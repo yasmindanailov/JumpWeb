@@ -84,6 +84,14 @@ class LandingAddonPresenter
                 : [];
 
             $rows[] = [
+                // El ID del complemento, para poder unir las listas de varios productos SIN repetir
+                // (`unique()`). Sin él la deduplicación tendría que hacerse por NOMBRE, y dos
+                // complementos distintos con el mismo rótulo se fundirían en uno.
+                'id' => $addon->id,
+                'icon' => $addon->iconKey(),
+                // ¿Su precio cambia según el día? Entonces la cifra se anuncia con un «desde», o el
+                // bloque prometería el más barato como si fuera el único.
+                'varies' => ! $included && $priceCents > 0 && $addon->priceVaries(),
                 'name' => (string) $addon->tr('name'),
                 'badge' => $badge,
                 'note' => $note,
@@ -107,5 +115,40 @@ class LandingAddonPresenter
         }
 
         return $rows;
+    }
+
+    /**
+     * **LOS COMPLEMENTOS DE VARIOS PRODUCTOS, UNIDOS Y SIN REPETIR** (`DECISIONES #480`).
+     *
+     * Lo pide la sección «Cuánto» de la portada: desde `#480` los complementos salen de las tarjetas
+     * y viven en un carril debajo, con **los de los productos que se ven** —o sea los de la zona
+     * activa— y **cada uno una sola vez**.
+     *
+     * ▶ **Existe aquí y no en la vista, y tampoco en `Booking`.** En la vista sería lógica repartida
+     * por Blade; en `Booking` sería una flecha prohibida hacia `Content` (`ModuleBoundariesTest`).
+     * Aquí es lo que ya es: la capa que presenta complementos.
+     *
+     * ⚠️⚠️ **Se deduplica por ID, nunca por nombre.** «Hora extra · KIDS» y «Hora extra · JUMP» son
+     * dos productos distintos con precios distintos, y en otra instalación podrían llamarse igual:
+     * fundirlos por rótulo publicaría **el precio de uno bajo el nombre del otro**.
+     *
+     * ⚠️ **El ORDEN es el de aparición**, que es el de los productos del carril: el primero que
+     * ofrece un complemento decide dónde sale. Ordenarlo por precio o por nombre inventaría una
+     * jerarquía que el catálogo no declara.
+     *
+     * @param  iterable<TicketType>  $products
+     * @return list<array<string, mixed>>
+     */
+    public static function unique(iterable $products): array
+    {
+        $vistos = [];
+
+        foreach ($products as $product) {
+            foreach (self::rows($product, false) as $row) {
+                $vistos[$row['id']] ??= $row;
+            }
+        }
+
+        return array_values($vistos);
     }
 }

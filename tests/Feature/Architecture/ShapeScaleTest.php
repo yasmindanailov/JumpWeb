@@ -99,6 +99,12 @@ class ShapeScaleTest extends TestCase
         // ⚠️ `.invite-card__deco` vivía aquí y SE RETIRÓ (T9): el bloque `.invite-*` era el editor
         // de invitación ANTERIOR a `bd-editor` y llevaba muerto desde aquel rediseño — 0
         // consumidores, medido. La excepción se va con su sujeto, que es para lo que está la lista.
+        // ⚠️⚠️ **El `0` del marcador es la FORMA, no un reset ni un canto** (`#480`): con canto
+        // redondo la línea de ahorro se lee como una PASTILLA, o sea como algo pulsable, y esto no
+        // se pulsa — es media frase resaltada a rotulador. El sistema del 2.º cliente declara el 0
+        // dentro de su escala (`0 · 10 · 16 · 999`) justo para esto.
+        '.rate-card__marker' => 'resalte tipo rotulador: el canto recto es lo que lo distingue de una '.
+            'pastilla pulsable, y el 0 está en la escala del sistema',
         '.bd-card__conf' => 'confeti del diseñador de invitaciones: dibujo',
         '.hero__chip:focus-visible' => 'anillo de foco sobre el vídeo del hero (ver el bloque de foco)',
         '.hero--full .hero__stage' => 'RESET: anula un radio heredado',

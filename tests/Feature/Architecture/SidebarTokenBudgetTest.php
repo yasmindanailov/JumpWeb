@@ -92,7 +92,8 @@ class SidebarTokenBudgetTest extends TestCase
         // rojo al usarlos y obligó a este borrado.
         // ⚠️ `--fs-button` sigue aquí y con motivo: el nivel Botón es 16/800 y la familia `.btn`
         // está a 14/600. Estrenarlo obliga a mover la familia ENTERA, que llega al cajón (Fase 4).
-        '--fs-display-xl', '--fs-subtitle', '--fs-body-s', '--fs-button', '--fs-slogan',
+        // ⚠️ `--fs-body-s` sale en `#480`: lo estrena la línea de AHORRO de la tarjeta de tarifa.
+        '--fs-display-xl', '--fs-subtitle', '--fs-button', '--fs-slogan',
     ];
 
     /**

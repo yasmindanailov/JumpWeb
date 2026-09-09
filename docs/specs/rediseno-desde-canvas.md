@@ -323,6 +323,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1c (`#471`) | añadir `--sec-air: 144px` y `--sec-air-mobile: 96px` — **los dos o ninguno**, lo vigila `RhythmScaleTest` |
 | T1d (`#472`) | añadir `--col-max: 1120px` |
 | T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
+| T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
@@ -375,7 +376,7 @@ navegador instalado**.
 |---|---|---|
 | T2a | **El armazón**: menú en dos grupos · eslogan en el cierre · el alto del par confirmado | ✅ `#477` |
 | T2b | **01 · Para quién**: dos tarjetas de zona · la altura pasa a DATO · 03 se separa | ✅ `#478` |
-| T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera | ✅ `#479` |
+| T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera · chapa de zona, ahorro y complementos fuera | ✅ `#479` + `#480` |
 | T2d–T2i | Las **seis secciones** restantes (§5.1) | ⬜ |
 
 ✅ **T2c · «Cuánto»** (`#479`). Rótulo · titular · entradilla que vende con una cifra del catálogo ·
@@ -398,6 +399,25 @@ instalación que no meta la zona en el nombre no nota nada.
 ❗❗ **LOS DÍAS SE DERIVAN DE `rate_types.weekdays`, y una entrada sin tarifa especial dice «solo».**
 Lo segundo tiene motivo medido: `RateResolver::priceCents()` devuelve **`null`** un sábado para una
 entrada sin precio especial — ese día **no se vende**, no es que cueste lo mismo.
+
+❗❗❗ **EL ARTBOARD SE MOVIÓ CINCO VECES MÁS DENTRO DE LA MISMA TANDA** (turnos 11→16, más el 5a de
+`Cumpleanos Pagina PJP`), y por eso la T2c tiene dos decisiones: `#479` y `#480`. *Esta fuente no se
+relee antes de cada tanda: se relee antes de cada tanda **y mientras dura**.*
+▶ Lo que trajo `#480`: **chapa de zona** por tarjeta (15b), **el ahorro con marcador amarillo**
+(14a+16a), **la zona fuera del botón**, y **los complementos fuera de la tarjeta**, en un carril
+debajo (5a).
+
+❗❗ **EL AHORRO SE DERIVA DE `duration_min`, y sin duración NO se escribe** (`[DECIDIDO owner]`). El
+artboard lo calcula desde el ÍNDICE de la tarjeta y su propia nota lo marcaba como decisión del
+dueño. Medido: «Todo el día» contra tres sueltas ahorraría 6,00 € y **contra dos sale a −2,00 €** —
+o sea que la cifra depende enteramente del supuesto, y por eso no se supone.
+
+❗❗ **NACE `--marker`**, el rol de resalte, porque los dos candidatos eran peores: `--warn` lleva un
+hexadecimal del PRIMER cliente y `--strip-3` cae en un color de zona. Transparente por defecto.
+
+❗❗ **Y el KEYLINE del botón es una VARIANTE de la familia** (`.btn--keyline`), no un borde escrito a
+mano — lo cazó el owner. **No va a todos**: el sistema declara «Completo» (sin borde) como defecto y
+acota la pegatina a hero y cierre.
 
 ❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA, y se corrigió DENTRO de la tanda.** Se había atado
 a `ticket_types.badge`, que es un campo **independiente** de `featured`: reproducido con los datos de

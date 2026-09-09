@@ -321,6 +321,27 @@
      precio. Lo vigila `InteractionColourIsNotAZoneTest` junto al resto. */
   --money: var(--fg);
 
+  /* ── EL MARCADOR ───────────────────────────────────────────────────────────────────────
+     `DECISIONES #480`. **El resalte tipo rotulador**: un fondo que levanta media frase sin
+     convertirla en un botón ni en un aviso. Lo estrena la línea de ahorro de una tarifa de tarifa,
+     y el sistema del 2.º cliente lo tiene como rol propio («resalte tipo marcador»).
+
+     ⚠️⚠️ **El producto no lo tenía, y los dos candidatos eran PEORES que no usarlo.** `--warn` lleva
+     hoy `#b45309` —uno de los siete hexadecimales del PRIMER cliente que la spec §2 tiene
+     fichados— y además es un color de TEXTO («a cobrar en el parque»), no de fondo; y `--strip-3`,
+     que en el paquete sí es el amarillo, cae por defecto en `var(--zone-1)`, o sea en el color de
+     una zona: la grieta 01 por la puerta de atrás. *Dos roles que se llaman parecido no son el
+     mismo rol.*
+
+     ⚠️ **Nace TRANSPARENTE, y eso es la conducta correcta**: un marcador sin color no es un
+     marcador, así que sin paquete la frase se queda en texto y lo que la levanta es su PESO — que
+     no depende de ninguna paleta. **Vacío es una respuesta.** El par lo pone el paquete, como
+     `--action` (`#209`), `--interactive` (`#436`) y `--money` (`#479`).
+     ⚠️ Y viaja con su TINTA (`--on-marker`): **el par lo declara quien declara el color**, nunca se
+     deriva — la regla que `#434` dejó escrita al nacer `--on-ok`/`--on-err`/`--on-warn`. */
+  --marker: transparent;
+  --on-marker: var(--fg);
+
   /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
      Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del
      segundo cliente, y por eso son cinco: su marca tiene cinco colores.
@@ -530,6 +551,7 @@
   --line-strong: var(--ink-line-strong);
   --interactive: var(--fg);   /* tinta → aquí es papel; el paquete lo fija por superficie (`#436`) */
   --money: var(--fg);         /* ídem: la cifra sigue a la tinta de SU superficie (`#479`) */
+  --on-marker: var(--fg);     /* ídem: la tinta del marcador (`#480`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -552,6 +574,7 @@
   --line-strong: var(--paper-line-strong);
   --interactive: var(--fg);   /* de vuelta a papel: tinta (`#436`) */
   --money: var(--fg);         /* ídem (`#479`) */
+  --on-marker: var(--fg);     /* ídem (`#480`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -1001,6 +1024,24 @@ img { display: block; max-width: 100%; }
 .btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
 .btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn--lg { padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16); }
+
+/* ❗❗❗ **EL KEYLINE · variante declarada de la familia, no un borde escrito a mano** (`#480`).
+   La hoja de componentes del sistema declara **DOS** rellenos de acción y los nombra:
+     · **«Completo»** — sin borde. Es lo que `.btn` ya era, y sigue siendo el DEFECTO.
+     · **«Pegatina»** — keyline de 2 y sombra dura, con su norma escrita: *«la pegatina es un botón
+       de hero o cierre: máximo dos por pantalla»*.
+   ▶ Esta variante es la **mitad del keyline**, sin la sombra: la usa un botón que vive DENTRO de
+   una pegatina —la tarjeta de tarifa—, donde la sombra ya la proyecta la tarjeta y dos sombras
+   duras superpuestas se leen como un error de render.
+
+   ⚠️⚠️ **Por qué NO se lo damos a `.btn` entero, que es la pregunta obvia**: porque el sistema dice
+   que no. Su relleno por defecto es «Completo», y la pegatina está acotada a hero y cierre con un
+   tope de dos por pantalla. Ponérselo a todos convertiría en excepción lo que su sistema declara
+   como norma — y de paso alcanzaría al **cajón de compra** (medido: `class="btn` vive en 18 ficheros
+   Blade y **22 de Vue**), que es Fase 4.
+   ▶ Lo que sí evita la divergencia es esto: el valor vive **una vez**, y quien lo necesita se
+   apunta a la variante en vez de volver a teclear un borde. */
+.btn--keyline { border: 2px solid var(--fg); }
 .btn--sm { padding: var(--sp-10) var(--sp-16); font-size: var(--fs-13); }
 /* Estado deshabilitado del sistema (antes inexistente: los botones con
    `wire:loading.attr="disabled"` conservaban el hover pleno). Atenúa y congela el
@@ -1873,6 +1914,22 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--shadow-float);
   transform: scale(1);
 }
+/* La fila de CHAPAS: la de zona siempre, la de quien lidera solo en su tarjeta. */
+.rate-card__tags {
+  display: flex; align-items: center; gap: var(--sp-8);
+  flex-wrap: wrap; margin: 0;
+}
+/* ❗ **LA CHAPA DE ZONA es de BORDE y no maciza**, y el motivo es que no puede confundirse con la
+   otra: la chapa MACIZA de tinta es la que marca quién lidera, y en esa tarjeta salen las dos
+   juntas. Dos rellenos iguales con dos significados distintos a un centímetro no se distinguen. */
+.rate-card__zone {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fg);
+  border: 1.5px solid var(--fg); border-radius: var(--r-pill);
+  padding: var(--sp-4) var(--sp-10);
+}
+
 .rate-card__head {
   display: flex; align-items: baseline; gap: var(--sp-8);
   flex-wrap: wrap; margin: 0;
@@ -1929,6 +1986,32 @@ img { display: block; max-width: 100%; }
   line-height: 1.4; color: var(--fg-mute); white-space: nowrap;
 }
 
+/* ── EL AHORRO, CON SU MARCADOR ────────────────────────────────────────────────────────────
+   ❗❗ **`border-radius: 0` NO es un descuido: es lo que lo hace un marcador.** Con canto redondo se
+   lee como una pastilla —o sea como algo pulsable—, y esto no se pulsa: es media frase resaltada a
+   rotulador. El 0 está en la escala del sistema, así que no se inventa ningún valor.
+   ⚠️ **Sin girar**: la rotación de este sistema es solo de manchas, cinta del eslogan y sello de
+   precio — y el sello ES el precio, así que girar el ahorro lo confundiría con él.
+   ⚠️ Es la ÚNICA mancha de color de la tarjeta, y por eso el naranja del botón no compite. */
+.rate-card__saving {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--sp-4); margin: 0;
+}
+.rate-card__marker {
+  display: inline-flex; align-items: baseline; gap: var(--sp-6);
+  background: var(--marker); color: var(--on-marker);
+  border-radius: 0;
+  padding: var(--sp-4) var(--sp-8);
+}
+.rate-card__saving-word { font-weight: 800; font-size: var(--fs-body-s); line-height: 1.3; }
+/* ⚠️ La cifra en RÓTULO porque **toda cifra de este sistema va en rótulo**; la palabra que la
+   acompaña, no — es texto. */
+.rate-card__saving-num {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-17); line-height: 1;
+}
+.rate-card__saving-base { font-size: var(--fs-body-s); line-height: 1.35; color: var(--fg-mute); }
+
 /* ⚠️ Cuerpo, o sea **16 en móvil y 17 en escritorio**, y no los 15 que dibuja el artboard: su
    propio pliego de reglas duras dice «texto de cuerpo 16px en móvil», así que ahí el dibujo se
    contradice con la norma y manda la norma. Divergencia declarada. */
@@ -1943,34 +2026,74 @@ img { display: block; max-width: 100%; }
 .rate-card__special b { font-weight: 700; color: var(--fg); white-space: nowrap; }
 .rate-card__special span { color: var(--fg-mute); }
 
-/* ── LOS COMPLEMENTOS, EN PÍLDORAS ────────────────────────────────────────────────────────
-   ❗❗ **La forma es la del artboard 10a**: cápsula con borde de 1,5, «+ nombre · precio» y la unidad
-   en mono al lado. Sustituye —**solo aquí**— a la lista de `.addons-mini`, que gastaba un rótulo,
-   un enlace «Más info» y una fila por complemento para decir que puedes añadir unos calcetines.
-   ⚠️ `/precios` y la banda de cumpleaños **siguen con la lista**: tienen artboards propios y se
-   rehacen en su fase. Dos formas conviviendo es lo correcto mientras dos superficies estén en
-   fases distintas; lo que no puede haber son dos FUENTES, y el dato es el mismo presentador. */
-.rate-card__addons {
-  display: flex; flex-wrap: wrap; gap: var(--sp-6);
-  margin-top: var(--sp-4); padding-top: var(--sp-14);
-  border-top: 1.5px solid var(--line);
+/* ── EL BLOQUE DE COMPLEMENTOS, DEBAJO DEL CARRIL ─────────────────────────────────────────
+   `Cumpleanos Pagina PJP` 5a · `DECISIONES #480`. Salieron de la tarjeta porque **los comparten casi
+   todas**, y hay una regla del sistema que lo pide: *«una comparativa solo compara lo que difiere;
+   lo común va a su propio bloque»*.
+   ⚠️ Van en CARRIL horizontal y no en filas: `[DECIDIDO owner]` sobre la propia recomendación del
+   canvas, que para las entradas proponía filas. */
+.addons-rail { margin: var(--sp-28) 0 0; }
+.addons-rail__title {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-title); line-height: 1.05;
+  color: var(--fg); margin: 0;
 }
-.addon-pill {
-  display: inline-flex; align-items: baseline; gap: var(--sp-6);
-  padding: var(--sp-6) var(--sp-11);
-  border: 1.5px solid var(--line-strong);
-  border-radius: var(--r-pill);
+.addons-rail__lede {
+  margin: var(--sp-10) 0 0;
+  font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute);
 }
-.addon-pill__t { font-weight: 600; font-size: var(--fs-13); color: var(--fg); }
-.addon-pill__u {
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  color: var(--fg-mute); white-space: nowrap;
+
+/* ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO** (`tabindex="0"` en el marcado), y sin eso la segunda
+   ficha **no se alcanza sin ratón**: aquí dentro no hay ningún control —son fichas, no botones—,
+   así que el Tab no tiene a qué entrar y el carril no se puede desplazar. Es la única pieza de la
+   sección que necesita foco propio, y por eso lleva su anillo. */
+.addons-rail__track {
+  display: flex; gap: var(--sp-12); align-items: stretch;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  /* A sangre por la derecha, igual que el carril de tarifas: el asoma es la señal de que hay más. */
+  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
+  padding: var(--sp-4) 64px var(--sp-8) var(--col-gutter);
 }
-/* Los EXCLUYENTES viajan juntos y con su rótulo: pintarlos sueltos diría que se pueden sumar. */
-.rate-card__addon-group { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-6); }
-.rate-card__addon-choose {
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
+.addons-rail__track::-webkit-scrollbar { display: none; }
+
+/* La ficha: blanca, borde de Línea y radio de tarjeta. **Cero controles y cero naranja** — aquí no
+   se compra, se informa; el único relleno de acción de la pantalla es el de la tarifa enfocada. */
+/* ⚠️ **La ficha es UNA fila** (`[owner]`): icono, nombre y precio en la misma línea. Con el nombre
+   encima del precio la ficha subía a tres renglones para decir dos cosas.
+   ⚠️⚠️ **El ancho se AJUSTA al contenido y no es fijo en 250**, que es lo que el artboard dibuja
+   para nombres cortos («Tarta, monitor y más»). Los de este catálogo son largos —«Calcetines
+   antideslizantes»— y con 250 la fila se partía igual: el `max-content` acotado deja la fila entera
+   cuando cabe, y el mínimo evita que una ficha de nombre corto quede raquítica al lado de otra. */
+.addon-card {
+  flex: none;
+  width: max-content;
+  min-width: 220px; max-width: min(380px, calc(100vw - 76px));
+  scroll-snap-align: center;
+  display: flex; align-items: center; gap: var(--sp-12);
+  padding: var(--sp-14) var(--sp-16);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.addon-card__ico { color: var(--fg); display: flex; flex: none; }
+.addon-card__name { flex: 1; min-width: 0; font-weight: 800; font-size: var(--fs-16); line-height: 1.25; color: var(--fg); }
+/* El precio no se parte ni se encoge: es el dato que se busca de un vistazo. */
+.addon-card__price {
+  flex: none; white-space: nowrap;
+  font-weight: 700; font-size: var(--fs-17); line-height: 1.3; color: var(--fg);
+}
+/* La UNIDAD es hermana del importe y va en Etiqueta: dice de qué es ese «+», y en mono para que no
+   compita con la cifra. ⚠️ Con `font-weight: 400` explícito porque hereda el 700 del importe. */
+.addon-card__unit {
+  margin-left: var(--sp-6);
+  font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-label);
+  color: var(--fg-mute);
+}
+
+@media (min-width: 1024px) {
+  /* Sin carril: dentro de la columna, como la rejilla de tarifas. */
+  .addons-rail__track { margin: var(--sp-16) 0 0; padding: var(--sp-4) 0 var(--sp-8); }
 }
 
 /* El CTA, pegado abajo para que las tarjetas de una fila alineen sus botones aunque su texto mida

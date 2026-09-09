@@ -67,9 +67,16 @@ class SurfaceScopeTest extends TestCase
      * tarjeta de tinta bajaría computado contra papel y saldría **tinta sobre tinta**. El paquete
      * del 2.º cliente lo fija por superficie (Lima 800 en papel, Lima Bote en tinta), porque su
      * lima claro está en la lista de «no puede ser texto sobre claro».
+     *
+     * ▶ **Y `--on-marker`, la TINTA del resalte** (`DECISIONES #480`), por lo mismo: vale
+     * `var(--fg)` y ese `var(--fg)` tiene que resolver contra el `--fg` de ESTA superficie.
+     * ⚠️⚠️ **`--marker` NO está aquí, y no es un olvido**: vale `transparent`, que no depende de la
+     * superficie, así que re-declararlo no cambiaría nada y solo añadiría una línea que mantener.
+     * *Un token se re-declara porque su valor DEPENDE del ámbito, no porque tenga un hermano que sí.*
      */
     private const ROLE_TOKENS = [
         '--action', '--on-action', '--action-hover', '--on-action-hover', '--interactive', '--money',
+        '--on-marker',
     ];
 
     /** @var ?array<string, array<string, string>> */

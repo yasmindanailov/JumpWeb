@@ -27,7 +27,7 @@ TMP="storage/app/mutaciones/seccion-tarifas"
 FICHEROS=(
     app/Domain/Booking/Services/RateCards.php
     resources/views/components/site/rate-rail.blade.php
-    resources/views/components/site/addon-pill.blade.php
+    app/Domain/Content/Services/LandingAddonPresenter.php
     resources/views/components/site/special-rate-chips.blade.php
     public/css/landing.css
 )
@@ -96,7 +96,7 @@ mutar() {
 
 CAR=app/Domain/Booking/Services/RateCards.php
 VIS=resources/views/components/site/rate-rail.blade.php
-PIL=resources/views/components/site/addon-pill.blade.php
+PRE=app/Domain/Content/Services/LandingAddonPresenter.php
 CHI=resources/views/components/site/special-rate-chips.blade.php
 CSS=public/css/landing.css
 
@@ -110,8 +110,8 @@ mutar "el matiz se pinta AUNQUE repita la duración" "$CAR" \
   '        if ($matiz !== null && ($matiz === '"''"' || preg_match('"'"'/min\.?$/iu'"'"', $matiz))) {' \
   '        if (false) {'
 
-mutar "el botón pierde la zona" "$CAR" \
-  "            'cta' => __('landing.rates.book_in', ['name' => \$nombre, 'zone' => \$nombreZona])," \
+mutar "el botón pierde su rótulo compuesto" "$CAR" \
+  "            'cta' => __('landing.rates.book_name', ['name' => \$nombre])," \
   "            'cta' => \$nombre,"
 
 mutar "el chip vuelve a colgar SOLO del badge (chip sin líder)" "$CAR" \
@@ -127,8 +127,8 @@ mutar "el badge le gana al matiz propio del nombre" "$CAR" \
   "            'nuance' => (\$lidera ? null : \$badge) ?? \$matiz,"
 
 mutar "lideran TODAS las que el panel marque, no una" "$CAR" \
-  '                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $nombreZona, $diasNormales, $i === $lidera))' \
-  '                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $nombreZona, $diasNormales, (bool) $t->featured))'
+  '                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $zone, $diasNormales, $i === $lidera, $unidad))' \
+  '                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $zone, $diasNormales, (bool) $t->featured, $unidad))'
 
 echo
 echo '── 2 · Los días, que son la mitad honesta de la sección ──'
@@ -183,21 +183,58 @@ mutar "la chapa de zona VUELVE" "$VIS" \
             @if ($specialLabel && collect($z['"'"'cards'"'"'])->contains(fn ($c) => $c['"'"'special'"'"'] !== null))'
 
 echo
-echo '── 5 · Los complementos ──'
+echo '── 5 · Los complementos, fuera de la tarjeta ──'
 
-mutar "la píldora afirma DOS unidades para el mismo precio" "$PIL" \
-  '@if ($unit && ! ($row['"'"'perGuest'"'"'] ?? false))' \
-  '@if ($unit)'
+mutar "los complementos se REPITEN (deduplicación por nombre y no por id)" "$PRE" \
+  '                $vistos[$row['"'"'id'"'"']] ??= $row;' \
+  '                $vistos[] = $row;'
 
-mutar "vuelve la LISTA vieja en vez de las píldoras" "$VIS" \
-  '<x-site.addon-pill :row="$row" :unit="$card['"'"'unit'"'"']" />
-                                @endforeach
+mutar "el carril pierde el FOCO del teclado" "$VIS" \
+  '<div class="addons-rail__track" tabindex="0" role="group"' \
+  '<div class="addons-rail__track" role="group"'
 
-                                @foreach ($grupos as $miembros)' \
-  '<x-site.addon-chip :row="$row" />
-                                @endforeach
+mutar "un complemento de precio VARIABLE se anuncia sin «desde»" "$VIS" \
+  "@if (\$extra['varies']){{ __('landing.rates.from') }} @endif" \
+  ''
 
-                                @foreach ($grupos as $miembros)'
+echo
+echo '── 6 · La chapa de zona, el ahorro y el botón ──'
+
+mutar "la chapa de zona desaparece" "$VIS" \
+  '<span class="rate-card__zone">{{ $card['"'"'zone'"'"'] }}</span>' \
+  ''
+
+mutar "el botón vuelve a decir la zona" "$CAR" \
+  "            'cta' => __('landing.rates.book_name', ['name' => \$nombre])," \
+  "            'cta' => \$nombre.' en '.\$nombreZona,"
+
+mutar "el ahorro se calcula por ORDEN y no por duración" "$CAR" \
+  '        $veces = $ticket->duration_min / $unidad->duration_min;' \
+  '        $veces = 3;'
+
+# ⚠️⚠️ **La mutación obvia aquí es DÉBIL y por eso no es ésta.** Quitar `! $ticket->duration_min`
+# de la guarda no cambia nada: con duración nula `$veces` sale 0 y el `$veces < 2` de la línea
+# siguiente devuelve `null` igual. Lo que sí es una conducta distinta —y es la que el owner
+# DESCARTÓ— es suponer tres sueltas cuando el producto no declara minutos.
+mutar "un producto SIN duración se compara contra TRES sueltas (el supuesto descartado)" "$CAR" \
+  '        if ($unidad === null || $unidad->is($ticket) || ! $ticket->duration_min || ! $unidad->duration_min) {
+            return null;
+        }
+
+        $veces = $ticket->duration_min / $unidad->duration_min;' \
+  '        if ($unidad === null || $unidad->is($ticket) || ! $unidad->duration_min) {
+            return null;
+        }
+
+        $veces = $ticket->duration_min ? $ticket->duration_min / $unidad->duration_min : 3;'
+
+mutar "se anuncia un ahorro NEGATIVO" "$CAR" \
+  '        if ($ahorro <= 0) {' \
+  '        if (false) {'
+
+mutar "el keyline se escribe a mano en vez de por variante" "$VIS" \
+  'class="btn btn--keyline rate-card__btn"' \
+  'class="btn rate-card__btn"'
 
 echo
 echo "── ${muerden} de ${total} muerden ──"

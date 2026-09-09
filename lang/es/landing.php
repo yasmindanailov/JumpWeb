@@ -174,10 +174,29 @@ return [
         // como lo escribe el panel — hoy «Viernes, findes y festivos».
         'special_note' => 'Tarifa especial: :label.',
 
-        // ❗ **La ZONA va en el rótulo del botón** (`Precios PJP` 9a): se dice una vez por
-        // tarjeta y en el único sitio donde equivocarse cuesta dinero. Por eso el nombre de arriba
-        // va limpio, sin el prefijo de la zona.
-        'book_in' => 'Reservar :name en :zone',
+        // ❗ **La ZONA la dice la CHAPA de la tarjeta, no el botón** (`#480`, sobre la nota del
+        // turno 15b: «con la zona en la chapa, en el botón sobra»). La llevó mientras la chapa no
+        // existía; con las dos, se decía dos veces por tarjeta.
+        'book_name' => 'Reservar :name',
+        'zone_chip' => 'Zona :zone',
+
+        // ── El AHORRO de una entrada larga frente a varias cortas ─────────────────────────
+        // ⚠️ La cifra la calcula el dominio del catálogo; aquí solo va la FORMA de la frase.
+        'saving' => 'Ahorras',
+        'saving_base' => 'frente a :count de :unit',
+        // ⚠️ El número va ESCRITO: la frase se lee, no se calcula. Fuera de esta lista corta el
+        // dominio cae al dígito, que es preferible a inventar la palabra.
+        'times' => [2 => 'dos', 3 => 'tres', 4 => 'cuatro', 5 => 'cinco', 6 => 'seis'],
+
+        // ── El bloque de COMPLEMENTOS, debajo del carril ──────────────────────────────────
+        'addons_title' => 'Complementos disponibles',
+        'addons_intro' => 'Puedes añadirlos a cualquier entrada.',
+        'from' => 'desde',
+        // ⚠️ La unidad de un complemento sale del PIVOTE: `per_guest` o `fixed`. **No se escribe
+        // «por persona» en uno `fixed`** — de ésos se elige cantidad, no se cobra uno por cabeza.
+        'addon_per_guest' => 'por invitado',
+        'addon_each' => 'cada uno',
+        'from' => 'desde',
     ],
     'registration' => [
         'title' => 'Completa tu registro en casa',

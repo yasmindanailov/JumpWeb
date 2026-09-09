@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
@@ -10,7 +9,6 @@ use App\Domain\Content\Services\LandingAddonPresenter;
 use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
@@ -72,6 +70,59 @@ class RateRailSectionTest extends TestCase
         $fin = strpos($html, 'id="rate-panel-', $ini + 10);
 
         return substr($html, $ini, ($fin === false ? strlen($html) : $fin) - $ini);
+    }
+
+    /**
+     * Dos entradas de la MISMA zona, la primera de las cuales hará de unidad.
+     *
+     * ⚠️ Se apagan las demás para que la zona quede con exactamente dos: el ahorro se mide contra la
+     * entrada de MENOR duración de su zona, y con más productos alrededor el sujeto del caso
+     * dependería de cuál sembró el fixture.
+     *
+     * @return array{0: TicketType, 1: TicketType}
+     */
+    private function dosEntradasDeUnaZona(): array
+    {
+        $zonaId = Zone::where('slug', 'kids')->value('id');
+
+        $entradas = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->where('zone_id', $zonaId)->orderBy('position')->get();
+
+        $this->assertGreaterThan(1, $entradas->count(), 'la zona no tiene dos entradas: el caso miraría el vacío.');
+
+        $entradas->skip(2)->each(fn (TicketType $t) => $t->update(['is_active' => false]));
+
+        return [$entradas[0], $entradas[1]];
+    }
+
+    /**
+     * Los importes de las fichas de complemento, de las dos zonas.
+     *
+     * ⚠️ Acotar a este elemento es lo que hace fiable la aserción del «desde»: la palabra vive
+     * también en la entradilla de la sección y en el sello de las tarjetas de zona.
+     *
+     * @return list<string>
+     */
+    private function preciosDeFicha(): array
+    {
+        preg_match_all(
+            '#<span class="addon-card__price">(.*?)</span>\s*</div>#s',
+            $this->panel('jump').$this->panel('kids'), $m,
+        );
+
+        return $m[1];
+    }
+
+    /** Deja una entrada con UN solo precio, el de la tarifa normal. */
+    private function reprecio(TicketType $ticket, int $cents): void
+    {
+        $ticket->prices()->delete();
+        $ticket->prices()->create([
+            'rate_type_id' => RateType::where('is_special', false)->value('id'),
+            'amount_cents' => $cents,
+            'currency' => 'EUR',
+        ]);
+        $ticket->load('prices.rateType');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -174,15 +225,20 @@ class RateRailSectionTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **EL NOMBRE MANDA Y LA ZONA SE DICE UNA VEZ, EN EL BOTÓN** (`Precios PJP` 9a y 10a).
+     * ❗❗❗ **EL NOMBRE MANDA Y LA ZONA SE DICE UNA VEZ, EN LA CHAPA** (`Precios PJP` 15b).
      *
      * ⚠️⚠️ **La cadena de esta instalación es `{ZONA} · {nombre}` y la del mockup `{nombre} ·
      * {matiz}`**, o sea al revés. Aplicar su `split` tal cual daría nombre «Jump» y matiz «1 hora».
      * Por eso primero se retira el prefijo **cuando es exactamente el nombre de la zona** —una
      * comprobación, no una adivinanza— y solo después se parte. Este caso fija las dos mitades: que
-     * el nombre sale limpio y que la zona aparece en el rótulo de comprar.
+     * el nombre sale limpio y que la zona aparece **una sola vez**, en su chapa.
+     *
+     * ⚠️⚠️ **La llevó el BOTÓN hasta `#480`** —era el turno 9a, «se dice en el único sitio donde
+     * equivocarse cuesta dinero»— y salió de ahí al entrar la chapa por tarjeta: con las dos, la
+     * zona se decía **dos veces por tarjeta**. Lo dice la nota del propio 15b: *«con la zona en la
+     * chapa, en el botón sobra»*.
      */
-    public function test_the_name_drops_the_zone_and_the_button_carries_it(): void
+    public function test_the_name_drops_the_zone_and_the_chip_carries_it(): void
     {
         $seccion = $this->seccion();
         $zona = Zone::where('slug', 'jump')->firstOrFail();
@@ -193,9 +249,17 @@ class RateRailSectionTest extends TestCase
             'el nombre de la tarjeta repite la zona que ya dice la pestaña.',
         );
 
-        // …y el botón sí la lleva, junto al nombre.
+        // …la chapa sí la lleva…
         $this->assertStringContainsString(
-            e(__('landing.rates.book_in', ['name' => '1 hora', 'zone' => $zona->tr('name')])), $seccion,
+            '<span class="rate-card__zone">'.e(__('landing.rates.zone_chip', ['zone' => $zona->tr('name')])).'</span>',
+            $seccion,
+        );
+
+        // …y el botón ya NO, o se diría dos veces en la misma tarjeta.
+        $this->assertStringContainsString(e(__('landing.rates.book_name', ['name' => '1 hora'])), $seccion);
+        $this->assertStringNotContainsString(
+            e(__('landing.rates.book_name', ['name' => '1 hora'])).' en ', $seccion,
+            'el botón vuelve a decir la zona: con la chapa arriba, se dice dos veces por tarjeta.',
         );
     }
 
@@ -223,73 +287,72 @@ class RateRailSectionTest extends TestCase
     }
 
     /**
-     * ❗❗ **LOS COMPLEMENTOS SON PÍLDORAS Y SALEN DEL MISMO PRESENTADOR.**
+     * ❗❗❗ **LOS COMPLEMENTOS SALEN DE LA TARJETA Y VIVEN EN SU PROPIO CARRIL, DEBAJO.**
      *
-     * ⚠️ La forma cambia (`Precios PJP` 10a: cápsula con «+ nombre · precio»), **la fuente no**:
-     * `LandingAddonPresenter` sigue decidiendo qué admite una entrada. Un segundo camino aquí
-     * ofrecería en la landing algo que el embudo rechaza — el invariante que ese presentador
-     * declara en su propio docblock.
+     * `[DECIDIDO owner, 2026-09-09]` sobre `Cumpleanos Pagina PJP` 5a, y hay una regla del sistema
+     * que lo pide: *«una comparativa solo compara lo que difiere; lo común va a su propio bloque»*.
+     * Los calcetines estaban en las tres tarifas, o sea escritos tres veces dentro de una
+     * comparativa — y el hueco que dejaron lo ocupa el AHORRO, que sí difiere.
+     *
+     * ⚠️ **Son los de los productos QUE SE VEN**, así que el bloque vive DENTRO del panel de cada
+     * zona: «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos con dos precios.
      */
-    public function test_the_addons_are_pills_from_the_shared_presenter(): void
+    public function test_the_addons_live_in_their_own_rail_below_the_cards(): void
     {
-        $entrada = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
-            ->orderBy('position')->firstOrFail();
-
-        $filas = LandingAddonPresenter::rows($entrada, false);
-        $this->assertNotEmpty($filas, 'la entrada de referencia no admite complementos: este caso miraría el vacío.');
-
         $seccion = $this->seccion();
 
-        $this->assertStringContainsString('addon-pill', $seccion);
-        $this->assertStringContainsString(e($filas[0]['name']), $seccion);
-        // ⚠️ Y NO la lista de la tarjeta antigua, que sigue viva en `/precios` y en cumpleaños.
+        $this->assertStringContainsString('addons-rail__track', $seccion);
+        // Y NO dentro de la tarjeta, ni con la lista de la tarjeta vieja.
+        $this->assertStringNotContainsString('rate-card__addons', $seccion);
         $this->assertStringNotContainsString('addons-mini', $seccion);
 
-        // La píldora lleva la unidad del PRODUCTO junto al complemento suelto.
+        // El carril está DENTRO del panel de la zona, no suelto en la sección.
+        $this->assertStringContainsString('addons-rail', $this->panel('jump'));
+    }
+
+    /**
+     * ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO, y sin eso la segunda ficha NO SE ALCANZA.**
+     *
+     * ⚠️⚠️ Dentro no hay ningún control —son fichas, no botones—, así que el Tab no tiene a qué
+     * entrar y el carril no se puede desplazar sin ratón. Lo declara el propio artboard, y es la
+     * única pieza de la sección que necesita foco propio.
+     */
+    public function test_the_addon_rail_can_be_reached_with_the_keyboard(): void
+    {
+        $seccion = $this->seccion();
+
         $this->assertMatchesRegularExpression(
-            '/addon-pill__u">'.preg_quote(e((string) $entrada->tr('period_label')), '/').'/', $seccion,
+            '/<div class="addons-rail__track" tabindex="0" role="group"\s+aria-label="[^"]+"/',
+            $seccion,
+            'el carril de complementos perdió su foco: sin él la segunda ficha no se alcanza sin ratón.',
         );
     }
 
     /**
-     * ❗❗ **UN COMPLEMENTO POR INVITADO NO LLEVA ENCIMA LA UNIDAD DE LA ENTRADA.**
+     * ❗❗❗ **LOS COMPLEMENTOS NO SE REPITEN, y la deduplicación es por ID.**
      *
-     * ⚠️⚠️ El artboard pone la unidad del producto al lado de cada píldora, y con un complemento que
-     * se cuenta **por invitado** eso afirma DOS unidades para el mismo precio: su propia nota ya
-     * dice «/invitado». *Una unidad de más no se lee como ruido: se lee como otro precio.*
-     * ▶ Lo encontró el arnés de mutación —quitar la condición salía VERDE—, no una relectura: el
-     * fixture no tiene ningún complemento por invitado en una entrada, así que la rama existía sin
-     * que ningún caso la ejercitara.
+     * ⚠️⚠️ «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos distintos con precios
+     * distintos, y en otra instalación podrían llamarse igual: fundirlos por RÓTULO publicaría **el
+     * precio de uno bajo el nombre del otro**.
      */
-    public function test_a_per_guest_addon_does_not_borrow_the_ticket_unit(): void
+    public function test_each_addon_appears_once_per_zone(): void
     {
-        $entrada = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
-            ->orderBy('position')->firstOrFail();
+        $zona = Zone::where('slug', 'kids')->firstOrFail();
+        $entradas = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->where('zone_id', $zona->id)->orderBy('position')->get();
 
-        $this->assertNotEmpty($entrada->addons, 'la entrada de referencia no admite complementos: este caso miraría el vacío.');
+        $esperados = LandingAddonPresenter::unique($entradas);
+        $this->assertNotEmpty($esperados, 'la zona no ofrece complementos: este caso miraría el vacío.');
 
-        // Control: por unidad, la píldora SÍ toma la unidad de la entrada.
-        $this->assertStringContainsString('addon-pill__u', $this->seccion());
+        // El mismo complemento cuelga de VARIAS entradas de la zona: sin deduplicar saldría repetido.
+        $this->assertGreaterThan(
+            count($esperados),
+            $entradas->sum(fn (TicketType $t): int => count(LandingAddonPresenter::rows($t, false))),
+            'ningún complemento se comparte entre entradas: la deduplicación no tendría sujeto.',
+        );
 
-        /*
-         * ⚠️⚠️ **TODOS los enganches de TODAS las entradas, y no el de la primera.** La sección pinta
-         * la zona que abre la sección, que no tiene por qué ser la de la entrada con `position` más
-         * baja: con un solo pivote convertido el caso encontraba la unidad en la píldora de otra
-         * tarjeta y **fallaba con el producto sano**. Es un falso negativo del instrumento, no del
-         * producto — y el tipo de error que hace desconfiar de una guarda buena.
-         */
-        DB::table('product_addons')
-            ->update(['quantity_mode' => ProductAddon::MODE_PER_GUEST]);
-
-        preg_match_all('#<span class="addon-pill">.*?</span>\s*</span>#s', $this->seccion(), $m);
-        $this->assertNotEmpty($m[0], 'no queda ninguna píldora: el caso miraría el vacío.');
-
-        foreach ($m[0] as $pildora) {
-            $this->assertStringNotContainsString(
-                'addon-pill__u', $pildora,
-                'un complemento por invitado lleva encima la unidad de la entrada: son dos unidades para un precio.',
-            );
-        }
+        $panel = $this->panel($zona->slug);
+        $this->assertSame(count($esperados), substr_count($panel, 'class="addon-card"'));
     }
 
     /**
@@ -587,6 +650,137 @@ class RateRailSectionTest extends TestCase
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
+    //  El AHORRO · el único argumento de valor de la tarjeta
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * ❗❗❗ **EL MULTIPLICADOR SALE DE LA DURACIÓN, NO DEL ORDEN DE LAS TARJETAS.**
+     *
+     * ⚠️⚠️ El artboard lo saca del índice —«la segunda vale por dos, la tercera por tres»—, y eso es
+     * cierto **solo mientras las tarjetas estén ordenadas por duración creciente y cada escalón sea
+     * un múltiplo exacto de la primera**. Aquí la segunda tarjeta dura el TRIPLE, así que por orden
+     * diría «dos» y por duración dice «tres»: la frase publicaría una comparación que no es.
+     */
+    public function test_the_saving_multiplier_comes_from_the_duration_and_not_the_order(): void
+    {
+        [$unidad, $larga] = $this->dosEntradasDeUnaZona();
+
+        $unidad->update(['duration_min' => 60]);
+        $larga->update(['duration_min' => 180]);
+        $this->reprecio($unidad, 1000);
+        $this->reprecio($larga, 2500);
+
+        $seccion = $this->seccion();
+
+        // 3 × 10,00 − 25,00 = 5,00
+        $this->assertStringContainsString('5 €', $seccion);
+        $this->assertStringContainsString(
+            e(__('landing.rates.saving_base', ['count' => __('landing.rates.times.3'), 'unit' => '1 hora'])),
+            $seccion,
+            'la frase compara por el ORDEN de las tarjetas y no por su duración.',
+        );
+    }
+
+    /**
+     * ❗❗❗ **UN PRODUCTO SIN DURACIÓN NO PINTA LA LÍNEA, y ésa es la mitad de la decisión.**
+     *
+     * `[DECIDIDO owner, 2026-09-09]`. «Todo el día» no declara minutos, así que compararlo con tres
+     * sueltas es **suponer cuánto se queda el cliente medio**, no medirlo — y si viene dos horas, la
+     * frase le promete un ahorro que no tiene. *Cuando el dato no existe, la línea no se escribe.*
+     */
+    public function test_a_ticket_without_duration_gets_no_saving_line(): void
+    {
+        [$unidad, $larga] = $this->dosEntradasDeUnaZona();
+
+        $unidad->update(['duration_min' => 60]);
+        $this->reprecio($unidad, 1000);
+        $this->reprecio($larga, 1500);
+
+        // ⚠️ Se mira el PANEL de la zona y no la sección: el marcado trae también el panel de la
+        //    otra zona —oculto, pero presente—, y allí sí hay una entrada que ahorra. *Aseverar
+        //    sobre la sección mediría la zona de al lado.*
+        // Control: CON duración la línea existe…
+        $larga->update(['duration_min' => 120]);
+        $this->assertStringContainsString('rate-card__marker', $this->panel('kids'));
+
+        // …y sin ella, no.
+        $larga->update(['duration_min' => null]);
+        $this->assertStringNotContainsString(
+            'rate-card__marker', $this->panel('kids'),
+            'se anuncia un ahorro sobre un producto que no declara duración: eso es suponer, no medir.',
+        );
+    }
+
+    /**
+     * **Un ahorro que no existe no se escribe.**
+     *
+     * ⚠️ Es el borde donde la frase se volvería falsa: si la entrada larga cuesta MÁS que comprar
+     * varias cortas, «Ahorras −2 €» sería un anuncio al revés. Medido con el catálogo real: «Todo el
+     * día» a 18,00 € contra dos de 8,00 € sale a **−2,00 €**.
+     */
+    public function test_no_saving_line_when_the_long_ticket_is_not_cheaper(): void
+    {
+        [$unidad, $larga] = $this->dosEntradasDeUnaZona();
+
+        $unidad->update(['duration_min' => 60]);
+        $larga->update(['duration_min' => 120]);
+        $this->reprecio($unidad, 800);
+        $this->reprecio($larga, 1800);   // 2 × 8 = 16 < 18 → no ahorra nada
+
+        $this->assertStringNotContainsString('rate-card__marker', $this->panel('kids'));
+    }
+
+    /**
+     * ❗❗ **UN COMPLEMENTO DE PRECIO VARIABLE SE ANUNCIA CON «DESDE».**
+     *
+     * ⚠️⚠️ Sin él el bloque publica **el más barato como si fuera el único** y el checkout cobra
+     * otro: el complemento se tarifica por el día de la VISITA (`#415`), así que el finde puede
+     * costar más. Es la misma regla que la tarjeta del producto principal ya cumplía.
+     */
+    public function test_an_addon_whose_price_changes_by_day_is_announced_with_from(): void
+    {
+        $addon = TicketType::ofType(TicketType::TYPE_ADDON)
+            ->whereIn('id', fn ($q) => $q->select('addon_id')->from('product_addons'))
+            ->orderBy('id')->firstOrFail();
+
+        // ⚠️⚠️ Se asevera sobre el PRECIO de la ficha y no sobre el documento: «Desde 8 €» ya vive
+        //    en la entradilla de la sección y «desde» en el sello de las tarjetas de zona, así que
+        //    un `assertDontSee` global saldría rojo con el producto sano.
+        $precios = fn (): string => implode('|', $this->preciosDeFicha());
+
+        $this->assertStringNotContainsString(__('landing.rates.from'), $precios());
+
+        $especial = RateType::where('is_special', true)->value('id');
+        $addon->prices()->updateOrCreate(['rate_type_id' => $especial], ['amount_cents' => 900, 'currency' => 'EUR']);
+
+        $this->assertStringContainsString(
+            __('landing.rates.from'), $precios(),
+            'un complemento que cambia de precio según el día se anuncia como si tuviera uno solo.',
+        );
+    }
+
+    /**
+     * ❗❗ **EL KEYLINE DEL BOTÓN ES UNA VARIANTE DE LA FAMILIA, no un borde escrito a mano.**
+     *
+     * ⚠️ La hoja de componentes del sistema declara dos rellenos —«Completo», sin borde, y
+     * «Pegatina», con keyline— y este botón vive dentro de una pegatina. Escribir el borde en el
+     * selector de la tarjeta dejaría el valor en un sitio que nadie más puede reutilizar, que es
+     * justo cómo nace una divergencia.
+     */
+    public function test_the_card_button_takes_the_keyline_from_the_family(): void
+    {
+        $seccion = $this->seccion();
+
+        $this->assertStringContainsString('class="btn btn--keyline rate-card__btn"', $seccion);
+
+        // Y la variante existe en la hoja, o la clase no pintaría nada.
+        $this->assertMatchesRegularExpression(
+            '/\.btn--keyline\s*\{[^}]*border:\s*2px solid var\(--fg\)/',
+            implode("\n", $this->siteSheets()),
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
     //  Lo que no se puede compartir
     // ─────────────────────────────────────────────────────────────────────────────────
 
@@ -619,7 +813,7 @@ class RateRailSectionTest extends TestCase
         //    permite mirar la familia esté donde esté declarada.
         $css = implode("\n", $this->siteSheets());
 
-        foreach (['.tabset', '.rate-card', '.rates__', '.addon-pill'] as $familia) {
+        foreach (['.tabset', '.rate-card', '.rates__', '.addon-card', '.addons-rail'] as $familia) {
             preg_match_all('/'.preg_quote($familia, '/').'[^{}]*\{([^{}]*)\}/', $css, $m);
 
             $this->assertNotEmpty($m[1], "no hay ninguna regla de `{$familia}`: este caso miraría el vacío.");

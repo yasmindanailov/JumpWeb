@@ -79,11 +79,19 @@ final class RateCards
             $lidera = $entradas->search(fn (TicketType $t): bool => (bool) $t->featured);
             $lidera = $lidera === false ? null : $lidera;
 
+            /*
+             * **LA UNIDAD CONTRA LA QUE SE MIDE EL AHORRO**: la entrada de MENOR duración de la
+             * zona. Ver `saving()` para por qué el multiplicador sale de ahí y no del orden.
+             */
+            $unidad = $entradas
+                ->filter(fn (TicketType $t): bool => $t->duration_min > 0)
+                ->sortBy('duration_min')->first();
+
             return [
                 'slug' => $zone->slug,
                 'name' => $nombreZona,
                 'cards' => $entradas
-                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $nombreZona, $diasNormales, $i === $lidera))
+                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $zone, $diasNormales, $i === $lidera, $unidad))
                     ->values()->all(),
                 'featured' => $lidera,
             ];
@@ -128,14 +136,22 @@ final class RateCards
      *
      * @return array<string, mixed>
      */
-    private function card(TicketType $ticket, string $nombreZona, ?string $diasNormales, bool $lidera): array
+    private function card(TicketType $ticket, Zone $zone, ?string $diasNormales, bool $lidera, ?TicketType $unidad): array
     {
+        $nombreZona = (string) $zone->tr('name');
         $especial = $ticket->specialRateSurcharges()[0] ?? null;
         [$nombre, $matiz] = $this->nameAndNuance((string) $ticket->tr('name'), $nombreZona);
         $badge = $ticket->tr('badge') ?: null;
 
         return [
             'id' => $ticket->id,
+            /*
+             * **LA CHAPA DE ZONA** (`Precios PJP` 15b, ✅ elegida por el dueño el 9 sep). Va en cada
+             * tarjeta y con su coste dicho: se repite tantas veces como tarifas tenga la zona.
+             * ⚠️ Es de BORDE y no maciza a propósito: la chapa maciza de tinta es la de «para
+             * empezar», y en la tarjeta que lidera saldrían las dos juntas.
+             */
+            'zone' => __('landing.rates.zone_chip', ['zone' => $nombreZona]),
             /*
              * **EL NOMBRE MANDA** (`Precios PJP` 10a): es lo primero que se lee y va en rótulo, no
              * en una etiqueta. Ver `nameAndNuance()` para de dónde sale y qué se le quita.
@@ -191,13 +207,19 @@ final class RateCards
              */
             'special' => isset($especial['priceCents']) ? $this->euros((int) $especial['priceCents']) : null,
             /*
-             * **EL RÓTULO DEL BOTÓN LLEVA LA ZONA DENTRO** (`Precios PJP` 9a, la recomendada y
-             * aplicada en 10a): *«se dice una vez por tarjeta, y en el único sitio donde equivocarse
-             * cuesta dinero»*. Por eso el nombre de arriba va limpio.
-             * ⚠️ Solo la rama de COMPRAR: «Llamar» no compra nada, así que decirle la zona a un
-             * teléfono sería rellenar el botón con una promesa que ese botón no cumple.
+             * **EL BOTÓN YA NO LLEVA LA ZONA** (`[DECIDIDO owner, 2026-09-09]`, sobre la nota del
+             * propio turno 15b: *«con la zona en la chapa, en el botón sobra»*). La llevó mientras
+             * la zona solo se decía ahí —era el turno 9a— y con la chapa arriba se diría **dos veces
+             * por tarjeta**.
+             * ⚠️ El argumento de 9a no se pierde: la zona sigue viajando hasta el gesto que cobra,
+             * solo que ahora la dice la chapa de la misma tarjeta y no el rótulo del botón.
              */
-            'cta' => __('landing.rates.book_in', ['name' => $nombre, 'zone' => $nombreZona]),
+            'cta' => __('landing.rates.book_name', ['name' => $nombre]),
+            /*
+             * **EL AHORRO** (`Precios PJP` 14a + 16a). Es el único argumento de VALOR de la tarjeta,
+             * y sale del catálogo: ver `saving()`.
+             */
+            'saving' => $this->saving($ticket, $unidad),
             'sellable' => (bool) $ticket->is_sellable,
             /*
              * ⚠️⚠️ **Los COMPLEMENTOS NO se resuelven aquí, y lo dijo `ModuleBoundariesTest`.**
@@ -208,6 +230,64 @@ final class RateCards
              * la presentación pregunte lo suyo sin que el dominio cruce una frontera.
              */
             'ticket' => $ticket,
+        ];
+    }
+
+    /**
+     * **EL AHORRO DE UNA ENTRADA LARGA FRENTE A COMPRAR VARIAS CORTAS** (`Precios PJP` 14a).
+     *
+     * Es el único argumento de VALOR que la tarjeta tiene, y **sale del catálogo**: nadie escribe
+     * una cifra. La resta está hecha —*cero sumas para el cliente*— y el resultado solo se pinta si
+     * de verdad ahorra.
+     *
+     * ❗❗❗ **EL MULTIPLICADOR SE DERIVA DE LA DURACIÓN, NO DEL ORDEN DE LAS TARJETAS**
+     * (`[DECIDIDO owner, 2026-09-09]`). El artboard lo saca del índice —«la segunda vale por dos, la
+     * tercera por tres»—, y eso es cierto **solo mientras las tarjetas estén ordenadas por duración
+     * creciente y cada escalón sea un múltiplo exacto de la primera**. Con `duration_min` la
+     * comparación es un hecho: 120 ÷ 60 = 2, así que dos horas se comparan con **dos** de una hora.
+     *
+     * ⚠️⚠️ **Y un producto SIN duración no pinta la línea, que es la mitad de la decisión.** «Todo
+     * el día» no declara minutos, así que compararlo con tres sueltas es **suponer cuánto se queda
+     * el cliente medio**, no medirlo — y si viene dos horas, la frase le promete un ahorro que no
+     * tiene. Medido con este catálogo: contra tres ahorraría 6,00 €, y **contra dos sale a −2,00 €**,
+     * o sea que comprar dos de una hora es más barato. *Cuando el dato no existe, la línea no se
+     * escribe.*
+     *
+     * ⚠️ El multiplicador tiene que ser **entero y ≥ 2**: «1,5 veces la de una hora» no se puede
+     * decir en una frase, y con 1 no hay nada que comparar.
+     *
+     * @return array{amount: string, base: string}|null
+     */
+    private function saving(TicketType $ticket, ?TicketType $unidad): ?array
+    {
+        if ($unidad === null || $unidad->is($ticket) || ! $ticket->duration_min || ! $unidad->duration_min) {
+            return null;
+        }
+
+        $veces = $ticket->duration_min / $unidad->duration_min;
+
+        if ($veces < 2 || fmod($veces, 1.0) !== 0.0) {
+            return null;
+        }
+
+        $ahorro = (int) round($veces) * $unidad->displayPriceCents() - $ticket->displayPriceCents();
+
+        if ($ahorro <= 0) {
+            return null;
+        }
+
+        [$nombreUnidad] = $this->nameAndNuance((string) $unidad->tr('name'), (string) $unidad->zone?->tr('name'));
+
+        return [
+            'amount' => $this->euros($ahorro),
+            // ⚠️ El número va ESCRITO —«dos», «tres»— y no en dígito: la frase se lee, no se calcula.
+            // Por encima de la lista corta cae al dígito, que es preferible a inventar la palabra.
+            'base' => __('landing.rates.saving_base', [
+                'count' => __('landing.rates.times.'.(int) round($veces)) === 'landing.rates.times.'.(int) round($veces)
+                    ? (string) (int) round($veces)
+                    : __('landing.rates.times.'.(int) round($veces)),
+                'unit' => $nombreUnidad,
+            ]),
         ];
     }
 

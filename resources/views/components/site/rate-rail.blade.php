@@ -64,6 +64,20 @@
                         @mouseenter="enfoca(@js($z['slug']), {{ $i }})"
                         @focusin="enfoca(@js($z['slug']), {{ $i }})">
 
+                        {{-- ══ LA FILA DE CHAPAS ══════════════════════════════════════════════
+                             ❗ **La chapa de ZONA va en cada tarjeta** (15b, ✅ del owner), y su
+                             coste está dicho: se repite tantas veces como tarifas tenga la zona.
+                             ⚠️ Es de BORDE y no maciza a propósito — la maciza es la del chip que
+                             marca quién lidera, y en esa tarjeta saldrían las dos juntas. --}}
+                        <p class="rate-card__tags">
+                            <span class="rate-card__zone">{{ $card['zone'] }}</span>
+                            {{-- El chip de quien LIDERA. Su texto sale de `ticket_types.badge`, que
+                                 el panel ya rellena. «Lo que no hay, no se pinta». --}}
+                            @if ($card['badge'])
+                                <span class="rate-card__badge">{{ $card['badge'] }}</span>
+                            @endif
+                        </p>
+
                         {{-- ❗ **EL NOMBRE MANDA** (10a): va en rótulo y es lo primero que se lee.
                              El matiz solo aparece cuando AÑADE un dato —«sin límite» sí, «120 min»
                              no, porque es «2 horas» dicho otra vez—, y esa regla vive en el
@@ -72,11 +86,6 @@
                             <span class="rate-card__name">{{ $card['name'] }}</span>
                             @if ($card['nuance'])
                                 <span class="rate-card__nuance">{{ $card['nuance'] }}</span>
-                            @endif
-                            {{-- El chip sale de `ticket_types.badge`, que el panel ya rellena.
-                                 «Lo que no hay, no se pinta». --}}
-                            @if ($card['badge'])
-                                <span class="rate-card__badge">{{ $card['badge'] }}</span>
                             @endif
                         </p>
 
@@ -89,6 +98,27 @@
                             <span class="rate-card__cur">€</span>
                             @if ($card['unit'])<span class="rate-card__unit">{{ $card['unit'] }}</span>@endif
                         </p>
+
+                        {{-- ══ EL AHORRO ═════════════════════════════════════════════════════
+                             ❗❗ **Es el único argumento de VALOR de la tarjeta**, y ocupa el sitio
+                             que dejaron los complementos al salir. Sale del catálogo: la resta está
+                             hecha y el cliente no suma nada.
+                             ⚠️ **El MARCADOR es el resalte del sistema**, no un adorno: Amarillo
+                             Aviso con la tinta encima (11,26 de contraste) y **radio 0**, para que
+                             se lea como subrayado a rotulador y no como una pastilla pulsable. Es
+                             la única mancha de color de la tarjeta, así que el naranja del botón no
+                             compite.
+                             ⚠️ La CIFRA va en rótulo porque **toda cifra de este sistema va en
+                             rótulo**, y la palabra que la acompaña no. --}}
+                        @if ($card['saving'])
+                            <p class="rate-card__saving">
+                                <span class="rate-card__marker">
+                                    <span class="rate-card__saving-word">{{ __('landing.rates.saving') }}</span>
+                                    <span class="rate-card__saving-num">{{ $card['saving']['amount'] }}</span>
+                                </span>
+                                <span class="rate-card__saving-base">{{ $card['saving']['base'] }}</span>
+                            </p>
+                        @endif
 
                         @if ($card['days'])
                             <p class="rate-card__days">{{ $card['days'] }}</p>
@@ -103,43 +133,6 @@
                             </p>
                         @endif
 
-                        {{-- ══ LOS COMPLEMENTOS, EN PÍLDORAS ═══════════════════════════════════
-                             ❗❗ **La forma es la del artboard 10a y NO la lista de la tarjeta
-                             antigua**: cápsula con borde de 1,5, «+ nombre · precio» y la unidad al
-                             lado. La lista vieja gastaba un rótulo («COMPLEMENTOS DISPONIBLES»), un
-                             enlace «Más info» y una fila por complemento — tres piezas de interfaz
-                             para decir que puedes añadir unos calcetines.
-                             ⚠️ **El dato es el MISMO** (`LandingAddonPresenter`): aquí no hay un
-                             segundo camino para saber qué admite una entrada, solo otra forma.
-                             ⚠️⚠️ **Los EXCLUYENTES se agrupan y se dicen**: un `choice_group` son
-                             opciones entre las que se elige UNA, y pintarlas sueltas diría que se
-                             pueden sumar. Hoy ninguna entrada los usa —son de los packs—, pero la
-                             píldora no puede mentir el día que alguien los configure. --}}
-                        @php
-                            $extras = \App\Domain\Content\Services\LandingAddonPresenter::rows($card['ticket'], false);
-                            $sueltos = array_values(array_filter($extras, fn ($r) => $r['group'] === null));
-                            $grupos = [];
-                            foreach ($extras as $r) {
-                                if ($r['group'] !== null) { $grupos[$r['group']][] = $r; }
-                            }
-                        @endphp
-                        @if (! empty($extras))
-                            <div class="rate-card__addons">
-                                @foreach ($sueltos as $row)
-                                    <x-site.addon-pill :row="$row" :unit="$card['unit']" />
-                                @endforeach
-
-                                @foreach ($grupos as $miembros)
-                                    <span class="rate-card__addon-group">
-                                        <span class="rate-card__addon-choose">{{ __('tickets.addon_choose_one') }}</span>
-                                        @foreach ($miembros as $row)
-                                            <x-site.addon-pill :row="$row" :unit="$card['unit']" />
-                                        @endforeach
-                                    </span>
-                                @endforeach
-                            </div>
-                        @endif
-
                         {{-- ⚠️⚠️ **El CTA conserva las tres ramas del producto y no se simplifica.**
                              Con la compra online cerrada (`sales.online_enabled=0`, que es como está
                              producción) todas las entradas caen a «Llamar», y una entrada no
@@ -150,10 +143,14 @@
                              tarjeta y en el único sitio donde equivocarse cuesta dinero. «Llamar» no
                              la lleva: ese botón no compra nada. --}}
                         <p class="rate-card__cta">
+                            {{-- ⚠️ **`btn--keyline` es una VARIANTE declarada de la familia**, no un
+                                 borde escrito aquí: el sistema nombra dos rellenos —«Completo», sin
+                                 borde, y «Pegatina», con keyline— y este botón vive dentro de una
+                                 pegatina. El valor vive en la hoja, una sola vez. --}}
                             @if ($card['sellable'] && $site['sales_online'])
-                                <button type="button" class="btn rate-card__btn" @click="$store.purchase.open()">{{ $card['cta'] }}</button>
+                                <button type="button" class="btn btn--keyline rate-card__btn" @click="$store.purchase.open()">{{ $card['cta'] }}</button>
                             @elseif ($site['has_phone'])
-                                <a href="tel:{{ $site['phone_tel'] }}" class="btn rate-card__btn">{{ __('landing.pricing.call') }}</a>
+                                <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--keyline rate-card__btn">{{ __('landing.pricing.call') }}</a>
                             @endif
                         </p>
                     </li>
@@ -165,6 +162,74 @@
                  ⚠️ Sale del rótulo de la tarifa, o sea del panel: aquí no se escribe ningún día. --}}
             @if ($specialLabel && collect($z['cards'])->contains(fn ($c) => $c['special'] !== null))
                 <x-site.special-rate-note />
+            @endif
+
+            {{-- ══ LOS COMPLEMENTOS, FUERA DE LAS TARJETAS ════════════════════════════════════
+                 `Cumpleanos Pagina PJP` 5a · `[DECIDIDO owner, 2026-09-09]`.
+
+                 ❗❗❗ **Salen de la tarjeta porque LOS COMPARTEN CASI TODAS**, y hay una regla del
+                 sistema que lo pide: *«una comparativa solo compara lo que difiere; lo común va a su
+                 propio bloque»*. Los calcetines estaban en las tres tarifas, o sea escritos tres
+                 veces dentro de una comparativa — y el hueco que dejaron es el que ocupa ahora el
+                 AHORRO, que sí difiere entre ellas.
+
+                 ⚠️⚠️ **Son los de los productos QUE SE VEN, y por eso el bloque vive DENTRO del
+                 panel de cada zona.** «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos
+                 con dos precios: un bloque único para la sección tendría que enseñar los dos o
+                 elegir uno, y las dos salidas mienten. Al cambiar de pestaña cambia el bloque.
+                 ⚠️ **Sin repetir**, y la deduplicación es por ID y nunca por nombre: en otra
+                 instalación dos complementos distintos pueden llamarse igual, y fundirlos por
+                 rótulo publicaría el precio de uno bajo el nombre del otro.
+
+                 ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO** (`tabindex="0"`, `role="group"`,
+                 `aria-label`), y no es adorno de accesibilidad: **dentro no hay ningún control**
+                 —son fichas, no botones—, así que sin esto la segunda tarjeta **no se alcanza sin
+                 ratón**. Lo dice el propio artboard. --}}
+            @php($extras = \App\Domain\Content\Services\LandingAddonPresenter::unique(collect($z['cards'])->pluck('ticket')))
+
+            @if (! empty($extras))
+                <div class="addons-rail">
+                    <h3 class="addons-rail__title">{{ __('landing.rates.addons_title') }}</h3>
+                    <p class="addons-rail__lede">{{ __('landing.rates.addons_intro') }}</p>
+
+                    <div class="addons-rail__track" tabindex="0" role="group"
+                         aria-label="{{ __('landing.rates.addons_title') }}">
+                        @foreach ($extras as $extra)
+                            <div class="addon-card">
+                                {{-- El MARCADOR del complemento, el mismo campo que ya elige el
+                                     panel (`ticket_types.icon`). ⚠️ `aria-hidden`: su nombre va al
+                                     lado y un icono que se anunciara lo diría dos veces. --}}
+                                <span class="addon-card__ico" aria-hidden="true">
+                                    <x-dynamic-component :component="'icons.'.$extra['icon']" :width="24" :height="24" />
+                                </span>
+                                {{-- ⚠️ **Nombre y precio en la MISMA fila** (`[owner]`): la ficha era
+                                     de dos y quedaba alta para lo que dice. El nombre se estira y el
+                                     precio se queda pegado al canto, sin partirse. --}}
+                                <span class="addon-card__name">{{ $extra['name'] }}</span>
+                                {{-- ❗❗ **El «+» y la UNIDAD, para que el precio no se confunda con
+                                     el de la entrada** (`[owner]`). El signo es honesto aquí y no lo
+                                     era en la tarifa especial: un complemento **se suma** a lo que
+                                     compras, mientras que la especial es un precio ALTERNATIVO —por
+                                     eso aquélla va entera y éste con signo.
+                                     ⚠️⚠️ **La unidad sale del PIVOTE, no se escribe**: `per_guest`
+                                     dice «por invitado» y `fixed` dice «cada uno». Poner «por
+                                     persona» en un complemento `fixed` sería FALSO — de esos se
+                                     elige cantidad, no se cobra uno por cabeza. Medido: los siete
+                                     enganches de este catálogo son `fixed`. --}}
+                                <span class="addon-card__price">
+                                    @if ($extra['price'])
+                                        {{-- ⚠️ «desde» cuando el precio cambia según el día: sin él,
+                                             el bloque anunciaría el más barato como si fuera el
+                                             único, y el checkout cobraría otro. --}}
+                                        @if ($extra['varies']){{ __('landing.rates.from') }} @endif+{{ $extra['price'] }}&nbsp;€<span class="addon-card__unit">{{ $extra['perGuest'] ? __('landing.rates.addon_per_guest') : __('landing.rates.addon_each') }}</span>
+                                    @elseif ($extra['badge'])
+                                        {{ __('tickets.addon_badge_'.$extra['badge']) }}
+                                    @endif
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             @endif
         </div>
     @endforeach

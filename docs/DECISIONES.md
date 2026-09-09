@@ -25677,3 +25677,82 @@ casos** y **19/19 mutaciones que muerden** (`scripts/mutar-seccion-tarifas.sh`),
 `scripts/sonda-carril-tarifas.mjs` en seis anchos con desborde 0 **y su control** —con el 352 fijo
 del artboard reporta −1 px a 390 y −45 a 320— · medido en escritorio **352×397** contra los
 **351×398** que el canvas escribió en `Escritorio PJP` 2a.
+
+
+## #480 · 2026-09-09 · `[DECIDIDO owner]` La tarjeta de tarifa se rehace con el artboard nuevo: chapa de zona, el ahorro con marcador, y los complementos fuera
+
+**Contexto.** El canvas volvió a moverse **dentro de la misma tanda** —turnos 11 a 16 de
+`Precios PJP`, más el 5a de `Cumpleanos Pagina PJP`— y el owner los trajo uno a uno mientras se
+construía. Esto es la segunda mitad de la T2c.
+
+**Las cinco decisiones del owner:**
+
+1. **La chapa de zona en cada tarjeta** (15b, ✅ suya): «Zona Kids» de BORDE, no maciza — la maciza
+   es la del chip que marca quién lidera, y en esa tarjeta saldrían las dos juntas. Su coste está
+   dicho: se repite tantas veces como tarifas tenga la zona.
+2. **El ahorro con MARCADOR amarillo** (16a): Amarillo Aviso con la tinta encima, **radio 0** y sin
+   girar. Ocupa el sitio que dejaron los complementos.
+3. **El multiplicador se DERIVA de la duración, y sin ella no se escribe la línea.** El artboard lo
+   saca del índice y su propia nota lo marcaba como decisión del dueño.
+4. **La zona sale del botón**, sobre la nota del propio 15b: *«con la zona en la chapa, en el botón
+   sobra»*. La llevó mientras la chapa no existía (turno 9a).
+5. **Los complementos salen de la tarjeta y bajan a un carril** (5a), con los de los productos que
+   se ven y sin repetir. Solo la sección 02: cumpleaños lo hereda en su tanda.
+
+❗❗❗ **EL AHORRO ES EL ÚNICO ARGUMENTO DE VALOR DE LA TARJETA, y por eso su derivación importa.**
+El artboard calcula «la segunda vale por dos, la tercera por tres» **desde el índice**, y eso es
+cierto solo mientras las tarjetas estén ordenadas por duración creciente y cada escalón sea múltiplo
+exacto de la primera. Aquí sale de `duration_min`: 120 ÷ 60 = 2, y solo si es **entero y ≥ 2**.
+⚠️⚠️ **Y un producto SIN duración no pinta la línea** (`[DECIDIDO owner]`): «Todo el día» no declara
+minutos, así que compararlo con tres sueltas es **suponer cuánto se queda el cliente medio**. Medido
+con este catálogo: contra tres ahorraría 6,00 € y **contra dos sale a −2,00 €**, o sea que dos de una
+hora es más barato. *Cuando el dato no existe, la línea no se escribe.*
+
+❗❗❗ **NACE `--marker`, y los dos candidatos que había eran PEORES que no usarlo.** El resalte tipo
+rotulador no tenía rol en el producto: `--warn` lleva `#b45309` —uno de los siete hexadecimales del
+PRIMER cliente que la spec §2 tiene fichados— y además es un color de TEXTO, no de fondo; y
+`--strip-3`, que en el paquete sí es el amarillo, cae por defecto en `var(--zone-1)`, o sea en el
+color de una zona: la grieta 01 por la puerta de atrás. *Dos roles que se llaman parecido no son el
+mismo rol.* ▶ Nace **transparente**, así que estrenarlo no mueve un píxel en ninguna instalación, y
+viaja con su tinta (`--on-marker`) porque **el par lo declara quien declara el color** (`#434`).
+
+❗❗ **EL KEYLINE DEL BOTÓN ES UNA VARIANTE DE LA FAMILIA, y lo cazó el owner.** Se había escrito como
+un borde a mano en el selector de la tarjeta —*«¿no deberíamos hacerlo por token para todos? así
+creamos divergencia»*—, y tenía razón en la forma. ▶ **Pero no va a todos, y lo dice su propio
+sistema**: `Componentes PJP` declara DOS rellenos de acción, «Completo» —sin borde, que es lo que
+`.btn` ya era— y «Pegatina» —keyline y sombra dura—, con la norma *«la pegatina es un botón de hero o
+cierre: máximo dos por pantalla»*. Queda como `.btn--keyline`: el valor vive una vez y quien lo
+necesita se apunta. Medido, dárselo a la familia entera alcanzaría al **cajón** (18 ficheros Blade y
+**22 de Vue**), que es Fase 4.
+
+⚠️⚠️ **La regla del canvas para el nombre NO se podía copiar, y aquí se ve por qué.** Su cadena es
+`{nombre} · {matiz}` y la de esta instalación `{ZONA} · {nombre}`. Se retira el prefijo **cuando es
+exactamente el nombre de la zona** —una comprobación, no una adivinanza— y después se aplica su
+regla, incluida la de que el matiz solo se pinta si añade un dato.
+
+⚠️ **Los complementos: la deduplicación es por ID y el bloque vive DENTRO del panel de cada zona.**
+«Hora extra · KIDS» y «Hora extra · JUMP» son dos productos con dos precios: un bloque único para la
+sección tendría que enseñar los dos o elegir uno, y las dos salidas mienten. Y fundirlos por RÓTULO
+publicaría el precio de uno bajo el nombre del otro.
+⚠️ **El carril lleva el foco del teclado** (`tabindex`, `role`, `aria-label`): dentro no hay ningún
+control —son fichas—, así que sin eso **la segunda no se alcanza sin ratón**.
+⚠️ **El «+» es honesto aquí y no lo era en la tarifa especial**: un complemento **se suma**, mientras
+que la especial es un precio ALTERNATIVO. Y la unidad sale del PIVOTE: `per_guest` dice «por
+invitado» y `fixed` dice «cada uno». **Escribir «por persona» en uno `fixed` sería falso** — de ésos
+se elige cantidad. Medido: los siete enganches de este catálogo son `fixed`.
+
+▶ **Los iconos de complemento no necesitaban código**: `ticket_types.icon` existe, `iconKey()` lo
+resuelve y el selector del panel **no tiene condición de tipo**, así que un complemento ya podía
+elegir el suyo; `#475` había metido `cake`, `ice-bucket`, `snacks`, `drink` y `clock-plus` justo para
+esto. Los catorce estaban en `NULL` —o sea, todos con la entrada genérica— y se han mapeado. **Es
+DATO**: va en los pasos de despliegue.
+
+⚠️⚠️ **Y una trampa de instrumento pagada dos veces**: una inserción de textos por coincidencia de
+`'from' => 'desde',` aterrizó en el bloque `zones` en vez de en `rates`, y **la clave salió en crudo
+en la web** sin que nada fallara. *Una sustitución por la primera coincidencia no es una sustitución
+en el sitio.*
+
+**Verificación**: suite **4.540** en verde · Pint · `npm run build` · `RateRailSectionTest` con **26
+casos** y **26/26 mutaciones que muerden** (`scripts/mutar-seccion-tarifas.sh`), árbol idéntico ·
+`scripts/sonda-carril-tarifas.mjs` en seis anchos sin problemas · las piezas nuevas medidas en
+navegador: chapa, marcador de ahorro, keyline del botón y ficha de complemento a una fila.
