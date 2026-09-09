@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + sección 01)
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01 y 02; quedan SEIS)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
