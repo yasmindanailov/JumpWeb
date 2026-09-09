@@ -31,7 +31,9 @@ class InteractionColourIsNotAZoneTest extends TestCase
 
     /** Lo que IDENTIFICA una zona y por eso lleva su color también en su estado activo. */
     private const IDENTIDAD = [
-        '.zone-pick__tab.active' => 'la pestaña de zona de la portada (#302)',
+        // ⚠️ La pestaña de zona de la portada se fue en `#482` con el selector. La de
+        // `/atracciones` es `.tabset__tab`, que NO se tiñe con el color de zona: su activa se
+        // levanta a blanco, que es lo que el sistema declara — así que no necesita excepción.
         '.zone-tab.active' => 'la pestaña de zona de tarifas y /servicios',
         '.purchase__chip.is-active' => 'cajón: el chip de zona del embudo',
         '.btn--zone:disabled:hover, .btn--zone[aria-disabled="true"]:hover' => 'cajón: el botón de zona, prohibido en Blade (#321) y vivo en el CSS a propósito',

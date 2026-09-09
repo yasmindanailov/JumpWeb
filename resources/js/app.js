@@ -1269,38 +1269,19 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // Interacciones de la landing (zona activa, menú móvil, dropdown, slider, FAQ).
+    // Interacciones de la landing (menú móvil, dropdown de idioma, FAQ).
     window.Alpine.data('landing', () => ({
-        /**
-         * **La zona activa de «Atracciones», identificada por `slug`.**
-         *
-         * ⚠️⚠️ **Nace VACÍA y la primera la dice el DOM, no esta línea.** Aquí ponía
-         * `zone: 'jump'` — el slug del PRIMER cliente escrito en el producto—, y eso rompe el
-         * principio white-label: una instalación cuya primera zona no se llame `jump` arranca sin
-         * ninguna pestaña activa y con los carruseles ocultos, **sin que falle nada**.
-         * ▶ La primera zona la manda el servidor por el orden del `@foreach` (`position`), así que
-         * se lee del primer `.slider[data-zone]` del documento y no hay ningún slug en el código.
-         *
-         * ⚠️ **Y es `slug`, nunca `accent`** (`#295`): `accent` agrupa —`kids`, `cap` y `cap2`
-         * comparten el suyo en datos reales— y con él tres carruseles respondían al mismo valor.
-         */
-        zone: '',
         menuOpen: false, // el menú del armazón: a pantalla completa en escritorio, cajón en móvil
         navHidden: false, // el armazón se retira al bajar y vuelve al subir (tanda 2c·2)
         langOpen: false, // selector de idioma
         faqOpen: 0, // índice de FAQ abierta
-        progressLeft: 0, // barra de progreso del slider
-        progressWidth: 0.33,
 
         init() {
-            // La zona activa inicial = la PRIMERA que pinta el servidor (es la que lleva el
-            // `style="display:none"` ausente en el SSR, así que coinciden sin negociar nada).
-            this.zone = document.querySelector('#rides .slider[data-zone]')?.dataset.zone ?? '';
-
-            // El acento de la zona activa se aplica SOLO a la sección «Atracciones» (#rides);
-            // lo genérico de la web usa el color de marca global (`--zone-1` en :root, #7.10).
-            this.applyZoneAccent();
-            this.$nextTick(() => this.updateProgress());
+            // ⚠️ Aquí arrancaba el CARRUSEL de atracciones: leía la primera zona del DOM, teñía
+            // `#rides` con su paleta y medía la barra de progreso. La sección 03 pasó a un mosaico
+            // de cinco fotos que no tiene zona activa, ni carril, ni progreso (`#482`), así que se
+            // fue con él — y con él `zone`, `setZone()`, `applyZoneAccent()`, `scrollSlider()`,
+            // `updateProgress()` y los dos números del progreso.
 
             // Los bucles del icono de calcetines (ocho) solo corren mientras el icono SE VE
             // (auditoría M10, `#435`): el CSS los deja pausados y aquí se encienden al entrar en
@@ -1451,68 +1432,12 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        setZone(z) {
-            this.zone = z;
-            this.applyZoneAccent();
-            this.$nextTick(() => this.updateProgress());
-        },
-
-        /**
-         * Tiñe la sección de atracciones con la paleta de la zona activa. Scoped a `#rides` para no
-         * recolorear la página entera (el resto se queda en la marca global).
-         *
-         * ⚠️⚠️ **Aquí se calculaba el contraste a mano y se quemaba el secundario**
-         * (`DECISIONES #139`). Eran dos defectos con la misma causa: el servidor mandaba solo el
-         * color primario, así que este método tenía que (a) elegir `--zone-2` con un ternario entre
-         * las dos zonas del PRIMER cliente y (b) **repetir la fórmula de luminancia de
-         * `ThemeSettings::onBrand()`** en JavaScript. Una regla escrita dos veces son dos reglas: el
-         * día que una cambie, la otra no se entera y nadie lo nota hasta que un color queda ilegible.
-         *
-         * ▶ Ahora el slider trae la paleta **ya compuesta** por el dominio y aquí solo se aplica.
-         */
-        applyZoneAccent() {
-            const rides = document.getElementById('rides');
-            if (!rides) return;
-            const slider = rides.querySelector('.slider[data-zone="' + this.zone + '"]');
-            const style = slider && slider.dataset.zoneStyle;
-            if (!style) return;
-
-            for (const decl of style.split(';')) {
-                const i = decl.indexOf(':');
-                if (i < 1) continue;
-                const prop = decl.slice(0, i).trim();
-                if (prop.startsWith('--')) rides.style.setProperty(prop, decl.slice(i + 1).trim());
-            }
-        },
-
-        // ⚠️ **Aquí vivía `goToRides(z)` y se retiró con su único llamante** (`#302`). Elegía la
-        // zona y SALTABA a la sección de atracciones, porque la tarjeta de zona y el selector eran
-        // dos piezas en sitios distintos de la página. Con las tarjetas fuera, el selector está
-        // pegado a los carriles que gobierna: no hay a dónde saltar.
+        // ⚠️ **De este componente se han ido TRES generaciones de la misma sección**: `goToRides(z)`
+        // con `#302`, y con `#482` la zona activa, `setZone()`, `applyZoneAccent()`, el carril y su
+        // barra de progreso. La sección 03 es hoy un mosaico de cinco fotos que no necesita ni una
+        // línea de JavaScript.
         // ▶ Un método sin llamante es lo mismo que una regla de CSS sin pantalla: se va con él.
 
-        scrollSlider(dir) {
-            const el = this.$refs['slider_' + this.zone];
-            if (!el) return;
-            const card = el.querySelector('.ride-card');
-            const step = card ? card.offsetWidth + 18 : 320;
-            el.scrollBy({ left: step * dir, behavior: 'smooth' });
-        },
-
-        updateProgress() {
-            const el = this.$refs['slider_' + this.zone];
-            if (!el) return;
-            const total = el.scrollWidth - el.clientWidth;
-            if (total <= 0) {
-                this.progressLeft = 0;
-                this.progressWidth = 1;
-                return;
-            }
-            const pct = el.scrollLeft / total;
-            const visible = el.clientWidth / el.scrollWidth;
-            this.progressLeft = pct * (1 - visible);
-            this.progressWidth = visible;
-        },
     }));
 
     // Cloudflare Turnstile dentro de un componente Livewire que puede aparecer por un MORPH

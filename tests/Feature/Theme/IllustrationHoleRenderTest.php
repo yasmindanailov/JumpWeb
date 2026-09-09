@@ -300,54 +300,21 @@ class IllustrationHoleRenderTest extends TestCase
         );
     }
 
-    /**
-     * Y el consumidor —el SELECTOR de zona— sí lo dimensiona y resuelve su color.
+    /*
+     * ⚠️⚠️⚠️ **AQUÍ VIVÍAN LOS DOS CASOS DEL DIBUJO DE ZONA, Y SE RETIRAN CON SU SUJETO** (`#482`).
      *
-     * ⚠️⚠️ **Este caso se RE-APUNTÓ, no se retiró** (`#302`). Vigilaba la tarjeta de zona
-     * (`.zone-intro__ilu` / `.zone-intro__card`), que se fue con `[DECIDIDO owner]`; el dibujo
-     * `zone-<slug>` no desapareció, **se mudó a la pestaña del selector**. Una guarda cuyo sujeto se
-     * muda se muda con él: retirarla habría dejado el mecanismo sin red justo donde sigue vivo.
+     * Vigilaban que el SELECTOR de la portada dimensionara y recoloreara su `zone-<slug>` del kit, y
+     * que la portada lo pidiera por `slug`. El selector se fue con el carrusel: la sección 03 es hoy
+     * un mosaico de cinco fotos y `/atracciones` usa la pestaña del sistema, que el artboard dibuja
+     * **solo con texto**.
      *
-     * ▶ **Y no queda más débil, queda más fuerte.** La tarjeta redefinía `--ilu-fg` a mano por cada
-     * superficie; la pestaña lo ata a `currentColor`, así que el dibujo sigue al texto solo. Para
-     * que eso valga hacen falta las DOS mitades —el `currentColor` y el `color` que la pestaña
-     * activa cambia al posarse sobre el color de la zona—, y las dos se aseveran: con una sola, el
-     * icono se quedaría en tinta oscura sobre el fondo de marca.
+     * ❗❗ **Y eso deja los dibujos `zone-<slug>` del kit SIN NINGUNA PANTALLA**, que es una pérdida
+     * real: `#302` los puso en el selector precisamente para dársela. No se inventa aquí un sitio
+     * nuevo —añadir un dibujo que el canvas no dibujó es decisión del owner—, así que la pérdida va
+     * FICHADA en `DEUDA.md` con sus dos salidas.
+     * ⚠️ El mecanismo NO se toca: `IllustrationKit`, la gramática `zone-<slug>` y el resto de casos
+     * de este fichero siguen enteros. Lo que falta es un consumidor.
      */
-    public function test_the_zone_picker_sizes_and_recolours_its_illustration(): void
-    {
-        $landing = (string) file_get_contents(base_path('public/css/landing.css'));
-
-        $this->assertMatchesRegularExpression(
-            '/(?<![-\w])width\s*:/', (string) $this->block($landing, '.zone-pick__ilu'),
-            'la pestaña de zona no dimensiona su ilustración: se quedaría con el tamaño por defecto',
-        );
-
-        $this->assertMatchesRegularExpression(
-            '/--ilu-fg\s*:\s*currentColor/i', (string) $this->block($landing, '.zone-pick__ilu'),
-            "la pestaña no ata `--ilu-fg` a `currentColor`.\n".
-            '▶ Sin eso el dibujo se pinta con la tinta del papel, y la pestaña ACTIVA es una '.
-            'superficie del color de la zona: el icono quedaría oscuro sobre el color de marca.',
-        );
-
-        $this->assertMatchesRegularExpression(
-            '/(?<![-\w])color\s*:/', (string) $this->block($landing, '.zone-pick__tab.active'),
-            "la pestaña activa no cambia su `color`.\n".
-            '▶ Es la otra mitad del mecanismo: `--ilu-fg: currentColor` no sirve de nada si el texto '.
-            'no se aclara al posarse sobre el color de la zona.',
-        );
-    }
-
-    /** Y la portada la pide con el `slug` de la zona, que es lo que hace que resuelva sola. */
-    public function test_the_home_asks_for_the_zone_slug(): void
-    {
-        $this->assertStringContainsString(
-            "<x-site.ilu :clave=\"'zone-'.\$zone->slug\"",
-            (string) file_get_contents(resource_path('views/home.blade.php')),
-            'la portada no pide la ilustración por el `slug` de la zona: la clave dejaría de casar '.
-            'con la gramática del kit y no se pintaría nada.',
-        );
-    }
 
     // ══ CASO 12 · el CSS lee un token que RESUELVE ══════════════════════════════════════════════
 

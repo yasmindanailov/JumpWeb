@@ -124,8 +124,11 @@ class ThemeColorTest extends TestCase
         $res->assertSee('--zone-1:var(--brand)', false);
 
         // El acento de la zona ya no viaja por el `:root`: viaja con la zona.
+        // ⚠️ Y su superficie es `/atracciones` desde `#482`: la portada dejó de tener una pieza por
+        // zona cuando el carrusel se fue. Es el mismo estilo compuesto, en el sitio donde hoy vive.
         $jump = Zone::where('accent', 'jump')->firstOrFail();
-        $res->assertSee(ThemeSettings::zoneStyle($jump->color, $jump->color_secondary, $jump->accent), false);
+        $this->get('/atracciones')->assertOk()
+            ->assertSee(ThemeSettings::zoneStyle($jump->color, $jump->color_secondary, $jump->accent), false);
     }
 
     // ───────────────────────── Settings ─────────────────────────────
@@ -258,22 +261,29 @@ class ThemeColorTest extends TestCase
 
     // ───────────────── Cobertura adicional (revisión adversarial) ─────────────────
 
-    public function test_landing_sliders_carry_validated_zone_color(): void
+    /*
+     * ⚠️⚠️ **ESTOS DOS MIRABAN AL `data-color` DEL CARRUSEL, que se fue con él** (`#482`). Se
+     * re-apuntan al `--zone-1` del panel de `/atracciones`, que es la misma defensa en el mismo
+     * punto de salida: el color de la zona saneado justo antes de entrar en el DOM.
+     * ▶ Y de paso son MÁS fuertes: `data-color` era un atributo que solo leía el JS del carril;
+     * `--zone-1` lo consume el CSS, así que un color corrupto ahí se ve.
+     */
+    public function test_the_attractions_page_carries_the_validated_zone_colour(): void
     {
         Zone::where('accent', 'jump')->update(['color' => '#111111']);
 
-        $this->get('/')->assertOk()->assertSee('data-color="#111111"', false);
+        $this->get('/atracciones')->assertOk()->assertSee('--zone-1:#111111', false);
     }
 
-    public function test_landing_sanitizes_corrupt_zone_color(): void
+    public function test_the_attractions_page_sanitizes_a_corrupt_zone_colour(): void
     {
         // Color corrupto en BD (saltándose el form): el render lo sanea al default de su accent,
         // no lo escupe crudo al DOM (defensa en el punto de salida).
         Zone::where('accent', 'jump')->update(['color' => 'corrupto']);
 
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/atracciones')->assertOk();
         $res->assertDontSee('corrupto', false);
-        $res->assertSee('data-color="#FF5B22"', false);
+        $res->assertSee('--zone-1:#FF5B22', false);
     }
 
     public function test_panel_loads_with_custom_brand(): void

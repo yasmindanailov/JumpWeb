@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01 y 02; quedan SEIS)
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02 y 03, más la página `/atracciones`; quedan CINCO secciones)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -135,7 +135,7 @@ cazado por su cuenta: es su **grieta 05**.
 
 ### 4.1 · Las páginas
 
-De las **siete del inventario del canvas**, **cinco existen** y **dos son nuevas**:
+De las **siete del inventario del canvas**, **seis existen** y **una es nueva**:
 
 | Página | Estado | Ruta / vista |
 |---|---|---|
@@ -144,8 +144,8 @@ De las **siete del inventario del canvas**, **cinco existen** y **dos son nuevas
 | `/normas` | ✅ existe | `PageController@rules` · `pages/rules.blade.php` |
 | `/servicios` | ✅ existe | `ServicesController` · `pages/services.blade.php` |
 | `/contacto` | ✅ existe | `ContactController` · `pages/contact.blade.php` |
-| `/atracciones` | ⬜ **NUEVA** | — |
-| `/bar` | ⬜ **NUEVA** | — |
+| `/atracciones` | ✅ **construida en la T2d** (`#481`) | `AttractionsController` · `pages/attractions.blade.php` |
+| `/bar` | ⬜ **NUEVA** | — · ⚠️ la pide la pareja del bar de la sección 03, que el owner ha dejado FUERA por ahora (`#482`) |
 
 ⚠️ **Y hay una que existe y el canvas NO tiene en su inventario: `/entradas`** (la sirve `HomeController`, registrada en `routes/web.php`). Hay que decidir qué pasa con ella — el canvas es explícito en que *«un enlace
 que no está en el inventario es relleno»*, así que o entra en el inventario o se retira. **Es del
@@ -208,9 +208,9 @@ titulares son frases de **3 a 6 palabras**:
 
 | Rótulo | Titular | Artboard |
 |---|---|---|
-| Para quién | Cada uno tiene su zona | `Zonas PJP` (4a) |
-| Cuánto | Una hora, dos o el día | `Precios PJP` (6a) |
-| Qué hay dentro | Salta, trepa y déjate caer | `Juegos PJP` (6a) |
+| Para quién | Cada uno tiene su zona | `Zonas PJP` (4a) · ✅ `#478` |
+| Cuánto | Una hora, dos o el día | `Precios PJP` (10a) · ✅ `#479` + `#480` |
+| Qué hay dentro | Salta, trepa y déjate caer | `Juegos PJP` (6a) + `Escritorio PJP` (4b) · ✅ `#482` |
 | Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) |
 | Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) |
 | Reseñas | Lo dicen los que han venido | `Resenas PJP` (2a) |
@@ -324,6 +324,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1d (`#472`) | añadir `--col-max: 1120px` |
 | T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
 | T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
+| T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
@@ -377,7 +378,73 @@ navegador instalado**.
 | T2a | **El armazón**: menú en dos grupos · eslogan en el cierre · el alto del par confirmado | ✅ `#477` |
 | T2b | **01 · Para quién**: dos tarjetas de zona · la altura pasa a DATO · 03 se separa | ✅ `#478` |
 | T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera · chapa de zona, ahorro y complementos fuera | ✅ `#479` + `#480` |
-| T2d–T2i | Las **seis secciones** restantes (§5.1) | ⬜ |
+| T2d | **03 · Qué hay dentro**: el mosaico de cinco, y con él la página `/atracciones` | ✅ `#481` + `#482` |
+| T2e–T2i | Las **cinco secciones** restantes (§5.1) | ⬜ |
+
+✅ **T2d · «Qué hay dentro»** (`#481` + `#482`). Rótulo · titular · entradilla que **abre con la
+cifra** · **mosaico de cinco** —tres con nombre sobre banda de tinta al 82 %, dos **veladas**— y
+**una sola puerta**. Y con ella nace **`/atracciones`**, la página de las 23, adelantada de la Fase 3
+porque sin destino la puerta sería el ancla muerta que la regla del canvas prohíbe.
+
+❗❗❗ **DOS CORRECCIONES A LO QUE EL ACTA DABA POR CERRADO, y las dos salen de releer el artboard el
+día de la tanda.** La **chapa del «18 más» NO entra** —vive detrás de un interruptor **apagado**
+desde el recorte de presupuesto del 7 sep, igual que la chapa de zona de `#480`—, y en su lugar van
+la cifra en la entradilla y la puerta. Y el **titular es «Salta, trepa y déjate caer»**: `Juegos PJP`
+sigue escribiendo «El parque», pero `doc/voz.md` declara que **los artboards de sección son el
+registro de sus turnos** y que el entregable es `Portada PJP`, donde se aplicó el 9 sep.
+▶ *Cuando dos fuentes del canvas se contradicen, la pregunta no es cuál gusta más: es cuál es fuente
+para qué.*
+
+❗❗ **EL REPARTO DE LAS CINCO NO ES «LAS PRIMERAS», y el artboard escribe por qué**: de las tres que
+se leen, **una es de la primera zona y dos de la segunda** —*«antes se nombraban dos de Jump y una de
+Kids, así que la madre de un niño de 4 años veía un solo juego de su zona con nombre»*—. Con el orden
+global, en esta instalación **las cinco saldrían de Jump**. `[DECIDIDO owner]`: lo manda
+`zones.position` + `attractions.position`, **sin campo nuevo**; medido, reproduce el mosaico del
+mockup con los datos de hoy.
+
+❗❗ **EL VELO SON DOS CELDAS O NINGUNA.** El artboard descarta su propia 4a por esto: *«el degradado
+es una BANDA que disuelve el borde inferior de la sección; con solo dos de tres veladas deja de decir
+"la sección se acaba" y dice "estas fotos están borrosas"»*. Medido: cubren **358 de 358** en móvil y
+**1120 de 1120** en escritorio. ▶ De ahí la degradación: con **cinco atracciones o menos** el velo
+desaparece.
+
+❗❗❗ **`#481` · EL COLOR DE UNA ZONA APRENDE A SER TEXTO, y lo obligó una guarda con la suite en
+verde.** La cifra grande de `/atracciones` se pinta con el color de la zona, que llega **del panel**;
+medido, sobre papel el lima da **1,85** y el cian **2,45**, contra el 3,0 que es el suelo de
+cualquier texto. La primera implementación mezclaba con un **porcentaje fijo** y pasaba con los
+colores de esta instalación… pero el `#C6FF3A` que el **producto** trae por defecto para Kids se
+quedaba en **3,14**. ▶ Sale `ThemeSettings::zoneInk()` (`--zone-ink`), que **oscurece por pasos**
+hasta pasar el umbral; el paso es el **0,88** que ya usaba `actionHover()` (`#209`), y por eso
+reproduce las variantes oscuras del propio sistema: cuatro pasos sobre el Lima Bote dan **`#627411`,
+exactamente el Lima 800 que el artboard escribe a mano**.
+
+⚠️⚠️ **La zona de llegada viaja en `?zona=` y NO en el hash**, contra lo que el artboard escribe: un
+hash **no llega al servidor**, así que una pestaña elegida por ancla solo funciona con JavaScript.
+**El precedente roto está al lado y medido**: `#478` enlazó a `/precios#zona-<slug>` y esa página
+emite **cero** `id="zona-…"`.
+
+⚠️⚠️ **LA RETIRADA ES LA MITAD DE LA TANDA Y CUESTA TRES COSAS**, las tres fichadas en `DEUDA.md` y
+las tres del owner: el panel puede **vincular un complemento** a una atracción y ya no lo publica
+nadie (medido: 0 de 23, así que la cifra de `#302` caducó) · los **dibujos `zone-<slug>` del kit** se
+quedan sin pantalla · y el sitio **ya no sabe abrir el cajón posicionado en una zona** (⚠️ y al
+medirlo salió su gemelo: el botón de tarifa dice «Comprar 1 hora en **Jump**» y abre sin intención,
+lo que viene de `#479`).
+
+⚠️ **Lo que sí se resolvió dentro**: `attractions.badge` se quedaba sin pantalla, y la ficha de
+`/atracciones` declara **dos** chips —el canvas dejó el segundo vacío porque no tenía dato—. El
+distintivo ocupa ese hueco.
+
+❗❗ **TREINTA GUARDAS EN ROJO Y LAS TREINTA CON RAZÓN.** Se re-apuntaron las que se mudaron
+(`ZoneIdentityIsUniqueTest` —**segunda vez** que pierde el sujeto—, `ThemeColorTest`,
+`CmsLandingFlowTest`), `SidebarSeamTest` pasó a **censo**, entró `RideMosaicSectionTest` con 7 casos,
+y se retiraron con su nota las que perdieron el sujeto. ⚠️⚠️ Y una salió **«risky»**: un caso que
+solo asevera dentro de un bucle **deja de vigilar en cuanto el bucle se vacía, y lo hace en verde**.
+
+⚠️⚠️ **Y dos trampas del instrumento de poda de CSS, las dos con la hoja cuadrando de llaves**: esta
+hoja tiene **llaves y nombres de clase dentro de comentarios** (un analizador que no los enmascara
+abre reglas donde no las hay y salva reglas que debían irse — con la máscara aparecieron seis más), y
+la primera versión iba a **borrar el foco de teclado de casillas y radios**, porque
+`.ride-card:focus-visible` era uno de los seis selectores de esa regla.
 
 ✅ **T2c · «Cuánto»** (`#479`). Rótulo · titular · entradilla que vende con una cifra del catálogo ·
 pestañas del sistema · **carril con foco** en móvil y **rejilla de tres pistas con foco** en
@@ -536,7 +603,19 @@ sembrará, pero sí bloquea publicar:
    11:30.
 6. **La grieta 00** (el cuerpo del cajón a 16).
 7. **Qué pasa con `/entradas`** (§4.1).
-8. **El contenido del «18 más»** de la sección 03.
+8. ~~**El contenido del «18 más»** de la sección 03.~~ ✅ **CADUCADA en la T2d** (`#482`): la chapa
+   del «18 más» **no entra** —el propio artboard la tiene detrás de un interruptor apagado desde el
+   recorte del 7 sep—, así que no hay texto que escribir. Lo que la sustituye —la cifra en la
+   entradilla y la puerta— es **dato**, y sale solo.
+   ⚠️ Y de paso caduca media línea del punto 2: **los nombres reales de las 23 atracciones NO
+   faltan**. El canvas los pedía porque los suyos eran de relleno; medido en la BD, las 23 tienen
+   nombre, descripción, edad y **su foto en disco**. Lo que sigue faltando de ese punto es **el
+   nombre del bar**.
+9. **Si el BAR entra en la sección 03** (`#482`, `[DECIDIDO owner]`: **no todavía**) y, con él,
+   cuándo se construye `/bar`.
+10. **Las tres pérdidas que deja la retirada del carrusel** (`#482`, fichas en `DEUDA.md`): el
+    complemento por atracción que el panel puede vincular y ya nadie publica, los dibujos
+    `zone-<slug>` del kit sin pantalla, y que el sitio ya no abra el cajón posicionado en una zona.
 
 ---
 

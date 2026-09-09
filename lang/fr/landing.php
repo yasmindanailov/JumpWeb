@@ -86,7 +86,10 @@ return [
         'intro' => 'On a conçu deux univers différents — un pour ceux qui sautent déjà sans freins, un pour ceux qui apprennent. Choisis le tien.',
     ],
     'rides' => [
-        'eyebrow' => 'Attractions',
+        'eyebrow' => 'Ce qu’il y a dedans',
+        'title' => 'Saute, grimpe et lâche-toi',
+        'intro' => ':count attractions dedans. Trampolines, toboggans, foam et piscine à balles.',
+        'door' => 'Voir les :count attractions',
         'zone_tab' => 'Zone',
         'book_zone' => 'Réserver :zone',
         'buy' => 'Acheter',

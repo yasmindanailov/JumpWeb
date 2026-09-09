@@ -120,8 +120,25 @@
                                          color de la zona AL 14 %, nunca pleno. Un chip que informa
                                          no va a color macizo, y su texto es tinta, así que se lee
                                          sea cual sea el color que el panel le ponga a la zona. --}}
-                                    @if ($ride->tr('age'))
-                                        <span class="ride-tile__age">{{ $ride->tr('age') }}</span>
+                                    @if ($ride->tr('age') || $ride->tr('badge'))
+                                        <p class="ride-tile__chips">
+                                            @if ($ride->tr('age'))
+                                                <span class="ride-tile__age">{{ $ride->tr('age') }}</span>
+                                            @endif
+                                            {{-- ⚠️⚠️ **EL DISTINTIVO OCUPA EL SEGUNDO CHIP QUE EL ARTBOARD DEJÓ
+                                                 VACÍO.** Su ficha declara dos —`edad` y un segundo en Nube— y el
+                                                 canvas retiró el suyo (la altura por atracción) porque **no hay
+                                                 dato que lo llene**: su propia nota dice que el 1,40 que había
+                                                 dibujado era invento. Aquí sí lo hay (`attractions.badge`, que el
+                                                 panel escribe), y sin este hueco ese campo se habría quedado **sin
+                                                 una sola pantalla que lo pinte** al retirarse el carrusel de la
+                                                 portada — como le pasó a `zones.image` en `#302`.
+                                                 ⚠️ Va en Nube y no en color de zona: el de zona ya lo lleva la
+                                                 edad, y dos chips teñidos igual dejan de distinguirse. --}}
+                                            @if ($ride->tr('badge'))
+                                                <span class="ride-tile__badge">{{ $ride->tr('badge') }}</span>
+                                            @endif
+                                        </p>
                                     @endif
                                 </li>
                             @endforeach

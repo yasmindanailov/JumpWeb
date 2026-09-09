@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Domain\Booking\Models\Zone;
-use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Services\IllustrationKit;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -153,7 +151,7 @@ class ZonesSectionTest extends TestCase
             'está midiendo lo que cree.',
         );
         $this->assertGreaterThan(
-            2000, strlen($rides),
+            1000, strlen($rides),
             'la sección de atracciones acotada es sospechosamente corta.',
         );
 
@@ -161,8 +159,10 @@ class ZonesSectionTest extends TestCase
         // la misma sección, así que un solo bloque bastaba; desde `#478` mirar el sujeto equivocado
         // dejaría uno de los dos recortes sin validar y sus casos pasarían en el vacío.
         $this->assertStringContainsString('zone-card__name', $zonas, 'no hay tarjetas de zona dentro de `#zones`');
-        $this->assertStringContainsString('zone-pick__tab', $rides, 'no hay selector de zona dentro de la sección de atracciones');
-        $this->assertStringContainsString('ride-card', $rides, 'no hay tarjetas de atracción dentro');
+        // ⚠️ La sección de atracciones dejó de tener selector y carrusel en `#482`: hoy es el
+        // MOSAICO de cinco fotos. Lo que vigila su forma vive en `RideMosaicSectionTest`; aquí solo
+        // se comprueba que el recorte sigue enmarcando algo real.
+        $this->assertStringContainsString('mosaic__cell', $rides, 'no hay mosaico dentro de la sección de atracciones');
 
         // Y que de verdad son DOS secciones distintas: si alguien las volviera a fundir, los dos
         // recortes devolverían el mismo texto y todo lo de arriba seguiría pasando.
@@ -210,137 +210,6 @@ class ZonesSectionTest extends TestCase
                 "nadie enlaza `#{$ancla}`: este caso ha perdido su motivo y habría que revisarlo.",
             );
         }
-    }
-
-    /**
-     * **La tarjeta de atracción NO emite descripción ni edad.**
-     *
-     * ⚠️⚠️ **Los dos textos se CREAN aquí, y ese detalle ES el caso.** Aseverar contra los datos del
-     * seeder saldría verde por casualidad el día que una atracción se quede sin descripción; con un
-     * valor propio e inconfundible, si la vista vuelve a pintarlo, se ve.
-     */
-    public function test_the_ride_card_shows_neither_description_nor_age(): void
-    {
-        $ride = Attraction::query()->firstOrFail();
-        $ride->update([
-            'description' => ['es' => 'DescripcionQueNoDebeSalirZZ'],
-            'age' => ['es' => 'EdadQueNoDebeSalirZZ'],
-            'name' => ['es' => 'NombreQueSiSaleZZ'],
-        ]);
-
-        $seccion = $this->seccionRides();
-
-        $this->assertStringContainsString(
-            'NombreQueSiSaleZZ', $seccion,
-            'la atracción no llega a la portada: el caso ha perdido su sujeto y no comprueba nada.',
-        );
-
-        $this->assertStringNotContainsString(
-            'DescripcionQueNoDebeSalirZZ', $seccion,
-            'la tarjeta vuelve a pintar la descripción de la atracción.',
-        );
-
-        $this->assertStringNotContainsString(
-            'EdadQueNoDebeSalirZZ', $seccion,
-            'la tarjeta vuelve a pintar la edad de la atracción.',
-        );
-    }
-
-    /**
-     * **TODAS las tarjetas ofrecen un camino, no solo la que se vende.**
-     *
-     * `[DECIDIDO owner]` (`#303`: «añade un CTA a las cards para que el usuario sepa que tiene que
-     * clicarlo»). ⚠️ **No existe página de detalle de atracción**, así que el CTA lleva a reservar la
-     * ZONA —el parque vende por zona, no por atracción— y las dos ramas llaman a la MISMA acción.
-     *
-     * ⚠️⚠️ **Las dos mitades hacen falta.** Sin la primera, volver al CTA solo en la comprable
-     * dejaría 22 de 23 tarjetas mudas y pasaría en verde. Sin la segunda, un cambio que pusiera
-     * PRECIO a todas —que es enseñar el precio de algo que no se vende— tampoco lo vería nadie.
-     */
-    public function test_every_ride_card_offers_a_way_in_and_only_the_sellable_shows_a_price(): void
-    {
-        $seccion = $this->seccionRides();
-
-        // ⚠️ Acotado al ELEMENTO: `class="ride-card` casa también con `ride-card__viz`, `__img`,
-        // `__name`… La primera versión contó **115 tarjetas donde hay 23** y acusó al producto de un
-        // defecto que era del contador. *Es la trampa de la subcadena, otra vez.*
-        $tarjetas = preg_match_all('/<article class="ride-card[ "]/', $seccion);
-        $ctas = preg_match_all('/<button [^>]*class="[^"]*\bride-card__cta\b/', $seccion);
-
-        $this->assertGreaterThan(0, $tarjetas, 'no hay tarjetas: el caso ha perdido su sujeto');
-
-        $this->assertSame(
-            $tarjetas, $ctas,
-            "hay {$tarjetas} tarjetas y {$ctas} CTA: alguna tarjeta se ha quedado sin decir qué hacer.",
-        );
-
-        $this->assertLessThan(
-            $tarjetas, preg_match_all('/class="ride-card__price"/', $seccion),
-            'TODAS las tarjetas enseñan precio: se está anunciando el precio de algo que no se vende.',
-        );
-    }
-
-    /**
-     * **La EDAD subió al selector — que es lo que se pidió— y una zona sin edad no deja hueco.**
-     *
-     * ⚠️ Las dos mitades hacen falta. Sin la primera, retirar la edad del selector pasaría en verde
-     * y el dato se perdería del todo (venía de la tarjeta, que ya no está). Sin la segunda, pintar
-     * un separador o un guion para una zona sin edad tampoco lo vería nadie.
-     */
-    public function test_the_picker_carries_the_age_and_omits_it_when_missing(): void
-    {
-        Zone::where('slug', 'jump')->update(['age_range' => ['es' => 'EdadDeZonaZZ']]);
-        Zone::where('slug', 'kids')->update(['age_range' => null]);
-
-        $seccion = $this->seccionRides();
-
-        $this->assertMatchesRegularExpression(
-            '/<span class="zone-pick__age">\s*EdadDeZonaZZ\s*<\/span>/', $seccion,
-            'el selector ya no lleva la edad de la zona.',
-        );
-
-        $this->assertSame(
-            1, preg_match_all('/class="zone-pick__age"/', $seccion),
-            'hay más etiquetas de edad que zonas con edad: una zona sin el dato está emitiendo el '.
-            'contenedor vacío.',
-        );
-    }
-
-    /**
-     * **El selector pide el dibujo de SU zona por `slug`, no por `accent`.**
-     *
-     * ⚠️⚠️ **La zona GEMELA se crea aquí, y ese detalle ES el caso.** La primera versión aseveraba
-     * que se piden `zone-jump` y `zone-kids`, y **pasaba en verde con la mutación puesta**: en la BD
-     * de test `accent` y `slug` VALEN LO MISMO para esas dos zonas, así que pedir por uno o por otro
-     * daba idéntico resultado. *Un caso sin sujeto no vigila nada, y no se nota hasta que se muta.*
-     * ▶ Con una zona cuyo `accent` es `kids` y cuyo `slug` no lo es, la diferencia se ve: por `slug`
-     * pide un dibujo que el kit no trae —y no emite nada, que es el modo de fallo elegido—; por
-     * `accent` pediría **otra vez** el de `kids` y lo pintaría, agrupando dos zonas bajo un dibujo.
-     */
-    public function test_the_picker_asks_for_the_zone_illustration_by_slug(): void
-    {
-        $this->instalarKit('zone-kids');
-
-        $kids = Zone::where('slug', 'kids')->firstOrFail();
-
-        Zone::create([
-            'slug' => 'kids-gemela', 'name' => ['es' => 'Kids gemela'], 'accent' => $kids->accent,
-            'color' => '#0000FF', 'position' => 98, 'is_active' => true, 'show_in_landing' => true,
-        ]);
-
-        $seccion = $this->seccionRides();
-
-        $this->assertStringContainsString(
-            'Kids gemela', $seccion,
-            'la zona gemela no llega al selector: el caso ha perdido su sujeto.',
-        );
-
-        $this->assertSame(
-            1, preg_match_all('/<use href="[^"]*#zone-kids"/', $seccion),
-            "el dibujo `zone-kids` se pide MÁS DE UNA VEZ.\n".
-            '▶ La clave se está componiendo con `accent`, que AGRUPA: dos zonas distintas acaban '.
-            'enseñando el mismo dibujo. La identidad de una zona es su `slug`.',
-        );
     }
 
     /**

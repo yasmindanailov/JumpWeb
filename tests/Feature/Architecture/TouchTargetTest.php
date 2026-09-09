@@ -68,7 +68,8 @@ class TouchTargetTest extends TestCase
         // el token ya valía 48 en su propia cascada y leerlo no delataba nada. Lo cazó la sonda de
         // navegador (`scripts/sonda-geometria.mjs`), no una relectura.
         '.btn' => 'la familia ÚNICA de botones (`#321`): sin mínimo, su alto era padding + línea = 44',
-        '.ride-card__cta' => 'tenía `44px` literal, que además GANABA al mínimo de `.btn` por especificidad',
+        // ⚠️ `.ride-card__cta` se fue en `#482` con el carrusel. Su lección sigue escrita en el
+        // docblock de esta lista: un literal de 44 que gana por especificidad al mínimo de `.btn`.
         '.form__field input, .form__field textarea' => 'campos de formulario: medían 46, y `#407` ya los fichó a 42 con sesión',
         '.form__field select' => 'el mismo suelo que su input hermano, o el formulario tiene dos alturas',
         '.bd-field input' => 'el formulario de reservar cumpleaños, que es el que más se rellena con el pulgar',

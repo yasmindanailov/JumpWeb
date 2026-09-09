@@ -25835,3 +25835,115 @@ sistema del canvas; el del producto es **`--dur-toque`**).
 cargadas, desborde **0** en las dos · `AttractionsPageTest`, **9 casos**.
 
 **Queda para la T2d·2**: la sección 03 de la portada, que es la que estrena la puerta.
+
+## #482 · 2026-09-10 · `[DECIDIDO owner]` La sección 03 pasa de 23 atracciones en carrusel a un mosaico de cinco — y se lleva por delante tres cosas que hay que decir
+
+**Contexto.** Segunda mitad de la T2d. Con `/atracciones` ya en pie (`#481`), la sección «Qué hay
+dentro» de la portada adopta el artboard: `Juegos PJP` **6a** (móvil) + `Escritorio PJP` **4b**
+(escritorio, aprobada el 8 sep).
+
+**Lo que queda.** Cabecera del canvas —rótulo «Qué hay dentro», titular **«Salta, trepa y déjate
+caer»**, entradilla que **abre con la cifra**— · **mosaico de cinco**: tres con nombre y zona sobre
+banda de tinta al 82 %, dos **veladas** que se disuelven hacia el papel · **una sola puerta**, «Ver
+las 23 atracciones».
+
+**⚠️⚠️ DOS CORRECCIONES A LO QUE EL ACTA DABA POR CERRADO, y las dos salen de releer el artboard
+HOY.** (1) **La chapa del «18 más» NO entra**: vive detrás de un interruptor **apagado** desde el
+recorte de presupuesto del 7 sep, exactamente como la chapa de zona de `#480`; en su lugar van la
+cifra en la entradilla y la puerta. (2) **El titular es «Salta, trepa y déjate caer»** y no «El
+parque»: `Juegos PJP` sigue escribiendo el segundo, pero `doc/voz.md` declara que los artboards de
+sección son *el registro de sus turnos* y que el entregable es `Portada PJP`, donde el cambio se
+aplicó el 9 sep. *Cuando dos fuentes del canvas se contradicen, la pregunta no es cuál gusta más:
+es cuál es fuente para qué.*
+
+**Las decisiones del owner:** el **bar NO entra todavía** (no existe en ninguna parte del producto y
+su tarjeta es un enlace a `/bar`, que tampoco) · **la foto lleva a `/atracciones`** en vez de abrir
+ficha flotante —una sola forma de profundizar, ninguna pieza flotante que mantener, y eso retira del
+alcance la hoja de móvil y el modal de 560— · **las cinco las manda el ORDEN del panel**.
+
+**❗❗ EL REPARTO NO ES «LAS CINCO PRIMERAS», y el artboard escribe por qué**: de las tres que se leen,
+**una es de la primera zona y dos de la segunda** —*«antes se nombraban dos de Jump y una de Kids,
+así que la madre de un niño de 4 años veía un solo juego de su zona con nombre»*—, y las veladas
+vuelven a la primera. Con el orden global, en esta instalación **las cinco saldrían de Jump**.
+▶ `Content\Services\RideMosaic` lo aplica sobre `zones.position`, **sin campo nuevo**: medido, con
+los datos de hoy reproduce el mosaico del mockup (Saltos libres · Piscina de bolas · Toboganes ·
+Salto a la nube y Tirolina veladas). Se descartó un `featured` por atracción con su precedente
+delante: `ticket_types.icon` es esa misma forma y estuvo en `NULL` en los catorce enganches.
+
+**❗❗ EL VELO SON DOS CELDAS O NINGUNA, y no es simetría: es su significado.** El artboard descarta
+su propia 4a por esto —*«el degradado es una BANDA que disuelve el borde inferior de la sección; con
+solo dos de tres veladas deja de decir "la sección se acaba" y dice "estas fotos están borrosas"»*—,
+así que las veladas ocupan **la fila entera** (medido: 358 de 358 en móvil, **1120 de 1120** en
+escritorio). ▶ De ahí sale la degradación: **con cinco atracciones o menos el velo desaparece** y la
+sección enseña las tres que se leen. Velar la última prometería un «más» que no existe.
+
+**Medido en navegador, contra el artboard**: escritorio **736×490** la grande (3:2), **352×229** las
+dos que se leen (3:2 otra vez, sin recortar ninguna foto de más), **736×230** en 16:5 la velada
+ancha; móvil 173 cuadradas. Titular Bungee 34/52 con peso **400**, banda al **.82**, zona en blanco
+pleno. Desborde **0** en las dos superficies.
+
+---
+
+**❗❗❗ LA RETIRADA ES LA MITAD DE LA TANDA, Y CUESTA TRES COSAS QUE NO SE PUEDEN CALLAR.** Con el
+carrusel se van **229 líneas de CSS**, seis miembros del componente `landing` de Alpine —la zona
+activa, `setZone()`, `applyZoneAccent()`, `scrollSlider()`, `updateProgress()` y el progreso— y el
+`@keyframes` del destello. Y con ellos:
+
+1. **El panel puede vincular un complemento a una atracción y ya no lo publica nadie.** `#302` lo
+   había conservado a propósito con la cifra «1 de 23, la Tirolina»; **medido hoy son 0 de 23**, así
+   que la cifra caducó y no se cierra ningún camino vivo — pero el selector sigue en el panel sin
+   hacer nada.
+2. **Los dibujos `zone-<slug>` del kit se quedan sin ninguna pantalla.** `#302` se los dio en la
+   pestaña del selector; la de `/atracciones` es la del sistema y va **solo con texto**.
+3. **El sitio ya no sabe abrir el cajón posicionado en una zona.** `type: 'zone'` lo declaraba una
+   sola superficie. ⚠️ Y al medirlo salió su gemelo: el botón de tarifa dice «Comprar 1 hora en
+   **Jump**» y abre el cajón **sin intención** (viene de `#479`).
+
+▶ Las tres van a `DEUDA.md` con sus salidas. Ninguna se decide aquí: son del owner.
+
+**⚠️ Y UNA CUARTA COSA, ÉSTA SÍ RESUELTA DENTRO DE LA TANDA**: al retirar el carrusel,
+`attractions.badge` se quedaba **sin una sola pantalla**. La ficha de `/atracciones` declara **dos**
+chips y el canvas dejó el segundo vacío porque no tenía dato —*su propia nota dice que el 1,40 que
+había dibujado era invento suyo*—. Aquí sí lo hay, así que el distintivo ocupa ese hueco, en Nube
+para no competir con el chip de edad.
+
+**❗❗ TREINTA GUARDAS EN ROJO, Y LAS TREINTA TENÍAN RAZÓN.** Ninguna era ruido: cada una nombraba una
+pieza que dejaba de existir. Cómo se trataron —y la regla que las ordena, *«una guarda re-apuntada
+no puede quedar más débil que la que sustituye»*—:
+
+- **Re-apuntadas** a `/atracciones`, que es donde su sujeto se mudó: `ZoneIdentityIsUniqueTest`
+  (⚠️ **segunda vez que pierde el sujeto**; la primera fue `#301`, y por eso no se borra),
+  `ThemeColorTest` ×3 —y quedan **más fuertes**: `data-color` solo lo leía el JS del carril y
+  `--zone-1` lo consume el CSS— y `CmsLandingFlowTest` ×7, que ahora vale para las 23 y antes valía
+  para las que cupieran en el carril.
+- **Convertida en CENSO**: `SidebarSeamTest` aseveraba UNA superficie con intención; hoy asevera
+  **todas**, así que perder o añadir una obliga a decidirlo.
+- **Sustituidas por red propia**: las cuatro del selector y la tarjeta salen de `ZonesSectionTest` y
+  entra **`RideMosaicSectionTest`** (7 casos) con lo que la sección promete ahora.
+- **Retiradas con su sujeto y su nota**: los dos casos del dibujo de zona y `AttractionComplementLandingTest`.
+- **Entradas muertas fuera de seis listas**: `CardSkinTest`, `TagSystemTest`, `TouchTargetTest`,
+  `ShapeScaleTest`, `InteractionColourIsNotAZoneTest` y `MotionBudgetTest`.
+
+**⚠️⚠️ Y una guarda salió «RISKY» —sin aserciones— y el defecto era SUYO, no de la tanda.**
+`CardSkinTest::test_no_sticker_levitates_on_hover` solo aseveraba dentro de un bucle, y al irse
+`.ride-card` —la única pegatina con `:hover`— se quedó sin una sola vuelta. *Un caso que solo asevera
+dentro de un bucle deja de vigilar en cuanto el bucle se vacía, y lo hace en verde.* Ahora asevera
+primero el HECHO: hoy ninguna pegatina responde al puntero.
+
+**⚠️⚠️ DOS TRAMPAS DEL INSTRUMENTO DE PODA, las dos con la hoja cuadrando de llaves.** El guion que
+retiró las 38 reglas nació con dos defectos que habrían pasado desapercibidos: **(1) esta hoja tiene
+llaves DENTRO de comentarios** —cita `> :not(.ilu) { position: relative }` en prosa— y también
+nombres de clase, así que un analizador que no los enmascara abre reglas donde no las hay **y salva
+de la poda reglas cuyo comentario menciona una clase viva**; con la máscara aparecieron **seis reglas
+más**. **(2) La primera versión iba a borrar el FOCO DE TECLADO de casillas y radios**, porque
+`.ride-card:focus-visible` era uno de los seis selectores de esa regla y el guion condenaba la regla
+entera. ▶ Hoy una regla solo se va si **todos** sus selectores se van, un selector **sin clases** no
+se condena nunca, y las mixtas se listan aparte para arreglarlas a mano. Y el corte va **por líneas
+enteras** con aborto si hay algo vivo en la misma línea: la primera política dejó `}@media (…) {}`
+pegado a la regla siguiente, cuadrando de llaves y ilegible.
+
+**Verificación**: suite **4.545** en verde, **0 risky** · sonda de geometría en las 13 vistas
+públicas, desborde **0** y ninguna pieza nueva bajo el táctil · geometría del mosaico medida contra
+el artboard en 390 y 1280.
+
+**Queda**: el OJO del owner, y las cuatro decisiones suyas de arriba (el bar, y las tres pérdidas).

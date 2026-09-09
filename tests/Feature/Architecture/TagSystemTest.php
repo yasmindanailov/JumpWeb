@@ -48,7 +48,9 @@ class TagSystemTest extends TestCase
         // texto no es una etiqueta*, así que exigirle la forma del sistema sería obligarla a ser
         // una cápsula por inercia de lo que fue. La clase se llama ya `.price__special-line`, para
         // que el nombre no siga prometiendo un chip.
-        '.ride-card__badge' => ['tag', 'tag--senal', 'tag--punteada'],
+        // ⚠️ `.ride-card__badge` se fue en `#482` con el carrusel. El distintivo de una atracción
+        // se pinta hoy en `/atracciones`, y allí NO es una etiqueta del sistema: es el segundo
+        // `chipDato` de la ficha —cápsula en Nube, mono 11—, que es otro componente del canvas.
         '.price__badge' => ['tag', 'tag--senal', 'tag--tinta'],
         '.svc-photo__tag' => ['tag', 'tag--senal', 'tag--punteada'],
     ];

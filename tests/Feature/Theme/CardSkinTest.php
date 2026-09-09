@@ -37,7 +37,9 @@ class CardSkinTest extends TestCase
     /** Primer nivel: lo que se elige o se compra. Cada una con su sujeto. */
     private const PEGATINA = [
         '.price' => 'la tarjeta de tarifa (portada y /precios) — T10',
-        '.ride-card' => 'la tarjeta de atracción (#303)',
+        // ⚠️ `.ride-card` se fue de aquí en `#482`: la tarjeta de atracción vivía en el carrusel
+        // de la portada, que se retiró con la sección 03. *Una entrada sin sujeto es una guarda
+        // que pasa sin mirar nada*, y esta lista lo dice en su propia guarda-de-la-guarda.
         '.visit-card' => 'las tres tarjetas de Visítanos (#307)',
         '.rules-must__card' => 'los dos requisitos de la sección de normas (#309)',
         '.rule' => 'las tarjetas de /normas — T10',
@@ -129,6 +131,29 @@ class CardSkinTest extends TestCase
     public function test_no_sticker_levitates_on_hover(): void
     {
         $rules = $this->rules();
+
+        /*
+         * ⚠️⚠️ **ESTE CASO SALIÓ «RISKY» EN `#482`, Y EL DEFECTO ERA SUYO, NO DE LA TANDA.** Al
+         * retirarse `.ride-card` —la única pegatina que declaraba `:hover`— el bucle de abajo se
+         * quedó sin una sola vuelta y PHPUnit avisó de que no aseveraba nada. *Un caso que solo
+         * asevera dentro de un bucle deja de vigilar en cuanto el bucle se queda vacío, y lo hace en
+         * verde.*
+         * ▶ Se aserta primero el HECHO: hoy ninguna pegatina responde al puntero. El día que alguna
+         * declare un `:hover`, esta aserción se pone roja y obliga a mirarlo — y a partir de ahí el
+         * bucle vuelve a tener sujeto.
+         */
+        $conHover = array_values(array_filter(
+            array_keys(self::PEGATINA),
+            static fn (string $selector): bool => isset($rules[$selector.':hover']),
+        ));
+
+        $this->assertSame(
+            [], $conHover,
+            'una pegatina ha estrenado `:hover`: '.implode(', ', $conHover)."\n".
+            "▶ No es un error por sí mismo, pero hay que decidirlo: la pegatina responde con la\n".
+            "  SOMBRA o no responde (`#303`), y la que no es enlace no responde (`#307`/`#295`).\n".
+            '  Añádela aquí a sabiendas y el bucle de abajo vigilará que no levite.',
+        );
 
         foreach (array_keys(self::PEGATINA) as $selector) {
             $hover = $rules[$selector.':hover'] ?? [];

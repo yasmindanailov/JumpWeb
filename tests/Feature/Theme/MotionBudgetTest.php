@@ -26,7 +26,8 @@ class MotionBudgetTest extends TestCase
     /** Todo `infinite` de las tres hojas, con su motivo. Añadir aquí es DECIDIR un bucle. */
     private const BUCLES_DECLARADOS = [
         '.nav__period-dot' => 'el punto del nombre de marca en texto — solo sin logotipo',
-        '.ride-card--special .ride-card__viz::after' => 'el destello de la atracción destacada (#279)',
+        // ⚠️ El destello de la atracción destacada se fue en `#482` con el carrusel, y con él su
+        // `@keyframes jj-shine-sweep`: un bucle declarado sin regla que lo invoque es ruido.
         '.price--feat .price__badge' => 'la chapa «destacado» de la tarifa (#279)',
         '.map-pin' => 'el pin del mapa sin inserción (#279)',
         '.brand-band__track' => 'la cinta del eslogan, AMBIENTAL (`--dur-cinta`)',

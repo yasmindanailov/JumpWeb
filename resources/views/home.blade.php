@@ -402,133 +402,89 @@
         </ul>
     </section>
 
-    {{-- ══ QUÉ HAY DENTRO · las atracciones ════════════════════════════════════════════════════
-         `#478`: sale de dentro de «Para quién» y pasa a ser sección propia, que es lo que el canvas
-         declara (01 presenta las zonas · 03 enseña lo que hay dentro). Su rediseño —el mosaico de
-         cinco fotos— es tanda aparte; aquí solo cambia de sitio, con su selector intacto. --}}
+    {{-- ══ 03 · QUÉ HAY DENTRO · el mosaico de cinco ═══════════════════════════════════════════
+         Carril de diseño Fase 2 · T2d (`DECISIONES #482`). Artboard `Juegos PJP` **6a** (móvil) +
+         `Escritorio PJP` **4b** (escritorio, aprobada el 8 sep).
+
+         ⚠️⚠️ **AQUÍ VIVÍA EL CARRUSEL DE LAS 23**, con su selector de zona, sus flechas y su barra
+         de progreso. Se retira entero: la portada enseña **cinco** y las 23 viven en
+         **`/atracciones`** (`#481`), que es la capa 3 del sistema de contenido —«quien llega aquí ha
+         querido llegar»— y el único sitio donde caben con su edad.
+
+         ❗❗ **LA CHAPA DEL «18 MÁS» NO ENTRA, y no es un olvido**: el artboard la tiene detrás de un
+         interruptor **apagado** desde el recorte de presupuesto del 7 sep, igual que la chapa de
+         zona de `#480`. En su lugar entra lo que la propia deuda pedía: **la cifra en la entradilla**
+         y **una sola puerta** debajo del mosaico.
+
+         ⚠️ **El ancla `#rides` se queda**: la enlazan el menú y el pie (medido: `/#rides` en
+         `nav.blade.php` y en `footer.blade.php`). Lo que cambia es lo que encuentra quien llega. --}}
     <section id="rides-section" class="section wrap">
-        <div id="rides" class="zones__juegos">
-            {{-- EL SELECTOR. Antes era una fila de palabras; ahora cada pestaña dice **quién es** la
-                 zona: su dibujo del kit, su nombre y su edad.
-                 ⚠️⚠️ **La identidad es `slug`, NUNCA `accent`** (`#295`, conservado en `#301`):
-                 `accent` AGRUPA —`kids`, `cap` y `cap2` comparten el suyo en datos reales—, así que
-                 con él tres pestañas emitían el mismo valor y abrían tres carruseles a la vez.
-                 ⚠️ **El dibujo es del CLIENTE y puede no estar**: `<x-site.ilu>` no emite nada si el
-                 kit no trae ese `zone-<slug>`, y la pestaña se queda con nombre y edad. Es el modo
-                 de fallo elegido en `hueco-ilustracion.md` §7 — invisible, nunca caja vacía.
-                 ⚠️ **La edad también puede faltar** (`cap`/`cap2` no la tienen): sin ella no se
-                 pinta la línea, en vez de dejar un hueco o un guion. --}}
-            <div class="zone-pick" role="tablist" aria-label="{{ __('landing.rides.eyebrow') }}">
-                @foreach ($zones as $zone)
-                    <button type="button" class="zone-pick__tab" data-tap
-                            id="zone-pick-{{ $zone->slug }}"
-                            role="tab" aria-controls="rides-{{ $zone->slug }}"
-                            :aria-selected="zone==='{{ $zone->slug }}' ? 'true' : 'false'"
-                            :class="zone==='{{ $zone->slug }}' && 'active'"
-                            @click="setZone('{{ $zone->slug }}')">
-                        <x-site.ilu :clave="'zone-'.$zone->slug" class="zone-pick__ilu" />
-                        <span class="zone-pick__name">{{ __('landing.rides.zone_tab') }} {{ $zone->tr('name') }}</span>
-                        @if ($zone->tr('age_range'))
-                            <span class="zone-pick__age">{{ $zone->tr('age_range') }}</span>
-                        @endif
-                    </button>
-                @endforeach
-            </div>
-
-            @foreach ($zones as $zone)
-                {{-- ⚠️ El carrusel lleva la PALETA YA COMPUESTA (`data-zone-style`, `DECISIONES #139`).
-                     `data-color` traía solo el primario, así que el JS tenía que (a) quemar el
-                     secundario a la paleta del primer cliente y (b) **repetir la fórmula de contraste
-                     de `ThemeSettings::onBrand()`** en JavaScript. Dos definiciones de la misma regla
-                     es como empiezan las divergencias que el tema existe para cerrar.
-                     ⚠️⚠️ **IDENTIDAD `slug`, PALETA `accent`**: lo que dice *cuál* es este carrusel
-                     sale de `slug`, que es único; lo que dice *de qué color va* sigue saliendo de
-                     `accent`, porque agrupar es justo su trabajo. --}}
-                <div class="slider" x-ref="slider_{{ $zone->slug }}" data-zone="{{ $zone->slug }}"
-                     id="rides-{{ $zone->slug }}" role="tabpanel" aria-labelledby="zone-pick-{{ $zone->slug }}"
-                     data-color="{{ \App\Domain\Content\Services\ThemeSettings::colorForAccent($zone->color, $zone->accent) }}"
-                     data-zone-style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
-                     x-show="zone==='{{ $zone->slug }}'" @scroll="updateProgress()" @if (! $loop->first) style="display:none" @endif>
-                    @foreach ($zone->attractions as $ride)
-                        {{-- **LA TARJETA SE QUEDA EN FOTO + TÍTULO + TAG** (`[DECIDIDO owner]`, `#302`).
-                             Se van la edad y la descripción: medido, las 23 atracciones tienen foto y
-                             descripción, así que el carril era una fila de párrafos de 58 caracteres
-                             de media compitiendo con 23 fotos. La sección es VISUAL y adopta esa forma.
-                             ⚠️ **El bloque de compra NO se va**, y no es un descuido: es una venta, no
-                             una descripción. Hoy lo cumple 1 de 23 (la Tirolina) y retirarlo cerraría
-                             un camino de compra sin que nadie lo hubiera pedido. --}}
-                        <article class="ride-card{{ $ride->is_special ? ' ride-card--special' : '' }}{{ $complements->isPurchasable($ride) ? ' ride-card--sellable' : '' }}">
-                            <div class="ride-card__viz">
-                                @if ($ride->tr('badge'))
-                                    <span class="tag tag--senal tag--punteada ride-card__badge">{{ $ride->tr('badge') }}</span>
-                                @endif
-                                @if ($ride->image)
-                                    <img class="ride-card__img" src="{{ asset($ride->image) }}" alt="{{ $ride->tr('name') }}" loading="lazy">
-                                @else
-                                    <span class="ride-card__placeholder">Foto — {{ \Illuminate\Support\Str::lower($ride->tr('name')) }}</span>
-                                @endif
-                            </div>
-                            {{-- El nombre lleva el PUNTO DE COLOR de la zona, que es lo que su `E1`
-                                 describe para esta familia: «sombra dura, borde de tinta y un punto de
-                                 color a la derecha». Es un pseudo-elemento, no marcado. --}}
-                            <h3 class="ride-card__name">{{ $ride->tr('name') }}</h3>
-
-                            {{-- ⚠️⚠️ **AQUÍ SE PROBÓ A PINTAR LA EDAD Y EL OWNER LO RECHAZÓ**
-                                 (2026-09-01): `attractions.age` está en la BD —**19 de las 23** la
-                                 declaran— y esta tarjeta no la enseña. **No es un olvido: es `#302`**,
-                                 que la dejó en «foto + título + tag», y lo guarda
-                                 `ZonesSectionTest::test_the_ride_card_shows_neither_description_nor_age`.
-                                 ▶ Y por eso esta tarjeta **no recibe icono**: sin un dato detrás, un
-                                 icono repetido 23 veces es decoración dentro de un bucle — lo que el
-                                 owner ya rechazó en `#286` con la mancha por tarjeta de precio.
-                                 Si alguna vez se retoma, el sitio es éste y el dato ya está. --}}
-
-                            {{-- **EL PIE DE LA TARJETA: siempre hay CTA** (`[DECIDIDO owner]`, `#303`:
-                                 «añade un CTA a las cards para que el usuario sepa que tiene que
-                                 clicarlo»).
-
-                                 ⚠️⚠️ **NO existe página de detalle de atracción**, así que el clic
-                                 tiene que llevar a algo que exista. `[DECIDIDO owner]`: **todas llevan
-                                 a reservar la ZONA de esa atracción** —abre el cajón posicionado en
-                                 ella—, que es exactamente lo que ya hacía el botón de la única
-                                 comprable. Y es coherente con el modelo: **el parque vende por ZONA,
-                                 no por atracción**.
-                                 ▶ Por eso las dos ramas llaman a la MISMA acción y solo cambian el
-                                 rótulo: la comprable enseña además su precio (`#228`).
-
-                                 ⚠️ **La tarjeta NO es un enlace, y el CTA sí.** Envolverla entera en
-                                 un `<button>` metería el precio y el badge dentro del nombre
-                                 accesible; un botón dentro de una tarjeta pulsable es la otra mitad
-                                 de la misma trampa. La afordancia la da el CTA, que es lo que se
-                                 pulsa. --}}
-                            <div class="ride-card__buy">
-                                @if ($complements->isPurchasable($ride))
-                                    <div class="ride-card__price">@if ($ride->ticketType?->priceVaries())<span class="ride-card__from">{{ __('landing.pricing.from') }}</span>@endif{{ $ride->ticketType?->euros() }}<span class="cents">,{{ $ride->ticketType?->cents() }}</span><span class="eur">€</span></div>
-                                    <button type="button" class="btn ride-card__cta" aria-label="{{ __('landing.rides.buy') }} · {{ $ride->tr('name') }}" @click="$store.purchase.openWith({ type: 'zone', slug: '{{ $zone->slug }}' })">{{ __('landing.rides.buy') }}</button>
-                                @else
-                                    <button type="button" class="btn btn--ghost ride-card__cta" aria-label="{{ __('landing.rides.book_zone', ['zone' => $zone->tr('name')]) }}" @click="$store.purchase.openWith({ type: 'zone', slug: '{{ $zone->slug }}' })">{{ __('landing.rides.book_zone', ['zone' => $zone->tr('name')]) }} <x-icons.arrow-right class="arrow" :width="14" :height="14" /></button>
-                                @endif
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
-            @endforeach
-
-            {{-- EL PIE DEL CARRUSEL: progreso a la izquierda, flechas a la derecha.
-                 ⚠️ Las flechas estaban arriba, en una fila que compartían con las pestañas; ahí
-                 competían con el selector por la atención. Van con lo que gobiernan.
-                 ⚠️ Se ocultan con puntero grueso: en un teléfono el carril se recorre con el dedo y
-                 dos botones que repiten un gesto que ya existe son ruido. --}}
-            <div class="slider-foot">
-                <div class="slider-progress">
-                    <div class="slider-progress__bar" :style="{ transform: 'translateX(' + (progressLeft*100) + '%) scaleX(' + progressWidth + ')' }"></div>
-                </div>
-                <div class="slider-nav">
-                    <button class="slider-arrow" @click="scrollSlider(-1)" aria-label="{{ __('landing.nav.slider_prev') }}"><x-icons.arrow-left :width="16" :height="16" /></button>
-                    <button class="slider-arrow" @click="scrollSlider(1)" aria-label="{{ __('landing.nav.slider_next') }}"><x-icons.arrow-right :width="16" :height="16" /></button>
-                </div>
-            </div>
+        <div id="rides" class="sec-head">
+            <p class="sec-head__eyebrow">{{ __('landing.rides.eyebrow') }}</p>
+            <h2 class="sec-head__title">{{ __('landing.rides.title') }}</h2>
+            {{-- ⚠️ La entradilla **abre con la cifra**, y la cifra es DATO: es lo que sustituye a la
+                 chapa retirada. Sin ella la sección enseña cinco fotos y no dice cuántas hay. --}}
+            <p class="sec-head__lede">{{ __('landing.rides.intro', ['count' => $ridesTotal]) }}</p>
         </div>
+
+        @if ($rideMosaic !== [])
+            {{-- EL MOSAICO. La geometría la manda la rejilla y cada celda dice su papel con un
+                 `data-`, no con una clase por posición: el papel lo decide el dominio y la hoja solo
+                 lo viste. --}}
+            <ul class="mosaic" role="list">
+                @foreach ($rideMosaic as $celda)
+                    @if ($celda['papel'] === 'velada')
+                        {{-- ⚠️⚠️ **UNA VELADA NO ES CONTENIDO: ES TEXTURA.** Pierde el nombre, deja
+                             de ser enlace y sale del árbol de accesibilidad — es la condición con la
+                             que el velo entró en el sistema («lo que se oculta no puede ser un
+                             destino, y un nombre a medio velo se queda sin contraste»). --}}
+                        <li class="mosaic__cell" data-papel="velada" aria-hidden="true">
+                            @if ($celda['ride']->image)
+                                <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}" alt=""
+                                     aria-hidden="true" loading="lazy" decoding="async">
+                            @endif
+                            <span class="mosaic__veil"></span>
+                        </li>
+                    @else
+                        {{-- ⚠️ **La foto lleva a `/atracciones`** (`[DECIDIDO owner]`), y llega con la
+                             zona de esa atracción ya elegida: la página la lee de `?zona=`, que es lo
+                             único que funciona sin JavaScript. No abre ficha flotante — se descartó a
+                             propósito: una sola forma de profundizar. --}}
+                        <li class="mosaic__cell" data-papel="{{ $celda['papel'] }}">
+                            <a class="mosaic__link" href="{{ route('atracciones', ['zona' => $celda['zone']->slug]) }}">
+                                {{-- ⚠️ **`alt=""` CON `aria-hidden`, y es la forma canónica, no un atajo**: el
+                                     nombre de la atracción y su zona están en la banda de al lado, dentro
+                                     del mismo enlace. Un `alt` con el nombre lo diría dos veces; un `alt=""`
+                                     a secas deja a quien no ve sin saber que eso es una imagen decorativa.
+                                     Lo vigila `SeoTest::test_content_images_have_non_empty_alt`. --}}
+                                @if ($celda['ride']->image)
+                                    <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}"
+                                         alt="" aria-hidden="true" loading="lazy" decoding="async">
+                                @endif
+                                {{-- La banda de tinta: el nombre y, debajo, su zona. La zona va en
+                                     blanco pleno porque sobre una banda al 82 % el gris secundario
+                                     no llega —es la regla del sistema, no un ajuste—. --}}
+                                <span class="mosaic__band">
+                                    <span class="mosaic__name">{{ $celda['ride']->tr('name') }}</span>
+                                    <span class="mosaic__zone">{{ $celda['zone']->tr('name') }}</span>
+                                </span>
+                            </a>
+                        </li>
+                    @endif
+                @endforeach
+            </ul>
+        @endif
+
+        {{-- LA PUERTA. Una sola, y es la única entrada a `/atracciones` desde la portada.
+             ⚠️ Sin atracciones no se pinta: una puerta a una página vacía no es una puerta. --}}
+        @if ($ridesTotal > 0)
+            <p class="rides__door">
+                <a class="rides__door-link" href="{{ route('atracciones') }}">
+                    {{ __('landing.rides.door', ['count' => $ridesTotal]) }}
+                    <x-icons.arrow-right class="arrow" :width="16" :height="16" />
+                </a>
+            </p>
+        @endif
     </section>
 
 

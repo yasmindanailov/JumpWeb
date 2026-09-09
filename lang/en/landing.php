@@ -86,7 +86,10 @@ return [
         'intro' => 'We built two different worlds — one for the kids who fly without brakes, one for those just learning to jump. Pick yours.',
     ],
     'rides' => [
-        'eyebrow' => 'Rides',
+        'eyebrow' => 'What’s inside',
+        'title' => 'Jump, climb and let go',
+        'intro' => ':count rides inside. Trampolines, slides, foam and a ball pit.',
+        'door' => 'See all :count rides',
         'zone_tab' => 'Zone',
         'book_zone' => 'Book :zone',
         'buy' => 'Buy',

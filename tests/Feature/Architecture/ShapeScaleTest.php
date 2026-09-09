@@ -92,7 +92,7 @@ class ShapeScaleTest extends TestCase
         '.reserve h2 .fill' => 'ídem',
         '.offw-gift .cft' => 'lazo del regalo del widget de ofertas: dibujo',
         '.offw-burst .spark.star' => 'punta de estrella: `0` es la forma, no un reset',
-        '.slider-progress' => 'barra de 2 px de alto — el radio la hace una píldora aplastada',
+        // ⚠️ `.slider-progress` se fue en `#482`: era la barra de avance del carrusel.
         '.cal__dot' => 'muestra de color de la leyenda del calendario: su radio es la forma del swatch, '.
             'no el canto de un contenedor. Con lado 12 y radio 4 su ratio es 3,00 y no cumple la ley '.
             'del motivo; tokenizarlo a `--r-xs` lo movería +1px, así que se deja y se anota',

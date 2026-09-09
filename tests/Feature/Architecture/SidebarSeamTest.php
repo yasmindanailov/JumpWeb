@@ -95,10 +95,38 @@ class SidebarSeamTest extends TestCase
             (string) file_get_contents(resource_path('views/pages/services.blade.php')),
             'la sección de servicios ha dejado de declarar su intención'
         );
-        $this->assertStringContainsString(
-            "openWith({ type: 'zone'",
-            (string) file_get_contents(resource_path('views/home.blade.php')),
-            'las tarjetas de atracción han dejado de declarar su intención'
+
+        /*
+         * ⚠️⚠️ **AQUÍ SE ASEVERABA `openWith({ type: 'zone'` EN LA PORTADA, Y ESE SUJETO YA NO
+         * EXISTE** (`#482`): la única superficie que lo declaraba era el CTA de la tarjeta de
+         * atracción, y el carrusel se retiró con la sección 03. Medido tras la retirada: `type:
+         * 'zone'` tiene **cero** consumidores en todo `resources/views`.
+         *
+         * ▶ **No se borra la aserción: se convierte en CENSO**, que es más fuerte que lo que
+         * sustituye. Antes vigilaba UNA superficie; ahora vigila **todas** las que declaran
+         * intención, así que retirar cualquiera —o añadir una que se salte la fachada— pone rojo
+         * este caso y obliga a decidirlo.
+         *
+         * ❗ **La pérdida está fichada en `DEUDA.md`**: el sitio ya no sabe abrir el cajón
+         * posicionado en una zona, y el botón de la tarjeta de tarifa dice «Comprar 1 hora en Jump»
+         * y llama a `open()` **sin intención**.
+         */
+        $declaran = [];
+
+        foreach ($this->bladeFiles() as $rel) {
+            if (str_contains((string) file_get_contents(resource_path('views/'.$rel)), 'openWith(')) {
+                $declaran[] = $rel;
+            }
+        }
+
+        sort($declaran);
+
+        $this->assertSame(
+            ['components/site/events-section.blade.php', 'pages/services.blade.php'],
+            $declaran,
+            "la lista de superficies que declaran su intención de compra ha cambiado.\n".
+            "Si es una nueva, añádela aquí; si una la ha perdido, ese camino de compra se ha cerrado\n".
+            'y hay que decirlo — que es exactamente lo que pasó con `type: \'zone\'` en `#482`.'
         );
     }
 

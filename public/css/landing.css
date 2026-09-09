@@ -1661,84 +1661,6 @@ img { display: block; max-width: 100%; }
 /* ⚠️⚠️ **`isolation: isolate` + `z-index: -1`, y NO «subir el contenido con `position: relative`».**
    Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }
 
-/* El bloque de juegos: el selector, los carriles y su pie. Lleva el ancla `#rides` y es lo que
-   `applyZoneAccent()` tiñe con la paleta de la zona activa — por eso envuelve TAMBIÉN al selector,
-   que sin ello perdería el color de su zona. */
-.zones__juegos { display: flex; flex-direction: column; }
-
-/* ══ EL SELECTOR DE ZONA · antes era una fila de palabras ══════════════════════════════════════
-   `[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona se retiran y **el selector pasa a
-   decir quién es cada zona** — su dibujo del kit, su nombre y su edad—.
-
-   ⚠️⚠️ **Clases PROPIAS y no un modificador de `.zone-tab`, y el motivo es medible.** Aquellas son
-   una cápsula de píldoras que comparten `/precios` y `/servicios`: reutilizarlas aquí obligaba a
-   anular su fondo, su borde, su padding y su radio —cuatro anulaciones— antes de escribir la
-   primera regla propia. Un modificador que empieza borrando a su base no es un modificador.
-   ▶ `.zone-tab` sigue viva y con dos consumidores; aquí no queda nada huérfano.
-
-   ⚠️ **Escrito de móvil hacia arriba**: la regla base es la del teléfono (envuelve) y el escritorio
-   no necesita excepción, porque `flex-wrap` ya reparte. */
-.zone-pick {
-  display: flex; flex-wrap: wrap;
-  gap: var(--sp-10);
-  /* El aire de arriba es EL SITIO que necesita la silueta que asoma (ver `.zone-pick__ilu`), no
-     una separación estética: si se baja, la figura se superpone al párrafo de la cabecera. */
-  margin: 56px 0 var(--sp-16);
-}
-.zone-pick__tab {
-  display: flex; flex-direction: column; align-items: flex-start;
-  gap: var(--sp-8);
-  flex: 1 1 clamp(140px, 40%, 220px);
-  padding: var(--sp-16);
-  border: 1px solid var(--line);
-  border-radius: var(--r-btn);
-  background: var(--bg-card);
-  color: var(--fg-mute);
-  text-align: left;
-  transition:
-    border-color var(--dur-estado) var(--ease-sale),
-    background var(--dur-estado) var(--ease-sale),
-    color var(--dur-estado) var(--ease-sale);
-}
-/* ⚠️ El dibujo lo trae la INSTALACIÓN y puede no estar: sin él la pestaña se queda con nombre y
-   edad, que es el modo de fallo elegido (`hueco-ilustracion.md` §7). No hay `min-height` que
-   reserve su sitio, justamente para que su ausencia no deje un hueco. */
-/* ▶ **LA SILUETA SALE DE LA TARJETA** (`[DECIDIDO owner, 2026-09-01]`: «hazlas más grandes aunque
-   se sobresalgan de las cards»). De 44 a 104 px y con un margen superior NEGATIVO que la saca por
-   encima del borde; `.zone-pick` compensa ese asomo con aire propio, para que la figura no se
-   coma el párrafo de la cabecera.
-   ⚠️ **El recorte NO se desactiva con `overflow: visible`**: un `<button>` ya lo es. Lo que había
-   que dar es SITIO — un `overflow` no crea espacio, solo deja de cortar, y sin el aire de arriba
-   la figura se superpone al texto en vez de asomar sobre papel.
-   ⚠️ En teléfono el asomo baja a la mitad: ahí las pestañas van a dos columnas y el aire que se
-   reserva arriba se paga en cada fila, no una vez. */
-.zone-pick__ilu {
-  width: 104px; height: auto;
-  margin-top: -46px;
-  --ilu-fg: currentColor;
-}
-.zone-pick__name {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: var(--fs-18); line-height: 1.05; letter-spacing: -0.02em;
-  text-transform: uppercase;
-  color: var(--fg);
-  transition: color var(--dur-estado) var(--ease-sale);
-}
-/* La EDAD, que es el dato que el owner pidió subir aquí. En mono, que es el registro «DATO» del
-   sistema de etiquetas (`specs/idioma-visual-heredado.md` §3.2). */
-.zone-pick__age {
-  font-family: var(--font-mono); font-size: var(--fs-11);
-  letter-spacing: 0.08em; line-height: 1.4;
-}
-.zone-pick__tab:hover { border-color: var(--line-strong); }
-/* ⚠️ El color de la zona ACTIVA lo pone `--zone-1`, que `applyZoneAccent()` publica en `#rides` con
-   la paleta ya compuesta por el servidor (`ThemeSettings::zoneStyle()`). Aquí no se calcula nada. */
-.zone-pick__tab.active {
-  background: var(--zone-1);
-  border-color: var(--zone-1);
-  color: var(--on-brand);
-}
-.zone-pick__tab.active .zone-pick__name { color: var(--on-brand); }
 
 /* ---------- atracciones (tabs + slider) ---------- */
 .rides__head {
@@ -2184,42 +2106,7 @@ img { display: block; max-width: 100%; }
 }
 .zone-tab.active { background: var(--zone-1); color: var(--on-brand); }
 
-.slider-nav { display: flex; gap: var(--sp-8); align-items: center; }
-.slider-nav__counter {
-  font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute);
-  text-transform: uppercase; letter-spacing: 0.14em; margin-right: var(--sp-8);
-}
-/* ⚠️ **La sombra es del CUARTO rol de elevación, no de `--shadow-lift`.** `#217` creó
-   `--shadow-nav-*` para el mobiliario que FLOTA sobre el contenido —el racimo del armazón— y estas
-   flechas son eso mismo: controles que se posan encima del carril. `--shadow-float` con el paquete
-   de este cliente vale `5px 5px 0`, dura y desplazada, que es otra familia. */
-.slider-arrow {
-  width: 48px; height: 48px; border-radius: var(--r-pill);
-  border: 1px solid var(--line-strong);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-nav-ghost);
-  display: grid; place-items: center;
-  transition:
-    background var(--dur-estado) var(--ease-sale),
-    color var(--dur-estado) var(--ease-sale),
-    border-color var(--dur-estado) var(--ease-sale),
-    box-shadow var(--dur-estado) var(--ease-sale);
-  color: var(--fg);
-}
-.slider-arrow:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); box-shadow: var(--shadow-nav-ghost-lift); }
-.slider-arrow:disabled { opacity: 0.3; cursor: not-allowed; }
-.slider-arrow:disabled:hover { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 
-.slider {
-  display: flex; gap: var(--sp-18);
-  overflow-x: auto; overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  padding: 6px 0 30px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.slider::-webkit-scrollbar { display: none; }
 
 /* ══ LA TARJETA DE ATRACCIÓN · foto + título + tag ═════════════════════════════════════════════
    `[DECIDIDO owner, 2026-08-31]` (`#302`): **se amplía y se queda en título y tag; fuera la edad y
@@ -2238,142 +2125,14 @@ img { display: block; max-width: 100%; }
    ⚠️ **No va a sangre completa**, y es a propósito: esta sección está acotada por `.wrap`, y ahí el
    `100%` de `--wrap-gutter` mide el CONTENEDOR y no la ventana — la trampa medida en `#238`. El
    corte se hace contra el borde de la columna, que no necesita escapar de ella. */
-/* ⚠️⚠️ **LA TARJETA ES UNA PEGATINA, y los tres rasgos salen de su `E1`**: «sombra dura de 5px,
-   borde de tinta y un punto de color a la derecha» (`[DECIDIDO owner]`, `#303`: las tarjetas se
-   veían «demasiado simples/limpias»).
-   ▶ **La sombra es `--shadow-float` y eso es un ROL, no un valor.** Con el paquete de este cliente
-   vale `5px 5px 0 var(--paper-fg)` —dura y desplazada, la pegatina—; sin paquete, la difusa del
-   producto. Escribir `5px 5px 0` a mano habría clavado el sistema de ESTE cliente en el producto.
-   ⚠️ El borde pasa de `--line` a `--paper-fg` (tinta): con `--line` la sombra dura salía flotando
-   sin contorno que la sostuviera, que es medio efecto.
-   ⚠️ **`overflow: hidden` se queda**: la foto tiene su propio radio y sin él asoma por las esquinas.
-   ⚠️ **Y no se levanta al pasar por encima**: la tarjeta no se pulsa —lo que se pulsa es su CTA—,
-   así que un `translateY` volvería a prometer lo que `#302` acaba de quitar. Lo que responde es la
-   SOMBRA, que es como se comporta una pegatina cuando la empujas. */
-.ride-card {
-  flex: 0 0 82%;
-  scroll-snap-align: start;
-  border: 1px solid var(--paper-fg);
-  border-radius: var(--r-lg);
-  padding: var(--sp-16);
-  background: var(--bg-card);
-  box-shadow: var(--shadow-float);
-  display: flex; flex-direction: column; gap: var(--sp-16);
-  transition: box-shadow var(--dur-estado) var(--ease-sale);
-  position: relative; overflow: hidden;
-}
-.ride-card:hover { box-shadow: none; }
 
-/* La FOTO manda: proporción en vez de alto fijo, para que escale con el ancho de la tarjeta.
-   ⚠️ Un alto FIJO cambia el encuadre al cambiar de ancho — medido en `#295`, una foto pasó de
-   enseñar el 62 % del original al 31 % al ensancharse su caja. */
-.ride-card__viz {
-  aspect-ratio: 4 / 5; border-radius: var(--r);
-  background:
-    repeating-linear-gradient(135deg, var(--bg-soft) 0 14px, var(--bg-card) 14px 15px);
-  position: relative; overflow: hidden;
-  border: 1px solid var(--line);
-}
-/* El disco de color: solo se ve cuando la atracción NO trae foto, porque la imagen lo cubre.
-   Es el estado vacío de la tarjeta. */
-.ride-card__viz::before {
-  content: ""; position: absolute;
-  inset: auto -10% -40% auto;
-  width: 220px; height: 220px; border-radius: 50%;
-  background: var(--zone-1); opacity: 0.55;
-}
-.ride-card__placeholder {
-  position: absolute; left: 16px; bottom: 14px;
-  font-family: var(--font-body); font-size: var(--fs-10);
-  text-transform: uppercase; letter-spacing: 0.14em;
-  color: var(--fg-mute);
-}
-/* ⚠️ **Aquí hubo un PUNTO DE COLOR a la derecha del nombre y se retiró** (`[DECIDIDO owner]`:
-   «quita todos los puntos»). Lo había puesto extrapolando su `E1`, que describe ese punto **para
-   los BOTONES**; la tarjeta tiene su propia entrada (`E3`) y no lo pide. *Una regla escrita para
-   una pieza no vale para otra solo porque compartan sistema visual.* */
-.ride-card__name {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(24px, 4.4vw, 34px);
-  line-height: 0.95; letter-spacing: -0.02em; margin: 0;
-}
 
-@media (min-width: 900px) {
-  /* Escritorio: **2,4 tarjetas por vista**. Con 3,4 la tarjeta salía más ESTRECHA que antes, y el
-     encargo era ampliarla; con 2,4 mide ~448 px donde antes medía 380, y la siguiente sigue
-     asomando cortada. */
-  .ride-card { flex: 0 0 calc((100% - 18px * 2) / 2.4); }
-}
 
-/* Atracción de pago (#228): precio del complemento + CTA «Comprar» al pie de la card */
-/* El pie: precio y CTA, o solo el CTA. ⚠️ `margin-top: auto` lo empuja abajo para que todas las
-   tarjetas del carril terminen a la misma altura aunque el nombre ocupe una o dos líneas. */
-.ride-card__buy {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-14);
-  margin-top: auto;
-  padding-top: var(--sp-18); border-top: 1px solid var(--line);
-}
-.ride-card__price {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 30px; line-height: 1; letter-spacing: -0.02em; color: var(--fg);
-}
-.ride-card__price .cents { font-size: var(--fs-14); vertical-align: super; }
-.ride-card__price .eur { font-size: var(--fs-16); margin-left: var(--sp-3); vertical-align: top; opacity: 0.6; }
-.ride-card__from {
-  display: block; font-family: var(--font-body); font-size: var(--fs-10); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-bottom: var(--sp-2);
-}
-/* ⚠️ El mínimo sale del TOKEN, no de un literal: escrito a mano se quedó en 44 cuando `#470` subió
-   el objetivo a 48, y además GANABA al mínimo de `.btn` por especificidad (`#476`). */
-.ride-card__cta { padding: var(--sp-12) var(--sp-20); font-size: var(--fs-13); min-height: var(--tap-min); }
-/* Atracción «Destacada» (#228 + «Cards Destacadas»): el destacado se señala SOLO con el Shine sweep
-   sobre la foto — SIN borde de color exterior (mismo criterio que el catálogo: card limpia, el efecto
-   es el distintivo). `.ride-card--special` queda como marcador para acotar la animación; el hover es
-   el normal de cualquier card (lift + borde de acento del `.ride-card:hover` base).
-   Shine sweep (foto): un destello cruza SOLO el marco de la foto (`.ride-card__viz` ya es
-   position:relative + overflow:hidden). Translúcido blanco → coherente con cualquier marca (#213). */
-.ride-card--special .ride-card__viz::after {
-  content: ""; position: absolute; top: -30%; bottom: -30%; left: 0; width: 30%;
-  background: linear-gradient(105deg, transparent, color-mix(in srgb, var(--sheet) 55%, transparent) 50%, transparent);
-  transform: skewX(-16deg) translateX(-160%);
-  animation: jj-shine-sweep 3.2s cubic-bezier(0.6, 0, 0.3, 1) infinite;
-  pointer-events: none; z-index: 1;
-}
-@keyframes jj-shine-sweep {
-  0%, 55%   { transform: skewX(-16deg) translateX(-160%); }
-  90%, 100% { transform: skewX(-16deg) translateX(480%); }
-}
+/* ⚠️ Aquí vivía `@keyframes jj-shine-sweep`, el destello que cruzaba la foto de la atracción
+   destacada del carrusel. Se va con su único consumidor (`#482`): una animación sin nadie que la
+   invoque es una regla muerta con nombre propio, que es la peor de leer. */
 
-/* progress bar under slider */
-/* EL PIE DEL CARRIL: el progreso ocupa lo que sobra y las flechas van a la derecha.
-   ⚠️ **Las flechas se esconden con puntero GRUESO**: en un teléfono el carril se recorre con el
-   dedo, y dos botones que repiten un gesto que ya existe son ruido. Vuelven con puntero fino.
-   Es la misma puerta de puntero que `#264` usó para las áreas táctiles. */
-.slider-foot {
-  display: flex; align-items: center; gap: var(--sp-16);
-  margin-top: var(--sp-12);
-}
-.slider-foot .slider-progress { flex: 1; }
-.slider-foot .slider-nav { display: none; }
-@media (pointer: fine) {
-  .slider-foot .slider-nav { display: flex; }
-}
 
-/* ⚠️ El canto sale del token de cápsula, no de un literal: `ShapeScaleTest` prohíbe escribir un
-   radio a mano, y una barra de 4 px con `border-radius: 2px` era justamente eso. */
-.slider-progress {
-  height: 4px; background: var(--line);
-  position: relative; overflow: hidden; border-radius: var(--r-pill);
-}
-/* La barra se MUEVE con `transform`, no con `left`/`width` (auditoría m2, `#435`): ocupa la pista entera
-   y el JS publica `translateX(L %) scaleX(W)` con el origen a la izquierda — el mismo par de números de
-   antes, sin animar layout. */
-.slider-progress__bar {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: var(--zone-1);
-  transform-origin: left center;
-  transition: transform var(--dur-entra) var(--ease-sale);
-}
 
 /* ---------- precios ---------- */
 .pricing__grid {
@@ -2505,9 +2264,10 @@ img { display: block; max-width: 100%; }
   94%, 100% { transform: rotate(6deg)  translateY(0)    scale(1,    1   ); }
 }
 
-/* `prefers-reduced-motion`: las cards destacadas no animan (shine sweep + badge hop). */
+/* `prefers-reduced-motion`: la tarifa destacada no anima (badge hop).
+   ⚠️ Aquí también se listaba `.ride-card--special .ride-card__viz::after`, el destello de la
+   atracción destacada del carrusel, que se fue con él en `#482`. */
 @media (prefers-reduced-motion: reduce) {
-  .ride-card--special .ride-card__viz::after,
   .price--feat .price__badge { animation: none; }
 }
 
@@ -3210,8 +2970,7 @@ a:focus-visible,
 button:focus-visible,
 [role="menuitem"]:focus-visible,
 input[type="checkbox"]:focus-visible,
-input[type="radio"]:focus-visible,
-.ride-card:focus-visible {
+input[type="radio"]:focus-visible {
   /* Anillo de foco unificado en --fg: contrasta siempre (la marca --zone-1 puede
      caer a ~1:1 con la zona Kids activa) y NO redefine el border-radius del elemento
      (antes 6px deformaba el radio 14px de los botones al tabular). El outline ya sigue
@@ -3262,7 +3021,6 @@ select:focus-visible {
   .rules-grid { grid-template-columns: 1fr 1fr; }
   .faq { grid-template-columns: 1fr; gap: 24px; }
   .events__row { grid-template-columns: 1fr; }
-  .ride-card { flex: 0 0 calc((100% - 18px) / 2); }
   .foot__grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -3293,9 +3051,6 @@ select:focus-visible {
      ancho de contenido) — con los 2 botones «Zona Jump/Kids» repartidos 50/50, sin hueco vacío. */
   .zone-tabs { display: flex; width: 100%; }
   .zone-tab { flex: 1; text-align: center; }
-  .slider-nav { justify-content: flex-end; }
-  .ride-card { flex: 0 0 78%; min-height: 400px; }
-  .ride-card__name { font-size: 24px; }
   /* pricing */
   .pricing__grid { grid-template-columns: 1fr; gap: var(--sp-12); }
   .price__num { font-size: 64px; }
@@ -3361,7 +3116,6 @@ select:focus-visible {
   .nav__brand-row { font-size: var(--fs-18); } /* #231 p9: logo grande pero ajustado al ancho mínimo */
   .hero__stage { aspect-ratio: 4 / 5; }
   .hero__title--onvideo { font-size: clamp(48px, 19vw, 80px); }
-  .ride-card { flex: 0 0 86%; }
   .polaroid { flex: 0 0 168px; }
   .price__num { font-size: 56px; }
 }
@@ -3982,13 +3736,20 @@ select:focus-visible {
 /* El chip `chipDato` del sistema: cápsula, mono 11 y el color de la zona AL 14 %.
    ⚠️ **Nunca a color pleno**: un chip que informa no es un control. Y su texto es TINTA, así que se
    lee sea cual sea el color que el panel le ponga a la zona. */
-.ride-tile__age {
+.ride-tile__chips {
+  margin: 0; display: flex; flex-wrap: wrap; gap: var(--sp-6);
+}
+.ride-tile__age,
+.ride-tile__badge {
   display: inline-flex; align-items: center;
   border-radius: var(--r-pill); padding: var(--sp-6) var(--sp-11);
   font-family: var(--font-mono); font-size: var(--fs-11); line-height: 1.2;
-  background: color-mix(in srgb, var(--zone-1) 14%, transparent);
   color: var(--fg);
 }
+.ride-tile__age { background: color-mix(in srgb, var(--zone-1) 14%, transparent); }
+/* El DISTINTIVO va en Nube y no en color de zona: ése ya lo lleva la edad, y dos chips teñidos
+   igual dejan de distinguirse. Nube es la superficie inerte del sistema, que es lo que es. */
+.ride-tile__badge { background: var(--bg-soft); }
 
 /* EL PIE de la página: la regla del parque y la vuelta a las zonas. */
 .page--rides .page__foot {
@@ -4026,4 +3787,117 @@ select:focus-visible {
     margin-top: 40px; padding-top: var(--sp-20);
     display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 03 · «QUÉ HAY DENTRO» · EL MOSAICO DE CINCO
+   Carril de diseño Fase 2 · T2d (`DECISIONES #482`). Artboard `Juegos PJP` **6a** (móvil) +
+   `Escritorio PJP` **4b** (escritorio).
+
+   La portada enseña cinco atracciones: **tres con nombre** y **dos veladas**, que se disuelven hacia
+   el papel. Las 23 viven en `/atracciones`.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* MÓVIL · dos pistas. La grande ocupa las dos en 3:2 y las cuatro restantes van cuadradas, así que
+   la fila de abajo la ocupan **enteras** las dos veladas — que es lo que hace que el velo se lea
+   como «la sección se acaba» y no como «estas dos fotos están borrosas». */
+.mosaic {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-12);
+}
+.mosaic__cell {
+  position: relative; overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--bg-soft);
+  aspect-ratio: 1 / 1;
+}
+.mosaic__cell[data-papel='grande'] { grid-column: span 2; aspect-ratio: 3 / 2; }
+.mosaic__link { display: block; position: absolute; inset: 0; }
+.mosaic__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* LA BANDA de tinta con el nombre y la zona.
+   ⚠️ **El .82 no es el .72 de una tarjeta cualquiera**: es el valor del 6a, que lo subió al poner la
+   zona en blanco pleno. Sobre una banda más clara ese blanco pierde el contraste que lo justifica. */
+.mosaic__band {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: var(--sp-10) var(--sp-12);
+  background: color-mix(in srgb, var(--paper-fg) 82%, transparent);
+  display: flex; flex-direction: column; gap: var(--sp-4);
+}
+/* ⚠️ **Bungee SOLO en la grande.** El sistema no lo deja bajar de 20 px, y en una celda de 173 el
+   nombre de una atracción en rótulo a 20 se parte en tres líneas: las chicas van en Hanken 800. */
+.mosaic__cell[data-papel='grande'] .mosaic__name {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-20); line-height: 1.1;
+}
+.mosaic__name {
+  font-family: var(--font-body); font-weight: 800;
+  font-size: var(--fs-16); line-height: 1.2;
+  color: var(--paper-bg);
+}
+/* ⚠️ La zona en **blanco pleno** y no en el gris secundario: sobre una superficie teñida solo
+   aguanta el extremo de la escala (el gris da 4,43 medido, y es la regla del sistema). */
+.mosaic__zone {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--paper-bg);
+}
+
+/* EL VELO · va a PAPEL y no a blanco puro, o contra el fondo de la página queda un canto visible.
+   ⚠️⚠️ **Es un degradado de UN color a su propia transparencia, no multicolor**: el sistema prohíbe
+   los segundos y éste no lo es. Y no es adorno: es el mismo recurso que el «asoma cortada» del
+   carril, dicho en vertical. */
+.mosaic__veil {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 8%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 52%,
+    var(--bg) 100%
+  );
+}
+
+/* LA PUERTA · una sola, y la única entrada a `/atracciones` desde la portada. */
+.rides__door { margin: var(--sp-20) 0 0; }
+.rides__door-link {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-16);
+  color: var(--interactive);
+  transition: color var(--dur-toque) var(--ease-sale);
+}
+.rides__door-link:hover { color: var(--fg); }
+
+@media (min-width: 1024px) {
+  /* ESCRITORIO · tres pistas (`Escritorio PJP` 4b, aprobada).
+     ⚠️⚠️ **La 4a se descartó por el VELO y el motivo es geométrico**: con la grande a dos columnas
+     solo cabe un nombre más arriba, así que el tercero cae por fuerza en la fila de las veladas y el
+     degradado deja de ser una banda. Aquí la columna de la derecha **se parte en dos** y los tres
+     nombres caben arriba, así que abajo no queda ninguna con nombre.
+     ⚠️ **Y ninguna foto se recorta de más**: las dos de la derecha quedan en 3:2, la misma
+     proporción que la grande — 4a estiraba una a 352×490, que de una piscina de bolas enseña una
+     franja central y pierde justo lo que la vende. */
+  .mosaic { grid-template-columns: repeat(3, 1fr); gap: 32px; }
+
+  /* La grande toma dos pistas y DOS filas: son las que se reparten las dos que se leen, así que su
+     3:2 es lo que fija el alto de la columna de la derecha. Sin el `grid-row: 1 / 3` cada una se
+     mediría por su cuenta y la fila quedaría descuadrada. */
+  .mosaic__cell[data-papel='grande'] { grid-column: 1 / 3; grid-row: 1 / 3; }
+  /* ⚠️ Sin proporción propia: se ESTIRAN a su fila, que es lo que las deja en ~3:2 —la misma que la
+     grande— sin escribir ningún número. */
+  .mosaic__cell[data-papel='chica'] { grid-column: 3; aspect-ratio: auto; }
+
+  /* ⚠️⚠️ **Las veladas ocupan la fila entera**, que es la condición con la que el velo entró: la
+     primera toma dos pistas en 16:5 y la segunda se estira a la altura de su fila.
+     ▶ La segunda se localiza por el HERMANO y no por `:last-child`: así la regla no depende de
+     cuántas celdas tenga el mosaico. */
+  .mosaic__cell[data-papel='velada'] { grid-column: 1 / 3; aspect-ratio: 16 / 5; }
+  .mosaic__cell[data-papel='velada'] ~ .mosaic__cell[data-papel='velada'] {
+    grid-column: 3; aspect-ratio: auto;
+  }
+
+  .mosaic__band { padding: var(--sp-16) var(--sp-20); gap: var(--sp-6); }
+  .mosaic__cell[data-papel='grande'] .mosaic__name { font-size: var(--fs-title); }
+  .mosaic__name { font-size: var(--fs-18); }
+  .mosaic__zone { font-size: var(--fs-12); }
 }

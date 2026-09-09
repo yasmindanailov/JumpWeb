@@ -6,10 +6,9 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\RateCards;
 use App\Domain\Booking\Services\ZoneCards;
-use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\VenueRule;
-use App\Domain\Content\Services\LandingComplementResolver;
+use App\Domain\Content\Services\RideMosaic;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Sidebar\AccountDoor;
@@ -22,22 +21,24 @@ class HomeController extends Controller
     {
         $this->maybeConsumeRedsysReturn($request);
 
-        // Atracciones por zona, con su complemento vinculado (#228) precargado para la card.
-        $zones = Zone::with(['attractions' => fn ($q) => $q
-            ->where('is_active', true)
-            ->with('ticketType.prices.rateType')])
+        // Atracciones activas por zona, en el orden del panel. De aquí salen el mosaico de «Qué hay
+        // dentro» y su recuento.
+        // ⚠️ **Ya no se precarga `ticketType.prices`**: se cargaba para pintar el precio del
+        // complemento en la tarjeta del carrusel, que se fue en `#482`. Una carga ansiosa que nadie
+        // consume es una consulta por petición que no se nota.
+        $zones = Zone::with(['attractions' => fn ($q) => $q->where('is_active', true)->orderBy('position')])
             ->where('show_in_landing', true)->orderBy('position')->get();
 
-        // Resolver de comprabilidad en BATCH (una query) → la card muestra precio/CTA solo si el
-        // complemento es realmente comprable en esa zona (coherencia #226).
-        $complements = new LandingComplementResolver($zones->flatMap->attractions);
-
-        // Dentro de cada zona: las atracciones con complemento COMPRABLE salen PRIMERO (decisión
-        // de la clienta), el resto por su `position`.
-        $zones->each(fn (Zone $zone) => $zone->setRelation('attractions', $zone->attractions
-            ->sort(fn (Attraction $a, Attraction $b): int => [$complements->isPurchasable($a) ? 0 : 1, $a->position]
-                <=> [$complements->isPurchasable($b) ? 0 : 1, $b->position])
-            ->values()));
+        /*
+         * ⚠️⚠️ **AQUÍ SE RESOLVÍA LA COMPRABILIDAD DEL COMPLEMENTO DE CADA ATRACCIÓN** (`#228`), y
+         * con ella el orden: las que se podían comprar salían primero en su carril. Las dos cosas se
+         * van con el carrusel (`#482`) — el mosaico enseña cinco fotos y **no vende**, que es lo que
+         * el artboard dibuja.
+         * ▶ **El MECANISMO no se retira**: el panel sigue pudiendo vincular un complemento a una
+         * atracción y el dominio sigue sabiendo si es comprable. Lo que ya no hay es pantalla que lo
+         * publique, y eso está FICHADO en `DEUDA.md` — medido, hoy lo usan **0 de 23**, así que no
+         * se cierra ningún camino de compra vivo; la cifra de `#302` («1 de 23, la Tirolina») caducó.
+         */
 
         // Las entradas activas de zona operativa, que alimentan a la vez la sección de tarifas y el
         // sello de precio de las tarjetas de zona. Se resuelven UNA vez.
@@ -47,7 +48,6 @@ class HomeController extends Controller
 
         return view('home', [
             'zones' => $zones,
-            'complements' => $complements,
             /*
              * Las tarjetas de «Para quién» (`#478`). Se componen en el dominio y no en la vista:
              * cruzar zonas con entradas, elegir la más barata y redactar la regla de altura es
@@ -58,6 +58,19 @@ class HomeController extends Controller
             // porque son de la ESCALA y no de una zona: las dos tarjetas rotulan el mismo techo.
             'zoneAxisCeiling' => $zoneCards->ceilingLabel(),
             'zoneAxisFloor' => $zoneCards->floorLabel(),
+            /*
+             * El mosaico de «Qué hay dentro» (`#482`): cinco atracciones de las que haya, con el
+             * reparto por zona del artboard. Recibe las MISMAS zonas que ya están cargadas —de ellas
+             * salen también las tarjetas de arriba—, así que no hay una segunda consulta.
+             */
+            'rideMosaic' => RideMosaic::compose($zones),
+            /*
+             * ⚠️ El recuento de la sección sale de lo que la PÁGINA DE AL LADO enseña, que son las
+             * zonas de la landing con atracciones activas. Es la misma cuenta que hace
+             * `AttractionsController`, y tiene que serlo: la entradilla promete «N atracciones
+             * dentro» y la puerta dice «ver las N» — si divergen, el cliente cuenta y no le salen.
+             */
+            'ridesTotal' => $zones->sum(fn (Zone $zone): int => $zone->attractions->count()),
             /*
              * Las tarifas de «Cuánto» (`#479`). ⚠️ **Reciben el MISMO `ZoneCards` que ya se ha
              * construido**, no uno propio: de él sale el eje de altura que la chapa vuelve a

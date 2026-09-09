@@ -65,6 +65,14 @@ class CmsLandingFlowTest extends TestCase
 
     // ─────────────────────────── Atracciones ───────────────────────────
 
+    /*
+     * ⚠️⚠️ **ESTOS CASOS MIRAN A `/atracciones`, NO A LA PORTADA, y el cambio es de `#482`.** La
+     * sección 03 pasó a un mosaico de CINCO fotos, así que la portada dejó de ser el sitio donde se
+     * ve el catálogo entero: una atracción nueva puede no salir ahí y estar publicada igualmente.
+     * ▶ `/atracciones` sí las enseña todas, así que es la superficie donde el flujo panel → web es
+     * observable. *Re-apuntar no es debilitar: aquí la aserción vale para las 23 y antes valía para
+     * las que cupieran en el carril.*
+     */
     public function test_attraction_created_in_panel_appears_on_landing(): void
     {
         $zone = $this->landingZone();
@@ -82,7 +90,7 @@ class CmsLandingFlowTest extends TestCase
             ->assertHasNoFormErrors();
 
         Auth::logout();
-        $this->get('/')->assertOk()->assertSee('AtraccionNuevaZZ');
+        $this->get('/atracciones')->assertOk()->assertSee('AtraccionNuevaZZ');
     }
 
     public function test_attraction_reorder_in_panel_reflects_on_landing(): void
@@ -92,7 +100,7 @@ class CmsLandingFlowTest extends TestCase
         $second = Attraction::create(['zone_id' => $zone->id, 'name' => ['es' => 'AtraccionDosZZ'], 'position' => 2]);
 
         // Orden inicial: Uno antes que Dos.
-        $this->get('/')->assertSeeInOrder(['AtraccionUnoZZ', 'AtraccionDosZZ']);
+        $this->get('/atracciones')->assertSeeInOrder(['AtraccionUnoZZ', 'AtraccionDosZZ']);
 
         // Reordenar en el panel (arrastrar Dos delante de Uno).
         Livewire::actingAs($this->admin())
@@ -102,7 +110,7 @@ class CmsLandingFlowTest extends TestCase
         $this->assertLessThan($first->fresh()->position, $second->fresh()->position, 'el reorden persistió en BD');
 
         Auth::logout();
-        $this->get('/')->assertSeeInOrder(['AtraccionDosZZ', 'AtraccionUnoZZ']);
+        $this->get('/atracciones')->assertSeeInOrder(['AtraccionDosZZ', 'AtraccionUnoZZ']);
     }
 
     public function test_attraction_badge_and_image_render_on_landing(): void
@@ -116,7 +124,7 @@ class CmsLandingFlowTest extends TestCase
             'position' => 1,
         ]);
 
-        $html = $this->get('/')->assertOk();
+        $html = $this->get('/atracciones')->assertOk();
         $html->assertSee('AtraccionConExtrasZZ');
         $html->assertSee('BadgeZZ');          // sub-badge
         $html->assertSee('images/test-zz.jpg'); // src de la imagen (vía asset())
@@ -127,7 +135,7 @@ class CmsLandingFlowTest extends TestCase
         $zone = $this->landingZone();
         $attraction = Attraction::create(['zone_id' => $zone->id, 'name' => ['es' => 'AtraccionVisibleZZ'], 'position' => 1]);
 
-        $this->get('/')->assertSee('AtraccionVisibleZZ');
+        $this->get('/atracciones')->assertSee('AtraccionVisibleZZ');
 
         Livewire::actingAs($this->admin())
             ->test(EditAttraction::class, ['record' => $attraction->id])
@@ -136,7 +144,7 @@ class CmsLandingFlowTest extends TestCase
             ->assertHasNoFormErrors();
 
         Auth::logout();
-        $this->get('/')->assertDontSee('AtraccionVisibleZZ');
+        $this->get('/atracciones')->assertDontSee('AtraccionVisibleZZ');
     }
 
     public function test_attraction_in_hidden_zone_does_not_appear_on_landing(): void
@@ -149,7 +157,7 @@ class CmsLandingFlowTest extends TestCase
         ]);
         Attraction::create(['zone_id' => $hidden->id, 'name' => ['es' => 'AtraccionOcultaZZ'], 'position' => 1, 'is_active' => true]);
 
-        $this->get('/')->assertOk()->assertDontSee('AtraccionOcultaZZ');
+        $this->get('/atracciones')->assertOk()->assertDontSee('AtraccionOcultaZZ');
     }
 
     public function test_deleted_attraction_disappears_from_landing(): void
@@ -157,14 +165,14 @@ class CmsLandingFlowTest extends TestCase
         $zone = $this->landingZone();
         $attraction = Attraction::create(['zone_id' => $zone->id, 'name' => ['es' => 'AtraccionBorrableZZ'], 'position' => 1]);
 
-        $this->get('/')->assertSee('AtraccionBorrableZZ');
+        $this->get('/atracciones')->assertSee('AtraccionBorrableZZ');
 
         Livewire::actingAs($this->admin())
             ->test(EditAttraction::class, ['record' => $attraction->id])
             ->callAction('deleteAttraction');
 
         Auth::logout();
-        $this->get('/')->assertDontSee('AtraccionBorrableZZ');
+        $this->get('/atracciones')->assertDontSee('AtraccionBorrableZZ');
     }
 
     public function test_attraction_renders_in_active_locale(): void
@@ -176,8 +184,8 @@ class CmsLandingFlowTest extends TestCase
             'position' => 1,
         ]);
 
-        $this->get('/')->assertSee('AtraccionEspanolZZ')->assertDontSee('AttractionEnglishZZ');
-        $this->withSession(['locale' => 'en'])->get('/')->assertSee('AttractionEnglishZZ');
+        $this->get('/atracciones')->assertSee('AtraccionEspanolZZ')->assertDontSee('AttractionEnglishZZ');
+        $this->withSession(['locale' => 'en'])->get('/atracciones')->assertSee('AttractionEnglishZZ');
     }
 
     // ─────────────────────────────── FAQ ───────────────────────────────

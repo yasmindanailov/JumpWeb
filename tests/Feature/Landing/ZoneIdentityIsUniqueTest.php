@@ -29,6 +29,14 @@ use Tests\TestCase;
  * ⚠️ **Y la misma raíz ya se había arreglado A MEDIAS antes**: `ThemeColorTest` tiene desde `#230`
  * un caso llamado *«dos zonas que comparten acento ya no comparten color»* — se corrigió el COLOR y
  * la IDENTIDAD se quedó en `accent`. Las dos mitades tienen ahora guarda propia.
+ *
+ * ❗❗❗ **Y VUELVE A PASAR LO MISMO EN `#482`: el carrusel de la portada se retiró y esta guarda se
+ * quedó sin sujeto por SEGUNDA vez.** No se borra —sería la tercera vez que el arreglo se queda
+ * desnudo—: se **re-apunta a `/atracciones`**, que es donde hoy vive una pieza por zona (una
+ * pestaña y un panel, más su paleta compuesta). *Una guarda re-apuntada no puede quedar más débil
+ * que la que sustituye*, así que sigue mirando las mismas tres cosas: que el localizador encuentre
+ * algo, que dos zonas con el mismo acento no compartan identidad, y que el color siga saliendo del
+ * acento.
  */
 class ZoneIdentityIsUniqueTest extends TestCase
 {
@@ -41,10 +49,10 @@ class ZoneIdentityIsUniqueTest extends TestCase
         app()->setLocale('es');
     }
 
-    /** El HTML de la portada, una sola vez por llamada. */
-    private function home(): string
+    /** El HTML de `/atracciones`, una sola vez por llamada. */
+    private function pagina(): string
     {
-        return (string) $this->get('/')->assertOk()->getContent();
+        return (string) $this->get('/atracciones')->assertOk()->getContent();
     }
 
     /**
@@ -54,20 +62,19 @@ class ZoneIdentityIsUniqueTest extends TestCase
      */
     private function identifiers(): array
     {
-        $html = $this->home();
+        $html = $this->pagina();
 
-        // ⚠️ El selector dejó de ser `.zone-tab` en `#301`: aquellas pestañas son las de `/precios`
-        // y `/servicios`, y el de la portada es ahora `.zone-pick__tab`, con icono y edad. Este
-        // patrón se re-apuntó porque **la guarda-de-la-guarda de abajo se puso ROJA** al cambiar el
-        // marcado, que es exactamente para lo que está.
-        preg_match_all('/<div class="slider"[^>]*data-zone="([^"]+)"/', $html, $carruseles);
-        preg_match_all('/<div class="slider"[^>]*x-ref="slider_([^"]+)"/', $html, $refs);
-        preg_match_all('/<button type="button" class="zone-pick__tab"[^>]*@click="setZone\(\'([^\']+)\'\)"/s', $html, $pestanas);
+        // ⚠️ El sitio cambió DOS veces: `.zone-tab` hasta `#301`, `.zone-pick__tab` en la portada
+        // hasta `#482`, y hoy la pestaña y el panel de `/atracciones`. Cada vez lo dijo **la
+        // guarda-de-la-guarda de abajo al ponerse ROJA**, que es exactamente para lo que está.
+        preg_match_all('/id="atracciones-([a-z0-9-]+)"/', $html, $paneles);
+        preg_match_all('/id="rides-tab-([a-z0-9-]+)"/', $html, $pestanas);
+        preg_match_all('/aria-controls="atracciones-([a-z0-9-]+)"/', $html, $controlados);
 
         return [
-            'data-zone' => $carruseles[1],
-            'x-ref' => $refs[1],
-            'pestañas' => $pestanas[1],
+            'panel' => $paneles[1],
+            'pestaña' => $pestanas[1],
+            'aria-controls' => $controlados[1],
         ];
     }
 
@@ -76,19 +83,19 @@ class ZoneIdentityIsUniqueTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────────────
 
     /**
-     * **El localizador encuentra las tres cosas.**
+     * **El localizador encuentra los tres sitios.**
      *
      * ⚠️ Sin este caso, un cambio de marcado dejaría los tres `preg_match_all` devolviendo listas
      * VACÍAS y el caso de abajo pasaría en verde **sin mirar nada**: una lista vacía no tiene
      * duplicados. Es el fallo que este proyecto ha cometido cuatro veces.
      */
-    public function test_the_probe_finds_carousels_refs_and_tabs(): void
+    public function test_the_probe_finds_panels_tabs_and_their_controls(): void
     {
         foreach ($this->identifiers() as $sitio => $encontrados) {
             $this->assertNotEmpty(
                 $encontrados,
-                "el localizador no encuentra ningún «{$sitio}» en la portada: o el marcado cambió de ".
-                'forma, o esta guarda lleva tiempo pasando sin mirar nada.',
+                "el localizador no encuentra ningún «{$sitio}» en `/atracciones`: o el marcado cambió ".
+                'de forma, o esta guarda lleva tiempo pasando sin mirar nada.',
             );
         }
     }
@@ -134,8 +141,8 @@ class ZoneIdentityIsUniqueTest extends TestCase
             $this->assertSame(
                 count($emitidos), count(array_unique($emitidos)),
                 "hay «{$sitio}» repetidos: la identidad ha vuelto a un campo que AGRUPA en vez de ".
-                'identificar. Con eso, dos zonas se pisan — `$refs` resuelve a una sola y pulsar '.
-                'una pestaña abre varios carruseles a la vez.',
+                'identificar. Con eso dos zonas se pisan: un `id` duplicado hace que `aria-controls` '.
+                'apunte a una sola y que pulsar una pestaña abra el panel de otra.',
             );
         }
     }
@@ -162,14 +169,16 @@ class ZoneIdentityIsUniqueTest extends TestCase
             'position' => 1, 'is_active' => true,
         ]);
 
-        $html = $this->home();
+        $html = $this->pagina();
 
+        // La paleta viaja COMPUESTA en el `style` del panel (`ThemeSettings::zoneStyle()`), que es
+        // donde `#138` la dejó: aquí se lee su `--zone-1`.
         preg_match(
-            '/<div class="slider"[^>]*data-zone="'.preg_quote($gemela->slug, '/').'"[^>]*data-color="([^"]+)"/',
+            '/id="atracciones-'.preg_quote($gemela->slug, '/').'"[^>]*style="--zone-1:([^;]+);/',
             $html, $m,
         );
 
-        $this->assertNotEmpty($m, 'el carrusel de la zona gemela no emite `data-color`');
+        $this->assertNotEmpty($m, 'el panel de la zona gemela no emite su `--zone-1`');
 
         $this->assertSame(
             ThemeSettings::colorForAccent(null, $kids->accent),

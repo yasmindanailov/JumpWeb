@@ -125,8 +125,21 @@ return [
         'height_between' => 'de :a a :b m',
         'intro' => 'Diseñamos dos universos diferentes: uno para los que vuelan sin frenos y otro para los que están descubriendo el salto. Elige el tuyo.',
     ],
+    /*
+     * La sección 03 «Qué hay dentro» (`#482`). ⚠️ El RÓTULO no lleva número —decisión del canvas,
+     * la misma de `#478`— y el TITULAR es una frase de 3 a 6 palabras, no una etiqueta: «El parque»
+     * era lo anterior y `doc/voz.md` del canvas lo cambia a propósito, porque «Dentro» repetiría la
+     * palabra del rótulo.
+     * ⚠️⚠️ La entradilla **abre con la cifra**, y la cifra es DATO: es lo que sustituye a la chapa
+     * del «18 más» que el recorte de presupuesto del canvas se llevó. Sin ella la sección enseña
+     * cinco fotos y no dice en ningún sitio cuántas hay.
+     */
     'rides' => [
-        'eyebrow' => 'Atracciones',
+        'eyebrow' => 'Qué hay dentro',
+        'title' => 'Salta, trepa y déjate caer',
+        'intro' => ':count atracciones dentro. Camas elásticas, toboganes, foam y piscina de bolas.',
+        // La única puerta de la sección, y la única entrada a `/atracciones` desde la portada.
+        'door' => 'Ver las :count atracciones',
         'zone_tab' => 'Zona',
         'book_zone' => 'Reservar :zone',
         'buy' => 'Comprar',
