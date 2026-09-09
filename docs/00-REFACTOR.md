@@ -1844,6 +1844,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
+      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#473`,
+      `specs/rediseno-desde-canvas.md`), que se reabrió con el sistema del 2.º cliente ya entregado.
+      Su Fase 1 es literalmente este punto: **cuatro cifras dentro** —táctil, radios, aire y
+      columna—, con **hueco nuevo por instalación** para el aire y la columna, que no lo tenían.
+      ⚠️ Y midiendo salió que **el paquete de un cliente podía inventar valores fuera de las escalas
+      cerradas del producto** sin que nada lo viera: tres guardas nuevas lo cierran. Queda la
+      tipografía, los 65 iconos y **una pasada de navegador que todavía no se ha hecho**.
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).
 
 ### Fase 6 — Móvil + features nuevas 🟦 — el waiver (subsistema B) EN EJECUCIÓN desde el 2026-08-25 · menores a cargo (C) desde el 2026-08-27

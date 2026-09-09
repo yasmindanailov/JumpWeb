@@ -1,6 +1,18 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🚀 **TODO LO DE LA HORA EXTRA ESTÁ EN PRODUCCIÓN, VERIFICADO, Y CONFIGURADO POR EL OWNER** (2026-09-08, commit `e76d6f2a`, sexto despliegue). Cerraron `#443` (la hora extra se cobra por invitado), `#444` (el cliente mueve sus invitados), **`#448` (el SELLO DEL MODO, cuatro tandas)** y **`#449`** (los por-invitado siguen a los invitados desde el post-form). ▶ **El owner YA puso los dos enganches en «Se cobra por invitado»**, y se verificó en producción que **las dos reservas vendidas del 21/09 no se movieron** —1 × 5,00 € y 1 × 4,00 €, sello `fixed`, 60 minutos— cuando antes ese mismo clic habría hecho **+35,00 €**, **+56,00 €** y **900 minutos de sala**. El owner vio la pastilla «Vendido con otra unidad» en la ficha real: era la única pieza sin red automática. ❗❗❗ **LO ÚNICO PENDIENTE ES DEL OWNER Y ES EL PRECIO** (medido el 08-09 tras configurar): las dos horas extra **solo tienen tarifa `normal`** (5,00 € JUMP · 4,00 € KIDS), así que **NO SE OFRECEN viernes, sábado, domingo ni fechas especiales** —justo cuando hay cumpleaños—; falta la tarifa `special` (viene del 06-09, `#443`, no del despliegue). ⚠️⚠️ **Y ese número era el precio de la HORA, no el de por invitado**: con «por invitado», una fiesta de 15 pagaría **15 × 5,00 € = 75,00 €**. Es decisión suya, pero **no está ajustada a la unidad nueva** — no se toca sin él. ▶ **NADA de esto bloquea código**: `main` = producción = `e76d6f2a`+doc, suite **4.481** verde.
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-09, `#469`→`#473`). El owner trajo su sistema de Claude Design terminado y `#452` mandaba, al volver, **leerlo entero y contrastarlo con el código antes de proponer nada**. Hecho. ▶ **TODO lo del carril vive en `docs/specs/rediseno-desde-canvas.md`** —plan, inventario, conflictos medidos y estado por tanda—; **empieza por ahí y por su §2**, que es el filtro que atraviesa las cinco fases: el canvas es de PlayJump y **este repo es el PRODUCTO**, así que cada pieza pasa por «¿mecanismo o cliente?» antes de copiarse. Banda del carril: **470–499**.
+>
+> ▶ **DÓNDE ESTÁ EXACTAMENTE.** La **Fase 1** (el sistema) tiene **cuatro tandas dentro y verdes**: táctil **44→48** en el producto · radios colapsados a **0·10·16·999** en el paquete · aire de sección **240/160 → 144/96** con token nuevo · columna **1176 → 1120** con hueco nuevo por instalación. Dos más se cerraron **sin código** (`#473`): el movimiento se queda en **cuatro curvas** —`#262` sigue en pie— y el **punto de corte se APARCA hasta la Fase 2**. ⬜ **Quedan la tipografía (T1g) y los 65 iconos (T1h)**, y ésas son las dos grandes.
+>
+> ⚠️⚠️ **TRES COSAS QUE NO PUEDES NO SABER ANTES DE TOCAR NADA DE ESTO.** **(1)** El paquete del cliente **`public/css/client.css` está GITIGNORADO**, así que **los valores de PlayJump NO viajan en ningún commit**: son **paso de despliegue** y la lista viva está en la **§5.bis** de la spec. Si miras la web y no ves el cambio, mira si el paquete local lo tiene. **(2)** `Tests\Support\ReadsSiteStylesheets::siteSheets()` **EXCLUYE `client.css` a propósito** —lo dice su docblock—, así que **para aseverar algo del paquete NO se usa el trait**: se lee el fichero con `file_get_contents`. Dos guardas escritas hoy vigilaban una cadena vacía por creer lo contrario, y **lo cazó una mutación, no una relectura**. **(3)** **NO hay sonda de navegador**: se han movido táctil, aire y columna sin verlo renderizado. `TouchTargetTest` no mide píxeles y lo dice su propio docblock. La pasada está planificada **una sola vez al final de la Fase 1** (spec §5.ter) y **hay que reconstruir la sonda** —vivía en `/root/e2e/tap44.mjs`, fuera del repo— leyendo antes sus dos trampas medidas.
+>
+> ▶ **LO SIGUIENTE, EN UNA LÍNEA: la tipografía (T1g).** El canvas declara **diez niveles con nombre** (Display XL/L · Título · Subtítulo · Entradilla · Cuerpo · Cuerpo S · Botón · Etiqueta · Eslogan) y el producto tiene una escala `--fs-*` **por píxel**; el propio canvas lo tiene fichado como su **grieta 00 bis** (*«las dos escalas no son escalas: son un token por píxel»*). ⚠️ **Va a traer decisiones del owner**, y el protocolo de este carril (`#469`) es **preguntárselas todas antes de construir**, aunque sean pequeñas.
+>
+> ▶ **Y hay DOS cosas del owner ya identificadas y sin contestar** (spec §6, ocho en total): la **grieta 00** —el cuerpo del cajón es **13 px** contra un suelo de sistema de 16, y subirlo obliga a revisar el reflujo de **25 pantallas**— y qué pasa con **`/entradas`**, que existe en el producto y **no está en el inventario de páginas del canvas**.
+>
+> ⚠️ **La copia local del canvas es `mockup_playjumppark_v2/`.** La vieja, `mockup_playjumppark/`, **NO está caducada: ES EL ARCHIVO** —son los artboards que el canvas movió a `archivo/`, con paleta antigua que su propia cabecera prohíbe copiar—. Y **`Portada PJP.dc.html` se baja TRUNCADO** (256 KiB exactos): parece válido y se corta por la mitad, así que la portada se lee de sus artboards por sección. `DesignSync` quedó **autorizado en esta máquina**, que era deuda desde `#262`.
+>
+> ▶ **Lo de la jornada anterior sigue cerrado y en producción, y NADA de esto lo toca.** 🚀 **TODO LO DE LA HORA EXTRA ESTÁ EN PRODUCCIÓN, VERIFICADO, Y CONFIGURADO POR EL OWNER** (2026-09-08, commit `e76d6f2a`, sexto despliegue). Cerraron `#443` (la hora extra se cobra por invitado), `#444` (el cliente mueve sus invitados), **`#448` (el SELLO DEL MODO, cuatro tandas)** y **`#449`** (los por-invitado siguen a los invitados desde el post-form). ▶ **El owner YA puso los dos enganches en «Se cobra por invitado»**, y se verificó en producción que **las dos reservas vendidas del 21/09 no se movieron** —1 × 5,00 € y 1 × 4,00 €, sello `fixed`, 60 minutos— cuando antes ese mismo clic habría hecho **+35,00 €**, **+56,00 €** y **900 minutos de sala**. El owner vio la pastilla «Vendido con otra unidad» en la ficha real: era la única pieza sin red automática. ❗❗❗ **LO ÚNICO PENDIENTE ES DEL OWNER Y ES EL PRECIO** (medido el 08-09 tras configurar): las dos horas extra **solo tienen tarifa `normal`** (5,00 € JUMP · 4,00 € KIDS), así que **NO SE OFRECEN viernes, sábado, domingo ni fechas especiales** —justo cuando hay cumpleaños—; falta la tarifa `special` (viene del 06-09, `#443`, no del despliegue). ⚠️⚠️ **Y ese número era el precio de la HORA, no el de por invitado**: con «por invitado», una fiesta de 15 pagaría **15 × 5,00 € = 75,00 €**. Es decisión suya, pero **no está ajustada a la unidad nueva** — no se toca sin él. ▶ **NADA de esto bloquea código**: `main` = producción = `e76d6f2a`+doc, suite **4.481** verde.
 
 > ✅ **EL SELLO DEL MODO — CERRADO DE PUNTA A PUNTA** (`#448`/`#449`; diseño y ejecución en `specs/hora-extra.md` §12, con §12.20 = la revisión adversarial). ▶ **La regla que deja, y vale para cualquier feature futura**: *la unidad con la que se contó una cantidad viaja en la LÍNEA, no en el catálogo* — es el hermano de `unit_price`, que ya estaba a salvo por vivir ahí. ⚠️ **Si añades un lector del modo**, `SoldLineUnitHasOneSourceTest` te obligará a declararlo en una de sus dos listas: OFERTA puede crecer (lee el catálogo de hoy), LÍNEA VENDIDA tiene que ser CERO (pasa por `AddonResolver::soldQuantityUnit()`). ▶ **Lo que queda abierto son SEIS fichas de `DEUDA.md`**, ninguna alcanzable con el catálogo de hoy; la más útil es el **N+1 de la pastilla de divergencia** (hoy cuesta 0 porque casi nada está sellado, y crece con cada venta nueva). ⚠️⚠️ **Y una que NO es de esta feature y muerde a todo el repo: 13 de los 22 arneses de mutación pueden dejar el árbol MUTADO si el proceso muere** (`trap … EXIT` no corre con SIGKILL). Pasó **tres veces hoy**, y las tres lo cazó **volver a correr la suite ENTERA antes de commitear**, no el arnés. `scripts/mutar-sello-modo.sh` ya está endurecido y sirve de MOLDE: copia en ruta fija, reparación al arrancar, `mutar()` que ABORTA si el fichero no tiene copia, e integridad al terminar.
 
@@ -487,7 +499,10 @@
 >    sembrados, guion en `VERIFICACION-E2E-CAJON.md` §5.septies — ⚠️ **ese escenario ENVEJECE**: se
 >    sembró para «hoy» el 01/09) · el libro del pedido (V18–V23) · los TPV · su `client-menu.webp`.
 >
-> **5. EL CARRIL DE DISEÑO ESTÁ PARADO** (`#452`, 2026-09-03, `[DECIDIDO owner]`): el owner delega el
+> **5. EL CARRIL DE DISEÑO — ✅ REABIERTO EL 2026-09-09** (`#469`; lo que sigue es de cuando paró y
+>    explica el estado del código de entonces). **El owner avisó con su base**, así que la condición
+>    de `#452` se cumplió y el carril vivo es `docs/specs/rediseno-desde-canvas.md`.
+>    Lo que decía `#452` (2026-09-03, `[DECIDIDO owner]`): el owner delega el
 >    diseño a **Claude Design**, itera allí y avisará con la base; hasta entonces este carril **no
 >    construye nada**. Al parar se revirtieron las tandas A y B del cajón (`#450`/`#451`, en un commit
 >    nuevo: el cajón está como antes), se archivaron `design.md`, el guion de la portada y la auditoría
@@ -495,8 +510,9 @@
 >    las tandas C→F de la auditoría de la web pública (`docs/specs/auditoria-diseno.md`, `#434`→`#437`,
 >    guardas vistas morder); su G, parada. ⚠️⚠️ **Paso de despliegue del owner: cinco líneas en el
 >    `client.css` de producción** (la lista, en «DOS COSAS DEL OWNER»). Su bloque «CARRIL DISEÑO ·
->    PARADO» y el **REPARTO VIGENTE de los dos carriles** —diseño numera en `#450`–`#459`, este carril
->    en `#410`+— están bajo «POR DÓNDE RETOMAR», más abajo. **Léelo antes de elegir número o de tocar
+>    PARADO» está bajo «POR DÓNDE RETOMAR», más abajo. ⚠️ **El reparto de bandas que decía esta línea
+>    está CADUCADO**: desde `#469` el carril de diseño numera en **470–499** (la vieja `#450`–`#459` se
+>    agotó), y el de producto sigue en la suya. **Léelo antes de elegir número o de tocar
 >    `resources/views/components/site/**`.** ▶ **Cierre de este carril: 2026-09-03 por la tarde**, en
 >    `34f8fa6` (el revert + el archivo, integrado sobre la T1 de complementos sin conflictos) y el commit
 >    de cierre que sigue; árbol limpio, nada aparcado en `wip/`, hook activo. Lo único que hay que saber
@@ -860,8 +876,13 @@ haga a propósito. *Encontrarlo fue gratis: `grep -oE '^## #[0-9]+' docs/DECISIO
 
 ## ▶ POR DÓNDE RETOMAR (lee esto primero)
 
-═══════════ CARRIL DISEÑO · PARADO Y ARCHIVADO (2026-09-03, `#452`, `[DECIDIDO owner]`) ═══════════
-▶ ❗❗❗ **POR DÓNDE SE RETOMA ESTE CARRIL: NO SE RETOMA HASTA QUE EL OWNER AVISE.** Sus palabras:
+═══════════ CARRIL DISEÑO · ✅ REABIERTO EL 2026-09-09 (`#469`) — este bloque es HISTÓRICO ═══════════
+▶ ❗❗❗ **YA NO SE RETOMA POR AQUÍ: el carril vivo está en `docs/specs/rediseno-desde-canvas.md`**
+y su estado, arriba del todo de este fichero. El owner avisó el 2026-09-09 con su sistema de Claude
+Design terminado (v1.32, tokens v1.9) y se hizo lo que `#452` mandaba: leerlo entero y contrastarlo
+con el código antes de proponer nada. **Lo de abajo queda como registro de lo que se archivó
+entonces** — sigue siendo cierto de aquel momento y explica por qué `docs/archivo/` existe.
+▶ Lo que dijo `#452` en su día:
 *«el diseño lo voy a delegar a claude design primero, voy a iterar ahí, aquí vamos a dejarlo… cuando lo
 tenga, te aviso y empezaremos a trabajar sobre una base profesional y robusta, con todo claro»*. Cuando
 vuelva traerá su sistema hecho en Claude Design; lo primero entonces es **leerlo entero y contrastarlo
@@ -1031,8 +1052,10 @@ regla de `CONVENCIONES §10` y la del 01-09: nadie corre `stash`/`checkout --`/`
     ⚠️ **La T3 tocará `SlotOffer` / `CartOccupants`, que son del carril de PRODUCTO y están en el
     `CRITICAL_RE`**: es una incursión declarada, con `VERIFY_CONC=1` y `git pull --rebase` antes de
     empujar. **No toco nada de la landing ni del armazón público.**
-  · **DISEÑO / IDIOMA VISUAL** (este) → ⏸️ **PARADO desde el 2026-09-03 (`#452`)**: no toca nada hasta
-    que el owner vuelva con su sistema de Claude Design. Su ámbito, cuando vuelva, sigue siendo
+  · **DISEÑO / IDIOMA VISUAL** (este) → ✅ **REABIERTO el 2026-09-09 (`#469`)** con el sistema del
+    owner ya entregado; lo gobierna `docs/specs/rediseno-desde-canvas.md` y su ámbito CRECE con
+    `tests/Feature/Architecture/{ShapeScale,Rhythm,TouchTarget,ColumnIsDeclaredOnce}Test.php` y el
+    paquete `public/css/client.css`, que **no viaja en el commit**. El ámbito heredado sigue siendo
     `public/css/{site,landing}.css` · `resources/views/{home.blade.php,pages/**,components/site/**}` ·
     `lang/*/landing.php` · `tests/Feature/{Landing,Theme}/**` ·
     `docs/specs/{auditoria-diseno,idioma-visual-heredado}.md` · `docs/archivo/**`. Los prototipos y
