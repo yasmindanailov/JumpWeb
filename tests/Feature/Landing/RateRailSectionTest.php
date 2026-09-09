@@ -53,6 +53,27 @@ class RateRailSectionTest extends TestCase
         return $m[0];
     }
 
+    /**
+     * El marcado del panel de UNA zona.
+     *
+     * ⚠️⚠️ **Se recorta hasta el panel SIGUIENTE, no con un `.*?</div>\s*</div>`.** El recorte no
+     * codicioso para en el primer par de cierres que encuentre, y cuántos hay dentro depende de si
+     * la tarjeta pinta complementos, matiz o tarifa especial — o sea **del dato**. Con el fixture
+     * corto capturaba una sola tarjeta y una guarda que contaba chips **pasaba en verde con dos
+     * pintados**. Lo cazó el arnés de mutación, no una relectura.
+     */
+    private function panel(string $slug): string
+    {
+        $html = (string) $this->get('/')->assertOk()->getContent();
+
+        $ini = strpos($html, 'id="rate-panel-'.$slug.'"');
+        $this->assertNotFalse($ini, "no existe el panel de la zona `{$slug}`: este caso miraría el vacío.");
+
+        $fin = strpos($html, 'id="rate-panel-', $ini + 10);
+
+        return substr($html, $ini, ($fin === false ? strlen($html) : $fin) - $ini);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Guarda de la guarda
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -425,6 +446,144 @@ class RateRailSectionTest extends TestCase
         $seccion = $this->seccion();
         $this->assertStringNotContainsString('data-featured', $seccion);
         $this->assertMatchesRegularExpression('/'.$destacada->zone->slug.'\\\\u0022:0/', $seccion);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    /**
+     * ❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA, Y SOLO DE ELLA.**
+     *
+     * `[DECIDIDO owner, 2026-09-09]`. En el artboard el chip negro es `esHero`: la señal de cuál
+     * coger. ⚠️⚠️ **Antes colgaba solo del `badge` y eso los separaba**, con daño reproducido sobre
+     * los datos de esta instalación: «Kids · Ilimitada» llevaba el chip **sin ser destacada** —su
+     * `badge` dice «Todo el día»— mientras ninguna entrada estaba marcada, o sea que la zona tenía
+     * un marcador de líder y **ninguna líder**. *Un marcador que puede aparecer en cualquier tarjeta
+     * deja de decir cuál coger, que es lo único para lo que existe.*
+     */
+    public function test_the_chip_only_marks_the_card_that_leads(): void
+    {
+        // ⚠️ El reset masivo, ANTES de leer: ver el motivo en `test_two_featured_entries…`.
+        TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
+
+        $entradas = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->orderBy('position')->get();
+        $this->assertGreaterThan(1, $entradas->count(), 'hace falta más de una entrada para distinguir líder de vecina.');
+
+        // Una NO líder con `badge`: no lleva chip.
+        $entradas->first()->update(['badge' => ['es' => 'Top', 'en' => 'Top', 'fr' => 'Top']]);
+
+        $this->assertStringNotContainsString(
+            'rate-card__badge', $this->seccion(),
+            'una tarjeta que no lidera lleva el chip: el marcador deja de decir cuál coger.',
+        );
+
+        // La misma, marcada como líder: ahora sí, y con SU texto.
+        $entradas->first()->update(['featured' => true]);
+
+        $seccion = $this->seccion();
+        $this->assertStringContainsString('<span class="rate-card__badge">Top</span>', $seccion);
+        $this->assertSame(
+            1, substr_count($seccion, 'rate-card__badge'),
+            'hay más de un chip en la sección: solo lidera una tarjeta por zona.',
+        );
+    }
+
+    /**
+     * ❗❗ **SI EL PANEL MARCA DOS DESTACADAS EN LA MISMA ZONA, LIDERA UNA.**
+     *
+     * ⚠️⚠️ Nada impide marcar dos: `featured` es un booleano por producto. Si cada tarjeta se
+     * preguntara «¿soy destacada?», saldrían **dos tarjetas anchas con dos chips** — y con eso el
+     * marcador deja de decir cuál coger, que es lo único para lo que existe. Se resuelve por ÍNDICE:
+     * manda la primera y las demás son tarjetas normales.
+     * ▶ **Es una resolución determinista, no un empate**, y por eso se fija con un caso: el día que
+     * alguien vuelva a preguntárselo producto a producto, esto se pone rojo.
+     */
+    public function test_two_featured_entries_in_one_zone_still_yield_a_single_leader(): void
+    {
+        /*
+         * ❗❗❗ **EL RESET MASIVO VA ANTES DE LEER LOS MODELOS, y no es orden estético.**
+         * Un `update()` de Eloquent solo escribe los atributos SUCIOS. Si el modelo se lee primero
+         * y después una escritura masiva le cambia la fila por detrás, reponer el MISMO valor que
+         * ya tiene en memoria **no lo ensucia y no emite ninguna sentencia**: la fila se queda como
+         * la dejó el masivo. Aquí eso dejaba **una sola destacada donde el caso creía marcar dos**,
+         * así que el caso pasaba… sin haber montado nunca el escenario que dice montar.
+         * ▶ Lo cazó el arnés de mutación —la mutación no mordía—, no una relectura.
+         */
+        TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
+
+        $entradas = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->where('zone_id', Zone::where('slug', 'kids')->value('id'))
+            ->orderBy('position')->get();
+
+        $this->assertGreaterThan(1, $entradas->count(), 'la zona no tiene dos entradas: este caso miraría el vacío.');
+
+        $entradas->take(2)->each(fn (TicketType $t) => $t->update([
+            'featured' => true,
+            'badge' => ['es' => 'Top', 'en' => 'Top', 'fr' => 'Top'],
+        ]));
+
+        $panel = $this->panel('kids');
+
+        // ⚠️ La cifra se DERIVA del catálogo, no se teclea: el fixture tiene cuatro entradas en
+        //    kids y la instalación local tres. *Un dato presente en tu base no es un dato que exista.*
+        $this->assertSame(
+            $entradas->count(), substr_count($panel, 'class="rate-card"'),
+            'el localizador no ve todas las tarjetas de la zona: contaría sobre un recorte.',
+        );
+        $this->assertSame(1, substr_count($panel, 'data-featured'), 'hay dos tarjetas anchas en la misma zona.');
+        $this->assertSame(1, substr_count($panel, 'rate-card__badge'), 'hay dos chips en la misma zona.');
+    }
+
+    /**
+     * ❗❗ **EL `badge` DE UNA TARJETA QUE NO LIDERA NO SE PIERDE: BAJA AL MATIZ.**
+     *
+     * ⚠️⚠️ Es la mitad que evita un fallo SILENCIOSO: sin esto, el operador escribe una etiqueta en
+     * el panel y **no aparece en ninguna parte**. Baja al registro donde el artboard pone «sin
+     * límite» —un dato del nombre, en mono y junto a él—, que es exactamente lo que «Todo el día»
+     * es en este catálogo.
+     */
+    public function test_a_badge_on_a_card_that_does_not_lead_becomes_the_nuance(): void
+    {
+        // ⚠️ El reset masivo, ANTES de leer: ver el motivo en `test_two_featured_entries…`.
+        TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
+
+        $entrada = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->orderBy('position')->firstOrFail();
+
+        $entrada->update([
+            'name' => ['es' => $entrada->zone->tr('name').' · Ilimitada'],
+            'badge' => ['es' => 'Todo el día', 'en' => 'All day', 'fr' => 'Toute la journée'],
+        ]);
+
+        $seccion = $this->seccion();
+
+        $this->assertStringContainsString('<span class="rate-card__nuance">Todo el día</span>', $seccion);
+        $this->assertStringNotContainsString('rate-card__badge', $seccion);
+    }
+
+    /**
+     * **Si el nombre ya trae matiz propio, manda el del NOMBRE.**
+     *
+     * ⚠️ La precedencia se declara porque las dos fuentes pueden coexistir, y sin decidirla el matiz
+     * dependería del orden en que estuvieran escritas. El del nombre gana porque es parte de cómo se
+     * llama el producto; el `badge` es una etiqueta añadida.
+     */
+    public function test_the_name_nuance_wins_over_the_badge(): void
+    {
+        // ⚠️ El reset masivo, ANTES de leer: ver el motivo en `test_two_featured_entries…`.
+        TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
+
+        $entrada = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->orderBy('position')->firstOrFail();
+
+        $entrada->update([
+            'name' => ['es' => $entrada->zone->tr('name').' · Todo el día · sin límite'],
+            'badge' => ['es' => 'Top', 'en' => 'Top', 'fr' => 'Top'],
+        ]);
+
+        $seccion = $this->seccion();
+
+        $this->assertStringContainsString('<span class="rate-card__nuance">sin límite</span>', $seccion);
+        $this->assertStringNotContainsString('>Top<', $seccion);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

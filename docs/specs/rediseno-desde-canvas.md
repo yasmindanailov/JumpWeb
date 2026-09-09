@@ -399,6 +399,21 @@ instalación que no meta la zona en el nombre no nota nada.
 Lo segundo tiene motivo medido: `RateResolver::priceCents()` devuelve **`null`** un sábado para una
 entrada sin precio especial — ese día **no se vende**, no es que cueste lo mismo.
 
+❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA, y se corrigió DENTRO de la tanda.** Se había atado
+a `ticket_types.badge`, que es un campo **independiente** de `featured`: reproducido con los datos de
+esta instalación, «Kids · Ilimitada» llevaba el chip **sin ser destacada** mientras ninguna entrada
+lo era — o sea, un marcador de líder en una zona sin líder. Hoy el chip, el ancho y el foco salen del
+**mismo sitio**, y el TEXTO lo sigue escribiendo el panel: la señal es del diseño y la palabra es del
+dueño. ⚠️ El `badge` de una tarjeta que no lidera **baja al MATIZ** en vez de perderse (precedencia:
+si el nombre trae matiz propio, manda el del nombre), y **dos destacadas en una zona resuelven a una**
+por índice.
+
+⚠️⚠️ **Y ahí apareció un caso que MENTÍA sin fallar.** Leía los modelos **antes** del reset masivo,
+así que reponer `featured => true` no ensuciaba el atributo y **Eloquent no emitía la escritura**: el
+escenario decía marcar dos destacadas y marcaba una. *Un `update()` que repone el valor que el modelo
+ya tiene en memoria no escribe nada, y si la fila cambió por detrás el caso monta un mundo que no
+existe.* Lo cazó el arnés de mutación, no una relectura.
+
 ⚠️⚠️ **El ancho de 352 del artboard NO cierra con su propio asoma a 390 px** (16 + 352 + 12 + los
 10 px que desplaza la escala del 94 % = **390,6**): a la anchura de referencia del sistema se veía
 UNA tarjeta y nada detrás, y eso rompe una regla suya —en 02 la entradilla dejó de decir «arrastra si

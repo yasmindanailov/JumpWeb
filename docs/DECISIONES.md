@@ -25646,7 +25646,34 @@ toda la web (medido: el menú ofrece `#zones`, `#rides` e `#info`). El ancla se 
 se llega a Normas navegando**. Ficha en `DEUDA.md` con sus dos salidas, y un caso invertido en
 `RulesSectionTest` que se pondrá rojo el día que alguien la vuelva a enlazar.
 
-**Verificación**: suite **4.530** en verde · Pint · `npm run build` · `RateRailSectionTest` con **16
-casos** y **15/15 mutaciones que muerden** (`scripts/mutar-seccion-tarifas.sh`), árbol idéntico ·
-sonda de navegador en seis anchos con desborde 0 · medido en escritorio **352×397** contra los
+❗❗❗ **CORRECCIÓN DENTRO DE LA MISMA TANDA: EL CHIP ES EL MARCADOR DE LA QUE LIDERA.**
+`[DECIDIDO owner]` tras verlo renderizado. Se había atado a `ticket_types.badge`, que es un campo
+**independiente** de `featured`, y eso los separaba en las dos direcciones. **Reproducido con los
+datos de esta instalación**: «Kids · Ilimitada» llevaba el chip **sin ser destacada** —su `badge`
+dice «Todo el día»— mientras **ninguna** entrada estaba marcada, o sea que la zona enseñaba un
+marcador de líder y no tenía líder. *Un marcador que puede aparecer en cualquier tarjeta deja de
+decir cuál coger, que es lo único para lo que existe.*
+▶ Ahora el chip, el ancho y el foco salen de **la misma fuente**, y su TEXTO lo sigue escribiendo el
+panel: la señal es del diseño y la palabra es del dueño.
+⚠️ **Y el `badge` de una tarjeta que no lidera NO se pierde: baja al MATIZ** —el mono junto al
+nombre, que es donde el artboard pone «sin límite»—. Sin eso, el operador escribiría una etiqueta en
+el panel y no aparecería en ninguna parte. Precedencia declarada: **si el nombre trae matiz propio,
+manda el del nombre**.
+⚠️ **Dos destacadas en una zona resuelven a UNA**, por índice: preguntárselo producto a producto
+pintaría dos tarjetas anchas con dos chips.
+
+⚠️⚠️ **Y ahí apareció un caso que MENTÍA sin fallar, cazado por el arnés y no por una relectura.** La
+mutación «lideran todas las que el panel marque» no mordía: el caso leía los modelos **antes** del
+reset masivo, así que al reponer `featured => true` el atributo en memoria ya valía `true`, Eloquent
+**no lo vio sucio y no emitió ninguna sentencia** — el escenario decía marcar dos y marcaba una.
+▶ *Un `update()` que repone el valor que el modelo ya tiene en memoria no escribe nada, y si la fila
+cambió por detrás el caso monta un mundo que no existe.* El reset masivo va **antes** de leer.
+⚠️ De paso, el localizador del panel dejó de recortar con `.*?</div>\s*</div>`: cuántos cierres hay
+dentro depende **del dato** —si la tarjeta pinta complementos, matiz o tarifa especial—, y con el
+fixture corto capturaba una sola tarjeta.
+
+**Verificación**: suite **4.534** en verde · Pint · `npm run build` · `RateRailSectionTest` con **20
+casos** y **19/19 mutaciones que muerden** (`scripts/mutar-seccion-tarifas.sh`), árbol idéntico ·
+`scripts/sonda-carril-tarifas.mjs` en seis anchos con desborde 0 **y su control** —con el 352 fijo
+del artboard reporta −1 px a 390 y −45 a 320— · medido en escritorio **352×397** contra los
 **351×398** que el canvas escribió en `Escritorio PJP` 2a.

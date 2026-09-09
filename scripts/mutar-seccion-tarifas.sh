@@ -114,6 +114,22 @@ mutar "el botón pierde la zona" "$CAR" \
   "            'cta' => __('landing.rates.book_in', ['name' => \$nombre, 'zone' => \$nombreZona])," \
   "            'cta' => \$nombre,"
 
+mutar "el chip vuelve a colgar SOLO del badge (chip sin líder)" "$CAR" \
+  "            'badge' => \$lidera ? \$badge : null," \
+  "            'badge' => \$badge,"
+
+mutar "el badge de una tarjeta que no lidera se PIERDE" "$CAR" \
+  "            'nuance' => \$matiz ?? (\$lidera ? null : \$badge)," \
+  "            'nuance' => \$matiz,"
+
+mutar "el badge le gana al matiz propio del nombre" "$CAR" \
+  "            'nuance' => \$matiz ?? (\$lidera ? null : \$badge)," \
+  "            'nuance' => (\$lidera ? null : \$badge) ?? \$matiz,"
+
+mutar "lideran TODAS las que el panel marque, no una" "$CAR" \
+  '                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $nombreZona, $diasNormales, $i === $lidera))' \
+  '                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $nombreZona, $diasNormales, (bool) $t->featured))'
+
 echo
 echo '── 2 · Los días, que son la mitad honesta de la sección ──'
 

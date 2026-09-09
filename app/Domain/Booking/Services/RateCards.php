@@ -60,24 +60,32 @@ final class RateCards
 
         return $zones->map(function (Zone $zone) use ($porZona, $diasNormales): array {
             /** @var Collection<int, TicketType> $entradas */
-            $entradas = $porZona->get($zone->id, collect());
+            $entradas = $porZona->get($zone->id, collect())->values();
             $nombreZona = (string) $zone->tr('name');
+
+            /*
+             * ❗❗❗ **CUÁL LIDERA LA ZONA, y es UNA sola** (`[DECIDIDO owner, 2026-09-09]`). Sale de
+             * `ticket_types.featured`, y de aquí cuelgan las TRES señales que el artboard le da: el
+             * ancho mayor, el foco con el que abre el carril y **el chip**.
+             *
+             * ⚠️⚠️ **Se resuelve por ÍNDICE y no producto a producto, a propósito.** Si el panel
+             * marcara dos entradas de la misma zona, preguntarle a cada tarjeta «¿eres destacada?»
+             * pintaría **dos** tarjetas anchas con **dos** chips — y con eso la señal deja de decir
+             * cuál coger, que es lo único para lo que existe. Con el índice manda la primera y las
+             * demás son tarjetas normales: una resolución determinista en vez de un empate.
+             * ⚠️ `null` cuando no hay ninguna: entonces no hay chip ni tarjeta ancha y el carril abre
+             * por la primera, que es lo que hace un carril sin destacada. **Vacío es una respuesta.**
+             */
+            $lidera = $entradas->search(fn (TicketType $t): bool => (bool) $t->featured);
+            $lidera = $lidera === false ? null : $lidera;
 
             return [
                 'slug' => $zone->slug,
                 'name' => $nombreZona,
-                'cards' => $entradas->map(fn (TicketType $t): array => $this->card($t, $nombreZona, $diasNormales))->values()->all(),
-                /*
-                 * **Cuál abre el carril.** Es la entrada marcada como destacada en el catálogo
-                 * (`ticket_types.featured`), y `null` cuando no hay ninguna — en cuyo caso el carril
-                 * abre por la primera, que es lo que hace un carril sin destacada.
-                 *
-                 * ⚠️ **Destacar y rotular son DOS cosas y el producto ya las tiene separadas**:
-                 * `featured` decide quién manda (ancho mayor y foco de salida) y `badge` escribe el
-                 * chip. El artboard las pone en la misma tarjeta, pero fundirlas aquí obligaría a
-                 * inventar el texto del chip en el código en vez de leerlo del panel.
-                 */
-                'featured' => $entradas->search(fn (TicketType $t): bool => (bool) $t->featured) ?: null,
+                'cards' => $entradas
+                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $nombreZona, $diasNormales, $i === $lidera))
+                    ->values()->all(),
+                'featured' => $lidera,
             ];
         })->values()->all();
     }
@@ -120,10 +128,11 @@ final class RateCards
      *
      * @return array<string, mixed>
      */
-    private function card(TicketType $ticket, string $nombreZona, ?string $diasNormales): array
+    private function card(TicketType $ticket, string $nombreZona, ?string $diasNormales, bool $lidera): array
     {
         $especial = $ticket->specialRateSurcharges()[0] ?? null;
         [$nombre, $matiz] = $this->nameAndNuance((string) $ticket->tr('name'), $nombreZona);
+        $badge = $ticket->tr('badge') ?: null;
 
         return [
             'id' => $ticket->id,
@@ -132,12 +141,32 @@ final class RateCards
              * en una etiqueta. Ver `nameAndNuance()` para de dónde sale y qué se le quita.
              */
             'name' => $nombre,
-            'nuance' => $matiz,
             /*
-             * El CHIP. Sale de `ticket_types.badge`, que el panel ya rellena y que la tarjeta vieja
-             * ya pintaba: no se estrena mecanismo para esto.
+             * ❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA, y su texto lo escribe el PANEL**
+             * (`[DECIDIDO owner, 2026-09-09]`). En el artboard es `esHero` con copy fijo; aquí sale
+             * de `ticket_types.badge`, así que la señal es del diseño y **la palabra es del dueño**.
+             *
+             * ⚠️⚠️ **Antes colgaba SOLO del `badge`, y eso los separaba.** Reproducido con los datos
+             * de esta instalación: «Kids · Ilimitada» llevaba el chip **sin ser destacada** —su
+             * `badge` dice «Todo el día»— y ninguna entrada estaba marcada, así que ninguna zona
+             * tenía tarjeta ancha. *Un marcador que puede aparecer en cualquier tarjeta deja de
+             * decir cuál coger, que es lo único para lo que existe.*
+             *
+             * ⚠️ **Una destacada SIN `badge` no pinta chip**: el marcador lo dan igual el ancho y el
+             * foco, y no se inventa aquí una palabra que el panel no ha escrito.
              */
-            'badge' => $ticket->tr('badge') ?: null,
+            'badge' => $lidera ? $badge : null,
+            /*
+             * **EL MATIZ, y por qué el `badge` de una tarjeta que no lidera NO se pierde.**
+             *
+             * ⚠️⚠️ Si el chip pasa a ser de la destacada, un `badge` escrito en cualquier otra se
+             * quedaría sin pintar **en silencio** — el operador lo escribe en el panel y no aparece
+             * en ninguna parte. Aquí baja al matiz, que es exactamente el registro donde el artboard
+             * pone «sin límite»: un dato del nombre, en mono y junto a él.
+             * ▶ **La precedencia está declarada**: si el nombre ya trae matiz propio, manda el del
+             * nombre — es parte de cómo se llama el producto, y el `badge` es una etiqueta añadida.
+             */
+            'nuance' => $matiz ?? ($lidera ? null : $badge),
             // ⚠️ La cifra SIN el símbolo: el artboard los pinta a 38 y a 20, así que el «€» es un
             // elemento aparte del marcado. Ver `WritesLandingValues::numero()`.
             'price' => $this->numero($ticket->displayPriceCents()),
