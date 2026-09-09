@@ -61,6 +61,17 @@ class TouchTargetTest extends TestCase
         '.price__cta' => 'el CTA de una tarifa, a 42: dos por debajo',
         '.foot__links a' => 'la tira de destinos, dentro de un carril que RECORTA',
         '.foot__legal > *' => 'la tira legal, el mismo carril y el mismo motivo',
+        // ── Las cinco que entraron en `#476`, y todas por el MISMO motivo ──────────────────────
+        // ⚠️⚠️ Ninguna declaraba mínimo: su alto salía de `padding` más la línea y daba **exactamente
+        // 44** —el objetivo VIEJO—, así que cumplían por casualidad aritmética. En cuanto `#470`
+        // subió el token a 48 se quedaron cortas **sin que nada fallara**: la suite no mide píxeles,
+        // el token ya valía 48 en su propia cascada y leerlo no delataba nada. Lo cazó la sonda de
+        // navegador (`scripts/sonda-geometria.mjs`), no una relectura.
+        '.btn' => 'la familia ÚNICA de botones (`#321`): sin mínimo, su alto era padding + línea = 44',
+        '.ride-card__cta' => 'tenía `44px` literal, que además GANABA al mínimo de `.btn` por especificidad',
+        '.form__field input, .form__field textarea' => 'campos de formulario: medían 46, y `#407` ya los fichó a 42 con sesión',
+        '.form__field select' => 'el mismo suelo que su input hermano, o el formulario tiene dos alturas',
+        '.bd-field input' => 'el formulario de reservar cumpleaños, que es el que más se rellena con el pulgar',
     ];
 
     /**

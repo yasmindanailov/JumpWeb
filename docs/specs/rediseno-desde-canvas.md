@@ -329,7 +329,31 @@ producción.
 
 ---
 
-## 5.ter · ⏳ Verificación de navegador, pendiente
+## 5.ter · ✅ Verificación de navegador — HECHA (`#476`, 2026-09-09)
+
+**La sonda vive ahora EN EL REPO**: `scripts/sonda-geometria.mjs`, con su receta de instalación y sus
+cuatro trampas dentro. La anterior estaba fuera y se perdió, que es el mismo error del extractor de
+iconos de `#257`.
+
+▶ **Las cuatro cifras de la Fase 1, confirmadas renderizadas**: `--tap-min` **48** · `--col-max`
+**1120** (con `.wrap` midiendo 1120 en escritorio y 358 en móvil) · `--sec-air` **144** con
+`.section` a 72/72 · `--sec-air-mobile` **96** con 48/48. **Desborde horizontal 0** en las 24
+mediciones (12 vistas × 2 anchos).
+
+❗❗❗ **Y encontró lo que la suite no podía ver**: `.btn`, la familia única de botones, **no
+declaraba mínimo táctil** — su alto salía de padding más línea y daba exactamente **44**, el
+objetivo VIEJO, así que cumplía por casualidad aritmética. Al subir el token a 48 se quedaron cortos
+todos los botones de la web **sin que nada fallara**. Cerrado en `#476`: los controles de PÁGINA
+bajo 48 pasan de 11/13/8/2 por vista a **0**, salvo el enlace en línea que WCAG exime.
+
+⚠️ **Lo que queda y por qué**: el **logotipo del armazón** (125,3×46) se deja para la Fase 2 —su alto
+entra en el cálculo del racimo de `#252` y la Fase 2 rehace el armazón entero— y los **54 cortos del
+CAJÓN** son de la Fase 4 (la ficha que `#407` abrió midiendo sus campos a 42).
+
+⚠️ **La sonda solo llega a lo PÚBLICO**: deja fuera el paso de datos del cajón, el post-form y el
+justificante, que exigen sesión o enlace firmado. Es el agujero de alcance que `#407` ya fichó.
+
+### 5.ter.1 · 📜 Lo que decía antes de hacerse
 
 `TouchTargetTest` **no mide píxeles** —lo dice su propio docblock— así que subir el táctil a 48
 puede solapar dos áreas sin que la suite se entere. Lo mismo valdrá para la columna y el aire.

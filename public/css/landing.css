@@ -927,8 +927,21 @@ img { display: block; max-width: 100%; }
    ficha de `DEUDA.md`. ⚠️ `.btn--zone` ya NO se usa en ningún Blade (acción ≠ marca): se queda
    SOLO porque el cajón Vue la emite (`SidebarDomContractTest`) y el SPA está aparcado — cuando el
    cajón se rediseñe, se va con él. `SingleButtonFamilyTest` vigila las dos cosas. */
+/* ❗❗❗ **EL MÍNIMO TÁCTIL DE LA FAMILIA, y por qué faltaba** (`DECISIONES #476`).
+   Hasta el 2026-09-09 `.btn` **no declaraba ningún mínimo**: su alto salía de `padding` (12+12) más
+   la línea del texto, y daba **exactamente 44** — o sea que cumplía el objetivo táctil viejo **por
+   casualidad aritmética**, no por una regla. En cuanto `#470` subió `--tap-min` a 48, todos los
+   botones de la web se quedaron cortos **sin que nada fallara**: la suite no mide píxeles y el token
+   valía ya 48 en la cascada, así que leerlo no delataba nada.
+   ▶ Lo cazó la SONDA de navegador (`scripts/sonda-geometria.mjs`), en la pasada que la Fase 1 tenía
+   pendiente. Medido: `.cookie-btn` en 152×**44** con `min-height: auto`, sin `[data-tap]` y con
+   `--tap-min: 48px` resuelto en su propia cascada.
+   ⚠️ Va aquí y no en cada consumidor porque **la familia es UNA** (`#321`, `SingleButtonFamilyTest`):
+   con el mínimo en la base, «Aceptar cookies», «Cargar el mapa», «Llamar» y `.ride-card__cta` dejan
+   de necesitar cada uno su literal. */
 .btn {
   display: inline-flex; align-items: center; gap: var(--sp-10);
+  min-height: var(--tap-min);
   padding: var(--sp-12) var(--sp-20);
   background: var(--action); color: var(--on-action);
   border-radius: var(--r-btn);
@@ -1528,7 +1541,9 @@ img { display: block; max-width: 100%; }
   display: block; font-family: var(--font-body); font-size: var(--fs-10); font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); margin-bottom: var(--sp-2);
 }
-.ride-card__cta { padding: var(--sp-12) var(--sp-20); font-size: var(--fs-13); min-height: 44px; } /* objetivo táctil WCAG */
+/* ⚠️ El mínimo sale del TOKEN, no de un literal: escrito a mano se quedó en 44 cuando `#470` subió
+   el objetivo a 48, y además GANABA al mínimo de `.btn` por especificidad (`#476`). */
+.ride-card__cta { padding: var(--sp-12) var(--sp-20); font-size: var(--fs-13); min-height: var(--tap-min); }
 /* Atracción «Destacada» (#228 + «Cards Destacadas»): el destacado se señala SOLO con el Shine sweep
    sobre la foto — SIN borde de color exterior (mismo criterio que el catálogo: card limpia, el efecto
    es el distintivo). `.ride-card--special` queda como marcador para acotar la animación; el hover es
@@ -2818,10 +2833,13 @@ select:focus-visible {
 .bd-field { display: flex; flex-direction: column; gap: var(--sp-6); }
 .bd-field--full { grid-column: 1 / -1; }
 .bd-field label { font-size: var(--fs-11); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
+/* ⚠️ Mismo suelo táctil que `.form__field input` (`#476`): son campos de la MISMA web y este
+   formulario es el de reservar un cumpleaños, o sea el que más se rellena con el pulgar. */
 .bd-field input {
   font: inherit; font-size: var(--fs-14); color: var(--fg);
   background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--r-md);
   padding: var(--sp-11) var(--sp-13); outline: none; width: 100%;
+  min-height: var(--tap-min);
   transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-sale) var(--ease-sale);
 }
 .bd-field input:focus { border-color: var(--bda); box-shadow: 0 0 0 3px color-mix(in oklab, var(--bda) 25%, transparent); }
@@ -3006,7 +3024,9 @@ select:focus-visible {
   .bd-proc__num { font-size: 80px; }
   .bd-proc__arrows { align-self: start; }
   .bd-proc__lbl { display: none; }
-  .bd-proc__cube { width: 44px; height: 44px; font-size: var(--fs-14); border-radius: 11px; }
+  /* ⚠️ El cubo es lo que da tamaño al BOTÓN `.bd-proc__stop`, así que su lado es el objetivo táctil
+     y sale del token: escrito a mano se quedó en 44 cuando `#470` subió el objetivo a 48 (`#476`). */
+  .bd-proc__cube { width: var(--tap-min); height: var(--tap-min); font-size: var(--fs-14); border-radius: 11px; }
   .bd-proc__seg { margin: 22px 8px 0; }
   .bd-card { transform: none; }
   .bd-card__star { width: 84px; height: 84px; top: 34px; right: 16px; }

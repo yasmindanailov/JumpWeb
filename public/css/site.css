@@ -846,11 +846,18 @@
    accesibilidad que perdió su aspecto por el camino, y que ningún gate veía. */
 .form__field > span,
 .form__field > .form__label { font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; color: var(--fg); }
+/* ⚠️ **El mínimo táctil de un CAMPO sale del token, igual que el de un botón** (`#476`): su alto lo
+   daba `padding` más la línea y salía **entre 42 y 46** según el tipo de campo, o sea por debajo del
+   objetivo en los tres casos. No es estética: un campo que no se puede pulsar con el pulgar es el
+   mismo defecto que un botón que no se puede pulsar, y `#407` ya lo había fichado a 42 en las
+   pantallas con sesión. ▶ El sistema del canvas fija además `campo.alto: 52`; eso llega al vestir
+   los formularios, y el token es el suelo mientras tanto. */
 .form__field input,
 .form__field textarea {
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-12) var(--sp-14); width: 100%; resize: vertical;
+    min-height: var(--tap-min);
     transition: border-color var(--dur-sale) var(--ease-sale);
 }
 .form__field input:focus,
@@ -1308,6 +1315,7 @@
     font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-12) var(--sp-14); width: 100%;
+    min-height: var(--tap-min);  /* mismo suelo táctil que input y textarea (`#476`) */
 }
 .form__field select:focus { border-color: var(--fg); }
 

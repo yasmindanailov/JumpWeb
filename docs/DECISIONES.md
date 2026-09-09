@@ -25431,3 +25431,39 @@ La T1h del carril de diseño, y con ella la **Fase 1 queda cerrada**. El canvas 
 ⚠️ **Y el arnés enseñó una trampa nueva del instrumento**: restaurar el fuente NO basta cuando se muta un componente de Vue. `SidebarDomContractTest` renderiza el **bundle**, así que al terminar el arnés el árbol estaba limpio y **35 casos salieron rojos** contra un bundle construido con la última mutación dentro. Parece defecto del producto y es el arnés. Ahora reconstruye los dos bundles al terminar.
 
 **Verificación**: suite **4.495** en verde · `scripts/mutar-set-iconos.sh` **7/7 muerden** con el árbol idéntico · el extractor validado con control contra `ui/menu` · paridad byte a byte del cajón en verde para los cinco dibujos nuevos.
+
+## #476 · 2026-09-09 · La Fase 1 se verifica en NAVEGADOR por primera vez — y resulta que el táctil de 48 no lo cumplía casi nadie, porque los botones llegaban a 44 por casualidad aritmética
+
+Requisito de entrada de la Fase 2, no una tanda más: `#470`→`#474` movieron el táctil, los radios, el aire y la columna **sin poder verlo renderizado** (`spec §5.ter`), y vestir ocho secciones encima habría sido construir sobre cifras no comprobadas.
+
+▶ **Primero hubo que reconstruir el instrumento, y por eso ahora VIAJA EN EL REPO** (`scripts/sonda-geometria.mjs`). La sonda anterior vivía en `/root/e2e/tap44.mjs`, fuera del repo, y se perdió — el mismo error que el extractor de iconos de `#257`, que `#475` tuvo que rehacer el mismo día. *Un instrumento que no viaja en el repo se vuelve a escribir, y al reescribirlo se vuelven a pagar sus trampas.* Se instaló Chromium en el contenedor y se levantó el puente `8081→80` que los assets absolutos necesitan (`hueco-ilustracion.md` §16); `playwright-core` entra con `--no-save`, porque una herramienta de verificación no tiene por qué estar en las dependencias que el despliegue reconstruye.
+
+❗❗❗ **LA SONDA SALIÓ MAL TRES VECES ANTES DE VALER, y las tres con cifras plausibles.** Es la misma familia de trampas que `§5.duovicies` ya tenía escritas, más una nueva:
+1. **639 controles bajo 48.** Medía también ESCRITORIO, donde el área ampliada **no existe a propósito** (`[data-tap]` es solo `pointer: coarse`, `#264`). Contar ahí no es medir accesibilidad táctil: es medir un ratón.
+2. **390 bajo 44.** No distinguía el **enlace en línea**, que WCAG exime, ni descartaba lo que está **fuera de la ventana**: el cajón vive en el DOM desplazado con `transform`, y `checkVisibility()` lo da por visible, así que sus ~40 controles salían como cortos en todas las vistas.
+3. **`.section padding 136/72` donde el token dice 72.** Medía la PRIMERA sección, que suma `--hero-air` por la decisión medida de `#303`. Era un falso positivo del instrumento, no un defecto.
+
+▶ **El CONTROL es lo que la hizo creíble**: corriendo la misma sonda con el umbral en **44** tiene que salir lo que `#264` dejó escrito, y sale — **1 control de página**, el enlace «Política de cookies», exento por WCAG. Hasta que ese control no pasó, ninguna cifra de la sonda valía nada.
+
+❗❗❗ **EL HALLAZGO: `.btn`, la familia ÚNICA de botones (`#321`), no declaraba ningún mínimo táctil.** Su alto salía de `padding` (12+12) más la línea del texto y daba **exactamente 44** — o sea que cumplía el objetivo VIEJO por casualidad aritmética. Medido: `.cookie-btn` en **152×44**, con `min-height: auto`, **sin `[data-tap]`** y con `--tap-min: 48px` ya resuelto en su propia cascada.
+⚠️⚠️ **Y no fallaba nada**: la suite no mide píxeles, el token valía 48, y `TouchTargetTest` comprobaba que el token existe y que las familias marcadas lo leen — pero `.btn` no estaba entre ellas. *Un token puede estar bien y no gobernar a quien debería.*
+
+▶ **Cerrado con una sola causa y cinco consumidores**: `.btn` gana `min-height: var(--tap-min)`, y con él se arreglan «Aceptar/Rechazar cookies», «Cargar el mapa» y «Llamar». Los otros cuatro eran literales que además **ganaban por especificidad** al mínimo de la familia (`.ride-card__cta` con `44px`, `.bd-proc__cube` con `44px`, y los campos de `.form__field` y `.bd-field`, que medían 42–46). Las cinco entran en `TouchTargetTest::GROWS`, y **4 de 4 mutaciones muerden**.
+
+▶ **Resultado medido, antes → después**, en las 12 vistas públicas a 390 px:
+
+| | Antes | Después |
+|---|---|---|
+| Controles de PÁGINA bajo 48 | **11 en `/`, 13 en `/cumpleanos`, 8 en `/contacto`, 2 en cada legal** | **0** — solo queda el exento de WCAG |
+| Controles de ARMAZÓN bajo 48 | 1 (el logotipo) | 1 (el logotipo) |
+| Desborde horizontal | 0 | **0** en las 24 mediciones |
+
+✅ **Y las cuatro cifras de la Fase 1 quedan CONFIRMADAS en el navegador**: `--tap-min` **48px** · `--col-max` **1120px** con `.wrap` midiendo 1120 en escritorio y 358 en móvil · `--sec-air` **144** con `.section` a 72/72 · `--sec-air-mobile` **96** con 48/48. Eran cuatro números escritos y ahora son cuatro números vistos.
+
+⚠️ **El logotipo del armazón (125,3×46) se deja a propósito para la Fase 2.** Su altura entra en el cálculo aritmético del racimo (`#252`: `--nav-pad-block + max(--nav-logo-h, --nav-btn-h) + --hero-top-air`), y la Fase 2 rehace el armazón entero: tocarlo ahora es descuadrar un cálculo que se va a rehacer.
+
+⚠️ **Los 54 cortos que quedan son del CAJÓN** y se cierran en la Fase 4, cuando tenga su armazón. Es la ficha que `#407` ya había abierto midiendo sus campos a 42.
+
+⚠️ `/servicios` responde **503 a propósito** —está en mantenimiento por dato, no es un fallo— y la sonda la salta diciéndolo.
+
+**Verificación**: suite **4.495** en verde · **4/4 mutaciones** muerden sobre `TouchTargetTest::GROWS` con el árbol restaurado · la sonda pasa su propio control a 44 reproduciendo el hallazgo de `#264`.
