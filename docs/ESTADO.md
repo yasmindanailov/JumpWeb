@@ -2,6 +2,24 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#495`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones EN EL ORDEN DEL MOCKUP— y lo siguiente es la FASE 3, las páginas.**
 >
+> ❗❗❗ **LA PORTADA YA NO LLEVA NINGUNA PIEZA DECORATIVA EN SUS OCHO SECCIONES** (`#496`), y no es
+una preferencia: **medido artboard a artboard, `Portada PJP` y `Zonas PJP` llevan CERO** manchas,
+siluetas, tramas y frisos. El material existe y está aprobado —32 piezas, `#281`— pero vive en
+`Elementos Fachada` como **REPERTORIO**, y la portada del canvas no coloca ninguna.
+> ▶ Con `slot-zonas` fuera, **`IllustrationKit::SLOTS` queda VACÍA** (sexta vez, misma regla: *una
+ranura vive lo que vive su consumidor*). Se quedan **la trama y el sello del CIERRE** —que el canvas
+sí pide— y **las tres piezas del MENÚ**, porque el canvas **no dibuja el menú**: el propio cliente lo
+excluyó de su auditoría (`armazon-y-menu.md` §1.5).
+> ⚠️⚠️ **Trampa de método pagada**: la primera sonda buscaba por NOMBRE (`mancha`, `deco`, `splash`) y
+**se dejó fuera `.menu__blob`** — *buscar por nombre supone conocer los nombres*. Se rehízo por
+COMPORTAMIENTO (inerte + pinta una forma + ≥60 px, que descarta iconos).
+> ⚠️ **Y las aserciones bajaron de 29.086 a 29.081: se persiguieron las cinco** en vez de darlas por
+buenas. Una es el `foreach` sobre `SLOTS` (estado válido, documentado) y cuatro el barrido de reglas
+CSS, que tiene una regla menos que inventariar. **Ninguna guarda se queda sin sujeto.**
+> ▶ **PENDIENTE Y ES DEL OWNER: dónde se ubican las 32 piezas.** `elementos-fachada.md` §7 propone
+colocaciones y §10 son las cinco decisiones suyas. ⚠️ Solo pueden entrar por el hueco de
+`hueco-ilustracion.md` (existe desde `#286`) o clavan el mural de un parque dentro del producto.
+>
 > ❗❗❗ **LAS SECCIONES YA VAN EN EL ORDEN DEL MOCKUP** (`#495`): **01 Para quién · 02 Cuánto ·
 03 Qué hay dentro · 04 Cumpleaños · 05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas**.
 Verificado contra **dos** fuentes del canvas —`Portada PJP`, con control de que ningún

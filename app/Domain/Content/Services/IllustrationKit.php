@@ -48,36 +48,32 @@ class IllustrationKit
      * @var list<string>
      */
     public const SLOTS = [
-        // ⚠️ **Esta lista ha estado VACÍA tres veces, y las tres por la misma regla: una ranura vive
-        // exactamente lo que vive su consumidor.** Aquí llegaron a estar `slot-mancha-esquina`,
-        // `slot-friso-1..5` y `slot-normas`; todas se fueron con la pantalla que las pintaba —la
-        // última en `#300`, al revertir la T1 del idioma visual—.
+        // ❗❗❗ **ESTÁ VACÍA, Y ES LA CONDUCTA CORRECTA HOY** (`#496`): el rediseño desde el canvas
+        // ha retirado la última. Medido sobre los artboards vigentes, `Portada PJP` y `Zonas PJP`
+        // llevan **cero** manchas, siluetas, tramas y frisos — la decoración del segundo cliente
+        // existe y está aprobada (32 piezas, `#281`), pero vive en su propio artboard
+        // `Elementos Fachada` como REPERTORIO, y su portada no coloca ninguna.
         //
-        // **`slot-zonas` nace con su pantalla en el mismo cambio** (`#302`): la mancha que va detrás
-        // del titular de la sección de zonas y sus juegos. Su dibujo es `B1·02` del artboard —la
-        // más ANCHA de las seis libres (relación 1,19 medida), que es la forma que pide ir detrás de
-        // una palabra, y de las más ligeras (17,3 % de cobertura) para no pelearse con el texto—.
-        // ⚠️ `B1·01` y `B1·04` no se podían usar: **ya viajan instaladas** como `--deco-blob-a/b`
-        // (verificado byte a byte en `#286`).
-        'slot-zonas',
-
-        // ⚠️⚠️ **QUINTA VEZ QUE ESTA LISTA ENCOGE POR LA MISMA REGLA** (`#485`): aquí estaban
-        // `slot-normas-registro` y `slot-normas-calcetines`, las dos manchas de la sección de
-        // NORMAS de la portada. Esa sección la sustituye la 05 «Antes de venir», que el canvas
-        // dibuja **sin ninguna pieza de dibujo**, así que las dos se van con su consumidor.
-        // ▶ Dejarlas declaradas habría hecho que `kit:build` siguiera exigiendo dos dibujos que ya
-        // no pinta nadie **y que la guarda de paridad se pusiera roja con el producto sano** — que
-        // es exactamente lo que `#479` escribió al retirar `slot-tarifas`.
-        // ▶ Con esto la portada gasta **UNA** de sus tres colocaciones de dibujo (`#292`).
-
-        // ── 📜 LAS TRES QUE `#309` AÑADIÓ Y EL REDISEÑO SE HA LLEVADO ─────────────────────────
-        // `slot-tarifas` (el friso familiar `G3` de la sección de tarifas) salió en `#479`, y
-        // `slot-normas-registro` / `slot-normas-calcetines` en `#485`, cada una con la sección que
-        // el canvas rehízo sin ninguna pieza de dibujo.
-        // ▶ Queda escrito porque la regla que las gobierna es la misma que la de arriba y ya ha
-        // decidido CINCO veces: **una ranura vive exactamente lo que vive su consumidor.** La que
-        // SIGUE en pie y no la toca ninguno de estos cambios es la que vigila
-        // `FacadeDecorationIsPerScreenTest`: ninguna pieza decorativa dentro de un bucle.
+        // ⚠️⚠️ **SEXTA VEZ QUE ESTA LISTA ENCOGE POR LA MISMA REGLA: una ranura vive exactamente lo
+        // que vive su consumidor.** El historial, para que nadie lo lea como un olvido:
+        //
+        //     `slot-mancha-esquina` · `slot-friso-1..5` · `slot-normas`   → se fueron en `#300`
+        //     `slot-tarifas`        (el friso familiar `G3` de tarifas)   → `#479`
+        //     `slot-normas-registro` · `slot-normas-calcetines`           → `#485`
+        //     `slot-zonas`          (la mancha `B1·02` tras el titular)   → `#496`
+        //
+        // ▶ Las tres últimas se fueron con la sección que el canvas rehízo **sin ninguna pieza de
+        // dibujo**, no porque estorbaran.
+        //
+        // ⚠️ **Dejar declarada una ranura sin pantalla NO es inocuo**: `kit:build` seguiría
+        // exigiendo un dibujo que no pinta nadie y **la guarda de paridad se pondría roja con el
+        // producto sano** (`#479`). La gramática es CERRADA en las dos direcciones.
+        //
+        // ⚠️ **Lo que NO gobierna esta lista son las claves `zone-<slug>`**, que salen de
+        // `zones.slug` y son IDENTIDAD, no decoración (`#302`). Hoy las pinta `/cumpleanos`.
+        //
+        // ▶ Y la regla que sigue en pie y no la toca nada de esto es la que vigila
+        // `FacadeDecorationIsPerScreenTest`: **ninguna pieza decorativa dentro de un bucle**.
     ];
 
     /**

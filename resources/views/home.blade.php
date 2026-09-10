@@ -219,26 +219,20 @@
          pestañas perderían el color de su zona. --}}
     <section id="zones" class="section wrap">
         <div class="zones__head">
-            {{-- `B1·02` del kit, en la ranura `slot-zonas`. **Su propia nota manda dónde va**: «la
-                 mancha detrás de la PRIMERA PALABRA, nunca detrás de todo el bloque».
-                 ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el
-                 patrón de `#286`): sin paquete el componente no emite nada y aquí no puede quedar
-                 hueco reservado. --}}
-            {{-- ⚠️⚠️ **La mancha va DENTRO del bloque del titular, no de la cabecera, y eso es lo
-                 que la mantiene donde su nota manda.** Estuvo colgando de `.zones__head` con un
-                 `top` en PORCENTAJE, y un porcentaje se resuelve contra el ALTO DEL CONTENEDOR: al
-                 acortar los titulares (`#303`) la cabecera pasó de 264 a 153 px, el mismo `-20%`
-                 valió la mitad y la mancha bajó **11.016 px² sobre el párrafo**.
-                 ▶ *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa al cambiar
-                 lo que hay alrededor.* Anclada al titular, su sitio ya no depende de cuánto texto
-                 tenga la sección. --}}
+            {{-- 📜 **AQUÍ VIVÍA LA MANCHA `B1·02`** (ranura `slot-zonas`, `#302`→`#309`), y se
+                 retira en `#496`: **el artboard `Zonas PJP` no lleva ninguna pieza decorativa**
+                 —medido: cero manchas, siluetas, tramas y frisos—, igual que `Portada PJP`. Era el
+                 último resto del carril anterior; `#479` y `#485` ya se habían llevado las otras
+                 tres por la misma razón. --}}
             {{-- ⚠️ El RÓTULO vuelve, y no contradice a `#303`. Aquélla retiró la etiqueta genérica
                  («ZONAS», que repetía el titular); ésta dice **a quién va dirigida** la sección, que
                  es información que el titular no da. Es el molde del canvas: rótulo en Etiqueta ·
                  titular en Display L · la regla debajo. --}}
             <p class="zones__eyebrow">{{ __('landing.zones.eyebrow') }}</p>
+            {{-- ⚠️ El envoltorio `.zones__titulo` SE QUEDA aunque la mancha se haya ido: existía
+                 como contexto de apilamiento para ella, pero también es lo que separa el titular
+                 del rótulo y de la regla en la columna. Retirarlo es maquetación, no limpieza. --}}
             <div class="zones__titulo">
-                <x-site.ilu clave="slot-zonas" class="zones__mancha" />
                 <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
             </div>
             {{-- ⚠️⚠️ **La REGLA va entera y en una frase.** Es la del parque —manda la edad, y la

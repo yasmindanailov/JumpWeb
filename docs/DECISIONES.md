@@ -27417,3 +27417,100 @@ porque un reordenado es una permutación.
 **Suite 4.637** · 29.086 aserciones · **8/8 mutaciones** (`scripts/mutar-orden-secciones.sh`; tres mueven
 bloques de verdad y una mueve una cabecera sin su sección — la que demostró que la primera versión
 de esa mutación no expresaba el defecto que decía perseguir) · **19/19** en `mutar-dudas` ya arreglado · Pint limpio.
+
+---
+
+## #496 · 2026-09-10 · La portada se queda sin la última pieza decorativa — y el canvas no coloca ninguna
+
+**Contexto.** El owner pidió *«limpiar la landing de los elementos de diseño, tipo splash y siluetas,
+y valorar dónde los ubicamos y cómo, respetando el sistema de diseño desde Claude Design»*.
+
+---
+
+**❗❗❗ EL INVENTARIO, MEDIDO EN NAVEGADOR — Y SALIERON SEIS PIEZAS, NO LAS QUE PARECÍA.**
+
+⚠️⚠️ **La primera sonda buscaba por NOMBRE** —`mancha`, `deco`, `splash`, `silueta`— **y se dejó
+fuera `.menu__blob`**, que son las dos manchas del menú. *Buscar por nombre supone conocer los
+nombres.* Se rehízo **por COMPORTAMIENTO**: pieza decorativa es la que no es interactiva, no la lee un
+lector de pantalla y pinta una forma (máscara, imagen o dibujo del kit), con un filtro de **60 px**
+para no contar iconos.
+
+| Pieza | Dónde | Caja | Opacidad |
+|---|---|---|---|
+| `zones__mancha` (`slot-zonas`) | sección 01 | 165×165 | 0,30 |
+| `menu__blob--a` | menú | 520×520 | 0,17 |
+| `menu__blob--b` | menú | 440×440 | 0,13 |
+| `.grain` | menú | 1440×1000 | 0,20 |
+| `.grain` | cierre | 1120×660 | 0,20 |
+| `reserve__tag` (`--deco-tag`) | cierre | 114×69 | 1 |
+
+▶ Y **en el cuerpo de las ocho secciones había EXACTAMENTE UNA**: la mancha de zonas. El logotipo
+(191×70) y el QR de ejemplo (260×260) salen del recuento — son contenido, no decoración.
+
+---
+
+**❗❗❗ LO QUE DICE EL CANVAS, MEDIDO ARTBOARD A ARTBOARD:**
+
+    Portada PJP         mancha 0 · silueta 0 · trama 0 · friso 0     ← el entregable
+    Zonas PJP           mancha 0 · silueta 0 · trama 0 · friso 0     ← la sección 01
+    Marco Portada PJP   nada
+    Escritorio PJP      «la tarjeta con su trama de puntos y el sello de Lorca a −6°»  ← EL CIERRE
+    Elementos Fachada   mancha 39 · silueta 9 · trama 26 · friso 6 · pose 40
+
+⚠️ La única aparición de «mancha» en `Portada PJP` es **una mención de pasada** dentro de un
+comentario sobre el sello de precio, y sus nueve «deco» son todos `text-decoration:none`. Se
+comprobó uno a uno.
+
+▶ **La lectura es inequívoca: el material decorativo existe, está aprobado (32 piezas, `#281`) y vive
+en su propio artboard como REPERTORIO — pero la portada del canvas no coloca ninguna.**
+
+▶ Y coincide con lo que las tandas ya venían haciendo sin habérselo propuesto: **cada sección que el
+rediseño rehízo perdió su decoración**, porque el artboard no la lleva —`slot-tarifas` en `#479`,
+`slot-normas-registro` y `slot-normas-calcetines` en `#485`—. `slot-zonas` era **la superviviente**: la
+sección 01 se rehízo en `#478` y la mancha se quedó.
+
+---
+
+**Lo que se retira**: `slot-zonas`, su marcado, sus **40 líneas de calibración** en CSS (el `top` en
+porcentaje, el barrido de seis combinaciones de `#303` y el de cinco de `#309`) y la ranura de
+`IllustrationKit::SLOTS`, que queda **VACÍA** — sexta vez, y siempre por la misma regla: *una ranura
+vive exactamente lo que vive su consumidor*.
+
+⚠️ **Dejarla declarada no habría sido inocuo**: `kit:build` seguiría exigiendo un dibujo que no pinta
+nadie y la guarda de paridad se pondría roja con el producto sano (`#479`).
+
+⚠️ **`.zones__titulo` se queda** aunque naciera como contexto de apilamiento de la mancha: también es
+lo que separa el titular del rótulo en la columna. Retirarlo es maquetación, no limpieza.
+
+**Lo que NO se toca, y por qué**:
+
+- **La trama y el sello del CIERRE**: el canvas los pide con esas palabras.
+- **Las tres piezas del MENÚ**: el canvas **no dibuja el menú**, y no es un descuido —
+  `armazon-y-menu.md` §1.5 registra que *la auditoría del cliente EXCLUYE el menú y el logotipo por
+  indicación suya*. Tocarlas sería ir más allá de lo que el mockup manda.
+
+---
+
+**⚠️ LAS ASERCIONES BAJARON DE 29.086 A 29.081, y se persiguieron las cinco** en vez de darlas por
+buenas —una aserción que desaparece puede ser una guarda que se queda sin sujeto—:
+
+- **1** es el `foreach` sobre `SLOTS` de `ZonesSectionTest`, que con la lista vacía no itera. **Está
+  previsto y escrito**: su docblock dice que *«`SLOTS` vacía es un estado VÁLIDO»* y conserva su
+  guarda-de-la-guarda (que el corpus contenga algún `<x-site.ilu>` — hoy lo pinta `/cumpleanos`).
+- **4** son del barrido de reglas de `SidebarTokenBudgetTest`, que ahora tiene **una regla CSS menos**
+  que inventariar. Con 5.283 aserciones, sujeto le sobra.
+
+▶ Localizadas comparando fichero a fichero contra `HEAD`, no deduciéndolo.
+
+**Medido**: la sección 01 **no cambia de alto** (1.146 px en escritorio, 1.624 en móvil) porque la
+mancha era absoluta; portada y desborde, idénticos.
+
+**Suite 4.637** · 29.081 aserciones · Pint limpio · docs-check verde.
+
+---
+
+**▶ LO QUE QUEDA ABIERTO Y ES DEL OWNER: dónde se ubican las 32 piezas aprobadas.** El kit
+`Elementos Fachada` se aprobó en `#281` y **nunca se construyó**; su §7 propone colocaciones y §10 son
+las cinco cosas que decide él. ⚠️ Y su §5 avisa de lo que está en juego: las manchas y las poses son
+**arte de ESTE cliente**, así que solo pueden entrar por el hueco de `hueco-ilustracion.md` —que
+existe desde `#286`— o clavarían el mural de un parque dentro de JumpWeb.

@@ -1328,47 +1328,17 @@ img { display: block; max-width: 100%; }
   max-width: 920px;
 }
 
-/* **LA MANCHA, DETRÁS DE LA PRIMERA PALABRA** — no detrás del bloque, que es lo que manda su propia
-   nota (`B1`, artboard «Elementos Fachada»): «la mancha detrás de la primera palabra, nunca detrás
-   de todo el bloque».
-   ⚠️ Va ABSOLUTA: sin paquete el componente no emite nada, y una pieza que reservara sitio dejaría
-   un hueco en la cabecera cuando la instalación no trae kit.
-   ⚠️ La opacidad es la misma que ya se midió para este material (0,14): por encima compite con el
-   titular, y el titular es tinta maciza. */
-/* El bloque del titular es el contexto de la mancha: `position` para que el `top` se resuelva
-   contra ÉL, e `isolation` para que el `z-index: -1` no se escape a la página. */
-.zones__titulo { position: relative; isolation: isolate; }
+/* 📜 **AQUÍ VIVÍA LA MANCHA `slot-zonas`** (`#302`→`#309`), retirada en `#496`: el artboard
+   `Zonas PJP` no lleva ninguna pieza decorativa —medido: cero manchas, siluetas, tramas y frisos—,
+   igual que `Portada PJP`. Con ella se van sus 40 líneas de calibración: el `top` en porcentaje del
+   bloque del titular, el barrido de seis combinaciones de `#303` y el de cinco de `#309`.
+   ▶ Lo que de aquello sigue valiendo, por si vuelve alguna pieza a esta sección: **el `top` en
+   porcentaje se resuelve contra el ALTO DEL CONTENEDOR**, así que anclarlo a la cabecera hizo que
+   acortar los titulares moviera la mancha 11.016 px² sobre el párrafo — *un ajuste sobrevive a la
+   razón que lo justificaba si nadie lo revisa al cambiar lo que hay alrededor*.
 
-/* ⚠️⚠️ **EL `top` ES UN PORCENTAJE DEL BLOQUE DEL TITULAR, NO DE LA CABECERA, y ese cambio es el
-   arreglo de un defecto REAL.** Estuvo colgando de `.zones__head`: al acortar los titulares
-   (`#303`) la cabecera pasó de **264 a 153 px**, el mismo `-20%` valió la mitad y la mancha cayó
-   **11.016 px² encima del párrafo** —justo lo que su nota prohíbe—. Anclada al titular, que la
-   guarda mantiene en UNA línea, su sitio ya no depende de cuánto texto tenga la sección.
-
-   ⚠️ **Y lo que había que cambiar era el TAMAÑO, no la posición.** Con 250 px de mancha sobre un
-   titular de 79, mover el `top` no cambiaba el número: la pieza se tragaba el párrafo entera
-   estuviera donde estuviera. Barrido de seis combinaciones → **`-84%` con `min(22%, 165px)`** es la
-   que más titular cubre (9.381 px² en escritorio, 2.512 en móvil) **con 0 px² sobre el párrafo** en
-   los dos anchos. Asoma 66 px por encima del titular, y ahí hay 128 px de aire de sección.
-
-   ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el patrón de
-   `#286`): sin paquete el componente no emite nada y aquí no puede quedar hueco reservado. */
-/* ⚠️⚠️ **`#309` sube la OPACIDAD de 0,14 a 0,30 y NO el tamaño** (`[DECIDIDO owner]`: «el splash
-   que se vea más»). El primer intento la subió también a 230 px y **rompió el criterio que `#303`
-   dejó medido**: 9.936 px² de mancha sobre el párrafo, justo lo que su propia nota prohíbe.
-   ▶ Barrido de CINCO combinaciones de tamaño y posición, medidas en navegador: ninguna crece sin
-   caer sobre el párrafo, y desplazarla a la izquierda lo empeora (2.540 px²) **cubriendo además
-   menos titular** (6.795 contra 9.381). O sea que la posición de `#303` ya era la óptima.
-   ▶ Queda `top: -104%` —4 puntos más arriba, que es lo que compensa el aire del `#309`— con el
-   MISMO tamaño: **0 px² sobre el párrafo en los dos anchos** y 9.381 sobre el titular, idéntico a
-   antes. La pieza se ve el DOBLE porque pinta el doble, no porque ocupe más. */
-.zones__mancha {
-  position: absolute; z-index: -1; pointer-events: none;
-  left: -5%; top: -104%;
-  width: min(22%, 165px); height: auto;
-  --ilu-fg: var(--zone-1);
-  opacity: 0.30;
-}
+   ⚠️ `.zones__titulo` conserva `position: relative; isolation: isolate`: nació como contexto de
+   apilamiento de la mancha, pero retirarlo es maquetación y no limpieza, y hoy no cuesta nada. */
 /* El titular de «Para quién» comparte declaración con el resto: ver «LA CABECERA DE SECCIÓN». */
 
 /* ══ SECCIÓN «PARA QUIÉN» · el rótulo, la regla y las dos tarjetas ═══════════════════════════
