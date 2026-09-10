@@ -6,7 +6,6 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailSlip;
 use App\Domain\Identity\Services\CustomerCards;
-use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\QrCode;
 use App\Notifications\Support\BrandedMailMessage;
@@ -42,10 +41,28 @@ class OrderConfirmation extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::businessName();
-
+        // ❗❗ EL ASUNTO, CON EL DATO DELANTE (`#506`; artboard `Correos PJP`, y `[DECIDIDO owner]`).
+        // Medido antes: «Tu reserva confirmada en SaltoPark (nº R-7MN4PK)» son 48 caracteres y en el
+        // corte de ~35 de un móvil se leía «Tu reserva confirmada en SaltoPark» — o sea, el nombre
+        // del parque **que el remitente ya dice justo al lado**, y ni el día ni el código.
+        //
+        // ⚠️⚠️ Y LA FECHA SÓLO SI EL PEDIDO TIENE UNA. `singleVisitDate()` devuelve `null` cuando
+        // hay reservas en días distintos, y entonces se usa la redacción sin fecha: en la bandeja no
+        // hay cuerpo debajo que matice un día que no es el único. Es la misma pareja de claves que
+        // el titular ya tenía (`headline` / `headline_no_date`).
+        // ⚠️ DOS FORMATOS DE LA MISMA FECHA, y es deliberado: `dayLabel()` («Sáb. 5 sep.») se lee
+        // como un DATO y lleva el mes —en la bandeja, «lunes 17» no dice de qué mes—; `dayInSentence()`
+        // («lunes 17») va DENTRO de la oración del titular. Lo dicen sus propios docblocks. La FECHA
+        // sale de una sola derivación, así que asunto y titular no se pueden contradecir.
+        $fecha = $this->order->singleVisitDate();
+        $dia = $this->day();
         $message = (new BrandedMailMessage)
-            ->subject(__('emails.order_confirmation.subject', ['code' => $this->order->code, 'park' => $park]))
+            ->subject($fecha !== null
+                ? __('emails.order_confirmation.subject', [
+                    'day' => DisplayTime::dayLabel($fecha),
+                    'code' => $this->order->code,
+                ])
+                : __('emails.order_confirmation.subject_no_date', ['code' => $this->order->code]))
             ->line(__('emails.order_confirmation.intro', ['code' => $this->order->code]));
 
         // LA CABECERA EN TINTA (`#503`; artboard `Correos PJP` 1a): chapa de estado, titular y el
@@ -55,7 +72,6 @@ class OrderConfirmation extends Notification implements ShouldQueue
         // ⚠️ Éste es el ÚNICO de los cuatro dibujados que lleva DÓNDE: es el que habla de la visita.
         // ⚠️ El titular cambia de CLAVE, no de parámetro, cuando no hay día: «Nos vemos el » con el
         // hueco vacío es peor que una frase neutra.
-        $dia = $this->day();
         $message->hero(
             'emails.order_confirmation', 'ok',
             EmailSlip::forOrder($this->order, conLugar: true),
@@ -126,11 +142,12 @@ class OrderConfirmation extends Notification implements ShouldQueue
      */
     private function day(): string
     {
-        $item = $this->order->items
-            ->whereNull('parent_item_id')
-            ->reject(fn ($i): bool => $i->isCancelled())
-            ->first();
+        // ⚠️ Sale de `Order::singleVisitDate()`, que devuelve `null` si el pedido tiene reservas en
+        // DÍAS DISTINTOS (`#506`). Antes se cogía la primera y el titular afirmaba «Nos vemos el
+        // sábado 4» en un pedido de dos días; hoy cae a `headline_no_date`, que ya existía.
+        // ▶ Y es la MISMA derivación que usa el asunto, para que no puedan contradecirse.
+        $fecha = $this->order->singleVisitDate();
 
-        return $item?->slot?->date ? DisplayTime::dayInSentence($item->slot->date) : '';
+        return $fecha !== null ? DisplayTime::dayInSentence($fecha) : '';
     }
 }

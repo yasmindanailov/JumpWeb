@@ -315,7 +315,8 @@ return [
     ],
 
     'exists_mail' => [
-        'subject' => 'Tu as déjà un compte :park',
+        'subject' => 'Tu as déjà un compte',
+        'preheader' => "Aucun nouveau compte n'a été créé. Si c'était toi, connecte-toi ou réinitialise.",
         'greeting' => 'Bonjour !',
         'line1' => "Quelqu'un a tenté de s'inscrire avec ton e-mail. Si c'était toi, tu as déjà un compte : connecte-toi ou réinitialise ton mot de passe.",
         'action' => 'Se connecter',
@@ -327,10 +328,11 @@ return [
     'social_link_mail' => [
         'providers' => [
             'google' => 'Google',
-            'badge' => 'Compte associé',
-            'headline' => 'Vous avez associé un compte',
         ],
-        'subject' => 'Ton compte :park se connecte désormais avec :provider',
+        'badge' => 'Compte associé',
+        'headline' => 'Vous avez associé un compte',
+        'subject' => 'Tu peux te connecter avec :provider',
+        'preheader' => "Tu peux désormais te connecter des deux façons. Si ce n'était pas toi, lis la suite.",
         'greeting' => 'Bonjour !',
         'line1' => 'Tu peux désormais te connecter à ton compte :park avec :provider, en plus de la méthode que tu utilisais avant.',
         'promoted' => "Ton adresse e-mail n'était pas encore vérifiée : nous la considérons vérifiée grâce à :provider et, par sécurité, nous avons fermé les sessions ouvertes et désactivé l'ancien mot de passe. Si tu veux de nouveau un mot de passe, utilise « j'ai oublié mon mot de passe ».",

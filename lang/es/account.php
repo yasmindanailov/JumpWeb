@@ -365,7 +365,8 @@ return [
     ],
 
     'exists_mail' => [
-        'subject' => 'Ya tienes una cuenta en :park',
+        'subject' => 'Ya tienes una cuenta',
+        'preheader' => 'Nadie ha creado una cuenta nueva. Si fuiste tú, entra o recupera tu contraseña.',
         'greeting' => '¡Hola!',
         'line1' => 'Alguien ha intentado registrarse con tu email. Si fuiste tú, ya tienes una cuenta: inicia sesión o recupera tu contraseña.',
         'action' => 'Iniciar sesión',
@@ -379,10 +380,11 @@ return [
     'social_link_mail' => [
         'providers' => [
             'google' => 'Google',
-            'badge' => 'Cuenta vinculada',
-            'headline' => 'Has vinculado una cuenta',
         ],
-        'subject' => 'Tu cuenta de :park ya entra con :provider',
+        'badge' => 'Cuenta vinculada',
+        'headline' => 'Has vinculado una cuenta',
+        'subject' => 'Ya puedes entrar con :provider',
+        'preheader' => 'Ya puedes entrar de las dos formas. Si no has sido tú, dentro te decimos qué hacer.',
         'greeting' => '¡Hola!',
         'line1' => 'A partir de ahora puedes entrar en tu cuenta de :park con :provider, además de como lo hicieras antes.',
         'promoted' => 'Como tu correo todavía no estaba verificado, lo hemos dado por verificado con :provider y, por seguridad, hemos cerrado las sesiones que hubiera abiertas y desactivado la contraseña anterior. Si quieres volver a tener contraseña, usa «he olvidado mi contraseña».',

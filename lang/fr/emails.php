@@ -10,7 +10,8 @@ return [
     ],
 
     'customer_account_created' => [
-        'subject' => 'Ton compte chez :park est prêt',
+        'subject' => 'Ton compte est prêt',
+        'preheader' => "Ton mot de passe provisoire est à l'intérieur : change-le dès ta première connexion.",
         'greeting' => 'Bonjour !',
         'intro' => 'L’équipe de :park a créé un compte pour toi afin que tu puisses consulter tes réservations.',
         'email_label' => 'E-mail',
@@ -22,7 +23,8 @@ return [
         'headline' => 'Votre compte est prêt',
     ],
     'verify_purchase' => [
-        'subject' => 'Confirme ton e-mail pour continuer ta réservation',
+        'subject' => 'Confirme ton e-mail · :code',
+        'preheader' => 'Ta place est gardée le temps de confirmer. Un clic et tu poursuis le paiement.',
         'greeting' => 'Bonjour !',
         'intro' => 'Presque fini. Ta réservation (n° :code) est en attente. Confirme ton e-mail pour continuer le paiement.',
         'action' => 'Confirmer mon e-mail',
@@ -32,7 +34,8 @@ return [
         'headline' => 'Confirmez votre e-mail pour continuer',
     ],
     'verify_pending_email' => [
-        'subject' => 'Confirme ton nouvel e-mail chez :park',
+        'subject' => 'Confirme ta nouvelle adresse',
+        'preheader' => "Ce lien expire dans 60 minutes. Si tu n'as rien demandé, ignore ce message.",
         'greeting' => 'Bonjour !',
         'intro' => 'Tu as demandé à changer l’e-mail de ton compte par celui-ci. Pour confirmer, clique sur le bouton.',
         'action' => 'Confirmer mon nouvel e-mail',
@@ -42,7 +45,8 @@ return [
         'headline' => 'Confirmez votre nouvel e-mail',
     ],
     'email_change_requested' => [
-        'subject' => 'Demande de changement d’e-mail sur ton compte',
+        'subject' => "Changement d'e-mail demandé",
+        'preheader' => "Si ce n'était pas toi, ton compte garde cette adresse. On t'explique quoi faire.",
         'greeting' => 'Bonjour !',
         'intro' => 'Quelqu’un a demandé à changer l’e-mail de ton compte par :new.',
         'it_was_me' => 'Si c’est toi, confirme depuis le lien envoyé au nouvel e-mail.',
@@ -51,7 +55,8 @@ return [
         'headline' => 'Une demande de changement d\'e-mail a été faite',
     ],
     'email_change_completed' => [
-        'subject' => 'L’e-mail de ton compte a changé',
+        'subject' => "L'e-mail de ton compte a changé",
+        'preheader' => 'Désormais tu te connectes avec la nouvelle adresse. Cette boîte ne reçoit plus rien.',
         'greeting' => 'Bonjour !',
         'intro' => 'Nous confirmons que l’e-mail de ton compte est maintenant :new. Cette boîte (la précédente) ne recevra plus de messages de :park.',
         'what_means' => 'À partir de maintenant, tu dois te connecter avec le nouvel e-mail.',
@@ -60,7 +65,9 @@ return [
         'headline' => 'L\'e-mail de votre compte a changé',
     ],
     'order_confirmation' => [
-        'subject' => 'Ta réservation confirmée chez :park (n° :code)',
+        'subject' => 'Réservation confirmée · :day · :code',
+        'subject_no_date' => 'Réservation confirmée · :code',
+        'preheader' => "Récapitulatif et QR à l'intérieur. Chaussettes antidérapantes, arrive 10 min avant.",
         'badge' => 'Réservation confirmée',
         'headline' => 'Rendez-vous :day',
         'headline_no_date' => 'Réservation confirmée',
@@ -77,7 +84,8 @@ return [
         'outro' => 'Une question avant ta visite ? Écris-nous, on est ravis de t’aider.',
     ],
     'guardian_authorization' => [
-        'subject' => 'Votre autorisation signée',
+        'subject' => 'Décharge signée',
+        'preheader' => "Ta copie en PDF est jointe, avec le texte intégral et l'heure de la signature.",
         'greeting' => 'Bonjour,',
         'intro' => 'Vous venez de signer l’autorisation de :name. Voici votre copie.',
         'booking' => 'Réservation : :code.',
@@ -88,7 +96,9 @@ return [
         'headline' => 'Votre autorisation est signée',
     ],
     'guest_form' => [
-        'subject' => 'Complète les infos de ta réservation « :product » · :code',
+        'subject' => 'Données des invités · :day · :code',
+        'subject_no_date' => 'Données des invités · :code',
+        'preheader' => "Il nous faut le nom et l'âge de chaque invité. Maintenant ou plus tard.",
         'greeting' => 'Bonjour !',
         'intro' => 'Ta réservation « :product » (n° :code) est confirmée ! Pour tout préparer et que la journée soit parfaite, dis-nous qui vient : complète les infos de chaque invité.',
         'body' => 'Tu peux le remplir maintenant ou plus tard, et le modifier quand tu veux jusqu’au jour de l’événement.',
@@ -100,7 +110,8 @@ return [
         'notice_title' => 'Et si vous voulez, des extras',
     ],
     'order_after_expiration' => [
-        'subject' => 'Ton paiement est bien arrivé, nous vérifions ta réservation (n° :code)',
+        'subject' => 'Ton paiement est bien arrivé · :code',
+        'preheader' => "Le paiement est bien arrivé. On t'appelle sous 24 h pour reprogrammer ou rembourser.",
         'greeting' => 'Bonjour,',
         'intro' => 'Bonne nouvelle : ton paiement pour la réservation :code est bien arrivé. Il nous est parvenu avec un peu de retard, donc il n’a pas été enregistré à temps automatiquement et nous le gérons à la main.',
         'amount' => 'Montant prélevé : :amount €',
@@ -110,7 +121,8 @@ return [
         'headline' => 'Votre paiement est bien arrivé',
     ],
     'order_declined' => [
-        'subject' => 'Nous n’avons pas pu traiter le paiement de ta réservation (n° :code)',
+        'subject' => "Le paiement n'a pas abouti · :code",
+        'preheader' => "Rien n'a été débité. Ta place reste gardée quelques minutes si tu veux réessayer.",
         'greeting' => 'Bonjour,',
         'intro' => 'Nous n’avons pas pu finaliser le paiement de ta réservation :code.',
         'no_charge' => 'Pas d’inquiétude : rien n’a été débité de ta carte. Nous gardons ta réservation encore quelques minutes au cas où tu voudrais réessayer ; sinon, la place redeviendra disponible pour d’autres.',
@@ -122,7 +134,8 @@ return [
         'notice_title' => 'Motif',
     ],
     'order_expired_without_payment' => [
-        'subject' => 'Ta réservation a expiré (n° :code)',
+        'subject' => 'Réservation expirée · :code',
+        'preheader' => "Rien n'a été débité et la place est de nouveau libre. Réserve quand tu veux.",
         'greeting' => 'Bonjour,',
         'intro' => 'Ta réservation :code a expiré car le paiement n’a pas été finalisé à temps.',
         'no_charge' => 'Rien n’a été débité de ta carte. La place a été libérée pour d’autres clients.',
@@ -133,7 +146,8 @@ return [
         'headline' => 'La réservation a expiré',
     ],
     'order_cancelled' => [
-        'subject' => 'Ta réservation a été annulée (n° :code)',
+        'subject' => 'Réservation annulée · :code',
+        'preheader' => "S'il y a un remboursement, il arrive dans un e-mail à part, avec montant et délai.",
         'greeting' => 'Bonjour,',
         'intro' => 'Nous avons annulé ta réservation :code.',
         'next_steps' => 'Si l’annulation comprend un remboursement, tu recevras un e-mail séparé avec le montant remboursé et le délai bancaire. Tout accord en personne avec notre équipe (échange contre des entrées, report, etc.) est enregistré dans ta réservation.',
@@ -143,7 +157,8 @@ return [
         'headline' => 'Votre réservation a été annulée',
     ],
     'order_refunded' => [
-        'subject' => 'Nous t’avons remboursé ta réservation (n° :code)',
+        'subject' => 'Remboursement effectué · :code',
+        'preheader' => "À l'intérieur : le montant et par quel moyen il te revient. Garde ce justificatif.",
         'greeting' => 'Bonjour,',
         'intro' => 'Nous avons traité le remboursement de la réservation :code.',
         'amount' => 'Montant remboursé : :amount €',
@@ -157,7 +172,8 @@ return [
         'headline' => 'Nous vous avons remboursé',
     ],
     'order_item_cancelled' => [
-        'subject' => 'Nous avons annulé « :product » de ta réservation (n° :code)',
+        'subject' => 'Produit annulé · :product · :code',
+        'preheader' => 'Le reste de ta réservation tient toujours. Tu verras ce qui reste et quel jour.',
         'greeting' => 'Bonjour,',
         'intro' => 'Nous avons annulé « :product » de ta réservation :code. Le reste de la réservation reste actif.',
         'cascaded_addons' => 'Ses :count complément(s) sont également annulés (ils vont avec le produit principal).',
@@ -169,7 +185,8 @@ return [
         'headline' => 'Nous avons annulé une partie de votre réservation',
     ],
     'order_item_refunded' => [
-        'subject' => 'Nous t’avons remboursé une partie de ta réservation (n° :code)',
+        'subject' => 'Remboursement effectué · :product · :code',
+        'preheader' => "À l'intérieur : ce qui a été remboursé, combien, et par quel moyen.",
         'greeting' => 'Bonjour,',
         'intro' => 'Nous avons traité un remboursement partiel de la réservation :code.',
         'amount' => 'Montant remboursé pour « :product » : :amount €',
@@ -184,7 +201,8 @@ return [
         'headline' => 'Nous vous avons remboursé un montant',
     ],
     'mixed_party_surcharge' => [
-        'subject' => 'Changement de ce que vous réglerez au parc (réservation n° :code)',
+        'subject' => 'Ton montant au parc change · :code',
+        'preheader' => "Ce que tu régleras au parc change. À l'intérieur, le nouveau montant et son origine.",
         'greeting' => 'Bonjour,',
         'intro' => 'Vous avez mis à jour l’âge des invités de votre réservation :code («:product»), ce qui modifie le montant à régler au parc.',
         'intro_by_park' => 'Nous avons mis à jour ta réservation :code (« :product »), ce qui change le montant à régler au parc.',
@@ -205,7 +223,8 @@ return [
     ],
 
     'postform_addons' => [
-        'subject' => 'Vos extras pour la fête (réservation n° :code)',
+        'subject' => 'Extras mis à jour · :code',
+        'preheader' => "À l'intérieur : ce que tu as ajouté ou retiré, et ce qui se règle au parc.",
         'greeting' => 'Bonjour,',
         'intro' => 'Nous avons noté les extras de votre réservation :code. Voici ce qui change :',
         'added' => 'Ajouté : :name × :qty.',
@@ -220,7 +239,8 @@ return [
     ],
 
     'order_item_modified' => [
-        'subject' => 'Modifications de « :product » dans ta réservation (n° :code)',
+        'subject' => 'Réservation modifiée · :product · :code',
+        'preheader' => 'Tu verras exactement ce qui a changé et à quoi ressemble ta réservation.',
         'greeting' => 'Bonjour,',
         'intro' => 'Nous avons mis à jour ta réservation :code. Voici ce qui change pour « :product » :',
         'slot_change' => 'Nouvelle date et heure : :old → :new',
@@ -239,7 +259,8 @@ return [
         'product_fallback' => 'produit :id',
     ],
     'guardian_request' => [
-        'subject' => 'Autorisation pour les mineurs invités de « :product » · :code',
+        'subject' => 'Autorisations des mineurs · :code',
+        'preheader' => 'Transfère-le aux parents : chacun remplit le sien, sans voir celui des autres.',
         'greeting' => 'Bonjour !',
         'intro' => "Votre réservation « :product » (n° :code) comprend un mineur qui n'est pas à votre charge. Pour qu'il puisse entrer, son père, sa mère ou son tuteur doit signer une autorisation.",
         'body' => "C'est l'affaire d'un instant : ses coordonnées, celles du mineur, accepter la décharge et c'est fait. Aucun compte n'est nécessaire.",

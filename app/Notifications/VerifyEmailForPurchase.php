@@ -23,7 +23,7 @@ class VerifyEmailForPurchase extends VerifyEmail implements ShouldQueue
     protected function buildMailMessage($url): MailMessage
     {
         return (new BrandedMailMessage)
-            ->subject(__('emails.verify_purchase.subject'))
+            ->subject(__('emails.verify_purchase.subject', ['code' => $this->orderCode]))
             ->hero('emails.verify_purchase', 'warn')
             ->line(__('emails.verify_purchase.intro', ['code' => $this->orderCode]))
             ->action(__('emails.verify_purchase.action'), $url)

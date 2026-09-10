@@ -3,6 +3,7 @@
 namespace App\Notifications\Support;
 
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Lang;
 
 /**
  * El MOLDE de los correos del producto (`DECISIONES #503`; artboard `Correos PJP` 1a).
@@ -47,6 +48,20 @@ class BrandedMailMessage extends MailMessage
         // además de retirarlo de cada notificación, para que un `->greeting()` escrito después no
         // devuelva dos aperturas al correo.
         $this->greeting = null;
+
+        // ❗❗ LA LÍNEA DE ADELANTO viaja con la cabecera, y eso es la decisión (`#506`): los 21 ya
+        // llaman a `hero()`, así que derivarla del MISMO grupo la pone en los veintiuno sin tocar
+        // ni una notificación — y no se puede olvidar en uno. Es la convención de `.badge` y
+        // `.headline`, aplicada a la tercera pieza.
+        //
+        // ⚠️⚠️ Y SOLO SI LA CLAVE EXISTE. `__()` devuelve la CLAVE cuando no la encuentra, así que
+        // sin esta guarda un grupo sin `preheader` anunciaría el correo en la bandeja con el texto
+        // «emails.order_cancelled.preheader». No es hipotético: `#504` dejó `badge` y `headline`
+        // fuera de su sitio en el correo de identidad social y el cliente recibió exactamente eso.
+        // ▶ Sin clave, el correo sale SIN línea de adelanto: falla hacia invisible, no hacia feo.
+        if (Lang::has($grupo.'.preheader')) {
+            $this->viewData['preheader'] = (string) __($grupo.'.preheader');
+        }
 
         return $this;
     }

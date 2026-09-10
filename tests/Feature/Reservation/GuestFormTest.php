@@ -399,8 +399,24 @@ class GuestFormTest extends TestCase
         $mail = (new GuestFormRequest($reservation))->toMail($order->user);
         $data = $mail->toArray();
 
-        $this->assertStringContainsString('Cumpleaños Jump', $data['subject']); // nombra la reserva
+        // ⚠️ CAMBIÓ DE PREMISA en `#506` y por eso se reescribe: el asunto nombraba el PRODUCTO y
+        // ahora nombra el DÍA. No es una relajación —sigue identificando la reserva— y es un
+        // discriminante mejor: dos cumpleaños del mismo cliente comparten producto y no comparten
+        // día, así que en la bandeja el nombre no separaba y la fecha sí.
+        //
+        // ▶ Y se aseveran LAS DOS RAMAS, que es más de lo que este caso comprobaba antes: esta
+        // reserva del fixture no tiene franja, así que cae a la redacción sin fecha —el código
+        // sigue identificándola— y al darle una aparece el día.
+        $this->assertNull($reservation->slot, 'CONTROL: el fixture no tiene franja, que es la rama sin fecha');
         $this->assertStringContainsString($order->code, $data['subject']);
+
+        $reservation->update(['slot_id' => $this->pastSlot()->id]);
+        $conFecha = (new GuestFormRequest($reservation->fresh(['slot'])))->toMail($order->user)->toArray();
+        $this->assertStringContainsString(
+            DisplayTime::dayLabel($reservation->fresh()->slot->date),
+            $conFecha['subject'],
+            'con franja, el asunto tiene que decir de qué día es la reserva'
+        );
         $this->assertStringContainsString('/reserva/'.$reservation->id.'/', $data['actionUrl']); // a SU reserva
         $this->assertStringContainsString('signature=', $data['actionUrl']);
         $this->assertStringContainsString('expires=', $data['actionUrl'], 'el enlace DEBE llevar caducidad (A7)');

@@ -56,7 +56,7 @@ class SocialIdentityLinked extends Notification implements ShouldQueue
         $provider = __('account.social_link_mail.providers.'.$this->provider);
 
         $mail = (new BrandedMailMessage)
-            ->subject(__('account.social_link_mail.subject', ['provider' => $provider, 'park' => $park]))
+            ->subject(__('account.social_link_mail.subject', ['provider' => $provider]))
             ->hero('account.social_link_mail', 'info')
             ->line(__('account.social_link_mail.line1', ['provider' => $provider, 'park' => $park]));
 

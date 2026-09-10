@@ -314,7 +314,8 @@ return [
     ],
 
     'exists_mail' => [
-        'subject' => 'You already have a :park account',
+        'subject' => 'You already have an account',
+        'preheader' => 'No new account was created. If it was you, sign in or reset your password.',
         'greeting' => 'Hi!',
         'line1' => 'Someone tried to sign up with your email. If it was you, you already have an account: sign in or reset your password.',
         'action' => 'Sign in',
@@ -326,10 +327,11 @@ return [
     'social_link_mail' => [
         'providers' => [
             'google' => 'Google',
-            'badge' => 'Account linked',
-            'headline' => 'You\'ve linked an account',
         ],
-        'subject' => 'Your :park account now signs in with :provider',
+        'badge' => 'Account linked',
+        'headline' => 'You\'ve linked an account',
+        'subject' => 'You can now sign in with :provider',
+        'preheader' => "You can now sign in both ways. If it wasn't you, inside we tell you what to do.",
         'greeting' => 'Hi!',
         'line1' => 'From now on you can sign in to your :park account with :provider, as well as the way you did before.',
         'promoted' => 'Your email address was not verified yet, so we have taken :provider as proof of it and, to keep the account safe, closed any open sessions and disabled the previous password. If you want a password again, use “I forgot my password”.',

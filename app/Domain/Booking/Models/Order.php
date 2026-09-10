@@ -155,6 +155,42 @@ class Order extends Model
             ->values();
     }
 
+    /**
+     * EL DÍA DE LA VISITA, **sólo si el pedido tiene uno solo** (`#506`, `[DECIDIDO owner]`).
+     *
+     * Un pedido puede llevar reservas en días distintos —`#401` lo cazó en un pedido REAL, con la
+     * hoja del responsable diciendo «Días de la visita: 03/09 · 07/09»—, y esta derivación existe
+     * para que lo que se publica FUERA del correo no lo esconda: si hay más de una fecha devuelve
+     * `null` y quien pregunta cae a su redacción sin fecha (`headline_no_date`, `subject_no_date`).
+     *
+     * ▶ **La regla es «el dato se publica cuando es cierto, y si no la frase encoge»**, que es la
+     * misma que ya aplican `EmailSlip` («cada fila se pinta solo si su dato existe») y la entradilla
+     * del horario de `#487`. Aquí pesa más que en otros sitios porque el ASUNTO se lee en la bandeja,
+     * donde no hay cuerpo debajo que lo matice: dentro del correo el cliente ve sus dos reservas
+     * listadas, en la lista de su móvil sólo vería un día que no es el único.
+     *
+     * ⚠️ Cuenta sólo reservas VIVAS y principales: una cancelada ya no es una visita, y un
+     * complemento hereda la franja de su padre —contarlo no añade fechas, pero sí consultas—.
+     *
+     * ⚠️ **Es la fuente ÚNICA del día en un correo**: el titular y el asunto salen de aquí, así que
+     * no pueden contradecirse. Lo que NO gobierna es el RESGUARDO (`EmailSlip`), que se compone
+     * sobre la primera reserva viva y lo declara en su docblock: eso es cuerpo, va al lado del
+     * desglose completo, y cambiarlo es otra tanda (ficha en `DEUDA.md`).
+     */
+    public function singleVisitDate(): ?Carbon
+    {
+        $fechas = $this->items
+            ->whereNull('parent_item_id')
+            ->reject(fn (OrderItem $item): bool => $item->isCancelled())
+            ->map(fn (OrderItem $item) => $item->slot?->date)
+            ->filter()
+            ->map(fn ($fecha): string => Carbon::parse($fecha)->toDateString())
+            ->unique()
+            ->values();
+
+        return $fechas->count() === 1 ? Carbon::parse($fechas->first()) : null;
+    }
+
     /** ¿Este pedido tiene algún pack que pida el post-form por-niño (#217)? */
     public function hasGuestForm(): bool
     {

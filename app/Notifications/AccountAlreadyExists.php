@@ -39,7 +39,7 @@ class AccountAlreadyExists extends Notification implements ShouldQueue
         $park = (string) Setting::businessName();
 
         return (new BrandedMailMessage)
-            ->subject(__('account.exists_mail.subject', ['park' => $park]))
+            ->subject(__('account.exists_mail.subject'))
             ->hero('account.exists_mail', 'info')
             ->line(__('account.exists_mail.line1'))
             ->action(__('account.exists_mail.action'), route('login'))

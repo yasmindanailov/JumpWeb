@@ -10,7 +10,8 @@ return [
     ],
 
     'customer_account_created' => [
-        'subject' => 'Your account at :park is ready',
+        'subject' => 'Your account is ready',
+        'preheader' => 'Your temporary password is inside: change it the first time you sign in.',
         'greeting' => 'Hi!',
         'intro' => 'The :park team has created an account for you so you can check your bookings.',
         'email_label' => 'Email',
@@ -22,7 +23,8 @@ return [
         'headline' => 'Your account is ready',
     ],
     'verify_purchase' => [
-        'subject' => 'Confirm your email to continue with your booking',
+        'subject' => 'Confirm your email · :code',
+        'preheader' => 'Your slot is on hold while you confirm. One click and you can finish paying.',
         'greeting' => 'Hi!',
         'intro' => 'Almost done. Your booking (no. :code) is on hold. Confirm your email to continue with payment.',
         'action' => 'Confirm my email',
@@ -32,7 +34,8 @@ return [
         'headline' => 'Confirm your email to continue',
     ],
     'verify_pending_email' => [
-        'subject' => 'Confirm your new email at :park',
+        'subject' => 'Confirm your new email',
+        'preheader' => "This link expires in 60 minutes. If you didn't ask for the change, ignore it.",
         'greeting' => 'Hi!',
         'intro' => 'You asked to change your account email to this one. To confirm it, click the button.',
         'action' => 'Confirm my new email',
@@ -42,7 +45,8 @@ return [
         'headline' => 'Confirm your new email',
     ],
     'email_change_requested' => [
-        'subject' => 'Email change requested on your account',
+        'subject' => 'Someone asked to change your email',
+        'preheader' => "If it wasn't you, your account keeps this address. Inside we tell you what to do.",
         'greeting' => 'Hi!',
         'intro' => 'Someone requested to change your account email to :new.',
         'it_was_me' => 'If it was you, confirm from the link we sent to the new email.',
@@ -52,6 +56,7 @@ return [
     ],
     'email_change_completed' => [
         'subject' => 'Your account email has changed',
+        'preheader' => "From now on you sign in with the new address. This inbox won't get more notices.",
         'greeting' => 'Hi!',
         'intro' => 'We confirm that your account email is now :new. This mailbox (the previous one) will no longer receive :park messages.',
         'what_means' => 'From now on, you need to log in with the new email.',
@@ -60,7 +65,9 @@ return [
         'headline' => 'Your account email has changed',
     ],
     'order_confirmation' => [
-        'subject' => 'Your :park booking confirmed (no. :code)',
+        'subject' => 'Booking confirmed · :day · :code',
+        'subject_no_date' => 'Booking confirmed · :code',
+        'preheader' => 'Your stub and your QR are inside. Grip socks, and arrive 10 minutes early.',
         'badge' => 'Booking confirmed',
         'headline' => 'See you on :day',
         'headline_no_date' => 'Booking confirmed',
@@ -77,7 +84,8 @@ return [
         'outro' => 'Any questions before your visit? Write to us, we’re happy to help.',
     ],
     'guardian_authorization' => [
-        'subject' => 'Your signed authorisation',
+        'subject' => 'Waiver signed',
+        'preheader' => "We've attached your PDF copy, with the full text and the time you signed.",
         'greeting' => 'Hello,',
         'intro' => 'You have just signed the authorisation for :name. Here is your copy.',
         'booking' => 'Booking: :code.',
@@ -88,7 +96,9 @@ return [
         'headline' => 'Your authorisation is signed',
     ],
     'guest_form' => [
-        'subject' => 'Complete the guest details for your :product booking · :code',
+        'subject' => 'Guest details · :day · :code',
+        'subject_no_date' => 'Guest details · :code',
+        'preheader' => "We need each guest's name and age. Fill it in now or leave it for later.",
         'greeting' => 'Hi!',
         'intro' => 'Your :product booking (no. :code) is confirmed! To get everything ready and make the day perfect, tell us who’s coming: fill in the details for each guest.',
         'body' => 'You can fill it in now or later, and edit it anytime until the event.',
@@ -100,7 +110,8 @@ return [
         'notice_title' => 'And if you like, extras',
     ],
     'order_after_expiration' => [
-        'subject' => 'Your payment arrived, we’re reviewing your booking (no. :code)',
+        'subject' => 'Your payment came through · :code',
+        'preheader' => "The payment is fine. We'll call within 24 h to rebook or refund you.",
         'greeting' => 'Hello,',
         'intro' => 'Good news: your payment for booking :code came through. It reached us a little late, so it wasn’t registered automatically in time and we’re handling it by hand.',
         'amount' => 'Amount charged: :amount €',
@@ -110,7 +121,8 @@ return [
         'headline' => 'Your payment came through',
     ],
     'order_declined' => [
-        'subject' => 'We couldn’t process the payment for your booking (no. :code)',
+        'subject' => "The payment didn't go through · :code",
+        'preheader' => 'Nothing was charged. Your slot stays on hold for a few minutes if you retry.',
         'greeting' => 'Hello,',
         'intro' => 'We could not complete the payment for your booking :code.',
         'no_charge' => 'Don’t worry: nothing was charged to your card. We’re holding your booking for a few more minutes in case you want to try again; if not, the spot will be released for other customers.',
@@ -122,7 +134,8 @@ return [
         'notice_title' => 'Reason',
     ],
     'order_expired_without_payment' => [
-        'subject' => 'Your booking has expired (no. :code)',
+        'subject' => 'Booking expired · :code',
+        'preheader' => 'Nothing was charged and the slot is free again. Book whenever suits you.',
         'greeting' => 'Hello,',
         'intro' => 'Your booking :code has expired because the payment was not completed in time.',
         'no_charge' => 'Nothing was charged to your card. The spot has been released for other customers.',
@@ -133,7 +146,8 @@ return [
         'headline' => 'The booking has expired',
     ],
     'order_cancelled' => [
-        'subject' => 'Your booking has been cancelled (no. :code)',
+        'subject' => 'Booking cancelled · :code',
+        'preheader' => "If there's money to return, it comes in a separate email with amount and timing.",
         'greeting' => 'Hello,',
         'intro' => 'We have cancelled your booking :code.',
         'next_steps' => 'If a refund is part of the cancellation, you will receive a separate email with the refunded amount and the bank timeline. Any in-person arrangement with our team (exchange for physical tickets, rescheduling, etc.) is recorded in your booking.',
@@ -143,7 +157,8 @@ return [
         'headline' => 'Your booking has been cancelled',
     ],
     'order_refunded' => [
-        'subject' => 'We have refunded your booking (no. :code)',
+        'subject' => 'Refund issued · :code',
+        'preheader' => 'Inside: the amount and how it reaches you. Keep this email as your receipt.',
         'greeting' => 'Hello,',
         'intro' => 'We have processed the refund for booking :code.',
         'amount' => 'Amount refunded: :amount €',
@@ -157,7 +172,8 @@ return [
         'headline' => 'We\'ve refunded your payment',
     ],
     'order_item_cancelled' => [
-        'subject' => 'We’ve cancelled ":product" from your booking (no. :code)',
+        'subject' => 'Item cancelled · :product · :code',
+        'preheader' => "The rest of your booking still stands. Inside you'll see what's left and when.",
         'greeting' => 'Hello,',
         'intro' => 'We have cancelled ":product" from your booking :code. The rest of the booking is still active.',
         'cascaded_addons' => 'Its :count add-on(s) are also cancelled (they go with the main product).',
@@ -169,7 +185,8 @@ return [
         'headline' => 'We\'ve cancelled part of your booking',
     ],
     'order_item_refunded' => [
-        'subject' => 'We have refunded part of your booking (no. :code)',
+        'subject' => 'Refund issued · :product · :code',
+        'preheader' => 'Inside: what was refunded, how much, and how it reaches you.',
         'greeting' => 'Hello,',
         'intro' => 'We have processed a partial refund for booking :code.',
         'amount' => 'Amount refunded for ":product": :amount €',
@@ -184,7 +201,8 @@ return [
         'headline' => 'We\'ve refunded an amount to you',
     ],
     'mixed_party_surcharge' => [
-        'subject' => 'Change to what you will pay at the park (booking no. :code)',
+        'subject' => 'Your park total has changed · :code',
+        'preheader' => 'What you pay at the park changes. Inside, the new amount and where it comes from.',
         'greeting' => 'Hi,',
         'intro' => 'You updated the guest ages on your booking :code (":product"), and that changes what is due at the park.',
         'intro_by_park' => 'We have updated your booking :code (“:product”), and that changes what is due at the park.',
@@ -205,7 +223,8 @@ return [
     ],
 
     'postform_addons' => [
-        'subject' => 'Your party extras (booking no. :code)',
+        'subject' => 'Extras updated · :code',
+        'preheader' => 'Inside: what you added or removed, and what gets paid at the park.',
         'greeting' => 'Hello,',
         'intro' => "We've noted the extras for your booking :code. Here's what changed:",
         'added' => 'Added: :name × :qty.',
@@ -220,7 +239,8 @@ return [
     ],
 
     'order_item_modified' => [
-        'subject' => 'Changes to ":product" in your booking (no. :code)',
+        'subject' => 'Booking updated · :product · :code',
+        'preheader' => "Inside you'll see exactly what changed and how your booking looks now.",
         'greeting' => 'Hello,',
         'intro' => 'We’ve updated your booking :code. Here’s what changes for ":product":',
         'slot_change' => 'New date and time: :old → :new',
@@ -238,7 +258,8 @@ return [
         'headline' => 'There are changes to your booking',
     ],
     'guardian_request' => [
-        'subject' => 'Authorization for the invited minors on “:product” · :code',
+        'subject' => 'Guardian consent forms · :code',
+        'preheader' => "Forward it to the parents: each one fills in their own and sees nobody else's.",
         'greeting' => 'Hi there!',
         'intro' => 'Your booking “:product” (no. :code) includes a minor who is not in your care. For them to come in, their parent or legal guardian has to sign an authorization.',
         'body' => 'It only takes a moment: their details, the minor’s details, accept the waiver and done. No account needed.',

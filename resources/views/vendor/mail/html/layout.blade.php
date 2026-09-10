@@ -165,6 +165,32 @@ border-bottom-color: #2A3138 !important;
 </head>
 <body>
 
+{{-- ══════════ LA LÍNEA DE ADELANTO (`#506`; artboard `Correos PJP`, decisión 23 del canvas) ══════════
+   Lo que el gestor de correo enseña DETRÁS DEL ASUNTO en la lista de la bandeja. Hasta hoy no
+   existía en ninguno de los 23 (medido: cero ocurrencias), así que el gestor cogía lo primero del
+   cuerpo — y lo primero era el saludo: **los veintiuno se anunciaban con «¡Hola!»**.
+
+   ❗❗❗ VA AQUÍ Y NO EN EL CUERPO, y el motivo es medible: lo primero que se lee es lo primero del
+   DOCUMENTO, y encima del cuerpo va la cabecera, cuyo logotipo lleva `alt="{nombre del negocio}"`.
+   Puesta en el slot, la bandeja leería «SaltoPark» y luego la frase. Aquí no hay nada delante.
+
+   ❗❗ POR QUÉ SEIS DECLARACIONES PARA ESCONDER UN `<div>`: ningún cliente de correo las respeta
+   todas y basta con que respete una. `display:none` lo tapa en la mayoría; Outlook lo ignora y ahí
+   muerden `max-height`/`overflow`; los que respetan `opacity` lo tapan aunque pinten la caja; y
+   `font-size:1px` con `line-height:1px` evita que deje una franja de aire si todo lo demás falla.
+   ⚠️ Va INLINE y no en el tema porque `CssToInlineStyles` descarta lo que no puede pegar a una
+   etiqueta — la misma regla que obliga a que el modo oscuro viva en el `<style>` de arriba.
+
+   ❗❗ Y EL RELLENO NO ES ADORNO. Sin él, el gestor pinta la línea de adelanto y **sigue leyendo el
+   cuerpo detrás**, así que la bandeja acaba diciendo «…y llegar 10 min antes. Reserva confirmada
+   Nos vemos el sábado 4…». Los espacios de ancho cero ocupan el resto de la previsualización sin
+   pintar nada. Se repite lo justo: son ~200 bytes en un correo, y viajan en los veintiuno. --}}
+@isset($preheader)
+@if ($preheader !== null && $preheader !== '')
+<div style="display:none; font-size:1px; line-height:1px; max-height:0; max-width:0; opacity:0; overflow:hidden; mso-hide:all;">{{ $preheader }}{!! str_repeat('&#8199;&#65279;&#847; ', 40) !!}</div>
+@endif
+@endisset
+
 <table class="wrapper" width="100%" cellpadding="0" cellspacing="0" role="presentation">
 <tr>
 <td align="center">

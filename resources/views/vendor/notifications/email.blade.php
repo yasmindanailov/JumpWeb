@@ -1,4 +1,8 @@
-<x-mail::message>
+{{-- `:preheader` es LA LÍNEA DE ADELANTO (`#506`) — lo que el gestor de correo enseña detrás
+     del asunto en la bandeja. Viaja como atributo hasta `layout`, que es el único sitio donde
+     puede ir ANTES de la cabecera: metida en el cuerpo, lo primero que se lee sigue siendo el
+     `alt` del logotipo. La notificación no la escribe: la deriva `hero()` de su grupo. --}}
+<x-mail::message :preheader="$preheader ?? null">
 {{-- LA CABECERA EN TINTA (`#503`) — chapa + titular + resguardo, la caja oscura que abre el correo.
      La notificación aporta DATOS (`viewData['hero']`), no HTML: componer marcado dentro de una
      notificación es cómo se acaba con veintitrés moldes en vez de uno.
