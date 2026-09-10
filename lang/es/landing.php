@@ -397,7 +397,12 @@ return [
 
         // El aviso de la excepción que viene, FUERA del pliegue: lo que urge no se esconde detrás
         // de un clic.
-        'special_soon' => ':date — :detail',
+        // ❗❗ Es una FRASE, no una fila de datos (`#489`): escribía «:date — :detail» y se leía como
+        // una tercera fila del horario. ⚠️ No dice «festivo» a propósito: `special_dates` es
+        // cualquier excepción de horario, no solo un festivo — el producto las llama «fechas
+        // especiales» en el pliegue de al lado.
+        'special_soon' => 'El :date, horario especial: :detail',
+        'special_soon_closed' => 'Cerramos el :date',
         'specials_open' => 'Ver las fechas especiales',
         'specials_close' => 'Cerrar las fechas especiales',
 

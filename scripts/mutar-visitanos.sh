@@ -25,6 +25,7 @@ FICHEROS=(
     app/Domain/Content/Services/ScheduleDisplay.php
     resources/views/components/site/visit.blade.php
     resources/views/components/site/consent-frame.blade.php
+    lang/es/landing.php
 )
 restaurar() {
     for f in "${FICHEROS[@]}"; do
@@ -91,6 +92,7 @@ HS=app/Domain/Content/Services/HeroStatus.php
 SD=app/Domain/Content/Services/ScheduleDisplay.php
 VW=resources/views/components/site/visit.blade.php
 CF=resources/views/components/site/consent-frame.blade.php
+ES=lang/es/landing.php
 
 echo '── Los cuatro estados ──'
 
@@ -163,6 +165,16 @@ mutar "sin horario se pinta el estado igual" "$VW" \
 mutar "el pliegue aparece con una sola fecha" "$VW" \
   '            @if (count($specials) > 1)' \
   '            @if (count($specials) > 0)'
+
+# 12.bis · el aviso vuelve a ser una FILA DE DATOS y deja de decir qué pasa ese día (`#489`).
+mutar "el aviso vuelve a ser una fila de datos" "$ES" \
+  "        'special_soon' => 'El :date, horario especial: :detail'," \
+  "        'special_soon' => ':date — :detail',"
+
+# 12.ter · su otra mitad: el día que CIERRA se anuncia con la frase del que abre a otra hora.
+mutar "el día que cierra se anuncia como «horario especial»" "$VW" \
+  "                    <span>{{ \$proxima['is_closed']" \
+  "                    <span>{{ false"
 
 # 12 · el aviso de la fecha próxima deja de mirar la distancia.
 mutar "una fecha lejana se anuncia como si viniera" "$VW" \

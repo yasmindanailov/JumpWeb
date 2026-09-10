@@ -322,6 +322,52 @@ class VisitSectionTest extends TestCase
         $this->assertStringContainsString('visit__fold', $seccion);
     }
 
+    /**
+     * **El aviso es una FRASE y son DOS, no una fila de datos** (`#489`).
+     *
+     * Escribía `:date — :detail` —«sáb. 19 sep. — 11:30 – 22:30»— y eso, sobre Nube y pegado a las
+     * dos filas del horario semanal, **se lee como una tercera fila del horario**. El artboard dice
+     * para qué existe el aviso: es *«la única frase de la sección que puede arruinarte el viaje»*.
+     *
+     * ⚠️⚠️ **Y «cerramos» y «abrimos a otra hora» son hechos distintos.** Con una sola plantilla, el
+     * día que cierra se anunciaría como «horario especial: Cerrado», que es una frase que no dice lo
+     * que pasa. Por eso el caso ejercita **las dos ramas**, no una.
+     *
+     * ⚠️ No se comprueba que diga «festivo», y es a propósito: `special_dates` es cualquier
+     * excepción de horario —un evento privado, una apertura extraordinaria—, así que llamarlas
+     * festivas afirmaría algo que el dato no dice. Es la disciplina de `#487`.
+     */
+    public function test_el_aviso_de_la_fecha_proxima_es_una_frase_y_distingue_el_cierre(): void
+    {
+        $this->abrirTodosLosDias('09:00:00', '21:30:00', '2026-09-02 12:00:00');
+
+        // Rama ABIERTA: horario distinto ese día.
+        SpecialDate::query()->delete();
+        SpecialDate::create(['date' => '2026-09-10', 'is_closed' => false, 'open_time' => '11:30', 'close_time' => '22:30']);
+        $abierta = $this->seccion();
+
+        $this->assertStringContainsString('11:30 – 22:30', $abierta, 'el aviso perdió el horario del día especial');
+        // ⚠️ Se asevera el TEXTO y no la clave: derivarlo de `lang/` haría que un retorno a
+        // «:date — :detail» pasara en verde, porque el caso buscaría lo que la plantilla dijera.
+        $this->assertStringContainsString(
+            'horario especial',
+            $abierta,
+            'el aviso volvió a ser una fila de datos: no dice qué pasa ese día.',
+        );
+
+        // Rama CERRADA: la frase cambia entera, no solo el detalle.
+        SpecialDate::query()->delete();
+        SpecialDate::create(['date' => '2026-09-10', 'is_closed' => true]);
+        $cerrada = $this->seccion();
+
+        $this->assertStringContainsString('Cerramos', $cerrada, 'el día que cierra no lo dice: es la mitad que se olvida');
+        $this->assertStringNotContainsString(
+            'horario especial',
+            $cerrada,
+            'el día que CIERRA se anuncia como «horario especial», que no dice lo que pasa.',
+        );
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Lo que la sección NO dice (`[DECIDIDO owner, 2026-09-10]`)
     // ─────────────────────────────────────────────────────────────────────────────────

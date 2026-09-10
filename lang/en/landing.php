@@ -260,7 +260,9 @@ return [
             'next_day' => 'On :day it opens at :time',
         ],
 
-        'special_soon' => ':date — :detail',
+        // Frase, no fila de datos (`#489`). No dice «holiday»: son fechas especiales, no festivos.
+        'special_soon' => 'Special hours on :date: :detail',
+        'special_soon_closed' => 'We are closed on :date',
         'specials_open' => 'See the special dates',
         'specials_close' => 'Hide the special dates',
 

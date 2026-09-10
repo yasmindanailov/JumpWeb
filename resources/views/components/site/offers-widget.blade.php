@@ -40,7 +40,7 @@
                 <span class="cft c1" style="left:34%;top:36%;width:5px;height:5px;background:var(--offw-accent);--cx:-20px;--cy:-26px;--cr:-60deg"></span>
                 <span class="cft c2" style="left:60%;top:34%;width:5px;height:5px;background:var(--ribbon);--cx:20px;--cy:-28px;--cr:70deg"></span>
                 <span class="cft c3" style="left:50%;top:31%;width:5px;height:5px;background:var(--offw-accent);--cx:3px;--cy:-34px;--cr:30deg"></span>
-                <span class="cft c4" style="left:44%;top:37%;width:4px;height:4px;background:#F0B33F;--cx:-11px;--cy:-27px;--cr:-30deg"></span>
+                <span class="cft c4" style="left:44%;top:37%;width:4px;height:4px;background:var(--gift-gold);--cx:-11px;--cy:-27px;--cr:-30deg"></span>
                 <span class="cft c5" style="left:56%;top:38%;width:4px;height:4px;background:var(--ribbon);--cx:14px;--cy:-24px;--cr:45deg"></span>
             </span>
             {{-- Badge SIEMPRE visible (el widget solo se pinta si hay ≥1 oferta): también con 1. --}}

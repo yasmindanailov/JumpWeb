@@ -1,6 +1,34 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#488`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y la Fase 2 está a UNA sección de cerrar — y esa sección la bloquea el owner.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
+>
+> ❗❗❗ **LO SIGUIENTE ES LA 06 «RESEÑAS», Y SE PARTE EN DOS.** `[DECIDIDO owner, 2026-09-10]`: se
+desbloquea. ▶ **Y la primera mitad NO necesita ni un dato suyo**, que es el hallazgo de leerla:
+> - **`a` · la sección + el respaldo PROPIO** (`testimonials` + su recurso del panel + el contrato
+`Content\Contracts\SocialProof`). No es un plan de emergencia: por §3.3 de su spec es **lo que ve
+todo visitante que no acepta cookies de terceros, CADA DÍA**. El propio artboard lo dice —*«sin
+opiniones propias la sección desaparece para ese visitante… cuesta poco arreglarlo: tres opiniones»*—.
+> - **`b` · Google** (Places API, caché corta, comando programado, atribución). **Esta sí está
+bloqueada**, y por cuatro cosas del owner: el ✅ a `specs/google-reviews.md`, el **`place_id`**, una
+**clave de API** con Places habilitado y el **techo de gasto**. ⚠️ Y su ✅ tiene que ser informado:
+§1.4 dice sin adornos que **el parque pierde el control editorial de esa sección** —una reseña de 1
+estrella que Google considere relevante se publica en su portada—.
+>
+> ⚠️⚠️ **Y hay un bloqueo heredado que conviene no descubrir tarde** (§4.2 de su spec): el refresco va
+por comando programado y **el scheduler no corre en staging** (`#115`). Allí habrá que dispararlo a
+mano.
+>
+> ⚠️ **El acta del canvas dice «sin cookies aceptadas la sección desaparece» y COMPRIME DE MÁS** —
+quinta vez—: su artboard dice que desaparece si faltan **las dos cosas**, las de Google *y* las
+propias. No contradice la decisión de agosto del owner; la confirma.
+>
+> 📌 **`#489` (pequeño, ya en el árbol)**: el aviso de la fecha especial pasa a ser una **frase** y son
+**dos** («Cerramos el …» / «El …, horario especial: …»); ⚠️ **no dice «festivo»** porque
+`special_dates` es cualquier excepción de horario, no un festivo. Y nace **`--gift-gold`**, el último
+color suelto del dibujo. ❗❗ **Y la ficha de `#474` tenía la premisa mal**: lo que se verificó fue la
+PRESENCIA de los siete hexadecimales, no su procedencia — dos son `amber-700/800` de Tailwind, así que
+no son marca de nadie y el arreglo **no es sacarlos, es diseñar las cuatro superficies de aviso sobre
+papel**. Ficha corregida, con el reparto medido (cinco triviales · dos con 14 apariciones fuera del CSS).
 >
 > ▶ **LA T2h ESTÁ EN EL ÁRBOL: la sección 08 «Dudas»** (`#488`). Hoy la sección es: cabecera común,
 **una tarjeta blanca** con una fila por duda, **todas cerradas** al cargar, papel de arriba abajo y
@@ -2000,8 +2028,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4575 en verde** (28.690 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con la **T2h** del carril de diseño (`#488`). ⚠️ **+11, y esta vez el
+> Suite **4576 en verde** (28.699 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con `#489`. ⚠️ **+1**: el caso de las dos ramas del aviso de la fecha
+> especial en `VisitSectionTest`. Ninguno sale — `ScheduleDisplayTest` **se re-apunta**, no se retira.
+> Antes, con la **T2h** (`#488`): **4575** y 28.690. ⚠️ **+11, y esa vez el
 > neto ES el movimiento**: entran los **11** casos de `DudasSectionTest` y no sale ninguno —
 > `TouchTargetTest` pierde una ENTRADA de su censo (`faq__q`), no un caso, y la propiedad se muda
 > dentro del mismo total.

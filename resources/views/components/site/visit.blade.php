@@ -81,10 +81,31 @@
 
             @if ($proxima)
                 {{-- El aviso de la excepción que viene. Una regla no avisa de su excepción: «los
-                     festivos como el finde» es cierta hasta el 25 de diciembre. --}}
+                     festivos como el finde» es cierta hasta el 25 de diciembre.
+
+                     ❗❗ **ES UNA FRASE, NO UNA FILA DE DATOS** (`#489`). Escribía `:date — :detail`,
+                     o sea «sáb. 19 sep. — 11:30 – 22:30», que **se lee como una tercera fila del
+                     horario** — y va sobre Nube, pegado a las dos filas semanales, así que ni la
+                     superficie lo distingue. El artboard es explícito sobre para qué existe este
+                     aviso: es *«la única frase de la sección que puede arruinarte el viaje»*, y su
+                     mockup escribe «Cerramos el 25 de diciembre» / «El 12 de octubre es festivo:
+                     abrimos a las 11:30». Lo que se copia es **la forma de frase**, no su texto.
+
+                     ⚠️⚠️ **Y NO se dice «es festivo», aunque el mockup lo diga.** Su lista son
+                     festivos porque los suyos lo son; la nuestra es `special_dates`, que el panel
+                     usa para **cualquier** excepción de horario —un evento privado, una apertura
+                     extraordinaria, una obra—. Llamarlas festivos sería afirmar algo que el dato no
+                     dice, que es justo lo que `#487` evitó con «los festivos, como el finde». El
+                     producto ya las llama por su nombre en el pliegue: «fechas especiales».
+
+                     ⚠️ Son DOS frases y no una con un condicional dentro: «cerramos» y «abrimos a
+                     otra hora» son hechos distintos, y una plantilla que los junte acaba diciendo
+                     «horario especial: Cerrado». --}}
                 <p class="visit__exception">
                     <span class="visit__dot visit__dot--warn" aria-hidden="true"></span>
-                    <span>{{ __('landing.info.special_soon', ['date' => $proxima['date'], 'detail' => $proxima['detail']]) }}</span>
+                    <span>{{ $proxima['is_closed']
+                        ? __('landing.info.special_soon_closed', ['date' => $proxima['date']])
+                        : __('landing.info.special_soon', ['date' => $proxima['date'], 'detail' => $proxima['detail']]) }}</span>
                 </p>
             @endif
 

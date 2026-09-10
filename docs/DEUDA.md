@@ -661,3 +661,34 @@ papel para el fondo y al 30 % para el borde, con **cuerpo y título en tinta** p
 superficie teñida solo aguanta la tinta). Entra con la Fase 4 (el cajón) o antes si se toca un
 correo. ⚠️ Y conviene que salga con **una guarda que alcance correos y PDF**, o el siguiente los
 vuelve a meter por la misma puerta.
+
+---
+
+⚠️⚠️ **DOS CORRECCIONES MEDIDAS A ESTA FICHA** (2026-09-10, `#489`), y la primera cambia lo que hay
+que hacer.
+
+**(1) «Del PRIMER cliente» es engañoso: lo verificado fue su PRESENCIA, no su procedencia.** Medido
+con `git log -S`: los siete entraron en el **commit fundacional** (`48b08c97`, la importación del
+repo de origen), así que *vienen de allí* — pero **no son la marca de aquel cliente**: `#b45309` y
+`#92400e` son literalmente **`amber-700` y `amber-800` de Tailwind**, y el propio código lo dice en
+un comentario (`PresentsOrderActions::priceDiffPreview()`). El resto tiene la misma pinta de valor de paleta
+ajena elegido a ojo — la declaración de `--err-bg` lleva escrito «consolida `#fde8e8`».
+▶ **Y eso cambia la salida**: no es «sacar la marca de un cliente del producto» (un buscar y
+reemplazar), es que **las cuatro superficies semánticas sobre papel nunca se diseñaron**. El producto
+necesita un juego por defecto **decidido y con su contraste medido**, y el paquete encima. Es una
+tanda, no una línea. ⚠️ Y su valor **no puede copiarse del canvas tal cual**: eso metería en el
+producto la paleta del SEGUNDO cliente, que es el mismo defecto por la otra puerta (§2 del carril).
+
+**(2) No son siete piezas del mismo tamaño, son cinco triviales y dos grandes.** Medido:
+
+| | Dónde vive | Tamaño |
+|---|---|---|
+| `#fbeaea` · `#e3b5b0` · `#8a2b22` · `#a93226` · `#e7f6ec` | **una sola aparición cada uno**, todas declaración de token en `site.css` | trivial |
+| `#b45309` · `#92400e` | `site.css` + el tema del panel + **el correo del libro** + **`reservation-slip` (8)** + **`waiver-proof` (2)** + **tres sitios de `PresentsOrderActions.php`** | **14 apariciones fuera del CSS** |
+
+⚠️⚠️ **Y ahí un token no vale, que es lo que hace grande a los dos ámbar**: un cliente de correo y
+dompdf **no resuelven `var(--token)`** de forma fiable, así que en esas superficies el color tiene que
+seguir siendo un literal. Lo que hay que decidir es **de dónde sale ese literal** — hoy está escrito a
+mano en cada plantilla, y el producto ya tiene el mecanismo para lo contrario (`ThemeSettings`
+compone el color de acción y su hover para los correos). Sin esa decisión, «pasarlo a token» es
+imposible en la mitad de los sitios.

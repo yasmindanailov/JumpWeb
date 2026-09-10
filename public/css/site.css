@@ -5279,6 +5279,12 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .offw {
     --box: #E0392C; --ribbon: #FBF1DD;
     --box-dk: #B02C21; --box-lt: #E55241; --box-in: #892119; --ribbon-dk: #C9A24A;
+    /* ⚠️ `--gift-gold` NACE aquí y no cambia un píxel (`#489`): era el ÚNICO color de este dibujo
+       escrito a mano, y en DOS sitios —el confeti `c4`, en línea en el Blade, y la barra superior de
+       la tarjeta, dentro de un `color-mix`—, mientras sus cuatro hermanos de confeti ya leían
+       `--offw-accent` y `--ribbon`. Un valor suelto en dos ficheros distintos es cómo una paleta
+       deja de poder cambiarse por instalación sin que nada falle. */
+    --gift-gold: #F0B33F;
     --offw-accent: var(--zone-1);   /* sin el naranja del PRIMER cliente de respaldo (auditoría m4/C2, `#435`); qué rol le toca es de la tanda D */
     --offw-spring: var(--ease-entra);
 }
@@ -5432,7 +5438,7 @@ html:not(.js) .gf-fiche__foot { display: none; }
     border-radius: var(--r-lg); padding: 30px 26px 26px;
     box-shadow: var(--shadow-float);
 }
-.offw-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--box), color-mix(in srgb, var(--box) 55%, #F0B33F)); }
+.offw-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--box), color-mix(in srgb, var(--box) 55%, var(--gift-gold))); }
 .offw-close {
     position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; z-index: 3;
     border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;

@@ -26650,3 +26650,91 @@ que visten las cuatro secciones ya cerradas.
 
 **Suite 4.575** · 28.690 aserciones · **19/19 mutaciones** (`scripts/mutar-dudas.sh`) · sonda de
 geometría y comparador en verde · Pint limpio.
+
+---
+
+## #489 · 2026-09-10 · El aviso de la fecha especial pasa a ser una FRASE, y el último color suelto del dibujo gana su token
+
+**Contexto.** Dos arreglos pequeños que el owner aprobó al retomar el carril de diseño, más una
+**corrección medida a la ficha de `#474`** que cambia lo que hay que hacer con ella. Salen de dos
+preguntas suyas: *«los días festivos salen como en el mockup?»* y *«los colores es todo por token,
+nada inline?»*.
+
+---
+
+**❗❗ 1 · EL AVISO DE LA FECHA ESPECIAL ERA UNA FILA DE DATOS DONDE EL ARTBOARD PIDE UNA FRASE.**
+
+`'special_soon' => ':date — :detail'` daba **«sáb. 19 sep. — 11:30 – 22:30»**, y eso va sobre Nube
+pegado a las dos filas del horario semanal: **se lee como una tercera fila del horario**. El artboard
+es explícito sobre para qué existe ese aviso — *«la única frase de la sección que puede arruinarte el
+viaje»* — y su mockup escribe «Cerramos el 25 de diciembre» / «El 12 de octubre es festivo: abrimos a
+las 11:30».
+
+▶ Se copia **la forma de frase**, no su texto, y son **DOS**: «cerramos» y «abrimos a otra hora» son
+hechos distintos, y una plantilla única acabaría diciendo «horario especial: **Cerrado**».
+
+⚠️⚠️ **Y NO se dice «es festivo», aunque el mockup lo diga.** Sus fechas son festivos porque las
+suyas lo son; `special_dates` es **cualquier** excepción de horario que el panel quiera meter —un
+evento privado, una apertura extraordinaria, una obra—. Llamarlas festivas afirmaría algo que el dato
+no dice, que es la misma disciplina con la que `#487` retiró «los festivos, como el finde». El
+producto ya las llama por su nombre en el pliegue de al lado: «fechas especiales».
+
+⚠️ **Esta pieza NUNCA se había visto con datos**: `special_dates` tiene **cero filas** y la sección
+no la pinta —conducta correcta—. Se sembraron tres a mano para renderizarla, se midió y se borraron.
+El propio artboard avisa de que las suyas son de ejemplo: *«en producción son `special_dates` del
+panel»*.
+
+---
+
+**⚠️ 2 · EL ÚLTIMO COLOR SUELTO DEL DIBUJO: `--gift-gold`.**
+
+Medido a raíz de la pregunta del owner: **`landing.css` y `client.css` tienen CERO usos crudos** —sus
+hexadecimales son todos declaración de token, que es su sitio—, y en las vistas públicas hay **tres**
+colores en línea, de los que **dos no son colores**: son los valores de una **máscara** en
+`<x-site.ilu>` (`fill:#fff` conserva, `fill:#000` recorta), con su medición dentro — con un token el
+recorte se invierte y pinta el 100 % de la caja.
+
+▶ El tercero sí lo era: **`#F0B33F`**, en **dos** sitios —el confeti `c4` en línea en el Blade y la
+barra superior de la tarjeta dentro de un `color-mix`— mientras sus **cuatro hermanos de confeti ya
+leían `--offw-accent` y `--ribbon`**. Nace `--gift-gold` en el bloque `.offw`, junto a `--box` y
+`--ribbon`. **Cero píxeles movidos**, verificado en navegador con control: el token resuelve
+`#F0B33F` y `.cft.c4` computa `rgb(240, 179, 63)`, con `c2` —el hermano que ya usaba token— al lado.
+
+⚠️ El resto de los 20 usos crudos de `site.css` quedan clasificados y **ninguno es un descuido**: 8
+son valores de máscara o de degradado a transparente, 6 son el **botón de Google** (la única excepción
+escrita del sistema), 3 son fallbacks dentro de un `var()` y 2 son el `#fff` de un `color-mix`.
+
+---
+
+**❗❗❗ 3 · LA FICHA DE `#474` TENÍA LA PREMISA MAL, Y ESO CAMBIA SU SALIDA.**
+
+Decía «siete hexadecimales **del PRIMER cliente** vivos en el producto». Medido con `git log -S`:
+entraron en el **commit fundacional** (`48b08c97`), así que *vienen* de aquel repo — pero **no son su
+marca**: `#b45309` y `#92400e` son **`amber-700` y `amber-800` de Tailwind**, y el propio código lo
+dice en un comentario.
+
+▶ *Lo que `#474` verificó fue su PRESENCIA, no su procedencia* — y la diferencia no es académica: si
+fueran marca ajena, el arreglo sería sacarlos; siendo valores de paleta elegidos a ojo, lo que falta
+es que **las cuatro superficies semánticas sobre papel se diseñen**, con su contraste medido y el
+paquete encima. Es una tanda, no un buscar y reemplazar. ⚠️ Y su valor **no puede copiarse del canvas
+tal cual**: eso metería la paleta del SEGUNDO cliente en el producto, el mismo defecto por la otra
+puerta.
+
+⚠️⚠️ **Y no son siete piezas iguales: cinco son triviales y dos son la tanda.** Los cinco de
+`--err-*`/`--ok-bg` tienen **una aparición cada uno**, todas en `site.css`; los dos ámbar tienen
+**14 fuera del CSS** —el correo del libro, los dos PDF y tres sitios de código PHP del panel—, y ahí
+**un token no vale**: ni un cliente de correo ni dompdf resuelven `var(--token)` de forma fiable. Lo
+que hay que decidir es de dónde sale ese literal. Ficha actualizada con las dos correcciones.
+
+---
+
+**⚠️ 4 · DOS GUARDAS PERDIERON SU SUJETO Y LAS DOS SE RE-APUNTAN MÁS FUERTES.**
+
+`ScheduleDisplayTest` aseveraba `$especial['detail']`, que para una fecha cerrada vale «Cerrado» — y
+con la frase nueva ese día ya no lo imprime. Se re-apunta a **la frase compuesta con la clave**, así
+que sigue exigiendo que el dato llegue a la página **y además** que diga qué pasa ese día; un retorno
+a `:date — :detail` no produce esa cadena, así que muerde. Y `VisitSectionTest` gana un caso que
+ejercita **las dos ramas**, no una.
+
+**Suite 4.576** · 28.699 aserciones · **15/15 mutaciones** (`scripts/mutar-visitanos.sh`, +2) · Pint
+limpio.

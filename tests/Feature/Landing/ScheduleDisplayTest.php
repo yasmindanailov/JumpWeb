@@ -157,7 +157,20 @@ class ScheduleDisplayTest extends TestCase
         $especial = collect(app(ScheduleDisplay::class)->upcomingSpecialDates())->first();
         $this->assertNotNull($especial, 'El caso se quedó sin fecha especial que comprobar.');
         $this->assertStringContainsString($especial['date'], $seccion);
-        $this->assertStringContainsString($especial['detail'], $seccion);
+
+        // ⚠️⚠️ **Re-apuntada** (`#489`), y no queda más débil (la regla de `#295`). Aseveraba
+        // `$especial['detail']`, que para una fecha CERRADA vale «Cerrado»; el aviso dejó de ser
+        // `:date — :detail` y pasó a ser una **frase**, así que ese día ya no imprime «Cerrado»:
+        // dice «Cerramos el …». La propiedad que este caso defiende es la misma —el DATO llega a la
+        // página, no solo su rótulo— y ahora exige además que la página diga QUÉ pasa ese día.
+        // ▶ Se compone con la clave y no con el texto literal para no atarla al castellano; un
+        // retorno a `:date — :detail` no produce esta cadena, así que sigue mordiendo.
+        $this->assertTrue($especial['is_closed'], 'El caso siembra una fecha CERRADA: si deja de serlo, mide otra rama.');
+        $this->assertStringContainsString(
+            (string) __('landing.info.special_soon_closed', ['date' => $especial['date']]),
+            $seccion,
+            'El aviso ya no dice que ese día se cierra.',
+        );
     }
 
     public function test_special_date_without_own_hours_shows_the_weekly_hours(): void

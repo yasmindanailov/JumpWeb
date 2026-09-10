@@ -260,7 +260,9 @@ return [
             'next_day' => 'Le :day il ouvre à :time',
         ],
 
-        'special_soon' => ':date — :detail',
+        // Frase, no fila de datos (`#489`). No dice «jour férié»: son fechas especiales.
+        'special_soon' => 'Le :date, horaires spéciaux : :detail',
+        'special_soon_closed' => 'Nous fermons le :date',
         'specials_open' => 'Voir les dates spéciales',
         'specials_close' => 'Masquer les dates spéciales',
 
