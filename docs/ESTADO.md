@@ -6,7 +6,7 @@
 cabecera común `.sec-head` —rótulo, titular «Tu registro es este QR» y la entradilla del
 entregable—, un **bloque de tinta** con el código dentro de un móvil y, al lado, **lo que ese código
 lleva** (tus reservas · tu firma · tus hijos), la excepción de los calcetines en papel, y **dos
-salidas sin relleno de acción**: «Ver todas las normas» y «Crear mi cuenta». Suite **4.555** ·
+salidas sin relleno de acción**: «Ver todas las normas» y «Crear mi cuenta». Suite **4.556** ·
 **13/13 mutaciones** · desborde 0 en las 13 vistas.
 >
 > ❗❗❗ **NO ES UNA SECCIÓN NUEVA: SUSTITUYE A LA DE NORMAS** (`#309`), que decía las dos mismas cosas
@@ -56,6 +56,29 @@ estaba escrita. Ficha en `DEUDA.md`.
 > ▶ **PASO DE DESPLIEGUE: ninguno de CSS** —la sección se viste entera con roles ya declarados—. Solo
 **DATO**: si el parque quiere ofrecer el justificante del niño invitado, se marca en el producto
 (`ticket_types.guardian_authorization`). La lista viva está en la §5.bis de la spec.
+>
+> ❗❗❗ **`#486` · EL OJO DEL OWNER SOBRE LA T2f, y una de las dos cosas NO ERA DE ESTA SECCIÓN.**
+> ▶ **«La barra fina de debajo del CTA»** era la **costura entre secciones**: `.section + .section
+{ border-top }`, herencia del diseño anterior que pintaba las **siete** costuras de la portada. Se
+retira, y no es gusto —el sistema separa secciones **solo con aire**, «uniforme de arriba abajo», y
+ninguno de los cinco artboards dibuja un divisor—. ⚠️ Medido antes: **solo existía en la portada**
+(ninguna otra página usa `.section`). ⚠️ Se notaba justo ahí porque el pie de la 05 ya lleva su
+propia raya, así que salían **dos líneas seguidas**.
+> ⚠️⚠️ **Y la guarda invertida que se escribió para eso nació «RISKY» con el producto sano**:
+aseveraba dentro de un `foreach` que, sin regla que recorrer, dejó de vigilar **sin ponerse roja** —
+la trampa que `#482` dejó escrita hace dos días. Reescrita con una aserción que corre siempre.
+> ▶ **El botón: tenía razón, y no es un botón de esta sección.** El sistema lo declara **16/800 con
+borde de 1,5 px en Azul Muro**; el nuestro es 14/600 con borde de tinta. ⚠️⚠️ **El ejemplo que la
+hoja de componentes usa para ese botón es literalmente «Cómo llegar»**, que en nuestra web es el
+mismo `.btn--ghost`: es **EL** botón secundario del sistema, no el de una pantalla. Y **todos los
+botones de la portada están a 14/600**, también los ya aprobados. `[DECIDIDO owner]`: *«si es la fase
+4 vale, lo dejamos por ahora»* — llega a 45 usos y 11 ficheros del cajón, así que **espera a su
+tanda**, con las cuatro cifras ya medidas en `DEUDA.md`.
+> ▶ **La revisión se hizo valor a valor, no mirando** (la lección de `#478`): **22 idénticas en móvil
+y 23 en escritorio, 0 divergencias sin explicar**. Encontró una que sí era mía —la chapa del aviso a
+20 donde el artboard escribe **24**— y el comparador queda versionado en
+**`scripts/comparar-seccion.mjs`**, con sus dos trampas dentro (el banner de cookies se cuela en la
+captura; **un `clamp()` da `18.0001px` y comparar cadenas acusa al producto sano**).
 >
 > ▶ **LO SIGUIENTE: la T2g.** Por orden del canvas tocaría **06 «Reseñas»** (`Resenas PJP` 2a), pero
 **está BLOQUEADA por el owner**: `specs/google-reviews.md` sigue esperando su ✅ y **tres datos**

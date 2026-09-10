@@ -74,6 +74,54 @@ class RhythmScaleTest extends TestCase
     }
 
     /**
+     * **DOS SECCIONES SE SEPARAN CON AIRE, NUNCA CON UNA LÍNEA** (`#486`, lo vio el owner: *«quita
+     * la barra fina de debajo del cta, donde empieza la siguiente sección»*).
+     *
+     * Las reglas duras del sistema lo escriben con esas palabras: *«Aire entre secciones 144 en
+     * escritorio y 96 en móvil, **uniforme de arriba abajo**»*. No declaran ningún divisor, y
+     * ninguno de los cinco artboards de sección dibuja uno.
+     *
+     * ⚠️⚠️ **Es un caso INVERTIDO y hace falta porque el filete no rompía nada.** Estuvo ahí desde el
+     * diseño anterior como `.section + .section { border-top: 1px solid var(--line) }`, se veía en
+     * las siete costuras de la portada y **ninguna guarda lo miraba**: un divisor de más no falla, no
+     * avisa y solo se nota comparando con el dibujo. El día que alguien lo devuelva «para separar
+     * mejor», esto se pone rojo y le obliga a decir por qué.
+     *
+     * ⚠️ Se mira el SELECTOR ADYACENTE, que es el mecanismo por el que un divisor entre secciones se
+     * escribe de verdad: un `border-top` en `.section` a secas lo pondría también en la primera, que
+     * es un defecto distinto y se ve al instante.
+     *
+     * ⚠️⚠️ **La primera versión de este caso solo aseveraba DENTRO de un bucle y salió «risky» con el
+     * producto sano**: al retirar la regla, el bucle se quedó vacío y el caso dejó de vigilar sin
+     * ponerse rojo. Es literalmente la trampa que `#482` dejó escrita — *un caso que solo asevera
+     * dentro de un bucle deja de vigilar en cuanto el bucle se vacía, y lo hace en verde*. Ahora la
+     * aserción es una y corre siempre.
+     */
+    public function test_two_sections_are_separated_by_air_and_never_by_a_line(): void
+    {
+        $producto = $this->productSheets();
+
+        // Guarda de la guarda: si el escáner no ve la hoja, lo de abajo pasa mirando el vacío.
+        $this->assertStringContainsString('.section {', $producto, 'no se encuentra la regla `.section`: el escáner mira al vacío.');
+
+        preg_match_all('/\.section\s*\+\s*\.section[^{]*\{([^}]*)\}/m', $producto, $m);
+
+        $conDivisor = array_values(array_filter(
+            $m[1],
+            static fn (string $cuerpo): bool => str_contains($cuerpo, 'border'),
+        ));
+
+        $this->assertSame(
+            [], $conDivisor,
+            'Ha vuelto un divisor entre secciones: «.section + .section { '.implode(' | ', $conDivisor)." }».\n".
+            "▶ El sistema separa secciones **solo con aire** —144 en escritorio y 96 en móvil,\n".
+            "  uniforme de arriba abajo— y no declara ningún filete. El de antes se retiró en\n".
+            "  `#486` porque el owner lo vio bajo el CTA de la sección 05.\n".
+            '▶ Si de verdad hace falta, dilo aquí con su motivo y quita esta comprobación.',
+        );
+    }
+
+    /**
      * **Si el paquete de instalación toca un escalón del par, toca los dos.**
      *
      * Éste es el caso que motiva el fichero. Ver el aviso del docblock de la clase.

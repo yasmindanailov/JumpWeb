@@ -647,7 +647,19 @@ img { display: block; max-width: 100%; }
    llevaba `64px 0 0` y su relleno inferior era CERO. Al pasar cumpleaños a segunda posición ese
    salto quedaba justo donde más se ve. */
 .section { padding: calc(var(--sec-air) / 2) 0; position: relative; }
-.section + .section { border-top: 1px solid var(--line); }
+
+/* ⚠️⚠️ **AQUÍ HABÍA UN FILETE ENTRE SECCIONES Y SE RETIRA** (`#486`, lo vio el owner: *«quita la
+   barra fina de debajo del cta, donde empieza la siguiente sección»*).
+   Era `.section + .section { border-top: 1px solid var(--line) }`, herencia del diseño anterior.
+   ▶ **El sistema del canvas separa secciones SOLO con aire**, y lo dice con esas palabras en sus
+   reglas duras: *«Aire entre secciones 144 en escritorio y 96 en móvil, **uniforme de arriba
+   abajo**»*. No declara ningún divisor, y ninguno de los cinco artboards de sección dibuja uno.
+   ⚠️ **Medido antes de retirarlo**: el filete **solo existía en la portada**. Ninguna otra página
+   usa `.section` —`/precios`, `/cumpleanos`, `/normas` y `/contacto` dan **cero**—, así que el
+   alcance es exactamente la superficie que este carril está rehaciendo.
+   ⚠️ **Y por qué se notaba justo ahí**: en la sección 05 el pie ya lleva su propia raya —el filete
+   sobre las dos salidas, que el artboard sí dibuja—, así que bajo el CTA salían **dos líneas
+   seguidas** separadas por el aire de la sección. */
 
 /* ⚠️⚠️ **EL AIRE QUE PERDIÓ LA PRIMERA SECCIÓN AL RETIRAR LA ETIQUETA** (`[DECIDIDO owner]`: «añade
    espacio entre el hero y la primera sección, el mismo que había antes»).
@@ -2815,14 +2827,17 @@ img { display: block; max-width: 100%; }
    dibujo dos veces.
    ⚠️⚠️ La tinta es `--paper-fg` y no `--fg`: `--attn` es un amarillo claro fijo en los dos
    paquetes, y lo que se lee encima es siempre la tinta oscura, viva la pieza donde viva. */
+/* ⚠️ **24 y no 20**: es la medida del artboard, y la primera versión la puso a 20 sin motivo. Lo
+   cazó la revisión pieza a pieza, no el ojo — a esa talla la diferencia es 4 px y se ve poco, que es
+   justo por lo que hay que comprobarla contra el dibujo y no mirándola. */
 .before__i {
-  flex: none; width: 20px; height: 20px; margin-top: var(--sp-2);
+  flex: none; width: 24px; height: 24px; margin-top: var(--sp-2);
   border-radius: var(--r-pill); color: var(--attn);
   box-shadow: 0 0 0 2px var(--paper-fg);
   display: grid; place-items: center;
 }
 /* La línea del niño invitado se alinea bajo el texto del aviso, no bajo su chapa. */
-.before__guest { padding-left: calc(20px + var(--sp-12)); }
+.before__guest { padding-left: calc(24px + var(--sp-12)); }
 
 /* ── LAS DOS SALIDAS ───────────────────────────────────────────────────────────────────────
    ⚠️ **Ninguna es un botón de acción**: la regla de la sección en el canvas es «cero naranja, cero

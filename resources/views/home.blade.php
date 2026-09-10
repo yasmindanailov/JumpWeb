@@ -787,7 +787,7 @@
              `#301` pagaron dos veces. ▶ Y no hace falta: el precio ya se publica en esta misma
              página, en el carril de complementos de la sección 02 (medido: «+2 € cada uno»). --}}
         <p class="before__socks">
-            <span class="before__i" aria-hidden="true"><x-icons.info :width="20" :height="20" /></span>
+            <span class="before__i" aria-hidden="true"><x-icons.info :width="24" :height="24" /></span>
             <span><strong>{{ __('landing.before.socks_lead') }}</strong> {{ __('landing.before.socks_text') }}</span>
         </p>
 

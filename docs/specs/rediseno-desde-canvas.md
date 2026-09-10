@@ -382,7 +382,7 @@ navegador instalado**.
 | T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera · chapa de zona, ahorro y complementos fuera | ✅ `#479` + `#480` |
 | T2d | **03 · Qué hay dentro**: el mosaico de cinco, y con él la página `/atracciones` | ✅ `#481` + `#482` |
 | T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` + `#484` |
-| T2f | **05 · Antes de venir**: el registro ES el QR · la sección de NORMAS se retira · el código es de ejemplo | ✅ `#485` |
+| T2f | **05 · Antes de venir**: el registro ES el QR · la sección de NORMAS se retira · el código es de ejemplo | ✅ `#485` + `#486` |
 | T2g–T2i | Las **tres secciones** restantes (§5.1) | ⬜ |
 
 ✅ **T2f · «Antes de venir»** (`#485`). Cabecera común · un **bloque de tinta** con el código dentro
@@ -448,10 +448,28 @@ que el catálogo no emite sería el ancla muerta que `#482` fichó*.
 izquierda. Medido: las **seis** reglas del repo que dan ancho a un `.btn` ya lo declaran a mano, o
 sea que la convención existe y no está escrita. Ficha en `DEUDA.md` con su salida.
 
-▶ **Medido**: la sección pesa **825 px** en móvil (contra los 1.108 de la de normas) y **1.100** en
+▶ **Medido**: la sección pesa **824 px** en móvil (contra los 1.108 de la de normas) y **1.099** en
 escritorio (contra 736 — la diferencia es la cabecera común, que la vieja no tenía). La portada baja
-a **12,02 pantallas** en móvil y sube a **11,12** en escritorio. Desborde horizontal **0** en las 13
+a **12,01 pantallas** en móvil y sube a **11,12** en escritorio. Desborde horizontal **0** en las 13
 vistas, y la sonda del repo no ve ningún control táctil nuevo bajo 48.
+
+❗❗❗ **`#486` · EL OJO DEL OWNER, y una de sus dos cosas NO ERA DE ESTA SECCIÓN.** *«La barra fina
+de debajo del CTA»* era la **costura entre secciones** —`.section + .section { border-top }`, que
+pintaba las siete de la portada—: se retira, porque el sistema separa secciones **solo con aire**
+(«uniforme de arriba abajo») y ninguno de los cinco artboards dibuja un divisor. Medido: **solo
+existía en la portada**. ⚠️ Se notaba ahí porque el pie de la 05 ya lleva su propia raya, así que
+salían dos líneas seguidas. ⚠️⚠️ **Y la guarda invertida nació «RISKY»**: aseveraba dentro de un
+bucle que, sin regla que recorrer, dejó de vigilar sin ponerse roja — la trampa de `#482`.
+
+▶ **El botón: `[DECIDIDO owner]` espera a la Fase 4.** El sistema lo declara 16/800 con borde de
+1,5 px en Azul Muro y el nuestro es 14/600 en tinta; el arreglo llega a **45 usos y 11 ficheros del
+cajón**. ⚠️⚠️ **El ejemplo que la hoja de componentes usa para ese botón es «Cómo llegar»**, que en
+nuestra web es ese mismo `.btn--ghost`: no es el botón de una sección, es EL secundario del sistema.
+
+▶ **La revisión se hizo VALOR A VALOR** (`scripts/comparar-seccion.mjs`, versionado porque quedan
+tres secciones): **22 idénticas en móvil y 23 en escritorio, 0 sin explicar**. Encontró la chapa del
+aviso a 20 donde el artboard escribe 24. ⚠️ Sus dos trampas van dentro, y la segunda acusaba al
+producto sano: **un `clamp()` devuelve `18.0001px` donde el artboard escribe 18**.
 
 ⚠️ **Divergencia declarada**: el titular de escritorio parte con «QR» solo en la segunda línea —una
 línea mediría **675 px** y el tope de la cabecera común son **608** (16ch, `#479`)—. No se toca

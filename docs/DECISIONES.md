@@ -26250,10 +26250,10 @@ de ancho automático, pero sí toca los `.btn` que estira una rejilla, y eso pid
 
 ---
 
-**▶ MEDIDO, EN NAVEGADOR.** La sección pesa **825 px** en móvil (contra los **1.108** de la de
-normas) y **1.100** en escritorio (contra **736** — la diferencia es la cabecera común de las ocho,
+**▶ MEDIDO, EN NAVEGADOR.** La sección pesa **824 px** en móvil (contra los **1.108** de la de
+normas) y **1.099** en escritorio (contra **736** — la diferencia es la cabecera común de las ocho,
 que la vieja no tenía: su `.sec-head` mide 206, exactamente lo mismo que la de `#rides-section`). La
-portada baja a **12,02 pantallas** en móvil y sube a **11,12** en escritorio. Desborde horizontal
+portada baja a **12,01 pantallas** en móvil y sube a **11,12** en escritorio. Desborde horizontal
 **0** en las 13 vistas y ningún control táctil nuevo por debajo de 48.
 
 ⚠️ **Divergencias declaradas con el artboard**: el fantasma se contornea en **tinta** y no en Azul
@@ -26273,3 +26273,85 @@ hojas**—. `CmsLandingFlowTest` cambia de contrato en tres casos, `CardSkinTest
 de su corpus y `HomePageTest` re-apunta la nota de calcetines a `/precios`. Neto **12 entran, 12
 salen**: la suite se queda en **4.555** y por eso el número no sirve de evidencia — la evidencia son
 las 28.505 aserciones (antes 28.443) y las 13 mutaciones.
+
+## #486 · 2026-09-10 · `[DECIDIDO owner]` El ojo del owner sobre la sección 05 — la barra entre secciones se retira, y el botón espera a la Fase 4
+
+**Contexto.** El owner revisó la sección recién construida (`#485`) con dos frases: *«revisa que sea
+idéntico al mockup, el botón no lo es, el cta de abajo»* y *«quita la barra fina de debajo del cta,
+donde empieza la siguiente sección»*. Las dos eran ciertas, y una de ellas **no era de esta
+sección**.
+
+---
+
+**❗❗❗ 1 · LA BARRA NO ERA MÍA: ERA LA COSTURA ENTRE SECCIONES, Y VENÍA DEL DISEÑO ANTERIOR.**
+
+No se adivinó: se preguntó al navegador qué elemento la pintaba. La respuesta, al píxel —`y = 7035`
+en móvil y `y = 7007` en escritorio, justo donde acaba la 05 y empieza Visítanos— fue
+`.section + .section { border-top: 1px solid var(--line) }`, una regla **general** que pintaba las
+**siete costuras** de la portada.
+
+▶ **Se retira, y no es gusto: es adoptar el sistema.** Sus reglas duras lo escriben con esas
+palabras: *«Aire entre secciones 144 en escritorio y 96 en móvil, **uniforme de arriba abajo**»*. No
+declaran ningún divisor, y ninguno de los cinco artboards de sección dibuja uno.
+
+⚠️ **Medido antes de retirarlo, y el alcance es limpio: el filete SOLO existía en la portada.**
+Ninguna otra página usa `.section` —`/precios`, `/cumpleanos`, `/normas` y `/contacto` dan **cero**—,
+así que la retirada toca exactamente la superficie que este carril está rehaciendo.
+
+⚠️ **Y por qué se notaba justo ahí**: en la 05 el pie ya lleva su propia raya —la que el artboard sí
+dibuja sobre las dos salidas—, así que bajo el CTA salían **dos líneas seguidas** separadas por el
+aire de la sección.
+
+▶ Queda guarda invertida (`RhythmScaleTest`), porque un divisor de más **no rompe nada**: no falla,
+no avisa y solo se nota comparando con el dibujo.
+
+⚠️⚠️ **Y esa guarda nació «RISKY» con el producto sano**: aseveraba dentro de un `foreach` y, al no
+haber ya ninguna regla que recorrer, dejó de vigilar **sin ponerse roja**. Es literalmente la trampa
+que `#482` dejó escrita hace dos días —*un caso que solo asevera dentro de un bucle deja de vigilar
+en cuanto el bucle se vacía, y lo hace en verde*—. Reescrita con una sola aserción que corre siempre,
+más su guarda-de-la-guarda; vista morder con el filete devuelto.
+
+---
+
+**❗❗❗ 2 · EL BOTÓN: TENÍA RAZÓN, Y NO ES UN BOTÓN DE ESTA SECCIÓN.**
+
+Medido contra el artboard **y contra la hoja de componentes del sistema**, que declara ese botón
+exacto (`font-size:16px; font-weight:700; padding:14px 27px; border-radius:10px;
+color:#0A5C93; border:1.5px solid #0A5C93;` y relleno azul al pasar):
+
+| | El sistema | `.btn--ghost` |
+|---|---|---|
+| Talla / peso | **16 / 800** (la regla dura dice 800) | 14 / 600 |
+| Color | **Azul Muro `#0A5C93`** | tinta `#101418` |
+| Borde | **1,5 px del mismo azul** | 1 px de tinta al 22 % |
+| Al pasar | rellena de azul | rellena de tinta |
+
+▶ **Dos hechos cambian la pregunta.** El primero: **el ejemplo que la hoja de componentes usa para
+ese botón es literalmente «Cómo llegar»**, que en nuestra web es ese mismo `.btn--ghost` — o sea que
+no es el botón de una sección, es **EL** botón secundario del sistema. El segundo: **todos los
+botones de la portada están a 14/600**, también los aprobados en tandas anteriores, así que la talla
+no era un defecto de esta tanda sino de la familia (ficha abierta desde `#479`).
+
+▶ `[DECIDIDO owner]`: *«si es la fase 4 vale, lo dejamos por ahora»*. El arreglo llega a **45 usos y
+11 ficheros del cajón**, así que **espera a su tanda**. La ficha de `DEUDA.md` queda con las cuatro
+cifras medidas y las dos salidas escritas.
+
+---
+
+**⚠️ 3 · LA REVISIÓN COMPLETA, Y LO QUE ENCONTRÓ.**
+
+«Revisa que sea idéntico» no se contesta mirando —es la lección de `#478`—, así que se comparó
+**valor a valor** contra los dos artboards. Resultado: **22 idénticas en móvil y 23 en escritorio, 0
+divergencias sin explicar**; las únicas que quedan son las **cuatro del CTA**, aparcadas arriba.
+
+▶ Encontró una que sí era mía y era barata: **la chapa del aviso estaba a 20 px y el artboard la
+escribe a 24**. A esa talla la diferencia se ve poco, que es justo por lo que hay que comprobarla
+contra el dibujo en vez de mirarla.
+
+▶ **El comparador pasa a `scripts/comparar-seccion.mjs`**, versionado por la regla de `#475`: quedan
+tres secciones y todas van a necesitarlo. Sus **dos trampas** van dentro — el banner de cookies es
+`fixed` y se cuela en la captura, y **un `clamp()` devuelve `18.0001px` donde el artboard escribe 18,
+así que comparar cadenas acusaba al producto sano**.
+
+⚠️ **Y lo que ese informe NO demuestra, escrito dentro**: solo mira los valores que su tabla enumera.
+Un «0 sin explicar» dice que lo comprobado coincide, no que la sección sea idéntica en todo.
