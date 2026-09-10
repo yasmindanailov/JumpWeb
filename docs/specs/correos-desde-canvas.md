@@ -1,6 +1,6 @@
 # Los correos, desde el canvas de Claude Design
 
-> **Estado:** 🟦 **T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA: 63 líneas de adelanto y los 21 asuntos) EN EL ÁRBOL** · queda el correo de la fiesta mixta, y el OJO del owner en un cliente de correo real
+> **Estado:** 🟦 **EL CARRIL ENTERO EN EL ÁRBOL** — T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA) · la FIESTA MIXTA (`#507`, §15). **El inventario del artboard queda sin ningún RECHAZADO.** Sigue 🟦 solo por el OJO del owner en un cliente de correo real, y por los cuatro ÁMBAR (§16)
 > **Banda de decisiones:** **500–519** (`[DECIDIDO owner, 2026-09-10]`; la del carril de diseño de la web pública es 470–499 y va por `#489`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · artboard `Correos PJP` (turno 1a) · `doc/correos.md` · `doc/reglas.md` · tokens **v1.10**
 > ⚠️ Esa fuente **se mueve sola** (`rediseno-desde-canvas.md` §1: v1.9 por la mañana y v1.10 por la tarde del 09-09): **se relee antes de cada tanda, no una vez por carril.**
@@ -159,7 +159,7 @@ copias se migran** (la regla del canvas: *«al arreglar una interacción se arre
 | **T4** | **El mapa del naranja** — el botón de tinta y los dos que venden | ✅ **hecho dentro de la T3** (§9) |
 | **T5** | **La BANDEJA** — las líneas de adelanto + los asuntos con el dato delante. ⚠️ Son **63**, no 69: los dos internos no pueden llevarla (§13.1) | ✅ **en el árbol** (§13) |
 | ~~T6~~ | ~~El molde en los 19 restantes~~ | ✅ **hecho** (`#504`, §10) |
-| — | **El correo de la fiesta mixta**, rehecho | turno propio |
+| — | **El correo de la fiesta mixta**, rehecho | ✅ **en el árbol** (`#507`, §15) |
 
 ⚠️ La T4 y la T3 tocan las mismas plantillas: si se hacen seguidas, se regenera una sola vez.
 
@@ -714,3 +714,134 @@ producto y no comparten día**, así que en la bandeja el nombre no separaba y l
    se puede medir lo que recorta cada cliente de correo.
 4. **Sigue sin verse en Gmail ni en Outlook** — y ahí es donde de verdad se comprueba si la línea
    de adelanto se lee y si el relleno tapa el cuerpo.
+
+---
+
+## 15 · La FIESTA MIXTA — EJECUTADA (2026-09-10, `#507`)
+
+**El último RECHAZADO del inventario del artboard.** `Correos PJP` clasifica los 23 en 15 correctos,
+4 ámbar y 4 rechazados; tres de esos cuatro los cerraron `#503` y `#506`, y quedaba éste con el
+veredicto: *«nueve frases para un solo importe. Es el correo más difícil de leer del producto.»*
+
+⚠️ **El artboard NO lo dibuja**: solo lo marca en su inventario y pregunta si rehacerlo. No hay
+forma que copiar — se deriva del molde que ya existe.
+
+### 15.1 · Medido antes, renderizando los siete desenlaces
+
+Las «nueve frases» del canvas eran **12–14 frases y 140–170 palabras** para decir un número. Y el
+desglose enseña que la culpa no la tenían las frases:
+
+| pieza | pesa | |
+|---|---|---|
+| Entradilla | 130 car. | repite el **código** y el **producto** |
+| Tarjeta de producto | 53 car. | repite el **producto**, el **día** y la **hora** |
+| **La frase de la cifra** | **55 car.** | ← el correo entero |
+| Dónde se paga | 72 car. | |
+| El libro del pedido | 175 car. | |
+| «Puedes seguir editando» | 126 car. | |
+
+> **Los TRES datos del resguardo se repetían debajo.** La cabecera ya dice Cuándo, Qué y Pedido.
+
+Y la segunda mitad: **la cifra no destacaba**. Salía en texto corrido, del mismo cuerpo y del mismo
+color que las otras doce frases — mientras el **aviso** del molde, que existe justo para esto, lo
+usaban ya cuatro correos para cosas menos importantes que un cambio de dinero.
+
+### 15.2 · ❗❗❗ Lo que NO se toca, y está razonado desde antes
+
+**Las siete frases del desenlace se quedan.** El código ya explica por qué son siete y no una
+—fundirlas en «tu importe es ahora X» dejaría la retirada diciendo «ahora es 0,00 €»— y
+`cumple-mixto.md` §24.5 **cita este correo como el patrón de referencia** para separar la línea del
+IMPORTE de la del CANAL. ▶ *Lo que se movió es dónde se pintan, no lo que dicen.*
+
+Y **el LIBRO se queda entero**, que es `[DECIDIDO owner]` en `#503`.
+
+### 15.3 · Lo que cambia · `[DECIDIDO owner]` «estructural»
+
+- **Fuera la tarjeta de producto**, y el código y el producto salen de la entradilla: es el mismo
+  recorte que `#503` hizo en la confirmación, y aquí pesaba más porque eran los tres datos.
+- **La entradilla pasa a decir el PORQUÉ** —lo único que ni el resguardo ni el titular dicen—.
+- **La cifra y su canal suben al AVISO**; el libro y la nota de edición bajan a CIERRE.
+- **El TONO lo pone el signo del neto**, desde **una** derivación para la chapa y el aviso: era
+  `warn` fijo, así que un descuento llegaba teñido de «falta algo». ⚠️ **`info` y no `ok`**: teñir de
+  verde una rebaja la vendería como una celebración, y esto es un dato del dinero — la misma regla
+  dura que creó el quinto tono en `#503`.
+
+### 15.4 · ❗❗❗ DOS defectos propios, los dos cazados RENDERIZANDO y ninguno leyendo
+
+**(1) El orden de las llamadas no es el orden de la pintura.** `notifications::email` pinta **todas**
+las `introLines` juntas y el aviso **después**, así que un `->notice()` escrito antes de tres
+`->line()` acaba **el último**. La cifra quedó debajo del libro y de «puedes seguir editando» — peor
+que antes de tocar nada. ▶ Nace **`BrandedMailMessage::outro()`**, para lo que es cierre de verdad.
+
+**(2) Un type hint `string` destruye un `Htmlable` en silencio.** El libro devuelve `HtmlString`, y
+`{{ $line }}` no escapa un `Htmlable` — de ahí que se pinte como tabla. La firma en `string` lo
+convertía a texto al pasarlo: medido, el correo pasó de **914 a 2.873 caracteres** y en el cuerpo se
+leía «border-collapse:separate» como si fuera una frase. **Nada falló.**
+
+⚠️ Y `formatLine()` tampoco es opcional: colapsa los saltos de línea, sin lo cual Markdown lee cada
+línea del bloque como su propio párrafo. Es lo que hace `->line()`, y `outro()` tiene que hacer lo
+mismo — el atajo `$this->outroLines[] = $texto` se salta **las dos** cosas.
+
+### 15.5 · ⚠️ Y un defecto de la T5 que solo se vio con el asunto nuevo al lado
+
+**Dos líneas de adelanto repetían su propio asunto al 75 %** —«Cambia tu importe en el parque» contra
+«Cambia lo que se abona en el parque…», y «Ya puedes entrar con Google» contra «Ya puedes entrar de
+las dos formas…»—. La regla estaba escrita en §13.3 y **no la vigilaba nadie**.
+
+▶ La guarda nueva cazó **un tercero que la sonda no vio, porque solo medía español**:
+`OrderProcessedAfterExpiration` en francés, al **80 %**. Umbral **60 %**, y sale de la medida: los
+defectos daban 75–80 y el resto de la familia se queda en 25–33, que es compartir el sustantivo del
+asunto y no su mensaje.
+
+### 15.6 · Guarda y arnés
+
+**`MixedPartyMailShapeTest`** (5 casos, con control en cada uno) vigila **la jerarquía, no la
+longitud**: contar caracteres no diría si se lee mejor, y el correo no se acortó mucho porque el
+libro se queda. Mide posiciones en el HTML —la cifra por encima del libro—, que el libro siga
+pintando filas, que el tono siga al signo en la chapa **y** en el aviso, y que el cuerpo no repita
+nada del resguardo.
+
+⚠️ **Un caso suyo nació buscando `data-product-card`, un atributo que NO EXISTE**: habría pasado en
+verde con la tarjeta puesta. Hoy comprueba primero que la aguja sabe encontrar una tarjeta real.
+
+**`scripts/mutar-mixta.py`: 7/7 mueren**, cinco reproduciendo defectos que ocurrieron de verdad.
+⚠️ Una sobrevivió al principio y era un hallazgo: **`formatLine()` no tenía sujeto** —el único texto
+multilínea que pasa por `outro()` es el libro, que al ser `Htmlable` sale intacto—, así que quitarla
+no cambiaba nada. Nació su caso en `MailMoldTest`, donde vive el molde.
+
+**`scripts/mutar-bandeja.py` sube a 10/10** con la mutación de §15.5.
+
+### 15.7 · Dos casos ajenos cambiaron de premisa, y los dos quedan MÁS fuertes
+
+- El de la voz del descuento apuntaba a `introLines` y ahora apunta al aviso — **y asevera además el
+  TONO**, que es propiedad nueva.
+- El helper de `EmailBookBlockTest` miraba solo `introLines` y **se puso rojo con el producto sano**
+  al mover el libro a cierre. Lo correcto no era re-apuntarlo al sitio nuevo sino mirar **lo que
+  recibe una persona** (intro + outro): así no se quedará ciego el día que otro de los cinco correos
+  mueva su libro.
+
+### 15.8 · Verificación
+
+- Suite **4.641 ✓** · Pint 1.246 · `MixedPartyMailShapeTest` 5 · `MailInboxLineTest` 10
+- **7 desenlaces renderizados**: cero placeholders crudos, el libro como tabla, el orden de lectura
+  comprobado en el HTML y el tono correcto en los cinco casos de signo
+- **3 enviados y leídos en Mailpit**: cabecera → porqué → **la cifra** → libro → nota de edición
+- ⚠️ **Sigue sin verse en un cliente de correo real**
+
+---
+
+## 16 · Lo que queda del inventario del artboard: los cuatro ÁMBAR
+
+`Correos PJP` clasifica los 23 en **15 correctos · 4 ámbar · 4 rechazados**. Con `#503`, `#506` y
+`#507` **los cuatro rechazados están cerrados**. Los cuatro ámbar siguen abiertos, verificados uno a
+uno contra el diccionario de hoy:
+
+| correo | lo que dice hoy | lo que pide el artboard |
+|---|---|---|
+| **Pago denegado** | *«Mantenemos tu reserva unos minutos más»* | la **hora** de caducidad. Es el correo que sí vende |
+| **Confirma tu email (compra)** | *«Tu plaza está reservada provisionalmente… podría liberarse»* | cuánto aguanta la plaza |
+| **Producto cancelado** | *«El resto de la reserva sigue activo»* | **qué** queda vivo, con sus fechas |
+| **Cuenta creada por el parque** | manda la contraseña temporal en el propio correo | otra forma; **toca código** |
+
+▶ Los tres primeros son **texto y un dato que el correo ya tiene a mano**; el cuarto es una decisión
+de seguridad con código detrás. Ninguno bloquea nada.

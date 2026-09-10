@@ -1,6 +1,6 @@
 # Estado del proyecto — foto viva
 
-> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#506`) ═══════════
+> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#507`) ═══════════
 >
 > ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
 > medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja
@@ -11,7 +11,8 @@
 > ▶ **TODO ESTÁ EN `docs/specs/correos-desde-canvas.md`. Empieza por su §2** (el filtro
 > producto/cliente, que aquí **no se resuelve con tokens y es estructural**).
 >
-> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#506`): **el vestido está COMPLETO.**
+> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#507`): **EL CARRIL ENTERO ESTÁ EN EL ÁRBOL, y el
+> inventario del artboard queda SIN NINGÚN RECHAZADO.**
 > - **T1 · el vestido** — 89 sustituciones; el tema vivo queda en **13 colores, todos del sistema
 >   v1.10 y cero ajenos**. Ninguna webfont viaja, radios en la escala de cuatro, modo oscuro.
 > - **T2 · el remitente desde el PANEL** (Ajustes → Contacto), no del `.env`, que valía literalmente
@@ -23,19 +24,27 @@
 >   los dos internos usan vista suelta y no pueden llevarla) y los **21 asuntos con el dato delante**.
 >   Medido: longitud media **44 → 33** caracteres · asuntos que pasan del corte de un móvil **18 → 7**
 >   · su dato cabe en el corte en **9 de 14**, contra **1 de 13**. **9/9 mutaciones.**
+> - **LA FIESTA MIXTA** (`#507`) — el último RECHAZADO del inventario. No eran «nueve frases»: eran
+>   **13 y 150 palabras** para decir un número, con **los TRES datos del resguardo repetidos debajo**
+>   y la cifra saliendo en texto corrido. Hoy la cifra va en el **AVISO**, por encima del libro, y
+>   **el tono sigue al signo** (un descuento ya no llega teñido de «falta algo»). **7/7 mutaciones.**
+>   ⚠️ **Las siete frases del desenlace NO se tocaron**: están razonadas en el código y
+>   `cumple-mixto.md` §24.5 las cita como patrón de referencia. Lo que se movió es DÓNDE se pintan.
 > - **La marca del PRODUCTO fuera de la bandeja del cliente**: remitente, firma y copyright decían
 >   «JumpWeb» con el negocio llamándose otra cosa, en **20 de los 21**.
 >
-> ❗❗❗ **LO QUE QUEDA, Y ES LO PRIMERO QUE HAY QUE HACER:**
-> 1. **El correo del SUPLEMENTO DE FIESTA MIXTA**, que se rehace en turno propio: usa nueve frases
->    para decir un importe. `[DECIDIDO owner]`: no entra con el vestido porque es **texto sobre
->    dinero** y merece medirse aparte. **Es lo único del carril que sigue sin tocarse.**
-> 2. ⚠️ **EL OJO DEL OWNER EN UN CLIENTE DE CORREO REAL** (Gmail, Outlook). **No se ha hecho y no se
+> ❗❗❗ **LO QUE QUEDA:**
+> 1. ⚠️ **EL OJO DEL OWNER EN UN CLIENTE DE CORREO REAL** (Gmail, Outlook). **No se ha hecho y no se
 >    puede hacer desde aquí**: no hay Playwright en el contenedor. Todo está verificado por
 >    aritmética, por render y por Mailpit, **nunca por ojo**. Y ahí es donde se comprueba si la línea
 >    de adelanto se lee, si el relleno tapa el cuerpo y si el oscuro no se invierte solo.
-> 3. **Los textos los corrige el owner**: las 63 líneas y los 21 asuntos están escritos derivando de
+> 2. **Los textos los corrige el owner**: las 63 líneas y los 21 asuntos están escritos derivando de
 >    lo que ya había, para que corrija **sobre algo y no sobre un hueco** (decisión 23 del canvas).
+> 3. **Los cuatro ÁMBAR del inventario** (§16 de la spec), verificados uno a uno contra el
+>    diccionario de hoy y ninguno bloqueante: la **hora** de caducidad en «pago denegado» y en
+>    «confirma tu email», **qué queda vivo** en «producto cancelado» —los tres son texto y un dato
+>    que el correo ya tiene a mano— y la **contraseña temporal** del alta por el parque, que es una
+>    decisión de seguridad con código detrás.
 >
 > ❗❗❗ **TRES DEFECTOS VIVOS QUE ENCONTRÓ LA T5 AL MEDIR, y los tres estaban en VERDE:**
 > **(a)** `#504` dejó la cabecera del correo de identidad social diciendo **el nombre de su clave**
@@ -48,7 +57,13 @@
 > líneas de los dos carriles partidas por un `=======`. Se conservan las diez decisiones, y **nace el
 > check 9 del gate documental**, verificado con control.
 >
-> ❗❗ **LAS SIETE TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
+> ❗❗ **LAS NUEVE TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
+> **(0)** ⚠️⚠️ **EL ORDEN DE LAS LLAMADAS NO ES EL ORDEN DE LA PINTURA**: la plantilla pinta TODAS las
+> `->line()` juntas y el aviso DESPUÉS, así que un `->notice()` escrito antes acaba el ÚLTIMO. La
+> cifra del suplemento quedó debajo del libro. *Se ve renderizando, no leyendo.*
+> **(0 bis)** ⚠️⚠️ **UN TYPE HINT `string` DESTRUYE UN `Htmlable` EN SILENCIO**: el libro devuelve
+> `HtmlString` —que `{{ }}` no escapa— y la firma lo convertía a texto. El correo pasó de 914 a
+> **2.873 caracteres** y se leía «border-collapse:separate» como una frase. **Nada falló.**
 > **(1)** Una `@media` **no puede vivir en el tema**: el inliner descarta lo que no puede pegar a una
 > etiqueta, y el modo oscuro salió sin una sola regla **sin que nada fallara**. Va en el `<style>` de
 > `layout.blade.php`, con `!important`. **(2)** **Todo componente de correo nace por partida doble**:
@@ -2204,9 +2219,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4635 en verde** (28.971 aserciones, 6 skipped, **0 risky**), medida el **2026-09-10**
+> Suite **4642 en verde** (28.997 aserciones, 6 skipped, **0 risky**), medida el **2026-09-10**
 > sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de diseño hasta `#493` (Reseñas)
-> y el de los CORREOS `#500`→`#506` (la T5 suma los 9 casos de `MailInboxLineTest`).
+> y el de los CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos + 1 del molde).
 > ⚠️⚠️ **Y la caducó la FUSIÓN, no un descuido.** Antes de fusionar, el carril de diseño declaraba
 > **4603 · 28.895** y el de correos medía **4599 · 28.760** — los dos ciertos sobre su propio árbol,
 > los dos falsos sobre el conjunto. *Dos ramas que mueven el mismo contador no se fusionan eligiendo

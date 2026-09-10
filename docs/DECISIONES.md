@@ -27328,3 +27328,85 @@ producto y no comparten día. Y queda **más fuerte**: asevera las dos ramas, co
 **Suite 4.634** · 28.969 aserciones · Pint 1.245 · **21 de 21 correos renderizados** con su línea,
 todas antes de la cabecera y cero placeholders crudos · **7 leídos en Mailpit**. ⚠️ **Sigue sin
 verse en Gmail ni Outlook**: no hay Playwright en el contenedor.
+
+---
+
+## #507 · 2026-09-10 · `[DECIDIDO owner]` El correo de la fiesta mixta: la cifra deja de ser un párrafo más — y dos defectos que solo se ven renderizando
+
+**El último RECHAZADO del inventario del artboard `Correos PJP`**, que clasifica los 23 en 15
+correctos · 4 ámbar · 4 rechazados. Tres de esos cuatro los cerraron `#503` y `#506`; quedaba éste,
+con su veredicto: *«nueve frases para un solo importe. Es el correo más difícil de leer del
+producto.»* ⚠️ **El artboard NO lo dibuja**: solo lo marca y pregunta. No había forma que copiar.
+
+**MEDIDO ANTES, renderizando los siete desenlaces**: no eran nueve frases, eran **12–14 frases y
+140–170 palabras** para decir un número. Y la culpa no la tenían las frases:
+
+| pieza | pesa | |
+|---|---|---|
+| Entradilla | 130 car. | repite el **código** y el **producto** |
+| Tarjeta de producto | 53 car. | repite el **producto**, el **día** y la **hora** |
+| **La frase de la cifra** | **55 car.** | ← el correo entero |
+| El libro del pedido | 175 car. | |
+
+> **Los TRES datos del resguardo se repetían debajo** —la cabecera ya dice Cuándo, Qué y Pedido— y
+> **la cifra salía en texto corrido**, del mismo cuerpo y del mismo color que las otras doce frases,
+> mientras el **aviso** del molde lo usaban ya cuatro correos para cosas menos importantes que un
+> cambio de dinero.
+
+**❗❗❗ LO QUE NO SE TOCA, Y ESTABA RAZONADO DESDE ANTES.** Las **siete frases del desenlace se
+quedan**: el código explica por qué son siete y no una —fundirlas dejaría la retirada diciendo
+«ahora es 0,00 €»— y `cumple-mixto.md` §24.5 **cita este correo como el patrón de referencia** para
+separar la línea del IMPORTE de la del CANAL. ▶ *Lo que se movió es dónde se pintan, no lo que
+dicen.* Y el LIBRO se queda entero, que es `[DECIDIDO owner]` en `#503`.
+
+**LO QUE CAMBIA** (`[DECIDIDO owner]`, «estructural», elegido sobre tres alcances con su coste):
+fuera la tarjeta de producto y el código/producto de la entradilla, que pasa a decir el **porqué**
+—lo único que ni el resguardo ni el titular dicen—; la cifra y su canal suben al **AVISO** y el libro
+y la nota de edición bajan a **CIERRE**; y **el TONO lo pone el signo del neto**, desde **una**
+derivación para la chapa y el aviso. ⚠️ Era `warn` fijo, así que un descuento llegaba teñido de
+«falta algo». ⚠️ **`info` y no `ok`**: teñir de verde una rebaja la vendería como una celebración —
+la misma regla dura que creó el quinto tono en `#503`.
+
+**❗❗❗ DOS DEFECTOS PROPIOS, LOS DOS CAZADOS RENDERIZANDO Y NINGUNO LEYENDO.**
+
+**(1) El orden de las llamadas NO es el orden de la pintura.** `notifications::email` pinta **todas**
+las `introLines` juntas y el aviso **después**, así que un `->notice()` escrito antes de tres
+`->line()` acaba **el último**: la cifra quedó debajo del libro y de «puedes seguir editando», peor
+que antes de tocar nada. ▶ Nace **`BrandedMailMessage::outro()`**.
+
+**(2) Un type hint `string` destruye un `Htmlable` en silencio.** El libro devuelve `HtmlString` y
+`{{ $line }}` no escapa un `Htmlable` —de ahí que se pinte como tabla—; la firma en `string` lo
+convertía a texto al pasarlo. Medido: el correo pasó de **914 a 2.873 caracteres** y en el cuerpo se
+leía «border-collapse:separate» como si fuera una frase. **Nada falló.** ⚠️ Y `formatLine()` tampoco
+es opcional: colapsa los saltos de línea. El atajo `$this->outroLines[] = $texto` se salta **las
+dos** cosas.
+
+**⚠️ Y UN DEFECTO DE LA T5 QUE SOLO SE VIO CON EL ASUNTO NUEVO AL LADO**: dos líneas de adelanto
+**repetían su propio asunto al 75 %** —«Cambia tu importe en el parque» contra «Cambia lo que se
+abona en el parque…», y «Ya puedes entrar con Google» contra «Ya puedes entrar de las dos formas…»—.
+La regla la escribió `#506` y **no la vigilaba nadie**. ▶ La guarda nueva cazó **un tercero que la
+sonda no vio, porque solo medía español**: `OrderProcessedAfterExpiration` en francés, al **80 %**.
+Umbral **60 %**, sacado de la medida: los defectos daban 75–80 y el resto de la familia se queda en
+25–33, que es compartir el sustantivo del asunto y no su mensaje.
+
+**GUARDAS**: `MixedPartyMailShapeTest` (5 casos, con control en cada uno) vigila **la jerarquía, no
+la longitud** —contar caracteres no diría si se lee mejor, y el correo no se acortó mucho porque el
+libro se queda—. ⚠️ **Un caso suyo nació buscando `data-product-card`, un atributo que NO EXISTE**:
+habría pasado en verde con la tarjeta puesta. **`scripts/mutar-mixta.py`: 7/7 mueren**, cinco
+reproduciendo defectos reales; **`mutar-bandeja.py` sube a 10/10**.
+
+⚠️ Una mutación sobrevivió y era un hallazgo: **`formatLine()` no tenía SUJETO** —el único texto
+multilínea que pasa por `outro()` es el libro, que al ser `Htmlable` sale intacto—, así que quitarla
+no cambiaba nada. Nació su caso en `MailMoldTest`, donde vive el molde.
+
+**Dos casos ajenos cambiaron de premisa y quedan MÁS fuertes**: el de la voz del descuento asevera
+además el tono, y el helper de `EmailBookBlockTest` pasa a mirar **lo que recibe una persona**
+(intro + outro) en vez de solo las `introLines` — no se quedará ciego el día que otro de los cinco
+correos mueva su libro.
+
+▶ **Con esto el inventario del artboard queda sin ningún RECHAZADO.** Siguen los cuatro ÁMBAR
+(§16 de la spec), verificados uno a uno: la hora de caducidad en «pago denegado» y en «confirma tu
+email», qué queda vivo en «producto cancelado», y la contraseña temporal del alta por el parque.
+
+**Suite 4.641** · Pint 1.246 · 7 desenlaces renderizados y 3 leídos en Mailpit. ⚠️ **Sigue sin verse
+en Gmail ni Outlook.**
