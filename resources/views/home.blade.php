@@ -376,7 +376,7 @@
         </ul>
     </section>
 
-    {{-- ═══════════════ 02 · CUÁNTO ═══════════════════════════════════════════════════════════
+    {{-- ══ 02 · CUÁNTO · el carril de tarifas ══════════════════════════════════════════════════
          `DECISIONES #479` · carril de diseño Fase 2 · T2c. Artboard `Precios PJP` 6a (móvil) y
          `Escritorio PJP` 2a (escritorio).
 
@@ -848,7 +848,7 @@
         </div>
     </section>
 
-    {{-- ══ SECCIÓN 06 · «RESEÑAS» ═════════════════════════════════════════════════════════════
+    {{-- ══ 06 · RESEÑAS · una opinión a la vez ═════════════════════════════════════════════
          `DECISIONES #490` · carril de diseño Fase 2 · T2i·a. Artboards `Resenas PJP` 2a (móvil) y
          `Escritorio PJP` 5b (escritorio, aprobado el 8 sep).
 
@@ -1187,7 +1187,11 @@
         </section>
     @endif
 
-    {{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}
+    {{-- ══ 07 · VISÍTANOS · tres tarjetas ══════════════════════════════════════════════════════
+         Carril de diseño Fase 2 · T2g (`DECISIONES #487`). Artboards `Visitanos PJP` **7b** (móvil)
+         + `Escritorio PJP` **3b**.
+
+         ── Lo que ya decía este bloque, y sigue vigente ──────────────────────────────────────── --}}
     {{-- ▶ **TRES TARJETAS** (`[DECIDIDO owner, 2026-09-01]`: «quiero un diseño de cards, todo en
          cards en la medida de lo posible; lo siento más organizado y limpio»),
          `specs/idioma-visual-heredado.md` §3.octies.
@@ -1237,7 +1241,7 @@
          rehacerla después es churn. ⚠️ Eso deja el ajuste del panel **sin consumidor**, que es el
          defecto que `#304` documentó; está dicho, con sus dos salidas, en `DEUDA.md`. --}}
 
-    {{-- ══ SECCIÓN 08 · «DUDAS» ═══════════════════════════════════════════════════════════════
+    {{-- ══ 08 · DUDAS · el acordeón del sistema ════════════════════════════════════════════
          `DECISIONES #488` · carril de diseño Fase 2 · T2h. Artboards `Dudas PJP` 1a (móvil) y
          `Escritorio PJP` 5c (escritorio, aprobado el 8 sep).
 

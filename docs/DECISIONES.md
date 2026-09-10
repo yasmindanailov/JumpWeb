@@ -27401,12 +27401,19 @@ que *sobraba un sujeto*.
 contenido tiene que ser idéntico antes y después—, no a ojo. Delta real: **+1 línea**, y es un
 separador. Y el bloque de la 01 era **el único sin cabecera numerada**; ahora las cinco primeras van
 `══ 01 ·` … `══ 05 ·`, de modo que un bloque descolocado se ve leyendo el fichero.
-⚠️ **Queda pendiente lo mismo para 06, 07 y 08**, que siguen con cabeceras de formato antiguo
-(`===== VISÍTANOS =====`) o sin cabecera de bloque. Ficha en `DEUDA.md`.
+⚠️⚠️ **Y aquí se cometió el error de método de la tanda, con la ficha de deuda ya escrita**: se dio
+por hecho que a 06, 07 y 08 les faltaba cabecera, y **solo era cierto de la 07** — las otras dos la
+tenían con **otro formato** (`══ SECCIÓN 06 · «RESEÑAS» ══`), así que el `grep` que las buscaba
+(`══ 0[1-8] ·`) no las veía. *Un `grep` que no encuentra no demuestra que no exista*: es la trampa de
+`#302` por la otra cara. ▶ Se unificaron las **cuatro** que divergían al mismo molde y **la
+numeración pasó a tener guarda** —ocho, en orden, y cada una delante de su sección—, porque una
+numeración que se desincroniza engaña más que no tenerla. La ficha se retira con su corrección
+dentro.
 
 **Medido en navegador** (390 y 1440): orden servido correcto, aire uniforme, `desborde 0`, portada
 **11.063 px / 13,11 pantallas** en móvil y **10.979 px / 10,98** en escritorio — el alto **no cambia**,
 porque un reordenado es una permutación.
 
-**Suite 4.636** · 29.076 aserciones · **5/5 mutaciones** (`scripts/mutar-orden-secciones.sh`, tres de
-ellas mueven bloques de verdad) · **19/19** en `mutar-dudas` ya arreglado · Pint limpio.
+**Suite 4.637** · 29.086 aserciones · **8/8 mutaciones** (`scripts/mutar-orden-secciones.sh`; tres mueven
+bloques de verdad y una mueve una cabecera sin su sección — la que demostró que la primera versión
+de esa mutación no expresaba el defecto que decía perseguir) · **19/19** en `mutar-dudas` ya arreglado · Pint limpio.

@@ -157,6 +157,50 @@ class HomeSectionOrderTest extends TestCase
         );
     }
 
+    /**
+     * **LA PLANTILLA LLEVA LAS OCHO CABECERAS NUMERADAS, EN ORDEN Y CADA UNA SOBRE SU SECCIÓN.**
+     *
+     * `home.blade.php` separa los bloques con un comentario `══ NN · RÓTULO ══`, para que **un bloque
+     * descolocado se vea leyendo el fichero** sin tener que reconstruir el orden a mano.
+     *
+     * ⚠️⚠️ **Sin esta guarda la numeración se desincroniza y engaña más que no estar.** Ya pasó: al
+     * escribirla, `#495` dio por hecho que a tres bloques les faltaba cabecera —y **la tenían**, con
+     * otro formato (`══ SECCIÓN 06 ·` en vez de `══ 06 ·`), así que el `grep` que las buscaba no las
+     * veía—. *Un `grep` que no encuentra no demuestra que no exista*, y sobre esa lectura se llegó a
+     * escribir una ficha de deuda con la premisa equivocada.
+     *
+     * ⚠️ Vigila el ORDEN y la CORRESPONDENCIA, no la redacción: el matiz que sigue al rótulo
+     * («las dos zonas», «el carril de tarifas») es libre y puede cambiar con la sección.
+     */
+    public function test_the_template_numbers_its_eight_blocks_in_order(): void
+    {
+        $plantilla = (string) file_get_contents(resource_path('views/home.blade.php'));
+
+        preg_match_all('/^\s*\{\{--\s*══ (0[1-8]) · /m', $plantilla, $cabeceras, PREG_OFFSET_CAPTURE);
+
+        $this->assertCount(8, $cabeceras[1],
+            'La portada ya no lleva ocho cabeceras de bloque numeradas: la numeración solo sirve '.
+            'si está completa, y a medias hace creer un orden que no vigila nadie.');
+
+        $this->assertSame(
+            ['01', '02', '03', '04', '05', '06', '07', '08'],
+            array_column($cabeceras[1], 0),
+            'Las cabeceras numeradas de `home.blade.php` no van en orden.'
+        );
+
+        // Y cada cabecera manda sobre la sección que le toca: la primera `<section id=…>` que sigue
+        // a `══ NN ·` tiene que ser la que ese número nombra.
+        $ids = array_keys(self::ORDEN);
+
+        foreach ($cabeceras[0] as $i => [$_, $pos]) {
+            preg_match('/<section id="([a-z-]+)"/', substr($plantilla, $pos), $m);
+
+            $this->assertSame($ids[$i], $m[1] ?? null,
+                'La cabecera `'.$cabeceras[1][$i][0].'` no está delante de `#'.$ids[$i]."`.\n".
+                '▶ O se movió el bloque sin llevarse su cabecera, o al revés.');
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────────────────────────
 
     /**

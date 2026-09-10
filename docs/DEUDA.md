@@ -696,22 +696,20 @@ imposible en la mitad de los sitios.
 
 ---
 
-## ▶ Baja · TRES bloques de la portada sin cabecera numerada (2026-09-10, `DECISIONES #495`)
+## ▶ ~~Baja · TRES bloques de la portada sin cabecera numerada~~ **RETIRADA: ARREGLADA — y su premisa era FALSA** (2026-09-10, `DECISIONES #495`)
 
-Al pasar las secciones al orden del mockup se numeraron las cabeceras de bloque de
-`resources/views/home.blade.php` —`══ 01 · PARA QUIÉN`, `══ 02 · CUÁNTO`…— para que **un bloque
-descolocado se vea leyendo el fichero**. Quedan tres fuera:
+La ficha decía que a las secciones 06, 07 y 08 les faltaba cabecera de bloque. **Solo era cierto de
+la 07.** Las otras dos la tenían desde siempre, con **otro formato** —`══ SECCIÓN 06 · «RESEÑAS» ══`
+en vez de `══ 06 · RESEÑAS ══`—, así que el `grep` que las buscaba (`══ 0[1-8] ·`) no las veía.
 
-    06 · Reseñas    sin cabecera de bloque propia
-    07 · Visítanos  `{{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}`
-    08 · Dudas      sin cabecera de bloque propia
+⚠️⚠️ **La lección es del instrumento, no del código**: *un `grep` que no encuentra no demuestra que
+no exista*, y sobre esa lectura se llegó a escribir una ficha entera con la premisa equivocada. El
+proyecto ya lo tenía escrito al revés (`#302`: «un `grep` que SÍ encuentra tampoco demuestra que
+exista»); es la misma trampa por la otra cara.
 
-▶ **Por qué importa poco y aun así está aquí**: el orden ya lo vigila `HomeSectionOrderTest`, así que
-esto no deja ningún agujero — es legibilidad. Pero la numeración solo sirve **si está completa**: con
-cinco de ocho, quien lea el fichero no puede fiarse de ella para saber dónde va cada cosa, que es
-exactamente para lo que se puso.
-
-⚠️ **Y no es solo renombrar un comentario**: el bloque de Visítanos tiene un comentario largo con
-historia de `#307` y `#487`, y el de Reseñas otro de `#490`→`#494`. La cabecera nueva va **delante**
-conservándolos, como se hizo con la 01 — que es donde se vio que copiar la línea antigua dentro de la
-nueva la **duplica** si no se mira el resultado.
+▶ **Lo que se hizo**: unificar las cuatro cabeceras que divergían —02 traía relleno de más, 06 y 08
+el prefijo «SECCIÓN», y la 07 era del formato antiguo y **sin número**— al mismo molde
+`══ NN · RÓTULO · matiz ══`. Y, ya que la numeración quedaba completa, **ponerle guarda**
+(`HomeSectionOrderTest::test_the_template_numbers_its_eight_blocks_in_order`): vigila que sean ocho,
+que vayan en orden y que **cada una esté delante de su sección** — sin eso se desincroniza y una
+numeración a medias engaña más que ninguna.
