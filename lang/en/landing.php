@@ -234,16 +234,38 @@ return [
         'intro' => "What's happening in the park, right now.",
     ],
     'info' => [
-        'title' => 'Visit us',
-        'hours_title' => 'Hours',
-        'hours_tbd' => 'Hours to be confirmed',
+        'eyebrow' => 'Visit us',
+        'title' => 'Where we are and when we open',
         'closed' => 'Closed',
         'open_generic' => 'Open',
         'day_range' => ':from to :to',
-        'special_dates_title' => 'Special dates',
-        'until' => '· until :time',
         'weekdays' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
         'address_title' => 'Location', 'directions' => 'Directions',
+
+        // ── 07 · VISIT US ── (`#487`). La entradilla se DERIVA del horario: el porqué, en
+        // `lang/es/landing.php` y en `ScheduleDisplay::weeklyLede()`.
+        'lede_one' => 'The same hours every day.',
+        'lede_two' => 'Two sets of hours: :a and :b.',
+        'lede_many' => 'Our hours change from day to day.',
+
+        'today_is' => 'Today, :day',
+        'state' => [
+            'open' => 'Open now',
+            'open_line' => 'Until :time',
+            'later' => 'Opens today',
+            'later_line' => 'Opens at :opens and closes at :closes',
+            'closed_now' => "We've closed for today",
+            'closed_today' => 'Closed today',
+            'next_tomorrow' => 'Tomorrow it opens at :time',
+            'next_day' => 'On :day it opens at :time',
+        ],
+
+        'special_soon' => ':date — :detail',
+        'specials_open' => 'See the special dates',
+        'specials_close' => 'Hide the special dates',
+
+        'map_credit' => 'Map by Google',
+        'open_in_maps' => 'Open in Google Maps',
     ],
     // ⚠️ Solo quedan las dos que lee `<x-site.socks-note>` en `/precios`: la sección de normas de la
     // portada la sustituyó la 05 «Antes de venir» (`#485`). El porqué, en `lang/es/landing.php`.

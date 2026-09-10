@@ -465,4 +465,46 @@ class ClientThemePackageTest extends TestCase
             );
         }
     }
+
+    /**
+     * **SI EL PAQUETE ACLARA EL VERDE, TIENE QUE DECLARAR SU TINTA** (`#487`).
+     *
+     * ❗❗❗ **Mismo patrón que la sombra, y otra vez con un número detrás.** La regla dura del sistema
+     * dice que *«cian, naranja, lima, amarillo y verde no pueden ser texto sobre claro (< 3,0)»*, y
+     * el estado «Abierto ahora» de la sección 07 **es** texto verde sobre una tarjeta blanca.
+     *
+     * ▶ El producto trae `--ok: #1f7a3d`, que ya es oscuro y se lee, así que `--ok-ink` cae en él y
+     * **el defecto del producto es correcto**. Quien lo rompe es un paquete que aclare `--ok` —el de
+     * esta instalación lo pone en `#5FA82E`, que sobre blanco da **2,4**— y no declare su tinta.
+     * *Y no falla: se ve mal, y solo si alguien mira ese día con el parque abierto.*
+     *
+     * ⚠️ **`--attn-ink` NO entra en esta guarda**, y es deliberado: su defecto es `--fg`, o sea que
+     * un paquete que no lo declare pierde el color pero **nunca la lectura**. Exigirlo sería pedir
+     * una línea que no arregla ningún defecto posible.
+     */
+    public function test_a_package_that_lightens_the_success_green_declares_its_ink(): void
+    {
+        $ruta = base_path('public/'.self::CLIENT_SHEET);
+
+        if (! is_file($ruta)) {
+            $this->markTestSkipped('no hay paquete de instalación en esta máquina');
+        }
+
+        $css = (string) file_get_contents($ruta);
+
+        if (! str_contains($css, '--ok:')) {
+            $this->assertTrue(true, 'el paquete no redefine el verde: no hay nada que cuadrar');
+
+            return;
+        }
+
+        $this->assertStringContainsString(
+            '--ok-ink:', $css,
+            "el paquete redefine `--ok` y NO declara `--ok-ink`.\n".
+            "▶ `--ok-ink` cae entonces en `--ok`, y el verde de una marca casi nunca se lee como\n".
+            "  TEXTO sobre blanco: el estado «Abierto ahora» de la sección 07 queda por debajo del\n".
+            "  suelo de 3,0 que el propio sistema fija.\n".
+            '  El par lo declara quien declara el color; no se deriva (`#434`).'
+        );
+    }
 }

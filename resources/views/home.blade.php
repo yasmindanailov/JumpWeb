@@ -6,6 +6,9 @@
     // Horario del parque data-driven (#207): misma fuente que las reservas (opening_hours +
     // temporadas + fechas especiales), agrupado para mostrar.
     $schedule = app(\App\Domain\Content\Services\ScheduleDisplay::class);
+    // La entradilla de «Visítanos» sale del MISMO servicio (`#487`): dice cuántos horarios hay y
+    // cuáles, en vez de afirmar un horario concreto que otra instalación no tendría.
+    $scheduleLede = $schedule->weeklyLede();
     // ⚠️ Aquí se calculaban `$totalSqm`, `$totalRides`, `$totalZones` y `$totalLabels`, la tira de
     // cifras de la sección de zonas. `[DECIDIDO owner, 2026-08-31]` (`#302`): **las tarjetas de zona
     // y las cifras, fuera**. Se van con su consumidor, igual que sus claves de idioma y su CSS.
@@ -840,10 +843,17 @@
          las usa `/contacto`; `.info__grid`, `.info-card` y `.hours` se fueron con su único
          consumidor, que era esta sección. --}}
     <section id="info" class="section wrap">
-        <div class="rides__head">
-            <div>
-                <h2 class="rides__title">{{ __('landing.info.title') }}</h2>
-            </div>
+        {{-- ⚠️ **`.sec-head` y no `.rides__head`**: es la cabecera que el canvas cierra para las ocho
+             secciones (`#479`). La vieja no tenía ni rótulo ni entradilla.
+             ⚠️⚠️ **La entradilla se DERIVA del horario** y no es un texto fijo: el canvas escribe
+             «Abrimos todos los días…», que es cierto en esta instalación y **falso en cualquiera que
+             cierre un día**. El porqué, en `ScheduleDisplay::weeklyLede()`. --}}
+        <div class="sec-head">
+            <p class="sec-head__eyebrow">{{ __('landing.info.eyebrow') }}</p>
+            <h2 class="sec-head__title">{{ __('landing.info.title') }}</h2>
+            @if ($scheduleLede)
+                <p class="sec-head__lede">{{ $scheduleLede }}</p>
+            @endif
         </div>
         <x-site.visit :schedule="$schedule" />
     </section>

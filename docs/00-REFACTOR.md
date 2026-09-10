@@ -1844,7 +1844,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
-      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#485`,
+      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#487`,
       `specs/rediseno-desde-canvas.md`), que se reabrió con el sistema del 2.º cliente ya entregado.
       ✅ **Su FASE 1 está CERRADA y verificada en navegador**: táctil **48**, radios **0·10·16·999**,
       aire **144/96**, columna **1120** —los dos últimos con **hueco nuevo por instalación**—, la
@@ -1854,9 +1854,11 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       alto daba 44 por casualidad aritmética, así que al subir el token TODOS los botones se
       quedaron cortos sin fallar—. Las dos las cierran guardas nuevas.
       ▶ **Fase 2 en curso**: el armazón (`#477`) y las secciones **01** (`#478`), **02**
-      (`#479`+`#480`), **03** (`#481`+`#482`), **04** (`#483`+`#484`) y **05** (`#485`). Quedan
-      **tres secciones**, y la primera por orden —06 Reseñas— está **bloqueada por el owner**
-      (`specs/google-reviews.md` espera su ✅ y tres datos de Google).
+      (`#479`+`#480`), **03** (`#481`+`#482`), **04** (`#483`+`#484`), **05** (`#485`) y **07**
+      (`#487`). Quedan **dos**: 06 Reseñas —**bloqueada por el owner**, su spec espera el ✅ y tres
+      datos de Google— y 08 Dudas.
+      ⚠️ Con la 07, `HeroStatus` pasa de **dos** estados a **cuatro**: «ya hemos cerrado» y «hoy
+      cerrado» decían lo mismo, con la tabla de horarios justo debajo.
       ⚠️ Con la 05 **desaparece la sección de NORMAS de la portada**: la 05 dice lo mismo y, a
       cambio, **enlaza a `/normas`** — que cierra la ficha de `DEUDA.md` de `#480`.
       ▶ Y con la 03 nació **`/atracciones`**, adelantada de la Fase 3 porque su puerta necesitaba

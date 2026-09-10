@@ -26355,3 +26355,123 @@ así que comparar cadenas acusaba al producto sano**.
 
 ⚠️ **Y lo que ese informe NO demuestra, escrito dentro**: solo mira los valores que su tabla enumera.
 Un «0 sin explicar» dice que lo comprobado coincide, no que la sección sea idéntica en todo.
+
+## #487 · 2026-09-10 · `[DECIDIDO owner]` La sección «Visítanos»: cuatro estados donde había dos, y tres cosas que el producto no puede afirmar
+
+**Contexto.** Séptima tanda de la Fase 2 del carril de diseño (`specs/rediseno-desde-canvas.md`
+§5.4), sobre `Visitanos PJP` **7b** —🔒 aprobada, con la sección cerrada— y `Escritorio PJP` **3b**.
+▶ **Por orden del canvas tocaba 06 «Reseñas», y está BLOQUEADA por el owner**: su spec espera su ✅ y
+tres datos de Google. Se salta a la 07, cuyo dato ya está en la BD.
+
+⚠️ **Las dos copias locales se verificaron BYTE A BYTE contra el canvas antes de leerlas**: idénticas.
+Es la primera vez en el carril que la comprobación sale limpia — y ha valido, porque de las cuatro
+tandas anteriores tres encontraron el artboard movido.
+
+---
+
+**❗❗❗ 1 · CUATRO ESTADOS DONDE HABÍA DOS.**
+
+Regla dura del sistema: *«un dato con hora tiene **cuatro** estados, no tres: "hoy no abre" y "hoy ya
+ha cerrado" son hechos distintos, y decirlos igual deja el titular contradiciendo a la tabla, que
+sigue enseñando las horas de hoy»*.
+
+Medido en `HeroStatus`: solo distinguía **dos** —abierto y «abrimos en…»—, así que un jueves con el
+parque ya cerrado y un lunes de cierre **decían lo mismo**, con la tabla de horarios justo debajo.
+
+▶ Entran `face`, `title` y `line` **sin tocar `status`**, y eso es deliberado: `status` lo leen el
+chip del hero y el del menú, que son piezas del ARMAZÓN con su propio artboard. Cambiarlo desde una
+tanda de sección movería el hero — lo que `#479` evitó con `/precios`.
+⚠️ **Consecuencia declarada**: en la misma página el chip dice «Abrimos en 5 h» y la sección «Abre
+hoy · Abre a las 16:30 y cierra a las 21:30». No se contradicen; son dos redacciones del mismo hecho.
+
+---
+
+**❗❗ 2 · EL DÍA SE RESALTA SOLO MIENTRAS SU HORARIO ESTÁ VIGENTE, y son DOS condiciones.**
+
+`is_today` ya se apagaba cuando manda una temporada o una fecha especial (`#307`). Falta la otra
+mitad: **que el estado sea `open` o `later`**. Con el parque ya cerrado, un resaltado dice «esto es lo
+que rige ahora» sobre unas horas que ya pasaron. Es la propiedad que más silenciosamente se rompe, y
+tiene caso con sus dos mitades.
+
+---
+
+**❗❗❗ 3 · TRES COSAS DEL ARTBOARD NO SE ESCRIBEN, y las tres son `[DECIDIDO owner]`.**
+
+- **El aparcamiento.** El canvas escribe «Se aparca en la calle, delante, y es gratis»; la web
+  publicada dice otra cosa; **el dato no tiene campo en el panel**. `#297` ya lo había decidido una
+  vez y `#307` lo retiró. ▶ *No entra en esta tanda.*
+- **«Los festivos, como el finde».** Es una promesa que el producto no puede saber. ▶ *No se
+  escribe*: la sección publica las fechas especiales que haya y nada más.
+- **El teléfono y «Cómo llegar».** El canvas cierra la sección con *«cero enlaces y cero botones»* con
+  el mapa cargado. ▶ *Se van.* El teléfono sigue en el menú y en el pie (medido en `#307`), así que no
+  se pierde; **lo que sí se pierde es la puerta a Google Maps cuando el mapa carga** —queda el propio
+  mapa, que es interactivo— y **vuelve con el mapa bloqueado**.
+
+▶ Esto **revierte parte de `#307`**, que puso aquí tres tarjetas con teléfono. Aquella tanda rompía el
+molde editorial heredado; ésta adopta el artboard, que es la decisión de `#469`.
+
+---
+
+**❗❗❗ 4 · LA ENTRADILLA SE DERIVA DEL HORARIO, Y ES LA MISMA REGLA QUE LAS TRES DE ARRIBA.**
+
+El canvas la fija como *«Abrimos todos los días. Entre semana por la tarde, y de viernes a domingo
+también por la mañana»* — cierto en esta instalación y **falso en cualquiera que cierre un día**. En
+el `lang/` del PRODUCTO eso es la fuga que `DECISIONES #1` prohíbe.
+
+▶ `ScheduleDisplay::weeklyLede()` dice **cuántos horarios distintos hay y cuáles**, que es lo que la
+entradilla del artboard de móvil cuenta. ⚠️ **Cuenta los grupos ABIERTOS**: un parque con «L–V»,
+«sábado cerrado» y «domingo» tiene TRES filas y **dos** horarios.
+
+---
+
+**❗❗ 5 · DOS TOKENS NUEVOS, Y NO SON DECORACIÓN.**
+
+El estado «Abierto ahora» es **texto verde sobre una tarjeta blanca**, y la regla dura dice que el
+verde no puede ser texto sobre claro. Medido con el paquete de este cliente: **2,4** el verde y
+**1,5** el amarillo.
+
+▶ Nacen **`--ok-ink`** y **`--attn-ink`**. ⚠️⚠️ **Se declaran, no se derivan**: mezclar con un
+porcentaje fijo es el defecto que `#481` midió y una guarda cazó —pasaba con los colores de esta
+instalación y fallaba con el verde por defecto del producto—. Es la regla de `#434`.
+
+⚠️ **Sus defectos caen del lado seguro y son distintos a propósito**: `--ok-ink` cae en `--ok`
+(el verde DEL PRODUCTO ya es oscuro) y `--attn-ink` cae en `--fg` (no hay amarillo legible como texto
+sobre claro, así que se pierde el color y nunca la lectura). Guarda en `ClientThemePackageTest`, del
+mismo molde que la de la sombra de `#484`: si el paquete aclara `--ok`, declara su tinta.
+
+---
+
+**⚠️⚠️ 6 · DOS DEFECTOS QUE SOLO VIO LA CAPTURA, con la suite en verde.**
+
+- **`aspect-ratio: 16/9` + `overflow: hidden` en el CONTENEDOR recortaba el bloqueo previo del mapa**,
+  y lo que se caía por abajo era **el enlace a la política de cookies**. La proporción es del
+  **iframe**, no de la caja: así mide 16:9 cuando el mapa carga y **crece con su contenido** cuando
+  no. Ninguna guarda mira alturas.
+- **La dirección llevaba `visit__addr`, que es la clase de `/contacto`**, así que se vestía con los
+  valores de otra página **y dejaba muertas las reglas de ésta**. Lo cazó la guarda, no una relectura.
+
+⚠️ **Y una trampa del comparador, con control**: `getComputedStyle` **trunca `border-width` a un
+entero de píxeles CSS** —`1.5px` sale `1px` y `0.5px` también—, y **da igual el `deviceScaleFactor`**
+(probado a 1 y a 2 en un documento de prueba). El informe acusaba al producto sano. Es la tercera
+trampa escrita dentro de `scripts/comparar-seccion.mjs`.
+
+---
+
+**⚠️ 7 · LO QUE CASI SE VA CON LA SECCIÓN, y es la trampa de `#485` otra vez.** `.visit-card`,
+`.visit-card__ico`, `.visit__addr` y `.visit__actions` **las usa `/contacto`**. Se conservan y la
+sección **estrena las suyas** en vez de reestilarlas: reestilarlas habría cambiado `/contacto` desde
+una tanda de la portada.
+
+---
+
+**▶ MEDIDO, EN NAVEGADOR.** La sección pesa **895 px** en móvil (contra 756 de la anterior) y **746**
+en escritorio (contra 617). La portada queda en **12,18 pantallas** en móvil y **11,26** en
+escritorio, desborde **0** en las 13 vistas y ningún control táctil nuevo bajo 48. El comparador da
+**21 y 13 valores idénticos, 0 divergencias sin explicar**; la única declarada es que el artboard
+escribe el día a **15,5** y la escala del producto no tiene ese escalón.
+
+⚠️ **Un dato en conflicto que sigue siendo del owner**: el panel dice **L–V 16:30 · S–D 11:00** y el
+canvas **L–J 16:30 · V–D 11:30**. Es DATO puro y el código agrupa bien —solo junta días con horario
+idéntico—: se cambia desde el panel.
+
+**Suite 4.564** · 28.609 aserciones · **13/13 mutaciones** (`scripts/mutar-visitanos.sh`) · Pint limpio.

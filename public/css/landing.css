@@ -342,6 +342,28 @@
   --marker: transparent;
   --on-marker: var(--fg);
 
+  /* ── EL VERDE Y EL AMARILLO CUANDO SON TEXTO ────────────────────────────────────────────
+     `#487` · el estado de «Visítanos» («Abierto ahora» en verde, «Abre hoy» en amarillo).
+
+     ❗❗❗ **NO son `--ok` ni `--attn`, y la regla es dura**: *«cian, naranja, lima, amarillo y verde
+     no pueden ser texto sobre claro (< 3,0); sobre papel se usa su variante oscura»*. Con el verde
+     del paquete de este cliente (`#5FA82E`) sobre blanco el titular daría **2,4** — ilegible— y con
+     su amarillo (`#F5C400`), **1,5**.
+
+     ⚠️⚠️ **Se DECLARAN, no se derivan.** Mezclar la variante oscura con un porcentaje fijo es
+     exactamente el defecto que `#481` midió y una guarda cazó: pasaba con los colores de esta
+     instalación y **fallaba con el verde que el producto trae por defecto**. Es la misma regla que
+     `#434` dejó escrita al nacer `--on-ok`: *el par lo declara quien declara el color.*
+
+     ▶ **Sus defectos caen del lado seguro y son distintos a propósito**:
+       · `--ok-ink` cae en `--ok`, porque el verde DEL PRODUCTO (`#1f7a3d`) ya es oscuro y sobre
+         papel se lee. Quien lo rompe es un paquete que aclare `--ok` sin declarar su tinta, y eso
+         lo vigila `ClientThemePackageTest`.
+       · `--attn-ink` cae en `--fg`: no hay ningún amarillo legible como texto sobre claro, así que
+         el defecto **pierde el color** en vez de arriesgar la lectura. */
+  --ok-ink: var(--ok);
+  --attn-ink: var(--fg);
+
   /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
      Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del
      segundo cliente, y por eso son cinco: su marca tiene cinco colores.
@@ -2547,25 +2569,19 @@ img { display: block; max-width: 100%; }
   animation: pulse 1.6s ease-in-out infinite;
 }
 
-/* ══ «Visítanos» EN TARJETAS ════════════════════════════════════════════════════════════
-   `[DECIDIDO owner, 2026-09-01]` · `specs/idioma-visual-heredado.md` §3.octies.
+/* ══ LO QUE `/contacto` SIGUE USANDO ════════════════════════════════════════════════════
+   ⚠️⚠️ **ESTAS CUATRO CLASES CASI SE VAN CON LA SECCIÓN, y es la trampa de `#485` otra vez.**
+   Nacieron en `#307` para «Visítanos» en tarjetas, pero **`pages/contact.blade.php` las usa**:
+   `.visit-card`, `.visit-card__ico`, `.visit__addr` y `.visit__actions`. Comprobado por FICHERO y
+   por clase EXACTA, no por «esto ya no lo usa la home».
+   ▶ La sección 07 rehecha **no las reestila**: estrena las suyas (`.visit__when`, `.visit__place`…)
+   precisamente para no cambiar `/contacto` desde una tanda de la portada — que es lo que `#479`
+   evitó con `/precios`. `/contacto` es página de la Fase 3 y allí se decidirá su forma.
 
-   Sustituye a `.info__grid`/`.info-card`/`.map-card` de aquí arriba, que son el idioma del cliente
-   ANTIGUO: dos tarjetas simétricas y blandas (borde `--line`, sin sombra) con un `h3` de 44 px
-   dentro de cada una. Aquéllas se retiran con su sección; si alguna sobreviviera sin consumidor,
-   se va — no son la base de éstas.
-
-   ❗ La tarjeta es la PEGATINA de `#303`, con sus mismos valores que `.ride-card`: borde de tinta
-   (`--paper-fg`, NO `--fg`: dentro de una superficie oscura `--fg` vale claro y el borde
-   desaparecería), radio `--r-lg` y sombra dura por ROL `--shadow-float`.
-   ⚠️ **Sin `:hover`, a propósito**: `.ride-card` responde al puntero porque tiene un CTA dentro;
-   éstas no llevan a ninguna parte, y una afordancia sin consumidor es el defecto de `#295`. */
-.visit {
-  display: grid; grid-template-columns: minmax(0, 380px) 1fr;
-  gap: var(--sp-16); align-items: start;
-}
-.visit__col { display: grid; gap: var(--sp-16); min-width: 0; }
-
+   ❗ La tarjeta es la PEGATINA de `#303`: borde de tinta (`--paper-fg`, NO `--fg`: dentro de una
+   superficie oscura `--fg` vale claro y el borde desaparecería), radio `--r-lg` y sombra por ROL.
+   ⚠️ **Sin `:hover`, a propósito**: no lleva a ninguna parte, y una afordancia sin consumidor es el
+   defecto de `#295`. */
 .visit-card {
   min-width: 0;
   border: 1px solid var(--paper-fg); border-radius: var(--r-lg);
@@ -2573,67 +2589,183 @@ img { display: block; max-width: 100%; }
   box-shadow: var(--shadow-float);
   display: grid; gap: var(--sp-12); align-content: start;
 }
-
-/* **EL ICONO DE CATEGORÍA** — dice qué es la tarjeta sin gastar una línea de texto.
-   ⚠️ Esto NO reabre los `h3` internos que `#307` retiró: lo que aquella tanda quitó fue el RÓTULO
-   («todo en cards, y ponerles cabecera rehace el molde desde dentro»), y un reloj de 22 px cumple la
-   misma función de orientación en la mitad del alto y sin una palabra.
-   ⚠️ Va en un cuadro de superficie apagada, no suelto: sobre papel un icono de línea solo se lee si
-   tiene fondo propio — es el mismo tratamiento que el marcador del catálogo del cajón. */
 .visit-card__ico {
   width: 34px; height: 34px; border-radius: var(--r-sm);
   display: inline-grid; place-items: center;
   background: var(--bg-soft); color: var(--paper-fg);
 }
-
-/* El mapa es una tarjeta MÁS: misma pegatina, sin relleno para que la imagen llegue al borde.
-   La trama de 45° es la reserva de siempre — lo que se ve mientras el iframe carga, o si la
-   instalación no ha configurado inserción. */
-.visit-card--map {
-  padding: 0; overflow: hidden; position: relative; min-height: 340px;
-  background: repeating-linear-gradient(45deg, var(--bg-soft) 0 28px, var(--bg-card) 28px 30px);
-}
-.visit__frame { position: absolute; inset: 0; }
-.visit__iframe { display: block; width: 100%; height: 100%; border: 0; }
-
-/* 1 · el estado. El punto usa `--ok` y NO `--action`: «abierto» es un ESTADO, no el control que
-   hace avanzar (`ActionFillTest`, la misma regla que ya siguió el chip del hero en `#254`). */
-.visit__now {
-  margin: 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--sp-8);
-  font-size: var(--fs-18); font-weight: 700; line-height: 1.3;
-}
-.visit__dot {
-  flex: none; align-self: center; width: 10px; height: 10px;
-  border-radius: var(--r-pill); background: var(--fg-mute);
-}
-.visit__now.is-open .visit__dot {
-  background: var(--ok);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 18%, transparent);
-}
-.visit__until { font-family: var(--font-mono); font-size: var(--fs-14); font-weight: 400; color: var(--fg-mute); }
-/* La excepción NO es un apéndice: contradice la línea de arriba, así que se lee con su misma
-   tinta y en negrita cuando cierra. No usa `--err`: un día de cierre es un HECHO, no un fallo. */
-.visit__exception { margin: var(--sp-6) 0 0; font-size: var(--fs-14); color: var(--fg-mute); }
-.visit__exception.is-closed { color: var(--fg); font-weight: 700; }
-
-/* 2 · el horario, sin encabezado. */
-/* El calendario de la semana. El filete superior separa la RESPUESTA («abierto ahora» / «abrimos
-   mañana») del calendario: son dos cosas distintas dentro de la misma tarjeta y sin él se leen
-   como una lista de cuatro renglones. */
-.visit__hours {
-  margin: 0; display: grid; gap: var(--sp-6); font-size: var(--fs-14);
-  padding-top: var(--sp-12); border-top: 1px solid var(--line);
-}
-.visit__hours > div { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); }
-.visit__hours dt { margin: 0; color: var(--fg-mute); }
-.visit__hours dd { margin: 0; font-family: var(--font-mono); white-space: nowrap; }
-.visit__hours .is-current dt, .visit__hours .is-current dd { color: var(--zone-1); font-weight: 700; }
-
-/* 3 · dónde, y qué se hace con eso. */
 /* Sin `margin-bottom`: la tarjeta es una rejilla con `gap`, y sumar los dos daba 24 px donde el
    sistema pide 12. Un margen heredado dentro de un contenedor con `gap` se paga dos veces. */
 .visit__addr { margin: 0; font-size: var(--fs-16); line-height: 1.5; }
 .visit__actions { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 07 · «VISÍTANOS» · el estado en vivo y el mapa
+   `DECISIONES #487` · Fase 2 · T2g. Artboards `Visitanos PJP` 7b + `Escritorio PJP` 3b.
+
+   ⚠️⚠️ **`.visit-card`, `.visit-card__ico`, `.visit__addr` y `.visit__actions` NO se van**: los usa
+   `/contacto`, que es una PÁGINA de la Fase 3. Comprobado por fichero y por clase exacta, que es
+   como `#485` evitó llevarse media `/normas` por delante. La sección estrena las suyas en vez de
+   reestilar las de aquélla — reestilarlas habría cambiado `/contacto` sin que nadie lo pidiera.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* Dos mitades: cuándo y dónde. En teléfono se apilan; en escritorio van a dos columnas iguales,
+   que es lo único que cambia entre las dos superficies. */
+.visit { display: grid; gap: var(--sp-20); align-items: start; }
+
+/* ── CUÁNDO ───────────────────────────────────────────────────────────────────────────────
+   ⚠️ **Es la ÚNICA tarjeta de la sección y eso es deliberado**: el estado comparte nivel
+   tipográfico con el titular —en móvil no hay ningún nivel legal por encima de 34, porque el 42 es
+   Display XL y lo gasta el hero—, así que lo que lo distingue son **el color y la tarjeta**.
+   ⚠️ Borde de LÍNEA y sin sombra, no la pegatina: esto no se elige ni se compra, se lee. */
+.visit__when {
+  min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-20);
+}
+
+.visit__today {
+  margin: 0;
+  display: flex; align-items: center; gap: var(--sp-8);
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-mute);
+}
+.visit__dot {
+  flex: none; width: 10px; height: 10px;
+  border-radius: var(--r-pill); background: var(--fg-mute);
+}
+
+/* ❗❗❗ **EL COLOR DEL ESTADO LEE UN TOKEN DE TINTA, NO `--ok` NI `--attn`.** Es regla dura del
+   sistema: *«cian, naranja, lima, amarillo y verde no pueden ser texto sobre claro (< 3.0); sobre
+   papel se usa su variante oscura»*. Con el verde del paquete (`#5FA82E`) sobre blanco esto daría
+   2,4 y el titular del estado sería ilegible.
+   ⚠️⚠️ **El par lo declara quien declara el color, no se deriva** (`#434`): mezclar un porcentaje
+   fijo es el defecto que `#481` midió —pasaba con los colores de esta instalación y fallaba con el
+   verde que el producto trae por defecto—. Por eso `--ok-ink` es un token propio.
+   ▶ Y su defecto cae del lado seguro: sin declarar, el estado se pinta en TINTA. Pierde color,
+   nunca legibilidad. */
+.visit__state {
+  margin: var(--sp-8) 0 0;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-display-l); line-height: 0.95; letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.visit__state--open { color: var(--ok-ink); }
+.visit__state--later { color: var(--attn-ink); }
+.visit__dot--open { background: var(--ok-ink); }
+.visit__dot--later { background: var(--attn-ink); }
+
+.visit__line { margin: var(--sp-8) 0 0; font-size: var(--fs-body); line-height: 1.4; color: var(--fg); }
+
+/* ── LA TABLA ─────────────────────────────────────────────────────────────────────────────
+   El filete separa la RESPUESTA del calendario: son dos cosas dentro de la misma tarjeta y sin él
+   se leen como una lista de renglones. */
+.visit__rows {
+  margin: var(--sp-16) 0 0; padding-top: var(--sp-16);
+  border-top: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: var(--sp-4);
+}
+.visit__rows > div {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12);
+  padding: var(--sp-8) var(--sp-12); border-radius: var(--r-btn);
+}
+.visit__rows dt { margin: 0; font-size: var(--fs-15); font-weight: 700; line-height: 1.35; color: var(--fg); }
+.visit__rows dd { margin: 0; font-family: var(--font-mono); font-size: var(--fs-15); white-space: nowrap; color: var(--fg); }
+
+/* ❗❗ **El día de hoy se marca con SUPERFICIE, nunca con color**, y el color de esta sección está
+   reservado al estado. Y solo se marca **mientras su horario está vigente**: con el parque ya
+   cerrado, la fila de hoy vuelve a ser una fila de calendario — la condición la pone la vista. */
+.visit__rows > .is-now { background: var(--bg-soft); }
+
+/* La excepción que viene, FUERA del pliegue: lo que urge no se esconde detrás de un clic. */
+.visit__exception {
+  margin: var(--sp-16) 0 0;
+  display: flex; align-items: flex-start; gap: var(--sp-12);
+  background: var(--bg-soft); border-radius: var(--r-btn);
+  padding: var(--sp-12) var(--sp-16);
+  font-size: var(--fs-body); font-weight: 700; line-height: 1.45; color: var(--fg);
+}
+.visit__exception .visit__dot { width: 8px; height: 8px; margin-top: var(--sp-7); }
+.visit__dot--warn { background: var(--attn-ink); }
+
+/* ── EL PLIEGUE ───────────────────────────────────────────────────────────────────────────
+   ⚠️ **Botón SIN borde**: dentro de una tarjeta que ya tiene el suyo, un segundo borde a 12 px del
+   primero se lee como caja dentro de caja.
+   ⚠️ **El signo es + y −, no una flecha**: una flecha dice «vas a otro sitio» y aquí no te mueves. */
+.visit__fold-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8);
+  width: 100%; min-height: var(--tap-min); margin-top: var(--sp-8);
+  padding: 0; background: none; border: 0; cursor: pointer; text-align: left;
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-16);
+  color: var(--interactive);
+}
+.visit__fold-sign { font-family: var(--font-mono); font-size: var(--fs-18); line-height: 1; }
+/* Las fechas repiten la tipografía de la tabla de arriba: se leen como lo que son, más filas del
+   mismo horario. Sin filete propio arriba —lo pone el pliegue— y sin resaltado: ninguna es hoy. */
+.visit__rows--specials { margin-top: 0; padding-top: var(--sp-8); }
+
+/* ── DÓNDE ────────────────────────────────────────────────────────────────────────────────
+   ⚠️⚠️ **La dirección vive FUERA del marco**, con mapa y sin mapa: un bloqueador tumba el widget
+   con las cookies aceptadas y entonces no salta ningún aviso, sale un hueco. */
+.visit__where { min-width: 0; }
+/* ❗❗❗ **LA PROPORCIÓN ES DEL IFRAME, NO DE LA CAJA, y ponerla en la caja era un DEFECTO REAL.**
+   Con `aspect-ratio: 16/9` + `overflow: hidden` en el contenedor, el **bloqueo previo** —que es más
+   alto que 16:9 en un teléfono: dos líneas de texto, un botón y dos enlaces— quedaba **recortado**,
+   y lo que se caía por abajo era el **enlace a la política de cookies**. Lo vio la captura de móvil,
+   no la suite: ninguna guarda mira alturas.
+   ▶ Con la proporción en el iframe, la caja mide 16:9 cuando el mapa carga y **crece con su
+   contenido** cuando no. */
+.visit__frame {
+  position: relative; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--r-btn);
+  background: var(--bg-soft);
+  display: grid; place-items: center;
+}
+.visit__iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; }
+
+.visit__place { margin: var(--sp-12) 0 0; display: grid; gap: var(--sp-4); }
+.visit__addr-1 { font-size: var(--fs-body); line-height: 1.4; color: var(--fg); }
+.visit__addr-2 { font-size: var(--fs-body); line-height: 1.4; color: var(--fg-mute); }
+/* La atribución del tercero. No es un aviso legal —ése lo da el bloqueo previo—: es la regla del
+   sistema de no atribuirse el dato de otro. */
+.visit__credit { margin: var(--sp-8) 0 0; font-size: var(--fs-15); line-height: 1.55; color: var(--fg-mute); }
+
+/* La puerta a Google Maps, que SOLO existe con el mapa bloqueado. */
+.visit__maps {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
+}
+.visit__maps .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
+.visit__maps:hover .arrow { transform: translateX(5px); }
+
+/* ── EL REFLUJO DE ESCRITORIO ─────────────────────────────────────────────────────────────
+   `Escritorio PJP` 3b: dos columnas iguales (544 + 544 de los 1120) y el dato recupera jerarquía —
+   aquí el titular de sección es 52, así que el estado pasa a **Título 36**, que es «titular de un
+   bloque dentro de una sección».
+   ⚠️ Va detrás de su base: a igual especificidad gana la última regla del fichero (`#314`). */
+@media (min-width: 1024px) {
+  .visit { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .visit__when { padding: 24px; }
+  .visit__state { font-size: var(--fs-title); line-height: 1.05; }
+  .visit__line,
+  .visit__exception { font-size: var(--fs-17); }
+  .visit__rows > div { padding: var(--sp-10) var(--sp-12); }
+
+  /* ⚠️ **El día a 15,5 y las horas en mono 15 NO se tocan**: son del componente de horario del
+     sistema, que no declara tamaños de escritorio — y copiar una pieza es copiar sus valores. */
+
+  /* La dirección se separa del mapa con un filete: en esta columna son dos bloques distintos. */
+  .visit__place {
+    margin-top: var(--sp-20); padding-top: var(--sp-20);
+    border-top: 1.5px solid var(--line);
+  }
+  .visit__addr-1 { font-size: var(--fs-17); font-weight: 700; }
+  .visit__addr-2 { font-size: var(--fs-17); }
+  .visit__credit { margin-top: var(--sp-10); }
+}
 
 /* ---------- normas · el pliego COMPLETO de `/normas` ----------
    ⚠️⚠️ **ESTO NO ES DE LA PORTADA Y CASI SE VA CON ELLA.** `.rules-grid` y `.rule` los usa

@@ -350,20 +350,61 @@ return [
         'intro' => 'Lo que pasa en el parque, en tiempo real.',
     ],
     'info' => [
-        'title' => 'Visítanos',
-        'hours_title' => 'Horarios',
-        'hours_tbd' => 'Horario por confirmar',
+        'eyebrow' => 'Visítanos',
+        'title' => 'Dónde estamos y cuándo abrimos',
         'closed' => 'Cerrado',
         'open_generic' => 'Abierto',
         'day_range' => ':from a :to',
-        'special_dates_title' => 'Fechas especiales',
-        // Cola del estado en vivo cuando el parque está abierto AHORA («Abierto ahora · hasta las
-        // 21:30»). La hora sale de `HeroStatus::current()['closes_at']`, que resuelve la ventana
-        // efectiva del día; NO se deduce de la fila semanal, cuyo `is_today` se apaga cuando manda
-        // una temporada o una fecha especial (`idioma-visual-heredado.md` §3.quinquies.5·1).
-        'until' => '· hasta las :time',
+        // ⚠️ **Aquí vivían `hours_title`, `special_dates_title`, `hours_tbd` y `until`, y se han ido
+        // con su consumidor** (`#487`): la sección 07 rehecha desde el canvas no lleva rótulos
+        // dentro de la tarjeta —el estado y la tabla se presentan solos— y la cola «· hasta las
+        // 21:30» pasó a ser la LÍNEA del estado, que ahora dice la frase entera.
         'weekdays' => [0 => 'Domingo', 1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado'],
         'address_title' => 'Ubicación', 'directions' => 'Cómo llegar',
+
+        /*
+         * ── 07 · VISÍTANOS ── (`#487`)
+         *
+         * ⚠️⚠️ **La entradilla se DERIVA del horario y por eso son tres claves, no una.** El canvas
+         * la fija como «Abrimos todos los días. Entre semana por la tarde, y de viernes a domingo
+         * también por la mañana» — cierto en esta instalación y **falso en cualquiera que cierre un
+         * día**. Escribirlo en el `lang/` del PRODUCTO sería la fuga que `DECISIONES #1` prohíbe.
+         * El porqué y el reparto, en `ScheduleDisplay::weeklyLede()`.
+         */
+        'lede_one' => 'Un mismo horario todos los días.',
+        'lede_two' => 'Dos horarios: :a y :b.',
+        'lede_many' => 'El horario cambia según el día.',
+
+        /*
+         * **LOS CUATRO ESTADOS.** Regla dura del sistema: «hoy no abre» y «hoy ya ha cerrado» son
+         * hechos distintos, y decirlos igual deja el titular contradiciendo a la tabla.
+         * ⚠️ **Ningún titular dice «mañana» ni «por la tarde»**: la hora es un dato y hay filas que
+         * abren a las 11:00 — un título quemado contra un dato variable miente.
+         */
+        'today_is' => 'Hoy, :day',
+        'state' => [
+            'open' => 'Abierto ahora',
+            'open_line' => 'Hasta las :time',
+            'later' => 'Abre hoy',
+            'later_line' => 'Abre a las :opens y cierra a las :closes',
+            // Los dos cierres comparten línea —la próxima apertura— y se distinguen en el TÍTULO,
+            // que es donde está el hecho: uno ya abrió hoy y el otro no abre hoy.
+            'closed_now' => 'Ya hemos cerrado',
+            'closed_today' => 'Hoy cerrado',
+            'next_tomorrow' => 'Mañana abre a las :time',
+            'next_day' => 'El :day abre a las :time',
+        ],
+
+        // El aviso de la excepción que viene, FUERA del pliegue: lo que urge no se esconde detrás
+        // de un clic.
+        'special_soon' => ':date — :detail',
+        'specials_open' => 'Ver las fechas especiales',
+        'specials_close' => 'Cerrar las fechas especiales',
+
+        // ⚠️ **«El mapa lo pone Google» no es un aviso legal**: es la atribución que el sistema pide
+        // cuando el dato lo posee un tercero. El aviso de cookies lo da el bloqueo previo.
+        'map_credit' => 'El mapa lo pone Google',
+        'open_in_maps' => 'Abrir en Google Maps',
     ],
     'rules' => [
         // ⚠️⚠️ **DE ESTE GRUPO SOLO QUEDAN DOS CLAVES, y su consumidor NO es la portada** (`#485`).

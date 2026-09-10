@@ -3,6 +3,7 @@
 namespace App\Domain\Content\Services;
 
 use App\Domain\Booking\Contracts\OperatingCalendar;
+use App\Domain\Booking\Contracts\OperatingWindow;
 use App\Domain\Platform\Services\DisplayTime;
 use Carbon\CarbonInterface;
 
@@ -31,7 +32,22 @@ class HeroStatus
      * Es un campo AÑADIDO: `null` salvo cuando el parque está abierto ahora mismo, de modo que
      * ningún consumidor existente cambia de conducta (el chip del menú lee `day` y `status`).
      *
-     * @return array{open_now: bool, day: string, status: string, closes_at: string|null}|null
+     * ❗❗❗ **LOS CUATRO ESTADOS SON UN CAMPO NUEVO Y `status` NO SE TOCA** (`#487`, sección 07).
+     * El sistema del canvas lo escribe como regla dura: *«Un dato con hora tiene **cuatro** estados,
+     * no tres: "hoy no abre" y "hoy ya ha cerrado" son hechos distintos, y decirlos igual deja el
+     * titular contradiciendo a la tabla, que sigue enseñando las horas de hoy»*. Este servicio solo
+     * distinguía DOS —abierto y «abrimos en…»—, así que un jueves ya cerrado y un lunes de cierre
+     * decían lo mismo.
+     *
+     * ▶ **Entran `face`, `title` y `line` SIN tocar `status`**, y eso es deliberado: `status` lo leen
+     * el chip del hero y el del menú, que son piezas del ARMAZÓN con su propio artboard. Cambiarlo
+     * desde una tanda de sección movería el hero, que es justo lo que `#479` evitó con `/precios`.
+     * ⚠️ La consecuencia, declarada: en la misma página el chip dice «Abrimos en 5 h» y la sección
+     * dice «Abre hoy · Abre a las 16:30 y cierra a las 21:30». No se contradicen —uno es la cuenta
+     * atrás y el otro el hecho del día— pero son dos redacciones del mismo estado.
+     *
+     * @return array{open_now: bool, day: string, status: string, closes_at: string|null,
+     *               face: string, title: string, line: string|null}|null
      */
     public function current(): ?array
     {
@@ -41,12 +57,17 @@ class HeroStatus
 
         // Abierto AHORA: hoy abierto, con ventana concreta que cubre la hora actual.
         if ($today->isOpen && $this->withinWindow($now, $today->opensAt, $today->closesAt)) {
+            $cierra = substr((string) $today->closesAt, 0, 5);
+
             return [
                 'open_now' => true,
                 'day' => $day,
                 'status' => (string) __('landing.hero.status_open'),
                 // Misma convención que `ScheduleDisplay` ('21:30:00' → '21:30').
-                'closes_at' => substr((string) $today->closesAt, 0, 5),
+                'closes_at' => $cierra,
+                'face' => 'open',
+                'title' => (string) __('landing.info.state.open'),
+                'line' => (string) __('landing.info.state.open_line', ['time' => $cierra]),
             ];
         }
 
@@ -61,7 +82,64 @@ class HeroStatus
             'day' => $day,
             'status' => $this->opensLabel($now, $opensAt),
             'closes_at' => null,
+            ...$this->closedFace($now, $today, $opensAt),
         ];
+    }
+
+    /**
+     * Las tres caras que NO son «abierto ahora», con su titular y su línea.
+     *
+     * ⚠️⚠️ **`later` y `closed_now` se distinguen por la HORA, no por el día**: los dos caen en un día
+     * que abre. Lo que los separa es si la ventana de hoy está por venir o ya pasó — y es justo la
+     * distinción que la regla dura pide, porque con la ventana pasada **la fila de hoy deja de estar
+     * vigente** y el resaltado de la tabla tiene que apagarse.
+     *
+     * @return array{face: string, title: string, line: string|null}
+     */
+    private function closedFace(CarbonInterface $now, OperatingWindow $today, CarbonInterface $opensAt): array
+    {
+        $siguiente = $this->nextOpeningLine($now, $opensAt);
+
+        // Hoy ABRE, y todavía no ha abierto: la ventana de hoy es la que hay que anunciar.
+        if ($today->isOpen && $today->opensAt !== null && $now->lessThan($now->copy()->setTimeFromTimeString($today->opensAt))) {
+            return [
+                'face' => 'later',
+                'title' => (string) __('landing.info.state.later'),
+                'line' => (string) __('landing.info.state.later_line', [
+                    'opens' => substr((string) $today->opensAt, 0, 5),
+                    'closes' => substr((string) $today->closesAt, 0, 5),
+                ]),
+            ];
+        }
+
+        // Hoy abría y la ventana ya pasó.
+        if ($today->isOpen) {
+            return ['face' => 'closed_now', 'title' => (string) __('landing.info.state.closed_now'), 'line' => $siguiente];
+        }
+
+        // Hoy no abre.
+        return ['face' => 'closed_today', 'title' => (string) __('landing.info.state.closed_today'), 'line' => $siguiente];
+    }
+
+    /**
+     * «Mañana abre a las 11:30» / «El viernes abre a las 11:30».
+     *
+     * ⚠️ **No se escribe «mañana» a secas**: la próxima apertura puede caer en tres días, y una
+     * frase quemada contra un dato variable miente — la misma regla por la que el titular no dice
+     * «por la tarde».
+     */
+    private function nextOpeningLine(CarbonInterface $now, CarbonInterface $opensAt): string
+    {
+        $time = $opensAt->format('H:i');
+
+        if ($opensAt->isSameDay($now->copy()->addDay())) {
+            return (string) __('landing.info.state.next_tomorrow', ['time' => $time]);
+        }
+
+        return (string) __('landing.info.state.next_day', [
+            'day' => mb_strtolower((string) __('landing.info.weekdays.'.$opensAt->dayOfWeek)),
+            'time' => $time,
+        ]);
     }
 
     /** ¿`$now` cae dentro de la ventana [open, close) del día? Requiere una ventana concreta. */

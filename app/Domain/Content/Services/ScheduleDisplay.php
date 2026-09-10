@@ -80,11 +80,51 @@ class ScheduleDisplay
             $groups[] = $current;
         }
 
+        // ⚠️ `is_closed` es un campo AÑADIDO (`#487`): la sección 07 escribe «Cerrado» en el sitio de
+        // las horas y la entradilla cuenta solo los grupos ABIERTOS. Deducirlo comparando `time` con
+        // la traducción de «Cerrado» sería atar una decisión de datos al diccionario.
         return array_map(fn (array $group): array => [
             'label' => $this->dayRangeLabel($group['days']),
             'time' => $group['time'],
             'is_today' => $group['has_today'] ?? false,
+            'is_closed' => $group['signature'] === 'closed',
         ], $groups);
+    }
+
+    /**
+     * **La entradilla de la sección 07, DERIVADA del horario** (`#487`).
+     *
+     * ❗❗❗ **Se deriva y no se escribe, y ése es el punto.** El canvas la fija como *«Abrimos todos
+     * los días. Entre semana por la tarde, y de viernes a domingo también por la mañana»* — una
+     * afirmación cierta en PlayJump y **falsa en cualquier instalación que cierre un día**. En un
+     * `lang/` del PRODUCTO eso es la fuga que `DECISIONES #1` prohíbe, y es la misma familia que el
+     * owner acaba de cerrar dos veces en esta tanda (el aparcamiento y «los festivos, como el
+     * finde»): *una promesa que el producto no puede saber no se escribe en el producto*.
+     *
+     * ▶ Lo que sí se puede decir con el dato delante es **cuántos horarios distintos hay y cuáles**,
+     * que es exactamente lo que la entradilla del artboard de móvil cuenta: «Dos horarios: entre
+     * semana y de viernes a domingo».
+     *
+     * ⚠️ **Se cuentan solo los grupos ABIERTOS.** Un parque con «L–V 16:30», «sábado cerrado» y
+     * «domingo 11:00» tiene TRES filas y **dos** horarios: contar filas diría «tres horarios» y una
+     * de ellas es un cierre.
+     */
+    public function weeklyLede(): ?string
+    {
+        $abiertos = array_values(array_filter(
+            $this->weeklyRows(),
+            static fn (array $row): bool => ! $row['is_closed'],
+        ));
+
+        return match (count($abiertos)) {
+            0 => null,
+            1 => (string) __('landing.info.lede_one'),
+            2 => (string) __('landing.info.lede_two', [
+                'a' => mb_strtolower($abiertos[0]['label']),
+                'b' => mb_strtolower($abiertos[1]['label']),
+            ]),
+            default => (string) __('landing.info.lede_many'),
+        };
     }
 
     /**
@@ -112,14 +152,21 @@ class ScheduleDisplay
     /**
      * Próximas fechas especiales (desde hoy): cierres puntuales u horarios especiales.
      *
-     * @return array<int, array{date: string, detail: string, is_closed: bool}>
+     * ⚠️ **`days_away` es un campo AÑADIDO** (`#487`): la sección 07 solo anuncia FUERA del pliegue
+     * la que está cerca, y «cerca» es una cantidad de días — un dato que la fecha ya escrita no
+     * puede devolver sin volver a parsearla en la vista.
+     *
+     * @return array<int, array{date: string, detail: string, is_closed: bool, days_away: int}>
      */
     public function upcomingSpecialDates(int $limit = 4): array
     {
+        $hoy = now(DisplayTime::timezone())->startOfDay();
+
         return array_map(fn (SpecialDay $special): array => [
             'date' => Carbon::parse($special->date)->isoFormat('ddd D MMM'),
             'detail' => $this->specialDetail($special),
             'is_closed' => $special->isClosed,
+            'days_away' => (int) $hoy->diffInDays(Carbon::parse($special->date)->startOfDay(), false),
         ], $this->calendar->upcomingSpecialDays($limit));
     }
 

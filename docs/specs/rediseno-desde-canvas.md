@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02, 03, 04 y 05, más la página `/atracciones`; quedan TRES secciones)
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02, 03, 04, 05 y 07, más la página `/atracciones`; quedan DOS secciones)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -196,7 +196,7 @@ sistema y dicen cosas distintas.
 |---|---|---|---|
 | **0** | Base: Docker · las seis cifras · este inventario | esta spec | todas |
 | **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
-| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio (van **5 de 8**) | la portada entera, vestida con BD | 3 |
+| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio (van **6 de 8**) | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
 | **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
 | **5** | **Post-form y justificante digital** | lo que hoy es funcional y no está vestido | — |
@@ -214,7 +214,7 @@ titulares son frases de **3 a 6 palabras**:
 | Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) + `Escritorio PJP` (5a) · ✅ `#483` |
 | Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) + `Escritorio PJP` (3a) · ✅ `#485` |
 | Reseñas | Lo dicen los que han venido | `Resenas PJP` (2a) |
-| Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) |
+| Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) + `Escritorio PJP` (3b) · ✅ `#487` |
 | Dudas | Lo que más nos preguntáis | `Dudas PJP` (1a) |
 
 Marco: `Marco Portada PJP` (móvil) · `Escritorio PJP` (escritorio, turnos 1–6).
@@ -326,6 +326,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
 | T2e (`#483`) | **`--shadow-float-hover: 2px 2px 0 var(--paper-fg)`** y **`--shadow-float-press: 0 0 0 var(--paper-fg)`** en el paquete. ❗❗ **No es una mejora, es un ARREGLO**: `#478` escribió el hover de la pegatina con esos dos tokens y el paquete no los declaraba, así que la tarjeta reposaba con la sombra DURA del cliente y al pasar el ratón saltaba a la DIFUSA del producto (medido). Sin ellos, la sección 04 **y la 01** siguen con ese defecto. Lo vigila `ClientThemePackageTest`: si el paquete declara `--shadow-float`, tiene que declarar los tres. ⚠️ Y **DATO, desde el panel**: revisar los `features` de los dos packs — la sección enseña los **tres primeros** y hoy dos de los cinco repiten lo que la tarjeta ya dice (la duración y la edad). |
 | T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
+| T2g (`#487`) | añadir **`--ok-ink: #447921`** y **`--attn-ink: #8A6E00`** al paquete (las variantes 800 de su propia paleta). ❗ **Sin `--ok-ink` el estado «Abierto ahora» se pinta con `--ok`, que en este paquete da 2,4 sobre blanco** — lo vigila `ClientThemePackageTest`, así que el gate lo caza. Sin `--attn-ink` el «Abre hoy» pierde el color y se queda en tinta: se ve, no se rompe. ⚠️ Y **DATO, desde el panel**: el horario en conflicto —el panel dice L–V 16:30 · S–D 11:00 y el canvas L–J 16:30 · V–D 11:30— y las **fechas especiales**, que hoy son cero: sin ellas no hay ni aviso ni pliegue, que es la conducta correcta. |
 | T2f (`#485`) | **Ninguno de CSS**: la sección se viste entera con roles ya declarados (`--attn`, `--ok`/`--on-ok`, `--interactive`, `--line`, `--paper-fg`, `--paper-bg-card`, los tres radios). ⚠️ Y **DATO, desde el panel**: la línea «¿viene un niño que no es de tu familia?» **solo sale si algún producto ofrece el justificante** (`ticket_types.guardian_authorization` distinto de `none`). Medido en local: **0 de N**, así que hoy no se pinta —y eso es la conducta correcta, no un defecto. Si el parque quiere ofrecerlo, se marca en el producto. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
@@ -383,7 +384,50 @@ navegador instalado**.
 | T2d | **03 · Qué hay dentro**: el mosaico de cinco, y con él la página `/atracciones` | ✅ `#481` + `#482` |
 | T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` + `#484` |
 | T2f | **05 · Antes de venir**: el registro ES el QR · la sección de NORMAS se retira · el código es de ejemplo | ✅ `#485` + `#486` |
-| T2g–T2i | Las **tres secciones** restantes (§5.1) | ⬜ |
+| T2g | **07 · Visítanos**: cuatro estados · la entradilla se deriva · sin teléfono, sin aparcamiento y sin la promesa de festivos | ✅ `#487` |
+| T2h–T2i | **06 · Reseñas** (⏸️ **bloqueada por el owner**: `specs/google-reviews.md` espera su ✅ y tres datos de Google) y **08 · Dudas** | ⬜ |
+
+✅ **T2g · «Visítanos»** (`#487`). Cabecera común · **la única tarjeta de la sección** con el estado
+en vivo y la tabla · el mapa tras el bloqueo previo · y la dirección **siempre fuera del marco**.
+
+❗❗❗ **CUATRO ESTADOS DONDE HABÍA DOS.** Regla dura del sistema: *«hoy no abre» y «hoy ya ha cerrado»
+son hechos distintos*. Medido: `HeroStatus` solo distinguía dos, así que un jueves ya cerrado y un
+lunes de cierre **decían lo mismo con la tabla de horarios justo debajo**. Entran `face`, `title` y
+`line` **sin tocar `status`**, que lo leen el chip del hero y el del menú — piezas del armazón.
+
+❗❗ **El día se resalta SOLO mientras su horario está vigente**, y son DOS condiciones: `is_today`
+—que ya se apagaba con una temporada o una fecha especial (`#307`)— **y** que el estado sea `open` o
+`later`.
+
+❗❗❗ **TRES COSAS DEL ARTBOARD NO SE ESCRIBEN, `[DECIDIDO owner]`**: el **aparcamiento** (el dato no
+tiene campo en el panel y hay dos versiones en conflicto; `#297` ya lo había decidido una vez), **«los
+festivos, como el finde»** (una promesa que el producto no puede saber) y **el teléfono con «Cómo
+llegar»** (el canvas cierra la sección con «cero enlaces y cero botones»). ▶ Esto **revierte parte de
+`#307`**: aquella tanda rompía el molde editorial heredado, ésta adopta el artboard.
+
+❗❗ **Y la ENTRADILLA se deriva por la misma regla.** El canvas escribe «Abrimos todos los días…»,
+cierto aquí y **falso en cualquier instalación que cierre un día**: `ScheduleDisplay::weeklyLede()`
+dice cuántos horarios hay y cuáles. ⚠️ Cuenta los grupos **abiertos**: tres filas con un sábado
+cerrado son **dos** horarios.
+
+❗❗ **Nacen `--ok-ink` y `--attn-ink`**, y no son decoración: el estado es texto verde sobre tarjeta
+blanca y el verde del paquete da **2,4**. ⚠️ **Se declaran, no se derivan** (`#434`), y sus defectos
+caen del lado seguro — `--ok-ink` en `--ok`, `--attn-ink` en `--fg`, que pierde el color y nunca la
+lectura. Guarda en `ClientThemePackageTest`, del molde de `#484`.
+
+⚠️⚠️ **DOS DEFECTOS QUE SOLO VIO LA CAPTURA**: `aspect-ratio` + `overflow: hidden` en el CONTENEDOR
+recortaba el bloqueo previo del mapa y se comía **el enlace a la política de cookies** —la proporción
+es del iframe—; y la dirección llevaba `visit__addr`, la clase de `/contacto`, así que se vestía con
+otra página **y dejaba muertas las reglas de ésta**.
+
+⚠️ **Y la trampa 3 del comparador, con control**: `getComputedStyle` **trunca `border-width` a un
+entero** —`1.5px` sale `1px`—, y da igual el `deviceScaleFactor`.
+
+▶ **Medido**: **895 px** en móvil (contra 756) y **746** en escritorio (contra 617). Portada **12,18**
+y **11,26 pantallas**, desborde 0. Comparador: **21 y 13 idénticas, 0 sin explicar**.
+
+⚠️ **Un dato en conflicto que sigue siendo del owner**: el panel dice **L–V 16:30 · S–D 11:00** y el
+canvas **L–J 16:30 · V–D 11:30**. Es DATO y el código agrupa bien: se cambia desde el panel.
 
 ✅ **T2f · «Antes de venir»** (`#485`). Cabecera común · un **bloque de tinta** con el código dentro
 de un móvil y, al lado, lo que ese código lleva · la excepción de los calcetines en papel · y dos

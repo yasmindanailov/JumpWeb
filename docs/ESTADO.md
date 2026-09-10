@@ -1,6 +1,64 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#485`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y verificada en navegador, y la Fase 2 va por su SEXTA tanda — quedan TRES secciones de la portada.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#487`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y la Fase 2 va por su SÉPTIMA tanda — quedan DOS secciones, y una está bloqueada por ti.**
+>
+> ▶ **LA T2g ESTÁ EN EL ÁRBOL: la sección 07 «Visítanos»** (`#487`). Hoy la sección es: cabecera
+común, **una sola tarjeta blanca** con el estado en vivo y la tabla del horario, el mapa tras el
+bloqueo previo, y la dirección **siempre fuera del marco**. Suite **4.564** · **13/13 mutaciones** ·
+comparador **21 y 13 valores idénticos, 0 divergencias sin explicar**.
+>
+> ▶ **Se saltó la 06 «Reseñas» a propósito**: por orden del canvas tocaba, pero **está bloqueada por
+ti** —`specs/google-reviews.md` espera tu ✅ y **tres datos** (`place_id`, clave de API y techo de
+gasto)—. Quedan **06** y **08 «Dudas»**.
+>
+> ❗❗❗ **CUATRO ESTADOS DONDE HABÍA DOS, y es lo que más valía de la tanda.** Regla dura del sistema:
+*«hoy no abre» y «hoy ya ha cerrado» son hechos distintos*. Medido: `HeroStatus` solo distinguía dos,
+así que **un jueves ya cerrado y un lunes de cierre decían lo mismo** con la tabla de horarios justo
+debajo. ⚠️ Entran `face`, `title` y `line` **sin tocar `status`**, que lo leen el chip del hero y el
+del menú: son piezas del ARMAZÓN y moverlas desde una tanda de sección es lo que `#479` evitó.
+>
+> ❗❗ **Y el día se resalta SOLO mientras su horario está vigente**, que son DOS condiciones: `is_today`
+—ya se apagaba con una temporada o una fecha especial (`#307`)— **y** que el estado sea «abierto» o
+«abre hoy». Con el parque cerrado, un resaltado dice «esto es lo que rige ahora» sobre horas que ya
+pasaron.
+>
+> ❗❗❗ **TUS TRES DECISIONES, y las tres son la misma regla: el producto no afirma lo que no puede
+saber.** El **aparcamiento** no entra (el dato no tiene campo en el panel y hay dos versiones en
+conflicto; `#297` ya lo había decidido una vez) · **«los festivos, como el finde»** no se escribe ·
+y **el teléfono con «Cómo llegar»** salen, como el canvas. ⚠️ El teléfono sigue en el menú y en el
+pie; lo que sí se pierde es la puerta a Google Maps **cuando el mapa carga**, y **vuelve con el mapa
+bloqueado**. ▶ Esto **revierte parte de `#307`**, a sabiendas.
+>
+> ❗❗ **Y LA ENTRADILLA SE DERIVA POR ESA MISMA REGLA.** El canvas escribe «Abrimos todos los días…»,
+que es cierto aquí y **falso en cualquier instalación que cierre un día**: `weeklyLede()` dice
+cuántos horarios hay y cuáles. ⚠️ Cuenta los grupos **ABIERTOS** — tres filas con un sábado cerrado
+son **dos** horarios, no tres.
+>
+> ⚠️⚠️ **DOS DEFECTOS QUE SOLO VIO LA CAPTURA, con la suite en verde**: `aspect-ratio: 16/9` +
+`overflow: hidden` **en el contenedor** recortaba el bloqueo previo del mapa y **se comía el enlace a
+la política de cookies** —la proporción es del **iframe**, no de la caja—; y la dirección llevaba
+`visit__addr`, que es **la clase de `/contacto`**, así que se vestía con otra página **y dejaba
+muertas las reglas de ésta**.
+>
+> ⚠️ **Y la trampa que casi se paga otra vez**: `.visit-card`, `.visit-card__ico`, `.visit__addr` y
+`.visit__actions` **las usa `/contacto`** — la de `#485` con `.rule*`. Se conservan y la sección
+**estrena las suyas**.
+>
+> ▶ **PASOS DE DESPLIEGUE (la lista viva está en la §5.bis de la spec)**: **`--ok-ink: #447921`** y
+**`--attn-ink: #8A6E00`** en el `client.css` de producción. ❗ Sin el primero el «Abierto ahora» se
+pinta con `--ok`, que en ese paquete da **2,4** sobre blanco — pero **el gate lo caza**
+(`ClientThemePackageTest`). Y **DATO, desde el panel**: el horario en conflicto (el panel dice **L–V
+16:30 · S–D 11:00** y el canvas **L–J 16:30 · V–D 11:30**) y las **fechas especiales**, que hoy son
+cero: sin ellas no hay ni aviso ni pliegue, y eso es la conducta correcta.
+>
+> ▶ **LO SIGUIENTE: la T2h.** Si desbloqueas Reseñas, va esa; si no, **08 «Dudas»** (`Dudas PJP` 1a +
+`Escritorio PJP` 5c), que es data-driven sobre `faqs` y **arrastra cuatro decisiones tuyas** (el
+aparcamiento, si grupos lleva al correo o a `/servicios`, si «interior y climatizado» sube a 03, y
+qué otras dudas oís en el mostrador). ⚠️ **Relee su artboard antes Y durante**: en esta tanda las
+dos copias salieron idénticas al canvas —la primera vez en el carril—, pero en tres de las cuatro
+anteriores el artboard se había movido.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA T2g** (la T2f, `#485`/`#486`).
 >
 > ▶ **LA T2f ESTÁ EN EL ÁRBOL: la sección 05 «Antes de venir»** (`#485`). Hoy la sección es:
 cabecera común `.sec-head` —rótulo, titular «Tu registro es este QR» y la entradilla del

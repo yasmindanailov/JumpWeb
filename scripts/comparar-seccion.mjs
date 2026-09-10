@@ -25,6 +25,12 @@
  *     artboard escribe 18, y comparar cadenas **acusaba al producto sano**. Las longitudes se
  *     comparan con tolerancia de medio píxel; el resto, exacto.
  *
+ *  3. **Un borde SUBPÍXEL no se puede verificar por aquí.** Chrome **trunca `border-width` a un
+ *     entero de píxeles CSS** en el valor calculado: `1.5px` sale `1px` y `0.5px` también. Medido
+ *     con control en un documento de prueba, y **da igual el `deviceScaleFactor`** —se probó a 1 y
+ *     a 2 y devuelve lo mismo—. El informe acusaba al producto sano, que sí declara 1,5.
+ *     ▶ Por eso esas filas esperan el valor TRUNCADO: lo que verifican es que el filete exista.
+ *
  * ⚠️ **Y lo que este comparador NO demuestra**: solo mira los valores que su tabla enumera. Un
  * «0 sin explicar» dice que lo comprobado coincide, no que la sección sea idéntica en todo.
  */
@@ -84,6 +90,47 @@ SECCIONES["05"] = { nombre: "05 · Antes de venir", raiz: "#before", movil: [
     ['.before__all', 'fontSize', '17px', ''],
     ['.before__foot', 'marginTop', '32px', ''],
     ['.before__foot', 'paddingTop', '20px', ''],
+] };
+
+SECCIONES["07"] = { nombre: "07 · Visítanos", raiz: "#info", movil: [
+    ['.sec-head__eyebrow', 'fontSize', '12px', ''],
+    ['.sec-head__title', 'fontSize', '34px', ''],
+    ['.sec-head__lede', 'fontSize', '18px', ''],
+    ['.sec-head__lede', 'fontWeight', '500', ''],
+    ['.visit__when', 'backgroundColor', 'rgb(255, 255, 255)', ''],
+    ['.visit__when', 'borderTopLeftRadius', '16px', ''],
+    ['.visit__when', 'borderTopWidth', '1px', ''],
+    ['.visit__when', 'paddingTop', '20px', ''],
+    ['.visit__today', 'fontSize', '12px', ''],
+    ['.visit__today', 'textTransform', 'uppercase', ''],
+    ['.visit__dot', 'width', '10px', ''],
+    ['.visit__state', 'fontSize', '34px', ''],
+    ['.visit__line', 'fontSize', '16px', ''],
+    ['.visit__rows', 'paddingTop', '16px', ''],
+    ['.visit__rows', 'borderTopWidth', '1px', ''],
+    ['.visit__rows > div', 'paddingTop', '8px', ''],
+    ['.visit__rows > div', 'borderTopLeftRadius', '10px', ''],
+    ['.visit__rows dt', 'fontSize', '15.5px', 'el artboard escribe 15,5 y la escala del producto no tiene ese escalón: 15'],
+    ['.visit__rows dt', 'fontWeight', '700', ''],
+    ['.visit__rows dd', 'fontSize', '15px', ''],
+    ['.visit__place', 'marginTop', '12px', ''],
+    ['.visit__credit', 'fontSize', '15px', ''],
+], escritorio: [
+    ['.sec-head__title', 'fontSize', '52px', ''],
+    ['.sec-head__lede', 'fontSize', '21px', ''],
+    ['.visit', 'columnGap', '32px', ''],
+    ['.visit__when', 'paddingTop', '24px', ''],
+    ['.visit__state', 'fontSize', '36px', ''],
+    ['.visit__line', 'fontSize', '17px', ''],
+    ['.visit__rows > div', 'paddingTop', '10px', ''],
+    ['.visit__rows dt', 'fontSize', '15.5px', 'ídem: el componente de horario no declara talla de escritorio'],
+    ['.visit__rows dd', 'fontSize', '15px', ''],
+    ['.visit__place', 'marginTop', '20px', ''],
+    ['.visit__place', 'paddingTop', '20px', ''],
+    // ⚠️ Declarado 1,5 en la hoja; Chrome lo trunca a 1 (ver la trampa 3). Se verifica que EXISTE.
+    ['.visit__place', 'borderTopWidth', '1px', ''],
+    ['.visit__addr-1', 'fontSize', '17px', ''],
+    ['.visit__addr-1', 'fontWeight', '700', ''],
 ] };
 
 const clave = process.argv[2] || "05";

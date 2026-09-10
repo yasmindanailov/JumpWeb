@@ -6,6 +6,11 @@
     'wrapperStyle' => '',
     'frameClass' => '',
     'frameStyle' => '',
+    // ⚠️ **La SALIDA de un marco bloqueado, y por eso es un hueco y no un enlace al mapa** (`#487`).
+    // Con el iframe sin consentir, el visitante se queda sin lo que ese marco enseña; quien lo
+    // coloca sabe qué le puede ofrecer a cambio —el mapa, su enlace a Google Maps— y el feed social
+    // no tiene por qué ofrecer lo mismo. Vacío por defecto: el componente no promete nada.
+    'fallback' => null,
 ])
 {{--
     Bloqueo previo de un iframe de tercero (#219, `docs/PLAN-COOKIES.md` §5). Componente ÚNICO
@@ -44,6 +49,9 @@
                 <button type="button" class="btn btn--ghost consent-frame__ph-btn" @click="accept()">
                     {{ __('cookies.frame.'.$category.'_btn') }}
                 </button>
+                @if ($fallback)
+                    {{ $fallback }}
+                @endif
                 <a class="consent-frame__ph-link" href="{{ route('legal.cookies') }}">{{ __('cookies.frame.policy_link') }}</a>
                 {{-- Degradación con JS desactivado: sin Alpine no hay botón → se informa de que el
                      contenido no carga por respeto a la privacidad (no se instalan cookies de tercero). --}}

@@ -234,16 +234,38 @@ return [
         'intro' => 'Ce qui se passe au parc, en temps réel.',
     ],
     'info' => [
-        'title' => 'Nous visiter',
-        'hours_title' => 'Horaires',
-        'hours_tbd' => 'Horaires à confirmer',
+        'eyebrow' => 'Nous visiter',
+        'title' => 'Où nous sommes et quand nous ouvrons',
         'closed' => 'Fermé',
         'open_generic' => 'Ouvert',
         'day_range' => ':from à :to',
-        'special_dates_title' => 'Dates spéciales',
-        'until' => '· jusqu\'à :time',
         'weekdays' => [0 => 'Dimanche', 1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi'],
         'address_title' => 'Adresse', 'directions' => 'Itinéraire',
+
+        // ── 07 · NOUS VISITER ── (`#487`). La entradilla se DERIVA del horario: el porqué, en
+        // `lang/es/landing.php` y en `ScheduleDisplay::weeklyLede()`.
+        'lede_one' => 'Les mêmes horaires tous les jours.',
+        'lede_two' => 'Deux horaires : :a et :b.',
+        'lede_many' => 'Les horaires changent selon le jour.',
+
+        'today_is' => "Aujourd'hui, :day",
+        'state' => [
+            'open' => 'Ouvert maintenant',
+            'open_line' => "Jusqu'à :time",
+            'later' => "Ouvre aujourd'hui",
+            'later_line' => 'Ouvre à :opens et ferme à :closes',
+            'closed_now' => 'Nous avons déjà fermé',
+            'closed_today' => "Fermé aujourd'hui",
+            'next_tomorrow' => 'Demain il ouvre à :time',
+            'next_day' => 'Le :day il ouvre à :time',
+        ],
+
+        'special_soon' => ':date — :detail',
+        'specials_open' => 'Voir les dates spéciales',
+        'specials_close' => 'Masquer les dates spéciales',
+
+        'map_credit' => 'Carte fournie par Google',
+        'open_in_maps' => 'Ouvrir dans Google Maps',
     ],
     // ⚠️ Solo quedan las dos que lee `<x-site.socks-note>` en `/precios`: la sección de normas de la
     // portada la sustituyó la 05 «Antes de venir» (`#485`). El porqué, en `lang/es/landing.php`.
