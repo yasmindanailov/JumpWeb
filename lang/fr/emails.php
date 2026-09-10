@@ -111,7 +111,7 @@ return [
     ],
     'order_after_expiration' => [
         'subject' => 'Ton paiement est bien arrivé · :code',
-        'preheader' => "Le paiement est bien arrivé. On t'appelle sous 24 h pour reprogrammer ou rembourser.",
+        'preheader' => "On t'appelle sous 24 h pour reprogrammer ta visite ou te rembourser.",
         'greeting' => 'Bonjour,',
         'intro' => 'Bonne nouvelle : ton paiement pour la réservation :code est bien arrivé. Il nous est parvenu avec un peu de retard, donc il n’a pas été enregistré à temps automatiquement et nous le gérons à la main.',
         'amount' => 'Montant prélevé : :amount €',
@@ -202,7 +202,7 @@ return [
     ],
     'mixed_party_surcharge' => [
         'subject' => 'Ton montant au parc change · :code',
-        'preheader' => "Ce que tu régleras au parc change. À l'intérieur, le nouveau montant et son origine.",
+        'preheader' => 'Rien à régler maintenant : tout se règle au parc le jour de la fête.',
         'greeting' => 'Bonjour,',
         'intro' => "Tu as mis à jour l'âge des invités, et certains entrent dans une tranche d'âge différente de celle réservée.",
         'intro_by_park' => "Nous avons mis à jour ta réservation, et certains invités entrent dans une tranche d'âge différente de celle réservée.",

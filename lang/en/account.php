@@ -331,7 +331,7 @@ return [
         'badge' => 'Account linked',
         'headline' => 'You\'ve linked an account',
         'subject' => 'You can now sign in with :provider',
-        'preheader' => "You can now sign in both ways. If it wasn't you, inside we tell you what to do.",
+        'preheader' => "If this wasn't you, change your email password and let us know right away.",
         'greeting' => 'Hi!',
         'line1' => 'From now on you can sign in to your :park account with :provider, as well as the way you did before.',
         'promoted' => 'Your email address was not verified yet, so we have taken :provider as proof of it and, to keep the account safe, closed any open sessions and disabled the previous password. If you want a password again, use “I forgot my password”.',

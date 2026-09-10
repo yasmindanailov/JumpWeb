@@ -332,7 +332,7 @@ return [
         'badge' => 'Compte associé',
         'headline' => 'Vous avez associé un compte',
         'subject' => 'Tu peux te connecter avec :provider',
-        'preheader' => "Tu peux désormais te connecter des deux façons. Si ce n'était pas toi, lis la suite.",
+        'preheader' => "Si ce n'était pas toi, change le mot de passe de ta messagerie et préviens-nous.",
         'greeting' => 'Bonjour !',
         'line1' => 'Tu peux désormais te connecter à ton compte :park avec :provider, en plus de la méthode que tu utilisais avant.',
         'promoted' => "Ton adresse e-mail n'était pas encore vérifiée : nous la considérons vérifiée grâce à :provider et, par sécurité, nous avons fermé les sessions ouvertes et désactivé l'ancien mot de passe. Si tu veux de nouveau un mot de passe, utilise « j'ai oublié mon mot de passe ».",

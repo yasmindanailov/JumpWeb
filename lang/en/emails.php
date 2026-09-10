@@ -111,7 +111,7 @@ return [
     ],
     'order_after_expiration' => [
         'subject' => 'Your payment came through · :code',
-        'preheader' => "The payment is fine. We'll call within 24 h to rebook or refund you.",
+        'preheader' => "We'll call within 24 h to rebook your visit or refund you.",
         'greeting' => 'Hello,',
         'intro' => 'Good news: your payment for booking :code came through. It reached us a little late, so it wasn’t registered automatically in time and we’re handling it by hand.',
         'amount' => 'Amount charged: :amount €',
@@ -202,7 +202,7 @@ return [
     ],
     'mixed_party_surcharge' => [
         'subject' => 'Your park total has changed · :code',
-        'preheader' => 'What you pay at the park changes. Inside, the new amount and where it comes from.',
+        'preheader' => 'Nothing to pay now: it gets settled at the park on the day of the party.',
         'greeting' => 'Hi,',
         'intro' => "You've updated your guests' ages, and some of them fall into a different age band from the one you booked.",
         'intro_by_park' => "We've updated your booking, and some guests now fall into a different age band from the one you booked.",

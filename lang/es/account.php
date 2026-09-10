@@ -384,7 +384,7 @@ return [
         'badge' => 'Cuenta vinculada',
         'headline' => 'Has vinculado una cuenta',
         'subject' => 'Ya puedes entrar con :provider',
-        'preheader' => 'Ya puedes entrar de las dos formas. Si no has sido tú, dentro te decimos qué hacer.',
+        'preheader' => 'Si no has sido tú, cambia la contraseña de tu correo y avísanos cuanto antes.',
         'greeting' => '¡Hola!',
         'line1' => 'A partir de ahora puedes entrar en tu cuenta de :park con :provider, además de como lo hicieras antes.',
         'promoted' => 'Como tu correo todavía no estaba verificado, lo hemos dado por verificado con :provider y, por seguridad, hemos cerrado las sesiones que hubiera abiertas y desactivado la contraseña anterior. Si quieres volver a tener contraseña, usa «he olvidado mi contraseña».',

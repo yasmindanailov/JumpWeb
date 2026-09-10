@@ -115,7 +115,7 @@ return [
     ],
     'order_after_expiration' => [
         'subject' => 'Tu pago llegó bien · :code',
-        'preheader' => 'El cobro está bien. Te llamamos en 24 h para reagendar o devolverte el importe.',
+        'preheader' => 'Te llamamos en 24 h para reagendar tu visita o devolverte el importe.',
         'greeting' => 'Hola,',
         'intro' => 'Buenas noticias: tu pago de la reserva :code ha llegado correctamente. Nos entró con algo de retraso, así que no quedó registrado a tiempo de forma automática y lo estamos gestionando a mano.',
         'amount' => 'Importe cobrado: :amount €',
@@ -229,7 +229,7 @@ return [
     // cambia, en las dos direcciones: la bajada también es dinero (`#155`).
     'mixed_party_surcharge' => [
         'subject' => 'Cambia tu importe en el parque · :code',
-        'preheader' => 'Cambia lo que se abona en el parque. Dentro, el importe nuevo y de dónde sale.',
+        'preheader' => 'No hay que pagar nada ahora: se ajusta en el parque el día de la fiesta.',
         'greeting' => 'Hola,',
         'intro' => 'Has actualizado las edades de los invitados, y algunos entran en un tramo de edad distinto del que reservaste.',
         'intro_by_park' => 'Hemos actualizado tu reserva, y algunos invitados entran en un tramo de edad distinto del que reservaste.',

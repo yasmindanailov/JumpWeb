@@ -74,6 +74,13 @@ MUTACIONES = [
      'app/Notifications/Support/BrandedMailMessage.php',
      "if (Lang::has($grupo.'.preheader')) {",
      "if (true) {"),
+
+    # `#507`: la regla estaba escrita en `#506` y no la vigilaba nadie — dos correos repetían su
+    # asunto al 75 % y un tercero, en francés, al 80 %.
+    ("una línea de adelanto repite su asunto en vez de completarlo",
+     'lang/es/emails.php',
+     "'preheader' => 'No hay que pagar nada ahora: se ajusta en el parque el día de la fiesta.'",
+     "'preheader' => 'Cambia tu importe en el parque. Dentro tienes el importe nuevo.'"),
 ]
 
 

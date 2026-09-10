@@ -129,6 +129,62 @@ class MailInboxLineTest extends TestCase
         $this->assertSame([], $con, "líneas de adelanto con dato variable:\n".implode("\n", $con));
     }
 
+    /**
+     * ❗❗❗ **LA LÍNEA DE ADELANTO COMPLETA AL ASUNTO, NO LO REPITE**, y ésa es la única razón por la
+     * que existe: se leen JUNTAS, en la misma línea de la bandeja. Repetir el asunto desperdicia la
+     * segunda frase, que es la que puede decir lo que en el asunto no cabe.
+     *
+     * ⚠️ **La regla estaba escrita en `#506` y no la vigilaba nadie** — se vio al poner los asuntos
+     * nuevos al lado: dos correos repetían el suyo al **75 %** («Cambia tu importe en el parque» /
+     * «Cambia lo que se abona en el parque…» y «Ya puedes entrar con Google» / «Ya puedes entrar de
+     * las dos formas…»).
+     *
+     * ⚠️ El umbral es **60 %** y sale de la medida, no de un número redondo: los dos defectos daban
+     * 75 y el resto de la familia se queda en 25–33, que es compartir el sustantivo del asunto
+     * («cuenta», «reserva») y no su mensaje.
+     */
+    public function test_no_inbox_line_just_repeats_its_own_subject(): void
+    {
+        $repiten = [];
+        foreach ($this->grupos() as $notificacion => $grupo) {
+            foreach (['es', 'en', 'fr'] as $loc) {
+                $asunto = $this->palabrasPlenas((string) Lang::get($grupo.'.subject', [], $loc));
+                $linea = $this->palabrasPlenas((string) Lang::get($grupo.'.preheader', [], $loc));
+                if ($asunto === [] || $linea === []) {
+                    continue;
+                }
+                $solape = (int) round(100 * count(array_intersect($asunto, $linea)) / count($asunto));
+                if ($solape >= 60) {
+                    $repiten[] = sprintf('%s (%s): %d %%', $notificacion, $loc, $solape);
+                }
+            }
+        }
+
+        $this->assertSame([], $repiten,
+            "líneas de adelanto que repiten su asunto en vez de completarlo:\n".implode("\n", $repiten));
+    }
+
+    /**
+     * Las palabras con contenido de un texto: sin signos y sin las vacías, que son las que dos
+     * frases cualesquiera comparten y harían que este umbral no midiera nada.
+     *
+     * @return array<int,string>
+     */
+    private function palabrasPlenas(string $texto): array
+    {
+        $vacias = ['de', 'la', 'el', 'lo', 'los', 'las', 'un', 'una', 'y', 'o', 'en', 'que', 'tu', 'tus',
+            'se', 'te', 'a', 'al', 'del', 'no', 'es', 'con', 'por', 'para',
+            'the', 'a', 'an', 'of', 'to', 'in', 'is', 'it', 'you', 'your', 'and', 'or', 'for', 'at', 'on',
+            'le', 'les', 'du', 'des', 'et', 'ou', 'ton', 'ta', 'tes', 'ce', 'au', 'aux', 'pas', 'ne'];
+
+        $limpio = mb_strtolower((string) preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $texto));
+
+        return array_values(array_diff(
+            array_filter((array) preg_split('/\s+/u', $limpio)),
+            $vacias,
+        ));
+    }
+
     /** Lo que no cabe en la previsualización no se lee: se corta a media frase. */
     public function test_no_inbox_line_is_longer_than_the_preview(): void
     {
