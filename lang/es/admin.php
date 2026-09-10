@@ -40,6 +40,7 @@ return [
             'attractions' => ['label' => 'Atracciones', 'description' => 'Lo que se enseña de cada zona en la web.'],
             'landing_services' => ['label' => 'Servicios (web)', 'description' => 'Las secciones de la página de servicios.'],
             'faqs' => ['label' => 'Preguntas frecuentes', 'description' => 'Las preguntas y respuestas que se publican.'],
+            'testimonials' => ['label' => 'Opiniones propias', 'description' => 'Lo que ve quien no acepta cookies de terceros.'],
             'offers' => ['label' => 'Ofertas', 'description' => 'Promociones informativas del aviso flotante.'],
             'park_rules' => ['label' => 'Normas', 'description' => 'Las normas del recinto que se publican en la web.'],
             'pages' => ['label' => 'Páginas legales', 'description' => 'Aviso legal, privacidad, cookies y condiciones.'],
@@ -2859,6 +2860,56 @@ return [
                 'modal_description' => 'Esta acción es irreversible.',
                 'submit' => 'Borrar',
                 'success' => 'Pregunta borrada.',
+            ],
+        ],
+    ],
+
+    // ❗❗❗ **Los textos de esta pantalla NO pueden decir «por si Google falla»**, y su spec lo
+    // advierte expresamente (`specs/google-reviews.md` §4.4.bis): sería falso —sin consentimiento
+    // de cookies no se puede servir NI UNA reseña de Google— y, sobre todo, **es la razón por la
+    // que el parque las dejaría vacías**. Aquí se dice lo que son: lo que ve una parte de sus
+    // visitantes cada día.
+    'testimonials' => [
+        'nav_label' => 'Opiniones propias',
+        'model_label_singular' => 'opinión',
+        'model_label_plural' => 'Opiniones propias',
+
+        'col_author' => 'Quién',
+        'col_text' => 'Opinión',
+        'col_rating' => 'Nota',
+        'col_active' => 'Activa',
+        'active_yes' => 'Activa',
+        'active_no' => 'Inactiva',
+
+        'section_who' => 'Quién lo dice',
+        'field_author' => 'Nombre',
+        'field_author_hint' => 'Como quiera aparecer publicado. La inicial se pinta en el círculo.',
+        'field_rating' => 'Nota (opcional)',
+        'field_rating_hint' => 'De 1 a 5. Sin nota, la opinión sale sin estrellas.',
+        'field_published_at' => 'Fecha (opcional)',
+        'field_published_at_hint' => 'De aquí sale el «hace 2 meses». Sin fecha, no se escribe.',
+
+        'section_classification' => 'Clasificación',
+        'field_position' => 'Orden',
+        'field_position_hint' => 'Orden de aparición (menor primero).',
+        'field_is_active' => 'Activa',
+        'field_is_active_hint' => 'Si se desactiva, la opinión no aparece. Sin ninguna activa, la sección entera desaparece de la portada.',
+
+        'lang' => ['es' => 'Español', 'en' => 'Inglés', 'fr' => 'Francés'],
+        'field_text' => 'Opinión',
+        'field_text_hint' => 'Se publica ENTERA, sin recortar. Cortita se lee mejor: cabe en cuatro líneas.',
+
+        'create_title' => 'Crear opinión',
+        'edit_title' => 'Editar la opinión de :name',
+
+        'actions' => [
+            'create' => 'Crear opinión',
+            'delete' => [
+                'label' => 'Borrar opinión',
+                'modal_heading' => 'Borrar esta opinión',
+                'modal_description' => 'Esta acción es irreversible.',
+                'submit' => 'Borrar',
+                'success' => 'Opinión borrada.',
             ],
         ],
     ],

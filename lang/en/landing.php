@@ -305,6 +305,24 @@ return [
         'cta' => 'Create my account',
         'cta_account' => 'See my QR',
     ],
+    // Sección 06 · «Reseñas» (`#490`). `lede_google` nace sin consumidor: la usa la mitad `b`.
+    'reviews' => [
+        'eyebrow' => 'Reviews',
+        'title' => 'From the people who came',
+        'lede_own' => 'Some of the things people tell us on their way out.',
+        'lede_google' => 'We do not pick them: these are the ones Google puts first.',
+        'stars' => '{1} :n star out of 5|[2,*] :n stars out of 5',
+        'out_of' => 'out of 5',
+        'count' => '{1} :n review|[2,*] :n reviews',
+        'score_aria' => ':value out of 5 on Google',
+        'read_more' => 'See more',
+        'read_less' => 'See less',
+        'see_on_google' => 'See on Google',
+        'prev' => 'Previous review',
+        'next' => 'Next review',
+        'go' => 'See review :n',
+    ],
+
     // Sección 08 · «Dudas» (`#488`). El titular es una frase; «FAQ» pasa a ser el RÓTULO.
     'faq' => [
         'eyebrow' => 'FAQ',

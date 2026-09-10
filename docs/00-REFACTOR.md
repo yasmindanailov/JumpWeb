@@ -1844,7 +1844,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
-      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#488`,
+      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#491`,
       `specs/rediseno-desde-canvas.md`), que se reabrió con el sistema del 2.º cliente ya entregado.
       ✅ **Su FASE 1 está CERRADA y verificada en navegador**: táctil **48**, radios **0·10·16·999**,
       aire **144/96**, columna **1120** —los dos últimos con **hueco nuevo por instalación**—, la
@@ -1853,10 +1853,17 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       cerradas del producto** sin que nada lo viera, y que **`.btn` no declaraba mínimo táctil** —su
       alto daba 44 por casualidad aritmética, así que al subir el token TODOS los botones se
       quedaron cortos sin fallar—. Las dos las cierran guardas nuevas.
-      ▶ **Fase 2 a UNA sección de cerrar**: el armazón (`#477`) y las secciones **01** (`#478`),
-      **02** (`#479`+`#480`), **03** (`#481`+`#482`), **04** (`#483`+`#484`), **05** (`#485`), **07**
-      (`#487`) y **08** (`#488`). Queda **una**: 06 Reseñas, **bloqueada por el owner** — su spec
-      espera el ✅ y tres datos de Google.
+      ✅ **Fase 2 CERRADA: la portada entera**, con el armazón (`#477`) y las ocho secciones — **01**
+      (`#478`), **02** (`#479`+`#480`), **03** (`#481`+`#482`), **04** (`#483`+`#484`), **05**
+      (`#485`), **06** (`#490`+`#491`), **07** (`#487`) y **08** (`#488`).
+      ❗❗ Con la **06** entra una regla de arquitectura que vale para cualquier tercero: **la portada
+      no llama a Google**, lee de una caché corta que llena un comando programado, y hay un caso que
+      **prohíbe el mecanismo** con su guarda-de-la-guarda. ▶ Lo siguiente es la **Fase 3, las
+      páginas**, y empieza por su ARMAZÓN.
+      ⚠️⚠️ A la **06** le falta su mitad de Google, y la verificación contra la API la reordenó: el
+      parque tiene **UNA** reseña, así que `[DECIDIDO owner]` hay **umbral de 10** y hoy la sección la
+      sostienen las opiniones PROPIAS. ▶ Y deja escrito que **«que la chapa se vea siempre» no es
+      implementable**: R2 prohíbe almacenar valoraciones más allá de una caché corta.
       ⚠️ Con la 08, tres cosas que la web PUBLICABA y no eran ciertas: la duda de la edad decía
       «Kids de 1 a 12 · Jump desde 6» contra el «4 — 7» y «+8» que la sección 01 saca de `zones`
       —**la portada se contradecía a sí misma**—, «¿Es necesario reservar?» desmentía a la página, y

@@ -81,7 +81,15 @@ class SecurityHeaders
             "object-src 'none'",
             "frame-ancestors 'self'",
             'form-action '.implode(' ', $formAction),
-            "img-src 'self' data:",
+            // ⚠️⚠️ **`lh3.googleusercontent.com` entra por las FOTOS DE AUTOR de las reseñas**
+            // (`#491`, `specs/google-reviews.md` §3.3), y esto **relaja la CSP del sitio entero**,
+            // no solo de esa sección: es una decisión, no un ajuste (`SEC-01`).
+            // ▶ De las tres salidas posibles es la ÚNICA que cumple las dos normas a la vez:
+            // proxear la foto sería «store» de contenido de Places —prohibido por R2— y servir la
+            // reseña sin foto incumple la atribución obligatoria de R3.
+            // ⚠️ Es un host concreto y solo para IMÁGENES; y la foto únicamente se pide cuando el
+            // visitante ha aceptado cookies de terceros, que es lo que exige `RGPD-05`.
+            "img-src 'self' data: https://lh3.googleusercontent.com",
             "font-src 'self' https://fonts.bunny.net data:",
             'style-src '.implode(' ', $style),
             'script-src '.implode(' ', $script),

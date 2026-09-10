@@ -1,7 +1,35 @@
 # [SPEC] Reseñas de Google en la landing — la prueba social que el parque NO controla
 
-> Estado: **🟦 en revisión — §3 DECIDIDA por el owner, §4 cerrada, falta su ✅ para implementar** ·
-> Última actualización: 2026-08-25 · Decisión asociada: `DECISIONES «#N»` al aprobarse.
+> Estado: ✅ **EJECUTADA ENTERA** — mitad `a` en `DECISIONES #490` y mitad `b` en `#491`
+> (2026-09-10) · Última actualización: 2026-09-10.
+>
+> ❗❗❗ **§4.4.bis TENÍA UNA AMBIGÜEDAD Y ESTÁ RESUELTA, y la corrección va delante del texto**:
+> afirmaba «sin consentimiento la cabecera no se pinta» **sin argumentarlo** —su razón escrita era no
+> inventar la cifra, que es otra cosa—. ▶ **La CIFRA no necesita consentimiento**: la trae nuestro
+> servidor, el visitante no hace ninguna petición a Google, no lleva autor ni foto y una media de un
+> negocio no es dato personal. **Las RESEÑAS sí**, porque R3 obliga a la foto del autor y cargarla
+> **sí** es una petición del visitante (`RGPD-05`). Las dos cosas se gobiernan por separado en
+> `FallingBackSocialProof`.
+>
+> ❗❗❗ **LO PRIMERO, PORQUE CAMBIA LA SECCIÓN: el parque tiene UNA reseña en Google.** Verificado
+> contra la API el 2026-09-10 (§6·5, la salida está en `DECISIONES #490`): HTTP 200, `rating: 5`,
+> `userRatingCount: 1`. Con una, la chapa diría «5,0 · 1 reseña» —que resta— y una segunda de 1
+> estrella publicaría un 3,0 al día siguiente. ▶ `[DECIDIDO owner, 2026-09-10]`: **umbral de 10
+> reseñas**; por debajo, la sección va entera con las opiniones propias y Google no se toca.
+>
+> ✅ **Y esa misma verificación cierra dos de los tres datos que faltaban**: el `place_id` es el del
+> parque y el campo `reviews` trae la atribución completa —`displayName`, `photoUri`, `uri`—, con el
+> avatar en `lh3.googleusercontent.com`, exactamente donde §3.3 lo midió. Falta el **tope de gasto**.
+>
+> ❗❗ **«QUE LA CHAPA SE VEA SIEMPRE» NO ES IMPLEMENTABLE**, y el owner lo preguntó con razón: no es
+> mentir, es que **R2 prohíbe almacenarla** más allá de una caché corta. Lo que sí se consigue es que
+> esté puesta **prácticamente siempre**, refrescando **cada hora** (~720 llamadas/mes, gratis).
+>
+> ⚠️⚠️ **Y hay una AMBIGÜEDAD en esta spec que juega a favor del owner y hay que resolver en la `b`**:
+> §4.4.bis afirma «sin consentimiento la cabecera no se pinta» **sin argumentarlo** —su razón escrita
+> es no inventar la cifra, que es otra cosa—. La cifra la trae **nuestro servidor**, no tiene autor ni
+> foto y no es dato personal, así que **puede que no necesite consentimiento**. Se decide con su
+> argumento delante, no por inercia.
 >
 > ⚠️⚠️ **Empieza por §1.3.** Esta integración tiene **cinco restricciones DURAS** que no son
 > negociables con Google y que cambian el diseño, no lo decoran. Tres de ellas chocan de frente con
@@ -349,5 +377,11 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
 - ❗ **Bloqueo heredado que conviene no descubrir tarde** (§4.2): el refresco va por comando
   programado, y `DECISIONES #115` dice que **el scheduler no corre en staging**. Allí habrá que
   dispararlo a mano hasta que el owner active las tareas en el panel del hosting.
-- **Pendiente del owner**: el ✅ a esta spec y los tres datos de arriba.
-- **Entrada final**: `DECISIONES «#N»`.
+- ✅ **APROBADA por el owner el 2026-09-10**, y con la mitad `a` construida (`DECISIONES #490`): la
+  sección, el contrato `Content\Contracts\SocialProof`, `CmsSocialProof`, la tabla `testimonials` y
+  su recurso del panel. **La vista lee el contrato**, así que la `b` entra cambiando el binding.
+- ⚠️ **Lo que sigue pendiente del owner, y es de la consola de Google**: el **tope de 50
+  peticiones/día** (dijo que no había puesto ninguno), **añadir la IP del servidor** a la restricción
+  de la clave —la que hay es la de su conexión, verificado midiendo nuestra IP de salida— y **rotar
+  la clave**, que se pegó en un chat.
+- **Entrada final**: `DECISIONES #490` (mitad `a`).

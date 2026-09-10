@@ -19,12 +19,17 @@ use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Booking\Models\Ticket;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Offer;
 use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\Testimonial;
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Content\Services\CmsSocialProof;
+use App\Domain\Content\Services\FallingBackSocialProof;
+use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
@@ -85,6 +90,25 @@ class AppServiceProvider extends ServiceProvider
         // (`ModuleBoundariesTest`), así que su propio proveedor tampoco puede nombrar al
         // implementador. La capa de ENTREGA es el composition root y sí puede ver a los dos.
         $this->app->bind(ReservationPlacesTaken::class, GuardianPlaces::class);
+
+        // **La prueba social de la landing** (`#490`, `specs/google-reviews.md` §4.1). Hoy resuelve
+        // a las opiniones PROPIAS y nada más, porque la mitad de Google todavía no existe.
+        // ⚠️⚠️ **El binding es lo que hace que la vista no cambie el día que llegue**: cuando entre
+        // `GoogleSocialProof`, aquí se sustituye por `FallingBackSocialProof` —el decorador que
+        // aplica la cascada de §4.0 en UN solo sitio— y la sección no se toca. Si en vez de esto la
+        // vista preguntara por la fuente, ese día habría que reescribirla.
+        $this->app->bind(SocialProof::class, function (): SocialProof {
+            return new FallingBackSocialProof(
+                $this->app->make(GoogleSocialProof::class),
+                $this->app->make(CmsSocialProof::class),
+                // ⚠️⚠️ **El consentimiento se lee AQUÍ y no dentro del decorador**: `CookieConsent`
+                // vive en Identity y **Content no puede mirar a Identity** (`ModuleBoundariesTest`).
+                // La capa de ENTREGA es el composition root y sí ve a los dos — la misma salida que
+                // `ReservationPlacesTaken` en `#444`.
+                // ⚠️ Va como cierre para que se evalúe cuando hace falta y no al construir.
+                static fn (): bool => (bool) (CookieConsent::state(request())['maps'] ?? false),
+            );
+        });
 
         // El icono que va DENTRO del QR del carné (`identidad-qr-puerta.md` §9.7 C·3): singleton
         // para que el rasterizado del SVG de la instalación se haga UNA vez por petición. El memo
@@ -165,6 +189,9 @@ class AppServiceProvider extends ServiceProvider
             'slot' => Slot::class,
             'slot_template' => SlotTemplate::class,
             'special_date' => SpecialDate::class,
+            // ⚠️ Lo exige `AuditLogger`: el alta, la edición y el borrado de una opinión escriben
+            // en `audit_logs.target_type`, así que este modelo SÍ se morfa (`#490`).
+            'testimonial' => Testimonial::class,
             'ticket' => Ticket::class,
             'ticket_type' => TicketType::class,
             'user' => User::class,

@@ -363,9 +363,10 @@ class AdminNavigationTest extends TestCase
 
         $this->assertCount(4, $areas);
         $this->assertSame(
-            20,
+            21,
             array_sum(array_map(fn (array $a): int => count($a['items']), $areas)),
-            'El admin debe ver las 20 tarjetas de Ajustes (19 + la puerta, que bajó del menú en `#320`).',
+            'El admin debe ver las 21 tarjetas de Ajustes (19 + la puerta, que bajó del menú en `#320`, '.
+            '+ «Opiniones propias», que entró con la sección 06 en `#490`).',
         );
 
         // La tarjeta «Equipo» lleva a la MISMA pantalla que «Clientes», en su otra pestaña.

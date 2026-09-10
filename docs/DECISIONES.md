@@ -21922,7 +21922,7 @@ habría comparado código viejo y dado verde. 35 rojos que desaparecieron al rec
 en `origin/main` y en la base `#341`). No es de este carril y no se toca aquí.
 
 **Verificación**: suite **4.003 · 25.611** (1 skipped a propósito) sobre el árbol conjunto y medida
-DESPUÉS de reconstruir los dos bundles · Pint ✓ (1.132 ficheros) · docs-check ✓ (39 modelos · 100
+DESPUÉS de reconstruir los dos bundles · Pint ✓ (1.132 ficheros) · docs-check ✓ (entonces 39 modelos y 100
 migraciones) · huella de las citas del otro carril verificada idéntica antes y después en las DOS
 renumeraciones · los seis escenarios de `purchase:verify-oversell`, `redsys:verify-concurrency` y los
 dos de `waiver:verify-chain`, verdes sobre MySQL real.
@@ -26739,6 +26739,7 @@ ejercita **las dos ramas**, no una.
 **Suite 4.576** · 28.699 aserciones · **15/15 mutaciones** (`scripts/mutar-visitanos.sh`, +2) · Pint
 limpio.
 
+<<<<<<< HEAD
 ## #500 · 2026-09-10 · `[DECIDIDO owner]` Un carril propio para los CORREOS, con banda 500–519 — y el vestido de los 23, que destapó la marca del producto en la bandeja del cliente
 
 El owner pidió retomar el diseño **en el SPA**. Al medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja que el otro agente está moviendo** para la web pública (`#469`→`#489`), así que se contrastaron las cuatro superficies que podían ir en paralelo sin pisarse. Solo una tiene aislamiento real: **los correos** —tema propio (`vendor/mail/html/themes/brand.css`), artboard suyo (`Correos PJP`) y **fuera de las cinco fases** del plan del otro carril, o sea sin dueño—. El post-form y el justificante **cargan las dos hojas** (`focused-layout.blade.php`, sus dos `<link>`), el panel solo tiene **un** artboard, y la invitación digital **no existe en código**. `[DECIDIDO owner]`: los correos, y **banda propia 500–519** para no chocar con la 470–499, que va por `#489`.
@@ -26842,3 +26843,395 @@ El owner: *«revisa los contrastes de las cards claras, no se lee el texto»*. M
 **LA GUARDA NUEVA MIDE EL RESULTADO, NO LA PRESENCIA.** `test_every_text_reads_in_both_modes` recorre el HTML con una **PILA de fondos** —el fondo de un texto es el de su ancestro más cercano que declare uno, no el del `<body>`—, aplica el mapa a los dos lados y exige AA en los dos modos. ⚠️ **La pila es lo que hace que sirva**: medir contra el fondo de la página es exactamente cómo un texto ilegible pasa por bueno, y es lo que pasaba aquí. Sustituye a la de `#502`, que comprobaba que el par EXISTIERA.
 
 **Verificación**: suite **4.599 ✓ · 28.760 aserciones** · Pint 1.225 · `MailThemeTest` 13 casos. Y una auditoría **externa e independiente del test**, sobre cinco correos con los cinco tonos: **176 textos medidos con su fondo efectivo, 0 por debajo de AA en los dos modos**. ⚠️ El único elemento que la sonda marca es el punto de marca de la cabecera, un `<span>` **vacío**: está declarado como excepción con su motivo. ⚠️ **Sigue sin verse en un cliente de correo real.**
+=======
+---
+
+## #490 · 2026-09-10 · `[DECIDIDO owner]` La sección «Reseñas», mitad `a`: las opiniones propias — y Google resulta tener UNA
+
+**Contexto.** Octava sección de la Fase 2 y la que cierra la portada (`specs/rediseno-desde-canvas.md`
+§5.4, `specs/google-reviews.md`). El owner **la desbloquea** y entrega la clave de API y el
+`place_id`. ▶ **La sección se parte en dos**, y la primera mitad no necesitaba ninguno de los dos:
+`a` es la sección con las opiniones PROPIAS; `b` será Google.
+
+---
+
+**❗❗❗ 1 · LA VERIFICACIÓN CONTRA GOOGLE, HECHA — Y CAMBIA LA SECCIÓN.**
+
+§6·5 de su spec exige hablar con el tercero de verdad antes de dar la integración por buena, como
+`redsys:verify-sandbox`. Hecho el 2026-09-10 contra `places.googleapis.com/v1/places/{id}` con la
+clave del owner, **HTTP 200**:
+
+    nombre        : Play Jump Park
+    dirección     : Ctra. de Granada, 30813 Lorca, Murcia, Spain
+    rating        : 5 · reseñas: 1
+    reviews       : 1 devuelta
+    campos        : authorAttribution, flagContentUri, googleMapsUri, name, originalText,
+                    publishTime, rating, relativePublishTimeDescription, text
+    atribución    : displayName, photoUri, uri     · host del avatar: lh3.googleusercontent.com
+
+▶ **Cierra dos de los tres puntos que la spec dejaba abiertos**: el `place_id` es el del parque
+—coincide con la dirección del panel— y el campo `reviews` trae todo lo que el diseño necesita, con
+el avatar exactamente en el host que §3.3 midió, así que su análisis de CSP y consentimiento se
+sostiene.
+
+❗❗❗ **Y el hallazgo que manda sobre el resto: el parque tiene UNA reseña.** El mockup dibuja «4,8
+sobre 5 · 320 opiniones». Con una, la chapa diría **«5,0 · 1 reseña»**, que no es prueba social —un
+cinco de una persona se lee como el favor de un amigo—, el carril tendría un elemento (lo que las
+condiciones del propio canvas prohíben) y sería **volátil**: una segunda reseña de 1 estrella
+publicaría un 3,0 al día siguiente.
+
+▶ `[DECIDIDO owner]`: **umbral de 10 reseñas.** Por debajo, la sección va entera con las opiniones
+propias y Google no se toca. Es el número a partir del cual una media deja de moverse con cada
+reseña nueva.
+
+---
+
+**❗❗❗ 2 · «QUE LA CHAPA SE VEA SIEMPRE» NO ES IMPLEMENTABLE, Y NO POR DISEÑO.**
+
+El owner pidió que la chapa estuviera siempre y preguntó por qué no se copia el dato: *«si ya sabemos
+que Google nos da un 4 y tenemos X reseñas, no podemos poner lo mismo? no es mentir»*. **No es
+mentir: es un contrato.** R2 prohíbe almacenar reseñas y valoraciones más allá de una **caché
+corta**; el `place_id` es la única excepción indefinida. El riesgo real es la suspensión de la clave
+—y con ella el mapa—, y hay un segundo motivo que le afecta a él: **un número congelado empieza
+siendo verdad y deja de serlo**.
+
+▶ **Pero lo que quería sí se consigue por la vía buena**: preguntar cada pocas horas y servir de una
+caché corta deja la chapa puesta prácticamente siempre, **actualizada sola y gratis** (cada 6 h son
+~120 llamadas al mes; cada hora, ~720). Se acordó **refrescar cada hora** para que el hueco de la
+caché evictada (`allkeys-lru`, `#137`) sea casi inexistente.
+
+⚠️⚠️ **Y una ambigüedad de nuestra propia spec queda anotada, porque juega a favor del owner**:
+§4.4.bis afirma «sin consentimiento la cabecera no se pinta» **sin argumentarlo** —su razón escrita
+es no inventar la cifra, que es otra cosa—. La cifra agregada la trae **nuestro servidor**, no tiene
+autor ni foto y no es dato personal, así que **puede que no necesite consentimiento**. Se decide con
+su argumento delante en la T2i·b; no se da por bueno aquí.
+
+---
+
+**❗❗ 3 · EL ARTBOARD TIENE LA OPINIÓN APAGADA EN MÓVIL, Y ESO CHOCABA CON §3.3.**
+
+Sexta vez que una pieza está tras un interruptor apagado: `conCarrusel`, desde el recorte del 7 sep
+(la sección pasa de 756 a 439 px). Con eso, en móvil la sección es **solo la chapa** — y la chapa
+solo existe con Google. Resultado: sin Google (hoy, y siempre para quien no consiente) **la sección
+se quedaba sin nada que enseñar en la superficie donde está casi todo el tráfico**, justo lo
+contrario de lo que §3.3 decidió en agosto.
+
+▶ `[DECIDIDO owner]`: **sin chapa, el carril se enciende en móvil.** No contradice el recorte: la
+opinión se apagó **porque la chapa ya cargaba la sección**, y sin chapa ese motivo desaparece.
+
+⚠️ **En escritorio la opinión ya volvía** por decisión del canvas (5b, aprobado el 8 sep): *«sin
+ella, la chapa se quedaba sola ocupando 1120 px de ancho para decir un número»*.
+
+⚠️ Y el acta comprimía de más otra vez: dice «sin cookies aceptadas la sección desaparece» y su
+artboard dice que desaparece **si faltan las dos cosas**, las de Google *y* las propias.
+
+---
+
+**▶ 4 · LO QUE ENTRA.**
+
+- **`testimonials`** + `Content\Models\Testimonial` + su recurso del panel («Ajustes → Web»).
+- **`Content\Contracts\SocialProof`** con `Rating` y `Testimonial`, y **`CmsSocialProof`** detrás.
+- **La sección 06** en la portada, con la cabecera común y el carril.
+
+❗❗ **La vista no sabe de dónde vienen las opiniones, y eso es el diseño**: lee el contrato y pinta.
+El día que entre Google **no se toca el marcado** — se sustituye el binding por el decorador. Si en
+vez de esto la vista preguntara por la fuente, ese día habría que reescribirla, y el respaldo
+quedaría como un condicional con **una rama sin cubrir: la que solo corre cuando algo va mal**.
+
+⚠️ **`published_at` es una FECHA, no el `meta` de texto libre que proponía §4.4.bis.** «hace 2 meses»
+escrito a mano es verdad el día que se teclea y mentira dos meses después: se deriva. Misma
+disciplina que `#489`.
+
+⚠️ **`rating()` devuelve `null` siempre, y no es una implementación a medias**: componer la media con
+opiniones propias daría un número real —la media de lo que el parque escribió de sí mismo— y
+publicarlo junto a las cinco estrellas del sistema lo haría pasar por la nota de Google.
+
+⚠️ **El texto NO se recorta**, contra el artboard: él corta a cuatro líneas y ofrece «leer entera en
+Google», y una opinión propia **no tiene entera en ninguna parte**. Recortarla escondería texto sin
+dónde ir a buscarlo.
+
+⚠️ **NO se siembran opiniones de ejemplo.** El seeder alimenta también el arranque en frío de
+producción (`--seed`), y ahí unas opiniones inventadas se publicarían como si fueran reales. La tabla
+nace vacía, que además demuestra la regla del panel vacío.
+
+⚠️ **La ayuda del panel no dice «por si Google falla»**, y su spec lo advierte: sería falso y es la
+razón por la que el parque las dejaría vacías.
+
+---
+
+**⚠️ 5 · TRES COSAS QUE CAZARON LAS GUARDAS, Y UNA QUE ME CACÉ YO.**
+
+- **`MorphMapTest`**: todo modelo nuevo necesita alias, y éste **se morfa de verdad** (el audit del
+  alta, la edición y el borrado escriben `target_type`).
+- **`AdminNavigationTest`**: el censo de Ajustes pasa de 20 a 21 tarjetas. Se actualiza con su razón.
+- **El arnés**: la mutación que quitaba `role="img"` **no mordía**. Mi caso miraba solo el
+  `aria-label`, y **sin un rol que admita nombre el `aria-label` de un `<p>` lo ignora el lector de
+  pantalla**: la etiqueta sigue en el HTML y el nombre accesible ya no existe. Ahora se aseveran los
+  dos juntos, sobre el mismo elemento.
+- **Y una trampa que este repo tiene fichada y volví a pagar**: `"    'offers' => ["` es **subcadena**
+  de `"            'offers' => ["`, así que un bloque de traducciones aterrizó dentro de otra lista.
+  Se rehízo anclando a **línea completa**. Es la de `#293` y `#309`, por tercera vez.
+- ⚠️ Y el propio caso de arquitectura se puso rojo con el producto sano: buscaba `Testimonial::` en
+  el controlador y lo encontró **dentro de mi comentario**, citado como advertencia. Se enmascaran
+  los comentarios antes de aseverar — la trampa de `#482` en PHP.
+
+---
+
+**▶ MEDIDO, EN NAVEGADOR.** La sección pesa **509 px** en móvil y **399** en escritorio; la portada
+sube a **12,65** y **11,46** pantallas, con desborde **0**. Inicial **56**, flecha **48**, tarjeta
+**358 / 736** —el número de `span 8` del artboard al dígito— y las estrellas en `rgb(138, 110, 0)`,
+que es su `#8A6E00` exacto, servido por `--attn-ink`.
+
+El comparador da **33 y 6 valores idénticos, 0 divergencias sin explicar**.
+
+⚠️ **Pendiente del owner**: poner el **tope de 50 peticiones/día** en la consola (dijo que no había
+puesto ninguno) y **añadir la IP del servidor** a la restricción de la clave — la que hay,
+`2.59.233.253`, es su conexión, verificado midiendo nuestra IP de salida. Y **rotar la clave** antes
+de producción: se pegó en el chat.
+
+**Suite 4.588** · 28.802 aserciones · **11/11 mutaciones** (`scripts/mutar-resenas.sh`) · Pint limpio.
+
+---
+
+## #491 · 2026-09-10 · La sección «Reseñas», mitad `b`: Google — y la chapa NO necesita consentimiento, que es lo que el owner quería
+
+**Contexto.** La segunda mitad de la sección 06 (`specs/google-reviews.md`, `#490` construyó la `a`).
+El owner entregó clave y `place_id` y decidió no rotar la clave ni poner el tope todavía: se prueba
+en local y en staging, con su IP.
+
+---
+
+**❗❗❗ 1 · LA PORTADA NO LLAMA A GOOGLE, Y ESO ES UNA CLASE ENTERA.**
+
+`GoogleSocialProof` **lee de la caché y no llama nunca**; quien llama es `social-proof:refresh`, el
+comando programado. No es una optimización: `PERF-02` documenta que la portada llegó a hacer ~1.900
+consultas por GET anónimo, y **una llamada HTTP a un tercero en el camino del render es peor que
+aquello** — no son milisegundos de BD local, es la latencia de otro en el camino crítico.
+
+▶ Lo vigila `SocialProofNeverHitsTheRenderPathTest` **prohibiendo el mecanismo**: el cliente HTTP se
+falsea para **explotar si alguien lo llama** y la portada tiene que seguir dando 200. Y lleva su
+**guarda-de-la-guarda** —un caso que comprueba que el falso SÍ explota—, sin la cual un `Http::fake()`
+mal montado dejaría el primero **verde sin mirar nada**.
+⚠️ La mutación que lo prueba es **la natural**: el `Cache::remember` que uno escribiría sin pensar.
+
+---
+
+**❗❗❗ 2 · LA CIFRA NO NECESITA CONSENTIMIENTO Y LAS RESEÑAS SÍ — y eso resuelve una ambigüedad que
+la spec tenía escrita SIN ARGUMENTAR.**
+
+§4.4.bis afirmaba «sin consentimiento la cabecera no se pinta», pero su razón escrita era *no
+inventar la cifra*, que es otra cosa. Mirado de cerca:
+
+- **La cifra**: la trae **nuestro servidor** con el comando, así que **el visitante no hace ninguna
+  petición a Google**; no tiene autor ni foto, de modo que la atribución con foto de R3 no aplica; y
+  una media de un negocio **no es dato personal**. Lo que sí exige es acreditar la fuente, y eso es
+  texto.
+- **Las opiniones**: R3 obliga a la foto del autor, esa foto vive en `lh3.googleusercontent.com` y
+  cargarla **es una petición del visitante a Google** (`RGPD-05`). Servirlas sin foto incumple R3, así
+  que no hay término medio.
+
+▶ **De ahí sale lo que el owner pedía** —que la chapa se vea siempre que se pueda— sin romper nada.
+
+---
+
+**⚠️⚠️ 3 · UN DEFECTO QUE SOLO VIO LA CAPTURA, y es consecuencia directa de lo anterior.**
+
+Até la entradilla a la presencia de la CHAPA. Pero la chapa y las opiniones **no vienen de la misma
+fuente**, y el caso más frecuente es justamente el cruce: chapa de Google encima de opiniones
+propias. Resultado: la sección decía *«No las elegimos nosotros: son las que Google pone primero»*
+**sobre una opinión que sí elegimos**.
+
+▶ La entradilla sigue ahora a la fuente de **las opiniones**. ⚠️ *Es un texto correcto, en un sitio
+correcto, diciendo algo falso: ninguna aserción de marcado lo veía.* Tiene caso y mutación.
+
+---
+
+**▶ 4 · LO QUE ENTRA.**
+
+- **`GoogleSocialProof`**: Places API (New), máscara de campos enumerada —`reviews` es lo que sube al
+  SKU caro, pedir de más es pagar de más—, caché corta y el umbral.
+- **`FallingBackSocialProof`**: la cascada de §4.0 en **un solo sitio**.
+- **`social-proof:refresh`** + `Schedule::hourly()`.
+- **La chapa** en la sección, las reseñas con su atribución, y `lh3.googleusercontent.com` en la CSP.
+
+⚠️⚠️ **El consentimiento entra como CIERRE desde el composition root**, y es una consecuencia de la
+frontera: `CookieConsent` vive en Identity y **Content no puede mirar a Identity**
+(`ModuleBoundariesTest`). Misma salida que `ReservationPlacesTaken` en `#444`.
+
+⚠️ **El TTL es la MITAD de la cadencia, no el doble.** Con un TTL más largo que el refresco, una
+respuesta vieja sobreviviría a un refresco fallido y la sección publicaría una cifra de ayer
+creyéndola de hoy.
+
+⚠️ **Al bajar del umbral la caché se OLVIDA**: si no, seguiría sirviendo la cifra de antes.
+
+⚠️ **Una reseña sin autor no se publica**: R3 exige acreditarlo y una anónima incumple la atribución.
+Es preferible enseñar una menos.
+
+⚠️ **`SEC-07` se aplica DONDE NACE EL DATO**, no en la plantilla: las URL de Google se sanean en el
+servicio, así que la siguiente superficie que las consuma —la API, un correo— recibe lo mismo sin
+tener que acordarse.
+
+⚠️ **Ampliar `img-src` relaja la CSP del sitio entero** (`SEC-01`), y es la decisión que §3.3 ya
+había tomado: de las tres salidas es la única que cumple R3 y `RGPD-05` a la vez.
+
+❗❗ **Las CINCO salidas del refresco son distinguibles, y eso lo cambié a media construcción.**
+Devolvía `?int` y el comando decía «no ha devuelto nada publicable (sin cobertura del umbral, cuota,
+caída o clave)» — cuatro causas en una frase, así que **para saber cuál era había que mirar el log y
+deducirlo de una ausencia**. Ahora cada una dice **qué hay que ir a mirar**, y todas terminan en 0:
+un cron que informa de fallo cada hora acaba silenciado, y entonces sí se pierden los fallos de
+verdad.
+
+---
+
+**⚠️ 5 · TRES TRAMPAS, Y LAS TRES YA ESTABAN FICHADAS.**
+
+- **`Http::fake()` ACUMULA stubs y gana el primero** (`#347`): un bucle con tres códigos recibía tres
+  veces el 403 y el caso fallaba diciendo «403 no es 429» — parecía defecto del producto y era el
+  arnés. Se usa `fakeSequence`.
+- **En bash no se puede escapar una comilla simple dentro de comillas simples**: reventó el arnés con
+  «syntax error near unexpected token». Van con dobles y el `$` escapado.
+- **`ScaleTokensAreUsedTest`** (`#437`) cazó dos literales del artboard que **sí tienen escalón**
+  (`gap: 2px` y `gap: 7px`).
+
+Y una guarda perdió su sujeto con razón: `ReviewsSectionTest` aseveraba que el binding resolvía a
+`CmsSocialProof`, y ahora es el decorador. Se re-apunta a la **conducta** —sin Google configurado
+llega el respaldo propio—, que es más fuerte que la clase.
+
+---
+
+**▶ VERIFICADO EN NAVEGADOR.** La chapa da **«4,8 sobre 5 · 320 opiniones»** con la cifra en
+`rgb(163, 194, 28)` —el `#A3C21C` del artboard, servido por `--money` sobre tinta— y **las cinco
+estrellas recortadas caja a caja**: 24 · 24 · 24 · 24 · **19,19**, o sea la quinta al 80 % de 4,8.
+Es exactamente lo que la regla exige y lo que un recorte a lo largo de la fila no consigue.
+
+⚠️ **Pendiente del owner, y él lo ha aplazado a sabiendas**: rotar la clave, poner el tope de
+peticiones/día y añadir la IP del servidor. Se hace al desplegar.
+
+**Suite 4.602** · 28.877 aserciones · **19/19 mutaciones** (`scripts/mutar-resenas.sh`) · integración
+verificada contra la API real · Pint limpio.
+
+---
+
+## #492 · 2026-09-10 · El ojo del owner sobre «Reseñas»: la rejilla estaba rota por `1fr`, y el texto se lee entero aquí
+
+**Contexto.** El owner miró la sección con datos reales y señaló tres cosas: la chapa «rompe las
+filas», la tarjeta de la reseña necesita organizarse y límites de ancho, y el texto debe poder leerse
+entero con un «ver más». Además pidió publicar «las imágenes que pone el cliente» (§4).
+
+---
+
+**❗❗❗ 1 · LA REJILLA ESTABA ROTA POR DOS COSAS, Y LAS DOS SE MIDIERON.**
+
+**(a) La chapa no estaba COLOCADA y se auto-colocaba.** `.rev-score` es un tercer hijo de `.rev-sec`
+y la rejilla de doce pistas lo metía donde cupiera: medido, **columnas 5-6, 183 px de ancho**, con la
+cifra y «sobre 5» partiéndose en dos líneas, y **empujando el carril a la fila siguiente**. El
+artboard es explícito: *«la chapa del 4,8 en cuatro columnas y la opinión al lado, en ocho»*, con la
+cabecera encima a todo lo ancho.
+
+**(b) `1fr` NO reparte en partes iguales cuando el contenido es largo.** `1fr` es
+`minmax(auto, 1fr)`: su mínimo es el CONTENIDO. Medido con la reseña real, la cabecera salía a
+**309** y el carril a **779** donde el artboard escribe **352** y **736** — el texto de la opinión
+empujaba las pistas.
+▶ `repeat(12, minmax(0, 1fr))`, y `min-width: 0` en los hijos.
+
+⚠️⚠️ **Es un defecto que no aparece con contenido corto**: la sección 08, con las **mismas** doce
+pistas, medía 352 y 736 exactos porque sus preguntas caben. *Una rejilla que cuadra no demuestra que
+la declaración sea correcta: demuestra que ese contenido no la ha puesto a prueba.*
+
+▶ Verificado tras el arreglo: chapa **352**, carril **736**, los dos en la misma fila, cabecera a
+**1120**, desborde **0**.
+
+---
+
+**❗❗ 2 · EL TEXTO SE LEE ENTERO EN LA PROPIA PÁGINA** (`[DECIDIDO owner]`).
+
+Antes se recortaba a cuatro líneas y la única salida era irse a Google. Ahora el recorte lo abre un
+**«Ver más»** ahí mismo. ⚠️ **No incumple R4**: la prohibición es alterar el contenido del usuario, y
+el texto servido está completo desde el principio — el `line-clamp` solo lo tapa. Lo que se retira es
+la obligación de irse a otro sitio para leerlo. ⚠️ **La salida a Google NO desaparece**: cuando la
+reseña es suya, su enlace es parte de la acreditación que R3 exige.
+
+⚠️⚠️ **El botón se decide MIDIENDO, no contando caracteres.** Con un umbral de longitud, una opinión
+de 140 caracteres con palabras largas se corta y no ofrece abrirla, y otra de 160 con palabras cortas
+ofrece abrir lo que ya se ve entero. Se compara el alto real contra el visible.
+
+⚠️ Y el recorte pasa a valer para **las dos fuentes**: la razón por la que las propias no se
+recortaban era que no tenían adónde mandar, y ahora el destino es la propia tarjeta.
+
+---
+
+**❗❗❗ 3 · UNA GUARDA QUE PASABA SIN MIRAR NADA, Y LA CAZÓ EL ARNÉS.**
+
+`test_la_portada_no_llama_a_google` ponía el cliente HTTP a **explotar** y comprobaba que `GET /`
+seguía dando 200. La mutación que mete un `Cache::remember` en el render **no mordía**, por dos
+motivos que se tapaban entre sí:
+
+1. `refresh()` **se traga las excepciones por diseño** —sus cinco salidas son normales—, así que la
+   portada llamaba a Google y seguía respondiendo 200;
+2. y **un `Http::fake()` que lanza ni siquiera llega a registrar la petición**, así que tampoco se
+   podía ver a posteriori.
+
+▶ *Comprobar que la página no se rompe no es comprobar que no ha llamado a un tercero.* Hoy el falso
+**responde** y la aserción es `Http::assertNothingSent()`. Y su **guarda-de-la-guarda** cambia con
+ella: ya no comprueba que el falso explote, sino que **la aserción falla de verdad** cuando algo se
+envía.
+
+---
+
+**⚠️ 4 · LAS IMÁGENES DEL CLIENTE: MEDIDO, Y NO ES LO QUE PARECE.**
+
+Consultada la API el 2026-09-10: el sitio tiene **10 fotos**, cada una con su autoría —dos de
+«PlayJump Park» y una de «anna», la misma que dejó la reseña—. ❗❗ **Pero el objeto `review` NO tiene
+campo de fotos**: sus claves son `authorAttribution`, `flagContentUri`, `googleMapsUri`, `name`,
+`originalText`, `publishTime`, `rating`, `relativePublishTimeDescription` y `text`.
+
+▶ **Así que no puede ser «la foto de esta opinión»**: son fotos **del sitio**, con autor. Y traerlas
+cuesta **una llamada facturada por foto** al endpoint de medios, más su atribución (R3), más que el
+navegador del visitante pida la imagen —consentimiento y CSP, como el avatar—. **Queda planteado, no
+construido**: la pieza no está en el artboard y el coste choca con el tope diario que todavía no
+está puesto.
+
+**Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.
+
+---
+
+## #493 · 2026-09-10 · `[DECIDIDO owner]` El umbral de reseñas baja de 10 a 1 — y al hacerlo se midió que la API de Google es INCONSISTENTE
+
+**Contexto.** El owner vio la sección renderizada con la reseña real y pidió bajar el umbral a **1**,
+para que la portada publique lo que el parque tiene hoy en vez de nada.
+
+▶ **La aritmética del 10 no ha cambiado** —con una sola reseña, la siguiente decide la media que ve
+todo el mundo— y está escrita en el código para que nadie lo suba otra vez sin reabrir la decisión.
+Lo que cambió es la información: con el umbral en 10, la sección **no enseñaba nada de Google en
+absoluto**, y eso el owner lo vio con la pantalla delante.
+
+---
+
+**❗❗❗ Y AL APLICARLO SALIÓ ALGO QUE NO SABÍAMOS: la API de Places devuelve INSTANTÁNEAS DISTINTAS
+entre llamadas consecutivas.**
+
+El refresco dejó en caché **«3,0 · 2 reseñas»** y una consulta hecha un minuto después devolvió
+**«5,0 · 1 reseña»**. ⚠️ **Estuve a punto de informar de que había llegado una segunda reseña y de
+que la media había caído** — y habría sido afirmar sobre una sola muestra. Medido con **cinco
+consultas seguidas**: **cuatro dieron 5,0 · 1 y una dio 3,0 · 2**.
+
+▶ Las dos cosas son ciertas: **la segunda reseña existe** —es de 1 estrella, sobre el personal, y su
+texto llegó traducido en los tres idiomas, así que no es un artefacto de parseo— **y Google sirve
+vistas distintas de su propio dato**. No es nuestra caché: `phpunit.xml` fija `CACHE_STORE=array`, así
+que la suite no la contamina, y el payload guardado traía las dos reseñas completas.
+
+⚠️⚠️ **Consecuencia directa del umbral en 1**: con dos reseñas y una media que salta de 5,0 a 3,0,
+**lo que la portada publica depende de qué instantánea pille el refresco de esa hora**. Con un
+recuento alto el efecto se diluye —una reseña más no mueve una media de 300—; con dos, la mueve
+entera. Es la misma razón que sostenía el 10, entrando por otra puerta.
+
+▶ **Ficha en `DEUDA.md`** con las tres salidas, que son del owner: subir el umbral, publicar las
+opiniones **sin la cifra** hasta tener volumen, o aceptarlo a sabiendas. ⚠️ Y una cuarta **descartada
+de antemano**: quedarse con la instantánea «mejor» sería elegir cuál de las dos verdades se publica,
+que es exactamente el control editorial que §1.4 dice que no tenemos.
+
+⚠️ **Lo que el owner debería saber al margen del código**: hay una reseña de 1 estrella sobre el
+personal en su ficha de Google. La verá en su propio panel de Google Business.
+
+**Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.
+>>>>>>> origin/main

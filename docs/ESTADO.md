@@ -61,6 +61,102 @@
 
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
+
+> ⚠️ **DOS CARRILES VIVOS SOBRE `main`.** Arriba, los CORREOS (banda 500–519); debajo, el
+> carril de DISEÑO de la web pública (banda 470–499). Cada uno tiene su spec y su banda, y
+> **comparten `public/css/site.css`**: al fusionar, re-mide todo presupuesto que toquen los dos
+> y espera bundles rancios (`npm run build` y `build:ssr`) — no viajan en git.
+
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#493`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+>
+> ❗❗❗ **LO PRIMERO AL RETOMAR: EL UMBRAL DE RESEÑAS ESTÁ EN 1** (`[DECIDIDO owner]`, `#493`, bajado
+de 10 con la sección renderizada delante) **Y LA API DE GOOGLE ES INCONSISTENTE.** Medido con cinco
+consultas seguidas al mismo sitio: **cuatro dieron «5,0 · 1 reseña» y una «3,0 · 2 reseñas»**. La
+segunda reseña existe —1 estrella, sobre el personal, con su texto traducido en los tres idiomas—,
+así que no es un fallo de parseo; **es Google sirviendo vistas distintas de su propio dato**.
+> ⚠️⚠️ **Con el umbral en 1, lo que la portada publica depende de qué instantánea pille el refresco de
+esa hora**: 5,0 o 3,0. **Ficha en `DEUDA.md`** con las tres salidas, que son del owner. ⚠️ Y una
+cuarta descartada: quedarse con la instantánea «mejor» es el control editorial que §1.4 dice que no
+tenemos.
+> ⚠️ **Y casi lo informo al revés**: el primer dato que vi fue el 3,0 y estuve a punto de decir que la
+media había caído. *Una sola muestra de un tercero no es una medición.*
+>
+> ▶ **LA T2i·b CIERRA LA PORTADA** (`#491`): la chapa del 4,8 con las estrellas recortadas **caja a
+caja**, las reseñas con su atribución, la caché corta y `social-proof:refresh` cada hora. Suite
+**4.602** · **19/19 mutaciones** · integración verificada contra la API real.
+>
+> ❗❗❗ **LA PORTADA NO LLAMA A GOOGLE, Y ESO ES UNA CLASE ENTERA.** `GoogleSocialProof` **lee de la
+caché y nunca llama**; quien llama es el comando programado. Lo vigila un caso que **prohíbe el
+mecanismo** —el cliente HTTP falseado para explotar si alguien lo llama— **con su guarda-de-la-guarda**.
+La mutación que lo prueba es la natural: el `Cache::remember` que uno escribiría sin pensar.
+>
+> ❗❗❗ **LA CIFRA NO NECESITA CONSENTIMIENTO Y LAS RESEÑAS SÍ.** Resuelve una ambigüedad que la spec
+tenía escrita **sin argumentar**: la cifra la trae nuestro servidor —el visitante no habla con
+Google—, no lleva autor ni foto y no es dato personal; la reseña obliga a su avatar, que **sí** es una
+petición del visitante (`RGPD-05`). ▶ De ahí sale lo que el owner quería: la chapa puesta siempre que
+se pueda.
+>
+> ⚠️⚠️ **UN DEFECTO QUE SOLO VIO LA CAPTURA**: la entradilla estaba atada a la CHAPA, y la chapa y las
+opiniones **no vienen de la misma fuente** — el caso más frecuente es el cruce. La sección decía «no
+las elegimos nosotros» **sobre una opinión propia**. *Texto correcto, sitio correcto, afirmación
+falsa: ninguna aserción de marcado lo veía.* Ya sigue a la fuente de las opiniones, con caso y
+mutación.
+>
+> ▶ **LO SIGUIENTE: LA FASE 3, LAS PÁGINAS.** Empieza por **el armazón de páginas**
+(`Layout Paginas PJP`, aprobado), no por una página: lo comparten las siete y construir una encima
+del armazón viejo obliga a rehacerla — el mismo razonamiento que hizo de `#477` la primera tanda de
+la Fase 2. Medido: hoy las interiores abren de **tres maneras distintas** y `.page__head` es **solo
+un `<h1>`**. ⚠️ Y dos avisos: **`/normas` no es solo diseño** (el canvas pide el porqué de cada norma
+y agruparlas por momento: **dos columnas nuevas**) y **`/servicios` está en mantenimiento** en local
+(`maintenance.page.servicios = 1`).
+>
+> ⚠️ **PASOS DE DESPLIEGUE de esta tanda** (§5.bis de la spec): `GOOGLE_PLACES_API_KEY` en el `.env`
+de producción, el ajuste `social.google_place_id`, y **en la consola de Google lo que el owner
+aplazó a sabiendas**: rotar la clave, el tope de peticiones/día y **añadir la IP del servidor** —
+sin ella todas las llamadas fallan en producción y la sección cae al respaldo sin avisar.
+> ❗ **El scheduler no corre en staging** (`#115`): allí el comando se dispara a mano.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA T2i·b.**
+>
+> ❗❗❗ **RETOMA ANTERIOR** (2026-09-10, `#469`→`#490`). ▶ **EN UNA LÍNEA: las OCHO secciones de la portada están en el árbol; a la 06 «Reseñas» le falta su mitad de Google, y eso es lo siguiente.**
+>
+> ▶ **LA T2i·a ESTÁ EN EL ÁRBOL: la sección 06 con las opiniones PROPIAS** (`#490`). Cabecera común,
+una opinión a la vez con flechas y puntos, y **sin la chapa del 4,8**. Entran la tabla
+`testimonials`, su recurso del panel, el contrato `Content\Contracts\SocialProof` y `CmsSocialProof`.
+Suite **4.588** · **11/11 mutaciones** · comparador **33 y 6 idénticas, 0 sin explicar**.
+>
+> ❗❗❗ **LA VERIFICACIÓN CONTRA GOOGLE ESTÁ HECHA, Y ES LO QUE MANDA: EL PARQUE TIENE UNA RESEÑA.**
+HTTP 200 con la clave del owner, `rating: 5 · userRatingCount: 1`. Con una, la chapa diría «5,0 · 1
+reseña» —que resta—, el carril tendría un elemento y una segunda de 1 estrella publicaría un **3,0**
+al día siguiente. `[DECIDIDO owner]`: **umbral de 10**. ▶ Y esa misma llamada **cierra dos de los
+tres datos que faltaban**: el `place_id` es el del parque y `reviews` trae la atribución completa,
+con el avatar en `lh3.googleusercontent.com` — donde §3.3 lo midió.
+>
+> ❗❗❗ **«QUE LA CHAPA SE VEA SIEMPRE» NO SE PUEDE, Y NO ES POR DISEÑO.** El owner preguntó por qué no
+se copia el dato; no es mentir, **es un contrato**: R2 prohíbe almacenar valoraciones más allá de una
+caché corta, y además un número congelado deja de ser verdad. ▶ Lo que quería se consigue por la vía
+buena: **refrescar cada hora** deja la chapa puesta casi siempre y sale gratis (~720 llamadas/mes).
+>
+> ❗❗ **SEXTA VEZ: el artboard tiene la opinión APAGADA en móvil** (`conCarrusel`, recorte del 7 sep),
+y eso dejaba la sección **sin nada que enseñar** sin Google — lo contrario de lo que §3.3 decidió en
+agosto. `[DECIDIDO owner]`: **sin chapa, el carril se enciende en móvil**; el recorte la apagó
+*porque la chapa ya cargaba la sección*.
+>
+> ▶ **LO SIGUIENTE: la T2i·b, Google.** El diseño ya está: la vista lee el contrato, así que **entra
+cambiando el binding** por el decorador de la cascada (§4.0). Lo que falta es de la consola y es del
+owner: el **tope de 50 peticiones/día**, **añadir la IP del servidor** a la restricción de la clave
+—la que hay, `2.59.233.253`, es su conexión— y **rotar la clave**, que se pegó en un chat.
+> ⚠️ Y un **bloqueo heredado**: el refresco va por comando programado y **el scheduler no corre en
+staging** (`#115`).
+>
+> ⚠️ **DATO, para poder verla**: la sección **no se pinta sin opiniones**, y eso es correcto. Hay que
+escribir tres en «Ajustes → Opiniones propias». ⚠️ **El seeder NO las siembra a propósito**: alimenta
+también el arranque en frío de producción, y ahí unas opiniones inventadas se publicarían como si
+fueran reales.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA T2i·a.**
+>
+> ❗❗❗ **RETOMA ANTERIOR** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
 >
 > ❗❗❗ **LO SIGUIENTE ES LA 06 «RESEÑAS», Y SE PARTE EN DOS.** `[DECIDIDO owner, 2026-09-10]`: se
 desbloquea. ▶ **Y la primera mitad NO necesita ni un dato suyo**, que es el hallazgo de leerla:
@@ -2088,8 +2184,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4576 en verde** (28.699 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con `#489`. ⚠️ **+1**: el caso de las dos ramas del aviso de la fecha
+> Suite **4603 en verde** (28.895 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con `#492`, el ojo del owner sobre Reseñas.
+> Antes, con la **T2i·b** (`#491`): **4602** y 28.877. ⚠️ **+14**: los 14 de
+> `SocialProofNeverHitsTheRenderPathTest`. Ninguno sale.
+> Antes, con la **T2i·a** (`#490`): **4588** y 28.802. ⚠️ **+12**: los 12 casos de
+> `ReviewsSectionTest`. Ninguno sale.
+> Antes, con `#489`: **4576** y 28.699. ⚠️ **+1**: el caso de las dos ramas del aviso de la fecha
 > especial en `VisitSectionTest`. Ninguno sale — `ScheduleDisplayTest` **se re-apunta**, no se retira.
 > Antes, con la **T2h** (`#488`): **4575** y 28.690. ⚠️ **+11, y esa vez el
 > neto ES el movimiento**: entran los **11** casos de `DudasSectionTest` y no sale ninguno —

@@ -831,6 +831,214 @@
         </div>
     </section>
 
+    {{-- ══ SECCIÓN 06 · «RESEÑAS» ═════════════════════════════════════════════════════════════
+         `DECISIONES #490` · carril de diseño Fase 2 · T2i·a. Artboards `Resenas PJP` 2a (móvil) y
+         `Escritorio PJP` 5b (escritorio, aprobado el 8 sep).
+
+         ❗❗❗ **LA VISTA NO SABE DE DÓNDE VIENEN LAS OPINIONES, y eso es el diseño.** Lee un solo
+         contrato (`Content\Contracts\SocialProof`) y pinta lo que le den. El día que entre Google no
+         se toca este marcado: se cambia el binding del composition root por el decorador que aplica
+         la cascada. `#136` fijó la línea —la landing consume DATOS, no proveedores— y la spec añade
+         el porqué: un respaldo escrito como condicional en la plantilla acaba con **una rama sin
+         cubrir, y la rama sin cubrir de un respaldo es la que solo corre cuando algo va mal**.
+
+         ❗❗❗ **LA CHAPA DEL 4,8 NO ESTÁ, Y NO ES QUE FALTE.** `$rating` vale `null` porque la media
+         **solo existe si viene de Google**: componerla con opiniones propias sería atribuirle a
+         Google un número que Google no ha dado. Hoy además hay otro motivo medido — el parque tiene
+         **una** reseña en Google, por debajo del umbral de 10 que el owner fijó, así que publicar
+         «5,0 · 1 reseña» restaría en vez de sumar.
+         ▶ Cuando haya `$rating`, la chapa entra AQUÍ sin tocar el resto.
+
+         ❗❗ **Y por eso el carril se pinta en MÓVIL** (`[DECIDIDO owner, 2026-09-10]`). El artboard
+         de móvil lo tiene apagado desde el recorte del 7 sep, pero lo apagó **porque la chapa ya
+         cargaba la sección**: sin chapa, ese motivo desaparece y la sección se quedaría con una
+         cabecera que no presenta nada.
+
+         ⚠️⚠️ **La ENTRADILLA depende de la fuente y no es un texto fijo.** La del artboard dice «No
+         las elegimos nosotros: son las que Google pone primero», que es lo que hace creíble a
+         Google — y sobre opiniones propias **sería falso**: éstas sí las elige el parque.
+
+         ⚠️ **El texto NO se recorta.** El artboard lo corta a cuatro líneas y ofrece «leer entera en
+         Google»; una opinión propia **no tiene entera en ningún sitio**, así que recortarla
+         escondería texto sin dónde ir a buscarlo — lo contrario de «un enlace no promete lo que no
+         esconde». Se enseña completa y el panel las mantiene cortas.
+
+         ⚠️ **El avatar es una INICIAL, no una foto**, como en el artboard. Con opiniones propias no
+         hay foto de nadie que pedir, y así la pieza ya está lista para el día de Google: la foto de
+         un tercero solo entra con consentimiento (`RGPD-05`) y ahí `avatarUrl` deja de ser `null`.
+
+         ❗❗❗ **CON CERO OPINIONES LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja—,
+         que es la regla dura del sistema, y el propio artboard dibuja ese estado: «la sección no se
+         pinta y la portada pasa de Antes de venir a Visítanos». --}}
+    @if ($socialProof->isNotEmpty())
+        <section id="reviews" class="section wrap">
+            <div class="rev-sec{{ $socialRating ? ' rev-sec--scored' : '' }}">
+                <div class="sec-head">
+                    <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
+                    <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
+                    {{-- ⚠️⚠️ **La entradilla sigue a la fuente de las OPINIONES, no a la de la
+                         chapa — y las dos pueden no coincidir.** La cifra se sirve sin
+                         consentimiento y las reseñas no, así que el caso más frecuente es
+                         justamente ése: chapa de Google encima de opiniones propias. Atada a la
+                         chapa, la sección decía «no las elegimos nosotros» **sobre una opinión que
+                         sí elegimos**. Lo vio la captura, no la suite. --}}
+                    <p class="sec-head__lede">{{ $socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE
+                        ? __('landing.reviews.lede_google')
+                        : __('landing.reviews.lede_own') }}</p>
+                </div>
+
+                @if ($socialRating)
+                    {{-- ══ LA CHAPA DE LA CIFRA ═══════════════════════════════════════════════
+                         ❗❗ **Solo existe si viene de Google.** Componerla con opiniones propias
+                         daría un número real —la media de lo que el parque escribió de sí mismo— y
+                         publicarlo aquí lo haría pasar por la nota de Google.
+                         ⚠️⚠️ **`data-surface="ink"` y no solo un fondo oscuro**: declarar la
+                         superficie cambia los tokens **y PINTA** (la lección de `#484`). Sin el
+                         atributo, la cifra y el gris saldrían con los valores de papel sobre tinta.
+                         ⚠️ **No pide consentimiento**: la trae nuestro servidor, no lleva autor ni
+                         foto y no es dato personal. La reseña sí, por su avatar. --}}
+                    <div class="rev-score" data-surface="ink">
+                        <p class="rev-score__num">
+                            <span class="rev-score__val">{{ number_format($socialRating->value, 1, ',', '.') }}</span>
+                            <span class="rev-score__of">{{ __('landing.reviews.out_of') }}</span>
+                        </p>
+                        {{-- ⚠️⚠️ **El recorte va por CAJA, nunca a lo largo de la fila**: el
+                             interletraje se come la décima y las cinco se leerían llenas. Cada
+                             estrella es su propia caja de 24 y su relleno es un porcentaje de ella. --}}
+                        <p class="rev-score__stars" role="img"
+                           aria-label="{{ __('landing.reviews.score_aria', ['value' => number_format($socialRating->value, 1, ',', '.')]) }}">
+                            @for ($e = 1; $e <= 5; $e++)
+                                @php($lleno = max(0, min(1, $socialRating->value - $e + 1)))
+                                <span class="rev-score__star" aria-hidden="true">
+                                    <span class="rev-score__star-off">&#9733;</span>
+                                    <span class="rev-score__star-on" style="width: {{ round($lleno * 100, 2) }}%"><span>&#9733;</span></span>
+                                </span>
+                            @endfor
+                        </p>
+                        {{-- El recuento va en TEXTO y no en mono: es el segundo argumento de la
+                             sección, y la letra mono es etiqueta, no argumento. --}}
+                        <p class="rev-score__count">{{ trans_choice('landing.reviews.count', $socialRating->count, ['n' => number_format($socialRating->count, 0, ',', '.')]) }}</p>
+                    </div>
+                @endif
+
+                {{-- ⚠️ `x-data` con el número de opiniones dentro: el carril tiene que saber dónde
+                     acaba para deshabilitar la flecha, y ese número lo sabe el servidor. --}}
+                <div class="rev" x-data="{ i: 0, n: {{ $socialProof->count() }} }"
+                     @keydown.left.prevent="i = Math.max(0, i - 1)"
+                     @keydown.right.prevent="i = Math.min(n - 1, i + 1)">
+                    @foreach ($socialProof as $k => $op)
+                        {{-- ⚠️⚠️ **La primera nace con `is-on` puesto POR EL SERVIDOR, y ése es el
+                             suelo sin JavaScript.** Con `x-show` + `x-cloak` —lo primero que se me
+                             ocurrió— la sección se queda **vacía** sin JS y parpadea en blanco
+                             mientras Alpine arranca. Con la clase servida, sin JS se lee la primera
+                             opinión y los controles simplemente no hacen nada. Es el mismo patrón
+                             que el acordeón de Dudas. --}}
+                        <article class="rev__card{{ $k === 0 ? ' is-on' : '' }}"
+                                 :class="i === {{ $k }} && 'is-on'">
+                            <div class="rev__who">
+                                {{-- ⚠️⚠️ **La foto es OBLIGATORIA cuando la reseña es de Google** (R3:
+                                     «you must always credit the author»), y por eso llega solo con
+                                     consentimiento — cargarla es una petición del visitante a
+                                     `lh3.googleusercontent.com`. Sin `avatarUrl` va la inicial, que
+                                     es lo que el artboard dibuja y lo que sirve para las propias.
+                                     ⚠️ `referrerpolicy` para no filtrarle a Google la URL de la
+                                     página desde la que se pide la foto. --}}
+                                @if ($op->avatarUrl)
+                                    <img class="rev__ini rev__ini--photo" src="{{ $op->avatarUrl }}" alt=""
+                                         width="56" height="56" loading="lazy" decoding="async"
+                                         referrerpolicy="no-referrer" aria-hidden="true">
+                                @else
+                                    <span class="rev__ini" aria-hidden="true">{{ $op->initial() }}</span>
+                                @endif
+                                <div class="rev__id">
+                                    <p class="rev__author">{{ $op->author }}</p>
+                                    @if ($op->when)
+                                        <p class="rev__when">{{ $op->when }}</p>
+                                    @endif
+                                </div>
+                                @if ($op->rating)
+                                    {{-- ⚠️ La nota va como IMAGEN con nombre accesible: cinco glifos
+                                         sueltos los lee un lector de pantalla como «estrella
+                                         estrella estrella…», que no dice la nota. --}}
+                                    <p class="rev__stars" role="img"
+                                       aria-label="{{ trans_choice('landing.reviews.stars', $op->rating, ['n' => $op->rating]) }}">
+                                        <span class="rev__stars-on" aria-hidden="true">{{ str_repeat('★', $op->rating) }}</span><span
+                                              class="rev__stars-off" aria-hidden="true">{{ str_repeat('★', 5 - $op->rating) }}</span>
+                                    </p>
+                                @endif
+                            </div>
+                            {{-- ❗❗ **EL TEXTO SE LEE ENTERO AQUÍ** (`[DECIDIDO owner, 2026-09-10]`).
+                                 Antes se recortaba a cuatro líneas y la única salida era irse a
+                                 Google; ahora el recorte lo abre un «Ver más» **en la propia
+                                 página**, que es donde el visitante está.
+                                 ⚠️ Y eso **no incumple R4**: la prohibición es alterar el contenido
+                                 del usuario, y el texto servido está completo desde el principio —
+                                 el `line-clamp` solo lo tapa. Lo que se retira es la promesa de que
+                                 hay que irse a otro sitio para leerlo.
+                                 ⚠️⚠️ **El botón se decide MIDIENDO, no contando caracteres.** Con un
+                                 umbral de longitud, una opinión de 140 caracteres con palabras
+                                 largas se corta y no ofrece abrirla, y otra de 160 con palabras
+                                 cortas ofrece abrir lo que ya se ve entero. `cortado` compara el
+                                 alto real contra el visible. --}}
+                            <div x-data="{ abierto: false, cortado: false }"
+                                 x-init="$nextTick(() => { cortado = $refs.txt.scrollHeight > $refs.txt.clientHeight + 1 })">
+                                {{-- ⚠️ UN solo atributo `class`: el servidor lo pinta recortado —ése
+                                     es el suelo sin JavaScript— y Alpine solo AÑADE `--open`. Dos
+                                     atributos `class` en el mismo elemento son HTML inválido y el
+                                     navegador se queda con el primero. --}}
+                                <p class="rev__text rev__text--clamp" x-ref="txt"
+                                   :class="abierto && 'rev__text--open'">{{ $op->text }}</p>
+                                <div class="rev__acts">
+                                    {{-- ⚠️ `x-cloak` porque sin JavaScript no hay nada que abrir: el
+                                         texto se queda recortado y ofrecer un botón muerto sería
+                                         peor. El suelo sin JS es la salida a Google, que sí existe
+                                         en el marcado servido. --}}
+                                    <button type="button" class="rev__toggle" x-cloak x-show="cortado || abierto"
+                                            @click="abierto = !abierto"
+                                            x-text="abierto ? @js(__('landing.reviews.read_less')) : @js(__('landing.reviews.read_more'))"></button>
+                                    @if ($op->url)
+                                        {{-- ⚠️ **La salida a Google NO es opcional cuando la reseña es
+                                             suya**: R3 exige acreditar al autor y su enlace es parte
+                                             de esa acreditación. No desaparece al abrir el texto. --}}
+                                        <a class="rev__more" href="{{ $op->url }}"
+                                           target="_blank" rel="noopener noreferrer nofollow">
+                                            <span>{{ __('landing.reviews.see_on_google') }}</span>
+                                            <span class="arrow" aria-hidden="true">&rarr;</span>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+
+                    {{-- Los controles solo existen si hay más de una: una flecha que no lleva a
+                         ninguna parte y un punto solo son 48 px para no decir nada — la misma regla
+                         que el pliegue de las fechas especiales (`#487`). --}}
+                    @if ($socialProof->count() > 1)
+                        <div class="rev__nav">
+                            <button type="button" class="rev__arrow" aria-label="{{ __('landing.reviews.prev') }}"
+                                    x-bind:disabled="i === 0" @click="i = Math.max(0, i - 1)">
+                                <span aria-hidden="true">&larr;</span>
+                            </button>
+                            <div class="rev__dots">
+                                @foreach ($socialProof as $k => $op)
+                                    <button type="button" class="rev__dot"
+                                            aria-label="{{ __('landing.reviews.go', ['n' => $k + 1]) }}"
+                                            x-bind:aria-current="i === {{ $k }} ? 'true' : 'false'"
+                                            @click="i = {{ $k }}"><span aria-hidden="true"></span></button>
+                                @endforeach
+                            </div>
+                            <button type="button" class="rev__arrow" aria-label="{{ __('landing.reviews.next') }}"
+                                    x-bind:disabled="i === n - 1" @click="i = Math.min(n - 1, i + 1)">
+                                <span aria-hidden="true">&rarr;</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}
     {{-- ▶ **TRES TARJETAS** (`[DECIDIDO owner, 2026-09-01]`: «quiero un diseño de cards, todo en
          cards en la medida de lo posible; lo siento más organizado y limpio»),

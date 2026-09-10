@@ -3084,6 +3084,156 @@ img { display: block; max-width: 100%; }
    su propio bloque y sigue viva. */
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 06 · «RESEÑAS» · UNA OPINIÓN A LA VEZ
+   `DECISIONES #490` · Fase 2 · T2i·a. Artboards `Resenas PJP` 2a y `Escritorio PJP` 5b.
+
+   ▶ **Aquí NO está la chapa del 4,8**, y no es que falte: esa cifra solo existe si viene de
+   Google, y la mitad de Google es la T2i·b. Cuando entre, la chapa se declara en este mismo bloque
+   —tinta, radio 16, la nota en Bungee 52 y las estrellas recortadas **caja a caja**— y en
+   escritorio ocupa las cuatro columnas que hoy lleva la cabecera.
+
+   ⚠️⚠️ **Las estrellas de una opinión van en `--attn-ink`, no en `--attn`.** Es exactamente el
+   token que `#487` tuvo que crear: el amarillo del paquete da **1,5** sobre blanco y aquí las
+   estrellas van sobre la tarjeta blanca. Su defecto cae del lado seguro —sin él se lee `--fg`,
+   que pierde el color y nunca la lectura—.
+
+   ⚠️ **El texto NO se recorta**, contra el artboard. Él corta a cuatro líneas y ofrece «leer entera
+   en Google»; una opinión propia no tiene entera en ninguna parte, así que un `line-clamp` aquí
+   escondería texto **sin dónde ir a buscarlo**. El `min-height` se queda: es lo que evita que la
+   tarjeta salte de alto al pasar de una opinión corta a una larga. */
+.rev { display: grid; }
+
+/* ⚠️ Las tarjetas se apilan en la MISMA celda de la rejilla y se enseña una. Así el alto del carril
+   es el de la más alta y no cambia al pasar, que es lo que hace que los controles no se muevan bajo
+   el dedo. Con `display:none` a secas cada carta mediría su propio alto y el pie bailaría. */
+.rev__card {
+  grid-area: 1 / 1;
+  min-width: 0;
+  visibility: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-18);
+}
+/* La primera nace con `is-on` puesto por el SERVIDOR: ése es el suelo sin JavaScript. */
+.rev__card.is-on { visibility: visible; }
+
+.rev__who { display: flex; align-items: center; gap: var(--sp-12); }
+.rev__ini {
+  flex: none; width: 56px; height: 56px; border-radius: var(--r-pill);
+  background: var(--bg-soft); border: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 400; font-size: var(--fs-22); color: var(--fg);
+}
+.rev__id { flex: 1; min-width: 0; }
+.rev__author { margin: 0; font-size: var(--fs-16); font-weight: 700; line-height: 1.2; color: var(--fg); }
+/* La fecha SÍ es mono: aquí es una etiqueta de dato, no un argumento (la regla de `doc/reglas.md`
+   que sacó el recuento de opiniones del mono en el artboard). */
+.rev__when { margin: var(--sp-4) 0 0; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--fg-mute); }
+.rev__stars { flex: none; margin: 0; font-size: var(--fs-15); line-height: 1; letter-spacing: 0.06em; }
+.rev__stars-on { color: var(--attn-ink); }
+.rev__stars-off { color: var(--line-strong); }
+.rev__text { margin: var(--sp-14) 0 0; font-size: var(--fs-16); line-height: 1.45; color: var(--fg); min-height: 93px; }
+
+/* Los controles. Van en su propia fila de la rejilla, DEBAJO de la pila de tarjetas. */
+.rev__nav { grid-area: 2 / 1; margin: var(--sp-4) 0 0; display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
+.rev__arrow {
+  flex: none; width: 48px; height: 48px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 1.5px solid var(--interactive); border-radius: var(--r-pill);
+  /* ⚠️ 19 es literal a propósito: la escala tipográfica no tiene ese escalón y meterlo con un
+     `calc()` a mano es justo lo que `#437` prohíbe. Es la talla del glifo del artboard. */
+  color: var(--interactive); font-size: 19px; line-height: 1;
+  transition: border-color var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale);
+}
+/* ⚠️ El deshabilitado se dice con COLOR, no con opacidad: la opacidad mueve el borde y el glifo a
+   la vez y deja el control por debajo del contraste mínimo (la lección del velo de `#436`). */
+.rev__arrow:disabled { border-color: var(--line); color: var(--fg-mute); cursor: default; }
+.rev__dots { display: flex; }
+/* 44 × 48: el alto es el del sistema y el ancho es el del artboard. El punto que se ve mide 10. */
+.rev__dot {
+  width: 44px; height: 48px; padding: 0; border: 0; background: none;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.rev__dot > span {
+  width: 10px; height: 10px; border-radius: var(--r-pill); background: var(--line-strong);
+  transition: background-color var(--dur-toque) var(--ease-sale);
+}
+.rev__dot[aria-current="true"] > span { background: var(--interactive); }
+
+/* ── LA CHAPA DE LA CIFRA (solo con Google) ───────────────────────────────────────────────
+   ⚠️ Su superficie la declara el marcado con `data-surface="ink"`, que además de cambiar los
+   tokens **pinta el fondo** (`#484`). Aquí no se escribe ningún color de fondo. */
+/* ⚠️ `min-width: 0` para que la chapa no pueda ensanchar su pista, y la cifra en una sola línea:
+   con la caja estrecha, «4,8» y «sobre 5» se partían en dos. */
+.rev-score { min-width: 0; border-radius: var(--r-lg); padding: var(--sp-18) var(--sp-20); margin-bottom: var(--sp-16); }
+.rev-score__num { margin: 0; display: flex; align-items: baseline; gap: 9px; flex-wrap: nowrap; }
+/* La cifra es el rol de CIFRA (`--money`, `#480`), que sobre tinta vale el lima del paquete. */
+.rev-score__val { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 0.9; color: var(--money); }
+.rev-score__of { font-size: var(--fs-16); font-weight: 700; color: var(--fg-mute); }
+.rev-score__stars { margin: var(--sp-8) 0 0; display: flex; gap: var(--sp-2); }
+/* ⚠️⚠️ **El recorte va por CAJA y no a lo largo de la fila**: el interletraje se come la décima y
+   las cinco se leerían llenas. Cada estrella es su caja de 24 y su relleno un % de ella. */
+.rev-score__star { position: relative; display: block; width: 24px; height: 24px; flex: none; }
+.rev-score__star-off,
+.rev-score__star-on { position: absolute; left: 0; top: 0; height: 24px; overflow: hidden; font-size: 24px; line-height: 24px; text-align: center; }
+.rev-score__star-off { width: 24px; color: var(--fg-mute); }
+.rev-score__star-on { color: var(--attn); }
+.rev-score__star-on > span { display: block; width: 24px; }
+.rev-score__count { margin: var(--sp-10) 0 0; font-size: var(--fs-15); font-weight: 700; line-height: 1.3; color: var(--fg-mute); }
+
+/* La foto del autor sustituye a la inicial. Misma caja, para que la fila no se mueva. */
+.rev__ini--photo { object-fit: cover; }
+
+/* ❗❗ **El texto nace RECORTADO y lo abre «Ver más» aquí mismo** (`[DECIDIDO owner]`). El recorte es
+   visual —el texto servido está completo—, así que no altera el contenido del usuario (R4): lo que
+   se retira es la obligación de irse a Google para leerlo. */
+.rev__text--clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+/* ⚠️ Al abrir hay que deshacer las TRES declaraciones del recorte, no solo el número de líneas: con
+   `display: -webkit-box` puesto, subir el `line-clamp` deja el párrafo en una caja que sigue
+   comportándose distinto. */
+.rev__text--open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación. */
+.rev__acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-16); }
+.rev__toggle,
+.rev__more {
+  display: inline-flex; align-items: center; gap: var(--sp-7); min-height: 48px;
+  font-size: var(--fs-14); font-weight: 800; color: var(--interactive);
+}
+.rev__toggle { background: none; border: 0; padding: 0; cursor: pointer; }
+.rev__more .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
+.rev__more:hover .arrow { transform: translateX(5px); }
+
+/* ── ESCRITORIO ───────────────────────────────────────────────────────────────────────────
+   `Escritorio PJP` 5b: cuatro columnas y ocho. Con la chapa presente, las cuatro son suyas y la
+   cabecera va arriba; **sin chapa las ocupa la cabecera**, que es el mismo reparto que la sección
+   08 (`#488`) y evita que el carril se estire a 1120 px de medida de línea.
+   ⚠️ Va DESPUÉS de su base: a igual especificidad gana la última regla del fichero (`#314`). */
+@media (min-width: 1024px) {
+  /* ⚠️⚠️ **`minmax(0, 1fr)` y NO `1fr`, y la diferencia se midió.** `1fr` es `minmax(auto, 1fr)`:
+     su mínimo es el CONTENIDO, así que una opinión larga **empuja las pistas** y el reparto deja de
+     ser el que se declaró. Medido con la reseña real: la cabecera salía a **309** y el carril a
+     **779**, donde el artboard escribe 352 y 736. Con `minmax(0, …)` el contenido no puede empujar.
+     ▶ Es un defecto que no se ve con contenido corto: la sección 08, con las mismas doce pistas,
+     medía 352 y 736 exactos porque sus preguntas caben. */
+  .rev-sec { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px; align-items: start; }
+  .rev-sec > .sec-head { grid-column: span 4; margin-bottom: 0; }
+  .rev-sec > .rev { grid-column: span 8; min-width: 0; }
+
+  /* ⚠️⚠️ **CON CHAPA el reparto cambia, y sin decírselo a la rejilla la chapa se AUTO-COLOCA.**
+     Medido: caía en las columnas 5-6 —183 px de ancho, con la cifra y «sobre 5» partiéndose— y
+     empujaba el carril a la fila siguiente. `Escritorio PJP` 5b es explícito: **la chapa en cuatro
+     columnas y la opinión al lado, en ocho**, con la cabecera encima a todo lo ancho. */
+  .rev-sec--scored > .sec-head { grid-column: 1 / -1; margin-bottom: var(--sp-8); }
+  .rev-sec--scored > .rev-score { grid-column: span 4; margin-bottom: 0; }
+  .rev-sec--scored > .rev { grid-column: span 8; }
+
+  /* El tope de medida del artboard: 65ch. Sin él, a 736 px de ancho una opinión larga pasa del
+     máximo de línea del sistema. */
+  .rev__text { max-width: 65ch; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
    SECCIÓN 08 · «DUDAS» · EL ACORDEÓN
    `DECISIONES #488` · Fase 2 · T2h. Artboards `Dudas PJP` 1a y `Escritorio PJP` 5c.
 
