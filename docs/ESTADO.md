@@ -2,6 +2,17 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#495`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones EN EL ORDEN DEL MOCKUP— y lo siguiente es la FASE 3, las páginas.**
 >
+> ❗❗❗ **ESTÁ ABIERTA LA VALORACIÓN DE DÓNDE VAN LOS ELEMENTOS DE DISEÑO** (`#497`,
+`docs/specs/pasada-de-vestido.md`): **el canvas ya la tenía prevista y la llama «la pasada de
+vestido»** —citado en siete artboards—: *«iconos, imagen y movimiento sobre las ocho secciones a la
+vez, NO una a una, y con presupuesto»*.
+> ▶ **Eso reencuadra `#496`**: la decoración que las secciones fueron perdiendo **no se retiró, se
+APLAZÓ** a esta pasada. ✅ **D1: se hace ahora y solo sobre la PORTADA** · ✅ **D2: techo de bytes
+antes de repartir, con `<use>` obligatorio**. ❗ **Quedan CINCO decisiones del owner** (§4 de la spec).
+> ⚠️⚠️ **Y si citas un número de bucles, mídelo CORRIENDO**: se dijo «28 contra un techo de 2» y
+**corriendo hay 2** (24 están pausados por el mecanismo de `#435`). La cifra falsa casi decide una
+tanda entera; lo delató que contradecía a `#279`.
+>
 > ❗❗❗ **LA PORTADA YA NO LLEVA NINGUNA PIEZA DECORATIVA EN SUS OCHO SECCIONES** (`#496`), y no es
 una preferencia: **medido artboard a artboard, `Portada PJP` y `Zonas PJP` llevan CERO** manchas,
 siluetas, tramas y frisos. El material existe y está aprobado —32 piezas, `#281`— pero vive en

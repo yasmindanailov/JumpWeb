@@ -27514,3 +27514,72 @@ mancha era absoluta; portada y desborde, idénticos.
 las cinco cosas que decide él. ⚠️ Y su §5 avisa de lo que está en juego: las manchas y las poses son
 **arte de ESTE cliente**, así que solo pueden entrar por el hueco de `hueco-ilustracion.md` —que
 existe desde `#286`— o clavarían el mural de un parque dentro de JumpWeb.
+
+---
+
+## #497 · 2026-09-10 · Se abre la valoración del vestido — y el canvas ya la tenía prevista con nombre
+
+**Contexto.** El owner: *«vamos a abrir esa valoración; ¿qué decisiones quedan para saber dónde
+ubicar los elementos de diseño? La idea es en todas las páginas.»*
+
+---
+
+**❗❗❗ EL HALLAZGO: EL CANVAS YA DECIDIÓ EL CÓMO, Y LO LLAMA «LA PASADA DE VESTIDO».** Lo repite en
+**siete artboards** con las mismas palabras: *«iconos, imagen y movimiento sobre las ocho secciones a
+la vez, **no una a una**»*, y `Visitanos PJP` lo dice sin margen: *«la sección se queda sin ninguna
+pieza gráfica del kit: eso se decide entero en la pasada de vestido, sobre todas las secciones a la
+vez **y con presupuesto**, no metiendo una mancha aquí por rellenar»*.
+
+▶ **Eso reencuadra algo que parecía una pérdida y era un APLAZAMIENTO.** Cada sección rehecha fue
+perdiendo su decoración —`#479`, `#485`, `#496`— y se leyó como limpieza. No lo era: su colocación
+estaba aplazada a esta pasada, y el canvas lo tenía escrito desde antes.
+
+▶ Y **la pasada son CUATRO ejes**, no solo las manchas: iconos · imagen · movimiento · piezas de
+fachada. Quien la retome no puede reducirla al kit. Después va **el censo pieza × pantalla**, que el
+propio canvas coloca detrás.
+
+▶ Spec nueva: **`docs/specs/pasada-de-vestido.md`**.
+
+---
+
+**⚠️⚠️ UNA CIFRA MÍA ERA FALSA Y CASI DECIDE UNA TANDA ENTERA.** Se le presentó al owner que la
+portada tenía **28 bucles contra un techo de 2** y eligió, razonablemente, «pagar la deuda primero».
+**No había deuda**: medido bien, **corriendo hay 2** —y `/precios` 1, y `/atracciones` 1—, o sea que
+las tres cumplen.
+
+▶ **24 de los 28 están PAUSADOS**: los calcetines fuera de pantalla y el spinner con el cajón
+cerrado, que es el mecanismo que `#435` construyó justo para esto. *Contar elementos con
+`animation-iteration-count: infinite` declarado no es contar bucles corriendo.*
+⚠️ Lo delató que la cifra contradecía a `#279`, que había dejado la portada en 2 y «ya cumple» — **si
+tu instrumento acusa a algo que ya estaba verificado, la primera hipótesis es el instrumento**. La
+pregunta se rehízo con el dato corregido.
+
+---
+
+**Lo que sí está cargado es el MARCADO**, medido:
+
+    HTML de GET /            275 KB
+      · el logotipo en línea  112,9 KB   (41 %)   ← confirma la medición de #275
+      · las 8 secciones        92,8 KB   (34 %)
+
+❗ **El logotipo pesa MÁS que las ocho secciones juntas.** Ése es el marco del techo del kit.
+
+---
+
+**✅ DOS DECISIONES DEL OWNER**:
+
+- **D1 · La pasada se hace AHORA y solo sobre la PORTADA.** ⚠️ Es una **desviación deliberada** del
+  «todas a la vez» del canvas y queda escrita como tal: de las siete páginas solo `/atracciones` está
+  rehecha, y las otras seis cambian en la Fase 3. **Coste asumido**: el reparto se decide sin ver seis
+  de las siete páginas, y puede haber una segunda pasada.
+- **D2 · Techo de BYTES fijado antes de repartir, y `<use>` obligatorio.** Ninguna pieza se coloca
+  hasta que haya techo medido. Repetir el `<path>` cuesta **18,6×** más que `<defs>` + `<use>`, y
+  `#266` dejó pagadas las dos trampas: una animación sobre `<defs>` no pinta, y los `px` de un
+  `transform` dentro de un SVG son unidades del `viewBox`.
+
+**❗ QUEDAN CINCO** (§4 de la spec): la regla de **densidad** —hoy rige la de `#292`, que es del carril
+viejo—; qué **familias** entran de las 32 piezas —y la línea que las parte **no es estética, es
+white-label**: manchas y poses son arte de PlayJump y solo entran por el hueco de `#286`—; las dos
+**contradicciones** del artboard que siguen abiertas; **`C3`**, la cinta del eslogan, que choca con
+`#252`; y **refrescar el canvas**, cuya copia local **no trae `Layout Paginas PJP`** —eso no bloquea
+la portada pero **sí la Fase 3**.
