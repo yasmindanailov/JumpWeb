@@ -1,7 +1,7 @@
 @php
     $isDuplicate = ($incident['kind'] ?? '') === 'duplicate';
 @endphp
-<h2 style="color:#b00020">⚠️ Incidencia de cobro Redsys</h2>
+<h2 style="color:#C83912">⚠️ Incidencia de cobro Redsys</h2>
 
 @if ($isDuplicate)
     <p>El banco <strong>capturó un cobro</strong> que NO casa con una reserva cumplible (el pedido
@@ -23,7 +23,7 @@
 </table>
 
 <hr>
-<p style="color:#888; font-size:12px">
+<p style="color:#626A72; font-size:12px">
     Aviso automático del sistema · queda registrado en el panel (Sistema → Incidencias) ·
     {{ now()->format('d/m/Y H:i') }}
 </p>

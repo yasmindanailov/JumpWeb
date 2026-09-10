@@ -6,6 +6,8 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -68,9 +70,9 @@ class OrderItemModified extends Notification implements ShouldQueue
         $productName = $this->item->ticketType?->tr('name')
             ?? __('emails.order_item_modified.product_fallback', ['id' => $this->item->id]);
 
-        $message = (new MailMessage)
+        $message = (new BrandedMailMessage)
             ->subject(__('emails.order_item_modified.subject', ['code' => $this->order->code, 'product' => $productName]))
-            ->greeting(__('emails.order_item_modified.greeting'))
+            ->hero('emails.order_item_modified', 'info', EmailSlip::forItem($this->item))
             ->line(__('emails.order_item_modified.intro', [
                 'code' => $this->order->code,
                 'product' => $productName,

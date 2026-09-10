@@ -48,15 +48,26 @@ class PostFormDemandSurfacesTest extends TestCase
 
     // ── El CORREO del post-form ────────────────────────────────────────────────────────────────
 
+    /**
+     * ⚠️ Se asevera sobre el HTML RENDERIZADO y no sobre `introLines` (`#503`): el texto de los
+     * extras pasó a su propio AVISO —es dinero, y se separa del cuerpo—, así que vivía en
+     * `viewData` y estos tres casos se pusieron rojos con el producto sano. *Un caso que asevera el
+     * CONTENEDOR se rompe cuando el texto cambia de sitio; uno que asevera lo que el cliente LEE,
+     * no.*
+     */
+    private function cuerpoDelCorreo(OrderItem $item): string
+    {
+        return (new GuestFormRequest($item))->toMail($item->order->user)->render();
+    }
+
     public function test_the_post_form_email_names_the_extras_when_there_are_any(): void
     {
         $item = $this->party();
         $this->attachPostFormAddon($item->ticketType);
 
-        $lines = (new GuestFormRequest($item->fresh(['ticketType.addons', 'order', 'slot'])))
-            ->toMail($item->order->user)->introLines;
+        $html = $this->cuerpoDelCorreo($item->fresh(['ticketType.addons', 'order', 'slot']));
 
-        $this->assertContains(__('emails.guest_form.extras'), $lines);
+        $this->assertStringContainsString(__('emails.guest_form.extras'), $html);
     }
 
     /** Y la instalación que no configura ninguno —el caso por defecto— no promete nada. */
@@ -64,9 +75,9 @@ class PostFormDemandSurfacesTest extends TestCase
     {
         $item = $this->party();
 
-        $lines = (new GuestFormRequest($item))->toMail($item->order->user)->introLines;
+        $html = $this->cuerpoDelCorreo($item);
 
-        $this->assertNotContains(__('emails.guest_form.extras'), $lines);
+        $this->assertStringNotContainsString(__('emails.guest_form.extras'), $html);
     }
 
     /**
@@ -79,10 +90,9 @@ class PostFormDemandSurfacesTest extends TestCase
         $item = $this->party(daysAhead: 1);
         $this->attachPostFormAddon($item->ticketType, cutoff: 48);
 
-        $lines = (new GuestFormRequest($item->fresh(['ticketType.addons', 'order', 'slot'])))
-            ->toMail($item->order->user)->introLines;
+        $html = $this->cuerpoDelCorreo($item->fresh(['ticketType.addons', 'order', 'slot']));
 
-        $this->assertNotContains(__('emails.guest_form.extras'), $lines);
+        $this->assertStringNotContainsString(__('emails.guest_form.extras'), $html);
     }
 
     // ── El dato que deja al cajón NOMBRARLOS ───────────────────────────────────────────────────

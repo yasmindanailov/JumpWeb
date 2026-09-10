@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Domain\Identity\Models\WaiverSignature;
 use App\Domain\Identity\Services\WaiverProof;
+use App\Notifications\Support\BrandedMailMessage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -56,7 +57,7 @@ class GuardianAuthorizationSigned extends Notification implements ShouldQueue
             $minor = $proof->subjectName() ?? '—';
             $code = $proof->orderCode();
 
-            $mail = (new MailMessage)
+            $mail = (new BrandedMailMessage)
                 // ⚠️⚠️ **El asunto NO nombra al menor** (`#406`): `guardian_email` lo teclea un adulto
                 // sin cuenta y nadie comprueba que ese buzón sea suyo, así que una errata manda esto a
                 // un desconocido. El asunto se replica donde el adjunto no llega —previsualización de
@@ -64,7 +65,7 @@ class GuardianAuthorizationSigned extends Notification implements ShouldQueue
                 // asunto y cabeceras—, así que ahí no va un nombre de menor. En el CUERPO sí, que es
                 // donde el destinatario legítimo necesita saber por quién firmó.
                 ->subject(__('emails.guardian_authorization.subject'))
-                ->greeting(__('emails.guardian_authorization.greeting'))
+                ->hero('emails.guardian_authorization', 'ok')
                 ->line(__('emails.guardian_authorization.intro', ['name' => $minor]));
 
             if ($code !== null) {

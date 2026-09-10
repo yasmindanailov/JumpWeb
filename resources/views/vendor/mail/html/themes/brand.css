@@ -1,14 +1,26 @@
 /* ====================================================================
-   Tema de email del producto (brand) — coherente con el sistema visual de la web.
-   Sigue los tokens del mockup (landing.css :root): bg crema, fg casi negro,
-   acento naranja (zona Jump). Tipografía: Space Grotesk (web) con fallback
-   a system-ui — los webfonts no son fiables en muchos clientes de email
-   (Outlook desktop, Apple Mail offline), así que el stack defensivo es
-   prioritario y la marca se sostiene con color + estructura.
+   Tema de email del producto (`brand`) — el ÚNICO archivo de estilos de los 23 correos.
+   Junto a `header`, `layout` y `footer` viste los veintitrés de golpe: aquí no hay
+   una hoja por correo, hay un molde.
 
-   Personalización futura (data-driven, panel admin): la paleta primaria
-   (--zone-1) y los datos del footer del email deben venir de `settings`.
-   Documentado en `docs/07-PANEL-ADMIN.md` (auditoria 2a ronda, #102).
+   ❗❗ POR QUÉ ESTE ARCHIVO NO PUEDE LEER TOKENS. Los clientes de correo no resuelven
+   `var(--…)` de forma fiable, y Laravel inlinea este CSS sobre cada etiqueta antes de
+   enviar. Medido: 0 usos de `var(` aquí, y no es un descuido — es estructural. Por eso
+   **el paquete de una instalación (`public/css/client.css`) NO llega al correo**: lo que
+   un cliente redefina o colapse ahí, el correo lo ignora.
+   ▶ Lo que SÍ es data-driven ya, y por otra puerta —Blade, que sí ejecuta PHP—:
+     · el LOGOTIPO y el nombre del negocio  → `header.blade.php` (`business.name`, `#325`)
+     · el COLOR del botón principal          → `button.blade.php` (`ThemeSettings::brand()`,
+       inyectado inline, que gana a `.button-primary` de aquí al inlinear).
+   Así que lo que queda escrito en este archivo **no es marca: son SUPERFICIES y FORMA**.
+
+   ⚠️ Los valores de antes del 2026-09-10 (crema `#ECE5D2`, tarjeta `#FBF7EC`, tinta
+   `#14130F`, gris cálido `#6B675D`) eran los del PRIMER cliente. Cambiarlos a neutros
+   fríos no clava a un cliente nuevo: **quita al viejo**. Salen del sistema del canvas
+   (tokens v1.10) y son el default del PRODUCTO, no de nadie.
+
+   ▶ Si algún día un cliente necesita SUS superficies en el correo, eso es un hueco que
+   no existe: `client.css` no llega hasta aquí. Ficha en `DEUDA.md`.
    ==================================================================== */
 
 /* Base */
@@ -16,15 +28,15 @@
 body,
 body *:not(html):not(style):not(br):not(tr):not(code) {
     box-sizing: border-box;
-    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+    font-family: Arial, Helvetica, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
     position: relative;
 }
 
 body {
     -webkit-text-size-adjust: none;
-    background-color: #ECE5D2;       /* mockup --bg-soft: queda como "margen" alrededor de la tarjeta */
-    color: #14130F;                   /* mockup --fg */
+    background-color: #F4F4F1;       /* Papel: el margen alrededor de la tarjeta */
+    color: #101418;                   /* Tinta */
     height: 100%;
     line-height: 1.55;
     margin: 0;
@@ -41,20 +53,31 @@ blockquote {
 }
 
 a {
-    color: #14130F;
+    color: #101418;
 }
 
 a img {
     border: none;
 }
 
-/* Typography — usamos `Bricolage Grotesque` (display de la web) si disponible para los
-   títulos; en clientes sin webfont caen al stack body. font-stretch no se interpreta en
-   muchos email clients pero no estorba donde no se lee. */
+/* Typography — ❗ NINGUNA fuente de la web llega a un correo. Ni la de rótulo, ni la de
+   texto, ni la mono: los clientes de correo no cargan webfonts de forma fiable, así que
+   declararlas era fingir que cargan y dibujar el correo con una tipografía que el
+   destinatario nunca ve. Se declara el SUSTITUTO, que es lo que se recibe de verdad.
+
+   Y con eso quedan escritas las tres sustituciones del sistema:
+     · el RÓTULO   → la misma familia a peso 800. El titular se distingue por tamaño y
+       peso, no por familia.
+     · la ETIQUETA → versalitas con la letra abierta. **Nunca un mono de sistema**: un
+       Courier es de otra marca, y en un correo eso se nota más que la falta de la nuestra.
+     · la CIFRA    → pierde su familia y se distingue por peso 800 y un punto de tamaño.
+       Es una EXCEPCIÓN ESCRITA a «toda cifra va en rótulo», que sin la fuente de rótulo
+       no se puede cumplir.
+   Las dos últimas nacerán con su consumidor (el resguardo), no antes. */
 
 h1 {
-    font-family: 'Bricolage Grotesque', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #14130F;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #101418;
     font-size: 28px;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -65,8 +88,8 @@ h1 {
 }
 
 h2 {
-    font-family: 'Bricolage Grotesque', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #14130F;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #101418;
     font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -84,7 +107,7 @@ h3 {
 }
 
 p {
-    color: #14130F;
+    color: #101418;
     font-size: 15px;
     line-height: 1.6em;
     margin-top: 0;
@@ -94,7 +117,7 @@ p {
 
 p.sub {
     font-size: 12px;
-    color: #6B675D;                  /* mockup --fg-mute */
+    color: #626A72;                  /* Humo */
 }
 
 img {
@@ -107,7 +130,7 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #ECE5D2;       /* fondo de la "página" del email */
+    background-color: #F4F4F1;       /* fondo de la "página" del email */
     margin: 0;
     padding: 0;
     width: 100%;
@@ -122,9 +145,10 @@ img {
     width: 100%;
 }
 
-/* Header — wordmark del negocio (replica del nav, sin imagen para que renderice igual
-   en clientes que bloquean imágenes — convención de email transaccional). El punto final
-   y el "block" visual del nav los simplificamos a un punto sólido en el color de marca. */
+/* Header — la marca del NEGOCIO, no la del producto (`business.name`). Si la instalación
+   trae su logotipo rasterizado, la cabecera lo enseña con el nombre como `alt`; sin él, el
+   texto y un punto en el color de marca. Los dos caminos viven en `header.blade.php`, que
+   es quien puede leer la BD. */
 
 .header {
     padding: 28px 0 16px;
@@ -132,8 +156,8 @@ img {
 }
 
 .header a {
-    font-family: 'Bricolage Grotesque', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color: #14130F;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #101418;
     font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.02em;
@@ -142,7 +166,8 @@ img {
 }
 
 .header a .brand-dot {
-    color: #FF5B22;                  /* mockup --zone-1 (acento Jump). Sustituye el "block" del nav. */
+    color: #F2711C;                  /* Naranja Salto. ⚠️ Suelo: `header.blade.php` inyecta
+                                        ThemeSettings::brand() inline y gana. */
     font-weight: 800;
 }
 
@@ -156,14 +181,13 @@ img {
     width: auto;
 }
 
-/* Body — "tarjeta" central sobre el fondo crema, con esquinas redondeadas y borde sutil
-   (consistente con .model y .events__pack-card del mockup). */
+/* Body — la tarjeta central sobre el papel: blanco, borde de Línea y radio 16. */
 
 .body {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #ECE5D2;
+    background-color: #F4F4F1;       /* Papel */
     border-bottom: 0;
     border-top: 0;
     margin: 0;
@@ -175,11 +199,13 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 600px;
-    background-color: #FBF7EC;       /* mockup --bg-card */
-    border-color: rgba(20, 19, 15, 0.10);  /* mockup --line */
-    border-radius: 14px;
+    background-color: #FFFFFF;       /* Blanco: la superficie de tarjeta sobre papel */
+    border-color: #D6D8D4;           /* Línea */
+    border-radius: 16px;             /* escala del sistema: tarjeta 16 · control 10 */
     border-width: 1px;
-    box-shadow: 0 14px 32px -14px rgba(20, 19, 15, 0.16);
+    /* Sin sombra, a propósito: la difusa solo existe en modales — y en un correo la mitad
+       de los clientes la descarta igualmente, así que era un valor que dividía el
+       resultado en dos según quién abriera. */
     margin: 0 auto;
     padding: 0;
     width: 600px;
@@ -187,7 +213,7 @@ img {
 
 .inner-body a {
     word-break: break-all;
-    color: #14130F;
+    color: #101418;
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -196,19 +222,19 @@ img {
    mostrar la URL del action button como texto seleccionable). */
 
 .subcopy {
-    border-top: 1px solid rgba(20, 19, 15, 0.10);
+    border-top: 1px solid #D6D8D4;
     margin-top: 28px;
     padding-top: 22px;
 }
 
 .subcopy p {
     font-size: 13px;
-    color: #6B675D;
+    color: #626A72;
     line-height: 1.5em;
 }
 
 .subcopy a {
-    color: #14130F;
+    color: #101418;
     text-decoration: underline;
 }
 
@@ -225,14 +251,14 @@ img {
 }
 
 .footer p {
-    color: #6B675D;
+    color: #626A72;
     font-size: 12px;
     text-align: center;
     line-height: 1.6em;
 }
 
 .footer a {
-    color: #6B675D;
+    color: #626A72;
     text-decoration: underline;
 }
 
@@ -247,15 +273,15 @@ img {
 }
 
 .table th {
-    border-bottom: 1px solid rgba(20, 19, 15, 0.10);
+    border-bottom: 1px solid #D6D8D4;
     margin: 0;
     padding-bottom: 8px;
     font-weight: 700;
-    color: #14130F;
+    color: #101418;
 }
 
 .table td {
-    color: #14130F;
+    color: #101418;
     font-size: 14px;
     line-height: 1.5em;
     margin: 0;
@@ -267,9 +293,11 @@ img {
     padding: 36px 36px 28px;
 }
 
-/* Buttons — botón de acción en color de marca (zona Jump, naranja sobre texto oscuro,
-   igual que .btn--zone del mockup). Email-safe: usamos border en lugar de padding para
-   conseguir el padding visual (compat Outlook); el background-color es el real. */
+/* Buttons — email-safe: el relleno visual se hace con `border` y no con `padding`, porque
+   Outlook no respeta el segundo dentro de un `<a>`; el `background-color` es el real.
+   ⚠️ El PRIMARY es el color de ACCIÓN, y hoy los 21 correos que lee un cliente lo llevan
+   igual. El mapa del naranja —naranja solo en los dos que VENDEN, tinta en los otros
+   diecinueve— es su propia tanda: aquí todavía no hay botón de tinta. */
 
 .action {
     -premailer-cellpadding: 0;
@@ -284,58 +312,84 @@ img {
 
 .button {
     -webkit-text-size-adjust: none;
-    border-radius: 14px;             /* igual que la landing (--r-btn: 14px): el botón del email = el botón de la web */
+    border-radius: 10px;             /* «control» de la escala de cuatro: 0 · 10 · 16 · 999. El 14 no es un escalón */
     display: inline-block;
     overflow: hidden;
     text-decoration: none;
-    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-weight: 700;
-    font-size: 15px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: 800;                /* el nivel «Botón» del sistema: 16/800, nunca menos de 16 */
+    font-size: 16px;
+    line-height: 22px;               /* 17 + 22 + 17 = 56 de alto, que es lo que dibuja el artboard */
     letter-spacing: 0.01em;
+    text-align: center;
 }
 
-.button-blue,
-.button-primary {
-    background-color: #FF5B22;       /* mockup --zone-1 (acento Jump). El "primary" en email = nuestro acento. */
-    border-bottom: 12px solid #FF5B22;
-    border-left: 22px solid #FF5B22;
-    border-right: 22px solid #FF5B22;
-    border-top: 12px solid #FF5B22;
-    color: #FFFFFF;                  /* texto blanco sobre marca = --on-brand de la web (.btn--zone/.cta-prime). El blade inlinea onBrand() para contraste WCAG ante cualquier marca. */
+/* ❗ EL SUELO ES TINTA, no el color de marca. El mapa del naranja gobierna también los correos:
+   de los veintiuno que lee un cliente solo DOS venden, y el resto lleva a mirar, a rellenar o a
+   firmar. Quién es quién lo decide `vendor/notifications/email.blade.php` por su `level`, y
+   `button.blade.php` inyecta el par inline —que gana al inlinear—; esto es lo que se ve si algún
+   día ese cálculo no corre. */
+.button-ink,
+.button-primary,
+.button-blue {
+    background-color: #101418;
+    border-bottom: 17px solid #101418;
+    border-left: 28px solid #101418;
+    border-right: 28px solid #101418;
+    border-top: 17px solid #101418;
+    color: #F4F4F1;
+}
+
+/* Los DOS que venden. El relleno real lo pone la INSTALACIÓN (`ThemeSettings::brand()`); esto es
+   el Naranja Salto del sistema como suelo. */
+.button-accion {
+    background-color: #F2711C;
+    border-bottom: 17px solid #F2711C;
+    border-left: 28px solid #F2711C;
+    border-right: 28px solid #F2711C;
+    border-top: 17px solid #F2711C;
+    color: #101418;
 }
 
 .button-green,
 .button-success {
-    background-color: #C6FF3A;       /* mockup --kids-1 (lima) — usable como "success" si llega el caso */
-    border-bottom: 12px solid #C6FF3A;
-    border-left: 22px solid #C6FF3A;
-    border-right: 22px solid #C6FF3A;
-    border-top: 12px solid #C6FF3A;
-    color: #14130F;
+    background-color: #5FA82E;        /* Verde Salta: éxito. `on` = tinta */
+    border-bottom: 17px solid #5FA82E;
+    border-left: 28px solid #5FA82E;
+    border-right: 28px solid #5FA82E;
+    border-top: 17px solid #5FA82E;
+    color: #101418;
 }
 
 .button-red,
 .button-error {
-    background-color: #dc2626;
-    border-bottom: 12px solid #dc2626;
-    border-left: 22px solid #dc2626;
-    border-right: 22px solid #dc2626;
-    border-top: 12px solid #dc2626;
-    color: #ffffff;
+    background-color: #D93E14;
+    border-bottom: 17px solid #D93E14;
+    border-left: 28px solid #D93E14;
+    border-right: 28px solid #D93E14;
+    border-top: 17px solid #D93E14;
+    color: #FFFFFF;
 }
 
 /* Panels (Laravel los usa para destacar bloques de info: "Tu reserva está pendiente…") */
 
+/* Un filete de acento a la izquierda es cromo de DOCUMENTOS, no del producto: una
+   explicación va en tarjeta con borde de Línea. Y el radio, en la escala.
+   ⚠️ Hoy NINGUNO de los 23 correos usa `.panel` (medido: cero llamadas a `->panel()` en
+   `app/Notifications/` y `app/Mail/`), así que aquí NO nacen las cuatro variantes de aviso
+   del sistema —error, éxito, aviso, info—: una pieza nace en el mismo cambio que su
+   consumidor, o se queda huérfana y nadie se entera. Cuando un correo necesite un aviso
+   con tono, entra con él y con su tono. */
 .panel {
-    border-left: #FF5B22 solid 4px;   /* acento de marca a la izquierda */
     margin: 21px 0;
-    border-radius: 4px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
 .panel-content {
-    background-color: #ECE5D2;        /* fondo --bg-soft */
-    color: #14130F;
+    background-color: #F4F4F1;        /* Papel, un escalón por debajo de la tarjeta blanca */
+    border: 1px solid #D6D8D4;        /* Línea */
+    color: #101418;
     padding: 16px 18px;
     font-size: 14px;
     line-height: 1.55;

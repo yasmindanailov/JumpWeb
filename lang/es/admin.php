@@ -2306,6 +2306,8 @@ return [
         'section_social' => 'Redes sociales',
         'section_social_hint' => 'Enlaces de redes y feed social «en directo».',
         'contact_email' => 'Email de contacto',
+        'mail_from_address' => 'Correo remitente',
+        'mail_from_address_hint' => 'Desde qué dirección salen los correos automáticos (confirmaciones, avisos…). No es el mismo que el de contacto: ése es al que te escriben. Si lo dejas vacío se usa el del servidor. ⚠️ Tiene que ser una dirección de tu dominio y estar autorizada (SPF/DKIM), o los correos acabarán en spam.',
         'contact_phone' => 'Teléfono',
         'address_line1' => 'Dirección (línea 1)',
         'address_line2' => 'Dirección (línea 2)',

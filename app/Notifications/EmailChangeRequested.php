@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -29,9 +30,9 @@ class EmailChangeRequested extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.email_change_requested.subject'))
-            ->greeting(__('emails.email_change_requested.greeting'))
+            ->hero('emails.email_change_requested', 'warn')
             ->line(__('emails.email_change_requested.intro', ['new' => $this->newEmailMasked]))
             ->line(__('emails.email_change_requested.it_was_me'))
             ->line(__('emails.email_change_requested.it_was_not_me'));

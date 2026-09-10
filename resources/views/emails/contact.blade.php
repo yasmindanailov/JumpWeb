@@ -10,6 +10,6 @@
 <p>{{ $contact['message'] }}</p>
 
 <hr>
-<p style="color:#888; font-size:12px">
+<p style="color:#626A72; font-size:12px">
     Enviado desde el formulario de contacto · idioma: {{ ['es' => 'Español', 'en' => 'Inglés', 'fr' => 'Francés'][$contact['locale'] ?? ''] ?? ($contact['locale'] ?? '—') }} · {{ now()->format('d/m/Y H:i') }}
 </p>

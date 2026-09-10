@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -41,11 +42,11 @@ class VerifyPendingEmail extends Notification implements ShouldQueue
             ['id' => $notifiable->getKey(), 'hash' => sha1((string) $notifiable->pending_email)],
         );
 
-        $park = (string) Setting::value('business.name', config('app.name'));
+        $park = (string) Setting::businessName();
 
-        return (new MailMessage)
-            ->subject(__('emails.verify_pending_email.subject', ['park' => $park]))
-            ->greeting(__('emails.verify_pending_email.greeting'))
+        return (new BrandedMailMessage)
+            ->subject(__('emails.verify_pending_email.subject'))
+            ->hero('emails.verify_pending_email', 'warn')
             ->line(__('emails.verify_pending_email.intro'))
             ->action(__('emails.verify_pending_email.action'), $url)
             ->line(__('emails.verify_pending_email.expires'))

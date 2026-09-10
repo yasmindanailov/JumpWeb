@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -38,11 +39,11 @@ class EmailChangeCompleted extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::value('business.name', config('app.name'));
+        $park = (string) Setting::businessName();
 
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.email_change_completed.subject'))
-            ->greeting(__('emails.email_change_completed.greeting'))
+            ->hero('emails.email_change_completed', 'ok')
             ->line(__('emails.email_change_completed.intro', ['new' => $this->newEmailMasked, 'park' => $park]))
             ->line(__('emails.email_change_completed.what_means'))
             ->line(__('emails.email_change_completed.it_was_not_me'));

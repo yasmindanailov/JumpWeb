@@ -99,6 +99,10 @@ class Settings extends Page
         // Contacto + dirección + redes
         'contact.email' => 'contact',
         'contact.phone' => 'contact',
+        // DESDE dónde salen los correos (`#500`). ⚠️ NO es `contact.email`: aquél es el buzón al
+        // que escribe un cliente y éste es el remitente de los 23 correos automáticos — suelen ser
+        // direcciones distintas, y ésta tiene que estar en el dominio que firma con SPF/DKIM.
+        'mail.from_address' => 'contact',
         'address.line1' => 'contact',
         'address.line2' => 'contact',
         'address.maps_url' => 'contact',
@@ -485,6 +489,17 @@ class Settings extends Page
             ->schema([
                 TextInput::make('contact.email')
                     ->label(__('admin.settings.contact_email'))
+                    ->email()
+                    ->maxLength(160),
+                // El REMITENTE de los correos automáticos (`#500`). Vacío → se usa el del `.env`,
+                // que en una instalación recién montada vale `hello@example.com`.
+                TextInput::make('mail.from_address')
+                    ->label(__('admin.settings.mail_from_address'))
+                    ->helperText(__('admin.settings.mail_from_address_hint'))
+                    // El campo vacío es un estado LEGÍTIMO (se usa el del servidor), así que el
+                    // operador tiene que poder ver QUÉ sale hoy sin abrir el `.env`. Sin esto, un
+                    // hueco vacío y un `hello@example.com` se ven exactamente igual.
+                    ->placeholder(fn (): string => (string) config('mail.from.address'))
                     ->email()
                     ->maxLength(160),
                 TextInput::make('contact.phone')

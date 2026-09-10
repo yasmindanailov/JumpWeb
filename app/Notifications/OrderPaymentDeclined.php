@@ -3,7 +3,9 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailSlip;
 use App\Domain\Payments\Services\RedsysResponseCode;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -46,13 +48,19 @@ class OrderPaymentDeclined extends Notification implements ShouldQueue
     {
         $reasonText = RedsysResponseCode::reasonText($this->dsResponse);
 
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.order_declined.subject', ['code' => $this->order->code]))
-            ->greeting(__('emails.order_declined.greeting'))
+            ->hero('emails.order_declined', 'err', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_declined.intro', ['code' => $this->order->code]))
             ->line(__('emails.order_declined.no_charge'))
-            ->line(__('emails.order_declined.reason_prefix').' '.$reasonText)
+            // EL MOTIVO en su propio aviso (`#503`): es lo que el cliente busca al abrir este
+            // correo, y como frase suelta en medio del cuerpo se leía como una más.
+            ->notice(__('emails.order_declined.notice_title'), $reasonText, 'err')
             ->action(__('emails.order_declined.action'), route('account.orders'))
+            // ❗ UNO DE LOS DOS ÚNICOS CORREOS QUE VENDEN (`#503`, el mapa del naranja): su botón
+            // va en relleno de ACCIÓN y los otros diecinueve en tinta. `level` es la única palanca
+            // que Laravel da aquí, porque `action()` no acepta color. Lo vigila `MailButtonMapTest`.
+            ->level('sell')
             ->line(__('emails.order_declined.contact'));
     }
 }

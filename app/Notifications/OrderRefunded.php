@@ -5,7 +5,9 @@ namespace App\Notifications;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
 use App\Domain\Payments\Models\Payment;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -64,9 +66,9 @@ class OrderRefunded extends Notification implements ShouldQueue
             ?? $this->payment?->amount
             ?? $this->order->total;
 
-        $message = (new MailMessage)
+        $message = (new BrandedMailMessage)
             ->subject(__('emails.order_refunded.subject', ['code' => $this->order->code]))
-            ->greeting(__('emails.order_refunded.greeting'))
+            ->hero('emails.order_refunded', 'neutro', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_refunded.intro', ['code' => $this->order->code]))
             // Reembolso del PEDIDO: muestra TODAS las reservas (también las canceladas antes sin
             // devolver), porque la devolución total las cubre — si no, el correo «devolución del total»

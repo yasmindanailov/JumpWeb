@@ -6,6 +6,8 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -64,9 +66,12 @@ class OrderItemRefunded extends Notification implements ShouldQueue
 
         $amount = number_format($this->refundedAmountCents / 100, 2, ',', '.');
 
-        $message = (new MailMessage)
-            ->subject(__('emails.order_item_refunded.subject', ['code' => $this->order->code]))
-            ->greeting(__('emails.order_item_refunded.greeting'))
+        $message = (new BrandedMailMessage)
+            ->subject(__('emails.order_item_refunded.subject', [
+                'code' => $this->order->code,
+                'product' => $productName,
+            ]))
+            ->hero('emails.order_item_refunded', 'neutro', EmailSlip::forItem($this->item))
             ->line(__('emails.order_item_refunded.intro', ['code' => $this->order->code]))
             ->line(EmailProductCard::forItem($this->item))
             ->line(__('emails.order_item_refunded.amount', [

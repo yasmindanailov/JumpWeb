@@ -5,8 +5,10 @@ namespace App\Notifications;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
 use App\Domain\Booking\Services\PostFormAddonChanges;
 use App\Domain\Platform\Services\Money;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -48,9 +50,9 @@ class PostFormAddonsChanged extends Notification implements ShouldQueue
         $code = $this->item->order?->code ?? '—';
         $currency = $this->item->order?->currency ?? 'EUR';
 
-        $message = (new MailMessage)
+        $message = (new BrandedMailMessage)
             ->subject(__('emails.postform_addons.subject', ['code' => $code]))
-            ->greeting(__('emails.postform_addons.greeting'))
+            ->hero('emails.postform_addons', 'ok', EmailSlip::forItem($this->item))
             ->line(__('emails.postform_addons.intro', ['code' => $code]))
             ->line(EmailProductCard::forItem($this->item));
 

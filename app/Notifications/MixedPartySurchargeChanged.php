@@ -5,6 +5,8 @@ namespace App\Notifications;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\EmailBookBlock;
 use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -59,9 +61,9 @@ class MixedPartySurchargeChanged extends Notification implements ShouldQueue
         $product = $this->item->ticketType?->tr('name') ?? '—';
         $amount = fn (int $cents): string => number_format($cents / 100, 2, ',', '.');
 
-        $message = (new MailMessage)
+        $message = (new BrandedMailMessage)
             ->subject(__('emails.mixed_party_surcharge.subject', ['code' => $code]))
-            ->greeting(__('emails.mixed_party_surcharge.greeting'))
+            ->hero('emails.mixed_party_surcharge', 'warn', EmailSlip::forItem($this->item))
             ->line(__($this->byCustomer
                 ? 'emails.mixed_party_surcharge.intro'
                 : 'emails.mixed_party_surcharge.intro_by_park', ['code' => $code, 'product' => $product]));

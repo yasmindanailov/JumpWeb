@@ -21,8 +21,9 @@ use Illuminate\Support\HtmlString;
  * Defensivo por diseño: una cortesía visual NUNCA debe tumbar el envío de un correo → ante
  * cualquier fallo devuelve una cadena vacía (el correo sale igual, solo sin la tarjeta).
  *
- * Icono: emoji dentro de un badge de color (NO SVG — Gmail/Outlook los eliminan). 🎂 para packs
- * de cumpleaños, 🎟️ para entradas. El color del badge/borde superior es el de la ZONA (data-driven).
+ * ⚠️ SIN ICONO (`#503`): el sistema del canvas no usa emojis en ningún correo —y un SVG no
+ * sobrevive a Gmail ni a Outlook—, así que lo que identifica el producto es el filete superior
+ * en el color de su ZONA, que sí es data-driven.
  */
 final class EmailProductCard
 {
@@ -99,7 +100,6 @@ final class EmailProductCard
             })->values()->all();
 
         return view('emails.partials.product-card', [
-            'emoji' => $isPack ? '🎂' : '🎟️',
             'color' => $type?->zone?->color ?: ThemeSettings::brand(),
             'title' => $title,
             'meta' => $meta,

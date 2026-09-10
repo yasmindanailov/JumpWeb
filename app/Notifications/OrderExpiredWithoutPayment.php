@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -46,13 +48,17 @@ class OrderExpiredWithoutPayment extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.order_expired_without_payment.subject', ['code' => $this->order->code]))
-            ->greeting(__('emails.order_expired_without_payment.greeting'))
+            ->hero('emails.order_expired_without_payment', 'warn', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_expired_without_payment.intro', ['code' => $this->order->code]))
             ->line(__('emails.order_expired_without_payment.no_charge'))
             ->line(__('emails.order_expired_without_payment.retry'))
             ->action(__('emails.order_expired_without_payment.action'), route('home'))
+            // ❗ UNO DE LOS DOS ÚNICOS CORREOS QUE VENDEN (`#503`, el mapa del naranja): su botón
+            // va en relleno de ACCIÓN y los otros diecinueve en tinta. `level` es la única palanca
+            // que Laravel da aquí, porque `action()` no acepta color. Lo vigila `MailButtonMapTest`.
+            ->level('sell')
             ->line(__('emails.order_expired_without_payment.contact'));
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -35,11 +36,11 @@ class AccountAlreadyExists extends Notification implements ShouldQueue
         // La ruta sobrevive por eso y porque es el destino del middleware `auth` de Laravel.
         // ⚠️ Que este CTA apunte aquí lo fija `Api\V1\AuthRegistrationTest`, y era **guardián
         // único** en un test del modal hasta que la auditoría de A8 lo re-apuntó.
-        $park = (string) Setting::value('business.name', config('app.name'));
+        $park = (string) Setting::businessName();
 
-        return (new MailMessage)
-            ->subject(__('account.exists_mail.subject', ['park' => $park]))
-            ->greeting(__('account.exists_mail.greeting'))
+        return (new BrandedMailMessage)
+            ->subject(__('account.exists_mail.subject'))
+            ->hero('account.exists_mail', 'info')
             ->line(__('account.exists_mail.line1'))
             ->action(__('account.exists_mail.action'), route('login'))
             ->line(__('account.exists_mail.line2'));

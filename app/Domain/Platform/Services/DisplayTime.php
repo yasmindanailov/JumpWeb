@@ -101,6 +101,29 @@ class DisplayTime
         return Str::ucfirst($carbon->locale(app()->getLocale())->isoFormat('ddd D MMM'));
     }
 
+    /**
+     * El día con su nombre ENTERO y sin mes: «sábado 5».
+     *
+     * Existe para los TITULARES de los correos (`#503`), donde la frase es «Nos vemos el sábado
+     * 5» y la forma abreviada de `dayLabel()` —«Sáb. 5 sep.»— se lee como un dato y no como una
+     * frase. ⚠️ En minúscula a propósito: aquí el día va DENTRO de una oración, no abriendo una
+     * celda, así que `ucfirst` lo dejaría con una mayúscula en medio.
+     */
+    public static function dayInSentence(DateTimeInterface|string|null $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        try {
+            $carbon = $value instanceof DateTimeInterface ? Carbon::instance($value) : Carbon::parse($value);
+        } catch (\Throwable) {
+            return '';
+        }
+
+        return $carbon->locale(app()->getLocale())->isoFormat('dddd D');
+    }
+
     public static function now(): Carbon
     {
         return Carbon::now(self::timezone());

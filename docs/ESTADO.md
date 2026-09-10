@@ -1,5 +1,113 @@
 # Estado del proyecto — foto viva
 
+> ❗❗❗ **HAY DOS CARRILES VIVOS Y NO SE PISAN. Lee el tuyo.**
+>
+> | carril | banda | dónde | estado |
+> |---|---|---|---|
+> | 🎨 **Diseño de la web** | **470–499** (agotada: la siguiente sesión abre banda nueva) | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
+> | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | vestido COMPLETO · toca lo que diga su bloque |
+>
+> ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
+`public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
+propio y artboard propio. ▶ Verificado en el merge del 10-09: los dos carriles tocaron **cero
+ficheros de código en común** — solo estos cinco documentos.
+>
+> ⚠️ **LA BANDA 470–499 ESTÁ AGOTADA** (`#499` es la última). Quien retome el carril de diseño abre
+banda nueva y lo escribe en `CLAUDE.md` §10.6 antes de numerar nada.
+>
+> ───────────────────────────────────────────────────────────────────────────────────────────
+
+> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#506`) ═══════════
+>
+> ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
+> medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja
+> que el carril de diseño está moviendo**. Se contrastaron las cuatro superficies que podían ir en
+> paralelo sin pisarse y solo una tiene aislamiento real: **los correos** —tema propio, artboard
+> suyo (`Correos PJP`) y **fuera de las cinco fases** de `specs/rediseno-desde-canvas.md`—.
+> `[DECIDIDO owner]`: los correos, con **banda propia 500–519**.
+> ▶ **TODO ESTÁ EN `docs/specs/correos-desde-canvas.md`. Empieza por su §2** (el filtro
+> producto/cliente, que aquí **no se resuelve con tokens y es estructural**).
+>
+> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#506`): **el vestido está COMPLETO.**
+> - **T1 · el vestido** — 89 sustituciones; el tema vivo queda en **13 colores, todos del sistema
+>   v1.10 y cero ajenos**. Ninguna webfont viaja, radios en la escala de cuatro, modo oscuro.
+> - **T2 · el remitente desde el PANEL** (Ajustes → Contacto), no del `.env`, que valía literalmente
+>   `hello@example.com`. **8/8 mutaciones**.
+> - **T3+T4 · el MOLDE en los VEINTIUNO** — cabecera en tinta con **chapa · titular · resguardo**,
+>   **aviso** con punto, **el mapa del naranja** (tinta salvo los dos que venden), dirección y
+>   teléfono en el pie, **cero emojis**. **21 de 21 renderizados con cabecera.**
+> - **T5 · LA BANDEJA** (`#506`) — las **63** líneas de adelanto (21 correos × 3 idiomas; **no 69**:
+>   los dos internos usan vista suelta y no pueden llevarla) y los **21 asuntos con el dato delante**.
+>   Medido: longitud media **44 → 33** caracteres · asuntos que pasan del corte de un móvil **18 → 7**
+>   · su dato cabe en el corte en **9 de 14**, contra **1 de 13**. **9/9 mutaciones.**
+> - **La marca del PRODUCTO fuera de la bandeja del cliente**: remitente, firma y copyright decían
+>   «JumpWeb» con el negocio llamándose otra cosa, en **20 de los 21**.
+>
+> ❗❗❗ **LO QUE QUEDA, Y ES LO PRIMERO QUE HAY QUE HACER:**
+> 1. **El correo del SUPLEMENTO DE FIESTA MIXTA**, que se rehace en turno propio: usa nueve frases
+>    para decir un importe. `[DECIDIDO owner]`: no entra con el vestido porque es **texto sobre
+>    dinero** y merece medirse aparte. **Es lo único del carril que sigue sin tocarse.**
+> 2. ⚠️ **EL OJO DEL OWNER EN UN CLIENTE DE CORREO REAL** (Gmail, Outlook). **No se ha hecho y no se
+>    puede hacer desde aquí**: no hay Playwright en el contenedor. Todo está verificado por
+>    aritmética, por render y por Mailpit, **nunca por ojo**. Y ahí es donde se comprueba si la línea
+>    de adelanto se lee, si el relleno tapa el cuerpo y si el oscuro no se invierte solo.
+> 3. **Los textos los corrige el owner**: las 63 líneas y los 21 asuntos están escritos derivando de
+>    lo que ya había, para que corrija **sobre algo y no sobre un hueco** (decisión 23 del canvas).
+>
+> ❗❗❗ **TRES DEFECTOS VIVOS QUE ENCONTRÓ LA T5 AL MEDIR, y los tres estaban en VERDE:**
+> **(a)** `#504` dejó la cabecera del correo de identidad social diciendo **el nombre de su clave**
+> —«account.social_link_mail.badge»— en los tres idiomas, porque `badge` y `headline` estaban
+> anidadas dentro de `providers`. Su guarda comprobaba `class="hero"`: *declarar una pieza no es que
+> diga algo.* **(b)** `#500` arregló las cuatro superficies de marca en HTML y dejó la parte de
+> **TEXTO PLANO** firmando con el nombre del producto (2 ocurrencias medidas) — la trampa de la
+> partida doble por la otra puerta. **(c)** `docs/DECISIONES.md` tenía **tres marcadores de conflicto
+> de merge sin resolver** del `git pull` de la sesión anterior, **con `docs-check` en verde**: 493
+> líneas de los dos carriles partidas por un `=======`. Se conservan las diez decisiones, y **nace el
+> check 9 del gate documental**, verificado con control.
+>
+> ❗❗ **LAS SIETE TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
+> **(1)** Una `@media` **no puede vivir en el tema**: el inliner descarta lo que no puede pegar a una
+> etiqueta, y el modo oscuro salió sin una sola regla **sin que nada fallara**. Va en el `<style>` de
+> `layout.blade.php`, con `!important`. **(2)** **Todo componente de correo nace por partida doble**:
+> sin su gemelo en `vendor/mail/text/`, `->render()` sale perfecto y **el ENVÍO revienta**.
+> **(3)** Los **comentarios CSS viajan** en cada correo (3.172 B, el 11 % del HTML); los de Blade no.
+> **(4)** Un `*/` dentro de un docblock **lo cierra** — la ruta comodín de los ficheros de idioma
+> dejó un servicio sin compilar y el render devolvía el HTML anterior **sin avisar**.
+> **(5)** ⚠️⚠️ **El arnés de mutación NACIÓ ROTO**: escrito en `bash` con heredocs anidados, el
+> escapado de `$` se perdía y **cinco mutaciones «sobrevivieron» sin haberse aplicado nunca**. Está
+> en Python y cada mutación **verifica que el fichero cambió** antes de correr un caso.
+> **(6)** ⚠️⚠️ **`Lang::has($clave, $locale)` cae al idioma de RESPALDO por defecto**, así que una
+> clave que falte en español pero esté en inglés **pasa en verde** y el correo sale en el idioma
+> equivocado. Es el tercer parámetro. Lo destapó la mutación, no la lectura.
+> **(7)** ⚠️⚠️ **El contraste lo hacen LOS DOS LADOS**: la guarda de `#502` solo exigía par oscuro al
+> TEXTO y el AVISO quedaba en **1,28 : 1**, ilegible, con la suite en verde. **Lo vio el owner.** Hoy
+> el mapa va **entero por color** y la guarda mide el RESULTADO con una pila de fondos.
+>
+> ⚠️ **PASOS DE DESPLIEGUE que deja este carril**: poner el **remitente** en Ajustes → Contacto de
+> cada instalación, con una dirección **del dominio que firma SPF/DKIM** (si no, spam — y el código
+> no lo puede comprobar).
+>
+> ⚠️⚠️ **DOS ROJOS QUE NO ERAN DE NADIE** salieron del `git pull` que abrió la sesión (74 commits del
+> otro carril): los bundles SSR y de landing estaban rancios. `npm run build:ssr` y `npm run build`.
+> Es la trampa ya fichada de fusionar, **dos veces en la misma sesión**.
+>
+> ⚠️ **`DesignSync` quedó AUTORIZADO en esta máquina** (se instaló el CLI en `~/.local/bin/claude` y
+> se corrió `/design-login`): el canvas se lee directamente, sin copia local.
+>
+> ═══════════════════════════════════════════════════════════════════════════════════════
+
+
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
+
+> ⚠️ **DOS CARRILES VIVOS SOBRE `main`.** Arriba, los CORREOS (banda 500–519); debajo, el
+> carril de DISEÑO de la web pública (banda 470–499). Cada uno tiene su spec y su banda, y
+> **comparten `public/css/site.css`**: al fusionar, re-mide todo presupuesto que toquen los dos
+> y espera bundles rancios (`npm run build` y `build:ssr`) — no viajan en git.
+
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#493`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+>
+> ───────────────────────────────────────────────────────────────────────────────────────────
+>
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ES LO VIVO** (2026-09-10, `#469`→`#499`). ▶ **EN UNA LÍNEA: la portada está cerrada —ocho secciones, en el ORDEN del mockup, con la atribución de Google puesta y sin decoración— y lo siguiente es la FASE 3, las PÁGINAS.**
 >
 > ❗❗❗ **LO SIGUIENTE, Y EL OWNER LO DEJÓ DICHO EN ESTE ORDEN**: (1) **seguir la fase de diseño como
@@ -2265,8 +2373,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4603 en verde** (28.895 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con `#492`, el ojo del owner sobre Reseñas.
+> Suite **4635 en verde** (28.971 aserciones, 6 skipped, **0 risky**), medida el **2026-09-10**
+> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de diseño hasta `#493` (Reseñas)
+> y el de los CORREOS `#500`→`#506` (la T5 suma los 9 casos de `MailInboxLineTest`).
+> ⚠️⚠️ **Y la caducó la FUSIÓN, no un descuido.** Antes de fusionar, el carril de diseño declaraba
+> **4603 · 28.895** y el de correos medía **4599 · 28.760** — los dos ciertos sobre su propio árbol,
+> los dos falsos sobre el conjunto. *Dos ramas que mueven el mismo contador no se fusionan eligiendo
+> un número: se re-mide.* Lo cazó el `pre-push`, que por eso mide en vez de creerse la resta.
+> Antes, con `#493`: **4603** y 28.895, sobre el árbol de diseño solo.
 > Antes, con la **T2i·b** (`#491`): **4602** y 28.877. ⚠️ **+14**: los 14 de
 > `SocialProofNeverHitsTheRenderPathTest`. Ninguno sale.
 > Antes, con la **T2i·a** (`#490`): **4588** y 28.802. ⚠️ **+12**: los 12 casos de

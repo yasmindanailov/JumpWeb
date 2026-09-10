@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -30,11 +31,11 @@ class CustomerAccountCreated extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::value('business.name', config('app.name'));
+        $park = (string) Setting::businessName();
 
-        return (new MailMessage)
-            ->subject(__('emails.customer_account_created.subject', ['park' => $park]))
-            ->greeting(__('emails.customer_account_created.greeting'))
+        return (new BrandedMailMessage)
+            ->subject(__('emails.customer_account_created.subject'))
+            ->hero('emails.customer_account_created', 'ok')
             ->line(__('emails.customer_account_created.intro', ['park' => $park]))
             ->line('**'.__('emails.customer_account_created.email_label').':** '.$notifiable->email)
             ->line('**'.__('emails.customer_account_created.password_label').':** '.$this->temporaryPassword)

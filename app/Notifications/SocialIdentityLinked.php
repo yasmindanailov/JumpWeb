@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Domain\Platform\Models\Setting;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -51,12 +52,12 @@ class SocialIdentityLinked extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $park = (string) Setting::value('business.name', config('app.name'));
+        $park = (string) Setting::businessName();
         $provider = __('account.social_link_mail.providers.'.$this->provider);
 
-        $mail = (new MailMessage)
-            ->subject(__('account.social_link_mail.subject', ['provider' => $provider, 'park' => $park]))
-            ->greeting(__('account.social_link_mail.greeting'))
+        $mail = (new BrandedMailMessage)
+            ->subject(__('account.social_link_mail.subject', ['provider' => $provider]))
+            ->hero('account.social_link_mail', 'info')
             ->line(__('account.social_link_mail.line1', ['provider' => $provider, 'park' => $park]));
 
         if ($this->promoted) {

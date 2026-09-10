@@ -53,6 +53,7 @@ use App\Domain\Identity\Services\GuardianPlaces;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
+use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\QrLogo;
@@ -60,6 +61,7 @@ use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -139,6 +141,12 @@ class AppServiceProvider extends ServiceProvider
         // Fase 6 · waiver (`#179`): la aceptación pendiente del alta se firma al VERIFICAR el correo. El
         // listener vive en Identity (el arch-test no deja dominio fuera de `app/Domain`) y se registra aquí.
         Event::listen(Verified::class, SignPendingWaiverOnVerification::class);
+
+        // El REMITENTE de todo correo sale del PANEL y no del `.env` (`#500`, T2 de
+        // `specs/correos-desde-canvas.md`). Va como listener y no como `Mail::alwaysFrom()` para no
+        // consultar `settings` en peticiones que no envían nada: `MessageSending` solo se dispara
+        // cuando hay un correo de verdad, y también desde el worker de la cola.
+        Event::listen(MessageSending::class, ApplyBusinessSender::class);
 
         // morphMap FORZADO (Fase 2, prerequisito de la modularización — DEUDA §Alta): las columnas
         // polimórficas (`payments.payable_type`, `prices.priceable_type`, `audit_logs.target_type`)
