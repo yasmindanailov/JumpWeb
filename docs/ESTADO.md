@@ -1,10 +1,19 @@
 # Estado del proyecto — foto viva
 
+> ⚠️⚠️ **AL FUSIONAR LOS DOS CARRILES SALIÓ UN ROJO QUE NO ERA DEL MERGE** (`#520`, arreglado):
+`ThemeColorTest::test_email_header_follows_brand_color` **dependía de la MÁQUINA**, no de una
+propiedad — la cabecera del correo cambia de rama si existe `client-logo@4x.png`, que está
+**gitignorado**, así que fallaba con el paquete del cliente instalado y pasaba en un clon limpio.
+▶ *Un test que lee un fichero gitignorado vigila el estado de una máquina, no una propiedad.* El
+repo ya lo tenía resuelto en `MailThemeTest` y `ReservationSlipTest`; ése se quedó sin aislamiento.
+> ▶ **Y lo primero fue comprobar si lo causaba el merge** —rama en `origin/main` puro, falló igual—,
+no suponerlo.
+>
 > ❗❗❗ **HAY DOS CARRILES VIVOS Y NO SE PISAN. Lee el tuyo.**
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | **470–499** (agotada: la siguiente sesión abre banda nueva) | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | vestido COMPLETO · toca lo que diga su bloque |
 >
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
@@ -12,8 +21,9 @@
 propio y artboard propio. ▶ Verificado en el merge del 10-09: los dos carriles tocaron **cero
 ficheros de código en común** — solo estos cinco documentos.
 >
-> ⚠️ **LA BANDA 470–499 ESTÁ AGOTADA** (`#499` es la última). Quien retome el carril de diseño abre
-banda nueva y lo escribe en `CLAUDE.md` §10.6 antes de numerar nada.
+> ⚠️ **LA BANDA 470–499 SE AGOTÓ** (`#499`) y el carril de diseño sigue en **520–549** (`#520` es
+la primera). ⚠️⚠️ **No se coge «el número que sigue»**: el carril de correos ocupa 500–519, y al
+cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — corregido antes de empujar.
 >
 > ───────────────────────────────────────────────────────────────────────────────────────────
 
@@ -2373,9 +2383,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4635 en verde** (28.971 aserciones, 6 skipped, **0 risky**), medida el **2026-09-10**
-> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de diseño hasta `#493` (Reseñas)
+> Suite **4676 en verde** (29.237 aserciones, 1 skipped), medida el **2026-09-11**
+> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de diseño hasta `#499` y `#520`
 > y el de los CORREOS `#500`→`#506` (la T5 suma los 9 casos de `MailInboxLineTest`).
+> ⚠️ **Segunda fusión, el 10-09 por la noche**: el carril de diseño cerró `#494`→`#499` (atribución
+> de Google · el orden de las secciones · la portada sin decoración · las velas del carril) y al
+> fusionar salió **un rojo que no era del merge** (`#520`): un test que dependía de la MÁQUINA.
 > ⚠️⚠️ **Y la caducó la FUSIÓN, no un descuido.** Antes de fusionar, el carril de diseño declaraba
 > **4603 · 28.895** y el de correos medía **4599 · 28.760** — los dos ciertos sobre su propio árbol,
 > los dos falsos sobre el conjunto. *Dos ramas que mueven el mismo contador no se fusionan eligiendo

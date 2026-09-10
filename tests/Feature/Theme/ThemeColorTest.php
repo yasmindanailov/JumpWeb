@@ -162,8 +162,32 @@ class ThemeColorTest extends TestCase
 
     // ─────────────────────────── Emails ─────────────────────────────
 
+    /**
+     * Un `public/` TEMPORAL y VACÍO, para que la cabecera del correo tome siempre la misma rama.
+     *
+     * ⚠️ El `build` se enlaza porque las vistas resuelven assets por el manifiesto de Vite y sin él
+     * el render revienta — el mismo detalle que `ZonesSectionTest` documenta en su aislamiento.
+     */
+    private function sinPaqueteDelCliente(): void
+    {
+        $dir = sys_get_temp_dir().'/jw-theme-'.getmypid().'-'.uniqid();
+        mkdir($dir.'/img', 0o777, true);
+        @symlink(base_path('public/build'), $dir.'/build');
+        $this->app->usePublicPath($dir);
+    }
+
+    /**
+     * ⚠️⚠️ **CON `public/` TEMPORAL, y sin eso el caso depende de la MÁQUINA.**
+     * `client-logo@4x.png` está **gitignorado** —es el paquete de la instalación (`#325`)— y con él
+     * presente la cabecera **cambia de rama**: pinta la imagen del cliente en vez del wordmark con
+     * su punto de marca, así que este caso **fallaba en cualquier máquina con el paquete instalado y
+     * pasaba en un clon limpio**. Es la trampa de `#302`, y `MailThemeTest` y `ReservationSlipTest`
+     * ya la tenían resuelta así: éste se quedó sin el aislamiento.
+     */
     public function test_email_header_follows_brand_color(): void
     {
+        $this->sinPaqueteDelCliente();
+
         Setting::updateOrCreate(['key' => 'theme.brand'], ['value' => '#0A0B0C', 'group' => 'theme']);
 
         $user = User::factory()->create();

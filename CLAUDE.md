@@ -123,15 +123,15 @@ antes de construir encima (`CONVENCIONES §7`).
 
    | carril | banda | estado |
    |---|---|---|
-   | 🎨 **Diseño de la web** | **470–499** | ⚠️⚠️ **AGOTADA** el 2026-09-10 (`#499` fue la última) |
+   | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | banda nueva desde `#520` (la anterior se agotó en `#499`) |
    | 📧 **Correos** | **500–519** | viva |
    | Google auth (portátil) | `#34x` | viva |
 
-   ❗❗❗ **SI RETOMAS EL CARRIL DE DISEÑO, ABRE BANDA NUEVA Y ESCRÍBELA AQUÍ ANTES DE NUMERAR NADA.**
-   Su banda está agotada, y el carril de correos ya ocupa la siguiente centena: coger «el número que
-   sigue» metería una decisión de diseño dentro de la banda de otro carril, que es exactamente lo que
-   estas bandas existen para impedir. ▶ Verificado en el merge del 10-09 que los dos carriles no
-   chocaron —`#494`–`#499` contra `#500`–`#506`—, pero fue por poco.
+   ❗❗❗ **LA BANDA DEL CARRIL DE DISEÑO SE AGOTÓ EN `#499` Y SE ABRIÓ LA 520–549.** No se salta a
+   «el número que sigue»: el carril de correos ocupa la centena de en medio, y coger `#507` metería
+   una decisión de diseño dentro de su banda — pasó al cerrar el 10-09 y se corrigió antes de
+   empujar. ▶ Verificado en ese mismo merge que los dos carriles no habían chocado
+   —`#494`–`#499` contra `#500`–`#506`—, pero fue por poco.
 4. Doc nuevo/renombrado → actualizar `docs/README.md` **y** esta tabla.
 5. Al empezar: skill **`/arranque-sesion`** (base verde). Al terminar: **`/cierre-sesion`**
    (suite+Pint+docs-check, tracker, ESTADO fiel, commit+push con evidencia).

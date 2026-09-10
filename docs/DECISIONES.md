@@ -27905,3 +27905,43 @@ producto y no comparten día. Y queda **más fuerte**: asevera las dos ramas, co
 **Suite 4.634** · 28.969 aserciones · Pint 1.245 · **21 de 21 correos renderizados** con su línea,
 todas antes de la cabecera y cero placeholders crudos · **7 leídos en Mailpit**. ⚠️ **Sigue sin
 verse en Gmail ni Outlook**: no hay Playwright en el contenedor.
+
+
+---
+
+## #520 · 2026-09-11 · Un test del carril de correos dependía de una máquina, no de una propiedad
+
+**Contexto.** Al fusionar los dos carriles (diseño `#494`–`#499` y correos `#500`–`#506`) la suite
+salió con **un fallo**: `ThemeColorTest::test_email_header_follows_brand_color`.
+
+▶ **Y la primera comprobación fue si lo había causado el merge**, no suponerlo: se creó una rama en
+`origin/main` puro y **falló igual**. Los dos carriles tocaron **cero ficheros de código en común**,
+así que el merge estaba descartado.
+
+---
+
+**❗❗❗ NO ESTABA ROTO PARA TODOS: DEPENDÍA DE LA MÁQUINA.**
+
+`resources/views/vendor/mail/html/header.blade.php` tiene **dos ramas**: si existe
+`public/img/client-logo@4x.png` pinta la imagen del cliente, y si no, el wordmark con su punto de
+color de marca. El caso aseveraba el punto **sin fijar cuál de las dos ramas quería**.
+
+    con el paquete del cliente instalado   → pinta la IMAGEN   → el caso FALLA
+    en un clon limpio o en CI              → pinta el WORDMARK → el caso PASA
+
+⚠️ `client-logo@4x.png` está **gitignorado**: es el paquete de la instalación (`#325`). ▶ Verificado
+en esta máquina: existe, 156.838 B.
+
+⚠️⚠️ **Es la trampa de `#302` por su cara inversa** —allí un test pasaba en la máquina del agente y
+fallaba en un clon limpio; aquí al revés—, y **el repo ya la tenía resuelta en DOS sitios**:
+`MailThemeTest` y `ReservationSlipTest` montan un `public/` temporal y lo explican con estas mismas
+palabras. `ThemeColorTest` fue el que se quedó sin el aislamiento.
+
+▶ **El arreglo no toca ninguna decisión del carril de correos** —ni el vestido, ni el botón de
+`#503`—: solo hace que el caso **fije su premisa** en vez de heredarla del entorno.
+
+⚠️ **Lección de método**: *un test que lee un fichero gitignorado no vigila una propiedad, vigila el
+estado de una máquina* — y el síntoma es el peor posible, porque el rojo aparece en el ordenador que
+tiene el paquete y no en el del agente que escribió el test.
+
+**Suite 4.676** · 29.237 aserciones · Pint limpio · docs-check ✓.
