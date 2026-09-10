@@ -665,6 +665,168 @@
         @endif
     </section>
 
+    {{-- ══ 05 · ANTES DE VENIR · el registro ES el QR ═══════════════════════════════════════════
+         Carril de diseño Fase 2 · T2f (`DECISIONES #485`). Artboards `Antes de Venir PJP` **2a**
+         (móvil) + `Escritorio PJP` **3a** (escritorio, rehecha por dentro el 8 sep).
+
+         ❗❗❗ **NO ES UNA SECCIÓN NUEVA: SUSTITUYE A LA DE NORMAS.** Aquélla (`#309`) decía las dos
+         mismas cosas —registrarse y traer calcetines— más un asomo de cuatro normas. `[DECIDIDO
+         owner, 2026-09-10]`: las cuatro normas **se van** y queda el enlace, que es lo que dibuja
+         el canvas. Con eso `/normas` gana una entrada desde la portada y se **cierra la ficha de
+         `DEUDA.md`** que `#480` abrió al retirar el único enlace a `#rules` (medido entonces y
+         vuelto a medir ahora: cero `href="#rules"` en todo el repo).
+
+         ▶ **Y va aquí y no donde estaba** (`[DECIDIDO owner]`: «donde la pone el canvas»). El canvas
+         ordena 01…08 y 05 va **después de las secciones de producto y antes de Visítanos y Dudas**;
+         la de normas vivía DESPUÉS de Visítanos. Es un salto de un puesto, y no toca el resto del
+         orden que `#314` decidió.
+
+         ⚠️⚠️ **EL ACTA DEL CANVAS DESCRIBE UNA PIEZA QUE SU ARTBOARD TIENE APAGADA, y van CUATRO**
+         (`#480` la chapa de zona, `#482` la del «18 más», `#483` el reloj y el aviso INFO). Aquí es
+         **la chapa de «lo que ve el empleado»**: vive tras el interruptor `conChapaEmpleado`,
+         **apagado por defecto** desde el recorte de presupuesto del 7 sep (la sección pasa de 1.180
+         a 726 px, medido por el propio artboard). *Esa fuente se relee antes de cada tanda y
+         mientras dura, y sin creerse el acta.*
+
+         ▶ **En ESCRITORIO la chapa vuelve**, y el motivo es aritmético y suyo: ahí no ocupa alto
+         —va en la columna de al lado, que sin ella se queda vacía—. Medido por el canvas: 722 px con
+         chapa en escritorio contra 726 sin ella en móvil.
+
+         ⚠️⚠️ **EL BLOQUE ES DE TINTA EN LAS DOS SUPERFICIES, y eso NO se pudo decidir a ojo.**
+         `[data-surface]` no solo cambia tokens: **PINTA** (`background: var(--bg)`, la lección que
+         `#484` pagó), así que una superficie **no puede depender del ancho de la ventana**. Entre
+         las dos fuentes manda la más nueva: `Escritorio PJP` 3a se rehízo el **8 sep** con la idea
+         que ordena la sección —*«la sección ES el código: en una página de papel, un bloque de tinta
+         es lo más importante de la pantalla, y 05 dejaba su pieza principal de chapa lateral»*—,
+         mientras que el móvil 2a es del **7 sep** y nunca se actualizó a ella. Lo que sí se respeta
+         del móvil es su recorte, que el canvas declara expresamente aparte: *«el interruptor de
+         móvil no se toca: son dos superficies y dos decisiones»*.
+
+         ⚠️ **Medido antes de decidirlo, porque el argumento del presupuesto aquí es más flojo que en
+         el canvas**: la sección que sustituye pesa **1.108 px en móvil**, así que traer también las
+         tres filas dejaría la portada casi igual (−88 px) en vez de −382. Se sigue al canvas, y la
+         cifra queda escrita para que el owner pueda revertirlo con el número delante — que es lo que
+         hizo en `#483` con el reloj. --}}
+    <section id="before" class="section wrap">
+        <div class="sec-head">
+            <p class="sec-head__eyebrow">{{ __('landing.before.eyebrow') }}</p>
+            <h2 class="sec-head__title">{{ __('landing.before.title') }}</h2>
+            <p class="sec-head__lede">{{ __('landing.before.lede') }}</p>
+        </div>
+
+        {{-- EL BLOQUE: el objeto a un lado y lo que abre al otro. --}}
+        <div class="before__code" data-surface="ink">
+            {{-- ── EL OBJETO ────────────────────────────────────────────────────────────────────
+                 ⚠️ **El código se enseña dentro de un MÓVIL** (`Escritorio PJP` 3a, 8 sep): *«el
+                 sitio del código es el teléfono, y así la sección contesta sola el "¿tengo que
+                 imprimirlo?" sin gastar una línea»*. En móvil el marco del teléfono se retira —
+                 dibujar un teléfono dentro de un teléfono no dice nada— y queda su pantalla, que es
+                 exactamente la tarjeta blanca del artboard de móvil. --}}
+            <div class="before__object">
+                {{-- ⚠️ **El objeto y su nombre van juntos**, y por eso hay un envoltorio: en teléfono
+                     el código y el texto se ponen al LADO (como el artboard de móvil) y ahí lo que
+                     se empareja con el texto es el código **con su nombre debajo**, no el código
+                     suelto. En escritorio se apilan los tres. --}}
+                <div class="before__id">
+                    <div class="before__device">
+                        <span class="before__ear" aria-hidden="true"></span>
+                        <div class="before__screen">
+                            <x-site.sample-qr :label="__('landing.before.qr_aria')" />
+                        </div>
+                        <span class="before__chin" aria-hidden="true"></span>
+                    </div>
+                {{-- ⚠️⚠️ **El nombre va FUERA del recuadro blanco, y el artboard escribe por qué**:
+                     dentro se comería la **zona de silencio**, que es lo único que ese margen está
+                     ahí para dar. Aquí el código no se escanea, pero la anatomía se copia entera o
+                     no se copia: la pieza tiene que seguir valiendo el día que enseñe uno de verdad.
+                     ⚠️ **«Mi QR» es el nombre del PRODUCTO** (`[DECIDIDO owner, 2026-09-10]`): es
+                     exactamente como se llama en la cuenta (`account.card.title`), y el mismo objeto
+                     no puede llamarse de dos maneras. El canvas escribe «Mi Play Jump QR», que es
+                     marca del cliente y no entra en el producto (`DECISIONES #1`). --}}
+                    <p class="before__name">
+                        {{ __('landing.before.qr_name') }}
+                        <span class="before__sample">{{ __('landing.before.qr_sample') }}</span>
+                    </p>
+                </div>
+                <p class="before__where">{{ __('landing.before.qr_where') }}</p>
+            </div>
+
+            {{-- ── LO QUE EL CÓDIGO LLEVA ───────────────────────────────────────────────────────
+                 ⚠️⚠️ **El sujeto es el VISITANTE, no el empleado**, y es una regla del canvas que
+                 costó una reescritura: *«lo que ve el empleado es su trabajo, no la ventaja del
+                 cliente»*. Por eso el titular es «Un código para todo» y no «lo que ve el empleado»,
+                 y por eso las tres filas dicen **lo que el código lleva siempre** —tus reservas, tu
+                 firma, tus hijos— y no una reserva concreta.
+                 ⚠️ **Las tres filas y el titular NO se pintan en móvil** (el recorte del 7 sep). El
+                 remate con el ✓ sí: es la frase que sostiene la sección. --}}
+            <div class="before__what">
+                <h3 class="before__what-title">{{ __('landing.before.carries_title') }}</h3>
+                <p class="before__what-lede">{{ __('landing.before.carries_lede') }}</p>
+                <dl class="before__rows">
+                    @foreach (['booking', 'waiver', 'minors'] as $fila)
+                        <div class="before__row">
+                            <dt class="before__row-key">{{ __('landing.before.rows.'.$fila.'.key') }}</dt>
+                            <dd class="before__row-val">{{ __('landing.before.rows.'.$fila.'.val') }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+                <p class="before__all">
+                    <span class="before__tick" aria-hidden="true"><x-icons.check :width="16" :height="16" /></span>
+                    <span>{{ __('landing.before.always') }}</span>
+                </p>
+            </div>
+        </div>
+
+        {{-- ── LA EXCEPCIÓN ─────────────────────────────────────────────────────────────────────
+             ⚠️ **Va en PAPEL y fuera del bloque a propósito**: los calcetines son *«lo único que no
+             cabe en el código»*, o sea la excepción — meterlos dentro los convertiría en una cuarta
+             cosa que el código lleva.
+             ⚠️⚠️ **La frase NO lleva el precio, y no es un olvido.** El producto **no sabe cuál de
+             sus complementos son «los calcetines»**: identificarlo por su icono sería usar un campo
+             de PRESENTACIÓN como identidad, que es exactamente el defecto de `accent` que `#295` y
+             `#301` pagaron dos veces. ▶ Y no hace falta: el precio ya se publica en esta misma
+             página, en el carril de complementos de la sección 02 (medido: «+2 € cada uno»). --}}
+        <p class="before__socks">
+            <span class="before__i" aria-hidden="true"><x-icons.info :width="20" :height="20" /></span>
+            <span><strong>{{ __('landing.before.socks_lead') }}</strong> {{ __('landing.before.socks_text') }}</span>
+        </p>
+
+        {{-- ⚠️⚠️ **La línea del niño invitado es DATO, no copia fija.** Ofrece el justificante que
+             `#400`/`#401` construyeron, y eso lo decide el catálogo: `ticket_types.guardian_authorization`.
+             Con los productos de hoy ninguno lo ofrece (medido: 0 de N), así que la línea no se
+             pinta — *prometer un enlace que el catálogo no emite sería el ancla muerta que `#482`
+             acaba de fichar*. El día que el operador lo active en un producto, sale sola. --}}
+        @if ($guestWaiverOffered)
+            <p class="before__guest">{{ __('landing.before.guest_text') }}</p>
+        @endif
+
+        {{-- ── LAS DOS SALIDAS · cero relleno de acción ─────────────────────────────────────────
+             ⚠️ **Ninguna de las dos es un botón de acción**, y es regla de la sección en el canvas:
+             *«cero naranja, cero relleno de acción»*. Aquí no se compra.
+             ⚠️⚠️ **Las TRES ramas del registro son las de `<x-site.cta-pair>`**, y duplicarlas es
+             menos malo que inventar una cuarta: sería un camino al alta que nadie más mantiene
+             (`#309`, que ya lo escribió al construir la sección que ésta sustituye).
+             ▶ **Con sesión NO se ofrece crear cuenta** —lo cazó una guarda del nav en su día— sino
+             **ver el QR**, que es de lo que habla la sección: abre el cajón en su zona `card`
+             (`specs/identidad-qr-puerta.md` §9.6). El `href` se conserva como suelo sin JS. --}}
+        <div class="before__foot">
+            <a class="before__rules" href="{{ route('normas') }}">
+                <span>{{ __('landing.before.all_rules') }}</span>
+                <x-icons.arrow-right class="arrow" :width="16" :height="16" />
+            </a>
+
+            @if (! empty($site['registration_url']))
+                <a class="btn btn--ghost before__cta" href="{{ $site['registration_url'] }}"
+                   target="_blank" rel="noopener">{{ __('landing.before.cta') }}</a>
+            @elseif (auth()->check())
+                <a class="btn btn--ghost before__cta" href="{{ route('account') }}"
+                   x-on:click.prevent="$store.purchase.openAccount($event, 'card')">{{ __('landing.before.cta_account') }}</a>
+            @else
+                <a class="btn btn--ghost before__cta" href="{{ route('registro') }}"
+                   x-on:click.prevent="$store.purchase.openAccount($event, 'register')">{{ __('landing.before.cta') }}</a>
+            @endif
+        </div>
+    </section>
 
     {{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}
     {{-- ▶ **TRES TARJETAS** (`[DECIDIDO owner, 2026-09-01]`: «quiero un diseño de cards, todo en
@@ -686,91 +848,18 @@
         <x-site.visit :schedule="$schedule" />
     </section>
 
-    {{-- ===================== NORMAS ===================== --}}
-    {{-- ▶ **DOS REQUISITOS PEGAJOSOS Y UN ASOMO DE NORMAS** (`[DECIDIDO owner, 2026-09-01]`,
-         `#309`, `specs/idioma-visual-heredado.md` §3.nonies). Sustituye al pliego de doce
-         pictogramas del cliente ANTIGUO y al carrusel con TODAS las normas, que era la base común
-         que `#300` había restaurado a propósito para rediseñar desde ella.
-
-         ▶ **La columna izquierda es lo que hay que HACER antes de venir** —registrarse y traer
-         calcetines—, y se queda quieta mientras la derecha se desplaza. No es un adorno: son las
-         dos únicas cosas de esta sección sobre las que el visitante puede actuar, y las dos tienen
-         su CTA.
-         ▶ **La derecha ASOMA las normas y no las agota**: cuatro y un enlace a `/normas`, que es la
-         página que las tiene todas y que ya existe.
-
-         ⚠️ **El ancla `#rules` es NUEVA y tiene consumidor**: el CTA de la sección de tarifas
-         («Conoce las reglas para venir»). Una sección sin `id` no se puede enlazar, y este ancla
-         nace con quien lo usa.
-         ⚠️⚠️ **Los CTA reutilizan el mecanismo del producto, con su suelo sin JavaScript**: el de
-         registro es `route('registro')` + `openAccount`, el de calcetines es `route('entradas')` +
-         el cajón de compra — los mismos dos que usa `<x-site.cta-pair>`. Inventar aquí un tercer
-         camino de compra habría creado una ruta que nadie más mantiene. --}}
-    <section id="rules" class="section wrap">
-        <div class="rides__head">
-            <div>
-                <h2 class="rides__title">{{ __('landing.rules.title') }}</h2>
-            </div>
-        </div>
-        <div class="rules-2col">
-            {{-- ── COLUMNA IZQUIERDA · lo que hay que hacer, y se queda quieta ─────────────── --}}
-            <div class="rules-must">
-                <article class="rules-must__card">
-                    <x-site.ilu clave="slot-normas-registro" class="rules-must__ilu" />
-                    <h3 class="rules-must__title">{{ __('landing.rules.register_title') }}</h3>
-                    <p class="rules-must__text">{{ __('landing.rules.register_text') }}</p>
-                    {{-- ⚠️⚠️ **LAS MISMAS TRES RAMAS QUE `<x-site.cta-pair>`, y no es celo: la primera
-                         versión de esta tarjeta ofrecía el ALTA a todo el mundo y una guarda la cazó
-                         con razón** (`HomePageTest::test_authenticated_nav_hides_ghost…` asevera que
-                         con sesión no se ofrece darse de alta). Aquí van:
-                           · registro EXTERNO configurado → su URL, que es el sistema del parque;
-                           · con sesión → la cuenta, que es donde se firma la exención;
-                           · sin sesión → el alta, con su suelo sin JS en `route('registro')`.
-                         Duplicar la lógica de `cta-pair` es feo, pero inventar aquí una cuarta
-                         conducta lo es más: sería un camino al registro que nadie más mantiene. --}}
-                    @if (! empty($site['registration_url']))
-                        <a class="btn btn--ghost btn--sm" href="{{ $site['registration_url'] }}"
-                           target="_blank" rel="noopener" data-tap>{{ __('landing.rules.register_cta') }}</a>
-                    @elseif (auth()->check())
-                        <a class="btn btn--ghost btn--sm" href="{{ route('account') }}" data-tap
-                           x-on:click.prevent="$store.purchase.openAccount($event, 'home')">{{ __('landing.rules.register_cta') }}</a>
-                    @else
-                        <a class="btn btn--ghost btn--sm" href="{{ route('registro') }}" data-tap
-                           x-on:click.prevent="$store.purchase.openAccount($event, 'register')">{{ __('landing.rules.register_cta') }}</a>
-                    @endif
-                </article>
-
-                <article class="rules-must__card">
-                    <x-site.ilu clave="slot-normas-calcetines" class="rules-must__ilu" />
-                    <h3 class="rules-must__title">{{ __('landing.rules.socks_title') }}</h3>
-                    <p class="rules-must__text">{{ __('landing.rules.socks_text') }}</p>
-                    {{-- Los calcetines son un COMPLEMENTO de la entrada, no un producto suelto: el
-                         CTA lleva a la compra, que es donde se ofrecen. --}}
-                    @if ($site['sales_online'])
-                    <a class="btn btn--ghost btn--sm" href="{{ route('entradas') }}" data-tap
-                       x-on:click.prevent="$store.purchase.open()">{{ __('landing.rules.socks_cta') }}</a>
-                    @endif
-                </article>
-            </div>
-
-            {{-- ── COLUMNA DERECHA · un asomo de las normas ────────────────────────────────── --}}
-            <div class="rules-peek">
-                {{-- ⚠️ **El tope lo declara la VISTA, no el panel** (mismo criterio que `#292`): el
-                     panel decide QUÉ normas y en qué orden; cuántas caben aquí es diseño. Con más,
-                     la columna derecha crecería por encima de la izquierda y la pegajosidad
-                     dejaría de notarse, que es justo lo que la sección va a enseñar. --}}
-                @foreach ($rules->take(4) as $rule)
-                    <article class="rules-peek__item">
-                        <h3 class="rules-peek__name">{{ $rule->tr('name') }}</h3>
-                        <p class="rules-peek__desc">{{ $rule->tr('description') }}</p>
-                    </article>
-                @endforeach
-                <p class="rules-peek__more">
-                    <a class="btn btn--ghost" href="{{ route('normas') }}" data-tap>{{ __('landing.rules.all_cta') }}</a>
-                </p>
-            </div>
-        </div>
-    </section>
+    {{-- ⚠️⚠️ **AQUÍ ESTABA LA SECCIÓN DE NORMAS Y SE HA RETIRADO** (`#485`, Fase 2 · T2f). No se
+         ha perdido: **la sustituye la sección 05 «Antes de venir»**, que está más arriba y dice
+         las dos mismas cosas —registrarse y traer calcetines— con el diseño del canvas.
+         ▶ Lo que SÍ se va con ella es **el asomo de cuatro normas** (`[DECIDIDO owner,
+         2026-09-10]`, con la consecuencia delante): la portada deja de enseñarlas y `/normas`
+         se alcanza por el enlace de la sección nueva y por el pie.
+         ⚠️ **Y con ella se van sus DOS ranuras de dibujo** (`slot-normas-registro` y
+         `slot-normas-calcetines`): una ranura vive exactamente lo que vive su consumidor, que es
+         la quinta vez que `IllustrationKit::SLOTS` encoge por esa regla. La portada vuelve a
+         gastar UNA de sus tres colocaciones de dibujo (`#292`).
+         ⚠️ **El ancla `#rules` desaparece**, y se midió antes: cero `href="#rules"` en todo el
+         repo —el único lo retiró `#479`—, así que no deja ningún enlace roto. --}}
 
     {{-- ⚠️⚠️ **AQUÍ ESTABA «EN DIRECTO» Y SE HA RETIRADO** (`[DECIDIDO owner, 2026-09-01]`:
          «la sección "en directo" quítala»), `#309`. Era la galería de polaroids con fotos del

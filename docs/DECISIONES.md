@@ -26111,3 +26111,165 @@ de aseverar por subcadena, la misma de `#195`.
 **Verificación**: suite **4.555** en verde · sonda de geometría en 13 vistas, desborde **0** · las dos
 tarjetas medidas a 544×378 en la misma fila, y enumeradas todas las capas que solapan la de Jump para
 comprobar que **no queda ninguna caja pintada detrás**.
+
+## #485 · 2026-09-10 · `[DECIDIDO owner]` La sección «Antes de venir»: el registro ES el QR — y con ella la sección de NORMAS de la portada se retira entera
+
+**Contexto.** Sexta tanda de la Fase 2 del carril de diseño (`specs/rediseno-desde-canvas.md` §5.4),
+sobre `Antes de Venir PJP` **2a** (móvil) y `Escritorio PJP` **3a** (escritorio). Las cuatro
+decisiones del owner se preguntaron **antes de escribir una línea**, que es el protocolo del carril
+(`#469`).
+
+---
+
+**❗❗❗ 1 · NO ES UNA SECCIÓN NUEVA: SUSTITUYE A LA DE NORMAS.**
+
+Medido antes de tocar nada: la sección `#rules` (`#309`) decía exactamente las dos mismas cosas que
+la 05 —**registrarse** y **traer calcetines**— más un asomo de cuatro normas. Y su ancla tenía **cero
+enlaces en todo el repo** desde que `#479` retiró el CTA de tarifas.
+
+`[DECIDIDO owner]` sobre las cuatro preguntas:
+
+1. **El código es de ejemplo y no lleva a ningún sitio.**
+2. **Las cuatro normas se van**; queda el enlace «Ver todas las normas».
+3. **La sección va donde la pone el canvas** — tras las de producto y antes de Visítanos y Dudas, o
+   sea **un puesto por delante** de donde vivía la de normas. El resto del orden de `#314` no se
+   toca.
+4. **Los nombres son los del PRODUCTO**: «Mi QR» y «Crear mi cuenta». El canvas escribe «Mi Play
+   Jump QR» y «Crear Mi Play Jump», que son marca del cliente y no entran (`DECISIONES #1`).
+   ▶ Y hay un argumento más fuerte que el filtro: **la cuenta ya llama a ese código «Mi QR»**
+   (`account.card.title`), y el mismo objeto no puede llamarse de dos maneras en la misma web.
+
+▶ **Con esto se CIERRA la ficha de `DEUDA.md` que `#480` abrió**, y por la segunda de sus dos
+salidas: `/normas` vuelve a tener entrada desde la portada.
+
+---
+
+**❗❗❗ 2 · POR CUARTA VEZ, EL ACTA DEL CANVAS DESCRIBE UNA PIEZA QUE SU ARTBOARD TIENE APAGADA.**
+
+`doc/portada.md` describe la sección con su *«chapa de tinta con lo que ve el empleado al
+escanearlo»*. El artboard la tiene tras el interruptor **`conChapaEmpleado`, apagado por defecto**
+desde el recorte de presupuesto del 7 sep — su propia nota lo mide: la sección pasa de **1.180 a
+726 px**. Van cuatro (la chapa de zona en `#480`, la del «18 más» en `#482`, el reloj y el aviso INFO
+en `#483`).
+
+▶ **En escritorio la chapa VUELVE**, y el motivo es aritmético y suyo: ahí va en la columna de al
+lado y no cuesta alto.
+
+---
+
+**❗❗❗ 3 · LA SUPERFICIE NO PUEDE DEPENDER DEL ANCHO DE LA VENTANA, y eso decidió la composición.**
+
+Los dos artboards discrepan: el de móvil (7 sep) pone la sección en **papel** con una tarjeta blanca,
+y el de escritorio (8 sep) la rehace como **un bloque de tinta** —*«la sección ES el código: en una
+página de papel, un bloque de tinta es lo más importante de la pantalla, y 05 dejaba su pieza
+principal de chapa lateral»*—.
+
+⚠️⚠️ **No es una elección de gusto: `[data-surface]` PINTA.** No solo cambia tokens —`background:
+var(--bg)`, la lección que `#484` pagó—, así que **la superficie no se puede conmutar por media
+query**. Entre dos fuentes del canvas que se contradicen manda la más nueva, que además es la que
+trae la idea que ordena la sección.
+
+▶ Lo que **sí** se respeta del móvil es su recorte, que el canvas declara expresamente aparte: *«el
+interruptor de móvil no se toca: son dos superficies y dos decisiones»*.
+
+⚠️ **Y el argumento del presupuesto aquí es MÁS FLOJO que en el canvas, medido antes de aceptarlo**:
+la sección que sustituye pesaba **1.108 px** en móvil, así que traer también las tres filas dejaría
+la portada casi igual (−88 px) en vez de −283. Queda escrito con su cifra, porque en `#483` el owner
+revirtió un recorte igual con el número delante.
+
+---
+
+**❗❗❗ 4 · EL CÓDIGO ES UN DIBUJO Y NO PUEDE SER OTRA COSA.**
+
+Nace `App\Domain\Platform\Services\SampleQrCode`, **al lado del generador de verdad a propósito**:
+lo que hay que impedir no es que alguien lo rompa, es que alguien lo «arregle» cambiándolo por
+`QrCode::svg()`, que ya existe y produce un código que **escanea**. La portada emitiría entonces un
+código que lleva a algo que nadie ha decidido, y el rótulo «de ejemplo» pasaría a ser mentira.
+
+⚠️⚠️ **La propiedad no es que se parezca a un QR: es que NO se pueda decodificar, y es
+ESTRUCTURAL.** Un lector empieza por la **información de formato** —los 15 bits que rodean los
+localizadores y dicen corrección y máscara—; aquí esa banda queda **vacía**, así que ningún
+decodificador llega siquiera a leer datos.
+
+▶ **Esa banda no estaba reservada y la añadió una guarda.** El generador del artboard solo reserva
+las esquinas de 8×8, así que el ruido caía dentro de la columna 8 y la fila 8: «no se puede
+decodificar» era **incidental** (un formato al azar casi nunca es válido) en vez de **estructural**.
+Cuesta unos módulos de dibujo.
+
+⚠️ **El dibujo NO es idéntico al del artboard, y está dicho**: su LCG corre en JavaScript, donde
+`semilla * 1103515245` pasa de 2⁵³ y **pierde precisión** antes del `&`; en PHP de 64 bits la
+multiplicación es exacta. Lo que se copia es la **anatomía**, no cada módulo.
+
+⚠️ **El icono calado es el hueco de la instalación** (`client-favicon.svg`) y **sin paquete no se
+dibuja**: es la doctrina de `QrLogo` —enseñar la «J» del producto dentro del código de un cliente
+que entregó su marca es una fuga de white-label, y un código liso no lo es—. Verificado de paso que
+el icono del canvas (`marca/icono-pjp.svg`) **es** el mismo cuadrado de degradado: los cinco
+`stop-color` coinciden, así que el render es fiel y no había defecto que arreglar.
+
+---
+
+**⚠️⚠️ 5 · DOS GUARDAS NACIERON DEMASIADO ESTRECHAS Y LO DIJO EL ARNÉS, NO UNA RELECTURA.**
+
+- Una aseveraba `'<section id="rules"'`, y **una mutación que devolvía el ancla en un `<span>` pasó
+  en verde**. *La propiedad dice que ese destino ya no existe, no que no exista una sección con ese
+  nombre.*
+- La otra comprobaba que la sección no pide dibujos al kit **instalando un kit sin esas claves**, así
+  que medía una ausencia **que el propio arnés causaba**: `<x-site.ilu>` no emite nada cuando la
+  clave falta, que es el modo de fallo invisible de `#287`.
+
+▶ Y una **mutación era DÉBIL por precedencia de operadores**: `false && A || B || C` es `B || C` en
+PHP, así que solo desactivaba la primera esquina. **13/13 muerden** tras corregir las tres
+(`scripts/mutar-antes-de-venir.sh`, con el molde endurecido de `#448`).
+
+---
+
+**⚠️ 6 · LO QUE NO SE ESCRIBE, Y POR QUÉ.**
+
+- **El precio de los calcetines.** El producto **no sabe cuál de sus complementos son «los
+  calcetines»**, y averiguarlo por su icono sería usar un campo de PRESENTACIÓN como identidad — el
+  defecto de `accent` que `#295` y `#301` pagaron dos veces. Y no hace falta: la cifra ya se publica
+  en esta misma página, en el carril de complementos de la 02 (medido: «+2 € cada uno»).
+- **La línea del niño invitado es DATO**: sale si y solo si algún producto ofrece el justificante
+  (`ticket_types.guardian_authorization`). Hoy ninguno, así que no se pinta — *prometer un enlace que
+  el catálogo no emite sería el ancla muerta que `#482` fichó*.
+- **La edad del acompañante** (`edadAdulto` del artboard) **no se necesita**: solo aparece dentro de
+  la chapa apagada de móvil, y la de escritorio no la nombra. Un hueco de dato que no llegó a serlo.
+
+---
+
+**⚠️⚠️ 7 · UNA TRAMPA DE LA FAMILIA DE BOTONES, ENCONTRADA POR LA CAPTURA Y NO POR LA SUITE.**
+
+`.btn` es `inline-flex` con `align-items: center` **y nada más**: no declara `justify-content`.
+Mientras el ancho lo manda el contenido no se nota; en cuanto un botón recibe `width: 100%`, **el
+rótulo se queda pegado a la izquierda**. Le pasó a `.before__cta` y lo vio la captura de móvil.
+
+▶ Medido: las **seis** reglas del repo que dan ancho a un `.btn` ya declaran `justify-content:
+center` a mano, o sea que **la convención existe y no está escrita en ningún sitio**. Ficha en
+`DEUDA.md` con su salida (declararlo en la base cuesta cero píxeles en los seis y en cualquier botón
+de ancho automático, pero sí toca los `.btn` que estira una rejilla, y eso pide su medición).
+
+---
+
+**▶ MEDIDO, EN NAVEGADOR.** La sección pesa **825 px** en móvil (contra los **1.108** de la de
+normas) y **1.100** en escritorio (contra **736** — la diferencia es la cabecera común de las ocho,
+que la vieja no tenía: su `.sec-head` mide 206, exactamente lo mismo que la de `#rides-section`). La
+portada baja a **12,02 pantallas** en móvil y sube a **11,12** en escritorio. Desborde horizontal
+**0** en las 13 vistas y ningún control táctil nuevo por debajo de 48.
+
+⚠️ **Divergencias declaradas con el artboard**: el fantasma se contornea en **tinta** y no en Azul
+Muro —`.btn--ghost` es de la familia única y cambiarla toca toda la web, ficha en `DEUDA.md`—, y el
+titular de escritorio parte con «QR» solo en la segunda línea (una línea mediría **675 px** contra el
+tope de **608** que `#479` fijó para las ocho cabeceras).
+
+**▶ Lo que se retira con la sección**: su marcado, su CSS (`.rules-2col`, `.rules-must*`,
+`.rules-peek*` — ⚠️ **`.rule*` NO**, que lo usa `/normas`), siete claves de idioma en tres idiomas, y
+las **dos ranuras** `slot-normas-registro` / `slot-normas-calcetines`, que es la **quinta** vez que
+`IllustrationKit::SLOTS` encoge por la misma regla: *una ranura vive exactamente lo que vive su
+consumidor*. La portada vuelve a gastar **UNA** de sus tres colocaciones de dibujo.
+
+**▶ Guardas.** Entra `BeforeVisitSectionTest` (12 casos) y se retiran `RulesSectionTest` (7) y
+`CardAnatomyTest` (5), las dos sin sujeto —la segunda entera: **ya no queda ni un `line-clamp` en las
+hojas**—. `CmsLandingFlowTest` cambia de contrato en tres casos, `CardSkinTest` pierde dos entradas
+de su corpus y `HomePageTest` re-apunta la nota de calcetines a `/precios`. Neto **12 entran, 12
+salen**: la suite se queda en **4.555** y por eso el número no sirve de evidencia — la evidencia son
+las 28.505 aserciones (antes 28.443) y las 13 mutaciones.

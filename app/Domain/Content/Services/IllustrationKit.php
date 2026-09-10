@@ -61,26 +61,23 @@ class IllustrationKit
         // (verificado byte a byte en `#286`).
         'slot-zonas',
 
-        // ── `#309` · las tres ranuras del encargo del owner («elementos de fachada, en grande») ──
-        // Todas nacen CON su consumidor en el mismo cambio, que es la regla de arriba.
-        //
-        // ⚠️⚠️ **Con éstas la portada pasa de UNA pieza decorativa a CUATRO, y eso REVISA a sabiendas
-        // el presupuesto que `#292` fijó** («una por sección, tres en toda la portada»). No es un
-        // descuido: `[DECIDIDO owner, 2026-09-01]` pidió material de fachada en tarifas, en las dos
-        // tarjetas de normas y en cumpleaños. La regla que SIGUE en pie es la que vigila
-        // `FacadeDecorationIsPerScreenTest`: ninguna pieza dentro de un bucle.
-        //
-        // ⚠️⚠️ **`slot-tarifas` SE RETIRA en `#479`, y es la cuarta vez que esta lista encoge por la
-        // misma regla: una ranura vive exactamente lo que vive su consumidor.** Era el friso
-        // familiar (`G3`) de la sección de tarifas, y el rediseño de esa sección desde el canvas la
-        // deja sin ninguna pieza de dibujo (`[DECIDIDO owner, 2026-09-09]`: el artboard de 02 no
-        // lleva ilustración, así que el friso sale). Dejarla declarada habría hecho que
-        // `kit:build` siguiera exigiendo un dibujo que ya no pinta nadie **y que la guarda de
-        // paridad se pusiera roja con el producto sano**.
-        // ▶ Con esto la portada vuelve a gastar TRES de sus colocaciones de dibujo, que es el
-        // presupuesto que `#292` fijó y que `#309` había subido a cuatro.
-        'slot-normas-registro',
-        'slot-normas-calcetines',
+        // ⚠️⚠️ **QUINTA VEZ QUE ESTA LISTA ENCOGE POR LA MISMA REGLA** (`#485`): aquí estaban
+        // `slot-normas-registro` y `slot-normas-calcetines`, las dos manchas de la sección de
+        // NORMAS de la portada. Esa sección la sustituye la 05 «Antes de venir», que el canvas
+        // dibuja **sin ninguna pieza de dibujo**, así que las dos se van con su consumidor.
+        // ▶ Dejarlas declaradas habría hecho que `kit:build` siguiera exigiendo dos dibujos que ya
+        // no pinta nadie **y que la guarda de paridad se pusiera roja con el producto sano** — que
+        // es exactamente lo que `#479` escribió al retirar `slot-tarifas`.
+        // ▶ Con esto la portada gasta **UNA** de sus tres colocaciones de dibujo (`#292`).
+
+        // ── 📜 LAS TRES QUE `#309` AÑADIÓ Y EL REDISEÑO SE HA LLEVADO ─────────────────────────
+        // `slot-tarifas` (el friso familiar `G3` de la sección de tarifas) salió en `#479`, y
+        // `slot-normas-registro` / `slot-normas-calcetines` en `#485`, cada una con la sección que
+        // el canvas rehízo sin ninguna pieza de dibujo.
+        // ▶ Queda escrito porque la regla que las gobierna es la misma que la de arriba y ya ha
+        // decidido CINCO veces: **una ranura vive exactamente lo que vive su consumidor.** La que
+        // SIGUE en pie y no la toca ninguno de estos cambios es la que vigila
+        // `FacadeDecorationIsPerScreenTest`: ninguna pieza decorativa dentro de un bucle.
     ];
 
     /**

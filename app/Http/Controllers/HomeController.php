@@ -8,7 +8,6 @@ use App\Domain\Booking\Services\PartyCards;
 use App\Domain\Booking\Services\RateCards;
 use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Models\Faq;
-use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\RideMosaic;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
@@ -124,7 +123,24 @@ class HomeController extends Controller
             // el trait que escribe los valores de la landing: aquí no se formatea nada.
             'partyDuration' => $partyCards->durationLabel($packs),
             'faqs' => Faq::where('is_active', true)->orderBy('position')->get(),
-            'rules' => VenueRule::where('is_active', true)->orderBy('position')->get(),
+            /*
+             * **¿Se ofrece el justificante de un menor invitado?** (`#485`, sección 05.)
+             *
+             * ⚠️⚠️ **Es DATO y no copia fija.** La línea «¿viene un niño que no es de tu familia?»
+             * ofrece la feature que `#400`/`#401` construyeron, y quién la ofrece lo decide el
+             * catálogo: `ticket_types.guardian_authorization` (`none` · `optional` · `required`).
+             * Escribirla siempre prometería un enlace que el producto no emite —el ancla muerta que
+             * `#482` fichó—, y esconderla siempre la dejaría sin salir nunca.
+             *
+             * ⚠️ **`exists()` y no `count()`**: la pregunta es «¿alguno?», y una sola fila basta.
+             * ⚠️ **`is_active` NO se filtra aquí a propósito**: la marca vive en el producto y un
+             * producto inactivo hoy puede volver mañana; lo que decide la frase es si esta
+             * instalación **usa** el mecanismo, no cuántas entradas tiene a la venta ahora mismo.
+             */
+            'guestWaiverOffered' => TicketType::query()
+                ->whereNotNull('guardian_authorization')
+                ->where('guardian_authorization', '!=', 'none')
+                ->exists(),
             // ⚠️⚠️ **`/registro`, `/login` y `/recuperar-contrasena` ya NO abren un modal**
             // (`specs/auth-en-cajon.md` §4.4, 2026-08-23): son PUERTAS que sirven la home y abren el
             // cajón en su zona de auth, exactamente como `/entradas` y `/mi-cuenta/…`. El mapa

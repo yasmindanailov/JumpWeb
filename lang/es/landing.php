@@ -366,19 +366,69 @@ return [
         'address_title' => 'Ubicación', 'directions' => 'Cómo llegar',
     ],
     'rules' => [
-        'eyebrow' => 'Normas', 'title' => 'Normas',
-        // ── Los DOS requisitos que hay que cumplir ANTES de saltar (`#309`) ──────────────────
-        // ⚠️ `socks_title`/`socks_text` VIVÍAN en `pricing` y se han MOVIDO aquí, no copiado: la
-        // nota salió de la sección «Tarifas» de la portada y una clave que nombra la sección donde
-        // ya no está es una mentira que el siguiente agente se cree. `<x-site.socks-note>` —que
-        // `/precios` sigue usando— lee estas mismas.
-        'register_title' => 'Registro obligatorio',
-        'register_text' => 'Todos los que salten tienen que registrarse y aceptar el consentimiento, menores incluidos. Se hace una sola vez.',
-        'register_cta' => 'Hacer el registro',
+        // ⚠️⚠️ **DE ESTE GRUPO SOLO QUEDAN DOS CLAVES, y su consumidor NO es la portada** (`#485`).
+        // La sección de normas de la portada se retiró al entrar la 05 «Antes de venir», y con ella
+        // se fueron `eyebrow`, `title`, `register_title`, `register_text`, `register_cta`,
+        // `socks_cta` y `all_cta` — todas se quedaron sin quien las pintara.
+        // ▶ **`socks_title`/`socks_text` se quedan porque las lee `<x-site.socks-note>`**, que
+        // `/precios` sigue usando: esa página no tiene sección de normas donde recoger el requisito.
+        // ⚠️ El grupo **no se renombra a `pricing`** aunque hoy solo lo use esa página: ya vivió ahí
+        // y `#309` lo movió con su motivo escrito —una clave que nombra la sección de la que la nota
+        // acaba de salir induce a error—. Moverlo otra vez sería repetir el viaje entero.
         'socks_title' => 'Calcetines antideslizantes obligatorios',
         'socks_text' => 'Son imprescindibles para saltar de forma segura. Puedes traerlos de casa o añadirlos a tu entrada.',
-        'socks_cta' => 'Añadirlos a mi entrada',
-        'all_cta' => 'Leer las normas',
+    ],
+
+    /*
+     * ── 05 · ANTES DE VENIR ─────────────────────────────────────────────────────────────────────
+     * Carril de diseño Fase 2 · T2f (`#485`). Textos de `doc/voz.md` del canvas, que es el registro
+     * de lo aprobado por el dueño.
+     *
+     * ⚠️⚠️ **La entradilla y el CTA NO son los del artboard de sección, y es deliberado.** `Antes de
+     * Venir PJP` 2a escribe «Sin firmar el descargo… no se entra» y «Registrarse»; el ENTREGABLE
+     * (`Portada PJP`, pasada de copy del 9 sep) escribe lo que hay aquí. La regla la fijó `#482`:
+     * *los artboards de sección son el registro de sus turnos y el entregable es `Portada PJP`*.
+     *
+     * ⚠️ **«Mi QR» es el nombre del PRODUCTO** (`[DECIDIDO owner, 2026-09-10]`), el mismo que la
+     * cuenta usa en `account.card.title`. El canvas escribe «Mi Play Jump QR» y «Crear Mi Play
+     * Jump», que son marca del cliente: en el producto serían la fuga que `DECISIONES #1` prohíbe.
+     */
+    'before' => [
+        'eyebrow' => 'Antes de venir',
+        'title' => 'Tu registro es este QR',
+        'lede' => 'Firmas el descargo de responsabilidad una vez, en el móvil. En la puerta solo enseñas el código.',
+
+        // ⚠️ **El nombre accesible dice «de ejemplo»**: sin eso, un lector de pantalla anuncia un
+        // código y quien lo oiga entenderá que hay algo que escanear. No lo hay, a propósito.
+        'qr_aria' => 'Mi QR, de ejemplo',
+        'qr_name' => 'Mi QR',
+        'qr_sample' => 'de ejemplo',
+        'qr_where' => 'En tu cuenta y en el correo de cada reserva. No hace falta imprimirlo.',
+
+        // ⚠️⚠️ **El sujeto es el VISITANTE.** El canvas lo reescribió por esto: *«lo que ve el
+        // empleado es su trabajo, no la ventaja del cliente»*. Lo que se cuenta no es que ellos
+        // tengan una pantalla: es que tú no repites nada.
+        'carries_title' => 'Un código para todo',
+        'carries_lede' => 'Lo enseñas en la puerta y el empleado lo ve todo de una vez: qué has reservado, que ya firmaste y quién viene contigo. Sin buscar tu nombre, sin enseñar el correo y sin rellenar nada allí.',
+        'rows' => [
+            // ⚠️ Las tres filas dicen lo que el código lleva **siempre**, no una reserva concreta.
+            'booking' => ['key' => 'Tus reservas', 'val' => 'Las que tengas y las que hagas después'],
+            'waiver' => ['key' => 'Tu firma', 'val' => 'El descargo, firmado una sola vez'],
+            'minors' => ['key' => 'Tus hijos', 'val' => 'Los que has añadido a tu cuenta'],
+        ],
+        'always' => 'Uno solo, siempre el mismo, y vale para todas las veces que vengáis.',
+
+        // ⚠️ **Sin el precio**, y el motivo está en la vista: el producto no sabe cuál de sus
+        // complementos son «los calcetines», y la cifra ya se publica en el carril de la sección 02.
+        'socks_lead' => 'Lo único que no cabe en el código:',
+        'socks_text' => 'calcetines antideslizantes. Tráelos de casa o cómpralos aquí, y te los quedas.',
+        'guest_text' => '¿Viene un niño que no es de tu familia? Puedes mandar un enlace a sus padres para que firmen ellos, sin crear cuenta.',
+
+        'all_rules' => 'Ver todas las normas',
+        'cta' => 'Crear mi cuenta',
+        // ⚠️ **Con sesión no se ofrece crear cuenta**: ya la tiene. Se ofrece el objeto del que habla
+        // la sección, y el enlace abre el cajón en su zona `card`.
+        'cta_account' => 'Ver mi QR',
     ],
     'faq' => ['title' => 'Dudas'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven

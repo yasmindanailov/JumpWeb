@@ -122,6 +122,12 @@ class HomePageTest extends TestCase
      *
      * ⚠️ Re-apuntado y **más fuerte que antes**: la versión anterior solo comprobaba que la nota
      * ESTUVIERA; ésta comprueba además dónde NO está, que es la mitad que fija la decisión.
+     *
+     * ⚠️⚠️ **Re-apuntado otra vez en `#485`, y la mitad de la portada cambia de sujeto.** La sección
+     * de normas ya no existe: la sustituye la 05 «Antes de venir», donde los calcetines son *«lo
+     * único que no cabe en el código»* y se dicen dentro de una frase, no en un título. Lo que la
+     * portada tiene que seguir diciendo —y es lo que aquí se vigila— es **el requisito**, porque es
+     * de seguridad; lo que no puede volver es el callout del catálogo.
      */
     public function test_the_socks_note_lives_on_pricing_and_no_longer_on_the_home(): void
     {
@@ -131,20 +137,27 @@ class HomePageTest extends TestCase
             ->assertSee('ic-s1', false)                                      // icono de marca S1 (white-label)
             ->assertSee('socks-note__title', false);                        // callout reutilizable
 
-        // En la portada el dato sigue estando —es obligatorio— pero como TARJETA de la sección de
-        // normas, no como la nota del catálogo. Se comprueban las dos mitades.
+        // En la portada el dato sigue estando —es obligatorio— pero dentro de la frase de la sección
+        // 05, no como la nota del catálogo. Se comprueban las dos mitades.
         $this->get('/')->assertOk()
             ->assertDontSee('socks-note__title', false)
-            ->assertSee('Calcetines antideslizantes obligatorios');
+            ->assertSee('calcetines antideslizantes');
     }
 
+    /**
+     * ⚠️ **La nota se traduce en `/precios`, que es donde vive** (`#485`), y la frase de la portada
+     * se comprueba aparte: son dos textos distintos desde que la sección 05 sustituyó a la de
+     * normas, y aseverar los dos en la misma página dejaba este caso mirando al vacío.
+     */
     public function test_socks_note_is_translated(): void
     {
         $this->get('/lang/en');
-        $this->get('/')->assertSee('Non-slip socks required')->assertSee('Bring your own from home', false);
+        $this->get('/precios')->assertSee('Non-slip socks required')->assertSee('Bring your own from home', false);
+        $this->get('/')->assertSee('non-slip socks', false);
 
         $this->get('/lang/fr');
-        $this->get('/')->assertSee('Chaussettes antidérapantes obligatoires')->assertSee('Apporte les tiennes', false);
+        $this->get('/precios')->assertSee('Chaussettes antidérapantes obligatoires')->assertSee('Apporte les tiennes', false);
+        $this->get('/')->assertSee('chaussettes antidérapantes', false);
     }
 
     public function test_home_includes_the_purchase_sidebar(): void

@@ -245,15 +245,41 @@ return [
         'weekdays' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
         'address_title' => 'Location', 'directions' => 'Directions',
     ],
+    // ⚠️ Solo quedan las dos que lee `<x-site.socks-note>` en `/precios`: la sección de normas de la
+    // portada la sustituyó la 05 «Antes de venir» (`#485`). El porqué, en `lang/es/landing.php`.
     'rules' => [
-        'eyebrow' => 'Rules', 'title' => 'Rules',
-        'register_title' => 'Sign-up required',
-        'register_text' => 'Everyone who jumps must sign up and accept the waiver, children included. You only do it once.',
-        'register_cta' => 'Sign up now',
         'socks_title' => 'Non-slip socks required',
         'socks_text' => "They're a must for safe jumping. Bring your own from home or add them to your ticket.",
-        'socks_cta' => 'Add them to my ticket',
-        'all_cta' => 'Read all the rules',
+    ],
+
+    // ── 05 · BEFORE YOU COME ── (`#485`). El término del descargo en inglés es «liability waiver»,
+    // y lo vigila `WaiverWordingIsOneTermTest`.
+    'before' => [
+        'eyebrow' => 'Before you come',
+        'title' => 'Your sign-up is this QR',
+        'lede' => 'You sign the liability waiver once, on your phone. At the door you just show the code.',
+
+        'qr_aria' => 'My QR, sample',
+        'qr_name' => 'My QR',
+        'qr_sample' => 'sample',
+        'qr_where' => 'In your account and in every booking email. No need to print it.',
+
+        'carries_title' => 'One code for everything',
+        'carries_lede' => 'You show it at the door and staff see it all at once: what you booked, that you already signed, and who is coming with you. No looking up your name, no showing your email, nothing to fill in there.',
+        'rows' => [
+            'booking' => ['key' => 'Your bookings', 'val' => 'The ones you have and the ones you make later'],
+            'waiver' => ['key' => 'Your signature', 'val' => 'The liability waiver, signed once'],
+            'minors' => ['key' => 'Your children', 'val' => 'The ones you added to your account'],
+        ],
+        'always' => 'One code, always the same, good for every visit.',
+
+        'socks_lead' => "The one thing the code can't carry:",
+        'socks_text' => 'non-slip socks. Bring them from home or buy them here, and they are yours to keep.',
+        'guest_text' => "Is a child coming who isn't family? You can send their parents a link so they sign themselves, no account needed.",
+
+        'all_rules' => 'See all the rules',
+        'cta' => 'Create my account',
+        'cta_account' => 'See my QR',
     ],
     'faq' => ['title' => 'FAQ'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven

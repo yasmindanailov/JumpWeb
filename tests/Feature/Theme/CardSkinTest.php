@@ -18,9 +18,7 @@ use Tests\TestCase;
  *     `box-shadow: var(--shadow-float)`— y que ninguna la abandone en silencio (una tarjeta que
  *     vuelva a `--line` no falla: solo deja de parecer de la misma web).
  *  2. **Que las de SEGUNDO nivel NO lleven la sombra dura**: si `.socks-note` amanece en pegatina,
- *     la jerarquía que distingue «elige esto» de «ten esto en cuenta» desaparece — y el adelanto de
- *     normas de la portada (`.rules-peek__item`, borde de tinta SIN sombra, `#309`) es exactamente
- *     ese segundo nivel a propósito.
+ *     la jerarquía que distingue «elige esto» de «ten esto en cuenta» desaparece.
  *  3. **Que ninguna pegatina LEVITE**: la tarjeta responde con la sombra o no responde (`#303`);
  *     `.price` y `.rule` levitaban 6 y 3 px con `--shadow-lift` y borde cian, y eso se retiró.
  *  4. **Que la destacada conserve el borde de tinta** sobre el color de zona: `border-color:
@@ -41,14 +39,18 @@ class CardSkinTest extends TestCase
         // de la portada, que se retiró con la sección 03. *Una entrada sin sujeto es una guarda
         // que pasa sin mirar nada*, y esta lista lo dice en su propia guarda-de-la-guarda.
         '.visit-card' => 'las tres tarjetas de Visítanos (#307)',
-        '.rules-must__card' => 'los dos requisitos de la sección de normas (#309)',
+        // ⚠️ `.rules-must__card` se fue en `#485`, por el MISMO motivo que `.ride-card` en `#482`:
+        // la sección de normas de la portada la sustituyó la 05 «Antes de venir», que no tiene
+        // tarjetas —su pieza es un bloque de tinta— y por tanto no tiene piel que vigilar aquí.
         '.rule' => 'las tarjetas de /normas — T10',
     ];
 
     /** Segundo nivel: apoyo. Borde, pero SIN la sombra dura. */
     private const APOYO = [
+        // ⚠️ `.rules-peek__item` se fue en `#485` con la sección de normas de la portada. Queda UNA
+        // entrada, y eso basta: lo que esta lista vigila es que nadie ascienda una tarjeta de apoyo
+        // a pegatina, y con un sujeto vivo la regla sigue teniendo dónde morder.
         '.socks-note' => 'la nota de calcetines bajo las tarifas',
-        '.rules-peek__item' => 'el adelanto de normas de la portada (#309): borde de tinta sin sombra, a propósito',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────────────

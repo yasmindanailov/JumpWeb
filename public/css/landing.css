@@ -2153,10 +2153,12 @@ img { display: block; max-width: 100%; }
 }
 .price__ico svg { max-width: 26px; max-height: 26px; }
 
-/* T10 (#323): la tarjeta de tarifa es PEGATINA — la misma receta que `.ride-card`, `.visit-card` y
-   `.rules-must__card` (borde de tinta 1 px + `--shadow-float`), `[DECIDIDO owner]` con las dos
+/* T10 (#323): la tarjeta de tarifa es PEGATINA — la misma receta que `.ride-card` y `.visit-card`
+   (borde de tinta 1 px + `--shadow-float`), `[DECIDIDO owner]` con las dos
    pieles renderizadas delante. Regla de DOS NIVELES que nace aquí y vigila `CardSkinTest`:
-   pegatina = lo que se elige o se compra; sin sombra = apoyo (`.socks-note`, `.rules-peek__item`).
+   pegatina = lo que se elige o se compra; sin sombra = apoyo (`.socks-note`).
+   ⚠️ Esta nota citaba `.rules-must__card` y `.rules-peek__item`, que eran los dos ejemplos de la
+   sección de normas: se fueron con ella en `#485`. La regla no cambia; cambian sus ejemplos.
    ⚠️ Sin hover: la tarjeta no es un enlace (`#307`/`#295`) — aquí levitaba 6 px con sombra difusa y
    borde CIAN, tres cosas que el sistema ya había retirado por separado. El borde sigue midiendo
    1 px, así que el texto no refluye: medido, «Más info» queda en la misma línea. */
@@ -2653,92 +2655,281 @@ img { display: block; max-width: 100%; }
 .rule__name { font-size: var(--fs-18); font-weight: 600; line-height: 1.2; }
 .rule__desc { font-size: var(--fs-13); color: var(--fg-mute); line-height: 1.5; }
 
-/* ══ NORMAS · dos requisitos PEGAJOSOS y un asomo de normas (`#309`) ═══════════════════════════
-   `[DECIDIDO owner, 2026-09-01]`. Sustituye a `.rules-layout` + `.rules-vslider` + `.rule`, que eran
-   el pliego de doce pictogramas del cliente ANTIGUO y un carrusel vertical con TODAS las normas.
-   Aquellas reglas se han ido con su único consumidor, que era esta sección.
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 05 · «ANTES DE VENIR» · el registro ES el QR
+   `DECISIONES #485` · Fase 2 · T2f. Artboards `Antes de Venir PJP` 2a + `Escritorio PJP` 3a.
 
-   ⚠️⚠️ **La columna izquierda es `sticky` y la derecha la que corre — pero eso solo se NOTA si la
-   derecha es más alta.** Por eso el tope de cuatro normas no es cosmético: con dos, las dos
-   columnas medirían casi lo mismo y la pegajosidad no se vería nunca. Si alguien sube el tope, que
-   lo suba; si lo baja a dos, está apagando el efecto sin darse cuenta.
+   ⚠️⚠️ **AQUÍ VIVÍA LA SECCIÓN DE NORMAS** (`.rules-2col`, `.rules-must*`, `.rules-peek*`, `#309`)
+   y se ha ido con su único consumidor, que era esa sección. ▶ **`.rule*` NO se va**: lo usa
+   `/normas`, que es justo la página a la que esta sección lleva — comprobado por clase EXACTA y
+   por fichero, que es como `#309` evitó llevarse por delante media página ajena.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
 
-   ⚠️ El `top` sale del armazón, no de un número: los racimos flotan a `--nav-pad-block` y miden
-   `--nav-cluster-h`. Un `top: 100px` a mano se descuelga en cuanto el logotipo cambie de talla —que
-   ya pasa entre escritorio y teléfono (`--nav-logo-h`: 70 → 46). */
-.rules-2col {
-  display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  gap: var(--sp-20); align-items: start;
-}
-.rules-must {
-  position: sticky;
-  top: calc(var(--nav-pad-block) * 2 + var(--nav-cluster-h));
-  display: grid; gap: var(--sp-16);
-}
-
-/* Las dos tarjetas de REQUISITO: pegatina completa —borde de tinta y sombra dura— porque son las
-   dos únicas piezas de la sección sobre las que se puede actuar. */
-.rules-must__card {
-  position: relative; isolation: isolate; overflow: hidden;
-  border: 1px solid var(--paper-fg); border-radius: var(--r-lg);
-  padding: var(--sp-20); background: var(--bg-card);
-  box-shadow: var(--shadow-float);
-  display: grid; gap: var(--sp-12); justify-items: start;
-}
-/* La mancha, EN GRANDE (`[DECIDIDO owner]`) y recortada por el canto de la tarjeta: es la «mancha
-   de esquina» del artboard, no un icono centrado. Va detrás del texto con su propio contexto de
-   apilamiento, el patrón de `#286`. */
-.rules-must__ilu {
-  position: absolute; z-index: -1; pointer-events: none;
-  right: -16%; top: -26%;
-  width: min(80%, 320px); height: auto;
-  --ilu-fg: var(--zone-1);
-  opacity: 0.26;
-}
-.rules-must__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: var(--fs-22); line-height: 1.05; letter-spacing: -0.02em;
-  text-transform: uppercase; margin: 0;
-}
-/* ⚠️⚠️ **TOPE DE DOS LÍNEAS, y son DOS mecanismos a propósito** (`[DECIDIDO owner, 2026-09-01]`):
-   el texto se ha reescrito para que QUEPA en dos —medido: `register_text` iba a tres— y además el
-   corte se deja puesto como RED, para que un texto más largo en el futuro no descuadre la fila de
-   tarjetas.
-   ▶ **Los dos, y no uno**: solo reescribir deja la tarjeta a merced del siguiente que edite el
-   copy; solo cortar **esconde texto que alguien decidió poner**, y en una norma de seguridad eso
-   puede ser justo la mitad que importa. Con los dos, lo que se lee es lo que se escribió.
-   ⚠️ `-webkit-box` no es un prefijo olvidado: es el único mecanismo con soporte universal para
-   `line-clamp`, y así lo sigue exigiendo la propia especificación mientras `line-clamp` a secas se
-   estabiliza. */
-.rules-must__text {
-  margin: 0; font-size: var(--fs-15); line-height: 1.55; color: var(--fg-mute);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
-  overflow: hidden;
+/* ── EL BLOQUE ─────────────────────────────────────────────────────────────────────────────
+   ⚠️⚠️ **Es de TINTA en las dos superficies, y no es una elección de gusto: `[data-surface]`
+   PINTA** (`background: var(--bg)`, la lección de `#484`), así que una superficie no puede
+   depender del ancho de la ventana. El artboard de móvil (7 sep) lo tiene en papel y el de
+   escritorio (8 sep) en tinta; manda el más nuevo, que es además el que trae la idea que ordena
+   la sección: *«la sección ES el código»*.
+   ⚠️ El radio es `--r-lg` (16) y el escalón inmediatamente inferior, `--r-btn` (10), es el de la
+   pantalla: radios CONCÉNTRICOS, sin inventar un tercer valor (la escala tiene cuatro peldaños). */
+.before__code {
+  border-radius: var(--r-lg);
+  padding: var(--sp-20);
+  display: grid; gap: var(--sp-20);
 }
 
-/* El ASOMO de normas. Tarjeta también —el owner las quiere todas en tarjeta— pero SIN sombra: la
-   elevación es lo que separa lo accionable de lo que solo se lee, y estas no llevan a ninguna
-   parte. Es la misma distinción por la que `.visit-card` no tiene `:hover` (`#295`). */
-.rules-peek { display: grid; gap: var(--sp-12); }
-.rules-peek__item {
-  border: 1px solid var(--paper-fg); border-radius: var(--r-lg);
-  padding: var(--sp-16); background: var(--bg-card);
+/* ── EL OBJETO ───────────────────────────────────────────────────────────────────────────────
+   ⚠️ **En teléfono el código y su texto van AL LADO**, como el artboard de móvil: apilados dejaban
+   166 px de tinta vacía a la derecha del código (medido) y la sección crecía 58 px para nada. En
+   escritorio se apilan, que es lo que hace `Escritorio PJP` 3a con su columna de 340. */
+.before__object { display: flex; gap: var(--sp-16); align-items: center; }
+.before__id { flex: none; display: grid; gap: var(--sp-10); justify-items: start; }
+
+/* EL MÓVIL DIBUJADO. En teléfono el marco se retira —dibujar un teléfono dentro de un teléfono no
+   dice nada— y queda su pantalla, que es exactamente la tarjeta blanca del artboard de móvil. */
+.before__device { display: inline-grid; }
+.before__ear,
+.before__chin { display: none; }
+
+/* ⚠️⚠️ **BLANCO EXPLÍCITO, no `--bg-card`.** Dentro de esta superficie `--bg-card` vale
+   `--ink-bg-card` (#1A1F25), así que el código se dibujaría oscuro sobre oscuro — el defecto que
+   `#483` y `#484` pagaron dos veces. La pantalla de un móvil es blanca en cualquier superficie. */
+.before__screen {
+  background: var(--paper-bg-card);
+  border-radius: var(--r-btn);
+  padding: var(--sp-20);
+  display: grid; place-items: center;
+}
+
+/* EL CÓDIGO. ⚠️ El `fill` vive aquí y lee `--paper-fg`: el color de un código es CONTRASTE, no
+   tema (doctrina de `QrCode::svg()`), y sobre la pantalla blanca `--fg` saldría claro. */
+.sqr {
+  position: relative; display: block;
+  width: var(--sqr-size, 112px); height: var(--sqr-size, 112px);
+}
+.sqr__code { display: block; width: 100%; height: 100%; }
+.sqr__code path { fill: var(--paper-fg); }
+
+/* EL ICONO DE MARCA, CALADO. Las proporciones son las del artboard y se escriben en PORCENTAJE
+   para que sobrevivan al cambio de talla: hueco 38/112 = 34 %, dibujo 30/112 = 27 % (en escritorio
+   el artboard usa 88/260 y 68/260, que son los mismos 34 % y 26 %).
+   ⚠️ El hueco es blanco, como la pantalla: es una calada, no una pegatina encima. */
+.sqr__mark {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 34%; height: 34%;
+  background: var(--paper-bg-card);
+  display: grid; place-items: center;
+}
+.sqr__mark img { display: block; width: 79%; height: 79%; }
+
+/* EL NOMBRE, FUERA del recuadro (el artboard escribe por qué: dentro se comería la zona de
+   silencio). ⚠️ En Hanken 800 y no en el display: Bungee no baja de 20 y esto mide 13. */
+.before__name {
+  margin: 0;
+  display: flex; align-items: baseline; gap: var(--sp-8); flex-wrap: wrap;
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-13);
+  letter-spacing: 0.01em; color: var(--fg);
+}
+/* «de ejemplo» — es la etiqueta del sistema, en mono. No es una nota al pie: es lo que impide que
+   el código se lea como el carné de alguien. */
+.before__sample {
+  font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-label);
+  letter-spacing: 0.04em; color: var(--fg-mute);
+}
+.before__where {
+  flex: 1; min-width: 0;
+  margin: 0; max-width: 46ch;
+  font-size: var(--fs-body); line-height: 1.45; color: var(--fg-mute);
+}
+
+/* ── LO QUE EL CÓDIGO LLEVA ────────────────────────────────────────────────────────────────
+   ⚠️⚠️ **El titular, la entradilla y las tres filas NO se pintan en teléfono**, y es el recorte de
+   presupuesto del 7 sep que el propio canvas declara aparte para esa superficie: *«el interruptor
+   de móvil no se toca: son dos superficies y dos decisiones»*. El remate con el ✓ **sí** se queda:
+   es la frase que sostiene la sección.
+   ▶ Medido antes de aceptarlo: la sección que ésta sustituye pesaba **1.108 px** en móvil, así que
+   traerlas costaría ~300 px y aun así la portada quedaría por debajo. Se sigue al canvas y la cifra
+   queda escrita, porque en `#483` el owner revirtió un recorte igual con el número delante. */
+.before__what { display: flex; flex-direction: column; gap: var(--sp-16); }
+.before__what-title,
+.before__what-lede,
+.before__rows { display: none; }
+
+.before__what-title {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-title); line-height: 1.05; color: var(--fg);
+}
+.before__what-lede {
+  margin: 0; max-width: 52ch;
+  font-size: var(--fs-lede); line-height: 1.45; color: var(--fg-mute);
+}
+.before__rows { margin: 0; }
+.before__row {
+  display: grid; grid-template-columns: 136px minmax(0, 1fr);
+  gap: var(--sp-16); align-items: baseline;
+  padding: var(--sp-14) 0;
+  border-top: 1px solid var(--line);
+}
+.before__row-key {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-mute);
+}
+.before__row-val {
+  margin: 0; font-size: var(--fs-body); font-weight: 700; line-height: 1.4; color: var(--fg);
+}
+
+/* EL REMATE. ⚠️ El ✓ va en `--ok`, que en tokens es literalmente «reserva confirmada», y su glifo
+   en `--on-ok`: el par lo declara quien declara el color (`#434`), no se deriva. */
+.before__all {
+  margin: 0;
+  display: flex; align-items: center; gap: var(--sp-12);
+  font-family: var(--font-body); font-weight: 800;
+  font-size: var(--fs-body); line-height: 1.35; color: var(--fg);
+}
+.before__tick {
+  flex: none; width: 26px; height: 26px; border-radius: var(--r-pill);
+  background: var(--ok); color: var(--on-ok);
+  display: grid; place-items: center;
+}
+
+/* ── LA EXCEPCIÓN · los calcetines ─────────────────────────────────────────────────────────
+   Va en PAPEL y fuera del bloque: son «lo único que no cabe en el código». */
+.before__socks,
+.before__guest {
+  margin: var(--sp-16) 0 0; max-width: 86ch;
+  font-size: var(--fs-body); line-height: 1.45; color: var(--fg-mute);
+}
+/* El filete que separa la excepción del código. ⚠️ Es de MÓVIL: en escritorio el artboard no lo
+   lleva —ahí el bloque de tinta ya hace de separación— y la única raya de la sección es la del pie. */
+.before__socks {
+  display: flex; gap: var(--sp-12); align-items: flex-start;
+  margin-top: 22px; padding-top: var(--sp-18);
+  border-top: 1.5px solid var(--line);
+}
+.before__socks strong { color: var(--fg); font-weight: 700; }
+/* ⚠️ El aviso es la PEGATINA del sistema: disco de `--attn` con keyline de tinta. El disco y la
+   «i» los dibuja el icono del set —`ui/info` es un disco macizo con la letra calada—, así que el
+   keyline entra como SOMBRA y no como un segundo círculo: dos discos concéntricos serían el mismo
+   dibujo dos veces.
+   ⚠️⚠️ La tinta es `--paper-fg` y no `--fg`: `--attn` es un amarillo claro fijo en los dos
+   paquetes, y lo que se lee encima es siempre la tinta oscura, viva la pieza donde viva. */
+.before__i {
+  flex: none; width: 20px; height: 20px; margin-top: var(--sp-2);
+  border-radius: var(--r-pill); color: var(--attn);
+  box-shadow: 0 0 0 2px var(--paper-fg);
+  display: grid; place-items: center;
+}
+/* La línea del niño invitado se alinea bajo el texto del aviso, no bajo su chapa. */
+.before__guest { padding-left: calc(20px + var(--sp-12)); }
+
+/* ── LAS DOS SALIDAS ───────────────────────────────────────────────────────────────────────
+   ⚠️ **Ninguna es un botón de acción**: la regla de la sección en el canvas es «cero naranja, cero
+   relleno de acción». Aquí no se compra. */
+.before__foot {
+  margin-top: var(--sp-20);
   display: grid; gap: var(--sp-6);
 }
-.rules-peek__name {
-  margin: 0; font-size: var(--fs-18); font-weight: 700; line-height: 1.2;
+/* El enlace a las normas: filete arriba y área táctil real, no un pseudo. */
+.before__rules {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  padding-top: var(--sp-12);
+  border-top: 2px solid var(--bg-soft);
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-16);
+  color: var(--interactive);
 }
-/* ⚠️ **Tope de dos líneas, y aquí cortar es SEGURO**: estas cuatro normas son un ADELANTO —el CTA
-   de al lado lleva a `/normas`, donde están enteras y sin recortar—. Es la diferencia con una
-   descripción que no tiene segunda casa: ahí esconder texto sí perdería información.
-   ⚠️ Medido el 2026-09-01 con las normas reales: **224, 36, 166 y 156** caracteres, o sea una de una
-   línea al lado de tres de tres. El adelanto dejaba de parecer una lista. */
-.rules-peek__desc {
-  margin: 0; font-size: var(--fs-14); line-height: 1.5; color: var(--fg-mute);
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
-  overflow: hidden;
+.before__rules .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
+.before__rules:hover .arrow { transform: translateX(5px); }
+/* El CTA ocupa la fila entera en teléfono.
+   ⚠️⚠️ **`justify-content: center` NO es decoración: `.btn` no lo declara.** La familia es
+   `inline-flex` con `align-items: center` y nada más, así que en cuanto un botón recibe un ancho
+   —aquí `width: 100%`— su rótulo se queda pegado a la izquierda. **No falla, queda mal**, y lo vio
+   la captura de móvil, no la suite. Es una trampa de la familia entera, no de este botón.
+   ⚠️ **Divergencia declarada con el artboard**: allí el
+   fantasma es Azul Muro (`--interactive`) y aquí es la variante `.btn--ghost` de la familia, que
+   lee `--fg`. Cambiar el color del fantasma tocaría TODOS los de la web —fuera del alcance de una
+   tanda de portada, que es justo lo que `#479` evitó con `/precios`—: queda como decisión del
+   owner con su ficha. */
+.before__cta { width: 100%; justify-content: center; }
+
+/* ── EL REFLUJO DE ESCRITORIO ──────────────────────────────────────────────────────────────
+   `Escritorio PJP` 3a. **Reparto 544 + 544** (seis columnas y seis de las doce de 1120), que es lo
+   que el artboard escribe: el objeto entero mide 340 de teléfono más su texto, y la chapa pide
+   anchura para sus tres filas.
+
+   ⚠️ **Va DETRÁS de su base y no en el bloque común de `min-width` de arriba**: a igual
+   especificidad gana la última regla del fichero (`#314`), y una regla de escritorio escrita antes
+   de su base no haría nada. */
+@media (min-width: 1024px) {
+  .before__code {
+    padding: 32px;
+    grid-template-columns: 340px minmax(0, 1fr);
+    gap: 40px; align-items: start;
+  }
+
+  /* EL TELÉFONO. Cuerpo de tinta con keyline, radio 16 fuera y 10 dentro —el escalón
+     inmediatamente inferior—, con su auricular y su botón. ⚠️ Los dos son `aria-hidden` y no
+     llevan texto: son el DIBUJO de que esto es un móvil. */
+  .before__device {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: var(--sp-12);
+    justify-self: start;
+  }
+  .before__ear,
+  .before__chin {
+    display: grid; place-items: center; height: 20px;
+  }
+  .before__ear::after,
+  .before__chin::after {
+    content: ''; display: block; height: 4px; border-radius: var(--r-pill);
+    background: var(--line);
+  }
+  .before__ear::after { width: 48px; }
+  .before__chin::after { width: 88px; }
+  .before__screen { padding: 26px; }
+  /* El código crece de 112 a 260 y el hueco del icono con él: la proporción es la misma (34 %),
+     así que no hay una segunda medida que mantener. */
+  .sqr { --sqr-size: 260px; }
+
+  /* En escritorio el objeto se apila: el teléfono, su nombre y el párrafo, uno debajo de otro en
+     la columna de 340 (`Escritorio PJP` 3a). */
+  .before__object { display: grid; gap: var(--sp-12); justify-items: start; align-items: start; }
+  .before__name { font-size: var(--fs-body-s); }
+  .before__where { font-size: var(--fs-17); }
+
+  /* Y aquí VUELVE la chapa: en la columna de al lado no cuesta alto, que es el argumento del
+     canvas con su cifra (722 px con chapa en escritorio contra 726 sin ella en móvil). */
+  .before__what-title,
+  .before__what-lede { display: block; }
+  .before__rows { display: block; }
+  /* ⚠️ **El remate baja al PIE de su columna**, y es por una medida: la columna del objeto mide 473
+     y ésta 362, así que con las dos ancladas arriba el bloque se quedaba con ~110 px de tinta vacía
+     debajo de la derecha. Bajar el ✓ reparte ese hueco y además lo pone donde le toca —es la
+     conclusión de las tres filas, no una cuarta—.
+     ⚠️ Hace falta `align-self: stretch` porque el bloque ancla arriba (`align-items: start`): sin
+     él la columna mide lo que su contenido y `margin-top: auto` no tiene contra qué empujar. */
+  .before__what { align-self: stretch; }
+  .before__all { margin-top: auto; }
+
+  /* El filete sobre los calcetines es de MÓVIL y aquí se retira: el bloque de tinta ya separa, y
+     el artboard de escritorio deja una sola raya en la sección, la del pie. */
+  .before__socks { margin-top: 24px; padding-top: 0; border-top: 0; }
+
+  /* El pie pasa a UNA fila: el enlace a la izquierda y el fantasma a la derecha, que en escritorio
+     no ocupa el ancho entero. */
+  .before__foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 32px;
+    margin-top: 32px;
+    padding-top: var(--sp-20);
+    border-top: 1.5px solid var(--line);
+  }
+  .before__rules { border-top: 0; padding-top: 0; justify-content: flex-start; gap: var(--sp-10); }
+  .before__cta { width: auto; flex: none; }
 }
-.rules-peek__more { margin: var(--sp-4) 0 0; }
 
 /* ⚠️ Aquí vivían `.gallery-marquee*` y `.polaroid*`: la marquesina de la sección «En directo», que
    el owner retiró en `#309`. Se fueron con su único consumidor.
@@ -3010,14 +3201,9 @@ select:focus-visible {
      tres pegatinas cuestan ~100 px de chrome que hay que devolver por algún lado. A 200 px la
      chincheta y las dos vías principales siguen leyéndose (comprobado a 390). */
   .visit-card--map { min-height: 200px; }
-  /* ⚠️⚠️ **ESTO FALTABA Y ERA UN DEFECTO VISIBLE**: sin colapsar, a 390 px la sección de normas
-     seguía en DOS columnas y el `overflow: hidden` de las tarjetas de requisito **cortaba su
-     titular y su botón** («REGISTRO OBLIGATOR…», «Añadirlos a mi entra…»). Lo cazó la captura de
-     móvil, no la suite: ninguna guarda mira anchos.
-     ▶ Y el `sticky` se APAGA a propósito: apilada, la columna izquierda se quedaría clavada sobre
-     las normas mientras éstas pasan por debajo, que es lo contrario de lo que se buscaba. */
-  .rules-2col { grid-template-columns: 1fr; }
-  .rules-must { position: static; }
+  /* ⚠️ Aquí colapsaban las dos columnas de la sección de NORMAS y se apagaba su `sticky`. Se han
+     ido con la sección (`#485`), que la sustituye la 05 «Antes de venir» — y aquélla nace
+     mobile-first, así que no necesita ninguna regla de colapso. */
   .rules-grid { grid-template-columns: 1fr 1fr; }
   .faq { grid-template-columns: 1fr; gap: 24px; }
   .events__row { grid-template-columns: 1fr; }

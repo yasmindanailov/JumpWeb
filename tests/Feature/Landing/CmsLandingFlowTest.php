@@ -244,28 +244,24 @@ class CmsLandingFlowTest extends TestCase
     // ────────────────────────────── Normas ─────────────────────────────
 
     /**
-     * **Una norma creada en el panel sale en la portada Y en `/normas`.**
+     * **Una norma creada en el panel sale en `/normas`.**
      *
-     * ⚠️⚠️ **Este caso ha cambiado de contrato DOS veces y conviene saberlo antes de tocarlo.** La
-     * T1 del idioma visual (`#292`) recortó la portada a las TRES primeras normas, y este caso pasó
-     * a exigir `assertDontSee` con `position: 99`. El 2026-08-31 el owner pidió **revertir la T1
-     * entera** (`#300`, con la consecuencia delante), así que la portada vuelve a listarlas TODAS y
-     * el caso vuelve a su forma original.
-     * ▶ **El tope de tres ya no existe**, y con él se va el caso que lo fijaba: una guarda de un
-     * contrato retirado no protege nada — pasa en verde diga lo que diga el producto.
+     * ⚠️⚠️ **Este caso ha cambiado de contrato TRES veces y conviene saberlo antes de tocarlo.** La
+     * T1 del idioma visual (`#292`) recortó la portada a las TRES primeras normas y el caso pasó a
+     * exigir `assertDontSee`; `#300` revirtió aquella T1 entera y volvió a listarlas todas; `#309`
+     * lo dejó en un asomo de cuatro.
+     * ▶ **Y en `#485` la portada deja de enseñar normas**: la sección que las asomaba la sustituye
+     * la 05 «Antes de venir», que en su lugar **enlaza** a `/normas` (`[DECIDIDO owner]`, con la
+     * consecuencia delante). Así que el sujeto se queda en una sola página, y la otra mitad pasa al
+     * caso invertido de abajo.
      */
-    public function test_rule_created_in_panel_appears_on_home_and_normas(): void
+    public function test_rule_created_in_panel_appears_on_normas(): void
     {
         Livewire::actingAs($this->admin())
             ->test(CreateParkRule::class)
             ->fillForm([
                 'name' => ['es' => 'NormaNuevaZZ'],
                 'description' => ['es' => 'Descripción de la norma.'],
-                // ⚠️ **Posición 0 y no 99, y el cambio NO afloja el caso** (`#309`): desde que la
-                // portada asoma solo las CUATRO primeras normas, una creada al final del orden no
-                // sale allí **por diseño**, no por un defecto. El sujeto —que una norma creada en
-                // el panel llegue a las páginas públicas— se comprueba con una que SÍ entre en el
-                // asomo; el tope tiene su propio caso, abajo.
                 'position' => 0,
                 'is_active' => true,
             ])
@@ -274,17 +270,19 @@ class CmsLandingFlowTest extends TestCase
 
         Auth::logout();
         $this->get('/normas')->assertOk()->assertSee('NormaNuevaZZ');
-        $this->get('/')->assertOk()->assertSee('NormaNuevaZZ');
     }
 
     /**
-     * **La portada ASOMA cuatro normas; `/normas` las tiene todas** (`#309`).
+     * **LA PORTADA YA NO ENSEÑA NINGUNA NORMA, y a cambio LLEVA a `/normas`** (`#485`).
      *
-     * El tope lo declara la VISTA, no el panel: el parque decide QUÉ normas y en qué orden, y
-     * cuántas caben en la portada es diseño. ⚠️ Y no es cosmético — la columna de requisitos es
-     * `sticky` y solo se nota si la de normas es más alta.
+     * ⚠️⚠️ **Es un caso INVERTIDO y por eso lleva las dos mitades.** Sin la segunda —el enlace—, un
+     * `assertDontSee` a secas pasaría en verde si alguien retirara también la salida a `/normas`, y
+     * entonces esa página se quedaría alcanzable solo desde el pie. Es exactamente el agujero que
+     * `#480` abrió al retirar el único enlace a `#rules` y que esta sección cierra.
+     * ▶ Y sustituye al caso del «asomo de cuatro»: aquel tope ya no existe, y una guarda de un
+     * contrato retirado no protege nada — pasa en verde diga lo que diga el producto.
      */
-    public function test_the_home_only_peeks_four_rules_and_normas_has_them_all(): void
+    public function test_the_home_shows_no_rule_but_links_to_normas(): void
     {
         VenueRule::query()->delete();
         foreach (range(1, 6) as $i) {
@@ -292,10 +290,10 @@ class CmsLandingFlowTest extends TestCase
         }
 
         $home = $this->get('/')->assertOk();
-        foreach ([1, 2, 3, 4] as $i) {
-            $home->assertSee("NormaPeekZZ{$i}");
+        foreach (range(1, 6) as $i) {
+            $home->assertDontSee("NormaPeekZZ{$i}");
         }
-        $home->assertDontSee('NormaPeekZZ5')->assertDontSee('NormaPeekZZ6');
+        $home->assertSee(route('normas'));
 
         $todas = $this->get('/normas')->assertOk();
         foreach (range(1, 6) as $i) {
@@ -330,14 +328,15 @@ class CmsLandingFlowTest extends TestCase
         $this->get('/normas')->assertOk()->assertDontSee('Conducta');
     }
 
-    public function test_deactivated_rule_disappears_from_home_and_normas(): void
+    /**
+     * ⚠️ **Solo `/normas`**: desde `#485` la portada no enseña ninguna norma, así que allí el caso
+     * probaría «no se ve» contra «no se ve» — la trampa que este mismo fichero ya evitaba eligiendo
+     * la posición 0 cuando la portada asomaba cuatro.
+     */
+    public function test_deactivated_rule_disappears_from_normas(): void
     {
-        // ⚠️ Posición 0: la portada solo asoma las cuatro primeras (`#309`), así que una norma al
-        // final del orden no llegaría a estar visible ni antes de desactivarla y el caso probaría
-        // «no se ve» contra «no se ve».
         $rule = VenueRule::create(['name' => ['es' => 'NormaVisibleZZ'], 'position' => 0]);
 
-        $this->get('/')->assertSee('NormaVisibleZZ');
         $this->get('/normas')->assertSee('NormaVisibleZZ');
 
         Livewire::actingAs($this->admin())
@@ -347,7 +346,6 @@ class CmsLandingFlowTest extends TestCase
             ->assertHasNoFormErrors();
 
         Auth::logout();
-        $this->get('/')->assertDontSee('NormaVisibleZZ');
         $this->get('/normas')->assertDontSee('NormaVisibleZZ');
     }
 }

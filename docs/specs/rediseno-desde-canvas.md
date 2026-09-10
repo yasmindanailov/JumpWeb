@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02, 03 y 04, más la página `/atracciones`; quedan CUATRO secciones)
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02, 03, 04 y 05, más la página `/atracciones`; quedan TRES secciones)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -196,7 +196,7 @@ sistema y dicen cosas distintas.
 |---|---|---|---|
 | **0** | Base: Docker · las seis cifras · este inventario | esta spec | todas |
 | **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
-| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio | la portada entera, vestida con BD | 3 |
+| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio (van **5 de 8**) | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
 | **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
 | **5** | **Post-form y justificante digital** | lo que hoy es funcional y no está vestido | — |
@@ -212,7 +212,7 @@ titulares son frases de **3 a 6 palabras**:
 | Cuánto | Una hora, dos o el día | `Precios PJP` (10a) · ✅ `#479` + `#480` |
 | Qué hay dentro | Salta, trepa y déjate caer | `Juegos PJP` (6a) + `Escritorio PJP` (4b) · ✅ `#482` |
 | Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) + `Escritorio PJP` (5a) · ✅ `#483` |
-| Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) |
+| Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) + `Escritorio PJP` (3a) · ✅ `#485` |
 | Reseñas | Lo dicen los que han venido | `Resenas PJP` (2a) |
 | Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) |
 | Dudas | Lo que más nos preguntáis | `Dudas PJP` (1a) |
@@ -326,6 +326,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
 | T2e (`#483`) | **`--shadow-float-hover: 2px 2px 0 var(--paper-fg)`** y **`--shadow-float-press: 0 0 0 var(--paper-fg)`** en el paquete. ❗❗ **No es una mejora, es un ARREGLO**: `#478` escribió el hover de la pegatina con esos dos tokens y el paquete no los declaraba, así que la tarjeta reposaba con la sombra DURA del cliente y al pasar el ratón saltaba a la DIFUSA del producto (medido). Sin ellos, la sección 04 **y la 01** siguen con ese defecto. Lo vigila `ClientThemePackageTest`: si el paquete declara `--shadow-float`, tiene que declarar los tres. ⚠️ Y **DATO, desde el panel**: revisar los `features` de los dos packs — la sección enseña los **tres primeros** y hoy dos de los cinco repiten lo que la tarjeta ya dice (la duración y la edad). |
 | T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
+| T2f (`#485`) | **Ninguno de CSS**: la sección se viste entera con roles ya declarados (`--attn`, `--ok`/`--on-ok`, `--interactive`, `--line`, `--paper-fg`, `--paper-bg-card`, los tres radios). ⚠️ Y **DATO, desde el panel**: la línea «¿viene un niño que no es de tu familia?» **solo sale si algún producto ofrece el justificante** (`ticket_types.guardian_authorization` distinto de `none`). Medido en local: **0 de N**, así que hoy no se pinta —y eso es la conducta correcta, no un defecto. Si el parque quiere ofrecerlo, se marca en el producto. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
@@ -381,7 +382,80 @@ navegador instalado**.
 | T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera · chapa de zona, ahorro y complementos fuera | ✅ `#479` + `#480` |
 | T2d | **03 · Qué hay dentro**: el mosaico de cinco, y con él la página `/atracciones` | ✅ `#481` + `#482` |
 | T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` + `#484` |
-| T2f–T2i | Las **cuatro secciones** restantes (§5.1) | ⬜ |
+| T2f | **05 · Antes de venir**: el registro ES el QR · la sección de NORMAS se retira · el código es de ejemplo | ✅ `#485` |
+| T2g–T2i | Las **tres secciones** restantes (§5.1) | ⬜ |
+
+✅ **T2f · «Antes de venir»** (`#485`). Cabecera común · un **bloque de tinta** con el código dentro
+de un móvil y, al lado, lo que ese código lleva · la excepción de los calcetines en papel · y dos
+salidas sin relleno de acción.
+
+❗❗❗ **NO ES UNA SECCIÓN NUEVA: SUSTITUYE A LA DE NORMAS** (`#309`), que decía las dos mismas cosas
+—registrarse y traer calcetines— más un asomo de cuatro normas. Y con eso **cierra la ficha de
+`DEUDA.md` que `#480` abrió**: `/normas` vuelve a tener entrada desde la portada.
+
+▶ **Cuatro decisiones del owner** (preguntadas antes de escribir una línea, protocolo de `#469`):
+el código es **de ejemplo y no lleva a ningún sitio** · las **cuatro normas se van** y queda el
+enlace · la sección va **donde la pone el canvas** —tras las de producto y antes de Visítanos y
+Dudas, o sea un puesto por delante de donde vivía la de normas— · y los nombres son **los del
+PRODUCTO**: «Mi QR» y «Crear mi cuenta», no «Mi Play Jump QR» / «Crear Mi Play Jump», que son marca
+del cliente (`DECISIONES #1`).
+
+❗❗❗ **POR CUARTA VEZ, EL ACTA DESCRIBE UNA PIEZA QUE EL ARTBOARD TIENE APAGADA.** Aquí es la chapa
+de «lo que ve el empleado»: vive tras `conChapaEmpleado`, **apagado desde el recorte del 7 sep** (la
+sección pasa de 1.180 a 726 px por su propia medición). En **escritorio vuelve**, y el motivo es
+aritmético y suyo: ahí va en la columna de al lado y no cuesta alto.
+
+❗❗❗ **LA SUPERFICIE NO PUEDE DEPENDER DEL ANCHO DE LA VENTANA, y eso decidió la composición.**
+`[data-surface]` no solo cambia tokens: **PINTA** (`background: var(--bg)`, la lección de `#484`). Los
+dos artboards discrepan —el móvil (7 sep) pone la sección en papel y el de escritorio (8 sep) en un
+bloque de tinta— y entre ellos manda **el más nuevo**, que además trae la idea que ordena la sección:
+*«la sección ES el código: en una página de papel, un bloque de tinta es lo más importante de la
+pantalla»*. Lo que sí se respeta del móvil es su **recorte**, que el canvas declara expresamente
+aparte: *«el interruptor de móvil no se toca: son dos superficies y dos decisiones»*.
+
+⚠️ **Y el argumento del presupuesto aquí es MÁS FLOJO que en el canvas, medido antes de aceptarlo**:
+la sección que sustituye pesaba **1.108 px** en móvil, así que traer también las tres filas dejaría
+la portada casi igual (−88 px) en vez de −283. Queda escrito para que el owner pueda revertirlo con
+el número delante, que es lo que hizo en `#483` con el reloj.
+
+❗❗❗ **EL CÓDIGO ES UN DIBUJO Y NO PUEDE SER OTRA COSA** (`SampleQrCode`, al lado del generador de
+verdad para que nadie lo «arregle»). La propiedad no es que se parezca a un QR: es que **no se pueda
+decodificar**, y es **estructural** — la banda de la información de formato queda vacía, así que
+ningún lector llega siquiera a leer datos. ⚠️ Esa banda **no estaba reservada y la añadió una
+guarda**: el generador del artboard solo reserva las esquinas, y con el ruido cayendo dentro de la
+columna 8 «no se puede decodificar» era **incidental** en vez de estructural.
+
+⚠️⚠️ **DOS GUARDAS NACIERON DEMASIADO ESTRECHAS Y LO DIJO EL ARNÉS, no una relectura.** Una aseveraba
+`'<section id="rules"'` y **una mutación que devolvía el ancla en un `<span>` pasó en verde** — *la
+propiedad dice que ese destino ya no existe, no que no exista una sección con ese nombre*. La otra
+comprobaba que la sección no pide dibujos **instalando un kit sin esas claves**, así que medía una
+ausencia que el propio arnés causaba (`<x-site.ilu>` no emite nada cuando la clave falta: el modo de
+fallo invisible de `#287`). ▶ Y una **mutación era DÉBIL por precedencia**: `false && A || B` es `B`
+en PHP. **13/13 muerden** tras corregir las tres (`scripts/mutar-antes-de-venir.sh`).
+
+⚠️ **El precio de los calcetines NO se escribe, y no es un olvido**: el producto **no sabe cuál de sus
+complementos son «los calcetines»**, y averiguarlo por su icono sería usar un campo de PRESENTACIÓN
+como identidad — el defecto de `accent` que `#295` y `#301` pagaron dos veces. Y no hace falta: la
+cifra ya se publica en esta misma página, en el carril de complementos de la 02 (medido: «+2 € cada
+uno»).
+
+⚠️ **La línea del niño invitado es DATO**: se pinta si y solo si algún producto ofrece el justificante
+(`ticket_types.guardian_authorization`). Hoy ninguno lo hace, así que no sale — *prometer un enlace
+que el catálogo no emite sería el ancla muerta que `#482` fichó*.
+
+⚠️⚠️ **Y una trampa de la familia de botones, encontrada por la captura y no por la suite**: `.btn`
+**no declara `justify-content`**, así que en cuanto recibe un ancho su rótulo se queda a la
+izquierda. Medido: las **seis** reglas del repo que dan ancho a un `.btn` ya lo declaran a mano, o
+sea que la convención existe y no está escrita. Ficha en `DEUDA.md` con su salida.
+
+▶ **Medido**: la sección pesa **825 px** en móvil (contra los 1.108 de la de normas) y **1.100** en
+escritorio (contra 736 — la diferencia es la cabecera común, que la vieja no tenía). La portada baja
+a **12,02 pantallas** en móvil y sube a **11,12** en escritorio. Desborde horizontal **0** en las 13
+vistas, y la sonda del repo no ve ningún control táctil nuevo bajo 48.
+
+⚠️ **Divergencia declarada**: el titular de escritorio parte con «QR» solo en la segunda línea —una
+línea mediría **675 px** y el tope de la cabecera común son **608** (16ch, `#479`)—. No se toca
+porque ese tope es de las ocho secciones y cambiarlo mueve las cuatro ya aprobadas.
 
 ❗❗❗ **`#484` · EL OJO DEL OWNER SOBRE LA T2e, y las dos cosas que señaló eran DEFECTOS.**
 

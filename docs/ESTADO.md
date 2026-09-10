@@ -1,6 +1,70 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#484`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y verificada en navegador, y la Fase 2 va por su QUINTA tanda — quedan CUATRO secciones de la portada.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#485`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y verificada en navegador, y la Fase 2 va por su SEXTA tanda — quedan TRES secciones de la portada.**
+>
+> ▶ **LA T2f ESTÁ EN EL ÁRBOL: la sección 05 «Antes de venir»** (`#485`). Hoy la sección es:
+cabecera común `.sec-head` —rótulo, titular «Tu registro es este QR» y la entradilla del
+entregable—, un **bloque de tinta** con el código dentro de un móvil y, al lado, **lo que ese código
+lleva** (tus reservas · tu firma · tus hijos), la excepción de los calcetines en papel, y **dos
+salidas sin relleno de acción**: «Ver todas las normas» y «Crear mi cuenta». Suite **4.555** ·
+**13/13 mutaciones** · desborde 0 en las 13 vistas.
+>
+> ❗❗❗ **NO ES UNA SECCIÓN NUEVA: SUSTITUYE A LA DE NORMAS** (`#309`), que decía las dos mismas cosas
+—registrarse y traer calcetines— más un asomo de cuatro normas. Con eso **se cierra la ficha de
+`DEUDA.md` que `#480` abrió**: `/normas` vuelve a tener entrada desde la portada. ▶ **Las cuatro
+decisiones del owner**, preguntadas antes de escribir una línea: el código es **de ejemplo y no lleva
+a ningún sitio** · las **cuatro normas se van** y queda el enlace · la sección va **donde la pone el
+canvas** (un puesto por delante, antes de Visítanos) · y los nombres son **los del PRODUCTO** —«Mi
+QR» y «Crear mi cuenta»—, porque la cuenta ya llama así a ese código y el mismo objeto no puede
+llamarse de dos maneras.
+>
+> ❗❗❗ **LO QUE `#485` DEJA Y VALE PARA LAS TRES QUE QUEDAN.**
+> **(1) La SUPERFICIE no puede depender del ancho de la ventana.** `[data-surface]` no solo cambia
+tokens: **PINTA** (`background: var(--bg)`, la lección de `#484`). Los dos artboards de esta sección
+discrepan —el de móvil (7 sep) la pone en papel y el de escritorio (8 sep) en un bloque de tinta— y
+entre dos fuentes del canvas que se contradicen **manda la más nueva**, que además trae la idea que
+ordena la sección: *«la sección ES el código»*.
+> **(2) Y por CUARTA vez, el acta describe una pieza que el artboard tiene APAGADA**: aquí la chapa
+de «lo que ve el empleado», tras `conChapaEmpleado` desde el recorte del 7 sep. En escritorio vuelve,
+y el motivo es aritmético y suyo: allí va en la columna de al lado y no cuesta alto.
+>
+> ⚠️⚠️ **DOS GUARDAS MÍAS NACIERON DEMASIADO ESTRECHAS Y LO DIJO EL ARNÉS, no una relectura.** Una
+aseveraba `'<section id="rules"'` y **una mutación que devolvía el ancla en un `<span>` pasó en
+verde** —*la propiedad dice que ese destino ya no existe, no que no exista una sección con ese
+nombre*—; la otra comprobaba que la sección no pide dibujos **instalando un kit sin esas claves**, o
+sea midiendo una ausencia que el propio arnés causaba. ▶ Y una **mutación era DÉBIL por precedencia**:
+`false && A || B` es `B` en PHP.
+>
+> ❗❗ **EL CÓDIGO ES UN DIBUJO Y NO PUEDE SER OTRA COSA** (`SampleQrCode`, **al lado del generador de
+verdad a propósito**): lo que hay que impedir no es que alguien lo rompa, es que alguien lo
+«ARREGLE» cambiándolo por `QrCode::svg()`. La propiedad no es que se parezca a un QR: es que **no se
+pueda decodificar**, y es **estructural** —la banda de la información de formato queda vacía—. ⚠️ Esa
+banda **no estaba reservada y la añadió una guarda**: con el ruido cayendo dentro, «no se puede
+decodificar» era incidental en vez de estructural.
+>
+> ⚠️ **Dos cosas que NO se escriben, con su motivo**: el **precio de los calcetines** —el producto no
+sabe cuál de sus complementos son «los calcetines», y averiguarlo por su icono sería usar un campo de
+PRESENTACIÓN como identidad (el defecto de `accent` de `#295`/`#301`); además la cifra ya se publica
+en el carril de la 02— y la **línea del niño invitado**, que es DATO: sale si y solo si algún producto
+ofrece el justificante, y hoy ninguno.
+>
+> ⚠️⚠️ **Y una trampa de la familia de botones que encontró la CAPTURA, no la suite**: `.btn` **no
+declara `justify-content`**, así que en cuanto recibe un ancho su rótulo se va a la izquierda. Las
+**seis** reglas del repo que dan ancho a un `.btn` ya lo declaran a mano: la convención existe y no
+estaba escrita. Ficha en `DEUDA.md`.
+>
+> ▶ **PASO DE DESPLIEGUE: ninguno de CSS** —la sección se viste entera con roles ya declarados—. Solo
+**DATO**: si el parque quiere ofrecer el justificante del niño invitado, se marca en el producto
+(`ticket_types.guardian_authorization`). La lista viva está en la §5.bis de la spec.
+>
+> ▶ **LO SIGUIENTE: la T2g.** Por orden del canvas tocaría **06 «Reseñas»** (`Resenas PJP` 2a), pero
+**está BLOQUEADA por el owner**: `specs/google-reviews.md` sigue esperando su ✅ y **tres datos**
+(`place_id`, clave de API y techo de gasto). ▶ Así que la siguiente construible es **07 «Visítanos»**
+(`Visitanos PJP` 7b + `Escritorio PJP` 3b), cuyo dato ya está en la BD — y ojo, arrastra dos
+pendientes suyos: la **dirección exacta** y los **festivos de Lorca**. ⚠️ **Relee su artboard antes Y
+durante**, y **no te creas el acta sin abrirlo**: van cuatro veces.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA T2f** (la T2e, `#483`/`#484`).
 >
 > ▶ **LA T2e ESTÁ EN EL ÁRBOL: la sección 04 «Cumpleaños»** (`#483` la construyó, **`#484` la
 corrigió con el ojo del owner**). Hoy la sección es: **cabecera común `.sec-head`** —rótulo, titular

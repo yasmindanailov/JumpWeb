@@ -245,15 +245,41 @@ return [
         'weekdays' => [0 => 'Dimanche', 1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi', 5 => 'Vendredi', 6 => 'Samedi'],
         'address_title' => 'Adresse', 'directions' => 'Itinéraire',
     ],
+    // ⚠️ Solo quedan las dos que lee `<x-site.socks-note>` en `/precios`: la sección de normas de la
+    // portada la sustituyó la 05 «Antes de venir» (`#485`). El porqué, en `lang/es/landing.php`.
     'rules' => [
-        'eyebrow' => 'Règles', 'title' => 'Règles',
-        'register_title' => 'Inscription obligatoire',
-        'register_text' => "Toute personne qui saute doit s'inscrire et accepter le consentement, mineurs inclus. Une seule fois.",
-        'register_cta' => "S'inscrire",
         'socks_title' => 'Chaussettes antidérapantes obligatoires',
         'socks_text' => 'Indispensables pour sauter en toute sécurité. Apporte les tiennes ou ajoute-les à ton billet.',
-        'socks_cta' => 'Les ajouter à mon billet',
-        'all_cta' => 'Lire toutes les règles',
+    ],
+
+    // ── 05 · AVANT DE VENIR ── (`#485`). El término del descargo en francés es «décharge de
+    // responsabilité», y lo vigila `WaiverWordingIsOneTermTest`.
+    'before' => [
+        'eyebrow' => 'Avant de venir',
+        'title' => 'Ton inscription, c’est ce QR',
+        'lede' => 'Tu signes la décharge de responsabilité une seule fois, sur ton téléphone. À l’entrée, tu montres juste le code.',
+
+        'qr_aria' => 'Mon QR, exemple',
+        'qr_name' => 'Mon QR',
+        'qr_sample' => 'exemple',
+        'qr_where' => 'Dans ton compte et dans l’e-mail de chaque réservation. Pas besoin de l’imprimer.',
+
+        'carries_title' => 'Un seul code pour tout',
+        'carries_lede' => 'Tu le montres à l’entrée et l’équipe voit tout d’un coup : ce que tu as réservé, que tu as déjà signé et qui vient avec toi. Sans chercher ton nom, sans montrer ton e-mail et sans rien remplir sur place.',
+        'rows' => [
+            'booking' => ['key' => 'Tes réservations', 'val' => 'Celles que tu as et celles que tu feras'],
+            'waiver' => ['key' => 'Ta signature', 'val' => 'La décharge, signée une seule fois'],
+            'minors' => ['key' => 'Tes enfants', 'val' => 'Ceux que tu as ajoutés à ton compte'],
+        ],
+        'always' => 'Un seul code, toujours le même, valable à chaque visite.',
+
+        'socks_lead' => 'La seule chose qui ne tient pas dans le code :',
+        'socks_text' => 'des chaussettes antidérapantes. Apporte les tiennes ou achète-les ici, et tu les gardes.',
+        'guest_text' => 'Un enfant qui n’est pas de ta famille vient ? Tu peux envoyer un lien à ses parents pour qu’ils signent eux-mêmes, sans créer de compte.',
+
+        'all_rules' => 'Voir toutes les règles',
+        'cta' => 'Créer mon compte',
+        'cta_account' => 'Voir mon QR',
     ],
     'faq' => ['title' => 'Questions'],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
