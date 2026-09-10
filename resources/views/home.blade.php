@@ -232,176 +232,173 @@
          ⚠️ **El ancla `#events` se conserva**: no la enlaza nada dentro del repo —el menú y el pie
          van a `route('cumpleanos')`, medido— pero una URL con ancla puede estar repartida fuera. --}}
     @if ($partyCards !== [])
-        <section id="events" class="section party">
-            {{-- LA CABECERA SOBRE FOTO. ⚠️ **Es la ÚNICA sección de la portada que la lleva**, y el
-                 artboard lo declara así: el velo de tinta al .72 con el rótulo y el titular encima.
-                 ⚠️⚠️ **La proporción cambia con la superficie y es aritmética, no gusto**: a 1120 el
-                 16:9 daría **630 px** —tres cuartos de pantalla de escritorio antes de la primera
-                 palabra— y el 21:9 da **480**. El recorte de una foto no es un valor del sistema:
-                 es lo que deja la retícula.
-                 ⚠️ **Sin foto no se reserva hueco**: la cabecera cae a papel con el rótulo y el
-                 titular en tinta, que es la variante `sinFoto` del propio artboard. --}}
-            <div class="party__head{{ $partyImage ? ' party__head--photo' : '' }}">
-                @if ($partyImage)
-                    <img class="party__img" src="{{ asset($partyImage) }}" alt="" aria-hidden="true"
-                         loading="lazy" decoding="async">
-                @endif
-                {{-- ⚠️ **El velo va a SANGRE COMPLETA y el texto en la COLUMNA**, que es como lo
-                     dibuja el artboard: la banda cruza la foto entera de lado a lado y el rótulo y
-                     el titular se alinean con el resto de la sección. Medido antes de corregirlo,
-                     el velo medía 1120 sobre una foto de 1280 y se leía como una caja pegada. --}}
-                <div class="party__head-in">
-                    <div class="wrap">
-                        <p class="party__eyebrow">{{ __('landing.events.eyebrow') }}</p>
-                        <h2 class="party__title">{{ __('landing.events.section_title') }}</h2>
-                    </div>
-                </div>
-            </div>
-
-            <div class="wrap">
-                <p class="party__lede">{{ $partyFrom === null
+        <section id="events" class="section wrap">
+            {{-- ⚠️⚠️ **AQUÍ HUBO UNA CABECERA SOBRE FOTO A SANGRE Y SE RETIRÓ** (`[DECIDIDO owner]`,
+                 `#484`). El artboard la dibuja —es la única sección que la lleva— pero la foto que la
+                 instalación tiene en `zones.image` para cumpleaños es **el comedor vacío**: filas de
+                 mesas y sillas, sin tarta y sin niños. No dice «cumpleaños», y el propio artboard lo
+                 tenía fichado como pendiente del dueño («foto del cumple montado»).
+                 ▶ La sección abre con **la cabecera común de las ocho** (`.sec-head`), que es lo que
+                 el canvas cierra. Medido: la cabecera pasa de 549 a **73 px** en escritorio y la
+                 sección de 1.620 a 1.145.
+                 ⚠️ **No queda un mecanismo dormido**: si algún día entra una foto de un cumple
+                 montado, volver a la cabecera sobre foto es una decisión, no un efecto lateral de
+                 subir una imagen al panel. --}}
+            <div class="sec-head">
+                <p class="sec-head__eyebrow">{{ __('landing.events.eyebrow') }}</p>
+                <h2 class="sec-head__title">{{ __('landing.events.section_title') }}</h2>
+                <p class="sec-head__lede">{{ $partyFrom === null
                     ? __('landing.events.section_intro_plain')
                     : __('landing.events.section_intro', ['from' => $partyFrom]) }}</p>
-
-                {{-- EL RELOJ DE LAS DOS HORAS (`[DECIDIDO owner]`: **dentro en las dos superficies**,
-                     contra el artboard, que lo apaga en móvil por presupuesto de pantalla).
-
-                     ❗❗ **NO REPARTE, y ésa es toda la pieza.** Las dos horas son para todo —merienda,
-                     tarta y saltos— y **no hay hora para nada**: si meriendan rápido, saltan más. Los
-                     tres tramos con sus minutos que había antes contaban un horario que no existe, y
-                     *un diagrama de tramos promete horario aunque la letra diga lo contrario*. Se
-                     dibuja el TOTAL entero con las tres cosas encima.
-                     ⚠️ **La duración sale del catálogo**; sin ella el reloj no se pinta, porque su
-                     titular es la duración. --}}
-                @if ($partyDuration)
-                    <div class="party__clock" data-surface="ink">
-                        <div class="party__clock-said">
-                            <h3 class="party__clock-title">{{ __('landing.events.clock_title', ['duration' => $partyDuration]) }}</h3>
-                            <p class="party__clock-rule">{{ __('landing.events.clock_rule') }}</p>
-                            <p class="party__clock-rule">{{ __('landing.events.clock_monitor') }}</p>
-                        </div>
-                        {{-- ⚠️ `aria-hidden`: las tres cápsulas y el filete son el DIBUJO de lo que la
-                             frase de al lado ya dice. Anunciarlas repetiría la regla en desorden. --}}
-                        <div class="party__clock-rail" aria-hidden="true">
-                            <ul class="party__clock-caps" role="list">
-                                <li>{{ __('landing.events.clock_a') }}</li>
-                                <li>{{ __('landing.events.clock_b') }}</li>
-                                <li>{{ __('landing.events.clock_c') }}</li>
-                            </ul>
-                            <span class="party__clock-line"></span>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- LAS DOS TARJETAS. `[DECIDIDO owner]`: **la tarjeta entera es el enlace y lleva a
-                     `/cumpleanos`**, no al cajón. Su razón la escribe el canvas: *«en la landing va la
-                     promesa, no la lista»* — un cumple se decide comparando, y la comparativa vive en
-                     la página.
-                     ⚠️⚠️ **Consecuencia declarada**: con esto la portada se queda **sin ninguna puerta
-                     que abra el cajón posicionado** —la de zona ya se perdió en `#482`—; siguen el CTA
-                     del hero y la barra flotante, que abren sin nada elegido. Ficha en `DEUDA.md`.
-                     ⚠️ **Alternan SUPERFICIE, no color de zona**: la primera en papel y la segunda en
-                     tinta, como las dos tarjetas de la sección 01. Pintarlas con la paleta de la zona
-                     sería la **grieta 01** que el propio canvas nos reportó. --}}
-                <ul class="party__packs" role="list">
-                    @foreach ($partyCards as $card)
-                        {{-- ⚠️⚠️ **LA SEGUNDA TARJETA DECLARA `data-surface="ink"`, y sin eso se ve
-                             MAL sin que nada falle.** Medido antes de ponerlo: el punto de la viñeta
-                             salía en `rgb(16,20,24)` sobre un fondo `rgb(26,31,37)` —o sea tinta
-                             sobre tinta, **invisible**— y los términos en el gris del PAPEL sobre un
-                             fondo oscuro. Pintar el fondo de una tarjeta no cambia sus tokens: eso
-                             lo hace el mecanismo de SUPERFICIE (`#192`), que aquí flipa `--fg`,
-                             `--fg-mute`, `--line` y `--money` de golpe.
-                             ⚠️ Y va por POSICIÓN en la vista y no en el CSS, porque es un hecho del
-                             contenido —son exactamente dos tarjetas y alternan— y no una regla de
-                             estilo que se pueda leer al revés. --}}
-                        <li class="party__pack-item" @if ($loop->even) data-surface="ink" @endif>
-                            {{-- ⚠️⚠️ **SIN ANCLA, y es una decisión medida.** El artboard enlaza a
-                                 `#cumple-kids` / `#cumple-jump`, pero `/cumpleanos` **no emite esas
-                                 anclas**: lo que tiene son `#bd-panel-<id>`, que son paneles de
-                                 pestaña ocultos con `x-show`. Enlazar ahí sería el ancla muerta que
-                                 `#482` acaba de fichar de `#478` (`/precios#zona-<slug>`, cero
-                                 destinos). ▶ Y los dos packs viven en la MISMA zona (`cumpleanos`,
-                                 medido), así que un ancla por zona daría el mismo destino dos veces.
-                                 ▶ Cuando la Fase 3 rehaga `/cumpleanos`, el sitio de esto es un
-                                 `?pack=` que el servidor honre — el mecanismo de `/atracciones`. --}}
-                            <a class="party-card" href="{{ route('cumpleanos') }}">
-                                <span class="party-card__chip">{{ $card['name'] }}</span>
-                                @if ($card['age'])
-                                    <span class="party-card__age">{{ $card['age'] }}</span>
-                                @endif
-
-                                {{-- ⚠️ **El tope de TRES lo declara la VISTA**: el panel decide QUÉ
-                                     incluye el pack y el diseño CUÁNTAS caben — la regla que `#293`
-                                     dejó escrita para las normas de la portada. Con las cinco que
-                                     esta instalación tiene hoy, dos repiten lo que la tarjeta ya
-                                     dice (la duración y la edad). --}}
-                                @if ($card['features'] !== [])
-                                    <span class="party-card__list">
-                                        @foreach (array_slice($card['features'], 0, 3) as $feature)
-                                            <span class="party-card__feat">
-                                                <span class="party-card__dot" aria-hidden="true"></span>
-                                                <span>{{ $feature }}</span>
-                                            </span>
-                                        @endforeach
-                                    </span>
-                                @endif
-
-                                <span class="party-card__money">
-                                    <span class="party-card__terms">
-                                        {{-- ⚠️ **La especial va ENTERA, nunca como recargo** (regla
-                                             dura del canvas): no es plana entre los dos packs —+2 en
-                                             Kids y +4 en Jump—, así que un recargo obligaría al
-                                             cliente a recordar cuál le toca. --}}
-                                        @if ($card['special'])
-                                            <span class="party-card__special">{{ $card['special'] }} {{ __('landing.events.special_suffix') }}</span>
-                                        @endif
-                                        <span class="party-card__terms-line">{{ __('landing.events.reserve_terms', [
-                                            'min' => $card['min'], 'max' => $card['max'], 'deposit' => $card['deposit'],
-                                        ]) }}</span>
-                                    </span>
-                                    {{-- EL SELLO girado −6°, con la cifra y su unidad. Es la misma
-                                         pieza que el sello de precio de la tarjeta de zona. --}}
-                                    <span class="party-card__seal">
-                                        <span class="party-card__price">{{ $card['price'] }}&nbsp;€</span>
-                                        <span class="party-card__unit">{{ __('landing.events.per_child') }}</span>
-                                    </span>
-                                </span>
-
-                                {{-- ⚠️ **El rótulo NO interpola el nombre del pack**, y no es pereza:
-                                     el catálogo escribe «Pack Cumpleaños KIDS», así que saldría «Ver
-                                     el cumple Pack Cumpleaños KIDS». Recortar el prefijo común sería
-                                     una ADIVINANZA —lo que `#479` prohibió expresamente al partir el
-                                     nombre de una tarifa: «una comprobación, no una adivinanza»—.
-                                     ▶ Y no hace falta: **la tarjeta entera es el enlace**, así que su
-                                     nombre accesible ya empieza por la chapa con el nombre del pack. --}}
-                                <span class="party-card__go">
-                                    <span>{{ __('landing.events.see_pack') }}</span>
-                                    <x-icons.arrow-right class="arrow" :width="16" :height="16" />
-                                </span>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
-
-                {{-- El pie: los días de la especial UNA vez, y la edad mezclada en una línea. --}}
-                @if ($ratesSpecialLabel && collect($partyCards)->contains(fn ($c) => $c['special'] !== null))
-                    <x-site.special-rate-note />
-                @endif
-                <p class="party__mixed">{{ __('landing.events.mixed_note') }}</p>
-
-                {{-- EL BLOQUE DE COMPLEMENTOS, con el molde compartido con las tarifas
-                     (`[DECIDIDO owner]`, `#483`: *«es el mismo formato y diseño que los complementos
-                     de las entradas; simplemente mostramos los complementos disponibles para los
-                     cumpleaños sin repetirse»*).
-                     ⚠️ Aquí el alcance es LOS DOS packs a la vez —se ven juntos, al revés que las
-                     tarifas, donde cada zona tiene el suyo— y la deduplicación es **por ID**: las dos
-                     «Hora extra de sala» son productos distintos con precios distintos. --}}
-                <x-site.addons-rail :products="$packages"
-                                    :title="__('landing.events.addons_title')"
-                                    :lede="__('landing.events.addons_intro')" />
             </div>
-        </section>
+
+            {{-- EL RELOJ DE LAS DOS HORAS (`[DECIDIDO owner]`: **dentro en las dos superficies**,
+                 contra el artboard, que lo apaga en móvil por presupuesto de pantalla).
+
+                 ❗❗ **NO REPARTE, y ésa es toda la pieza.** Las dos horas son para todo —merienda,
+                 tarta y saltos— y **no hay hora para nada**: si meriendan rápido, saltan más. Los
+                 tres tramos con sus minutos que había antes contaban un horario que no existe, y
+                 *un diagrama de tramos promete horario aunque la letra diga lo contrario*. Se
+                 dibuja el TOTAL entero con las tres cosas encima.
+                 ⚠️ **La duración sale del catálogo**; sin ella el reloj no se pinta, porque su
+                 titular es la duración. --}}
+            @if ($partyDuration)
+                <div class="party__clock" data-surface="ink">
+                    <div class="party__clock-said">
+                        <h3 class="party__clock-title">{{ __('landing.events.clock_title', ['duration' => $partyDuration]) }}</h3>
+                        <p class="party__clock-rule">{{ __('landing.events.clock_rule') }}</p>
+                        <p class="party__clock-rule">{{ __('landing.events.clock_monitor') }}</p>
+                    </div>
+                    {{-- ⚠️ `aria-hidden`: las tres cápsulas y el filete son el DIBUJO de lo que la
+                         frase de al lado ya dice. Anunciarlas repetiría la regla en desorden. --}}
+                    <div class="party__clock-rail" aria-hidden="true">
+                        <ul class="party__clock-caps" role="list">
+                            <li>{{ __('landing.events.clock_a') }}</li>
+                            <li>{{ __('landing.events.clock_b') }}</li>
+                            <li>{{ __('landing.events.clock_c') }}</li>
+                        </ul>
+                        <span class="party__clock-line"></span>
+                    </div>
+                </div>
+            @endif
+
+            {{-- LAS DOS TARJETAS. `[DECIDIDO owner]`: **la tarjeta entera es el enlace y lleva a
+                 `/cumpleanos`**, no al cajón. Su razón la escribe el canvas: *«en la landing va la
+                 promesa, no la lista»* — un cumple se decide comparando, y la comparativa vive en
+                 la página.
+                 ⚠️⚠️ **Consecuencia declarada**: con esto la portada se queda **sin ninguna puerta
+                 que abra el cajón posicionado** —la de zona ya se perdió en `#482`—; siguen el CTA
+                 del hero y la barra flotante, que abren sin nada elegido. Ficha en `DEUDA.md`.
+                 ⚠️ **Alternan SUPERFICIE, no color de zona**: la primera en papel y la segunda en
+                 tinta, como las dos tarjetas de la sección 01. Pintarlas con la paleta de la zona
+                 sería la **grieta 01** que el propio canvas nos reportó. --}}
+            <ul class="party__packs" role="list">
+                @foreach ($partyCards as $card)
+                    {{-- ⚠️⚠️ **LA SEGUNDA TARJETA DECLARA `data-surface="ink"`, y sin eso se ve
+                         MAL sin que nada falle.** Medido antes de ponerlo: el punto de la viñeta
+                         salía en `rgb(16,20,24)` sobre un fondo `rgb(26,31,37)` —o sea tinta
+                         sobre tinta, **invisible**— y los términos en el gris del PAPEL sobre un
+                         fondo oscuro. Pintar el fondo de una tarjeta no cambia sus tokens: eso
+                         lo hace el mecanismo de SUPERFICIE (`#192`), que aquí flipa `--fg`,
+                         `--fg-mute`, `--line` y `--money` de golpe.
+                         ⚠️ Y va por POSICIÓN en la vista y no en el CSS, porque es un hecho del
+                         contenido —son exactamente dos tarjetas y alternan— y no una regla de
+                         estilo que se pueda leer al revés.
+
+                         ❗❗❗ **VA EN LA TARJETA Y NO EN EL `<li>`, y ponerlo mal dejaba un
+                         RECUADRO DETRÁS** (`#484`, lo vio el owner). `[data-surface]` no solo
+                         declara la superficie: **la PINTA** (`background: var(--bg)`). Con el
+                         atributo en el `<li>`, ese contenedor se volvía un rectángulo de tinta
+                         pura **con radio 0** y exactamente la misma caja que la tarjeta, así que
+                         asomaba por las cuatro esquinas redondeadas. *Declarar una superficie no
+                         es solo cambiar tokens: es pintar.* --}}
+                    <li class="party__pack-item">
+                        {{-- ⚠️⚠️ **SIN ANCLA, y es una decisión medida.** El artboard enlaza a
+                             `#cumple-kids` / `#cumple-jump`, pero `/cumpleanos` **no emite esas
+                             anclas**: lo que tiene son `#bd-panel-<id>`, que son paneles de
+                             pestaña ocultos con `x-show`. Enlazar ahí sería el ancla muerta que
+                             `#482` acaba de fichar de `#478` (`/precios#zona-<slug>`, cero
+                             destinos). ▶ Y los dos packs viven en la MISMA zona (`cumpleanos`,
+                             medido), así que un ancla por zona daría el mismo destino dos veces.
+                             ▶ Cuando la Fase 3 rehaga `/cumpleanos`, el sitio de esto es un
+                             `?pack=` que el servidor honre — el mecanismo de `/atracciones`. --}}
+                        <a class="party-card" @if ($loop->even) data-surface="ink" @endif
+                           href="{{ route('cumpleanos') }}">
+                            <span class="party-card__chip">{{ $card['name'] }}</span>
+                            @if ($card['age'])
+                                <span class="party-card__age">{{ $card['age'] }}</span>
+                            @endif
+
+                            {{-- ⚠️ **El tope de TRES lo declara la VISTA**: el panel decide QUÉ
+                                 incluye el pack y el diseño CUÁNTAS caben — la regla que `#293`
+                                 dejó escrita para las normas de la portada. Con las cinco que
+                                 esta instalación tiene hoy, dos repiten lo que la tarjeta ya
+                                 dice (la duración y la edad). --}}
+                            @if ($card['features'] !== [])
+                                <span class="party-card__list">
+                                    @foreach (array_slice($card['features'], 0, 3) as $feature)
+                                        <span class="party-card__feat">
+                                            <span class="party-card__dot" aria-hidden="true"></span>
+                                            <span>{{ $feature }}</span>
+                                        </span>
+                                    @endforeach
+                                </span>
+                            @endif
+
+                            <span class="party-card__money">
+                                <span class="party-card__terms">
+                                    {{-- ⚠️ **La especial va ENTERA, nunca como recargo** (regla
+                                         dura del canvas): no es plana entre los dos packs —+2 en
+                                         Kids y +4 en Jump—, así que un recargo obligaría al
+                                         cliente a recordar cuál le toca. --}}
+                                    @if ($card['special'])
+                                        <span class="party-card__special">{{ $card['special'] }} {{ __('landing.events.special_suffix') }}</span>
+                                    @endif
+                                    <span class="party-card__terms-line">{{ __('landing.events.reserve_terms', [
+                                        'min' => $card['min'], 'max' => $card['max'], 'deposit' => $card['deposit'],
+                                    ]) }}</span>
+                                </span>
+                                {{-- EL SELLO girado −6°, con la cifra y su unidad. Es la misma
+                                     pieza que el sello de precio de la tarjeta de zona. --}}
+                                <span class="party-card__seal">
+                                    <span class="party-card__price">{{ $card['price'] }}&nbsp;€</span>
+                                    <span class="party-card__unit">{{ __('landing.events.per_child') }}</span>
+                                </span>
+                            </span>
+
+                            {{-- ⚠️ **El rótulo NO interpola el nombre del pack**, y no es pereza:
+                                 el catálogo escribe «Pack Cumpleaños KIDS», así que saldría «Ver
+                                 el cumple Pack Cumpleaños KIDS». Recortar el prefijo común sería
+                                 una ADIVINANZA —lo que `#479` prohibió expresamente al partir el
+                                 nombre de una tarifa: «una comprobación, no una adivinanza»—.
+                                 ▶ Y no hace falta: **la tarjeta entera es el enlace**, así que su
+                                 nombre accesible ya empieza por la chapa con el nombre del pack. --}}
+                            <span class="party-card__go">
+                                <span>{{ __('landing.events.see_pack') }}</span>
+                                <x-icons.arrow-right class="arrow" :width="16" :height="16" />
+                            </span>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+
+            {{-- El pie: los días de la especial UNA vez, y la edad mezclada en una línea. --}}
+            @if ($ratesSpecialLabel && collect($partyCards)->contains(fn ($c) => $c['special'] !== null))
+                <x-site.special-rate-note />
+            @endif
+            <p class="party__mixed">{{ __('landing.events.mixed_note') }}</p>
+
+            {{-- EL BLOQUE DE COMPLEMENTOS, con el molde compartido con las tarifas
+                 (`[DECIDIDO owner]`, `#483`: *«es el mismo formato y diseño que los complementos
+                 de las entradas; simplemente mostramos los complementos disponibles para los
+                 cumpleaños sin repetirse»*).
+                 ⚠️ Aquí el alcance es LOS DOS packs a la vez —se ven juntos, al revés que las
+                 tarifas, donde cada zona tiene el suyo— y la deduplicación es **por ID**: las dos
+                 «Hora extra de sala» son productos distintos con precios distintos. --}}
+            <x-site.addons-rail :products="$packages"
+                                :title="__('landing.events.addons_title')"
+                                :lede="__('landing.events.addons_intro')" />
+    </section>
     @endif
     {{-- ============ ZONAS Y SUS JUEGOS (una sola sección) ============ --}}
     {{-- **`[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona y la tira de cifras, fuera.**

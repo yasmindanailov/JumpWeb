@@ -78,10 +78,17 @@ class PublicPagesTest extends TestCase
         $events->assertSee('Cómo se reserva');                        // eyebrow del proceso (ES)
         $events->assertSee('images/attractions/cumplea_1.webp', false);
 
-        // ⚠️ La FOTO sí sigue en la portada, y en un sitio distinto: es la cabecera de la sección
-        // 04, que el artboard pone sobre foto. `zones.image` conserva su consumidor en las dos.
+        /*
+         * ⚠️⚠️ **Y la FOTO ya NO está en la portada** (`#484`, `[DECIDIDO owner]`). La sección 04
+         * abrió un tiempo con la cabecera sobre foto que el artboard dibuja, y se retiró: la imagen
+         * que esta instalación tiene en `zones.image` para cumpleaños es **el comedor vacío**, sin
+         * tarta y sin niños — el propio artboard tenía pendiente del dueño «la foto del cumple
+         * montado».
+         * ▶ Con eso `zones.image` **vuelve a tener un solo consumidor**, `/cumpleanos`, que es lo
+         * que `#302` dejó fichado como dudoso al retirar las tarjetas de zona.
+         */
         $this->get('/')->assertOk()
-            ->assertSee('images/attractions/cumplea_1.webp', false)
+            ->assertDontSee('images/attractions/cumplea_1.webp', false)
             ->assertDontSee('birthdayProcess', false);
     }
 

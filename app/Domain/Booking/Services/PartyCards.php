@@ -99,7 +99,13 @@ final class PartyCards
              * cliente a recordar cuál le toca.
              */
             'special' => $especial ? $this->euros((int) $especial['priceCents']) : null,
-            'deposit' => $this->euros((int) $pack->deposit_value),
+            /*
+             * ⚠️⚠️ **La señal viaja SIN el símbolo, y esto fue un defecto REAL** que el owner vio en
+             * la tarjeta: la cadena `reserve_terms` ya escribe el «€» —la comparte `/cumpleanos`,
+             * que le pasa un número pelado— y mandarla formateada publicaba «Señal de 50 € € para
+             * reservar». *Una cadena con la unidad dentro pide el número, no el importe escrito.*
+             */
+            'deposit' => $this->numero((int) $pack->deposit_value),
             'min' => (int) $pack->min_qty,
             'max' => (int) $pack->max_qty,
             'duration' => $pack->duration_min ? (int) $pack->duration_min : null,

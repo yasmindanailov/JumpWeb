@@ -380,8 +380,28 @@ navegador instalado**.
 | T2b | **01 · Para quién**: dos tarjetas de zona · la altura pasa a DATO · 03 se separa | ✅ `#478` |
 | T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera · chapa de zona, ahorro y complementos fuera | ✅ `#479` + `#480` |
 | T2d | **03 · Qué hay dentro**: el mosaico de cinco, y con él la página `/atracciones` | ✅ `#481` + `#482` |
-| T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` |
+| T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` + `#484` |
 | T2f–T2i | Las **cuatro secciones** restantes (§5.1) | ⬜ |
+
+❗❗❗ **`#484` · EL OJO DEL OWNER SOBRE LA T2e, y las dos cosas que señaló eran DEFECTOS.**
+
+▶ **«Un recuadro sin border radius detrás de la card de Jump»**: era `[data-surface]` **pintando el
+contenedor**. Esa regla no solo declara la superficie —`background: var(--bg)`—, así que con el
+atributo en el `<li>` ése se volvía un rectángulo de tinta pura **con radio 0** y la misma caja que
+la tarjeta. Enumerando las capas con el navegador salió en una línea. *Declarar una superficie no es
+solo cambiar tokens: es pintar.* ⚠️ Y antes de eso la pegatina de tinta **no se leía**: keyline,
+relleno y sombra eran casi el mismo color (contraste **1,19**), así que lo único visible era el
+escalón de la esquina — el keyline pasa a seguir a SU superficie, divergencia declarada con el
+artboard, **que tiene el mismo problema**.
+
+▶ **«Quitamos la foto»**: y el problema no era cómo estaba puesta. La imagen que la instalación tiene
+en `zones.image` para cumpleaños es **el comedor vacío**, y el propio artboard lo tenía pendiente del
+dueño («foto del cumple montado»). `[DECIDIDO owner]` sobre tres opciones **renderizadas**: se quita
+y la sección abre con `.sec-head`, la cabecera común de las ocho. La cabecera pasa de **549 a 73 px**
+y la portada baja a **10,72 pantallas** en escritorio.
+
+⚠️ Y en la misma captura se vio un defecto de dinero: «Señal de **50 € €**». *Una cadena con la
+unidad dentro pide el número, no el importe escrito.*
 
 ✅ **T2e · «Cumpleaños»** (`#483`). Cabecera **sobre foto** —la única sección que la lleva—, el
 **reloj de las dos horas**, **dos tarjetas de pack** que se comparan al lado y el **bloque de

@@ -131,7 +131,9 @@ class PartySectionTest extends TestCase
      */
     public function test_each_card_is_a_link_to_the_page_and_carries_no_dead_anchor(): void
     {
-        preg_match_all('#<a class="party-card" href="([^"]+)"#', $this->seccion(), $m);
+        // ⚠️ El atributo de superficie va entre la clase y el `href`, así que el localizador no
+        // puede dar por hecho que van pegados: es la trampa de aseverar por SUBCADENA.
+        preg_match_all('#<a class="party-card"[^>]*?href="([^"]+)"#s', $this->seccion(), $m);
 
         $this->assertCount(2, $m[1], 'no hay dos tarjetas-enlace');
 
@@ -214,7 +216,9 @@ class PartySectionTest extends TestCase
      */
     public function test_the_dark_card_declares_its_surface(): void
     {
-        preg_match_all('#<li class="party__pack-item"([^>]*)>#', $this->seccion(), $m);
+        $seccion = $this->seccion();
+
+        preg_match_all('#<a class="party-card"([^>]*)href=#s', $seccion, $m);
 
         $this->assertCount(2, $m[1], 'no hay dos tarjetas');
         $this->assertStringNotContainsString('data-surface', $m[1][0],
@@ -223,6 +227,19 @@ class PartySectionTest extends TestCase
             "la segunda tarjeta ha dejado de declarar su superficie.\n".
             "▶ Pintarle el fondo NO le cambia los tokens: la viñeta se queda en tinta sobre tinta y\n".
             '  el gris de los términos, en el del papel. No falla nada; simplemente no se ve.');
+
+        /*
+         * ❗❗❗ **Y EL ATRIBUTO VA EN LA TARJETA, NUNCA EN SU `<li>`.** El owner vio un «recuadro sin
+         * radio» detrás de la tarjeta de Jump y era esto: `[data-surface]` no solo declara la
+         * superficie, **la PINTA** (`background: var(--bg)`), así que el contenedor se volvía un
+         * rectángulo de tinta pura **con radio 0** y la misma caja que la tarjeta, asomando por las
+         * cuatro esquinas redondeadas. *Declarar una superficie no es solo cambiar tokens: es pintar.*
+         */
+        $this->assertDoesNotMatchRegularExpression(
+            '#<li class="party__pack-item"[^>]*data-surface#', $seccion,
+            "el `<li>` vuelve a declarar la superficie, y eso PINTA un rectángulo sin radio detrás\n".
+            '  de la tarjeta. El atributo va en la tarjeta, que es la que tiene el canto redondeado.'
+        );
     }
 
     /** Sin packs vendibles no hay sección: ni cabecera, ni reloj, ni complementos. */

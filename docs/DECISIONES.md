@@ -26040,3 +26040,74 @@ edad 26/36, sello 22/30. La sección baja de **2.489 a 1.795 px** en móvil y la
 
 **Queda**: el OJO del owner, y las dos fichas de `DEUDA.md` (la tarjeta de invitación y la duplicidad
 de la regla de duración).
+
+## #484 · 2026-09-10 · `[DECIDIDO owner]` Fuera la foto a sangre de Cumpleaños — y el «recuadro raro» detrás de la tarjeta era el mecanismo de superficie pintando
+
+**Contexto.** El owner revisó la sección 04 recién construida (`#483`) y señaló dos cosas: *«vamos a
+quitar la imagen… no me convence»* y *«detrás de la card cumple Jump hay un recuadro raro, un cuadro
+sin border radius»*. Las dos resultaron ser defectos con causa, no gusto.
+
+---
+
+**❗❗❗ 1 · EL «RECUADRO SIN RADIO» ERA `[data-surface]` PINTANDO EL CONTENEDOR.**
+
+`#483` puso `data-surface="ink"` en el `<li>` para que la segunda tarjeta flipara sus tokens. Pero
+esa regla del producto **no solo declara la superficie: la PINTA** —`[data-surface] { background:
+var(--bg); color: var(--fg); }`, `landing.css:592`—. Enumerando las capas con el navegador:
+
+    li.party__pack-item   656 · 3361 · 544 · 378   r=0px   bg=rgb(16, 20, 24)
+
+Un rectángulo de **tinta pura con radio 0** y exactamente la misma caja que la tarjeta, asomando por
+las cuatro esquinas redondeadas. ▶ **El atributo pasa a la TARJETA**, que es la que tiene el canto.
+*Declarar una superficie no es solo cambiar tokens: es pintar.* Guarda con su aserción invertida.
+
+⚠️ Y al mover el atributo, el `<li>` se quedó sin regla y la tarjeta **encogió a 509 px en una pista
+de 544**: al volverse el ítem un contenedor flex, la tarjeta dejó de estirarse. Resuelto con
+`flex: 1` y verificado — las dos vuelven a **544×378**, misma fila y misma altura.
+
+**❗❗ 1.bis · Y ANTES DE ESO, LA PEGATINA DE TINTA NO SE LEÍA.** Una pegatina se define por el
+contraste entre **tres capas**: keyline, relleno y sombra. En la tarjeta de tinta las tres eran casi
+el mismo color —keyline y sombra `#101418` sobre relleno `#1A1F25`, **contraste 1,19**—, así que la
+pegatina desaparecía y lo único visible era el escalón de la esquina. ▶ **El keyline sigue a SU
+superficie** (claro sobre tinta), que es el mismo mecanismo que el producto ya usa para
+`--interactive`, `--money` y `--on-marker`. ⚠️ **Divergencia declarada con el artboard**: su propia
+tarjeta de tinta escribe `#101418` y tiene el mismo problema — solo se ve renderizándola.
+
+---
+
+**❗❗❗ 2 · LA FOTO SE RETIRA, Y EL PROBLEMA NO ERA CÓMO ESTABA PUESTA.**
+
+La cabecera sobre foto es del artboard —la única sección que la lleva— y estaba a sangre completa y
+en 21:9. Pero la imagen que esta instalación tiene en `zones.image` para cumpleaños es **el comedor
+vacío**: filas de mesas y sillas, sin tarta y sin niños. Dice «cafetería a la hora de cerrar». ▶ Y el
+propio artboard lo tenía fichado como pendiente del dueño: *«foto del cumple montado»*.
+
+`[DECIDIDO owner]` sobre **tres opciones renderizadas** sobre la página real (A como estaba · B sin
+foto · C foto a sangre con la cabecera debajo): **se quita**. La sección abre con **`.sec-head`**, la
+cabecera común de las ocho que el canvas cierra. Medido: la cabecera pasa de **549 a 73 px** en
+escritorio y la sección de 1.620 a **1.165**; la portada baja a **10,72 pantallas** en escritorio y
+**12,40** en móvil.
+
+⚠️ **No queda un mecanismo dormido, y es deliberado**: si algún día entra una foto de un cumple
+montado, volver a la cabecera sobre foto será una decisión, no un efecto lateral de subir una imagen
+al panel. Con la foto fuera, **`zones.image` vuelve a tener un solo consumidor** (`/cumpleanos`), que
+es lo que `#302` dejó fichado como dudoso.
+
+⚠️ Se retira también **todo su CSS** —`.party__head`, `.party__img`, `.party__eyebrow`,
+`.party__title`, `.party__lede` y su media query—: *una regla sin pantalla es deuda que parece una
+decisión*.
+
+---
+
+**⚠️ 3 · Y UN DEFECTO DE DINERO QUE SE VIO EN LA MISMA CAPTURA**: «Señal de **50 € €** para
+reservar». La cadena `reserve_terms` ya escribe el símbolo —la comparte `/cumpleanos`, que le pasa un
+número pelado— y `PartyCards` le mandaba el importe formateado. *Una cadena con la unidad dentro pide
+el número, no el importe escrito.*
+
+**⚠️ Y un localizador de guarda que se rompió al mover el atributo**: aseveraba
+`<a class="party-card" href=` con los dos pegados, y entre medias entró `data-surface`. Es la trampa
+de aseverar por subcadena, la misma de `#195`.
+
+**Verificación**: suite **4.555** en verde · sonda de geometría en 13 vistas, desborde **0** · las dos
+tarjetas medidas a 544×378 en la misma fila, y enumeradas todas las capas que solapan la de Jump para
+comprobar que **no queda ninguna caja pintada detrás**.

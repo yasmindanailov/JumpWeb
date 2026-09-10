@@ -3911,52 +3911,12 @@ select:focus-visible {
    PÁGINA con artboard propio y se rehace en la Fase 3. Aquí no se poda nada.
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
-/* ⚠️ La sección NO lleva `.wrap`: su cabecera va a SANGRE COMPLETA (la foto) y la columna la ponen
-   los bloques de dentro. Es la única de la portada que lo hace. */
-.party { padding: calc(var(--sec-air) / 2) 0; position: relative; }
-
-/* LA CABECERA SOBRE FOTO · la única sección de la portada que la lleva.
-   ⚠️⚠️ **La proporción cambia con la superficie y es ARITMÉTICA**: a 1120 el 16:9 daría 630 px
-   —tres cuartos de pantalla de escritorio antes de la primera palabra— y el 21:9 da 480. El recorte
-   de una foto no es un valor del sistema: es lo que deja la retícula. */
-.party__head { position: relative; }
-.party__head--photo { aspect-ratio: 16 / 9; overflow: hidden; }
-.party__img {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%; object-fit: cover;
-  display: block;
-}
-/* ⚠️ El velo va al **.72** del artboard y se compone con `--paper-fg`, no con `--fg`: dentro de una
-   superficie de tinta `--fg` vale CLARO, y el velo se volvería luz (la lección de `#196`). */
-.party__head--photo .party__head-in {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  background: color-mix(in srgb, var(--paper-fg) 72%, transparent);
-  padding-top: var(--sp-14); padding-bottom: var(--sp-14);
-}
-.party__eyebrow {
-  margin: 0;
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--fg-mute);
-}
-.party__title {
-  font-family: var(--font-display);
-  /* ⚠️ 400 EXPLÍCITO: sin declararlo un `<h2>` hereda el `bold` del navegador y el motor SINTETIZA
-     una negrita que Bungee no tiene (las 77 reglas fichadas en `DEUDA.md`). */
-  font-weight: 400;
-  font-size: var(--fs-display-l);
-  line-height: 0.95; letter-spacing: -0.01em; margin: var(--sp-8) 0 0;
-}
-/* Sobre la foto, el rótulo y el titular se aclaran: la banda de tinta está debajo. */
-.party__head--photo .party__eyebrow { color: var(--paper-bg); opacity: 0.82; }
-.party__head--photo .party__title { color: var(--paper-bg); }
-
-.party__lede {
-  margin: var(--sp-20) 0 0;
-  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
-  color: var(--fg-mute); max-width: 52ch;
-}
-
+/* ⚠️⚠️ **AQUÍ VIVÍA LA CABECERA SOBRE FOTO A SANGRE, y se retiró con su marcado** (`#484`,
+   `[DECIDIDO owner]`). El artboard la dibuja —es la única sección que la lleva— pero la foto que
+   esta instalación tiene en `zones.image` para cumpleaños es el comedor vacío, y el propio artboard
+   tenía pendiente del dueño «la foto del cumple montado». La sección abre con `.sec-head`, la
+   cabecera común de las ocho. Con ella se van `.party__head`, `.party__img`, `.party__eyebrow` y
+   `.party__title`: una regla sin pantalla es deuda que parece una decisión. */
 /* EL RELOJ DE LAS DOS HORAS · `[DECIDIDO owner]`: dentro en las DOS superficies, contra el artboard,
    que lo apaga en móvil por presupuesto de pantalla.
    ❗❗ **NO REPARTE**: las tres cosas van sobre UN carril entero, sin tramos. Un diagrama de tramos
@@ -4001,6 +3961,13 @@ select:focus-visible {
   list-style: none; margin: var(--sp-20) 0 0; padding: 0;
   display: grid; gap: var(--sp-20);
 }
+/* ⚠️ El ítem es solo el hueco de la rejilla, y por eso es `flex`: así la tarjeta lo llena sin
+   depender de un `height: 100%` contra un padre sin altura declarada. Es lo que mantiene las dos a
+   la misma altura con la salida alineada abajo.
+   ⚠️⚠️ **Y la tarjeta lleva `flex: 1`**: sin él, al volverse el ítem un contenedor flex la tarjeta
+   se encoge a su contenido — medido, 509 px en una pista de 544, y las dos quedaban de anchos
+   distintos. */
+.party__pack-item { display: flex; }
 .party-card {
   display: flex; flex-direction: column;
   background: var(--paper-bg);
@@ -4009,7 +3976,7 @@ select:focus-visible {
   box-shadow: var(--shadow-float);
   padding: var(--sp-18) var(--sp-16);
   color: var(--paper-fg);
-  height: 100%;
+  flex: 1; min-width: 0;
   transition:
     transform var(--dur-sale) var(--ease-sale),
     box-shadow var(--dur-sale) var(--ease-sale);
@@ -4028,10 +3995,26 @@ select:focus-visible {
 }
 /* La tarjeta que declara SUPERFICIE de tinta se pinta con los tokens de esa superficie, no con
    literales: es el territorio por superficie del artboard.
-   ⚠️ Quién la declara lo decide la VISTA (`data-surface="ink"` en la posición impar), porque es un
-   hecho del contenido —son dos y alternan— y no una regla de estilo. */
-.party__pack-item[data-surface='ink'] .party-card {
+   ⚠️ Quién la declara lo decide la VISTA (`data-surface="ink"` en la posición par), porque es un
+   hecho del contenido —son dos y alternan— y no una regla de estilo.
+
+   ❗❗❗ **EL ATRIBUTO VA EN LA TARJETA Y NO EN SU `<li>`, y ponerlo mal dejaba un RECUADRO detrás**
+   (`#484`, lo vio el owner). `[data-surface]` no solo declara la superficie: **la PINTA**
+   (`background: var(--bg)`, línea 592). Con el atributo en el contenedor, ése se volvía un
+   rectángulo de tinta pura **con radio 0** y la misma caja que la tarjeta, asomando por las cuatro
+   esquinas redondeadas. *Declarar una superficie no es solo cambiar tokens: es pintar.*
+
+   ❗❗❗ **Y SU KEYLINE SIGUE A LA SUPERFICIE, que es el arreglo de `#484`.** Una pegatina se lee por
+   el CONTRASTE entre tres capas: keyline, relleno y sombra. Con el keyline y la sombra en tinta
+   sobre una tarjeta que YA es de tinta, las tres eran casi el mismo color —medido: `#101418` sobre
+   `#1A1F25`, contraste 1,19— así que la pegatina desaparecía y lo único que se veía era **el
+   desajuste de la esquina** donde la sombra asoma. *El owner lo describió como «una sombra sin
+   radio».* Con el keyline de la superficie vuelven a leerse las tres capas.
+   ⚠️ El artboard escribe `#101418` aquí, así que **esto es una divergencia declarada con él**: su
+   propia tarjeta de tinta tiene el mismo problema, y se ve al renderizarla. */
+.party-card[data-surface='ink'] {
   background: var(--bg-card); color: var(--fg);
+  border-color: var(--line-strong);
 }
 
 .party-card__chip {
@@ -4106,11 +4089,6 @@ select:focus-visible {
 .party__mixed { margin: var(--sp-12) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
 
 @media (min-width: 1024px) {
-  /* ⚠️ **21:9 y no 16:9**, y es aritmética: a 1120 el 16:9 son 630 px de foto antes de la primera
-     palabra y el 21:9 son 480. */
-  .party__head--photo { aspect-ratio: 21 / 9; }
-  .party__head--photo .party__head-in { padding-top: var(--sp-20); padding-bottom: var(--sp-20); }
-
   /* El reloj a DOS columnas: la regla escrita a la izquierda y el carril a la derecha, dentro del
      ancho que ya había. Por eso en escritorio no cuesta alto. */
   .party__clock { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
