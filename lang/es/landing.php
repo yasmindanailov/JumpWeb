@@ -492,6 +492,11 @@ return [
         // `role="img"` necesita un nombre que diga la NOTA. Cinco glifos sueltos los lee un lector
         // de pantalla como «estrella estrella estrella…», que no es el dato.
         'stars' => '{1} :n estrella sobre 5|[2,*] :n estrellas sobre 5',
+        'out_of' => 'sobre 5',
+        'count' => '{1} :n opinión|[2,*] :n opiniones',
+        'score_aria' => ':value sobre 5 en Google',
+        'read_full' => 'Leer entera en Google',
+        'see_on_google' => 'Ver en Google',
         'prev' => 'Opinión anterior',
         'next' => 'Opinión siguiente',
         'go' => 'Ver la opinión :n',

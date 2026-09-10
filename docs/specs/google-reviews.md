@@ -1,7 +1,15 @@
 # [SPEC] Reseñas de Google en la landing — la prueba social que el parque NO controla
 
-> Estado: **🟦 APROBADA y con la mitad `a` EN EL ÁRBOL** (`DECISIONES #490`, 2026-09-10) · queda la
-> mitad `b`, Google · Última actualización: 2026-09-10.
+> Estado: ✅ **EJECUTADA ENTERA** — mitad `a` en `DECISIONES #490` y mitad `b` en `#491`
+> (2026-09-10) · Última actualización: 2026-09-10.
+>
+> ❗❗❗ **§4.4.bis TENÍA UNA AMBIGÜEDAD Y ESTÁ RESUELTA, y la corrección va delante del texto**:
+> afirmaba «sin consentimiento la cabecera no se pinta» **sin argumentarlo** —su razón escrita era no
+> inventar la cifra, que es otra cosa—. ▶ **La CIFRA no necesita consentimiento**: la trae nuestro
+> servidor, el visitante no hace ninguna petición a Google, no lleva autor ni foto y una media de un
+> negocio no es dato personal. **Las RESEÑAS sí**, porque R3 obliga a la foto del autor y cargarla
+> **sí** es una petición del visitante (`RGPD-05`). Las dos cosas se gobiernan por separado en
+> `FallingBackSocialProof`.
 >
 > ❗❗❗ **LO PRIMERO, PORQUE CAMBIA LA SECCIÓN: el parque tiene UNA reseña en Google.** Verificado
 > contra la API el 2026-09-10 (§6·5, la salida está en `DECISIONES #490`): HTTP 200, `rating: 5`,

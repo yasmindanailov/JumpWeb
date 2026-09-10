@@ -28,6 +28,8 @@ use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\Testimonial;
 use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\CmsSocialProof;
+use App\Domain\Content\Services\FallingBackSocialProof;
+use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
 use App\Domain\Content\Services\SocialEmbed;
@@ -93,7 +95,18 @@ class AppServiceProvider extends ServiceProvider
         // `GoogleSocialProof`, aquí se sustituye por `FallingBackSocialProof` —el decorador que
         // aplica la cascada de §4.0 en UN solo sitio— y la sección no se toca. Si en vez de esto la
         // vista preguntara por la fuente, ese día habría que reescribirla.
-        $this->app->bind(SocialProof::class, CmsSocialProof::class);
+        $this->app->bind(SocialProof::class, function (): SocialProof {
+            return new FallingBackSocialProof(
+                $this->app->make(GoogleSocialProof::class),
+                $this->app->make(CmsSocialProof::class),
+                // ⚠️⚠️ **El consentimiento se lee AQUÍ y no dentro del decorador**: `CookieConsent`
+                // vive en Identity y **Content no puede mirar a Identity** (`ModuleBoundariesTest`).
+                // La capa de ENTREGA es el composition root y sí ve a los dos — la misma salida que
+                // `ReservationPlacesTaken` en `#444`.
+                // ⚠️ Va como cierre para que se evalúe cuando hace falta y no al construir.
+                static fn (): bool => (bool) (CookieConsent::state(request())['maps'] ?? false),
+            );
+        });
 
         // El icono que va DENTRO del QR del carné (`identidad-qr-puerta.md` §9.7 C·3): singleton
         // para que el rasterizado del SVG de la instalación se haga UNA vez por petición. El memo

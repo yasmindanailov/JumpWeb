@@ -19,7 +19,7 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-FILTER='ReviewsSectionTest|ModuleContractsTest'
+FILTER='ReviewsSectionTest|SocialProofNeverHitsTheRenderPathTest|ModuleContractsTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="storage/app/mutaciones/resenas"
@@ -29,6 +29,8 @@ FICHEROS=(
     app/Domain/Content/Services/CmsSocialProof.php
     app/Domain/Content/Contracts/Testimonial.php
     public/css/landing.css
+    app/Domain/Content/Services/GoogleSocialProof.php
+    app/Domain/Content/Services/FallingBackSocialProof.php
 )
 restaurar() {
     for f in "${FICHEROS[@]}"; do
@@ -96,6 +98,8 @@ HC=app/Http/Controllers/HomeController.php
 CS=app/Domain/Content/Services/CmsSocialProof.php
 DT=app/Domain/Content/Contracts/Testimonial.php
 CSS=public/css/landing.css
+GS=app/Domain/Content/Services/GoogleSocialProof.php
+FB=app/Domain/Content/Services/FallingBackSocialProof.php
 
 echo '── El panel vacío ──'
 
@@ -125,9 +129,16 @@ mutar "una opinión propia sale con enlace a Google" "$CS" \
   '                url: null,' \
   '                url: "https://maps.google.com/?cid=1",'
 
+# ⚠️ La entradilla dejó de ser un literal al entrar la cifra: es un ternario. Se fuerza la rama.
 mutar "la entradilla pasa a ser la de Google" "$HB" \
-  "{{ __('landing.reviews.lede_own') }}" \
-  "{{ __('landing.reviews.lede_google') }}"
+  '<p class="sec-head__lede">{{ $socialProof->first()?->source' \
+  '<p class="sec-head__lede">{{ true ? true : $socialProof->first()?->source'
+
+# El defecto REAL que encontró la captura: la entradilla atada a la CHAPA y no a las opiniones, con
+# lo que la sección dice «no las elegimos nosotros» sobre una opinión propia.
+mutar "la entradilla se ata a la chapa y no a las opiniones" "$HB" \
+  '{{ $socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE' \
+  '{{ $socialRating'
 
 echo
 echo '── El suelo sin JavaScript ──'
@@ -170,6 +181,47 @@ mutar "la portada vuelve a consultar el modelo" "$HC" \
   "            'socialProof' => app(SocialProof::class)->testimonials()," \
   "            'socialProof' => app(SocialProof::class)->testimonials(),
             'cuantas' => \\App\\Domain\\Content\\Models\\Testimonial::count(),"
+
+echo
+echo '── Google: el camino del render ──'
+
+# La mutación NATURAL: el `Cache::remember` que uno escribiría sin pensar, y que mete la latencia de
+# un tercero en el camino crítico de la portada.
+mutar "la portada llama a Google cuando la caché está fría" "$GS" \
+  '        $datos = Cache::get(self::CACHE_KEY);' \
+  '        $datos = Cache::remember(self::CACHE_KEY, 60, fn () => $this->refresh() ? [] : null);'
+
+echo
+echo '── Google: el umbral y la caché ──'
+
+mutar "el umbral desaparece" "$GS" \
+  '        if ($count < self::MIN_REVIEWS || $value <= 0) {' \
+  '        if ($count < 0 || $value <= 0) {'
+
+mutar "la caché conserva una cifra que ya no es publicable" "$GS" \
+  '            Cache::forget(self::CACHE_KEY);
+
+            return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);' \
+  '            return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);'
+
+mutar "una reseña sin autor se publica igual" "$GS" \
+  "            if (\$texto === '' || \$autor === '') {" \
+  "            if (\$texto === '') {"
+
+mutar "una URL de tercero llega sin sanear" "$GS" \
+  "        return (\$valor !== '' && preg_match('#^https?://#i', \$valor) === 1) ? \$valor : null;" \
+  "        return \$valor !== '' ? \$valor : null;"
+
+echo
+echo '── Google: la cascada ──'
+
+mutar "las reseñas de Google salen sin consentimiento" "$FB" \
+  '        if (($this->terceroPermitido)()) {' \
+  '        if (true) {'
+
+mutar "la cifra pasa a pedir consentimiento" "$FB" \
+  '        return $this->google->rating() ?? $this->cms->rating();' \
+  '        return ($this->terceroPermitido)() ? ($this->google->rating() ?? $this->cms->rating()) : null;'
 
 echo
 echo "── ${muerden}/${total} mutaciones muerden ──"

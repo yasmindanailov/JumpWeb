@@ -876,8 +876,50 @@
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
                     <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
-                    <p class="sec-head__lede">{{ __('landing.reviews.lede_own') }}</p>
+                    {{-- ⚠️⚠️ **La entradilla sigue a la fuente de las OPINIONES, no a la de la
+                         chapa — y las dos pueden no coincidir.** La cifra se sirve sin
+                         consentimiento y las reseñas no, así que el caso más frecuente es
+                         justamente ése: chapa de Google encima de opiniones propias. Atada a la
+                         chapa, la sección decía «no las elegimos nosotros» **sobre una opinión que
+                         sí elegimos**. Lo vio la captura, no la suite. --}}
+                    <p class="sec-head__lede">{{ $socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE
+                        ? __('landing.reviews.lede_google')
+                        : __('landing.reviews.lede_own') }}</p>
                 </div>
+
+                @if ($socialRating)
+                    {{-- ══ LA CHAPA DE LA CIFRA ═══════════════════════════════════════════════
+                         ❗❗ **Solo existe si viene de Google.** Componerla con opiniones propias
+                         daría un número real —la media de lo que el parque escribió de sí mismo— y
+                         publicarlo aquí lo haría pasar por la nota de Google.
+                         ⚠️⚠️ **`data-surface="ink"` y no solo un fondo oscuro**: declarar la
+                         superficie cambia los tokens **y PINTA** (la lección de `#484`). Sin el
+                         atributo, la cifra y el gris saldrían con los valores de papel sobre tinta.
+                         ⚠️ **No pide consentimiento**: la trae nuestro servidor, no lleva autor ni
+                         foto y no es dato personal. La reseña sí, por su avatar. --}}
+                    <div class="rev-score" data-surface="ink">
+                        <p class="rev-score__num">
+                            <span class="rev-score__val">{{ number_format($socialRating->value, 1, ',', '.') }}</span>
+                            <span class="rev-score__of">{{ __('landing.reviews.out_of') }}</span>
+                        </p>
+                        {{-- ⚠️⚠️ **El recorte va por CAJA, nunca a lo largo de la fila**: el
+                             interletraje se come la décima y las cinco se leerían llenas. Cada
+                             estrella es su propia caja de 24 y su relleno es un porcentaje de ella. --}}
+                        <p class="rev-score__stars" role="img"
+                           aria-label="{{ __('landing.reviews.score_aria', ['value' => number_format($socialRating->value, 1, ',', '.')]) }}">
+                            @for ($e = 1; $e <= 5; $e++)
+                                @php($lleno = max(0, min(1, $socialRating->value - $e + 1)))
+                                <span class="rev-score__star" aria-hidden="true">
+                                    <span class="rev-score__star-off">&#9733;</span>
+                                    <span class="rev-score__star-on" style="width: {{ round($lleno * 100, 2) }}%"><span>&#9733;</span></span>
+                                </span>
+                            @endfor
+                        </p>
+                        {{-- El recuento va en TEXTO y no en mono: es el segundo argumento de la
+                             sección, y la letra mono es etiqueta, no argumento. --}}
+                        <p class="rev-score__count">{{ trans_choice('landing.reviews.count', $socialRating->count, ['n' => number_format($socialRating->count, 0, ',', '.')]) }}</p>
+                    </div>
+                @endif
 
                 {{-- ⚠️ `x-data` con el número de opiniones dentro: el carril tiene que saber dónde
                      acaba para deshabilitar la flecha, y ese número lo sabe el servidor. --}}
@@ -894,7 +936,20 @@
                         <article class="rev__card{{ $k === 0 ? ' is-on' : '' }}"
                                  :class="i === {{ $k }} && 'is-on'">
                             <div class="rev__who">
-                                <span class="rev__ini" aria-hidden="true">{{ $op->initial() }}</span>
+                                {{-- ⚠️⚠️ **La foto es OBLIGATORIA cuando la reseña es de Google** (R3:
+                                     «you must always credit the author»), y por eso llega solo con
+                                     consentimiento — cargarla es una petición del visitante a
+                                     `lh3.googleusercontent.com`. Sin `avatarUrl` va la inicial, que
+                                     es lo que el artboard dibuja y lo que sirve para las propias.
+                                     ⚠️ `referrerpolicy` para no filtrarle a Google la URL de la
+                                     página desde la que se pide la foto. --}}
+                                @if ($op->avatarUrl)
+                                    <img class="rev__ini rev__ini--photo" src="{{ $op->avatarUrl }}" alt=""
+                                         width="56" height="56" loading="lazy" decoding="async"
+                                         referrerpolicy="no-referrer" aria-hidden="true">
+                                @else
+                                    <span class="rev__ini" aria-hidden="true">{{ $op->initial() }}</span>
+                                @endif
                                 <div class="rev__id">
                                     <p class="rev__author">{{ $op->author }}</p>
                                     @if ($op->when)
@@ -912,7 +967,24 @@
                                     </p>
                                 @endif
                             </div>
-                            <p class="rev__text">{{ $op->text }}</p>
+                            {{-- ⚠️⚠️ **Solo se RECORTA la de Google, y la diferencia no es estética.**
+                                 R4 prohíbe alterar el contenido del usuario, y un `line-clamp`
+                                 recorta visualmente sin tocar el texto servido — aceptable **porque
+                                 hay adónde ir a leerla entera**. Una opinión propia no tiene entera
+                                 en ninguna parte: recortarla escondería texto sin destino. --}}
+                            <p class="rev__text{{ $op->url ? ' rev__text--clamp' : '' }}">{{ $op->text }}</p>
+                            @if ($op->url)
+                                {{-- ⚠️ **El rótulo no promete lo que no esconde**: dice «leer entera»
+                                     solo cuando el texto se corta de verdad. El umbral son los
+                                     caracteres que caben en las cuatro líneas del recorte. --}}
+                                <a class="rev__more" href="{{ $op->url }}"
+                                   target="_blank" rel="noopener noreferrer nofollow">
+                                    <span>{{ mb_strlen($op->text) > 150
+                                        ? __('landing.reviews.read_full')
+                                        : __('landing.reviews.see_on_google') }}</span>
+                                    <span class="arrow" aria-hidden="true">&rarr;</span>
+                                </a>
+                            @endif
                         </article>
                     @endforeach
 

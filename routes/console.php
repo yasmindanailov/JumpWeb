@@ -36,6 +36,19 @@ Artisan::command('inspire', function () {
 Schedule::command('orders:expire')->everyFiveMinutes()->withoutOverlapping();
 
 /*
+ * `#491` — Las reseñas de Google a la caché corta. **La landing nunca llama a Google**: éste es el
+ * único sitio que lo hace (`specs/google-reviews.md` §4.2, y `PERF-02` es la razón).
+ *
+ * ⚠️ **Cada hora, y no por coste**: son ~720 llamadas al mes, gratis. Es que la caché va en Redis
+ * con `allkeys-lru` y **puede evictarse antes de su TTL** (`#137`), así que la cadencia decide cuánto
+ * dura el rato en que la sección cae al respaldo propio.
+ * ⚠️ `withoutOverlapping` porque la llamada puede tardar (timeout de 8 s) y dos a la vez serían dos
+ * peticiones facturadas para el mismo dato.
+ * ❗ **En staging el scheduler no corre** (`#115`): allí se dispara a mano.
+ */
+Schedule::command('social-proof:refresh')->hourly()->withoutOverlapping();
+
+/*
  * #219 — Poda del log de consentimiento de cookies. `CookieConsentLog` es Prunable (borra las filas
  * > 24 meses, la vida del consentimiento). Diario es de sobra: el plazo es de meses. Acota el
  * crecimiento de la tabla y cumple la minimización / limitación del plazo de conservación del RGPD

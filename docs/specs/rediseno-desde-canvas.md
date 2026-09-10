@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA · Fase 2 con las OCHO secciones en el árbol** (la 06 va por su mitad `a`: las opiniones propias; su mitad `b`, Google, es lo siguiente)
+> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · lo siguiente es la **Fase 3, las páginas**
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -196,7 +196,7 @@ sistema y dicen cosas distintas.
 |---|---|---|---|
 | **0** | Base: Docker · las seis cifras · este inventario | esta spec | todas |
 | **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
-| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio (**las 8 en el árbol**; a la 06 le falta su mitad de Google) | la portada entera, vestida con BD | 3 |
+| **2** | ✅ **El armazón + las 8 secciones**, móvil y escritorio | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
 | **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
 | **5** | **Post-form y justificante digital** | lo que hoy es funcional y no está vestido | — |
@@ -213,7 +213,7 @@ titulares son frases de **3 a 6 palabras**:
 | Qué hay dentro | Salta, trepa y déjate caer | `Juegos PJP` (6a) + `Escritorio PJP` (4b) · ✅ `#482` |
 | Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) + `Escritorio PJP` (5a) · ✅ `#483` |
 | Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) + `Escritorio PJP` (3a) · ✅ `#485` |
-| Reseñas | Lo dicen los que ya han venido | `Resenas PJP` (2a) + `Escritorio PJP` (5b) · 🟦 `#490` (mitad `a`) |
+| Reseñas | Lo dicen los que ya han venido | `Resenas PJP` (2a) + `Escritorio PJP` (5b) · ✅ `#490` + `#491` |
 | Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) + `Escritorio PJP` (3b) · ✅ `#487` |
 | Dudas | Lo que más nos preguntáis | `Dudas PJP` (1a) + `Escritorio PJP` (5c) · ✅ `#488` |
 
@@ -329,6 +329,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2g (`#487`) | añadir **`--ok-ink: #447921`** y **`--attn-ink: #8A6E00`** al paquete (las variantes 800 de su propia paleta). ❗ **Sin `--ok-ink` el estado «Abierto ahora» se pinta con `--ok`, que en este paquete da 2,4 sobre blanco** — lo vigila `ClientThemePackageTest`, así que el gate lo caza. Sin `--attn-ink` el «Abre hoy» pierde el color y se queda en tinta: se ve, no se rompe. ⚠️ Y **DATO, desde el panel**: el horario en conflicto —el panel dice L–V 16:30 · S–D 11:00 y el canvas L–J 16:30 · V–D 11:30— y las **fechas especiales**, que hoy son cero: sin ellas no hay ni aviso ni pliegue, que es la conducta correcta. |
 | T2f (`#485`) | **Ninguno de CSS**: la sección se viste entera con roles ya declarados (`--attn`, `--ok`/`--on-ok`, `--interactive`, `--line`, `--paper-fg`, `--paper-bg-card`, los tres radios). ⚠️ Y **DATO, desde el panel**: la línea «¿viene un niño que no es de tu familia?» **solo sale si algún producto ofrece el justificante** (`ticket_types.guardian_authorization` distinto de `none`). Medido en local: **0 de N**, así que hoy no se pinta —y eso es la conducta correcta, no un defecto. Si el parque quiere ofrecerlo, se marca en el producto. |
 | T2i·a (`#490`) | **Ninguno de CSS**: la sección se viste con roles ya declarados (`--bg-card`, `--line`, `--bg-soft`, `--attn-ink`, `--interactive`, `--fg-mute`). ▶ **DATO, desde el panel**: escribir **tres opiniones propias** en «Ajustes → Opiniones propias». ⚠️ **Sin ninguna, la sección no se pinta** —conducta correcta— y hoy es **lo único** que la sección puede enseñar: Google tiene una sola reseña, por debajo del umbral de 10. ⚠️ Y **en la consola de Google**: poner el **tope de 50 peticiones/día**, añadir la **IP del servidor** a la restricción de la clave (la que hay es la conexión del owner) y **rotar la clave**, que se pegó en un chat. |
+| T2i·b (`#491`) | **`.env` de producción**: `GOOGLE_PLACES_API_KEY=` con la clave de Places API (New). ▶ **DATO, desde el panel**: el ajuste `social.google_place_id` (`app:set-setting social.google_place_id <ChIJ…> --force`). ⚠️ **Y en la consola de Google, lo que el owner aplazó a sabiendas**: **rotar la clave** (se pegó en un chat), poner el **tope de peticiones/día** y **añadir la IP del servidor** a la restricción — sin la IP, en producción todas las llamadas fallan y la sección cae al respaldo propio sin avisar. ❗ **El scheduler no corre en staging** (`#115`): allí `social-proof:refresh` se dispara a mano. |
 | T2h (`#488`) | **Ninguno de CSS**: la sección se viste con roles ya declarados (`--bg-card`, `--line`, `--bg-soft`, `--interactive`, `--r-lg`, `--r-pill`). ▶ **DATO, desde el panel** — las cinco dudas publicadas: **retirar la de la EDAD** (contradice a la sección 01, que dice 4–7 y +8 desde `zones`) · **reescribir la del APARCAMIENTO** con «en la calle, delante, y gratis» (`[DECIDIDO owner]`; ⚠️ es el único sitio de la web que lo publica) · **reescribir «¿Hace falta reservar?»**, que hoy dice «no hace falta» contra toda la página · y **quitar el «automáticamente»** de la de cancelar, que promete un canal que `#244` no da. ⚠️ El seeder ya trae las cinco; en producción **no se siembra**, así que se editan desde el panel. ⚠️ Y **quedan dos decisiones del owner**: si grupos lleva al correo o a `/servicios`, y qué otras dudas oyen en el mostrador. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
@@ -389,7 +390,24 @@ navegador instalado**.
 | T2g | **07 · Visítanos**: cuatro estados · la entradilla se deriva · sin teléfono, sin aparcamiento y sin la promesa de festivos | ✅ `#487` |
 | T2h | **08 · Dudas**: el acordeón del sistema · todas cerradas · cero salida · con el panel vacío la sección desaparece | ✅ `#488` |
 | T2i·a | **06 · Reseñas**, mitad `a`: las opiniones PROPIAS · el contrato `SocialProof` · el recurso del panel | ✅ `#490` |
-| T2i·b | **06 · Reseñas**, mitad `b`: Google (Places, caché corta, comando programado, atribución) | ⬜ **el owner ya entregó clave y `place_id`**; falta el tope/día, la IP del servidor y rotar la clave |
+| T2i·b | **06 · Reseñas**, mitad `b`: Google (Places, caché corta, comando programado, atribución) | ✅ `#491` |
+
+✅ **T2i·b · Google** (`#491`). La chapa del 4,8 con las estrellas recortadas **caja a caja**, las
+reseñas con su atribución, la caché corta y el comando `social-proof:refresh` cada hora.
+
+❗❗❗ **LA PORTADA NO LLAMA A GOOGLE, y eso es una clase entera**: `GoogleSocialProof` lee de la caché
+y **nunca llama**; quien llama es el comando. Lo vigila un caso que **prohíbe el mecanismo** —el
+cliente HTTP falseado para explotar si alguien lo llama— **con su guarda-de-la-guarda**.
+
+❗❗❗ **LA CIFRA NO NECESITA CONSENTIMIENTO Y LAS RESEÑAS SÍ**, y eso resuelve la ambigüedad que la
+spec tenía escrita sin argumentar: la cifra la trae **nuestro servidor** —el visitante no habla con
+Google—, no lleva autor ni foto y no es dato personal; la reseña obliga a su avatar, que **sí** es
+una petición del visitante. ▶ De ahí sale lo que el owner quería.
+
+⚠️⚠️ **Un defecto que solo vio la CAPTURA**: la entradilla estaba atada a la CHAPA, y la chapa y las
+opiniones **no vienen de la misma fuente** — el caso más frecuente es el cruce. La sección decía «no
+las elegimos nosotros» **sobre una opinión propia**. *Texto correcto, sitio correcto, afirmación
+falsa: ninguna aserción de marcado lo veía.*
 
 ✅ **T2i·a · «Reseñas», las opiniones propias** (`#490`). Cabecera común · **una opinión a la vez**
 con flechas y puntos · **sin la chapa del 4,8**, porque esa cifra solo existe si viene de Google.

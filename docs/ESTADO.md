@@ -1,6 +1,45 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#490`). ▶ **EN UNA LÍNEA: las OCHO secciones de la portada están en el árbol; a la 06 «Reseñas» le falta su mitad de Google, y eso es lo siguiente.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#491`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+>
+> ▶ **LA T2i·b CIERRA LA PORTADA** (`#491`): la chapa del 4,8 con las estrellas recortadas **caja a
+caja**, las reseñas con su atribución, la caché corta y `social-proof:refresh` cada hora. Suite
+**4.602** · **19/19 mutaciones** · integración verificada contra la API real.
+>
+> ❗❗❗ **LA PORTADA NO LLAMA A GOOGLE, Y ESO ES UNA CLASE ENTERA.** `GoogleSocialProof` **lee de la
+caché y nunca llama**; quien llama es el comando programado. Lo vigila un caso que **prohíbe el
+mecanismo** —el cliente HTTP falseado para explotar si alguien lo llama— **con su guarda-de-la-guarda**.
+La mutación que lo prueba es la natural: el `Cache::remember` que uno escribiría sin pensar.
+>
+> ❗❗❗ **LA CIFRA NO NECESITA CONSENTIMIENTO Y LAS RESEÑAS SÍ.** Resuelve una ambigüedad que la spec
+tenía escrita **sin argumentar**: la cifra la trae nuestro servidor —el visitante no habla con
+Google—, no lleva autor ni foto y no es dato personal; la reseña obliga a su avatar, que **sí** es una
+petición del visitante (`RGPD-05`). ▶ De ahí sale lo que el owner quería: la chapa puesta siempre que
+se pueda.
+>
+> ⚠️⚠️ **UN DEFECTO QUE SOLO VIO LA CAPTURA**: la entradilla estaba atada a la CHAPA, y la chapa y las
+opiniones **no vienen de la misma fuente** — el caso más frecuente es el cruce. La sección decía «no
+las elegimos nosotros» **sobre una opinión propia**. *Texto correcto, sitio correcto, afirmación
+falsa: ninguna aserción de marcado lo veía.* Ya sigue a la fuente de las opiniones, con caso y
+mutación.
+>
+> ▶ **LO SIGUIENTE: LA FASE 3, LAS PÁGINAS.** Empieza por **el armazón de páginas**
+(`Layout Paginas PJP`, aprobado), no por una página: lo comparten las siete y construir una encima
+del armazón viejo obliga a rehacerla — el mismo razonamiento que hizo de `#477` la primera tanda de
+la Fase 2. Medido: hoy las interiores abren de **tres maneras distintas** y `.page__head` es **solo
+un `<h1>`**. ⚠️ Y dos avisos: **`/normas` no es solo diseño** (el canvas pide el porqué de cada norma
+y agruparlas por momento: **dos columnas nuevas**) y **`/servicios` está en mantenimiento** en local
+(`maintenance.page.servicios = 1`).
+>
+> ⚠️ **PASOS DE DESPLIEGUE de esta tanda** (§5.bis de la spec): `GOOGLE_PLACES_API_KEY` en el `.env`
+de producción, el ajuste `social.google_place_id`, y **en la consola de Google lo que el owner
+aplazó a sabiendas**: rotar la clave, el tope de peticiones/día y **añadir la IP del servidor** —
+sin ella todas las llamadas fallan en producción y la sección cae al respaldo sin avisar.
+> ❗ **El scheduler no corre en staging** (`#115`): allí el comando se dispara a mano.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA T2i·b.**
+>
+> ❗❗❗ **RETOMA ANTERIOR** (2026-09-10, `#469`→`#490`). ▶ **EN UNA LÍNEA: las OCHO secciones de la portada están en el árbol; a la 06 «Reseñas» le falta su mitad de Google, y eso es lo siguiente.**
 >
 > ▶ **LA T2i·a ESTÁ EN EL ÁRBOL: la sección 06 con las opiniones PROPIAS** (`#490`). Cabecera común,
 una opinión a la vez con flechas y puntos, y **sin la chapa del 4,8**. Entran la tabla
@@ -2066,8 +2105,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4588 en verde** (28.802 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con la **T2i·a** (`#490`). ⚠️ **+12**: los 12 casos de
+> Suite **4602 en verde** (28.877 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con la **T2i·b** (`#491`). ⚠️ **+14**: los 14 de
+> `SocialProofNeverHitsTheRenderPathTest`. Ninguno sale.
+> Antes, con la **T2i·a** (`#490`): **4588** y 28.802. ⚠️ **+12**: los 12 casos de
 > `ReviewsSectionTest`. Ninguno sale.
 > Antes, con `#489`: **4576** y 28.699. ⚠️ **+1**: el caso de las dos ramas del aviso de la fecha
 > especial en `VisitSectionTest`. Ninguno sale — `ScheduleDisplayTest` **se re-apunta**, no se retira.

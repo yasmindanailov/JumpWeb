@@ -6,6 +6,7 @@ use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Content\Models\Testimonial;
 use App\Domain\Content\Services\CmsSocialProof;
+use App\Domain\Content\Services\FallingBackSocialProof;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -270,7 +271,14 @@ class ReviewsSectionTest extends TestCase
             'El controlador consulta el modelo directamente: la landing ha vuelto a conocer a su proveedor.',
         );
 
-        // Y el binding resuelve a la implementación del CMS mientras Google no exista.
-        $this->assertInstanceOf(CmsSocialProof::class, app(SocialProof::class));
+        // ⚠️ **Re-apuntada** (`#491`): el binding ya no es `CmsSocialProof`, es el decorador de la
+        // cascada. Y se asevera la CONDUCTA y no la clase, que es más fuerte: sin Google configurado
+        // —el caso normal de una instalación recién montada— lo que llega es el respaldo propio.
+        $this->assertInstanceOf(FallingBackSocialProof::class, app(SocialProof::class));
+
+        $this->sembrar(1);
+        $opiniones = app(SocialProof::class)->testimonials();
+        $this->assertCount(1, $opiniones);
+        $this->assertSame(TestimonialData::SOURCE_CMS, $opiniones->first()->source);
     }
 }

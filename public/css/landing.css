@@ -3160,6 +3160,37 @@ img { display: block; max-width: 100%; }
 }
 .rev__dot[aria-current="true"] > span { background: var(--interactive); }
 
+/* ── LA CHAPA DE LA CIFRA (solo con Google) ───────────────────────────────────────────────
+   ⚠️ Su superficie la declara el marcado con `data-surface="ink"`, que además de cambiar los
+   tokens **pinta el fondo** (`#484`). Aquí no se escribe ningún color de fondo. */
+.rev-score { border-radius: var(--r-lg); padding: var(--sp-18) var(--sp-20); margin-bottom: var(--sp-16); }
+.rev-score__num { margin: 0; display: flex; align-items: baseline; gap: 9px; }
+/* La cifra es el rol de CIFRA (`--money`, `#480`), que sobre tinta vale el lima del paquete. */
+.rev-score__val { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 0.9; color: var(--money); }
+.rev-score__of { font-size: var(--fs-16); font-weight: 700; color: var(--fg-mute); }
+.rev-score__stars { margin: var(--sp-8) 0 0; display: flex; gap: var(--sp-2); }
+/* ⚠️⚠️ **El recorte va por CAJA y no a lo largo de la fila**: el interletraje se come la décima y
+   las cinco se leerían llenas. Cada estrella es su caja de 24 y su relleno un % de ella. */
+.rev-score__star { position: relative; display: block; width: 24px; height: 24px; flex: none; }
+.rev-score__star-off,
+.rev-score__star-on { position: absolute; left: 0; top: 0; height: 24px; overflow: hidden; font-size: 24px; line-height: 24px; text-align: center; }
+.rev-score__star-off { width: 24px; color: var(--fg-mute); }
+.rev-score__star-on { color: var(--attn); }
+.rev-score__star-on > span { display: block; width: 24px; }
+.rev-score__count { margin: var(--sp-10) 0 0; font-size: var(--fs-15); font-weight: 700; line-height: 1.3; color: var(--fg-mute); }
+
+/* La foto del autor sustituye a la inicial. Misma caja, para que la fila no se mueva. */
+.rev__ini--photo { object-fit: cover; }
+
+/* ⚠️ **Solo se recorta la de Google**, que es la que tiene adónde mandar a leerla entera. */
+.rev__text--clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+.rev__more {
+  display: inline-flex; align-items: center; gap: var(--sp-7); min-height: 48px;
+  font-size: var(--fs-14); font-weight: 800; color: var(--interactive);
+}
+.rev__more .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
+.rev__more:hover .arrow { transform: translateX(5px); }
+
 /* ── ESCRITORIO ───────────────────────────────────────────────────────────────────────────
    `Escritorio PJP` 5b: cuatro columnas y ocho. Con la chapa presente, las cuatro son suyas y la
    cabecera va arriba; **sin chapa las ocupa la cabecera**, que es el mismo reparto que la sección

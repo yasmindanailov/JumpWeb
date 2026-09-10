@@ -136,6 +136,15 @@ class HomeController extends Controller
              */
             'socialProof' => app(SocialProof::class)->testimonials(),
             /*
+             * **La cifra agregada** (`#491`). `null` es la respuesta NORMAL y no un fallo: sin
+             * Google configurado, con su caché fría o por debajo del umbral de reseñas no hay
+             * ninguna media que se pueda sostener, y la chapa simplemente no se pinta.
+             * ⚠️ **NO necesita consentimiento de cookies, y su porqué está en el decorador**: la trae
+             * nuestro servidor, no lleva autor ni foto y no es dato personal. Lo que sí lo necesita
+             * es la RESEÑA, por su avatar.
+             */
+            'socialRating' => app(SocialProof::class)->rating(),
+            /*
              * **¿Se ofrece el justificante de un menor invitado?** (`#485`, sección 05.)
              *
              * ⚠️⚠️ **Es DATO y no copia fija.** La línea «¿viene un niño que no es de tu familia?»

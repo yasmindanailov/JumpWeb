@@ -26885,3 +26885,122 @@ puesto ninguno) y **añadir la IP del servidor** a la restricción de la clave �
 de producción: se pegó en el chat.
 
 **Suite 4.588** · 28.802 aserciones · **11/11 mutaciones** (`scripts/mutar-resenas.sh`) · Pint limpio.
+
+---
+
+## #491 · 2026-09-10 · La sección «Reseñas», mitad `b`: Google — y la chapa NO necesita consentimiento, que es lo que el owner quería
+
+**Contexto.** La segunda mitad de la sección 06 (`specs/google-reviews.md`, `#490` construyó la `a`).
+El owner entregó clave y `place_id` y decidió no rotar la clave ni poner el tope todavía: se prueba
+en local y en staging, con su IP.
+
+---
+
+**❗❗❗ 1 · LA PORTADA NO LLAMA A GOOGLE, Y ESO ES UNA CLASE ENTERA.**
+
+`GoogleSocialProof` **lee de la caché y no llama nunca**; quien llama es `social-proof:refresh`, el
+comando programado. No es una optimización: `PERF-02` documenta que la portada llegó a hacer ~1.900
+consultas por GET anónimo, y **una llamada HTTP a un tercero en el camino del render es peor que
+aquello** — no son milisegundos de BD local, es la latencia de otro en el camino crítico.
+
+▶ Lo vigila `SocialProofNeverHitsTheRenderPathTest` **prohibiendo el mecanismo**: el cliente HTTP se
+falsea para **explotar si alguien lo llama** y la portada tiene que seguir dando 200. Y lleva su
+**guarda-de-la-guarda** —un caso que comprueba que el falso SÍ explota—, sin la cual un `Http::fake()`
+mal montado dejaría el primero **verde sin mirar nada**.
+⚠️ La mutación que lo prueba es **la natural**: el `Cache::remember` que uno escribiría sin pensar.
+
+---
+
+**❗❗❗ 2 · LA CIFRA NO NECESITA CONSENTIMIENTO Y LAS RESEÑAS SÍ — y eso resuelve una ambigüedad que
+la spec tenía escrita SIN ARGUMENTAR.**
+
+§4.4.bis afirmaba «sin consentimiento la cabecera no se pinta», pero su razón escrita era *no
+inventar la cifra*, que es otra cosa. Mirado de cerca:
+
+- **La cifra**: la trae **nuestro servidor** con el comando, así que **el visitante no hace ninguna
+  petición a Google**; no tiene autor ni foto, de modo que la atribución con foto de R3 no aplica; y
+  una media de un negocio **no es dato personal**. Lo que sí exige es acreditar la fuente, y eso es
+  texto.
+- **Las opiniones**: R3 obliga a la foto del autor, esa foto vive en `lh3.googleusercontent.com` y
+  cargarla **es una petición del visitante a Google** (`RGPD-05`). Servirlas sin foto incumple R3, así
+  que no hay término medio.
+
+▶ **De ahí sale lo que el owner pedía** —que la chapa se vea siempre que se pueda— sin romper nada.
+
+---
+
+**⚠️⚠️ 3 · UN DEFECTO QUE SOLO VIO LA CAPTURA, y es consecuencia directa de lo anterior.**
+
+Até la entradilla a la presencia de la CHAPA. Pero la chapa y las opiniones **no vienen de la misma
+fuente**, y el caso más frecuente es justamente el cruce: chapa de Google encima de opiniones
+propias. Resultado: la sección decía *«No las elegimos nosotros: son las que Google pone primero»*
+**sobre una opinión que sí elegimos**.
+
+▶ La entradilla sigue ahora a la fuente de **las opiniones**. ⚠️ *Es un texto correcto, en un sitio
+correcto, diciendo algo falso: ninguna aserción de marcado lo veía.* Tiene caso y mutación.
+
+---
+
+**▶ 4 · LO QUE ENTRA.**
+
+- **`GoogleSocialProof`**: Places API (New), máscara de campos enumerada —`reviews` es lo que sube al
+  SKU caro, pedir de más es pagar de más—, caché corta y el umbral.
+- **`FallingBackSocialProof`**: la cascada de §4.0 en **un solo sitio**.
+- **`social-proof:refresh`** + `Schedule::hourly()`.
+- **La chapa** en la sección, las reseñas con su atribución, y `lh3.googleusercontent.com` en la CSP.
+
+⚠️⚠️ **El consentimiento entra como CIERRE desde el composition root**, y es una consecuencia de la
+frontera: `CookieConsent` vive en Identity y **Content no puede mirar a Identity**
+(`ModuleBoundariesTest`). Misma salida que `ReservationPlacesTaken` en `#444`.
+
+⚠️ **El TTL es la MITAD de la cadencia, no el doble.** Con un TTL más largo que el refresco, una
+respuesta vieja sobreviviría a un refresco fallido y la sección publicaría una cifra de ayer
+creyéndola de hoy.
+
+⚠️ **Al bajar del umbral la caché se OLVIDA**: si no, seguiría sirviendo la cifra de antes.
+
+⚠️ **Una reseña sin autor no se publica**: R3 exige acreditarlo y una anónima incumple la atribución.
+Es preferible enseñar una menos.
+
+⚠️ **`SEC-07` se aplica DONDE NACE EL DATO**, no en la plantilla: las URL de Google se sanean en el
+servicio, así que la siguiente superficie que las consuma —la API, un correo— recibe lo mismo sin
+tener que acordarse.
+
+⚠️ **Ampliar `img-src` relaja la CSP del sitio entero** (`SEC-01`), y es la decisión que §3.3 ya
+había tomado: de las tres salidas es la única que cumple R3 y `RGPD-05` a la vez.
+
+❗❗ **Las CINCO salidas del refresco son distinguibles, y eso lo cambié a media construcción.**
+Devolvía `?int` y el comando decía «no ha devuelto nada publicable (sin cobertura del umbral, cuota,
+caída o clave)» — cuatro causas en una frase, así que **para saber cuál era había que mirar el log y
+deducirlo de una ausencia**. Ahora cada una dice **qué hay que ir a mirar**, y todas terminan en 0:
+un cron que informa de fallo cada hora acaba silenciado, y entonces sí se pierden los fallos de
+verdad.
+
+---
+
+**⚠️ 5 · TRES TRAMPAS, Y LAS TRES YA ESTABAN FICHADAS.**
+
+- **`Http::fake()` ACUMULA stubs y gana el primero** (`#347`): un bucle con tres códigos recibía tres
+  veces el 403 y el caso fallaba diciendo «403 no es 429» — parecía defecto del producto y era el
+  arnés. Se usa `fakeSequence`.
+- **En bash no se puede escapar una comilla simple dentro de comillas simples**: reventó el arnés con
+  «syntax error near unexpected token». Van con dobles y el `$` escapado.
+- **`ScaleTokensAreUsedTest`** (`#437`) cazó dos literales del artboard que **sí tienen escalón**
+  (`gap: 2px` y `gap: 7px`).
+
+Y una guarda perdió su sujeto con razón: `ReviewsSectionTest` aseveraba que el binding resolvía a
+`CmsSocialProof`, y ahora es el decorador. Se re-apunta a la **conducta** —sin Google configurado
+llega el respaldo propio—, que es más fuerte que la clase.
+
+---
+
+**▶ VERIFICADO EN NAVEGADOR.** La chapa da **«4,8 sobre 5 · 320 opiniones»** con la cifra en
+`rgb(163, 194, 28)` —el `#A3C21C` del artboard, servido por `--money` sobre tinta— y **las cinco
+estrellas recortadas caja a caja**: 24 · 24 · 24 · 24 · **19,19**, o sea la quinta al 80 % de 4,8.
+Es exactamente lo que la regla exige y lo que un recorte a lo largo de la fila no consigue.
+
+⚠️ **Pendiente del owner, y él lo ha aplazado a sabiendas**: rotar la clave, poner el tope de
+peticiones/día y añadir la IP del servidor. Se hace al desplegar.
+
+**Suite 4.602** · 28.877 aserciones · **19/19 mutaciones** (`scripts/mutar-resenas.sh`) · integración
+verificada contra la API real · Pint limpio.
