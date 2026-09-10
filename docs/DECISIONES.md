@@ -27661,3 +27661,48 @@ festivos y vísperas—»*—, o sea que **el producto lo tenía bien y el dato 
 **Suite 4.644** · 29.154 aserciones · guarda `AddonsRailSailsTest` (7 casos) · Pint limpio ·
 verificado en navegador a 390 y 1440: velas correctas en los cuatro casos (con desborde, sin
 desborde, al principio y al final del carril).
+
+---
+
+## #499 · 2026-09-10 · Por qué no se ven las reseñas de Google: la caché está vacía el 83 % del tiempo
+
+**Contexto.** El owner preguntó por qué la portada no muestra las reseñas de Google. Medido, hay dos
+causas y solo una es de diseño.
+
+---
+
+**❗❗❗ LA CAUSA PRINCIPAL ES UNA INCOHERENCIA ENTRE EL TTL Y LA CADENCIA, y estaba ahí desde `#491`.**
+
+    TTL de la caché        1.800 s = 30 min   (`GoogleSocialProof::CACHE_TTL_SECONDS`)
+    refresco programado    3 h    = 180 min   (`routes/console.php`, `everyThreeHours`)
+    ──────────────────────────────────────────
+    caché VACÍA            150 de cada 180 min = **83 % del tiempo**
+
+⚠️⚠️ **Los dos razonamientos son correctos por separado, y por eso nadie lo vio.** El docblock del TTL
+dice *«es la mitad del refresco **(que va cada hora)**»* —escrito suponiendo cadencia horaria— y el
+scheduler va cada tres horas con su propia aritmética, también buena: *«a esta cadencia salen 24
+llamadas al día, que caben en el tope de 50; cada hora serían 72 y el tope las cortaría a media
+tarde»*.
+
+▶ **La cadencia bajó de 1 h a 3 h por el tope de la consola de Google y el TTL no se ajustó.** Cada
+mitad es coherente con la premisa que tenía delante; juntas dejan la sección cayendo al respaldo
+propio cinco sextas partes del tiempo. *Dos comentarios que se explican bien pueden contradecirse sin
+que ninguno mienta.*
+
+⚠️ Y **se paga el SKU más caro de Places** —`reviews` es Enterprise + Atmosphere (R5)— para enseñarlas
+el 17 % del tiempo.
+
+**La segunda causa SÍ es de diseño y está decidida** (`#491`): las RESEÑAS piden consentimiento de
+terceros —su avatar vive en `lh3.googleusercontent.com`— y la CIFRA no. Sin aceptar cookies se ve la
+chapa de Google sobre opiniones propias. Correcto, y no se toca.
+
+⚠️ **Verificado que el scheduler SÍ corre en producción** (`crontab` tiene `schedule:run`), así que la
+causa no es ésa. En local se dispara a mano.
+
+▶ **NO se arregla en esta sesión**: las tres salidas tienen matiz —subir el TTL acepta a sabiendas lo
+que el docblock quería evitar, y bajar la cadencia obliga a tocar el tope de la consola de Google, que
+`#491` dejó pendiente del owner—. **Ficha en `DEUDA.md`** con las tres.
+
+**Medido de paso, con la caché caliente**: rating **4,6 · 5 reseñas**, y la cascada se comporta como
+está escrita — con consentimiento, chapa y opiniones de Google; sin él, chapa de Google y opiniones
+propias.

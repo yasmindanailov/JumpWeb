@@ -713,3 +713,45 @@ el prefijo «SECCIÓN», y la 07 era del formato antiguo y **sin número**— al
 (`HomeSectionOrderTest::test_the_template_numbers_its_eight_blocks_in_order`): vigila que sean ocho,
 que vayan en orden y que **cada una esté delante de su sección** — sin eso se desincroniza y una
 numeración a medias engaña más que ninguna.
+
+---
+
+## ▶ ❗ ALTA · Las reseñas de Google casi nunca se ven: la caché está VACÍA el 83 % del tiempo (2026-09-10, `DECISIONES #499`)
+
+**El owner preguntó por qué no se muestran las reseñas de Google en la página.** Medido, y la causa
+principal no es el consentimiento: es una **incoherencia entre el TTL y la cadencia del refresco**.
+
+    TTL de la caché           1.800 s  =  30 min   (`GoogleSocialProof::CACHE_TTL_SECONDS`)
+    cadencia del refresco     3 h      = 180 min   (`routes/console.php`, `everyThreeHours`)
+    ──────────────────────────────────────────────
+    la caché está VACÍA       150 de cada 180 min  =  **83 % del tiempo**
+
+⚠️⚠️ **Los dos razonamientos son correctos por separado, y por eso nadie lo vio.**
+
+- El docblock del TTL dice: *«Es la mitad del refresco **(que va cada hora)**, no el doble. Con un TTL
+  más largo que la cadencia, una respuesta vieja sobreviviría a un refresco fallido»*. Escrito
+  suponiendo cadencia **horaria**.
+- El scheduler va **cada tres horas**, con su propia aritmética bien argumentada: *«la llamada es una
+  por idioma… a esta cadencia salen 24 llamadas al día, que caben en el tope de 50; **cada hora serían
+  72 y el tope las cortaría a media tarde**»*.
+
+▶ **La cadencia bajó de 1 h a 3 h por el tope de la consola de Google, y el TTL no se ajustó.** Cada
+mitad es coherente con la premisa que tenía delante; juntas dejan la sección cayendo al respaldo
+propio cinco sextas partes del tiempo.
+
+**La segunda causa, que sí es de diseño y está decidida** (`#491`): las RESEÑAS necesitan
+consentimiento de cookies de terceros —su avatar viene de `lh3.googleusercontent.com`— y la CIFRA no.
+Sin aceptar cookies se ve la chapa de Google sobre opiniones propias. Eso es correcto y no se toca.
+
+**Las salidas, y son del owner porque tienen matiz:**
+
+1. **Subir el TTL por encima de la cadencia** (p. ej. 3 h 30 min). ⚠️ Acepta a sabiendas lo que el
+   docblock quería evitar: una respuesta puede sobrevivir a **un** refresco fallido. Sigue siendo
+   «temporary caching», que es lo que R2 permite.
+2. **Bajar la cadencia a una hora** y subir el tope de la consola de Google de 50 a ~100 llamadas/día.
+   ⚠️ Requiere tocar la consola, que es lo que `#491` dejó pendiente del owner.
+3. Dejarlo y aceptar que las reseñas de Google son ocasionales. ⚠️ Difícil de defender: se paga el
+   SKU más caro de Places (`reviews` es Enterprise + Atmosphere) para enseñarlas el 17 % del tiempo.
+
+⚠️ **Verificado que el scheduler SÍ corre en producción** (`crontab` tiene `schedule:run`), así que no
+es eso. Y en local se dispara a mano: `php artisan social-proof:refresh`.

@@ -1,6 +1,62 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#495`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones EN EL ORDEN DEL MOCKUP— y lo siguiente es la FASE 3, las páginas.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ES LO VIVO** (2026-09-10, `#469`→`#499`). ▶ **EN UNA LÍNEA: la portada está cerrada —ocho secciones, en el ORDEN del mockup, con la atribución de Google puesta y sin decoración— y lo siguiente es la FASE 3, las PÁGINAS.**
+>
+> ❗❗❗ **LO SIGUIENTE, Y EL OWNER LO DEJÓ DICHO EN ESTE ORDEN**: (1) **seguir la fase de diseño como
+está estipulada** → la **Fase 3**, y **empieza por el ARMAZÓN de páginas** (`Layout Paginas PJP`), no
+por una página: lo comparten las siete y construir una encima del armazón viejo obliga a rehacerla.
+(2) Después, **un repaso de COPYS texto por texto para conversión**, con los datos y la configuración
+reales de los productos de PlayJump delante. (3) Y después, **el texto de las vísperas** (ver abajo).
+> ⚠️ **Dos avisos de la Fase 3**: `/normas` **no es solo diseño** —el canvas pide el porqué de cada
+norma y agruparlas por momento: **dos columnas nuevas**— y `/servicios` está **en mantenimiento** en
+local. ⚠️ Y la copia local del canvas **no trae `Layout Paginas PJP`**: hay que refrescarla antes.
+>
+> ❗❗❗ **LO QUE HAY QUE ARREGLAR Y ES DE DINERO — LA TARIFA ESPECIAL COBRA VÍSPERAS QUE NO ANUNCIA**
+(`#498`, pendiente de la decisión del owner, que lo dejó para «después»). Leído en **producción**: la
+tarifa especial aplica a `weekdays [5,6,0]` **más 30 fechas declaradas**, y el propio parque las nombra
+«Víspera de Navidad», «Víspera de Reyes», «Puente de la Constitución»… ▶ **Las vísperas SÍ pagan
+especial y la etiqueta no las nombra**: no promete de más, **cobra más de lo que anuncia**.
+> ⚠️ Es un cambio de **DATO** (`rate_types.label` en el panel), no de código. ⚠️⚠️ Y el docblock de
+`<x-site.special-rate-note>` **ya escribía la regla completa** —«viernes, findes, festivos y
+vísperas»—: *el producto lo tenía bien y el dato se quedó corto*.
+>
+> ❗❗ **Y POR QUÉ NO SE VEN LAS RESEÑAS DE GOOGLE** (`#499`, **ficha ALTA en `DEUDA.md`**, sin
+arreglar a propósito): **la caché está VACÍA el 83 % del tiempo** — TTL de **30 min** contra un
+refresco **cada 3 h**. ⚠️⚠️ Los dos razonamientos son correctos por separado y por eso nadie lo vio:
+el TTL se escribió suponiendo cadencia **horaria** y la cadencia bajó a 3 h por el tope de la consola
+de Google. *Dos comentarios que se explican bien pueden contradecirse sin que ninguno mienta.*
+> ⚠️ La segunda causa **sí es de diseño y está bien**: las reseñas piden consentimiento de terceros
+(su avatar) y la cifra no. ⚠️ **El scheduler SÍ corre en producción**; en local se dispara a mano con
+`php artisan social-proof:refresh`. ▶ Tres salidas en la ficha, y son del owner.
+>
+> ▶ **LO HECHO EN ESTA SESIÓN** (`#494`→`#499`):
+> - **`#494` · la atribución de Google**, que el owner pidió como diseño y **era un requisito
+INCUMPLIDO**: faltaban el logotipo, el enlace al perfil del autor, el aviso de traducción y la
+distinción visual. ⚠️ **El logotipo NO es la «G» de `google.svg`** (ésa es Sign-In) y **el color se
+elige cambiando de FICHERO**. ⚠️ **«Verificado por Google» NO se puede escribir**: su documentación
+dice lo contrario. ⚠️⚠️ **Dos guiones seguidos en un comentario rompen un SVG** —HTTP 200, caja de
+98×18 y el logotipo INVISIBLE—.
+> - **`#495` · las ocho secciones al orden del mockup** (01 Para quién · 02 Cuánto · 03 Qué hay dentro
+· 04 Cumpleaños · 05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas). ❗❗ **Reordenar NO ROMPE
+NADA** —la suite pasó verde con los dos órdenes—, así que **lo único que caza un bloque descolocado es
+`HomeSectionOrderTest`**.
+> - **`#496` · la portada se queda SIN decoración**: medido, `Portada PJP` y `Zonas PJP` llevan **cero**
+manchas, siluetas y tramas. `IllustrationKit::SLOTS` queda **VACÍA**.
+> - **`#497` · se abre la valoración del vestido** (`specs/pasada-de-vestido.md`): el canvas ya la
+tenía prevista y **la llama «la pasada de vestido»**. Dos decisiones tomadas, **cinco pendientes**.
+> - **`#498` · las velas del carril de complementos** y el pie de cumpleaños (la nota de edades
+mezcladas **se MOVIÓ a `/cumpleanos`**, no se borró: era el único sitio del sitio que lo decía).
+>
+> ⚠️⚠️ **LA LECCIÓN DE MÉTODO DE LA SESIÓN, y se pagó CINCO veces: un número de CAJA no dice lo que
+parece.** `getBoundingClientRect()` de un elemento girado devuelve la envolvente; el solape de cajas
+sobrestima el de tinta; medir el solape dentro de una sección no ve que la pieza se salga de ella; un
+`overflow: hidden` recorta lo que se ve pero no la caja; y contar elementos con `infinite` **declarado**
+no es contar bucles **corriendo**. ▶ *Cuando un instrumento acusa a algo que ya estaba verificado, la
+primera hipótesis es el instrumento* — y esa regla ahorró dos cambios equivocados.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA SESIÓN DEL 10-09 (tarde).**
+>
+> ❗❗❗ **RETOMA ANTERIOR.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#495`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones EN EL ORDEN DEL MOCKUP— y lo siguiente es la FASE 3, las páginas.**
 >
 > ❗❗❗ **ESTÁ ABIERTA LA VALORACIÓN DE DÓNDE VAN LOS ELEMENTOS DE DISEÑO** (`#497`,
 `docs/specs/pasada-de-vestido.md`): **el canvas ya la tenía prevista y la llama «la pasada de
