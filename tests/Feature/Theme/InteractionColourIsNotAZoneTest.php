@@ -103,12 +103,30 @@ class InteractionColourIsNotAZoneTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️⚠️ **Se localiza por PARTE de selector, no por la clave entera de la regla** (`#488`).
+     * Buscaba `.faq__item.open .faq__q` como clave exacta y se puso ROJO con el producto sano en
+     * cuanto los dos estados del acordeón pasaron a compartir una regla —`.faq__item:hover .faq__q,
+     * .faq__item.open .faq__q`—, que es una forma perfectamente legítima de escribir lo mismo.
+     * ▶ Y **no queda más débil que la que sustituye** (la regla de `#295`): sigue exigiendo que
+     * **cada uno** de los cuatro estados lea `--interactive`, solo que ahora aguanta que estén
+     * escritos juntos o por separado. Un estado que pierda el token sigue poniendo esto rojo.
+     */
     public function test_the_faq_and_the_menu_read_the_interaction_token(): void
     {
-        $rules = $this->rules();
+        $porParte = [];
+        foreach ($this->rules() as $selector => $body) {
+            foreach (explode(',', $selector) as $parte) {
+                $parte = trim($parte);
+                if ($parte !== '') {
+                    $porParte[$parte] = ($porParte[$parte] ?? '').' '.$body;
+                }
+            }
+        }
+
         foreach (['.faq__item.open .faq__q', '.faq__item:hover .faq__q', '.cookie__config:hover', '.lang-dd__panel a.active'] as $selector) {
-            $this->assertArrayHasKey($selector, $rules);
-            $this->assertMatchesRegularExpression('/color:\s*var\(--interactive\)/', $rules[$selector], "`{$selector}` ya no lee `--interactive`");
+            $this->assertArrayHasKey($selector, $porParte, "`{$selector}` ya no tiene ninguna regla: este caso miraría el vacío");
+            $this->assertMatchesRegularExpression('/color:\s*var\(--interactive\)/', $porParte[$selector], "`{$selector}` ya no lee `--interactive`");
         }
     }
 

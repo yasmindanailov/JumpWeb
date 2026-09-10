@@ -26475,3 +26475,178 @@ canvas **L–J 16:30 · V–D 11:30**. Es DATO puro y el código agrupa bien —
 idéntico—: se cambia desde el panel.
 
 **Suite 4.564** · 28.609 aserciones · **13/13 mutaciones** (`scripts/mutar-visitanos.sh`) · Pint limpio.
+
+---
+
+## #488 · 2026-09-10 · `[DECIDIDO owner]` La sección «Dudas»: el acordeón del sistema, cero salida — y la duda del aparcamiento se queda porque nadie más lo publica
+
+**Contexto.** Octava y última tanda de secciones de la Fase 2 del carril de diseño
+(`specs/rediseno-desde-canvas.md` §5.4), sobre `Dudas PJP` **1a** (móvil) y `Escritorio PJP` **5c**
+(escritorio, aprobado el 8 sep). ▶ **06 «Reseñas» sigue BLOQUEADA por el owner** —`specs/google-reviews.md`
+espera su ✅ y tres datos de Google—, así que con ésta la Fase 2 queda a una sola sección de cerrar.
+
+⚠️ `Componentes PJP.dc.html` se bajó fresco y se comparó **byte a byte** con la copia local: idéntico.
+El artboard de la sección no estaba en la copia local y se bajó entero.
+
+---
+
+**❗❗❗ 1 · LA FORMA ES EL ACORDEÓN DEL SISTEMA, Y ENTRE LAS DOS OPCIONES DEL ARTBOARD MANDA UNA.**
+
+El artboard ofrece **1a** (las cuatro dudas dentro del acordeón) y **1b** (la de la reserva contestada
+a la vista, las otras tres plegadas). `[DECIDIDO owner]`: **1a**, y hay tres razones medidas:
+
+- **1b cuesta 78 px MÁS teniendo una duda MENOS dentro** (550 contra 504): la línea a la vista mide
+  131 y la fila que se ahorra devuelve 65.
+- **La reserva pasaría a ser lo primero que se lee de la sección**, y no es la duda más frecuente:
+  solo la más contradictoria.
+- **1b no tiene escritorio dibujado.** `Escritorio PJP` 5c implementa 1a, así que construir 1b haría
+  que **la superficie dependiera del ancho de la ventana**, que es exactamente lo que `#485` cerró.
+
+---
+
+**❗❗ 2 · TODAS CERRADAS AL CARGAR, Y NO ES UNA DIVERGENCIA CON EL SISTEMA.**
+
+El producto arrancaba en `faqOpen: 0`, o sea con la primera desplegada. El artboard de la sección lo
+llama «divergencia declarada con el componente», pero **la tabla de reglas del propio componente 06
+ya lo había absorbido**: *«una abierta a la vez; la primera abierta al cargar en una FAQ de PÁGINA,
+**todas cerradas en la PORTADA**»*, con su motivo — con cuatro o cinco filas el índice entero es la
+respuesta a «¿está mi duda?», y una abierta empuja las demás fuera del pulgar.
+
+▶ *Cuando dos piezas del canvas parecen contradecirse, conviene abrir la que manda antes de declarar
+una divergencia: aquí no había ninguna que declarar.*
+
+---
+
+**❗❗❗ 3 · CON EL PANEL VACÍO LA SECCIÓN ENTERA NO SE PINTA.**
+
+Regla dura del sistema para toda sección cuyo contenido pone el panel: *«ni rótulo, ni titular, ni
+caja vacía»*. Sin el `@if`, una instalación sin preguntas publicaba una cabecera que no presenta
+nada, una tarjeta de cero filas **y un `FAQPage` vacío para Google**, con la página devolviendo 200.
+
+⚠️ El `<x-site.faq-json-ld>` va DENTRO de la sección a propósito: si no hay preguntas, tampoco hay
+datos estructurados que declarar.
+
+⚠️⚠️ **Y la regla alcanza a más secciones de las que esta tanda toca.** Medido: `#events` ya la
+cumple (`@if ($partyCards !== [])`), pero **01 «Para quién», 02 «Cuánto» y 03 «Qué hay dentro» no** —
+en 03 el mosaico sí está guardado y la cabecera no, así que con cero atracciones se pinta el rótulo,
+el titular, una entradilla que dice «0» y **144 px de aire debajo de nada**. Ficha en `DEUDA.md`: no
+se arregla aquí porque toca tres secciones cerradas y sus guardas.
+
+---
+
+**❗❗❗ 4 · LAS DUDAS SON DATO, Y AHÍ ESTABAN LOS HALLAZGOS.**
+
+La lista vive en `faqs` y se edita desde el panel; el seeder es la semilla. Lo que cambia:
+
+- **Se cae la duda de la EDAD** (`[DECIDIDO owner]`). Regla del sistema: *«una duda que ya se contesta
+  arriba no baja a Dudas, y si además está escrita con otro dato, el conflicto se resuelve antes de
+  bajarla»*. ⚠️ **Medido: la portada se contradecía a sí misma.** Aquí decía «Kids de 1 a 12 · Jump
+  desde 6» y la sección 01 publica **«4 — 7 años»** y **«+8 años»** leyendo `zones`, dos secciones más
+  arriba. La contestan 01, 02 y 04, y con el dato bueno.
+- **El APARCAMIENTO se queda, y con el dato de la calle** (`[DECIDIDO owner]`: «en la calle, delante,
+  y gratis»). ⚠️⚠️ **El canvas lo quitaba «porque lo contesta 07» y aquí eso es FALSO**: `#487`
+  decidió no escribirlo en «Visítanos» porque no hay campo en el panel. Medido: **cero apariciones en
+  todo el repo**, o sea que esta duda es el ÚNICO sitio de la web que lo menciona. Quitarla habría
+  dejado el dato sin publicar en ninguna parte, sin que nada fallara.
+  ▶ *Una razón heredada del canvas se comprueba contra el producto: la suya era cierta en su maqueta
+  y falsa aquí, porque una decisión nuestra posterior le había quitado el sujeto.*
+- **«¿Hace falta reservar?» deja de desmentir a la página.** Decía *«ven directo, no hace falta
+  reservar»* con la barra de compra, las cinco tarifas y el aforo por franja diciendo lo contrario.
+  Regla: *«un desagüe no puede desmentir a la página»*.
+- **⚠️⚠️ La de cancelar prometía algo que el producto NO hace.** Decía *«te devolvemos la diferencia
+  **automáticamente**»*, y `#244` sigue en pie: nada se cobra ni se devuelve online después de
+  reservar — el saldo se liquida en el parque, o lo devuelve el operador desde el panel (`#317`). La
+  voz del propio producto lo tiene escrito en `lang/es/emails.php`: *«se te devuelve allí ese día»*.
+  El canvas ya retiraba el adverbio; aquí se adopta **sabiendo por qué**, no copiando.
+- **«¿Y si llueve?» se queda**, y no por inercia: es el único sitio de todo el repo donde aparecen
+  «interior, climatizado y 22 °C» (medido: cero apariciones fuera de esta respuesta). ⚠️ El canvas
+  recomienda que ese dato **suba también a 03**; `[DECIDIDO owner]`: **no** — el artboard de 03 está
+  aprobado y cerrado sin él.
+- ⚠️ De paso, `22ºC` pasa a `22 °C`: llevaba el indicador ordinal en vez del signo de grado.
+
+⚠️ **`seedFaqs()` no podaba, y su propio docblock decía que sí** («a diferencia de FAQs/normas, que
+sí podan»). Sin la poda, bajar la lista de 6 a 5 deja la fila de la edad viva en toda BD ya sembrada
+**con el seeder ya corregido**. Se añade, con su consecuencia escrita: es destructiva, igual que en
+`seedRules()`, y no muerde en producción porque el despliegue migra pero no siembra.
+
+---
+
+**❗❗ 5 · LA CABECERA, EL TITULAR Y LA SALIDA.**
+
+- **Entra `.sec-head`**, la cabecera común de las ocho: rótulo «Dudas» · titular · entradilla. La
+  vieja era un `<h2>` suelto sin rótulo ni entradilla.
+- **El titular deja de ser «Dudas», que es el RÓTULO.** `doc/voz.md` fija los ocho titulares como
+  frases de **3 a 6 palabras** porque «el rótulo ya dice el eje de la pregunta»: queda **«Lo que más
+  nos preguntáis»**. La guarda lo mide contando palabras en los tres idiomas, no comparando cadenas.
+- **CERO salida**, y es decisión: el cierre está pegado debajo con el teléfono y el pie con el correo,
+  así que Dudas **no repite el canal**. Ni enlace, ni CTA, ni relleno de acción — los únicos pulsables
+  son los que pliegan, uno por duda.
+
+---
+
+**⚠️ 6 · EL SIGNO SON DOS ICONOS DEL SET Y NINGUNO GIRA.**
+
+El producto giraba un solo «+» 45°, y **un aspa significa cerrar, no plegar**. El artboard dibuja «+»
+y «–» como caracteres de texto; aquí entran como los iconos `plus` y `minus` del set —que es un
+mecanismo del producto (`#475`) y cuya geometría no depende de la fuente que cargue—, los dos en la
+misma celda de rejilla para que el círculo no cambie de tamaño al plegar.
+
+⚠️ **`data-tap` se retira y `faq__q` sale del censo de `TouchTargetTest`**, y no porque desaparezca el
+control: **porque desapareció su motivo**. Su nota decía «acordeón de 28 px: crecerlo subiría la
+sección 96», y hoy el pulsable mide **64 px de alto por el ancho entero**, 16 por encima del suelo. La
+propiedad se muda a `DudasSectionTest`, que exige el `min-height` **y** que el marcador no vuelva.
+
+---
+
+**⚠️⚠️ 7 · LA REJILLA DE ESCRITORIO ES DE DOCE PISTAS, Y LA DIFERENCIA SE VE EN EL NÚMERO.**
+
+`Escritorio PJP` 5c: cabecera en cuatro columnas, acordeón en ocho. Con doce pistas y 32 de gap sobre
+la columna de 1120 cada pista mide 64, así que `span 4` da **352** y `span 8` da **736** — al dígito
+lo que el artboard midió en el DOM. Con `1fr 2fr` y el mismo gap salen **362,67 y 725,33**: se parece,
+no falla nada y no es su número. Hay caso y hay mutación.
+
+⚠️ **El acordeón no se estira a las doce a propósito**: la respuesta más larga daría líneas de 140
+caracteres contra el máximo de 70 del sistema. La cabecera ocupa las otras cuatro en vez de dejar el
+hueco vacío.
+
+---
+
+**⚠️ 8 · UNA GUARDA SE PUSO ROJA CON EL PRODUCTO SANO, y su arreglo la deja MÁS fuerte.**
+
+`InteractionColourIsNotAZoneTest` buscaba `.faq__item.open .faq__q` como **clave exacta** de la regla,
+y los dos estados del acordeón pasaron a compartir una —`:hover, .open`—, que es una forma
+perfectamente legítima de escribir lo mismo. Se re-apunta a localizar **por parte de selector**: sigue
+exigiendo que **cada uno** de los cuatro estados lea `--interactive` y ahora aguanta que estén
+escritos juntos o por separado. Cumple la regla de `#295` —una guarda re-apuntada no puede quedar más
+débil— y tiene mutación propia.
+
+---
+
+**⚠️⚠️ 9 · UNA TRAMPA DE INSTRUMENTO YA ESCRITA, PAGADA OTRA VEZ.** La captura del ELEMENTO enseñaba
+un **«+» huérfano flotando en la columna del titular**. No existe: `elementFromPoint` en ese punto
+devuelve la propia sección, y los tres elementos `fixed` de la página —nav, menú y **el cajón
+cerrado, que lleva su botón de cantidad**— se cosen en una captura de elemento. Es literalmente la
+trampa que `#303` dejó escrita: **se mide con captura de VENTANA**, y el control lo confirmó.
+
+⚠️ Y un defecto propio del arnés: **comillas invertidas dentro de una cadena entre comillas dobles**
+las ejecuta bash. Imprimió «data-tap: command not found» y dejó el rótulo de la mutación vacío; la
+mutación sí se aplicó, así que el veredicto valía y el informe mentía sobre qué se había probado.
+
+---
+
+**▶ MEDIDO, EN NAVEGADOR.** La sección baja de **735 a 623 px** en móvil y de **715 a 490** en
+escritorio; la portada, de **12,18 a 12,04** pantallas en móvil y de **11,26 a 11,01** en escritorio,
+con desborde **0** en las 13 vistas y **ningún** control nuevo bajo 48 (la portada se queda en el
+único exento por WCAG). Cabecera de escritorio **352 × 255** y acordeón **736** de ancho, con las
+filas a **68**; en móvil, filas a **64**: las cifras del artboard al dígito.
+
+El comparador da **31 y 13 valores idénticos, 0 divergencias sin explicar**. Las dos declaradas: el
+ritmo de cabecera (28 contra los 20 del artboard, porque es el de las **ocho** secciones) y el color
+de Línea, que va por el ROL `--line` —tinta al 10 %— y no por su hexadecimal, que es la misma cadena
+que visten las cuatro secciones ya cerradas.
+
+⚠️ **Dos cosas siguen pendientes del owner y son DATO**: si la duda de grupos lleva **al correo o a
+`/servicios`** (hoy apunta a la página, que existe) y **qué otras dudas oyen en el mostrador**.
+
+**Suite 4.575** · 28.690 aserciones · **19/19 mutaciones** (`scripts/mutar-dudas.sh`) · sonda de
+geometría y comparador en verde · Pint limpio.

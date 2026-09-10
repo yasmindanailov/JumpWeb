@@ -303,7 +303,12 @@ return [
         'cta' => 'Create my account',
         'cta_account' => 'See my QR',
     ],
-    'faq' => ['title' => 'FAQ'],
+    // Sección 08 · «Dudas» (`#488`). El titular es una frase; «FAQ» pasa a ser el RÓTULO.
+    'faq' => [
+        'eyebrow' => 'FAQ',
+        'title' => 'What people ask us most',
+        'lede' => 'The ones that come in by phone, answered here.',
+    ],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven

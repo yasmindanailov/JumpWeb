@@ -881,36 +881,82 @@
          rehacerla después es churn. ⚠️ Eso deja el ajuste del panel **sin consumidor**, que es el
          defecto que `#304` documentó; está dicho, con sus dos salidas, en `DEUDA.md`. --}}
 
-    {{-- ===================== FAQ ===================== --}}
-    <section class="section wrap">
-        <div class="faq">
-            <div>
-                {{-- ⚠️ Sin talla en línea (`#479`): era un TERCER tamaño de titular de sección
-                     escrito a mano —48→96 frente a los 48→108 de la clase— y un `style` gana a la
-                     hoja siempre, así que la cabecera de Dudas quedaba fuera del sistema sin que
-                     nada lo dijera. El nivel es Display L, como en las otras siete. --}}
-                <h2 class="rides__title">{{ __('landing.faq.title') }}</h2>
+    {{-- ══ SECCIÓN 08 · «DUDAS» ═══════════════════════════════════════════════════════════════
+         `DECISIONES #488` · carril de diseño Fase 2 · T2h. Artboards `Dudas PJP` 1a (móvil) y
+         `Escritorio PJP` 5c (escritorio, aprobado el 8 sep).
+
+         ▶ **La forma es el acordeón de `Componentes` 06 tal cual**, no un dibujo propio: tarjeta
+         blanca con borde de Línea y radio 16, una fila por duda con su filete, y el «+» en un
+         círculo de papel. `[DECIDIDO owner]` sobre las dos opciones del artboard: **1a**, las
+         cuatro dentro del acordeón — 1b saca la de la reserva a la vista, cuesta 78 px MÁS
+         teniendo una duda MENOS dentro, y **no tiene escritorio dibujado**, así que la superficie
+         dependería del ancho de la ventana (la lección de `#485`).
+
+         ❗❗ **TODAS CERRADAS al cargar, y NO es una divergencia con el sistema**: la tabla de
+         reglas de `Componentes` 06 ya lo dice —«la primera abierta al cargar en una FAQ de
+         PÁGINA, todas cerradas en la PORTADA»—, y su motivo es que con cuatro filas el índice
+         entero es la respuesta a «¿está mi duda?», mientras una abierta empuja las demás fuera
+         del pulgar. ⚠️ El producto arrancaba en `faqOpen: 0`.
+
+         ❗❗❗ **CERO SALIDA al final, a propósito**: el cierre está pegado debajo con el teléfono
+         y el pie con el correo. `doc/reglas.md`: preguntar vive en el cierre, así que Dudas no
+         repite el canal. Ni CTA, ni enlace, ni relleno de acción.
+
+         ❗❗❗ **CON EL PANEL VACÍO LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja
+         vacía—, que es regla dura del sistema para toda sección cuyo contenido pone el panel. Sin
+         el `@if`, una instalación sin preguntas publicaba una cabecera que no presenta nada y una
+         tarjeta de 0 filas. ⚠️ El `<x-site.faq-json-ld>` va DENTRO de la sección a propósito: si
+         no hay preguntas tampoco hay `FAQPage` que declarar. --}}
+    @if ($faqs->isNotEmpty())
+        <section id="faq" class="section wrap">
+            <div class="faq-sec">
+                {{-- ⚠️ **`.sec-head` y no un `<h2>` suelto**: es la cabecera que el canvas cierra
+                     para las ocho secciones (`#479`). La vieja no tenía ni rótulo ni entradilla, y
+                     su titular decía «Dudas», que es el RÓTULO — el titular es una frase. --}}
+                <div class="sec-head">
+                    <p class="sec-head__eyebrow">{{ __('landing.faq.eyebrow') }}</p>
+                    <h2 class="sec-head__title">{{ __('landing.faq.title') }}</h2>
+                    <p class="sec-head__lede">{{ __('landing.faq.lede') }}</p>
+                </div>
+                <div class="faq">
+                    @foreach ($faqs as $i => $faq)
+                        <div class="faq__item" :class="faqOpen==={{ $i }} && 'open'">
+                            {{-- ⚠️ Sin `data-tap`: el pulsable mide **64 px de alto por el ancho
+                                 entero**, 16 por encima del mínimo de 48, así que el pseudo
+                                 centrado de `#264` no tiene nada que ampliar y solo añadiría una
+                                 capa que se solapa con la de la fila de al lado. --}}
+                            <button type="button" class="faq__q"
+                                    @click="faqOpen = faqOpen==={{ $i }} ? -1 : {{ $i }}"
+                                    :aria-expanded="faqOpen==={{ $i }} ? 'true' : 'false'"
+                                    aria-controls="faq-answer-{{ $i }}">
+                                <span class="faq__p">{{ $faq->tr('question') }}</span>
+                                {{-- ⚠️⚠️ **El signo son DOS iconos del set, no uno girado.** El
+                                     artboard dibuja «+» y «–»; girar el «+» 45° da una «×», que
+                                     significa cerrar y no plegar. Y son iconos y no los caracteres
+                                     de texto que el artboard escribe porque el set es un mecanismo
+                                     del producto (`#475`) y su geometría no depende de la fuente
+                                     que cargue. El de fuera decide cuál se ve, sin JavaScript. --}}
+                                <span class="faq__sign" aria-hidden="true">
+                                    <x-icons.plus class="faq__sign-i faq__sign-i--mas" :width="16" :height="16" />
+                                    <x-icons.minus class="faq__sign-i faq__sign-i--menos" :width="16" :height="16" />
+                                </span>
+                            </button>
+                            {{-- Dos envoltorios a propósito (auditoría M8, `#434`): el acordeón anima
+                                 `grid-template-rows` 0fr → 1fr y no `max-height`, que animaba layout y era
+                                 un TOPE de 240 px sobre respuestas que escribe el panel. El de fuera
+                                 (`.faq__a-in`) recorta y NO lleva relleno; el de dentro lleva el aire.
+                                 ⚠️ El artboard muestra y oculta el NODO; aquí se anima, que es lo mismo
+                                 en «sin tope de alto» y además respeta `prefers-reduced-motion`. --}}
+                            <div class="faq__a" id="faq-answer-{{ $i }}"><div class="faq__a-in"><p class="faq__a-p">{{ $faq->tr('answer') }}</p></div></div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
-            <div class="faq__list">
-                @foreach ($faqs as $i => $faq)
-                    <div class="faq__item" :class="faqOpen==={{ $i }} && 'open'">
-                        <button type="button" class="faq__q" data-tap
-                                @click="faqOpen = faqOpen==={{ $i }} ? -1 : {{ $i }}"
-                                :aria-expanded="faqOpen==={{ $i }} ? 'true' : 'false'"
-                                aria-controls="faq-answer-{{ $i }}">{{ $faq->tr('question') }}<span class="ico" aria-hidden="true"><x-icons.plus :width="14" :height="14" /></span></button>
-                        {{-- Dos envoltorios a propósito (auditoría M8, `#434`): el acordeón anima
-                             `grid-template-rows` 0fr → 1fr y no `max-height`, que animaba layout y era
-                             un TOPE de 240 px sobre respuestas que escribe el panel. El de fuera
-                             (`.faq__a-in`) recorta y NO lleva relleno; el de dentro lleva el aire. --}}
-                        <div class="faq__a" id="faq-answer-{{ $i }}"><div class="faq__a-in"><p class="faq__a-p">{{ $faq->tr('answer') }}</p></div></div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-        {{-- Datos estructurados FAQPage (invisible): Google puede mostrar estas preguntas como
-             desplegable enriquecido en el resultado. --}}
-        <x-site.faq-json-ld :faqs="$faqs" />
-    </section>
+            {{-- Datos estructurados FAQPage (invisible): Google puede mostrar estas preguntas como
+                 desplegable enriquecido en el resultado. --}}
+            <x-site.faq-json-ld :faqs="$faqs" />
+        </section>
+    @endif
 
     {{-- ===================== RESERVE CTA ===================== --}}
     {{-- ══ EL HERO DEL CIERRE (`#229`, del mockup `Landing PJP Modos`) ═════════════════════════

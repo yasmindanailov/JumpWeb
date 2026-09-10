@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02, 03, 04, 05 y 07, más la página `/atracciones`; quedan DOS secciones)
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 a UNA sección de cerrar** (armazón + secciones 01, 02, 03, 04, 05, 07 y 08, más la página `/atracciones`; queda **06 «Reseñas»**, bloqueada por el owner)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -196,7 +196,7 @@ sistema y dicen cosas distintas.
 |---|---|---|---|
 | **0** | Base: Docker · las seis cifras · este inventario | esta spec | todas |
 | **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
-| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio (van **6 de 8**) | la portada entera, vestida con BD | 3 |
+| **2** | 🟦 **El armazón + las 8 secciones**, móvil y escritorio (van **7 de 8**; la que falta está bloqueada) | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
 | **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
 | **5** | **Post-form y justificante digital** | lo que hoy es funcional y no está vestido | — |
@@ -215,7 +215,7 @@ titulares son frases de **3 a 6 palabras**:
 | Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) + `Escritorio PJP` (3a) · ✅ `#485` |
 | Reseñas | Lo dicen los que han venido | `Resenas PJP` (2a) |
 | Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) + `Escritorio PJP` (3b) · ✅ `#487` |
-| Dudas | Lo que más nos preguntáis | `Dudas PJP` (1a) |
+| Dudas | Lo que más nos preguntáis | `Dudas PJP` (1a) + `Escritorio PJP` (5c) · ✅ `#488` |
 
 Marco: `Marco Portada PJP` (móvil) · `Escritorio PJP` (escritorio, turnos 1–6).
 
@@ -328,6 +328,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
 | T2g (`#487`) | añadir **`--ok-ink: #447921`** y **`--attn-ink: #8A6E00`** al paquete (las variantes 800 de su propia paleta). ❗ **Sin `--ok-ink` el estado «Abierto ahora» se pinta con `--ok`, que en este paquete da 2,4 sobre blanco** — lo vigila `ClientThemePackageTest`, así que el gate lo caza. Sin `--attn-ink` el «Abre hoy» pierde el color y se queda en tinta: se ve, no se rompe. ⚠️ Y **DATO, desde el panel**: el horario en conflicto —el panel dice L–V 16:30 · S–D 11:00 y el canvas L–J 16:30 · V–D 11:30— y las **fechas especiales**, que hoy son cero: sin ellas no hay ni aviso ni pliegue, que es la conducta correcta. |
 | T2f (`#485`) | **Ninguno de CSS**: la sección se viste entera con roles ya declarados (`--attn`, `--ok`/`--on-ok`, `--interactive`, `--line`, `--paper-fg`, `--paper-bg-card`, los tres radios). ⚠️ Y **DATO, desde el panel**: la línea «¿viene un niño que no es de tu familia?» **solo sale si algún producto ofrece el justificante** (`ticket_types.guardian_authorization` distinto de `none`). Medido en local: **0 de N**, así que hoy no se pinta —y eso es la conducta correcta, no un defecto. Si el parque quiere ofrecerlo, se marca en el producto. |
+| T2h (`#488`) | **Ninguno de CSS**: la sección se viste con roles ya declarados (`--bg-card`, `--line`, `--bg-soft`, `--interactive`, `--r-lg`, `--r-pill`). ▶ **DATO, desde el panel** — las cinco dudas publicadas: **retirar la de la EDAD** (contradice a la sección 01, que dice 4–7 y +8 desde `zones`) · **reescribir la del APARCAMIENTO** con «en la calle, delante, y gratis» (`[DECIDIDO owner]`; ⚠️ es el único sitio de la web que lo publica) · **reescribir «¿Hace falta reservar?»**, que hoy dice «no hace falta» contra toda la página · y **quitar el «automáticamente»** de la de cancelar, que promete un canal que `#244` no da. ⚠️ El seeder ya trae las cinco; en producción **no se siembra**, así que se editan desde el panel. ⚠️ Y **quedan dos decisiones del owner**: si grupos lleva al correo o a `/servicios`, y qué otras dudas oyen en el mostrador. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
@@ -385,7 +386,60 @@ navegador instalado**.
 | T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` + `#484` |
 | T2f | **05 · Antes de venir**: el registro ES el QR · la sección de NORMAS se retira · el código es de ejemplo | ✅ `#485` + `#486` |
 | T2g | **07 · Visítanos**: cuatro estados · la entradilla se deriva · sin teléfono, sin aparcamiento y sin la promesa de festivos | ✅ `#487` |
-| T2h–T2i | **06 · Reseñas** (⏸️ **bloqueada por el owner**: `specs/google-reviews.md` espera su ✅ y tres datos de Google) y **08 · Dudas** | ⬜ |
+| T2h | **08 · Dudas**: el acordeón del sistema · todas cerradas · cero salida · con el panel vacío la sección desaparece | ✅ `#488` |
+| T2i | **06 · Reseñas** | ⏸️ **bloqueada por el owner**: `specs/google-reviews.md` espera su ✅ y tres datos de Google |
+
+✅ **T2h · «Dudas»** (`#488`). Cabecera común · **una tarjeta blanca** con una fila por duda ·
+**todas cerradas** al cargar · papel de arriba abajo · y **cero salida** al final.
+
+❗❗❗ **ENTRE LAS DOS OPCIONES DEL ARTBOARD MANDA 1a, y por tres razones medidas**: 1b cuesta **78 px
+más teniendo una duda menos** dentro del acordeón, pone la reserva como lo primero que se lee de la
+sección —que no es la duda más frecuente, solo la más contradictoria— y **no tiene escritorio
+dibujado**, así que la superficie dependería del ancho de la ventana (la lección de `#485`).
+
+❗❗ **«Todas cerradas» NO es una divergencia con el sistema, aunque el artboard la llame así**: la
+tabla de reglas del componente 06 ya dice *«la primera abierta al cargar en una FAQ de PÁGINA, todas
+cerradas en la PORTADA»*. ▶ *Cuando dos piezas del canvas parecen contradecirse, se abre la que
+manda antes de declarar una divergencia.*
+
+❗❗❗ **CON EL PANEL VACÍO LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja, **ni el
+`FAQPage`**—, que es regla dura del sistema. ⚠️⚠️ **Y alcanza a más secciones**: medido, `#events` ya
+la cumple pero **01, 02 y 03 no** —en 03 el mosaico está guardado y la cabecera no, así que con cero
+atracciones se pintan rótulo, titular, una entradilla que dice «0» y 144 px de aire debajo de nada—.
+Ficha en `DEUDA.md`: toca tres secciones cerradas y sus guardas.
+
+❗❗❗ **LAS DUDAS SON DATO, Y AHÍ ESTABAN LOS HALLAZGOS** (`[DECIDIDO owner]` las tres):
+**se cae la edad** —decía «Kids de 1 a 12 · Jump desde 6» contra el «4 — 7» y «+8» que la sección 01
+publica desde `zones`: **la portada se contradecía a sí misma**—; **el aparcamiento SE QUEDA**, con el
+dato de la calle, porque ⚠️⚠️ **el canvas lo quitaba «porque lo contesta 07» y aquí eso es falso**
+(`#487` decidió no escribirlo, y medido hay **cero apariciones en todo el repo**: esta duda es el
+único sitio que lo publica); y **el clima NO sube a 03**, cuyo artboard está cerrado sin él.
+⚠️⚠️ **Y una respuesta prometía algo que el producto no hace**: «te devolvemos la diferencia
+**automáticamente**», con `#244` en pie —el saldo se liquida en el parque—. El canvas ya retiraba el
+adverbio; se adopta sabiendo por qué. ⚠️ `seedFaqs()` **no podaba y su docblock decía que sí**.
+
+⚠️ **El signo son DOS iconos del set y ninguno gira** (un aspa significa cerrar, no plegar), y con el
+pulsable en **64 px por el ancho entero** `data-tap` se retira: `faq__q` sale del censo de
+`TouchTargetTest` **porque desapareció su motivo**, no su sujeto.
+
+⚠️⚠️ **La rejilla de escritorio es de DOCE pistas**: `span 4` da **352** y `span 8` da **736**, al
+dígito lo que el artboard midió. Con `1fr 2fr` salen 362,67 y 725,33 — se parece y no es su número.
+
+⚠️ **Una guarda se puso roja con el producto sano**: `InteractionColourIsNotAZoneTest` buscaba
+`.faq__item.open .faq__q` como clave exacta y los dos estados pasaron a compartir regla. Re-apuntada
+**por parte de selector**, que es más fuerte, no más débil (`#295`).
+
+⚠️⚠️ **Y una trampa ya escrita, pagada otra vez**: la captura de ELEMENTO enseñaba un «+» huérfano
+que **no existe** —`elementFromPoint` devuelve la sección— porque cose los `fixed`, y el cajón cerrado
+lleva su botón de cantidad. Es la de `#303`: **se mide con captura de VENTANA**.
+
+▶ **Medido**: la sección baja de **735 a 623 px** en móvil y de **715 a 490** en escritorio; la
+portada, de **12,18 a 12,04** y de **11,26 a 11,01** pantallas. Comparador **31 y 13 idénticas, 0 sin
+explicar**; las dos declaradas son el ritmo de cabecera (28, que es el de las ocho) y el color de
+Línea, que va por el rol `--line`. Desborde **0** y ningún control nuevo bajo 48.
+
+⚠️ **Dos cosas del owner siguen pendientes y son DATO**: si la duda de grupos lleva **al correo o a
+`/servicios`**, y **qué otras dudas oyen en el mostrador**.
 
 ✅ **T2g · «Visítanos»** (`#487`). Cabecera común · **la única tarjeta de la sección** con el estado
 en vivo y la tabla · el mapa tras el bloqueo previo · y la dirección **siempre fuera del marco**.

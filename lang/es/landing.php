@@ -471,7 +471,17 @@ return [
         // la sección, y el enlace abre el cajón en su zona `card`.
         'cta_account' => 'Ver mi QR',
     ],
-    'faq' => ['title' => 'Dudas'],
+    // ══ SECCIÓN 08 · «DUDAS» ═══════════════════════════════════════════════════════════════
+    // `DECISIONES #488` · Fase 2 · T2h. Artboards `Dudas PJP` 1a y `Escritorio PJP` 5c.
+    // ⚠️ El titular DEJA de ser «Dudas»: eso es el RÓTULO. `doc/voz.md` fija los ocho titulares
+    //    como frases de 3 a 6 palabras porque «el rótulo ya dice el eje de la pregunta».
+    // ⚠️ La entradilla dice de dónde salen las preguntas, que es lo que las hace creíbles: no son
+    //    de relleno, son las que llegan por teléfono.
+    'faq' => [
+        'eyebrow' => 'Dudas',
+        'title' => 'Lo que más nos preguntáis',
+        'lede' => 'Las que llegan por teléfono, contestadas aquí.',
+    ],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven

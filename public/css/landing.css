@@ -3083,47 +3083,117 @@ img { display: block; max-width: 100%; }
    ▶ ⚠️ NO confundir con `.bd-pol*`, la polaroid de la sección de cumpleaños: es otra pieza, tiene
    su propio bloque y sigue viva. */
 
-/* ---------- FAQ ---------- */
-.faq { display: grid; grid-template-columns: 1fr 2fr; gap: 60px; margin-top: 40px; }
-.faq__list { display: grid; gap: 0; }
-.faq__item { border-top: 1px solid var(--line); padding: 24px 0; }
-.faq__item:last-child { border-bottom: 1px solid var(--line); }
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 08 · «DUDAS» · EL ACORDEÓN
+   `DECISIONES #488` · Fase 2 · T2h. Artboards `Dudas PJP` 1a y `Escritorio PJP` 5c.
+
+   ▶ **Es el componente 06 del sistema, no un dibujo de esta sección.** Y `doc/reglas.md` es
+   explícito sobre qué significa copiarlo: *«copiar una pieza del sistema es copiar sus ESTADOS,
+   no solo sus colores»* — de ahí que el color de la pregunta, el signo y la transición estén
+   escritos, y no solo el relleno de la tarjeta.
+
+   ⚠️⚠️ **La talla de la pregunta (18/700) y la de la respuesta (16) NO salen de la escala
+   tipográfica del canvas, y eso está declarado por el propio artboard**: *«son valores del
+   componente, y copiar una pieza es copiar sus valores — igual que la tabla de horarios de 07»*.
+   La Entradilla es 18 pero a peso 500 y escalando a 21, y el Cuerpo escala a 17 en escritorio;
+   aquí las dos son FIJAS en las dos superficies. Mismo precedente que `.visit__rows` (`#487`).
+
+   ⚠️ **Lo que se retiró de la versión anterior**, para que nadie lo reponga creyendo que falta:
+   la rejilla `1fr 2fr` con `gap: 60px` (la cabecera vivía DENTRO del acordeón), los filetes de
+   `--line` arriba y abajo de cada ítem sin tarjeta que los contuviera, la pregunta a `--fs-22`
+   con peso 600, y el signo como UN icono girado 45° sobre un círculo con borde. */
+.faq {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  /* Recorta las esquinas de la primera y la última fila contra el radio de la tarjeta. */
+  overflow: hidden;
+}
+
+/* El filete es **entre** filas, nunca arriba de la primera: el borde de la tarjeta ya la cierra y
+   dos líneas seguidas es lo que el owner señaló en `#486`. Y va en Nube (`--bg-soft`), que es el
+   `#E8E9E5` del artboard: más claro que el borde exterior, porque separa dentro de una caja que ya
+   tiene su propio contorno. */
+.faq__item + .faq__item { border-top: 1px solid var(--bg-soft); }
+
 .faq__q {
-  /* Lote 6 (a11y): ahora es un <button> (operable por teclado + aria-expanded). El
-     reset global de `button` (landing.css §104) ya le quita el chrome; aquí solo
-     forzamos lo no-default del botón —ancho completo y alineación a la izquierda—
-     para conservar el layout del mockup (botón = fit-content + center por defecto). */
-  width: 100%; text-align: left;
-  display: flex; justify-content: space-between; align-items: center; gap: 24px;
-  font-size: var(--fs-22); font-weight: 600; letter-spacing: -0.01em;
-  transition: color var(--dur-sale) var(--ease-sale);
+  /* Lote 6 (a11y): es un <button> (operable por teclado + aria-expanded). El reset global de
+     `button` ya le quita el chrome; aquí solo forzamos lo no-default —ancho completo y alineación
+     a la izquierda—, porque un botón nace `fit-content` y centrado.
+     ⚠️ `min-height` y no `height`: una pregunta de dos líneas tiene que poder crecer. */
+  width: 100%; min-height: 64px; text-align: left;
+  display: flex; justify-content: space-between; align-items: center; gap: var(--sp-14);
+  padding: var(--sp-16) var(--sp-18);
+  color: var(--fg);
+  transition: color var(--dur-toque) var(--ease-sale);
 }
-/* La interacción, en su ROL (auditoría C2, `#436`): la pregunta abierta y la que tiene el ratón encima
-   leen `--interactive`, no la identidad de una zona que aquí no existe — con el cian del 2.º cliente
-   daban 2,45 sobre papel. */
-.faq__item:hover .faq__q { color: var(--interactive); }
+.faq__p { font-size: var(--fs-18); font-weight: 700; line-height: 1.3; }
+
+/* La interacción, en su ROL (auditoría C2, `#436`): la pregunta abierta y la que tiene el ratón
+   encima leen `--interactive`, no la identidad de una zona que aquí no existe — con el cian del
+   2.º cliente daban 2,45 sobre papel. */
+.faq__item:hover .faq__q,
 .faq__item.open .faq__q { color: var(--interactive); }
-.faq__q .ico {
-  width: 28px; height: 28px; border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  display: grid; place-items: center; flex-shrink: 0;
-  transition: transform var(--dur-entra) var(--ease-sale), background var(--dur-entra), color var(--dur-entra), border-color var(--dur-entra);
+
+/* EL SIGNO. Círculo de PAPEL sobre la tarjeta blanca —o sea que se ve por ser más oscuro que su
+   fondo, no por un borde— con el glifo en Azul Muro (6,43 sobre papel). No cambia con el estado
+   de la fila: lo que cambia es CUÁL de los dos iconos se ve. */
+.faq__sign {
+  flex: none; width: 32px; height: 32px; border-radius: var(--r-pill);
+  background: var(--bg); color: var(--interactive);
+  display: grid; place-items: center;
 }
-.faq__item.open .faq__q .ico { transform: rotate(45deg); background: var(--interactive); border-color: transparent; color: var(--bg); }
+/* Los dos iconos ocupan la MISMA celda de la rejilla, así que el círculo no cambia de tamaño al
+   plegar y desplegar. Se enseña uno y se oculta el otro; ninguno gira. */
+.faq__sign-i { grid-area: 1 / 1; }
+.faq__sign-i--menos { display: none; }
+.faq__item.open .faq__sign-i--mas { display: none; }
+.faq__item.open .faq__sign-i--menos { display: block; }
+
 /* EL DESPLIEGUE SIN TOPE (auditoría M8, `#434`). Aquí se animaba `max-height: 0 → 240px`: anima
-   layout Y es un tope de contenido — hoy las seis respuestas miden 24–48 px, pero las escribe el
-   panel y la primera larga se habría cortado SIN FALLAR. La receta que anima sin tope es la rejilla
-   `0fr → 1fr`. ⚠️ Hacen falta DOS envoltorios: el recorte (`overflow: hidden`) no puede llevar
-   relleno, porque estirado a una fila de 0 px conservaría su relleno y asomarían 14 px; el aire va
-   en el párrafo de dentro. `FaqAccordionTest` vigila que no vuelva el tope. */
+   layout Y es un tope de contenido — las respuestas las escribe el panel y la primera larga se
+   habría cortado SIN FALLAR. La receta que anima sin tope es la rejilla `0fr → 1fr`.
+   ⚠️ Hacen falta DOS envoltorios: el recorte (`overflow: hidden`) no puede llevar relleno, porque
+   estirado a una fila de 0 px conservaría su relleno y asomarían unos píxeles; el aire va en el
+   párrafo de dentro. `FaqAccordionTest` vigila que no vuelva el tope.
+   ⚠️ **El tope de 70ch NO es el de antes.** El viejo era `max-width: 640px` sobre una columna de
+   2/3; éste es el máximo de medida de línea del sistema, y en escritorio es lo único que impide
+   que una respuesta dé líneas de 140 caracteres dentro de las ocho columnas del acordeón. */
 .faq__a {
   display: grid; grid-template-rows: 0fr;
   transition: grid-template-rows var(--dur-cae) var(--ease-sale);
-  color: var(--fg-mute); font-size: var(--fs-15); line-height: 1.6; max-width: 640px;
+  color: var(--fg-mute); font-size: var(--fs-16); line-height: 1.5;
 }
 .faq__a-in { overflow: hidden; min-height: 0; }
-.faq__a-p { margin: 0; padding-top: var(--sp-14); }
+.faq__a-p { margin: 0; padding: 0 var(--sp-18) var(--sp-20); max-width: 70ch; }
 .faq__item.open .faq__a { grid-template-rows: 1fr; }
+
+/* ── ESCRITORIO ───────────────────────────────────────────────────────────────────────────
+   `Escritorio PJP` 5c: **cabecera en cuatro columnas y acordeón en ocho**. Es la única de las
+   ocho secciones que «solo se ensancha», y aun así **no se estira**: el artboard lo razona con un
+   número —a 1120 la respuesta más larga daría líneas de 140 caracteres contra el máximo de 70 del
+   sistema—, así que la cabecera ocupa las otras cuatro columnas en vez de dejar el hueco vacío.
+
+   ⚠️⚠️ **La rejilla es de DOCE pistas y no `1fr 2fr`, y la diferencia se ve en el número.** Con
+   doce pistas y 32 de gap sobre 1120 cada pista mide 64, así que `span 4` da **352** y `span 8`
+   da **736** — exactamente lo que el artboard midió en el DOM. Con `1fr 2fr` y el mismo gap
+   saldrían 362,67 y 725,33: parecido, y ninguno de los dos es su número.
+
+   ⚠️ Va DESPUÉS de su base, no antes: a igual especificidad gana la última regla del fichero, y
+   escribir esto arriba lo dejaría sin efecto sin que nada fallara (la trampa de `#314`).
+   ⚠️ El único valor que crece es el RELLENO (16/18 → 18/24). La pregunta se queda en 18 y la
+   respuesta en 16: son del componente, no de la superficie. */
+@media (min-width: 1024px) {
+  .faq-sec {
+    display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px; align-items: start;
+  }
+  /* Dentro de la rejilla la cabecera es una COLUMNA, no un encabezado: su margen inferior
+     separaría de nada y desalinearía la primera pregunta con el titular. */
+  .faq-sec > .sec-head { grid-column: span 4; margin-bottom: 0; }
+  .faq-sec > .faq { grid-column: span 8; }
+  .faq__q { padding: 18px 24px; gap: var(--sp-16); }
+  .faq__a-p { padding: 0 24px 22px; }
+}
 
 /* ---------- big CTA footer ---------- */
 .reserve { text-align: center; padding: 120px 0 80px; }
@@ -3352,7 +3422,9 @@ select:focus-visible {
      ido con la sección (`#485`), que la sustituye la 05 «Antes de venir» — y aquélla nace
      mobile-first, así que no necesita ninguna regla de colapso. */
   .rules-grid { grid-template-columns: 1fr 1fr; }
-  .faq { grid-template-columns: 1fr; gap: 24px; }
+  /* ⚠️ Aquí colapsaba `.faq` de `1fr 2fr` a una columna. Se fue con esa rejilla (`#488`): hoy
+     `.faq` es la TARJETA del acordeón —no una rejilla— y quien reparte cabecera y acordeón es
+     `.faq-sec`, que nace en una columna y solo se abre en `min-width: 1024px`. */
   .events__row { grid-template-columns: 1fr; }
   .foot__grid { grid-template-columns: 1fr 1fr; }
 }
@@ -3414,9 +3486,9 @@ select:focus-visible {
   .rules-grid { grid-template-columns: 1fr; }
   /* gallery */
   .polaroid { flex: 0 0 200px; padding: 10px 10px 30px; }
-  /* faq */
-  .faq { gap: var(--sp-18); }
-  .faq__q { font-size: var(--fs-18); gap: var(--sp-16); }
+  /* ⚠️ Aquí `.faq` bajaba su `gap` y `.faq__q` su talla a 18. Las dos se fueron con la rejilla
+     vieja (`#488`): la tarjeta no tiene `gap`, y 18 dejó de ser el valor de móvil para ser **el
+     valor del componente en las dos superficies**, escrito una sola vez en su base. */
   /* reserve big CTA */
   .reserve { padding: 100px 0 70px; }
   .reserve h2 { font-size: clamp(72px, 22vw, 140px); }

@@ -1844,7 +1844,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
-      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#487`,
+      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#488`,
       `specs/rediseno-desde-canvas.md`), que se reabrió con el sistema del 2.º cliente ya entregado.
       ✅ **Su FASE 1 está CERRADA y verificada en navegador**: táctil **48**, radios **0·10·16·999**,
       aire **144/96**, columna **1120** —los dos últimos con **hueco nuevo por instalación**—, la
@@ -1853,21 +1853,32 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       cerradas del producto** sin que nada lo viera, y que **`.btn` no declaraba mínimo táctil** —su
       alto daba 44 por casualidad aritmética, así que al subir el token TODOS los botones se
       quedaron cortos sin fallar—. Las dos las cierran guardas nuevas.
-      ▶ **Fase 2 en curso**: el armazón (`#477`) y las secciones **01** (`#478`), **02**
-      (`#479`+`#480`), **03** (`#481`+`#482`), **04** (`#483`+`#484`), **05** (`#485`) y **07**
-      (`#487`). Quedan **dos**: 06 Reseñas —**bloqueada por el owner**, su spec espera el ✅ y tres
-      datos de Google— y 08 Dudas.
+      ▶ **Fase 2 a UNA sección de cerrar**: el armazón (`#477`) y las secciones **01** (`#478`),
+      **02** (`#479`+`#480`), **03** (`#481`+`#482`), **04** (`#483`+`#484`), **05** (`#485`), **07**
+      (`#487`) y **08** (`#488`). Queda **una**: 06 Reseñas, **bloqueada por el owner** — su spec
+      espera el ✅ y tres datos de Google.
+      ⚠️ Con la 08, tres cosas que la web PUBLICABA y no eran ciertas: la duda de la edad decía
+      «Kids de 1 a 12 · Jump desde 6» contra el «4 — 7» y «+8» que la sección 01 saca de `zones`
+      —**la portada se contradecía a sí misma**—, «¿Es necesario reservar?» desmentía a la página, y
+      la de cancelar prometía devolver «automáticamente» con `#244` en pie. **Las dudas son DATO**:
+      el hallazgo no estaba en el diseño.
+      ⚠️ Y deja escrita una regla que **tres secciones cerradas no cumplen** (ficha en `DEUDA.md`):
+      una sección cuyo contenido pone el panel **desaparece con cero filas**.
       ⚠️ Con la 07, `HeroStatus` pasa de **dos** estados a **cuatro**: «ya hemos cerrado» y «hoy
       cerrado» decían lo mismo, con la tabla de horarios justo debajo.
       ⚠️ Con la 05 **desaparece la sección de NORMAS de la portada**: la 05 dice lo mismo y, a
       cambio, **enlaza a `/normas`** — que cierra la ficha de `DEUDA.md` de `#480`.
       ▶ Y con la 03 nació **`/atracciones`**, adelantada de la Fase 3 porque su puerta necesitaba
       destino.
-      ❗ **Cuatro instrumentos viven ya en `scripts/`**, versionados: la sonda de navegador, el
+      ❗ **Cinco instrumentos viven ya en `scripts/`**, versionados: la sonda de navegador, el
       comparador con el mockup, el **comparador de sección** (`#486`, con su tabla de valores por
-      sección) y el podador de CSS huérfano. «Idéntico al mockup» no se comprueba mirando — el
+      sección), el **medidor de sección** (`#488`, el alto y las pantallas, que es la cifra que cada
+      tanda escribe) y el podador de CSS huérfano. «Idéntico al mockup» no se comprueba mirando — el
       primero dio **40 divergencias** donde el ojo veía «parecido», y el segundo cazó una chapa a
       20 px donde el artboard escribe 24.
+      ⚠️⚠️ **Y una trampa de captura ya escrita se ha vuelto a pagar** (`#488`): una captura de
+      ELEMENTO **cose los `fixed`**, así que enseñaba un «+» que no existe en la página. Es la de
+      `#303`: **se mide con captura de VENTANA**, y se comprueba con `elementFromPoint`.
       ⚠️⚠️ **Y lo que más se ha repetido: el acta del canvas describe piezas que su propio artboard
       tiene APAGADAS** —la chapa de zona, la del «18 más», el reloj y el aviso INFO, y la chapa del
       empleado en la 05: **cuatro veces**—. *Esa fuente se relee antes de cada tanda, mientras dura,

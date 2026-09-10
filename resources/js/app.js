@@ -1274,7 +1274,12 @@ document.addEventListener('alpine:init', () => {
         menuOpen: false, // el menú del armazón: a pantalla completa en escritorio, cajón en móvil
         navHidden: false, // el armazón se retira al bajar y vuelve al subir (tanda 2c·2)
         langOpen: false, // selector de idioma
-        faqOpen: 0, // índice de FAQ abierta
+        // ❗❗ **−1 = TODAS CERRADAS al cargar, y es la regla del sistema para la PORTADA** (`#488`).
+        // La tabla de reglas del componente 06 dice «la primera abierta al cargar en una FAQ de
+        // PÁGINA, todas cerradas en la PORTADA»: con cuatro o cinco filas el índice entero es la
+        // respuesta a «¿está mi duda?», y una abierta empuja las demás fuera del pulgar.
+        // ⚠️ Arrancaba en `0`, o sea con la primera desplegada.
+        faqOpen: -1, // índice de FAQ abierta; -1 = ninguna
 
         init() {
             // ⚠️ Aquí arrancaba el CARRUSEL de atracciones: leía la primera zona del DOM, teñía

@@ -133,6 +133,68 @@ SECCIONES["07"] = { nombre: "07 · Visítanos", raiz: "#info", movil: [
     ['.visit__addr-1', 'fontWeight', '700', ''],
 ] };
 
+SECCIONES["08"] = { nombre: "08 · Dudas", raiz: "#faq", movil: [
+    ['.sec-head__eyebrow', 'fontSize', '12px', ''],
+    ['.sec-head__eyebrow', 'letterSpacing', '1.92px', ''],
+    ['.sec-head__eyebrow', 'color', 'rgb(98, 106, 114)', ''],
+    ['.sec-head__title', 'fontSize', '34px', ''],
+    ['.sec-head__title', 'lineHeight', '32.3px', ''],
+    ['.sec-head__lede', 'fontSize', '18px', ''],
+    ['.sec-head__lede', 'marginTop', '16px', ''],
+    // ⚠️ El artboard separa la cabecera del acordeón con 20; el producto usa el ritmo de cabecera
+    // COMPARTIDO por las ocho secciones (28/40, `#479`, del `ritmo.cabecera` del sistema). Bajarlo
+    // aquí desalinea esta sección con las siete restantes; subir las siete es otra tanda.
+    ['.sec-head', 'marginBottom', '20px', 'el ritmo de cabecera es de las OCHO secciones: 28 en móvil'],
+    ['.faq', 'backgroundColor', 'rgb(255, 255, 255)', ''],
+    ['.faq', 'borderTopLeftRadius', '16px', ''],
+    ['.faq', 'borderTopWidth', '1px', ''],
+    // ⚠️⚠️ El artboard escribe Línea `#D6D8D4`; el producto usa el ROL `--line`, que es tinta al
+    // 10 % (§2: va el rol, nunca el hex). Es la MISMA cadena que visten las cuatro secciones ya
+    // cerradas —`.visit__when` la primera—, así que cambiarla aquí las mueve a todas.
+    ['.faq', 'borderTopColor', 'rgb(214, 216, 212)', 'Línea es el rol `--line` (tinta 10 %), compartido con las secciones ya cerradas'],
+    ['.faq__q', 'minHeight', '64px', ''],
+    ['.faq__q', 'paddingTop', '16px', ''],
+    ['.faq__q', 'paddingLeft', '18px', ''],
+    ['.faq__q', 'gap', '14px', ''],
+    ['.faq__q', 'color', 'rgb(16, 20, 24)', ''],
+    ['.faq__p', 'fontSize', '18px', ''],
+    ['.faq__p', 'fontWeight', '700', ''],
+    ['.faq__p', 'lineHeight', '23.4px', ''],
+    ['.faq__sign', 'width', '32px', ''],
+    ['.faq__sign', 'height', '32px', ''],
+    ['.faq__sign', 'borderTopLeftRadius', '999px', ''],
+    ['.faq__sign', 'backgroundColor', 'rgb(244, 244, 241)', ''],
+    ['.faq__sign', 'color', 'rgb(10, 92, 147)', ''],
+    ['.faq__item + .faq__item', 'borderTopWidth', '1px', ''],
+    ['.faq__item + .faq__item', 'borderTopColor', 'rgb(232, 233, 229)', ''],
+    ['.faq__a', 'fontSize', '16px', ''],
+    ['.faq__a', 'lineHeight', '24px', ''],
+    ['.faq__a', 'color', 'rgb(98, 106, 114)', ''],
+    ['.faq__a-p', 'paddingLeft', '18px', ''],
+    ['.faq__a-p', 'paddingBottom', '20px', ''],
+    ['.faq__a-p', 'paddingTop', '0px', ''],
+], escritorio: [
+    ['.sec-head__title', 'fontSize', '52px', ''],
+    ['.sec-head__lede', 'fontSize', '21px', ''],
+    ['.sec-head__lede', 'marginTop', '20px', ''],
+    // Las dos cifras que el artboard midió en el DOM: `span 4` = 352 y `span 8` = 736 sobre la
+    // columna de 1120 con 32 de gap. Si alguien cambia la rejilla a `1fr 2fr` salen 362,67 y
+    // 725,33 y estas dos filas lo dicen.
+    ['.sec-head', 'width', '352px', ''],
+    ['.faq', 'width', '736px', ''],
+    ['.sec-head', 'marginBottom', '0px', ''],
+    ['.faq__q', 'paddingTop', '18px', ''],
+    ['.faq__q', 'paddingLeft', '24px', ''],
+    ['.faq__q', 'gap', '16px', ''],
+    // ⚠️ Estas dos NO llevan nota porque NO divergen: el artboard de escritorio escribe 18 y 16
+    // igual que el de móvil. Están aquí justamente para vigilar que nadie las «suba» a la escala
+    // (Entradilla 21 · Cuerpo 17) creyendo que se les olvidó escalar: son valores del COMPONENTE.
+    ['.faq__p', 'fontSize', '18px', ''],
+    ['.faq__a', 'fontSize', '16px', ''],
+    ['.faq__a-p', 'paddingLeft', '24px', ''],
+    ['.faq__a-p', 'paddingBottom', '22px', ''],
+] };
+
 const clave = process.argv[2] || "05";
 const S = SECCIONES[clave];
 if (!S) {

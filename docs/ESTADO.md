@@ -1,6 +1,53 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#487`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y la Fase 2 va por su SÉPTIMA tanda — quedan DOS secciones, y una está bloqueada por el owner.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#488`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y la Fase 2 está a UNA sección de cerrar — y esa sección la bloquea el owner.**
+>
+> ▶ **LA T2h ESTÁ EN EL ÁRBOL: la sección 08 «Dudas»** (`#488`). Hoy la sección es: cabecera común,
+**una tarjeta blanca** con una fila por duda, **todas cerradas** al cargar, papel de arriba abajo y
+**cero salida** al final. Suite **4.575** · **19/19 mutaciones** · comparador **31 y 13 valores
+idénticos, 0 divergencias sin explicar**.
+>
+> ▶ **LO SIGUIENTE — Y ES UNA DECISIÓN, NO UNA TANDA.** Las ocho secciones están **menos una**: la
+**06 «Reseñas»** sigue bloqueada por el owner (`specs/google-reviews.md` espera su ✅ y **tres datos**:
+`place_id`, clave de API y techo de gasto). Con ella cerrada, la Fase 2 termina y **empieza la Fase 3,
+las páginas** (`Layout Paginas PJP`: dos nuevas y cinco rehechas). ❗ Pregúntale al owner si desbloquea
+Reseñas o si se salta a la Fase 3.
+>
+> ❗❗❗ **EL HALLAZGO DE LA TANDA NO ESTABA EN EL DISEÑO, ESTABA EN EL DATO.** Las dudas son filas de
+`faqs`, y al medirlas salieron **tres cosas que la web publicaba y no eran ciertas**: (1) la duda de la
+edad decía «Kids de 1 a 12 · Jump desde 6» mientras **la sección 01 publica «4 — 7 años» y «+8 años»
+desde `zones`** —o sea que la portada se contradecía a sí misma dos secciones más abajo—; (2) «¿Es
+necesario reservar?» decía *«ven directo, no hace falta reservar»* con la barra de compra, las cinco
+tarifas y el aforo por franja diciendo lo contrario; y (3) la de cancelar prometía devolver la
+diferencia **«automáticamente»**, con `#244` en pie —el saldo se liquida en el parque—.
+>
+> ❗❗❗ **Y EL APARCAMIENTO SE QUEDA POR LO CONTRARIO DE LO QUE DECÍA EL CANVAS.** Él lo quitaba «porque
+lo contesta la 07»; aquí **eso es falso**: `#487` decidió no escribirlo en «Visítanos» porque no hay
+campo en el panel, y medido hay **cero apariciones en todo el repo**. Esa duda es **el único sitio de
+la web que publica el aparcamiento**. `[DECIDIDO owner]`: se queda, con «en la calle, delante, y
+gratis». ▶ *Una razón heredada del canvas se comprueba contra el producto: la suya era cierta en su
+maqueta y falsa aquí, porque una decisión nuestra posterior le había quitado el sujeto.*
+>
+> ❗❗ **CON EL PANEL VACÍO LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja, ni el
+`FAQPage`—, que es regla dura del sistema. ⚠️⚠️ **Y alcanza a más secciones**: medido, **01, 02 y 03
+no la cumplen** (en la 03 el mosaico está guardado y la cabecera no, así que con cero atracciones se
+pinta el rótulo, el titular, una entradilla que dice «0» y 144 px de aire debajo de nada). **Ficha en
+`DEUDA.md`**, sin arreglar a propósito: toca tres secciones cerradas y sus guardas.
+>
+> ⚠️ **Dos cosas del owner quedan pendientes y son DATO**: si la duda de grupos lleva **al correo o a
+`/servicios`**, y **qué otras dudas oyen en el mostrador**. Ninguna bloquea código.
+>
+> ⚠️⚠️ **Y una trampa de instrumento YA ESCRITA, pagada otra vez**: la captura de ELEMENTO enseñaba un
+**«+» huérfano** en la columna del titular. **No existe** —`elementFromPoint` devuelve la propia
+sección— porque una captura de elemento **cose los `fixed`**, y el cajón cerrado lleva su botón de
+cantidad. Es literalmente la de `#303`: **se mide con captura de VENTANA**, y el control lo zanjó.
+>
+> ▶ **PASO DE DESPLIEGUE: ninguno de CSS** —la sección se viste con roles ya declarados—. Solo **DATO,
+desde el panel**: las cinco dudas publicadas (retirar la de la edad, reescribir la del aparcamiento,
+la de reservar y quitar el «automáticamente» de la de cancelar). El seeder ya las trae, pero en
+producción **no se siembra**. La lista viva está en la §5.bis de la spec.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA T2h** (la T2g, `#487`).
 >
 > ▶ **LA T2g ESTÁ EN EL ÁRBOL: la sección 07 «Visítanos»** (`#487`). Hoy la sección es: cabecera
 común, **una sola tarjeta blanca** con el estado en vivo y la tabla del horario, el mapa tras el
@@ -1953,8 +2000,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4564 en verde** (28.609 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con la **T2g** del carril de diseño (`#487`). ⚠️ **+9 en NETO, y el
+> Suite **4575 en verde** (28.690 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con la **T2h** del carril de diseño (`#488`). ⚠️ **+11, y esta vez el
+> neto ES el movimiento**: entran los **11** casos de `DudasSectionTest` y no sale ninguno —
+> `TouchTargetTest` pierde una ENTRADA de su censo (`faq__q`), no un caso, y la propiedad se muda
+> dentro del mismo total.
+> Antes, con la **T2g** (`#487`): **4564** y 28.609. ⚠️ **+9 en NETO, y el
 > neto esconde el movimiento**: la T2f entra y sale en CERO —12 casos nuevos de
 > `BeforeVisitSectionTest` contra los 12 de `RulesSectionTest` (7) y `CardAnatomyTest` (5), que
 > perdieron su sujeto—, y los +9 salen de TRES sitios, contados uno a uno: la guarda del divisor

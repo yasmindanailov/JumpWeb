@@ -81,7 +81,14 @@ class TouchTargetTest extends TestCase
      * @var array<string, array{0: string, 1: string}> clase => [ruta, por qué no crece]
      */
     private const TAPPED = [
-        'faq__q' => ['/', 'acordeón de 28 px: crecerlo subiría la sección 96'],
+        // ⚠️⚠️ **`faq__q` SE RETIRA, y no porque desaparezca el control: porque desapareció su
+        // MOTIVO** (`#488`). Su nota decía «acordeón de 28 px: crecerlo subiría la sección 96», y
+        // con la sección 08 rehecha el pulsable mide **64 px de alto por el ancho entero de la
+        // tarjeta** —16 por encima del suelo de 48—, así que el pseudo centrado de `#264` no tiene
+        // nada que ampliar: solo añadiría una capa que se solapa con la de la fila de al lado.
+        // ▶ **La propiedad no se pierde, se muda**: la vigila `DudasSectionTest`, que exige el
+        // `min-height: 64px` **y** que `data-tap` no vuelva. Sin esta nota, el siguiente que lea el
+        // censo pensaría que a la FAQ se le olvidó el marcador.
         // ⚠️ **Se mira en `/precios` y ya no en `/`** (`#479`): la sección «Cuánto» de la portada
         // estrena la pestaña del SISTEMA (`.tabset__tab`, con su propio `min-height`) y la cápsula
         // vieja se queda donde aún vive —la página de tarifas y `/servicios`—. La guarda seguía

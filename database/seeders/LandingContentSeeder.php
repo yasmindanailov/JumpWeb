@@ -550,15 +550,39 @@ class LandingContentSeeder extends Seeder
         }
     }
 
+    /**
+     * Las DUDAS de la sección 08 (`DECISIONES #488`, Fase 2 · T2h).
+     *
+     * ❗❗❗ **Esto es DATO: la lista vive en el panel y aquí solo está la semilla.** Lo que la
+     * tanda cambió del contenido son tres decisiones del owner y una corrección medida:
+     *
+     *  1. **Se cae la duda de la EDAD.** `doc/reglas.md`: *«una duda que ya se contesta arriba no
+     *     baja a Dudas, y si además está escrita con otro dato, el conflicto se resuelve antes de
+     *     bajarla»*. Medido: aquí decía «Kids de 1 a 12 · Jump desde 6» y la sección 01 publica
+     *     «4 — 7 años» y «+8 años» **desde `zones`**, o sea que la portada se contradecía a sí
+     *     misma dos secciones más abajo. La contestan 01, 02 y 04, y con el dato bueno.
+     *  2. **El APARCAMIENTO se queda, y con el dato de la calle** (`[DECIDIDO owner]`). ⚠️ El
+     *     canvas lo quitaba «porque lo contesta 07», y aquí **eso es falso**: `#487` decidió no
+     *     escribirlo en «Visítanos» (no hay campo en el panel), y medido, esta duda es el ÚNICO
+     *     sitio de toda la web que lo menciona. Quitarla habría dejado el dato sin publicar.
+     *  3. **«¿Hace falta reservar?» deja de desmentir a la página.** Decía «ven directo, no hace
+     *     falta reservar» con la barra de compra, las cinco tarifas y el aforo por franja diciendo
+     *     lo contrario. La respuesta que aguanta las tres cosas: se puede venir directo, y
+     *     reservando la hora está guardada.
+     *  4. ⚠️⚠️ **La de cancelar prometía algo que el producto NO hace.** Decía «te devolvemos la
+     *     diferencia **automáticamente**», y `#244` sigue en pie: nada se cobra ni se devuelve
+     *     online después de reservar — el saldo se liquida en el parque, o lo devuelve el operador
+     *     desde el panel (`#317`). La voz del propio producto es `emails.php`: *«se te devuelve
+     *     allí ese día»*. Se retira el adverbio, que es lo que prometía el canal.
+     */
     private function seedFaqs(): void
     {
         $faqs = [
-            [['¿Es necesario reservar?', 'Do I need to book?', 'Faut-il réserver ?'], ['Para saltar, ven directo — no hace falta reservar. Los findes nos llenamos rápido; si quieres asegurar tu sitio, llámanos. Los cumpleaños sí se reservan online.', 'To jump, just come in — no booking needed. Weekends fill up fast, so call us if you want to make sure of your spot. Birthdays do book online.', 'Pour sauter, viens directement — pas besoin de réserver. Le week-end on se remplit vite ; appelle-nous pour assurer ta place. Les anniversaires, eux, se réservent en ligne.']],
-            [['¿Desde qué edad pueden saltar?', 'Minimum age?', 'À partir de quel âge ?'], ['Zona Kids: de 1 a 12 años (los menores de 3, con un adulto). Zona Jump: desde 6 años; si el niño mide menos de 1,30 m, entra con un adulto.', 'Kids zone: ages 1–12 (under-3s with an adult). Jump zone: from age 6; if the child is under 1.30 m, they enter with an adult.', 'Zone Kids : de 1 à 12 ans (les moins de 3 ans avec un adulte). Zone Jump : dès 6 ans ; si l\'enfant mesure moins de 1,30 m, il entre avec un adulte.']],
-            [['¿Hay parking?', 'Is there parking?', 'Y a-t-il un parking ?'], ['Sí, parking gratuito durante 2 horas en el mismo recinto. Después, 1€/h.', 'Yes, free for 2 hours on site. €1/h after that.', 'Oui, gratuit pendant 2 heures sur place. 1€/h après.']],
-            [['¿Puedo cancelar una reserva?', 'Can I cancel my booking?', 'Puis-je annuler ma réservation ?'], ['Sí. Llámanos o escríbenos y lo gestionamos. Si reduces algo ya pagado, te devolvemos la diferencia automáticamente. Los plazos están en nuestras Condiciones.', 'Yes. Call or write to us and we\'ll handle it. If you reduce something already paid, we refund the difference automatically. The deadlines are in our Terms.', 'Oui. Appelle-nous ou écris-nous et on s\'en occupe. Si tu réduis quelque chose déjà payé, on te rembourse la différence automatiquement. Les délais sont dans nos Conditions.']],
-            [['¿Tenéis tarifa de grupos?', 'Group rates?', 'Tarif groupe ?'], ['Sí. Preparamos excursiones de colegio, jornadas de empresa y salidas de grupos de adultos a medida, también fuera del horario. Escríbenos desde Contacto o mira la página de Servicios.', 'Yes. We arrange school trips, company days and adult group outings tailored to you, also outside opening hours. Write to us from Contact or see our Services page.', "Oui. On organise des sorties scolaires, des journées d'entreprise et des sorties de groupes d'adultes sur mesure, aussi hors horaires. Écris-nous depuis Contact ou vois la page Services."]],
-            [['¿Y si llueve?', 'And if it rains?', 'Et s\'il pleut ?'], ['Mejor — el parque es interior, climatizado y a 22ºC todo el año.', 'Better — it\'s all indoor, climate-controlled at 22ºC year round.', 'Encore mieux — c\'est en intérieur, climatisé à 22ºC toute l\'année.']],
+            [['¿Hace falta reservar?', 'Do I need to book?', 'Faut-il réserver ?'], ['Puedes venir directo y sacar la entrada en recepción. Reservando entras a tu hora, y los findes es la única forma de tenerla guardada.', 'You can just walk in and buy your ticket at reception. Booking gets you in at your time, and at weekends it is the only way to keep it.', 'Tu peux venir directement et prendre ton billet à l\'accueil. En réservant, tu entres à ton heure, et le week-end c\'est la seule façon de la garder.']],
+            [['¿Puedo cancelar o cambiar de día?', 'Can I cancel or change the day?', 'Puis-je annuler ou changer de jour ?'], ['Sí. Llámanos o escríbenos y lo movemos. Si acabas pagando menos, te devolvemos la diferencia. Los plazos están en nuestras Condiciones.', 'Yes. Call or write to us and we will move it. If you end up paying less, we refund the difference. The deadlines are in our Terms.', 'Oui. Appelle-nous ou écris-nous et on le déplace. Si tu finis par payer moins, on te rembourse la différence. Les délais sont dans nos Conditions.']],
+            [['¿Hay parking?', 'Is there parking?', 'Y a-t-il un parking ?'], ['Sí: en la calle, justo delante del parque, y es gratis.', 'Yes: on the street, right in front of the park, and it is free.', 'Oui : dans la rue, juste devant le parc, et c\'est gratuit.']],
+            [['¿Hacéis precio para grupos?', 'Do you do group rates?', 'Faites-vous des tarifs de groupe ?'], ['Sí: colegios, empresas y grupos de adultos, a medida y también fuera de nuestro horario. Escríbenos desde Contacto o mira la página de Servicios.', 'Yes: schools, companies and adult groups, tailored to you and also outside opening hours. Write to us from Contact or see our Services page.', "Oui : écoles, entreprises et groupes d'adultes, sur mesure et aussi hors horaires. Écris-nous depuis Contact ou vois la page Services."]],
+            [['¿Y si llueve?', 'And if it rains?', 'Et s\'il pleut ?'], ['Mejor para vosotros: el parque es interior, climatizado y a 22 °C todo el año.', 'All the better: the park is indoors, climate-controlled and at 22 °C all year round.', 'Tant mieux : le parc est en intérieur, climatisé et à 22 °C toute l\'année.']],
         ];
 
         foreach ($faqs as $i => [$q, $a]) {
@@ -567,6 +591,15 @@ class LandingContentSeeder extends Seeder
                 'answer' => ['es' => $a[0], 'en' => $a[1], 'fr' => $a[2]],
             ]);
         }
+
+        // Poda las sobrantes: la lista bajó de 6 a 5 al retirarse la de la EDAD. Sin esto la fila 6
+        // sobrevive en toda BD ya sembrada y la portada seguiría publicando la edad que contradice
+        // a la sección 01, con el seeder ya corregido y nada fallando.
+        // ⚠️ Es DESTRUCTIVO a propósito, igual que en `seedRules()` —el docblock de más abajo ya
+        // decía que «FAQs y normas sí podan» y en FAQs no era verdad—: borra también lo que el
+        // negocio haya añadido por encima de la última. No muerde en producción porque el
+        // despliegue **migra pero no siembra** (`scripts/deploy.sh` solo siembra con `--seed`).
+        Faq::where('position', '>', count($faqs))->delete();
     }
 
     private function seedRules(): void
