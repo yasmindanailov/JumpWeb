@@ -7,6 +7,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Notifications\AccountAlreadyExists;
 use App\Notifications\OrderConfirmation;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Lang;
@@ -75,7 +76,14 @@ class MailInboxLineTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **TODA PIEZA DE LA BANDEJA EXISTE EN LOS TRES IDIOMAS.** `hero()` sólo pinta la línea de
+     * ❗❗❗ **TODA PIEZA DE LA BANDEJA EXISTE EN LOS TRES IDIOMAS.**
+     *
+     * ⚠️⚠️ **El tercer parámetro de `Lang::has()` es el que hace que esto mida algo**: por defecto
+     * cae al idioma de RESPALDO —aquí `en`—, así que una clave que faltara en español pero
+     * estuviera en inglés pasaba en verde y el correo salía en el idioma equivocado sin fallar.
+     * Lo destapó la mutación, no la lectura: con la guarda escrita «bien» a ojo, borrar las claves
+     * de `lang/es/` SOBREVIVÍA.
+     * `hero()` sólo pinta la línea de
      * adelanto si la clave existe —falla hacia invisible, no hacia feo—, así que un olvido aquí NO
      * rompe nada: deja el correo anunciándose otra vez con lo primero del cuerpo. La chapa y el
      * titular no tienen esa red: sin clave, `__()` devuelve la clave y se le enseña al cliente.
@@ -88,7 +96,7 @@ class MailInboxLineTest extends TestCase
         foreach ($this->grupos() as $notificacion => $grupo) {
             foreach (['es', 'en', 'fr'] as $loc) {
                 foreach (['preheader', 'badge', 'headline', 'subject'] as $pieza) {
-                    if (! Lang::has($grupo.'.'.$pieza, $loc)) {
+                    if (! Lang::has($grupo.'.'.$pieza, $loc, false)) {
                         $faltan[] = "$notificacion ($loc): $grupo.$pieza";
                     }
                 }
@@ -271,6 +279,25 @@ class MailInboxLineTest extends TestCase
 
         $this->assertNotSame('', $linea, 'CONTROL: sin línea escrita este caso no mide nada');
         $this->assertStringNotContainsString($linea, $texto, 'la línea de adelanto se cuela en el texto plano');
+    }
+
+    /**
+     * ❗❗❗ **UN CORREO SIN LÍNEA ESCRITA SALE SIN LÍNEA, NO CON LA CLAVE DENTRO.** `hero()` sólo la
+     * pinta si existe, y esa comprobación **no tiene sujeto entre los 21** —todos la tienen—, así
+     * que sin este caso quitarla no cambia nada y la mutación sobrevive. Con él, el día que alguien
+     * añada un correo nuevo y se deje la línea, la bandeja no dirá «emails.lo_que_sea.preheader».
+     *
+     * ▶ Es exactamente el defecto que `#504` puso delante de un cliente con `badge` y `headline`.
+     */
+    public function test_a_mail_without_a_written_line_ships_without_one(): void
+    {
+        $sinEscribir = 'emails.este_grupo_no_existe';
+        $this->assertFalse(Lang::has($sinEscribir.'.preheader'), 'CONTROL: el grupo tenía que no existir');
+
+        $mensaje = (new BrandedMailMessage)->hero($sinEscribir, 'info');
+
+        $this->assertArrayNotHasKey('preheader', $mensaje->viewData,
+            'un grupo sin línea escrita anunciaría el correo con el nombre de la clave');
     }
 
     private function renderConfirmation(): string
