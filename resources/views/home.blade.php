@@ -660,11 +660,19 @@
                 @endforeach
             </ul>
 
-            {{-- El pie: los días de la especial UNA vez, y la edad mezclada en una línea. --}}
+            {{-- El pie: los días de la especial UNA vez.
+                 ❗❗ **LA NOTA DE EDADES MEZCLADAS SE FUE A `/cumpleanos`** (`[DECIDIDO owner,
+                 2026-09-10]`, `#498`): *«genera ruido, algo debe irse y dejarlo para la página de
+                 cumpleaños»*. Aquí eran TRES bloques de texto seguidos bajo las tarjetas —los días,
+                 las edades mezcladas y la cabecera del carril— y el caso de dos edades es un detalle
+                 que se resuelve en recepción, no un argumento de la portada.
+                 ⚠️⚠️ **Se MUEVE, no se borra**: medido, esa frase **solo existía aquí**, así que
+                 quitarla sin más la habría hecho desaparecer del sitio entero — y el suplemento
+                 mixto es una feature que cobra dinero (`specs/cumple-mixto.md`). Quien lleva niños de
+                 dos edades tiene que enterarse en alguna parte. --}}
             @if ($ratesSpecialLabel && collect($partyCards)->contains(fn ($c) => $c['special'] !== null))
                 <x-site.special-rate-note />
             @endif
-            <p class="party__mixed">{{ __('landing.events.mixed_note') }}</p>
 
             {{-- EL BLOQUE DE COMPLEMENTOS, con el molde compartido con las tarifas
                  (`[DECIDIDO owner]`, `#483`: *«es el mismo formato y diseño que los complementos

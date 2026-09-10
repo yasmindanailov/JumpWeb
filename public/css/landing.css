@@ -1973,12 +1973,78 @@ img { display: block; max-width: 100%; }
    ficha **no se alcanza sin ratón**: aquí dentro no hay ningún control —son fichas, no botones—,
    así que el Tab no tiene a qué entrar y el carril no se puede desplazar. Es la única pieza de la
    sección que necesita foco propio, y por eso lleva su anillo. */
+/* ══ LAS VELAS DEL CARRIL ═══════════════════════════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-09-10]`: con muchos complementos el carril llega a un ancho amplio y hay
+   que decir que sigue **por los dos lados**.
+
+   ❗❗ **Van en el ENVOLTORIO, no en el carril**, y es la misma razón que la vela del pie (`#252`):
+   un pseudo-elemento dentro de un contenedor con scroll **viaja con el contenido** y se iría hacia
+   la izquierda en cuanto alguien deslizara.
+
+   ⚠️⚠️ **Los dos defectos por defecto son OPUESTOS, y eso no es un descuido.** Donde el navegador
+   no entienda `animation-timeline`, la de la DERECHA se queda puesta —el estado seguro: decir que
+   hay más cuando ya no lo hay es un adorno, y no decirlo cuando sí lo hay es una lista que parece
+   terminada y no lo está— y la de la IZQUIERDA se queda APAGADA, porque al principio del carril no
+   hay nada a la izquierda y anunciarlo sería falso.
+
+   ⚠️ El degradado va a `--bg` y no a un literal: el carril vive en dos superficies distintas —dentro
+   del panel de una zona en tarifas y sobre papel en cumpleaños— y `[data-surface]` ya redefine ese
+   token. Un color escrito a mano se vería como una banda en una de las dos. */
+/* ⚠️⚠️ **`timeline-scope` es lo que hace que esto funcione, y sin él sale AL REVÉS.**
+   `animation-timeline: --carril` busca ese nombre en un ANCESTRO del elemento animado, y aquí quien
+   lo declara es el track, que es HIJO del envoltorio. Sin elevar el ámbito, las velas no encuentran
+   su eje y se quedan en un fotograma que no significa nada — medido: salían las dos invertidas.
+   `timeline-scope` sube la timeline del hijo al padre, que es justo este caso. */
+.addons-rail__wrap {
+  position: relative; timeline-scope: --carril;
+  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
+}
+.addons-rail__wrap::before,
+.addons-rail__wrap::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 64px;
+  pointer-events: none; z-index: 1;
+}
+.addons-rail__wrap::before {
+  left: 0; opacity: 0;
+  background: linear-gradient(to left, transparent, var(--bg));
+}
+.addons-rail__wrap::after {
+  right: 0; opacity: 1;
+  background: linear-gradient(to right, transparent, var(--bg));
+}
+/* ❗❗ **SIN SCROLL NO HAY VELAS, y esto es lo único que el CSS no puede saber solo.** Sin
+   desbordamiento la timeline no tiene rango, la animación se queda en su fotograma inicial y la vela
+   derecha aparecería **sin nada detrás** — medido: con dos complementos el carril de tarifas cabe
+   entero en escritorio y desborda 330 px en móvil, así que depende del ANCHO y no del número de
+   fichas, y por eso tampoco se puede decidir en el servidor.
+   ▶ El atributo lo pone `ui/rail-sails.js`, que **publica un hecho y no decide diseño** (`#195`).
+   ⚠️ La regla mira la AUSENCIA del atributo: sin JavaScript no hay marca y las velas se comportan
+   como si hubiera más — el mismo defecto seguro que eligió la vela del pie (`#252`). */
+.addons-rail__wrap:not([data-rail-scroll])::before,
+.addons-rail__wrap:not([data-rail-scroll])::after { opacity: 0; animation: none; }
+@supports (animation-timeline: scroll()) {
+  .addons-rail__wrap::before,
+  .addons-rail__wrap::after { animation: var(--ease-bucle) both; animation-timeline: --carril; }
+  .addons-rail__wrap::before { animation-name: rail-vela-izq; }
+  .addons-rail__wrap::after { animation-name: rail-vela-der; }
+  /* ⚠️ El carril declara el eje del que cuelgan las dos velas. Sin `scroll-timeline-name` en él,
+     `animation-timeline: --carril` no encuentra nada y las velas se quedan en su fotograma inicial
+     — que es justo el defecto seguro de arriba, así que falla bien. */
+  .addons-rail__track { scroll-timeline-name: --carril; scroll-timeline-axis: inline; }
+  @keyframes rail-vela-izq { 0% { opacity: 0; } 12%, 100% { opacity: 1; } }
+  @keyframes rail-vela-der { 0%, 88% { opacity: 1; } 100% { opacity: 0; } }
+}
+
 .addons-rail__track {
   display: flex; gap: var(--sp-12); align-items: stretch;
   overflow-x: auto; overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory; scrollbar-width: none;
-  /* A sangre por la derecha, igual que el carril de tarifas: el asoma es la señal de que hay más. */
-  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
+  /* A sangre por la derecha, igual que el carril de tarifas: el asoma es la señal de que hay más.
+     ⚠️⚠️ **El sangrado vive en el ENVOLTORIO desde `#498`, no aquí.** Con los márgenes negativos en
+     el carril, el envoltorio acababa en el borde de la columna y **las velas caían donde el carril
+     ya no está** — medido: la de la derecha no se veía. Un pseudo-elemento solo puede velar el
+     borde que su propio contenedor alcanza. */
+  margin: 0;
   padding: var(--sp-4) 64px var(--sp-8) var(--col-gutter);
 }
 .addons-rail__track::-webkit-scrollbar { display: none; }
@@ -2019,7 +2085,8 @@ img { display: block; max-width: 100%; }
 
 @media (min-width: 1024px) {
   /* Sin carril: dentro de la columna, como la rejilla de tarifas. */
-  .addons-rail__track { margin: var(--sp-16) 0 0; padding: var(--sp-4) 0 var(--sp-8); }
+  .addons-rail__track { margin: 0; padding: var(--sp-4) 0 var(--sp-8); }
+  .addons-rail__wrap { margin: var(--sp-16) 0 0; }
 }
 
 /* El CTA, pegado abajo para que las tarjetas de una fila alineen sus botones aunque su texto mida
@@ -4691,6 +4758,13 @@ select:focus-visible {
    mecanismo de superficie ya le da su valor —cian sobre tinta, Azul Muro sobre papel (`#436`)—, así
    que **no hay una segunda regla de color**, hay una sola leída en dos superficies. */
 
+/* ❗❗ **EL AIRE DE LA NOTA BAJO LAS TARJETAS DE CUMPLEAÑOS** (`[owner]`, `#498`: *«no tiene margen
+   con la card»*). `.rates__note` nace con `--sp-4` porque en la sección de TARIFAS va pegada a su
+   carril y ahí 4 px es lo correcto; bajo una tarjeta de cumpleaños, esos mismos 4 px la dejan
+   colgando del borde.
+   ⚠️ Por eso el margen lo pone el CONTEXTO y no el componente: es la misma pieza en dos sitios que
+   piden aire distinto, y cambiarlo dentro movería también el de tarifas. */
+#events .rates__note { margin-top: var(--sp-20); }
 .party__mixed { margin: var(--sp-12) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
 
 @media (min-width: 1024px) {

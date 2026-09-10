@@ -27583,3 +27583,81 @@ white-label**: manchas y poses son arte de PlayJump y solo entran por el hueco d
 **contradicciones** del artboard que siguen abiertas; **`C3`**, la cinta del eslogan, que choca con
 `#252`; y **refrescar el canvas**, cuya copia local **no trae `Layout Paginas PJP`** —eso no bloquea
 la portada pero **sí la Fase 3**.
+
+---
+
+## #498 · 2026-09-10 · Las velas del carril de complementos y el pie de cumpleaños — y la tarifa especial cobra vísperas que no anuncia
+
+**Contexto.** Dos encargos del owner: *«los complementos, cuando son muchos y llegan a un width muy
+amplio, añadirles un velo para hacer el slide de manera profesional en los laterales»* y, en
+cumpleaños, *«este texto no tiene margen con la card y genera ruido: algo debe irse y dejarlo para la
+página de cumpleaños»*.
+
+---
+
+**❗❗ EL MECANISMO YA EXISTÍA Y SE REUTILIZA**: la vela del pie (`#252`), con su regla escrita —*«va
+en el ENVOLTORIO y no en la fila: un pseudo-elemento dentro de un contenedor con scroll viaja con el
+contenido»*—. El carril no tenía envoltorio y hubo que dárselo.
+
+**⚠️⚠️ Los defectos de las dos velas son OPUESTOS, y no es un descuido.** Sin
+`animation-timeline`, la DERECHA se queda puesta —una lista que parece terminada sin estarlo esconde
+contenido, mientras que una vela de más solo es un adorno— y la IZQUIERDA apagada, porque al
+principio del carril no hay nada a la izquierda y anunciarlo sería falso.
+
+---
+
+**❗❗❗ TRES DEFECTOS, Y LOS TRES SOLO LOS VIO EL NAVEGADOR.**
+
+1. **Las velas salían INVERTIDAS.** `animation-timeline: --carril` busca ese nombre en un **ancestro**
+   del elemento animado, y quien lo declara es el carril, que es **hijo** del envoltorio. Sin
+   `timeline-scope: --carril` en el envoltorio, las velas no encuentran su eje y se quedan en un
+   fotograma que no significa nada — medido: `izq 1 · der 0`, justo al revés.
+2. **La vela derecha no se veía**, ya con la timeline arreglada: el carril iba **a sangre con márgenes
+   negativos** y el envoltorio no, así que la vela caía en el borde de la columna y **no en el borde
+   del carril**. *Un pseudo-elemento solo puede velar el borde que su propio contenedor alcanza.* El
+   sangrado se mudó al envoltorio.
+3. **Con el carril lleno pero sin desbordar, salía una vela sin nada detrás.** Sin scroll la timeline
+   no tiene rango y la animación se queda en su fotograma inicial.
+
+▶ **El (3) es lo único que el CSS no puede saber solo**, y **tampoco el servidor**: medido, con dos
+complementos el carril de tarifas **cabe entero en escritorio (desborde 0) y desborda 330 px en
+móvil** — depende del ANCHO, no del número de fichas. Entra `ui/rail-sails.js`, que **publica un
+hecho y no decide diseño** (la doctrina de `#195`): marca `data-rail-scroll` y el CSS decide. Con
+`ResizeObserver` y no un `resize` de ventana, porque la columna cambia por cosas que no la mueven —la
+lección de `#256`, donde el motor del minijuego cacheaba el ancho del lienzo—.
+
+---
+
+**EL PIE DE CUMPLEAÑOS**: eran **tres bloques de texto seguidos** bajo las tarjetas —los días de la
+especial, las edades mezcladas y la cabecera del carril—.
+
+⚠️⚠️ **La nota de edades mezcladas se MUEVE a `/cumpleanos`, NO se borra**, y eso se decidió
+midiendo: esa frase **solo existía en la portada**, así que quitarla sin más la habría hecho
+desaparecer del sitio entero — y el suplemento mixto **cobra dinero** (`specs/cumple-mixto.md`).
+⚠️ **La de los días se queda**: sin ella «16,95 € en tarifa especial» no significa nada (`#479`).
+
+⚠️ **Y el margen lo pone el CONTEXTO, no el componente**: `.rates__note` nace con `--sp-4` porque en
+la sección de TARIFAS va pegada a su carril y ahí 4 px es lo correcto; bajo una tarjeta de cumpleaños
+la dejan colgando del borde, que era la queja literal. Cambiarlo dentro habría movido también el de
+tarifas.
+
+---
+
+**❗❗❗ Y AL RESPONDER UNA PREGUNTA DEL OWNER SALIÓ UN HALLAZGO DE DINERO.** Preguntó por qué la tarifa
+especial dice «Viernes, findes y festivos» y si las vísperas entran.
+
+▶ **Leído en PRODUCCIÓN** (con su permiso, solo lectura): `rate_types` #2 declara `weekdays [5,6,0]`
+—viernes, sábado, domingo— y **`special_dates` tiene 30 filas**, todas con la tarifa especial y
+nombradas por el propio parque: «Víspera de Navidad», «Víspera de Año Nuevo», «Víspera de Reyes»,
+«Víspera de San José», «Puente de la Constitución»…
+
+⚠️⚠️ **Así que las vísperas SÍ pagan tarifa especial, y la etiqueta no las nombra.** Es el problema
+CONTRARIO al que se temía: no promete de más, **cobra más de lo que anuncia**. Quien venga el jueves
+24 de diciembre paga especial y la portada solo dice «Viernes, findes y festivos».
+▶ Es un cambio de **DATO** (`rate_types.label` en el panel), no de código, y es del owner. ⚠️ Y el
+docblock de `<x-site.special-rate-note>` ya escribía la regla completa —*«los días —viernes, findes,
+festivos y vísperas—»*—, o sea que **el producto lo tenía bien y el dato se quedó corto**.
+
+**Suite 4.644** · 29.154 aserciones · guarda `AddonsRailSailsTest` (7 casos) · Pint limpio ·
+verificado en navegador a 390 y 1440: velas correctas en los cuatro casos (con desborde, sin
+desborde, al principio y al final del carril).

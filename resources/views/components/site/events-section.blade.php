@@ -210,6 +210,12 @@
                      cada pack dejaron de repetirlos al pasar del recargo al precio entero, así que
                      el término se define aquí — que es la otra mitad de la misma regla. --}}
                 <x-site.special-rate-note />
+                {{-- ❗❗ **LLEGA DESDE LA PORTADA** (`#498`): allí era el tercero de tres bloques de
+                     texto seguidos bajo las tarjetas y el owner lo mandó aquí. Su sitio es éste —una
+                     página de cumpleaños puede permitirse el caso particular— y **no podía
+                     simplemente borrarse**: era el único lugar del sitio que lo decía, y el
+                     suplemento mixto cobra de verdad (`specs/cumple-mixto.md`). --}}
+                <p class="party__mixed">{{ __('landing.events.mixed_note') }}</p>
                 @unless ($showInvite)
                     {{-- En la landing, JUSTO DEBAJO de la card del cumpleaños: pregunta + enlace
                          sutil a la tarjeta de invitación de /cumpleanos (no se satura la home con
