@@ -1844,7 +1844,7 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
 - [ ] Sustituir el composer global `'*'` por **query services de contenido** con caché
       etiquetada e invalidación por evento de modelo (hoy: memo por request tras el W1).
 - [ ] Theming como paquete coherente (tokens CSS + tema BD + assets por instalación).
-      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#478`,
+      ▶ **EN EJECUCIÓN desde el 2026-09-09 por el carril de diseño** (`DECISIONES #469`→`#484`,
       `specs/rediseno-desde-canvas.md`), que se reabrió con el sistema del 2.º cliente ya entregado.
       ✅ **Su FASE 1 está CERRADA y verificada en navegador**: táctil **48**, radios **0·10·16·999**,
       aire **144/96**, columna **1120** —los dos últimos con **hueco nuevo por instalación**—, la
@@ -1853,10 +1853,20 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       cerradas del producto** sin que nada lo viera, y que **`.btn` no declaraba mínimo táctil** —su
       alto daba 44 por casualidad aritmética, así que al subir el token TODOS los botones se
       quedaron cortos sin fallar—. Las dos las cierran guardas nuevas.
-      ▶ **Fase 2 en curso**: el armazón (`#477`) y la sección 01 (`#478`). Quedan **siete secciones**.
-      ❗ **La sonda de navegador y el comparador con el mockup viven ya en `scripts/`**, versionados:
-      «idéntico al mockup» no se comprueba mirando — el comparador dio **40 divergencias** donde el
-      ojo veía «parecido».
+      ▶ **Fase 2 en curso**: el armazón (`#477`) y las secciones **01** (`#478`), **02**
+      (`#479`+`#480`), **03** (`#481`+`#482`) y **04** (`#483`+`#484`). Quedan **cuatro secciones**.
+      ▶ Y con la 03 nació **`/atracciones`**, adelantada de la Fase 3 porque su puerta necesitaba
+      destino.
+      ❗ **Tres instrumentos viven ya en `scripts/`**, versionados: la sonda de navegador, el
+      comparador con el mockup y el podador de CSS huérfano. «Idéntico al mockup» no se comprueba
+      mirando — el comparador dio **40 divergencias** donde el ojo veía «parecido».
+      ⚠️⚠️ **Y lo que más se ha repetido en las cuatro tandas: el acta del canvas describe piezas que
+      su propio artboard tiene APAGADAS** (la chapa de zona, la del «18 más», el reloj y el aviso
+      INFO). *Esa fuente se relee antes de cada tanda, mientras dura, y sin creerse el acta.*
+      ⚠️ **Y lo que ninguna guarda de PHP ve**: `[data-surface]` no solo declara la superficie, la
+      **pinta**; una pegatina cuyo keyline, relleno y sombra son del mismo color deja de leerse; y un
+      comentario que describe un mecanismo no lo implementa (el paquete no declaraba los dos estados
+      de la sombra y llevaba así desde `#478`). Las tres salieron **midiendo en navegador**.
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).
 
 ### Fase 6 — Móvil + features nuevas 🟦 — el waiver (subsistema B) EN EJECUCIÓN desde el 2026-08-25 · menores a cargo (C) desde el 2026-08-27
