@@ -3127,9 +3127,26 @@ img { display: block; max-width: 100%; }
 }
 .rev__id { flex: 1; min-width: 0; }
 .rev__author { margin: 0; font-size: var(--fs-16); font-weight: 700; line-height: 1.2; color: var(--fg); }
+/* El enlace al perfil del autor (atribución obligatoria, `#494`). Hereda el peso y el color del
+   nombre: la afordancia la da el subrayado, no un segundo color — el nombre sigue siendo el nombre.
+   ⚠️ **NO se le da el objetivo táctil de 48 px, y es de norma.** Es un enlace EN LÍNEA cuyo alto lo
+   fija el `line-height` del texto (medido: 40 px en móvil, donde el nombre ocupa dos renglones), y
+   WCAG 2.5.8 exime ese caso — la misma excepción que el enlace del texto de cookies, que
+   `TouchTargetTest` documenta. Forzarlo a 48 partiría la cabecera de la tarjeta en dos. */
+.rev__author a { color: inherit; text-underline-offset: 3px; }
+.rev__author a:hover { color: var(--interactive); }
 /* La fecha SÍ es mono: aquí es una etiqueta de dato, no un argumento (la regla de `doc/reglas.md`
    que sacó el recuento de opiniones del mono en el artboard). */
 .rev__when { margin: var(--sp-4) 0 0; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--fg-mute); }
+/* ── LA COLUMNA DE LA MARCA · logotipo de Google Maps + nota (`#494`) ──────────────────────
+   ⚠️⚠️ **Sin logotipo esta columna solo lleva las estrellas y la fila queda IDÉNTICA a como
+   estaba**, así que una opinión propia no paga nada por la atribución de Google. Es también el
+   orden del widget de Google: quién lo dice arriba, cuánto puntúa debajo.
+   ⚠️ `flex: none` para que no la encoja el nombre del autor: por debajo de 98 px el logotipo
+   bajaría de los 16 px de alto que sus directrices fijan como mínimo. */
+.rev__mark {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-8);
+}
 .rev__stars { flex: none; margin: 0; font-size: var(--fs-15); line-height: 1; letter-spacing: 0.06em; }
 .rev__stars-on { color: var(--attn-ink); }
 .rev__stars-off { color: var(--line-strong); }
@@ -3193,8 +3210,13 @@ img { display: block; max-width: 100%; }
    `display: -webkit-box` puesto, subir el `line-clamp` deja el párrafo en una caja que sigue
    comportándose distinto. */
 .rev__text--open { display: block; -webkit-line-clamp: unset; overflow: visible; }
-/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación. */
+/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación.
+   ❗❗ **«Ver en Google» va SIEMPRE a la derecha** (`[DECIDIDO owner, 2026-09-10]`, `#494`).
+   ⚠️⚠️ Con `justify-content: space-between` no bastaría: cuando el texto es corto no hay botón «Ver
+   más» —se decide MIDIENDO, no contando caracteres—, y con un solo hijo la fila lo dejaría a la
+   IZQUIERDA. El `margin-left: auto` del propio enlace lo empuja haya o no compañero. */
 .rev__acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-16); }
+.rev__acts > .rev__more { margin-left: auto; }
 .rev__toggle,
 .rev__more {
   display: inline-flex; align-items: center; gap: var(--sp-7); min-height: 48px;
@@ -3203,6 +3225,58 @@ img { display: block; max-width: 100%; }
 .rev__toggle { background: none; border: 0; padding: 0; cursor: pointer; }
 .rev__more .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
 .rev__more:hover .arrow { transform: translateX(5px); }
+
+/* ══ ATRIBUCIÓN DE GOOGLE MAPS ══════════════════════════════════════════════════════════════
+   `DECISIONES #494`. Piel del componente `<x-site.google-attribution>`.
+
+   ❗❗❗ **Estas medidas son de la GUÍA DE GOOGLE, no del sistema de diseño de la casa**, igual que
+   las del botón de acceso (`#345`): alto publicado **16–19 px** (aquí 18, el del propio asset) y
+   espacio libre **10 izq/der/arriba y 5 abajo**. Por eso no salen de `--sp-*` — esas escalas las
+   mueve el cliente en su paquete, y con ellas el logotipo dejaría de cumplir su guía **sin que nada
+   falle**.
+
+   ⚠️⚠️ **`width` Y `height` los dos fijos, y `flex: none`.** Con solo el alto, un `img{max-width}`
+   heredado o un contenedor estrecho lo encogen a lo ancho y **lo DEFORMAN**, que es lo primero que
+   sus directrices prohíben (*«Maintain the aspect ratio of the logo to prevent distortion»*). Y por
+   debajo de 98 px de ancho bajaría también del alto mínimo. Antes se desborda que se deforma.
+
+   ⚠️ **Aquí no hay ni un color.** El color del logotipo lo pone el FICHERO que elige el marcado:
+   Google publica una variante por fondo y recolorear su marca está prohibido. Un `filter` o un
+   `opacity` sobre esta clase es la forma de incumplir sin romper nada. */
+.gmaps-attr { display: block; flex: none; width: 98px; height: 18px; max-width: none; }
+
+/* El logotipo dentro de la CHAPA. `--sp-10` es exactamente el espacio libre superior que pide la
+   guía; el inferior lo da el relleno de la chapa, que es mayor que los 5 px del mínimo. */
+.rev-score__src { margin: var(--sp-10) 0 0; }
+/* ⚠️ Cuando es enlace crece al objetivo táctil del sistema: el dibujo mide 18 px de alto y un
+   enlace de 18 px no se pulsa con el dedo. Crece el ÁREA, nunca el logotipo. */
+a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; }
+
+/* ── EL AVISO DE TRADUCCIÓN ───────────────────────────────────────────────────────────────
+   ❗❗ La nota es TEXTO servido y el conmutador un botón con `x-cloak`: sin JavaScript el aviso
+   —que es lo obligatorio— sale igual, y lo que no se pinta es el control que no funcionaría. */
+.rev__xlat {
+  margin: var(--sp-10) 0 0;
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-4) var(--sp-12);
+}
+.rev__xlat-note { font-size: var(--fs-13); color: var(--fg-mute); }
+.rev__xlat-swap {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; min-height: 48px;
+  font-size: var(--fs-13); font-weight: 800; color: var(--interactive);
+}
+
+/* ── LA POLÍTICA DE RESEÑAS DE GOOGLE ─────────────────────────────────────────────────────
+   Cierra la sección con letra de nota al pie: es una aclaración sobre la fuente, no un argumento
+   de venta, y compite con la opinión si se lee al mismo peso. */
+/* ⚠️ El tope de medida es generoso a propósito: con `62ch` la frase partía en **dos líneas cortas
+   dejando 700 px de columna vacíos** a 1440 —una nota al pie no es un párrafo, y ahí la medida de
+   línea no protege nada, solo estropea el bloque—. Con `104ch` las tres traducciones caben en una
+   línea en escritorio y siguen envolviendo en móvil, que es donde el tope sí hace falta. */
+.rev-sec__policy {
+  margin: var(--sp-16) 0 0;
+  font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); max-width: 104ch;
+}
 
 /* ── ESCRITORIO ───────────────────────────────────────────────────────────────────────────
    `Escritorio PJP` 5b: cuatro columnas y ocho. Con la chapa presente, las cuatro son suyas y la
@@ -3227,6 +3301,12 @@ img { display: block; max-width: 100%; }
   .rev-sec--scored > .sec-head { grid-column: 1 / -1; margin-bottom: var(--sp-8); }
   .rev-sec--scored > .rev-score { grid-column: span 4; margin-bottom: 0; }
   .rev-sec--scored > .rev { grid-column: span 8; }
+
+  /* ⚠️⚠️ **La nota de política es hijo directo de la rejilla y SIN ESTO SE AUTO-COLOCA** — es
+     exactamente lo que le pasó a la chapa: cae en las columnas que queden libres, se queda en un
+     carril estrecho y empuja lo de al lado. Va a todo lo ancho, debajo de todo, porque habla de la
+     sección entera y no de una de sus dos columnas. */
+  .rev-sec__policy { grid-column: 1 / -1; }
 
   /* El tope de medida del artboard: 65ch. Sin él, a 736 px de ancho una opinión larga pasa del
      máximo de línea del sistema. */

@@ -308,6 +308,97 @@ maquetación que se convierte en requisito legal, y por eso está escrito aquí.
 
 ---
 
+### 4.6 ✅ **EJECUTADO** (`#494`) · La atribución: el LOGOTIPO, y por qué no es la «G» que ya había
+
+Esta sección nació de una petición de **diseño** del owner —*«más veracidad con los logos de
+Google»*— y resultó ser de **cumplimiento**: leída la política contra su documentación el
+2026-09-10, faltaban cuatro cosas obligatorias, y una era exactamente la que él señaló.
+
+    R6   «When displaying Places API data WITHOUT A GOOGLE MAP,
+          you must include the Google logo»                          ❌ no estaba
+    R3′  «…author's avatar image, name, AND PROFILE LINK»            ⚠️ faltaba el perfil
+    R7   «Make end users aware when a review has been TRANSLATED»    ❌ no estaba  → §4.7
+    R8   «VISUALLY DISTINGUISH Google Maps Platform Content
+          from other content»                                        ❌ no se distinguía
+
+❗❗❗ **El supuesto de «sin un mapa de Google» es aquí el caso NORMAL.** El mapa de «Visítanos» nace
+bloqueado hasta que se aceptan cookies de terceros y la chapa de la cifra se sirve **sin ellas**
+(`#491`): para el visitante que no consiente, la portada enseña dato de Places y **cero mapas**.
+
+❗❗❗ **Y el logotipo obligatorio NO es `google.svg`.** Aquél es la marca de **Google Sign-In**
+(`auth-con-google.md` §21.1, `#345`) y acredita identidad; la atribución de Places pide el logotipo
+de **Google Maps**, que es otro asset con otras reglas. Usar uno por otro **no rompe nada: solo
+incumple**. Del paquete oficial entran dos variantes:
+
+| Fichero | Color | Superficie | Contraste medido |
+|---|---|---|---|
+| `google-maps-white.svg` | `#FFFFFF` | tinta (la chapa) | **18,50** sobre `--fg` |
+| `google-maps-gray.svg` | `#5E5E5E` | papel (la tarjeta) | **6,48** sobre `--bg-card` |
+
+⚠️ **La de papel se eligió midiendo.** La otra que Google publica para fondo plano —DarkGray,
+`#1F1F1F`— da **16,48**: a ese peso el logotipo pasaba por encima del nombre del autor, y **la
+atribución acompaña al contenido, no lo encabeza**. Las dos son suyas, así que elegir no es
+desviarse.
+
+⚠️⚠️ **El color se elige cambiando de FICHERO, jamás recoloreando.** Ni `currentColor`, ni un token,
+ni un `filter`, ni una `opacity`: sus directrices lo prohíben, y en una landing white-label la
+tentación es constante. Es la misma razón por la que estos assets viven en `public/images/providers/`
+y no en el set de iconos, donde `IconSetAnatomyTest` exige exactamente lo contrario.
+
+**❗❗❗ DÓNDE VA, Y SOBRE TODO DÓNDE NO** (`[DECIDIDO owner, 2026-09-10]`: chapa + cabecera de la
+reseña). La política pide la atribución *«within the same visual container»* que el dato, y aquí hay
+una razón más fuerte: **la chapa y las opiniones no vienen de la misma fuente**, y el caso frecuente
+es el **CRUCE** —chapa de Google sobre opiniones propias—. Un logotipo en la cabecera de la sección
+marcaría como de Google lo que escribió el parque, que es *«misrepresent Google Maps by attributing
+it with non-Google Maps Platform content»*.
+▶ Es el defecto que la captura cazó en `#491` con la entradilla, **pero peor**: aquél era una frase
+inexacta y éste es un incumplimiento de marca.
+
+**❗❗❗ «VERIFICADO POR GOOGLE» NO SE ESCRIBE.** Fue una de las tres ideas del owner y es la única
+imposible: su documentación dice literalmente *«Reviews aren't verified by Google, but Google checks
+for and removes fake content when it's identified»*. ▶ Lo que entra es **esa misma frase**, que la
+política pide publicar (*«Inform end users of Google's review policy when displaying reviews and
+average rating»*) — y que es la veracidad que se buscaba: no inventar un sello, sino decir de dónde
+viene el dato y en qué condiciones. Sale siempre que haya **algo** de Google, chapa incluida.
+
+⚠️⚠️ **EL DEFECTO QUE NINGUNA MEDIDA DE GEOMETRÍA VE: el SVG que no es XML.** La cabecera de
+procedencia de los assets citaba tokens CSS con su prefijo de dos guiones, y **XML prohíbe esa
+secuencia dentro de un comentario**. El fichero seguía dando **HTTP 200**, el marcado seguía
+correcto, no salía en las peticiones fallidas y **la caja seguía midiendo 98×18** —los atributos del
+`<img>` reservan el hueco—: el logotipo estaba **invisible** y la sonda daba verde. Lo delató
+`naturalWidth`, que valía 0. *Que el fichero llegue y mida bien no es que se pinte.*
+
+### 4.7 ✅ **EJECUTADO** (`#494`) · La traducción: obligatorio avisarla, y la señal es el IDIOMA
+
+*«Make end users aware when a review has been translated from its original language. You can enable
+end users to view the original non-translated text `originalText`.»*
+
+❗❗ **No es un borde: son dos de los tres idiomas del sitio.** Medido contra la API real el
+2026-09-10, las dos reseñas del parque están escritas en español, así que **en inglés y en francés
+Google devuelve las dos traducidas** (`text.languageCode` = `en`/`fr` sobre
+`originalText.languageCode` = `es`).
+
+⚠️⚠️ **La señal es que los códigos de idioma DIFIERAN, nunca comparar los dos textos.** Google
+devuelve `originalText` **siempre**, traducida o no —en español los dos vienen con `languageCode: es`
+y el mismo contenido—, así que *«hay original»* no significa *«está traducida»*: quien lo escriba así
+publicará «Traducida del español» sobre una reseña escrita en español, en la página en español.
+
+⚠️ **El original y su idioma viajan en UN objeto** (`Content\Contracts\OriginalText`). Por separado
+existen dos estados imposibles —texto sin idioma, idioma sin texto— que nadie construye a mano pero
+que un refactor deja pasar en silencio; el tipo lo impide y no hace falta guarda.
+
+⚠️⚠️ **`ext-intl` NO es un requisito declarado de este producto** —no está en `composer.json` ni lo
+usa ninguna otra línea del repo—, así que nombrar el idioma **degrada**: con la extensión sale
+«Traducida del español» y sin ella «Traducida automáticamente». **Avisar es lo obligatorio; nombrar
+de qué idioma, no.** Llamarlo a pelo habría metido un fatal en la portada de una instalación sin la
+extensión, y solo se vería al desplegar.
+
+⚠️ El aviso va como **texto servido** y el conmutador es un botón con `x-cloak`: sin JavaScript el
+aviso —que es lo obligatorio— sale igual, y lo que no se pinta es el control que no funcionaría. El
+acceso al original sigue existiendo por la salida a Google, que está en el marcado servido.
+
+---
+
 ## 5. Impacto en invariantes
 
 | Invariante | Impacto |

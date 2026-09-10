@@ -32,7 +32,40 @@ final readonly class Testimonial
         public string $source,
         /** La foto del autor. Solo la de un tercero, y solo con consentimiento. */
         public ?string $avatarUrl = null,
+        /**
+         * **La ficha pública de quien la firma** (`#494`).
+         *
+         * ❗❗ **Es la tercera pata de la atribución que R3 exige y faltaba**: *«Each photo and review
+         * includes an author attribution (author's avatar image, name, **and profile link**)»* —
+         * *«Attribute the author using all available resources (avatar, name, and profile link) when
+         * space allows»*. Se tenían las dos primeras.
+         * ⚠️ **No cuesta ni una llamada más**: `authorAttribution.uri` ya viaja en la misma respuesta
+         * de Places que el nombre y la foto (verificado con HTTP 200 el 2026-09-10). Lo único que
+         * faltaba era leerlo.
+         * ⚠️ Es URL de un tercero: nace saneada (`SEC-07` se aplica DONDE NACE EL DATO). `null` en
+         * las propias, que no tienen perfil en ninguna parte.
+         */
+        public ?string $authorUrl = null,
+        /**
+         * **Lo que el autor escribió**, cuando lo que se enseña está traducido (`#494`).
+         *
+         * ⚠️ **Su ausencia es la señal de que NO hay traducción**, y por eso no existe ningún
+         * `bool $translated` que pudiera contradecirla. {@see isTranslated()}.
+         */
+        public ?OriginalText $originalText = null,
     ) {}
+
+    /**
+     * ¿Lo que se está enseñando es una traducción?
+     *
+     * ⚠️ **La política obliga a decirlo** y a dar acceso al original, así que esto no es un adorno:
+     * es lo que decide si la tarjeta pinta el aviso. Se DERIVA de tener el original —una sola
+     * fuente— en vez de viajar como un segundo campo que pudiera decir lo contrario que el texto.
+     */
+    public function isTranslated(): bool
+    {
+        return $this->originalText !== null;
+    }
 
     /**
      * La inicial que va en el círculo cuando no hay foto.

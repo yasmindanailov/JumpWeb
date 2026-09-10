@@ -501,6 +501,31 @@ return [
         'prev' => 'Opinión anterior',
         'next' => 'Opinión siguiente',
         'go' => 'Ver la opinión :n',
+
+        // ── ATRIBUCIÓN DE GOOGLE (`#494`) ──────────────────────────────────────────────────
+        // ❗❗ El enlace al perfil es la tercera pata de la atribución obligatoria («avatar, name,
+        //    and profile link»). El nombre accesible dice ADÓNDE lleva: sin él, un lector de
+        //    pantalla anuncia «Ana G., enlace» y no hay forma de saber que sale del sitio.
+        'author_on_google' => ':name en Google Maps',
+
+        // ❗❗❗ El aviso de traducción es OBLIGATORIO («Make end users aware when a review has been
+        //    translated from its original language»), y aquí es el caso normal: las reseñas del
+        //    parque están en español, así que en inglés y en francés Google las traduce.
+        // ⚠️ `translated` a secas es la salida cuando no se puede nombrar el idioma (sin `ext-intl`,
+        //    o con un código que el sistema no conoce): avisar es lo obligatorio; nombrarlo, no.
+        'translated_from' => 'Traducida del :lang',
+        'translated' => 'Traducida automáticamente',
+        'see_original' => 'Ver original',
+        'see_translation' => 'Ver traducción',
+
+        // ❗❗❗ LA FRASE ES DE GOOGLE, no nuestra: «Reviews aren't verified by Google, but Google
+        //    checks for and removes fake content when it's identified». Su documentación pide
+        //    informar de esto al enseñar reseñas Y valoración media.
+        // ⚠️⚠️ Y es lo que cierra la petición de «verificado por Google»: eso NO se puede escribir,
+        //    porque afirma lo contrario de lo que Google dice de sus propias reseñas.
+        // ⚠️ Nombra a Google DENTRO de la frase a propósito: la sección puede estar enseñando
+        //    opiniones propias debajo, y una redacción impersonal las alcanzaría también.
+        'google_policy' => 'Google no verifica las reseñas, pero retira el contenido falso cuando lo detecta.',
     ],
 
     // ══ SECCIÓN 08 · «DUDAS» ═══════════════════════════════════════════════════════════════

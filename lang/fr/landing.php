@@ -321,6 +321,25 @@ return [
         'prev' => 'Avis précédent',
         'next' => 'Avis suivant',
         'go' => 'Voir l\'avis :n',
+
+        // Atribución de Google (`#494`). El enlace al perfil dice adónde lleva.
+        'author_on_google' => ':name sur Google Maps',
+
+        // ⚠️⚠️ **AQUÍ EL FRANCÉS NO ADMITE LA FORMA LITERAL, y por eso la frase es OTRA.** «Traduit
+        //    de …» exige contraer con el artículo del idioma —«de l'espagnol» pero «du portugais»—,
+        //    y el idioma de origen lo pone Google en tiempo de ejecución: con una sola plantilla
+        //    saldría mal la mitad de las veces («traduit de l'portugais»). Ninguna variable de
+        //    Laravel puede decidir esa contracción.
+        // ▶ «original en :lang» no la necesita y vale para todos los idiomas: «original en
+        //    espagnol», «original en portugais». Es la traducción bien hecha, no una desviación —
+        //    cada lengua usa su forma natural, y en ES/EN la literal ya lo es.
+        'translated_from' => 'Traduit · original en :lang',
+        'translated' => 'Traduit automatiquement',
+        'see_original' => 'Voir l\'original',
+        'see_translation' => 'Voir la traduction',
+
+        // La frase es la de Google, traducida (ver la nota en `lang/en`).
+        'google_policy' => 'Google ne vérifie pas les avis, mais supprime les faux contenus lorsqu\'il les détecte.',
     ],
 
     // Sección 08 · «Dudas» (`#488`). El titular es una frase; «Questions» pasa a ser el RÓTULO.

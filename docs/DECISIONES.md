@@ -27129,3 +27129,178 @@ que es exactamente el control editorial que §1.4 dice que no tenemos.
 personal en su ficha de Google. La verá en su propio panel de Google Business.
 
 **Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.
+
+---
+
+## #494 · 2026-09-10 · La atribución de Google en «Reseñas» — el owner pidió veracidad y resultó ser un requisito INCUMPLIDO
+
+**Contexto.** El owner pidió *«añadirle más veracidad con los logos de Google, como el widget
+oficial, ya sea en la reseña, lo de verificado por Google en la reseña o en las estrellas el logo de
+Google»*.
+
+▶ **Es una petición de diseño que resultó ser de CUMPLIMIENTO.** Leída la política de Places contra
+su documentación oficial el 2026-09-10, y medida contra la API real del parque (HTTP 200 el mismo
+día), la sección incumplía **cuatro** requisitos y uno de ellos es precisamente el que el owner
+señaló.
+
+| | Lo que dice Google | Estaba |
+|---|---|---|
+| 1 | *«When displaying Places API data **without a Google Map**, you must include the Google logo»* | ❌ |
+| 2 | *«author attribution (author's avatar image, name, **and profile link**)»* | ⚠️ faltaba el perfil |
+| 3 | *«Make end users aware when a review has been **translated** from its original language»* | ❌ |
+| 4 | *«**Visually distinguish** Google Maps Platform Content from other content»* | ❌ |
+
+---
+
+**❗❗❗ EL SUPUESTO DE «SIN UN MAPA DE GOOGLE» ES AQUÍ EL CASO NORMAL, NO UN BORDE.** El mapa de
+«Visítanos» nace bloqueado hasta que se aceptan cookies de terceros y la chapa de la cifra **se sirve
+sin ellas** (`#491`). Para el visitante que no consiente, la portada enseña dato de Places y **cero
+mapas**: exactamente el supuesto que obliga al logotipo.
+
+**❗❗❗ Y ES EL LOGOTIPO DE «GOOGLE MAPS», NO LA «G» QUE YA TENÍAMOS.** `google.svg` es la marca de
+Google Sign-In (`#345`) y sirve para identidad; la atribución de Places pide otro asset, con otras
+reglas —alto 16–19 px, espacio libre 10/10/10/5, prohibido modificarlo, etiqueta accesible «Google
+Maps»—. Usar una por otra **no rompe nada: solo incumple.** Se trae el paquete oficial
+(`Google_Maps_Attribution_Assets.zip`), del que entran **dos** variantes: blanca para tinta (18,50 de
+contraste) y gris para papel (6,48).
+
+⚠️ **La variante de papel se eligió MIDIENDO.** La otra que Google publica para fondo plano
+—DarkGray, #1F1F1F— da **16,48** sobre la tarjeta: a ese peso el logotipo pasaba por encima del
+nombre del autor, y **la atribución acompaña al contenido, no lo encabeza**. Las dos son suyas, así
+que elegir no es desviarse.
+
+---
+
+**❗❗❗ «VERIFICADO POR GOOGLE» ES LO ÚNICO DE LAS TRES IDEAS DEL OWNER QUE NO SE PUEDE HACER**, y no
+es un matiz: su propia documentación dice literalmente **«Reviews aren't verified by Google, but
+Google checks for and removes fake content when it's identified»**. Escribirlo afirmaría en su nombre
+lo que ellos niegan. ▶ Lo que sí entra es **esa misma frase**, que la política pide publicar
+(*«Inform end users of Google's review policy»*) y que es la veracidad que el owner buscaba: no
+inventar un sello, decir de dónde viene el dato y en qué condiciones. Hay caso que prohíbe la
+prohibida, **con el texto de la política descontado antes de mirar** —contiene la frase en su forma
+negada, así que sin descontarlo la guarda acusaría a la línea que existe para decir la verdad—.
+
+---
+
+**❗❗❗ EL LOGOTIPO NO PUEDE IR EN LA CABECERA DE LA SECCIÓN, Y ÉSE ES EL HALLAZGO QUE GOBIERNA EL
+DISEÑO.** La chapa y las opiniones **no vienen de la misma fuente** —la cifra se sirve sin
+consentimiento y las reseñas no—, así que **el caso frecuente es el CRUCE**: chapa de Google sobre
+opiniones propias. Medido: así estaba esta instalación al empezar la tanda. Un logotipo arriba
+marcaría como de Google unas opiniones que escribió el parque, que es *«misrepresent Google Maps by
+attributing it with non-Google Maps Platform content»*.
+
+▶ **Es el mismo defecto que la captura cazó en `#491` con la entradilla, pero peor**: aquél era una
+frase inexacta y éste es un incumplimiento de marca. `[DECIDIDO owner]`: **chapa + cabecera de la
+reseña**, cada trozo con su atribución en su propio contenedor visual.
+
+---
+
+**❗❗❗ EL DEFECTO QUE COSTÓ UNA VUELTA Y QUE NINGUNA MEDIDA DE GEOMETRÍA VEÍA: EL SVG NO ERA XML.**
+
+La cabecera de procedencia que se les puso a los assets citaba tokens CSS con su prefijo de dos
+guiones. **XML prohíbe esa secuencia dentro de un comentario** —a diferencia de HTML, que la
+tolera— y un SVG servido como `image/svg+xml` se parsea como XML **estricto**.
+
+⚠️⚠️ **Lo peligroso es cómo falla**: el fichero seguía dando **HTTP 200 con sus 7,6 KB**, el marcado
+seguía siendo correcto, no aparecía en las peticiones fallidas y **la caja seguía midiendo 98×18**,
+porque los atributos `width`/`height` del `<img>` reservan el hueco. O sea: **el logotipo estaba
+invisible y la sonda de geometría daba verde.** Lo delató `naturalWidth`, que valía 0.
+▶ *Que el fichero llegue y mida bien no es que se pinte* — la lección de `#263` por otra puerta. Hay
+guarda que parsea los dos assets como XML, y es la primera mutación del arnés.
+
+---
+
+**⚠️⚠️ LA TRADUCCIÓN: LA SEÑAL ES EL IDIOMA, NUNCA COMPARAR LOS TEXTOS.** Google devuelve
+`originalText` **siempre**, traducida o no: medido, en español los dos campos vienen con
+`languageCode: es` y el mismo contenido. Quien escriba «hay original ⇒ está traducida» publicará
+«Traducida del español» sobre una reseña escrita en español, en la página en español.
+▶ Y no es hipotético al revés: **en inglés y en francés Google traduce LAS DOS reseñas del parque**
+(`text.languageCode` = `en`/`fr` sobre `originalText.languageCode` = `es`). Dos de los tres idiomas
+del sitio servían texto traducido sin decirlo.
+
+⚠️ **El original y su idioma van en UN objeto** (`Content\Contracts\OriginalText`), no en dos campos
+sueltos: por separado existen dos estados imposibles —texto sin idioma e idioma sin texto— que nadie
+construye a mano pero que un refactor deja pasar en silencio, y la frase saldría «Traducida del ` »`.
+El tipo lo impide y no hace falta guarda.
+
+⚠️ **`ext-intl` NO es un requisito declarado de este producto** —no está en `composer.json` ni lo usa
+ninguna otra línea del repo, aunque este contenedor lo traiga—, así que nombrar el idioma **degrada**:
+con `intl` sale «Traducida del español» y sin él «Traducida automáticamente». Avisar es lo
+obligatorio; nombrar de qué idioma, no. Llamar a `Locale` a pelo habría metido un **fatal en la
+portada** de cualquier instalación sin la extensión, y solo se vería al desplegar.
+
+---
+
+**⚠️ EL PERFIL DEL AUTOR NO COSTÓ NI UNA LLAMADA MÁS**: `authorAttribution.uri` ya viajaba en la
+misma respuesta que el nombre y la foto (verificado con HTTP 200). Lo único que faltaba era leerlo.
+
+**⚠️ Las claves nuevas se leen de la caché con `?? null` porque LA CACHÉ SOBREVIVE AL DESPLIEGUE**: al
+subir esto hay entradas escritas por el código anterior, y leerlas por acceso directo revienta la
+portada hasta el primer refresco —que puede tardar una hora—.
+
+---
+
+**⚠️⚠️ TRES TRAMPAS DE INSTRUMENTO, todas con la sonda dando números creíbles.**
+
+1. **La sonda medía antes del scroll** y el logotipo es `loading="lazy"`: salía `complete=false` y
+   `naturalWidth=0`, indistinguible de un 404. La caja medía bien igual.
+2. **El helper que acota el HTML cortaba «hasta la siguiente aparición de la clase»**, así que una
+   clase que sale UNA vez —`sec-head`— se llevaba el resto de la sección entera. Lo cazó el caso de
+   la cabecera, pero mientras tanto **los demás pasaban por accidente**. Ahora cuenta anidamiento.
+   ▶ Es la trampa de `#314` en pequeño: *un localizador que depende de qué viene DESPUÉS no acota un
+   elemento, acota un tramo de documento*.
+3. **El fixture de la traducción usaba `es`, que es el idioma que la mutación clavaba**: aseverar
+   `lang="es"` no distinguía si venía del dato o estaba escrito a mano. Pasa a `de`.
+
+⚠️ **Y cuatro mutaciones salieron «NO SE APLICÓ»** por un detalle de bash: dentro de comillas
+simples, dos comillas seguidas **no producen una comilla** —cierran y abren—, así que un patrón con
+`__('clave')` llega sin ellas y no casa.
+
+⚠️ **Cuatro más NO MORDÍAN, y las cuatro eran huecos reales de la guarda**: los casos de la vista
+doblan el CONTRATO —que es lo correcto— y por eso **no pasan por el traductor**, así que borrar en
+`GoogleSocialProof` la lectura del perfil las dejaba a todas en verde. *Doblar el contrato prueba la
+vista y deja el traductor sin cubrir.* Entran dos casos que ejercitan `normalize()` de verdad.
+
+---
+
+**⚠️ La nota de política tuvo que ensancharse**: con `62ch` partía en **dos líneas cortas dejando
+700 px de columna vacíos** a 1440. Una nota al pie no es un párrafo, y ahí la medida de línea no
+protege nada. Queda en `104ch`, donde las tres traducciones caben en una línea.
+
+**❗ `[DECIDIDO owner, 2026-09-10]` · EL UMBRAL SE QUEDA EN 1 Y ES DEFINITIVO**: *«deja el umbral a 1
+siempre; mínimo 1 reseña para mostrar el widget de Google»*. Re-confirmado **con la inconsistencia de
+`#493` ya medida y delante**, así que no es un descuido: es el precio aceptado. Lo fija un caso, para
+que la constante no vuelva a moverse en silencio.
+
+⚠️ **Y la inconsistencia se volvió a ver en vivo durante la tanda**: la chapa pasó de **3,0 · 2** a
+**3,7 · 3** entre dos refrescos del mismo día. Hay una tercera reseña.
+
+---
+
+**▶ TRES RETOQUES DEL OWNER SOBRE LA SECCIÓN RENDERIZADA** (`[DECIDIDO owner, 2026-09-10]`):
+
+1. **Las flechas del carril se retiran**: se recorre con los puntos. ⚠️⚠️ **No costó accesibilidad, y
+   por eso se pudo hacer**: cada punto ya era un `<button>` con su nombre («Ver la opinión 2»), así
+   que sigue habiendo recorrido por teclado y por lector de pantalla, y el contenedor conserva su
+   `keydown`. *Retirar un control solo es gratis si lo que hacía lo sigue haciendo otro* — la guarda
+   vigila **las dos mitades**, porque sin la segunda pasaría en verde con el carril convertido en
+   algo que solo se puede recorrer con el ratón.
+2. **«Ver en Google» se ancla a la derecha de su fila.** ⚠️⚠️ Es `margin-left: auto` y **no**
+   `justify-content: space-between`: el botón «Ver más» solo aparece cuando el texto se recorta —se
+   decide MIDIENDO—, así que con una opinión corta la fila tiene **un solo hijo** y `space-between` lo
+   devolvería a la izquierda. Es el caso normal: la reseña que sale hoy en la portada no lleva «Ver
+   más».
+3. **El logotipo se queda donde está, en los dos sitios.** ⚠️ Pidió quitar «el de debajo del titular»
+   y al aclarar dijo «debajo de las estrellas sí, déjalo» — que es justo dónde está el de la chapa.
+   Se le enseñaron **los dos con su posición** antes de tocar nada y respondió «ninguno, déjalos».
+   ▶ *Preguntar costó un minuto; quitar el equivocado habría costado la vuelta entera* — y uno de los
+   dos es el obligatorio.
+
+⚠️ **Y durante los retoques la cifra volvió a moverse**: `3,0 · 2` → `3,7 · 3` → `4,3 · 6` en la misma
+jornada. La inconsistencia de `#493` no es un episodio: es la conducta de esa API.
+
+**Suite 4.632** · 29.057 aserciones · **29/29 mutaciones** (`scripts/mutar-atribucion-google.sh`) · Pint limpio ·
+verificado en navegador a 390 y 1440, en español e inglés: logotipo **cargado** y sin deformar en los
+tres sitios, área táctil de la chapa 98×48, desborde 0 · **suelo sin JavaScript medido**: el aviso de
+traducción y el logotipo salen, el original viaja servido pero oculto y los controles que no
+funcionarían no se pintan.

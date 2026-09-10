@@ -1,9 +1,47 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#493`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#494`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
 >
-> ❗❗❗ **LO PRIMERO AL RETOMAR: EL UMBRAL DE RESEÑAS ESTÁ EN 1** (`[DECIDIDO owner]`, `#493`, bajado
-de 10 con la sección renderizada delante) **Y LA API DE GOOGLE ES INCONSISTENTE.** Medido con cinco
+> ❗❗❗ **LO ÚLTIMO HECHO ES LA ATRIBUCIÓN DE GOOGLE** (`#494`), y su lección vale para cualquier
+tercero: **el owner la pidió como DISEÑO —«más veracidad con los logos de Google»— y era un requisito
+INCUMPLIDO**. Leída la política de Places contra su documentación el 2026-09-10, faltaban **cuatro**
+cosas obligatorias: el logotipo, el enlace al perfil del autor, el aviso de traducción y la distinción
+visual entre lo de Google y lo propio.
+>
+> ❗❗❗ **DOS COSAS QUE HAY QUE SABER ANTES DE TOCAR ESA SECCIÓN.** (1) **El logotipo obligatorio NO es
+la «G» de `google.svg`** —aquélla es Google Sign-In (`#345`); Places pide el de **Google Maps**, otro
+asset con sus propias reglas—, y **el color se elige cambiando de FICHERO, nunca recoloreando**.
+(2) **No puede ir en la cabecera de la sección**: la chapa y las opiniones no vienen de la misma fuente
+y **el caso frecuente es el CRUCE** —chapa de Google sobre opiniones propias—, así que arriba marcaría
+como suyas unas opiniones que escribió el parque. Va en la chapa y en la cabecera de cada reseña de
+Google.
+>
+> ⚠️⚠️ **Y «verificado por Google» NO SE PUEDE ESCRIBIR**: su propia documentación dice *«Reviews
+aren't verified by Google»*. Lo que entra es esa misma frase, que la política pide publicar — y es la
+veracidad que el owner buscaba: no un sello inventado, sino decir de dónde viene el dato.
+>
+> ⚠️⚠️ **EL DEFECTO DE MÉTODO QUE MÁS CARO SALIÓ**: la cabecera que se les puso a los assets citaba
+tokens CSS con sus dos guiones y **XML lo prohíbe dentro de un comentario**. El SVG seguía dando
+**HTTP 200**, el marcado seguía correcto y **la caja seguía midiendo 98×18** —los atributos del `<img>`
+reservan el hueco—, así que **el logotipo estaba INVISIBLE y la sonda de geometría daba verde**. Lo
+delató `naturalWidth`. *Que el fichero llegue y mida bien no es que se pinte.*
+>
+> ⚠️ **Y cuatro mutaciones no mordían porque los casos de la vista doblan el CONTRATO** —que es lo
+correcto— **y por eso no pasan por el traductor**: borrar en `GoogleSocialProof` la lectura del perfil
+las dejaba todas en verde. *Doblar el contrato prueba la vista y deja el traductor sin cubrir.*
+>
+> ▶ **Tres retoques del owner con la sección renderizada delante**: **fuera las flechas** del carril
+—se recorre con los puntos, y ⚠️ **no costó accesibilidad porque cada punto ya era un `<button>` con
+su nombre**—, **«Ver en Google» anclado a la derecha** (⚠️ `margin-left: auto` y **no**
+`space-between`: sin «Ver más» la fila tiene un solo hijo) y **los dos logotipos se quedan**.
+⚠️ Ese tercero llegó como «quita el de debajo del titular» y se aclaró a «debajo de las estrellas sí,
+déjalo»: se le enseñaron **los dos con su posición** antes de tocar y respondió «ninguno». *Preguntar
+costó un minuto; quitar el equivocado habría costado la vuelta entera* — y uno de los dos es el
+obligatorio.
+>
+> ❗❗❗ **EL UMBRAL DE RESEÑAS ESTÁ EN 1 Y ES DEFINITIVO** (`[DECIDIDO owner]`, `#493` y re-confirmado
+en `#494`: *«deja el umbral a 1 siempre; mínimo 1 reseña para mostrar el widget de Google»*)
+**Y LA API DE GOOGLE ES INCONSISTENTE.** Medido con cinco
 consultas seguidas al mismo sitio: **cuatro dieron «5,0 · 1 reseña» y una «3,0 · 2 reseñas»**. La
 segunda reseña existe —1 estrella, sobre el personal, con su texto traducido en los tres idiomas—,
 así que no es un fallo de parseo; **es Google sirviendo vistas distintas de su propio dato**.
@@ -13,6 +51,9 @@ cuarta descartada: quedarse con la instantánea «mejor» es el control editoria
 tenemos.
 > ⚠️ **Y casi lo informo al revés**: el primer dato que vi fue el 3,0 y estuve a punto de decir que la
 media había caído. *Una sola muestra de un tercero no es una medición.*
+> ⚠️ **Vuelto a ver en vivo el 2026-09-10 durante `#494`**: la chapa pasó de **3,0 · 2** a **3,7 · 3**
+entre dos refrescos del mismo día. Hay una tercera reseña, y el salto sigue siendo el que describe la
+ficha.
 >
 > ▶ **LA T2i·b CIERRA LA PORTADA** (`#491`): la chapa del 4,8 con las estrellas recortadas **caja a
 caja**, las reseñas con su atribución, la caché corta y `social-proof:refresh` cada hora. Suite
