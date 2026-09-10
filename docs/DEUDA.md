@@ -744,3 +744,31 @@ que **no era data-driven** —choca con el principio «todo configurable desde e
 escrito en ninguna decisión**, que es lo que el canvas del cliente ya había cazado por su cuenta. En
 la bandeja el remitente pesa más que el asunto, y en una instalación recién montada valía literalmente
 `hello@example.com`: *el hueco no fallaba hacia invisible, fallaba hacia ridículo.*
+
+---
+
+## Lo que deja la T5 de los correos (`DECISIONES #506`, 2026-09-10)
+
+**(6) Los dos correos INTERNOS al parque no llevan línea de adelanto** — Baja, y es estructural, no
+un olvido. `ContactMessageMail` y `PaymentIncidentMail` usan **vistas HTML sueltas**
+(`emails/contact.blade.php`, `emails/payment-incident.blade.php`), no el `layout` de `vendor/mail`,
+que es donde vive el mecanismo. Dárselas obliga a repetirlo en dos sitios; los lee un operador en
+una bandeja con pocos correos, donde el asunto ya distingue. ▶ **Ésta es la razón por la que las
+líneas son 63 y no 69**, que es lo que decía la spec.
+
+**(7) `EmailSlip::forOrder()` se compone sobre la PRIMERA reserva viva** — Media. En un pedido con
+reservas en días distintos el resguardo dice **un** día, igual que hacía el titular hasta `#506`.
+Está declarado en su docblock desde `#503` y **no se tocó a propósito**: eso es CUERPO —va junto al
+desglose, que lista todas las reservas— y la T5 acota a la BANDEJA, donde no hay nada que lo
+matice. ▶ `Order::singleVisitDate()` ya existe para el día que quiera cerrarse; lo que falta es
+decidir qué dice el resguardo cuando hay varias («Sáb. 4 oct. y 1 día más», o encoger la fila).
+Es del owner.
+
+**(8) El corte de ~35 caracteres del asunto es una premisa del canvas, no una medición nuestra** —
+Baja. Desde aquí no hay forma de medir lo que recorta cada cliente de correo. Se adopta como
+criterio declarado y se vigila con él (`MailInboxLineTest`).
+
+**(9) Ningún correo se ha visto en Gmail ni en Outlook** — Media, y viene de `#500`. Todo lo del
+carril está verificado por aritmética, por render y por Mailpit, **nunca por ojo en un cliente
+real** — y es justo donde se comprueba si la línea de adelanto se lee, si el relleno tapa el cuerpo
+y si el modo oscuro no se invierte solo. No hay Playwright en el contenedor.

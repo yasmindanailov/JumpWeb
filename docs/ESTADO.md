@@ -1,6 +1,6 @@
 # Estado del proyecto — foto viva
 
-> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#505`) ═══════════
+> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#506`) ═══════════
 >
 > ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
 > medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja
@@ -11,30 +11,44 @@
 > ▶ **TODO ESTÁ EN `docs/specs/correos-desde-canvas.md`. Empieza por su §2** (el filtro
 > producto/cliente, que aquí **no se resuelve con tokens y es estructural**).
 >
-> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#505`):
+> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#506`): **el vestido está COMPLETO.**
 > - **T1 · el vestido** — 89 sustituciones; el tema vivo queda en **13 colores, todos del sistema
 >   v1.10 y cero ajenos**. Ninguna webfont viaja, radios en la escala de cuatro, modo oscuro.
 > - **T2 · el remitente desde el PANEL** (Ajustes → Contacto), no del `.env`, que valía literalmente
->   `hello@example.com`. **8/8 mutaciones** (`scripts/mutar-correos-t2.py`).
+>   `hello@example.com`. **8/8 mutaciones**.
 > - **T3+T4 · el MOLDE en los VEINTIUNO** — cabecera en tinta con **chapa · titular · resguardo**,
 >   **aviso** con punto, **el mapa del naranja** (tinta salvo los dos que venden), dirección y
 >   teléfono en el pie, **cero emojis**. **21 de 21 renderizados con cabecera.**
+> - **T5 · LA BANDEJA** (`#506`) — las **63** líneas de adelanto (21 correos × 3 idiomas; **no 69**:
+>   los dos internos usan vista suelta y no pueden llevarla) y los **21 asuntos con el dato delante**.
+>   Medido: longitud media **44 → 33** caracteres · asuntos que pasan del corte de un móvil **18 → 7**
+>   · su dato cabe en el corte en **9 de 14**, contra **1 de 13**. **9/9 mutaciones.**
 > - **La marca del PRODUCTO fuera de la bandeja del cliente**: remitente, firma y copyright decían
 >   «JumpWeb» con el negocio llamándose otra cosa, en **20 de los 21**.
 >
 > ❗❗❗ **LO QUE QUEDA, Y ES LO PRIMERO QUE HAY QUE HACER:**
-> 1. **Las 69 líneas de adelanto** (23 correos × 3 idiomas — **no 23, que es lo que decía el canvas**)
->    y **los 23 asuntos con el dato delante**. `[DECIDIDO owner]`: las escribe el agente y él las
->    corrige. Hoy **ningún correo tiene línea de adelanto**, así que en la bandeja los 23 se anuncian
->    con lo primero del cuerpo.
-> 2. **El correo del SUPLEMENTO DE FIESTA MIXTA**, que se rehace en turno propio: usa nueve frases
+> 1. **El correo del SUPLEMENTO DE FIESTA MIXTA**, que se rehace en turno propio: usa nueve frases
 >    para decir un importe. `[DECIDIDO owner]`: no entra con el vestido porque es **texto sobre
->    dinero** y merece medirse aparte.
-> 3. ⚠️ **EL OJO DEL OWNER EN UN CLIENTE DE CORREO REAL** (Gmail, Outlook). **No se ha hecho y no se
->    puede hacer desde aquí**: no hay Playwright en el contenedor. El modo oscuro está verificado por
->    aritmética y por presencia en el HTML, **nunca por ojo**.
+>    dinero** y merece medirse aparte. **Es lo único del carril que sigue sin tocarse.**
+> 2. ⚠️ **EL OJO DEL OWNER EN UN CLIENTE DE CORREO REAL** (Gmail, Outlook). **No se ha hecho y no se
+>    puede hacer desde aquí**: no hay Playwright en el contenedor. Todo está verificado por
+>    aritmética, por render y por Mailpit, **nunca por ojo**. Y ahí es donde se comprueba si la línea
+>    de adelanto se lee, si el relleno tapa el cuerpo y si el oscuro no se invierte solo.
+> 3. **Los textos los corrige el owner**: las 63 líneas y los 21 asuntos están escritos derivando de
+>    lo que ya había, para que corrija **sobre algo y no sobre un hueco** (decisión 23 del canvas).
 >
-> ❗❗ **LAS CINCO TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
+> ❗❗❗ **TRES DEFECTOS VIVOS QUE ENCONTRÓ LA T5 AL MEDIR, y los tres estaban en VERDE:**
+> **(a)** `#504` dejó la cabecera del correo de identidad social diciendo **el nombre de su clave**
+> —«account.social_link_mail.badge»— en los tres idiomas, porque `badge` y `headline` estaban
+> anidadas dentro de `providers`. Su guarda comprobaba `class="hero"`: *declarar una pieza no es que
+> diga algo.* **(b)** `#500` arregló las cuatro superficies de marca en HTML y dejó la parte de
+> **TEXTO PLANO** firmando con el nombre del producto (2 ocurrencias medidas) — la trampa de la
+> partida doble por la otra puerta. **(c)** `docs/DECISIONES.md` tenía **tres marcadores de conflicto
+> de merge sin resolver** del `git pull` de la sesión anterior, **con `docs-check` en verde**: 493
+> líneas de los dos carriles partidas por un `=======`. Se conservan las diez decisiones, y **nace el
+> check 9 del gate documental**, verificado con control.
+>
+> ❗❗ **LAS SIETE TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
 > **(1)** Una `@media` **no puede vivir en el tema**: el inliner descarta lo que no puede pegar a una
 > etiqueta, y el modo oscuro salió sin una sola regla **sin que nada fallara**. Va en el `<style>` de
 > `layout.blade.php`, con `!important`. **(2)** **Todo componente de correo nace por partida doble**:
@@ -42,7 +56,13 @@
 > **(3)** Los **comentarios CSS viajan** en cada correo (3.172 B, el 11 % del HTML); los de Blade no.
 > **(4)** Un `*/` dentro de un docblock **lo cierra** — la ruta comodín de los ficheros de idioma
 > dejó un servicio sin compilar y el render devolvía el HTML anterior **sin avisar**.
-> **(5)** ⚠️⚠️ **El contraste lo hacen LOS DOS LADOS**: la guarda de `#502` solo exigía par oscuro al
+> **(5)** ⚠️⚠️ **El arnés de mutación NACIÓ ROTO**: escrito en `bash` con heredocs anidados, el
+> escapado de `$` se perdía y **cinco mutaciones «sobrevivieron» sin haberse aplicado nunca**. Está
+> en Python y cada mutación **verifica que el fichero cambió** antes de correr un caso.
+> **(6)** ⚠️⚠️ **`Lang::has($clave, $locale)` cae al idioma de RESPALDO por defecto**, así que una
+> clave que falte en español pero esté en inglés **pasa en verde** y el correo sale en el idioma
+> equivocado. Es el tercer parámetro. Lo destapó la mutación, no la lectura.
+> **(7)** ⚠️⚠️ **El contraste lo hacen LOS DOS LADOS**: la guarda de `#502` solo exigía par oscuro al
 > TEXTO y el AVISO quedaba en **1,28 : 1**, ilegible, con la suite en verde. **Lo vio el owner.** Hoy
 > el mapa va **entero por color** y la guarda mide el RESULTADO con una pila de fondos.
 >

@@ -191,6 +191,23 @@ while IFS= read -r cls; do
         || err "INVARIANTES.md cita \`${cls}\`, que no existe en tests/. Si la cobertura se mudó, re-apunta la cita; si el test se retiró y lo nombras como historia, escríbelo tachado: ~~${cls}~~"
 done < <(perl -ne 'next if /\((?:futuro|ejemplo)\)/; while (/(~~)?`[A-Za-z0-9\\]*?([A-Z][A-Za-z0-9]*Test)`/g) { print "$2\n" unless $1 }' docs/INVARIANTES.md | sort -u)
 
+# ── 9 · Ningún marcador de conflicto de merge sobrevive en la doc ────────────────────
+# ❗❗ ESTO PASÓ (`#506`, 2026-09-10): el `git pull` que abrió una sesión dejó **tres marcadores
+# de conflicto sin resolver dentro de `DECISIONES.md`** —493 líneas de dos carriles vivos
+# separadas por un `=======`— y **este gate pasó en verde**, el hook `pre-push` con él.
+#
+# ⚠️ Y no era una contradicción: los dos lados eran decisiones de bandas distintas que
+# tenían que convivir. El daño no es el contenido, es la FORMA — con dos agentes trabajando
+# sobre `main` (`CONVENCIONES §10.6`), el registro que el siguiente agente lee de arriba
+# abajo se queda partido, y quien busque «la última decisión» encuentra un `>>>>>>>`.
+#
+# Alcance: la doc, que es lo que este gate gobierna. Un conflicto en código lo caza el
+# intérprete; en un `.md` no lo caza nadie.
+while IFS= read -r hit; do
+    [[ -z "$hit" ]] && continue
+    err "marcador de conflicto de merge sin resolver: ${hit%%:*} (línea ${hit#*:}). Resuelve el merge conservando lo de los DOS carriles."
+done < <(grep -rn -E '^(<<<<<<< |>>>>>>> )' docs/ CLAUDE.md 2>/dev/null | cut -d: -f1,2)
+
 if [[ $FAIL -eq 0 ]]; then
     echo "✓ docs-check: doc coherente (${real_models} modelos · ${real_migrations} migraciones · ${real_invariants} invariantes · ${real_resources} Resources)."
 else

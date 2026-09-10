@@ -1,6 +1,6 @@
 # Los correos, desde el canvas de Claude Design
 
-> **Estado:** 🟦 **T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE y el mapa del naranja, en los VEINTIUNO) EN EL ÁRBOL** · quedan la T5 (textos) y el correo de la fiesta mixta
+> **Estado:** 🟦 **T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA: 63 líneas de adelanto y los 21 asuntos) EN EL ÁRBOL** · queda el correo de la fiesta mixta, y el OJO del owner en un cliente de correo real
 > **Banda de decisiones:** **500–519** (`[DECIDIDO owner, 2026-09-10]`; la del carril de diseño de la web pública es 470–499 y va por `#489`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · artboard `Correos PJP` (turno 1a) · `doc/correos.md` · `doc/reglas.md` · tokens **v1.10**
 > ⚠️ Esa fuente **se mueve sola** (`rediseno-desde-canvas.md` §1: v1.9 por la mañana y v1.10 por la tarde del 09-09): **se relee antes de cada tanda, no una vez por carril.**
@@ -157,7 +157,7 @@ copias se migran** (la regla del canvas: *«al arreglar una interacción se arre
 | **T2** | **El remitente desde el panel** (decisión 4) | ✅ **en el árbol** (§8) |
 | **T3** | **El molde** — cabecera en tinta, chapa, resguardo, aviso, pie con dirección | ✅ **en los 21** (§9 · §10) |
 | **T4** | **El mapa del naranja** — el botón de tinta y los dos que venden | ✅ **hecho dentro de la T3** (§9) |
-| **T5** | **Los textos** — 69 líneas de adelanto + los 23 asuntos con el dato delante | — |
+| **T5** | **La BANDEJA** — las líneas de adelanto + los asuntos con el dato delante. ⚠️ Son **63**, no 69: los dos internos no pueden llevarla (§13.1) | ✅ **en el árbol** (§13) |
 | ~~T6~~ | ~~El molde en los 19 restantes~~ | ✅ **hecho** (`#504`, §10) |
 | — | **El correo de la fiesta mixta**, rehecho | turno propio |
 
@@ -554,3 +554,163 @@ exactamente cómo un texto ilegible pasa por bueno.
 4. **`.panel` no lo usa ningún correo** (medido: cero `->panel()`), así que las cuatro superficies de
    aviso de v1.10 **no se declararon**: una pieza nace con su consumidor.
 5. **El remitente sigue en el `.env`** y en local vale literalmente `hello@example.com`. Es la T2.
+
+---
+
+## 13 · T5 · La BANDEJA — EJECUTADA (2026-09-10, `#506`)
+
+Lo que se lee en la lista de un cliente de correo son **dos cosas juntas** —el asunto y la línea de
+adelanto— y hasta esta tanda **ninguna de las dos hacía su trabajo**. Medido antes de tocar nada:
+
+| | antes | después |
+|---|---|---|
+| Líneas de adelanto | **0 de 63** (21 correos × 3 idiomas) | **63 de 63** |
+| Longitud media del asunto | 44 caracteres | **33** |
+| Asuntos que pasan del corte de 35 de un móvil | **18 de 21** | **7** |
+| Asuntos cuyo dato cabe en ese corte | **1 de 13** | **9 de 14** |
+
+⚠️ **El corte de ~35 caracteres es una premisa del canvas, no una medición nuestra**: desde aquí no
+hay forma de medir lo que recorta cada cliente de correo. Se adopta como criterio declarado.
+
+### 13.1 · ❗❗ La cuenta del canvas —y la de esta spec— eran 69, y son **63**
+
+`doc/correos.md` habla de 23 líneas y §3.1·2 de este documento corrigió a 69 (23 × 3). Al
+construirlo salió la tercera cifra, y es la buena: **los dos correos internos al parque no pueden
+llevarla**, y no por decisión sino **por construcción** — `ContactMessageMail` y
+`PaymentIncidentMail` usan **vistas HTML sueltas** (`emails/contact.blade.php`,
+`emails/payment-incident.blade.php`), no el `layout` de `vendor/mail`, que es donde vive el
+mecanismo. Quedan fuera con el resto del molde (§10.1, grupo C).
+
+### 13.2 · ❗❗❗ La línea va en el `layout` y ANTES de la cabecera
+
+Lo primero que lee un gestor de correo es **lo primero del DOCUMENTO**, y encima del cuerpo va la
+cabecera, cuyo logotipo lleva `alt="{nombre del negocio}"`. Puesta en el cuerpo —que es donde la
+pondría cualquiera— la bandeja leería «SaltoPark» y **luego** la frase.
+
+- **Se deriva del grupo del diccionario**, como `.badge` y `.headline` (§10.2): los 21 ya llaman a
+  `hero()`, así que entra en los veintiuno **sin tocar una notificación** y no se puede olvidar en
+  uno.
+- **Sólo si la clave existe.** `__()` devuelve la clave cuando no la encuentra, así que sin esa
+  puerta un grupo sin escribir anunciaría el correo con el texto `emails.order_cancelled.preheader`.
+  ▶ Sin clave, el correo sale **sin** línea: falla hacia invisible, no hacia feo.
+- **Seis declaraciones para esconder un `<div>`**, y no es cinturón y tirantes: ningún cliente de
+  correo las respeta todas y basta con que respete una. Va **inline**, porque `CssToInlineStyles`
+  descarta lo que no puede pegar a una etiqueta —la misma regla que obliga al modo oscuro a vivir en
+  el `<style>` de `layout`—.
+- **El relleno no es adorno.** Sin él el gestor pinta la línea y **sigue leyendo el cuerpo detrás**.
+  Medido: **83 caracteres de línea + 168 de relleno invisible** antes de que asome el cuerpo; Gmail
+  previsualiza ~100.
+- **No viaja en la parte de texto plano**, a propósito: allí no hay bandeja a la que adelantarse y
+  repetiría la primera frase. Se declara en `text/message.blade.php` **para ignorarla**, que es la
+  forma de dejar escrito que es deliberado.
+
+### 13.3 · La línea de adelanto **no lleva datos variables**, y es una regla
+
+Dos motivos, y el segundo es el que duele: el asunto ya lleva el dato delante, así que repetirlo
+desperdicia la única frase que puede **completarlo**; y `hero()` la resuelve sin reemplazos, de modo
+que un `:code` escrito ahí **saldría literal en la bandeja de un cliente sin que nada fallara**.
+
+### 13.4 · Los asuntos · `[DECIDIDO owner, 2026-09-10]`
+
+Dos decisiones, las dos con su medición delante:
+
+1. **El nombre del parque sale del asunto.** Cinco de los 21 lo repetían y gastaban ~13 caracteres
+   del corte; desde `#501` **el remitente lo dice, en la misma línea de la bandeja**.
+2. **La fecha entra sólo si el pedido tiene una.** `Order::singleVisitDate()` devuelve `null` cuando
+   hay reservas en días distintos —`#401` lo cazó en un pedido REAL: «Días de la visita: 03/09 ·
+   07/09»— y entonces se usa la redacción sin fecha. ▶ *En la bandeja no hay cuerpo debajo que
+   matice un día que no es el único.* Es la misma pareja de claves que el titular ya tenía
+   (`headline` / `headline_no_date`), y la regla que ya aplican `EmailSlip` y la entradilla de `#487`:
+   **el dato se publica cuando es cierto, y si no la frase encoge**.
+
+⚠️ **Esa derivación gobierna también el TITULAR**, que hasta hoy afirmaba «Nos vemos el sábado 4» en
+un pedido de dos días. Una sola fuente para los dos, o pueden contradecirse.
+
+⚠️ **Dos formatos de la misma fecha, y es deliberado**: `dayLabel()` en el asunto —«Sáb. 4 oct.», se
+lee como un DATO y **lleva el mes**, que en una bandeja hace falta— y `dayInSentence()` en el
+titular —«sábado 4», que va dentro de una oración—. Lo dicen sus propios docblocks.
+
+⚠️ La fecha entra en **dos** de los 21, no en todos: la confirmación y los datos de invitados, que
+son donde el CUÁNDO es lo que se busca. En una cancelación o una devolución lo que se busca es qué
+pasó y de qué pedido; meterle fecha infla el asunto sin ganar nada.
+
+### 13.5 · ❗❗❗ DOS defectos vivos encontrados al medir, los dos visibles para el cliente
+
+**(1) `#504` dejó la cabecera del correo de identidad social diciendo el nombre de su clave.**
+`badge` y `headline` estaban anidadas **dentro de `providers`** —que es el mapa proveedor→nombre—,
+así que `__('account.social_link_mail.badge')` no las encontraba. Renderizado antes del arreglo:
+
+> la chapa del correo decía literalmente **«account.social_link_mail.badge»**, en los tres idiomas.
+
+▶ Y `MailMoldTest` estaba en verde, porque comprueba que el correo **declara** `class="hero"`.
+*Declarar una pieza no es que diga algo* — la tercera vez en este carril que la guarda mide
+presencia y no resultado (`#502`, `#505`, y ésta).
+
+**(2) `#500` arregló las cuatro superficies de marca en HTML y dejó la parte de TEXTO PLANO firmando
+con el nombre del PRODUCTO.** Medido sobre el correo enviado: **2 ocurrencias** de «JumpWeb» —el
+copyright y la cabecera— con el negocio llamándose otra cosa. Es la trampa ya fichada de esta casa,
+por la otra puerta: **todo componente de correo nace por partida doble**, y `text/message.blade.php`
+sí usa el slot del header que su gemelo HTML ignora. Hoy **0 ocurrencias**.
+
+### 13.6 · La guarda y su arnés
+
+**`MailInboxLineTest`** (9 casos) censa la familia **desde la fuente** —`->hero('<grupo>')`—, no de
+una lista escrita a mano que envejecería en silencio. Cubre lo que ninguna guarda anterior veía:
+
+- las cuatro piezas de bandeja existen **en los tres idiomas** (habría cazado `#504`);
+- **todo `:placeholder` del asunto lo pasa su notificación**, buscándolo **dentro** de la llamada
+  `__()` con los paréntesis balanceados. ⚠️ Acotar es lo que lo hace servir: mirar «¿aparece
+  `'code' =>` en el fichero?» pasa en verde, porque esa notificación sí lo pasa… en otra línea y a
+  otra clave;
+- la línea va antes de la cabecera **con control** de que la cabecera existe, no lleva datos, cabe en
+  la previsualización, no se cuela en el texto plano, y **un correo sin línea escrita sale sin línea**.
+
+**`scripts/mutar-bandeja.py` · 9/9 mutaciones mueren**, dos de ellas reproduciendo los defectos
+reales de §13.5.
+
+⚠️⚠️ **El arnés destapó DOS agujeros de la propia guarda, y ninguno se veía leyéndola**:
+
+1. **`Lang::has($clave, $locale)` cae al idioma de RESPALDO por defecto.** Una clave que faltara en
+   español pero estuviera en inglés **pasaba en verde**, y el correo saldría en el idioma
+   equivocado sin fallar. Es el tercer parámetro, `false`.
+2. **La puerta de «sólo si la clave existe» no tenía SUJETO**: los 21 la tienen, así que quitarla no
+   cambiaba nada. Nació con su caso —un grupo que no existe— y ahora la mutación muerde.
+
+⚠️ **Y el arnés nació roto**, con la trampa de siempre: escrito en `bash` con heredocs anidados, el
+escapado de `$` se perdía y **cinco mutaciones «sobrevivieron» sin haberse aplicado nunca**. Está
+reescrito en Python y **cada mutación verifica que el fichero cambió** antes de correr un solo caso.
+*Cuando un instrumento dice que nada funciona, la primera hipótesis es el instrumento.*
+
+### 13.7 · Un caso ajeno cambió de premisa y se REESCRIBIÓ
+
+`GuestFormTest` aseveraba que el asunto del post-form **nombra el producto**, y ahora nombra el día.
+No es una relajación y es un discriminante mejor: **dos cumpleaños del mismo cliente comparten
+producto y no comparten día**, así que en la bandeja el nombre no separaba y la fecha sí. Y queda
+**más fuerte** que antes: asevera las dos ramas, con franja y sin ella.
+
+### 13.8 · Verificación
+
+- Suite **4.634 ✓ · 28.969 aserciones** · Pint 1.245 · `MailInboxLineTest` 9 casos
+- **21 de 21 renderizados**: línea de adelanto presente, **antes de la cabecera** en los 21, y
+  **cero placeholders crudos** en los asuntos
+- **7 correos enviados y leídos en Mailpit**: lo que se previsualiza bajo el asunto es la línea de
+  adelanto, no el saludo
+- ⚠️ **Sigue sin verse en un cliente de correo real** (Gmail, Outlook): no hay Playwright en el
+  contenedor. Es el mismo pendiente que dejaron `#500`→`#505`.
+
+---
+
+## 14 · Deuda que deja la T5
+
+1. **Los dos correos internos al parque no llevan línea de adelanto** (§13.1), y es estructural:
+   usan vistas HTML sueltas, no el `layout` de `vendor/mail`. Darles una obliga a repetir el
+   mecanismo en dos sitios; los lee un operador en una bandeja con pocos correos.
+2. ⚠️ **`EmailSlip::forOrder()` sigue componiéndose sobre la PRIMERA reserva viva**, así que en un
+   pedido de dos días el resguardo dice un día. Está declarado en su docblock desde `#503` y **no
+   se tocó a propósito**: eso es CUERPO —va junto al desglose, que lista todas las reservas— y la
+   T5 acota a la BANDEJA, donde no hay nada que matice. `Order::singleVisitDate()` ya existe para
+   el día que se quiera cerrar.
+3. **El corte de ~35 caracteres es una premisa del canvas**, no una medición nuestra: desde aquí no
+   se puede medir lo que recorta cada cliente de correo.
+4. **Sigue sin verse en Gmail ni en Outlook** — y ahí es donde de verdad se comprueba si la línea
+   de adelanto se lee y si el relleno tapa el cuerpo.
