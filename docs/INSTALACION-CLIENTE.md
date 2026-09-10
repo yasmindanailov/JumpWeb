@@ -25,7 +25,13 @@ Desde `.env.production.example`: `APP_KEY` nueva (`key:generate`, NO la de dev) 
 `APP_ENV=production` + `APP_DEBUG=false` · `APP_URL` con HTTPS (lo usan Redsys, signed URLs
 y emails) · `DB_*` · `SESSION_SECURE_COOKIE=true` · **`QUEUE_CONNECTION=database`** (nunca
 `sync`: los mails son `ShouldQueue`) · `MAIL_*` real + SPF/DKIM/DMARC · `REDSYS_SECRET_KEY`
-en el vault (§6). Después: `migrate --force` · `db:seed` · **`app:create-admin`** (§5) · `config:cache`.
+en el vault (§6).
+> ❗ **El REMITENTE de los correos ya NO se configura aquí** (`DECISIONES #501`): el nombre sale de
+> `business.name` y la dirección de **Ajustes → Contacto → «Correo remitente»**. `MAIL_FROM_ADDRESS`
+> se queda como **suelo** por si el ajuste está vacío, así que ponerlo bien sigue mereciendo la pena
+> — pero lo que un cliente ve en su bandeja lo decide el panel. ⚠️ La dirección tiene que estar en
+> **el dominio que firma con SPF/DKIM**, o los 23 correos acaban en spam; eso el código no lo puede
+> comprobar, y por eso el aviso vive en el campo. Después: `migrate --force` · `db:seed` · **`app:create-admin`** (§5) · `config:cache`.
 ⚠️ **`npm run build` NO se corre en el servidor**: puede no haber node (staging no lo tiene,
 `ENTORNOS.md` §4). Los assets se construyen en local y se suben ya compilados.
 - Cron único que lo mueve todo (`routes/console.php`): `* * * * * php artisan schedule:run`

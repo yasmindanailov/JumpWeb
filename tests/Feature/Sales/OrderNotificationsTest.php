@@ -80,23 +80,28 @@ class OrderNotificationsTest extends TestCase
     {
         $order = $this->makeOrder('JJ-DECL01');
 
-        $mail = (new OrderPaymentDeclined($order, '0101'))->toMail($order->user)->toArray();
+        $mail = (new OrderPaymentDeclined($order, '0101'))->toMail($order->user);
 
-        $this->assertStringContainsString('JJ-DECL01', $mail['subject']);
-        $this->assertSame(__('emails.order_declined.action'), $mail['actionText']);
-        $this->assertSame(route('account.orders'), $mail['actionUrl']);
-        // El motivo (0101 → card_expired) aparece en alguna línea del body.
-        $body = implode("\n", $mail['introLines'] ?? []);
-        $this->assertStringContainsString(__('tickets.payment_failed.reasons.card_expired'), $body);
+        $this->assertStringContainsString('JJ-DECL01', $mail->subject);
+        $this->assertSame(__('emails.order_declined.action'), $mail->actionText);
+        $this->assertSame(route('account.orders'), $mail->actionUrl);
+
+        // ⚠️ El motivo (0101 → card_expired) ya no es una línea del cuerpo: desde `#503` vive en su
+        // propio AVISO, porque es lo que el cliente busca al abrir este correo y como frase suelta
+        // en medio se leía como una más. Se asevera sobre el HTML RENDERIZADO —lo que la persona
+        // LEE— para que el caso no se vuelva a romper si el texto cambia de contenedor.
+        $this->assertStringContainsString(
+            __('tickets.payment_failed.reasons.card_expired'), $mail->render()
+        );
     }
 
     public function test_order_payment_declined_uses_default_reason_when_code_unknown(): void
     {
         $order = $this->makeOrder('JJ-DECL02');
 
-        $mail = (new OrderPaymentDeclined($order, '9999'))->toMail($order->user)->toArray();
-        $body = implode("\n", $mail['introLines'] ?? []);
-        $this->assertStringContainsString(__('tickets.payment_failed.reasons.default'), $body);
+        $html = (new OrderPaymentDeclined($order, '9999'))->toMail($order->user)->render();
+
+        $this->assertStringContainsString(__('tickets.payment_failed.reasons.default'), $html);
     }
 
     public function test_order_expired_without_payment_renders_correctly(): void

@@ -1,6 +1,18 @@
 <?php
 
 return [
+    /*
+     * EL RESGUARDO — las cuatro cosas que se buscan al abrir un correo (`#503`; artboard
+     * `Correos PJP` 1a). Compartido: es el mismo resguardo del formulario de invitados y del
+     * justificante, así que sus rótulos viven una sola vez.
+     */
+    'slip' => [
+        'when' => 'Cuándo',
+        'what' => 'Qué',
+        'where' => 'Dónde',
+        'order' => 'Pedido',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Tu cuenta en :park ya está lista',
         'greeting' => '¡Hola!',
@@ -10,6 +22,8 @@ return [
         'action' => 'Iniciar sesión',
         'recommend_change' => 'Por seguridad, te recomendamos cambiar la contraseña en cuanto entres, desde «Mi cuenta».',
         'ignore' => 'Si no esperabas este correo, puedes ignorarlo.',
+        'badge' => 'Cuenta creada',
+        'headline' => 'Tu cuenta ya está lista',
     ],
     'verify_purchase' => [
         'subject' => 'Confirma tu email para continuar con tu reserva',
@@ -18,6 +32,8 @@ return [
         'action' => 'Confirmar mi email',
         'hold_note' => 'Tu plaza está reservada provisionalmente. Si no confirmas a tiempo, podría liberarse.',
         'outro' => 'Si no has hecho esta reserva, puedes ignorar este correo.',
+        'badge' => 'Falta confirmar',
+        'headline' => 'Confirma tu email para seguir',
     ],
     'verify_pending_email' => [
         'subject' => 'Confirma tu nuevo email en :park',
@@ -26,6 +42,8 @@ return [
         'action' => 'Confirmar mi nuevo email',
         'expires' => 'Este enlace caduca en 60 minutos.',
         'ignore' => 'Si no has pedido este cambio, puedes ignorar este correo: tu cuenta seguirá usando el email anterior.',
+        'badge' => 'Falta confirmar',
+        'headline' => 'Confirma tu nuevo email',
     ],
     'email_change_requested' => [
         'subject' => 'Solicitud de cambio de email en tu cuenta',
@@ -33,6 +51,8 @@ return [
         'intro' => 'Alguien ha solicitado cambiar el email de tu cuenta a :new.',
         'it_was_me' => 'Si has sido tú, confirma desde el enlace que hemos enviado al nuevo email.',
         'it_was_not_me' => 'Si NO has sido tú, ignora ese correo: tu cuenta seguirá usando este email. Te recomendamos cambiar la contraseña.',
+        'badge' => 'Revisa esto',
+        'headline' => 'Se ha pedido cambiar tu email',
     ],
     'email_change_completed' => [
         'subject' => 'El email de tu cuenta ha cambiado',
@@ -40,12 +60,19 @@ return [
         'intro' => 'Confirmamos que el email de tu cuenta es ahora :new. Este buzón (el anterior) ya no recibirá comunicaciones de :park.',
         'what_means' => 'A partir de ahora, debes iniciar sesión con el nuevo email.',
         'it_was_not_me' => 'Si NO has hecho este cambio, contacta con nosotros INMEDIATAMENTE: tu cuenta puede haber sido comprometida.',
+        'badge' => 'Email cambiado',
+        'headline' => 'El email de tu cuenta ha cambiado',
     ],
     'order_confirmation' => [
         'subject' => 'Tu reserva confirmada en :park (nº :code)',
+        'badge' => 'Reserva confirmada',
+        'headline' => 'Nos vemos el :day',
+        'headline_no_date' => 'Reserva confirmada',
         'greeting' => '¡Hola!',
         'intro' => '¡Pago recibido y reserva confirmada! Ya está todo listo para tu visita. Tu nº de pedido es :code — guárdalo, te lo pedirán en el parque.',
         'paid_at' => 'Fecha del cobro: :when',
+        'notice_title' => 'Antes de venir',
+        'notice_body' => 'Calcetines antideslizantes obligatorios (se compran allí), y el descargo de responsabilidad se firma una vez, desde el móvil. Ven 10 minutos antes.',
         // Fase 6 · subsistema A: el QR del cliente va adjunto (PNG).
         'card_attached' => 'Adjuntamos tu QR (carne-qr.png): enséñalo en la entrada y te atenderemos al momento. Es personal y no caduca; si lo pierdes, puedes renovarlo desde tu cuenta.',
         'action' => 'Ver mis reservas',
@@ -61,6 +88,8 @@ return [
         'attached' => 'El documento adjunto es el registro completo de lo que aceptaste, con el texto íntegro, la fecha y la hora.',
         'not_verified' => 'Los datos que escribiste los declaraste tú y no los hemos comprobado con ningún documento. Si ves algún error, avisa a la persona que hizo la reserva.',
         'salutation' => 'Gracias.',
+        'badge' => 'Justificante firmado',
+        'headline' => 'Tu justificante está firmado',
     ],
     'guest_form' => [
         'subject' => 'Completa los datos de tu reserva «:product» · :code',
@@ -70,6 +99,9 @@ return [
         'extras' => 'Y si quieres, ahí mismo puedes añadir extras para la fiesta: bebidas, algo de picar… Se pagan en el parque el día del evento.',
         'action' => 'Rellenar el formulario de reserva',
         'outro' => 'También puedes hacerlo desde «Mis reservas». ¡Gracias!',
+        'badge' => 'Nos falta un dato',
+        'headline' => '¿Quién viene a la fiesta?',
+        'notice_title' => 'Y si quieres, extras',
     ],
     'order_after_expiration' => [
         'subject' => 'Tu pago llegó bien, estamos revisando tu reserva (nº :code)',
@@ -78,6 +110,8 @@ return [
         'amount' => 'Importe cobrado: :amount €',
         'next_steps' => 'Nuestro equipo lo está revisando ahora mismo: nos pondremos en contacto contigo en las próximas 24 horas para reagendar tu visita o, si lo prefieres, devolverte el importe.',
         'contact' => 'Si necesitas hablar antes con nosotros, responde a este correo o llámanos. Lamentamos las molestias.',
+        'badge' => 'Lo estamos revisando',
+        'headline' => 'Tu pago llegó bien',
     ],
     'order_declined' => [
         'subject' => 'No hemos podido procesar el pago de tu reserva (nº :code)',
@@ -87,6 +121,9 @@ return [
         'reason_prefix' => 'Motivo:',
         'action' => 'Reintentar el pago',
         'contact' => 'Si crees que se trata de un error, contáctanos con el número de pedido y te ayudamos.',
+        'badge' => 'No se ha cobrado nada',
+        'headline' => 'El pago no ha salido',
+        'notice_title' => 'Motivo',
     ],
     'order_expired_without_payment' => [
         'subject' => 'Tu reserva ha caducado (nº :code)',
@@ -96,6 +133,8 @@ return [
         'retry' => '¡Nos encantaría verte por aquí! Vuelve cuando quieras y reserva tu sitio sin prisa.',
         'action' => 'Hacer una nueva reserva',
         'contact' => 'Si crees que sí pagaste y no recibiste confirmación, contáctanos con el número de pedido — lo revisaremos en el banco.',
+        'badge' => 'Reserva caducada',
+        'headline' => 'La reserva ha caducado',
     ],
     // Cancelación. Texto NEUTRO sobre el reembolso (#139): cancelar y devolver son
     // operaciones independientes. Si procede devolución, el cliente recibe el
@@ -109,6 +148,8 @@ return [
         'next_steps' => 'Si la cancelación lleva asociado un reembolso, recibirás un correo aparte con el importe devuelto y el plazo bancario. Cualquier acuerdo en persona con nuestro equipo (canje por entradas, reagendar, etc.) queda registrado en tu reserva.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',
+        'badge' => 'Reserva cancelada',
+        'headline' => 'Tu reserva ha sido cancelada',
     ],
     // Reembolso. Mensaje firme: importe + plazo bancario + tarjeta cargada.
     // Cuando la acción del panel también cancela el pedido (`alsoCancelled=true`),
@@ -126,6 +167,8 @@ return [
         'when_manual' => 'Este importe se te ha devuelto en el parque. Este correo te sirve de justificante.',
         'action' => 'Ver mis reservas',
         'contact' => 'Si en una semana no ves el reintegro, escríbenos con el número de pedido.',
+        'badge' => 'Devolución hecha',
+        'headline' => 'Te hemos devuelto el importe',
     ],
     // Cancelación de un producto suelto del pedido (sub-fase 7.2e.1bis,
     // decisión #154). Texto NEUTRO sobre el reembolso — la acción de cancelar
@@ -140,6 +183,8 @@ return [
         'action' => 'Ver mis reservas',
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',
+        'badge' => 'Producto cancelado',
+        'headline' => 'Hemos cancelado una parte de tu reserva',
     ],
 
     // Reembolso parcial ligado a un producto concreto del pedido (sub-fase 7.2e).
@@ -158,6 +203,8 @@ return [
         'action' => 'Ver mis reservas',
         'contact' => 'Si en una semana no ves el reintegro, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',
+        'badge' => 'Devolución hecha',
+        'headline' => 'Te hemos devuelto un importe',
     ],
     // Modificación de un producto del pedido (sub-fase 7.2e). Polivalente: el
     // caller pasa solo las líneas relevantes al cambio efectuado.
@@ -181,6 +228,8 @@ return [
         'where_to_pay' => 'Se abona en el parque el día de la fiesta, junto con el resto pendiente.',
         'where_discounted' => 'Se descuenta de lo que pagarás en el parque el día de la fiesta; si ya lo tenías todo pagado, se te devuelve allí ese día.',
         'editable' => 'Puedes seguir editando los datos de los invitados hasta el día del evento; si cambian las edades, este importe se ajusta solo.',
+        'badge' => 'Cambia lo que se abona',
+        'headline' => 'Tu importe en el parque ha cambiado',
     ],
 
     'postform_addons' => [
@@ -194,6 +243,8 @@ return [
         'delta_down' => 'Se restan :amount de lo que abonarás en el parque.',
         'where_to_pay' => 'Los extras se pagan en el parque el día de la fiesta, junto con el resto pendiente.',
         'editable' => 'Puedes cambiarlos desde el mismo formulario hasta poco antes de la fiesta. Si no has sido tú, llámanos.',
+        'badge' => 'Extras actualizados',
+        'headline' => 'Tus extras para la fiesta',
     ],
 
     'order_item_modified' => [
@@ -212,6 +263,8 @@ return [
         'action' => 'Ver mis reservas',
         'contact' => 'Si tienes cualquier duda, escríbenos con el número de pedido.',
         'product_fallback' => 'producto :id',
+        'badge' => 'Reserva modificada',
+        'headline' => 'Hay cambios en tu reserva',
     ],
     /*
      * El enlace del JUSTIFICANTE de un menor invitado, al que RESERVÓ
@@ -229,5 +282,8 @@ return [
         'action' => 'Abrir la autorización',
         'share' => 'Pásales este enlace a los padres o tutores. Vale para todos: cada uno rellena SUS datos y no ve los de los demás.',
         'outro' => 'El enlace caduca poco después de la visita. Si necesitas otro, dínoslo.',
+        'badge' => 'Para pasárselo a los padres',
+        'headline' => 'Un enlace para todos los padres',
+        'notice_title' => 'Pásales este enlace',
     ],
 ];

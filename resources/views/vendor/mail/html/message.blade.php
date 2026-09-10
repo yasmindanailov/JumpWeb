@@ -21,7 +21,8 @@
 {{-- Footer --}}
 <x-slot:footer>
 <x-mail::footer>
-© {{ date('Y') }} {{ config('app.name') }}. {{ __('All rights reserved.') }}
+{{-- El NEGOCIO, no el producto: ver la nota de la firma en `vendor/notifications/email.blade.php`. --}}
+© {{ date('Y') }} {{ \App\Domain\Platform\Models\Setting::businessName() }}. {{ __('All rights reserved.') }}
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>

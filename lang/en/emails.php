@@ -1,6 +1,14 @@
 <?php
 
 return [
+    /* THE SLIP — the four things people look for when they open a mail (`#503`). Shared. */
+    'slip' => [
+        'when' => 'When',
+        'what' => 'What',
+        'where' => 'Where',
+        'order' => 'Order',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Your account at :park is ready',
         'greeting' => 'Hi!',
@@ -10,6 +18,8 @@ return [
         'action' => 'Log in',
         'recommend_change' => 'For your security, we recommend changing your password as soon as you log in, from "My account".',
         'ignore' => 'If you were not expecting this email, you can ignore it.',
+        'badge' => 'Account created',
+        'headline' => 'Your account is ready',
     ],
     'verify_purchase' => [
         'subject' => 'Confirm your email to continue with your booking',
@@ -18,6 +28,8 @@ return [
         'action' => 'Confirm my email',
         'hold_note' => 'Your spot is provisionally reserved. If you don’t confirm in time, it may be released.',
         'outro' => 'If you didn’t make this booking, you can ignore this email.',
+        'badge' => 'One step left',
+        'headline' => 'Confirm your email to continue',
     ],
     'verify_pending_email' => [
         'subject' => 'Confirm your new email at :park',
@@ -26,6 +38,8 @@ return [
         'action' => 'Confirm my new email',
         'expires' => 'This link expires in 60 minutes.',
         'ignore' => 'If you didn’t request this change, you can ignore this email: your account will keep using the previous email.',
+        'badge' => 'One step left',
+        'headline' => 'Confirm your new email',
     ],
     'email_change_requested' => [
         'subject' => 'Email change requested on your account',
@@ -33,6 +47,8 @@ return [
         'intro' => 'Someone requested to change your account email to :new.',
         'it_was_me' => 'If it was you, confirm from the link we sent to the new email.',
         'it_was_not_me' => 'If it wasn’t you, ignore that email: your account will keep using this address. We recommend changing your password.',
+        'badge' => 'Please check this',
+        'headline' => 'Someone asked to change your email',
     ],
     'email_change_completed' => [
         'subject' => 'Your account email has changed',
@@ -40,11 +56,18 @@ return [
         'intro' => 'We confirm that your account email is now :new. This mailbox (the previous one) will no longer receive :park messages.',
         'what_means' => 'From now on, you need to log in with the new email.',
         'it_was_not_me' => 'If you did NOT make this change, contact us IMMEDIATELY: your account may have been compromised.',
+        'badge' => 'Email changed',
+        'headline' => 'Your account email has changed',
     ],
     'order_confirmation' => [
         'subject' => 'Your :park booking confirmed (no. :code)',
+        'badge' => 'Booking confirmed',
+        'headline' => 'See you on :day',
+        'headline_no_date' => 'Booking confirmed',
         'greeting' => 'Hi!',
         'intro' => 'Payment received and booking confirmed! You’re all set for your visit. Your order number is :code — keep it, you will be asked for it at the park.',
+        'notice_title' => 'Before you come',
+        'notice_body' => 'Non-slip socks are compulsory (you can buy them there), and the liability waiver is signed once, from your phone. Please arrive 10 minutes early.',
         // #225 (deposit): when only the birthday deposit is charged online.
         'paid_at' => 'Charged on: :when',
         'card_attached' => 'Your QR is attached (carne-qr.png): show it at the entrance and we will help you right away. It is personal and does not expire; if you lose it, you can renew it from your account.',
@@ -61,6 +84,8 @@ return [
         'attached' => 'The attached document is the full record of what you accepted, with the complete text, the date and the time.',
         'not_verified' => 'You declared these details yourself and we have not checked them against any document. If you spot a mistake, let the person who made the booking know.',
         'salutation' => 'Thank you.',
+        'badge' => 'Authorisation signed',
+        'headline' => 'Your authorisation is signed',
     ],
     'guest_form' => [
         'subject' => 'Complete the guest details for your :product booking · :code',
@@ -70,6 +95,9 @@ return [
         'extras' => 'And if you like, you can add party extras right there: drinks, something to nibble… They are paid at the park on the day.',
         'action' => 'Fill in the booking form',
         'outro' => 'You can also do it from "My bookings". Thank you!',
+        'badge' => 'One thing left',
+        'headline' => 'Who\'s coming to the party?',
+        'notice_title' => 'And if you like, extras',
     ],
     'order_after_expiration' => [
         'subject' => 'Your payment arrived, we’re reviewing your booking (no. :code)',
@@ -78,6 +106,8 @@ return [
         'amount' => 'Amount charged: :amount €',
         'next_steps' => 'Our team is looking into it right now: we will contact you within 24 hours to reschedule your visit or, if you prefer, refund the amount.',
         'contact' => 'If you need to talk to us sooner, reply to this email or call us. We apologise for the inconvenience.',
+        'badge' => 'We\'re checking it',
+        'headline' => 'Your payment came through',
     ],
     'order_declined' => [
         'subject' => 'We couldn’t process the payment for your booking (no. :code)',
@@ -87,6 +117,9 @@ return [
         'reason_prefix' => 'Reason:',
         'action' => 'Retry payment',
         'contact' => 'If you believe this is an error, contact us with the order number and we will help.',
+        'badge' => 'Nothing was charged',
+        'headline' => 'The payment didn\'t go through',
+        'notice_title' => 'Reason',
     ],
     'order_expired_without_payment' => [
         'subject' => 'Your booking has expired (no. :code)',
@@ -96,6 +129,8 @@ return [
         'retry' => 'We’d love to see you here! Come back whenever you like and book your spot, no rush.',
         'action' => 'Make a new booking',
         'contact' => 'If you believe you did pay and did not receive a confirmation, contact us with the order number — we will check with the bank.',
+        'badge' => 'Booking expired',
+        'headline' => 'The booking has expired',
     ],
     'order_cancelled' => [
         'subject' => 'Your booking has been cancelled (no. :code)',
@@ -104,6 +139,8 @@ return [
         'next_steps' => 'If a refund is part of the cancellation, you will receive a separate email with the refunded amount and the bank timeline. Any in-person arrangement with our team (exchange for physical tickets, rescheduling, etc.) is recorded in your booking.',
         'action' => 'See my bookings',
         'contact' => 'If you have any questions, write to us with the order number.',
+        'badge' => 'Booking cancelled',
+        'headline' => 'Your booking has been cancelled',
     ],
     'order_refunded' => [
         'subject' => 'We have refunded your booking (no. :code)',
@@ -116,6 +153,8 @@ return [
         'when_manual' => 'This amount was returned to you at the park. This email is your receipt.',
         'action' => 'See my bookings',
         'contact' => 'If you do not see the refund within a week, write to us with the order number.',
+        'badge' => 'Refund issued',
+        'headline' => 'We\'ve refunded your payment',
     ],
     'order_item_cancelled' => [
         'subject' => 'We’ve cancelled ":product" from your booking (no. :code)',
@@ -126,6 +165,8 @@ return [
         'action' => 'See my bookings',
         'contact' => 'If you have any questions, write to us with the order number.',
         'product_fallback' => 'product :id',
+        'badge' => 'Item cancelled',
+        'headline' => 'We\'ve cancelled part of your booking',
     ],
     'order_item_refunded' => [
         'subject' => 'We have refunded part of your booking (no. :code)',
@@ -139,6 +180,8 @@ return [
         'action' => 'See my bookings',
         'contact' => 'If you do not see the refund within a week, write to us with the order number.',
         'product_fallback' => 'product :id',
+        'badge' => 'Refund issued',
+        'headline' => 'We\'ve refunded an amount to you',
     ],
     'mixed_party_surcharge' => [
         'subject' => 'Change to what you will pay at the park (booking no. :code)',
@@ -157,6 +200,8 @@ return [
         'where_to_pay' => 'It is paid at the park on the day of the party, together with anything else outstanding.',
         'where_discounted' => 'It comes off what you will pay at the park on the day of the party; if you had already paid everything, it is refunded to you there that day.',
         'editable' => 'You can keep editing the guest details until the day of the event; if the ages change, this amount adjusts on its own.',
+        'badge' => 'What you\'ll pay changes',
+        'headline' => 'Your amount at the park has changed',
     ],
 
     'postform_addons' => [
@@ -170,6 +215,8 @@ return [
         'delta_down' => ':amount is taken off what you will pay at the park.',
         'where_to_pay' => 'Extras are paid at the park on the day of the party, together with the rest.',
         'editable' => 'You can change them from the same form until shortly before the party. If this was not you, please call us.',
+        'badge' => 'Extras updated',
+        'headline' => 'Your extras for the party',
     ],
 
     'order_item_modified' => [
@@ -187,6 +234,8 @@ return [
         'action' => 'See my bookings',
         'contact' => 'If you have any questions, write to us with the order number.',
         'product_fallback' => 'product :id',
+        'badge' => 'Booking updated',
+        'headline' => 'There are changes to your booking',
     ],
     'guardian_request' => [
         'subject' => 'Authorization for the invited minors on “:product” · :code',
@@ -196,5 +245,8 @@ return [
         'action' => 'Open the authorization',
         'share' => 'Pass this link on to the parents or guardians. It works for all of them: each one fills in THEIR details and cannot see anyone else’s.',
         'outro' => 'The link expires shortly after the visit. If you need another one, just tell us.',
+        'badge' => 'To forward to the parents',
+        'headline' => 'One link for every parent',
+        'notice_title' => 'Forward them this link',
     ],
 ];

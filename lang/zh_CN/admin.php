@@ -1813,6 +1813,10 @@ return [
         'section_social' => '社交媒体',
         'section_social_hint' => '社交链接和「实时」社交动态。',
         'contact_email' => '联系邮箱',
+        'mail_from_address' => '发件人邮箱',
+        'mail_from_address_hint' => '自动邮件（确认、通知等）的发件地址。它与联系邮箱不同：'
+            .'后者是客户写信给你的地址。留空则使用服务器的设置。⚠️ 必须是你自己域名下的地址，'
+            .'并已通过 SPF/DKIM 授权，否则邮件会被判为垃圾邮件。',
         'contact_phone' => '电话',
         'address_line1' => '地址（第一行）',
         'address_line2' => '地址（第二行）',

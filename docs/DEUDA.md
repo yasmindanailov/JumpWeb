@@ -692,3 +692,54 @@ seguir siendo un literal. Lo que hay que decidir es **de dónde sale ese literal
 mano en cada plantilla, y el producto ya tiene el mecanismo para lo contrario (`ThemeSettings`
 compone el color de acción y su hover para los correos). Sin esa decisión, «pasarlo a token» es
 imposible en la mitad de los sitios.
+
+> ▶ **ACTUALIZACIÓN MEDIDA desde el carril de los correos (2026-09-10, `DECISIONES #500`)**: de esas
+> **14 apariciones fuera del CSS, las del CORREO ya no están.** `#b45309` (a pagar), `#92400e` (a
+> devolver) y `#991b1b` (en revisión) salieron de `emails/partials/book.blade.php` al aplicar la regla
+> dura del canvas *«una devolución no es un color: es un signo y una fecha»*: los dos primeros pasan a
+> **tinta** y el tercero a **Rojo 800** del sistema, porque el único que de verdad es una avería es el
+> libro que no cuadra. **Siguen en `reservation-slip` (8), `waiver-proof` (2), `PresentsOrderActions`
+> (3) y el tema del panel.**
+> ⚠️ Y confirma el diagnóstico de esta ficha por otra puerta: en el correo **un token no vale**, así
+> que el literal se quedó — lo que cambió no fue el mecanismo, fue **cuál es el literal correcto**.
+
+## ▶ Alta/Media · lo que deja dicho el vestido de los CORREOS (2026-09-10, `DECISIONES #500`)
+
+**(1) Media · El paquete de una instalación NO llega al correo, y es estructural.** Los clientes de
+correo no resuelven `var(--…)` y Laravel **inlinea** el tema antes de enviar, así que
+`public/css/client.css` —donde un cliente pone su paleta, sus radios y sus fuentes— **no alcanza a
+ninguno de los 23**. Hoy eso no rompe nada porque lo que queda en el tema son superficies neutras y
+la marca sí es data-driven por Blade (logotipo, nombre y color de botón). Pero **si un cliente pide
+sus propias superficies en el correo, hace falta un hueco que no existe**. Está declarado como
+«personalización futura» en el comentario del tema **desde `#102`** y sin construir. Las salidas
+posibles: generar el tema desde `settings` (deja de ser un `.css` estático) o un `client-mail.css`
+que gane al inlinear. **Es del owner: nadie lo ha pedido todavía.**
+
+**(2) Media · `ThemeSettings` conserva DOS literales del primer cliente, y por eso el correo tiene
+dos negros.** `brand()` devuelve `#FF5B22` y `onAction()`/`onBrand()` devuelven `#14130F`. Como el
+botón se pinta con esos helpers inyectados inline, **el rótulo del botón sale en `#14130F` mientras
+el resto del correo va en `#101418`** — invisible a la vista y aun así incoherente, justo lo que el
+tema nuevo dice que viene a quitar («deja de haber dos negros»). ⚠️ **No se toca desde este carril**:
+mover esos literales cambia el botón de TODA la web y tiene guarda propia (`#209`, `ActionFillTest`).
+
+**(3) Baja · `lang/zh_CN/` no tiene `emails.php`.** Tiene `admin.php` y `tickets.php`; los otros tres
+idiomas sí tienen los tres ficheros. Un cliente con el locale en chino recibe **los 23 correos en el
+idioma de respaldo**. Preexistente, ajeno a este carril, y crece con la T5: las líneas de adelanto
+son 69 en tres idiomas y serían 92 en cuatro.
+
+**(4) Baja · Las cuatro superficies de aviso de v1.10 NO se declararon en el correo, a propósito.**
+Medido: **ningún correo usa `->panel()`** (cero llamadas en `app/Notifications/` y `app/Mail/`), así
+que declarar los cuatro tonos habría creado cuatro piezas sin consumidor. `.panel` queda como tarjeta
+con borde de Línea y radio de la escala. **Cuando un correo necesite un aviso con tono, entra con él.**
+
+**(5) ~~El remitente sigue en el `.env`~~ — ✅ RETIRADA: HECHA en la T2 (`DECISIONES #501`).**
+Sale del panel (Ajustes → Contacto), con el nombre desde `business.name` y la dirección desde
+`mail.from_address`, aplicado por `Platform\Listeners\ApplyBusinessSender` al vuelo. ⚠️ **Queda un
+paso de DESPLIEGUE**: ponerlo en cada instalación, con una dirección del dominio que firma con
+SPF/DKIM.
+
+▶ **Lo que decía esta ficha, y por qué era deuda:** el remitente salía de `MAIL_FROM_ADDRESS`, o sea
+que **no era data-driven** —choca con el principio «todo configurable desde el panel»— y **no estaba
+escrito en ninguna decisión**, que es lo que el canvas del cliente ya había cazado por su cuenta. En
+la bandeja el remitente pesa más que el asunto, y en una instalación recién montada valía literalmente
+`hello@example.com`: *el hueco no fallaba hacia invisible, fallaba hacia ridículo.*

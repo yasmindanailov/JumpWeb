@@ -63,23 +63,38 @@ class EmailProductCardTest extends TestCase
         return [$order->fresh(), $item->fresh(), $user];
     }
 
-    public function test_confirmation_renders_product_card_with_icon_addons_and_zone_color(): void
+    /**
+     * ⚠️⚠️ ESTE CASO PERDIÓ SU SUJETO EN `#503` Y SE RE-APUNTA MÁS FUERTE. La confirmación **ya no
+     * lleva tarjeta de producto**: el RESGUARDO de la cabecera dice QUÉ y CUÁNDO, así que la tarjeta
+     * repetía los dos datos treinta líneas más abajo y el artboard no la dibuja aquí. Lo que este
+     * caso protegía —que el correo diga qué se ha comprado— sigue protegido; lo que cambia es de
+     * dónde sale. Y gana lo que faltaba: que **no haya emoji**, que es el defecto que el owner vio.
+     */
+    public function test_the_confirmation_says_what_was_bought_in_its_slip_and_without_a_card(): void
     {
         [$order, , $user] = $this->packReservation();
 
         $html = (new OrderConfirmation($order))->toMail($user)->render();
 
-        $this->assertStringContainsString('product-card', $html);          // la subcard
-        $this->assertStringContainsString('🎂', $html);                     // emoji de cumpleaños (no SVG)
-        $this->assertStringContainsString('Cumpleaños Kids', $html);        // nombre del producto
-        $this->assertStringContainsString('Tarta', $html);                 // complemento anidado
-        $this->assertStringContainsString('8 invitados', $html);           // sub-línea de invitados
-        $this->assertStringContainsString('#FF5B22', $html);               // color de la zona (borde superior)
+        // El resguardo, con sus rótulos y su dato.
+        $this->assertStringContainsString(__('emails.slip.what'), $html);
+        $this->assertStringContainsString(__('emails.slip.order'), $html);
+        $this->assertStringContainsString('Cumpleaños Kids', $html);
+        $this->assertStringContainsString('8 invitados', $html);
+
+        // Y NO la tarjeta, que aquí duplicaba.
+        // ⚠️ Se acota a la CLASE EMITIDA, no a la subcadena: «product-card» aparece también dentro
+        // de un comentario del `<style>` del molde, y aseverar por subcadena daba un falso positivo.
+        $this->assertStringNotContainsString('class="product-card"', $html);
+
+        // ❗ Ni un emoji: el sistema del canvas no usa ninguno en ningún correo.
+        $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
+
         // La lógica condicional NO se rompió: el pack con guest_fields sigue prometiendo el post-form.
         $this->assertStringContainsString('datos de los invitados', $html);
     }
 
-    public function test_entry_card_uses_ticket_emoji_and_quantity_title(): void
+    public function test_an_entry_says_its_quantity_in_the_slip(): void
     {
         $zone = Zone::create(['slug' => 'jump', 'name' => ['es' => 'Jump'], 'color' => '#1FA2A6', 'is_active' => true]);
         $entry = TicketType::create([
@@ -101,20 +116,24 @@ class EmailProductCardTest extends TestCase
 
         $html = (new OrderConfirmation($order->fresh()))->toMail($user)->render();
 
-        $this->assertStringContainsString('🎟️', $html);        // emoji de entrada
-        $this->assertStringContainsString('2× Entrada 1h', $html); // cantidad delante (como en «Mis pedidos»)
-        $this->assertStringContainsString('#1FA2A6', $html);     // color de la zona Jump
+        // La cantidad delante, como en «Mis pedidos» — ahora en el RESGUARDO, no en una tarjeta.
+        $this->assertStringContainsString('2× Entrada 1h', $html);
+        $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
     }
 
-    public function test_guest_form_request_includes_the_reservation_card(): void
+    public function test_guest_form_request_identifies_its_reservation(): void
     {
         [, $item, $user] = $this->packReservation();
 
         $html = (new GuestFormRequest($item))->toMail($user)->render();
 
-        $this->assertStringContainsString('product-card', $html);
-        $this->assertStringContainsString('🎂', $html);
+        // ⚠️⚠️ YA NO LLEVA TARJETA (`#503`): este correo también tiene su CABECERA con resguardo, que
+        // dice qué y cuándo. Lo que este caso protege —que el correo identifique la reserva a la que
+        // pertenece el enlace— sigue protegido, y por eso se asevera el DATO y no el contenedor.
+        $this->assertStringNotContainsString('class="product-card"', $html);
+        $this->assertStringContainsString(__('emails.slip.what'), $html);
         $this->assertStringContainsString('8 invitados', $html);
+        $this->assertSame(0, preg_match('/[\x{1F300}-\x{1FAFF}]/u', $html), 'un correo no lleva emojis');
     }
 
     public function test_order_refund_shows_all_products_including_a_pre_cancelled_one(): void

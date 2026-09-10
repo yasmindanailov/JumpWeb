@@ -3,7 +3,8 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -58,15 +59,23 @@ class GuardianAuthorizationRequest extends Notification implements ShouldQueue
         $code = (string) ($this->reservation->order?->code ?? '');
         $product = $this->reservation->displayProductName();
 
-        return (new MailMessage)
+        $message = (new BrandedMailMessage)
             ->subject(__('emails.guardian_request.subject', ['product' => $product, 'code' => $code]))
-            ->greeting(__('emails.guardian_request.greeting'))
             ->line(__('emails.guardian_request.intro', ['product' => $product, 'code' => $code]))
-            // La tarjeta del producto, la misma que usa el correo del post-form: dice a qué visita es
-            // el enlace. En un pedido con dos reservas marcadas llegan DOS correos y sin ella el
-            // cliente no podría distinguirlos.
-            ->line(EmailProductCard::forItem($this->reservation))
-            ->line(__('emails.guardian_request.body'))
+            ->line(__('emails.guardian_request.body'));
+
+        // LA CABECERA EN TINTA (`#503`). Su RESGUARDO hace el trabajo que hacía la tarjeta de
+        // producto —decir a qué visita es el enlace—: en un pedido con dos reservas marcadas llegan
+        // DOS correos y sin eso el cliente no podría distinguirlos. Ahora lo dice arriba del todo.
+        $message->hero('emails.guardian_request', 'warn', EmailSlip::forItem($this->reservation));
+
+        // ❗❗ LA FRASE DE QUE SE PUEDE REPARTIR SUBE DEL FINAL DEL CUERPO A UN AVISO PROPIO
+        // (`#503`), y no es un cambio de forma: éste es **el único correo del producto escrito para
+        // ser REENVIADO**. Sin esa frase donde se lee, un responsable prudente no lo manda —parece
+        // su enlace privado— y la feature se queda parada en su bandeja.
+        $message->notice(__('emails.guardian_request.notice_title'), __('emails.guardian_request.share'));
+
+        return $message
             ->action(
                 __('emails.guardian_request.action'),
                 // Fuente ÚNICA del enlace, compartida con el modal del panel y con la cuenta del
@@ -74,10 +83,6 @@ class GuardianAuthorizationRequest extends Notification implements ShouldQueue
                 // URL por su cuenta acabarían con dos caducidades distintas de la misma reserva.
                 $this->reservation->guardianAuthorizationSignedUrl(),
             )
-            // ⚠️ Se dice que el enlace es para REPARTIR y que quien lo abre no ve lo que han escrito
-            // los demás. Sin esa frase, un responsable prudente no lo reenvía —parece su enlace
-            // privado— y la feature se queda parada en su bandeja.
-            ->line(__('emails.guardian_request.share'))
             ->line(__('emails.guardian_request.outro'));
     }
 }

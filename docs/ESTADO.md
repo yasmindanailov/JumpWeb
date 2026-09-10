@@ -1,5 +1,65 @@
 # Estado del proyecto — foto viva
 
+> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#505`) ═══════════
+>
+> ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
+> medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja
+> que el carril de diseño está moviendo**. Se contrastaron las cuatro superficies que podían ir en
+> paralelo sin pisarse y solo una tiene aislamiento real: **los correos** —tema propio, artboard
+> suyo (`Correos PJP`) y **fuera de las cinco fases** de `specs/rediseno-desde-canvas.md`—.
+> `[DECIDIDO owner]`: los correos, con **banda propia 500–519**.
+> ▶ **TODO ESTÁ EN `docs/specs/correos-desde-canvas.md`. Empieza por su §2** (el filtro
+> producto/cliente, que aquí **no se resuelve con tokens y es estructural**).
+>
+> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#505`):
+> - **T1 · el vestido** — 89 sustituciones; el tema vivo queda en **13 colores, todos del sistema
+>   v1.10 y cero ajenos**. Ninguna webfont viaja, radios en la escala de cuatro, modo oscuro.
+> - **T2 · el remitente desde el PANEL** (Ajustes → Contacto), no del `.env`, que valía literalmente
+>   `hello@example.com`. **8/8 mutaciones** (`scripts/mutar-correos-t2.py`).
+> - **T3+T4 · el MOLDE en los VEINTIUNO** — cabecera en tinta con **chapa · titular · resguardo**,
+>   **aviso** con punto, **el mapa del naranja** (tinta salvo los dos que venden), dirección y
+>   teléfono en el pie, **cero emojis**. **21 de 21 renderizados con cabecera.**
+> - **La marca del PRODUCTO fuera de la bandeja del cliente**: remitente, firma y copyright decían
+>   «JumpWeb» con el negocio llamándose otra cosa, en **20 de los 21**.
+>
+> ❗❗❗ **LO QUE QUEDA, Y ES LO PRIMERO QUE HAY QUE HACER:**
+> 1. **Las 69 líneas de adelanto** (23 correos × 3 idiomas — **no 23, que es lo que decía el canvas**)
+>    y **los 23 asuntos con el dato delante**. `[DECIDIDO owner]`: las escribe el agente y él las
+>    corrige. Hoy **ningún correo tiene línea de adelanto**, así que en la bandeja los 23 se anuncian
+>    con lo primero del cuerpo.
+> 2. **El correo del SUPLEMENTO DE FIESTA MIXTA**, que se rehace en turno propio: usa nueve frases
+>    para decir un importe. `[DECIDIDO owner]`: no entra con el vestido porque es **texto sobre
+>    dinero** y merece medirse aparte.
+> 3. ⚠️ **EL OJO DEL OWNER EN UN CLIENTE DE CORREO REAL** (Gmail, Outlook). **No se ha hecho y no se
+>    puede hacer desde aquí**: no hay Playwright en el contenedor. El modo oscuro está verificado por
+>    aritmética y por presencia en el HTML, **nunca por ojo**.
+>
+> ❗❗ **LAS CINCO TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
+> **(1)** Una `@media` **no puede vivir en el tema**: el inliner descarta lo que no puede pegar a una
+> etiqueta, y el modo oscuro salió sin una sola regla **sin que nada fallara**. Va en el `<style>` de
+> `layout.blade.php`, con `!important`. **(2)** **Todo componente de correo nace por partida doble**:
+> sin su gemelo en `vendor/mail/text/`, `->render()` sale perfecto y **el ENVÍO revienta**.
+> **(3)** Los **comentarios CSS viajan** en cada correo (3.172 B, el 11 % del HTML); los de Blade no.
+> **(4)** Un `*/` dentro de un docblock **lo cierra** — la ruta comodín de los ficheros de idioma
+> dejó un servicio sin compilar y el render devolvía el HTML anterior **sin avisar**.
+> **(5)** ⚠️⚠️ **El contraste lo hacen LOS DOS LADOS**: la guarda de `#502` solo exigía par oscuro al
+> TEXTO y el AVISO quedaba en **1,28 : 1**, ilegible, con la suite en verde. **Lo vio el owner.** Hoy
+> el mapa va **entero por color** y la guarda mide el RESULTADO con una pila de fondos.
+>
+> ⚠️ **PASOS DE DESPLIEGUE que deja este carril**: poner el **remitente** en Ajustes → Contacto de
+> cada instalación, con una dirección **del dominio que firma SPF/DKIM** (si no, spam — y el código
+> no lo puede comprobar).
+>
+> ⚠️⚠️ **DOS ROJOS QUE NO ERAN DE NADIE** salieron del `git pull` que abrió la sesión (74 commits del
+> otro carril): los bundles SSR y de landing estaban rancios. `npm run build:ssr` y `npm run build`.
+> Es la trampa ya fichada de fusionar, **dos veces en la misma sesión**.
+>
+> ⚠️ **`DesignSync` quedó AUTORIZADO en esta máquina** (se instaló el CLI en `~/.local/bin/claude` y
+> se corrió `/design-login`): el canvas se lee directamente, sin copia local.
+>
+> ═══════════════════════════════════════════════════════════════════════════════════════
+
+
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
 >
 > ❗❗❗ **LO SIGUIENTE ES LA 06 «RESEÑAS», Y SE PARTE EN DOS.** `[DECIDIDO owner, 2026-09-10]`: se

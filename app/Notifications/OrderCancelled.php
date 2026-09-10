@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,9 +38,9 @@ class OrderCancelled extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.order_cancelled.subject', ['code' => $this->order->code]))
-            ->greeting(__('emails.order_cancelled.greeting'))
+            ->hero('emails.order_cancelled', 'err', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_cancelled.intro', ['code' => $this->order->code]))
             ->line(__('emails.order_cancelled.next_steps'))
             ->action(__('emails.order_cancelled.action'), route('account.orders'))

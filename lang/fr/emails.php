@@ -1,6 +1,14 @@
 <?php
 
 return [
+    /* LE RÉCÉPISSÉ — les quatre choses que l'on cherche en ouvrant un e-mail (`#503`). Partagé. */
+    'slip' => [
+        'when' => 'Quand',
+        'what' => 'Quoi',
+        'where' => 'Où',
+        'order' => 'Commande',
+    ],
+
     'customer_account_created' => [
         'subject' => 'Ton compte chez :park est prêt',
         'greeting' => 'Bonjour !',
@@ -10,6 +18,8 @@ return [
         'action' => 'Se connecter',
         'recommend_change' => 'Pour ta sécurité, nous te recommandons de changer ton mot de passe dès ta première connexion, depuis « Mon compte ».',
         'ignore' => 'Si tu n’attendais pas cet e-mail, tu peux l’ignorer.',
+        'badge' => 'Compte créé',
+        'headline' => 'Votre compte est prêt',
     ],
     'verify_purchase' => [
         'subject' => 'Confirme ton e-mail pour continuer ta réservation',
@@ -18,6 +28,8 @@ return [
         'action' => 'Confirmer mon e-mail',
         'hold_note' => 'Ta place est réservée provisoirement. Si tu ne confirmes pas à temps, elle pourrait être libérée.',
         'outro' => 'Si tu n’es pas à l’origine de cette réservation, ignore cet e-mail.',
+        'badge' => 'Il reste une étape',
+        'headline' => 'Confirmez votre e-mail pour continuer',
     ],
     'verify_pending_email' => [
         'subject' => 'Confirme ton nouvel e-mail chez :park',
@@ -26,6 +38,8 @@ return [
         'action' => 'Confirmer mon nouvel e-mail',
         'expires' => 'Ce lien expire dans 60 minutes.',
         'ignore' => 'Si tu n’as pas demandé ce changement, ignore cet e-mail : ton compte continuera d’utiliser l’adresse précédente.',
+        'badge' => 'Il reste une étape',
+        'headline' => 'Confirmez votre nouvel e-mail',
     ],
     'email_change_requested' => [
         'subject' => 'Demande de changement d’e-mail sur ton compte',
@@ -33,6 +47,8 @@ return [
         'intro' => 'Quelqu’un a demandé à changer l’e-mail de ton compte par :new.',
         'it_was_me' => 'Si c’est toi, confirme depuis le lien envoyé au nouvel e-mail.',
         'it_was_not_me' => 'Sinon, ignore cet e-mail : ton compte continuera d’utiliser cette adresse. Nous te recommandons de changer le mot de passe.',
+        'badge' => 'Vérifiez ceci',
+        'headline' => 'Une demande de changement d\'e-mail a été faite',
     ],
     'email_change_completed' => [
         'subject' => 'L’e-mail de ton compte a changé',
@@ -40,11 +56,18 @@ return [
         'intro' => 'Nous confirmons que l’e-mail de ton compte est maintenant :new. Cette boîte (la précédente) ne recevra plus de messages de :park.',
         'what_means' => 'À partir de maintenant, tu dois te connecter avec le nouvel e-mail.',
         'it_was_not_me' => 'Si tu n’es PAS à l’origine de ce changement, contacte-nous IMMÉDIATEMENT : ton compte a peut-être été compromis.',
+        'badge' => 'E-mail modifié',
+        'headline' => 'L\'e-mail de votre compte a changé',
     ],
     'order_confirmation' => [
         'subject' => 'Ta réservation confirmée chez :park (n° :code)',
+        'badge' => 'Réservation confirmée',
+        'headline' => 'Rendez-vous :day',
+        'headline_no_date' => 'Réservation confirmée',
         'greeting' => 'Bonjour !',
         'intro' => 'Paiement reçu et réservation confirmée ! Tout est prêt pour ta visite. Ton n° de commande est :code — garde-le, il te sera demandé au parc.',
+        'notice_title' => 'Avant de venir',
+        'notice_body' => 'Chaussettes antidérapantes obligatoires (en vente sur place), et la décharge de responsabilité se signe une seule fois, depuis le mobile. Arrivez 10 minutes en avance.',
         // #225 (acompte) : quand seul l’acompte de l’anniversaire est encaissé en ligne.
         'paid_at' => 'Date du paiement : :when',
         'card_attached' => 'Votre QR est en pièce jointe (carne-qr.png) : présentez-le à l’entrée et nous vous accueillerons aussitôt. Il est personnel et n’expire pas ; en cas de perte, vous pouvez le renouveler depuis votre compte.',
@@ -61,6 +84,8 @@ return [
         'attached' => 'Le document joint est l’enregistrement complet de ce que vous avez accepté, avec le texte intégral, la date et l’heure.',
         'not_verified' => 'Vous avez déclaré ces données vous-même et nous ne les avons vérifiées avec aucun document. Si vous voyez une erreur, prévenez la personne qui a réservé.',
         'salutation' => 'Merci.',
+        'badge' => 'Autorisation signée',
+        'headline' => 'Votre autorisation est signée',
     ],
     'guest_form' => [
         'subject' => 'Complète les infos de ta réservation « :product » · :code',
@@ -70,6 +95,9 @@ return [
         'extras' => 'Et si tu veux, tu peux y ajouter des extras pour la fête : boissons, de quoi grignoter… Ils se règlent au parc le jour J.',
         'action' => 'Remplir le formulaire de réservation',
         'outro' => 'Tu peux aussi le faire depuis « Mes réservations ». Merci !',
+        'badge' => 'Il manque une donnée',
+        'headline' => 'Qui vient à la fête ?',
+        'notice_title' => 'Et si vous voulez, des extras',
     ],
     'order_after_expiration' => [
         'subject' => 'Ton paiement est bien arrivé, nous vérifions ta réservation (n° :code)',
@@ -78,6 +106,8 @@ return [
         'amount' => 'Montant prélevé : :amount €',
         'next_steps' => 'Notre équipe examine cela en ce moment : nous te contacterons dans les 24 heures pour reprogrammer ta visite ou, si tu préfères, te rembourser le montant.',
         'contact' => 'Si tu as besoin de nous parler avant, réponds à cet e-mail ou appelle-nous. Nous nous excusons pour la gêne occasionnée.',
+        'badge' => 'Nous vérifions',
+        'headline' => 'Votre paiement est bien arrivé',
     ],
     'order_declined' => [
         'subject' => 'Nous n’avons pas pu traiter le paiement de ta réservation (n° :code)',
@@ -87,6 +117,9 @@ return [
         'reason_prefix' => 'Motif :',
         'action' => 'Réessayer le paiement',
         'contact' => 'Si tu penses qu’il s’agit d’une erreur, contacte-nous avec le numéro de commande et nous t’aiderons.',
+        'badge' => 'Rien n\'a été débité',
+        'headline' => 'Le paiement n\'a pas abouti',
+        'notice_title' => 'Motif',
     ],
     'order_expired_without_payment' => [
         'subject' => 'Ta réservation a expiré (n° :code)',
@@ -96,6 +129,8 @@ return [
         'retry' => 'On adorerait te voir ici ! Reviens quand tu veux et réserve ta place tranquillement.',
         'action' => 'Faire une nouvelle réservation',
         'contact' => 'Si tu penses avoir payé et ne pas avoir reçu de confirmation, contacte-nous avec le numéro de commande — nous vérifierons avec la banque.',
+        'badge' => 'Réservation expirée',
+        'headline' => 'La réservation a expiré',
     ],
     'order_cancelled' => [
         'subject' => 'Ta réservation a été annulée (n° :code)',
@@ -104,6 +139,8 @@ return [
         'next_steps' => 'Si l’annulation comprend un remboursement, tu recevras un e-mail séparé avec le montant remboursé et le délai bancaire. Tout accord en personne avec notre équipe (échange contre des entrées, report, etc.) est enregistré dans ta réservation.',
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',
+        'badge' => 'Réservation annulée',
+        'headline' => 'Votre réservation a été annulée',
     ],
     'order_refunded' => [
         'subject' => 'Nous t’avons remboursé ta réservation (n° :code)',
@@ -116,6 +153,8 @@ return [
         'when_manual' => 'Ce montant t’a été rendu au parc. Cet e-mail te sert de justificatif.',
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu ne vois pas le remboursement sous une semaine, écris-nous avec le numéro de commande.',
+        'badge' => 'Remboursement effectué',
+        'headline' => 'Nous vous avons remboursé',
     ],
     'order_item_cancelled' => [
         'subject' => 'Nous avons annulé « :product » de ta réservation (n° :code)',
@@ -126,6 +165,8 @@ return [
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',
         'product_fallback' => 'produit :id',
+        'badge' => 'Produit annulé',
+        'headline' => 'Nous avons annulé une partie de votre réservation',
     ],
     'order_item_refunded' => [
         'subject' => 'Nous t’avons remboursé une partie de ta réservation (n° :code)',
@@ -139,6 +180,8 @@ return [
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu ne vois pas le remboursement sous une semaine, écris-nous avec le numéro de commande.',
         'product_fallback' => 'produit :id',
+        'badge' => 'Remboursement effectué',
+        'headline' => 'Nous vous avons remboursé un montant',
     ],
     'mixed_party_surcharge' => [
         'subject' => 'Changement de ce que vous réglerez au parc (réservation n° :code)',
@@ -157,6 +200,8 @@ return [
         'where_to_pay' => 'Il se règle au parc le jour de la fête, avec le reste éventuel.',
         'where_discounted' => 'Elle est déduite de ce que vous réglerez au parc le jour de la fête ; si tout était déjà payé, elle vous est remboursée sur place ce jour-là.',
         'editable' => 'Vous pouvez continuer à modifier les informations des invités jusqu’au jour de l’événement ; si les âges changent, ce montant s’ajuste tout seul.',
+        'badge' => 'Le montant change',
+        'headline' => 'Votre montant au parc a changé',
     ],
 
     'postform_addons' => [
@@ -170,6 +215,8 @@ return [
         'delta_down' => ':amount sont déduits de ce que vous réglerez au parc.',
         'where_to_pay' => 'Les extras se règlent au parc le jour de la fête, avec le reste.',
         'editable' => 'Vous pouvez les modifier depuis le même formulaire jusqu\'à peu avant la fête. Si ce n\'était pas vous, appelez-nous.',
+        'badge' => 'Extras mis à jour',
+        'headline' => 'Vos extras pour la fête',
     ],
 
     'order_item_modified' => [
@@ -184,6 +231,8 @@ return [
         // `#155` : une baisse de prix, c'est aussi de l'argent — même vocabulaire que l'écran.
         // T5 (§25.5) : sans promettre de canal ni d'e-mail — l'argent peut revenir par la banque
         // ou être réglé au parc.
+        'badge' => 'Réservation modifiée',
+        'headline' => 'Il y a des changements dans votre réservation',
 
         'action' => 'Voir mes réservations',
         'contact' => 'Si tu as des questions, écris-nous avec le numéro de commande.',
@@ -197,5 +246,8 @@ return [
         'action' => "Ouvrir l'autorisation",
         'share' => 'Transmettez ce lien aux parents ou tuteurs. Il vaut pour tous : chacun remplit SES données et ne voit pas celles des autres.',
         'outro' => "Le lien expire peu après la visite. Si vous en avez besoin d'un autre, dites-le-nous.",
+        'badge' => 'À transmettre aux parents',
+        'headline' => 'Un lien pour tous les parents',
+        'notice_title' => 'Transmettez-leur ce lien',
     ],
 ];

@@ -319,11 +319,15 @@ return [
         'line1' => 'Someone tried to sign up with your email. If it was you, you already have an account: sign in or reset your password.',
         'action' => 'Sign in',
         'line2' => 'If it was not you, you can safely ignore this message.',
+        'badge' => 'You already have an account',
+        'headline' => 'Your account already exists',
     ],
 
     'social_link_mail' => [
         'providers' => [
             'google' => 'Google',
+            'badge' => 'Account linked',
+            'headline' => 'You\'ve linked an account',
         ],
         'subject' => 'Your :park account now signs in with :provider',
         'greeting' => 'Hi!',

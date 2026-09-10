@@ -3,8 +3,9 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\OrderItem;
-use App\Domain\Booking\Services\EmailProductCard;
+use App\Domain\Booking\Services\EmailSlip;
 use App\Domain\Booking\Services\PostFormAddons;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -40,12 +41,15 @@ class GuestFormRequest extends Notification implements ShouldQueue
         $product = (string) ($this->reservation->ticketType?->tr('name') ?? '');
         $code = (string) ($this->reservation->order?->code ?? '');
 
-        $message = (new MailMessage)
+        $message = (new BrandedMailMessage)
             ->subject(__('emails.guest_form.subject', ['product' => $product, 'code' => $code]))
-            ->greeting(__('emails.guest_form.greeting'))
             ->line(__('emails.guest_form.intro', ['product' => $product, 'code' => $code]))
-            ->line(EmailProductCard::forItem($this->reservation))
             ->line(__('emails.guest_form.body'));
+
+        // LA CABECERA EN TINTA (`#503`). ⚠️ SIN «Dónde»: este correo no habla de llegar al parque,
+        // habla de rellenar una ficha — la dirección aquí es ruido. Y sin tarjeta de producto: el
+        // resguardo ya dice QUÉ y CUÁNDO, y repetirlo era lo que hacía el correo largo.
+        $message->hero('emails.guest_form', 'warn', EmailSlip::forItem($this->reservation));
 
         // D15 · **el único correo que lleva a este formulario tiene que nombrar lo que ahí se puede
         // pedir**, o la feature se construye entera y no se vende un solo cubo de refrescos. No se
@@ -54,8 +58,10 @@ class GuestFormRequest extends Notification implements ShouldQueue
         // ⚠️ **Condicionada a que ESTA reserva tenga extras abiertos**, nunca al catálogo: una
         // instalación sin enganches `postform` —el caso por defecto, y hoy los 29— prometería algo
         // que no existe, y el cliente buscaría en su formulario una sección que no está.
+        // ▶ Y va en su propio AVISO (`#503`), no como una línea más del cuerpo: es DINERO, y dice
+        // dónde se paga.
         if (app(PostFormAddons::class)->offerableFor($this->reservation)->isNotEmpty()) {
-            $message->line(__('emails.guest_form.extras'));
+            $message->notice(__('emails.guest_form.notice_title'), __('emails.guest_form.extras'));
         }
 
         return $message

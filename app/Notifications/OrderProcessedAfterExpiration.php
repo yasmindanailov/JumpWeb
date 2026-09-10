@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Services\EmailSlip;
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -46,9 +48,9 @@ class OrderProcessedAfterExpiration extends Notification implements ShouldQueue
         // reembolso prometido reflejan lo realmente cobrado, no el valor pleno.
         $this->order->loadMissing(['items', 'adjustments']);
 
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.order_after_expiration.subject', ['code' => $this->order->code]))
-            ->greeting(__('emails.order_after_expiration.greeting'))
+            ->hero('emails.order_after_expiration', 'warn', EmailSlip::forOrder($this->order))
             ->line(__('emails.order_after_expiration.intro', ['code' => $this->order->code]))
             ->line(__('emails.order_after_expiration.amount', [
                 'amount' => number_format($this->order->onlineDueCents() / 100, 2, ',', '.'),

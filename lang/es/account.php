@@ -370,6 +370,8 @@ return [
         'line1' => 'Alguien ha intentado registrarse con tu email. Si fuiste tú, ya tienes una cuenta: inicia sesión o recupera tu contraseña.',
         'action' => 'Iniciar sesión',
         'line2' => 'Si no has sido tú, puedes ignorar este mensaje con tranquilidad.',
+        'badge' => 'Ya tienes cuenta',
+        'headline' => 'Tu cuenta ya existe',
     ],
 
     // El aviso de que la cuenta se ha vinculado a una identidad externa. NO es cortesía: es lo que
@@ -377,6 +379,8 @@ return [
     'social_link_mail' => [
         'providers' => [
             'google' => 'Google',
+            'badge' => 'Cuenta vinculada',
+            'headline' => 'Has vinculado una cuenta',
         ],
         'subject' => 'Tu cuenta de :park ya entra con :provider',
         'greeting' => '¡Hola!',

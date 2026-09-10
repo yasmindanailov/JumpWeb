@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Support\BrandedMailMessage;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -21,9 +22,9 @@ class VerifyEmailForPurchase extends VerifyEmail implements ShouldQueue
      */
     protected function buildMailMessage($url): MailMessage
     {
-        return (new MailMessage)
+        return (new BrandedMailMessage)
             ->subject(__('emails.verify_purchase.subject'))
-            ->greeting(__('emails.verify_purchase.greeting'))
+            ->hero('emails.verify_purchase', 'warn')
             ->line(__('emails.verify_purchase.intro', ['code' => $this->orderCode]))
             ->action(__('emails.verify_purchase.action'), $url)
             ->line(__('emails.verify_purchase.hold_note'))

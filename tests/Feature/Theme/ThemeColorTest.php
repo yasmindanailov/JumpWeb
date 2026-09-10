@@ -10,6 +10,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Filament\Pages\Settings;
 use App\Notifications\OrderConfirmation;
+use App\Notifications\OrderPaymentDeclined;
 use Database\Seeders\LandingContentSeeder;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -172,13 +173,43 @@ class ThemeColorTest extends TestCase
         ]);
 
         $message = (new OrderConfirmation($order))->toMail($user);
-        $html = (string) app(Markdown::class)->render('notifications::email', $message->toArray());
+        // ⚠️ `data()`, no `toArray()`: el segundo deja fuera `viewData`, donde viajan la cabecera y
+        // el aviso — y el correo saldría a medias sin que nada fallara.
+        $html = (string) app(Markdown::class)->render('notifications::email', $message->data());
 
         // El wordmark del header (brand-dot) lleva el color de marca inline en TODOS los emails.
         $this->assertStringContainsString('#0A0B0C', $html);
-        // Y el botón primary (OrderConfirmation tiene CTA) sigue la marca en el fondo (gana al
-        // `.button-primary` estático al inlinear el CSS del tema).
-        $this->assertStringContainsString('background-color: #0A0B0C', $html, 'el botón del email sigue la marca');
+
+        // ❗❗ PERO EL BOTÓN **NO** SIGUE LA MARCA, y eso es la decisión, no un descuido
+        // (`[DECIDIDO owner, 2026-09-10]`, `#503`): el naranja solo significa COMPRAR. La
+        // confirmación lleva a MIRAR, así que su botón va en relleno de TINTA. Hasta hoy este caso
+        // aseveraba lo contrario, que es como los veintiuno acabaron con el mismo botón.
+        $this->assertStringNotContainsString(
+            'background-color: #0A0B0C; border-top', $html,
+            'el botón de un correo que no vende no puede llevar el color de marca'
+        );
+        $this->assertStringContainsString('button-ink', $html);
+    }
+
+    /**
+     * ❗ Y EL CASO QUE FALTABA: **uno de los dos que SÍ venden**. Sin él, la guarda de arriba se
+     * cumpliría también con el mapa del naranja apagado del todo — que es el defecto simétrico.
+     */
+    public function test_the_two_selling_mails_do_follow_the_brand_colour(): void
+    {
+        Setting::updateOrCreate(['key' => 'theme.brand'], ['value' => '#0A0B0C', 'group' => 'theme']);
+
+        $user = User::factory()->create();
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'JJ-THEME2', 'status' => Order::STATUS_PENDING,
+            'subtotal' => 2500, 'total' => 2500, 'currency' => 'EUR',
+        ]);
+
+        $message = (new OrderPaymentDeclined($order))->toMail($user);
+        $html = (string) app(Markdown::class)->render('notifications::email', $message->data());
+
+        $this->assertStringContainsString('button-accion', $html, 'reintentar el pago SÍ vende');
+        $this->assertStringContainsString('background-color: #0A0B0C', $html);
     }
 
     // ─────────── El acento de zona deja de viajar por el nombre de la clase (`#138`) ───────────

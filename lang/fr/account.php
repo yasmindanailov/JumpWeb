@@ -320,11 +320,15 @@ return [
         'line1' => "Quelqu'un a tenté de s'inscrire avec ton e-mail. Si c'était toi, tu as déjà un compte : connecte-toi ou réinitialise ton mot de passe.",
         'action' => 'Se connecter',
         'line2' => "Si ce n'était pas toi, tu peux ignorer ce message en toute tranquillité.",
+        'badge' => 'Vous avez déjà un compte',
+        'headline' => 'Votre compte existe déjà',
     ],
 
     'social_link_mail' => [
         'providers' => [
             'google' => 'Google',
+            'badge' => 'Compte associé',
+            'headline' => 'Vous avez associé un compte',
         ],
         'subject' => 'Ton compte :park se connecte désormais avec :provider',
         'greeting' => 'Bonjour !',
