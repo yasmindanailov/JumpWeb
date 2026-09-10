@@ -991,11 +991,21 @@ class MixedPartySurchargeTest extends TestCase
             function (MixedPartySurchargeChanged $n) use ($item): bool {
                 $mail = $n->toMail($item->order->user);
 
+                // ⚠️ CAMBIÓ DE SITIO en `#507`, no de contenido: la cifra y su canal dejan de ser dos
+                // párrafos del cuerpo y pasan al AVISO, que es la caja que el molde tiene para lo
+                // que hay que mirar. Este caso se re-apunta ahí y queda MÁS fuerte que antes —
+                // asevera además el TONO, que es propiedad nueva: lo pone el signo del neto, así
+                // que un descuento no puede llegar teñido de ámbar como si faltara algo.
+                $aviso = $mail->viewData['notice'] ?? ['texto' => '', 'tono' => ''];
+
                 // El neto pasó de 0 a −7,00: la voz es la del DESCUENTO, no un «suplemento −7,00».
                 return $n->oldCents === 0 && $n->newCents === -700
-                    && in_array(__('emails.mixed_party_surcharge.credit_added', ['amount' => '7,00']), $mail->introLines, true)
-                    && in_array(__('emails.mixed_party_surcharge.where_discounted'), $mail->introLines, true)
-                    && ! in_array(__('emails.mixed_party_surcharge.where_to_pay'), $mail->introLines, true);
+                    && str_contains($aviso['texto'], (string) __('emails.mixed_party_surcharge.credit_added', ['amount' => '7,00']))
+                    && str_contains($aviso['texto'], (string) __('emails.mixed_party_surcharge.where_discounted'))
+                    && ! str_contains($aviso['texto'], (string) __('emails.mixed_party_surcharge.where_to_pay'))
+                    && $aviso['tono'] === 'info'
+                    // …y ya NO viaja como una línea más del cuerpo, que es de donde se la sacó.
+                    && ! in_array(__('emails.mixed_party_surcharge.credit_added', ['amount' => '7,00']), $mail->introLines, true);
             },
         );
     }

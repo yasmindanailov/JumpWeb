@@ -157,11 +157,23 @@ class EmailBookBlockTest extends TestCase
         return preg_match('/<tr data-book-'.$row.'>.*?<\/tr>/s', $html, $m) === 1 ? $m[0] : '';
     }
 
+    /**
+     * El cuerpo ENTERO del correo — las líneas de antes del aviso y las de después.
+     *
+     * ⚠️ Miraba sólo `introLines`, y en `#507` el libro del suplemento mixto pasó a CIERRE
+     * (`outroLines`) para que la cifra quedara por encima de él: el caso se puso rojo con el
+     * producto sano. Lo correcto no era re-apuntarlo al sitio nuevo, sino mirar **lo que recibe
+     * una persona** — así este helper tampoco se quedará ciego el día que otro de los cinco
+     * correos mueva su libro.
+     */
     private function body(Notification $notification): string
     {
         /** @var MailMessage $mail */
         $mail = $notification->toMail($this->customer);
 
-        return collect($mail->introLines)->map(fn ($l) => (string) $l)->implode(' ');
+        return collect($mail->introLines)
+            ->concat($mail->outroLines)
+            ->map(fn ($l) => (string) $l)
+            ->implode(' ');
     }
 }

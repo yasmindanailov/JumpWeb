@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Support;
 
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Lang;
 
@@ -62,6 +63,35 @@ class BrandedMailMessage extends MailMessage
         if (Lang::has($grupo.'.preheader')) {
             $this->viewData['preheader'] = (string) __($grupo.'.preheader');
         }
+
+        return $this;
+    }
+
+    /**
+     * UNA LÍNEA DE CIERRE — lo que va DESPUÉS del aviso.
+     *
+     * ❗❗❗ Existe porque **el orden de las llamadas no es el orden de la pintura**, y eso no se ve
+     * leyendo la notificación: `notifications::email` pinta **todas** las `introLines` juntas y el
+     * aviso DESPUÉS, así que un `->notice()` escrito antes de tres `->line()` acaba el ÚLTIMO.
+     * Pasó al construir `#507`: la cifra del suplemento —que es el correo entero— quedó debajo del
+     * libro del pedido y de «puedes seguir editando». *Se ve renderizando, no leyendo.*
+     *
+     * ▶ Lo que va aquí es CIERRE de verdad —el libro a día de hoy, la nota de que aún se puede
+     * editar—, no cuerpo: si se lee antes que el aviso, el aviso deja de ser lo que se mira.
+     */
+    public function outro(Htmlable|string $texto): static
+    {
+        // ⚠️⚠️ EL TIPO `Htmlable` TIENE QUE SOBREVIVIR HASTA AQUÍ, y por eso la firma no es `string`.
+        // `{{ $line }}` no escapa un `Htmlable` —de ahí que el LIBRO del pedido, que devuelve un
+        // `HtmlString`, se pinte como tabla—, pero un type hint `string` lo convierte a texto al
+        // pasarlo y deja de serlo. Medido al construir `#507` con la firma en `string`: el correo
+        // pasó de 914 a **2.873 caracteres** de texto y en el cuerpo se leía el CSS del libro
+        // —«border-collapse:separate»— como si fuera una frase. **Nada falló.**
+        //
+        // ⚠️ Y `formatLine()` no es opcional: colapsa los saltos de línea, sin lo cual Markdown lee
+        // cada línea del bloque como su propio párrafo. Es lo que hace `->line()`, y esto tiene que
+        // hacer lo mismo — un atajo `$this->outroLines[] = $texto` se salta las dos cosas.
+        $this->outroLines[] = $this->formatLine($texto);
 
         return $this;
     }
