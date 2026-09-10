@@ -204,7 +204,26 @@ sistema y dicen cosas distintas.
 ### 5.1 · Las ocho secciones de la portada
 
 Rótulo · titular · artboard. **Los rótulos NO llevan número** (`[DECIDIDO owner]` del canvas) y los
-titulares son frases de **3 a 6 palabras**:
+titulares son frases de **3 a 6 palabras**.
+
+❗❗❗ **EL ORDEN DE ESTA TABLA ES EL ORDEN DE LA PORTADA, y desde `#495` es también el del código.**
+Verificado contra **dos fuentes independientes** del canvas el 2026-09-10:
+
+- **`Portada PJP`** (el entregable): sus ocho rótulos salen en este orden de documento, los ocho caen
+  **antes del truncamiento** y —con control— **ningún `position: absolute` los recoloca**, así que el
+  orden de documento es el orden visual.
+- **`Marco Portada PJP`**, que lo lleva **en datos**: `01 Zonas · 03 Qué hay dentro · 05 Antes de
+  venir · 07 Visítanos · 08 Dudas`. Las tres que faltan (02, 04, 06) son las que ese artboard excluye
+  a propósito: *«Tarifas y Cumpleaños son sección y página, y aquí apuntan a la página»*.
+
+⚠️⚠️ **Hay una TERCERA numeración en el canvas que dice otra cosa y NO cuenta**: `Landing PJP Modos`
+(`01 Entradas · 02 Zonas · 03 Cumpleaños…`). `[owner]`: *«de esa maqueta solo sacaremos la sección de
+reseñas»*. *Mirarla y creerle es la forma de reordenar mal la portada con una fuente del canvas en la
+mano.* Y una cuarta en `Colores de Marca PJP`, que son las partes de una página en un ejercicio de
+color y nombra piezas del ARCHIVO.
+
+⚠️ **Reordenar secciones NO ROMPE NADA** —las guardas acotan por `id`, `--hero-air` cuelga de
+`.hero + .section` y se muda solo—, así que el orden lo vigila **`HomeSectionOrderTest`** y nada más.
 
 | Rótulo | Titular | Artboard |
 |---|---|---|

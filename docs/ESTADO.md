@@ -1,6 +1,28 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#494`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#495`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones EN EL ORDEN DEL MOCKUP— y lo siguiente es la FASE 3, las páginas.**
+>
+> ❗❗❗ **LAS SECCIONES YA VAN EN EL ORDEN DEL MOCKUP** (`#495`): **01 Para quién · 02 Cuánto ·
+03 Qué hay dentro · 04 Cumpleaños · 05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas**.
+Verificado contra **dos** fuentes del canvas —`Portada PJP`, con control de que ningún
+`position: absolute` recoloque los rótulos, y la numeración que `Marco Portada PJP` lleva en datos—.
+⚠️⚠️ **Y hay una tercera numeración que dice otra cosa y NO cuenta**: `Landing PJP Modos`
+(`[owner]`: «de esa maqueta solo sacaremos la sección de reseñas»). *Mirarla y creerle es la forma de
+reordenar mal la portada con una fuente del canvas en la mano.*
+>
+> ⚠️ **Esto REVIERTE el orden de `#314`** y no es una contradicción: aquella decisión es del carril
+anterior y `#469` adoptó el canvas entero.
+>
+> ❗❗ **LO QUE HAY QUE SABER SI VUELVES A REORDENAR: NO ROMPE NADA.** La suite entera pasó en verde
+con el orden viejo **y** con el nuevo sin tocar un test —las guardas acotan por `id`, `--hero-air`
+cuelga de `.hero + .section` y se muda solo, y los anclas siguen existiendo—. Por eso nace
+**`HomeSectionOrderTest`**: es lo único capaz de cazar un bloque descolocado.
+>
+> ⚠️⚠️ **Y correr los arneses vecinos destapó un defecto que no era de la tanda**: `mutar-dudas`
+llevaba **desde `#490`** mutando la sección equivocada —`replace(…, 1)` sobre una indentación que
+comparte con «Reseñas», que entró delante—, así que **el rótulo de Dudas llevaba sin vigilar desde
+entonces**. Arreglado. ▶ *Antes de arreglar algo que tu cambio destapó, comprueba si tu cambio lo
+causó*: se reconstruyó `home.blade.php` desde `HEAD`, se aplicó la mutación y salió verde igual.
 >
 > ❗❗❗ **LO ÚLTIMO HECHO ES LA ATRIBUCIÓN DE GOOGLE** (`#494`), y su lección vale para cualquier
 tercero: **el owner la pidió como DISEÑO —«más veracidad con los logos de Google»— y era un requisito

@@ -180,6 +180,202 @@
     </header>
 
 
+    {{-- ══ 01 · PARA QUIÉN · las dos zonas ═════════════════════════════════════════════════════
+         ❗❗❗ **EL ORDEN DE LAS OCHO SECCIONES LO MANDA EL MOCKUP, Y ESTA ES LA PRIMERA**
+         (`DECISIONES #495`). Va **01 Para quién · 02 Cuánto · 03 Qué hay dentro · 04 Cumpleaños ·
+         05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas**, verificado contra `Portada PJP`
+         —los ocho rótulos salen en ese orden de documento, con control de que ningún
+         `position: absolute` los recoloque— y contra la numeración que `Marco Portada PJP` lleva en
+         datos (`01 Zonas · 03 Qué hay dentro · 05 Antes de venir · 07 Visítanos · 08 Dudas`).
+
+         ⚠️⚠️ **Esto REVIERTE el orden de `#314`** (`[DECIDIDO owner, 2026-09-01]`: «entradas →
+         cumpleaños → el parque → ubicación → normas → dudas»), y no es una contradicción: aquella
+         decisión es del carril de diseño ANTERIOR, y `#469` adoptó el canvas entero. Queda escrito
+         para que nadie lo lea como un descuido.
+
+         ⚠️ **Las cabeceras van numeradas 01–08 a propósito**: puestas en orden, un bloque descolocado
+         se ve de un vistazo. Esta era la única sin número y por eso costaba saber que iba primera.
+
+         ── Lo que ya decía este bloque, y sigue vigente ──────────────────────────────────────── --}}
+    {{-- **`[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona y la tira de cifras, fuera.**
+         Aquí había DOS secciones —`#zones`, con una tarjeta grande por zona cuyo CTA saltaba a la
+         otra, y `#rides`, con una barra de pestañas que hacía exactamente la misma elección—. O sea
+         **dos selectores de zona en la misma página**, y el de arriba costaba 1.011 px en escritorio
+         y 1.831 en móvil (medido).
+
+         ▶ **Queda UNA sección y UN selector**: el toggle, que ahora dice quién es cada zona (icono
+         del kit + nombre + edad) en vez de ser solo una palabra.
+         ⚠️ **Y queda UNA cabecera, no dos.** Con las tarjetas y las cifras fuera, la de zonas se
+         quedaba presentando el vacío y la de atracciones venía detrás con el mismo molde. Sobrevive
+         la de ZONAS porque su párrafo acaba literalmente en «Elige el tuyo», que es lo que hace el
+         toggle que va justo debajo; la de atracciones solo explicaba la interfaz («pasa de una zona
+         a otra con un clic»), que es el texto que `#297` señala como sobrante.
+
+         ⚠️⚠️ **LAS DOS ANCLAS SIGUEN VIVAS Y NO ES UN DETALLE**: `/#zones` lo enlazan 4 sitios
+         (menú ×2, pie ×2) y `/#rides` otros 2. `#zones` es la sección; `#rides` envuelve el selector
+         y el carrusel, así que «Atracciones» del menú sigue aterrizando en los juegos.
+         ▶ Y `#rides` **tiene que envolver a los dos**: `applyZoneAccent()` tiñe ese contenedor con
+         la paleta de la zona activa, así que si el ancla se quedara solo en el carrusel las
+         pestañas perderían el color de su zona. --}}
+    <section id="zones" class="section wrap">
+        <div class="zones__head">
+            {{-- `B1·02` del kit, en la ranura `slot-zonas`. **Su propia nota manda dónde va**: «la
+                 mancha detrás de la PRIMERA PALABRA, nunca detrás de todo el bloque».
+                 ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el
+                 patrón de `#286`): sin paquete el componente no emite nada y aquí no puede quedar
+                 hueco reservado. --}}
+            {{-- ⚠️⚠️ **La mancha va DENTRO del bloque del titular, no de la cabecera, y eso es lo
+                 que la mantiene donde su nota manda.** Estuvo colgando de `.zones__head` con un
+                 `top` en PORCENTAJE, y un porcentaje se resuelve contra el ALTO DEL CONTENEDOR: al
+                 acortar los titulares (`#303`) la cabecera pasó de 264 a 153 px, el mismo `-20%`
+                 valió la mitad y la mancha bajó **11.016 px² sobre el párrafo**.
+                 ▶ *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa al cambiar
+                 lo que hay alrededor.* Anclada al titular, su sitio ya no depende de cuánto texto
+                 tenga la sección. --}}
+            {{-- ⚠️ El RÓTULO vuelve, y no contradice a `#303`. Aquélla retiró la etiqueta genérica
+                 («ZONAS», que repetía el titular); ésta dice **a quién va dirigida** la sección, que
+                 es información que el titular no da. Es el molde del canvas: rótulo en Etiqueta ·
+                 titular en Display L · la regla debajo. --}}
+            <p class="zones__eyebrow">{{ __('landing.zones.eyebrow') }}</p>
+            <div class="zones__titulo">
+                <x-site.ilu clave="slot-zonas" class="zones__mancha" />
+                <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
+            </div>
+            {{-- ⚠️⚠️ **La REGLA va entera y en una frase.** Es la del parque —manda la edad, y la
+                 altura desempata— y partirla en dos líneas la convierte en dos reglas, que es justo
+                 lo que la sección existe para evitar: que el visitante llegue a la puerta sin saber
+                 cuál manda. Sustituye a la entradilla larga, cuya última frase («Elige el tuyo»)
+                 tenía como sujeto el selector de pestañas que esta tanda retira. --}}
+            <p class="zones__rule">{{ __('landing.zones.rule') }}</p>
+        </div>
+
+        {{-- ══ LAS DOS TARJETAS DE ZONA ═══════════════════════════════════════════════════════
+             `DECISIONES #478` · Fase 2 · T2b. **La tarjeta ENTERA es el enlace, sin botón** (marco
+             aprobado del canvas), y lleva a la TARIFA de esa zona: elegir zona y ver su precio es
+             un solo recorrido.
+             ⚠️⚠️ **Esto no reintroduce el defecto de `#295`**, que era tener dos superficies
+             haciendo la MISMA elección: aquéllas saltaban a la sección donde unas pestañas volvían
+             a elegir zona. Aquí la tarjeta **navega** y las pestañas de tarifas **eligen tarifa** —
+             son eslabones del mismo camino, no dos puertas a lo mismo.
+             ⚠️ Todo el contenido sale de la BD (`ZoneCards`): nombre, descripción y edad son campos
+             traducibles de `zones`, la altura sus dos columnas nuevas, y el precio, del catálogo por
+             los mismos métodos que usa el resto de la landing. **Lo que no hay, no se pinta.** --}}
+        <ul class="zone-cards" role="list">
+            @foreach ($zoneCards as $i => $card)
+                <li class="zone-cards__item">
+                    {{-- ⚠️⚠️ **Las tarjetas ALTERNAN superficie, y eso es un mecanismo, no el color de
+                         esta marca.** El artboard pinta una en papel y otra en tinta, y `data-surface`
+                         es el interruptor que el producto ya tiene (`tema-por-instalacion.md`): con
+                         dos zonas sale exactamente el mockup, y con tres o con una sigue teniendo
+                         sentido. Pintarlas con el color de la zona sería la grieta 01 del propio
+                         canvas —el color de un DATO decidiendo el aspecto de un componente—. --}}
+                    <a class="zone-card" href="{{ route('precios') }}#zona-{{ $card['slug'] }}"
+                       data-zone="{{ $card['slug'] }}"
+                       @if ($card['tint']) style="--zone-tint: {{ $card['tint'] }}; --zone-tint-op: {{ $card['tintOpacity'] }};" @endif>
+
+                        {{-- ── LA FOTO, a 16:9, con el SELLO asomando por su borde ─────────────
+                             ⚠️ El hueco existe aunque no haya foto: sin él, el sello —que va
+                             ANCLADO a su borde inferior— se quedaría flotando sobre el texto. El
+                             fondo es el mismo relleno oscuro que usa el artboard mientras no hay
+                             imagen, no un hueco vacío.
+                             ⚠️ **`zones.image` recupera consumidor aquí**: se quedó sin ninguno en
+                             `#302` y era una de las tres salidas anotadas en `DEUDA.md`. --}}
+                        <div class="zone-card__viz">
+                            @if ($card['image'])
+                                {{-- ⚠️ `aria-hidden` y `alt` vacío: la foto es DECORACIÓN. El nombre de la zona,
+                                     su edad y qué hay dentro ya están en texto justo debajo, así que
+                                     describirla otra vez sería leer la tarjeta dos veces. --}}
+                                <img src="{{ $card['image'] }}" alt="" aria-hidden="true" loading="lazy" decoding="async" width="800" height="450">
+                            @endif
+
+                            {{-- El SELLO de precio. ⚠️ Solo si la zona tiene entrada vendible: sin
+                                 precio no se pinta un sello vacío ni un «consultar». --}}
+                            @if ($card['from'] !== null)
+                                <p class="zone-card__seal">
+                                    <span class="zone-card__from">{{ __('landing.zones.from') }}</span>
+                                    <span class="zone-card__price">{{ $card['from'] }}</span>
+                                    @if ($card['special'] !== null)
+                                        <span class="zone-card__special">{{ $card['special'] }} {{ $card['specialLabel'] }}</span>
+                                    @endif
+                                </p>
+                            @endif
+                        </div>
+
+                        {{-- ── EL CUERPO: una ESCALA DE ESTATURA, no un bloque de texto ────────
+                             ❗❗❗ **Ésta es la idea de la sección y sin ella la tarjeta solo se
+                             parece al mockup.** El cuerpo se parte en dos por la frontera de altura,
+                             y **el velo de color tiñe SOLO el tramo que le toca a esta zona**: la de
+                             «desde 1,30 m» colorea de la línea hacia arriba, y la de «hasta 1,30 m»
+                             de la línea hacia abajo. Al otro lado queda el hueco con el nombre de la
+                             vecina. Por eso las dos tarjetas se leen juntas como **una sola escala**.
+                             ⚠️ El ORDEN de los bloques sale del lado, y el lado sale de qué columna
+                             lleva el umbral (`height_min_cm` o `height_max_cm`) — nunca de adivinar
+                             qué zona es. --}}
+                        <div class="zone-card__body"
+                             @if ($card['heightAxis'])
+                                 data-axis data-side="{{ $card['heightAxis']['side'] }}"
+                             @endif>
+                            @if ($card['heightAxis'])
+                                {{-- El EJE: la línea con sus dos extremos. ⚠️ `aria-hidden` porque es
+                                     el DIBUJO de una regla que el texto de al lado ya dice; y una
+                                     escala de estatura no se recorre con un lector de pantalla. --}}
+                                <div class="zone-card__axis" aria-hidden="true">
+                                    <span class="zone-card__axis-top">
+                                        <b>{{ __('landing.zones.axis_label') }}</b>
+                                        <i>{{ $zoneAxisCeiling }}</i>
+                                    </span>
+                                    <span class="zone-card__axis-zero">{{ $zoneAxisFloor }}</span>
+                                </div>
+                            @endif
+
+                            {{-- El hueco de la VECINA, al otro lado de la línea. Va antes o después
+                                 del bloque teñido según el lado, y por eso está dos veces: es la
+                                 misma pieza en dos sitios, no dos piezas. --}}
+                            @if ($card['heightAxis'] && $card['heightAxis']['side'] === 'below' && $card['heightAxis']['neighbour'])
+                                <p class="zone-card__neighbour">{{ __('landing.zones.above_is', ['zone' => $card['heightAxis']['neighbour']]) }}</p>
+                                <p class="zone-card__border"><span class="zone-card__chip">{{ $card['heightAxis']['label'] }}</span></p>
+                            @endif
+
+                            <div class="zone-card__text">
+                                {{-- El VELO. ⚠️⚠️ **Aquí el color de zona SÍ va, y no contradice a
+                                     `#436`**: aquélla sacó `--zone-*` de los CONTROLES —la grieta 01
+                                     del canvas era el botón de comprar teñido por un dato— y lo dejó
+                                     «para lo que IDENTIFICA una zona». Esto es exactamente eso, y
+                                     además **dice cuánto mide**: el color ocupa su tramo. --}}
+                                <span class="zone-card__tint" aria-hidden="true"></span>
+                                <span class="zone-card__inner">
+                                    <h3 class="zone-card__name">{{ $card['name'] }}</h3>
+                                    <span class="zone-card__who">
+                                        <span>{{ $card['age'] }}</span>
+                                        @if ($card['height'])
+                                            <span>{{ $card['height'] }}</span>
+                                        @endif
+                                        @if ($card['description'])
+                                            <span class="zone-card__what">{{ $card['description'] }}</span>
+                                        @endif
+                                    </span>
+                                </span>
+                            </div>
+
+                            @if ($card['heightAxis'] && $card['heightAxis']['side'] === 'above' && $card['heightAxis']['neighbour'])
+                                <p class="zone-card__border"><span class="zone-card__chip">{{ $card['heightAxis']['label'] }}</span></p>
+                                <p class="zone-card__neighbour">{{ __('landing.zones.below_is', ['zone' => $card['heightAxis']['neighbour']]) }}</p>
+                            @endif
+                        </div>
+
+                        {{-- ⚠️ **No es un botón**: la tarjeta entera ya es el enlace, y meter un
+                             control dentro de un `<a>` es marcado inválido además de dos dianas para
+                             el mismo destino. Es la afordancia que dice a dónde lleva. --}}
+                        <span class="zone-card__go">
+                            {{ __('landing.zones.see_zone', ['zone' => $card['name']]) }}
+                            <x-icons.arrow-right :width="18" :height="18" />
+                        </span>
+                    </a>
+                </li>
+            @endforeach
+        </ul>
+    </section>
+
     {{-- ═══════════════ 02 · CUÁNTO ═══════════════════════════════════════════════════════════
          `DECISIONES #479` · carril de diseño Fase 2 · T2c. Artboard `Precios PJP` 6a (móvil) y
          `Escritorio PJP` 2a (escritorio).
@@ -217,6 +413,91 @@
         </div>
 
         <x-site.rate-rail :zones="$rateCards" :special-label="$ratesSpecialLabel" />
+    </section>
+
+    {{-- ══ 03 · QUÉ HAY DENTRO · el mosaico de cinco ═══════════════════════════════════════════
+         Carril de diseño Fase 2 · T2d (`DECISIONES #482`). Artboard `Juegos PJP` **6a** (móvil) +
+         `Escritorio PJP` **4b** (escritorio, aprobada el 8 sep).
+
+         ⚠️⚠️ **AQUÍ VIVÍA EL CARRUSEL DE LAS 23**, con su selector de zona, sus flechas y su barra
+         de progreso. Se retira entero: la portada enseña **cinco** y las 23 viven en
+         **`/atracciones`** (`#481`), que es la capa 3 del sistema de contenido —«quien llega aquí ha
+         querido llegar»— y el único sitio donde caben con su edad.
+
+         ❗❗ **LA CHAPA DEL «18 MÁS» NO ENTRA, y no es un olvido**: el artboard la tiene detrás de un
+         interruptor **apagado** desde el recorte de presupuesto del 7 sep, igual que la chapa de
+         zona de `#480`. En su lugar entra lo que la propia deuda pedía: **la cifra en la entradilla**
+         y **una sola puerta** debajo del mosaico.
+
+         ⚠️ **El ancla `#rides` se queda**: la enlazan el menú y el pie (medido: `/#rides` en
+         `nav.blade.php` y en `footer.blade.php`). Lo que cambia es lo que encuentra quien llega. --}}
+    <section id="rides-section" class="section wrap">
+        <div id="rides" class="sec-head">
+            <p class="sec-head__eyebrow">{{ __('landing.rides.eyebrow') }}</p>
+            <h2 class="sec-head__title">{{ __('landing.rides.title') }}</h2>
+            {{-- ⚠️ La entradilla **abre con la cifra**, y la cifra es DATO: es lo que sustituye a la
+                 chapa retirada. Sin ella la sección enseña cinco fotos y no dice cuántas hay. --}}
+            <p class="sec-head__lede">{{ __('landing.rides.intro', ['count' => $ridesTotal]) }}</p>
+        </div>
+
+        @if ($rideMosaic !== [])
+            {{-- EL MOSAICO. La geometría la manda la rejilla y cada celda dice su papel con un
+                 `data-`, no con una clase por posición: el papel lo decide el dominio y la hoja solo
+                 lo viste. --}}
+            <ul class="mosaic" role="list">
+                @foreach ($rideMosaic as $celda)
+                    @if ($celda['papel'] === 'velada')
+                        {{-- ⚠️⚠️ **UNA VELADA NO ES CONTENIDO: ES TEXTURA.** Pierde el nombre, deja
+                             de ser enlace y sale del árbol de accesibilidad — es la condición con la
+                             que el velo entró en el sistema («lo que se oculta no puede ser un
+                             destino, y un nombre a medio velo se queda sin contraste»). --}}
+                        <li class="mosaic__cell" data-papel="velada" aria-hidden="true">
+                            @if ($celda['ride']->image)
+                                <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}" alt=""
+                                     aria-hidden="true" loading="lazy" decoding="async">
+                            @endif
+                            <span class="mosaic__veil"></span>
+                        </li>
+                    @else
+                        {{-- ⚠️ **La foto lleva a `/atracciones`** (`[DECIDIDO owner]`), y llega con la
+                             zona de esa atracción ya elegida: la página la lee de `?zona=`, que es lo
+                             único que funciona sin JavaScript. No abre ficha flotante — se descartó a
+                             propósito: una sola forma de profundizar. --}}
+                        <li class="mosaic__cell" data-papel="{{ $celda['papel'] }}">
+                            <a class="mosaic__link" href="{{ route('atracciones', ['zona' => $celda['zone']->slug]) }}">
+                                {{-- ⚠️ **`alt=""` CON `aria-hidden`, y es la forma canónica, no un atajo**: el
+                                     nombre de la atracción y su zona están en la banda de al lado, dentro
+                                     del mismo enlace. Un `alt` con el nombre lo diría dos veces; un `alt=""`
+                                     a secas deja a quien no ve sin saber que eso es una imagen decorativa.
+                                     Lo vigila `SeoTest::test_content_images_have_non_empty_alt`. --}}
+                                @if ($celda['ride']->image)
+                                    <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}"
+                                         alt="" aria-hidden="true" loading="lazy" decoding="async">
+                                @endif
+                                {{-- La banda de tinta: el nombre y, debajo, su zona. La zona va en
+                                     blanco pleno porque sobre una banda al 82 % el gris secundario
+                                     no llega —es la regla del sistema, no un ajuste—. --}}
+                                <span class="mosaic__band">
+                                    <span class="mosaic__name">{{ $celda['ride']->tr('name') }}</span>
+                                    <span class="mosaic__zone">{{ $celda['zone']->tr('name') }}</span>
+                                </span>
+                            </a>
+                        </li>
+                    @endif
+                @endforeach
+            </ul>
+        @endif
+
+        {{-- LA PUERTA. Una sola, y es la única entrada a `/atracciones` desde la portada.
+             ⚠️ Sin atracciones no se pinta: una puerta a una página vacía no es una puerta. --}}
+        @if ($ridesTotal > 0)
+            <p class="rides__door">
+                <a class="rides__door-link" href="{{ route('atracciones') }}">
+                    {{ __('landing.rides.door', ['count' => $ridesTotal]) }}
+                    <x-icons.arrow-right class="arrow" :width="16" :height="16" />
+                </a>
+            </p>
+        @endif
     </section>
 
     {{-- ══ 04 · CUMPLEAÑOS · los dos packs ═════════════════════════════════════════════════════
@@ -403,270 +684,6 @@
                                 :lede="__('landing.events.addons_intro')" />
     </section>
     @endif
-    {{-- ============ ZONAS Y SUS JUEGOS (una sola sección) ============ --}}
-    {{-- **`[DECIDIDO owner, 2026-08-31]` (`#302`): las tarjetas de zona y la tira de cifras, fuera.**
-         Aquí había DOS secciones —`#zones`, con una tarjeta grande por zona cuyo CTA saltaba a la
-         otra, y `#rides`, con una barra de pestañas que hacía exactamente la misma elección—. O sea
-         **dos selectores de zona en la misma página**, y el de arriba costaba 1.011 px en escritorio
-         y 1.831 en móvil (medido).
-
-         ▶ **Queda UNA sección y UN selector**: el toggle, que ahora dice quién es cada zona (icono
-         del kit + nombre + edad) en vez de ser solo una palabra.
-         ⚠️ **Y queda UNA cabecera, no dos.** Con las tarjetas y las cifras fuera, la de zonas se
-         quedaba presentando el vacío y la de atracciones venía detrás con el mismo molde. Sobrevive
-         la de ZONAS porque su párrafo acaba literalmente en «Elige el tuyo», que es lo que hace el
-         toggle que va justo debajo; la de atracciones solo explicaba la interfaz («pasa de una zona
-         a otra con un clic»), que es el texto que `#297` señala como sobrante.
-
-         ⚠️⚠️ **LAS DOS ANCLAS SIGUEN VIVAS Y NO ES UN DETALLE**: `/#zones` lo enlazan 4 sitios
-         (menú ×2, pie ×2) y `/#rides` otros 2. `#zones` es la sección; `#rides` envuelve el selector
-         y el carrusel, así que «Atracciones» del menú sigue aterrizando en los juegos.
-         ▶ Y `#rides` **tiene que envolver a los dos**: `applyZoneAccent()` tiñe ese contenedor con
-         la paleta de la zona activa, así que si el ancla se quedara solo en el carrusel las
-         pestañas perderían el color de su zona. --}}
-    <section id="zones" class="section wrap">
-        <div class="zones__head">
-            {{-- `B1·02` del kit, en la ranura `slot-zonas`. **Su propia nota manda dónde va**: «la
-                 mancha detrás de la PRIMERA PALABRA, nunca detrás de todo el bloque».
-                 ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el
-                 patrón de `#286`): sin paquete el componente no emite nada y aquí no puede quedar
-                 hueco reservado. --}}
-            {{-- ⚠️⚠️ **La mancha va DENTRO del bloque del titular, no de la cabecera, y eso es lo
-                 que la mantiene donde su nota manda.** Estuvo colgando de `.zones__head` con un
-                 `top` en PORCENTAJE, y un porcentaje se resuelve contra el ALTO DEL CONTENEDOR: al
-                 acortar los titulares (`#303`) la cabecera pasó de 264 a 153 px, el mismo `-20%`
-                 valió la mitad y la mancha bajó **11.016 px² sobre el párrafo**.
-                 ▶ *Un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa al cambiar
-                 lo que hay alrededor.* Anclada al titular, su sitio ya no depende de cuánto texto
-                 tenga la sección. --}}
-            {{-- ⚠️ El RÓTULO vuelve, y no contradice a `#303`. Aquélla retiró la etiqueta genérica
-                 («ZONAS», que repetía el titular); ésta dice **a quién va dirigida** la sección, que
-                 es información que el titular no da. Es el molde del canvas: rótulo en Etiqueta ·
-                 titular en Display L · la regla debajo. --}}
-            <p class="zones__eyebrow">{{ __('landing.zones.eyebrow') }}</p>
-            <div class="zones__titulo">
-                <x-site.ilu clave="slot-zonas" class="zones__mancha" />
-                <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
-            </div>
-            {{-- ⚠️⚠️ **La REGLA va entera y en una frase.** Es la del parque —manda la edad, y la
-                 altura desempata— y partirla en dos líneas la convierte en dos reglas, que es justo
-                 lo que la sección existe para evitar: que el visitante llegue a la puerta sin saber
-                 cuál manda. Sustituye a la entradilla larga, cuya última frase («Elige el tuyo»)
-                 tenía como sujeto el selector de pestañas que esta tanda retira. --}}
-            <p class="zones__rule">{{ __('landing.zones.rule') }}</p>
-        </div>
-
-        {{-- ══ LAS DOS TARJETAS DE ZONA ═══════════════════════════════════════════════════════
-             `DECISIONES #478` · Fase 2 · T2b. **La tarjeta ENTERA es el enlace, sin botón** (marco
-             aprobado del canvas), y lleva a la TARIFA de esa zona: elegir zona y ver su precio es
-             un solo recorrido.
-             ⚠️⚠️ **Esto no reintroduce el defecto de `#295`**, que era tener dos superficies
-             haciendo la MISMA elección: aquéllas saltaban a la sección donde unas pestañas volvían
-             a elegir zona. Aquí la tarjeta **navega** y las pestañas de tarifas **eligen tarifa** —
-             son eslabones del mismo camino, no dos puertas a lo mismo.
-             ⚠️ Todo el contenido sale de la BD (`ZoneCards`): nombre, descripción y edad son campos
-             traducibles de `zones`, la altura sus dos columnas nuevas, y el precio, del catálogo por
-             los mismos métodos que usa el resto de la landing. **Lo que no hay, no se pinta.** --}}
-        <ul class="zone-cards" role="list">
-            @foreach ($zoneCards as $i => $card)
-                <li class="zone-cards__item">
-                    {{-- ⚠️⚠️ **Las tarjetas ALTERNAN superficie, y eso es un mecanismo, no el color de
-                         esta marca.** El artboard pinta una en papel y otra en tinta, y `data-surface`
-                         es el interruptor que el producto ya tiene (`tema-por-instalacion.md`): con
-                         dos zonas sale exactamente el mockup, y con tres o con una sigue teniendo
-                         sentido. Pintarlas con el color de la zona sería la grieta 01 del propio
-                         canvas —el color de un DATO decidiendo el aspecto de un componente—. --}}
-                    <a class="zone-card" href="{{ route('precios') }}#zona-{{ $card['slug'] }}"
-                       data-zone="{{ $card['slug'] }}"
-                       @if ($card['tint']) style="--zone-tint: {{ $card['tint'] }}; --zone-tint-op: {{ $card['tintOpacity'] }};" @endif>
-
-                        {{-- ── LA FOTO, a 16:9, con el SELLO asomando por su borde ─────────────
-                             ⚠️ El hueco existe aunque no haya foto: sin él, el sello —que va
-                             ANCLADO a su borde inferior— se quedaría flotando sobre el texto. El
-                             fondo es el mismo relleno oscuro que usa el artboard mientras no hay
-                             imagen, no un hueco vacío.
-                             ⚠️ **`zones.image` recupera consumidor aquí**: se quedó sin ninguno en
-                             `#302` y era una de las tres salidas anotadas en `DEUDA.md`. --}}
-                        <div class="zone-card__viz">
-                            @if ($card['image'])
-                                {{-- ⚠️ `aria-hidden` y `alt` vacío: la foto es DECORACIÓN. El nombre de la zona,
-                                     su edad y qué hay dentro ya están en texto justo debajo, así que
-                                     describirla otra vez sería leer la tarjeta dos veces. --}}
-                                <img src="{{ $card['image'] }}" alt="" aria-hidden="true" loading="lazy" decoding="async" width="800" height="450">
-                            @endif
-
-                            {{-- El SELLO de precio. ⚠️ Solo si la zona tiene entrada vendible: sin
-                                 precio no se pinta un sello vacío ni un «consultar». --}}
-                            @if ($card['from'] !== null)
-                                <p class="zone-card__seal">
-                                    <span class="zone-card__from">{{ __('landing.zones.from') }}</span>
-                                    <span class="zone-card__price">{{ $card['from'] }}</span>
-                                    @if ($card['special'] !== null)
-                                        <span class="zone-card__special">{{ $card['special'] }} {{ $card['specialLabel'] }}</span>
-                                    @endif
-                                </p>
-                            @endif
-                        </div>
-
-                        {{-- ── EL CUERPO: una ESCALA DE ESTATURA, no un bloque de texto ────────
-                             ❗❗❗ **Ésta es la idea de la sección y sin ella la tarjeta solo se
-                             parece al mockup.** El cuerpo se parte en dos por la frontera de altura,
-                             y **el velo de color tiñe SOLO el tramo que le toca a esta zona**: la de
-                             «desde 1,30 m» colorea de la línea hacia arriba, y la de «hasta 1,30 m»
-                             de la línea hacia abajo. Al otro lado queda el hueco con el nombre de la
-                             vecina. Por eso las dos tarjetas se leen juntas como **una sola escala**.
-                             ⚠️ El ORDEN de los bloques sale del lado, y el lado sale de qué columna
-                             lleva el umbral (`height_min_cm` o `height_max_cm`) — nunca de adivinar
-                             qué zona es. --}}
-                        <div class="zone-card__body"
-                             @if ($card['heightAxis'])
-                                 data-axis data-side="{{ $card['heightAxis']['side'] }}"
-                             @endif>
-                            @if ($card['heightAxis'])
-                                {{-- El EJE: la línea con sus dos extremos. ⚠️ `aria-hidden` porque es
-                                     el DIBUJO de una regla que el texto de al lado ya dice; y una
-                                     escala de estatura no se recorre con un lector de pantalla. --}}
-                                <div class="zone-card__axis" aria-hidden="true">
-                                    <span class="zone-card__axis-top">
-                                        <b>{{ __('landing.zones.axis_label') }}</b>
-                                        <i>{{ $zoneAxisCeiling }}</i>
-                                    </span>
-                                    <span class="zone-card__axis-zero">{{ $zoneAxisFloor }}</span>
-                                </div>
-                            @endif
-
-                            {{-- El hueco de la VECINA, al otro lado de la línea. Va antes o después
-                                 del bloque teñido según el lado, y por eso está dos veces: es la
-                                 misma pieza en dos sitios, no dos piezas. --}}
-                            @if ($card['heightAxis'] && $card['heightAxis']['side'] === 'below' && $card['heightAxis']['neighbour'])
-                                <p class="zone-card__neighbour">{{ __('landing.zones.above_is', ['zone' => $card['heightAxis']['neighbour']]) }}</p>
-                                <p class="zone-card__border"><span class="zone-card__chip">{{ $card['heightAxis']['label'] }}</span></p>
-                            @endif
-
-                            <div class="zone-card__text">
-                                {{-- El VELO. ⚠️⚠️ **Aquí el color de zona SÍ va, y no contradice a
-                                     `#436`**: aquélla sacó `--zone-*` de los CONTROLES —la grieta 01
-                                     del canvas era el botón de comprar teñido por un dato— y lo dejó
-                                     «para lo que IDENTIFICA una zona». Esto es exactamente eso, y
-                                     además **dice cuánto mide**: el color ocupa su tramo. --}}
-                                <span class="zone-card__tint" aria-hidden="true"></span>
-                                <span class="zone-card__inner">
-                                    <h3 class="zone-card__name">{{ $card['name'] }}</h3>
-                                    <span class="zone-card__who">
-                                        <span>{{ $card['age'] }}</span>
-                                        @if ($card['height'])
-                                            <span>{{ $card['height'] }}</span>
-                                        @endif
-                                        @if ($card['description'])
-                                            <span class="zone-card__what">{{ $card['description'] }}</span>
-                                        @endif
-                                    </span>
-                                </span>
-                            </div>
-
-                            @if ($card['heightAxis'] && $card['heightAxis']['side'] === 'above' && $card['heightAxis']['neighbour'])
-                                <p class="zone-card__border"><span class="zone-card__chip">{{ $card['heightAxis']['label'] }}</span></p>
-                                <p class="zone-card__neighbour">{{ __('landing.zones.below_is', ['zone' => $card['heightAxis']['neighbour']]) }}</p>
-                            @endif
-                        </div>
-
-                        {{-- ⚠️ **No es un botón**: la tarjeta entera ya es el enlace, y meter un
-                             control dentro de un `<a>` es marcado inválido además de dos dianas para
-                             el mismo destino. Es la afordancia que dice a dónde lleva. --}}
-                        <span class="zone-card__go">
-                            {{ __('landing.zones.see_zone', ['zone' => $card['name']]) }}
-                            <x-icons.arrow-right :width="18" :height="18" />
-                        </span>
-                    </a>
-                </li>
-            @endforeach
-        </ul>
-    </section>
-
-    {{-- ══ 03 · QUÉ HAY DENTRO · el mosaico de cinco ═══════════════════════════════════════════
-         Carril de diseño Fase 2 · T2d (`DECISIONES #482`). Artboard `Juegos PJP` **6a** (móvil) +
-         `Escritorio PJP` **4b** (escritorio, aprobada el 8 sep).
-
-         ⚠️⚠️ **AQUÍ VIVÍA EL CARRUSEL DE LAS 23**, con su selector de zona, sus flechas y su barra
-         de progreso. Se retira entero: la portada enseña **cinco** y las 23 viven en
-         **`/atracciones`** (`#481`), que es la capa 3 del sistema de contenido —«quien llega aquí ha
-         querido llegar»— y el único sitio donde caben con su edad.
-
-         ❗❗ **LA CHAPA DEL «18 MÁS» NO ENTRA, y no es un olvido**: el artboard la tiene detrás de un
-         interruptor **apagado** desde el recorte de presupuesto del 7 sep, igual que la chapa de
-         zona de `#480`. En su lugar entra lo que la propia deuda pedía: **la cifra en la entradilla**
-         y **una sola puerta** debajo del mosaico.
-
-         ⚠️ **El ancla `#rides` se queda**: la enlazan el menú y el pie (medido: `/#rides` en
-         `nav.blade.php` y en `footer.blade.php`). Lo que cambia es lo que encuentra quien llega. --}}
-    <section id="rides-section" class="section wrap">
-        <div id="rides" class="sec-head">
-            <p class="sec-head__eyebrow">{{ __('landing.rides.eyebrow') }}</p>
-            <h2 class="sec-head__title">{{ __('landing.rides.title') }}</h2>
-            {{-- ⚠️ La entradilla **abre con la cifra**, y la cifra es DATO: es lo que sustituye a la
-                 chapa retirada. Sin ella la sección enseña cinco fotos y no dice cuántas hay. --}}
-            <p class="sec-head__lede">{{ __('landing.rides.intro', ['count' => $ridesTotal]) }}</p>
-        </div>
-
-        @if ($rideMosaic !== [])
-            {{-- EL MOSAICO. La geometría la manda la rejilla y cada celda dice su papel con un
-                 `data-`, no con una clase por posición: el papel lo decide el dominio y la hoja solo
-                 lo viste. --}}
-            <ul class="mosaic" role="list">
-                @foreach ($rideMosaic as $celda)
-                    @if ($celda['papel'] === 'velada')
-                        {{-- ⚠️⚠️ **UNA VELADA NO ES CONTENIDO: ES TEXTURA.** Pierde el nombre, deja
-                             de ser enlace y sale del árbol de accesibilidad — es la condición con la
-                             que el velo entró en el sistema («lo que se oculta no puede ser un
-                             destino, y un nombre a medio velo se queda sin contraste»). --}}
-                        <li class="mosaic__cell" data-papel="velada" aria-hidden="true">
-                            @if ($celda['ride']->image)
-                                <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}" alt=""
-                                     aria-hidden="true" loading="lazy" decoding="async">
-                            @endif
-                            <span class="mosaic__veil"></span>
-                        </li>
-                    @else
-                        {{-- ⚠️ **La foto lleva a `/atracciones`** (`[DECIDIDO owner]`), y llega con la
-                             zona de esa atracción ya elegida: la página la lee de `?zona=`, que es lo
-                             único que funciona sin JavaScript. No abre ficha flotante — se descartó a
-                             propósito: una sola forma de profundizar. --}}
-                        <li class="mosaic__cell" data-papel="{{ $celda['papel'] }}">
-                            <a class="mosaic__link" href="{{ route('atracciones', ['zona' => $celda['zone']->slug]) }}">
-                                {{-- ⚠️ **`alt=""` CON `aria-hidden`, y es la forma canónica, no un atajo**: el
-                                     nombre de la atracción y su zona están en la banda de al lado, dentro
-                                     del mismo enlace. Un `alt` con el nombre lo diría dos veces; un `alt=""`
-                                     a secas deja a quien no ve sin saber que eso es una imagen decorativa.
-                                     Lo vigila `SeoTest::test_content_images_have_non_empty_alt`. --}}
-                                @if ($celda['ride']->image)
-                                    <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}"
-                                         alt="" aria-hidden="true" loading="lazy" decoding="async">
-                                @endif
-                                {{-- La banda de tinta: el nombre y, debajo, su zona. La zona va en
-                                     blanco pleno porque sobre una banda al 82 % el gris secundario
-                                     no llega —es la regla del sistema, no un ajuste—. --}}
-                                <span class="mosaic__band">
-                                    <span class="mosaic__name">{{ $celda['ride']->tr('name') }}</span>
-                                    <span class="mosaic__zone">{{ $celda['zone']->tr('name') }}</span>
-                                </span>
-                            </a>
-                        </li>
-                    @endif
-                @endforeach
-            </ul>
-        @endif
-
-        {{-- LA PUERTA. Una sola, y es la única entrada a `/atracciones` desde la portada.
-             ⚠️ Sin atracciones no se pinta: una puerta a una página vacía no es una puerta. --}}
-        @if ($ridesTotal > 0)
-            <p class="rides__door">
-                <a class="rides__door-link" href="{{ route('atracciones') }}">
-                    {{ __('landing.rides.door', ['count' => $ridesTotal]) }}
-                    <x-icons.arrow-right class="arrow" :width="16" :height="16" />
-                </a>
-            </p>
-        @endif
-    </section>
 
     {{-- ══ 05 · ANTES DE VENIR · el registro ES el QR ═══════════════════════════════════════════
          Carril de diseño Fase 2 · T2f (`DECISIONES #485`). Artboards `Antes de Venir PJP` **2a**

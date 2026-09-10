@@ -27304,3 +27304,109 @@ verificado en navegador a 390 y 1440, en español e inglés: logotipo **cargado*
 tres sitios, área táctil de la chapa 98×48, desborde 0 · **suelo sin JavaScript medido**: el aviso de
 traducción y el logotipo salen, el original viaja servido pero oculto y los controles que no
 funcionarían no se pintan.
+
+---
+
+## #495 · 2026-09-10 · Las ocho secciones de la portada pasan al orden del mockup — y una mutación llevaba desde `#490` apuntando al sujeto equivocado
+
+**Contexto.** El owner pidió *«organizar las secciones según el orden del mockup»*.
+
+**El orden queda así**, y solo se movieron las cuatro primeras:
+
+| n | Sección | `id` | estaba |
+|---|---|---|---|
+| 01 | Para quién | `zones` | 3.ª |
+| 02 | Cuánto | `pricing` | 1.ª |
+| 03 | Qué hay dentro | `rides-section` | 4.ª |
+| 04 | Cumpleaños | `events` | 2.ª |
+| 05–08 | Antes de venir · Reseñas · Visítanos · Dudas | | ya estaban |
+
+---
+
+**❗❗❗ VERIFICADO CONTRA DOS FUENTES INDEPENDIENTES DEL CANVAS, y no contra la tabla de la spec.**
+
+1. **`Portada PJP`**, que es el entregable: sus ocho rótulos salen **en ese orden de documento**, y
+   los ocho caen **antes del truncamiento** (el fichero se baja cortado a 256 KiB exactos y el último
+   rótulo está en el byte 134.568). ⚠️ **Con CONTROL**: cero `position: absolute` cerca de los
+   rótulos, así que el orden de documento **es** el orden visual — sin esa comprobación, leer el
+   orden de un HTML posicionado habría sido adivinar.
+2. **`Marco Portada PJP`**, que lleva la numeración **en datos**:
+   `01 Zonas · 03 Qué hay dentro · 05 Antes de venir · 07 Visítanos · 08 Dudas`. Las tres que faltan
+   —02, 04, 06— son justo las que ese artboard excluye a propósito: *«Tarifas y Cumpleaños son
+   sección y página, y aquí apuntan a la página»*.
+
+⚠️⚠️ **Y hay una TERCERA numeración en el canvas que dice otra cosa**: `Landing PJP Modos` lleva
+`01 Entradas · 02 Zonas · 03 Cumpleaños · 04 Antes de venir · 05 Dónde y cuándo`. **No cuenta**, y no
+es una interpretación: `[owner]` lo dejó dicho —*«de esa maqueta solo sacaremos la sección de
+reseñas»*— y `idioma-visual-heredado.md` lo registra. *Mirarla y creerle es la forma de reordenar mal
+la portada con una fuente del canvas en la mano.*
+▶ Hay una cuarta en `Colores de Marca PJP` (`01 Cabecera fija · 02 Hero · 03 Zonas del parque…`) que
+tampoco es la portada: son las partes de una página en un ejercicio de color, y nombra piezas del
+ARCHIVO.
+
+---
+
+**⚠️⚠️ ESTO REVIERTE EL ORDEN DE `#314`** (`[DECIDIDO owner, 2026-09-01]`: «entradas → cumpleaños →
+el parque → ubicación → normas → dudas»). **No es una contradicción**: aquella decisión es del carril
+de diseño ANTERIOR y `#469` adoptó el canvas entero (`[DECIDIDO owner]`). Queda escrito en la
+plantilla y en la guarda para que nadie lo lea como un descuido **ni lo «arregle» devolviéndolo**.
+
+---
+
+**❗❗❗ LO QUE HACE FALTA SABER: REORDENAR SECCIONES NO ROMPE NADA.** La suite entera —4.632 casos—
+pasó en verde con el orden viejo **y** con el nuevo, sin tocar un solo test. Tres razones, las tres
+medidas antes de mover nada:
+
+- **las guardas acotan por `id`**, no «desde X hasta Y» — la lección de `#314` ya estaba aplicada
+  (`preg_match('#<section id="pricing".*?</section>#s')`);
+- **`--hero-air` cuelga de `.hero + .section`**, así que **se muda solo**: medido, la nueva primera
+  (`#zones`) recibe `padding-top` de **112 px en móvil y 136 en escritorio** frente a los 48/72 de las
+  demás, y `document.querySelector('.hero + .section').id` devuelve `zones`;
+- **los anclas siguen existiendo** y ninguna sección declara `data-surface`, así que no hay dos
+  superficies de tinta que puedan quedar seguidas.
+
+▶ **Por eso nace `HomeSectionOrderTest`**: lo único que puede cazar un bloque descolocado es una
+guarda que sepa cuál es el orden bueno. Compara la **secuencia completa** —con comprobaciones por
+parejas, mover un bloque dos sitios abajo sigue cumpliendo todas las parejas que alguien se acordó de
+escribir— y vigila también que **las ocho se pinten**, porque una sección que desaparece *también*
+deja el resto «en orden».
+
+⚠️ **Su `setUp` siembra una opinión a propósito**: la 06 no se pinta sin ellas y el seeder no las
+siembra (`#490`), así que sin eso el fichero compararía **siete** secciones y llamaría «en orden» a
+una portada a la que le falta una. Y el centinela de la guarda-de-la-guarda **no puede ser `reviews`**
+por lo mismo.
+
+---
+
+**❗❗❗ Y AL CORRER LOS ARNESES VECINOS SALIÓ UN DEFECTO QUE NO ERA DE ESTA TANDA: `mutar-dudas`
+llevaba desde `#490` mutando la sección equivocada.**
+
+Su mutación «se pierde el rótulo» buscaba `<p class="sec-head__eyebrow">` con 20 espacios y
+`replace(…, 1)` cambia **la primera aparición**. Desde que la sección 06 «Reseñas» entró en la
+portada —va antes de Dudas y tiene la misma indentación—, la que mutaba era **la de reseñas**, que
+ninguna guarda de ese filtro mira.
+
+⚠️ **Verificado que no lo causó el reordenado**: reconstruido `home.blade.php` desde `HEAD`, aplicada
+la mutación a mano y corrido su filtro → **32 passed**. Ya estaba roto. ▶ *Antes de arreglar algo que
+tu cambio destapó, comprueba si tu cambio lo causó* — y aquí el árbol se restauró comprobando el
+sha1, no confiando.
+
+▶ Se re-apunta **por su clave**, que es única. **El rótulo de Dudas llevaba sin vigilar desde `#490`**
+y el arnés lo decía con un «NO muerde», que se lee como *falta una guarda* cuando lo que pasaba era
+que *sobraba un sujeto*.
+
+---
+
+**⚠️ Método**: el movimiento se hizo con un **control de permutación** —el multiconjunto de líneas con
+contenido tiene que ser idéntico antes y después—, no a ojo. Delta real: **+1 línea**, y es un
+separador. Y el bloque de la 01 era **el único sin cabecera numerada**; ahora las cinco primeras van
+`══ 01 ·` … `══ 05 ·`, de modo que un bloque descolocado se ve leyendo el fichero.
+⚠️ **Queda pendiente lo mismo para 06, 07 y 08**, que siguen con cabeceras de formato antiguo
+(`===== VISÍTANOS =====`) o sin cabecera de bloque. Ficha en `DEUDA.md`.
+
+**Medido en navegador** (390 y 1440): orden servido correcto, aire uniforme, `desborde 0`, portada
+**11.063 px / 13,11 pantallas** en móvil y **10.979 px / 10,98** en escritorio — el alto **no cambia**,
+porque un reordenado es una permutación.
+
+**Suite 4.636** · 29.076 aserciones · **5/5 mutaciones** (`scripts/mutar-orden-secciones.sh`, tres de
+ellas mueven bloques de verdad) · **19/19** en `mutar-dudas` ya arreglado · Pint limpio.

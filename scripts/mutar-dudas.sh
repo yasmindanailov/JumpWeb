@@ -110,9 +110,17 @@ mutar "el titular vuelve a ser el rótulo" "$ES" \
   "        'title' => 'Dudas',"
 
 # 3 · sin rótulo, la sección deja de decir a qué eje contesta.
+# ❗❗ **ESTA MUTACIÓN APUNTABA AL SUJETO EQUIVOCADO Y NO MORDÍA** (arreglado en `#495`). Buscaba
+#    `sec-head__eyebrow` con 20 espacios y `replace(…, 1)` cambia la PRIMERA aparición: desde que
+#    `#490` metió la sección 06 «Reseñas» —que va antes de Dudas y tiene la misma indentación—, la
+#    que mutaba era **la de reseñas**, que ninguna guarda de este filtro mira. O sea que el rótulo de
+#    Dudas llevaba sin vigilar desde entonces, y el arnés lo decía con un «NO muerde» que parece que
+#    falte una guarda en vez de que sobre un sujeto.
+# ▶ Se apunta por su CLAVE, que es única. ⚠️ Lleva comillas simples de PHP, así que va en `$'…'`:
+#    dentro de comillas simples de bash, dos seguidas cierran y abren (la lección de `#494`).
 mutar "se pierde el rótulo" "$HB" \
-  '                    <p class="sec-head__eyebrow">{{ __(' \
-  '                    <p class="sec-head__NO">{{ __('
+  $'<p class="sec-head__eyebrow">{{ __(\'landing.faq.eyebrow\')' \
+  $'<p class="sec-head__NO">{{ __(\'landing.faq.eyebrow\')'
 
 # 4 · sin entradilla, las preguntas dejan de tener procedencia.
 mutar "se pierde la entradilla" "$HB" \

@@ -693,3 +693,25 @@ seguir siendo un literal. Lo que hay que decidir es **de dónde sale ese literal
 mano en cada plantilla, y el producto ya tiene el mecanismo para lo contrario (`ThemeSettings`
 compone el color de acción y su hover para los correos). Sin esa decisión, «pasarlo a token» es
 imposible en la mitad de los sitios.
+
+---
+
+## ▶ Baja · TRES bloques de la portada sin cabecera numerada (2026-09-10, `DECISIONES #495`)
+
+Al pasar las secciones al orden del mockup se numeraron las cabeceras de bloque de
+`resources/views/home.blade.php` —`══ 01 · PARA QUIÉN`, `══ 02 · CUÁNTO`…— para que **un bloque
+descolocado se vea leyendo el fichero**. Quedan tres fuera:
+
+    06 · Reseñas    sin cabecera de bloque propia
+    07 · Visítanos  `{{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}`
+    08 · Dudas      sin cabecera de bloque propia
+
+▶ **Por qué importa poco y aun así está aquí**: el orden ya lo vigila `HomeSectionOrderTest`, así que
+esto no deja ningún agujero — es legibilidad. Pero la numeración solo sirve **si está completa**: con
+cinco de ocho, quien lea el fichero no puede fiarse de ella para saber dónde va cada cosa, que es
+exactamente para lo que se puso.
+
+⚠️ **Y no es solo renombrar un comentario**: el bloque de Visítanos tiene un comentario largo con
+historia de `#307` y `#487`, y el de Reseñas otro de `#490`→`#494`. La cabecera nueva va **delante**
+conservándolos, como se hizo con la 01 — que es donde se vio que copiar la línea antigua dentro de la
+nueva la **duplica** si no se mira el resultado.
