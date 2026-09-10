@@ -872,7 +872,7 @@
          pinta y la portada pasa de Antes de venir a Visítanos». --}}
     @if ($socialProof->isNotEmpty())
         <section id="reviews" class="section wrap">
-            <div class="rev-sec">
+            <div class="rev-sec{{ $socialRating ? ' rev-sec--scored' : '' }}">
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
                     <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
@@ -967,24 +967,47 @@
                                     </p>
                                 @endif
                             </div>
-                            {{-- ⚠️⚠️ **Solo se RECORTA la de Google, y la diferencia no es estética.**
-                                 R4 prohíbe alterar el contenido del usuario, y un `line-clamp`
-                                 recorta visualmente sin tocar el texto servido — aceptable **porque
-                                 hay adónde ir a leerla entera**. Una opinión propia no tiene entera
-                                 en ninguna parte: recortarla escondería texto sin destino. --}}
-                            <p class="rev__text{{ $op->url ? ' rev__text--clamp' : '' }}">{{ $op->text }}</p>
-                            @if ($op->url)
-                                {{-- ⚠️ **El rótulo no promete lo que no esconde**: dice «leer entera»
-                                     solo cuando el texto se corta de verdad. El umbral son los
-                                     caracteres que caben en las cuatro líneas del recorte. --}}
-                                <a class="rev__more" href="{{ $op->url }}"
-                                   target="_blank" rel="noopener noreferrer nofollow">
-                                    <span>{{ mb_strlen($op->text) > 150
-                                        ? __('landing.reviews.read_full')
-                                        : __('landing.reviews.see_on_google') }}</span>
-                                    <span class="arrow" aria-hidden="true">&rarr;</span>
-                                </a>
-                            @endif
+                            {{-- ❗❗ **EL TEXTO SE LEE ENTERO AQUÍ** (`[DECIDIDO owner, 2026-09-10]`).
+                                 Antes se recortaba a cuatro líneas y la única salida era irse a
+                                 Google; ahora el recorte lo abre un «Ver más» **en la propia
+                                 página**, que es donde el visitante está.
+                                 ⚠️ Y eso **no incumple R4**: la prohibición es alterar el contenido
+                                 del usuario, y el texto servido está completo desde el principio —
+                                 el `line-clamp` solo lo tapa. Lo que se retira es la promesa de que
+                                 hay que irse a otro sitio para leerlo.
+                                 ⚠️⚠️ **El botón se decide MIDIENDO, no contando caracteres.** Con un
+                                 umbral de longitud, una opinión de 140 caracteres con palabras
+                                 largas se corta y no ofrece abrirla, y otra de 160 con palabras
+                                 cortas ofrece abrir lo que ya se ve entero. `cortado` compara el
+                                 alto real contra el visible. --}}
+                            <div x-data="{ abierto: false, cortado: false }"
+                                 x-init="$nextTick(() => { cortado = $refs.txt.scrollHeight > $refs.txt.clientHeight + 1 })">
+                                {{-- ⚠️ UN solo atributo `class`: el servidor lo pinta recortado —ése
+                                     es el suelo sin JavaScript— y Alpine solo AÑADE `--open`. Dos
+                                     atributos `class` en el mismo elemento son HTML inválido y el
+                                     navegador se queda con el primero. --}}
+                                <p class="rev__text rev__text--clamp" x-ref="txt"
+                                   :class="abierto && 'rev__text--open'">{{ $op->text }}</p>
+                                <div class="rev__acts">
+                                    {{-- ⚠️ `x-cloak` porque sin JavaScript no hay nada que abrir: el
+                                         texto se queda recortado y ofrecer un botón muerto sería
+                                         peor. El suelo sin JS es la salida a Google, que sí existe
+                                         en el marcado servido. --}}
+                                    <button type="button" class="rev__toggle" x-cloak x-show="cortado || abierto"
+                                            @click="abierto = !abierto"
+                                            x-text="abierto ? @js(__('landing.reviews.read_less')) : @js(__('landing.reviews.read_more'))"></button>
+                                    @if ($op->url)
+                                        {{-- ⚠️ **La salida a Google NO es opcional cuando la reseña es
+                                             suya**: R3 exige acreditar al autor y su enlace es parte
+                                             de esa acreditación. No desaparece al abrir el texto. --}}
+                                        <a class="rev__more" href="{{ $op->url }}"
+                                           target="_blank" rel="noopener noreferrer nofollow">
+                                            <span>{{ __('landing.reviews.see_on_google') }}</span>
+                                            <span class="arrow" aria-hidden="true">&rarr;</span>
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
                         </article>
                     @endforeach
 

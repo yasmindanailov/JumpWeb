@@ -188,8 +188,8 @@ echo '── Google: el camino del render ──'
 # La mutación NATURAL: el `Cache::remember` que uno escribiría sin pensar, y que mete la latencia de
 # un tercero en el camino crítico de la portada.
 mutar "la portada llama a Google cuando la caché está fría" "$GS" \
-  '        $datos = Cache::get(self::CACHE_KEY);' \
-  '        $datos = Cache::remember(self::CACHE_KEY, 60, fn () => $this->refresh() ? [] : null);'
+  '        $datos = Cache::get(self::cacheKey());' \
+  '        $datos = Cache::remember(self::cacheKey(), 60, fn () => $this->refresh()->ok() ? [] : null);'
 
 echo
 echo '── Google: el umbral y la caché ──'
@@ -199,7 +199,7 @@ mutar "el umbral desaparece" "$GS" \
   '        if ($count < 0 || $value <= 0) {'
 
 mutar "la caché conserva una cifra que ya no es publicable" "$GS" \
-  '            Cache::forget(self::CACHE_KEY);
+  '            Cache::forget(self::cacheKey($locale));
 
             return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);' \
   '            return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);'
@@ -211,6 +211,20 @@ mutar "una reseña sin autor se publica igual" "$GS" \
 mutar "una URL de tercero llega sin sanear" "$GS" \
   "        return (\$valor !== '' && preg_match('#^https?://#i', \$valor) === 1) ? \$valor : null;" \
   "        return \$valor !== '' ? \$valor : null;"
+
+echo
+echo '── Google: el idioma ──'
+
+# El defecto REAL que encontró renderizar con la reseña de verdad: sin `languageCode`, Google
+# contesta «a week ago» y la portada en español lo publica tal cual.
+mutar "no se le pide a Google el idioma de la página" "$GS" \
+  "['languageCode' => \$locale]" \
+  '[]'
+
+# Y su otra mitad: con una sola caché, el primer refresco sirve su idioma a las tres versiones.
+mutar "la caché deja de ser por idioma" "$GS" \
+  "        return self::CACHE_PREFIX.(\$locale ?? app()->getLocale());" \
+  '        return self::CACHE_PREFIX;'
 
 echo
 echo '── Google: la cascada ──'

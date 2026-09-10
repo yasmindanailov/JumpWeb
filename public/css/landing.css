@@ -3108,6 +3108,7 @@ img { display: block; max-width: 100%; }
    el dedo. Con `display:none` a secas cada carta mediría su propio alto y el pie bailaría. */
 .rev__card {
   grid-area: 1 / 1;
+  min-width: 0;
   visibility: hidden;
   background: var(--bg-card);
   border: 1px solid var(--line);
@@ -3163,8 +3164,10 @@ img { display: block; max-width: 100%; }
 /* ── LA CHAPA DE LA CIFRA (solo con Google) ───────────────────────────────────────────────
    ⚠️ Su superficie la declara el marcado con `data-surface="ink"`, que además de cambiar los
    tokens **pinta el fondo** (`#484`). Aquí no se escribe ningún color de fondo. */
-.rev-score { border-radius: var(--r-lg); padding: var(--sp-18) var(--sp-20); margin-bottom: var(--sp-16); }
-.rev-score__num { margin: 0; display: flex; align-items: baseline; gap: 9px; }
+/* ⚠️ `min-width: 0` para que la chapa no pueda ensanchar su pista, y la cifra en una sola línea:
+   con la caja estrecha, «4,8» y «sobre 5» se partían en dos. */
+.rev-score { min-width: 0; border-radius: var(--r-lg); padding: var(--sp-18) var(--sp-20); margin-bottom: var(--sp-16); }
+.rev-score__num { margin: 0; display: flex; align-items: baseline; gap: 9px; flex-wrap: nowrap; }
 /* La cifra es el rol de CIFRA (`--money`, `#480`), que sobre tinta vale el lima del paquete. */
 .rev-score__val { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 0.9; color: var(--money); }
 .rev-score__of { font-size: var(--fs-16); font-weight: 700; color: var(--fg-mute); }
@@ -3182,12 +3185,22 @@ img { display: block; max-width: 100%; }
 /* La foto del autor sustituye a la inicial. Misma caja, para que la fila no se mueva. */
 .rev__ini--photo { object-fit: cover; }
 
-/* ⚠️ **Solo se recorta la de Google**, que es la que tiene adónde mandar a leerla entera. */
+/* ❗❗ **El texto nace RECORTADO y lo abre «Ver más» aquí mismo** (`[DECIDIDO owner]`). El recorte es
+   visual —el texto servido está completo—, así que no altera el contenido del usuario (R4): lo que
+   se retira es la obligación de irse a Google para leerlo. */
 .rev__text--clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+/* ⚠️ Al abrir hay que deshacer las TRES declaraciones del recorte, no solo el número de líneas: con
+   `display: -webkit-box` puesto, subir el `line-clamp` deja el párrafo en una caja que sigue
+   comportándose distinto. */
+.rev__text--open { display: block; -webkit-line-clamp: unset; overflow: visible; }
+/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación. */
+.rev__acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-16); }
+.rev__toggle,
 .rev__more {
   display: inline-flex; align-items: center; gap: var(--sp-7); min-height: 48px;
   font-size: var(--fs-14); font-weight: 800; color: var(--interactive);
 }
+.rev__toggle { background: none; border: 0; padding: 0; cursor: pointer; }
 .rev__more .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
 .rev__more:hover .arrow { transform: translateX(5px); }
 
@@ -3197,9 +3210,24 @@ img { display: block; max-width: 100%; }
    08 (`#488`) y evita que el carril se estire a 1120 px de medida de línea.
    ⚠️ Va DESPUÉS de su base: a igual especificidad gana la última regla del fichero (`#314`). */
 @media (min-width: 1024px) {
-  .rev-sec { display: grid; grid-template-columns: repeat(12, 1fr); gap: 32px; align-items: start; }
+  /* ⚠️⚠️ **`minmax(0, 1fr)` y NO `1fr`, y la diferencia se midió.** `1fr` es `minmax(auto, 1fr)`:
+     su mínimo es el CONTENIDO, así que una opinión larga **empuja las pistas** y el reparto deja de
+     ser el que se declaró. Medido con la reseña real: la cabecera salía a **309** y el carril a
+     **779**, donde el artboard escribe 352 y 736. Con `minmax(0, …)` el contenido no puede empujar.
+     ▶ Es un defecto que no se ve con contenido corto: la sección 08, con las mismas doce pistas,
+     medía 352 y 736 exactos porque sus preguntas caben. */
+  .rev-sec { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px; align-items: start; }
   .rev-sec > .sec-head { grid-column: span 4; margin-bottom: 0; }
-  .rev-sec > .rev { grid-column: span 8; }
+  .rev-sec > .rev { grid-column: span 8; min-width: 0; }
+
+  /* ⚠️⚠️ **CON CHAPA el reparto cambia, y sin decírselo a la rejilla la chapa se AUTO-COLOCA.**
+     Medido: caía en las columnas 5-6 —183 px de ancho, con la cifra y «sobre 5» partiéndose— y
+     empujaba el carril a la fila siguiente. `Escritorio PJP` 5b es explícito: **la chapa en cuatro
+     columnas y la opinión al lado, en ocho**, con la cabecera encima a todo lo ancho. */
+  .rev-sec--scored > .sec-head { grid-column: 1 / -1; margin-bottom: var(--sp-8); }
+  .rev-sec--scored > .rev-score { grid-column: span 4; margin-bottom: 0; }
+  .rev-sec--scored > .rev { grid-column: span 8; }
+
   /* El tope de medida del artboard: 65ch. Sin él, a 736 px de ancho una opinión larga pasa del
      máximo de línea del sistema. */
   .rev__text { max-width: 65ch; }

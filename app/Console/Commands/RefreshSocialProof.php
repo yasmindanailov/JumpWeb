@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\SocialProofRefresh;
+use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Console\Command;
 
 /**
@@ -35,12 +36,27 @@ class RefreshSocialProof extends Command
 
     public function handle(GoogleSocialProof $google): int
     {
-        $r = $google->refresh();
+        // ⚠️⚠️ **UNA LLAMADA POR IDIOMA.** Google devuelve la fecha relativa y el texto en el idioma
+        // que se le pide, así que una sola caché serviría «a week ago» a la página en español — lo
+        // vio renderizar con datos reales. Son tres llamadas por pasada, y por eso la cadencia bajó
+        // a cada tres horas: **24 al día**, que cabe con holgura en el tope de 50 que se recomienda
+        // poner en la consola. Con una llamada por hora y tres idiomas serían 72 y el tope lo
+        // cortaría a media tarde.
+        foreach (SiteLocales::SUPPORTED as $locale) {
+            $r = $google->refresh($locale);
+            $this->line("[{$locale}] ".$this->explica($r));
+        }
+
+        return self::SUCCESS;
+    }
+
+    private function explica(SocialProofRefresh $r): string
+    {
 
         // ⚠️ Cada salida dice QUÉ hay que ir a mirar, no solo que no hubo datos. Y todas terminan
         // en 0: un cron que informa de fallo cada hora acaba silenciado, y entonces sí se pierden
         // los fallos de verdad.
-        $this->line(match ($r->outcome) {
+        return match ($r->outcome) {
             SocialProofRefresh::CACHED => "Reseñas en caché: {$r->reviews}.",
             SocialProofRefresh::NOT_CONFIGURED => 'Sin `place_id` o sin clave de API. Se configuran en '.
                 'Ajustes y en el `.env`. La sección usa las opiniones propias.',
@@ -52,8 +68,6 @@ class RefreshSocialProof extends Command
             SocialProofRefresh::UNREACHABLE => 'No se ha podido hablar con Google (red o timeout). '.
                 'La sección usa las opiniones propias.',
             default => 'Resultado desconocido: '.$r->outcome,
-        });
-
-        return self::SUCCESS;
+        };
     }
 }

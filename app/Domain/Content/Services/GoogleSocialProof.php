@@ -39,7 +39,15 @@ class GoogleSocialProof implements SocialProof
     /** Clave del ajuste que guarda el identificador del sitio. Es lo único que la política exime. */
     public const PLACE_ID_SETTING = 'social.google_place_id';
 
-    public const CACHE_KEY = 'social-proof.google';
+    /**
+     * ⚠️⚠️ **La caché es POR IDIOMA, y lo descubrió renderizar con datos reales.** Google devuelve
+     * `relativePublishTimeDescription` —y el propio `text`— **en el idioma que se le pida**, y sin
+     * pedirle ninguno contestó «a week ago» sobre una página en español. La landing es ES/EN/FR, así
+     * que una sola caché serviría la fecha de un idioma a los tres.
+     * ▶ Y no vale traducirlo nosotros: R4 prohíbe alterar el contenido del usuario. Se le pide a
+     * Google, que es quien puede.
+     */
+    public const CACHE_PREFIX = 'social-proof.google.';
 
     /**
      * Cuánto vive la respuesta en caché.
@@ -63,6 +71,12 @@ class GoogleSocialProof implements SocialProof
     private const FIELD_MASK = 'id,displayName,rating,userRatingCount,googleMapsUri,reviews';
 
     private const TIMEOUT_SECONDS = 8;
+
+    /** La clave de ESTE idioma. */
+    public static function cacheKey(?string $locale = null): string
+    {
+        return self::CACHE_PREFIX.($locale ?? app()->getLocale());
+    }
 
     private const CONNECT_TIMEOUT_SECONDS = 4;
 
@@ -112,8 +126,10 @@ class GoogleSocialProof implements SocialProof
      * cosas distintas**: un ajuste, tiempo, la consola de Google o la red. Con un `null` para las
      * cuatro, distinguirlas obligaba a mirar el log y deducirlo de una ausencia.
      */
-    public function refresh(): SocialProofRefresh
+    public function refresh(?string $locale = null): SocialProofRefresh
     {
+        $locale ??= app()->getLocale();
+
         if (! $this->configured()) {
             return new SocialProofRefresh(SocialProofRefresh::NOT_CONFIGURED);
         }
@@ -125,7 +141,9 @@ class GoogleSocialProof implements SocialProof
             ])
                 ->timeout(self::TIMEOUT_SECONDS)
                 ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
-                ->get(self::ENDPOINT.$this->placeId());
+                // ⚠️ `languageCode` es lo que hace que la fecha y el texto lleguen en el idioma de
+                // la página. Sin él, Google elige y una página en español publica «a week ago».
+                ->get(self::ENDPOINT.$this->placeId(), ['languageCode' => $locale]);
         } catch (\Throwable $e) {
             // Un timeout o un DNS caído no son un fallo nuestro: se anota y se cae al CMS.
             Log::info('social_proof.google_unreachable', ['reason' => $e::class]);
@@ -146,12 +164,12 @@ class GoogleSocialProof implements SocialProof
         if ($datos === null) {
             // ⚠️ Se OLVIDA lo que hubiera: si el sitio baja del umbral —o pierde la nota— la caché
             // no puede seguir sirviendo la cifra de antes. Es el mismo criterio que el TTL corto.
-            Cache::forget(self::CACHE_KEY);
+            Cache::forget(self::cacheKey($locale));
 
             return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);
         }
 
-        Cache::put(self::CACHE_KEY, $datos, self::CACHE_TTL_SECONDS);
+        Cache::put(self::cacheKey($locale), $datos, self::CACHE_TTL_SECONDS);
 
         return new SocialProofRefresh(SocialProofRefresh::CACHED, reviews: count($datos['reviews']));
     }
@@ -213,7 +231,7 @@ class GoogleSocialProof implements SocialProof
      */
     private function cached(): ?array
     {
-        $datos = Cache::get(self::CACHE_KEY);
+        $datos = Cache::get(self::cacheKey());
 
         return is_array($datos) ? $datos : null;
     }

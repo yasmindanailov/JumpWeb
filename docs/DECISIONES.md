@@ -27004,3 +27004,86 @@ peticiones/día y añadir la IP del servidor. Se hace al desplegar.
 
 **Suite 4.602** · 28.877 aserciones · **19/19 mutaciones** (`scripts/mutar-resenas.sh`) · integración
 verificada contra la API real · Pint limpio.
+
+---
+
+## #492 · 2026-09-10 · El ojo del owner sobre «Reseñas»: la rejilla estaba rota por `1fr`, y el texto se lee entero aquí
+
+**Contexto.** El owner miró la sección con datos reales y señaló tres cosas: la chapa «rompe las
+filas», la tarjeta de la reseña necesita organizarse y límites de ancho, y el texto debe poder leerse
+entero con un «ver más». Además pidió publicar «las imágenes que pone el cliente» (§4).
+
+---
+
+**❗❗❗ 1 · LA REJILLA ESTABA ROTA POR DOS COSAS, Y LAS DOS SE MIDIERON.**
+
+**(a) La chapa no estaba COLOCADA y se auto-colocaba.** `.rev-score` es un tercer hijo de `.rev-sec`
+y la rejilla de doce pistas lo metía donde cupiera: medido, **columnas 5-6, 183 px de ancho**, con la
+cifra y «sobre 5» partiéndose en dos líneas, y **empujando el carril a la fila siguiente**. El
+artboard es explícito: *«la chapa del 4,8 en cuatro columnas y la opinión al lado, en ocho»*, con la
+cabecera encima a todo lo ancho.
+
+**(b) `1fr` NO reparte en partes iguales cuando el contenido es largo.** `1fr` es
+`minmax(auto, 1fr)`: su mínimo es el CONTENIDO. Medido con la reseña real, la cabecera salía a
+**309** y el carril a **779** donde el artboard escribe **352** y **736** — el texto de la opinión
+empujaba las pistas.
+▶ `repeat(12, minmax(0, 1fr))`, y `min-width: 0` en los hijos.
+
+⚠️⚠️ **Es un defecto que no aparece con contenido corto**: la sección 08, con las **mismas** doce
+pistas, medía 352 y 736 exactos porque sus preguntas caben. *Una rejilla que cuadra no demuestra que
+la declaración sea correcta: demuestra que ese contenido no la ha puesto a prueba.*
+
+▶ Verificado tras el arreglo: chapa **352**, carril **736**, los dos en la misma fila, cabecera a
+**1120**, desborde **0**.
+
+---
+
+**❗❗ 2 · EL TEXTO SE LEE ENTERO EN LA PROPIA PÁGINA** (`[DECIDIDO owner]`).
+
+Antes se recortaba a cuatro líneas y la única salida era irse a Google. Ahora el recorte lo abre un
+**«Ver más»** ahí mismo. ⚠️ **No incumple R4**: la prohibición es alterar el contenido del usuario, y
+el texto servido está completo desde el principio — el `line-clamp` solo lo tapa. Lo que se retira es
+la obligación de irse a otro sitio para leerlo. ⚠️ **La salida a Google NO desaparece**: cuando la
+reseña es suya, su enlace es parte de la acreditación que R3 exige.
+
+⚠️⚠️ **El botón se decide MIDIENDO, no contando caracteres.** Con un umbral de longitud, una opinión
+de 140 caracteres con palabras largas se corta y no ofrece abrirla, y otra de 160 con palabras cortas
+ofrece abrir lo que ya se ve entero. Se compara el alto real contra el visible.
+
+⚠️ Y el recorte pasa a valer para **las dos fuentes**: la razón por la que las propias no se
+recortaban era que no tenían adónde mandar, y ahora el destino es la propia tarjeta.
+
+---
+
+**❗❗❗ 3 · UNA GUARDA QUE PASABA SIN MIRAR NADA, Y LA CAZÓ EL ARNÉS.**
+
+`test_la_portada_no_llama_a_google` ponía el cliente HTTP a **explotar** y comprobaba que `GET /`
+seguía dando 200. La mutación que mete un `Cache::remember` en el render **no mordía**, por dos
+motivos que se tapaban entre sí:
+
+1. `refresh()` **se traga las excepciones por diseño** —sus cinco salidas son normales—, así que la
+   portada llamaba a Google y seguía respondiendo 200;
+2. y **un `Http::fake()` que lanza ni siquiera llega a registrar la petición**, así que tampoco se
+   podía ver a posteriori.
+
+▶ *Comprobar que la página no se rompe no es comprobar que no ha llamado a un tercero.* Hoy el falso
+**responde** y la aserción es `Http::assertNothingSent()`. Y su **guarda-de-la-guarda** cambia con
+ella: ya no comprueba que el falso explote, sino que **la aserción falla de verdad** cuando algo se
+envía.
+
+---
+
+**⚠️ 4 · LAS IMÁGENES DEL CLIENTE: MEDIDO, Y NO ES LO QUE PARECE.**
+
+Consultada la API el 2026-09-10: el sitio tiene **10 fotos**, cada una con su autoría —dos de
+«PlayJump Park» y una de «anna», la misma que dejó la reseña—. ❗❗ **Pero el objeto `review` NO tiene
+campo de fotos**: sus claves son `authorAttribution`, `flagContentUri`, `googleMapsUri`, `name`,
+`originalText`, `publishTime`, `rating`, `relativePublishTimeDescription` y `text`.
+
+▶ **Así que no puede ser «la foto de esta opinión»**: son fotos **del sitio**, con autor. Y traerlas
+cuesta **una llamada facturada por foto** al endpoint de medios, más su atribución (R3), más que el
+navegador del visitante pida la imagen —consentimiento y CSP, como el avatar—. **Queda planteado, no
+construido**: la pieza no está en el artboard y el coste choca con el tope diario que todavía no
+está puesto.
+
+**Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.

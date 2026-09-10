@@ -1,6 +1,6 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#491`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#492`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
 >
 > ▶ **LA T2i·b CIERRA LA PORTADA** (`#491`): la chapa del 4,8 con las estrellas recortadas **caja a
 caja**, las reseñas con su atribución, la caché corta y `social-proof:refresh` cada hora. Suite
@@ -2105,8 +2105,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4602 en verde** (28.877 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con la **T2i·b** (`#491`). ⚠️ **+14**: los 14 de
+> Suite **4603 en verde** (28.895 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con `#492`, el ojo del owner sobre Reseñas.
+> Antes, con la **T2i·b** (`#491`): **4602** y 28.877. ⚠️ **+14**: los 14 de
 > `SocialProofNeverHitsTheRenderPathTest`. Ninguno sale.
 > Antes, con la **T2i·a** (`#490`): **4588** y 28.802. ⚠️ **+12**: los 12 casos de
 > `ReviewsSectionTest`. Ninguno sale.

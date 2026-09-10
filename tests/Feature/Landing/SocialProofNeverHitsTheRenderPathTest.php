@@ -13,21 +13,29 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\AssertionFailedError;
 use Tests\TestCase;
 
 /**
  * **La portada NUNCA llama a Google, y las cinco salidas de la cascada** (`DECISIONES #491`,
  * `specs/google-reviews.md` §6·1 y §6·3).
  *
- * ❗❗❗ **El primer caso PROHÍBE EL MECANISMO, no comprueba un resultado.** El cliente HTTP se falsea
- * para **explotar si alguien lo llama**, y la portada tiene que seguir dando 200. Si mañana alguien
- * mete un `Cache::remember` en el camino del render —que es lo natural y lo que uno escribiría sin
- * pensar—, esto se pone rojo. `PERF-02` es la razón: la latencia de un tercero en el camino crítico
- * de la portada es peor que las ~1.900 consultas que aquella invariante existe para evitar.
+ * ❗❗❗ **El primer caso PROHÍBE EL MECANISMO, no comprueba un resultado.** Si mañana alguien mete un
+ * `Cache::remember` en el camino del render —que es lo natural y lo que uno escribiría sin pensar—,
+ * esto se pone rojo. `PERF-02` es la razón: la latencia de un tercero en el camino crítico de la
+ * portada es peor que las ~1.900 consultas que aquella invariante existe para evitar.
+ *
+ * ⚠️⚠️ **Y se asevera que no se ENVIÓ NADA, no que la página aguante — la diferencia la encontró el
+ * arnés.** La primera versión ponía el cliente HTTP a explotar y comprobaba que `GET /` seguía dando
+ * 200; esa mutación **no mordía**, por dos motivos que se tapaban entre sí: `refresh()` se traga las
+ * excepciones por diseño —sus cinco salidas son normales— y **un `Http::fake()` que lanza ni
+ * siquiera llega a registrar la petición**. *Comprobar que la página no se rompe no es comprobar que
+ * no ha llamado a un tercero.*
  *
  * ⚠️⚠️ **Y lleva su GUARDA-DE-LA-GUARDA**, que la spec pide expresamente: un caso que comprueba que
- * el falso SÍ explota cuando se le llama. Sin él, un `Http::fake()` mal montado dejaría el primer
- * caso **en verde sin mirar nada**.
+ * `assertNothingSent()` **falla de verdad** cuando algo se envía. Sin él, una aserción que no viera
+ * las peticiones dejaría el primer caso **en verde sin mirar nada** — que es exactamente lo que
+ * acababa de pasar.
  *
  * ⚠️ **El JSON de los casos tiene la forma de una respuesta REAL de Places**, capturada el
  * 2026-09-10 contra el sitio del parque (la salida está en `DECISIONES #491`). Lo único que se
@@ -43,7 +51,7 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
     {
         parent::setUp();
         app()->setLocale('es');
-        Cache::forget(GoogleSocialProof::CACHE_KEY);
+        Cache::forget(GoogleSocialProof::cacheKey());
         config()->set('services.google_places.key', 'clave-de-prueba');
         Setting::query()->updateOrCreate(
             ['key' => GoogleSocialProof::PLACE_ID_SETTING],
@@ -90,34 +98,43 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────────────
 
     /**
-     * **Con el cliente HTTP puesto para explotar, la portada sigue dando 200 y pinta la sección.**
+     * **La portada NO envía ni una petición a Google, ni con la caché vacía.**
+     *
+     * ⚠️⚠️ **Se asevera que no se ENVIÓ NADA, no que la página no se rompa — y la diferencia la
+     * encontró el arnés.** La primera versión ponía el cliente HTTP a EXPLOTAR y comprobaba que
+     * `GET /` seguía dando 200; la mutación que mete un `Cache::remember` en el render **no
+     * mordía**, por dos motivos que se tapaban entre sí: `refresh()` se traga las excepciones por
+     * diseño —sus cinco salidas son normales— y, además, **un `Http::fake()` que lanza no llega a
+     * registrar la petición**, así que ni siquiera se podía ver. *Comprobar que la página no se
+     * rompe no es comprobar que no ha llamado a un tercero.*
+     * ▶ Con un falso que RESPONDE, la llamada queda registrada y `assertNothingSent()` la caza.
      */
     public function test_la_portada_no_llama_a_google_ni_con_la_cache_vacia(): void
     {
         $this->conOpinionPropia();
-        Http::fake(function (): void {
-            throw new \RuntimeException('La portada ha llamado a un tercero en el camino del render.');
-        });
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
 
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertStringContainsString('<section id="reviews"', (string) $html);
+        Http::assertNothingSent();
     }
 
     /**
-     * **LA GUARDA DE LA GUARDA**: el falso SÍ explota si alguien lo llama.
+     * **LA GUARDA DE LA GUARDA**: `assertNothingSent()` FALLA de verdad cuando algo se envía.
      *
-     * ⚠️ Sin este caso, un `Http::fake()` mal montado dejaría el de arriba verde sin mirar nada — y
-     * un test que pasa por no estar comprobando nada es peor que no tenerlo.
+     * ⚠️ Sin este caso, un falso mal montado —o una aserción que no ve las peticiones— dejaría el de
+     * arriba **verde sin mirar nada**, y un test que pasa por no estar comprobando nada es peor que
+     * no tenerlo. Es exactamente lo que pasó con la versión anterior de este par.
      */
-    public function test_el_falso_explota_de_verdad_cuando_se_le_llama(): void
+    public function test_la_asercion_de_la_guarda_falla_cuando_si_se_envia(): void
     {
-        Http::fake(function (): void {
-            throw new \RuntimeException('boom');
-        });
+        Http::fake(['places.googleapis.com/*' => Http::response(['ok' => true])]);
 
-        $this->expectException(\RuntimeException::class);
         Http::get('https://places.googleapis.com/v1/places/x');
+
+        $this->expectException(AssertionFailedError::class);
+        Http::assertNothingSent();
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -141,7 +158,7 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
         $r = app(GoogleSocialProof::class)->refresh();
 
         $this->assertSame(SocialProofRefresh::UNREACHABLE, $r->outcome);
-        $this->assertNull(Cache::get(GoogleSocialProof::CACHE_KEY));
+        $this->assertNull(Cache::get(GoogleSocialProof::cacheKey()));
     }
 
     /**
@@ -173,14 +190,14 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
      */
     public function test_por_debajo_del_umbral_no_hay_media_publicable(): void
     {
-        Cache::put(GoogleSocialProof::CACHE_KEY, ['value' => 4.8, 'count' => 99, 'url' => null, 'reviews' => []], 600);
+        Cache::put(GoogleSocialProof::cacheKey(), ['value' => 4.8, 'count' => 99, 'url' => null, 'reviews' => []], 600);
 
         Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle(count: GoogleSocialProof::MIN_REVIEWS - 1))]);
 
         $r = app(GoogleSocialProof::class)->refresh();
 
         $this->assertSame(SocialProofRefresh::BELOW_THRESHOLD, $r->outcome);
-        $this->assertNull(Cache::get(GoogleSocialProof::CACHE_KEY), 'la caché conserva una cifra que ya no es publicable');
+        $this->assertNull(Cache::get(GoogleSocialProof::cacheKey()), 'la caché conserva una cifra que ya no es publicable');
     }
 
     public function test_con_datos_suficientes_queda_en_la_cache_corta(): void
@@ -237,6 +254,29 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
 
         $this->assertSame(SocialProofRefresh::CACHED, $r->outcome, 'la cifra sigue siendo publicable');
         $this->assertSame(0, $r->reviews, 'se publica una reseña sin acreditar a su autor');
+    }
+
+    /**
+     * ❗❗❗ **SE LE PIDE A GOOGLE EL IDIOMA DE LA PÁGINA, Y LA CACHÉ ES POR IDIOMA.**
+     *
+     * ⚠️ **Lo encontró renderizar con la reseña REAL, no una relectura**: sin `languageCode`, Google
+     * contestó `relativePublishTimeDescription` = «a week ago» y la portada en español lo publicó
+     * tal cual. Y no vale traducirlo nosotros: **R4 prohíbe alterar el contenido del usuario**, así
+     * que se le pide a quien puede hacerlo.
+     * ⚠️ Y por eso la caché lleva el idioma en la clave: con una sola, el primer refresco serviría
+     * su idioma a las tres versiones del sitio.
+     */
+    public function test_se_pide_el_idioma_de_la_pagina_y_la_cache_es_por_idioma(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+
+        app(GoogleSocialProof::class)->refresh('fr');
+
+        Http::assertSent(fn ($req) => str_contains($req->url(), 'languageCode=fr'));
+
+        // La clave lleva el idioma: lo cacheado en francés no se sirve en español.
+        $this->assertNotNull(Cache::get(GoogleSocialProof::cacheKey('fr')));
+        $this->assertNull(Cache::get(GoogleSocialProof::cacheKey('es')), 'una sola caché serviría el idioma equivocado');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
