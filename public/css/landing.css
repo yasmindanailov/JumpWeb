@@ -3901,3 +3901,227 @@ select:focus-visible {
   .mosaic__name { font-size: var(--fs-18); }
   .mosaic__zone { font-size: var(--fs-12); }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   SECCIÓN 04 · «CUMPLEAÑOS» · LOS DOS PACKS
+   Carril de diseño Fase 2 · T2e (`DECISIONES #483`). Artboard `Cumpleanos PJP` **7b** (móvil) +
+   `Escritorio PJP` **5a** (escritorio).
+
+   ⚠️⚠️ **El marcado heredado (`.bd-*`) NO se toca y sigue vivo**: lo pinta `/cumpleanos`, que es una
+   PÁGINA con artboard propio y se rehace en la Fase 3. Aquí no se poda nada.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️ La sección NO lleva `.wrap`: su cabecera va a SANGRE COMPLETA (la foto) y la columna la ponen
+   los bloques de dentro. Es la única de la portada que lo hace. */
+.party { padding: calc(var(--sec-air) / 2) 0; position: relative; }
+
+/* LA CABECERA SOBRE FOTO · la única sección de la portada que la lleva.
+   ⚠️⚠️ **La proporción cambia con la superficie y es ARITMÉTICA**: a 1120 el 16:9 daría 630 px
+   —tres cuartos de pantalla de escritorio antes de la primera palabra— y el 21:9 da 480. El recorte
+   de una foto no es un valor del sistema: es lo que deja la retícula. */
+.party__head { position: relative; }
+.party__head--photo { aspect-ratio: 16 / 9; overflow: hidden; }
+.party__img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  display: block;
+}
+/* ⚠️ El velo va al **.72** del artboard y se compone con `--paper-fg`, no con `--fg`: dentro de una
+   superficie de tinta `--fg` vale CLARO, y el velo se volvería luz (la lección de `#196`). */
+.party__head--photo .party__head-in {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: color-mix(in srgb, var(--paper-fg) 72%, transparent);
+  padding-top: var(--sp-14); padding-bottom: var(--sp-14);
+}
+.party__eyebrow {
+  margin: 0;
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--fg-mute);
+}
+.party__title {
+  font-family: var(--font-display);
+  /* ⚠️ 400 EXPLÍCITO: sin declararlo un `<h2>` hereda el `bold` del navegador y el motor SINTETIZA
+     una negrita que Bungee no tiene (las 77 reglas fichadas en `DEUDA.md`). */
+  font-weight: 400;
+  font-size: var(--fs-display-l);
+  line-height: 0.95; letter-spacing: -0.01em; margin: var(--sp-8) 0 0;
+}
+/* Sobre la foto, el rótulo y el titular se aclaran: la banda de tinta está debajo. */
+.party__head--photo .party__eyebrow { color: var(--paper-bg); opacity: 0.82; }
+.party__head--photo .party__title { color: var(--paper-bg); }
+
+.party__lede {
+  margin: var(--sp-20) 0 0;
+  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
+  color: var(--fg-mute); max-width: 52ch;
+}
+
+/* EL RELOJ DE LAS DOS HORAS · `[DECIDIDO owner]`: dentro en las DOS superficies, contra el artboard,
+   que lo apaga en móvil por presupuesto de pantalla.
+   ❗❗ **NO REPARTE**: las tres cosas van sobre UN carril entero, sin tramos. Un diagrama de tramos
+   promete horario aunque la letra diga lo contrario, y aquí no hay hora para nada. */
+.party__clock {
+  margin-top: var(--sp-20);
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  padding: var(--sp-20);
+}
+.party__clock-title {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-20); line-height: 1.15;
+  color: var(--fg);
+}
+.party__clock-rule { margin: var(--sp-16) 0 0; font-size: var(--fs-body); line-height: 1.45; color: var(--fg-mute); }
+.party__clock-rail { margin-top: var(--sp-18); }
+.party__clock-caps { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--sp-8); }
+.party__clock-caps li {
+  flex: 1; text-align: center;
+  border: 1.5px solid var(--line-strong); border-radius: var(--r-pill);
+  padding: 9px var(--sp-4);
+  font-family: var(--font-body); font-weight: 700; font-size: var(--fs-15); line-height: 1.2;
+  color: var(--fg);
+}
+/* ⚠️ El filete va **entero y sin cortes**: es el carril de las dos horas, y partirlo volvería a
+   dibujar los tramos que la pieza existe para no dibujar.
+   ⚠️⚠️ **Lee `--money`, y es un rol prestado que se declara.** El artboard lo pinta en Lima Bote, y
+   `--money` es el token cuyo valor ES ese lima en las dos superficies (`#479`) — su nombre dice
+   «cifra», y aquí la cifra que se dibuja son las dos horas. Se prefiere prestarlo a inventar un
+   token para una línea: sin él el filete cae a la tinta de la superficie, que sobre el bloque oscuro
+   sale CLARO y pierde el acento (medido antes de corregirlo). */
+.party__clock-line {
+  display: block; margin-top: var(--sp-10);
+  border-top: 2px solid var(--money, var(--fg));
+}
+
+/* LAS DOS TARJETAS. Alternan SUPERFICIE —papel y tinta—, no color de zona: pintarlas con la paleta
+   sería la «grieta 01» que el propio canvas nos reportó. */
+.party__packs {
+  list-style: none; margin: var(--sp-20) 0 0; padding: 0;
+  display: grid; gap: var(--sp-20);
+}
+.party-card {
+  display: flex; flex-direction: column;
+  background: var(--paper-bg);
+  border: 2px solid var(--paper-fg);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-float);
+  padding: var(--sp-18) var(--sp-16);
+  color: var(--paper-fg);
+  height: 100%;
+  transition:
+    transform var(--dur-sale) var(--ease-sale),
+    box-shadow var(--dur-sale) var(--ease-sale);
+}
+/* ⚠️⚠️ **La pegatina se HUNDE, no levita**, y son EXACTAMENTE los mismos tokens que la tarjeta de
+   zona de `#478`: baja `--press-shift` y su sombra se acorta, así que la suma no cambia y el keyline
+   no se mueve de sitio. Escribir aquí un `translate(3px,3px)` literal habría creado una segunda
+   física para el mismo gesto a media portada de distancia. */
+.party-card:hover {
+  transform: translate(var(--press-shift), var(--press-shift));
+  box-shadow: var(--shadow-float-hover);
+}
+.party-card:active {
+  transform: translate(calc(var(--press-shift) + 2px), calc(var(--press-shift) + 2px));
+  box-shadow: var(--shadow-float-press);
+}
+/* La tarjeta que declara SUPERFICIE de tinta se pinta con los tokens de esa superficie, no con
+   literales: es el territorio por superficie del artboard.
+   ⚠️ Quién la declara lo decide la VISTA (`data-surface="ink"` en la posición impar), porque es un
+   hecho del contenido —son dos y alternan— y no una regla de estilo. */
+.party__pack-item[data-surface='ink'] .party-card {
+  background: var(--bg-card); color: var(--fg);
+}
+
+.party-card__chip {
+  align-self: flex-start;
+  background: var(--zone-1); border: 2px solid var(--paper-fg);
+  border-radius: var(--r-pill); padding: 5px var(--sp-11);
+  font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--on-brand);
+}
+.party-card__age {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-title); line-height: 1.05;
+  margin-top: var(--sp-12);
+}
+.party-card__list { display: flex; flex-direction: column; gap: 9px; margin-top: var(--sp-14); }
+.party-card__feat { display: flex; gap: var(--sp-10); align-items: flex-start; font-size: var(--fs-body); line-height: 1.35; }
+/* ⚠️⚠️ **El punto es CUADRADO y lee `--money`**, que es el token cuyo valor es el lima del artboard
+   **en las dos superficies** —oscuro sobre papel y vivo sobre tinta—. Antes leía `--zone-ink`, que
+   solo lo emite un elemento con la paleta de su zona compuesta, y aquí no hay ninguno: caía a `--fg`
+   y en la tarjeta de tinta salía **tinta sobre tinta**, medido. */
+.party-card__dot {
+  flex: none; width: 8px; height: 8px; margin-top: var(--sp-6);
+  background: var(--money, var(--fg));
+}
+
+.party-card__money {
+  display: flex; align-items: flex-start; gap: var(--sp-12);
+  margin-top: var(--sp-18); padding-top: var(--sp-16);
+  border-top: 1.5px solid var(--line-strong);
+}
+.party-card__terms { flex: 1; min-width: 0; }
+.party-card__special { display: block; font-size: var(--fs-15); line-height: 1.45; }
+.party-card__terms-line {
+  display: block; margin-top: var(--sp-8);
+  font-family: var(--font-mono); font-size: var(--fs-11); line-height: 1.5;
+  color: var(--fg-mute);
+}
+/* EL SELLO girado. ⚠️ La rotación solo vale de −2° a −8° y solo en manchas, cinta y sello: éste es
+   un sello, y −6° es el valor del artboard. */
+.party-card__seal {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end;
+  background: var(--marker, var(--zone-1));
+  border: 2px solid var(--paper-fg); border-radius: var(--r-md);
+  box-shadow: var(--shadow-float);
+  padding: var(--sp-8) var(--sp-12);
+  transform: rotate(-6deg);
+  margin: 2px var(--sp-4) var(--sp-6) 0;
+  color: var(--on-marker, var(--paper-fg));
+}
+.party-card__price { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-22); line-height: 1; }
+.party-card__unit {
+  font-family: var(--font-mono); font-size: var(--fs-10);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-top: var(--sp-3); white-space: nowrap;
+}
+
+/* La salida. ⚠️ `margin-top: auto` la pega al fondo: sin esto, una línea más en un pack descuadra la
+   salida del otro — el fallo que el artboard dice que ya se pagó en Zonas. */
+.party-card__go {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8);
+  margin-top: auto; padding-top: var(--sp-12);
+  border-top: 2px solid var(--line);
+  min-height: var(--tap-min);
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-16);
+  color: var(--interactive);
+}
+/* ⚠️ El enlace de la tarjeta de tinta sale de `--interactive`, igual que el de la de papel: el
+   mecanismo de superficie ya le da su valor —cian sobre tinta, Azul Muro sobre papel (`#436`)—, así
+   que **no hay una segunda regla de color**, hay una sola leída en dos superficies. */
+
+.party__mixed { margin: var(--sp-12) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
+
+@media (min-width: 1024px) {
+  /* ⚠️ **21:9 y no 16:9**, y es aritmética: a 1120 el 16:9 son 630 px de foto antes de la primera
+     palabra y el 21:9 son 480. */
+  .party__head--photo { aspect-ratio: 21 / 9; }
+  .party__head--photo .party__head-in { padding-top: var(--sp-20); padding-bottom: var(--sp-20); }
+
+  /* El reloj a DOS columnas: la regla escrita a la izquierda y el carril a la derecha, dentro del
+     ancho que ya había. Por eso en escritorio no cuesta alto. */
+  .party__clock { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+  .party__clock-rail { margin-top: 0; }
+
+  /* Las dos tarjetas se comparan AL LADO, que es lo que el artboard pide. */
+  .party__packs { grid-template-columns: 1fr 1fr; gap: 32px; }
+
+  /* Lo que sube de nivel, tal cual lo lista el artboard. */
+  .party-card__age { font-size: var(--fs-title); }
+  .party-card__price { font-size: 30px; }
+  .party-card__feat, .party-card__special { font-size: var(--fs-17); }
+  .party-card__chip, .party-card__terms-line { font-size: var(--fs-12); }
+}

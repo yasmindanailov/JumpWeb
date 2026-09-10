@@ -164,73 +164,17 @@
                 <x-site.special-rate-note />
             @endif
 
-            {{-- ══ LOS COMPLEMENTOS, FUERA DE LAS TARJETAS ════════════════════════════════════
-                 `Cumpleanos Pagina PJP` 5a · `[DECIDIDO owner, 2026-09-09]`.
-
-                 ❗❗❗ **Salen de la tarjeta porque LOS COMPARTEN CASI TODAS**, y hay una regla del
-                 sistema que lo pide: *«una comparativa solo compara lo que difiere; lo común va a su
-                 propio bloque»*. Los calcetines estaban en las tres tarifas, o sea escritos tres
-                 veces dentro de una comparativa — y el hueco que dejaron es el que ocupa ahora el
-                 AHORRO, que sí difiere entre ellas.
-
-                 ⚠️⚠️ **Son los de los productos QUE SE VEN, y por eso el bloque vive DENTRO del
-                 panel de cada zona.** «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos
-                 con dos precios: un bloque único para la sección tendría que enseñar los dos o
-                 elegir uno, y las dos salidas mienten. Al cambiar de pestaña cambia el bloque.
-                 ⚠️ **Sin repetir**, y la deduplicación es por ID y nunca por nombre: en otra
-                 instalación dos complementos distintos pueden llamarse igual, y fundirlos por
-                 rótulo publicaría el precio de uno bajo el nombre del otro.
-
-                 ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO** (`tabindex="0"`, `role="group"`,
-                 `aria-label`), y no es adorno de accesibilidad: **dentro no hay ningún control**
-                 —son fichas, no botones—, así que sin esto la segunda tarjeta **no se alcanza sin
-                 ratón**. Lo dice el propio artboard. --}}
-            @php($extras = \App\Domain\Content\Services\LandingAddonPresenter::unique(collect($z['cards'])->pluck('ticket')))
-
-            @if (! empty($extras))
-                <div class="addons-rail">
-                    <h3 class="addons-rail__title">{{ __('landing.rates.addons_title') }}</h3>
-                    <p class="addons-rail__lede">{{ __('landing.rates.addons_intro') }}</p>
-
-                    <div class="addons-rail__track" tabindex="0" role="group"
-                         aria-label="{{ __('landing.rates.addons_title') }}">
-                        @foreach ($extras as $extra)
-                            <div class="addon-card">
-                                {{-- El MARCADOR del complemento, el mismo campo que ya elige el
-                                     panel (`ticket_types.icon`). ⚠️ `aria-hidden`: su nombre va al
-                                     lado y un icono que se anunciara lo diría dos veces. --}}
-                                <span class="addon-card__ico" aria-hidden="true">
-                                    <x-dynamic-component :component="'icons.'.$extra['icon']" :width="24" :height="24" />
-                                </span>
-                                {{-- ⚠️ **Nombre y precio en la MISMA fila** (`[owner]`): la ficha era
-                                     de dos y quedaba alta para lo que dice. El nombre se estira y el
-                                     precio se queda pegado al canto, sin partirse. --}}
-                                <span class="addon-card__name">{{ $extra['name'] }}</span>
-                                {{-- ❗❗ **El «+» y la UNIDAD, para que el precio no se confunda con
-                                     el de la entrada** (`[owner]`). El signo es honesto aquí y no lo
-                                     era en la tarifa especial: un complemento **se suma** a lo que
-                                     compras, mientras que la especial es un precio ALTERNATIVO —por
-                                     eso aquélla va entera y éste con signo.
-                                     ⚠️⚠️ **La unidad sale del PIVOTE, no se escribe**: `per_guest`
-                                     dice «por invitado» y `fixed` dice «cada uno». Poner «por
-                                     persona» en un complemento `fixed` sería FALSO — de esos se
-                                     elige cantidad, no se cobra uno por cabeza. Medido: los siete
-                                     enganches de este catálogo son `fixed`. --}}
-                                <span class="addon-card__price">
-                                    @if ($extra['price'])
-                                        {{-- ⚠️ «desde» cuando el precio cambia según el día: sin él,
-                                             el bloque anunciaría el más barato como si fuera el
-                                             único, y el checkout cobraría otro. --}}
-                                        @if ($extra['varies']){{ __('landing.rates.from') }} @endif+{{ $extra['price'] }}&nbsp;€<span class="addon-card__unit">{{ $extra['perGuest'] ? __('landing.rates.addon_per_guest') : __('landing.rates.addon_each') }}</span>
-                                    @elseif ($extra['badge'])
-                                        {{ __('tickets.addon_badge_'.$extra['badge']) }}
-                                    @endif
-                                </span>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
+            {{-- ⚠️⚠️ **EL BLOQUE DE COMPLEMENTOS ES UN COMPONENTE COMPARTIDO desde `#483`**: la
+                 sección 04 pide exactamente la misma pieza con los packs dentro, y el owner lo dijo
+                 con esas palabras —*«es el mismo formato y diseño que los complementos de las
+                 entradas»*—. Sus reglas y sus trampas viven ahora en `<x-site.addons-rail>`.
+                 ⚠️ Lo que se queda AQUÍ es el ALCANCE: los complementos de los productos de ESTA
+                 zona, porque «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos con dos
+                 precios y un bloque único para la sección tendría que enseñar los dos o elegir uno.
+                 Al cambiar de pestaña cambia el bloque. --}}
+            <x-site.addons-rail :products="collect($z['cards'])->pluck('ticket')"
+                                :title="__('landing.rates.addons_title')"
+                                :lede="__('landing.rates.addons_intro')" />
         </div>
     @endforeach
 </div>

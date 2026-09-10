@@ -59,6 +59,34 @@ trait WritesLandingValues
         return number_format($cm / 100, 2, $this->coma(), '');
     }
 
+    /**
+     * Minutos → duración escrita para el ESCAPARATE: «2 h», «45 min», «1 h 30 min».
+     *
+     * ⚠️⚠️ **No se usa `Duration::formatHumane()`, y no es un olvido**: aquél escribe con el
+     * diccionario del PANEL (`admin.orders.item_detail.duration.*`), y una página pública que lea
+     * los textos del operador es una fuga de dominio que además nadie ve —las tres cadenas se leen
+     * bien en los tres idiomas—.
+     *
+     * ⚠️ **`HeroStatus` conserva su propia copia de esta regla** y no puede usar ésta: vive en
+     * `Content`, que solo puede mirar a `Booking\Contracts`, y este trait está en `Booking\Concerns`.
+     * Ficha en `DEUDA.md`: son dos escrituras de la misma regla a un palmo en la misma página.
+     */
+    private function duracion(int $minutos): ?string
+    {
+        if ($minutos <= 0) {
+            return null;
+        }
+
+        $horas = intdiv($minutos, 60);
+        $resto = $minutos % 60;
+
+        return match (true) {
+            $horas === 0 => $resto.' min',
+            $resto === 0 => $horas.' h',
+            default => $horas.' h '.$resto.' min',
+        };
+    }
+
     /** El separador decimal del idioma. */
     private function coma(): string
     {

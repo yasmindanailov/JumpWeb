@@ -46,6 +46,11 @@ class HoverDoesNotJumpTest extends TestCase
     private const PEGATINA_QUE_SE_APRIETA = [
         '.zone-card:hover',
         '.zone-card:active',
+        // ⚠️ La tarjeta de pack de la sección 04 (`#483`) usa **los MISMOS tokens** que la de
+        // zona —`--press-shift` y los dos escalones de sombra—, no una segunda física: es la
+        // misma pegatina apretándose en otra sección.
+        '.party-card:hover',
+        '.party-card:active',
     ];
 
     /** El cajón SPA (aparcado, `[DECIDIDO owner, 2026-09-01]`): sus botones siguen subiendo 2 px. Solo encoge. */

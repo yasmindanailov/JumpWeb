@@ -67,9 +67,20 @@ class RateRailSectionTest extends TestCase
         $ini = strpos($html, 'id="rate-panel-'.$slug.'"');
         $this->assertNotFalse($ini, "no existe el panel de la zona `{$slug}`: este caso miraría el vacío.");
 
-        $fin = strpos($html, 'id="rate-panel-', $ini + 10);
+        /*
+         * ⚠️⚠️ **EL RECORTE TERMINA EN LA SECCIÓN, NO «AL LLEGAR AL SIGUIENTE PANEL»**, y esto lo
+         * cazó `#483`. Antes, para el ÚLTIMO panel no había «siguiente» y el localizador se llevaba
+         * **el resto del documento**: al nacer un segundo bloque de complementos más abajo —el de
+         * cumpleaños—, este caso contó 6 fichas donde su panel pinta 2.
+         * ▶ Es la lección de `#314` en otra puerta: *un localizador que depende de qué viene DESPUÉS
+         * no acota una sección, acota un tramo de página*. El cierre de `<section>` sí es suyo.
+         */
+        $siguiente = strpos($html, 'id="rate-panel-', $ini + 10);
+        $cierre = strpos($html, '</section>', $ini);
 
-        return substr($html, $ini, ($fin === false ? strlen($html) : $fin) - $ini);
+        $fin = min(array_filter([$siguiente, $cierre], static fn ($n): bool => $n !== false) ?: [strlen($html)]);
+
+        return substr($html, $ini, $fin - $ini);
     }
 
     /**

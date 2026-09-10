@@ -245,6 +245,41 @@ return [
         'label' => 'Complementos disponibles',
     ],
     'events' => [
+        /*
+         * La sección 04 «Cumpleaños» rehecha desde el canvas (`#483`). ⚠️ El RÓTULO no lleva número
+         * y el TITULAR es una frase, como las otras siete.
+         * ⚠️⚠️ `title` sigue existiendo con su valor viejo porque lo usa **`/cumpleanos`**, que es
+         * una PÁGINA con artboard propio y se rehace en la Fase 3. Cambiarlo aquí habría movido el
+         * `<h1>` de esa página desde una tanda de la portada.
+         */
+        'section_title' => 'El cumple, resuelto',
+        // ⚠️ La entradilla **vende con una cifra** del catálogo; sin packs con precio cae a la
+        // variante sin cifra, porque un «desde» que no existe miente (la regla de `#479`).
+        'section_intro' => 'Dos horas, la comida de los niños y los calcetines. Desde :from por niño.',
+        'section_intro_plain' => 'Dos horas, la comida de los niños y los calcetines.',
+        // La edad del PACK. Son tres formas y no una con un valor opcional: dicen cosas distintas.
+        'age_between' => 'De :a a :b años',
+        'age_from' => 'Desde :a años',
+        'age_up_to' => 'Hasta :b años',
+        // El sello girado: la cifra y su unidad.
+        'per_child' => 'por niño',
+        'special_suffix' => 'en tarifa especial',
+        'see_pack' => 'Ver el cumple',
+        // El pie de la sección: la edad mezclada, en una línea y sin cifras.
+        'mixed_note' => '¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.',
+        /*
+         * EL RELOJ de las dos horas. ⚠️⚠️ **No reparte, y ésa es la regla**: las dos horas son para
+         * todo —merienda, tarta y saltos— y no hay hora para nada. Un diagrama de tramos promete
+         * horario aunque la letra diga lo contrario, así que se dibuja el TOTAL entero con las tres
+         * cosas encima. `:duration` sale del catálogo.
+         */
+        'clock_title' => 'Las :duration, a vuestro ritmo',
+        'clock_a' => 'Saltos', 'clock_b' => 'Merienda', 'clock_c' => 'Tarta',
+        'clock_rule' => 'Dentro cabe todo y sin horario: si meriendan rápido, saltan más rato. El orden lo decidís vosotros.',
+        'clock_monitor' => 'Un monitor con ellos de principio a fin. Vosotros, sentados.',
+        // El bloque de complementos, con el molde compartido con las tarifas (`#483`).
+        'addons_title' => 'Tu fiesta, tu manera',
+        'addons_intro' => 'Añade lo que quieras: nada de esto hace falta para reservar.',
         'eyebrow' => 'Cumpleaños', 'title' => 'Cumpleaños',
         'included' => 'Incluido en el pack', 'from' => 'Desde',
         'choose' => 'Elige tu cumpleaños',

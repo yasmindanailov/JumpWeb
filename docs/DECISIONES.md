@@ -25947,3 +25947,96 @@ públicas, desborde **0** y ninguna pieza nueva bajo el táctil · geometría de
 el artboard en 390 y 1280.
 
 **Queda**: el OJO del owner, y las cuatro decisiones suyas de arriba (el bar, y las tres pérdidas).
+
+## #483 · 2026-09-10 · `[DECIDIDO owner]` La sección «Cumpleaños»: los dos packs se comparan, el reloj no reparte, y el bloque de complementos pasa a ser UN molde para las dos secciones
+
+**Contexto.** T2e del carril. La sección 04 pasa de la banda heredada —polaroid, cinta, pegatina,
+billete, selector de packs y un «paso a paso» de cinco pasos— al artboard `Cumpleanos PJP` **7b**
+(móvil) + `Escritorio PJP` **5a** (escritorio, aprobada el 8 sep). Medido antes de tocar nada: era
+**2.489 px en móvil** (1.874 la banda + 615 el paso a paso), la sección más larga de la portada.
+
+**❗❗❗ POR TERCERA VEZ EN EL CARRIL, EL ACTA DESCRIBE PIEZAS QUE SU PROPIO ARTBOARD TIENE APAGADAS.**
+Aquí el **reloj de la fiesta** y el **aviso INFO** salieron con el recorte de presupuesto del 7 sep
+(`conRelojFiesta` / `conAvisoInfo`, off por defecto): la sección pasa de 1.605 a **1.153 px** medidos.
+Es el mismo patrón de la chapa de zona (`#480`) y de la chapa del «18 más» (`#482`). ▶ *Esta fuente
+no se relee antes de cada tanda: se relee antes, mientras dura, y sin creerse el acta.*
+⚠️ Y el artboard **se movió durante la tanda**: apareció un **turno 8** nuevo —«Tu fiesta, tu
+manera»— que el canvas ofrece como propuesta abierta, con su coste medido.
+
+**Las cuatro decisiones del owner:**
+
+1. **El «paso a paso» SALE de la portada** y se queda en `/cumpleanos`, donde el mismo componente ya
+   lo pinta. Ahorra **615 px** en una portada que iba por 13,43 pantallas contra el presupuesto de 11.
+2. **Las tarjetas NAVEGAN a la página**, no abren el cajón. Su razón la escribe el canvas: *«en la
+   landing va la promesa, no la lista»*. ⚠️ Consecuencia declarada y fichada: la portada se queda
+   **sin ninguna puerta que abra el cajón posicionado** —la de zona ya se perdió en `#482`—.
+3. **El turno 8 SÍ entra, pero con el molde de las entradas**: *«es el mismo formato y diseño que los
+   complementos de las entradas; simplemente mostramos los complementos disponibles para los
+   cumpleaños sin repetirse»*. ▶ Eso convirtió el bloque en **componente compartido**.
+4. **El reloj entra en las DOS superficies**, contra el artboard, que lo apaga en móvil por
+   presupuesto.
+
+**▶ El bloque de complementos sale de `rate-rail` y pasa a `<x-site.addons-rail>`.** No es refactor
+por gusto: la sección 04 pide exactamente la misma pieza con otros productos dentro, y con dos copias
+el día que alguien cambie el signo, la unidad o el «desde» de una, la portada publicaría dos moldes a
+media pantalla de distancia. ⚠️ **La extracción se verificó BYTE A BYTE**: el bloque renderizado de
+tarifas es idéntico antes y después. ⚠️ El **alcance** se queda en el llamante: en tarifas es por
+zona —«Hora extra · KIDS» y «· JUMP» son dos productos con dos precios— y en cumpleaños son los dos
+packs a la vez, deduplicados **por ID**.
+
+**❗❗ LA EDAD QUE SE PUBLICA ES LA DEL PACK, y eso cierra una divergencia que el canvas dejó abierta**
+(*«la página dice 4–7 y desde 8; la portada dice la de la zona, 2–6 y desde 7»*). Medido:
+`ticket_types.guest_age_min/max` dice **4–7** y **8+**, y es el campo que **cobra el suplemento de
+fiesta mixta** — publicar otro tramo prometería un precio distinto del que se cobra. `#478` ya lo
+había decidido para las zonas: manda la BD.
+
+**❗❗ EL RELOJ NO REPARTE LAS DOS HORAS.** Son para todo —merienda, tarta y saltos— y no hay hora para
+nada. Los tres tramos con minutos que había contaban un horario que no existe, y *un diagrama de
+tramos promete horario aunque la letra diga lo contrario*: se dibuja el TOTAL entero con las tres
+cosas encima y el filete sin cortes.
+
+---
+
+**❗❗❗ DOS DEFECTOS REPRODUCIDOS EN NAVEGADOR, y los dos con la suite en verde.**
+
+**(1) La tarjeta oscura no declaraba su SUPERFICIE.** *Pintarle el fondo a una tarjeta no le cambia
+los tokens.* Medido: dentro de ella el punto de la viñeta salía en `rgb(16,20,24)` sobre un fondo
+`rgb(26,31,37)` —**tinta sobre tinta**, contraste ≈ 1,1— y los términos, en el gris del PAPEL. Lo
+arregla el mecanismo de superficie del producto (`#192`): `data-surface="ink"` flipa `--fg`,
+`--fg-mute`, `--line`, `--interactive` y `--money` de golpe. ▶ Y el resultado son **exactamente los
+colores que el artboard escribe a mano**: punto en lima vivo sobre tinta (8,12) y en Lima 800 sobre
+papel (4,73), sin un solo literal. Guarda propia.
+
+**(2) EL HOVER DE LA PEGATINA ESTABA MAL DESDE `#478`, EN TODA LA PORTADA.** Aquella tanda escribió
+el hover de la tarjeta de zona con `--shadow-float-hover` / `--shadow-float-press` y dejó dicho —en
+su propio comentario— que *«un paquete de instalación con otra sombra los mueve con ella»*. **El
+paquete no los declaraba**: solo `--shadow-float`. Medido en el navegador, la tarjeta reposaba en la
+sombra DURA del cliente (`5px 5px 0`) y al pasar el ratón **saltaba a la difusa del producto**
+(`0 6px 14px -8px`). ▶ *Un comentario que describe un mecanismo no lo implementa.* Con los dos
+tokens en el paquete, medido: reposo `5px 5px 0` → hover `2px 2px 0`, hundiéndose 3 px, la suma sigue
+siendo 5 y el keyline no se mueve. **Arregla también la tarjeta de zona.** Guarda nueva en
+`ClientThemePackageTest` con el patrón de `RhythmScaleTest`: **los tres o ninguno**, y vista morder.
+
+**⚠️⚠️ Y UN LOCALIZADOR DE GUARDA QUE ACOTABA MAL, cazado de rebote.** `RateRailSectionTest::panel()`
+recortaba «hasta el siguiente panel», y para el ÚLTIMO no había siguiente: se llevaba **el resto del
+documento**. Al nacer un segundo bloque de complementos más abajo, contó **6** fichas donde su panel
+pinta 2. ▶ Es la lección de `#314` por otra puerta: *un localizador que depende de qué viene DESPUÉS
+no acota una sección, acota un tramo de página.*
+
+**⚠️ Una medición mía salió FALSA y la cacé comprobándola por otra vía**: la primera consulta dio los
+dos packs a **0,00 €** —leí `amount` en vez de `amount_cents`—. Los precios reales son exactamente
+los que el canvas escribe: 14,95 · 15,95, especiales 16,95 · 19,95, señal 50 €.
+
+**Guardas**: se re-apuntan a `/cumpleanos` las que miraban la banda en la portada
+(`LandingAddonsTest` ×8, `PublicPagesTest` ×2, `TouchTargetTest` `bd-tab`), entra
+**`PartySectionTest`** con 9 casos, y `bd-invite-cta` **se retira con su sujeto** —su rama
+`@unless($showInvite)` se quedó sin llamante, ficha en `DEUDA.md`—.
+
+**Verificación**: suite **4.554** en verde · sonda de geometría en 13 vistas, desborde **0** y ninguna
+pieza nueva bajo el táctil · medido contra el artboard: packs **544×377** en la misma fila y a la
+misma altura, reloj a **dos columnas**, foto **21:9** en escritorio y 16:9 en móvil, titular 34/52,
+edad 26/36, sello 22/30. La sección baja de **2.489 a 1.795 px** en móvil y la portada de **13,43 a
+12,65 pantallas**.
+
+**Queda**: el OJO del owner, y las dos fichas de `DEUDA.md` (la tarjeta de invitación y la duplicidad
+de la regla de duración).

@@ -41,33 +41,48 @@ class PublicPagesTest extends TestCase
 
     public function test_birthday_invitation_card_only_on_events_page(): void
     {
-        // #231: la tarjeta de invitación editable (birthdayInvite) ya NO va en la landing (para no
-        // saturar) — solo en /cumpleanos (ancla #tarjeta-invitacion). En la landing hay un enlace
-        // sutil a esa página. Los términos de reserva (#7, mín. 8) sí van en ambas (sección 1).
+        /*
+         * #231: la tarjeta de invitación editable (birthdayInvite) va SOLO en /cumpleanos (ancla
+         * #tarjeta-invitacion).
+         * ⚠️⚠️ **En la portada ya NO hay enlace sutil a ella, y es de `#483`**: ese enlace vivía en
+         * la rama `@unless($showInvite)` de la banda heredada, que salió de la portada al rehacerse
+         * la sección 04 desde el canvas. La rama sigue en el componente —es de `/cumpleanos`, página
+         * de la Fase 3— pero **sin ningún llamante**. Ficha en `DEUDA.md`.
+         * ▶ Lo que la portada SÍ conserva es lo que importa: que la tarjeta editable no esté ahí.
+         */
         $home = $this->get('/')->assertOk();
         $home->assertDontSee('birthdayInvite', false);          // sin tarjeta en la landing
         $home->assertDontSee('Descargar tarjeta');
-        $home->assertSee('¿Te gustaría crear tu invitación personalizada?'); // CTA bajo la card (ES, #231)
-        $home->assertSee('/cumpleanos#tarjeta-invitacion', false);
-        $home->assertSee('De 8 a 20 niños');                    // términos de reserva (sección 1): mín–máx
+        $home->assertSee('De 8 a 20 niños');                    // términos de reserva: mín–máx y señal
 
         $events = $this->get('/cumpleanos')->assertOk();
         $events->assertSee('birthdayInvite', false);            // tarjeta editable en /cumpleanos
         $events->assertSee('Descargar tarjeta');
         $events->assertSee('id="tarjeta-invitacion"', false);   // ancla de destino del enlace
         $events->assertDontSee('¿Te gustaría crear tu invitación'); // el CTA no va aquí (está el editor)
+        // Y el enlace sutil no está en NINGUNA superficie desde `#483`: si algún día vuelve, será
+        // una decisión, no un descuido.
+        $this->get('/')->assertDontSee('¿Te gustaría crear tu invitación');
         $events->assertSee('De 8 a 20 niños');
     }
 
     public function test_birthday_process_and_zone_photo_render(): void
     {
-        // #231: la sección «Proceso» (5 pasos) y la foto de la zona cumpleaños (polaroid).
-        foreach (['/', '/cumpleanos'] as $url) {
-            $response = $this->get($url)->assertOk();
-            $response->assertSee('birthdayProcess', false);                 // stepper Alpine (#231)
-            $response->assertSee('Cómo se reserva');                        // eyebrow del proceso (ES)
-            $response->assertSee('images/attractions/cumplea_1.webp', false); // foto de la zona cumpleaños
-        }
+        /*
+         * #231: la sección «Proceso» (5 pasos) y la foto de la zona cumpleaños.
+         * ⚠️⚠️ **El «paso a paso» salió de la portada en `#483`** (`[DECIDIDO owner]`, medido: 615 px
+         * de los 2.489 que ocupaba la sección) y sigue entero en su página. Se mira donde está.
+         */
+        $events = $this->get('/cumpleanos')->assertOk();
+        $events->assertSee('birthdayProcess', false);                 // stepper Alpine (#231)
+        $events->assertSee('Cómo se reserva');                        // eyebrow del proceso (ES)
+        $events->assertSee('images/attractions/cumplea_1.webp', false);
+
+        // ⚠️ La FOTO sí sigue en la portada, y en un sitio distinto: es la cabecera de la sección
+        // 04, que el artboard pone sobre foto. `zones.image` conserva su consumidor en las dos.
+        $this->get('/')->assertOk()
+            ->assertSee('images/attractions/cumplea_1.webp', false)
+            ->assertDontSee('birthdayProcess', false);
     }
 
     public function test_footer_has_account_link_in_info(): void

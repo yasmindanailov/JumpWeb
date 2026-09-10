@@ -89,8 +89,16 @@ class TouchTargetTest extends TestCase
         // exactamente lo que tenía que hacer: sin ese aviso, el día que `.zone-tab` desapareciera
         // del todo este caso pasaría en verde sin mirar nada.
         'zone-tab' => ['/precios', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
-        'bd-tab' => ['/', 'pestaña de cumpleaños, 41'],
-        'bd-invite-cta' => ['/', 'el enlace de la invitación, 17 px de alto'],
+        // ⚠️ Se mira en `/cumpleanos` y ya no en `/`: la banda heredada salió de la portada en
+        // `#483` y **sigue entera en su página**, que tiene artboard propio (Fase 3). Re-apuntar
+        // no debilita: el mismo control, en la única superficie donde hoy se pinta.
+        'bd-tab' => ['/cumpleanos', 'pestaña de cumpleaños, 41'],
+        // ⚠️⚠️ **`bd-invite-cta` SE RETIRA con su sujeto** (`#483`), y no es lo mismo que
+        // `bd-tab`: aquél sigue vivo en `/cumpleanos` y éste **no se pinta en ninguna parte**. Su
+        // rama es `@unless ($showInvite)`, o sea el enlace sutil que solo salía en la portada; con
+        // la banda heredada fuera de la portada, esa rama se queda sin llamante. La rama NO se
+        // borra: vive en un componente de `/cumpleanos`, que es página de la Fase 3. Ficha en
+        // `DEUDA.md`.
         'cookie__config' => ['/', 'el «Configurar» del banner, 17'],
         'cookie__policy' => ['/', 'el enlace de la política dentro del panel, 16'],
         'ck-tgl' => ['/', 'el interruptor de finalidad: 42×24, y su ::after ya dibuja el pomo'],

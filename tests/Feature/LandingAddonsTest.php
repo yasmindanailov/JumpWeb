@@ -12,6 +12,14 @@ use Tests\TestCase;
 /**
  * #194 — Landing: complementos por producto (coherentes con el pivote) y selector de
  * cumpleaños que soporta N packs (antes el selector binario jump/kids mezclaba 3 packs).
+ *
+ * ⚠️⚠️ **ESTOS CASOS MIRAN A `/cumpleanos`, NO A LA PORTADA, y el cambio es de `#483`.** La banda
+ * heredada —el selector de packs, el bloque compacto `addons-mini` y el enlace de la invitación—
+ * salió de la portada cuando la sección 04 se rehízo desde el canvas, y **sigue entera en su
+ * página**, que tiene artboard propio y se rehace en la Fase 3.
+ * ▶ *Re-apuntar no es debilitar*: es el mismo componente y las mismas aserciones, en la única
+ * superficie donde hoy se pinta. Lo que la portada tiene ahora es otro molde —el carril de fichas
+ * compartido con las tarifas— y lo vigila `PartySectionTest`.
  */
 class LandingAddonsTest extends TestCase
 {
@@ -26,7 +34,7 @@ class LandingAddonsTest extends TestCase
 
     public function test_entries_show_their_assigned_addons_compactly(): void
     {
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
 
         // El bloque compacto de complementos aparece (etiqueta) con los addons enganchados a
         // las entradas (el seeder engancha Calcetines + Taquilla a todas las entradas).
@@ -51,7 +59,7 @@ class LandingAddonsTest extends TestCase
         ]);
         $loco->prices()->create(['rate_type_id' => RateType::where('key', RateType::KEY_NORMAL)->value('id'), 'amount_cents' => 2000]);
 
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
 
         // Los 3 packs aparecen como pestañas...
         $res->assertSee('Cumpleaños Jump');
@@ -70,7 +78,7 @@ class LandingAddonsTest extends TestCase
     public function test_packs_show_their_addons_below_the_card(): void
     {
         // El seeder engancha Tarta y Monitor extra a los packs de cumpleaños → deben anunciarse.
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
 
         $res->assertSee('Tarta');
         $res->assertSee('Monitor extra');
@@ -89,7 +97,7 @@ class LandingAddonsTest extends TestCase
         $jump->configurableAddons()->attach($m1->id, ['is_included' => true, 'included_quantity' => 1, 'quantity_mode' => 'per_guest', 'choice_group' => 'menu', 'position' => 1]);
         $jump->configurableAddons()->attach($m2->id, ['quantity_mode' => 'per_guest', 'choice_group' => 'menu', 'position' => 2]);
 
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
         $res->assertSee('addons-mini__group', false);
         $res->assertSee('Elige una opción');
         $res->assertSee('Menú Mago');
@@ -106,7 +114,7 @@ class LandingAddonsTest extends TestCase
         $menu->prices()->create(['rate_type_id' => $rate, 'amount_cents' => 200]);
         $jump->configurableAddons()->attach($menu->id, ['quantity_mode' => 'per_guest', 'position' => 3]);
 
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
         $res->assertSee('+2,00 €/invitado'); // con el «+» (la nota de precio del chip)
     }
 
@@ -121,7 +129,7 @@ class LandingAddonsTest extends TestCase
         $deluxe->prices()->create(['rate_type_id' => $rate, 'amount_cents' => 1500]);
         $jump->configurableAddons()->attach($deluxe->id, ['quantity_mode' => 'fixed', 'position' => 5]);
 
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
         $res->assertSee('addons__moreinfo', false);          // botón «Más info» (mismo del sidebar)
         $res->assertSee('addons-mini__moreinfo', false);     // modificador INLINE (en la fila, junto al título)
         $res->assertSee('addons__features', false);          // lista de ventajas desplegable
@@ -134,7 +142,7 @@ class LandingAddonsTest extends TestCase
     {
         // Regresión del bug reportado: un complemento gratis (0 €) no debe mostrar "Gratis"
         // como etiqueta Y como precio. El badge "Gratis" aparece; el precio "Gratis" no.
-        $res = $this->get('/')->assertOk();
+        $res = $this->get('/cumpleanos')->assertOk();
         // El seeder tiene Calcetines a 0 € → badge "Gratis"; no debe haber un span de precio "Gratis".
         $res->assertDontSee('addons-mini__price">Gratis<', false);
     }
@@ -142,6 +150,6 @@ class LandingAddonsTest extends TestCase
     public function test_static_socks_note_is_gone(): void
     {
         // La nota estática de calcetines se sustituye por los complementos reales por producto.
-        $this->get('/')->assertOk()->assertDontSee('Calcetines antideslizantes obligatorios para saltar');
+        $this->get('/cumpleanos')->assertOk()->assertDontSee('Calcetines antideslizantes obligatorios para saltar');
     }
 }

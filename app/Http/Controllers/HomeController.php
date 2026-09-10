@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\PartyCards;
 use App\Domain\Booking\Services\RateCards;
 use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Models\Faq;
@@ -102,8 +103,26 @@ class HomeController extends Controller
             // sección «Servicios» detrás (coherencia CTA⟺catálogo, #210).
             // Fuente ÚNICA (#256, modelo A): packs de la superficie Cumpleaños = vendibles de zona
             // operativa SIN un `LandingService` que los reubique en /servicios (idéntico en Events).
-            'packages' => TicketType::birthdaySurfacePacks()
-                ->with(['zone', 'prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get(),
+            'packages' => ($packs = TicketType::birthdaySurfacePacks()
+                ->with(['zone', 'prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get()),
+            /*
+             * Las dos tarjetas de «Cumpleaños» (`#483`). Se componen en el dominio y no en la vista:
+             * cruzar el pack con su tarifa especial, elegir qué edad se publica y escribir los
+             * importes es lógica, y en Blade serían dos copias de la misma regla —una por tarjeta—.
+             */
+            'partyCards' => ($partyCards = new PartyCards)->compose($packs),
+            'partyFrom' => $partyCards->cheapest($packs),
+            /*
+             * ⚠️ La FOTO de la sección sale de la zona del pack (`zones.image`), que es de donde ya
+             * salía la polaroid heredada. Sin ella la cabecera cae a papel — la variante `sinFoto`
+             * del propio artboard— en vez de reservar un hueco gris.
+             * ⚠️⚠️ Y con esto `zones.image` **conserva su consumidor**, que es justo lo que `#302`
+             * dejó fichado como dudoso al retirar las tarjetas de zona.
+             */
+            'partyImage' => $packs->first()?->zone?->image,
+            // La duración del pack, ya escrita. La compone el mismo servicio que las tarjetas, con
+            // el trait que escribe los valores de la landing: aquí no se formatea nada.
+            'partyDuration' => $partyCards->durationLabel($packs),
             'faqs' => Faq::where('is_active', true)->orderBy('position')->get(),
             'rules' => VenueRule::where('is_active', true)->orderBy('position')->get(),
             // ⚠️⚠️ **`/registro`, `/login` y `/recuperar-contrasena` ya NO abren un modal**

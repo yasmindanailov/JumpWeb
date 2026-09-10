@@ -422,4 +422,47 @@ class ClientThemePackageTest extends TestCase
             }
         }
     }
+
+    /**
+     * **SI EL PAQUETE REDEFINE LA SOMBRA DURA, TIENE QUE REDEFINIR SUS TRES ESTADOS.**
+     *
+     * ❗❗❗ **Esto nace de un defecto MEDIDO, no de una precaución** (`#483`). `#478` escribió el
+     * hover de la tarjeta de zona con `--shadow-float-hover` y `--shadow-float-press`, y dejó dicho
+     * en su propio comentario que *«un paquete de instalación con otra sombra los mueve con ella»*.
+     * El paquete **no los declaraba**: solo `--shadow-float`. Así que la tarjeta reposaba con la
+     * sombra DURA del cliente (`5px 5px 0`) y al pasar el ratón saltaba a la DIFUSA del producto
+     * (`0 6px 14px -8px`) — medido en el navegador, y llevaba así desde que se escribió.
+     *
+     * ▶ *Un comentario que describe un mecanismo no lo implementa.* Es el mismo patrón que
+     * `RhythmScaleTest` fijó para el aire de sección: **los tres o ninguno**.
+     *
+     * ⚠️ El paquete está **gitignorado**, así que el caso se salta cuando no existe: uno que
+     * dependiera de él pasaría aquí y fallaría en un clon limpio.
+     */
+    public function test_a_package_that_redefines_the_hard_shadow_declares_its_three_states(): void
+    {
+        $ruta = base_path('public/'.self::CLIENT_SHEET);
+
+        if (! is_file($ruta)) {
+            $this->markTestSkipped('no hay paquete de instalación en esta máquina');
+        }
+
+        $css = (string) file_get_contents($ruta);
+
+        if (! str_contains($css, '--shadow-float:')) {
+            $this->assertTrue(true, 'el paquete no redefine la sombra dura: no hay nada que cuadrar');
+
+            return;
+        }
+
+        foreach (['--shadow-float-hover', '--shadow-float-press'] as $token) {
+            $this->assertStringContainsString(
+                $token.':', $css,
+                "el paquete redefine `--shadow-float` y NO declara `{$token}`.\n".
+                "▶ Entonces el estado de reposo es el suyo y el de hover cae al del PRODUCTO, que es\n".
+                "  difuso: la pegatina reposa con sombra dura y al pasar el ratón se disuelve.\n".
+                '  Los tres se declaran juntos, o ninguno.'
+            );
+        }
+    }
 }

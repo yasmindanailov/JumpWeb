@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02 y 03, más la página `/atracciones`; quedan CINCO secciones)
+> **Estado:** 🟦 **Fase 1 CERRADA y verificada en navegador · Fase 2 en curso** (armazón + secciones 01, 02, 03 y 04, más la página `/atracciones`; quedan CUATRO secciones)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -211,7 +211,7 @@ titulares son frases de **3 a 6 palabras**:
 | Para quién | Cada uno tiene su zona | `Zonas PJP` (4a) · ✅ `#478` |
 | Cuánto | Una hora, dos o el día | `Precios PJP` (10a) · ✅ `#479` + `#480` |
 | Qué hay dentro | Salta, trepa y déjate caer | `Juegos PJP` (6a) + `Escritorio PJP` (4b) · ✅ `#482` |
-| Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) |
+| Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) + `Escritorio PJP` (5a) · ✅ `#483` |
 | Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) |
 | Reseñas | Lo dicen los que han venido | `Resenas PJP` (2a) |
 | Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) |
@@ -324,6 +324,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1d (`#472`) | añadir `--col-max: 1120px` |
 | T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
 | T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
+| T2e (`#483`) | **`--shadow-float-hover: 2px 2px 0 var(--paper-fg)`** y **`--shadow-float-press: 0 0 0 var(--paper-fg)`** en el paquete. ❗❗ **No es una mejora, es un ARREGLO**: `#478` escribió el hover de la pegatina con esos dos tokens y el paquete no los declaraba, así que la tarjeta reposaba con la sombra DURA del cliente y al pasar el ratón saltaba a la DIFUSA del producto (medido). Sin ellos, la sección 04 **y la 01** siguen con ese defecto. Lo vigila `ClientThemePackageTest`: si el paquete declara `--shadow-float`, tiene que declarar los tres. ⚠️ Y **DATO, desde el panel**: revisar los `features` de los dos packs — la sección enseña los **tres primeros** y hoy dos de los cinco repiten lo que la tarjeta ya dice (la duración y la edad). |
 | T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 
@@ -379,7 +380,45 @@ navegador instalado**.
 | T2b | **01 · Para quién**: dos tarjetas de zona · la altura pasa a DATO · 03 se separa | ✅ `#478` |
 | T2c | **02 · Cuánto**: carril con foco · el nombre manda · la tarifa especial, entera · chapa de zona, ahorro y complementos fuera | ✅ `#479` + `#480` |
 | T2d | **03 · Qué hay dentro**: el mosaico de cinco, y con él la página `/atracciones` | ✅ `#481` + `#482` |
-| T2e–T2i | Las **cinco secciones** restantes (§5.1) | ⬜ |
+| T2e | **04 · Cumpleaños**: los dos packs se comparan · el reloj no reparte · el bloque de complementos pasa a molde compartido | ✅ `#483` |
+| T2f–T2i | Las **cuatro secciones** restantes (§5.1) | ⬜ |
+
+✅ **T2e · «Cumpleaños»** (`#483`). Cabecera **sobre foto** —la única sección que la lleva—, el
+**reloj de las dos horas**, **dos tarjetas de pack** que se comparan al lado y el **bloque de
+complementos** con el molde de las tarifas.
+
+❗❗❗ **POR TERCERA VEZ, EL ACTA DESCRIBE PIEZAS QUE EL ARTBOARD TIENE APAGADAS**: aquí el reloj y el
+aviso INFO salieron con el recorte del 7 sep (la sección pasa de 1.605 a **1.153 px** medidos), igual
+que la chapa de zona de `#480` y la del «18 más» de `#482`. ⚠️ Y el artboard **se movió durante la
+tanda**: apareció un **turno 8** con el bloque «Tu fiesta, tu manera», ofrecido como propuesta.
+
+▶ **Cuatro decisiones del owner**: el **paso a paso sale** de la portada (615 px) · las tarjetas
+**navegan** a `/cumpleanos`, no venden · el turno 8 **entra con el molde de las entradas** · y el
+**reloj entra en las dos superficies**, contra el artboard.
+
+▶ **El bloque de complementos pasa a `<x-site.addons-rail>`**, compartido por 02 y 04 — *«es el mismo
+formato y diseño que los complementos de las entradas»*. La extracción se verificó **byte a byte**
+sobre el bloque renderizado de tarifas.
+
+❗❗ **La edad que se publica es la del PACK**, no la de su zona: `guest_age_min/max` dice 4–7 y 8+, y
+es el campo que **cobra el suplemento mixto**. Cierra la divergencia que el canvas dejó abierta.
+
+❗❗❗ **DOS DEFECTOS REPRODUCIDOS EN NAVEGADOR, con la suite en verde.** (1) La tarjeta oscura no
+declaraba su **superficie**: *pintarle el fondo no le cambia los tokens*, y su viñeta salía tinta
+sobre tinta (contraste ≈ 1,1). (2) **El hover de la pegatina estaba mal desde `#478` en toda la
+portada**: el paquete no declaraba `--shadow-float-hover` / `-press`, así que la tarjeta reposaba con
+la sombra dura del cliente y saltaba a la difusa del producto. *Un comentario que describe un
+mecanismo no lo implementa.* Arreglado, **también para la sección 01**, con guarda vista morder.
+
+⚠️⚠️ **Y un localizador de guarda que acotaba mal, cazado de rebote**: `RateRailSectionTest::panel()`
+recortaba «hasta el siguiente panel» y para el último se llevaba el resto del documento — contó 6
+fichas donde su panel pinta 2. Es la lección de `#314` por otra puerta.
+
+⚠️ **Una medición propia salió FALSA**: la primera consulta dio los packs a 0,00 € (leí `amount` en
+vez de `amount_cents`). *Se cazó comprobándola por otra vía*, no releyéndola.
+
+▶ **Medido**: la sección baja de **2.489 a 1.795 px** en móvil y la portada de **13,43 a 12,65
+pantallas**. Packs 544×377 en la misma fila y a la misma altura, reloj a dos columnas, foto 21:9.
 
 ✅ **T2d · «Qué hay dentro»** (`#481` + `#482`). Rótulo · titular · entradilla que **abre con la
 cifra** · **mosaico de cinco** —tres con nombre sobre banda de tinta al 82 %, dos **veladas**— y
