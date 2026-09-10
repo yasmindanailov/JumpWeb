@@ -1863,12 +1863,16 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       cambio, **enlaza a `/normas`** — que cierra la ficha de `DEUDA.md` de `#480`.
       ▶ Y con la 03 nació **`/atracciones`**, adelantada de la Fase 3 porque su puerta necesitaba
       destino.
-      ❗ **Tres instrumentos viven ya en `scripts/`**, versionados: la sonda de navegador, el
-      comparador con el mockup y el podador de CSS huérfano. «Idéntico al mockup» no se comprueba
-      mirando — el comparador dio **40 divergencias** donde el ojo veía «parecido».
-      ⚠️⚠️ **Y lo que más se ha repetido en las cuatro tandas: el acta del canvas describe piezas que
-      su propio artboard tiene APAGADAS** (la chapa de zona, la del «18 más», el reloj y el aviso
-      INFO). *Esa fuente se relee antes de cada tanda, mientras dura, y sin creerse el acta.*
+      ❗ **Cuatro instrumentos viven ya en `scripts/`**, versionados: la sonda de navegador, el
+      comparador con el mockup, el **comparador de sección** (`#486`, con su tabla de valores por
+      sección) y el podador de CSS huérfano. «Idéntico al mockup» no se comprueba mirando — el
+      primero dio **40 divergencias** donde el ojo veía «parecido», y el segundo cazó una chapa a
+      20 px donde el artboard escribe 24.
+      ⚠️⚠️ **Y lo que más se ha repetido: el acta del canvas describe piezas que su propio artboard
+      tiene APAGADAS** —la chapa de zona, la del «18 más», el reloj y el aviso INFO, y la chapa del
+      empleado en la 05: **cuatro veces**—. *Esa fuente se relee antes de cada tanda, mientras dura,
+      y sin creerse el acta.* ▶ En la **07** las dos copias salieron **idénticas byte a byte** al
+      canvas, y es la primera vez que la comprobación sale limpia: por eso se hace.
       ⚠️ **Y lo que ninguna guarda de PHP ve**: `[data-surface]` no solo declara la superficie, la
       **pinta**; una pegatina cuyo keyline, relleno y sombra son del mismo color deja de leerse; y un
       comentario que describe un mecanismo no lo implementa (el paquete no declaraba los dos estados

@@ -1,6 +1,6 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#487`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y la Fase 2 va por su SÉPTIMA tanda — quedan DOS secciones, y una está bloqueada por ti.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#487`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA y la Fase 2 va por su SÉPTIMA tanda — quedan DOS secciones, y una está bloqueada por el owner.**
 >
 > ▶ **LA T2g ESTÁ EN EL ÁRBOL: la sección 07 «Visítanos»** (`#487`). Hoy la sección es: cabecera
 común, **una sola tarjeta blanca** con el estado en vivo y la tabla del horario, el mapa tras el
@@ -8,8 +8,8 @@ bloqueo previo, y la dirección **siempre fuera del marco**. Suite **4.564** · 
 comparador **21 y 13 valores idénticos, 0 divergencias sin explicar**.
 >
 > ▶ **Se saltó la 06 «Reseñas» a propósito**: por orden del canvas tocaba, pero **está bloqueada por
-ti** —`specs/google-reviews.md` espera tu ✅ y **tres datos** (`place_id`, clave de API y techo de
-gasto)—. Quedan **06** y **08 «Dudas»**.
+el owner** —`specs/google-reviews.md` espera su ✅ y **tres datos** (`place_id`, clave de API y techo
+de gasto)—. Quedan **06** y **08 «Dudas»**.
 >
 > ❗❗❗ **CUATRO ESTADOS DONDE HABÍA DOS, y es lo que más valía de la tanda.** Regla dura del sistema:
 *«hoy no abre» y «hoy ya ha cerrado» son hechos distintos*. Medido: `HeroStatus` solo distinguía dos,
@@ -22,8 +22,8 @@ del menú: son piezas del ARMAZÓN y moverlas desde una tanda de sección es lo 
 «abre hoy». Con el parque cerrado, un resaltado dice «esto es lo que rige ahora» sobre horas que ya
 pasaron.
 >
-> ❗❗❗ **TUS TRES DECISIONES, y las tres son la misma regla: el producto no afirma lo que no puede
-saber.** El **aparcamiento** no entra (el dato no tiene campo en el panel y hay dos versiones en
+> ❗❗❗ **TRES DECISIONES DEL OWNER, y las tres son la misma regla: el producto no afirma lo que no
+puede saber.** El **aparcamiento** no entra (el dato no tiene campo en el panel y hay dos versiones en
 conflicto; `#297` ya lo había decidido una vez) · **«los festivos, como el finde»** no se escribe ·
 y **el teléfono con «Cómo llegar»** salen, como el canvas. ⚠️ El teléfono sigue en el menú y en el
 pie; lo que sí se pierde es la puerta a Google Maps **cuando el mapa carga**, y **vuelve con el mapa
@@ -51,10 +51,11 @@ pinta con `--ok`, que en ese paquete da **2,4** sobre blanco — pero **el gate 
 16:30 · S–D 11:00** y el canvas **L–J 16:30 · V–D 11:30**) y las **fechas especiales**, que hoy son
 cero: sin ellas no hay ni aviso ni pliegue, y eso es la conducta correcta.
 >
-> ▶ **LO SIGUIENTE: la T2h.** Si desbloqueas Reseñas, va esa; si no, **08 «Dudas»** (`Dudas PJP` 1a +
-`Escritorio PJP` 5c), que es data-driven sobre `faqs` y **arrastra cuatro decisiones tuyas** (el
-aparcamiento, si grupos lleva al correo o a `/servicios`, si «interior y climatizado» sube a 03, y
-qué otras dudas oís en el mostrador). ⚠️ **Relee su artboard antes Y durante**: en esta tanda las
+> ▶ **LO SIGUIENTE: la T2h.** Si el owner desbloquea Reseñas, va esa; si no, **08 «Dudas»**
+(`Dudas PJP` 1a + `Escritorio PJP` 5c), que es data-driven sobre `faqs` y **arrastra cuatro
+decisiones suyas** (el aparcamiento, si grupos lleva al correo o a `/servicios`, si «interior y
+climatizado» sube a 03, y qué otras dudas oyen en el mostrador). ❗ **Pregúntaselas ANTES de
+escribir**, que es el protocolo del carril (`#469`). ⚠️ **Relee su artboard antes Y durante**: en esta tanda las
 dos copias salieron idénticas al canvas —la primera vez en el carril—, pero en tres de las cuatro
 anteriores el artboard se había movido.
 >
@@ -236,7 +237,7 @@ está en la §5.bis de la spec.
 >
 > ⚠️ **La copia local del canvas es `mockup_playjumppark_v2/`.** La vieja, `mockup_playjumppark/`, **NO está caducada: ES EL ARCHIVO** —son los artboards que el canvas movió a `archivo/`, con paleta antigua que su propia cabecera prohíbe copiar—. Y **`Portada PJP.dc.html` se baja TRUNCADO** (256 KiB exactos): parece válido y se corta por la mitad, así que la portada se lee de sus artboards por sección. `DesignSync` quedó **autorizado en esta máquina**, que era deuda desde `#262`.
 >
-> ▶ **Lo de la jornada anterior sigue cerrado y en producción, y NADA de esto lo toca.** 🚀 **TODO LO DE LA HORA EXTRA ESTÁ EN PRODUCCIÓN, VERIFICADO, Y CONFIGURADO POR EL OWNER** (2026-09-08, commit `e76d6f2a`, sexto despliegue). Cerraron `#443` (la hora extra se cobra por invitado), `#444` (el cliente mueve sus invitados), **`#448` (el SELLO DEL MODO, cuatro tandas)** y **`#449`** (los por-invitado siguen a los invitados desde el post-form). ▶ **El owner YA puso los dos enganches en «Se cobra por invitado»**, y se verificó en producción que **las dos reservas vendidas del 21/09 no se movieron** —1 × 5,00 € y 1 × 4,00 €, sello `fixed`, 60 minutos— cuando antes ese mismo clic habría hecho **+35,00 €**, **+56,00 €** y **900 minutos de sala**. El owner vio la pastilla «Vendido con otra unidad» en la ficha real: era la única pieza sin red automática. ❗❗❗ **LO ÚNICO PENDIENTE ES DEL OWNER Y ES EL PRECIO** (medido el 08-09 tras configurar): las dos horas extra **solo tienen tarifa `normal`** (5,00 € JUMP · 4,00 € KIDS), así que **NO SE OFRECEN viernes, sábado, domingo ni fechas especiales** —justo cuando hay cumpleaños—; falta la tarifa `special` (viene del 06-09, `#443`, no del despliegue). ⚠️⚠️ **Y ese número era el precio de la HORA, no el de por invitado**: con «por invitado», una fiesta de 15 pagaría **15 × 5,00 € = 75,00 €**. Es decisión suya, pero **no está ajustada a la unidad nueva** — no se toca sin él. ▶ **NADA de esto bloquea código.** ⚠️ **Pero ojo: `main` YA NO ES producción.** Lo fue hasta el 08-09 (`e76d6f2a`); desde el 09-09 lleva encima las cuatro tandas del carril de diseño (`#469`→`#473`), que **no están desplegadas**. Producción sigue en `e76d6f2a`. El tamaño de la suite vigente está en la línea «Suite **N en verde**» de este documento, que es su única copia.
+> ▶ **Lo de la jornada anterior sigue cerrado y en producción, y NADA de esto lo toca.** 🚀 **TODO LO DE LA HORA EXTRA ESTÁ EN PRODUCCIÓN, VERIFICADO, Y CONFIGURADO POR EL OWNER** (2026-09-08, commit `e76d6f2a`, sexto despliegue). Cerraron `#443` (la hora extra se cobra por invitado), `#444` (el cliente mueve sus invitados), **`#448` (el SELLO DEL MODO, cuatro tandas)** y **`#449`** (los por-invitado siguen a los invitados desde el post-form). ▶ **El owner YA puso los dos enganches en «Se cobra por invitado»**, y se verificó en producción que **las dos reservas vendidas del 21/09 no se movieron** —1 × 5,00 € y 1 × 4,00 €, sello `fixed`, 60 minutos— cuando antes ese mismo clic habría hecho **+35,00 €**, **+56,00 €** y **900 minutos de sala**. El owner vio la pastilla «Vendido con otra unidad» en la ficha real: era la única pieza sin red automática. ❗❗❗ **LO ÚNICO PENDIENTE ES DEL OWNER Y ES EL PRECIO** (medido el 08-09 tras configurar): las dos horas extra **solo tienen tarifa `normal`** (5,00 € JUMP · 4,00 € KIDS), así que **NO SE OFRECEN viernes, sábado, domingo ni fechas especiales** —justo cuando hay cumpleaños—; falta la tarifa `special` (viene del 06-09, `#443`, no del despliegue). ⚠️⚠️ **Y ese número era el precio de la HORA, no el de por invitado**: con «por invitado», una fiesta de 15 pagaría **15 × 5,00 € = 75,00 €**. Es decisión suya, pero **no está ajustada a la unidad nueva** — no se toca sin él. ▶ **NADA de esto bloquea código.** ⚠️ **Pero ojo: `main` YA NO ES producción.** Lo fue hasta el 08-09 (`e76d6f2a`); desde el 09-09 lleva encima las cuatro tandas del carril de diseño (`#469`→`#473`), que **no están desplegadas**. Producción sigue en `e76d6f2a`. El tamaño de la suite vigente está en la línea «Suite **N en verde**» de este documento, que es su única copia — **y la lee el `pre-push`**, así que una cifra desfasada bloquea el push.
 
 > ✅ **EL SELLO DEL MODO — CERRADO DE PUNTA A PUNTA** (`#448`/`#449`; diseño y ejecución en `specs/hora-extra.md` §12, con §12.20 = la revisión adversarial). ▶ **La regla que deja, y vale para cualquier feature futura**: *la unidad con la que se contó una cantidad viaja en la LÍNEA, no en el catálogo* — es el hermano de `unit_price`, que ya estaba a salvo por vivir ahí. ⚠️ **Si añades un lector del modo**, `SoldLineUnitHasOneSourceTest` te obligará a declararlo en una de sus dos listas: OFERTA puede crecer (lee el catálogo de hoy), LÍNEA VENDIDA tiene que ser CERO (pasa por `AddonResolver::soldQuantityUnit()`). ▶ **Lo que queda abierto son SEIS fichas de `DEUDA.md`**, ninguna alcanzable con el catálogo de hoy; la más útil es el **N+1 de la pastilla de divergencia** (hoy cuesta 0 porque casi nada está sellado, y crece con cada venta nueva). ⚠️⚠️ **Y una que NO es de esta feature y muerde a todo el repo: 13 de los 22 arneses de mutación pueden dejar el árbol MUTADO si el proceso muere** (`trap … EXIT` no corre con SIGKILL). Pasó **tres veces hoy**, y las tres lo cazó **volver a correr la suite ENTERA antes de commitear**, no el arnés. `scripts/mutar-sello-modo.sh` ya está endurecido y sirve de MOLDE: copia en ruta fija, reparación al arrancar, `mutar()` que ABORTA si el fichero no tiene copia, e integridad al terminar.
 
@@ -1952,10 +1953,17 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4555 en verde** (28.367 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con la **T2e** del carril de diseño (`#483`). ⚠️ **+10**: entran los
-> **9** de `PartySectionTest` y el de los tres estados de la sombra en `ClientThemePackageTest`, y
-> sale `bd-invite-cta` de `TouchTargetTest` con su sujeto.
+> Suite **4564 en verde** (28.609 aserciones, 1 skipped a propósito, **0 risky**), medida el
+> **2026-09-10** sobre el árbol con la **T2g** del carril de diseño (`#487`). ⚠️ **+9 en NETO, y el
+> neto esconde el movimiento**: la T2f entra y sale en CERO —12 casos nuevos de
+> `BeforeVisitSectionTest` contra los 12 de `RulesSectionTest` (7) y `CardAnatomyTest` (5), que
+> perdieron su sujeto—, y los +9 salen de TRES sitios, contados uno a uno: la guarda del divisor
+> entre secciones (`#486`, **+1**), la reescritura de `VisitSectionTest` (`#487`, de **8 a 15**) y la
+> guarda del par del verde en `ClientThemePackageTest` (`#487`, **+1**).
+> ⚠️⚠️ **Y esta cifra la cazó el pre-push, no yo**: se dio por buena una nota que decía que esta
+> línea «ya no existía», y la conclusión salió de un `grep` cortado con `head -3` — *un listado
+> truncado no dice que algo no exista, dice que no lo has visto* (`#281`, otra vez). El gate hizo su
+> trabajo.
 > Antes, con la **T2d** (`#481`+`#482`). ⚠️ El neto es
 > **+5** y esconde mucho movimiento: entran los **9** de `AttractionsPageTest` y los **7** de
 > `RideMosaicSectionTest`, y salen los **4** de `AttractionComplementLandingTest`, los **4** del
