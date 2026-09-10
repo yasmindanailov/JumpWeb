@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Mail;
 
+use App\Notifications\Support\BrandedMailMessage;
 use Tests\TestCase;
 
 /**
@@ -140,5 +141,33 @@ class MailMoldTest extends TestCase
         $this->assertSame($esperados, $venden,
             'el mapa del naranja se ha movido. Solo VENDEN «Reintentar el pago» y «Hacer una nueva '.
             'reserva»; cambiar esta lista es una decisión del owner, no un ajuste.');
+    }
+
+    /**
+     * ❗❗ **UNA LÍNEA DE CIERRE SE NORMALIZA IGUAL QUE UNA DEL CUERPO** (`#507`).
+     *
+     * `outro()` existe porque el orden de las llamadas no es el orden de la pintura, y por dentro
+     * tiene que hacer **lo mismo** que `->line()`: pasar por `formatLine()`, que colapsa los saltos
+     * de línea. Sin ese colapso Markdown lee cada línea del bloque como su propio párrafo.
+     *
+     * ⚠️⚠️ **Este caso existe porque la defensa NO TENÍA SUJETO y la mutación lo dijo**: hoy el único
+     * texto multilínea que pasa por `outro()` es el LIBRO del pedido, que al ser `Htmlable` sale de
+     * `formatLine()` intacto — así que quitar la llamada no cambiaba nada y la mutación sobrevivía.
+     * La defensa protege el uso con un STRING multilínea, que es el que aún no existe. Aquí lo tiene.
+     */
+    public function test_a_closing_line_is_normalised_like_a_body_line(): void
+    {
+        $multilinea = "primera línea\nsegunda línea\r\ntercera";
+
+        $conCierre = (new BrandedMailMessage)->outro($multilinea);
+        $conCuerpo = (new BrandedMailMessage)->line($multilinea);
+
+        $this->assertStringNotContainsString("\n", (string) $conCierre->outroLines[0],
+            'una línea de cierre con saltos rompe el bloque al pasar por Markdown');
+        $this->assertSame(
+            (string) $conCuerpo->introLines[0],
+            (string) $conCierre->outroLines[0],
+            'el cierre y el cuerpo tienen que normalizar igual: `outro()` no puede ser un atajo de `line()`'
+        );
     }
 }
