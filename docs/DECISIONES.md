@@ -27129,6 +27129,583 @@ que es exactamente el control editorial que §1.4 dice que no tenemos.
 personal en su ficha de Google. La verá en su propio panel de Google Business.
 
 **Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.
+
+---
+
+## #494 · 2026-09-10 · La atribución de Google en «Reseñas» — el owner pidió veracidad y resultó ser un requisito INCUMPLIDO
+
+**Contexto.** El owner pidió *«añadirle más veracidad con los logos de Google, como el widget
+oficial, ya sea en la reseña, lo de verificado por Google en la reseña o en las estrellas el logo de
+Google»*.
+
+▶ **Es una petición de diseño que resultó ser de CUMPLIMIENTO.** Leída la política de Places contra
+su documentación oficial el 2026-09-10, y medida contra la API real del parque (HTTP 200 el mismo
+día), la sección incumplía **cuatro** requisitos y uno de ellos es precisamente el que el owner
+señaló.
+
+| | Lo que dice Google | Estaba |
+|---|---|---|
+| 1 | *«When displaying Places API data **without a Google Map**, you must include the Google logo»* | ❌ |
+| 2 | *«author attribution (author's avatar image, name, **and profile link**)»* | ⚠️ faltaba el perfil |
+| 3 | *«Make end users aware when a review has been **translated** from its original language»* | ❌ |
+| 4 | *«**Visually distinguish** Google Maps Platform Content from other content»* | ❌ |
+
+---
+
+**❗❗❗ EL SUPUESTO DE «SIN UN MAPA DE GOOGLE» ES AQUÍ EL CASO NORMAL, NO UN BORDE.** El mapa de
+«Visítanos» nace bloqueado hasta que se aceptan cookies de terceros y la chapa de la cifra **se sirve
+sin ellas** (`#491`). Para el visitante que no consiente, la portada enseña dato de Places y **cero
+mapas**: exactamente el supuesto que obliga al logotipo.
+
+**❗❗❗ Y ES EL LOGOTIPO DE «GOOGLE MAPS», NO LA «G» QUE YA TENÍAMOS.** `google.svg` es la marca de
+Google Sign-In (`#345`) y sirve para identidad; la atribución de Places pide otro asset, con otras
+reglas —alto 16–19 px, espacio libre 10/10/10/5, prohibido modificarlo, etiqueta accesible «Google
+Maps»—. Usar una por otra **no rompe nada: solo incumple.** Se trae el paquete oficial
+(`Google_Maps_Attribution_Assets.zip`), del que entran **dos** variantes: blanca para tinta (18,50 de
+contraste) y gris para papel (6,48).
+
+⚠️ **La variante de papel se eligió MIDIENDO.** La otra que Google publica para fondo plano
+—DarkGray, #1F1F1F— da **16,48** sobre la tarjeta: a ese peso el logotipo pasaba por encima del
+nombre del autor, y **la atribución acompaña al contenido, no lo encabeza**. Las dos son suyas, así
+que elegir no es desviarse.
+
+---
+
+**❗❗❗ «VERIFICADO POR GOOGLE» ES LO ÚNICO DE LAS TRES IDEAS DEL OWNER QUE NO SE PUEDE HACER**, y no
+es un matiz: su propia documentación dice literalmente **«Reviews aren't verified by Google, but
+Google checks for and removes fake content when it's identified»**. Escribirlo afirmaría en su nombre
+lo que ellos niegan. ▶ Lo que sí entra es **esa misma frase**, que la política pide publicar
+(*«Inform end users of Google's review policy»*) y que es la veracidad que el owner buscaba: no
+inventar un sello, decir de dónde viene el dato y en qué condiciones. Hay caso que prohíbe la
+prohibida, **con el texto de la política descontado antes de mirar** —contiene la frase en su forma
+negada, así que sin descontarlo la guarda acusaría a la línea que existe para decir la verdad—.
+
+---
+
+**❗❗❗ EL LOGOTIPO NO PUEDE IR EN LA CABECERA DE LA SECCIÓN, Y ÉSE ES EL HALLAZGO QUE GOBIERNA EL
+DISEÑO.** La chapa y las opiniones **no vienen de la misma fuente** —la cifra se sirve sin
+consentimiento y las reseñas no—, así que **el caso frecuente es el CRUCE**: chapa de Google sobre
+opiniones propias. Medido: así estaba esta instalación al empezar la tanda. Un logotipo arriba
+marcaría como de Google unas opiniones que escribió el parque, que es *«misrepresent Google Maps by
+attributing it with non-Google Maps Platform content»*.
+
+▶ **Es el mismo defecto que la captura cazó en `#491` con la entradilla, pero peor**: aquél era una
+frase inexacta y éste es un incumplimiento de marca. `[DECIDIDO owner]`: **chapa + cabecera de la
+reseña**, cada trozo con su atribución en su propio contenedor visual.
+
+---
+
+**❗❗❗ EL DEFECTO QUE COSTÓ UNA VUELTA Y QUE NINGUNA MEDIDA DE GEOMETRÍA VEÍA: EL SVG NO ERA XML.**
+
+La cabecera de procedencia que se les puso a los assets citaba tokens CSS con su prefijo de dos
+guiones. **XML prohíbe esa secuencia dentro de un comentario** —a diferencia de HTML, que la
+tolera— y un SVG servido como `image/svg+xml` se parsea como XML **estricto**.
+
+⚠️⚠️ **Lo peligroso es cómo falla**: el fichero seguía dando **HTTP 200 con sus 7,6 KB**, el marcado
+seguía siendo correcto, no aparecía en las peticiones fallidas y **la caja seguía midiendo 98×18**,
+porque los atributos `width`/`height` del `<img>` reservan el hueco. O sea: **el logotipo estaba
+invisible y la sonda de geometría daba verde.** Lo delató `naturalWidth`, que valía 0.
+▶ *Que el fichero llegue y mida bien no es que se pinte* — la lección de `#263` por otra puerta. Hay
+guarda que parsea los dos assets como XML, y es la primera mutación del arnés.
+
+---
+
+**⚠️⚠️ LA TRADUCCIÓN: LA SEÑAL ES EL IDIOMA, NUNCA COMPARAR LOS TEXTOS.** Google devuelve
+`originalText` **siempre**, traducida o no: medido, en español los dos campos vienen con
+`languageCode: es` y el mismo contenido. Quien escriba «hay original ⇒ está traducida» publicará
+«Traducida del español» sobre una reseña escrita en español, en la página en español.
+▶ Y no es hipotético al revés: **en inglés y en francés Google traduce LAS DOS reseñas del parque**
+(`text.languageCode` = `en`/`fr` sobre `originalText.languageCode` = `es`). Dos de los tres idiomas
+del sitio servían texto traducido sin decirlo.
+
+⚠️ **El original y su idioma van en UN objeto** (`Content\Contracts\OriginalText`), no en dos campos
+sueltos: por separado existen dos estados imposibles —texto sin idioma e idioma sin texto— que nadie
+construye a mano pero que un refactor deja pasar en silencio, y la frase saldría «Traducida del ` »`.
+El tipo lo impide y no hace falta guarda.
+
+⚠️ **`ext-intl` NO es un requisito declarado de este producto** —no está en `composer.json` ni lo usa
+ninguna otra línea del repo, aunque este contenedor lo traiga—, así que nombrar el idioma **degrada**:
+con `intl` sale «Traducida del español» y sin él «Traducida automáticamente». Avisar es lo
+obligatorio; nombrar de qué idioma, no. Llamar a `Locale` a pelo habría metido un **fatal en la
+portada** de cualquier instalación sin la extensión, y solo se vería al desplegar.
+
+---
+
+**⚠️ EL PERFIL DEL AUTOR NO COSTÓ NI UNA LLAMADA MÁS**: `authorAttribution.uri` ya viajaba en la
+misma respuesta que el nombre y la foto (verificado con HTTP 200). Lo único que faltaba era leerlo.
+
+**⚠️ Las claves nuevas se leen de la caché con `?? null` porque LA CACHÉ SOBREVIVE AL DESPLIEGUE**: al
+subir esto hay entradas escritas por el código anterior, y leerlas por acceso directo revienta la
+portada hasta el primer refresco —que puede tardar una hora—.
+
+---
+
+**⚠️⚠️ TRES TRAMPAS DE INSTRUMENTO, todas con la sonda dando números creíbles.**
+
+1. **La sonda medía antes del scroll** y el logotipo es `loading="lazy"`: salía `complete=false` y
+   `naturalWidth=0`, indistinguible de un 404. La caja medía bien igual.
+2. **El helper que acota el HTML cortaba «hasta la siguiente aparición de la clase»**, así que una
+   clase que sale UNA vez —`sec-head`— se llevaba el resto de la sección entera. Lo cazó el caso de
+   la cabecera, pero mientras tanto **los demás pasaban por accidente**. Ahora cuenta anidamiento.
+   ▶ Es la trampa de `#314` en pequeño: *un localizador que depende de qué viene DESPUÉS no acota un
+   elemento, acota un tramo de documento*.
+3. **El fixture de la traducción usaba `es`, que es el idioma que la mutación clavaba**: aseverar
+   `lang="es"` no distinguía si venía del dato o estaba escrito a mano. Pasa a `de`.
+
+⚠️ **Y cuatro mutaciones salieron «NO SE APLICÓ»** por un detalle de bash: dentro de comillas
+simples, dos comillas seguidas **no producen una comilla** —cierran y abren—, así que un patrón con
+`__('clave')` llega sin ellas y no casa.
+
+⚠️ **Cuatro más NO MORDÍAN, y las cuatro eran huecos reales de la guarda**: los casos de la vista
+doblan el CONTRATO —que es lo correcto— y por eso **no pasan por el traductor**, así que borrar en
+`GoogleSocialProof` la lectura del perfil las dejaba a todas en verde. *Doblar el contrato prueba la
+vista y deja el traductor sin cubrir.* Entran dos casos que ejercitan `normalize()` de verdad.
+
+---
+
+**⚠️ La nota de política tuvo que ensancharse**: con `62ch` partía en **dos líneas cortas dejando
+700 px de columna vacíos** a 1440. Una nota al pie no es un párrafo, y ahí la medida de línea no
+protege nada. Queda en `104ch`, donde las tres traducciones caben en una línea.
+
+**❗ `[DECIDIDO owner, 2026-09-10]` · EL UMBRAL SE QUEDA EN 1 Y ES DEFINITIVO**: *«deja el umbral a 1
+siempre; mínimo 1 reseña para mostrar el widget de Google»*. Re-confirmado **con la inconsistencia de
+`#493` ya medida y delante**, así que no es un descuido: es el precio aceptado. Lo fija un caso, para
+que la constante no vuelva a moverse en silencio.
+
+⚠️ **Y la inconsistencia se volvió a ver en vivo durante la tanda**: la chapa pasó de **3,0 · 2** a
+**3,7 · 3** entre dos refrescos del mismo día. Hay una tercera reseña.
+
+---
+
+**▶ TRES RETOQUES DEL OWNER SOBRE LA SECCIÓN RENDERIZADA** (`[DECIDIDO owner, 2026-09-10]`):
+
+1. **Las flechas del carril se retiran**: se recorre con los puntos. ⚠️⚠️ **No costó accesibilidad, y
+   por eso se pudo hacer**: cada punto ya era un `<button>` con su nombre («Ver la opinión 2»), así
+   que sigue habiendo recorrido por teclado y por lector de pantalla, y el contenedor conserva su
+   `keydown`. *Retirar un control solo es gratis si lo que hacía lo sigue haciendo otro* — la guarda
+   vigila **las dos mitades**, porque sin la segunda pasaría en verde con el carril convertido en
+   algo que solo se puede recorrer con el ratón.
+2. **«Ver en Google» se ancla a la derecha de su fila.** ⚠️⚠️ Es `margin-left: auto` y **no**
+   `justify-content: space-between`: el botón «Ver más» solo aparece cuando el texto se recorta —se
+   decide MIDIENDO—, así que con una opinión corta la fila tiene **un solo hijo** y `space-between` lo
+   devolvería a la izquierda. Es el caso normal: la reseña que sale hoy en la portada no lleva «Ver
+   más».
+3. **El logotipo se queda donde está, en los dos sitios.** ⚠️ Pidió quitar «el de debajo del titular»
+   y al aclarar dijo «debajo de las estrellas sí, déjalo» — que es justo dónde está el de la chapa.
+   Se le enseñaron **los dos con su posición** antes de tocar nada y respondió «ninguno, déjalos».
+   ▶ *Preguntar costó un minuto; quitar el equivocado habría costado la vuelta entera* — y uno de los
+   dos es el obligatorio.
+
+⚠️ **Y durante los retoques la cifra volvió a moverse**: `3,0 · 2` → `3,7 · 3` → `4,3 · 6` en la misma
+jornada. La inconsistencia de `#493` no es un episodio: es la conducta de esa API.
+
+**Suite 4.632** · 29.057 aserciones · **29/29 mutaciones** (`scripts/mutar-atribucion-google.sh`) · Pint limpio ·
+verificado en navegador a 390 y 1440, en español e inglés: logotipo **cargado** y sin deformar en los
+tres sitios, área táctil de la chapa 98×48, desborde 0 · **suelo sin JavaScript medido**: el aviso de
+traducción y el logotipo salen, el original viaja servido pero oculto y los controles que no
+funcionarían no se pintan.
+
+---
+
+## #495 · 2026-09-10 · Las ocho secciones de la portada pasan al orden del mockup — y una mutación llevaba desde `#490` apuntando al sujeto equivocado
+
+**Contexto.** El owner pidió *«organizar las secciones según el orden del mockup»*.
+
+**El orden queda así**, y solo se movieron las cuatro primeras:
+
+| n | Sección | `id` | estaba |
+|---|---|---|---|
+| 01 | Para quién | `zones` | 3.ª |
+| 02 | Cuánto | `pricing` | 1.ª |
+| 03 | Qué hay dentro | `rides-section` | 4.ª |
+| 04 | Cumpleaños | `events` | 2.ª |
+| 05–08 | Antes de venir · Reseñas · Visítanos · Dudas | | ya estaban |
+
+---
+
+**❗❗❗ VERIFICADO CONTRA DOS FUENTES INDEPENDIENTES DEL CANVAS, y no contra la tabla de la spec.**
+
+1. **`Portada PJP`**, que es el entregable: sus ocho rótulos salen **en ese orden de documento**, y
+   los ocho caen **antes del truncamiento** (el fichero se baja cortado a 256 KiB exactos y el último
+   rótulo está en el byte 134.568). ⚠️ **Con CONTROL**: cero `position: absolute` cerca de los
+   rótulos, así que el orden de documento **es** el orden visual — sin esa comprobación, leer el
+   orden de un HTML posicionado habría sido adivinar.
+2. **`Marco Portada PJP`**, que lleva la numeración **en datos**:
+   `01 Zonas · 03 Qué hay dentro · 05 Antes de venir · 07 Visítanos · 08 Dudas`. Las tres que faltan
+   —02, 04, 06— son justo las que ese artboard excluye a propósito: *«Tarifas y Cumpleaños son
+   sección y página, y aquí apuntan a la página»*.
+
+⚠️⚠️ **Y hay una TERCERA numeración en el canvas que dice otra cosa**: `Landing PJP Modos` lleva
+`01 Entradas · 02 Zonas · 03 Cumpleaños · 04 Antes de venir · 05 Dónde y cuándo`. **No cuenta**, y no
+es una interpretación: `[owner]` lo dejó dicho —*«de esa maqueta solo sacaremos la sección de
+reseñas»*— y `idioma-visual-heredado.md` lo registra. *Mirarla y creerle es la forma de reordenar mal
+la portada con una fuente del canvas en la mano.*
+▶ Hay una cuarta en `Colores de Marca PJP` (`01 Cabecera fija · 02 Hero · 03 Zonas del parque…`) que
+tampoco es la portada: son las partes de una página en un ejercicio de color, y nombra piezas del
+ARCHIVO.
+
+---
+
+**⚠️⚠️ ESTO REVIERTE EL ORDEN DE `#314`** (`[DECIDIDO owner, 2026-09-01]`: «entradas → cumpleaños →
+el parque → ubicación → normas → dudas»). **No es una contradicción**: aquella decisión es del carril
+de diseño ANTERIOR y `#469` adoptó el canvas entero (`[DECIDIDO owner]`). Queda escrito en la
+plantilla y en la guarda para que nadie lo lea como un descuido **ni lo «arregle» devolviéndolo**.
+
+---
+
+**❗❗❗ LO QUE HACE FALTA SABER: REORDENAR SECCIONES NO ROMPE NADA.** La suite entera —4.632 casos—
+pasó en verde con el orden viejo **y** con el nuevo, sin tocar un solo test. Tres razones, las tres
+medidas antes de mover nada:
+
+- **las guardas acotan por `id`**, no «desde X hasta Y» — la lección de `#314` ya estaba aplicada
+  (`preg_match('#<section id="pricing".*?</section>#s')`);
+- **`--hero-air` cuelga de `.hero + .section`**, así que **se muda solo**: medido, la nueva primera
+  (`#zones`) recibe `padding-top` de **112 px en móvil y 136 en escritorio** frente a los 48/72 de las
+  demás, y `document.querySelector('.hero + .section').id` devuelve `zones`;
+- **los anclas siguen existiendo** y ninguna sección declara `data-surface`, así que no hay dos
+  superficies de tinta que puedan quedar seguidas.
+
+▶ **Por eso nace `HomeSectionOrderTest`**: lo único que puede cazar un bloque descolocado es una
+guarda que sepa cuál es el orden bueno. Compara la **secuencia completa** —con comprobaciones por
+parejas, mover un bloque dos sitios abajo sigue cumpliendo todas las parejas que alguien se acordó de
+escribir— y vigila también que **las ocho se pinten**, porque una sección que desaparece *también*
+deja el resto «en orden».
+
+⚠️ **Su `setUp` siembra una opinión a propósito**: la 06 no se pinta sin ellas y el seeder no las
+siembra (`#490`), así que sin eso el fichero compararía **siete** secciones y llamaría «en orden» a
+una portada a la que le falta una. Y el centinela de la guarda-de-la-guarda **no puede ser `reviews`**
+por lo mismo.
+
+---
+
+**❗❗❗ Y AL CORRER LOS ARNESES VECINOS SALIÓ UN DEFECTO QUE NO ERA DE ESTA TANDA: `mutar-dudas`
+llevaba desde `#490` mutando la sección equivocada.**
+
+Su mutación «se pierde el rótulo» buscaba `<p class="sec-head__eyebrow">` con 20 espacios y
+`replace(…, 1)` cambia **la primera aparición**. Desde que la sección 06 «Reseñas» entró en la
+portada —va antes de Dudas y tiene la misma indentación—, la que mutaba era **la de reseñas**, que
+ninguna guarda de ese filtro mira.
+
+⚠️ **Verificado que no lo causó el reordenado**: reconstruido `home.blade.php` desde `HEAD`, aplicada
+la mutación a mano y corrido su filtro → **32 passed**. Ya estaba roto. ▶ *Antes de arreglar algo que
+tu cambio destapó, comprueba si tu cambio lo causó* — y aquí el árbol se restauró comprobando el
+sha1, no confiando.
+
+▶ Se re-apunta **por su clave**, que es única. **El rótulo de Dudas llevaba sin vigilar desde `#490`**
+y el arnés lo decía con un «NO muerde», que se lee como *falta una guarda* cuando lo que pasaba era
+que *sobraba un sujeto*.
+
+---
+
+**⚠️ Método**: el movimiento se hizo con un **control de permutación** —el multiconjunto de líneas con
+contenido tiene que ser idéntico antes y después—, no a ojo. Delta real: **+1 línea**, y es un
+separador. Y el bloque de la 01 era **el único sin cabecera numerada**; ahora las cinco primeras van
+`══ 01 ·` … `══ 05 ·`, de modo que un bloque descolocado se ve leyendo el fichero.
+⚠️⚠️ **Y aquí se cometió el error de método de la tanda, con la ficha de deuda ya escrita**: se dio
+por hecho que a 06, 07 y 08 les faltaba cabecera, y **solo era cierto de la 07** — las otras dos la
+tenían con **otro formato** (`══ SECCIÓN 06 · «RESEÑAS» ══`), así que el `grep` que las buscaba
+(`══ 0[1-8] ·`) no las veía. *Un `grep` que no encuentra no demuestra que no exista*: es la trampa de
+`#302` por la otra cara. ▶ Se unificaron las **cuatro** que divergían al mismo molde y **la
+numeración pasó a tener guarda** —ocho, en orden, y cada una delante de su sección—, porque una
+numeración que se desincroniza engaña más que no tenerla. La ficha se retira con su corrección
+dentro.
+
+**Medido en navegador** (390 y 1440): orden servido correcto, aire uniforme, `desborde 0`, portada
+**11.063 px / 13,11 pantallas** en móvil y **10.979 px / 10,98** en escritorio — el alto **no cambia**,
+porque un reordenado es una permutación.
+
+**Suite 4.637** · 29.086 aserciones · **8/8 mutaciones** (`scripts/mutar-orden-secciones.sh`; tres mueven
+bloques de verdad y una mueve una cabecera sin su sección — la que demostró que la primera versión
+de esa mutación no expresaba el defecto que decía perseguir) · **19/19** en `mutar-dudas` ya arreglado · Pint limpio.
+
+---
+
+## #496 · 2026-09-10 · La portada se queda sin la última pieza decorativa — y el canvas no coloca ninguna
+
+**Contexto.** El owner pidió *«limpiar la landing de los elementos de diseño, tipo splash y siluetas,
+y valorar dónde los ubicamos y cómo, respetando el sistema de diseño desde Claude Design»*.
+
+---
+
+**❗❗❗ EL INVENTARIO, MEDIDO EN NAVEGADOR — Y SALIERON SEIS PIEZAS, NO LAS QUE PARECÍA.**
+
+⚠️⚠️ **La primera sonda buscaba por NOMBRE** —`mancha`, `deco`, `splash`, `silueta`— **y se dejó
+fuera `.menu__blob`**, que son las dos manchas del menú. *Buscar por nombre supone conocer los
+nombres.* Se rehízo **por COMPORTAMIENTO**: pieza decorativa es la que no es interactiva, no la lee un
+lector de pantalla y pinta una forma (máscara, imagen o dibujo del kit), con un filtro de **60 px**
+para no contar iconos.
+
+| Pieza | Dónde | Caja | Opacidad |
+|---|---|---|---|
+| `zones__mancha` (`slot-zonas`) | sección 01 | 165×165 | 0,30 |
+| `menu__blob--a` | menú | 520×520 | 0,17 |
+| `menu__blob--b` | menú | 440×440 | 0,13 |
+| `.grain` | menú | 1440×1000 | 0,20 |
+| `.grain` | cierre | 1120×660 | 0,20 |
+| `reserve__tag` (`--deco-tag`) | cierre | 114×69 | 1 |
+
+▶ Y **en el cuerpo de las ocho secciones había EXACTAMENTE UNA**: la mancha de zonas. El logotipo
+(191×70) y el QR de ejemplo (260×260) salen del recuento — son contenido, no decoración.
+
+---
+
+**❗❗❗ LO QUE DICE EL CANVAS, MEDIDO ARTBOARD A ARTBOARD:**
+
+    Portada PJP         mancha 0 · silueta 0 · trama 0 · friso 0     ← el entregable
+    Zonas PJP           mancha 0 · silueta 0 · trama 0 · friso 0     ← la sección 01
+    Marco Portada PJP   nada
+    Escritorio PJP      «la tarjeta con su trama de puntos y el sello de Lorca a −6°»  ← EL CIERRE
+    Elementos Fachada   mancha 39 · silueta 9 · trama 26 · friso 6 · pose 40
+
+⚠️ La única aparición de «mancha» en `Portada PJP` es **una mención de pasada** dentro de un
+comentario sobre el sello de precio, y sus nueve «deco» son todos `text-decoration:none`. Se
+comprobó uno a uno.
+
+▶ **La lectura es inequívoca: el material decorativo existe, está aprobado (32 piezas, `#281`) y vive
+en su propio artboard como REPERTORIO — pero la portada del canvas no coloca ninguna.**
+
+▶ Y coincide con lo que las tandas ya venían haciendo sin habérselo propuesto: **cada sección que el
+rediseño rehízo perdió su decoración**, porque el artboard no la lleva —`slot-tarifas` en `#479`,
+`slot-normas-registro` y `slot-normas-calcetines` en `#485`—. `slot-zonas` era **la superviviente**: la
+sección 01 se rehízo en `#478` y la mancha se quedó.
+
+---
+
+**Lo que se retira**: `slot-zonas`, su marcado, sus **40 líneas de calibración** en CSS (el `top` en
+porcentaje, el barrido de seis combinaciones de `#303` y el de cinco de `#309`) y la ranura de
+`IllustrationKit::SLOTS`, que queda **VACÍA** — sexta vez, y siempre por la misma regla: *una ranura
+vive exactamente lo que vive su consumidor*.
+
+⚠️ **Dejarla declarada no habría sido inocuo**: `kit:build` seguiría exigiendo un dibujo que no pinta
+nadie y la guarda de paridad se pondría roja con el producto sano (`#479`).
+
+⚠️ **`.zones__titulo` se queda** aunque naciera como contexto de apilamiento de la mancha: también es
+lo que separa el titular del rótulo en la columna. Retirarlo es maquetación, no limpieza.
+
+**Lo que NO se toca, y por qué**:
+
+- **La trama y el sello del CIERRE**: el canvas los pide con esas palabras.
+- **Las tres piezas del MENÚ**: el canvas **no dibuja el menú**, y no es un descuido —
+  `armazon-y-menu.md` §1.5 registra que *la auditoría del cliente EXCLUYE el menú y el logotipo por
+  indicación suya*. Tocarlas sería ir más allá de lo que el mockup manda.
+
+---
+
+**⚠️ LAS ASERCIONES BAJARON DE 29.086 A 29.081, y se persiguieron las cinco** en vez de darlas por
+buenas —una aserción que desaparece puede ser una guarda que se queda sin sujeto—:
+
+- **1** es el `foreach` sobre `SLOTS` de `ZonesSectionTest`, que con la lista vacía no itera. **Está
+  previsto y escrito**: su docblock dice que *«`SLOTS` vacía es un estado VÁLIDO»* y conserva su
+  guarda-de-la-guarda (que el corpus contenga algún `<x-site.ilu>` — hoy lo pinta `/cumpleanos`).
+- **4** son del barrido de reglas de `SidebarTokenBudgetTest`, que ahora tiene **una regla CSS menos**
+  que inventariar. Con 5.283 aserciones, sujeto le sobra.
+
+▶ Localizadas comparando fichero a fichero contra `HEAD`, no deduciéndolo.
+
+**Medido**: la sección 01 **no cambia de alto** (1.146 px en escritorio, 1.624 en móvil) porque la
+mancha era absoluta; portada y desborde, idénticos.
+
+**Suite 4.637** · 29.081 aserciones · Pint limpio · docs-check verde.
+
+---
+
+**▶ LO QUE QUEDA ABIERTO Y ES DEL OWNER: dónde se ubican las 32 piezas aprobadas.** El kit
+`Elementos Fachada` se aprobó en `#281` y **nunca se construyó**; su §7 propone colocaciones y §10 son
+las cinco cosas que decide él. ⚠️ Y su §5 avisa de lo que está en juego: las manchas y las poses son
+**arte de ESTE cliente**, así que solo pueden entrar por el hueco de `hueco-ilustracion.md` —que
+existe desde `#286`— o clavarían el mural de un parque dentro de JumpWeb.
+
+---
+
+## #497 · 2026-09-10 · Se abre la valoración del vestido — y el canvas ya la tenía prevista con nombre
+
+**Contexto.** El owner: *«vamos a abrir esa valoración; ¿qué decisiones quedan para saber dónde
+ubicar los elementos de diseño? La idea es en todas las páginas.»*
+
+---
+
+**❗❗❗ EL HALLAZGO: EL CANVAS YA DECIDIÓ EL CÓMO, Y LO LLAMA «LA PASADA DE VESTIDO».** Lo repite en
+**siete artboards** con las mismas palabras: *«iconos, imagen y movimiento sobre las ocho secciones a
+la vez, **no una a una**»*, y `Visitanos PJP` lo dice sin margen: *«la sección se queda sin ninguna
+pieza gráfica del kit: eso se decide entero en la pasada de vestido, sobre todas las secciones a la
+vez **y con presupuesto**, no metiendo una mancha aquí por rellenar»*.
+
+▶ **Eso reencuadra algo que parecía una pérdida y era un APLAZAMIENTO.** Cada sección rehecha fue
+perdiendo su decoración —`#479`, `#485`, `#496`— y se leyó como limpieza. No lo era: su colocación
+estaba aplazada a esta pasada, y el canvas lo tenía escrito desde antes.
+
+▶ Y **la pasada son CUATRO ejes**, no solo las manchas: iconos · imagen · movimiento · piezas de
+fachada. Quien la retome no puede reducirla al kit. Después va **el censo pieza × pantalla**, que el
+propio canvas coloca detrás.
+
+▶ Spec nueva: **`docs/specs/pasada-de-vestido.md`**.
+
+---
+
+**⚠️⚠️ UNA CIFRA MÍA ERA FALSA Y CASI DECIDE UNA TANDA ENTERA.** Se le presentó al owner que la
+portada tenía **28 bucles contra un techo de 2** y eligió, razonablemente, «pagar la deuda primero».
+**No había deuda**: medido bien, **corriendo hay 2** —y `/precios` 1, y `/atracciones` 1—, o sea que
+las tres cumplen.
+
+▶ **24 de los 28 están PAUSADOS**: los calcetines fuera de pantalla y el spinner con el cajón
+cerrado, que es el mecanismo que `#435` construyó justo para esto. *Contar elementos con
+`animation-iteration-count: infinite` declarado no es contar bucles corriendo.*
+⚠️ Lo delató que la cifra contradecía a `#279`, que había dejado la portada en 2 y «ya cumple» — **si
+tu instrumento acusa a algo que ya estaba verificado, la primera hipótesis es el instrumento**. La
+pregunta se rehízo con el dato corregido.
+
+---
+
+**Lo que sí está cargado es el MARCADO**, medido:
+
+    HTML de GET /            275 KB
+      · el logotipo en línea  112,9 KB   (41 %)   ← confirma la medición de #275
+      · las 8 secciones        92,8 KB   (34 %)
+
+❗ **El logotipo pesa MÁS que las ocho secciones juntas.** Ése es el marco del techo del kit.
+
+---
+
+**✅ DOS DECISIONES DEL OWNER**:
+
+- **D1 · La pasada se hace AHORA y solo sobre la PORTADA.** ⚠️ Es una **desviación deliberada** del
+  «todas a la vez» del canvas y queda escrita como tal: de las siete páginas solo `/atracciones` está
+  rehecha, y las otras seis cambian en la Fase 3. **Coste asumido**: el reparto se decide sin ver seis
+  de las siete páginas, y puede haber una segunda pasada.
+- **D2 · Techo de BYTES fijado antes de repartir, y `<use>` obligatorio.** Ninguna pieza se coloca
+  hasta que haya techo medido. Repetir el `<path>` cuesta **18,6×** más que `<defs>` + `<use>`, y
+  `#266` dejó pagadas las dos trampas: una animación sobre `<defs>` no pinta, y los `px` de un
+  `transform` dentro de un SVG son unidades del `viewBox`.
+
+**❗ QUEDAN CINCO** (§4 de la spec): la regla de **densidad** —hoy rige la de `#292`, que es del carril
+viejo—; qué **familias** entran de las 32 piezas —y la línea que las parte **no es estética, es
+white-label**: manchas y poses son arte de PlayJump y solo entran por el hueco de `#286`—; las dos
+**contradicciones** del artboard que siguen abiertas; **`C3`**, la cinta del eslogan, que choca con
+`#252`; y **refrescar el canvas**, cuya copia local **no trae `Layout Paginas PJP`** —eso no bloquea
+la portada pero **sí la Fase 3**.
+
+---
+
+## #498 · 2026-09-10 · Las velas del carril de complementos y el pie de cumpleaños — y la tarifa especial cobra vísperas que no anuncia
+
+**Contexto.** Dos encargos del owner: *«los complementos, cuando son muchos y llegan a un width muy
+amplio, añadirles un velo para hacer el slide de manera profesional en los laterales»* y, en
+cumpleaños, *«este texto no tiene margen con la card y genera ruido: algo debe irse y dejarlo para la
+página de cumpleaños»*.
+
+---
+
+**❗❗ EL MECANISMO YA EXISTÍA Y SE REUTILIZA**: la vela del pie (`#252`), con su regla escrita —*«va
+en el ENVOLTORIO y no en la fila: un pseudo-elemento dentro de un contenedor con scroll viaja con el
+contenido»*—. El carril no tenía envoltorio y hubo que dárselo.
+
+**⚠️⚠️ Los defectos de las dos velas son OPUESTOS, y no es un descuido.** Sin
+`animation-timeline`, la DERECHA se queda puesta —una lista que parece terminada sin estarlo esconde
+contenido, mientras que una vela de más solo es un adorno— y la IZQUIERDA apagada, porque al
+principio del carril no hay nada a la izquierda y anunciarlo sería falso.
+
+---
+
+**❗❗❗ TRES DEFECTOS, Y LOS TRES SOLO LOS VIO EL NAVEGADOR.**
+
+1. **Las velas salían INVERTIDAS.** `animation-timeline: --carril` busca ese nombre en un **ancestro**
+   del elemento animado, y quien lo declara es el carril, que es **hijo** del envoltorio. Sin
+   `timeline-scope: --carril` en el envoltorio, las velas no encuentran su eje y se quedan en un
+   fotograma que no significa nada — medido: `izq 1 · der 0`, justo al revés.
+2. **La vela derecha no se veía**, ya con la timeline arreglada: el carril iba **a sangre con márgenes
+   negativos** y el envoltorio no, así que la vela caía en el borde de la columna y **no en el borde
+   del carril**. *Un pseudo-elemento solo puede velar el borde que su propio contenedor alcanza.* El
+   sangrado se mudó al envoltorio.
+3. **Con el carril lleno pero sin desbordar, salía una vela sin nada detrás.** Sin scroll la timeline
+   no tiene rango y la animación se queda en su fotograma inicial.
+
+▶ **El (3) es lo único que el CSS no puede saber solo**, y **tampoco el servidor**: medido, con dos
+complementos el carril de tarifas **cabe entero en escritorio (desborde 0) y desborda 330 px en
+móvil** — depende del ANCHO, no del número de fichas. Entra `ui/rail-sails.js`, que **publica un
+hecho y no decide diseño** (la doctrina de `#195`): marca `data-rail-scroll` y el CSS decide. Con
+`ResizeObserver` y no un `resize` de ventana, porque la columna cambia por cosas que no la mueven —la
+lección de `#256`, donde el motor del minijuego cacheaba el ancho del lienzo—.
+
+---
+
+**EL PIE DE CUMPLEAÑOS**: eran **tres bloques de texto seguidos** bajo las tarjetas —los días de la
+especial, las edades mezcladas y la cabecera del carril—.
+
+⚠️⚠️ **La nota de edades mezcladas se MUEVE a `/cumpleanos`, NO se borra**, y eso se decidió
+midiendo: esa frase **solo existía en la portada**, así que quitarla sin más la habría hecho
+desaparecer del sitio entero — y el suplemento mixto **cobra dinero** (`specs/cumple-mixto.md`).
+⚠️ **La de los días se queda**: sin ella «16,95 € en tarifa especial» no significa nada (`#479`).
+
+⚠️ **Y el margen lo pone el CONTEXTO, no el componente**: `.rates__note` nace con `--sp-4` porque en
+la sección de TARIFAS va pegada a su carril y ahí 4 px es lo correcto; bajo una tarjeta de cumpleaños
+la dejan colgando del borde, que era la queja literal. Cambiarlo dentro habría movido también el de
+tarifas.
+
+---
+
+**❗❗❗ Y AL RESPONDER UNA PREGUNTA DEL OWNER SALIÓ UN HALLAZGO DE DINERO.** Preguntó por qué la tarifa
+especial dice «Viernes, findes y festivos» y si las vísperas entran.
+
+▶ **Leído en PRODUCCIÓN** (con su permiso, solo lectura): `rate_types` #2 declara `weekdays [5,6,0]`
+—viernes, sábado, domingo— y **`special_dates` tiene 30 filas**, todas con la tarifa especial y
+nombradas por el propio parque: «Víspera de Navidad», «Víspera de Año Nuevo», «Víspera de Reyes»,
+«Víspera de San José», «Puente de la Constitución»…
+
+⚠️⚠️ **Así que las vísperas SÍ pagan tarifa especial, y la etiqueta no las nombra.** Es el problema
+CONTRARIO al que se temía: no promete de más, **cobra más de lo que anuncia**. Quien venga el jueves
+24 de diciembre paga especial y la portada solo dice «Viernes, findes y festivos».
+▶ Es un cambio de **DATO** (`rate_types.label` en el panel), no de código, y es del owner. ⚠️ Y el
+docblock de `<x-site.special-rate-note>` ya escribía la regla completa —*«los días —viernes, findes,
+festivos y vísperas—»*—, o sea que **el producto lo tenía bien y el dato se quedó corto**.
+
+**Suite 4.644** · 29.154 aserciones · guarda `AddonsRailSailsTest` (7 casos) · Pint limpio ·
+verificado en navegador a 390 y 1440: velas correctas en los cuatro casos (con desborde, sin
+desborde, al principio y al final del carril).
+
+---
+
+## #499 · 2026-09-10 · Por qué no se ven las reseñas de Google: la caché está vacía el 83 % del tiempo
+
+**Contexto.** El owner preguntó por qué la portada no muestra las reseñas de Google. Medido, hay dos
+causas y solo una es de diseño.
+
+---
+
+**❗❗❗ LA CAUSA PRINCIPAL ES UNA INCOHERENCIA ENTRE EL TTL Y LA CADENCIA, y estaba ahí desde `#491`.**
+
+    TTL de la caché        1.800 s = 30 min   (`GoogleSocialProof::CACHE_TTL_SECONDS`)
+    refresco programado    3 h    = 180 min   (`routes/console.php`, `everyThreeHours`)
+    ──────────────────────────────────────────
+    caché VACÍA            150 de cada 180 min = **83 % del tiempo**
+
+⚠️⚠️ **Los dos razonamientos son correctos por separado, y por eso nadie lo vio.** El docblock del TTL
+dice *«es la mitad del refresco **(que va cada hora)**»* —escrito suponiendo cadencia horaria— y el
+scheduler va cada tres horas con su propia aritmética, también buena: *«a esta cadencia salen 24
+llamadas al día, que caben en el tope de 50; cada hora serían 72 y el tope las cortaría a media
+tarde»*.
+
+▶ **La cadencia bajó de 1 h a 3 h por el tope de la consola de Google y el TTL no se ajustó.** Cada
+mitad es coherente con la premisa que tenía delante; juntas dejan la sección cayendo al respaldo
+propio cinco sextas partes del tiempo. *Dos comentarios que se explican bien pueden contradecirse sin
+que ninguno mienta.*
+
+⚠️ Y **se paga el SKU más caro de Places** —`reviews` es Enterprise + Atmosphere (R5)— para enseñarlas
+el 17 % del tiempo.
+
+**La segunda causa SÍ es de diseño y está decidida** (`#491`): las RESEÑAS piden consentimiento de
+terceros —su avatar vive en `lh3.googleusercontent.com`— y la CIFRA no. Sin aceptar cookies se ve la
+chapa de Google sobre opiniones propias. Correcto, y no se toca.
+
+⚠️ **Verificado que el scheduler SÍ corre en producción** (`crontab` tiene `schedule:run`), así que la
+causa no es ésa. En local se dispara a mano.
+
+▶ **NO se arregla en esta sesión**: las tres salidas tienen matiz —subir el TTL acepta a sabiendas lo
+que el docblock quería evitar, y bajar la cadencia obliga a tocar el tope de la consola de Google, que
+`#491` dejó pendiente del owner—. **Ficha en `DEUDA.md`** con las tres.
+
+**Medido de paso, con la caché caliente**: rating **4,6 · 5 reseñas**, y la cascada se comporta como
+está escrita — con consentimiento, chapa y opiniones de Google; sin él, chapa de Google y opiniones
+propias.
 ## #500 · 2026-09-10 · `[DECIDIDO owner]` Un carril propio para los CORREOS, con banda 500–519 — y el vestido de los 23, que destapó la marca del producto en la bandeja del cliente
 
 El owner pidió retomar el diseño **en el SPA**. Al medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja que el otro agente está moviendo** para la web pública (`#469`→`#489`), así que se contrastaron las cuatro superficies que podían ir en paralelo sin pisarse. Solo una tiene aislamiento real: **los correos** —tema propio (`vendor/mail/html/themes/brand.css`), artboard suyo (`Correos PJP`) y **fuera de las cinco fases** del plan del otro carril, o sea sin dueño—. El post-form y el justificante **cargan las dos hojas** (`focused-layout.blade.php`, sus dos `<link>`), el panel solo tiene **un** artboard, y la invitación digital **no existe en código**. `[DECIDIDO owner]`: los correos, y **banda propia 500–519** para no chocar con la 470–499, que va por `#489`.
@@ -27410,3 +27987,42 @@ email», qué queda vivo en «producto cancelado», y la contraseña temporal de
 
 **Suite 4.641** · Pint 1.246 · 7 desenlaces renderizados y 3 leídos en Mailpit. ⚠️ **Sigue sin verse
 en Gmail ni Outlook.**
+
+---
+
+## #520 · 2026-09-11 · Un test del carril de correos dependía de una máquina, no de una propiedad
+
+**Contexto.** Al fusionar los dos carriles (diseño `#494`–`#499` y correos `#500`–`#506`) la suite
+salió con **un fallo**: `ThemeColorTest::test_email_header_follows_brand_color`.
+
+▶ **Y la primera comprobación fue si lo había causado el merge**, no suponerlo: se creó una rama en
+`origin/main` puro y **falló igual**. Los dos carriles tocaron **cero ficheros de código en común**,
+así que el merge estaba descartado.
+
+---
+
+**❗❗❗ NO ESTABA ROTO PARA TODOS: DEPENDÍA DE LA MÁQUINA.**
+
+`resources/views/vendor/mail/html/header.blade.php` tiene **dos ramas**: si existe
+`public/img/client-logo@4x.png` pinta la imagen del cliente, y si no, el wordmark con su punto de
+color de marca. El caso aseveraba el punto **sin fijar cuál de las dos ramas quería**.
+
+    con el paquete del cliente instalado   → pinta la IMAGEN   → el caso FALLA
+    en un clon limpio o en CI              → pinta el WORDMARK → el caso PASA
+
+⚠️ `client-logo@4x.png` está **gitignorado**: es el paquete de la instalación (`#325`). ▶ Verificado
+en esta máquina: existe, 156.838 B.
+
+⚠️⚠️ **Es la trampa de `#302` por su cara inversa** —allí un test pasaba en la máquina del agente y
+fallaba en un clon limpio; aquí al revés—, y **el repo ya la tenía resuelta en DOS sitios**:
+`MailThemeTest` y `ReservationSlipTest` montan un `public/` temporal y lo explican con estas mismas
+palabras. `ThemeColorTest` fue el que se quedó sin el aislamiento.
+
+▶ **El arreglo no toca ninguna decisión del carril de correos** —ni el vestido, ni el botón de
+`#503`—: solo hace que el caso **fije su premisa** en vez de heredarla del entorno.
+
+⚠️ **Lección de método**: *un test que lee un fichero gitignorado no vigila una propiedad, vigila el
+estado de una máquina* — y el síntoma es el peor posible, porque el rojo aparece en el ordenador que
+tiene el paquete y no en el del agente que escribió el test.
+
+**Suite 4.676** · 29.237 aserciones · Pint limpio · docs-check ✓.

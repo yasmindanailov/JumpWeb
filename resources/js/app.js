@@ -3,6 +3,7 @@ import { reveal } from './ui/account-host.js';
 import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
 import { installHeroSwitch } from './ui/hero-switch.js';
+import { initRailSails } from './ui/rail-sails.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
@@ -1652,6 +1653,9 @@ document.addEventListener('alpine:init', () => {
 // que colgarlo de ese evento sería atarlo a un motor que no usa. En las diez vistas sin interruptor
 // devuelve `null` sin tocar el documento.
 installHeroSwitch();
+
+// Las velas del carril de complementos: el módulo solo publica si hay scroll; el CSS decide (`#498`).
+initRailSails();
 
 // ⚠️⚠️ **Aquí escuchaba el evento `logged-in` de Livewire, y se retiró el 2026-08-23**
 // (`specs/account-context-vue.md` §4.6). Ese bus existía porque el bloque de cuenta era un componente

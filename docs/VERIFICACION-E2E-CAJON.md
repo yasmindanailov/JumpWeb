@@ -2577,3 +2577,60 @@ es exactamente el defecto de los **900 minutos** que esta tanda cierra.
   renderiza esa insignia** —borrar su `@if` del blade deja la suite verde—, así que **es justo la
   pieza que conviene mirar con los ojos**. Aparece cuando el sello y el enganche declaran unidades
   distintas: provócala cambiando el modo de un enganche con una línea ya sellada debajo.
+
+---
+
+## 5.decies · LA ATRIBUCIÓN DE GOOGLE EN «RESEÑAS» — guion del OJO del owner (`DECISIONES #494`)
+
+**Qué se mira aquí y por qué no lo puede mirar la suite**: que el logotipo **se PINTE de verdad**
+—no que llegue—, que caiga en el rango de alto que Google publica, que no esté deformado y que su
+espacio libre se respete. La suite ve el marcado; el navegador ve el dibujo.
+
+### La sonda
+
+    docker compose exec -d -T laravel.test bash -lc \
+      'socat TCP-LISTEN:8081,fork,reuseaddr TCP:127.0.0.1:80'
+    docker compose exec -u sail -T laravel.test php artisan social-proof:refresh
+    docker compose exec -u sail -T laravel.test bash -lc \
+      'PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers node storage/app/sonda-atribucion-google.mjs'
+
+⚠️ **`social-proof:refresh` ANTES, siempre.** La caché vive en la BD y **`RefreshDatabase` la vacía**:
+tras correr la suite, la sección cae al respaldo propio y la sonda mediría la ausencia de todo lo que
+viene a comprobar, llamándola «correcta».
+
+⚠️ La sonda vive en `storage/app/` (gitignorado), como las demás de auditoría. Está escrita para
+volver a generarse: lo que hay que conservar son las trampas de abajo.
+
+### Lo que tiene que salir
+
+| Campo | Valor | Por qué |
+|---|---|---|
+| `cargado` | **`true` en los tres logotipos** | ⚠️⚠️ **La aserción que de verdad importa.** Es `naturalWidth > 0`: lo único que distingue «se pinta» de «llegó el fichero» |
+| `deformado` | `false` | Compara la proporción **natural** con la pintada, no con 98/18 escrito a mano |
+| `h` | **18** | Dentro del rango publicado, 16–19 |
+| `areaChapa` | `98 × 48` | El enlace crece al objetivo táctil; el logotipo NO |
+| `aviso` (en inglés) | «Translated from Spanish» | Requisito, y en ES no sale porque ahí no hay traducción |
+| `desborde` | `0` | Sobre `documentElement`, no sobre un carril (`#346`) |
+
+### ⚠️⚠️ Las cuatro trampas, todas pagadas
+
+1. **Medir antes del scroll.** El logotipo es `loading="lazy"`: desde arriba de la portada sale
+   `complete=false` y `naturalWidth=0`, **indistinguible de un 404** — y la caja mide bien igual,
+   porque los atributos del `<img>` reservan el hueco. **El scroll va antes de medir.**
+2. **Sin consentimiento no hay reseñas de Google** (`RGPD-05`): la sonda acepta cookies, y eso es una
+   intervención del instrumento sobre el sujeto que hay que decir.
+3. **El idioma no es un prefijo de ruta**: se cambia con `GET /lang/{locale}`. Pedir `/en` da 404 y la
+   sonda muere esperando `#reviews`.
+4. **En español no hay nada que avisar**: las reseñas del parque están escritas en español. Sin una
+   vista en otro idioma, la sonda mide la ausencia del aviso de traducción y la da por buena.
+
+### Lo que el owner tiene que mirar con los ojos
+
+- Que el logotipo **se lee** sobre la tinta de la chapa y sobre el papel de la tarjeta, y que en la
+  tarjeta **no pesa más que el nombre del autor** (ése fue el criterio para elegir la variante gris).
+- Que el nombre del autor **lleva a su ficha** de Google y la abre fuera.
+- En inglés o francés: que sale «Traducida del español · Ver original» y que **el botón alterna** el
+  texto de verdad.
+- Que la nota del pie —«Google no verifica las reseñas…»— **no compite** con la opinión.
+- ⚠️ Y que la reseña que sale puede ser **negativa**: es lo que `google-reviews.md` §1.4 advirtió, no
+  un defecto. El parque no elige qué reseña publica Google.

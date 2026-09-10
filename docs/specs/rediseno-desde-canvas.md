@@ -204,7 +204,26 @@ sistema y dicen cosas distintas.
 ### 5.1 · Las ocho secciones de la portada
 
 Rótulo · titular · artboard. **Los rótulos NO llevan número** (`[DECIDIDO owner]` del canvas) y los
-titulares son frases de **3 a 6 palabras**:
+titulares son frases de **3 a 6 palabras**.
+
+❗❗❗ **EL ORDEN DE ESTA TABLA ES EL ORDEN DE LA PORTADA, y desde `#495` es también el del código.**
+Verificado contra **dos fuentes independientes** del canvas el 2026-09-10:
+
+- **`Portada PJP`** (el entregable): sus ocho rótulos salen en este orden de documento, los ocho caen
+  **antes del truncamiento** y —con control— **ningún `position: absolute` los recoloca**, así que el
+  orden de documento es el orden visual.
+- **`Marco Portada PJP`**, que lo lleva **en datos**: `01 Zonas · 03 Qué hay dentro · 05 Antes de
+  venir · 07 Visítanos · 08 Dudas`. Las tres que faltan (02, 04, 06) son las que ese artboard excluye
+  a propósito: *«Tarifas y Cumpleaños son sección y página, y aquí apuntan a la página»*.
+
+⚠️⚠️ **Hay una TERCERA numeración en el canvas que dice otra cosa y NO cuenta**: `Landing PJP Modos`
+(`01 Entradas · 02 Zonas · 03 Cumpleaños…`). `[owner]`: *«de esa maqueta solo sacaremos la sección de
+reseñas»*. *Mirarla y creerle es la forma de reordenar mal la portada con una fuente del canvas en la
+mano.* Y una cuarta en `Colores de Marca PJP`, que son las partes de una página en un ejercicio de
+color y nombra piezas del ARCHIVO.
+
+⚠️ **Reordenar secciones NO ROMPE NADA** —las guardas acotan por `id`, `--hero-air` cuelga de
+`.hero + .section` y se muda solo—, así que el orden lo vigila **`HomeSectionOrderTest`** y nada más.
 
 | Rótulo | Titular | Artboard |
 |---|---|---|
@@ -391,6 +410,45 @@ navegador instalado**.
 | T2h | **08 · Dudas**: el acordeón del sistema · todas cerradas · cero salida · con el panel vacío la sección desaparece | ✅ `#488` |
 | T2i·a | **06 · Reseñas**, mitad `a`: las opiniones PROPIAS · el contrato `SocialProof` · el recurso del panel | ✅ `#490` |
 | T2i·b | **06 · Reseñas**, mitad `b`: Google (Places, caché corta, comando programado, atribución) | ✅ `#491` |
+| T2i·c | **06 · Reseñas**: la ATRIBUCIÓN de Google — el logotipo oficial, el perfil del autor y el aviso de traducción | ✅ `#494` |
+
+✅ **T2i·c · La atribución de Google** (`#494`). El owner pidió *«más veracidad con los logos de
+Google, como el widget oficial»* y **resultó ser un requisito INCUMPLIDO**: leída la política de
+Places el 2026-09-10, faltaban el logotipo obligatorio, el enlace al perfil del autor, el aviso de
+traducción y la distinción visual entre contenido de Google y contenido propio.
+
+❗❗❗ **EL LOGOTIPO OBLIGATORIO NO ES LA «G» QUE YA TENÍAMOS.** `google.svg` es la marca de Google
+Sign-In (`#345`); la atribución de Places pide el logotipo de **Google Maps**, otro asset con otras
+reglas (alto 16–19 px, espacio libre 10/10/10/5, prohibido modificarlo). Entran **dos variantes** del
+paquete oficial y **el color se elige cambiando de FICHERO, jamás recoloreando**.
+
+❗❗❗ **Y NO PUEDE IR EN LA CABECERA DE LA SECCIÓN**: la chapa y las opiniones no vienen de la misma
+fuente y **el caso frecuente es el CRUCE** —chapa de Google sobre opiniones propias—. Arriba marcaría
+como suyas unas opiniones que escribió el parque. `[DECIDIDO owner]`: **chapa + cabecera de la
+reseña**, cada trozo con su atribución en su contenedor.
+
+❗❗ **«Verificado por Google» es lo único de las tres ideas del owner que NO se puede hacer**: su
+documentación dice *«Reviews aren't verified by Google»*. Entra en su lugar **esa misma frase**, que
+la política pide publicar.
+
+⚠️⚠️ **Un defecto que ninguna medida de geometría veía**: la cabecera que se les puso a los assets
+citaba tokens CSS con sus dos guiones, y **XML lo prohíbe dentro de un comentario**. HTTP 200, marcado
+correcto, **caja de 98×18** —los atributos del `<img>` reservan el hueco— y el logotipo **invisible**.
+Lo delató `naturalWidth`. *Que el fichero llegue y mida bien no es que se pinte.*
+
+⚠️ **En inglés y en francés Google traduce las DOS reseñas del parque** y no se decía. La señal es
+que los códigos de idioma **difieran**: `originalText` viene siempre, traducida o no.
+
+▶ **Tres retoques del owner con la sección delante**: **fuera las flechas** del carril —se recorre
+con los puntos, y ⚠️⚠️ **no costó accesibilidad porque cada punto ya era un `<button>` con su
+nombre**; la guarda vigila las dos mitades—, **«Ver en Google» anclado a la derecha** (⚠️ con
+`margin-left: auto` y **no** `space-between`: sin «Ver más» la fila tiene un solo hijo y volvería a la
+izquierda) y **los dos logotipos se quedan** — pidió quitar «el de debajo del titular», al aclarar
+dijo «debajo de las estrellas sí, déjalo», se le enseñaron los dos con su posición y respondió
+«ninguno». ▶ *Preguntar costó un minuto; quitar el equivocado habría costado la vuelta entera.*
+
+▶ Suite **4.632** · **29/29 mutaciones** · verificado en navegador (390 y 1440, ES y EN) y **con
+JavaScript desactivado**.
 
 ✅ **T2i·b · Google** (`#491`). La chapa del 4,8 con las estrellas recortadas **caja a caja**, las
 reseñas con su atribución, la caché corta y el comando `social-proof:refresh` cada hora.

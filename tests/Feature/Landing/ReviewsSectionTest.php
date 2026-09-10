@@ -179,12 +179,40 @@ class ReviewsSectionTest extends TestCase
     public function test_los_controles_piden_mas_de_una_opinion(): void
     {
         $this->sembrar(1);
-        $this->assertStringNotContainsString('rev__nav', $this->seccion(), 'una flecha que no lleva a ninguna parte');
+        $this->assertStringNotContainsString('rev__nav', $this->seccion(), 'un punto solo no dice nada');
 
         $this->sembrar(2);
         $seccion = $this->seccion();
         $this->assertStringContainsString('rev__nav', $seccion);
         $this->assertSame(3, preg_match_all('/class="rev__dot"/', $seccion), 'un punto por opinión');
+    }
+
+    /**
+     * **LAS FLECHAS SE RETIRARON** (`[DECIDIDO owner, 2026-09-10]`, `#494`): el carril se recorre con
+     * los puntos.
+     *
+     * ⚠️⚠️ **Lo que este caso vigila NO es que no haya flechas: es que retirarlas no costó
+     * recorrido.** Cada punto sigue siendo un `<button>` con su nombre accesible, así que un teclado
+     * y un lector de pantalla llegan a todas las opiniones. *Retirar un control solo es gratis si lo
+     * que hacía lo sigue haciendo otro* — sin esta mitad, la guarda pasaría en verde con el carril
+     * convertido en algo que solo se puede recorrer con el ratón.
+     */
+    public function test_sin_flechas_los_puntos_siguen_dando_recorrido_completo(): void
+    {
+        $this->sembrar(3);
+        $seccion = $this->seccion();
+
+        $this->assertStringNotContainsString('rev__arrow', $seccion,
+            'Han vuelto las flechas del carril, que el owner retiró.');
+
+        // Y las tres opiniones siguen siendo alcanzables, cada una por su nombre.
+        foreach ([1, 2, 3] as $n) {
+            $this->assertStringContainsString(
+                'aria-label="'.__('landing.reviews.go', ['n' => $n]).'"', $seccion,
+                "La opinión {$n} no tiene ningún control que la nombre: sin flechas, el punto es la ".
+                'única forma de llegar a ella.'
+            );
+        }
     }
 
     /**

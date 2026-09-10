@@ -2,6 +2,7 @@
 
 namespace App\Domain\Content\Services;
 
+use App\Domain\Content\Contracts\OriginalText;
 use App\Domain\Content\Contracts\Rating;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
@@ -78,6 +79,13 @@ class GoogleSocialProof implements SocialProof
      * depende de qué instantánea pille el refresco de esa hora.** Con un recuento alto el efecto se
      * diluye —una reseña más no mueve una media de 300—; con dos, la mueve entera. Es la misma
      * razón que sostenía el 10, por otra puerta.
+     *
+     * ❗❗❗ **`[DECIDIDO owner, 2026-09-10]` — SE QUEDA EN 1 Y ES DEFINITIVO** (`#494`): *«deja el
+     * umbral a 1 siempre; mínimo 1 reseña para mostrar el widget de Google»*. Re-confirmado con la
+     * inconsistencia de arriba ya medida y delante, así que **no es un descuido: es el precio
+     * aceptado**. ⚠️ Subirlo «para que la media sea más estable» apaga el widget entero y deshace
+     * `#493` y esto — no se toca sin reabrir la decisión con el owner.
+     * ▶ Lo fija `GoogleAttributionTest`, para que la constante no vuelva a moverse en silencio.
      */
     public const MIN_REVIEWS = 1;
 
@@ -120,6 +128,10 @@ class GoogleSocialProof implements SocialProof
     {
         $datos = $this->cached();
 
+        // ⚠️⚠️ **Las claves nuevas se leen con `?? null` porque la CACHÉ SOBREVIVE AL DESPLIEGUE.**
+        // Al subir `#494` había entradas escritas por el código anterior, sin `author_url` ni
+        // `original`: leerlas por acceso directo revienta la portada hasta el primer refresco, que
+        // puede tardar una hora. No es defensa por si acaso — es la forma de este dato.
         return collect($datos['reviews'] ?? [])->map(fn (array $r): TestimonialData => new TestimonialData(
             text: (string) $r['text'],
             author: (string) $r['author'],
@@ -128,7 +140,26 @@ class GoogleSocialProof implements SocialProof
             url: $r['url'],
             source: TestimonialData::SOURCE_GOOGLE,
             avatarUrl: $r['avatar'],
+            authorUrl: $r['author_url'] ?? null,
+            originalText: $this->original($r),
         ))->values();
+    }
+
+    /**
+     * El original de una fila de la caché, o `null` si lo servido no es una traducción.
+     *
+     * ⚠️ **Exige las DOS mitades.** Una fila a medias —texto sin idioma— escribiría «Traducida del
+     * ` `»; el tipo {@see OriginalText} lo impide aguas abajo y esta puerta lo impide aquí, que es
+     * donde entra el dato de fuera.
+     *
+     * @param  array<string,mixed>  $r
+     */
+    private function original(array $r): ?OriginalText
+    {
+        $texto = trim((string) ($r['original'] ?? ''));
+        $idioma = trim((string) ($r['original_lang'] ?? ''));
+
+        return ($texto !== '' && $idioma !== '') ? new OriginalText($texto, $idioma) : null;
     }
 
     /** ¿Está configurada esta instalación? Sin las dos cosas, no hay nada que traer. */
@@ -212,7 +243,7 @@ class GoogleSocialProof implements SocialProof
 
         $reviews = [];
         foreach ($json['reviews'] ?? [] as $r) {
-            $texto = trim((string) (($r['text']['text'] ?? '') ?: ($r['originalText']['text'] ?? '')));
+            [$texto, $original, $idiomaOriginal] = $this->texts($r);
             $autor = trim((string) ($r['authorAttribution']['displayName'] ?? ''));
 
             // ⚠️⚠️ **Sin autor no se publica.** R3 exige acreditar al autor al mostrar una reseña, y
@@ -228,6 +259,12 @@ class GoogleSocialProof implements SocialProof
                 'when' => ($r['relativePublishTimeDescription'] ?? null) ?: null,
                 'url' => $this->safeUrl($r['googleMapsUri'] ?? null),
                 'avatar' => $this->safeUrl($r['authorAttribution']['photoUri'] ?? null),
+                // ❗❗ **La tercera pata de la atribución de R3**, que hasta `#494` no se leía: *«author's
+                // avatar image, name, and profile link»*. Ya venía en esta misma respuesta.
+                'author_url' => $this->safeUrl($r['authorAttribution']['uri'] ?? null),
+                // Presentes **solo si lo servido es una traducción** (ver {@see texts()}).
+                'original' => $original,
+                'original_lang' => $idiomaOriginal,
             ];
         }
 
@@ -237,6 +274,57 @@ class GoogleSocialProof implements SocialProof
             'url' => $this->safeUrl($json['googleMapsUri'] ?? null),
             'reviews' => $reviews,
         ];
+    }
+
+    /**
+     * **Qué texto se enseña, y si es una traducción de otro** (`#494`).
+     *
+     * ❗❗❗ **La política obliga a avisarlo**: *«Make end users aware when a review has been translated
+     * from its original language»*. Y aquí es el caso NORMAL, no un borde: medido contra la API real
+     * el 2026-09-10, las dos reseñas del parque están escritas en español, así que **en inglés y en
+     * francés Google devuelve las dos traducidas**. Dos de los tres idiomas del sitio.
+     *
+     * ⚠️⚠️ **La señal es el IDIOMA, nunca comparar los dos textos.** Google devuelve `originalText`
+     * SIEMPRE, traducida o no —en español los dos vienen con `languageCode: es` y el mismo
+     * contenido—, así que «hay `originalText`» no significa «está traducida». Lo que lo significa es
+     * que los dos códigos difieran, que es además lo que la política nombra.
+     *
+     * ⚠️ **Y si Google no traduce, lo servido ES el original**: entonces no hay «otro» texto que
+     * ofrecer y no se avisa de nada. Sin esta rama, una reseña en el idioma de la página se anunciaría
+     * como traducida de sí misma.
+     *
+     * @param  array<string,mixed>  $r
+     * @return array{0:string,1:?string,2:?string} [lo que se enseña, el original o null, su idioma o null]
+     */
+    private function texts(array $r): array
+    {
+        $servido = trim((string) ($r['text']['text'] ?? ''));
+        $idiomaServido = $this->lang($r['text']['languageCode'] ?? null);
+
+        $original = trim((string) ($r['originalText']['text'] ?? ''));
+        $idiomaOriginal = $this->lang($r['originalText']['languageCode'] ?? null);
+
+        // Google no ha traducido nada: se enseña el original y no queda un segundo texto que dar.
+        if ($servido === '') {
+            return [$original, null, null];
+        }
+
+        $traducida = $original !== ''
+            && $idiomaServido !== null
+            && $idiomaOriginal !== null
+            && $idiomaServido !== $idiomaOriginal;
+
+        return $traducida
+            ? [$servido, $original, $idiomaOriginal]
+            : [$servido, null, null];
+    }
+
+    /** El código de idioma de la fuente, o `null` si no lo declara. No se normaliza. */
+    private function lang(mixed $valor): ?string
+    {
+        $valor = trim((string) ($valor ?? ''));
+
+        return $valor !== '' ? $valor : null;
     }
 
     /**

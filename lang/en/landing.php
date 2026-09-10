@@ -321,6 +321,21 @@ return [
         'prev' => 'Previous review',
         'next' => 'Next review',
         'go' => 'See review :n',
+
+        // Atribución de Google (`#494`). El enlace al perfil dice adónde lleva.
+        'author_on_google' => ':name on Google Maps',
+
+        // Aviso de traducción, obligatorio. `translated` a secas es la salida cuando no se puede
+        // nombrar el idioma de origen.
+        'translated_from' => 'Translated from :lang',
+        'translated' => 'Automatically translated',
+        'see_original' => 'See original',
+        'see_translation' => 'See translation',
+
+        // ❗ La redacción es LA DE GOOGLE, palabra por palabra: «Reviews aren't verified by Google,
+        //   but Google checks for and removes fake content when it's identified». En inglés se cita
+        //   tal cual; en los otros idiomas se traduce esa misma frase.
+        'google_policy' => 'Reviews aren\'t verified by Google, but Google checks for and removes fake content when it\'s identified.',
     ],
 
     // Sección 08 · «Dudas» (`#488`). El titular es una frase; «FAQ» pasa a ser el RÓTULO.

@@ -1328,47 +1328,17 @@ img { display: block; max-width: 100%; }
   max-width: 920px;
 }
 
-/* **LA MANCHA, DETRÁS DE LA PRIMERA PALABRA** — no detrás del bloque, que es lo que manda su propia
-   nota (`B1`, artboard «Elementos Fachada»): «la mancha detrás de la primera palabra, nunca detrás
-   de todo el bloque».
-   ⚠️ Va ABSOLUTA: sin paquete el componente no emite nada, y una pieza que reservara sitio dejaría
-   un hueco en la cabecera cuando la instalación no trae kit.
-   ⚠️ La opacidad es la misma que ya se midió para este material (0,14): por encima compite con el
-   titular, y el titular es tinta maciza. */
-/* El bloque del titular es el contexto de la mancha: `position` para que el `top` se resuelva
-   contra ÉL, e `isolation` para que el `z-index: -1` no se escape a la página. */
-.zones__titulo { position: relative; isolation: isolate; }
+/* 📜 **AQUÍ VIVÍA LA MANCHA `slot-zonas`** (`#302`→`#309`), retirada en `#496`: el artboard
+   `Zonas PJP` no lleva ninguna pieza decorativa —medido: cero manchas, siluetas, tramas y frisos—,
+   igual que `Portada PJP`. Con ella se van sus 40 líneas de calibración: el `top` en porcentaje del
+   bloque del titular, el barrido de seis combinaciones de `#303` y el de cinco de `#309`.
+   ▶ Lo que de aquello sigue valiendo, por si vuelve alguna pieza a esta sección: **el `top` en
+   porcentaje se resuelve contra el ALTO DEL CONTENEDOR**, así que anclarlo a la cabecera hizo que
+   acortar los titulares moviera la mancha 11.016 px² sobre el párrafo — *un ajuste sobrevive a la
+   razón que lo justificaba si nadie lo revisa al cambiar lo que hay alrededor*.
 
-/* ⚠️⚠️ **EL `top` ES UN PORCENTAJE DEL BLOQUE DEL TITULAR, NO DE LA CABECERA, y ese cambio es el
-   arreglo de un defecto REAL.** Estuvo colgando de `.zones__head`: al acortar los titulares
-   (`#303`) la cabecera pasó de **264 a 153 px**, el mismo `-20%` valió la mitad y la mancha cayó
-   **11.016 px² encima del párrafo** —justo lo que su nota prohíbe—. Anclada al titular, que la
-   guarda mantiene en UNA línea, su sitio ya no depende de cuánto texto tenga la sección.
-
-   ⚠️ **Y lo que había que cambiar era el TAMAÑO, no la posición.** Con 250 px de mancha sobre un
-   titular de 79, mover el `top` no cambiaba el número: la pieza se tragaba el párrafo entera
-   estuviera donde estuviera. Barrido de seis combinaciones → **`-84%` con `min(22%, 165px)`** es la
-   que más titular cubre (9.381 px² en escritorio, 2.512 en móvil) **con 0 px² sobre el párrafo** en
-   los dos anchos. Asoma 66 px por encima del titular, y ahí hay 128 px de aire de sección.
-
-   ⚠️ Va ABSOLUTA y con `z-index: -1` dentro de un contexto de apilamiento propio (el patrón de
-   `#286`): sin paquete el componente no emite nada y aquí no puede quedar hueco reservado. */
-/* ⚠️⚠️ **`#309` sube la OPACIDAD de 0,14 a 0,30 y NO el tamaño** (`[DECIDIDO owner]`: «el splash
-   que se vea más»). El primer intento la subió también a 230 px y **rompió el criterio que `#303`
-   dejó medido**: 9.936 px² de mancha sobre el párrafo, justo lo que su propia nota prohíbe.
-   ▶ Barrido de CINCO combinaciones de tamaño y posición, medidas en navegador: ninguna crece sin
-   caer sobre el párrafo, y desplazarla a la izquierda lo empeora (2.540 px²) **cubriendo además
-   menos titular** (6.795 contra 9.381). O sea que la posición de `#303` ya era la óptima.
-   ▶ Queda `top: -104%` —4 puntos más arriba, que es lo que compensa el aire del `#309`— con el
-   MISMO tamaño: **0 px² sobre el párrafo en los dos anchos** y 9.381 sobre el titular, idéntico a
-   antes. La pieza se ve el DOBLE porque pinta el doble, no porque ocupe más. */
-.zones__mancha {
-  position: absolute; z-index: -1; pointer-events: none;
-  left: -5%; top: -104%;
-  width: min(22%, 165px); height: auto;
-  --ilu-fg: var(--zone-1);
-  opacity: 0.30;
-}
+   ⚠️ `.zones__titulo` conserva `position: relative; isolation: isolate`: nació como contexto de
+   apilamiento de la mancha, pero retirarlo es maquetación y no limpieza, y hoy no cuesta nada. */
 /* El titular de «Para quién» comparte declaración con el resto: ver «LA CABECERA DE SECCIÓN». */
 
 /* ══ SECCIÓN «PARA QUIÉN» · el rótulo, la regla y las dos tarjetas ═══════════════════════════
@@ -2003,12 +1973,78 @@ img { display: block; max-width: 100%; }
    ficha **no se alcanza sin ratón**: aquí dentro no hay ningún control —son fichas, no botones—,
    así que el Tab no tiene a qué entrar y el carril no se puede desplazar. Es la única pieza de la
    sección que necesita foco propio, y por eso lleva su anillo. */
+/* ══ LAS VELAS DEL CARRIL ═══════════════════════════════════════════════════════════════════
+   `[DECIDIDO owner, 2026-09-10]`: con muchos complementos el carril llega a un ancho amplio y hay
+   que decir que sigue **por los dos lados**.
+
+   ❗❗ **Van en el ENVOLTORIO, no en el carril**, y es la misma razón que la vela del pie (`#252`):
+   un pseudo-elemento dentro de un contenedor con scroll **viaja con el contenido** y se iría hacia
+   la izquierda en cuanto alguien deslizara.
+
+   ⚠️⚠️ **Los dos defectos por defecto son OPUESTOS, y eso no es un descuido.** Donde el navegador
+   no entienda `animation-timeline`, la de la DERECHA se queda puesta —el estado seguro: decir que
+   hay más cuando ya no lo hay es un adorno, y no decirlo cuando sí lo hay es una lista que parece
+   terminada y no lo está— y la de la IZQUIERDA se queda APAGADA, porque al principio del carril no
+   hay nada a la izquierda y anunciarlo sería falso.
+
+   ⚠️ El degradado va a `--bg` y no a un literal: el carril vive en dos superficies distintas —dentro
+   del panel de una zona en tarifas y sobre papel en cumpleaños— y `[data-surface]` ya redefine ese
+   token. Un color escrito a mano se vería como una banda en una de las dos. */
+/* ⚠️⚠️ **`timeline-scope` es lo que hace que esto funcione, y sin él sale AL REVÉS.**
+   `animation-timeline: --carril` busca ese nombre en un ANCESTRO del elemento animado, y aquí quien
+   lo declara es el track, que es HIJO del envoltorio. Sin elevar el ámbito, las velas no encuentran
+   su eje y se quedan en un fotograma que no significa nada — medido: salían las dos invertidas.
+   `timeline-scope` sube la timeline del hijo al padre, que es justo este caso. */
+.addons-rail__wrap {
+  position: relative; timeline-scope: --carril;
+  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
+}
+.addons-rail__wrap::before,
+.addons-rail__wrap::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 64px;
+  pointer-events: none; z-index: 1;
+}
+.addons-rail__wrap::before {
+  left: 0; opacity: 0;
+  background: linear-gradient(to left, transparent, var(--bg));
+}
+.addons-rail__wrap::after {
+  right: 0; opacity: 1;
+  background: linear-gradient(to right, transparent, var(--bg));
+}
+/* ❗❗ **SIN SCROLL NO HAY VELAS, y esto es lo único que el CSS no puede saber solo.** Sin
+   desbordamiento la timeline no tiene rango, la animación se queda en su fotograma inicial y la vela
+   derecha aparecería **sin nada detrás** — medido: con dos complementos el carril de tarifas cabe
+   entero en escritorio y desborda 330 px en móvil, así que depende del ANCHO y no del número de
+   fichas, y por eso tampoco se puede decidir en el servidor.
+   ▶ El atributo lo pone `ui/rail-sails.js`, que **publica un hecho y no decide diseño** (`#195`).
+   ⚠️ La regla mira la AUSENCIA del atributo: sin JavaScript no hay marca y las velas se comportan
+   como si hubiera más — el mismo defecto seguro que eligió la vela del pie (`#252`). */
+.addons-rail__wrap:not([data-rail-scroll])::before,
+.addons-rail__wrap:not([data-rail-scroll])::after { opacity: 0; animation: none; }
+@supports (animation-timeline: scroll()) {
+  .addons-rail__wrap::before,
+  .addons-rail__wrap::after { animation: var(--ease-bucle) both; animation-timeline: --carril; }
+  .addons-rail__wrap::before { animation-name: rail-vela-izq; }
+  .addons-rail__wrap::after { animation-name: rail-vela-der; }
+  /* ⚠️ El carril declara el eje del que cuelgan las dos velas. Sin `scroll-timeline-name` en él,
+     `animation-timeline: --carril` no encuentra nada y las velas se quedan en su fotograma inicial
+     — que es justo el defecto seguro de arriba, así que falla bien. */
+  .addons-rail__track { scroll-timeline-name: --carril; scroll-timeline-axis: inline; }
+  @keyframes rail-vela-izq { 0% { opacity: 0; } 12%, 100% { opacity: 1; } }
+  @keyframes rail-vela-der { 0%, 88% { opacity: 1; } 100% { opacity: 0; } }
+}
+
 .addons-rail__track {
   display: flex; gap: var(--sp-12); align-items: stretch;
   overflow-x: auto; overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory; scrollbar-width: none;
-  /* A sangre por la derecha, igual que el carril de tarifas: el asoma es la señal de que hay más. */
-  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
+  /* A sangre por la derecha, igual que el carril de tarifas: el asoma es la señal de que hay más.
+     ⚠️⚠️ **El sangrado vive en el ENVOLTORIO desde `#498`, no aquí.** Con los márgenes negativos en
+     el carril, el envoltorio acababa en el borde de la columna y **las velas caían donde el carril
+     ya no está** — medido: la de la derecha no se veía. Un pseudo-elemento solo puede velar el
+     borde que su propio contenedor alcanza. */
+  margin: 0;
   padding: var(--sp-4) 64px var(--sp-8) var(--col-gutter);
 }
 .addons-rail__track::-webkit-scrollbar { display: none; }
@@ -2049,7 +2085,8 @@ img { display: block; max-width: 100%; }
 
 @media (min-width: 1024px) {
   /* Sin carril: dentro de la columna, como la rejilla de tarifas. */
-  .addons-rail__track { margin: var(--sp-16) 0 0; padding: var(--sp-4) 0 var(--sp-8); }
+  .addons-rail__track { margin: 0; padding: var(--sp-4) 0 var(--sp-8); }
+  .addons-rail__wrap { margin: var(--sp-16) 0 0; }
 }
 
 /* El CTA, pegado abajo para que las tarjetas de una fila alineen sus botones aunque su texto mida
@@ -3127,9 +3164,26 @@ img { display: block; max-width: 100%; }
 }
 .rev__id { flex: 1; min-width: 0; }
 .rev__author { margin: 0; font-size: var(--fs-16); font-weight: 700; line-height: 1.2; color: var(--fg); }
+/* El enlace al perfil del autor (atribución obligatoria, `#494`). Hereda el peso y el color del
+   nombre: la afordancia la da el subrayado, no un segundo color — el nombre sigue siendo el nombre.
+   ⚠️ **NO se le da el objetivo táctil de 48 px, y es de norma.** Es un enlace EN LÍNEA cuyo alto lo
+   fija el `line-height` del texto (medido: 40 px en móvil, donde el nombre ocupa dos renglones), y
+   WCAG 2.5.8 exime ese caso — la misma excepción que el enlace del texto de cookies, que
+   `TouchTargetTest` documenta. Forzarlo a 48 partiría la cabecera de la tarjeta en dos. */
+.rev__author a { color: inherit; text-underline-offset: 3px; }
+.rev__author a:hover { color: var(--interactive); }
 /* La fecha SÍ es mono: aquí es una etiqueta de dato, no un argumento (la regla de `doc/reglas.md`
    que sacó el recuento de opiniones del mono en el artboard). */
 .rev__when { margin: var(--sp-4) 0 0; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--fg-mute); }
+/* ── LA COLUMNA DE LA MARCA · logotipo de Google Maps + nota (`#494`) ──────────────────────
+   ⚠️⚠️ **Sin logotipo esta columna solo lleva las estrellas y la fila queda IDÉNTICA a como
+   estaba**, así que una opinión propia no paga nada por la atribución de Google. Es también el
+   orden del widget de Google: quién lo dice arriba, cuánto puntúa debajo.
+   ⚠️ `flex: none` para que no la encoja el nombre del autor: por debajo de 98 px el logotipo
+   bajaría de los 16 px de alto que sus directrices fijan como mínimo. */
+.rev__mark {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-8);
+}
 .rev__stars { flex: none; margin: 0; font-size: var(--fs-15); line-height: 1; letter-spacing: 0.06em; }
 .rev__stars-on { color: var(--attn-ink); }
 .rev__stars-off { color: var(--line-strong); }
@@ -3193,8 +3247,13 @@ img { display: block; max-width: 100%; }
    `display: -webkit-box` puesto, subir el `line-clamp` deja el párrafo en una caja que sigue
    comportándose distinto. */
 .rev__text--open { display: block; -webkit-line-clamp: unset; overflow: visible; }
-/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación. */
+/* Las dos salidas van en una fila: abrir el texto y, si la reseña es de Google, su acreditación.
+   ❗❗ **«Ver en Google» va SIEMPRE a la derecha** (`[DECIDIDO owner, 2026-09-10]`, `#494`).
+   ⚠️⚠️ Con `justify-content: space-between` no bastaría: cuando el texto es corto no hay botón «Ver
+   más» —se decide MIDIENDO, no contando caracteres—, y con un solo hijo la fila lo dejaría a la
+   IZQUIERDA. El `margin-left: auto` del propio enlace lo empuja haya o no compañero. */
 .rev__acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-16); }
+.rev__acts > .rev__more { margin-left: auto; }
 .rev__toggle,
 .rev__more {
   display: inline-flex; align-items: center; gap: var(--sp-7); min-height: 48px;
@@ -3203,6 +3262,58 @@ img { display: block; max-width: 100%; }
 .rev__toggle { background: none; border: 0; padding: 0; cursor: pointer; }
 .rev__more .arrow { transition: transform var(--dur-entra) var(--ease-entra); }
 .rev__more:hover .arrow { transform: translateX(5px); }
+
+/* ══ ATRIBUCIÓN DE GOOGLE MAPS ══════════════════════════════════════════════════════════════
+   `DECISIONES #494`. Piel del componente `<x-site.google-attribution>`.
+
+   ❗❗❗ **Estas medidas son de la GUÍA DE GOOGLE, no del sistema de diseño de la casa**, igual que
+   las del botón de acceso (`#345`): alto publicado **16–19 px** (aquí 18, el del propio asset) y
+   espacio libre **10 izq/der/arriba y 5 abajo**. Por eso no salen de `--sp-*` — esas escalas las
+   mueve el cliente en su paquete, y con ellas el logotipo dejaría de cumplir su guía **sin que nada
+   falle**.
+
+   ⚠️⚠️ **`width` Y `height` los dos fijos, y `flex: none`.** Con solo el alto, un `img{max-width}`
+   heredado o un contenedor estrecho lo encogen a lo ancho y **lo DEFORMAN**, que es lo primero que
+   sus directrices prohíben (*«Maintain the aspect ratio of the logo to prevent distortion»*). Y por
+   debajo de 98 px de ancho bajaría también del alto mínimo. Antes se desborda que se deforma.
+
+   ⚠️ **Aquí no hay ni un color.** El color del logotipo lo pone el FICHERO que elige el marcado:
+   Google publica una variante por fondo y recolorear su marca está prohibido. Un `filter` o un
+   `opacity` sobre esta clase es la forma de incumplir sin romper nada. */
+.gmaps-attr { display: block; flex: none; width: 98px; height: 18px; max-width: none; }
+
+/* El logotipo dentro de la CHAPA. `--sp-10` es exactamente el espacio libre superior que pide la
+   guía; el inferior lo da el relleno de la chapa, que es mayor que los 5 px del mínimo. */
+.rev-score__src { margin: var(--sp-10) 0 0; }
+/* ⚠️ Cuando es enlace crece al objetivo táctil del sistema: el dibujo mide 18 px de alto y un
+   enlace de 18 px no se pulsa con el dedo. Crece el ÁREA, nunca el logotipo. */
+a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; }
+
+/* ── EL AVISO DE TRADUCCIÓN ───────────────────────────────────────────────────────────────
+   ❗❗ La nota es TEXTO servido y el conmutador un botón con `x-cloak`: sin JavaScript el aviso
+   —que es lo obligatorio— sale igual, y lo que no se pinta es el control que no funcionaría. */
+.rev__xlat {
+  margin: var(--sp-10) 0 0;
+  display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-4) var(--sp-12);
+}
+.rev__xlat-note { font-size: var(--fs-13); color: var(--fg-mute); }
+.rev__xlat-swap {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  display: inline-flex; align-items: center; min-height: 48px;
+  font-size: var(--fs-13); font-weight: 800; color: var(--interactive);
+}
+
+/* ── LA POLÍTICA DE RESEÑAS DE GOOGLE ─────────────────────────────────────────────────────
+   Cierra la sección con letra de nota al pie: es una aclaración sobre la fuente, no un argumento
+   de venta, y compite con la opinión si se lee al mismo peso. */
+/* ⚠️ El tope de medida es generoso a propósito: con `62ch` la frase partía en **dos líneas cortas
+   dejando 700 px de columna vacíos** a 1440 —una nota al pie no es un párrafo, y ahí la medida de
+   línea no protege nada, solo estropea el bloque—. Con `104ch` las tres traducciones caben en una
+   línea en escritorio y siguen envolviendo en móvil, que es donde el tope sí hace falta. */
+.rev-sec__policy {
+  margin: var(--sp-16) 0 0;
+  font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); max-width: 104ch;
+}
 
 /* ── ESCRITORIO ───────────────────────────────────────────────────────────────────────────
    `Escritorio PJP` 5b: cuatro columnas y ocho. Con la chapa presente, las cuatro son suyas y la
@@ -3227,6 +3338,12 @@ img { display: block; max-width: 100%; }
   .rev-sec--scored > .sec-head { grid-column: 1 / -1; margin-bottom: var(--sp-8); }
   .rev-sec--scored > .rev-score { grid-column: span 4; margin-bottom: 0; }
   .rev-sec--scored > .rev { grid-column: span 8; }
+
+  /* ⚠️⚠️ **La nota de política es hijo directo de la rejilla y SIN ESTO SE AUTO-COLOCA** — es
+     exactamente lo que le pasó a la chapa: cae en las columnas que queden libres, se queda en un
+     carril estrecho y empuja lo de al lado. Va a todo lo ancho, debajo de todo, porque habla de la
+     sección entera y no de una de sus dos columnas. */
+  .rev-sec__policy { grid-column: 1 / -1; }
 
   /* El tope de medida del artboard: 65ch. Sin él, a 736 px de ancho una opinión larga pasa del
      máximo de línea del sistema. */
@@ -4641,6 +4758,13 @@ select:focus-visible {
    mecanismo de superficie ya le da su valor —cian sobre tinta, Azul Muro sobre papel (`#436`)—, así
    que **no hay una segunda regla de color**, hay una sola leída en dos superficies. */
 
+/* ❗❗ **EL AIRE DE LA NOTA BAJO LAS TARJETAS DE CUMPLEAÑOS** (`[owner]`, `#498`: *«no tiene margen
+   con la card»*). `.rates__note` nace con `--sp-4` porque en la sección de TARIFAS va pegada a su
+   carril y ahí 4 px es lo correcto; bajo una tarjeta de cumpleaños, esos mismos 4 px la dejan
+   colgando del borde.
+   ⚠️ Por eso el margen lo pone el CONTEXTO y no el componente: es la misma pieza en dos sitios que
+   piden aire distinto, y cambiarlo dentro movería también el de tarifas. */
+#events .rates__note { margin-top: var(--sp-20); }
 .party__mixed { margin: var(--sp-12) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
 
 @media (min-width: 1024px) {

@@ -1,5 +1,32 @@
 # Estado del proyecto — foto viva
 
+> ⚠️⚠️ **AL FUSIONAR LOS DOS CARRILES SALIÓ UN ROJO QUE NO ERA DEL MERGE** (`#520`, arreglado):
+`ThemeColorTest::test_email_header_follows_brand_color` **dependía de la MÁQUINA**, no de una
+propiedad — la cabecera del correo cambia de rama si existe `client-logo@4x.png`, que está
+**gitignorado**, así que fallaba con el paquete del cliente instalado y pasaba en un clon limpio.
+▶ *Un test que lee un fichero gitignorado vigila el estado de una máquina, no una propiedad.* El
+repo ya lo tenía resuelto en `MailThemeTest` y `ReservationSlipTest`; ése se quedó sin aislamiento.
+> ▶ **Y lo primero fue comprobar si lo causaba el merge** —rama en `origin/main` puro, falló igual—,
+no suponerlo.
+>
+> ❗❗❗ **HAY DOS CARRILES VIVOS Y NO SE PISAN. Lee el tuyo.**
+>
+> | carril | banda | dónde | estado |
+> |---|---|---|---|
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
+> | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
+>
+> ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
+`public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
+propio y artboard propio. ▶ Verificado en el merge del 10-09: los dos carriles tocaron **cero
+ficheros de código en común** — solo estos cinco documentos.
+>
+> ⚠️ **LA BANDA 470–499 SE AGOTÓ** (`#499`) y el carril de diseño sigue en **520–549** (`#520` es
+la primera). ⚠️⚠️ **No se coge «el número que sigue»**: el carril de correos ocupa 500–519, y al
+cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — corregido antes de empujar.
+>
+> ───────────────────────────────────────────────────────────────────────────────────────────
+
 > ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#507`) ═══════════
 >
 > ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
@@ -104,8 +131,157 @@
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#493`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
 >
-> ❗❗❗ **LO PRIMERO AL RETOMAR: EL UMBRAL DE RESEÑAS ESTÁ EN 1** (`[DECIDIDO owner]`, `#493`, bajado
-de 10 con la sección renderizada delante) **Y LA API DE GOOGLE ES INCONSISTENTE.** Medido con cinco
+> ───────────────────────────────────────────────────────────────────────────────────────────
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ES LO VIVO** (2026-09-10, `#469`→`#499`). ▶ **EN UNA LÍNEA: la portada está cerrada —ocho secciones, en el ORDEN del mockup, con la atribución de Google puesta y sin decoración— y lo siguiente es la FASE 3, las PÁGINAS.**
+>
+> ❗❗❗ **LO SIGUIENTE, Y EL OWNER LO DEJÓ DICHO EN ESTE ORDEN**: (1) **seguir la fase de diseño como
+está estipulada** → la **Fase 3**, y **empieza por el ARMAZÓN de páginas** (`Layout Paginas PJP`), no
+por una página: lo comparten las siete y construir una encima del armazón viejo obliga a rehacerla.
+(2) Después, **un repaso de COPYS texto por texto para conversión**, con los datos y la configuración
+reales de los productos de PlayJump delante. (3) Y después, **el texto de las vísperas** (ver abajo).
+> ⚠️ **Dos avisos de la Fase 3**: `/normas` **no es solo diseño** —el canvas pide el porqué de cada
+norma y agruparlas por momento: **dos columnas nuevas**— y `/servicios` está **en mantenimiento** en
+local. ⚠️ Y la copia local del canvas **no trae `Layout Paginas PJP`**: hay que refrescarla antes.
+>
+> ❗❗❗ **LO QUE HAY QUE ARREGLAR Y ES DE DINERO — LA TARIFA ESPECIAL COBRA VÍSPERAS QUE NO ANUNCIA**
+(`#498`, pendiente de la decisión del owner, que lo dejó para «después»). Leído en **producción**: la
+tarifa especial aplica a `weekdays [5,6,0]` **más 30 fechas declaradas**, y el propio parque las nombra
+«Víspera de Navidad», «Víspera de Reyes», «Puente de la Constitución»… ▶ **Las vísperas SÍ pagan
+especial y la etiqueta no las nombra**: no promete de más, **cobra más de lo que anuncia**.
+> ⚠️ Es un cambio de **DATO** (`rate_types.label` en el panel), no de código. ⚠️⚠️ Y el docblock de
+`<x-site.special-rate-note>` **ya escribía la regla completa** —«viernes, findes, festivos y
+vísperas»—: *el producto lo tenía bien y el dato se quedó corto*.
+>
+> ❗❗ **Y POR QUÉ NO SE VEN LAS RESEÑAS DE GOOGLE** (`#499`, **ficha ALTA en `DEUDA.md`**, sin
+arreglar a propósito): **la caché está VACÍA el 83 % del tiempo** — TTL de **30 min** contra un
+refresco **cada 3 h**. ⚠️⚠️ Los dos razonamientos son correctos por separado y por eso nadie lo vio:
+el TTL se escribió suponiendo cadencia **horaria** y la cadencia bajó a 3 h por el tope de la consola
+de Google. *Dos comentarios que se explican bien pueden contradecirse sin que ninguno mienta.*
+> ⚠️ La segunda causa **sí es de diseño y está bien**: las reseñas piden consentimiento de terceros
+(su avatar) y la cifra no. ⚠️ **El scheduler SÍ corre en producción**; en local se dispara a mano con
+`php artisan social-proof:refresh`. ▶ Tres salidas en la ficha, y son del owner.
+>
+> ▶ **LO HECHO EN ESTA SESIÓN** (`#494`→`#499`):
+> - **`#494` · la atribución de Google**, que el owner pidió como diseño y **era un requisito
+INCUMPLIDO**: faltaban el logotipo, el enlace al perfil del autor, el aviso de traducción y la
+distinción visual. ⚠️ **El logotipo NO es la «G» de `google.svg`** (ésa es Sign-In) y **el color se
+elige cambiando de FICHERO**. ⚠️ **«Verificado por Google» NO se puede escribir**: su documentación
+dice lo contrario. ⚠️⚠️ **Dos guiones seguidos en un comentario rompen un SVG** —HTTP 200, caja de
+98×18 y el logotipo INVISIBLE—.
+> - **`#495` · las ocho secciones al orden del mockup** (01 Para quién · 02 Cuánto · 03 Qué hay dentro
+· 04 Cumpleaños · 05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas). ❗❗ **Reordenar NO ROMPE
+NADA** —la suite pasó verde con los dos órdenes—, así que **lo único que caza un bloque descolocado es
+`HomeSectionOrderTest`**.
+> - **`#496` · la portada se queda SIN decoración**: medido, `Portada PJP` y `Zonas PJP` llevan **cero**
+manchas, siluetas y tramas. `IllustrationKit::SLOTS` queda **VACÍA**.
+> - **`#497` · se abre la valoración del vestido** (`specs/pasada-de-vestido.md`): el canvas ya la
+tenía prevista y **la llama «la pasada de vestido»**. Dos decisiones tomadas, **cinco pendientes**.
+> - **`#498` · las velas del carril de complementos** y el pie de cumpleaños (la nota de edades
+mezcladas **se MOVIÓ a `/cumpleanos`**, no se borró: era el único sitio del sitio que lo decía).
+>
+> ⚠️⚠️ **LA LECCIÓN DE MÉTODO DE LA SESIÓN, y se pagó CINCO veces: un número de CAJA no dice lo que
+parece.** `getBoundingClientRect()` de un elemento girado devuelve la envolvente; el solape de cajas
+sobrestima el de tinta; medir el solape dentro de una sección no ve que la pieza se salga de ella; un
+`overflow: hidden` recorta lo que se ve pero no la caja; y contar elementos con `infinite` **declarado**
+no es contar bucles **corriendo**. ▶ *Cuando un instrumento acusa a algo que ya estaba verificado, la
+primera hipótesis es el instrumento* — y esa regla ahorró dos cambios equivocados.
+>
+> 📜 **LO QUE DECÍA ESTE SITIO ANTES DE LA SESIÓN DEL 10-09 (tarde).**
+>
+> ❗❗❗ **RETOMA ANTERIOR.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#495`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones EN EL ORDEN DEL MOCKUP— y lo siguiente es la FASE 3, las páginas.**
+>
+> ❗❗❗ **ESTÁ ABIERTA LA VALORACIÓN DE DÓNDE VAN LOS ELEMENTOS DE DISEÑO** (`#497`,
+`docs/specs/pasada-de-vestido.md`): **el canvas ya la tenía prevista y la llama «la pasada de
+vestido»** —citado en siete artboards—: *«iconos, imagen y movimiento sobre las ocho secciones a la
+vez, NO una a una, y con presupuesto»*.
+> ▶ **Eso reencuadra `#496`**: la decoración que las secciones fueron perdiendo **no se retiró, se
+APLAZÓ** a esta pasada. ✅ **D1: se hace ahora y solo sobre la PORTADA** · ✅ **D2: techo de bytes
+antes de repartir, con `<use>` obligatorio**. ❗ **Quedan CINCO decisiones del owner** (§4 de la spec).
+> ⚠️⚠️ **Y si citas un número de bucles, mídelo CORRIENDO**: se dijo «28 contra un techo de 2» y
+**corriendo hay 2** (24 están pausados por el mecanismo de `#435`). La cifra falsa casi decide una
+tanda entera; lo delató que contradecía a `#279`.
+>
+> ❗❗❗ **LA PORTADA YA NO LLEVA NINGUNA PIEZA DECORATIVA EN SUS OCHO SECCIONES** (`#496`), y no es
+una preferencia: **medido artboard a artboard, `Portada PJP` y `Zonas PJP` llevan CERO** manchas,
+siluetas, tramas y frisos. El material existe y está aprobado —32 piezas, `#281`— pero vive en
+`Elementos Fachada` como **REPERTORIO**, y la portada del canvas no coloca ninguna.
+> ▶ Con `slot-zonas` fuera, **`IllustrationKit::SLOTS` queda VACÍA** (sexta vez, misma regla: *una
+ranura vive lo que vive su consumidor*). Se quedan **la trama y el sello del CIERRE** —que el canvas
+sí pide— y **las tres piezas del MENÚ**, porque el canvas **no dibuja el menú**: el propio cliente lo
+excluyó de su auditoría (`armazon-y-menu.md` §1.5).
+> ⚠️⚠️ **Trampa de método pagada**: la primera sonda buscaba por NOMBRE (`mancha`, `deco`, `splash`) y
+**se dejó fuera `.menu__blob`** — *buscar por nombre supone conocer los nombres*. Se rehízo por
+COMPORTAMIENTO (inerte + pinta una forma + ≥60 px, que descarta iconos).
+> ⚠️ **Y las aserciones bajaron de 29.086 a 29.081: se persiguieron las cinco** en vez de darlas por
+buenas. Una es el `foreach` sobre `SLOTS` (estado válido, documentado) y cuatro el barrido de reglas
+CSS, que tiene una regla menos que inventariar. **Ninguna guarda se queda sin sujeto.**
+> ▶ **PENDIENTE Y ES DEL OWNER: dónde se ubican las 32 piezas.** `elementos-fachada.md` §7 propone
+colocaciones y §10 son las cinco decisiones suyas. ⚠️ Solo pueden entrar por el hueco de
+`hueco-ilustracion.md` (existe desde `#286`) o clavan el mural de un parque dentro del producto.
+>
+> ❗❗❗ **LAS SECCIONES YA VAN EN EL ORDEN DEL MOCKUP** (`#495`): **01 Para quién · 02 Cuánto ·
+03 Qué hay dentro · 04 Cumpleaños · 05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas**.
+Verificado contra **dos** fuentes del canvas —`Portada PJP`, con control de que ningún
+`position: absolute` recoloque los rótulos, y la numeración que `Marco Portada PJP` lleva en datos—.
+⚠️⚠️ **Y hay una tercera numeración que dice otra cosa y NO cuenta**: `Landing PJP Modos`
+(`[owner]`: «de esa maqueta solo sacaremos la sección de reseñas»). *Mirarla y creerle es la forma de
+reordenar mal la portada con una fuente del canvas en la mano.*
+>
+> ⚠️ **Esto REVIERTE el orden de `#314`** y no es una contradicción: aquella decisión es del carril
+anterior y `#469` adoptó el canvas entero.
+>
+> ❗❗ **LO QUE HAY QUE SABER SI VUELVES A REORDENAR: NO ROMPE NADA.** La suite entera pasó en verde
+con el orden viejo **y** con el nuevo sin tocar un test —las guardas acotan por `id`, `--hero-air`
+cuelga de `.hero + .section` y se muda solo, y los anclas siguen existiendo—. Por eso nace
+**`HomeSectionOrderTest`**: es lo único capaz de cazar un bloque descolocado.
+>
+> ⚠️⚠️ **Y correr los arneses vecinos destapó un defecto que no era de la tanda**: `mutar-dudas`
+llevaba **desde `#490`** mutando la sección equivocada —`replace(…, 1)` sobre una indentación que
+comparte con «Reseñas», que entró delante—, así que **el rótulo de Dudas llevaba sin vigilar desde
+entonces**. Arreglado. ▶ *Antes de arreglar algo que tu cambio destapó, comprueba si tu cambio lo
+causó*: se reconstruyó `home.blade.php` desde `HEAD`, se aplicó la mutación y salió verde igual.
+>
+> ❗❗❗ **LO ÚLTIMO HECHO ES LA ATRIBUCIÓN DE GOOGLE** (`#494`), y su lección vale para cualquier
+tercero: **el owner la pidió como DISEÑO —«más veracidad con los logos de Google»— y era un requisito
+INCUMPLIDO**. Leída la política de Places contra su documentación el 2026-09-10, faltaban **cuatro**
+cosas obligatorias: el logotipo, el enlace al perfil del autor, el aviso de traducción y la distinción
+visual entre lo de Google y lo propio.
+>
+> ❗❗❗ **DOS COSAS QUE HAY QUE SABER ANTES DE TOCAR ESA SECCIÓN.** (1) **El logotipo obligatorio NO es
+la «G» de `google.svg`** —aquélla es Google Sign-In (`#345`); Places pide el de **Google Maps**, otro
+asset con sus propias reglas—, y **el color se elige cambiando de FICHERO, nunca recoloreando**.
+(2) **No puede ir en la cabecera de la sección**: la chapa y las opiniones no vienen de la misma fuente
+y **el caso frecuente es el CRUCE** —chapa de Google sobre opiniones propias—, así que arriba marcaría
+como suyas unas opiniones que escribió el parque. Va en la chapa y en la cabecera de cada reseña de
+Google.
+>
+> ⚠️⚠️ **Y «verificado por Google» NO SE PUEDE ESCRIBIR**: su propia documentación dice *«Reviews
+aren't verified by Google»*. Lo que entra es esa misma frase, que la política pide publicar — y es la
+veracidad que el owner buscaba: no un sello inventado, sino decir de dónde viene el dato.
+>
+> ⚠️⚠️ **EL DEFECTO DE MÉTODO QUE MÁS CARO SALIÓ**: la cabecera que se les puso a los assets citaba
+tokens CSS con sus dos guiones y **XML lo prohíbe dentro de un comentario**. El SVG seguía dando
+**HTTP 200**, el marcado seguía correcto y **la caja seguía midiendo 98×18** —los atributos del `<img>`
+reservan el hueco—, así que **el logotipo estaba INVISIBLE y la sonda de geometría daba verde**. Lo
+delató `naturalWidth`. *Que el fichero llegue y mida bien no es que se pinte.*
+>
+> ⚠️ **Y cuatro mutaciones no mordían porque los casos de la vista doblan el CONTRATO** —que es lo
+correcto— **y por eso no pasan por el traductor**: borrar en `GoogleSocialProof` la lectura del perfil
+las dejaba todas en verde. *Doblar el contrato prueba la vista y deja el traductor sin cubrir.*
+>
+> ▶ **Tres retoques del owner con la sección renderizada delante**: **fuera las flechas** del carril
+—se recorre con los puntos, y ⚠️ **no costó accesibilidad porque cada punto ya era un `<button>` con
+su nombre**—, **«Ver en Google» anclado a la derecha** (⚠️ `margin-left: auto` y **no**
+`space-between`: sin «Ver más» la fila tiene un solo hijo) y **los dos logotipos se quedan**.
+⚠️ Ese tercero llegó como «quita el de debajo del titular» y se aclaró a «debajo de las estrellas sí,
+déjalo»: se le enseñaron **los dos con su posición** antes de tocar y respondió «ninguno». *Preguntar
+costó un minuto; quitar el equivocado habría costado la vuelta entera* — y uno de los dos es el
+obligatorio.
+>
+> ❗❗❗ **EL UMBRAL DE RESEÑAS ESTÁ EN 1 Y ES DEFINITIVO** (`[DECIDIDO owner]`, `#493` y re-confirmado
+en `#494`: *«deja el umbral a 1 siempre; mínimo 1 reseña para mostrar el widget de Google»*)
+**Y LA API DE GOOGLE ES INCONSISTENTE.** Medido con cinco
 consultas seguidas al mismo sitio: **cuatro dieron «5,0 · 1 reseña» y una «3,0 · 2 reseñas»**. La
 segunda reseña existe —1 estrella, sobre el personal, con su texto traducido en los tres idiomas—,
 así que no es un fallo de parseo; **es Google sirviendo vistas distintas de su propio dato**.
@@ -115,6 +291,9 @@ cuarta descartada: quedarse con la instantánea «mejor» es el control editoria
 tenemos.
 > ⚠️ **Y casi lo informo al revés**: el primer dato que vi fue el 3,0 y estuve a punto de decir que la
 media había caído. *Una sola muestra de un tercero no es una medición.*
+> ⚠️ **Vuelto a ver en vivo el 2026-09-10 durante `#494`**: la chapa pasó de **3,0 · 2** a **3,7 · 3**
+entre dos refrescos del mismo día. Hay una tercera reseña, y el salto sigue siendo el que describe la
+ficha.
 >
 > ▶ **LA T2i·b CIERRA LA PORTADA** (`#491`): la chapa del 4,8 con las estrellas recortadas **caja a
 caja**, las reseñas con su atribución, la caché corta y `social-proof:refresh` cada hora. Suite
@@ -2219,9 +2398,17 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4642 en verde** (28.997 aserciones, 6 skipped, **0 risky**), medida el **2026-09-10**
-> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de diseño hasta `#493` (Reseñas)
-> y el de los CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos + 1 del molde).
+> Suite **4683 en verde** (29.256 aserciones, 6 skipped), medida el **2026-09-11** corriéndola
+> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de
+> diseño hasta `#499` y `#520`, y el de los CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos de
+> `MixedPartyMailShapeTest` + 1 del molde + 1 de la bandeja).
+> ⚠️ **Segunda fusión, el 10-09 por la noche**: el carril de diseño cerró `#494`→`#499` (atribución
+> de Google · el orden de las secciones · la portada sin decoración · las velas del carril) y al
+> fusionar salió **un rojo que no era del merge** (`#520`): un test que dependía de la MÁQUINA.
+> ⚠️⚠️ **TERCERA fusión, el 11-09**: y el contador volvió a chocar — el carril de correos declaraba
+> **4642 · 28.997** y el de diseño **4676 · 29.237**, los dos ciertos sobre su propio árbol y los dos
+> falsos sobre el conjunto. *Es literalmente lo que el párrafo de abajo ya advertía*, y por eso el
+> número de esta línea sale de correr la suite fusionada, nunca de sumar.
 > ⚠️⚠️ **Y la caducó la FUSIÓN, no un descuido.** Antes de fusionar, el carril de diseño declaraba
 > **4603 · 28.895** y el de correos medía **4599 · 28.760** — los dos ciertos sobre su propio árbol,
 > los dos falsos sobre el conjunto. *Dos ramas que mueven el mismo contador no se fusionan eligiendo

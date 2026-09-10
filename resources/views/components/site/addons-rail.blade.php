@@ -40,6 +40,11 @@
         <h{{ $level }} class="addons-rail__title">{{ $title }}</h{{ $level }}>
         <p class="addons-rail__lede">{{ $lede }}</p>
 
+        {{-- ❗❗ **EL ENVOLTORIO EXISTE PARA LAS VELAS, y no puede ser el propio carril**: un
+             pseudo-elemento dentro de un contenedor con scroll **viaja con el contenido** y se iría
+             hacia la izquierda en cuanto alguien deslizara. Es la misma razón por la que la vela del
+             pie vive en `.foot__links-wrap` y no en la fila (`#252`). --}}
+        <div class="addons-rail__wrap">
         <div class="addons-rail__track" tabindex="0" role="group" aria-label="{{ $title }}">
             @foreach ($extras as $extra)
                 <div class="addon-card">
@@ -74,6 +79,7 @@
                     </span>
                 </div>
             @endforeach
+        </div>
         </div>
     </div>
 @endif
