@@ -2184,8 +2184,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4603 en verde** (28.895 aserciones, 1 skipped a propósito, **0 risky**), medida el
-> **2026-09-10** sobre el árbol con `#492`, el ojo del owner sobre Reseñas.
+> Suite **4626 en verde** (28.956 aserciones, 6 skipped, **0 risky**), medida el **2026-09-10**
+> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de diseño hasta `#493` (Reseñas)
+> y el de los CORREOS `#500`→`#505`.
+> ⚠️⚠️ **Y la caducó la FUSIÓN, no un descuido.** Antes de fusionar, el carril de diseño declaraba
+> **4603 · 28.895** y el de correos medía **4599 · 28.760** — los dos ciertos sobre su propio árbol,
+> los dos falsos sobre el conjunto. *Dos ramas que mueven el mismo contador no se fusionan eligiendo
+> un número: se re-mide.* Lo cazó el `pre-push`, que por eso mide en vez de creerse la resta.
+> Antes, con `#493`: **4603** y 28.895, sobre el árbol de diseño solo.
 > Antes, con la **T2i·b** (`#491`): **4602** y 28.877. ⚠️ **+14**: los 14 de
 > `SocialProofNeverHitsTheRenderPathTest`. Ninguno sale.
 > Antes, con la **T2i·a** (`#490`): **4588** y 28.802. ⚠️ **+12**: los 12 casos de
