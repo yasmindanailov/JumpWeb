@@ -476,6 +476,27 @@ return [
         // la sección, y el enlace abre el cajón en su zona `card`.
         'cta_account' => 'Ver mi QR',
     ],
+    // ══ SECCIÓN 06 · «RESEÑAS» ═════════════════════════════════════════════════════════════
+    // `DECISIONES #490` · Fase 2 · T2i·a. Artboards `Resenas PJP` 2a y `Escritorio PJP` 5b.
+    // ⚠️⚠️ **La entradilla depende de la FUENTE y por eso son dos claves.** El artboard escribe «No
+    //    las elegimos nosotros: son las que Google pone primero», que es lo que hace creíble a
+    //    Google — y **sobre opiniones propias sería falso**, porque éstas sí las elige el parque.
+    //    `lede_google` nace sin consumidor a propósito: la usa la mitad `b`, y dejarla escrita aquí
+    //    es lo que impide que ese día alguien reutilice la de arriba sin mirar lo que dice.
+    // ❗ El titular es del canvas y tiene **seis palabras**, el techo que fija `Voz PJP`.
+    'reviews' => [
+        'eyebrow' => 'Reseñas',
+        'title' => 'Lo dicen los que ya han venido',
+        'lede_own' => 'Algunas de las cosas que nos dicen al salir.',
+        'lede_google' => 'No las elegimos nosotros: son las que Google pone primero.',
+        // `role="img"` necesita un nombre que diga la NOTA. Cinco glifos sueltos los lee un lector
+        // de pantalla como «estrella estrella estrella…», que no es el dato.
+        'stars' => '{1} :n estrella sobre 5|[2,*] :n estrellas sobre 5',
+        'prev' => 'Opinión anterior',
+        'next' => 'Opinión siguiente',
+        'go' => 'Ver la opinión :n',
+    ],
+
     // ══ SECCIÓN 08 · «DUDAS» ═══════════════════════════════════════════════════════════════
     // `DECISIONES #488` · Fase 2 · T2h. Artboards `Dudas PJP` 1a y `Escritorio PJP` 5c.
     // ⚠️ El titular DEJA de ser «Dudas»: eso es el RÓTULO. `doc/voz.md` fija los ocho titulares

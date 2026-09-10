@@ -831,6 +831,119 @@
         </div>
     </section>
 
+    {{-- ══ SECCIÓN 06 · «RESEÑAS» ═════════════════════════════════════════════════════════════
+         `DECISIONES #490` · carril de diseño Fase 2 · T2i·a. Artboards `Resenas PJP` 2a (móvil) y
+         `Escritorio PJP` 5b (escritorio, aprobado el 8 sep).
+
+         ❗❗❗ **LA VISTA NO SABE DE DÓNDE VIENEN LAS OPINIONES, y eso es el diseño.** Lee un solo
+         contrato (`Content\Contracts\SocialProof`) y pinta lo que le den. El día que entre Google no
+         se toca este marcado: se cambia el binding del composition root por el decorador que aplica
+         la cascada. `#136` fijó la línea —la landing consume DATOS, no proveedores— y la spec añade
+         el porqué: un respaldo escrito como condicional en la plantilla acaba con **una rama sin
+         cubrir, y la rama sin cubrir de un respaldo es la que solo corre cuando algo va mal**.
+
+         ❗❗❗ **LA CHAPA DEL 4,8 NO ESTÁ, Y NO ES QUE FALTE.** `$rating` vale `null` porque la media
+         **solo existe si viene de Google**: componerla con opiniones propias sería atribuirle a
+         Google un número que Google no ha dado. Hoy además hay otro motivo medido — el parque tiene
+         **una** reseña en Google, por debajo del umbral de 10 que el owner fijó, así que publicar
+         «5,0 · 1 reseña» restaría en vez de sumar.
+         ▶ Cuando haya `$rating`, la chapa entra AQUÍ sin tocar el resto.
+
+         ❗❗ **Y por eso el carril se pinta en MÓVIL** (`[DECIDIDO owner, 2026-09-10]`). El artboard
+         de móvil lo tiene apagado desde el recorte del 7 sep, pero lo apagó **porque la chapa ya
+         cargaba la sección**: sin chapa, ese motivo desaparece y la sección se quedaría con una
+         cabecera que no presenta nada.
+
+         ⚠️⚠️ **La ENTRADILLA depende de la fuente y no es un texto fijo.** La del artboard dice «No
+         las elegimos nosotros: son las que Google pone primero», que es lo que hace creíble a
+         Google — y sobre opiniones propias **sería falso**: éstas sí las elige el parque.
+
+         ⚠️ **El texto NO se recorta.** El artboard lo corta a cuatro líneas y ofrece «leer entera en
+         Google»; una opinión propia **no tiene entera en ningún sitio**, así que recortarla
+         escondería texto sin dónde ir a buscarlo — lo contrario de «un enlace no promete lo que no
+         esconde». Se enseña completa y el panel las mantiene cortas.
+
+         ⚠️ **El avatar es una INICIAL, no una foto**, como en el artboard. Con opiniones propias no
+         hay foto de nadie que pedir, y así la pieza ya está lista para el día de Google: la foto de
+         un tercero solo entra con consentimiento (`RGPD-05`) y ahí `avatarUrl` deja de ser `null`.
+
+         ❗❗❗ **CON CERO OPINIONES LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja—,
+         que es la regla dura del sistema, y el propio artboard dibuja ese estado: «la sección no se
+         pinta y la portada pasa de Antes de venir a Visítanos». --}}
+    @if ($socialProof->isNotEmpty())
+        <section id="reviews" class="section wrap">
+            <div class="rev-sec">
+                <div class="sec-head">
+                    <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
+                    <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
+                    <p class="sec-head__lede">{{ __('landing.reviews.lede_own') }}</p>
+                </div>
+
+                {{-- ⚠️ `x-data` con el número de opiniones dentro: el carril tiene que saber dónde
+                     acaba para deshabilitar la flecha, y ese número lo sabe el servidor. --}}
+                <div class="rev" x-data="{ i: 0, n: {{ $socialProof->count() }} }"
+                     @keydown.left.prevent="i = Math.max(0, i - 1)"
+                     @keydown.right.prevent="i = Math.min(n - 1, i + 1)">
+                    @foreach ($socialProof as $k => $op)
+                        {{-- ⚠️⚠️ **La primera nace con `is-on` puesto POR EL SERVIDOR, y ése es el
+                             suelo sin JavaScript.** Con `x-show` + `x-cloak` —lo primero que se me
+                             ocurrió— la sección se queda **vacía** sin JS y parpadea en blanco
+                             mientras Alpine arranca. Con la clase servida, sin JS se lee la primera
+                             opinión y los controles simplemente no hacen nada. Es el mismo patrón
+                             que el acordeón de Dudas. --}}
+                        <article class="rev__card{{ $k === 0 ? ' is-on' : '' }}"
+                                 :class="i === {{ $k }} && 'is-on'">
+                            <div class="rev__who">
+                                <span class="rev__ini" aria-hidden="true">{{ $op->initial() }}</span>
+                                <div class="rev__id">
+                                    <p class="rev__author">{{ $op->author }}</p>
+                                    @if ($op->when)
+                                        <p class="rev__when">{{ $op->when }}</p>
+                                    @endif
+                                </div>
+                                @if ($op->rating)
+                                    {{-- ⚠️ La nota va como IMAGEN con nombre accesible: cinco glifos
+                                         sueltos los lee un lector de pantalla como «estrella
+                                         estrella estrella…», que no dice la nota. --}}
+                                    <p class="rev__stars" role="img"
+                                       aria-label="{{ trans_choice('landing.reviews.stars', $op->rating, ['n' => $op->rating]) }}">
+                                        <span class="rev__stars-on" aria-hidden="true">{{ str_repeat('★', $op->rating) }}</span><span
+                                              class="rev__stars-off" aria-hidden="true">{{ str_repeat('★', 5 - $op->rating) }}</span>
+                                    </p>
+                                @endif
+                            </div>
+                            <p class="rev__text">{{ $op->text }}</p>
+                        </article>
+                    @endforeach
+
+                    {{-- Los controles solo existen si hay más de una: una flecha que no lleva a
+                         ninguna parte y un punto solo son 48 px para no decir nada — la misma regla
+                         que el pliegue de las fechas especiales (`#487`). --}}
+                    @if ($socialProof->count() > 1)
+                        <div class="rev__nav">
+                            <button type="button" class="rev__arrow" aria-label="{{ __('landing.reviews.prev') }}"
+                                    x-bind:disabled="i === 0" @click="i = Math.max(0, i - 1)">
+                                <span aria-hidden="true">&larr;</span>
+                            </button>
+                            <div class="rev__dots">
+                                @foreach ($socialProof as $k => $op)
+                                    <button type="button" class="rev__dot"
+                                            aria-label="{{ __('landing.reviews.go', ['n' => $k + 1]) }}"
+                                            x-bind:aria-current="i === {{ $k }} ? 'true' : 'false'"
+                                            @click="i = {{ $k }}"><span aria-hidden="true"></span></button>
+                                @endforeach
+                            </div>
+                            <button type="button" class="rev__arrow" aria-label="{{ __('landing.reviews.next') }}"
+                                    x-bind:disabled="i === n - 1" @click="i = Math.min(n - 1, i + 1)">
+                                <span aria-hidden="true">&rarr;</span>
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </section>
+    @endif
+
     {{-- ===================== VISÍTANOS (horarios y ubicación) ===================== --}}
     {{-- ▶ **TRES TARJETAS** (`[DECIDIDO owner, 2026-09-01]`: «quiero un diseño de cards, todo en
          cards en la medida de lo posible; lo siento más organizado y limpio»),

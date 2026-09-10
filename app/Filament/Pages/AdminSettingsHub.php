@@ -16,6 +16,7 @@ use App\Filament\Resources\Seasons\SeasonResource;
 use App\Filament\Resources\Slots\SlotResource;
 use App\Filament\Resources\SlotTemplates\SlotTemplateResource;
 use App\Filament\Resources\SpecialDates\SpecialDateResource;
+use App\Filament\Resources\Testimonials\TestimonialResource;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Filament\Resources\Users\UserResource;
 use App\Filament\Resources\Zones\ZoneResource;
@@ -110,6 +111,7 @@ class AdminSettingsHub extends Page
                 ['key' => 'attractions', 'class' => AttractionResource::class],
                 ['key' => 'landing_services', 'class' => LandingServiceResource::class],
                 ['key' => 'faqs', 'class' => FaqResource::class],
+                ['key' => 'testimonials', 'class' => TestimonialResource::class],
                 ['key' => 'offers', 'class' => OfferResource::class],
                 ['key' => 'park_rules', 'class' => ParkRuleResource::class],
                 ['key' => 'pages', 'class' => PageResource::class],

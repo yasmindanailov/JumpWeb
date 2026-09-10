@@ -133,6 +133,56 @@ SECCIONES["07"] = { nombre: "07 · Visítanos", raiz: "#info", movil: [
     ['.visit__addr-1', 'fontWeight', '700', ''],
 ] };
 
+// ⚠️ La 06 va SIN la chapa del 4,8: esa cifra solo existe si viene de Google, y su mitad es la
+// T2i·b. Cuando entre, sus valores se añaden a esta misma tabla (nota Bungee 52 en Lima, estrellas
+// de 24 recortadas caja a caja, recuento 15/700 sobre tinta).
+SECCIONES["06"] = { nombre: "06 · Reseñas (opiniones propias)", raiz: "#reviews", movil: [
+    ['.sec-head__eyebrow', 'fontSize', '12px', ''],
+    ['.sec-head__eyebrow', 'letterSpacing', '1.92px', ''],
+    ['.sec-head__title', 'fontSize', '34px', ''],
+    ['.sec-head__lede', 'fontSize', '18px', ''],
+    ['.rev__card', 'backgroundColor', 'rgb(255, 255, 255)', ''],
+    ['.rev__card', 'borderTopLeftRadius', '16px', ''],
+    ['.rev__card', 'borderTopWidth', '1px', ''],
+    ['.rev__card', 'paddingTop', '18px', ''],
+    ['.rev__who', 'gap', '12px', ''],
+    ['.rev__ini', 'width', '56px', ''],
+    ['.rev__ini', 'height', '56px', ''],
+    ['.rev__ini', 'borderTopLeftRadius', '999px', ''],
+    ['.rev__ini', 'backgroundColor', 'rgb(232, 233, 229)', ''],
+    ['.rev__ini', 'fontSize', '22px', ''],
+    ['.rev__author', 'fontSize', '16px', ''],
+    ['.rev__author', 'fontWeight', '700', ''],
+    ['.rev__when', 'fontSize', '11px', ''],
+    ['.rev__when', 'marginTop', '4px', ''],
+    ['.rev__stars', 'fontSize', '15px', ''],
+    ['.rev__stars', 'letterSpacing', '0.9px', ''],
+    ['.rev__stars-on', 'color', 'rgb(138, 110, 0)', ''],
+    ['.rev__text', 'fontSize', '16px', ''],
+    ['.rev__text', 'marginTop', '14px', ''],
+    ['.rev__text', 'minHeight', '93px', ''],
+    ['.rev__nav', 'marginTop', '4px', ''],
+    ['.rev__nav', 'gap', '4px', ''],
+    ['.rev__arrow', 'width', '48px', ''],
+    ['.rev__arrow', 'height', '48px', ''],
+    ['.rev__arrow', 'borderTopLeftRadius', '999px', ''],
+    // ⚠️ Declarado 1,5 en la hoja; Chrome lo trunca a 1 (trampa 3). Se verifica que EXISTE.
+    ['.rev__arrow', 'borderTopWidth', '1px', ''],
+    ['.rev__arrow', 'fontSize', '19px', ''],
+    ['.rev__dot', 'width', '44px', ''],
+    ['.rev__dot', 'height', '48px', ''],
+], escritorio: [
+    ['.sec-head__title', 'fontSize', '52px', ''],
+    ['.sec-head__lede', 'fontSize', '21px', ''],
+    // Las dos cifras que `Escritorio PJP` 5b midió en el DOM: la chapa ocupa 352 y la opinión 736.
+    // Sin chapa, esas cuatro columnas las lleva la cabecera — el mismo reparto que la 08.
+    ['.sec-head', 'width', '352px', ''],
+    ['.rev', 'width', '736px', ''],
+    // Valores del COMPONENTE: no escalan con la superficie. Aquí para que nadie los «suba».
+    ['.rev__text', 'fontSize', '16px', ''],
+    ['.rev__author', 'fontSize', '16px', ''],
+] };
+
 SECCIONES["08"] = { nombre: "08 · Dudas", raiz: "#faq", movil: [
     ['.sec-head__eyebrow', 'fontSize', '12px', ''],
     ['.sec-head__eyebrow', 'letterSpacing', '1.92px', ''],

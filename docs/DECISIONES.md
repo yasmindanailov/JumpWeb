@@ -21922,7 +21922,7 @@ habría comparado código viejo y dado verde. 35 rojos que desaparecieron al rec
 en `origin/main` y en la base `#341`). No es de este carril y no se toca aquí.
 
 **Verificación**: suite **4.003 · 25.611** (1 skipped a propósito) sobre el árbol conjunto y medida
-DESPUÉS de reconstruir los dos bundles · Pint ✓ (1.132 ficheros) · docs-check ✓ (39 modelos · 100
+DESPUÉS de reconstruir los dos bundles · Pint ✓ (1.132 ficheros) · docs-check ✓ (entonces 39 modelos y 100
 migraciones) · huella de las citas del otro carril verificada idéntica antes y después en las DOS
 renumeraciones · los seis escenarios de `purchase:verify-oversell`, `redsys:verify-concurrency` y los
 dos de `waiver:verify-chain`, verdes sobre MySQL real.
@@ -26738,3 +26738,150 @@ ejercita **las dos ramas**, no una.
 
 **Suite 4.576** · 28.699 aserciones · **15/15 mutaciones** (`scripts/mutar-visitanos.sh`, +2) · Pint
 limpio.
+
+---
+
+## #490 · 2026-09-10 · `[DECIDIDO owner]` La sección «Reseñas», mitad `a`: las opiniones propias — y Google resulta tener UNA
+
+**Contexto.** Octava sección de la Fase 2 y la que cierra la portada (`specs/rediseno-desde-canvas.md`
+§5.4, `specs/google-reviews.md`). El owner **la desbloquea** y entrega la clave de API y el
+`place_id`. ▶ **La sección se parte en dos**, y la primera mitad no necesitaba ninguno de los dos:
+`a` es la sección con las opiniones PROPIAS; `b` será Google.
+
+---
+
+**❗❗❗ 1 · LA VERIFICACIÓN CONTRA GOOGLE, HECHA — Y CAMBIA LA SECCIÓN.**
+
+§6·5 de su spec exige hablar con el tercero de verdad antes de dar la integración por buena, como
+`redsys:verify-sandbox`. Hecho el 2026-09-10 contra `places.googleapis.com/v1/places/{id}` con la
+clave del owner, **HTTP 200**:
+
+    nombre        : Play Jump Park
+    dirección     : Ctra. de Granada, 30813 Lorca, Murcia, Spain
+    rating        : 5 · reseñas: 1
+    reviews       : 1 devuelta
+    campos        : authorAttribution, flagContentUri, googleMapsUri, name, originalText,
+                    publishTime, rating, relativePublishTimeDescription, text
+    atribución    : displayName, photoUri, uri     · host del avatar: lh3.googleusercontent.com
+
+▶ **Cierra dos de los tres puntos que la spec dejaba abiertos**: el `place_id` es el del parque
+—coincide con la dirección del panel— y el campo `reviews` trae todo lo que el diseño necesita, con
+el avatar exactamente en el host que §3.3 midió, así que su análisis de CSP y consentimiento se
+sostiene.
+
+❗❗❗ **Y el hallazgo que manda sobre el resto: el parque tiene UNA reseña.** El mockup dibuja «4,8
+sobre 5 · 320 opiniones». Con una, la chapa diría **«5,0 · 1 reseña»**, que no es prueba social —un
+cinco de una persona se lee como el favor de un amigo—, el carril tendría un elemento (lo que las
+condiciones del propio canvas prohíben) y sería **volátil**: una segunda reseña de 1 estrella
+publicaría un 3,0 al día siguiente.
+
+▶ `[DECIDIDO owner]`: **umbral de 10 reseñas.** Por debajo, la sección va entera con las opiniones
+propias y Google no se toca. Es el número a partir del cual una media deja de moverse con cada
+reseña nueva.
+
+---
+
+**❗❗❗ 2 · «QUE LA CHAPA SE VEA SIEMPRE» NO ES IMPLEMENTABLE, Y NO POR DISEÑO.**
+
+El owner pidió que la chapa estuviera siempre y preguntó por qué no se copia el dato: *«si ya sabemos
+que Google nos da un 4 y tenemos X reseñas, no podemos poner lo mismo? no es mentir»*. **No es
+mentir: es un contrato.** R2 prohíbe almacenar reseñas y valoraciones más allá de una **caché
+corta**; el `place_id` es la única excepción indefinida. El riesgo real es la suspensión de la clave
+—y con ella el mapa—, y hay un segundo motivo que le afecta a él: **un número congelado empieza
+siendo verdad y deja de serlo**.
+
+▶ **Pero lo que quería sí se consigue por la vía buena**: preguntar cada pocas horas y servir de una
+caché corta deja la chapa puesta prácticamente siempre, **actualizada sola y gratis** (cada 6 h son
+~120 llamadas al mes; cada hora, ~720). Se acordó **refrescar cada hora** para que el hueco de la
+caché evictada (`allkeys-lru`, `#137`) sea casi inexistente.
+
+⚠️⚠️ **Y una ambigüedad de nuestra propia spec queda anotada, porque juega a favor del owner**:
+§4.4.bis afirma «sin consentimiento la cabecera no se pinta» **sin argumentarlo** —su razón escrita
+es no inventar la cifra, que es otra cosa—. La cifra agregada la trae **nuestro servidor**, no tiene
+autor ni foto y no es dato personal, así que **puede que no necesite consentimiento**. Se decide con
+su argumento delante en la T2i·b; no se da por bueno aquí.
+
+---
+
+**❗❗ 3 · EL ARTBOARD TIENE LA OPINIÓN APAGADA EN MÓVIL, Y ESO CHOCABA CON §3.3.**
+
+Sexta vez que una pieza está tras un interruptor apagado: `conCarrusel`, desde el recorte del 7 sep
+(la sección pasa de 756 a 439 px). Con eso, en móvil la sección es **solo la chapa** — y la chapa
+solo existe con Google. Resultado: sin Google (hoy, y siempre para quien no consiente) **la sección
+se quedaba sin nada que enseñar en la superficie donde está casi todo el tráfico**, justo lo
+contrario de lo que §3.3 decidió en agosto.
+
+▶ `[DECIDIDO owner]`: **sin chapa, el carril se enciende en móvil.** No contradice el recorte: la
+opinión se apagó **porque la chapa ya cargaba la sección**, y sin chapa ese motivo desaparece.
+
+⚠️ **En escritorio la opinión ya volvía** por decisión del canvas (5b, aprobado el 8 sep): *«sin
+ella, la chapa se quedaba sola ocupando 1120 px de ancho para decir un número»*.
+
+⚠️ Y el acta comprimía de más otra vez: dice «sin cookies aceptadas la sección desaparece» y su
+artboard dice que desaparece **si faltan las dos cosas**, las de Google *y* las propias.
+
+---
+
+**▶ 4 · LO QUE ENTRA.**
+
+- **`testimonials`** + `Content\Models\Testimonial` + su recurso del panel («Ajustes → Web»).
+- **`Content\Contracts\SocialProof`** con `Rating` y `Testimonial`, y **`CmsSocialProof`** detrás.
+- **La sección 06** en la portada, con la cabecera común y el carril.
+
+❗❗ **La vista no sabe de dónde vienen las opiniones, y eso es el diseño**: lee el contrato y pinta.
+El día que entre Google **no se toca el marcado** — se sustituye el binding por el decorador. Si en
+vez de esto la vista preguntara por la fuente, ese día habría que reescribirla, y el respaldo
+quedaría como un condicional con **una rama sin cubrir: la que solo corre cuando algo va mal**.
+
+⚠️ **`published_at` es una FECHA, no el `meta` de texto libre que proponía §4.4.bis.** «hace 2 meses»
+escrito a mano es verdad el día que se teclea y mentira dos meses después: se deriva. Misma
+disciplina que `#489`.
+
+⚠️ **`rating()` devuelve `null` siempre, y no es una implementación a medias**: componer la media con
+opiniones propias daría un número real —la media de lo que el parque escribió de sí mismo— y
+publicarlo junto a las cinco estrellas del sistema lo haría pasar por la nota de Google.
+
+⚠️ **El texto NO se recorta**, contra el artboard: él corta a cuatro líneas y ofrece «leer entera en
+Google», y una opinión propia **no tiene entera en ninguna parte**. Recortarla escondería texto sin
+dónde ir a buscarlo.
+
+⚠️ **NO se siembran opiniones de ejemplo.** El seeder alimenta también el arranque en frío de
+producción (`--seed`), y ahí unas opiniones inventadas se publicarían como si fueran reales. La tabla
+nace vacía, que además demuestra la regla del panel vacío.
+
+⚠️ **La ayuda del panel no dice «por si Google falla»**, y su spec lo advierte: sería falso y es la
+razón por la que el parque las dejaría vacías.
+
+---
+
+**⚠️ 5 · TRES COSAS QUE CAZARON LAS GUARDAS, Y UNA QUE ME CACÉ YO.**
+
+- **`MorphMapTest`**: todo modelo nuevo necesita alias, y éste **se morfa de verdad** (el audit del
+  alta, la edición y el borrado escriben `target_type`).
+- **`AdminNavigationTest`**: el censo de Ajustes pasa de 20 a 21 tarjetas. Se actualiza con su razón.
+- **El arnés**: la mutación que quitaba `role="img"` **no mordía**. Mi caso miraba solo el
+  `aria-label`, y **sin un rol que admita nombre el `aria-label` de un `<p>` lo ignora el lector de
+  pantalla**: la etiqueta sigue en el HTML y el nombre accesible ya no existe. Ahora se aseveran los
+  dos juntos, sobre el mismo elemento.
+- **Y una trampa que este repo tiene fichada y volví a pagar**: `"    'offers' => ["` es **subcadena**
+  de `"            'offers' => ["`, así que un bloque de traducciones aterrizó dentro de otra lista.
+  Se rehízo anclando a **línea completa**. Es la de `#293` y `#309`, por tercera vez.
+- ⚠️ Y el propio caso de arquitectura se puso rojo con el producto sano: buscaba `Testimonial::` en
+  el controlador y lo encontró **dentro de mi comentario**, citado como advertencia. Se enmascaran
+  los comentarios antes de aseverar — la trampa de `#482` en PHP.
+
+---
+
+**▶ MEDIDO, EN NAVEGADOR.** La sección pesa **509 px** en móvil y **399** en escritorio; la portada
+sube a **12,65** y **11,46** pantallas, con desborde **0**. Inicial **56**, flecha **48**, tarjeta
+**358 / 736** —el número de `span 8` del artboard al dígito— y las estrellas en `rgb(138, 110, 0)`,
+que es su `#8A6E00` exacto, servido por `--attn-ink`.
+
+El comparador da **33 y 6 valores idénticos, 0 divergencias sin explicar**.
+
+⚠️ **Pendiente del owner**: poner el **tope de 50 peticiones/día** en la consola (dijo que no había
+puesto ninguno) y **añadir la IP del servidor** a la restricción de la clave — la que hay,
+`2.59.233.253`, es su conexión, verificado midiendo nuestra IP de salida. Y **rotar la clave** antes
+de producción: se pegó en el chat.
+
+**Suite 4.588** · 28.802 aserciones · **11/11 mutaciones** (`scripts/mutar-resenas.sh`) · Pint limpio.

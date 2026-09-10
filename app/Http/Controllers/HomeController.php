@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\PartyCards;
 use App\Domain\Booking\Services\RateCards;
 use App\Domain\Booking\Services\ZoneCards;
+use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\RideMosaic;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
@@ -123,6 +124,17 @@ class HomeController extends Controller
             // el trait que escribe los valores de la landing: aquí no se formatea nada.
             'partyDuration' => $partyCards->durationLabel($packs),
             'faqs' => Faq::where('is_active', true)->orderBy('position')->get(),
+            /*
+             * **La prueba social de la sección 06** (`#490`).
+             *
+             * ⚠️⚠️ **El controlador pregunta al CONTRATO, no a un modelo.** Hoy detrás hay
+             * `CmsSocialProof` y mañana el decorador con Google delante; si aquí pusiera
+             * `Testimonial::where(...)`, ese día habría que tocar el controlador **y** la vista, y
+             * la landing habría vuelto a conocer a su proveedor (`#136`).
+             * ⚠️ `rating()` **no se pide todavía**: hoy vale `null` siempre y pedirlo pintaría un
+             * hueco que no existe. Entra con la mitad de Google, junto con la chapa.
+             */
+            'socialProof' => app(SocialProof::class)->testimonials(),
             /*
              * **¿Se ofrece el justificante de un menor invitado?** (`#485`, sección 05.)
              *
