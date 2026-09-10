@@ -59,8 +59,27 @@ class GoogleSocialProof implements SocialProof
      */
     public const CACHE_TTL_SECONDS = 1800;
 
-    /** `[DECIDIDO owner, 2026-09-10]`. Por debajo, Google no se toca. */
-    public const MIN_REVIEWS = 10;
+    /**
+     * `[DECIDIDO owner, 2026-09-10]`. Por debajo, Google no se toca.
+     *
+     * ⚠️⚠️ **Estuvo en 10 y el owner lo bajó a 1 TRAS VER LA SECCIÓN RENDERIZADA con la reseña real**
+     * (`#493`). El 10 salía de la volatilidad —con una sola reseña, la segunda que entre decide la
+     * media que ve todo el mundo: una de 1 estrella publicaría un **3,0** al día siguiente— y esa
+     * aritmética **no ha cambiado**; lo que cambió es que con el umbral en 10 la sección **no
+     * enseñaba nada de Google en absoluto**, y el parque prefiere publicar lo que tiene.
+     * ▶ Se deja escrito para que nadie lo «arregle» subiéndolo otra vez sin reabrir la decisión, y
+     * para que quede claro qué se aceptó a cambio.
+     *
+     * ❗❗❗ **Y con el umbral en 1 hay un segundo efecto, MEDIDO el mismo día: la API de Google
+     * devuelve instantáneas INCONSISTENTES entre llamadas consecutivas.** Cinco consultas seguidas
+     * al mismo sitio dieron **cuatro veces «5,0 · 1 reseña» y una vez «3,0 · 2 reseñas»** —la
+     * segunda existe y es de 1 estrella—. No es nuestra caché: es su infraestructura.
+     * ⚠️ Traducido: **con dos reseñas y una cifra que salta de 5,0 a 3,0, lo que la portada publica
+     * depende de qué instantánea pille el refresco de esa hora.** Con un recuento alto el efecto se
+     * diluye —una reseña más no mueve una media de 300—; con dos, la mueve entera. Es la misma
+     * razón que sostenía el 10, por otra puerta.
+     */
+    public const MIN_REVIEWS = 1;
 
     private const ENDPOINT = 'https://places.googleapis.com/v1/places/';
 

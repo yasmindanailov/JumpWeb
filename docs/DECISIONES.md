@@ -27087,3 +27087,45 @@ construido**: la pieza no está en el artboard y el coste choca con el tope diar
 está puesto.
 
 **Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.
+
+---
+
+## #493 · 2026-09-10 · `[DECIDIDO owner]` El umbral de reseñas baja de 10 a 1 — y al hacerlo se midió que la API de Google es INCONSISTENTE
+
+**Contexto.** El owner vio la sección renderizada con la reseña real y pidió bajar el umbral a **1**,
+para que la portada publique lo que el parque tiene hoy en vez de nada.
+
+▶ **La aritmética del 10 no ha cambiado** —con una sola reseña, la siguiente decide la media que ve
+todo el mundo— y está escrita en el código para que nadie lo suba otra vez sin reabrir la decisión.
+Lo que cambió es la información: con el umbral en 10, la sección **no enseñaba nada de Google en
+absoluto**, y eso el owner lo vio con la pantalla delante.
+
+---
+
+**❗❗❗ Y AL APLICARLO SALIÓ ALGO QUE NO SABÍAMOS: la API de Places devuelve INSTANTÁNEAS DISTINTAS
+entre llamadas consecutivas.**
+
+El refresco dejó en caché **«3,0 · 2 reseñas»** y una consulta hecha un minuto después devolvió
+**«5,0 · 1 reseña»**. ⚠️ **Estuve a punto de informar de que había llegado una segunda reseña y de
+que la media había caído** — y habría sido afirmar sobre una sola muestra. Medido con **cinco
+consultas seguidas**: **cuatro dieron 5,0 · 1 y una dio 3,0 · 2**.
+
+▶ Las dos cosas son ciertas: **la segunda reseña existe** —es de 1 estrella, sobre el personal, y su
+texto llegó traducido en los tres idiomas, así que no es un artefacto de parseo— **y Google sirve
+vistas distintas de su propio dato**. No es nuestra caché: `phpunit.xml` fija `CACHE_STORE=array`, así
+que la suite no la contamina, y el payload guardado traía las dos reseñas completas.
+
+⚠️⚠️ **Consecuencia directa del umbral en 1**: con dos reseñas y una media que salta de 5,0 a 3,0,
+**lo que la portada publica depende de qué instantánea pille el refresco de esa hora**. Con un
+recuento alto el efecto se diluye —una reseña más no mueve una media de 300—; con dos, la mueve
+entera. Es la misma razón que sostenía el 10, entrando por otra puerta.
+
+▶ **Ficha en `DEUDA.md`** con las tres salidas, que son del owner: subir el umbral, publicar las
+opiniones **sin la cifra** hasta tener volumen, o aceptarlo a sabiendas. ⚠️ Y una cuarta **descartada
+de antemano**: quedarse con la instantánea «mejor» sería elegir cuál de las dos verdades se publica,
+que es exactamente el control editorial que §1.4 dice que no tenemos.
+
+⚠️ **Lo que el owner debería saber al margen del código**: hay una reseña de 1 estrella sobre el
+personal en su ficha de Google. La verá en su propio panel de Google Business.
+
+**Suite 4.603** · 28.895 aserciones · **21/21 mutaciones** · Pint limpio.

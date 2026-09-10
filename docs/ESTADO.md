@@ -1,6 +1,18 @@
 # Estado del proyecto — foto viva
 
-> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#492`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#493`). ▶ **EN UNA LÍNEA: la FASE 2 ESTÁ CERRADA —la portada entera, con sus ocho secciones— y lo siguiente es la FASE 3, las páginas.**
+>
+> ❗❗❗ **LO PRIMERO AL RETOMAR: EL UMBRAL DE RESEÑAS ESTÁ EN 1** (`[DECIDIDO owner]`, `#493`, bajado
+de 10 con la sección renderizada delante) **Y LA API DE GOOGLE ES INCONSISTENTE.** Medido con cinco
+consultas seguidas al mismo sitio: **cuatro dieron «5,0 · 1 reseña» y una «3,0 · 2 reseñas»**. La
+segunda reseña existe —1 estrella, sobre el personal, con su texto traducido en los tres idiomas—,
+así que no es un fallo de parseo; **es Google sirviendo vistas distintas de su propio dato**.
+> ⚠️⚠️ **Con el umbral en 1, lo que la portada publica depende de qué instantánea pille el refresco de
+esa hora**: 5,0 o 3,0. **Ficha en `DEUDA.md`** con las tres salidas, que son del owner. ⚠️ Y una
+cuarta descartada: quedarse con la instantánea «mejor» es el control editorial que §1.4 dice que no
+tenemos.
+> ⚠️ **Y casi lo informo al revés**: el primer dato que vi fue el 3,0 y estuve a punto de decir que la
+media había caído. *Una sola muestra de un tercero no es una medición.*
 >
 > ▶ **LA T2i·b CIERRA LA PORTADA** (`#491`): la chapa del 4,8 con las estrellas recortadas **caja a
 caja**, las reseñas con su atribución, la caché corta y `social-proof:refresh` cada hora. Suite
