@@ -6,9 +6,9 @@ use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use App\Filament\Resources\Users\Pages\ViewUser;
+use App\Notifications\PasswordReset;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
-use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -75,7 +75,7 @@ class SendPasswordResetActionTest extends TestCase
             ->callAction('sendPasswordReset')
             ->assertHasNoActionErrors();
 
-        Notification::assertSentTo($customer, ResetPassword::class);
+        Notification::assertSentTo($customer, PasswordReset::class);
 
         $log = AuditLog::where('action', 'users.password_reset_sent')->latest()->first();
         $this->assertNotNull($log);

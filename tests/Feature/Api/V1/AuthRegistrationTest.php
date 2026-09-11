@@ -13,10 +13,10 @@ use App\Domain\Identity\Services\TermsAcceptance;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
 use App\Notifications\AccountAlreadyExists;
+use App\Notifications\VerifyEmailAddress;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Auth\Events\Verified;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -94,7 +94,7 @@ class AuthRegistrationTest extends ApiTestCase
         $this->assertSame(Consent::CURRENT_VERSION, $user->consents->first()->version);
         $this->assertNotNull($user->privacy_accepted_at);
         $this->assertNull($user->terms_accepted_at, 'el alta no acepta condiciones: eso es del checkout');
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
     }
 
     /**
@@ -201,7 +201,7 @@ class AuthRegistrationTest extends ApiTestCase
 
         $this->register()->assertStatus(422);
 
-        Notification::assertSentTo($existing, VerifyEmail::class);
+        Notification::assertSentTo($existing, VerifyEmailAddress::class);
         $this->assertSame(1, User::where('email', 'nuevo@jumpweb.test')->count());
     }
 
@@ -398,7 +398,7 @@ class AuthRegistrationTest extends ApiTestCase
 
         $this->assertAuthenticatedAs($user);
         $this->assertNull($user->email_verified_at, 'entrar no es verificar: el buzón sigue sin demostrarse');
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
     }
 
     /**
@@ -471,7 +471,7 @@ class AuthRegistrationTest extends ApiTestCase
             ->assertValidRequest()
             ->assertValidResponse(202);
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
     }
 
     /**
@@ -502,7 +502,7 @@ class AuthRegistrationTest extends ApiTestCase
         $user = User::factory()->create(['email' => 'nuevo@jumpweb.test', 'email_verified_at' => null]);
 
         $this->postJson(self::ROOT.'/auth/email/resend', ['email' => $user->email])->assertAccepted();
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
 
         Notification::fake();
         $this->postJson(self::ROOT.'/auth/email/resend', ['email' => $user->email])->assertAccepted();

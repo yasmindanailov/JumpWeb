@@ -4,7 +4,7 @@ namespace Tests\Feature\Api\V1;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\PasswordRecovery;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -54,7 +54,7 @@ class PasswordRecoveryTest extends ApiTestCase
             ->assertValidRequest()
             ->assertValidResponse(202);
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, PasswordReset::class);
     }
 
     /** Y responde EXACTAMENTE lo mismo si la cuenta no existe: no hay nada que enumerar. */

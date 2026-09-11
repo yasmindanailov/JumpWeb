@@ -26,6 +26,27 @@ return [
         'badge' => 'Cuenta creada',
         'headline' => 'Tu cuenta ya está lista',
     ],
+    /*
+     * LOS DOS CORREOS DEL FRAMEWORK (`#508`) — el enlace de restablecer contraseña y el de verificar
+     * el correo de una cuenta nueva. No estaban en el inventario de 23 porque el artboard contó
+     * carpetas y éstos salían de `Illuminate\Auth\Notifications`.
+     *
+     * ⚠️ Aquí SOLO viven las tres piezas del molde —chapa, titular y línea de adelanto— más el
+     * asunto. El CUERPO sigue saliendo de las cadenas del framework, ya traducidas en `lang/es.json`
+     * y `lang/fr.json`: esta tanda no cambia ni una palabra de lo que el cliente venía leyendo.
+     */
+    'password_reset' => [
+        'subject' => 'Restablece tu contraseña',
+        'preheader' => 'Si no lo has pedido tú no tienes que hacer nada: el enlace caduca solo.',
+        'badge' => 'Falta un paso',
+        'headline' => 'Restablece tu contraseña',
+    ],
+    'verify_email' => [
+        'subject' => 'Verifica tu email',
+        'preheader' => 'Un clic y tu cuenta queda lista. Si no la has creado tú, ignora este correo.',
+        'badge' => 'Falta confirmar',
+        'headline' => 'Verifica tu email',
+    ],
     'verify_purchase' => [
         'subject' => 'Confirma tu email · :code',
         'preheader' => 'Tu plaza está apartada mientras confirmas. Un clic y sigues con el pago.',

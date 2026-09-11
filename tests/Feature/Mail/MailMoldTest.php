@@ -2,19 +2,34 @@
 
 namespace Tests\Feature\Mail;
 
+use App\Domain\Identity\Models\User;
+use App\Notifications\PasswordReset;
 use App\Notifications\Support\BrandedMailMessage;
+use App\Notifications\VerifyEmailAddress;
+use Illuminate\Auth\Notifications\ResetPassword as FrameworkResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail as FrameworkVerifyEmail;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
- * EL MOLDE de los correos — que los 21 que lee un cliente salgan del mismo sitio (`#503`).
+ * EL MOLDE de los correos — que los 23 que lee un cliente salgan del mismo sitio (`#503`, `#508`).
  *
- * ⚠️⚠️ **Se comprueba sobre las FUENTES y no renderizando.** Renderizar los 21 exige montar el
+ * ⚠️ **Eran 21 hasta `#508`**, y la cifra no subió por un correo nuevo: subió porque el inventario
+ * del artboard contó `app/Notifications/` + `app/Mail/` y **los dos del framework no vivían en
+ * ninguna carpeta**. Salían de `Illuminate\Auth\Notifications` —el enlace de restablecer contraseña
+ * y el de verificar el correo de una cuenta nueva—, los recibe todo el mundo, y estuvieron fuera del
+ * carril entero. Hoy son subclases propias y entran solas en este censo.
+ *
+ * ⚠️⚠️ **Se comprueba sobre las FUENTES y no renderizando.** Renderizar los 23 exige montar el
  * fixture de cada uno —un pedido, una reserva con franja, una firma, un pago— y un caso que no se
  * puede construir acaba no escribiéndose: es así como estos veintiuno llegaron a tener veintiún
  * moldes distintos. Aquí se lee el código, que es exhaustivo por definición.
  */
 class MailMoldTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Los DOS únicos correos que VENDEN. El mapa del naranja: el relleno de acción solo significa
      * comprar (`[DECIDIDO owner, 2026-09-10]`).
@@ -53,10 +68,40 @@ class MailMoldTest extends TestCase
 
     public function test_the_scan_sees_the_whole_family(): void
     {
+        // ⚠️ **23, y el número subió en `#508`**: el inventario del artboard decía 23 contando
+        // `app/Notifications/` + `app/Mail/`, y **los dos correos del framework no vivían en ninguna
+        // carpeta** —salían de `Illuminate\Auth\Notifications`—, así que eran 25 y nadie los contaba.
+        // Hoy son subclases propias y entran solas en este censo.
         $this->assertGreaterThanOrEqual(
-            21, count($this->correos()) + count(self::FUERA_DEL_MOLDE),
+            23, count($this->correos()) + count(self::FUERA_DEL_MOLDE),
             'el escaneo ve menos correos de los que hay: ¿han cambiado de carpeta?'
         );
+    }
+
+    /**
+     * ❗❗❗ **LOS DOS DEL FRAMEWORK SE SIGUEN MANDANDO DESDE `User`**, y sin este caso volverían a
+     * salir los de Laravel **sin que nada fallara**: las subclases seguirían existiendo —así que
+     * `test_every_customer_facing_mail_declares_its_hero` pasaría en verde— y simplemente no las
+     * usaría nadie. Es el modo de fallo exacto que dejó estos dos correos fuera del carril durante
+     * todo `#500`→`#507`.
+     *
+     * ⚠️ Se comprueba por CONDUCTA —qué notificación se encola— y no leyendo `User.php`: que el
+     * método esté escrito no es que mande la nuestra.
+     */
+    public function test_the_two_framework_mails_are_sent_in_our_own_shape(): void
+    {
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $user->sendPasswordResetNotification('tok');
+        $user->sendEmailVerificationNotification();
+
+        Notification::assertSentTo($user, PasswordReset::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
+
+        // …y NO las del framework, que es la otra mitad: sin esto, mandar las dos pasaría igual.
+        Notification::assertNotSentTo($user, FrameworkResetPassword::class);
+        Notification::assertNotSentTo($user, FrameworkVerifyEmail::class);
     }
 
     /**

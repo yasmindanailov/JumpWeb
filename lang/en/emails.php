@@ -22,6 +22,22 @@ return [
         'badge' => 'Account created',
         'headline' => 'Your account is ready',
     ],
+    /*
+     * The two FRAMEWORK mails (`#508`). Only the mould pieces live here — the body still comes from
+     * the framework's own strings, so not a word of what the customer was reading changes.
+     */
+    'password_reset' => [
+        'subject' => 'Reset your password',
+        'preheader' => "If you didn't ask for this you don't need to do anything: the link expires.",
+        'badge' => 'One step left',
+        'headline' => 'Reset your password',
+    ],
+    'verify_email' => [
+        'subject' => 'Verify your email',
+        'preheader' => "One click and your account is ready. If you didn't create it, ignore this.",
+        'badge' => 'Needs confirming',
+        'headline' => 'Verify your email',
+    ],
     'verify_purchase' => [
         'subject' => 'Confirm your email · :code',
         'preheader' => 'Your slot is on hold while you confirm. One click and you can finish paying.',

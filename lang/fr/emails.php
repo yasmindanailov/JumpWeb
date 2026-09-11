@@ -22,6 +22,22 @@ return [
         'badge' => 'Compte créé',
         'headline' => 'Votre compte est prêt',
     ],
+    /*
+     * Les deux e-mails du FRAMEWORK (`#508`). Seules les pièces du moule vivent ici — le corps vient
+     * toujours des chaînes du framework, donc rien de ce que le client lisait ne change.
+     */
+    'password_reset' => [
+        'subject' => 'Réinitialise ton mot de passe',
+        'preheader' => "Si tu ne l'as pas demandé, rien à faire : le lien expire tout seul.",
+        'badge' => 'Une étape',
+        'headline' => 'Réinitialise ton mot de passe',
+    ],
+    'verify_email' => [
+        'subject' => 'Vérifie ton e-mail',
+        'preheader' => "Un clic et ton compte est prêt. Si tu ne l'as pas créé, ignore ce message.",
+        'badge' => 'À confirmer',
+        'headline' => 'Vérifie ton e-mail',
+    ],
     'verify_purchase' => [
         'subject' => 'Confirme ton e-mail · :code',
         'preheader' => 'Ta place est gardée le temps de confirmer. Un clic et tu poursuis le paiement.',

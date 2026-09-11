@@ -68,8 +68,12 @@ class MailInboxLineTest extends TestCase
 
     public function test_the_scan_sees_the_whole_family(): void
     {
+        // ⚠️ **23 desde `#508`**, y no por un correo nuevo: los dos del framework —restablecer
+        // contraseña y verificar el correo— **no vivían en ninguna carpeta**, así que quedaron fuera
+        // del inventario del artboard y del carril entero. Hoy son subclases propias y el escaneo
+        // los ve solo.
         $this->assertGreaterThanOrEqual(
-            21,
+            23,
             count($this->grupos()),
             'el escaneo ve menos correos de los que hay: ¿han dejado de usar `->hero()`?'
         );

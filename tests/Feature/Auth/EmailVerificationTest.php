@@ -4,7 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Domain\Booking\Models\Order;
 use App\Domain\Identity\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Notifications\VerifyEmailAddress;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
@@ -121,7 +121,7 @@ class EmailVerificationTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('status', 'verification-link-sent');
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
     }
 
     public function test_resend_is_noop_for_already_verified_user(): void

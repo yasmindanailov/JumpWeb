@@ -5,8 +5,8 @@ namespace Tests\Feature\Api\V1;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Services\AccountProfile;
 use App\Notifications\EmailChangeRequested;
+use App\Notifications\VerifyEmailAddress;
 use App\Notifications\VerifyPendingEmail;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
@@ -293,7 +293,7 @@ class MeProfileTest extends ApiTestCase
             ->assertNoContent()
             ->assertValidResponse(204);
 
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmailAddress::class);
     }
 
     /** ⚠️ Con el correo ya verificado es un no-op silencioso: no hay nada que reenviar. */
@@ -317,7 +317,7 @@ class MeProfileTest extends ApiTestCase
         $this->actingAs($user)->postJson(self::ROOT.'/me/email/resend')->assertNoContent();
         $this->actingAs($user)->postJson(self::ROOT.'/me/email/resend')->assertNoContent();
 
-        Notification::assertSentToTimes($user, VerifyEmail::class, 1);
+        Notification::assertSentToTimes($user, VerifyEmailAddress::class, 1);
     }
 
     // ── Puerta ────────────────────────────────────────────────────────────────────────────────

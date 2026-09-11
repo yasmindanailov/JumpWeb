@@ -6,6 +6,8 @@ use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\Ticket;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Notifications\PasswordReset;
+use App\Notifications\VerifyEmailAddress;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -98,6 +100,27 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         $first = $trimmed->before(' ')->toString();
 
         return $first !== '' ? $first : $trimmed->toString();
+    }
+
+    /**
+     * ❗❗ LOS DOS CORREOS DEL FRAMEWORK, AL MOLDE DEL PRODUCTO (`DECISIONES #508`).
+     *
+     * Hasta esta tanda salían los de `Illuminate\Auth\Notifications` tal cual: vestidos —pasan por
+     * el mismo layout— pero **sin cabecera y sin línea de adelanto**, así que en la bandeja se
+     * anunciaban con «¡Hola!», que es el defecto que abrió este carril. **No estaban en el
+     * inventario de 23** porque el artboard contó carpetas y éstos no viven en ninguna.
+     *
+     * ⚠️ Las subclases solo cambian `buildMailMessage($url)`: el token, la firma, la caducidad y la
+     * ruta los sigue generando el framework. Aquí solo se dice **cuál** se manda.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new PasswordReset($token));
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailAddress);
     }
 
     /**
