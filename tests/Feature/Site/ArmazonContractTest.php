@@ -287,13 +287,14 @@ class ArmazonContractTest extends TestCase
     {
         $html = $this->get('/normas')->assertOk()->getContent();
 
-        $rutas = array_map(
-            fn (string $ruta): string => (string) parse_url(route($ruta), PHP_URL_PATH),
-            array_keys(SiteDestinations::PAGES),
-        );
+        // ⚠️⚠️ **El inventario va ESCRITO aquí, no leído de `SiteDestinations::PAGES`**, y lo dijo la
+        // mutación: calculado desde la constante, meter un destino o reordenarla movía a la vez lo
+        // esperado y lo medido, y el caso seguía verde — se comparaba consigo mismo. Este caso ES la
+        // especificación del inventario del canvas (`Layout Paginas PJP`, sin `/bar`, que no existe).
+        $rutas = ['/precios', '/cumpleanos', '/atracciones', '/normas', '/servicios', '/contacto'];
         $rotulos = array_map(
             fn (string $clave): string => (string) __('landing.nav.pages.'.$clave),
-            array_values(SiteDestinations::PAGES),
+            ['pricing', 'events', 'attractions', 'rules', 'services', 'contact'],
         );
 
         $this->assertSame(
