@@ -4,6 +4,17 @@
 > Decisión asociada: `DECISIONES #524` (`[DECIDIDO owner, 2026-09-11]`: *«vamos a hacerlo así, de manera
 > profesional»*).
 >
+> ✅ **SEGUNDA VUELTA DEL OWNER (2026-09-11)** — alcance y decisiones:
+> - **Entran**: la **conexión** (T1), **las reseñas con sus imágenes** (T2), **el botón «Reservar» de
+>   Google Maps** (T5), **el horario sincronizado** (T6) y **el enlace «Escribir una reseña»** en la
+>   portada (de la T7, solo el enlace: el correo sigue pendiente de `D9`).
+> - **Aparcadas**: responder desde el panel y avisos (T3), métricas de la ficha (T4).
+> - `[DECIDIDO owner]` **D1** un proyecto de Google **por cliente** · **D2** las fotos de los autores se
+>   sirven **desde nuestro servidor** · **D3** **6** en la portada · **D4** **se filtra por estrellas**
+>   (contra la recomendación del agente: ver §4.3·8 para cómo se hace sin engañar) · **D5** las anónimas
+>   **se publican** · **D8** el horario **se sincroniza** (la web escribe en Google).
+> - 🟦 **Pasa a revisión adversarial antes de escribir código** (`CONVENCIONES §5`).
+>
 > ▶ **Sustituye como FUENTE a `google-reviews.md`** (Places API) en cuanto la T2 esté verificada. Aquella
 > spec queda como registro de lo construido en `#490`/`#491`/`#494`, y **su contrato se conserva**: la
 > portada lee `Content\Contracts\SocialProof` y no sabe de dónde vienen los datos, así que el cambio de
@@ -146,6 +157,11 @@ habla es el comando programado y la conexión del panel.
 ▶ **T1 y T2 son el encargo** («que salgan siempre»). T3–T7 son lo que la misma conexión deja al
 alcance y se deciden una a una.
 
+✅ **Alcance decidido en la segunda vuelta**: **T1 · T2 · T5 · T6** y **el enlace de la T7** (en la portada).
+**T3 y T4, aparcadas.** Orden de ejecución: T1 → T2 (con el enlace) → T5 → T6, porque T6 es la única que
+ESCRIBE datos de la ficha que ven todos los clientes de Google y tiene que llegar con la conexión ya
+probada en producción.
+
 ### 4.2 T1 · La conexión
 
 1. **Pantalla** «Ficha de Google» en **Ajustes → Web** (`AdminSettingsHub::areas()`), **solo rol
@@ -215,7 +231,7 @@ alcance y se deciden una a una.
 4. **La nueva fuente**: `BusinessProfileSocialProof` (futuro) implementa `SocialProof` leyendo las
    tablas (1–2 consultas indexadas, memo por petición) y **sustituye a `GoogleSocialProof` en el binding
    de `AppServiceProvider`**. `FallingBackSocialProof` y `CmsSocialProof` no cambian.
-5. ❗❗ **«A todos los visitantes» — la mitad que decide `D2`.** Hoy las reseñas de Google solo se ven con
+5. ✅ **`D2` DECIDIDO: sí.** ❗❗ **«A todos los visitantes» — la mitad que decide `D2`.** Hoy las reseñas de Google solo se ven con
    cookies de terceros aceptadas porque el avatar es una petición del navegador a
    `lh3.googleusercontent.com` (`RGPD-05`). Con esta API se pueden **guardar los avatares 30 días y
    servirlos desde nuestro dominio**: el visitante no hace ninguna petición a Google, la sección se ve sin
@@ -227,12 +243,27 @@ alcance y se deciden una a una.
    ▶ **Antes de escribir el analizador se MIDE con la ficha real** (§6·T2·1) pidiendo con `Accept-Language`
    de los tres idiomas del sitio, que según esa medida devuelve los originales sin traducción. La regla que
    se busca: **publicar el ORIGINAL**, que es lo que el autor escribió.
-7. **Anónimos**: `isAnonymous` llega sin nombre ni foto. Se publican con un rótulo genérico traducido
-   («Usuario de Google») y sin avatar — `D5`.
-8. **Qué se enseña en la portada** (`D3`, `D4`): las N más recientes con texto, **con la respuesta del
-   parque debajo** (`reviewReply`: es la señal de atención que más pesa en una reseña), la media y el total
-   reales, y dos enlaces: «Ver las N reseñas en Google» (`mapsUri`) y «Escribir una reseña»
-   (`newReviewUri`).
+7. ✅ **`D5` DECIDIDO: se publican.** **Anónimos**: `isAnonymous` llega sin nombre ni foto. Se publican
+   con un rótulo genérico traducido («Usuario de Google») y sin avatar.
+8. ✅ **`D3` y `D4` DECIDIDOS: 6, y filtradas por estrellas.** **Qué se enseña en la portada**: las **6** más
+   recientes **con texto** y **con al menos N estrellas**, **con la respuesta del parque debajo**
+   (`reviewReply`: es la señal de atención que más pesa en una reseña), la media y el total reales, y dos
+   enlaces: «Ver las N reseñas en Google» (`mapsUri`) y **«Escribir una reseña»** (`newReviewUri`).
+   ▶ **Cómo se filtra sin engañar** —la política prohíbe usar las reseñas *«de forma engañosa»*—:
+   - el **mínimo de estrellas es un ajuste del panel** (por defecto **4**), no un número en el código;
+   - **la media y el total NUNCA se filtran**: son los de Google, con todas las reseñas dentro;
+   - **se dice**: bajo el carril, una línea del tipo *«Reseñas de 4 estrellas o más · ver todas en
+     Google»*, con el enlace a la ficha. Filtrar sin decirlo junto a una media que lo contradice es lo
+     que se lee como trampa; decirlo es una selección editorial legítima.
+   - ⚠️ **Si el filtro deja menos de 6**, se enseñan las que haya; **si deja 0**, el carril cae a las
+     opiniones propias (la cascada de siempre) y la media se sigue enseñando.
+11. **«Reseñas con imágenes»** — lo que la API da y lo que no. Da **la foto del AUTOR** de cada reseña
+   (`reviewer.profilePhotoUrl`), que es la que se sirve desde nuestro servidor (`D2`). ⚠️ **El recurso
+   `Review` no trae ningún campo de fotos adjuntas por el autor**; las fotos que suben los clientes a la
+   ficha llegan por la **Media API** (fotos de clientes) **sin enlace a una reseña concreta**. ▶ **A
+   confirmar en la revisión** contra la referencia oficial; si se confirma, «las reseñas con imágenes» son
+   las reseñas con la foto de su autor, y una galería de fotos de clientes sería otra pieza, con su
+   propia decisión.
 9. **Atribución**: se conserva la de `#494` —el logotipo de Google Maps, el rótulo de procedencia y el
    aviso de que Google no verifica las reseñas—. Esta API no la exige con la misma letra que Places, pero
    distinguir lo de Google de lo propio es honestidad, no un requisito que sobrar.
@@ -276,9 +307,24 @@ decide el owner (`D7`). Los enlaces de agregadores (`AGGREGATOR_3P`) no son edit
 
 Hoy el horario vive en el panel (horario semanal, temporadas, fechas especiales) y **en la ficha de
 Google por separado**: si alguien cierra un festivo en el panel y no en Google, Maps dice «abierto».
-▶ **Primero comparar** (la pantalla dice *«tu ficha dice X, la web dice Y»*) y **solo después, con `D8`,
-escribir** `specialHours`/`regularHours` desde el panel. ⚠️ Escribir en la ficha pasa por la moderación
-de Google y tiene el mismo tope de 10 ediciones por minuto.
+
+✅ **`D8` DECIDIDO: se sincroniza — el PANEL manda y la web escribe en Google.** Diseño:
+
+1. **Fuente de verdad: el panel.** Lo que se escribe sale de la MISMA resolución que pinta la web
+   (`OperatingSchedule`, la cara pública de `effectiveFor()`), nunca de una segunda lectura de las tablas:
+   dos derivaciones del horario acaban diciendo dos cosas.
+2. **Qué se escribe**: `regularHours` (la semana tipo vigente) y `specialHours` (fechas especiales y
+   cierres, de hoy en adelante, dentro de la ventana que Google admite).
+3. **Primera activación = comparar, no escribir.** El panel enseña *«tu ficha dice X · la web dice Y»* y el
+   admin confirma la primera escritura. Después, **cada cambio de horario en el panel se empuja**, y una
+   **conciliación diaria** detecta si la ficha se ha desviado (una edición a mano en Google, o una
+   *actualización de Google* propuesta por usuarios) y la corrige o avisa.
+4. ⚠️ **Escribir en la ficha pasa por la moderación de Google** y tiene un tope de **10 ediciones por
+   minuto**, sin ampliación: los cambios se agrupan en una sola escritura y se usa `validateOnly` antes de
+   la primera.
+5. ⚠️ **Lo que el modelo de Google no puede expresar se dice, no se aproxima**: si el horario del panel
+   tiene algo que `regularHours`/`specialHours` no admiten, la escritura no se hace a medias — se avisa en
+   el panel. **A medir en la revisión**: el encaje de temporadas, cierres por zona y horarios partidos.
 
 ### 4.8 T7 · Pedir la reseña tras la visita (carril de correos)
 
@@ -392,14 +438,14 @@ hacer YA, mientras se construye la T1.
 
 | | Pregunta | Recomendación |
 |---|---|---|
-| **D1** | ¿Un proyecto de Google por instalación (cada cliente el suyo) o uno central de JumpWeb verificado, al que cada parque solo le da permiso? | **Por instalación para empezar** (PlayJump), con el código listo para las dos. El central es mejor producto a escala, pero exige que JumpWeb pase la verificación y registre los dominios de todos |
-| **D2** | ¿Servir los avatares desde nuestro servidor (30 días) para que las reseñas se vean **sin consentimiento de cookies**? | **Sí** — es lo que hace «a todos los visitantes» de verdad y estrecha la CSP. ⚠️ Añade un tratamiento de datos de terceros: requiere la línea en la política de privacidad |
-| **D3** | ¿Cuántas en la portada y en qué orden? | **Las 6 más recientes con texto**, con la respuesta del parque debajo |
-| **D4** | ¿Filtrar por estrellas en la portada? | **No filtrar.** La media real sale igual; enseñar solo las de 5 estrellas junto a una media de 3,8 se lee como trampa. Si se filtra, se dice («seleccionadas por el parque») |
-| **D5** | ¿Publicar las reseñas anónimas? | **Sí**, con «Usuario de Google» y sin foto |
+| **D1** | ¿Un proyecto de Google por instalación o uno central de JumpWeb? | ✅ **`[DECIDIDO owner]` por cliente** |
+| **D2** | ¿Servir los avatares desde nuestro servidor (30 días) para que las reseñas se vean **sin consentimiento de cookies**? | ✅ **`[DECIDIDO owner]` sí** — ⚠️ con la línea en la política de privacidad |
+| **D3** | ¿Cuántas en la portada y en qué orden? | ✅ **`[DECIDIDO owner]` 6**, las más recientes con texto, con la respuesta del parque debajo |
+| **D4** | ¿Filtrar por estrellas en la portada? | ✅ **`[DECIDIDO owner]` sí** (el agente recomendaba no) — con mínimo configurable, media y total sin filtrar y el filtro DICHO (§4.3·8) |
+| **D5** | ¿Publicar las reseñas anónimas? | ✅ **`[DECIDIDO owner]` sí**, con «Usuario de Google» y sin foto |
 | **D6** | Aviso de reseña nueva: ¿por sondeo cada hora o Pub/Sub en segundos? | **Sondeo primero**; Pub/Sub solo si se echa de menos la inmediatez |
 | **D7** | ¿Qué tipo de acción para el botón «Reservar» de Google? | Se comprueba en la ficha real antes de decidir |
-| **D8** | ¿Que la web ESCRIBA el horario en Google, o solo que avise de las diferencias? | **Solo avisar al principio**; escribir cuando se haya visto que coincide |
+| **D8** | ¿Que la web ESCRIBA el horario en Google, o solo que avise de las diferencias? | ✅ **`[DECIDIDO owner]` sincronizar**: el panel manda; la primera escritura se confirma tras comparar (§4.7) |
 | **D9** | El correo de «déjanos tu reseña», ¿solo a quien aceptó marketing o a todo cliente como seguimiento? | Consulta legal; **por defecto, solo con consentimiento de marketing** |
 
 ---
