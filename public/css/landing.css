@@ -3699,12 +3699,8 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
    su vela lo dice. En móvil no cambia nada: ahí son dos filas, como el marco. */
 @media (min-width: 1024px) {
     .foot__inner { display: flex; flex-wrap: wrap; align-items: stretch; }
-    /* ⚠️ El CIERRE de las interiores (`#526`) va también a fila entera: sin estar en esta lista es un
-       elemento flex más y se queda con el ancho de su contenido — medido, 610 px de 1120.
-       ⚠️ Va ANTES del colofón y no al final: `FooterFrameTest` lee `.foot__colophon { flex: …` tal cual. */
     .foot__strip,
     .foot__links-wrap,
-    .reserve--pagina,
     .foot__colophon { flex: 0 0 100%; }
     .foot__contact { flex: 0 0 auto; padding-right: 24px; }
     .foot__legal-wrap { flex: 1 1 0; margin-top: var(--sp-6); padding-top: var(--sp-16); }

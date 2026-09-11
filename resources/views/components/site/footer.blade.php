@@ -1,4 +1,4 @@
-@props(['sections' => [], 'surface' => 'ink', 'closing' => false])
+@props(['sections' => [], 'surface' => 'ink'])
 @php
     // ── LOS DESTINOS DEL PIE SON LOS DEL MENÚ (`DECISIONES #521`/`#522`, `[DECIDIDO owner]`) ──────────
     // El inventario de páginas del canvas + la cuenta + —solo en la portada, que es quien las pasa—
@@ -62,16 +62,6 @@
      interiores siguen en tinta. Solo se aceptan las dos superficies que existen. --}}
 <footer class="foot" data-surface="{{ $surface === 'paper' ? 'paper' : 'ink' }}">
     <div class="foot__inner wrap">
-        {{-- ══ EL CIERRE DE LAS INTERIORES VA DENTRO DE LA BANDA (`#526`, T3a·4) ═══════════════════
-             Como lo dibuja `Layout Paginas PJP`: una sola banda de tinta que empieza con la tarjeta y
-             sigue con el pie. Lo piden las páginas del inventario (`closing`); la portada no, porque
-             lleva el suyo, y las legales y las pantallas de servicio tampoco.
-             ▶ Y dentro de la banda la barra de móvil se retira sola al llegar el cierre: se aparta
-             cuando entra `.foot`, y el cierre ya es `.foot`. --}}
-        @if ($closing)
-            <x-site.closing />
-        @endif
-
         {{-- La tira de marca: COMPONENTE (`#226`) y aquí su COLOCACIÓN. Va en CUÑA de 22 px y no fina
              de 4 como la dibuja el Layout: es decisión anterior del owner contra el artboard. --}}
         <x-site.brand-strip class="brand-strip--wedge foot__strip" />
