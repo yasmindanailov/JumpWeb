@@ -28881,3 +28881,9 @@ etiqueta 12 del sistema contra 15,5 y 10,5 del dibujo—. Medido: la página pes
 ⚠️ **Y una raya que salía en verde**: la de «no se vende» heredaba el rol de CIFRA de su columna y se leía
 como un precio en lima. Una ausencia no se resalta — va en el gris de apoyo. *Lo vio la captura, no la
 suite.*
+
+▶ **Verificado también SIN JAVASCRIPT** (`storage/app/sin-js-precios.mjs`): la página se sirve entera
+—cabecera, tira de la semana, las siete filas con sus precios y su «no se vende ese día», la explicación,
+los complementos y la salida a 287×48—, con desborde **0**. No declara ni un comportamiento propio, pero
+**eso se comprueba y no se supone**: el armazón sí lleva JS, y una pieza que naciera esperando a Alpine se
+quedaría invisible sin que nada fallara.
