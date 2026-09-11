@@ -28863,7 +28863,14 @@ las tres tarjetas de esta página) y el censo de FASE de complementos, que exige
 vacío. Ficha en `DEUDA.md`.
 
 **Verificación.** Guarda nueva `PricingPageTest` (13 casos, con el CONTROL del precio igualado) +
-`scripts/mutar-precios.py`. Sonda de navegador: `/precios` **cero desborde y cero solapes** en 390 y 1280,
+`scripts/mutar-precios.py`, **18/18 mutaciones**. ⚠️⚠️ **Y TRES nacieron LAXAS: lo dijo el arnés, no una
+relectura.** (1) El caso de la hora extra miraba que estuviera en la tabla y fuera del carril, así que
+quitarle el predicado del MECANISMO —con lo que **todos** los complementos se volvían filas de precio—
+pasaba en verde: *un caso que mira lo que debe estar no ve lo que no debería*. (2) La fecha CERRADA del
+fixture no llevaba tarifa, y sin ella la mutación que ignora `is_closed` era **equivalente** —un día
+cerrado no tiene horario que enseñar—: hoy lleva tarifa y lo que se comprueba es la PRECEDENCIA. (3) El
+enlace a cumpleaños se aseveraba sobre la página entera, y esa ruta la escriben también el menú y el pie
+(la lección de `#295`: acota al elemento antes de creerte un verde). Sonda de navegador: `/precios` **cero desborde y cero solapes** en 390 y 1280,
 y los cuatro controles bajo 48 son **preexistentes** (el logotipo del armazón, aparcado en `#476`, y los
 tres enlaces de idioma del pie, de `#522`). Comparador contra el artboard (`scripts/comparar-seccion.mjs
 precios`, que estrena `ruta`): **14 idénticas · 2 divergencias declaradas · 0 sin explicar** en móvil y

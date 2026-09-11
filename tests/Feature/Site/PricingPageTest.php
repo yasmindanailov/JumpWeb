@@ -188,6 +188,16 @@ class PricingPageTest extends TestCase
         preg_match('#<ul class="extras__list".*?</ul>#s', $html, $m);
         $this->assertNotEmpty($m, 'el bloque de complementos no se pinta: la otra mitad miraría el vacío');
         $this->assertStringNotContainsString($nombre, strip_tags($m[0]));
+
+        /*
+         * ⚠️⚠️ **Y LA OTRA MITAD, que el arnés obligó a escribir**: a la tabla suben SOLO los
+         * complementos de TIEMPO. Sin esta aserción, quitarle el predicado del mecanismo dejaba
+         * pasar la mutación —la hora extra seguía en su fila y fuera del carril—, con **todos** los
+         * complementos convertidos en filas de precio. *Un caso que mira lo que debe estar no ve lo
+         * que no debería.*
+         */
+        $enLaTabla = implode(' ', $this->rows($html));
+        $this->assertStringNotContainsString('Taquilla', $enLaTabla, 'un complemento que no es tiempo se ha colado en la tabla');
     }
 
     /**
@@ -282,9 +292,17 @@ class PricingPageTest extends TestCase
         SpecialDate::query()->delete();
         $especial = RateType::firstSpecial();
 
+        /*
+         * ⚠️⚠️ **La fecha cerrada lleva TARIFA a propósito, y lo obligó el arnés**: sin ella la
+         * mutación que ignora `is_closed` sobrevivía —un día cerrado no tiene horario que enseñar,
+         * así que el detalle ya decía «Cerrado» y las dos ramas daban lo mismo—. Con tarifa, lo que
+         * se comprueba es la PRECEDENCIA: un día cerrado dice que está cerrado **aunque tenga
+         * tarifa declarada**, que es el caso real de un festivo de cierre.
+         */
         SpecialDate::create([
             'date' => Carbon::now()->addDays(3)->toDateString(),
             'is_closed' => true, 'note' => ['es' => 'Navidad'],
+            'rate_type_id' => $especial->id,
         ]);
         SpecialDate::create([
             'date' => Carbon::now()->addDays(5)->toDateString(),
@@ -298,10 +316,15 @@ class PricingPageTest extends TestCase
         $this->assertNotEmpty($m, 'con fechas cargadas el bloque tiene que pintarse');
         $lista = strip_tags($m[0]);
 
-        $this->assertStringContainsString('Navidad', $lista);
-        $this->assertStringContainsString(__('landing.info.closed'), $lista);
         $this->assertStringContainsString('Víspera de Reyes', $lista);
         $this->assertStringContainsString((string) $especial->tr('label'), $lista, 'la fecha con tarifa no dice cuál');
+
+        // La fila de la fecha CERRADA, acotada: dice «Cerrado» y **no** el rótulo de su tarifa.
+        preg_match('#<li [^>]*holidays__row[^>]*>(?:(?!</li>).)*Navidad(?:(?!</li>).)*</li>#s', $m[0], $fila);
+        $this->assertNotEmpty($fila, 'la fecha cerrada no se pinta: el caso miraría el vacío');
+        $this->assertStringContainsString(__('landing.info.closed'), strip_tags($fila[0]));
+        $this->assertStringNotContainsString((string) $especial->tr('label'), strip_tags($fila[0]),
+            'un día CERRADO anuncia su tarifa: lo que hay que decir es que no se abre');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -361,7 +384,13 @@ class PricingPageTest extends TestCase
     {
         $html = $this->html();
 
-        $this->assertStringContainsString(__('landing.pricing.birthdays'), $html);
-        $this->assertStringContainsString(route('cumpleanos'), $html);
+        // ⚠️ **Acotado al BLOQUE y no a la página**, que fue lo que dijo el arnés: la ruta de
+        // cumpleaños la escriben también el menú y el pie, así que sobre el documento entero la
+        // aserción pasaba aunque el enlace de la salida apuntara a ninguna parte.
+        preg_match('#<div class="rate-page__birthdays">.*?</div>#s', $html, $bloque);
+        $this->assertNotEmpty($bloque, 'la página no pinta su salida a cumpleaños');
+
+        $this->assertStringContainsString(__('landing.pricing.birthdays'), $bloque[0]);
+        $this->assertStringContainsString(route('cumpleanos'), $bloque[0]);
     }
 }
