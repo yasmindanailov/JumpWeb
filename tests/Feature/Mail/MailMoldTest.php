@@ -105,6 +105,39 @@ class MailMoldTest extends TestCase
     }
 
     /**
+     * ❗❗❗ **Y LOS DOS SE RENDERIZAN DE VERDAD.** Este fichero lee FUENTES —es exhaustivo y por eso
+     * vale— pero *que un correo declare la cabecera no es que la pinte*, que es la trampa ya fichada
+     * del carril. Aquí sí se rinden los dos, y hace falta: la mutación que sustituye
+     * `BrandedMailMessage` por un `MailMessage` pelado **sobrevivía**, porque el escaneo de fuentes
+     * no ejecuta nada y **ningún otro caso de la suite renderizaba estos dos**.
+     *
+     * ⚠️ Con la URL dentro de la aserción: es lo único que esta tanda no podía tocar, y un
+     * `buildMailMessage` que se dejara el `$url` saldría con un botón que no lleva a ninguna parte.
+     */
+    public function test_the_two_framework_mails_actually_render(): void
+    {
+        $user = User::factory()->create();
+
+        foreach ([new PasswordReset('tok-de-prueba'), new VerifyEmailAddress] as $notificacion) {
+            $mail = $notificacion->toMail($user);
+            $html = (string) $mail->render();
+            $clase = class_basename($notificacion);
+
+            $this->assertStringContainsString('class="hero', $html, "$clase: sin cabecera en el HTML");
+            $this->assertArrayHasKey('preheader', $mail->viewData, "$clase: sin línea de adelanto");
+            $this->assertNotEmpty($mail->subject, "$clase: sin asunto");
+            $this->assertNotEmpty($mail->actionUrl, "$clase: el botón se quedó sin URL");
+            // ⚠️ ESCAPADA, que es como viaja: el `&` de la query sale `&amp;` en el `href`, así que
+            // comparar la URL literal falla con el producto sano. Medido al escribir este caso.
+            $this->assertStringContainsString(
+                str_replace('&', '&amp;', (string) $mail->actionUrl),
+                $html,
+                "$clase: la URL no llega al correo"
+            );
+        }
+    }
+
+    /**
      * ❗❗ **TODO CORREO QUE LEE UN CLIENTE ABRE CON SU CABECERA.** Sin ella el correo empieza con el
      * saludo de Laravel —«¡Hola!»— y pierde las tres cosas que el molde pone arriba: el estado en una
      * chapa, el titular y el resguardo. Medido antes de la tanda: **los 23 se anunciaban con un
@@ -134,7 +167,10 @@ class MailMoldTest extends TestCase
     {
         $sueltos = [];
         foreach ($this->correos() as $nombre => $src) {
-            if (str_contains($src, 'new MailMessage')) {
+            // ⚠️ Con el nombre COMPLETO también: buscar la subcadena `new MailMessage` deja pasar un
+            // `new \Illuminate\Notifications\Messages\MailMessage`, que es exactamente lo mismo. Lo
+            // dijo la mutación de `#508` — sobrevivió escribiéndolo así.
+            if (preg_match('/new\s+(\\\\?Illuminate\\\\Notifications\\\\Messages\\\\)?MailMessage\b/', $src) === 1) {
                 $sueltos[] = $nombre;
             }
             if (str_contains($src, "viewData['hero'] = [")) {
