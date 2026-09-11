@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas** (§5.5)
+> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas COMPLETO (T3a·1 → T3a·4); siguen las páginas** (§5.5)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`), **agotada en `#499`** → la Fase 3 va en **520–549**
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -945,8 +945,8 @@ de escritorio) y `doc/paginas.md` del canvas.
 |---|---|---|
 | T3a·1 | **El armazón · los DESTINOS** del menú (y del pie): el inventario de páginas; en la portada, sus secciones | ✅ `#521` |
 | T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón — y las VELAS del pie y del menú, que no se apagaban nunca | ✅ `#522` |
-| T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b |
-| T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ⬜ decidido en `#521` |
+| T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b · revisada por el owner: OK |
+| T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ✅ `#526` — dentro de la banda de tinta del pie (opción A del owner) |
 | T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
 
 #### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
@@ -1083,6 +1083,30 @@ Guarda `PageHeadTest` (5 casos) + `scripts/mutar-cabecera.py` (**18/18**). ⚠�
 lo dijo el arnés**: sacar `.page__lede` de la regla tipográfica compartida **sobrevivía**, porque la
 entradilla también comparte con la de sección la regla de su MARGEN y el caso aceptaba cualquiera. Hoy
 exige compartir la que declara `font-size`. *«Comparte una regla» no es «comparte la declaración».*
+
+✅ **T3a·4 · el cierre en las interiores** (`#526`). La tarjeta de la portada **sin el juego, sin el eslogan
+y con un solo botón**, y `[DECIDIDO owner, 2026-09-11]` **dentro de la banda de tinta del pie** —la opción A,
+elegida sobre dos renderizadas: la B la ponía sobre el papel antes del pie, como en la portada—. La llevan
+las seis páginas del inventario que existen; ni las legales ni las pantallas de servicio. El texto es el de
+la portada (`[DECIDIDO owner]`: el teléfono sale justo debajo, en el pie).
+
+▶ **El cuerpo es COMPARTIDO con la portada** (`<x-site.closing-body>`): titular, texto y la regla de a dónde
+lleva «Reservar» con la venta online cerrada. ⚠️ La CAJA de la portada no se toca —lleva los manejadores
+del juego en el propio elemento y `SaltaJuegoTest` los exige ahí—. ▶ Lo que la portada hace y aquí no
+significa nada se retira: la altura en reposo («el hueco que deja el pie», que publica su coreografía) →
+**la mide el contenido**; el hueco del minijuego → **el de la chapa**, derivado de su geometría; la sombra de
+elevación, invisible sobre tinta → **el filete de la superficie**. ▶ **La barra de móvil se retira sola**: se
+aparta al entrar `.foot`, y el cierre ya es `.foot`; en la portada sigue por encima a propósito (`#253`).
+
+❗❗ **El defecto que vio la sonda**: en escritorio la tarjeta medía **610 px de 1120** —desde 1024 el pie es
+`flex` con salto y solo lo que está en su lista de «fila entera» ocupa la fila—. ⚠️ Y **la suite completa cazó
+lo que la tanda dirigida no**: `FooterFrameTest` lee `.foot__colophon { flex: …` tal cual, así que la tarjeta
+va delante del colofón en esa lista. Guarda `PageClosingTest` (5 casos) + `scripts/mutar-cierre.py` (**13/13**).
+
+▶ **CON ESTO EL ARMAZÓN QUEDA COMPLETO** (T3a·1 → T3a·4). Lo siguiente son **las páginas (T3b)**, en el orden
+del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto`. Dos
+preguntas del owner esperan a su página: **`/bar`** (no existe; el canvas la condiciona a que el bar tenga carta,
+`#482`) y **`/entradas`** (existe sin estar en el inventario: entra o se retira, §4.1).
 
 ### 5.2 · Las cuatro excepciones del owner
 

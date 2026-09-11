@@ -39,7 +39,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#525`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525`; sigue el CIERRE en las interiores (T3a·4) · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#526`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ✅ `#526` — **el armazón, COMPLETO**; siguen las PÁGINAS (T3b), empezando por `/atracciones` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -148,7 +148,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
-> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#525`) ═══════════
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#526`) ═══════════
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
 > por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
@@ -163,8 +163,9 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > Business Profile»*. ⛔ **No se escribe código de Business Profile hasta cerrar el diseño.** Lo decidido
 > (R1–R4, D2–D5) está en `specs/google-business-profile.md` §8 y **no se vuelve a preguntar**; lo único
 > abierto —si entran los vídeos— se pregunta al abrir su T1.
-> ▶ **Hecho en esa sesión: T3a·3, la cabecera de página** (`#525`, abajo). **Lo siguiente: T3a·4, el cierre
-> en las interiores**, ya decidido.
+> ▶ **Hecho en esa sesión: el ARMAZÓN, COMPLETO** — T3a·3, la cabecera de página (`#525`, revisada por el
+> owner: todo OK) y T3a·4, el cierre en las interiores (`#526`), los dos abajo. **Lo siguiente: las PÁGINAS
+> (T3b)**, en el orden del canvas, empezando por `/atracciones`.
 > ⚠️ **Pasos de DESPLIEGUE de este carril** (esta sesión no desplegó nada; `specs/rediseno-desde-canvas.md`
 > §5.bis): añadir `--ink-fg-body: #C9CDD1` al `client.css` de producción · si ese paquete ya lleva el
 > marcador, **renombrar** `--on-marker` → `--on-marker-brand` · comprobar que `theme.brand` de producción
@@ -221,11 +222,21 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > titular, que la recorta**: lo destapó la CAPTURA —la trama de `/normas` cayó bajo la entradilla nueva y,
 > medido, el abanico de `/precios` ya caía bajo la suya en móvil ANTES—. El aire de arriba se deriva del
 > racimo (88 px a 390, el del canvas). Entradillas «solo lo que se ve». `PageHeadTest` + **18/18** (la
-> guarda nació laxa y lo cazó el arnés). ⚠️ **Falta el OJO del owner** sobre las seis vistas.
+> guarda nació laxa y lo cazó el arnés). ✅ **El owner la revisó: todo OK** (11-09).
 >
-> ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
-> **T3a·4 · el CIERRE en las interiores** (la tarjeta de la portada sin juego ni eslogan,
-> **solo «Reservar»**; la barra de móvil se retira cuando entra).
+> ✅ **T3a·4 · EL CIERRE EN LAS INTERIORES** (`#526`, `[DECIDIDO owner]`): la tarjeta de la portada **sin juego,
+> sin eslogan y con un solo botón**, **dentro de la banda de tinta del pie** —la opción A de dos renderizadas,
+> como el canvas— en las seis páginas del inventario; ni legales ni pantallas de servicio. Su cuerpo
+> (`<x-site.closing-body>`) es COMPARTIDO con la portada: ahí vive la regla de a dónde lleva «Reservar» con la
+> venta cerrada. La barra de móvil se retira sola (el cierre ya es `.foot`). ❗ **Defecto que vio la sonda**: en
+> escritorio la tarjeta medía 610 px de 1120 (el pie es `flex` con salto y no estaba en su lista de «fila
+> entera»). `PageClosingTest` + **13/13**. ⚠️ **Falta el OJO del owner** sobre las seis páginas.
+>
+> ❗❗ **LO SIGUIENTE: LAS PÁGINAS (T3b)**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` ·
+> `/normas` · `/servicios` · `/bar` · `/contacto`. Cada una tiene su artboard cerrado en el canvas (`doc/paginas.md`
+> dice qué quedó fijado en cada una) y se relee con `DesignSync` antes de tocarla. ⚠️ **Dos preguntas del owner
+> esperan a su página**: **`/bar`** (no existe; el canvas la condiciona a que el bar tenga carta, `#482`) y
+> **`/entradas`** (existe sin estar en el inventario: entra o se retira, spec §4.1).
 > ⛔ **LO QUE NO SE HACE, DECIDIDO**: la **barra blanca fija** de las interiores (se queda el racimo
 > flotante) y el **panel de menú de 520** en escritorio (se queda la pantalla completa). Tampoco la tira
 > fina del pie: la cuña de 22 es decisión anterior del owner contra el artboard.
@@ -2522,8 +2533,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4694 en verde** (29.496 aserciones, 1 skipped), medida el **2026-09-11** (tarde) sobre `d57ebb88`
-> (`#525`): **4689** + los **5** casos de `PageHeadTest`, la cabecera de página. Antes, **4689** y 29.406
+> Suite **4699 en verde** (29.609 aserciones, 1 skipped), medida el **2026-09-11** (tarde) sobre `955423ad`
+> (`#526`): **4694** + los **5** casos de `PageClosingTest`, el cierre de las interiores. Antes, **4694** y
+> 29.496 sobre `d57ebb88` (`#525`: **4689** + los **5** de `PageHeadTest`); y antes, **4689** y 29.406
 > sobre `58065945`, re-medida idéntica al cerrar sobre `525d4463` (entre medias, solo documentación)
 > (`#523`): **4686** + las **3** guardas nuevas del pie en papel, la tira del cierre y la tinta del
 > marcador (la del arranque del par se reescribe, no suma).

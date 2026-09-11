@@ -28426,4 +28426,51 @@ canónica); lo que no puede es leerse, y se acotó a la cabecera.
 
 **Verificación**: `PageHeadTest` 5 casos · `scripts/mutar-cabecera.py` **18/18** · suite **4694** en verde ·
 sonda de navegador (`storage/app/sonda-armazon-paginas.mjs`, 8 vistas × 390 y 1280) antes y después, con
-capturas comparadas. ⚠️ **Falta el ojo del owner** sobre las seis vistas.
+capturas comparadas. ✅ **El owner la revisó en la sesión siguiente: todo OK** (2026-09-11).
+
+## #526 · 2026-09-11 · `[DECIDIDO owner]` El CIERRE de las páginas interiores: la tarjeta de la portada DENTRO de la banda del pie, sin juego, sin eslogan y con un solo botón
+
+La **T3a·4**, última del armazón de la Fase 3 (`specs/rediseno-desde-canvas.md` §5.5). Lo decidido en `#521`
+—*la tarjeta de la portada sin el juego y sin el eslogan, solo «Reservar»; la barra de móvil se retira
+cuando entra*— y dos preguntas más que salieron al construir, contestadas **viendo dos renderizadas**:
+
+| | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| Dónde va | **A · dentro de la banda de tinta del pie**, como lo dibuja `Layout Paginas PJP`: una sola banda que empieza con la tarjeta (filete fino) y sigue con el pie. Descartada la **B** (tarjeta sobre papel antes del pie, como en la portada): dos masas de tinta con 120/184 px de papel en medio, y lógica extra para la barra |
+| El texto | **igual que en la portada** («¿Solo vienes a saltar? Ven directo o llámanos.»), aunque aquí no haya «Llamar»: el teléfono sale justo debajo, en el pie, y es una sola clave |
+| Qué páginas | las **seis del inventario** que existen (`/precios`, `/normas`, `/contacto`, `/atracciones`, `/cumpleanos`, `/servicios`) — el canvas lo escribe para las siete; **ni las legales ni las pantallas de servicio** |
+
+▶ **Lo construido.** `<x-site.closing>` (sección + caja con trama y chapa) y, compartido con la portada,
+**`<x-site.closing-body>`**: titular, texto y botones. Es componente y no copia porque ahí vive una REGLA —a
+dónde lleva «Reservar» con la venta online cerrada: al teléfono si lo hay, si no a las tarifas—, y con dos
+copias la portada y las páginas mandarían al visitante a sitios distintos. ⚠️ **La CAJA de la portada no se
+toca**: lleva los manejadores del juego en el propio `<div>` y `SaltaJuegoTest` los exige ahí. El pie la
+pinta con `:closing="true"`, primera cosa de su banda.
+
+▶ **Las tres cosas que la portada hace y aquí no tienen sentido, medidas en el código antes de construir**: la
+altura en reposo es «el hueco que deja el pie» (`--foot-h`, que publica la coreografía de la portada y aquí
+no existe: saldría una tarjeta de ~500 px con el texto flotando) → **la mide su contenido**; el relleno de
+abajo reserva 122–156 px para el minijuego → **reserva el de la chapa**, derivado de su propia geometría
+(la chapa va en la esquina y un botón a todo el ancho se le metería debajo); y la sombra de elevación no se
+ve sobre tinta → **filete de la superficie**, como el canvas. ⚠️ **La barra de móvil se retira sola**: se
+aparta cuando entra `.foot`, y el cierre ya es `.foot`, así que su JavaScript no cambia. En la portada sigue
+por encima del cierre **a propósito** (`#253`: es el botón de comprar persistente).
+
+❗❗ **UN DEFECTO QUE SOLO VIO LA SONDA**: en escritorio la tarjeta medía **610 px de 1120**. Desde 1024 el pie
+reparte su fila con `flex` y salto de línea, y declara «fila entera» para la tira, los destinos y el colofón;
+un hijo nuevo que no está en esa lista es un elemento flex más y se queda con el ancho de su contenido. *Todo
+lo que entre en el pie tiene que decir si ocupa la fila.*
+
+⚠️ **Y la suite completa cazó lo que la tanda dirigida no**: la tanda se corrió antes de añadir la tarjeta a
+esa lista, y `FooterFrameTest` lee `.foot__colophon { flex: …` **tal cual** — con la tarjeta detrás del colofón
+dejaba de casar. Se resolvió poniéndola delante, sin tocar la guarda ajena.
+
+⚠️ **Dos trampas de instrumento de esta tanda**: el **puente 8081→80** del contenedor se había caído (la sonda
+daba `ERR_CONNECTION_REFUSED`; receta en `VERIFICACION-E2E-CAJON.md`, `socat` con `docker compose exec -d`) y
+**poner `$store.cookies.visible = false` no cierra el banner** — tapaba media captura; se cierra con
+`rejectAll()`, el mismo método que su botón.
+
+**Verificación**: `PageClosingTest` 5 casos (con CONTROL: la portada conserva eslogan, juego y dos botones; y
+«Reservar» lleva al MISMO sitio en portada y página en los tres estados de la venta) · `scripts/mutar-cierre.py`
+**13/13** · suite **4699** en verde · sonda de navegador (`storage/app/sonda-cierre-paginas.mjs`, 7 vistas ×
+390 y 1280): la chapa **0 px²** sobre botón y texto, barra retirada, **0** desbordes, tarjeta a 1120.
