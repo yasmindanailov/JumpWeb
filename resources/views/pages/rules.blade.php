@@ -35,6 +35,6 @@
         <a href="{{ url('/') }}" class="page__back" data-tap>{{ __('site.back_home') }}</a>
     </main>
 
-    <x-site.footer />
+    <x-site.footer :closing="true" />
 </div>
 </x-layout>

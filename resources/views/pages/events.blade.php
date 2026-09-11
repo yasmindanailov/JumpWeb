@@ -20,6 +20,6 @@
         </main>
     @endif
 
-    <x-site.footer />
+    <x-site.footer :closing="true" />
 </div>
 </x-layout>

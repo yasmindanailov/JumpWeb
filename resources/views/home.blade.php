@@ -1443,31 +1443,9 @@
                  máscara transparente que sí necesitan las manchas del menú. --}}
             <span class="reserve__tag" aria-hidden="true"></span>
 
-            <div class="reserve__body">
-                {{-- ❗ **EL ESLOGAN A ROTULADOR, EN EL CIERRE** (`DECISIONES #477`, `[DECIDIDO owner]`).
-                     El marco aprobado del canvas lo manda al cierre **y** al menú, o sea una vez por
-                     SUPERFICIE y no una vez por página — y las dos superficies nunca se ven a la vez,
-                     porque el menú es `inset: 0` y tapa la portada entera (el mismo razonamiento que
-                     ya está escrito en `menu.blade.php`).
-                     ⚠️ Va **antes** del titular y no después: es el guiño que presenta la última
-                     pantalla antes de comprar, no un pie de página del bloque.
-                     ⚠️ Comparte la clave con el menú (`landing.hero.kicker`) a propósito: es el MISMO
-                     eslogan, y tenerlo en dos claves invita a que un día digan cosas distintas. --}}
-                <p class="reserve__slogan">{{ __('landing.hero.kicker') }}</p>
-                <h2>
-                    {{ __('landing.reserve.title') }}<br />
-                    <span class="stroke">{{ __('landing.reserve.stroke') }}</span>
-                    <span class="fill">{{ __('landing.reserve.fill') }}</span>
-                </h2>
-                <p>{{ __('landing.reserve.copy') }}</p>
-                <div class="reserve__actions">
-                    <a href="{{ $site['sales_online'] ? route('entradas') : ($site['has_phone'] ? 'tel:'.$site['phone_tel'] : route('precios')) }}"
-                       @if ($site['sales_online']) @click.prevent="$store.purchase.open()" @endif class="reserve__act">{{ __('landing.reserve.cta') }}</a>
-                    @if ($site['has_phone'])
-                        <a href="tel:{{ $site['phone_tel'] }}" class="reserve__act reserve__act--alt">{{ __('landing.reserve.cta2') }} {{ $site['phone'] }}</a>
-                    @endif
-                </div>
-            </div>
+            {{-- El cuerpo es COMPARTIDO con el cierre de las interiores (`#526`): titular, texto y la
+                 regla de a dónde lleva «Reservar». La portada lleva además el eslogan y «Llamar». --}}
+            <x-site.closing-body :slogan="true" :call="true" />
         </div>
     </section>
     </main>

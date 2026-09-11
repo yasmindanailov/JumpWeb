@@ -226,6 +226,6 @@
         </section>
     </main>
 
-    <x-site.footer />
+    <x-site.footer :closing="true" />
 </div>
 </x-layout>

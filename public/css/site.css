@@ -2681,6 +2681,27 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
    con el pie ya pasado por detrás. */
 .reserve__runway { height: var(--cierre-runway); }
 
+/* ══ EL CIERRE DE LAS INTERIORES (`#526`, T3a·4) ═══════════════════════════════════════════════
+   La tarjeta de la portada, quieta y dentro de la banda de tinta del pie (`Layout Paginas PJP`).
+   ▶ La columna la pone el pie (`.foot__inner.wrap`), así que la sección suelta el ancho, el
+   sangrado y el margen que la portada necesita para ir sola sobre el papel.
+   ▶ **Sin coreografía no hay `--foot-h`**: la altura en reposo de la portada («el hueco que deja el
+   pie») aquí no significa nada, así que manda el contenido.
+   ▶ **Tinta sobre tinta se separa con el KEYLINE, no con la sombra**: la sombra de elevación es
+   oscura y en una banda de tinta no se ve. El canvas la dibuja con el filete de la superficie.
+   ▶ **El hueco de abajo es el de la chapa, no el del juego**: aquí no hay lienzo que apartar, pero
+   la chapa va en la esquina inferior y un botón a todo el ancho se le metería debajo. Se deriva de
+   su propia geometría (su distancia al canto + su alto + un respiro), así que se mueve con ella. */
+.reserve--pagina {
+    max-width: none; margin: 0 0 24px; padding: 0;
+    --salta-hueco: calc(clamp(20px, 3vw, 40px) + clamp(72px, 8vw, 108px) * 197 / 377 + var(--sp-16));
+}
+@media (min-width: 1024px) { .reserve--pagina { margin-bottom: 40px; } }
+.reserve--pagina .reserve__box {
+    min-height: 0;
+    box-shadow: none;
+    border: 1px solid var(--line);
+}
 /* ⚠️ **El hueco del juego también se retira aquí, y no es cosmético** (`#256`): con movimiento
    reducido la coreografía del cierre NO se monta, así que la tarjeta nunca se ancla, el motor
    nunca se carga y el lienzo se queda en blanco. Reservarle entonces 122–156 px sería dejar una
