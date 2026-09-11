@@ -1,271 +1,100 @@
-# [SPEC] Google Business Profile — las reseñas de la ficha del parque, siempre a la vista (y lo demás que da la API)
+# [SPEC] Google Business Profile — las reseñas de la ficha siempre a la vista, y el horario publicado desde el panel
 
-> Estado: 🟦 **EN REVISIÓN — spec escrita, código NO empezado** · Última actualización: 2026-09-11 ·
-> Decisión asociada: `DECISIONES #524` (`[DECIDIDO owner, 2026-09-11]`: *«vamos a hacerlo así, de manera
-> profesional»*).
+> Estado: ✅ **APROBADA POR EL OWNER tras una revisión adversarial de cinco lentes** (2026-09-11) ·
+> **código NO empezado** · Decisión asociada: `DECISIONES #524`.
 >
-> ✅ **SEGUNDA VUELTA DEL OWNER (2026-09-11)** — alcance y decisiones:
-> - **Entran**: la **conexión** (T1), **las reseñas con sus imágenes** (T2), **el botón «Reservar» de
->   Google Maps** (T5), **el horario sincronizado** (T6) y **el enlace «Escribir una reseña»** en la
->   portada (de la T7, solo el enlace: el correo sigue pendiente de `D9`).
-> - **Aparcadas**: responder desde el panel y avisos (T3), métricas de la ficha (T4).
-> - `[DECIDIDO owner]` **D1** un proyecto de Google **por cliente** · **D2** las fotos de los autores se
->   sirven **desde nuestro servidor** · **D3** **6** en la portada · **D4** **se filtra por estrellas**
->   (contra la recomendación del agente: ver §4.3·8 para cómo se hace sin engañar) · **D5** las anónimas
->   **se publican** · **D8** el horario **se sincroniza** (la web escribe en Google).
-> - ✅ **Revisión adversarial HECHA el mismo día** (§0): **tres bloqueantes verificados en la fuente**
->   reabren **D1**, **D5** y **D8** → decisiones **R1–R5** del owner. **Lee §0 antes que el cuerpo.**
+> ▶ **Esta es la versión reescrita tras la revisión.** La versión que pasó a revisión está en el historial
+> (`3b31c45d`) y la revisión con sus citas, en §10. **Donde una versión anterior diga otra cosa, manda ésta.**
 >
-> ▶ **Sustituye como FUENTE a `google-reviews.md`** (Places API) en cuanto la T2 esté verificada. Aquella
-> spec queda como registro de lo construido en `#490`/`#491`/`#494`, y **su contrato se conserva**: la
-> portada lee `Content\Contracts\SocialProof` y no sabe de dónde vienen los datos, así que el cambio de
-> fuente **no toca la vista**. ⚠️ **CORREGIDO (§0.3): FALSO** — el contrato, el decorador y la vista
-> cambian.
+> ▶ **Sustituye como FUENTE a `google-reviews.md`** (Places API), que queda como registro de lo construido
+> en `#490`/`#491`/`#494`. El contrato `Content\Contracts\SocialProof` se conserva, **pero cambia** (§4.3·9):
+> el decorador, el contrato y la vista se tocan.
 >
-> ❗❗❗ **Lo que hay que saber si solo se leen cinco líneas:**
-> 1. **Places no permite guardar reseñas** (solo el `place_id` y las coordenadas), da **5 como máximo** y
->    las elige Google. **Business Profile** es la API del DUEÑO de la ficha: da **todas**, con la media y
->    el total reales, y permite **guardarlas hasta 30 días**. Es lo que hacen los widgets serios (§1.3).
-> 2. **Necesita que el owner haga cuatro cosas en Google** que ningún agente puede hacer por él: pedir el
->    acceso a la API, crear el proyecto, la pantalla de consentimiento y el cliente OAuth (§7).
-> 3. **La app OAuth tiene que quedar «En producción», nunca «En prueba»**: en prueba Google caduca el
->    permiso a los **7 días** y la sincronización se para en silencio (§4.2·6).
-> 4. **«Siempre a la vista» tiene DOS mitades**: guardar las reseñas (lo resuelve esta API) y que el
->    visitante que no acepta cookies las vea (lo resuelve servir los avatares desde nuestro servidor —
->    decisión `D2`, §8—).
-> 5. **El límite de 30 días lo rige TODO lo que da la API**, métricas incluidas: no se puede construir un
->    histórico largo con datos de Google (§4.5).
+> ❗❗❗ **Lo que hay que saber si solo se leen seis líneas:**
+> 1. **Fuente: la API de Google Business Profile**, la del dueño de la ficha, con un **proyecto CENTRAL de
+>    JumpWeb** —la política prohíbe pedirle a cada cliente el suyo— al que cada parque solo le da permiso.
+> 2. **Se publican TODAS las reseñas** (filtradas por estrellas, con fotos, anónimas incluidas) **sin pedir
+>    permiso a cada autor**, como hace el sector. ⚠️ **La guía de marca de Google pide ese permiso**: es un
+>    **riesgo aceptado por el owner** (§8·R1), mitigado con «Ocultar» en el panel.
+> 3. **Nada de Google vive más de 30 días**, y el límite se aplica **al leer**, no solo al purgar.
+> 4. **El horario se publica en Google con UN BOTÓN** del admin: Google exige consentimiento previo y
+>    específico para cada edición. La comprobación diaria **solo avisa**.
+> 5. **Toda escritura en Google, solo en PRODUCCIÓN**; desarrollo y staging usan **otro proyecto**: revocar
+>    un permiso retira la autorización de todo el proyecto.
+> 6. **Las entradas se configuran a mano en la ficha**: la API no tiene tipo «entradas».
 
 ---
 
-## 0 · ❗❗❗ REVISIÓN ADVERSARIAL (2026-09-11) — LO QUE CAMBIA, Y MANDA SOBRE EL CUERPO
-
-Cinco lentes en paralelo y en solo lectura, cada hallazgo con su evidencia (fichero y línea del repo o
-cita de la fuente oficial): **cumplimiento con Google · seguridad · RGPD · robustez y operación ·
-encaje con el repo**. Los **tres bloqueantes los verificó además el agente principal** en la fuente, con
-cita literal. ▶ **Donde el cuerpo diga otra cosa, manda esta sección**; las afirmaciones del cuerpo que
-resultaron falsas llevan además la marca «CORREGIDO (§0)».
-
-### 0.1 Los tres bloqueantes — reabren decisiones del owner
-
-1. **Publicar las reseñas en la web del parque exige el CONSENTIMIENTO de cada autor.** La guía de
-   Google para negocios —a la que obliga la política de la API (*«comply with Google's brand permissions
-   guidelines»*)— dice: *«You must get consent from the reviewer if you want to use customer reviews of
-   your business for your own marketing purposes, such as on your website or in print or digital ads»* y
-   *«User reviews belong to the person who wrote them, even if they're written on your business's
-   listing»*. ▶ **Poder guardarlas 30 días no es permiso para publicarlas.** Y **D5 no se puede cumplir**:
-   a un autor anónimo no se le puede pedir. ⚠️ **Lo de hoy con Places vive en la misma tensión** (es la web
-   del negocio). ✅ **Lo que SÍ contempla la guía es compartir la NOTA y el TOTAL**, con condiciones: *«Include
-   an 'as of' date when sharing your overall rating or number of reviews»*, el logotipo *«Google G or full
-   Google wordmark»*, *«Don't add stars by the Google name or logos»* y nada de «Google rating». → **R1**.
-2. **Un proyecto de Google POR CLIENTE lo prohíbe la política**: *«If you provide the Business Profile
-   APIs to end-clients or other third-party clients, you cannot require them to apply for their own
-   Business Profile project in order to use the Business Profile APIs»*. JumpWeb da el producto a parques:
-   **D1 queda reabierta**. La salida conforme es **un proyecto central de JumpWeb** (una sola solicitud de
-   acceso), con dos costes: la **verificación del ámbito sensible** —3–5 días hábiles, vídeo, política de
-   privacidad en el dominio de JumpWeb— porque la autorizarán varios dueños, y la **política de terceros**
-   (avisar al cliente de cambios en su cuenta en 48 h, desvincularlo en 7 días hábiles). → **R2**.
-3. **Editar la ficha exige el consentimiento PREVIO Y ESPECÍFICO del usuario**: *«You must not automate or
-   trigger review replies, Q&As, listing creations, listing edits, or other actions without the user's prior
-   specific and express consent»*. ▶ **El horario no se empuja solo**: cada publicación en Google sale de un
-   gesto del admin con los cambios delante, y la conciliación diaria **solo avisa**. → **R3**.
-
-### 0.2 Hechos que corrigen el cuerpo
-
-- **Las reseñas SÍ traen fotos** (verificado): `reviewMediaItems[]` con `thumbnailUrl`, `thumbnailLabel` y
-  `videoUrl`. **§4.3·11 era falso.** → **R5** (fotos y vídeos).
-- **No hay tipo de acción «entradas»**: `PlaceActionType` es de citas y comida. Y **las atracciones gestionan
-  sus ENTRADAS en la propia ficha**, a mano, sin API (verificado: *«All attraction businesses and tour
-  operators»*; *«Ticket or Activity name and Booking URL are required fields»*). Los tipos que admite una
-  ficha se consultan con `placeActionTypeMetadata.list`. → **R4**.
-- **Guardar: «limited amounts of Content»** —la frase completa es *«…for use outside of your Business
-  Profile project except for limited amounts of Content»*—. ▶ Se guardan **solo las candidatas a la
-  portada** (las que pasan el filtro, con un margen) y el resumen; el resto se recorre en memoria.
-- **Revocar un token retira la autorización COMBINADA del proyecto**: «Desconectar» desde local con el
-  mismo proyecto **mata la conexión de producción**.
-- **El horario de Google**: `specialHours` *«cannot be set without regular hours»* (verificado); según la
-  revisión —citando la referencia RPC, no re-verificado— un periodo especial dura menos de 24 h. Una
-  **temporada** del panel no es un rango en Google: día a día dentro de un horizonte, o reescribir
-  `regularHours` al cambiar de temporada. **La moderación** puede tardar hasta 30 días o no aprobar: se
-  leen `hasPendingEdits` y `getGoogleUpdated` y **no se reenvía lo pendiente**.
-- **Esta API no da enlace por reseña ni perfil del autor** (Places sí): los enlaces de cada tarjeta pasan a
-  `mapsUri`, y el del nombre del autor desaparece.
-- **Atribución con esta fuente**: la «G» o la palabra Google (no el logotipo de Google Maps de `#494`),
-  **«a fecha de …»** junto a la media y el total, sin estrellas pegadas al logotipo.
-- **Filtrar por estrellas**: Google no lo prohíbe, pero la **Directiva de prácticas comerciales desleales**
-  (Ómnibus 2019/2161) considera engañoso enseñar solo las positivas sin decirlo y obliga a informar de cómo
-  se tratan. ▶ La línea del filtro, **siempre visible**; decir que ni el parque ni Google verifican que los
-  autores sean clientes; y **la entradilla de hoy («No las elegimos nosotros») se vuelve falsa**. [consulta
-  legal]
-- **JSON-LD**: nunca la media de Google en `aggregateRating` (las directrices de datos estructurados lo
-  prohíben); hoy no se emite y hace falta guarda para que no entre «de paso».
-
-### 0.3 Requisitos que la revisión añade
-
-**Privacidad**
-- **Ocultar una reseña desde el panel**, con motivo tasado (petición del autor · menores · salud o terceros
-  · otros), lista de supresión que sobrevive a la resincronización y a la purga, borrado inmediato de
-  nombre, foto y texto, y rastro sin PII. Sin esto no se atiende el art. 21 ni se retira una reseña que
-  nombra a un niño. Alcanza también a la respuesta del parque.
-- **Texto para la política de privacidad** (art. 14) y **paso de despliegue manual por instalación**: la
-  migración no toca una política ya editada. [validación de la asesoría del cliente]
-- **Ponderación del interés legítimo** y fila en el registro de actividades; **prohibido cruzar** la tabla
-  de reseñas con clientes o pedidos (guarda de arquitectura).
-- **Anónimos**: nombre y foto a `null` ANTES de guardar.
-- **Si pasan N días sin una pasada completa**, dejar de pintar nombre y foto (una reseña borrada en Google
-  no puede seguir 29 días en la web porque la sincronización esté rota).
-
-**Seguridad**
-- **Toda escritura en Google solo en PRODUCCIÓN**, detrás de un interruptor explícito, con `updateMask`
-  fija (`regularHours,specialHours`), por cola, con **permiso propio** no asignable a cualquiera, y rastro
-  y correo en cada escritura. Hoy editan el horario `slots.manage` y `prices.manage`, permisos de gestión.
-- **Cliente o proyecto OAuth de DESARROLLO aparte**: nada de `localhost` en el de producción, y la conexión
-  fuera de cualquier copia de base entre entornos.
-- **Credenciales solo por CLI** (`app:set-setting --force`, con entrada oculta): **el panel no las edita**
-  (`SEC-11`). §7·7 queda corregido.
-- **OAuth**: reto atado al `user_id` que lo pidió y permiso re-comprobado a la vuelta —**el precedente es
-  `GoogleAuthSession`, no `SocialLogin`**—, clave de sesión propia, **PKCE S256** (no existe aún en el
-  repo), comprobar el `scope` concedido, revocar el token anterior al reconectar, limitadores, y
-  desconectar solo por POST.
-- **Revalidar la ficha elegida** contra el `locations.list` del token antes de cada escritura, y exigir
-  que el host de su `websiteUri` sea el del sitio.
-- **Descargador de imágenes endurecido**: lista blanca `lh[3-6].googleusercontent.com`, sin
-  redirecciones, tope de bytes, tipo por bytes mágicos (jpeg, png, webp, gif; **SVG nunca**), nombre por
-  hash, escritura atómica; servidas por una ruta de Laravel (con `SecurityHeaders`) o con un `.htaccess`
-  propio.
-- **Tokens nunca en la URL ni en logs**: `#[\SensitiveParameter]`, un envoltorio HTTP que solo registra el
-  estado, jobs sin credenciales dentro.
-- **Token cifrado en TABLA PROPIA** (cast `encrypted`, precedente `CustomerCard`), no en `settings`, que se
-  lee entero en cada petición; `DecryptException` → estado «caducado»; `APP_PREVIOUS_KEYS` permite rotar la
-  clave sin reconectar.
-
-**Robustez**
-- **El límite de 30 días se aplica al LEER** (`fetched_at` de los últimos 29 días), no solo con la purga: si
-  el cron muere, la portada no sirve lo viejo.
-- **Una pasada solo borra si es COHERENTE** (lo recogido cuadra con `totalReviewCount`); una lista vacía con
-  total mayor que cero no borra; se deduplica por `name`; el reemplazo va por diferencias en una transacción.
-- **Un solo candado dentro del servicio**, en un almacén que no se desaloja (`cache_locks` de la base), con
-  caducidad igual al presupuesto de la pasada; el botón del panel encola el mismo trabajo.
-- **Presupuesto de tiempo** de la pasada, en segundo plano, job con un solo intento.
-- **Máquina de estados de la conexión** (conectada · caducada · sin permiso · ficha perdida · sin verificar ·
-  sin acceso), aviso en la transición a un destinatario definido, y la antigüedad calculada al leer.
-- **Resultado de cada pasada registrado** y alarma por días sin pasada completa; `fetched_at` se renueva en
-  toda fila devuelta, cambie o no.
-- **Imágenes en `public/uploads/…`** (protegido del `--delete` del despliegue) o disco privado; `Prunable`
-  (no `MassPrunable`) que borra el fichero, y barrido de huérfanos.
-- **`deploy.sh` comprueba las tareas programadas por NOMBRE**, no por número.
-
-**Encaje con el repo**
-- **El contrato cambia y la vista SÍ se toca**: `Testimonial` gana la respuesta del parque y las fotos; hace
-  falta dónde llevar «Escribir una reseña», el enlace general y la línea del filtro; el doble anónimo de
-  `GoogleAttributionTest` se actualiza; y `FallingBackSocialProof` cambia (recibe el tipo concreto de Google
-  y aplica el consentimiento de `maps`). **El «no toca la vista» del cuerpo era falso.**
-- **Módulos**: la conexión en **Platform**; la sincronización y la fuente en **Content**; la ida y vuelta
-  OAuth en `app/Http`, hermana de `GoogleAuthSession`; el horario se lee de
-  `Booking\Contracts\OperatingCalendar` —Content no puede usar `OperatingSchedule`—.
-- **El horario**: un día sin configurar no se escribe y se avisa; **las zonas nunca van a Google**; no hay
-  horarios partidos en el modelo; y el disparo sale del gesto del admin (no existen eventos de dominio).
-- **El umbral `MIN_REVIEWS = 1`** (`#494`, definitivo) se conserva para la cifra y se muda con su guarda.
-- **`bind` → `scoped`**: el controlador pide el contrato dos veces y el memo por petición no se compartiría.
-- **Las UTM**: el producto no tiene analítica ni guarda UTM; la medición de la T5 se retira o se guarda en
-  el pedido (toca el checkout).
-- **La fecha relativa** («hace 2 meses») se deriva de la fecha, como `CmsSocialProof`; `starRating` llega
-  como texto (`FIVE`…).
-
-### 0.4 Lo que la revisión deja al owner
-
-**R1** cómo se publican las reseñas (consentimiento) · **R2** de quién es el proyecto de Google · **R3**
-el horario publicado con un gesto del admin · **R4** el botón de entradas · **R5** fotos y vídeos de las
-reseñas. Mientras no se decidan, **no se escribe código** (`CONVENCIONES §5`).
-
-✅ **Decididas por el owner (2026-09-11, tercera vuelta)**:
-- **R2 · `[DECIDIDO owner]` proyecto CENTRAL de JumpWeb.** JumpWeb crea el proyecto, pide el acceso a la
-  API y pasa la verificación del ámbito sensible **una sola vez**; cada parque solo pulsa «Conectar». Sustituye
-  a **D1**. Consecuencias que entran en el diseño: la verificación de Google (dominio de JumpWeb verificado,
-  política de privacidad en ese dominio, vídeo de demostración); la **URI de redirección de cada instalación**
-  se registra en el cliente central (una por dominio de parque); las credenciales del cliente dejan de ser
-  por instalación; y JumpWeb asume la **política de terceros** de Google (avisos al cliente en 48 h,
-  desvinculación en 7 días hábiles). §7 se reescribe: los pasos 2–6 son de JumpWeb, y el parque solo
-  comprueba su ficha (paso 1) y conecta (paso 8).
-- **R3 · `[DECIDIDO owner]` el horario se publica con UN BOTÓN.** El panel enseña qué cambia y el admin lo
-  publica en Google; la comprobación diaria **solo avisa** si la ficha no coincide. Sustituye a **D8**.
-- **R4 · `[DECIDIDO owner]` las ENTRADAS se configuran a mano en la ficha** (el apartado «Entradas» que
-  Google da a las atracciones), con el enlace a la página de reserva. **La T5 por API se retira**: el producto
-  solo le da al parque el enlace exacto.
-- **R1** pendiente: el owner preguntó cómo se obtiene ese permiso antes de decidir.
-
----
-
-## 1. Contexto y problema — MEDIDO, no supuesto
+## 1. Contexto y problema — MEDIDO
 
 ### 1.1 Lo que hay hoy
 
     fuente          Places API (New) · Place Details con `reviews`        `GoogleSocialProof`
-    caché           30 min (`CACHE_TTL_SECONDS`)                         en Redis, `allkeys-lru`
-    refresco        cada 3 h (`social-proof:refresh`)                    una llamada por idioma
-    umbral          1 reseña (`MIN_REVIEWS`, `[DECIDIDO owner]` #494)
-    consentimiento  las reseñas solo con cookies de terceros aceptadas   por el avatar (`RGPD-05`)
+    caché           30 min (`CACHE_TTL_SECONDS`), Redis `allkeys-lru`
+    refresco        cada 3 h (`social-proof:refresh`), una llamada por idioma
+    umbral          1 reseña (`MIN_REVIEWS`, `[DECIDIDO owner]` #494, definitivo)
+    consentimiento  las reseñas solo con la categoría `maps` aceptada     por el avatar (`RGPD-05`)
     respaldo        opiniones propias (`testimonials`, `CmsSocialProof`)
 
-### 1.2 Por qué no salen siempre — cuatro causas, todas medidas
+### 1.2 Por qué no salen siempre
 
 | # | Causa | Medido |
 |---|---|---|
-| C1 | La caché dura 30 min y el refresco va cada 3 h | vacía **150 de cada 180 min** (83 %), `#499` |
-| C2 | Places **no permite** guardarlas: alargar la caché no es una salida limpia | política leída el 2026-09-11 (§1.3) |
-| C3 | Sin cookies de terceros aceptadas no se pintan (el avatar es una petición del visitante a Google) | `#491`, `RGPD-05` |
+| C1 | Caché de 30 min contra refresco cada 3 h | vacía **150 de cada 180 min** (`#499`) |
+| C2 | Places **no permite** guardar valoraciones ni reseñas | política leída el 2026-09-11 |
+| C3 | Sin la categoría `maps` aceptada no se pintan (el avatar es una petición del visitante a Google) | `#491`, `FallingBackSocialProof`, `AppServiceProvider` |
 | C4 | En desarrollo, la clave de Places rechaza la IP (403 `API_KEY_IP_ADDRESS_BLOCKED`) | `#523`; `[owner]`: en local no hace falta |
 
-⚠️ **Y una causa de fondo que ninguna API arregla**: el parque tiene **2 reseñas** en Google. La palanca
-más grande para que la sección luzca es que haya más, y eso tiene su tanda (T7, §4.8).
+⚠️ Y la causa de fondo: el parque tiene **2 reseñas** en Google.
 
-### 1.3 Lo que dice la documentación oficial (leída el 2026-09-11)
+### 1.3 Places contra Business Profile (documentación oficial, 2026-09-11)
 
-| | Places API (lo de hoy) | Business Profile API (lo propuesto) |
+| | Places (lo de hoy) | Business Profile (lo aprobado) |
 |---|---|---|
-| Quién puede usarla | cualquiera, sobre cualquier sitio | **solo el dueño o administrador** de la ficha (*«business listings that you either own or are authorized to manage»*) |
-| Cuántas reseñas | **5**, por relevancia, sin paginar | **todas**, páginas de hasta 50 (`reviews.list`, `pageSize` máx. 50) |
+| Quién la usa | cualquiera, sobre cualquier sitio | el dueño o administrador de la ficha, o **quien este autorice por OAuth** |
+| Reseñas | **5**, por relevancia | **todas**, páginas de hasta 50 |
 | Media y total | `rating`, `userRatingCount` | `averageRating`, `totalReviewCount` |
-| Guardarlas | ❌ *«You must not pre-fetch, cache, or store Places API content beyond the allowed exceptions»*; exentos el `place_id` y las coordenadas (30 días) | ✅ **hasta 30 días**, *«stored securely»*, *«cannot be manipulated or aggregated in any way»* |
-| Respuesta del parque | no | ✅ `reviewReply` (leer y escribir, máx. 4096 bytes) |
-| Aviso de reseña nueva | no | ✅ Pub/Sub: `NEW_REVIEW`, `UPDATED_REVIEW` |
-| Coste | SKU Enterprise + Atmosphere (el más caro de Place Details) | **gratuita**, con cuota (300 consultas/min por proyecto) |
-| Requisitos | una clave de API | **acceso solicitado y aprobado** + OAuth del dueño (§7) |
-
-⚠️⚠️ **Corrige a `google-reviews.md` §3.2**, que daba por buena una excepción de *«temporary caching for
-immediate performance optimization»* para Places. **La página de políticas de hoy no la tiene.** Está
-anotado allí con la corrección delante del texto.
+| Guardar | ❌ *«You must not pre-fetch, cache, or store Places API content beyond the allowed exceptions»* (exentos `place_id` y coordenadas) | ✅ *«…for use outside of your Business Profile project except for limited amounts of Content»*: **hasta 30 días**, *«stored securely»*, *«cannot be manipulated or aggregated»* |
+| Fotos de la reseña | no | ✅ `reviewMediaItems[]` (`thumbnailUrl`, `thumbnailLabel`, `videoUrl`) |
+| Enlace por reseña / perfil del autor | sí | **no** (solo `metadata.mapsUri` de la ficha) |
+| Coste | SKU Enterprise + Atmosphere | gratuita, 300 consultas/min por proyecto |
+| Requisitos | una clave de API | acceso solicitado y aprobado + OAuth |
 
 ---
 
 ## 2. Objetivo
 
-**Que la portada publique las reseñas reales del parque desde su ficha de Google, todas las que haya y a
-todos los visitantes, sin guardar nada más allá de lo que Google permite y sin que Google caído tumbe
-nada.**
+**Que la portada publique las reseñas reales del parque desde su ficha de Google, a todos los visitantes,
+sin guardar más de lo que Google permite, sin que un fallo de Google o del cron las deje mal, y que el
+horario de la web se pueda publicar en la ficha con un botón.**
 
 Criterios de éxito, todos medibles:
 
-1. **Con Google caído hasta 30 días, la sección sigue enseñando las reseñas** (las últimas sincronizadas).
-2. **Nada de Google vive más de 30 días** en nuestro sistema: toda fila lleva la hora en que se trajo y
-   un proceso la borra al cumplirlos (guarda con reloj congelado).
-3. **La portada no gana ninguna llamada HTTP en su render** (`PERF-02`): lee de nuestra base.
-4. **La media y el total son los de Google**, nunca calculados por nosotros (*«cannot be aggregated»*).
-5. **El texto de cada reseña se publica íntegro** (*«cannot be manipulated»*): se puede cortar a la
-   VISTA con `line-clamp`, jamás en el dato.
-6. **Una reseña borrada en Google desaparece de la web** en la siguiente sincronización.
-7. **El permiso de Google caducado o revocado se DICE** en el panel y por correo al admin: la
-   sincronización no puede morir en silencio.
-8. **White-label**: credenciales y ficha por instalación; ni un dato de PlayJump en el código.
+1. **Con Google caído, la sección sigue con lo último sincronizado** mientras tenga menos de 29 días, y
+   **ninguna reseña de más de 29 días se pinta aunque el cron esté muerto** (límite al leer).
+2. **Las reseñas se ven sin aceptar cookies** y **ninguna petición del navegador sale a Google** (sonda que
+   cuenta peticiones, incluido el caso «imagen ausente»).
+3. **La portada no gana ninguna llamada HTTP** en su render (`PERF-02`).
+4. **La media y el total son los de Google**, con «a fecha de …», jamás calculados.
+5. **El texto se publica íntegro**; el recorte es solo visual.
+6. **Una reseña borrada en Google desaparece** en la siguiente pasada coherente; **una pasada incoherente
+   no borra nada**.
+7. **Una reseña se puede ocultar desde el panel** y no vuelve con la resincronización.
+8. **Ninguna escritura en Google sin un gesto del admin**, y ninguna fuera de producción.
+9. **Un permiso caducado o una sincronización rota se DICEN**, en el panel y por correo, sin depender del
+   cron para enterarse.
+10. **White-label**: la ficha y la conexión por instalación; el proyecto de Google es de JumpWeb; ni un dato
+    de PlayJump en el código.
 
-### Fuera de alcance, explícitamente
+### Fuera de alcance
 
-- ⛔ **Preguntas y respuestas**: la API se cerró el **3 de noviembre de 2025** (sus tipos de aviso están
-  marcados como retirados en `NotificationType`).
-- ⛔ **Histórico de más de 30 días** de nada que venga de Google — reseñas ni métricas (§4.5).
-- ⛔ **Reseñas de otras fichas o plataformas** (competencia, TripAdvisor, Facebook).
-- ⛔ **Premios o descuentos a cambio de reseñas**, y pedírselas solo a los contentos: lo prohíbe la
-  política de contenido de Google (§4.8).
+- ⛔ **Preguntas y respuestas**: Google cerró esa API el **3 de noviembre de 2025**.
+- ⛔ **Histórico de más de 30 días** de nada que venga de Google.
+- ⛔ **Pedir permiso a los autores** (`[DECIDIDO owner]`, §8·R1).
+- ⛔ **Leer la ficha pública sin API** (scraping): lo prohíben los términos de Google.
+- ⏸️ **Aparcadas**: responder reseñas desde el panel y avisos de reseña nueva (T3), métricas de la ficha
+  (T4), el correo de «déjanos tu reseña» (pendiente de consulta legal, `D9`), y **los vídeos de las reseñas**
+  (pendiente del owner).
 
 ---
 
@@ -273,240 +102,230 @@ Criterios de éxito, todos medibles:
 
 | | Opción | Veredicto |
 |---|---|---|
-| A | **Seguir con Places y alargar la caché** (3 h 30 min) | ❌ Arregla C1 pero choca con C2: la política no permite guardar reseñas, y seguiría dando 5 elegidas por Google |
-| B | **Business Profile API** (la del dueño) | ✅ **Elegida**: todas las reseñas, 30 días de margen, gratis, y abre respuestas, avisos, métricas y el enlace de reserva |
-| C | **Widget comercial** (Elfsight, Trustindex, EmbedSocial…) | ❌ Script de un tercero en la portada: choca con `RGPD-05` (petición del visitante sin consentimiento), con la CSP (`SEC-01`) y con `PERF-02`; cuota mensual; y los datos del parque en casa de otro |
-| D | **Leer la ficha pública sin API** (scraping) | ❌ Prohibido por los términos de Google y frágil: se rompe con cualquier cambio de su HTML |
-
-▶ **La opción no elegida también es información**: A sería el arreglo de una línea que se ofreció al
-owner en `#523`, y se descartó al leer la política con la pregunta del owner delante (*«cómo se hace de
-manera profesional»*).
+| A | Seguir con Places y alargar la caché | ❌ La política de Places no permite guardar reseñas; 5 elegidas por Google |
+| B | **API de Business Profile con proyecto central** | ✅ **Elegida** — es lo que hacen los widgets que conectan tu cuenta (EmbedSocial: *«We are not using any scraping. Everything works on the official Google Business Profile API»*) |
+| B′ | Business Profile con un proyecto por cliente | ❌ Prohibido: *«you cannot require them to apply for their own Business Profile project»* |
+| C | Widget comercial con script de terceros | ❌ Petición del visitante a un tercero (`RGPD-05`), CSP (`SEC-01`), `PERF-02`, cuota mensual y los datos en casa de otro |
+| D | Leer la ficha pública sin API (Elfsight lo describe como *«without using API»*; proveedores como Outscraper o Apify) | ❌ Contra los términos de Google y frágil |
 
 ---
 
-## 4. Diseño elegido
+## 4. Diseño aprobado
 
-### 4.0 La forma, en un dibujo
+### 4.0 La forma y los módulos
 
-    [owner en el panel] ──OAuth──▶ Google ──refresh token──▶ CIFRADO en nuestra base
-                                                                    │
-    [comando programado, 1×/día + a demanda] ◀─────────────────────┘
-          │  accounts.list · locations.list · reviews.list (paginado)
+    [admin del parque] ──OAuth──▶ proyecto CENTRAL de JumpWeb ──token de refresco──▶ cifrado, tabla propia
+                                                                                         │ (Platform)
+    [comando programado 1×/día · botón del panel que ENCOLA lo mismo] ◀──────────────────┘
+          │  accounts.list · locations.list · reviews.list (paginado, en memoria)
           ▼
-    tablas locales con `fetched_at`  ──purga a los 30 días──▶ ∅
+    solo las CANDIDATAS + el resumen, con `fetched_at`  ──filtro ≤29 días al leer · purga──▶ ∅   (Content)
           │
-    BusinessProfileSocialProof (futuro)  ─┐
-    CmsSocialProof (existe)              ─┼─▶ FallingBackSocialProof (existe) ─▶ la portada (sin cambios)
-                                          ┘
+    BusinessProfileSocialProof (futuro) ─┐
+    CmsSocialProof (existe)             ─┼─▶ FallingBackSocialProof (CAMBIA) ─▶ la portada (CAMBIA, §4.3·9)
+                                         ┘
+    [botón «Publicar horario en Google»] ─▶ lee Booking\Contracts\OperatingCalendar ─▶ locations.patch
 
-**La portada NUNCA habla con Google** (`PERF-02`, la regla de `#491` que se conserva entera). Quien
-habla es el comando programado y la conexión del panel.
+| Pieza | Módulo | Por qué |
+|---|---|---|
+| Conexión: token, refresco, cliente HTTP, estados | **Platform** | sin dependencias; ni Content ni Identity |
+| Ida y vuelta OAuth | `app/Http`, hermana de `GoogleAuthSession` (no compartida con el login) | el reto vive en la sesión del admin |
+| Sincronización, tablas y fuente | **Content** | es prueba social |
+| Publicar el horario | **Content**, leyendo `Booking\Contracts\OperatingCalendar` | Content no puede usar `OperatingSchedule` (`ModuleBoundariesTest`) |
 
-### 4.1 Por tandas
+**La portada NUNCA habla con Google** (`PERF-02`).
+
+### 4.1 Tandas
 
 | Tanda | Qué | Depende de |
 |---|---|---|
-| **T1** | **La conexión**: pantalla en Ajustes, OAuth, token cifrado, elegir la ficha, comando de verificación | el acceso aprobado (§7·3) |
-| **T2** | **Las reseñas**: sincronización, tablas con purga a 30 días, la nueva fuente, la sección siempre a la vista, y **se retira Places** | T1 · decisiones `D2`–`D5` |
-| **T3** | **Responder desde el panel** y **aviso de reseña nueva** (primero por sondeo; Pub/Sub después) | T2 · `D6` |
-| **T4** | **Métricas de la ficha** en el panel (búsquedas, clics en llamar, web, cómo llegar) | T1 |
-| **T5** | **El botón «Reservar» de Google Maps** apuntando a nuestra reserva, con UTM | T1 · `D7` |
-| **T6** | **El horario de la web hacia Google** (primero comparar, luego escribir) | T1 · `D8` |
-| **T7** | **Pedir reseña tras la visita** (correo con el enlace de Google), carril de correos | T1 · `D9` |
+| **T1** | **La conexión**: pantalla «Ficha de Google», OAuth, token cifrado, elegir y revalidar la ficha, estados, `business-profile:verify` | el proyecto central con acceso aprobado (§7·A) |
+| **T2** | **Las reseñas**: sincronización, candidatas, fotos, «Ocultar», la fuente nueva, la sección, el texto de privacidad y **la retirada de Places** | T1 |
+| **T6** | **El horario**: comparar, botón «Publicar en Google», comprobación diaria que avisa | T1 · el acceso de escritura verificado en producción |
+| **T5** | **Entradas**: guía y enlace exacto para configurarlas a mano en la ficha (sin código de API) | — |
 
-▶ **T1 y T2 son el encargo** («que salgan siempre»). T3–T7 son lo que la misma conexión deja al
-alcance y se deciden una a una.
-
-✅ **Alcance decidido en la segunda vuelta**: **T1 · T2 · T5 · T6** y **el enlace de la T7** (en la portada).
-**T3 y T4, aparcadas.** Orden de ejecución: T1 → T2 (con el enlace) → T5 → T6, porque T6 es la única que
-ESCRIBE datos de la ficha que ven todos los clientes de Google y tiene que llegar con la conexión ya
-probada en producción.
+▶ Orden: **T1 → T2 → T6**. T5 es documentación y puede ir cuando el owner quiera. T6 va la última porque es
+la única que ESCRIBE en la ficha que ven todos los clientes de Google.
 
 ### 4.2 T1 · La conexión
 
-1. **Pantalla** «Ficha de Google» en **Ajustes → Web** (`AdminSettingsHub::areas()`), **solo rol
-   `admin`**. Estados que pinta, cada uno con lo que hay que hacer: *sin configurar* (faltan
-   credenciales) · *lista para conectar* · *conectada* (cuenta, ficha, última sincronización y su
-   resultado) · *permiso caducado o retirado* (botón «Volver a conectar») · *sin acceso a la API* (403 o
-   cuota 0: el acceso aún no está aprobado).
-2. **Flujo OAuth 2.0 de código de autorización** con `access_type=offline` y `prompt=consent` (sin ellos
-   Google no entrega el token de refresco, o no lo vuelve a entregar al reconectar), **PKCE** y un `state`
-   de **un solo uso guardado en el servidor**, atado a la sesión del admin que lo pidió — el patrón de
-   `SocialLogin` (`#347`): *la intención y quién la pidió viajan en el reto del servidor, jamás en la URL
-   de vuelta*.
-3. **Un solo ámbito**: `https://www.googleapis.com/auth/business.manage`. No hay uno más estrecho de solo
-   lectura; por eso el panel pide confirmación antes de escribir nada en Google (T3, T5, T6).
-4. **Elegir la ficha**: `accounts.list` (Account Management) → `locations.list` (Business Information,
-   `readMask` = `name,title,storefrontAddress,metadata`). Se guarda el nombre de recurso de la ficha y de
-   `metadata`: **`placeId`** (sustituye al ajuste manual `social.google_place_id`), **`mapsUri`** y
-   **`newReviewUri`** (el enlace «escribir una reseña», T7).
+1. **Pantalla «Ficha de Google»** en **Ajustes → Web** (`AdminSettingsHub::areas()`), con `canAccess()` sobre
+   **`settings.manage`**. Pinta el estado de la conexión (§4.2·7) con lo que hay que hacer en cada uno, la
+   ficha conectada, **qué usuario del panel la conectó**, la última pasada y su resultado.
+2. **OAuth 2.0 de código de autorización** contra el cliente **central** de JumpWeb:
+   - `access_type=offline` y `prompt=consent select_account` (sin ellos no llega el token de refresco);
+   - **PKCE S256** con el `code_verifier` solo en el servidor (no existe aún en el repo);
+   - **reto de un solo uso en el servidor**, con **clave de sesión propia**, que anota el `user_id` que lo pidió
+     —el precedente es `GoogleAuthSession` (`startChallenge`/`consumeChallenge`)—; a la vuelta se exige **el
+     mismo usuario** y se **re-comprueba `settings.manage`** (la ruta va con `web`, `auth`, `panel_role`, y
+     `panel_role` deja pasar a `staff`);
+   - se comprueba que el **`scope` concedido** incluye `business.manage` (el consentimiento de Google es
+     granular); **sin token de refresco, error dicho y nada guardado**;
+   - al reconectar se guarda el nuevo, **se revoca el anterior** y todo va bajo candado;
+   - **limitadores** en la ida y la vuelta (`SEC-06`); **desconectar solo por POST**.
+3. **Un solo ámbito**: `https://www.googleapis.com/auth/business.manage` (sensible; no hay uno de solo lectura).
+4. **Elegir la ficha**: `accounts.list` → `locations.list` (`readMask` = `name,title,storefrontAddress,websiteUri,metadata`).
+   Se guardan su nombre de recurso y de `metadata` el `placeId`, el `mapsUri` y el `newReviewUri`.
+   **Se revalida en el servidor** que la ficha está en el `locations.list` de ESE token —al guardar y antes de
+   cada escritura— y que **el host de su `websiteUri` es el del sitio**. Si cambia el `placeId` respecto a la
+   conexión anterior: confirmación explícita, rastro y correo a los admins.
 5. **Dónde viven las credenciales** (`SEC-11`):
 
-   | Dato | Dónde | Por qué |
-   |---|---|---|
-   | ID y secreto del cliente OAuth | ajustes, **claves protegidas** de `SetSetting` (`--force`), nunca legibles en el panel | el precedente de `GoogleAuth` (`#353`) |
-   | **Token de refresco** | ajustes, **cifrado** con `Crypt` (la `APP_KEY`) | es una credencial de ESCRITURA sobre la ficha del negocio: en claro, un volcado de la base la regala |
-   | Token de acceso | solo en memoria/caché hasta su caducidad (≈1 h) | se regenera con el de refresco |
+   | Dato | Dónde |
+   |---|---|
+   | ID y secreto del **cliente central** | ajustes, **claves protegidas** de `SetSetting`, **solo por CLI con entrada oculta**; el panel no los edita ni los enseña |
+   | **Token de refresco** | **tabla propia** de conexión (fila única, con versión) y cast **`encrypted`** —precedente `CustomerCard`—; **nunca** en `settings` (se lee entero en cada petición), en una propiedad de Livewire, en un export ni en una vista |
+   | Token de acceso | solo en memoria del proceso; se refresca una vez por pasada con 5 min de margen y un único reintento ante un 401 |
 
-   ⚠️ **Rotar la `APP_KEY` obliga a reconectar** (el token cifrado deja de leerse): se escribe en
-   `INSTALACION-CLIENTE.md` y el panel lo detecta como *permiso caducado*.
-6. ❗❗ **Robustez del permiso — la trampa que mata esto en silencio.** Un token de refresco deja de
-   funcionar si: la app OAuth está **«En prueba»** (caduca a los **7 días**), el dueño lo **retira**, **no se
-   usa en 6 meses**, se supera el **tope de 100 tokens vivos** por usuario y cliente, o un administrador de
-   Workspace **restringe** el servicio. ▶ Por eso: la app va **«En producción»** (§7·5) · la sincronización
-   diaria lo mantiene en uso · y **`invalid_grant` no se reintenta**: marca la conexión como caducada,
-   avisa al admin (panel + correo) y **deja servir lo ya sincronizado** hasta la purga de 30 días.
-7. **Desconectar**: revoca el token en Google (endpoint `revoke`), lo borra de la base y **borra lo
-   sincronizado** (reseñas, avatares, métricas). Queda rastro en `audit_logs` sin PII (`RGPD-02`).
-8. **`business-profile:verify`** (futuro): lista cuenta, ficha, número de reseñas y el estado de cada API
-   **sin imprimir ni una reseña ni un nombre**. Es el `redsys:verify-sandbox` de esta integración: no se da
-   por buena sin haber hablado con Google de verdad (§6).
+   ⚠️ `DecryptException` → estado «caducado», sin registrar el cifrado. **Rotar la `APP_KEY` no obliga a
+   reconectar** si se usa `APP_PREVIOUS_KEYS`. Runbook: si se filtra la `APP_KEY`, se revoca el permiso en Google.
+6. **Tokens nunca en la URL ni en logs**: un único envoltorio HTTP que registra solo el estado y el código
+   `error` de Google; `#[\SensitiveParameter]` en todo método que reciba un secreto; los jobs leen las
+   credenciales en `handle()`, no las llevan dentro. Test con un **token-canario** que no puede aparecer en el
+   log ni en `failed_jobs` tras forzar un timeout.
+7. **Máquina de estados de la conexión**, con **aviso en la transición** a los administradores activos con
+   correo y recordatorios escalonados:
+
+   | Estado | Se entra por | La pasada |
+   |---|---|---|
+   | sin configurar | faltan las credenciales del cliente | no llama |
+   | lista para conectar | credenciales, sin token | no llama |
+   | **conectada** | vuelta OAuth válida | sincroniza |
+   | **caducada** | `invalid_grant`, `invalid_client`, `DecryptException` | **no llama** (no se reintenta) |
+   | **sin permiso** | 403 `PERMISSION_DENIED` (la cuenta perdió el rol) | no llama |
+   | **ficha perdida** | 404 de la ficha | no llama |
+   | **sin acceso a la API** | cuota 0 / API sin aprobar | no llama |
+
+   Marcar «caducada» es **comparar-y-escribir sobre la huella del token usado**: un worker con el token viejo
+   no pisa una reconexión recién hecha. Las credenciales se leen con consulta fresca, no con `Setting::value()`
+   (memoriza la tabla por proceso). **La antigüedad de la última pasada completa se calcula AL LEER** y se
+   enseña también en «Hoy», no solo en Ajustes.
+8. **Desconectar**: revoca en Google (cuerpo POST, nunca `?token=`), borra el token, **borra lo sincronizado
+   y sus ficheros**, deja rastro sin PII. Si `revoke` falla, se borra lo local igual y se dice cómo retirar el
+   acceso desde la cuenta de Google. **Fuera de producción no llama a `revoke`.**
+9. **Quién conectó**: se guarda el usuario del panel, y si pierde el rol se avisa a los admins. §7 recomienda
+   una **cuenta de Google dedicada** del parque, administradora de la ficha.
+10. **`business-profile:verify`** (futuro): cuenta, ficha, número de reseñas y estado de cada API, **sin
+    imprimir tokens, correos ni cuerpos** en ningún nivel de detalle (test con canario).
 
 ### 4.3 T2 · Las reseñas
 
-1. **Sincronización** (`business-profile:sync` (futuro), programado **1× al día** y lanzable desde el
-   panel): `reviews.list` con `pageSize=50` y `orderBy=updateTime desc`, **paginando hasta el final**.
-   Una sola llamada por pasada y ficha —**no una por idioma**: esta API no traduce como Places—.
-   ⚠️ Con `withoutOverlapping()` y **reintento con espera creciente** ante 429/5xx (la doc lo pide).
-2. **Guardado — tablas propias, no la caché** (Redis está en `allkeys-lru`, `#137`, y evicta):
+1. **Sincronización** (`business-profile:sync` (futuro)), **1× al día** a una hora propia, en segundo plano,
+   con **presupuesto de tiempo** (p. ej. 120 s) y reintentos que respetan `Retry-After`. El botón del panel
+   **encola el mismo trabajo** (job con un solo intento y `timeout` coherente) y, si hay una pasada en curso,
+   lo dice. **Un solo candado dentro del servicio**, en un almacén que no se desaloja (`cache_locks` de la base),
+   con caducidad igual al presupuesto.
+2. **La pasada recorre TODAS las páginas en memoria** (`pageSize=50`) y **persiste solo lo que se puede
+   publicar** —*«limited amounts of Content»*—:
+   - **las candidatas**: con texto, con al menos el mínimo de estrellas, no ocultas, hasta **6 + un margen**
+     (p. ej. 12);
+   - **el resumen**: `averageRating`, `totalReviewCount`, `mapsUri`, `newReviewUri`, `fetched_at`.
+   Del resto no se guarda nada. **Si el mínimo de estrellas cambia en el panel, se fuerza una pasada.**
+3. **Solo se borra con una pasada COHERENTE**: lo recogido cuadra con el `totalReviewCount` de la primera y de
+   la última página y la media no cambió entre ellas. **Una lista vacía con total mayor que cero no borra**;
+   una caída brusca, tampoco (se avisa). Se deduplica por el `name` de la reseña. El reemplazo va **por
+   diferencias en una transacción**. `fetched_at` se renueva en **toda** fila devuelta, cambie o no.
+4. **El límite de 30 días se aplica AL LEER**: la fuente solo devuelve filas con `fetched_at` de los últimos
+   29 días. La purga (`Prunable`, **no** `MassPrunable`, en la entrada de `model:prune` de `routes/console.php`)
+   es limpieza, no la garantía. ▶ Y **si pasan 3 días sin una pasada completa**, nombre y foto dejan de
+   pintarse: una reseña borrada en Google no puede seguir en la web porque la sincronización esté rota.
+5. **Anónimas** (`[DECIDIDO owner]` se publican): nombre y foto a `null` **antes de guardar**; se pintan
+   como «Usuario de Google» y sin foto. ⚠️ **Medir primero** si Google manda un rótulo propio en lugar del vacío.
+6. **Imágenes: la foto del autor y las fotos de la reseña** (`reviewMediaItems`, `thumbnailUrl`) se descargan
+   **solo de las candidatas** y se sirven desde nuestro servidor. **Los vídeos no** (pendiente del owner).
+   Descargador endurecido:
+   - lista blanca de host exacta (`lh[3-6].googleusercontent.com`, solo https), **sin redirecciones**, timeouts
+     cortos, **tope de bytes** leyendo en streaming;
+   - tipo por **bytes mágicos**: jpeg, png, webp o gif; **SVG nunca**; la extensión sale de los bytes;
+   - nombre por hash, **nunca** derivado del autor; escritura atómica; ninguna librería de imagen las procesa
+     (no se redimensionan: *«cannot be manipulated»*);
+   - **disco privado servido por una ruta de Laravel** (recibe `SecurityHeaders`), con
+     `Content-Security-Policy: default-src 'none'; sandbox`, `nosniff` y `Cache-Control` corto;
+   - el fichero se borra **en la misma operación que su fila** (purga, reemplazo, «Ocultar», desconectar) y un
+     **barrido de huérfanos** programado limpia lo que quede;
+   - si la descarga falla: **la inicial, jamás la URL de Google**.
+7. **Ocultar desde el panel** (lo exigió la revisión de privacidad): por reseña, con **motivo tasado**
+   —petición del autor · menores · salud o terceros · otros—. Lista de supresión por **hash del identificador**
+   que sobrevive a la resincronización y a la purga; borra en el acto nombre, foto, fotos y texto (también la
+   respuesta del parque); rastro en `audit_logs` con solo el hash y el motivo. **No toca la media ni el total.**
+8. **El texto de la reseña** puede traer la traducción de Google mezclada (`(Translated by Google) …
+   (Original) …`, sin documentar, en orden variable): **se mide con la ficha real antes** de escribir el
+   analizador; se publica **el original**; el analizador **falla cerrado** (ante marcas ambiguas guarda el texto
+   crudo, lo marca y lo cuenta en la verificación). Al pintar: `{{ }}`, `white-space: pre-line`, `dir="auto"` con
+   aislamiento bidi; **prohibido `nl2br` sin escapar**.
+9. **El contrato y la vista CAMBIAN**:
+   - `Testimonial` gana la **respuesta del parque**, las **fotos** y la marca de **anónimo**; hace falta dónde
+     llevar el **enlace a la ficha**, **«Escribir una reseña»** y **la línea del filtro** (un objeto de selección
+     en el contrato); el doble anónimo de `GoogleAttributionTest` se actualiza;
+   - `FallingBackSocialProof` cambia: recibe hoy el tipo concreto de Google y aplica el consentimiento de
+     `maps`; **la fuente declara si sus opiniones necesitan consentimiento**, y ésta no lo necesita;
+   - **invariante con guarda: la URL de una imagen es una ruta propia o `null`, nunca un host de terceros**;
+   - binding **`scoped`** con memo de instancia (el controlador pide el contrato dos veces);
+   - la fecha relativa se deriva de la fecha, como `CmsSocialProof`; `starRating` llega como texto (`FIVE`…).
+10. **Qué enseña la portada** (`[DECIDIDO owner]`):
+    - las **6** más recientes que pasan el filtro, **con la respuesta del parque debajo** y sus fotos;
+    - el **mínimo de estrellas es un ajuste del panel** (por defecto **4**);
+    - **la media y el total nunca se filtran**, con **«a fecha de …»**;
+    - **la línea del filtro, siempre visible**: *«Reseñas de 4 estrellas o más · ni el parque ni Google
+      verifican que los autores sean clientes · ver todas en Google»* — la ley europea de consumo (Ómnibus
+      2019/2161) considera engañoso enseñar solo las positivas sin decirlo [consulta legal de la redacción];
+    - la entradilla de hoy (*«No las elegimos nosotros»*) **se reescribe**: deja de ser cierta;
+    - dos enlaces: **«Ver todas en Google»** (`mapsUri`) y **«Escribir una reseña»** (`newReviewUri`);
+    - **atribución de marca con esta fuente**: la «G» o la palabra Google (no el logotipo de Google Maps de
+      `#494`), **sin estrellas pegadas al logotipo**, y nada de «Google rating»;
+    - **el umbral `MIN_REVIEWS = 1`** (`#494`, definitivo) se conserva para la cifra y se muda con su guarda;
+    - si el filtro deja menos de 6, las que haya; **si deja 0**, las opiniones propias, y la media se sigue enseñando;
+    - **JSON-LD: nunca `aggregateRating` ni `Review` con datos de Google** (guarda);
+    - `data-nosnippet` en el bloque de reseñas.
+11. **Privacidad** (artículos 6.1.f, 14, 21 del RGPD):
+    - **texto nuevo en la política de privacidad** (borrador en §10) y **paso de despliegue manual por
+      instalación**: la migración no toca una política ya editada [validación de la asesoría del cliente];
+    - **ponderación del interés legítimo** y fila en el registro de actividades (plantilla para el cliente);
+    - **prohibido cruzar** la tabla de reseñas con clientes o pedidos (guarda de arquitectura);
+    - las copias de seguridad declaran su retención y excluyen esta tabla y sus ficheros.
+12. **CSP**: `lh3.googleusercontent.com` sale de `img-src` **en el MISMO despliegue** que el cambio de binding,
+    con guarda nueva (*«`img-src` no nombra a Google»*). Las entradas de caché de Places (`social-proof.google.*`)
+    se borran.
+13. **Se retira Places** tras verificar la T2 con la ficha real: `GoogleSocialProof`, `SocialProofRefresh`,
+    `RefreshSocialProof` y su línea del programador, `config/services.php` (`google_places`), la fila
+    `social.google_place_id`, el comentario de CSP de `SecurityHeaders`, y los casos que pierden su sujeto
+    (`GoogleAttributionTest`, `ReviewsSectionTest`, `SocialProofNeverHitsTheRenderPathTest` —re-apuntado a la
+    fuente nueva—), clasificados por sujeto (`CONVENCIONES §3.quater`). `deploy.sh` pasa a comprobar las tareas
+    programadas **por NOMBRE**. En la consola de Google, la clave de Places se retira.
 
-       google_business_reviews (futuro)   review_id (único) · star_rating · comment (íntegro)
-                                          · reviewer_name · reviewer_anonymous · avatar_path?
-                                          · created_on_google · updated_on_google
-                                          · reply_comment · reply_updated · fetched_at
-       google_business_summary (futuro)   average_rating · total_review_count · maps_uri
-                                          · new_review_uri · fetched_at
+### 4.4 T6 · El horario, publicado con un botón
 
-3. **Las cuatro reglas de la política, hechas código**:
-   - **≤ 30 días**: toda fila lleva `fetched_at`; el `Prunable` borra lo que pase de 29 días (un día de
-     margen) y **entra en la lista de `routes/console.php`** — ⚠️ *un `Prunable` que no está en esa lista
-     no se poda NUNCA* (lo midió `waiver-por-reserva.md`).
-   - **Borrada en Google → borrada aquí**: la pasada que llega al final sin error reemplaza el conjunto;
-     lo que no volvió, se borra. ⚠️ **Una pasada cortada a medias NO borra nada** (si no, un 500 en la
-     página 3 vaciaría la sección).
-   - **Sin manipular**: el texto se guarda y se publica tal cual; el recorte es visual (`line-clamp`) con
-     enlace a la reseña en Google.
-   - **Sin agregar**: la media y el total salen de `averageRating`/`totalReviewCount`. Jamás un `AVG()`
-     nuestro.
-4. **La nueva fuente**: `BusinessProfileSocialProof` (futuro) implementa `SocialProof` leyendo las
-   tablas (1–2 consultas indexadas, memo por petición) y **sustituye a `GoogleSocialProof` en el binding
-   de `AppServiceProvider`**. `FallingBackSocialProof` y `CmsSocialProof` no cambian.
-5. ✅ **`D2` DECIDIDO: sí.** ❗❗ **«A todos los visitantes» — la mitad que decide `D2`.** Hoy las reseñas de Google solo se ven con
-   cookies de terceros aceptadas porque el avatar es una petición del navegador a
-   `lh3.googleusercontent.com` (`RGPD-05`). Con esta API se pueden **guardar los avatares 30 días y
-   servirlos desde nuestro dominio**: el visitante no hace ninguna petición a Google, la sección se ve sin
-   consentimiento **y la CSP se ESTRECHA** (`img-src` deja de necesitar a Google). ⚠️ Los avatares se
-   guardan **como llegan**, sin redimensionar (*«cannot be manipulated»*): el tamaño lo pone el CSS.
-6. ⚠️⚠️ **El texto puede traer la traducción de Google DENTRO** — y no está documentado. La comunidad lo ha
-   medido: el comentario llega a veces como `«(Translated by Google) … (Original) …»`, **en orden variable**
-   y a veces sin la segunda marca, y las marcas se traducen al idioma de la cabecera `Accept-Language`.
-   ▶ **Antes de escribir el analizador se MIDE con la ficha real** (§6·T2·1) pidiendo con `Accept-Language`
-   de los tres idiomas del sitio, que según esa medida devuelve los originales sin traducción. La regla que
-   se busca: **publicar el ORIGINAL**, que es lo que el autor escribió.
-7. ✅ **`D5` DECIDIDO: se publican.** **Anónimos**: `isAnonymous` llega sin nombre ni foto. Se publican
-   con un rótulo genérico traducido («Usuario de Google») y sin avatar.
-8. ✅ **`D3` y `D4` DECIDIDOS: 6, y filtradas por estrellas.** **Qué se enseña en la portada**: las **6** más
-   recientes **con texto** y **con al menos N estrellas**, **con la respuesta del parque debajo**
-   (`reviewReply`: es la señal de atención que más pesa en una reseña), la media y el total reales, y dos
-   enlaces: «Ver las N reseñas en Google» (`mapsUri`) y **«Escribir una reseña»** (`newReviewUri`).
-   ▶ **Cómo se filtra sin engañar** —la política prohíbe usar las reseñas *«de forma engañosa»*—:
-   - el **mínimo de estrellas es un ajuste del panel** (por defecto **4**), no un número en el código;
-   - **la media y el total NUNCA se filtran**: son los de Google, con todas las reseñas dentro;
-   - **se dice**: bajo el carril, una línea del tipo *«Reseñas de 4 estrellas o más · ver todas en
-     Google»*, con el enlace a la ficha. Filtrar sin decirlo junto a una media que lo contradice es lo
-     que se lee como trampa; decirlo es una selección editorial legítima.
-   - ⚠️ **Si el filtro deja menos de 6**, se enseñan las que haya; **si deja 0**, el carril cae a las
-     opiniones propias (la cascada de siempre) y la media se sigue enseñando.
-11. ⚠️ **CORREGIDO (§0.2): lo que sigue es FALSO — el recurso `Review` SÍ trae fotos y vídeos
-   (`reviewMediaItems`).** **«Reseñas con imágenes»** — lo que la API da y lo que no. Da **la foto del AUTOR** de cada reseña
-   (`reviewer.profilePhotoUrl`), que es la que se sirve desde nuestro servidor (`D2`). ⚠️ **El recurso
-   `Review` no trae ningún campo de fotos adjuntas por el autor**; las fotos que suben los clientes a la
-   ficha llegan por la **Media API** (fotos de clientes) **sin enlace a una reseña concreta**. ▶ **A
-   confirmar en la revisión** contra la referencia oficial; si se confirma, «las reseñas con imágenes» son
-   las reseñas con la foto de su autor, y una galería de fotos de clientes sería otra pieza, con su
-   propia decisión.
-9. **Atribución**: se conserva la de `#494` —el logotipo de Google Maps, el rótulo de procedencia y el
-   aviso de que Google no verifica las reseñas—. Esta API no la exige con la misma letra que Places, pero
-   distinguir lo de Google de lo propio es honestidad, no un requisito que sobrar.
-10. **Se retira Places** cuando la T2 esté verificada con la ficha real: fuera `GoogleSocialProof`, el
-    comando `social-proof:refresh` y su línea del programador, la clave de Places del `.env` y el SKU que
-    se paga. Con sus tests, clasificados por sujeto (`CONVENCIONES §3.quater`).
+1. **La fuente es el panel**, leído por la cara pública `Booking\Contracts\OperatingCalendar::windowFor()`
+   (la de `HeroStatus`), **nunca** por la variante por zona.
+2. **Qué se publica**: `regularHours` = la semana efectiva vigente; `specialHours` = fechas especiales, cierres
+   y **los días de las temporadas** dentro de un horizonte (una temporada del panel no es un rango en Google).
+   El tope de periodos y la ventana se **miden con `validateOnly`** antes de fijarlos.
+3. **Lo que Google no puede expresar no se publica y se dice**: un día **sin configurar** (el producto lo
+   trata como «abierto sin ventana»), una fecha especial abierta sin horas que herede un semanal nulo. **Las
+   zonas nunca van a Google.** El cierre a medianoche y la zona horaria del parque (`DisplayTime`; la app
+   está en UTC) tienen caso propio.
+4. **Cada publicación sale de un gesto del admin** (`[DECIDIDO owner]`, y lo exige la política: *«must not
+   automate or trigger … listing edits … without the user's prior specific and express consent»*): el panel
+   enseña **qué cambia** (la ficha dice X · la web dice Y) y el admin pulsa **«Publicar en Google»**.
+   - **Permiso propio** (`google_business.write` (futuro)), no asignable con los de gestión: hoy editan el
+     horario `slots.manage` y `prices.manage`;
+   - **solo en producción**, con un **interruptor** explícito apagado por defecto y excluido de toda copia de
+     configuración; fuera de producción la clase que escribe se enlaza a una que solo hace `validateOnly`;
+   - **`updateMask` fija en el código**: `regularHours,specialHours`, nada más;
+   - por **cola**, con **`validateOnly` antes**, rastro con actor y cambios, y **correo a los admins** en cada
+     publicación; un interruptor de parada inmediata.
+5. **Antes de publicar se leen `hasPendingEdits` y `getGoogleUpdated`**: no se reenvía lo pendiente, y lo que
+   Google haya actualizado se enseña para que el admin decida. Una edición puede tardar **hasta 30 días** en
+   moderarse o no aprobarse: el panel distingue **pendiente · aplicada · no aprobada · divergente**.
+6. **La comprobación diaria solo AVISA** si la ficha y la web no coinciden. Compara la forma normalizada, solo
+   fechas futuras, contra la última carga publicada. **Nunca corrige sola.**
 
-### 4.4 T3 · Responder desde el panel y enterarse de las nuevas
+### 4.5 T5 · Entradas en la ficha, a mano
 
-- Lista en el panel con filtro «sin responder»; **responder, editar y borrar la respuesta**
-  (`updateReply`/`deleteReply`, máx. 4096 bytes). Permiso propio (`reviews.reply` (futuro)), rastro en
-  `audit_logs` sin el texto. ⚠️ **Tope de Google: 10 ediciones por minuto y ficha**, sin posibilidad de
-  subirlo.
-- **Aviso de reseña nueva** (`D6`): **primero por sondeo** —la sincronización ligera de la primera página
-  cada hora detecta lo nuevo— y **después, si compensa, Pub/Sub** (`NEW_REVIEW`, `UPDATED_REVIEW`): tema de
-  Cloud Pub/Sub con permiso de publicación para `mybusiness-api-pubsub@system.gserviceaccount.com` y
-  suscripción *push* a un endpoint nuestro que **verifica el JWT firmado de Google** antes de hacer nada.
-  ▶ Por sondeo no hace falta infraestructura nueva; por Pub/Sub el aviso llega en segundos.
-
-### 4.5 T4 · Métricas de la ficha
-
-La Performance API da, por día: impresiones en **Búsqueda y Maps** (móvil y escritorio), **clics en
-llamar** (`CALL_CLICKS`), **clics en la web** (`WEBSITE_CLICKS`), **peticiones de cómo llegar**
-(`BUSINESS_DIRECTION_REQUESTS`), conversaciones y reservas por Reserve with Google (`BUSINESS_BOOKINGS`),
-más las **palabras de búsqueda** con las que la encontraron, por mes.
-
-⚠️⚠️ **Y aquí el límite de 30 días muerde de verdad**: la política cubre *todo el contenido* de las APIs,
-así que **no se puede guardar un histórico largo de métricas**. El panel las pide al abrirse (con caché de
-horas, nunca de más de 30 días) y enseña la ventana que Google devuelve. Lo que SÍ se puede cruzar sin
-límite es lo NUESTRO: visitas llegadas desde Google (UTM, T5) y reservas cerradas.
-
-### 4.6 T5 · El botón «Reservar» de Google Maps
-
-La Place Actions API crea un enlace de acción de tipo **`MERCHANT`** marcado `isPreferred` hacia
-`/entradas` con parámetros UTM, para medir en nuestra propia analítica cuánta venta llega de la ficha.
-⚠️ Los tipos de acción son de citas y comida (`APPOINTMENT`, `ONLINE_APPOINTMENT`, `DINING_RESERVATION`,
-`FOOD_*`, `SHOP_ONLINE`); **cuál encaja con entradas de un parque se comprueba en la ficha real** y lo
-decide el owner (`D7`). Los enlaces de agregadores (`AGGREGATOR_3P`) no son editables.
-
-### 4.7 T6 · El horario, una sola fuente de verdad
-
-Hoy el horario vive en el panel (horario semanal, temporadas, fechas especiales) y **en la ficha de
-Google por separado**: si alguien cierra un festivo en el panel y no en Google, Maps dice «abierto».
-
-✅ **`D8` DECIDIDO: se sincroniza — el PANEL manda y la web escribe en Google.** Diseño:
-
-1. **Fuente de verdad: el panel.** Lo que se escribe sale de la MISMA resolución que pinta la web
-   (`OperatingSchedule`, la cara pública de `effectiveFor()`), nunca de una segunda lectura de las tablas:
-   dos derivaciones del horario acaban diciendo dos cosas.
-2. **Qué se escribe**: `regularHours` (la semana tipo vigente) y `specialHours` (fechas especiales y
-   cierres, de hoy en adelante, dentro de la ventana que Google admite).
-3. **Primera activación = comparar, no escribir.** El panel enseña *«tu ficha dice X · la web dice Y»* y el
-   admin confirma la primera escritura. ⚠️ **CORREGIDO (§0.1·3): no se empuja solo — la política exige
-   consentimiento previo y específico; cada publicación sale de un gesto del admin y la conciliación solo
-   avisa.** Después, **cada cambio de horario en el panel se empuja**, y una
-   **conciliación diaria** detecta si la ficha se ha desviado (una edición a mano en Google, o una
-   *actualización de Google* propuesta por usuarios) y la corrige o avisa.
-4. ⚠️ **Escribir en la ficha pasa por la moderación de Google** y tiene un tope de **10 ediciones por
-   minuto**, sin ampliación: los cambios se agrupan en una sola escritura y se usa `validateOnly` antes de
-   la primera.
-5. ⚠️ **Lo que el modelo de Google no puede expresar se dice, no se aproxima**: si el horario del panel
-   tiene algo que `regularHours`/`specialHours` no admiten, la escritura no se hace a medias — se avisa en
-   el panel. **A medir en la revisión**: el encaje de temporadas, cierres por zona y horarios partidos.
-
-### 4.8 T7 · Pedir la reseña tras la visita (carril de correos)
-
-Un correo tras la visita con el enlace `newReviewUri`. Es la palanca que más mueve la sección —el parque
-tiene 2 reseñas— y la política de Google marca las líneas rojas:
-
-- ✅ **A TODOS los clientes por igual**, satisfechos o no;
-- ❌ **nada de premios, descuentos ni sorteos** a cambio;
-- ❌ **nada de filtrar** («¿te gustó? → Google; ¿no? → a nosotros»): es *review gating* y está prohibido;
-- ❌ **nada de presión en el parque** ni de pedir contenido concreto.
-
-⚠️ **Y una pregunta legal que no es del agente** (`D9`): si ese correo cuenta como comunicación
-comercial (LSSI) y exige el consentimiento de marketing, o puede ir como seguimiento del servicio.
-
-### 4.9 Lo que también da y no se propone ahora
-
-Publicaciones en la ficha (ofertas, eventos, con botón), fotos (subirlas y ver las de clientes), llamadas
-perdidas (Business Calls, requiere historial de llamadas activo). Quedan anotadas; ninguna tiene
-pantalla que las pida hoy.
+`[DECIDIDO owner]`: las atracciones gestionan sus **Entradas** en la propia ficha (*«All attraction businesses
+and tour operators»*; *«Ticket or Activity name and Booking URL are required fields»*), sin API. El producto da
+el **enlace exacto a la página de reserva** de la instalación y la guía (§7·B·3). **Sin UTM**: el producto no
+tiene analítica ni guarda UTM, así que no se promete medir.
 
 ---
 
@@ -514,149 +333,182 @@ pantalla que las pida hoy.
 
 | Invariante | Impacto |
 |---|---|
-| **PERF-02** | La portada lee de nuestra base (1–2 consultas indexadas). Presupuesto de `HomePageTest` medido **antes y después** |
-| **SEC-01** | Con `D2` (avatares desde nuestro dominio) la CSP **se estrecha**: `img-src` deja de nombrar a Google |
-| **SEC-07** | `mapsUri`, `newReviewUri` y los enlaces de reseña son URL de un tercero: se sanean donde nace el dato |
-| **SEC-11** | Secreto del cliente y token de refresco fuera del panel; el token, **cifrado**. ▶ Se propone ampliar la invariante: *«una credencial de un tercero con permiso de escritura se guarda cifrada»* (del owner, `CONVENCIONES §9.1`) |
-| **RGPD-02** | Ni el texto de una reseña ni el nombre de su autor llegan al log ni a `audit_logs` |
-| **RGPD-05** | Con `D2` las reseñas **dejan de depender del consentimiento** de terceros; sin `D2`, se conserva el de hoy |
-| **RGPD** (nuevo tratamiento) | Nombre y foto de los autores son datos personales de terceros guardados hasta 30 días: interés legítimo, mención en la política de privacidad y borrado al desaparecer en Google — `D2` lo trae al owner |
-| **SUITE** | La suite **no habla con Google**: todo con `Http::fake`, y un caso que demuestra que el falso explota si alguien llama desde el render |
+| **PERF-02** | La portada lee de nuestra base (1–2 consultas indexadas, binding `scoped`). Presupuesto de `HomePageTest` medido antes y después |
+| **SEC-01** | `img-src` deja de nombrar a Google; las imágenes propias van con su propia CSP |
+| **SEC-04** | La vuelta OAuth re-comprueba el permiso en el servidor |
+| **SEC-06** | Limitadores en la ida, la vuelta, el botón de sincronizar y el de publicar |
+| **SEC-07** | `mapsUri` y `newReviewUri` solo https y con lista blanca de hosts de Google, saneados donde nace el dato |
+| **SEC-11** | Credenciales solo por CLI; el token, cifrado en tabla propia. ▶ Se propone ampliarla: *«una credencial de un tercero con permiso de escritura se guarda cifrada y fuera de `settings`»* (del owner, `CONVENCIONES §9.1`) |
+| **RGPD-01** | Una petición de supresión de un cliente se comprueba también contra las reseñas (procedimiento de «Ocultar») |
+| **RGPD-02** | Ni textos, ni nombres, ni tokens en logs, `audit_logs` ni `failed_jobs` |
+| **RGPD-05** | Las reseñas **dejan de depender del consentimiento**: ninguna petición del navegador a Google |
+| **RGPD** (tratamiento nuevo) | Nombre, foto y fotos de autores terceros hasta 30 días: interés legítimo, política de privacidad, «Ocultar», plazo al leer |
+| **SUITE** | `Http::preventStrayRequests()`; todo con `Http::fake`; ningún caso habla con Google |
 
 ---
 
 ## 6. Plan de verificación empírica
 
-**T1** — casos: el `state` de un solo uso (reutilizado → rechazado; de otra sesión → rechazado) · sin
-`refresh_token` en la respuesta → error dicho, no conexión a medias · `invalid_grant` → estado caducado +
-aviso, **sin reintento** · el token guardado **no es legible** en la base (cifrado) ni en el panel ·
-desconectar revoca y borra · solo `admin`. Y **`business-profile:verify` contra la ficha real**, con su
+**T1** — `state` de un solo uso (reutilizado, de otra sesión, de otro usuario → rechazado) · permiso
+re-comprobado a la vuelta (un `staff` no conecta) · `scope` sin `business.manage` → error dicho · sin token de
+refresco → nada guardado · cada estado de §4.2·7 con su transición y su aviso · comparar-y-escribir frente a
+un worker con el token viejo · token cifrado en la base e ilegible en el panel, el HTML, el snapshot de
+Livewire y `audit_logs` · canario en log y `failed_jobs` · ficha revalidada antes de escribir · desconectar
+revoca (solo en producción) y borra ficheros · **`business-profile:verify` contra la ficha real**, con su
 salida pegada en la decisión.
 
-**T2** — ① **medición previa con la ficha real**: formato del comentario con y sin `Accept-Language`
-múltiple (la trampa de §4.3·6), campos presentes, anónimos, respuestas; ② casos: paginación hasta el
-final · pasada cortada **no borra** · reseña borrada en Google se borra aquí · purga a 30 días **con reloj
-congelado** (`travel()`, nunca `time()`) · el `Prunable` está en la lista del programador · la media es
-la de Google aunque las filas digan otra cosa · texto íntegro · anónimo sin foto · `SocialProofNeverHitsTheRenderPathTest`
-re-apuntado a la nueva fuente · presupuesto de la portada · con `D2`, la portada sin consentimiento
-**sí** pinta las reseñas y **ninguna** petición sale a Google (sonda de navegador contando peticiones);
-③ arnés de mutación con control y por código de salida.
+**T2** — ① **medición previa con la ficha real**: formato del comentario (traducción), anónimos, fotos,
+respuestas; ② paginación en memoria · solo candidatas persistidas · pasada incoherente o vacía no borra ·
+reemplazo por diferencias · filtro de 29 días al leer **sin ejecutar la purga** (`travel()`) · 3 días sin pasada
+→ sin nombre ni foto · el fichero desaparece con su fila · barrido de huérfanos · descargador (redirección,
+tamaño, SVG, host) · «Ocultar» sobrevive a la resincronización · anónimo sin nombre ni foto · URL de imagen
+nunca de terceros · la media es la de Google · la línea del filtro presente · sin `aggregateRating` ·
+`img-src` sin Google · presupuesto de la portada · **sonda de navegador sin consentimiento que cuenta
+peticiones a Google (cero), también con una imagen ausente**; ③ arnés de mutación con control y por código de
+salida.
 
-**T3–T7** — cada una con su guarda y su verificación contra la ficha real antes de darla por buena.
-
----
-
-## 7. Guía de configuración para el owner — paso a paso
-
-⚠️ **Nada de esto lo puede hacer un agente**: son pasos en tu cuenta de Google. Los pasos 1–6 se pueden
-hacer YA, mientras se construye la T1.
-
-1. **Comprueba la ficha.** Tiene que estar **verificada y activa desde hace más de 60 días**, tener **la
-   web del parque** puesta, y tu cuenta de Google tiene que ser **propietaria o administradora** de la
-   ficha. Sin esto Google no aprueba el acceso.
-2. ⚠️ **PENDIENTE DE R2 (§0.1·2)**: la política prohíbe pedirle a cada cliente su propio proyecto. Si el
-   proyecto es CENTRAL de JumpWeb, los pasos 2–6 los hace JumpWeb una sola vez y el parque solo conecta.
-   **Crea un proyecto de Google Cloud** en `console.cloud.google.com` → selector de proyectos → *Nuevo
-   proyecto* (por ejemplo «PlayJump Business Profile»). ▶ **Recomendado: un proyecto APARTE** del de
-   *Iniciar sesión con Google* y del de Places: el ámbito de esta API es **sensible**, y metido en el
-   proyecto del login pondría la pantalla de consentimiento de tus clientes bajo esas reglas. Apunta el
-   **número de proyecto** (panel del proyecto, *Project number*).
-3. **Pide el acceso a la API**: formulario de contacto de la API de Google Business Profile → *Application
-   for Basic API Access*, **con el correo que es propietario/administrador de la ficha** y el número de
-   proyecto. Espera el correo de aprobación (Google no da plazo). **Cómo saber si ya está**: en la consola,
-   *APIs y servicios → Cuotas*: con **0** consultas por minuto no está aprobado; con **300**, sí.
-4. **Habilita las APIs** (*APIs y servicios → Biblioteca*): **My Business Account Management API** ·
-   **My Business Business Information API** · **Google My Business API** (solo aparece tras la
-   aprobación) · **Business Profile Performance API** · **My Business Place Actions API**. Más adelante,
-   si se hace Pub/Sub (T3): **My Business Notifications API** y **Cloud Pub/Sub API**. **No hacen falta**:
-   Lodging, Verifications ni Business Calls.
-5. **Pantalla de consentimiento OAuth** (*Google Auth Platform*):
-   - **Tipo de usuario: Externo.** Nombre de la app: el del parque. Correo de asistencia: el tuyo.
-   - **Sin logotipo**: subir un logotipo obliga a verificar la marca.
-   - **Dominio autorizado**: el de la web del parque. **Página principal** y **política de privacidad**:
-     sus URL públicas (la del enlace «Privacidad» del pie).
-   - **Acceso a datos → añadir ámbito**: `https://www.googleapis.com/auth/business.manage`.
-   - ❗❗ **Estado de publicación: «En producción».** **No lo dejes en «En prueba»**: ahí Google caduca el
-     permiso a los **7 días** y la sincronización se pararía sola cada semana.
-   - ▶ **No hace falta pasar la verificación de Google**: la app solo la autorizas tú, y eso entra en la
-     excepción de *uso personal* («un solo usuario o unos pocos que conoces»). La primera vez verás
-     *«Google no ha verificado esta aplicación»* → *Configuración avanzada* → *Ir a …*. Si algún día la
-     autorizan otras personas, entonces sí: verificación de 3–5 días hábiles (política de privacidad en el
-     mismo dominio, dominio verificado en Search Console y un vídeo de demostración).
-6. **Crea el cliente OAuth** (*Clientes → Crear cliente → Aplicación web*):
-   - **URI de redirección autorizada**: la de producción, `https://<dominio del parque>/admin/google-business/vuelta`
-     (futuro) — ⚠️ **te confirmo la ruta exacta al cerrar la T1**, antes de que la pegues.
-   - Para desarrollo, la misma ruta sobre `http://localhost:8081`.
-   - Guarda el **ID de cliente** y el **secreto**.
-7. ⚠️ **CORREGIDO (§0.3): solo por CLI** (`app:set-setting --force`, con entrada oculta) — **el panel no
-   edita secretos** (`SEC-11`); la opción de pegarlos en el panel queda retirada.
-   ❗❗ **Entrégalos por la vía segura, NO por un chat** (la clave de Places se pegó en uno y hubo que
-   pedir rotarla): o los escribes tú en el servidor con `php artisan app:set-setting … --force` (te daré
-   las dos órdenes exactas en la T1), o los pegas en la pantalla del panel, que los guarda sin volver a
-   enseñarlos.
-8. **Conecta** (cuando esté la T1): *Ajustes → Web → Ficha de Google → Conectar con Google* → eliges tu
-   cuenta → aceptas → eliges la ficha del parque → primera sincronización. El panel dice qué ha traído.
-9. **Después de verificar la T2**: en la consola de Places, **retira la clave** o déjala sin el SKU de
-   reseñas — ya no se usa y deja de facturarse.
+**T6** — la carga se construye desde `OperatingCalendar` · día sin configurar → no se publica y se avisa · zonas
+fuera · temporada → días en `specialHours` · medianoche y zona horaria · `updateMask` fija · sin permiso propio
+no se publica · fuera de producción solo `validateOnly` · `hasPendingEdits` bloquea el reenvío · la comprobación
+diaria no escribe · **`validateOnly` contra la ficha real antes de la primera publicación**.
 
 ---
 
-## 8. Decisiones del owner (con recomendación)
+## 7. Guía de configuración
 
-| | Pregunta | Recomendación |
+### A · Lo que hace JumpWeb, UNA vez (el owner, como JumpWeb)
+
+1. **Dos proyectos de Google Cloud**: el **central** («JumpWeb Business Profile») y **otro de desarrollo**.
+   Separados porque revocar un permiso retira la autorización de TODO el proyecto: con uno solo, desconectar
+   en local mataría la conexión de producción.
+2. **Pedir el acceso a la API para el proyecto central**: formulario de Google Business Profile → *Application
+   for Basic API Access*, con el **número de proyecto** y un correo **propietario o administrador de una ficha
+   verificada y activa 60+ días, con web** (vale la ficha del parque que gestionas). Aprobado = la cuota pasa de
+   **0 a 300** consultas por minuto. Google no da plazo.
+3. **Habilitar las APIs** en los dos proyectos: My Business Account Management · My Business Business
+   Information · Google My Business (aparece tras la aprobación). No hacen falta Performance, Place Actions,
+   Notifications, Lodging, Verifications ni Business Calls (T3, T4 y T5 por API quedan fuera).
+4. **Pantalla de consentimiento** del proyecto central: tipo **Externo**, marca **JumpWeb**, dominio y
+   política de privacidad **de JumpWeb**, ámbito `business.manage`, **estado «En producción»** (en «En prueba»
+   el permiso caduca a los 7 días).
+   ⚠️ **Verificación del ámbito sensible**: la autorizarán varios dueños de parques, así que la excepción de uso
+   personal no vale. Hasta verificarla (3–5 días hábiles: dominio de JumpWeb verificado en Search Console,
+   política de privacidad en ese dominio, vídeo de demostración, justificación del ámbito), la app enseña el
+   aviso de «no verificada» y tiene un **tope de 100 usuarios**: suficiente para los primeros parques, no para
+   crecer. Sin verificar la marca, la pantalla enseña **el dominio**, no el nombre.
+5. **Cliente OAuth web** en el proyecto central, con una **URI de redirección por instalación** (la de cada
+   parque, que se fija en la T1); el de **desarrollo**, en el otro proyecto, con `localhost`. **Nunca `localhost`
+   en el central.**
+6. **Entregar las credenciales a cada instalación** por CLI con entrada oculta (la orden exacta llega con la
+   T1). **Nunca por chat.**
+7. **Política de terceros de Google**: JumpWeb gestiona fichas en nombre de sus clientes, así que avisa al
+   cliente de cambios en su cuenta en 48 h y le deja desvincularse en 7 días hábiles (lo cubre «Desconectar»).
+
+### B · Lo que hace cada parque
+
+1. **Comprobar su ficha**: verificada, con la web del parque puesta. Recomendado: una **cuenta de Google
+   dedicada** del parque, administradora de la ficha.
+2. **Conectar** (tras la T1): *Ajustes → Web → Ficha de Google → Conectar con Google* → cuenta → aceptar →
+   elegir la ficha. El panel dice qué ha traído.
+3. **Entradas** (T5): en la ficha de Google, apartado **Entradas**, con el enlace a la página de reserva que da
+   el panel.
+4. **Política de privacidad**: añadir el texto de §10 (validado por su asesoría) antes de activar las reseñas.
+5. **Horario** (tras la T6): comparar y pulsar «Publicar en Google» cuando cambie.
+
+---
+
+## 8. Decisiones
+
+| | Decisión | Estado |
 |---|---|---|
-| **D1** | ¿Un proyecto de Google por instalación o uno central de JumpWeb? | ✅ **`[DECIDIDO owner]` por cliente** |
-| **D2** | ¿Servir los avatares desde nuestro servidor (30 días) para que las reseñas se vean **sin consentimiento de cookies**? | ✅ **`[DECIDIDO owner]` sí** — ⚠️ con la línea en la política de privacidad |
-| **D3** | ¿Cuántas en la portada y en qué orden? | ✅ **`[DECIDIDO owner]` 6**, las más recientes con texto, con la respuesta del parque debajo |
-| **D4** | ¿Filtrar por estrellas en la portada? | ✅ **`[DECIDIDO owner]` sí** (el agente recomendaba no) — con mínimo configurable, media y total sin filtrar y el filtro DICHO (§4.3·8) |
-| **D5** | ¿Publicar las reseñas anónimas? | ✅ **`[DECIDIDO owner]` sí**, con «Usuario de Google» y sin foto |
-| **D6** | Aviso de reseña nueva: ¿por sondeo cada hora o Pub/Sub en segundos? | **Sondeo primero**; Pub/Sub solo si se echa de menos la inmediatez |
-| **D7** | ¿Qué tipo de acción para el botón «Reservar» de Google? | Se comprueba en la ficha real antes de decidir |
-| **D8** | ¿Que la web ESCRIBA el horario en Google, o solo que avise de las diferencias? | ✅ **`[DECIDIDO owner]` sincronizar**: el panel manda; la primera escritura se confirma tras comparar (§4.7) |
-| **D9** | El correo de «déjanos tu reseña», ¿solo a quien aceptó marketing o a todo cliente como seguimiento? | Consulta legal; **por defecto, solo con consentimiento de marketing** |
+| **R1** | **Se publican TODAS las reseñas sin pedir permiso a cada autor**, como el sector | ✅ `[DECIDIDO owner, 2026-09-11]` — ⚠️ **riesgo aceptado**: la guía de marca de Google dice *«You must get consent from the reviewer if you want to use customer reviews of your business for your own marketing purposes, such as on your website»*. Mitigación: «Ocultar» a petición, la línea del filtro, y un interruptor para apagar la sección si Google lo pide |
+| **R2** | Proyecto **central de JumpWeb** | ✅ `[DECIDIDO owner]` (sustituye a D1) |
+| **R3** | Horario **publicado con un botón**; la comprobación diaria solo avisa | ✅ `[DECIDIDO owner]` (sustituye a D8) |
+| **R4** | **Entradas a mano** en la ficha; sin T5 por API | ✅ `[DECIDIDO owner]` |
+| **D2** | Imágenes servidas desde nuestro servidor | ✅ `[DECIDIDO owner]` |
+| **D3** | **6** en la portada | ✅ `[DECIDIDO owner]` |
+| **D4** | **Filtradas por estrellas**, con mínimo configurable y la línea que lo dice | ✅ `[DECIDIDO owner]` |
+| **D5** | Las **anónimas se publican** | ✅ `[DECIDIDO owner]` |
+| **R5** | **Fotos de las reseñas: sí**. Vídeos: **pendiente** | 🟦 vídeos pendientes del owner |
+| **D9** | El correo de «déjanos tu reseña» | ⏸️ aparcado; consulta legal (LSSI) |
+| — | Redacción de la política de privacidad, de la línea del filtro y la ponderación del interés legítimo | ⚖️ asesoría del cliente |
 
 ---
 
 ## 9. Riesgos y trampas conocidas
 
-- **La app «En prueba»** → permiso de 7 días → sincronización muerta cada semana (§4.2·6, §7·5).
-- **Un token de refresco sin uso 6 meses** caduca: la sincronización diaria lo evita, y `invalid_grant`
-  se dice en vez de reintentarse.
-- **La traducción mezclada en el texto** (§4.3·6): no está documentada; se mide antes de analizarla.
-- **No hay entorno de pruebas** en esta API: toda verificación real es contra la ficha de verdad, y las
-  escrituras (T3, T5, T6) **usan `validateOnly`** donde la API lo admite antes de escribir.
-- **`Prunable` fuera de la lista del programador** no se poda nunca (§4.3·3).
-- **Rotar la `APP_KEY`** deja ilegible el token cifrado → reconectar (§4.2·5).
-- **Cuota**: 300 consultas/min por proyecto y **10 ediciones/min por ficha**, este último sin ampliación.
+- **R1 aceptado**: publicar sin permiso del autor contra la letra de la guía de marca de Google.
+- **La app «En prueba»** → permiso de 7 días → sincronización muerta cada semana.
+- **El mismo proyecto en desarrollo y producción** → desconectar en local mata producción.
+- **El cron muerto** → la portada no sirve nada de más de 29 días (límite al leer), y se avisa.
+- **Una pasada incoherente** borraría reseñas vivas → solo borra la coherente.
+- **La traducción mezclada en el texto**: sin documentar; se mide antes.
+- **No hay entorno de pruebas** en esta API: `validateOnly` antes de toda escritura.
+- **La moderación de Google** puede tardar hasta 30 días o no aprobar un horario.
+- **`Setting::value()` memoriza la tabla por proceso** → la conexión va en tabla propia con lectura fresca.
+- **`withoutOverlapping()` no protege el botón** → candado dentro del servicio, en la base.
+- **Un `MassPrunable` no dispara eventos** → los ficheros sobrevivirían: `Prunable` con `pruning()`.
+- **El despliegue borra lo que no está protegido bajo `public/`** (`rsync --delete`) → imágenes en disco privado.
+- **Cuota**: 300 consultas/min por proyecto (compartida entre parques) y **10 ediciones/min por ficha**.
 
 ---
 
-## 10. Revisión y decisión
+## 10. Registro de la revisión adversarial (2026-09-11)
 
-- **Investigado por el agente** el 2026-09-11 contra la documentación oficial —políticas de Places y de
-  Business Profile, `reviews.list`, requisitos de acceso, configuración básica, OAuth, avisos,
-  métricas, enlaces de acción, límites de uso, verificación de ámbitos sensibles y caducidad de tokens— y
-  contra el código del repo (`GoogleSocialProof`, el contrato `SocialProof`, `FallingBackSocialProof`,
-  `GoogleAuth`, `SetSetting`).
-- **Decidido por el owner** el 2026-09-11: ir por Business Profile, *«de manera profesional, al detalle
-  y robusta»*.
-- ⚠️ **Pendiente antes de escribir código**: las decisiones `D1`–`D9` (al menos `D1`–`D5` para T1–T2),
-  **una revisión adversarial de esta spec** (`CONVENCIONES §5`) y **el acceso a la API aprobado** (§7·3).
-- **Fuentes**: [políticas de Places](https://developers.google.com/maps/documentation/places/web-service/policies)
-  · [políticas de Business Profile](https://developers.google.com/my-business/content/policies)
-  · [datos de reseñas](https://developers.google.com/my-business/content/review-data)
-  · [`reviews.list`](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list)
-  · [recurso `Review`](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews)
-  · [requisitos](https://developers.google.com/my-business/content/prereqs)
-  · [configuración básica](https://developers.google.com/my-business/content/basic-setup)
-  · [OAuth](https://developers.google.com/my-business/content/implement-oauth)
-  · [avisos](https://developers.google.com/my-business/content/notification-setup)
-  · [`NotificationSetting`](https://developers.google.com/my-business/reference/notifications/rest/v1/NotificationSetting)
-  · [métricas diarias](https://developers.google.com/my-business/reference/performance/rest/v1/DailyMetric)
-  · [enlaces de acción](https://developers.google.com/my-business/reference/placeactions/rest/v1/locations.placeActionLinks)
-  · [fichas](https://developers.google.com/my-business/reference/businessinformation/rest/v1/locations)
-  · [límites](https://developers.google.com/my-business/content/limits)
-  · [verificación de ámbitos sensibles](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification)
-  · [caducidad de tokens](https://developers.google.com/identity/protocols/oauth2)
-  · [política de contenido de Maps](https://support.google.com/contributionpolicy/answer/7400114?hl=en)
-  · [reseñas sin traducción (medida de la comunidad)](https://ambience.sk/google-business-profiles-api-reviews-without-translation/).
+Cinco lentes en paralelo, en solo lectura y con evidencia: **cumplimiento con Google · seguridad · RGPD ·
+robustez y operación · encaje con el repo**. **Los tres bloqueantes y el hallazgo de las fotos los verificó
+además el agente principal en la fuente, con cita literal.** Lo que cambió respecto a la versión revisada:
+
+| Hallazgo | Fuente | Resultado |
+|---|---|---|
+| Publicar reseñas en la web exige el consentimiento del autor | [guía de reseñas de Google](https://partnermarketinghub.withgoogle.com/brands/google/use-cases/customer-reviews/) + *«comply with Google's brand permissions guidelines»* | R1: riesgo aceptado por el owner |
+| Un proyecto por cliente, prohibido | [políticas de la API](https://developers.google.com/my-business/content/policies) | R2: proyecto central |
+| Editar la ficha exige consentimiento previo y específico | ídem | R3: botón |
+| **Las reseñas SÍ traen fotos** (la versión revisada decía que no) | [recurso `Review`](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews) | fotos sí; vídeos pendientes |
+| No hay tipo de acción «entradas»; las atracciones las gestionan en la ficha | [`PlaceActionType`](https://developers.google.com/my-business/reference/placeactions/rest/v1/locations.placeActionLinks) · [ayuda de entradas](https://support.google.com/business/answer/12944910) | R4: a mano |
+| «Limited amounts of Content» | políticas de la API | solo candidatas |
+| Revocar retira la autorización combinada del proyecto | documentación de OAuth de Google | proyecto de desarrollo aparte |
+| La vista, el contrato y el decorador SÍ cambian (la versión revisada decía que no) | `FallingBackSocialProof.php`, `Testimonial`, `home.blade.php` | §4.3·9 |
+| Staging y local escribirían en la ficha real | `ENTORNOS.md`, `#453` | solo producción + interruptor |
+| El límite de 30 días dependía del cron | `routes/console.php`, `ENTORNOS.md` | límite al leer |
+| Una pasada «completa» puede borrar reseñas vivas | semántica de `orderBy=updateTime desc` | solo pasadas coherentes |
+| Sin mecanismo para retirar una reseña concreta | arts. 17, 21 y 9 RGPD | «Ocultar» |
+| La política de privacidad no menciona reseñas y la migración no la actualiza | `LegalContent`, migración de páginas legales | texto + paso manual |
+| Credenciales en el panel chocan con `SEC-11` | `Settings.php`, `INVARIANTES` | solo CLI |
+| El horario del producto no cabe tal cual en el modelo de Google | `OperatingSchedule`, `horario-por-zona.md` | §4.4·2–3 |
+| Atribución, «a fecha de» y JSON-LD | guía de reseñas · [datos estructurados](https://developers.google.com/search/docs/appearance/structured-data/review-snippet) | §4.3·10 |
+| Filtrar sin decirlo, engañoso para la ley de consumo | Directiva 2005/29 modificada por la Ómnibus 2019/2161 (fuentes secundarias) | la línea del filtro [consulta legal] |
+
+**Borrador del texto de privacidad** (ES; EN y FR a traducir; validar con la asesoría del cliente):
+
+> **Reseñas de Google en nuestra web.** Mostramos en la página de inicio reseñas que los usuarios han publicado
+> sobre nosotros en nuestra ficha de Google, obtenidas de Google mediante la herramienta que ofrece al titular
+> de la ficha. Tratamos el nombre público y la foto de perfil con los que el autor publicó, el texto, la
+> valoración, la fecha, las fotos que adjuntó y, en su caso, nuestra respuesta; las reseñas anónimas se
+> muestran sin nombre ni foto. Finalidad: mostrar a los visitantes opiniones reales sobre el parque. Base:
+> nuestro interés legítimo (art. 6.1.f RGPD). Conservamos estos datos como máximo 30 días desde la última vez
+> que los obtenemos de Google; si el autor borra o cambia su reseña en Google, desaparece o se actualiza aquí.
+> Las imágenes se sirven desde nuestro servidor: tu navegador no se conecta a Google para verlas. No usamos
+> estos datos para ningún otro fin ni los cruzamos con nuestros clientes. Si eres el autor y quieres que tu
+> reseña deje de mostrarse en esta web, escríbenos a :legal_email y la retiraremos; también puedes oponerte,
+> pedir acceso o reclamar ante la AEPD.
+
+**Fuentes**: [políticas de la API](https://developers.google.com/my-business/content/policies) ·
+[guía de reseñas para negocios](https://partnermarketinghub.withgoogle.com/brands/google/use-cases/customer-reviews/) ·
+[políticas de Places](https://developers.google.com/maps/documentation/places/web-service/policies) ·
+[recurso `Review`](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews) ·
+[`reviews.list`](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list) ·
+[requisitos de acceso](https://developers.google.com/my-business/content/prereqs) ·
+[configuración básica](https://developers.google.com/my-business/content/basic-setup) ·
+[OAuth](https://developers.google.com/my-business/content/implement-oauth) ·
+[fichas](https://developers.google.com/my-business/reference/businessinformation/rest/v1/locations) ·
+[límites](https://developers.google.com/my-business/content/limits) ·
+[entradas y actividades](https://support.google.com/business/answer/12944910) ·
+[ediciones de la ficha](https://support.google.com/business/answer/3038311) ·
+[verificación de ámbitos sensibles](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification) ·
+[caducidad de tokens](https://developers.google.com/identity/protocols/oauth2) ·
+[apps no verificadas](https://support.google.com/cloud/answer/7454865) ·
+[política de contenido de Maps](https://support.google.com/contributionpolicy/answer/7400114) ·
+[datos estructurados de reseñas](https://developers.google.com/search/docs/appearance/structured-data/review-snippet) ·
+[EmbedSocial](https://embedsocial.com/gbp/api/) · [Elfsight](https://elfsight.com/blog/how-to-work-with-gmb-reviews-api/) ·
+[medida de la comunidad sobre traducción](https://ambience.sk/google-business-profiles-api-reviews-without-translation/).

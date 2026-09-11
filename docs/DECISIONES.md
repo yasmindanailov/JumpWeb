@@ -28345,7 +28345,7 @@ de la clave de Places (`[owner]`: no hace falta), y se retirará con Places.
 D1 un proyecto por cliente, D2 avatares desde nuestro servidor, D3 seis en portada, D4 filtradas por
 estrellas, D5 anónimas publicadas, D8 horario sincronizado.
 
-❗❗❗ **Y LA REVISIÓN ADVERSARIAL (cinco lentes, §0 de la spec) REABRE TRES DE ELLAS con la fuente
+❗❗❗ **Y LA REVISIÓN ADVERSARIAL (cinco lentes; su registro es hoy §10 de la spec) REABRE TRES DE ELLAS con la fuente
 delante**, verificadas por el agente principal: (1) **publicar las reseñas en la web exige el
 consentimiento de cada autor** —*«You must get consent from the reviewer if you want to use customer
 reviews of your business for your own marketing purposes, such as on your website»*— y con eso D5 no se
@@ -28362,3 +28362,16 @@ conecta) · **R3** el horario se publica **con un botón** y la comprobación di
 D8) · **R4** las **entradas se configuran a mano en la ficha** y la T5 por API se retira. **R1** (cómo se
 publican las reseñas) queda pendiente: el owner preguntó cómo se obtiene el permiso del autor antes de
 decidir.
+
+▶ **R1, con el sector delante** (`[DECIDIDO owner, 2026-09-11]`): **se publican TODAS las reseñas sin pedir
+permiso a cada autor**, como hacen los widgets que conectan la cuenta (EmbedSocial: *«We are not using any
+scraping. Everything works on the official Google Business Profile API»*); **filtradas por estrellas** con la
+línea que lo dice, **con sus fotos**, y **anónimas incluidas**. ⚠️⚠️ **Es un riesgo ACEPTADO, no un
+descuido**: la guía de Google pide el permiso (*«You must get consent from the reviewer…»*) y el único cauce
+que da es *«reply to the review»*, sin contacto del autor (*«Google can't provide you with additional contact
+information»*); ninguno de los proveedores revisados dice que lo pida. Mitigación: «Ocultar» a petición,
+la línea del filtro y un interruptor para apagar la sección. Descartada la otra familia de widgets —la que
+lee la ficha pública sin API (Elfsight lo describe como *«without using API»*)—: la prohíben los términos de
+Google. **Fotos de las reseñas: sí; vídeos: pendientes del owner.** ▶ **La spec queda ✅ APROBADA y
+reescrita** con la revisión integrada (la versión revisada, `3b31c45d`); lo siguiente es la **T1** y, por
+parte del owner como JumpWeb, **el proyecto central y la solicitud de acceso** (§7·A).

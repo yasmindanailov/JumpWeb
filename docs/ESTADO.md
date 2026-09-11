@@ -180,12 +180,14 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > papel. ▶ **Las reseñas de Google no salen por la RESTRICCIÓN DE IP de la clave** (403
 > `API_KEY_IP_ADDRESS_BLOCKED`) además de por el TTL de `#499`: las dos son del owner.
 >
-> 🟦 **`#524` · LAS RESEÑAS PASAN A LA API DE GOOGLE BUSINESS PROFILE** (`[DECIDIDO owner]`, spec
-> `specs/google-business-profile.md`, **código NO empezado**): la del DUEÑO de la ficha —todas las reseñas,
-> guardables 30 días, gratis— en lugar de Places, que no deja guardar nada. ▶ **Lo siguiente de esta línea
-> depende del owner**: el ACCESO a la API aprobado por Google y la configuración de §7 (proyecto,
-> consentimiento OAuth **«En producción»**, cliente), y las decisiones `D1`–`D5` de §8 para arrancar la T1
-> (la conexión). ⚠️ Antes de escribir código, **revisión adversarial de la spec** (`CONVENCIONES §5`).
+> ✅ **`#524` · LAS RESEÑAS PASAN A LA API DE GOOGLE BUSINESS PROFILE — SPEC APROBADA tras revisión
+> adversarial de cinco lentes, código NO empezado** (`specs/google-business-profile.md`). Decidido por el owner:
+> **proyecto CENTRAL de JumpWeb** (la política prohíbe uno por cliente) · **todas las reseñas sin pedir permiso
+> al autor** (riesgo ACEPTADO frente a la guía de marca de Google) · filtradas por estrellas con la línea que lo
+> dice · con fotos (vídeos pendientes) · anónimas incluidas · **horario publicado con un botón** · **entradas a
+> mano en la ficha**. ▶ **Lo siguiente: la T1 (la conexión)**, y por parte del owner como JumpWeb **el proyecto
+> central, el de desarrollo y la solicitud de acceso** (§7·A). ⚠️ La verificación del ámbito sensible (dominio y
+> política de privacidad de JumpWeb, vídeo) hace falta antes de pasar de 100 usuarios.
 >
 > ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
 > **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las interiores que
