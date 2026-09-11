@@ -28026,3 +28026,71 @@ estado de una máquina* — y el síntoma es el peor posible, porque el rojo apa
 tiene el paquete y no en el del agente que escribió el test.
 
 **Suite 4.676** · 29.237 aserciones · Pint limpio · docs-check ✓.
+
+## #453 · 2026-09-11 · `[DECIDIDO owner]` Staging pasa a ser el entorno de VALIDACIÓN del banco: el catálogo de playjump.es, el terminal de PRUEBAS de CaixaBank y dos cuentas de prueba
+
+**Contexto.** CaixaBank (Comercia Global Payments, caso 06887197) mandó las credenciales del TPV
+virtual en **entorno de TEST** (comercio `369809538`, terminal `1`, divisa 978, la clave pública del
+sandbox) y su guía de integración: el pase a real exige que **su equipo complete una compra** en una
+URL nuestra apuntando a `sis-t`. En `playjump.es` la venta online está cerrada (`#325`), así que el
+owner decidió preparar **staging** para esa validación: *«Preparamos el entorno con sus datos y dejamos
+los productos igual que en playjump.es; dejamos un usuario de prueba para ellos y créame una cuenta
+admin test»*.
+
+**Lo hecho, en bloque (`ENTORNOS.md` §5), con copia previa** (`~/backups/jumpweb-pre-tpv-20260911-055029.sql.gz`,
+100 K, 50 tablas, en el servidor):
+1. **Desplegado `f19746d6`** con `scripts/deploy.sh --go` (staging llevaba 98 migraciones y `main` tiene
+   108: se aplicaron las cuatro). ⚠️ La comprobación de salud salió en ROJO con el sitio sano: el script
+   esperaba **5** tareas programadas y son **6** desde `#491` (`social-proof:refresh`). Corregido en el
+   mismo commit — *la cifra es una propiedad del repo, no del servidor*.
+2. **Catálogo = producción.** Se volcaron de `playjump2_main` **solo tablas de catálogo y configuración**
+   (`zones` · `ticket_types` · `prices` · `price_tiers` · `product_addons` · `rate_types` ·
+   `slot_templates` · `rooms` · `attractions` · `faqs` · `park_rules` · `landing_services` · `pages` ·
+   `opening_hours` · `special_dates` · `seasons` · `offers`), con `--complete-insert` porque staging ya
+   tiene columnas que producción no (`zones.height_rule`). **Ninguna tabla con personas**: la guarda 2
+   de `ENTORNOS.md` §2 prohíbe el volcado del cliente por los MENORES, no por las tarifas. Las
+   transaccionales de staging (8 pedidos de sandbox, 9 pagos, 28 entradas) y las franjas se vaciaron
+   porque cuelgan del catálogo sustituido; `slots:generate-rolling` dejó **6.760** franjas.
+3. **Ajustes copiados por LISTA BLANCA de prefijos** (51 claves: `address.` · `business.` · `contact.` ·
+   `mixed_party.` · `packs.` · `theme.` · `waiver.` · `maintenance.` …) y **excluidos a propósito**
+   `auth.google_*`, `security.turnstile_*`, `redsys_*` y `sales.online_enabled`. Los dos ids de
+   `mixed_party.*` viajan con el catálogo porque apuntan a filas de `ticket_types`. Entran las tres
+   «condiciones v1» de `legal_document_versions` (staging solo tenía el waiver).
+4. **Redsys apuntando al terminal del banco**: `redsys_merchant_code=369809538` · `redsys_terminal=1` ·
+   `redsys_merchant_name=Play Jump Park` · `redsys_environment=test` · la clave efectiva es la del correo
+   (idéntica a la del sandbox, verificado por hash) · `redsys_merchant_url` de staging · `sales.online_enabled=1`.
+5. **Paquete del cliente** al día: `client.css`, `client-kit.svg` (staging no lo tenía) y `client-logo@4x.png`
+   copiados de producción (md5 idénticos).
+6. **Cuentas**: `pruebas.tpv@playjump.es` (cliente, correo verificado, teléfono, consentimiento de
+   privacidad, creado como lo hace `SelfSignup`) para el banco, y `admin.test@playjump.es` (rol `admin`,
+   `app:create-admin`). Las contraseñas se entregaron al owner y **no están en el repo**.
+
+**Verificado con navegador headless contra el terminal del banco** (Playwright en `/root/e2e/tpv-staging.mjs`
+del contenedor; receta en `VERIFICACION-E2E-CAJON.md` §5.undecies):
+- **Compra aceptada, dos veces**: `R-7E76SN` (autorización 278564) y `R-ORKOAM` (278574), 10,00 € de
+  «Kids · 1 Hora», con el simulador EMV3DS en medio. Pedido `paid`, pago `paid`, entrada emitida, «¡Reserva
+  creada!» en el cajón.
+- ❗ **La confirmación llegó por la NOTIFICACIÓN servidor a servidor y la vuelta del navegador vino SIN
+  DATOS**: con `LOG_LEVEL=info` (subido y restaurado en la misma sesión) el log dice
+  `redsys.return.processed {source: notification, outcome: authorized}` y tres segundos después
+  `redsys.return.no_payload {method: GET}`. O sea: **el terminal de pruebas del banco NO tiene «incluir
+  datos en redirección»** y **sí notifica**. Sin `redsys_merchant_url` este mismo pago habría caducado
+  con la tarjeta cobrada (`PAY-02`) — y **producción la tiene VACÍA**: es un paso obligatorio del go-live.
+- **La tarjeta «denegada» del correo (`1111…1117`) no produce una denegación: produce una EXCEPCIÓN**
+  (`SIS0093`, «Tarjeta ajena al servicio»), y **cancelar** en la pasarela otra (`SIS9915`). En los dos casos
+  Redsys **sí notifica** (los pagos quedan `failed`) y el navegador vuelve **sin datos**. ⚠️ Y la pasarela
+  exige **tres dígitos de CVV** también con esa tarjeta: «no requerido» en el correo significa que no se
+  valida, no que pueda ir vacío (el botón «Pagar» sigue deshabilitado).
+- CVV `999` con la tarjeta aceptada → «DENEGADA. El emisor de su tarjeta requiere autenticación del
+  titular…» y la pasarela **se queda en su formulario** ofreciendo reintentar: tampoco es una vuelta KO.
+- ❗ **Defecto de producto medido, ficha en `DEUDA.md`**: en la vuelta SIN DATOS, `handleDataLessReturn`
+  solo busca pagos `pending|paid`, así que cuando la notificación ya marcó `failed` el pago que acaba de
+  fallar, la pantalla enseña «**Verificando tu pago · Tu banco ha procesado el pago**» **de un pedido
+  anterior que seguía pendiente** (`R-ZBRCOM` tras cancelar `R-RXSCDJ`). No mueve dinero ni aforo (el
+  pedido caduca solo), pero le dice al cliente lo contrario de lo que pasó, y con este terminal es el
+  camino NORMAL de todo rechazo.
+
+**Lo que queda, y de quién es**: responder al banco (plataforma «desarrollo propio», integración
+«Hosted/Redirección», la URL de staging y el usuario de prueba); comprobar en Canales de pruebas que
+las operaciones aparecen; y, al recibir el terminal real, `redsys_merchant_url` en producción **antes**
+que `redsys_environment=live`.

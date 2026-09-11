@@ -1,5 +1,23 @@
 # Estado del proyecto — foto viva
 
+> 🏦 **PASARELA · STAGING LISTO PARA LA VALIDACIÓN DEL BANCO (2026-09-11, `DECISIONES #453`, banda 4xx
+> de producto: último usado `#453`).** CaixaBank mandó las credenciales de TEST del TPV (comercio
+> `369809538`, terminal `1`) y su guía: el pase a real exige que **su equipo complete una compra** en una
+> URL nuestra. `[DECIDIDO owner]`: **staging** lleva desde hoy el **catálogo de playjump.es** (solo tablas
+> de catálogo, nada personal), el terminal de pruebas del banco, la venta online abierta y dos cuentas
+> (`pruebas.tpv@playjump.es` para el banco · `admin.test@playjump.es`); contraseñas en manos del owner.
+> ▶ **Verificado en headless contra su terminal**: dos compras aceptadas (`R-7E76SN`, `R-ORKOAM`) de punta
+> a punta; **la confirmación llega por la notificación S2S y la vuelta del navegador viene sin datos**
+> (su terminal no incluye datos en la redirección) — por eso **`redsys_merchant_url` en producción, hoy
+> VACÍA, es paso obligatorio del go-live** (`sistemas/REDSYS.md` §14.bis). ⚠️ Su tarjeta «denegada»
+> excepciona (`SIS0093`) en vez de denegar, y en la vuelta sin datos el cajón enseña «Verificando tu pago»
+> de OTRO pedido pendiente: ficha nueva en `DEUDA.md` (Media). ⚠️ `deploy.sh` esperaba 5 tareas
+> programadas y son 6 desde `#491`: corregido.
+> ▶ **Queda del OWNER**: responder al correo del banco (plataforma «desarrollo propio», integración
+> «Hosted/Redirección», URL `https://jumpweb.sites.aelium.app` y el usuario de prueba), mirar en su
+> Canales de pruebas que salen las operaciones, y el contrato en CaixaBank Now. ⚠️ **No re-sembrar
+> staging** mientras dure la validación (`ENTORNOS.md` §1).
+
 > ⚠️⚠️ **AL FUSIONAR LOS DOS CARRILES SALIÓ UN ROJO QUE NO ERA DEL MERGE** (`#520`, arreglado):
 `ThemeColorTest::test_email_header_follows_brand_color` **dependía de la MÁQUINA**, no de una
 propiedad — la cabecera del correo cambia de rama si existe `client-logo@4x.png`, que está
@@ -15,6 +33,7 @@ no suponerlo.
 > |---|---|---|---|
 > | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
+> | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#453`; libres `#454`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
 `public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
