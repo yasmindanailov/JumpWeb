@@ -32,7 +32,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#523`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523`; siguen la CABECERA de página y el CIERRE |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#524`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523`; siguen la CABECERA de página y el CIERRE |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -141,7 +141,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
-> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#523`) ═══════════
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#524`) ═══════════
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
 > por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
@@ -179,6 +179,13 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > `--on-marker-brand`: **cambia el contrato**, §5.bis) y «Configuración de cookies» bajaba a 3,7 sobre
 > papel. ▶ **Las reseñas de Google no salen por la RESTRICCIÓN DE IP de la clave** (403
 > `API_KEY_IP_ADDRESS_BLOCKED`) además de por el TTL de `#499`: las dos son del owner.
+>
+> 🟦 **`#524` · LAS RESEÑAS PASAN A LA API DE GOOGLE BUSINESS PROFILE** (`[DECIDIDO owner]`, spec
+> `specs/google-business-profile.md`, **código NO empezado**): la del DUEÑO de la ficha —todas las reseñas,
+> guardables 30 días, gratis— en lugar de Places, que no deja guardar nada. ▶ **Lo siguiente de esta línea
+> depende del owner**: el ACCESO a la API aprobado por Google y la configuración de §7 (proyecto,
+> consentimiento OAuth **«En producción»**, cliente), y las decisiones `D1`–`D5` de §8 para arrancar la T1
+> (la conexión). ⚠️ Antes de escribir código, **revisión adversarial de la spec** (`CONVENCIONES §5`).
 >
 > ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
 > **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las interiores que

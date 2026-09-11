@@ -28298,3 +28298,45 @@ retirada y la tira a la vista en reposo, «SALTAR» en cian, el sello en tinta s
 tarjetas, y «Reservar» ancho (317 px a 1440, 298 en la barra de móvil) con el registro plegado (56–76 px)
 y su «asoma» y su aro corriendo. Textos bajo AA en la portada: **13 → 9**, y los 9 son lecturas del
 instrumento (8 rótulos del mosaico sobre `color(srgb …)` y la «A» hueca), comprobadas con captura.
+
+## #524 · 2026-09-11 · `[DECIDIDO owner]` Las reseñas de Google pasan a la API de Business Profile — la del DUEÑO de la ficha, no la de Places
+
+El owner pidió que las reseñas de Google **salgan siempre** y preguntó cómo se hace *«de manera
+profesional, cuál es el estándar de estos widgets»*. Se contestó leyendo la documentación oficial, no de
+memoria, y la respuesta cambió la fuente: **`[DECIDIDO owner]` *«vamos a hacerlo así, de manera
+profesional, al detalle y robusta»***. Spec: `specs/google-business-profile.md` (🟦 en revisión, código
+no empezado).
+
+❗❗❗ **LA RAZÓN, EN UNA TABLA.** Places —lo construido en `#491`— **no permite guardar** valoraciones ni
+reseñas (*«You must not pre-fetch, cache, or store Places API content beyond the allowed exceptions»*;
+exentos solo el `place_id` y las coordenadas), da **5** y las elige Google. **Business Profile** es la API
+del dueño: da **todas** (páginas de 50), la media y el total reales, la respuesta del parque, avisos de
+reseña nueva, y **permite guardar hasta 30 días** («de forma segura», «sin manipular ni agregar»). Es
+gratuita y es lo que hacen los widgets serios.
+
+⚠️⚠️ **Corrige a `google-reviews.md` §3.2 y a `#491`**, que daban por buena una excepción de «caché
+temporal para rendimiento» en Places: **la política de hoy no la tiene**. Con eso, hasta la caché corta
+actual queda en terreno dudoso, y alargarla —el arreglo de una línea ofrecido en `#523`— **se descartó**.
+
+⚠️⚠️ **Tres hechos que el diseño recoge porque, si no, se aprenden en producción**: (1) la app OAuth
+**tiene que quedar «En producción»** —en prueba Google caduca el permiso a los **7 días** y la
+sincronización muere en silencio—, y como solo la autoriza el dueño entra en la excepción de *uso
+personal* y **no necesita la verificación** de ámbito sensible; (2) **el límite de 30 días rige TODO** lo
+que da la API, métricas incluidas — no hay histórico largo con datos de Google; (3) el texto de una reseña
+puede llegar con **la traducción de Google mezclada** (`(Translated by Google) … (Original) …`, sin
+documentar y en orden variable): se **mide con la ficha real** antes de escribir el analizador.
+
+▶ **«Que salgan siempre» son DOS mitades**: guardarlas (la resuelve esta API) y que las vea quien no
+acepta cookies (la resuelve servir los avatares desde nuestro dominio dentro de los 30 días, que además
+**estrecha** la CSP) — es la decisión `D2` de la spec, con el tratamiento de datos de terceros delante.
+
+▶ **Lo que la misma conexión deja al alcance**, cada cosa en su tanda y con su decisión: responder
+reseñas desde el panel, aviso de reseña nueva, métricas de la ficha, el botón «Reservar» de Google Maps
+hacia nuestra reserva, el horario de la web hacia Google, y el correo de «déjanos tu reseña» tras la
+visita — **a todos por igual, sin premios ni filtros**, que es lo que la política de Google permite.
+⛔ Preguntas y respuestas **no**: Google cerró esa API el 3 de noviembre de 2025.
+
+⚠️ **Nada de esto lo puede hacer un agente**: pedir el acceso a la API (ficha verificada 60+ días, con web,
+correo propietario), el proyecto, la pantalla de consentimiento y el cliente OAuth son pasos del owner en
+su cuenta de Google — §7 de la spec los da uno a uno. **En local no se arregla la restricción de IP**
+de la clave de Places (`[owner]`: no hace falta), y se retirará con Places.
