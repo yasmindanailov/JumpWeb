@@ -28563,3 +28563,144 @@ basta. No es una relajación — el correo, su URL y su texto son los mismos.
 **Suite 4.684** · 29.262 aserciones · Pint limpio · los dos leídos en Mailpit: la bandeja enseña
 «Verifica tu email» / «Un clic y tu cuenta queda lista…» en vez de «¡Hola!». ⚠️ **Sigue sin verse en
 Gmail ni Outlook.**
+
+## #528 · 2026-09-11 · `[DECIDIDO owner]` `/cumpleanos` rehecha desde su artboard (T3b): una comparativa que solo compara lo que difiere
+
+Carril de diseño, Fase 3 · T3b (`specs/rediseno-desde-canvas.md` §5.5). Artboard `Cumpleanos Pagina PJP`
+**1a** (móvil) + **1b** (escritorio) y el carril de **5a**. La espina es la del artboard: **el reloj
+primero** (qué pasa ese día), los **packs comparados**, **qué comen**, lo que se añade, **lo que no cambia
+de un pack a otro**, **lo que se decide después de reservar** y el cierre con las edades mezcladas.
+
+▶ **Cuatro piezas del artboard NO están, y las cuatro las decidió el owner** (preguntadas con la
+consecuencia delante): **las dos fotos 16:9** —no hay ninguna así en el parque y la regla del canvas es
+*«o la foto vende o no está»*; entran cuando las mande—, **el paso a paso** y **el editor de la invitación**
+de la página vieja (retirados con su JavaScript y con `html2canvas`, desinstalado), y **la ficha de
+invitado de ejemplo** («Lucía, 7 años, sin gluten»): sus valores eran inventados y los campos los crea el
+panel, así que se publican los RÓTULOS reales. ▶ **«Su día especial» se llama «Después de reservar»** y
+cita el formulario por su nombre de cara al cliente (`guestform.title`, «Formulario de reserva»), el que
+se va a encontrar en el correo (`#462`: el post-form no se renombra). Visto en vivo por el owner: OK.
+
+❗❗❗ **LA REGLA QUE ORDENA LA PÁGINA LA ESCRIBE EL SISTEMA DEL CANVAS**: *«una comparativa solo compara lo
+que DIFIERE; lo común va a su propio bloque»*. `Booking\Services\BirthdayComparison` mira cada HECHO de un
+pack —su edad, cuántos niños admite, cuánto dura, la señal, sus ventajas, la hora extra— en TODOS los
+packs a la vez: si coincide va a «Igual en los dos» y si no, a una fila. Nada se decide por el nombre del
+hecho ni por cuántos packs haya: con uno solo todo coincide consigo mismo, el titular dice «El pack» y el
+bloque «Lo que incluye».
+
+❗❗❗ **EL TOTAL NO SE CALCULA EN EL NAVEGADOR.** El servidor lo trae hecho **para cada número de niños
+posible** con `priceCentsForRate($tarifa, $n) × $n` —exactamente la línea de `CartPricer`, tramos de
+volumen incluidos (`#329`)— y el contador solo elige cuál enseñar. *Un total en JavaScript sería una
+segunda regla de dinero que nadie vigila.* Sin JavaScript la tabla se lee en el mínimo y los botones no
+aparecen (`x-cloak`). Medido en navegador: 12 niños → 179,40 / 191,40 €; tope 20 → 299 / 319 €; los
+botones se bloquean en los dos extremos.
+
+⚠️ La especial va **entera** (`#479`) y sus dos filas **desaparecen si no dicen nada nuevo** (misma cifra
+que la normal en todos los packs), con la nota de los días. ⚠️ **El reloj solo habla por una duración
+COMPARTIDA**: si los packs duran distinto, su titular diría la de uno como si fuera de todos, y la duración
+baja a una fila. ⚠️ **La hora extra va a la tabla** (su precio cambia por pack: *«un complemento con dos
+precios no es una tarjeta, es una fila»*) y se reconoce por el MECANISMO (`extends_parent_stay`), nunca
+por el nombre. ⚠️ **El menú sale del carril** (`withoutChoices`) y vive en «Qué comen», con su precio y la
+unidad del PIVOTE: `[DECIDIDO owner]` «+2 € por invitado», no un precio entero por pack — en local sale
+«cada uno» porque ese enganche es `fixed`; en producción es por invitado. ⚠️ **La tarjeta de edades
+mezcladas** solo sale con dos packs o más de la misma familia de edades, y dice las DOS direcciones —a
+favor o en contra— porque las dos existen (`#296`). ⚠️ **Lo que se añade después de reservar** sale del
+catálogo con su precio y su PLAZO (`#413`), nunca en el carril, que es lo que se compra al reservar.
+
+▶ **El reloj es ya un componente** (`x-site.party-clock`), el mismo en la portada y en la página: el artboard
+lo dice *«copiado del marcado de 04, no redibujado»*.
+
+⚠️⚠️ **LA PODA DEL CSS DESTAPÓ UNA TRAMPA DEL PROPIO GUION** (`scripts/podar-css-huerfano.py`, trampa 5):
+condenaba un selector solo si TODAS sus clases estaban muertas, así que `.bd-tab.is-active` o
+`.bd-pol__ticket .lbl` sobrevivían porque `.is-active` y `.lbl` siguen vivas en otra parte. **Dentro de un
+selector cada clase es obligatoria**: basta una muerta para que no case nunca (lo que va dentro de `:not()`,
+`:is()`, `:where()` y `:has()` no cuenta). Con la regla corregida salieron **39 reglas más**; en total,
+**471 líneas** de CSS de la página vieja, con el balance de llaves verificado.
+
+❗❗ **Lo que se queda SIN PANTALLA** (fichas en `DEUDA.md`): `zones.image` de la zona de cumpleaños (su
+último consumidor era la polaroid) y **el componente `<x-site.ilu>`** —la silueta de la banda vieja era el
+último sitio que pintaba el kit—; el mecanismo sigue y dónde vuelve lo decide la pasada de vestido (`#497`).
+▶ **Tres cosas del catálogo, no del diseño**, que la página enseña tal cual: la fila «Incluye» repite la
+edad porque el catálogo la escribe también como ventaja; «120 minutos» repite el reloj; y la entradilla de
+la sección 04 de la portada dice «…y los calcetines», que suena a incluidos cuando el catálogo los cobra.
+
+Guardas: **`BirthdayPageTest`** (14 casos) + `scripts/mutar-cumple.py` (**18/18**, control en verde y árbol
+limpio al terminar). Treinta y cinco guardas ajenas se re-apuntaron o perdieron la entrada de su sujeto
+(sus lápidas lo dicen): entre ellas `SidebarTokenBudgetTest`, porque **`--fs-subtitle` se estrena** en el
+titular de la tarjeta mixta, y `ZonesSectionTest`, cuya guarda de la guarda buscaba un `<x-site.ilu>` que ya
+no pinta nadie. Sonda de navegador a 390, 1280 y 1920: desborde **0**, aire del artboard (40 / 144), cero
+errores de consola.
+
+## #529 · 2026-09-11 · `[DECIDIDO owner]` El vídeo del hero es el nuevo de PlayJump — H.264 720p nivel 4.0, sin audio y con el mismo peso
+
+El owner subió `heroplayjump (1).mp4` a la raíz del repo: **1080p HEVC, 30 fps, 10,8 s, con audio AAC,
+14,8 MB**. Pidió prepararlo *«para el mejor rendimiento, sin música»* y sustituir el del hero.
+
+▶ **Medido antes de elegir** (SSIM contra el original escalado a 720p):
+
+| Candidato | Peso | SSIM |
+|---|---|---|
+| H.264 CRF 23 | 8,5 MB | 0,977 |
+| H.264 CRF 28 | 4,4 MB | 0,959 |
+| H.264 CRF 30 | 3,5 MB | 0,949 |
+| **H.264 dos pasadas a 1,7 Mbps** | **2,27 MB** | **0,922** |
+| AV1 CRF 40 | 3,6 MB | 0,851 |
+
+Queda la de **dos pasadas**: el mismo peso que el vídeo anterior (2,2 MB), y a la vista indistinguible de la
+CRF 28 en los fotogramas comparados. El vídeo tiene mucho movimiento, y por eso la CRF «cómoda» se iba a
+8,5 MB. AV1 salió peor a igual peso y además exigiría un segundo `<source>` en la vista.
+
+⚠️⚠️ **El NIVEL va fijado a 4.0**: con `-preset veryslow` x264 subió solo a **5.0** por el número de
+referencias, y un 720p a 30 fps no lo necesita. Hay decodificadores móviles que no pasan de 4.x, y un vídeo
+que no se decodifica en un teléfono no avisa: se queda en el póster. ⚠️ **El póster es el PRIMER fotograma**
+(45 KB, antes 94). No es el más bonito, porque sale movido, pero es el que hay al arrancar: otro distinto daría un
+salto visible cuando empieza el vídeo. ▶ **Mismos nombres de fichero**: la vista no cambia y el `?v=` de
+`filemtime` invalida la caché.
+
+⚠️⚠️ **TRAMPA DE INSTRUMENTO**: la sonda de navegador dio `readyState 0` y no era el vídeo. **El Chromium de
+`playwright-core` no trae H.264** —`canPlayType('video/mp4; codecs="avc1.64001F"')` devuelve `""`, y sí VP9 y
+AV1—, así que tampoco habría reproducido el vídeo anterior. La verificación buena es **decodificarlo entero
+con `ffmpeg`: cero errores**, más `avc1` y el `moov` al principio del fichero (`faststart`). La sonda sí
+confirma lo que puede ver: los dos ficheros se sirven con 200 y su tamaño exacto.
+
+▶ La **fuente original NO se versiona en `main`**: va a la rama del cliente (`#530`, `fuentes/`).
+
+## #530 · 2026-09-11 · `[DECIDIDO owner]` Un segundo ordenador lleva el diseño del SPA: la rama `cliente/playjump` con todo lo del cliente, y la banda 550–579
+
+El owner quiere avanzar más rápido con **otro agente de Claude Code en otro ordenador** trabajando sobre el
+diseño del **SPA** (el cajón, Fase 4 del rediseño) mientras éste sigue con las páginas, *«para que no
+choquéis y el otro agente tenga todo, los diseños y demás del cliente»*.
+
+❗❗❗ **EL PROBLEMA ES LA REGLA NÚMERO UNO**: todo lo que el otro agente necesita del cliente —el paquete de
+tema, la marca, el kit, la copia del canvas, los datos del catálogo— está **ignorado por git a propósito**
+(`#1`: este repo es el PRODUCTO), así que un clon limpio no lo trae. `[DECIDIDO owner]` sobre tres salidas
+(rama aparte del mismo repo · meterlo en `main` · una carpeta de Google Drive): **una rama aparte del mismo
+repositorio**, `cliente/playjump`, **huérfana** —sin historia en común con `main`—, con los ficheros en sus
+mismas rutas y un `README.md` + `aplicar.sh`.
+
+⚠️⚠️ **El guion coloca los ficheros con `git archive | tar`, jamás con `git checkout`**: un checkout de otra
+rama escribe en el ÍNDICE y dejaría el material del cliente preparado para entrar en `main`. Y **para** si
+alguna de las rutas colocadas no está ignorada en ese clon. ⚠️ **La rama nunca se fusiona**: un `merge`
+pediría `--allow-unrelated-histories`, y eso es la señal.
+
+▶ **Los datos** (`[DECIDIDO owner]`: sí, sin clientes ni pedidos): un volcado de **veintitrés tablas de catálogo y
+configuración** (zonas, atracciones, productos, precios, tramos, complementos, horarios, plantillas y
+franjas, normas, dudas, páginas, textos legales, roles y permisos) **más los ajustes sin `auth.*` ni
+`redsys*`**. Fuera, a propósito: usuarios, pedidos, pagos, reembolsos, firmas, consentimientos, menores,
+carnés, sesiones y auditoría. Verificado sobre el fichero: **cero** secretos y **cero** tablas personales.
+Se aplica sobre una base migrada: borra esas tablas y las rellena.
+
+⚠️ **Antes de subir nada del cliente se comprobó que el repositorio es PRIVADO** (la API de GitHub responde
+404 sin autenticar). En la máquina no hay `gh`.
+
+▶ **El arranque del otro agente es `docs/CARRIL-SPA.md`**: cómo montar el ordenador, de dónde sale el diseño
+(canvas por `DesignSync`, artboards del cajón, la auditoría de sus nueve grietas), las guardas que atan el
+cajón, **el reparto por FICHERO** (`CONVENCIONES` §10.3: cada carril lista lo suyo y lo compartido se avisa
+ANTES en `ESTADO.md`) y **las reglas de trabajo del owner**, que vivían solo en la memoria del agente de
+ESTE ordenador y el otro no tendría. ▶ **Banda del carril del SPA: 550–579** (libre: ninguna entrada
+entre `#550` y `#699`).
+
+⚠️⚠️ **Lo que más choca entre los dos carriles NO es el código, es la línea «Suite N en verde»** de
+`ESTADO.md`: la lee el `pre-push` y tiene que coincidir con la suite real. Con dos carriles cambiando tests,
+**quien empuja la re-mide tras su `git pull --rebase`**; un conflicto en ella se resuelve corriendo la suite,
+no eligiendo una cifra. ⚠️ Y **`npm install`/`npm uninstall` poda `playwright-core`**, que va sin guardar a
+propósito: pasó al desinstalar `html2canvas` en `#528` y la sonda dejó de arrancar.

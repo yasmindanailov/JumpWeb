@@ -1,0 +1,142 @@
+# Carril del SPA · el diseño del cajón en el SEGUNDO ordenador
+
+> **Para el agente de Claude Code del otro ordenador.** Este documento es tu arranque: qué montar,
+> de dónde sale el diseño, qué te ata y cómo convivir con el carril de la web sin pisarlo.
+> `[DECIDIDO owner, 2026-09-11]` (`DECISIONES #530`). Banda de decisiones: **550–579**.
+
+Eres el **carril del SPA**: el rediseño del **cajón de compra y de cuenta** (Vue, `resources/js/sidebar/**`),
+que es la **Fase 4** del rediseño desde el canvas (`docs/specs/rediseno-desde-canvas.md` §5). El otro
+agente, en el primer ordenador, sigue con la **Fase 3** (las páginas públicas: `/precios`, `/normas`,
+`/servicios`, `/contacto`…). Los dos empujáis a `main`.
+
+---
+
+## 1 · Montar el ordenador (una vez)
+
+1. Clonar `https://github.com/yasmindanailov/JumpWeb` (privado) en `~/proyectos/JumpWeb`, **dentro de
+   WSL** (no en `/mnt/c`).
+2. `.env` desde `.env.example`, con los puertos propios del proyecto: web **8081**, MySQL **3308**,
+   Mailpit **8028**. Tus credenciales de desarrollo (Google, Redsys de pruebas) son **tuyas**: no vienen
+   en ningún paquete.
+3. `docker compose up -d` · `composer install` · `npm install` · `php artisan key:generate` ·
+   `php artisan migrate` (todo con `docker compose exec -u sail laravel.test …`; **siempre `-u sail`**).
+4. **El material del cliente** (paquete de tema, marca, kit, copia del canvas y datos del catálogo) está
+   en la rama **`cliente/playjump`** del mismo repo. Desde la raíz del clon:
+   ```bash
+   git fetch origin cliente/playjump
+   git show origin/cliente/playjump:aplicar.sh | bash -s -- --datos
+   ```
+   Lee antes su `README.md` (`git show origin/cliente/playjump:README.md`). Luego pon en tu `.env` la
+   línea de `entorno/cliente.env` de esa rama y crea tu administrador: `php artisan app:create-admin`.
+5. `npm run build` **y** `npm run build:ssr` (el segundo lo exige `SidebarDomContractTest`, abajo).
+6. El gate: `git config core.hooksPath .githooks` (el `pre-push` corre docs-check + Pint + build + suite
+   en cada push a `main`).
+7. **La sonda de navegador** (la vas a necesitar mucho): la receta está en la cabecera de
+   `scripts/sonda-geometria.mjs` — Chromium en el contenedor, `playwright-core@1.49.0` con `--no-save`
+   y el puente `socat` 8081→80. ⚠️⚠️ **Cualquier `npm install`/`npm uninstall` PODA `playwright-core`**
+   (no está en `package.json` a propósito): medido el 2026-09-11, hay que reinstalarlo después.
+   ⚠️ **El Chromium de la sonda NO reproduce H.264**: un `<video>` mp4 sale con `readyState 0` y no es
+   un defecto (`DECISIONES #529`).
+
+## 2 · De dónde sale el diseño
+
+- **El canvas de Claude Design** es la fuente de verdad: MCP **`DesignSync`**,
+  `projectId = 8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad`, con la cuenta del owner. Trampas en
+  `docs/specs/tema-por-instalacion.md` §1 (truncado a 256 KiB, binarios a 192 KiB, sin avisar).
+- **La copia local** (`mockup_playjumppark_v2/`, llega con la rama del cliente) es una foto: **compárala
+  con el canvas antes de construir**. `mockup_playjumppark/` es el ARCHIVO: **no copies colores de ahí**.
+- **Artboards del cajón**: `Pasos Compra PJP` · `Pago y Desenlaces PJP` · `Navegacion Cuenta PJP`, sobre el
+  sistema (`Sistema PJP`, `Componentes PJP` —«los cuatro controles del cajón»—, `Iconos PJP`,
+  `Microanimaciones PJP`). En el canvas vive además **`Auditoria Sistema SPA PJP`**: una auditoría del
+  cajón REAL con nueve grietas — léela en `rediseno-desde-canvas.md` §3.1. Y `HANDOFF.md` de la copia es
+  el acta del diseñador («Lo que queda, por orden»: el SPA va después de la landing).
+- **El filtro de todo** (`rediseno-desde-canvas.md` §2): el canvas es de PlayJump y **este repo es el
+  PRODUCTO**. Cada pieza pasa por «¿es un mecanismo o es de este cliente?» antes de copiarse. Lo del
+  cliente entra por su hueco (`client.css`, `public/img/client-*`, el kit), **nunca en el código**.
+
+## 3 · Dónde empiezas
+
+- **Grieta 00** · el cuerpo del cajón está a **13 px** y el suelo del sistema son **16**: subirlo es
+  revisar el reflujo de 25 pantallas. **Es decisión del owner y está ABIERTA** — pregúntala primero.
+- **Grieta 01** · el botón que avanza la compra se pinta con `var(--zone-1)`, el color de una ZONA (de los
+  datos): tiene que pasar al rol de acción (`--action`/`--interactive`, `#436`, `#209`).
+- **El botón del sistema** (16/800 con borde) se aplazó expresamente a esta fase (`rediseno` §5,
+  «`[DECIDIDO owner]` espera a la Fase 4»): estrenarlo mueve la familia `.btn` entera, que llega al cajón.
+- Specs que mandan en el cajón: `docs/specs/sidebar-spa.md` (§4.2: **el contrato visual es el ÁRBOL, no
+  las clases**), `docs/specs/cajon-en-movil.md` (lo abierto: §7.4), `docs/specs/auth-en-cajon.md`,
+  `docs/specs/area-cliente.md`, y `docs/VERIFICACION-E2E-CAJON.md` para verlo en navegador.
+
+## 4 · Lo que te ata (las guardas del cajón)
+
+- **`SidebarDomContractTest` renderiza el BUNDLE SSR, no las fuentes**: tras tocar un `.vue` o un `.js`
+  del cajón, `npm run build:ssr` antes de la suite, o compara código VIEJO (35 casos en rojo con el árbol
+  limpio, medido dos veces).
+- **Presupuestos**: `SidebarBundleBudgetTest` (techo del chunk del cajón) y `SidebarComponentBudgetTest`;
+  **se poda antes de subir un techo**, y la cifra la dice el test, no el ojo.
+- **`SidebarTokenBudgetTest`** y su `SIN_ESTRENAR`: la lista de niveles tipográficos sin consumidor solo
+  ENCOGE — si estrenas uno, sácalo de ahí en el mismo cambio.
+- **Paridad**: `tests/Feature/Sidebar/*Parity*`, `SidebarIconParityTest` (el set de iconos lo comparten
+  la web y el cajón), `SidebarTranslationKeysExistTest` (una clave mal escrita deja el texto VACÍO sin
+  fallar), `SidebarSetupBindingsTest` (una `const` con el nombre de una prop la sombrea), y los de cableado
+  (`SidebarStyleWiringTest`, `SidebarSeamTest`, `SidebarImportWiringTest`…).
+- Los tests de JS: `npm run test:js` (`node --test`).
+
+## 5 · Cómo no chocar con el carril de la web
+
+`docs/CONVENCIONES.md` §10 manda (*«el canal es el REPO: lo que no está en `origin/main`, el otro no lo
+sabe»*). Lo concreto para estos dos carriles:
+
+**Tuyo** (el de la web no entra sin avisar): `resources/js/sidebar/**` · `resources/js/ui/*` que solo use
+el cajón · `lang/*/tickets.php` y `lang/*/account.php` · `tests/Feature/Sidebar/**` · los tests
+`tests/Feature/Architecture/Sidebar*` · y, en `public/css/site.css`, **los bloques del cajón por su
+TÍTULO de sección**: «Autenticación (Fase 4)», «Mi cuenta (Fase 4.5)», «Sidebar de compra (Fase 5.2)»,
+«SIDEBAR v2», «Feedback de carga», «Carrito de visitas», «Paso 1: catálogo», «Confirmación de la reserva»,
+«Mis pedidos», «`.prod-ico`» y el «Formulario post-reserva».
+
+**De la web** (tú no entras sin avisar): `resources/views/pages/**`, `resources/views/components/site/**`,
+`resources/views/home.blade.php`, `public/css/landing.css` (salvo el `:root`), `lang/*/landing.php` y
+`lang/*/site.php`, `tests/Feature/Site/**` y `tests/Feature/Landing/**`, y los bloques de la web de
+`site.css` (servicios, registro, precios, pulido/hero, CTAs, barra de móvil, cookies, ofertas, menú).
+
+**Compartido — se avisa ANTES en `ESTADO.md`**: los **tokens** (`:root` de `landing.css`: un token del
+cajón mueve la web entera), `resources/views/components/layout.blade.php` (la poda del payload de textos),
+`resources/js/app.js` (el cargador del cajón), `package.json`/`package-lock.json`, y las **listas
+globales de las guardas** (`MotionBudgetTest`, `ShapeScaleTest`, `TouchTargetTest`,
+`InteractionColourIsNotAZoneTest`, `ActionFillTest`).
+
+**Los documentos calientes**:
+- `DECISIONES.md`: tus números salen de **550–579**, y la entrada se añade **al final del fichero**.
+- `ESTADO.md`: toca **solo tu fila** del cuadro de carriles y tu propio bloque; los avisos al otro van
+  ahí como «▶ Para el agente de la web: …», y quien lo lee y actúa lo retira.
+- **La línea «Suite N en verde»** de `ESTADO.md` la lee el `pre-push` y tiene que coincidir con la suite
+  REAL. Con dos carriles cambiando tests, **quien empuja la vuelve a medir tras su `git pull --rebase`**;
+  un conflicto en esa línea no se resuelve eligiendo una cifra, se resuelve **corriendo la suite**.
+- `CLAUDE.md`, `DEUDA.md`, `00-REFACTOR.md`: tus filas y tus secciones; no reescribas las del otro.
+
+**El ritmo**: `git pull --rebase` antes de cada push · empuja cada unidad verde pronto · **commit por
+NOMBRE de fichero, nunca `git add -A`** (en `main` hay material del cliente ignorado y a veces ficheros
+del otro a medias).
+
+**El material del cliente**: si cambias algo suyo (un token del paquete, un logotipo, una copia nueva del
+canvas), va en tu clon **y** en la rama `cliente/playjump` (su `README.md` lo explica). Nunca a `main`.
+
+## 6 · Cómo trabaja el owner contigo
+
+Esto vive en la memoria del agente del primer ordenador, y aquí queda escrito para ti:
+
+- **Edita con las herramientas de Read / Write / Edit**, no con `sed` ni con heredocs (lo pidió así).
+- **Las decisiones de producto se PREGUNTAN, en simple** (con opciones y la recomendada primero), nunca
+  se deciden por él. Cualquier ambigüedad, se pregunta.
+- **Nada de workflows ni de enjambres de agentes sin que él lo pida.**
+- **Lo visual se enseña EN VIVO** en `localhost:8081`, en móvil y escritorio, **antes de commitear**: una
+  captura de ventana no enseña lo que ocupa más de una pantalla (eligió sobre capturas y lo revirtió al
+  verlo, `#526`→`#527`).
+- **Si repite que algo se ve mal**, deja de medir y **enséñale opciones renderizadas** para que elija; y
+  si las rechaza todas, propón **quitar la variante**, no una cuarta.
+- **«Todo en tarjetas»** en lo posible, con la pegatina que ya existe. Público: madres, familias y
+  jóvenes — **sorpresa en los momentos, calma en el camino del dinero** (y el cajón ES ese camino).
+- **Lo del cliente vive en su hueco** (su BD, su `.env`, sus ficheros ignorados): al repo solo entran
+  mecanismos.
+- **Commit, push y mutaciones se deciden por el CÓDIGO DE SALIDA** del test, nunca por un `grep passed`.
+- **La shell conserva el `cd`**: no hagas `cd` dentro de un comando; usa rutas absolutas.
+- **Rigor y empirismo**: mide antes de afirmar, con control; una guarda se escribe con su mutación.

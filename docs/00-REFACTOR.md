@@ -1895,14 +1895,18 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       **pinta**; una pegatina cuyo keyline, relleno y sombra son del mismo color deja de leerse; y un
       comentario que describe un mecanismo no lo implementa (el paquete no declaraba los dos estados
       de la sombra y llevaba así desde `#478`). Las tres salieron **midiendo en navegador**.
-      🟦 **Fase 3 del rediseño (las páginas) EN CURSO** (`#521`→`#527`, 2026-09-11): el ARMAZÓN que
+      🟦 **Fase 3 del rediseño (las páginas) EN CURSO** (`#521`→`#530`, 2026-09-11): el ARMAZÓN que
       comparten las siete — los destinos del menú y del pie salen del inventario de páginas (`#521`),
       el pie del marco con unas velas que por fin se apagan (`#522`), el ojo del owner sobre la
       portada (`#523`: el pie en papel, «Reservar» abierto) y **la cabecera de página** (`#525`, T3a·3:
       un componente, la ruta escrita en el rótulo, la tipografía de la sección y la decoración lejos
       de la entradilla; `/cumpleanos` y `/servicios` la reciben en su T3b). **El cierre de las interiores
       se construyó y se revirtió** (`#526` → `#527`, `[DECIDIDO owner]`): las páginas acaban en el pie, sin
-      tarjeta. **El armazón está COMPLETO**; siguen las páginas (T3b). ▶ Y la mitad de Google de la **06** cambia de fuente: la spec
+      tarjeta. **El armazón está COMPLETO**, y de las páginas ya están `/atracciones` y **`/cumpleanos`**
+      (`#528`: una comparativa que solo compara lo que difiere, con el total del servidor para cada
+      número de niños); el vídeo del hero es el nuevo (`#529`) y **la Fase 4 (el SPA) la lleva otro
+      ordenador desde `#530`** (`docs/CARRIL-SPA.md`, material del cliente en la rama `cliente/playjump`).
+      Sigue `/precios`. ▶ Y la mitad de Google de la **06** cambia de fuente: la spec
       de **Business Profile** está aprobada (`#524`, `specs/google-business-profile.md`), **código no
       empezado** — la próxima sesión la abre el owner decidiendo sobre las reseñas.
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).

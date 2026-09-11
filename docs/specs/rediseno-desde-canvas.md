@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas COMPLETO (T3a·1 → T3a·3; la T3a·4 revertida por `#527`); siguen las páginas** (§5.5)
+> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas COMPLETO (T3a·1 → T3a·3; la T3a·4 revertida por `#527`); de las páginas, `/atracciones` y `/cumpleanos` (`#528`); sigue `/precios`** (§5.5) · 🧩 **la Fase 4 (el SPA) la lleva otro ordenador desde `#530`** (`docs/CARRIL-SPA.md`)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`), **agotada en `#499`** → la Fase 3 va en **520–549**
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -947,7 +947,9 @@ de escritorio) y `doc/paginas.md` del canvas.
 | T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón — y las VELAS del pie y del menú, que no se apagaban nunca | ✅ `#522` |
 | T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b · revisada por el owner: OK |
 | T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ↩️ `#526` construida y **revertida por `#527`** (`[DECIDIDO owner]`): las interiores acaban en el pie de `#522`, sin tarjeta |
-| T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
+| T3b·1 | **`/atracciones`** | ✅ `#481` (adelantada en la Fase 2: la puerta de la sección 03 la necesitaba) |
+| T3b·2 | **`/cumpleanos`**: el reloj, los packs comparados con contador, qué comen, el carril, «Igual en los dos», «Después de reservar» y el cierre | ✅ `#528` — revisada por el owner en vivo: OK · el vídeo del hero, cambiado en la misma jornada (`#529`) |
+| T3b… | **Las páginas** que quedan, en el orden del Layout: `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
 
 #### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
 
@@ -1111,8 +1113,20 @@ aparta al entrar `.foot`, y el cierre ya es `.foot`; en la portada sigue por enc
 lo que la tanda dirigida no**: `FooterFrameTest` lee `.foot__colophon { flex: …` tal cual, así que la tarjeta
 va delante del colofón en esa lista. Guarda `PageClosingTest` (5 casos) + `scripts/mutar-cierre.py` (**13/13**).
 
-▶ **EL ARMAZÓN QUEDA COMPLETO con T3a·1 → T3a·3** (la T3a·4 se retiró por decisión del owner). Lo siguiente son **las páginas (T3b)**, en el orden
-del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto`. Dos
+✅ **T3b·2 · `/cumpleanos`** (`#528`, detalle en `DECISIONES #528`). La espina del artboard: **el reloj** (el
+mismo componente que la portada, `x-site.party-clock`), **los packs comparados** con un contador de niños,
+**qué comen**, el **carril** sin el menú, **«Igual en los dos»**, **«Después de reservar»** y el cierre con la
+tarjeta de **edades mezcladas** y el aviso. ❗❗❗ *«Una comparativa solo compara lo que DIFIERE»*:
+`BirthdayComparison` mira cada hecho en todos los packs y lo manda a «Igual» o a una fila; **el total se
+calcula en el SERVIDOR para cada número de niños** con el precio que cobra la cesta (tramos incluidos). ▶ Lo
+que no entra, por decisión del owner: **las dos fotos** (hasta que las mande), el paso a paso, el editor de
+invitaciones (con `html2canvas`) y la ficha de ejemplo. ⚠️ Quedan sin pantalla `zones.image` de cumpleaños y
+`<x-site.ilu>` (`DEUDA.md`). Guarda `BirthdayPageTest` (14) + `scripts/mutar-cumple.py` (**18/18**).
+
+▶ **EL ARMAZÓN QUEDA COMPLETO con T3a·1 → T3a·3** (la T3a·4 se retiró por decisión del owner), y de las páginas
+están `/atracciones` y `/cumpleanos`. Lo siguiente, en el orden del Layout: `/precios` · `/normas` ·
+`/servicios` · `/bar` · `/contacto`. ▶ **La Fase 4 (el SPA) la lleva desde `#530` otro agente en otro
+ordenador**, con banda **550–579** y su arranque en **`docs/CARRIL-SPA.md`**. Dos
 preguntas del owner esperan a su página: **`/bar`** (no existe; el canvas la condiciona a que el bar tenga carta,
 `#482`) y **`/entradas`** (existe sin estar en el inventario: entra o se retira, §4.1).
 
@@ -1134,7 +1148,9 @@ hero lleva las dos puertas enteras»*.
 Su propia lista, sin filtrar — **nada de esto bloquea el código** porque todo es data-driven y se
 sembrará, pero sí bloquea publicar:
 
-1. **El vídeo o el póster del hero** (huecos `pjp-hero-poster` y `pjp-hero-esc`).
+1. ~~**El vídeo o el póster del hero** (huecos `pjp-hero-poster` y `pjp-hero-esc`).~~ ✅ **CERRADA en `#529`**: el
+   owner subió su vídeo y ya es el del hero (H.264 720p, sin audio, 2,27 MB; el póster es su primer fotograma).
+   Siguen pendientes **las dos fotos de `/cumpleanos`** (la zona montada y la mesa, `#528`).
 2. **Los nombres reales** de las 23 atracciones y **el nombre del bar** (hoy se llama «el bar» en
    todas las superficies, y es el titular de `/bar`).
 3. **El aparcamiento**: 07 dice «en la calle, delante, y gratis»; la web publicada dice «gratis 2 h

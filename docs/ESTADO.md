@@ -35,13 +35,14 @@ repo ya lo tenía resuelto en `MailThemeTest` y `ReservationSlipTest`; ése se q
 > ▶ **Y lo primero fue comprobar si lo causaba el merge** —rama en `origin/main` puro, falló igual—,
 no suponerlo.
 >
-> ❗❗❗ **HAY DOS CARRILES VIVOS Y NO SE PISAN. Lee el tuyo.**
+> ❗❗❗ **HAY VARIOS CARRILES VIVOS, Y DESDE `#530` EN DOS ORDENADORES. No se pisan: lee el tuyo.**
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#527`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO**; siguen las PÁGINAS (T3b), empezando por `/atracciones` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
+> | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#530`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` — sigue **`/precios`** · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
+> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (sin estrenar) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §3.1 | **arranca** (`#530`): el material del cliente está en la rama **`cliente/playjump`** (su `README.md` y `aplicar.sh`); lo primero es la **grieta 00**, que es decisión del owner · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5**, y lo compartido se avisa AQUÍ antes de tocarlo |
 >
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
 `public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
@@ -2575,8 +2576,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4696 en verde** (29.505 aserciones, 6 skipped), medida el **2026-09-11** (noche) corriéndola
-> sobre el árbol **CONJUNTO tras la CUARTA fusión**: diseño hasta `#527` y CORREOS `#500`→`#508`.
+> Suite **4708 en verde** (29.415 aserciones, 1 skipped), medida el **2026-09-11** (noche) sobre `main`
+> con `/cumpleanos` encima (`#528`: **+14** de `BirthdayPageTest`, y los casos de la página vieja —la
+> invitación, el paso a paso— retirados con su sujeto), el vídeo del hero (`#529`) y los documentos del
+> segundo ordenador (`#530`). ⚠️ Los *skipped* dependen de la máquina (aquí 1, en la medida anterior 6):
+> la cifra que manda es la de tests. Antes, **4696** (29.505 aserciones, 6 skipped) sobre el árbol
+> **CONJUNTO tras la CUARTA fusión**: diseño hasta `#527` y CORREOS `#500`→`#508`.
 > ✅ **Y `scripts/audit-clock.sh` pasado a mano al cerrar** —no está en el `pre-push`— porque la
 > sesión añadió fixtures con fechas: **verde en las DOCE fronteras**, con la misma cifra en todas,
 > incluidos los dos cruces de medianoche (UTC y Madrid). *Un test que solo falla ciertos días está
