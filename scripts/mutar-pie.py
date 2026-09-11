@@ -34,8 +34,10 @@ MUTACIONES = [
 
     ("la portada vuelve a pedir el pie de TINTA (se funde con la tarjeta del cierre, #523)",
      'resources/views/home.blade.php',
-     ' surface="paper" />',
-     ' />'),
+     # ⚠️ Anclada a la LLAMADA entera: ` surface="paper" />` a secas aparece dos veces en la portada,
+     # y una mutación ambigua no se aplica (lo dijo el propio arnés, «NO APLICADA»).
+     '<x-site.footer :sections="$menuSections" surface="paper" />',
+     '<x-site.footer :sections="$menuSections" />'),
 
     ("el pie recupera `.wrap` y la banda deja de ir a sangre",
      'resources/views/components/site/footer.blade.php',

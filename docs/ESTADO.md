@@ -32,7 +32,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#522`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522`; siguen la CABECERA de página y el CIERRE |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#523`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523`; siguen la CABECERA de página y el CIERRE |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -141,7 +141,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
-> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#522`) ═══════════
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#523`) ═══════════
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
 > por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
@@ -161,11 +161,24 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > páginas** (revierte `#253`) y colofón «Nombre · Ciudad · © año». ❗ **En escritorio contacto e idioma
 > comparten FILA con lo legal** —se aparta del Layout a propósito: con sus dos filas el punto estático
 > del cierre dejaba de caber (45 px de solape a 1440×900 → 0)—; tres ventanas BAJAS siguen pisando
-> (390×844, 1280×800, 1366×768) y no hay medida del pie anterior para decir si es nuevo.
+> (390×844, 1280×800, 1366×768), y con el pie anterior pisaban MÁS (medido en `#523`).
 > ❗❗❗ **Y cierra un defecto que no avisaba: las VELAS del pie y del menú no se apagaban NUNCA**
 > (`scroll(nearest …)` en el `::after` del envoltorio mira el contenedor ANTECESOR, no el carril); hoy
 > línea de tiempo con nombre + `timeline-scope`, y `rail-sails.js` publica si el carril desborda.
 > Nace `--fg-body`. **Paso de despliegue**: `--ink-fg-body` en el `client.css` de producción (§5.bis).
+>
+> ✅ **`#523` · EL OJO DEL OWNER SOBRE LA PORTADA** (`[DECIDIDO owner]`): el **pie de la PORTADA va sobre
+> PAPEL** (la tarjeta de tinta del cierre se fundía con un pie de tinta) y las interiores siguen en
+> tinta; el **par arranca siempre con «Reservar» abierto** y el registro plegado invitando (revierte
+> `#326`). ❗❗❗ **Y el «contraste roto» NO ERA CÓDIGO**: `theme.brand` de la base de desarrollo valía
+> `#0A0B0C`, la marca de mentira de `ThemeColorTest`, **escrita a mano con `tinker` por otra sesión y sin
+> devolver** — «SALTAR» y las chapas salían casi negras sobre tinta. Devuelto a `#1AA9DE`.
+> ⚠️⚠️ **Si pruebas un valor en la base de desarrollo, DEVUÉLVELO**: el registro de auditoría no guarda
+> los ajustes y la única pista fueron las transcripciones. De paso, dos defectos de verdad: el sello de
+> precio salía claro sobre amarillo en la tarjeta de tinta (el paquete declara ahora su tinta en
+> `--on-marker-brand`: **cambia el contrato**, §5.bis) y «Configuración de cookies» bajaba a 3,7 sobre
+> papel. ▶ **Las reseñas de Google no salen por la RESTRICCIÓN DE IP de la clave** (403
+> `API_KEY_IP_ADDRESS_BLOCKED`) además de por el TTL de `#499`: las dos son del owner.
 >
 > ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
 > **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las interiores que
@@ -2467,8 +2480,11 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4686 en verde** (29.391 aserciones, 1 skipped), medida el **2026-09-11** sobre `1d435347`,
-> que lleva diseño hasta `#522`, CORREOS `#500`→`#507` y la pasarela `#453`/`#454`. ▶ **Cuadra**:
+> Suite **4689 en verde** (29.406 aserciones, 1 skipped), medida el **2026-09-11** sobre `58065945`
+> (`#523`): **4686** + las **3** guardas nuevas del pie en papel, la tira del cierre y la tinta del
+> marcador (la del arranque del par se reescribe, no suma).
+> Antes, sobre `1d435347`: **4686** y 29.391, con diseño hasta `#522`, CORREOS `#500`→`#507` y la
+> pasarela `#453`/`#454`. ▶ **Cuadra**:
 > sobre `0af09e60` eran **4678**; el pie de `#522` añade **7** casos (`FooterFrameTest`) y retira **1**
 > con su sujeto (el registro externo ya no está en el pie, `Detalles216Test`) (→ 4684), y `#454` añade
 > **2** (→ **4686**). La vela del menú amplía un caso que ya existía y no suma ninguno.

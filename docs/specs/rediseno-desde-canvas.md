@@ -342,7 +342,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1c (`#471`) | añadir `--sec-air: 144px` y `--sec-air-mobile: 96px` — **los dos o ninguno**, lo vigila `RhythmScaleTest` |
 | T1d (`#472`) | añadir `--col-max: 1120px` |
 | T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
-| T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
+| T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker-brand: #101418`** al paquete (⚠️ **`--on-marker-brand` y no `--on-marker`** desde `#523`: con éste la superficie de tinta pisa la tinta del paquete y el sello del precio sale con texto claro sobre amarillo, 1,49 : 1). Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
 | T2e (`#483`) | **`--shadow-float-hover: 2px 2px 0 var(--paper-fg)`** y **`--shadow-float-press: 0 0 0 var(--paper-fg)`** en el paquete. ❗❗ **No es una mejora, es un ARREGLO**: `#478` escribió el hover de la pegatina con esos dos tokens y el paquete no los declaraba, así que la tarjeta reposaba con la sombra DURA del cliente y al pasar el ratón saltaba a la DIFUSA del producto (medido). Sin ellos, la sección 04 **y la 01** siguen con ese defecto. Lo vigila `ClientThemePackageTest`: si el paquete declara `--shadow-float`, tiene que declarar los tres. ⚠️ Y **DATO, desde el panel**: revisar los `features` de los dos packs — la sección enseña los **tres primeros** y hoy dos de los cinco repiten lo que la tarjeta ya dice (la duración y la edad). |
 | T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
 | T2g (`#487`) | añadir **`--ok-ink: #447921`** y **`--attn-ink: #8A6E00`** al paquete (las variantes 800 de su propia paleta). ❗ **Sin `--ok-ink` el estado «Abierto ahora» se pinta con `--ok`, que en este paquete da 2,4 sobre blanco** — lo vigila `ClientThemePackageTest`, así que el gate lo caza. Sin `--attn-ink` el «Abre hoy» pierde el color y se queda en tinta: se ve, no se rompe. ⚠️ Y **DATO, desde el panel**: el horario en conflicto —el panel dice L–V 16:30 · S–D 11:00 y el canvas L–J 16:30 · V–D 11:30— y las **fechas especiales**, que hoy son cero: sin ellas no hay ni aviso ni pliegue, que es la conducta correcta. |
@@ -352,6 +352,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2h (`#488`) | **Ninguno de CSS**: la sección se viste con roles ya declarados (`--bg-card`, `--line`, `--bg-soft`, `--interactive`, `--r-lg`, `--r-pill`). ▶ **DATO, desde el panel** — las cinco dudas publicadas: **retirar la de la EDAD** (contradice a la sección 01, que dice 4–7 y +8 desde `zones`) · **reescribir la del APARCAMIENTO** con «en la calle, delante, y gratis» (`[DECIDIDO owner]`; ⚠️ es el único sitio de la web que lo publica) · **reescribir «¿Hace falta reservar?»**, que hoy dice «no hace falta» contra toda la página · y **quitar el «automáticamente»** de la de cancelar, que promete un canal que `#244` no da. ⚠️ El seeder ya trae las cinco; en producción **no se siembra**, así que se editan desde el panel. ⚠️ Y **quedan dos decisiones del owner**: si grupos lleva al correo o a `/servicios`, y qué otras dudas oyen en el mostrador. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
 | T3a·2 (`#522`) | añadir **`--ink-fg-body: #C9CDD1`** al paquete (Papel 200, el gris de CUERPO sobre tinta del canvas). Sin él el cuerpo del pie sale con la mezcla de reserva del producto (`--fg` de tinta al 82 %): se lee, pero no es su valor. ⚠️ Y **DATO, desde el panel**: la **ciudad** (Ajustes → Contacto) — sin ella el colofón dice solo «Nombre · © año», que es la conducta correcta, no un defecto. |
+| `#523` | **Ninguno de CSS nuevo**, y dos comprobaciones: (1) si el paquete de producción ya lleva el marcador, **renombrar** `--on-marker` → `--on-marker-brand` (fila T2c); (2) comprobar que `theme.brand` de producción sigue en `#1AA9DE` — en local se había quedado un valor de TEST (`#0A0B0C`) escrito a mano por otra sesión. ⚠️ Y **en la consola de Google**: la restricción de IP de la clave de Places rechaza hoy (403) la IP de la máquina de desarrollo. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
 `#436` tres): comprobar que están puestas antes de dar por buena una verificación visual en
@@ -1005,8 +1006,9 @@ del panel de lema y coletilla ya no prometen el pie.
 Layout, que los dibuja en dos filas): con dos filas el pie crecía y el punto estático del cierre de la
 portada dejaba de caber — medido a 1440×900, **45 px** de tarjeta sobre el pie; con una, **0**. Solape
 con la fila única, en px: 390×844 **67** · 430×932 0 · 1280×800 **55** · 1280×900 0 · 1366×768 **94** ·
-1440×900 0 · 1536×864 0 · 1920×1080 0. ⚠️ Las tres que pisan son ventanas BAJAS y **no se midieron con
-el pie anterior**: no se sabe si el solape es nuevo o ya estaba.
+1440×900 0 · 1536×864 0 · 1920×1080 0. ▶ **Medido después con el pie anterior** (`#523`, servido en paralelo desde un árbol de
+trabajo de la víspera): esas tres ventanas **ya pisaban, y más** —78 · 93 · 135 px, y 64 a 1536×864—;
+el pie nuevo las redujo.
 
 ❗❗❗ **LAS VELAS DEL PIE Y DEL MENÚ NO SE HABÍAN APAGADO NUNCA**, y es el hallazgo de la tanda: colgaban
 de `scroll(nearest …)` sobre el `::after` del ENVOLTORIO, que busca el contenedor de scroll ANTECESOR
@@ -1028,6 +1030,17 @@ despliegue en §5.bis). Guardas: `FooterFrameTest` (7) y la vela del menú en `A
 arnés `scripts/mutar-pie.py`: **18/18** (14 del pie y 4 de la vela del menú). ⚠️ **El eje de la lista
 del menú va en SU regla** (`.menu__col-list`), no en una segunda con el mismo selector: `MenuGroupsTest`
 lee la primera que aparece en la hoja, y con dos perdió el `overflow-y` — lo cazó la suite completa.
+
+✅ **`#523` · lo que corrigió el ojo del owner** (detalle en `DECISIONES #523`). `[DECIDIDO owner]` **el pie
+de la PORTADA va sobre papel** —la tarjeta de tinta del cierre sobre un pie de tinta se fundía, y a
+pantalla completa la banda rellenaba su marco— y las interiores siguen en tinta; la tira del pie se
+retira con el progreso crudo del cierre para no asomar por ese marco. `[DECIDIDO owner]` **el par
+arranca siempre con «Reservar» abierto** y el registro plegado invitando (revierte `#326`, corrección en
+`armazon-y-menu.md` §13). ❗❗ **El «contraste roto» era un dato de test en la base de desarrollo**:
+`theme.brand = #0A0B0C`, escrito a mano por otra sesión y sin devolver; con él «SALTAR» y las chapas se
+pintaban casi negras sobre tinta. Devuelto a `#1AA9DE`. ⚠️ Y dos defectos de verdad: el sello de
+precio salía claro sobre amarillo en la tarjeta de tinta (el paquete declara ahora su tinta en
+`--on-marker-brand`) y «Configuración de cookies» bajaba a 3,7 sobre papel por una `opacity`.
 
 ### 5.2 · Las cuatro excepciones del owner
 

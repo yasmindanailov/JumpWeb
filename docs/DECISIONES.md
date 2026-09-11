@@ -28193,8 +28193,9 @@ tomó en `#521` sobre el Layout y una más que salió al medir:
 ❗❗ **La última se decidió con la medida delante**: con las dos filas del canvas el pie crecía y el
 punto estático del cierre de la portada dejaba de caber —**45 px** de tarjeta sobre el pie a 1440×900,
 donde antes cabía—; con una fila, **0**. Solape final en px: 390×844 **67** · 430×932 0 · 1280×800
-**55** · 1280×900 0 · 1366×768 **94** · 1440×900 0 · 1536×864 0 · 1920×1080 0. ⚠️ Las tres que pisan son
-ventanas BAJAS y no se midieron con el pie anterior: no se afirma que sean nuevas.
+**55** · 1280×900 0 · 1366×768 **94** · 1440×900 0 · 1536×864 0 · 1920×1080 0. ▶ **Medido después con el pie
+anterior (`#523`)**: esas tres ventanas ya pisaban, y MÁS —78 · 93 · 135 px, y 64 a 1536×864—; el pie
+nuevo no las causó, las redujo.
 
 ▶ **Lo que sale del pie no se pierde**: el lema sigue siendo el `<title>` de la portada cuando no hay
 «Título web», la coletilla el pie del post-form, las redes siguen en el menú y en el `sameAs`, y el
@@ -28235,3 +28236,65 @@ localiza una regla por su selector se queda con la primera que encuentra.*
 inicio y 0 al final, 0 a 1280 (cabe); vela del menú a 390×844 → 1 y 0 con la línea colgando de
 `.menu__col-list`, 0 a 1024×1366 (cabe); punto estático en ocho ventanas. Se retira **1** caso con su
 sujeto (`CONVENCIONES §3.quater`): el del registro externo en el pie, en `Detalles216Test`.
+
+## #523 · 2026-09-11 · `[DECIDIDO owner]` Tras el ojo del owner: el pie de la portada sobre papel y «Reservar» abierto — y un color de marca de TEST que llevaba doce horas en la base de desarrollo
+
+El owner revisó la portada y reportó cuatro cosas: el pie con el cierre animado «no sale bien», las
+reseñas de Google no salen, «hay contrastes rotos» y el par de CTA debe arrancar con «Reservar»
+abierto y el registro invitando. Cada una se midió contra la VÍSPERA **servida en paralelo**: un árbol
+de trabajo en `3e0678d6` en el puerto 8090, con la misma sonda en los dos servidores.
+
+| Pieza | Lo medido | Resolución |
+|---|---|---|
+| El pie de la portada | la tarjeta de TINTA del cierre sobre un pie de TINTA se fundía: en reposo y, a pantalla completa, la banda rellenaba el marco de papel de la tarjeta | `[DECIDIDO owner]` **pie sobre PAPEL solo en la portada** (`surface="paper"`); las interiores siguen en tinta |
+| La tira del pie | a pantalla completa asomaba por los 10 px de arriba del marco; con el pie viejo se escondía **por casualidad**, por su relleno | se retira con el progreso CRUDO del cierre (`--cierre-q`) |
+| El par de CTA | arrancaba con la cuenta abierta sin sesión (`#326`) | `[DECIDIDO owner]` **siempre «Reservar» abierto** y el registro plegado invitando — revierte `#326` |
+| «SALTAR» y las chapas de cumpleaños | casi negro sobre tinta (1,06 : 1) | ❗ la MARCA de la base valía `#0A0B0C` — ver abajo |
+| El sello de precio | texto CLARO sobre amarillo en la tarjeta de tinta (1,49 : 1) | defecto de mecanismo desde `#480`, arreglado |
+| «Configuración de cookies» | 3,7 : 1 sobre el papel nuevo | fuera la `opacity: .85` |
+| Las reseñas de Google | Google responde **403 · `API_KEY_IP_ADDRESS_BLOCKED`** | consola de Google; del owner |
+
+❗❗❗ **EL CONTRASTE ROTO NO ERA DE CÓDIGO: ERA UN DATO DE TEST EN LA BASE DE DESARROLLO.**
+`theme.brand` valía `#0A0B0C` —la marca de mentira de `ThemeColorTest`— desde el 2026-09-10 a las
+22:20 UTC. **No lo escribió un test**: lo escribió a mano otra sesión, con `tinker` y
+`Setting::updateOrCreate`, mientras investigaba un caso del correo, y no lo devolvió. La web pinta
+con la marca «SALTAR» (`--zone-1: var(--brand)`) y las chapas, así que todo eso quedó casi negro
+sobre tinta. ⚠️⚠️ **Y la comparación con la víspera daba IDÉNTICO, que es justo lo que lo delató**:
+los dos servidores leían la MISMA base. *Si el antes y el después miden igual y el owner ve algo roto,
+lo roto no está en el código.* El valor real (`#1AA9DE`) salió de las transcripciones —lo había
+puesto otra sesión el 2026-08-29— y se devolvió con `app:set-setting`. **Producción no se vio
+afectada** (otra sesión la leyó a las 05:45 UTC con `#1AA9DE`). ⚠️ **El registro de auditoría no guarda
+los cambios de ajustes**: la única pista eran las transcripciones.
+
+⚠️⚠️ **El sello de precio SÍ era del código, y de mecanismo.** Las dos superficies re-declaran
+`--on-marker` para que su valor por defecto —el `--fg` de ESA superficie, porque sin paquete el
+marcador es transparente— se evalúe donde toca (`SurfaceScopeTest` lo exige), y esa re-declaración
+**pisaba la tinta que el paquete ponía en `:root`**. Un marcador de color tiene la misma tinta en todos
+los fondos, así que el paquete la declara aparte (`--on-marker-brand`) y las tres declaraciones la
+prefieren: el patrón de `--action-brand` (`#209`). ⚠️ **Cambia el contrato del paquete** (spec §5.bis).
+
+⚠️ **Tres de las cifras sospechosas eran de MI sonda**, y se comprobaron con captura antes de tocar
+nada: los rótulos del mosaico (1,11) van sobre una banda de tinta al 82 % que el navegador expresa
+como `color(srgb …)`, un formato que el analizador no leía; la «A» hueca del cierre es un contorno sin
+relleno; y una «bajada» en la tarjeta de cumpleaños era el cruce emparejando dos tarjetas con el mismo
+texto. ⚠️ **Y montar la víspera tenía una trampa**: con `vendor` enlazado simbólicamente, el autoload
+resuelve `App\` contra el repo ACTUAL y la víspera habría corrido el PHP de hoy con las vistas de
+ayer; se copió con enlaces duros.
+
+▶ **Reseñas de Google**: la clave tiene restricción por IP y la de la máquina de desarrollo ya no está
+en la lista (el motivo se obtuvo con una llamada directa que imprime `error.status` y `reason`, nunca
+la clave). **Y sigue en pie la causa de `#499`** (caché de 30 min contra refresco cada 3 h). Las dos son
+del owner.
+
+▶ **El punto estático del cierre, medido por fin contra la víspera**: las ventanas bajas ya pisaban el
+pie, y más (78 · 93 · 135 px, y 64 a 1536×864); el pie nuevo las redujo. Corrige lo que `#522` dejó
+sin afirmar.
+
+**Verificación**: suite **4689 en verde** (29.406 aserciones, 1 omitido) · **25/25 mutaciones**
+(`scripts/mutar-pie.py`; una salió «NO APLICADA» a la primera —` surface="paper" />` aparece dos veces en
+la portada, la otra es la atribución de Google— y se ancló a la llamada entera del pie) · navegador:
+pie en papel en la portada y en tinta en las interiores, marco limpio a pantalla completa con la tira
+retirada y la tira a la vista en reposo, «SALTAR» en cian, el sello en tinta sobre amarillo en las dos
+tarjetas, y «Reservar» ancho (317 px a 1440, 298 en la barra de móvil) con el registro plegado (56–76 px)
+y su «asoma» y su aro corriendo. Textos bajo AA en la portada: **13 → 9**, y los 9 son lecturas del
+instrumento (8 rótulos del mosaico sobre `color(srgb …)` y la «A» hueca), comprobadas con captura.

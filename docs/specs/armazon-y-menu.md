@@ -1613,6 +1613,15 @@ así que retirarlo pide su propia pasada con la auditoría de `CONVENCIONES §3.
 
 ## 13 · El arranque del par depende de la SESIÓN (`#326`, 2026-09-01)
 
+> ⚠️⚠️ **CORRECCIÓN (`#523`, `[DECIDIDO owner, 2026-09-11]`): ESTA SECCIÓN QUEDA REVERTIDA.** El par
+> arranca **SIEMPRE con COMPRAR expandido** —«Reservar» abierto— y el registro (o la cuenta, con
+> sesión) plegado e **invitando a abrirse**. La invitación ya seguía a la mitad plegada en la hoja
+> (`.cta-pair--invita .cta-pair__alt`), así que el cambio fue el arranque: `data-cta-mode="buy"`
+> siempre y sin la clase estática `cta-pair--account`. El mecanismo de `data-cta-mode` se conserva, y
+> si el arranque vuelve a variar, la clase estática tiene que salir de la MISMA fuente o habrá salto
+> antes de Alpine. Guarda: `ArmazonContractTest::test_the_pair_starts_on_buy_for_guests_and_with_session`.
+> Lo de abajo es el registro de lo que se decidió el día del lanzamiento.
+
 `[DECIDIDO owner]` el día del lanzamiento, y **cambia el arranque de §8** («arranca EXPANDIDA en
 comprar»): **sin sesión el par arranca con la CUENTA expandida** —registrarse es lo primero que un
 cliente nuevo tiene que hacer para entrar al parque— y **con sesión, con comprar**. El modo lo dice el

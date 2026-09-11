@@ -836,3 +836,33 @@ Sin aceptar cookies se ve la chapa de Google sobre opiniones propias. Eso es cor
 
 ⚠️ **Verificado que el scheduler SÍ corre en producción** (`crontab` tiene `schedule:run`), así que no
 es eso. Y en local se dispara a mano: `php artisan social-proof:refresh`.
+
+▶ ❗ **SEGUNDA CAUSA, medida el 2026-09-11 (`#523`)**: Google responde **403 · `PERMISSION_DENIED` ·
+`API_KEY_IP_ADDRESS_BLOCKED`** — la clave tiene restricción por IP y la de la máquina de desarrollo ya
+no está en la lista. Mientras sea así, **en local no hay reseñas de Google aunque se llene la caché a
+mano**: el refresco falla y la sección cae a las opiniones propias. Se arregla en la consola (añadir
+la IP, o una clave de desarrollo aparte sin esa restricción) y es del owner. ⚠️ El log solo guarda el
+CÓDIGO (`RGPD-02`: nunca el cuerpo); el motivo se sacó con una llamada directa que imprime
+`error.status` y `reason`, nunca la clave.
+
+▶ ❗❗ **LA SALIDA ESTÁNDAR, investigada el 2026-09-11 a petición del owner** («quiero que salgan
+siempre»): **la API de Google Business Profile**, no la de Places. Leído en la documentación oficial:
+- **Places** (lo de hoy): *«You must not pre-fetch, cache, or store Places API content beyond the
+  allowed exceptions»*; exentos solo el `place_id` (indefinido) y las coordenadas (30 días). **Máximo 5
+  reseñas** y las elige Google. ⚠️ **La excepción de «caché temporal para rendimiento» que citan
+  `google-reviews.md` §3.2 y `#491` NO aparece hoy en la página de políticas**: sin confirmar.
+- **Business Profile** (la del DUEÑO de la ficha): `accounts.locations.reviews.list` devuelve **todas**
+  las reseñas (páginas de hasta 50) con `averageRating` y `totalReviewCount`, y la política permite
+  **guardarlas hasta 30 días**, «de forma segura» y «sin manipularlas ni agregarlas». Es **gratuita**. Es
+  lo que hacen los widgets serios: el dueño conecta su cuenta de Google.
+- **Requisitos que son del owner**: solicitar el acceso (formulario de GBP, «Application for Basic API
+  Access») con un correo que sea propietario/administrador de la ficha, **ficha verificada y activa
+  60+ días** y con web; sin aprobación la cuota es 0. Después, autorizar por OAuth una vez.
+- ⚠️ **Lo que queda por decidir antes de construir**: si los avatares se pueden servir desde nuestro
+  servidor dentro de los 30 días —sería lo que quita la dependencia del consentimiento (`RGPD-05`)—
+  está **sin confirmar** contra la política de atribución de Business Profile. Es una spec nueva
+  (OAuth, token del dueño guardado, sincronización diaria, purga a los 30 días), no un parche.
+- Fuentes: [políticas de Places](https://developers.google.com/maps/documentation/places/web-service/policies) ·
+  [políticas de Business Profile](https://developers.google.com/my-business/content/policies) ·
+  [`reviews.list`](https://developers.google.com/my-business/reference/rest/v4/accounts.locations.reviews/list) ·
+  [requisitos de acceso](https://developers.google.com/my-business/content/prereqs).
