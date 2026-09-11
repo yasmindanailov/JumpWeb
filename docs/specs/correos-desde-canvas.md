@@ -1,6 +1,6 @@
 # Los correos, desde el canvas de Claude Design
 
-> **Estado:** 🟦 **EL CARRIL ENTERO EN EL ÁRBOL** — T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA) · la FIESTA MIXTA (`#507`, §15). **El inventario del artboard queda sin ningún RECHAZADO.** Sigue 🟦 solo por el OJO del owner en un cliente de correo real, y por los cuatro ÁMBAR (§16)
+> **Estado:** 🟦 **EL CARRIL ENTERO EN EL ÁRBOL, y son 25 correos, no 23** — T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA) · la FIESTA MIXTA (`#507`, §15) · **los DOS del framework que nadie había contado** (`#508`, §17). **El inventario del artboard queda sin ningún RECHAZADO.** Sigue 🟦 solo por el OJO del owner en un cliente de correo real, y por los cuatro ÁMBAR (§16)
 > **Banda de decisiones:** **500–519** (`[DECIDIDO owner, 2026-09-10]`; la del carril de diseño de la web pública es 470–499 y va por `#489`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · artboard `Correos PJP` (turno 1a) · `doc/correos.md` · `doc/reglas.md` · tokens **v1.10**
 > ⚠️ Esa fuente **se mueve sola** (`rediseno-desde-canvas.md` §1: v1.9 por la mañana y v1.10 por la tarde del 09-09): **se relee antes de cada tanda, no una vez por carril.**
@@ -68,7 +68,7 @@ luego se abrió `doc/correos.md`), así que la coincidencia es independiente:
 
 | | canvas | código | |
 |---|---|---|---|
-| Nº de correos | 23 (21 cliente + 2 parque) | 21 `app/Notifications/` + 2 `app/Mail/` | ✓ |
+| Nº de correos | 23 (21 cliente + 2 parque) | 21 `app/Notifications/` + 2 `app/Mail/` | ⚠️ **son 25** (§17) |
 | Fondo · tarjeta · texto · gris · acento | `#ECE5D2` `#FBF7EC` `#14130F` `#6B675D` `#FF5B22` | idénticos | ✓ |
 | Fuentes | Space Grotesk / Bricolage Grotesque | idénticas | ✓ |
 | Línea de adelanto | «no existe en ninguno» | **0 ocurrencias** de preheader | ✓ |
@@ -845,3 +845,84 @@ uno contra el diccionario de hoy:
 
 ▶ Los tres primeros son **texto y un dato que el correo ya tiene a mano**; el cuarto es una decisión
 de seguridad con código detrás. Ninguno bloquea nada.
+
+---
+
+## 17 · ❗❗❗ No eran 23: eran 25 (2026-09-11, `#508`)
+
+El owner preguntó si estaban **todos** los correos hechos. El barrido —de todo lo que sale por
+correo, no solo de las dos carpetas— dio **dos que lee un cliente y que estuvieron fuera del carril
+entero**:
+
+| correo | quién lo dispara | cómo estaba |
+|---|---|---|
+| **`VerifyEmail`** | `Identity\Services\SelfSignup` → **toda cuenta nueva**, y cada reenvío | vestido, **sin cabecera ni línea de adelanto** |
+| **`ResetPassword`** | `Identity\Services\PasswordRecovery` **y** el botón del panel | vestido, **sin cabecera ni línea de adelanto** |
+
+**La causa es la misma para los dos, y explica por qué nadie los vio**: el artboard contó
+`app/Notifications/` + `app/Mail/` —que es exactamente donde miró también la T1— y **éstos no vivían
+en ninguna carpeta**: salían de `Illuminate\Auth\Notifications`. El tema sí les llegaba, porque pasan
+por el mismo `layout`, así que el color y el modo oscuro estaban bien; lo que faltaba era el molde.
+
+> En la bandeja se anunciaban con «SaltoPark ¡Hola!» — **el defecto que abrió este carril**, en los
+> dos correos más frecuentes que manda el producto.
+
+### 17.1 · El mecanismo: se EXTIENDE, no se reemplaza
+
+`PasswordReset` y `VerifyEmailAddress` heredan de las del framework y sobrescriben **solo**
+`buildMailMessage($url)`, que **recibe la URL ya construida**: el token, la firma, la caducidad y la
+ruta siguen siendo del framework.
+
+▶ **Se descartó `toMailUsing()`, con dos motivos medidos**: su callback de reset recibe **el token,
+no la URL** —obligaría a copiar aquí la línea `url(route('password.reset', …))`, una regla duplicada
+que envejece sin fallar— y una notificación registrada en un provider **no vive en
+`app/Notifications/`**, así que los censos del molde, que escanean esa carpeta, no la verían. Con
+subclases, **entran solas**.
+
+⚠️ **Verificado lo único que no se podía tocar**: la URL es **idéntica** a la del framework en los
+dos, y el **texto del cuerpo no cambia ni una palabra** (se reutilizan las cadenas ya traducidas de
+`lang/es.json` y `lang/fr.json`). Lo que entra son cabecera, línea de adelanto y asunto.
+
+⚠️ **`lang/en.json` no existe**, así que en inglés salen las cadenas originales del framework —que
+ya están en inglés—. Las claves nuevas sí se escriben en los tres.
+
+### 17.2 · ❗❗ Y traerlos a la carpeta destapó un TERCER defecto, vivo
+
+**Ninguno implementaba `ShouldQueue`**, o sea que los dos correos se mandaban **síncronos**, contra
+`PAY-14` («ningún email bloquea al cliente»). La guarda que lo vigila —`QueuedEmailsTest`— **escanea
+`app/Notifications/`**, donde no estaban: los puso en rojo el mismo día que llegaron.
+
+> ▶ *Una guarda que censa una carpeta no vigila lo que está fuera de ella.* Es la misma forma del
+> defecto que los tuvo fuera del inventario, en otra capa.
+
+### 17.3 · Guardas
+
+Los dos censos suben de **21 a 23** y los ven solos. Y un caso nuevo vigila **la propiedad que de
+verdad importa**: que `User` siga mandando las nuestras, comprobado **por conducta** y con la otra
+mitad —que las del framework **no** salen—. Sin él, volverían a salir las de Laravel **sin que nada
+fallara**: las subclases seguirían existiendo, el censo del molde seguiría en verde, y simplemente no
+las usaría nadie. *Es el modo de fallo exacto que las dejó fuera durante todo `#500`→`#507`.*
+
+**`scripts/mutar-correos-framework.py`: 7/7 mueren.** ⚠️ Una sobrevivió al principio y destapó **dos
+agujeros**: `test_they_all_use_the_mold_type` buscaba `new MailMessage` **por subcadena** —un
+`new \Illuminate\Notifications\Messages\MailMessage` la esquivaba— y **ningún caso de la suite
+renderizaba estos dos correos**, así que sustituir el molde por un `MailMessage` pelado pasaba en
+verde. Hoy se renderizan los dos, con la URL dentro de la aserción.
+
+⚠️ Y al escribir ese caso: **la URL viaja ESCAPADA en el `href`** (`&` → `&amp;`), así que compararla
+literal falla con el producto sano.
+
+### 17.4 · Diez casos ajenos cambiaron de premisa
+
+Aseveraban la notificación del framework, y `NotificationFake` **indexa por clase exacta**: la
+herencia no basta. Se re-apuntaron a la subclase en cinco ficheros — no es una relajación, porque el
+correo, su URL y su texto son los mismos.
+
+### 17.5 · Verificación
+
+- Suite **4.684 ✓ · 29.262 aserciones** · Pint limpio
+- **La URL, idéntica a la del framework** en los dos · el cuerpo, línea a línea idéntico
+- **Los dos renderizados** con cabecera, línea de adelanto antes de la cabecera, asunto y botón
+- **Los dos leídos en Mailpit**: la bandeja enseña «Verifica tu email» / «Un clic y tu cuenta queda
+  lista…» en vez de «¡Hola!»
+- ⚠️ **Sigue sin verse en un cliente de correo real**

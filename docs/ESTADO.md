@@ -14,7 +14,7 @@ no suponerlo.
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
 > | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
-> | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
+> | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#508`) y son **25**, no 23 · quedan los 4 ámbar y el OJO del owner |
 >
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
 `public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
@@ -27,7 +27,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ───────────────────────────────────────────────────────────────────────────────────────────
 
-> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-10, `#500`→`#507`) ═══════════
+> ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-11, `#500`→`#508`) ═══════════
 >
 > ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
 > medir el terreno salió que el CSS del cajón vive dentro de `public/css/site.css`, **la misma hoja
@@ -38,8 +38,21 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > ▶ **TODO ESTÁ EN `docs/specs/correos-desde-canvas.md`. Empieza por su §2** (el filtro
 > producto/cliente, que aquí **no se resuelve con tokens y es estructural**).
 >
-> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#507`): **EL CARRIL ENTERO ESTÁ EN EL ÁRBOL, y el
-> inventario del artboard queda SIN NINGÚN RECHAZADO.**
+> **LO QUE ESTÁ HECHO Y VERIFICADO** (`#500`→`#508`): **EL CARRIL ENTERO ESTÁ EN EL ÁRBOL, el
+> inventario del artboard queda SIN NINGÚN RECHAZADO — y son 25 correos, no 23.**
+>
+> ❗❗❗ **LO PRIMERO AL RETOMAR: EL INVENTARIO ESTABA MIRANDO CARPETAS.** El owner preguntó si estaban
+> todos, y el barrido de todo lo que sale por correo dio **DOS que lee un cliente y que estuvieron
+> fuera del carril entero** (`#508`): el enlace de **verificar el correo** —lo recibe toda cuenta
+> nueva— y el de **restablecer la contraseña**. No vivían en ninguna carpeta: salían de
+> `Illuminate\Auth\Notifications`, y el artboard contó `app/Notifications/` + `app/Mail/`, que es
+> donde miró también la T1. Vestidos sí —pasan por el mismo layout—, pero **sin cabecera y sin línea
+> de adelanto**: en la bandeja se anunciaban con «¡Hola!». ▶ Hoy son subclases propias que solo
+> cambian `buildMailMessage($url)`, así que **la URL y el texto del cuerpo siguen siendo los del
+> framework** (verificado: idénticos) y **entran solas en los censos**, que suben de 21 a 23.
+> ⚠️⚠️ **Y al traerlos destapó un TERCER defecto vivo**: ninguno implementaba `ShouldQueue`, o sea que
+> los dos se mandaban SÍNCRONOS contra `PAY-14`. La guarda que lo vigila escanea `app/Notifications/`,
+> donde no estaban. ▶ *Una guarda que censa una carpeta no vigila lo que está fuera de ella.*
 > - **T1 · el vestido** — 89 sustituciones; el tema vivo queda en **13 colores, todos del sistema
 >   v1.10 y cero ajenos**. Ninguna webfont viaja, radios en la escala de cuatro, modo oscuro.
 > - **T2 · el remitente desde el PANEL** (Ajustes → Contacto), no del `.env`, que valía literalmente
@@ -2398,7 +2411,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4683 en verde** (29.256 aserciones, 6 skipped), medida el **2026-09-11** corriéndola
+> Suite **4685 en verde** (29.272 aserciones, 6 skipped), medida el **2026-09-11** corriéndola
 > sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de
 > diseño hasta `#499` y `#520`, y el de los CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos de
 > `MixedPartyMailShapeTest` + 1 del molde + 1 de la bandeja).

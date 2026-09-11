@@ -28026,3 +28026,62 @@ estado de una máquina* — y el síntoma es el peor posible, porque el rojo apa
 tiene el paquete y no en el del agente que escribió el test.
 
 **Suite 4.676** · 29.237 aserciones · Pint limpio · docs-check ✓.
+
+---
+
+## #508 · 2026-09-11 · Los DOS correos que nadie había contado: no eran 23, eran 25 — y el inventario del artboard estaba mirando carpetas
+
+El owner preguntó si estaban **todos** los correos hechos. El barrido de **todo lo que sale por
+correo** —no solo de `app/Notifications/` + `app/Mail/`, que es lo que contó el artboard y lo que
+miró también la T1— dio **dos que lee un cliente y que estuvieron fuera del carril entero**:
+
+| correo | quién lo dispara | cómo estaba |
+|---|---|---|
+| **`VerifyEmail`** | `SelfSignup` → **toda cuenta nueva**, y cada reenvío | vestido, **sin cabecera ni línea de adelanto** |
+| **`ResetPassword`** | `PasswordRecovery` **y** el botón del panel | vestido, **sin cabecera ni línea de adelanto** |
+
+**La causa explica por qué nadie los vio**: no vivían en ninguna carpeta — salían de
+`Illuminate\Auth\Notifications`. El tema sí les llegaba (pasan por el mismo `layout`), así que el
+color y el modo oscuro estaban bien; lo que faltaba era el molde. ▶ En la bandeja se anunciaban con
+«SaltoPark ¡Hola!», **el defecto que abrió este carril**, en los dos correos más frecuentes del
+producto.
+
+**EL MECANISMO · se EXTIENDE, no se reemplaza.** `PasswordReset` y `VerifyEmailAddress` heredan y
+sobrescriben **solo** `buildMailMessage($url)`, que **recibe la URL ya construida**: token, firma,
+caducidad y ruta siguen siendo del framework. ▶ **Se descartó `toMailUsing()` con dos motivos
+medidos**: su callback de reset recibe **el token, no la URL** —obligaría a copiar aquí
+`url(route('password.reset', …))`, una regla duplicada que envejece sin fallar— y una notificación
+registrada en un provider **no vive en `app/Notifications/`**, así que los censos del molde no la
+verían. Con subclases **entran solas**.
+
+⚠️ **Verificado lo único que no se podía tocar**: la URL es **idéntica** a la del framework en los
+dos, y el **texto del cuerpo no cambia ni una palabra** (mismas cadenas ya traducidas). Lo que entra
+son cabecera, línea de adelanto y asunto. ⚠️ `lang/en.json` **no existe**: en inglés salen las
+cadenas originales, que ya están en inglés.
+
+**❗❗ Y TRAERLOS A LA CARPETA DESTAPÓ UN TERCER DEFECTO, VIVO**: **ninguno implementaba
+`ShouldQueue`**, o sea que los dos se mandaban **síncronos**, contra `PAY-14` («ningún email bloquea
+al cliente»). La guarda que lo vigila —`QueuedEmailsTest`— **escanea `app/Notifications/`**, donde no
+estaban: los puso en rojo el mismo día que llegaron. ▶ *Una guarda que censa una carpeta no vigila lo
+que está fuera de ella* — la misma forma del defecto que los tuvo fuera del inventario, en otra capa.
+
+**GUARDAS**: los dos censos suben de **21 a 23** y los ven solos. Y un caso nuevo vigila la propiedad
+que importa: que **`User` siga mandando las nuestras**, por CONDUCTA y con la otra mitad —que las del
+framework **no** salen—. Sin él volverían a salir las de Laravel **sin que nada fallara**: las
+subclases seguirían existiendo, el censo seguiría verde y no las usaría nadie. *Es el modo de fallo
+exacto que las dejó fuera durante todo `#500`→`#507`.*
+
+**`scripts/mutar-correos-framework.py`: 7/7 mueren.** ⚠️⚠️ Una sobrevivió y destapó **dos agujeros**:
+`test_they_all_use_the_mold_type` buscaba `new MailMessage` **por subcadena** —un
+`new \Illuminate\Notifications\Messages\MailMessage` la esquivaba— y **ningún caso de la suite
+renderizaba estos dos correos**, así que sustituir el molde por un `MailMessage` pelado pasaba en
+verde. Hoy se renderizan los dos. ⚠️ Y al escribir ese caso: **la URL viaja ESCAPADA en el `href`**
+(`&` → `&amp;`), así que compararla literal falla con el producto sano.
+
+**Diez casos ajenos cambiaron de premisa** y se re-apuntaron en cinco ficheros: aseveraban la
+notificación del framework y `NotificationFake` **indexa por clase exacta**, así que la herencia no
+basta. No es una relajación — el correo, su URL y su texto son los mismos.
+
+**Suite 4.684** · 29.262 aserciones · Pint limpio · los dos leídos en Mailpit: la bandeja enseña
+«Verifica tu email» / «Un clic y tu cuenta queda lista…» en vez de «¡Hola!». ⚠️ **Sigue sin verse en
+Gmail ni Outlook.**
