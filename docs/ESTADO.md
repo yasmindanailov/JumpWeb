@@ -15,9 +15,16 @@
 > el mismo rechazo que la vuelta firmada. ⚠️ `deploy.sh` esperaba 5 tareas programadas y son 6 desde
 > `#491`: corregido.
 > ▶ **Queda del OWNER**: responder al correo del banco (plataforma «desarrollo propio», integración
-> «Hosted/Redirección», URL `https://jumpweb.sites.aelium.app` y el usuario de prueba), mirar en su
-> Canales de pruebas que salen las operaciones, y el contrato en CaixaBank Now. ⚠️ **No re-sembrar
-> staging** mientras dure la validación (`ENTORNOS.md` §1).
+> «Hosted/Redirección», URL `https://jumpweb.sites.aelium.app` y el usuario de prueba) — **hecho el
+> 11-09**, a la espera de su respuesta—, mirar en su Canales de pruebas que salen las operaciones, y el
+> contrato en CaixaBank Now. ⚠️ **No re-sembrar staging** mientras dure la validación (`ENTORNOS.md` §1).
+> ▶ **Cierre de este carril (11-09)**: `#453` y `#454` empujados en `a0c3716f` con el gate en verde;
+> **el árbol lo comparten dos sesiones a la vez en esta máquina**, y el protocolo que funcionó fue
+> commitear solo los ficheros propios, avisar por mensaje entre sesiones antes de empujar (el gate
+> corre la suite sobre el ÁRBOL, con el trabajo a medias del otro dentro) y no empujar mientras corre
+> su arnés de mutación. **Por dónde retomar la pasarela**: `sistemas/REDSYS.md` §14.bis (lo medido con
+> el terminal del banco) y la lista de go-live de su §14.9; lo primero, `redsys_merchant_url` en
+> producción.
 
 > ⚠️⚠️ **AL FUSIONAR LOS DOS CARRILES SALIÓ UN ROJO QUE NO ERA DEL MERGE** (`#520`, arreglado):
 `ThemeColorTest::test_email_header_follows_brand_color` **dependía de la MÁQUINA**, no de una
