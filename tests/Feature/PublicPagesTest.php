@@ -16,11 +16,17 @@ class PublicPagesTest extends TestCase
         $this->seed(LandingContentSeeder::class);
     }
 
+    /**
+     * ⚠️ **El nombre va SIN el prefijo de su zona desde `#531`**: la tabla dice la zona UNA vez en su
+     * cabecera y cada fila escribe lo que la distingue («2 horas»). Por eso el caso asevera las dos
+     * mitades y no la cadena entera del catálogo, que ya no se pinta junta en ninguna parte.
+     */
     public function test_pricing_page_lists_tickets(): void
     {
-        $this->get('/precios')
-            ->assertOk()
-            ->assertSee('Jump · 2 horas'); // entrada sembrada (ES)
+        $html = $this->get('/precios')->assertOk()->getContent();
+
+        $this->assertStringContainsString('JUMP', $html);      // la cabecera de su zona
+        $this->assertStringContainsString('2 horas', $html);   // la fila de la entrada (ES)
     }
 
     public function test_pricing_page_respects_locale(): void
@@ -29,7 +35,7 @@ class PublicPagesTest extends TestCase
 
         $this->get('/precios')
             ->assertOk()
-            ->assertSee('Jump · 2 hours'); // entrada (EN)
+            ->assertSee('2 hours'); // entrada (EN)
     }
 
     public function test_events_page_shows_package(): void

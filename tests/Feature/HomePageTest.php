@@ -131,16 +131,49 @@ class HomePageTest extends TestCase
      * portada tiene que seguir diciendo —y es lo que aquí se vigila— es **el requisito**, porque es
      * de seguridad; lo que no puede volver es el callout del catálogo.
      */
-    public function test_the_socks_note_lives_on_pricing_and_no_longer_on_the_home(): void
+    /**
+     * El complemento de los calcetines **con su ventaja escrita**, como la tiene el catálogo real.
+     *
+     * ⚠️⚠️ El seeder de la suite crea el complemento **sin `features`**, y eso no es un descuido del
+     * fixture: es el estado de una instalación recién sembrada. La página publica lo que el panel
+     * escribe y **no inventa la frase**, así que para vigilar que la publica hay que escribirla — y
+     * queda dicho que sin ella la página solo dice el nombre y el precio (paso de puesta en marcha,
+     * `#531`).
+     */
+    private function socksWithAdvantage(): void
     {
-        $this->get('/precios')->assertOk()
-            ->assertSee('Calcetines antideslizantes obligatorios')          // título (ES)
-            ->assertSee('Puedes traerlos de casa', false)                    // se pueden traer de casa
-            ->assertSee('ic-s1', false)                                      // icono de marca S1 (white-label)
-            ->assertSee('socks-note__title', false);                        // callout reutilizable
+        TicketType::ofType(TicketType::TYPE_ADDON)->where('name->es', 'Calcetines antideslizantes')
+            ->firstOrFail()
+            ->forceFill(['features' => [
+                'es' => ['Imprescindibles para saltar'],
+                'en' => ['Required to jump'],
+                'fr' => ['Indispensables pour sauter'],
+            ]])->save();
+    }
 
-        // En la portada el dato sigue estando —es obligatorio— pero dentro de la frase de la sección
-        // 05, no como la nota del catálogo. Se comprueban las dos mitades.
+    /**
+     * ⚠️⚠️ **RE-APUNTADO EN `#531`, y el requisito cambia de FUENTE, no de sitio.** La nota estática
+     * del producto (`<x-site.socks-note>`, con su título y su texto en `lang/`) se retiró al rehacer
+     * `/precios` desde su artboard: los calcetines son ahora una FILA del bloque «Lo que se añade»,
+     * con el nombre del complemento y **la ventaja que el panel escribe en él**. Es más fuerte que
+     * antes —lo que se publica es el dato del dueño— y por eso el caso asevera ahora el nombre del
+     * complemento y su ventaja, no una cadena del producto.
+     * ▶ La otra mitad no cambia: en la portada el requisito sigue dicho dentro de la frase de la
+     * sección 05, y el callout del catálogo no puede volver.
+     */
+    public function test_the_socks_requirement_lives_on_pricing_and_no_longer_on_the_home(): void
+    {
+        // ⚠️⚠️ **La ventaja se SIEMBRA aquí, y eso es parte de lo que el caso dice**: el catálogo de
+        // la suite no la trae, y la página **no la inventa** — publica lo que el panel escribe. Un
+        // caso que la diera por hecha estaría midiendo el catálogo de esta máquina, no la página.
+        $this->socksWithAdvantage();
+
+        $this->get('/precios')->assertOk()
+            ->assertSee('Calcetines antideslizantes')        // el nombre del complemento, del panel
+            ->assertSee('Imprescindibles para saltar')       // su ventaja, también del panel
+            ->assertSee('extras__row', false)                // la fila del bloque «Lo que se añade»
+            ->assertDontSee('socks-note__title', false);     // el callout del catálogo no vuelve
+
         $this->get('/')->assertOk()
             ->assertDontSee('socks-note__title', false)
             ->assertSee('calcetines antideslizantes');
@@ -151,14 +184,20 @@ class HomePageTest extends TestCase
      * se comprueba aparte: son dos textos distintos desde que la sección 05 sustituyó a la de
      * normas, y aseverar los dos en la misma página dejaba este caso mirando al vacío.
      */
-    public function test_socks_note_is_translated(): void
+    public function test_socks_requirement_is_translated(): void
     {
+        // ⚠️ En `/precios` lo que se traduce es el DATO —el nombre del complemento y su ventaja, que
+        // el panel escribe en los tres idiomas—, no una cadena del producto (`#531`).
+        $this->socksWithAdvantage();
+
+        // ⚠️ El nombre es el que el catálogo tenga en ese idioma —aquí «Grip socks»—, no una cadena
+        // del producto: es exactamente lo que esta tanda cambió de fuente.
         $this->get('/lang/en');
-        $this->get('/precios')->assertSee('Non-slip socks required')->assertSee('Bring your own from home', false);
+        $this->get('/precios')->assertSee('Grip socks')->assertSee('Required to jump');
         $this->get('/')->assertSee('non-slip socks', false);
 
         $this->get('/lang/fr');
-        $this->get('/precios')->assertSee('Chaussettes antidérapantes obligatoires')->assertSee('Apporte les tiennes', false);
+        $this->get('/precios')->assertSee('Chaussettes antidérapantes')->assertSee('Indispensables pour sauter');
         $this->get('/')->assertSee('chaussettes antidérapantes', false);
     }
 
@@ -757,10 +796,15 @@ class HomePageTest extends TestCase
 
         $this->assertSame(0, $tarjetasDeKids(), 'una zona desactivada sigue anunciando entradas que el flujo no puede vender.');
 
-        // Y `/precios`, que conserva el catálogo con su nombre completo, se comporta igual.
-        $this->get('/precios')->assertOk()
-            ->assertSee('Jump · 1 hora')       // entrada de zona operativa: sigue
-            ->assertDontSee('Kids · 1 hora');  // entrada de zona desactivada: fuera
+        // Y `/precios` se comporta igual. ⚠️ **Se mira la TABLA de la zona y no el nombre completo**
+        // (`#531`, como arriba con el panel de la portada): la página rehecha dice la zona una vez en
+        // su cabecera y las filas escriben «1 hora», así que «Kids · 1 hora» ya no existe en ninguna
+        // superficie. Lo que significa lo mismo —y es más fuerte— es que la zona desactivada **no
+        // tiene tabla**, porque sin entradas no se pinta.
+        $html = (string) $this->get('/precios')->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="zone-jump"', $html, 'la zona operativa pierde su tabla');
+        $this->assertStringNotContainsString('id="zone-kids"', $html, 'una zona desactivada sigue anunciando entradas');
     }
 
     /* ====================================================================

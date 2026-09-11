@@ -51,7 +51,9 @@ class TagSystemTest extends TestCase
         // ⚠️ `.ride-card__badge` se fue en `#482` con el carrusel. El distintivo de una atracción
         // se pinta hoy en `/atracciones`, y allí NO es una etiqueta del sistema: es el segundo
         // `chipDato` de la ficha —cápsula en Nube, mono 11—, que es otro componente del canvas.
-        '.price__badge' => ['tag', 'tag--senal', 'tag--tinta'],
+        // ⚠️ `.price__badge` se fue en `#531` con la tarjeta de tarifa: `/precios` se rehizo desde su
+        // artboard y el marcador de la que lidera es hoy un CHIP dentro de una fila de tabla, con el
+        // resalte del marcador (`--marker`) y no una etiqueta del sistema.
         '.svc-photo__tag' => ['tag', 'tag--senal', 'tag--punteada'],
     ];
 

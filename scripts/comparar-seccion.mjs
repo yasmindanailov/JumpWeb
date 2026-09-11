@@ -245,6 +245,44 @@ SECCIONES["08"] = { nombre: "08 · Dudas", raiz: "#faq", movil: [
     ['.faq__a-p', 'paddingBottom', '22px', ''],
 ] };
 
+/*
+ * **`/precios`, la PÁGINA** (`#531`, Fase 3 · T3b). Artboard `Precios Pagina PJP` 1a/1b.
+ * ⚠️ Es la primera entrada con `ruta`: lo que se compara no es una sección de la portada.
+ * ⚠️ Las dos divergencias de TALLA están declaradas y son la misma decisión de siempre: el sistema
+ * manda sobre el dibujo cuando el dibujo baja del suelo de lectura (cuerpo 16, etiqueta 12).
+ */
+SECCIONES["precios"] = { nombre: "/precios · todas las tarifas", ruta: "/precios", raiz: "main", movil: [
+    ['.week__day', 'height', '56px', ''],
+    ['.week__initial', 'fontSize', '20px', ''],
+    ['.rate-zone__name', 'fontSize', '26px', ''],
+    ['.rate-zone__dot', 'width', '12px', ''],
+    ['.rate-table', 'borderTopLeftRadius', '16px', ''],
+    ['.rate-table__col', 'fontSize', '10.5px', 'la etiqueta del sistema es 12 y su pliego dice «mono nunca bajo 10»: la escala no tiene 10,5'],
+    ['.rate-table__name', 'fontSize', '15.5px', 'cuerpo 16 en móvil, que es su propia regla dura; el artboard dibuja 15,5'],
+    ['.rate-table__cell--normal', 'fontSize', '20px', ''],
+    ['.rate-table__cell--normal', 'color', 'rgb(98, 116, 17)', ''],
+    ['.rate-table__cell--special', 'fontSize', '15px', ''],
+    ['.rate-table__what', 'paddingTop', '14px', ''],
+    ['.rate-table__what', 'paddingLeft', '16px', ''],
+    ['.rate-note', 'paddingTop', '20px', ''],
+    ['.rate-note__title', 'fontSize', '22px', ''],
+    ['.holidays__row', 'paddingTop', '12px', ''],
+    ['.extras__list', 'borderTopLeftRadius', '16px', ''],
+], escritorio: [
+    ['.week__day', 'height', '72px', ''],
+    ['.week__initial', 'fontSize', '22px', ''],
+    ['.rate-zone__name', 'fontSize', '36px', ''],
+    ['.rate-zone__dot', 'width', '14px', ''],
+    ['.rate-page__zones', 'columnGap', '32px', ''],
+    ['.rate-table__what', 'paddingTop', '16px', ''],
+    ['.rate-table__what', 'paddingLeft', '24px', ''],
+    ['.rate-table__cell--normal', 'fontSize', '26px', ''],
+    ['.rate-note', 'width', '544px', ''],
+    ['.rate-note', 'paddingTop', '28px', ''],
+    ['.rate-note__title', 'fontSize', '26px', ''],
+    ['.holidays__row', 'paddingTop', '14px', ''],
+] };
+
 const clave = process.argv[2] || "05";
 const S = SECCIONES[clave];
 if (!S) {
@@ -259,7 +297,10 @@ let sinExplicar = 0;
 for (const [w, h, n, tabla] of [[390, 844, `MÓVIL 390 · ${S.nombre}`, S.movil], [1280, 900, `ESCRITORIO 1280 · ${S.nombre}`, S.escritorio]]) {
     const ctx = await nav.newContext({ viewport: { width: w, height: h } });
     const page = await ctx.newPage();
-    await page.goto('http://localhost:8081/', { waitUntil: 'networkidle' });
+    // ⚠️ La RUTA la dice la sección desde `#531`: la Fase 3 compara PÁGINAS (`/precios`, `/normas`…)
+    // y esto iba clavado a la portada. Sin `ruta`, sigue siendo `/` — las tablas de la Fase 2 no
+    // cambian.
+    await page.goto('http://localhost:8081' + (S.ruta ?? '/'), { waitUntil: 'networkidle' });
     await page.addStyleTag({ content: '.cookie-banner,[class*="cookie"]{display:none!important}' });
     await page.evaluate(() => document.fonts.ready);
     await page.mouse.move(-50, -50);

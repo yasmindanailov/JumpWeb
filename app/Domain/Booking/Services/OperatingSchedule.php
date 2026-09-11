@@ -158,7 +158,10 @@ class OperatingSchedule implements OperatingCalendar
      */
     private function special(): Collection
     {
-        return $this->special ??= SpecialDate::all()->keyBy(fn (SpecialDate $s): string => $s->date->toDateString());
+        // ⚠️ La TARIFA viaja cargada (`#531`): `upcomingSpecialDays()` la transcribe para `/precios`,
+        // y sin el `with` serían tantas consultas como fechas especiales — 30 en producción.
+        return $this->special ??= SpecialDate::with('rateType')->get()
+            ->keyBy(fn (SpecialDate $s): string => $s->date->toDateString());
     }
 
     /**
@@ -252,6 +255,9 @@ class OperatingSchedule implements OperatingCalendar
                     note: $special->tr('note'),
                     opensAt: $window->opensAt,
                     closesAt: $window->closesAt,
+                    // La tarifa de ese día, tal y como la nombra el panel (`#531`). `null` cuando la
+                    // fecha no declara ninguna: ese día lo tarifa la regla por día de la semana.
+                    rateLabel: $special->rateType?->tr('label') ?: null,
                 );
             })
             ->values()

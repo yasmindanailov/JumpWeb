@@ -919,26 +919,10 @@
    cuatro excepciones que lo citaban (`ShapeScaleTest` ×2, `RawColourIsNotATokenTest` ×2) — para
    eso existen las listas que «solo encogen». */
 
-/* Nota general «calcetines antideslizantes obligatorios» bajo el grid de precios (reactiva #6,
-   ahora como callout con el icono de marca S1). Aplica a TODAS las entradas → vive con el
-   catálogo (`<x-site.socks-note>`). El icono usa el trazo (currentColor=--fg) y el acento de
-   marca (--zone-1) en los grips. */
-.socks-note {
-  margin: 28px auto 0; max-width: 640px;
-  display: flex; align-items: center; gap: var(--sp-16);
-  background: var(--bg-card); border: 1px solid var(--line);
-  border-radius: var(--r); padding: 18px 22px;
-}
-.socks-note__icon { flex-shrink: 0; color: var(--fg); }
-.socks-note__body { min-width: 0; }
-.socks-note__title {
-  margin: 0; font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
-  letter-spacing: -0.01em; font-size: var(--fs-18); color: var(--fg);
-}
-.socks-note__text { margin: var(--sp-4) 0 0; font-size: var(--fs-14); line-height: 1.5; color: var(--fg-mute); }
-@media (max-width: 540px) {
-  .socks-note { flex-direction: column; text-align: center; gap: var(--sp-12); padding: 22px 18px; }
-}
+/* ⚠️ Aquí vivía `.socks-note`, el callout de «calcetines antideslizantes obligatorios» bajo el grid
+   de precios. Se fue con su componente en `#531`: `/precios` se rehizo desde su artboard y el
+   requisito lo dice ahora la FILA del propio complemento, con el texto que el panel escribe en él
+   (`ticket_types.features`). *El dato lo pone el dueño, no una cadena del producto.* */
 
 /* ====================================================================
    Card «Regístrate antes de venir» (QR + CTA) — `<x-site.registration-qr>`.
@@ -998,29 +982,10 @@
 .reg-cta .arrow-ico { transition: transform var(--dur-sale) var(--ease-sale); }
 .reg-cta:hover .arrow-ico { transform: translateX(3px); }
 
-/* Fila que contiene la card de registro inline: cada card conserva su ALTURA NATURAL (la card de
-   registro —más alta— NO estira las entradas) y todas se centran en la vertical, en vez de quedar
-   pegadas al borde superior de la fila. Solo la fila con la card (el resto de grids no se toca). */
-.ticket-prices .pricing__grid--with-reg { align-items: center; }
-
-/* INLINE = columna natural del grid (>1080px): más estrecha que la banda, pero MISMAS dos columnas
-   (QR+CTA a la izquierda, título+texto a la derecha). QR reducido para dejar sitio a la 2ª columna. */
-@media (min-width: 1081px) {
-  .regcard--inline {
-    flex: 0 1 calc((100% - 48px) / 4 * 1.32);  /* ~10% más ancha que antes (era 1.2) */
-    align-self: center;                         /* centrada en la vertical de la fila (no pegada arriba) */
-    margin: 0 0 0 24px;                         /* separación EXTRA respecto a las cards de producto */
-    max-width: none; --qr-size: 132px; grid-template-columns: auto 1fr; gap: var(--sp-18); padding: 26px;
-  }
-  .regcard--inline .reg-aside { gap: var(--sp-14); }
-  .regcard--inline .reg-title { font-size: clamp(18px, 1.4vw, 22px); }
-  .regcard--inline .reg-copy { font-size: var(--fs-13); max-width: none; }
-  .regcard--inline .reg-cta { font-size: var(--fs-13); padding: var(--sp-11) var(--sp-12); }
-}
-/* ≤1080px la inline cae a BANDA a ancho completo (su propia fila dentro del grid flex). */
-@media (max-width: 1080px) {
-  .regcard--inline { flex: 0 1 100%; }
-}
+/* ⚠️ Aquí vivía el modo INLINE de esta card (`.regcard--inline`), que la metía como una columna más
+   de la rejilla de tarifas de `/precios` cuando la zona dejaba hueco. Se fue con la rejilla en
+   `#531`: la página es hoy una tabla por zona y **la card es siempre una BANDA**. Con ella se van su
+   clase, su prop y los dos cortes que la gobernaban. */
 /* Banda demasiado estrecha → apila (QR arriba, cuerpo debajo). */
 @media (max-width: 560px) {
   .regcard { grid-template-columns: 1fr; gap: 24px; padding: 28px 22px; justify-items: start; }
@@ -1313,11 +1278,10 @@
 }
 .form__field select:focus { border-color: var(--fg); }
 
-/* ====================================================================
-   Precios (Fase 5.1): switcher de zona (reutiliza .zone-tabs) + "desde".
-   ==================================================================== */
-/* el switcher de precios reutiliza .zone-tabs/.zone-tab; aquí solo lo centramos */
-.ticket-prices__tabs { display: flex; justify-content: center; margin-bottom: var(--sp-28); }
+/* ⚠️ Aquí vivía el switcher de zona de `/precios` (`.ticket-prices__tabs`). La página se rehizo
+   desde su artboard en `#531` y **ya no elige zona**: enseña las dos tablas a la vez, porque quien
+   abre el enlace que le han mandado no ha elegido ninguna. `.zone-tabs`/`.zone-tab` siguen vivas en
+   `/servicios` y en el cajón, que son de otra fase. */
 
 /* ⚠️ El color activo POR ZONA y los acentos de su rejilla —la tarjeta «Top», su insignia— llegan
    INLINE desde el servidor como `--zone-1`/`--zone-2`/`--on-brand` (`DECISIONES #138`). Aquí había
@@ -4506,28 +4470,9 @@ body[data-has-hero] .nav--over .nav__cta {
     gap: var(--sp-6);
 }
 
-/* ====================================================================
-   Centrar las cards de entradas cuando hay menos de 4 (#194)
-   El grid del mockup fija `repeat(4, 1fr)`: con 3 entradas quedaban
-   alineadas a la izquierda con un hueco a la derecha. Pasamos a flex
-   centrado, manteniendo el tamaño ~1/4 por card y centrando cuando hay
-   menos de 4. Breakpoints = los del mockup (1080 / 768).
-   ==================================================================== */
-.pricing__grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-.pricing__grid > .price {
-    /* 4 por fila (3 gaps de 16px); con menos de 4, `justify-content: center` las centra. */
-    flex: 0 1 calc((100% - 48px) / 4);
-}
-@media (max-width: 1080px) {
-    .pricing__grid > .price { flex-basis: calc((100% - 16px) / 2); } /* 2 por fila */
-}
-@media (max-width: 768px) {
-    .pricing__grid > .price { flex-basis: 100%; }                    /* 1 por fila */
-}
+/* ⚠️ Aquí vivía la rejilla de tarjetas de entrada (`.pricing__grid`), con su reparto de cuatro
+   columnas y sus dos cortes. Se fue con la tarjeta en `#531`: la página de tarifas es hoy una tabla
+   por zona, y en escritorio las dos van enfrentadas (`landing.css`, bloque `/precios`). */
 
 /* ===================== #216 — detalles transversales ===================== */
 

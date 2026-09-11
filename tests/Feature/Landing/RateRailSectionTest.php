@@ -380,7 +380,11 @@ class RateRailSectionTest extends TestCase
         $seccion = $this->seccion();
 
         $this->assertStringNotContainsString('zone-plate', $seccion);
-        $this->assertStringNotContainsString(__('landing.rules.socks_title'), $seccion);
+        // ⚠️ Aquí se aseveraba además que la NOTA DE CALCETINES no se repetía en esta sección. Se
+        // fue con su sujeto (`#531`): la nota estática desapareció del producto cuando `/precios`
+        // pasó a publicar cada complemento con el texto que el panel escribe en él. Lo que la
+        // sección no puede hacer —recordar aquí lo que «Para quién» ya dice— lo siguen vigilando la
+        // chapa de zona y el censo de fichas del carril.
     }
 
     /**

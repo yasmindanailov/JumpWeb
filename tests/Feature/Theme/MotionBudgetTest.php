@@ -28,7 +28,9 @@ class MotionBudgetTest extends TestCase
         '.nav__period-dot' => 'el punto del nombre de marca en texto — solo sin logotipo',
         // ⚠️ El destello de la atracción destacada se fue en `#482` con el carrusel, y con él su
         // `@keyframes jj-shine-sweep`: un bucle declarado sin regla que lo invoque es ruido.
-        '.price--feat .price__badge' => 'la chapa «destacado» de la tarifa (#279)',
+        // ⚠️ La chapa «destacado» de la tarifa se fue en `#531` con la tarjeta de precio: `/precios`
+        // se rehizo desde su artboard y su chip es una pastilla QUIETA dentro de una fila de tabla.
+        // La lista solo encoge, que es la regla.
         '.map-pin' => 'el pin del mapa sin inserción (#279)',
         '.brand-band__track' => 'la cinta del eslogan, AMBIENTAL (`--dur-cinta`)',
         '.catalog__item--feat .catalog__badge' => 'cajón: la chapa del catálogo',

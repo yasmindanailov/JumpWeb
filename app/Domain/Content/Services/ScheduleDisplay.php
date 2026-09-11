@@ -8,6 +8,7 @@ use App\Domain\Booking\Contracts\SpecialDay;
 use App\Domain\Booking\Contracts\WeeklyOpening;
 use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Fase 7.7 (#207) — Presenta el horario del parque para la LANDING, data-driven desde la
@@ -156,7 +157,11 @@ class ScheduleDisplay
      * la que está cerca, y «cerca» es una cantidad de días — un dato que la fecha ya escrita no
      * puede devolver sin volver a parsearla en la vista.
      *
-     * @return array<int, array{date: string, detail: string, is_closed: bool, days_away: int}>
+     * ⚠️ **`note` y `rate` los añade `#531` para `/precios`**, que publica la lista entera porque esas
+     * fechas cambian el PRECIO: el nombre que el parque le da al día («Víspera de Navidad») y la
+     * tarifa que aplica. La 07 de la portada no los lee — sigue con `detail`, que es su horario.
+     *
+     * @return array<int, array{date: string, detail: string, is_closed: bool, days_away: int, note: ?string, rate: ?string}>
      */
     public function upcomingSpecialDates(int $limit = 4): array
     {
@@ -167,7 +172,37 @@ class ScheduleDisplay
             'detail' => $this->specialDetail($special),
             'is_closed' => $special->isClosed,
             'days_away' => (int) $hoy->diffInDays(Carbon::parse($special->date)->startOfDay(), false),
+            'note' => $special->note,
+            'rate' => $special->rateLabel,
         ], $this->calendar->upcomingSpecialDays($limit));
+    }
+
+    /**
+     * **LAS FECHAS ESPECIALES COMO LAS PUBLICA `/precios`** (`DECISIONES #531`): la fecha, el nombre
+     * que el parque le da y **el hecho de ese día**.
+     *
+     * ❗❗❗ **Cada fila dice SU hecho, y no hay ninguna frase general.** El artboard escribe encima
+     * «cuentan como fin de semana, en precio y en horario» y eso es justo lo que `#487` retiró de la
+     * 07: el producto **no puede afirmarlo** —una instalación puede cerrar el 25 y abrir el 6 con
+     * otro horario—. Aquí el hecho se deriva de la fila: cerrada dice «Cerrado», con tarifa dice el
+     * rótulo de esa tarifa —que es lo que el visitante viene a saber en una página de precios— y si
+     * no, su horario.
+     *
+     * ⚠️ **Sin fechas cargadas devuelve vacío y la página no pinta el bloque**: «una sección cuyo
+     * contenido lo pone el panel desaparece con cero filas», regla dura del canvas.
+     *
+     * @return list<array{date: string, name: ?string, fact: string, is_closed: bool}>
+     */
+    public function pricingCalendar(int $limit = 40): array
+    {
+        return array_map(fn (array $row): array => [
+            // ⚠️ Mayúscula inicial: `isoFormat('ddd D MMM')` devuelve «vie 12 dic» en español, y una
+            // lista de fechas empieza cada línea como una etiqueta, no como media frase.
+            'date' => Str::ucfirst($row['date']),
+            'name' => $row['note'],
+            'fact' => $row['is_closed'] ? __('landing.info.closed') : ($row['rate'] ?? $row['detail']),
+            'is_closed' => $row['is_closed'],
+        ], $this->upcomingSpecialDates($limit));
     }
 
     /** Firma de un día para agrupar (cerrado / ventana / abierto-sin-ventana / sin-config). */

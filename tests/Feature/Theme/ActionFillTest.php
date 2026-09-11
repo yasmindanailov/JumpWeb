@@ -58,7 +58,9 @@ class ActionFillTest extends TestCase
         // de las tarjetas de zona. **Se van con su sujeto** (`#302`, `[DECIDIDO owner]`: las
         // tarjetas fuera): las atracciones están ahora debajo del selector, así que el botón
         // llevaba a donde ya estabas. La lista de acción **solo encoge**, que es la regla.
-        '.price--feat .price__cta' => 'el CTA de la tarifa destacada',
+        // ⚠️ `.price--feat .price__cta` —el CTA de la tarifa destacada— **se fue con su sujeto** en
+        // `#531`: `/precios` se rehizo desde su artboard y **no tiene botón propio**; la acción la
+        // trae el armazón. La lista de acción solo encoge, que es la regla.
         // ⚠️ `.bd-pack__cta` («Reservar este cumple») SE FUE CON SU SUJETO en `#528`: la página
         // rehecha reserva con un `.btn--ghost`, que el artboard dibuja fantasma, no relleno.
         // ⚠️ `.bd-btn--solid` vivía aquí y SE FUE CON SU SUJETO (T9): el par del editor de
@@ -104,11 +106,16 @@ class ActionFillTest extends TestCase
      * ya `var(--on-action-hover)` y sigue al rol como todas. Su ficha de `DEUDA.md` se retira con
      * ella. De dos excepciones queda UNA — la lista encogió sola, que es lo que prometía.
      */
-    private const EXCEPTIONS = [
-        // El CTA de la tarifa destacada INVIERTE al pasar el cursor (fondo de tarjeta + texto de
-        // tinta) en vez de oscurecerse. Es otro patrón de hover, no el del rol.
-        '.price--feat .price__cta:hover' => 'background+color',
-    ];
+    /*
+     * ❗ **HOY ESTÁ VACÍA, y eso es el final del camino que esta lista describía.** La última
+     * excepción era el CTA de la tarifa destacada, que invertía al pasar el cursor en vez de
+     * oscurecerse; se fue con su sujeto en `#531` al rehacerse `/precios`. O sea que **ninguna regla
+     * del rol de acción desobedece ya al color de acción**.
+     * ⚠️ El caso que la vigila sigue teniendo sujeto —asevera el TOPE, que con cero se cumple—, así
+     * que no pasa a mirar el vacío: si alguien añade una excepción, vuelve a haber lista y vuelve a
+     * exigirse su porqué.
+     */
+    private const EXCEPTIONS = [];
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Guarda de la guarda

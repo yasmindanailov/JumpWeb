@@ -1,4 +1,4 @@
-@props(['svg' => null, 'inline' => false])
+@props(['svg' => null])
 
 {{-- Card «Regístrate antes de venir» (#268): QR + CTA al MISMO enlace de registro EXTERNO.
 
@@ -7,14 +7,17 @@
      El QR se genera SERVER-SIDE (SVG inline, sin JS) desde esa URL → mejora progresiva: el CTA es un
      enlace real y funciona aunque no se escanee ni haya JS.
 
-     `:svg`  → SVG del QR ya generado (lo pasa `ticket-prices` una sola vez, aunque la card se pinte
-               en varias zonas); si no se pasa, se genera aquí (uso suelto).
-     `:inline` → la card es una COLUMNA del grid de precios (mismo ancho que las entradas). Sin él, es
-               una BANDA horizontal a ancho completo. --}}
+     `:svg`  → SVG del QR ya generado (lo pasa el llamante, hoy `/precios`); si no se pasa, se genera
+               aquí (uso suelto).
+
+     ⚠️ **La card es siempre una BANDA desde `#531`.** El modo `:inline` existía porque `/precios`
+     pintaba una rejilla de tarjetas de entrada y la card entraba como una columna más cuando la zona
+     dejaba hueco; esa rejilla se fue con la página rehecha, así que el prop, su clase y su CSS se
+     retiraron con su sujeto. --}}
 @php $regUrl = $site['registration_url'] ?? null; @endphp
 
 @if (! empty($regUrl))
-    <div @class(['regcard', 'regcard--inline' => $inline])>
+    <div class="regcard">
         {{-- Columna IZQUIERDA: el QR (con «Escanéame») y, debajo, el CTA. --}}
         <div class="reg-aside">
             <div class="qr-frame">

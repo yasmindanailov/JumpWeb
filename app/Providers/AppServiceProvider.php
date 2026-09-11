@@ -419,8 +419,8 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Formato consistente de precio para los CTAs (nav + hero): coma decimal y `€` final,
-     * convención europea. Se usa en los 3 idiomas (mercado primario español; coherente con
-     * `<x-site.price-card>`). Si en el futuro hay que diferenciar por locale, pasa al composer.
+     * convención europea. Se usa en los 3 idiomas (mercado primario español). Si en el futuro hay
+     * que diferenciar por locale, pasa al composer.
      */
     public static function formatPriceLabel(int $cents): string
     {

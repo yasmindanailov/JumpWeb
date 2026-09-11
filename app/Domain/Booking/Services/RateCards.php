@@ -2,12 +2,11 @@
 
 namespace App\Domain\Booking\Services;
 
+use App\Domain\Booking\Concerns\ReadsRateFacts;
 use App\Domain\Booking\Concerns\WritesLandingValues;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
-use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
@@ -38,6 +37,14 @@ use Illuminate\Support\Collection;
  */
 final class RateCards
 {
+    /*
+     * ▶ **Las reglas que esta sección comparte con la página `/precios` viven en el trait**
+     * (`#531`): cómo se parte el nombre de su matiz, qué días rige la normal, si un producto se
+     * vende en la especial y cuál lidera la zona. Estaban aquí en privado, y la página las pregunta
+     * igual: con dos copias, la portada y la página podrían decir cosas distintas del mismo
+     * catálogo sin que nada fallara.
+     */
+    use ReadsRateFacts;
     use WritesLandingValues;
 
     /**
@@ -76,8 +83,7 @@ final class RateCards
              * ⚠️ `null` cuando no hay ninguna: entonces no hay chip ni tarjeta ancha y el carril abre
              * por la primera, que es lo que hace un carril sin destacada. **Vacío es una respuesta.**
              */
-            $lidera = $entradas->search(fn (TicketType $t): bool => (bool) $t->featured);
-            $lidera = $lidera === false ? null : $lidera;
+            $lidera = $this->leadingIndex($entradas);
 
             /*
              * **LA UNIDAD CONTRA LA QUE SE MIDE EL AHORRO**: la entrada de MENOR duración de la
@@ -195,10 +201,16 @@ final class RateCards
              * `RateResolver::priceCents()` devuelve `null` un sábado—, así que su frase lleva
              * «solo». Escribir la misma frase en los dos casos publicaría un precio para un día en
              * el que no se puede comprar.
+             *
+             * ❗❗❗ **Y la pregunta es `sellsOnSpecial()`, NO «¿tiene recargo?»** (`#531`, corregido
+             * con control). Hasta entonces colgaba de `specialRateSurcharges()`, que devuelve las
+             * especiales **cuyo precio DIFIERE**: una entrada con el MISMO precio los siete días
+             * —que se vende el sábado— se anunciaba como «solo de lunes a jueves». *Existir un
+             * precio y ser distinto son dos preguntas, y esta frase es de la primera.*
              */
-            'days' => $diasNormales === null ? null : ($especial === null
-                ? __('landing.rates.days_only', ['days' => $diasNormales])
-                : $diasNormales),
+            'days' => $diasNormales === null ? null : ($this->sellsOnSpecial($ticket)
+                ? $diasNormales
+                : __('landing.rates.days_only', ['days' => $diasNormales])),
             /*
              * La tarifa especial, **con su precio ENTERO y nunca como recargo**
              * (`[DECIDIDO owner, 2026-09-09]`, regla dura del canvas: *«un recargo no se publica
@@ -307,27 +319,8 @@ final class RateCards
      * nombre no nota nada**.
      * ▶ Y es lo que hace cierta la decisión 9a: la zona se dice **una vez por tarjeta**, en el botón.
      *
-     * @return array{0: string, 1: ?string} [nombre, matiz]
+     * ▶ **Vive en `ReadsRateFacts` desde `#531`**, porque `/precios` parte los mismos nombres.
      */
-    private function nameAndNuance(string $nombre, string $nombreZona): array
-    {
-        $prefijo = $nombreZona.' · ';
-
-        if ($nombreZona !== '' && mb_stripos($nombre, $prefijo) === 0) {
-            $nombre = mb_substr($nombre, mb_strlen($prefijo));
-        }
-
-        $partes = array_map('trim', explode(' · ', $nombre, 2));
-        $matiz = $partes[1] ?? null;
-
-        // ⚠️ El matiz que acaba en «min» se descarta: es la misma duración en otra unidad. La regla
-        // sale del propio artboard (`parte()`), no de un criterio nuestro.
-        if ($matiz !== null && ($matiz === '' || preg_match('/min\.?$/iu', $matiz))) {
-            $matiz = null;
-        }
-
-        return [$partes[0], $matiz];
-    }
 
     /**
      * **Los días en los que rige la tarifa normal, escritos** — o `null` si no se pueden saber.
@@ -345,59 +338,9 @@ final class RateCards
      * ⚠️ **No dice nada de los festivos y no le hace falta**: el rótulo de la tarifa especial —el
      * dato, hoy «Viernes, findes y festivos»— ya los nombra, así que un martes festivo cae en la
      * especial y la frase de al lado sigue siendo verdad.
+     *
+     * ▶ **Vive en `ReadsRateFacts` desde `#531`**, porque `/precios` escribe los mismos días —en la
+     * tira de la semana, en la cabecera de columna y en la nota de una entrada que no se vende el
+     * finde— y dos derivaciones del mismo conjunto pueden separarse sin que nada falle.
      */
-    private function plainDaysPhrase(): ?string
-    {
-        $especiales = RateType::query()->where('is_active', true)->where('is_special', true)->get();
-
-        if ($especiales->isEmpty() || $especiales->contains(fn (RateType $r): bool => ! is_array($r->weekdays) || $r->weekdays === [])) {
-            return null;
-        }
-
-        /** @var list<int> $tomados */
-        $tomados = $especiales->flatMap(fn (RateType $r): array => array_map('intval', (array) $r->weekdays))->unique()->all();
-
-        // La semana como la escribe el sitio: de lunes a domingo. ⚠️ El domingo es `0` en la BD
-        // —convenio de `Carbon::dayOfWeek`— y va al FINAL, no al principio: una semana que empieza
-        // en domingo daría «de domingo a jueves» para un conjunto que es de lunes a jueves.
-        $semana = [1, 2, 3, 4, 5, 6, 0];
-        $libres = array_values(array_filter($semana, fn (int $d): bool => ! in_array($d, $tomados, true)));
-
-        if ($libres === []) {
-            return null;
-        }
-
-        /*
-         * ⚠️ El nombre del día lo pone **Carbon**, no una tabla de 21 cadenas nuestras: son los
-         * mismos siete nombres en los tres idiomas del sitio y ya vienen traducidos. Escribirlos a
-         * mano es crear tres listas que pueden separarse. `startOfWeek(SUNDAY) + $d` cae en el día
-         * cuyo `dayOfWeek` es exactamente `$d`, que es el convenio con el que la BD los guarda.
-         */
-        $nombre = fn (int $d): string => CarbonImmutable::now()
-            ->startOfWeek(CarbonInterface::SUNDAY)->addDays($d)
-            ->locale(app()->getLocale())->dayName;
-
-        if (count($libres) === 1) {
-            return $nombre($libres[0]);
-        }
-
-        /*
-         * ⚠️ **Solo se escribe como RANGO si los días que sobran son contiguos en la semana.** Con
-         * un conjunto suelto —martes y viernes— «de martes a viernes» sería literalmente falso:
-         * incluiría el miércoles. En ese caso se enumeran.
-         */
-        $posicion = array_flip($semana);
-        $contiguos = count($libres) - 1 === $posicion[$libres[count($libres) - 1]] - $posicion[$libres[0]];
-
-        if ($contiguos) {
-            return __('landing.rates.days_range', [
-                'from' => $nombre($libres[0]),
-                'to' => $nombre($libres[count($libres) - 1]),
-            ]);
-        }
-
-        return __('landing.rates.days_list', [
-            'days' => implode(', ', array_map($nombre, $libres)),
-        ]);
-    }
 }

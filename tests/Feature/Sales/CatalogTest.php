@@ -5,7 +5,7 @@ namespace Tests\Feature\Sales;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\RateResolver;
-use App\Domain\Content\Services\ThemeSettings;
+use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -62,12 +62,26 @@ class CatalogTest extends TestCase
         $this->assertSame(1190, (new RateResolver)->priceCents($ticket, $saturday));
     }
 
-    public function test_pricing_page_renders_features_from_db(): void
+    /**
+     * ⚠️⚠️ **Este caso miraba las `features` de la entrada y desde `#531` la página no las pinta**:
+     * la tabla publica lo que el visitante viene a consultar —el nombre y el precio de cada día— y
+     * las ventajas siguen en el cajón, que es donde se compra. Lo que el caso SIGUE vigilando es su
+     * propiedad de verdad: que la página se escribe desde la BD y no desde una plantilla con
+     * cifras. Se re-apunta al dato que sí pinta, que además es el que cuesta dinero equivocar.
+     */
+    public function test_pricing_page_renders_the_catalog_from_db(): void
     {
-        $this->get('/precios')
-            ->assertOk()
-            ->assertSee('Reserva online recomendada'); // feature sembrada de la entrada (ES). Los
-        // calcetines dejaron de ir "incluidos" en la entrada (#6): ahora son un complemento de 2€.
+        $entrada = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->orderBy('position')->firstOrFail();
+
+        $html = $this->get('/precios')->assertOk()->getContent();
+
+        // El precio de la tarifa NORMAL, escrito como lo escribe la landing (sin decimales cuando
+        // son cero): si alguien teclea una cifra en la plantilla, este caso se pone rojo.
+        $this->assertStringContainsString(
+            Money::showcase($entrada->displayPriceCents()).'&nbsp;€',
+            str_replace(' €', '&nbsp;€', $html),
+        );
     }
 
     public function test_price_varies_when_rates_differ(): void
@@ -78,25 +92,26 @@ class CatalogTest extends TestCase
         $this->assertTrue($ticket->priceVaries());
     }
 
-    public function test_pricing_page_shows_zone_switch_and_from_label(): void
+    /**
+     * ⚠️⚠️ **`/precios` YA NO TIENE PESTAÑA DE ZONA desde `#531`**: enseña las dos tablas a la vez,
+     * porque quien abre el enlace que le han mandado **no ha elegido zona** —es la prueba que le dio
+     * página a esta pantalla—. Lo que este caso vigilaba sigue vivo y se re-apunta: **las dos zonas
+     * salen, cada una con su color del panel y con sus entradas dentro**.
+     * ⚠️ El color se asevera como VALOR y no por el nombre de una clase: desde `#138` viaja en línea,
+     * y una clase solo diría que la plantilla escribió el acento, no que llegara el color.
+     */
+    public function test_pricing_page_shows_both_zones_with_their_colour(): void
     {
-        $response = $this->get('/precios')->assertOk();
+        $html = (string) $this->get('/precios')->assertOk()->getContent();
 
-        $response->assertSee('desde');           // etiqueta de precio "desde" (ES)
-        $response->assertSee('Entradas JUMP');   // label del switcher (zona Jump)
-        $response->assertSee('Entradas KIDS');   // label del switcher (zona Kids)
-        // ⚠️ El tinte por zona se comprobaba por el NOMBRE DE LA CLASE (`zone-tab--jump`), que solo
-        // decía que la plantilla escribió el acento — no que llegara el color. Desde `DECISIONES #138`
-        // el color viaja en línea, así que aquí se asevera EL COLOR de cada zona, que es lo que el
-        // visitante ve: más fuerte que lo anterior y sin acoplar el CSS a los datos.
         foreach (Zone::where('show_in_landing', true)->get() as $zone) {
-            $response->assertSee(
-                ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent),
-                false,
-            );
+            $this->assertStringContainsString((string) $zone->tr('name'), $html, 'falta la cabecera de una zona');
+            $this->assertStringContainsString('background: '.$zone->color, $html, 'la zona pierde su color');
         }
-        $response->assertSee('Jump · 1 hora');   // entradas de la zona Jump en el DOM
-        $response->assertSee('Kids · 1 hora');   // entradas de la zona Kids en el DOM
+
+        // Las entradas de cada zona, con el nombre SIN el prefijo de su zona (`RateTable`).
+        $this->assertStringContainsString('1 hora', $html);
+        $this->assertStringContainsString('2 horas', $html);
     }
 
     public function test_each_zone_has_a_top_featured_entry(): void

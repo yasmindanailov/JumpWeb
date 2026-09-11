@@ -34,7 +34,8 @@ class CardSkinTest extends TestCase
 
     /** Primer nivel: lo que se elige o se compra. Cada una con su sujeto. */
     private const PEGATINA = [
-        '.price' => 'la tarjeta de tarifa (portada y /precios) — T10',
+        // ⚠️ `.price` se fue en `#531`: la tarjeta de tarifa la sustituyó la TABLA de `/precios`, que
+        // es una tarjeta de consulta —no se elige ni se compra dentro— y por eso vive en `APOYO`.
         // ⚠️ `.ride-card` se fue de aquí en `#482`: la tarjeta de atracción vivía en el carrusel
         // de la portada, que se retiró con la sección 03. *Una entrada sin sujeto es una guarda
         // que pasa sin mirar nada*, y esta lista lo dice en su propia guarda-de-la-guarda.
@@ -47,10 +48,15 @@ class CardSkinTest extends TestCase
 
     /** Segundo nivel: apoyo. Borde, pero SIN la sombra dura. */
     private const APOYO = [
-        // ⚠️ `.rules-peek__item` se fue en `#485` con la sección de normas de la portada. Queda UNA
-        // entrada, y eso basta: lo que esta lista vigila es que nadie ascienda una tarjeta de apoyo
-        // a pegatina, y con un sujeto vivo la regla sigue teniendo dónde morder.
-        '.socks-note' => 'la nota de calcetines bajo las tarifas',
+        // ⚠️ `.rules-peek__item` se fue en `#485` con la sección de normas de la portada, y
+        // `.socks-note` en `#531` con la nota de calcetines: `/precios` se rehizo y su requisito lo
+        // dice ahora la fila del propio complemento.
+        // ▶ **La lista se re-apunta a las tarjetas de apoyo que nacen con esa página**, no se queda
+        // vacía: una lista sin sujeto es una guarda que pasa sin mirar nada, y lo que vigila —que
+        // nadie ascienda a pegatina algo que solo se lee— sigue siendo verdad en las tres.
+        '.rate-note' => 'la explicación de la tarifa especial en /precios — #531',
+        '.holidays__list' => 'la lista de festivos de /precios — #531',
+        '.extras__list' => 'los complementos de /precios — #531',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -180,18 +186,15 @@ class CardSkinTest extends TestCase
     //  4 · La destacada conserva el contorno
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    public function test_the_featured_price_card_keeps_its_ink_border(): void
-    {
-        $feat = $this->rules()['.price--feat'] ?? null;
-
-        $this->assertNotNull($feat, 'la regla `.price--feat` ya no existe: si la destacada se fue, retira este caso con ella');
-
-        $this->assertFalse(
-            $this->has($feat, 'border-color', 'transparent'),
-            'la tarifa destacada vuelve a borrar su contorno (`border-color: transparent`): la pegatina '.
-            'sobre color de zona conserva el borde de tinta, como el toggle activo de cumpleaños.',
-        );
-    }
+    /*
+     * ⚠️⚠️ **AQUÍ VIVÍA `test_the_featured_price_card_keeps_its_ink_border`, Y SE VA CON SU SUJETO**
+     * (`#531`, `CONVENCIONES §3.quater`). Vigilaba que `.price--feat` —la tarjeta de tarifa DESTACADA,
+     * pintada sobre el color de su zona— no borrara su contorno de tinta. `/precios` se rehizo desde
+     * su artboard: no hay tarjeta destacada, hay una FILA de tabla con un chip, y el color de zona ya
+     * no rellena nada (era la grieta 01 que el propio canvas nos reportó).
+     * ▶ La regla que lo motivaba sigue viva donde tiene sujeto: la lista `PEGATINA` de arriba exige
+     * el borde de tinta a todas las tarjetas de primer nivel.
+     */
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Herramientas

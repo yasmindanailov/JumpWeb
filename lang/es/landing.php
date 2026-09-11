@@ -166,15 +166,65 @@ return [
         'count_phrase_plain' => 'atracciones en :zone',
         'see_zones' => 'Ver las zonas',
     ],
+    /*
+     * ══ LA PÁGINA `/precios` ═══════════════════════════════════════════════════════════════════
+     * `DECISIONES #531` · carril de diseño Fase 3 · T3b. Artboard `Precios Pagina PJP` 1a/1b.
+     *
+     * ⚠️ El titular y la entradilla son los del artboard (`[DECIDIDO owner, 2026-09-11]`), que
+     * sustituyen a los de `#525`: la página ya enseña exactamente lo que prometen —las dos columnas
+     * de precio por día— así que «cada día tiene su precio escrito» es comprobable mirándola.
+     */
     'pricing' => [
-        'title' => 'Tarifas',
-        // La entradilla de la cabecera de `/precios` (`#525`). ⚠️ Dice solo lo que la página ENSEÑA:
-        // la del canvas añade «y sus complementos», que `/precios` hoy no pinta. Y la anterior
-        // afirmaba que las entradas se compraban «en taquilla o por teléfono» al lado de un botón
-        // que las reserva online.
-        'intro' => 'Todas las tarifas, con sus días.',
-        'from' => 'desde', 'pick_zone' => 'Elige la zona', 'tab' => 'Entradas',
-        'book' => 'Reservar', 'call' => 'Llamar',
+        'title' => 'Todas las tarifas',
+        'intro' => 'Lo que cuesta saltar, por zona y por tiempo. Sin sumas: cada día tiene su precio escrito.',
+        // ⚠️ `book` y `call` los siguen usando `/servicios` y el carril de la portada: la página de
+        // tarifas ya no lleva botón propio, pero las claves NO son suyas.
+        'from' => 'desde', 'book' => 'Reservar', 'call' => 'Llamar',
+
+        // ── LA SEMANA DIBUJADA ────────────────────────────────────────────────────────────
+        // ⚠️ Las INICIALES son de calendario, no de Carbon: en español el miércoles es «X» —«M» es
+        // el martes— y en francés se repiten a propósito. El nombre completo lo pone Carbon y es el
+        // que se lee en voz alta, así que la inicial nunca tiene que desambiguar sola.
+        'week_initials' => [1 => 'L', 2 => 'M', 3 => 'X', 4 => 'J', 5 => 'V', 6 => 'S', 0 => 'D'],
+        'week_label' => 'Qué tarifa rige cada día',
+        'week_normal' => 'Tarifa normal',
+        'week_special' => 'Tarifa especial',
+
+        // ── LA TABLA ──────────────────────────────────────────────────────────────────────
+        // ⚠️ La cabecera de la columna normal se DERIVA de los días que ninguna especial reclama:
+        // aquí solo va la forma del rango («L a J»).
+        'col_range' => ':from a :to',
+        'col_special' => 'Especial',
+        'table_label' => 'Tarifas de :zone',
+        // ⚠️ **«—» no es «gratis»: es que ese día no se vende.** Lo dice en voz alta el lector de
+        // pantalla, que no ve la raya.
+        'not_sold' => 'No se vende ese día',
+        // La fila de la hora extra dice con qué entradas se puede comprar, y sale del PIVOTE.
+        'with_entry' => 'con :entries',
+
+        // ── QUÉ ES LA TARIFA ESPECIAL ─────────────────────────────────────────────────────
+        // ⚠️ Los días salen del rótulo del panel (`:label`) y los normales se derivan: ni una lista
+        // de días escrita a mano, que sería cierta en esta instalación y falsa en la siguiente.
+        'special_title' => 'Qué es la tarifa especial',
+        'special_text' => 'Los días de tarifa especial son: :label.',
+        'special_plain' => 'El resto de días, :days, es la tarifa normal.',
+        'special_calm' => 'No hay que calcular nada: al elegir el día, el precio que ves ya es el tuyo.',
+
+        // ── LOS FESTIVOS ──────────────────────────────────────────────────────────────────
+        // ⚠️ **Sin frase general**: cada fecha dice SU hecho (cerrado, su tarifa o su horario). El
+        // artboard escribe «cuentan como fin de semana, en precio y en horario» y eso es justo lo
+        // que `#487` retiró de la 07, porque el producto no puede afirmarlo.
+        'holidays_title' => 'Los festivos',
+
+        // ── LO QUE SE AÑADE ───────────────────────────────────────────────────────────────
+        'addons_title' => 'Lo que se añade',
+        'addons_lede' => 'Se compra al reservar o en el parque.',
+
+        // ── LA LÍNEA A CUMPLEAÑOS ─────────────────────────────────────────────────────────
+        // ⚠️ «con la comida incluida» es comprobable: el pack trae un menú marcado como incluido.
+        // La zona NO se nombra —el canvas tiene pendiente si es exclusiva durante la fiesta—.
+        'birthdays' => 'Los cumpleaños tienen su propia tarifa, con la comida incluida.',
+        'birthdays_cta' => 'Ver los packs de cumpleaños',
     ],
 
     /*
@@ -412,19 +462,14 @@ return [
         'map_credit' => 'El mapa lo pone Google',
         'open_in_maps' => 'Abrir en Google Maps',
     ],
-    'rules' => [
-        // ⚠️⚠️ **DE ESTE GRUPO SOLO QUEDAN DOS CLAVES, y su consumidor NO es la portada** (`#485`).
-        // La sección de normas de la portada se retiró al entrar la 05 «Antes de venir», y con ella
-        // se fueron `eyebrow`, `title`, `register_title`, `register_text`, `register_cta`,
-        // `socks_cta` y `all_cta` — todas se quedaron sin quien las pintara.
-        // ▶ **`socks_title`/`socks_text` se quedan porque las lee `<x-site.socks-note>`**, que
-        // `/precios` sigue usando: esa página no tiene sección de normas donde recoger el requisito.
-        // ⚠️ El grupo **no se renombra a `pricing`** aunque hoy solo lo use esa página: ya vivió ahí
-        // y `#309` lo movió con su motivo escrito —una clave que nombra la sección de la que la nota
-        // acaba de salir induce a error—. Moverlo otra vez sería repetir el viaje entero.
-        'socks_title' => 'Calcetines antideslizantes obligatorios',
-        'socks_text' => 'Son imprescindibles para saltar de forma segura. Puedes traerlos de casa o añadirlos a tu entrada.',
-    ],
+    /*
+     * ⚠️⚠️ **EL GRUPO `rules` SE VA ENTERO EN `#531`, y sus dos últimas claves con él.** La sección de
+     * normas de la portada la sustituyó la 05 «Antes de venir» (`#485`) y `socks_title`/`socks_text`
+     * sobrevivían por su único consumidor, `<x-site.socks-note>` en `/precios`. Esa página se rehizo
+     * desde su artboard: los calcetines son ahora una ficha del bloque «Lo que se añade» **con el
+     * texto que el panel escribe en el propio complemento** (`ticket_types.features`), así que la
+     * nota estática del producto dejó de tener sitio y de tener sentido — el dato lo pone el dueño.
+     */
 
     /*
      * ── 05 · ANTES DE VENIR ─────────────────────────────────────────────────────────────────────

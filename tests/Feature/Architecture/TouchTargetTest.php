@@ -58,7 +58,9 @@ class TouchTargetTest extends TestCase
         '.lang-dd__trigger' => 'el disparador del idioma, que es una cápsula más',
         '.lang-dd__panel a' => 'las opciones van PEGADAS (hueco 0): un área centrada se metería en la vecina',
         '.skip-link' => 'primer focusable de la página, 38 px',
-        '.price__cta' => 'el CTA de una tarifa, a 42: dos por debajo',
+        // ⚠️ `.price__cta` se fue en `#531` con la tarjeta de tarifa: `/precios` se rehizo desde su
+        // artboard y **no tiene botón propio** —la acción la trae el armazón—, así que ese CTA ya no
+        // existe en ninguna superficie. *Una entrada sin sujeto es una guarda que pasa sin mirar.*
         '.foot__links a' => 'la tira de destinos, dentro de un carril que RECORTA',
         '.foot__legal > *' => 'la tira legal, el mismo carril y el mismo motivo',
         // ── Las cinco que entraron en `#476`, y todas por el MISMO motivo ──────────────────────
@@ -95,7 +97,11 @@ class TouchTargetTest extends TestCase
         // buscándola en la portada y **se puso roja diciendo que vigilaba el vacío**, que es
         // exactamente lo que tenía que hacer: sin ese aviso, el día que `.zone-tab` desapareciera
         // del todo este caso pasaría en verde sin mirar nada.
-        'zone-tab' => ['/precios', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
+        // ⚠️ **Se mira en `/servicios` desde `#531`**: `/precios` se rehizo desde su artboard y ya no
+        // tiene pestaña de zona —quien abre el enlace que le han mandado no ha elegido zona, así que
+        // la página enseña las dos tablas a la vez—. La cápsula vieja sigue viva en `/servicios` y en
+        // el cajón, que son de otra fase: la guarda se muda con su sujeto, no se retira.
+        'zone-tab' => ['/servicios', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
         // ⚠️ `bd-tab`, `bd-invite-cta` y `bd-swatch` se fueron con la página vieja de `/cumpleanos`
         // (`#483` el enlace de la portada, `#528` el resto): la página rehecha compara los packs
         // lado a lado, sin pestañas, y ya no tiene editor de invitaciones.

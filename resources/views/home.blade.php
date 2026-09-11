@@ -388,8 +388,8 @@
          —la sección existe y sigue siendo destino directo— pero **hoy no se llega a ella navegando**:
          o entra en el menú, o espera a la sección 05. Ficha en `DEUDA.md`.
 
-         ⚠️ `/precios` NO cambia: sigue con `<x-site.ticket-prices>` y con sus propios textos. Es una
-         PÁGINA, tiene artboard propio (`Precios Pagina PJP`) y se rehace en la Fase 3. --}}
+         ⚠️ `/precios` NO cambió con esta sección: es una PÁGINA, tiene artboard propio
+         (`Precios Pagina PJP`) y se rehízo en la Fase 3 (`#531`), con su tabla por zona. --}}
     <section id="pricing" class="section wrap">
         {{-- ⚠️⚠️ **`.sec-head` y no `.rides__head`, y lo dijo la sonda.** La cabecera vieja estiliza
              a sus párrafos por ELEMENTO (`.rides__head > p`), así que el rótulo —que también es un
@@ -504,7 +504,7 @@
          componente lo comparten la portada y **`/cumpleanos`**, que es una PÁGINA con artboard
          propio (`Cumpleanos Pagina PJP`) y se rehace en la **Fase 3**. Rehacerlo aquí habría
          cambiado esa página desde una tanda de la portada — es exactamente lo que `#479` evitó con
-         `/precios` y su `<x-site.ticket-prices>`.
+         `/precios`, que esperó a su propia tanda (`#531`).
          ▶ Por eso la banda heredada —polaroid, cinta, pegatina y billete— y el **«paso a paso» de
          cinco pasos** salen de la portada y **siguen enteros en `/cumpleanos`**. `[DECIDIDO owner]`:
          el paso a paso no entra (medido: 615 px de los 2.489 que ocupaba la sección en móvil).

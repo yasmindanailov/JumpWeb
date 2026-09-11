@@ -61,7 +61,19 @@ FAMILIAS = {
 }
 # Clases sueltas cuya FAMILIA sigue viva. ⚠️ Van aparte porque normalizar por familia las dejaría
 # fuera de la poda sin decir nada: le pasó a `.zones__juegos` en `#482`, con `.zones` viva.
-EXACTAS = {'party__mixed'}
+#
+# ⚠️⚠️ **`#531` (la página `/precios` rehecha) es el caso que MÁS pide esta lista y no `FAMILIAS`**:
+# la tarjeta de precio vieja se retira entera, pero **`.price__from` lo emite el CAJÓN**
+# (`CatalogStep.vue`, Fase 4 y otro carril), así que condenar la familia `price` se habría llevado
+# una clase viva de otra superficie. Igual con `pricing`: `.pricing__head` y `.pricing__rays` siguen
+# siendo la cabecera y la decoración de la página.
+EXACTAS = {
+    'party__mixed',
+    # La tarjeta de precio y su rejilla (`<x-site.price-card>`, `<x-site.ticket-prices>`, `#531`).
+    'price', 'price--feat', 'price__ico', 'price__name', 'price__num', 'price__per',
+    'price__cta', 'price__badge', 'price__special', 'price__special-line',
+    'pricing__grid', 'ticket-prices', 'ticket-prices__tabs',
+}
 
 
 def enmascarar(css: str) -> str:

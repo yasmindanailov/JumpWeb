@@ -949,7 +949,8 @@ de escritorio) y `doc/paginas.md` del canvas.
 | T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ↩️ `#526` construida y **revertida por `#527`** (`[DECIDIDO owner]`): las interiores acaban en el pie de `#522`, sin tarjeta |
 | T3b·1 | **`/atracciones`** | ✅ `#481` (adelantada en la Fase 2: la puerta de la sección 03 la necesitaba) |
 | T3b·2 | **`/cumpleanos`**: el reloj, los packs comparados con contador, qué comen, el carril, «Igual en los dos», «Después de reservar» y el cierre | ✅ `#528` — revisada por el owner en vivo: OK · el vídeo del hero, cambiado en la misma jornada (`#529`) |
-| T3b… | **Las páginas** que quedan, en el orden del Layout: `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
+| T3b·3 | **`/precios`**: sin pestaña de zona · la semana dibujada · una tabla por zona con las dos columnas de precio entero · la hora extra como fila · los festivos · «Lo que se añade» | ✅ `#531` |
+| T3b… | **Las páginas** que quedan, en el orden del Layout: `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
 
 #### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
 

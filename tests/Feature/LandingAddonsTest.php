@@ -44,17 +44,22 @@ class LandingAddonsTest extends TestCase
         return $addon;
     }
 
-    public function test_entries_show_their_assigned_addons_compactly(): void
-    {
-        $res = $this->get('/precios')->assertOk();
-
-        // El bloque compacto de complementos aparece (etiqueta) con los addons enganchados a
-        // las entradas (el seeder engancha Calcetines + Taquilla a todas las entradas).
-        $res->assertSee('Complementos disponibles');
-        $res->assertSee('addons-mini', false);
-        $res->assertSee('Calcetines antideslizantes');
-        $res->assertSee('Taquilla');
-    }
+    /*
+     * ⚠️⚠️ **AQUÍ VIVÍAN DOS CASOS DEL BLOQUE COMPACTO SOBRE ENTRADAS, y se van con su SUJETO**
+     * (`#531`, `CONVENCIONES §3.quater`): `test_entries_show_their_assigned_addons_compactly` y
+     * `test_addon_features_open_from_an_inline_more_info_button_on_the_landing`.
+     *
+     * El bloque `addons-mini` —con su «Más info» desplegable— lo pintaba `<x-site.price-card>` bajo
+     * cada tarjeta de entrada de `/precios`. Esa página se rehizo desde su artboard: hoy publica una
+     * TABLA por zona y los complementos van en su propio bloque de filas, con el nombre y la ventaja
+     * que el panel escribe en cada uno. **No es que la regla se relaje: es que su superficie ya no
+     * existe** — y lo que la sustituye lo vigila `PricingPageTest`.
+     *
+     * ▶ `<x-site.product-addons>` sigue vivo en `/servicios`, para un servicio que vincule un pack
+     * comprable. ⚠️ En la suite **ningún servicio sembrado lo vincula** (`ticket_type_id => null`),
+     * así que re-apuntar estos casos allí los habría dejado mirando el vacío, que es exactamente lo
+     * que esta convención existe para impedir. Ficha en `DEUDA.md`.
+     */
 
     public function test_the_comparison_gets_one_column_per_pack(): void
     {
@@ -124,33 +129,31 @@ class LandingAddonsTest extends TestCase
             ->assertSee('<span class="addon-card__unit">'.__('landing.rates.addon_per_guest').'</span>', false);
     }
 
-    public function test_addon_features_open_from_an_inline_more_info_button_on_the_landing(): void
-    {
-        // Decisión clienta: en la LANDING las ventajas se despliegan con el botón «Más info +»
-        // (mismo patrón que el sidebar de compra), INLINE en la fila, junto al título del
-        // complemento. Las ventajas (.addons__features) van debajo.
-        $deluxe = $this->addon('Photocall', 1500, 82, ['features' => ['es' => ['Atrezzo temático', 'Fotos ilimitadas']]]);
-        $this->anEntry()->configurableAddons()->attach($deluxe->id, ['quantity_mode' => 'fixed', 'position' => 5]);
-
-        $res = $this->get('/precios')->assertOk();
-        $res->assertSee('addons__moreinfo', false);          // botón «Más info» (mismo del sidebar)
-        $res->assertSee('addons-mini__moreinfo', false);     // modificador INLINE (en la fila, junto al título)
-        $res->assertSee('addons__features', false);          // lista de ventajas desplegable
-        $res->assertSee('Atrezzo temático');                 // la ventaja, debajo
-        // Revertido: ya NO se usa el patrón «nombre como disparador».
-        $res->assertDontSee('addons-mini__name--toggle', false);
-    }
-
+    /**
+     * ⚠️ **Re-apuntado en `#531`, y la propiedad no se relaja.** El caso nació de un defecto real —un
+     * complemento GRATIS rotulado dos veces, como etiqueta y como precio— y su superficie era la
+     * lista compacta de la tarjeta de entrada. Hoy ese complemento sale en la FILA del bloque «Lo que
+     * se añade» de `/precios`, así que la regla se comprueba ahí: **la palabra «Gratis» aparece una
+     * sola vez**.
+     */
     public function test_free_addon_is_not_labelled_twice(): void
     {
-        // Regresión del bug reportado: un complemento gratis (0 €) no debe mostrar "Gratis"
-        // como etiqueta Y como precio. El badge "Gratis" aparece; el precio "Gratis" no.
         $gratis = $this->addon('Pulsera', 0, 83);
         $this->anEntry()->configurableAddons()->attach($gratis->id, ['quantity_mode' => 'fixed', 'position' => 6]);
 
-        $res = $this->get('/precios')->assertOk();
-        $res->assertSee('Pulsera');
-        $res->assertDontSee('addons-mini__price">Gratis<', false);
+        $html = (string) $this->get('/precios')->assertOk()->getContent();
+
+        // ⚠️ Se acota al BLOQUE, no a la página: el diccionario del cajón viaja en el payload de
+        // todas las vistas y lleva esa misma palabra. Contarla sobre el documento entero mediría
+        // otra cosa (la lección de `#295`: acota al elemento antes de creerte un recuento).
+        preg_match('#<ul class="extras__list".*?</ul>#s', $html, $bloque);
+        $this->assertNotEmpty($bloque, 'el bloque de complementos no se pinta: el caso miraría el vacío');
+
+        $this->assertStringContainsString('Pulsera', $bloque[0]);
+        $this->assertSame(
+            1, substr_count($bloque[0], __('tickets.addon_badge_free')),
+            'el complemento gratis se rotula dos veces: la etiqueta dice la categoría y el precio no repite la palabra.',
+        );
     }
 
     public function test_static_socks_note_is_gone(): void

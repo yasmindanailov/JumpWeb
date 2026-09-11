@@ -551,6 +551,7 @@ class AddonStageTest extends TestCase
             'app/Domain/Booking/Services/AddonOfferReader.php' => 'vende: la oferta del embudo',
             'app/Domain/Booking/Services/CatalogReader.php' => 'vende: la ficha pública del producto',
             'app/Domain/Content/Services/LandingAddonPresenter.php' => 'vende: anuncia bajo la tarjeta',
+            'app/Domain/Booking/Services/RateTable.php' => 'vende: la tabla de `/precios` lleva a una FILA los complementos de TIEMPO, y los pide por su fase con `addonsSoldAtBooking()` — uno de `postform` no se compra al reservar y anunciarlo aquí ofrecería lo que el embudo rechaza (`#531`)',
             'app/Filament/Pages/CreateManualOrderPage.php' => 'vende: el alta manual del mostrador',
             'app/Domain/Booking/Services/CartPricer.php' => 'vende: presupuesto, delega en el resolutor',
             'app/Domain/Booking/Services/OrderCreator.php' => 'vende: cobro, delega en el resolutor',

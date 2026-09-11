@@ -10,15 +10,16 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Card «Regístrate antes de venir» (QR + CTA): bajo la sección de entradas SOLO con registro EXTERNO
- * (`registration.url`). QR y CTA apuntan a la MISMA URL; el QR es SVG inline server-side. Entra como
- * COLUMNA del grid (≤3 entradas en la zona) o como BANDA debajo (≥4). Ver `<x-site.registration-qr>`.
+ * Card «Regístrate antes de venir» (QR + CTA): en `/precios` SOLO con registro EXTERNO
+ * (`registration.url`). QR y CTA apuntan a la MISMA URL; el QR es SVG inline server-side.
+ *
+ * ⚠️ **Desde `#531` es siempre una BANDA**: el modo inline colgaba de la rejilla de tarjetas de
+ * entrada, que se fue al rehacer la página desde su artboard. Ver `<x-site.registration-qr>`.
  *
  * ⚠️⚠️ **DESDE `#479` ESTA CARD YA NO ESTÁ EN LA PORTADA, y por eso todos los casos miran
  * `/precios`.** El rediseño de la sección 02 desde el canvas la retira de la home
  * (`[DECIDIDO owner, 2026-09-09]`): allí el registro es la sección 05 «Antes de venir», que dice
- * *«el registro ES el QR»* y la trata entera. Hasta que esa sección exista, la card vive **solo** en
- * la página de tarifas, que sigue usando `<x-site.ticket-prices>`.
+ * *«el registro ES el QR»* y la trata entera. La card vive **solo** en la página de tarifas.
  * ▶ Los casos NO se han borrado: se han re-apuntado. La card sigue teniendo pantalla y sus reglas
  * —inline contra banda, la URL compartida, el rechazo de un esquema no http— siguen valiendo. Lo
  * que cambió es dónde se pinta.
@@ -86,26 +87,25 @@ class RegistrationQrCardTest extends TestCase
             ->assertSee('https://registro.example.test/alta', false);
     }
 
-    public function test_card_is_inline_column_when_the_zone_has_room(): void
+    /**
+     * ❗❗ **LA CARD ES SIEMPRE UNA BANDA DESDE `#531`, y aquí vivían sus DOS modos.**
+     *
+     * El modo INLINE existía porque la página pintaba una rejilla de tarjetas de precio y la card
+     * entraba como una columna más cuando la zona dejaba hueco (≤3 entradas). `/precios` se rehizo
+     * desde su artboard —dos tablas, sin rejilla de tarjetas—, así que **ese hueco ya no existe**:
+     * el modo inline se fue con su sujeto, y con él la clase, su CSS y el prop que lo encendía.
+     * ▶ Lo que sí sigue siendo cierto se asevera aquí: la card se pinta **una sola vez**, como banda,
+     * y NO depende de la zona activa —la página ya no tiene zona activa—.
+     */
+    public function test_card_is_a_single_band_and_no_longer_depends_on_a_zone(): void
     {
-        // ≤3 entradas por zona → la card entra como COLUMNA del grid (alineada con las entradas).
-        $this->trimEntriesPerZoneTo(2);
         $this->setRegistrationUrl('https://registro.example.test/alta');
 
-        $this->get('/precios')->assertOk()->assertSee('regcard--inline', false);
-    }
+        $html = (string) $this->get('/precios')->assertOk()->getContent();
 
-    public function test_card_is_band_when_the_grid_is_full(): void
-    {
-        // El fixture siembra 4 entradas por zona → grid lleno → la card va como BANDA debajo (no inline),
-        // visible por zona activa (`includes(priceZone)`).
-        $this->setRegistrationUrl('https://registro.example.test/alta');
-
-        $res = $this->get('/precios');
-
-        $res->assertOk();
-        $res->assertDontSee('regcard--inline', false);
-        $res->assertSee('includes(priceZone)', false); // la banda se muestra según la zona activa
+        $this->assertSame(1, substr_count($html, 'class="regcard"'), 'la card de registro se pinta una sola vez');
+        $this->assertStringNotContainsString('regcard--inline', $html);
+        $this->assertStringNotContainsString('includes(priceZone)', $html);
     }
 
     public function test_cta_and_qr_target_the_same_url(): void

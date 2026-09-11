@@ -28796,3 +28796,81 @@ seguía pasando de cien reglas). *Una mutación que no muerde puede ser débil a
 
 ⚠️ **Queda el OJO del owner**: nada de esto se ha visto en un teléfono de verdad, y la grieta 00 es
 justo la que se juzga mirando.
+
+## #531 · 2026-09-12 · `[DECIDIDO owner]` `/precios` rehecha desde su artboard (T3b): dos columnas de precio ENTERO, la hora extra como FILA y los festivos con el hecho de cada fecha
+
+Carril de diseño, Fase 3 · T3b (`specs/rediseno-desde-canvas.md` §5.5). Artboard `Precios Pagina PJP`
+**1a** (móvil) + **1b** (escritorio), leído del canvas con `DesignSync`: **la copia local no lo trae**.
+
+❗❗❗ **SIN PESTAÑA DE ZONA, y el motivo está en la prueba que le dio página**: *«los precios se buscan
+por su nombre o se mandan por WhatsApp desde el mostrador»*, así que **quien abre el enlace no ha
+elegido zona** — esconderle media tabla detrás de un control es lo contrario de lo que viene a hacer.
+En `/atracciones` la zona sí venía elegida, y por eso allí sí hay pestaña.
+
+▶ **Cuatro cosas chocaban —con los datos, con una decisión anterior o con el propio artboard— y las
+decidió el owner** (preguntadas con lo medido delante):
+
+| | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| La **hora extra** | **una FILA de la tabla de su zona**, con «—» en la columna donde no tiene precio. El artboard dibuja una sola a 3 €; el catálogo tiene **DOS productos** (Kids 5 € · Jump 8 €) y **solo con precio en la tarifa especial** |
+| Los **festivos** | **la lista entera aquí**, cada fecha con SU hecho; la 07 de la portada **no se toca** (su pliegue sigue) |
+| El **bloque de complementos** | se llama **«Lo que se añade»** y cada uno dice **la ventaja que el panel escribe en él**; sin la frase «una no es opcional», que el producto no sabe |
+| Los **textos** | los del artboard: «Todas las tarifas» y «Lo que cuesta saltar, por zona y por tiempo. Sin sumas: cada día tiene su precio escrito», y la salida «con la comida incluida» **sin nombrar la zona** |
+
+❗❗❗ **EL DEFECTO QUE SALIÓ AL MEDIR, Y ESTABA EN LA PORTADA: «solo de lunes a jueves» colgaba de la
+pregunta EQUIVOCADA.** La frase la decidía `specialRateSurcharges()`, que devuelve las tarifas
+especiales **cuyo precio DIFIERE**. Reproducido con control sobre el catálogo real: igualando el precio
+especial al normal, la tarjeta de Kids pasa a decir **«solo de lunes a jueves»** mientras el dominio la
+sigue vendiendo el sábado (`displayPriceCentsForRate` devuelve 800). ▶ *Existir un precio y ser distinto
+son dos preguntas, y esa frase es de la primera*: hoy la responde `sellsOnSpecial()`, con su caso y su
+CONTROL —una entrada con el MISMO precio los siete días **no** puede decir «solo»—.
+
+▶ **Las reglas compartidas suben a un trait** (`Booking\Concerns\ReadsRateFacts`): el nombre sin el
+prefijo de su zona, los días de la normal, quién lidera y si un producto se vende en la especial. Estaban
+en privado dentro de `RateCards`, y la página pregunta lo mismo: con dos copias, **la portada y la página
+podrían decir cosas distintas del mismo catálogo sin que nada fallara**.
+
+❗❗ **UNA COLUMNA POR TARIFA PREGUNTA POR SU TARIFA.** `displayPriceCents()` es el precio de REFERENCIA
+—la normal o, si falta, la más baja—, así que la hora extra (solo especial) habría escrito su cifra en la
+columna «L a J», anunciando un día en el que no se puede comprar. La tabla usa
+`displayPriceCentsForRate()` por columna, y `null` se pinta como raya **con su texto para lector de
+pantalla**: «no se vende ese día» no es «gratis».
+
+▶ **La fecha especial viaja con su TARIFA** (`SpecialDay::rateLabel`, `#531`): la lista está aquí porque
+esas fechas cambian el PRECIO, así que una fila que solo dijera «cerrado» o su horario no contestaría la
+pregunta por la que se entra. ⚠️ **Y no hay frase general**: «cuentan como fin de semana, en precio y en
+horario» es justo lo que `#487` retiró de la portada porque el producto no puede afirmarlo. Cada fila dice
+lo suyo —cerrado · su tarifa · su horario— y **con cero fechas el bloque no existe**.
+
+⚠️⚠️ **Lo que se retira con su sujeto** (`CONVENCIONES §3.quater`): `<x-site.ticket-prices>`,
+`<x-site.price-card>`, `<x-site.special-rate-chips>` y `<x-site.socks-note>`, su CSS (131 líneas por el
+podador, más tres bloques de `site.css` a mano), el modo `--inline` de la tarjeta del QR de registro —que
+colgaba de la rejilla de tarjetas— y el grupo `landing.rules` de los tres idiomas. ▶ **El requisito de los
+calcetines no se pierde: cambia de FUENTE.** Lo dice la fila de su complemento con el texto del panel, y
+así el producto **no tiene que adivinar cuál de sus complementos son los calcetines** — deducirlo por su
+icono sería usar presentación como identidad, el defecto que `#485` evitó y que `#295`/`#301` pagaron dos
+veces. ⚠️ **Paso de PUESTA EN MARCHA**: una instalación recién sembrada no escribe esas ventajas, así que
+hasta que el panel las escriba la fila dice solo nombre y precio (ficha en `DEUDA.md`).
+
+⚠️ **Siete guardas ajenas se re-apuntan o pierden su entrada**, y **cinco las cazó la suite COMPLETA con
+la dirigida en verde** (la lección de `#521`, otra vez): el censo de etiquetas (`.price__badge`), el de
+movimiento (`.price--feat .price__badge`), el de rellenos de acción —que se queda **sin ninguna
+excepción**, por primera vez— , el de tarjetas (`.price` sale de PEGATINA y el segundo nivel se re-apunta a
+las tres tarjetas de esta página) y el censo de FASE de complementos, que exige declarar a `RateTable`.
+
+⚠️ **Dos casos de `LandingAddonsTest` se van con su superficie** —el bloque compacto sobre ENTRADAS— y
+**no se re-apuntan a `/servicios`**: ningún servicio sembrado vincula un pack, así que allí mirarían el
+vacío. Ficha en `DEUDA.md`.
+
+**Verificación.** Guarda nueva `PricingPageTest` (13 casos, con el CONTROL del precio igualado) +
+`scripts/mutar-precios.py`. Sonda de navegador: `/precios` **cero desborde y cero solapes** en 390 y 1280,
+y los cuatro controles bajo 48 son **preexistentes** (el logotipo del armazón, aparcado en `#476`, y los
+tres enlaces de idioma del pie, de `#522`). Comparador contra el artboard (`scripts/comparar-seccion.mjs
+precios`, que estrena `ruta`): **14 idénticas · 2 divergencias declaradas · 0 sin explicar** en móvil y
+**12 · 0 · 0** en escritorio; las dos declaradas son de TALLA y la misma decisión de siempre —cuerpo 16 y
+etiqueta 12 del sistema contra 15,5 y 10,5 del dibujo—. Medido: la página pesa **2.131 px** en móvil
+(2,52 pantallas) y **2.382** en escritorio (2,65).
+
+⚠️ **Y una raya que salía en verde**: la de «no se vende» heredaba el rol de CIFRA de su columna y se leía
+como un precio en lima. Una ausencia no se resalta — va en el gris de apoyo. *Lo vio la captura, no la
+suite.*

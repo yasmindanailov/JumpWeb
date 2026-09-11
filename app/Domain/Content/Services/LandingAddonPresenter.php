@@ -73,7 +73,8 @@ class LandingAddonPresenter
 
             // "desde" si el complemento DE PAGO varía de precio por día (festivo/finde): el
             // checkout cobra la tarifa del día, así que lo anunciado no debe quedar por debajo.
-            // Mismo matiz que la tarjeta del producto principal (price-card con priceVaries()).
+            // Mismo matiz que el precio del producto principal, que también anuncia con «desde»
+            // cuando varía por día (`TicketType::priceVaries()`).
             if (! $included && $priceCents > 0 && $addon->priceVaries()) {
                 $note = __('landing.pricing.from').' '.$note;
             }
@@ -95,6 +96,15 @@ class LandingAddonPresenter
                 'name' => (string) $addon->tr('name'),
                 'badge' => $badge,
                 'note' => $note,
+                /*
+                 * ¿Este complemento es TIEMPO y no una cosa? (`#531`). Lo dicen los dos interruptores
+                 * del catálogo —ocupar la franja siguiente o alargar la estancia del padre—, **nunca
+                 * el nombre**: es el mismo criterio con el que `/cumpleanos` distingue su hora extra
+                 * (`#528`) y con el que el aforo la cobra (`specs/hora-extra.md`).
+                 * ▶ Lo usa `/precios`, que lo lleva a una FILA de su tabla porque su precio depende
+                 * del día; en el carril de escaparate no cabría esa excepción.
+                 */
+                'time_extra' => $addon->occupiesAfterParent() || $addon->extendsParentStay(),
                 /*
                  * **El precio SUELTO, en registro de escaparate** (`#479`). `note` lleva el importe
                  * con su signo y su matiz ya pegados —«+2,00 €», «desde +2,00 €/invitado»— porque
@@ -140,16 +150,23 @@ class LandingAddonPresenter
      * excluyente —el menú—. `/cumpleanos` los enseña en su propio bloque con lo que lleva cada uno,
      * y en el carril serían dos fichas que parecen sumarse cuando se elige una.
      *
+     * ▶ `$withoutTimeExtras` (`DECISIONES #531`): fuera los que son TIEMPO —la hora extra—. `/precios`
+     * los lleva a una fila de su tabla, donde la columna dice en qué tarifa se venden; como ficha de
+     * escaparate habría que escribir esa excepción a mano y encima una vez por zona.
+     *
      * @param  iterable<TicketType>  $products
      * @return list<array<string, mixed>>
      */
-    public static function unique(iterable $products, bool $withoutChoices = false): array
+    public static function unique(iterable $products, bool $withoutChoices = false, bool $withoutTimeExtras = false): array
     {
         $vistos = [];
 
         foreach ($products as $product) {
             foreach (self::rows($product, false) as $row) {
                 if ($withoutChoices && $row['group'] !== null) {
+                    continue;
+                }
+                if ($withoutTimeExtras && $row['time_extra']) {
                     continue;
                 }
                 $vistos[$row['id']] ??= $row;

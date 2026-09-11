@@ -24,12 +24,20 @@
  */
 import { chromium } from 'playwright-core';
 
-const selector = process.argv[2];
-if (!selector) {
-    console.error('Uso: node scripts/medir-seccion.mjs "<selector>" [más selectores…]');
+/*
+ * ⚠️ **`--url=` lo añade `#531`, y no es comodidad**: la Fase 3 mide PÁGINAS (`/precios`, `/normas`,
+ * `/servicios`…) y este medidor iba clavado a la portada, así que cada tanda de página se escribía
+ * su propio `page.evaluate` a mano — que es justo lo que este fichero existe para evitar. La ruta
+ * por defecto sigue siendo `/`, así que las llamadas de la Fase 2 no cambian.
+ */
+const args = process.argv.slice(2);
+const ruta = (args.find((a) => a.startsWith('--url=')) ?? '--url=/').slice('--url='.length);
+const selectores = args.filter((a) => !a.startsWith('--'));
+
+if (selectores.length === 0) {
+    console.error('Uso: node scripts/medir-seccion.mjs "<selector>" [más selectores…] [--url=/precios]');
     process.exit(1);
 }
-const selectores = process.argv.slice(2);
 
 const nav = await chromium.launch({ args: ['--no-sandbox'] });
 

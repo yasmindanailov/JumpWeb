@@ -99,10 +99,35 @@ return [
         'see_zones' => 'Voir les zones',
     ],
     'pricing' => [
-        'title' => 'Tarifs',
-        'intro' => 'Tous les tarifs, avec leurs jours.',
-        'from' => 'dès', 'pick_zone' => 'Choisis ta zone', 'tab' => 'Billets',
-        'book' => 'Réserver', 'call' => 'Appeler',
+        'title' => 'Tous les tarifs',
+        'intro' => 'Ce que coûte de sauter, par zone et par durée. Sans calcul : chaque jour a son prix écrit.',
+        'from' => 'dès', 'book' => 'Réserver', 'call' => 'Appeler',
+
+        // ⚠️ Initiales de calendrier, pas celles de Carbon : en français le M se répète (mardi et
+        // mercredi) par convention. Le nom complet vient de Carbon et c'est lui qui est lu à voix haute.
+        'week_initials' => [1 => 'L', 2 => 'M', 3 => 'M', 4 => 'J', 5 => 'V', 6 => 'S', 0 => 'D'],
+        'week_label' => 'Quel tarif s\'applique chaque jour',
+        'week_normal' => 'Tarif normal',
+        'week_special' => 'Tarif spécial',
+
+        'col_range' => 'de :from à :to',
+        'col_special' => 'Spécial',
+        'table_label' => 'Tarifs :zone',
+        'not_sold' => 'Pas vendu ce jour-là',
+        'with_entry' => 'avec :entries',
+
+        'special_title' => 'Ce qu\'est le tarif spécial',
+        'special_text' => 'Les jours de tarif spécial sont : :label.',
+        'special_plain' => 'Les autres jours, :days, c\'est le tarif normal.',
+        'special_calm' => 'Rien à calculer : en choisissant le jour, le prix que tu vois est le tien.',
+
+        'holidays_title' => 'Les jours fériés',
+
+        'addons_title' => 'Ce qui s\'ajoute',
+        'addons_lede' => 'À acheter en réservant ou au parc.',
+
+        'birthdays' => 'Les anniversaires ont leur propre tarif, repas compris.',
+        'birthdays_cta' => 'Voir les formules anniversaire',
     ],
 
     /* Section 02 de la page d'accueil. Voir le fichier espagnol pour le motif du bloc à part. */
@@ -256,12 +281,8 @@ return [
         'map_credit' => 'Carte fournie par Google',
         'open_in_maps' => 'Ouvrir dans Google Maps',
     ],
-    // ⚠️ Solo quedan las dos que lee `<x-site.socks-note>` en `/precios`: la sección de normas de la
-    // portada la sustituyó la 05 «Antes de venir» (`#485`). El porqué, en `lang/es/landing.php`.
-    'rules' => [
-        'socks_title' => 'Chaussettes antidérapantes obligatoires',
-        'socks_text' => 'Indispensables pour sauter en toute sécurité. Apporte les tiennes ou ajoute-les à ton billet.',
-    ],
+    // ⚠️ El grupo `rules` se fue entero en `#531`: su última nota —la de los calcetines— la sustituye
+    // la ficha del complemento en `/precios`, con el texto que escribe el panel. Ver `lang/es`.
 
     // ── 05 · AVANT DE VENIR ── (`#485`). El término del descargo en francés es «décharge de
     // responsabilité», y lo vigila `WaiverWordingIsOneTermTest`.

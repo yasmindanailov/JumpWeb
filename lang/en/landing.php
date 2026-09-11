@@ -99,10 +99,35 @@ return [
         'see_zones' => 'See the zones',
     ],
     'pricing' => [
-        'title' => 'Pricing',
-        'intro' => 'All the rates, with their days.',
-        'from' => 'from', 'pick_zone' => 'Choose a zone', 'tab' => 'Tickets',
-        'book' => 'Book', 'call' => 'Call',
+        'title' => 'All the rates',
+        'intro' => 'What it costs to jump, by zone and by time. No maths: every day has its own price written down.',
+        'from' => 'from', 'book' => 'Book', 'call' => 'Call',
+
+        // ⚠️ Calendar initials, not Carbon's: in English T and S repeat by convention. The full day
+        // name comes from Carbon and is what a screen reader announces.
+        'week_initials' => [1 => 'M', 2 => 'T', 3 => 'W', 4 => 'T', 5 => 'F', 6 => 'S', 0 => 'S'],
+        'week_label' => 'Which rate applies each day',
+        'week_normal' => 'Regular rate',
+        'week_special' => 'Special rate',
+
+        'col_range' => ':from to :to',
+        'col_special' => 'Special',
+        'table_label' => ':zone rates',
+        'not_sold' => 'Not sold that day',
+        'with_entry' => 'with :entries',
+
+        'special_title' => 'What the special rate is',
+        'special_text' => 'The special rate days are: :label.',
+        'special_plain' => 'Every other day, :days, is the regular rate.',
+        'special_calm' => 'Nothing to work out: when you pick the day, the price you see is yours.',
+
+        'holidays_title' => 'Public holidays',
+
+        'addons_title' => 'What you can add',
+        'addons_lede' => 'Buy it when booking or at the park.',
+
+        'birthdays' => 'Birthdays have their own rate, food included.',
+        'birthdays_cta' => 'See the birthday packages',
     ],
 
     /* Section 02 of the home page. See the Spanish file for why this is its own block. */
@@ -256,12 +281,8 @@ return [
         'map_credit' => 'Map by Google',
         'open_in_maps' => 'Open in Google Maps',
     ],
-    // ⚠️ Solo quedan las dos que lee `<x-site.socks-note>` en `/precios`: la sección de normas de la
-    // portada la sustituyó la 05 «Antes de venir» (`#485`). El porqué, en `lang/es/landing.php`.
-    'rules' => [
-        'socks_title' => 'Non-slip socks required',
-        'socks_text' => "They're a must for safe jumping. Bring your own from home or add them to your ticket.",
-    ],
+    // ⚠️ El grupo `rules` se fue entero en `#531`: su última nota —la de los calcetines— la sustituye
+    // la ficha del complemento en `/precios`, con el texto que escribe el panel. Ver `lang/es`.
 
     // ── 05 · BEFORE YOU COME ── (`#485`). El término del descargo en inglés es «liability waiver»,
     // y lo vigila `WaiverWordingIsOneTermTest`.

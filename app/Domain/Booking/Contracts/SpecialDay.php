@@ -19,6 +19,17 @@ final readonly class SpecialDay
         public ?string $note,
         public ?string $opensAt,
         public ?string $closesAt,
+        /**
+         * **La TARIFA que ese día aplica, escrita** —hoy «Viernes, findes y festivos»— o `null` si
+         * la fecha no declara ninguna (entonces manda la regla por día de la semana).
+         *
+         * ▶ Existe desde `#531`, y lo pide la página `/precios`: su lista de festivos está ahí
+         * **porque cambian el PRECIO**, así que una fila que solo dijera «cerrado» o su horario no
+         * contestaría la pregunta por la que el visitante ha entrado. La 07 de la portada no la usa.
+         * ⚠️ Es el rótulo del PANEL (`rate_types.label`), no una cadena nuestra: la tarifa se nombra
+         * igual en todas las superficies (regla dura del canvas) y aquí solo se transcribe.
+         */
+        public ?string $rateLabel = null,
     ) {}
 
     public function hasHours(): bool
