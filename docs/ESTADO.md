@@ -44,6 +44,18 @@ no suponerlo.
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 > | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (sin estrenar) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §3.1 | **arranca** (`#530`): el material del cliente está en la rama **`cliente/playjump`** (su `README.md` y `aplicar.sh`); lo primero es la **grieta 00**, que es decisión del owner · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5**, y lo compartido se avisa AQUÍ antes de tocarlo |
 >
+> ▶ **Cierre del carril de diseño (11-09, noche)**: `#528`→`#530` empujados en `dd3b6a0e` con el gate
+en verde, y la rama `cliente/playjump` en `19f2bc8c`. **Por dónde retomar**: **`/precios`**, la
+primera de las que quedan en `specs/rediseno-desde-canvas.md` §5.5 (`/precios` · `/normas` ·
+`/servicios` · `/bar` · `/contacto`) — **refresca antes la copia del canvas** (caduca sin avisar,
+`tema-por-instalacion.md` §1) y relee su artboard mientras dura la tanda. **Si cambias algo del
+cliente, cámbialo también en la rama** (`CARRIL-SPA.md`). ▶ **Queda del OWNER, y nada bloquea**:
+**ver el vídeo nuevo del hero en un navegador de verdad** (el Chromium de las sondas no trae H.264, así
+que se verificó decodificándolo entero con `ffmpeg`, `#529`) · las **dos fotos** de `/cumpleanos` · y
+las **dos notas de catálogo** que dejó (`DEUDA.md` «lo que dejó `/cumpleanos`»: ventajas que repiten la
+edad y la duración, y los calcetines y las «dos horas» escritos a mano en la sección 04). En el otro
+ordenador lo primero también es suyo: la **grieta 00** (13 → 16 px).
+>
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
 `public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
 propio y artboard propio. ▶ Verificado en el merge del 10-09: los dos carriles tocaron **cero
