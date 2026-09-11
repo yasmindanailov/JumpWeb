@@ -28176,3 +28176,62 @@ vigila nada.*
 marcada. Cuatro casos se retiran con su sujeto (`CONVENCIONES §3.quater`) —dos de `ServicesPageTest`
 y dos de orden de `ArmazonContractTest`— y uno se sustituye; dos sondas de idioma de `HomePageTest`
 usaban el rótulo del desplegable viejo y se re-apuntan, porque su sujeto es el IDIOMA.
+
+## #522 · 2026-09-11 · `[DECIDIDO owner]` El PIE del marco: tinta a sangre, el idioma a la vista y el colofón del canvas — y dos velas que no se habían apagado NUNCA
+
+La **T3a·2** de la Fase 3 (`specs/rediseno-desde-canvas.md` §5.5), con las decisiones que el owner
+tomó en `#521` sobre el Layout y una más que salió al medir:
+
+| Pieza | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| Superficie | banda de **TINTA a sangre completa** (`data-surface="ink"` en el `<footer>`, la columna dentro), con la tira en cuña de siempre |
+| Destinos | los de `SiteDestinations` (`#521`) + «Mi cuenta»; **solo en la portada**, además, sus secciones |
+| Idioma | **ES · EN · FR a la vista en todas las páginas** — revierte `#253`, que lo había dejado en un `<noscript>` para ganar sitio |
+| Colofón | **«Nombre · Ciudad · © año»**; sin ciudad no queda un «·» colgando |
+| Escritorio | **contacto e idioma COMPARTEN FILA con lo legal** — se aparta del Layout, que los dibuja en dos |
+
+❗❗ **La última se decidió con la medida delante**: con las dos filas del canvas el pie crecía y el
+punto estático del cierre de la portada dejaba de caber —**45 px** de tarjeta sobre el pie a 1440×900,
+donde antes cabía—; con una fila, **0**. Solape final en px: 390×844 **67** · 430×932 0 · 1280×800
+**55** · 1280×900 0 · 1366×768 **94** · 1440×900 0 · 1536×864 0 · 1920×1080 0. ⚠️ Las tres que pisan son
+ventanas BAJAS y no se midieron con el pie anterior: no se afirma que sean nuevas.
+
+▶ **Lo que sale del pie no se pierde**: el lema sigue siendo el `<title>` de la portada cuando no hay
+«Título web», la coletilla el pie del post-form, las redes siguen en el menú y en el `sameAs`, y el
+registro externo lo ofrece el par del armazón. Las ayudas del panel de lema y coletilla dejaron de
+prometer el pie. Los enlaces de idioma llevan `hreflang`, `lang`, el **nombre nativo** como nombre
+accesible (la etiqueta visible «ES» está contenida en él) y `aria-current` el vigente.
+
+❗❗❗ **EL HALLAZGO: LAS VELAS DEL PIE Y DEL MENÚ NO SE HABÍAN APAGADO NUNCA.** Las dos colgaban de
+`animation-timeline: scroll(nearest …)` sobre el `::after` del ENVOLTORIO, y `nearest` busca el
+contenedor de scroll **ANTECESOR** del elemento animado —el documento en el pie, el propio `.menu` en
+el menú—, no el carril, que es su hermano (pie) o su descendiente (menú). Medido con el carril al
+final: opacidad **1** en los dos. Como estaban siempre a la vista, parecían funcionar, y las guardas
+del menú solo comprobaban que la vela EXISTE. ▶ La receta ya estaba en el repo desde `#498`, en el
+carril de complementos: el carril declara su eje con NOMBRE (`scroll-timeline-name`), el envoltorio lo
+SUBE (`timeline-scope`) y la vela cuelga de ese nombre. ⚠️⚠️ **Y con eso no basta**: con un carril que
+CABE la línea de tiempo está inactiva, la animación no se aplica y la vela se pinta sobre el último
+destino sin nada detrás —en escritorio, con el inventario, es lo normal—. El hecho de si desborda lo
+publica `ui/rail-sails.js` (`data-rail-scroll`), que pasa de un carril a **cuatro** y aprende el eje de
+BLOQUE. ⚠️ Además vuelve a medir al llegar las fuentes y al acabar las transiciones: las filas del menú
+entran con un desplazamiento que cuenta como contenido mientras dura (173 px de desborde a mitad de la
+entrada, 158 al terminar) sin cambiar el tamaño de la lista, y eso no lo ve ningún observador de
+tamaño.
+
+⚠️ **La cabecera de `rail-sails.js` decía que sin JavaScript las velas se comportan «como si hubiera
+más», y era falso**: el CSS las apaga sin la marca. Se corrigió el comentario, no la conducta.
+
+⚠️ Nace **`--fg-body`**, el gris de CUERPO por superficie (en tinta, Papel 200 del paquete). **Paso de
+despliegue**: `--ink-fg-body: #C9CDD1` en el `client.css` de producción (spec §5.bis).
+
+⚠️⚠️ **La suite COMPLETA cazó lo que la dirigida no** (la lección de `#521`, otra vez): la primera
+versión declaraba el eje del menú en una SEGUNDA regla `.menu__col-list`, dentro de `@supports`, más
+arriba en la hoja que la regla de la lista, y `MenuGroupsTest` —que lee la PRIMERA regla con ese
+selector— dejó de ver el `overflow-y: auto`. El eje va en la regla de la lista. *Una guarda que
+localiza una regla por su selector se queda con la primera que encuentra.*
+
+**Verificación**: suite **4686 en verde** (29.391 aserciones, 1 omitido) · **18/18 mutaciones**
+(`scripts/mutar-pie.py`: 14 del pie y 4 de la vela del menú) · navegador: vela del pie a 390 → 1 al
+inicio y 0 al final, 0 a 1280 (cabe); vela del menú a 390×844 → 1 y 0 con la línea colgando de
+`.menu__col-list`, 0 a 1024×1366 (cabe); punto estático en ocho ventanas. Se retira **1** caso con su
+sujeto (`CONVENCIONES §3.quater`): el del registro externo en el pie, en `Detalles216Test`.

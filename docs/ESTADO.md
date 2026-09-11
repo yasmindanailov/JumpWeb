@@ -32,7 +32,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#521`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521`; siguen el PIE, la CABECERA de página y el CIERRE |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#522`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522`; siguen la CABECERA de página y el CIERRE |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -141,7 +141,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
-> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`) ═══════════
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#522`) ═══════════
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
 > por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
@@ -156,13 +156,21 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > grupo «En esta página» listaba secciones DE LA PORTADA. Salen del menú zonas, atajos y servicios del
 > panel —y del panel, el interruptor «Sale en el menú» y el subtítulo del menú—. **9/9 mutaciones**.
 >
+> ✅ **T3a·2 · EL PIE DEL MARCO** (`#522`, `[DECIDIDO owner]`): banda de TINTA a sangre, destinos del
+> inventario + «Mi cuenta» (+ las secciones solo en la portada), idioma ES·EN·FR **visible en todas las
+> páginas** (revierte `#253`) y colofón «Nombre · Ciudad · © año». ❗ **En escritorio contacto e idioma
+> comparten FILA con lo legal** —se aparta del Layout a propósito: con sus dos filas el punto estático
+> del cierre dejaba de caber (45 px de solape a 1440×900 → 0)—; tres ventanas BAJAS siguen pisando
+> (390×844, 1280×800, 1366×768) y no hay medida del pie anterior para decir si es nuevo.
+> ❗❗❗ **Y cierra un defecto que no avisaba: las VELAS del pie y del menú no se apagaban NUNCA**
+> (`scroll(nearest …)` en el `::after` del envoltorio mira el contenedor ANTECESOR, no el carril); hoy
+> línea de tiempo con nombre + `timeline-scope`, y `rail-sails.js` publica si el carril desborda.
+> Nace `--fg-body`. **Paso de despliegue**: `--ink-fg-body` en el `client.css` de producción (§5.bis).
+>
 > ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
-> **T3a·2 · el PIE del marco** —sobre tinta · idioma ES·EN·FR **visible en todas las páginas** (revierte
-> `#253`) · destinos del inventario + «Mi cuenta» (+ las secciones solo en la portada) · colofón
-> «Nombre · Ciudad · © año» (el lema sigue siendo el `<title>` de la portada y la coletilla, el pie del
-> post-form)— · **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las
-> interiores que la estrenan) · **T3a·4 · el CIERRE en las interiores** (la tarjeta de la portada sin
-> juego ni eslogan, **solo «Reservar»**; la barra de móvil se retira cuando entra).
+> **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las interiores que
+> la estrenan) · **T3a·4 · el CIERRE en las interiores** (la tarjeta de la portada sin juego ni eslogan,
+> **solo «Reservar»**; la barra de móvil se retira cuando entra).
 > ⛔ **LO QUE NO SE HACE, DECIDIDO**: la **barra blanca fija** de las interiores (se queda el racimo
 > flotante) y el **panel de menú de 520** en escritorio (se queda la pantalla completa). Tampoco la tira
 > fina del pie: la cuña de 22 es decisión anterior del owner contra el artboard.
@@ -2459,9 +2467,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4678 en verde** (29.252 aserciones, 1 skipped), medida el **2026-09-11** sobre `0af09e60`,
-> que ya lleva los TRES carriles del día: diseño hasta `#521`, CORREOS `#500`→`#507` y el `#453` de
-> la pasarela. ▶ **Cuadra con la cifra anterior, y conviene que conste cómo**: `4683` se midió en
+> Suite **4686 en verde** (29.391 aserciones, 1 skipped), medida el **2026-09-11** sobre `1d435347`,
+> que lleva diseño hasta `#522`, CORREOS `#500`→`#507` y la pasarela `#453`/`#454`. ▶ **Cuadra**:
+> sobre `0af09e60` eran **4678**; el pie de `#522` añade **7** casos (`FooterFrameTest`) y retira **1**
+> con su sujeto (el registro externo ya no está en el pie, `Detalles216Test`) (→ 4684), y `#454` añade
+> **2** (→ **4686**). La vela del menú amplía un caso que ya existía y no suma ninguno.
+> Antes, sobre `0af09e60`: **4678** y 29.252, con diseño hasta `#521`, CORREOS y `#453`.
+> ▶ **Y esa cifra también cuadraba**: `4683` se midió en
 > `f19746d6`, antes de `#521`; `#521` retira **5** casos con su sujeto y añade **4** (→ 4682) y la
 > vista previa del menú retira **4** más (→ **4678**). ⚠️ Los «6 skipped» de aquella medida eran del
 > entorno de aquella pasada: esta da **1**, el de siempre.

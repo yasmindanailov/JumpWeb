@@ -351,6 +351,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2i·b (`#491`) | **`.env` de producción**: `GOOGLE_PLACES_API_KEY=` con la clave de Places API (New). ▶ **DATO, desde el panel**: el ajuste `social.google_place_id` (`app:set-setting social.google_place_id <ChIJ…> --force`). ⚠️ **Y en la consola de Google, lo que el owner aplazó a sabiendas**: **rotar la clave** (se pegó en un chat), poner el **tope de peticiones/día** y **añadir la IP del servidor** a la restricción — sin la IP, en producción todas las llamadas fallan y la sección cae al respaldo propio sin avisar. ❗ **El scheduler no corre en staging** (`#115`): allí `social-proof:refresh` se dispara a mano. |
 | T2h (`#488`) | **Ninguno de CSS**: la sección se viste con roles ya declarados (`--bg-card`, `--line`, `--bg-soft`, `--interactive`, `--r-lg`, `--r-pill`). ▶ **DATO, desde el panel** — las cinco dudas publicadas: **retirar la de la EDAD** (contradice a la sección 01, que dice 4–7 y +8 desde `zones`) · **reescribir la del APARCAMIENTO** con «en la calle, delante, y gratis» (`[DECIDIDO owner]`; ⚠️ es el único sitio de la web que lo publica) · **reescribir «¿Hace falta reservar?»**, que hoy dice «no hace falta» contra toda la página · y **quitar el «automáticamente»** de la de cancelar, que promete un canal que `#244` no da. ⚠️ El seeder ya trae las cinco; en producción **no se siembra**, así que se editan desde el panel. ⚠️ Y **quedan dos decisiones del owner**: si grupos lleva al correo o a `/servicios`, y qué otras dudas oyen en el mostrador. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
+| T3a·2 (`#522`) | añadir **`--ink-fg-body: #C9CDD1`** al paquete (Papel 200, el gris de CUERPO sobre tinta del canvas). Sin él el cuerpo del pie sale con la mezcla de reserva del producto (`--fg` de tinta al 82 %): se lee, pero no es su valor. ⚠️ Y **DATO, desde el panel**: la **ciudad** (Ajustes → Contacto) — sin ella el colofón dice solo «Nombre · © año», que es la conducta correcta, no un defecto. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
 `#436` tres): comprobar que están puestas antes de dar por buena una verificación visual en
@@ -942,7 +943,7 @@ de escritorio) y `doc/paginas.md` del canvas.
 | | Tanda | Estado |
 |---|---|---|
 | T3a·1 | **El armazón · los DESTINOS** del menú (y del pie): el inventario de páginas; en la portada, sus secciones | ✅ `#521` |
-| T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón | ⬜ decidido en `#521` |
+| T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón — y las VELAS del pie y del menú, que no se apagaban nunca | ✅ `#522` |
 | T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ⬜ |
 | T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ⬜ decidido en `#521` |
 | T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
@@ -989,6 +990,44 @@ Arnés `scripts/mutar-destinos.py`: **9/9**.
 
 ⚠️ **En local `/servicios` está en mantenimiento, así que el menú no la ofrece**: no es un fallo, es
 la regla nueva funcionando. En producción sale en cuanto el panel la abra.
+
+✅ **T3a·2 · el pie del marco** (`#522`). Una banda de **tinta a sangre completa** (`data-surface="ink"`
+en el `<footer>` y la columna dentro) con la tira en cuña, los **destinos** de `SiteDestinations` más
+«Mi cuenta» (y, solo en la portada, sus secciones), el **contacto**, el **idioma ES · EN · FR a la vista
+en todas las páginas** —enlaces con `hreflang`, `lang`, el nombre nativo como nombre accesible y el
+vigente marcado— y el **colofón «Nombre · Ciudad · © año»**, que sin ciudad no deja un «·» colgando.
+Salen del pie el lema, la coletilla, las redes y el registro externo, y ninguno se pierde: el lema
+sigue siendo el `<title>` de la portada cuando no hay «Título web», la coletilla el pie del post-form,
+las redes siguen en el menú y en el `sameAs`, y el registro lo ofrece el par del armazón. Las ayudas
+del panel de lema y coletilla ya no prometen el pie.
+
+❗❗ **En escritorio contacto e idioma COMPARTEN FILA con lo legal** (`[DECIDIDO owner]`, se aparta del
+Layout, que los dibuja en dos filas): con dos filas el pie crecía y el punto estático del cierre de la
+portada dejaba de caber — medido a 1440×900, **45 px** de tarjeta sobre el pie; con una, **0**. Solape
+con la fila única, en px: 390×844 **67** · 430×932 0 · 1280×800 **55** · 1280×900 0 · 1366×768 **94** ·
+1440×900 0 · 1536×864 0 · 1920×1080 0. ⚠️ Las tres que pisan son ventanas BAJAS y **no se midieron con
+el pie anterior**: no se sabe si el solape es nuevo o ya estaba.
+
+❗❗❗ **LAS VELAS DEL PIE Y DEL MENÚ NO SE HABÍAN APAGADO NUNCA**, y es el hallazgo de la tanda: colgaban
+de `scroll(nearest …)` sobre el `::after` del ENVOLTORIO, que busca el contenedor de scroll ANTECESOR
+—el documento en el pie, el propio `.menu` en el menú— y no la fila o la lista, que son su hermana y
+su descendiente. Estaban siempre a la vista, y por eso nadie lo vio; las guardas del menú comprobaban
+que la vela EXISTE. Hoy el carril declara su eje con nombre (`scroll-timeline-name`), el envoltorio lo
+sube (`timeline-scope`) —la receta que el carril de complementos tenía desde `#498`— y
+`ui/rail-sails.js` publica si el carril desborda (`data-rail-scroll`): sin desbordamiento la línea de
+tiempo está inactiva y la vela se pintaría sobre el último destino sin nada detrás. Medido en
+navegador: pie a 390 → **1** al inicio y **0** al final, **0** a 1280 (cabe); menú a 390×844 → **1** al
+inicio y **0** al final, **0** a 1024×1366 (cabe), con la línea colgando ya de `.menu__col-list`.
+⚠️ `rail-sails.js` vuelve a medir al llegar las fuentes y al acabar las transiciones: las filas del
+menú entran con un desplazamiento que cuenta como contenido mientras dura (173 px de desborde a mitad
+de la entrada, 158 al terminar) y eso no cambia el tamaño de la lista, así que ningún observador de
+tamaño se entera.
+
+⚠️ Nace **`--fg-body`**, el gris de CUERPO por superficie (en tinta, Papel 200 del paquete: paso de
+despliegue en §5.bis). Guardas: `FooterFrameTest` (7) y la vela del menú en `ArmazonContractTest`;
+arnés `scripts/mutar-pie.py`: **18/18** (14 del pie y 4 de la vela del menú). ⚠️ **El eje de la lista
+del menú va en SU regla** (`.menu__col-list`), no en una segunda con el mismo selector: `MenuGroupsTest`
+lee la primera que aparece en la hoja, y con dos perdió el `overflow-y` — lo cazó la suite completa.
 
 ### 5.2 · Las cuatro excepciones del owner
 
