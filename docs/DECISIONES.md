@@ -28355,3 +28355,10 @@ previo y específico**, así que el horario no se empuja solo (D8 se matiza). �
 spec era falsa**: las reseñas SÍ traen fotos (`reviewMediaItems`). ▶ Quedan **R1–R5** del owner, y **no
 se escribe código hasta decidirlas**. *Una decisión tomada sin la cita delante no está tomada: está
 pendiente de la cita.*
+
+▶ **Tercera vuelta, con la revisión delante** (`[DECIDIDO owner, 2026-09-11]`): **R2** proyecto **central
+de JumpWeb** (sustituye a D1: una sola solicitud de acceso y una sola verificación; cada parque solo
+conecta) · **R3** el horario se publica **con un botón** y la comprobación diaria solo avisa (sustituye a
+D8) · **R4** las **entradas se configuran a mano en la ficha** y la T5 por API se retira. **R1** (cómo se
+publican las reseñas) queda pendiente: el owner preguntó cómo se obtiene el permiso del autor antes de
+decidir.

@@ -178,6 +178,22 @@ resultaron falsas llevan además la marca «CORREGIDO (§0)».
 el horario publicado con un gesto del admin · **R4** el botón de entradas · **R5** fotos y vídeos de las
 reseñas. Mientras no se decidan, **no se escribe código** (`CONVENCIONES §5`).
 
+✅ **Decididas por el owner (2026-09-11, tercera vuelta)**:
+- **R2 · `[DECIDIDO owner]` proyecto CENTRAL de JumpWeb.** JumpWeb crea el proyecto, pide el acceso a la
+  API y pasa la verificación del ámbito sensible **una sola vez**; cada parque solo pulsa «Conectar». Sustituye
+  a **D1**. Consecuencias que entran en el diseño: la verificación de Google (dominio de JumpWeb verificado,
+  política de privacidad en ese dominio, vídeo de demostración); la **URI de redirección de cada instalación**
+  se registra en el cliente central (una por dominio de parque); las credenciales del cliente dejan de ser
+  por instalación; y JumpWeb asume la **política de terceros** de Google (avisos al cliente en 48 h,
+  desvinculación en 7 días hábiles). §7 se reescribe: los pasos 2–6 son de JumpWeb, y el parque solo
+  comprueba su ficha (paso 1) y conecta (paso 8).
+- **R3 · `[DECIDIDO owner]` el horario se publica con UN BOTÓN.** El panel enseña qué cambia y el admin lo
+  publica en Google; la comprobación diaria **solo avisa** si la ficha no coincide. Sustituye a **D8**.
+- **R4 · `[DECIDIDO owner]` las ENTRADAS se configuran a mano en la ficha** (el apartado «Entradas» que
+  Google da a las atracciones), con el enlace a la página de reserva. **La T5 por API se retira**: el producto
+  solo le da al parque el enlace exacto.
+- **R1** pendiente: el owner preguntó cómo se obtiene ese permiso antes de decidir.
+
 ---
 
 ## 1. Contexto y problema — MEDIDO, no supuesto
