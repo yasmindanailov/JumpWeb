@@ -1895,6 +1895,13 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       **pinta**; una pegatina cuyo keyline, relleno y sombra son del mismo color deja de leerse; y un
       comentario que describe un mecanismo no lo implementa (el paquete no declaraba los dos estados
       de la sombra y llevaba así desde `#478`). Las tres salieron **midiendo en navegador**.
+      🟦 **Fase 3 del rediseño (las páginas) EN CURSO** (`#521`→`#523`, 2026-09-11): el ARMAZÓN que
+      comparten las siete — los destinos del menú y del pie salen del inventario de páginas (`#521`),
+      el pie del marco con unas velas que por fin se apagan (`#522`) y el ojo del owner sobre la
+      portada (`#523`: el pie en papel, «Reservar» abierto). Quedan la cabecera de página (T3a·3) y el
+      cierre en las interiores (T3a·4). ▶ Y la mitad de Google de la **06** cambia de fuente: la spec
+      de **Business Profile** está aprobada (`#524`, `specs/google-business-profile.md`), **código no
+      empezado** — la próxima sesión la abre el owner decidiendo sobre las reseñas.
 - [ ] Contenido consumible también vía API (para que la app móvil pinte lo mismo que la landing).
 
 ### Fase 6 — Móvil + features nuevas 🟦 — el waiver (subsistema B) EN EJECUCIÓN desde el 2026-08-25 · menores a cargo (C) desde el 2026-08-27

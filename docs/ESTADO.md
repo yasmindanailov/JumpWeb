@@ -32,7 +32,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#524`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523`; siguen la CABECERA de página y el CIERRE |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#524`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`); siguen la CABECERA de página y el CIERRE, y **las reseñas las decide el owner al abrir la próxima sesión** |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -149,6 +149,22 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > navegador, 8 vistas × 2 anchos) y lo que el owner decidió pieza a pieza. ⚠️ El artboard se leyó con
 > **`DesignSync`** directamente: la copia local `mockup_playjumppark_v2/` **no lo trae**.
 >
+> ⏹️ **CIERRE DEL 2026-09-11 — CÓMO QUEDA ESTE CARRIL** (todo empujado a `main`; suite 4689 · 29.406,
+> 1 skipped; Pint y docs-check en verde; build regenerado; sin worktrees ni servidores de comparación vivos).
+> ▶ **Lo primero de la próxima sesión lo decide el OWNER, y es sobre las RESEÑAS** (`[owner, 2026-09-11]`:
+> «decidiremos sobre las reseñas en la siguiente sesión»). Quedan dos preguntas: **¿se empieza la T1 de
+> Business Profile?** y **¿entran los vídeos de las reseñas o solo las fotos?** ⛔ **No se escribe código
+> de Business Profile sin su respuesta.** Lo ya decidido (R1–R4, D2–D5) está en
+> `specs/google-business-profile.md` §8 y **no se vuelve a preguntar**.
+> ▶ Si el owner prefiere seguir con el marco: **T3a·3 (cabecera de página) y T3a·4 (cierre en las
+> interiores)**, ya decididas (abajo).
+> ⚠️ **Pasos de DESPLIEGUE de este carril** (esta sesión no desplegó nada; `specs/rediseno-desde-canvas.md`
+> §5.bis): añadir `--ink-fg-body: #C9CDD1` al `client.css` de producción · si ese paquete ya lleva el
+> marcador, **renombrar** `--on-marker` → `--on-marker-brand` · comprobar que `theme.brand` de producción
+> sigue en `#1AA9DE`.
+> ⚠️ **Sigue esperando al owner**: el `<title>` y la tarjeta para redes firman con el nombre del PRODUCTO
+> (`DEUDA.md`; se le trae antes de arreglarlo).
+>
 > ✅ **T3a·1 · LOS DESTINOS** (`#521`, `[DECIDIDO owner]`): el menú (y el pie, en la T3a·2) ofrece el
 > **INVENTARIO de páginas** del canvas, con la ruta escrita debajo y sin las que estén en mantenimiento;
 > **solo en la portada**, además, sus cinco secciones con el rótulo que la propia sección pinta. Fuente
@@ -185,7 +201,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > **proyecto CENTRAL de JumpWeb** (la política prohíbe uno por cliente) · **todas las reseñas sin pedir permiso
 > al autor** (riesgo ACEPTADO frente a la guía de marca de Google) · filtradas por estrellas con la línea que lo
 > dice · con fotos (vídeos pendientes) · anónimas incluidas · **horario publicado con un botón** · **entradas a
-> mano en la ficha**. ▶ **Lo siguiente: la T1 (la conexión)**, y por parte del owner como JumpWeb **el proyecto
+> mano en la ficha**. ▶ **La T1 (la conexión) espera a que el owner decida en la próxima sesión** (cierre, arriba); de su parte, como JumpWeb, **el proyecto
 > central, el de desarrollo y la solicitud de acceso** (§7·A). ⚠️ La verificación del ámbito sensible (dominio y
 > política de privacidad de JumpWeb, vídeo) hace falta antes de pasar de 100 usuarios.
 >
@@ -2489,7 +2505,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4689 en verde** (29.406 aserciones, 1 skipped), medida el **2026-09-11** sobre `58065945`
+> Suite **4689 en verde** (29.406 aserciones, 1 skipped), medida el **2026-09-11** sobre `58065945` y re-medida idéntica al cerrar sobre `525d4463` (entre medias, solo documentación)
 > (`#523`): **4686** + las **3** guardas nuevas del pie en papel, la tira del cierre y la tinta del
 > marcador (la del arranque del par se reescribe, no suma).
 > Antes, sobre `1d435347`: **4686** y 29.391, con diseño hasta `#522`, CORREOS `#500`→`#507` y la
