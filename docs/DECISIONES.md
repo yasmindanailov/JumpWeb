@@ -28375,3 +28375,55 @@ lee la ficha pública sin API (Elfsight lo describe como *«without using API»*
 Google. **Fotos de las reseñas: sí; vídeos: pendientes del owner.** ▶ **La spec queda ✅ APROBADA y
 reescrita** con la revisión integrada (la versión revisada, `3b31c45d`); lo siguiente es la **T1** y, por
 parte del owner como JumpWeb, **el proyecto central y la solicitud de acceso** (§7·A).
+
+## #525 · 2026-09-11 · `[DECIDIDO owner]` La CABECERA DE PÁGINA del armazón: la ruta escrita, la tipografía de la sección y la decoración lejos de la entradilla
+
+La **T3a·3** de la Fase 3 del carril de diseño (`specs/rediseno-desde-canvas.md` §5.5), sobre `Layout
+Paginas PJP` 1a/1b: *«una página no tiene hero: tiene cabecera de página»* —rótulo mono 12 con **la
+ruta**, titular Display L 34/52, entradilla 18/21— y *«una página no estrena tipografía»*. Antes de
+construir, el owner abrió la sesión con el orden: **las reseñas se quedan como están y Business Profile
+va DESPUÉS del diseño** (`[owner, 2026-09-11]`).
+
+**Lo que decidió el owner** (preguntado con lo medido delante):
+
+| | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| Alcance | **las interiores sencillas** (`/precios`, `/normas`, `/contacto`, legales) + las **pantallas de servicio**; `/atracciones` ya la tenía. **`/cumpleanos` y `/servicios` en su T3b**: su cabecera va dentro de un bloque (banda con foto, hero con índice) que esa tanda sustituye |
+| Entradillas | **solo lo que la página enseña**: `/precios` «Todas las tarifas, con sus días.» (la del canvas sin «y sus complementos», que `/precios` no pinta), `/normas` la del canvas, legales sin entradilla, `/contacto` la suya |
+
+❗❗❗ **LO QUE ESTABA MAL Y NO AVISABA**: (1) el titular de página de `site.css` pedía `font-weight: 800` y
+`font-stretch: 75%` sobre Bungee, que **trae una sola cara**: el navegador **falsificaba** negrita y
+condensada, a 40/77 px, en `/normas`, `/contacto`, las legales y cuatro pantallas de servicio; (2) la
+entradilla de `/precios` decía que las entradas se compraban **en taquilla o por teléfono** al lado de un
+botón que las reserva online; (3) `/atracciones` llevaba su ruta **tecleada a mano** en tres ficheros de
+idioma, una segunda fuente que podía decir otra dirección que el menú.
+
+▶ **Lo construido.** Un componente, `<x-site.page-head>`: el rótulo por defecto es la ruta escrita,
+derivada de la URL con **la misma función que el menú** (`SiteDestinations::writtenPath()`, que nace aquí
+y que `pages()` también usa); las pantallas de servicio lo pasan a mano —la de restablecer la contraseña
+lleva un TOKEN en la ruta, y un rótulo derivado lo imprimiría—. Sin entradilla no se pinta el párrafo.
+En el CSS, `.page__eyebrow/__title/__lede` entran en la **declaración de la cabecera de sección** y se
+retiran el titular de `site.css`, `.rides__head`/`.rides__title` (último consumidor: `/precios`) y los
+cuatro compuestos `.page--rides .page__…`. El hueco de arriba se **deriva del racimo** —era
+`clamp(108px, 14vh, 156px)`, la lección de `#252`— y cae a 390 en **88 px, el del canvas**; el de abajo es
+el aire entre secciones.
+
+❗❗ **LA DECORACIÓN VIVE EN EL CONJUNTO rótulo + titular, que la RECORTA** (ranura `deco`,
+`.page__lockup--deco`). **Lo vio la captura, no la suite**: con la entradilla nueva, la trama de `/normas`
+cayó debajo de ella, y la captura de partida enseñó que **el abanico de `/precios` ya caía detrás de su
+entradilla en móvil antes de esta tanda**. Las dos piezas llevan escrita la regla «detrás del titular y
+nunca detrás de un párrafo»; colocadas contra la cabecera entera la cumplían o no según lo largo del
+texto. Contra el conjunto, la entradilla queda fuera **por estructura**, que es además lo que se puede
+vigilar sin ventana. ⚠️ Coste visible y declarado: el abanico de `/precios` pasa a ser una banda a la
+altura del rótulo y el titular.
+
+⚠️⚠️ **LA GUARDA NACIÓ LAXA Y LO DIJO EL ARNÉS** (17/18 la primera vez): el caso de «comparte la
+declaración» aceptaba cualquier regla con los dos selectores, y la entradilla comparte con la de sección
+también la de su MARGEN — así que sacarla de la regla tipográfica pasaba en verde. Hoy exige la regla que
+declara `font-size`. *«Comparte una regla» no es «comparte la declaración».* Y una aseveración mía salió
+roja con el producto sano: «el token no sale en la página» — **tiene que salir** (campo oculto y URL
+canónica); lo que no puede es leerse, y se acotó a la cabecera.
+
+**Verificación**: `PageHeadTest` 5 casos · `scripts/mutar-cabecera.py` **18/18** · suite **4694** en verde ·
+sonda de navegador (`storage/app/sonda-armazon-paginas.mjs`, 8 vistas × 390 y 1280) antes y después, con
+capturas comparadas. ⚠️ **Falta el ojo del owner** sobre las seis vistas.

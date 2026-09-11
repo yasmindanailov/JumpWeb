@@ -39,7 +39,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#524`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`); siguen la CABECERA de página y el CIERRE, y **las reseñas las decide el owner al abrir la próxima sesión** |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#525`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525`; sigue el CIERRE en las interiores (T3a·4) · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -148,7 +148,7 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
-> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#524`) ═══════════
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#525`) ═══════════
 >
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
 > por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
@@ -158,13 +158,13 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ⏹️ **CIERRE DEL 2026-09-11 — CÓMO QUEDA ESTE CARRIL** (todo empujado a `main`; suite 4689 · 29.406,
 > 1 skipped; Pint y docs-check en verde; build regenerado; sin worktrees ni servidores de comparación vivos).
-> ▶ **Lo primero de la próxima sesión lo decide el OWNER, y es sobre las RESEÑAS** (`[owner, 2026-09-11]`:
-> «decidiremos sobre las reseñas en la siguiente sesión»). Quedan dos preguntas: **¿se empieza la T1 de
-> Business Profile?** y **¿entran los vídeos de las reseñas o solo las fotos?** ⛔ **No se escribe código
-> de Business Profile sin su respuesta.** Lo ya decidido (R1–R4, D2–D5) está en
-> `specs/google-business-profile.md` §8 y **no se vuelve a preguntar**.
-> ▶ Si el owner prefiere seguir con el marco: **T3a·3 (cabecera de página) y T3a·4 (cierre en las
-> interiores)**, ya decididas (abajo).
+> ▶ **EL ORDEN, DECIDIDO POR EL OWNER AL ABRIR LA SESIÓN SIGUIENTE (11-09, tarde)**: *«las reseñas las
+> dejamos como están ahora; primero terminamos el diseño y después haremos las reseñas con la API de Google
+> Business Profile»*. ⛔ **No se escribe código de Business Profile hasta cerrar el diseño.** Lo decidido
+> (R1–R4, D2–D5) está en `specs/google-business-profile.md` §8 y **no se vuelve a preguntar**; lo único
+> abierto —si entran los vídeos— se pregunta al abrir su T1.
+> ▶ **Hecho en esa sesión: T3a·3, la cabecera de página** (`#525`, abajo). **Lo siguiente: T3a·4, el cierre
+> en las interiores**, ya decidido.
 > ⚠️ **Pasos de DESPLIEGUE de este carril** (esta sesión no desplegó nada; `specs/rediseno-desde-canvas.md`
 > §5.bis): añadir `--ink-fg-body: #C9CDD1` al `client.css` de producción · si ese paquete ya lleva el
 > marcador, **renombrar** `--on-marker` → `--on-marker-brand` · comprobar que `theme.brand` de producción
@@ -212,9 +212,19 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > central, el de desarrollo y la solicitud de acceso** (§7·A). ⚠️ La verificación del ámbito sensible (dominio y
 > política de privacidad de JumpWeb, vídeo) hace falta antes de pasar de 100 usuarios.
 >
+> ✅ **T3a·3 · LA CABECERA DE PÁGINA** (`#525`, `[DECIDIDO owner]`): un componente, `<x-site.page-head>`
+> —rótulo con la **ruta escrita** (la misma función que el menú), titular Display L, entradilla opcional—
+> en `/precios`, `/normas`, `/contacto`, `/atracciones`, las legales y las cuatro pantallas de servicio
+> (rótulo a mano: la de contraseña lleva un TOKEN en la URL). `/cumpleanos` y `/servicios` la reciben en
+> su T3b. ❗ **Comparte la declaración de la cabecera de sección** y se retira el titular de `site.css`,
+> que **falsificaba negrita y condensada** sobre Bungee. ❗❗ **La decoración vive en el conjunto rótulo +
+> titular, que la recorta**: lo destapó la CAPTURA —la trama de `/normas` cayó bajo la entradilla nueva y,
+> medido, el abanico de `/precios` ya caía bajo la suya en móvil ANTES—. El aire de arriba se deriva del
+> racimo (88 px a 390, el del canvas). Entradillas «solo lo que se ve». `PageHeadTest` + **18/18** (la
+> guarda nació laxa y lo cazó el arnés). ⚠️ **Falta el OJO del owner** sobre las seis vistas.
+>
 > ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
-> **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las interiores que
-> la estrenan) · **T3a·4 · el CIERRE en las interiores** (la tarjeta de la portada sin juego ni eslogan,
+> **T3a·4 · el CIERRE en las interiores** (la tarjeta de la portada sin juego ni eslogan,
 > **solo «Reservar»**; la barra de móvil se retira cuando entra).
 > ⛔ **LO QUE NO SE HACE, DECIDIDO**: la **barra blanca fija** de las interiores (se queda el racimo
 > flotante) y el **panel de menú de 520** en escritorio (se queda la pantalla completa). Tampoco la tira
@@ -2512,7 +2522,9 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4689 en verde** (29.406 aserciones, 1 skipped), medida el **2026-09-11** sobre `58065945` y re-medida idéntica al cerrar sobre `525d4463` (entre medias, solo documentación)
+> Suite **4694 en verde** (29.496 aserciones, 1 skipped), medida el **2026-09-11** (tarde) sobre `d57ebb88`
+> (`#525`): **4689** + los **5** casos de `PageHeadTest`, la cabecera de página. Antes, **4689** y 29.406
+> sobre `58065945`, re-medida idéntica al cerrar sobre `525d4463` (entre medias, solo documentación)
 > (`#523`): **4686** + las **3** guardas nuevas del pie en papel, la tira del cierre y la tinta del
 > marcador (la del arranque del par se reescribe, no suma).
 > Antes, sobre `1d435347`: **4686** y 29.391, con diseño hasta `#522`, CORREOS `#500`→`#507` y la

@@ -945,7 +945,7 @@ de escritorio) y `doc/paginas.md` del canvas.
 |---|---|---|
 | T3a·1 | **El armazón · los DESTINOS** del menú (y del pie): el inventario de páginas; en la portada, sus secciones | ✅ `#521` |
 | T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón — y las VELAS del pie y del menú, que no se apagaban nunca | ✅ `#522` |
-| T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ⬜ |
+| T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b |
 | T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ⬜ decidido en `#521` |
 | T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
 
@@ -1041,6 +1041,48 @@ arranca siempre con «Reservar» abierto** y el registro plegado invitando (revi
 pintaban casi negras sobre tinta. Devuelto a `#1AA9DE`. ⚠️ Y dos defectos de verdad: el sello de
 precio salía claro sobre amarillo en la tarjeta de tinta (el paquete declara ahora su tinta en
 `--on-marker-brand`) y «Configuración de cookies» bajaba a 3,7 sobre papel por una `opacity`.
+
+✅ **T3a·3 · la cabecera de página** (`#525`). Un componente, `<x-site.page-head>`: rótulo en Etiqueta con
+la **ruta escrita** —la deriva `SiteDestinations::writtenPath()`, la misma función que escribe la ruta
+bajo cada destino del menú—, titular en Display L y entradilla **opcional** (sin ella no se pinta el
+párrafo). `[DECIDIDO owner, 2026-09-11]` **la llevan ya las interiores sencillas** —`/precios`, `/normas`,
+`/contacto`, `/atracciones` y las legales— y las **pantallas de servicio** (mantenimiento, pago,
+contraseña, verificar el correo), que pasan su rótulo a mano: no son destinos, y la de contraseña lleva un
+TOKEN en la URL. **`/cumpleanos` y `/servicios` la reciben al rehacerse (T3b)**: su cabecera va dentro de
+un bloque —la banda con foto, el hero con índice— que esa tanda sustituye. Y `[DECIDIDO owner]` **las
+entradillas dicen solo lo que la página enseña**: `/precios` «Todas las tarifas, con sus días.» (la del
+canvas sin «y sus complementos», que la página no pinta; la anterior afirmaba que las entradas se
+compraban «en taquilla o por teléfono» al lado de un botón que las reserva online), `/normas` la del canvas
+y las legales sin entradilla.
+
+❗❗❗ **«Una página no estrena tipografía» es ya verdad en el CSS**: `.page__eyebrow`, `.page__title` y
+`.page__lede` comparten la declaración tipográfica de `.sec-head__*`. El titular propio de `site.css`
+—40/80 px con `font-weight: 800` y `font-stretch: 75%` sobre Bungee, que trae UNA cara— **falsificaba**
+negrita y condensada en `/normas`, `/contacto`, las legales y cuatro pantallas de servicio, y se retira.
+Con él se van `.rides__head`/`.rides__title`, cuyo último consumidor era `/precios`, y los cuatro
+compuestos `.page--rides .page__…` con los que la estrenó `/atracciones`.
+
+❗❗ **LA DECORACIÓN VIVE EN EL CONJUNTO rótulo + titular (`.page__lockup`), que la RECORTA, con la
+entradilla fuera.** Lo destapó la CAPTURA, no la suite: la trama de `/normas` cayó debajo de la
+entradilla nueva, y —medido contra la captura de partida— **en móvil el abanico de `/precios` ya caía
+detrás de las tres líneas de la suya ANTES de esta tanda**. Las dos piezas tienen escrita la regla
+«detrás del titular y nunca detrás de un párrafo»; contra la cabecera entera dependían de lo largo que
+fuera el texto, contra el conjunto no pueden alcanzarlo. ⚠️ El recorte va solo con decoración
+(`.page__lockup--deco`): un titular de Bungee a `line-height: .95` puede sacar una coma por debajo de su
+caja. ⚠️ El abanico se ve ahora como una BANDA a la altura del rótulo y el titular (en escritorio antes
+bajaba hasta la entradilla, sin pisarla): es el precio de la regla, y lo mira el owner.
+
+▶ **El hueco de arriba se DERIVA del racimo** (`--nav-pad-block` + la más alta de sus piezas + 28/44),
+no de `vh` (era `clamp(108px, 14vh, 156px)`): a 390 el rótulo cae en **88 px, justo donde lo pone el
+canvas** (su barra de 60 + 28), aunque aquí el racimo flota sin barra. El de abajo es el **aire entre
+secciones** (96/144 en esta instalación). Medido antes → después: el titular de `/normas`, `/contacto` y
+las legales **40 → 34 px** en móvil y **77 → 52** en escritorio, peso **800 → 400**; `/atracciones` pasa
+de dos líneas a una en escritorio (el tope de 20 caracteres de 1b); cero desbordes horizontales.
+
+Guarda `PageHeadTest` (5 casos) + `scripts/mutar-cabecera.py` (**18/18**). ⚠️⚠️ **La guarda NACIÓ LAXA y
+lo dijo el arnés**: sacar `.page__lede` de la regla tipográfica compartida **sobrevivía**, porque la
+entradilla también comparte con la de sección la regla de su MARGEN y el caso aceptaba cualquiera. Hoy
+exige compartir la que declara `font-size`. *«Comparte una regla» no es «comparte la declaración».*
 
 ### 5.2 · Las cuatro excepciones del owner
 
