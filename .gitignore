@@ -88,8 +88,9 @@ Thumbs.db
 /_*.png
 
 # Vídeos: por defecto NO se versionan (fuentes pesadas / HEVC). EXCEPCIÓN: el vídeo del hero
-# y su póster, ya optimizados y ligeros (~1,9 MB, H.264 720p), SÍ se versionan para que el
-# repo sea un clon COMPLETO y desplegable (repositorio canónico). Ver docs/AUDIT-RENDIMIENTO.md §6.
+# y su póster, ya optimizados y ligeros (~2,2 MB, H.264 720p 30 fps, SIN audio), SÍ se versionan
+# para que el repo sea un clon COMPLETO y desplegable (repositorio canónico). Receta y medidas en
+# `DECISIONES #529`; la FUENTE original del cliente no se versiona aquí.
 /public/videos/*
 !/public/videos/.gitkeep
 !/public/videos/header_hero.mp4
