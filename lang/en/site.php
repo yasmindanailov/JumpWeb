@@ -4,6 +4,7 @@ return [
     'legal_eyebrow' => 'Legal information',
     'rules_eyebrow' => 'Rules',
     'rules_title' => 'Rules',
+    'rules_intro' => 'What you need to follow to jump. Read it once.',
     'back_home' => '← Back to home',
     'legal_draft_notice' => 'Draft text, pending legal review.',
 

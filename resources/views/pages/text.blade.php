@@ -13,9 +13,9 @@
     <x-site.nav />
 
     <main id="main" class="page wrap">
-        <div class="page__head">
-            <h1 class="page__title">{{ $page->tr('title') }}</h1>
-        </div>
+        {{-- La cabecera del armazón (T3a·3), sin entradilla: un texto legal no tiene frase que lo
+             presente, y el componente no pinta un párrafo vacío. --}}
+        <x-site.page-head :title="$page->tr('title')" />
 
         {{-- El aviso de borrador solo se muestra en las páginas legales aún NO revisadas; las de
              contenido definitivo (ver `Page::REVIEWED_LEGAL_SLUGS`) lo ocultan. --}}

@@ -10,10 +10,9 @@
     <x-site.nav />
 
     <main id="main" class="page wrap" style="min-height:52vh">
-        <div class="page__head">
-            <div class="eyebrow">{{ __('site.page_maintenance.eyebrow') }}</div>
-            <h1 class="page__title">{{ __('site.page_maintenance.title') }}</h1>
-        </div>
+        {{-- El rótulo va A MANO: esta pantalla sustituye a la página caída y escribir su ruta
+             anunciaría un destino que ahora mismo no está. --}}
+        <x-site.page-head :eyebrow="__('site.page_maintenance.eyebrow')" :title="__('site.page_maintenance.title')" />
 
         <p class="page__body" style="max-width:60ch; margin-bottom:32px">{{ __('site.page_maintenance.body') }}</p>
 

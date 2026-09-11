@@ -583,7 +583,10 @@ tasks=$(remote_php "artisan schedule:list" 2>/dev/null | grep -c 'artisan' || tr
 # ⚠️ Esto mide el REGISTRO, no la EJECUCIÓN: dice que la app conoce sus 5 tareas, NO que nadie las
 # dispare. Se deja porque sigue valiendo, pero con el nombre correcto — leerlo como «el scheduler
 # funciona» es justo lo que pasó el 2026-08-21 (`DECISIONES #115`).
-check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 5)" "$([[ "$tasks" == "5" ]] && echo 0 || echo 1)"
+# Son 6 desde `#491` (`social-proof:refresh`): el 2026-09-11 el despliegue a staging salió en ROJO
+# con el sitio sano porque este número seguía en 5. Si añades una tarea a `routes/console.php`,
+# súbelo aquí en el mismo commit: la cifra es una PROPIEDAD del repo, no del servidor.
+check "scheduler: $tasks tareas REGISTRADAS en la app (esperadas 6)" "$([[ "$tasks" == "6" ]] && echo 0 || echo 1)"
 
 migr=$(remote_php "artisan migrate:status" 2>/dev/null | grep -c 'Pending' || true)
 check "migraciones pendientes: $migr (esperadas 0)" "$([[ "$migr" == "0" ]] && echo 0 || echo 1)"

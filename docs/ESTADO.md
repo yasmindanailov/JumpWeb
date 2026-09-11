@@ -1,5 +1,31 @@
 # Estado del proyecto — foto viva
 
+> 🏦 **PASARELA · STAGING LISTO PARA LA VALIDACIÓN DEL BANCO (2026-09-11, `DECISIONES #453`, banda 4xx
+> de producto: último usado `#453`).** CaixaBank mandó las credenciales de TEST del TPV (comercio
+> `369809538`, terminal `1`) y su guía: el pase a real exige que **su equipo complete una compra** en una
+> URL nuestra. `[DECIDIDO owner]`: **staging** lleva desde hoy el **catálogo de playjump.es** (solo tablas
+> de catálogo, nada personal), el terminal de pruebas del banco, la venta online abierta y dos cuentas
+> (`pruebas.tpv@playjump.es` para el banco · `admin.test@playjump.es`); contraseñas en manos del owner.
+> ▶ **Verificado en headless contra su terminal**: dos compras aceptadas (`R-7E76SN`, `R-ORKOAM`) de punta
+> a punta; **la confirmación llega por la notificación S2S y la vuelta del navegador viene sin datos**
+> (su terminal no incluye datos en la redirección) — por eso **`redsys_merchant_url` en producción, hoy
+> VACÍA, es paso obligatorio del go-live** (`sistemas/REDSYS.md` §14.bis). ⚠️ Su tarjeta «denegada»
+> excepciona (`SIS0093`) en vez de denegar, y en la vuelta sin datos el cajón enseñaba «Verificando tu
+> pago» de OTRO pedido pendiente — ✅ **cerrado en `#454`**: el último intento decide, y `failed` devuelve
+> el mismo rechazo que la vuelta firmada. ⚠️ `deploy.sh` esperaba 5 tareas programadas y son 6 desde
+> `#491`: corregido.
+> ▶ **Queda del OWNER**: responder al correo del banco (plataforma «desarrollo propio», integración
+> «Hosted/Redirección», URL `https://jumpweb.sites.aelium.app` y el usuario de prueba) — **hecho el
+> 11-09**, a la espera de su respuesta—, mirar en su Canales de pruebas que salen las operaciones, y el
+> contrato en CaixaBank Now. ⚠️ **No re-sembrar staging** mientras dure la validación (`ENTORNOS.md` §1).
+> ▶ **Cierre de este carril (11-09)**: `#453` y `#454` empujados en `a0c3716f` con el gate en verde;
+> **el árbol lo comparten dos sesiones a la vez en esta máquina**, y el protocolo que funcionó fue
+> commitear solo los ficheros propios, avisar por mensaje entre sesiones antes de empujar (el gate
+> corre la suite sobre el ÁRBOL, con el trabajo a medias del otro dentro) y no empujar mientras corre
+> su arnés de mutación. **Por dónde retomar la pasarela**: `sistemas/REDSYS.md` §14.bis (lo medido con
+> el terminal del banco) y la lista de go-live de su §14.9; lo primero, `redsys_merchant_url` en
+> producción.
+
 > ⚠️⚠️ **AL FUSIONAR LOS DOS CARRILES SALIÓ UN ROJO QUE NO ERA DEL MERGE** (`#520`, arreglado):
 `ThemeColorTest::test_email_header_follows_brand_color` **dependía de la MÁQUINA**, no de una
 propiedad — la cabecera del correo cambia de rama si existe `client-logo@4x.png`, que está
@@ -13,8 +39,9 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
-> | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#508`) y son **25**, no 23 · quedan los 4 ámbar y el OJO del owner |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#527`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO**; siguen las PÁGINAS (T3b), empezando por `/atracciones` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
+> | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
+> | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
 `public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema
@@ -134,6 +161,116 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`–`#527`) ═══════════
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
+> por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
+> `specs/rediseno-desde-canvas.md` §5.5**: el contraste del artboard con el código (medido con sonda de
+> navegador, 8 vistas × 2 anchos) y lo que el owner decidió pieza a pieza. ⚠️ El artboard se leyó con
+> **`DesignSync`** directamente: la copia local `mockup_playjumppark_v2/` **no lo trae**.
+>
+> ⏹️ **CIERRE DEL 2026-09-11 — CÓMO QUEDA ESTE CARRIL** (todo empujado a `main`; suite 4689 · 29.406,
+> 1 skipped; Pint y docs-check en verde; build regenerado; sin worktrees ni servidores de comparación vivos).
+> ▶ **EL ORDEN, DECIDIDO POR EL OWNER AL ABRIR LA SESIÓN SIGUIENTE (11-09, tarde)**: *«las reseñas las
+> dejamos como están ahora; primero terminamos el diseño y después haremos las reseñas con la API de Google
+> Business Profile»*. ⛔ **No se escribe código de Business Profile hasta cerrar el diseño.** Lo decidido
+> (R1–R4, D2–D5) está en `specs/google-business-profile.md` §8 y **no se vuelve a preguntar**; lo único
+> abierto —si entran los vídeos— se pregunta al abrir su T1.
+> ▶ **Hecho en esa sesión: el ARMAZÓN, COMPLETO** — T3a·3, la cabecera de página (`#525`, revisada por el
+> owner: todo OK); la T3a·4 (el cierre en las interiores, `#526`) se construyó y el owner la **revirtió al
+> verla en vivo** (`#527`): las interiores acaban en el pie, sin tarjeta. **Lo siguiente: las PÁGINAS (T3b)**,
+> en el orden del canvas, empezando por `/atracciones`.
+> ⚠️ **Pasos de DESPLIEGUE de este carril** (esta sesión no desplegó nada; `specs/rediseno-desde-canvas.md`
+> §5.bis): añadir `--ink-fg-body: #C9CDD1` al `client.css` de producción · si ese paquete ya lleva el
+> marcador, **renombrar** `--on-marker` → `--on-marker-brand` · comprobar que `theme.brand` de producción
+> sigue en `#1AA9DE`.
+> ⚠️ **Sigue esperando al owner**: el `<title>` y la tarjeta para redes firman con el nombre del PRODUCTO
+> (`DEUDA.md`; se le trae antes de arreglarlo).
+>
+> ✅ **T3a·1 · LOS DESTINOS** (`#521`, `[DECIDIDO owner]`): el menú (y el pie, en la T3a·2) ofrece el
+> **INVENTARIO de páginas** del canvas, con la ruta escrita debajo y sin las que estén en mantenimiento;
+> **solo en la portada**, además, sus cinco secciones con el rótulo que la propia sección pinta. Fuente
+> única: `Content\Services\SiteDestinations`. ❗ **Cierra un defecto que no avisaba**: en una interior el
+> grupo «En esta página» listaba secciones DE LA PORTADA. Salen del menú zonas, atajos y servicios del
+> panel —y del panel, el interruptor «Sale en el menú» y el subtítulo del menú—. **9/9 mutaciones**.
+>
+> ✅ **T3a·2 · EL PIE DEL MARCO** (`#522`, `[DECIDIDO owner]`): banda de TINTA a sangre, destinos del
+> inventario + «Mi cuenta» (+ las secciones solo en la portada), idioma ES·EN·FR **visible en todas las
+> páginas** (revierte `#253`) y colofón «Nombre · Ciudad · © año». ❗ **En escritorio contacto e idioma
+> comparten FILA con lo legal** —se aparta del Layout a propósito: con sus dos filas el punto estático
+> del cierre dejaba de caber (45 px de solape a 1440×900 → 0)—; tres ventanas BAJAS siguen pisando
+> (390×844, 1280×800, 1366×768), y con el pie anterior pisaban MÁS (medido en `#523`).
+> ❗❗❗ **Y cierra un defecto que no avisaba: las VELAS del pie y del menú no se apagaban NUNCA**
+> (`scroll(nearest …)` en el `::after` del envoltorio mira el contenedor ANTECESOR, no el carril); hoy
+> línea de tiempo con nombre + `timeline-scope`, y `rail-sails.js` publica si el carril desborda.
+> Nace `--fg-body`. **Paso de despliegue**: `--ink-fg-body` en el `client.css` de producción (§5.bis).
+>
+> ✅ **`#523` · EL OJO DEL OWNER SOBRE LA PORTADA** (`[DECIDIDO owner]`): el **pie de la PORTADA va sobre
+> PAPEL** (la tarjeta de tinta del cierre se fundía con un pie de tinta) y las interiores siguen en
+> tinta; el **par arranca siempre con «Reservar» abierto** y el registro plegado invitando (revierte
+> `#326`). ❗❗❗ **Y el «contraste roto» NO ERA CÓDIGO**: `theme.brand` de la base de desarrollo valía
+> `#0A0B0C`, la marca de mentira de `ThemeColorTest`, **escrita a mano con `tinker` por otra sesión y sin
+> devolver** — «SALTAR» y las chapas salían casi negras sobre tinta. Devuelto a `#1AA9DE`.
+> ⚠️⚠️ **Si pruebas un valor en la base de desarrollo, DEVUÉLVELO**: el registro de auditoría no guarda
+> los ajustes y la única pista fueron las transcripciones. De paso, dos defectos de verdad: el sello de
+> precio salía claro sobre amarillo en la tarjeta de tinta (el paquete declara ahora su tinta en
+> `--on-marker-brand`: **cambia el contrato**, §5.bis) y «Configuración de cookies» bajaba a 3,7 sobre
+> papel. ▶ **Las reseñas de Google no salen por la RESTRICCIÓN DE IP de la clave** (403
+> `API_KEY_IP_ADDRESS_BLOCKED`) además de por el TTL de `#499`: las dos son del owner.
+>
+> ✅ **`#524` · LAS RESEÑAS PASAN A LA API DE GOOGLE BUSINESS PROFILE — SPEC APROBADA tras revisión
+> adversarial de cinco lentes, código NO empezado** (`specs/google-business-profile.md`). Decidido por el owner:
+> **proyecto CENTRAL de JumpWeb** (la política prohíbe uno por cliente) · **todas las reseñas sin pedir permiso
+> al autor** (riesgo ACEPTADO frente a la guía de marca de Google) · filtradas por estrellas con la línea que lo
+> dice · con fotos (vídeos pendientes) · anónimas incluidas · **horario publicado con un botón** · **entradas a
+> mano en la ficha**. ▶ **La T1 (la conexión) espera a que el owner decida en la próxima sesión** (cierre, arriba); de su parte, como JumpWeb, **el proyecto
+> central, el de desarrollo y la solicitud de acceso** (§7·A). ⚠️ La verificación del ámbito sensible (dominio y
+> política de privacidad de JumpWeb, vídeo) hace falta antes de pasar de 100 usuarios.
+>
+> ✅ **T3a·3 · LA CABECERA DE PÁGINA** (`#525`, `[DECIDIDO owner]`): un componente, `<x-site.page-head>`
+> —rótulo con la **ruta escrita** (la misma función que el menú), titular Display L, entradilla opcional—
+> en `/precios`, `/normas`, `/contacto`, `/atracciones`, las legales y las cuatro pantallas de servicio
+> (rótulo a mano: la de contraseña lleva un TOKEN en la URL). `/cumpleanos` y `/servicios` la reciben en
+> su T3b. ❗ **Comparte la declaración de la cabecera de sección** y se retira el titular de `site.css`,
+> que **falsificaba negrita y condensada** sobre Bungee. ❗❗ **La decoración vive en el conjunto rótulo +
+> titular, que la recorta**: lo destapó la CAPTURA —la trama de `/normas` cayó bajo la entradilla nueva y,
+> medido, el abanico de `/precios` ya caía bajo la suya en móvil ANTES—. El aire de arriba se deriva del
+> racimo (88 px a 390, el del canvas). Entradillas «solo lo que se ve». `PageHeadTest` + **18/18** (la
+> guarda nació laxa y lo cazó el arnés). ✅ **El owner la revisó: todo OK** (11-09).
+>
+> ↩️ **T3a·4 · EL CIERRE EN LAS INTERIORES — CONSTRUIDA (`#526`) Y REVERTIDA (`#527`) EL MISMO DÍA**
+> (`[DECIDIDO owner]`): la tarjeta de la portada dentro de la banda de tinta del pie se eligió sobre capturas y,
+> vista en vivo, *«el footer déjalo como estaba… no este full screen»* — la banda (tarjeta + pie) llenaba un
+> teléfono. Se deshizo con `git revert` del commit de código; **el pie de `#522` se queda** y **las interiores
+> acaban en él, sin tarjeta**. Es el TERCER «no» al Layout (con la barra blanca y el panel de 520): **no se
+> «termina»**. ⚠️ *Lo que ocupa más de una pantalla se enseña desplazándose, no en un fotograma.* Lo medido en
+> `#526` (la tarjeta de la portada no se reutiliza tal cual; todo hijo nuevo del pie tiene que ir en su lista de
+> «fila entera») se conserva allí.
+>
+> ❗❗ **LO SIGUIENTE: LAS PÁGINAS (T3b)**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` ·
+> `/normas` · `/servicios` · `/bar` · `/contacto`. Cada una tiene su artboard cerrado en el canvas (`doc/paginas.md`
+> dice qué quedó fijado en cada una) y se relee con `DesignSync` antes de tocarla. ⚠️ **Dos preguntas del owner
+> esperan a su página**: **`/bar`** (no existe; el canvas la condiciona a que el bar tenga carta, `#482`) y
+> **`/entradas`** (existe sin estar en el inventario: entra o se retira, spec §4.1).
+> ⛔ **LO QUE NO SE HACE, DECIDIDO**: la **barra blanca fija** de las interiores (se queda el racimo
+> flotante) y el **panel de menú de 520** en escritorio (se queda la pantalla completa). Tampoco la tira
+> fina del pie: la cuña de 22 es decisión anterior del owner contra el artboard.
+> ⚠️ **Tres conflictos del MARCO siguen abiertos y NO son de esta fase** (el canvas se los deja al owner):
+> el rótulo del par en Bungee («Bungee nunca en un botón»), el CTA amarillo dentro del menú, y la barra
+> de móvil naranja en el canvas y tinta aquí (`#225`). Se le traen cuando toque el par.
+>
+> ⚠️⚠️ **DOS TRAMPAS PAGADAS EN LA T3a·1, las dos con la suite en verde a medias**: (1) la guarda del
+> inventario calculaba lo esperado desde la MISMA constante que muta — 2 de 9 mutaciones vivas hasta
+> escribir el inventario en el caso; (2) la ejecución DIRIGIDA dejó fuera `MenuPreviewImagesTest` y la
+> suite completa cazó **3 rojos y un caso que pasaba EN VACÍO**. *Correr los tests que crees afectados
+> no es correr los afectados.*
+> ⚠️⚠️ **OTRAS SESIONES TRABAJAN EN ESTE MISMO ÁRBOL** (hoy, la validación del banco `#453`, que dejó
+> ficheros sin commitear mientras esta tanda corría): mira `git status` antes de cada `git add` y añade
+> **por fichero**, nunca `-A`.
+> ⚠️ **Tres fichas nuevas en `DEUDA.md`**: el `<title>` y la tarjeta para redes de TODAS las páginas
+> públicas firman con `config('app.name')` —el nombre del PRODUCTO— (la fuga que `#500` cerró en los
+> correos; **se trae al owner antes de arreglarla**) · el intermitente de `QrLogoTest` **ya tiene causa**
+> (el tope de 2 s, medido 2,051 s bajo la suite) · y dos columnas del panel conservadas sin consumidor.
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
 
@@ -2411,10 +2548,30 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4685 en verde** (29.272 aserciones, 6 skipped), medida el **2026-09-11** corriéndola
-> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de
-> diseño hasta `#499` y `#520`, y el de los CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos de
-> `MixedPartyMailShapeTest` + 1 del molde + 1 de la bandeja).
+> Suite **4696 en verde** (29.505 aserciones, 6 skipped), medida el **2026-09-11** (noche) corriéndola
+> sobre el árbol **CONJUNTO tras la CUARTA fusión**: diseño hasta `#527` y CORREOS `#500`→`#508`.
+> ⚠️⚠️ **Cuarta fusión y cuarto choque del contador**, que ya es el patrón: correos declaraba
+> **4685 · 29.272** y diseño **4694 · 29.496**, los dos ciertos sobre su propio árbol. Los **2** casos
+> nuevos de `#508` —los dos correos del framework, que el censo no veía— entran sobre lo suyo.
+> Antes, **4694** y 29.496, medida el **2026-09-11** (tarde) tras el revert de
+> `#526` (`#527`): los **5** casos de `PageClosingTest` se fueron con su sujeto y vuelve la cifra de `d57ebb88`
+> (`#525`: **4689** + los **5** de `PageHeadTest`). Entre medias llegó a **4699** con el cierre puesto. Antes, **4689** y 29.406
+> sobre `58065945`, re-medida idéntica al cerrar sobre `525d4463` (entre medias, solo documentación)
+> (`#523`): **4686** + las **3** guardas nuevas del pie en papel, la tira del cierre y la tinta del
+> marcador (la del arranque del par se reescribe, no suma).
+> Antes, sobre `1d435347`: **4686** y 29.391, con diseño hasta `#522`, CORREOS `#500`→`#507` y la
+> pasarela `#453`/`#454`. ▶ **Cuadra**:
+> sobre `0af09e60` eran **4678**; el pie de `#522` añade **7** casos (`FooterFrameTest`) y retira **1**
+> con su sujeto (el registro externo ya no está en el pie, `Detalles216Test`) (→ 4684), y `#454` añade
+> **2** (→ **4686**). La vela del menú amplía un caso que ya existía y no suma ninguno.
+> Antes, sobre `0af09e60`: **4678** y 29.252, con diseño hasta `#521`, CORREOS y `#453`.
+> ▶ **Y esa cifra también cuadraba**: `4683` se midió en
+> `f19746d6`, antes de `#521`; `#521` retira **5** casos con su sujeto y añade **4** (→ 4682) y la
+> vista previa del menú retira **4** más (→ **4678**). ⚠️ Los «6 skipped» de aquella medida eran del
+> entorno de aquella pasada: esta da **1**, el de siempre.
+> Antes, sobre `f19746d6`: **4683** y 29.256, el árbol CONJUNTO de diseño hasta `#499`/`#520` y los
+> CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos de `MixedPartyMailShapeTest` + 1 del molde + 1
+> de la bandeja).
 > ⚠️ **Segunda fusión, el 10-09 por la noche**: el carril de diseño cerró `#494`→`#499` (atribución
 > de Google · el orden de las secciones · la portada sin decoración · las velas del carril) y al
 > fusionar salió **un rojo que no era del merge** (`#520`): un test que dependía de la MÁQUINA.

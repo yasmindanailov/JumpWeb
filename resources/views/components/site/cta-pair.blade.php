@@ -55,13 +55,17 @@
     $etiquetaPrecio = $ctaMinPriceLabel ?? null;
 @endphp
 
-{{-- `[DECIDIDO owner, 2026-09-01]` (lanzamiento): SIN sesión el par arranca con la CUENTA
-     expandida —lo que un cliente nuevo necesita al llegar es registrarse— y CON sesión, con
-     comprar. El modo inicial lo dice el servidor (`<body data-cta-mode>` → `$store.ctaPair`), y
-     el primer pintado ya sale en ese modo (la clase estática) para que no haya salto antes de
-     Alpine. ⚠️ `:class` va en sintaxis de OBJETO a propósito: con la de array Alpine solo retira
-     las clases que él añadió, y la estática se quedaría pegada al pasar a comprar. --}}
-<div class="cta-pair {{ $s['racimo'] }}{{ auth()->check() ? '' : ' cta-pair--account' }}"
+{{-- `[DECIDIDO owner, 2026-09-11]` (`DECISIONES #523`, revierte el arranque de `#326`): el par
+     arranca SIEMPRE con COMPRAR expandido —«Reservar» abierto— y la otra mitad (el registro, o la
+     cuenta con sesión) plegada e INVITANDO a abrirse; la invitación ya sigue a la mitad plegada en
+     la hoja (`.cta-pair--invita .cta-pair__alt`). El modo inicial lo sigue diciendo el servidor
+     (`<body data-cta-mode>` → `$store.ctaPair`).
+     ⚠️ Por eso aquí ya no va la clase estática `cta-pair--account`: con ella el primer pintado
+     saldría con la cuenta abierta y Alpine lo corregiría un instante después. Si el arranque vuelve
+     a variar, esa clase tiene que salir de la MISMA fuente que `data-cta-mode`, o habrá salto.
+     ⚠️ `:class` va en sintaxis de OBJETO a propósito: con la de array Alpine solo retira las clases
+     que él añadió, y una estática se quedaría pegada al cambiar de mitad. --}}
+<div class="cta-pair {{ $s['racimo'] }}"
      :class="{ 'cta-pair--account': $store.ctaPair.mode === 'account',
                'cta-pair--invita': ! $store.ctaPair.touched }">
 

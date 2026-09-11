@@ -4,6 +4,7 @@ return [
     'legal_eyebrow' => 'Informations légales',
     'rules_eyebrow' => 'Règles',
     'rules_title' => 'Règles',
+    'rules_intro' => 'Ce qu’il faut respecter pour sauter. À lire une fois.',
     'back_home' => '← Retour à l\'accueil',
     'legal_draft_notice' => 'Texte provisoire, en attente de révision juridique.',
 

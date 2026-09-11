@@ -29,14 +29,10 @@
     <main id="main" class="page page--rides wrap">
 
         {{-- LA CABECERA DE PÁGINA del canvas: rótulo con la RUTA, titular en Display L y entradilla.
-             ⚠️ Es la primera página que la estrena; las otras cinco la adoptan en la Fase 3, con el
-             armazón de página entero. Es el mismo camino que siguió `.sec-head`, que estrenó en
-             Tarifas y las demás secciones adoptan al rehacerse (`#479`). --}}
-        <div class="page__head">
-            <p class="page__eyebrow">{{ __('landing.attractions.eyebrow') }}</p>
-            <h1 class="page__title">{{ __('landing.attractions.title') }}</h1>
-            <p class="page__lede">{{ __('landing.attractions.intro', ['count' => $total]) }}</p>
-        </div>
+             La estrenó esta página (`#481`) y desde la T3a·3 es el componente del armazón (`#525`).
+             ⚠️ El rótulo ya NO es una clave de idioma con la ruta escrita a mano: la deriva el
+             componente de la URL real, con la misma función que el menú. --}}
+        <x-site.page-head :title="__('landing.attractions.title')" :lede="__('landing.attractions.intro', ['count' => $total])" />
 
         @if ($zones->isNotEmpty())
             {{-- ⚠️ El estado arranca en la zona que la URL pide (`?zona=`), ya resuelta y SANEADA por

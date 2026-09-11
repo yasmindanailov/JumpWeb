@@ -1519,9 +1519,9 @@ document.addEventListener('alpine:init', () => {
     window.Alpine.store('ctaPair', {
         /**
          * `'buy'` (comprar expandido) | `'account'` (la cuenta expandida).
-         * El ARRANQUE lo dice el servidor (`<body data-cta-mode>`, 2026-09-01, `[DECIDIDO owner]`):
-         * sin sesión, `account` —registrarse es lo primero—; con sesión, `buy`. Sin el atributo
-         * (una plantilla que no lo emita), comprar, como siempre.
+         * El ARRANQUE lo dice el servidor (`<body data-cta-mode>`): desde el 2026-09-11 es SIEMPRE
+         * `buy` (`[DECIDIDO owner]`, `DECISIONES #523`, revierte `#326`) —«Reservar» abierto y el
+         * registro o la cuenta plegados, invitando—. Sin el atributo, comprar también.
          */
         mode: (document.body && document.body.dataset && document.body.dataset.ctaMode === 'account') ? 'account' : 'buy',
         /** ¿Ha interactuado ya alguien con el par? Mientras sea `false`, la otra mitad invita. */

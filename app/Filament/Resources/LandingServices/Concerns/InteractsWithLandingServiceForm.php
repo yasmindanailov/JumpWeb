@@ -4,13 +4,17 @@ namespace App\Filament\Resources\LandingServices\Concerns;
 
 /**
  * Normalización compartida por crear/editar un servicio de la landing (#256):
- *  - Textos i18n (`title`/`accent_word`/`zone_label`/`nav_subtitle`/`body`): descarta idiomas
- *    vacíos; `null` si todos vacíos.
+ *  - Textos i18n (`title`/`accent_word`/`zone_label`/`body`): descarta idiomas vacíos; `null` si
+ *    todos vacíos. (`nav_subtitle` salió del formulario con `#521` y ya no llega aquí.)
  *  - `specs`: por idioma, descarta filas vacías (sin label ni value); `null` si todas vacías.
  *  - `image`: ruta recortada con saneo anti-traversal; vacío → `null`.
  *  - `ticket_type_id`: entero o `null` (servicio de solo-contacto).
- *  - defaults de columnas NOT NULL (is_active, show_in_nav, position) — el Toggle de Filament
+ *  - defaults de columnas NOT NULL (is_active, position) — el Toggle de Filament
  *    dehidrata `false` [[feedback_filament_create_defaults]].
+ *
+ * ⚠️⚠️ `show_in_nav` YA NO se toca aquí, y no es un olvido (`#521`): el formulario dejó de pintar su
+ * interruptor, así que forzarlo a `true` cuando no llega **reescribiría el valor de todo servicio que
+ * se editara** sin que nadie lo hubiera pedido. Al crear, lo pone el `default(true)` de la columna.
  */
 trait InteractsWithLandingServiceForm
 {
@@ -20,7 +24,7 @@ trait InteractsWithLandingServiceForm
      */
     protected function prepareLandingServiceData(array $data): array
     {
-        foreach (['title', 'accent_word', 'zone_label', 'nav_subtitle', 'body'] as $field) {
+        foreach (['title', 'accent_word', 'zone_label', 'body'] as $field) {
             if (array_key_exists($field, $data)) {
                 $data[$field] = $this->compactTranslations($data[$field] ?? []);
             }
@@ -44,7 +48,6 @@ trait InteractsWithLandingServiceForm
         $data['ticket_type_id'] = ! empty($data['ticket_type_id']) ? (int) $data['ticket_type_id'] : null;
 
         $data['is_active'] = (bool) ($data['is_active'] ?? true);
-        $data['show_in_nav'] = (bool) ($data['show_in_nav'] ?? true);
         $data['position'] = (int) ($data['position'] ?? 0);
 
         return $data;

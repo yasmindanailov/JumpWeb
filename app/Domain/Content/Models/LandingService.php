@@ -64,12 +64,6 @@ class LandingService extends Model
     }
 
     /** @param  Builder<LandingService>  $query */
-    public function scopeInNav(Builder $query): void
-    {
-        $query->where('show_in_nav', true);
-    }
-
-    /** @param  Builder<LandingService>  $query */
     public function scopeOrdered(Builder $query): void
     {
         $query->orderBy('position');

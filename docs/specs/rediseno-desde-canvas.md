@@ -1,7 +1,7 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · lo siguiente es la **Fase 3, las páginas**
-> **Banda de decisiones:** 470–499 (la reapertura es `#469`)
+> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas COMPLETO (T3a·1 → T3a·3; la T3a·4 revertida por `#527`); siguen las páginas** (§5.5)
+> **Banda de decisiones:** 470–499 (la reapertura es `#469`), **agotada en `#499`** → la Fase 3 va en **520–549**
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
 > fuente se mueve sola, así que **se relee antes de cada tanda, no una vez por carril** (`#474`).
@@ -342,7 +342,7 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T1c (`#471`) | añadir `--sec-air: 144px` y `--sec-air-mobile: 96px` — **los dos o ninguno**, lo vigila `RhythmScaleTest` |
 | T1d (`#472`) | añadir `--col-max: 1120px` |
 | T2b (`#478`) | **DATO, desde el panel** — Zonas: poner la **altura** de cada zona (Kids «máxima 130», Jump «mínima 130») y **quitar la altura del texto libre** de su edad, o saldrá dos veces («+8 años · +1,30 m desde 1,30 m», medido). ⚠️ Y decidir dos cosas suyas: el rótulo de la tarifa especial es «Viernes, findes y festivos» y en el sello queda largo (el mockup escribe «finde»), y el **orden** de las tarjetas lo manda `zones.position` —hoy sale Jump primero y el canvas ordena Kids · Jump—. |
-| T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker: #101418`** al paquete. Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
+| T2c (`#480`) | añadir **`--marker: #F5C400`** y **`--on-marker-brand: #101418`** al paquete (⚠️ **`--on-marker-brand` y no `--on-marker`** desde `#523`: con éste la superficie de tinta pisa la tinta del paquete y el sello del precio sale con texto claro sobre amarillo, 1,49 : 1). Sin ellos el ahorro se queda en texto en negrita —conducta correcta, pero se pierde el resalte—. ⚠️ Y **DATO, desde el panel**: elegir el **icono** de cada complemento (`cake`, `ice-bucket`, `snacks`, `drink`, `clock-plus`, `socks`) — los catorce estaban en `NULL`, o sea todos con la entrada genérica; el mecanismo existe desde `#475` y aquí solo faltaba usarlo. |
 | T2e (`#483`) | **`--shadow-float-hover: 2px 2px 0 var(--paper-fg)`** y **`--shadow-float-press: 0 0 0 var(--paper-fg)`** en el paquete. ❗❗ **No es una mejora, es un ARREGLO**: `#478` escribió el hover de la pegatina con esos dos tokens y el paquete no los declaraba, así que la tarjeta reposaba con la sombra DURA del cliente y al pasar el ratón saltaba a la DIFUSA del producto (medido). Sin ellos, la sección 04 **y la 01** siguen con ese defecto. Lo vigila `ClientThemePackageTest`: si el paquete declara `--shadow-float`, tiene que declarar los tres. ⚠️ Y **DATO, desde el panel**: revisar los `features` de los dos packs — la sección enseña los **tres primeros** y hoy dos de los cinco repiten lo que la tarjeta ya dice (la duración y la edad). |
 | T2d (`#482`) | **DATO, desde el panel** — el ORDEN de las atracciones decide **cuáles cinco** salen en la portada: la 1.ª de la primera zona va grande, la 1.ª y la 2.ª de la segunda se leen, y la 2.ª y 3.ª de la primera se velan. Con el orden de hoy sale «Saltos libres» grande, «Piscina de bolas» y «Toboganes» con nombre. **Cero código**: se cambia reordenando. ⚠️ Y arrastra la decisión pendiente de T2b/T2c —el orden de las ZONAS—, que aquí decide **qué zona lidera el mosaico**. |
 | T2g (`#487`) | añadir **`--ok-ink: #447921`** y **`--attn-ink: #8A6E00`** al paquete (las variantes 800 de su propia paleta). ❗ **Sin `--ok-ink` el estado «Abierto ahora» se pinta con `--ok`, que en este paquete da 2,4 sobre blanco** — lo vigila `ClientThemePackageTest`, así que el gate lo caza. Sin `--attn-ink` el «Abre hoy» pierde el color y se queda en tinta: se ve, no se rompe. ⚠️ Y **DATO, desde el panel**: el horario en conflicto —el panel dice L–V 16:30 · S–D 11:00 y el canvas L–J 16:30 · V–D 11:30— y las **fechas especiales**, que hoy son cero: sin ellas no hay ni aviso ni pliegue, que es la conducta correcta. |
@@ -351,6 +351,8 @@ producción, y crece con cada tanda que toque el paquete. Es el mismo mecanismo 
 | T2i·b (`#491`) | **`.env` de producción**: `GOOGLE_PLACES_API_KEY=` con la clave de Places API (New). ▶ **DATO, desde el panel**: el ajuste `social.google_place_id` (`app:set-setting social.google_place_id <ChIJ…> --force`). ⚠️ **Y en la consola de Google, lo que el owner aplazó a sabiendas**: **rotar la clave** (se pegó en un chat), poner el **tope de peticiones/día** y **añadir la IP del servidor** a la restricción — sin la IP, en producción todas las llamadas fallan y la sección cae al respaldo propio sin avisar. ❗ **El scheduler no corre en staging** (`#115`): allí `social-proof:refresh` se dispara a mano. |
 | T2h (`#488`) | **Ninguno de CSS**: la sección se viste con roles ya declarados (`--bg-card`, `--line`, `--bg-soft`, `--interactive`, `--r-lg`, `--r-pill`). ▶ **DATO, desde el panel** — las cinco dudas publicadas: **retirar la de la EDAD** (contradice a la sección 01, que dice 4–7 y +8 desde `zones`) · **reescribir la del APARCAMIENTO** con «en la calle, delante, y gratis» (`[DECIDIDO owner]`; ⚠️ es el único sitio de la web que lo publica) · **reescribir «¿Hace falta reservar?»**, que hoy dice «no hace falta» contra toda la página · y **quitar el «automáticamente»** de la de cancelar, que promete un canal que `#244` no da. ⚠️ El seeder ya trae las cinco; en producción **no se siembra**, así que se editan desde el panel. ⚠️ Y **quedan dos decisiones del owner**: si grupos lleva al correo o a `/servicios`, y qué otras dudas oyen en el mostrador. |
 | T2c (`#479`) | añadir **`--money`** al paquete: `#627411` en `:root` y en `[data-surface="paper"]`, `#A3C21C` en `[data-surface="ink"]`. Es el rol de CIFRA; **sin él los precios salen en tinta**, que es la conducta anterior — no se rompe nada, solo se pierde el color. ⚠️ Y **DATO, desde el panel**: el **orden** de las pestañas lo manda `zones.position` (el canvas ordena Kids · Jump y aquí sale Jump primero, la misma decisión pendiente de T2b), y **`ticket_types.featured` está a cero en las cinco entradas** — sin ninguna destacada, el carril abre por la primera y no hay tarjeta ancha ni chip. Es una elección suya, no un defecto. |
+| T3a·2 (`#522`) | añadir **`--ink-fg-body: #C9CDD1`** al paquete (Papel 200, el gris de CUERPO sobre tinta del canvas). Sin él el cuerpo del pie sale con la mezcla de reserva del producto (`--fg` de tinta al 82 %): se lee, pero no es su valor. ⚠️ Y **DATO, desde el panel**: la **ciudad** (Ajustes → Contacto) — sin ella el colofón dice solo «Nombre · © año», que es la conducta correcta, no un defecto. |
+| `#523` | **Ninguno de CSS nuevo**, y dos comprobaciones: (1) si el paquete de producción ya lleva el marcador, **renombrar** `--on-marker` → `--on-marker-brand` (fila T2c); (2) comprobar que `theme.brand` de producción sigue en `#1AA9DE` — en local se había quedado un valor de TEST (`#0A0B0C`) escrito a mano por otra sesión. ⚠️ Y **en la consola de Google**: la restricción de IP de la clave de Places rechaza hoy (403) la IP de la máquina de desarrollo. |
 
 ⚠️ Y arrastra las **cinco líneas** que ya venían pendientes de `auditoria-diseno.md` (`#434` dos,
 `#436` tres): comprobar que están puestas antes de dar por buena una verificación visual en
@@ -931,6 +933,188 @@ rehacer el armazón**; tocarlo suelto es descuadrar un cálculo que se va a reha
 ⚠️ **Divergencia detectada y NO resuelta**: el canvas dice que *«el teléfono y el WhatsApp salen del
 cierre»* y hoy el cierre tiene un `tel:` en su segundo CTA (`.reserve__act--alt`). No se tocó porque
 no estaba entre lo preguntado — **es decisión del owner** y va con la sección del cierre.
+
+### 5.5 · Estado de la Fase 3 · las páginas
+
+La Fase 3 empieza por el **ARMAZÓN** —lo que comparten las siete páginas— y no por una página:
+construir una encima del armazón viejo obliga a rehacerla (el mismo razonamiento que hizo de `#477`
+la primera tanda de la Fase 2). Fuente: `Layout Paginas PJP` (1a móvil · 1b escritorio · 1c el menú
+de escritorio) y `doc/paginas.md` del canvas.
+
+| | Tanda | Estado |
+|---|---|---|
+| T3a·1 | **El armazón · los DESTINOS** del menú (y del pie): el inventario de páginas; en la portada, sus secciones | ✅ `#521` |
+| T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón — y las VELAS del pie y del menú, que no se apagaban nunca | ✅ `#522` |
+| T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b · revisada por el owner: OK |
+| T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ↩️ `#526` construida y **revertida por `#527`** (`[DECIDIDO owner]`): las interiores acaban en el pie de `#522`, sin tarjeta |
+| T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
+
+#### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
+
+Medido con la sonda de navegador el 2026-09-11 (8 vistas × 390 y 1280) antes de tocar nada:
+
+| Pieza | Canvas | Código | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|---|---|
+| Cabecera de las interiores | barra blanca **fija** 60/72 con filete de tinta de 4 px (token `componente.cabecera`) | racimo flotante sin fondo (`#201`) | ❌ **racimo flotante, como hoy** |
+| Menú en escritorio | panel de 520 a la derecha, velo al 72 %, sin foto | pantalla completa con columna de foto (`#228`/`#341`) | ❌ **pantalla completa, como hoy** |
+| Destinos del menú y del pie | el inventario de páginas | zonas, atajos y servicios del panel | ✅ el inventario |
+| Rótulo del grupo | «Páginas» | «Otras páginas» | ✅ «Páginas» |
+| Idioma en el pie | visible, ES · EN · FR | solo `<noscript>` (`#253`) | ✅ visible en TODAS — revierte `#253` |
+| Colofón | «Nombre · Ciudad · © año» | lema + coletilla | ✅ el del canvas |
+| Cierre en las interiores | la tarjeta sin juego ni eslogan | ninguno | ✅ solo «Reservar» |
+| El interruptor «Sale en el menú» | — | queda sin efecto | ✅ se retira del panel |
+
+⚠️⚠️ **Los dos «no» están DECIDIDOS, no pendientes**: quien abra el Layout mañana no debe
+«terminar» la barra blanca ni el panel de 520. Tampoco se toca la **tira en cuña** del pie: el
+Layout la dibuja fina de 4 px y el owner ya la había decidido en cuña de 22 contra el artboard.
+
+⚠️ **Tres diferencias del armazón que NO son de esta tanda y siguen abiertas en el marco**, porque
+el propio canvas las deja como conflictos del owner (marco `1b`): el rótulo del par va en **Bungee**
+y el sistema dice *«Bungee nunca en un botón»* · el CTA dentro del menú es **amarillo** y el sistema
+dice *«el amarillo nunca es botón»* · la barra de móvil del canvas es **naranja** y la nuestra es
+**tinta** (`#225`). Se le traen al owner cuando toque el par, no antes.
+
+✅ **T3a·1 · los destinos** (`#521`). `Content\Services\SiteDestinations` es la fuente ÚNICA de
+destinos del menú y del pie: las páginas del inventario en el orden del Layout con la **ruta escrita**
+debajo, sin las que estén en mantenimiento y sin `/bar` (su ruta no existe); y, **solo en la
+portada**, sus cinco secciones con el rótulo que la propia sección pinta.
+
+❗❗❗ **El defecto que cierra**: en una INTERIOR el grupo «En esta página» listaba las secciones **de
+la portada** —en `/precios`: JUMP, KIDS, Atracciones y Ubicación, las cuatro llevando fuera—. Ya no
+se pinta, y la página en curso sale en la lista marcada.
+
+⚠️⚠️ **Retirar el interruptor del panel tenía una trampa**: la normalización lo forzaba a `true`
+cuando no llegaba, así que quitar solo el campo habría reescrito el dato de todo servicio editado.
+⚠️⚠️ **Y la guarda del inventario nació comparándose consigo misma** (lo esperado salía de la misma
+constante que se muta): 2 de 9 mutaciones sobrevivían. Hoy el inventario va escrito en el caso.
+Arnés `scripts/mutar-destinos.py`: **9/9**.
+
+⚠️ **En local `/servicios` está en mantenimiento, así que el menú no la ofrece**: no es un fallo, es
+la regla nueva funcionando. En producción sale en cuanto el panel la abra.
+
+✅ **T3a·2 · el pie del marco** (`#522`). Una banda de **tinta a sangre completa** (`data-surface="ink"`
+en el `<footer>` y la columna dentro) con la tira en cuña, los **destinos** de `SiteDestinations` más
+«Mi cuenta» (y, solo en la portada, sus secciones), el **contacto**, el **idioma ES · EN · FR a la vista
+en todas las páginas** —enlaces con `hreflang`, `lang`, el nombre nativo como nombre accesible y el
+vigente marcado— y el **colofón «Nombre · Ciudad · © año»**, que sin ciudad no deja un «·» colgando.
+Salen del pie el lema, la coletilla, las redes y el registro externo, y ninguno se pierde: el lema
+sigue siendo el `<title>` de la portada cuando no hay «Título web», la coletilla el pie del post-form,
+las redes siguen en el menú y en el `sameAs`, y el registro lo ofrece el par del armazón. Las ayudas
+del panel de lema y coletilla ya no prometen el pie.
+
+❗❗ **En escritorio contacto e idioma COMPARTEN FILA con lo legal** (`[DECIDIDO owner]`, se aparta del
+Layout, que los dibuja en dos filas): con dos filas el pie crecía y el punto estático del cierre de la
+portada dejaba de caber — medido a 1440×900, **45 px** de tarjeta sobre el pie; con una, **0**. Solape
+con la fila única, en px: 390×844 **67** · 430×932 0 · 1280×800 **55** · 1280×900 0 · 1366×768 **94** ·
+1440×900 0 · 1536×864 0 · 1920×1080 0. ▶ **Medido después con el pie anterior** (`#523`, servido en paralelo desde un árbol de
+trabajo de la víspera): esas tres ventanas **ya pisaban, y más** —78 · 93 · 135 px, y 64 a 1536×864—;
+el pie nuevo las redujo.
+
+❗❗❗ **LAS VELAS DEL PIE Y DEL MENÚ NO SE HABÍAN APAGADO NUNCA**, y es el hallazgo de la tanda: colgaban
+de `scroll(nearest …)` sobre el `::after` del ENVOLTORIO, que busca el contenedor de scroll ANTECESOR
+—el documento en el pie, el propio `.menu` en el menú— y no la fila o la lista, que son su hermana y
+su descendiente. Estaban siempre a la vista, y por eso nadie lo vio; las guardas del menú comprobaban
+que la vela EXISTE. Hoy el carril declara su eje con nombre (`scroll-timeline-name`), el envoltorio lo
+sube (`timeline-scope`) —la receta que el carril de complementos tenía desde `#498`— y
+`ui/rail-sails.js` publica si el carril desborda (`data-rail-scroll`): sin desbordamiento la línea de
+tiempo está inactiva y la vela se pintaría sobre el último destino sin nada detrás. Medido en
+navegador: pie a 390 → **1** al inicio y **0** al final, **0** a 1280 (cabe); menú a 390×844 → **1** al
+inicio y **0** al final, **0** a 1024×1366 (cabe), con la línea colgando ya de `.menu__col-list`.
+⚠️ `rail-sails.js` vuelve a medir al llegar las fuentes y al acabar las transiciones: las filas del
+menú entran con un desplazamiento que cuenta como contenido mientras dura (173 px de desborde a mitad
+de la entrada, 158 al terminar) y eso no cambia el tamaño de la lista, así que ningún observador de
+tamaño se entera.
+
+⚠️ Nace **`--fg-body`**, el gris de CUERPO por superficie (en tinta, Papel 200 del paquete: paso de
+despliegue en §5.bis). Guardas: `FooterFrameTest` (7) y la vela del menú en `ArmazonContractTest`;
+arnés `scripts/mutar-pie.py`: **18/18** (14 del pie y 4 de la vela del menú). ⚠️ **El eje de la lista
+del menú va en SU regla** (`.menu__col-list`), no en una segunda con el mismo selector: `MenuGroupsTest`
+lee la primera que aparece en la hoja, y con dos perdió el `overflow-y` — lo cazó la suite completa.
+
+✅ **`#523` · lo que corrigió el ojo del owner** (detalle en `DECISIONES #523`). `[DECIDIDO owner]` **el pie
+de la PORTADA va sobre papel** —la tarjeta de tinta del cierre sobre un pie de tinta se fundía, y a
+pantalla completa la banda rellenaba su marco— y las interiores siguen en tinta; la tira del pie se
+retira con el progreso crudo del cierre para no asomar por ese marco. `[DECIDIDO owner]` **el par
+arranca siempre con «Reservar» abierto** y el registro plegado invitando (revierte `#326`, corrección en
+`armazon-y-menu.md` §13). ❗❗ **El «contraste roto» era un dato de test en la base de desarrollo**:
+`theme.brand = #0A0B0C`, escrito a mano por otra sesión y sin devolver; con él «SALTAR» y las chapas se
+pintaban casi negras sobre tinta. Devuelto a `#1AA9DE`. ⚠️ Y dos defectos de verdad: el sello de
+precio salía claro sobre amarillo en la tarjeta de tinta (el paquete declara ahora su tinta en
+`--on-marker-brand`) y «Configuración de cookies» bajaba a 3,7 sobre papel por una `opacity`.
+
+✅ **T3a·3 · la cabecera de página** (`#525`). Un componente, `<x-site.page-head>`: rótulo en Etiqueta con
+la **ruta escrita** —la deriva `SiteDestinations::writtenPath()`, la misma función que escribe la ruta
+bajo cada destino del menú—, titular en Display L y entradilla **opcional** (sin ella no se pinta el
+párrafo). `[DECIDIDO owner, 2026-09-11]` **la llevan ya las interiores sencillas** —`/precios`, `/normas`,
+`/contacto`, `/atracciones` y las legales— y las **pantallas de servicio** (mantenimiento, pago,
+contraseña, verificar el correo), que pasan su rótulo a mano: no son destinos, y la de contraseña lleva un
+TOKEN en la URL. **`/cumpleanos` y `/servicios` la reciben al rehacerse (T3b)**: su cabecera va dentro de
+un bloque —la banda con foto, el hero con índice— que esa tanda sustituye. Y `[DECIDIDO owner]` **las
+entradillas dicen solo lo que la página enseña**: `/precios` «Todas las tarifas, con sus días.» (la del
+canvas sin «y sus complementos», que la página no pinta; la anterior afirmaba que las entradas se
+compraban «en taquilla o por teléfono» al lado de un botón que las reserva online), `/normas` la del canvas
+y las legales sin entradilla.
+
+❗❗❗ **«Una página no estrena tipografía» es ya verdad en el CSS**: `.page__eyebrow`, `.page__title` y
+`.page__lede` comparten la declaración tipográfica de `.sec-head__*`. El titular propio de `site.css`
+—40/80 px con `font-weight: 800` y `font-stretch: 75%` sobre Bungee, que trae UNA cara— **falsificaba**
+negrita y condensada en `/normas`, `/contacto`, las legales y cuatro pantallas de servicio, y se retira.
+Con él se van `.rides__head`/`.rides__title`, cuyo último consumidor era `/precios`, y los cuatro
+compuestos `.page--rides .page__…` con los que la estrenó `/atracciones`.
+
+❗❗ **LA DECORACIÓN VIVE EN EL CONJUNTO rótulo + titular (`.page__lockup`), que la RECORTA, con la
+entradilla fuera.** Lo destapó la CAPTURA, no la suite: la trama de `/normas` cayó debajo de la
+entradilla nueva, y —medido contra la captura de partida— **en móvil el abanico de `/precios` ya caía
+detrás de las tres líneas de la suya ANTES de esta tanda**. Las dos piezas tienen escrita la regla
+«detrás del titular y nunca detrás de un párrafo»; contra la cabecera entera dependían de lo largo que
+fuera el texto, contra el conjunto no pueden alcanzarlo. ⚠️ El recorte va solo con decoración
+(`.page__lockup--deco`): un titular de Bungee a `line-height: .95` puede sacar una coma por debajo de su
+caja. ⚠️ El abanico se ve ahora como una BANDA a la altura del rótulo y el titular (en escritorio antes
+bajaba hasta la entradilla, sin pisarla): es el precio de la regla, y lo mira el owner.
+
+▶ **El hueco de arriba se DERIVA del racimo** (`--nav-pad-block` + la más alta de sus piezas + 28/44),
+no de `vh` (era `clamp(108px, 14vh, 156px)`): a 390 el rótulo cae en **88 px, justo donde lo pone el
+canvas** (su barra de 60 + 28), aunque aquí el racimo flota sin barra. El de abajo es el **aire entre
+secciones** (96/144 en esta instalación). Medido antes → después: el titular de `/normas`, `/contacto` y
+las legales **40 → 34 px** en móvil y **77 → 52** en escritorio, peso **800 → 400**; `/atracciones` pasa
+de dos líneas a una en escritorio (el tope de 20 caracteres de 1b); cero desbordes horizontales.
+
+Guarda `PageHeadTest` (5 casos) + `scripts/mutar-cabecera.py` (**18/18**). ⚠️⚠️ **La guarda NACIÓ LAXA y
+lo dijo el arnés**: sacar `.page__lede` de la regla tipográfica compartida **sobrevivía**, porque la
+entradilla también comparte con la de sección la regla de su MARGEN y el caso aceptaba cualquiera. Hoy
+exige compartir la que declara `font-size`. *«Comparte una regla» no es «comparte la declaración».*
+
+↩️ **T3a·4 · REVERTIDA por `#527` el mismo día** (`[DECIDIDO owner, 2026-09-11]`): visto en vivo, *«el footer
+déjalo como estaba»* — la tarjeta encima del pie hacía de la banda de tinta un bloque que en un teléfono llena
+la pantalla. Se deshizo con `git revert` del commit de código; **el pie de `#522` se queda** y **las páginas
+interiores acaban en él, sin tarjeta de cierre**. Es el TERCER «no» al Layout, con la barra blanca y el panel de
+520: no se «termina». Lo de abajo se conserva como registro de lo construido y medido.
+⚠️ *Una decisión visual sobre algo que ocupa más de una pantalla se enseña desplazándose, no en un fotograma*:
+se eligió sobre capturas de ventana y se deshizo al verlo entero.
+
+📜 **T3a·4 · el cierre en las interiores, tal como se construyó** (`#526`). La tarjeta de la portada **sin el juego, sin el eslogan
+y con un solo botón**, y `[DECIDIDO owner, 2026-09-11]` **dentro de la banda de tinta del pie** —la opción A,
+elegida sobre dos renderizadas: la B la ponía sobre el papel antes del pie, como en la portada—. La llevan
+las seis páginas del inventario que existen; ni las legales ni las pantallas de servicio. El texto es el de
+la portada (`[DECIDIDO owner]`: el teléfono sale justo debajo, en el pie).
+
+▶ **El cuerpo es COMPARTIDO con la portada** (`<x-site.closing-body>`): titular, texto y la regla de a dónde
+lleva «Reservar» con la venta online cerrada. ⚠️ La CAJA de la portada no se toca —lleva los manejadores
+del juego en el propio elemento y `SaltaJuegoTest` los exige ahí—. ▶ Lo que la portada hace y aquí no
+significa nada se retira: la altura en reposo («el hueco que deja el pie», que publica su coreografía) →
+**la mide el contenido**; el hueco del minijuego → **el de la chapa**, derivado de su geometría; la sombra de
+elevación, invisible sobre tinta → **el filete de la superficie**. ▶ **La barra de móvil se retira sola**: se
+aparta al entrar `.foot`, y el cierre ya es `.foot`; en la portada sigue por encima a propósito (`#253`).
+
+❗❗ **El defecto que vio la sonda**: en escritorio la tarjeta medía **610 px de 1120** —desde 1024 el pie es
+`flex` con salto y solo lo que está en su lista de «fila entera» ocupa la fila—. ⚠️ Y **la suite completa cazó
+lo que la tanda dirigida no**: `FooterFrameTest` lee `.foot__colophon { flex: …` tal cual, así que la tarjeta
+va delante del colofón en esa lista. Guarda `PageClosingTest` (5 casos) + `scripts/mutar-cierre.py` (**13/13**).
+
+▶ **EL ARMAZÓN QUEDA COMPLETO con T3a·1 → T3a·3** (la T3a·4 se retiró por decisión del owner). Lo siguiente son **las páginas (T3b)**, en el orden
+del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto`. Dos
+preguntas del owner esperan a su página: **`/bar`** (no existe; el canvas la condiciona a que el bar tenga carta,
+`#482`) y **`/entradas`** (existe sin estar en el inventario: entra o se retira, §4.1).
 
 ### 5.2 · Las cuatro excepciones del owner
 

@@ -3,15 +3,13 @@
     <x-site.nav />
 
     <main id="main" class="page wrap">
-        <div class="rides__head">
+        {{-- La cabecera del armazón (T3a·3). Antes era la cabecera VIEJA de sección
+             (`.rides__head`), la última que quedaba en todo el sitio. --}}
+        <x-site.page-head class="pricing__head" :title="__('landing.pricing.title')" :lede="__('landing.pricing.intro')">
             {{-- A3 · el abanico de rayos, QUIETO. Su regla es «uno por página», y éste es el de
                  `/precios`. Detrás del titular y NUNCA detrás de un párrafo (su regla 02). --}}
-            <div class="rays pricing__rays" aria-hidden="true"></div>
-            <div>
-                <h1 class="rides__title">{{ __('landing.pricing.title') }}</h1>
-            </div>
-            <p>{{ __('landing.pricing.intro') }}</p>
-        </div>
+            <x-slot:deco><div class="rays pricing__rays" aria-hidden="true"></div></x-slot:deco>
+        </x-site.page-head>
 
         <x-site.ticket-prices :tickets="$tickets" :zones="$zones" />
 

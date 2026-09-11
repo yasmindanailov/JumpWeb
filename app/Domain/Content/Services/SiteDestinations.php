@@ -1,0 +1,140 @@
+<?php
+
+namespace App\Domain\Content\Services;
+
+use App\Domain\Platform\Services\MaintenanceSettings;
+
+/**
+ * **LOS DESTINOS DEL SITIO: el inventario de páginas y las secciones de la portada**
+ * (`DECISIONES #521`, carril de diseño Fase 3 · T3a·1, `specs/rediseno-desde-canvas.md` §5.5).
+ *
+ * El menú y el pie ofrecen LO MISMO y lo leen de aquí. Mientras cada uno compuso su lista —el menú
+ * con zonas y servicios del panel, el pie con dos arrays escritos a mano— un destino podía existir en
+ * uno y no en el otro sin que nada lo avisara.
+ *
+ * `[DECIDIDO owner, 2026-09-11]`: **los destinos son el INVENTARIO del canvas**. Su regla es
+ * *«el inventario de páginas es la fuente también para el menú y el pie; un enlace que no está en él
+ * es relleno»*. Las zonas se eligen en la sección 01 y los servicios son UNA página, así que dejan de
+ * ser destinos sueltos.
+ *
+ * ⚠️ Solo compone datos de NAVEGACIÓN —rótulo, URL, ruta escrita—. Qué se pinta y cómo lo decide
+ * cada plantilla.
+ */
+final class SiteDestinations
+{
+    /**
+     * Las páginas del inventario, en SU orden (`Layout Paginas PJP`): nombre de ruta → clave del
+     * rótulo en `landing.nav.pages`.
+     *
+     * ⚠️ **`/bar` está en el inventario y NO aquí**: la página no existe (el owner la dejó para más
+     * adelante en `#482`), y un destino a una ruta inexistente es el ancla muerta que la regla del
+     * canvas prohíbe. Entra el día que nazca su ruta.
+     * ⚠️ El rótulo es el del INVENTARIO y no el titular de cada página: `/contacto` se titula
+     * «Hablamos» y `/atracciones` «Todo lo que hay dentro», que son frases de su cabecera y no
+     * nombres de destino.
+     */
+    public const PAGES = [
+        'precios' => 'pricing',
+        'cumpleanos' => 'events',
+        'atracciones' => 'attractions',
+        'normas' => 'rules',
+        'servicios' => 'services',
+        'contacto' => 'contact',
+    ];
+
+    /**
+     * Las secciones de la portada que llevan a sí mismas, en el orden de la portada: ancla → clave
+     * del rótulo que la PROPIA sección lleva escrito.
+     *
+     * ⚠️ **Son cinco de ocho, y las tres que faltan faltan por una regla del canvas** (marco 1d):
+     * «Cuánto» y «Cumpleaños» son sección Y página, y el destino es la PÁGINA —la versión larga—;
+     * «Reseñas» no tiene página y **desaparece sin consentimiento de cookies**, así que sería un
+     * enlace a la nada para quien dijo que no.
+     * ⚠️ **El rótulo es el de la sección, no uno propio**: si el menú dijera «Zonas» y la sección
+     * «Para quién», serían dos nombres para el mismo sitio, y el canvas lo avisa por lo mismo con los
+     * números. Por eso la clave apunta al rótulo de la sección y no a una del menú.
+     */
+    public const HOME_SECTIONS = [
+        'zones' => 'landing.zones.eyebrow',
+        'rides' => 'landing.rides.eyebrow',
+        'before' => 'landing.before.eyebrow',
+        'info' => 'landing.info.eyebrow',
+        'faq' => 'landing.faq.eyebrow',
+    ];
+
+    /**
+     * Las páginas del inventario que hoy se pueden visitar.
+     *
+     * ⚠️ **Una página en mantenimiento no se anuncia**: su enlace llevaría a una pantalla de «vuelve
+     * luego». Es la misma regla que el menú ya aplicaba a `/servicios` desde el lanzamiento, ahora
+     * para cualquiera de las páginas que el panel puede poner en mantenimiento
+     * (`MaintenanceSettings::PAGE_KEYS`; una clave que no está ahí nunca lo está).
+     *
+     * @param  ?string  $currentRoute  la ruta de la página que pinta el menú, para marcarla
+     * @return list<array{route: string, t: string, url: string, s: string, current: bool}>
+     */
+    public static function pages(?string $currentRoute = null): array
+    {
+        $pages = [];
+
+        foreach (self::PAGES as $route => $label) {
+            if (MaintenanceSettings::pageInMaintenance($route)) {
+                continue;
+            }
+
+            $url = route($route);
+
+            $pages[] = [
+                'route' => $route,
+                't' => (string) __('landing.nav.pages.'.$label),
+                'url' => $url,
+                's' => self::writtenPath($url),
+                'current' => $currentRoute === $route,
+            ];
+        }
+
+        return $pages;
+    }
+
+    /**
+     * **La RUTA ESCRITA de una URL**: lo que el menú pone debajo de cada destino y lo que la cabecera
+     * de una página pone en su rótulo (`DECISIONES #525`, T3a·3).
+     *
+     * ⚠️ Sale de la URL real y no de una tabla aparte, así que no puede decir una dirección que no
+     * es. Y es UNA función para los dos a propósito: con dos derivaciones, el menú y la cabecera de
+     * la misma página podían escribir rutas distintas sin que nada lo avisara — `/atracciones` la
+     * llevaba escrita a mano en los ficheros de idioma hasta `#525`.
+     */
+    public static function writtenPath(string $url): string
+    {
+        return (string) (parse_url($url, PHP_URL_PATH) ?: '/');
+    }
+
+    /**
+     * Las secciones de la portada que el menú y el pie ofrecen.
+     *
+     * ⚠️ **Solo las que la portada PINTA**: un ancla a una sección que no está no falla —el navegador
+     * se queda donde estaba— y por eso nadie lo vería. Hoy la única condicional de las cinco es
+     * «Dudas», que desaparece con cero dudas en el panel; quien la sabe es el controlador de la
+     * portada, que es quien decide pintarla.
+     *
+     * @return list<array{t: string, url: string}>
+     */
+    public static function homeSections(bool $withFaq = true): array
+    {
+        $sections = [];
+
+        foreach (self::HOME_SECTIONS as $anchor => $label) {
+            if ($anchor === 'faq' && ! $withFaq) {
+                continue;
+            }
+
+            $sections[] = [
+                't' => (string) __($label),
+                'url' => url('/#'.$anchor),
+            ];
+        }
+
+        return $sections;
+    }
+}

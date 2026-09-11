@@ -17,6 +17,19 @@ que **necesita una URL pública** y no se puede ver en local.
 Es un banco de pruebas del PRODUCTO, no la instalación de nadie. Si algún día existe una instalación
 real de un cliente, será otra cosa distinta y con otras reglas (`INSTALACION-CLIENTE.md`).
 
+> 🏦 **DESDE EL 2026-09-11 STAGING ES ADEMÁS EL ENTORNO DE VALIDACIÓN DEL BANCO** (`DECISIONES #453`,
+> `[DECIDIDO owner]`): lleva el **catálogo y la configuración de playjump.es** (solo tablas de catálogo,
+> **ninguna con personas** — la guarda 2 sigue en pie) y apunta al **terminal de PRUEBAS de CaixaBank**
+> (`redsys_merchant_code=369809538` · `redsys_terminal=1` · `redsys_environment=test`), con la venta online
+> **ABIERTA** (`sales.online_enabled=1`). Cuentas de prueba: `pruebas.tpv@playjump.es` (cliente, para el
+> equipo del banco) y `admin.test@playjump.es` (panel); las contraseñas las tiene el owner, no el repo.
+> Copia previa al cambio: `~/backups/jumpweb-pre-tpv-20260911-055029.sql.gz` en el servidor (es la marcha
+> atrás). ⚠️ Un `--seed` lo pisaría: **no re-sembrar** mientras dure la validación. ⚠️ Los pagos de prueba
+> que se hagan aquí aparecen en el **Canales de pruebas** del comercio (`sis-t.redsys.es:25443/canales/`).
+> ▶ **Medido con ese terminal**: la confirmación llega por la **notificación S2S** y la vuelta del navegador
+> viene **sin datos** («incluir datos en redirección» está apagado en su terminal de test); la tarjeta
+> «denegada» del banco da la excepción `SIS0093`, no una denegación (§5.undecies del e2e).
+
 - **Infra propia** del owner, gestionada desde el panel **enhanceCP**.
 - **Acceso**: `ssh jumpweb-staging` (alias configurado en `~/.ssh/config`, clave dedicada
   `~/.ssh/jumpweb_staging_ed25519`). Solo por CLAVE — **verificado el 2026-08-15**.
@@ -338,6 +351,11 @@ Ficha abierta en `DEUDA.md`; el contenido acordado está en `DECISIONES #137`.
 > y `slots:generate-rolling` (3.875 franjas). Verificado por la API: 8 referencias publicadas, fechas con
 > precio (15 € especial / 12 € normal) y horas. ▶ Un `--seed` posterior NO lo deshace (el seeder hace
 > `updateOrCreate` sobre las entradas y volvería a ponerlas `false`: si se re-siembra, hay que repetir esto).
+>
+> ⚠️⚠️ **CADUCADO el 2026-09-11: ese catálogo ya no está.** Staging lleva ahora el de **producción**
+> (`#453`, §1): 4 zonas · 25 productos · 43 precios · 453 plantillas · 6.760 franjas · las 30 fechas
+> especiales, importado por `mysqldump --complete-insert` de las tablas de catálogo y `TRUNCATE` previo.
+> Para repetirlo o revertirlo, el procedimiento y la copia están en `#453`.
 
 **El principio que sí está decidido**: staging se levanta con el MISMO procedimiento que levantaría la
 instalación de un cliente. Si se configura a mano deja de ser una prueba del producto y pasa a ser un

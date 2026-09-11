@@ -77,10 +77,11 @@ class LandingServiceForm
                             ->label(__('admin.landing_services.field_is_active'))
                             ->helperText(__('admin.landing_services.field_is_active_hint'))
                             ->default(true),
-                        Toggle::make('show_in_nav')
-                            ->label(__('admin.landing_services.field_show_in_nav'))
-                            ->helperText(__('admin.landing_services.field_show_in_nav_hint'))
-                            ->default(true),
+                        // ⚠️ Aquí vivía el interruptor «Sale en el menú» (`show_in_nav`), y se retira
+                        // con su consumidor (`#521`, `[DECIDIDO owner]`): los destinos del menú son
+                        // el inventario de páginas y un servicio ya no es un destino suelto. Un
+                        // control que no gobierna nada engaña a quien lo toca. La COLUMNA se queda
+                        // en la base —con el valor que tuviera— por si algún día vuelve a hacer falta.
                     ]),
 
                 Tabs::make('translations')->tabs([
@@ -125,10 +126,9 @@ class LandingServiceForm
                 ->label(__('admin.landing_services.field_zone_label'))
                 ->helperText($locale === 'es' ? __('admin.landing_services.field_zone_label_hint') : null)
                 ->maxLength(60),
-            TextInput::make("nav_subtitle.{$locale}")
-                ->label(__('admin.landing_services.field_nav_subtitle'))
-                ->helperText($locale === 'es' ? __('admin.landing_services.field_nav_subtitle_hint') : null)
-                ->maxLength(80),
+            // ⚠️ Aquí vivía «Subtítulo en el menú» (`nav_subtitle`), y se va con el interruptor por el
+            // mismo motivo (`#521`): lo pintaba el menú viejo debajo del servicio, y el menú ya no
+            // ofrece servicios sueltos. La columna y lo que tuviera escrito se conservan.
             Textarea::make("body.{$locale}")
                 ->label(__('admin.landing_services.field_body'))
                 ->rows(4)

@@ -2634,3 +2634,34 @@ volver a generarse: lo que hay que conservar son las trampas de abajo.
 - Que la nota del pie —«Google no verifica las reseñas…»— **no compite** con la opinión.
 - ⚠️ Y que la reseña que sale puede ser **negativa**: es lo que `google-reviews.md` §1.4 advirtió, no
   un defecto. El parque no elige qué reseña publica Google.
+
+## 5.undecies · LA COMPRA CONTRA EL TERMINAL DE PRUEBAS DEL BANCO, EN STAGING — ✅ 2026-09-11 (`DECISIONES #453`)
+
+> Staging con el catálogo de playjump.es y `redsys_merchant_code=369809538` / terminal `1`
+> (`ENTORNOS.md` §1). Recorrido con Playwright desde el contenedor (`/root/e2e/tpv-staging.mjs`, fuera del
+> repo como el resto del andamio de §5.bis; `BASE`, `LOGIN_EMAIL`, `LOGIN_PASSWORD` y `MODE` por entorno).
+> Usuario: `pruebas.tpv@playjump.es`.
+
+**Resultado, sin adornos**: `MODE=ok` dos veces → `R-7E76SN` (autorización 278564) y `R-ORKOAM` (278574),
+pedido `paid`, entrada emitida, «¡Reserva creada!». `MODE=ko` (tarjeta `1111…1117`) → excepción `SIS0093`.
+`MODE=cancel` → `SIS9915`. `MODE=denied` (CVV `999`) → «DENEGADA…» y la pasarela se queda en su formulario.
+
+**Lo que enseñó, y ahorra otra hora** (se suma a las ocho lecciones de §5.bis):
+1. **El clic de «Pagar» del cajón dispara el auto-POST a `sis-t`: hazlo con `noWaitAfter: true`** y espera
+   la URL con `waitUntil: 'domcontentloaded'`. Su página tiene recursos que tardan; esperando `load` el
+   clic caduca **con la URL ya en la pasarela** (dos intentos perdidos).
+2. **Sus campos son `#card-number`, `#card-expiration` (`1227`), `#card-cvv`; el botón `#divImgAceptar`**
+   nace `disabled` y se habilita al teclear (`pressSequentially`). ⚠️ Un selector por `name` que contenga
+   «Numero» casa ANTES con un `input` oculto (`Sis_Numero_Tarjeta`) y el clic caduca: **por `id`**.
+3. **El CVV es obligatorio también con la tarjeta «denegada»** cuyo CVV «no se requiere»: sin él el botón
+   sigue deshabilitado y no hay mensaje.
+4. **El simulador EMV3DS (`sis-d.redsys.es`) son tres radios sin `<label>`** (valores `1`·`2`·`3`: éxito,
+   denegar, cancelada) y un botón `#boton` «Enviar»; el primero viene marcado. A veces hay que pulsar
+   «Enviar» dos veces.
+5. **Tras el ticket «OPERACIÓN AUTORIZADA» hay un «Continuar»** (y un «Imprimir»); no vuelve solo.
+6. **La vuelta llega sin datos y el pago ya está confirmado por la notificación**: en la home el cajón
+   abre en «¡Reserva creada!» con `?redsys=<pase>`. Para verlo en el log hace falta `LOG_LEVEL=info`
+   (staging va en `warning`, y `redsys.return.processed` es `info`): se subió y se restauró.
+7. **En Node no existe `CSS.escape`**: un `'#' + CSS.escape(id)` tumba el guion en el 3DS.
+8. **Cada recorrido abortado deja un pedido pendiente** (lección 6 de §5.bis): entre pruebas,
+   `expires_at = now() - 1 min` sobre los del usuario de prueba y `orders:expire`.

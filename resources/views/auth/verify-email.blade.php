@@ -6,10 +6,7 @@
     <x-site.nav />
 
     <main id="main" class="page wrap">
-        <div class="page__head">
-            <div class="eyebrow">{{ __('account.verify.eyebrow') }}</div>
-            <h1 class="page__title">{{ __('account.verify.title') }}</h1>
-        </div>
+        <x-site.page-head :eyebrow="__('account.verify.eyebrow')" :title="__('account.verify.title')" />
 
         <div class="page__body">
             <p>{{ __('account.verify.intro') }}</p>

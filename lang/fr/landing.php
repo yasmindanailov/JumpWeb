@@ -2,7 +2,11 @@
 
 return [
     'nav' => [
-        'menu_group' => ['section' => 'Sur cette page', 'page' => 'Autres pages'],
+        'menu_group' => ['section' => 'Sur cette page', 'page' => 'Pages'],
+        'pages' => [
+            'pricing' => 'Tarifs', 'events' => 'Anniversaires', 'attractions' => 'Attractions',
+            'rules' => 'Règles', 'services' => 'Services', 'contact' => 'Contact',
+        ],
         'zones' => 'Zones', 'rides' => 'Attractions', 'pricing' => 'Tarifs',
         'events' => 'Anniversaires', 'info' => 'Nous visiter', 'reserve' => "S'inscrire",
         'reserve_tickets_aria' => 'Réserver billets et anniversaires',
@@ -12,8 +16,6 @@ return [
         'cta_buy' => 'Réserver',
         'cta_buy_from' => 'dès :amount',
         'cta_book' => 'Réserver',
-        'park' => 'Le parc',
-        'services' => 'Services',
         'tickets' => 'Billets',
         'cta_switch_buy' => 'Passer à la réservation',
         'cta_switch_signup' => "Passer à l'inscription",
@@ -32,15 +34,7 @@ return [
         'slider_prev' => 'Précédent',
         'slider_next' => 'Suivant',
         'park_items' => [
-            'rides' => ['t' => 'Attractions', 's' => 'Trampolines, foam, tyrolienne'],
-            'info' => ['t' => 'Adresse et horaires', 's' => 'Murcia · accès'],
-        ],
-        'services_items' => [
-            'birthdays' => ['t' => 'Anniversaires', 's' => 'Forfaits par enfant'],
-            'school' => ['t' => 'Sorties scolaires', 's' => 'Séance de 30 min'],
-            'team_building' => ['t' => 'Entreprises', 's' => 'À partir de 30 personnes'],
-            'adults' => ['t' => 'Sortie adultes', 's' => '22h00–01h00 · min. 30'],
-            'events' => ['t' => 'Autres événements', 's' => 'EVJF/EVG, tournages, fêtes'],
+            'info' => ['t' => 'Adresse et horaires'],
         ],
     ],
     'hero' => [
@@ -94,9 +88,9 @@ return [
         'book_zone' => 'Réserver :zone',
         'buy' => 'Acheter',
     ],
-    // `/atracciones` (carril de diseño, T2d). El rótulo es la RUTA y no se traduce: es la URL.
+    // `/atracciones` (carril de diseño, T2d). El rótulo es la RUTA y no vive aquí: lo deriva la
+    // cabecera de página de la URL real (`#525`).
     'attractions' => [
-        'eyebrow' => '/atracciones',
         'title' => 'Tout ce qu’il y a dedans',
         'intro' => 'Les :count attractions du parc, avec leur âge.',
         'zone_tablist' => 'Zone',
@@ -106,7 +100,7 @@ return [
     ],
     'pricing' => [
         'title' => 'Tarifs',
-        'intro' => "Choisis ta zone et vois les prix. Pour le moment, les billets s'achètent à la billetterie ou par téléphone.",
+        'intro' => 'Tous les tarifs, avec leurs jours.',
         'from' => 'dès', 'pick_zone' => 'Choisis ta zone', 'tab' => 'Billets',
         'book' => 'Réserver', 'call' => 'Appeler',
     ],

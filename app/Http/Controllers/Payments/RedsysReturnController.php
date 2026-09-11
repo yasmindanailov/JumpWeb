@@ -27,9 +27,10 @@ use Throwable;
  *     en el portal admin Redsys (#106, verificado empíricamente 2026-05-26):
  *       · Terminal con "incluir datos en redirección" activo: GET con query params O
  *         auto-POST → procesamos vía `processSignedReturn`.
- *       · Terminal sin esa opción: bare GET sin datos → fallback `handleDataLessReturn`
- *         que muestra al cliente "verificando pago" sin afirmar éxito hasta que llegue
- *         la notificación on-line (5.5d).
+ *       · Terminal sin esa opción: bare GET sin datos → fallback `handleDataLessReturn`,
+ *         que resuelve por lo que la notificación on-line (5.5d) ya haya escrito sobre el
+ *         ÚLTIMO intento del cliente: pagado → éxito, fallido → rechazo, y si aún no ha
+ *         llegado, "verificando pago" sin afirmar nada.
  *     La cookie de sesión SÍ viaja en GET top-level navigation (SameSite=Lax), pero NO
  *     la usamos para autorizar el pago — solo para asociar al cliente al pedido reciente.
  *   - `notification` — POST server-to-server (5.5d, requiere `MerchantURL` configurada
@@ -141,13 +142,24 @@ class RedsysReturnController extends Controller
      * el pago aquí — la notificación on-line es la fuente de verdad en este escenario.
      *
      * Comportamiento seguro:
-     *   - Localizamos el Payment reciente del USUARIO LOGUEADO (la cookie de sesión SÍ
-     *     viajó porque GET top-level navigation permite SameSite=Lax).
+     *   - Localizamos el ÚLTIMO intento de cobro reciente del USUARIO LOGUEADO (la cookie de
+     *     sesión SÍ viajó porque GET top-level navigation permite SameSite=Lax), sea cual
+     *     sea su desenlace. Lo que decide es lo que la notificación haya escrito sobre ÉL.
      *   - Si la notificación ya lo marcó `paid` (carrera con la vuelta), redirigimos con
      *     token de éxito → sidebar abre en paso 6.
+     *   - Si la notificación ya lo marcó `failed` (denegación, cancelación en la pasarela o
+     *     una excepción SIS de la que Redsys también notifica), redirigimos con el token de
+     *     RECHAZO → el mismo desenlace que la vuelta firmada por UrlKO, con reintento.
      *   - Si sigue `pending`, redirigimos al home con `purchase.verifying_code` → sidebar
      *     abre en paso 11 "verificando tu pago, te avisaremos por email".
      *   - Sin usuario / sin Payment reciente → home limpia (no leakeamos información).
+     *
+     * ⚠️ Los intentos FALLIDOS entran en la búsqueda a propósito (`DECISIONES #454`). Medido el
+     * 2026-09-11 con el terminal de pruebas de CaixaBank, que no incluye datos en la redirección
+     * y notifica ANTES de devolver al navegador: buscando solo `pending|paid`, el pago que acababa
+     * de fallar quedaba fuera y la búsqueda caía en un pedido pendiente ANTERIOR del mismo cliente,
+     * al que se le decía «verificando tu pago · tu banco ha procesado el pago» tras cancelarlo. Con
+     * un terminal así, ése era el camino NORMAL de todo rechazo.
      *
      * Importante: NUNCA marcamos `paid` por la mera llegada a UrlOK sin firma — sería un
      * vector de fraude (atacante navega a UrlOK manualmente tras cancelar el pago).
@@ -166,7 +178,7 @@ class RedsysReturnController extends Controller
 
         $latest = Payment::where('payable_type', (new Order)->getMorphClass())
             ->where('provider', 'redsys')
-            ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID])
+            ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_PAID, Payment::STATUS_FAILED])
             ->whereHas('payable', fn ($q) => $q->where('user_id', $user->id))
             ->where('created_at', '>=', now()->subMinutes(self::RECENT_PAYMENT_LOOKBACK_MINUTES))
             ->orderByDesc('id')
@@ -184,6 +196,12 @@ class RedsysReturnController extends Controller
         if ($latest->status === Payment::STATUS_PAID) {
             // La notificación llegó antes que el cliente. Token de éxito idempotente.
             return $this->redirectWithToken($order->user_id, $order->code, RedsysReturnOutcome::IdempotentPaid);
+        }
+
+        if ($latest->status === Payment::STATUS_FAILED) {
+            // La notificación llegó antes que el cliente y el banco dijo que no. El pedido sigue
+            // `pending` y caducará solo (`orders:expire`); el cliente puede reintentar desde aquí.
+            return $this->redirectWithToken($order->user_id, $order->code, RedsysReturnOutcome::Denied);
         }
 
         // Aún `pending`: mostrar "verificando pago". El sidebar abrirá en paso 11.

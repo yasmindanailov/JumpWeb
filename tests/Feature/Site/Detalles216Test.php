@@ -120,16 +120,12 @@ class Detalles216Test extends TestCase
         $res->assertSee(route('contacto'), false);
     }
 
-    public function test_footer_shows_external_register_with_configured_title(): void
-    {
-        $this->set('registration.url', 'https://registro.ejemplo.com/alta', 'registration');
-        $this->set('registration.label.es', 'Alta socios', 'registration');
-
-        // El enlace del pie usa el título configurado en Ajustes (#216 pto.1), no un texto fijo.
-        $this->get('/')->assertOk()
-            ->assertSee('https://registro.ejemplo.com/alta', false)
-            ->assertSee('Alta socios');
-    }
+    // ⚠️⚠️ **AQUÍ VIVÍA `test_footer_shows_external_register_with_configured_title`, Y SE RETIRA CON SU
+    // SUJETO** (`#522`, `[DECIDIDO owner, 2026-09-11]`): los destinos del pie son el INVENTARIO del
+    // canvas, y el registro externo del parque no es una página del inventario. **La capacidad no se
+    // pierde**: el registro externo con su título configurado sigue siendo la puerta de la cuenta en el
+    // par de CTA de las doce vistas, y eso lo vigilan los dos casos del principio de este fichero
+    // (`contact_shows_quick_ctas_when_data_present` y los del subtítulo).
 
     public function test_footer_hides_waiver_when_disabled(): void
     {

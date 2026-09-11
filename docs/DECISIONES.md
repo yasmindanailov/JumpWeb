@@ -28027,6 +28027,484 @@ tiene el paquete y no en el del agente que escribió el test.
 
 **Suite 4.676** · 29.237 aserciones · Pint limpio · docs-check ✓.
 
+## #453 · 2026-09-11 · `[DECIDIDO owner]` Staging pasa a ser el entorno de VALIDACIÓN del banco: el catálogo de playjump.es, el terminal de PRUEBAS de CaixaBank y dos cuentas de prueba
+
+**Contexto.** CaixaBank (Comercia Global Payments, caso 06887197) mandó las credenciales del TPV
+virtual en **entorno de TEST** (comercio `369809538`, terminal `1`, divisa 978, la clave pública del
+sandbox) y su guía de integración: el pase a real exige que **su equipo complete una compra** en una
+URL nuestra apuntando a `sis-t`. En `playjump.es` la venta online está cerrada (`#325`), así que el
+owner decidió preparar **staging** para esa validación: *«Preparamos el entorno con sus datos y dejamos
+los productos igual que en playjump.es; dejamos un usuario de prueba para ellos y créame una cuenta
+admin test»*.
+
+**Lo hecho, en bloque (`ENTORNOS.md` §5), con copia previa** (`~/backups/jumpweb-pre-tpv-20260911-055029.sql.gz`,
+100 K, 50 tablas, en el servidor):
+1. **Desplegado `f19746d6`** con `scripts/deploy.sh --go` (staging llevaba 98 migraciones y `main` tiene
+   108: se aplicaron las cuatro). ⚠️ La comprobación de salud salió en ROJO con el sitio sano: el script
+   esperaba **5** tareas programadas y son **6** desde `#491` (`social-proof:refresh`). Corregido en el
+   mismo commit — *la cifra es una propiedad del repo, no del servidor*.
+2. **Catálogo = producción.** Se volcaron de `playjump2_main` **solo tablas de catálogo y configuración**
+   (`zones` · `ticket_types` · `prices` · `price_tiers` · `product_addons` · `rate_types` ·
+   `slot_templates` · `rooms` · `attractions` · `faqs` · `park_rules` · `landing_services` · `pages` ·
+   `opening_hours` · `special_dates` · `seasons` · `offers`), con `--complete-insert` porque staging ya
+   tiene columnas que producción no (`zones.height_rule`). **Ninguna tabla con personas**: la guarda 2
+   de `ENTORNOS.md` §2 prohíbe el volcado del cliente por los MENORES, no por las tarifas. Las
+   transaccionales de staging (8 pedidos de sandbox, 9 pagos, 28 entradas) y las franjas se vaciaron
+   porque cuelgan del catálogo sustituido; `slots:generate-rolling` dejó **6.760** franjas.
+3. **Ajustes copiados por LISTA BLANCA de prefijos** (51 claves: `address.` · `business.` · `contact.` ·
+   `mixed_party.` · `packs.` · `theme.` · `waiver.` · `maintenance.` …) y **excluidos a propósito**
+   `auth.google_*`, `security.turnstile_*`, `redsys_*` y `sales.online_enabled`. Los dos ids de
+   `mixed_party.*` viajan con el catálogo porque apuntan a filas de `ticket_types`. Entran las tres
+   «condiciones v1» de `legal_document_versions` (staging solo tenía el waiver).
+4. **Redsys apuntando al terminal del banco**: `redsys_merchant_code=369809538` · `redsys_terminal=1` ·
+   `redsys_merchant_name=Play Jump Park` · `redsys_environment=test` · la clave efectiva es la del correo
+   (idéntica a la del sandbox, verificado por hash) · `redsys_merchant_url` de staging · `sales.online_enabled=1`.
+5. **Paquete del cliente** al día: `client.css`, `client-kit.svg` (staging no lo tenía) y `client-logo@4x.png`
+   copiados de producción (md5 idénticos).
+6. **Cuentas**: `pruebas.tpv@playjump.es` (cliente, correo verificado, teléfono, consentimiento de
+   privacidad, creado como lo hace `SelfSignup`) para el banco, y `admin.test@playjump.es` (rol `admin`,
+   `app:create-admin`). Las contraseñas se entregaron al owner y **no están en el repo**.
+
+**Verificado con navegador headless contra el terminal del banco** (Playwright en `/root/e2e/tpv-staging.mjs`
+del contenedor; receta en `VERIFICACION-E2E-CAJON.md` §5.undecies):
+- **Compra aceptada, dos veces**: `R-7E76SN` (autorización 278564) y `R-ORKOAM` (278574), 10,00 € de
+  «Kids · 1 Hora», con el simulador EMV3DS en medio. Pedido `paid`, pago `paid`, entrada emitida, «¡Reserva
+  creada!» en el cajón.
+- ❗ **La confirmación llegó por la NOTIFICACIÓN servidor a servidor y la vuelta del navegador vino SIN
+  DATOS**: con `LOG_LEVEL=info` (subido y restaurado en la misma sesión) el log dice
+  `redsys.return.processed {source: notification, outcome: authorized}` y tres segundos después
+  `redsys.return.no_payload {method: GET}`. O sea: **el terminal de pruebas del banco NO tiene «incluir
+  datos en redirección»** y **sí notifica**. Sin `redsys_merchant_url` este mismo pago habría caducado
+  con la tarjeta cobrada (`PAY-02`) — y **producción la tiene VACÍA**: es un paso obligatorio del go-live.
+- **La tarjeta «denegada» del correo (`1111…1117`) no produce una denegación: produce una EXCEPCIÓN**
+  (`SIS0093`, «Tarjeta ajena al servicio»), y **cancelar** en la pasarela otra (`SIS9915`). En los dos casos
+  Redsys **sí notifica** (los pagos quedan `failed`) y el navegador vuelve **sin datos**. ⚠️ Y la pasarela
+  exige **tres dígitos de CVV** también con esa tarjeta: «no requerido» en el correo significa que no se
+  valida, no que pueda ir vacío (el botón «Pagar» sigue deshabilitado).
+- CVV `999` con la tarjeta aceptada → «DENEGADA. El emisor de su tarjeta requiere autenticación del
+  titular…» y la pasarela **se queda en su formulario** ofreciendo reintentar: tampoco es una vuelta KO.
+- ❗ **Defecto de producto medido, ficha en `DEUDA.md`**: en la vuelta SIN DATOS, `handleDataLessReturn`
+  solo busca pagos `pending|paid`, así que cuando la notificación ya marcó `failed` el pago que acaba de
+  fallar, la pantalla enseña «**Verificando tu pago · Tu banco ha procesado el pago**» **de un pedido
+  anterior que seguía pendiente** (`R-ZBRCOM` tras cancelar `R-RXSCDJ`). No mueve dinero ni aforo (el
+  pedido caduca solo), pero le dice al cliente lo contrario de lo que pasó, y con este terminal es el
+  camino NORMAL de todo rechazo.
+
+**Lo que queda, y de quién es**: responder al banco (plataforma «desarrollo propio», integración
+«Hosted/Redirección», la URL de staging y el usuario de prueba); comprobar en Canales de pruebas que
+las operaciones aparecen; y, al recibir el terminal real, `redsys_merchant_url` en producción **antes**
+que `redsys_environment=live`.
+
+## #454 · 2026-09-11 · La vuelta SIN DATOS resuelve por el ÚLTIMO intento, y un pago ya fallido devuelve el mismo rechazo que la vuelta firmada
+
+**Contexto.** Cierra la ficha que `#453` abrió el mismo día. `RedsysReturnController::handleDataLessReturn()`
+—la vuelta del navegador cuando el terminal no incluye los `Ds_*` firmados— buscaba el pago reciente
+del usuario **solo entre `pending` y `paid`**. Con un terminal que **notifica antes de devolver al
+navegador** (el de pruebas de CaixaBank, medido en `#453`), el pago que acababa de fallar ya estaba
+`failed` cuando el cliente volvía: la búsqueda lo saltaba y **caía en un pedido pendiente anterior** del
+mismo cliente, al que se le decía «Verificando tu pago · Tu banco ha procesado el pago» (reproducido:
+`R-ZBRCOM` tras cancelar `R-RXSCDJ`). Sin pedido anterior, home limpia y sin explicación. No movía
+dinero ni aforo (`PAY-02`: el pedido caduca solo), pero afirmaba lo contrario de lo que había pasado y
+no ofrecía reintentar — y con ese terminal era **el camino normal de todo rechazo**.
+
+**Lo decidido.** La búsqueda incluye `failed` y **el intento más reciente decide**, sea cual sea su
+desenlace: `paid` → token de éxito idempotente (como antes) · **`failed` → token de `Denied`**, el
+mismo pase que emite la vuelta firmada por UrlKO, así que la portada abre el cajón en el paso de
+rechazo con reintento · `pending` → «verificando» (como antes). Un `superseded` no entra porque
+siempre hay un intento más nuevo del mismo pedido. **No cambia ninguna regla de dinero**: el único
+que escribe `paid`/`failed` sigue siendo `RedsysReturnHandler` (`PAY-01`); aquí solo se LEE lo que
+la notificación escribió y se elige el pase.
+
+**Guarda.** Dos casos en `RedsysReturnControllerTest`: el rechazo ya notificado devuelve el pase de
+`Denied` y la portada lo consume como el firmado; y **el intento fallido más reciente gana a un pedido
+pendiente anterior** (el escenario medido). Los dos se vieron en ROJO con `failed` fuera de la
+búsqueda antes de dar por buena la guarda. `RedsysReturnController` **no está en el `CRITICAL_RE`**
+(el handler sí, y no se toca), así que el push no exigió `VERIFY_CONC`.
+
+## #521 · 2026-09-11 · `[DECIDIDO owner]` Los destinos del menú (y del pie) son el INVENTARIO del canvas — y una página interior dejaba de ofrecer secciones de otra página
+
+La **T3a·1**, primera tanda de la **Fase 3** del carril de diseño (`specs/rediseno-desde-canvas.md`
+§5.5). La Fase 3 empieza por el ARMAZÓN de las páginas (`Layout Paginas PJP`, aprobado en el canvas)
+y no por una página. Antes de construir se contrastó el artboard contra el código **renderizado**
+(sonda de navegador, 8 vistas × 2 anchos) y salieron seis diferencias; las que chocaban con
+decisiones anteriores del owner se le preguntaron **con lo medido delante**:
+
+| Pieza | Canvas | Código | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|---|---|
+| Cabecera de las interiores | barra blanca FIJA 60/72 con filete de tinta de 4 px | racimo flotante sin fondo (`#201`) | ❌ **se queda el racimo flotante** |
+| Menú en escritorio | panel de 520 a la derecha, sin foto | pantalla completa con columna de foto (`#228`/`#341`) | ❌ **se queda la pantalla completa** |
+| Destinos del menú y del pie | el inventario de páginas | zonas, atajos y servicios del panel | ✅ **el inventario** (esta tanda) |
+| Idioma en el pie | visible, ES · EN · FR | solo `<noscript>` (`#253`) | ✅ **visible en todas las páginas** — revierte `#253` (T3a·2) |
+| Colofón del pie | «Nombre · Ciudad · © año» | lema + coletilla | ✅ **el del canvas** (T3a·2) |
+| Cierre en las interiores | la tarjeta de la portada sin juego ni eslogan | ninguno | ✅ **solo «Reservar»** (T3a·4) |
+
+⚠️ **Los dos «no» no son descuido: están decididos**, y quien lea el Layout mañana no debe
+«terminar» la barra blanca ni el panel de 520.
+
+❗❗❗ **EL DEFECTO QUE ESTA TANDA CIERRA, Y NO AVISABA**: en una página INTERIOR el grupo «En esta
+página» del menú listaba las secciones **de la portada** — medido en `/precios`: JUMP, KIDS,
+Atracciones y Ubicación, las cuatro llevando FUERA de la página que decía. Una interior no tiene
+secciones (el Layout: *«sin el grupo "Esta página" mientras la página no tenga secciones»*), así que
+ese grupo ya no se pinta, y la página en curso sale en la lista **marcada** (`aria-current`).
+▶ Por eso el grupo se llama «**Páginas**» y no «Otras páginas» (`[DECIDIDO owner]`): la lista incluye
+la página en la que estás, y «otras» dejaría de ser cierto.
+
+▶ **Lo construido.** `Content\Services\SiteDestinations` es la fuente ÚNICA de destinos —el menú
+ahora y el pie en la T3a·2—: las páginas del inventario en el orden del Layout, con la **ruta
+escrita** debajo (sale de la URL real, no de una tabla), y **una página en mantenimiento no se
+anuncia** (antes solo `/servicios`; hoy cualquiera de las que el panel puede cerrar). `/bar` no entra:
+su ruta no existe. Las secciones de la portada son las cinco que el marco pone en el menú
+—«Cuánto» y «Cumpleaños» llevan a su PÁGINA; «Reseñas» desaparece sin cookies— con **el rótulo
+que la propia sección pinta**, y «Dudas» solo si la portada la pinta. El composer deja de hacer
+**dos consultas por petición** en las doce vistas (`navZones`, `navServices`).
+
+⚠️⚠️ **Retirar el interruptor «Sale en el menú» tenía una trampa** (`[DECIDIDO owner]`: *un control
+que no gobierna nada engaña a quien lo toca*): la normalización del formulario forzaba `show_in_nav`
+a `true` cuando no llegaba, así que quitar solo el campo habría **reescrito el dato de todo servicio
+que se editara**. Se retiró también esa línea, con guarda y mutación propias. «Subtítulo en el menú»
+(`nav_subtitle`) sale del formulario por lo mismo. Las **dos columnas se conservan** con su valor.
+
+⚠️⚠️ **Y la guarda del inventario NACIÓ comparándose consigo misma**: calculaba lo esperado desde
+`SiteDestinations::PAGES`, la constante que muta, y **2 de 9 mutaciones sobrevivían** (colar un
+destino, reordenar). Hoy el inventario va ESCRITO en el caso, que es su especificación. La misma
+trampa se había esquivado a tiempo en los rótulos de sección —se leen del rótulo PINTADO en la
+portada, no de la constante—. *Una guarda que deriva lo esperado del mismo sitio que lo medido no
+vigila nada.*
+
+**Verificación**: 151 casos de los ficheros tocados · **9/9 mutaciones** (`scripts/mutar-destinos.py`)
+· navegador a 390 y 1280: portada con 5 secciones + 5 páginas, `/precios` con solo «Páginas» y
+marcada. Cuatro casos se retiran con su sujeto (`CONVENCIONES §3.quater`) —dos de `ServicesPageTest`
+y dos de orden de `ArmazonContractTest`— y uno se sustituye; dos sondas de idioma de `HomePageTest`
+usaban el rótulo del desplegable viejo y se re-apuntan, porque su sujeto es el IDIOMA.
+
+## #522 · 2026-09-11 · `[DECIDIDO owner]` El PIE del marco: tinta a sangre, el idioma a la vista y el colofón del canvas — y dos velas que no se habían apagado NUNCA
+
+La **T3a·2** de la Fase 3 (`specs/rediseno-desde-canvas.md` §5.5), con las decisiones que el owner
+tomó en `#521` sobre el Layout y una más que salió al medir:
+
+| Pieza | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| Superficie | banda de **TINTA a sangre completa** (`data-surface="ink"` en el `<footer>`, la columna dentro), con la tira en cuña de siempre |
+| Destinos | los de `SiteDestinations` (`#521`) + «Mi cuenta»; **solo en la portada**, además, sus secciones |
+| Idioma | **ES · EN · FR a la vista en todas las páginas** — revierte `#253`, que lo había dejado en un `<noscript>` para ganar sitio |
+| Colofón | **«Nombre · Ciudad · © año»**; sin ciudad no queda un «·» colgando |
+| Escritorio | **contacto e idioma COMPARTEN FILA con lo legal** — se aparta del Layout, que los dibuja en dos |
+
+❗❗ **La última se decidió con la medida delante**: con las dos filas del canvas el pie crecía y el
+punto estático del cierre de la portada dejaba de caber —**45 px** de tarjeta sobre el pie a 1440×900,
+donde antes cabía—; con una fila, **0**. Solape final en px: 390×844 **67** · 430×932 0 · 1280×800
+**55** · 1280×900 0 · 1366×768 **94** · 1440×900 0 · 1536×864 0 · 1920×1080 0. ▶ **Medido después con el pie
+anterior (`#523`)**: esas tres ventanas ya pisaban, y MÁS —78 · 93 · 135 px, y 64 a 1536×864—; el pie
+nuevo no las causó, las redujo.
+
+▶ **Lo que sale del pie no se pierde**: el lema sigue siendo el `<title>` de la portada cuando no hay
+«Título web», la coletilla el pie del post-form, las redes siguen en el menú y en el `sameAs`, y el
+registro externo lo ofrece el par del armazón. Las ayudas del panel de lema y coletilla dejaron de
+prometer el pie. Los enlaces de idioma llevan `hreflang`, `lang`, el **nombre nativo** como nombre
+accesible (la etiqueta visible «ES» está contenida en él) y `aria-current` el vigente.
+
+❗❗❗ **EL HALLAZGO: LAS VELAS DEL PIE Y DEL MENÚ NO SE HABÍAN APAGADO NUNCA.** Las dos colgaban de
+`animation-timeline: scroll(nearest …)` sobre el `::after` del ENVOLTORIO, y `nearest` busca el
+contenedor de scroll **ANTECESOR** del elemento animado —el documento en el pie, el propio `.menu` en
+el menú—, no el carril, que es su hermano (pie) o su descendiente (menú). Medido con el carril al
+final: opacidad **1** en los dos. Como estaban siempre a la vista, parecían funcionar, y las guardas
+del menú solo comprobaban que la vela EXISTE. ▶ La receta ya estaba en el repo desde `#498`, en el
+carril de complementos: el carril declara su eje con NOMBRE (`scroll-timeline-name`), el envoltorio lo
+SUBE (`timeline-scope`) y la vela cuelga de ese nombre. ⚠️⚠️ **Y con eso no basta**: con un carril que
+CABE la línea de tiempo está inactiva, la animación no se aplica y la vela se pinta sobre el último
+destino sin nada detrás —en escritorio, con el inventario, es lo normal—. El hecho de si desborda lo
+publica `ui/rail-sails.js` (`data-rail-scroll`), que pasa de un carril a **cuatro** y aprende el eje de
+BLOQUE. ⚠️ Además vuelve a medir al llegar las fuentes y al acabar las transiciones: las filas del menú
+entran con un desplazamiento que cuenta como contenido mientras dura (173 px de desborde a mitad de la
+entrada, 158 al terminar) sin cambiar el tamaño de la lista, y eso no lo ve ningún observador de
+tamaño.
+
+⚠️ **La cabecera de `rail-sails.js` decía que sin JavaScript las velas se comportan «como si hubiera
+más», y era falso**: el CSS las apaga sin la marca. Se corrigió el comentario, no la conducta.
+
+⚠️ Nace **`--fg-body`**, el gris de CUERPO por superficie (en tinta, Papel 200 del paquete). **Paso de
+despliegue**: `--ink-fg-body: #C9CDD1` en el `client.css` de producción (spec §5.bis).
+
+⚠️⚠️ **La suite COMPLETA cazó lo que la dirigida no** (la lección de `#521`, otra vez): la primera
+versión declaraba el eje del menú en una SEGUNDA regla `.menu__col-list`, dentro de `@supports`, más
+arriba en la hoja que la regla de la lista, y `MenuGroupsTest` —que lee la PRIMERA regla con ese
+selector— dejó de ver el `overflow-y: auto`. El eje va en la regla de la lista. *Una guarda que
+localiza una regla por su selector se queda con la primera que encuentra.*
+
+**Verificación**: suite **4686 en verde** (29.391 aserciones, 1 omitido) · **18/18 mutaciones**
+(`scripts/mutar-pie.py`: 14 del pie y 4 de la vela del menú) · navegador: vela del pie a 390 → 1 al
+inicio y 0 al final, 0 a 1280 (cabe); vela del menú a 390×844 → 1 y 0 con la línea colgando de
+`.menu__col-list`, 0 a 1024×1366 (cabe); punto estático en ocho ventanas. Se retira **1** caso con su
+sujeto (`CONVENCIONES §3.quater`): el del registro externo en el pie, en `Detalles216Test`.
+
+## #523 · 2026-09-11 · `[DECIDIDO owner]` Tras el ojo del owner: el pie de la portada sobre papel y «Reservar» abierto — y un color de marca de TEST que llevaba doce horas en la base de desarrollo
+
+El owner revisó la portada y reportó cuatro cosas: el pie con el cierre animado «no sale bien», las
+reseñas de Google no salen, «hay contrastes rotos» y el par de CTA debe arrancar con «Reservar»
+abierto y el registro invitando. Cada una se midió contra la VÍSPERA **servida en paralelo**: un árbol
+de trabajo en `3e0678d6` en el puerto 8090, con la misma sonda en los dos servidores.
+
+| Pieza | Lo medido | Resolución |
+|---|---|---|
+| El pie de la portada | la tarjeta de TINTA del cierre sobre un pie de TINTA se fundía: en reposo y, a pantalla completa, la banda rellenaba el marco de papel de la tarjeta | `[DECIDIDO owner]` **pie sobre PAPEL solo en la portada** (`surface="paper"`); las interiores siguen en tinta |
+| La tira del pie | a pantalla completa asomaba por los 10 px de arriba del marco; con el pie viejo se escondía **por casualidad**, por su relleno | se retira con el progreso CRUDO del cierre (`--cierre-q`) |
+| El par de CTA | arrancaba con la cuenta abierta sin sesión (`#326`) | `[DECIDIDO owner]` **siempre «Reservar» abierto** y el registro plegado invitando — revierte `#326` |
+| «SALTAR» y las chapas de cumpleaños | casi negro sobre tinta (1,06 : 1) | ❗ la MARCA de la base valía `#0A0B0C` — ver abajo |
+| El sello de precio | texto CLARO sobre amarillo en la tarjeta de tinta (1,49 : 1) | defecto de mecanismo desde `#480`, arreglado |
+| «Configuración de cookies» | 3,7 : 1 sobre el papel nuevo | fuera la `opacity: .85` |
+| Las reseñas de Google | Google responde **403 · `API_KEY_IP_ADDRESS_BLOCKED`** | consola de Google; del owner |
+
+❗❗❗ **EL CONTRASTE ROTO NO ERA DE CÓDIGO: ERA UN DATO DE TEST EN LA BASE DE DESARROLLO.**
+`theme.brand` valía `#0A0B0C` —la marca de mentira de `ThemeColorTest`— desde el 2026-09-10 a las
+22:20 UTC. **No lo escribió un test**: lo escribió a mano otra sesión, con `tinker` y
+`Setting::updateOrCreate`, mientras investigaba un caso del correo, y no lo devolvió. La web pinta
+con la marca «SALTAR» (`--zone-1: var(--brand)`) y las chapas, así que todo eso quedó casi negro
+sobre tinta. ⚠️⚠️ **Y la comparación con la víspera daba IDÉNTICO, que es justo lo que lo delató**:
+los dos servidores leían la MISMA base. *Si el antes y el después miden igual y el owner ve algo roto,
+lo roto no está en el código.* El valor real (`#1AA9DE`) salió de las transcripciones —lo había
+puesto otra sesión el 2026-08-29— y se devolvió con `app:set-setting`. **Producción no se vio
+afectada** (otra sesión la leyó a las 05:45 UTC con `#1AA9DE`). ⚠️ **El registro de auditoría no guarda
+los cambios de ajustes**: la única pista eran las transcripciones.
+
+⚠️⚠️ **El sello de precio SÍ era del código, y de mecanismo.** Las dos superficies re-declaran
+`--on-marker` para que su valor por defecto —el `--fg` de ESA superficie, porque sin paquete el
+marcador es transparente— se evalúe donde toca (`SurfaceScopeTest` lo exige), y esa re-declaración
+**pisaba la tinta que el paquete ponía en `:root`**. Un marcador de color tiene la misma tinta en todos
+los fondos, así que el paquete la declara aparte (`--on-marker-brand`) y las tres declaraciones la
+prefieren: el patrón de `--action-brand` (`#209`). ⚠️ **Cambia el contrato del paquete** (spec §5.bis).
+
+⚠️ **Tres de las cifras sospechosas eran de MI sonda**, y se comprobaron con captura antes de tocar
+nada: los rótulos del mosaico (1,11) van sobre una banda de tinta al 82 % que el navegador expresa
+como `color(srgb …)`, un formato que el analizador no leía; la «A» hueca del cierre es un contorno sin
+relleno; y una «bajada» en la tarjeta de cumpleaños era el cruce emparejando dos tarjetas con el mismo
+texto. ⚠️ **Y montar la víspera tenía una trampa**: con `vendor` enlazado simbólicamente, el autoload
+resuelve `App\` contra el repo ACTUAL y la víspera habría corrido el PHP de hoy con las vistas de
+ayer; se copió con enlaces duros.
+
+▶ **Reseñas de Google**: la clave tiene restricción por IP y la de la máquina de desarrollo ya no está
+en la lista (el motivo se obtuvo con una llamada directa que imprime `error.status` y `reason`, nunca
+la clave). **Y sigue en pie la causa de `#499`** (caché de 30 min contra refresco cada 3 h). Las dos son
+del owner.
+
+▶ **El punto estático del cierre, medido por fin contra la víspera**: las ventanas bajas ya pisaban el
+pie, y más (78 · 93 · 135 px, y 64 a 1536×864); el pie nuevo las redujo. Corrige lo que `#522` dejó
+sin afirmar.
+
+**Verificación**: suite **4689 en verde** (29.406 aserciones, 1 omitido) · **25/25 mutaciones**
+(`scripts/mutar-pie.py`; una salió «NO APLICADA» a la primera —` surface="paper" />` aparece dos veces en
+la portada, la otra es la atribución de Google— y se ancló a la llamada entera del pie) · navegador:
+pie en papel en la portada y en tinta en las interiores, marco limpio a pantalla completa con la tira
+retirada y la tira a la vista en reposo, «SALTAR» en cian, el sello en tinta sobre amarillo en las dos
+tarjetas, y «Reservar» ancho (317 px a 1440, 298 en la barra de móvil) con el registro plegado (56–76 px)
+y su «asoma» y su aro corriendo. Textos bajo AA en la portada: **13 → 9**, y los 9 son lecturas del
+instrumento (8 rótulos del mosaico sobre `color(srgb …)` y la «A» hueca), comprobadas con captura.
+
+## #524 · 2026-09-11 · `[DECIDIDO owner]` Las reseñas de Google pasan a la API de Business Profile — la del DUEÑO de la ficha, no la de Places
+
+El owner pidió que las reseñas de Google **salgan siempre** y preguntó cómo se hace *«de manera
+profesional, cuál es el estándar de estos widgets»*. Se contestó leyendo la documentación oficial, no de
+memoria, y la respuesta cambió la fuente: **`[DECIDIDO owner]` *«vamos a hacerlo así, de manera
+profesional, al detalle y robusta»***. Spec: `specs/google-business-profile.md` (🟦 en revisión, código
+no empezado).
+
+❗❗❗ **LA RAZÓN, EN UNA TABLA.** Places —lo construido en `#491`— **no permite guardar** valoraciones ni
+reseñas (*«You must not pre-fetch, cache, or store Places API content beyond the allowed exceptions»*;
+exentos solo el `place_id` y las coordenadas), da **5** y las elige Google. **Business Profile** es la API
+del dueño: da **todas** (páginas de 50), la media y el total reales, la respuesta del parque, avisos de
+reseña nueva, y **permite guardar hasta 30 días** («de forma segura», «sin manipular ni agregar»). Es
+gratuita y es lo que hacen los widgets serios.
+
+⚠️⚠️ **Corrige a `google-reviews.md` §3.2 y a `#491`**, que daban por buena una excepción de «caché
+temporal para rendimiento» en Places: **la política de hoy no la tiene**. Con eso, hasta la caché corta
+actual queda en terreno dudoso, y alargarla —el arreglo de una línea ofrecido en `#523`— **se descartó**.
+
+⚠️⚠️ **Tres hechos que el diseño recoge porque, si no, se aprenden en producción**: (1) la app OAuth
+**tiene que quedar «En producción»** —en prueba Google caduca el permiso a los **7 días** y la
+sincronización muere en silencio—, y como solo la autoriza el dueño entra en la excepción de *uso
+personal* y **no necesita la verificación** de ámbito sensible; (2) **el límite de 30 días rige TODO** lo
+que da la API, métricas incluidas — no hay histórico largo con datos de Google; (3) el texto de una reseña
+puede llegar con **la traducción de Google mezclada** (`(Translated by Google) … (Original) …`, sin
+documentar y en orden variable): se **mide con la ficha real** antes de escribir el analizador.
+
+▶ **«Que salgan siempre» son DOS mitades**: guardarlas (la resuelve esta API) y que las vea quien no
+acepta cookies (la resuelve servir los avatares desde nuestro dominio dentro de los 30 días, que además
+**estrecha** la CSP) — es la decisión `D2` de la spec, con el tratamiento de datos de terceros delante.
+
+▶ **Lo que la misma conexión deja al alcance**, cada cosa en su tanda y con su decisión: responder
+reseñas desde el panel, aviso de reseña nueva, métricas de la ficha, el botón «Reservar» de Google Maps
+hacia nuestra reserva, el horario de la web hacia Google, y el correo de «déjanos tu reseña» tras la
+visita — **a todos por igual, sin premios ni filtros**, que es lo que la política de Google permite.
+⛔ Preguntas y respuestas **no**: Google cerró esa API el 3 de noviembre de 2025.
+
+⚠️ **Nada de esto lo puede hacer un agente**: pedir el acceso a la API (ficha verificada 60+ días, con web,
+correo propietario), el proyecto, la pantalla de consentimiento y el cliente OAuth son pasos del owner en
+su cuenta de Google — §7 de la spec los da uno a uno. **En local no se arregla la restricción de IP**
+de la clave de Places (`[owner]`: no hace falta), y se retirará con Places.
+
+▶ **Segunda vuelta del owner el mismo día**: alcance T1 · T2 · T5 · T6 y el enlace «Escribir una reseña»;
+D1 un proyecto por cliente, D2 avatares desde nuestro servidor, D3 seis en portada, D4 filtradas por
+estrellas, D5 anónimas publicadas, D8 horario sincronizado.
+
+❗❗❗ **Y LA REVISIÓN ADVERSARIAL (cinco lentes; su registro es hoy §10 de la spec) REABRE TRES DE ELLAS con la fuente
+delante**, verificadas por el agente principal: (1) **publicar las reseñas en la web exige el
+consentimiento de cada autor** —*«You must get consent from the reviewer if you want to use customer
+reviews of your business for your own marketing purposes, such as on your website»*— y con eso D5 no se
+puede cumplir; (2) **un proyecto por cliente lo prohíbe la política** —*«you cannot require them to apply
+for their own Business Profile project»*—, así que D1 cae; (3) **editar la ficha exige consentimiento
+previo y específico**, así que el horario no se empuja solo (D8 se matiza). ⚠️ Y **una afirmación de la
+spec era falsa**: las reseñas SÍ traen fotos (`reviewMediaItems`). ▶ Quedan **R1–R5** del owner, y **no
+se escribe código hasta decidirlas**. *Una decisión tomada sin la cita delante no está tomada: está
+pendiente de la cita.*
+
+▶ **Tercera vuelta, con la revisión delante** (`[DECIDIDO owner, 2026-09-11]`): **R2** proyecto **central
+de JumpWeb** (sustituye a D1: una sola solicitud de acceso y una sola verificación; cada parque solo
+conecta) · **R3** el horario se publica **con un botón** y la comprobación diaria solo avisa (sustituye a
+D8) · **R4** las **entradas se configuran a mano en la ficha** y la T5 por API se retira. **R1** (cómo se
+publican las reseñas) queda pendiente: el owner preguntó cómo se obtiene el permiso del autor antes de
+decidir.
+
+▶ **R1, con el sector delante** (`[DECIDIDO owner, 2026-09-11]`): **se publican TODAS las reseñas sin pedir
+permiso a cada autor**, como hacen los widgets que conectan la cuenta (EmbedSocial: *«We are not using any
+scraping. Everything works on the official Google Business Profile API»*); **filtradas por estrellas** con la
+línea que lo dice, **con sus fotos**, y **anónimas incluidas**. ⚠️⚠️ **Es un riesgo ACEPTADO, no un
+descuido**: la guía de Google pide el permiso (*«You must get consent from the reviewer…»*) y el único cauce
+que da es *«reply to the review»*, sin contacto del autor (*«Google can't provide you with additional contact
+information»*); ninguno de los proveedores revisados dice que lo pida. Mitigación: «Ocultar» a petición,
+la línea del filtro y un interruptor para apagar la sección. Descartada la otra familia de widgets —la que
+lee la ficha pública sin API (Elfsight lo describe como *«without using API»*)—: la prohíben los términos de
+Google. **Fotos de las reseñas: sí; vídeos: pendientes del owner.** ▶ **La spec queda ✅ APROBADA y
+reescrita** con la revisión integrada (la versión revisada, `3b31c45d`); lo siguiente es la **T1** y, por
+parte del owner como JumpWeb, **el proyecto central y la solicitud de acceso** (§7·A).
+
+## #525 · 2026-09-11 · `[DECIDIDO owner]` La CABECERA DE PÁGINA del armazón: la ruta escrita, la tipografía de la sección y la decoración lejos de la entradilla
+
+La **T3a·3** de la Fase 3 del carril de diseño (`specs/rediseno-desde-canvas.md` §5.5), sobre `Layout
+Paginas PJP` 1a/1b: *«una página no tiene hero: tiene cabecera de página»* —rótulo mono 12 con **la
+ruta**, titular Display L 34/52, entradilla 18/21— y *«una página no estrena tipografía»*. Antes de
+construir, el owner abrió la sesión con el orden: **las reseñas se quedan como están y Business Profile
+va DESPUÉS del diseño** (`[owner, 2026-09-11]`).
+
+**Lo que decidió el owner** (preguntado con lo medido delante):
+
+| | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| Alcance | **las interiores sencillas** (`/precios`, `/normas`, `/contacto`, legales) + las **pantallas de servicio**; `/atracciones` ya la tenía. **`/cumpleanos` y `/servicios` en su T3b**: su cabecera va dentro de un bloque (banda con foto, hero con índice) que esa tanda sustituye |
+| Entradillas | **solo lo que la página enseña**: `/precios` «Todas las tarifas, con sus días.» (la del canvas sin «y sus complementos», que `/precios` no pinta), `/normas` la del canvas, legales sin entradilla, `/contacto` la suya |
+
+❗❗❗ **LO QUE ESTABA MAL Y NO AVISABA**: (1) el titular de página de `site.css` pedía `font-weight: 800` y
+`font-stretch: 75%` sobre Bungee, que **trae una sola cara**: el navegador **falsificaba** negrita y
+condensada, a 40/77 px, en `/normas`, `/contacto`, las legales y cuatro pantallas de servicio; (2) la
+entradilla de `/precios` decía que las entradas se compraban **en taquilla o por teléfono** al lado de un
+botón que las reserva online; (3) `/atracciones` llevaba su ruta **tecleada a mano** en tres ficheros de
+idioma, una segunda fuente que podía decir otra dirección que el menú.
+
+▶ **Lo construido.** Un componente, `<x-site.page-head>`: el rótulo por defecto es la ruta escrita,
+derivada de la URL con **la misma función que el menú** (`SiteDestinations::writtenPath()`, que nace aquí
+y que `pages()` también usa); las pantallas de servicio lo pasan a mano —la de restablecer la contraseña
+lleva un TOKEN en la ruta, y un rótulo derivado lo imprimiría—. Sin entradilla no se pinta el párrafo.
+En el CSS, `.page__eyebrow/__title/__lede` entran en la **declaración de la cabecera de sección** y se
+retiran el titular de `site.css`, `.rides__head`/`.rides__title` (último consumidor: `/precios`) y los
+cuatro compuestos `.page--rides .page__…`. El hueco de arriba se **deriva del racimo** —era
+`clamp(108px, 14vh, 156px)`, la lección de `#252`— y cae a 390 en **88 px, el del canvas**; el de abajo es
+el aire entre secciones.
+
+❗❗ **LA DECORACIÓN VIVE EN EL CONJUNTO rótulo + titular, que la RECORTA** (ranura `deco`,
+`.page__lockup--deco`). **Lo vio la captura, no la suite**: con la entradilla nueva, la trama de `/normas`
+cayó debajo de ella, y la captura de partida enseñó que **el abanico de `/precios` ya caía detrás de su
+entradilla en móvil antes de esta tanda**. Las dos piezas llevan escrita la regla «detrás del titular y
+nunca detrás de un párrafo»; colocadas contra la cabecera entera la cumplían o no según lo largo del
+texto. Contra el conjunto, la entradilla queda fuera **por estructura**, que es además lo que se puede
+vigilar sin ventana. ⚠️ Coste visible y declarado: el abanico de `/precios` pasa a ser una banda a la
+altura del rótulo y el titular.
+
+⚠️⚠️ **LA GUARDA NACIÓ LAXA Y LO DIJO EL ARNÉS** (17/18 la primera vez): el caso de «comparte la
+declaración» aceptaba cualquier regla con los dos selectores, y la entradilla comparte con la de sección
+también la de su MARGEN — así que sacarla de la regla tipográfica pasaba en verde. Hoy exige la regla que
+declara `font-size`. *«Comparte una regla» no es «comparte la declaración».* Y una aseveración mía salió
+roja con el producto sano: «el token no sale en la página» — **tiene que salir** (campo oculto y URL
+canónica); lo que no puede es leerse, y se acotó a la cabecera.
+
+**Verificación**: `PageHeadTest` 5 casos · `scripts/mutar-cabecera.py` **18/18** · suite **4694** en verde ·
+sonda de navegador (`storage/app/sonda-armazon-paginas.mjs`, 8 vistas × 390 y 1280) antes y después, con
+capturas comparadas. ✅ **El owner la revisó en la sesión siguiente: todo OK** (2026-09-11).
+
+## #526 · 2026-09-11 · `[DECIDIDO owner]` El CIERRE de las páginas interiores: la tarjeta de la portada DENTRO de la banda del pie, sin juego, sin eslogan y con un solo botón
+
+> ↩️ **REVERTIDA el mismo día por `#527`** (`[DECIDIDO owner]`): visto en vivo, el owner no la quiso. Se conserva
+> como registro de lo construido y medido; **el código ya no está en el árbol**.
+
+La **T3a·4**, última del armazón de la Fase 3 (`specs/rediseno-desde-canvas.md` §5.5). Lo decidido en `#521`
+—*la tarjeta de la portada sin el juego y sin el eslogan, solo «Reservar»; la barra de móvil se retira
+cuando entra*— y dos preguntas más que salieron al construir, contestadas **viendo dos renderizadas**:
+
+| | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|
+| Dónde va | **A · dentro de la banda de tinta del pie**, como lo dibuja `Layout Paginas PJP`: una sola banda que empieza con la tarjeta (filete fino) y sigue con el pie. Descartada la **B** (tarjeta sobre papel antes del pie, como en la portada): dos masas de tinta con 120/184 px de papel en medio, y lógica extra para la barra |
+| El texto | **igual que en la portada** («¿Solo vienes a saltar? Ven directo o llámanos.»), aunque aquí no haya «Llamar»: el teléfono sale justo debajo, en el pie, y es una sola clave |
+| Qué páginas | las **seis del inventario** que existen (`/precios`, `/normas`, `/contacto`, `/atracciones`, `/cumpleanos`, `/servicios`) — el canvas lo escribe para las siete; **ni las legales ni las pantallas de servicio** |
+
+▶ **Lo construido.** `<x-site.closing>` (sección + caja con trama y chapa) y, compartido con la portada,
+**`<x-site.closing-body>`**: titular, texto y botones. Es componente y no copia porque ahí vive una REGLA —a
+dónde lleva «Reservar» con la venta online cerrada: al teléfono si lo hay, si no a las tarifas—, y con dos
+copias la portada y las páginas mandarían al visitante a sitios distintos. ⚠️ **La CAJA de la portada no se
+toca**: lleva los manejadores del juego en el propio `<div>` y `SaltaJuegoTest` los exige ahí. El pie la
+pinta con `:closing="true"`, primera cosa de su banda.
+
+▶ **Las tres cosas que la portada hace y aquí no tienen sentido, medidas en el código antes de construir**: la
+altura en reposo es «el hueco que deja el pie» (`--foot-h`, que publica la coreografía de la portada y aquí
+no existe: saldría una tarjeta de ~500 px con el texto flotando) → **la mide su contenido**; el relleno de
+abajo reserva 122–156 px para el minijuego → **reserva el de la chapa**, derivado de su propia geometría
+(la chapa va en la esquina y un botón a todo el ancho se le metería debajo); y la sombra de elevación no se
+ve sobre tinta → **filete de la superficie**, como el canvas. ⚠️ **La barra de móvil se retira sola**: se
+aparta cuando entra `.foot`, y el cierre ya es `.foot`, así que su JavaScript no cambia. En la portada sigue
+por encima del cierre **a propósito** (`#253`: es el botón de comprar persistente).
+
+❗❗ **UN DEFECTO QUE SOLO VIO LA SONDA**: en escritorio la tarjeta medía **610 px de 1120**. Desde 1024 el pie
+reparte su fila con `flex` y salto de línea, y declara «fila entera» para la tira, los destinos y el colofón;
+un hijo nuevo que no está en esa lista es un elemento flex más y se queda con el ancho de su contenido. *Todo
+lo que entre en el pie tiene que decir si ocupa la fila.*
+
+⚠️ **Y la suite completa cazó lo que la tanda dirigida no**: la tanda se corrió antes de añadir la tarjeta a
+esa lista, y `FooterFrameTest` lee `.foot__colophon { flex: …` **tal cual** — con la tarjeta detrás del colofón
+dejaba de casar. Se resolvió poniéndola delante, sin tocar la guarda ajena.
+
+⚠️ **Dos trampas de instrumento de esta tanda**: el **puente 8081→80** del contenedor se había caído (la sonda
+daba `ERR_CONNECTION_REFUSED`; receta en `VERIFICACION-E2E-CAJON.md`, `socat` con `docker compose exec -d`) y
+**poner `$store.cookies.visible = false` no cierra el banner** — tapaba media captura; se cierra con
+`rejectAll()`, el mismo método que su botón.
+
+**Verificación**: `PageClosingTest` 5 casos (con CONTROL: la portada conserva eslogan, juego y dos botones; y
+«Reservar» lleva al MISMO sitio en portada y página en los tres estados de la venta) · `scripts/mutar-cierre.py`
+**13/13** · suite **4699** en verde · sonda de navegador (`storage/app/sonda-cierre-paginas.mjs`, 7 vistas ×
+390 y 1280): la chapa **0 px²** sobre botón y texto, barra retirada, **0** desbordes, tarjeta a 1120.
+
+## #527 · 2026-09-11 · `[DECIDIDO owner]` Las páginas interiores NO llevan cierre: se revierte `#526` y el pie vuelve a ser el de `#522`
+
+Visto en vivo tras empujar `#526`, el owner: *«el footer déjalo como estaba… este footer no me gusta, el
+actual de las páginas»*, y *«no este full screen»* — la tarjeta metida encima del pie hacía de la banda de
+tinta un bloque que en un teléfono llena la pantalla. Preguntado hasta dónde deshacer, con las tres salidas
+delante (quitar la tarjeta · sacarla sobre el papel, la opción B · deshacer también el pie de `#522`):
+**quitar la tarjeta**. El pie de ayer (`#522`/`#523`) **se queda** tal cual: lo había validado.
+
+▶ **Cómo se deshizo**: `git revert` del commit de código de `#526` (`955423ad`), en un commit nuevo y sin
+reescribir historia —el mismo camino que `#452` con el cajón—. Vuelven, byte a byte, las vistas, el pie, la hoja
+y la portada (su cuerpo del cierre deja de ser un componente compartido: con una sola consumidora, la regla de
+«Reservar» vuelve a vivir en un solo sitio, que es lo que la extracción protegía). Se retiran con su sujeto la
+guarda `PageClosingTest` y el arnés `mutar-cierre.py`. **La documentación NO se revierte**: `#526` queda marcada
+como revertida, porque lo medido sigue valiendo para quien lo reabra.
+
+⚠️⚠️ **Es el TERCER «no» del owner al `Layout Paginas PJP`** (con la barra blanca fija y el panel de menú de 520,
+`#521`), y se escribe para que nadie lo «termine»: **una página interior acaba en el pie, sin tarjeta de cierre**.
+⚠️ **Y la elección se hizo sobre capturas y se deshizo en vivo**: una captura de ventana enseña el cierre en el
+punto que la sonda eligió; lo que el owner vio fue el final de la página entero al desplazarse, donde la banda
+de tinta (tarjeta + pie) mide más que la pantalla. *Una decisión visual sobre algo que ocupa más de una
+pantalla se enseña desplazándose, no en un fotograma.*
+
+▶ **Lo que sigue valiendo de `#526`** para quien vuelva a este terreno: la tarjeta de la portada no se puede
+reutilizar tal cual fuera de ella (su altura en reposo sale de `--foot-h`, que publica su coreografía, y
+reserva 122–156 px para el juego); desde 1024 px el pie es `flex` con salto y todo hijo nuevo tiene que estar
+en su lista de «fila entera» (y delante del colofón, por `FooterFrameTest`); y las dos trampas de instrumento
+(el puente 8081 caído, y que `$store.cookies.visible = false` no cierra el banner: es `rejectAll()`).
 ---
 
 ## #508 · 2026-09-11 · Los DOS correos que nadie había contado: no eran 23, eran 25 — y el inventario del artboard estaba mirando carpetas

@@ -4,6 +4,8 @@ return [
     'legal_eyebrow' => 'Información legal',
     'rules_eyebrow' => 'Normas',
     'rules_title' => 'Normas',
+    // La entradilla de la cabecera de `/normas` (`#525`), la que escribe `Layout Paginas PJP`.
+    'rules_intro' => 'Lo que hay que cumplir para saltar. Se lee una vez.',
     'back_home' => '← Volver al inicio',
     'legal_draft_notice' => 'Texto provisional pendiente de revisión legal.',
 

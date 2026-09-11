@@ -1,80 +1,27 @@
+@props(['sections' => []])
 @php
-    // Estructura del nav (reorganización 2026-05-27): dos desplegables temáticos
-    // ("El parque" / "Servicios") + dos atajos directos ("Cumpleaños" / "Entradas").
-    // Las URLs apuntan a secciones de la home (#zones, #rides, #info) o a páginas
-    // dedicadas (/cumpleanos, /precios, /servicios#...). Los items se traducen a
-    // ES/EN/FR via `landing.nav.{park_items,services_items}`.
-    // Cada item lleva título (`t`) y descripción corta (`s`) — `s` se renderiza
-    // debajo del título en el panel del dropdown para dar contexto antes del clic.
-    // ⚠️⚠️ **Las ZONAS salen de la BD, y eso ARREGLA una fuga** (`#341`): hasta hoy eran dos entradas
-    // escritas a mano en `lang/*/landing.php` —«Zona Kids» y «Zona Jump», con sus edades—, o sea el
-    // catálogo de UN cliente dentro de los ficheros del PRODUCTO. Una instalación con otras zonas
-    // veía en su menú las de otro parque. Es la misma fuga que `#302` cerró en el JS (`zone: 'jump'`).
+    // ── LOS DESTINOS DEL MENÚ SON EL INVENTARIO DEL CANVAS (`DECISIONES #521`, carril de diseño
+    // Fase 3 · T3a·1, `[DECIDIDO owner, 2026-09-11]`) ──────────────────────────────────────────────
+    // Dos listas y ninguna más: las SECCIONES de la portada —solo cuando la página que pinta el menú
+    // ES la portada, que es quien las pasa por `sections`— y las PÁGINAS del inventario, en todas.
+    // Las compone `SiteDestinations`, que es también la fuente del PIE: con una lista cada uno, un
+    // destino nuevo aparecería en uno y no en el otro sin que nada avisara.
     //
-    // El criterio es el MISMO que el de las pestañas de la portada (`is_active` + `show_in_landing`),
-    // para que menú y sección no puedan discrepar sobre qué zonas existen; lo resuelve `navZones` en
-    // el composer, memoizado con el resto del payload.
+    // ⚠️⚠️ **Aquí vivían las ZONAS, los atajos y los SERVICIOS del panel** (`#256`, `#341`), y se van
+    // por decisión del owner con la regla del canvas delante: *«un enlace que no está en el
+    // inventario es relleno»*. Las zonas se eligen en la sección 01 y los servicios son UNA página.
+    // Con ellos se retira del panel el interruptor «Sale en el menú», que ya no gobernaría nada, y el
+    // composer deja de hacer dos consultas por petición que solo servían aquí.
     //
-    // ⚠️ El subtítulo prefiere la EDAD y cae al subtítulo de la zona: en un menú, «+8 años · +1,30 m»
-    // le dice a un padre si esa zona es para su hijo y «Para los que ya saltan» no. Las zonas sin
-    // edad —una sala de cumpleaños— usan el suyo, que para eso está.
-    $zoneItems = collect($navZones ?? [])->map(fn ($z): array => [
-        't' => $z->tr('name'),
-        's' => $z->tr('age_range') ?: $z->tr('subtitle'),
-        'url' => url('/#zones'),
-        // La foto de la zona llena la VISTA PREVIA de la columna lateral del menú. `zones.image` se
-        // había quedado sin ningún consumidor desde `#302`; éste lo devuelve.
-        'img' => $z->image ? asset($z->image) : null,
-    ])->all();
-
-    $parkItems = array_merge($zoneItems, [
-        ['t' => __('landing.nav.park_items.rides.t'), 's' => __('landing.nav.park_items.rides.s'), 'url' => url('/#rides')],
-        ['t' => __('landing.nav.park_items.info.t'), 's' => __('landing.nav.park_items.info.s'), 'url' => url('/#info')],
-    ]);
-    // Selector «Servicios»: STATIC + DATA-DRIVEN (#256, modelo A). «Cumpleaños» (→ /cumpleanos) y
-    // «Otros eventos» (→ /servicios#eventos) quedan FIJOS; los del medio salen de `LandingService`
-    // (show_in_nav) memoizado en el composer (`$navServices`), enlazando a /servicios#slug.
-    // Lanzamiento 2026-09-01: con `/servicios` en MANTENIMIENTO (`maintenance.page.servicios`), sus
-    // destinos salen del menú — una página inalcanzable no se anuncia. Cumpleaños tiene página propia.
-    $serviciosAbierta = ! \App\Domain\Platform\Services\MaintenanceSettings::pageInMaintenance('servicios');
-    $servicesItems = array_merge(
-        [['t' => __('landing.nav.services_items.birthdays.t'), 's' => __('landing.nav.services_items.birthdays.s'), 'url' => route('cumpleanos')]],
-        // ⚠️ `img` entra en `#228` para la VISTA PREVIA del menú (la columna lateral del mockup).
-        // Solo los servicios del CMS tienen imagen; los ítems fijos —zonas, atracciones, info—
-        // no, y ahí la tarjeta cae a su fondo rayado. Es el mismo trato que el mockup le da a lo
-        // que aún no tiene foto, así que la ausencia no se ve como un hueco.
-        $serviciosAbierta ? collect($navServices ?? [])->map(fn ($s) => [
-            't' => $s->tr('title'),
-            's' => $s->tr('nav_subtitle'),
-            'url' => route('servicios').'#'.$s->slug,
-            'img' => $s->image ? asset($s->image) : null,
-        ])->all() : [],
-        $serviciosAbierta
-            ? [['t' => __('landing.nav.services_items.events.t'), 's' => __('landing.nav.services_items.events.s'), 'url' => route('servicios').'#eventos']]
-            : [],
-    );
-    $simpleLinks = [
-        ['t' => __('landing.nav.events'), 'url' => route('cumpleanos')],   // Cumpleaños (destacado además del item dentro de Servicios)
-        ['t' => __('landing.nav.tickets'), 'url' => route('precios')],     // Entradas
-    ];
-
-    // **La lista PLANA del menú a pantalla completa** (`specs/armazon-y-menu.md` §4.2,
-    // `[DECIDIDO owner]`). Se compone de las MISMAS fuentes que tenía la barra —atajos, «El
-    // parque» y «Servicios», con los del CMS por `show_in_nav`— y en el mismo orden que ya
-    // usaba el cajón de móvil: primero lo más buscado, luego el parque, luego los servicios.
+    // ⚠️⚠️ **Y se cierra un defecto que no avisaba**: en una página INTERIOR el grupo «En esta página»
+    // listaba las secciones DE LA PORTADA —medido en `/precios`: JUMP, KIDS, Atracciones y
+    // Ubicación, las cuatro llevando fuera de ella—. Una interior no tiene secciones, así que ese
+    // grupo no se pinta (`Layout Paginas PJP`: «sin el grupo "Esta página" mientras la página no
+    // tenga secciones»).
     //
-    // ⚠️ **Se deduplica por el PAR (título, url), no por url**, y la diferencia importa:
-    // «Cumpleaños» está a la vez como atajo y como primer servicio —mismo título y misma
-    // URL— y en una lista plana sería el mismo destino dos veces; pero «Zona Kids» y «Zona
-    // Jump» **comparten ancla** (`/#zones`) y son dos destinos distintos. Deduplicar por URL
-    // se habría comido uno de los dos sin avisar.
-    // ── El GRUPO de cada destino (`DECISIONES #477`) ────────────────────────────────────────
-    // El menú se pinta en DOS grupos —lo que te lleva dentro de esta página y lo que te saca de
-    // ella—, y el grupo **se DEDUCE de la URL**: no es un campo, ni de la BD ni del panel. Un dato
-    // derivable de un hecho no se guarda; guardarlo abre la puerta a que los dos digan cosas
-    // distintas y a que alguien tenga que mantenerlo a mano en cada alta.
-    // ⚠️ Y con esto se resuelven **las dos cruces** que el canvas dejaba pendientes (Tarifas y
-    // Cumpleaños son sección Y página): el menú ya enlaza a su PÁGINA, así que caen ahí solas.
+    // ── El GRUPO de cada destino se sigue DEDUCIENDO de la URL (`DECISIONES #477`) ─────────────────
+    // Un destino es «sección» si apunta a la portada con ancla, y «página» en cualquier otro caso. No
+    // es un campo, ni de la BD ni del panel: un dato derivable de un hecho no se guarda.
     $grupoDeUrl = static function (string $url): string {
         $partes = parse_url($url);
         $ruta = $partes['path'] ?? '/';
@@ -83,10 +30,17 @@
     };
 
     $menuItems = [];
-    foreach (array_merge($simpleLinks, $parkItems, $servicesItems) as $item) {
-        $menuItems[$item['t'].'|'.$item['url']] ??= $item + ['grupo' => $grupoDeUrl($item['url'])];
+    foreach (array_merge($sections, \App\Domain\Content\Services\SiteDestinations::pages(request()->route()?->getName())) as $item) {
+        $menuItems[] = $item + ['grupo' => $grupoDeUrl($item['url'])];
     }
-    $menuItems = array_values($menuItems);
+
+    // Los mismos destinos repartidos en sus dos grupos, en el ORDEN del sistema —primero lo de esta
+    // página, luego lo que te saca de ella—. Lo lee el cajón de móvil; el menú agrupa por su cuenta
+    // porque necesita el índice GLOBAL de cada destino para su vista previa.
+    $menuGroups = [
+        'section' => array_values(array_filter($menuItems, static fn (array $i): bool => $i['grupo'] === 'section')),
+        'page' => array_values(array_filter($menuItems, static fn (array $i): bool => $i['grupo'] === 'page')),
+    ];
 @endphp
 
 {{-- **El salto al contenido, y va aquí a propósito** (`specs/armazon-y-menu.md` §1.8): existía
@@ -219,37 +173,22 @@
             </button>
         </div>
 
-        {{-- Atajos directos arriba — Cumpleaños y Entradas son los destinos más buscados. --}}
-        <ul class="mob-menu__primary">
-            @foreach ($simpleLinks as $i => $link)
-                <li style="--i: {{ $i }}">
-                    <a href="{{ $link['url'] }}" @click="menuOpen = false">{{ $link['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
-                </li>
-            @endforeach
-        </ul>
-
-        {{-- En móvil aplanamos los desplegables como secciones — más rápido para el pulgar. --}}
-        <div class="mob-menu__section">
-            <h4>{{ __('landing.nav.park') }}</h4>
-            <ul class="mob-menu__secondary">
-                @foreach ($parkItems as $i => $item)
-                    <li style="--i: {{ $i + 2 }}">
-                        <a href="{{ $item['url'] }}" @click="menuOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-
-        <div class="mob-menu__section">
-            <h4>{{ __('landing.nav.services') }}</h4>
-            <ul class="mob-menu__secondary">
-                @foreach ($servicesItems as $i => $item)
-                    <li style="--i: {{ $i + 6 }}">
-                        <a href="{{ $item['url'] }}" @click="menuOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
+        {{-- ⚠️ El cajón está APAGADO desde `#221` (no retirado: ficha en `DEUDA.md`) y aun así lee
+             los MISMOS destinos y los MISMOS grupos que el menú (`#521`): dos navegaciones con
+             listas distintas son dos sitios que mantener, y uno se queda atrás sin avisar. --}}
+        @foreach ($menuGroups as $clave => $delGrupo)
+            @continue (empty($delGrupo))
+            <div class="mob-menu__section">
+                <h4>{{ __('landing.nav.menu_group.'.$clave) }}</h4>
+                <ul class="mob-menu__secondary">
+                    @foreach ($delGrupo as $i => $item)
+                        <li style="--i: {{ $i }}">
+                            <a href="{{ $item['url'] }}" @click="menuOpen = false">{{ $item['t'] }}<x-icons.arrow-right class="arrow" :width="14" :height="14" /></a>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endforeach
 
         {{-- Solo invitados: el «Registro» del parque. Con sesión iniciada, la cuenta vive en el
              selector «Hola, nombre» de la barra superior (visible también en móvil, #216 punto 4),

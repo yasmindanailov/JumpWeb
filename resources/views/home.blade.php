@@ -17,7 +17,9 @@
 <div x-data="landing">
     {{-- El salto al contenido ya NO se pinta aquí: lo sirve `<x-site.nav>` para las DOCE vistas
          (armazón · tanda 2c·2). Aquí solo quedaba porque la home fue la primera en tenerlo. --}}
-    <x-site.nav />
+    {{-- La portada es la única página con SECCIONES a las que bajar, y las pasa ella (`#521`): las
+         demás no pasan nada y su menú se queda solo con «Páginas». --}}
+    <x-site.nav :sections="$menuSections" />
     <main id="main">
 
     {{-- ===================== HERO ===================== --}}
@@ -1470,7 +1472,10 @@
     </section>
     </main>
 
-    <x-site.footer />
+    {{-- El pie ofrece, además del inventario, las secciones de la portada: las MISMAS del menú (`#522`).
+         Y aquí va sobre PAPEL, el fondo de la página (`[DECIDIDO owner, 2026-09-11]`, `#523`): la
+         portada termina en la tarjeta de TINTA del cierre, y un pie de tinta se fundía con ella. --}}
+    <x-site.footer :sections="$menuSections" surface="paper" />
 
     {{-- ⚠️⚠️ **EL RECORRIDO DEL HERO DEL CIERRE VA AQUÍ, DESPUÉS DEL PIE — y ése era el fallo.**
          (`#233`, corrigiendo a `#229`.) La primera versión lo puso DENTRO de la sección y usó un

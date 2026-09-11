@@ -10,6 +10,7 @@ use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\RideMosaic;
+use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Sidebar\AccountDoor;
@@ -123,7 +124,14 @@ class HomeController extends Controller
             // La duración del pack, ya escrita. La compone el mismo servicio que las tarjetas, con
             // el trait que escribe los valores de la landing: aquí no se formatea nada.
             'partyDuration' => $partyCards->durationLabel($packs),
-            'faqs' => Faq::where('is_active', true)->orderBy('position')->get(),
+            'faqs' => ($faqs = Faq::where('is_active', true)->orderBy('position')->get()),
+            /*
+             * **Las secciones que el menú y el pie ofrecen de ESTA página** (`#521`). Solo la
+             * portada las pasa: una interior no tiene secciones a las que bajar.
+             * ⚠️ «Dudas» se pinta solo con alguna duda en el panel (`#488`), y el menú no puede
+             * anunciar un ancla que no está: la condición es la MISMA colección que decide pintarla.
+             */
+            'menuSections' => SiteDestinations::homeSections(withFaq: $faqs->isNotEmpty()),
             /*
              * **La prueba social de la sección 06** (`#490`).
              *

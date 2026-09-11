@@ -11,6 +11,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\Redsys;
+use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Sidebar\SidebarEntry;
@@ -454,6 +455,63 @@ class RedsysReturnControllerTest extends TestCase
         $token = $this->tokenFromRedirect($response);
         $cached = RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token));
         $this->assertSame('idempotent_paid', $cached['outcome']);
+    }
+
+    public function test_browser_return_get_without_data_with_already_failed_payment_redirects_with_denied_token(): void
+    {
+        // `DECISIONES #454`: la notificación llegó ANTES que el navegador y el banco dijo que no
+        // (denegación, cancelación en la pasarela o una excepción SIS de la que Redsys también
+        // notifica). El fallback tiene que dar el MISMO desenlace que la vuelta firmada por UrlKO
+        // —token de rechazo, con reintento— y no «verificando tu pago», que afirma lo contrario.
+        [$payment, $user] = $this->setupPaidableOrder();
+        $payment->forceFill(['status' => Payment::STATUS_FAILED])->save();
+
+        $response = $this->actingAs($user)->get(route('payments.redsys.return.ko'));
+
+        $response->assertStatus(303);
+        $token = $this->tokenFromRedirect($response);
+        $cached = RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($token));
+        $this->assertSame(RedsysReturnOutcome::Denied->value, $cached['outcome']);
+        $this->assertSame($payment->payable->code, $cached['order_code']);
+        $this->assertNull(session('purchase.verifying_code'), 'un rechazo ya notificado no es «verificando»');
+
+        // Y la portada lo consume como el rechazo firmado: el cajón abre en el paso de KO.
+        $owner = $this->actingAs($user)->get('/?redsys='.$token);
+        $owner->assertOk();
+        $this->assertSame([SidebarEntry::OUTCOME_FAILED, $payment->payable->code], $this->outcomeInBoot($owner));
+
+        // El pedido no se toca: sigue pendiente y caducará solo (`orders:expire`).
+        $this->assertSame(Order::STATUS_PENDING, $payment->payable->fresh()->status);
+    }
+
+    public function test_browser_return_get_without_data_resolves_by_the_latest_attempt_not_by_an_older_pending_order(): void
+    {
+        // Medido el 2026-09-11 con el terminal de pruebas de CaixaBank (`DECISIONES #453`): el
+        // cliente dejó un pedido pendiente, empezó otro y lo canceló en la pasarela; la notificación
+        // marcó `failed` el segundo antes de que volviera el navegador. Buscando solo `pending|paid`,
+        // la búsqueda saltaba el intento recién fallido y caía en el pedido ANTERIOR, al que se le
+        // decía «verificando tu pago · tu banco ha procesado el pago». Lo que decide es el ÚLTIMO
+        // intento, sea cual sea su desenlace.
+        [$older, $user] = $this->setupPaidableOrder();
+        $newerOrder = Order::create([
+            'user_id' => $user->id, 'code' => 'JJ-RC'.bin2hex(random_bytes(2)),
+            'status' => Order::STATUS_PENDING, 'subtotal' => 1000, 'total' => 1000,
+            'currency' => 'EUR', 'expires_at' => now()->addMinutes(15),
+        ]);
+        $newer = Payment::create([
+            'payable_type' => (new Order)->getMorphClass(), 'payable_id' => $newerOrder->id,
+            'provider' => 'redsys', 'amount' => 1000, 'currency' => 'EUR',
+            'status' => Payment::STATUS_FAILED, 'gateway_order' => '0000'.str_pad((string) $newerOrder->id, 6, '0', STR_PAD_LEFT),
+        ]);
+        $this->assertGreaterThan($older->id, $newer->id, 'el intento fallido tiene que ser el más reciente');
+
+        $response = $this->actingAs($user)->get(route('payments.redsys.return.ko'));
+
+        $response->assertStatus(303);
+        $cached = RedsysReturnController::handoff()->get(RedsysReturnController::cacheKey($this->tokenFromRedirect($response)));
+        $this->assertSame(RedsysReturnOutcome::Denied->value, $cached['outcome']);
+        $this->assertSame($newerOrder->code, $cached['order_code'], 'el rechazo es del intento recién fallido, no del pedido anterior');
+        $this->assertNull(session('purchase.verifying_code'), 'el pedido pendiente anterior no se cuela como «verificando»');
     }
 
     public function test_browser_return_get_without_data_without_auth_redirects_home(): void

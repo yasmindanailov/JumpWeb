@@ -47,7 +47,7 @@
         esquinas del marcador QR, el subrayado tipográfico en `em`, la barra de 2 px de alto.
         Y los `0` que son un reset de un radio heredado.
 
-   SECTION HEAD PATTERN (.zones__head / .rides__head)
+   SECTION HEAD PATTERN (.zones__head / .sec-head · y la de PÁGINA, .page__head, que es la misma)
      stack vertical, left-aligned:  eyebrow → h2 → intro
      head max-width 820-920px, intro max-width 56ch (~560px)
      intro: 18px, --fg-mute
@@ -112,6 +112,12 @@
      junto al 7,08 del sistema de referencia. Con el gris ÚNICO de antes eran 3,28: FALLA AA.
      Ningún gris puede pasar en las dos superficies — por eso hay dos. */
   --ink-fg-mute: color-mix(in srgb, var(--bg) 65%, var(--fg));
+  /* El TEXTO DE CUERPO sobre tinta (`#522`): el Papel 200 del sistema v1.10
+     (`semantico.tinta.textoCuerpo`), un gris entre el claro de los titulares (`--ink-fg`) y el
+     secundario (`--ink-fg-mute`). Lo estrena el pie del marco, que usa los tres a la vez. El 82 %
+     da ≈ 12,6 sobre la tinta con los valores del producto (AAA); el paquete del cliente lo fija
+     con su nombre propio. */
+  --ink-fg-body: color-mix(in srgb, var(--bg) 82%, var(--fg));
   --ink-line: color-mix(in srgb, var(--bg) 12%, transparent);
   --ink-line-strong: color-mix(in srgb, var(--bg) 24%, transparent);
 
@@ -128,6 +134,11 @@
   --paper-fg-mute: var(--fg-mute);
   --paper-line: var(--line);
   --paper-line-strong: var(--line-strong);
+
+  /* El TEXTO DE CUERPO fuera de toda superficie declarada (`#522`): el papel por defecto, donde el
+     cuerpo es la tinta. Las dos superficies lo re-declaran —papel con la tinta, tinta con
+     `--ink-fg-body`—, porque su valor DEPENDE del fondo (`SurfaceScopeTest`). */
+  --fg-body: var(--fg);
 
   /* ⚠️ AQUÍ VIVÍAN `--jump-1/2` y `--kids-1/2`: la paleta de las dos zonas del PRIMER CLIENTE,
      escrita en el CSS del producto y heredada por toda instalación. Se retiraron el 2026-08-25
@@ -338,9 +349,17 @@
      no depende de ninguna paleta. **Vacío es una respuesta.** El par lo pone el paquete, como
      `--action` (`#209`), `--interactive` (`#436`) y `--money` (`#479`).
      ⚠️ Y viaja con su TINTA (`--on-marker`): **el par lo declara quien declara el color**, nunca se
-     deriva — la regla que `#434` dejó escrita al nacer `--on-ok`/`--on-err`/`--on-warn`. */
+     deriva — la regla que `#434` dejó escrita al nacer `--on-ok`/`--on-err`/`--on-warn`.
+     ⚠️⚠️ **Y la tinta del PAQUETE va en `--on-marker-brand`, no en `--on-marker`** (`#523`). Las dos
+     superficies re-declaran `--on-marker` para que su valor por defecto —el `--fg` de ESA superficie,
+     porque sin paquete el marcador es transparente y el texto va sobre el fondo— se evalúe donde
+     toca (`SurfaceScopeTest`). Pero esa re-declaración PISABA la tinta que el paquete ponía en
+     `:root`: dentro de la tarjeta de tinta de cumpleaños el sello amarillo del precio salía con texto
+     CLARO (**1,49 : 1**, medido). Un marcador de color tiene la misma tinta en todos los fondos, así
+     que el paquete la declara aparte y las tres declaraciones la prefieren — el patrón de
+     `--action-brand` (`#209`). */
   --marker: transparent;
-  --on-marker: var(--fg);
+  --on-marker: var(--on-marker-brand, var(--fg));
 
   /* ── EL VERDE Y EL AMARILLO CUANDO SON TEXTO ────────────────────────────────────────────
      `#487` · el estado de «Visítanos» («Abierto ahora» en verde, «Abre hoy» en amarillo).
@@ -568,12 +587,13 @@
   --bg-card: var(--ink-bg-card);
   --sheet: var(--ink-sheet);
   --fg: var(--ink-fg);
+  --fg-body: var(--ink-fg-body);
   --fg-mute: var(--ink-fg-mute);
   --line: var(--ink-line);
   --line-strong: var(--ink-line-strong);
   --interactive: var(--fg);   /* tinta → aquí es papel; el paquete lo fija por superficie (`#436`) */
   --money: var(--fg);         /* ídem: la cifra sigue a la tinta de SU superficie (`#479`) */
-  --on-marker: var(--fg);     /* ídem: la tinta del marcador (`#480`) */
+  --on-marker: var(--on-marker-brand, var(--fg));   /* la tinta del marcador: la del paquete si la declara, si no la de ESTA superficie (`#480`, `#523`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -591,12 +611,13 @@
   --bg-card: var(--paper-bg-card);
   --sheet: var(--paper-sheet);
   --fg: var(--paper-fg);
+  --fg-body: var(--paper-fg);   /* sobre papel, el cuerpo ES la tinta (`#522`) */
   --fg-mute: var(--paper-fg-mute);
   --line: var(--paper-line);
   --line-strong: var(--paper-line-strong);
   --interactive: var(--fg);   /* de vuelta a papel: tinta (`#436`) */
   --money: var(--fg);         /* ídem (`#479`) */
-  --on-marker: var(--fg);     /* ídem (`#480`) */
+  --on-marker: var(--on-marker-brand, var(--fg));   /* ídem (`#480`, `#523`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -951,23 +972,8 @@ img { display: block; max-width: 100%; }
 }
 .mob-menu__close:hover { background: var(--fg); color: var(--bg); }
 
-.mob-menu__primary { list-style: none; padding: 0; margin: 0; }
-.mob-menu__primary li { border-top: 1px solid var(--line); }
-.mob-menu__primary li:last-child { border-bottom: 1px solid var(--line); }
-.mob-menu__primary a {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: var(--sp-18) var(--sp-4);
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 32px; letter-spacing: -0.02em; line-height: 1;
-  transition: color var(--dur-sale) var(--ease-sale);
-}
-/* Sin desplazar el relleno al pasar (auditoría m2, `#435`): animar layout en una interacción. */
-.mob-menu__primary a:hover { color: var(--interactive); }
-.mob-menu__primary .arrow {
-  font-family: var(--font-body); font-size: var(--fs-16);
-  color: var(--fg-mute);
-}
-.mob-menu__primary a:hover .arrow { color: var(--interactive); }
+/* ⚠️ Aquí vivía `.mob-menu__primary`, la lista de atajos del cajón, y se va con su marcado (`#521`):
+   el cajón pinta ya los dos grupos del menú, los dos con `.mob-menu__secondary`. */
 
 .mob-menu__section h4 {
   font-family: var(--font-body); font-size: var(--fs-11);
@@ -994,11 +1000,10 @@ img { display: block; max-width: 100%; }
 .mob-menu__foot .btn { flex: 1; justify-content: center; }
 
 /* staggered entrance for items */
-.mob-menu__primary li, .mob-menu__secondary li {
+.mob-menu__secondary li {
   opacity: 0; transform: translateX(20px);
   transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-cae) var(--ease-sale);
 }
-.mob-menu--open .mob-menu__primary li,
 .mob-menu--open .mob-menu__secondary li {
   opacity: 1; transform: translateX(0);
   transition-delay: calc(var(--i, 0) * var(--dur-toque) + var(--dur-toque));
@@ -1350,7 +1355,8 @@ img { display: block; max-width: 100%; }
    ▶ Comparte declaración con el molde nuevo: es el nivel **Etiqueta** del canvas, y `--fs-label` es
    el token que lo nombra (`--fs-12` valía lo mismo, pero no decía qué era). */
 .sec-head__eyebrow,
-.zones__eyebrow {
+.zones__eyebrow,
+.page__eyebrow {
   margin: 0 0 var(--sp-8);
   font-family: var(--font-mono); font-size: var(--fs-label);
   text-transform: uppercase; letter-spacing: 0.16em;
@@ -1666,13 +1672,6 @@ img { display: block; max-width: 100%; }
    Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }
 
 
-/* ---------- atracciones (tabs + slider) ---------- */
-.rides__head {
-  display: flex; flex-direction: column;
-  gap: var(--sp-20); margin-bottom: 48px;
-  max-width: 920px;
-}
-
 /* ══ LA CABECERA DE SECCIÓN · UNA PARA LAS OCHO ═══════════════════════════════════════════
    `DECISIONES #479` · carril de diseño Fase 2 · T2c. El canvas la cierra en un turno propio
    (`Escritorio PJP` 1a, «la cabecera de sección: una para las ocho»): **rótulo en Etiqueta ·
@@ -1693,13 +1692,15 @@ img { display: block; max-width: 100%; }
    comando en `DEUDA.md`). Aquí se arreglan las cinco cabeceras, que es el alcance de la tanda;
    las otras 72 alcanzan al cajón (Fase 4) y al panel, y van en tanda propia.
 
-   ⚠️ **Las tres declaraciones viven juntas a propósito.** `.rides__title` la comparten Tarifas,
-   Visítanos, Normas y Dudas; `.zones__title` es «Para quién»; `.sec-head__title` es el molde nuevo
-   que estrena Tarifas y que las demás adoptan al rehacerse. Separarlas es cómo la portada acaba
-   con dos tamaños de titular sin que nadie lo decida. */
+   ⚠️ **Las tres declaraciones viven juntas a propósito.** `.sec-head__title` es la cabecera de las
+   secciones, `.zones__title` la de «Para quién» y **`.page__title` la de las PÁGINAS** (`#525`,
+   T3a·3): el canvas escribe que «una página no estrena tipografía», y su cabecera es la de sección
+   con la ruta en el rótulo. Separarlas es cómo el sitio acaba con dos tamaños de titular sin que
+   nadie lo decida — y `site.css` tenía uno propio, a 40/80 px y con la negrita falsificada.
+   ▶ `.rides__title` y `.rides__head` se retiraron en `#525` con su último consumidor, `/precios`. */
 .sec-head__title,
-.rides__title,
-.zones__title {
+.zones__title,
+.page__title {
   font-family: var(--font-display);
   /* ⚠️ 400 EXPLÍCITO, no ausente: sin la declaración un `<h2>` hereda el `bold` del navegador y
      vuelve la síntesis por la puerta de atrás, que es peor porque no se ve en la hoja. */
@@ -1711,26 +1712,43 @@ img { display: block; max-width: 100%; }
 /* La ENTRADILLA de la cabecera. `max-width: 52ch` es el del artboard de escritorio; el canvas
    escribe «máx. 65 caracteres» para el nivel, y 52 es lo que la cabecera usa de verdad. */
 .sec-head__lede,
-.rides__head > p {
+.page__lede {
   font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
   color: var(--fg-mute); max-width: 52ch;
   margin: 0;
 }
 
 /* El BLOQUE de la cabecera. Su ritmo sale del sistema —`ritmo.titular` 16/20 entre titular y
-   entradilla, `ritmo.cabecera` 28/40 antes del contenido—, no de un ojo.
-   ⚠️⚠️ **Existe porque `.rides__head` estiliza por ELEMENTO** (`> p`), y con un rótulo que también
+   entradilla, `ritmo.cabecera` 28/40 antes del contenido—, no de un ojo. Y es el MISMO en una
+   sección y en una página: `Layout Paginas PJP` 1a/1b dibuja 8 · 16/20 · 28/40.
+   ⚠️⚠️ **Nació porque `.rides__head` estilizaba por ELEMENTO** (`> p`), y con un rótulo que también
    es un `<p>` esa regla le ganaba por especificidad: el rótulo salía a 21 px en Hanken en vez de a
    12 en mono, con el marcado correcto y sin que fallara nada. Lo vio la sonda, no una relectura. */
-.sec-head { margin: 0 0 var(--sp-28); }
-.sec-head__lede { margin-top: var(--sp-16); }
+.sec-head,
+.page__head { margin: 0 0 var(--sp-28); }
+.sec-head__lede,
+.page__lede { margin-top: var(--sp-16); }
 @media (min-width: 1024px) {
-  .sec-head { margin-bottom: 40px; }
-  .sec-head__lede { margin-top: var(--sp-20); }
+  .sec-head,
+  .page__head { margin-bottom: 40px; }
+  .sec-head__lede,
+  .page__lede { margin-top: var(--sp-20); }
   /* El titular se acota para que no se estire de lado a lado de la columna: es un rótulo, no un
-     párrafo. 16ch es lo que usa el artboard de escritorio. */
+     párrafo. 16ch es lo que usa el artboard de escritorio para una sección; el de PÁGINA dice 20,
+     porque el titular de una página puede ser más largo («Política de privacidad»). */
   .sec-head__title { max-width: 16ch; }
+  .page__title { max-width: 20ch; }
 }
+
+/* EL CONJUNTO rótulo + titular de una cabecera de página, que es la CAJA de su decoración (`#525`).
+   ❗ La decoración de una página —la trama de `/normas`, el abanico de `/precios`— se coloca contra
+   este conjunto y NO contra la cabecera entera, y con la ranura puesta lo RECORTA: así no puede
+   alcanzar a la entradilla, que queda fuera. Su regla escrita es «detrás del titular y nunca detrás
+   de un párrafo», y contra la cabecera entera la incumplían las dos (medido en `#525`).
+   ⚠️ El recorte va SOLO con decoración (`--deco`): un titular de Bungee a `line-height: .95` puede
+   sacar una coma por debajo de su caja, y recortarlo sin motivo la cortaría. */
+.page__lockup { position: relative; isolation: isolate; }
+.page__lockup--deco { overflow: hidden; }
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    SECCIÓN 02 · «CUÁNTO» · EL CARRIL DE TARIFAS
@@ -3479,10 +3497,18 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
 .reserve__actions { display: flex; gap: var(--sp-12); justify-content: center; flex-wrap: wrap; }
 
 /* ---------- footer ---------- */
-/* ⚠️ El `border-top: 1px solid var(--line)` que había aquí lo SUSTITUYE la tira: dos remates
-   horizontales pegados leen como un error de maquetación, no como dos piezas. Es el único
-   píxel que el pie mueve por sí mismo en esta tanda. */
-.foot { padding: 60px 0 40px; }
+/* ══ EL PIE DEL MARCO (`DECISIONES #522`, carril de diseño Fase 3 · T3a·2, `[DECIDIDO owner]`) ════
+   Cinco filas sobre TINTA —la tira, los destinos, el contacto con el idioma, lo legal y el
+   colofón—, con los valores de `Marco Portada PJP` (1e) y `Layout Paginas PJP` (1a · 1b).
+   ▶ **Aquí no se escribe ni un color**: la superficie la declara el marcado (`data-surface="ink"`),
+   que re-escopa los tokens y además PINTA el fondo, así que todo lee `--fg`, `--fg-body`,
+   `--fg-mute` y `--line` de la tinta.
+   ⚠️ **La banda va a SANGRE**: el `<footer>` ya no lleva `.wrap` y la columna la pone `.foot__inner`.
+   Con `.wrap` en el propio pie, el fondo de tinta se quedaría en la columna y el papel asomaría a los
+   lados. Los rellenos son los del marco: 24 · 20 en móvil y 40 · 44 desde el corte único del
+   sistema (1024). */
+.foot { padding-block: 24px var(--sp-20); }
+@media (min-width: 1024px) { .foot { padding-block: 40px 44px; } }
 
 /* La tira de marca, «C2 · tiras» del sistema del segundo cliente. Cinco franjas de igual
    ancho, 4 px de alto, cantos apenas matados. Decorativa de arriba abajo: va con
@@ -3506,41 +3532,34 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
 .brand-strip > span:nth-child(4) { background: var(--strip-4); }
 .brand-strip > span:nth-child(5) { background: var(--strip-5); }
 
-/* COLOCACIÓN · el pie: lo único suyo es el aire que deja debajo. */
-.foot__strip { margin-bottom: clamp(30px, 3vw, 44px); }
+/* COLOCACIÓN · el pie: lo único suyo es el aire que deja debajo — 18, el del marco. */
+.foot__strip { margin-bottom: var(--sp-18); }
+/* ⚠️ **En la portada la tira se RETIRA cuando la tarjeta del cierre crece** (`#523`). A pantalla
+   completa la tarjeta deja un marco de papel de 10 px, y lo único del pie que queda detrás a la vista
+   es esta tira, asomando por arriba (medido a 1440 y a 390). Con el pie viejo no pasaba porque su
+   relleno la dejaba por encima de la ventana: se escondía por casualidad.
+   ▶ Lee el progreso CRUDO del cierre (`--cierre-q`), no `--cierre-queda`: aquél vale 0 en el punto
+   estático —la tira entera, con el pie a la vista— y ésta ya vale 0 en cuanto la tarjeta se ancla, o
+   sea que se llevaría la tira justo donde el pie tiene que verse completo. Fuera de la portada
+   `--cierre-q` vale siempre 0 y esto no cambia nada. */
+.foot__strip { opacity: clamp(0, 1 - var(--cierre-q, 0) * 4, 1); }
 
-/* ⚠️ **Una sola FILA de enlaces** (`#235`). Aquí vivía `.foot__grid`, una rejilla de cuatro
-   columnas. La fila envuelve —`flex-wrap`— porque el número de destinos lo manda la instalación:
-   con `nowrap` un cliente con quince enlaces los perdería por el borde, que es el mismo error que
-   `#228` cazó en el menú. */
-/* ══ UNA SOLA FILA (`#252`, `[DECIDIDO owner]`: «solo quiero 1 fila, no más») ═══════════════════
-   Aquí la fila ENVOLVÍA, y con los 14 destinos de esta instalación salían **dos renglones**.
-
-   ⚠️ **La aritmética manda y conviene dejarla escrita**: a 14 px de talla y 34 de hueco los 14
-   enlaces piden **1.469 px** y la columna del sitio da **1.176**. No cabe por poco: cabe por
-   MUCHO menos. Con 12,5 px y un hueco de 16 piden **1.125**, o sea 51 px de margen (4 %) — que ya
-   no es un cable trampa, pero tampoco es infinito.
-   ▶ **Y por eso la fila no envuelve: se DESLIZA.** El número de destinos lo manda la instalación,
-   así que «una fila» solo puede sostenerse si lo que no cabe se alcanza con un gesto en vez de
-   caer a un segundo renglón. Es la misma mecánica que la tira de horas y la lista del menú, y la
-   de los carruseles del artboard de móvil del cliente.
+/* ══ UNA SOLA FILA QUE SE DESLIZA (`#252`, `[DECIDIDO owner]`: «solo quiero 1 fila, no más») ═════
+   El número de destinos lo manda la instalación, así que «una fila» solo se sostiene si lo que no
+   cabe se alcanza con un gesto en vez de caer a un segundo renglón. Es la misma mecánica que la tira
+   de horas y la lista del menú.
+   ▶ Con los destinos del INVENTARIO (`#521`), en escritorio suelen CABER y entonces no hay nada que
+   deslizar: la vela se apaga sola (ver su regla). El Layout dibuja el escritorio en filas que
+   envuelven; se queda la fila única porque es decisión del owner (`#252`) y, cuando cabe, las dos
+   formas se ven igual.
    ⚠️ La barra de scroll va OCULTA a propósito, así que **la vela del envoltorio no es un adorno**:
    es lo único que dice que la lista sigue. */
-/* ⚠️⚠️ **DOS FILAS COMPARTEN ESTA MECÁNICA Y SE ESCRIBE UNA VEZ** (`#264`): los DESTINOS
-   (`.foot__links`, `#252`) y el bloque LEGAL (`.foot__legal`). El legal se pasó a tira porque a
-   390 px envolvía en **tres** renglones de 14 px de alto y no había forma de llevarlo a los 44 sin
-   mover el pie: apilarlos a 44 lo hacía crecer **54 px**, y esta tira lo deja en 44 —o sea que el
-   pie **ENCOGE 34**, altura que recupera el punto estático del cierre (`DEUDA`)—.
-   `[DECIDIDO owner, 2026-08-29]`, con el precedente de `#252` delante.
-   ▶ Es el mismo argumento de `#226` y `#227`: la respuesta a «esto está en dos sitios» es una
-   regla, no una copia. */
+/* ⚠️⚠️ **DOS FILAS COMPARTEN ESTA MECÁNICA Y SE ESCRIBE UNA VEZ** (`#264`, `[DECIDIDO owner,
+   2026-08-29]`): los DESTINOS (`.foot__links`) y el bloque LEGAL (`.foot__legal`). La respuesta a
+   «esto está en dos sitios» es una regla, no una copia. */
 .foot__links-wrap,
 .foot__legal-wrap { position: relative; }
-.foot__links-wrap { margin-bottom: clamp(30px, 4vw, 52px); }
-/* ⚠️ **Sin este tope la tira legal no tendría límite y NO habría scroll**: en `.foot__bottom` es
-   un ítem flex que se dimensiona por su contenido —y en móvil, con `align-items: flex-start`,
-   además se encoge—, así que los 416 px de eslabones desbordarían el pie en vez de deslizarse.
-   `min-width: 0` es la otra mitad: un ítem flex no baja de su contenido sin él. */
+/* Sin este tope la tira legal no tendría límite y NO habría scroll; `min-width: 0` es la otra mitad. */
 .foot__legal-wrap { max-width: 100%; min-width: 0; }
 .foot__links,
 .foot__legal {
@@ -3550,40 +3569,30 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
 }
-.foot__links { gap: clamp(12px, 1.4vw, 16px); font-size: 12.5px; }
 .foot__links::-webkit-scrollbar,
 .foot__legal::-webkit-scrollbar { display: none; }
-/* `flex: none` + `nowrap` para que un destino de dos palabras no se parta por dentro, que es la
-   otra forma de acabar con dos renglones.
-   ⚠️⚠️ **El alto es `--tap-min` y NO los 40 px del mockup.** Aquí no vale el área invisible del
-   `[data-tap]`: dentro de un contenedor con scroll un eje no visible obliga al otro a `auto`, así
-   que un pseudo que sobresaliera **se recortaría sin que nada fallara**. En una tira, el objetivo
-   táctil solo puede ser alto de verdad. */
+/* `flex: none` + `nowrap` para que un destino de dos palabras no se parta por dentro.
+   ⚠️⚠️ **El alto es `--tap-min`, y dentro de un carril con scroll tiene que ser alto de VERDAD**: un
+   eje no visible obliga al otro a `auto`, así que el área invisible de `[data-tap]` se recortaría
+   sin que nada fallara.
+   ⚠️⚠️ **Y va en TODOS los punteros, y eso CAMBIA `#264`** (`#522`): allí el alto se puso solo bajo
+   puntero grueso porque el mockup de entonces fijaba más bajo el pie de escritorio. El marco vigente
+   dibuja estas filas a 48 también en escritorio, y el sistema escribe *«alto mínimo de cualquier
+   control táctil: 48, sin excepciones»*. */
 .foot__links a,
 .foot__legal > * {
     flex: none; white-space: nowrap;
     display: inline-flex; align-items: center; justify-content: center;
+    min-height: var(--tap-min);
 }
-/* Los 40 px son de los DESTINOS y son del mockup; el bloque legal nunca los tuvo —es texto
-   pequeño de una línea— y dárselos aquí le subía 26 px en escritorio sin que nadie lo pidiera. */
-.foot__links a { min-height: 40px; }
-/* ⚠️⚠️ **EL ALTO TÁCTIL DE LAS DOS TIRAS VA BAJO PUNTERO GRUESO, y eso se aprendió MIDIENDO.**
-   Puesto sin puerta, el pie encogía 30 px en teléfono —lo que se buscaba— pero **CRECÍA 20 en
-   escritorio**: el bloque legal pasaba de 14 a 44 y el mockup fija ese pie a 1176. Un objetivo
-   táctil que engorda la pantalla donde no hay dedos no es un objetivo táctil, es un cambio de
-   diseño con otro nombre.
-   ⚠️ **El ancho también, y se olvidó en la primera pasada**: en una tira `nowrap` lo da el rótulo,
-   y «Tarifas» medía 38 y «Galería» 41. Lo cazó la sonda, no el ojo — un objetivo de 38×44 parece
-   perfecto en una captura. */
+/* El ANCHO táctil sí va bajo puntero grueso: en una tira `nowrap` lo da el rótulo, y uno corto mide
+   menos de 48 — lo cazó la sonda en `#264`, no el ojo. */
 @media (pointer: coarse) {
     .foot__links a,
-    .foot__legal > * { min-height: var(--tap-min); min-width: var(--tap-min); }
+    .foot__legal > * { min-width: var(--tap-min); }
 }
 /* ❗ **LA VELA.** Va en el ENVOLTORIO y no en la fila: un `::after` dentro de un contenedor con
-   scroll viaja con el contenido y se iría hacia la izquierda en cuanto alguien deslizara.
-   Se apaga sola al llegar al final donde el navegador entienda `animation-timeline`; donde no,
-   se queda puesta — que es el estado seguro: una señal de más contenido cuando ya no lo hay es un
-   adorno, y no tenerla cuando sí lo hay es una lista que parece terminada y no lo está. */
+   scroll viaja con el contenido y se iría hacia la izquierda en cuanto alguien deslizara. */
 .foot__links-wrap::after,
 .foot__legal-wrap::after {
     content: "";
@@ -3592,37 +3601,110 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
     background: linear-gradient(to right, transparent, var(--bg));
     pointer-events: none;
 }
+/* ❗❗ **SIN SCROLL NO HAY VELA, y eso el CSS no lo puede saber solo** (`#522`, el mismo caso que el
+   carril de complementos de `#498`). Sin desbordamiento la línea de tiempo no tiene rango y la
+   animación se queda en su fotograma inicial: la vela taparía el último destino **sin nada detrás** —
+   y con los destinos del inventario eso es lo normal en escritorio, donde la fila CABE—. El hecho de
+   si desborda lo publica `ui/rail-sails.js` (`data-rail-scroll`); el diseño lo decide esta regla.
+   ⚠️ Sin JavaScript no hay atributo y la vela no se pinta: la fila se sigue deslizando, pero nada dice
+   que siga. Es la conducta del carril de complementos, y se escribe como es. */
+.foot__links-wrap:not([data-rail-scroll])::after,
+.foot__legal-wrap:not([data-rail-scroll])::after { opacity: 0; animation: none; }
 @supports (animation-timeline: scroll()) {
-    .foot__links-wrap::after,
-    .foot__legal-wrap::after {
-        animation: foot-vela var(--ease-bucle) both;
-        animation-timeline: scroll(nearest inline);
-        animation-range: contain;
-    }
+    /* ⚠️⚠️ **LA LÍNEA DE TIEMPO LLEVA NOMBRE, y la anónima no funcionaba NUNCA** (`#522`). Aquí había
+       `scroll(nearest inline)` sobre el `::after` del ENVOLTORIO, y `nearest` busca el contenedor de
+       scroll ANTECESOR —el documento, que no desliza en horizontal—, no la fila, que es su HERMANA:
+       medido, la animación corría con una línea de tiempo inactiva y la vela **no se apagó nunca al
+       llegar al final**. Estaba siempre visible, que es por lo que nadie lo notó.
+       ▶ La fila declara su eje con nombre y el envoltorio lo SUBE con `timeline-scope`, que es lo que
+       permite que su `::after` lo encuentre: el patrón que `#498` ya dejó medido en el carril. */
+    .foot__links-wrap { timeline-scope: --pie-destinos; }
+    .foot__legal-wrap { timeline-scope: --pie-legal; }
+    .foot__links { scroll-timeline-name: --pie-destinos; scroll-timeline-axis: inline; }
+    .foot__legal { scroll-timeline-name: --pie-legal; scroll-timeline-axis: inline; }
+    .foot__links-wrap[data-rail-scroll]::after,
+    .foot__legal-wrap[data-rail-scroll]::after { animation: foot-vela var(--ease-bucle) both; }
+    .foot__links-wrap[data-rail-scroll]::after { animation-timeline: --pie-destinos; }
+    .foot__legal-wrap[data-rail-scroll]::after { animation-timeline: --pie-legal; }
     @keyframes foot-vela {
         0%, 80% { opacity: 1; }
         100% { opacity: 0; }
     }
 }
-.foot__links a { color: var(--fg-mute); transition: color var(--dur-toque) var(--ease-sale); }
-/* El eslogan editable de la instalación, delante del copyright. Va en su propia línea si no cabe:
-   es texto libre y su longitud la decide el cliente. */
-.foot__tag { display: block; color: var(--fg); }
-.foot__links a:hover { color: var(--fg); }
+
+/* ── LOS DESTINOS · Cuerpo S 15/600 en el gris de CUERPO de la tinta ───────────────────────────
+   `--fg-body` es el Papel 200 del sistema (`semantico.tinta.textoCuerpo`): ni el claro de los
+   titulares ni el secundario. Los 12,5 px de antes estaban por debajo del Cuerpo S del sistema, y a
+   390 la fila se desliza igual: encoger la letra no hacía caber nada (lo escribe el marco). */
+.foot__links { gap: var(--sp-16); font-size: var(--fs-15); font-weight: 600; }
+@media (min-width: 1024px) { .foot__links { gap: 24px; } }
+.foot__links a { color: var(--fg-body); transition: color var(--dur-toque) var(--ease-sale); }
+.foot__links a:hover,
+.foot__links a[aria-current="page"] { color: var(--fg); }
 .foot__links a:focus-visible { outline: var(--focus-outline); outline-offset: 3px; border-radius: var(--r-xs); }
 
-
-
-
-
-.foot__bottom {
-  display: flex; justify-content: space-between; align-items: center; gap: 24px;
-  margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line);
-  font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute);
-  text-transform: uppercase; letter-spacing: 0.12em;
+/* ── EL CONTACTO Y EL IDIOMA · su propia fila, bajo un filete ───────────────────────────────── */
+.foot__contact {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-10) var(--sp-20);
+    margin-top: var(--sp-6); padding-top: var(--sp-16);
+    border-top: 1px solid var(--line);
 }
-.foot__bottom a { transition: color var(--dur-sale) var(--ease-sale); }
-.foot__bottom a:hover { color: var(--fg); }
+.foot__contact a {
+    display: inline-flex; align-items: center; min-height: var(--tap-min);
+    font-size: var(--fs-15); color: var(--fg);
+    transition: color var(--dur-toque) var(--ease-sale);
+}
+.foot__contact a:focus-visible { outline: var(--focus-outline); outline-offset: 3px; border-radius: var(--r-xs); }
+/* El teléfono es un DATO: va en la letra mono, como en el marco. */
+.foot__tel { font-family: var(--font-mono); }
+.foot__langs { display: inline-flex; align-items: center; gap: var(--sp-4); }
+.foot__contact .foot__langs a {
+    padding: 0 var(--sp-10);
+    font-family: var(--font-mono); font-size: var(--fs-14); letter-spacing: 0.08em;
+    color: var(--fg-mute);
+}
+/* El idioma en curso va en el claro: `aria-current` se lo dice al lector y esto al ojo. */
+.foot__contact .foot__langs a:hover,
+.foot__contact .foot__langs a[aria-current] { color: var(--fg); }
+
+/* ── LO LEGAL · la tira de abajo, en el gris secundario ───────────────────────────────────── */
+.foot__legal-wrap { margin-top: var(--sp-2); padding-top: var(--sp-14); border-top: 1px solid var(--line); }
+.foot__legal { gap: var(--sp-14); font-size: var(--fs-15); color: var(--fg-mute); }
+.foot__legal a { color: inherit; transition: color var(--dur-toque) var(--ease-sale); }
+.foot__legal a:hover { color: var(--fg); }
+.foot__legal a:focus-visible { outline: var(--focus-outline); outline-offset: 3px; border-radius: var(--r-xs); }
+
+/* ── EL COLOFÓN · «Nombre · Ciudad» y «© año», en Etiqueta ────────────────────────────────────
+   ⚠️ Las mayúsculas las pone el CSS y no el texto: el lector de pantalla lee el nombre como se
+   escribió y no deletrea unas siglas. */
+.foot__colophon {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-8) var(--sp-14);
+    margin: var(--sp-10) 0 0;
+    font-family: var(--font-mono); font-size: var(--fs-11); letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--fg-mute);
+}
+
+/* ══ EN ESCRITORIO, EL CONTACTO Y LO LEGAL COMPARTEN FILA (`#522`, `[DECIDIDO owner, 2026-09-11]`) ══
+   ⚠️⚠️ **Se aparta del canvas a propósito, y el motivo está MEDIDO.** El marco dibuja el contacto y
+   lo legal en dos filas de 48; con ellas el pie crecía ~25 px en escritorio y el PUNTO ESTÁTICO del
+   cierre de la portada —la tarjeta en reposo con el pie entero debajo (`#252`/`#254`)— dejaba de
+   caber a 1440×900 (la tarjeta pisaba el pie 45 px) y empeoraba donde ya no cabía (1280×800,
+   1366×768, 1536×864). En una fila el pie baja a ~267 px y el cierre cabe MEJOR que antes en todas
+   las ventanas medidas (`storage/app/sonda-punto-opciones.mjs`, tres variantes comparadas).
+   ▶ Es el mismo intercambio que `#253` hizo en su día —espacio del pie a cambio del punto estático—,
+   pero sin quitar el idioma del pie, que el owner acaba de devolver.
+   ⚠️ **Un solo filete continuo encima de la fila**: por eso no hay `column-gap`, sino relleno a la
+   derecha del contacto. Con un hueco entre las dos piezas, la línea se partiría en dos.
+   ⚠️ Lo legal sigue siendo una TIRA que se desliza (`#264`) y ocupa el resto de la fila: si no cabe,
+   su vela lo dice. En móvil no cambia nada: ahí son dos filas, como el marco. */
+@media (min-width: 1024px) {
+    .foot__inner { display: flex; flex-wrap: wrap; align-items: stretch; }
+    .foot__strip,
+    .foot__links-wrap,
+    .foot__colophon { flex: 0 0 100%; }
+    .foot__contact { flex: 0 0 auto; padding-right: 24px; }
+    .foot__legal-wrap { flex: 1 1 0; margin-top: var(--sp-6); padding-top: var(--sp-16); }
+}
 
 /* ---------- reveal on scroll ---------- */
 .reveal { opacity: 0; transform: translateY(28px); transition: opacity var(--dur-espera) var(--ease-sale), transform var(--dur-espera) var(--ease-sale); }
@@ -3716,8 +3798,7 @@ select:focus-visible {
      una regla de móvil que fije otro tamaño **gana al clamp entero** y deja el nivel del sistema
      sin efecto justo en el ancho para el que se diseñó (390). Es la lección de `TypeScaleTest`:
      *una medida en un punto no vigila una función*, y una excepción en un punto la desactiva. */
-  .zones__head, .rides__head { margin-bottom: 36px; gap: var(--sp-16); }
-  .rides__head { flex-direction: column; align-items: flex-start; gap: var(--sp-16); }
+  .zones__head { margin-bottom: 36px; gap: var(--sp-16); }
   /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil — tanto en Atracciones
      (#rides) como en Entradas (#pricing, donde su contenedor `.ticket-prices__tabs` lo centraba a
      ancho de contenido) — con los 2 botones «Zona Jump/Kids» repartidos 50/50, sin hueco vacío. */
@@ -4268,11 +4349,11 @@ select:focus-visible {
    ⚠️ El `z-index: -1` va aquí y NO en `.grain`: esa misma pieza se usa en el menú y en la tarjeta
    del cierre, que no crean contexto de apilamiento propio — allí bajarla la mandaría detrás del
    fondo y desaparecería. La capa es COLOCACIÓN, como el tamaño. */
-.page--rules .page__head > .grain { z-index: -1; }
-.page--rules .page__head {
-  position: relative; isolation: isolate;
-  --trama-fade: 0.3;
-}
+/* ⚠️ Desde `#525` su caja es el CONJUNTO rótulo + titular (`.page__lockup`) y no la cabecera: la
+   cabecera ganó una ENTRADILLA, y contra la caja entera los puntos caían debajo de ella — justo lo
+   que su regla 02 prohíbe. La posición y el contexto de apilamiento los pone ya el conjunto. */
+.page--rules .page__lockup > .grain { z-index: -1; }
+.page--rules .page__lockup { --trama-fade: 0.3; }
 
 
 /* A5 · la niebla NO va en el formulario.
@@ -4287,13 +4368,19 @@ select:focus-visible {
 /* A3 · el abanico quieto de `/precios`. Su regla es «uno por página»: éste es ese uno.
    ⚠️ Su posición original (`top: 118%`) era para una tarjeta de 186 px; aquí la caja es otra, así
    que la COLOCACIÓN se decide aquí —que es lo que hace un consumidor— y la FORMA sigue siendo suya
-   al dígito: 3,2° encendido y 8° de periodo. */
-.rides__head { position: relative; overflow: hidden; isolation: isolate; }
+   al dígito: 3,2° encendido y 8° de periodo.
+   ⚠️⚠️ **Su caja es el CONJUNTO rótulo + titular (`.page__lockup`), que lo recorta** (`#525`): la
+   entradilla queda fuera, así que el abanico ya no puede caer detrás de ella. Medido: en MÓVIL ya
+   caía detrás de las tres líneas de la anterior, antes de la cabecera de página.
+   ⚠️ Y la cabecera va a la COLUMNA ENTERA (`max-width: none`): se acota a 820 por la trama de
+   `/normas`, y dentro de 820 el abanico —a 30 px del canto derecho y de 360— se echaría encima del
+   titular en escritorio. Va con el compuesto porque `site.css` se carga después y ganaría. */
+.page__head.pricing__head { max-width: none; }
 
 .pricing__rays {
   z-index: -1;
   /* ⚠️⚠️ Va ENTERO dentro del contenedor, y no es capricho: con la caja sobresaliendo, el
-     `overflow: hidden` del `.rides__head` la corta en un CANTO RECTO **antes** de que el
+     `overflow: hidden` de la cabecera la corta en un CANTO RECTO **antes** de que el
      desvanecido de la propia pieza haya terminado — y eso se lee como un fallo de render, no como
      decoración. En su artboard el corte lo da el borde visible de una tarjeta; aquí no hay borde
      que justifique una línea recta. */
@@ -4321,40 +4408,11 @@ select:focus-visible {
    `/atracciones` · LAS 23, CON SU ZONA EN LA PESTAÑA
    Carril de diseño Fase 2 · T2d. Artboard `Atracciones PJP` **1a** (móvil) + **1c** (escritorio).
 
-   ⚠️⚠️ **LOS SELECTORES VAN COMPUESTOS (`.page--rides .page__…`) Y NO ES CELO.** `site.css` se
-   carga DESPUÉS que esta hoja, así que a igual especificidad gana la suya: un `.page__title` a secas
-   escrito aquí no pintaría nada. Es la trampa de cascada de `#314` con los dos ficheros de por
-   medio, y `.page--rules` (línea 3845) ya la resolvió igual.
-
-   ⚠️ **Y con el compuesto se arregla de paso la SÍNTESIS de la fuente en esta página**:
-   `site.css` pide `font-weight: 800` y `font-stretch: 75%` sobre `--font-display`, que es Bungee y
-   **trae una sola cara**, así que el navegador falsifica negrita y condensada. Son las 77 reglas
-   fichadas en `DEUDA.md` por `#479`; aquí se corrige la de esta página, que es la única que la tanda
-   toca. El `400` va EXPLÍCITO: sin declararlo, un `<h1>` hereda el `bold` del navegador y la
-   síntesis vuelve por la puerta de atrás.
+   ▶ **Su CABECERA ya no vive aquí** (`#525`, T3a·3): la estrenó esta página con cuatro reglas
+   compuestas (`.page--rides .page__…`, para ganar a `site.css`) y hoy es la cabecera del armazón,
+   que comparte declaración con la de sección — ver «LA CABECERA DE SECCIÓN». Los compuestos que
+   quedan (`.page--rides .page__foot…`) son de esta página y de nadie más.
    ══════════════════════════════════════════════════════════════════════════════════════════ */
-
-/* LA CABECERA DE PÁGINA del canvas: rótulo con la ruta · titular Display L · entradilla.
-   La estrena esta página; las otras cinco la adoptan en la Fase 3 con el armazón entero. */
-.page--rides .page__head { max-width: 52ch; }
-.page--rides .page__eyebrow {
-  margin: 0;
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--fg-mute);
-}
-.page--rides .page__title {
-  font-family: var(--font-display);
-  font-weight: 400; font-stretch: normal;
-  font-size: var(--fs-display-l);
-  line-height: 0.95; letter-spacing: -0.01em;
-  margin: var(--sp-8) 0 0;
-}
-.page--rides .page__lede {
-  margin: var(--sp-16) 0 0;
-  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
-  color: var(--fg-mute);
-}
 
 /* LA FILA de control. En móvil es flujo de bloque —pestañas, cifra, rejilla, el orden del
    artboard— y en escritorio pasa a una fila con el control a la izquierda y su consecuencia al

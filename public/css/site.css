@@ -447,20 +447,9 @@
 }
 .lang-dd--up.lang-dd--open .lang-dd__panel { transform: translateY(0) scale(1); }
 
-/* Bloque izquierdo del bottom row: lang-dd arriba + copyright debajo, alineados al inicio. */
-.foot__bottom-left {
-    display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12);
-}
-
-/* ⚠️ El `gap` es lo ÚNICO que queda aquí del bloque legal: desde `#264` es una tira que se
-   desliza, y su mecánica —carril, vela, alto táctil— la comparte con `.foot__links` en una regla
-   sola (`landing.css`). Un `display: flex` repetido aquí sería la segunda copia que diverge. */
-.foot__legal { gap: var(--sp-18); }
-
-/* Lote 8: el selector de idioma del footer (`.lang-dd`) SÍ se muestra en móvil —el mismo
-   selector del desktop—: `.foot__bottom-left` lo apila justo encima del copyright y es el único
-   punto de cambio de idioma en móvil (la web es ES/EN/FR, con móvil dominante). Antes se ocultaba
-   ≤768 asumiendo —falsamente— que el drawer ya traía su propio selector; no era así. */
+/* ⚠️ Aquí vivían `.foot__bottom-left` y el `gap` del bloque legal. Se van con la fila inferior del
+   pie viejo (`#522`): el pie del marco escribe sus cinco filas juntas en `landing.css`, y una
+   segunda regla del mismo bloque en otra hoja es la copia que diverge. */
 
 /* Utilidad: texto solo para lectores de pantalla (oculto visualmente). #221 lo usa para anunciar
    el aviso de formulario pendiente del chip de cuenta, cuya señal visual es solo el puntito. */
@@ -505,15 +494,32 @@
     border-radius: 50%; background: var(--attn); border: 2px solid var(--bg-card);
 }
 
-/* ---------- páginas de texto (legales, normas) ---------- */
-/* Reutiliza los tokens del mockup; deja aire bajo el nav fijo. */
-.page { padding-top: clamp(108px, 14vh, 156px); padding-bottom: 96px; }
-.page__head { max-width: 820px; margin-bottom: 40px; }
-.page__title {
-    font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-    letter-spacing: -0.03em; line-height: 0.95;
-    font-size: clamp(40px, 6vw, 80px); margin: var(--sp-14) 0 0;
+/* ---------- las páginas interiores y de texto · el ARMAZÓN de página (T3a·3, `#525`) ---------- */
+/* ⚠️⚠️ **El hueco de arriba se DERIVA del racimo, no de la ventana.** Era `clamp(108px, 14vh,
+   156px)`: un hueco en `vh` para dejar sitio a algo que mide siempre lo mismo acierta por tramos
+   —la lección de `#252` con el hero—. Ahora es dónde nace el racimo + lo que mide la más alta de
+   sus piezas + el aire del canvas bajo la cabecera: 28 en móvil y 44 en escritorio (`Layout
+   Paginas PJP` 1a/1b). A 390 sale 12 + 48 + 28 = 88, que es EXACTAMENTE donde el canvas pone el
+   rótulo (su barra de 60 + 28), aunque aquí el racimo flota sin barra (`#521`).
+   ▶ Y el de abajo es el AIRE ENTRE SECCIONES del sistema (96 · 144 en esta instalación): lo último
+   de una página deja ese aire antes del pie, igual que una sección de la portada. */
+.page {
+    padding-top: calc(var(--nav-pad-block) + max(var(--nav-logo-h), var(--nav-btn-h)) + var(--sp-28));
+    padding-bottom: var(--sec-air-mobile);
 }
+@media (min-width: 1024px) {
+    .page {
+        padding-top: calc(var(--nav-pad-block) + max(var(--nav-logo-h), var(--nav-btn-h)) + 44px);
+        padding-bottom: var(--sec-air);
+    }
+}
+/* La CABECERA de página comparte su declaración con la de sección (`landing.css`, «LA CABECERA DE
+   SECCIÓN»): aquí queda solo su CAJA. ⚠️ Su titular propio vivía aquí —40/80 px, peso 800 y
+   `font-stretch: 75%` sobre Bungee, que trae UNA cara: negrita y condensada FALSIFICADAS— y se
+   retiró con `#525`. ⚠️ El `max-width` no acota el titular (eso lo hace su `20ch`): acota la
+   decoración que una página cuelga dentro —la trama de `/normas` se mide contra esta caja—.
+   `/precios` lo levanta, porque su abanico tiene que caer lejos de la entradilla. */
+.page__head { max-width: 820px; }
 .page__body { max-width: 70ch; color: var(--fg-mute); font-size: var(--fs-17); line-height: 1.7; }
 .page__body p { margin: 0 0 1em; }
 .page__body a { color: var(--zone-1); text-decoration: underline; }
@@ -5001,14 +5007,16 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .ck-tgl.is-locked { background: var(--fg); cursor: not-allowed; }
 .ck-tgl.is-locked::after { transform: translateX(18px); }
 
-/* Enlace permanente del pie «Configuración de cookies» (revocar, art. 7.3). */
+/* Enlace permanente del pie «Configuración de cookies» (revocar, art. 7.3).
+   ⚠️ **Sin `opacity`** (`#523`): lleva el color de los demás enlaces legales y nada más. La `.85` que
+   tenía no se notaba sobre tinta y sobre PAPEL —el pie de la portada— lo hundía a **3,7 : 1** (medido),
+   por debajo de AA, cuando sus hermanos leen a 4,98. El retiro del consentimiento no puede leerse peor
+   que el resto del pie (art. 7.3: retirar tan fácil como dar). */
 .foot__cookie-config {
     background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit;
-    cursor: pointer; opacity: .85; text-decoration: none;
+    cursor: pointer; text-decoration: none;
 }
-/* La vela de la tira legal: misma pieza y mismo porqué que la de los destinos (`#252`), que vive
-   junto a `.foot__links-wrap::after` en `landing.css` — aquí solo se declara el caso. */
-.foot__cookie-config:hover { opacity: 1; text-decoration: underline; }
+.foot__cookie-config:hover { text-decoration: underline; }
 
 @media (max-width: 520px) {
     .cookie { left: 12px; right: 12px; bottom: 12px; width: auto; }
@@ -5612,10 +5620,14 @@ html:not(.js) .gf-fiche__foot { display: none; }
        contenido 806, o sea que **cinco de los diez destinos quedan fuera** — y la barra de scroll
        está oculta a propósito (`scrollbar-width: none`), así que sin esto nada dice que haya más.
        El mockup tiene la suya (`velaMenuRef`) y la apaga con JavaScript al llegar al final.
-       ⚠️ **Aquí se apaga con `animation-timeline: scroll()`, sin una línea de JS**, y donde el
-       navegador no lo entienda se queda visible — que es el estado seguro: una señal de más
-       contenido cuando ya no lo hay es un adorno; **no tenerla cuando sí lo hay es una lista que
-       parece terminada y no lo está**.
+       ▶ Aquí la apaga `animation-timeline` al llegar al final, y **el HECHO de si la lista desborda
+       lo publica `ui/rail-sails.js`** (`data-rail-scroll`): con una lista que cabe la línea de
+       tiempo está inactiva, la animación no se aplica y la vela se pintaría sobre el último destino
+       sin nada detrás.
+       ⚠️⚠️ **CORRECCIÓN (`#522`): esta nota decía «se apaga sin una línea de JS», y la vela NO SE
+       APAGABA NUNCA.** Colgaba de `scroll(nearest block)`, que busca el contenedor de scroll
+       ANTECESOR del `::after` —el propio `.menu`—, y no la lista, que es su DESCENDIENTE. Medido a
+       390×844 con la lista deslizada hasta el final: opacidad 1. Es el defecto que tenía el pie.
        ⚠️ Va en el envoltorio y no en la lista: un `::after` dentro de un contenedor con scroll
        viaja con el contenido, así que se iría hacia arriba en cuanto alguien desplazara. */
     .menu__inner { position: relative; }
@@ -5627,15 +5639,22 @@ html:not(.js) .gf-fiche__foot { display: none; }
         background: linear-gradient(to top, var(--bg), transparent);
         pointer-events: none;
     }
+    .menu__inner:not([data-rail-scroll])::after { opacity: 0; }
 }
 
-/* La vela se apaga sola al llegar al final de la lista, donde el navegador sepa hacerlo. */
+/* La vela se apaga sola al llegar al final de la lista, donde el navegador sepa hacerlo.
+   ▶ La LISTA declara su eje con nombre y el envoltorio lo SUBE con `timeline-scope` —la receta del
+   pie y del carril de complementos—: `animation-timeline` busca ese nombre en un ANTECESOR del
+   elemento animado, y aquí quien desliza es un descendiente. Donde el navegador no entienda la
+   línea de tiempo, la vela se queda puesta mientras la lista desborde: una señal de más contenido
+   cuando ya no lo hay es un adorno; **no tenerla cuando sí lo hay es una lista que parece terminada
+   y no lo está**. */
 @supports (animation-timeline: scroll()) {
     @media (max-width: 1080px) {
-        .menu__inner::after {
+        .menu__inner { timeline-scope: --menu-lista; }   /* la lista nombra su eje en su propia regla */
+        .menu__inner[data-rail-scroll]::after {
             animation: menu-vela var(--ease-bucle) both;
-            animation-timeline: scroll(nearest block);
-            animation-range: contain;
+            animation-timeline: --menu-lista;
         }
     }
     @keyframes menu-vela {
@@ -5747,6 +5766,11 @@ html:not(.js) .gf-fiche__foot { display: none; }
     position: relative; flex: 1 1 560px; min-width: 0;
     display: flex; flex-direction: column; justify-content: safe center;
     min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none;
+    /* El eje del que cuelga la vela del menú (`#522`): se declara AQUÍ, en la regla de la lista, y no
+       en una segunda regla con el mismo selector — las guardas leen la PRIMERA regla `.menu__col-list`
+       de la hoja, y una segunda más arriba les escondía el `overflow-y` (lo cazó `MenuGroupsTest`).
+       Donde el navegador no entiende líneas de tiempo, se ignora. */
+    scroll-timeline-name: --menu-lista; scroll-timeline-axis: block;
 }
 .menu__col-list::-webkit-scrollbar { width: 0; }
 
@@ -5847,9 +5871,12 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border-radius: 50%; background: var(--ok);
 }
 
+/* ⚠️ El subtítulo de un destino es ya SIEMPRE su ruta escrita (`#521`: «/precios» debajo de
+   «Tarifas», como el canvas), y una ruta es un DATO: va en la letra mono, que el sistema reserva
+   para etiquetas y códigos. Sin mayúsculas, porque una dirección en mayúsculas no es la dirección. */
 .menu__s {
     flex: 0 0 auto;
-    font-family: var(--font-body); font-size: 13.5px;
+    font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: 0.02em;
     color: var(--fg-mute); white-space: nowrap;
 }
 .menu__arrow {

@@ -32,7 +32,9 @@ class HomePageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Saltos libres');          // atracción real desde BD (ES)
-        $response->assertSee('El parque');              // trigger del 1.º desplegable del nav (ES)
+        // Un rótulo del ARMAZÓN, que sale de `lang/` y no de la BD. ⚠️ Era «El parque», el
+        // desplegable viejo, que se fue con `#521`: el sujeto de este caso es el IDIOMA, no el menú.
+        $response->assertSee('Páginas');
     }
 
     public function test_language_can_switch_to_english(): void
@@ -43,7 +45,7 @@ class HomePageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Free jump');              // atracción real desde BD (EN)
-        $response->assertSee('The park');               // trigger del 1.º desplegable del nav (EN)
+        $response->assertSee('Pages');                  // el mismo rótulo del armazón, en inglés
     }
 
     public function test_unsupported_locale_is_ignored(): void
@@ -554,22 +556,18 @@ class HomePageTest extends TestCase
        ==================================================================== */
 
     // ⚠️ **`test_nav_renders_park_dropdown_with_anchor_items` y
-    // `test_nav_renders_services_dropdown_with_section_links` se MUDARON**, no se retiraron
-    // (2026-08-27, armazón · tanda 2c·1, `DECISIONES #200`). Su sujeto —los dos desplegables de
-    // la barra— dejó de existir, pero lo que comprobaban de verdad sigue vivo: las etiquetas de
-    // los destinos, **su orden** y sus anclas. Eso se comprueba ahora contra el portador nuevo y
-    // **acotado al elemento**, en `Tests\Feature\Site\ArmazonContractTest`:
-    // `the_menu_keeps_the_park_items_in_order` y `the_menu_keeps_the_services_in_order`.
-    // ▶ Retirarlas sin mudarlas habría perdido la cobertura del ORDEN, que ninguna otra fijaba.
+    // `test_nav_renders_services_dropdown_with_section_links` se MUDARON** en la 2c·1 (`#200`) a
+    // `ArmazonContractTest`, y allí **se retiraron con su sujeto en `#521`**: los destinos del menú
+    // pasan a ser el INVENTARIO de páginas del canvas (`[DECIDIDO owner]`), y zonas y servicios del
+    // panel ya no son destinos sueltos. El ORDEN, que era lo que se mudó a proteger, lo vigila ahora
+    // `ArmazonContractTest::test_the_menu_offers_exactly_the_inventory_in_its_order`.
 
-    public function test_nav_renders_direct_links_for_birthdays_and_tickets(): void
+    public function test_nav_links_to_the_pricing_and_birthday_pages(): void
     {
-        // Atajos directos en el nav: "Cumpleaños" (también aparece dentro de
-        // Servicios, por destacado intencional) y "Entradas" → /precios.
+        // Tarifas y Cumpleaños son sección Y página, y el menú lleva a la PÁGINA —la versión
+        // larga— (`#477`/`#521`): a la ruta, no a un ancla de la portada.
         $response = $this->get('/')->assertOk();
 
-        $response->assertSee('Entradas');
-        // El href "Cumpleaños" del atajo va a /cumpleanos (no a un anchor).
         $response->assertSee('href="'.route('cumpleanos').'"', false);
         $response->assertSee('href="'.route('precios').'"', false);
     }

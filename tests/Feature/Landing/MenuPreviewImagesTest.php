@@ -2,28 +2,22 @@
 
 namespace Tests\Feature\Landing;
 
-use App\Domain\Booking\Models\Zone;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * **LA COLUMNA DEL MENÚ DEJA DE ESTAR VACÍA, Y SUS ZONAS SALEN DE LA BD** (`#341`,
+ * **LA COLUMNA DEL MENÚ NO SE QUEDA VACÍA: su imagen es un hueco POR INSTALACIÓN** (`#341`,
  * `[DECIDIDO owner]`: *«las que sean, que no esté vacío»*).
  *
- * Medido antes de tocar nada: con `/servicios` en mantenimiento **ninguno** de los siete destinos del
- * menú traía foto —`img` solo lo tenían los servicios del CMS—, así que la vista previa de la columna
- * lateral caía al fondo rayado en todos.
+ * Medido en `#341`: con `/servicios` en mantenimiento **ninguno** de los destinos del menú traía foto,
+ * así que la vista previa de la columna lateral caía al fondo rayado en todos. Se arregló por dos
+ * caminos —las zonas aportaban la suya y un respaldo por instalación cubría al resto—.
  *
- * Se arregla por DOS caminos y este fichero vigila los dos:
- *
- *  1. **Las zonas aportan la suya.** Y eso, además de la foto, cierra una fuga: hasta hoy «Zona Kids»
- *     y «Zona Jump» estaban **escritas a mano en los ficheros de idioma del PRODUCTO**, o sea el
- *     catálogo de un cliente dentro del repo — la misma fuga que `#302` cerró en el JS (`zone: 'jump'`).
- *     De paso, `zones.image` recupera un consumidor: lo había perdido en `#302`.
- *  2. **Un respaldo POR INSTALACIÓN** para los destinos que no tienen ninguna imagen que sea SUYA en
- *     el modelo —Entradas, Cumpleaños, Atracciones, Ubicación—. Inventarles una asociación habría sido
- *     quemar otra vez el catálogo de un cliente en el producto.
+ * ⚠️⚠️ **Desde `#521` queda UNO**: las zonas dejaron de ser destinos del menú (`[DECIDIDO owner]`: los
+ * destinos son el inventario de páginas y las secciones de la portada), y ninguno de ésos tiene una
+ * imagen que sea SUYA en el modelo. Así que la imagen de la columna es la de la instalación, o
+ * ninguna. Los casos de zonas se retiraron con su sujeto (ver la nota de abajo).
  *
  * ⚠️⚠️ **El `public/` es TEMPORAL a propósito**: `img/client-menu.webp` está gitignorado, así que un
  * caso que aseverara contra el `public/` real **pasaría en la máquina que tiene el paquete instalado y
@@ -70,8 +64,8 @@ class MenuPreviewImagesTest extends TestCase
     }
 
     /**
-     * Los destinos tal y como llegan a la vista previa (`vistas` del `x-data` del menú), ya con el
-     * respaldo resuelto. Se leen del HTML porque es donde de verdad acaban.
+     * Los destinos tal y como llegan a la vista previa (`vistas` del `x-data` del menú), ya con la
+     * imagen resuelta. Se leen del HTML porque es donde de verdad acaban.
      *
      * @return list<array{t:string,s:string,img:?string}>
      */
@@ -105,48 +99,17 @@ class MenuPreviewImagesTest extends TestCase
         $this->assertGreaterThanOrEqual(3, count($this->vistas()));
     }
 
-    /** Las zonas del menú son las de la BD, con su nombre y su edad — no un texto del producto. */
-    public function test_the_zones_of_the_menu_come_from_the_database(): void
-    {
-        Zone::where('slug', 'jump')->update([
-            'name' => json_encode(['es' => 'ZONA DE PRUEBA']),
-            'age_range' => json_encode(['es' => '+99 años']),
-            'show_in_landing' => true,
-            'is_active' => true,
-        ]);
-
-        $titulos = array_column($this->vistas(), 't');
-
-        $this->assertContains('ZONA DE PRUEBA', $titulos, 'el menú sigue pintando un nombre de zona que no sale de la BD');
-        $this->assertSame('+99 años', collect($this->vistas())->firstWhere('t', 'ZONA DE PRUEBA')['s']);
-    }
-
-    /**
-     * ⚠️ Y el CONTROL de lo anterior: una zona que el panel no marca para la landing no entra en el
-     * menú. Sin este caso, «salen de la BD» se cumpliría también pintándolas todas.
-     */
-    public function test_a_zone_outside_the_landing_is_not_offered(): void
-    {
-        Zone::where('slug', 'jump')->update(['name' => json_encode(['es' => 'ZONA OCULTA']), 'show_in_landing' => false]);
-
-        $this->assertNotContains('ZONA OCULTA', array_column($this->vistas(), 't'));
-    }
-
-    /** La foto de la zona llena su vista previa: es el consumidor que `zones.image` había perdido. */
-    public function test_a_zone_with_a_photo_shows_it(): void
-    {
-        Zone::where('slug', 'jump')->update([
-            'name' => json_encode(['es' => 'CON FOTO']),
-            'image' => 'images/attractions/park_jump.webp',
-            'show_in_landing' => true,
-            'is_active' => true,
-        ]);
-
-        $vista = collect($this->vistas())->firstWhere('t', 'CON FOTO');
-
-        $this->assertNotNull($vista);
-        $this->assertStringContainsString('park_jump.webp', (string) $vista['img']);
-    }
+    // ⚠️⚠️ **AQUÍ VIVÍAN CUATRO CASOS DE ZONAS, Y SE RETIRAN CON SU SUJETO** (`#521`,
+    // `[DECIDIDO owner, 2026-09-11]`): `the_zones_of_the_menu_come_from_the_database`,
+    // `a_zone_outside_the_landing_is_not_offered`, `a_zone_with_a_photo_shows_it` y
+    // `the_own_photo_wins_over_the_installation_file`. Las zonas dejaron de ser destinos del menú,
+    // así que no hay zona que buscar ni foto propia que gane (la plantilla ya no tiene esa rama).
+    // ⚠️ **Y el segundo no fallaba: pasaba EN VACÍO** —«una zona oculta no sale» es cierto cuando no
+    // sale ninguna—, que es peor que un rojo: un verde que ya no vigila nada. Lo cazó la suite
+    // completa, no la ejecución dirigida, que no incluía este fichero.
+    // ▶ Lo que sigue vivo —la fuga de catálogo que `#341` cerró— lo vigila ahora la guarda del
+    // inventario (`ArmazonContractTest`), que prohíbe cualquier destino que no sea del inventario.
+    // `zones.image` conserva consumidor: la foto de la tarjeta de la sección 01 (`ZoneCards`).
 
     /**
      * ❗ **EL SUELO DEL PRODUCTO**: sin el fichero de la instalación no se inventa ninguna imagen y la
@@ -155,8 +118,6 @@ class MenuPreviewImagesTest extends TestCase
      */
     public function test_without_the_installation_file_nothing_is_painted(): void
     {
-        Zone::query()->update(['image' => null]);
-
         $conImagen = array_filter(array_column($this->vistas(), 'img'));
 
         $this->assertSame([], $conImagen, 'sin paquete de instalación el menú no puede pintar ninguna foto');
@@ -165,7 +126,6 @@ class MenuPreviewImagesTest extends TestCase
     /** Con el fichero puesto, NINGÚN destino se queda sin imagen. Es el encargo, literal. */
     public function test_the_installation_file_fills_every_destination(): void
     {
-        Zone::query()->update(['image' => null]);
         $this->instalarRespaldo();
 
         $vistas = $this->vistas();
@@ -178,34 +138,12 @@ class MenuPreviewImagesTest extends TestCase
     }
 
     /**
-     * ⚠️ Y el respaldo es RESPALDO: la foto propia de una zona le gana. Sin este caso, resolverlo al
-     * revés —el respaldo pisando a todos— pasaría en verde y la columna enseñaría la misma imagen
-     * para los seis destinos.
-     */
-    public function test_the_own_photo_wins_over_the_installation_file(): void
-    {
-        $this->instalarRespaldo();
-        Zone::where('slug', 'jump')->update([
-            'name' => json_encode(['es' => 'MANDA LA SUYA']),
-            'image' => 'images/attractions/park_jump.webp',
-            'show_in_landing' => true,
-            'is_active' => true,
-        ]);
-
-        $vista = collect($this->vistas())->firstWhere('t', 'MANDA LA SUYA');
-
-        $this->assertStringContainsString('park_jump.webp', (string) $vista['img']);
-        $this->assertStringNotContainsString('client-menu.webp', (string) $vista['img']);
-    }
-
-    /**
      * ⚠️ **La marca de tiempo del fichero viaja como cache-buster.** Sin ella, sustituir la foto en el
      * servidor no se vería hasta que caducara la caché del navegador — y el owner cambiaría el fichero
      * creyendo que no funciona. Mismo mecanismo que `site.brand`.
      */
     public function test_the_installation_file_carries_its_cache_buster(): void
     {
-        Zone::query()->update(['image' => null]);
         $this->instalarRespaldo();
 
         $img = (string) ($this->vistas()[0]['img'] ?? '');

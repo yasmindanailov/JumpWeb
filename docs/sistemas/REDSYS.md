@@ -203,11 +203,16 @@ Redsys (verificado empíricamente en el origen):
   redirect 303 al home con **token one-shot** en cache (`redsys.return:<token>`, TTL 5 min,
   payload `user_id`/`order_code`/`outcome`) que la UI consume para reabrir el flujo en el paso
   de resultado.
-- **Sin datos** (`handleDataLessReturn`): fallback seguro — busca el Payment redsys reciente
-  (<30 min) del **usuario logueado**; si la notificación ya lo marcó `paid` → token de éxito
-  idempotente; si sigue `pending` → home con `purchase.verifying_code` en sesión («verificando
-  tu pago»). Sin usuario/sin Payment → home limpia. **NUNCA se marca `paid` por llegar a UrlOK
-  sin firma** (fraude trivial).
+- **Sin datos** (`handleDataLessReturn`): fallback seguro — busca el **último intento** de cobro
+  redsys reciente (<30 min) del **usuario logueado**, esté `pending`, `paid` o `failed`, y resuelve
+  por lo que la notificación haya escrito sobre él: `paid` → token de éxito idempotente; `failed`
+  → token de **rechazo** (el mismo desenlace que la vuelta firmada por UrlKO, con reintento);
+  `pending` → home con `purchase.verifying_code` en sesión («verificando tu pago»). Sin usuario/sin
+  Payment → home limpia. ⚠️ Los `failed` entran a propósito (`DECISIONES #454`): con un terminal
+  que notifica antes de devolver al navegador y no incluye datos en la redirección —el de pruebas
+  de CaixaBank, §14.bis—, dejarlos fuera hacía que la búsqueda cayera en un pedido pendiente
+  ANTERIOR y el cliente leyera «tu banco ha procesado el pago» tras cancelar. **NUNCA se marca
+  `paid` por llegar a UrlOK sin firma** (fraude trivial).
 
 **Notificación**: responde **SIEMPRE HTTP 200 con body vacío**, pase lo que pase (4xx/5xx
 provocan reintentos exponenciales de Redsys). Try/catch de último recurso → log
@@ -384,6 +389,29 @@ hace en `settings.redsys_environment`.
    adicional en el edge/WAF es complementario y opcional; si se pone, **con bypass para los rangos IP
    de Redsys** (pedirlos al banco: reintenta con backoff y un límite estricto rompería reintentos
    legítimos). [DECIDIDO 2026-08-19] Antes decía «NO en la app», que contradecía a `PAY-15`.
+
+## 14.bis · Lo MEDIDO con el terminal de CaixaBank (Cyberpac), 2026-09-11 (`DECISIONES #453`)
+
+El banco del segundo cliente es CaixaBank (Comercia Global Payments). **Cyberpac es el TPV Virtual de
+Redsys**: mismas URL (`sis-t` / `sis`), mismo Canales, mismos códigos SIS; lo que cambia es el soporte,
+el proceso de pase a real (su equipo completa una compra en una URL nuestra) y la configuración del
+terminal por entidad. Lo que su terminal de PRUEBAS (`369809538` / `1`) contestó, sin tocar el código:
+- **Acepta `HMAC_SHA512_V2`** aunque su guía y su correo digan «SHA-256» (documento antiguo): la ida
+  abre la pantalla de pago y el REST devuelve `SIS0054` con la clave buena y `SIS0042` con una mala.
+- **NOTIFICA por S2S y la vuelta del navegador llega SIN DATOS** (`redsys.return.processed
+  {source: notification}` y luego `redsys.return.no_payload`): «incluir datos en redirección» está
+  apagado en su terminal. ▶ Consecuencia para el go-live de §14.9: **`redsys_merchant_url` es
+  OBLIGATORIA antes de `live`** (hoy en producción está vacía), o el pago cobrado caduca (`PAY-02`).
+- **Su tarjeta «denegada» (`1111…1117`) no deniega: EXCEPCIONA** (`SIS0093`, «Tarjeta ajena al
+  servicio»), y cancelar da `SIS9915`; en los dos casos notifica (el pago queda `failed`) y el navegador
+  vuelve sin datos → la pantalla de «verificando» de `DEUDA.md`. CVV `999` con la tarjeta aceptada da
+  «DENEGADA … requiere autenticación del titular» **y se queda en la pasarela** (no vuelve).
+- **La pasarela exige 3 dígitos de CVV siempre**, también con la tarjeta cuyo CVV «no se requiere».
+- Su guía §5 fija la **sesión de la pasarela en 30 minutos**; `sales.hold_minutes` vale 15 en producción
+  (20 por defecto): un pago completado entre el minuto 15 y el 30 llega con el pedido caducado.
+- Sus nueve IP de notificación (guía §6): `193.16.243.33` · `.13` · `.173` · `194.224.159.47` · `.57` ·
+  `195.76.9.187` · `.222` · `.117` · `.149`. Sin WAF delante no hay nada que abrir; el `throttle:120,1`
+  las aguanta.
 
 ## Referencias oficiales (públicas)
 - Manual "Integración por Redirección": `canales.redsys.es/canales/ayuda/documentacion/Manual integracion para conexion por Redireccion.pdf`

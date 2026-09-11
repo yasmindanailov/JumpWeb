@@ -145,6 +145,15 @@ no puede ser).
 
 ### 3.2 ✅ [DECIDIDO, con una CORRECCIÓN medida] Caché corta SÍ · snapshot NO
 
+> ⚠️⚠️ **CORRECCIÓN PENDIENTE (2026-09-11, `#523`): la excepción de «caché temporal» de abajo NO se ha
+> podido confirmar.** La página de políticas de Places dice hoy, sin excepción de rendimiento: *«You must
+> not pre-fetch, cache, or store Places API content beyond the allowed exceptions»*, y las únicas
+> exentas son el `place_id` y las coordenadas (30 días). Cualquier caché de valoraciones o reseñas de
+> Places —también la corta de hoy— queda en terreno dudoso. ▶ **La salida estándar es otra API**: la
+> de **Google Business Profile**, la del DUEÑO de la ficha, que da todas las reseñas y permite
+> guardarlas hasta 30 días. Está investigada, con fuentes, en la ficha de las reseñas de `DEUDA.md`,
+> y es una spec nueva: se decide con el owner antes de construir.
+
 ⚠️⚠️ **De las dos opciones de respaldo que planteó el owner, una NO es viable.** Verificado contra
 los *Google Maps Platform Service Terms* el 2026-08-25:
 

@@ -78,16 +78,20 @@ class LandingServiceTest extends TestCase
         $this->assertFalse($svc->isPurchasable(), 'sin pack vinculado = solo-contacto');
     }
 
-    public function test_scopes_active_in_nav_and_ordered(): void
+    /**
+     * ⚠️ El scope `inNav()` se retiró con su único consumidor, el menú viejo (`#521`): los destinos
+     * del menú son el inventario de páginas. Aquí quedan los dos scopes que sí se usan.
+     */
+    public function test_scopes_active_and_ordered(): void
     {
         // Aísla los scopes de los servicios sembrados por el fixture (3 secciones reales).
         LandingService::query()->delete();
 
-        LandingService::create(['slug' => 'b', 'title' => ['es' => 'B'], 'position' => 2, 'is_active' => true, 'show_in_nav' => false]);
-        LandingService::create(['slug' => 'a', 'title' => ['es' => 'A'], 'position' => 1, 'is_active' => false, 'show_in_nav' => true]);
-        LandingService::create(['slug' => 'c', 'title' => ['es' => 'C'], 'position' => 3, 'is_active' => true, 'show_in_nav' => true]);
+        LandingService::create(['slug' => 'b', 'title' => ['es' => 'B'], 'position' => 2, 'is_active' => true]);
+        LandingService::create(['slug' => 'a', 'title' => ['es' => 'A'], 'position' => 1, 'is_active' => false]);
+        LandingService::create(['slug' => 'c', 'title' => ['es' => 'C'], 'position' => 3, 'is_active' => true]);
 
-        $this->assertSame(['a', 'c'], LandingService::inNav()->ordered()->pluck('slug')->all());
         $this->assertSame(['b', 'c'], LandingService::active()->ordered()->pluck('slug')->all());
+        $this->assertSame(['a', 'b', 'c'], LandingService::ordered()->pluck('slug')->all());
     }
 }

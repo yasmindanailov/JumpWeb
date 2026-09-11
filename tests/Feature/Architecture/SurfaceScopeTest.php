@@ -32,9 +32,16 @@ class SurfaceScopeTest extends TestCase
 {
     private const SHEETS = 'public/css/*.css';
 
-    /** Los siete tokens que definen una superficie, más la hoja que va encima. */
+    /**
+     * Los siete tokens que definen una superficie, más la hoja que va encima, más el TEXTO DE CUERPO.
+     *
+     * ⚠️ **`--fg-body` entra en `#522`** y es de superficie de verdad —cambia de VALOR con el fondo—:
+     * sobre papel el cuerpo es la tinta, y sobre tinta es el Papel 200 del sistema
+     * (`semantico.tinta.textoCuerpo`), un gris que no es ni el claro de los titulares (`--fg`) ni el
+     * secundario (`--fg-mute`). Lo estrenó el pie del marco, que usa los tres a la vez.
+     */
     private const SURFACE_TOKENS = [
-        '--bg', '--bg-soft', '--bg-card', '--sheet', '--fg', '--fg-mute', '--line', '--line-strong',
+        '--bg', '--bg-soft', '--bg-card', '--sheet', '--fg', '--fg-body', '--fg-mute', '--line', '--line-strong',
     ];
 
     /**
@@ -85,6 +92,30 @@ class SurfaceScopeTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────────────
     //  Guardas de la guarda
     // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * **La tinta de un marcador de COLOR es la del paquete en TODOS los fondos** (`#523`).
+     *
+     * ⚠️⚠️ Las superficies re-declaran `--on-marker` para que su valor por defecto (el `--fg` de ESA
+     * superficie) se evalúe donde toca, y esa re-declaración pisaba la tinta que el paquete ponía en
+     * `:root`: el sello amarillo del precio salía con texto CLARO en la tarjeta de tinta (1,49 : 1,
+     * medido). El paquete declara su tinta aparte (`--on-marker-brand`) y las TRES declaraciones la
+     * prefieren. ▶ Se lee `landing.css` directamente: `client.css` no está en el repo y esta propiedad
+     * es del PRODUCTO — que con cualquier paquete la tinta del paquete gane.
+     */
+    public function test_the_marker_ink_prefers_the_package_in_every_scope(): void
+    {
+        $css = (string) file_get_contents(public_path('css/landing.css'));
+
+        $this->assertGreaterThanOrEqual(
+            3, preg_match_all('/--on-marker:\s*var\(--on-marker-brand,\s*var\(--fg\)\)\s*;/', $css),
+            '`:root` y las dos superficies tienen que preferir la tinta del paquete (`--on-marker-brand`)',
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/--on-marker:\s*var\(--fg\)\s*;/', $css,
+            'una superficie vuelve a declarar la tinta del marcador sin mirar el paquete: el sello amarillo sale con texto claro sobre tinta',
+        );
+    }
 
     /**
      * **El escaneo ve de verdad los tres bloques.**
@@ -187,7 +218,7 @@ class SurfaceScopeTest extends TestCase
 
         $this->assertSame(
             $this->sorted(array_merge(self::SURFACE_TOKENS, self::ROLE_TOKENS)), $ink,
-            'la superficie no cubre exactamente lo que declaran `SURFACE_TOKENS` (los ocho que '.
+            'la superficie no cubre exactamente lo que declaran `SURFACE_TOKENS` (los nueve que '.
             'CAMBIAN con el fondo) y `ROLE_TOKENS` (los cuatro del rol de acción, que se re-declaran '.
             'para que su fallback se re-evalúe). Si uno se retira de verdad, quítalo también de su '.
             'constante y di por qué — y no lo muevas de constante: significan cosas distintas.',

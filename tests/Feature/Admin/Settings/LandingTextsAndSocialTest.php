@@ -115,20 +115,30 @@ class LandingTextsAndSocialTest extends TestCase
         Setting::updateOrCreate(['key' => 'landing.footer_rights.es'], ['value' => 'COLETILLA PERSONALIZADA', 'group' => 'landing']);
         Setting::updateOrCreate(['key' => 'seo.title.es'], ['value' => 'TITULO WEB PERSONALIZADO', 'group' => 'seo']);
 
-        $this->get('/')
+        $response = $this->get('/')
             ->assertOk()
-            ->assertSee('ESLOGAN PERSONALIZADO')
-            ->assertSee('COLETILLA PERSONALIZADA')
             ->assertSee('<title>TITULO WEB PERSONALIZADO</title>', false);
+
+        // ⚠️⚠️ **Ni el lema ni la coletilla se pintan ya en el pie de la web** (`#522`, `[DECIDIDO owner]`:
+        // el colofón es «Nombre · Ciudad · © año»). Los dos siguen vivos —el lema es el `<title>` de la
+        // portada cuando NO hay «Título web», y la coletilla, el pie del formulario de invitados—, así que
+        // lo que se comprueba aquí es que los ajustes siguen llegando al payload del que esos dos leen.
+        // ⚠️ **Y con «Título web» puesto, como en este caso, el lema no sale en NINGÚN sitio de la web**:
+        // es la consecuencia de retirarlo del pie, dicha al owner y escrita en la ayuda del campo.
+        $this->assertSame('ESLOGAN PERSONALIZADO', $response->viewData('site')['tagline']);
+        $this->assertSame('COLETILLA PERSONALIZADA', $response->viewData('site')['footer_rights']);
+        $response->assertDontSee('COLETILLA PERSONALIZADA');
     }
 
     public function test_landing_falls_back_to_i18n_when_settings_empty(): void
     {
-        // Sin ajustes → textos por defecto de lang/landing (es).
-        $this->get('/')
+        // Sin ajustes → textos por defecto de lang/landing (es). El lema es el título de la portada;
+        // la coletilla se comprueba en el payload por lo mismo que en el caso de arriba.
+        $response = $this->get('/')
             ->assertOk()
-            ->assertSee('Parque de saltos para toda la familia · Murcia')
-            ->assertSee('Hecho para reír.');
+            ->assertSee('Parque de saltos para toda la familia · Murcia');
+
+        $this->assertSame('Hecho para reír.', $response->viewData('site')['footer_rights']);
     }
 
     // ⚠️⚠️ **AQUÍ HABÍA `test_social_feed_renders_iframe_or_falls_back_to_gallery` Y SE HA RETIRADO

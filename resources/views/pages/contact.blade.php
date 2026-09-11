@@ -3,11 +3,9 @@
     <x-site.nav />
 
     <main id="main" class="page wrap">
-        <div class="page__head">
-            <h1 class="page__title">{{ __('site.contact_title') }}</h1>
-        </div>
-
-        <p class="page__body" style="max-width:60ch; margin-bottom:24px">{{ __('site.contact_intro') }}</p>
+        {{-- La cabecera del armazón (T3a·3): la frase de presentación sube a ENTRADILLA, que es lo
+             que era — iba suelta como cuerpo de página, con su ancho y su margen a mano. --}}
+        <x-site.page-head :title="__('site.contact_title')" :lede="__('site.contact_intro')" />
 
         {{-- #216: CTAs directos data-driven (solo si el dato existe en Ajustes), con los botones del
              sistema de diseño de la landing (`.btn`). La clienta prefiere resolver dudas por aquí. --}}
