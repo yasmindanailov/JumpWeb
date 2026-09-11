@@ -13,12 +13,14 @@
 >   sirven **desde nuestro servidor** · **D3** **6** en la portada · **D4** **se filtra por estrellas**
 >   (contra la recomendación del agente: ver §4.3·8 para cómo se hace sin engañar) · **D5** las anónimas
 >   **se publican** · **D8** el horario **se sincroniza** (la web escribe en Google).
-> - 🟦 **Pasa a revisión adversarial antes de escribir código** (`CONVENCIONES §5`).
+> - ✅ **Revisión adversarial HECHA el mismo día** (§0): **tres bloqueantes verificados en la fuente**
+>   reabren **D1**, **D5** y **D8** → decisiones **R1–R5** del owner. **Lee §0 antes que el cuerpo.**
 >
 > ▶ **Sustituye como FUENTE a `google-reviews.md`** (Places API) en cuanto la T2 esté verificada. Aquella
 > spec queda como registro de lo construido en `#490`/`#491`/`#494`, y **su contrato se conserva**: la
 > portada lee `Content\Contracts\SocialProof` y no sabe de dónde vienen los datos, así que el cambio de
-> fuente **no toca la vista**.
+> fuente **no toca la vista**. ⚠️ **CORREGIDO (§0.3): FALSO** — el contrato, el decorador y la vista
+> cambian.
 >
 > ❗❗❗ **Lo que hay que saber si solo se leen cinco líneas:**
 > 1. **Places no permite guardar reseñas** (solo el `place_id` y las coordenadas), da **5 como máximo** y
@@ -33,6 +35,148 @@
 >    decisión `D2`, §8—).
 > 5. **El límite de 30 días lo rige TODO lo que da la API**, métricas incluidas: no se puede construir un
 >    histórico largo con datos de Google (§4.5).
+
+---
+
+## 0 · ❗❗❗ REVISIÓN ADVERSARIAL (2026-09-11) — LO QUE CAMBIA, Y MANDA SOBRE EL CUERPO
+
+Cinco lentes en paralelo y en solo lectura, cada hallazgo con su evidencia (fichero y línea del repo o
+cita de la fuente oficial): **cumplimiento con Google · seguridad · RGPD · robustez y operación ·
+encaje con el repo**. Los **tres bloqueantes los verificó además el agente principal** en la fuente, con
+cita literal. ▶ **Donde el cuerpo diga otra cosa, manda esta sección**; las afirmaciones del cuerpo que
+resultaron falsas llevan además la marca «CORREGIDO (§0)».
+
+### 0.1 Los tres bloqueantes — reabren decisiones del owner
+
+1. **Publicar las reseñas en la web del parque exige el CONSENTIMIENTO de cada autor.** La guía de
+   Google para negocios —a la que obliga la política de la API (*«comply with Google's brand permissions
+   guidelines»*)— dice: *«You must get consent from the reviewer if you want to use customer reviews of
+   your business for your own marketing purposes, such as on your website or in print or digital ads»* y
+   *«User reviews belong to the person who wrote them, even if they're written on your business's
+   listing»*. ▶ **Poder guardarlas 30 días no es permiso para publicarlas.** Y **D5 no se puede cumplir**:
+   a un autor anónimo no se le puede pedir. ⚠️ **Lo de hoy con Places vive en la misma tensión** (es la web
+   del negocio). ✅ **Lo que SÍ contempla la guía es compartir la NOTA y el TOTAL**, con condiciones: *«Include
+   an 'as of' date when sharing your overall rating or number of reviews»*, el logotipo *«Google G or full
+   Google wordmark»*, *«Don't add stars by the Google name or logos»* y nada de «Google rating». → **R1**.
+2. **Un proyecto de Google POR CLIENTE lo prohíbe la política**: *«If you provide the Business Profile
+   APIs to end-clients or other third-party clients, you cannot require them to apply for their own
+   Business Profile project in order to use the Business Profile APIs»*. JumpWeb da el producto a parques:
+   **D1 queda reabierta**. La salida conforme es **un proyecto central de JumpWeb** (una sola solicitud de
+   acceso), con dos costes: la **verificación del ámbito sensible** —3–5 días hábiles, vídeo, política de
+   privacidad en el dominio de JumpWeb— porque la autorizarán varios dueños, y la **política de terceros**
+   (avisar al cliente de cambios en su cuenta en 48 h, desvincularlo en 7 días hábiles). → **R2**.
+3. **Editar la ficha exige el consentimiento PREVIO Y ESPECÍFICO del usuario**: *«You must not automate or
+   trigger review replies, Q&As, listing creations, listing edits, or other actions without the user's prior
+   specific and express consent»*. ▶ **El horario no se empuja solo**: cada publicación en Google sale de un
+   gesto del admin con los cambios delante, y la conciliación diaria **solo avisa**. → **R3**.
+
+### 0.2 Hechos que corrigen el cuerpo
+
+- **Las reseñas SÍ traen fotos** (verificado): `reviewMediaItems[]` con `thumbnailUrl`, `thumbnailLabel` y
+  `videoUrl`. **§4.3·11 era falso.** → **R5** (fotos y vídeos).
+- **No hay tipo de acción «entradas»**: `PlaceActionType` es de citas y comida. Y **las atracciones gestionan
+  sus ENTRADAS en la propia ficha**, a mano, sin API (verificado: *«All attraction businesses and tour
+  operators»*; *«Ticket or Activity name and Booking URL are required fields»*). Los tipos que admite una
+  ficha se consultan con `placeActionTypeMetadata.list`. → **R4**.
+- **Guardar: «limited amounts of Content»** —la frase completa es *«…for use outside of your Business
+  Profile project except for limited amounts of Content»*—. ▶ Se guardan **solo las candidatas a la
+  portada** (las que pasan el filtro, con un margen) y el resumen; el resto se recorre en memoria.
+- **Revocar un token retira la autorización COMBINADA del proyecto**: «Desconectar» desde local con el
+  mismo proyecto **mata la conexión de producción**.
+- **El horario de Google**: `specialHours` *«cannot be set without regular hours»* (verificado); según la
+  revisión —citando la referencia RPC, no re-verificado— un periodo especial dura menos de 24 h. Una
+  **temporada** del panel no es un rango en Google: día a día dentro de un horizonte, o reescribir
+  `regularHours` al cambiar de temporada. **La moderación** puede tardar hasta 30 días o no aprobar: se
+  leen `hasPendingEdits` y `getGoogleUpdated` y **no se reenvía lo pendiente**.
+- **Esta API no da enlace por reseña ni perfil del autor** (Places sí): los enlaces de cada tarjeta pasan a
+  `mapsUri`, y el del nombre del autor desaparece.
+- **Atribución con esta fuente**: la «G» o la palabra Google (no el logotipo de Google Maps de `#494`),
+  **«a fecha de …»** junto a la media y el total, sin estrellas pegadas al logotipo.
+- **Filtrar por estrellas**: Google no lo prohíbe, pero la **Directiva de prácticas comerciales desleales**
+  (Ómnibus 2019/2161) considera engañoso enseñar solo las positivas sin decirlo y obliga a informar de cómo
+  se tratan. ▶ La línea del filtro, **siempre visible**; decir que ni el parque ni Google verifican que los
+  autores sean clientes; y **la entradilla de hoy («No las elegimos nosotros») se vuelve falsa**. [consulta
+  legal]
+- **JSON-LD**: nunca la media de Google en `aggregateRating` (las directrices de datos estructurados lo
+  prohíben); hoy no se emite y hace falta guarda para que no entre «de paso».
+
+### 0.3 Requisitos que la revisión añade
+
+**Privacidad**
+- **Ocultar una reseña desde el panel**, con motivo tasado (petición del autor · menores · salud o terceros
+  · otros), lista de supresión que sobrevive a la resincronización y a la purga, borrado inmediato de
+  nombre, foto y texto, y rastro sin PII. Sin esto no se atiende el art. 21 ni se retira una reseña que
+  nombra a un niño. Alcanza también a la respuesta del parque.
+- **Texto para la política de privacidad** (art. 14) y **paso de despliegue manual por instalación**: la
+  migración no toca una política ya editada. [validación de la asesoría del cliente]
+- **Ponderación del interés legítimo** y fila en el registro de actividades; **prohibido cruzar** la tabla
+  de reseñas con clientes o pedidos (guarda de arquitectura).
+- **Anónimos**: nombre y foto a `null` ANTES de guardar.
+- **Si pasan N días sin una pasada completa**, dejar de pintar nombre y foto (una reseña borrada en Google
+  no puede seguir 29 días en la web porque la sincronización esté rota).
+
+**Seguridad**
+- **Toda escritura en Google solo en PRODUCCIÓN**, detrás de un interruptor explícito, con `updateMask`
+  fija (`regularHours,specialHours`), por cola, con **permiso propio** no asignable a cualquiera, y rastro
+  y correo en cada escritura. Hoy editan el horario `slots.manage` y `prices.manage`, permisos de gestión.
+- **Cliente o proyecto OAuth de DESARROLLO aparte**: nada de `localhost` en el de producción, y la conexión
+  fuera de cualquier copia de base entre entornos.
+- **Credenciales solo por CLI** (`app:set-setting --force`, con entrada oculta): **el panel no las edita**
+  (`SEC-11`). §7·7 queda corregido.
+- **OAuth**: reto atado al `user_id` que lo pidió y permiso re-comprobado a la vuelta —**el precedente es
+  `GoogleAuthSession`, no `SocialLogin`**—, clave de sesión propia, **PKCE S256** (no existe aún en el
+  repo), comprobar el `scope` concedido, revocar el token anterior al reconectar, limitadores, y
+  desconectar solo por POST.
+- **Revalidar la ficha elegida** contra el `locations.list` del token antes de cada escritura, y exigir
+  que el host de su `websiteUri` sea el del sitio.
+- **Descargador de imágenes endurecido**: lista blanca `lh[3-6].googleusercontent.com`, sin
+  redirecciones, tope de bytes, tipo por bytes mágicos (jpeg, png, webp, gif; **SVG nunca**), nombre por
+  hash, escritura atómica; servidas por una ruta de Laravel (con `SecurityHeaders`) o con un `.htaccess`
+  propio.
+- **Tokens nunca en la URL ni en logs**: `#[\SensitiveParameter]`, un envoltorio HTTP que solo registra el
+  estado, jobs sin credenciales dentro.
+- **Token cifrado en TABLA PROPIA** (cast `encrypted`, precedente `CustomerCard`), no en `settings`, que se
+  lee entero en cada petición; `DecryptException` → estado «caducado»; `APP_PREVIOUS_KEYS` permite rotar la
+  clave sin reconectar.
+
+**Robustez**
+- **El límite de 30 días se aplica al LEER** (`fetched_at` de los últimos 29 días), no solo con la purga: si
+  el cron muere, la portada no sirve lo viejo.
+- **Una pasada solo borra si es COHERENTE** (lo recogido cuadra con `totalReviewCount`); una lista vacía con
+  total mayor que cero no borra; se deduplica por `name`; el reemplazo va por diferencias en una transacción.
+- **Un solo candado dentro del servicio**, en un almacén que no se desaloja (`cache_locks` de la base), con
+  caducidad igual al presupuesto de la pasada; el botón del panel encola el mismo trabajo.
+- **Presupuesto de tiempo** de la pasada, en segundo plano, job con un solo intento.
+- **Máquina de estados de la conexión** (conectada · caducada · sin permiso · ficha perdida · sin verificar ·
+  sin acceso), aviso en la transición a un destinatario definido, y la antigüedad calculada al leer.
+- **Resultado de cada pasada registrado** y alarma por días sin pasada completa; `fetched_at` se renueva en
+  toda fila devuelta, cambie o no.
+- **Imágenes en `public/uploads/…`** (protegido del `--delete` del despliegue) o disco privado; `Prunable`
+  (no `MassPrunable`) que borra el fichero, y barrido de huérfanos.
+- **`deploy.sh` comprueba las tareas programadas por NOMBRE**, no por número.
+
+**Encaje con el repo**
+- **El contrato cambia y la vista SÍ se toca**: `Testimonial` gana la respuesta del parque y las fotos; hace
+  falta dónde llevar «Escribir una reseña», el enlace general y la línea del filtro; el doble anónimo de
+  `GoogleAttributionTest` se actualiza; y `FallingBackSocialProof` cambia (recibe el tipo concreto de Google
+  y aplica el consentimiento de `maps`). **El «no toca la vista» del cuerpo era falso.**
+- **Módulos**: la conexión en **Platform**; la sincronización y la fuente en **Content**; la ida y vuelta
+  OAuth en `app/Http`, hermana de `GoogleAuthSession`; el horario se lee de
+  `Booking\Contracts\OperatingCalendar` —Content no puede usar `OperatingSchedule`—.
+- **El horario**: un día sin configurar no se escribe y se avisa; **las zonas nunca van a Google**; no hay
+  horarios partidos en el modelo; y el disparo sale del gesto del admin (no existen eventos de dominio).
+- **El umbral `MIN_REVIEWS = 1`** (`#494`, definitivo) se conserva para la cifra y se muda con su guarda.
+- **`bind` → `scoped`**: el controlador pide el contrato dos veces y el memo por petición no se compartiría.
+- **Las UTM**: el producto no tiene analítica ni guarda UTM; la medición de la T5 se retira o se guarda en
+  el pedido (toca el checkout).
+- **La fecha relativa** («hace 2 meses») se deriva de la fecha, como `CmsSocialProof`; `starRating` llega
+  como texto (`FIVE`…).
+
+### 0.4 Lo que la revisión deja al owner
+
+**R1** cómo se publican las reseñas (consentimiento) · **R2** de quién es el proyecto de Google · **R3**
+el horario publicado con un gesto del admin · **R4** el botón de entradas · **R5** fotos y vídeos de las
+reseñas. Mientras no se decidan, **no se escribe código** (`CONVENCIONES §5`).
 
 ---
 
@@ -257,7 +401,8 @@ probada en producción.
      que se lee como trampa; decirlo es una selección editorial legítima.
    - ⚠️ **Si el filtro deja menos de 6**, se enseñan las que haya; **si deja 0**, el carril cae a las
      opiniones propias (la cascada de siempre) y la media se sigue enseñando.
-11. **«Reseñas con imágenes»** — lo que la API da y lo que no. Da **la foto del AUTOR** de cada reseña
+11. ⚠️ **CORREGIDO (§0.2): lo que sigue es FALSO — el recurso `Review` SÍ trae fotos y vídeos
+   (`reviewMediaItems`).** **«Reseñas con imágenes»** — lo que la API da y lo que no. Da **la foto del AUTOR** de cada reseña
    (`reviewer.profilePhotoUrl`), que es la que se sirve desde nuestro servidor (`D2`). ⚠️ **El recurso
    `Review` no trae ningún campo de fotos adjuntas por el autor**; las fotos que suben los clientes a la
    ficha llegan por la **Media API** (fotos de clientes) **sin enlace a una reseña concreta**. ▶ **A
@@ -316,7 +461,9 @@ Google por separado**: si alguien cierra un festivo en el panel y no en Google, 
 2. **Qué se escribe**: `regularHours` (la semana tipo vigente) y `specialHours` (fechas especiales y
    cierres, de hoy en adelante, dentro de la ventana que Google admite).
 3. **Primera activación = comparar, no escribir.** El panel enseña *«tu ficha dice X · la web dice Y»* y el
-   admin confirma la primera escritura. Después, **cada cambio de horario en el panel se empuja**, y una
+   admin confirma la primera escritura. ⚠️ **CORREGIDO (§0.1·3): no se empuja solo — la política exige
+   consentimiento previo y específico; cada publicación sale de un gesto del admin y la conciliación solo
+   avisa.** Después, **cada cambio de horario en el panel se empuja**, y una
    **conciliación diaria** detecta si la ficha se ha desviado (una edición a mano en Google, o una
    *actualización de Google* propuesta por usuarios) y la corrige o avisa.
 4. ⚠️ **Escribir en la ficha pasa por la moderación de Google** y tiene un tope de **10 ediciones por
@@ -391,7 +538,9 @@ hacer YA, mientras se construye la T1.
 1. **Comprueba la ficha.** Tiene que estar **verificada y activa desde hace más de 60 días**, tener **la
    web del parque** puesta, y tu cuenta de Google tiene que ser **propietaria o administradora** de la
    ficha. Sin esto Google no aprueba el acceso.
-2. **Crea un proyecto de Google Cloud** en `console.cloud.google.com` → selector de proyectos → *Nuevo
+2. ⚠️ **PENDIENTE DE R2 (§0.1·2)**: la política prohíbe pedirle a cada cliente su propio proyecto. Si el
+   proyecto es CENTRAL de JumpWeb, los pasos 2–6 los hace JumpWeb una sola vez y el parque solo conecta.
+   **Crea un proyecto de Google Cloud** en `console.cloud.google.com` → selector de proyectos → *Nuevo
    proyecto* (por ejemplo «PlayJump Business Profile»). ▶ **Recomendado: un proyecto APARTE** del de
    *Iniciar sesión con Google* y del de Places: el ámbito de esta API es **sensible**, y metido en el
    proyecto del login pondría la pantalla de consentimiento de tus clientes bajo esas reglas. Apunta el
@@ -423,7 +572,9 @@ hacer YA, mientras se construye la T1.
      (futuro) — ⚠️ **te confirmo la ruta exacta al cerrar la T1**, antes de que la pegues.
    - Para desarrollo, la misma ruta sobre `http://localhost:8081`.
    - Guarda el **ID de cliente** y el **secreto**.
-7. ❗❗ **Entrégalos por la vía segura, NO por un chat** (la clave de Places se pegó en uno y hubo que
+7. ⚠️ **CORREGIDO (§0.3): solo por CLI** (`app:set-setting --force`, con entrada oculta) — **el panel no
+   edita secretos** (`SEC-11`); la opción de pegarlos en el panel queda retirada.
+   ❗❗ **Entrégalos por la vía segura, NO por un chat** (la clave de Places se pegó en uno y hubo que
    pedir rotarla): o los escribes tú en el servidor con `php artisan app:set-setting … --force` (te daré
    las dos órdenes exactas en la T1), o los pegas en la pantalla del panel, que los guarda sin volver a
    enseñarlos.

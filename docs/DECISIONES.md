@@ -28340,3 +28340,18 @@ visita — **a todos por igual, sin premios ni filtros**, que es lo que la polí
 correo propietario), el proyecto, la pantalla de consentimiento y el cliente OAuth son pasos del owner en
 su cuenta de Google — §7 de la spec los da uno a uno. **En local no se arregla la restricción de IP**
 de la clave de Places (`[owner]`: no hace falta), y se retirará con Places.
+
+▶ **Segunda vuelta del owner el mismo día**: alcance T1 · T2 · T5 · T6 y el enlace «Escribir una reseña»;
+D1 un proyecto por cliente, D2 avatares desde nuestro servidor, D3 seis en portada, D4 filtradas por
+estrellas, D5 anónimas publicadas, D8 horario sincronizado.
+
+❗❗❗ **Y LA REVISIÓN ADVERSARIAL (cinco lentes, §0 de la spec) REABRE TRES DE ELLAS con la fuente
+delante**, verificadas por el agente principal: (1) **publicar las reseñas en la web exige el
+consentimiento de cada autor** —*«You must get consent from the reviewer if you want to use customer
+reviews of your business for your own marketing purposes, such as on your website»*— y con eso D5 no se
+puede cumplir; (2) **un proyecto por cliente lo prohíbe la política** —*«you cannot require them to apply
+for their own Business Profile project»*—, así que D1 cae; (3) **editar la ficha exige consentimiento
+previo y específico**, así que el horario no se empuja solo (D8 se matiza). ⚠️ Y **una afirmación de la
+spec era falsa**: las reseñas SÍ traen fotos (`reviewMediaItems`). ▶ Quedan **R1–R5** del owner, y **no
+se escribe código hasta decidirlas**. *Una decisión tomada sin la cita delante no está tomada: está
+pendiente de la cita.*
