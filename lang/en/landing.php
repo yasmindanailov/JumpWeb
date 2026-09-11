@@ -88,9 +88,9 @@ return [
         'book_zone' => 'Book :zone',
         'buy' => 'Buy',
     ],
-    // `/atracciones` (carril de diseño, T2d). El rótulo es la RUTA y no se traduce: es la URL.
+    // `/atracciones` (carril de diseño, T2d). El rótulo es la RUTA y no vive aquí: lo deriva la
+    // cabecera de página de la URL real (`#525`).
     'attractions' => [
-        'eyebrow' => '/atracciones',
         'title' => 'Everything inside',
         'intro' => 'All :count rides in the park, with their age.',
         'zone_tablist' => 'Zone',
@@ -100,7 +100,7 @@ return [
     ],
     'pricing' => [
         'title' => 'Pricing',
-        'intro' => 'Pick your zone and see the prices. For now, tickets are bought at the box office or by phone.',
+        'intro' => 'All the rates, with their days.',
         'from' => 'from', 'pick_zone' => 'Choose a zone', 'tab' => 'Tickets',
         'book' => 'Book', 'call' => 'Call',
     ],

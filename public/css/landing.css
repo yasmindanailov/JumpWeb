@@ -47,7 +47,7 @@
         esquinas del marcador QR, el subrayado tipográfico en `em`, la barra de 2 px de alto.
         Y los `0` que son un reset de un radio heredado.
 
-   SECTION HEAD PATTERN (.zones__head / .rides__head)
+   SECTION HEAD PATTERN (.zones__head / .sec-head · y la de PÁGINA, .page__head, que es la misma)
      stack vertical, left-aligned:  eyebrow → h2 → intro
      head max-width 820-920px, intro max-width 56ch (~560px)
      intro: 18px, --fg-mute
@@ -1355,7 +1355,8 @@ img { display: block; max-width: 100%; }
    ▶ Comparte declaración con el molde nuevo: es el nivel **Etiqueta** del canvas, y `--fs-label` es
    el token que lo nombra (`--fs-12` valía lo mismo, pero no decía qué era). */
 .sec-head__eyebrow,
-.zones__eyebrow {
+.zones__eyebrow,
+.page__eyebrow {
   margin: 0 0 var(--sp-8);
   font-family: var(--font-mono); font-size: var(--fs-label);
   text-transform: uppercase; letter-spacing: 0.16em;
@@ -1671,13 +1672,6 @@ img { display: block; max-width: 100%; }
    Esa fue la primera solución y ROMPIÓ cosas: `> :not(.ilu) { position: relative }
 
 
-/* ---------- atracciones (tabs + slider) ---------- */
-.rides__head {
-  display: flex; flex-direction: column;
-  gap: var(--sp-20); margin-bottom: 48px;
-  max-width: 920px;
-}
-
 /* ══ LA CABECERA DE SECCIÓN · UNA PARA LAS OCHO ═══════════════════════════════════════════
    `DECISIONES #479` · carril de diseño Fase 2 · T2c. El canvas la cierra en un turno propio
    (`Escritorio PJP` 1a, «la cabecera de sección: una para las ocho»): **rótulo en Etiqueta ·
@@ -1698,13 +1692,15 @@ img { display: block; max-width: 100%; }
    comando en `DEUDA.md`). Aquí se arreglan las cinco cabeceras, que es el alcance de la tanda;
    las otras 72 alcanzan al cajón (Fase 4) y al panel, y van en tanda propia.
 
-   ⚠️ **Las tres declaraciones viven juntas a propósito.** `.rides__title` la comparten Tarifas,
-   Visítanos, Normas y Dudas; `.zones__title` es «Para quién»; `.sec-head__title` es el molde nuevo
-   que estrena Tarifas y que las demás adoptan al rehacerse. Separarlas es cómo la portada acaba
-   con dos tamaños de titular sin que nadie lo decida. */
+   ⚠️ **Las tres declaraciones viven juntas a propósito.** `.sec-head__title` es la cabecera de las
+   secciones, `.zones__title` la de «Para quién» y **`.page__title` la de las PÁGINAS** (`#525`,
+   T3a·3): el canvas escribe que «una página no estrena tipografía», y su cabecera es la de sección
+   con la ruta en el rótulo. Separarlas es cómo el sitio acaba con dos tamaños de titular sin que
+   nadie lo decida — y `site.css` tenía uno propio, a 40/80 px y con la negrita falsificada.
+   ▶ `.rides__title` y `.rides__head` se retiraron en `#525` con su último consumidor, `/precios`. */
 .sec-head__title,
-.rides__title,
-.zones__title {
+.zones__title,
+.page__title {
   font-family: var(--font-display);
   /* ⚠️ 400 EXPLÍCITO, no ausente: sin la declaración un `<h2>` hereda el `bold` del navegador y
      vuelve la síntesis por la puerta de atrás, que es peor porque no se ve en la hoja. */
@@ -1716,26 +1712,43 @@ img { display: block; max-width: 100%; }
 /* La ENTRADILLA de la cabecera. `max-width: 52ch` es el del artboard de escritorio; el canvas
    escribe «máx. 65 caracteres» para el nivel, y 52 es lo que la cabecera usa de verdad. */
 .sec-head__lede,
-.rides__head > p {
+.page__lede {
   font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
   color: var(--fg-mute); max-width: 52ch;
   margin: 0;
 }
 
 /* El BLOQUE de la cabecera. Su ritmo sale del sistema —`ritmo.titular` 16/20 entre titular y
-   entradilla, `ritmo.cabecera` 28/40 antes del contenido—, no de un ojo.
-   ⚠️⚠️ **Existe porque `.rides__head` estiliza por ELEMENTO** (`> p`), y con un rótulo que también
+   entradilla, `ritmo.cabecera` 28/40 antes del contenido—, no de un ojo. Y es el MISMO en una
+   sección y en una página: `Layout Paginas PJP` 1a/1b dibuja 8 · 16/20 · 28/40.
+   ⚠️⚠️ **Nació porque `.rides__head` estilizaba por ELEMENTO** (`> p`), y con un rótulo que también
    es un `<p>` esa regla le ganaba por especificidad: el rótulo salía a 21 px en Hanken en vez de a
    12 en mono, con el marcado correcto y sin que fallara nada. Lo vio la sonda, no una relectura. */
-.sec-head { margin: 0 0 var(--sp-28); }
-.sec-head__lede { margin-top: var(--sp-16); }
+.sec-head,
+.page__head { margin: 0 0 var(--sp-28); }
+.sec-head__lede,
+.page__lede { margin-top: var(--sp-16); }
 @media (min-width: 1024px) {
-  .sec-head { margin-bottom: 40px; }
-  .sec-head__lede { margin-top: var(--sp-20); }
+  .sec-head,
+  .page__head { margin-bottom: 40px; }
+  .sec-head__lede,
+  .page__lede { margin-top: var(--sp-20); }
   /* El titular se acota para que no se estire de lado a lado de la columna: es un rótulo, no un
-     párrafo. 16ch es lo que usa el artboard de escritorio. */
+     párrafo. 16ch es lo que usa el artboard de escritorio para una sección; el de PÁGINA dice 20,
+     porque el titular de una página puede ser más largo («Política de privacidad»). */
   .sec-head__title { max-width: 16ch; }
+  .page__title { max-width: 20ch; }
 }
+
+/* EL CONJUNTO rótulo + titular de una cabecera de página, que es la CAJA de su decoración (`#525`).
+   ❗ La decoración de una página —la trama de `/normas`, el abanico de `/precios`— se coloca contra
+   este conjunto y NO contra la cabecera entera, y con la ranura puesta lo RECORTA: así no puede
+   alcanzar a la entradilla, que queda fuera. Su regla escrita es «detrás del titular y nunca detrás
+   de un párrafo», y contra la cabecera entera la incumplían las dos (medido en `#525`).
+   ⚠️ El recorte va SOLO con decoración (`--deco`): un titular de Bungee a `line-height: .95` puede
+   sacar una coma por debajo de su caja, y recortarlo sin motivo la cortaría. */
+.page__lockup { position: relative; isolation: isolate; }
+.page__lockup--deco { overflow: hidden; }
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    SECCIÓN 02 · «CUÁNTO» · EL CARRIL DE TARIFAS
@@ -3785,8 +3798,7 @@ select:focus-visible {
      una regla de móvil que fije otro tamaño **gana al clamp entero** y deja el nivel del sistema
      sin efecto justo en el ancho para el que se diseñó (390). Es la lección de `TypeScaleTest`:
      *una medida en un punto no vigila una función*, y una excepción en un punto la desactiva. */
-  .zones__head, .rides__head { margin-bottom: 36px; gap: var(--sp-16); }
-  .rides__head { flex-direction: column; align-items: flex-start; gap: var(--sp-16); }
+  .zones__head { margin-bottom: 36px; gap: var(--sp-16); }
   /* #232: el switcher de zonas `.zone-tabs` a ANCHO COMPLETO en móvil — tanto en Atracciones
      (#rides) como en Entradas (#pricing, donde su contenedor `.ticket-prices__tabs` lo centraba a
      ancho de contenido) — con los 2 botones «Zona Jump/Kids» repartidos 50/50, sin hueco vacío. */
@@ -4337,11 +4349,11 @@ select:focus-visible {
    ⚠️ El `z-index: -1` va aquí y NO en `.grain`: esa misma pieza se usa en el menú y en la tarjeta
    del cierre, que no crean contexto de apilamiento propio — allí bajarla la mandaría detrás del
    fondo y desaparecería. La capa es COLOCACIÓN, como el tamaño. */
-.page--rules .page__head > .grain { z-index: -1; }
-.page--rules .page__head {
-  position: relative; isolation: isolate;
-  --trama-fade: 0.3;
-}
+/* ⚠️ Desde `#525` su caja es el CONJUNTO rótulo + titular (`.page__lockup`) y no la cabecera: la
+   cabecera ganó una ENTRADILLA, y contra la caja entera los puntos caían debajo de ella — justo lo
+   que su regla 02 prohíbe. La posición y el contexto de apilamiento los pone ya el conjunto. */
+.page--rules .page__lockup > .grain { z-index: -1; }
+.page--rules .page__lockup { --trama-fade: 0.3; }
 
 
 /* A5 · la niebla NO va en el formulario.
@@ -4356,13 +4368,19 @@ select:focus-visible {
 /* A3 · el abanico quieto de `/precios`. Su regla es «uno por página»: éste es ese uno.
    ⚠️ Su posición original (`top: 118%`) era para una tarjeta de 186 px; aquí la caja es otra, así
    que la COLOCACIÓN se decide aquí —que es lo que hace un consumidor— y la FORMA sigue siendo suya
-   al dígito: 3,2° encendido y 8° de periodo. */
-.rides__head { position: relative; overflow: hidden; isolation: isolate; }
+   al dígito: 3,2° encendido y 8° de periodo.
+   ⚠️⚠️ **Su caja es el CONJUNTO rótulo + titular (`.page__lockup`), que lo recorta** (`#525`): la
+   entradilla queda fuera, así que el abanico ya no puede caer detrás de ella. Medido: en MÓVIL ya
+   caía detrás de las tres líneas de la anterior, antes de la cabecera de página.
+   ⚠️ Y la cabecera va a la COLUMNA ENTERA (`max-width: none`): se acota a 820 por la trama de
+   `/normas`, y dentro de 820 el abanico —a 30 px del canto derecho y de 360— se echaría encima del
+   titular en escritorio. Va con el compuesto porque `site.css` se carga después y ganaría. */
+.page__head.pricing__head { max-width: none; }
 
 .pricing__rays {
   z-index: -1;
   /* ⚠️⚠️ Va ENTERO dentro del contenedor, y no es capricho: con la caja sobresaliendo, el
-     `overflow: hidden` del `.rides__head` la corta en un CANTO RECTO **antes** de que el
+     `overflow: hidden` de la cabecera la corta en un CANTO RECTO **antes** de que el
      desvanecido de la propia pieza haya terminado — y eso se lee como un fallo de render, no como
      decoración. En su artboard el corte lo da el borde visible de una tarjeta; aquí no hay borde
      que justifique una línea recta. */
@@ -4390,40 +4408,11 @@ select:focus-visible {
    `/atracciones` · LAS 23, CON SU ZONA EN LA PESTAÑA
    Carril de diseño Fase 2 · T2d. Artboard `Atracciones PJP` **1a** (móvil) + **1c** (escritorio).
 
-   ⚠️⚠️ **LOS SELECTORES VAN COMPUESTOS (`.page--rides .page__…`) Y NO ES CELO.** `site.css` se
-   carga DESPUÉS que esta hoja, así que a igual especificidad gana la suya: un `.page__title` a secas
-   escrito aquí no pintaría nada. Es la trampa de cascada de `#314` con los dos ficheros de por
-   medio, y `.page--rules` (línea 3845) ya la resolvió igual.
-
-   ⚠️ **Y con el compuesto se arregla de paso la SÍNTESIS de la fuente en esta página**:
-   `site.css` pide `font-weight: 800` y `font-stretch: 75%` sobre `--font-display`, que es Bungee y
-   **trae una sola cara**, así que el navegador falsifica negrita y condensada. Son las 77 reglas
-   fichadas en `DEUDA.md` por `#479`; aquí se corrige la de esta página, que es la única que la tanda
-   toca. El `400` va EXPLÍCITO: sin declararlo, un `<h1>` hereda el `bold` del navegador y la
-   síntesis vuelve por la puerta de atrás.
+   ▶ **Su CABECERA ya no vive aquí** (`#525`, T3a·3): la estrenó esta página con cuatro reglas
+   compuestas (`.page--rides .page__…`, para ganar a `site.css`) y hoy es la cabecera del armazón,
+   que comparte declaración con la de sección — ver «LA CABECERA DE SECCIÓN». Los compuestos que
+   quedan (`.page--rides .page__foot…`) son de esta página y de nadie más.
    ══════════════════════════════════════════════════════════════════════════════════════════ */
-
-/* LA CABECERA DE PÁGINA del canvas: rótulo con la ruta · titular Display L · entradilla.
-   La estrena esta página; las otras cinco la adoptan en la Fase 3 con el armazón entero. */
-.page--rides .page__head { max-width: 52ch; }
-.page--rides .page__eyebrow {
-  margin: 0;
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--fg-mute);
-}
-.page--rides .page__title {
-  font-family: var(--font-display);
-  font-weight: 400; font-stretch: normal;
-  font-size: var(--fs-display-l);
-  line-height: 0.95; letter-spacing: -0.01em;
-  margin: var(--sp-8) 0 0;
-}
-.page--rides .page__lede {
-  margin: var(--sp-16) 0 0;
-  font-size: var(--fs-lede); line-height: 1.5; font-weight: 500;
-  color: var(--fg-mute);
-}
 
 /* LA FILA de control. En móvil es flujo de bloque —pestañas, cifra, rejilla, el orden del
    artboard— y en escritorio pasa a una fila con el control a la izquierda y su consecuencia al

@@ -3,11 +3,9 @@
     <x-site.nav />
 
     <main id="main" class="page wrap account">
-        <div class="page__head">
-            <div class="eyebrow">{{ __('account.orders.eyebrow') }}</div>
-            <h1 class="page__title">{{ __('tickets.pay_redirecting_title') }}</h1>
+        <x-site.page-head :eyebrow="__('account.orders.eyebrow')" :title="__('tickets.pay_redirecting_title')">
             <p class="account__intro">{{ __('tickets.order_code') }}: <strong>{{ $orderCode }}</strong></p>
-        </div>
+        </x-site.page-head>
 
         {{-- Mismo patrón que el paso 9 del sidebar (#104): auto-POST al TPV Redsys.
              target="_top" rompe cualquier iframe; la tarjeta NO toca este servidor.

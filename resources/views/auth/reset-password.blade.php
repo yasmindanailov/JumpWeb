@@ -6,10 +6,8 @@
     <x-site.nav />
 
     <main id="main" class="page wrap">
-        <div class="page__head">
-            <div class="eyebrow">{{ __('account.reset.eyebrow') }}</div>
-            <h1 class="page__title">{{ __('account.reset.title') }}</h1>
-        </div>
+        {{-- El rótulo va A MANO: la URL de esta pantalla lleva un TOKEN y no es un destino. --}}
+        <x-site.page-head :eyebrow="__('account.reset.eyebrow')" :title="__('account.reset.title')" />
 
         <div class="page__body">
             <p>{{ __('account.reset.intro') }}</p>

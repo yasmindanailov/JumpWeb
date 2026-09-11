@@ -88,14 +88,26 @@ final class SiteDestinations
                 'route' => $route,
                 't' => (string) __('landing.nav.pages.'.$label),
                 'url' => $url,
-                // ⚠️ La ruta ESCRITA sale de la URL real y no de una tabla aparte: es lo que el
-                // canvas pone debajo de cada página, y así no puede decir una dirección que no es.
-                's' => (string) (parse_url($url, PHP_URL_PATH) ?: '/'),
+                's' => self::writtenPath($url),
                 'current' => $currentRoute === $route,
             ];
         }
 
         return $pages;
+    }
+
+    /**
+     * **La RUTA ESCRITA de una URL**: lo que el menú pone debajo de cada destino y lo que la cabecera
+     * de una página pone en su rótulo (`DECISIONES #525`, T3a·3).
+     *
+     * ⚠️ Sale de la URL real y no de una tabla aparte, así que no puede decir una dirección que no
+     * es. Y es UNA función para los dos a propósito: con dos derivaciones, el menú y la cabecera de
+     * la misma página podían escribir rutas distintas sin que nada lo avisara — `/atracciones` la
+     * llevaba escrita a mano en los ficheros de idioma hasta `#525`.
+     */
+    public static function writtenPath(string $url): string
+    {
+        return (string) (parse_url($url, PHP_URL_PATH) ?: '/');
     }
 
     /**

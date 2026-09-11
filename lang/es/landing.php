@@ -148,17 +148,14 @@ return [
     ],
     /*
      * `/atracciones` — la página de las 23 (carril de diseño, T2d · `Atracciones PJP` 1a/1c).
-     * ⚠️ El RÓTULO es la RUTA, que es la cabecera de página que el canvas cierra en
-     * `Layout Paginas PJP`. Es la primera página que la estrena; las otras cinco la adoptan en la
-     * Fase 3, igual que `.sec-head` estrenó en Tarifas y las demás secciones la adoptan al
-     * rehacerse (`#479`).
+     * ⚠️ El RÓTULO es la RUTA y NO vive aquí: lo deriva `<x-site.page-head>` de la URL real, con la
+     * misma función que el menú (`#525`). Hasta entonces estaba escrito a mano en los tres idiomas.
      * ⚠️⚠️ La entradilla dice «con su edad» y NO «con su edad y su altura», que es lo que escribe el
      * artboard: el propio canvas retiró la altura por atracción —«el único dato de altura del
      * sistema es el 1,30 y es de la ZONA»— y aquí no hay columna que la guarde. Prometer un dato
      * que la ficha no puede pintar es la avería que `#309` describe con las anclas.
      */
     'attractions' => [
-        'eyebrow' => '/atracciones',
         'title' => 'Todo lo que hay dentro',
         // `:count` es el recuento de lo que la PÁGINA enseña, no `Attraction::count()`.
         'intro' => 'Las :count atracciones del parque, con su edad.',
@@ -171,7 +168,11 @@ return [
     ],
     'pricing' => [
         'title' => 'Tarifas',
-        'intro' => 'Elige tu zona y mira los precios. Hoy las entradas se compran en taquilla o por teléfono.',
+        // La entradilla de la cabecera de `/precios` (`#525`). ⚠️ Dice solo lo que la página ENSEÑA:
+        // la del canvas añade «y sus complementos», que `/precios` hoy no pinta. Y la anterior
+        // afirmaba que las entradas se compraban «en taquilla o por teléfono» al lado de un botón
+        // que las reserva online.
+        'intro' => 'Todas las tarifas, con sus días.',
         'from' => 'desde', 'pick_zone' => 'Elige la zona', 'tab' => 'Entradas',
         'book' => 'Reservar', 'call' => 'Llamar',
     ],
