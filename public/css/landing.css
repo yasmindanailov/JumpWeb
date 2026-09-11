@@ -2296,8 +2296,8 @@ img { display: block; max-width: 100%; }
 }
 .price__num .cents { font-size: 32px; vertical-align: super; }
 .price__num .eur { font-size: 28px; margin-left: var(--sp-4); vertical-align: top; opacity: 0.6; }
-/* Unidad «POR PERSONA» bajo el precio: MISMO css/texto que el «POR NIÑO» del pack (#267); comparte
-   la regla visual con `.bd-pack__price .per`.
+/* Unidad «POR PERSONA» bajo el precio: el mismo css/texto que tenía el «POR NIÑO» del pack de la
+   página vieja de `/cumpleanos` (#267; aquella regla se fue en `#528`).
    ⚠️⚠️ **Aquí ponía `margin-left: 8px` «porque aquí no hay flex-gap», y esa nota describía un
    marcado que ERA el defecto**: la unidad vivía DENTRO de `.price__num` —80 px, `line-height: 0.85`—
    y heredaba su caja, así que se partía en dos con 68 px de hueco en medio. Ahora es hermana y la
@@ -3134,9 +3134,8 @@ img { display: block; max-width: 100%; }
 }
 
 /* ⚠️ Aquí vivían `.gallery-marquee*` y `.polaroid*`: la marquesina de la sección «En directo», que
-   el owner retiró en `#309`. Se fueron con su único consumidor.
-   ▶ ⚠️ NO confundir con `.bd-pol*`, la polaroid de la sección de cumpleaños: es otra pieza, tiene
-   su propio bloque y sigue viva. */
+   el owner retiró en `#309`. Se fueron con su único consumidor. (La otra polaroid, `.bd-pol*`, la
+   de la página vieja de `/cumpleanos`, se fue en `#528`.) */
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    SECCIÓN 06 · «RESEÑAS» · UNA OPINIÓN A LA VEZ
@@ -3873,457 +3872,19 @@ select:focus-visible {
   .price__num { font-size: 56px; }
 }
 
-/* ====================================================================
-   Sección Cumpleaños (#231) — rediseño en 3 secciones (mockup
-   `design_mockup/seccion-cumpleanos.css`). 01 banda pack · 02 invitación ·
-   03 proceso. Acento `--bda` = pack activo (lo fija el blade inline). Omitidos
-   del mockup: `.bd-day` (decisión clienta), `.bd-toast`/`.bd-main` (demo).
-   ==================================================================== */
-/* ⚠️ `--bda` es un ALIAS del acento activo (`DECISIONES #139`). Valía `var(--jump-1)`: la paleta de
-   una zona del primer cliente, así que una instalación sin una zona con ese acento perdía el color de
-   toda la sección de cumpleaños. El acento por pack lo pinta el blade en línea. */
-.bd-page { --bda: var(--zone-1); }
+/* ⚠️ Aquí empezaba la sección de cumpleaños heredada (`#231`: la banda, la polaroid, el paso a paso
+   y el editor de invitaciones). Se retiró entera en `#528`, cuando `/cumpleanos` se rehízo desde su
+   artboard; de ella sobrevive solo la unidad de la tarifa, que compartía esta regla. */
+.price__per { font-family: var(--font-mono); font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
 
-/* ---- 01 · CUMPLEAÑOS — banda ---- */
-/* ⚠️⚠️ **El mismo ritmo que `.section`, y su relleno inferior YA NO ES CERO.** Esta banda no es un
-   `.section` —tiene fondo propio— así que quedaba fuera de la escala: con `64px 0 0` el aire a su
-   alrededor era la MITAD que entre las demás (96 y 110 contra 193, medido). */
-.bd-sec1 { padding: 120px 0; }
-/* En /cumpleanos la sección es el primer contenido bajo el nav FIJO → despeje superior
-   (mismo que `.page`). En la landing va a mitad de página y conserva los 64px. */
-.bd-standalone .bd-sec1 { padding-top: clamp(108px, 14vh, 156px); }
-.bd-band {
-  background: var(--bda); color: var(--on-brand);
-  border-radius: var(--r-lg);
-  padding: 56px clamp(28px, 5vw, 72px) clamp(40px, 5vw, 64px);
-  position: relative; overflow: hidden;
-  transition: background-color var(--dur-cae) var(--ease-sale);
-}
-/* ⚠️ Aquí vivía `.bd-shape`: los cuatro cuadrados «foam» del cliente ANTIGUO, colocados con estilo
-   en línea desde el marcado. Retirados en `#309` con sus cuatro `<span>`.
-   ▶ En su sitio, `.bd-band__figura`: el CONTORNO de la pose de cumpleaños. El tratamiento lo manda
-   `F6` del artboard —sobre color saturado, contorno; sobre papel, silueta plana—, no el gusto de
-   quien lo escribe. */
-/* ⚠️ **Cabe ENTERA a propósito.** El primer intento la sacaba por el canto derecho (300 px de ancho,
-   597 de alto, **26 px fuera**) y con `overflow: hidden` en la banda lo que se veía era medio
-   contorno: no se leía como una figura, se leía como un garabato. La pose ocupa el hueco de pañuelo
-   que queda a la derecha del titular, POR ENCIMA de los toggles. */
-.bd-band__figura {
-  position: absolute; pointer-events: none;
-  right: 3%; top: 24px;
-  width: min(15%, 170px); height: auto;
-  --ilu-fg: var(--on-brand);
-  opacity: 0.5;
-}
-.bd-band__head { max-width: 860px; margin-bottom: 44px; position: relative; z-index: 1; }
-.bd-band__eyebrow {
-  font-size: var(--fs-12); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--on-brand);
-  display: inline-flex; align-items: center; gap: var(--sp-8); margin-bottom: var(--sp-16);
-}
-.bd-band__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(44px, 6.4vw, 100px);
-  line-height: 0.88; letter-spacing: -0.035em; margin: 0 0 26px;
-}
-/* ══ LOS TOGGLES DE PACK · al ancho de la tarjeta de precio (`#309`) ═══════════════════════════
-   `[DECIDIDO owner]`: «al mismo ancho de la card del precio del pack cumpleaños».
 
-   ⚠️⚠️ **El ancho se DERIVA de la rejilla, no se teclea.** `.bd-grid` es `0.95fr 1.05fr` con un
-   `gap` variable, así que la columna donde vive la tarjeta mide `(100% − gap) · 1.05/2`. Escribir
-   aquí un `420px` a ojo funcionaría a un ancho y se despegaría en todos los demás — y el defecto
-   sería invisible salvo mirando las dos piezas a la vez. Por eso el `gap` sale a token: lo leen la
-   rejilla Y este cálculo, que es lo que los mantiene atados.
 
-   ⚠️ Van a la DERECHA (`margin-inline-start: auto`) porque ahí está la tarjeta que gobiernan.
-   ⚠️ Y son PEGATINA, no píldoras: sobre la banda de color el borde de tinta y la sombra dura son
-   lo que los separa del fondo — el registro «SEÑAL» del sistema de etiquetas. */
-.bd-grid, .bd-tabs { --bd-gap: clamp(36px, 4vw, 64px); }
-.bd-tabs {
-  display: flex; gap: var(--sp-10); flex-wrap: wrap;
-  width: calc((100% - var(--bd-gap)) * 1.05 / 2);
-  margin: 0 0 var(--sp-20) auto;
-  position: relative; z-index: 1;
-}
-.bd-tab {
-  flex: 1 1 0; min-width: 0;
-  display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
-  border: 1px solid var(--paper-fg);
-  border-radius: var(--r-lg);
-  padding: var(--sp-14) var(--sp-16);
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: var(--fs-16); letter-spacing: -0.01em; text-transform: uppercase;
-  color: var(--paper-fg); background: var(--paper-bg-card); cursor: pointer;
-  box-shadow: var(--shadow-float);
-  transition:
-    background-color var(--dur-estado) var(--ease-sale),
-    color var(--dur-estado) var(--ease-sale),
-    box-shadow var(--dur-estado) var(--ease-sale);
-}
-/* El icono del PRODUCTO, no un adorno: sale de `iconKey()` y el parque lo cambia en el panel. */
-.bd-tab__ico { flex: none; }
-/* T9: `anywhere` partía «CUMPLEAÑOS» sin guion a 390 (el nombre del pack lo escribe el PANEL, así
-   que no hay regla de longitud posible). `hyphens` parte por diccionario (CUM-PLE-AÑOS) y
-   `break-word` queda de red para un nombre sin puntos de guion. */
-.bd-tab__t { min-width: 0; hyphens: auto; overflow-wrap: break-word; }
-/* La sombra RESPONDE, la tarjeta no se levanta — la misma decisión que `.ride-card` en `#303`. */
-.bd-tab:hover { box-shadow: none; }
-.bd-tab.is-active { background: var(--paper-fg); color: var(--paper-bg-card); box-shadow: none; }
-.bd-band__body { font-size: var(--fs-18); line-height: 1.55; margin: 0; max-width: 56ch; }
-
-.bd-grid {
-  display: grid; grid-template-columns: 0.95fr 1.05fr;
-  gap: var(--bd-gap);
-  /* ⚠️ **Defecto PREEXISTENTE, cazado al alinear los toggles con la tarjeta** (`#309`): a 390 px la
-     pista medía **310** y `.bd-pack-col` **321** — la tarjeta se salía 11 px de su propia columna.
-     Una celda de rejilla tiene `min-width: auto`, así que un contenido ancho la ensancha en vez de
-     partirse. No se veía porque el desbordamiento cabía dentro del relleno de la banda. */
-  align-items: start; position: relative; z-index: 1;
-}
-.bd-grid > * { min-width: 0; }
-
-/* polaroid con la foto de la zona */
-.bd-pol {
-  position: relative; background: var(--sheet);
-  padding: 18px 18px 56px;
-  transform: rotate(-2.5deg);
-  box-shadow: none;
-  transition: transform var(--dur-cae) var(--ease-sale), box-shadow var(--dur-cae) var(--ease-sale);
-  margin-top: var(--sp-10);
-}
-.bd-pol:hover {
-  transform: rotate(0deg);   /* se endereza; no levita (tanda E, `#435`) */
-}
-.bd-pol__frame {
-  width: 100%; aspect-ratio: 4 / 5;
-  background: repeating-linear-gradient(135deg, var(--bg-soft) 0 14px, var(--bg) 14px 15px);
-  position: relative; overflow: hidden;
-}
-.bd-pol__frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.bd-pol__cap {
-  position: absolute; left: 0; right: 0; bottom: 18px; text-align: center;
-  font-size: var(--fs-11); text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
-}
-.bd-pol__tape {
-  position: absolute; top: -14px; left: 50%;
-  width: 130px; height: 28px;
-  transform: translateX(-50%) rotate(-3deg);
-  background: color-mix(in srgb, var(--sheet) 55%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--fg) 25%, transparent); z-index: 2;
-}
-.bd-pol__sticker {
-  position: absolute; top: 20px; right: -22px;
-  /* «¡Felicidades!» en magenta puro sobre tinta daba 4,11 (auditoría C3, `#434`): el acento se ACLARA
-     hacia el papel —la salida que el sistema del cliente da a sus enlaces en tinta («aclarar en
-     tinta»)— y con el magenta queda en 5,15; con cualquier acento de zona (cian, lima) sube más. */
-  background: var(--fg); color: color-mix(in srgb, var(--bda) 72%, var(--paper-bg));
-  font-size: var(--fs-11); font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  padding: var(--sp-6) var(--sp-14); transform: rotate(8deg);
-  border-radius: var(--r-sm);
-  box-shadow: none; z-index: 3;
-}
-.bd-pol__ticket {
-  position: absolute; bottom: -26px; right: -28px;
-  background: var(--bg-card); color: var(--fg);
-  padding: 16px 26px 14px; border-radius: var(--r-md);
-  transform: rotate(5deg);
-  box-shadow: none;
-  display: flex; flex-direction: column; align-items: center;
-  z-index: 4; text-align: center; min-width: 132px;
-}
-.bd-pol__ticket::before, .bd-pol__ticket::after {
-  content: ""; position: absolute; top: 50%;
-  transform: translateY(-50%);
-  width: 14px; height: 14px; border-radius: 50%;
-  background: var(--bda); transition: background-color var(--dur-cae) var(--ease-sale);
-}
-.bd-pol__ticket::before { left: -7px; }
-.bd-pol__ticket::after { right: -7px; }
-.bd-pol__ticket .lbl { font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; color: var(--fg-mute); }
-.bd-pol__ticket .num {
-  font-family: var(--font-display); font-stretch: 75%; font-weight: 800;
-  font-size: 38px; line-height: 1; letter-spacing: -0.025em; margin-top: var(--sp-4);
-}
-.bd-pol__ticket .sub { font-size: var(--fs-11); font-weight: 600; color: var(--fg-mute); }
-
-/* pack card */
-.bd-pack {
-  background: var(--bg-card); color: var(--fg); border-radius: var(--r-lg);
-  padding: 26px 28px 28px;
-  box-shadow: none;
-}
-.bd-pack__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-18); margin-bottom: var(--sp-20); }
-/* Chip de tarifa especial (#267) en la card de pack: la card NO es flex-gap como `.price`, así que
-   el chip lleva su propio margen (sube junto al precio, separa de las ventajas). Alineado a la
-   derecha para quedar DEBAJO DEL PRECIO (que va a la derecha en la cabecera). */
-.bd-pack .price__special { justify-content: flex-end; margin: -10px 0 20px; }
-.bd-pack__label { font-size: var(--fs-11); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--fg-mute); }
-.bd-pack__price { display: flex; align-items: baseline; gap: var(--sp-7); white-space: nowrap; }
-.bd-pack__price .val { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 34px; line-height: 1; letter-spacing: -0.03em; }
-.bd-pack__price .per, .price__per { font-family: var(--font-mono); font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.bd-pack__list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--sp-13); }
-.bd-pack__list li { display: flex; align-items: flex-start; gap: var(--sp-12); }
-.bd-check {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: var(--bda); color: var(--fg);
-  display: grid; place-items: center; flex-shrink: 0; margin-top: var(--sp-1);
-  transition: background-color var(--dur-cae) var(--ease-sale);
-}
-.bd-feat__t { font-size: 14.5px; font-weight: 600; display: block; }
-.bd-feat__s { font-size: 12.5px; color: var(--fg-mute); display: block; margin-top: var(--sp-1); }
-
-/* Los complementos reales (addons-mini) ya traen su PROPIO separador (borde punteado) y margen.
-   NO añadir aquí otro borde: dejaría dos líneas (recta + punteada) → un solo separador (#231 p1). */
-
-.bd-pack__note { font-size: 12.5px; color: var(--fg-mute); margin: var(--sp-18) 0 0; padding-top: var(--sp-16); border-top: 1px solid var(--line); }
-.bd-pack__note strong { color: var(--fg); font-weight: 600; }
-.bd-pack__cta {
-  display: flex; align-items: center; justify-content: center; gap: var(--sp-10);
-  width: 100%; background: var(--action); color: var(--on-action);
-  border-radius: var(--r-btn); padding: 16px 22px;
-  font-size: var(--fs-15); font-weight: 600; margin-top: var(--sp-20); cursor: pointer;
-  transition: transform var(--dur-entra) var(--ease-entra), background-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
-}
-/* Tres efectos a la vez —salto, escala y sombra— en el CTA de la banda más cargada de la web (auditoría
-   M1, G13). Queda la respuesta de color, como `.btn` (`#321`); la pisada sigue en `:active`. */
-.bd-pack__cta:hover { background: var(--action-hover); color: var(--on-action-hover); }
-.bd-pack__cta:active { transform: translateY(0) scale(0.98); transition: transform var(--dur-toque) var(--ease-sale); }
-.bd-pack__cta svg { transition: transform var(--dur-entra) var(--ease-entra); }
-.bd-pack__cta:hover svg { transform: translateX(5px); }
-
-/* enlace sutil a la invitación (solo landing), JUSTO DEBAJO de la card del pack (#231).
-   Secundario: no compite con el CTA sólido «Reservar cumpleaños» de la card. */
-.bd-invite-cta {
-  display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
-  margin-top: var(--sp-14); text-align: center;
-  font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600;
-  color: var(--on-brand); opacity: 0.78;
-  transition: color var(--dur-sale) var(--ease-sale), opacity var(--dur-sale) var(--ease-sale), gap var(--dur-sale) var(--ease-sale);
-}
-.bd-invite-cta:hover { color: var(--on-brand); opacity: 1; gap: var(--sp-12); }
-.bd-invite-cta svg { flex-shrink: 0; transition: transform var(--dur-estado) var(--ease-sale); }
-.bd-invite-cta:hover svg { transform: translateX(3px); }
-
-/* ---- 02 · INVITACIÓN ---- */
-.bd-sec2 { padding: 96px 0; }
-.bd-sec2__head { max-width: 860px; margin-bottom: 48px; }
-.bd-sec2__head .eyebrow { display: block; margin-bottom: var(--sp-16); }
-.bd-sec2__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(40px, 5.4vw, 84px); line-height: 0.88; letter-spacing: -0.035em; margin: 0 0 var(--sp-18);
-}
-.bd-sec2__title em { font-style: normal; color: var(--bda); transition: color var(--dur-cae) var(--ease-sale); }
-.bd-sec2__intro { font-size: var(--fs-18); line-height: 1.55; color: var(--fg-mute); max-width: 56ch; margin: 0; }
-.bd-inv { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: var(--sp-28); align-items: stretch; }
-.bd-editor { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px; display: flex; flex-direction: column; gap: var(--sp-18); }
-.bd-editor__title { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.bd-fields { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-12); }
-.bd-field { display: flex; flex-direction: column; gap: var(--sp-6); }
-.bd-field--full { grid-column: 1 / -1; }
-.bd-field label { font-size: var(--fs-11); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
-/* ⚠️ Mismo suelo táctil que `.form__field input` (`#476`): son campos de la MISMA web y este
-   formulario es el de reservar un cumpleaños, o sea el que más se rellena con el pulgar. */
-.bd-field input {
-  font: inherit; font-size: var(--fs-14); color: var(--fg);
-  background: var(--bg); border: 1px solid var(--line-strong); border-radius: var(--r-md);
-  padding: var(--sp-11) var(--sp-13); outline: none; width: 100%;
-  min-height: var(--tap-min);
-  transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-sale) var(--ease-sale);
-}
-.bd-field input:focus { border-color: var(--bda); box-shadow: 0 0 0 3px color-mix(in oklab, var(--bda) 25%, transparent); }
-.bd-swatches { display: flex; gap: var(--sp-8); }
-.bd-swatch {
-  display: inline-flex; align-items: center; gap: var(--sp-8);
-  border: 1px solid var(--line-strong); border-radius: var(--r-pill);
-  padding: var(--sp-8) var(--sp-16); font-size: var(--fs-12); font-weight: 600; cursor: pointer; background: transparent; color: var(--fg);
-  transition: border-color var(--dur-sale) var(--ease-sale), background-color var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--ease-sale);
-}
-.bd-swatch:hover { border-color: var(--fg); }
-.bd-swatch .dot { width: 12px; height: 12px; border-radius: 50%; }
-/* El punto del swatch toma el acento que la propia paleta pinta en línea. Antes había una regla por
-   zona —`--jump` y `--kids`— y un parque con otras zonas se quedaba con puntos invisibles. */
-.bd-swatch .dot { background: var(--zone-1); }
-.bd-swatch.is-active { border-color: var(--fg); background: var(--fg); color: var(--bg); }
-.bd-editor__actions { display: flex; gap: var(--sp-10); flex-wrap: wrap; margin-top: auto; }
-/* T9: `.bd-btn` RETIRADA — el par del editor de invitaciones usa `.btn`/`.btn--ghost`, la familia
-   única del contenido. No pierde nada al absorberse: la pisada (`:active`) y el texto-sigue-al-rol
-   que estrenó aquí viven ahora en la base `.btn`. */
-.bd-editor__hint { font-size: 11.5px; color: var(--fg-mute); margin: 0; }
-.bd-stage { background: var(--bg-soft); border-radius: var(--r-lg); border: 1px solid var(--line); display: grid; place-items: center; padding: clamp(32px, 4vw, 56px); position: relative; overflow: hidden; }
-.bd-stage__shape { position: absolute; pointer-events: none; background: var(--zone-1); transition: background-color var(--dur-cae) var(--ease-sale); }
-.bd-card {
-  /* La tarjeta usa la paleta COMPLETA de la zona elegida: `--inv2` valía lo mismo que `--inv`
-     porque el segundo color no tenía dónde vivir hasta `#138`. */
-  --inv: var(--zone-1); --inv2: var(--zone-2);
-  width: min(560px, 100%); background: var(--sheet); border-radius: var(--r);
-  box-shadow: none;
-  transform: rotate(-2deg); position: relative; overflow: hidden;
-  transition: transform var(--dur-cae) var(--ease-sale);
-}
-.bd-card:hover { transform: rotate(0deg); }
-/* Estado de CAPTURA (html2canvas, #231 p2): la añade `birthdayInvite._render` al clon antes de
-   pintar para que el PNG sea un frame en REPOSO y RECTO — sin rotación de la tarjeta, sin las
-   animaciones de banderines/estrella/letras (que saldrían a mitad de animación). Fiel a la vista. */
-.bd-card--capturing { transform: none !important; }
-/* Mata TODA animación y TRANSICIÓN en el clon de captura → frame en reposo, sin nada a medias
-   (la transición de las letras podía dispararse durante el render; revisión #232). */
-.bd-card--capturing, .bd-card--capturing * { animation: none !important; transition: none !important; }
-.bd-card--capturing .bd-card__star { transform: rotate(10deg) !important; translate: 0 0 !important; }
-.bd-card--capturing .bd-card__name .ltr { transform: rotate(var(--lr, 0deg)) !important; }
-.bd-card__bunting { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: center; gap: var(--sp-7); padding: 0 var(--sp-18); pointer-events: none; z-index: 2; }
-/* Banderines como triángulos de BORDE (no clip-path) → html2canvas los captura fiel (#231 p2). */
-.bd-card__bunting .flag {
-  width: 0; height: 0; flex-shrink: 0; transform-origin: top center;
-  border-left: 15px solid transparent; border-right: 15px solid transparent;
-  border-top: 22px solid var(--inv);
-}
-.bd-card__bunting .flag:nth-child(3n + 1) { border-top-color: var(--inv); }
-.bd-card__bunting .flag:nth-child(3n + 2) { border-top-color: var(--fg); }
-.bd-card__bunting .flag:nth-child(3n) { border-top-color: var(--inv2); }
-.bd-card__bunting .flag:nth-child(even) { border-top-width: 18px; }
-/* Las banderitas QUIETAS (`[DECIDIDO owner, 2026-09-03]` D6, auditoría M10, `#435`): eran once bucles
-   sin fin —más la estrella— en una página cuyo presupuesto de movimiento (`#279`) es de dos, y la
-   tarjeta las lleva dibujadas igual de bien quietas. `MotionBudgetTest` cuenta los `infinite`. */
-.bd-card__conf { position: absolute; pointer-events: none; z-index: 1; border-radius: 3px; }
-.bd-card__conf--1 { width: 12px; height: 12px; top: 64px; left: 26px; background: var(--inv2); transform: rotate(22deg); }
-.bd-card__conf--2 { width: 8px; height: 8px; top: 120px; right: 150px; background: var(--inv); transform: rotate(-15deg); }
-.bd-card__conf--3 { width: 10px; height: 10px; bottom: 110px; right: 28px; background: var(--fg); transform: rotate(38deg); border-radius: 50%; }
-.bd-card__conf--4 { width: 7px; height: 7px; bottom: 56px; left: 40px; background: var(--inv); transform: rotate(-30deg); }
-.bd-card__star {
-  position: absolute; top: 40px; right: 26px; z-index: 3;
-  width: 104px; height: 104px;
-  /* La estrella la dibuja un SVG hijo (no clip-path) → captura fiel con html2canvas (#231 p2). */
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  transform: rotate(10deg);
-  transition: transform var(--dur-cae) var(--ease-entra);
-}
-.bd-card__star-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.bd-card__star-svg polygon { fill: var(--inv); transition: fill var(--dur-cae) var(--ease-sale); }
-.bd-card__star .num, .bd-card__star .yrs { position: relative; z-index: 1; }
-.bd-card:hover .bd-card__star { transform: rotate(-4deg) scale(1.08); }
-/* (la estrella flotaba en bucle: quieta desde D6, `#435`) */
-.bd-card__star .num { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 38px; line-height: 0.9; letter-spacing: -0.03em; color: var(--fg); }
-.bd-card__star .yrs { font-size: var(--fs-10); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg); }
-.bd-card__inner { padding: 52px 30px 24px; min-width: 0; position: relative; z-index: 2; }
-.bd-card__top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); margin-bottom: 26px; padding-right: 116px; }
-.bd-card__brand { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-17); letter-spacing: -0.04em; }
-.bd-card__brand .dot { color: var(--inv); }
-.bd-card__eyebrow { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.bd-card__msg { font-size: var(--fs-15); font-weight: 600; color: var(--fg-mute); margin: 0 0 var(--sp-6); padding-right: 116px; }
-.bd-card__name {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(44px, 5vw, 64px); line-height: 0.95; letter-spacing: -0.02em;
-  margin: 0 0 24px; overflow-wrap: anywhere; padding-right: 96px;
-}
-.bd-card__name .ltr { display: inline-block; transform: rotate(var(--lr, 0deg)); transition: transform var(--dur-entra) var(--ease-entra); }
-.bd-card__name .ltr-0 { --lr: -3deg; }
-.bd-card__name .ltr-1 { --lr: 2.5deg; color: var(--inv); }
-.bd-card__name .ltr-2 { --lr: -1.5deg; }
-.bd-card__name .ltr-3 { --lr: 3deg; color: var(--inv2); }
-.bd-card:hover .bd-card__name .ltr { transform: translateY(-6px) rotate(var(--lr, 0deg)); }
-.bd-card__name .sp { display: inline-block; width: 0.3em; }
-.bd-card__details { border-top: 2px dashed var(--line-strong); }
-.bd-card__row { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-11) 0; border-bottom: 2px dashed var(--line); font-size: var(--fs-14); }
-.bd-card__row .ico { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: var(--inv); color: var(--fg); display: grid; place-items: center; transition: background-color var(--dur-cae) var(--ease-sale); }
-.bd-card__row:nth-child(2) .ico { background: var(--inv2); }
-.bd-card__row:nth-child(3) .ico { background: var(--fg); color: var(--bg); }
-.bd-card__row .lbl { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); width: 52px; flex-shrink: 0; }
-.bd-card__row .val { font-weight: 600; }
-.bd-card__ps { font-size: 12.5px; color: var(--fg-mute); margin: var(--sp-14) 0 0; font-style: italic; }
 
 /* ---- 03 · PROCESO ---- */
-/* ⚠️ El relleno inferior sube a 120 para cerrar el bloque de cumpleaños con el MISMO aire que
-   separa a las demás secciones. `.bd-page` tiene DOS hijos en la portada —`bd-sec1` y este
-   «paso a paso»—, así que quien manda en el aire de salida es éste, no la banda de arriba. */
-.bd-sec3 { padding: 88px 0 120px; }
 
-/* ⚠️⚠️ **Estas dos van AQUÍ y no en el bloque de 768 de más arriba, y no es colocación: es
-   CASCADA.** Se escribieron allí primero y no hicieron nada — a igual especificidad gana la última
-   regla del fichero, y las bases de `.bd-sec1`/`.bd-sec3` viven ~100 líneas MÁS ABAJO que aquel
-   `@media`. El síntoma era el peor posible: el aire de móvil seguía en 200 contra 160 y el CSS
-   parecía correcto al leerlo. */
-@media (max-width: 768px) {
-  .bd-sec1 { padding: 80px 0; }
-  .bd-sec3 { padding: 64px 0 80px; }
-}
-.bd-sec3__top { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line); padding-bottom: var(--sp-28); }
-.bd-sec3__top .eyebrow { display: block; margin-bottom: var(--sp-14); }
-.bd-sec3__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(38px, 4.6vw, 72px); line-height: 0.88; letter-spacing: -0.035em; margin: 0; }
-.bd-sec3__title em { font-style: normal; color: var(--bda); transition: color var(--dur-cae) var(--ease-sale); }
-.bd-proc__count { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 30px; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; }
-.bd-proc__count .of { color: var(--fg-mute); font-size: var(--fs-18); }
-.bd-proc { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: clamp(24px, 4vw, 56px); align-items: center; padding: 44px 0 40px; border-bottom: 1px solid var(--line); }
 @keyframes bdProcIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-.bd-proc__num { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(110px, 13vw, 210px); line-height: 0.8; letter-spacing: -0.04em; color: transparent; -webkit-text-stroke: 1.5px var(--fg); user-select: none; }
-.bd-proc__body { min-width: 0; }
-@media (prefers-reduced-motion: no-preference) {
-  .bd-proc__num, .bd-proc__body { animation: bdProcIn var(--dur-cae) var(--ease-sale) both; }
-  .bd-proc__body { animation-delay: var(--dur-toque); }
-}
-.bd-proc__kicker { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); display: block; margin-bottom: var(--sp-12); }
-.bd-proc__t { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(30px, 3.6vw, 54px); line-height: 0.92; letter-spacing: -0.03em; margin: 0 0 var(--sp-12); text-wrap: balance; }
-.bd-proc__s { font-size: var(--fs-16); line-height: 1.55; color: var(--fg-mute); margin: 0; max-width: 46ch; }
-.bd-proc__arrows { display: flex; gap: var(--sp-10); align-self: end; }
-.bd-proc__arrow { width: 50px; height: 50px; border: 1px solid var(--line-strong); border-radius: 50%; display: grid; place-items: center; color: var(--fg); background: transparent; cursor: pointer; transition: background-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), transform var(--dur-estado) var(--ease-sale); }
-.bd-proc__arrow:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.bd-proc__rail { display: flex; align-items: flex-start; padding-top: 36px; }
-.bd-proc__stop { display: flex; flex-direction: column; align-items: center; gap: var(--sp-10); flex-shrink: 0; cursor: pointer; background: transparent; border: 0; }
-.bd-proc__cube {
-  width: 54px; height: 54px; border: 1.5px solid var(--line-strong); border-radius: 13px;
-  transform: rotate(8deg); display: grid; place-items: center;
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: var(--fs-17); letter-spacing: -0.02em;
-  background: var(--bg-card); color: var(--fg);
-  transition: transform var(--dur-entra) var(--ease-entra), background-color var(--dur-estado) var(--ease-sale), border-color var(--dur-estado) var(--ease-sale), color var(--dur-estado) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
-}
-.bd-proc__stop:nth-child(4n + 3) .bd-proc__cube { transform: rotate(-7deg); }
-.bd-proc__stop:hover .bd-proc__cube { transform: rotate(0deg) translateY(-4px); }
-.bd-proc__stop.is-active .bd-proc__cube { background: var(--bda); color: var(--on-brand); border-color: transparent; transform: rotate(0deg) scale(1.12); box-shadow: var(--shadow-lift); }
-.bd-proc__stop.is-done .bd-proc__cube { background: var(--fg); border-color: transparent; color: var(--bg); }
-.bd-proc__lbl { font-size: var(--fs-11); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); transition: color var(--dur-sale) var(--ease-sale); }
-.bd-proc__stop.is-active .bd-proc__lbl { color: var(--fg); }
-.bd-proc__seg { flex: 1; height: 0; border-top: 2px dashed var(--line-strong); margin: 27px 14px 0; position: relative; transition: border-color var(--dur-entra) var(--ease-sale); }
-.bd-proc__seg.is-filled { border-top-style: solid; border-top-color: var(--fg); }
 
 /* ---- responsive ---- */
-@media (max-width: 1080px) { .bd-proc__num { font-size: 96px; } }
-@media (max-width: 900px) {
-  .bd-grid { grid-template-columns: 1fr; }
-  /* `width:100%` IMPRESCINDIBLE: como `.bd-pol` es grid item, el `margin-inline:auto` desactiva el
-     stretch y lo dimensiona por contenido; con la foto en position:absolute el contenido aporta 0
-     → el marco colapsaba y la FOTO no se veía en móvil. Con ancho definido (100%, tope 420, centrado)
-     el `.bd-pol__frame { width:100% }` ya resuelve y la imagen aparece (#232). */
-  .bd-pol { width: 100%; max-width: 420px; margin-inline: auto; }
-  .bd-inv { grid-template-columns: 1fr; }
-  .bd-card__name { font-size: 40px; }
-  /* Móvil/tablet (#231 p4 / #232): la leyenda de la polaroid (`.bd-pol__cap`) y la cinta
-     (`.bd-pol__tape`) quedaban tapadas/sueltas tras el ticket «Pack cumple 8+». Se ocultan en
-     pantallas estrechas (la FOTO se mantiene).
-     ⚠️ Aquí también se ocultaba `.bd-shape`; se ha ido con su regla base en `#309` — retirar una
-     regla y dejar su `@media` detrás es el defecto que `#295` pagó tres veces. */
-  .bd-pol__cap { display: none; }
-  .bd-pol__tape { display: none; }
-  /* Los toggles ocupan el ancho entero: apilada la rejilla, ya no hay columna a la que igualarse. */
-  .bd-tabs { width: 100%; margin-inline-start: 0; }
-  .bd-band__figura { width: min(46%, 200px); opacity: 0.32; }
-}
-@media (max-width: 560px) {
-  .bd-band { padding: 40px 24px; }
-  .bd-proc { grid-template-columns: 1fr; gap: var(--sp-18); }
-  .bd-proc__num { font-size: 80px; }
-  .bd-proc__arrows { align-self: start; }
-  .bd-proc__lbl { display: none; }
-  /* ⚠️ El cubo es lo que da tamaño al BOTÓN `.bd-proc__stop`, así que su lado es el objetivo táctil
-     y sale del token: escrito a mano se quedó en 44 cuando `#470` subió el objetivo a 48 (`#476`). */
-  .bd-proc__cube { width: var(--tap-min); height: var(--tap-min); font-size: var(--fs-14); border-radius: 11px; }
-  .bd-proc__seg { margin: 22px 8px 0; }
-  .bd-card { transform: none; }
-  .bd-card__star { width: 84px; height: 84px; top: 34px; right: 16px; }
-  .bd-card__star .num { font-size: 30px; }
-  .bd-card__top, .bd-card__msg { padding-right: 90px; }
-  .bd-card__name { padding-right: 70px; }
-}
 
 /* ══ COLOCACIÓN DEL MATERIAL DE FACHADA ════════════════════════════════════════════════════════
    El QUÉ vive en `site.css` (`.grain`, `.spray`, `.rays`, las variantes de tira); aquí solo el
@@ -4637,8 +4198,8 @@ select:focus-visible {
    Carril de diseño Fase 2 · T2e (`DECISIONES #483`). Artboard `Cumpleanos PJP` **7b** (móvil) +
    `Escritorio PJP` **5a** (escritorio).
 
-   ⚠️⚠️ **El marcado heredado (`.bd-*`) NO se toca y sigue vivo**: lo pinta `/cumpleanos`, que es una
-   PÁGINA con artboard propio y se rehace en la Fase 3. Aquí no se poda nada.
+   ⚠️ El marcado heredado (`.bd-*`) que pintaba `/cumpleanos` se retiró en `#528`, cuando la página
+   se rehízo desde su artboard; de esta sección la página comparte el reloj (`x-site.party-clock`).
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
 /* ⚠️⚠️ **AQUÍ VIVÍA LA CABECERA SOBRE FOTO A SANGRE, y se retiró con su marcado** (`#484`,
@@ -4823,7 +4384,229 @@ select:focus-visible {
    ⚠️ Por eso el margen lo pone el CONTEXTO y no el componente: es la misma pieza en dos sitios que
    piden aire distinto, y cambiarlo dentro movería también el de tarifas. */
 #events .rates__note { margin-top: var(--sp-20); }
-.party__mixed { margin: var(--sp-12) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
+
+/* ══ /cumpleanos · EL CUMPLE, AL DETALLE ════════════════════════════════════════════════════════
+   Carril de diseño Fase 3 · T3b (`DECISIONES #528`). Artboard `Cumpleanos Pagina PJP` 1a (móvil) +
+   1b (escritorio). Todo es TARJETA BLANCA con borde de Línea y canto de tarjeta —el sistema de la
+   página—, sin sombra: aquí no hay nada que se elija ni se compre dentro, salvo el contador.
+   ⚠️ Ningún color es literal: la cifra lee `--money`, lo incluido `--ok` y el aviso `--attn`, que
+   el paquete de cada instalación declara. Sin paquete salen en la tinta del producto.
+   ⚠️ El aire entre bloques es 40 en móvil (el del artboard dentro de una página) y el AIRE DE
+   SECCIÓN en escritorio (`--sec-air`, 144 en esta instalación), que es lo que el artboard escribe. */
+.party-page__block { margin-top: 40px; }
+.party-page__block > .addons-rail { margin-top: 0; }
+.party-page__title {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-title); line-height: 1.05;
+  color: var(--fg);
+}
+.party-page__lede {
+  margin: var(--sp-12) 0 0; max-width: 70ch;
+  font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute);
+}
+.party-page__note {
+  margin: var(--sp-12) 0 0; max-width: 70ch;
+  font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute);
+}
+
+/* EL CONTADOR: un solo control, y el total aparece en la columna de cada pack. */
+.party-compare { margin-top: var(--sp-20); }
+.party-count { display: flex; align-items: center; gap: var(--sp-14); }
+.party-count__q { flex: 1; min-width: 0; font-weight: 700; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
+.party-count__btn {
+  flex: none; width: var(--tap-min); height: var(--tap-min); padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-card); color: var(--interactive);
+  border: 1.5px solid var(--interactive); border-radius: var(--r-md);
+  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-20); line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-sale) var(--ease-sale),
+    color var(--dur-sale) var(--ease-sale),
+    border-color var(--dur-sale) var(--ease-sale);
+}
+.party-count__btn:hover:not(:disabled) { background: color-mix(in srgb, var(--interactive) 10%, var(--bg-card)); }
+.party-count__btn:disabled { color: var(--line-strong); border-color: var(--line-strong); cursor: default; }
+.party-count__n {
+  flex: none; min-width: 52px; text-align: center;
+  font-family: var(--font-display); font-size: var(--fs-title); line-height: 1; color: var(--fg);
+}
+
+/* LA COMPARATIVA: filas alineadas, la etiqueta en mono y un valor por pack. ⚠️ El envoltorio
+   desliza: con tres packs o más la tabla no cabe en un teléfono, y es lo único que puede ser más
+   ancho que la página. */
+.party-compare__scroll {
+  margin-top: var(--sp-16);
+  overflow-x: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.party-compare__table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.party-compare__table :is(th, td) { padding: var(--sp-12) var(--sp-8); text-align: left; vertical-align: baseline; }
+.party-compare__table tr > :first-child { padding-left: var(--sp-16); }
+.party-compare__table tr > :last-child { padding-right: var(--sp-16); }
+.party-compare__table thead :is(th, td) {
+  padding-top: var(--sp-14); padding-bottom: var(--sp-14);
+  background: var(--bg); border-bottom: 1px solid var(--line);
+}
+.party-compare__table tbody tr + tr { border-top: 1px solid var(--line); }
+.party-compare__corner { width: 96px; }
+.party-compare__pack { font-weight: 800; font-size: var(--fs-16); line-height: 1.2; color: var(--fg); overflow-wrap: anywhere; }
+.party-compare__label {
+  font-family: var(--font-mono); font-weight: 400;
+  font-size: var(--fs-11); letter-spacing: 0.1em; text-transform: uppercase;
+  line-height: 1.35; color: var(--fg-mute);
+}
+.party-compare__cell { font-size: var(--fs-17); line-height: 1.3; color: var(--fg); overflow-wrap: anywhere; }
+/* El precio es la única cifra que cambia de familia y de talla: es la que se compara. */
+.party-compare__row--price .party-compare__cell {
+  font-family: var(--font-display); font-weight: 400; font-size: var(--fs-20);
+  color: var(--money, var(--fg));
+}
+.party-compare__row--strong .party-compare__cell { font-weight: 700; }
+.party-compare__row--total .party-compare__cell { font-weight: 800; font-size: var(--fs-22); }
+.party-compare__row--list .party-compare__cell { font-size: var(--fs-body-s); line-height: 1.4; }
+.party-compare__line { display: block; }
+.party-compare__line + .party-compare__line { margin-top: var(--sp-6); }
+.party-compare__sub { display: block; color: var(--fg-mute); }
+.party-compare__foot { margin-top: var(--sp-4); }
+.party-compare__cta { display: none; }
+
+/* QUÉ COMEN: una tarjeta por opción, con la chapa de su precio y lo que lleva. ⚠️ La chapa de lo que
+   se paga va en Nube (`--bg-soft`) y no en el color de interacción: informa, no se pulsa. */
+.party-menus { list-style: none; margin: var(--sp-16) 0 0; padding: 0; display: grid; gap: var(--sp-12); }
+.party-menu { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-18); }
+.party-menu__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); }
+.party-menu__name {
+  margin: 0;
+  font-family: var(--font-display); font-weight: 400; font-size: var(--fs-20); line-height: 1;
+  color: var(--fg);
+}
+.party-menu__chip {
+  flex: none; white-space: nowrap;
+  border-radius: var(--r-pill); padding: var(--sp-6) var(--sp-11);
+  font-family: var(--font-mono); font-size: var(--fs-11); line-height: 1.2;
+  background: var(--bg-soft); color: var(--fg);
+}
+.party-menu__chip--included { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.party-menu__items { list-style: none; margin: var(--sp-12) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
+.party-menu__items li { display: flex; gap: var(--sp-10); align-items: flex-start; font-size: var(--fs-body); line-height: 1.45; color: var(--fg); }
+.party-menu__dot {
+  flex: none; width: 6px; height: 6px; margin-top: var(--sp-8);
+  border-radius: var(--r-pill); background: var(--money, var(--fg));
+}
+
+/* IGUAL EN LOS DOS: una lista de hechos con su marca de «incluido». */
+.party-shared__list {
+  list-style: none; margin: var(--sp-16) 0 0; padding: 0;
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+}
+.party-shared__item { display: flex; gap: var(--sp-12); align-items: flex-start; padding: var(--sp-14) var(--sp-18); }
+.party-shared__item + .party-shared__item { border-top: 1px solid var(--line); }
+.party-shared__tick {
+  flex: none; width: 20px; height: 20px; margin-top: var(--sp-2);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok-ink);
+}
+.party-shared__text { flex: 1; min-width: 0; }
+.party-shared__t { display: block; font-weight: 800; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
+.party-shared__d { display: block; margin-top: var(--sp-2); font-size: var(--fs-16); line-height: 1.45; color: var(--fg-mute); }
+
+/* DESPUÉS DE RESERVAR: lo que pide el formulario y lo que se añade desde él, en tarjetas con rótulo. */
+.party-form { margin-top: var(--sp-20); display: flex; flex-direction: column; gap: var(--sp-16); }
+.party-form__label {
+  margin: 0;
+  font-family: var(--font-mono); font-size: var(--fs-11); letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--fg-mute);
+}
+.party-form__card {
+  list-style: none; margin: var(--sp-10) 0 0; padding: 0;
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+}
+.party-form__row { padding: var(--sp-12) var(--sp-18); }
+.party-form__row + .party-form__row { border-top: 1px solid var(--line); }
+.party-form__t { display: block; font-weight: 800; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
+.party-form__d { display: block; margin-top: var(--sp-2); font-size: var(--fs-16); line-height: 1.45; color: var(--fg-mute); }
+
+/* EL CIERRE: la tarjeta de las edades mezcladas y el aviso con su círculo de atención. */
+.party-close { display: flex; flex-direction: column; gap: 40px; }
+.party-mixed { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-20); }
+.party-mixed__title {
+  margin: 0;
+  font-family: var(--font-body); font-weight: 700; font-size: var(--fs-subtitle); line-height: 1.25;
+  color: var(--fg);
+}
+.party-mixed__text { margin: var(--sp-12) 0 0; max-width: 70ch; font-size: var(--fs-17); line-height: 1.5; color: var(--fg-mute); }
+.party-info {
+  display: flex; gap: var(--sp-12); align-items: flex-start;
+  padding-top: var(--sp-20); border-top: 1.5px solid var(--line-strong);
+}
+.party-info__mark {
+  flex: none; width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-pill); background: var(--attn); border: 2px solid var(--paper-fg);
+  font-weight: 800; font-size: var(--fs-13); line-height: 1; color: var(--paper-fg);
+}
+.party-info__title { margin: 0; font-weight: 800; font-size: var(--fs-15); line-height: 1.35; color: var(--fg); }
+.party-info__text { margin: var(--sp-4) 0 0; font-size: var(--fs-15); line-height: 1.5; color: var(--fg-mute); }
+
+@media (min-width: 1024px) {
+  .party-page__block { margin-top: var(--sec-air); }
+  .party-page__lede { margin-top: var(--sp-16); }
+  .party-page__note { font-size: var(--fs-17); }
+
+  .party-count__q { font-size: 21px; }
+  .party-count__btn { width: 56px; height: 56px; }
+  .party-compare__scroll { margin-top: 24px; }
+  /* La retícula del artboard: etiqueta de 224 y 32 de hueco entre columnas (16 + 16). */
+  .party-compare__table :is(th, td) { padding: var(--sp-16); }
+  .party-compare__table thead :is(th, td) { padding-top: var(--sp-18); padding-bottom: var(--sp-18); }
+  .party-compare__table tr > :first-child { padding-left: 32px; }
+  .party-compare__table tr > :last-child { padding-right: 32px; }
+  .party-compare__corner { width: 224px; }
+  .party-compare__pack { font-size: var(--fs-20); }
+  .party-compare__label { font-size: var(--fs-12); }
+  .party-compare__row--price .party-compare__cell,
+  .party-compare__row--total .party-compare__cell { font-size: 26px; }
+  .party-compare__foot { display: flex; align-items: center; gap: 32px; margin-top: var(--sp-20); }
+  .party-compare__notes { flex: 1; min-width: 0; }
+  .party-compare__cta { display: inline-flex; flex: none; }
+
+  /* Sin la foto de la mesa, las opciones del menú ocupan la fila entera, una al lado de otra. */
+  .party-menus { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--sp-20); margin-top: 24px; }
+  .party-menu { padding: 24px; }
+  .party-menu__name { font-size: 26px; }
+  .party-menu__chip { font-size: var(--fs-12); }
+  .party-menu__items { margin-top: var(--sp-14); gap: var(--sp-7); }
+
+  /* «Igual»: el titular en su columna de 352 y la lista a dos columnas, sin filetes. */
+  .party-shared { display: flex; gap: 32px; align-items: flex-start; }
+  .party-shared__head { flex: none; width: 352px; }
+  .party-shared__list {
+    flex: 1; min-width: 0; margin-top: 0;
+    display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px;
+    padding: var(--sp-8) 24px;
+  }
+  .party-shared__item { padding: var(--sp-14) 0; }
+  .party-shared__item + .party-shared__item { border-top: 0; }
+
+  .party-form { flex-direction: row; gap: 32px; align-items: flex-start; margin-top: 24px; }
+  .party-form__col { flex: 1 1 0; min-width: 0; }
+  .party-form__label { font-size: var(--fs-12); }
+  .party-form__card { margin-top: var(--sp-12); }
+  .party-form__row { padding: var(--sp-14) var(--sp-20); }
+
+  .party-close { flex-direction: row; gap: 32px; }
+  .party-mixed { flex: 1; min-width: 0; padding: var(--sp-28); }
+  .party-mixed__text { margin-top: var(--sp-14); }
+  .party-info { flex: none; width: 352px; border-top: 0; padding-top: var(--sp-28); gap: var(--sp-14); }
+  .party-info__mark { width: 28px; height: 28px; font-size: var(--fs-15); }
+  .party-info__title { font-size: var(--fs-17); }
+  .party-info__text { font-size: var(--fs-16); }
+}
 
 @media (min-width: 1024px) {
   /* El reloj a DOS columnas: la regla escrita a la izquierda y el carril a la derecha, dentro del

@@ -72,7 +72,7 @@ class TouchTargetTest extends TestCase
         // docblock de esta lista: un literal de 44 que gana por especificidad al mínimo de `.btn`.
         '.form__field input, .form__field textarea' => 'campos de formulario: medían 46, y `#407` ya los fichó a 42 con sesión',
         '.form__field select' => 'el mismo suelo que su input hermano, o el formulario tiene dos alturas',
-        '.bd-field input' => 'el formulario de reservar cumpleaños, que es el que más se rellena con el pulgar',
+        // ⚠️ `.bd-field input` se fue en `#528` con el editor de invitaciones de `/cumpleanos`.
     ];
 
     /**
@@ -96,22 +96,14 @@ class TouchTargetTest extends TestCase
         // exactamente lo que tenía que hacer: sin ese aviso, el día que `.zone-tab` desapareciera
         // del todo este caso pasaría en verde sin mirar nada.
         'zone-tab' => ['/precios', 'pestaña de zona, 37 px, con la rejilla del mockup detrás'],
-        // ⚠️ Se mira en `/cumpleanos` y ya no en `/`: la banda heredada salió de la portada en
-        // `#483` y **sigue entera en su página**, que tiene artboard propio (Fase 3). Re-apuntar
-        // no debilita: el mismo control, en la única superficie donde hoy se pinta.
-        'bd-tab' => ['/cumpleanos', 'pestaña de cumpleaños, 41'],
-        // ⚠️⚠️ **`bd-invite-cta` SE RETIRA con su sujeto** (`#483`), y no es lo mismo que
-        // `bd-tab`: aquél sigue vivo en `/cumpleanos` y éste **no se pinta en ninguna parte**. Su
-        // rama es `@unless ($showInvite)`, o sea el enlace sutil que solo salía en la portada; con
-        // la banda heredada fuera de la portada, esa rama se queda sin llamante. La rama NO se
-        // borra: vive en un componente de `/cumpleanos`, que es página de la Fase 3. Ficha en
-        // `DEUDA.md`.
+        // ⚠️ `bd-tab`, `bd-invite-cta` y `bd-swatch` se fueron con la página vieja de `/cumpleanos`
+        // (`#483` el enlace de la portada, `#528` el resto): la página rehecha compara los packs
+        // lado a lado, sin pestañas, y ya no tiene editor de invitaciones.
         'cookie__config' => ['/', 'el «Configurar» del banner, 17'],
         'cookie__policy' => ['/', 'el enlace de la política dentro del panel, 16'],
         'ck-tgl' => ['/', 'el interruptor de finalidad: 42×24, y su ::after ya dibuja el pomo'],
         'page__back' => ['/normas', 'el «Volver al inicio» de las páginas de contenido, 21'],
         'svc-hero__jump' => ['/servicios', 'los saltos a cada servicio, 36'],
-        'bd-swatch' => ['/cumpleanos', 'las muestras de color de la invitación, 34'],
     ];
 
     protected function setUp(): void

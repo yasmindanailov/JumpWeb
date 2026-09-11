@@ -251,9 +251,8 @@ return [
         /*
          * La sección 04 «Cumpleaños» rehecha desde el canvas (`#483`). ⚠️ El RÓTULO no lleva número
          * y el TITULAR es una frase, como las otras siete.
-         * ⚠️⚠️ `title` sigue existiendo con su valor viejo porque lo usa **`/cumpleanos`**, que es
-         * una PÁGINA con artboard propio y se rehace en la Fase 3. Cambiarlo aquí habría movido el
-         * `<h1>` de esa página desde una tanda de la portada.
+         * ▶ `/cumpleanos` tiene su propio grupo, `birthday` (`#528`); de éste comparte el reloj, la
+         * edad del pack, `per_child`, `special_suffix`, el carril y el «próximamente».
          */
         'section_title' => 'El cumple, resuelto',
         // ⚠️ La entradilla **vende con una cifra** del catálogo; sin packs con precio cae a la
@@ -268,8 +267,6 @@ return [
         'per_child' => 'por niño',
         'special_suffix' => 'en tarifa especial',
         'see_pack' => 'Ver el cumple',
-        // El pie de la sección: la edad mezclada, en una línea y sin cifras.
-        'mixed_note' => '¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.',
         /*
          * EL RELOJ de las dos horas. ⚠️⚠️ **No reparte, y ésa es la regla**: las dos horas son para
          * todo —merienda, tarta y saltos— y no hay hora para nada. Un diagrama de tramos promete
@@ -283,60 +280,61 @@ return [
         // El bloque de complementos, con el molde compartido con las tarifas (`#483`).
         'addons_title' => 'Tu fiesta, tu manera',
         'addons_intro' => 'Añade lo que quieras: nada de esto hace falta para reservar.',
-        'eyebrow' => 'Cumpleaños', 'title' => 'Cumpleaños',
-        'included' => 'Incluido en el pack', 'from' => 'Desde',
-        'choose' => 'Elige tu cumpleaños',
+        'eyebrow' => 'Cumpleaños',
         'reserve_terms' => 'De :min a :max niños · Señal de :deposit € para reservar',
-        'reserve_terms_rich' => 'De :min a :max niños · <strong>Señal de :deposit € para reservar</strong>, se descuenta del total.',
-        'bd_photo_cap' => 'Cumpleaños que se recuerdan',
-        'bd_sticker' => '¡Felicidades!',
-        'bd_ticket_label' => 'Pack cumple',
-        'bd_ticket_sub' => 'invitados',
-        'invite_link' => '¿Te gustaría crear tu invitación personalizada?',
-        'process_eyebrow' => 'Cómo se reserva',
-        'process_title' => 'Paso a paso',
-        'process_step' => 'Paso', 'process_of' => 'de',
-        'process_prev' => 'Paso anterior', 'process_next' => 'Paso siguiente',
-        'process' => [
-            's1_k' => 'Reserva', 's1_t' => 'Eliges fecha y pack', 's1_s' => 'El día, la hora y el pack, en el calendario online.',
-            's2_k' => 'Datos', 's2_t' => 'Rellenas los datos', 's2_s' => 'Tus datos de contacto y el nombre del cumpleañero.',
-            's3_k' => 'Depósito', 's3_t' => 'Pagas :deposit € de depósito', 's3_s' => 'Guardan tu fecha y se descuentan del total. El resto, el día del cumple en el parque.',
-            's4_k' => 'Detalles', 's4_t' => 'Completas los detalles', 's4_s' => 'Invitados, alergias y tarta — sin prisa, cuando lo tengas claro.',
-            's5_k' => '¡Listo!', 's5_t' => '¡A esperar la fecha!', 's5_s' => 'Te recordamos todo por email 48 h antes.',
-        ],
-        'invite' => [
-            'eyebrow' => 'Invitación',
-            'title' => 'Tu invitación',
-            'intro' => 'Rellena los datos, elige el color de la zona y comparte la tarjeta con los invitados. Se actualiza al instante.',
-            'editor_title' => 'Editor — los cambios se guardan solos',
-            'color_label' => 'Color',
-            'card_eyebrow' => 'Fiesta de cumpleaños',
-            'card_msg' => '¡Ven a saltar a mi cumple!',
-            'card_ps' => 'PD: ven en calcetines — de los que no resbalan. ¡Vamos a saltar mucho!',
-            'lead' => '¡Te invito a mi cumpleaños!',
-            'years' => 'años',
-            'when' => 'Cuándo', 'time' => 'Hora', 'where' => 'Dónde',
-            'name_label' => 'Nombre', 'age_label' => 'Edad', 'date_label' => 'Fecha', 'time_label' => 'Hora',
-            'name_placeholder' => 'Nombre del cumpleañero/a',
-            'name_fallback' => 'tu nombre',
-            'date_fallback' => 'elige la fecha',
-            'sample_name' => 'Lucía',
-            'download' => 'Descargar tarjeta',
-            'share' => 'Compartir',
-            'hint' => 'Edita los datos, descarga la tarjeta y compártela con tus invitados.',
-            'share_text' => '¡Estás invitado/a a mi cumpleaños en :park! 🎉',
-        ],
-        'timeline_label' => 'Tu tarde, paso a paso',
-        'timeline' => [
-            ['time' => '17:00', 'label' => 'Llegada'],
-            ['time' => '17:15', 'label' => 'Saltos libres'],
-            ['time' => '18:30', 'label' => 'Pizza & tarta'],
-            ['time' => '19:00', 'label' => 'Foto de grupo'],
-            ['time' => '19:15', 'label' => 'Despedida'],
-        ],
-        'cta' => 'Reservar cumpleaños',
+        // `/cumpleanos` sin packs vendibles: la entradilla y su salida.
         'coming_soon' => 'Estamos preparando los packs de cumpleaños. Si quieres reservar antes, escríbenos y te ayudamos.',
         'coming_soon_cta' => 'Contactar',
+    ],
+    /*
+     * `/cumpleanos` · la página del cumple rehecha desde su artboard (`#528`, `Cumpleanos Pagina
+     * PJP`). ⚠️ Los PLURALES van por `trans_choice`: con uno, dos o más packs la página dice cosas
+     * distintas («El pack» · «Los dos packs» · «Igual en todos»), y los packs los pone el panel.
+     * ⚠️ No hay cifras escritas aquí: importes, edades, niños y plazos llegan del catálogo.
+     */
+    'birthday' => [
+        'title' => 'El cumple, al detalle',
+        'lede' => 'Lo que incluye cada pack, lo que cuesta y lo que se decide después de reservar.',
+        'packs_title' => '{1} El pack|{2} Los dos packs|[3,*] Los :count packs',
+        'count_question' => '¿Cuántos niños vienen?',
+        'count_less' => 'Un niño menos',
+        'count_more' => 'Un niño más',
+        'table_label' => 'Comparativa de los packs',
+        'row_each' => 'Por niño',
+        'row_each_special' => 'En tarifa especial',
+        'row_age' => 'Edad',
+        'row_kids' => 'Niños',
+        'row_duration' => 'Duración',
+        'row_deposit' => 'Señal',
+        'row_features' => 'Incluye',
+        'row_extend' => 'Alargar la fiesta',
+        'row_total' => 'Total',
+        'row_total_special' => 'Total en tarifa especial',
+        'kids' => 'De :min a :max niños',
+        'kids_from' => 'Desde :min niños',
+        'kids_note' => 'El mínimo y el máximo para reservar.',
+        'deposit_title' => 'Señal de :deposit para reservar',
+        'deposit_note' => 'Se descuenta del total.',
+        'deposit_line' => 'La señal de :deposit se descuenta del total; el resto se paga el día de la fiesta, en el parque.',
+        'book' => 'Reservar el cumple',
+        'menu_title' => 'Qué comen',
+        'choice_title' => 'A elegir',
+        'choice_lede' => '{1} Se elige al reservar.|{2} Se elige uno de los dos al reservar.|[3,*] Se elige uno de los :count al reservar.',
+        'shared_title' => '{1} Lo que incluye|{2} Igual en los dos|[3,*] Igual en todos',
+        'shared_lede' => '{1} Todo lo que trae el pack.|[2,*] Lo que no cambia de un pack a otro, para no tener que compararlo.',
+        'after_title' => 'Después de reservar',
+        'after_lede' => 'Al reservar te llega por correo el enlace al «:form», para contarnos quién viene. No hace falta rellenarlo del tirón: se puede cambiar hasta el día de la fiesta.',
+        'after_children' => 'De cada niño',
+        'after_group' => 'De vosotros',
+        'after_extras' => 'Lo que podéis añadir',
+        'after_paid' => 'Lo que se añade ahí se paga en el parque, el día de la fiesta.',
+        'cutoff' => 'hasta :time antes',
+        'cutoff_start' => 'hasta que empiece la fiesta',
+        'mixed_title' => '{2} ¿Y si vienen niños de las dos edades?|[3,*] ¿Y si vienen niños de edades distintas?',
+        'mixed_text' => 'Cada niño paga el pack que le toca por su edad, y la diferencia —a favor o en contra— se ajusta en recepción el día de la fiesta. Esa diferencia nunca se cobra online: lo que cambia después de reservar se arregla en el parque.',
+        'mixed_seal' => 'Y lo que reservaste no se mueve: cada reserva guarda las condiciones del día en que la hiciste, aunque cambien los precios.',
+        'info_title' => 'Personalizamos cada cumple',
+        'info_text' => 'Si hay una alergia, un miedo o una sorpresa que preparar, dínoslo y lo montamos.',
     ],
     'plan' => [
         'label' => 'Planea tu visita', 'heading' => 'Taquilla',

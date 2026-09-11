@@ -543,23 +543,9 @@
                  ⚠️ **La duración sale del catálogo**; sin ella el reloj no se pinta, porque su
                  titular es la duración. --}}
             @if ($partyDuration)
-                <div class="party__clock" data-surface="ink">
-                    <div class="party__clock-said">
-                        <h3 class="party__clock-title">{{ __('landing.events.clock_title', ['duration' => $partyDuration]) }}</h3>
-                        <p class="party__clock-rule">{{ __('landing.events.clock_rule') }}</p>
-                        <p class="party__clock-rule">{{ __('landing.events.clock_monitor') }}</p>
-                    </div>
-                    {{-- ⚠️ `aria-hidden`: las tres cápsulas y el filete son el DIBUJO de lo que la
-                         frase de al lado ya dice. Anunciarlas repetiría la regla en desorden. --}}
-                    <div class="party__clock-rail" aria-hidden="true">
-                        <ul class="party__clock-caps" role="list">
-                            <li>{{ __('landing.events.clock_a') }}</li>
-                            <li>{{ __('landing.events.clock_b') }}</li>
-                            <li>{{ __('landing.events.clock_c') }}</li>
-                        </ul>
-                        <span class="party__clock-line"></span>
-                    </div>
-                </div>
+                {{-- ⚠️ Desde `#528` es un COMPONENTE: `/cumpleanos` lo pinta también, y el artboard
+                     de la página dice que va «copiado del marcado de 04, no redibujado». --}}
+                <x-site.party-clock :duration="$partyDuration" />
             @endif
 
             {{-- LAS DOS TARJETAS. `[DECIDIDO owner]`: **la tarjeta entera es el enlace y lleva a
@@ -595,13 +581,10 @@
                     <li class="party__pack-item">
                         {{-- ⚠️⚠️ **SIN ANCLA, y es una decisión medida.** El artboard enlaza a
                              `#cumple-kids` / `#cumple-jump`, pero `/cumpleanos` **no emite esas
-                             anclas**: lo que tiene son `#bd-panel-<id>`, que son paneles de
-                             pestaña ocultos con `x-show`. Enlazar ahí sería el ancla muerta que
-                             `#482` acaba de fichar de `#478` (`/precios#zona-<slug>`, cero
-                             destinos). ▶ Y los dos packs viven en la MISMA zona (`cumpleanos`,
-                             medido), así que un ancla por zona daría el mismo destino dos veces.
-                             ▶ Cuando la Fase 3 rehaga `/cumpleanos`, el sitio de esto es un
-                             `?pack=` que el servidor honre — el mecanismo de `/atracciones`. --}}
+                             anclas**, y enlazar ahí sería el ancla muerta que `#482` fichó de
+                             `#478` (`/precios#zona-<slug>`, cero destinos). ▶ Y desde `#528` ya
+                             no hace falta: la página COMPARA los packs lado a lado, así que no
+                             hay un pack «al que llegar» — la tarjeta lleva a la comparativa. --}}
                         <a class="party-card" @if ($loop->even) data-surface="ink" @endif
                            href="{{ route('cumpleanos') }}">
                             <span class="party-card__chip">{{ $card['name'] }}</span>

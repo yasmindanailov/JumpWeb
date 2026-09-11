@@ -70,7 +70,8 @@ class ShapeScaleTest extends TestCase
         // `.hero__stat` entera estaba MUERTA —cero usos en `resources/`— y se fue con otras cinco.
         // Lo cazó esta misma guarda, que es para lo que está: una excepción sin sujeto tapa el
         // siguiente caso que se llame igual.
-        '.bd-proc__cube' => [44, 11.0],
+        // ⚠️ `.bd-proc__cube` (y su variante dentro de un `@media`) SE RETIRÓ en `#528` con el paso
+        // a paso de la página vieja de `/cumpleanos`: la excepción se va con su sujeto.
         '.catalog-acc__icon' => [30, 9.0],
         '.pwd-input__toggle' => [32, 6.0],
     ];
@@ -105,14 +106,13 @@ class ShapeScaleTest extends TestCase
         // dentro de su escala (`0 · 10 · 16 · 999`) justo para esto.
         '.rate-card__marker' => 'resalte tipo rotulador: el canto recto es lo que lo distingue de una '.
             'pastilla pulsable, y el 0 está en la escala del sistema',
-        '.bd-card__conf' => 'confeti del diseñador de invitaciones: dibujo',
+        // ⚠️ `.bd-card__conf`, el confeti de la invitación, se fue en `#528` con el editor.
         '.hero__chip:focus-visible' => 'anillo de foco sobre el vídeo del hero (ver el bloque de foco)',
         '.hero--full .hero__stage' => 'RESET: anula un radio heredado',
         // ⚠️ `.plan-select__panel a` vivía aquí y SE RETIRÓ el 2026-08-27 (armazón, tanda 2c·1):
         // los dos desplegables de la barra desaparecieron con ella y la familia entera se quedó
         // sin consumidor. Lo cazó esta misma guarda, que es para lo que está: una excepción sin
         // sujeto tapa al siguiente que se llame igual.
-        '.bd-proc__cube@media' => 'el cubo del proceso a otro tamaño dentro de un @media: sigue la ley',
     ];
 
     /**
@@ -178,7 +178,9 @@ class ShapeScaleTest extends TestCase
         );
 
         // Por NOMBRE, no por umbral: un contador no distingue «leo poco» de «leo otra cosa».
-        foreach (['.foot__strip', '.bd-card', '.offw-card'] as $needle) {
+        // ⚠️ `.bd-card` era una de las tres agujas y se fue en `#528`: la sustituye la ficha del
+        // carril de complementos, que vive en la portada, en tarifas y en `/cumpleanos`.
+        foreach (['.foot__strip', '.addon-card', '.offw-card'] as $needle) {
             $this->assertNotEmpty(
                 array_filter($radii, fn (array $r) => str_contains($r['selector'], $needle))
                     ?: array_filter($this->sheetContents(), fn (string $c) => str_contains($c, $needle)),

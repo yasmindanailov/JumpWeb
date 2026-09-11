@@ -112,8 +112,8 @@ final class PartyCards
             /*
              * ⚠️ **Aquí NO viaja la zona, y se probó.** La tarjeta enlazaba a
              * `/cumpleanos#<slug de zona>` y medido salía el MISMO destino para las dos: los dos
-             * packs viven en la zona `cumpleanos`. El enlace va a la página sin ancla — y cuando la
-             * Fase 3 la rehaga, lo que hará falta es el ID del pack en la query, no su zona.
+             * packs viven en la zona `cumpleanos`. El enlace va a la página sin ancla, y desde
+             * `#528` no hace falta más: la página compara los packs lado a lado.
              */
         ];
     }
@@ -126,8 +126,12 @@ final class PartyCards
      * sola frase con los números dentro obligaría a que el idioma adivinara el sentido.
      * ⚠️ Y sin tramo declarado devuelve `null`: la tarjeta se queda sin titular de edad en vez de
      * publicar un rango inventado. **Vacío es una respuesta.**
+     *
+     * ▶ Pública desde `#528`: la comparativa de `/cumpleanos` publica la MISMA edad en su fila, y
+     * una segunda redacción de estas tres frases es cómo la portada y la página acabarían diciendo
+     * dos tramos distintos del mismo pack.
      */
-    private function ageLabel(TicketType $pack): ?string
+    public function ageLabel(TicketType $pack): ?string
     {
         $min = $pack->guest_age_min;
         $max = $pack->guest_age_max;

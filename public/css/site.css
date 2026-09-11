@@ -565,8 +565,8 @@
    (port del mockup design_mockup/pagina-servicios-v2.css; SOLO la plantilla
    Editorial, que es la definitiva). Usa los tokens del sistema de diseño de
    landing.css; `--zone-1` = color de marca white-label (#7.10). El despeje
-   superior bajo el nav fijo se hace en `.svc-hero` (idéntico a `.page`/
-   `.bd-standalone`). Las fotos sangran al margen y las recorta el
+   superior bajo el nav fijo se hace en `.svc-hero` (idéntico a `.page`).
+   Las fotos sangran al margen y las recorta el
    `html,body{overflow-x:hidden}` global; `overflow-x:clip` en `.svc-main`
    blinda el contenedor por si acaso. Sin precios (reales [PENDIENTE]). */
 .svc-main { overflow-x: clip; }

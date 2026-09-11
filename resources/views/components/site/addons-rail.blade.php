@@ -7,6 +7,9 @@
     'lede',
     // Nivel del encabezado. La sección lo decide: dentro de un `<h2>` de sección va un `h3`.
     'level' => 3,
+    // ¿Fuera los grupos de elección excluyente (el menú)? `/cumpleanos` los enseña en su propio
+    // bloque —«Qué comen»— y el artboard pide que no se repitan aquí (`DECISIONES #528`).
+    'withoutChoices' => false,
 ])
 
 {{-- ══ EL BLOQUE DE COMPLEMENTOS · UN SOLO MOLDE PARA LAS DOS SECCIONES ══════════════════════════
@@ -33,7 +36,7 @@
      ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO** (`tabindex="0"`, `role="group"`, `aria-label`), y no
      es adorno de accesibilidad: **dentro no hay ningún control** —son fichas, no botones—, así que
      sin esto la segunda ficha **no se alcanza sin ratón**. Lo dice el propio artboard. --}}
-@php($extras = \App\Domain\Content\Services\LandingAddonPresenter::unique($products))
+@php($extras = \App\Domain\Content\Services\LandingAddonPresenter::unique($products, $withoutChoices))
 
 @if (! empty($extras))
     <div class="addons-rail">

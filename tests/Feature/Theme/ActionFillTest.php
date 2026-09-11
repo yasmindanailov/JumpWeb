@@ -59,7 +59,8 @@ class ActionFillTest extends TestCase
         // tarjetas fuera): las atracciones están ahora debajo del selector, así que el botón
         // llevaba a donde ya estabas. La lista de acción **solo encoge**, que es la regla.
         '.price--feat .price__cta' => 'el CTA de la tarifa destacada',
-        '.bd-pack__cta' => '«Reservar este cumple»',
+        // ⚠️ `.bd-pack__cta` («Reservar este cumple») SE FUE CON SU SUJETO en `#528`: la página
+        // rehecha reserva con un `.btn--ghost`, que el artboard dibuja fantasma, no relleno.
         // ⚠️ `.bd-btn--solid` vivía aquí y SE FUE CON SU SUJETO (T9): el par del editor de
         // invitaciones usa ahora `.btn`/`.btn--ghost`, la familia única del contenido — que ya
         // está en esta lista. La lista solo encoge, que es la regla.

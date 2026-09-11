@@ -70,7 +70,10 @@ class IllustrationKit
         // producto sano** (`#479`). La gramática es CERRADA en las dos direcciones.
         //
         // ⚠️ **Lo que NO gobierna esta lista son las claves `zone-<slug>`**, que salen de
-        // `zones.slug` y son IDENTIDAD, no decoración (`#302`). Hoy las pinta `/cumpleanos`.
+        // `zones.slug` y son IDENTIDAD, no decoración (`#302`). ⚠️ Desde `#528` no las pinta
+        // NINGUNA pantalla: la silueta de la banda vieja de `/cumpleanos` era la última, y la
+        // página rehecha no lleva dibujo. El mecanismo sigue en pie; dónde vuelve a entrar lo
+        // decide la pasada de vestido (`#497`).
         //
         // ▶ Y la regla que sigue en pie y no la toca nada de esto es la que vigila
         // `FacadeDecorationIsPerScreenTest`: **ninguna pieza decorativa dentro de un bucle**.

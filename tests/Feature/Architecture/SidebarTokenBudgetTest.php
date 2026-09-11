@@ -93,7 +93,9 @@ class SidebarTokenBudgetTest extends TestCase
         // ⚠️ `--fs-button` sigue aquí y con motivo: el nivel Botón es 16/800 y la familia `.btn`
         // está a 14/600. Estrenarlo obliga a mover la familia ENTERA, que llega al cajón (Fase 4).
         // ⚠️ `--fs-body-s` sale en `#480`: lo estrena la línea de AHORRO de la tarjeta de tarifa.
-        '--fs-display-xl', '--fs-subtitle', '--fs-button', '--fs-slogan',
+        // ⚠️ `--fs-subtitle` sale en `#528`: lo estrena el titular de la tarjeta de edades mezcladas
+        // de `/cumpleanos`, que el artboard escribe en su nivel (22 → 26, peso 700).
+        '--fs-display-xl', '--fs-button', '--fs-slogan',
     ];
 
     /**

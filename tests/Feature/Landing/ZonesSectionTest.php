@@ -223,6 +223,12 @@ class ZonesSectionTest extends TestCase
      *
      * ⚠️ Y `SLOTS` vacía es un estado VÁLIDO —lo ha estado tres veces—, así que el caso no exige que
      * haya ranuras: exige que las que haya tengan consumidor.
+     *
+     * ⚠️⚠️ **`#528`: la guarda de la guarda ya NO busca un `<x-site.ilu>`**, porque desde entonces no
+     * lo pinta ninguna vista —la silueta de la banda vieja de `/cumpleanos` era la última, y la página
+     * rehecha no lleva dibujo—. Buscarlo convertía un estado válido en un fallo. Lo que tiene que
+     * probar es que el escáner LEE las vistas, y eso lo demuestra la cabecera de página, que pintan
+     * todas las interiores (`#525`).
      */
     public function test_every_declared_slot_is_painted_by_a_screen(): void
     {
@@ -235,9 +241,9 @@ class ZonesSectionTest extends TestCase
             ->implode("\n");
 
         $this->assertStringContainsString(
-            'x-site.ilu', $vistas,
-            'el corpus de vistas no contiene ni un `<x-site.ilu>`: el escáner no está mirando lo que '.
-            'cree, y este caso pasaría en vacío.',
+            'x-site.page-head', $vistas,
+            'el corpus de vistas no contiene ni una cabecera de página: el escáner no está mirando lo '.
+            'que cree, y este caso pasaría en vacío.',
         );
 
         foreach (IllustrationKit::SLOTS as $ranura) {

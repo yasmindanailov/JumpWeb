@@ -20,7 +20,7 @@ import { takeOver } from '../ui/account-host.js';
  * el bundle de todas las páginas públicas multiplicaría por un orden de magnitud los 15 kB que la
  * landing sirve hoy, **y durante la convivencia del flag se enviarían los dos motores**.
  *
- * El precedente correcto ya existía en el repo con `html2canvas`.
+ * Es el patrón que ya usaba `html2canvas` en el editor de invitaciones (retirado con él en `#528`).
  *
  * ⚠️ Y hay un riesgo de rendimiento distinto que sí toca `PERF-02`: si la raíz montara con avidez y
  * pidiera catálogo en cada carga de landing, añadiría una petición por visita en la ruta de más

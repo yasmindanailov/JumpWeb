@@ -14,8 +14,8 @@ use Tests\TestCase;
  * así que aquí se vigila lo que SÍ es estático y basta: **cada `infinite` de las hojas está
  * enumerado con su motivo**. Un bucle nuevo pone la suite en rojo hasta que alguien lo decida.
  *
- * Además de la lista, tres hechos concretos de la tanda:
- *  · las banderitas y la estrella de la invitación no llevan `infinite` (D6: quietas);
+ * Además de la lista, dos hechos concretos de la tanda (había un tercero —las banderitas y la
+ * estrella de la invitación, quietas por D6— y se fue con el editor de invitaciones en `#528`):
  *  · el spinner se PAUSA con el cajón cerrado (`visibility: hidden` no detiene animaciones);
  *  · los bucles del icono de calcetines se pausan fuera de pantalla (`.is-onscreen` lo pone `app.js`).
  */
@@ -69,17 +69,6 @@ class MotionBudgetTest extends TestCase
             "Estas entradas de la lista ya no tienen un `infinite` detrás — retíralas, la lista solo encoge:\n  ".
             implode("\n  ", $sinSujeto),
         );
-    }
-
-    public function test_the_invitation_flags_and_star_are_still(): void
-    {
-        foreach ($this->infiniteSelectors() as $selector) {
-            $this->assertDoesNotMatchRegularExpression(
-                '/bd-card__bunting|bd-card__star/',
-                $selector,
-                "`{$selector}` vuelve a mover las banderitas o la estrella de la invitación en bucle (D6: quietas).",
-            );
-        }
     }
 
     public function test_the_spinner_is_paused_while_the_drawer_is_closed(): void

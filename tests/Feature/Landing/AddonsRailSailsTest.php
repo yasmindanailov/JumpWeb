@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\TicketType;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -122,14 +123,20 @@ class AddonsRailSailsTest extends TestCase
      * ⚠️⚠️ Medido antes de tocarla: esa frase **solo existía en la portada**, así que quitarla sin
      * más la habría hecho desaparecer del sitio entero — y el suplemento mixto **cobra dinero**
      * (`specs/cumple-mixto.md`). Quien lleve niños de dos edades tiene que enterarse en alguna parte.
+     * ▶ Desde `#528` es la TARJETA del artboard de la página, y sale solo cuando dos packs o más
+     * comparten familia de edades: sin eso una fiesta no puede ser mixta. El seeder no la siembra,
+     * así que el caso la pone — sin ella miraría el vacío.
      */
     public function test_the_mixed_age_note_moved_to_the_page_instead_of_vanishing(): void
     {
-        $this->assertStringNotContainsString(__('landing.events.mixed_note'), $this->home(),
-            'La nota de edades mezcladas sigue en la portada, donde era el tercero de tres bloques '.
+        TicketType::birthdaySurfacePacks()->update(['guest_age_family' => 'cumple']);
+        $texto = __('landing.birthday.mixed_text');
+
+        $this->assertStringNotContainsString($texto, $this->home(),
+            'La nota de edades mezcladas ha vuelto a la portada, donde era el tercero de tres bloques '.
             'de texto seguidos bajo las tarjetas.');
 
-        $this->assertStringContainsString(__('landing.events.mixed_note'),
+        $this->assertStringContainsString($texto,
             (string) $this->get('/cumpleanos')->assertOk()->getContent(),
             "La nota de edades mezcladas NO está en `/cumpleanos`.\n".
             '▶ Se movió, no se borró: era el único sitio del sitio que lo decía.');

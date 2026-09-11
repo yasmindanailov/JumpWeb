@@ -39,6 +39,9 @@ class SoldLineUnitHasOneSourceTest extends TestCase
         'app/Domain/Booking/Services/CartOccupants.php',
         'app/Domain/Booking/Services/CatalogReader.php',
         'app/Domain/Content/Services/LandingAddonPresenter.php',
+        // `#528` · el escaparate de `/cumpleanos`: escribe «por niño» en la hora extra si el
+        // enganche de HOY es por invitado. Pregunta por lo que se vende hoy, nunca por una línea.
+        'app/Domain/Booking/Services/BirthdayComparison.php',
         // El panel: el alta manual vende NUEVO, y el catálogo edita la configuración.
         'app/Filament/Pages/CreateManualOrderPage.php',
         'app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php',

@@ -48,14 +48,20 @@ import sys
 RUTA = 'public/css/landing.css'
 
 # Familias enteras (la clase y sus `__elemento` / `--modificador`).
+# `#528`: la página vieja de `/cumpleanos` —la banda, la polaroid, el paso a paso y el editor de
+# invitaciones—. ⚠️ Cada una es una BASE exacta: `bd-pack-col` no es de la familia `bd-pack`
+# (`base()` solo parte por `__` y `--`), así que van todas escritas.
+# (La pasada anterior, `#482`, podó el carrusel de atracciones con esta misma lista.)
 FAMILIAS = {
-    'zone-pick', 'slider', 'slider-nav', 'slider-arrow',
-    'slider-foot', 'slider-progress', 'ride-card',
+    'bd-page', 'bd-main', 'bd-standalone', 'bd-sec1', 'bd-sec2', 'bd-sec3',
+    'bd-band', 'bd-tabs', 'bd-tab', 'bd-grid', 'bd-pol', 'bd-pack-col', 'bd-pack',
+    'bd-check', 'bd-feat', 'bd-invite-cta', 'bd-proc', 'bd-inv', 'bd-editor',
+    'bd-fields', 'bd-field', 'bd-swatches', 'bd-swatch', 'bd-stage', 'bd-shape',
+    'bd-card', 'bd-toast', 'bd-day', 'bd-btn',
 }
-# ⚠️ `.zones__juegos` va APARTE: su familia es `zones`, que sigue viva (`.zones__head`,
-# `.zones__title`). Normalizar por familia la habría dejado fuera de la poda — y así fue en la
-# primera pasada, que la perdió sin decir nada.
-EXACTAS = {'zones__juegos'}
+# Clases sueltas cuya FAMILIA sigue viva. ⚠️ Van aparte porque normalizar por familia las dejaría
+# fuera de la poda sin decir nada: le pasó a `.zones__juegos` en `#482`, con `.zones` viva.
+EXACTAS = {'party__mixed'}
 
 
 def enmascarar(css: str) -> str:
@@ -78,16 +84,26 @@ def muerta(clase: str) -> bool:
 
 
 def parte_condenada(parte: str) -> bool:
-    """Un selector suelto está condenado si cita clases y TODAS están muertas.
+    """Un selector suelto está condenado si alguna clase que EXIGE está muerta.
 
     ⚠️⚠️ Un selector SIN clases —`input[type="checkbox"]:focus-visible`— NO está condenado, y esto
     es lo que evita el peor falso positivo de este guion: el foco de teclado de casillas y radios
     vive en una regla que además lista `.ride-card:focus-visible`, y la primera versión se la iba a
-    llevar entera.
-    """
-    clases = re.findall(r'\.(-?[A-Za-z_][A-Za-z0-9_-]*)', parte)
+    llevar entera. (Eso lo resuelve `condenado()` partiendo por comas: aquí se mira UN selector.)
 
-    return bool(clases) and all(muerta(c) for c in clases)
+    ⚠️⚠️ **TRAMPA 5 (`#528`): «todas sus clases muertas» era demasiado prudente.** Dentro de UN
+    selector —compuesto (`.bd-tab.is-active`) o descendiente (`.bd-pol__ticket .lbl`)— cada clase
+    es OBLIGATORIA: basta una sin consumidor para que el selector no pueda casar nunca. La versión
+    anterior las salvaba porque `.is-active` o `.lbl` siguen vivas en otra parte, y dejó **dieciocho
+    reglas muertas** tras la poda de la página vieja de `/cumpleanos`.
+    ▶ Lo que NO es obligatorio es lo que va dentro de `:not()`, `:is()`, `:where()` o `:has()`:
+    `:not(.x)` casa precisamente cuando `.x` falta, y `:is(.x, .y)` son alternativas. Se retiran
+    antes de contar.
+    """
+    obligatoria = re.sub(r':(?:not|is|where|has)\([^()]*\)', '', parte)
+    clases = re.findall(r'\.(-?[A-Za-z_][A-Za-z0-9_-]*)', obligatoria)
+
+    return any(muerta(c) for c in clases)
 
 
 def condenado(selector: str) -> bool:

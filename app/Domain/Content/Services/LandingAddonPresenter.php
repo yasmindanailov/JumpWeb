@@ -136,19 +136,62 @@ class LandingAddonPresenter
      * ofrece un complemento decide dónde sale. Ordenarlo por precio o por nombre inventaría una
      * jerarquía que el catálogo no declara.
      *
+     * ▶ `$withoutChoices` (`DECISIONES #528`): fuera los que pertenecen a un GRUPO de elección
+     * excluyente —el menú—. `/cumpleanos` los enseña en su propio bloque con lo que lleva cada uno,
+     * y en el carril serían dos fichas que parecen sumarse cuando se elige una.
+     *
      * @param  iterable<TicketType>  $products
      * @return list<array<string, mixed>>
      */
-    public static function unique(iterable $products): array
+    public static function unique(iterable $products, bool $withoutChoices = false): array
     {
         $vistos = [];
 
         foreach ($products as $product) {
             foreach (self::rows($product, false) as $row) {
+                if ($withoutChoices && $row['group'] !== null) {
+                    continue;
+                }
                 $vistos[$row['id']] ??= $row;
             }
         }
 
         return array_values($vistos);
+    }
+
+    /**
+     * **LOS GRUPOS DE ELECCIÓN EXCLUYENTE DE VARIOS PRODUCTOS** —el menú de un cumpleaños—, cada
+     * complemento una sola vez (`DECISIONES #528`).
+     *
+     * ▶ Lo pide el bloque «Qué comen» de `/cumpleanos`: el artboard escribe que *«el menú no es un
+     * complemento: es una elección dentro del pack»*, así que no vive en el carril sino en su propio
+     * bloque, con lo que lleva cada opción (sus `features`).
+     *
+     * ⚠️ Se leen como PACK (`rows($product, true)`): el incluido se rotula «Incluido», no «Gratis».
+     * ⚠️ La deduplicación es por ID, como en `unique()`, y el grupo por su CLAVE: dos packs que
+     * comparten los mismos dos menús dan un grupo de dos, no uno de cuatro.
+     *
+     * @param  iterable<TicketType>  $products
+     * @return list<array{key: string, rows: list<array<string, mixed>>}>
+     */
+    public static function choiceGroups(iterable $products): array
+    {
+        $grupos = [];
+
+        foreach ($products as $product) {
+            foreach (self::rows($product, true) as $row) {
+                if ($row['group'] === null) {
+                    continue;
+                }
+                $grupos[$row['group']][$row['id']] ??= $row;
+            }
+        }
+
+        $salida = [];
+        foreach ($grupos as $clave => $filas) {
+            $salida[] = ['key' => (string) $clave, 'rows' => array_values($filas)];
+        }
+
+        return $salida;
     }
 }

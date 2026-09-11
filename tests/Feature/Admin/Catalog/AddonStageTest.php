@@ -546,7 +546,8 @@ class AddonStageTest extends TestCase
             // VENDEN: filtran a `booking`, porque un `postform` no nace nunca con el pedido.
             'app/Domain/Booking/Services/AddonResolver.php' => 'la AUTORIDAD: el eje entra aquí',
             'app/Domain/Booking/Services/PostFormAddons.php' => 'VENDE en la otra fase: filtra a `postform` y además por PLAZO',
-            'app/Domain/Booking/Models/TicketType.php' => 'expone `addonsSoldAtBooking()` para que la landing nombre la fase sin arrastrar flechas nuevas al grafo de módulos',
+            'app/Domain/Booking/Models/TicketType.php' => 'expone `addonsSoldAtBooking()` y `addonsSoldAfterBooking()` para que la landing nombre la fase sin arrastrar flechas nuevas al grafo de módulos',
+            'app/Domain/Booking/Services/BirthdayComparison.php' => 'vende: el escaparate de `/cumpleanos` lee cada fase por su NOMBRE — la hora extra de `booking` y lo que se añade de `postform` (`#528`)',
             'app/Domain/Booking/Services/AddonOfferReader.php' => 'vende: la oferta del embudo',
             'app/Domain/Booking/Services/CatalogReader.php' => 'vende: la ficha pública del producto',
             'app/Domain/Content/Services/LandingAddonPresenter.php' => 'vende: anuncia bajo la tarjeta',

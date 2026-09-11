@@ -125,9 +125,8 @@ class PartySectionTest extends TestCase
      * **LA TARJETA ENTERA ES EL ENLACE, Y LLEVA A LA PÁGINA** (`[DECIDIDO owner]`).
      *
      * ⚠️⚠️ **Y va SIN ancla, que es lo medido**: `/cumpleanos` no emite `#cumple-kids` ni
-     * `#cumple-jump` —lo que tiene son paneles de pestaña ocultos—, y los dos packs viven en la
-     * MISMA zona, así que un ancla por zona daría el mismo destino dos veces. Inventar un ancla sin
-     * destino es el defecto que `#482` fichó de `#478`.
+     * `#cumple-jump` —desde `#528` compara los dos packs lado a lado, así que no hay un pack al que
+     * llegar—. Inventar un ancla sin destino es el defecto que `#482` fichó de `#478`.
      */
     public function test_each_card_is_a_link_to_the_page_and_carries_no_dead_anchor(): void
     {

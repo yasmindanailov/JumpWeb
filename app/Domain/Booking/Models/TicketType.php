@@ -472,6 +472,21 @@ class TicketType extends Model
     }
 
     /**
+     * El gemelo de {@see addonsSoldAtBooking()}: los complementos de este producto que se venden
+     * **DESPUÉS de reservar**, desde el formulario de la reserva (`#413`).
+     *
+     * ▶ Lo pide `/cumpleanos` (`DECISIONES #528`), que enseña lo que se puede añadir después con su
+     * precio y su plazo. Existe aquí por la misma razón que su gemelo: el nombre dice la FASE en el
+     * punto de llamada y el filtro no se esconde dentro de la relación `addons()`.
+     *
+     * @return Collection<int, self>
+     */
+    public function addonsSoldAfterBooking(): Collection
+    {
+        return AddonResolver::forStage($this->addons, ProductAddon::STAGE_POSTFORM);
+    }
+
+    /**
      * Inverso de `configurableAddons` (claves de pivote intercambiadas): productos que
      * ENGANCHAN este complemento. Lo necesita el panel (7.6 iter. 2) para que la acción
      * "Añadir complemento" excluya los ya enganchados — sin declararlo, Filament intenta

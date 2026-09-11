@@ -39,57 +39,41 @@ class PublicPagesTest extends TestCase
             ->assertSee('Mesa reservada para el grupo'); // feature del producto pack (ES, #87/3c)
     }
 
-    public function test_birthday_invitation_card_only_on_events_page(): void
+    public function test_the_invitation_editor_is_gone_from_every_surface(): void
     {
         /*
-         * #231: la tarjeta de invitación editable (birthdayInvite) va SOLO en /cumpleanos (ancla
-         * #tarjeta-invitacion).
-         * ⚠️⚠️ **En la portada ya NO hay enlace sutil a ella, y es de `#483`**: ese enlace vivía en
-         * la rama `@unless($showInvite)` de la banda heredada, que salió de la portada al rehacerse
-         * la sección 04 desde el canvas. La rama sigue en el componente —es de `/cumpleanos`, página
-         * de la Fase 3— pero **sin ningún llamante**. Ficha en `DEUDA.md`.
-         * ▶ Lo que la portada SÍ conserva es lo que importa: que la tarjeta editable no esté ahí.
+         * `#231` puso la tarjeta de invitación editable (`birthdayInvite` + `html2canvas`) en
+         * `/cumpleanos`; `#483` le quitó el enlace de la portada y **`#528` la retiró** con la página
+         * vieja (`[DECIDIDO owner]`: el artboard de la página no la trae). Si algún día vuelve, será
+         * con su propio artboard — y será una decisión, no un resto.
+         * ▶ Lo que SÍ se conserva en las dos superficies son los términos de reserva.
          */
-        $home = $this->get('/')->assertOk();
-        $home->assertDontSee('birthdayInvite', false);          // sin tarjeta en la landing
-        $home->assertDontSee('Descargar tarjeta');
-        $home->assertSee('De 8 a 20 niños');                    // términos de reserva: mín–máx y señal
-
-        $events = $this->get('/cumpleanos')->assertOk();
-        $events->assertSee('birthdayInvite', false);            // tarjeta editable en /cumpleanos
-        $events->assertSee('Descargar tarjeta');
-        $events->assertSee('id="tarjeta-invitacion"', false);   // ancla de destino del enlace
-        $events->assertDontSee('¿Te gustaría crear tu invitación'); // el CTA no va aquí (está el editor)
-        // Y el enlace sutil no está en NINGUNA superficie desde `#483`: si algún día vuelve, será
-        // una decisión, no un descuido.
-        $this->get('/')->assertDontSee('¿Te gustaría crear tu invitación');
-        $events->assertSee('De 8 a 20 niños');
+        foreach (['/', '/cumpleanos'] as $url) {
+            $this->get($url)->assertOk()
+                ->assertDontSee('birthdayInvite', false)
+                ->assertDontSee('tarjeta-invitacion', false)
+                ->assertDontSee('Descargar tarjeta')
+                ->assertDontSee('¿Te gustaría crear tu invitación')
+                ->assertSee('De 8 a 20 niños');
+        }
     }
 
-    public function test_birthday_process_and_zone_photo_render(): void
+    public function test_the_step_by_step_and_the_zone_photo_are_gone_too(): void
     {
         /*
-         * #231: la sección «Proceso» (5 pasos) y la foto de la zona cumpleaños.
-         * ⚠️⚠️ **El «paso a paso» salió de la portada en `#483`** (`[DECIDIDO owner]`, medido: 615 px
-         * de los 2.489 que ocupaba la sección) y sigue entero en su página. Se mira donde está.
+         * El «paso a paso» (`birthdayProcess`) salió de la portada en `#483` y de su página en `#528`
+         * (`[DECIDIDO owner]`: el artboard no lo trae).
+         * ⚠️⚠️ **Y la foto de la zona cumpleaños ya no la pinta NADIE**: salió de la portada en
+         * `#484` —era el comedor vacío— y la página rehecha **no lleva fotos hasta que el owner mande
+         * las del artboard** (`[DECIDIDO owner]`, `#528`: «o la foto vende o no está»). Con eso
+         * `zones.image` de esa zona se queda **sin consumidor**; ficha en `DEUDA.md`.
          */
-        $events = $this->get('/cumpleanos')->assertOk();
-        $events->assertSee('birthdayProcess', false);                 // stepper Alpine (#231)
-        $events->assertSee('Cómo se reserva');                        // eyebrow del proceso (ES)
-        $events->assertSee('images/attractions/cumplea_1.webp', false);
-
-        /*
-         * ⚠️⚠️ **Y la FOTO ya NO está en la portada** (`#484`, `[DECIDIDO owner]`). La sección 04
-         * abrió un tiempo con la cabecera sobre foto que el artboard dibuja, y se retiró: la imagen
-         * que esta instalación tiene en `zones.image` para cumpleaños es **el comedor vacío**, sin
-         * tarta y sin niños — el propio artboard tenía pendiente del dueño «la foto del cumple
-         * montado».
-         * ▶ Con eso `zones.image` **vuelve a tener un solo consumidor**, `/cumpleanos`, que es lo
-         * que `#302` dejó fichado como dudoso al retirar las tarjetas de zona.
-         */
-        $this->get('/')->assertOk()
-            ->assertDontSee('images/attractions/cumplea_1.webp', false)
-            ->assertDontSee('birthdayProcess', false);
+        foreach (['/', '/cumpleanos'] as $url) {
+            $this->get($url)->assertOk()
+                ->assertDontSee('birthdayProcess', false)
+                ->assertDontSee('Cómo se reserva')
+                ->assertDontSee('images/attractions/cumplea_1.webp', false);
+        }
     }
 
     public function test_footer_has_account_link_in_info(): void

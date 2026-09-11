@@ -123,7 +123,8 @@ document.addEventListener('alpine:init', () => {
         // El entry de Vue se trae con `import()` en la PRIMERA apertura, nunca con la página: la
         // landing sirve hoy 15 kB de JS propio y meter Vue + Pinia + once pasos en el bundle de
         // todas las páginas públicas es un orden de magnitud más — y durante la convivencia del
-        // flag se enviarían LOS DOS motores. El precedente correcto ya existía con `html2canvas`.
+        // flag se enviarían LOS DOS motores. Es el patrón que ya usaba `html2canvas` en el editor
+        // de invitaciones (retirado con él en `#528`).
         //
         // ⚠️ Montar al ABRIR y no al cargar también evita el riesgo que sí toca `PERF-02`: una raíz
         // Vue ávida pidiendo catálogo en cada carga de landing añadiría una petición por visita en
@@ -465,160 +466,10 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // Tarjeta de invitación de cumpleaños editable (#8, 2026-06-01). El usuario edita
-    // nombre/edad/fecha/hora y la tarjeta se previsualiza en vivo; puede descargarla como
-    // PNG o compartirla. La librería html2canvas se carga BAJO DEMANDA (import dinámico →
-    // chunk aparte de Vite) para no engordar el bundle de la landing. Compartir usa la
-    // Web Share API nativa (sin dependencias) con descarga como fallback en escritorio.
-    window.Alpine.data('birthdayInvite', (cfg = {}) => ({
-        name: cfg.name || '',
-        age: cfg.age ?? '',
-        date: '',
-        time: cfg.time || '17:00',
-        // Color de la tarjeta (#231): selector INDEPENDIENTE del pack.
-        // ⚠️ Guardaba la cadena `'jump'` y el blade la comparaba con ternarios, así que solo sabía
-        // pintar dos zonas —las del primer cliente— y un parque con otras se quedaba con una sola
-        // opción y un color ajeno (`DECISIONES #139`). Ahora es la CLAVE de una paleta y el estilo
-        // completo llega en `invStyles`: el blade solo lo transporta, sin decidir nada.
-        invZone: cfg.invZone || '',
-        invStyles: cfg.invStyles || {},
-        busy: false,
-        park: cfg.park || '',
-        labels: cfg.labels || {},
-
-        // —— previsualización (getters reactivos) ——
-        get displayName() {
-            return (this.name || '').trim() || this.labels.nameFallback || '…';
-        },
-        get displayAge() {
-            const n = parseInt(this.age, 10);
-            return Number.isFinite(n) && n > 0 && n < 130 ? n : null;
-        },
-        get displayDate() {
-            if (!this.date) return this.labels.dateFallback || '—';
-            const d = new Date(this.date + 'T00:00:00');
-            if (isNaN(d.getTime())) return this.labels.dateFallback || '—';
-            try {
-                return d.toLocaleDateString(document.documentElement.lang || 'es', {
-                    weekday: 'long', day: 'numeric', month: 'long',
-                });
-            } catch (e) {
-                return this.date;
-            }
-        },
-        get displayTime() {
-            return this.time || '—';
-        },
-
-        // —— exportación a imagen ——
-        async _render() {
-            const mod = await import('html2canvas');
-            const html2canvas = mod.default || mod;
-            const card = this.$refs.card;
-
-            // 100% fidedigno (#231 p2): html2canvas NO resuelve var() dentro del SVG serializado
-            // de la estrella ni en algunos contextos del clon → resolvemos --inv/--inv2 a un color
-            // CONCRETO (rgb) con una sonda y los reinyectamos en el clon. Además, una clase de
-            // captura deja la tarjeta RECTA y en reposo (sin animaciones a medias).
-            const cs = getComputedStyle(card);
-            const probe = document.createElement('span');
-            probe.style.display = 'none';
-            card.appendChild(probe);
-            const resolve = (raw) => {
-                probe.style.color = '';
-                probe.style.color = (raw || '').trim() || 'transparent';
-                return getComputedStyle(probe).color;
-            };
-            const invC = resolve(cs.getPropertyValue('--inv'));
-            const inv2C = resolve(cs.getPropertyValue('--inv2'));
-            card.removeChild(probe);
-
-            return html2canvas(card, {
-                backgroundColor: null,
-                scale: 2,            // nitidez para móvil/retina
-                useCORS: true,
-                logging: false,
-                onclone: (doc, clone) => {
-                    clone.classList.add('bd-card--capturing');
-                    clone.style.setProperty('--inv', invC);
-                    clone.style.setProperty('--inv2', inv2C);
-                    // El polígono del SVG no hereda var() en el clon serializado → fill concreto.
-                    const poly = clone.querySelector('.bd-card__star-svg polygon');
-                    if (poly) poly.setAttribute('fill', invC);
-                },
-            });
-        },
-        _save(canvas) {
-            const link = document.createElement('a');
-            link.download = (this.labels.fileName || 'invitacion') + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        },
-        async download() {
-            if (this.busy) return;
-            this.busy = true;
-            try {
-                this._save(await this._render());
-            } catch (e) {
-                console.error('invite: download failed', e);
-            } finally {
-                this.busy = false;
-            }
-        },
-        async share() {
-            if (this.busy) return;
-            this.busy = true;
-            try {
-                const canvas = await this._render();
-                const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
-                const file = blob
-                    ? new File([blob], (this.labels.fileName || 'invitacion') + '.png', { type: 'image/png' })
-                    : null;
-                const text = this.labels.shareText || '';
-                if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: this.park, text });
-                } else if (navigator.share) {
-                    await navigator.share({ title: this.park, text, url: window.location.href });
-                } else {
-                    // Escritorio sin Web Share: descarga como alternativa.
-                    this._save(canvas);
-                }
-            } catch (e) {
-                // El usuario canceló el diálogo de compartir → no es un error.
-                if (e && e.name !== 'AbortError') console.error('invite: share failed', e);
-            } finally {
-                this.busy = false;
-            }
-        },
-    }));
-
-    // Sección «Proceso» del cumpleaños (#231): 5 pasos de la reserva con un paso protagonista
-    // + raíl de cubos. Auto-avanza suave hasta que el usuario interactúa (flechas/raíl), y se
-    // detiene del todo entonces. Respeta `prefers-reduced-motion` (sin auto-avance).
-    window.Alpine.data('birthdayProcess', (steps = [], deposit = 30) => ({
-        steps,
-        deposit,
-        active: 0,
-        touched: false,
-        _timer: null,
-        init() {
-            if (!Array.isArray(this.steps) || this.steps.length < 2) return;
-            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            this._timer = setInterval(() => {
-                if (this.touched) return;
-                this.active = (this.active + 1) % this.steps.length;
-            }, 3400);
-        },
-        destroy() {
-            if (this._timer) { clearInterval(this._timer); this._timer = null; }
-        },
-        go(i) {
-            this.touched = true;
-            if (this._timer) { clearInterval(this._timer); this._timer = null; }
-            const n = this.steps.length || 1;
-            this.active = ((i % n) + n) % n;
-        },
-    }));
+    // ⚠️ Aquí vivían `birthdayInvite` (el editor de la tarjeta de invitación, que traía
+    // `html2canvas` bajo demanda) y `birthdayProcess` (el paso a paso de la reserva). Se retiraron
+    // con la página vieja de `/cumpleanos` (`DECISIONES #528`, `[DECIDIDO owner]`): su artboard no
+    // los trae, y la dependencia se desinstaló con ellos.
 
     // "Reveal on scroll" del CTA filled del nav en DESKTOP (espejo del sticky móvil).
     // En páginas con hero (`body[data-has-hero]`), el `.nav-cta-med` empieza oculto

@@ -189,20 +189,24 @@ class SpecialRateSurchargeTest extends TestCase
         );
     }
 
-    public function test_pack_card_writes_the_whole_special_price_too(): void
+    public function test_the_birthday_comparison_writes_the_whole_special_price_too(): void
     {
-        // Packs (cumpleaños) reutilizan el MISMO componente, así que heredan la regla entera.
+        /*
+         * `/cumpleanos` (`#528`) publica la especial en su PROPIA FILA de la comparativa, por niño y
+         * en total, y hereda la regla entera: el precio, nunca el recargo.
+         * ⚠️ «18 €» y no «18,00 €»: los importes de ESCAPARATE se escriben sin ceros a la derecha
+         * (`Money::showcase()`), al revés que los de transacción.
+         * ⚠️ Se acota a la FILA, no a la página: los complementos del carril llevan su «+», y ése
+         * es legítimo — un complemento sí se suma.
+         */
         $html = (string) $this->get('/cumpleanos')->assertOk()->getContent();
 
-        // ⚠️ «18» y no «18,00»: los importes de ESCAPARATE se escriben sin ceros a la derecha
-        // (`Money::showcase()`), al revés que los de transacción. Es la diferencia que `#479`
-        // subió a esa clase para que no hubiera dos formas sueltas de escribir un precio.
-        preg_match_all('#<span class="price__special-line">(.*?)</span>\s*</span>#s', $html, $m);
-        $this->assertNotEmpty($m[1], 'el pack no pinta tarifa especial: este caso miraría el vacío.');
+        preg_match('#<tr class="party-compare__row party-compare__row--strong">(.*?)</tr>#s', $html, $m);
+        $this->assertNotEmpty($m, 'la comparativa no pinta la fila de la especial: este caso miraría el vacío.');
 
-        $this->assertStringContainsString('18', $m[1][0]);
-        $this->assertStringContainsString(__('landing.rates.special_suffix'), $m[1][0]);
-        $this->assertStringNotContainsString('+', $m[1][0], 'el pack ha vuelto a publicar su recargo.');
+        $this->assertStringContainsString(__('landing.birthday.row_each_special'), $m[1]);
+        $this->assertStringContainsString('18 €', $m[1]);
+        $this->assertStringNotContainsString('+', $m[1], 'el pack ha vuelto a publicar su recargo.');
     }
 
     public function test_cheaper_special_renders_its_own_amount_too(): void

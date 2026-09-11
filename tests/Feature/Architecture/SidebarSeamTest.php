@@ -121,8 +121,10 @@ class SidebarSeamTest extends TestCase
 
         sort($declaran);
 
+        // ⚠️ `#528`: la superficie de cumpleaños se MUDA, no se pierde — el componente de la página
+        // vieja se retiró y la página rehecha abre el cajón en los packs desde su comparativa.
         $this->assertSame(
-            ['components/site/events-section.blade.php', 'pages/services.blade.php'],
+            ['pages/events.blade.php', 'pages/services.blade.php'],
             $declaran,
             "la lista de superficies que declaran su intención de compra ha cambiado.\n".
             "Si es una nueva, añádela aquí; si una la ha perdido, ese camino de compra se ha cerrado\n".
