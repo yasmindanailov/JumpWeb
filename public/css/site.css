@@ -5601,10 +5601,14 @@ html:not(.js) .gf-fiche__foot { display: none; }
        contenido 806, o sea que **cinco de los diez destinos quedan fuera** — y la barra de scroll
        está oculta a propósito (`scrollbar-width: none`), así que sin esto nada dice que haya más.
        El mockup tiene la suya (`velaMenuRef`) y la apaga con JavaScript al llegar al final.
-       ⚠️ **Aquí se apaga con `animation-timeline: scroll()`, sin una línea de JS**, y donde el
-       navegador no lo entienda se queda visible — que es el estado seguro: una señal de más
-       contenido cuando ya no lo hay es un adorno; **no tenerla cuando sí lo hay es una lista que
-       parece terminada y no lo está**.
+       ▶ Aquí la apaga `animation-timeline` al llegar al final, y **el HECHO de si la lista desborda
+       lo publica `ui/rail-sails.js`** (`data-rail-scroll`): con una lista que cabe la línea de
+       tiempo está inactiva, la animación no se aplica y la vela se pintaría sobre el último destino
+       sin nada detrás.
+       ⚠️⚠️ **CORRECCIÓN (`#522`): esta nota decía «se apaga sin una línea de JS», y la vela NO SE
+       APAGABA NUNCA.** Colgaba de `scroll(nearest block)`, que busca el contenedor de scroll
+       ANTECESOR del `::after` —el propio `.menu`—, y no la lista, que es su DESCENDIENTE. Medido a
+       390×844 con la lista deslizada hasta el final: opacidad 1. Es el defecto que tenía el pie.
        ⚠️ Va en el envoltorio y no en la lista: un `::after` dentro de un contenedor con scroll
        viaja con el contenido, así que se iría hacia arriba en cuanto alguien desplazara. */
     .menu__inner { position: relative; }
@@ -5616,15 +5620,22 @@ html:not(.js) .gf-fiche__foot { display: none; }
         background: linear-gradient(to top, var(--bg), transparent);
         pointer-events: none;
     }
+    .menu__inner:not([data-rail-scroll])::after { opacity: 0; }
 }
 
-/* La vela se apaga sola al llegar al final de la lista, donde el navegador sepa hacerlo. */
+/* La vela se apaga sola al llegar al final de la lista, donde el navegador sepa hacerlo.
+   ▶ La LISTA declara su eje con nombre y el envoltorio lo SUBE con `timeline-scope` —la receta del
+   pie y del carril de complementos—: `animation-timeline` busca ese nombre en un ANTECESOR del
+   elemento animado, y aquí quien desliza es un descendiente. Donde el navegador no entienda la
+   línea de tiempo, la vela se queda puesta mientras la lista desborde: una señal de más contenido
+   cuando ya no lo hay es un adorno; **no tenerla cuando sí lo hay es una lista que parece terminada
+   y no lo está**. */
 @supports (animation-timeline: scroll()) {
     @media (max-width: 1080px) {
-        .menu__inner::after {
+        .menu__inner { timeline-scope: --menu-lista; }   /* la lista nombra su eje en su propia regla */
+        .menu__inner[data-rail-scroll]::after {
             animation: menu-vela var(--ease-bucle) both;
-            animation-timeline: scroll(nearest block);
-            animation-range: contain;
+            animation-timeline: --menu-lista;
         }
     }
     @keyframes menu-vela {
@@ -5736,6 +5747,11 @@ html:not(.js) .gf-fiche__foot { display: none; }
     position: relative; flex: 1 1 560px; min-width: 0;
     display: flex; flex-direction: column; justify-content: safe center;
     min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none;
+    /* El eje del que cuelga la vela del menú (`#522`): se declara AQUÍ, en la regla de la lista, y no
+       en una segunda regla con el mismo selector — las guardas leen la PRIMERA regla `.menu__col-list`
+       de la hoja, y una segunda más arriba les escondía el `overflow-y` (lo cazó `MenuGroupsTest`).
+       Donde el navegador no entiende líneas de tiempo, se ignora. */
+    scroll-timeline-name: --menu-lista; scroll-timeline-axis: block;
 }
 .menu__col-list::-webkit-scrollbar { width: 0; }
 

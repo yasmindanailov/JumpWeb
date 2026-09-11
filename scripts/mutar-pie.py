@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Arnés de mutación de `#522` — el PIE del marco (tinta, destinos, idioma visible, colofón, vela).
+"""Arnés de mutación de `#522` — el PIE del marco (tinta, destinos, idioma visible, colofón, vela)
+y la VELA DEL MENÚ, que tenía el mismo defecto de línea de tiempo.
 
 Mismo molde endurecido que `mutar-bandeja.py` (`#506`) y `mutar-destinos.py` (`#521`):
   · en PYTHON, y cada mutación verifica que el fichero CAMBIÓ antes de correr nada;
@@ -17,6 +18,7 @@ FILTRO = 'FooterFrameTest|FooterContactLinksTest|ArmazonContractTest|SurfaceScop
 FICHEROS = [
     'resources/views/components/site/footer.blade.php',
     'public/css/landing.css',
+    'public/css/site.css',
     'resources/js/ui/rail-sails.js',
 ]
 
@@ -90,6 +92,27 @@ MUTACIONES = [
     ("la tinta de dentro del pie pierde su gris de CUERPO",
      'public/css/landing.css',
      "  --fg-body: var(--ink-fg-body);\n",
+     ""),
+
+    # ── La vela del MENÚ: el mismo defecto, en el eje de bloque ──
+    ("la vela del MENÚ vuelve a la línea ANÓNIMA, que mira el `.menu` y no la lista (el defecto REAL)",
+     'public/css/site.css',
+     "            animation-timeline: --menu-lista;\n",
+     "            animation-timeline: scroll(nearest block);\n"),
+
+    ("la lista del menú deja de declarar su eje con nombre",
+     'public/css/site.css',
+     "    scroll-timeline-name: --menu-lista; scroll-timeline-axis: block;\n",
+     ""),
+
+    ("la vela del menú se pinta aunque la lista quepa",
+     'public/css/site.css',
+     "    .menu__inner:not([data-rail-scroll])::after { opacity: 0; }\n",
+     ""),
+
+    ("rail-sails deja de publicar el hecho para la lista del menú",
+     'resources/js/ui/rail-sails.js',
+     "    ['.menu__inner', '.menu__col-list', 'block'],\n",
      ""),
 ]
 

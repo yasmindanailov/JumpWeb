@@ -151,10 +151,10 @@ class FooterFrameTest extends TestCase
      * **La vela se apaga sola cuando no hay nada que deslizar** (`#522`).
      *
      * ⚠️⚠️ Con los destinos del inventario, en escritorio la fila CABE, y la vela —un degradado encima
-     * del último destino— lo tapaba sin nada detrás. La regla que la gobierna por la línea de tiempo
-     * de scroll tiene que partir de opacidad CERO: sin desbordamiento, la línea está inactiva y la
-     * animación no se aplica, así que manda el valor base. Y FUERA del `@supports` la vela tiene que
-     * seguir puesta, que es el estado seguro donde el navegador no entiende la línea de tiempo.
+     * del último destino— lo tapaba sin nada detrás. Sin desbordamiento la línea de tiempo está
+     * inactiva y la animación no se aplica, así que el CSS no puede saberlo solo: el HECHO lo publica
+     * `rail-sails.js` (`data-rail-scroll`) y sin él la vela no se pinta. Con él y sin soporte de líneas
+     * de tiempo la vela se queda puesta, que es el estado seguro mientras la fila desborda.
      */
     public function test_the_edge_fade_follows_its_own_row_and_is_off_when_the_row_fits(): void
     {

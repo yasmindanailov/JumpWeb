@@ -2473,6 +2473,41 @@ class ArmazonContractTest extends TestCase
             'pointer-events: none', $cuerpo,
             'la vela se traga los clics del último destino visible.',
         );
+
+        // ❗❗ **Y tiene que APAGARSE al llegar al final** (`#522`). Colgaba de `scroll(nearest block)`
+        // en el `::after` del envoltorio, que busca el contenedor de scroll ANTECESOR —el `.menu`—
+        // y no la lista, que es su descendiente: medido, con la lista al final seguía a opacidad 1.
+        // Las dos aserciones de arriba pasaban igual, así que el defecto vivía en verde.
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.menu__inner\s*\{\s*timeline-scope:\s*--menu-lista\s*;/', $css,
+            'el envoltorio del menú no sube la línea de tiempo de su lista',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.menu__col-list\s*\{[^}]*scroll-timeline-name:\s*--menu-lista\s*;\s*scroll-timeline-axis:\s*block/', $css,
+            'la lista del menú no declara su eje con nombre',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.menu__inner\[data-rail-scroll\]::after\s*\{[^}]*animation-timeline:\s*--menu-lista\s*;/', $css,
+            'la vela del menú no cuelga de la línea de tiempo de su lista',
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.menu__inner[^{]*::after[^{]*\{[^}]*scroll\(nearest/', $css,
+            'la vela del menú vuelve a `scroll(nearest …)`: busca el `.menu`, no la lista',
+        );
+
+        // Con una lista que CABE la línea de tiempo está inactiva y la animación no se aplica, así
+        // que el CSS no lo puede saber solo: el hecho lo publica `rail-sails.js`, y sin él no hay vela.
+        $this->assertMatchesRegularExpression(
+            '/\.menu__inner:not\(\[data-rail-scroll\]\)::after\s*\{[^}]*opacity:\s*0/', $css,
+            'con la lista entera a la vista la vela se sigue pintando sobre el último destino',
+        );
+        $this->assertStringContainsString(
+            "['.menu__inner', '.menu__col-list', 'block']",
+            (string) file_get_contents(resource_path('js/ui/rail-sails.js')),
+            '`rail-sails.js` no publica si la lista del menú desborda',
+        );
     }
 
     /**
