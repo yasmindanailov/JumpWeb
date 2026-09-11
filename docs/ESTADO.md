@@ -10,9 +10,10 @@
 > a punta; **la confirmación llega por la notificación S2S y la vuelta del navegador viene sin datos**
 > (su terminal no incluye datos en la redirección) — por eso **`redsys_merchant_url` en producción, hoy
 > VACÍA, es paso obligatorio del go-live** (`sistemas/REDSYS.md` §14.bis). ⚠️ Su tarjeta «denegada»
-> excepciona (`SIS0093`) en vez de denegar, y en la vuelta sin datos el cajón enseña «Verificando tu pago»
-> de OTRO pedido pendiente: ficha nueva en `DEUDA.md` (Media). ⚠️ `deploy.sh` esperaba 5 tareas
-> programadas y son 6 desde `#491`: corregido.
+> excepciona (`SIS0093`) en vez de denegar, y en la vuelta sin datos el cajón enseñaba «Verificando tu
+> pago» de OTRO pedido pendiente — ✅ **cerrado en `#454`**: el último intento decide, y `failed` devuelve
+> el mismo rechazo que la vuelta firmada. ⚠️ `deploy.sh` esperaba 5 tareas programadas y son 6 desde
+> `#491`: corregido.
 > ▶ **Queda del OWNER**: responder al correo del banco (plataforma «desarrollo propio», integración
 > «Hosted/Redirección», URL `https://jumpweb.sites.aelium.app` y el usuario de prueba), mirar en su
 > Canales de pruebas que salen las operaciones, y el contrato en CaixaBank Now. ⚠️ **No re-sembrar
@@ -33,7 +34,7 @@ no suponerlo.
 > |---|---|---|---|
 > | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#521`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521`; siguen el PIE, la CABECERA de página y el CIERRE |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
-> | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#453`; libres `#454`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
+> | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
 > ⚠️⚠️ **Se eligieron para poder ir en paralelo, y el criterio está medido**: el CSS del cajón vive en
 `public/css/site.css`, **la misma hoja que mueve el carril de diseño**, y los correos tienen tema

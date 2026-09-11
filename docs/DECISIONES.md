@@ -28095,6 +28095,32 @@ del contenedor; receta en `VERIFICACION-E2E-CAJON.md` §5.undecies):
 las operaciones aparecen; y, al recibir el terminal real, `redsys_merchant_url` en producción **antes**
 que `redsys_environment=live`.
 
+## #454 · 2026-09-11 · La vuelta SIN DATOS resuelve por el ÚLTIMO intento, y un pago ya fallido devuelve el mismo rechazo que la vuelta firmada
+
+**Contexto.** Cierra la ficha que `#453` abrió el mismo día. `RedsysReturnController::handleDataLessReturn()`
+—la vuelta del navegador cuando el terminal no incluye los `Ds_*` firmados— buscaba el pago reciente
+del usuario **solo entre `pending` y `paid`**. Con un terminal que **notifica antes de devolver al
+navegador** (el de pruebas de CaixaBank, medido en `#453`), el pago que acababa de fallar ya estaba
+`failed` cuando el cliente volvía: la búsqueda lo saltaba y **caía en un pedido pendiente anterior** del
+mismo cliente, al que se le decía «Verificando tu pago · Tu banco ha procesado el pago» (reproducido:
+`R-ZBRCOM` tras cancelar `R-RXSCDJ`). Sin pedido anterior, home limpia y sin explicación. No movía
+dinero ni aforo (`PAY-02`: el pedido caduca solo), pero afirmaba lo contrario de lo que había pasado y
+no ofrecía reintentar — y con ese terminal era **el camino normal de todo rechazo**.
+
+**Lo decidido.** La búsqueda incluye `failed` y **el intento más reciente decide**, sea cual sea su
+desenlace: `paid` → token de éxito idempotente (como antes) · **`failed` → token de `Denied`**, el
+mismo pase que emite la vuelta firmada por UrlKO, así que la portada abre el cajón en el paso de
+rechazo con reintento · `pending` → «verificando» (como antes). Un `superseded` no entra porque
+siempre hay un intento más nuevo del mismo pedido. **No cambia ninguna regla de dinero**: el único
+que escribe `paid`/`failed` sigue siendo `RedsysReturnHandler` (`PAY-01`); aquí solo se LEE lo que
+la notificación escribió y se elige el pase.
+
+**Guarda.** Dos casos en `RedsysReturnControllerTest`: el rechazo ya notificado devuelve el pase de
+`Denied` y la portada lo consume como el firmado; y **el intento fallido más reciente gana a un pedido
+pendiente anterior** (el escenario medido). Los dos se vieron en ROJO con `failed` fuera de la
+búsqueda antes de dar por buena la guarda. `RedsysReturnController` **no está en el `CRITICAL_RE`**
+(el handler sí, y no se toca), así que el push no exigió `VERIFY_CONC`.
+
 ## #521 · 2026-09-11 · `[DECIDIDO owner]` Los destinos del menú (y del pie) son el INVENTARIO del canvas — y una página interior dejaba de ofrecer secciones de otra página
 
 La **T3a·1**, primera tanda de la **Fase 3** del carril de diseño (`specs/rediseno-desde-canvas.md`

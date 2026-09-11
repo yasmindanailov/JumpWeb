@@ -203,11 +203,16 @@ Redsys (verificado empíricamente en el origen):
   redirect 303 al home con **token one-shot** en cache (`redsys.return:<token>`, TTL 5 min,
   payload `user_id`/`order_code`/`outcome`) que la UI consume para reabrir el flujo en el paso
   de resultado.
-- **Sin datos** (`handleDataLessReturn`): fallback seguro — busca el Payment redsys reciente
-  (<30 min) del **usuario logueado**; si la notificación ya lo marcó `paid` → token de éxito
-  idempotente; si sigue `pending` → home con `purchase.verifying_code` en sesión («verificando
-  tu pago»). Sin usuario/sin Payment → home limpia. **NUNCA se marca `paid` por llegar a UrlOK
-  sin firma** (fraude trivial).
+- **Sin datos** (`handleDataLessReturn`): fallback seguro — busca el **último intento** de cobro
+  redsys reciente (<30 min) del **usuario logueado**, esté `pending`, `paid` o `failed`, y resuelve
+  por lo que la notificación haya escrito sobre él: `paid` → token de éxito idempotente; `failed`
+  → token de **rechazo** (el mismo desenlace que la vuelta firmada por UrlKO, con reintento);
+  `pending` → home con `purchase.verifying_code` en sesión («verificando tu pago»). Sin usuario/sin
+  Payment → home limpia. ⚠️ Los `failed` entran a propósito (`DECISIONES #454`): con un terminal
+  que notifica antes de devolver al navegador y no incluye datos en la redirección —el de pruebas
+  de CaixaBank, §14.bis—, dejarlos fuera hacía que la búsqueda cayera en un pedido pendiente
+  ANTERIOR y el cliente leyera «tu banco ha procesado el pago» tras cancelar. **NUNCA se marca
+  `paid` por llegar a UrlOK sin firma** (fraude trivial).
 
 **Notificación**: responde **SIEMPRE HTTP 200 con body vacío**, pase lo que pase (4xx/5xx
 provocan reintentos exponenciales de Redsys). Try/catch de último recurso → log
