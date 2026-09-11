@@ -94,6 +94,30 @@ class SurfaceScopeTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────────────
 
     /**
+     * **La tinta de un marcador de COLOR es la del paquete en TODOS los fondos** (`#523`).
+     *
+     * ⚠️⚠️ Las superficies re-declaran `--on-marker` para que su valor por defecto (el `--fg` de ESA
+     * superficie) se evalúe donde toca, y esa re-declaración pisaba la tinta que el paquete ponía en
+     * `:root`: el sello amarillo del precio salía con texto CLARO en la tarjeta de tinta (1,49 : 1,
+     * medido). El paquete declara su tinta aparte (`--on-marker-brand`) y las TRES declaraciones la
+     * prefieren. ▶ Se lee `landing.css` directamente: `client.css` no está en el repo y esta propiedad
+     * es del PRODUCTO — que con cualquier paquete la tinta del paquete gane.
+     */
+    public function test_the_marker_ink_prefers_the_package_in_every_scope(): void
+    {
+        $css = (string) file_get_contents(public_path('css/landing.css'));
+
+        $this->assertGreaterThanOrEqual(
+            3, preg_match_all('/--on-marker:\s*var\(--on-marker-brand,\s*var\(--fg\)\)\s*;/', $css),
+            '`:root` y las dos superficies tienen que preferir la tinta del paquete (`--on-marker-brand`)',
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/--on-marker:\s*var\(--fg\)\s*;/', $css,
+            'una superficie vuelve a declarar la tinta del marcador sin mirar el paquete: el sello amarillo sale con texto claro sobre tinta',
+        );
+    }
+
+    /**
      * **El escaneo ve de verdad los tres bloques.**
      *
      * Sin esto, un parser roto deja este fichero verde para siempre sin mirar nada — el modo de

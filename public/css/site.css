@@ -4990,14 +4990,16 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .ck-tgl.is-locked { background: var(--fg); cursor: not-allowed; }
 .ck-tgl.is-locked::after { transform: translateX(18px); }
 
-/* Enlace permanente del pie «Configuración de cookies» (revocar, art. 7.3). */
+/* Enlace permanente del pie «Configuración de cookies» (revocar, art. 7.3).
+   ⚠️ **Sin `opacity`** (`#523`): lleva el color de los demás enlaces legales y nada más. La `.85` que
+   tenía no se notaba sobre tinta y sobre PAPEL —el pie de la portada— lo hundía a **3,7 : 1** (medido),
+   por debajo de AA, cuando sus hermanos leen a 4,98. El retiro del consentimiento no puede leerse peor
+   que el resto del pie (art. 7.3: retirar tan fácil como dar). */
 .foot__cookie-config {
     background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit;
-    cursor: pointer; opacity: .85; text-decoration: none;
+    cursor: pointer; text-decoration: none;
 }
-/* La vela de la tira legal: misma pieza y mismo porqué que la de los destinos (`#252`), que vive
-   junto a `.foot__links-wrap::after` en `landing.css` — aquí solo se declara el caso. */
-.foot__cookie-config:hover { opacity: 1; text-decoration: underline; }
+.foot__cookie-config:hover { text-decoration: underline; }
 
 @media (max-width: 520px) {
     .cookie { left: 12px; right: 12px; bottom: 12px; width: auto; }

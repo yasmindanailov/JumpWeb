@@ -1742,28 +1742,36 @@ class ArmazonContractTest extends TestCase
      * @return list<\DOMElement>
      */
     /**
-     * **El par ARRANCA con la cuenta expandida SIN sesión, y con comprar CON sesión**
-     * (`[DECIDIDO owner, 2026-09-01]`, `DECISIONES #326`; cambia el arranque de `#8`).
+     * **El par ARRANCA con COMPRAR expandido, con sesión y sin ella** (`[DECIDIDO owner, 2026-09-11]`,
+     * `DECISIONES #523`; revierte el arranque de `#326`, que abría la cuenta a quien no tenía sesión).
      *
-     * Lo que un cliente nuevo necesita al llegar es registrarse, así que esa mitad es la ancha
-     * hasta que tiene cuenta. El modo lo dice el SERVIDOR en `<body data-cta-mode>` —el store lo
-     * lee al arrancar— y el primer pintado ya sale en ese modo (clase estática `cta-pair--account`
-     * en el par), para que no haya salto antes de que Alpine despierte.
+     * «Reservar» es el botón abierto y el registro (o la cuenta) la mitad plegada que INVITA a
+     * abrirse. La invitación ya sigue a la mitad plegada en la hoja, así que el cambio es el arranque.
      *
-     * ⚠️ Se asevera el atributo del `<body>` Y la clase estática: con solo la clase, el JS podría
-     * arrancar en comprar y devolver el par al modo viejo un instante después de pintarse.
+     * ⚠️ Se asevera el atributo del `<body>` Y la ausencia de la clase estática: con la clase puesta
+     * por el servidor, el primer pintado saldría con la cuenta abierta y Alpine lo corregiría un
+     * instante después — un salto delante del visitante.
      */
-    public function test_the_pair_starts_on_account_for_guests_and_on_buy_with_session(): void
+    public function test_the_pair_starts_on_buy_for_guests_and_with_session(): void
     {
         $html = $this->get('/')->assertOk()->getContent();
-        $this->assertStringContainsString('data-cta-mode="account"', $html, 'sin sesión el body no anuncia el modo cuenta');
-        $this->assertStringContainsString('cta-pair--account', $this->nodes($html, 'nav__pair')[0]->getAttribute('class'), 'sin sesión el par de la cabecera no arranca con la cuenta expandida');
-        $this->assertStringContainsString('cta-pair--account', $this->nodes($html, 'hero__pair')[0]->getAttribute('class'), 'sin sesión el par del hero no arranca con la cuenta expandida');
+        $this->assertStringContainsString('data-cta-mode="buy"', $html, 'sin sesión el body no anuncia el modo comprar');
+        foreach (['nav__pair', 'hero__pair'] as $racimo) {
+            $this->assertStringNotContainsString('cta-pair--account', $this->nodes($html, $racimo)[0]->getAttribute('class'),
+                "sin sesión el par `{$racimo}` arranca con la cuenta expandida: «Reservar» tiene que salir abierto");
+        }
 
         $user = User::factory()->create(['email_verified_at' => now()]);
         $conSesion = $this->actingAs($user)->get('/')->assertOk()->getContent();
         $this->assertStringContainsString('data-cta-mode="buy"', $conSesion, 'con sesión el body no anuncia el modo comprar');
-        $this->assertStringNotContainsString('cta-pair--account', $this->nodes($conSesion, 'nav__pair')[0]->getAttribute('class'), 'con sesión el par sigue arrancando con la cuenta expandida');
+        $this->assertStringNotContainsString('cta-pair--account', $this->nodes($conSesion, 'nav__pair')[0]->getAttribute('class'), 'con sesión el par arranca con la cuenta expandida');
+
+        // Y la INVITACIÓN cuelga de la mitad PLEGADA —el registro—, no de comprar.
+        $css = (string) file_get_contents(public_path('css/site.css'));
+        $this->assertMatchesRegularExpression('/\.cta-pair--invita \.cta-pair__alt > \.cta-ghost\s*\{[^}]*animation:\s*cta-asoma/', $css,
+            'la mitad plegada del par no invita a abrirse');
+        $this->assertMatchesRegularExpression('/\.cta-pair--invita \.cta-pair__alt-ring\s*\{[^}]*animation:\s*cta-aro/', $css,
+            'la mitad plegada del par perdió su aro');
     }
 
     private function nodes(string $html, string $class): array

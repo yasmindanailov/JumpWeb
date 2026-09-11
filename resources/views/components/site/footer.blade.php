@@ -1,4 +1,4 @@
-@props(['sections' => []])
+@props(['sections' => [], 'surface' => 'ink'])
 @php
     // ── LOS DESTINOS DEL PIE SON LOS DEL MENÚ (`DECISIONES #521`/`#522`, `[DECIDIDO owner]`) ──────────
     // El inventario de páginas del canvas + la cuenta + —solo en la portada, que es quien las pasa—
@@ -53,8 +53,14 @@
      los escondía: los enlaces visibles SON el suelo sin JS.
 
      ⚠️ **Cada dato solo si la instalación lo tiene**: sin teléfono no se emite un `tel:` roto a un
-     ajuste sin rellenar (`has_phone`/`phone_tel` del composer), y sin correo no hay `mailto:` vacío. --}}
-<footer class="foot" data-surface="ink">
+     ajuste sin rellenar (`has_phone`/`phone_tel` del composer), y sin correo no hay `mailto:` vacío.
+
+     ⚠️⚠️ **EN LA PORTADA VA SOBRE PAPEL** (`[DECIDIDO owner, 2026-09-11]`, `DECISIONES #523`): la
+     portada termina en la tarjeta de TINTA del cierre, y un pie de tinta debajo se fundía con ella
+     —en su punto de reposo y, sobre todo, a pantalla completa, donde la banda rellenaba el marco de
+     papel de la tarjeta y asomaba la tira por arriba—. La página lo pide con `surface="paper"`; las
+     interiores siguen en tinta. Solo se aceptan las dos superficies que existen. --}}
+<footer class="foot" data-surface="{{ $surface === 'paper' ? 'paper' : 'ink' }}">
     <div class="foot__inner wrap">
         {{-- La tira de marca: COMPONENTE (`#226`) y aquí su COLOCACIÓN. Va en CUÑA de 22 px y no fina
              de 4 como la dibuja el Layout: es decisión anterior del owner contra el artboard. --}}

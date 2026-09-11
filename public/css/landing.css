@@ -349,9 +349,17 @@
      no depende de ninguna paleta. **Vacío es una respuesta.** El par lo pone el paquete, como
      `--action` (`#209`), `--interactive` (`#436`) y `--money` (`#479`).
      ⚠️ Y viaja con su TINTA (`--on-marker`): **el par lo declara quien declara el color**, nunca se
-     deriva — la regla que `#434` dejó escrita al nacer `--on-ok`/`--on-err`/`--on-warn`. */
+     deriva — la regla que `#434` dejó escrita al nacer `--on-ok`/`--on-err`/`--on-warn`.
+     ⚠️⚠️ **Y la tinta del PAQUETE va en `--on-marker-brand`, no en `--on-marker`** (`#523`). Las dos
+     superficies re-declaran `--on-marker` para que su valor por defecto —el `--fg` de ESA superficie,
+     porque sin paquete el marcador es transparente y el texto va sobre el fondo— se evalúe donde
+     toca (`SurfaceScopeTest`). Pero esa re-declaración PISABA la tinta que el paquete ponía en
+     `:root`: dentro de la tarjeta de tinta de cumpleaños el sello amarillo del precio salía con texto
+     CLARO (**1,49 : 1**, medido). Un marcador de color tiene la misma tinta en todos los fondos, así
+     que el paquete la declara aparte y las tres declaraciones la prefieren — el patrón de
+     `--action-brand` (`#209`). */
   --marker: transparent;
-  --on-marker: var(--fg);
+  --on-marker: var(--on-marker-brand, var(--fg));
 
   /* ── EL VERDE Y EL AMARILLO CUANDO SON TEXTO ────────────────────────────────────────────
      `#487` · el estado de «Visítanos» («Abierto ahora» en verde, «Abre hoy» en amarillo).
@@ -585,7 +593,7 @@
   --line-strong: var(--ink-line-strong);
   --interactive: var(--fg);   /* tinta → aquí es papel; el paquete lo fija por superficie (`#436`) */
   --money: var(--fg);         /* ídem: la cifra sigue a la tinta de SU superficie (`#479`) */
-  --on-marker: var(--fg);     /* ídem: la tinta del marcador (`#480`) */
+  --on-marker: var(--on-marker-brand, var(--fg));   /* la tinta del marcador: la del paquete si la declara, si no la de ESTA superficie (`#480`, `#523`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -609,7 +617,7 @@
   --line-strong: var(--paper-line-strong);
   --interactive: var(--fg);   /* de vuelta a papel: tinta (`#436`) */
   --money: var(--fg);         /* ídem (`#479`) */
-  --on-marker: var(--fg);     /* ídem (`#480`) */
+  --on-marker: var(--on-marker-brand, var(--fg));   /* ídem (`#480`, `#523`) */
 
   /* El rol de ACCIÓN se re-declara para que su fallback se evalúe con el `--fg`/`--bg` de ESTA
      superficie. Sin estas cuatro líneas el botón primario dejaría de invertirse dentro del menú
@@ -3513,6 +3521,15 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
 
 /* COLOCACIÓN · el pie: lo único suyo es el aire que deja debajo — 18, el del marco. */
 .foot__strip { margin-bottom: var(--sp-18); }
+/* ⚠️ **En la portada la tira se RETIRA cuando la tarjeta del cierre crece** (`#523`). A pantalla
+   completa la tarjeta deja un marco de papel de 10 px, y lo único del pie que queda detrás a la vista
+   es esta tira, asomando por arriba (medido a 1440 y a 390). Con el pie viejo no pasaba porque su
+   relleno la dejaba por encima de la ventana: se escondía por casualidad.
+   ▶ Lee el progreso CRUDO del cierre (`--cierre-q`), no `--cierre-queda`: aquél vale 0 en el punto
+   estático —la tira entera, con el pie a la vista— y ésta ya vale 0 en cuanto la tarjeta se ancla, o
+   sea que se llevaría la tira justo donde el pie tiene que verse completo. Fuera de la portada
+   `--cierre-q` vale siempre 0 y esto no cambia nada. */
+.foot__strip { opacity: clamp(0, 1 - var(--cierre-q, 0) * 4, 1); }
 
 /* ══ UNA SOLA FILA QUE SE DESLIZA (`#252`, `[DECIDIDO owner]`: «solo quiero 1 fila, no más») ═════
    El número de destinos lo manda la instalación, así que «una fila» solo se sostiene si lo que no

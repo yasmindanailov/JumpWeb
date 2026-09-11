@@ -93,21 +93,64 @@ class FooterFrameTest extends TestCase
     }
 
     /**
-     * **El pie es una banda de TINTA a sangre, y la columna la pone su interior** (`#522`).
-     * ⚠️ Con `.wrap` en el propio `<footer>`, el fondo que pinta `[data-surface]` se quedaría en la
-     * columna y el papel asomaría a los lados.
+     * **En las interiores el pie es una banda de TINTA a sangre, y la columna la pone su interior**
+     * (`#522`). ⚠️ Con `.wrap` en el propio `<footer>`, el fondo que pinta `[data-surface]` se quedaría
+     * en la columna y el papel asomaría a los lados.
+     *
+     * ⚠️⚠️ **En la PORTADA va sobre PAPEL** (`[DECIDIDO owner, 2026-09-11]`, `#523`): la portada termina
+     * en la tarjeta de tinta del cierre, y un pie de tinta se fundía con ella —a pantalla completa la
+     * banda rellenaba el marco de papel de la tarjeta—. Se fijan las DOS mitades: una sin la otra deja
+     * o la portada fundida o las interiores sin su banda.
      */
-    public function test_the_footer_is_a_full_bleed_ink_band(): void
+    public function test_the_footer_is_a_full_bleed_ink_band_except_on_the_home(): void
     {
-        $xpath = $this->xpath($this->get('/contacto')->assertOk()->getContent());
-        $pie = $xpath->query('//h:footer')->item(0);
+        foreach (['/contacto' => 'ink', '/' => 'paper'] as $url => $superficie) {
+            $xpath = $this->xpath($this->get($url)->assertOk()->getContent());
+            // Por su clase y no por ser el primer `<footer>`: una tarjeta de opinión puede llevar el suyo.
+            $pie = $xpath->query('//h:footer[contains(concat(" ", normalize-space(@class), " "), " foot ")]')->item(0);
 
-        $this->assertNotNull($pie);
-        $this->assertSame('ink', $pie->getAttribute('data-surface'), 'el pie no declara la superficie de tinta');
-        $this->assertStringNotContainsString('wrap', $pie->getAttribute('class'), 'el pie a sangre lleva `.wrap`: el fondo se quedaría en la columna');
-        $this->assertSame(
-            1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " wrap ")]', $pie)->length,
-            'la columna del pie no la pone su interior',
+            $this->assertNotNull($pie, "{$url}: no hay pie");
+            $this->assertSame($superficie, $pie->getAttribute('data-surface'), "{$url}: el pie no declara la superficie `{$superficie}`");
+            $this->assertStringNotContainsString('wrap', $pie->getAttribute('class'), "{$url}: el pie a sangre lleva `.wrap`: el fondo se quedaría en la columna");
+            $this->assertSame(
+                1, $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " wrap ")]', $pie)->length,
+                "{$url}: la columna del pie no la pone su interior",
+            );
+        }
+    }
+
+    /**
+     * **Con la tarjeta del cierre a pantalla completa, la tira del pie NO asoma por su marco** (`#523`).
+     *
+     * ⚠️⚠️ La tarjeta deja 10 px de papel alrededor, y lo único del pie que queda detrás a la vista es
+     * la tira. Se retira con el progreso CRUDO del cierre, que vale 0 en el punto estático —la tira
+     * entera— y crece solo cuando la tarjeta avanza hacia la pantalla completa. ⚠️ Con
+     * `--cierre-queda` (el token de la retirada del armazón) desaparecería ya en el punto estático,
+     * que está anclado: se asevera también que NO lo lee.
+     */
+    public function test_the_strip_retires_as_the_closing_card_grows_and_stays_at_rest(): void
+    {
+        $css = (string) file_get_contents(base_path('public/css/landing.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.foot__strip\s*\{\s*opacity:\s*clamp\(\s*0\s*,\s*1\s*-\s*var\(--cierre-q\s*,\s*0\)\s*\*\s*\d+(\.\d+)?\s*,\s*1\s*\)\s*;/', $css,
+            'la tira del pie no se retira con el progreso del cierre: asoma por el marco de la tarjeta a pantalla completa',
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.foot__strip\s*\{[^}]*--cierre-queda/', $css,
+            'la tira lee la retirada del ARMAZÓN, que ya vale 0 en el punto estático: el pie perdería su tira en reposo',
+        );
+    }
+
+    /**
+     * **«Configuración de cookies» lee como el resto de lo legal** (`#523`). Llevaba `opacity: .85`,
+     * que sobre tinta no se notaba y sobre el PAPEL de la portada lo dejaba en 3,7 : 1 (medido).
+     */
+    public function test_the_cookie_settings_link_is_not_faded(): void
+    {
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.foot__cookie-config\s*\{[^}]*opacity/', (string) file_get_contents(base_path('public/css/site.css')),
+            '«Configuración de cookies» vuelve a llevar opacidad: sobre papel baja de AA',
         );
     }
 

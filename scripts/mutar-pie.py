@@ -17,6 +17,9 @@ RAIZ = Path(__file__).resolve().parent.parent
 FILTRO = 'FooterFrameTest|FooterContactLinksTest|ArmazonContractTest|SurfaceScopeTest'
 FICHEROS = [
     'resources/views/components/site/footer.blade.php',
+    'resources/views/home.blade.php',
+    'resources/views/components/layout.blade.php',
+    'resources/views/components/site/cta-pair.blade.php',
     'public/css/landing.css',
     'public/css/site.css',
     'resources/js/ui/rail-sails.js',
@@ -24,15 +27,31 @@ FICHEROS = [
 
 # (nombre, fichero, texto que se busca, texto por el que se cambia)
 MUTACIONES = [
-    ("el pie vuelve al PAPEL",
+    ("las interiores vuelven al PAPEL",
      'resources/views/components/site/footer.blade.php',
-     '<footer class="foot" data-surface="ink">',
-     '<footer class="foot" data-surface="paper">'),
+     "@props(['sections' => [], 'surface' => 'ink'])",
+     "@props(['sections' => [], 'surface' => 'paper'])"),
+
+    ("la portada vuelve a pedir el pie de TINTA (se funde con la tarjeta del cierre, #523)",
+     'resources/views/home.blade.php',
+     ' surface="paper" />',
+     ' />'),
 
     ("el pie recupera `.wrap` y la banda deja de ir a sangre",
      'resources/views/components/site/footer.blade.php',
-     '<footer class="foot" data-surface="ink">',
-     '<footer class="foot wrap" data-surface="ink">'),
+     '<footer class="foot" data-surface=',
+     '<footer class="foot wrap" data-surface='),
+
+    # ── El arranque del par (#523): «Reservar» abierto, el registro plegado invitando ──
+    ("el par vuelve a abrir la CUENTA a los visitantes (el arranque de #326)",
+     'resources/views/components/layout.blade.php',
+     '<body data-cta-mode="buy"',
+     "<body data-cta-mode=\"{{ auth()->check() ? 'buy' : 'account' }}\""),
+
+    ("la clase estática vuelve a pintar la cuenta abierta antes de Alpine",
+     'resources/views/components/site/cta-pair.blade.php',
+     "<div class=\"cta-pair {{ $s['racimo'] }}\"",
+     "<div class=\"cta-pair {{ $s['racimo'] }}{{ auth()->check() ? '' : ' cta-pair--account' }}\""),
 
     ("las secciones de la portada se cuelan en el pie de las interiores",
      'resources/views/components/site/footer.blade.php',
@@ -93,6 +112,27 @@ MUTACIONES = [
      'public/css/landing.css',
      "  --fg-body: var(--ink-fg-body);\n",
      ""),
+
+    # ── #523: el pie de la portada sobre papel, con el cierre ──
+    ("la tira del pie vuelve a asomar por el marco del cierre a pantalla completa",
+     'public/css/landing.css',
+     ".foot__strip { opacity: clamp(0, 1 - var(--cierre-q, 0) * 4, 1); }\n",
+     ""),
+
+    ("la tira lee la retirada del ARMAZÓN y desaparece ya en el punto estático",
+     'public/css/landing.css',
+     ".foot__strip { opacity: clamp(0, 1 - var(--cierre-q, 0) * 4, 1); }\n",
+     ".foot__strip { opacity: var(--cierre-queda); }\n"),
+
+    ("«Configuración de cookies» vuelve a llevar opacidad (3,7 : 1 sobre papel)",
+     'public/css/site.css',
+     "    cursor: pointer; text-decoration: none;\n}",
+     "    cursor: pointer; opacity: .85; text-decoration: none;\n}"),
+
+    ("la superficie de tinta vuelve a pisar la tinta del marcador del paquete (sello claro sobre amarillo)",
+     'public/css/landing.css',
+     "  --on-marker: var(--on-marker-brand, var(--fg));   /* la tinta del marcador: la del paquete si la declara, si no la de ESTA superficie (`#480`, `#523`) */",
+     "  --on-marker: var(--fg);"),
 
     # ── La vela del MENÚ: el mismo defecto, en el eje de bloque ──
     ("la vela del MENÚ vuelve a la línea ANÓNIMA, que mira el `.menu` y no la lista (el defecto REAL)",

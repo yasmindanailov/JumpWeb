@@ -91,7 +91,10 @@
      `lazy`, así que su `mount()` corre en una petición POSTERIOR a este render (medido). Si
      el layout consumiera aquí, el motor se quedaría sin nada que enseñar. Quién consume
      depende del motor, y `Http\Sidebar\SidebarEntry` lo explica en un solo sitio. --}}
-<body data-cta-mode="{{ auth()->check() ? 'buy' : 'account' }}"
+{{-- `data-cta-mode`: con qué mitad ARRANCA el par de CTA. Siempre comprar (`[DECIDIDO owner,
+     2026-09-11]`, `DECISIONES #523`, revierte `#326`): «Reservar» abierto y el registro —o la cuenta,
+     con sesión— plegado e invitando a abrirse. --}}
+<body data-cta-mode="buy"
       data-purchase-open="{{ ((request()->routeIs('entradas') && $site['sales_online']) || \App\Http\Sidebar\AccountDoor::isDoor() || \App\Http\Sidebar\SidebarEntry::peek()->pending()) ? '1' : '' }}"
       {{-- La ZONA del área de cliente con la que abrir, cuando se ha entrado por una de las rutas
            que sobreviven a la retirada de `/mi-cuenta/…` (`AccountDoor`). Vacío = no es una puerta.

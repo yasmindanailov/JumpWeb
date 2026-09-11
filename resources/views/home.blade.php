@@ -1472,8 +1472,10 @@
     </section>
     </main>
 
-    {{-- El pie ofrece, además del inventario, las secciones de la portada: las MISMAS del menú (`#522`). --}}
-    <x-site.footer :sections="$menuSections" />
+    {{-- El pie ofrece, además del inventario, las secciones de la portada: las MISMAS del menú (`#522`).
+         Y aquí va sobre PAPEL, el fondo de la página (`[DECIDIDO owner, 2026-09-11]`, `#523`): la
+         portada termina en la tarjeta de TINTA del cierre, y un pie de tinta se fundía con ella. --}}
+    <x-site.footer :sections="$menuSections" surface="paper" />
 
     {{-- ⚠️⚠️ **EL RECORRIDO DEL HERO DEL CIERRE VA AQUÍ, DESPUÉS DEL PIE — y ése era el fallo.**
          (`#233`, corrigiendo a `#229`.) La primera versión lo puso DENTRO de la sección y usó un
