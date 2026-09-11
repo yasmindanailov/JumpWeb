@@ -2577,6 +2577,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
 > Suite **4696 en verde** (29.505 aserciones, 6 skipped), medida el **2026-09-11** (noche) corriéndola
 > sobre el árbol **CONJUNTO tras la CUARTA fusión**: diseño hasta `#527` y CORREOS `#500`→`#508`.
+> ✅ **Y `scripts/audit-clock.sh` pasado a mano al cerrar** —no está en el `pre-push`— porque la
+> sesión añadió fixtures con fechas: **verde en las DOCE fronteras**, con la misma cifra en todas,
+> incluidos los dos cruces de medianoche (UTC y Madrid). *Un test que solo falla ciertos días está
+> rojo y aún no lo sabes* (`TESTING.md` §2.septies).
 > ⚠️⚠️ **Cuarta fusión y cuarto choque del contador**, que ya es el patrón: correos declaraba
 > **4685 · 29.272** y diseño **4694 · 29.496**, los dos ciertos sobre su propio árbol. Los **2** casos
 > nuevos de `#508` —los dos correos del framework, que el censo no veía— entran sobre lo suyo.
