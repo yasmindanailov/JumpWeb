@@ -52,7 +52,6 @@ class EditLandingService extends EditRecord
             'title' => $record->tr('title'),
             'ticket_type_id' => $record->ticket_type_id ? (int) $record->ticket_type_id : null,
             'is_active' => (bool) $record->is_active,
-            'show_in_nav' => (bool) $record->show_in_nav,
             'position' => (int) $record->position,
         ]);
     }

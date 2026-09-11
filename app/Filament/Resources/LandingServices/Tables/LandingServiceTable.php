@@ -9,8 +9,11 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 /**
- * Tabla de servicios de la landing: título (idioma activo), pack vinculado, estado y nav.
+ * Tabla de servicios de la landing: título (idioma activo), pack vinculado y estado.
  * Fila clicable → edición. Ordenada por posición (reordenable arrastrando).
+ *
+ * ⚠️ La columna y el filtro «En el menú» se retiraron con el interruptor (`#521`): el menú ya no
+ * ofrece servicios sueltos, así que el dato no describe nada que se vea.
  */
 class LandingServiceTable
 {

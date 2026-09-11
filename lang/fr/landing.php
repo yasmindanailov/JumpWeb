@@ -2,7 +2,11 @@
 
 return [
     'nav' => [
-        'menu_group' => ['section' => 'Sur cette page', 'page' => 'Autres pages'],
+        'menu_group' => ['section' => 'Sur cette page', 'page' => 'Pages'],
+        'pages' => [
+            'pricing' => 'Tarifs', 'events' => 'Anniversaires', 'attractions' => 'Attractions',
+            'rules' => 'Règles', 'services' => 'Services', 'contact' => 'Contact',
+        ],
         'zones' => 'Zones', 'rides' => 'Attractions', 'pricing' => 'Tarifs',
         'events' => 'Anniversaires', 'info' => 'Nous visiter', 'reserve' => "S'inscrire",
         'reserve_tickets_aria' => 'Réserver billets et anniversaires',
@@ -12,8 +16,6 @@ return [
         'cta_buy' => 'Réserver',
         'cta_buy_from' => 'dès :amount',
         'cta_book' => 'Réserver',
-        'park' => 'Le parc',
-        'services' => 'Services',
         'tickets' => 'Billets',
         'cta_switch_buy' => 'Passer à la réservation',
         'cta_switch_signup' => "Passer à l'inscription",
@@ -32,15 +34,7 @@ return [
         'slider_prev' => 'Précédent',
         'slider_next' => 'Suivant',
         'park_items' => [
-            'rides' => ['t' => 'Attractions', 's' => 'Trampolines, foam, tyrolienne'],
-            'info' => ['t' => 'Adresse et horaires', 's' => 'Murcia · accès'],
-        ],
-        'services_items' => [
-            'birthdays' => ['t' => 'Anniversaires', 's' => 'Forfaits par enfant'],
-            'school' => ['t' => 'Sorties scolaires', 's' => 'Séance de 30 min'],
-            'team_building' => ['t' => 'Entreprises', 's' => 'À partir de 30 personnes'],
-            'adults' => ['t' => 'Sortie adultes', 's' => '22h00–01h00 · min. 30'],
-            'events' => ['t' => 'Autres événements', 's' => 'EVJF/EVG, tournages, fêtes'],
+            'info' => ['t' => 'Adresse et horaires'],
         ],
     ],
     'hero' => [

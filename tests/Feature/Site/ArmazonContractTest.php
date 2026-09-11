@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Site;
 
-use App\Domain\Booking\Models\Zone;
-use App\Domain\Content\Models\LandingService;
+use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
@@ -71,14 +71,25 @@ class ArmazonContractTest extends TestCase
         '/', '/atracciones', '/precios', '/cumpleanos', '/servicios', '/contacto', '/normas', '/aviso-legal',
     ];
 
-    /** Destinos que el menú ofrece hoy y que la 2c no puede perder. `ruta#ancla`. */
+    /**
+     * Destinos que el menú de la PORTADA ofrece y que no puede perder. `ruta#ancla`.
+     *
+     * ⚠️ **Cambió de lista en `#521`** (`[DECIDIDO owner]`): son el INVENTARIO de páginas del canvas
+     * y las secciones de la portada. Antes eran zonas, atajos y servicios del panel. «Dudas»
+     * (`/#faq`) no está aquí porque se pinta solo con dudas en el panel: su paridad la vigila
+     * `test_the_home_offers_exactly_the_sections_it_paints`.
+     */
     private const FIXED_DESTINATIONS = [
         '/#zones',
         '/#rides',
+        '/#before',
         '/#info',
-        '/cumpleanos',
         '/precios',
-        '/servicios#eventos',
+        '/cumpleanos',
+        '/atracciones',
+        '/normas',
+        '/servicios',
+        '/contacto',
     ];
 
     protected function setUp(): void
@@ -259,34 +270,41 @@ class ArmazonContractTest extends TestCase
     }
 
     /**
-     * **Un servicio marcado para el menú llega a los DOS sitios, y desmarcarlo lo retira de los dos.**
+     * **El menú ofrece EXACTAMENTE el inventario de páginas, en su orden y con su rótulo**
+     * (`#521`, `[DECIDIDO owner, 2026-09-11]`).
      *
-     * Lo primero lo cubría a medias `ServicesPageTest`, que solo mira la barra. El cajón móvil
-     * lee la misma lista y **nadie comprobaba que llegara**: si el día de mañana se sirve solo a
-     * la barra, en móvil el servicio deja de existir.
+     * ⚠️ **Sustituye a `test_a_service_marked_for_the_nav_reaches_both_the_menu_and_the_drawer`**, que
+     * se retira con su sujeto: un servicio del panel ya no es un destino suelto y su interruptor
+     * «Sale en el menú» salió del panel. Lo que aquel caso protegía de verdad —que menú y cajón no
+     * ofrezcan cosas distintas— se sigue comprobando aquí, contra la lista nueva.
+     *
+     * ▶ Se compara la LISTA ENTERA y en orden, no «que estén»: así se caza un destino que falta, uno
+     * que se cuela —el canvas: *«un enlace que no está en el inventario es relleno»*— y un reorden.
+     * ⚠️ Se mide en una página INTERIOR, donde el menú no lleva secciones: lo que hay es solo el grupo
+     * de páginas, sin tener que separar grupos a mano.
      */
-    public function test_a_service_marked_for_the_nav_reaches_both_the_menu_and_the_drawer(): void
+    public function test_the_menu_offers_exactly_the_inventory_in_its_order(): void
     {
-        LandingService::create([
-            'slug' => 'sonda-armazon',
-            'title' => ['es' => 'Sonda del armazón'],
-            'position' => 99,
-            'is_active' => true,
-            'show_in_nav' => true,
-        ]);
+        $html = $this->get('/normas')->assertOk()->getContent();
 
-        $html = $this->get('/')->assertOk()->getContent();
+        $rutas = array_map(
+            fn (string $ruta): string => (string) parse_url(route($ruta), PHP_URL_PATH),
+            array_keys(SiteDestinations::PAGES),
+        );
+        $rotulos = array_map(
+            fn (string $clave): string => (string) __('landing.nav.pages.'.$clave),
+            array_values(SiteDestinations::PAGES),
+        );
 
-        $this->assertContains('/servicios#sonda-armazon', $this->linksIn($html, 'menu__list'));
-        $this->assertContains('/servicios#sonda-armazon', $this->linksIn($html, 'mob-menu'));
-
-        LandingService::where('slug', 'sonda-armazon')->update(['show_in_nav' => false]);
-        Cache::flush();
-
-        $html = $this->get('/')->assertOk()->getContent();
-
-        $this->assertNotContains('/servicios#sonda-armazon', $this->linksIn($html, 'menu__list'));
-        $this->assertNotContains('/servicios#sonda-armazon', $this->linksIn($html, 'mob-menu'));
+        $this->assertSame(
+            $rutas, $this->linksIn($html, 'menu__list'),
+            'el menú de una página interior no ofrece EXACTAMENTE el inventario, en su orden',
+        );
+        $this->assertSame($rotulos, $this->menuTitles($html), 'los rótulos del menú no son los del inventario');
+        $this->assertSame(
+            $rutas, $this->linksIn($html, 'mob-menu__secondary'),
+            'el cajón de móvil ofrece destinos distintos que el menú: a un ancho se esconde algo',
+        );
     }
 
     /**
@@ -355,82 +373,128 @@ class ArmazonContractTest extends TestCase
         );
     }
 
+    // ⚠️⚠️ **AQUÍ VIVÍAN `test_the_menu_keeps_the_park_items_in_order` Y
+    // `test_the_menu_keeps_the_services_in_order`, Y SE RETIRAN CON SU SUJETO** (`#521`,
+    // `[DECIDIDO owner, 2026-09-11]`): zonas, atracciones, ubicación y servicios del panel dejan de
+    // ser destinos del menú, que pasa a ofrecer el INVENTARIO de páginas del canvas y las secciones
+    // de la portada. Lo que se mudó a proteger —el ORDEN— lo vigilan ahora
+    // `test_the_menu_offers_exactly_the_inventory_in_its_order` (páginas) y el caso de abajo
+    // (secciones, en el orden de la portada).
+
     /**
-     * **El menú conserva los destinos del parque, en su orden y con sus anclas.**
+     * **La portada ofrece EXACTAMENTE las secciones que pinta, en su orden** (`#521`).
      *
-     * ⚠️ **Se MUDÓ desde `HomePageTest::nav_renders_park_dropdown_with_anchor_items`** al retirar
-     * la 2c·1 el desplegable de la barra. El sujeto viejo —el desplegable— murió; lo que
-     * comprobaba de verdad —las etiquetas, **el orden** y las anclas— sigue vivo y nadie más lo
-     * fijaba. Retirar el test en vez de mudarlo habría perdido la cobertura del orden.
-     *
-     * ▶ Y aquí se lee **acotado al elemento**: la versión anterior aseveraba sobre la página
-     * entera, donde el nombre de una zona lo pinta también la sección de zonas.
-     *
-     * ⚠️⚠️ **RE-APUNTADO en `#341`, y el motivo importa**: hasta entonces esta guarda aseveraba los
-     * literales `'Zona Kids'` y `'Zona Jump'` — o sea que **fijaba en su sitio el catálogo de un
-     * cliente dentro del producto**, que es justo la fuga que `#341` cierra. Ahora las dos primeras
-     * salen de la BD.
-     * ▶ Y **no queda más débil que la que sustituye** (la regla de `#295`): antes fijaba cuatro
-     * etiquetas y su orden; ahora fija **las zonas de la instalación en el orden que manda su
-     * `position`**, seguidas de los dos destinos fijos — o sea que además caza que el menú y el panel
-     * discrepen sobre el orden de las zonas, que antes no miraba nadie.
+     * ⚠️⚠️ **Un ancla a una sección que no está NO FALLA**: el navegador se queda donde estaba y nadie
+     * lo ve. Por eso la paridad se comprueba en las DOS direcciones contra la página RENDERIZADA
+     * —cada ancla del menú existe como `id`, y cada una de las secciones que existe está en el
+     * menú—, sin copiar la condición de pintado de ninguna: si mañana otra sección pasa a
+     * desaparecer con cero filas (la ficha de `#488`), esto lo cazará sin tocarlo.
+     * ▶ Se corre con dudas y SIN ellas, porque «Dudas» es hoy la única condicional: un caso que
+     * solo mirara el estado sembrado no distinguiría «el menú sigue a la sección» de «coinciden».
      */
-    public function test_the_menu_keeps_the_park_items_in_order(): void
+    public function test_the_home_offers_exactly_the_sections_it_paints(): void
     {
-        $html = $this->get('/')->assertOk()->getContent();
+        foreach ([true, false] as $conDudas) {
+            if (! $conDudas) {
+                Faq::query()->update(['is_active' => false]);
+                Cache::flush();
+            }
 
-        $zonas = Zone::query()
-            ->where('is_active', true)
-            ->where('show_in_landing', true)
-            ->orderBy('position')
-            ->get()
-            ->map(fn (Zone $z): string => (string) $z->tr('name'))
-            ->all();
+            $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertNotEmpty($zonas, 'sin zonas en la landing este caso no vigila nada: el fixture perdió su sujeto');
+            $anclas = array_values(array_filter(
+                $this->linksIn($html, 'menu__list'),
+                static fn (string $destino): bool => str_starts_with($destino, '/#'),
+            ));
 
-        $titles = $this->menuTitles($html);
-        $parque = [...$zonas, 'Atracciones', 'Ubicación y horario'];
+            $this->assertNotEmpty($anclas, 'la portada no ofrece ninguna sección: el caso no vigilaría nada');
 
-        $this->assertSame(
-            $parque,
-            array_values(array_intersect($titles, $parque)),
-            'los destinos del parque han cambiado de orden o han desaparecido del menú',
-        );
+            foreach ($anclas as $ancla) {
+                $this->assertStringContainsString(
+                    'id="'.substr($ancla, 2).'"', $html,
+                    "el menú ofrece `{$ancla}` y la portada no pinta esa sección: un ancla muerta",
+                );
+            }
 
-        $urls = $this->linksIn($html, 'menu__list');
-        foreach (['/#zones', '/#rides', '/#info'] as $anchor) {
-            $this->assertContains($anchor, $urls, "el menú ya no ancla a `{$anchor}`");
+            $pintadas = array_values(array_filter(
+                array_keys(SiteDestinations::HOME_SECTIONS),
+                static fn (string $id): bool => str_contains($html, 'id="'.$id.'"'),
+            ));
+
+            $this->assertSame(
+                array_map(static fn (string $id): string => '/#'.$id, $pintadas), $anclas,
+                'las secciones del menú no son exactamente las que la portada pinta, en su orden',
+            );
+
+            // ⚠️ **Y cada una se llama como la PROPIA sección se rotula**, leído del rótulo pintado y
+            // no de la constante: comparar la constante consigo misma pasaría en verde con el menú
+            // diciendo «Zonas» sobre una sección que dice «Para quién» — dos nombres para un sitio.
+            $rotulosPintados = [];
+            foreach ($pintadas as $id) {
+                $rotulo = $this->xpath($html)->query('//*[@id="'.$id.'"]//*[contains(@class, "__eyebrow")]')->item(0);
+                $this->assertNotNull($rotulo, "la sección `#{$id}` no tiene rótulo que comparar");
+                $rotulosPintados[] = trim($rotulo->textContent);
+            }
+            $this->assertSame(
+                $rotulosPintados, array_slice($this->menuTitles($html), 0, count($pintadas)),
+                'el menú nombra una sección distinto de como la sección se rotula a sí misma',
+            );
+
+            $conDudas
+                ? $this->assertContains('/#faq', $anclas, 'con dudas en el panel, el menú no ofrece «Dudas»')
+                : $this->assertNotContains('/#faq', $anclas, 'sin dudas el menú sigue ofreciendo «Dudas», que ya no se pinta');
         }
     }
 
     /**
-     * **El menú conserva los servicios, en el orden que manda la BD.**
+     * **Una página interior no lleva el grupo «En esta página», y se marca a sí misma** (`#521`).
      *
-     * ⚠️ **Se MUDÓ desde `HomePageTest::nav_renders_services_dropdown_with_section_links`**, por
-     * el mismo motivo. El orden lo fija `position` en el panel: si el menú dejara de respetarlo,
-     * el parque perdería el control de cómo se presentan sus propios servicios.
+     * ⚠️⚠️ **Es el defecto que esta tanda cierra, y no avisaba**: en `/precios` el grupo «En esta
+     * página» listaba JUMP, KIDS, Atracciones y Ubicación — secciones DE LA PORTADA, las cuatro
+     * llevando fuera de la página que decía. Una interior no tiene secciones (`Layout Paginas PJP`).
+     * ▶ Y la página en la que estás SALE en la lista, marcada: por eso el grupo se llama «Páginas».
      */
-    public function test_the_menu_keeps_the_services_in_order(): void
+    public function test_an_interior_page_offers_pages_only_and_marks_itself(): void
     {
-        $html = $this->get('/')->assertOk()->getContent();
+        $html = $this->get('/precios')->assertOk()->getContent();
 
-        $titles = $this->menuTitles($html);
-        $servicios = ['Cumpleaños', 'Excursiones de colegio', 'Empresas', 'Excursión para mayores', 'Otros eventos'];
-
+        $grupos = array_map(static fn ($n): string => trim($n->textContent), $this->nodes($html, 'menu__group'));
         $this->assertSame(
-            $servicios,
-            array_values(array_intersect($titles, $servicios)),
-            'los servicios han cambiado de orden o han desaparecido del menú',
+            [(string) __('landing.nav.menu_group.page')], $grupos,
+            'una página interior pinta un grupo de secciones que no son suyas',
         );
 
-        $urls = $this->linksIn($html, 'menu__list');
-        foreach (['excursionescolegio', 'teambuilding', 'sesionadultos', 'eventos'] as $slug) {
-            $this->assertContains(
-                '/servicios#'.$slug, $urls,
-                "el menú ya no lleva a la sección `{$slug}` de servicios",
-            );
+        $this->assertSame(
+            [], array_values(array_filter($this->linksIn($html, 'menu__list'), static fn (string $d): bool => str_contains($d, '#'))),
+            'el menú de una interior ofrece anclas de otra página',
+        );
+
+        $marcados = [];
+        foreach ($this->nodes($html, 'menu__list') as $lista) {
+            /** @var \DOMElement $a */
+            foreach ($this->xpath($html)->query('.//h:a[@aria-current="page"]', $lista) as $a) {
+                $marcados[] = (string) parse_url($a->getAttribute('href'), PHP_URL_PATH);
+            }
         }
+        $this->assertSame(['/precios'], $marcados, 'la página en curso no va marcada (o va marcada otra)');
+    }
+
+    /**
+     * **Una página en mantenimiento no se ofrece** (`#521`): su enlace llevaría a «vuelve luego».
+     *
+     * El menú ya lo hacía con `/servicios` desde el lanzamiento; ahora vale para cualquiera de las
+     * páginas que el panel puede poner en mantenimiento. El CONTROL es la página de al lado.
+     */
+    public function test_a_page_in_maintenance_is_not_offered(): void
+    {
+        Setting::updateOrCreate(['key' => 'maintenance.page.normas'], ['value' => '1', 'group' => 'maintenance']);
+        Setting::flushMemo();
+        Cache::flush();
+
+        $destinos = $this->linksIn($this->get('/precios')->assertOk()->getContent(), 'menu__list');
+
+        $this->assertNotContains('/normas', $destinos, 'el menú anuncia una página en mantenimiento');
+        $this->assertContains('/contacto', $destinos, 'CONTROL: las demás páginas siguen ofreciéndose');
     }
 
     /**

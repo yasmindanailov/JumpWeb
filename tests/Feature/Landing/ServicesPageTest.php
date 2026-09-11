@@ -147,39 +147,12 @@ class ServicesPageTest extends TestCase
         $this->get('/servicios')->assertOk()->assertDontSee('Servicio oculto');
     }
 
-    public function test_nav_lists_data_driven_services_and_respects_show_in_nav(): void
-    {
-        LandingService::create([
-            'slug' => 'nuevo-svc',
-            'title' => ['es' => 'Servicio nuevo de nav'],
-            'nav_subtitle' => ['es' => 'subtítulo'],
-            'show_in_nav' => true,
-            'position' => 9,
-        ]);
-
-        $home = $this->get('/')->assertOk();
-        $home->assertSee('Servicio nuevo de nav');                         // aparece en el desplegable
-        $home->assertSee(route('servicios').'#nuevo-svc', false);          // enlaza al anchor
-        // Los items estáticos del extremo siguen ahí.
-        $home->assertSee(route('servicios').'#eventos', false);            // «Otros eventos» fijo
-
-        LandingService::where('slug', 'nuevo-svc')->update(['show_in_nav' => false]);
-        $this->get('/')->assertDontSee('Servicio nuevo de nav');
-    }
-
-    public function test_an_inactive_service_is_excluded_from_the_nav(): void
-    {
-        // is_active=false (oculto de /servicios) PERO show_in_nav=true: NO debe salir en el menú, o
-        // enlazaría a /servicios#slug a una sección que la página no pinta (anchor roto). El nav exige
-        // active()+inNav() (no basta show_in_nav).
-        LandingService::create([
-            'slug' => 'inactivo-nav',
-            'title' => ['es' => 'Servicio inactivo de nav'],
-            'nav_subtitle' => ['es' => 'x'],
-            'is_active' => false,
-            'show_in_nav' => true,
-        ]);
-
-        $this->get('/')->assertOk()->assertDontSee('Servicio inactivo de nav');
-    }
+    // ⚠️⚠️ **AQUÍ VIVÍAN `test_nav_lists_data_driven_services_and_respects_show_in_nav` Y
+    // `test_an_inactive_service_is_excluded_from_the_nav`, Y SE RETIRAN CON SU SUJETO** (`#521`,
+    // `[DECIDIDO owner, 2026-09-11]`): los destinos del menú son el INVENTARIO de páginas del canvas,
+    // y un servicio del panel ya no es un destino suelto — el interruptor «Sale en el menú» se retiró
+    // del panel con ellos. Clasificados por sujeto (`CONVENCIONES §3.quater`): lo que comprobaban era
+    // una capacidad que el owner ha quitado, no una regla que siga viva en otro sitio.
+    // ▶ Lo que SÍ sigue vivo —que el menú no ofrezca nada que no sea del inventario— lo vigila
+    // `ArmazonContractTest::test_the_menu_offers_exactly_the_inventory_in_its_order`.
 }

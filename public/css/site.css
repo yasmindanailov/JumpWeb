@@ -5847,9 +5847,12 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border-radius: 50%; background: var(--ok);
 }
 
+/* ⚠️ El subtítulo de un destino es ya SIEMPRE su ruta escrita (`#521`: «/precios» debajo de
+   «Tarifas», como el canvas), y una ruta es un DATO: va en la letra mono, que el sistema reserva
+   para etiquetas y códigos. Sin mayúsculas, porque una dirección en mayúsculas no es la dirección. */
 .menu__s {
     flex: 0 0 auto;
-    font-family: var(--font-body); font-size: 13.5px;
+    font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: 0.02em;
     color: var(--fg-mute); white-space: nowrap;
 }
 .menu__arrow {

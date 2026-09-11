@@ -9,7 +9,16 @@ return [
          * pone en mayúsculas (`text-transform`): guardarlos ya en mayúsculas rompe el idioma de
          * quien no las use y deja el texto sin poder cambiarse desde aquí.
          */
-        'menu_group' => ['section' => 'En esta página', 'page' => 'Otras páginas'],
+        // ⚠️ «Páginas» y no «Otras páginas» (`#521`, `[DECIDIDO owner]`): la lista incluye la página
+        // en la que estás, marcada, así que «otras» dejaría de ser cierto en cualquier interior.
+        'menu_group' => ['section' => 'En esta página', 'page' => 'Páginas'],
+        // Los rótulos del INVENTARIO de páginas (`#521`). Los leen el menú y el pie, que ofrecen lo
+        // mismo. Son nombres de DESTINO y no el titular de cada página: `/contacto` se titula
+        // «Hablamos» en su cabecera y aquí se llama por lo que es.
+        'pages' => [
+            'pricing' => 'Tarifas', 'events' => 'Cumpleaños', 'attractions' => 'Atracciones',
+            'rules' => 'Normas', 'services' => 'Servicios', 'contact' => 'Contacto',
+        ],
         'zones' => 'Zonas', 'rides' => 'Atracciones', 'pricing' => 'Precios',
         'events' => 'Cumpleaños', 'info' => 'Visítanos', 'reserve' => 'Registrarse',
         'reserve_tickets_aria' => 'Reservar entradas y cumpleaños',
@@ -27,9 +36,8 @@ return [
         'cta_buy' => 'Reservar',
         'cta_buy_from' => 'desde :amount',
         'cta_book' => 'Reservar',
-        // Reorganización 2026-05-27: dos desplegables temáticos + dos atajos directos.
-        'park' => 'El parque',
-        'services' => 'Servicios',
+        // ⚠️ `park` y `services` —los rótulos de los dos desplegables viejos— se fueron con `#521`.
+        // `tickets` se queda: lo sigue usando la lista de atajos de la página 404.
         'tickets' => 'Entradas',
         // **Nombres accesibles del CTA DOBLE de móvil** (armazón · tanda 2c·4). Cuando una mitad
         // está COLAPSADA su pulsación no lleva a ninguna parte: la expande. El nombre tiene que
@@ -51,17 +59,11 @@ return [
         'skip' => 'Saltar al contenido',
         'slider_prev' => 'Anterior',
         'slider_next' => 'Siguiente',
-        // Cada item: `t` título, `s` descripción corta (≤ ~30 chars).
+        // ⚠️ De los ítems del menú viejo solo queda éste (`#521`): es el respaldo del dato «dónde
+        // estamos» del menú cuando la instalación no tiene ciudad escrita. Los destinos del menú son
+        // ya el inventario (`pages`, arriba) y las secciones de la portada, con su propio rótulo.
         'park_items' => [
-            'rides' => ['t' => 'Atracciones', 's' => 'Trampolines, foam, tirolinas'],
-            'info' => ['t' => 'Ubicación y horario', 's' => 'Murcia · cómo llegar'],
-        ],
-        'services_items' => [
-            'birthdays' => ['t' => 'Cumpleaños', 's' => 'Packs por niño · sala privada'],
-            'school' => ['t' => 'Excursiones de colegio', 's' => 'Sesión de 30 min'],
-            'team_building' => ['t' => 'Empresas', 's' => 'Desde 30 personas'],
-            'adults' => ['t' => 'Excursión para mayores', 's' => '22:00–01:00 · mín. 30'],
-            'events' => ['t' => 'Otros eventos', 's' => 'Despedidas, fiestas, rodajes'],
+            'info' => ['t' => 'Ubicación y horario'],
         ],
     ],
     'hero' => [

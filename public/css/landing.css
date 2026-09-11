@@ -951,23 +951,8 @@ img { display: block; max-width: 100%; }
 }
 .mob-menu__close:hover { background: var(--fg); color: var(--bg); }
 
-.mob-menu__primary { list-style: none; padding: 0; margin: 0; }
-.mob-menu__primary li { border-top: 1px solid var(--line); }
-.mob-menu__primary li:last-child { border-bottom: 1px solid var(--line); }
-.mob-menu__primary a {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: var(--sp-18) var(--sp-4);
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: 32px; letter-spacing: -0.02em; line-height: 1;
-  transition: color var(--dur-sale) var(--ease-sale);
-}
-/* Sin desplazar el relleno al pasar (auditoría m2, `#435`): animar layout en una interacción. */
-.mob-menu__primary a:hover { color: var(--interactive); }
-.mob-menu__primary .arrow {
-  font-family: var(--font-body); font-size: var(--fs-16);
-  color: var(--fg-mute);
-}
-.mob-menu__primary a:hover .arrow { color: var(--interactive); }
+/* ⚠️ Aquí vivía `.mob-menu__primary`, la lista de atajos del cajón, y se va con su marcado (`#521`):
+   el cajón pinta ya los dos grupos del menú, los dos con `.mob-menu__secondary`. */
 
 .mob-menu__section h4 {
   font-family: var(--font-body); font-size: var(--fs-11);
@@ -994,11 +979,10 @@ img { display: block; max-width: 100%; }
 .mob-menu__foot .btn { flex: 1; justify-content: center; }
 
 /* staggered entrance for items */
-.mob-menu__primary li, .mob-menu__secondary li {
+.mob-menu__secondary li {
   opacity: 0; transform: translateX(20px);
   transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-cae) var(--ease-sale);
 }
-.mob-menu--open .mob-menu__primary li,
 .mob-menu--open .mob-menu__secondary li {
   opacity: 1; transform: translateX(0);
   transition-delay: calc(var(--i, 0) * var(--dur-toque) + var(--dur-toque));

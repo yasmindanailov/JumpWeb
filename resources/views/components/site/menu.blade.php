@@ -152,7 +152,12 @@
                                 {{-- ⚠️ `mouseenter` **y** `focus`: la vista previa tiene que seguir
                                      también a quien navega con teclado, o la columna se queda
                                      contando algo que no es lo que el usuario está mirando. --}}
+                                {{-- ⚠️ La página en la que estás SALE en la lista y va marcada (`#521`):
+                                     el grupo se llama «Páginas» y no «Otras páginas» justamente para
+                                     que eso sea cierto. Quitarla dejaría la lista cambiando de forma
+                                     de una página a otra. --}}
                                 <a href="{{ $item['url'] }}" @click="menuOpen = false"
+                                   @if (! empty($item['current'])) aria-current="page" @endif
                                    @mouseenter="mira = {{ $i }}" @focus="mira = {{ $i }}">
                                     {{-- Los números «01…» de cada destino se RETIRARON (`[DECIDIDO owner, 2026-09-01]`,
                                          lanzamiento): eran decoración y el owner los quiso fuera. --}}

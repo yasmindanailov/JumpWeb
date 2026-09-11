@@ -53,7 +53,6 @@ class LandingServiceResourceTest extends TestCase
             'slug' => 'eventos-empresa',
             'position' => 1,
             'is_active' => true,
-            'show_in_nav' => true,
             'title' => ['es' => 'Eventos de empresa'],
         ], $overrides);
     }
@@ -74,9 +73,7 @@ class LandingServiceResourceTest extends TestCase
             ->fillForm($this->validForm([
                 'image' => '  images/attractions/park_jump.webp  ',
                 'title' => ['es' => 'Eventos de empresa', 'en' => 'Company events', 'fr' => ''],
-                'nav_subtitle' => ['es' => 'Desde 30 personas'],
                 'specs' => ['es' => [['label' => 'Grupo', 'value' => 'Mín. 30'], ['label' => '', 'value' => '']]],
-                'show_in_nav' => false,
             ]))
             ->call('create')
             ->assertHasNoFormErrors();
@@ -86,7 +83,6 @@ class LandingServiceResourceTest extends TestCase
         $this->assertSame('images/attractions/park_jump.webp', $svc->image, 'ruta recortada');
         $this->assertSame(['es' => 'Eventos de empresa', 'en' => 'Company events'], $svc->title, 'fr vacío descartado');
         $this->assertSame([['label' => 'Grupo', 'value' => 'Mín. 30']], $svc->tr('specs', 'es'), 'fila vacía descartada');
-        $this->assertFalse($svc->show_in_nav);
         $this->assertNull($svc->ticket_type_id, 'sin pack = solo contacto');
         $this->assertDatabaseHas('audit_logs', ['action' => 'content.landing_service_created', 'target_id' => $svc->id]);
     }
@@ -133,19 +129,28 @@ class LandingServiceResourceTest extends TestCase
         );
     }
 
+    /**
+     * ⚠️⚠️ **Editar un servicio NO reescribe `show_in_nav`** (`#521`). El formulario dejó de pintar
+     * su interruptor, y la normalización lo forzaba a `true` cuando no llegaba: con esa línea viva,
+     * **todo servicio que se editara quedaba marcado** sin que nadie lo hubiera pedido. La columna se
+     * conserva con el valor que tuviera, así que el guardado tiene que dejarla quieta.
+     */
     public function test_edit_toggles_and_slug_stays(): void
     {
-        $svc = LandingService::create(['slug' => 'colegios', 'title' => ['es' => 'Colegios'], 'is_active' => true, 'show_in_nav' => true]);
+        $svc = LandingService::create(['slug' => 'colegios', 'title' => ['es' => 'Colegios'], 'is_active' => true, 'show_in_nav' => false]);
 
         Livewire::actingAs($this->admin())
             ->test(EditLandingService::class, ['record' => $svc->id])
-            ->fillForm(['is_active' => false, 'show_in_nav' => false])
+            ->fillForm(['is_active' => false])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $svc->refresh();
         $this->assertFalse($svc->is_active);
-        $this->assertFalse($svc->show_in_nav);
+        $this->assertFalse(
+            $svc->show_in_nav,
+            'guardar el formulario reescribió `show_in_nav`, un dato que el formulario ya no enseña',
+        );
         $this->assertSame('colegios', $svc->slug, 'el slug (anchor) es inmutable al editar');
         $this->assertDatabaseHas('audit_logs', ['action' => 'content.landing_service_updated', 'target_id' => $svc->id]);
     }

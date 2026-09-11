@@ -2,7 +2,11 @@
 
 return [
     'nav' => [
-        'menu_group' => ['section' => 'On this page', 'page' => 'Other pages'],
+        'menu_group' => ['section' => 'On this page', 'page' => 'Pages'],
+        'pages' => [
+            'pricing' => 'Pricing', 'events' => 'Birthdays', 'attractions' => 'Attractions',
+            'rules' => 'Rules', 'services' => 'Services', 'contact' => 'Contact',
+        ],
         'zones' => 'Zones', 'rides' => 'Rides', 'pricing' => 'Pricing',
         'events' => 'Birthdays', 'info' => 'Visit', 'reserve' => 'Sign up',
         'reserve_tickets_aria' => 'Book tickets and birthdays',
@@ -12,8 +16,6 @@ return [
         'cta_buy' => 'Book',
         'cta_buy_from' => 'from :amount',
         'cta_book' => 'Book',
-        'park' => 'The park',
-        'services' => 'Services',
         'tickets' => 'Tickets',
         'cta_switch_buy' => 'Switch to booking tickets',
         'cta_switch_signup' => 'Switch to sign up',
@@ -32,15 +34,7 @@ return [
         'slider_prev' => 'Previous',
         'slider_next' => 'Next',
         'park_items' => [
-            'rides' => ['t' => 'Rides', 's' => 'Trampolines, foam pit, zipline'],
-            'info' => ['t' => 'Location & hours', 's' => 'Murcia · how to get there'],
-        ],
-        'services_items' => [
-            'birthdays' => ['t' => 'Birthdays', 's' => 'Per-kid packs · private room'],
-            'school' => ['t' => 'School trips', 's' => '30-minute session'],
-            'team_building' => ['t' => 'Companies', 's' => 'From 30 people'],
-            'adults' => ['t' => 'Adults outing', 's' => '22:00–01:00 · min. 30'],
-            'events' => ['t' => 'Other events', 's' => 'Hen, stag, shoots, parties'],
+            'info' => ['t' => 'Location & hours'],
         ],
     ],
     'hero' => [
