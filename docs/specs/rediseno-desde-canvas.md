@@ -1,7 +1,7 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · lo siguiente es la **Fase 3, las páginas**
-> **Banda de decisiones:** 470–499 (la reapertura es `#469`)
+> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas** (§5.5)
+> **Banda de decisiones:** 470–499 (la reapertura es `#469`), **agotada en `#499`** → la Fase 3 va en **520–549**
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
 > fuente se mueve sola, así que **se relee antes de cada tanda, no una vez por carril** (`#474`).
@@ -931,6 +931,64 @@ rehacer el armazón**; tocarlo suelto es descuadrar un cálculo que se va a reha
 ⚠️ **Divergencia detectada y NO resuelta**: el canvas dice que *«el teléfono y el WhatsApp salen del
 cierre»* y hoy el cierre tiene un `tel:` en su segundo CTA (`.reserve__act--alt`). No se tocó porque
 no estaba entre lo preguntado — **es decisión del owner** y va con la sección del cierre.
+
+### 5.5 · Estado de la Fase 3 · las páginas
+
+La Fase 3 empieza por el **ARMAZÓN** —lo que comparten las siete páginas— y no por una página:
+construir una encima del armazón viejo obliga a rehacerla (el mismo razonamiento que hizo de `#477`
+la primera tanda de la Fase 2). Fuente: `Layout Paginas PJP` (1a móvil · 1b escritorio · 1c el menú
+de escritorio) y `doc/paginas.md` del canvas.
+
+| | Tanda | Estado |
+|---|---|---|
+| T3a·1 | **El armazón · los DESTINOS** del menú (y del pie): el inventario de páginas; en la portada, sus secciones | ✅ `#521` |
+| T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón | ⬜ decidido en `#521` |
+| T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ⬜ |
+| T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ⬜ decidido en `#521` |
+| T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
+
+#### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
+
+Medido con la sonda de navegador el 2026-09-11 (8 vistas × 390 y 1280) antes de tocar nada:
+
+| Pieza | Canvas | Código | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|---|---|
+| Cabecera de las interiores | barra blanca **fija** 60/72 con filete de tinta de 4 px (token `componente.cabecera`) | racimo flotante sin fondo (`#201`) | ❌ **racimo flotante, como hoy** |
+| Menú en escritorio | panel de 520 a la derecha, velo al 72 %, sin foto | pantalla completa con columna de foto (`#228`/`#341`) | ❌ **pantalla completa, como hoy** |
+| Destinos del menú y del pie | el inventario de páginas | zonas, atajos y servicios del panel | ✅ el inventario |
+| Rótulo del grupo | «Páginas» | «Otras páginas» | ✅ «Páginas» |
+| Idioma en el pie | visible, ES · EN · FR | solo `<noscript>` (`#253`) | ✅ visible en TODAS — revierte `#253` |
+| Colofón | «Nombre · Ciudad · © año» | lema + coletilla | ✅ el del canvas |
+| Cierre en las interiores | la tarjeta sin juego ni eslogan | ninguno | ✅ solo «Reservar» |
+| El interruptor «Sale en el menú» | — | queda sin efecto | ✅ se retira del panel |
+
+⚠️⚠️ **Los dos «no» están DECIDIDOS, no pendientes**: quien abra el Layout mañana no debe
+«terminar» la barra blanca ni el panel de 520. Tampoco se toca la **tira en cuña** del pie: el
+Layout la dibuja fina de 4 px y el owner ya la había decidido en cuña de 22 contra el artboard.
+
+⚠️ **Tres diferencias del armazón que NO son de esta tanda y siguen abiertas en el marco**, porque
+el propio canvas las deja como conflictos del owner (marco `1b`): el rótulo del par va en **Bungee**
+y el sistema dice *«Bungee nunca en un botón»* · el CTA dentro del menú es **amarillo** y el sistema
+dice *«el amarillo nunca es botón»* · la barra de móvil del canvas es **naranja** y la nuestra es
+**tinta** (`#225`). Se le traen al owner cuando toque el par, no antes.
+
+✅ **T3a·1 · los destinos** (`#521`). `Content\Services\SiteDestinations` es la fuente ÚNICA de
+destinos del menú y del pie: las páginas del inventario en el orden del Layout con la **ruta escrita**
+debajo, sin las que estén en mantenimiento y sin `/bar` (su ruta no existe); y, **solo en la
+portada**, sus cinco secciones con el rótulo que la propia sección pinta.
+
+❗❗❗ **El defecto que cierra**: en una INTERIOR el grupo «En esta página» listaba las secciones **de
+la portada** —en `/precios`: JUMP, KIDS, Atracciones y Ubicación, las cuatro llevando fuera—. Ya no
+se pinta, y la página en curso sale en la lista marcada.
+
+⚠️⚠️ **Retirar el interruptor del panel tenía una trampa**: la normalización lo forzaba a `true`
+cuando no llegaba, así que quitar solo el campo habría reescrito el dato de todo servicio editado.
+⚠️⚠️ **Y la guarda del inventario nació comparándose consigo misma** (lo esperado salía de la misma
+constante que se muta): 2 de 9 mutaciones sobrevivían. Hoy el inventario va escrito en el caso.
+Arnés `scripts/mutar-destinos.py`: **9/9**.
+
+⚠️ **En local `/servicios` está en mantenimiento, así que el menú no la ofrece**: no es un fallo, es
+la regla nueva funcionando. En producción sale en cuanto el panel la abra.
 
 ### 5.2 · Las cuatro excepciones del owner
 

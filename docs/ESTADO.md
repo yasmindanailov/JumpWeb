@@ -31,7 +31,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** | `specs/rediseno-desde-canvas.md` | portada CERRADA · toca la **Fase 3, las páginas** |
+> | 🎨 **Diseño de la web** | ~~470–499~~ → **520–549** (último `#521`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521`; siguen el PIE, la CABECERA de página y el CIERRE |
 > | 📧 **Correos** | **500–519** | `specs/correos-desde-canvas.md` | **carril ENTERO en el árbol** (`#507`): el inventario del artboard queda sin ningún RECHAZADO · quedan los 4 ámbar y el OJO del owner |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#453`; libres `#454`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 >
@@ -140,6 +140,47 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ═══════════════════════════════════════════════════════════════════════════════════════
 
+> ═══════════ 🎨 CARRIL DE DISEÑO · banda **520–549** (2026-09-11, `#521`) ═══════════
+>
+> ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO PRIMERO.** La **Fase 3 (las páginas) está EN CURSO** y empieza
+> por el **ARMAZÓN** que comparten las siete (`Layout Paginas PJP`), no por una página. ▶ **Todo en
+> `specs/rediseno-desde-canvas.md` §5.5**: el contraste del artboard con el código (medido con sonda de
+> navegador, 8 vistas × 2 anchos) y lo que el owner decidió pieza a pieza. ⚠️ El artboard se leyó con
+> **`DesignSync`** directamente: la copia local `mockup_playjumppark_v2/` **no lo trae**.
+>
+> ✅ **T3a·1 · LOS DESTINOS** (`#521`, `[DECIDIDO owner]`): el menú (y el pie, en la T3a·2) ofrece el
+> **INVENTARIO de páginas** del canvas, con la ruta escrita debajo y sin las que estén en mantenimiento;
+> **solo en la portada**, además, sus cinco secciones con el rótulo que la propia sección pinta. Fuente
+> única: `Content\Services\SiteDestinations`. ❗ **Cierra un defecto que no avisaba**: en una interior el
+> grupo «En esta página» listaba secciones DE LA PORTADA. Salen del menú zonas, atajos y servicios del
+> panel —y del panel, el interruptor «Sale en el menú» y el subtítulo del menú—. **9/9 mutaciones**.
+>
+> ❗❗ **LO SIGUIENTE, YA DECIDIDO POR EL OWNER EL 11-09** (no hay que volver a preguntarlo):
+> **T3a·2 · el PIE del marco** —sobre tinta · idioma ES·EN·FR **visible en todas las páginas** (revierte
+> `#253`) · destinos del inventario + «Mi cuenta» (+ las secciones solo en la portada) · colofón
+> «Nombre · Ciudad · © año» (el lema sigue siendo el `<title>` de la portada y la coletilla, el pie del
+> post-form)— · **T3a·3 · la CABECERA de página** (rótulo con la ruta · Display L · entradilla, en las
+> interiores que la estrenan) · **T3a·4 · el CIERRE en las interiores** (la tarjeta de la portada sin
+> juego ni eslogan, **solo «Reservar»**; la barra de móvil se retira cuando entra).
+> ⛔ **LO QUE NO SE HACE, DECIDIDO**: la **barra blanca fija** de las interiores (se queda el racimo
+> flotante) y el **panel de menú de 520** en escritorio (se queda la pantalla completa). Tampoco la tira
+> fina del pie: la cuña de 22 es decisión anterior del owner contra el artboard.
+> ⚠️ **Tres conflictos del MARCO siguen abiertos y NO son de esta fase** (el canvas se los deja al owner):
+> el rótulo del par en Bungee («Bungee nunca en un botón»), el CTA amarillo dentro del menú, y la barra
+> de móvil naranja en el canvas y tinta aquí (`#225`). Se le traen cuando toque el par.
+>
+> ⚠️⚠️ **DOS TRAMPAS PAGADAS EN LA T3a·1, las dos con la suite en verde a medias**: (1) la guarda del
+> inventario calculaba lo esperado desde la MISMA constante que muta — 2 de 9 mutaciones vivas hasta
+> escribir el inventario en el caso; (2) la ejecución DIRIGIDA dejó fuera `MenuPreviewImagesTest` y la
+> suite completa cazó **3 rojos y un caso que pasaba EN VACÍO**. *Correr los tests que crees afectados
+> no es correr los afectados.*
+> ⚠️⚠️ **OTRAS SESIONES TRABAJAN EN ESTE MISMO ÁRBOL** (hoy, la validación del banco `#453`, que dejó
+> ficheros sin commitear mientras esta tanda corría): mira `git status` antes de cada `git add` y añade
+> **por fichero**, nunca `-A`.
+> ⚠️ **Tres fichas nuevas en `DEUDA.md`**: el `<title>` y la tarjeta para redes de TODAS las páginas
+> públicas firman con `config('app.name')` —el nombre del PRODUCTO— (la fuga que `#500` cerró en los
+> correos; **se trae al owner antes de arreglarla**) · el intermitente de `QrLogoTest` **ya tiene causa**
+> (el tope de 2 s, medido 2,051 s bajo la suite) · y dos columnas del panel conservadas sin consumidor.
 
 > ❗❗❗ **POR DÓNDE SE RETOMA — LEE ESTO Y NADA MÁS DE ESTE BLOQUE.** 🎨 **EL CARRIL DE DISEÑO ESTÁ ABIERTO Y ES LO VIVO** (2026-09-10, `#469`→`#489`). ▶ **EN UNA LÍNEA: la Fase 1 está CERRADA, la Fase 2 está a UNA sección de cerrar, y esa sección —06 «Reseñas»— el owner acaba de decidir DESBLOQUEARLA.**
 
@@ -2417,10 +2458,15 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4683 en verde** (29.256 aserciones, 6 skipped), medida el **2026-09-11** corriéndola
-> sobre el árbol **CONJUNTO de los DOS carriles ya fusionados**: el de
-> diseño hasta `#499` y `#520`, y el de los CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos de
-> `MixedPartyMailShapeTest` + 1 del molde + 1 de la bandeja).
+> Suite **4678 en verde** (29.252 aserciones, 1 skipped), medida el **2026-09-11** sobre `0af09e60`,
+> que ya lleva los TRES carriles del día: diseño hasta `#521`, CORREOS `#500`→`#507` y el `#453` de
+> la pasarela. ▶ **Cuadra con la cifra anterior, y conviene que conste cómo**: `4683` se midió en
+> `f19746d6`, antes de `#521`; `#521` retira **5** casos con su sujeto y añade **4** (→ 4682) y la
+> vista previa del menú retira **4** más (→ **4678**). ⚠️ Los «6 skipped» de aquella medida eran del
+> entorno de aquella pasada: esta da **1**, el de siempre.
+> Antes, sobre `f19746d6`: **4683** y 29.256, el árbol CONJUNTO de diseño hasta `#499`/`#520` y los
+> CORREOS `#500`→`#507` (la fiesta mixta suma 5 casos de `MixedPartyMailShapeTest` + 1 del molde + 1
+> de la bandeja).
 > ⚠️ **Segunda fusión, el 10-09 por la noche**: el carril de diseño cerró `#494`→`#499` (atribución
 > de Google · el orden de las secciones · la portada sin decoración · las velas del carril) y al
 > fusionar salió **un rojo que no era del merge** (`#520`): un test que dependía de la MÁQUINA.

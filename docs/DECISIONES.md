@@ -28094,3 +28094,59 @@ del contenedor; receta en `VERIFICACION-E2E-CAJON.md` §5.undecies):
 «Hosted/Redirección», la URL de staging y el usuario de prueba); comprobar en Canales de pruebas que
 las operaciones aparecen; y, al recibir el terminal real, `redsys_merchant_url` en producción **antes**
 que `redsys_environment=live`.
+
+## #521 · 2026-09-11 · `[DECIDIDO owner]` Los destinos del menú (y del pie) son el INVENTARIO del canvas — y una página interior dejaba de ofrecer secciones de otra página
+
+La **T3a·1**, primera tanda de la **Fase 3** del carril de diseño (`specs/rediseno-desde-canvas.md`
+§5.5). La Fase 3 empieza por el ARMAZÓN de las páginas (`Layout Paginas PJP`, aprobado en el canvas)
+y no por una página. Antes de construir se contrastó el artboard contra el código **renderizado**
+(sonda de navegador, 8 vistas × 2 anchos) y salieron seis diferencias; las que chocaban con
+decisiones anteriores del owner se le preguntaron **con lo medido delante**:
+
+| Pieza | Canvas | Código | `[DECIDIDO owner, 2026-09-11]` |
+|---|---|---|---|
+| Cabecera de las interiores | barra blanca FIJA 60/72 con filete de tinta de 4 px | racimo flotante sin fondo (`#201`) | ❌ **se queda el racimo flotante** |
+| Menú en escritorio | panel de 520 a la derecha, sin foto | pantalla completa con columna de foto (`#228`/`#341`) | ❌ **se queda la pantalla completa** |
+| Destinos del menú y del pie | el inventario de páginas | zonas, atajos y servicios del panel | ✅ **el inventario** (esta tanda) |
+| Idioma en el pie | visible, ES · EN · FR | solo `<noscript>` (`#253`) | ✅ **visible en todas las páginas** — revierte `#253` (T3a·2) |
+| Colofón del pie | «Nombre · Ciudad · © año» | lema + coletilla | ✅ **el del canvas** (T3a·2) |
+| Cierre en las interiores | la tarjeta de la portada sin juego ni eslogan | ninguno | ✅ **solo «Reservar»** (T3a·4) |
+
+⚠️ **Los dos «no» no son descuido: están decididos**, y quien lea el Layout mañana no debe
+«terminar» la barra blanca ni el panel de 520.
+
+❗❗❗ **EL DEFECTO QUE ESTA TANDA CIERRA, Y NO AVISABA**: en una página INTERIOR el grupo «En esta
+página» del menú listaba las secciones **de la portada** — medido en `/precios`: JUMP, KIDS,
+Atracciones y Ubicación, las cuatro llevando FUERA de la página que decía. Una interior no tiene
+secciones (el Layout: *«sin el grupo "Esta página" mientras la página no tenga secciones»*), así que
+ese grupo ya no se pinta, y la página en curso sale en la lista **marcada** (`aria-current`).
+▶ Por eso el grupo se llama «**Páginas**» y no «Otras páginas» (`[DECIDIDO owner]`): la lista incluye
+la página en la que estás, y «otras» dejaría de ser cierto.
+
+▶ **Lo construido.** `Content\Services\SiteDestinations` es la fuente ÚNICA de destinos —el menú
+ahora y el pie en la T3a·2—: las páginas del inventario en el orden del Layout, con la **ruta
+escrita** debajo (sale de la URL real, no de una tabla), y **una página en mantenimiento no se
+anuncia** (antes solo `/servicios`; hoy cualquiera de las que el panel puede cerrar). `/bar` no entra:
+su ruta no existe. Las secciones de la portada son las cinco que el marco pone en el menú
+—«Cuánto» y «Cumpleaños» llevan a su PÁGINA; «Reseñas» desaparece sin cookies— con **el rótulo
+que la propia sección pinta**, y «Dudas» solo si la portada la pinta. El composer deja de hacer
+**dos consultas por petición** en las doce vistas (`navZones`, `navServices`).
+
+⚠️⚠️ **Retirar el interruptor «Sale en el menú» tenía una trampa** (`[DECIDIDO owner]`: *un control
+que no gobierna nada engaña a quien lo toca*): la normalización del formulario forzaba `show_in_nav`
+a `true` cuando no llegaba, así que quitar solo el campo habría **reescrito el dato de todo servicio
+que se editara**. Se retiró también esa línea, con guarda y mutación propias. «Subtítulo en el menú»
+(`nav_subtitle`) sale del formulario por lo mismo. Las **dos columnas se conservan** con su valor.
+
+⚠️⚠️ **Y la guarda del inventario NACIÓ comparándose consigo misma**: calculaba lo esperado desde
+`SiteDestinations::PAGES`, la constante que muta, y **2 de 9 mutaciones sobrevivían** (colar un
+destino, reordenar). Hoy el inventario va ESCRITO en el caso, que es su especificación. La misma
+trampa se había esquivado a tiempo en los rótulos de sección —se leen del rótulo PINTADO en la
+portada, no de la constante—. *Una guarda que deriva lo esperado del mismo sitio que lo medido no
+vigila nada.*
+
+**Verificación**: 151 casos de los ficheros tocados · **9/9 mutaciones** (`scripts/mutar-destinos.py`)
+· navegador a 390 y 1280: portada con 5 secciones + 5 páginas, `/precios` con solo «Páginas» y
+marcada. Cuatro casos se retiran con su sujeto (`CONVENCIONES §3.quater`) —dos de `ServicesPageTest`
+y dos de orden de `ArmazonContractTest`— y uno se sustituye; dos sondas de idioma de `HomePageTest`
+usaban el rótulo del desplegable viejo y se re-apuntan, porque su sujeto es el IDIOMA.
