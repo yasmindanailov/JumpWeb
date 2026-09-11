@@ -51,34 +51,33 @@
          en la vista, o al revés, y nadie se enteraría hasta verlo. `mira` es el índice del ítem
          señalado; arranca en 0 para que la tarjeta no nazca vacía. --}}
 
-    {{-- **EL RESPALDO DE LA COLUMNA: un hueco de imagen POR INSTALACIÓN** (`#341`,
-         `[DECIDIDO owner]`: «las que sean, que no esté vacío»).
+    {{-- **LA IMAGEN DE LA COLUMNA: un hueco POR INSTALACIÓN** (`#341`, `[DECIDIDO owner]`: «las que
+         sean, que no esté vacío»).
 
-         Medido antes de tocarlo: con `/servicios` en mantenimiento **ninguno** de los destinos del
-         menú traía foto —`img` solo lo tienen los servicios del CMS—, así que la columna caía al
-         fondo rayado en los siete. Las zonas ya aportan la suya (`#341`, arriba), pero Entradas,
-         Cumpleaños, Atracciones y Ubicación no tienen ninguna imagen que sea SUYA en el modelo, y
-         **inventarles una asociación sería quemar el catálogo de un cliente en el producto** — que
-         es justo la fuga que esta misma tanda acaba de cerrar.
+         ⚠️⚠️ **Desde `#521` es la ÚNICA imagen de la columna, y no es un descuido.** Hasta entonces las
+         ZONAS y los servicios del CMS traían foto propia, pero salieron del menú con la decisión del
+         owner —los destinos son el inventario de páginas y las secciones de la portada—, y **ninguno
+         de ésos tiene una imagen que sea SUYA en el modelo**: inventarles una asociación sería quemar
+         el catálogo de un cliente en el producto. Por eso aquí ya no hay rama «foto propia»: una rama
+         que nunca se ejecuta es una mentira esperando a que alguien la crea.
 
-         ▶ Por eso el respaldo es el CUARTO hueco por instalación, con las mismas tres piezas que el
-         logotipo, el icono y el kit (`INSTALACION-CLIENTE.md` §4): fichero del cliente, gitignorado
-         y excluido del `--delete` del despliegue. **Sin fichero no se pinta nada** y la columna se
-         comporta exactamente como hoy: el suelo del producto es el fondo rayado, que es lo que el
-         mockup usa donde aún no hay foto.
+         ▶ Es el CUARTO hueco por instalación, con las mismas tres piezas que el logotipo, el icono y el
+         kit (`INSTALACION-CLIENTE.md` §4): fichero del cliente, gitignorado y excluido del `--delete`
+         del despliegue. **Sin fichero no se pinta nada**: el suelo del producto es el fondo rayado,
+         que es lo que el mockup usa donde aún no hay foto.
 
          ⚠️ La marca de tiempo hace de cache-buster, igual que en `site.brand`: sin ella, sustituir
          la foto en el servidor no se vería hasta que caducara la caché del navegador. --}}
     @php($respaldoMenu = @filemtime(public_path('img/client-menu.webp')))
     @php($respaldo = $respaldoMenu ? asset('img/client-menu.webp').'?v='.$respaldoMenu : null)
 
-    {{-- ⚠️ El respaldo se resuelve AQUÍ y no en la plantilla: así «qué imagen le toca a este destino»
+    {{-- ⚠️ La imagen se resuelve AQUÍ y no en la plantilla: así «qué imagen le toca a este destino»
          se decide en UN sitio, y el marcado sigue preguntando por una sola cosa (`vistas[mira].img`).
          Un `||` dentro del `:src` habría dejado la regla repartida entre PHP y Alpine. --}}
     @php($vistas = collect($items)->map(fn ($it) => [
         't' => $it['t'],
         's' => $it['s'] ?? '',
-        'img' => $it['img'] ?? $respaldo,
+        'img' => $respaldo,
     ])->values()->all())
 
     <div class="menu__inner" role="dialog" aria-modal="true"
