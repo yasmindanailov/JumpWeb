@@ -87,16 +87,23 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > - **T3+T4 · el MOLDE en los VEINTIUNO** — cabecera en tinta con **chapa · titular · resguardo**,
 >   **aviso** con punto, **el mapa del naranja** (tinta salvo los dos que venden), dirección y
 >   teléfono en el pie, **cero emojis**. **21 de 21 renderizados con cabecera.**
-> - **T5 · LA BANDEJA** (`#506`) — las **63** líneas de adelanto (21 correos × 3 idiomas; **no 69**:
->   los dos internos usan vista suelta y no pueden llevarla) y los **21 asuntos con el dato delante**.
+> - **T5 · LA BANDEJA** (`#506`) — las líneas de adelanto y los **asuntos con el dato delante**.
 >   Medido: longitud media **44 → 33** caracteres · asuntos que pasan del corte de un móvil **18 → 7**
->   · su dato cabe en el corte en **9 de 14**, contra **1 de 13**. **9/9 mutaciones.**
+>   · su dato cabe en el corte en **9 de 14**, contra **1 de 13**. **10/10 mutaciones.**
+>   ⚠️ **Su cifra ha cambiado DOS veces y hoy son 69** (medido: 23 × 3): el canvas decía 23, la spec
+>   corrigió a 69 (× 3 idiomas), la T5 midió **63** —los dos internos usan vista suelta y no pueden
+>   llevarla— y `#508` devolvió el 69 **por otro motivo**: los dos del framework. *Tres cifras para
+>   el mismo dato, y las tres fueron ciertas cuando se midieron.*
 > - **LA FIESTA MIXTA** (`#507`) — el último RECHAZADO del inventario. No eran «nueve frases»: eran
 >   **13 y 150 palabras** para decir un número, con **los TRES datos del resguardo repetidos debajo**
 >   y la cifra saliendo en texto corrido. Hoy la cifra va en el **AVISO**, por encima del libro, y
 >   **el tono sigue al signo** (un descuento ya no llega teñido de «falta algo»). **7/7 mutaciones.**
 >   ⚠️ **Las siete frases del desenlace NO se tocaron**: están razonadas en el código y
 >   `cumple-mixto.md` §24.5 las cita como patrón de referencia. Lo que se movió es DÓNDE se pintan.
+> - **LOS DOS DEL FRAMEWORK** (`#508`, §17) — el enlace de **verificar el correo** y el de
+>   **restablecer la contraseña**, que no estaban en el inventario (arriba está el porqué). Subclases
+>   que sobrescriben solo `buildMailMessage($url)`: **la URL y el cuerpo siguen siendo del
+>   framework**, verificados idénticos. **7/7 mutaciones.**
 > - **La marca del PRODUCTO fuera de la bandeja del cliente**: remitente, firma y copyright decían
 >   «JumpWeb» con el negocio llamándose otra cosa, en **20 de los 21**.
 >
@@ -105,15 +112,20 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >    puede hacer desde aquí**: no hay Playwright en el contenedor. Todo está verificado por
 >    aritmética, por render y por Mailpit, **nunca por ojo**. Y ahí es donde se comprueba si la línea
 >    de adelanto se lee, si el relleno tapa el cuerpo y si el oscuro no se invierte solo.
-> 2. **Los textos los corrige el owner**: las 63 líneas y los 21 asuntos están escritos derivando de
->    lo que ya había, para que corrija **sobre algo y no sobre un hueco** (decisión 23 del canvas).
+> 2. **Los textos los corrige el owner**: las **69** líneas de adelanto y los **23** asuntos están
+>    escritos derivando de lo que ya había, para que corrija **sobre algo y no sobre un hueco**
+>    (decisión 23 del canvas).
 > 3. **Los cuatro ÁMBAR del inventario** (§16 de la spec), verificados uno a uno contra el
 >    diccionario de hoy y ninguno bloqueante: la **hora** de caducidad en «pago denegado» y en
 >    «confirma tu email», **qué queda vivo** en «producto cancelado» —los tres son texto y un dato
 >    que el correo ya tiene a mano— y la **contraseña temporal** del alta por el parque, que es una
 >    decisión de seguridad con código detrás.
 >
-> ❗❗❗ **TRES DEFECTOS VIVOS QUE ENCONTRÓ LA T5 AL MEDIR, y los tres estaban en VERDE:**
+> ❗❗❗ **CUATRO DEFECTOS VIVOS QUE ENCONTRÓ EL CARRIL AL MEDIR, y los cuatro estaban en VERDE.**
+> ⚠️ **Y los cuatro comparten forma**: la guarda existía y miraba al lado — presencia en vez de
+> contenido, HTML en vez de las dos partes, una carpeta en vez de todo lo que se envía.
+> **(d)** `#508`: los dos correos del framework **se mandaban SÍNCRONOS**, contra `PAY-14`, porque su
+> guarda escanea `app/Notifications/` y ellos no estaban ahí.
 > **(a)** `#504` dejó la cabecera del correo de identidad social diciendo **el nombre de su clave**
 > —«account.social_link_mail.badge»— en los tres idiomas, porque `badge` y `headline` estaban
 > anidadas dentro de `providers`. Su guarda comprobaba `class="hero"`: *declarar una pieza no es que
