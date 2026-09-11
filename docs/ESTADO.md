@@ -136,6 +136,21 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > líneas de los dos carriles partidas por un `=======`. Se conservan las diez decisiones, y **nace el
 > check 9 del gate documental**, verificado con control.
 >
+> ▶ **LA RED QUE PROTEGE ESTO, por si hay que tocarlo** (correr los arneses ANTES de dar por bueno
+> un cambio, y con el árbol commiteado — los tres lo exigen):
+> - `MailThemeTest` (13) — el vestido: ninguna webfont, radios en la escala, el modo oscuro en el
+>   HTML **enviado**, y el contraste **calculado** con una pila de fondos, no un hex escrito.
+> - `MailMoldTest` (8) — el molde, censando **23** desde la FUENTE; incluye que `User` siga mandando
+>   las nuestras y que los dos del framework **se rendericen**.
+> - `MailInboxLineTest` (10) — la bandeja: las piezas en los tres idiomas (con `Lang::has(…, false)`,
+>   o el respaldo las tapa), sin datos variables, dentro del tope, y **sin repetir su asunto**.
+> - `MixedPartyMailShapeTest` (5) · `EmailBookBlockTest`. ⚠️ El mapa del naranja lo vigila `MailMoldTest`, no un `MailButtonMapTest` — esa clase nunca existió y tres comentarios del código la citaban.
+> - Arneses: `scripts/mutar-correos-t2.py` (8/8) · `mutar-bandeja.py` (**10/10**) ·
+>   `mutar-mixta.py` (**7/7**) · `mutar-correos-framework.py` (**7/7**).
+> - **Para mirarlos de verdad**: enviarlos con `Notification::sendNow` desde `tinker` y leerlos en
+>   **Mailpit (`localhost:8028`)** — su `Snippet` es literalmente lo que previsualiza una bandeja, así
+>   que sirve para comprobar la línea de adelanto sin salir de aquí.
+>
 > ❗❗ **LAS NUEVE TRAMPAS DE ESTE TERRENO, todas pagadas** (detalle en la spec):
 > **(0)** ⚠️⚠️ **EL ORDEN DE LAS LLAMADAS NO ES EL ORDEN DE LA PINTURA**: la plantilla pinta TODAS las
 > `->line()` juntas y el aviso DESPUÉS, así que un `->notice()` escrito antes acaba el ÚLTIMO. La

@@ -58,7 +58,7 @@
      * que «reintentar el pago». Medido: **15 correos con botón y ninguno declaraba `level`**.
      *
      * ▶ `level` es la única palanca que Laravel ofrece aquí (`action()` no acepta color), así que
-     * los dos que venden la declaran con `->level('sell')`. Lo vigila `MailButtonMapTest`: si un
+     * los dos que venden la declaran con `->level('sell')`. Lo vigila `MailMoldTest::test_exactly_two_mails_carry_the_selling_button`: si un
      * tercer correo la usa, o si uno de esos dos deja de usarla, se pone rojo.
      */
     $color = match ($level) {
