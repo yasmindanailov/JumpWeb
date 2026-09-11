@@ -23,7 +23,18 @@ class ScaleTokensAreUsedTest extends TestCase
 {
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css'];
 
-    private const FS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22];
+    /**
+     * ⚠️ **El 9 SALE con la grieta 00 del cajón** (`#550`). Esta lista dice «para este píxel existe
+     * token», y `--fs-9` se quedó con **cero usos** cuando sus tres consumidores —«Casi llena», la
+     * chapa del catálogo y el precio del día— subieron al nivel Etiqueta (12), el suelo del sistema.
+     * Se retiró del `:root` porque `SidebarTokenBudgetTest` no admite escalones muertos.
+     *
+     * ▶ **Y no se pierde la otra mitad de esta guarda**: un `font-size: 9px` literal ya lo prohíben
+     * `SemanticFillTextTest` (suelo de 10 px en la web pública) y `SidebarBodySizeTest` (la escala,
+     * dentro del cajón). *Eran tres guardas diciendo cosas distintas sobre el mismo token; la que
+     * manda es la que mide el uso real.*
+     */
+    private const FS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22];
 
     private const SP = [1, 2, 3, 4, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 18, 20, 28];
 

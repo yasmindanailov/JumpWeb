@@ -30,8 +30,15 @@ class SemanticFillTextTest extends TestCase
 {
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css'];
 
-    /** Reglas del cajón SPA (aparcado, `[DECIDIDO owner, 2026-09-01]`) que aún bajan de 10 px. Solo encoge. */
-    private const CAJON_BAJO_EL_SUELO = ['.bk-seg__label'];
+    /**
+     * Reglas del CAJÓN que aún bajan de 10 px. **Solo encoge** — y con la grieta 00 queda VACÍA:
+     * `.bk-seg__label` era la última (9,5 px) y pasa al nivel **Etiqueta** (12), que es el escalón
+     * más pequeño que el sistema declara. La lista se conserva, no el hueco: si mañana alguien
+     * vuelve a bajar de 10 dentro del cajón, este fichero se lo dirá en vez de tener que decidirlo.
+     *
+     * @var list<string>
+     */
+    private const CAJON_BAJO_EL_SUELO = [];
 
     public function test_the_scan_sees_the_corpus(): void
     {
@@ -105,6 +112,15 @@ class SemanticFillTextTest extends TestCase
 
     public function test_the_exception_list_still_has_a_subject(): void
     {
+        // ⚠️ La lista quedó VACÍA con la grieta 00, y un `foreach` sobre una lista vacía no asevera
+        // nada: PHPUnit lo marca «risky» y con razón — un caso que no comprueba nada se lee como
+        // verde. Se asevera el estado final que se quiere conservar: ninguna excepción abierta.
+        if (self::CAJON_BAJO_EL_SUELO === []) {
+            $this->assertSame([], self::CAJON_BAJO_EL_SUELO, 'la lista de excepciones está vacía: el cajón ya no baja de 10 px');
+
+            return;
+        }
+
         $rules = $this->rules();
         foreach (self::CAJON_BAJO_EL_SUELO as $selector) {
             $this->assertArrayHasKey($selector, $rules, "`{$selector}` ya no existe: retíralo de la lista de excepciones, que solo encoge");

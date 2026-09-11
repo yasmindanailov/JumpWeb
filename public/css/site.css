@@ -912,20 +912,6 @@
 
 /* ── Cumpleaños: toggle Jump/Kids (landing, #1 · 2026-05-31) ─────────────── */
 .events__tabs { display: inline-flex; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-4); }
-.events__tab {
-  font-family: var(--font-body); font-weight: 600; font-size: var(--fs-13);
-  padding: 9px 18px; border-radius: var(--r-btn); cursor: pointer;
-  background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg);
-  border: 1px solid color-mix(in srgb, var(--fg) 16%, transparent);
-  transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--ease-sale);
-}
-.events__tab:hover { background: color-mix(in srgb, var(--fg) 15%, transparent); }
-.events__tab.is-active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.events__pack-terms {
-  margin: var(--sp-16) 0 0; font-size: var(--fs-13); font-weight: 600; line-height: 1.4;
-  color: var(--fg); opacity: 0.85;
-}
-
 /* T9: el bloque `.invite-*` (la tarjeta de invitación ANTERIOR al editor `bd-editor`/`bd-inv` de
    `events-section`, objetivo de html2canvas en su día) llevaba MUERTO desde aquel rediseño:
    0 consumidores en blades, Vue y JS — medido con control positivo. Se retira ENTERO, y con él
@@ -1075,7 +1061,7 @@
 .auth__row .check--opt { margin: 0; }
 .auth__link {
     background: none; border: none; cursor: pointer; padding: 0;
-    font-family: var(--font-body); font-size: var(--fs-13); color: var(--zone-1);
+    font-family: var(--font-body); font-size: var(--fs-button); color: var(--zone-1);
     font-weight: 600; text-decoration: underline; white-space: nowrap;
 }
 
@@ -1085,7 +1071,7 @@
 /* cambiar entre login/registro dentro del modal */
 .auth__switch {
     margin: var(--sp-16) 0 0; text-align: center;
-    font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute);
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
 }
 .auth__switch button {
     background: none; border: none; cursor: pointer; padding: 0;
@@ -1143,7 +1129,7 @@
 /* ⚠️ **La confirmación del alta: «te hemos escrito a …»**, y va con más peso que el consejo de spam
    que lleva debajo. Sin regla —como estuvo hasta el 2026-08-23— las dos frases se leían igual y el
    correo, que es el DATO que el titular tiene que reconocer, se perdía entre ellas. */
-.auth__sent { margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
+.auth__sent { margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
 .auth__form { max-width: none; margin-top: var(--sp-18); }
 .auth__submit { width: 100%; justify-content: center; margin-top: var(--sp-6); }
 /* ══ EL BOTÓN DE GOOGLE — el único control del producto que NO habla nuestro idioma visual ══
@@ -1181,7 +1167,7 @@
     gap: var(--sp-10); min-height: var(--tap-min); padding: var(--sp-10) var(--sp-12);
     background: #fff; color: #1f1f1f;
     border: 1px solid #747775; border-radius: var(--r-pill);
-    font-family: var(--font-body); font-size: var(--fs-14); line-height: 20px; font-weight: 500;
+    font-family: var(--font-body); font-size: var(--fs-body); line-height: 20px; font-weight: 500;
 }
 .auth__google:hover { background: #f7f8f8; color: #1f1f1f; border-color: #747775; }
 /* El dibujo NO se estira ni se recolorea: `flex: none` lo saca del reparto del flex, y al ser un
@@ -1199,7 +1185,7 @@
 .auth__or {
     display: flex; align-items: center; gap: var(--sp-12);
     margin: var(--sp-14) 0;
-    color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-13);
+    color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-body-s);
 }
 .auth__or::before, .auth__or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 .form__hint { color: var(--fg-mute); font-size: var(--fs-12); }
@@ -1250,13 +1236,9 @@
     font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
     letter-spacing: -0.02em; font-size: var(--fs-22); color: var(--fg); margin: 0;
 }
-.account__card-sub { margin: var(--sp-6) 0 var(--sp-18); color: var(--fg-mute); font-size: var(--fs-14); line-height: 1.5; }
+.account__card-sub { margin: var(--sp-6) 0 var(--sp-18); color: var(--fg-mute); font-size: var(--fs-body-s); line-height: 1.5; }
 .account__card .form { max-width: none; margin-top: 0; }
 .account__danger-btn { width: 100%; justify-content: center; }
-
-/* RGPD: consentimientos, exportar y zona de borrado */
-.account__subhead { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-14); color: var(--fg); margin: var(--sp-18) 0 var(--sp-8); }
-.account__muted { color: var(--fg-mute); font-size: var(--fs-14); }
 /* **LAS CUENTAS VINCULADAS, DENTRO DEL FORMULARIO DE SESIONES** (`specs/auth-con-google.md` §21.4.5).
    Es la única sección del área de cuenta que NO puede ser una tarjeta —comparte el campo de
    contraseña con «cerrar sesión en los demás dispositivos»—, así que la rejilla no la separa y su aire
@@ -1268,7 +1250,7 @@
 /* ⚠️⚠️ **`flex-wrap: wrap` es la mitad del arreglo de `#346`.** Sin él, la meta y el rótulo compiten
    por el mismo renglón y la fila crece hacia fuera del carril en vez de partirse. Medido: al
    retirar el marketing, **82 px de desborde** y barra de scroll horizontal en el cajón. */
-.account__consents li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-4) var(--sp-12); align-items: baseline; font-family: var(--font-body); font-size: var(--fs-13); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.account__consents li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-4) var(--sp-12); align-items: baseline; font-family: var(--font-body); font-size: var(--fs-body); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-sm); }
 .account__consent-type { font-weight: 600; color: var(--fg); }
 /* ⚠️⚠️ **El `white-space: nowrap` se movió de la LÍNEA al TROZO** (`#346`, y ésta es la otra mitad).
    Cuando la meta eran «fecha · versión» el `nowrap` describía algo cierto: nada dentro se podía
@@ -1396,7 +1378,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__scroll::-webkit-scrollbar { width: 10px; }
 .purchase__scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); border: 3px solid var(--bg); }
 .wiz__title { margin: 0 0 var(--sp-14); font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-20); color: var(--fg); }
-.purchase__empty { color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-14); }
+.purchase__empty { color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-body); }
 
 /* ══ LA TIRA DE HORAS (paso 3 · `DECISIONES #239`) ═════════════════════════════════════════════
    `[DECIDIDO owner, 2026-08-28]`: tira deslizable con AJUSTE, no una rejilla que envuelve y no un
@@ -1430,7 +1412,7 @@ body.no-scroll { overflow: hidden; }
    del embudo se lean como una familia y no como dos controles distintos. Antes eran 68×39 (`#237`) y
    luego 72×44. Medido: con este ancho se siguen viendo **4 de 11** sin deslizar, igual que antes —lo
    que cambia es la jerarquía de dentro, no cuántas caben—. */
-.purchase__chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); min-height: 76px; min-width: 76px; padding: var(--sp-8) var(--sp-10); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
+.purchase__chip { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); min-height: 76px; min-width: 76px; padding: var(--sp-8) var(--sp-10); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale); }
 .purchase__chip:hover { border-color: var(--fg); }
 /* ❗❗ **LA FRANJA COMPLETA: SE ENSEÑA, NO SE ESCONDE** (`#277`, artboard `Microanimaciones PJP`).
    Su norma pinta tres estados y dice que el color **informa, no decora**: con plazas, con las
@@ -1490,13 +1472,13 @@ body.no-scroll { overflow: hidden; }
 @keyframes chip-cae-quieta { from { opacity: 0; } to { opacity: 1; } }
 /* La hora MANDA en el chip: es lo que se elige. `line-height: 1` para que el aviso quede pegado
    debajo sin que el interlineado le abra un hueco que descoloca la altura de la tira. */
-.purchase__chip-t { font-size: var(--fs-15); font-weight: var(--fw-bold); line-height: 1; }
+.purchase__chip-t { font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1; }
 /* «Casi llena»: `--warn` es el token de señal del producto (el mismo del «a cobrar en el parque»),
    no un amarillo nuevo. ⚠️ Es ESCAPARATE, no aforo: quien decide el cupo es `SlotOffer` (`AFORO-02`). */
 /* ⚠️ **El aviso va en SEGUNDO plano, no al mismo nivel que la hora** (`[OWNER, 2026-08-28]`). Es
    contexto de la decisión, no la decisión: por eso baja de peso, envuelve en dos líneas si hace falta
    y se queda en el ámbar de señal del producto. */
-.purchase__chip-full { max-width: 100%; font-size: var(--fs-9); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn); }
+.purchase__chip-full { max-width: 100%; font-size: var(--fs-label); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn); }
 /* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
 .purchase__chip.is-active .purchase__chip-full { color: var(--fg); opacity: 0.78; }
 
@@ -1504,9 +1486,6 @@ body.no-scroll { overflow: hidden; }
 .entry { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .entry.is-out { opacity: 0.55; }
 .entry__info { display: flex; flex-direction: column; gap: var(--sp-2); }
-.entry__name { font-family: var(--font-body); font-weight: 600; font-size: var(--fs-14); color: var(--fg); }
-.entry__price { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-13); color: var(--fg); }
-.entry__avail { font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); }
 .entry__stepper { display: flex; align-items: center; gap: var(--sp-8); flex: none; }
 .entry__stepper button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-17); line-height: 1; cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale); }
 .entry__stepper button:hover:not(:disabled) { border-color: var(--fg); }
@@ -1517,7 +1496,7 @@ body.no-scroll { overflow: hidden; }
    navegador impone; sin esto el número sale con la fuente del sistema y una caja gris entre dos
    botones redondos. ⚠️ Y las flechas nativas (`spin buttons`) se retiran: al lado de un `+` y un `−`
    de 32 px son un tercer control que hace lo mismo y en móvil roban la mitad del ancho. */
-.entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-sm); }
+.entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-sm); }
 /* ⚠️ Decía `var(--r-5)`, que no existe (`#414`): la declaración se descartaba y el radio valía 0.
    Medido en navegador: **0px → 6px**, con un `<input>` sin la clase como control (0px), que es lo
    que demuestra que la clase hace algo. ⚠️ Este control **no tiene borde ni fondo**, así que lo
@@ -1536,7 +1515,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__total { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-body); }
 .purchase__total strong { font-size: var(--fs-22); font-family: var(--font-display); font-stretch: 75%; }
 /* Señal/depósito (#227): sub-líneas «Pagas ahora (señal) / En el parque» bajo el total. */
-.purchase__split { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); }
+.purchase__split { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .purchase__split strong { font-weight: var(--fw-bold); color: var(--fg); }
 
 /* ====================================================================
@@ -1660,7 +1639,7 @@ body.no-scroll { overflow: hidden; }
 @keyframes bk-fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .bk-progress { flex: none; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-14) var(--sp-20); background: var(--bg-soft); border-bottom: 1px solid var(--line); animation: bk-fade var(--dur-entra) var(--ease-sale); }
 .bk-progress__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
-.bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--zone-1); transition: gap var(--dur-sale) var(--ease-sale); }
+.bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-bold); color: var(--zone-1); transition: gap var(--dur-sale) var(--ease-sale); }
 .bk-back svg { width: 15px; height: 15px; }
 /* Flecha/chevron canónicos (componentes x-icons.arrow-right/arrow-left). En contexto inline
    (enlace con texto + flecha) se alinea al centro de la línea; dentro de flex (botones) manda
@@ -1681,7 +1660,7 @@ body.no-scroll { overflow: hidden; }
    empezara por un bloque con margen. El día que una dejó de traer título, «Volver» y las pestañas
    quedaron pegados. Un elemento que no se separa solo acaba dependiendo del que venga detrás. */
 .account__back { margin-bottom: var(--sp-14); }
-.bk-step-count { font-family: var(--font-mono); font-size: var(--fs-11); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-mute); flex-shrink: 0; }
+.bk-step-count { font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-mute); flex-shrink: 0; }
 .bk-seg { display: flex; gap: var(--sp-7); }
 .bk-seg__item { flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 .bk-seg__bar { height: 5px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; position: relative; }
@@ -1689,10 +1668,10 @@ body.no-scroll { overflow: hidden; }
 .bk-seg__item.is-done .bk-seg__bar::after,
 .bk-seg__item.is-current .bk-seg__bar::after { transform: scaleX(1); }
 .bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--zone-1) 30%, transparent); }
-.bk-seg__label { font-size: 9.5px; font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-mute); text-align: center; white-space: nowrap; transition: color var(--dur-estado) var(--ease-sale); }
+.bk-seg__label { font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-mute); text-align: center; white-space: nowrap; transition: color var(--dur-estado) var(--ease-sale); }
 .bk-seg__item.is-current .bk-seg__label,
 .bk-seg__item.is-done .bk-seg__label { color: var(--fg); }
-.bk-context { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-13); font-weight: var(--fw-bold); color: var(--zone-1); line-height: 1.2; }
+.bk-context { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--zone-1); line-height: 1.2; }
 .bk-context .jj-block { width: 11px; height: 11px; border-radius: 3px; transform: rotate(20deg); background: var(--zone-1); flex: none; }
 
 /* (3) Footer sticky y dinámico: anclado al fondo del panel, fuera del scroll. En columna porque
@@ -1701,9 +1680,9 @@ body.no-scroll { overflow: hidden; }
 .bk-foot { position: relative; flex: none; display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-14) var(--sp-20); border-top: 1px solid var(--line); background: var(--bg); }
 .bk-foot__row { display: flex; align-items: center; gap: var(--sp-14); }
 .bk-foot__total { display: flex; flex-direction: column; flex-shrink: 0; }
-.bk-foot__l { font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--fg-mute); letter-spacing: 0.04em; }
+.bk-foot__l { font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); letter-spacing: 0.04em; }
 .bk-foot__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; font-size: var(--fs-22); letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap; }
-.bk-foot__note { margin: 0; font-size: 11.5px; color: var(--fg-mute); line-height: 1.4; }
+.bk-foot__note { margin: 0; font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4; }
 
 /* Desglose de la señal vía ⓘ (popover), para NO romper la estética «Total — CTA» con líneas extra.
    La ⓘ va junto al rótulo del total; el popover abre HACIA ARRIBA (el footer está al fondo del panel). */
@@ -1715,20 +1694,20 @@ body.no-scroll { overflow: hidden; }
    encima. Así queda SIEMPRE dentro del panel — no lo recorta el `overflow:hidden` de `.sidecart__body`
    ni se sale por el borde izquierdo (el fallo anterior con `translateX`). */
 .bk-foot__pop { position: absolute; left: 20px; right: 20px; bottom: calc(100% + 6px); z-index: 20; display: flex; flex-direction: column; gap: var(--sp-7); padding: var(--sp-12) var(--sp-14); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg-card); box-shadow: var(--shadow-float); }
-.bk-foot__pop-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); }
+.bk-foot__pop-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .bk-foot__pop-row span:last-child { font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap; }
 
 /* Banda de desglose del pago: sticky propia ENCIMA del footer, con bordes top+bottom. Solo en el
    paso de pago, donde el cliente debe ver siempre lo que pagará. */
 .bk-paybreakdown { flex: none; display: flex; flex-direction: column; gap: var(--sp-6); padding: var(--sp-12) var(--sp-20); background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .bk-paybreakdown + .bk-foot { border-top: 0; }   /* evita el doble 1px contra el footer */
-.bk-paybreakdown__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg-mute); }
+.bk-paybreakdown__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .bk-paybreakdown__l { font-weight: var(--fw-semibold); }
 .bk-paybreakdown__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; color: var(--fg); white-space: nowrap; }
 
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
 .purchase__back { margin-bottom: var(--sp-14); }
-.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-15); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
+.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
 .bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: var(--shadow-lift); }
 .bk-cta svg { width: 17px; height: 17px; transition: transform var(--dur-entra) var(--ease-entra); }
 .bk-cta:hover svg { transform: translateX(4px); }
@@ -1742,9 +1721,9 @@ body.no-scroll { overflow: hidden; }
 .cartbar:hover .cartbar__count { background: var(--fg); color: var(--action-hover); }
 .cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .cartbar__txt { display: flex; flex-direction: column; gap: var(--sp-1); flex: 1; min-width: 0; text-align: left; }
-.cartbar__label { font-size: var(--fs-11); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em; }
+.cartbar__label { font-size: var(--fs-label); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em; }
 .cartbar__total { font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-18); letter-spacing: -0.01em; }
-.cartbar__go { display: inline-flex; align-items: center; gap: var(--sp-7); font-size: var(--fs-13); font-weight: var(--fw-semibold); white-space: nowrap; }
+.cartbar__go { display: inline-flex; align-items: center; gap: var(--sp-7); font-size: var(--fs-button); font-weight: var(--fw-semibold); white-space: nowrap; }
 .cartbar__go svg { width: 16px; height: 16px; transition: transform var(--dur-entra) var(--ease-entra); }
 .cartbar:hover .cartbar__go svg { transform: translateX(4px); }
 
@@ -1777,13 +1756,13 @@ body.no-scroll { overflow: hidden; }
    atenuado, para que la jerarquía visual sea evidente sin texto extra. */
 .purchase__cta-tertiary {
     width: 100%; justify-content: center;
-    font-size: var(--fs-13);
+    font-size: var(--fs-body-s);
     color: var(--fg-mute);
     border-color: var(--line);
 }
 .purchase__cta-tertiary:hover { color: var(--bg); }
-.purchase__confirm { margin-top: var(--sp-12); padding: var(--sp-10) var(--sp-12); background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg); }
-.purchase__note { margin: var(--sp-10) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
+.purchase__confirm { margin-top: var(--sp-12); padding: var(--sp-10) var(--sp-12); background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
+.purchase__note { margin: var(--sp-10) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.5; }
 /* Aviso de señal bajo el total del paso de cantidad (#227 F2): «Señal X€ ahora · resto en el parque». */
 
 /* ══ LA TIRA DE DÍAS RESERVABLES (paso 2 · `DECISIONES #239`) ══════════════════════════════════
@@ -1848,7 +1827,7 @@ body.no-scroll { overflow: hidden; }
     display: flex; align-items: center;
     padding: 0 var(--sp-6);
     border-left: 1px solid var(--line);
-    font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold);
+    font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold);
     letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-mute);
     writing-mode: vertical-rl;
     /* El primero no lleva raya: no separa nada. */
@@ -1871,9 +1850,9 @@ body.no-scroll { overflow: hidden; }
     transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
 }
 .daystrip__day:hover { border-color: var(--fg); }
-.daystrip__wd { font-size: var(--fs-10); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
+.daystrip__wd { font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
 .daystrip__num { font-size: var(--fs-18); font-weight: var(--fw-bold); line-height: 1; }
-.daystrip__price { font-size: var(--fs-10); font-weight: 500; line-height: 1; color: var(--fg-mute); }
+.daystrip__price { font-size: var(--fs-label); font-weight: 500; line-height: 1; color: var(--fg-mute); }
 /* Día especial (festivo, finde o víspera): el MISMO código de color que la rejilla, para que la
    leyenda del calendario siga explicando la tira. */
 .daystrip__day--special { background: var(--attn); border-color: var(--attn); }
@@ -1947,7 +1926,7 @@ body.no-scroll { overflow: hidden; }
     width: 100%; min-height: 44px; margin-top: var(--sp-10);
     border: 1px solid var(--line); border-radius: var(--r-btn);
     background: transparent; color: var(--fg-mute);
-    font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold);
     cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
@@ -2001,7 +1980,7 @@ body.no-scroll { overflow: hidden; }
    destaca lo suficiente para escanear el mes sin confundirse con el número del día. */
 .cal__day-num { font-size: inherit; font-weight: inherit; line-height: 1; }
 .cal__day-price {
-    font-size: var(--fs-10); font-weight: 500; line-height: 1;
+    font-size: var(--fs-label); font-weight: 500; line-height: 1;
     letter-spacing: 0.01em;
     color: var(--fg-mute);
     /* Etiqueta tipo "chip": pequeño padding y fondo sutil para separarlo claramente del
@@ -2016,20 +1995,23 @@ body.no-scroll { overflow: hidden; }
     color: var(--fg);
 }
 /* Celdas muy estrechas (móvil < 380px): el chip ocuparía demasiado. Mostramos el precio
-   sin fondo, solo más pequeño y atenuado — mantiene la jerarquía sin saturar visualmente. */
+   sin fondo y atenuado — la jerarquía la mantienen el peso y el color, no el tamaño.
+   ⚠️ Aquí bajaba ADEMÁS a 9 px, y con la grieta 00 esa declaración se retira: el nivel Etiqueta (12)
+   es el suelo del sistema y ya lo pone la regla base. Una declaración que repite el valor de su base
+   no acota nada — solo hace creer que en este ancho pasa algo. */
 @media (max-width: 380px) {
     .cal__day { gap: var(--sp-2); padding: var(--sp-2); }
-    .cal__day-price { padding: 0; background: transparent; font-size: var(--fs-9); }
+    .cal__day-price { padding: 0; background: transparent; }
 }
 .cal__legend { display: flex; flex-wrap: wrap; gap: var(--sp-16); margin-top: var(--sp-12); }
-.cal__legend-item { display: inline-flex; align-items: center; gap: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.cal__legend-item { display: inline-flex; align-items: center; gap: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .cal__dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; }
 .cal__dot--normal { background: color-mix(in srgb, var(--fg) 12%, transparent); }
 .cal__dot--special { background: var(--attn); }
 
 /* "desde" delante del precio de referencia (el precio del día se aplica en la compra) */
 .price__from {
-    font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-13);
+    font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body-s);
     color: var(--fg-mute); margin-right: 5px; vertical-align: middle;
 }
 
@@ -2065,16 +2047,16 @@ body.no-scroll { overflow: hidden; }
 .cart { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
 .cart__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-12) var(--sp-14); }
 .cart__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-10); }
-.cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--zone-1); text-transform: capitalize; }
-.cart__price { flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--fg); }
+.cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--zone-1); text-transform: capitalize; }
+.cart__price { flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); }
 .cart__remove { background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer; }
 .cart__remove:hover { color: var(--fg); }
 .cart__lines { list-style: none; margin: var(--sp-8) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
-.cart__lines li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
+.cart__lines li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 .purchase__add-more {
     width: 100%; margin-top: var(--sp-14); padding: var(--sp-11) var(--sp-16);
     background: none; border: 1px dashed var(--line-strong); border-radius: var(--r-btn);
-    font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); cursor: pointer;
+    font-family: var(--font-body); font-size: var(--fs-button); font-weight: var(--fw-semibold); color: var(--fg); cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
 .purchase__add-more:hover { border-color: var(--fg); color: var(--zone-1); }
@@ -2105,7 +2087,7 @@ body.no-scroll { overflow: hidden; }
     .catalog__item--feat .catalog__badge { animation: none; }
 }
 .catalog__info { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1; min-width: 0; }
-.catalog__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-14); color: var(--fg); display: flex; align-items: center; gap: var(--sp-7); flex-wrap: wrap; }
+.catalog__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg); display: flex; align-items: center; gap: var(--sp-7); flex-wrap: wrap; }
 
 /* ⚠️ El icono de cada entrada del índice de «Mi cuenta». `flex: none` para que no lo aplaste un
    rótulo largo —el contenedor es flex— y `margin-right` porque el `gap` de `.catalog__item` separa
@@ -2113,12 +2095,22 @@ body.no-scroll { overflow: hidden; }
 .catalog__ico { flex: none; margin-right: var(--sp-10); color: var(--fg-mute); }
 .catalog__item:hover .catalog__ico { color: var(--zone-1); }
 .catalog__badge {
-    font-size: var(--fs-9); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
+    font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
     background: var(--zone-1); color: var(--on-brand); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
     white-space: nowrap;
 }
-.catalog__feat { font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.4; }
-.catalog__price { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); color: var(--fg); white-space: nowrap; flex: none; }
+/* La línea de ventajas del catálogo, acotada a DOS líneas (`[DECIDIDO owner]`, grieta 00).
+   Al subir el cuerpo del cajón esta línea pasó a envolver en CUATRO y el catálogo —la primera
+   pantalla de la compra— creció de 1.112 a 1.758 px en móvil, con dos tarjetas de pack en 364 y 385.
+   Medido con las tres salidas delante: a 12 px (nivel Etiqueta) quedaba en 1.359, y acotada a dos
+   líneas en **981**, o sea más corta que antes de la tanda y con las tarjetas entre 91 y 133.
+   ⚠️ Lo que cuesta: un producto con ventajas largas no se lee entero AQUÍ. Es una lista para elegir,
+   y el texto completo vive en su pantalla. Mismo mecanismo que `.rev__text--clamp` de la portada. */
+.catalog__feat {
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.catalog__price { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); white-space: nowrap; flex: none; }
 /* Columna derecha de la card: precio y, DEBAJO, el anuncio de señal del producto, alineados a la
    derecha (#227 F2 → la señal va bajo el precio, no bajo la descripción). */
 .catalog__pricecol { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-3); text-align: right; }
@@ -2127,7 +2119,7 @@ body.no-scroll { overflow: hidden; }
 .catalog__go svg { width: 18px; height: 18px; }
 .catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--zone-1); }
 /* Anuncio de señal en el catálogo (#227 F2): «Señal 30,00 €» bajo el PRECIO (en `.catalog__pricecol`). */
-.catalog__deposit { font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--warn); line-height: 1.3; }
+.catalog__deposit { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--warn); line-height: 1.3; }
 
 /* ====================================================================
    Paso 1: catálogo en secciones-acordeón POR TIPO + buscador progresivo.
@@ -2140,7 +2132,7 @@ body.no-scroll { overflow: hidden; }
 .catalog-search { position: relative; margin: 0 0 var(--sp-12); }
 .catalog-search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--fg-mute); pointer-events: none; }
 .catalog-search__input {
-    width: 100%; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg);
+    width: 100%; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     padding: var(--sp-11) var(--sp-14) var(--sp-11) 38px; transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-sale) var(--ease-sale);
 }
@@ -2157,8 +2149,8 @@ body.no-scroll { overflow: hidden; }
 /* El icono de entradas apiladas (E5): el occluder de las cards de delante debe fundirse con el
    fondo naranja del box al hover (si no, se ven cards blancas sobre el naranja). Igual que E2 en los CTAs. */
 .catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ { fill: var(--zone-1); }
-.catalog-acc__title { flex: 1; font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-15); letter-spacing: -0.01em; color: var(--fg); }
-.catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-bold); color: var(--fg-mute); }
+.catalog-acc__title { flex: 1; font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-body); letter-spacing: -0.01em; color: var(--fg); }
+.catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); color: var(--fg-mute); }
 .catalog-acc__chev { width: 20px; height: 20px; flex: none; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale); }
 .catalog-acc__chev.is-open { transform: rotate(180deg); }
 
@@ -2180,8 +2172,8 @@ body.no-scroll { overflow: hidden; }
 /* Caja de cantidad (paso 3, tras elegir la hora) */
 .qtybox { margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .qtybox__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
-.qtybox__label { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-14); color: var(--fg); }
-.qtybox__avail { margin: var(--sp-8) 0 0; font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.qtybox__label { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg); }
+.qtybox__avail { margin: var(--sp-8) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 .qtybox__price { font-weight: var(--fw-bold); color: var(--fg); }
 
 /* Datos del evento del pack (paso 3): campos configurables por pack (#86). Mismo aspecto que .form__field. */
@@ -2202,7 +2194,7 @@ body.no-scroll { overflow: hidden; }
    antes del pie — medido en navegador. */
 .paydue { margin-top: var(--sp-18); padding-top: var(--sp-16); border-top: 1px solid var(--line); }
 .paydue .eventfields { margin-top: 0; }
-.paydue__hint { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.5; }
+.paydue__hint { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.5; }
 /* ⚠️ **18 y no 14, medido en navegador**: el teléfono y las condiciones son DOS peticiones distintas,
    y con 14 sus dos textos de apoyo —los dos en gris y del mismo cuerpo— se leían como un solo párrafo
    soso. El 18 es el mismo aire con el que el bloque se separa del resumen: se repite el número que ya
@@ -2214,7 +2206,7 @@ body.no-scroll { overflow: hidden; }
 /* El peso MÁS BAJO de la pantalla, el mismo de `.purchase__note`: es información, no una acción — y
    por eso su enlace va en la tinta del texto y no en el color de marca, que aquí invitaría a pulsar
    en vez de a leer. */
-.paydue__legal { margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); line-height: 1.5; }
+.paydue__legal { margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.5; }
 .paydue__legal a { color: inherit; text-decoration: underline; }
 
 .eventfields { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-14); }
@@ -2262,49 +2254,48 @@ body.no-scroll { overflow: hidden; }
 
 /* Datos del evento mostrados bajo una línea de carrito/pago/confirmación */
 .cart__event { list-style: none; margin: var(--sp-8) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
-.cart__event li { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.45; }
+.cart__event li { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); line-height: 1.45; }
 .cart__event-label { font-weight: var(--fw-semibold); color: var(--fg); }
 
 /* Complementos del producto (paso 3): "mejora tu reserva" (#87) */
 .addons { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-10); }
-.addons__intro { margin: 0 0 var(--sp-2); font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg); }
+.addons__intro { margin: 0 0 var(--sp-2); font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg); }
 .addons__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .addons__info { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
-.addons__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-14); color: var(--fg); }
-.addons__price { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.addons__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg); }
+.addons__price { font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 
 /* Complementos avanzados: incluidos/gratis, grupos de elección y "Más info" */
-.addons__badge { display: inline-block; margin-left: var(--sp-6); padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-10); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle; }
+.addons__badge { display: inline-block; margin-left: var(--sp-6); padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle; }
 .addons__badge--included { background: var(--ok); color: var(--on-ok); }
 .addons__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
 .addons__charged { font-weight: var(--fw-bold); color: var(--fg); }
 .addons__group { border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-10) var(--sp-12); margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
-.addons__group-label { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-13); color: var(--fg); padding: 0; }
+.addons__group-label { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body-s); color: var(--fg); padding: 0; }
 .addons__row--choice { cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale); }
 .addons__row--choice.is-selected { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); }
 .addons__choice { display: flex; align-items: center; gap: var(--sp-10); flex: 1 1 auto; min-width: 0; cursor: pointer; margin: 0; }
 .addons__radio { width: 18px; height: 18px; flex: none; accent-color: var(--ok); cursor: pointer; }
 .addons__moreinfo { align-self: flex-start; background: none; border: none; padding: var(--sp-2) 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .addons__moreinfo:hover { color: var(--fg); }
-.addons__perguest { flex: none; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); }
+.addons__perguest { flex: none; font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); }
 .addons__features { flex-basis: 100%; list-style: none; margin: var(--sp-4) 0 0; padding: var(--sp-8) 0 var(--sp-2); border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4); }
 .addons__features li { position: relative; padding-left: var(--sp-18); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
 .addons__features li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: var(--fw-bold); }
 /* Dependencia «requiere» (data-driven): el complemento dependiente se atenúa y muestra la nota
    «Requiere: X» hasta que su requisito esté elegido. Los controles ya van `disabled` desde el blade. */
-.addons__requires { font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--warn); }
+.addons__requires { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--warn); }
 .addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled { opacity: 0.6; }
 .addons__row.is-disabled .entry__stepper button[disabled] { cursor: not-allowed; }
-.cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-11); color: var(--ok); }
-.orders__line-included { display: inline-block; padding: 0 var(--sp-6); border-radius: var(--r-pill); background: var(--ok-bg); font-weight: 700; font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.02em; color: var(--ok); }
-.orders__line-unit { color: var(--fg-mute); font-size: var(--fs-12); font-weight: 400; }
+.cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-body-s); color: var(--ok); }
+.orders__line-unit { color: var(--fg-mute); font-size: var(--fs-body-s); font-weight: 400; }
 
 /* Complementos agrupados bajo su producto (carrito/pago/confirmación) */
 .cart__addons { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-6) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
-.cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 /* Nota de señal por producto (#227 F2): «Señal X€ ahora · resto en el parque» en la card del
    producto que cobra señal — evita etiquetar el agregado como «(señal)» en cestas mixtas. */
-.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
+.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
 
 /* ====================================================================
    Pulido visual (demo): fotos de atracciones + hero full-bleed con vídeo.
@@ -3018,7 +3009,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .purchase__done .wiz__title { text-align: center; }
 .purchase__party { font-size: 40px; line-height: 1; margin-bottom: var(--sp-4); }
 .cart--summary { margin: var(--sp-14) 0; text-align: left; }
-.purchase__code { margin: var(--sp-12) 0 0; font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
+.purchase__code { margin: var(--sp-12) 0 0; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 
 /* ══ EL DESENLACE: DOS PIEZAS, Y NI UNA MÁS (`#278`, `[DECIDIDO owner]`) ═══════════════════════
    `[DECIDIDO owner]`: «quitamos el confeti, tampoco vamos a saturar al cliente». El confeti a
@@ -3131,8 +3122,8 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* El paso al historial, DESPUÉS de la paginación: lo pasado no compite con lo vivo. */
 .orders__history-cta { display: flex; justify-content: center; margin: var(--sp-4) 0 0; }
 .orders__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; }
-.orders__code { font-family: var(--font-body); font-size: var(--fs-14); color: var(--fg); }
-.orders__status { font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute); }
+.orders__code { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
+.orders__status { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute); }
 .orders__status--paid { background: var(--ok-bg); color: var(--ok); }
 .orders__status--pending { background: var(--attn); color: var(--fg); }
 .orders__status--cancelled, .orders__status--expired { background: var(--err-bg); color: var(--err-strong); }
@@ -3141,27 +3132,18 @@ body[data-has-hero].nav--live .hero__pair-slot {
    anotado — no sustituye al status (un "Completado" con reembolso sigue siendo
    "Completado"). El reembolso es una dimensión independiente del servicio. */
 .orders__status--refunded-badge { background: var(--refund-bg); color: var(--refund); }
-.orders__meta { margin: var(--sp-4) 0 var(--sp-12); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.orders__meta { margin: var(--sp-4) 0 var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 .orders__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
-.orders__line { display: flex; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
+.orders__line { display: flex; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 /* Título del producto de cada reserva: más grueso (negrita) y un punto mayor, para que destaque
    sobre la fecha/precio (que se quedan en el 13px base). Acotado a la línea principal — NO a los
    complementos (`.orders__line--addon`), para no engordarlos. */
-.orders__line:not(.orders__line--addon) .orders__line-name { font-size: var(--fs-15); font-weight: 700; }
+.orders__line:not(.orders__line--addon) .orders__line-name { font-size: var(--fs-body); font-weight: 700; }
 .orders__line-when { color: var(--fg-mute); text-transform: capitalize; }
-/* Nota de señal por producto en «Mis pedidos» (#227 F3): «Señal 30€ · resto en el parque». Reubicada
-   (2026-06-15) al PIE de la card de la reserva, separada de los datos del evento por una línea sutil
-   (mismo separador discontinuo que `.orders__final`). Pie financiero de la reserva. */
-.orders__product-deposit { margin-top: var(--sp-2); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-size: var(--fs-12); font-weight: 600; color: var(--warn); }
 .orders__event { list-style: none; margin: var(--sp-4) 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: var(--sp-2); }
-.orders__event li { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.45; }
+.orders__event li { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); line-height: 1.45; }
 .orders__event-label { font-weight: 600; color: var(--fg); }
 .orders__total { display: flex; justify-content: space-between; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; }
-/* Resumen del reembolso (#146): se renderiza solo si la Order tiene reembolso
-   anotado. Patrón análogo al de `.orders__total` (mismo flex space-between) para
-   coherencia visual; tono ámbar en el importe para reforzar el "salió dinero".
-   `.orders__net` muestra el importe efectivamente cobrado tras la devolución. */
-.orders__refund { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
 .orders__refund-label { color: var(--fg-mute); }
 .orders__refund-amount { color: var(--refund); font-weight: 700; }
 /* EL ANCLA DE CAJA (`DECISIONES #128`): lo REALMENTE cobrado, con su método y su fecha. Va NEUTRA
@@ -3173,16 +3155,11 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* Desglose detallado en Mis pedidos (#196): "A cobrar en el parque" (naranja,
    lo que el cliente pagará en recepción) + su caption, y "Total final" (lo que
    acaba pagando neto). Mismo patrón flex space-between que `.orders__total`. */
-.orders__gate { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
+.orders__gate { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 .orders__gate-label { color: var(--fg-mute); }
 .orders__gate-amount { color: var(--warn); font-weight: 700; }
-/* Desglose ↳ por componente de "A cobrar en el parque" (#227 F2): cargos de
-   edición + "Resto de la señal". Indentado, más pequeño y atenuado; el importe
-   conserva el naranja de `.orders__gate-amount` con peso algo menor. */
-.orders__gate-line { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-3); padding-left: var(--sp-14); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
-.orders__gate-line strong { color: var(--warn); font-weight: 600; }
 /* Toggle "Ver desglose" del desglose ↳ (#227 F3): link sobrio, sin fondo de botón. */
-.orders__gate-toggle { margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-12); font-weight: 600; color: var(--warn); text-decoration: underline; }
+.orders__gate-toggle { margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-button); font-weight: 600; color: var(--warn); text-decoration: underline; }
 .orders__gate-toggle:hover { color: var(--warn-hover); }
 
 /* Los JUSTIFICANTES de menores invitados de un pedido (#336, `specs/waiver-por-reserva.md` §4.10):
@@ -3191,8 +3168,8 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__guests { margin-top: var(--sp-10); padding-top: var(--sp-10); border-top: 1px dashed var(--line); }
 /* A QUÉ visita pertenecen estos justificantes (`#401`). Solo se pinta en «Mis pedidos», donde se
    listan VARIAS reservas; en la tarjeta de una reserva el nombre ya está tres líneas más arriba. */
-.orders__guests-what { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
-.orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg); }
+.orders__guests-what { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
+.orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--fg); }
 /* Las plazas LIBRES, junto al contador y en tinta atenuada: es contexto del número de al lado, no un
    dato con el mismo peso. */
 /* ⚠️ `400` literal y no un token: la escala declara `--fw-semibold/bold/black` y **no tiene «normal»**
@@ -3216,17 +3193,17 @@ body[data-has-hero].nav--live .hero__pair-slot {
 }
 .orders__guests-copy:hover { border-color: var(--line-strong); background: var(--bg-soft); }
 .orders__guests-copy:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.orders__guests-ack { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-11); color: var(--fg-mute); }
+.orders__guests-ack { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 .orders__guests-list { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
-.orders__guests-item { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); }
+.orders__guests-item { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 /* Solo la EXCEPCIÓN se marca (#320): un justificante vigente es la condición para estar en la lista. */
 .orders__guests-item em { font-style: normal; font-weight: var(--fw-semibold); color: var(--warn); }
-.orders__guests-hint { margin: var(--sp-8) 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.45; }
+.orders__guests-hint { margin: var(--sp-8) 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.45; }
 /* El enlace se autoselecciona al enfocarlo: es lo que sustituye al botón de copiar que la poda del
    presupuesto del chunk se llevó (`SidebarBundleBudgetTest`, la subida a 263). */
-.orders__guests-link { width: 100%; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10); }
+.orders__guests-link { width: 100%; font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10); }
 .orders__guests-link:focus { border-color: var(--fg); }
-.orders__gate-caption { margin: var(--sp-2) 0 0; font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); }
+.orders__gate-caption { margin: var(--sp-2) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
 .orders__final { display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
 /* ⚠️⚠️ LOS DOS BLOQUES del desglose (`DECISIONES #127`). Arriba lo que vale y por qué canal se
    paga; abajo qué ha pasado con su dinero. **La separación es la corrección**: hasta la tanda B,
@@ -3235,10 +3212,10 @@ body[data-has-hero].nav--live .hero__pair-slot {
    que hace que se lean como dos cosas distintas, no como una resta más. */
 .orders__ledger { margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); }
 .orders__ledger--cash { margin-top: var(--sp-16); }
-.orders__ledger-title { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-mute); }
+.orders__ledger-title { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-mute); }
 /* La FRASE que explica el estado. Destacada sobre fondo suave: es lo primero que hay que leer
    cuando algo se sale de lo normal, y un párrafo más de texto gris se pierde. */
-.orders__ledger-note { margin: var(--sp-12) 0 0; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); }
+.orders__ledger-note { margin: var(--sp-12) 0 0; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg); }
 /* Trazabilidad: lo facturado al reservar. Atenuado y al pie porque NO es un canal — pintarlo
    arriba, como hacía el «Subtotal», apilaba dos bases distintas sin decirlo. */
 .orders__ledger-invoiced { margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px dashed var(--line); opacity: 0.85; }
@@ -3247,9 +3224,9 @@ body[data-has-hero].nav--live .hero__pair-slot {
    Lo negativo (bajadas, cortesías, devoluciones) toma el color de devolución; una devolución en
    curso o fallida se atenúa. El SALDO cierra el bloque y toma el color de su clase: ámbar lo que se
    paga, el de devolución lo que se devuelve. */
-.orders__mov { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg); }
+.orders__mov { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 .orders__mov-label { color: var(--fg-mute); }
-.orders__mov-date { font-size: var(--fs-12); white-space: nowrap; }
+.orders__mov-date { font-size: var(--fs-body-s); white-space: nowrap; }
 .orders__mov strong { font-weight: 700; color: var(--fg); white-space: nowrap; }
 .orders__mov--neg strong { color: var(--refund); }
 .orders__mov--pending { opacity: 0.7; }
@@ -3262,7 +3239,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* Badge "Finalizado" en Mis pedidos (Fase 7.1b, #127). Sutil para no competir
    con el resto del row; gris/atenuado porque para el cliente "finished" no
    es ni positivo ni negativo, simplemente "ya pasó". */
-.orders__line-badge { display: inline-flex; align-items: center; padding: var(--sp-1) var(--sp-8); border-radius: var(--r-pill); font-size: var(--fs-11); font-weight: 600; line-height: 1.6; }
+.orders__line-badge { display: inline-flex; align-items: center; padding: var(--sp-1) var(--sp-8); border-radius: var(--r-pill); font-size: var(--fs-label); font-weight: 600; line-height: 1.6; }
 .orders__line-badge--finished { background: var(--line); color: var(--fg-mute); }
 .orders__line--finished .orders__line-name,
 .orders__line--finished .orders__line-when,
@@ -3286,7 +3263,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
    el total, anchura completa para fácil táctil. */
 .orders__retry { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-6); }
 .orders__retry-btn { width: 100%; justify-content: center; }
-.orders__retry-hint { font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute); margin: 0; line-height: 1.5; }
+.orders__retry-hint { font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); margin: 0; line-height: 1.5; }
 
 /* Botón "Gestionar" para Orders pagadas (#117). En la card de la Order: width
    completo, ghost para no competir con el CTA primario de los Orders pending. */
@@ -3303,22 +3280,16 @@ body[data-has-hero].nav--live .hero__pair-slot {
     font-size: clamp(24px, 4vw, 30px);
     margin: var(--sp-8) 0 0;
 }
-.manage__intro { margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-14); line-height: 1.6; color: var(--fg); }
 .manage__code {
     margin: var(--sp-18) 0 0; padding: var(--sp-14) var(--sp-16);
     background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm);
     display: flex; flex-direction: column; gap: var(--sp-4);
     user-select: all; /* facilita seleccionar el código completo de un click */
 }
-.manage__code-label {
-    font-family: var(--font-body); font-size: var(--fs-11); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-mute);
-}
 .manage__code-value {
     font-family: var(--font-display); font-weight: 800; letter-spacing: 0.02em;
     font-size: clamp(20px, 3vw, 24px); color: var(--fg);
 }
-.manage__note { margin: var(--sp-12) 0 0; font-family: var(--font-body); font-size: var(--fs-13); color: var(--fg-mute); line-height: 1.5; }
 .manage__actions { margin-top: 22px; display: flex; flex-direction: column; gap: var(--sp-10); }
 .manage__cta { width: 100%; justify-content: center; }
 .manage__cancel { width: 100%; justify-content: center; }
@@ -4607,7 +4578,7 @@ body[data-has-hero] .nav--over .nav__cta {
     letter-spacing: -0.01em; line-height: 1.05; color: var(--fg);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.acct__sub { font-size: var(--fs-12); color: var(--fg-mute); line-height: 1.3; }
+.acct__sub { font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.3; }
 .acct__cta { display: flex; gap: 9px; }
 .acct__logout-form { margin: 0; display: flex; flex: 1; }
 .acct__btn {
@@ -4650,7 +4621,7 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .acct__count {
     display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
-    border-radius: var(--r-pill); background: var(--zone-1); color: var(--on-brand); font-size: var(--fs-10); font-weight: 700;
+    border-radius: var(--r-pill); background: var(--zone-1); color: var(--on-brand); font-size: var(--fs-label); font-weight: 700;
 }
 /* Aviso de formulario de reserva pendiente (#217), accionable. */
 .acct__alert {
@@ -4658,7 +4629,7 @@ body[data-has-hero] .nav--over .nav__cta {
     padding: var(--sp-8) var(--sp-10); border-radius: var(--r-sm);
     background: color-mix(in srgb, var(--zone-1) 12%, transparent);
     border: 1px solid color-mix(in srgb, var(--zone-1) 35%, transparent);
-    color: var(--fg); font-size: var(--fs-12); font-weight: 600; line-height: 1.3;
+    color: var(--fg); font-size: var(--fs-body); font-weight: 600; line-height: 1.3;
     transition: background var(--dur-sale) var(--ease-sale);
 }
 .acct__alert:hover { background: color-mix(in srgb, var(--zone-1) 20%, transparent); }
@@ -4815,7 +4786,7 @@ body[data-has-hero] .nav--over .nav__cta {
 .orders__products { display: flex; flex-direction: column; gap: var(--sp-10); }
 .orders__product { background: var(--bg-soft); border-radius: var(--r-md); padding: var(--sp-12) var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-8); }
 .orders__product-form { margin-top: var(--sp-2); }
-.orders__product-form-link { font-size: var(--fs-13); color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
+.orders__product-form-link { font-size: var(--fs-body); color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px; }
 /* Botón del post-form de reserva (#217): ancho completo + texto centrado para que sea una acción
    clara y consistente con el resto de CTAs de ancho completo del flujo. */
 /* ⚠️⚠️ **`white-space: normal` y no `nowrap`, y eso ANULA `.btn` a propósito** (`#403`). El botón de
@@ -4834,7 +4805,7 @@ body[data-has-hero] .nav--over .nav__cta {
     background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
     display: flex; flex-direction: column; gap: var(--sp-12);
 }
-.purchase__reginfo-text { margin: 0; font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg); }
+.purchase__reginfo-text { margin: 0; font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
 .purchase__reginfo-btn { width: 100%; justify-content: center; }
 
 @media (max-width: 768px) {
@@ -6022,7 +5993,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .acc-tile:hover .acc-tile__ico svg { color: var(--zone-1); }
 .acc-tile__name {
     font-family: var(--font-body); font-weight: var(--fw-semibold);
-    font-size: var(--fs-13); line-height: 1.25; color: var(--fg);
+    font-size: var(--fs-body); line-height: 1.25; color: var(--fg);
 }
 /* Hereda el aspecto de `.acct__count` (la píldora del bloque de cuenta) y solo cambia de sitio:
    el número es el MISMO dato, y dos píldoras distintas para un mismo número es deriva. */
@@ -6041,7 +6012,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border-radius: var(--r-pill);
     background: transparent;
     color: var(--fg);
-    font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold);
     white-space: nowrap; cursor: pointer;
     transition: background var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale), border-color var(--dur-toque) var(--ease-sale);
 }
@@ -6082,7 +6053,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .dep-pick__pick { align-items: center; }
 .dep-pick__who { display: flex; align-items: baseline; gap: var(--sp-7); flex-wrap: wrap; }
 .dep-pick__name { font-weight: var(--fw-semibold); color: var(--fg); }
-.dep-pick__age { font-size: var(--fs-12); color: var(--fg-mute); }
+.dep-pick__age { font-size: var(--fs-body-s); color: var(--fg-mute); }
 /* La sangría iguala el hueco que dejan la casilla y su separación, para que el motivo caiga bajo el
    NOMBRE y no bajo el cuadradito. **Son 33 px y están MEDIDOS en el navegador**, no calculados de
    cabeza: 16 de caja + 10 del `gap` de `.check` + **7 de los márgenes que el propio navegador le pone
@@ -6092,7 +6063,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .dep-pick__why {
     margin: var(--sp-6) 0 0;
     padding-left: calc(var(--sp-16) + var(--sp-10) + var(--sp-7));
-    font-family: var(--font-body); font-size: var(--fs-11); line-height: 1.35;
+    font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.35;
     color: var(--warn);
 }
 /* ⚠️ **Cambia de sujeto y de PESO en `#242`**: aquí decía «EXENCIÓN FIRMADA» en verde, mayúsculas y
@@ -6101,7 +6072,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    (`[OWNER]`): minúsculas, sin peso y en tinta atenuada. Es una nota al margen del nombre, no una
    medalla. */
 .dep-pick__ok {
-    font-family: var(--font-body); font-size: var(--fs-10); font-weight: 500;
+    font-family: var(--font-body); font-size: var(--fs-label); font-weight: 500;
     color: var(--fg-mute);
 }
 
@@ -6131,7 +6102,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
 .whoblock__head::-webkit-details-marker { display: none; }
 .whoblock__head:hover { background: var(--bg-soft); }
 .whoblock__head:focus-visible { outline: var(--focus-outline); outline-offset: -2px; }
-.whoblock__title { font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
+.whoblock__title { font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
 .whoblock__title::before {
     content: "";
     display: inline-block; width: 0; height: 0; margin-right: var(--sp-8);
@@ -6139,7 +6110,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     transition: transform var(--dur-entra) var(--ease-sale);
 }
 .whoblock[open] .whoblock__title::before { transform: rotate(90deg); }
-.whoblock__hint { font-size: var(--fs-12); color: var(--fg-mute); margin-left: auto; }
+.whoblock__hint { font-size: var(--fs-body-s); color: var(--fg-mute); margin-left: auto; }
 .whoblock__body { padding: 0 var(--sp-14) var(--sp-14); }
 /* Dentro del bloque, el selector de menores pierde su separador de arriba: ya lo da el desplegable. */
 .whoblock__body .dep-pick { padding-top: 0; border-top: none; }
@@ -6173,9 +6144,9 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    (`#264`). `margin-top` la alinea con la primera línea del rótulo, no con el centro del bloque. */
 .guardnote__box { margin-top: var(--sp-2); flex-shrink: 0; }
 .guardnote__body { display: flex; flex-direction: column; gap: var(--sp-4); }
-.guardnote__label { font-family: var(--font-body); font-size: var(--fs-14); font-weight: var(--fw-semibold); color: var(--fg); }
-.guardnote__help { font-family: var(--font-body); font-size: var(--fs-12); line-height: 1.4; color: var(--fg-mute); }
-.guardnote__text { margin: 0; font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); }
+.guardnote__label { font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
+.guardnote__help { font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
+.guardnote__text { margin: 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg); }
 
 /* ── El QR de puerta, presentado como CREDENCIAL ────────────────────────────────────────────
    (encargo del owner, 2026-08-28: «esa presentación del QR la quiero más profesional, mejor
@@ -6219,7 +6190,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border: 1px solid var(--line);
     border-radius: var(--r-sm);
     background: var(--bg-soft);
-    font-family: var(--font-mono); font-size: var(--fs-15); font-weight: var(--fw-semibold);
+    font-family: var(--font-mono); font-size: var(--fs-body); font-weight: var(--fw-semibold);
     letter-spacing: 0.08em; line-height: 1.4; color: var(--fg);
     /* Un token de 20 caracteres en cinco grupos no cabe de una línea en el cajón estrecho: parte por
        el espacio de grupo, que es donde también lo parte quien lo dicta. */
@@ -6238,7 +6209,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border: 1px dashed var(--line-strong);
     border-radius: var(--r);
     background: var(--bg-soft);
-    font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5; color: var(--fg-mute);
+    font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute);
 }
 
 .qr-pass__hint { max-width: 42ch; }
@@ -6256,7 +6227,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border-top: 1px solid var(--line);
     display: flex; flex-direction: column; align-items: center;
 }
-.qr-pass__notice { margin: var(--sp-10) 0 0; max-width: 42ch; font-size: var(--fs-12); }
+.qr-pass__notice { margin: var(--sp-10) 0 0; max-width: 42ch; font-size: var(--fs-body-s); }
 .qr-pass__renew .purchase__confirm { width: 100%; text-align: left; }
 
 /* ── «Menores a cargo»: el alta se DESPLIEGA y la lista se pagina ──────────────────────────
@@ -6928,3 +6899,36 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    que ya tenía dos capas. Lo que SÍ ha sobrevivido —la trama, la niebla, los rayos, las poses de
    zona— comparte tres cosas: **una por pantalla, integrada en su superficie, y a baja opacidad**.
    No es que el material no valga: es que este sitio lo admite en dosis pequeñas. */
+
+/* ====================================================================
+   EL CUERPO DEL CAJÓN · las clases COMPARTIDAS, acotadas al panel (grieta 00).
+
+   Estas clases las emiten también el formulario de contacto, el de recuperar
+   contraseña, los chips de complementos de la landing, el formulario post-reserva,
+   el justificante y el calendario de «Crear pedido» del panel. Subirlas en su sitio
+   movería cinco superficies que nadie ha revisado, así que `[DECIDIDO owner]` se
+   suben SOLO aquí dentro. El día que cada superficie se vista, este bloque encoge.
+   ==================================================================== */
+.sidecart__panel .form__field > .form__label { font-size: var(--fs-body); }  /* el rótulo de un campo */
+.sidecart__panel .form__field textarea { font-size: var(--fs-body); }  /* campo: el sistema lo fija en 16 */
+.sidecart__panel .form__field select { font-size: var(--fs-body); }  /* campo */
+.sidecart__panel .form__error { font-size: var(--fs-body-s); }  /* el aviso de un campo */
+.sidecart__panel .form__hint { font-size: var(--fs-body-s); }  /* la pista de un campo */
+.sidecart__panel .check { font-size: var(--fs-body); }  /* el texto de una casilla se lee entero */
+.sidecart__panel .switch { font-size: var(--fs-body); }  /* lo mismo, en interruptor */
+.sidecart__panel .auth__sub { font-size: var(--fs-body-s); }  /* la entradilla de las pantallas de auth */
+.sidecart__panel .auth__errors { font-size: var(--fs-body-s); }  /* el aviso del limitador */
+.sidecart__panel .eventfields__label { font-size: var(--fs-body); }  /* rótulo de un campo del pack */
+.sidecart__panel .addons__moreinfo { font-size: var(--fs-body-s); }  /* enlace de «más info» */
+.sidecart__panel .addons__features li { font-size: var(--fs-body-s); }  /* las ventajas desplegadas */
+.sidecart__panel .cal__month { font-size: var(--fs-body); }  /* el mes del calendario */
+.sidecart__panel .cal__day { font-size: var(--fs-body); }  /* el número del día */
+.sidecart__panel .cal__wd { font-size: var(--fs-label); }  /* la inicial del día de la semana */
+.sidecart__panel .acct__btn { font-size: var(--fs-button); }  /* el botón del bloque de cuenta */
+.sidecart__panel .zone-tab { font-size: var(--fs-body-s); }  /* pestaña: el sistema la fija en 15 (componente.pestana) */
+.sidecart__panel .purchase__note { font-size: var(--fs-body-s); }  /* la entradilla del paso 5 */
+.sidecart__panel .btn { font-size: var(--fs-button); }  /* el rótulo de un botón; la familia de la web no se toca */
+.sidecart__panel .eventfields input { font-size: var(--fs-body); }  /* campo del pack: el sistema lo fija en 16 */
+.sidecart__panel .eventfields select { font-size: var(--fs-body); }  /* campo del pack */
+.sidecart__panel .eventfields textarea { font-size: var(--fs-body); }  /* campo del pack */
+.sidecart__panel .pagination__info { font-size: var(--fs-body-s); }  /* el «1 de 3» de las listas de la cuenta */

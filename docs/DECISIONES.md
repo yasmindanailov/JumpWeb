@@ -28704,3 +28704,95 @@ entre `#550` y `#699`).
 **quien empuja la re-mide tras su `git pull --rebase`**; un conflicto en ella se resuelve corriendo la suite,
 no eligiendo una cifra. ⚠️ Y **`npm install`/`npm uninstall` poda `playwright-core`**, que va sin guardar a
 propósito: pasó al desinstalar `html2canvas` en `#528` y la sonda dejó de arrancar.
+
+## #550 · 2026-09-12 · `[DECIDIDO owner]` La GRIETA 00: el cuerpo del cajón sube al suelo del sistema — y lo que no lo emite nadie no se viste
+
+Primera tanda del carril del SPA (banda 550–579, `CARRIL-SPA.md`). El canvas auditó **nuestro** código
+(`Auditoria Sistema SPA PJP`) y su grieta **00** era la mayor: el cuerpo del cajón iba a **13 px** —con
+notas a 11 y un 9— contra un suelo de **16**. ⚠️ `CARRIL-SPA.md` la daba por ABIERTA y el `doc/spa.md`
+del canvas por CERRADA en su parada 05; se preguntó al owner con las dos versiones delante y confirmó:
+**16 en las 25 pantallas**.
+
+**Lo hecho**: **103 reglas** pasan a los cuatro niveles de TEXTO del sistema —`--fs-body` (16/17),
+`--fs-body-s` (15), `--fs-button` (16) y `--fs-label` (12), que es el suelo—; **17 reglas MUERTAS se
+retiran**; **23 clases COMPARTIDAS se suben acotadas al panel**; `--fs-9` se retira por quedarse sin
+consumidores.
+
+⚠️ **Las cuatro últimas acotadas no salieron del censo: salieron del chequeo de COMPLETITUD**, que es
+otro instrumento —cruzar las clases que el cajón EMITE de verdad (los `class="…"` de sus `.vue`) con
+las reglas por debajo de 16—. Son los CAMPOS del pack (`.eventfields input|select|textarea`, a 15
+cuando el sistema fija los campos en 16) y el «1 de 3» de las listas de la cuenta
+(`.pagination__info`, a 14). Se escapaban **a la vez** de los bloques del cajón y de los prefijos de
+la guarda. ▶ *Un censo responde «qué hay aquí dentro»; la completitud responde «qué de lo que se pinta
+no he mirado», y son preguntas distintas.* Guion `scripts/cuerpo-del-cajon.py` (tabla explícita regla por regla, informe en seco e
+idempotente), guarda `SidebarBodySizeTest` y arnés `scripts/mutar-cuerpo-cajon.py`.
+
+**1 · Las tallas NO se copian de los artboards.** Sus ficheros mezclan la pantalla dibujada con el
+**aparato de anotación** —rótulos y notas a 10-12 px—, así que un `grep` de `font-size` sobre ellos da
+una cifra creíble y falsa; y además **no todos están redibujados**: `Pago y Desenlaces` (parada 04) usa
+16 px cuarenta y cinco veces y `Pasos Compra`, anterior a la decisión, sigue en 14,5 y 11. Las tallas
+salen de `tokens-pjp.js` v1.10 y de `doc/reglas.md`.
+
+**2 · El reparto por TÍTULO de sección se queda corto, y eso es del reparto, no del cajón.**
+`CARRIL-SPA.md` §5 lista los bloques de `site.css` que son del SPA; medido, **31 declaraciones de
+clases del cajón viven fuera de ellos** (`.auth__*`, `.acct__*`, `.whoblock__*`, `.guardnote__*`,
+`.acc-tile__name`…). ▶ *Lo que define al cajón es qué clase EMITE, no dónde está escrita su regla* —y
+por eso la guarda acota por vocabulario de clase y no por posición.
+
+**3 · Tres decisiones del owner, cada una con su número delante.** (a) Las **18 clases compartidas**
+—las emiten también el formulario de contacto, el de recuperar contraseña, los chips de la landing, el
+post-form, el justificante y el calendario de «Crear pedido» del panel— se suben **solo dentro del
+panel**, no en su regla base: el cajón queda entero y no se mueve un píxel en cinco superficies que
+nadie ha revisado. (b) Las **15 reglas muertas se retiran** (sus clases no las emite nadie: ni Vue, ni
+Blade, ni PHP, ni el manifiesto congelado). (c) La **línea de ventajas del catálogo se acota a dos
+líneas**: al subir el cuerpo pasó a envolver en cuatro y el catálogo creció de **1.112 a 1.758 px** en
+móvil; a 12 px quedaba en 1.359 y acotada en **981**, más corta que antes de la tanda.
+
+**4 · `--fs-button` se estrena y `--fs-9` se retira, y las dos cosas las pidió un trinquete.** El
+primero estaba en `SidebarTokenBudgetTest::SIN_ESTRENAR` porque «mueve la familia `.btn` entera»: aquí
+se estrena **solo dentro del panel**, así que la web no se toca. El segundo se quedó con **cero usos** al
+subir sus tres consumidores. ⚠️⚠️ **Y ahí dos guardas se contradecían**: `TypeScaleTest` exige que la
+escala por píxel siga declarada «porque retirar un escalón deja `calc()` sin variable» y
+`SidebarTokenBudgetTest` exige retirar todo token sin consumidores. **Manda la que mide el uso real**:
+con cero usos no queda ninguna regla huérfana.
+
+**5 · La guarda nació MAL DOS VECES, y las dos las dijo la ejecución, no una relectura.** Primero pedía
+**lo contrario de lo decidido** —medía las compartidas en su regla base y las ocho salían culpables—; y
+después leía **vacío** el rótulo de campo, porque en la hoja está escrito **agrupado**
+(`.form__field > span, .form__field > .form__label`) y el caso lo buscaba como clave exacta. ▶ *Aseverar
+cómo está escrito un selector ata la guarda a su redacción; lo que hay que aseverar es qué declara.*
+
+**6 · Una lista de prefijos escrita a mano se queda corta EN SILENCIO.** El censo perdió dos familias
+enteras del cajón —`.qr-pass__*` (el carné) y `.dep-pick__*` (el selector de menores)— porque el filtro
+de «esto es de la web» descartaba todo lo que empezara por `qr-`. **No lo cazó una relectura: lo cazó la
+SONDA**, que mide lo que el navegador computa. Seis reglas más, y los dos prefijos entran en la guarda.
+
+⚠️ **Un `foreach` sobre una lista de excepciones VACÍA no asevera nada**: PHPUnit lo marca «risky» y
+tiene razón — un caso que no comprueba nada se lee como verde. Se asevera el estado final.
+
+▶ **Medido en navegador** (`scripts/sonda-cajon.mjs`, versionada, 390 y 1280, quince pantallas): en el
+embudo los nodos de texto por debajo de 16 pasan de **226 a 110**, **cero desborde horizontal** y
+**ningún recorte nuevo** —los cuatro que salen son el texto para lectores de pantalla del spinner, que
+se recorta a 1 px por diseño—. Las nueve pantallas de la CUENTA se miden por primera vez: el primer
+intento no llegó a ellas porque la sonda esperaba la raíz del EMBUDO, y el área de cliente monta otra.
+
+⚠️ **Paso de despliegue: ninguno.** Esta tanda no toca `client.css`: los cuatro niveles ya estaban
+declarados en el producto desde `#474`.
+
+**7 · Y el guion se auditó con su propio diff, que es lo que su docblock declara como auditoría.** La
+primera pasada dejó **diez sitios PEGADOS** —al retirar una regla muerta se llevaba el salto de línea
+de DETRÁS, así que el comentario o la regla siguiente quedaban al final de la línea anterior
+(`.entry__info { … }.entry__stepper { … }`)—. **El CSS parsea igual y ninguna guarda lo ve**: lo que se
+rompe es la lectura de la hoja. Se corrigió el guion (consume el salto de DELANTE), se descartó el CSS
+y se volvió a aplicar entero, que es lo que un guion idempotente permite hacer sin miedo.
+
+**Verificación**: suite **4713 · 29.450 aserciones** (1 skipped) · `SidebarBodySizeTest` 5 casos y
+**7/7 mutaciones muerden** con su control en verde (`scripts/mutar-cuerpo-cajon.py`) · Pint y
+docs-check ✓ · sonda de navegador a 390 y 1280 sobre **quince pantallas** (seis del embudo y nueve de
+la cuenta). ⚠️⚠️ **Tres de las siete mutaciones nacieron INÚTILES y lo dijo el arnés, no una
+relectura**: dos no llegaron a aplicarse —el texto se había escrito de memoria y no coincidía con la
+hoja— y la tercera **sobrevivía por débil** (vaciaba tres prefijos de veinticuatro, así que el censo
+seguía pasando de cien reglas). *Una mutación que no muerde puede ser débil antes que reveladora.*
+
+⚠️ **Queda el OJO del owner**: nada de esto se ha visto en un teléfono de verdad, y la grieta 00 es
+justo la que se juzga mirando.

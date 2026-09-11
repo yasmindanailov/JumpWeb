@@ -95,7 +95,13 @@ class SidebarTokenBudgetTest extends TestCase
         // ⚠️ `--fs-body-s` sale en `#480`: lo estrena la línea de AHORRO de la tarjeta de tarifa.
         // ⚠️ `--fs-subtitle` sale en `#528`: lo estrena el titular de la tarjeta de edades mezcladas
         // de `/cumpleanos`, que el artboard escribe en su nivel (22 → 26, peso 700).
-        '--fs-display-xl', '--fs-button', '--fs-slogan',
+        // ⚠️ **`--fs-button` SALE con la grieta 00**: lo estrenan los botones del CAJÓN —«Ir a pagar»,
+        // la barra del carrito, «+ Añadir otra reserva», el desplegable de la puerta, «he olvidado mi
+        // contraseña» y el botón del bloque de cuenta—, que iban de 12 a 15 px sobre un nivel de 16.
+        // ▶ Lo que el comentario de arriba temía **no pasa aquí**: estrenar la TALLA dentro del panel
+        // no mueve la familia `.btn` de la web. El peso 800 y el borde del botón del sistema siguen
+        // aplazados a su propia tanda, que es la que toca `.btn` entera.
+        '--fs-display-xl', '--fs-slogan',
     ];
 
     /**

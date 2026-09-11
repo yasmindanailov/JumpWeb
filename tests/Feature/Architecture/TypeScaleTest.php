@@ -243,7 +243,13 @@ class TypeScaleTest extends TestCase
     {
         $css = $this->productSheets();
 
-        foreach ([9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22] as $n) {
+        // ⚠️ **El 9 SALE con la grieta 00 del cajón**, y no contradice lo de arriba: el motivo escrito
+        // es que retirar un escalón deja `calc()` sin variable en las reglas que lo usan — y éste se
+        // quedó con **CERO usos** (medido en las dos hojas) cuando sus tres consumidores (el aviso
+        // «Casi llena», la chapa del catálogo y el precio del día) subieron al nivel Etiqueta, que es
+        // el suelo del sistema. Un escalón sin consumidores lo retira `SidebarTokenBudgetTest`: las
+        // dos guardas se contradecían aquí, y manda la que mide el uso real.
+        foreach ([10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22] as $n) {
             $this->assertStringContainsString(
                 "--fs-{$n}:",
                 $css,

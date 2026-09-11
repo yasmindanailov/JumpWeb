@@ -140,3 +140,31 @@ Esto vive en la memoria del agente del primer ordenador, y aquí queda escrito p
 - **Commit, push y mutaciones se deciden por el CÓDIGO DE SALIDA** del test, nunca por un `grep passed`.
 - **La shell conserva el `cd`**: no hagas `cd` dentro de un comando; usa rutas absolutas.
 - **Rigor y empirismo**: mide antes de afirmar, con control; una guarda se escribe con su mutación.
+
+## 7 · Correcciones medidas al montar el carril (2026-09-12, `#550`)
+
+Cuatro cosas de este documento no se sostuvieron al medirlas desde el segundo ordenador. Se corrigen
+aquí y no se reescribe lo de arriba: **la corrección va delante del texto que corrige**.
+
+1. **La grieta 00 NO estaba abierta.** §3 dice «es decisión del owner y está ABIERTA»; el `doc/spa.md`
+   del canvas la registra **cerrada por él** en su parada 05 («el cuerpo a 16 en todo el cajón»). Se le
+   preguntó con las dos versiones delante y confirmó: **16**. Hecho en `#550`.
+2. **Son DIECISÉIS grietas y SEIS paradas, no nueve y cinco.** §2 cita «una auditoría del cajón real con
+   nueve grietas»: ésa es la primera pasada. El canvas lleva **16** (las 11-14 nacieron en su parada 06)
+   y las 25 pantallas están dibujadas en seis paradas.
+3. **Los artboards del cajón son más de tres, y la copia local solo trae tres.**
+   `mockup_playjumppark_v2/` tiene `Pasos Compra`, `Pago y Desenlaces` y `Navegacion Cuenta`; en el
+   canvas están además `Armazon Cajon`, `Identificacion`, `Mi Play Jump`, `Entrar y Crear Cuenta`,
+   `Mapa SPA`, `Decisiones SPA` y `Auditoria Sistema SPA`. Se leen con `DesignSync`.
+   ⚠️ **Y no se les raspa un `font-size` con un `grep`**: sus ficheros mezclan la pantalla dibujada con
+   el aparato de anotación (rótulos y notas a 10-12 px), así que la cifra sale creíble y falsa.
+4. **La receta del navegador no funciona tal cual** (§1·7). `npx playwright install chromium` deja el
+   navegador en la caché de `npx` y el `playwright-core` de `node_modules` **no lo encuentra**
+   («Executable doesn't exist»). Lo que funciona:
+   `node node_modules/playwright-core/cli.js install chromium`. Y hacía falta instalar **`socat`**
+   (`apt-get install -y socat`, como root) para el puente 8081→80.
+
+⚠️ **Y el reparto por TÍTULO de sección de §5 se queda corto**: medido, **31 declaraciones** de clases
+del cajón viven fuera de esos bloques (`.auth__*`, `.acct__*`, `.whoblock__*`, `.guardnote__*`,
+`.acc-tile__name`…), más dos familias enteras (`.qr-pass__*`, `.dep-pick__*`). ▶ *Lo que define al cajón
+es qué clase EMITE, no dónde está escrita su regla* — el censo bueno está en `SidebarBodySizeTest`.

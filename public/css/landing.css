@@ -433,7 +433,12 @@
      segundo dejaría las reglas de este sin token, y un `calc()` sin su variable no es un valor
      raro: es una declaración inválida que el navegador descarta. */
   --fs-unit: 1px;
-  --fs-9: calc(var(--fs-unit) * 9);
+  /* ⚠️ `--fs-9` SE RETIRA con la grieta 00 del cajón: sus tres consumidores —«Casi llena», la chapa
+     del catálogo y el precio del día— subieron al nivel Etiqueta (12), que es el escalón más pequeño
+     que el sistema declara, y el token se quedó con CERO usos. Lo dijo `SidebarTokenBudgetTest`: una
+     escala con escalones muertos describe un sistema que el producto no tiene.
+     ▶ Este `:root` lo COMPARTEN los dos carriles: si vuelve a hacer falta un 9, es que algo bajó del
+     suelo, y eso se decide antes de declarar el token. */
   --fs-10: calc(var(--fs-unit) * 10);
   --fs-11: calc(var(--fs-unit) * 11);
   --fs-12: calc(var(--fs-unit) * 12);

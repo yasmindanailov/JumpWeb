@@ -198,7 +198,7 @@ sistema y dicen cosas distintas.
 | **1** | ✅ **El sistema**: tokens (color · tipo · espacio · forma · elevación · movimiento) + los 65 iconos | `site.css` y `client.css` a v1.10, el set con su guarda | 2, 3, 4 |
 | **2** | ✅ **El armazón + las 8 secciones**, móvil y escritorio | la portada entera, vestida con BD | 3 |
 | **3** | **Las páginas**: 2 nuevas + 5 rehechas con el armazón de `Layout Paginas` | las siete del inventario | — |
-| **4** | **El SPA**: las 9 grietas + las 5 paradas del canvas | el cajón | 5 |
+| **4** | **El SPA**: las **16** grietas + las **6** paradas del canvas | el cajón | 5 |
 | **5** | **Post-form y justificante digital** | lo que hoy es funcional y no está vestido | — |
 
 ### 5.1 · Las ocho secciones de la portada
