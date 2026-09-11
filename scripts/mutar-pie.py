@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""Arnés de mutación de `#522` — el PIE del marco (tinta, destinos, idioma visible, colofón, vela).
+
+Mismo molde endurecido que `mutar-bandeja.py` (`#506`) y `mutar-destinos.py` (`#521`):
+  · en PYTHON, y cada mutación verifica que el fichero CAMBIÓ antes de correr nada;
+  · EXIGE VERDE antes de mutar (`#337`) y ÁRBOL LIMPIO en los ficheros que muta (`#181`);
+  · restaura SIEMPRE, también si el proceso revienta (`#448`).
+
+    python3 scripts/mutar-pie.py
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+RAIZ = Path(__file__).resolve().parent.parent
+FILTRO = 'FooterFrameTest|FooterContactLinksTest|ArmazonContractTest|SurfaceScopeTest'
+FICHEROS = [
+    'resources/views/components/site/footer.blade.php',
+    'public/css/landing.css',
+    'resources/js/ui/rail-sails.js',
+]
+
+# (nombre, fichero, texto que se busca, texto por el que se cambia)
+MUTACIONES = [
+    ("el pie vuelve al PAPEL",
+     'resources/views/components/site/footer.blade.php',
+     '<footer class="foot" data-surface="ink">',
+     '<footer class="foot" data-surface="paper">'),
+
+    ("el pie recupera `.wrap` y la banda deja de ir a sangre",
+     'resources/views/components/site/footer.blade.php',
+     '<footer class="foot" data-surface="ink">',
+     '<footer class="foot wrap" data-surface="ink">'),
+
+    ("las secciones de la portada se cuelan en el pie de las interiores",
+     'resources/views/components/site/footer.blade.php',
+     "        $sections,\n",
+     "        $sections ?: \\App\\Domain\\Content\\Services\\SiteDestinations::homeSections(),\n"),
+
+    ("la cuenta desaparece del pie",
+     'resources/views/components/site/footer.blade.php',
+     "        [['t' => __('landing.footer.account_link'), 'url' => route('account')]],\n",
+     ""),
+
+    ("el idioma pierde su nombre nativo (label in name)",
+     'resources/views/components/site/footer.blade.php',
+     "aria-label=\"{{ $langNames[$l] ?? strtoupper($l) }}\"",
+     "aria-label=\"{{ __('landing.footer.language') }}\""),
+
+    ("el idioma en curso deja de ir marcado",
+     'resources/views/components/site/footer.blade.php',
+     "@if (app()->getLocale() === $l) aria-current=\"true\" @endif",
+     ""),
+
+    ("el idioma vuelve a esconderse en un <noscript> (lo que el owner revirtió)",
+     'resources/views/components/site/footer.blade.php',
+     "<span class=\"foot__langs\" role=\"group\"",
+     "<noscript><span class=\"foot__langs\" role=\"group\""),
+
+    ("el colofón vuelve a llevar el lema",
+     'resources/views/components/site/footer.blade.php',
+     "<span>{{ $colofon }}</span>",
+     "<span>{{ $colofon }} {{ $site['tagline'] ?? '' }}</span>"),
+
+    ("sin ciudad, el colofón deja un «·» colgando",
+     'resources/views/components/site/footer.blade.php',
+     "if (! empty($site['city'])) {",
+     "if (true) {"),
+
+    ("la vela vuelve a la línea ANÓNIMA, que mira el documento y no la fila (el defecto REAL)",
+     'public/css/landing.css',
+     "    .foot__links-wrap[data-rail-scroll]::after { animation-timeline: --pie-destinos; }",
+     "    .foot__links-wrap[data-rail-scroll]::after { animation-timeline: scroll(nearest inline); }"),
+
+    ("la vela se pinta aunque la fila quepa",
+     'public/css/landing.css',
+     ".foot__links-wrap:not([data-rail-scroll])::after,\n.foot__legal-wrap:not([data-rail-scroll])::after { opacity: 0; animation: none; }\n",
+     ""),
+
+    ("rail-sails deja de publicar el hecho para las filas del pie",
+     'resources/js/ui/rail-sails.js',
+     "    ['.foot__links-wrap', '.foot__links'],\n",
+     ""),
+
+    ("en escritorio el contacto y lo legal vuelven a dos filas (el punto estático deja de caber)",
+     'public/css/landing.css',
+     "    .foot__legal-wrap { flex: 1 1 0; margin-top: var(--sp-6); padding-top: var(--sp-16); }\n",
+     ""),
+
+    ("la tinta de dentro del pie pierde su gris de CUERPO",
+     'public/css/landing.css',
+     "  --fg-body: var(--ink-fg-body);\n",
+     ""),
+]
+
+
+def git(*args):
+    return subprocess.run(['git', *args], cwd=RAIZ, capture_output=True, text=True)
+
+
+def restaura():
+    git('checkout', '-q', '--', *FICHEROS)
+
+
+def verde():
+    r = subprocess.run(
+        ['docker', 'compose', 'exec', '-u', 'sail', '-T', 'laravel.test',
+         'php', 'artisan', 'test', '--filter=' + FILTRO],
+        cwd=RAIZ, capture_output=True, text=True)
+    return r.returncode == 0, r.stdout + r.stderr
+
+
+def main():
+    sucio = git('status', '--porcelain', '--', *FICHEROS).stdout.strip()
+    if sucio:
+        print('✗ hay cambios sin commitear en los ficheros que se mutan — commitea antes:')
+        print(sucio)
+        return 2
+
+    print('── CONTROL: la guarda tiene que estar VERDE antes de mutar ──')
+    ok, salida = verde()
+    if not ok:
+        print('✗ el árbol limpio ya sale ROJO: el arnés no mide nada')
+        print(salida[-1500:])
+        return 2
+    print('✓ verde\n')
+
+    print('── mutaciones ──')
+    vivas = []
+    try:
+        for nombre, rel, busca, cambia in MUTACIONES:
+            ruta = RAIZ / rel
+            antes = ruta.read_text(encoding='utf-8')
+            n = antes.count(busca)
+            if n != 1:
+                # ⚠️ Una mutación que no se aplica NO es una guarda que aguanta.
+                print('  ⚠ NO APLICADA (%d coincidencias)  %s' % (n, nombre))
+                vivas.append(nombre + ' [no aplicada]')
+                continue
+            ruta.write_text(antes.replace(busca, cambia, 1), encoding='utf-8')
+            assert ruta.read_text(encoding='utf-8') != antes, 'el fichero no cambió'
+
+            ok, _ = verde()
+            print(('  ✗ SOBREVIVE  ' if ok else '  ✓ muere      ') + nombre)
+            if ok:
+                vivas.append(nombre)
+            restaura()
+    finally:
+        restaura()
+
+    print('\n' + '─' * 60)
+    print('%d/%d mutaciones mueren' % (len(MUTACIONES) - len(vivas), len(MUTACIONES)))
+    for v in vivas:
+        print('   sobrevive: ' + v)
+    return 1 if vivas else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

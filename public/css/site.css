@@ -447,20 +447,9 @@
 }
 .lang-dd--up.lang-dd--open .lang-dd__panel { transform: translateY(0) scale(1); }
 
-/* Bloque izquierdo del bottom row: lang-dd arriba + copyright debajo, alineados al inicio. */
-.foot__bottom-left {
-    display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12);
-}
-
-/* ⚠️ El `gap` es lo ÚNICO que queda aquí del bloque legal: desde `#264` es una tira que se
-   desliza, y su mecánica —carril, vela, alto táctil— la comparte con `.foot__links` en una regla
-   sola (`landing.css`). Un `display: flex` repetido aquí sería la segunda copia que diverge. */
-.foot__legal { gap: var(--sp-18); }
-
-/* Lote 8: el selector de idioma del footer (`.lang-dd`) SÍ se muestra en móvil —el mismo
-   selector del desktop—: `.foot__bottom-left` lo apila justo encima del copyright y es el único
-   punto de cambio de idioma en móvil (la web es ES/EN/FR, con móvil dominante). Antes se ocultaba
-   ≤768 asumiendo —falsamente— que el drawer ya traía su propio selector; no era así. */
+/* ⚠️ Aquí vivían `.foot__bottom-left` y el `gap` del bloque legal. Se van con la fila inferior del
+   pie viejo (`#522`): el pie del marco escribe sus cinco filas juntas en `landing.css`, y una
+   segunda regla del mismo bloque en otra hoja es la copia que diverge. */
 
 /* Utilidad: texto solo para lectores de pantalla (oculto visualmente). #221 lo usa para anunciar
    el aviso de formulario pendiente del chip de cuenta, cuya señal visual es solo el puntito. */

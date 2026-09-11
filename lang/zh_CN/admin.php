@@ -1845,10 +1845,10 @@ return [
         'lang_fr' => '法语',
         'seo_title' => '网站标题（标签页与谷歌）',
         'seo_title_hint' => '首页在浏览器标签页和谷歌搜索结果中显示的标题。例如：「MI PARQUE - Parque de saltos」。留空 = 默认标题。',
-        'landing_tagline' => '页脚标语',
-        'landing_tagline_hint' => '页脚名称下方的短语。例如：「Parque de saltos para toda la familia · Murcia」。',
+        'landing_tagline' => '首页标语',
+        'landing_tagline_hint' => '未设置“网站标题”时，首页浏览器标签页的标题。例如：「Parque de saltos para toda la familia · Murcia」。',
         'landing_footer_rights' => '版权附言',
-        'landing_footer_rights_hint' => '页脚「© 年份 名称 —」之后的文字。例如：「Hecho para reír.」。',
+        'landing_footer_rights_hint' => '宾客信息表页脚「© 年份 名称 —」之后的文字。例如：「Hecho para reír.」。',
 
         'section_registration' => '注册（外部系统）',
         'section_registration_hint' => '网站头部的「注册」按钮跳转到你们的外部注册/免责声明系统。标签和副标题可按语言编辑；若网址留空，按钮将打开内部预订注册。',

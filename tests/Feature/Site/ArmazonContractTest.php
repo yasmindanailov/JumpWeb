@@ -6,6 +6,7 @@ use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\SiteLocales;
 use Database\Seeders\LandingContentSeeder;
 use Dom\HTMLDocument;
 use Dom\XPath;
@@ -1253,13 +1254,18 @@ class ArmazonContractTest extends TestCase
             'marcado son dos listas de idiomas, y así se acaba ofreciendo uno que la otra no tiene.',
         );
 
+        // ⚠️⚠️ **EL SUELO SIN JAVASCRIPT YA NO ES UN `<noscript>`: SON LOS ENLACES VISIBLES DEL PIE**
+        // (`#522`, `[DECIDIDO owner, 2026-09-11]`, revierte `#253`). El pie del marco lleva ES · EN · FR
+        // en su fila de contacto, siempre a la vista, y son enlaces de verdad —no el desplegable, que
+        // lo abre Alpine—, así que cambian de idioma sin JS. Se comprueba que estén FUERA de cualquier
+        // `<noscript>`: dentro, con JS no se verían, que es justo lo que el owner acaba de revertir.
         $xpath = $this->xpath($html);
-        $noscript = $xpath->query('//h:noscript[.//h:a[contains(@href, "/lang/")]]');
+        $enPie = $xpath->query('//h:footer//h:a[contains(@href, "/lang/")][@hreflang][not(ancestor::h:noscript)]');
 
-        $this->assertGreaterThan(
-            0, $noscript->length,
-            'no queda ningún cambio de idioma sin JavaScript: el desplegable necesita Alpine para '.
-            'abrirse, en el pie igual que en el menú.',
+        $this->assertSame(
+            count(SiteLocales::SUPPORTED), $enPie->length,
+            'el pie no ofrece a la vista un enlace por idioma: sin JavaScript no queda ninguna forma '.
+            'de cambiar de idioma, porque el desplegable del menú necesita Alpine para abrirse.',
         );
     }
 

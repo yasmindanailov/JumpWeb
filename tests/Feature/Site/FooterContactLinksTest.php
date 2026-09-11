@@ -21,9 +21,12 @@ use Tests\TestCase;
  * saltándose el `has_phone`/`phone_tel` que el composer centralizó justamente para no emitir un
  * `tel:` roto a un ajuste sin rellenar.
  *
- * ⚠️ Las aserciones se acotan al ELEMENTO (`<nav class="foot__links">`) y no a la página: la home
- * está llena de anclas `href="#…"` legítimas, así que buscar por subcadena en todo el HTML daría un
- * verde que no vigila nada — la trampa que `#295` pagó con una guarda re-apuntada.
+ * ⚠️ Las aserciones se acotan al ELEMENTO (el `<footer>`) y no a la página: la home está llena de
+ * anclas `href="#…"` legítimas —y desde `#522` las redes viven en las cápsulas del MENÚ—, así que
+ * buscar por subcadena en todo el HTML daría un verde que no vigila nada — la trampa que `#295` pagó
+ * con una guarda re-apuntada.
+ * ⚠️ **Re-apuntada en `#522`** del `<nav class="foot__links">` al `<footer>` entero: el teléfono y el
+ * correo se mudaron a su propia fila de contacto (el pie del marco), fuera de la tira de destinos.
  */
 class FooterContactLinksTest extends TestCase
 {
@@ -34,18 +37,18 @@ class FooterContactLinksTest extends TestCase
         Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => $group]);
     }
 
-    /** El `<nav>` de enlaces del pie, aislado del resto del documento. */
+    /** El `<footer>` del sitio, aislado del resto del documento. */
     private function footerNav(): string
     {
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertMatchesRegularExpression(
-            '/<nav class="foot__links"[^>]*>/',
+            '/<footer class="foot"[^>]*>/',
             $html,
-            'El pie ya no emite `<nav class="foot__links">`: esta guarda se quedó sin sujeto.',
+            'El pie ya no emite `<footer class="foot">`: esta guarda se quedó sin sujeto.',
         );
 
-        preg_match('#<nav class="foot__links".*?</nav>#s', $html, $m);
+        preg_match('#<footer class="foot".*?</footer>#s', $html, $m);
 
         return $m[0];
     }
@@ -76,17 +79,30 @@ class FooterContactLinksTest extends TestCase
         $this->assertStringNotContainsString('href="#"', $nav);
     }
 
-    public function test_con_redes_configuradas_el_pie_las_ofrece(): void
+    /**
+     * **Con redes configuradas el pie NO las ofrece, y el MENÚ sí** (`#522`, `[DECIDIDO owner]`).
+     *
+     * ⚠️ Invierte a `test_con_redes_configuradas_el_pie_las_ofrece`, y a sabiendas: los destinos del
+     * pie son el INVENTARIO del canvas —*«un enlace que no está en el inventario es relleno»*—, y las
+     * redes viven en las cápsulas del menú. El CONTROL es el menú: sin él, este caso pasaría en verde
+     * con las redes desaparecidas de toda la web.
+     */
+    public function test_con_redes_configuradas_el_pie_no_las_ofrece_y_el_menu_si(): void
     {
         $this->set('contact.instagram', 'https://instagram.com/playjumppark', 'social');
         $this->set('contact.tiktok', 'https://tiktok.com/@playjumppark', 'social');
 
+        $html = $this->get('/')->assertOk()->getContent();
         $nav = $this->footerNav();
 
-        $this->assertStringContainsString('https://instagram.com/playjumppark', $nav);
-        $this->assertStringContainsString('https://tiktok.com/@playjumppark', $nav);
+        $this->assertStringNotContainsString('https://instagram.com/playjumppark', $nav);
+        $this->assertStringNotContainsString('https://tiktok.com/@playjumppark', $nav);
+
+        preg_match('#<ul class="menu__chips".*?</ul>#s', $html, $chips);
+        $this->assertNotEmpty($chips, 'CONTROL: no se encuentran las cápsulas del menú');
+        $this->assertStringContainsString('https://instagram.com/playjumppark', $chips[0]);
         // Salen a un tercero: se abren fuera y sin filtrar el referente.
-        $this->assertStringContainsString('rel="noopener noreferrer"', $nav);
+        $this->assertStringContainsString('rel="noopener noreferrer"', $chips[0]);
     }
 
     public function test_un_telefono_sin_rellenar_no_emite_un_tel_roto(): void

@@ -1,143 +1,115 @@
-<footer class="foot wrap">
-    @php
-        // Enlaces del footer (mismo orden que los textos de lang). Las páginas de
-        // precios/cumpleaños/contacto llegan en 3.4.3–3.4.4; de momento van a la home.
-        // ⚠️ Eran CUATRO: el cuarto era «Galería» → `/#gallery`, y se fue con la sección «En
-        // directo» que el owner retiró en `#309`. Un ancla a una sección que ya no existe no
-        // falla —lleva a la home y no pasa nada visible—, que es justamente por lo que hay que
-        // retirarla a mano: nada la habría delatado.
-        $parkUrls = [url('/#zones'), url('/#zones'), url('/#rides')];
-        // Lote 11: «Grupos y empresas» (índice 2) → /servicios (su página real), no /contacto.
-        $infoUrls = [route('precios'), route('cumpleanos'), route('servicios'), route('normas')];
-        // Orden = `landing.footer.legal`: aviso-legal, privacidad, condiciones, cookies, waiver (#216).
-        $legalUrls = [route('legal.aviso-legal'), route('legal.privacidad'), route('legal.condiciones'), route('legal.cookies'), route('legal.waiver')];
-        $legalLabels = (array) __('landing.footer.legal');
-        // Si el waiver está DESACTIVADO (no se usa, #216 pto.3), se retira del pie. Se localiza por la
-        // URL (controlada por código), no por posición, para no depender del orden de las etiquetas i18n.
-        if (! \App\Domain\Identity\Services\PuertaSettings::waiverCheckEnabled()) {
-            $waiverIdx = array_search(route('legal.waiver'), $legalUrls, true);
-            if ($waiverIdx !== false) {
-                unset($legalUrls[$waiverIdx], $legalLabels[$waiverIdx]);
-            }
+@props(['sections' => []])
+@php
+    // ── LOS DESTINOS DEL PIE SON LOS DEL MENÚ (`DECISIONES #521`/`#522`, `[DECIDIDO owner]`) ──────────
+    // El inventario de páginas del canvas + la cuenta + —solo en la portada, que es quien las pasa—
+    // sus secciones. Salen de `SiteDestinations`, la MISMA fuente que el menú: hasta aquí el pie tenía
+    // su propia lista escrita a mano (`links_park` + `links_info`) y un destino podía existir en uno y
+    // no en el otro.
+    // ⚠️ Con esto salen del pie las REDES y el registro EXTERNO del parque. No es un descuido: el canvas
+    // escribe que *«un enlace que no está en el inventario es relleno»*. Las redes siguen en las
+    // cápsulas del menú y el registro externo en el par de CTA, que es su puerta en las doce vistas.
+    $destinos = array_merge(
+        \App\Domain\Content\Services\SiteDestinations::pages(request()->route()?->getName()),
+        [['t' => __('landing.footer.account_link'), 'url' => route('account')]],
+        $sections,
+    );
+
+    // Orden = `landing.footer.legal`: aviso-legal, privacidad, condiciones, cookies, waiver (#216).
+    $legalUrls = [route('legal.aviso-legal'), route('legal.privacidad'), route('legal.condiciones'), route('legal.cookies'), route('legal.waiver')];
+    $legalLabels = (array) __('landing.footer.legal');
+    // Si el waiver está DESACTIVADO (no se usa, #216 pto.3), se retira del pie. Se localiza por la
+    // URL (controlada por código), no por posición, para no depender del orden de las etiquetas i18n.
+    if (! \App\Domain\Identity\Services\PuertaSettings::waiverCheckEnabled()) {
+        $waiverIdx = array_search(route('legal.waiver'), $legalUrls, true);
+        if ($waiverIdx !== false) {
+            unset($legalUrls[$waiverIdx], $legalLabels[$waiverIdx]);
         }
-        // ⚠️ Estas dos listas estaban QUEMADAS aquí y son una SEGUNDA copia de `SiteLocales`,
-        // cuyo propio docblock avisa: «dos listas de idiomas es cómo se acaba ofreciendo uno que
-        // la otra no reconoce». Al necesitar el menú del armazón los mismos datos (tanda 2c·1) se
-        // devuelven a su fuente única en vez de hacer una tercera.
-        $locales = \App\Domain\Platform\Services\SiteLocales::SUPPORTED;
-        $langNames = \App\Domain\Platform\Services\SiteLocales::NAMES;
-    @endphp
-    {{-- La tira de marca que remata el pie y sustituye al filete de 1 px que había.
-         ⚠️ **El marcado se fue a `<x-site.brand-strip>` en `#226`**: el mockup la usa también en
-         el hero de cabecera, y dos copias pegadas de lo mismo divergen. Aquí queda `foot__strip`,
-         que es COLOCACIÓN —el aire que deja debajo— y nada más. --}}
-    <x-site.brand-strip class="brand-strip--wedge foot__strip" />
+    }
 
-    {{-- ⚠️⚠️ **UNA SOLA FILA DE ENLACES** (`#235`, `[DECIDIDO owner]`: «lo quiero una sola línea
-         el footer con los enlaces, no 3 columnas con varias filas»). Aquí había una rejilla de
-         cuatro columnas —marca + tres listas con título— que ocupaba media pantalla.
+    // Los idiomas salen de `SiteLocales`, la fuente única: dos listas de idiomas es cómo se acaba
+    // ofreciendo uno que la otra no reconoce (lo dice el docblock de esa clase).
+    $locales = \App\Domain\Platform\Services\SiteLocales::SUPPORTED;
+    $langNames = \App\Domain\Platform\Services\SiteLocales::NAMES;
 
-         ▶ **El bloque de marca se va con ellas, y eso es 1:1**: el mockup no tiene marca en las
-         columnas, la lleva en la fila inferior junto al copyright. Nuestro copyright ya dice el
-         nombre del parque, así que no se pierde nada.
+    // El COLOFÓN del marco: «Nombre · Ciudad» y «© año» (`[DECIDIDO owner]`, `#522`). La ciudad se
+    // omite si la instalación no la tiene: un «· » colgando dice que falta algo.
+    $colofon = trim((string) ($site['name'] ?? config('app.name')));
+    if (! empty($site['city'])) {
+        $colofon .= ' · '.$site['city'];
+    }
+@endphp
+{{-- **EL PIE DEL MARCO** (`DECISIONES #522`, carril de diseño Fase 3 · T3a·2, `[DECIDIDO owner]`).
+     Es el de `Marco Portada PJP` (1e) y `Layout Paginas PJP` (1a · 1b): cinco filas sobre TINTA
+     —la tira de marca, los destinos, el contacto con el idioma, lo legal y el colofón—.
 
-         ⚠️ **Los títulos de columna también se van, y no se sustituyen por nada**: en una fila
-         única, «El parque / Información / Contacto» serían tres rótulos separando enlaces que se
-         leen igual de bien seguidos. Un encabezado que no agrupa nada es ruido.
+     ▶ **Sobre TINTA, y no es gusto**: la regla dura del sistema es *«tinta solo en hero, cierre y
+     pie»*, y el pie del producto seguía en papel por herencia (ninguna decisión lo había elegido).
+     `data-surface` re-escopa los tokens y además PINTA el fondo, así que la banda va a sangre y la
+     columna la pone el `.wrap` de dentro.
 
-         ⚠️ **Y NINGÚN enlace se retira sin decirlo.** La fila envuelve si no caben —son 14 con la
-         configuración de este cliente y a 1240 px ocupan dos renglones—; quitar destinos es una
-         decisión de producto, no de maquetación, y se toma mirando cuáles sobran de verdad. --}}
-    {{-- El envoltorio existe para la VELA: un `::after` dentro de un contenedor con scroll
-         viajaría con el contenido. Su porqué completo está junto a la regla. --}}
-    <div class="foot__links-wrap">
-    <nav class="foot__links" aria-label="{{ __('landing.footer.col_info') }}">
-        @foreach (__('landing.footer.links_park') as $i => $link)
-            <a href="{{ $parkUrls[$i] ?? url('/') }}">{{ $link }}</a>
-        @endforeach
-        @foreach (__('landing.footer.links_info') as $i => $link)
-            {{-- Lanzamiento 2026-09-01: con `/servicios` en mantenimiento, su enlace no se anuncia. --}}
-            @continue(($infoUrls[$i] ?? '') === route('servicios') && \App\Domain\Platform\Services\MaintenanceSettings::pageInMaintenance('servicios'))
-            <a href="{{ $infoUrls[$i] ?? url('/') }}">{{ $link }}</a>
-        @endforeach
-        <a href="{{ route('account') }}">{{ __('landing.footer.account_link') }}</a>
-        @if (! empty($site['registration_url']))
-            <a href="{{ $site['registration_url'] }}" target="_blank" rel="noopener">{{ $site['registration_label'] }}</a>
-        @endif
-        <a href="{{ route('contacto') }}">{{ __('landing.footer.contact_link') }}</a>
-        {{-- ⚠️ El teléfono va por `has_phone`/`phone_tel`, NO por `phone` con un `preg_replace`
-             propio: ese saneo a mano es justo lo que el Lote 11 centralizó en el composer, y con
-             el ajuste sin rellenar («[PENDIENTE]») emitía `tel:[PENDIENTE]` — un enlace roto que
-             `has_phone` existe para no pintar. Era el único sitio que se lo saltaba. --}}
-        @if (! empty($site['has_phone']))<a href="tel:{{ $site['phone_tel'] }}">{{ $site['phone'] }}</a>@endif
-        @if (! empty($site['email']))<a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a>@endif
-        {{-- ⚠️⚠️ Las redes SOLO se pintan si la instalación las tiene. El composer mapea «sin
-             configurar» a `'#'` (`SEC-07`: la URL llega ya saneada, el marcado no decide), así que
-             ese valor NO pinta enlace. Sin esta condición el pie servía `<a href="#">Instagram</a>`
-             y lo mismo TikTok en TODA instalación sin redes — el menú y el `sameAs` de schema.org
-             ya lo comprobaban; este era el único de los tres que no. --}}
-        @foreach (['instagram' => 'Instagram', 'tiktok' => 'TikTok'] as $red => $etiqueta)
-            @if (! empty($site[$red]) && $site[$red] !== '#')
-                <a href="{{ $site[$red] }}" target="_blank" rel="noopener noreferrer">{{ $etiqueta }}</a>
+     ⚠️⚠️ **EL IDIOMA VUELVE AL PIE, y revierte `#253`** (`[DECIDIDO owner, 2026-09-11]`): tres enlaces
+     de verdad en la fila de contacto, siempre visibles. Son lo único que cambia de idioma **sin
+     JavaScript** —el selector del menú lo abre Alpine—, así que ya no hace falta el `<noscript>` que
+     los escondía: los enlaces visibles SON el suelo sin JS.
+
+     ⚠️ **Cada dato solo si la instalación lo tiene**: sin teléfono no se emite un `tel:` roto a un
+     ajuste sin rellenar (`has_phone`/`phone_tel` del composer), y sin correo no hay `mailto:` vacío. --}}
+<footer class="foot" data-surface="ink">
+    <div class="foot__inner wrap">
+        {{-- La tira de marca: COMPONENTE (`#226`) y aquí su COLOCACIÓN. Va en CUÑA de 22 px y no fina
+             de 4 como la dibuja el Layout: es decisión anterior del owner contra el artboard. --}}
+        <x-site.brand-strip class="brand-strip--wedge foot__strip" />
+
+        {{-- ⚠️⚠️ **UNA SOLA FILA QUE SE DESLIZA** (`#252`, `[DECIDIDO owner]`): el número de destinos lo
+             manda la instalación y con muchos no caben. Con los del inventario, en escritorio suelen
+             caber y entonces no hay nada que deslizar — y la vela se APAGA sola (ver su regla). El
+             envoltorio existe para la VELA: un `::after` dentro del carril viajaría con el contenido. --}}
+        <div class="foot__links-wrap">
+            <nav class="foot__links" aria-label="{{ __('landing.footer.col_info') }}">
+                @foreach ($destinos as $destino)
+                    <a href="{{ $destino['url'] }}" @if (! empty($destino['current'])) aria-current="page" @endif>{{ $destino['t'] }}</a>
+                @endforeach
+            </nav>
+        </div>
+
+        {{-- El CONTACTO y el IDIOMA, en su propia fila y FUERA de cualquier condicional de terceros
+             (la regla que salió de «Visítanos»: lo que no depende de un tercero no vive dentro de su
+             condicional). --}}
+        <div class="foot__contact">
+            @if (! empty($site['has_phone']))
+                <a class="foot__tel" href="tel:{{ $site['phone_tel'] }}">{{ $site['phone'] }}</a>
             @endif
-        @endforeach
-    </nav>
-    </div>
-
-    <div class="foot__bottom">
-        {{-- ⚠️⚠️ **El selector de idioma SALE de aquí otra vez** (`#253`, `[DECIDIDO owner]`: «quita
-             el selector de idioma del footer, ya lo tenemos en el menú»). Vuelve así a la postura de
-             `#205`, que `#233` había revertido para parecerse al mockup.
-             ▶ **No es solo una pieza menos**: el pie es la mitad de la composición del punto
-             estático del cierre, y a 1440×900 esa composición se pasaba **40 px** de la ventana. Lo
-             que se retira aquí es alto que se recupera allí. Medido en `#253`.
-
-             ❗❗ **Lo que NO se va es el `<noscript>`, y esto es lo importante**: el desplegable del
-             menú se abre con Alpine, así que **sin JavaScript el idioma se quedaría sin ninguna
-             puerta**. Estas tres anclas son esa puerta. No las ve nadie con JS y son lo único que
-             hay sin él — el mismo recurso que usan el reintento de pago y el marco de
-             consentimiento. Retirarlas «porque el selector ya no está» sería quitar la salida y la
-             señal a la vez. --}}
-        <div class="foot__bottom-left">
-            <noscript>
-                <ul class="foot__lang-fallback">
-                    @foreach ($locales as $l)
-                        <li><a href="{{ route('lang.switch', $l) }}" hreflang="{{ $l }}"
-                               @if (app()->getLocale() === $l) aria-current="true" @endif>{{ $langNames[$l] }}</a></li>
-                    @endforeach
-                </ul>
-            </noscript>
-
-            {{-- ⚠️⚠️ **El ESLOGAN vuelve aquí, y lo cazó la suite completa** (`#235`). Vivía en el
-                 bloque de marca que se retiró al aplanar el pie a una fila, y con él desapareció
-                 de la web entera: es un ajuste EDITABLE del panel (`landing.tagline.*`), así que
-                 quitarlo en silencio deja un campo que el cliente rellena y no sale en ninguna
-                 parte. En una fila única su sitio natural es junto al copyright.
-                 ▶ Lo destapó `LandingTextsAndSocialTest`, un caso de AJUSTES —a dos carpetas de
-                 distancia de lo que se tocó—. Segunda vez en esta sesión que un cambio de armazón
-                 rompe algo cuyo nombre de fichero no lo sugería. --}}
-            <span class="foot__copy">
-                <span class="foot__tag">{{ $site['tagline'] ?? __('landing.footer.tag') }}</span>
-                © {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}
+            @if (! empty($site['email']))
+                <a href="mailto:{{ $site['email'] }}">{{ $site['email'] }}</a>
+            @endif
+            {{-- ⚠️ El nombre accesible de cada idioma es su nombre NATIVO («English») y el rótulo, su
+                 código («EN»): el código leído en voz alta no dice nada, y el nombre empieza por el
+                 código, que es lo que exige «label in name» (WCAG 2.5.3) para quien dicta por voz. --}}
+            <span class="foot__langs" role="group" aria-label="{{ __('landing.footer.language') }}">
+                @foreach ($locales as $l)
+                    <a href="{{ route('lang.switch', $l) }}" hreflang="{{ $l }}" lang="{{ $l }}"
+                       aria-label="{{ $langNames[$l] ?? strtoupper($l) }}"
+                       @if (app()->getLocale() === $l) aria-current="true" @endif>{{ strtoupper($l) }}</a>
+                @endforeach
             </span>
         </div>
 
-        {{-- ⚠️⚠️ **EL BLOQUE LEGAL ES UNA TIRA QUE SE DESLIZA** (`#264`, `[DECIDIDO owner]`), el
-             mismo patrón que `#252` dio a los destinos de arriba. El envoltorio no es decorativo:
-             existe para la VELA, porque un `::after` dentro del carril viajaría con el contenido
-             (su porqué entero está junto a la regla).
-             ▶ **El motivo es táctil**: a 390 px estos seis eslabones envolvían en tres renglones de
-             14 px de alto. Apilarlos a 44 hacía crecer el pie 54 px; en una tira miden 44 y el pie
-             ENCOGE 34. --}}
-        <span class="foot__legal-wrap">
-        <span class="foot__legal">
-            @foreach ($legalLabels as $i => $item)
-                <a href="{{ $legalUrls[$i] ?? url('/') }}">{{ $item }}</a>
-            @endforeach
-            {{-- Enlace permanente para revisar/revocar el consentimiento de cookies (art. 7.3 RGPD,
-                 #219): reabre el panel de preferencias. Es un botón porque actúa sobre el store Alpine. --}}
-            <button type="button" class="foot__cookie-config" @click="$store.cookies.openPanel()">{{ __('cookies.banner.manage_link') }}</button>
-        </span>
-        </span>
+        {{-- ⚠️⚠️ **EL BLOQUE LEGAL ES UNA TIRA QUE SE DESLIZA** (`#264`, `[DECIDIDO owner]`), la misma
+             mecánica que los destinos. «Configuración de cookies» es la única vuelta atrás de quien
+             dijo que no: el mapa de «Visítanos» y las reseñas viven detrás del consentimiento. --}}
+        <div class="foot__legal-wrap">
+            <div class="foot__legal">
+                @foreach ($legalLabels as $i => $item)
+                    <a href="{{ $legalUrls[$i] ?? url('/') }}">{{ $item }}</a>
+                @endforeach
+                {{-- Enlace permanente para revisar/revocar el consentimiento de cookies (art. 7.3 RGPD,
+                     #219): reabre el panel de preferencias. Es un botón porque actúa sobre el store Alpine. --}}
+                <button type="button" class="foot__cookie-config" @click="$store.cookies.openPanel()">{{ __('cookies.banner.manage_link') }}</button>
+            </div>
+        </div>
+
+        {{-- ⚠️ **El colofón NO lleva el lema ni la coletilla** (`[DECIDIDO owner]`, `#522`): el lema
+             sigue siendo el `<title>` de la portada y la coletilla, el pie del formulario de invitados. --}}
+        <p class="foot__colophon"><span>{{ $colofon }}</span><span>© {{ date('Y') }}</span></p>
     </div>
 </footer>

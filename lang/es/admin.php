@@ -2336,10 +2336,10 @@ return [
         'lang_fr' => 'Francés',
         'seo_title' => 'Título web (pestaña y Google)',
         'seo_title_hint' => 'El título que se ve en la pestaña del navegador y en los resultados de Google para la portada. Ej.: «MI PARQUE - Parque de saltos». Vacío = título por defecto.',
-        'landing_tagline' => 'Eslogan del pie',
-        'landing_tagline_hint' => 'Frase bajo el nombre en el pie de página. Ej.: «Parque de saltos para toda la familia · Murcia».',
+        'landing_tagline' => 'Lema de la portada',
+        'landing_tagline_hint' => 'Título de la pestaña de la portada cuando no hay «Título web». Ej.: «Parque de saltos para toda la familia · Murcia».',
         'landing_footer_rights' => 'Coletilla del copyright',
-        'landing_footer_rights_hint' => 'Texto tras «© AÑO NOMBRE —» en el pie. Ej.: «Hecho para reír.».',
+        'landing_footer_rights_hint' => 'Texto tras «© AÑO NOMBRE —» en el pie del formulario de invitados. Ej.: «Hecho para reír.».',
 
         'section_registration' => 'Registro (sistema externo)',
         'section_registration_hint' => 'El botón «Registro» del header de la web lleva a vuestro sistema externo de registro/descargo. Etiqueta y subtítulo editables por idioma; si la URL queda vacía, el botón abre el registro interno de reservas.',

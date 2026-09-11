@@ -32,9 +32,16 @@ class SurfaceScopeTest extends TestCase
 {
     private const SHEETS = 'public/css/*.css';
 
-    /** Los siete tokens que definen una superficie, más la hoja que va encima. */
+    /**
+     * Los siete tokens que definen una superficie, más la hoja que va encima, más el TEXTO DE CUERPO.
+     *
+     * ⚠️ **`--fg-body` entra en `#522`** y es de superficie de verdad —cambia de VALOR con el fondo—:
+     * sobre papel el cuerpo es la tinta, y sobre tinta es el Papel 200 del sistema
+     * (`semantico.tinta.textoCuerpo`), un gris que no es ni el claro de los titulares (`--fg`) ni el
+     * secundario (`--fg-mute`). Lo estrenó el pie del marco, que usa los tres a la vez.
+     */
     private const SURFACE_TOKENS = [
-        '--bg', '--bg-soft', '--bg-card', '--sheet', '--fg', '--fg-mute', '--line', '--line-strong',
+        '--bg', '--bg-soft', '--bg-card', '--sheet', '--fg', '--fg-body', '--fg-mute', '--line', '--line-strong',
     ];
 
     /**
@@ -187,7 +194,7 @@ class SurfaceScopeTest extends TestCase
 
         $this->assertSame(
             $this->sorted(array_merge(self::SURFACE_TOKENS, self::ROLE_TOKENS)), $ink,
-            'la superficie no cubre exactamente lo que declaran `SURFACE_TOKENS` (los ocho que '.
+            'la superficie no cubre exactamente lo que declaran `SURFACE_TOKENS` (los nueve que '.
             'CAMBIAN con el fondo) y `ROLE_TOKENS` (los cuatro del rol de acción, que se re-declaran '.
             'para que su fallback se re-evalúe). Si uno se retira de verdad, quítalo también de su '.
             'constante y di por qué — y no lo muevas de constante: significan cosas distintas.',

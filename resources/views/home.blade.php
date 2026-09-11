@@ -1472,7 +1472,8 @@
     </section>
     </main>
 
-    <x-site.footer />
+    {{-- El pie ofrece, además del inventario, las secciones de la portada: las MISMAS del menú (`#522`). --}}
+    <x-site.footer :sections="$menuSections" />
 
     {{-- ⚠️⚠️ **EL RECORRIDO DEL HERO DEL CIERRE VA AQUÍ, DESPUÉS DEL PIE — y ése era el fallo.**
          (`#233`, corrigiendo a `#229`.) La primera versión lo puso DENTRO de la sección y usó un
