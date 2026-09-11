@@ -4018,6 +4018,33 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
       así que pedir que se «entregue» era mandar a hacer algo que no existe. 0 controles bajo 44 px
 - [ ] **D4 de la auditoría**, pendiente del detalle del owner
 
+### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 EN CURSO — la máquina montada y la grieta 00 (`#550`, carril del SPA, banda `#550`–`#579`)
+- [x] **El SEGUNDO ORDENADOR, montado y verde** (2026-09-11, noche): paquete del cliente aplicado
+      desde la rama `cliente/playjump` con sus datos de catálogo, `THEME_FONTS` en el `.env`, suite
+      verde **con el paquete puesto**, Chromium y `socat` en el contenedor, y **sonda propia
+      versionada** (`scripts/sonda-cajon.mjs`), que es lo que `scripts/sonda-geometria.mjs` no puede
+      hacer: entrar en el panel del cajón. ⚠️ `[DECIDIDO owner]` los pedidos locales de prueba se
+      borraron —el catálogo nuevo los dejó apuntando a productos que ya no existen—, con copia previa
+      de la BD en `storage/app/backups/`
+- [x] ❗❗❗ **T4·1 · LA GRIETA 00** (`#550`, `[DECIDIDO owner]`): el cuerpo del cajón sube al suelo del
+      sistema. **103 reglas** a los cuatro niveles de TEXTO (cuerpo 16/17 · apoyo 15 · botón 16 ·
+      etiqueta 12), **17 reglas MUERTAS retiradas** (sus clases no las emite ni Vue, ni Blade, ni PHP,
+      ni el manifiesto congelado), **23 clases COMPARTIDAS acotadas al panel** —para no mover la web,
+      el post-form, el justificante ni el calendario del panel— y `--fs-9` retirado por quedarse sin
+      consumidores. ▶ **Medido en navegador**: en el embudo los nodos de texto por debajo de 16 pasan
+      de **226 a 110**, el catálogo baja de **1.112 a 981 px** en móvil, **cero desborde** y **cero
+      recortes**. `SidebarBodySizeTest` (5 casos) · **7/7 mutaciones** con su control ·
+      `scripts/cuerpo-del-cajon.py`, con la tabla explícita regla por regla
+- [ ] **El OJO del owner en un teléfono de verdad** — ninguna de las 25 pantallas se ha visto en uno,
+      y ésta es la grieta que se juzga mirando. Capturas del antes y el después en
+      `storage/app/audit/cajon-{antes,despues}/`
+- [ ] **T4·2 · la grieta 01**: el botón que avanza la compra se pinta con `var(--zone-1)`, el color de
+      una ZONA que llega desde los datos, así que cambia a mitad del embudo si alguien retiñe una zona.
+      Va al rol de acción (`#436`/`#209`)
+- [ ] **El botón del SISTEMA** (16/800 con borde), aplazado a esta fase por `rediseno-desde-canvas.md`
+      §5: **toca la familia `.btn` entera**, o sea las doce vistas de la web. Se acuerda con el carril
+      de la web antes de tocarlo
+
 ## Relación con el proyecto origen
 El cliente origen (jumpingjump) sigue vivo en **su** repo con su canal de deploy; este repo no
 le despliega nada. Mejoras de JumpWeb aplicables allí se portan **solo por decisión explícita**,

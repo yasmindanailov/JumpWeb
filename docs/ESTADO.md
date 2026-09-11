@@ -69,6 +69,59 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 >
 > ───────────────────────────────────────────────────────────────────────────────────────────
 
+> ═══════════ 🧩 CARRIL DEL SPA · banda **550–579** (2026-09-12, `#550`) ═══════════
+>
+> ❗❗❗ **QUÉ ES ESTE CARRIL Y DÓNDE EMPIEZA.** Es la **Fase 4** del rediseño desde el canvas: el
+> **cajón** de compra y de cuenta (`resources/js/sidebar/**` + sus bloques de `public/css/site.css`).
+> Corre en el **segundo ordenador**, con banda propia **550–579**. ▶ **Arranque: `docs/CARRIL-SPA.md`,
+> y su §7 antes que el resto** —son cuatro correcciones medidas a ese mismo documento—. La fuente de
+> diseño es el canvas por `DesignSync`: **`doc/spa.md`** (25 pantallas, seis paradas, 16 grietas) y la
+> lista de encargos de **`doc/pendiente.md`**, no los artboards sueltos.
+>
+> ✅ **MÁQUINA MONTADA** (2026-09-11, noche): paquete de `cliente/playjump` aplicado con `--datos`,
+> `THEME_FONTS` en el `.env`, suite verde con el paquete puesto, Chromium + `socat` en el contenedor y
+> sonda propia versionada (`scripts/sonda-cajon.mjs`). ⚠️ **Los pedidos locales de prueba se borraron**
+> (`[DECIDIDO owner]`): el catálogo nuevo los dejó apuntando a productos que ya no existen. Copia de la
+> BD de antes en `storage/app/backups/`. ⚠️ **Chromium se instala con la CLI del PROYECTO**
+> (`node node_modules/playwright-core/cli.js install chromium`), no con `npx`; y él y `socat` **mueren**
+> con un `npm install` o al recrear el contenedor.
+>
+> ✅ **T4·1 · LA GRIETA 00** (`#550`, `[DECIDIDO owner]`): el cuerpo del cajón sube al suelo del
+> sistema. **103 reglas** a los cuatro niveles de TEXTO (cuerpo 16/17 · apoyo 15 · botón 16 · etiqueta
+> 12), **17 reglas muertas retiradas**, **23 clases compartidas acotadas al panel** y `--fs-9` retirado.
+> ▶ Medido en navegador: en el embudo los nodos bajo 16 pasan de **226 a 110**, el catálogo baja de
+> **1.112 a 981 px** en móvil (la línea de ventajas se acota a dos líneas, elegido sobre tres salidas
+> medidas), **cero desborde** y **cero recortes**. Guarda `SidebarBodySizeTest` (5 casos) con
+> **7/7 mutaciones** y su control.
+>
+> ❗❗ **LO SIGUIENTE: LA GRIETA 01**, que es la que el canvas marca como la que más importa — el botón
+> que avanza la compra se pinta con `var(--zone-1)`, **el color de una ZONA, que llega desde los
+> datos**: si alguien retiñe Kids o Jump, el botón de comprar cambia de color a mitad del embudo. Va al
+> rol de acción (`--action`/`--interactive`, `#436`/`#209`). Después, el **botón del sistema** (16/800
+> con borde), que `rediseno-desde-canvas.md` §5 aplazó a esta fase y que **toca la familia `.btn`
+> entera**, o sea las doce vistas de la web: se acuerda con el otro carril antes de tocarla.
+>
+> ⚠️ **LO QUE NO HAY QUE VOLVER A DESCUBRIR** (lo caro de esta tanda): el reparto por TÍTULO de sección
+> de `CARRIL-SPA.md` §5 **se queda corto** —31 declaraciones del cajón viven fuera de sus bloques; lo
+> que define al cajón es qué clase EMITE— · una lista de prefijos escrita a mano **perdió dos familias
+> enteras** (`qr-pass`, `dep-pick`) y las cazó la sonda, no una relectura · **las tallas no se raspan de
+> los artboards**, que mezclan la pantalla con su aparato de anotación a 10-12 px · y una guarda nueva
+> puede pedir **lo contrario de lo decidido**: la primera versión medía las compartidas en su regla base
+> y las ocho salían culpables.
+>
+> ❗ **PENDIENTE DEL OWNER**: su OJO en un **teléfono de verdad**. Ninguna de las 25 pantallas se ha
+> visto en uno, y la grieta 00 es justo la que se juzga mirando. Hay capturas del antes y el después en
+> `storage/app/audit/cajon-{antes,despues}/` (pares solo de las seis del embudo: la pasada del «antes»
+> no llegó a las zonas de cuenta).
+>
+> ⚠️ **LO COMPARTIDO QUE TOCÓ `#550`, para el carril de la web**: `landing.css` `:root` pierde `--fs-9`
+> (cero usos) y tres guardas encogen con él (`TypeScaleTest`, `ScaleTokensAreUsedTest`,
+> `SemanticFillTextTest`). **Ninguna regla de la web cambia de talla**: las clases compartidas conservan
+> su regla base y solo suben dentro de `.sidecart__panel`. Ese bloque acotado **encoge** el día que cada
+> superficie se vista.
+>
+> ═══════════════════════════════════════════════════════════════════════════════════════
+
 > ═══════════ 📧 CARRIL DE LOS CORREOS · banda **500–519** (2026-09-11, `#500`→`#508`) ═══════════
 >
 > ❗❗❗ **QUÉ ES ESTE CARRIL Y POR QUÉ EXISTE.** El owner pidió retomar el diseño **en el SPA**; al
