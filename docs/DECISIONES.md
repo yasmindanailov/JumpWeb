@@ -28430,6 +28430,9 @@ capturas comparadas. ✅ **El owner la revisó en la sesión siguiente: todo OK*
 
 ## #526 · 2026-09-11 · `[DECIDIDO owner]` El CIERRE de las páginas interiores: la tarjeta de la portada DENTRO de la banda del pie, sin juego, sin eslogan y con un solo botón
 
+> ↩️ **REVERTIDA el mismo día por `#527`** (`[DECIDIDO owner]`): visto en vivo, el owner no la quiso. Se conserva
+> como registro de lo construido y medido; **el código ya no está en el árbol**.
+
 La **T3a·4**, última del armazón de la Fase 3 (`specs/rediseno-desde-canvas.md` §5.5). Lo decidido en `#521`
 —*la tarjeta de la portada sin el juego y sin el eslogan, solo «Reservar»; la barra de móvil se retira
 cuando entra*— y dos preguntas más que salieron al construir, contestadas **viendo dos renderizadas**:
@@ -28474,3 +28477,31 @@ daba `ERR_CONNECTION_REFUSED`; receta en `VERIFICACION-E2E-CAJON.md`, `socat` co
 «Reservar» lleva al MISMO sitio en portada y página en los tres estados de la venta) · `scripts/mutar-cierre.py`
 **13/13** · suite **4699** en verde · sonda de navegador (`storage/app/sonda-cierre-paginas.mjs`, 7 vistas ×
 390 y 1280): la chapa **0 px²** sobre botón y texto, barra retirada, **0** desbordes, tarjeta a 1120.
+
+## #527 · 2026-09-11 · `[DECIDIDO owner]` Las páginas interiores NO llevan cierre: se revierte `#526` y el pie vuelve a ser el de `#522`
+
+Visto en vivo tras empujar `#526`, el owner: *«el footer déjalo como estaba… este footer no me gusta, el
+actual de las páginas»*, y *«no este full screen»* — la tarjeta metida encima del pie hacía de la banda de
+tinta un bloque que en un teléfono llena la pantalla. Preguntado hasta dónde deshacer, con las tres salidas
+delante (quitar la tarjeta · sacarla sobre el papel, la opción B · deshacer también el pie de `#522`):
+**quitar la tarjeta**. El pie de ayer (`#522`/`#523`) **se queda** tal cual: lo había validado.
+
+▶ **Cómo se deshizo**: `git revert` del commit de código de `#526` (`955423ad`), en un commit nuevo y sin
+reescribir historia —el mismo camino que `#452` con el cajón—. Vuelven, byte a byte, las vistas, el pie, la hoja
+y la portada (su cuerpo del cierre deja de ser un componente compartido: con una sola consumidora, la regla de
+«Reservar» vuelve a vivir en un solo sitio, que es lo que la extracción protegía). Se retiran con su sujeto la
+guarda `PageClosingTest` y el arnés `mutar-cierre.py`. **La documentación NO se revierte**: `#526` queda marcada
+como revertida, porque lo medido sigue valiendo para quien lo reabra.
+
+⚠️⚠️ **Es el TERCER «no» del owner al `Layout Paginas PJP`** (con la barra blanca fija y el panel de menú de 520,
+`#521`), y se escribe para que nadie lo «termine»: **una página interior acaba en el pie, sin tarjeta de cierre**.
+⚠️ **Y la elección se hizo sobre capturas y se deshizo en vivo**: una captura de ventana enseña el cierre en el
+punto que la sonda eligió; lo que el owner vio fue el final de la página entero al desplazarse, donde la banda
+de tinta (tarjeta + pie) mide más que la pantalla. *Una decisión visual sobre algo que ocupa más de una
+pantalla se enseña desplazándose, no en un fotograma.*
+
+▶ **Lo que sigue valiendo de `#526`** para quien vuelva a este terreno: la tarjeta de la portada no se puede
+reutilizar tal cual fuera de ella (su altura en reposo sale de `--foot-h`, que publica su coreografía, y
+reserva 122–156 px para el juego); desde 1024 px el pie es `flex` con salto y todo hijo nuevo tiene que estar
+en su lista de «fila entera» (y delante del colofón, por `FooterFrameTest`); y las dos trampas de instrumento
+(el puente 8081 caído, y que `$store.cookies.visible = false` no cierra el banner: es `rejectAll()`).

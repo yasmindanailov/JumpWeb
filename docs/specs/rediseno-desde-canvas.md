@@ -1,6 +1,6 @@
 # Rediseño desde el canvas de Claude Design
 
-> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas COMPLETO (T3a·1 → T3a·4); siguen las páginas** (§5.5)
+> **Estado:** ✅ **Fase 1 y Fase 2 CERRADAS: la portada entera, con sus ocho secciones** · 🟦 **Fase 3 EN CURSO: el armazón de las páginas COMPLETO (T3a·1 → T3a·3; la T3a·4 revertida por `#527`); siguen las páginas** (§5.5)
 > **Banda de decisiones:** 470–499 (la reapertura es `#469`), **agotada en `#499`** → la Fase 3 va en **520–549**
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · sistema **v1.32** · tokens **v1.10**
 > ⚠️ Los tokens iban por **v1.9** el 2026-09-09 por la mañana y por **v1.10** por la tarde: esta
@@ -946,7 +946,7 @@ de escritorio) y `doc/paginas.md` del canvas.
 | T3a·1 | **El armazón · los DESTINOS** del menú (y del pie): el inventario de páginas; en la portada, sus secciones | ✅ `#521` |
 | T3a·2 | **El armazón · el PIE del marco**: sobre tinta · idioma visible · filas del marco · colofón — y las VELAS del pie y del menú, que no se apagaban nunca | ✅ `#522` |
 | T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b · revisada por el owner: OK |
-| T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ✅ `#526` — dentro de la banda de tinta del pie (opción A del owner) |
+| T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ↩️ `#526` construida y **revertida por `#527`** (`[DECIDIDO owner]`): las interiores acaban en el pie de `#522`, sin tarjeta |
 | T3b… | **Las páginas**, en el orden del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
 
 #### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
@@ -1084,7 +1084,15 @@ lo dijo el arnés**: sacar `.page__lede` de la regla tipográfica compartida **s
 entradilla también comparte con la de sección la regla de su MARGEN y el caso aceptaba cualquiera. Hoy
 exige compartir la que declara `font-size`. *«Comparte una regla» no es «comparte la declaración».*
 
-✅ **T3a·4 · el cierre en las interiores** (`#526`). La tarjeta de la portada **sin el juego, sin el eslogan
+↩️ **T3a·4 · REVERTIDA por `#527` el mismo día** (`[DECIDIDO owner, 2026-09-11]`): visto en vivo, *«el footer
+déjalo como estaba»* — la tarjeta encima del pie hacía de la banda de tinta un bloque que en un teléfono llena
+la pantalla. Se deshizo con `git revert` del commit de código; **el pie de `#522` se queda** y **las páginas
+interiores acaban en él, sin tarjeta de cierre**. Es el TERCER «no» al Layout, con la barra blanca y el panel de
+520: no se «termina». Lo de abajo se conserva como registro de lo construido y medido.
+⚠️ *Una decisión visual sobre algo que ocupa más de una pantalla se enseña desplazándose, no en un fotograma*:
+se eligió sobre capturas de ventana y se deshizo al verlo entero.
+
+📜 **T3a·4 · el cierre en las interiores, tal como se construyó** (`#526`). La tarjeta de la portada **sin el juego, sin el eslogan
 y con un solo botón**, y `[DECIDIDO owner, 2026-09-11]` **dentro de la banda de tinta del pie** —la opción A,
 elegida sobre dos renderizadas: la B la ponía sobre el papel antes del pie, como en la portada—. La llevan
 las seis páginas del inventario que existen; ni las legales ni las pantallas de servicio. El texto es el de
@@ -1103,7 +1111,7 @@ aparta al entrar `.foot`, y el cierre ya es `.foot`; en la portada sigue por enc
 lo que la tanda dirigida no**: `FooterFrameTest` lee `.foot__colophon { flex: …` tal cual, así que la tarjeta
 va delante del colofón en esa lista. Guarda `PageClosingTest` (5 casos) + `scripts/mutar-cierre.py` (**13/13**).
 
-▶ **CON ESTO EL ARMAZÓN QUEDA COMPLETO** (T3a·1 → T3a·4). Lo siguiente son **las páginas (T3b)**, en el orden
+▶ **EL ARMAZÓN QUEDA COMPLETO con T3a·1 → T3a·3** (la T3a·4 se retiró por decisión del owner). Lo siguiente son **las páginas (T3b)**, en el orden
 del Layout: `/atracciones` · `/cumpleanos` · `/precios` · `/normas` · `/servicios` · `/bar` · `/contacto`. Dos
 preguntas del owner esperan a su página: **`/bar`** (no existe; el canvas la condiciona a que el bar tenga carta,
 `#482`) y **`/entradas`** (existe sin estar en el inventario: entra o se retira, §4.1).
