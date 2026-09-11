@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Anton&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Space Grotesk',system-ui,sans-serif;color:#101113;background:#ECF3F7}
+a{color:#0E8FCB;text-decoration:none}
+a:hover{color:#0A6E9E}
+@keyframes pjplatido{0%,100%{transform:scale(1)}50%{transform:scale(1.5);opacity:.35}}
+@keyframes pjpticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes pjptickerinv{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+</style>
+</helmet>
+
+<section style="padding:56px 56px 40px;display:flex;flex-direction:column;gap:34px;">
+
+  <div style="display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;max-width:1100px;">
+    <div style="flex:1 1 520px;min-width:0;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7B8791;margin-bottom:14px;">Turno 2 · tendencias 2026 · tipografía cinética, hero-como-layout, texto funcional</div>
+      <h1 style="font-family:'Anton';font-weight:400;font-size:64px;line-height:.94;letter-spacing:-.005em;text-transform:uppercase;margin:0;">Cinco heroes con las tendencias de 2026</h1>
+    </div>
+    <p style="flex:0 1 380px;margin:0;font-size:16px;line-height:1.6;color:#5A6670;">Tipo cinético, rejilla editorial, tipo elástica justificada, hero funcional y collage de pegatinas. Ids <a href="#2a">2a</a>–<a href="#2e">2e</a>; el turno anterior sigue abajo.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:44px;">
+
+    <!-- ══════════ 2a ══════════ -->
+    <div id="2a" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">2a</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Tipo cinética · cintas</span>
+        <span style="font-size:14px;color:#7B8791;">Dos cintas de texto cruzan el vídeo en direcciones opuestas.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.3) 0%,rgba(16,17,19,.1) 45%,rgba(16,17,19,.8) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:absolute;left:0;right:0;top:196px;overflow:hidden;transform:rotate(-2deg);">
+          <div style="display:flex;width:max-content;animation:pjpticker 26s linear infinite;">
+            <span style="font-family:'Anton';font-size:104px;line-height:1;text-transform:uppercase;color:#fff;white-space:nowrap;padding-right:26px;">Salta · vuela · cae · repite · </span>
+            <span style="font-family:'Anton';font-size:104px;line-height:1;text-transform:uppercase;color:#fff;white-space:nowrap;padding-right:26px;">Salta · vuela · cae · repite · </span>
+          </div>
+        </div>
+        <div style="position:absolute;left:0;right:0;top:324px;overflow:hidden;transform:rotate(-2deg);background:#0E8FCB;">
+          <div style="display:flex;width:max-content;animation:pjptickerinv 22s linear infinite;">
+            <span style="font-family:'JetBrains Mono';font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:#fff;white-space:nowrap;padding:9px 22px 9px 0;">1.200 m² · 2 zonas · 14 juegos · foam pit · ninja course · cumples · desde 8 € · </span>
+            <span style="font-family:'JetBrains Mono';font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:#fff;white-space:nowrap;padding:9px 22px 9px 0;">1.200 m² · 2 zonas · 14 juegos · foam pit · ninja course · cumples · desde 8 € · </span>
+          </div>
+        </div>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:38px;">
+          <span style="font-family:'Permanent Marker';font-size:20px;color:#8DC63F;transform:rotate(-2deg);align-self:flex-start;">activa tu modo diversión</span>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+            <p style="margin:0;max-width:330px;font-size:16px;line-height:1.55;color:rgba(255,255,255,.85);">Parque de camas elásticas en Lorca. Reserva tu hora y entra directo.</p>
+            <a href="#2a" style="display:inline-flex;align-items:center;gap:10px;background:#fff;color:#101113;border-radius:999px;padding:16px 28px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.55;">→</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 2b ══════════ -->
+    <div id="2b" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">2b</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">El titular ES la reserva</span>
+        <span style="font-size:14px;color:#7B8791;">Frase con huecos elegibles: día, hora y personas dentro del texto.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.36) 0%,rgba(16,17,19,.24) 40%,rgba(16,17,19,.88) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:38px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:18px;">Play Jump Park · Lorca · abierto 10:00 – 22:00</span>
+          <h2 style="font-family:'Anton';font-weight:400;font-size:54px;line-height:1.22;text-transform:uppercase;color:#fff;margin:0;max-width:800px;">
+            Quiero saltar el
+            <span style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.5);border-radius:14px;padding:2px 16px 4px;">sábado <span style="font-size:22px;opacity:.7;">▾</span></span>
+            a las
+            <span style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.5);border-radius:14px;padding:2px 16px 4px;">17:00 <span style="font-size:22px;opacity:.7;">▾</span></span>
+            con
+            <span style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.5);border-radius:14px;padding:2px 16px 4px;">4 <span style="font-size:22px;opacity:.7;">▾</span></span>
+            saltadores
+          </h2>
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:26px;">
+            <a href="#2b" style="display:inline-flex;align-items:center;gap:10px;background:#8DC63F;color:#101113;border-radius:999px;padding:16px 28px;font-weight:700;font-size:15.5px;">Ver huecos libres <span style="opacity:.6;">→</span></a>
+            <span style="font-size:14.5px;color:rgba(255,255,255,.75);">32 € · 60 min · calcetines incluidos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 2c ══════════ -->
+    <div id="2c" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">2c</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Rejilla editorial</span>
+        <span style="font-size:14px;color:#7B8791;">Hero como sistema de layout: titular a la izquierda, ficha a la derecha.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.5) 0%,rgba(16,17,19,.32) 45%,rgba(16,17,19,.86) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:relative;height:100%;display:grid;grid-template-columns:1.55fr 1fr;gap:38px;padding:38px;align-items:end;">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:12px;border-top:1px solid rgba(255,255,255,.35);padding-top:12px;margin-bottom:26px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7);">
+              <span>01 — Lorca, Murcia</span><span style="margin-left:auto;">Est. 2019</span>
+            </div>
+            <h2 style="font-family:'Anton';font-weight:400;font-size:88px;line-height:.86;letter-spacing:-.01em;text-transform:uppercase;color:#fff;margin:0;">Diversión<br>sin<br><span style="color:#8DC63F;">frenos</span></h2>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid rgba(255,255,255,.22);font-size:14px;color:#fff;">
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);">Zonas</span><span>Kids + Jump</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid rgba(255,255,255,.22);font-size:14px;color:#fff;">
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);">Juegos</span><span>14</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid rgba(255,255,255,.22);font-size:14px;color:#fff;">
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);">Edades</span><span>2 – 99</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid rgba(255,255,255,.22);border-bottom:1px solid rgba(255,255,255,.22);font-size:14px;color:#fff;">
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);">Desde</span><span>8 € / 60 min</span>
+            </div>
+            <a href="#2c" style="display:inline-flex;align-items:center;justify-content:space-between;gap:10px;margin-top:22px;background:#0E8FCB;color:#fff;border-radius:12px;padding:16px 20px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+            <span style="display:inline-flex;align-items:center;gap:9px;margin-top:14px;color:rgba(255,255,255,.85);font-size:13.5px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#8DC63F;"></span>Abierto ahora · 10:00 – 22:00
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 2d ══════════ -->
+    <div id="2d" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">2d</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Tipo justificada de borde a borde</span>
+        <span style="font-size:14px;color:#7B8791;">Cada línea se estira hasta tocar los dos márgenes. Muro de letras.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.3) 0%,rgba(16,17,19,.18) 50%,rgba(16,17,19,.82) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:26px;padding:34px;">
+          <div style="display:flex;flex-direction:column;gap:0;font-family:'Anton';font-size:126px;line-height:.9;text-transform:uppercase;color:#fff;">
+            <div style="display:flex;justify-content:space-between;"><span>S</span><span>A</span><span>L</span><span>T</span><span>A</span></div>
+            <div style="display:flex;justify-content:space-between;color:#8DC63F;"><span>S</span><span>I</span><span>N</span></div>
+            <div style="display:flex;justify-content:space-between;"><span>F</span><span>R</span><span>E</span><span>N</span><span>O</span><span>S</span></div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.3);padding-top:20px;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.75);max-width:420px;line-height:1.7;">Camas elásticas en Lorca · 1.200 m² · abierto 10:00 – 22:00</span>
+            <a href="#2d" style="display:inline-flex;align-items:center;gap:10px;background:#0E8FCB;color:#fff;border-radius:999px;padding:15px 26px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 2e ══════════ -->
+    <div id="2e" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">2e</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Collage de pegatinas</span>
+        <span style="font-size:14px;color:#7B8791;">Titular limpio + dos pegatinas giradas con la información que vende.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.26) 0%,rgba(16,17,19,.14) 42%,rgba(16,17,19,.84) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:absolute;top:150px;right:44px;display:flex;flex-direction:column;align-items:center;gap:2px;background:#8DC63F;color:#101113;border-radius:999px;width:150px;height:150px;justify-content:center;transform:rotate(9deg);text-align:center;">
+          <span style="font-family:'Anton';font-size:42px;line-height:.9;">8 €</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;">60 min · entre semana</span>
+        </div>
+        <div style="position:absolute;top:76px;right:176px;background:#fff;color:#101113;border-radius:8px;padding:9px 15px;transform:rotate(-5deg);font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;">Nuevo · ninja course</div>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:38px;">
+          <span style="font-family:'Permanent Marker';font-size:21px;color:#8DC63F;transform:rotate(-2deg);align-self:flex-start;margin-bottom:16px;">activa tu modo diversión</span>
+          <h2 style="font-family:'Anton';font-weight:400;font-size:96px;line-height:.88;letter-spacing:-.01em;text-transform:uppercase;color:#fff;margin:0;max-width:640px;">Salta<br>hasta que<br>no puedas</h2>
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:24px;">
+            <a href="#2e" style="display:inline-flex;align-items:center;gap:10px;background:#0E8FCB;color:#fff;border-radius:999px;padding:16px 28px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+            <span style="display:inline-flex;align-items:center;gap:9px;color:rgba(255,255,255,.9);font-size:14.5px;font-weight:500;">
+              <span style="width:9px;height:9px;border-radius:50%;background:#8DC63F;"></span>Abierto ahora · 10:00 – 22:00
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section style="padding:16px 56px 96px;display:flex;flex-direction:column;gap:34px;">
+
+  <div style="display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;max-width:1100px;">
+    <div style="flex:1 1 520px;min-width:0;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7B8791;margin-bottom:14px;">Turno 1 · texto del hero · mismo vídeo, mismo marco</div>
+      <h1 style="font-family:'Anton';font-weight:400;font-size:64px;line-height:.94;letter-spacing:-.005em;text-transform:uppercase;margin:0;">Cinco maneras de escribir el hero</h1>
+    </div>
+    <p style="flex:0 1 380px;margin:0;font-size:16px;line-height:1.6;color:#5A6670;">Solo cambia el bloque de texto: composición, jerarquía y copy. Dime el id (<a href="#1a">1a</a>–<a href="#1e">1e</a>) que quieras llevar a la landing y lo monto ahí.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:44px;">
+
+    <!-- ══════════ 1a ══════════ -->
+    <div id="1a" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">1a</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Relleno + contorno</span>
+        <span style="font-size:14px;color:#7B8791;">La segunda línea vacía: el vídeo se ve a través del titular.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.28) 0%,rgba(16,17,19,.12) 42%,rgba(16,17,19,.84) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:38px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:14px;">Lorca · Murcia · 1.200 m² de camas elásticas</span>
+          <div style="display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;">
+            <h2 style="font-family:'Anton';font-weight:400;font-size:92px;line-height:.9;letter-spacing:-.01em;text-transform:uppercase;color:#fff;margin:0;">DIVERSIÓN<br><span style="-webkit-text-stroke:1.8px #fff;color:transparent;">SIN FRENOS</span></h2>
+            <span style="font-family:'Permanent Marker';font-size:20px;line-height:1.15;color:#8DC63F;transform:rotate(-3deg);margin-bottom:16px;max-width:190px;">activa tu<br>modo diversión</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:24px;">
+            <a href="#1a" style="display:inline-flex;align-items:center;gap:10px;background:#0E8FCB;color:#fff;border-radius:999px;padding:15px 26px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+            <span style="display:inline-flex;align-items:center;gap:9px;color:rgba(255,255,255,.9);font-size:14.5px;font-weight:500;">
+              <span style="position:relative;width:9px;height:9px;">
+                <span style="position:absolute;inset:0;border-radius:50%;background:#8DC63F;"></span>
+                <span style="position:absolute;inset:0;border-radius:50%;background:#8DC63F;animation:pjplatido 2.4s ease-out infinite;"></span>
+              </span>
+              Abierto ahora · 10:00 – 22:00
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 1b ══════════ -->
+    <div id="1b" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">1b</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Verbos en escalera</span>
+        <span style="font-size:14px;color:#7B8791;">El texto imita el rebote: cada línea salta a la derecha.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(110deg,rgba(16,17,19,.82) 0%,rgba(16,17,19,.42) 52%,rgba(16,17,19,.18) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;padding:38px;">
+          <span style="font-family:'Permanent Marker';font-size:19px;color:#8DC63F;transform:rotate(-2deg);margin:0 0 22px 2px;">activa tu modo diversión</span>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;align-items:baseline;gap:14px;margin-left:0;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:rgba(255,255,255,.45);width:20px;">01</span>
+              <span style="font-family:'Anton';font-size:78px;line-height:.94;text-transform:uppercase;color:#fff;">Salta</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:14px;margin-left:64px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:rgba(255,255,255,.45);width:20px;">02</span>
+              <span style="font-family:'Anton';font-size:78px;line-height:.94;text-transform:uppercase;color:#fff;">Vuela</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:14px;margin-left:128px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:rgba(255,255,255,.45);width:20px;">03</span>
+              <span style="font-family:'Anton';font-size:78px;line-height:.94;text-transform:uppercase;color:#fff;">Cae</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:14px;margin-left:192px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:rgba(255,255,255,.45);width:20px;">04</span>
+              <span style="font-family:'Anton';font-size:78px;line-height:.94;text-transform:uppercase;color:#0E8FCB;">Repite</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:30px;">
+            <a href="#1b" style="display:inline-flex;align-items:center;gap:10px;background:#fff;color:#101113;border-radius:999px;padding:15px 26px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.55;">→</span></a>
+            <span style="font-size:14.5px;color:rgba(255,255,255,.8);">2 zonas · 14 juegos · desde 8 € · Lorca</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 1c ══════════ -->
+    <div id="1c" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">1c</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Frase que habla al padre</span>
+        <span style="font-size:14px;color:#7B8791;">Copy en vez de eslogan: una frase larga hace el titular.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.34) 0%,rgba(16,17,19,.2) 38%,rgba(16,17,19,.86) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:38px;">
+          <h2 style="font-family:'Anton';font-weight:400;font-size:60px;line-height:1.02;letter-spacing:-.005em;text-transform:uppercase;color:#fff;margin:0;max-width:780px;text-wrap:balance;">El único sitio de Lorca donde <span style="color:#0E8FCB;">nadie</span> le dice a tu hijo <span style="display:inline-block;position:relative;"><span style="position:absolute;left:-4px;right:-4px;bottom:4px;height:11px;background:#8DC63F;opacity:.95;"></span><span style="position:relative;">«no corras»</span></span></h2>
+          <p style="margin:20px 0 0;max-width:520px;font-size:17px;line-height:1.6;color:rgba(255,255,255,.82);">1.200 m² de camas elásticas, foam pit y ninja course. Dos horas aquí y duerme del tirón.</p>
+          <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:26px;">
+            <a href="#1c" style="display:inline-flex;align-items:center;gap:10px;background:#0E8FCB;color:#fff;border-radius:999px;padding:15px 26px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+            <span style="display:inline-flex;align-items:center;gap:9px;color:rgba(255,255,255,.9);font-size:14.5px;font-weight:500;">
+              <span style="width:9px;height:9px;border-radius:50%;background:#8DC63F;"></span>Abierto ahora · 10:00 – 22:00
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 1d ══════════ -->
+    <div id="1d" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">1d</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Cartel centrado</span>
+        <span style="font-size:14px;color:#7B8791;">Datos en las cuatro esquinas, titular al centro. Aire y orden.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:radial-gradient(70% 60% at 50% 48%,rgba(16,17,19,.62) 0%,rgba(16,17,19,.36) 55%,rgba(16,17,19,.8) 100%);"></div>
+        <div style="position:absolute;inset:22px;border:1px solid rgba(255,255,255,.2);border-radius:12px;pointer-events:none;"></div>
+        <div style="position:absolute;top:38px;left:40px;right:40px;display:flex;justify-content:space-between;gap:16px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.66);">
+          <span>Play Jump Park · Lorca</span>
+          <span style="display:inline-flex;align-items:center;gap:8px;"><span style="width:7px;height:7px;border-radius:50%;background:#8DC63F;"></span>Abierto · 10:00 – 22:00</span>
+        </div>
+        <div style="position:absolute;bottom:38px;left:40px;right:40px;display:flex;justify-content:space-between;gap:16px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.66);">
+          <span>Desde 8 € / 60 min</span>
+          <span>2 zonas · 14 juegos</span>
+        </div>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:38px;text-align:center;">
+          <span style="font-family:'Permanent Marker';font-size:19px;color:#8DC63F;transform:rotate(-1.5deg);">activa tu modo diversión</span>
+          <h2 style="font-family:'Anton';font-weight:400;font-size:86px;line-height:.92;letter-spacing:.01em;text-transform:uppercase;color:#fff;margin:0;">Diversión<br>sin frenos</h2>
+          <a href="#1d" style="display:inline-flex;align-items:center;gap:10px;background:#0E8FCB;color:#fff;border-radius:999px;padding:15px 30px;font-weight:600;font-size:15.5px;margin-top:6px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ 1e ══════════ -->
+    <div id="1e" style="display:flex;flex-direction:column;gap:14px;width:940px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101113;color:#ECF3F7;border-radius:6px;padding:5px 9px;">1e</span>
+        <span style="font-family:'Anton';font-size:22px;text-transform:uppercase;">Palabra gigante recortada</span>
+        <span style="font-size:14px;color:#7B8791;">Una sola palabra fuera de marco; el resto en letra pequeña.</span>
+      </div>
+      <div style="position:relative;width:940px;height:560px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,19,.2) 0%,rgba(16,17,19,.1) 45%,rgba(16,17,19,.8) 100%);"></div>
+        <span style="position:absolute;top:18px;right:20px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:5px 10px;">[ vídeo del parque ]</span>
+        <span aria-hidden="true" style="position:absolute;left:-36px;bottom:-56px;font-family:'Anton';font-size:280px;line-height:.8;letter-spacing:-.02em;text-transform:uppercase;color:#fff;opacity:.96;white-space:nowrap;">Salta</span>
+        <div style="position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:38px;">
+          <div style="max-width:420px;margin-top:64px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;">
+            <span style="font-family:'Permanent Marker';font-size:19px;color:#8DC63F;transform:rotate(-2deg);display:inline-block;">activa tu modo diversión</span>
+            <p style="margin:0;font-family:'Space Grotesk';font-size:20px;line-height:1.45;font-weight:500;color:#fff;">Parque de camas elásticas en Lorca. 1.200 m², dos zonas y ninguna excusa para estar quieto.</p>
+            <span style="display:inline-flex;align-items:center;gap:9px;color:rgba(255,255,255,.9);font-size:14.5px;font-weight:500;">
+              <span style="width:9px;height:9px;border-radius:50%;background:#8DC63F;"></span>Abierto ahora · 10:00 – 22:00
+            </span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;">
+            <a href="#1e" style="display:inline-flex;align-items:center;gap:10px;background:#0E8FCB;color:#fff;border-radius:999px;padding:15px 26px;font-weight:600;font-size:15.5px;">Reservar mi hora <span style="opacity:.8;">→</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</x-dc>
+</body>
+</html>

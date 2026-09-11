@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&family=Lilita+One&family=Permanent+Marker&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:'Space Grotesk',system-ui,sans-serif;color:#101113;background:#ECF3F7;-webkit-font-smoothing:antialiased}
+  a{color:#0E8FCB;text-decoration:none}
+  a:hover{color:#0B7AAF}
+  button{font:inherit;color:inherit}
+  ::selection{background:#0E8FCB;color:#fff}
+  @keyframes pjpbrillo{0%{transform:translateX(-130%)}55%,100%{transform:translateX(260%)}}
+  @keyframes pjplatido{0%,100%{transform:scale(1)}50%{transform:scale(1.5);opacity:.35}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#ECF3F7;">
+
+<div ref="{{ logoRef }}" style="position:fixed;left:26px;top:22px;z-index:220;display:flex;align-items:center;gap:14px;">
+  <a href="#top" aria-label="PLAY JUMP PARK" style="display:flex;align-items:center;filter:drop-shadow(0 6px 16px rgba(16,17,19,.45)) drop-shadow(0 1px 0 rgba(16,17,19,.25));transition:transform .34s cubic-bezier(.2,.9,.2,1);" style-hover="transform:translateY(-2px) rotate(-1.5deg);">
+    <span style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+      <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:17px;line-height:1;margin-left:4px;transform:rotate(-3deg) skewX(-5deg);z-index:1;">
+        <span style="color:transparent;">PLAY</span>
+        <span style="position:absolute;left:0;top:0;-webkit-text-stroke:3.6px #2FB6DE;color:#2FB6DE;">PLAY</span>
+        <span style="position:absolute;left:0;top:0;-webkit-text-stroke:2.5px #1B1B19;color:#1B1B19;">PLAY</span>
+        <span style="position:absolute;left:0;top:0;-webkit-text-stroke:1.3px #FFFFFF;color:#FFFFFF;">PLAY</span>
+        <span style="position:absolute;left:0;top:0;"><span style="color:#3FC3E8;">P</span><span style="color:#33BBE4;">L</span><span style="color:#2BB4E1;">A</span><span style="color:#22ACDD;">Y</span></span>
+      </span>
+      <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:25px;transform:skewX(-5deg);line-height:1;margin-top:-4px;z-index:2;">
+        <span style="color:transparent;">JUMPPARK</span>
+        <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+        <span style="position:absolute;left:0;top:0;-webkit-text-stroke:3.3px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+        <span style="position:absolute;left:0;top:0;-webkit-text-stroke:1.3px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+        <span style="position:absolute;left:0;top:0;"><span style="color:#F9B02A;">J</span><span style="color:#F79A22;">U</span><span style="color:#F4821E;">M</span><span style="color:#EE5F22;">P</span><span style="color:#B7D93E;">P</span><span style="color:#9BCE41;">A</span><span style="color:#78C059;">R</span><span style="color:#3FB6C9;">K</span></span>
+      </span>
+    </span>
+  </a>
+  <button ref="{{ botonRef }}" onClick="{{ alterna }}" aria-label="Abrir menú" style="{{ estiloBoton }}" style-hover="transform:translateY(-2px);">
+    <span style="display:flex;flex-direction:column;gap:4px;width:19px;">
+      <span style="{{ estiloRaya1 }}"></span>
+      <span style="{{ estiloRaya2 }}"></span>
+    </span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;">{{ etiquetaLogo }}</span>
+  </button>
+</div>
+
+<div ref="{{ menuRef }}" style="position:fixed;inset:0;z-index:210;background:#101113;color:#ECF3F7;overflow:hidden;pointer-events:none;clip-path:circle(0px at 62px 56px);transition:clip-path .72s cubic-bezier(.7,0,.2,1);">
+  <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(236,243,247,.11) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+  <div aria-hidden="true" style="position:absolute;top:-140px;right:-110px;width:460px;height:460px;background:#2FB6DE;opacity:.2;border-radius:54% 46% 60% 40%/48% 58% 42% 52%;"></div>
+  <div aria-hidden="true" style="position:absolute;bottom:-160px;left:-80px;width:380px;height:380px;background:#8DC63F;opacity:.15;border-radius:46% 54% 58% 42%/52% 46% 54% 48%;"></div>
+
+  <div style="position:relative;height:100%;max-width:1240px;margin:0 auto;padding:clamp(108px,14vh,132px) 40px clamp(104px,13vh,124px);display:flex;flex-direction:column;">
+    <div style="display:flex;gap:56px;flex:1;min-height:0;">
+
+      <div style="position:relative;flex:1 1 560px;min-width:0;display:flex;">
+      <div ref="{{ listaRef }}" onScroll="{{ miraLista }}" style="flex:1;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;">
+        <div style="margin:auto 0;width:100%;display:flex;flex-direction:column;">
+        <sc-for list="{{ enlaces }}" as="e" hint-placeholder-count="5">
+          <button onClick="{{ cierra }}" onMouseEnter="{{ e.mira }}" onFocus="{{ e.mira }}" style="{{ e.estilo }}">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#7B8791;width:26px;flex:0 0 auto;">{{ e.n }}</span>
+            <span style="{{ e.estiloTitulo }}">{{ e.t }}</span>
+            <span style="{{ e.estiloSub }}">{{ e.s }}</span>
+            <span style="{{ e.estiloFlecha }}">→</span>
+          </button>
+        </sc-for>
+        </div>
+      </div>
+      <div ref="{{ velaRef }}" aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:56px;background:linear-gradient(180deg,rgba(16,17,19,0),#101113);opacity:0;transition:opacity .3s ease;pointer-events:none;"></div>
+      </div>
+
+      <div style="{{ estiloAparte }}">
+        <div style="position:relative;flex:1;min-height:190px;border-radius:20px;overflow:hidden;background:repeating-linear-gradient(135deg,#22262A 0 14px,#1B1E21 14px 28px);display:flex;align-items:flex-end;padding:20px;">
+          <span style="position:absolute;top:16px;left:18px;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(236,243,247,.45);border:1px dashed rgba(236,243,247,.26);border-radius:7px;padding:5px 9px;">[ foto ]</span>
+          <div style="position:relative;display:flex;flex-direction:column;gap:7px;">
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#8DC63F;">{{ vistaEtiqueta }}</span>
+            <span style="font-family:'Anton';font-weight:400;font-size:30px;line-height:1;text-transform:uppercase;">{{ vistaTitulo }}</span>
+            <span style="font-size:14px;line-height:1.5;color:#A8B6C0;max-width:280px;">{{ vistaClaim }}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#ECF3F7;">
+            <span style="position:relative;width:9px;height:9px;flex:0 0 auto;">
+              <span style="position:absolute;inset:0;border-radius:50%;background:#8DC63F;"></span>
+              <span style="position:absolute;inset:0;border-radius:50%;background:#8DC63F;animation:pjplatido 2.4s ease-out infinite;"></span>
+            </span>
+            Abierto ahora · 10:00 – 22:00
+          </div>
+          <a href="tel:+34000000000" style="font-size:14px;color:#A8B6C0;">000 000 000</a>
+          <a href="#" style="font-size:14px;color:#A8B6C0;">Lorca · cómo llegar</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-top:22px;border-top:1px solid rgba(236,243,247,.14);">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <sc-for list="{{ secundarios }}" as="x" hint-placeholder-count="3">
+          <button onClick="{{ cierra }}" style="border:1px solid rgba(236,243,247,.25);background:transparent;color:#ECF3F7;border-radius:999px;padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .25s ease,border-color .25s ease;" style-hover="background:rgba(236,243,247,.12);border-color:rgba(236,243,247,.5);">{{ x }}</button>
+        </sc-for>
+      </div>
+      <span style="font-family:'Permanent Marker';font-size:18px;color:#8DC63F;transform:rotate(-2deg);">activa tu modo diversión</span>
+    </div>
+  </div>
+</div>
+
+<button ref="{{ ctaRef }}" onClick="{{ nada }}" style="{{ estiloCta }}" style-hover="box-shadow:0 24px 54px rgba(16,17,19,.34);">
+  <span aria-hidden="true" style="position:absolute;top:0;bottom:0;left:0;width:46px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:pjpbrillo 5.2s ease-in-out infinite;"></span>
+  <span style="position:relative;width:44px;height:32px;border-radius:9px;background:rgba(236,243,247,.14);display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
+    <svg viewBox="0 0 50 32" width="34" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M 8 3 L 44 3 L 44 7.5 A 2.8 2.8 0 0 0 44 13.1 L 44 19 L 8 19 L 8 13.1 A 2.8 2.8 0 0 0 8 7.5 Z"/><path d="M 15 6 L 15 16" stroke-dasharray="2.4 2.4"/><path d="M 19.5 8.5 L 38 8.5"/><path d="M 19.5 13 L 31 13" stroke-width="1.2"/></svg>
+  </span>
+  <span style="position:relative;display:flex;flex-direction:column;text-align:left;line-height:1.22;margin-right:auto;">
+    <span style="font-family:'Anton';font-weight:400;font-size:20px;text-transform:uppercase;letter-spacing:.01em;">Reservar entradas</span>
+    <span style="font-size:12.5px;opacity:.62;">desde 8,50 € · sin colas · cancelas hasta 24 h antes</span>
+  </span>
+  <span style="position:relative;font-size:17px;">→</span>
+</button>
+
+<main id="top" style="max-width:1240px;margin:0 auto;padding:0 32px 140px;">
+  <div style="position:relative;height:100vh;min-height:560px;border-radius:0 0 24px 24px;overflow:hidden;background:repeating-linear-gradient(135deg,#2A2C30 0 16px,#24262A 16px 32px);display:flex;flex-direction:column;justify-content:flex-end;padding:44px;">
+    <span style="position:absolute;top:24px;right:26px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);border:1px dashed rgba(255,255,255,.28);border-radius:8px;padding:6px 11px;">[ hero de la landing · solo de contexto ]</span>
+    <span style="font-family:'Permanent Marker';font-size:20px;color:#8DC63F;transform:rotate(-2.2deg);margin:0 0 16px 4px;">activa tu modo diversión</span>
+    <h1 style="font-family:'Anton';font-weight:400;font-size:clamp(46px,7vw,96px);line-height:.92;text-transform:uppercase;color:#fff;margin:0;">Diversión<br><span style="color:#0E8FCB;">sin frenos</span></h1>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:34px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5A6670;">
+    <span>Clic en el logo para abrir el menú</span><span>·</span><span>Esc para cerrar</span><span>·</span><span>El botón de reservar no cambia al hacer scroll</span>
+  </div>
+  <div style="height:1500px;margin-top:34px;border-radius:22px;background:repeating-linear-gradient(135deg,#E1EBF2 0 14px,#D9E5EC 14px 28px);"></div>
+</main>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  state = { abierto: false, mirando: 0, ancho: 1440 };
+
+  logoRef = React.createRef();
+  botonRef = React.createRef();
+  listaRef = React.createRef();
+  velaRef = React.createRef();
+  menuRef = React.createRef();
+  ctaRef = React.createRef();
+  rayasRef = React.createRef();
+
+  ENLACES = [
+    { n: '01', t: 'Zonas', s: 'Kids y Jump · 13 juegos', etiqueta: 'Dos zonas', titulo: 'Elige tu zona', claim: 'Kids para los peques, Jump para los mayores. Cada una con sus juegos.' },
+    { n: '02', t: 'Ofertas', s: 'solo online', etiqueta: 'Solo online', titulo: 'Salta más, paga menos', claim: 'Martes de salto, 2×1 de tarde y bono de diez sesiones.' },
+    { n: '03', t: 'Cumpleaños', s: 'Kids y Jump', etiqueta: 'Cumpleaños', titulo: 'Su cumple, montado', claim: 'Sala privada, monitor y menú. Tú solo traes la tarta.' },
+    { n: '04', t: 'Antes de venir', s: 'normas y consejos', etiqueta: 'Antes de venir', titulo: 'Ven listo para saltar', claim: 'Calcetines antideslizantes, registro de acceso y poco más.' },
+    { n: '05', t: 'Dónde y cuándo', s: 'Lorca · 10:00 – 22:00', etiqueta: 'Visítanos', titulo: 'Estamos en Lorca', claim: 'Aparcamiento gratuito a pie de puerta y horario amplio.' }
+  ];
+
+  componentDidMount() {
+    this.onEsc = (e) => { if (e.key === 'Escape' && this.state.abierto) this.cierra(); };
+    this.onResize = () => this.setState({ ancho: window.innerWidth });
+    window.addEventListener('keydown', this.onEsc);
+    window.addEventListener('resize', this.onResize);
+    this.setState({ ancho: window.innerWidth }, () => this.aplica());
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.onEsc);
+    window.removeEventListener('resize', this.onResize);
+    document.body.style.overflow = '';
+  }
+
+  componentDidUpdate() { this.aplica(); }
+
+  aplica() {
+    const m = this.menuRef.current, l = this.botonRef.current;
+    if (!m) return;
+    const abierto = this.state.abierto;
+    const r = l ? l.getBoundingClientRect() : null;
+    const cx = r ? Math.round(r.left + r.width / 2) : 62;
+    const cy = r ? Math.round(r.top + r.height / 2) : 56;
+    const radio = Math.round(Math.hypot(Math.max(cx, window.innerWidth - cx), Math.max(cy, window.innerHeight - cy)) * 1.05);
+    m.style.clipPath = 'circle(' + (abierto ? radio : 0) + 'px at ' + cx + 'px ' + cy + 'px)';
+    m.style.pointerEvents = abierto ? 'auto' : 'none';
+    document.body.style.overflow = abierto ? 'hidden' : '';
+    this.miraLista();
+  }
+
+  miraLista = () => {
+    const l = this.listaRef.current, v = this.velaRef.current;
+    if (!l || !v) return;
+    const resto = l.scrollHeight - l.clientHeight - l.scrollTop;
+    v.style.opacity = this.state.abierto && resto > 8 ? '1' : '0';
+  };
+
+  alterna = () => this.setState((s) => ({ abierto: !s.abierto, mirando: 0 }));
+  cierra = () => this.setState({ abierto: false });
+  nada = (e) => { if (e && e.preventDefault) e.preventDefault(); };
+
+  renderVals() {
+    const st = this.state;
+    const esMovil = st.ancho < 860;
+    const v = this.ENLACES[st.mirando] || this.ENLACES[0];
+
+    return {
+      etiquetaLogo: st.abierto ? 'Cerrar' : 'Menú',
+      estiloBoton: 'display:inline-flex;align-items:center;gap:11px;cursor:pointer;border:1px solid ' + (st.abierto ? '#ECF3F7' : '#DCE7EE') + ';' +
+        'background:' + (st.abierto ? '#ECF3F7' : '#fff') + ';color:#101113;border-radius:14px;padding:11px 16px;' +
+        'box-shadow:0 10px 28px rgba(16,17,19,.16);transition:transform .34s cubic-bezier(.2,.9,.2,1),background .3s ease,border-color .3s ease;',
+      estiloRaya1: 'height:2px;width:19px;background:#101113;border-radius:2px;transition:transform .4s cubic-bezier(.2,.9,.2,1);transform:' +
+        (st.abierto ? 'translateY(3px) rotate(45deg)' : 'none') + ';',
+      estiloRaya2: 'height:2px;background:#101113;border-radius:2px;transition:transform .4s cubic-bezier(.2,.9,.2,1),width .4s ease;width:' +
+        (st.abierto ? '19px' : '12px') + ';transform:' + (st.abierto ? 'translateY(-3px) rotate(-45deg)' : 'none') + ';',
+
+      enlaces: this.ENLACES.map((e, i) => {
+        const on = st.mirando === i && st.abierto;
+        return {
+          n: e.n, t: e.t, s: e.s,
+          mira: () => this.setState({ mirando: i }),
+          estilo: 'display:flex;align-items:baseline;gap:18px;width:100%;background:transparent;border:0;border-bottom:1px solid rgba(236,243,247,.13);padding:' +
+            (esMovil ? 'clamp(9px,1.6vh,16px) 2px' : 'clamp(10px,2vh,20px) 6px') + ';cursor:pointer;color:#ECF3F7;text-align:left;' +
+            'transition:opacity .5s ease ' + (90 + i * 55) + 'ms,transform .6s cubic-bezier(.2,.9,.2,1) ' + (90 + i * 55) + 'ms,padding-left .35s cubic-bezier(.2,.9,.2,1),background .3s ease;' +
+            'opacity:' + (st.abierto ? 1 : 0) + ';transform:translateY(' + (st.abierto ? '0' : '26px') + ');' +
+            'padding-left:' + (on ? '18px' : (esMovil ? '2px' : '6px')) + ';background:' + (on ? 'rgba(236,243,247,.05)' : 'transparent') + ';',
+          estiloTitulo: 'font-family:\'Anton\';font-weight:400;white-space:nowrap;font-size:' +
+            (esMovil ? 'clamp(26px,min(9vw,7vh),44px)' : 'clamp(30px,min(5.2vw,9vh),70px)') +
+            ';line-height:1;text-transform:uppercase;transition:color .3s ease;color:' + (on ? '#0E8FCB' : '#ECF3F7') + ';',
+          estiloSub: 'font-size:13.5px;color:#7B8791;white-space:nowrap;flex:0 0 auto;display:' + (esMovil || st.ancho < 1040 ? 'none' : 'inline') + ';',
+          estiloFlecha: 'margin-left:auto;font-size:22px;transition:transform .35s cubic-bezier(.2,.9,.2,1),opacity .3s ease;color:#7B8791;' +
+            'opacity:' + (on ? 1 : .3) + ';transform:translateX(' + (on ? '6px' : '0') + ');'
+        };
+      }),
+
+      vistaEtiqueta: v.etiqueta, vistaTitulo: v.titulo, vistaClaim: v.claim,
+      estiloAparte: 'flex:0 0 320px;display:' + (esMovil ? 'none' : 'flex') + ';flex-direction:column;gap:20px;justify-content:center;' +
+        'transition:opacity .5s ease .24s,transform .6s cubic-bezier(.2,.9,.2,1) .24s;opacity:' + (st.abierto ? 1 : 0) +
+        ';transform:translateY(' + (st.abierto ? '0' : '20px') + ');',
+
+      secundarios: ['Acceder', 'Español', 'Instagram', 'Contacto'],
+
+      estiloCta: 'position:fixed;left:50%;bottom:' + (esMovil ? '18px' : '26px') + ';transform:translateX(-50%);z-index:' + (st.abierto ? 215 : 200) +
+        ';display:inline-flex;align-items:center;gap:18px;overflow:hidden;cursor:pointer;border:0;' +
+        'width:' + (esMovil ? 'calc(100vw - 36px)' : 'min(520px,calc(100vw - 60px))') + ';justify-content:space-between;' +
+        'background:' + (st.abierto ? '#FFC20E' : '#101113') + ';color:' + (st.abierto ? '#101113' : '#ECF3F7') + ';' +
+        'border-radius:18px;padding:15px 22px;box-shadow:0 18px 44px rgba(16,17,19,.26);' +
+        'transition:background .35s ease,color .35s ease,box-shadow .3s ease;',
+
+      alterna: this.alterna, cierra: this.cierra, nada: this.nada,
+      miraLista: this.miraLista, listaRef: this.listaRef, velaRef: this.velaRef,
+      logoRef: this.logoRef, botonRef: this.botonRef, menuRef: this.menuRef, ctaRef: this.ctaRef, rayasRef: this.rayasRef
+    };
+  }
+}
+
+</script>
+</body>
+</html>

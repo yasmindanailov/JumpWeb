@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#6C747C}
+.dv-card button:focus-visible,.dv-card a[href]:focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-card [data-superficie="tinta"] button:focus-visible,.dv-card button[data-superficie="tinta"]:focus-visible,.dv-card a[data-superficie="tinta"]:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+.dv-card [data-mueve]{transition-property:box-shadow,border-color,color,background-color !important}
+.dv-card [data-mueve]:hover,.dv-card [data-mueve]:active{transform:none !important}
+}
+.dv-meta{font:400 10.5px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#6C747C;max-width:390px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t7">
+  <div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">El bar entra aquí — con los juegos de fuera</span></div>
+  <p class="dv-intro">Viene de la sección 07: el bar estaba allí y allí no le tocaba. Lo dicen tus dos documentos. El <span style="color:#F4F4F1;">Sistema de Contenido</span> cuenta que dentro hay <span style="color:#F4F4F1;">cuatro cosas y no dos</span> —Kids, Jump, los juegos de fuera y el bar— y abre una pregunta que no estaba en las nueve: «voy con dos hijos y solo salta uno, ¿qué hago yo mientras?»; el bar y los juegos de fuera <span style="color:#F4F4F1;">son su respuesta</span>. Y la <span style="color:#F4F4F1;">Arquitectura de Contenido</span> lo coloca igual: «Portada · dos tarjetas en "qué hay dentro". La carta, en la página del bar». Así que entran <span style="color:#F4F4F1;">los dos, juntos y al final</span>, con la pregunta escrita en voz alta, que es lo que los convierte en respuesta y no en dos avisos sueltos. Tres cosas que no se ven pero deciden el diseño: <span style="color:#F4F4F1;">van DEBAJO de la chapa del «18 más»</span> —los juegos de fuera no son zona, no llevan aforo y no piden altura, así que no pueden contarse entre las 23—; <span style="color:#F4F4F1;">el bar es enlace y los juegos de fuera no</span>, porque el bar pasa las tres pruebas de página (carta, precios, 50 mesas) y los juegos no las pasan: una tarjeta que no esconde nada no promete nada; y <span style="color:#F4F4F1;">cero naranja</span>, que aquí no es solo estética —ya decidiste que el bar queda fuera del modelo de reserva, así que no puede vestirse de compra—. ⚠ Con esto la chapa deja de tener las dos únicas puertas de la sección: ahora hay tres, y la del bar es la única suya en toda la portada. ⚠ Y falta lo de siempre: <span style="color:#F4F4F1;">la página /bar no existe todavía</span> en el inventario de URL, y el nombre real del bar sigue sin decidirse.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="7a">
+      <div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a><span>4a tal cual, y al final la pareja: el bar como puerta y los juegos de fuera como dato.</span></div>
+      <div class="dv-card" data-screen-label="7a">
+        <div style="padding:24px 16px 18px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">El parque</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">Camas elásticas, toboganes, foam y piscina de bolas.</p>
+        </div>
+
+        <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <sc-for list="{{ mezcla }}" as="j" hint-placeholder-count="5">
+            <a href="#atraccion" data-mueve="" style="{{ j.estCelda }}" style-hover="transform:scale(.985)">
+              <div role="img" aria-label="{{ j.n }}" style="{{ j.estFoto }}"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:10px 12px;">
+                <sc-if value="{{ j.esGrande }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#F4F4F1;">{{ j.n }}</div>
+                </sc-if>
+                <sc-if value="{{ j.esChica }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.2;color:#F4F4F1;">{{ j.n }}</div>
+                </sc-if>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C9CDD1;margin-top:4px;">{{ j.z }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="margin:18px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:'Bungee';font-size:38px;line-height:.9;color:#1AA9DE;">18</span>
+            <span style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;">más</span>
+          </div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Tirolina, escalada, dianas, futbolín humano y el resto de los juegos de Kids.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+            <a href="#atracciones-jump" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Las 15 de Jump</a>
+            <a href="#atracciones-kids" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Los 8 de Kids</a>
+          </div>
+        </div>
+
+        <div style="margin:24px 16px 24px;padding-top:24px;border-top:1px solid #D6D8D4;">
+          <div style="font-size:22px;line-height:1.25;font-weight:700;color:#101418;">¿Y yo qué hago mientras?</div>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+            <a href="#bar" data-mueve="" style="display:flex;align-items:center;gap:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;color:#0A5C93;transition:border-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#0A5C93;">
+              <span style="flex:1;min-width:0;display:block;">
+                <span style="display:block;font-family:'Bungee';font-size:20px;line-height:1.15;color:#101418;">El bar</span>
+                <span style="display:block;font-size:16px;line-height:1.5;color:#626A72;margin-top:4px;">Mesas con el parque a la vista y carta corta. Puedes comer sin saltar.</span>
+              </span>
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+            </a>
+            <div style="background:#E8E9E5;border-radius:16px;padding:20px;">
+              <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#101418;">Los juegos de fuera</div>
+              <div style="font-size:16px;line-height:1.5;color:#626A72;margin-top:4px;">Garra de peluches y billar. Se pagan aparte, no piden altura y no hace falta reservarlos.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">✅ <span style="color:#F4F4F1;">7 sep 2026</span>: el titular vuelve a <span style="color:#9AA1A8;">«El parque»</span>, que es el de 6a. Este turno había escrito «Dentro», que <span style="color:#9AA1A8;">repite la palabra del rótulo</span> —«03 · Qué hay dentro»— y era justo lo que 6a arregló. Decisión del dueño con el turno 4 del escritorio.<br>la pregunta en voz alta es lo que empareja las dos tarjetas: sin ella son dos avisos sueltos al final de un catálogo · el bar lleva flecha y los juegos de fuera no, y esa asimetría es el dato: uno tiene página y el otro no. Un enlace no promete lo que no esconde · ⚠ pero la flecha sola no bastaba: las dos tarjetas eran blancas con borde de Línea y radio 16, que en esta portada YA significa «la tarjeta entera es el enlace» —Zonas 4a—, así que cinco señales decían pulsable y un glifo de 20 px decía que no. La que no es puerta pasa a <span style="color:#9AA1A8;">superficie inerte</span>, Nube y sin borde, que es su rol declarado en tokens: se lee como dato y no como control, y el texto sigue a 15,17 y 4,50 de contraste · debajo de la chapa a propósito: el «18 más» cuenta atracciones con aforo, y estas dos no lo son — arriba contaminarían el 23 · las dos tarjetas repiten el patrón del recuadro de 07 (papel, borde a Línea, radio 16, borde a Azul Muro al pasar por encima), así que la portada usa la misma pieza para «esto existe y tiene su página» · sin foto: el material del bar no existe todavía y un cuadrado gris esperando es peor que una tarjeta de texto · cero naranja, como el resto de la sección: aquí no se compra, y el bar además no se reserva · medido: la pareja son 315 px y la sección pasa a 1.395, o sea <span style="color:#9AA1A8;">1,65 pantallas</span> — 03 era la sección más larga de la portada y esto la alarga. A cambio, 07 se ha quedado en 1,25: entre las dos se han movido 300 px al sitio donde contestan algo · 8 enlaces en la sección: las cinco fotos, las dos puertas de la chapa y el bar</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «con foto del bar cuando la tengas» · «los juegos de fuera con sus precios» · «la pareja en tinta» · «el nombre real del bar»</p>
+</section>
+
+<section class="dv-turn" id="t6">
+  <div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">El modal de atracción, para que lo juzgues viéndolo</span></div>
+  <p class="dv-intro">Montado y honesto: <span style="color:#F4F4F1;">yo no lo pondría en la portada</span>. Añade cinco toques que no acercan a reservar y la sección ya había demostrado su punto con el mosaico; la galería a lo grande pertenece a la página de las 23, donde mirar <em>es</em> el objetivo. Dicho eso, si tus fotos van a vender solas, aquí lo tienes hecho según el sistema: superficie de papel, <span style="color:#F4F4F1;">sombra difusa — que solo existe en modales</span>, cierre de 48 px, se cierra con Escape y tocando fuera. Pulsa cualquiera de las tres con nombre.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a><span>Igual que <a href="#5a">5a</a>, pero las tres con nombre abren su ficha: foto grande, zona y edad. Las veladas siguen sin ser pulsables.</span></div>
+      <div class="dv-card" style="position:relative;">
+        <div style="padding:24px 16px 18px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">El parque</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">Camas elásticas, toboganes, foam y piscina de bolas.</p>
+        </div>
+
+        <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <sc-for list="{{ conModal }}" as="j" hint-placeholder-count="5">
+            <sc-if value="{{ j.noVelada }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ j.abre }}" data-mueve="" style="{{ j.estCelda }}" style-hover="transform:scale(.985)">
+                <div role="img" aria-label="{{ j.n }}" style="{{ j.estFoto }}"></div>
+                <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.82);padding:10px 12px;text-align:left;">
+                  <sc-if value="{{ j.esGrande }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#F4F4F1;">{{ j.n }}</div>
+                  </sc-if>
+                  <sc-if value="{{ j.esChica }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.2;color:#F4F4F1;">{{ j.n }}</div>
+                  </sc-if>
+                  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#F4F4F1;margin-top:4px;">{{ j.z }}</div>
+                </div>
+              </button>
+            </sc-if>
+            <sc-if value="{{ j.seVela }}" hint-placeholder-val="{{ false }}">
+              <div aria-hidden="true" style="{{ j.estCelda }}">
+                <div style="{{ j.estFoto }}"></div>
+                <div style="{{ estVelo }}"></div>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ conChapa18 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:{{ alFinal }};background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <sc-if value="{{ hayResto }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Bungee';font-size:38px;line-height:.9;color:#1AA9DE;">{{ restantes }}</span>
+              <span style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;">más</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hayEjemplos }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">{{ ejemplosResto }}</p>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+            <a href="#atracciones-jump" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">{{ puertaJump }}</a>
+            <a href="#atracciones-kids" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">{{ puertaKids }}</a>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ hayAbierta }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;inset:0;z-index:5;display:flex;align-items:flex-end;">
+            <button type="button" onClick="{{ cierra }}" aria-label="Cerrar" style="position:absolute;inset:0;border:0;padding:0;background:rgba(16,20,24,.72);cursor:pointer;"></button>
+            <div role="dialog" aria-modal="true" style="position:relative;width:100%;background:#F4F4F1;border-radius:16px 16px 0 0;box-shadow:0 -18px 48px rgba(16,20,24,.34);padding:14px;">
+              <div style="display:flex;justify-content:center;padding:2px 0 6px;">
+                <span aria-hidden="true" style="width:44px;height:4px;border-radius:999px;background:#C9CDD1;"></span>
+              </div>
+              <div style="display:flex;justify-content:flex-end;">
+                <button type="button" onClick="{{ cierra }}" aria-label="Cerrar" data-mueve="" style="width:48px;height:48px;border-radius:999px;border:1.5px solid #C9CDD1;background:transparent;cursor:pointer;font-family:'Hanken Grotesk';font-weight:800;font-size:18px;color:#101418;transition:border-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#101418">✕</button>
+              </div>
+              <div style="position:relative;aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:#E8E9E5;margin-top:4px;">
+                <div role="img" aria-label="{{ ficha.n }}" style="{{ ficha.estFoto }}"></div>
+              </div>
+              <div style="padding:14px 2px 6px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-family:'Bungee';font-size:24px;line-height:1.1;color:#101418;">{{ ficha.n }}</div>
+                <div style="font-size:16px;line-height:1.45;color:#626A72;"><span style="font-weight:700;color:#101418;">{{ ficha.z }}</span> · {{ ficha.e }}</div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div class="dv-meta">CERRADA · hoja de ficha con asa de 44×4, velo .72, cierre de 48, Escape y toque fuera · reparto justo: la grande de Jump, las dos nombradas de Kids, las veladas de Jump · rótulo y título ya no repiten palabra · banda .82 y zona en blanco pleno · sección 03: el hero no lleva rótulo, así que Zonas 01, Tarifas 02, Juegos 03 · pendiente: nombres reales y el contenido del «18 más»<br>⚠ <span style="color:#F4F4F1;">Recorte del presupuesto (ruta 1b, 7 sep 2026)</span>: de esta sección sale <span style="color:#C9CDD1;">la chapa del «18 más», con la cifra y las dos puertas</span>, y por eso lo que dice esta nota de esa pieza <span style="color:#C9CDD1;">sigue siendo verdad de la pieza, no de la sección</span>. No se ha borrado: vive detrás del interruptor <span style="color:#C9CDD1;">conChapa18</span>, apagado por defecto. La sección pasa de <span style="color:#C9CDD1;">1052</span> a <span style="color:#C9CDD1;">775 px</span>, medido.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «que el modal ocupe toda la pantalla» · «añade al modal la edad mínima y si necesita calcetines» · «quítalo: el mosaico no se pulsa»</p>
+</section>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Las dos últimas desvaneciéndose en el papel</span></div>
+  <p class="dv-intro">Buena idea, y encaja: el sistema prohíbe los degradados multicolor, pero esto no es adorno, es un <span style="color:#F4F4F1;">velo funcional</span> — el mismo recurso que el «asoma cortada» del carrusel, dicho en vertical. Dos condiciones para que no falle. El degradado va a <span style="color:#F4F4F1;">papel #F4F4F1</span> y no a blanco puro: contra el fondo de la página, el blanco deja un canto visible. Y las dos que se desvanecen <span style="color:#F4F4F1;">pierden el nombre y dejan de ser enlaces</span> — lo que se oculta no puede ser un destino, y un nombre a medio velo se queda sin contraste. Se convierten en textura que dice «hay más», y quien quiera más lo pide en la chapa.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><span>Tres con nombre y dos disolviéndose en el papel. La chapa aparece justo donde muere el velo, así que el remate se lee como continuación y no como corte.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 18px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">Camas elásticas, toboganes, foam y piscina de bolas.</p>
+        </div>
+
+        <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <sc-for list="{{ mezcla }}" as="j" hint-placeholder-count="5">
+            <sc-if value="{{ j.noVelada }}" hint-placeholder-val="{{ true }}">
+              <a href="#atraccion" data-mueve="" style="{{ j.estCelda }}" style-hover="transform:scale(.985)">
+                <div role="img" aria-label="{{ j.n }}" style="{{ j.estFoto }}"></div>
+                <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:10px 12px;">
+                  <sc-if value="{{ j.esGrande }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#F4F4F1;">{{ j.n }}</div>
+                  </sc-if>
+                  <sc-if value="{{ j.esChica }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.2;color:#F4F4F1;">{{ j.n }}</div>
+                  </sc-if>
+                  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C9CDD1;margin-top:4px;">{{ j.z }}</div>
+                </div>
+              </a>
+            </sc-if>
+            <sc-if value="{{ j.seVela }}" hint-placeholder-val="{{ false }}">
+              <div aria-hidden="true" style="{{ j.estCelda }}">
+                <div style="{{ j.estFoto }}"></div>
+                <div style="{{ estVelo }}"></div>
+              </div>
+            </sc-if>
+          </sc-for>
+        </div>
+
+        <div style="margin:0 16px 24px;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:'Bungee';font-size:38px;line-height:.9;color:#1AA9DE;">18</span>
+            <span style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;">más</span>
+          </div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Tirolina, escalada, dianas, futbolín humano y el resto de los juegos de Kids.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+            <a href="#atracciones-jump" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Las 15 de Jump</a>
+            <a href="#atracciones-kids" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Los 8 de Kids</a>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">velo a papel #F4F4F1, no a blanco · las veladas sin nombre, sin enlace y ocultas al lector de pantalla: son textura, no contenido · velo funcional, no adorno: el mismo papel que «asoma cortada» en el carrusel</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «que se vele solo la última» · «velo más suave, que se siga leyendo la foto» · «que el velo arranque más abajo»</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Mosaico + la chapa del recuento</span></div>
+  <p class="dv-intro">Buena mezcla: el mosaico demuestra por densidad y la chapa remata con la cifra. Dos condiciones para que no se estropee. La chapa <span style="color:#F4F4F1;">sustituye</span> a los dos botones de <a href="#3a">3a</a>, no se suma — si no, quedan cuatro controles para dos destinos. Y la entradilla <span style="color:#F4F4F1;">suelta su número</span>: con «23» arriba, «18 más» en medio y «15 / 8» en los enlaces, el mismo dato aparecería cuatro veces, que es exactamente lo que el sistema de contenido llama saturación. Así queda una sola cuenta y se cierra sola: cinco a la vista más dieciocho.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><span>Las cinco fotos de golpe y la chapa de tinta cerrando con el 18 y las dos puertas dentro. Una pantalla y media, un solo recuento.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 18px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">Camas elásticas, toboganes, foam y piscina de bolas.</p>
+        </div>
+
+        <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <sc-for list="{{ mezcla }}" as="j" hint-placeholder-count="5">
+            <a href="#atraccion" data-mueve="" style="{{ j.estCelda }}" style-hover="transform:scale(.985)">
+              <div role="img" aria-label="{{ j.n }}" style="{{ j.estFoto }}"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:10px 12px;">
+                <sc-if value="{{ j.esGrande }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#F4F4F1;">{{ j.n }}</div>
+                </sc-if>
+                <sc-if value="{{ j.esChica }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.2;color:#F4F4F1;">{{ j.n }}</div>
+                </sc-if>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C9CDD1;margin-top:4px;">{{ j.z }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="margin:18px 16px 24px;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:'Bungee';font-size:38px;line-height:.9;color:#1AA9DE;">18</span>
+            <span style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;">más</span>
+          </div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Tirolina, escalada, dianas, futbolín humano y el resto de los juegos de Kids.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+            <a href="#atracciones-jump" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Las 15 de Jump</a>
+            <a href="#atracciones-kids" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Los 8 de Kids</a>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">un solo recuento: 5 a la vista + 18 = 23, sin decirlo cuatro veces · la entradilla pasa a cualitativa · las dos puertas viven dentro de la chapa, no duplicadas fuera · cero naranja: aquí no se compra</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «que la chapa lleve una foto de fondo con velo» · «un solo enlace: ver las 23» · «la chapa a papel con borde de tinta, como la norma de calcetines»</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Sin carril: otras dos maneras de demostrar lo mismo</span></div>
+  <p class="dv-intro">El objetivo de la sección es uno: <span style="color:#F4F4F1;">que se crea que hay de todo y que es grande</span>. El carril lo consigue enseñando que hay más de lo que cabe; estas dos lo consiguen de otra forma, y ninguna obliga a arrastrar. <a href="#3a">3a</a> lo demuestra por <span style="color:#F4F4F1;">densidad</span>: cinco fotos de golpe en una pantalla, que es la sensación de nave llena. <a href="#3b">3b</a> lo demuestra por <span style="color:#F4F4F1;">recuento</span>: la visita numerada, con foto grande, y el «y 18 más» al final haciendo el trabajo. Las dos siguen las reglas de siempre — papel de fondo, tinta y radios de la escala, cero naranja, y ningún texto sobre foto sin capa de tinta debajo.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a><span>Mosaico. Las cinco a la vez, la primera a lo ancho y las otras cuadradas. Nada que arrastrar: la abundancia se ve de un vistazo, no se descubre.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 18px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">{{ entradilla2a }}</p>
+        </div>
+
+        <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <sc-for list="{{ mezcla }}" as="j" hint-placeholder-count="5">
+            <a href="#atraccion" data-mueve="" style="{{ j.estCelda }}" style-hover="transform:scale(.985)">
+              <div role="img" aria-label="{{ j.n }}" style="{{ j.estFoto }}"></div>
+              <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:10px 12px;">
+                <sc-if value="{{ j.esGrande }}" hint-placeholder-val="{{ true }}">
+                  <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#F4F4F1;">{{ j.n }}</div>
+                </sc-if>
+                <sc-if value="{{ j.esChica }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.2;color:#F4F4F1;">{{ j.n }}</div>
+                </sc-if>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#C9CDD1;margin-top:4px;">{{ j.z }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="padding:18px 16px 24px;display:flex;flex-direction:column;gap:10px;">
+          <a href="#atracciones-jump" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">Las 15 de Jump</a>
+          <a href="#atracciones-kids" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">Los 8 de Kids</a>
+        </div>
+      </div>
+      <div class="dv-meta">sin gesto: cabe en una pantalla · nombre sobre banda de tinta (.72), nunca sobre foto pelada · Bungee solo en la grande, las chicas en Hanken 800 porque bajo 20px el sistema no deja Bungee · radio 16 sin sombra: la foto es la mancha</div>
+    </div>
+
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a><span>La visita numerada. Cada atracción con su foto grande y su número, en vertical, y el recuento final cerrando: «y 18 más».</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 18px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">{{ entradilla2a }}</p>
+        </div>
+
+        <div style="padding:0 16px;display:flex;flex-direction:column;gap:16px;">
+          <sc-for list="{{ mezcla }}" as="j" hint-placeholder-count="5">
+            <a href="#atraccion" data-mueve="" style="display:flex;flex-direction:column;text-decoration:none;color:#101418;" style-hover="opacity:.92">
+              <div style="position:relative;aspect-ratio:3/2;border-radius:16px;overflow:hidden;background:#E8E9E5;">
+                <div role="img" aria-label="{{ j.n }}" style="{{ j.estFoto }}"></div>
+                <span style="position:absolute;top:10px;left:10px;width:34px;height:34px;border-radius:999px;background:#101418;color:#F4F4F1;font-family:'JetBrains Mono';font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;">{{ j.num }}</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:10px;">
+                <span style="font-family:'Bungee';font-size:20px;line-height:1.1;">{{ j.n }}</span>
+                <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;white-space:nowrap;">{{ j.z }}</span>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="margin:20px 16px 24px;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:'Bungee';font-size:38px;line-height:.9;color:#1AA9DE;">18</span>
+            <span style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;">más</span>
+          </div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Camas elásticas, foam, tirolina, escalada y los juegos de Kids.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px;">
+            <a href="#atracciones-jump" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Las 15 de Jump</a>
+            <a href="#atracciones-kids" data-superficie="tinta" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #3B434B;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;transition:border-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#1AA9DE;color:#1AA9DE">Los 8 de Kids</a>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">la foto manda: sin marco ni sombra, radio 16 · el número en chapa de tinta, no en color · el 18 es la cifra que remata (respuesta), y los enlaces van dentro de su chapa · cuesta 5 pantallas de alto: es la más cara de las tres</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «<a href="#3a">3a</a> con seis fotos, tres filas iguales» · «<a href="#3b">3b</a> solo con tres atracciones y el 20 más» · «mezcla las dos: mosaico arriba y la chapa del recuento de <a href="#3b">3b</a> abajo»</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Menos interruptores: la zona como dato, no como control</span></div>
+  <p class="dv-intro">Llevas razón y el número es peor de lo que parece: entre Zonas, Tarifas y Juegos el visitante se encuentra <span style="color:#F4F4F1;">el mismo interruptor tres veces</span>. El sistema pide «un selector, tres sitios» — un solo <em>componente</em>, no volver a preguntar en cada sección. Y aquí hay un argumento de fondo: esta sección existe para demostrar que <span style="color:#F4F4F1;">hay de todo y es grande</span>, y filtrar por zona trabaja justo en contra: enseña la mitad del parque. Dos salidas, y en las dos <a href="#1b">1b</a> desaparece.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><span>Sin pestañas. El parque entero en un carril, alternando zonas, y la zona escrita en cada tarjeta como dato. Al final, dos puertas al listado completo.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 8px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">{{ entradilla2a }}</p>
+        </div>
+
+        <div data-carril="juegos" style="display:flex;gap:12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:20px 64px 20px 16px;">
+          <sc-for list="{{ mezcla }}" as="j" hint-placeholder-count="5">
+            <a href="#atraccion" data-mueve="" style="flex:none;width:262px;scroll-snap-align:start;display:flex;flex-direction:column;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;aspect-ratio:3/2;background:#E8E9E5;">
+                <div aria-hidden="true" style="{{ j.estFoto }}"></div>
+                <sc-if value="{{ j.hayD }}" hint-placeholder-val="{{ true }}">
+                  <span style="position:absolute;top:10px;left:10px;background:rgba(16,20,24,.72);color:#F4F4F1;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:6px 11px;">{{ j.d }}</span>
+                </sc-if>
+              </div>
+              <div style="padding:14px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1.1;">{{ j.n }}</div>
+                <div style="font-size:15px;line-height:1.4;color:#626A72;"><span style="font-weight:700;color:#101418;">{{ j.z }}</span> · {{ j.e }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="padding:0 16px 24px;display:flex;flex-direction:column;gap:10px;">
+          <a href="#atracciones-jump" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">Las 15 de Jump</a>
+          <a href="#atracciones-kids" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">Los 8 de Kids</a>
+        </div>
+      </div>
+      <div class="dv-meta">carrusel · pieza 09 de Componentes, no el carril con foco: aquí no se elige, la tarjeta es una puerta · identidad propia (data-carril="juegos") para que no cruce gestos con el de Tarifas · la zona es dato, no control · un número por frase: 23 arriba (promesa), 15 y 8 en los enlaces (respuesta)</div>
+    </div>
+
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><span>Hereda la zona de arriba y lo dice en una línea, con un solo enlace para cambiarla. Un control en vez de un par de pestañas.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 8px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">{{ zona.entradilla }}</p>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#101418;border:1.5px solid #C9CDD1;border-radius:999px;padding:7px 12px;">{{ estasViendo }}</span>
+            <button type="button" onClick="{{ cambiaZona }}" data-mueve="" style="min-height:48px;padding:0 4px;background:transparent;border:0;cursor:pointer;font-family:'Hanken Grotesk';font-weight:800;font-size:15px;color:#0A5C93;transition:color 180ms cubic-bezier(.4,0,.2,1);" style-hover="color:#12769B">{{ otraZona }}</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:16px 64px 20px 16px;">
+          <sc-for list="{{ lista }}" as="j" hint-placeholder-count="3">
+            <a href="#atraccion" data-mueve="" style="flex:none;width:262px;scroll-snap-align:start;display:flex;flex-direction:column;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;aspect-ratio:3/2;background:#E8E9E5;">
+                <div aria-hidden="true" style="{{ j.estFoto }}"></div>
+                <sc-if value="{{ j.hayD }}" hint-placeholder-val="{{ true }}">
+                  <span style="position:absolute;top:10px;left:10px;background:rgba(16,20,24,.72);color:#F4F4F1;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:6px 11px;">{{ j.d }}</span>
+                </sc-if>
+              </div>
+              <div style="padding:14px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1.1;">{{ j.n }}</div>
+                <div style="font-size:15px;line-height:1.4;color:#626A72;">{{ j.e }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="padding:0 16px 24px;">
+          <a href="#atracciones" data-mueve="" style="display:flex;align-items:center;justify-content:center;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">{{ zona.todas }}</a>
+        </div>
+      </div>
+      <div class="dv-meta">un control en vez de dos · la chapa «Estás viendo Kids» es un chip que informa, no se pulsa · el enlace de cambio llega a 48 px de área sin caja, como el enlace en línea del sistema</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «en <a href="#2a">2a</a> deja un solo enlace: ver las 23» · «en <a href="#2a">2a</a> ordena por zona en vez de alternar» · «que la chapa de <a href="#2b">2b</a> lleve la foto de la zona»</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">03 · Qué hay dentro — con tus fotos reales</span></div>
+  <p class="dv-intro">La sección no es un catálogo: es <span style="color:#F4F4F1;">la prueba de que el precio vale la pena</span>. Tres decisiones que salen de tus propias fotos: el color lo ponen ellas, así que la tarjeta se calla (blanco, tinta y nada de cian de adorno); van a <span style="color:#F4F4F1;">3:2 sin recortar</span>, porque el recorte vertical se come la sensación de nave grande; y aquí el carril es el <span style="color:#F4F4F1;">simple</span>, no el de foco — las atracciones son homogéneas, no comparativas y ninguna decide nada al fondo: es el caso de manual del carrusel del sistema, y por eso no hace falta velo ni destacada. <span style="color:#F4F4F1;">Con la pestaña Kids solo verás dos tarjetas</span>, porque me has dado dos fotos de esa zona; en el catálogo real son ocho, así que la condición de «tres o más» la cumple en la web — aquí falta material, no diseño. La tarjeta entera es el enlace y se aplasta al pulsar, como en Zonas. El bar fuera, como dijiste. Nombres provisionales, para cambiarlos por los tuyos.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span>El carril limpio. Cabecera, pestañas y las atracciones de la zona con la siguiente asomando. La foto manda y el texto son dos líneas: qué es y para quién.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 8px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">03 · Qué hay dentro</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Dentro</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">{{ zona.entradilla }}</p>
+          <div role="tablist" style="display:flex;gap:8px;">
+            <button type="button" role="tab" onClick="{{ pulsaJump }}" data-mueve="" style="{{ estTabJump }}">Jump</button>
+            <button type="button" role="tab" onClick="{{ pulsaKids }}" data-mueve="" style="{{ estTabKids }}">Kids</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:16px 64px 20px 16px;">
+          <sc-for list="{{ lista }}" as="j" hint-placeholder-count="3">
+            <a href="#atraccion" data-mueve="" style="flex:none;width:262px;scroll-snap-align:start;display:flex;flex-direction:column;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;aspect-ratio:3/2;background:#E8E9E5;">
+                <div aria-hidden="true" style="{{ j.estFoto }}"></div>
+                <sc-if value="{{ j.hayD }}" hint-placeholder-val="{{ true }}">
+                  <span style="position:absolute;top:10px;left:10px;background:rgba(16,20,24,.72);color:#F4F4F1;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:6px 11px;">{{ j.d }}</span>
+                </sc-if>
+              </div>
+              <div style="padding:14px;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1.1;">{{ j.n }}</div>
+                <div style="font-size:15px;line-height:1.4;color:#626A72;">{{ j.e }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="padding:0 16px 24px;">
+          <a href="#atracciones" data-mueve="" style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">{{ zona.todas }}</a>
+        </div>
+      </div>
+      <div class="dv-meta">carril simple: homogéneas · no comparativas · nada crítico al fondo · la siguiente asoma 64 px, sin puntos ni flechas · distintivo sobre velo de tinta (.72) · cero naranja · ⚠ en Kids solo hay 2 fotos: en la web serán 8 y ahí la condición 01 se cumple sola</div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><span>Abre a sangre con la más espectacular y el titular sobre banda de tinta. El carril de debajo lleva el resto: primero el golpe, después el inventario.</span></div>
+      <div class="dv-card">
+        <div style="position:relative;aspect-ratio:3/2;background:#E8E9E5;">
+          <div aria-hidden="true" style="{{ zona.estPortada }}"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">03 · Qué hay dentro</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">Dentro</div>
+          </div>
+        </div>
+
+        <div style="padding:18px 16px 8px;">
+          <p style="margin:0 0 18px;font-size:16px;line-height:1.5;color:#626A72;">{{ zona.entradilla }}</p>
+          <div role="tablist" style="display:flex;gap:8px;">
+            <button type="button" role="tab" onClick="{{ pulsaJump }}" data-mueve="" style="{{ estTabJump }}">Jump</button>
+            <button type="button" role="tab" onClick="{{ pulsaKids }}" data-mueve="" style="{{ estTabKids }}">Kids</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:16px 64px 20px 16px;">
+          <sc-for list="{{ lista }}" as="j" hint-placeholder-count="3">
+            <a href="#atraccion" data-mueve="" style="flex:none;width:230px;scroll-snap-align:start;display:flex;flex-direction:column;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;aspect-ratio:3/2;background:#E8E9E5;">
+                <div aria-hidden="true" style="{{ j.estFoto }}"></div>
+                <sc-if value="{{ j.hayD }}" hint-placeholder-val="{{ true }}">
+                  <span style="position:absolute;top:10px;left:10px;background:rgba(16,20,24,.72);color:#F4F4F1;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border-radius:999px;padding:6px 11px;">{{ j.d }}</span>
+                </sc-if>
+              </div>
+              <div style="padding:13px;display:flex;flex-direction:column;gap:5px;">
+                <div style="font-family:'Bungee';font-size:18px;line-height:1.1;">{{ j.n }}</div>
+                <div style="font-size:15px;line-height:1.4;color:#626A72;">{{ j.e }}</div>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="padding:0 16px 24px;">
+          <a href="#atracciones" data-mueve="" style="display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:48px;border:1.5px solid #0A5C93;border-radius:10px;color:#0A5C93;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">{{ zona.todas }}</a>
+        </div>
+      </div>
+      <div class="dv-meta">la foto de apertura es la mancha grande de la pantalla, así que aquí no entra ninguna otra · cambia con la zona: nadie ve como portada una atracción que su hijo no puede usar · titular sobre banda de tinta (.72), nunca sobre foto pelada · tarjetas a 230</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «pon el nombre sobre la foto y no debajo» · «en <a href="#1b">1b</a> que la foto de apertura cambie con la zona» · «tarjetas más anchas y solo dos por zona» · «añade los metros cuadrados de cada zona»</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;conChapa18&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presupuesto&quot;,&quot;label&quot;:&quot;La chapa del «18 más»&quot;},&quot;atraccionesJump&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:15,&quot;min&quot;:0,&quot;max&quot;:40,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos del panel&quot;,&quot;label&quot;:&quot;Atracciones en Jump&quot;},&quot;atraccionesKids&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:8,&quot;min&quot;:0,&quot;max&quot;:40,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos del panel&quot;,&quot;label&quot;:&quot;Juegos en Kids&quot;},&quot;ejemplosResto&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Camas elásticas, foam y el resto de los juegos de Kids.&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Datos del panel&quot;,&quot;label&quot;:&quot;Frase de ejemplos (vacío = se oculta)&quot;},&quot;zonaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Jump&quot;,&quot;Kids&quot;],&quot;default&quot;:&quot;Jump&quot;,&quot;tsType&quot;:&quot;'Jump' | 'Kids'&quot;,&quot;section&quot;:&quot;Qué hay dentro&quot;},&quot;distintivos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Qué hay dentro&quot;}}">
+class Component extends DCLogic {
+  state = { zona: null, abierta: null };
+
+  componentDidMount() {
+    this._esc = (e) => { if (e.key === 'Escape') this.setState({ abierta: null }); };
+    document.addEventListener('keydown', this._esc);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this._esc);
+  }
+
+  datos(z) {
+    if (z === 'kids') return [
+      { n: 'Piscina de bolas', e: 'De 2 a 6 años', d: 'Grande', f: 'uploads/header-120.png' },
+      { n: 'Tobogán Cañón', e: 'De 2 a 6 años', d: 'Baby', f: 'uploads/header-114.png' }
+    ];
+    return [
+      { n: 'Saltos libres', e: 'Desde 7 años', d: 'XL', f: 'uploads/header-125.png' },
+      { n: 'Carrera de lonas', e: 'Desde 7 años', f: 'uploads/header-131.png' },
+      { n: 'Aro 360', e: 'Desde 7 años', d: 'PRO', f: 'uploads/header-141.png' }
+    ];
+  }
+
+  renderVals() {
+    const p = this.props;
+    const z = this.state.zona || (p.zonaInicial === 'Kids' ? 'kids' : 'jump');
+    const items = this.datos(z);
+    const base = 'flex:1;min-height:48px;border-radius:999px;font-family:\'Hanken Grotesk\';font-weight:800;font-size:16px;letter-spacing:.01em;cursor:pointer;transition:background-color 240ms cubic-bezier(.4,0,.2,1),color 240ms cubic-bezier(.4,0,.2,1),border-color 240ms cubic-bezier(.4,0,.2,1);';
+    const activa = base + 'background:#101418;color:#F4F4F1;border:2px solid #101418;';
+    const inerte = base + 'background:transparent;color:#101418;border:2px solid #C9CDD1;';
+
+    /* El parque entero, alternando zona: la mezcla es la que demuestra «hay de todo».
+       La zona pasa de ser un CONTROL a ser un DATO de cada tarjeta. */
+    /* La foto va en `background-image` y NO en `src`: un hueco sin resolver dentro de un
+       src hace que el navegador pida «{{ j.f }}» y parpadee la imagen rota; en un style
+       no pinta nada y no dispara ninguna petición. */
+    const foto = (f) => 'position:absolute;inset:0;background-image:url(' + f + ');background-size:cover;background-position:center;';
+
+    const nJump = Math.max(0, p.atraccionesJump ?? 15);
+    const nKids = Math.max(0, p.atraccionesKids ?? 8);
+    const ejemplos = (p.ejemplosResto ?? 'Camas elásticas, foam y el resto de los juegos de Kids.').trim();
+
+    /* Orden con reparto justo: de las tres que se leen, una es de Jump (la grande) y dos
+       de Kids. Antes se nombraban dos de Jump y una de Kids, así que la madre de un niño
+       de 4 años veía un solo juego de su zona con nombre. Las veladas son las dos de Jump. */
+    const restantes = Math.max(0, nJump + nKids - 5);
+
+    const mezcla = [
+      { n: 'Saltos libres', z: 'Jump', e: 'desde 7 años', d: 'XL', f: 'uploads/header-125.png' },
+      { n: 'Piscina de bolas', z: 'Kids', e: 'de 2 a 6 años', d: 'Grande', f: 'uploads/header-120.png' },
+      { n: 'Tobogán Cañón', z: 'Kids', e: 'de 2 a 6 años', d: 'Baby', f: 'uploads/header-114.png' },
+      { n: 'Aro 360', z: 'Jump', e: 'desde 7 años', d: 'PRO', f: 'uploads/header-141.png' },
+      { n: 'Carrera de lonas', z: 'Jump', e: 'desde 7 años', f: 'uploads/header-131.png' }
+    ];
+
+    return {
+      mezcla: mezcla.map((it, i) => Object.assign({}, it, {
+        hayD: !!it.d && p.distintivos !== false,
+        estFoto: foto(it.f),
+        num: '0' + (i + 1),
+        /* Mosaico: la primera ocupa las dos columnas en 3:2 y las cuatro restantes van
+           cuadradas. Bungee solo en la grande: bajo 20px el sistema no lo permite. */
+        estCelda: i === 0
+          ? 'grid-column:span 2;position:relative;aspect-ratio:3/2;border-radius:16px;overflow:hidden;background:#E8E9E5;'
+          : 'position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#E8E9E5;',
+        esGrande: i === 0,
+        esChica: i !== 0,
+        /* Las dos últimas se desvanecen: el velo va a PAPEL, no a blanco puro, o queda
+           un canto visible contra el fondo de la página. Y sin nombre ni enlace: lo que
+           se oculta no puede ser un destino. */
+        seVela: i >= 3,
+        noVelada: i < 3
+      })),
+      estVelo: 'position:absolute;inset:0;background:linear-gradient(to bottom,rgba(244,244,241,0) 8%,rgba(244,244,241,.55) 52%,#F4F4F1 100%);',
+      /* Modal de atracción · la sombra difusa SOLO existe aquí, según el sistema. */
+      conModal: mezcla.map((it, i) => Object.assign({}, it, {
+        hayD: !!it.d && p.distintivos !== false,
+        estFoto: foto(it.f),
+        estCelda: i === 0
+          ? 'grid-column:span 2;position:relative;aspect-ratio:3/2;border-radius:16px;overflow:hidden;background:#E8E9E5;border:0;padding:0;cursor:pointer;'
+          : 'position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;background:#E8E9E5;border:0;padding:0;cursor:pointer;',
+        esGrande: i === 0,
+        esChica: i !== 0,
+        seVela: i >= 3,
+        noVelada: i < 3,
+        abre: () => this.setState({ abierta: i })
+      })),
+      /* Contrato de datos de la sección: el panel da los dos totales y la frase de ejemplos;
+         el resto se calcula. Si algún día se enseñan todas, «y N más» desaparece sola. */
+      totalJump: nJump,
+      totalKids: nKids,
+      restantes: restantes,
+      hayResto: restantes > 0,
+      hayEjemplos: !!ejemplos,
+      ejemplosResto: ejemplos,
+      puertaJump: 'Las ' + nJump + ' de Jump',
+      puertaKids: 'Los ' + nKids + ' de Kids',
+      hayAbierta: this.state.abierta !== null,
+      ficha: this.state.abierta === null ? {} : Object.assign({}, mezcla[this.state.abierta], { estFoto: foto(mezcla[this.state.abierta].f) }),
+      cierra: () => this.setState({ abierta: null }),
+      alFinal: restantes > 0 ? '0 16px 24px' : '4px 16px 24px',
+      /* Un número por frase: el 23 es promesa (capa 1) y los desgloses son respuesta
+         (capa 2), en los enlaces del final. Nada de una tercera cifra en la entradilla. */
+      entradilla2a: 'Veintitrés atracciones entre las dos zonas.',
+      otraZona: z === 'kids' ? 'Ver las 15 atracciones de Jump' : 'Ver los 8 juegos de Kids',
+      estasViendo: z === 'kids' ? 'Estás viendo Kids' : 'Estás viendo Jump',
+      cambiaZona: () => this.setState({ zona: z === 'kids' ? 'jump' : 'kids' }),
+      /* `hayFoto` guarda el hueco: un {{ }} sin resolver dentro de un src hace que el
+         navegador pida literalmente «{{ j.f }}» y falle mientras la lista aún no existe. */
+      lista: items.map((it) => Object.assign({}, it, { hayD: !!it.d && p.distintivos !== false, estFoto: foto(it.f) })),
+      zona: z === 'kids'
+        ? { entradilla: 'Ocho juegos para los peques. Estos son dos.', todas: 'Ver los 8 juegos de Kids', estPortada: foto('uploads/header-120.png') }
+        : { entradilla: 'Quince atracciones en Jump. Estas son tres.', todas: 'Ver las 15 atracciones de Jump', estPortada: foto('uploads/header-141.png') },
+      estTabJump: z === 'jump' ? activa : inerte,
+      estTabKids: z === 'kids' ? activa : inerte,
+      pulsaJump: () => this.setState({ zona: 'jump' }),
+      pulsaKids: () => this.setState({ zona: 'kids' })
+    };
+  }
+}
+
+</script>
+</body>
+</html>

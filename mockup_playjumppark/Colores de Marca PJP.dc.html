@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:#101418;color:#F4F4F1;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+</style>
+</helmet>
+
+<div style="background:#101418;color:#F4F4F1;padding:56px 44px 96px;min-height:100vh;">
+<div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:76px;">
+
+<!-- ═══ PORTADA ═══ -->
+<section style="display:flex;flex-direction:column;gap:26px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:#1AA9DE;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Sistema de color v1</span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Play Jump Park · Lorca</span>
+  </div>
+  <h1 style="font-family:'Bungee';font-size:64px;line-height:.95;letter-spacing:-.015em;margin:0;max-width:900px;">Colores de<br><span style="color:#1AA9DE;">marca</span> <span style="color:#F2711C;">PJP</span></h1>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:720px;color:#C9CDD1;text-wrap:pretty;">Cada valor de esta página sale de medir los píxeles del mural de la fachada, no de estimarlos a ojo. Los porcentajes son masa cromática real de la imagen; los ratios de contraste son WCAG 2.1 calculados sobre estos hex exactos.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:12px;">
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">8 colores núcleo</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">9 neutrales</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">1 CTA por pantalla</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">AA mínimo en todo texto</span>
+  </div>
+</section>
+
+<!-- ═══ 00 ESTILO ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">00 / ESTILO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:24px;padding:34px 36px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">La frase que resume el sistema</div>
+    <p style="margin:0;font-family:'Bungee';font-size:38px;line-height:1.12;letter-spacing:-.01em;max-width:1000px;">Graffiti de rótulo con<br>disciplina de <span style="color:#1AA9DE;">sistema</span>.</p>
+    <p style="margin:0;font-size:19px;line-height:1.5;color:#C9CDD1;max-width:820px;text-wrap:pretty;">Negro de base, un color al mando, letra de rótulo para gritar y grotesca para explicarse. La fiesta está permitida — pero está presupuestada.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;">
+    <div style="background:#101418;border:1px solid #2A3138;border-radius:20px;padding:28px 30px;display:flex;flex-direction:column;gap:18px;">
+      <div>
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#F5C400;margin-bottom:10px;">El estilo de la fachada</div>
+        <div style="font-family:'Bungee';font-size:25px;line-height:1.12;">Letra burbuja sobre<br>campo de spray</div>
+        <p style="margin:12px 0 0;font-size:15.5px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">Rotulación urbana de tradición hip-hop: <em style="font-style:normal;color:#F4F4F1;">throw-up</em> de letra redondeada con doble contorno, degradado interior y un fondo de manchas sobre panel negro. Es un estilo de <strong style="color:#F4F4F1;">energía por acumulación</strong>: está construido para funcionar en doce metros de fachada, de lejos y en tres segundos. No está construido para leerse.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px;border-top:1px solid #2A3138;padding-top:16px;">
+        <sc-for list="{{ rasgos }}" as="r" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:baseline;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">{{ r.n }}</span>
+            <div><span style="font-size:15px;font-weight:700;">{{ r.t }}</span> <span style="font-size:14.5px;color:#9AA1A8;line-height:1.55;">{{ r.d }}</span></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background:#101418;border:1px solid #2A3138;border-radius:20px;padding:28px 30px;display:flex;flex-direction:column;gap:18px;">
+      <div>
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#1AA9DE;margin-bottom:10px;">El estilo del sistema</div>
+        <div style="font-family:'Bungee';font-size:25px;line-height:1.12;">El mural, pero<br>con retícula</div>
+        <p style="margin:12px 0 0;font-size:15.5px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">El sistema no reproduce el mural: le añade lo que un mural no necesita — jerarquía, contraste medido y un límite de piezas. Conserva la energía y le pone gramática. Seis traslaciones, una por rasgo que no se puede copiar tal cual:</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;border-top:1px solid #2A3138;padding-top:16px;">
+        <sc-for list="{{ traducciones }}" as="t" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+              <span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ t.c }};"></span>
+              <span style="font-size:14px;color:#9AA1A8;text-decoration:line-through;">{{ t.de }}</span>
+              <span style="font-size:13px;color:#9AA1A8;">→</span>
+              <span style="font-size:15px;font-weight:700;">{{ t.a }}</span>
+            </div>
+            <div style="font-size:14.5px;line-height:1.55;color:#9AA1A8;padding-left:17px;">{{ t.d }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:12px;">Los tres irrenunciables</div>
+      <p style="margin:0 0 12px;font-size:15px;line-height:1.6;color:#C9CDD1;">Quítale esto y deja de parecer Play Jump Park, aunque los colores sean los correctos:</p>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;gap:11px;align-items:baseline;"><span style="font-family:'Bungee';font-size:14px;color:#A3C21C;">01</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;"><strong style="color:#F4F4F1;">El contorno.</strong> Keyline de tinta con sombra dura en la pieza protagonista.</span></div>
+        <div style="display:flex;gap:11px;align-items:baseline;"><span style="font-family:'Bungee';font-size:14px;color:#A3C21C;">02</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;"><strong style="color:#F4F4F1;">La salpicadura.</strong> Mancha o goteo entrando por un borde, nunca centrada ni simétrica.</span></div>
+        <div style="display:flex;gap:11px;align-items:baseline;"><span style="font-family:'Bungee';font-size:14px;color:#A3C21C;">03</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;"><strong style="color:#F4F4F1;">La silueta plana.</strong> Un cuerpo saltando, de un solo color, apoyado en un borde.</span></div>
+      </div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:12px;">Estilos vecinos que no somos</div>
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#C9CDD1;">Todos comparten paleta saturada con el mural. Ninguno comparte su origen.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <sc-for list="{{ noEs }}" as="x" hint-placeholder-count="5">
+          <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:12px;color:#FF8A6B;flex:none;">✕</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">{{ x }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 01 FUENTE ═══ -->
+<sc-if value="{{ mostrarFuente }}" hint-placeholder-val="{{ true }}">
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">01 / FUENTE</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">De la fachada al token</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;">
+    <div style="border-radius:16px;overflow:hidden;border:1px solid #2A3138;">
+      <img src="assets/fachada-mural.jpg" alt="Mural del castillo de Lorca con el logotipo Play Jump Park" style="width:100%;height:260px;object-fit:cover;">
+      <div style="padding:14px 16px;font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;letter-spacing:.06em;">MURAL PRINCIPAL · fuente primaria del núcleo</div>
+    </div>
+    <div style="border-radius:16px;overflow:hidden;border:1px solid #2A3138;">
+      <img src="assets/fachada-rotulo.jpg" alt="Rótulo de la fachada del parque" style="width:100%;height:260px;object-fit:cover;">
+      <div style="padding:14px 16px;font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;letter-spacing:.06em;">RÓTULO EXTERIOR · confirma negro y blanco base</div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:18px;padding:24px 26px;display:flex;flex-direction:column;gap:18px;">
+    <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Masa cromática medida · píxeles saturados del mural</div>
+    <div style="display:flex;height:52px;border-radius:10px;overflow:hidden;">
+      <div style="width:46%;background:#1AA9DE;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:#101418;">46% AZULES</div>
+      <div style="width:36%;background:#F2711C;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:#101418;">36% NARANJAS</div>
+      <div style="width:13%;background:#A3C21C;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:#101418;">13%</div>
+      <div style="width:3%;background:#F5C400;"></div>
+      <div style="width:2%;background:#E6007E;"></div>
+    </div>
+    <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;max-width:840px;text-wrap:pretty;">La jerarquía no es una opinión: el mural es <strong style="color:#F4F4F1;">azul y naranja</strong> con verdes de apoyo. De ahí sale la regla del sistema — el cian ocupa superficie e identidad, el naranja se reserva para la acción, y los verdes, amarillo y magenta son condimento. Negro medido <span style="font-family:'JetBrains Mono';font-size:14px;">#121517</span>, blanco del graffiti <span style="font-family:'JetBrains Mono';font-size:14px;">#E6E6E3</span>: ambos neutros, sin sesgo cálido.</p>
+  </div>
+</section>
+</sc-if>
+
+<!-- ═══ 02 NÚCLEO ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">02 / NÚCLEO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Ocho colores, un trabajo cada uno</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:760px;">Cada color trae su versión de <em style="font-style:normal;color:#C9CDD1;">hover</em>, su versión pulsada y —cuando la necesita— su versión oscura para poder ser texto sobre papel.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:16px;">
+    <sc-for list="{{ nucleo }}" as="c" hint-placeholder-count="8">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="height:104px;position:relative;background:{{ c.hex }};">
+          <span style="position:absolute;left:16px;bottom:12px;font-family:'JetBrains Mono';font-size:15px;font-weight:700;color:{{ c.on }};">{{ c.hex }}</span>
+          <span style="position:absolute;right:14px;top:12px;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;padding:4px 8px;border-radius:999px;background:{{ c.on }};color:{{ c.hex }};font-weight:700;">{{ c.masa }}</span>
+        </div>
+        <div style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1;">
+          <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">{{ c.nombre }}</div>
+          <div style="font-size:14px;line-height:1.5;color:#9AA1A8;flex:1;text-wrap:pretty;">{{ c.rol }}</div>
+          <sc-if value="{{ mostrarOklch }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">{{ c.ok }}</div>
+          </sc-if>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #2A3138;">
+            <span style="display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;"><span style="width:13px;height:13px;border-radius:4px;background:{{ c.hover }};"></span>hover</span>
+            <span style="display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;"><span style="width:13px;height:13px;border-radius:4px;background:{{ c.press }};"></span>pulsado</span>
+            <span style="display:flex;align-items:center;gap:5px;font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;"><span style="width:13px;height:13px;border-radius:4px;background:{{ c.dark }};"></span>{{ c.darkLbl }}</span>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ═══ 03 NEUTRALES ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">03 / NEUTRALES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">La escala tinta → papel</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:760px;">Neutros fríos, croma casi cero (≤0.016). El gris del mural no es cálido, así que el sistema tampoco: nada de cremas.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;">
+    <sc-for list="{{ neutros }}" as="n" hint-placeholder-count="9">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="height:92px;border-radius:12px;background:{{ n.hex }};border:1px solid #2A3138;"></div>
+        <div style="font-family:'Hanken Grotesk';font-size:13px;font-weight:700;">{{ n.nombre }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">{{ n.hex }}</div>
+        <div style="font-size:12px;line-height:1.4;color:#9AA1A8;">{{ n.rol }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ═══ 04 LEY ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">04 / LEY DEL SISTEMA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F2711C;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:22px;line-height:1.15;margin-bottom:12px;">Los colores del mural son<br>relleno, no texto</div>
+      <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;">Cian sobre blanco da <span style="font-family:'JetBrains Mono';color:#FF8A6B;">2.70</span>. Naranja, <span style="font-family:'JetBrains Mono';color:#FF8A6B;">2.94</span>. Lima, <span style="font-family:'JetBrains Mono';color:#FF8A6B;">2.42</span>. Ninguno es legible como texto en claro. Sobre tinta, todos superan <span style="font-family:'JetBrains Mono';color:#A3C21C;">5.6</span>. La marca es <strong style="color:#F4F4F1;">oscura por naturaleza</strong>: el color vive sobre negro. En papel, el color entra como bloque con texto tinta encima.</p>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:22px;line-height:1.15;margin-bottom:12px;">60 / 30 / 10</div>
+      <div style="display:flex;height:38px;border-radius:8px;overflow:hidden;margin-bottom:14px;">
+        <div style="width:60%;background:#101418;border:1px solid #2A3138;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">60 NEUTRO</div>
+        <div style="width:30%;background:#1AA9DE;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;color:#101418;font-weight:700;">30 CIAN</div>
+        <div style="width:10%;background:#F2711C;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;color:#101418;font-weight:700;">10</div>
+      </div>
+      <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;">Sesenta de neutro, treinta de cian (identidad), diez de naranja (acción). Amarillo, rojo, verde y magenta suman menos del 5% de la superficie total. Una sección, un color dominante.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05 ROLES ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">05 / ROLES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Qué color va en cada sitio</h2>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr 1.5fr;gap:0;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;padding:14px 22px;border-bottom:1px solid #2A3138;">
+      <div>Elemento</div><div>En tinta</div><div>En papel</div><div>Nota</div>
+    </div>
+    <sc-for list="{{ roles }}" as="r" hint-placeholder-count="12">
+      <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr 1.5fr;gap:0;padding:13px 22px;border-bottom:1px solid #22282E;align-items:center;font-size:14px;">
+        <div style="font-weight:600;">{{ r.el }}</div>
+        <div style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;"><span style="width:15px;height:15px;border-radius:4px;flex:none;background:{{ r.d }};border:1px solid #2A3138;"></span>{{ r.dTxt }}</div>
+        <div style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;"><span style="width:15px;height:15px;border-radius:4px;flex:none;background:{{ r.l }};border:1px solid #2A3138;"></span>{{ r.lTxt }}</div>
+        <div style="font-size:13px;color:#9AA1A8;line-height:1.45;">{{ r.nota }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ═══ 06 BOTONES ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">06 / BOTONES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Botones</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:760px;">El primario es <strong style="color:#F4F4F1;">{{ ctaNombre }}</strong> con texto tinta: 184° de distancia de tono respecto al cian que domina las superficies, así que nunca se pierde en el fondo. Un solo primario por pantalla. Pasa el cursor por encima para ver los estados.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Sobre tinta</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:800;letter-spacing:.01em;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:{{ cta.fill }};color:#101418;transition:background .15s,transform .15s;" style-hover="background:{{ cta.hover }};transform:translateY(-1px)" style-active="background:{{ cta.press }};transform:translateY(0)">Reservar ahora</button>
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:#1AA9DE;color:#101418;transition:background .15s;" style-hover="background:#1795C3">Ver precios</button>
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:700;padding:14px 27px;border-radius:10px;cursor:pointer;background:transparent;color:#F4F4F1;border:1.5px solid #3B434B;transition:border-color .15s,color .15s;" style-hover="border-color:#1AA9DE;color:#1AA9DE">Cómo llegar</button>
+        <button type="button" disabled="disabled" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:700;padding:15px 28px;border-radius:10px;border:0;background:#2A3138;color:#6C747C;cursor:not-allowed;">Completo</button>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">primario {{ cta.fill }} · hover {{ cta.hover }} · pulsado {{ cta.press }}<br>texto #101418 · contraste {{ cta.cr }}</div>
+    </div>
+
+    <div style="background:#F4F4F1;border:1px solid #D6D8D4;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Sobre papel</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:{{ cta.fill }};color:#101418;transition:background .15s,transform .15s;" style-hover="background:{{ cta.hover }};transform:translateY(-1px)" style-active="background:{{ cta.press }}">Reservar ahora</button>
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:#101418;color:#F4F4F1;transition:background .15s;" style-hover="background:#2A3138">Ver precios</button>
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:700;padding:14px 27px;border-radius:10px;cursor:pointer;background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;transition:background .15s,color .15s;" style-hover="background:#0A5C93;color:#FFFFFF">Cómo llegar</button>
+        <button type="button" disabled="disabled" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:700;padding:15px 28px;border-radius:10px;border:0;background:#E8E9E5;color:#9AA1A8;cursor:not-allowed;">Completo</button>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;line-height:1.6;">En claro el secundario es tinta, no cian: cian sobre papel da 2.45 y el borde se come el texto.<br>Botón fantasma siempre en Azul Muro #0A5C93 (6.43 ✓).</div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+    <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Anatomía fija</div>
+    <div style="display:flex;gap:28px;flex-wrap:wrap;font-size:14.5px;color:#C9CDD1;">
+      <div><span style="font-family:'JetBrains Mono';font-size:13px;color:#F4F4F1;">radio 10px</span><br><span style="color:#9AA1A8;font-size:13px;">14px en botón grande</span></div>
+      <div><span style="font-family:'JetBrains Mono';font-size:13px;color:#F4F4F1;">alto mín. 48px</span><br><span style="color:#9AA1A8;font-size:13px;">táctil, sin excepciones</span></div>
+      <div><span style="font-family:'JetBrains Mono';font-size:13px;color:#F4F4F1;">peso 800</span><br><span style="color:#9AA1A8;font-size:13px;">Hanken Grotesk, nunca Bungee</span></div>
+      <div><span style="font-family:'JetBrains Mono';font-size:13px;color:#F4F4F1;">foco 3px #F5C400</span><br><span style="color:#9AA1A8;font-size:13px;">outline-offset 2px, en ambos fondos</span></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;padding-top:6px;">
+      <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;background:{{ cta.fill }};color:#101418;outline:3px solid #F5C400;outline-offset:2px;cursor:pointer;">Estado de foco</button>
+      <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Amarillo Aviso es el único color de foco: 11.26 sobre tinta, 10.09 sobre superficie.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 07 TEXTO ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">07 / TEXTO RESALTADO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cuatro formas de resaltar. No hay una quinta.</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#F5C400;">A · Marcador</div>
+      <p style="margin:0;font-size:23px;line-height:1.45;font-weight:600;">Reserva tu hora y <span style="background:#F5C400;color:#101418;padding:1px 8px;border-radius:4px;box-decoration-break:clone;">salta 60 minutos</span> sin cola.</p>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">Amarillo #F5C400 + texto #101418 · 11.26 AAA<br>Máximo 1 marcador por bloque de texto.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;">B · Palabra en color</div>
+      <p style="margin:0;font-size:23px;line-height:1.45;font-weight:600;">El parque de camas elásticas más <span style="color:#1AA9DE;">grande</span> de Lorca.</p>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">Solo sobre tinta. Cian 6.85 ✓ · Lima 9.06 ✓ · Naranja 6.30 ✓<br>Sobre papel esta técnica exige la versión oscura del color.</div>
+    </div>
+    <div style="background:#F4F4F1;border:1px solid #D6D8D4;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#0A5C93;">C · Enlace en claro</div>
+      <p style="margin:0;font-size:23px;line-height:1.45;font-weight:600;color:#101418;">Consulta las <a href="#07" style="color:#0A5C93;border-bottom:2px solid #1AA9DE;">normas de seguridad</a> antes de venir.</p>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;line-height:1.6;">Azul Muro #0A5C93 · 6.43 AA ✓<br>El cian queda de subrayado, donde el contraste no aplica.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;">D · Dato grande</div>
+      <div style="display:flex;align-items:baseline;gap:10px;">
+        <span style="font-family:'Bungee';font-size:52px;line-height:.9;color:#A3C21C;">9,90</span>
+        <span style="font-family:'Bungee';font-size:24px;color:#F4F4F1;">€</span>
+        <span style="font-size:15px;color:#9AA1A8;">/ 60 min</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;background:#252C19;color:#A3C21C;border:1px solid #3E4A21;padding:5px 10px;border-radius:999px;">plazas libres</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;background:#2C1A17;color:#FF8A6B;border:1px solid #4A2620;padding:5px 10px;border-radius:999px;">últimas 3</span>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">Precios en Lima; urgencia en Rojo Goteo. Los chips usan el color al 14% sobre tinta.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 08 FONDOS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">08 / FONDOS</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Dos fondos de sección,<br>y el color nunca es uno.</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="border-radius:16px;overflow:hidden;border:1px solid #2A3138;">
+      <div style="background:#101418;padding:30px 26px;position:relative;min-height:168px;">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.5) 1.4px,transparent 1.6px);background-size:20px 20px;opacity:.1;"></div>
+        <div style="position:relative;font-family:'Bungee';font-size:26px;line-height:1.1;">Tinta<br><span style="color:#1AA9DE;">#101418</span></div>
+        <p style="position:relative;margin:12px 0 0;font-size:14.5px;color:#9AA1A8;line-height:1.55;">Hero, cabecera, pie y bloque de cierre. Liso: sin trama, sin manchas debajo del texto. El negro es un cierre de página, no un fondo de contenido.</p>
+      </div>
+    </div>
+    <div style="border-radius:16px;overflow:hidden;border:1px solid #2A3138;">
+      <div style="background:#F4F4F1;padding:30px 26px;min-height:168px;">
+        <div style="font-family:'Bungee';font-size:26px;line-height:1.1;color:#101418;">Papel<br><span style="color:#0A5C93;">#F4F4F1</span></div>
+        <p style="margin:12px 0 0;font-size:14.5px;color:#626A72;line-height:1.55;">El fondo del contenido, de arriba abajo. Tarifas, zonas, cumples, normas, horario, opiniones. Tarjetas en blanco puro #FFFFFF con borde #D6D8D4, o en tinta cuando el bloque tiene que pesar.</p>
+      </div>
+    </div>
+    <div style="border-radius:16px;overflow:hidden;border:1px solid #2A3138;">
+      <div style="background:#1A1F25;padding:30px 26px;min-height:168px;">
+        <div style="font-family:'Bungee';font-size:26px;line-height:1.1;color:#F4F4F1;">Color pleno<br><span style="color:#FF8A6B;">descartado</span></div>
+        <p style="margin:12px 0 0;font-size:14.5px;color:#9AA1A8;line-height:1.55;">Hubo una tercera superficie —una sección entera en cian— y se cayó en revisión: un bloque de color a sangre mete ruido detrás del texto y obliga a repintar cada elemento que cae dentro. El color va en la tarjeta, en el dato y en el botón. En el fondo, nunca.</p>
+      </div>
+    </div>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px 26px;display:flex;gap:26px;flex-wrap:wrap;align-items:center;">
+    <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Superficies sobre tinta</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <span style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;"><span style="width:22px;height:22px;border-radius:6px;background:#1A1F25;border:1px solid #2A3138;"></span>tarjeta #1A1F25</span>
+      <span style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;"><span style="width:22px;height:22px;border-radius:6px;background:#2A3138;"></span>borde #2A3138</span>
+      <span style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;"><span style="width:22px;height:22px;border-radius:6px;background:#112934;border:1px solid #1A4657;"></span>tinte cian #112934</span>
+      <span style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;"><span style="width:22px;height:22px;border-radius:6px;background:#302119;border:1px solid #4A3120;"></span>tinte naranja #302119</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 09 CONTRASTE ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">09 / CONTRASTE</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Auditoría WCAG</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:760px;">Ratios calculados sobre los hex de esta página. Umbrales: 4.5 para texto normal (AA), 3.0 para texto ≥24px o bold ≥19px, 7.0 para AAA.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:10px;">
+    <sc-for list="{{ contraste }}" as="k" hint-placeholder-count="14">
+      <div style="background:{{ k.bg }};border:1px solid #2A3138;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-height:104px;justify-content:space-between;">
+        <div style="font-size:15px;font-weight:700;color:{{ k.fg }};">{{ k.txt }}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:17px;font-weight:700;color:{{ k.fg }};">{{ k.cr }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 8px;border-radius:999px;background:{{ k.badgeBg }};color:{{ k.badgeFg }};">{{ k.badge }}</span>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:10px;color:{{ k.mute }};">{{ k.uso }}</div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<!-- ═══ 10 PROHIBIDO ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#FF8A6B;">10 / PROHIBIDO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:14px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="background:#FFFFFF;padding:22px;height:96px;display:flex;align-items:center;"><span style="font-size:21px;font-weight:800;color:#1AA9DE;">Salta ya en Lorca</span></div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ 2.70</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Cian, lima, amarillo o naranja como texto sobre claro. Usa la variante oscura o pásalo a fondo tinta.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="padding:22px;min-height:96px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;background:#101418;">
+        <span style="font-size:14px;font-weight:800;padding:12px 18px;border-radius:9px;background:#F2711C;color:#101418;">Reservar</span>
+        <span style="font-size:14px;font-weight:800;padding:12px 18px;border-radius:9px;background:#E6007E;color:#fff;">Comprar</span>
+        <span style="font-size:14px;font-weight:800;padding:12px 18px;border-radius:9px;background:#A3C21C;color:#101418;">Bonos</span>
+      </div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ TRES PRIMARIOS</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Un solo botón de relleno de acción por pantalla. El resto, secundario o fantasma.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="height:96px;background:linear-gradient(120deg,#E6007E,#F2711C,#F5C400,#A3C21C,#1AA9DE);"></div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ ARCOÍRIS</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Nada de degradados multicolor de fondo. El único degradado válido es de un color a su versión pulsada, y solo en piezas decorativas.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="height:96px;background:#E6007E;display:flex;align-items:center;padding:22px;"><span style="font-family:'Bungee';font-size:22px;color:#fff;">Sección magenta</span></div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ MAGENTA GRANDE</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Magenta es &lt;1% del mural: salpicadura, icono, un chip. Nunca fondo de sección ni botón principal.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 11 MIGRACIÓN ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">11 / MIGRACIÓN</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cambios respecto al kit de fachada</h2>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+    <sc-for list="{{ migracion }}" as="m" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:auto auto 1fr;gap:18px;align-items:center;padding:15px 24px;border-bottom:1px solid #22282E;">
+        <div style="display:flex;align-items:center;gap:9px;font-family:'JetBrains Mono';font-size:12px;color:#9AA1A8;text-decoration:line-through;"><span style="width:26px;height:26px;border-radius:6px;background:{{ m.viejo }};opacity:.6;"></span>{{ m.viejo }}</div>
+        <div style="display:flex;align-items:center;gap:9px;font-family:'JetBrains Mono';font-size:13px;font-weight:700;color:#F4F4F1;"><span style="font-size:15px;color:#A3C21C;">→</span><span style="width:26px;height:26px;border-radius:6px;background:{{ m.nuevo }};"></span>{{ m.nuevo }}</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;">{{ m.por }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <p style="margin:0;font-size:15px;line-height:1.6;color:#9AA1A8;max-width:820px;">Los ocho colores del kit original eran correctos en intención; lo que faltaba era la capa de uso: qué color puede ser texto, cuál solo relleno, y en qué proporción entra cada uno. Eso es lo que fija este documento.</p>
+</section>
+
+<!-- ═══ 12 TIPOGRAFÍA ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">12 / TIPOGRAFÍA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cuatro fuentes con contrato</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">En la fachada no hay ninguna tipografía: hay letra pintada a mano con contorno negro y un eslogan a rotulador. El sistema no la imita, la traduce — una fuente de rótulo para el volumen, una grotesca para leer, el rotulador solo como guiño y la mono para el dato.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;">Rótulo · Bungee</div>
+      <div style="font-family:'Bungee';font-size:44px;line-height:.95;letter-spacing:-.01em;">SALTA<br>YA</div>
+      <div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;">Diseñada para rotulación urbana: trazo grueso y constante, contraformas amplias. Es la masa de las letras del mural sin caer en el pastiche.</div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;border-top:1px solid #2A3138;padding-top:10px;">Solo mayúsculas · mín. 20px · nunca en párrafo ni en botón</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;">Texto · Hanken Grotesk</div>
+      <div style="font-size:25px;line-height:1.3;font-weight:700;">Reserva tu hora<br><span style="font-weight:400;font-size:17px;color:#C9CDD1;">y salta sesenta minutos sin cola ni esperas.</span></div>
+      <div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;">Grotesca humanista de altura x alta y ojos redondos: el eco legible de la letra burbuja. Pesos 400 / 500 / 700 / 800.</div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;border-top:1px solid #2A3138;padding-top:10px;">Cuerpo, subtítulos y botones · mín. 16px</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#F5C400;">Guiño · Permanent Marker</div>
+      <div style="font-family:'Permanent Marker';font-size:30px;line-height:1.15;color:#F4F4F1;transform:rotate(-2deg);transform-origin:left center;padding:6px 0;">activa tu modo diversión</div>
+      <div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;">Es el eslogan del rótulo, literalmente. Por eso no se usa para nada más: en cuanto informa, deja de ser un guiño.</div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;border-top:1px solid #2A3138;padding-top:10px;">Máx. 6 palabras · nunca precios, botones ni normas</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Dato · JetBrains Mono</div>
+      <div style="font-family:'JetBrains Mono';font-size:19px;line-height:1.5;font-weight:500;">L–V 17:00–21:00<br><span style="color:#A3C21C;">S–D 11:00–22:00</span></div>
+      <div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;">Cifras de ancho fijo: horarios, aforo, códigos de reserva y antetítulos. Alinea columnas sin tabular.</div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;border-top:1px solid #2A3138;padding-top:10px;">10–19px · mayúsculas con .16em en etiquetas</div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1fr 1.1fr .5fr .5fr .5fr .6fr 1.4fr;gap:0;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#9AA1A8;padding:14px 22px;border-bottom:1px solid #2A3138;">
+      <div>Nivel</div><div>Fuente</div><div>Desktop</div><div>Móvil</div><div>Interl.</div><div>Tracking</div><div>Uso</div>
+    </div>
+    <sc-for list="{{ escala }}" as="t" hint-placeholder-count="10">
+      <div style="display:grid;grid-template-columns:1fr 1.1fr .5fr .5fr .5fr .6fr 1.4fr;gap:0;padding:12px 22px;border-bottom:1px solid #22282E;align-items:center;font-size:14px;">
+        <div style="font-weight:700;">{{ t.n }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:12px;color:#C9CDD1;">{{ t.f }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:13px;color:#F4F4F1;">{{ t.d }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:13px;color:#9AA1A8;">{{ t.m }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:12px;color:#9AA1A8;">{{ t.lh }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:12px;color:#9AA1A8;">{{ t.ls }}</div>
+        <div style="font-size:13px;color:#9AA1A8;line-height:1.45;">{{ t.uso }}</div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#C9CDD1;">Máx. 2 familias por pantalla + mono en etiquetas</span>
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#C9CDD1;">Cero cursivas: ninguna de las cuatro tiene una real</span>
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#C9CDD1;">Bungee y rotulador nunca en la misma línea</span>
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#C9CDD1;">Salto mínimo entre niveles: 1.25×</span>
+  </div>
+</section>
+
+<!-- ═══ 13 FORMA ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">13 / FORMA Y RADIOS</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Panel recto, letra redonda</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">La fachada tiene exactamente dos geometrías: el panel del rótulo, rectangular y a escuadra, y las letras, completamente redondeadas. De ahí la regla — a escala de página el canto es duro; a escala de componente, generoso. Nada tímido en medio.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:14px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:78px;background:#1AA9DE;border-radius:0;"></div>
+      <div><div style="font-family:'Bungee';font-size:19px;">0</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:5px;">Secciones a sangre, fotos de ancho completo, la banda del rótulo.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:78px;background:#A3C21C;border-radius:6px;"></div>
+      <div><div style="font-family:'Bungee';font-size:19px;">6</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:5px;">Chips mono, muestras de color, sellos, elementos dentro de tarjeta.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:78px;background:#F2711C;border-radius:10px;"></div>
+      <div><div style="font-family:'Bungee';font-size:19px;">10</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:5px;">Botones e inputs. Alto 48px, así que 10 es un canto redondo, no una cápsula.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:78px;background:#F5C400;border-radius:16px;"></div>
+      <div><div style="font-family:'Bungee';font-size:19px;">16</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:5px;">Tarjetas, tiles, imágenes en tarjeta. El radio por defecto del sistema.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:78px;background:#5FA82E;border-radius:24px;"></div>
+      <div><div style="font-family:'Bungee';font-size:19px;">24</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:5px;">Bloques grandes con fondo propio, modales, tarjeta de hero.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:78px;background:#E6007E;border-radius:999px;"></div>
+      <div><div style="font-family:'Bungee';font-size:19px;">999</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:5px;">Cápsulas: filtros, contadores, «últimas 3 plazas», avatares.</div></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:12px;">Radios concéntricos</div>
+      <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;">
+        <div style="background:#101418;border:1px solid #2A3138;border-radius:16px;padding:8px;flex:none;">
+          <div style="width:112px;height:74px;background:#1AA9DE;border-radius:6px;"></div>
+        </div>
+        <div style="font-size:14.5px;line-height:1.6;color:#C9CDD1;flex:1 1 160px;">Interior = exterior − padding, ajustado a la escala. Tarjeta 16 con 8 de aire → foto a 6. Si repites el 16 dentro, queda una luna blanca entre los dos cantos.</div>
+      </div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F2711C;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:14px;">Pegatina: el contorno del mural</div>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+        <div style="background:#F4F4F1;border:1px solid #2A3138;border-radius:16px;padding:20px 24px 24px;flex:none;">
+          <span style="display:inline-flex;align-items:center;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;padding:14px 22px;box-shadow:5px 5px 0 #101418;">Reservar</span>
+        </div>
+        <div style="font-size:14.5px;line-height:1.6;color:#C9CDD1;flex:1 1 150px;">Borde 2px tinta + sombra dura 5px. Es el keyline negro de las letras. Un solo elemento por pantalla lo lleva; en una rejilla de tarjetas, jamás.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px 26px;display:flex;gap:28px;flex-wrap:wrap;">
+    <div style="flex:1 1 200px;"><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;margin-bottom:8px;">Bordes</div><div style="font-size:14px;line-height:1.6;color:#C9CDD1;">1px por defecto · 1.5px solo en botón fantasma · 2px solo en pegatina. Nunca bordes de color saturado alrededor de una tarjeta.</div></div>
+    <div style="flex:1 1 200px;"><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;margin-bottom:8px;">Sombras</div><div style="font-size:14px;line-height:1.6;color:#C9CDD1;">Dura <span style="font-family:'JetBrains Mono';font-size:12.5px;">5px 5px 0 #101418</span> o ninguna. La difusa solo existe en modales: <span style="font-family:'JetBrains Mono';font-size:12.5px;">0 24px 60px rgba(0,0,0,.45)</span>.</div></div>
+    <div style="flex:1 1 200px;"><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;margin-bottom:8px;">Rotación</div><div style="font-size:14px;line-height:1.6;color:#C9CDD1;">Solo −2° a −8°, y solo en manchas, cinta del eslogan y sello de precio. El texto informativo nunca se gira.</div></div>
+  </div>
+</section>
+
+<!-- ═══ 14 ORDEN ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">14 / ORDEN DE LA PÁGINA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Dónde va cada elemento del kit</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Los 24 elementos de <a href="Elementos%20Fachada.dc.html">Elementos Fachada</a> montados en una sola secuencia. El fondo es papel de principio a fin salvo hero, cierre y pie: el color no pinta secciones, entra dentro de las tarjetas. Así la suma sigue cumpliendo el 60/30/10 sin que el centro de la página se convierta en un muro.</p>
+
+  <div style="display:flex;height:44px;border-radius:8px;overflow:hidden;">
+    <div style="flex:2;background:#101418;border:1px solid #2A3138;"></div>
+    <div style="flex:5;background:#F4F4F1;"></div>
+    <div style="flex:1;background:#101418;border:1px solid #2A3138;"></div>
+    <div style="flex:1;background:#F4F4F1;"></div>
+    <div style="flex:1;background:#101418;border:1px solid #2A3138;"></div>
+  </div>
+    <div style="flex:1;background:#F4F4F1;"></div>
+    <div style="flex:1;background:#1AA9DE;"></div>
+    <div style="flex:1;background:#F4F4F1;"></div>
+    <div style="flex:1;background:#101418;border:1px solid #2A3138;"></div>
+    <div style="flex:1;background:#D93E14;"></div>
+    <div style="flex:1;background:#101418;border:1px solid #2A3138;"></div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <sc-for list="{{ stack }}" as="s" hint-placeholder-count="8">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:18px 22px;display:grid;grid-template-columns:44px 1.1fr 1.3fr 1.6fr;gap:18px;align-items:center;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <div style="font-family:'Bungee';font-size:22px;color:#F4F4F1;">{{ s.n }}</div>
+          <span style="width:26px;height:7px;border-radius:999px;background:{{ s.dom }};border:1px solid #3B434B;"></span>
+        </div>
+        <div>
+          <div style="font-size:17px;font-weight:700;line-height:1.25;">{{ s.t }}</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:6px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#9AA1A8;"><span style="width:13px;height:13px;border-radius:4px;background:{{ s.bg }};border:1px solid #3B434B;"></span>{{ s.sup }}</div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:12px;line-height:1.6;color:#C9CDD1;">{{ s.el }}</div>
+        <div style="font-size:13.5px;line-height:1.5;color:#9AA1A8;">{{ s.nota }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Presupuesto de elementos · por página</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:12px;">
+      <sc-for list="{{ limites }}" as="l" hint-placeholder-count="8">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <span style="font-family:'Bungee';font-size:15px;background:#F5C400;color:#101418;border-radius:6px;padding:3px 9px;flex:none;">×{{ l.q }}</span>
+          <div><div style="font-size:14.5px;font-weight:700;line-height:1.3;">{{ l.k }}</div><div style="font-size:13px;color:#9AA1A8;line-height:1.45;margin-top:3px;">{{ l.v }}</div></div>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;border-top:1px solid #2A3138;padding-top:14px;">El kit tiene 24 piezas y una página usa unas 15. Lo que sobra no es material de repuesto: es lo que hace que el hero siga pareciendo el hero.</p>
+  </div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;ctaColor&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;naranja&quot;,&quot;cian&quot;,&quot;lima&quot;,&quot;rojo&quot;],&quot;default&quot;:&quot;naranja&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Decisiones&quot;,&quot;label&quot;:&quot;Color del CTA primario&quot;},&quot;mostrarFuente&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Documento&quot;,&quot;label&quot;:&quot;Mostrar fotos de la fachada&quot;},&quot;mostrarOklch&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Documento&quot;,&quot;label&quot;:&quot;Mostrar valores oklch&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const ctas = {
+      naranja: { nombre: 'Naranja Salto', fill: '#F2711C', hover: '#D56319', press: '#B85615', cr: '6.30 AA ✓' },
+      cian:    { nombre: 'Cian PJP',      fill: '#1AA9DE', hover: '#1795C3', press: '#1480A9', cr: '6.85 AA ✓' },
+      lima:    { nombre: 'Lima Bote',     fill: '#A3C21C', hover: '#8FAB19', press: '#7C9315', cr: '9.06 AAA ✓' },
+      rojo:    { nombre: 'Rojo Goteo',    fill: '#D93E14', hover: '#BF3712', press: '#A52F0F', cr: '4.28 · solo ≥19px bold' }
+    };
+    const cta = ctas[p.ctaColor] || ctas.naranja;
+
+    const nucleo = [
+      { nombre: 'Cian PJP', hex: '#1AA9DE', on: '#101418', masa: '46%', ok: 'oklch(69% .134 231)', rol: 'Identidad. Titulares sobre tinta, rellenos grandes, iconografía, subrayados.', hover: '#1795C3', press: '#1480A9', dark: '#12769B', darkLbl: 'texto claro' },
+      { nombre: 'Azul Muro', hex: '#0A5C93', on: '#FFFFFF', masa: '46%', ok: 'oklch(46% .114 246)', rol: 'La voz del cian en superficies claras: enlaces, botón fantasma, profundidad.', hover: '#095181', press: '#084670', dark: '#1AA9DE', darkLbl: 'par claro' },
+      { nombre: 'Naranja Salto', hex: '#F2711C', on: '#101418', masa: '36%', ok: 'oklch(69% .181 47)', rol: 'Acción. Reservar, comprar, enviar. Un único relleno naranja por pantalla.', hover: '#D56319', press: '#B85615', dark: '#AE5114', darkLbl: 'texto claro' },
+      { nombre: 'Rojo Goteo', hex: '#D93E14', on: '#FFFFFF', masa: '4%', ok: 'oklch(59% .198 35)', rol: 'Urgencia y error. Sobre tinta da 4.10: solo ≥19px bold. Para texto pequeño en oscuro, usa #FF8A6B (8.02).', hover: '#BF3712', press: '#A52F0F', dark: '#C83912', darkLbl: 'texto claro' },
+      { nombre: 'Amarillo Aviso', hex: '#F5C400', on: '#101418', masa: '3%', ok: 'oklch(84% .172 90)', rol: 'Resalte tipo marcador y anillo de foco. Nunca fondo de sección ni botón.', hover: '#D8AC00', press: '#BA9500', dark: '#8A6E00', darkLbl: 'texto claro' },
+      { nombre: 'Lima Bote', hex: '#A3C21C', on: '#101418', masa: '13%', ok: 'oklch(76% .176 121)', rol: 'Precios, cifras, confirmación. El color del rebote: energía sin gritar.', hover: '#8FAB19', press: '#7C9315', dark: '#627411', darkLbl: 'texto claro' },
+      { nombre: 'Verde Salta', hex: '#5FA82E', on: '#101418', masa: '13%', ok: 'oklch(66% .170 136)', rol: 'Éxito: reserva confirmada, pago correcto. Verde de la silueta que salta.', hover: '#549428', press: '#488023', dark: '#447921', darkLbl: 'texto claro' },
+      { nombre: 'Magenta Chispa', hex: '#E6007E', on: '#FFFFFF', masa: '<1%', ok: 'oklch(60% .244 359)', rol: 'Chispa de fiesta: cumpleaños, salpicaduras, un chip. Máx. 2% de superficie.', hover: '#CA006F', press: '#AD0060', dark: '#D40074', darkLbl: 'texto claro' }
+    ];
+
+    const neutros = [
+      { nombre: 'Tinta', hex: '#101418', rol: 'Fondo base de marca' },
+      { nombre: 'Tinta 800', hex: '#1A1F25', rol: 'Tarjetas y superficies' },
+      { nombre: 'Tinta 700', hex: '#2A3138', rol: 'Bordes y divisores' },
+      { nombre: 'Tinta 600', hex: '#3B434B', rol: 'Borde de botón fantasma sobre tinta' },
+      { nombre: 'Humo', hex: '#626A72', rol: 'Texto 2º en papel' },
+      { nombre: 'Humo Claro', hex: '#9AA1A8', rol: 'Texto 2º en tinta' },
+      { nombre: 'Papel 200', hex: '#C9CDD1', rol: 'Texto de cuerpo sobre tinta' },
+      { nombre: 'Nube', hex: '#E8E9E5', rol: 'Relleno inerte, deshabilitado' },
+      { nombre: 'Línea', hex: '#D6D8D4', rol: 'Bordes en papel' },
+      { nombre: 'Papel', hex: '#F4F4F1', rol: 'Fondo claro y texto en tinta' },
+      { nombre: 'Blanco', hex: '#FFFFFF', rol: 'Tarjetas sobre papel' }
+    ];
+
+    const roles = [
+      { el: 'Fondo de sección', d: '#101418', dTxt: '#101418', l: '#F4F4F1', lTxt: '#F4F4F1', nota: 'Alterna tinta y papel; nunca dos papeles seguidos.' },
+      { el: 'Superficie / tarjeta', d: '#1A1F25', dTxt: '#1A1F25', l: '#FFFFFF', lTxt: '#FFFFFF', nota: 'Sin sombras de color, solo negro al 25%.' },
+      { el: 'Borde', d: '#2A3138', dTxt: '#2A3138', l: '#D6D8D4', lTxt: '#D6D8D4', nota: '1px normal, 1.5px en botón fantasma.' },
+      { el: 'Texto principal', d: '#F4F4F1', dTxt: '#F4F4F1', l: '#101418', lTxt: '#101418', nota: '16.79 en ambos sentidos. AAA.' },
+      { el: 'Texto secundario', d: '#9AA1A8', dTxt: '#9AA1A8', l: '#626A72', lTxt: '#626A72', nota: 'Dos grises distintos: el claro falla en papel.' },
+      { el: 'Titular con color', d: '#1AA9DE', dTxt: '#1AA9DE', l: '#101418', lTxt: '#101418', nota: 'En papel el titular es tinta; el color va al fondo.' },
+      { el: 'CTA primario', d: cta.fill, dTxt: cta.fill, l: cta.fill, lTxt: cta.fill, nota: 'Idéntico en ambos fondos, siempre con texto tinta.' },
+      { el: 'CTA secundario', d: '#1AA9DE', dTxt: '#1AA9DE', l: '#101418', lTxt: '#101418', nota: 'Cambia de color según el fondo; el relleno nunca compite.' },
+      { el: 'Enlace en texto', d: '#1AA9DE', dTxt: '#1AA9DE', l: '#0A5C93', lTxt: '#0A5C93', nota: 'Hover: aclarar 15% en tinta, oscurecer 12% en papel.' },
+      { el: 'Precio / cifra', d: '#A3C21C', dTxt: '#A3C21C', l: '#627411', lTxt: '#627411', nota: 'Bungee. La cifra manda, el € va en tinta.' },
+      { el: 'Éxito', d: '#5FA82E', dTxt: '#5FA82E', l: '#447921', lTxt: '#447921', nota: 'Con texto blanco en claro (5.25 ✓).' },
+      { el: 'Urgencia / error', d: '#D93E14', dTxt: '#D93E14', l: '#C83912', lTxt: '#C83912', nota: 'Nunca como decoración; solo cuando informa.' },
+      { el: 'Anillo de foco', d: '#F5C400', dTxt: '#F5C400', l: '#F5C400', lTxt: '#F5C400', nota: '3px + offset 2px. Único color que no cambia.' }
+    ];
+
+    const lum = (hex) => {
+      const ch = [1, 3, 5].map((i) => parseInt(hex.substr(i, 2), 16) / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+      return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+    };
+    const mk = (txt, fg, bg, cr, badge, uso) => {
+      const cr2 = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+      const light = lum(bg) > 0.18;
+      const capt = cr2('#101418', bg) >= cr2('#FFFFFF', bg) ? '#101418' : '#FFFFFF';
+      const tone = { AAA: ['#A3C21C', '#101418'], AA: ['#1AA9DE', '#101418'], 'GRANDE': ['#F5C400', '#101418'], '✕ NUNCA': ['#D93E14', '#FFFFFF'] }[badge] || ['#2A3138', '#F4F4F1'];
+      return { txt: txt, fg: fg, bg: bg, cr: cr, badge: badge, uso: uso, badgeBg: tone[0], badgeFg: tone[1], mute: capt };
+    };
+    const contraste = [
+      mk('Papel sobre Tinta', '#F4F4F1', '#101418', '16.79', 'AAA', 'texto base oscuro'),
+      mk('Tinta sobre Papel', '#101418', '#F4F4F1', '16.79', 'AAA', 'texto base claro'),
+      mk('Humo Claro sobre Tinta', '#9AA1A8', '#101418', '7.08', 'AAA', 'texto 2º oscuro'),
+      mk('Humo sobre Papel', '#626A72', '#F4F4F1', '4.98', 'AA', 'texto 2º claro'),
+      mk('Cian sobre Tinta', '#1AA9DE', '#101418', '6.85', 'AA', 'titular, enlace'),
+      mk('Naranja sobre Tinta', '#F2711C', '#101418', '6.30', 'AA', 'acento, texto CTA'),
+      mk('Lima sobre Tinta', '#A3C21C', '#101418', '9.06', 'AAA', 'precios'),
+      mk('Amarillo sobre Tinta', '#F5C400', '#101418', '11.26', 'AAA', 'foco, marcador'),
+      mk('Tinta sobre Naranja', '#101418', '#F2711C', '6.30', 'AA', 'botón primario'),
+      mk('Tinta sobre Cian', '#101418', '#1AA9DE', '6.85', 'AA', 'bloque cian'),
+      mk('Tinta sobre Amarillo', '#101418', '#F5C400', '11.26', 'AAA', 'marcador'),
+      mk('Azul Muro sobre Papel', '#0A5C93', '#F4F4F1', '6.43', 'AA', 'enlace en claro'),
+      mk('Blanco sobre Azul Muro', '#FFFFFF', '#0A5C93', '7.08', 'AAA', 'botón azul'),
+      mk('Blanco sobre Rojo', '#FFFFFF', '#D93E14', '4.52', 'AA', 'aviso'),
+      mk('Rojo sobre Tinta', '#D93E14', '#101418', '4.10', 'GRANDE', 'solo ≥19px bold'),
+      mk('Rojo Claro sobre Tinta', '#FF8A6B', '#101418', '8.02', 'AAA', 'error en texto pequeño'),
+      mk('Cian sobre Papel', '#1AA9DE', '#F4F4F1', '2.45', '✕ NUNCA', 'solo relleno'),
+      mk('Naranja sobre Blanco', '#F2711C', '#FFFFFF', '2.94', '✕ NUNCA', 'solo relleno'),
+      mk('Blanco sobre Verde', '#FFFFFF', '#5FA82E', '2.95', '✕ NUNCA', 'usa Verde oscuro'),
+      mk('Lima sobre Papel', '#A3C21C', '#F4F4F1', '2.42', '✕ NUNCA', 'solo relleno')
+    ];
+
+    const migracion = [
+      { viejo: '#EFEDE7', nuevo: '#F4F4F1', por: 'El blanco medido del mural es #E6E6E3, neutro. El crema metía un amarillo que competía con Amarillo Aviso y ensuciaba las fotos.' },
+      { viejo: '#141517', nuevo: '#101418', por: 'Negro real de la fachada #121517, con un grado más de azul para emparentarlo con el cian.' },
+      { viejo: '#2FB6DE', nuevo: '#1AA9DE', por: 'El cian del logotipo mide #0094C6; #2FB6DE se iba de claro y perdía 0.4 de contraste sobre tinta.' },
+      { viejo: '#1E7BC8', nuevo: '#0A5C93', por: 'El azul anterior no llegaba a AA sobre papel (4.05). Azul Muro sí: 6.43. Es el único azul que puede ser texto.' },
+      { viejo: '#8CC63F', nuevo: '#A3C21C', por: 'Dos verdes separados y con función: Lima #A3C21C para cifras, Verde Salta #5FA82E para éxito.' },
+      { viejo: '#E33B2E', nuevo: '#D93E14', por: 'Rojo más anaranjado, alineado con el goteo del mural (#CA4309) y sin chocar con el magenta.' },
+      { viejo: '#6E6A64', nuevo: '#626A72', por: 'Gris neutro frío y con AA real sobre papel (4.98 frente a 4.30 del anterior).' }
+    ];
+
+    const rasgos = [
+      { n: '01', t: 'Letra burbuja con contorno', d: 'Masa cerrada, contraformas amplias, contorno negro constante y un halo blanco por fuera. No hay tipografía en la fachada: hay letra dibujada.' },
+      { n: '02', t: 'El color va dentro de la forma', d: 'Cada letra hace su propio degradado — amarillo a naranja, cian a verde. El color no está detrás del texto, está en el texto.' },
+      { n: '03', t: 'Campo de salpicadura', d: 'Manchas, goteos y puntos de spray sobre negro. Densidad alta en los bordes, centro despejado para que la palabra respire.' },
+      { n: '04', t: 'Silueta plana', d: 'El saltador es un recorte de un solo color, sin detalle interior. Gesto reconocible a cincuenta metros.' },
+      { n: '05', t: 'La ciudad como textura', d: 'El castillo entra en semitono degradado, detrás de todo. Es fondo documental, no ilustración protagonista.' },
+      { n: '06', t: 'Jerarquía sin retícula', d: 'Nada está alineado a una columna. Manda el tamaño y el contorno, y el eslogan cruza torcido por abajo.' },
+      { n: '07', t: 'Ocho colores a la vez', d: 'La paleta entera saturada, conviviendo. Lo único que la unifica es el negro y el contorno de cada pieza.' }
+    ];
+
+    const traducciones = [
+      { de: 'Acumulación', a: 'Presupuesto', c: '#F2711C', d: 'El mural pone los ocho colores juntos porque se ve una vez y de lejos. Una página se recorre entera: un color manda por sección, 60/30/10, y las piezas se cuentan.' },
+      { de: 'Color dentro de la letra', a: 'Color detrás del texto', c: '#1AA9DE', d: 'Un degradado interior no sobrevive a 16px. El color se muda al fondo y al relleno; el texto se queda en tinta o papel, que es lo que se lee.' },
+      { de: 'Contorno negro', a: 'Negro de superficie', c: '#A3C21C', d: 'Lo que en el mural rodea cada letra, en pantalla es el lienzo: tinta #101418. De ahí que la marca sea oscura por naturaleza y no por gusto.' },
+      { de: 'Letra dibujada', a: 'Dos voces', c: '#F5C400', d: 'Bungee hereda la masa del rótulo, el rotulador hereda el gesto y se queda solo en el eslogan. Leer es trabajo de la grotesca, no del graffiti.' },
+      { de: 'Sin retícula', a: 'Retícula con permiso', c: '#5FA82E', d: 'Todo se alinea. La excentricidad se concentra en tres piezas — mancha, cinta y sello — con una rotación de −2° a −8°. El resto, recto.' },
+      { de: 'Visto de lejos', a: 'Visto a 40 cm', c: '#E6007E', d: 'Un mural no tiene requisito de contraste; una pantalla sí. Cada par de colores del sistema pasa AA, y los que no pueden quedan como relleno.' }
+    ];
+
+    const noEs = ['No es Memphis noventero de formas geométricas', 'No es Y2K de neón y cromados', 'No es marca infantil de pastel y globos', 'No es bebida energética de aristas y cursivas', 'No es flat corporativo con una salpicadura de adorno'];
+
+    const escala = [
+      { n: 'Display XL', f: 'Bungee', d: '76', m: '42', lh: '.92', ls: '-.015em', uso: 'Hero. Una vez por página.' },
+      { n: 'Display L', f: 'Bungee', d: '52', m: '34', lh: '.95', ls: '-.01em', uso: 'Cifra grande, cabecera de bloque.' },
+      { n: 'Título', f: 'Bungee', d: '36', m: '26', lh: '1.05', ls: '0', uso: 'Título de sección.' },
+      { n: 'Subtítulo', f: 'Hanken 700', d: '26', m: '22', lh: '1.25', ls: '0', uso: 'Título de tarjeta, pregunta de FAQ.' },
+      { n: 'Entradilla', f: 'Hanken 500', d: '21', m: '18', lh: '1.5', ls: '0', uso: 'Párrafo de apertura. Máx. 65 caracteres.' },
+      { n: 'Cuerpo', f: 'Hanken 400', d: '17', m: '16', lh: '1.6', ls: '0', uso: 'Texto corrido. Máx. 70 caracteres por línea.' },
+      { n: 'Cuerpo S', f: 'Hanken 400', d: '15', m: '15', lh: '1.55', ls: '0', uso: 'Notas, pies, letra pequeña.' },
+      { n: 'Botón', f: 'Hanken 800', d: '16', m: '16', lh: '1', ls: '.01em', uso: 'Nunca Bungee. Nunca menos de 16.' },
+      { n: 'Etiqueta', f: 'JetBrains Mono', d: '12', m: '12', lh: '1.2', ls: '.16em', uso: 'Mayúsculas. Antetítulos, horarios, códigos.' },
+      { n: 'Eslogan', f: 'Permanent Marker', d: '30', m: '24', lh: '1.15', ls: '0', uso: 'Máx. 6 palabras, girado 2°. Uno por página.' }
+    ];
+
+    const stack = [
+      { n: '01', t: 'Cabecera fija', sup: 'Tinta', bg: '#101418', el: 'Logotipo · Menu PJP · botón Reservar', dom: cta.fill, nota: 'Radio 0 en la barra. Tiras C2 de 4px como borde inferior. Sin trama, sin manchas.' },
+      { n: '02', t: 'Hero', sup: 'Tinta', bg: '#101418', el: 'Vídeo del parque + eslogan a rotulador + CTA', dom: '#1AA9DE', nota: 'El único Display XL y el único rotulador de la página. Cierra con C1 borde que gotea.' },
+      { n: '03', t: 'Zonas del parque', sup: 'Papel', bg: '#F4F4F1', el: 'E3 tarjetas · B6 mancha de esquina · E2 etiquetas', dom: '#1AA9DE', nota: 'Una mancha por tarjeta y su color identifica la zona. Radio 16, foto interior 6.' },
+      { n: '04', t: 'Precios', sup: 'Papel', bg: '#F4F4F1', el: 'Tarjetas de tarifa en tinta · B5 sello de precio', dom: cta.fill, nota: 'Dato XL en Lima sobre tinta, o en tinta sobre cian. Máximo un B5 en toda la página.' },
+      { n: '05', t: 'Cómo funciona · normas', sup: 'Papel', bg: '#F4F4F1', el: 'Tarjetas blancas · E2 etiquetas', dom: '#0A5C93', nota: 'Cero manchas: la pintura nunca va debajo de un párrafo. Enlaces en Azul Muro.' },
+      { n: '06', t: 'Castillo · Salta la Ciudad', sup: 'Tinta', bg: '#101418', el: 'Marquesina Castillo · Tag Lorca', dom: '#F5C400', nota: 'Sección de identidad local, sin CTA. Los rayos solo aparecen aquí.' },
+      { n: '07', t: 'Cierre', sup: 'Tinta', bg: '#101418', el: 'Bloque de cierre · D4 pegatina', dom: '#101418', nota: 'Bloque de color entero con goteo arriba. Un solo botón y va en tinta.' },
+      { n: '08', t: 'Pie', sup: 'Tinta', bg: '#101418', el: 'C2 tiras continuas · D1 silueta plana', dom: '#9AA1A8', nota: 'Horarios y dirección en mono 12. Nada de color de acción aquí.' }
+    ];
+
+    const limites = [
+      { q: '1', k: 'Display XL', v: 'Solo el hero.' },
+      { q: '1', k: 'Rotulador', v: 'El eslogan. Nada más.' },
+      { q: '1', k: 'D8 Campo de siluetas', v: 'Una tarjeta por página.' },
+      { q: '1', k: 'B5 Precio y promo', v: 'Girado, y solo una vez.' },
+      { q: '1', k: 'C3 Cinta del eslogan', v: 'Cruza la página una vez.' },
+      { q: '2', k: 'D4 Pegatina', v: 'Hero y cierre.' },
+      { q: '3', k: 'CTA de relleno', v: 'Cabecera, precios, cierre.' },
+      { q: '1', k: 'Mancha grande', v: 'Por pantalla. El resto, al borde y pequeñas.' }
+    ];
+
+    return { cta: cta, ctaNombre: cta.nombre, nucleo: nucleo, neutros: neutros, roles: roles, contraste: contraste, migracion: migracion,
+      escala: escala, stack: stack, limites: limites, rasgos: rasgos, traducciones: traducciones, noEs: noEs,
+      mostrarFuente: p.mostrarFuente !== false, mostrarOklch: p.mostrarOklch !== false };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:#101418;color:#F4F4F1;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+@keyframes pjpgira{to{transform:rotate(360deg)}}
+@keyframes pjpbote{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+@keyframes pjpbarra{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+@keyframes pjpentra{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pjpsello{0%{opacity:0;transform:translateY(-34px) rotate(-16deg) scale(1.35)}60%{opacity:1}100%{opacity:1;transform:translateY(0) rotate(-6deg) scale(1)}}
+@keyframes pjpsalta{0%{transform:translateY(0) scale(1,1)}14%{transform:translateY(5px) scale(1.14,.84)}42%{transform:translateY(-30px) scale(.93,1.12)}72%{transform:translateY(0) scale(1.08,.92)}88%{transform:translateY(-4px) scale(.98,1.03)}100%{transform:translateY(0) scale(1,1)}}
+@keyframes pjplona{0%{transform:scaleY(1)}18%{transform:scaleY(.34)}52%{transform:scaleY(1.16)}100%{transform:scaleY(1)}}
+@keyframes pjppulso{0%{box-shadow:0 0 0 0 rgba(245,196,0,.5)}70%{box-shadow:0 0 0 14px rgba(245,196,0,0)}100%{box-shadow:0 0 0 0 rgba(245,196,0,0)}}
+@keyframes pjpcheck{0%{opacity:0;transform:scale(.3)}70%{opacity:1;transform:scale(1.16)}100%{opacity:1;transform:scale(1)}}
+@keyframes pjpcae{0%{opacity:0;transform:translateY(-32px) scale(.9,1.14)}52%{opacity:1;transform:translateY(0) scale(1.12,.76)}74%{transform:translateY(-7px) scale(.98,1.05)}90%{transform:translateY(0) scale(1.03,.97)}100%{opacity:1;transform:translateY(0) scale(1,1)}}
+@keyframes pjphunde{0%,42%{transform:translateY(0)}58%{transform:translateY(6px)}78%{transform:translateY(-3px)}100%{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){
+@keyframes pjpgira{from{transform:none}to{transform:none}}
+@keyframes pjpbote{from{transform:none}to{transform:none}}
+@keyframes pjpbarra{from{transform:none}to{transform:none}}
+@keyframes pjpsalta{from{transform:none}to{transform:none}}
+@keyframes pjplona{from{transform:none}to{transform:none}}
+@keyframes pjphunde{from{transform:none}to{transform:none}}
+@keyframes pjpentra{from{opacity:0}to{opacity:1}}
+@keyframes pjpcae{from{opacity:0}to{opacity:1}}
+@keyframes pjpsello{from{opacity:0;transform:rotate(-6deg)}to{opacity:1;transform:rotate(-6deg)}}
+@keyframes pjpcheck{from{opacity:0}to{opacity:1}}
+@keyframes pjppulso{from{box-shadow:none}to{box-shadow:none}}
+}
+</style>
+</helmet>
+
+<div style="background:#101418;color:#F4F4F1;padding:56px 44px 96px;min-height:100vh;">
+<div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:72px;">
+
+<!-- ═══ PORTADA ═══ -->
+<section style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:#F2711C;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Movimiento v1</span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Play Jump Park · Lorca</span>
+  </div>
+  <h1 style="font-family:'Bungee';font-size:64px;line-height:.95;letter-spacing:-.015em;margin:0;max-width:940px;">Todo rebota.<br>Casi nada se <span style="color:#1AA9DE;">mueve</span>.</h1>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:760px;color:#C9CDD1;text-wrap:pretty;">La física de la marca ya está decidida por el producto: una lona que devuelve. Por eso las entradas tienen sobreimpulso y los cierres no, y por eso el rebote se gasta en tres o cuatro piezas por pantalla — un parque donde todo bota es un parque donde no se distingue nada.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:12px;">
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">4 curvas</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">7 duraciones</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">11 microanimaciones</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">máx. 2 a la vez</span>
+  </div>
+</section>
+
+<!-- ═══ 01 PRINCIPIOS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">01 / PRINCIPIOS</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:12px;">Entra rebotando,<br>sale limpio</div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;">Lo que aparece se pasa de largo y vuelve — es la lona. Lo que desaparece se va sin gracia y en la mitad de tiempo: nadie quiere ver rebotar un modal que está cerrando.</p>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F2711C;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:12px;">El sobreimpulso<br>se paga en píxeles</div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;">El rebote nunca es de opacidad ni de color: es desplazamiento y escala. Si una animación no mueve masa, no es de esta marca — es un fundido.</p>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:24px 26px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;margin-bottom:12px;">Dos a la vez,<br>y ninguna en bucle</div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;">Máximo dos elementos animándose en pantalla. Los únicos bucles permitidos son los tres cargadores; todo lo demás ocurre una vez y se queda quieto.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 02 CURVAS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">02 / CURVAS Y DURACIONES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cuatro curvas con contrato</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:14px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:104px;background:#101418;border:1px solid #2A3138;border-radius:10px;padding:8px;">
+        <svg viewBox="-8 -46 116 158" preserveAspectRatio="none" style="width:100%;height:100%;display:block;"><path d="M0 100H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 0H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 100C34-56 64 0 100 0" fill="none" stroke="#1AA9DE" stroke-width="4.5" stroke-linecap="round"></path></svg>
+      </div>
+      <div>
+        <div style="font-family:'Bungee';font-size:16px;">Bote</div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;margin-top:6px;">cubic-bezier(.34,1.56,.64,1)<br>320 ms · sobreimpulso 8%</div>
+        <div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:8px;">Entrada simple de una tarjeta o un tile, hover de icono, y el salto del hero — que estira esta misma curva a 620 ms.</div>
+      </div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:104px;background:#101418;border:1px solid #2A3138;border-radius:10px;padding:8px;">
+        <svg viewBox="-8 -46 116 158" preserveAspectRatio="none" style="width:100%;height:100%;display:block;"><path d="M0 100H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 0H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 100C20-56 25 0 100 0" fill="none" stroke="#A3C21C" stroke-width="4.5" stroke-linecap="round"></path></svg>
+      </div>
+      <div>
+        <div style="font-family:'Bungee';font-size:16px;">Lona</div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;margin-top:6px;">cubic-bezier(.2,1.56,.25,1)<br>420 ms · sobreimpulso 16%</div>
+        <div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:8px;">El rebote grande: cascada de franjas, sello de plaza y confirmación de reserva. Máximo uno por pantalla.</div>
+      </div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:104px;background:#101418;border:1px solid #2A3138;border-radius:10px;padding:8px;">
+        <svg viewBox="-8 -46 116 158" preserveAspectRatio="none" style="width:100%;height:100%;display:block;"><path d="M0 100H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 0H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 100C40 100 20 0 100 0" fill="none" stroke="#F2711C" stroke-width="4.5" stroke-linecap="round"></path></svg>
+      </div>
+      <div>
+        <div style="font-family:'Bungee';font-size:16px;">Salida</div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;margin-top:6px;">cubic-bezier(.4,0,.2,1)<br>180 ms · sin sobreimpulso</div>
+        <div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:8px;">Cierres, borrados, cambios de foco y todo el hover. Rápida y sin opinión.</div>
+      </div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <div style="height:104px;background:#101418;border:1px solid #2A3138;border-radius:10px;padding:8px;">
+        <svg viewBox="-8 -46 116 158" preserveAspectRatio="none" style="width:100%;height:100%;display:block;"><path d="M0 100H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 0H100" stroke="#2A3138" stroke-width="2" fill="none"></path><path d="M0 100 100 0" fill="none" stroke="#F5C400" stroke-width="4.5" stroke-linecap="round"></path></svg>
+      </div>
+      <div>
+        <div style="font-family:'Bungee';font-size:16px;">Lineal</div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;margin-top:6px;">linear<br>900 ms · en bucle</div>
+        <div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:8px;">Solo cargadores. Una espera con easing parece un fallo de red intermitente.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+    <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Escala de duración</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px;">
+      <div><div style="font-family:'Bungee';font-size:19px;color:#1AA9DE;">120</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Hover de icono y enlace. Por debajo se percibe como instantáneo.</div></div>
+      <div><div style="font-family:'Bungee';font-size:19px;color:#1AA9DE;">180</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Botones, cierres, salidas. La mitad de su entrada.</div></div>
+      <div><div style="font-family:'Bungee';font-size:19px;color:#1AA9DE;">240</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Cambio de estado dentro de un componente.</div></div>
+      <div><div style="font-family:'Bungee';font-size:19px;color:#1AA9DE;">320</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Entrada simple de una tarjeta o un tile, sin cadena.</div></div>
+      <div><div style="font-family:'Bungee';font-size:19px;color:#1AA9DE;">420</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Cascada de franjas con desfase 90, sello y confirmación. Techo general.</div></div>
+      <div><div style="font-family:'Bungee';font-size:19px;color:#F2711C;">620</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Única excepción declarada: el salto del hero, que necesita despegue y aterrizaje.</div></div>
+      <div><div style="font-family:'Bungee';font-size:19px;color:#F5C400;">900</div><div style="font-size:13.5px;color:#C9CDD1;line-height:1.5;margin-top:4px;">Ciclo de cargador. El único número que se repite.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 03 HOVER ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">03 / AL PASAR EL CURSOR</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">La pegatina se aplasta</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">El hover del sistema no ilumina: acorta la sombra dura y baja el elemento la misma distancia. Es el keyline del mural comportándose como un objeto físico apoyado en la lona. Pasa el cursor por cada pieza.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(288px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Botón pegatina</div>
+      <div style="min-height:76px;display:flex;align-items:center;">
+        <button type="button" style="font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;padding:14px 24px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">Reservar ahora</button>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">hover: translate 3px · sombra 5→2<br>activo: translate 5px · sombra 0 · 180 ms salida</div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Tile de zona</div>
+      <div style="min-height:104px;display:flex;align-items:center;gap:16px;">
+        <span style="width:80px;height:80px;border-radius:20px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418">
+          <svg width="52" height="52" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="11" r="7" stroke="none"></circle><path d="M32 21v15" fill="none"></path><path d="M32 25 19 14M32 25l13-11" fill="none"></path><path d="M32 36 23 49M32 36l9 13" fill="none"></path><rect x="8" y="54" width="48" height="7" rx="3.5" stroke="none"></rect></svg>
+        </span>
+        <div style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">El glifo no se mueve dentro del tile: se mueve el tile entero. Mover las dos capas rompe el keyline.</div>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">idéntico al botón · el color no cambia nunca en hover</div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Icono de UI</div>
+      <div style="min-height:76px;display:flex;align-items:center;gap:14px;">
+        <span style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#F4F4F1;cursor:pointer;transition:transform 120ms cubic-bezier(.34,1.56,.64,1),color 120ms linear;" style-hover="transform:translateY(-3px);color:#1AA9DE">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+        </span>
+        <span style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#F4F4F1;cursor:pointer;transition:transform 120ms cubic-bezier(.34,1.56,.64,1),color 120ms linear;" style-hover="transform:translateY(-3px);color:#1AA9DE">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.6a7.4 7.4 0 0 0-7.4 7.4c0 5.4 7.4 11.4 7.4 11.4s7.4-6 7.4-11.4A7.4 7.4 0 0 0 12 2.6zm0 10.3a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8z"></path></svg>
+        </span>
+        <span style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#F4F4F1;cursor:pointer;transition:transform 120ms cubic-bezier(.34,1.56,.64,1),color 120ms linear;" style-hover="transform:translateY(-3px);color:#1AA9DE">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.4V12l3.2 2.4"></path></svg>
+        </span>
+        <div style="font-size:14.5px;color:#C9CDD1;line-height:1.55;flex:1;">3px de salto con curva de bote. Sin fondo, sin escala.</div>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">120 ms bote · color a cian solo si es enlace</div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Tarjeta de zona</div>
+      <div style="min-height:104px;display:flex;align-items:center;">
+        <div style="flex:1;background:#101418;border:1px solid #2A3138;border-radius:16px;padding:18px 20px;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),border-color 180ms linear;" style-hover="transform:translateY(-4px);border-color:#3B434B">
+          <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Foam pit</div>
+          <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:5px;">Caída libre y bloques de espuma</div>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">4px arriba · el borde aclara un paso · nunca sombra difusa</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 04 UNA VEZ ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">04 / OCURRE UNA VEZ</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Las cuatro que sí cuentan algo</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Cada una responde a un momento real de la reserva. Pulsa para verlas — en producción se disparan solas, una única vez, y no se pueden repetir sin volver a hacer la acción. En la cascada el color no decora, informa: <span style="color:#1AA9DE;font-weight:700;">cian</span> con plazas, <span style="color:#F5C400;font-weight:700;">amarillo</span> con las últimas, <span style="color:#FF8A6B;font-weight:700;">rojo</span> tachado si está completa — y la franja completa cae igual que las demás, porque negarle el rebote sería castigarla dos veces.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Cargando → confirmado</div>
+        <button type="button" onClick="{{ juegaConfirma }}" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:#2A3138;color:#F4F4F1;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:#3B434B">Reproducir</button>
+      </div>
+      <div style="min-height:118px;display:flex;align-items:center;justify-content:center;">
+        <sc-if value="{{ confirmaCargando }}" hint-placeholder-val="{{ true }}">
+          <span style="display:flex;color:#1AA9DE;animation:pjpgira 900ms linear infinite;">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 3.8a8.2 8.2 0 1 1-8.2 8.2"></path></svg>
+          </span>
+        </sc-if>
+        <sc-if value="{{ confirmaHecho }}" hint-placeholder-val="{{ false }}">
+          <span style="width:72px;height:72px;border-radius:999px;background:#5FA82E;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;animation:pjpcheck 420ms cubic-bezier(.2,1.56,.25,1) both;">
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg>
+          </span>
+        </sc-if>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">el aro desaparece sin transición · la pegatina entra con lona 420 ms<br>nunca se solapan: primero termina la espera</div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Sello de reserva</div>
+        <button type="button" onClick="{{ juegaSello }}" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:#2A3138;color:#F4F4F1;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:#3B434B">Reproducir</button>
+      </div>
+      <div style="min-height:118px;display:flex;align-items:center;justify-content:center;">
+        <sc-if value="{{ selloVisible }}" hint-placeholder-val="{{ true }}">
+          <span style="font-family:'Bungee';font-size:22px;background:#F5C400;color:#101418;border:2px solid #101418;border-radius:10px;padding:12px 20px;box-shadow:5px 5px 0 #101418;transform:rotate(-6deg);animation:pjpsello 420ms cubic-bezier(.2,1.56,.25,1) both;">PLAZA 12</span>
+        </sc-if>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">cae de −34px con −16° y aterriza en −6° · escala 1.35 → 1<br>es la única rotación animada del sistema</div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Cascada de franjas</div>
+        <button type="button" onClick="{{ juegaCascada }}" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:#2A3138;color:#F4F4F1;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:#3B434B">Reproducir</button>
+      </div>
+      <div style="min-height:118px;display:flex;flex-direction:column;justify-content:flex-end;gap:0;">
+        <sc-if value="{{ cascadaVisible }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end;">
+            <span style="font-family:'JetBrains Mono';font-size:12.5px;text-align:center;background:#112934;color:#1AA9DE;border:1px solid #1A4657;border-radius:8px;padding:11px 6px;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) both;">17:00</span>
+            <span style="font-family:'JetBrains Mono';font-size:12.5px;text-align:center;background:#112934;color:#1AA9DE;border:1px solid #1A4657;border-radius:8px;padding:11px 6px;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 90ms both;">18:00</span>
+            <span style="font-family:'JetBrains Mono';font-size:12.5px;text-align:center;background:#2A2413;color:#F5C400;border:1px solid #4A4020;border-radius:8px;padding:11px 6px;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 180ms both;">19:00<br>· 6 ·</span>
+            <span style="font-family:'JetBrains Mono';font-size:12.5px;text-align:center;background:#112934;color:#1AA9DE;border:1px solid #1A4657;border-radius:8px;padding:11px 6px;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 270ms both;">20:00</span>
+            <span style="font-family:'JetBrains Mono';font-size:12.5px;text-align:center;background:#2C1A17;color:#FF8A6B;border:1px solid #4A2620;border-radius:8px;padding:11px 6px;text-decoration:line-through;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 360ms both;">21:00</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:12px;">
+            <span style="height:7px;border-radius:999px 0 0 999px;background:#1AA9DE;animation:pjphunde 420ms cubic-bezier(.2,1.56,.25,1) both;"></span>
+            <span style="height:7px;background:#1AA9DE;animation:pjphunde 420ms cubic-bezier(.2,1.56,.25,1) 90ms both;"></span>
+            <span style="height:7px;background:#1AA9DE;animation:pjphunde 420ms cubic-bezier(.2,1.56,.25,1) 180ms both;"></span>
+            <span style="height:7px;background:#1AA9DE;animation:pjphunde 420ms cubic-bezier(.2,1.56,.25,1) 270ms both;"></span>
+            <span style="height:7px;border-radius:0 999px 999px 0;background:#1AA9DE;animation:pjphunde 420ms cubic-bezier(.2,1.56,.25,1) 360ms both;"></span>
+          </div>
+        </sc-if>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">cae de −32px · aplasta a 1.12/.76 al aterrizar · la lona se hunde 6px bajo cada franja<br>desfase 90 ms: el hundimiento viaja de izquierda a derecha, no todas a la vez</div>
+
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Salto en la lona</div>
+        <button type="button" onClick="{{ juegaSalto }}" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:#2A3138;color:#F4F4F1;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:#3B434B">Reproducir</button>
+      </div>
+      <div style="min-height:118px;display:flex;align-items:flex-end;justify-content:center;gap:0;flex-direction:column;">
+        <sc-if value="{{ saltoVisible }}" hint-placeholder-val="{{ true }}">
+          <div style="width:100%;display:flex;flex-direction:column;align-items:center;">
+            <span style="display:flex;color:#F2711C;transform-origin:50% 100%;animation:pjpsalta 620ms cubic-bezier(.34,1.56,.64,1) both;">
+              <svg width="52" height="52" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="11" r="7" stroke="none"></circle><path d="M32 21v15" fill="none"></path><path d="M32 25 19 14M32 25l13-11" fill="none"></path><path d="M32 36 23 49M32 36l9 13" fill="none"></path></svg>
+            </span>
+            <span style="width:112px;height:8px;border-radius:999px;background:#F2711C;transform-origin:50% 0;animation:pjplona 620ms cubic-bezier(.34,1.56,.64,1) both;"></span>
+          </div>
+        </sc-if>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">620 ms bote · squash 1.14/.84 al despegar · stretch .93/1.12 en el aire · lona a .34<br>única excepción al techo de 420 · solo en el hero y solo al entrar en pantalla</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05 BUCLES ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F5C400;">05 / LOS ÚNICOS BUCLES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:20px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(226px,1fr));gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="height:56px;display:flex;align-items:center;">
+          <sc-if value="{{ bucles }}" hint-placeholder-val="{{ true }}">
+            <span style="display:flex;color:#1AA9DE;animation:pjpgira 900ms linear infinite;"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 3.8a8.2 8.2 0 1 1-8.2 8.2"></path></svg></span>
+          </sc-if>
+          <sc-if value="{{ buclesOff }}" hint-placeholder-val="{{ false }}">
+            <span style="display:flex;color:#1AA9DE;"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><circle cx="12" cy="12" r="8.2"></circle></svg></span>
+          </sc-if>
+        </div>
+        <div><div style="font-size:14.5px;font-weight:700;">Aro abierto · 900 lineal</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Espera de página o de botón. Con movimiento reducido, el aro se cierra y se queda quieto.</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="height:56px;display:flex;align-items:center;gap:9px;">
+          <sc-if value="{{ bucles }}" hint-placeholder-val="{{ true }}">
+            <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;animation:pjpbote 900ms ease-in-out infinite;"></span>
+            <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;animation:pjpbote 900ms ease-in-out .12s infinite;"></span>
+            <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;animation:pjpbote 900ms ease-in-out .24s infinite;"></span>
+          </sc-if>
+          <sc-if value="{{ buclesOff }}" hint-placeholder-val="{{ false }}">
+            <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;opacity:.4;"></span>
+            <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;opacity:.4;"></span>
+            <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;opacity:.4;"></span>
+          </sc-if>
+        </div>
+        <div><div style="font-size:14.5px;font-weight:700;">Tres botes · 900 desfase 120</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Espera corta dentro de una lista. El único rebote en bucle que existe.</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="height:56px;display:flex;align-items:center;">
+          <span style="position:relative;display:block;width:100%;height:8px;border-radius:999px;background:#2A3138;overflow:hidden;">
+            <sc-if value="{{ bucles }}" hint-placeholder-val="{{ true }}">
+              <span style="position:absolute;inset:0;width:38%;border-radius:999px;background:#A3C21C;animation:pjpbarra 1.4s ease-in-out infinite;"></span>
+            </sc-if>
+            <sc-if value="{{ buclesOff }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;inset:0;width:100%;border-radius:999px;background:#A3C21C;opacity:.5;"></span>
+            </sc-if>
+          </span>
+        </div>
+        <div><div style="font-size:14.5px;font-weight:700;">Barra indeterminada · 1400</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Proceso de pago o emisión. Si hay porcentaje real, se rellena y deja de ir y venir.</div></div>
+      </div>
+    </div>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;border-top:1px solid #2A3138;padding-top:14px;max-width:880px;">Fuera de estos tres, cualquier bucle es ruido: banners que respiran, flechas que se balancean, iconos que laten. En un parque con música, pantallas y niños, la interfaz es lo único que puede estarse quieto.</p>
+  </div>
+</section>
+
+<!-- ═══ 06 PROHIBIDO ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#FF8A6B;">06 / PROHIBIDO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:14px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;">✕ REBOTE EN LA SALIDA</div>
+      <div style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Un modal que rebota al cerrarse parece que ha fallado. Salida siempre 180 ms sin sobreimpulso.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;">✕ TEXTO EN MOVIMIENTO</div>
+      <div style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Párrafos, precios y normas no se animan nunca. Se anima el bloque que los contiene, una vez, y quietos.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;">✕ ANIMAR COLOR DE MARCA</div>
+      <div style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">El cian no transiciona a naranja. El color identifica; si cambia, deja de identificar. Solo opacidad y masa.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;">✕ CASCADA EN CADA SCROLL</div>
+      <div style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Una sección se anima la primera vez que entra en pantalla. Al volver a subir, ya está montada.</div>
+    </div>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:20px;line-height:1.15;">Movimiento reducido: no es apagarlo todo</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:880px;text-wrap:pretty;">Con <span style="font-family:'JetBrains Mono';font-size:13.5px;">prefers-reduced-motion</span> desaparecen los desplazamientos y las escalas, pero se mantienen los cambios de opacidad de 120 ms — quitar también el fundido deja la interfaz saltando de estado sin avisar. Los cargadores pasan a forma estática y el sello aparece sin caer.</p>
+  </div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;bucles&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Movimiento&quot;,&quot;label&quot;:&quot;Cargadores en bucle&quot;}}">
+class Component extends DCLogic {
+  state = { confirma: 'hecho', sello: 1, cascada: 1, salto: 1 };
+
+  componentWillUnmount() { if (this._t) clearTimeout(this._t); }
+
+  renderVals() {
+    const p = this.props;
+    const rejugar = (k) => () => {
+      this.setState((s) => { const n = {}; n[k] = false; return n; });
+      setTimeout(() => this.setState((s) => { const n = {}; n[k] = (s[k] || 0) + 1; return n; }), 40);
+    };
+    return {
+      confirmaCargando: this.state.confirma === 'cargando',
+      confirmaHecho: this.state.confirma === 'hecho',
+      juegaConfirma: () => {
+        if (this._t) clearTimeout(this._t);
+        this.setState({ confirma: 'cargando' });
+        this._t = setTimeout(() => this.setState({ confirma: 'hecho' }), 1300);
+      },
+      selloVisible: !!this.state.sello,
+      cascadaVisible: !!this.state.cascada,
+      saltoVisible: !!this.state.salto,
+      juegaSello: rejugar('sello'),
+      juegaCascada: rejugar('cascada'),
+      juegaSalto: rejugar('salto'),
+      bucles: p.bucles !== false,
+      buclesOff: p.bucles === false
+    };
+  }
+}
+</script>
+</body>
+</html>

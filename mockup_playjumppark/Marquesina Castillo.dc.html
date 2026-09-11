@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500&family=Permanent+Marker&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#DFE7EC; font-family:'Manrope',system-ui,sans-serif; color:#101113; -webkit-font-smoothing:antialiased; }
+  a { color:#0E8FCB; text-decoration:none; }
+  a:hover { color:#0B7AAF; }
+</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:26px;padding:44px 40px 80px;">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:30px;flex-wrap:wrap;max-width:1180px;">
+    <div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5A6670;margin-bottom:12px;">Banco de pruebas · sustituye la marquesina de rótulos</div>
+      <h1 style="font-family:'Anton';font-weight:400;font-size:54px;line-height:.98;letter-spacing:-.005em;text-transform:uppercase;margin:0;">Castillo de Lorca<br><span style="color:#0E8FCB;">y el saltarín</span></h1>
+    </div>
+    <p style="max-width:420px;margin:0;font-size:15.5px;line-height:1.6;color:#454F59;">Banda clara con la silueta de la fortaleza en bucle. Hay camas elásticas repartidas por la muralla: cuando cae en una, sale disparado hacia las torres altas.</p>
+  </div>
+
+  <div id="2a" style="display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:#101113;color:#ECF3F7;border-radius:999px;padding:5px 11px;">2a</span>
+      <span style="font-weight:700;font-size:16px;">Banda clara · con camas elásticas</span>
+      <span style="font-size:14px;color:#5A6670;">Franja más baja: 190 px de alto.</span>
+    </div>
+    <div style="border-radius:22px;overflow:hidden;background:#ECF3F7;border:1px solid #C9D8E1;">
+      <canvas ref="{{ refA }}" style="display:block;width:100%;height:190px;"></canvas>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:14px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#5A6670;">
+    <span>Alto de la banda, velocidad, salto y rebote se ajustan en Tweaks</span>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;altoBanda&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:190,&quot;min&quot;:120,&quot;max&quot;:300,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Banda&quot;},&quot;velocidad&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:110,&quot;min&quot;:40,&quot;max&quot;:220,&quot;step&quot;:5,&quot;unit&quot;:&quot;px/s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;},&quot;alturaSalto&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:34,&quot;min&quot;:14,&quot;max&quot;:70,&quot;step&quot;:2,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;},&quot;rebote&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:1.2,&quot;max&quot;:3.2,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Movimiento&quot;},&quot;tamMuneco&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2.5,&quot;min&quot;:1.5,&quot;max&quot;:5,&quot;step&quot;:0.5,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Muñeco&quot;}}">
+class Component extends DCLogic {
+  refA = React.createRef();
+
+  MUNDO = [
+    { w: 176, h: 52, t: 'muro' },
+    { w: 118, h: 66, t: 'cama' },
+    { w: 124, h: 196, t: 'alfonsina' },
+    { w: 120, h: 104, t: 'torre' },
+    { w: 158, h: 52, t: 'muro' },
+    { w: 118, h: 62, t: 'cama' },
+    { w: 108, h: 142, t: 'espolon' },
+    { w: 150, h: 56, t: 'muro' },
+    { w: 96, h: 86, t: 'torre' },
+    { w: 180, h: 50, t: 'muro' }
+  ];
+
+  POSE_SALTO = [
+    '....CCCC....',
+    '...CCCCCC...',
+    '...CCCCCC...',
+    '...SSSSSS...',
+    '...SSSSSS...',
+    '....SSSS....',
+    'S..BBBBBB..S',
+    'S.BBBBBBBB.S',
+    '..BBBBBBBB..',
+    '..BBBBBBBB..',
+    '...PPPPPP...',
+    '..PPP..PPP..',
+    '..PP....PP..',
+    '.PPP....PPP.',
+    '.ZZZ....ZZZ.',
+    '.ZZZ....ZZZ.'
+  ];
+
+  POSE_CAIDA = [
+    '............',
+    '....CCCC....',
+    '...CCCCCC...',
+    '...CCCCCC...',
+    '...SSSSSS...',
+    '...SSSSSS...',
+    '..SBBBBBBS..',
+    '.SSBBBBBBSS.',
+    '..BBBBBBBB..',
+    '..BBBBBBBB..',
+    '..PPPPPPPP..',
+    '..PPP..PPP..',
+    '.PPP....PPP.',
+    '.ZZZZ..ZZZZ.',
+    '.ZZZZ..ZZZZ.',
+    '............'
+  ];
+
+  PALETA = { C: '#8DC63F', S: '#F7CFA6', B: '#FFC20E', P: '#0E8FCB', Z: '#101113' };
+
+  componentDidMount() {
+    this.t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    this.bucle();
+  }
+
+  componentWillUnmount() { if (this.raf) cancelAnimationFrame(this.raf); }
+
+  bucle = () => {
+    const ahora = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const alto = this.props.altoBanda ?? 190;
+    this.pinta(this.refA.current, alto, (ahora - this.t0) / 1000, {
+      vel: this.props.velocidad ?? 110,
+      salto: this.props.alturaSalto ?? 34,
+      rebote: this.props.rebote ?? 2,
+      esc: this.props.tamMuneco ?? 2.5,
+      fondo: '#ECF3F7', lejos: '#D9E4EB', silueta: '#101113', filo: '#2B3136', hueco: '#ECF3F7',
+      lona: '#0E8FCB', muelle: '#8DC63F'
+    });
+    this.raf = requestAnimationFrame(this.bucle);
+  };
+
+  prepara(cv, alto) {
+    if (!cv || !cv.clientWidth) return null;
+    if (cv.style.height !== alto + 'px') cv.style.height = alto + 'px';
+    const dpr = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+    const bw = Math.round(cv.clientWidth * dpr);
+    const bh = Math.round(alto * dpr);
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, w: cv.clientWidth, h: alto };
+  }
+
+  total() {
+    if (!this._tot) this._tot = this.MUNDO.reduce((a, s) => a + s.w, 0);
+    return this._tot;
+  }
+
+  almena(ctx, x, y, ancho, paso, alto, grueso) {
+    let cx = x + 6;
+    while (cx + grueso <= x + ancho - 4) {
+      ctx.fillRect(Math.round(cx), Math.round(y - alto), grueso, alto + 2);
+      cx += paso;
+    }
+  }
+
+  cama(ctx, x, piso, s, cfg, k, hundido) {
+    const an = s.w * k;
+    const hCama = 30 * k;
+    const yMuro = piso - (s.h * k - hCama);
+    ctx.fillStyle = cfg.silueta;
+    ctx.fillRect(Math.round(x), Math.round(yMuro), Math.ceil(an) + 1, Math.ceil(piso - yMuro));
+    this.almena(ctx, x, yMuro, an, 24 * k, 9 * k, 11 * k);
+
+    const margen = 16 * k;
+    const izq = x + margen;
+    const der = x + an - margen;
+    const yLona = piso - s.h * k + hundido;
+    const grosor = 6 * k;
+    const pata = Math.max(3, 5 * k);
+
+    ctx.fillStyle = cfg.silueta;
+    ctx.fillRect(Math.round(izq - 1 * k), Math.round(yLona + grosor), Math.round(pata), Math.round(yMuro - yLona - grosor + 2));
+    ctx.fillRect(Math.round(der - pata + 1 * k), Math.round(yLona + grosor), Math.round(pata), Math.round(yMuro - yLona - grosor + 2));
+    ctx.fillRect(Math.round(izq + (der - izq) * 0.3), Math.round(yLona + grosor), Math.round(pata * 0.7), Math.round(yMuro - yLona - grosor + 2));
+    ctx.fillRect(Math.round(izq + (der - izq) * 0.66), Math.round(yLona + grosor), Math.round(pata * 0.7), Math.round(yMuro - yLona - grosor + 2));
+
+    const sag = hundido * 1.5;
+    ctx.fillStyle = cfg.lona;
+    ctx.beginPath();
+    ctx.moveTo(izq, yLona);
+    ctx.quadraticCurveTo((izq + der) / 2, yLona + sag, der, yLona);
+    ctx.lineTo(der, yLona + grosor);
+    ctx.quadraticCurveTo((izq + der) / 2, yLona + grosor + sag, izq, yLona + grosor);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = cfg.muelle;
+    ctx.fillRect(Math.round(izq - 5 * k), Math.round(yLona - 1), Math.round(9 * k), Math.round(grosor + 2));
+    ctx.fillRect(Math.round(der - 4 * k), Math.round(yLona - 1), Math.round(9 * k), Math.round(grosor + 2));
+  }
+
+  segmento(ctx, x, piso, s, cfg, k, hundido) {
+    if (s.t === 'cama') { this.cama(ctx, x, piso, s, cfg, k, hundido); return; }
+    const an = s.w * k;
+    const y = piso - s.h * k;
+    ctx.fillStyle = cfg.silueta;
+    ctx.fillRect(Math.round(x), Math.round(y), Math.ceil(an) + 1, Math.ceil(piso - y));
+    if (s.t === 'alfonsina') {
+      this.almena(ctx, x, y, an, 30 * k, 15 * k, 16 * k);
+      ctx.fillStyle = cfg.hueco;
+      ctx.fillRect(Math.round(x + an / 2 - 16 * k), Math.round(y + 44 * k), 9 * k, 22 * k);
+      ctx.fillRect(Math.round(x + an / 2 + 7 * k), Math.round(y + 44 * k), 9 * k, 22 * k);
+      ctx.fillRect(Math.round(x + an / 2 - 5 * k), Math.round(y + 96 * k), 10 * k, 26 * k);
+    } else if (s.t === 'espolon') {
+      this.almena(ctx, x, y, an, 26 * k, 13 * k, 14 * k);
+      ctx.fillStyle = cfg.hueco;
+      ctx.fillRect(Math.round(x + an / 2 - 5 * k), Math.round(y + 40 * k), 9 * k, 22 * k);
+    } else if (s.t === 'torre') {
+      this.almena(ctx, x, y, an, 24 * k, 12 * k, 13 * k);
+      ctx.fillStyle = cfg.hueco;
+      ctx.fillRect(Math.round(x + an / 2 - 4 * k), Math.round(y + 34 * k), 8 * k, 20 * k);
+    } else {
+      this.almena(ctx, x, y, an, 24 * k, 11 * k, 13 * k);
+    }
+  }
+
+  muneco(ctx, cx, pie, pose, esc, squash) {
+    const filas = pose;
+    const cols = filas[0].length;
+    const an = cols * esc;
+    const al = filas.length * esc;
+    ctx.save();
+    ctx.translate(cx, pie);
+    ctx.scale(1 / squash, squash);
+    const x0 = Math.round(-an / 2);
+    const y0 = Math.round(-al);
+    for (let r = 0; r < filas.length; r++) {
+      for (let c = 0; c < cols; c++) {
+        const ch = filas[r][c];
+        if (ch === '.') continue;
+        ctx.fillStyle = this.PALETA[ch];
+        ctx.fillRect(x0 + c * esc, y0 + r * esc, esc, esc);
+      }
+    }
+    ctx.restore();
+  }
+
+  pinta(cv, alto, t, cfg) {
+    const base = this.prepara(cv, alto);
+    if (!base) return;
+    const ctx = base.ctx;
+    const w = base.w;
+    const h = base.h;
+    const piso = h - 8;
+    const n = this.MUNDO.length;
+    const k = h / 265;
+    const TOT = this.total() * k;
+    const X0 = Math.round(w * 0.32);
+
+    let m = ((t * cfg.vel + X0) % TOT + TOT) % TOT;
+    let idx = 0;
+    let acc = 0;
+    while (acc + this.MUNDO[idx].w * k <= m && idx < n - 1) { acc += this.MUNDO[idx].w * k; idx++; }
+    const seg = this.MUNDO[idx];
+    const sig = this.MUNDO[(idx + 1) % n];
+    const p = Math.min(1, Math.max(0, (m - acc) / (seg.w * k)));
+
+    const impulso = seg.t === 'cama' ? cfg.rebote : 1;
+    const subida = Math.max(0, (sig.h - seg.h) / 70);
+    const figura = 16 * cfg.esc + 6;
+    const arcoPico = cfg.salto * impulso * (1 + 0.3 * subida);
+    const supMedia = ((seg.h + sig.h) / 2) * k;
+    const margen = Math.max(6, piso - supMedia - figura);
+    const arco = Math.min(arcoPico, margen) * Math.sin(Math.PI * p);
+    const superficie = (seg.h + (sig.h - seg.h) * p) * k;
+    const hundido = seg.t === 'cama' && p < 0.16 ? (1 - p / 0.16) * 10 * k : 0;
+    const pie = Math.max(figura, piso - superficie - arco + hundido);
+    const squash = p < 0.08 ? 1 - 0.16 * (1 - p / 0.08) : 1;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = cfg.fondo;
+    ctx.fillRect(0, 0, w, h);
+
+    const lejos = -((t * cfg.vel * 0.32) % 300);
+    ctx.fillStyle = cfg.lejos;
+    for (let j = -1; j * 300 + lejos < w + 300; j++) {
+      ctx.beginPath();
+      ctx.ellipse(j * 300 + lejos + 150, piso + 30, 220, 82, 0, Math.PI, 0);
+      ctx.fill();
+    }
+
+    const off = -((t * cfg.vel) % TOT);
+    let x = off - TOT;
+    let i = 0;
+    let guard = 0;
+    while (x < w + 8 && guard < 240) {
+      const s = this.MUNDO[i % n];
+      const an = s.w * k;
+      if (x + an > -8) {
+        const activo = s.t === 'cama' && X0 >= x && X0 <= x + an;
+        this.segmento(ctx, x, piso, s, cfg, k, activo ? hundido : 0);
+      }
+      x += an;
+      i++;
+      guard++;
+    }
+
+    ctx.fillStyle = cfg.silueta;
+    ctx.fillRect(0, piso, w, h - piso);
+
+    if (p < 0.13 && seg.t !== 'cama') {
+      const d = p / 0.13;
+      ctx.globalAlpha = 1 - d;
+      ctx.fillStyle = cfg.filo;
+      ctx.fillRect(X0 - 16 - d * 10, piso - seg.h * k - 6, 6, 4);
+      ctx.fillRect(X0 + 10 + d * 10, piso - seg.h * k - 8, 5, 4);
+      ctx.globalAlpha = 1;
+    }
+
+    this.muneco(ctx, X0, pie, (p < 0.1 || p > 0.93) ? this.POSE_CAIDA : this.POSE_SALTO, cfg.esc, squash);
+  }
+
+  renderVals() { return { refA: this.refA }; }
+}
+
+</script>
+</body>
+</html>

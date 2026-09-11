@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#6C747C}
+/* El anillo lo pone UNA regla de página, no cada control (Componentes · guardas).
+   Papel: Azul Muro, 6,43 sobre #F4F4F1. */
+.dv-card a[href]:focus{outline:none}
+.dv-card button:focus-visible,.dv-card a[href]:not([data-superficie="tinta"]):focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-card a[data-superficie="tinta"]:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+/* Ese día llegó: 8 tarjetas-enlace se aplastan al pulsarlas (transform + box-shadow).
+   Gana la cascada a las reglas generadas: (0,3,0) frente a (0,2,0), y con !important.
+   La sombra sí cambia — informa de que el control responde sin mover nada. */
+@media (prefers-reduced-motion:reduce){
+.dv-card [data-mueve]{transition-property:box-shadow,border-color,color,background-color !important}
+.dv-card [data-mueve]:hover,.dv-card [data-mueve]:active{transform:none !important}
+}
+.dv-meta{font:400 10.5px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#6C747C;max-width:390px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">La síntesis: la regla una vez, el territorio en la tarjeta</span></div>
+  <p class="dv-intro">La regla se explica <span style="color:#F4F4F1;">una sola vez</span> y tumbada, así que se lee de izquierda a derecha en el mismo orden en que vienen las tarjetas — sin el conflicto de orden que tenía el eje vertical. Y el territorio no lo marca un segundo color de marca (ninguno está libre: naranja es acción, amarillo es el sello, lima son las cifras), sino <span style="color:#F4F4F1;">la superficie</span>: Kids en blanco, Jump en tinta. Tinta 800 es «tarjetas y superficies» en tokens, así que el territorio no gasta ni un punto del 60/30/10, y el cian queda de identidad en las dos.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><span>Regla maestra arriba, dos territorios abajo. Papel para los peques, tinta para la adrenalina: se distinguen antes de leer una palabra.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Manda la edad. Si no cuadra, manda la altura.</p>
+
+          <div style="border:2px solid #101418;border-radius:16px;padding:16px;margin-bottom:24px;">
+            <div style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">altura</div>
+            <div style="margin-top:12px;position:relative;height:20px;border:2px solid #101418;border-radius:10px;overflow:hidden;">
+              <div style="position:absolute;left:0;top:0;bottom:0;width:68.4%;background:#1AA9DE;opacity:.22;"></div>
+              <div style="position:absolute;left:68.4%;top:0;bottom:0;border-left:2px solid #101418;"></div>
+            </div>
+            <div style="position:relative;height:16px;margin-top:4px;">
+              <span style="position:absolute;left:0;top:0;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</span>
+              <span style="position:absolute;left:68.4%;top:0;transform:translateX(-50%);white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30</span>
+              <span style="position:absolute;right:0;top:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">1,90 m</span>
+            </div>
+            <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <span style="display:flex;align-items:center;gap:8px;">
+                <span style="width:12px;height:12px;border-radius:999px;background:#1AA9DE;border:2px solid #101418;"></span>
+                <span style="font-weight:800;font-size:16px;color:#101418;">Kids</span>
+              </span>
+              <span style="display:flex;align-items:center;gap:8px;">
+                <span style="font-weight:800;font-size:16px;color:#101418;">Jump</span>
+                <span style="width:12px;height:12px;border-radius:999px;background:#101418;"></span>
+              </span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <a href="#zona-kids" data-mueve data-superficie="papel" onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-kids-5a" shape="rect" fit="cover" placeholder="Foto de la zona Kids" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;left:0;top:0;background:#1AA9DE;border-right:2px solid #101418;border-bottom:2px solid #101418;border-bottom-right-radius:10px;padding:8px 12px;font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">Kids</div>
+                <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:center;">
+                  <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                  <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">10 €</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">12 € finde</div>
+                </div>
+              </div>
+              <div style="padding:20px 16px 16px;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años, hasta 1,30 m</div>
+                  <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+                </div>
+                <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+                  <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+                </div>
+              </div>
+            </a>
+
+            <a href="#zona-jump" data-mueve data-superficie="tinta" onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-jump-5a" shape="rect" fit="cover" placeholder="Foto de la zona Jump" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;left:0;top:0;background:#101418;border-right:2px solid #1AA9DE;border-bottom:2px solid #1AA9DE;border-bottom-right-radius:10px;padding:8px 12px;font-family:'Bungee';font-size:20px;line-height:1;color:#1AA9DE;">Jump</div>
+                <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:center;">
+                  <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                  <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">12 €</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                </div>
+              </div>
+              <div style="padding:20px 16px 16px;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:16px;line-height:1.45;color:#F4F4F1;">Desde 7 años y 1,30 m, sin límite</div>
+                  <div style="font-size:16px;line-height:1.45;color:#C9CDD1;">Toboganes grandes, escalada y camas</div>
+                </div>
+                <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver la zona Jump</span>
+                  <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+                </div>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">1,20 pantallas medidas, la más corta con foto · las dos tarjetas miden 356×339 exactos, así que ninguna zona parece la principal · enlace en cian sobre tinta (6,14) y en Azul Muro sobre papel (7,08) · anillo de foco por superficie: amarillo en la oscura (10,09), Azul Muro en la clara</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «dale la vuelta: Jump en blanco y Kids en tinta» · «quita el sello de precio de las dos» · «pon el nombre dentro de la tarjeta y no sobre la foto»</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Cómo se presenta: el eje con nombre, o la regla dicha una vez</span></div>
+  <p class="dv-intro">Las dos llevan <span style="color:#F4F4F1;">la cabecera de sección de vuelta</span> — en el turno 3 la quité y eso era parte del problema: sin «Zonas / la línea de 1,30 m decide cuál» encima, cada tarjeta tenía que explicarse sola. Y las dos nombran el eje: <span style="color:#F4F4F1;">«altura»</span>, que es el dato que faltaba. La diferencia es dónde vive la explicación: dentro de cada tarjeta (<a class="dv-oid" href="#4a">4a</a>) o una sola vez arriba (<a class="dv-oid" href="#4b">4b</a>).</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><span>El eje con nombre. Cada tarjeta se explica sola, y la foto de cada zona se arrastra a su hueco: contesta «¿es divertido?», que es otra pregunta y no compite con la regla.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Manda la edad. Si no cuadra, manda la altura.</p>
+
+          <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <a href="#zona-kids" data-mueve onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-kids-4a" shape="rect" fit="cover" placeholder="Foto de la zona Kids" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:center;">
+                  <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                  <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">8 €</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">10 € finde</div>
+                </div>
+              </div>
+              <div style="position:relative;">
+                <div style="position:absolute;left:16px;top:20px;bottom:0;width:56px;border-left:2px solid #101418;z-index:1;">
+                  <div style="position:absolute;left:4px;top:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.3;">
+                    <div style="font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">altura</div>
+                    <div style="color:#626A72;">1,90 m</div>
+                  </div>
+                  <div style="position:absolute;left:4px;bottom:16px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</div>
+                </div>
+                <div style="padding:20px 16px 0 76px;">
+                  <div style="height:40px;display:flex;align-items:flex-end;justify-content:flex-end;">
+                    <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">encima, Jump</span>
+                  </div>
+                </div>
+                <div style="position:relative;border-top:2px dashed #101418;margin-top:8px;z-index:1;">
+                  <div style="position:absolute;left:16px;top:-12px;background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:4px 8px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30 m</div>
+                </div>
+                <div style="position:relative;padding:16px 16px 16px 76px;">
+                  <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:#1AA9DE;opacity:.22;"></div>
+                  <div style="position:relative;">
+                    <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Kids</div>
+                    <div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;">
+                      <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+                      <div style="font-size:16px;line-height:1.45;color:#101418;">Hasta 1,30 m de altura</div>
+                      <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:12px 16px 16px 76px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+                <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+              </div>
+            </a>
+
+            <a href="#zona-jump" data-mueve onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-jump-4a" shape="rect" fit="cover" placeholder="Foto de la zona Jump" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:center;">
+                  <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                  <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">12 €</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                </div>
+              </div>
+              <div style="position:relative;">
+                <div style="position:absolute;left:16px;top:20px;bottom:0;width:56px;border-left:2px solid #101418;z-index:1;">
+                  <div style="position:absolute;left:4px;top:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.3;">
+                    <div style="font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">altura</div>
+                    <div style="color:#626A72;">1,90 m</div>
+                  </div>
+                  <div style="position:absolute;left:4px;bottom:16px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</div>
+                </div>
+                <div style="position:relative;padding:20px 16px 16px 76px;">
+                  <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:#A3C21C;opacity:.24;"></div>
+                  <div style="position:relative;">
+                    <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Jump</div>
+                    <div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;">
+                      <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 7 años, sin límite</div>
+                      <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 1,30 m de altura</div>
+                      <div style="font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas</div>
+                    </div>
+                  </div>
+                </div>
+                <div style="position:relative;border-top:2px dashed #101418;z-index:1;">
+                  <div style="position:absolute;left:16px;top:-12px;background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:4px 8px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30 m</div>
+                </div>
+                <div style="padding:16px 16px 0 76px;">
+                  <div style="height:40px;display:flex;align-items:flex-start;justify-content:flex-end;">
+                    <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">debajo, Kids</span>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:12px 16px 16px 76px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Jump</span>
+                <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">aprobado · precios reales del catálogo desde el 4 sep (Kids 8/10 · Jump 12/14; el de Jump ya coincidía) · un solo hueco de foto por zona, a 16:9 · la escala se repite dos veces, una por tarjeta, y la regla es una sola<br>escritorio, pendiente y decidido: a partir de 900 px las dos tarjetas pasan a dos columnas de la misma altura y la escala se saca fuera, vertical y <span style="color:#C9CDD1;">compartida</span> — solo ahí se pueden ver las dos a la vez y alinear el 1,30 con una frontera real</div>
+    </div>
+
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a><span>La regla dicha una vez. Un diagrama arriba explica la línea, y las tarjetas se quedan limpias: foto, nombre, dato y precio.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Manda la edad. Si no cuadra, manda la altura.</p>
+
+          <div style="border:2px solid #101418;border-radius:16px;padding:16px;margin-bottom:24px;">
+            <div style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">altura</div>
+            <div style="margin-top:12px;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+              <span style="width:12px;height:12px;border-radius:999px;background:#F2711C;border:2px solid #101418;"></span>
+              <span style="font-weight:800;font-size:16px;color:#101418;">Jump</span>
+            </div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+              <span style="background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:4px 8px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30 m</span>
+              <span style="flex:1;border-top:2px dashed #101418;"></span>
+            </div>
+            <div style="margin-top:8px;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+              <span style="width:12px;height:12px;border-radius:999px;background:#1AA9DE;border:2px solid #101418;"></span>
+              <span style="font-weight:800;font-size:16px;color:#101418;">Kids</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <a href="#zona-kids" data-mueve onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-kids-4b" shape="rect" fit="cover" placeholder="Foto de la zona Kids" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;left:0;top:0;background:#1AA9DE;border-right:2px solid #101418;border-bottom:2px solid #101418;border-bottom-right-radius:10px;padding:8px 12px;font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">Kids</div>
+                <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:center;">
+                  <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                  <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">10 €</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">12 € finde</div>
+                </div>
+              </div>
+              <div style="padding:20px 16px 16px;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años, hasta 1,30 m</div>
+                  <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+                </div>
+                <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+                  <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+                </div>
+              </div>
+            </a>
+
+            <a href="#zona-jump" data-mueve onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-jump-4b" shape="rect" fit="cover" placeholder="Foto de la zona Jump" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;left:0;top:0;background:#F2711C;border-right:2px solid #101418;border-bottom:2px solid #101418;border-bottom-right-radius:10px;padding:8px 12px;font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">Jump</div>
+                <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:center;">
+                  <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                  <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">12 €</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                </div>
+              </div>
+              <div style="padding:20px 16px 16px;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 7 años y 1,30 m, sin límite</div>
+                  <div style="font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas</div>
+                </div>
+                <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Jump</span>
+                  <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+                </div>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">1,21 pantallas medidas, 0,15 menos que 4a · la regla se dice una vez y las tarjetas bajan a dos líneas de dato · el nombre sube a la foto, así que se lee antes que cualquier número</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «en <a class="dv-oid" href="#4b">4b</a> pon el diagrama en negativo sobre tinta» · «<a class="dv-oid" href="#4a">4a</a> sin el sello de precio» · «junta las dos: diagrama arriba y banda de color en la tarjeta»</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">La regla de metros · tres formas</span></div>
+  <p class="dv-intro">Solo la mitad de abajo de la tarjeta de <a class="dv-oid" href="#1a">1a</a>: sin foto, porque el sujeto aquí es el gráfico y su relación con el texto, no la imagen. Las tres llevan <span style="color:#F4F4F1;">la unidad escrita una sola vez</span> — «1,90 m» arriba y los demás números desnudos, como en cualquier regla de verdad: repetir «m» en cada cifra es ruido. Y una diferencia medida, no opinable: en <a class="dv-oid" href="#3a">3a</a> y <a class="dv-oid" href="#3c">3c</a> el 1,30 cae donde le toca dentro de 0–1,90 (31,6% y 68,2% medidos); en <a class="dv-oid" href="#3b">3b</a> la coloca el texto y no la escala: en Kids sale casi bien (banda al 69,8%, le toca 68,4%) y en Jump al doble de lo que le toca (63,7% contra 31,6%). Es el precio de que el color marque territorio y el texto viva dentro.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a>A toda la altura del texto. La regla crece con los datos y la banda de color es el tramo de la zona.</div>
+      <div class="dv-card">
+        <div style="padding:16px;">
+          <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Kids</div>
+          <div style="margin-top:12px;display:flex;gap:16px;align-items:stretch;">
+            <div style="flex:none;width:56px;position:relative;border-left:2px solid #101418;">
+              <div style="position:absolute;left:2px;right:0;top:31.6%;bottom:0;background:#1AA9DE;opacity:.22;"></div>
+              <div style="position:absolute;left:0;right:0;top:31.6%;border-top:2px solid #101418;"></div>
+              <div style="position:absolute;left:4px;top:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">1,90 m</div>
+              <div style="position:absolute;left:4px;top:calc(31.6% + 4px);white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30</div>
+              <div style="position:absolute;left:4px;bottom:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</div>
+            </div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+              <div style="font-size:16px;line-height:1.45;color:#101418;">Hasta 1,30 m de altura</div>
+              <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+            <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">regla de 56×78 medida · el 1,30 al 31,6%, exacto · la banda cubre el tramo real, del 0,00 al 1,30 · texto a 284 px</div>
+    </div>
+
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a><span>El nombre en la línea. La de 1,30 atraviesa la tarjeta entera y «Kids» cuelga justo debajo: la posición del nombre es la regla.</span></div>
+      <div class="dv-card">
+        <div style="position:relative;">
+          <div style="position:absolute;left:16px;top:16px;bottom:0;width:56px;border-left:2px solid #101418;z-index:1;">
+            <div style="position:absolute;left:4px;top:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">1,90 m</div>
+            <div style="position:absolute;left:4px;bottom:16px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</div>
+          </div>
+          <div style="padding:16px 16px 0 76px;">
+            <div style="height:56px;display:flex;align-items:flex-end;justify-content:flex-end;">
+              <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">encima, Jump</span>
+            </div>
+          </div>
+          <div style="position:relative;border-top:2px dashed #101418;margin-top:8px;z-index:1;">
+            <div style="position:absolute;left:16px;top:-12px;background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:4px 8px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30 m</div>
+          </div>
+          <div style="position:relative;padding:16px 16px 16px 76px;">
+            <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:#1AA9DE;opacity:.22;"></div>
+            <div style="position:relative;">
+              <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Kids</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+                <div style="font-size:16px;line-height:1.45;color:#101418;">Hasta 1,30 m de altura</div>
+                <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px 76px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+          <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+        </div>
+      </div>
+      <div class="dv-card">
+        <div style="position:relative;">
+          <div style="position:absolute;left:16px;top:16px;bottom:0;width:56px;border-left:2px solid #101418;z-index:1;">
+            <div style="position:absolute;left:4px;top:0;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">1,90 m</div>
+            <div style="position:absolute;left:4px;bottom:16px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</div>
+          </div>
+          <div style="position:relative;padding:16px 16px 16px 76px;">
+            <div style="position:absolute;left:0;right:0;top:0;bottom:0;background:#A3C21C;opacity:.24;"></div>
+            <div style="position:relative;">
+              <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Jump</div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 7 años, sin límite</div>
+                <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 1,30 m de altura</div>
+                <div style="font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas</div>
+              </div>
+            </div>
+          </div>
+          <div style="position:relative;border-top:2px dashed #101418;z-index:1;">
+            <div style="position:absolute;left:16px;top:-12px;background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:4px 8px;white-space:nowrap;font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30 m</div>
+          </div>
+          <div style="padding:16px 16px 0 76px;">
+            <div style="height:56px;display:flex;align-items:flex-start;justify-content:flex-end;">
+              <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">debajo, Kids</span>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 16px 16px 76px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Jump</span>
+          <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+        </div>
+      </div>
+      <div class="dv-meta">el 1,30 m ahora sobre la espina, que es de quien es el número · en Kids la banda ocupa el 69,8% y le toca el 68,4%: casi exacto · en Jump ocupa el 63,7% y le toca el 31,6%: el doble de lo que le corresponde, porque manda el texto y no la escala</div>
+    </div>
+
+    <div class="dv-opt" id="3c">
+      <div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a>Regla tumbada. El otro eje: libera los 40 px de la izquierda y el texto gana todo el ancho.</div>
+      <div class="dv-card">
+        <div style="padding:16px;">
+          <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Kids</div>
+          <div style="margin-top:20px;position:relative;height:20px;border:2px solid #101418;border-radius:10px;overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:68.4%;background:#1AA9DE;opacity:.22;"></div>
+            <div style="position:absolute;left:68.4%;top:0;bottom:0;border-left:2px solid #101418;"></div>
+          </div>
+          <div style="position:relative;height:16px;margin-top:4px;">
+            <span style="position:absolute;left:0;top:0;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">0,00</span>
+            <span style="position:absolute;left:68.4%;top:0;transform:translateX(-50%);font-family:'JetBrains Mono';font-size:10px;font-weight:700;line-height:1.2;color:#101418;">1,30</span>
+            <span style="position:absolute;right:0;top:0;font-family:'JetBrains Mono';font-size:10px;line-height:1.2;color:#626A72;">1,90 m</span>
+          </div>
+          <div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+            <div style="font-size:16px;line-height:1.45;color:#101418;">Hasta 1,30 m de altura</div>
+            <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+          </div>
+          <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+            <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">el texto gana 72 px medidos (284 → 356) · marca al 68,2% · pero la regla ya no crece con los datos</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «<a class="dv-oid" href="#3b">3b</a> con la banda más suave» · «pon la de <a class="dv-oid" href="#3b">3b</a> también en Jump, con el nombre encima de la línea» · «quita el nombre de arriba en <a class="dv-oid" href="#3b">3b</a>»</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">La barrera de <a class="dv-oid" href="#1c">1c</a> con la regla de <a class="dv-oid" href="#1a">1a</a></span></div>
+  <p class="dv-intro">Una sola regla en el margen izquierdo que atraviesa las dos zonas, y la línea de 1,30 <span style="color:#F4F4F1;">es</span> la banda de tinta — así que la alineación es estructural y no puede desajustarse. Le injerto el estado «elegida» de <a class="dv-oid" href="#1b">1b</a>: la zona activa se queda en blanco y la otra baja a Nube.</p>
+
+  <div class="dv-opts">
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>La regla es una sola, pero con dos tramos: cada uno lineal por dentro y rotulado en sus dos extremos. No finjo una cinta métrica continua — arriba hay 0,60 m y abajo 1,30 en el mismo espacio.</div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 24px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Una regla, dos zonas. Si la edad falla, manda la altura.</p>
+
+          <div style="background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;">
+
+            <div style="display:flex;background:#E8E9E5;">
+              <div style="flex:none;width:44px;position:relative;border-right:2px solid #101418;">
+                <div style="position:absolute;right:0;top:0;width:9px;border-top:2px solid #101418;"></div>
+                <div style="position:absolute;right:11px;top:2px;font-family:'JetBrains Mono';font-size:10px;font-weight:700;color:#101418;">1,90</div>
+                <div style="position:absolute;right:0;top:50%;width:6px;border-top:2px solid #626A72;"></div>
+                <div style="position:absolute;right:8px;top:calc(50% + 2px);font-family:'JetBrains Mono';font-size:10px;color:#626A72;">1,60</div>
+              </div>
+              <div style="flex:1;padding:16px;">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+                  <div style="font-family:'Bungee';font-size:26px;line-height:1;color:#101418;">Jump</div>
+                  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">encima</div>
+                </div>
+                <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                    <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 7 años, sin límite</div>
+                    <div style="font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas</div>
+                  </div>
+                  <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                    <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:4px 12px 8px;transform:rotate(-5deg);text-align:center;">
+                      <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                      <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">12 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="margin-top:12px;aspect-ratio:2/1;border-radius:10px;overflow:hidden;background:#2A3138;">
+                  <image-slot id="pjp-jump-2a" shape="rect" fit="cover" placeholder="Foto de la zona Jump" style="width:100%;height:100%;"></image-slot>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;background:#101418;">
+              <div style="flex:none;width:44px;border-right:2px solid #F5C400;display:flex;align-items:center;justify-content:center;">
+                <div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;line-height:1;color:#F5C400;">1,30</div>
+              </div>
+              <div style="flex:1;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;">la línea</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;line-height:1.5;color:#C9CDD1;text-align:right;">decide cuando<br>la edad no</div>
+              </div>
+            </div>
+
+            <div style="display:flex;background:#FFFFFF;">
+              <div style="flex:none;width:44px;position:relative;border-right:2px solid #101418;">
+                <div style="position:absolute;right:0;top:23%;width:6px;border-top:2px solid #626A72;"></div>
+                <div style="position:absolute;right:8px;top:calc(23% + 2px);font-family:'JetBrains Mono';font-size:10px;color:#626A72;">1,00</div>
+                <div style="position:absolute;right:0;top:46%;width:6px;border-top:2px solid #626A72;"></div>
+                <div style="position:absolute;right:8px;top:calc(46% + 2px);font-family:'JetBrains Mono';font-size:10px;color:#626A72;">0,70</div>
+                <div style="position:absolute;right:0;top:69%;width:6px;border-top:2px solid #626A72;"></div>
+                <div style="position:absolute;right:8px;top:calc(69% + 2px);font-family:'JetBrains Mono';font-size:10px;color:#626A72;">0,40</div>
+                <div style="position:absolute;right:0;bottom:0;width:9px;border-top:2px solid #101418;"></div>
+                <div style="position:absolute;right:11px;bottom:2px;font-family:'JetBrains Mono';font-size:10px;font-weight:700;color:#101418;">0,00</div>
+              </div>
+              <div style="flex:1;padding:16px;">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;">
+                  <div style="font-family:'Bungee';font-size:26px;line-height:1;color:#101418;">Kids</div>
+                  <div style="background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:4px 8px;font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#101418;">Elegida</div>
+                </div>
+                <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                    <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+                    <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+                  </div>
+                  <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                    <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:4px 12px 8px;transform:rotate(-5deg);text-align:center;">
+                      <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                      <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">10 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">12 € finde</div>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="margin-top:12px;aspect-ratio:2/1;border-radius:10px;overflow:hidden;background:#2A3138;">
+                  <image-slot id="pjp-kids-2a" shape="rect" fit="cover" placeholder="Foto de la zona Kids" style="width:100%;height:100%;"></image-slot>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <sc-if value="{{ conBoton }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:16px;display:flex;gap:12px;">
+              <button type="button" style="padding:0;flex:1;background:transparent;font-family:inherit;min-height:48px;display:flex;align-items:center;justify-content:center;border:2px solid #0A5C93;border-radius:10px;color:#0A5C93;font-weight:800;font-size:16px;cursor:pointer;transition:background 180ms linear;" style-hover="background:#E8E9E5">Ver Jump</button>
+              <button type="button" style="padding:0;flex:1;background:transparent;font-family:inherit;min-height:48px;display:flex;align-items:center;justify-content:center;border:2px solid #0A5C93;border-radius:10px;color:#0A5C93;font-weight:800;font-size:16px;cursor:pointer;transition:background 180ms linear;" style-hover="background:#E8E9E5">Ver Kids</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      <div class="dv-meta">1,05 pantallas · medido a 390×844 · la más compacta de las cuatro · regla de 44 px</div>
+    </div>
+  </div>
+
+  <p class="dv-next">Prueba: «<a class="dv-oid" href="#2a">2a</a> con la foto de Kids más grande» · «pon Jump como elegida» · «quita los dos botones y que la zona se elija tocando su bloque»</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Tarjetas de zona · la pregunta 2 de la portada</span></div>
+  <p class="dv-intro">Diseñadas a 390 px sobre papel, con los datos que me has dado (los juegos, los metros y los precios son inventados). Las tres cumplen: un dato por línea sin mayúsculas ni tracking, radios de la escala de cuatro, sombra dura, alto de control 48 y ningún relleno de acción — el relleno es la barra de abajo, que ya existe. Las pantallas de cada una están <span style="color:#F4F4F1;">medidas</span> en el navegador, no estimadas: ninguna baja de 1,12, y el presupuesto de tu prototipo para esta sección era 0,94. Los ajustes prueban dos decisiones reales: si el precio pinta algo aquí y si cada zona necesita su propio botón.</p>
+
+  <div class="dv-opts">
+
+    <!-- ═══ 1a · LA REGLA DENTRO ═══ -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>La regla dentro, y la tarjeta entera es el enlace: se aplasta al pulsarla, como una pegatina. Sin botón dentro — el blanco es toda la tarjeta.</div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 24px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Dos, y la línea de 1,30 m decide cuál.</p>
+
+          <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <a href="#zona-kids" data-mueve onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-kids-1a" shape="rect" fit="cover" placeholder="Foto de la zona Kids: piscina de bolas" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px 8px;transform:rotate(-6deg);text-align:center;">
+                    <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                    <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">10 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">12 € finde</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="padding:20px 16px 16px;">
+                <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Kids</div>
+                <div style="margin-top:12px;display:flex;gap:16px;align-items:flex-start;">
+                  <div style="flex:none;width:40px;height:78px;position:relative;border-left:2px solid #101418;">
+                    <div style="position:absolute;left:0;right:0;top:24px;border-top:2px solid #101418;"></div>
+                    <div style="position:absolute;left:2px;right:0;top:26px;bottom:0;background:#1AA9DE;opacity:.22;"></div>
+                    <div style="position:absolute;left:4px;top:-1px;font-family:'JetBrains Mono';font-size:10px;color:#626A72;">1,90</div>
+                    <div style="position:absolute;left:4px;top:27px;font-family:'JetBrains Mono';font-size:10px;font-weight:700;color:#101418;">1,30</div>
+                    <div style="position:absolute;left:4px;bottom:0;font-family:'JetBrains Mono';font-size:10px;color:#626A72;">0,00</div>
+                  </div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                    <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+                    <div style="font-size:16px;line-height:1.45;color:#101418;">Hasta 1,30 m de altura</div>
+                    <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+                  </div>
+                </div>
+                <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Kids</span>
+                  <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+                </div>
+              </div>
+            </a>
+
+            <a href="#zona-jump" data-mueve onClick="{{ vaAZona }}" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;cursor:pointer;transition:transform 120ms cubic-bezier(.4,0,.2,1),box-shadow 120ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-jump-1a" shape="rect" fit="cover" placeholder="Foto de la zona Jump: camas y escalada" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:absolute;right:12px;bottom:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px 8px;transform:rotate(-6deg);text-align:center;">
+                    <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                    <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">12 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="padding:20px 16px 16px;">
+                <div style="font-family:'Bungee';font-size:24px;line-height:1;color:#101418;">Jump</div>
+                <div style="margin-top:12px;display:flex;gap:16px;align-items:flex-start;">
+                  <div style="flex:none;width:40px;height:78px;position:relative;border-left:2px solid #101418;">
+                    <div style="position:absolute;left:2px;right:0;top:2px;height:22px;background:#A3C21C;opacity:.24;"></div>
+                    <div style="position:absolute;left:0;right:0;top:24px;border-top:2px solid #101418;"></div>
+                    <div style="position:absolute;left:4px;top:-1px;font-family:'JetBrains Mono';font-size:10px;color:#626A72;">1,90</div>
+                    <div style="position:absolute;left:4px;top:27px;font-family:'JetBrains Mono';font-size:10px;font-weight:700;color:#101418;">1,30</div>
+                    <div style="position:absolute;left:4px;bottom:0;font-family:'JetBrains Mono';font-size:10px;color:#626A72;">0,00</div>
+                  </div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                    <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 7 años, sin límite</div>
+                    <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 1,30 m de altura</div>
+                    <div style="font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas</div>
+                  </div>
+                </div>
+                <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                  <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver la zona Jump</span>
+                  <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+                </div>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">1,22 pantallas · 1 pulsable por zona, blanco medido de 356×426 · baja 3 y sombra 5→2 al pasar, baja 5 y sombra 0 al pulsar</div>
+    </div>
+
+    <!-- ═══ 1b · EL BILLETE ═══ -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>El billete. Sin regla dibujada: los datos como filas troqueladas, y la zona elegida se pinta de su color.</div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 24px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Elige una y el resto de la página se ajusta.</p>
+
+          <div style="display:flex;flex-direction:column;gap:16px;">
+
+            <div style="background:#FFFFFF;border:2px solid #1AA9DE;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;">
+              <div style="position:relative;">
+                <div style="aspect-ratio:16/9;background:#2A3138;">
+                  <image-slot id="pjp-kids-1b" shape="rect" fit="cover" placeholder="Foto de la zona Kids" style="width:100%;height:100%;"></image-slot>
+                </div>
+                <div style="position:absolute;left:0;top:0;background:#1AA9DE;padding:8px 12px;border-bottom-right-radius:10px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#101418;">Elegida</div>
+              </div>
+              <div style="padding:16px;">
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+                  <div style="font-family:'Bungee';font-size:26px;line-height:1;color:#101418;">Kids</div>
+                  <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                    <div style="text-align:right;">
+                      <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">desde</div>
+                      <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#627411;">10 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">12 € finde</div>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="margin-top:12px;border-top:2px dashed #D6D8D4;"></div>
+                <div style="padding:12px 0;border-bottom:2px dashed #D6D8D4;display:flex;justify-content:space-between;gap:12px;">
+                  <span style="font-size:16px;color:#626A72;">Edad</span>
+                  <span style="font-size:16px;font-weight:700;color:#101418;">2 a 6 años</span>
+                </div>
+                <div style="padding:12px 0;border-bottom:2px dashed #D6D8D4;display:flex;justify-content:space-between;gap:12px;">
+                  <span style="font-size:16px;color:#626A72;">Altura</span>
+                  <span style="font-size:16px;font-weight:700;color:#101418;">Hasta 1,30 m</span>
+                </div>
+                <div style="padding:12px 0;display:flex;justify-content:space-between;gap:12px;">
+                  <span style="font-size:16px;color:#626A72;">Tamaño</span>
+                  <span style="font-size:16px;font-weight:700;color:#101418;">450 m²</span>
+                </div>
+                <p style="margin:4px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos.</p>
+                <sc-if value="{{ conBoton }}" hint-placeholder-val="{{ true }}">
+                  <button type="button" style="padding:0;margin-top:16px;width:100%;background:transparent;font-family:inherit;min-height:48px;display:flex;align-items:center;justify-content:center;border:2px solid #0A5C93;border-radius:10px;color:#0A5C93;font-weight:800;font-size:16px;cursor:pointer;transition:background 180ms linear;" style-hover="background:#E8E9E5">Ver la zona Kids</button>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;opacity:.94;">
+              <div style="aspect-ratio:16/9;background:#2A3138;">
+                <image-slot id="pjp-jump-1b" shape="rect" fit="cover" placeholder="Foto de la zona Jump" style="width:100%;height:100%;"></image-slot>
+              </div>
+              <div style="padding:16px;">
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+                  <div style="font-family:'Bungee';font-size:26px;line-height:1;color:#101418;">Jump</div>
+                  <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                    <div style="text-align:right;">
+                      <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">desde</div>
+                      <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#627411;">12 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="margin-top:12px;border-top:2px dashed #D6D8D4;"></div>
+                <div style="padding:12px 0;border-bottom:2px dashed #D6D8D4;display:flex;justify-content:space-between;gap:12px;">
+                  <span style="font-size:16px;color:#626A72;">Edad</span>
+                  <span style="font-size:16px;font-weight:700;color:#101418;">7 años o más</span>
+                </div>
+                <div style="padding:12px 0;border-bottom:2px dashed #D6D8D4;display:flex;justify-content:space-between;gap:12px;">
+                  <span style="font-size:16px;color:#626A72;">Altura</span>
+                  <span style="font-size:16px;font-weight:700;color:#101418;">Desde 1,30 m</span>
+                </div>
+                <div style="padding:12px 0;display:flex;justify-content:space-between;gap:12px;">
+                  <span style="font-size:16px;color:#626A72;">Tamaño</span>
+                  <span style="font-size:16px;font-weight:700;color:#101418;">1.200 m²</span>
+                </div>
+                <p style="margin:4px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas elásticas.</p>
+                <sc-if value="{{ conBoton }}" hint-placeholder-val="{{ true }}">
+                  <button type="button" style="padding:0;margin-top:16px;width:100%;background:transparent;font-family:inherit;min-height:48px;display:flex;align-items:center;justify-content:center;border:2px solid #0A5C93;border-radius:10px;color:#0A5C93;font-weight:800;font-size:16px;cursor:pointer;transition:background 180ms linear;" style-hover="background:#E8E9E5">Ver la zona Jump</button>
+                </sc-if>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">1,48 pantallas · medido · la más larga de las cuatro: tres filas de dato por tarjeta</div>
+    </div>
+
+    <!-- ═══ 1c · LA BARRERA ═══ -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>La barrera. Una sola pieza: la línea de 1,30 m atraviesa la sección y las dos zonas cuelgan de ella, como la barra de la entrada.</div>
+      <div class="dv-card">
+        <div style="padding:24px 16px 24px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-bottom:8px;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;">Zonas</div>
+          <p style="margin:16px 0 28px;font-size:18px;line-height:1.5;color:#626A72;">Una línea, dos zonas. Si la edad falla, manda la altura.</p>
+
+          <div style="background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;overflow:hidden;">
+
+            <div style="padding:16px 16px 16px;">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                <div style="font-family:'Bungee';font-size:26px;line-height:1;color:#101418;">Jump</div>
+                <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">encima de la línea</div>
+              </div>
+              <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:16px;line-height:1.45;color:#101418;">Desde 7 años, sin límite</div>
+                  <div style="font-size:16px;line-height:1.45;color:#626A72;">Toboganes grandes, escalada y camas</div>
+                </div>
+                <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                  <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:4px 12px 8px;transform:rotate(-5deg);text-align:center;">
+                    <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                    <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">12 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">14 € finde</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="margin-top:12px;aspect-ratio:2/1;border-radius:10px;overflow:hidden;background:#2A3138;">
+                <image-slot id="pjp-jump-1c" shape="rect" fit="cover" placeholder="Foto de la zona Jump" style="width:100%;height:100%;"></image-slot>
+              </div>
+            </div>
+
+            <div style="position:relative;background:#101418;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#F5C400;">1,30 m</div>
+              <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#C9CDD1;text-align:right;">la altura decide<br>cuando la edad no</div>
+            </div>
+
+            <div style="padding:16px 16px 16px;">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                <div style="font-family:'Bungee';font-size:26px;line-height:1;color:#101418;">Kids</div>
+                <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">debajo de la línea</div>
+              </div>
+              <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-start;">
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:16px;line-height:1.45;color:#101418;">De 2 a 6 años</div>
+                  <div style="font-size:16px;line-height:1.45;color:#626A72;">Piscinas de bolas, toboganes y circuitos</div>
+                </div>
+                <sc-if value="{{ conSello }}" hint-placeholder-val="{{ true }}">
+                  <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:4px 12px 8px;transform:rotate(-5deg);text-align:center;">
+                    <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">desde</div>
+                    <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#101418;">10 €</div><div style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">12 € finde</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="margin-top:12px;aspect-ratio:2/1;border-radius:10px;overflow:hidden;background:#2A3138;">
+                <image-slot id="pjp-kids-1c" shape="rect" fit="cover" placeholder="Foto de la zona Kids" style="width:100%;height:100%;"></image-slot>
+              </div>
+            </div>
+
+          </div>
+
+          <sc-if value="{{ conBoton }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:16px;display:flex;gap:12px;">
+              <button type="button" style="padding:0;flex:1;background:transparent;font-family:inherit;min-height:48px;display:flex;align-items:center;justify-content:center;border:2px solid #0A5C93;border-radius:10px;color:#0A5C93;font-weight:800;font-size:16px;cursor:pointer;transition:background 180ms linear;" style-hover="background:#E8E9E5">Ver Jump</button>
+              <button type="button" style="padding:0;flex:1;background:transparent;font-family:inherit;min-height:48px;display:flex;align-items:center;justify-content:center;border:2px solid #0A5C93;border-radius:10px;color:#0A5C93;font-weight:800;font-size:16px;cursor:pointer;transition:background 180ms linear;" style-hover="background:#E8E9E5">Ver Kids</button>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+      <div class="dv-meta">1,10 pantallas · medido · la más compacta del turno 1 · la barra de tinta es el único bloque oscuro</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «<a class="dv-oid" href="#1a">1a</a> pero con las fotos más grandes» · «la barrera de <a class="dv-oid" href="#1c">1c</a> con las filas de dato de <a class="dv-oid" href="#1b">1b</a>» · «quita el precio de las tres y déjalo para la sección de precios»</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;selloPrecio&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Contenido&quot;,&quot;label&quot;:&quot;Mostrar el precio en la tarjeta&quot;},&quot;accionTarjeta&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Botón fantasma en cada zona&quot;,&quot;La tarjeta entera, sin botón&quot;],&quot;default&quot;:&quot;Botón fantasma en cada zona&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Acción&quot;,&quot;label&quot;:&quot;Cómo se elige la zona&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return {
+      /* La tarjeta-enlace es una maqueta: no hay páginas de zona todavía. Sin esto,
+       * pulsar «Replace» en el hueco de foto activaba además el enlace y metía un
+       * hash muerto en la URL. */
+      vaAZona: (e) => { e.preventDefault(); },
+      conSello: p.selloPrecio !== false,
+      conBoton: (p.accionTarjeta ?? 'Botón fantasma en cada zona') === 'Botón fantasma en cada zona'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

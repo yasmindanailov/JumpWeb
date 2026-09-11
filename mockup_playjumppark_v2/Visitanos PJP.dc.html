@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden;padding-bottom:24px}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#6C747C}
+.dv-card button:focus-visible,.dv-card a[href]:focus-visible,.dv-card [tabindex]:focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-card [data-superficie="tinta"] a[href]:focus-visible,.dv-card [data-superficie="tinta"] button:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+.dv-meta{font:400 10.5px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#6C747C;max-width:390px}
+@media (prefers-reduced-motion:reduce){
+.dv-card [data-mueve]{transition-property:box-shadow,border-color,color,background-color !important}
+.dv-card [data-mueve]:hover,.dv-card [data-mueve]:active{transform:none !important}
+}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t7">
+  <div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">Los festivos: la excepción, no el calendario</span></div>
+  <p class="dv-intro">De tus dos ideas me quedo con media, y te explico por qué. <span style="color:#F4F4F1;">El CTA no</span>: acabamos de quitar «el horario, día a día» justo por eso — el Sistema de Contenido dice que «Horarios» <span style="color:#F4F4F1;">no llega a página</span> porque no pasa sus tres pruebas, se queda «en esta sección, en vivo». Un enlace a una página de festivos vuelve a prometer lo que no esconde, y encima devuelve a la sección el enlace que nos costó quitar. <span style="color:#F4F4F1;">La lista entera, tampoco de entrada</span>: son doce o catorce fechas que están muertas 360 días al año y caducan cada enero; nadie entra en la web a leer el calendario laboral. Lo que de verdad falta es otra cosa: <span style="color:#F4F4F1;">«los festivos, como el finde» es una regla, y una regla no avisa de su excepción</span>. Si un 25 de diciembre cerráis, esa frase miente ese día. Así que lo que hay que poner no es el calendario: es <span style="color:#F4F4F1;">el festivo que viene, cuando viene</span> — y eso ya es dato del panel, <span style="font-family:'JetBrains Mono';font-size:11.5px;">special_dates</span>, que existe porque el motor del horario lo necesita para calcular el «abierto ahora». <a href="#7a">7a</a> es solo eso: una línea que aparece sola cuando queda menos de tres semanas y desaparece el resto del año. <a href="#7b">7b</a> añade tu lista, pero <span style="color:#F4F4F1;">dentro de la sección y plegada</span>, sin CTA y sin página: quien la quiere la abre. Pruébalo con el interruptor «Festivo próximo»: hoy, 6 de septiembre, no hay ninguno a la vista y la línea no existe — que es el estado normal. ⚠ Los festivos del ejemplo son los <span style="color:#F4F4F1;">nacionales</span>: los de Lorca y los de la Región los tienes que dar tú, y son justo los que el visitante de fuera no sabe.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="7a">
+      <div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a><span>Solo el aviso del festivo que viene. Sin lista y sin enlace.</span></div>
+      <div class="dv-card" data-screen-label="7a">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios: entre semana y de viernes a domingo.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:4px;">
+            <sc-for list="{{ filasPapel }}" as="f" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:{{ f.fondo }};">
+                <span style="font-size:15.5px;line-height:1.35;font-weight:700;color:#101418;">{{ f.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:15px;flex:none;color:#101418;">{{ f.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:12px;">Los festivos, como el finde.</div>
+          <sc-if value="{{ avisoFestivo }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-top:16px;background:#E8E9E5;border-radius:10px;padding:12px 16px;">
+            <span aria-hidden="true" style="width:8px;height:8px;border-radius:999px;flex:none;margin-top:7px;background:#8A6E00;"></span>
+            <span style="font-size:16px;line-height:1.45;font-weight:700;color:#101418;">{{ festivoTexto }}</span>
+          </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-7a" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso.</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+          <a href="#maps" style="display:flex;align-items:center;gap:8px;min-height:48px;margin-top:4px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+      </div>
+      <div class="dv-meta">la línea del festivo vive DENTRO de la tarjeta del horario, pegada a la regla que corrige: si estuviera suelta más abajo, quien lee «los festivos, como el finde» ya se ha ido con la idea equivocada · aparece sola cuando quedan 21 días o menos y desaparece el resto del año: con los seis del ejemplo eso son unos <span style="color:#9AA1A8;">93 días</span>, un cuarto del año, y subirá al añadir los de Lorca — o sea que la mayoría de las visitas no la ven, y por eso cuando está tiene peso. Si con los locales pasa de la mitad del año deja de ser excepción y hay que replantearla · superficie Nube y punto en Amarillo Aviso oscuro (4,87 sobre blanco), sin borde y sin sombra: es un dato con excepción, no una alarma — el rojo de error no entra porque un festivo no es un fallo · el texto va en 700 sobre Nube (15,17) porque es la única frase de la sección que puede arruinarte el viaje · nunca dice «consulta los festivos»: dice el festivo y su hora, que es lo que el panel sabe · si el festivo cierra, la frase cambia entera —«Cerramos el 25 de diciembre»— y no se apoya en la regla que contradice · cero enlaces nuevos: la sección sigue sin ninguno con el mapa cargado</div>
+    </div>
+
+    <div class="dv-opt" id="7b">
+      <div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a><span>🔒 <span style="color:#F4F4F1;">APROBADA · sección 07 cerrada</span> — el aviso y, plegada, la lista del año. Sin CTA y sin página.</span></div>
+      <div class="dv-card" data-screen-label="7b">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios: entre semana y de viernes a domingo.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:4px;">
+            <sc-for list="{{ filasPapel }}" as="f" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:{{ f.fondo }};">
+                <span style="font-size:15.5px;line-height:1.35;font-weight:700;color:#101418;">{{ f.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:15px;flex:none;color:#101418;">{{ f.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:12px;">Los festivos, como el finde.</div>
+
+          <sc-if value="{{ avisoFestivo }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-top:16px;background:#E8E9E5;border-radius:10px;padding:12px 16px;">
+            <span aria-hidden="true" style="width:8px;height:8px;border-radius:999px;flex:none;margin-top:7px;background:#8A6E00;"></span>
+            <span style="font-size:16px;line-height:1.45;font-weight:700;color:#101418;">{{ festivoTexto }}</span>
+          </div>
+          </sc-if>
+
+          <button type="button" onClick="{{ toggleFestivos }}" aria-expanded="{{ festivosAbiertos }}" data-mueve style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:48px;margin-top:8px;padding:0;background:none;border:none;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;text-align:left;">
+            <span>{{ festivosLabel }}</span>
+            <span aria-hidden="true" style="font-family:'JetBrains Mono';font-size:18px;line-height:1;">{{ festivosSigno }}</span>
+          </button>
+
+          <sc-if value="{{ festivosAbiertos }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:4px;padding-top:8px;border-top:1px solid #D6D8D4;">
+            <sc-for list="{{ festivos }}" as="d" hint-placeholder-count="6">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;">
+                <span style="font-size:15.5px;line-height:1.35;font-weight:700;color:#101418;">{{ d.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:15px;flex:none;color:#101418;">{{ d.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-7b" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso.</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+          <a href="#maps" style="display:flex;align-items:center;gap:8px;min-height:48px;margin-top:4px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+      </div>
+      <div class="dv-meta">🔒 <span style="color:#F4F4F1;">CERRADA (sep 2026) · esta es la sección 07.</span> ⚠ <span style="color:#F4F4F1;">Divergencia declarada tras la cabecera unificada (7 sep)</span>: el titular de sección pasó de 26 a <span style="color:#C9CDD1;">Display L 34</span>, así que el «abierto ahora» —que es el dato de la sección y va en Bungee 34— <span style="color:#C9CDD1;">comparte nivel con el titular</span>. No se ha aplanado nada: el dato era 1,31× el titular porque el titular estaba mal medido, a 26, y en móvil no existe ningún nivel legal por encima de 34 (el 42 es Display XL y lo gasta el hero, uno por página). Lo que distingue al dato sigue siendo <span style="color:#C9CDD1;">el color y la tarjeta</span>: Verde 800 sobre blanco, el único verde de la sección, dentro de la única tarjeta blanca. Si algún día hace falta más jerarquía, la salida es bajar el titular en esta sección, no subir el dato. Documentada en \`HANDOFF.md\` («07 Visítanos · cerrada»), en la tabla de secciones de \`CLAUDE.md\`, en el índice como v1.17 y en la ficha de Visítanos de \`Arquitectura de Contenido\`, que se ha reescrito porque pedía el teléfono como único botón y la línea del bar, y ninguna de las dos está ya aquí. ✅ <span style="color:#F4F4F1;">La dirección ya no es inventada (7 sep 2026)</span>: es la publicada, <span style="color:#C9CDD1;">Ctra. de Granada · 30813 Lorca, Murcia</span>, aprobada por el dueño con el turno 3 del escritorio. La de ejemplo que había aquí —«Avenida de Europa, 14 · Polígono Saprelorca»— está retirada; queda pendiente solo el desglose exacto en <span style="color:#C9CDD1;">line1/line2</span>. Pendiente del dueño: <span style="color:#F4F4F1;">los festivos de Lorca y de la Región</span>. · la lista se abre y se cierra <span style="color:#9AA1A8;">aquí mismo</span>: ni CTA, ni página, ni salir de la portada — que es lo que el Sistema de Contenido pide para «Horarios» · medido: plegada cuesta 56 px —48 el botón y 8 de aire— y abierta 306,5, o sea que el pliegue esconde 250,5: por eso va plegada, y por eso el aviso del festivo próximo va FUERA del pliegue, porque lo que urge no se esconde detrás de un clic · el control es un botón fantasma sin borde: dentro de una tarjeta que ya tiene su propio borde, un segundo borde a 12 px del primero se lee como caja dentro de caja · el signo es + y −, no una flecha: la flecha es «vas a otro sitio» y aquí no te mueves — es la misma distinción de la FAQ de Componentes · las fechas repiten la tipografía de la tabla de arriba (15,5 a 700 y horas en mono 15), así que se leen como lo que son: más filas del mismo horario · las que cierran dicen «Cerrado» en su sitio, sin tachar ni apagar: la fila apagada del sistema es para lo que no se puede elegir, y un día cerrado no se elige · lo que cuesta: es el único control de toda la sección, así que rompe el «cero clics» de 6a a cambio de contestar a quien planifica en diciembre</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «7a y ya está» · «la lista abierta por defecto» · «solo los festivos que cierran» · «los festivos de Lorca son estos: …»</p>
+</section>
+
+<section class="dv-turn" id="t6">
+  <div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">El enlace del mapa, condicional</span></div>
+  <p class="dv-intro">Cómo lo valoro: aciertas, pero con un matiz que cambia la solución. El widget trae su enlace y su dirección <span style="color:#F4F4F1;">solo cuando carga</span>, y carga solo si aceptan cookies. Así que no es «lo quito» ni «lo dejo»: es <span style="color:#F4F4F1;">condicional</span>. Con mapa, fuera el enlace —duplicaba lo que el propio mapa ya ofrece—. Sin mapa, el enlace <span style="color:#F4F4F1;">vuelve dentro del aviso</span>, porque abrir Google Maps en otra pestaña no pone ninguna cookie aquí y es la salida más rápida para quien ha dicho no. Y sobre la dirección: la dejo <span style="color:#F4F4F1;">siempre visible, una línea bajo el mapa</span>, y no por cabezonería —hay un segundo modo de fallo que no es el consentimiento: los bloqueadores de anuncios tumban el <span style="font-family:'JetBrains Mono';font-size:11.5px;">iframe</span> de Google aunque las cookies estén aceptadas, y entonces no salta nuestro aviso: sale un hueco. Con la dirección escrita, ese hueco sigue teniendo la calle; sin ella, la sección no contesta su propia pregunta. Cuesta 57 px medidos —dos líneas, dir1 y dir2, porque en una sola envuelve igual y se lee como una lista de cuatro trozos en vez de como una dirección—. Resultado: <span style="color:#F4F4F1;">1,07 pantallas</span> —por debajo de Zonas, y empezó en 1,77— y nadie se queda sin saber dónde estamos ni dónde se aparca. ✅ <span style="color:#F4F4F1;">6a es la sección cerrada</span>, y con una decisión más encima: <span style="color:#F4F4F1;">el bar se ha ido de aquí</span>. Lo dicen tus documentos —el Sistema de Contenido lo cuenta como una de las cuatro cosas que hay dentro y le da su tarjeta en «Qué hay dentro»; la Arquitectura solo autorizaba «la línea del bar» en Visítanos— y lo dice el embudo: 07 es lo último antes del cierre, y un destino nuevo ahí manda de lado a quien está a punto de comprar. Está montado en <span style="color:#F4F4F1;">Juegos PJP, turno 7</span>, emparejado con los juegos de fuera. Así que esta sección <span style="color:#F4F4F1;">se queda sin ningún enlace propio</span> cuando el mapa carga: informa, y las acciones son de la barra y del cierre.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a><span>Sin enlace al mapa cuando el mapa está. La dirección siempre. Un solo enlace: el bar.</span></div>
+      <div class="dv-card" data-screen-label="6a">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios: entre semana y de viernes a domingo.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:4px;">
+            <sc-for list="{{ filasPapel }}" as="f" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:{{ f.fondo }};">
+                <span style="font-size:15.5px;line-height:1.35;font-weight:700;color:#101418;">{{ f.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:15px;flex:none;color:#101418;">{{ f.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:12px;">Los festivos, como el finde.</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-6a" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso.</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+          <a href="#maps" style="display:flex;align-items:center;gap:8px;min-height:48px;margin-top:4px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+      </div>
+      <div class="dv-meta">🔎 <span style="color:#F4F4F1;">Auditoría, tal como preguntas.</span> <span style="color:#F4F4F1;">Sistema de diseño: sí</span>, con tres cosas que había mal y ya están arregladas. Una: la <span style="color:#F4F4F1;">tabla de horarios es un componente declarado</span> (Componentes PJP · 08) y yo la había vuelto a dibujar a mano con otros valores — día a 16/400 y horas en mono 14 —, así que pasa a los del componente: día 15,5 a 700 en Tinta y horas en mono 15. Dos: por eso mismo <span style="color:#F4F4F1;">hoy ya no se marca con negrita</span>, solo con superficie (Nube), que es la regla del velo de Tarifas y evita que el día de hoy compita con las horas. Tres: la entradilla contaba dos horarios y la tabla de ejemplo enseñaba cuatro. <span style="color:#F4F4F1;">Ya está el horario real</span> (dueño, sep 2026) y resulta que son dos de verdad: <span style="color:#F4F4F1;">16:30–21:30 de lunes a jueves y 11:30–21:30 de viernes a domingo</span>, con los festivos como el finde. Cierran los dos a la misma hora, así que lo que cambia es cuándo abren — y por eso la tabla son <span style="color:#F4F4F1;">dos filas</span>, no cuatro ni siete: escribir siete días para decir dos cosas es hacer leer siete veces lo mismo. Los festivos van en una línea bajo la tabla, que es donde el componente pone su columna «Nota». Contrastes medidos, todos por encima de 4,5: 16,79 · 15,17 · 5,49 · 4,98 · 6,43. Radios concéntricos 16 → 10, espacios todos múltiplo de 4, Bungee nunca bajo 20, un solo tono de gris para el texto secundario, cero naranja, cero sombras, cero rotación, 48 de alto en todo lo pulsable. <span style="color:#F4F4F1;">Divergencia que dejo a propósito</span>: el componente separa las filas con línea de Papel 200 y aquí van con 4 de aire y esquina 10, porque la fila de hoy es una pastilla y una pastilla con separadores se ensucia.  ⚠ <span style="color:#F4F4F1;">Arquitectura de Contenido: no, y en tres puntos</span>, los tres por decisiones tuyas y ninguno por accidente. Su ficha de Visítanos dice literalmente «los DOS horarios (semana y findes o festivos) con "abierto ahora" en vivo, el mapa como pieza y <span style="color:#F4F4F1;">el teléfono como único botón</span>. Aquí <span style="color:#F4F4F1;">la línea del bar</span> y el parking». Uno: el teléfono se fue al cierre, así que con el mapa cargado esta sección <span style="color:#F4F4F1;">no tiene ni un botón</span>. Dos: el bar se ha ido a 03. Del tercer punto ya no hay nada que decir: la ficha pedía «los DOS horarios (semana y findes o festivos)» y el horario real es exactamente eso, así que ahí acertó. Lo que sí cumple de esa ficha: los dos horarios, el «abierto ahora» en vivo, el mapa como pieza y el parking. Hay que reescribir esa ficha y anotarlo en el registro del índice; y ojo, la misma Arquitectura le da al futuro <span style="font-family:'JetBrains Mono';font-size:11.5px;">/contacto</span> «mapa sin nada encima, horario, parking, teléfono y formulario», que es casi esta sección otra vez: al escribir esa página hay que decidir qué NO se repite. · el bar se ha ido a 03, donde lo pone la Arquitectura de Contenido, así que esta sección se queda con lo suyo: cuándo abre, dónde está y dónde se aparca · el aparcamiento pasa DEBAJO de los dos estados del mapa: estuvo delante del aviso de sin-cookies y se leía antes que la explicación de por qué no hay mapa · con el mapa cargado la sección <span style="color:#9AA1A8;">no tiene ningún enlace ni ningún botón</span>: todo es información, y quien quiera hacer algo lo hace dentro del mapa o en el cierre. Es lo más callado que ha estado y lo que la Arquitectura no previó · el enlace a Google Maps no se borra, se muda al aviso: ahí es la ÚNICA salida de la sección, la de quien ha dicho no a las cookies, y abrir otra pestaña no pone ninguna · la dirección va bajo el mapa en dos líneas, calle y población, como se escribe una dirección: cubre el fallo que el consentimiento no cubre —un bloqueador tumba el iframe con las cookies aceptadas y entonces no salta el aviso, sale un hueco— y de paso da el dato a quien prefiere teclearlo en su propio navegador · el aparcamiento vuelve a tener bloque propio: estuvo pegado a la atribución del mapa y eso lo metía dentro del <span style="font-family:'JetBrains Mono';font-size:11.5px;">sc-if</span> del consentimiento, así que quien rechazaba cookies se quedaba sin saber dónde aparcar —un dato que no tiene nada que ver con Google—. Lo que no depende del mapa no vive dentro del mapa, que es el mismo criterio que manda la dirección fuera del <span style="font-family:'JetBrains Mono';font-size:11.5px;">iframe</span> · el aviso de sin-cookies ya no dice «la dirección es esta» porque la dirección ya está arriba: dice solo por qué no hay mapa, y luego repite la calle porque en ese estado el mapa no está para confirmarla · medido: <span style="color:#9AA1A8;">872,2 px = 1,07 pantallas</span> con el horario real dentro —dos filas en vez de cuatro, 47 px menos—, cero enlaces y cero botones en el DOM con el mapa puesto — por debajo de Zonas (1,27) y de todo lo que llevamos, con la semana entera dentro. Empezó en 1,77</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «el horario real y la dirección de verdad» · «la semana en dos líneas y la tabla en Dudas» · «que el aparcamiento entre en la nota del mapa»</p>
+</section>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">El bar: o foto grande, o ninguna</span></div>
+  <p class="dv-intro">Llevas razón y conviene decirlo claro: <span style="color:#F4F4F1;">un cuadradito de 120×120 de un interior no enseña nada</span>. Una foto de mesas necesita anchura para que se entienda que las mesas miran al parque; a esa medida es una manchita marrón. Y eso convierte la decisión en <span style="color:#F4F4F1;">binaria</span>: o la foto es lo bastante grande para vender —16:9, que es <a href="#3a">3a</a>: 333 px de bloque y la sección en 1,44— o no hay foto, y entonces no se paga espacio por una imagen que no cumple. El tamaño intermedio es lo peor de las dos: cuesta sitio y no enseña. Así que sí, tu tercera idea es la buena: <span style="color:#F4F4F1;">un recuadro</span>. Es <a href="#5a">5a</a>, con lo de 4a dentro —la semana entera y un solo enlace de salida— y el bar como <span style="color:#F4F4F1;">tarjeta que entera es el enlace</span>, sin foto y sin botón: el patrón de Zonas otra vez. La sección se queda en <span style="color:#F4F4F1;">1,24 pantallas</span> —menos que sin bar ninguno, porque el mapa a 16:9 devuelve más de lo que cuesta el recuadro—, o sea que el bar cuesta <span style="color:#F4F4F1;">menos que nada</span> y sigue leyéndose como una cosa y no como un pie de página. ⚠ Y no lo he puesto en tinta a propósito, aunque una tarjeta oscura llamaría más: detrás de esta sección viene el cierre, que es el bloque de tinta con el eslogan, y dos manchas oscuras seguidas le quitan el golpe al cierre. La única pregunta que queda en tus manos: <span style="color:#F4F4F1;">¿hay una foto buena del bar?</span> Si la hay, 3a se defiende sola; si no la hay o es regular, 5a es mejor diseño que 3a con una foto mala.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><span>El bar como recuadro sin foto, la semana entera y un solo enlace de salida.</span></div>
+      <div class="dv-card" data-screen-label="5a">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios distintos: entre semana y finde.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:4px;">
+            <sc-for list="{{ filasPapel }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:{{ f.fondo }};">
+                <span style="font-size:15.5px;line-height:1.35;font-weight:700;color:#101418;">{{ f.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:15px;flex:none;color:#101418;">{{ f.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-5a" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso. La dirección es esta:</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+        </div>
+        </sc-if>
+
+        <div style="margin:8px 16px 0;">
+          <a href="#maps" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+
+        <sc-if value="{{ conBar }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <a href="#bar" data-mueve style="display:flex;align-items:center;gap:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;color:#0A5C93;transition:border-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#0A5C93;">
+            <span style="flex:1;min-width:0;display:block;">
+              <span style="display:block;font-family:'Bungee';font-size:20px;line-height:1.15;color:#101418;">El bar</span>
+              <span style="display:block;font-size:16px;line-height:1.5;color:#626A72;margin-top:4px;">Puedes comer sin saltar: mesas con el parque a la vista y carta corta.</span>
+            </span>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+      </div>
+      <div class="dv-meta">la tarjeta entera es el enlace y no lleva botón dentro: Zonas (4a) otra vez, y aquí encaja mejor que en ningún sitio porque el destino es una página del bar · en papel y no en tinta a propósito: el cierre de la portada es tinta y dos oscuros seguidos se comen el uno al otro · sin foto no hay hueco que rellenar: la tarjeta mide lo que mide su texto, así que no hay decisión pendiente de material ni un cuadrado gris esperando · el borde se enciende a Azul Muro al pasar por encima, 180 ms con la curva de salida — es lo que hace la tarjeta de Zonas y no hay que inventar nada · dentro del recuadro el rótulo es Bungee 20, el mínimo que permite el sistema, y el texto Cuerpo 16: por eso caben las dos ideas —comer sin saltar y qué hay— en tres líneas · los «juegos de fuera» se han caído de la frase para que quepa en dos líneas: si son un argumento fuerte, vuelven y la tarjeta crece 23 px · medido: el recuadro son 117 px y la sección 1.050, o sea <span style="color:#9AA1A8;">1,24 pantallas</span> — 20 menos que 4a con la fila y la foto pequeña, 298 menos que 1b con la foto grande, y por debajo de la sección sin bar ninguno (1,26), porque el mapa a 16:9 devuelve más de lo que cuesta el recuadro. El bar sale gratis</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «con foto, a lo ancho» (es 3a) · «el recuadro en tinta a ver cómo queda» · «que vuelvan los juegos de fuera a la frase» · «con el nombre real del bar»</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">Un solo enlace de salida</span></div>
+  <p class="dv-intro">Tienes razón, y lo interesante es que <span style="color:#F4F4F1;">los tres fallaban por motivos distintos</span>. <span style="color:#F4F4F1;">«El horario, día a día»</span> era el peor: apunta a una página que <span style="color:#F4F4F1;">el sistema de contenido dice que no va a existir</span> —«Horarios» no pasa las tres pruebas, se queda «en esta sección, en vivo»— así que prometía lo que no esconde. Fuera el enlace y <span style="color:#F4F4F1;">la semana entera se ve aquí</span>, cuatro líneas, que es lo que la sección venía a hacer. <span style="color:#F4F4F1;">«Ver el bar»</span> tampoco hacía falta: en 3b la fila entera ya es el enlace, así que el botón era un segundo clic para lo mismo. Y <span style="color:#F4F4F1;">«Abrir en Google Maps»</span> se queda, y se queda solo, por una razón: es la única acción que la gente quiere de verdad aquí —arrancar el navegador— y es <span style="color:#F4F4F1;">lo único que sobrevive cuando no hay cookies</span> y el mapa no se carga. Un enlace de salida, una fila de contenido que se puede pulsar, y ninguna promesa vacía. ⚠ Lo que cuesta: la semana entera son 50 px más que el resumen de hoy y mañana, así que el ahorro del enlace se lo come la tabla: la sección queda en <span style="color:#F4F4F1;">1,27 pantallas</span> contra las 1,21 de 3b —51 px más—, que es exactamente lo que mide Zonas. Se gana en honradez y en dos controles menos, no en centímetros.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><span>3b con la semana entera dentro y sin enlace al horario. Un único enlace de salida.</span></div>
+      <div class="dv-card" data-screen-label="4a">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios distintos: entre semana y finde.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:4px;">
+            <sc-for list="{{ filasPapel }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:{{ f.fondo }};">
+                <span style="font-size:15.5px;line-height:1.35;font-weight:700;color:#101418;">{{ f.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:15px;flex:none;color:#101418;">{{ f.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-4a" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso. La dirección es esta:</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+        </div>
+        </sc-if>
+
+        <div style="margin:8px 16px 0;">
+          <a href="#maps" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+
+        <sc-if value="{{ conBar }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <a href="#bar" data-mueve style="display:flex;align-items:center;gap:16px;color:#0A5C93;transition:opacity 180ms cubic-bezier(.4,0,.2,1);">
+            <span style="width:120px;height:120px;flex:none;border-radius:10px;overflow:hidden;background:#E8E9E5;display:block;">
+              <image-slot id="pjp-bar-4a" shape="rect" fit="cover" placeholder="Foto del bar: las mesas" style="width:100%;height:100%;"></image-slot>
+            </span>
+            <span style="flex:1;min-width:0;display:block;">
+              <span style="display:block;font-family:'Bungee';font-size:20px;line-height:1.15;color:#101418;">El bar</span>
+              <span style="display:block;font-size:16px;line-height:1.45;color:#626A72;margin-top:4px;">Puedes comer sin saltar, con el parque a la vista</span>
+            </span>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+      </div>
+      <div class="dv-meta">un solo enlace con flecha que saca de la página, «Abrir en Google Maps», que además es el que aguanta el estado sin cookies · la fila del bar lleva flecha porque sin ella una fila no se lee como pulsable, pero es contenido: la foto y el nombre son el enlace, igual que en Zonas · la tabla de la semana pasa a papel: hoy se marca con superficie (Nube), nunca con color ni con peso de texto —el truco del velo de Tarifas— y solo cuando su horario está vigente; con el parque ya cerrado la fila de hoy vuelve a ser calendario, y quien manda es el titular · el día a día ya no es un enlace porque no había destino: «Horarios» no pasa las tres pruebas del sistema de contenido, así que su sitio ES esta sección · la mono se queda en las horas y en los antetítulos, que es su papel; las etiquetas de día son texto · sin naranja, sin sombras, sin rotación y con un solo tono de gris para el texto secundario · medido: 1.070 px, 1,27 pantallas — 51 más que 3b y 278 menos que 1b, con dos controles menos. Justo lo que mide Zonas</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «aplícalo a 1b» · «la semana en dos líneas y la tabla en Dudas» · «quita también la flecha del bar»</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Acortar la sección — y no solo el bar</span></div>
+  <p class="dv-intro">Antes de recortar, medirlo: 1b está en <span style="color:#F4F4F1;">1.348 px, 1,60 pantallas</span> —el número sale de medir lo construido, no de sumar a mano—, y de eso <span style="color:#F4F4F1;">534 px son dos fotos en 4:3</span> —el mapa y el bar—, o sea el 40 % de la sección en dos rectángulos de imagen. Así que el bar no es la causa única: la causa es que <span style="color:#F4F4F1;">pusimos dos fotos del mismo tamaño y ninguna es del parque</span>. Lo primero, gratis y en las dos opciones: el mapa <span style="color:#F4F4F1;">baja a 16:9</span>, que es la proporción natural de una tira de mapa y ahorra 66 px sin quitar nada. Lo segundo es lo que decides tú: <a href="#3a">3a</a> deja el bar como está pero también a 16:9 —misma idea, menos alto— y <a href="#3b">3b</a> lo convierte en <span style="color:#F4F4F1;">una fila que entera es el enlace</span>, con la foto pequeña al lado del texto, que es exactamente el patrón que ya aprobaste en Zonas: la tarjeta es el enlace y no lleva botón. Y hay una tercera salida que no he dibujado porque es estructural, no de tamaño: <span style="color:#F4F4F1;">el bar se va al pie de «Qué hay dentro»</span> —donde el sistema de contenido ya coloca «los juegos de fuera»— y aquí se queda en una línea con enlace. Eso deja la sección en <span style="color:#F4F4F1;">1,05 pantallas</span>, la más corta de las tres, y coloca el bar donde está la pregunta que contesta. Dime y la monto.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a><span>Lo mismo, apretado: las dos fotos a 16:9. −133 px.</span></div>
+      <div class="dv-card" data-screen-label="3a">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios distintos: entre semana y finde.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:12px;">
+            <sc-for list="{{ resumen }}" as="r" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                <span style="font-size:16px;line-height:1.35;font-weight:{{ r.peso }};color:#101418;">{{ r.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:14px;flex:none;color:#101418;">{{ r.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="#horario" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>El horario, día a día</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-3a" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso. La dirección es esta:</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+        </div>
+        </sc-if>
+
+        <div style="margin:8px 16px 0;">
+          <a href="#maps" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+
+        <sc-if value="{{ conBar }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <div style="position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#E8E9E5;">
+            <image-slot id="pjp-bar-3a" shape="rect" fit="cover" placeholder="Foto del bar: las mesas con el parque a la vista" style="width:100%;height:100%;"></image-slot>
+            <div style="position:absolute;left:12px;right:12px;bottom:12px;background:#101418;border-radius:10px;padding:12px 16px;">
+              <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">El bar</div>
+              <div style="font-size:16px;line-height:1.45;color:#C9CDD1;margin-top:4px;">Puedes comer sin saltar</div>
+            </div>
+          </div>
+          <div style="font-size:16px;line-height:1.5;color:#626A72;margin-top:12px;">Mesas con el parque a la vista, carta corta y los juegos de fuera.</div>
+          <a href="#bar" style="display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Ver el bar</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+      </div>
+      <div class="dv-meta">no cambia ninguna decisión: mismo orden, mismo contenido, misma chapa. Solo la proporción de las dos fotos · el mapa a 16:9 no pierde información —una manzana se ve igual— y el bar a 16:9 sigue teniendo sitio para la chapa: 201 px de foto con 74 de chapa es el 37 %, un poco más que el 28 % de 4:3, pero por debajo de la mitad · medido: el bloque del bar baja de 400 a 333 px y la sección de 1.348 a 1.215 · lo que gana: −133 px sin quitar nada, y las dos fotos comparten proporción, que es una decisión de sistema y no un ajuste suelto · lo que cuesta: sigue habiendo dos fotos seguidas del mismo tamaño y ninguna del parque; la sección queda en 1,44 pantallas, por encima de Zonas</div>
+    </div>
+
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a><span>El bar en fila y la fila entera es el enlace, como en Zonas. −330 px.</span></div>
+      <div class="dv-card" data-screen-label="3b">
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios distintos: entre semana y finde.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:12px;">
+            <sc-for list="{{ resumen }}" as="r" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                <span style="font-size:16px;line-height:1.35;font-weight:{{ r.peso }};color:#101418;">{{ r.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:14px;flex:none;color:#101418;">{{ r.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="#horario" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>El horario, día a día</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-3b" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso. La dirección es esta:</p>
+          <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+        </div>
+        </sc-if>
+
+        <div style="margin:8px 16px 0;">
+          <a href="#maps" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+
+        <sc-if value="{{ conBar }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <a href="#bar" data-mueve style="display:flex;align-items:center;gap:16px;color:#0A5C93;transition:opacity 180ms cubic-bezier(.4,0,.2,1);">
+            <span style="width:120px;height:120px;flex:none;border-radius:10px;overflow:hidden;background:#E8E9E5;display:block;">
+              <image-slot id="pjp-bar-3b" shape="rect" fit="cover" placeholder="Foto del bar: las mesas" style="width:100%;height:100%;"></image-slot>
+            </span>
+            <span style="flex:1;min-width:0;display:block;">
+              <span style="display:block;font-family:'Bungee';font-size:20px;line-height:1.15;color:#101418;">El bar</span>
+              <span style="display:block;font-size:16px;line-height:1.45;color:#626A72;margin-top:4px;">Puedes comer sin saltar, con el parque a la vista</span>
+            </span>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+      </div>
+      <div class="dv-meta">la fila entera es el enlace y no lleva botón dentro: es el patrón que cerraste en Zonas (4a), así que no inventa nada · la foto pasa de 358×268 a 120×120 —de 96.000 px² a 14.400, un 15 %— y por eso baja tanto: el bloque va de 400 a 137 px, medido · el rótulo sale de la chapa y vuelve a papel, con lo que la sección se queda otra vez sin ninguna mancha oscura antes del cierre, que era la virtud de 1b · toda la fila mide 120 de alto, muy por encima de los 48 del mínimo táctil, y el texto es <span style="font-family:'JetBrains Mono';font-size:11.5px;">span</span> dentro del enlace: HTML válido, sin un botón anidado · lo que cuesta: a 120×120 la foto del bar ya no vende, informa; si la gracia era que se viera la terraza, esta no es la opción · resultado medido: 1.018 px = 1,21 pantallas, menos que la sección sin foto ninguna (1,26) — o sea, el bar entra gratis y encima sobra sitio</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «monta la tercera: el bar al pie de Qué hay dentro» · «3b pero con la foto a 4:3» · «el mapa también a 16:9 en 1b y ya está»</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">El bar — tres formas de darle sitio</span></div>
+  <p class="dv-intro">Preguntas cómo mejorarlo sin salirse del sistema. Lo primero: el bar <span style="color:#F4F4F1;">no contesta la pregunta de esta sección</span>. «Visítanos» contesta «¿está abierto y cómo llego?»; el bar contesta <span style="color:#F4F4F1;">«y yo qué hago mientras salta mi hijo»</span>, que es la duda del adulto que acompaña —un público con nombre propio en Arquitectura de Contenido—. Por eso hoy es una línea de paso: está en el sitio de otra pregunta. Lo que hay que decidir no es el adorno, es <span style="color:#F4F4F1;">cuánto sitio se le da y si necesita foto</span>. Tres tratamientos, los tres dentro de las reglas: cero naranja (aquí no se compra), radios 16 con interior 10, 48 de alto en lo pulsable, la mono solo como etiqueta y ninguna sombra difusa. <a href="#2a">2a</a> le da tarjeta propia en tinta · <a href="#2b">2b</a> una foto ancha con chapa · <a href="#2c">2c</a> ninguna foto. ⚠ Los tres te piden lo mismo: <span style="color:#F4F4F1;">el nombre real</span> del bar si lo tiene, y si hay foto decente de las mesas. Mientras no haya nombre, los tres dicen «el bar». ✅ Ya contestado: <span style="color:#F4F4F1;">se puede comer sin saltar</span>, y eso es ahora la primera frase de los tres —es el argumento, no un detalle—; y las mesas tienen <span style="color:#F4F4F1;">«el parque a la vista»</span>, no «las camas», que era palabra de dentro.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><span>Tarjeta propia en tinta, con foto. El bar pasa de línea a bloque.</span></div>
+      <div class="dv-card" data-screen-label="2a">
+        <div style="margin:24px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <div style="background:#101418;border-radius:16px;padding:20px;" data-superficie="tinta">
+            <div style="aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#1A1F25;">
+              <image-slot id="pjp-bar-2a" shape="rect" fit="cover" placeholder="Foto del bar: las mesas con el parque a la vista" style="width:100%;height:100%;"></image-slot>
+            </div>
+            <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;margin-top:16px;">El bar</div>
+            <div style="font-size:16px;line-height:1.5;color:#C9CDD1;margin-top:8px;">Puedes comer sin saltar: mesas con el parque a la vista, carta corta y los juegos de fuera.</div>
+            <a href="#bar" style="display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#1AA9DE;"><span>Ver el bar</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></a>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">tarjeta en tinta sobre papel, que es un rol declarado en tokens (`papel.superficiePeso`) y no un fondo de color: la regla prohíbe el color como fondo de sección, no una tarjeta oscura dentro de una sección de papel · concéntrico correcto: 16 fuera, 20 de aire, 10 la foto · enlace en Cian PJP porque estamos en tinta (6,21); en papel ese cian daría 2,45 y ahí el enlace es Azul Muro · el foco de este enlace pasa a amarillo por estar en tinta, y lo hace la regla por superficie que ya tiene la sección · lo que gana: el bar deja de ser un pie de página de «cómo llegar» y se lee como una oferta; la foto hace el argumento que el texto no puede hacer · lo que cuesta: el bloque pasa de 111 a 412 px —<span style="color:#9AA1A8;">+300, casi cuatro veces</span>, y con él la sección se iría a 1,62 desde las 1,26 de base— y mete una segunda mancha oscura en una sección que 1b había dejado con ninguna, justo antes del cierre en tinta. Si eliges esta, el cierre pierde parte de su golpe</div>
+    </div>
+
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><span>Una foto ancha con la chapa encima, como las fichas de «Qué hay dentro».</span></div>
+      <div class="dv-card" data-screen-label="2b">
+        <div style="margin:24px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <div style="position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#E8E9E5;">
+            <image-slot id="pjp-bar-2b" shape="rect" fit="cover" placeholder="Foto del bar: las mesas con el parque a la vista" style="width:100%;height:100%;"></image-slot>
+            <div style="position:absolute;left:12px;right:12px;bottom:12px;background:#101418;border-radius:10px;padding:12px 16px;">
+              <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">El bar</div>
+              <div style="font-size:16px;line-height:1.45;color:#C9CDD1;margin-top:4px;">Puedes comer sin saltar</div>
+            </div>
+          </div>
+          <div style="font-size:16px;line-height:1.5;color:#626A72;margin-top:12px;">Mesas con el parque a la vista, carta corta y los juegos de fuera.</div>
+          <a href="#bar" style="display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;"><span>Ver el bar</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></a>
+        </div>
+      </div>
+      <div class="dv-meta">⚠ preguntas si respeta el sistema, y tal como estaba <span style="color:#9AA1A8;">no del todo: dos cosas falladas, ya corregidas</span>. El rótulo «El bar» iba en Bungee a 18 px y la regla dura dice que Bungee nunca baja de 20 —a 18 la Bungee empieza a cerrarse y deja de leerse como rótulo—; y la frase de la chapa iba a 15 px, que es Cuerpo S, letra de pie: siendo el argumento del bloque le toca Cuerpo, 16, que además es el mínimo de móvil de este proyecto. Lo demás sí cumplía: reusa vocabulario ya aprobado —la chapa de tinta sobre la foto es exactamente lo de 03 y 06—, y el texto va sobre tinta plena, nunca sobre la foto —«nada de texto de color sobre foto sin capa de tinta debajo» · concéntrico: 16 la foto, 12 de aire, 10 la chapa · la chapa se queda con el rótulo y la frase que decide —«puedes comer sin saltar»— y el resto baja a papel: con la frase entera dentro, la chapa tapaba el 45 % del alto de la foto y entonces la foto ya no mandaba, que era justo lo que esta opción venía a hacer. Así se queda en el 28 % · lo que cuesta: es el patrón de «Qué hay dentro» aplicado fuera de su sección, y a 4:3 pesa casi como una zona —el bar puede acabar pareciendo la sexta atracción. Y sin foto real no hay opción: el hueco vacío se ve · de 111 a 400 px, +289, y la sección pasa de 1,26 a 1,60 pantallas — es la que está montada en 1b, así que la cifra sale de allí, medida sobre lo construido; 60 px más que antes de bajar la frase a papel, porque la chapa flota sobre la foto y encogerla no devuelve alto: lo que se gana es que la foto se vea · lo que cumple, punto por punto: radios 16 fuera → 10 la chapa, con 12 de aire, que es el concéntrico correcto · Azul Muro en el enlace (7,08 sobre papel) y nunca el cian, que ahí da 2,45 · Papel 200 sobre tinta en la chapa (12,8) · 48 de alto en el enlace · espacios 24 · 16 · 12 · 8, todos múltiplo de 4 · cero naranja, cero mono, ninguna sombra y sin rotación · y la foto es <span style="font-family:'JetBrains Mono';font-size:11.5px;">aspect-ratio</span>, no un alto fijo, así que a 320 y a 1920 se comporta igual</div>
+    </div>
+
+    <div class="dv-opt" id="2c">
+      <div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a><span>Sin foto: la pregunta del adulto, la respuesta y tres datos.</span></div>
+      <div class="dv-card" data-screen-label="2c">
+        <div style="margin:24px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <div style="font-size:22px;line-height:1.25;font-weight:700;color:#101418;">¿Tú no saltas?</div>
+          <div style="font-size:16px;line-height:1.5;color:#626A72;margin-top:8px;">Puedes comer sin saltar: hay mesas con el parque a la vista.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;border-radius:999px;padding:6px 11px;background:#E8E9E5;color:#101418;">Carta corta</span>
+            <span style="font-family:'JetBrains Mono';font-size:11px;border-radius:999px;padding:6px 11px;background:#E8E9E5;color:#101418;">Mesas dentro y fuera</span>
+            <span style="font-family:'JetBrains Mono';font-size:11px;border-radius:999px;padding:6px 11px;background:#E8E9E5;color:#101418;">Juegos de fuera</span>
+          </div>
+          <a href="#bar" style="display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;"><span>Ver el bar</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></a>
+        </div>
+      </div>
+      <div class="dv-meta">la mejora aquí es de texto, no de caja: se hace la pregunta del que acompaña en voz alta —Subtítulo, 22, Hanken 700— y se contesta en una frase. Es el patrón que la FAQ del sistema usa: la pregunta es el titular · los tres datos son chips que informan, no filtros: no se pulsan, así que no cumplen los 48 y no tienen por qué. Van en Nube con tinta encima (15,17) porque en papel no existe el chip «color al 14%», que está definido sobre tinta · lo que gana: solo +124 px (de 111 a 236) y ni una decisión pendiente de material fotográfico —la sección se queda en 1,40 pantallas, por encima de Zonas (1,27) pero 0,21 por debajo de las dos con foto—; y en móvil los chips caen a dos líneas sin romper nada · lo que cuesta: sigue siendo texto en una sección de texto, así que el bar se ve pero no se desea. Es la opción honesta mientras no haya foto ni nombre</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «con el nombre real y la carta» · «que diga si se puede comer sin saltar» · «cuatro precios de la carta» · «el bar fuera de Visítanos, como sección propia»</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">07 · Visítanos — el estado en vivo manda, y la puerta se reconoce</span></div>
+  <p class="dv-intro">Lo que contestaste: <span style="color:#F4F4F1;">dos piezas</span> (esta sección en papel y el cierre de tinta detrás, con su juego y su eslogan), el <span style="color:#F4F4F1;">«abierto ahora» en grande</span> porque es el dato de la sección, <span style="color:#F4F4F1;">el mapa de Google</span> con un aviso cuando no hay cookies, y —decidido ahora— <span style="color:#F4F4F1;">sin teléfono ni WhatsApp aquí</span>, porque preguntar vive en el cierre; el aparcamiento en una línea —gratis y en la calle— y, decidido ahora, <span style="color:#F4F4F1;">ni logo ni dirección escrita</span>: el widget de Google ya trae la calle, así que la dirección solo aparece cuando el mapa no se carga. Las dos opciones se diferencian en <span style="color:#F4F4F1;">cuánta oscuridad gasta la sección</span>: <a href="#1a">1a</a> mete el estado y la semana entera en una chapa de tinta, como 04, 05 y 06; <a href="#1b">1b</a> deja el estado en papel, resume el horario en <span style="color:#F4F4F1;">hoy y mañana</span> —con el día a día detrás de un enlace— y así la única mancha oscura de la sección es la fachada. Lo demás es igual en las dos. ⚠ Dos cosas que hacen falta y no me diste: <span style="color:#F4F4F1;">la dirección</span> y <span style="color:#F4F4F1;">el horario real</span>. ✅ <span style="color:#F4F4F1;">El horario ya es el real</span> (dueño, sep 2026): 16:30–21:30 de lunes a jueves, 11:30–21:30 de viernes a domingo, festivos como el finde y <span style="color:#F4F4F1;">ningún día de cierre</span> — o sea que la spec de excursiones se equivocaba con el martes y con el 10:00–21:00. Sigue pendiente la dirección, que es inventada. Prueba el interruptor «Hoy cerrado» para verlo. ⚠ Y he quitado dos frases que había escrito yo y no eran dato: <span style="color:#F4F4F1;">«sin reserva para entrar a saltar»</span> —que además choca con lo que decidiste, que el «¿hace falta reservar?» vive en Dudas, y con el aforo por franja: un sábado a las 18:00 puede ser mentira en la puerta— y <span style="color:#F4F4F1;">«festivos y vísperas, horario de finde»</span>, que el producto sí sabe decir (`special_dates`) pero que nadie ha decidido. Si los festivos van con horario de finde, dilo y vuelve como línea; mientras no lo digas, la sección no publica una regla que no puede probar. ✅ El estado se calcula <span style="color:#F4F4F1;">con la hora de tu ordenador</span> y contra esa misma tabla: si lo abres a las 22:30 un domingo, dice «ya hemos cerrado» y te da la hora de mañana. ⚠ Ese caso destapó un fallo que estaba puesto y ya no está: «hoy no abre» y «hoy ya ha cerrado» se decían con la misma frase, así que el titular ponía «Hoy cerrado» mientras la tabla, 60 px más abajo, seguía marcando el domingo con «11:00 — 21:00» como si fuera oferta. Son cuatro estados, no tres, y el día solo se resalta cuando su horario está vigente: con el parque ya cerrado, la fila de hoy vuelve a ser calendario y el que se resalta es mañana. No hay ningún número escrito dos veces. ⚠ Y una medida que hay que decidir: <span style="color:#F4F4F1;">es la sección más alta de la portada</span> — con el bar de 2b ya montado en 1b, mide 1.348 px (1,60 pantallas a 390) y 1a se queda en 1.153 (1,37), contra 1,27 de Zonas y 0,89 de Reseñas. Sin la foto del bar, 1b eran 1,26 —casi como Zonas—: la foto cuesta 0,35 de pantalla y es la decisión que sostiene esa altura. Cabe recortar por tres sitios, de menos a más doloroso: el mapa de 3:2 a 16:9 (−37 px), la banda de la fachada fuera (−142) o la línea del bar movida al pie de «Qué hay dentro». Dime por dónde y lo recorto al elegir opción.</p>
+  <p class="dv-intro">🔍 <span style="color:#F4F4F1;">Repaso contra el sistema, con lo que había mal.</span> Nueve cosas incumplían un documento propio y están corregidas: <span style="color:#F4F4F1;">1 · el espacio</span> —«todo múltiplo de 4; un 13, un 18 o un 22 no existen»— y yo tenía 18, 14, 10, 7, 6 y 2 repartidos por toda la sección; <span style="color:#F4F4F1;">2 · el titular</span> iba a 32 px, que no es ningún escalón: Título en móvil es 26, y el dato pasa a Display L, 34, con lo que la jerarquía queda dicha por la escala y no por un número a ojo; <span style="color:#F4F4F1;">3 · la entradilla</span> era Cuerpo (16) y medía 82 caracteres, con un máximo de 65: ahora es Entradilla (18) y mide 45; <span style="color:#F4F4F1;">4 · el guion</span> de los rangos era «–» y Voz PJP escribe «16:00 — 21:00» con guion largo; <span style="color:#F4F4F1;">5 · dos rótulos en mono</span> —«el mapa lo pone Google» y «cuando veas el mural, ya estás»— eran argumentos escritos en letra de etiqueta, y por la regla dura de este proyecto la mono es etiqueta, no argumento: pasan a Cuerpo S, 15; las etiquetas que quedan suben a los 12 px de la escala; <span style="color:#F4F4F1;">6 · el panel del rótulo</span> tenía las esquinas a 10 y la fachada real es «panel recto, a escuadra»: radio 0, y fuera la banda gris de pared, que además usaba Tinta 600 —un primitivo cuyo único papel declarado es el borde del botón fantasma—; <span style="color:#F4F4F1;">7 · el aviso del mapa</span> iba con borde discontinuo, que en estos documentos significa «esto es una anotación, no una pantalla», cuando es UI de verdad que el visitante ve: borde continuo; <span style="color:#F4F4F1;">8 · los divisores</span> usaban Nube, que es relleno inerte, en vez de Línea, que es el borde en papel; <span style="color:#F4F4F1;">9 · la flecha</span> era el carácter «→» y el sistema tiene su icono (<span style="font-family:'JetBrains Mono';font-size:11.5px;">ui/flecha-der</span>), que es el que va. Y el hover de los botones pasa de 120 a 180 ms, que es el tiempo declarado para botones; 120 es el de iconos y enlaces. ⚠ Queda un <span style="color:#F4F4F1;">conflicto que no puedo resolver yo</span>: el sistema de contenido tiene escrito «Contacto → Sección Visítanos», y acabas de decidir que preguntar vive en el cierre. Con el teléfono fuera, esta sección ya no tiene ningún canal: quien quiera preguntar por un cumpleaños tiene que seguir bajando. Si te parece bien, hay que cambiar esa fila del documento y anotarlo en el índice; y si no, el teléfono vuelve.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span>El estado y la semana entera en una chapa de tinta, como las otras secciones. Debajo, cómo llegar y la puerta.</span></div>
+      <div class="dv-card" data-screen-label="1a">
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios distintos: entre semana y finde.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColor }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColor }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#C9CDD1;margin-top:8px;">{{ estadoLinea }}</div>
+
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #2A3138;display:flex;flex-direction:column;gap:4px;">
+            <sc-for list="{{ filas }}" as="f" hint-placeholder-count="4">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:{{ f.fondo }};">
+                <span style="font-size:15px;line-height:1.35;font-weight:{{ f.peso }};color:{{ f.colorLabel }};">{{ f.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.02em;flex:none;color:{{ f.colorHoras }};">{{ f.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <div style="margin:16px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Cómo llegar</div>
+
+          <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+          <div style="margin-top:16px;">
+            <div style="aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+              <image-slot id="pjp-mapa-1a" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+            </div>
+            <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+            <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso. La dirección es esta:</p>
+            <div style="font-size:17px;line-height:1.35;font-weight:700;color:#101418;margin-top:12px;">{{ dir1 }}</div>
+            <div style="font-size:16px;line-height:1.4;color:#626A72;margin-top:4px;">{{ dir2 }}</div>
+            <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+            <a href="#cookies" style="display:inline-flex;align-items:center;min-height:44px;font-size:15px;color:#0A5C93;">Qué cookies usamos</a>
+          </div>
+          </sc-if>
+
+          <a href="#maps" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+
+        <div style="margin:16px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:4px 20px;">
+          <div style="padding:16px 0;font-size:16px;line-height:1.45;color:#101418;">Se aparca en la calle, delante, y es gratis.</div>
+          <sc-if value="{{ conBar }}" hint-placeholder-val="{{ true }}">
+          <div style="padding:0 0 8px;border-top:1px solid #D6D8D4;">
+            <div style="font-size:16px;line-height:1.45;color:#101418;margin-top:16px;">¿Tú no saltas? El bar tiene carta, mesas y los juegos de fuera.</div>
+            <a href="#bar" style="display:inline-flex;align-items:center;gap:8px;min-height:48px;font-weight:800;font-size:16px;color:#0A5C93;">
+              <span>Ver el bar</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+            </a>
+          </div>
+          </sc-if>
+        </div>
+
+      </div>
+      <div class="dv-meta">papel de arriba abajo y una sola chapa de tinta, la del dato — el mismo sitio que ocupa el 4,8 en 06 y el reloj en 04 · cero naranja: aquí no se compra, y el naranja solo significa comprar · el estado en Verde Salta (5,63 sobre Tinta 800), que en tokens es «éxito»; cerrado NO va en rojo, porque un lunes cerrado no es un error — va en Papel con el punto en Tinta 500 (3,49), y «abre más tarde» en Amarillo Aviso (10,09) · la fila de hoy se marca con superficie, no con color de texto: fondo Tinte Cian y las horas en Cian 300 (7,52 sobre ese tinte), que es el mismo truco del velo del carril — cambiar de superficie en vez de bajar la opacidad · «cierra a las 21:00» sale del hallazgo del producto: HeroStatus calculaba la ventana del día y la tiraba, y por eso entró `closes_at`. Si el horario no está configurado, el producto devuelve null y no pinta chip: eso es el interruptor «Sin horario configurado», y entonces la sección pierde la mitad de arriba, no se rellena con nada · la segunda línea del dato dice solo «Hasta las 21:00», que es `closes_at` y nada más: llevaba «sin reserva para entrar a saltar» y era una promesa operativa inventada —el «¿hace falta reservar?» está mandado a Dudas y el aforo por franja puede desmentirla— y debajo, «festivos y vísperas, horario de finde», que es una afirmación sobre `special_dates` que ningún documento sostiene. Las dos fuera: en el dato más grande de la sección, una frase sin campo detrás es la que más caro sale · un número por frase: la hora de cierre está en el titular del dato, y la tabla la repite como fila de hoy porque ahí es la misma frase leída de otra forma — no hay ninguna cifra escrita dos veces en el código, todas salen de la tabla · el mapa es el iframe de Google detrás del consentimiento de la categoría `maps`: con permiso, el hueco (aquí un sitio donde arrastrar una captura); sin permiso, el aviso con el botón «Cargar el mapa», que es el componente `consent-frame` del producto. la dirección ya no se escribe al lado del mapa —el widget la trae— y por eso vive dentro del aviso de sin-cookies: ahí deja de ser repetición y es lo único que hay. Si se hubiera quitado a secas, quien no acepte cookies se queda sin mapa Y sin calle · «Abrir en Google Maps» se queda en los dos estados — abrir un enlace no pone cookies aquí · preguntar ya no vive aquí: el dueño lo mandó al cierre, y con el bloque se va también la decisión que traía —teléfono y WhatsApp a la vez y nunca en cascada, porque un `v-else-if` esconde el WhatsApp de toda instalación que tenga teléfono—, que hay que sostener allí · el aparcamiento se queda en una línea, gratis y en la calle: el «no reservamos plazas» lo quitó el dueño, y con razón —nadie pregunta si le guardas sitio, así que la aclaración solo sembraba la duda que venía a despejar· la imagen de la fachada se queda sin pie: el rótulo se reconoce solo, y explicarlo era escribir lo que ya se ve · el logo se ha ido entero: en la portada la marca ya está dicha en el hero y en la cabecera, y repetirla a mitad de página no ayuda a llegar. Con él se va la última pieza gráfica de la sección, que queda solo con el dato, el mapa y el bar · ⚠ la dirección y el horario son de ejemplo. Y ojo con una trampa del panel: el domicilio social (`legal_*`) es Ceutí y NO es el parque — la dirección de la sección es `address.line1/line2` · medido a 390: 1.153 px = 1,37 pantallas. 1a se queda con el bar en una línea, así que sirve de referencia de lo que cuesta la foto. con el logo y la dirección fuera ya no se pasa tanto; si aún hay que recortar, queda el mapa 3:2 → 16:9 (−37) o el bar al pie de «Qué hay dentro» (−94, el único que quita contenido) · la sección se queda sin ninguna pieza gráfica del kit: eso se decide entero en la pasada de vestido, sobre todas las secciones a la vez y con presupuesto, no metiendo una mancha aquí por rellenar · sin el bloque de «Preguntar» la tarjeta cierra con el aparcamiento y el bar, y el aire de abajo lo pone el propio marco: 24, igual que el de arriba</div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><span>El estado igual de grande pero en papel, el horario resumido en hoy y mañana, y la única mancha oscura es la fachada.</span></div>
+      <div class="dv-card" data-screen-label="1b">
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">07 · Visítanos</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Dónde estamos y cuándo abrimos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;font-weight:500;color:#626A72;">Dos horarios distintos: entre semana y finde.</p>
+        </div>
+
+        <sc-if value="{{ verHorario }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:20px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span aria-hidden="true" style="width:10px;height:10px;border-radius:999px;flex:none;background:{{ puntoColorPapel }};"></span>
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">{{ hoyEtiqueta }}</span>
+          </div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;margin-top:8px;color:{{ estadoColorPapel }};">{{ estadoTitulo }}</div>
+          <div style="font-size:16px;line-height:1.4;color:#101418;margin-top:8px;">{{ estadoLinea }}</div>
+
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid #D6D8D4;display:flex;flex-direction:column;gap:12px;">
+            <sc-for list="{{ resumen }}" as="r" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                <span style="font-size:16px;line-height:1.35;font-weight:{{ r.peso }};color:#101418;">{{ r.label }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:14px;flex:none;color:#101418;">{{ r.horas }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <a href="#horario" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>El horario, día a día</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinHorario }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:20px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:12px;">Sin horario, no hay mitad</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Si el horario no está puesto en el panel, el producto no dice ni «abierto» ni la tabla: no se inventa nada. La sección se queda solo con la mitad de <span style="color:#101418;font-weight:700;">cómo llegar</span>, y el titular pasa a decir solo dónde estamos.</p>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ conMapa }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;">
+          <div style="aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:#E8E9E5;border:1px solid #D6D8D4;">
+            <image-slot id="pjp-mapa-1b" shape="rect" fit="cover" placeholder="Captura del mapa: la manzana del parque" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:8px;">El mapa lo pone Google</div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinMapa }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:16px 16px 0;background:#E8E9E5;border:1px solid #D6D8D4;border-radius:10px;padding:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">El mapa no se ha cargado</div>
+          <p style="margin:8px 0 0;font-size:16px;line-height:1.45;color:#101418;">El mapa es de Google y pone cookies suyas, así que no lo cargamos sin tu permiso. La dirección la tienes aquí arriba entera.</p>
+          <button type="button" data-mueve style="margin-top:12px;width:100%;min-height:48px;padding:0 20px;background:none;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#0A5C93;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF;">Cargar el mapa</button>
+          <a href="#cookies" style="display:inline-flex;align-items:center;min-height:44px;font-size:15px;color:#0A5C93;">Qué cookies usamos</a>
+        </div>
+        </sc-if>
+
+        <div style="margin:8px 16px 0;">
+          <a href="#maps" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Abrir en Google Maps</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+
+        <div style="margin:16px 16px 0;">
+          <div style="font-size:16px;line-height:1.45;color:#626A72;">Se aparca en la calle, delante, y es gratis.</div>
+        </div>
+
+        <sc-if value="{{ conBar }}" hint-placeholder-val="{{ true }}">
+        <div style="margin:16px 16px 0;padding-top:16px;border-top:1px solid #D6D8D4;">
+          <div style="position:relative;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#E8E9E5;">
+            <image-slot id="pjp-bar-1b" shape="rect" fit="cover" placeholder="Foto del bar: las mesas con el parque a la vista" style="width:100%;height:100%;"></image-slot>
+            <div style="position:absolute;left:12px;right:12px;bottom:12px;background:#101418;border-radius:10px;padding:12px 16px;">
+              <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">El bar</div>
+              <div style="font-size:16px;line-height:1.45;color:#C9CDD1;margin-top:4px;">Puedes comer sin saltar</div>
+            </div>
+          </div>
+          <div style="font-size:16px;line-height:1.5;color:#626A72;margin-top:12px;">Mesas con el parque a la vista, carta corta y los juegos de fuera.</div>
+          <a href="#bar" style="display:inline-flex;align-items:center;gap:8px;min-height:48px;margin-top:8px;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>Ver el bar</span><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+          </a>
+        </div>
+        </sc-if>
+
+      </div>
+      <div class="dv-meta">el mismo estado, igual de grande, pero en papel: Verde 800 sobre blanco (5,25) en vez de Verde Salta sobre tinta — el 500 sobre blanco daría 2,4 y no se puede usar como texto · el horario se resume en HOY y MAÑANA, que son los dos días sobre los que se decide salir de casa, y el día a día se va a un enlace: la tabla entera es letra pequeña de capa 3, no de portada · ⚠ la primera versión agrupaba «entre semana» y «finde», y con este horario eso MENTÍA: sábado cierra a las 23:00 y domingo a las 21:00, así que la horquilla del grupo publicaba «finde 11:00 — 23:00» justo debajo del dato de hoy, que decía 21:00. Es el mismo fallo que la spec de excursiones rechaza cuando descarta ampliar el horario del recinto porque «la web mentiría». Dos días con cierres distintos no se juntan en una línea · lo que gana: la sección tiene UNA sola mancha oscura, la fachada, y el cierre de tinta que viene detrás no llega después de dos bloques negros seguidos · lo que cuesta: para saber a qué hora abre el jueves hay que salir de la portada, y el jueves es un día que la gente pregunta. Si eliges 1b, ese enlace necesita destino — hoy no existe ninguna página de horarios (y por las tres pruebas del sistema de contenido, «Horarios» no llega a página: se queda en esta sección) · el orden queda en cuatro cosas y ninguna de relleno: dato → mapa → aparcamiento → bar. El aparcamiento va en texto suelto, sin tarjeta, para no encajonar tres cajas seguidas · el resto es idéntico a 1a: los dos estados de cookies, la dirección siempre en texto, «Abrir en Google Maps» en los dos, ningún canal de contacto —eso es del cierre— y cero naranja · medido a 390 con la foto del bar dentro: 1.348 px = 1,60 pantallas, 195 MÁS que 1a — el ahorro es la tabla, no el orden. Ha bajado de 1,77 a 1,22 quitando cosas, no comprimiéndolas: preguntar, el logo, la dirección repetida, el pie de la fachada y la aclaración del aparcamiento. Eso deja sitio para lo del bar · sin logo y sin dirección escrita, 1b se queda en lo mínimo que contesta la pregunta: cuándo abre, dónde está en el mapa y dónde se aparca · <span style="color:#9AA1A8;">el bar ya lleva el tratamiento 2b puesto</span>: foto con chapa de tinta, el rótulo y «puedes comer sin saltar» dentro, y el detalle en papel debajo. Con él la sección tiene ahora DOS fotos —el mapa y el bar— y ninguna es del parque: si algún día entra una imagen de las camas, entra en la pasada de vestido y no aquí</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «el mapa dibujado por nosotros, sin cookies» · «la fachada con foto real en vez de dibujo» · «que el estado diga cuánto queda para cerrar» · «un aviso cuando hoy está cerrado y mañana también» · «el bar como tarjeta con foto» · «la línea de excursiones de colegio»</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;estado&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Automático (según la hora)&quot;,&quot;Abierto ahora&quot;,&quot;Hoy cerrado&quot;,&quot;Sin horario configurado&quot;],&quot;default&quot;:&quot;Automático (según la hora)&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Qué se está viendo&quot;,&quot;label&quot;:&quot;Estado del parque&quot;},&quot;cookies&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Mapa aceptado&quot;,&quot;Sin cookies&quot;],&quot;default&quot;:&quot;Mapa aceptado&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Qué se está viendo&quot;,&quot;label&quot;:&quot;Consentimiento del mapa&quot;},&quot;festivo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Automático (el que venga)&quot;,&quot;Ninguno cerca&quot;,&quot;Uno esta semana&quot;,&quot;Uno que cierra&quot;],&quot;default&quot;:&quot;Automático (el que venga)&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Qué se está viendo&quot;,&quot;label&quot;:&quot;Festivo próximo&quot;},&quot;conBar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Datos del panel&quot;,&quot;label&quot;:&quot;El bar tiene página&quot;}}">
+class Component extends DCLogic {
+  /* Horario de EJEMPLO. En producción sale de OperatingCalendar::weeklyOpenings();
+   * `dias` usa el índice de getDay() (0 = domingo). Ningún otro sitio del archivo
+   * teclea una hora: el estado, la fila de hoy y el resumen salen de aquí. */
+  /* Horario REAL (dueño, sep 2026). Cierran los dos a la misma hora; lo que
+   * cambia es cuándo abren. Festivos van con el bloque de viernes a domingo. */
+  FILAS = [
+    { label: 'Lunes a jueves', abre: '16:30', cierra: '21:30', dias: [1, 2, 3, 4] },
+    { label: 'Viernes a domingo', abre: '11:30', cierra: '21:30', dias: [5, 6, 0] }
+  ];
+
+  DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+  /* Festivos de EJEMPLO: en producción son `special_dates` del panel, que ya
+   * existen porque el motor de horario los necesita. Los de Lorca los añade
+   * el dueño; estos son los nacionales. `cierra` es la excepción a la regla. */
+  FESTIVOS = [
+    { iso: '2026-10-12', label: '12 de octubre', cierra: false },
+    { iso: '2026-11-01', label: '1 de noviembre', cierra: false },
+    { iso: '2026-12-08', label: '8 de diciembre', cierra: false },
+    { iso: '2026-12-25', label: '25 de diciembre', cierra: true },
+    { iso: '2027-01-01', label: '1 de enero', cierra: true },
+    { iso: '2027-01-06', label: '6 de enero', cierra: false }
+  ];
+
+  state = { festivosAbiertos: false };
+
+  diasHasta(iso, ahora) {
+    const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+    return Math.round((new Date(iso + 'T00:00:00') - hoy) / 86400000);
+  }
+
+  min(h) {
+    const p = h.split(':');
+    return Number(p[0]) * 60 + Number(p[1]);
+  }
+
+  filaDe(dow) {
+    return this.FILAS.find((f) => f.dias.indexOf(dow) !== -1) || null;
+  }
+
+  renderVals() {
+    const p = this.props;
+    const modo = p.estado ?? 'Automático (según la hora)';
+    const ahora = new Date();
+    const dow = ahora.getDay();
+    const hoy = this.filaDe(dow);
+    const manana = this.filaDe((dow + 1) % 7);
+    const minutos = ahora.getHours() * 60 + ahora.getMinutes();
+
+    /* CUATRO estados, no tres: «hoy no abre» y «hoy ya ha cerrado» son hechos
+     * distintos, y decirlos con la misma frase contradice la tabla, que sigue
+     * enseñando las horas de hoy. Los cuatro salen de is_open y closes_at. */
+    let cara = 'cerrado';
+    if (modo === 'Abierto ahora') cara = 'abierto';
+    else if (modo === 'Hoy cerrado') cara = 'cerrado';
+    else if (hoy) {
+      if (minutos < this.min(hoy.abre)) cara = 'luego';
+      else if (minutos < this.min(hoy.cierra)) cara = 'abierto';
+      else cara = 'yacerrado';
+    }
+
+    const forzadoCerrado = modo === 'Hoy cerrado';
+    const filaHoy = forzadoCerrado ? null : hoy;
+    /* Solo se resalta el día cuando su horario está VIGENTE. Con el parque ya
+     * cerrado, la fila de hoy vuelve a ser una fila de calendario. */
+    const resaltaHoy = (cara === 'abierto' || cara === 'luego') ? hoy : null;
+
+    /* El título no dice «mañana» ni «tarde»: la hora es dato y hay filas que
+     * abren a las 11:00. Un título quemado contra un dato variable miente. */
+    const titulo = cara === 'abierto' ? 'Abierto ahora'
+      : (cara === 'luego' ? 'Abre hoy' : (cara === 'yacerrado' ? 'Ya hemos cerrado' : 'Hoy cerrado'));
+    const linea = cara === 'abierto'
+      ? 'Hasta las ' + (filaHoy ? filaHoy.cierra : '')
+      : (cara === 'luego'
+        ? 'Abre a las ' + (filaHoy ? filaHoy.abre : '') + ' y cierra a las ' + (filaHoy ? filaHoy.cierra : '')
+        : 'Mañana abre a las ' + (manana ? manana.abre : ''));
+
+    const color = { abierto: '#5FA82E', luego: '#F5C400', yacerrado: '#F4F4F1', cerrado: '#F4F4F1' }[cara];
+    const colorPapel = { abierto: '#447921', luego: '#8A6E00', yacerrado: '#101418', cerrado: '#101418' }[cara];
+    const punto = { abierto: '#5FA82E', luego: '#F5C400', yacerrado: '#6C747C', cerrado: '#6C747C' }[cara];
+    const puntoPapel = { abierto: '#447921', luego: '#8A6E00', yacerrado: '#9AA1A8', cerrado: '#9AA1A8' }[cara];
+
+    /* El resumen de 1b es HOY y MAÑANA, no «entre semana / finde»: agrupar días
+     * con cierres distintos publica una hora falsa (sábado cierra a las 23:00 y
+     * domingo a las 21:00, y la horquilla del grupo decía 23:00 un domingo). */
+    /* El aviso de festivo solo aparece cuando hay uno CERCA: un calendario
+     * entero está muerto 360 días al año, y la excepción es lo único que la
+     * regla «como el finde» no puede contar. */
+    const finde = this.FILAS[this.FILAS.length - 1];
+    const demo = p.festivo ?? 'Automático (el que venga)';
+    let prox = null;
+    if (demo === 'Uno esta semana') prox = { label: 'el jueves', cierra: false, dias: 4 };
+    else if (demo === 'Uno que cierra') prox = { label: 'el 25 de diciembre', cierra: true, dias: 6 };
+    else if (demo !== 'Ninguno cerca') {
+      const futuros = this.FESTIVOS
+        .map((f) => ({ label: f.label, cierra: f.cierra, dias: this.diasHasta(f.iso, ahora) }))
+        .filter((f) => f.dias >= 0)
+        .sort((a, b) => a.dias - b.dias);
+      if (futuros.length && futuros[0].dias <= 21) prox = futuros[0];
+    }
+
+    return {
+      verHorario: modo !== 'Sin horario configurado',
+      avisoFestivo: !!prox,
+      festivoTexto: prox
+        ? (prox.cierra
+          ? 'Cerramos ' + prox.label
+          : (prox.label.indexOf('el ') === 0 ? 'El' + prox.label.slice(2) : 'El ' + prox.label) + ' es festivo: abrimos a las ' + finde.abre)
+        : '',
+      festivos: this.FESTIVOS.map((f) => ({
+        label: f.label,
+        horas: f.cierra ? 'Cerrado' : finde.abre + ' — ' + finde.cierra
+      })),
+      festivosAbiertos: this.state.festivosAbiertos,
+      festivosLabel: this.state.festivosAbiertos ? 'Cerrar los festivos' : 'Ver los festivos del año',
+      festivosSigno: this.state.festivosAbiertos ? '–' : '+',
+      toggleFestivos: () => this.setState((s) => ({ festivosAbiertos: !s.festivosAbiertos })),
+      sinHorario: modo === 'Sin horario configurado',
+      hoyEtiqueta: 'Hoy, ' + this.DIAS[dow],
+      estadoTitulo: titulo,
+      estadoLinea: linea,
+      estadoColor: color,
+      estadoColorPapel: colorPapel,
+      puntoColor: punto,
+      puntoColorPapel: puntoPapel,
+      filas: this.FILAS.map((f) => {
+        const es = resaltaHoy === f;
+        return {
+          label: f.label,
+          /* Guion largo: la puntuación la fija Voz PJP («17:00 — 21:00»). */
+          horas: forzadoCerrado && f === hoy ? 'Cerrado' : f.abre + ' — ' + f.cierra,
+          fondo: es ? '#112934' : 'transparent',
+          peso: es ? 700 : 400,
+          colorLabel: es ? '#F4F4F1' : '#C9CDD1',
+          colorHoras: es ? '#5CC3EB' : '#F4F4F1'
+        };
+      }),
+      /* La misma tabla que 1a pero en papel: sin enlace a ninguna parte, la
+       * semana entera se ve aquí. Hoy se marca SOLO con superficie (Nube) y
+       * solo cuando su horario está vigente: el día va siempre a 700 y en
+       * Tinta, que es lo que fija el componente 08 de Componentes PJP. */
+      filasPapel: this.FILAS.map((f) => ({
+        label: f.label,
+        horas: forzadoCerrado && f === hoy ? 'Cerrado' : f.abre + ' — ' + f.cierra,
+        fondo: resaltaHoy === f ? '#E8E9E5' : 'transparent'
+      })),
+      resumen: [
+        { label: 'Hoy', horas: cara === 'yacerrado' ? 'Ya cerrado' : (filaHoy ? filaHoy.abre + ' — ' + filaHoy.cierra : 'Cerrado'), peso: resaltaHoy ? 700 : 400 },
+        { label: 'Mañana, ' + this.DIAS[(dow + 1) % 7], horas: manana ? manana.abre + ' — ' + manana.cierra : 'Cerrado', peso: resaltaHoy ? 400 : 700 }
+      ],
+      conMapa: (p.cookies ?? 'Mapa aceptado') === 'Mapa aceptado',
+      sinMapa: (p.cookies ?? 'Mapa aceptado') !== 'Mapa aceptado',
+      conBar: p.conBar !== false,
+      /* La dirección PUBLICADA en playjump.es (aprobada por el dueño, sep 2026).
+       * Antes había aquí una inventada —«Avenida de Europa, 14 · Polígono
+       * Saprelorca»— que llegó a dibujarse: retirada. Sigue pendiente el desglose
+       * exacto en address.line1 / line2, no la calle. El teléfono ya no vive aquí:
+       * preguntar es del cierre (decisión del dueño, sep 2026). */
+      dir1: 'Ctra. de Granada',
+      dir2: '30813 Lorca, Murcia'
+    };
+  }
+}
+</script>
+</body>
+</html>

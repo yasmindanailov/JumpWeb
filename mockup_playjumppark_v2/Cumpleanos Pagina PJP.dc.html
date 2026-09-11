@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="image-slot.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:900px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden}
+.dv-card--w{width:1208px}
+.dv-meta--w{max-width:1208px}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#6C747C}
+.dv-card button:focus-visible,.dv-card a[href]:focus-visible,.dv-card [tabindex]:focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-meta{font:400 10.5px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#6C747C;max-width:390px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">Las tarjetas de 2b, en horizontal con slider</span></div>
+  <p class="dv-intro">Las tarjetas de <a href="#2b">2b</a> tal cual —icono, nombre y precio, nada más— puestas en carril. El «cuándo» sube a la frase («uno se pide al reservar; el otro, después por correo») para que dentro de la tarjeta no entre ni una línea más. Dos cosas que sí he tenido que resolver: el precio de la hora extra pasa a <span style="color:#F4F4F1;">«Desde 4,00 €»</span> —las dos cifras de zona no caben en una tarjeta de 250 y la comparativa por zona ya vive en su tabla— y el carril <span style="color:#F4F4F1;">se lleva el foco del teclado</span> (tabindex, role y aria-label), porque dentro no hay ningún control y sin eso la segunda tarjeta no se alcanza sin ratón. Sigue siendo un carril de dos, o sea que rompe la condición 01 del componente 09: <span style="color:#F4F4F1;">el día que cierres qué extras se venden</span>, esa mitad crece y el carril empieza a tener sentido por sí solo.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><span>El carril con las tarjetas de 2b. Va después de «Qué comen», en el sitio del bloque de <a href="#4a">4a</a>.</span></div>
+      <div class="dv-card" data-screen-label="5a">
+        <div style="padding:24px 16px 8px;">
+          <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Tu fiesta, tu manera</div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Añade lo que quieras. Uno se pide al reservar; el otro, después por correo.</p>
+        </div>
+        <div tabindex="0" role="group" aria-label="Lo que puedes añadir" style="display:flex;gap:12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:16px 64px 24px 16px;">
+          <div style="flex:none;width:250px;scroll-snap-align:center;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;">
+            <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.25;color:#101418;">{{ cA_t }}</span>
+              <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ cA_pCorto }}</span>
+            </div>
+          </div>
+          <div style="flex:none;width:250px;scroll-snap-align:center;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;">
+            <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.25;color:#101418;">Tarta, monitor y más</span>
+              <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">En el parque</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">tarjeta de 2b sin tocar: blanca, borde Línea, radio 16, relleno 16, icono 24 en tinta, nombre 16/800 y precio 17/700 en tinta · carril de 250 con 64 de asoma, snap al centro, sin flechas y sin automático · el carril lleva el foco (tabindex 0 · role=group · aria-label) con el anillo de papel · medido: tarjetas de <span style="color:#9AA1A8;">250×78</span> con nombre y precio en una línea cada uno, carril de 118 sobre 592 de recorrido y la muestra entera en <span style="color:#9AA1A8;">237 px</span> (cabecera 117 + carril 118) — contra el mismo objeto en <a href="#4a">4a</a>, que mide <span style="color:#9AA1A8;">268</span> (título 27 + frase 48 + tarjeta de filas 167): el carril ahorra <span style="color:#9AA1A8;">31 px</span></div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Si te vale así, lo llevo al mismo sitio en los otros tres: <span style="color:#9AA1A8;">la landing (04)</span> y la <span style="color:#9AA1A8;">portada en sus dos superficies</span>. En <span style="color:#9AA1A8;">las entradas</span> lo dejaría en filas: ahí una de las dos cosas es la norma de los calcetines, y esconderla detrás de un gesto es la condición 04 del componente («nada crítico al fondo»).</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">El formato, ya simple: icono, nombre, precio</span></div>
+  <p class="dv-intro">Esto es lo que pediste y es <span style="color:#F4F4F1;">el formato definitivo</span>: el titular, una frase, y filas de <span style="color:#F4F4F1;">icono + nombre + un matiz de una línea + precio a la derecha</span>. Sin párrafos, sin rótulos de grupo y sin carril — el momento cabe en el matiz («se pide al reservar», «desde el enlace del correo»), así que no hace falta agrupar nada. Está puesto en los cuatro sitios con los mismos valores: <span style="color:#F4F4F1;">esta página</span> (aquí), <span style="color:#F4F4F1;">/precios</span>, y la <span style="color:#F4F4F1;">portada</span> en sus dos superficies —02 debajo del carril y 04 antes del aviso—. Cambia el texto, no la forma.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><span>El bloque del cumple, en móvil. Va después de «Qué comen».</span></div>
+      <div class="dv-card" data-screen-label="4a">
+        <div style="padding:24px 16px;">
+          <div style="margin:0;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Tu fiesta, tu manera</div>
+            <p style="margin:10px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Añade lo que quieras: nada de esto hace falta para reservar.</p>
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">Hora extra de sala</span>
+                  <span style="font-size:15px;line-height:1.4;color:#626A72;">Al reservar</span>
+                </span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;white-space:nowrap;">Desde 4,00&#160;€</span>
+              </div>\n              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid #E8E9E5;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">Tarta, monitor y más</span>
+                  <span style="font-size:15px;line-height:1.4;color:#626A72;">Después, por correo</span>
+                </span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;white-space:nowrap;">En el parque</span>
+              </div>
+            </div>
+          </div>
+          <p style="margin:14px 0 0;font-size:15px;line-height:1.5;color:#626A72;">Los calcetines van incluidos en el pack.</p>
+        </div>
+      </div>
+      <div class="dv-meta">rótulo 26 · frase 16 · fila de icono 24 en tinta, nombre 17/800, matiz 15 en Humo y precio 17/700 en tinta · tarjeta blanca, borde Línea, radio 16 y filetes internos de 1 px · el precio no va en Lima: Lima es lo cobrado, y esto es lo que se pagará</div>
+    </div>
+
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a><span>El mismo bloque en escritorio: rótulo a 36, filas más anchas y el icono a 28. Nada más cambia.</span></div>
+      <div class="dv-card dv-card--w" data-screen-label="4b">
+        <div style="padding:44px;">
+          <div style="margin:0;max-width:720px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:36px;line-height:1.05;color:#101418;">Tu fiesta, tu manera</div>
+            <p style="margin:10px 0 0;font-size:17px;line-height:1.5;color:#626A72;">Añade lo que quieras: nada de esto hace falta para reservar.</p>
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">Hora extra de sala</span>
+                  <span style="font-size:16px;line-height:1.4;color:#626A72;">Al reservar</span>
+                </span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;white-space:nowrap;">Desde 4,00&#160;€</span>
+              </div>\n              <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-top:1px solid #E8E9E5;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">Tarta, monitor y más</span>
+                  <span style="font-size:16px;line-height:1.4;color:#626A72;">Después, por correo</span>
+                </span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;white-space:nowrap;">En el parque</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta dv-meta--w">columna de 720 como el resto de los bloques de texto de la página · rótulo 36 (nivel Título en escritorio) · el matiz sube a 16 y el resto de valores no cambia</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Los turnos <a href="#t3">3</a> y <a href="#t2">2</a> quedan como histórico: el carril (3a) y las dos versiones con descripción (2a y 2b).</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">«Tu fiesta, tu manera» · y si va en carril</span></div>
+  <p class="dv-intro">El titular me gusta y lo he puesto tal cual. La frase la he tocado un poco: <span style="color:#F4F4F1;">«complementos» es palabra de catálogo</span> —el cliente dice «añadir»— y «los que quieras» promete una lista larga cuando hoy hay dos cosas; queda «Añade lo que quieras: nada de esto hace falta para reservar». Del carril tengo que avisarte, porque el sistema tiene escritas <span style="color:#F4F4F1;">cuatro condiciones y hacen falta las cuatro</span>: 01 tres o más · 02 homogéneas · 03 no comparativas · 04 nada crítico al fondo. Hoy esto falla <span style="color:#F4F4F1;">dos</span>: son <span style="color:#F4F4F1;">dos</span> piezas, no tres, y no son homogéneas —una tiene precio y se pide al reservar, la otra no tiene precio y se pide después—. Traducido: el carril esconde detrás de un gesto la mitad de una lista de dos. <span style="color:#F4F4F1;">El día que cierres qué extras se venden y a cuánto</span> (tu decisión 15), el grupo de «después» pasa a ser una lista de verdad y entonces el carril sí cumple — y ese es el sitio donde lo pondría, no en la lista de dos.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a><span>Tu idea, montada: el titular nuevo y las dos piezas en carril, con el momento como etiqueta de cada tarjeta. Así se ve lo que cuesta — y lo que se esconde.</span></div>
+      <div class="dv-card" data-screen-label="3a">
+        <div style="padding:24px 16px 8px;">
+          <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Tu fiesta, tu manera</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Añade lo que quieras: nada de esto hace falta para reservar.</p>
+        </div>
+        <div tabindex="0" role="group" aria-label="Lo que puedes añadir" style="display:flex;gap:12px;align-items:stretch;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:16px 64px 24px 16px;">
+          <div style="flex:none;width:250px;scroll-snap-align:center;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;">
+            <span style="color:#101418;display:flex;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">{{ cA_m }}</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ cA_t }}</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ cA_p }}</span>
+            <span style="font-size:16px;line-height:1.45;color:#626A72;">{{ cA_d }}</span>
+          </div>
+          <div style="flex:none;width:250px;scroll-snap-align:center;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;">
+            <span style="color:#101418;display:flex;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">{{ cD_m }}</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ cD_t }}</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ cD_p }}</span>
+            <span style="font-size:16px;line-height:1.45;color:#626A72;">{{ cD_d }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">tarjetas de 250 con la siguiente asomando, snap al centro y sin flechas ni automático, como pide el componente 09 · dentro no hay ningún control, así que el carril se lleva el foco: <span style="color:#9AA1A8;">tabindex 0 · role=group · aria-label</span> y el anillo de papel (Azul Muro, 3 px, 2 de separación) — sin eso la segunda tarjeta no se alcanza con el teclado, que es la trampa que el componente 09 tiene escrita · rompe la condición 01 (dos piezas) y la 02 (no son homogéneas): queda anotado, no escondido · los calcetines no entran: van incluidos</div>
+    </div>
+
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a><span>El mismo titular sobre lo de <a href="#2b">2b</a>: las dos filas a la vista, sin gesto. El día que la lista de «después» tenga precio y tres piezas, esa mitad se convierte en el carril de 3a.</span></div>
+      <div class="dv-card" data-screen-label="3b">
+        <div style="padding:24px 16px;">
+          <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Tu fiesta, tu manera</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Añade lo que quieras: nada de esto hace falta para reservar.</p>
+
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:12px;">
+            <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">{{ cA_m }}</span>
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ cA_t }}</span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ cA_p }}</span>
+                <span style="font-size:16px;line-height:1.45;color:#626A72;">{{ cA_d }}</span>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start;">
+              <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">{{ cD_m }}</span>
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ cD_t }}</span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ cD_p }}</span>
+                <span style="font-size:16px;line-height:1.45;color:#626A72;">{{ cD_d }}</span>
+              </div>
+            </div>
+          </div>
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.5;color:#626A72;">Los calcetines no están aquí porque van incluidos en el pack.</p>
+        </div>
+      </div>
+      <div class="dv-meta">el momento sube a etiqueta mono dentro de cada fila, así que el bloque no necesita dos rótulos de grupo como en 2a · cumple las cuatro condiciones por no ser carril · mismo formato que el bloque de las entradas (Precios PJP, turno 12)</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «en <a href="#3a">3a</a> pon tres tarjetas de ejemplo para ver el carril lleno» · «el titular en la landing también» · «quita la etiqueta del momento y déjalo en la frase»</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Los complementos del cumple: dónde van y cómo se dicen</span></div>
+  <p class="dv-intro">Lo primero: <span style="color:#F4F4F1;">en la landing (04) no van</span>. Esa sección contesta «el cumple, resuelto» con los dos packs, el precio entero, el aforo y la señal; un complemento no decide esa compra y sí compite con lo que sí la decide. Su sitio es esta página. Lo segundo, y es lo que enreda tu pantalla del catálogo: eso que sale junto no es <span style="color:#F4F4F1;">una</span> cosa, son <span style="color:#F4F4F1;">tres</span>. El <span style="color:#F4F4F1;">menú no es un complemento</span>: es una elección obligatoria dentro del pack, y ya vive en «Qué comen» — «elige una opción» dentro de «complementos disponibles» es lo que hace que parezca que hay que pagar aparte. Los <span style="color:#F4F4F1;">calcetines tampoco</span>: en el cumple van incluidos, así que su sitio es «Igual en los dos». Y lo que <span style="color:#F4F4F1;">sí</span> es complemento se contrata en <span style="color:#F4F4F1;">dos momentos distintos</span> —la hora extra al reservar, la tarta y el monitor después, desde el correo— y por eso el bloque se ordena por momento, no por precio.</p>
+  <p class="dv-intro">⚠ <span style="color:#F4F4F1;">Tres datos de tu catálogo chocan con lo publicado aquí</span>, y son decisión tuya, no de diseño: los <span style="color:#F4F4F1;">calcetines</span> —la página dice «incluidos» y el catálogo cobra 2,00 €—; la <span style="color:#F4F4F1;">hora extra</span> —la página compara 4,00 € en Kids y 5,00 € en Jump, y el catálogo dice «desde 3,00 €»—; y el <span style="color:#F4F4F1;">«Menú 2 +2,00 €»</span>, que es un recargo publicado como recargo: la regla del sistema pide precio entero, o sea «16,95 € por invitado» (y 18,95 en tarifa especial). Mientras no me digas, los dibujos usan <span style="color:#F4F4F1;">los números de la página</span>.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><span>La recomendada: un bloque propio, «Lo que puedes añadir», justo después de «Qué comen». Dos grupos por momento, con los iconos del sistema y sin ningún control: aquí no se compra.</span></div>
+      <div class="dv-card" data-screen-label="2a">
+        <div style="padding:24px 16px;">
+          <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Lo que puedes añadir</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Nada de esto hace falta para reservar. Se pide en dos momentos distintos.</p>
+
+          <div style="margin-top:20px;display:flex;flex-direction:column;gap:20px;">
+            <div>
+              <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Al reservar</div>
+              <div style="margin-top:10px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:18px;display:flex;gap:12px;align-items:flex-start;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+                <div style="flex:1;min-width:0;">
+                  <sc-for list="{{ complAntes }}" as="c" hint-placeholder-count="1">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                      <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ c.t }}</span>
+                      <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ c.p }}</span>
+                      <span style="font-size:16px;line-height:1.45;color:#626A72;">{{ c.d }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Después, desde tu correo</div>
+              <div style="margin-top:10px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:18px;display:flex;gap:12px;align-items:flex-start;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+                <div style="flex:1;min-width:0;">
+                  <sc-for list="{{ complDespues }}" as="c" hint-placeholder-count="1">
+                    <div style="display:flex;flex-direction:column;gap:4px;">
+                      <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ c.t }}</span>
+                      <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ c.p }}</span>
+                      <span style="font-size:16px;line-height:1.45;color:#626A72;">{{ c.d }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.5;color:#626A72;">Los calcetines no están aquí porque van incluidos en el pack. Y de la señal de 50 € se descuenta el resto: lo demás se paga el día de la fiesta.</p>
+        </div>
+      </div>
+      <div class="dv-meta">tarjeta blanca, borde Línea y radio 16, como el resto de la página · iconos «Hora extra» y «Tarta» copiados de Iconos PJP, 28 px, en tinta · el grupo de después va <span style="color:#9AA1A8;">sin precio y sin lista</span>: qué se vende y a cuánto es tu decisión 15, y una lista con precio prometería lo que no está cerrado · cero botones: la compra vive en la barra</div>
+    </div>
+
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><span>Sin bloque nuevo: cada complemento cuelga de la sección que ya es su dueña — la hora extra en los precios y lo de después dentro de «Su día especial».</span></div>
+      <div class="dv-card" data-screen-label="2b">
+        <div style="padding:24px 16px;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Va en el bloque de precios</div>
+          <div style="margin-top:10px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;">
+            <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+            <sc-for list="{{ complAntes }}" as="c" hint-placeholder-count="1">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.25;color:#101418;">{{ c.t }}</span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ c.p }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="margin-top:24px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Va dentro de «Su día especial»</div>
+          <div style="margin-top:10px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;">
+            <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+            <sc-for list="{{ complDespues }}" as="c" hint-placeholder-count="1">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;line-height:1.25;color:#101418;">{{ c.t }}</span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;">{{ c.p }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <p style="margin:16px 0 0;font-size:15px;line-height:1.5;color:#626A72;">Cada dato al lado de lo que explica, y la página no crece un rótulo más. A cambio, quien busca «¿qué más puedo añadir?» no encuentra la respuesta en un sitio.</p>
+        </div>
+      </div>
+      <div class="dv-meta">dos filas de 16 pegadas a los bloques que ya existen · misma tarjeta y mismos iconos, a 24 px · la cifra en tinta y peso 700, como en 2a y como la publica la comparativa de esta página: el sistema no tiene gris entre los papeles del dinero · no hay rótulo nuevo, así que la página no gana altura de sección · el precio de la hora extra sigue además en la comparativa de escritorio, que es donde se compara por zona</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Y del formulario: <span style="color:#9AA1A8;">está bien resuelto y no lo tocaría</span> — el extra se pide en su tarjeta con su precio, el que ya no se puede añadir pasa a superficie Nube (nunca opacidad) y la frase dice «se pagan en el parque el día de la fiesta». Lo que falta no es diseño, son tus dos datos: <span style="color:#9AA1A8;">qué extras se venden y a cuánto</span> (decisión 15) y <span style="color:#9AA1A8;">hasta cuándo</span> (decisión 16) — la pantalla ya enseña la fecha, así que solo falta la regla. Prueba: «pon los dos grupos en una tabla de dos columnas» · «que la hora extra diga su precio entero por zona en vez de los dos juntos».</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">/cumpleanos — la versión larga, con tu contenido real</span></div>
+  <p class="dv-intro">Con tus cinco respuestas y el bloque de Kids que me has pasado. La espina es la que elegiste: <span style="color:#F4F4F1;">el reloj primero</span> —qué pasa ese día— y los packs después. Aquí aterrizan las dos piezas que salieron de la portada con el recorte del presupuesto, el <span style="color:#F4F4F1;">reloj de la fiesta</span> y el <span style="color:#F4F4F1;">aviso «Personalizamos cada cumple»</span>, copiadas del marcado de 04 y no redibujadas. Y entra la <span style="color:#F4F4F1;">ficha de invitado ya rellena</span>, que descarté de la portada por sitio con la nota escrita de guardarla para esta página. Tu contenido trae cuatro cosas que los documentos tenían al revés y que hay que corregir: la <span style="color:#F4F4F1;">tarifa especial</span> la escribes como «+2,00 €» y la regla dura pide el precio entero, así que aquí pone <span style="color:#F4F4F1;">16,95 €</span> · la <span style="color:#F4F4F1;">hora extra sí existe</span> en cumpleaños, «de sala», y el handoff decía que no —error mío— · la edad del <span style="color:#F4F4F1;">pack</span> (4–7) no es la de la <span style="color:#F4F4F1;">zona</span> (2–6), y se dibujan como dos datos distintos porque lo son · y «acceso exclusivo a la zona» <span style="color:#F4F4F1;">cierra la promesa operativa</span> que 04 dejó abierta. Con los dos bloques ya reales, y Jump trae un hallazgo: <span style="color:#F4F4F1;">el recargo del especial no es plano</span> —+2,00 € en Kids y +4,00 € en Jump—, ni la hora extra —+4,00 y +5,00—. Eso es lo que hace inaceptable escribir «+X €»: el cliente tendría que recordar cuál le toca. Aquí los cuatro precios van <span style="color:#F4F4F1;">enteros</span> y salen de una sola fuente: el precio y su recargo.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span>La página entera en móvil. El armazón —cabecera fija, cierre y pie— es el aprobado y no se repite aquí.</span></div>
+      <div class="dv-card" data-screen-label="1a">
+        <div style="padding:28px 16px 24px;">
+
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">/cumpleanos</div>
+          <div style="font-family:'Bungee';font-weight:400;font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, al detalle</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">Dos horas, la zona para vosotros y la comida puesta. Aquí está todo lo que incluye.</p>
+
+          <div style="margin-top:28px;aspect-ratio:16/9;background:#2A3138;border-radius:16px;overflow:hidden;">
+            <image-slot id="pjp-cumple-zona" shape="rect" fit="cover" placeholder="La zona montada para la fiesta, con las mesas puestas" style="width:100%;height:100%;"></image-slot>
+          </div>
+          <p style="margin:10px 0 0;font-size:15px;line-height:1.5;color:#626A72;">La zona es vuestra durante la fiesta: nadie más entra.</p>
+
+          <div style="margin-top:28px;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+            <div style="font-family:'Bungee';font-weight:400;font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, a vuestro ritmo</div>
+            <div style="margin-top:18px;display:flex;gap:8px;">
+              <sc-for list="{{ franja }}" as="f" hint-placeholder-count="3">
+                <span style="flex:1;text-align:center;border:1.5px solid #2A3138;border-radius:999px;padding:9px 4px;font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.2;color:#F4F4F1;">{{ f.t }}</span>
+              </sc-for>
+            </div>
+            <div aria-hidden="true" style="margin-top:10px;border-top:2px solid #A3C21C;"></div>
+            <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Dentro cabe todo y sin horario: si meriendan rápido, saltan más rato. El orden lo decidís vosotros.</p>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+          </div>
+
+          <div style="margin-top:40px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Los dos packs</div>
+            <div style="margin-top:20px;display:flex;align-items:center;gap:14px;">
+              <span style="flex:1;min-width:0;font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.25;color:#101418;">¿Cuántos niños vienen?</span>
+              <button type="button" onClick="{{ quita }}" disabled="{{ topeAbajo }}" aria-label="Un niño menos" style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1.5px solid {{ colorMenos }};border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:20px;line-height:1;color:{{ colorMenos }};cursor:pointer;">−</button>
+              <span aria-live="polite" style="flex:none;min-width:52px;text-align:center;font-family:'Bungee';font-weight:400;font-size:26px;line-height:1;color:#101418;">{{ ninos }}</span>
+              <button type="button" onClick="{{ pon }}" disabled="{{ topeArriba }}" aria-label="Un niño más" style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1.5px solid {{ colorMas }};border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:20px;line-height:1;color:{{ colorMas }};cursor:pointer;">+</button>
+            </div>
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <div style="display:grid;grid-template-columns:96px 1fr 1fr;gap:8px;padding:14px 16px;background:#F4F4F1;border-bottom:1px solid #D6D8D4;">
+                <span></span>
+                <sc-for list="{{ packs }}" as="p" hint-placeholder-count="2">
+                  <span style="display:flex;align-items:center;gap:7px;">
+                    <span aria-hidden="true" style="width:10px;height:10px;flex:none;border-radius:0;background:{{ p.color }};"></span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:20px;line-height:1;color:#101418;">{{ p.zona }}</span>
+                  </span>
+                </sc-for>
+              </div>
+              <sc-for list="{{ filas }}" as="f" hint-placeholder-count="7">
+                <div style="display:grid;grid-template-columns:96px 1fr 1fr;gap:8px;padding:12px 16px;border-top-width:{{ f.filete }};border-top-style:solid;border-top-color:#E8E9E5;align-items:baseline;">
+                  <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;line-height:1.35;">{{ f.et }}</span>
+                  <span style="font-family:{{ f.familia }};font-weight:{{ f.peso }};font-size:{{ f.tamano }};line-height:1.3;color:{{ f.color }};">{{ f.a }}</span>
+                  <span style="font-family:{{ f.familia }};font-weight:{{ f.peso }};font-size:{{ f.tamano }};line-height:1.3;color:{{ f.color }};">{{ f.b }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <p style="margin:12px 0 0;font-size:15px;line-height:1.5;color:#626A72;">La tarifa especial es viernes, fines de semana, festivos y vísperas. De la señal de 50 € se descuenta el resto: lo demás se paga el día de la fiesta. Si al final vienen menos niños, se ajusta allí — el mínimo son 8.</p>
+          </div>
+
+          <div style="margin-top:40px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Qué comen</div>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Se elige uno de los dos, y se dice en «Su día especial» después de reservar.</p>
+            <div style="margin-top:16px;aspect-ratio:16/9;background:#2A3138;border-radius:16px;overflow:hidden;">
+              <image-slot id="pjp-cumple-mesa" shape="rect" fit="cover" placeholder="La mesa puesta con la comida del cumple" style="width:100%;height:100%;"></image-slot>
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:12px;">
+              <sc-for list="{{ menus }}" as="m" hint-placeholder-count="2">
+                <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:18px;">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:20px;line-height:1;color:#101418;">{{ m.t }}</span>
+                    <span style="display:inline-flex;align-items:center;border-radius:999px;padding:6px 11px;font-family:'JetBrains Mono';font-size:11px;background:{{ m.chipFondo }};color:#101418;white-space:nowrap;">{{ m.precio }}</span>
+                  </div>
+                  <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+                    <sc-for list="{{ m.items }}" as="i" hint-placeholder-count="5">
+                      <div style="display:flex;gap:10px;align-items:flex-start;">
+                        <span aria-hidden="true" style="width:6px;height:6px;flex:none;border-radius:999px;background:#A3C21C;margin-top:8px;"></span>
+                        <span style="font-size:16px;line-height:1.45;color:#101418;">{{ i.t }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top:40px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Igual en los dos</div>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Lo que no cambia entre Kids y Jump, para no tener que compararlo.</p>
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <sc-for list="{{ igual }}" as="g" hint-placeholder-count="8">
+                <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 18px;border-top-width:{{ g.filete }};border-top-style:solid;border-top-color:#E8E9E5;">
+                  <span aria-hidden="true" style="flex:none;width:20px;height:20px;margin-top:2px;border-radius:999px;background:rgba(95,168,46,.14);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#447921;">&#10003;</span>
+                  <span style="flex:1;min-width:0;">
+                    <span style="display:block;font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ g.t }}</span>
+                    <span style="display:block;margin-top:2px;font-size:16px;line-height:1.45;color:#626A72;">{{ g.d }}</span>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top:40px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:20px;">
+            <div style="font-family:'Hanken Grotesk';font-weight:700;font-size:22px;line-height:1.25;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.5;color:#626A72;">Se ajusta niño por niño y se ve en recepción el día de la fiesta: los que caen en el otro tramo pagan la diferencia de su pack. <span style="color:#101418;font-weight:700;">Nunca se cobra online</span> — todo lo que cambia después de reservar se arregla en el parque.</p>
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.5;color:#626A72;">Y lo que reservaste no se mueve: cada reserva guarda las condiciones del día que la hiciste, aunque cambien los precios.</p>
+          </div>
+
+          <div style="margin-top:40px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Su día especial</div>
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.5;color:#626A72;">Al reservar te llega un enlace para contarnos quién viene. No hay que rellenarlo del tirón: <span style="color:#101418;font-weight:700;">se puede cambiar hasta el día de la fiesta</span>, y si se te olvida te lo recordamos.</p>
+
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:16px;">
+              <sc-for list="{{ bloquesForm }}" as="b" hint-placeholder-count="2">
+                <div>
+                  <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">{{ b.et }}</div>
+                  <div style="margin-top:10px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+                    <sc-for list="{{ b.items }}" as="i" hint-placeholder-count="4">
+                      <div style="padding:12px 18px;border-top-width:{{ i.filete }};border-top-style:solid;border-top-color:#E8E9E5;">
+                        <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ i.t }}</div>
+                        <div style="margin-top:2px;font-size:16px;line-height:1.45;color:#626A72;">{{ i.d }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="margin-top:20px;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Así queda un invitado · 3 de 12</div>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+                <sc-for list="{{ ficha }}" as="c" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:3px;">
+                    <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">{{ c.et }}</span>
+                    <span style="font-size:17px;line-height:1.35;font-weight:{{ c.peso }};color:#101418;">{{ c.v }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Con eso el monitor sabe quién no come gluten y a quién no meter en el foam. Y lo que se añada ahí <span style="color:#101418;font-weight:700;">se paga en el parque</span>, el día de la fiesta: aquí no se cobra nada más que la señal.</p>
+          </div>
+
+          <div style="margin-top:40px;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <span aria-hidden="true" style="width:24px;height:24px;flex:none;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+              <div>
+                <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">Personalizamos cada cumple</div>
+                <div style="margin-top:4px;font-size:15px;line-height:1.5;color:#626A72;">Si hay una alergia, un miedo o una sorpresa que preparar, dínoslo y lo montamos.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="dv-meta">🔁 <span style="color:#F4F4F1;">8 sep · el reloj ya no reparte las dos horas</span>: son para todo —merienda, tarta y saltos— y sin hora para nada, así que los tres tramos con sus minutos prometían un horario que no existe. Queda el <span style="color:#9AA1A8;">carril entero</span> con las tres cosas en cápsula encima y la regla escrita: si meriendan rápido, saltan más · el <span style="color:#9AA1A8;">aviso INFO</span> está copiado del marcado de 04, con su filete lima como eje de tiempo y su círculo amarillo con troquel: son las dos piezas que el recorte del presupuesto mandó a esta página · la comparativa son <span style="color:#9AA1A8;">filas alineadas</span>, que es lo que pide la Arquitectura de Contenido para los dos packs, y cabe a 390 con la etiqueta a 96 y dos columnas de valor · el precio va en <span style="color:#9AA1A8;">Lima 800</span> (#627411) sobre blanco, el mismo par que Tarifas, y la tarifa especial <span style="color:#9AA1A8;">con su precio entero</span>: tu catálogo lo escribe «+2,00 €» y la regla dura del proyecto prohíbe hacer sumar · los días de la tarifa especial se dicen <span style="color:#9AA1A8;">una vez</span> para la página, no una por pack · la <span style="color:#9AA1A8;">hora extra de sala</span> baja a la comparativa en vez de vivir con los complementos, porque su precio <span style="color:#9AA1A8;">cambia por zona</span> (+4,00 y +5,00): un complemento con dos precios no es una tarjeta, es una fila · la <span style="color:#9AA1A8;">ficha de invitado</span> lleva borde de pegatina y sombra dura porque es un objeto que se rellena, no un enlace · <span style="color:#9AA1A8;">dos fotos y las dos a 16:9</span>, que es la regla: o la foto vende o no está, y para mesas hace falta anchura. La primera es la prueba del «acceso exclusivo» —la promesa que más cuesta creer— y la segunda es <span style="color:#9AA1A8;">una para los dos menús</span>, porque lo que vende es la mesa de cumpleaños y no un sándwich · ni la comparativa ni la ficha llevan imagen: una tabla con fotos es ruido · «Su día especial» se llama así <span style="color:#9AA1A8;">en todas las superficies</span>: aquí, en el correo y en el panel — nunca «el formulario»</div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel dv-meta--w"><a class="dv-oid" href="#1b">1b</a><span>La misma página en escritorio. Cuatro repartos de la retícula y un «Reservar» fantasma, porque aquí no hay barra.</span></div>
+      <div class="dv-card dv-card--w" data-screen-label="1b">
+        <div style="padding:44px 44px 40px;">
+
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">/cumpleanos</div>
+          <div style="font-family:'Bungee';font-weight:400;font-size:52px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, al detalle</div>
+          <p style="margin:20px 0 0;font-size:21px;line-height:1.5;color:#626A72;max-width:52ch;">Dos horas, la zona para vosotros y la comida puesta. Aquí está todo lo que incluye.</p>
+
+          <div style="margin-top:40px;display:flex;gap:32px;align-items:stretch;">
+            <div style="flex:none;width:736px;">
+              <div style="aspect-ratio:16/9;background:#2A3138;border-radius:16px;overflow:hidden;">
+                <image-slot id="pjp-cumple-zona-esc" shape="rect" fit="cover" placeholder="La zona montada para la fiesta, con las mesas puestas" style="width:100%;height:100%;"></image-slot>
+              </div>
+              <p style="margin:12px 0 0;font-size:17px;line-height:1.5;color:#626A72;">La zona es vuestra durante la fiesta: nadie más entra.</p>
+            </div>
+            <div style="flex:1;min-width:0;background:#1A1F25;border-radius:16px;padding:28px;display:flex;flex-direction:column;" data-superficie="tinta">
+              <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#F4F4F1;">Las {{ dur }}, a vuestro ritmo</div>
+              <div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:8px;">
+                <sc-for list="{{ franja }}" as="f" hint-placeholder-count="3">
+                  <span style="flex:1 1 auto;text-align:center;border:1.5px solid #2A3138;border-radius:999px;padding:10px 14px;font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.2;color:#F4F4F1;white-space:nowrap;">{{ f.t }}</span>
+                </sc-for>
+              </div>
+              <div aria-hidden="true" style="margin-top:12px;border-top:2px solid #A3C21C;"></div>
+              <p style="margin:20px 0 0;font-size:17px;line-height:1.45;color:#C9CDD1;">Dentro cabe todo y sin horario: si meriendan rápido, saltan más rato. El orden lo decidís vosotros.</p>
+              <span style="flex:1;"></span>
+              <p style="margin:24px 0 0;font-size:17px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+            </div>
+          </div>
+
+          <div style="margin-top:144px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:36px;line-height:1.05;color:#101418;">Los dos packs</div>
+            <div style="margin-top:20px;display:flex;align-items:center;gap:14px;">
+              <span style="flex:1;min-width:0;font-family:'Hanken Grotesk';font-weight:700;font-size:21px;line-height:1.25;color:#101418;">¿Cuántos niños vienen?</span>
+              <button type="button" onClick="{{ quita }}" disabled="{{ topeAbajo }}" aria-label="Un niño menos" style="width:56px;height:56px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1.5px solid {{ colorMenos }};border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:20px;line-height:1;color:{{ colorMenos }};cursor:pointer;">−</button>
+              <span aria-live="polite" style="flex:none;min-width:52px;text-align:center;font-family:'Bungee';font-weight:400;font-size:36px;line-height:1;color:#101418;">{{ ninos }}</span>
+              <button type="button" onClick="{{ pon }}" disabled="{{ topeArriba }}" aria-label="Un niño más" style="width:56px;height:56px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF;border:1.5px solid {{ colorMas }};border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:20px;line-height:1;color:{{ colorMas }};cursor:pointer;">+</button>
+            </div>
+            <div style="margin-top:24px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <div style="display:grid;grid-template-columns:224px 1fr 1fr;gap:32px;padding:18px 32px;background:#F4F4F1;border-bottom:1px solid #D6D8D4;">
+                <span></span>
+                <sc-for list="{{ packs }}" as="p" hint-placeholder-count="2">
+                  <span style="display:flex;align-items:center;gap:9px;">
+                    <span aria-hidden="true" style="width:12px;height:12px;flex:none;border-radius:0;background:{{ p.color }};"></span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1;color:#101418;">{{ p.zona }}</span>
+                  </span>
+                </sc-for>
+              </div>
+              <sc-for list="{{ filas }}" as="f" hint-placeholder-count="4">
+                <div style="display:grid;grid-template-columns:224px 1fr 1fr;gap:32px;padding:16px 32px;border-top-width:{{ f.filete }};border-top-style:solid;border-top-color:#E8E9E5;align-items:baseline;">
+                  <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;line-height:1.35;">{{ f.et }}</span>
+                  <span style="font-family:{{ f.familia }};font-weight:{{ f.peso }};font-size:{{ f.tamanoEsc }};line-height:1.3;color:{{ f.color }};">{{ f.a }}</span>
+                  <span style="font-family:{{ f.familia }};font-weight:{{ f.peso }};font-size:{{ f.tamanoEsc }};line-height:1.3;color:{{ f.color }};">{{ f.b }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:20px;display:flex;gap:32px;align-items:center;">
+              <p style="margin:0;flex:1;font-size:17px;line-height:1.5;color:#626A72;max-width:70ch;">La tarifa especial es viernes, fines de semana, festivos y vísperas. De la señal de 50 € se descuenta el resto: lo demás se paga el día de la fiesta. Si al final vienen menos niños, se ajusta allí — el mínimo son 8.</p>
+              <a href="#reservar" data-mueve style="flex:none;display:flex;align-items:center;min-height:56px;padding:0 34px;border:1.5px solid #0A5C93;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#0A5C93;transition:background-color 180ms cubic-bezier(.4,0,.2,1),color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#0A5C93;color:#FFFFFF">Reservar el cumple</a>
+            </div>
+          </div>
+
+          <div style="margin-top:144px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:36px;line-height:1.05;color:#101418;">Qué comen</div>
+            <p style="margin:16px 0 0;font-size:17px;line-height:1.5;color:#626A72;max-width:70ch;">Se elige uno de los dos, y se dice en «Su día especial» después de reservar.</p>
+            <div style="margin-top:24px;display:flex;gap:32px;align-items:flex-start;">
+              <div style="flex:1;min-width:0;">
+                <div style="aspect-ratio:16/9;background:#2A3138;border-radius:16px;overflow:hidden;">
+                  <image-slot id="pjp-cumple-mesa-esc" shape="rect" fit="cover" placeholder="La mesa puesta con la comida del cumple" style="width:100%;height:100%;"></image-slot>
+                </div>
+              </div>
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:20px;">
+                <sc-for list="{{ menus }}" as="m" hint-placeholder-count="2">
+                  <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:24px;">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;">
+                      <span style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1;color:#101418;">{{ m.t }}</span>
+                      <span style="display:inline-flex;align-items:center;border-radius:999px;padding:6px 11px;font-family:'JetBrains Mono';font-size:12px;background:{{ m.chipFondo }};color:#101418;white-space:nowrap;">{{ m.precio }}</span>
+                    </div>
+                    <div style="margin-top:14px;display:flex;flex-direction:column;gap:7px;">
+                      <sc-for list="{{ m.items }}" as="i" hint-placeholder-count="5">
+                        <div style="display:flex;gap:10px;align-items:flex-start;">
+                          <span aria-hidden="true" style="width:6px;height:6px;flex:none;border-radius:999px;background:#A3C21C;margin-top:9px;"></span>
+                          <span style="font-size:17px;line-height:1.45;color:#101418;">{{ i.t }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:144px;display:flex;gap:32px;align-items:flex-start;">
+            <div style="flex:none;width:352px;">
+              <div style="font-family:'Bungee';font-weight:400;font-size:36px;line-height:1.05;color:#101418;">Igual en los dos</div>
+              <p style="margin:16px 0 0;font-size:17px;line-height:1.5;color:#626A72;">Lo que no cambia entre Kids y Jump, para no tener que compararlo.</p>
+            </div>
+            <div style="flex:1;min-width:0;display:grid;grid-template-columns:1fr 1fr;gap:0 32px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:8px 24px;">
+              <sc-for list="{{ igual }}" as="g" hint-placeholder-count="8">
+                <div style="display:flex;gap:12px;align-items:flex-start;padding:14px 0;">
+                  <span aria-hidden="true" style="flex:none;width:20px;height:20px;margin-top:2px;border-radius:999px;background:rgba(95,168,46,.14);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#447921;">&#10003;</span>
+                  <span style="flex:1;min-width:0;">
+                    <span style="display:block;font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ g.t }}</span>
+                    <span style="display:block;margin-top:2px;font-size:16px;line-height:1.45;color:#626A72;">{{ g.d }}</span>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="margin-top:144px;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:36px;line-height:1.05;color:#101418;">Su día especial</div>
+            <p style="margin:16px 0 0;font-size:17px;line-height:1.5;color:#626A72;max-width:70ch;">Al reservar te llega un enlace para contarnos quién viene. No hay que rellenarlo del tirón: <span style="color:#101418;font-weight:700;">se puede cambiar hasta el día de la fiesta</span>, y si se te olvida te lo recordamos.</p>
+            <div style="margin-top:24px;display:flex;gap:32px;align-items:flex-start;">
+              <sc-for list="{{ bloquesForm }}" as="b" hint-placeholder-count="2">
+                <div style="flex:none;width:352px;">
+                  <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">{{ b.et }}</div>
+                  <div style="margin-top:12px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+                    <sc-for list="{{ b.items }}" as="i" hint-placeholder-count="5">
+                      <div style="padding:14px 20px;border-top-width:{{ i.filete }};border-top-style:solid;border-top-color:#E8E9E5;">
+                        <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">{{ i.t }}</div>
+                        <div style="margin-top:2px;font-size:16px;line-height:1.45;color:#626A72;">{{ i.d }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="flex:1;min-width:0;">
+                <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Así queda uno</div>
+                <div style="margin-top:12px;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:24px;">
+                  <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Invitado 3 de 12</div>
+                  <div style="margin-top:14px;display:flex;flex-direction:column;gap:14px;">
+                    <sc-for list="{{ ficha }}" as="c" hint-placeholder-count="4">
+                      <div style="display:flex;flex-direction:column;gap:3px;">
+                        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">{{ c.et }}</span>
+                        <span style="font-size:17px;line-height:1.35;font-weight:{{ c.peso }};color:#101418;">{{ c.v }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p style="margin:20px 0 0;font-size:17px;line-height:1.5;color:#626A72;max-width:70ch;">Con eso el monitor sabe quién no come gluten y a quién no meter en el foam. Y lo que se añada ahí <span style="color:#101418;font-weight:700;">se paga en el parque</span>, el día de la fiesta: aquí no se cobra nada más que la señal.</p>
+          </div>
+
+          <div style="margin-top:144px;display:flex;gap:32px;align-items:flex-start;">
+            <div style="flex:1;min-width:0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:28px;">
+              <div style="font-family:'Hanken Grotesk';font-weight:700;font-size:26px;line-height:1.25;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+              <p style="margin:14px 0 0;font-size:17px;line-height:1.5;color:#626A72;max-width:70ch;">Se ajusta niño por niño y se ve en recepción el día de la fiesta: los que caen en el otro tramo pagan la diferencia de su pack. <span style="color:#101418;font-weight:700;">Nunca se cobra online</span> — todo lo que cambia después de reservar se arregla en el parque. Y lo que reservaste no se mueve: cada reserva guarda las condiciones del día que la hiciste.</p>
+            </div>
+            <div style="flex:none;width:352px;display:flex;gap:14px;align-items:flex-start;padding-top:28px;">
+              <span aria-hidden="true" style="width:28px;height:28px;flex:none;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:15px;color:#101418;">i</span>
+              <div>
+                <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.35;color:#101418;">Personalizamos cada cumple</div>
+                <div style="margin-top:4px;font-size:16px;line-height:1.5;color:#626A72;">Si hay una alergia, un miedo o una sorpresa que preparar, dínoslo y lo montamos.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="dv-meta dv-meta--w">cuatro repartos de la retícula y ninguno inventado: <span style="color:#9AA1A8;">736 + 352</span> para la foto y el reloj, <span style="color:#9AA1A8;">224 + 382 + 382</span> en la comparativa —medido: la tabla trae su propio relleno de 32 a cada lado, así que reparte 1052 y no 1120; publiqué 448 sin contarlo— <span style="color:#9AA1A8;">544 + 544</span> para la mesa y los menús y <span style="color:#9AA1A8;">352 × 3</span> para el formulario, que suma 1120 exacto en la página · en este dibujo la tercera columna del formulario va <span style="color:#9AA1A8;">flexible</span> en vez de fija, porque el marco del propio cuadro se come 2 px y si no, la última se recortaría en silencio · el <span style="color:#9AA1A8;">reloj se apila</span>: en móvil sus tres tramos van en columnas de 106 y aquí en 352 se leen mejor uno debajo de otro, con el mismo filete lima como eje · ❗ entra un <span style="color:#9AA1A8;">«Reservar el cumple» fantasma</span> junto a la comparativa, y hace falta: en escritorio <span style="color:#9AA1A8;">no hay barra flotante</span> —se retira a 1024— así que quien decide a mitad de página tenía que subir al racimo o bajar 3.000 px hasta el cierre. Es fantasma, no relleno, así que el único relleno de la pantalla sigue siendo el del racimo · el aire entre bloques es <span style="color:#9AA1A8;">144</span> y el titular de bloque sube a <span style="color:#9AA1A8;">Título 36</span>, que es su nivel en escritorio</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Quedan dos decisiones que salen de tu propio contenido: si la <span style="color:#9AA1A8;">edad del pack</span> (4–7) conviviendo con la de la zona (2–6) es correcta —un niño de 3 entra a saltar y no puede tener su cumple ahí— y si la <span style="color:#9AA1A8;">hora extra de sala</span> aparece también en la portada, donde hoy el sistema dice que la hora extra no existe en cumpleaños. Después de esto: el escritorio de esta página.</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:900},&quot;extrasAdultos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Su día especial&quot;,&quot;label&quot;:&quot;Prometer los extras de adultos&quot;}}">
+class Component extends DCLogic {
+  /* Contenido REAL del pack Kids, pasado por el dueño (sep 2026). De Jump solo hay
+   * precio publicado: el resto está INFERIDO y marcado como tal en la nota.
+   * Nada de esto es diseño: sale de `ticket_types` + `prices` + `product_addons`. */
+  /* Los dos bloques REALES, pasados por el dueño (sep 2026). El catálogo escribe la
+   * tarifa especial como un recargo —«+2,00 €» en Kids y «+4,00 €» en Jump— y la regla
+   * dura pide el precio ENTERO, así que aquí solo se guardan el precio y el recargo:
+   * el especial se CALCULA. Y el recargo no es plano, que es justo lo que hace
+   * inaceptable el «+X €»: el cliente tendría que recordar cuál le toca. */
+  KIDS = {
+    zona: 'Kids', color: '#1AA9DE', precio: 14.95, recargo: 2,
+    edad: 'De 4 a 7 años', ninos: 'De 8 a 20', senal: 50,
+    dur: '120 minutos', extra: 4
+  };
+
+  JUMP = {
+    zona: 'Jump', color: '#A3C21C', precio: 15.95, recargo: 4,
+    edad: 'A partir de 8 años', ninos: 'De 8 a 20', senal: 50,
+    dur: '120 minutos', extra: 5
+  };
+
+  /* Formato de Voz: coma decimal y dos decimales. */
+  eur(n) { return n.toFixed(2).replace('.', ',') + ' €'; }
+
+  /* Turno 2 · lo que se puede añadir, ordenado por MOMENTO y no por precio.
+     Son dos cosas distintas y el cliente las contrata en dos sitios distintos: la hora
+     extra de sala al reservar (afecta a la sala y difiere por zona) y lo del formulario
+     después, desde el enlace del correo. Lo de después va SIN precio y SIN lista: qué se
+     vende y a cuánto es la decisión 15 del dueño, y una lista con precio prometería algo
+     que el parque no ha cerrado. */
+  valsCompl() {
+    const K = this.KIDS, J = this.JUMP, e = (n) => this.eur(n);
+    return {
+      /* Planos para el carril del turno 3: allí cada tarjeta lleva SU icono, así que las
+         dos piezas se escriben una a una en la plantilla en vez de repetirse con sc-for. */
+      /* En una tarjeta de 250 no caben las dos cifras de zona: con nowrap la fila se va a
+         135 px y el nombre parte en tres líneas (medido en la portada). Así que en el
+         carril va «Desde», y la comparativa por zona se queda en su tabla. */
+      cA_pCorto: 'Desde ' + e(K.extra),
+      cA_t: 'Hora extra de sala', cA_p: e(K.extra) + ' Kids · ' + e(J.extra) + ' Jump',
+      cA_d: 'Media fiesta más en la sala. Se pide al reservar.', cA_m: 'Al reservar',
+      cD_t: 'Tarta, monitor y algo más', cD_p: 'Se paga en el parque',
+      cD_d: 'Se añaden desde el enlace del correo, hasta poco antes de la fiesta.', cD_m: 'Después',
+      complAntes: [
+        { t: 'Hora extra de sala', p: e(K.extra) + ' Kids · ' + e(J.extra) + ' Jump',
+          d: 'Media fiesta más en la sala. Se pide al reservar, no después.' }
+      ],
+      complDespues: [
+        { t: 'Tarta, monitor y algún extra más', p: 'Se paga en el parque',
+          d: 'Se añaden desde el enlace que te llega por correo, hasta poco antes de la fiesta.' }
+      ]
+    };
+  }
+
+  MENUS = [
+    ['Menú 1', 'Incluido', ['Refresco o zumo individual a elegir', 'Botella de agua de 1,5 l',
+      'Snacks, chuches y patatas para compartir', 'Sándwich mixto', 'Sándwich dulce']],
+    ['Menú 2', '+2,00 € por invitado', ['Refresco o zumo individual a elegir', 'Botella de agua de 1,5 l',
+      'Snacks, chuches y patatas para compartir', 'Pizza o perrito caliente']]
+  ];
+
+  /* Solo lo que es igual en los dos packs. La hora extra difiere por zona, así que
+   * baja a la comparativa en vez de vivir aquí con dos precios. */
+  EXTRAS = [
+    ['Calcetines antideslizantes', 'Imprescindibles para saltar, y te los quedas: sirven para la próxima visita.', 'Incluidos']
+  ];
+
+  FORM = [
+    ['De cada niño', [
+      ['Su nombre', 'Para la lista del monitor y para la tarta'],
+      ['Su edad', 'Es lo que decide su pack si la fiesta es mixta'],
+      ['Alergias', 'La cocina lo ve antes de preparar nada'],
+      ['Algo que debamos saber', 'Un miedo, una sorpresa, que no salte al foam'],
+      ['Qué menú', 'El 1 o el 2, y si necesita menú especial']
+    ]],
+    ['De vosotros', [
+      ['Cuántos adultos venís', 'Aproximado, para preparar las mesas'],
+      ['Si queréis algo para vosotros', 'Tapas, bebida, café. Se elige aquí y se paga en el parque'],
+      ['Quién lo rellena', 'El enlace te llega por correo y lo rellena quien organiza']
+    ]]
+  ];
+
+  FICHA = [
+    ['Nombre', 'Lucía', 700],
+    ['Edad', '7 años', 400],
+    ['Alergias', 'Sin gluten', 700],
+    ['Algo que debamos saber', 'Le da miedo el foam', 400]
+  ];
+
+  state = { ninos: 12 };
+
+  renderVals() {
+    const p = this.props;
+    const K = this.KIDS, J = this.JUMP;
+    /* «Nunca una suma»: el catálogo da el precio por niño y el cliente compra un
+     * total. Un solo control —cuántos niños— y el total aparece en la columna de
+     * cada pack, así que no hay que elegir zona ni día para verlo. */
+    const n = Math.min(20, Math.max(8, this.state.ninos));
+    /* Una comparativa solo compara lo que DIFIERE. Los dos packs coinciden en ocho
+     * cosas, así que ponerlas en dos columnas repetía el mismo texto al lado. */
+    const igual = [
+      ['Acceso exclusivo a la zona', 'La sala es vuestra durante la fiesta'],
+      ['Un monitor toda la sesión', 'De principio a fin. Vosotros, sentados'],
+      ['Mesa reservada para el grupo', 'Puesta y recogida'],
+      ['Comida y bebida de los niños', 'Con el menú que elijáis'],
+      ['Calcetines antideslizantes', 'Incluidos, y te los quedas'],
+      ['De 8 a 20 niños', 'Es el mínimo y el máximo'],
+      ['120 minutos', 'Lo que dura la fiesta'],
+      ['Señal de 50 €', 'Se descuenta del total; el resto, en el parque']
+    ];
+
+    /* Filas alineadas: etiqueta + los dos valores. El precio es el único que cambia
+     * de familia y tamaño, porque es la cifra que se compara. */
+    const e = (n) => this.eur(n);
+    const F = [
+      ['Por niño', e(K.precio), e(J.precio), "'Bungee', system-ui", 400, '20px', '#627411'],
+      ['En tarifa especial', e(K.precio + K.recargo), e(J.precio + J.recargo), "'Hanken Grotesk'", 700, '17px', '#101418'],
+      ['Edad del pack', K.edad, J.edad, "'Hanken Grotesk'", 400, '17px', '#101418'],
+      ['Hora extra de sala', e(K.extra), e(J.extra), "'Hanken Grotesk'", 400, '17px', '#101418'],
+      ['Total, de L a J', e(K.precio * n), e(J.precio * n), "'Hanken Grotesk'", 800, '22px', '#101418'],
+      ['Total en especial', e((K.precio + K.recargo) * n), e((J.precio + J.recargo) * n), "'Hanken Grotesk'", 800, '22px', '#101418']
+    ];
+
+    return Object.assign(this.valsCompl(), {
+      dur: K.dur,
+      /* ⚠ 8 sep · las dos horas NO se reparten: son para todo y sin horario. El
+       * reloj de tramos se retira y queda el carril con las tres cosas dentro. */
+      franja: [{ t: 'Saltos' }, { t: 'Merienda' }, { t: 'Tarta' }],
+      packs: [
+        { zona: K.zona, color: K.color },
+        { zona: J.zona, color: J.color }
+      ],
+      ninos: n,
+      topeAbajo: n <= 8,
+      topeArriba: n >= 20,
+      colorMenos: n <= 8 ? '#C9CDD1' : '#0A5C93',
+      colorMas: n >= 20 ? '#C9CDD1' : '#0A5C93',
+      menos: n > 8,
+      mas: n < 20,
+      quita: () => this.setState((s) => ({ ninos: Math.max(8, s.ninos - 1) })),
+      pon: () => this.setState((s) => ({ ninos: Math.min(20, s.ninos + 1) })),
+      igual: igual.map((x, i) => ({ t: x[0], d: x[1], filete: i === 0 ? '0' : '1px' })),
+      filas: F.map((f, i) => ({
+        et: f[0], a: f[1], b: f[2],
+        familia: f[3], peso: f[4], tamano: f[5], color: f[6],
+        /* En escritorio solo cambia de nivel la CIFRA (Bungee 20 → 26). Los demás
+         * valores se quedan en cuerpo 17: el 19 no existe en la escala, y ya se
+         * había corregido una vez en móvil. */
+        tamanoEsc: f[5] === '20px' ? '26px' : (f[5] === '22px' ? '26px' : f[5]),
+        filete: i === 0 ? '0' : '1px'
+      })),
+      menus: this.MENUS.map((m) => ({
+        t: m[0], precio: m[1],
+        chipFondo: m[1] === 'Incluido' ? 'rgba(95,168,46,.14)' : 'rgba(26,169,222,.14)',
+        items: m[2].map((t) => ({ t: t }))
+      })),
+      extras: this.EXTRAS.map((e) => ({
+        t: e[0], d: e[1], p: e[2],
+        chipFondo: e[2] === 'Incluidos' ? 'rgba(95,168,46,.14)' : 'rgba(26,169,222,.14)'
+      })),
+      conExtrasAdultos: p.extrasAdultos !== false,
+      /* Lo que pide el formulario, tal como está construido (POSTFORM-INVITADOS):
+       * por cada niño cinco campos, y del grupo el número de adultos. Los extras de
+       * adultos son el eje product_addons.stage, DISEÑADO y sin construir: aquí se
+       * prometen sin precio y sin lista, porque una lista con precio prometería algo
+       * que el cliente todavía no puede elegir. */
+      bloquesForm: this.FORM.map(function (b) {
+        return { et: b[0], items: b[1].map(function (i, n) {
+          return { t: i[0], d: i[1], filete: n === 0 ? '0' : '1px' };
+        }) };
+      }),
+      ficha: this.FICHA.map((c) => ({ et: c[0], v: c[1], peso: c[2] }))
+    });
+  }
+}
+
+</script>
+</body>
+</html>

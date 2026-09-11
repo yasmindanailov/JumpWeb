@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Titan+One&family=Modak&family=Lilita+One&family=Hanken+Grotesk:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#201E1B;background:#EBECEE;-webkit-font-smoothing:antialiased;}
+img{display:block;max-width:100%;}
+a{color:#F26C1D;text-decoration:none;}
+a:hover{color:#d65f12;}
+[data-acento="naranja"]{--ac:#F26C1D;}
+[data-acento="cian"]{--ac:#2FB6DE;}
+[data-acento="verde"]{--ac:#8CC63F;}
+[data-acento="amarillo"]{--ac:#F5B301;}
+</style>
+</helmet>
+
+<section style="background:#F8F9FA;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">Exploración · turno 9</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">El relevo, con relieve</h1>
+    </div>
+    <p style="margin:0;max-width:700px;font-size:15px;line-height:1.6;color:#5E5B56;text-wrap:pretty;">La animación de <a href="#7a">7a</a> sobre el rótulo de <a href="#8a">8a</a>: entra el logo con la Y puesta, el saltador hace el arco y cae en su hueco, y la Y sale despedida. El relieve va en todas las piezas, también en la Y suelta, así que la extrusión no parpadea en el relevo. Velocidad, altura y bucle siguen en Tweaks.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="9a" style="width:1180px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">9a</span>
+        <span style="font-weight:800;font-size:16px;">Entrada animada con relieve</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">8a + relevo de la Y</span>
+      </div>
+
+      <div style="display:grid;place-items:end center;padding:48px 40px 96px;min-height:560px;background:#fff;overflow:hidden;">
+        <div style="transform:scale(1.12);transform-origin:bottom center;">
+          <div ref="{{ refLockup3 }}" style="will-change:transform;display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95);">
+
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #14708F;color:#14708F;text-shadow:2.2px 2.9px 0 #14708F,4.4px 5.8px 0 #14688A,6.6px 8.7px 0 #135F81,8.8px 11.6px 0 #125778,11px 14.5px 0 #104E6F,13px 17px 0 #0E486A;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(4,32,48,.52) 0%,rgba(4,32,48,.20) 15%,rgba(4,32,48,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.5) 13%,rgba(255,255,255,.16) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+
+              <span ref="{{ refYPalabra3 }}" style="position:absolute;left:0;top:0;white-space:nowrap;">
+                <span style="-webkit-text-stroke:19px #14708F;color:#14708F;text-shadow:2.2px 2.9px 0 #14708F,4.4px 5.8px 0 #14688A,6.6px 8.7px 0 #135F81,8.8px 11.6px 0 #125778,11px 14.5px 0 #104E6F,13px 17px 0 #0E486A;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#48C7EC,#1B8DC2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+                <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(4,32,48,.52) 0%,rgba(4,32,48,.20) 15%,rgba(4,32,48,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLAY</span></span>
+                <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.5) 13%,rgba(255,255,255,.16) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLAY</span></span>
+              </span>
+
+              <span ref="{{ refYSuelta3 }}" style="position:absolute;left:100%;top:0;margin-left:-3.5px;opacity:0;transform-origin:50% 88%;white-space:nowrap;">
+                <span style="-webkit-text-stroke:19px #14708F;color:#14708F;text-shadow:2.2px 2.9px 0 #14708F,4.4px 5.8px 0 #14688A,6.6px 8.7px 0 #135F81,8.8px 11.6px 0 #125778,11px 14.5px 0 #104E6F,13px 17px 0 #0E486A;">Y</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">Y</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">Y</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">Y</span>
+                <span style="position:absolute;left:0;top:0;background:linear-gradient(#48C7EC,#1B8DC2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span>
+                <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.5) 13%,rgba(255,255,255,.16) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+              </span>
+
+              <span ref="{{ refSaltador3 }}" style="will-change:transform;position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:max-content;z-index:5;opacity:0;transform-origin:50% 90%;pointer-events:none;">
+                <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="height:104px;width:auto;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;filter:drop-shadow(3.2px 4.2px 0 #14708F) drop-shadow(3.2px 4.2px 0 #125E7E) drop-shadow(3.2px 4.2px 0 #0F4A6B);">
+              </span>
+            </span>
+
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #14708F;color:#14708F;text-shadow:2.2px 2.9px 0 #14708F,4.4px 5.8px 0 #14688A,6.6px 8.7px 0 #135F81,8.8px 11.6px 0 #125778,11px 14.5px 0 #104E6F,13px 17px 0 #0E4366;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(48,16,2,.5) 0%,rgba(48,16,2,.18) 15%,rgba(48,16,2,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.46) 13%,rgba(255,255,255,.14) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+            </span>
+
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:18px;padding:16px 22px;border-top:2px solid #1B1B19;flex-wrap:wrap;">
+        <button onClick="{{ repetir3 }}" style="font-family:'Bungee';font-size:12px;letter-spacing:.04em;background:#1B1B19;color:#fff;border:0;border-radius:999px;padding:11px 20px;cursor:pointer;">Repetir salto</button>
+        <div style="display:flex;align-items:center;gap:22px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;flex-wrap:wrap;">
+          <span>1 · rótulo con Y en relieve</span>
+          <span>2 · arco del saltador</span>
+          <span>3 · la Y cede el sitio</span>
+          <span>4 · silueta fija en el hueco</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section style="background:#F1F3F5;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">Exploración · turno 8</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">Relieve y bisel</h1>
+    </div>
+    <p style="margin:0;max-width:700px;font-size:15px;line-height:1.6;color:#5E5B56;text-wrap:pretty;">El bisel va <strong>dentro</strong> de la letra, recortado al propio glifo: banda clara arriba-izquierda, banda oscura abajo-derecha y un contorno interior fino que sigue el dibujo. Los trazos de fuera de <a href="#7a">7a</a> no se tocan. En <a href="#8a">8a</a> y <a href="#8b">8b</a> queda el primer intento, con pared lateral extruida y sombras por fuera.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="8c" style="width:1180px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">8c</span>
+        <span style="font-weight:800;font-size:16px;">Bisel dentro de la letra</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">línea de brillo interior como el original</span>
+      </div>
+
+      <div style="display:grid;place-items:center;padding:56px 40px 64px;min-height:420px;background:#fff;">
+        <div style="position:relative;width:580px;height:240px;">
+          <svg width="580" height="240" viewBox="-30 -40 580 240" style="display:block;overflow:visible;">
+            <defs>
+              <clipPath id="clipPla8c"><text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1">PLA</text></clipPath>
+              <clipPath id="clipJp8c"><text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1">JUMPPARK</text></clipPath>
+              <filter id="soft8c" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="0.3"></feGaussianBlur></filter>
+              <linearGradient id="g8cP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5FD3F1"></stop><stop offset="1" stop-color="#1F9CD0"></stop></linearGradient>
+              <linearGradient id="g8cL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#57D0F0"></stop><stop offset="1" stop-color="#1E97CB"></stop></linearGradient>
+              <linearGradient id="g8cA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4FCBEE"></stop><stop offset="1" stop-color="#1D92C6"></stop></linearGradient>
+              <linearGradient id="g8cJ" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBC02D"></stop><stop offset="1" stop-color="#F08019"></stop></linearGradient>
+              <linearGradient id="g8cU" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9A825"></stop><stop offset="1" stop-color="#EC6A1B"></stop></linearGradient>
+              <linearGradient id="g8cM" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F79420"></stop><stop offset="1" stop-color="#E8492A"></stop></linearGradient>
+              <linearGradient id="g8cP2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F5851F"></stop><stop offset="1" stop-color="#E03B26"></stop></linearGradient>
+              <linearGradient id="g8cP3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C6DD3F"></stop><stop offset="1" stop-color="#8CC63F"></stop></linearGradient>
+              <linearGradient id="g8cA2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B7D93E"></stop><stop offset="1" stop-color="#7BC152"></stop></linearGradient>
+              <linearGradient id="g8cR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A5D341"></stop><stop offset="1" stop-color="#57BC7C"></stop></linearGradient>
+              <linearGradient id="g8cK" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FCB4A"></stop><stop offset="1" stop-color="#2FB6DE"></stop></linearGradient>
+            </defs>
+
+            <g transform="rotate(-2 0 120) scale(0.95 1)">
+
+              <g transform="translate(24 -4) rotate(-3 60 40) skewX(-5)">
+                <text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1" fill="#2FB6DE" stroke="#2FB6DE" stroke-width="20" stroke-linejoin="round">JUMPPARK</text>
+                <text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1" fill="#1B1B19" stroke="#1B1B19" stroke-width="13.5" stroke-linejoin="round">JUMPPARK</text>
+                <text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="5" stroke-linejoin="round">JUMPPARK</text>
+                <text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1"><tspan fill="url(#g8cJ)">J</tspan><tspan fill="url(#g8cU)">U</tspan><tspan fill="url(#g8cM)">M</tspan><tspan fill="url(#g8cP2)">P</tspan><tspan fill="url(#g8cP3)">P</tspan><tspan fill="url(#g8cA2)">A</tspan><tspan fill="url(#g8cR)">R</tspan><tspan fill="url(#g8cK)">K</tspan></text>
+                <g clip-path="url(#clipJp8c)">
+                  <g filter="url(#soft8c)">
+                    <text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1" fill="none" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="2.8" stroke-linejoin="round" transform="translate(6 7)">JUMPPARK</text>
+                    <text x="0" y="160" font-family="Lilita One" font-size="95" letter-spacing="1" fill="none" stroke="#5A1A02" stroke-opacity="0.26" stroke-width="5" transform="translate(-2.5 -3)">JUMPPARK</text>
+                  </g>
+                </g>
+              </g>
+
+              <g transform="translate(0 0) rotate(-3 60 40) skewX(-5)">
+                <text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1" fill="#2FB6DE" stroke="#2FB6DE" stroke-width="19" stroke-linejoin="round">PLA</text>
+                <text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1" fill="#1B1B19" stroke="#1B1B19" stroke-width="13" stroke-linejoin="round">PLA</text>
+                <text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="4.6" stroke-linejoin="round">PLA</text>
+                <text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1"><tspan fill="url(#g8cP)">P</tspan><tspan fill="url(#g8cL)">L</tspan><tspan fill="url(#g8cA)">A</tspan></text>
+                <g clip-path="url(#clipPla8c)">
+                  <g filter="url(#soft8c)">
+                    <text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1" fill="none" stroke="#FFFFFF" stroke-opacity="0.95" stroke-width="2.6" stroke-linejoin="round" transform="translate(5.5 6.5)">PLA</text>
+                    <text x="17" y="78" font-family="Lilita One" font-size="88" letter-spacing="-1" fill="none" stroke="#062A3E" stroke-opacity="0.24" stroke-width="5" transform="translate(-2.5 -3)">PLA</text>
+                  </g>
+                </g>
+              </g>
+
+            </g>
+          </svg>
+          <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:143px;top:-4px;height:104px;width:auto;transform:rotate(-5deg);pointer-events:none;">
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:22px;padding:16px 22px;border-top:2px solid #1B1B19;flex-wrap:wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">
+        <span>línea de brillo separada del borde</span>
+        <span>sombra abajo-derecha insinuada</span>
+        <span>se corta en las letras finas, como el original</span>
+        <span>los trazos de fuera no se tocan</span>
+      </div>
+    </div>
+
+    <div id="8a" style="width:1180px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">8a</span>
+        <span style="font-weight:800;font-size:16px;">Logo con relieve</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">extrusión 14 px · bisel + brillo</span>
+      </div>
+
+      <div style="display:grid;place-items:center;padding:64px 40px 78px;min-height:500px;background:#fff;overflow:hidden;">
+        <div style="position:relative;">
+          <div style="position:absolute;left:6%;right:-2%;bottom:-42px;height:56px;background:radial-gradient(50% 50% at 50% 50%,rgba(10,42,58,.28),rgba(10,42,58,0) 72%);"></div>
+          <div style="position:relative;display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95) scale(1.1);transform-origin:center;">
+
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #14708F;color:#14708F;text-shadow:1.15px 1.5px 0 #14708F,2.3px 3px 0 #14708F,3.45px 4.5px 0 #14708F,4.6px 6px 0 #146D8B,5.75px 7.5px 0 #136887,6.9px 9px 0 #136382,8.05px 10.5px 0 #125E7E,9.2px 12px 0 #115979,10.35px 13.5px 0 #115475,11.5px 15px 0 #104F70,13px 17px 0 #0E486A,16px 22px 14px rgba(9,40,56,.34);">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(4,32,48,.52) 0%,rgba(4,32,48,.20) 15%,rgba(4,32,48,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.5) 13%,rgba(255,255,255,.16) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:auto;z-index:5;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;pointer-events:none;filter:drop-shadow(1.9px 2.5px 0 #14708F) drop-shadow(1.9px 2.5px 0 #136687) drop-shadow(1.9px 2.5px 0 #125C7D) drop-shadow(1.9px 2.5px 0 #115373) drop-shadow(1.9px 2.5px 0 #0F4A6B) drop-shadow(5px 8px 7px rgba(9,40,56,.3));">
+            </span>
+
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #14708F;color:#14708F;text-shadow:1.15px 1.5px 0 #14708F,2.3px 3px 0 #14708F,3.45px 4.5px 0 #146D8B,4.6px 6px 0 #136887,5.75px 7.5px 0 #136382,6.9px 9px 0 #125E7E,8.05px 10.5px 0 #115979,9.2px 12px 0 #115475,10.35px 13.5px 0 #104F70,11.5px 15px 0 #0F4A6B,13px 17px 0 #0E4366,16px 22px 14px rgba(9,40,56,.34);">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(48,16,2,.5) 0%,rgba(48,16,2,.18) 15%,rgba(48,16,2,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.46) 13%,rgba(255,255,255,.14) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+            </span>
+
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:22px;padding:16px 22px;border-top:2px solid #1B1B19;flex-wrap:wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">
+        <span>pared lateral · #14708F → #0E4366</span>
+        <span>bisel superior · blanco 90 % a 42 %</span>
+        <span>sombra interior en la base</span>
+        <span>sombra de contacto suave</span>
+      </div>
+    </div>
+
+    <div id="8b" style="width:660px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">8b</span>
+        <span style="font-weight:800;font-size:16px;">Plano vs. relieve</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">a tamaño cabecera</span>
+      </div>
+
+      <div style="display:grid;grid-template-rows:repeat(3,1fr);">
+
+        <div style="padding:22px 26px;border-bottom:1px solid #E7E8EB;display:flex;align-items:center;gap:20px;min-height:130px;background:#fff;">
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9A968E;width:74px;flex:none;">plano 7a</span>
+          <div style="position:relative;height:84px;flex:1;">
+          <div style="position:absolute;left:0;top:50%;transform:translateY(-50%) scale(.4);transform-origin:left center;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95);">
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:auto;z-index:5;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;pointer-events:none;">
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+            </span>
+          </div>
+          </div>
+          </div>
+        </div>
+
+        <div style="padding:22px 26px;border-bottom:1px solid #E7E8EB;display:flex;align-items:center;gap:20px;min-height:130px;background:#fff;">
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9A968E;width:74px;flex:none;">relieve</span>
+          <div style="position:relative;height:84px;flex:1;">
+          <div style="position:absolute;left:0;top:50%;transform:translateY(-50%) scale(.4);transform-origin:left center;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95);">
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #14708F;color:#14708F;text-shadow:1.15px 1.5px 0 #14708F,2.3px 3px 0 #14708F,3.45px 4.5px 0 #146D8B,4.6px 6px 0 #136887,5.75px 7.5px 0 #136382,6.9px 9px 0 #125E7E,8.05px 10.5px 0 #115979,9.2px 12px 0 #115475,10.35px 13.5px 0 #104F70,11.5px 15px 0 #0F4A6B,13px 17px 0 #0E4366;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(4,32,48,.52) 0%,rgba(4,32,48,.20) 15%,rgba(4,32,48,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.5) 13%,rgba(255,255,255,.16) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:auto;z-index:5;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;pointer-events:none;filter:drop-shadow(1.9px 2.5px 0 #14708F) drop-shadow(1.9px 2.5px 0 #136687) drop-shadow(1.9px 2.5px 0 #125C7D) drop-shadow(1.9px 2.5px 0 #115373) drop-shadow(1.9px 2.5px 0 #0F4A6B);">
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #14708F;color:#14708F;text-shadow:1.15px 1.5px 0 #14708F,2.3px 3px 0 #14708F,3.45px 4.5px 0 #146D8B,4.6px 6px 0 #136887,5.75px 7.5px 0 #136382,6.9px 9px 0 #125E7E,8.05px 10.5px 0 #115979,9.2px 12px 0 #115475,10.35px 13.5px 0 #104F70,11.5px 15px 0 #0F4A6B,13px 17px 0 #0E4366;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(48,16,2,.5) 0%,rgba(48,16,2,.18) 15%,rgba(48,16,2,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.46) 13%,rgba(255,255,255,.14) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+            </span>
+          </div>
+          </div>
+          </div>
+        </div>
+
+        <div style="padding:22px 26px;display:flex;align-items:center;gap:20px;min-height:130px;background:#14181C;">
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#7E8890;width:74px;flex:none;">en oscuro</span>
+          <div style="position:relative;height:84px;flex:1;">
+          <div style="position:absolute;left:0;top:50%;transform:translateY(-50%) scale(.4);transform-origin:left center;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95);">
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #14708F;color:#14708F;text-shadow:1.15px 1.5px 0 #14708F,2.3px 3px 0 #14708F,3.45px 4.5px 0 #146D8B,4.6px 6px 0 #136887,5.75px 7.5px 0 #136382,6.9px 9px 0 #125E7E,8.05px 10.5px 0 #115979,9.2px 12px 0 #115475,10.35px 13.5px 0 #104F70,11.5px 15px 0 #0F4A6B,13px 17px 0 #0E4366;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(4,32,48,.52) 0%,rgba(4,32,48,.20) 15%,rgba(4,32,48,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.5) 13%,rgba(255,255,255,.16) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLA</span></span>
+              <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:auto;z-index:5;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;pointer-events:none;filter:drop-shadow(1.9px 2.5px 0 #14708F) drop-shadow(1.9px 2.5px 0 #136687) drop-shadow(1.9px 2.5px 0 #125C7D) drop-shadow(1.9px 2.5px 0 #115373) drop-shadow(1.9px 2.5px 0 #0F4A6B);">
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #14708F;color:#14708F;text-shadow:1.15px 1.5px 0 #14708F,2.3px 3px 0 #14708F,3.45px 4.5px 0 #146D8B,4.6px 6px 0 #136887,5.75px 7.5px 0 #136382,6.9px 9px 0 #125E7E,8.05px 10.5px 0 #115979,9.2px 12px 0 #115475,10.35px 13.5px 0 #104F70,11.5px 15px 0 #0F4A6B,13px 17px 0 #0E4366;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(0deg,rgba(48,16,2,.5) 0%,rgba(48,16,2,.18) 15%,rgba(48,16,2,0) 33%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(180deg,rgba(255,255,255,.88) 0%,rgba(255,255,255,.46) 13%,rgba(255,255,255,.14) 27%,rgba(255,255,255,0) 42%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMPPARK</span></span>
+            </span>
+          </div>
+          </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section data-acento="{{ acento }}" style="background:#E6E9ED;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">Exploración · turno 7</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">El relevo de la Y</h1>
+    </div>
+    <p style="margin:0;max-width:660px;font-size:15px;line-height:1.6;color:#5E5B56;text-wrap:pretty;">Primero entra el rótulo con la Y normal. El saltador llega desde abajo, hace el arco por encima del logo y cae justo en el hueco de la Y: la letra sale despedida y la silueta se queda en su sitio, con la forma que ya tenía en <a href="#4a">4a</a>. En Tweaks: velocidad, altura del salto, bucle e impacto.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="7a" style="width:1180px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">7a</span>
+        <span style="font-weight:800;font-size:16px;">Animación de entrada del logo</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">Y normal → salto → silueta en su sitio</span>
+      </div>
+
+      <div style="display:grid;place-items:end center;padding:48px 40px 96px;min-height:560px;background:#fff;overflow:hidden;">
+        <div style="transform:scale(1.12);transform-origin:bottom center;">
+          <div ref="{{ refLockup }}" style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95);">
+
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+
+              <span ref="{{ refYPalabra }}" style="position:absolute;left:0;top:0;white-space:nowrap;">
+                <span style="-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLAY</span>
+                <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#48C7EC,#1B8DC2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+              </span>
+
+              <span ref="{{ refYSuelta }}" style="position:absolute;left:100%;top:0;margin-left:-3.5px;opacity:0;transform-origin:50% 88%;white-space:nowrap;">
+                <span style="-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">Y</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">Y</span>
+                <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">Y</span>
+                <span style="position:absolute;left:0;top:0;background:linear-gradient(#48C7EC,#1B8DC2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span>
+              </span>
+
+              <sc-if value="{{ mostrarImpacto }}" hint-placeholder-val="{{ true }}">
+              <span ref="{{ refImpacto }}" style="position:absolute;left:100%;bottom:-12px;margin-left:14px;width:1px;height:1px;opacity:0;transform-origin:0 100%;pointer-events:none;">
+                <span style="position:absolute;left:-46px;bottom:14px;width:28px;height:7px;border-radius:99px;background:#1B1B19;transform:rotate(-16deg);"></span>
+                <span style="position:absolute;left:14px;bottom:20px;width:22px;height:7px;border-radius:99px;background:#1B1B19;transform:rotate(18deg);"></span>
+                <span style="position:absolute;left:-18px;bottom:-2px;width:38px;height:7px;border-radius:99px;background:#1B1B19;"></span>
+              </span>
+              </sc-if>
+
+              <span ref="{{ refSaltador }}" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:max-content;z-index:5;opacity:0;transform-origin:50% 90%;pointer-events:none;">
+                <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="height:104px;width:auto;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;">
+              </span>
+            </span>
+
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+            </span>
+
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:18px;padding:16px 22px;border-top:2px solid #1B1B19;flex-wrap:wrap;">
+        <button onClick="{{ repetir }}" style="font-family:'Bungee';font-size:12px;letter-spacing:.04em;background:#1B1B19;color:#fff;border:0;border-radius:999px;padding:11px 20px;cursor:pointer;">Repetir salto</button>
+        <div style="display:flex;align-items:center;gap:22px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;flex-wrap:wrap;">
+          <span>1 · rótulo con Y</span>
+          <span>2 · arco del saltador</span>
+          <span>3 · la Y cede el sitio</span>
+          <span>4 · silueta fija en el hueco</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section style="background:#DEE1E5;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">Exploración · turno 6</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">4a junto al original</h1>
+    </div>
+    <p style="margin:0;max-width:640px;font-size:15px;line-height:1.6;color:#5E5B56;text-wrap:pretty;">Mismo encuadre y misma altura de rótulo para poder comparar letra a letra. Dime qué toco de <a href="#4a">4a</a> y lo edito aquí.</p>
+  </div>
+
+  <div id="6a" style="max-width:1880px;margin:0 auto;background:#FFFFFF;border:2px solid #1B1B19;border-radius:22px;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+      <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">6a</span>
+      <span style="font-weight:800;font-size:16px;">Original vs. reconstrucción 4a</span>
+      <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">comparativa lado a lado</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;">
+
+      <div style="border-right:2px solid #1B1B19;min-width:0;">
+        <div style="padding:10px 18px;border-bottom:1px solid #E7E8EB;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A64;">Original</div>
+        <div style="padding:54px 40px;display:grid;place-items:center;min-height:380px;background:#fff;">
+          <img src="assets/logo.png" alt="Logo original PLAY JUMP PARK" style="width:100%;max-width:660px;height:auto;">
+        </div>
+      </div>
+
+      <div style="min-width:0;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid #E7E8EB;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A64;">
+          <span>4a · reconstruido en CSS</span>
+          <span style="margin-left:auto;letter-spacing:.04em;text-transform:none;color:#9A968E;">Tweaks › redondezOriginal para volver al 4a</span>
+        </div>
+
+        <sc-if value="{{ menosRedonda }}" hint-placeholder-val="{{ true }}">
+        <div ref="{{ refZona }}" style="padding:54px 40px;display:grid;place-items:center start;min-height:380px;background:#fff;overflow:hidden;">
+          <div style="transform-origin:left center;transform:{{ escala }};">
+          <div ref="{{ refInterior }}" style="position:relative;display:inline-block;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg) scaleX(.95);">
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:88px;line-height:1;letter-spacing:-1px;margin-left:17px;transform:rotate(-3deg) skewX(-5deg);z-index:3;">
+              <span style="-webkit-text-stroke:19px #2FB6DE;color:#2FB6DE;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.6px #FFFFFF;color:#FFFFFF;">PLA</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:auto;z-index:5;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;pointer-events:none;">
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Lilita One';font-size:95px;line-height:1;letter-spacing:1px;margin-top:-16px;transform:skewX(-5deg);z-index:2;">
+              <span style="-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13.5px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+            </span>
+          </div>
+          </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ redondezOriginal }}" hint-placeholder-val="{{ false }}">
+        <div ref="{{ refZona }}" style="padding:54px 40px;display:grid;place-items:center start;min-height:380px;background:#fff;overflow:hidden;">
+          <div style="transform-origin:left center;transform:{{ escala }};">
+          <div ref="{{ refInterior }}" style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:66px;line-height:1;letter-spacing:0px;margin-left:20px;transform:rotate(-3deg);z-index:1;">
+              <span style="-webkit-text-stroke:23px #2FB6DE;color:#2FB6DE;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:15px #1B1B19;color:#1B1B19;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5.7px #FFFFFF;color:#FFFFFF;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span></span>
+              <img src="assets/saltador-y-verde.png" alt="Silueta saltando como letra Y" style="position:absolute;left:100%;bottom:-4px;margin-left:-18px;height:104px;width:auto;z-index:5;transform:skewX(5deg) rotate(-3deg);transform-origin:bottom left;pointer-events:none;">
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:96px;line-height:1;letter-spacing:-1.5px;margin-top:-12px;z-index:2;">
+              <span style="-webkit-text-stroke:30px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:7.5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+            </span>
+          </div>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+<section data-acento="{{ acento }}" style="background:#CDD1D6;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">Exploración · turno 5</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">Toque underground</h1>
+    </div>
+    <p style="margin:0;max-width:700px;font-size:15px;line-height:1.6;color:#5E5B56;text-wrap:pretty;">El rótulo de 4a sin tocar; lo urbano se añade alrededor: grano de espray dentro de la letra, halo de overspray, goterones, muro de hormigón, cinta de señalización y pegatina arrancada. Todo son capas separables, así que la marca sigue siendo la misma en cabecera y en favicon.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="5a" style="width:760px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">5a</span>
+        <span style="font-weight:800;font-size:16px;">Rótulo sobre muro</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">overspray + hormigón + sombra dura</span>
+      </div>
+      <div style="padding:0;display:grid;place-items:center;min-height:330px;background-color:#22252A;background-image:radial-gradient(circle at 22% 28%,rgba(255,255,255,.045) .5px,transparent .9px),radial-gradient(circle at 68% 74%,rgba(0,0,0,.38) .6px,transparent 1px),repeating-linear-gradient(91deg,rgba(255,255,255,.022) 0 2px,transparent 2px 7px),linear-gradient(#2A2E34,#1C1F23);background-size:3px 3px,5px 5px,auto,auto;border-bottom:2px solid #1B1B19;position:relative;">
+        <div style="position:absolute;left:0;right:0;top:0;height:14px;background:repeating-linear-gradient(45deg,#F5B301 0 13px,#1B1B19 13px 26px);opacity:.9;"></div>
+        <div style="padding:60px 32px 54px;filter:drop-shadow(9px 11px 0 rgba(0,0,0,.55));"><div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:52px;line-height:1;letter-spacing:0px;margin-left:16px;transform:rotate(-3deg);z-index:1;">
+              <span style="color:transparent;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:34px rgba(0,0,0,.45);color:transparent;filter:blur(9px);">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#5FD3F1,#1F9CD0);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#57D0F0,#1E97CB);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#4FCBEE,#1D92C6);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#48C7EC,#1B8DC2);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:76px;line-height:1;letter-spacing:-1px;margin-top:-10px;z-index:2;">
+              <span style="color:transparent;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:34px rgba(0,0,0,.45);color:transparent;filter:blur(9px);">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:14px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#FBC02D,#F08019);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F9A825,#EC6A1B);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F79420,#E8492A);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F5851F,#E03B26);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#C6DD3F,#8CC63F);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#B7D93E,#7BC152);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#A5D341,#57BC7C);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#8FCB4A,#2FB6DE);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+            </span>
+          </div></div>
+        <span style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;letter-spacing:.34em;color:rgba(255,255,255,.34);">TRAMPOLINE PARK</span>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">El logo no cambia: cambia el soporte. Muro de hormigón con grano, halo de espray alrededor del contorno, sombra dura desplazada y cinta de señalización arriba. Es el planteamiento para el hero y las cabeceras de sección.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:12px;background-color:#22252A;background-image:radial-gradient(circle at 22% 28%,rgba(255,255,255,.045) .5px,transparent .9px),radial-gradient(circle at 68% 74%,rgba(0,0,0,.38) .6px,transparent 1px),repeating-linear-gradient(91deg,rgba(255,255,255,.022) 0 2px,transparent 2px 7px),linear-gradient(#2A2E34,#1C1F23);background-size:3px 3px,5px 5px,auto,auto;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #0F1013;color:#0F1013;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;margin-top:-2px;"><span style="-webkit-text-stroke:5px #0F1013;color:#0F1013;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#B7BDC1;">cabecera oscura · 44 px</span>
+        </div>
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:12px;background:#fff;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;margin-top:-2px;"><span style="-webkit-text-stroke:5px #1B1B19;color:#1B1B19;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">sin muro sigue funcionando</span>
+        </div></div>
+    </div>
+
+    <div id="5b" style="width:760px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">5b</span>
+        <span style="font-weight:800;font-size:16px;">Espray y goterones</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">textura de bote + 3 chorretones</span>
+      </div>
+      <div style="padding:58px 32px 96px;display:grid;place-items:center;min-height:340px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:52px;line-height:1;letter-spacing:0px;margin-left:16px;transform:rotate(-3deg);z-index:1;">
+              <span style="color:transparent;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:26px rgba(20,20,18,.4);color:transparent;filter:blur(8px);">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#5FD3F1,#1F9CD0);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#57D0F0,#1E97CB);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#4FCBEE,#1D92C6);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#48C7EC,#1B8DC2);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:76px;line-height:1;letter-spacing:-1px;margin-top:-10px;z-index:2;">
+              <span style="color:transparent;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:26px rgba(20,20,18,.4);color:transparent;filter:blur(8px);">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:20px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:14px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#FBC02D,#F08019);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F9A825,#EC6A1B);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F79420,#E8492A);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F5851F,#E03B26);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#C6DD3F,#8CC63F);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#B7D93E,#7BC152);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#A5D341,#57BC7C);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#8FCB4A,#2FB6DE);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+              <span style="position:absolute;left:19%;bottom:-27px;width:17px;height:31px;box-sizing:border-box;border:5px solid #1B1B19;border-top:0;border-radius:0 0 99px 99px;background:#EC6A1B;"></span>
+              <span style="position:absolute;left:46%;bottom:-42px;width:19px;height:46px;box-sizing:border-box;border:5px solid #1B1B19;border-top:0;border-radius:0 0 99px 99px;background:#E03B26;"></span>
+              <span style="position:absolute;left:79%;bottom:-22px;width:15px;height:26px;box-sizing:border-box;border:5px solid #1B1B19;border-top:0;border-radius:0 0 99px 99px;background:#7BC152;"></span>
+            </span>
+          </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">La textura granulada dentro de la letra imita la pintura de bote y los tres goterones cuelgan de la línea baja. Es el toque más callejero y se reserva para piezas grandes: en cabecera y a tamaño pequeño se usa la versión sin goterones.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:12px;background:#fff;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;margin-top:-2px;"><span style="-webkit-text-stroke:5px #1B1B19;color:#1B1B19;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">44 px · sin goterones</span>
+        </div>
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:12px;background:#16171A;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;margin-top:-2px;"><span style="-webkit-text-stroke:5px #F4F2EA;color:#F4F2EA;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div></div>
+    </div>
+
+    <div id="5c" style="width:760px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">5c</span>
+        <span style="font-weight:800;font-size:16px;">Pegatina slap</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">sticker arrancado + cinta</span>
+      </div>
+      <div style="padding:56px 32px;display:grid;place-items:center;min-height:330px;background-color:#3A3F45;background-image:radial-gradient(circle at 24% 32%,rgba(255,255,255,.05) .5px,transparent .9px),linear-gradient(#41464D,#2E3237);background-size:3px 3px,auto;border-bottom:2px solid #1B1B19;">
+        <div style="position:relative;transform:rotate(2.5deg);padding:34px 46px 30px;background:#F4F2EA;clip-path:polygon(1% 4%,14% 0,32% 3%,55% 0,78% 4%,96% 1%,100% 16%,99% 42%,100% 74%,97% 96%,74% 99%,48% 96%,22% 100%,3% 97%,0 68%,1% 34%);box-shadow:10px 12px 0 rgba(0,0,0,.42);">
+          <div style="position:absolute;left:-14px;top:22px;width:96px;height:26px;transform:rotate(-6deg);background:repeating-linear-gradient(45deg,#F5B301 0 11px,#1B1B19 11px 22px);opacity:.95;"></div>
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:52px;line-height:1;letter-spacing:0px;margin-left:16px;transform:rotate(-3deg);z-index:1;">
+              <span style="color:transparent;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:22px rgba(20,20,18,.35);color:transparent;filter:blur(7px);">PLAY</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLA</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">PLAY</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#5FD3F1,#1F9CD0);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#57D0F0,#1E97CB);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#4FCBEE,#1D92C6);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#48C7EC,#1B8DC2);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:76px;line-height:1;letter-spacing:-1px;margin-top:-10px;z-index:2;">
+              <span style="color:transparent;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:22px rgba(20,20,18,.35);color:transparent;filter:blur(7px);">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:14px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+              <span style="position:absolute;left:0;top:0;"><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#FBC02D,#F08019);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F9A825,#EC6A1B);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F79420,#E8492A);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#F5851F,#E03B26);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#C6DD3F,#8CC63F);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#B7D93E,#7BC152);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#A5D341,#57BC7C);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background-image:radial-gradient(circle at 30% 28%,rgba(255,255,255,.2) .4px,transparent .8px),radial-gradient(circle at 74% 66%,rgba(0,0,0,.16) .5px,transparent .9px),linear-gradient(#8FCB4A,#2FB6DE);background-size:3px 3px,4px 4px,100% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">El rótulo impreso como pegatina de papel con el borde arrancado, pegada torcida sobre metal y cruzada por un trozo de cinta. Sirve para merchandising, redes y adhesivos reales, y en web funciona como sello sobre las fotos del parque.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:12px;background:#fff;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;margin-top:-2px;"><span style="-webkit-text-stroke:5px #1B1B19;color:#1B1B19;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">sello sobre foto · 44 px</span>
+        </div>
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:12px;background:#3A3F45;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;margin-top:-2px;"><span style="-webkit-text-stroke:5px #F4F2EA;color:#F4F2EA;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#B7BDC1;">sobre metal</span>
+        </div></div>
+    </div>
+  </div>
+
+</section>
+
+<section data-acento="{{ acento }}" style="background:#D5D8DD;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#6E6A64;">Exploración · turno 4</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">Reconstrucción del rótulo</h1>
+    </div>
+    <p style="margin:0;max-width:700px;font-size:15px;line-height:1.6;color:#6E6A64;text-wrap:pretty;">Ahora sí con la construcción del logo real: keyline cian por fuera, contorno negro continuo alrededor de la palabra, filete blanco entre letras, un degradado propio en cada letra y JUMPPARK soldado como una sola pieza bajo PLAY, con las dos líneas inclinadas. Lo único que falta respecto al original son las salpicaduras, la flecha y el saltador.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="4a" style="width:760px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">4a</span>
+        <span style="font-weight:800;font-size:16px;">Rótulo completo, sin adornos</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">keyline + contorno + filete + degradado</span>
+      </div>
+      <div style="padding:56px 32px 64px;display:grid;place-items:center;min-height:300px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+          <span style="position:relative;display:inline-block;font-family:'Modak';font-size:52px;line-height:1;letter-spacing:0px;margin-left:16px;transform:rotate(-3deg);z-index:1;">
+            <span style="-webkit-text-stroke:18px #2FB6DE;color:#2FB6DE;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:12px #1B1B19;color:#1B1B19;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#48C7EC,#1B8DC2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+          </span>
+          <span style="position:relative;display:inline-block;font-family:'Modak';font-size:76px;line-height:1;letter-spacing:-1px;margin-top:-10px;z-index:2;">
+            <span style="-webkit-text-stroke:24px #2FB6DE;color:#2FB6DE;">JUMPPARK</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:16px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:6px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+            <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+          </span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Cuatro capas como en el rótulo original: keyline cian y contorno negro recorriendo la palabra completa, filete blanco entre letra y letra, y un degradado distinto en cada carácter. JUMPPARK va soldado en una sola pieza y el color va corriendo del amarillo al rojo y del verde al turquesa en la K. Nada de salpicaduras, flecha ni silueta.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;margin-top:-2px;">
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;"><span style="-webkit-text-stroke:5px #1B1B19;color:#1B1B19;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">44 px · contorno fino, color plano</span>
+        </div>
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:11px;background:repeating-linear-gradient(135deg,#2b3940 0 17px,#26333a 17px 34px);">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:20px;line-height:1;margin-left:5px;"><span style="-webkit-text-stroke:8px #2FB6DE;color:#2FB6DE;">PLAY</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:2px #FFFFFF;color:#FFFFFF;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;margin-top:-3px;">
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:28px;line-height:1;"><span style="-webkit-text-stroke:10px #2FB6DE;color:#2FB6DE;">JUMPPARK</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:6px #1B1B19;color:#1B1B19;">JUMPPARK</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:2.5px #FFFFFF;color:#FFFFFF;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#B7BDC1;">sobre foto · keyline cian visible</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="4b" style="width:760px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">4b</span>
+        <span style="font-weight:800;font-size:16px;">El mismo rótulo, un paso más ordenado</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">sin keyline · más compacto</span>
+      </div>
+      <div style="padding:56px 32px 64px;display:grid;place-items:center;min-height:300px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+          <span style="position:relative;display:inline-block;font-family:'Modak';font-size:52px;line-height:1;letter-spacing:0px;margin-left:16px;transform:rotate(-2deg);z-index:1;">
+            <span style="-webkit-text-stroke:12px #1B1B19;color:#1B1B19;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#5FD3F1,#1F9CD0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#57D0F0,#1E97CB);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">L</span><span style="background:linear-gradient(#4FCBEE,#1D92C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#48C7EC,#1B8DC2);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">Y</span></span>
+          </span>
+          <span style="position:relative;display:inline-block;font-family:'Modak';font-size:76px;line-height:1;letter-spacing:-1px;margin-top:-10px;z-index:2;">
+            <span style="-webkit-text-stroke:15px #1B1B19;color:#1B1B19;">JUMPPARK</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:6px #FFFFFF;color:#FFFFFF;">JUMPPARK</span>
+            <span style="position:absolute;left:0;top:0;"><span style="background:linear-gradient(#FBC02D,#F08019);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">J</span><span style="background:linear-gradient(#F9A825,#EC6A1B);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">U</span><span style="background:linear-gradient(#F79420,#E8492A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">M</span><span style="background:linear-gradient(#F5851F,#E03B26);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#C6DD3F,#8CC63F);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">P</span><span style="background:linear-gradient(#B7D93E,#7BC152);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">A</span><span style="background:linear-gradient(#A5D341,#57BC7C);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">R</span><span style="background:linear-gradient(#8FCB4A,#2FB6DE);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">K</span></span>
+          </span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Misma letra, mismo degradado y mismas dos líneas, pero sin el keyline cian y con menos inclinación: al quitar el borde exterior recorta menos espacio, así que aguanta mejor en fondos de color, en la cabecera y a tamaños medianos.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;margin-top:-2px;">
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;"><span style="-webkit-text-stroke:5px #1B1B19;color:#1B1B19;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">44 px de alto</span>
+        </div>
+        <div style="padding:24px 14px;display:grid;place-items:center;gap:11px;background:#16171A;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:17px;line-height:1;margin-left:4px;"><span style="-webkit-text-stroke:4px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;margin-top:-2px;">
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:24px;line-height:1;"><span style="-webkit-text-stroke:5px #F4F2EA;color:#F4F2EA;">JUMPPARK</span><span style="position:absolute;left:0;top:0;"><span style="color:#F26C1D;">JUMP</span><span style="color:#8CC63F;">PARK</span></span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section data-acento="{{ acento }}" style="background:#DDE0E4;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#6E6A64;">Exploración · turno 3</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">Punto medio: letra bubble, cero adornos</h1>
+    </div>
+    <p style="margin:0;max-width:680px;font-size:15px;line-height:1.6;color:#6E6A64;text-wrap:pretty;">Se recupera lo que hacía reconocible al logo: letra redondeada de rótulo, contorno negro con filete blanco, degradado suave y baseline con movimiento. Se quitan solo los añadidos: salpicaduras, puntos, flecha naranja y saltador.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="3a" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">3a</span>
+        <span style="font-weight:800;font-size:16px;">Bubble redondeada · dos líneas</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">la más cercana al logo real</span>
+      </div>
+      <div style="padding:46px 32px 52px;display:grid;place-items:center;min-height:250px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+          <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:48px;line-height:1;margin-left:8px;">
+            <span style="-webkit-text-stroke:13px #1B1B19;color:#1B1B19;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;background:linear-gradient(#4ECBEA,#1D93C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLAY</span>
+          </span>
+          <div style="display:flex;align-items:baseline;gap:24px;margin-top:6px;">
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:68px;line-height:1;">
+              <span style="-webkit-text-stroke:12px #1B1B19;color:#1B1B19;">JUMP</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5.5px #FFFFFF;color:#FFFFFF;">JUMP</span>
+              <span style="position:absolute;left:0;top:0;background:linear-gradient(#F8A62B,#E8462A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMP</span>
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:68px;line-height:1;">
+              <span style="-webkit-text-stroke:12px #1B1B19;color:#1B1B19;">PARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5.5px #FFFFFF;color:#FFFFFF;">PARK</span>
+              <span style="position:absolute;left:0;top:0;background:linear-gradient(#AFD23C,#3FB4A6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PARK</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Cambia la letra recta por una redondeada de rótulo, que es lo que daba el aire del logo original. Conserva contorno, filete blanco, degradado por palabra e inclinación; nada más.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:13px;line-height:1;margin-left:3px;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:9px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">36 px de alto · color plano</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;background:repeating-linear-gradient(135deg,#2b3940 0 17px,#26333a 17px 34px);">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-2deg);">
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:16px;line-height:1;margin-left:3px;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:11px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:22px;line-height:1;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:22px;line-height:1;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#B7BDC1;">sobre foto del parque</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="3b" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">3b</span>
+        <span style="font-weight:800;font-size:16px;">Bubble con letras bailadas</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">movimiento del original</span>
+      </div>
+      <div style="padding:44px 32px 52px;display:grid;place-items:center;min-height:250px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;">
+          <span style="display:inline-flex;align-items:flex-end;font-family:'Modak';font-size:46px;line-height:1.05;letter-spacing:2px;margin-left:10px;">
+            <span style="position:relative;display:inline-block;transform:rotate(-7deg);"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">P</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:3.5px #FFFFFF;color:#FFFFFF;">P</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">P</span></span>
+            <span style="position:relative;display:inline-block;transform:rotate(-2deg) translateY(-2px);"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">L</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:3.5px #FFFFFF;color:#FFFFFF;">L</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">L</span></span>
+            <span style="position:relative;display:inline-block;transform:rotate(3deg) translateY(-1px);"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">A</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:3.5px #FFFFFF;color:#FFFFFF;">A</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">A</span></span>
+            <span style="position:relative;display:inline-block;transform:rotate(8deg) translateY(2px);"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">Y</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:3.5px #FFFFFF;color:#FFFFFF;">Y</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">Y</span></span>
+          </span>
+          <div style="display:flex;align-items:flex-end;gap:26px;margin-top:10px;">
+            <span style="display:inline-flex;align-items:flex-end;font-family:'Modak';font-size:64px;line-height:1.05;letter-spacing:3px;">
+              <span style="position:relative;display:inline-block;transform:rotate(-6deg) translateY(2px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">J</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">J</span><span style="position:absolute;left:0;top:0;color:#F5A623;">J</span></span>
+              <span style="position:relative;display:inline-block;transform:rotate(-1deg) translateY(-2px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">U</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">U</span><span style="position:absolute;left:0;top:0;color:#F5941F;">U</span></span>
+              <span style="position:relative;display:inline-block;transform:rotate(3deg) translateY(-1px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">M</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">M</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">M</span></span>
+              <span style="position:relative;display:inline-block;transform:rotate(7deg) translateY(3px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">P</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">P</span><span style="position:absolute;left:0;top:0;color:#E8492B;">P</span></span>
+            </span>
+            <span style="display:inline-flex;align-items:flex-end;font-family:'Modak';font-size:64px;line-height:1.05;letter-spacing:3px;">
+              <span style="position:relative;display:inline-block;transform:rotate(-6deg) translateY(2px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">P</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">P</span><span style="position:absolute;left:0;top:0;color:#AFD23C;">P</span></span>
+              <span style="position:relative;display:inline-block;transform:rotate(-1deg) translateY(-2px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">A</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">A</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">A</span></span>
+              <span style="position:relative;display:inline-block;transform:rotate(3deg) translateY(-1px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">R</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">R</span><span style="position:absolute;left:0;top:0;color:#63BE72;">R</span></span>
+              <span style="position:relative;display:inline-block;transform:rotate(7deg) translateY(3px);"><span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">K</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4.5px #FFFFFF;color:#FFFFFF;">K</span><span style="position:absolute;left:0;top:0;color:#3FB4A6;">K</span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Letra más gorda y cada carácter girado, como en el rótulo original, con el color desplazándose a lo largo de la palabra en vez de un degradado por letra. Es la versión con más carácter; para tamaños pequeños se usa la de 3a.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:14px;line-height:1.05;margin-left:3px;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:19px;line-height:1.05;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:19px;line-height:1.05;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">36 px · sin giro, color plano</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;background:#16171A;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;">
+            <span style="position:relative;display:inline-block;font-family:'Modak';font-size:14px;line-height:1.05;margin-left:3px;"><span style="-webkit-text-stroke:3px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:19px;line-height:1.05;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Modak';font-size:19px;line-height:1.05;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="3c" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">3c</span>
+        <span style="font-weight:800;font-size:16px;">Bubble en una línea</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">versión de cabecera de 3a</span>
+      </div>
+      <div style="padding:52px 32px;display:grid;place-items:center;min-height:250px;background:#fff;">
+        <div style="display:flex;align-items:baseline;gap:20px;transform:rotate(-1deg);">
+          <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:46px;line-height:1;"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4px #FFFFFF;color:#FFFFFF;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+          <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:46px;line-height:1;"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4px #FFFFFF;color:#FFFFFF;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+          <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:46px;line-height:1;"><span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;-webkit-text-stroke:4px #FFFFFF;color:#FFFFFF;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">La misma letra de 3a puesta en fila para la barra de navegación, donde solo hay 40–48 px de alto. Conviven las dos: dos líneas para el hero y piezas grandes, una línea para la cabecera.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:19px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:19px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:19px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">28 px de alto</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;background:#16171A;">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:19px;line-height:1;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:19px;line-height:1;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Titan One';font-size:19px;line-height:1;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section data-acento="{{ acento }}" style="background:#E4E6E9;padding:46px 46px 60px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#6E6A64;">Exploración · turno 2</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">El mismo logo, sin ruido</h1>
+    </div>
+    <p style="margin:0;max-width:660px;font-size:15px;line-height:1.6;color:#6E6A64;text-wrap:pretty;">Se mantienen los tres colores y el carácter de pegatina rotulada. Fuera: salpicaduras, puntos sueltos, flecha naranja, silueta del saltador y los degradados por letra. La composición de dos líneas del original se conserva.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <div id="2a" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">2a</span>
+        <span style="font-weight:800;font-size:16px;">Pegatina limpia · dos líneas</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">contorno negro + blanco</span>
+      </div>
+      <div style="padding:46px 32px 50px;display:grid;place-items:center;min-height:230px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+          <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:46px;line-height:1;margin-left:6px;">
+            <span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4px #FFFFFF;color:#FFFFFF;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span>
+          </span>
+          <div style="display:flex;align-items:baseline;gap:22px;margin-top:4px;">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:66px;line-height:1;">
+              <span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">JUMP</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMP</span>
+              <span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span>
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:66px;line-height:1;">
+              <span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">PARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">PARK</span>
+              <span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">La traducción directa: misma estructura y mismos colores por palabra, un solo contorno negro con filete blanco y una inclinación mínima. Todo el ruido decorativo desaparece.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:11px;line-height:1;margin-left:2px;"><span style="-webkit-text-stroke:2.5px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:9px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:16px;line-height:1;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:16px;line-height:1;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">32 px de alto · contorno fino</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;background:#16171A;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:11px;line-height:1;margin-left:2px;"><span style="-webkit-text-stroke:2.5px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:9px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:16px;line-height:1;"><span style="-webkit-text-stroke:3px #F4F2EA;color:#F4F2EA;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:16px;line-height:1;"><span style="-webkit-text-stroke:3px #F4F2EA;color:#F4F2EA;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">contorno claro en oscuro</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="2b" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">2b</span>
+        <span style="font-weight:800;font-size:16px;">Con degradado por palabra</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">1 degradado por palabra, no por letra</span>
+      </div>
+      <div style="padding:46px 32px 50px;display:grid;place-items:center;min-height:230px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+          <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:46px;line-height:1;margin-left:6px;">
+            <span style="-webkit-text-stroke:9px #1B1B19;color:#1B1B19;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;-webkit-text-stroke:4px #FFFFFF;color:#FFFFFF;">PLAY</span>
+            <span style="position:absolute;left:0;top:0;background:linear-gradient(#4ECBEA,#1D93C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;">PLAY</span>
+          </span>
+          <div style="display:flex;align-items:baseline;gap:22px;margin-top:4px;">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:66px;line-height:1;">
+              <span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">JUMP</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">JUMP</span>
+              <span style="position:absolute;left:0;top:0;background:linear-gradient(#F8A62B,#E8462A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;">JUMP</span>
+            </span>
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:66px;line-height:1;">
+              <span style="-webkit-text-stroke:11px #1B1B19;color:#1B1B19;">PARK</span>
+              <span style="position:absolute;left:0;top:0;-webkit-text-stroke:5px #FFFFFF;color:#FFFFFF;">PARK</span>
+              <span style="position:absolute;left:0;top:0;background:linear-gradient(#AFD23C,#3FB4A6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;">PARK</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Recupera la profundidad del logo actual, pero con un degradado por palabra en lugar de uno distinto por letra. Para tamaños pequeños se usa la versión plana de 2a.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:11px;line-height:1;margin-left:2px;"><span style="-webkit-text-stroke:2.5px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;background:linear-gradient(#4ECBEA,#1D93C6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:9px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:16px;line-height:1;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;background:linear-gradient(#F8A62B,#E8462A);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:16px;line-height:1;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;background:linear-gradient(#AFD23C,#3FB4A6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">32 px · el degradado casi no se lee</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;background:repeating-linear-gradient(135deg,#2b3940 0 17px,#26333a 17px 34px);">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;transform:rotate(-1.5deg);">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:15px;line-height:1;margin-left:3px;"><span style="-webkit-text-stroke:3px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <div style="display:flex;align-items:baseline;gap:11px;margin-top:3px;">
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:21px;line-height:1;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+              <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:21px;line-height:1;"><span style="-webkit-text-stroke:4px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#B7BDC1;">sobre foto del parque</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="2c" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">2c</span>
+        <span style="font-weight:800;font-size:16px;">Una línea, contorno simple</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">versión de cabecera</span>
+      </div>
+      <div style="padding:52px 32px;display:grid;place-items:center;min-height:230px;background:#fff;">
+        <div style="display:flex;align-items:baseline;gap:18px;">
+          <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:44px;line-height:1;"><span style="-webkit-text-stroke:8px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+          <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:44px;line-height:1;"><span style="-webkit-text-stroke:8px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+          <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:44px;line-height:1;"><span style="-webkit-text-stroke:8px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Sin filete blanco y en una sola línea: la más cómoda para la barra de navegación, donde el alto disponible es de 40–48 px y el logo de dos líneas se queda pequeño.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #1B1B19;color:#1B1B19;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px de alto</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;background:#16171A;">
+          <div style="display:flex;align-items:baseline;gap:10px;">
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">PLAY</span><span style="position:absolute;left:0;top:0;color:#2FB6DE;">PLAY</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">JUMP</span><span style="position:absolute;left:0;top:0;color:#F26C1D;">JUMP</span></span>
+            <span style="position:relative;display:inline-block;font-family:'Bungee';font-size:18px;line-height:1;"><span style="-webkit-text-stroke:3.5px #F4F2EA;color:#F4F2EA;">PARK</span><span style="position:absolute;left:0;top:0;color:#8CC63F;">PARK</span></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="2d" style="width:700px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">2d</span>
+        <span style="font-weight:800;font-size:16px;">Dos líneas sin contorno</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">el mínimo</span>
+      </div>
+      <div style="padding:46px 32px 50px;display:grid;place-items:center;min-height:230px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:flex-start;">
+          <span style="font-family:'Bungee';font-size:44px;line-height:1;color:#2FB6DE;margin-left:5px;">PLAY</span>
+          <div style="display:flex;align-items:baseline;gap:12px;margin-top:2px;">
+            <span style="font-family:'Bungee';font-size:64px;line-height:1;color:#F26C1D;">JUMP</span>
+            <span style="font-family:'Bungee';font-size:64px;line-height:1;color:#8CC63F;">PARK</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Solo letra y color: es la que mejor escala, la que pesa menos y la única que se puede teñir a una sola tinta sin retoques. Mantiene la jerarquía de dos líneas del original.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;">
+            <span style="font-family:'Bungee';font-size:12px;line-height:1;color:#2FB6DE;margin-left:2px;">PLAY</span>
+            <div style="display:flex;align-items:baseline;gap:5px;margin-top:1px;">
+              <span style="font-family:'Bungee';font-size:17px;line-height:1;color:#F26C1D;">JUMP</span>
+              <span style="font-family:'Bungee';font-size:17px;line-height:1;color:#8CC63F;">PARK</span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">32 px de alto</span>
+        </div>
+        <div style="padding:22px 14px;display:grid;place-items:center;gap:11px;">
+          <div style="display:inline-flex;flex-direction:column;align-items:flex-start;">
+            <span style="font-family:'Bungee';font-size:12px;line-height:1;color:#1B1B19;margin-left:2px;">PLAY</span>
+            <div style="display:flex;align-items:baseline;gap:5px;margin-top:1px;">
+              <span style="font-family:'Bungee';font-size:17px;line-height:1;color:#1B1B19;">JUMP</span>
+              <span style="font-family:'Bungee';font-size:17px;line-height:1;color:#1B1B19;">PARK</span>
+            </div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">1 tinta</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section data-acento="{{ acento }}" style="background:#EBECEE;padding:46px 46px 70px;">
+
+  <div style="display:flex;align-items:flex-end;gap:26px;max-width:1880px;margin:0 auto 30px;flex-wrap:wrap;">
+    <div>
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#6E6A64;">Exploración · turno 1</div>
+      <h1 style="font-family:'Bungee';font-size:38px;line-height:1.05;margin:8px 0 0;">Logotipo simplificado para web</h1>
+    </div>
+    <p style="margin:0;max-width:640px;font-size:15px;line-height:1.6;color:#6E6A64;text-wrap:pretty;">Cinco lockups y un set de isotipos derivados del logo actual. Criterios: legible a 26&nbsp;px de alto, válido en una sola tinta, con versión cuadrada para favicon y sin degradados ni contornos múltiples.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start;max-width:1880px;margin:0 auto;">
+
+    <sc-if value="{{ mostrarReferencia }}" hint-placeholder-val="{{ true }}">
+    <div style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#6E6A64;color:#fff;border-radius:999px;padding:5px 11px;">ref</span>
+        <span style="font-weight:800;font-size:16px;">Logo actual</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">PNG 1501×671</span>
+      </div>
+      <div style="padding:38px 32px;display:grid;place-items:center;min-height:158px;background:#fff;">
+        <img src="assets/logo.png" alt="Logo actual PLAY JUMP PARK" style="width:420px;">
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Muy expresivo, pero a tamaño de cabecera se pierde el detalle: doble contorno, degradados por letra, silueta y salpicaduras. Tampoco existe versión de una tinta ni cuadrada.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 14px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;">
+          <img src="assets/logo.png" alt="Logo a 26 px" style="height:26px;width:auto;">
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px · se empasta</span>
+        </div>
+        <div style="padding:20px 14px;display:grid;place-items:center;gap:10px;background:#16171A;">
+          <img src="assets/logo.png" alt="Logo en una tinta" style="height:26px;width:auto;filter:grayscale(1) brightness(2.6) contrast(1.4);">
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">1 tinta · ilegible</span>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <div id="1a" style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">1a</span>
+        <span style="font-weight:800;font-size:16px;">Wordmark tricolor</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">1 línea · 3 tintas</span>
+      </div>
+      <div style="padding:44px 32px;display:grid;place-items:center;min-height:158px;background:#fff;">
+        <div style="display:flex;align-items:baseline;gap:11px;font-family:'Bungee';font-size:34px;line-height:1;">
+          <span style="color:#F26C1D;">PLAY</span><span style="color:#2FB6DE;">JUMP</span><span style="color:#8CC63F;">PARK</span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">La lectura más directa del logo actual: mantiene los tres colores de marca y el carácter rotulado, pero en una sola línea, sin contornos ni degradados.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;">
+          <div style="display:flex;align-items:baseline;gap:6px;font-family:'Bungee';font-size:17px;line-height:1;"><span style="color:#F26C1D;">PLAY</span><span style="color:#2FB6DE;">JUMP</span><span style="color:#8CC63F;">PARK</span></div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;background:#16171A;">
+          <div style="display:flex;align-items:baseline;gap:6px;font-family:'Bungee';font-size:17px;line-height:1;"><span style="color:#F26C1D;">PLAY</span><span style="color:#2FB6DE;">JUMP</span><span style="color:#8CC63F;">PARK</span></div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">fondo oscuro</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;">
+          <div style="display:flex;align-items:baseline;gap:6px;font-family:'Bungee';font-size:17px;line-height:1;color:#1B1B19;"><span>PLAY</span><span>JUMP</span><span>PARK</span></div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">1 tinta</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="1b" style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">1b</span>
+        <span style="font-weight:800;font-size:16px;">Negro + un acento</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">el más versátil</span>
+      </div>
+      <div style="padding:44px 32px;display:grid;place-items:center;min-height:158px;background:#fff;">
+        <div style="display:flex;align-items:baseline;gap:11px;font-family:'Bungee';font-size:34px;line-height:1;color:#1B1B19;">
+          <span>PLAY</span><span style="color:var(--ac,#F26C1D);">JUMP</span><span>PARK</span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Un solo color de marca sobre negro: sobrevive en cualquier fondo, en documentos, en firma de correo y en impresión a una tinta. El acento se puede rotar por temporada.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;">
+          <div style="display:flex;align-items:baseline;gap:6px;font-family:'Bungee';font-size:17px;line-height:1;color:#1B1B19;"><span>PLAY</span><span style="color:var(--ac,#F26C1D);">JUMP</span><span>PARK</span></div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;background:#16171A;">
+          <div style="display:flex;align-items:baseline;gap:6px;font-family:'Bungee';font-size:17px;line-height:1;color:#F4F2EA;"><span>PLAY</span><span style="color:var(--ac,#F26C1D);">JUMP</span><span>PARK</span></div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;">
+          <div style="display:flex;align-items:baseline;gap:6px;font-family:'Bungee';font-size:17px;line-height:1;color:#1B1B19;"><span>PLAY</span><span>JUMP</span><span>PARK</span></div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">1 tinta</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="1c" style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">1c</span>
+        <span style="font-weight:800;font-size:16px;">Isotipo chevrón + lockup</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">sistema completo</span>
+      </div>
+      <div style="padding:40px 32px;display:grid;place-items:center;min-height:158px;background:#fff;">
+        <div style="display:flex;align-items:center;gap:15px;">
+          <div style="width:58px;height:58px;border-radius:17px;background:#1B1B19;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+            <div style="width:28px;height:11px;background:var(--ac,#F26C1D);clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            <div style="width:28px;height:11px;background:#FFFFFF;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+          </div>
+          <div style="font-family:'Bungee';font-size:23px;line-height:1.04;color:#1B1B19;">
+            <div>PLAY JUMP</div>
+            <div style="letter-spacing:.355em;">PARK</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Separa símbolo y texto: el chevrón doble (el rebote) funciona solo en favicon, app y redes, y el bloque de dos líneas ocupa poco ancho en cabeceras y móvil.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;border-radius:8px;background:#1B1B19;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+              <div style="width:13px;height:5px;background:var(--ac,#F26C1D);clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+              <div style="width:13px;height:5px;background:#FFFFFF;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            </div>
+            <div style="font-family:'Bungee';font-size:11px;line-height:1.04;color:#1B1B19;"><div>PLAY JUMP</div><div style="letter-spacing:.355em;">PARK</div></div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;background:#16171A;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:26px;height:26px;border-radius:8px;background:#F4F2EA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+              <div style="width:13px;height:5px;background:var(--ac,#F26C1D);clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+              <div style="width:13px;height:5px;background:#16171A;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            </div>
+            <div style="font-family:'Bungee';font-size:11px;line-height:1.04;color:#F4F2EA;"><div>PLAY JUMP</div><div style="letter-spacing:.355em;">PARK</div></div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:#1B1B19;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
+            <div style="width:17px;height:7px;background:#FFFFFF;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            <div style="width:17px;height:7px;background:#FFFFFF;opacity:.5;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">solo símbolo</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="1d" style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">1d</span>
+        <span style="font-weight:800;font-size:16px;">Píldora sólida</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">para foto y vídeo</span>
+      </div>
+      <div style="padding:40px 32px;display:grid;place-items:center;min-height:158px;background:repeating-linear-gradient(135deg,#2b3940 0 17px,#26333a 17px 34px);">
+        <div style="display:inline-flex;align-items:center;gap:12px;background:#1B1B19;border-radius:999px;padding:13px 26px;font-family:'Bungee';font-size:26px;line-height:1;color:#FFFFFF;">
+          <span style="width:13px;height:13px;border-radius:50%;background:var(--ac,#F26C1D);flex:0 0 auto;"></span>PLAY JUMP PARK
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">El contenedor resuelve el contraste: encima del hero, de fotos del parque o de vídeo nunca hace falta retocar el logo. El punto de color hereda el acento de marca.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;align-items:center;gap:7px;background:#1B1B19;border-radius:999px;padding:7px 15px;font-family:'Bungee';font-size:13px;line-height:1;color:#fff;"><span style="width:7px;height:7px;border-radius:50%;background:var(--ac,#F26C1D);"></span>PLAY JUMP PARK</div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px de alto</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;background:#16171A;">
+          <div style="display:inline-flex;align-items:center;gap:7px;background:#F4F2EA;border-radius:999px;padding:7px 15px;font-family:'Bungee';font-size:13px;line-height:1;color:#1B1B19;"><span style="width:7px;height:7px;border-radius:50%;background:var(--ac,#F26C1D);"></span>PLAY JUMP PARK</div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">invertida</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;">
+          <div style="display:inline-flex;align-items:center;gap:7px;background:#1B1B19;border-radius:999px;padding:7px 15px;font-family:'Bungee';font-size:13px;line-height:1;color:#fff;"><span style="width:7px;height:7px;border-radius:50%;background:#fff;"></span>PLAY JUMP PARK</div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">1 tinta</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="1e" style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">1e</span>
+        <span style="font-weight:800;font-size:16px;">Grotesca + arco de rebote</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">el más limpio</span>
+      </div>
+      <div style="padding:40px 32px;display:grid;place-items:center;min-height:158px;background:#fff;">
+        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:9px;">
+          <div style="display:flex;align-items:flex-end;gap:10px;">
+            <span style="width:9px;height:9px;border-radius:50%;background:#8CC63F;"></span>
+            <span style="width:13px;height:13px;border-radius:50%;background:var(--ac,#F26C1D);margin-bottom:9px;"></span>
+            <span style="width:9px;height:9px;border-radius:50%;background:#2FB6DE;"></span>
+          </div>
+          <div style="font-family:'Hanken Grotesk';font-weight:900;font-size:33px;line-height:1;letter-spacing:-.022em;color:#1B1B19;">PLAY JUMP PARK</div>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Usa la misma tipografía de la web, así que la cabecera queda coherente y ligera. Los tres puntos en arco guardan la idea de salto sin depender de la letra rotulada.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;">
+          <div style="display:inline-flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="display:flex;align-items:flex-end;gap:5px;"><span style="width:5px;height:5px;border-radius:50%;background:#8CC63F;"></span><span style="width:7px;height:7px;border-radius:50%;background:var(--ac,#F26C1D);margin-bottom:5px;"></span><span style="width:5px;height:5px;border-radius:50%;background:#2FB6DE;"></span></div>
+            <div style="font-family:'Hanken Grotesk';font-weight:900;font-size:15px;line-height:1;letter-spacing:-.022em;color:#1B1B19;">PLAY JUMP PARK</div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">26 px</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;border-right:1px solid #E7E8EB;background:#16171A;">
+          <div style="display:inline-flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="display:flex;align-items:flex-end;gap:5px;"><span style="width:5px;height:5px;border-radius:50%;background:#8CC63F;"></span><span style="width:7px;height:7px;border-radius:50%;background:var(--ac,#F26C1D);margin-bottom:5px;"></span><span style="width:5px;height:5px;border-radius:50%;background:#2FB6DE;"></span></div>
+            <div style="font-family:'Hanken Grotesk';font-weight:900;font-size:15px;line-height:1;letter-spacing:-.022em;color:#F4F2EA;">PLAY JUMP PARK</div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#8C877E;">negativo</span>
+        </div>
+        <div style="padding:20px 12px;display:grid;place-items:center;gap:10px;">
+          <div style="display:inline-flex;flex-direction:column;align-items:center;gap:5px;">
+            <div style="display:flex;align-items:flex-end;gap:5px;"><span style="width:5px;height:5px;border-radius:50%;background:#1B1B19;"></span><span style="width:7px;height:7px;border-radius:50%;background:#1B1B19;margin-bottom:5px;"></span><span style="width:5px;height:5px;border-radius:50%;background:#1B1B19;"></span></div>
+            <div style="font-family:'Hanken Grotesk';font-weight:900;font-size:15px;line-height:1;letter-spacing:-.022em;color:#1B1B19;">PLAY JUMP PARK</div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">1 tinta</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="1f" style="width:600px;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+        <span style="font-family:'Bungee';font-size:12px;background:#1B1B19;color:#fff;border-radius:999px;padding:5px 11px;">1f</span>
+        <span style="font-weight:800;font-size:16px;">Isotipos · favicon y app</span>
+        <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">cuadrado 1:1</span>
+      </div>
+      <div style="padding:34px 32px;display:flex;align-items:flex-start;justify-content:center;gap:34px;min-height:158px;background:#fff;">
+        <div style="display:grid;justify-items:center;gap:12px;">
+          <div style="width:72px;height:72px;border-radius:20px;background:#1B1B19;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;">
+            <div style="width:34px;height:14px;background:var(--ac,#F26C1D);clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            <div style="width:34px;height:14px;background:#FFFFFF;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">chevrón</span>
+        </div>
+        <div style="display:grid;justify-items:center;gap:12px;">
+          <div style="width:72px;height:72px;border-radius:50%;background:var(--ac,#F26C1D);display:grid;place-items:center;">
+            <span style="font-family:'Bungee';font-size:22px;line-height:1;color:#1B1B19;">PJP</span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">monograma</span>
+        </div>
+        <div style="display:grid;justify-items:center;gap:12px;">
+          <div style="width:72px;height:72px;border-radius:20px;background:#1B1B19;display:flex;align-items:flex-end;justify-content:center;gap:7px;padding:0 0 24px;">
+            <span style="width:10px;height:10px;border-radius:50%;background:#8CC63F;"></span>
+            <span style="width:15px;height:15px;border-radius:50%;background:var(--ac,#F26C1D);margin-bottom:11px;"></span>
+            <span style="width:10px;height:10px;border-radius:50%;background:#2FB6DE;"></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">rebote</span>
+        </div>
+      </div>
+      <div style="padding:0 22px 20px;font-size:14px;line-height:1.55;color:#6E6A64;">Los tres a 16 px: el chevrón y los puntos siguen leyéndose, el monograma es el que mejor identifica en pestaña de navegador. Elige uno y se usa en favicon, perfil social y app.</div>
+      <div style="display:grid;grid-template-columns:1fr;border-top:2px solid #1B1B19;">
+        <div style="padding:20px 12px;display:flex;align-items:center;justify-content:center;gap:26px;">
+          <div style="width:16px;height:16px;border-radius:5px;background:#1B1B19;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5px;">
+            <div style="width:9px;height:3.5px;background:var(--ac,#F26C1D);clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            <div style="width:9px;height:3.5px;background:#FFFFFF;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+          </div>
+          <div style="width:16px;height:16px;border-radius:50%;background:var(--ac,#F26C1D);display:grid;place-items:center;"><span style="font-family:'Bungee';font-size:6px;line-height:1;color:#1B1B19;">PJP</span></div>
+          <div style="width:16px;height:16px;border-radius:5px;background:#1B1B19;display:flex;align-items:flex-end;justify-content:center;gap:1.5px;padding:0 0 5px;">
+            <span style="width:2.5px;height:2.5px;border-radius:50%;background:#8CC63F;"></span>
+            <span style="width:3.5px;height:3.5px;border-radius:50%;background:var(--ac,#F26C1D);margin-bottom:2.5px;"></span>
+            <span style="width:2.5px;height:2.5px;border-radius:50%;background:#2FB6DE;"></span>
+          </div>
+          <span style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;color:#9A968E;">16 px reales</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <sc-if value="{{ mostrarCabecera }}" hint-placeholder-val="{{ true }}">
+  <div style="max-width:1880px;margin:34px auto 0;background:#FFFFFF;border:2px solid #1B1B19;border-radius:20px;overflow:hidden;">
+    <div style="display:flex;align-items:center;gap:11px;padding:13px 20px;border-bottom:2px solid #1B1B19;background:#F3F4F6;">
+      <span style="font-weight:800;font-size:16px;">En contexto · cabecera real de la web</span>
+      <span style="margin-left:auto;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#6E6A64;">altura de logo 34 px</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(560px,1fr));gap:2px;background:#1B1B19;">
+      <div style="background:#FFFFFF;padding:16px 22px;display:flex;align-items:center;gap:26px;">
+        <div style="display:flex;align-items:baseline;gap:9px;font-family:'Bungee';font-size:22px;line-height:1;color:#1B1B19;"><span>PLAY</span><span style="color:var(--ac,#F26C1D);">JUMP</span><span>PARK</span></div>
+        <div style="display:flex;align-items:center;gap:18px;margin-left:auto;font-weight:700;font-size:13px;color:#201E1B;"><span>Atracciones</span><span>Precios</span><span>Cumpleaños</span><span style="background:var(--ac,#F26C1D);border:2px solid #1B1B19;border-radius:999px;padding:8px 15px;font-weight:800;">Reservar</span></div>
+      </div>
+      <div style="background:#FFFFFF;padding:16px 22px;display:flex;align-items:center;gap:26px;">
+        <div style="display:flex;align-items:center;gap:11px;">
+          <div style="width:38px;height:38px;border-radius:12px;background:#1B1B19;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
+            <div style="width:19px;height:8px;background:var(--ac,#F26C1D);clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+            <div style="width:19px;height:8px;background:#FFFFFF;clip-path:polygon(50% 0,100% 100%,76% 100%,50% 32%,24% 100%,0 100%);"></div>
+          </div>
+          <div style="font-family:'Bungee';font-size:15px;line-height:1.04;color:#1B1B19;"><div>PLAY JUMP</div><div style="letter-spacing:.355em;">PARK</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px;margin-left:auto;font-weight:700;font-size:13px;color:#201E1B;"><span>Atracciones</span><span>Precios</span><span>Cumpleaños</span><span style="background:var(--ac,#F26C1D);border:2px solid #1B1B19;border-radius:999px;padding:8px 15px;font-weight:800;">Reservar</span></div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;acento&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;naranja&quot;,&quot;cian&quot;,&quot;verde&quot;,&quot;amarillo&quot;],&quot;default&quot;:&quot;naranja&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Marca&quot;},&quot;redondezOriginal&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Marca&quot;},&quot;velocidad&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0.6,&quot;max&quot;:1.8,&quot;step&quot;:0.1,&quot;default&quot;:0.8,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Animación&quot;},&quot;alturaSalto&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:140,&quot;max&quot;:320,&quot;step&quot;:10,&quot;unit&quot;:&quot;px&quot;,&quot;default&quot;:290,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Animación&quot;},&quot;repetirEnBucle&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Animación&quot;},&quot;mostrarImpacto&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Animación&quot;},&quot;mostrarReferencia&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tablero&quot;},&quot;mostrarCabecera&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tablero&quot;}}">class Component extends DCLogic {
+  state = { escalaNum: 1 };
+
+  refZona = (el) => {
+    if (!el || el === this._zona) return;
+    this._zona = el;
+    if (!this._ro && typeof ResizeObserver !== 'undefined') {
+      this._ro = new ResizeObserver(() => this.medir());
+    }
+    if (this._ro) { this._ro.disconnect(); this._ro.observe(el); }
+    requestAnimationFrame(() => this.medir());
+  };
+
+  refInterior = (el) => {
+    if (!el || el === this._interior) return;
+    this._interior = el;
+    requestAnimationFrame(() => this.medir());
+  };
+
+  medir() {
+    const z = this._zona, i = this._interior;
+    if (!z || !i) return;
+    const natural = i.offsetWidth || 1;
+    const disponible = z.clientWidth - 80;
+    const s = Math.max(0.32, Math.min(1, disponible / natural));
+    if (Math.abs(s - this.state.escalaNum) > 0.004) this.setState({ escalaNum: s });
+  }
+
+  componentDidMount() {
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => this.medir());
+    this._t = setTimeout(() => this.medir(), 600);
+  }
+
+  componentWillUnmount() {
+    if (this._ro) this._ro.disconnect();
+    clearTimeout(this._t);
+    if (this._bucles) Object.keys(this._bucles).forEach((k) => clearTimeout(this._bucles[k]));
+  }
+
+  refLockup = (el) => { this._lockup = el; this.programar(); };
+  refYPalabra = (el) => { this._ypal = el; };
+  refYSuelta = (el) => { this._ysuelta = el; };
+  refImpacto = (el) => { this._imp = el; };
+  refSaltador = (el) => { this._salt = el; this.programar(); };
+
+  refLockup3 = (el) => { this._lockup3 = el; this.programar3(); };
+  refYPalabra3 = (el) => { this._ypal3 = el; };
+  refYSuelta3 = (el) => { this._ysuelta3 = el; };
+  refSaltador3 = (el) => { this._salt3 = el; this.programar3(); };
+
+  programar3() {
+    if (this._pend3 || !this._lockup3 || !this._salt3) return;
+    this._pend3 = true;
+    const arranca = () => { this._pend3 = false; this.reproducir3(); };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(arranca));
+    else requestAnimationFrame(arranca);
+  }
+
+  repetir3 = () => this.reproducir3();
+
+  reproducir3() { this._animar({ key: 'r', L: this._lockup3, W: this._ypal3, Y: this._ysuelta3, K: this._salt3, I: null }); }
+
+  programar() {
+    if (this._pend || !this._lockup || !this._salt) return;
+    this._pend = true;
+    const arranca = () => { this._pend = false; this.reproducir(); };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestAnimationFrame(arranca));
+    else requestAnimationFrame(arranca);
+  }
+
+  repetir = () => this.reproducir();
+
+  reproducir() { this._animar({ key: 'f', L: this._lockup, W: this._ypal, Y: this._ysuelta, K: this._salt, I: this._imp }); }
+
+  _animar(g) {
+    const L = g.L, W = g.W, Y = g.Y, K = g.K, I = g.I;
+    if (!L || !K || !L.animate) return;
+    if (!this._bucles) this._bucles = {};
+    clearTimeout(this._bucles[g.key]);
+    [L, W, Y, K, I].forEach((el) => { if (el && el.getAnimations) el.getAnimations().forEach((a) => a.cancel()); });
+
+    const v = Math.max(0.4, this.props.velocidad ?? 1);
+    const d = (ms) => ms / v;
+    const alto = this.props.alturaSalto ?? 210;
+    const base = ' rotate(-2deg) scaleX(.95)';
+    const tSalto = 820, dSalto = 1180, aterriza = tSalto + dSalto * 0.70, relevo = aterriza - 170;
+
+    L.animate([
+      { offset: 0, opacity: 0, transform: 'translateY(34px) scale(.86)' + base },
+      { offset: .7, opacity: 1, transform: 'translateY(-6px) scale(1.03)' + base },
+      { offset: 1, opacity: 1, transform: 'translateY(0) scale(1)' + base }
+    ], { duration: d(560), easing: 'cubic-bezier(.22,.9,.3,1)', fill: 'both' });
+
+    K.animate([
+      { offset: 0, opacity: 0, transform: 'translate(0,340px) scale(.93,1.08)', easing: 'cubic-bezier(.1,.62,.3,1)' },
+      { offset: .05, opacity: 1, transform: 'translate(0,282px) scale(.93,1.08)', easing: 'cubic-bezier(.12,.6,.32,1)' },
+      { offset: .38, opacity: 1, transform: 'translate(0,' + (-alto) + 'px) scale(1.02,.99)', easing: 'cubic-bezier(.5,0,.85,.45)' },
+      { offset: .62, opacity: 1, transform: 'translate(0,4px) scale(.96,1.05)', easing: 'cubic-bezier(.6,0,.9,.5)' },
+      { offset: .70, opacity: 1, transform: 'translate(0,15px) scale(1.14,.84)', easing: 'cubic-bezier(.2,.8,.4,1)' },
+      { offset: .80, opacity: 1, transform: 'translate(0,' + (-alto * .14).toFixed(1) + 'px) scale(.96,1.06)', easing: 'cubic-bezier(.55,0,.9,.5)' },
+      { offset: .91, opacity: 1, transform: 'translate(0,5px) scale(1.05,.95)', easing: 'cubic-bezier(.2,.7,.4,1)' },
+      { offset: 1, opacity: 1, transform: 'translate(0,0) scale(1,1)' }
+    ], { duration: d(dSalto), delay: d(tSalto), fill: 'forwards' });
+
+    if (W) W.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 1, delay: d(relevo), fill: 'forwards' });
+
+    if (Y) Y.animate([
+      { offset: 0, opacity: 1, transform: 'translate(0,0) scale(1)' },
+      { offset: .55, opacity: .34, transform: 'translate(0,5px) scale(.994)' },
+      { offset: 1, opacity: 0, transform: 'translate(0,11px) scale(.985)' }
+    ], { duration: d(560), delay: d(relevo), fill: 'forwards', easing: 'cubic-bezier(.35,.1,.6,1)' });
+
+    if (I) I.animate([
+      { offset: 0, opacity: 0, transform: 'scale(.45)' },
+      { offset: .18, opacity: .75, transform: 'scale(.95)' },
+      { offset: 1, opacity: 0, transform: 'scale(1.45)' }
+    ], { duration: d(340), delay: d(aterriza), fill: 'forwards', easing: 'ease-out' });
+
+    L.animate([
+      { offset: 0, transform: 'translateY(0)' + base },
+      { offset: .28, transform: 'translateY(6px)' + base },
+      { offset: 1, transform: 'translateY(0)' + base }
+    ], { duration: d(340), delay: d(aterriza), easing: 'cubic-bezier(.3,.9,.3,1)' });
+
+    const fin = d(tSalto + dSalto + 120);
+    if (this.props.repetirEnBucle ?? true) {
+      this._bucles[g.key] = setTimeout(() => this._animar(g), fin + d(1600));
+    } else {
+      K.animate([
+        { offset: 0, transform: 'translate(0,0) scale(1)' },
+        { offset: .5, transform: 'translate(0,-7px) scale(1.012)' },
+        { offset: 1, transform: 'translate(0,0) scale(1)' }
+      ], { duration: d(2400), delay: fin, iterations: Infinity, easing: 'ease-in-out' });
+    }
+  }
+
+  componentDidUpdate(prev) {
+    if (prev.velocidad !== this.props.velocidad || prev.alturaSalto !== this.props.alturaSalto || prev.repetirEnBucle !== this.props.repetirEnBucle || prev.mostrarImpacto !== this.props.mostrarImpacto) {
+      this.reproducir();
+      this.reproducir3();
+    }
+  }
+
+  renderVals() {
+    return {
+      refZona: this.refZona,
+      refInterior: this.refInterior,
+      refLockup: this.refLockup,
+      refYPalabra: this.refYPalabra,
+      refYSuelta: this.refYSuelta,
+      refImpacto: this.refImpacto,
+      refSaltador: this.refSaltador,
+      repetir: this.repetir,
+      refLockup3: this.refLockup3,
+      refYPalabra3: this.refYPalabra3,
+      refYSuelta3: this.refYSuelta3,
+      refSaltador3: this.refSaltador3,
+      repetir3: this.repetir3,
+      mostrarImpacto: this.props.mostrarImpacto ?? true,
+      escala: 'scale(' + this.state.escalaNum.toFixed(3) + ')',
+      acento: this.props.acento ?? 'naranja',
+      redondezOriginal: this.props.redondezOriginal ?? false,
+      menosRedonda: !(this.props.redondezOriginal ?? false),
+      mostrarReferencia: this.props.mostrarReferencia ?? true,
+      mostrarCabecera: this.props.mostrarCabecera ?? true
+    };
+  }
+}</script>
+</body>
+</html>

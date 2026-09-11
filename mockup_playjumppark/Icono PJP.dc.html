@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Lilita+One&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#201E1B;background:#EBECEE;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:#0A5C93;text-decoration:none}
+a:hover{color:#095181}
+</style>
+</helmet>
+
+<section style="padding:46px 46px 64px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;background:#A3C21C;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Icono · turno 3</span>
+      <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">La Y del rótulo, sin tocar</span>
+    </div>
+    <h1 style="font-family:'Bungee';font-size:52px;line-height:1;letter-spacing:-.015em;margin:0;max-width:1000px;">La misma Y,<br><span style="color:#F2711C;">dentro del cuadro</span></h1>
+    <p style="margin:0;max-width:820px;font-size:17px;line-height:1.6;color:#3A3833;text-wrap:pretty;">Ya no se aplana: entra la figura exacta del logotipo, la que hace de Y, con su keyline cian, su contorno negro y su degradado. Sobre la barra de <a href="#2c">2c</a>. Lo único que se decide aquí es cuánto ocupa y qué bandas quedan debajo.</p>
+  </div>
+
+  <div style="max-width:1560px;margin:26px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start;">
+    <sc-for list="{{ marcasC }}" as="m" hint-placeholder-count="3">
+      <div id="{{ m.id }}" style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;background:#201E1B;color:#F8F9FA;padding:5px 9px;border-radius:6px;">{{ m.id }}</span>
+          <strong style="font-family:'Bungee';font-weight:400;font-size:18px;line-height:1;">{{ m.nombre }}</strong>
+        </div>
+        <div style="{{ m.estiloGrande }}">
+          <sc-for list="{{ m.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+          </sc-for>
+          <sc-if value="{{ verGuias }}" hint-placeholder-val="{{ false }}">
+            <span aria-hidden="true" style="position:absolute;left:10%;top:10%;width:80%;height:80%;border:1px dashed rgba(255,255,255,.75);border-radius:50%;pointer-events:none;"></span>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:12px;">
+          <sc-for list="{{ m.tallas }}" as="v" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+              <div style="{{ v.estiloCaja }}">
+                <sc-for list="{{ m.capas }}" as="c" hint-placeholder-count="2">
+                  <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                  <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+                </sc-for>
+              </div>
+              <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:#8A867F;">{{ v.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin:0;font-size:14.5px;line-height:1.55;color:#5E5B56;">{{ m.linea }}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="max-width:1560px;margin:16px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start;">
+    <div style="background:#201E1B;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#A3C21C;">La familia · sobre 3c</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <sc-for list="{{ densidadesC }}" as="d" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="{{ d.estiloGrande }}">
+              <sc-for list="{{ d.capas }}" as="c" hint-placeholder-count="2">
+                <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+              </sc-for>
+            </div>
+            <span style="{{ d.estiloRango }}">{{ d.rango }}</span>
+            <strong style="font-family:'Bungee';font-weight:400;font-size:15px;color:#F7F3EA;">{{ d.nombre }}</strong>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;line-height:1.5;color:rgba(247,243,234,.55);max-width:130px;">{{ d.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(247,243,234,.72);">La figura completa aguanta de 48 px para arriba. Por debajo, los cuatro trazos se pisan: ahí y solo ahí se cambia por el troquel crema de <a href="#2c" style="color:#1AA9DE;">2c</a>.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">Pestaña · 16 px</span>
+      <div style="background:#DEE1E6;border-radius:12px 12px 0 0;padding:8px 8px 0;">
+        <div style="display:flex;align-items:center;gap:9px;background:#FFFFFF;border-radius:9px 9px 0 0;padding:9px 12px;">
+          <div style="{{ faviconC.estiloCaja }}">
+            <sc-for list="{{ faviconC.capas }}" as="c" hint-placeholder-count="2">
+              <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+              <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+            </sc-for>
+          </div>
+          <span style="font-size:12.5px;color:#3A3833;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Play Jump Park · Lorca — Reservar</span>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">Troquel crema sobre cuatro bandas: a este tamaño el color es lo único que se lee.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">iOS 120 · maskable 64</span>
+      <div style="display:flex;gap:16px;align-items:flex-end;background:repeating-linear-gradient(135deg,#C9CCD1 0 12px,#BFC3C8 12px 24px);border-radius:14px;padding:20px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <div style="{{ iosC.estiloCaja }}">
+            <sc-for list="{{ iosC.capas }}" as="c" hint-placeholder-count="2">
+              <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+              <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+            </sc-for>
+          </div>
+          <span style="font-size:12px;color:#FFFFFF;text-shadow:0 1px 2px rgba(0,0,0,.5);">Play Jump</span>
+        </div>
+        <div style="{{ maskCircC.estiloCaja }}">
+          <sc-for list="{{ maskCircC.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+          </sc-for>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">Con la figura al 88 % los pies quedan dentro del círculo del 80 % por dos puntos.</p>
+    </div>
+  </div>
+
+</section>
+
+<section style="padding:46px 46px 64px;border-bottom:2px dashed #C4C1B8;">
+
+  <div style="max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;background:#F2711C;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Icono · turno 2</span>
+      <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">1c con la silueta del rótulo</span>
+    </div>
+    <h1 style="font-family:'Bungee';font-size:52px;line-height:1;letter-spacing:-.015em;margin:0;max-width:1000px;">La barra de cinco,<br>con <span style="color:#1AA9DE;">la silueta buena</span></h1>
+    <p style="margin:0;max-width:820px;font-size:17px;line-height:1.6;color:#3A3833;text-wrap:pretty;">Fuera el trazado vectorizado del kit: la figura sale ahora del propio rótulo —<span style="font-family:'JetBrains Mono';font-size:14.5px;">assets/saltador-y.png</span>, la misma Y del logotipo— troquelada por su contorno exterior. Ese contorno, que en el rótulo es el keyline, aquí engorda la masa: es lo que salva la figura a 32 px. Tres barras que probar y, debajo, la familia.</p>
+  </div>
+
+  <div style="max-width:1560px;margin:26px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start;">
+    <sc-for list="{{ marcasB }}" as="m" hint-placeholder-count="3">
+      <div id="{{ m.id }}" style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;background:#201E1B;color:#F8F9FA;padding:5px 9px;border-radius:6px;">{{ m.id }}</span>
+          <strong style="font-family:'Bungee';font-weight:400;font-size:18px;line-height:1;">{{ m.nombre }}</strong>
+        </div>
+        <div style="{{ m.estiloGrande }}">
+          <sc-for list="{{ m.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+          </sc-for>
+          <sc-if value="{{ verGuias }}" hint-placeholder-val="{{ false }}">
+            <span aria-hidden="true" style="position:absolute;left:10%;top:10%;width:80%;height:80%;border:1px dashed rgba(255,255,255,.75);border-radius:50%;pointer-events:none;"></span>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:12px;">
+          <sc-for list="{{ m.tallas }}" as="v" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+              <div style="{{ v.estiloCaja }}">
+                <sc-for list="{{ m.capas }}" as="c" hint-placeholder-count="2">
+                  <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                  <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+                </sc-for>
+              </div>
+              <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:#8A867F;">{{ v.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin:0;font-size:14.5px;line-height:1.55;color:#5E5B56;">{{ m.linea }}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="max-width:1560px;margin:16px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start;">
+    <div style="background:#201E1B;border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#F5C400;">La familia · sobre 2a</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <sc-for list="{{ densidadesB }}" as="d" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <div style="{{ d.estiloGrande }}">
+              <sc-for list="{{ d.capas }}" as="c" hint-placeholder-count="2">
+                <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+              </sc-for>
+            </div>
+            <span style="{{ d.estiloRango }}">{{ d.rango }}</span>
+            <strong style="font-family:'Bungee';font-weight:400;font-size:15px;color:#F7F3EA;">{{ d.nombre }}</strong>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;line-height:1.5;color:rgba(247,243,234,.55);max-width:120px;">{{ d.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(247,243,234,.72);">Misma barra y misma silueta en las tres. Cambia el aire —12 % arriba, 26 % en el medio— y solo la grande añade keyline claro y sombra dura.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">Pestaña · 16 px</span>
+      <div style="background:#DEE1E6;border-radius:12px 12px 0 0;padding:8px 8px 0;">
+        <div style="display:flex;align-items:center;gap:9px;background:#FFFFFF;border-radius:9px 9px 0 0;padding:9px 12px;">
+          <div style="{{ faviconB.estiloCaja }}">
+            <sc-for list="{{ faviconB.capas }}" as="c" hint-placeholder-count="2">
+              <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+              <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+            </sc-for>
+          </div>
+          <span style="font-size:12.5px;color:#3A3833;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Play Jump Park · Lorca — Reservar</span>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">Aquí gana la barra: el color se reconoce antes de que la figura se lea.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">iOS 120 · maskable 64</span>
+      <div style="display:flex;gap:16px;align-items:flex-end;background:repeating-linear-gradient(135deg,#C9CCD1 0 12px,#BFC3C8 12px 24px);border-radius:14px;padding:20px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <div style="{{ iosB.estiloCaja }}">
+            <sc-for list="{{ iosB.capas }}" as="c" hint-placeholder-count="2">
+              <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+              <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+            </sc-for>
+          </div>
+          <span style="font-size:12px;color:#FFFFFF;text-shadow:0 1px 2px rgba(0,0,0,.5);">Play Jump</span>
+        </div>
+        <div style="{{ maskCirc.estiloCaja }}">
+          <sc-for list="{{ maskCirc.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esImagen }}" hint-placeholder-val="{{ false }}"><span style="{{ c.estilo }}"></span></sc-if>
+          </sc-for>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">Las bandas van a sangre y la figura entera dentro del círculo del 80 %.</p>
+    </div>
+  </div>
+
+</section>
+
+<section style="padding:46px 46px 64px;">
+
+  <div style="max-width:1560px;margin:0 auto;display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;background:#1AA9DE;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Icono · turno 1</span>
+      <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#5E5B56;">Play Jump Park · Lorca</span>
+    </div>
+    <h1 style="font-family:'Bungee';font-size:52px;line-height:1;letter-spacing:-.015em;margin:0;max-width:1000px;">El icono no es el logo:<br>es <span style="color:#1AA9DE;">la silueta</span></h1>
+    <p style="margin:0;max-width:760px;font-size:17px;line-height:1.6;color:#3A3833;text-wrap:pretty;">Tres reglas ya escritas deciden esto casi solas. Abajo, cuatro caminos para la marca del icono y, al final, la familia que propongo: una sola forma en tres densidades.</p>
+  </div>
+
+  <div style="max-width:1560px;margin:34px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;">
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px 24px;display:flex;flex-direction:column;gap:9px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#1AA9DE;">Heredado de los iconos</span>
+      <strong style="font-family:'Bungee';font-weight:400;font-size:19px;line-height:1.15;">Silueta plana, masa de 3, un color</strong>
+      <p style="margin:0;font-size:14.5px;line-height:1.55;color:#5E5B56;">La pegatina —keyline, contorno, brillo, sombra dura— solo se permite cuando el icono deja de señalar y empieza a hablar. Un icono de app habla: es el único sitio donde la construcción del rótulo puede entrar.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px 24px;display:flex;flex-direction:column;gap:9px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#F2711C;">Heredado del logotipo</span>
+      <strong style="font-family:'Bungee';font-weight:400;font-size:19px;line-height:1.15;">Lo reconocible es la Y que salta</strong>
+      <p style="margin:0;font-size:14.5px;line-height:1.55;color:#5E5B56;">A 16 px el lockup entero es una mancha azul: cuatro trazos apilados en 16 px no caben. La silueta, en cambio, sigue siendo silueta. El icono hereda el relevo de la Y, no las letras.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px 24px;display:flex;flex-direction:column;gap:9px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#A3C21C;">Heredado de la fachada</span>
+      <strong style="font-family:'Bungee';font-weight:400;font-size:19px;line-height:1.15;">Una mancha, y nunca bajo información</strong>
+      <p style="margin:0;font-size:14.5px;line-height:1.55;color:#5E5B56;">Un icono es información pura y diminuta. La pintura de la fachada solo aparece a partir de 512 px, detrás de la figura y sin tocar su contorno. Trama o mancha, nunca las dos.</p>
+    </div>
+  </div>
+
+  <div style="max-width:1560px;margin:40px auto 0;display:flex;align-items:baseline;gap:12px;border-bottom:2px solid #DEDBD3;padding-bottom:12px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5E5B56;">01 / Cuatro caminos</span>
+    <span style="font-size:14.5px;color:#5E5B56;">Cada uno a 240, y luego a 96 · 48 · 32 · 16 para ver dónde se rompe.</span>
+  </div>
+
+  <div style="max-width:1560px;margin:18px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start;">
+    <sc-for list="{{ marcas }}" as="m" hint-placeholder-count="4">
+      <div id="{{ m.id }}" style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;background:#201E1B;color:#F8F9FA;padding:5px 9px;border-radius:6px;">{{ m.id }}</span>
+          <strong style="font-family:'Bungee';font-weight:400;font-size:18px;line-height:1;">{{ m.nombre }}</strong>
+        </div>
+        <div style="{{ m.estiloGrande }}">
+          <sc-for list="{{ m.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+            <sc-if value="{{ c.esLetra }}" hint-placeholder-val="{{ false }}">
+              <span style="{{ c.estilo }}">
+                <sc-for list="{{ c.trazos }}" as="t" hint-placeholder-count="5">
+                  <span style="{{ t.estilo }}">{{ c.glifo }}</span>
+                </sc-for>
+              </span>
+            </sc-if>
+          </sc-for>
+          <sc-if value="{{ verGuias }}" hint-placeholder-val="{{ false }}">
+            <span aria-hidden="true" style="position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(255,0,110,.28) 0 1px,transparent 1px 12.5%),repeating-linear-gradient(180deg,rgba(255,0,110,.28) 0 1px,transparent 1px 12.5%);pointer-events:none;"></span>
+            <span aria-hidden="true" style="position:absolute;left:10%;top:10%;width:80%;height:80%;border:1px dashed rgba(255,255,255,.7);border-radius:50%;pointer-events:none;"></span>
+            <span aria-hidden="true" style="position:absolute;left:12%;top:12%;width:76%;height:76%;border:1px dashed rgba(255,255,255,.45);pointer-events:none;"></span>
+          </sc-if>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:12px;">
+          <sc-for list="{{ m.tallas }}" as="v" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+              <div style="{{ v.estiloCaja }}">
+                <sc-for list="{{ m.capas }}" as="c" hint-placeholder-count="2">
+                  <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                  <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+                  <sc-if value="{{ c.esLetra }}" hint-placeholder-val="{{ false }}">
+                    <span style="{{ c.estilo }}">
+                      <sc-for list="{{ c.trazos }}" as="t" hint-placeholder-count="5">
+                        <span style="{{ t.estilo }}">{{ c.glifo }}</span>
+                      </sc-for>
+                    </span>
+                  </sc-if>
+                </sc-for>
+              </div>
+              <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.06em;color:#8A867F;">{{ v.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin:0;font-size:14.5px;line-height:1.55;color:#5E5B56;">{{ m.linea }}</p>
+        <div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid #E4E1D9;">
+          <span style="display:flex;gap:8px;font-size:13.5px;line-height:1.45;color:#3A3833;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#5FA82E;flex:0 0 auto;padding-top:2px;">SÍ</span>{{ m.gana }}</span>
+          <span style="display:flex;gap:8px;font-size:13.5px;line-height:1.45;color:#3A3833;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#D93E14;flex:0 0 auto;padding-top:2px;">NO</span>{{ m.pierde }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="max-width:1560px;margin:44px auto 0;background:#201E1B;border-radius:22px;padding:36px 38px;position:relative;overflow:hidden;">
+    <span aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,242,234,.5) 1.4px,transparent 1.6px);background-size:20px 20px;opacity:.14;"></span>
+    <div style="position:relative;display:flex;flex-direction:column;gap:26px;">
+      <div style="display:flex;flex-direction:column;gap:10px;max-width:820px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#1AA9DE;">02 / La propuesta</span>
+        <h2 style="font-family:'Bungee';font-weight:400;font-size:34px;line-height:1.05;color:#F7F3EA;margin:0;">Una forma, tres densidades</h2>
+        <p style="margin:0;font-size:15.5px;line-height:1.6;color:rgba(247,243,234,.78);text-wrap:pretty;">Mi voto es <a href="#1a" style="color:#1AA9DE;">1a</a>: la silueta es siempre la misma y en la misma pose, y lo único que cambia con el tamaño es cuánta construcción lleva encima y cuánto aire le dejamos. Así el icono no se convierte en tres marcas distintas. Si prefieres que gane por color antes que por forma, la misma familia se monta con <a href="#1c" style="color:#1AA9DE;">1c</a> de campo.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;">
+        <sc-for list="{{ densidades }}" as="d" hint-placeholder-count="3">
+          <div style="background:rgba(247,243,234,.05);border:1px solid rgba(247,243,234,.14);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div style="{{ d.estiloGrande }}">
+                <sc-for list="{{ d.capas }}" as="c" hint-placeholder-count="2">
+                  <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                  <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <sc-for list="{{ d.tallas }}" as="v" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:9px;">
+                    <div style="{{ v.estiloCaja }}">
+                      <sc-for list="{{ d.capas }}" as="c" hint-placeholder-count="2">
+                        <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+                        <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+                      </sc-for>
+                    </div>
+                    <span style="font-family:'JetBrains Mono';font-size:9.5px;color:rgba(247,243,234,.5);">{{ v.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <span style="{{ d.estiloRango }}">{{ d.rango }}</span>
+            <strong style="font-family:'Bungee';font-weight:400;font-size:18px;line-height:1.1;color:#F7F3EA;">{{ d.nombre }}</strong>
+            <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(247,243,234,.72);">{{ d.desc }}</p>
+            <span style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:rgba(247,243,234,.5);">{{ d.spec }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1560px;margin:44px auto 0;display:flex;align-items:baseline;gap:12px;border-bottom:2px solid #DEDBD3;padding-bottom:12px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5E5B56;">03 / En contexto</span>
+    <span style="font-size:14.5px;color:#5E5B56;">Pestaña, escritorio del móvil y máscara circular de Android.</span>
+  </div>
+
+  <div style="max-width:1560px;margin:18px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;">
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">Pestaña · 16 px</span>
+      <div style="background:#DEE1E6;border-radius:12px 12px 0 0;padding:8px 8px 0;">
+        <div style="display:flex;align-items:center;gap:9px;background:#FFFFFF;border-radius:9px 9px 0 0;padding:9px 12px;">
+          <div style="{{ favicon.estiloCaja }}">
+            <sc-for list="{{ favicon.capas }}" as="c" hint-placeholder-count="2">
+              <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+              <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+            </sc-for>
+          </div>
+          <span style="font-size:12.5px;color:#3A3833;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Play Jump Park · Lorca — Reservar</span>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">A este tamaño manda el campo de color: la silueta solo tiene que dar la mancha correcta.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">iOS · 120 px + rótulo</span>
+      <div style="display:flex;gap:18px;align-items:flex-start;background:repeating-linear-gradient(135deg,#C9CCD1 0 12px,#BFC3C8 12px 24px);border-radius:14px;padding:20px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <div style="{{ ios.estiloCaja }}">
+            <sc-for list="{{ ios.capas }}" as="c" hint-placeholder-count="2">
+              <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+              <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+            </sc-for>
+          </div>
+          <span style="font-size:12px;color:#FFFFFF;text-shadow:0 1px 2px rgba(0,0,0,.5);">Play Jump</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:7px;opacity:.55;">
+          <span style="width:120px;height:120px;border-radius:27px;background:#F8F9FA;"></span>
+          <span style="font-size:12px;color:#FFFFFF;text-shadow:0 1px 2px rgba(0,0,0,.5);">Otra app</span>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">El sistema pone las esquinas: el archivo va a sangre, sin radio propio ni sombra.</p>
+    </div>
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A867F;">Android · maskable</span>
+      <div style="display:flex;gap:16px;align-items:center;background:repeating-linear-gradient(135deg,#C9CCD1 0 12px,#BFC3C8 12px 24px);border-radius:14px;padding:20px;">
+        <div style="{{ maskA.estiloCaja }}">
+          <sc-for list="{{ maskA.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+          </sc-for>
+        </div>
+        <div style="{{ maskB.estiloCaja }}">
+          <sc-for list="{{ maskB.capas }}" as="c" hint-placeholder-count="2">
+            <sc-if value="{{ c.esCampo }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"></span></sc-if>
+            <sc-if value="{{ c.esMask }}" hint-placeholder-val="{{ true }}"><span style="{{ c.estilo }}"><svg viewBox="{{ c.vb }}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;fill:currentColor;"><path d="{{ c.d }}" fill-rule="{{ c.regla }}"></path></svg></span></sc-if>
+          </sc-for>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">La figura vive dentro del círculo del 80 %: cuadrada o redonda, no se le corta ni un pie.</p>
+    </div>
+  </div>
+
+  <div style="max-width:1560px;margin:44px auto 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start;">
+    <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5E5B56;">04 / Cómo se dibuja</span>
+      <div style="display:flex;flex-direction:column;">
+        <sc-for list="{{ reglas }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #E4E1D9;">
+            <span style="font-family:'Bungee';font-weight:400;font-size:15px;color:#1AA9DE;flex:0 0 68px;">{{ r.n }}</span>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <strong style="font-size:15px;">{{ r.t }}</strong>
+              <span style="font-size:14px;line-height:1.5;color:#5E5B56;">{{ r.d }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="background:#F8F9FA;border:1px solid #DEDBD3;border-radius:18px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#5E5B56;">05 / Qué se exporta</span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <sc-for list="{{ exports }}" as="e" hint-placeholder-count="6">
+            <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid #DEDBD3;background:#FFFFFF;border-radius:999px;padding:8px 13px;color:#3A3833;">{{ e }}</span>
+          </sc-for>
+        </div>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:#5E5B56;">Todo sale del mismo SVG maestro. El PNG solo existe porque lo piden los sistemas, nunca como origen.</p>
+      </div>
+      <div style="background:#2A1512;border:1px solid #4A241D;border-radius:18px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8A6B;">06 / Prohibido</span>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <sc-for list="{{ prohibido }}" as="p" hint-placeholder-count="5">
+            <span style="display:flex;gap:10px;font-size:14.5px;line-height:1.5;color:rgba(255,236,232,.86);"><span style="color:#FF8A6B;flex:0 0 auto;">✕</span>{{ p }}</span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1660,&quot;height&quot;:1400},&quot;pose&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;Maestra (Y)&quot;,&quot;options&quot;:[&quot;Maestra (Y)&quot;,&quot;Tijera&quot;,&quot;Estrella&quot;,&quot;Puños&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Icono&quot;},&quot;radio&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:22,&quot;min&quot;:0,&quot;max&quot;:50,&quot;step&quot;:2,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Icono&quot;},&quot;verGuias&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Icono&quot;}}">
+class Component extends DCLogic {
+  FIG = {
+    'Maestra (Y)': { src: 'assets/silueta-saltador.svg', ratio: 0.579 },
+    'Tijera': { src: 'assets/pose-04-tijera.svg', ratio: 0.93 },
+    'Estrella': { src: 'assets/pose-07-estrella.svg', ratio: 0.772 },
+    'Puños': { src: 'assets/pose-09-punos.svg', ratio: 0.775 }
+  };
+  MANCHA = { src: 'assets/splash-3.svg', ratio: 1 };
+
+  campo(fondo) {
+    return { esCampo: true, esMask: false, esLetra: false, estilo: 'position:absolute;inset:0;background:' + fondo + ';' };
+  }
+
+  state = { trazados: {} };
+
+  componentDidMount() {
+    const srcs = Object.keys(this.FIG).map((k) => this.FIG[k].src).concat([this.MANCHA.src]);
+    Promise.all(srcs.map((s) => fetch(s).then((r) => r.text()).then((t) => {
+      const vb = (t.match(/viewBox="([^"]+)"/) || [])[1] || '0 0 100 100';
+      const d = (t.match(/\sd="([^"]+)"/) || [])[1] || '';
+      return [s, { vb, d, regla: /fill-rule="evenodd"/.test(t) ? 'evenodd' : 'nonzero' }];
+    }).catch(() => [s, null]))).then((pares) => {
+      const m = {};
+      pares.forEach((p) => { if (p[1]) m[p[0]] = p[1]; });
+      this.setState({ trazados: m });
+    });
+  }
+
+  forma(obj, color, alto, dx, dy) {
+    const h = (alto * 100).toFixed(2), w = (alto * obj.ratio * 100).toFixed(2);
+    const mov = (dx || dy) ? ' translate(' + (dx || 0) + '%,' + (dy || 0) + '%)' : '';
+    const t = (this.state.trazados || {})[obj.src] || { vb: '0 0 100 100', d: '', regla: 'nonzero' };
+    return {
+      esMask: true, esCampo: false, esLetra: false,
+      vb: t.vb, d: t.d, regla: t.regla,
+      estilo: 'position:absolute;left:50%;top:50%;height:' + h + '%;width:' + w + '%;' +
+        'transform:translate(-50%,-50%)' + mov + ';color:' + color + ';'
+    };
+  }
+
+  letra(glifo, relleno) {
+    const base = 'position:absolute;left:0;top:0;white-space:nowrap;';
+    return {
+      esLetra: true, esCampo: false, esMask: false, glifo,
+      estilo: 'position:absolute;left:50%;top:50%;transform:translate(-50%,-52%) skewX(-5deg) rotate(-3deg);' +
+        "font-family:'Lilita One';font-weight:400;font-size:62cqw;line-height:1;",
+      trazos: [
+        { estilo: 'position:relative;display:inline-block;white-space:nowrap;-webkit-text-stroke:.185em #0A5C93;color:#0A5C93;' +
+            'text-shadow:.02em .028em 0 #0A5C93,.04em .056em 0 #095484,.06em .084em 0 #084C76,.08em .112em 0 #074468,.1em .14em 0 #063C5A;' },
+        { estilo: base + '-webkit-text-stroke:.185em #1AA9DE;color:#1AA9DE;' },
+        { estilo: base + '-webkit-text-stroke:.128em #101418;color:#101418;' },
+        { estilo: base + '-webkit-text-stroke:.05em #FFFFFF;color:#FFFFFF;' },
+        { estilo: base + 'color:' + relleno + ';' }
+      ]
+    };
+  }
+
+  LOGO = { src: 'assets/saltador-y.png', ratio: 0.608 };
+
+  imagen(obj, tono, alto, dx, dy, op) {
+    const h = (alto * 100).toFixed(2), w = (alto * obj.ratio * 100).toFixed(2);
+    const mov = (dx || dy) ? ' translate(' + (dx || 0) + '%,' + (dy || 0) + '%)' : '';
+    const filtro = tono === 'real' ? '' : 'filter:' + (tono === 'claro' ? 'brightness(0) invert(1)' : 'brightness(0)') + ';';
+    return {
+      esImagen: true, esCampo: false, esMask: false, esLetra: false, src: obj.src,
+      estilo: 'position:absolute;left:50%;top:50%;height:' + h + '%;width:' + w + '%;' +
+        'background-image:url(' + obj.src + ');background-size:contain;background-repeat:no-repeat;background-position:center;' +
+        'transform:translate(-50%,-50%)' + mov + ';' + filtro + (op ? 'opacity:' + op + ';' : '')
+    };
+  }
+
+  caja(n, radio, sombra) {
+    return 'position:relative;flex:0 0 auto;width:' + n + 'px;height:' + n + 'px;overflow:hidden;' +
+      'container-type:size;border-radius:' + radio + ';' + (sombra === false ? '' : 'box-shadow:0 1px 3px rgba(32,30,27,.22);');
+  }
+
+  vistas(ns, radio) {
+    return ns.map((n) => ({ label: n + ' px', estiloCaja: this.caja(n, radio) }));
+  }
+
+  renderVals() {
+    const fig = this.FIG[this.props.pose] || this.FIG['Maestra (Y)'];
+    const rad = (this.props.radio == null ? 22 : this.props.radio) + '%';
+    const barra = 'linear-gradient(118deg,#1AA9DE 0 20%,#A3C21C 20% 40%,#F5C400 40% 60%,#F2711C 60% 80%,#D93E14 80%)';
+    const grande = this.caja(240, rad);
+    const tallas = this.vistas([96, 48, 32, 16], rad);
+
+    const marcas = [
+      {
+        id: '1a', nombre: 'La Y saltadora',
+        capas: [this.campo('#101418'), this.forma(fig, '#1AA9DE', 0.66)],
+        linea: 'La silueta maestra sola: campo oscuro, figura de un color, nada más. Es la regla de los iconos aplicada al pie de la letra.',
+        gana: 'Es lo único que ya se reconoce del parque sin leer nada. Aguanta hasta 32 px y funciona en monocromo.',
+        pierde: 'A 16 px las piernas y los brazos se van: hay que recortar el aire y subir el contraste.'
+      },
+      {
+        id: '1b', nombre: 'Pegatina P',
+        capas: [this.campo('#F4F4F1'), this.letra('P', '#1AA9DE')],
+        linea: 'La construcción completa del rótulo —keyline cian, contorno negro, brillo blanco, relieve— sobre una sola letra.',
+        gana: 'Es el que más se parece al rótulo de la fachada. A 512 px y en merchandising es imbatible.',
+        pierde: 'Cuatro trazos apilados no caben por debajo de 48 px: se convierte en un borrón azul.'
+      },
+      {
+        id: '1c', nombre: 'La barra de cinco',
+        capas: [this.campo(barra), this.forma(fig, '#101418', 0.72)],
+        linea: 'Los cinco colores de la marca en diagonal y la silueta troquelada encima en negro.',
+        gana: 'Sobrevive a 16 px como mancha de color: en una barra de pestañas se distingue antes que cualquier silueta.',
+        pierde: 'Cinco colores rompen la regla de un color por glifo y compiten con la figura a tamaño grande.'
+      },
+      {
+        id: '1d', nombre: 'Mancha y silueta',
+        capas: [this.campo('#F4F4F1'), this.forma(this.MANCHA, '#A3C21C', 0.96), this.forma(fig, '#101418', 0.58)],
+        linea: 'El camino de la fachada: una mancha de pintura y la silueta oscura saltando encima.',
+        gana: 'Es el más de marca y el más simpático en tamaños grandes, portada de app incluida.',
+        pierde: 'Dos formas peleando dentro de 48 px dan barro. La pintura, además, no debería ir bajo información.'
+      }
+    ].map((m) => Object.assign(m, { estiloGrande: grande, tallas }));
+
+    const densidades = [
+      {
+        rango: '16 – 32 px', nombre: 'Plana', color: '#F5C400',
+        capas: [this.campo('#1AA9DE'), this.forma(fig, '#101418', 0.86)],
+        desc: 'Figura recortada hasta el 86 % del lienzo y contraste al máximo: campo cian, silueta negra. Sin sombra, sin keyline, sin trama.',
+        spec: 'aire 7 % · masa mín. 12,5 %',
+        tallas: this.vistas([32, 16], rad)
+      },
+      {
+        rango: '48 – 256 px', nombre: 'Sistema', color: '#1AA9DE',
+        capas: [this.campo('#101418'), this.forma(fig, '#1AA9DE', 0.66)],
+        desc: 'La versión de trabajo: la que va en la app, el PWA y el escritorio. Campo oscuro, figura cian, dos planos y nada más.',
+        spec: 'aire 17 % · dos planos',
+        tallas: this.vistas([96, 48], rad)
+      },
+      {
+        rango: '512 px y más', nombre: 'Pegatina', color: '#A3C21C',
+        capas: [
+          this.campo('#101418'),
+          this.forma(this.MANCHA, 'rgba(163,194,28,.20)', 1.04),
+          this.forma(fig, 'rgba(0,0,0,.5)', 0.7, 2.6, 3.4),
+          this.forma(fig, '#F4F4F1', 0.7),
+          this.forma(fig, '#1AA9DE', 0.655)
+        ],
+        desc: 'Aquí el icono ya habla: entra el keyline claro, la sombra dura y una sola mancha detrás, siempre sin tocar el contorno de la figura.',
+        spec: 'keyline 2,3 % · sombra 3 %',
+        tallas: []
+      }
+    ].map((d) => Object.assign(d, {
+      estiloGrande: this.caja(132, rad),
+      estiloRango: "font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:" + d.color + ";"
+    }));
+
+    const planas = [this.campo('#1AA9DE'), this.forma(fig, '#101418', 0.86)];
+    const sistema = [this.campo('#101418'), this.forma(fig, '#1AA9DE', 0.66)];
+
+    const diag = barra;
+    const vert = 'linear-gradient(90deg,#1AA9DE 0 20%,#A3C21C 20% 40%,#F5C400 40% 60%,#F2711C 60% 80%,#D93E14 80%)';
+    const L = this.LOGO;
+
+    const marcasB = [
+      {
+        id: '2a', nombre: 'Bandas en diagonal',
+        capas: [this.campo(diag), this.imagen(L, 'oscuro', 0.74)],
+        linea: 'La barra a 118°, como el rótulo cuando se inclina. La diagonal deja más color a la vista detrás de la figura.'
+      },
+      {
+        id: '2b', nombre: 'Bandas verticales',
+        capas: [this.campo(vert), this.imagen(L, 'oscuro', 0.74)],
+        linea: 'Las mismas cinco bandas rectas, igual que la tira de color de la landing y del pie. Más ordenado, menos gesto.'
+      },
+      {
+        id: '2c', nombre: 'Troquel claro',
+        capas: [this.campo(diag), this.imagen(L, 'claro', 0.74)],
+        linea: 'Idéntico a 2a con la figura en crema. Sube el contraste sobre el naranja y el rojo, lo baja sobre el amarillo.'
+      }
+    ].map((m) => Object.assign(m, { estiloGrande: grande, tallas }));
+
+    const densidadesB = [
+      {
+        rango: '16 – 32', nombre: 'Plana', color: '#F5C400', spec: 'aire 12 % · dos planos',
+        capas: [this.campo(diag), this.imagen(L, 'oscuro', 0.88)],
+        estiloGrande: this.caja(96, rad)
+      },
+      {
+        rango: '48 – 256', nombre: 'Sistema', color: '#1AA9DE', spec: 'aire 26 % · dos planos',
+        capas: [this.campo(diag), this.imagen(L, 'oscuro', 0.74)],
+        estiloGrande: this.caja(96, rad)
+      },
+      {
+        rango: '512 +', nombre: 'Pegatina', color: '#A3C21C', spec: 'keyline 2,5 % · sombra 3 %',
+        capas: [
+          this.campo(diag),
+          this.imagen(L, 'oscuro', 0.78, 2.4, 3.2, 0.42),
+          this.imagen(L, 'claro', 0.78),
+          this.imagen(L, 'oscuro', 0.74)
+        ],
+        estiloGrande: this.caja(96, rad)
+      }
+    ].map((d) => Object.assign(d, {
+      estiloRango: "font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:" + d.color + ";"
+    }));
+
+    const planaB = [this.campo(diag), this.imagen(L, 'oscuro', 0.88)];
+    const sistemaB = [this.campo(diag), this.imagen(L, 'oscuro', 0.74)];
+
+    const sinCian = 'linear-gradient(118deg,#A3C21C 0 25%,#F5C400 25% 50%,#F2711C 50% 75%,#D93E14 75%)';
+    const marcasC = [
+      {
+        id: '3a', nombre: 'La Y tal cual',
+        capas: [this.campo(diag), this.imagen(L, 'real', 0.74)],
+        linea: 'La figura del rótulo sin tocar —keyline cian, contorno negro, brillo blanco y degradado— centrada sobre la barra de 2c.'
+      },
+      {
+        id: '3b', nombre: 'La Y grande',
+        capas: [this.campo(diag), this.imagen(L, 'real', 0.94, 0, 2)],
+        linea: 'La misma, al 94 % y bajada dos puntos: los pies casi tocan el borde y la mancha llena mejor el cuadro.'
+      },
+      {
+        id: '3c', nombre: 'La Y sin cian debajo',
+        capas: [this.campo(sinCian), this.imagen(L, 'real', 0.88, 0, 1.5)],
+        linea: 'Cuatro bandas en vez de cinco: fuera el cian del fondo para que el keyline cian de la figura no se pierda encima.'
+      }
+    ].map((m) => Object.assign(m, { estiloGrande: grande, tallas }));
+
+    const densidadesC = [
+      {
+        rango: '16 – 32', nombre: 'Plana', color: '#F5C400', spec: 'troquel crema · dos planos',
+        capas: [this.campo(sinCian), this.imagen(L, 'claro', 0.9)],
+        estiloGrande: this.caja(96, rad)
+      },
+      {
+        rango: '48 – 256', nombre: 'Sistema', color: '#1AA9DE', spec: 'figura del rótulo al 88 %',
+        capas: [this.campo(sinCian), this.imagen(L, 'real', 0.88, 0, 1.5)],
+        estiloGrande: this.caja(96, rad)
+      },
+      {
+        rango: '512 +', nombre: 'Pegatina', color: '#A3C21C', spec: '+ sombra dura 3 %',
+        capas: [
+          this.campo(sinCian),
+          this.imagen(L, 'oscuro', 0.88, 2.6, 4.4, 0.4),
+          this.imagen(L, 'real', 0.88, 0, 1.5)
+        ],
+        estiloGrande: this.caja(96, rad)
+      }
+    ].map((d) => Object.assign(d, {
+      estiloRango: "font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:" + d.color + ";"
+    }));
+
+    const sistemaC = [this.campo(sinCian), this.imagen(L, 'real', 0.88, 0, 1.5)];
+    const planaC = [this.campo(sinCian), this.imagen(L, 'claro', 0.9)];
+
+    return {
+      verGuias: !!this.props.verGuias,
+      marcas, densidades,
+      marcasB, densidadesB,
+      marcasC, densidadesC,
+      faviconC: { estiloCaja: this.caja(16, '4px', false), capas: planaC },
+      iosC: { estiloCaja: this.caja(120, '22%', false), capas: sistemaC },
+      maskCircC: { estiloCaja: this.caja(64, '50%', false), capas: sistemaC },
+      faviconB: { estiloCaja: this.caja(16, '4px', false), capas: planaB },
+      iosB: { estiloCaja: this.caja(120, '22%', false), capas: sistemaB },
+      maskCirc: { estiloCaja: this.caja(64, '50%', false), capas: sistemaB },
+      favicon: { estiloCaja: this.caja(16, '4px', false), capas: planas },
+      ios: { estiloCaja: this.caja(120, '22%', false), capas: sistema },
+      maskA: { estiloCaja: this.caja(64, '50%', false), capas: sistema },
+      maskB: { estiloCaja: this.caja(64, '18%', false), capas: sistema },
+      reglas: [
+        { n: '64', t: 'Rejilla de 64, masa mínima de 8', d: 'La misma que el set de zonas. Ocho unidades son el 12,5 % del lienzo: por debajo de eso, ningún brazo ni ninguna pierna.' },
+        { n: '80 %', t: 'Todo dentro del círculo', d: 'Android recorta en círculo y iOS en squircle. La figura completa vive dentro del 80 % central; el campo de color va a sangre.' },
+        { n: '2', t: 'Dos planos como máximo', d: 'Campo y figura. El tercer plano —mancha, keyline, sombra— solo existe a partir de 512 px.' },
+        { n: '1', t: 'Una pose para siempre', d: 'La del relevo de la Y. Es la que ya está en el rótulo, en el menú y en el pie: el icono no estrena pose.' },
+        { n: '0', t: 'Cero letras', d: 'Ni el lockup ni las iniciales: el nombre lo pone el sistema debajo del icono.' },
+        { n: 'SVG', t: 'Un maestro, tres densidades', d: 'Un SVG por densidad, generados desde el mismo trazado. Los PNG se rasterizan al final y nunca se editan.' }
+      ],
+      exports: ['favicon.svg', '16 · 32 · 48 ico', '180 apple-touch', '192 · 512 pwa', '512 maskable', '1024 tienda', 'monocromo svg'],
+      prohibido: [
+        'El lockup completo dentro del cuadro: a 48 px no cabe ni la primera letra.',
+        'Degradados y duotonos dentro de la figura. Un color por plano.',
+        'Trama de puntos o rayos por debajo de 512 px.',
+        'Radio, sombra o borde dibujados en el archivo: eso lo pone el sistema.',
+        'Estrenar una pose que no esté en el kit de fachada.'
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

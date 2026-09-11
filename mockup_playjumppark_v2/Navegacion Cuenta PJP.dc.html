@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:#101418;color:#F4F4F1;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+</style>
+</helmet>
+
+<div style="background:#101418;color:#F4F4F1;padding:56px 44px 96px;min-height:100vh;">
+<section id="6b" style="max-width:1480px;margin:0 auto;display:flex;flex-direction:column;gap:64px;">
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:#A3C21C;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Navegación de la cuenta · 6b</span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Retirada la tira del armazón</span>
+  </div>
+  <h1 style="font-family:'Bungee';font-size:52px;line-height:.97;letter-spacing:-.015em;margin:0;max-width:1020px;">Tenías razón:<br>el racimo <span style="color:#A3C21C;">no avisa</span>.</h1>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:920px;color:#C9CDD1;text-wrap:pretty;">Puse una tira de aviso debajo del racimo y estaba mal por tres motivos que tú viste de golpe: <strong style="color:#F4F4F1;">apuntar a los hijos no es obligatorio</strong>, así que perseguir a todo el mundo con eso es dar la lata; el racimo es <strong style="color:#F4F4F1;">un grupo de mandos</strong> —logo, el par y el menú— y no un sitio donde caben noticias; y el armazón está <strong style="color:#F4F4F1;">aprobado</strong>, así que meterle una cuarta pieza es abrir una decisión cerrada sin necesidad.</p>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:920px;color:#C9CDD1;text-wrap:pretty;">Fuera la tira del armazón. Pero <strong style="color:#F4F4F1;">tu fila arriba del catálogo se queda</strong> —dentro del cajón, no encima de la web— porque hace lo que ningún botón puede: decir quién eres. Con un atajo, el del QR, y no con tres.</p>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:920px;color:#C9CDD1;text-wrap:pretty;">Y una segunda retracción, más gorda: <strong style="color:#F4F4F1;">se va todo el aparato de «menores a cargo»</strong>. Es una opción, no un paso — y yo le había puesto un aviso, un botón al pagar y una advertencia en el QR. Ver la sección 03.</p>
+</div>
+
+<!-- 00 · TU FILA -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">00 / TU BANNER, Y TENÍAS RAZÓN</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Una fila arriba del catálogo. Con un atajo, no con tres.</h2>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Le busqué el defecto a tu banner por estar «en una sola pantalla» y ése era el argumento flojo: <strong style="color:#F4F4F1;">esa pantalla es la primera del cajón</strong>. O sea que está exactamente donde el cajón se abre. Y hace algo que un botón no puede hacer: <strong style="color:#F4F4F1;">decirte quién eres</strong> — «Hola, Marta» contra un icono de persona no es lo mismo, y para quien no ha entrado es la única invitación que existe.</p>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Lo que cambio de tu idea es <strong style="color:#F4F4F1;">cuántos enlaces lleva</strong>: uno. Tres CTA en la cabecera de una pantalla de compra pelean con los productos, y dos de los tres —cuenta y reservas— están a un toque de todas formas. El atajo se lo lleva el QR, que es el único recado con prisa.</p>
+
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;">
+    <sc-for list="{{ filas }}" as="f" hint-placeholder-count="3">
+      <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:{{ f.tinte }};">{{ f.n }}</span>
+          <span style="font-size:15px;font-weight:800;">{{ f.nom }}</span>
+        </div>
+        <div style="background:#F4F4F1;border:1px solid #2A3138;display:flex;flex-direction:column;">
+
+          <div style="flex:none;padding:14px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <span style="font-family:'Bungee';font-size:18px;color:#101418;">Reservar</span>
+            <span style="width:44px;height:44px;margin:-8px 0;display:flex;align-items:center;justify-content:center;color:#101418;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+          </div>
+
+          <div style="flex:none;padding:12px 20px;background:{{ f.filaFondo }};border-bottom:1px solid #D6D8D4;display:flex;align-items:center;gap:12px;min-height:64px;">
+            <span style="flex:none;width:36px;height:36px;border-radius:999px;background:{{ f.avatarFondo }};display:flex;align-items:center;justify-content:center;">
+              <sc-if value="{{ f.esRegistro }}" hint-placeholder-val="{{ false }}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ f.avatarTinta }}" aria-hidden="true"><circle cx="9" cy="8" r="3.6"></circle><path d="M2.6 19.4a6.4 6.4 0 0 1 12.8 0 1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2z"></path><rect x="17.4" y="15.4" width="2.8" height="6" rx="1.4"></rect><rect x="15.8" y="17" width="6" height="2.8" rx="1.4"></rect></svg>
+              </sc-if>
+              <sc-if value="{{ f.esAcceso }}" hint-placeholder-val="{{ true }}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ f.avatarTinta }}" aria-hidden="true"><circle cx="12" cy="7.8" r="4.2"></circle><path d="M4.4 20.4a7.6 7.6 0 0 1 15.2 0 1.4 1.4 0 0 1-1.4 1.4H5.8a1.4 1.4 0 0 1-1.4-1.4z"></path></svg>
+              </sc-if>
+            </span>
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+              <span style="font-size:15px;font-weight:700;color:#101418;line-height:1.25;">{{ f.titulo }}</span>
+              <span style="font-size:12.5px;color:#626A72;line-height:1.35;">{{ f.sub }}</span>
+            </span>
+            <sc-if value="{{ f.conQr }}" hint-placeholder-val="{{ false }}">
+              <span style="flex:none;min-height:48px;display:inline-flex;align-items:center;gap:7px;padding:12px 14px;border-radius:10px;background:#101418;color:#F4F4F1;font-size:14px;font-weight:800;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                  <rect x="3.5" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none"></rect>
+                  <rect x="14.1" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none"></rect>
+                  <rect x="3.5" y="14.1" width="6.4" height="6.4" rx="1.4" fill="none"></rect>
+                  <rect x="13.4" y="13.4" width="3.4" height="3.4" rx="1" stroke="none"></rect>
+                  <rect x="18.2" y="17.6" width="3.4" height="3.4" rx="1" stroke="none"></rect>
+                  <rect x="13.4" y="18.2" width="3" height="3" rx="1" stroke="none"></rect>
+                </svg>
+                Mi QR
+              </span>
+            </sc-if>
+            <sc-if value="{{ f.conEntrar }}" hint-placeholder-val="{{ false }}">
+              <span style="flex:none;min-height:48px;display:inline-flex;align-items:center;padding:12px 18px;border-radius:10px;border:1px solid #101418;background:#FFFFFF;color:#101418;font-size:14px;font-weight:800;">Entrar</span>
+            </sc-if>
+          </div>
+
+          <div style="flex:none;padding:20px;display:flex;flex-direction:column;gap:10px;">
+            <span style="font-family:'Bungee';font-size:15px;letter-spacing:-.01em;color:#101418;">Entradas</span>
+            <sc-for list="{{ productos }}" as="pr" hint-placeholder-count="2">
+              <div style="min-height:48px;display:flex;align-items:center;gap:10px;padding:11px 13px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:10px;">
+                <span style="flex:1;min-width:0;font-size:14px;font-weight:600;color:#101418;">{{ pr.nom }}</span>
+                <span style="flex:none;font-size:13.5px;font-weight:700;color:#101418;white-space:nowrap;"><span style="font-size:11.5px;font-weight:600;color:#626A72;margin-right:3px;">desde</span>{{ pr.precio }}</span>
+                <span style="flex:none;color:#0A5C93;display:flex;"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="font-size:13.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;">{{ f.d }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <sc-for list="{{ notasFila }}" as="n" hint-placeholder-count="4">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid {{ n.tinte }};border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:9px;">
+        <div style="font-size:15.5px;font-weight:800;color:#F4F4F1;line-height:1.25;">{{ n.t }}</div>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ n.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- 01 · LO QUE RETIRO -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#FF8A6B;">01 / POR QUÉ SE VA LA TIRA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;">
+    <sc-for list="{{ retirada }}" as="r" hint-placeholder-count="4">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;color:#FF8A6B;">{{ r.n }}</div>
+        <div style="font-size:15.5px;font-weight:800;color:#F4F4F1;line-height:1.25;">{{ r.t }}</div>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ r.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">La regla que saco de esto</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;"><strong style="color:#F4F4F1;">Un aviso vive donde se paga su consecuencia, no donde más gente lo ve.</strong> Perseguir al cliente por toda la web con algo opcional gasta la atención que hace falta para lo que sí es obligatorio — y cuando de verdad haya que avisarle de algo, ya no lo mirará.</p>
+  </div>
+</div>
+
+<!-- 02 · EL ARMAZÓN, INTACTO -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">02 / EL ARMAZÓN SE QUEDA COMO ESTÁ</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;">
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#A3C21C;">EL RACIMO</span>
+        <span style="font-size:15px;font-weight:800;">Tres piezas, y ninguna nueva</span>
+      </div>
+      <div style="background:#101418;border:1px solid #2A3138;padding:16px;display:flex;align-items:center;gap:10px;">
+        <img src="marca/logo-pjp-blanco.svg" alt="Play Jump Park" style="flex:none;height:46px;width:auto;">
+        <span style="flex:1;"></span>
+        <span style="flex:none;min-height:48px;display:inline-flex;align-items:center;padding:12px 16px;border-radius:10px;background:#F2711C;color:#101418;font-size:14px;font-weight:800;">Reservar</span>
+        <span aria-label="Cambiar a Mi Play Jump" style="flex:none;width:56px;height:56px;border-radius:10px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+        </span>
+        <span style="flex:none;width:48px;height:48px;border-radius:10px;border:1px solid #2A3138;display:flex;align-items:center;justify-content:center;color:#F4F4F1;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="3" y="5.2" width="18" height="2.9" rx="1.45"></rect>
+            <rect x="3" y="10.55" width="18" height="2.9" rx="1.45"></rect>
+            <rect x="3" y="15.9" width="13" height="2.9" rx="1.45"></rect>
+          </svg>
+        </span>
+      </div>
+      <div style="font-size:13.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;">Logo, el par doble y el menú. <strong style="color:#F4F4F1;">Ni tira, ni contador, ni punto rojo.</strong> Y el segundo botón del par —copiado de su marcado— ya dice «Cambiar a Mi Play Jump»: la puerta que preguntas <strong style="color:#F4F4F1;">llevaba ahí desde que aprobamos el marco</strong>.</div>
+    </div>
+    <div style="flex:1;min-width:330px;display:flex;flex-direction:column;gap:14px;">
+      <sc-for list="{{ armazon }}" as="a" hint-placeholder-count="3">
+        <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:9px;">
+          <div style="font-size:15.5px;font-weight:800;color:#F4F4F1;line-height:1.25;">{{ a.t }}</div>
+          <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ a.d }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+<!-- 03 · LA RETRACCIÓN -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#FF8A6B;">03 / RETIRADO TODO EL APARATO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">No hay que llegar a esa pantalla</h2>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Llevo tres turnos diseñando <strong style="color:#F4F4F1;">cómo empujar al cliente a «Menores a cargo»</strong> —un aviso nuevo, un botón al pagar, una advertencia en el QR— y el marco estaba mal desde tu primera pregunta. Asignar una entrada a un menor <strong style="color:#F4F4F1;">es una opción, no un paso</strong>: si vienes con un niño la asignas, y si no, sigues. Todo lo que construí trataba una opción como un trámite pendiente.</p>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Y con el marco corregido, la respuesta a tu pregunta original cambia de raíz: <strong style="color:#F4F4F1;">el cliente no necesita llegar a esa pantalla nunca</strong>. La asignación ya vive donde están las entradas —en el carrito— y ahí se hace en un gesto. La zona es para gestionar la lista más adelante, no para pasar por ella.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+    <sc-for list="{{ retiradoMenores }}" as="r" hint-placeholder-count="4">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid {{ r.tinte }};border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};white-space:nowrap;">{{ r.sello }}</span>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:#F4F4F1;line-height:1.3;">{{ r.t }}</div>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ r.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;">
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#A3C21C;">LO ÚNICO QUE QUEDA</span>
+        <span style="font-size:15px;font-weight:800;">El carrito, y ya está</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;padding:20px;display:flex;flex-direction:column;gap:14px;">
+        <span style="font-family:'Bungee';font-size:22px;line-height:1.05;color:#101418;">Tu carrito</span>
+        <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:11px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:14px;font-weight:700;color:#101418;line-height:1.3;">3× Entrada Kids</span>
+              <span style="font-size:12.5px;color:#626A72;">Sáb 12 sept · 17:00</span>
+            </span>
+            <span style="flex:none;font-size:14px;font-weight:700;color:#101418;">24,00 €</span>
+          </div>
+          <div style="border-top:1px solid #D6D8D4;padding-top:11px;display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:13.5px;font-weight:700;color:#101418;">¿Para quién son estas entradas?</span>
+            <span style="font-size:12.5px;color:#626A72;line-height:1.45;margin-bottom:4px;">Si vienes con menores a tu cargo, márcalos y firma una vez. Puedes dejarlo para después o hacerlo en la puerta.</span>
+            <sc-for list="{{ menoresCarrito }}" as="m" hint-placeholder-count="2">
+              <span style="min-height:44px;display:flex;align-items:center;gap:11px;">
+                <span style="flex:none;width:22px;height:22px;border-radius:6px;border:2px solid #101418;background:{{ m.fondo }};display:flex;align-items:center;justify-content:center;color:#F4F4F1;">
+                  <sc-if value="{{ m.marcado }}" hint-placeholder-val="{{ false }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"></path></svg>
+                  </sc-if>
+                </span>
+                <span style="flex:1;min-width:0;display:flex;align-items:baseline;gap:7px;">
+                  <span style="font-size:14.5px;font-weight:600;color:#101418;">{{ m.nom }}</span>
+                  <span style="font-size:12.5px;color:#626A72;">{{ m.edad }}</span>
+                </span>
+              </span>
+            </sc-for>
+            <span style="min-height:44px;display:inline-flex;align-items:center;font-size:14px;font-weight:800;color:#0A5C93;">+ Añadir un menor</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:13.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;">Una pregunta, en el sitio donde están las entradas, con <strong style="color:#F4F4F1;">«puedes dejarlo para después»</strong> escrito al lado. Quien no trae menores pasa de largo y no vuelve a oír hablar del tema.</div>
+    </div>
+
+    <div style="flex:1;min-width:330px;display:flex;flex-direction:column;gap:14px;">
+      <sc-for list="{{ quedaAsi }}" as="q" hint-placeholder-count="4">
+        <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:9px;">
+          <div style="font-size:15.5px;font-weight:800;color:#F4F4F1;line-height:1.25;">{{ q.t }}</div>
+          <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ q.d }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">La regla, y esta vez es la buena</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;"><strong style="color:#F4F4F1;">Una opción se ofrece una vez, donde se decide. Un trámite se persigue.</strong> Si algo se puede no hacer sin consecuencias, no lleva aviso, ni recordatorio, ni segunda oportunidad en otra pantalla — porque cada una de esas piezas le dice al cliente que sí era obligatorio.</p>
+  </div>
+</div>
+
+<!-- 03 ANTERIOR · RETIRADO -->
+<div style="display:none;">
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F5C400;">03 / DÓNDE SE PIDE, ENTONCES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Tres sitios, y los tres ya existen</h2>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:960px;text-wrap:pretty;">Ninguno es nuevo y ninguno está en el armazón. Los tres tienen algo en común: <strong style="color:#F4F4F1;">el cliente ya está ahí por su propia voluntad</strong>, así que decírselo no interrumpe nada.</p>
+
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- QR -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#F5C400;">SITIO 1 · EL MEJOR</span>
+        <span style="font-size:15px;font-weight:800;">La pantalla del QR</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;padding:20px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">Mi Play Jump QR</span>
+          <span style="font-family:'Bungee';font-size:22px;line-height:1.05;color:#101418;">Enséñalo al entrar</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:9px;">
+          <div style="background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:20px;">
+            <div style="position:relative;width:168px;height:168px;">
+              <svg viewBox="0 0 25 25" width="168" height="168" role="img" aria-label="Mi Play Jump QR, de ejemplo" style="display:block;">
+                <path d="{{ codigoRuta }}" fill="#101418"></path>
+              </svg>
+              <span aria-hidden="true" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:54px;height:54px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;">
+                <img src="marca/icono-pjp.svg" alt="" style="width:44px;height:44px;display:block;">
+              </span>
+            </div>
+          </div>
+          <span style="font-size:13px;font-weight:800;color:#101418;">Mi Play Jump QR</span>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:15px;display:flex;flex-direction:column;gap:11px;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <span style="font-size:14.5px;font-weight:700;color:#101418;line-height:1.3;">Este código solo te incluye a ti</span>
+            <span style="font-size:13px;color:#626A72;line-height:1.5;">Añade a los menores que traes y firma una vez. Si no, en la puerta hay que rellenarlo a mano.</span>
+          </div>
+          <span style="min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;background:#101418;color:#F4F4F1;font-size:15px;font-weight:800;">Menores a cargo</span>
+        </div>
+      </div>
+      <div style="font-size:13.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;">Éste es el sitio bueno y no lo había visto. <strong style="color:#F4F4F1;">Aquí el aviso no es una molestia: es un defecto de tu entrada.</strong> Y se lee cuando aún hay tiempo — quien mira su QR el día antes puede arreglarlo en dos minutos.</div>
+    </div>
+
+    <!-- CONFIRMADO -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#A3C21C;">SITIO 2</span>
+        <span style="font-size:15px;font-weight:800;">Justo después de pagar</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;padding:20px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">Reserva confirmada</span>
+          <span style="font-family:'Bungee';font-size:26px;line-height:1.05;color:#101418;">¡Hecho!</span>
+        </div>
+        <p style="margin:0;font-size:14.5px;line-height:1.55;color:#626A72;">Sáb 12 sept · 17:00 · 3× Entrada Kids. Te lo hemos mandado por correo.</p>
+        <div style="display:flex;justify-content:center;">
+          <div style="background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:16px;">
+            <div style="position:relative;width:112px;height:112px;">
+              <svg viewBox="0 0 25 25" width="112" height="112" role="img" aria-label="Mi Play Jump QR, de ejemplo" style="display:block;">
+                <path d="{{ codigoRuta }}" fill="#101418"></path>
+              </svg>
+              <span aria-hidden="true" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:38px;height:38px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;">
+                <img src="marca/icono-pjp.svg" alt="" style="width:30px;height:30px;display:block;">
+              </span>
+            </div>
+          </div>
+        </div>
+        <div style="border-top:1px solid #D6D8D4;padding-top:14px;display:flex;flex-direction:column;gap:10px;">
+          <span style="font-size:14px;color:#626A72;line-height:1.5;">Has comprado 3 entradas Kids. <strong style="color:#101418;font-weight:700;">Di quién viene</strong> y firma una vez: en la puerta no rellenas nada.</span>
+          <span style="min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:10px;border:1px solid #D6D8D4;background:#FFFFFF;color:#101418;font-size:15px;font-weight:800;">Menores a cargo</span>
+          <span style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0A5C93;">Lo hago luego</span>
+        </div>
+      </div>
+      <div style="font-size:13.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;">Debajo del QR y de lo comprado, <strong style="color:#F4F4F1;">nunca encima</strong>. Y en botón de borde, no de relleno: la pantalla ya tiene su protagonista, que es el código. Con salida clara.</div>
+    </div>
+
+    <!-- ÍNDICE -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#1AA9DE;">SITIO 3 · YA EXISTE</span>
+        <span style="font-size:15px;font-weight:800;">El aviso del índice</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;padding:20px;display:flex;flex-direction:column;gap:15px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">Mi Play Jump</span>
+          <span style="font-family:'Bungee';font-size:22px;line-height:1.05;color:#101418;">Hola, Marta</span>
+          <span style="font-size:14px;color:#626A72;line-height:1.5;">Sáb 12 sept · 17:00 · Entrada Jump</span>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:9px;">
+          <span style="font-size:13.5px;color:#101418;line-height:1.5;">Te falta decir quién viene contigo.</span>
+          <span style="min-height:44px;display:inline-flex;align-items:center;font-size:14.5px;font-weight:800;color:#0A5C93;">Menores a cargo</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <sc-for list="{{ tarjetas }}" as="t" hint-placeholder-count="4">
+            <div style="min-height:84px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:13px 11px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;text-align:center;">
+              <span style="color:#101418;display:flex;" data-om-raster="true">
+                <sc-if value="{{ t.esReserva }}" hint-placeholder-val="{{ false }}">
+                  <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.4V12l3.2 2.4"></path></svg>
+                </sc-if>
+                <sc-if value="{{ t.esPedido }}" hint-placeholder-val="{{ false }}">
+                  <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 7.4V6.6a4.6 4.6 0 0 1 9.2 0v.8H19a1.9 1.9 0 0 1 1.9 2l-.7 10.2a2.3 2.3 0 0 1-2.3 2.2H6.1a2.3 2.3 0 0 1-2.3-2.2L3.1 9.4a1.9 1.9 0 0 1 1.9-2zm2.8 0h3.6v-.8a1.8 1.8 0 0 0-3.6 0z"></path></svg>
+                </sc-if>
+                <sc-if value="{{ t.esQr }}" hint-placeholder-val="{{ false }}">
+                  <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" aria-hidden="true"><rect x="3.5" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none"></rect><rect x="14.1" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none"></rect><rect x="3.5" y="14.1" width="6.4" height="6.4" rx="1.4" fill="none"></rect><rect x="13.4" y="13.4" width="3.4" height="3.4" rx="1" stroke="none"></rect><rect x="18.2" y="17.6" width="3.4" height="3.4" rx="1" stroke="none"></rect><rect x="13.4" y="18.2" width="3" height="3" rx="1" stroke="none"></rect></svg>
+                </sc-if>
+                <sc-if value="{{ t.esDatos }}" hint-placeholder-val="{{ false }}">
+                  <svg width="25" height="25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.6 3.4h16.8a2.2 2.2 0 0 1 2.2 2.2v12.8a2.2 2.2 0 0 1-2.2 2.2H3.6a2.2 2.2 0 0 1-2.2-2.2V5.6a2.2 2.2 0 0 1 2.2-2.2zm5.2 3a2.9 2.9 0 1 0 0 5.8 2.9 2.9 0 0 0 0-5.8zm0 6.8c-2.7 0-4.9 1.7-4.9 3.8h9.8c0-2.1-2.2-3.8-4.9-3.8zM15 7.4v2.2h5.2V7.4zm0 4.4v2.2h5.2v-2.2z"></path></svg>
+                </sc-if>
+              </span>
+              <span style="font-size:12.5px;font-weight:700;color:#101418;line-height:1.25;">{{ t.nom }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="font-size:13.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;">Ya existe: el índice tiene su hueco de aviso con tres versiones, y una lleva justo a «Menores a cargo». Lo único que cambia es <strong style="color:#F4F4F1;">cuándo salta</strong> — hoy solo si a un hijo ya apuntado le falta la firma.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 03bis · CÓMO SE LLEGA AL SITIO 3 -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">03 BIS / ¿Y CÓMO LLEGA AL ÍNDICE?</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Por la puerta que ya aprobaste</h2>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Buena pregunta, y me hace corregir dos cosas más. He ido a leer el marco y <strong style="color:#F4F4F1;">el segundo botón del par doble ya es la cuenta</strong>: su rótulo para lectores de pantalla dice «Cambiar a Mi Play Jump» y lleva el glifo de persona en Azul Muro. Lo tenías decidido y dibujado; yo llegué, le puse un QR encima y luego inventé una tira para resolver un acceso <strong style="color:#F4F4F1;">que ya existía</strong>.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+    <sc-for list="{{ puertas }}" as="p" hint-placeholder-count="4">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid {{ p.tinte }};border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;color:{{ p.tinte }};">{{ p.n }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};white-space:nowrap;">{{ p.sello }}</span>
+        </div>
+        <div style="font-size:15.5px;font-weight:800;color:#F4F4F1;line-height:1.25;">{{ p.t }}</div>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ p.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">Y con esto se cae también mi «botón del QR»</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Dije que de los tres enlaces del banner solo el QR merecía un botón fijo, y lo dibujé en la barra. <strong style="color:#F4F4F1;">Estaba cambiando una pieza aprobada sin darme cuenta</strong>: ese hueco ya lo ocupa la cuenta. Así que el QR vuelve adentro, donde está su zona —tercera del índice, justo por lo que decíamos— y el par doble se queda tal cual: Reservar y Mi Play Jump.</p>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Cuesta un toque más en la cola de la puerta: cuenta → QR en vez de QR directo. Si eso te parece caro, la conversación es <strong style="color:#F4F4F1;">a qué zona aterriza ese botón</strong> —al índice o al QR— y no si añadimos otro botón. Con el QR como aterrizaje, el índice queda a un «volver», que es el mismo toque cambiado de sitio.</p>
+  </div>
+</div>
+
+<!-- 04 · EL AVISO QUE FALTA -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">04 / EL ÚNICO CAMBIO DE VERDAD</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Un cuarto aviso, y con interruptor</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px;">
+    <sc-for list="{{ avisos }}" as="a" hint-placeholder-count="4">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid {{ a.tinte }};border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:11px;">
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;color:{{ a.tinte }};">{{ a.n }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:{{ a.bg }};color:{{ a.fg }};white-space:nowrap;">{{ a.sello }}</span>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:#F4F4F1;line-height:1.3;">{{ a.cuando }}</div>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ a.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">Corrección: el sistema no sabe si viene un niño</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Tenías razón y el problema es más gordo de lo que parecía. Yo cableé el aviso a «entradas sin asignar», y la especificación del justificante dice esta frase tal cual: <strong style="color:#F4F4F1;">«los adultos NO se restan: una entrada sin asignar puede ser un adulto o un menor invitado»</strong>. O sea que ese dato no distingue. Un adulto que salta compra una Entrada Jump igual que un niño de doce.</p>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Así que el aviso no puede colgar de «cuántas van sin asignar». Cuelga de lo único que sí es un hecho: <strong style="color:#F4F4F1;">qué producto ha comprado</strong>.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
+      <sc-for list="{{ certeza }}" as="c" hint-placeholder-count="3">
+        <div style="background:#161B21;border:1px solid #2A3138;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:9px;">
+          <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:{{ c.bg }};color:{{ c.fg }};white-space:nowrap;">{{ c.sello }}</span>
+          </div>
+          <div style="font-size:14.5px;font-weight:800;color:#F4F4F1;line-height:1.3;">{{ c.t }}</div>
+          <p style="margin:0;font-size:13.5px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ c.d }}</p>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Con esto, la mayoría de las compras <strong style="color:#F4F4F1;">no ven nada</strong>: dos adultos que van a saltar un viernes compran, pagan y se van. Que es exactamente lo que pedías.</p>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F5C400;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">El rótulo: fuera «mis hijos»</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Otra que tenías tú, y también por suponer. <strong style="color:#F4F4F1;">Quien compra no es necesariamente el padre</strong>: una abuela con los nietos, una tía, un monitor. «Apuntar a mis hijos» le dice «hijos» a alguien que no los tiene, y encima en la pantalla más delicada del asunto.</p>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Y hay un segundo motivo que decide solo: <strong style="color:#F4F4F1;">tu código ya tiene la regla escrita</strong> — el rótulo de un atajo es el título de la zona a la que lleva, «la regla del atajo Mi QR». Así que el botón dice <strong style="color:#F4F4F1;">«Menores a cargo»</strong>, igual que la pantalla, y quien persuade es la frase de encima. Eso es exactamente lo que ya hace el aviso del índice.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;">
+      <sc-for list="{{ rotulos }}" as="r" hint-placeholder-count="3">
+        <div style="background:#161B21;border:1px solid #2A3138;border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;">
+          <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9AA1A8;">{{ r.donde }}</div>
+          <div style="font-size:14px;color:#FF8A6B;line-height:1.45;text-decoration:line-through;">{{ r.antes }}</div>
+          <div style="font-size:14.5px;font-weight:700;color:#A3C21C;line-height:1.45;">{{ r.ahora }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Y en el QR el titular cambia por lo mismo: «no incluye a tus hijos» daba por hecho que los hay. <strong style="color:#F4F4F1;">«Este código solo te incluye a ti»</strong> es un hecho sobre el código, no sobre tu familia — y funciona igual para la abuela.</p>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F5C400;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">Y se apaga solo, de tres maneras</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Porque no es obligatorio y no puede ser eterno: <strong style="color:#F4F4F1;">desaparece</strong> cuando apunta a alguien, cuando pulsa «lo hago luego» dos veces —quien lo esquiva dos veces ha contestado—, y cuando la visita ya ha pasado. Y nunca aparece si la reserva no lleva entradas de niño.</p>
+  </div>
+</div>
+
+</div>
+
+<!-- 05 · LAS 18 PANTALLAS -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#9AA1A8;">05 / LAS DIECIOCHO, Y CÓMO SE LLEGA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <p style="margin:0;font-size:16.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Ocho en el índice, cuatro para quien no ha entrado y seis a las que solo se llega desde dentro. La columna que importa es la última: <strong style="color:#F4F4F1;">cuántos toques desde que abre el móvil</strong> — contando ya el botón del par y la fila del catálogo, que son las dos puertas de este documento.</p>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1.1fr 1.25fr 1.55fr 84px;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;padding:14px 24px;border-bottom:1px solid #2A3138;background:#161B21;">
+      <div>Pantalla</div><div>Para qué se entra</div><div>Cómo se llega</div><div style="text-align:right;">Toques</div>
+    </div>
+    <sc-for list="{{ zonas }}" as="z" hint-placeholder-count="18">
+      <div style="display:grid;grid-template-columns:1.1fr 1.25fr 1.55fr 84px;font-size:14px;line-height:1.5;border-bottom:1px solid #22282E;padding:14px 24px;align-items:baseline;">
+        <div style="display:flex;flex-direction:column;gap:3px;padding-right:12px;">
+          <span style="font-weight:700;color:#F4F4F1;">{{ z.nom }}</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;color:{{ z.tinte }};">{{ z.grupo }}</span>
+        </div>
+        <div style="color:#C9CDD1;padding-right:12px;">{{ z.para }}</div>
+        <div style="color:#9AA1A8;padding-right:12px;">{{ z.como }}</div>
+        <div style="text-align:right;font-family:'JetBrains Mono';font-size:13px;color:{{ z.toquesColor }};font-weight:700;">{{ z.toques }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <sc-for list="{{ lecturas }}" as="l" hint-placeholder-count="3">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid {{ l.tinte }};border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:9px;">
+        <div style="font-size:15.5px;font-weight:800;color:#F4F4F1;line-height:1.25;">{{ l.t }}</div>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ l.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- 05 · CIERRE -->
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;gap:20px;">
+    <div style="font-family:'Bungee';font-size:22px;line-height:1.15;">Resumen del cambio</div>
+    <sc-for list="{{ cambios }}" as="c" hint-placeholder-count="4">
+      <div style="display:flex;flex-direction:column;gap:7px;border-top:1px solid #2A3138;padding-top:18px;">
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.2;color:#F4F4F1;">{{ c.t }}</div>
+        <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;max-width:1020px;text-wrap:pretty;">{{ c.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:11px;">
+    <div style="font-family:'Bungee';font-size:18px;line-height:1.15;">Y un choque en el marco, que sí hay que arreglar</div>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">El set tiene <strong style="color:#F4F4F1;">dos</strong> glifos de cuenta y la diferencia es de significado: <span style="font-family:'JetBrains Mono';font-size:13px;color:#A3C21C;">ui/cuenta</span> es una persona sola —«acceder»— y <span style="font-family:'JetBrains Mono';font-size:13px;color:#A3C21C;">ui/registro</span> es persona con un «más» —«crear cuenta»—. En la fila ya está cada uno en su sitio: el «más» solo en el estado sin entrar.</p>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Pero el botón del racimo lleva <strong style="color:#F4F4F1;">el del «más»</strong> y su rótulo dice «Cambiar a Mi Play Jump» — o sea ir a tu cuenta, no crearla. Está así en el marco aprobado, y además es un dibujo propio: ni la persona ni el «más» coinciden con los del set. Lo dejo tal cual en el dibujo porque es fiel a lo aprobado, y lo levanto como <strong style="color:#F4F4F1;">corrección del marco</strong>: a un cliente que ya tiene cuenta, ese botón le está ofreciendo crearse otra.</p>
+    <div style="font-family:'Bungee';font-size:18px;line-height:1.15;margin-top:6px;">Un hueco del set, declarado</div>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Los iconos de estas pantallas salen del set —menú, hora, pedido, mis datos y el QR, copiados de su marcado—. Pero <strong style="color:#F4F4F1;">no hay glifo de «menores a cargo»</strong>: en las diecisiete de cuenta no existe. Aquí uso el de «Mis datos» como apaño y lo digo en vez de dibujarme uno: un glifo inventado en una rejilla distinta no falla, solo se nota mirando la web entera a la vez.</p>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F5C400;border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:'Bungee';font-size:22px;line-height:1.15;">Lo que decides tú</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <sc-for list="{{ preguntas }}" as="q" hint-placeholder-count="3">
+        <div style="display:flex;gap:12px;align-items:baseline;border-top:1px solid #22282E;padding-top:12px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;color:#F5C400;white-space:nowrap;">{{ q.n }}</span>
+          <span style="font-size:14.5px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ q.d }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1480}}">
+class Component extends DCLogic {
+  /* Copiado ENTERO de `Antes de Venir PJP` (sección 05, aprobada): cuadrícula de 25×25
+   * como la del carné real —versión 2 del QR—, con sus tres patrones de localización,
+   * los dos de sincronía y datos deterministas. Es una maqueta: el código de verdad son
+   * 20 caracteres que emite el producto. Un icono de UI ampliado NO sirve aquí: seis
+   * formas donde un código tiene cientos se lee como pictograma, no como algo escaneable. */
+  rutaCodigo(n) {
+    const s = [];
+    for (let y = 0; y < n; y++) s.push(new Array(n).fill(0));
+
+    const localiza = (ox, oy) => {
+      for (let y = 0; y < 7; y++) {
+        for (let x = 0; x < 7; x++) {
+          const borde = x === 0 || x === 6 || y === 0 || y === 6;
+          const nucleo = x >= 2 && x <= 4 && y >= 2 && y <= 4;
+          s[oy + y][ox + x] = (borde || nucleo) ? 1 : 0;
+        }
+      }
+    };
+    localiza(0, 0);
+    localiza(n - 7, 0);
+    localiza(0, n - 7);
+
+    const reservado = (x, y) =>
+      (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9) || x === 6 || y === 6;
+
+    for (let i = 8; i < n - 8; i++) {
+      s[6][i] = i % 2 === 0 ? 1 : 0;
+      s[i][6] = i % 2 === 0 ? 1 : 0;
+    }
+
+    let semilla = 20260906;
+    const azar = () => {
+      semilla = (semilla * 1103515245 + 12345) & 0x7fffffff;
+      return semilla / 0x7fffffff;
+    };
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        if (reservado(x, y)) continue;
+        s[y][x] = azar() > 0.48 ? 1 : 0;
+      }
+    }
+
+    let d = '';
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) if (s[y][x]) d += 'M' + x + ' ' + y + 'h1v1h-1z';
+    }
+    return d;
+  }
+
+  renderVals() {
+    const filas = [
+      { n: 'ESTADO 1', nom: 'Sin entrar', tinte: '#9AA1A8',
+        filaFondo: '#FFFFFF', avatarFondo: '#E8E9E5', avatarTinta: '#626A72',
+        titulo: 'Entra o crea tu cuenta', sub: 'Para tener tu código y firmar una sola vez',
+        conQr: false, conEntrar: true, esRegistro: true, esAcceso: false,
+        d: 'La única invitación que existe hoy en toda la web, y por eso tu banner tiene sentido. Se puede comprar sin entrar —la cuenta se pide en el paso 5—, así que esto invita, no bloquea.' },
+      { n: 'ESTADO 2', nom: 'Con la cuenta abierta', tinte: '#A3C21C',
+        filaFondo: '#FFFFFF', avatarFondo: '#101418', avatarTinta: '#F4F4F1',
+        titulo: 'Hola, Marta', sub: 'Toca aquí para tu cuenta y tus reservas',
+        conQr: true, conEntrar: false, esRegistro: false, esAcceso: true,
+        d: 'Un atajo, el del QR. Y la fila entera es pulsable: lleva al índice, que es donde están las otras siete cosas. Dos funciones en 79 px de alto, medidos.' },
+      { n: 'ESTADO 3', nom: 'Con visita hoy', tinte: '#F5C400',
+        filaFondo: '#E8E9E5', avatarFondo: '#101418', avatarTinta: '#F4F4F1',
+        titulo: 'Hoy a las 17:00', sub: 'Marta · 3 entradas Jump',
+        conQr: true, conEntrar: false, esRegistro: false, esAcceso: true,
+        d: 'El único día en que el nombre cede el sitio: si vienes hoy, el dato es la hora. Cambia la superficie a Nube, y ese cambio ya significa algo en el sistema — sin inventar un color de aviso.' }
+    ];
+
+    const productos = [
+      { nom: 'Entrada Kids', precio: '8 €' },
+      { nom: 'Entrada Jump', precio: '9 €' }
+    ];
+
+    const notasFila = [
+      { t: 'Por qué un atajo y no tres', tinte: '#A3C21C',
+        d: 'Tres CTA en la cabecera de una pantalla de compra pelean con los productos, que es lo que la pantalla viene a vender. Y de los tres que tienes hoy, dos —cuenta y reservas— caen dentro del índice, o sea a un toque de la propia fila. El QR no: se usa en la cola, y ahí un toque cuesta.' },
+      { t: 'Menores no va aquí, y es a propósito', tinte: '#F2711C',
+        d: 'Apuntar a los hijos se hace una vez en la vida. Un atajo permanente para algo que se usa una vez es el sitio peor gastado de la pantalla. Sigue viviendo en los tres sitios de la sección 03 — el QR, el momento de pagar y el aviso del índice— que es donde el cliente tiene un motivo delante.' },
+      { t: 'Y no es un banner: es una fila del cajón', tinte: '#1AA9DE',
+        d: 'La diferencia importa. Un banner va encima de la web y hay que decidir en qué páginas sale; esto vive dentro del cajón, pegado bajo su cabecera, y por eso solo aparece cuando el cajón está abierto — que es justo cuando hace falta. Cero decisiones sobre páginas.' },
+      { t: 'Lo que cuesta: 79 px', tinte: '#9AA1A8',
+        d: 'Medidos en pantalla a 390, no sumados: 12 y 12 de aire, la columna de texto en 54 —el subtítulo cae a dos líneas— y el filete de 1. El mínimo de 64 que lleva escrito es un suelo, no su alto. Baja a 73 cuando el subtítulo cabe en una línea, y entonces manda el botón de 48. Se los quita al catálogo, que con cinco productos los tiene de sobra. Y desaparece en el paso 2: elegido un producto, el sujeto es la compra.' }
+    ];
+
+    const retirada = [
+      { n: 'MOTIVO 1', t: 'No es obligatorio', d: 'Apuntar a los hijos ahorra tiempo en la puerta, pero se puede venir sin hacerlo y se rellena allí. Un aviso permanente para algo opcional es dar la lata — y el cliente aprende a no mirar esa fila, justo antes de que le hagamos falta para algo que sí importe.' },
+      { n: 'MOTIVO 2', t: 'El racimo es un grupo de mandos', d: 'Logo, el par doble y el menú: tres cosas que se pulsan. Una noticia no se pulsa, se lee — y mezclarla con los mandos convierte la cabecera en un tablón. Tú lo dijiste: el racimo es eso, no un centro de avisos.' },
+      { n: 'MOTIVO 3', t: 'El armazón está aprobado', d: 'Se cerró en septiembre con seis cambios y su acta. Añadirle una cuarta pieza reabre una decisión cerrada, y hay que medir otra vez el hueco que el hero le deja al racimo. Un aviso opcional no paga eso.' },
+      { n: 'MOTIVO 4', t: 'Y se pisa con el naranja', d: 'La barra flotante es naranja porque el naranja significa comprar. Una segunda tira justo debajo, diciendo otra cosa, le quita sentido al mapa de color entero — que es lo único que hace que «Pagar» se entienda sin leerlo.' }
+    ];
+
+    const armazon = [
+      { t: 'Ni contador, ni punto rojo', d: 'Tampoco una insignia en el botón de la cuenta. Un punto rojo dice «hay algo que se rompe si no lo miras», y aquí no se rompe nada.' },
+      { t: 'El segundo botón del par ES la cuenta', d: 'Copiado de su marcado: 56 de lado, blanco, glifo de persona en Azul Muro y el rótulo «Cambiar a Mi Play Jump». No hace falta añadir nada — la puerta estaba puesta.' },
+      { t: 'Lo demás no cambia', d: 'El par sigue doble. El menú sigue en dos grupos y lleva «Mi Play Jump» en el pie, que también lo tiene. El logo bota una vez. Nada de lo aprobado se toca.' }
+    ];
+
+    const puertas = [
+      { n: 'PUERTA 1', sello: 'YA EXISTE', t: 'El segundo botón del par doble', tinte: '#A3C21C', bg: '#252C19', fg: '#A3C21C',
+        d: 'Está en las tres superficies del marco —hero, racimo y barra de móvil— con su aro que invita y su glifo de persona. Es la puerta principal y no hay que construirla: solo respetarla.' },
+      { n: 'PUERTA 2', sello: 'YA EXISTE', t: 'Al entrar en tu cuenta, aterrizas ahí', tinte: '#1AA9DE', bg: '#1A2733', fg: '#1AA9DE',
+        d: 'Quien consigue sesión va al índice, siempre, por una razón técnica dura: los textos de la cuenta solo viajan con sesión, así que hay que recargar. La primera vez, el cliente no tiene que buscar nada — se lo encuentra abierto.' },
+      { n: 'PUERTA 3', sello: 'YA EXISTE', t: 'El pie, con «Mi Play Jump» en la lista', tinte: '#9AA1A8', bg: '#22282E', fg: '#C9CDD1',
+        d: 'Está en los trece destinos del pie, que ya aprobamos. Es la vía sin prisa y sin JavaScript, y en una página interior el pie es el único sitio donde algo así funciona seguro.' },
+      { n: 'PUERTA 4', sello: 'YA EXISTE', t: 'Desde dentro, un «volver»', tinte: '#F5C400', bg: '#2E2708', fg: '#F5C400',
+        d: 'Cualquier zona de la cuenta vuelve al índice por su pila de migas, y sin repetidos: volver quince veces al índice no te obliga a pulsar quince veces para salir.' }
+    ];
+
+    const avisos = [
+      { n: 'AVISO 1', sello: 'YA EXISTE', cuando: 'Falta verificar tu correo', tinte: '#F5C400', bg: '#2E2708', fg: '#F5C400',
+        d: 'Y ofrece reenviarlo, que es lo único que desbloquea firmar. Bien pensado: el botón de firmar que había antes solo podía dar error.' },
+      { n: 'AVISO 2', sello: 'YA EXISTE', cuando: 'Falta la firma de un menor', tinte: '#A3C21C', bg: '#252C19', fg: '#A3C21C',
+        d: 'Lleva a «Menores a cargo», con el botón llamado igual que la pantalla. Es la puerta que buscabas... para quien ya tiene hijos apuntados.' },
+      { n: 'AVISO 3', sello: 'YA EXISTE', cuando: 'Falta tu propia firma', tinte: '#1AA9DE', bg: '#1A2733', fg: '#1AA9DE',
+        d: 'Lleva a Privacidad, que es donde está la tuya. Separados a propósito: mandarte donde no está lo que te falta ya fue un fallo una vez.' },
+      { n: 'AVISO 4', sello: 'CORREGIDO', cuando: 'La compra lleva algo que solo puede ser un niño', tinte: '#F2711C', bg: '#2E1508', fg: '#F2711C',
+        d: 'El de la primera visita, con su condición arreglada. Dije «entradas de niño» y lo cableé a «entradas sin asignar», que no es lo mismo: una entrada sin asignar puede ser un adulto. Ahora solo salta con una entrada de zona Kids o un pack de cumpleaños — lo único de lo que el producto responde. Y se puede ignorar sin consecuencias, así que se apaga solo.' }
+    ];
+
+    const retiradoMenores = [
+      { sello: 'SE VA', bg: '#2C1A17', fg: '#FF8A6B', t: 'El aviso nuevo del índice', tinte: '#FF8A6B',
+        d: 'Lo propuse como «cuarto aviso» y no debe existir. Los otros tres avisan de algo empezado y sin acabar; éste avisaba de algo que el cliente nunca empezó y no tiene por qué empezar.' },
+      { sello: 'SE VA', bg: '#2C1A17', fg: '#FF8A6B', t: 'El botón al pagar', tinte: '#FF8A6B',
+        d: 'Justo después de pagar, la pantalla tiene un solo trabajo: enseñar el código y decir que está hecho. Meter ahí una tarea convierte un «¡hecho!» en un «casi».' },
+      { sello: 'SE VA', bg: '#2C1A17', fg: '#FF8A6B', t: 'La advertencia del QR', tinte: '#FF8A6B',
+        d: 'Era la peor de las tres y la defendí como la mejor: «este código solo te incluye a ti» presenta el carné como incompleto. Un código que sirve para entrar no está roto porque no lleve a nadie más.' },
+      { sello: 'SE QUEDA', bg: '#252C19', fg: '#A3C21C', t: 'El aviso de la firma pendiente', tinte: '#A3C21C',
+        d: 'Éste sí: ya tienes un menor apuntado y le falta la firma. Eso es algo que empezaste tú y que quedó a medias — es la definición de un aviso legítimo, y ya existe en el código.' }
+    ];
+
+    const menoresCarrito = [
+      { nom: 'Lucía', edad: '9 años', marcado: true, fondo: '#101418' },
+      { nom: 'Mateo', edad: '7 años', marcado: false, fondo: '#FFFFFF' }
+    ];
+
+    const quedaAsi = [
+      { t: 'La zona sigue en el índice, como una de ocho', d: 'Ni destacada, ni con insignia, ni tercera por importancia. Es donde se gestiona la lista —añadir, quitar, firmar— para quien quiera hacerlo antes de venir. Una tarjeta más entre ocho.' },
+      { t: 'Y quien no la visita nunca, no pierde nada', d: 'Ésa es la prueba de que el marco es el correcto. La asignación se hace en el carrito en un gesto, y si tampoco se hace ahí, se resuelve en la puerta como se ha resuelto siempre.' },
+      { t: 'El «puedes dejarlo para después» no es un descargo: es el mensaje', d: 'Ya está escrito en el control real, y era la señal de que el diseño original tenía el tono bien. Lo que yo añadí encima —tres recordatorios— lo contradecía.' },
+      { t: 'Lo que se gana con quitarlo', d: 'La compra de dos adultos un viernes no ve la palabra «menores» en ninguna pantalla. Y el cliente que sí trae niños se lo encuentra una vez, donde le sirve, sin sensación de trámite.' }
+    ];
+
+    const rotulos = [
+      { donde: 'Al pagar', antes: 'Apuntar a mis hijos', ahora: 'Menores a cargo' },
+      { donde: 'En el QR', antes: 'Este código no incluye a tus hijos', ahora: 'Este código solo te incluye a ti' },
+      { donde: 'Aviso del índice', antes: 'Te falta apuntar a tus hijos', ahora: 'Te falta decir quién viene contigo' }
+    ];
+
+    /* Los tres niveles de certeza sobre «¿viene un niño?». Solo los dos primeros hablan. */
+    const certeza = [
+      { sello: 'LO DICE EL PRODUCTO', bg: '#252C19', fg: '#A3C21C', t: 'Entrada de zona Kids o pack de cumpleaños',
+        d: 'Kids es de 2 a 6 años y los packs de 4 a 7 o desde 8: en los dos casos el menor existe por definición de lo que ha comprado, no por deducción. Aquí el aviso es un hecho.' },
+      { sello: 'LO DICE EL CLIENTE', bg: '#1A2733', fg: '#1AA9DE', t: 'Ya tiene hijos dados de alta y esta reserva no lleva ninguno',
+        d: 'Si tiene menores en su cuenta, sabemos que existen porque los apuntó él. Que esta reserva no tenga ninguno asignado es una laguna real, y decirlo no es suponer nada.' },
+      { sello: 'NO SE SABE · CALLAR', bg: '#2C1A17', fg: '#FF8A6B', t: 'Solo entradas Jump, sin asignar',
+        d: 'Jump es «desde 7 años», así que ahí cabe un niño de doce y un padre de cuarenta. El sistema no puede distinguirlos y no lo va a poder: no se dice nada. Éste es el caso que tú has cazado, y es el más común.' }
+    ];
+
+    const tarjetas = [
+      { nom: 'Mis reservas', esReserva: true, esPedido: false, esQr: false, esDatos: false },
+      { nom: 'Mis pedidos', esReserva: false, esPedido: true, esQr: false, esDatos: false },
+      { nom: 'Mi Play Jump QR', esReserva: false, esPedido: false, esQr: true, esDatos: false },
+      { nom: 'Menores a cargo', esReserva: false, esPedido: false, esQr: false, esDatos: true }
+    ];
+
+    const cambios = [
+      { t: 'Se retira la tira del armazón. Entera.', d: 'No hay banner de avisos en el racimo, ni en móvil ni en escritorio. El armazón aprobado se queda exactamente como está, con sus tres piezas.' },
+      { t: 'Y se retira todo el aparato de menores: el aviso, el botón al pagar y la advertencia del QR', d: 'Los tres trataban una opción como un trámite. Asignar una entrada a un menor es voluntario: si vienes con un niño la asignas, y si no, sigues. Queda la pregunta del carrito —una vez, donde están las entradas, con «puedes dejarlo para después» al lado— y la zona como una tarjeta más entre ocho. Cero cambios de código: se cae el único que había pedido.' },
+      { t: 'El recordatorio vive dentro del cajón, en tres sitios que ya existen', d: 'La pantalla del QR —el mejor de los tres, y el que no había visto—, la de «reserva confirmada» justo al pagar, y el hueco de aviso del índice de la cuenta. En los tres el cliente ya está ahí por su voluntad, así que no se interrumpe nada.' },
+      { t: 'En el QR el aviso cambia de naturaleza', d: 'No es un recordatorio: es un defecto de tu entrada. «Este código no incluye a tus hijos» dice algo que al cliente le importa mirando justo la pantalla donde le importa, y con tiempo de arreglarlo. Es el único de los tres que se explica solo.' },
+      { t: 'El único cambio de código es un aviso más, y su condición ya no adivina', d: 'No cuelga de «entradas sin asignar» —ese dato no distingue un adulto de un niño, y la especificación del justificante lo dice con esas palabras—. Cuelga del producto: entrada de zona Kids o pack de cumpleaños. O de que el cliente ya tenga hijos dados de alta. En cualquier otro caso, silencio. Y se apaga de tres formas: al apuntar a alguien, al esquivarlo dos veces, y cuando la visita pasa.' }
+    ];
+
+    const preguntas = [
+      { n: '01', d: '¿Confirmas el marco? Menores a cargo es una opción: se ofrece una vez en el carrito y no se vuelve a mencionar. Si algún día quieres empujarlo —por ejemplo para descongestionar la puerta— dímelo y lo montamos, pero entonces será una decisión de negocio y no de diseño.' },
+      { n: '03', d: 'El botón de la cuenta del par: ¿aterriza en el índice o directo en el QR? Yo lo dejaría en el índice —es lo que hace hoy al entrar— y el QR a un toque, tercero de las ocho tarjetas. Si en la cola te importa ese toque, cambiamos el aterrizaje, no el número de botones.' },
+      { n: '04', d: 'El botón de la cuenta del racimo lleva el icono de «crear cuenta» y va a «ir a mi cuenta». ¿Lo cambio en el marco al de acceder, o lo dejas y lo anoto como divergencia? Es un cambio de tres líneas y arregla lo que ese botón promete.' },
+      { n: '05', d: 'Falta el glifo de «menores a cargo» en el set: en las diecisiete de cuenta no existe. ¿Lo dibujo en la rejilla de 24 con la masa de 3, o lo apuntas para una pasada de iconos?' }
+    ];
+
+    const z = (nom, grupo, para, como, toques, tinte) => ({
+      nom, grupo, para, como, toques, tinte,
+      toquesColor: toques === '1' ? '#A3C21C' : (toques === '2' ? '#F5C400' : '#9AA1A8')
+    });
+
+    const zonas = [
+      z('Mi Play Jump', 'ÍNDICE', 'Ver todo lo demás', 'El segundo botón del par, o la fila del catálogo', '1', '#1AA9DE'),
+      z('Mis reservas', 'ÍNDICE · 1.ª', '¿A qué hora era?', 'Índice → tarjeta', '2', '#A3C21C'),
+      z('Mis pedidos', 'ÍNDICE · 2.ª', 'Qué pagué y qué queda', 'Índice → tarjeta', '2', '#A3C21C'),
+      z('Mi Play Jump QR', 'ÍNDICE · 3.ª', 'Enseñarlo en la puerta', 'Atajo de la fila del catálogo · o índice → tarjeta', '1', '#F5C400'),
+      z('Mis datos', 'ÍNDICE · 4.ª', 'Cambiar el teléfono', 'Índice → tarjeta', '2', '#9AA1A8'),
+      z('Menores a cargo', 'ÍNDICE · 5.ª', 'Gestionar la lista, si quiere', 'Índice → tarjeta. Sin atajos: no hace falta pasar por aquí', '2', '#9AA1A8'),
+      z('Contraseña', 'ÍNDICE · 6.ª', 'Cambiarla', 'Índice → tarjeta', '2', '#9AA1A8'),
+      z('Sesiones', 'ÍNDICE · 7.ª', 'Cerrar en otro aparato', 'Índice → tarjeta', '2', '#9AA1A8'),
+      z('Privacidad', 'ÍNDICE · 8.ª', 'Firmar lo mío, descargar o borrarme', 'Índice → tarjeta, o su aviso de firma', '2', '#9AA1A8'),
+      z('Detalle de reserva', 'DESDE DENTRO', 'Ver una reserva entera', 'Índice → reservas → la reserva', '3', '#A3C21C'),
+      z('Sus justificantes', 'DESDE DENTRO', 'Repartir el enlace a otros padres', 'Dentro de la reserva. Solo si lleva invitados', '3', '#F2711C'),
+      z('Historial', 'DESDE DENTRO', 'Ver lo ya pasado', 'Desde «Mis reservas». Fuera del índice a propósito', '3', '#9AA1A8'),
+      z('Alta de menor', 'DESDE DENTRO', 'Añadir uno a la lista', 'Botón dentro de la zona, o desde el carrito', '2', '#9AA1A8'),
+      z('Entrar', 'INVITADO', 'Volver a tu cuenta', 'El botón del par, la fila, o el paso 5', '1', '#626A72'),
+      z('Crear cuenta', 'INVITADO', 'La primera vez', 'Pestaña de «Entrar». No es otro sitio', '1', '#626A72'),
+      z('Recuperar contraseña', 'INVITADO', 'Se me ha olvidado', 'Desde «Entrar»', '2', '#626A72'),
+      z('Alta con Google', 'INVITADO', 'Terminar un alta de Google', 'Solo al volver de Google', '—', '#626A72'),
+      z('Verificar correo', 'INVITADO', 'Confirmar el buzón', 'Desde el correo. Sin salida dentro del cajón', '—', '#626A72')
+    ];
+
+    const lecturas = [
+      { t: 'Los cuatro recados de verdad están a uno o dos toques', tinte: '#A3C21C',
+        d: 'El QR a uno por el atajo de la fila; el índice a uno; reservas y pedidos a dos. Y las nueve que se usan una vez al año se quedan a dos, que es donde deben estar.' },
+      { t: 'Nada está a más de tres', tinte: '#1AA9DE',
+        d: 'Y las tres que lo están son las que tienen que estarlo: el detalle de una reserva, sus justificantes y el historial. Ninguna se entra con prisa.' },
+      { t: '«Menores a cargo» pierde sus atajos, y es lo correcto', tinte: '#F5C400',
+        d: 'En la versión anterior tenía tres puertas y era la más empujada de las dieciocho. Ahora tiene una, como las demás — y la asignación, que es lo que de verdad se hace, ocurre en el carrito sin pasar por aquí.' }
+    ];
+
+    return { filas, productos, notasFila, retirada, armazon, puertas, avisos, certeza, rotulos, retiradoMenores, menoresCarrito, quedaAsi, zonas, lecturas, tarjetas, cambios, preguntas, codigoRuta: this.rutaCodigo(25) };
+  }
+}
+</script>
+</body>
+</html>

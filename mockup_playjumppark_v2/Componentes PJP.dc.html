@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:#101418;color:#F4F4F1;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+input,select,button,textarea{font-family:inherit}
+:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+[data-superficie="papel"] :focus-visible{outline-color:#0A5C93}
+@keyframes pjp-gira{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+
+<div style="background:#101418;color:#F4F4F1;padding:56px 44px 96px;min-height:100vh;">
+<div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:72px;">
+
+  <section style="display:flex;flex-direction:column;gap:24px;">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:#F2711C;color:#101418;padding:6px 11px;border-radius:10px;font-weight:700;">Capa 06</span>
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Play Jump Park · <a href="Sistema%20PJP.dc.html">índice</a></span>
+    </div>
+    <h1 style="font-family:'Bungee';font-size:64px;line-height:.95;letter-spacing:-.015em;margin:0;max-width:960px;">Cada pieza, con<br>todos sus <span style="color:#1AA9DE;">estados</span></h1>
+    <p style="margin:0;font-size:19px;line-height:1.5;max-width:800px;color:#C9CDD1;text-wrap:pretty;">Un botón sin estado de carga no está documentado: está dibujado. Aquí cada componente trae su anatomía, sus variantes, sus estados reales —pásale el cursor y púlsalos— y la línea que más se olvida: cuándo <em style="font-style:normal;color:#F4F4F1;">no</em> usarlo.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:12px;">
+      <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">Todo funciona en tinta y en papel</span>
+      <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">Alto mínimo 48px</span>
+      <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">Foco 3px por superficie</span>
+      <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">Valores en tokens-pjp.js</span>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">01 / BOTONES</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cuatro jerarquías, tres tamaños</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Solo un botón de relleno de acción por pantalla. El resto de acciones bajan de jerarquía: secundario, fantasma o enlace. Si dos botones compiten, ninguno gana.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:16px;">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:20px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Sobre tinta</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button type="button" style="font-size:16px;font-weight:800;letter-spacing:.01em;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:#F2711C;color:#101418;transition:background .18s,transform .18s;" style-hover="background:#D56319;transform:translateY(-1px)" style-active="background:#B85615;transform:translateY(0)">Reservar ahora</button>
+          <button type="button" style="font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:#1AA9DE;color:#101418;transition:background .18s;" style-hover="background:#1795C3" style-active="background:#1480A9">Ver precios</button>
+          <button type="button" style="font-size:16px;font-weight:700;padding:14px 27px;border-radius:10px;cursor:pointer;background:transparent;color:#F4F4F1;border:1.5px solid #3B434B;transition:border-color .18s,color .18s;" style-hover="border-color:#1AA9DE;color:#1AA9DE">Cómo llegar</button>
+          <a href="#01" style="display:inline-flex;align-items:center;min-height:48px;font-size:16px;font-weight:700;color:#1AA9DE;border-bottom:2px solid #1AA9DE;">Ver normas</a>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;border-top:1px solid #2A3138;padding-top:18px;">
+          <button type="button" disabled="disabled" style="font-size:16px;font-weight:700;padding:15px 28px;border-radius:10px;border:0;background:#2A3138;color:#6C747C;cursor:not-allowed;">Completo</button>
+          <button type="button" style="display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;background:#F2711C;color:#101418;cursor:progress;opacity:.86;">
+            <span style="width:15px;height:15px;border-radius:999px;border:2.5px solid rgba(16,20,24,.3);border-top-color:#101418;animation:pjp-gira .9s linear infinite;display:inline-block;"></span>Reservando
+          </button>
+          <button type="button" style="font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;background:#F2711C;color:#101418;outline:3px solid #F5C400;outline-offset:2px;cursor:pointer;">Con foco</button>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">inactivo #2A3138 / #6C747C · cargando opacidad .86 + rueda 15px<br>foco 3px #F5C400 offset 2px · el texto no cambia al cargar, se añade la rueda</div>
+      </div>
+
+      <div data-superficie="papel" style="background:#F4F4F1;border:1px solid #D6D8D4;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:20px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Sobre papel</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button type="button" style="font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:#F2711C;color:#101418;transition:background .18s,transform .18s;" style-hover="background:#D56319;transform:translateY(-1px)" style-active="background:#B85615">Reservar ahora</button>
+          <button type="button" style="font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;cursor:pointer;background:#101418;color:#F4F4F1;transition:background .18s;" style-hover="background:#2A3138">Ver precios</button>
+          <button type="button" style="font-size:16px;font-weight:700;padding:14px 27px;border-radius:10px;cursor:pointer;background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;transition:background .18s,color .18s;" style-hover="background:#0A5C93;color:#FFFFFF">Cómo llegar</button>
+          <a href="#01" style="display:inline-flex;align-items:center;min-height:48px;font-size:16px;font-weight:700;color:#0A5C93;border-bottom:2px solid #1AA9DE;">Ver normas</a>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;border-top:1px solid #D6D8D4;padding-top:18px;">
+          <button type="button" disabled="disabled" style="font-size:16px;font-weight:700;padding:15px 28px;border-radius:10px;border:0;background:#E8E9E5;color:#9AA1A8;cursor:not-allowed;">Completo</button>
+          <span style="display:inline-flex;align-items:center;font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;padding:13px 24px;box-shadow:5px 5px 0 #101418;">Pegatina</span>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;line-height:1.6;">En claro el secundario es tinta, nunca cian (2.45).<br>La pegatina es un botón de hero o cierre: máximo dos por pantalla.</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Tamaños</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <button type="button" style="min-height:48px;font-size:15px;font-weight:800;padding:12px 18px;border-radius:10px;border:0;background:#1AA9DE;color:#101418;cursor:pointer;">Compacto</button>
+          <button type="button" style="min-height:48px;font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;background:#1AA9DE;color:#101418;cursor:pointer;">Normal</button>
+          <button type="button" style="min-height:56px;font-size:18px;font-weight:800;padding:18px 34px;border-radius:10px;border:0;background:#1AA9DE;color:#101418;cursor:pointer;">Grande</button>
+        </div>
+        <div style="font-size:14px;line-height:1.55;color:#9AA1A8;"><strong style="color:#F4F4F1;">Los tres miden 48 de alto o más: lo que cambia es el relleno, no la altura.</strong> El compacto va dentro de tarjetas y barras donde el ancho escasea; el normal es el estándar; el grande, solo en hero y cierre. Radio 10 en los tres.</div>
+      </div>
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:24px 26px;">
+        <div style="font-family:'Bungee';font-size:19px;line-height:1.15;margin-bottom:12px;">Cuándo no usar botón</div>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <sc-for list="{{ noBoton }}" as="x" hint-placeholder-count="4">
+            <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:12px;color:#FF8A6B;flex:none;">✕</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">{{ x }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">02 / FORMULARIOS</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Reservar es rellenar cuatro campos</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Etiqueta siempre visible encima, nunca dentro del campo. Alto 52. El error aparece debajo, en texto, y nunca solo por color. Los campos de reserva viven en papel: es donde está el contenido.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;">
+      <div data-superficie="papel" style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:20px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Campos · sobre papel</div>
+        <label style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-size:14px;font-weight:700;color:#101418;">Nombre y apellidos</span>
+          <input type="text" placeholder="Marta García" style="height:52px;padding:0 16px;font-size:16px;border-radius:10px;border:1px solid #D6D8D4;background:#FFFFFF;color:#101418;transition:border-color .18s;" style-focus="border-color:#0A5C93">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-size:14px;font-weight:700;color:#101418;">Zona</span>
+          <select style="height:52px;padding:0 14px;font-size:16px;border-radius:10px;border:1px solid #D6D8D4;background:#FFFFFF;color:#101418;cursor:pointer;">
+            <option>Kids · hasta 6 años</option>
+            <option>Jump · desde 7 años</option>
+          </select>
+        </label>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <label style="display:flex;flex-direction:column;gap:8px;flex:1 1 150px;">
+            <span style="font-size:14px;font-weight:700;color:#101418;">Día</span>
+            <input type="date" value="2026-09-12" style="height:52px;padding:0 14px;font-size:16px;border-radius:10px;border:1px solid #D6D8D4;background:#FFFFFF;color:#101418;">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:8px;flex:1 1 130px;">
+            <span style="font-size:14px;font-weight:700;color:#101418;">Hora</span>
+            <input type="time" value="17:30" style="height:52px;padding:0 14px;font-size:16px;border-radius:10px;border:1px solid #D6D8D4;background:#FFFFFF;color:#101418;">
+          </label>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:8px;">
+          <span style="font-size:14px;font-weight:700;color:#101418;">Teléfono</span>
+          <input type="tel" value="600 12" style="height:52px;padding:0 16px;font-size:16px;border-radius:10px;border:1.5px solid #D93E14;background:#FFFFFF;color:#101418;">
+          <span style="display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:#C83912;"><span style="font-family:'JetBrains Mono';font-size:12px;">!</span>Faltan dígitos: son nueve, sin espacios ni prefijo.</span>
+        </label>
+        <label style="display:flex;gap:11px;align-items:flex-start;min-height:48px;padding:6px 0;cursor:pointer;">
+          <input type="checkbox" checked="checked" style="width:22px;height:22px;accent-color:#0A5C93;margin:1px 0 0;flex:none;cursor:pointer;">
+          <span style="font-size:14.5px;line-height:1.5;color:#101418;">He leído las <a href="#02" style="color:#0A5C93;">normas de seguridad</a> y acepto el uso de calcetines antideslizantes.</span>
+        </label>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Los mismos campos sobre tinta</div>
+          <label style="display:flex;flex-direction:column;gap:8px;">
+            <span style="font-size:14px;font-weight:700;">Correo</span>
+            <input type="email" placeholder="marta@correo.es" style="height:52px;padding:0 16px;font-size:16px;border-radius:10px;border:1px solid #2A3138;background:#101418;color:#F4F4F1;transition:border-color .18s;" style-focus="border-color:#1AA9DE">
+          </label>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <span style="font-size:14px;font-weight:700;">Cuántos saltan</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <button type="button" onClick="{{ menos }}" style="width:48px;height:48px;border-radius:10px;border:1px solid #2A3138;background:#101418;color:#F4F4F1;font-size:22px;font-weight:700;cursor:pointer;" style-hover="border-color:#1AA9DE;color:#1AA9DE">−</button>
+              <span style="font-family:'Bungee';font-size:24px;min-width:44px;text-align:center;">{{ personas }}</span>
+              <button type="button" onClick="{{ mas }}" style="width:48px;height:48px;border-radius:10px;border:1px solid #2A3138;background:#101418;color:#F4F4F1;font-size:22px;font-weight:700;cursor:pointer;" style-hover="border-color:#1AA9DE;color:#1AA9DE">+</button>
+              <span style="font-family:'JetBrains Mono';font-size:12px;color:#9AA1A8;margin-left:6px;">máx. 12 por reserva</span>
+            </div>
+          </div>
+          <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;border-top:1px solid #2A3138;padding-top:14px;">fondo #101418 dentro de tarjeta #1A1F25: el campo se hunde, no se levanta<br>borde activo cian en tinta · azul muro en papel</div>
+        </div>
+        <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:24px 26px;">
+          <div style="font-family:'Bungee';font-size:19px;line-height:1.15;margin-bottom:12px;">Reglas de campo</div>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <sc-for list="{{ reglasCampo }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;gap:11px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#A3C21C;flex:none;">{{ r.n }}</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">{{ r.t }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">03 / PESTAÑAS Y FILTROS</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Pestañas para ver, filtros para reducir</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">No son lo mismo y no se mezclan. Las pestañas cambian el contenido y solo una está activa. Los filtros quitan cosas de una lista y pueden estar varios a la vez. Máximo tres pestañas: a la cuarta, es un menú.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;">
+      <div data-superficie="papel" style="background:#F4F4F1;border:1px solid #D6D8D4;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:20px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Pestañas · sobre papel</div>
+        <div style="display:flex;gap:4px;background:#E8E9E5;padding:4px;border-radius:16px;">
+          <sc-for list="{{ pestanas }}" as="p" hint-placeholder-count="3">
+            <button type="button" onClick="{{ p.click }}" style="flex:1;min-height:48px;border:0;border-radius:10px;cursor:pointer;font-size:15px;font-weight:800;background:{{ p.fondo }};color:{{ p.texto }};transition:background .18s,color .18s;">{{ p.t }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:7px;min-height:118px;">
+          <div style="font-family:'Bungee';font-size:24px;line-height:1.1;color:#101418;">{{ pestanaInfo.t }}</div>
+          <div style="font-size:15px;color:#626A72;">{{ pestanaInfo.d }}</div>
+          <div style="font-family:'JetBrains Mono';font-size:12px;color:#0A5C93;">{{ pestanaInfo.n }}</div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;line-height:1.6;">activa: fondo blanco, peso 800, texto tinta · inactiva: sin fondo, texto #626A72 (4,50 sobre la pista: justo el umbral, así que ese gris no se aclara)<br>pista en Nube, 4 de hueco y 4 de relleno, radio 16 fuera y 10 dentro, alto 48 · en escritorio la pista mide 352, una columna de cuatro, y no se estira a la columna<br>el contenido cambia sin animación de deslizamiento: aparece ya cambiado<br>⚠ esto no tenía token hasta v1.7 y por eso una sección pudo dibujar su propia píldora: ahora vive en `componente.pestana`</div>
+      </div>
+
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Filtros · sobre tinta</div>
+          <button type="button" onClick="{{ limpiaFiltros }}" style="min-height:48px;padding:12px 14px;margin:-12px -14px;background:none;border:0;border-radius:10px;font-size:13.5px;font-weight:700;color:#1AA9DE;cursor:pointer;text-decoration:underline;">Quitar todos</button>
+        </div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;">
+          <sc-for list="{{ filtros }}" as="f" hint-placeholder-count="5">
+            <button type="button" onClick="{{ f.alterna }}" style="min-height:48px;padding:13px 18px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:700;background:{{ f.fondo }};color:{{ f.texto }};border:1.5px solid {{ f.borde }};transition:background .18s,color .18s,border-color .18s;">{{ f.t }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;border-top:1px solid #2A3138;padding-top:18px;">
+          <span style="font-family:'Bungee';font-size:22px;color:#A3C21C;">{{ cuentaFiltros }}</span>
+          <span style="font-size:14.5px;color:#9AA1A8;">filtros puestos. La cuenta siempre visible: un filtro olvidado parece una lista vacía.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">04 / MODAL Y HOJA INFERIOR</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Lo que bloquea la página</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Un modal interrumpe: solo se usa cuando hay que decidir algo antes de seguir. En móvil el mismo contenido entra como hoja desde abajo, porque el pulgar llega. Se cierra con la X, con el velo y con Escape — las tres, siempre.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;align-items:flex-start;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Pruébalo</div>
+        <button type="button" onClick="{{ abreModal }}" style="font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;background:#F2711C;color:#101418;cursor:pointer;" style-hover="background:#D56319">Abrir el modal</button>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">radio 16 · padding 34 (22 en móvil) · ancho máx. 560<br>velo rgba(16,20,24,.72) · sombra 0 24px 60px rgba(0,0,0,.45)</div>
+      </div>
+
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Hoja inferior · móvil</div>
+        <div style="background:#101418;border:1px solid #2A3138;border-radius:16px;padding:14px;display:flex;flex-direction:column;justify-content:flex-end;height:230px;">
+          <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px 16px 0 0;padding:18px 20px 20px;display:flex;flex-direction:column;gap:12px;">
+            <span style="width:44px;height:4px;border-radius:999px;background:#3B434B;align-self:center;"></span>
+            <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">Elige la hora</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <span style="font-family:'JetBrains Mono';font-size:12px;border:1px solid #1AA9DE;background:#112934;color:#1AA9DE;border-radius:10px;padding:9px 12px;">17:30</span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;border:1px solid #2A3138;color:#C9CDD1;border-radius:10px;padding:9px 12px;">18:30</span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;border:1px solid #2A3138;color:#6C747C;border-radius:10px;padding:9px 12px;text-decoration:line-through;">19:30</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">radio 16 solo arriba · asa de 44×4 centrada · entra en 240ms con curva de salida</div>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;">Hoja de ficha · la variante de galería</div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:900px;text-wrap:pretty;">Aprobada en <span style="color:#F4F4F1;">Juegos PJP · 6a</span> (sep 2026). La hoja inferior de siempre, pero para <span style="color:#F4F4F1;">mirar, no para decidir</span>: se abre desde una foto y su contenido es esa foto a lo grande más dos datos. Por eso va en <span style="color:#F4F4F1;">papel y no en tinta</span> — la foto es la protagonista y la tinta le robaría el contraste — y por eso no lleva botones de acción: no hay nada que confirmar. Sube desde abajo, nunca aparece en el centro: el pulgar está abajo, y el gesto de cerrar es el mismo de arrastrar la hoja.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:16px;">
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#1AA9DE;letter-spacing:.1em;">FORMA</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Radio <strong style="font-weight:700;color:#F4F4F1;">16 solo arriba</strong>, asa de 44×4 y foto interior a 10: el escalón inmediatamente inferior, como manda la regla concéntrica.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#1AA9DE;letter-spacing:.1em;">SOMBRA</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Difusa hacia arriba: <code style="font-family:'JetBrains Mono';font-size:12.5px;color:#F4F4F1;">0 -18px 48px rgba(16,20,24,.34)</code>. La dura no sirve: la hoja no está apoyada, está subiendo.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#1AA9DE;letter-spacing:.1em;">CIERRE</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Las tres vías de la pieza 04, con su mismo velo: X de 48, velo <code style="font-family:'JetBrains Mono';font-size:12.5px;color:#F4F4F1;">.72</code> pulsable y Escape.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#F5C400;letter-spacing:.1em;">CUÁNDO NO</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Si la hoja no añade nada que la tarjeta no diga ya, no se pone. En la portada un toque debería acercar a comprar; esta hoja devuelve al mismo sitio con la foto más grande.</div></div>
+      </div>
+    </div>
+
+    <sc-if value="{{ modalAbierto }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ cierraModal }}" style="position:fixed;inset:0;background:rgba(16,20,24,.72);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px;">
+        <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:34px;max-width:560px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:18px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.1;">¿Cancelas la reserva?</div>
+            <button type="button" onClick="{{ cierraModal }}" style="width:44px;height:44px;flex:none;border-radius:10px;border:1px solid #2A3138;background:#101418;color:#F4F4F1;font-size:18px;cursor:pointer;" style-hover="border-color:#1AA9DE;color:#1AA9DE">✕</button>
+          </div>
+          <p style="margin:0;font-size:16px;line-height:1.6;color:#C9CDD1;">Se libera tu hora del sábado a las 17:30 para 4 personas. Te devolvemos el importe completo si cancelas con más de 24 horas.</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:6px;">
+            <button type="button" onClick="{{ cierraModal }}" style="font-size:16px;font-weight:800;padding:15px 28px;border-radius:10px;border:0;background:#D93E14;color:#FFFFFF;cursor:pointer;" style-hover="background:#BF3712">Sí, cancelar</button>
+            <button type="button" onClick="{{ cierraModal }}" style="font-size:16px;font-weight:700;padding:14px 27px;border-radius:10px;background:transparent;color:#F4F4F1;border:1.5px solid #3B434B;cursor:pointer;" style-hover="border-color:#1AA9DE;color:#1AA9DE">Mantener mi hora</button>
+          </div>
+          <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">La acción destructiva es la primaria aquí, y va en rojo con texto blanco. Es el único caso.</div>
+        </div>
+      </div>
+    </sc-if>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F5C400;">05 / AVISOS</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cuatro tonos, y ninguno grita</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">El fondo es el color al 14% sobre tinta, nunca el color pleno: un aviso a todo naranja compite con el botón de reservar. Icono, título en una línea y una frase. El toast vive 5 segundos; el aviso de bloque se queda hasta que se resuelve.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <sc-for list="{{ ejemplosAviso }}" as="a" hint-placeholder-count="4">
+        <div style="background:{{ a.bg }};border:1px solid {{ a.bd }};border-radius:10px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;">
+          <span style="width:26px;height:26px;flex:none;border-radius:999px;background:{{ a.c }};color:#101418;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:14px;font-weight:700;">{{ a.ico }}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:15.5px;font-weight:700;color:{{ a.c }};">{{ a.t }}</div>
+            <div style="font-size:14.5px;line-height:1.5;color:#C9CDD1;margin-top:3px;">{{ a.d }}</div>
+          </div>
+          <button type="button" onClick="{{ a.lanza }}" style="flex:none;background:none;border:1px solid {{ a.bd }};border-radius:10px;padding:8px 12px;font-family:'JetBrains Mono';font-size:11px;color:{{ a.c }};cursor:pointer;">como toast</button>
+        </div>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ avisoActivo }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;bottom:24px;right:24px;z-index:400;max-width:420px;background:{{ avisoActivo.bg }};border:1px solid {{ avisoActivo.bd }};border-radius:10px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 24px 60px rgba(0,0,0,.45);">
+        <span style="width:26px;height:26px;flex:none;border-radius:999px;background:{{ avisoActivo.c }};color:#101418;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:14px;font-weight:700;">{{ avisoActivo.ico }}</span>
+        <div>
+          <div style="font-size:15.5px;font-weight:700;color:{{ avisoActivo.c }};">{{ avisoActivo.t }}</div>
+          <div style="font-size:14.5px;line-height:1.5;color:#C9CDD1;margin-top:3px;">{{ avisoActivo.d }}</div>
+        </div>
+      </div>
+    </sc-if>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">06 / ACORDEÓN Y FAQ</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Preguntas de verdad, no de relleno</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Una abierta a la vez, y la primera abierta al cargar: una lista toda cerrada parece un menú apagado. La pregunta se escribe como la haría un padre por teléfono, no como la contestaría la web.</p>
+    <div data-superficie="papel" style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+      <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="4">
+        <div style="border-bottom:1px solid #E8E9E5;">
+          <button type="button" onClick="{{ f.alterna }}" style="width:100%;min-height:64px;background:none;border:0;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px;cursor:pointer;text-align:left;">
+            <span style="font-size:18px;font-weight:700;color:#101418;line-height:1.3;">{{ f.p }}</span>
+            <span style="flex:none;width:32px;height:32px;border-radius:999px;background:#F4F4F1;color:#0A5C93;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;">{{ f.signo }}</span>
+          </button>
+          <sc-if value="{{ f.abierta }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:0;padding:0 24px 22px;font-size:16px;line-height:1.6;color:#626A72;max-width:70ch;">{{ f.r }}</p>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">07 / NAVEGACIÓN MÓVIL</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Cuatro destinos como máximo</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Barra inferior · app</div>
+        <div style="background:#101418;border:1px solid #2A3138;border-radius:16px;padding:0;overflow:hidden;">
+          <div style="height:150px;background:#1A1F25;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;color:#3B434B;">contenido</div>
+          <div style="height:64px;border-top:1px solid #2A3138;display:flex;"><sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
+                <span style="font-size:17px;color:{{ n.color }};line-height:1;">{{ n.ico }}</span>
+                <span style="font-size:11px;font-weight:{{ n.peso }};color:{{ n.color }};">{{ n.t }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">alto 64 · objetivo 44 mínimo · activo en cian, resto #9AA1A8<br>etiqueta siempre visible: un icono solo no se entiende</div>
+      </div>
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Cabecera · landing</div>
+        <div style="background:#101418;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+          <div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;">
+            <span style="font-family:'Bungee';font-size:15px;">PJP</span>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <button type="button" style="min-height:48px;padding:12px 16px;border-radius:10px;border:0;background:#F2711C;color:#101418;font-size:14px;font-weight:800;cursor:pointer;">Reservar</button>
+              <button type="button" style="width:48px;height:48px;border-radius:10px;border:1px solid #2A3138;background:transparent;color:#F4F4F1;font-size:16px;cursor:pointer;">☰</button>
+            </div>
+          </div>
+          <div style="display:flex;height:4px;">
+            <span style="flex:1;background:#1AA9DE;"></span><span style="flex:1;background:#F2711C;"></span><span style="flex:1;background:#A3C21C;"></span><span style="flex:1;background:#F5C400;"></span>
+          </div>
+          <div style="height:150px;background:#1A1F25;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;color:#3B434B;">contenido</div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">alto 60 en móvil, 72 en escritorio · radio 0 · borde inferior de 4px con las tiras<br>el CTA nunca se esconde dentro del menú hamburguesa</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">08 / TABLA DE HORARIOS</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Las horas van en mono</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;">Cifras de ancho fijo: las columnas se alinean sin tabular. En móvil la tabla se rompe en filas de dos líneas, nunca se desplaza en horizontal.</p>
+    <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:0;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;padding:14px 24px;border-bottom:1px solid #D6D8D4;background:#F4F4F1;">
+        <div>Día</div><div>Horario</div><div>Nota</div>
+      </div>
+      <sc-for list="{{ horario }}" as="h" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:0;padding:15px 24px;border-bottom:1px solid #E8E9E5;align-items:center;">
+          <div style="font-size:15.5px;font-weight:700;color:#101418;">{{ h.d }}</div>
+          <div style="font-family:'JetBrains Mono';font-size:15px;color:#101418;">{{ h.h }}</div>
+          <div style="font-size:14px;color:#626A72;">{{ h.n }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">09 / CARRUSEL Y PAGINACIÓN</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Se arrastra, y se ve que hay más</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Un carrusel solo se justifica si la siguiente pieza asoma: si tapa lo que hay detrás, la mitad de la gente no sabe que existe. Lo que dice «hay más» es <span style="color:#F4F4F1;">el borde que corta</span>, no los puntos — los puntos dicen dónde estás, que es otra cosa. Nada automático: el usuario manda. En móvil se arrastra con el dedo y las flechas desaparecen.</p>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="overflow:hidden;border-radius:16px;">
+        <div style="display:flex;transition:transform .42s cubic-bezier(.4,0,.2,1);transform:{{ desplaza }};">
+          <sc-for list="{{ diapos }}" as="d" hint-placeholder-count="4">
+            <div style="flex:0 0 86%;padding-right:12px;">
+              <div style="height:170px;border-radius:16px;background:{{ d.c }};display:flex;align-items:flex-end;padding:20px;">
+                <span style="font-family:'Bungee';font-size:26px;color:#101418;line-height:1.1;">{{ d.t }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;gap:7px;align-items:center;">
+          <sc-for list="{{ diapos }}" as="d" hint-placeholder-count="4">
+            <button type="button" onClick="{{ d.ve }}" style="height:9px;border:0;padding:0;border-radius:999px;background:#1AA9DE;cursor:pointer;width:{{ d.ancho }};opacity:{{ d.opacidad }};transition:width .24s,opacity .24s;"></button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" onClick="{{ anterior }}" style="width:48px;height:48px;border-radius:10px;border:1px solid #2A3138;background:#101418;color:#F4F4F1;font-size:17px;cursor:pointer;" style-hover="border-color:#1AA9DE;color:#1AA9DE">←</button>
+          <button type="button" onClick="{{ siguiente }}" style="width:48px;height:48px;border-radius:10px;border:1px solid #2A3138;background:#101418;color:#F4F4F1;font-size:17px;cursor:pointer;" style-hover="border-color:#1AA9DE;color:#1AA9DE">→</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F2711C;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;">Cuatro condiciones, y hacen falta las cuatro</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:16px;">
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#F2711C;letter-spacing:.1em;">01 · TRES O MÁS</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Con dos piezas no hay carril: se ven a la vez. Es la regla que deja las dos zonas y los dos packs fuera.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#F2711C;letter-spacing:.1em;">02 · HOMOGÉNEAS</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Misma forma y mismo peso. Si una es «la buena», es una lista con jerarquía y va apilada.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#F2711C;letter-spacing:.1em;">03 · NO COMPARATIVAS</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Si hay que ver dos juntas para decidir, un carril lo impide por construcción.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#F2711C;letter-spacing:.1em;">04 · NADA CRÍTICO AL FONDO</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Lo que hace falta para decidir no vive en la posición cinco. Y una secuencia numerada nunca va en carril: esconder el paso 3 la rompe.</div></div>
+      </div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;border-top:1px solid #2A3138;padding-top:14px;max-width:900px;text-wrap:pretty;">Y el precio del patrón, medido en el propio producto: en el cajón <span style="color:#F4F4F1;">las once horas cabían a la vez y la tira ensea cuatro</span>. Un carril cambia largo por descubrimiento, y ese cambio se decide con la medida delante, no por costumbre. En escritorio casi nunca compensa: a partir de ~900px sobra anchura, así que el carril se vuelve rejilla.</p>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;">Carril con foco · la variante de Tarifas</div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:900px;text-wrap:pretty;">La segunda especie de carril, aprobada en <span style="color:#F4F4F1;">Precios PJP · 6a</span> (sep 2026, decisión del propietario). Aquí el carril no solo enseña que hay más: <span style="color:#F4F4F1;">señala cuál manda</span>. La enfocada va a tamaño natural, en blanco y con su sombra dura; las vecinas cambian de superficie a Nube y bajan al 94 %. El velo <span style="color:#F4F4F1;">nunca es opacidad</span> — una cifra a media opacidad da 2,4 de contraste y se sale del sistema. Y el relleno de acción viaja con el foco, así que sigue habiendo uno solo por pantalla aunque cada tarjeta lleve su botón de comprar.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:16px;">
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#1AA9DE;letter-spacing:.1em;">MEDIDAS</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">262 de ancho, 302 la destacada, 12 de hueco y 64 de la siguiente asomando. El foco se <strong style="font-weight:700;color:#F4F4F1;">mide</strong> sobre los hijos: con una tarjeta más ancha, un paso fijo miente.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#1AA9DE;letter-spacing:.1em;">TÁCTIL · 52, NO 48</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">La escala del velo encoge el área de pulsación: 52 × 0,94 = 48,9. Un control a 48 dentro de una vecina mide 45 y rompe el mínimo.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#1AA9DE;letter-spacing:.1em;">TECLADO</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">El manejador va en el control, no en la tarjeta: al enfocar el botón con Tab, su tarjeta pasa a enfocada. Si el foco se escucha en el contenedor no llega, y quien navega con teclado ve su botón en gris inerte.</div></div>
+        <div><div style="font-family:'JetBrains Mono';font-size:11px;color:#F2711C;letter-spacing:.1em;">EXCEPCIÓN DECLARADA</div><div style="font-size:14.5px;line-height:1.55;color:#C9CDD1;margin-top:6px;">Jump tiene <strong style="font-weight:700;color:#F4F4F1;">dos</strong> entradas y va en carril igual, contra la condición 01. Decisión del propietario, sep 2026: las dos zonas usan la misma pieza y el mismo gesto. <span style="color:#FF8A6B;">No es un descuido: no se «arregla» a rejilla.</span></div></div>
+      </div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;border-top:1px solid #2A3138;padding-top:14px;max-width:900px;text-wrap:pretty;">Lo que el carril con foco <span style="color:#F4F4F1;">sigue cobrando</span>, y hay que saberlo al elegirlo: dos precios no se comparan de un vistazo (condición 03). Si la sección existe para comparar, la salida es apilar, no destacar.</p>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;">Cinco trampas, las cinco pagadas ya</div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#9AA1A8;max-width:900px;">Un carril no es maquetación: es un componente con estado — foco, teclado, carga diferida, ajuste e identidad. Cada instancia nueva vuelve a traer estas cinco.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="border-top:1px solid #2A3138;padding-top:12px;"><span style="font-weight:800;color:#F4F4F1;font-size:15px;">Identidad compartida.</span> <span style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Tres carriles emitieron la misma referencia porque el acento <em>agrupa</em> y no identifica: las flechas movían un carril que podía no ser el que veías. Cada carril es una instancia con su propia identidad, nunca un atributo compartido.</span></div>
+        <div style="border-top:1px solid #2A3138;padding-top:12px;"><span style="font-weight:800;color:#F4F4F1;font-size:15px;">Enfocable sin anillo.</span> <span style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">El <span style="font-family:'JetBrains Mono';font-size:13px;">tabindex</span> y el anillo de foco entran el mismo día, o no entra ninguno.</span></div>
+        <div style="border-top:1px solid #2A3138;padding-top:12px;"><span style="font-weight:800;color:#F4F4F1;font-size:15px;">Flechas de 0×0.</span> <span style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Ocultas con puntero grueso y visibles solo en la captura de pantalla. Las flechas son de escritorio; en móvil la afordancia es el borde que corta.</span></div>
+        <div style="border-top:1px solid #2A3138;padding-top:12px;"><span style="font-weight:800;color:#F4F4F1;font-size:15px;">Carga diferida en horizontal.</span> <span style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Veintitrés imágenes con <span style="font-family:'JetBrains Mono';font-size:13px;">loading="lazy"</span> en un carril: solo cargan las visibles, y la captura completa sale como trama.</span></div>
+        <div style="border-top:1px solid #2A3138;padding-top:12px;"><span style="font-weight:800;color:#F4F4F1;font-size:15px;">Una parada sin ajuste nace cortada.</span> <span style="font-size:14.5px;color:#C9CDD1;line-height:1.55;">Todas las paradas llevan <span style="font-family:'JetBrains Mono';font-size:13px;">scroll-snap-align</span>, también las que no se pulsan — un separador de mes sin él nacía cinco píxeles fuera.</span></div>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Paginación · listas largas de la app</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <sc-for list="{{ paginas }}" as="p" hint-placeholder-count="5">
+          <button type="button" onClick="{{ p.ve }}" style="min-width:48px;height:48px;padding:0 14px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:700;background:{{ p.fondo }};color:{{ p.texto }};border:1px solid {{ p.borde }};transition:background .18s,color .18s;">{{ p.n }}</button>
+        </sc-for>
+        <span style="font-family:'JetBrains Mono';font-size:12px;color:#9AA1A8;margin-left:8px;">48×48 mínimo: se pulsa con el pulgar, no con el ratón</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">10 / LOS CONTROLES DEL CAJÓN</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Elegir, no buscar</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Nueve de cada diez reservas se hacen con el teléfono y para pronto. Estos cuatro controles son los del embudo, y todos siguen la misma idea: <strong style="color:#C9CDD1;font-weight:600;">el control carga la respuesta</strong> — un chip de hora que solo dice la hora obliga a probar; uno que dice cómo está de lleno decide.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(390px,1fr));gap:16px;">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Tira de días</div>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">
+          <sc-for list="{{ dias }}" as="d" hint-placeholder-count="8">
+            <div style="flex:none;display:flex;">
+              <sc-if value="{{ d.separador }}" hint-placeholder-val="{{ false }}">
+                <span style="display:flex;align-items:center;height:76px;padding:0 6px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#9AA1A8;">{{ d.mes }}</span>
+              </sc-if>
+              <sc-if value="{{ d.elige }}" hint-placeholder-val="{{ true }}">
+                <button type="button" onClick="{{ d.elige }}" style="width:56px;height:76px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:{{ d.fondo }};color:{{ d.texto }};border:1px solid {{ d.borde }};transition:background .18s,color .18s;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.75;">{{ d.d }}</span>
+                  <span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ d.n }}</span>
+                </button>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">56×76 · ajuste por proximidad · el separador de mes tiene su propia parada<br>Lleva todos los días reservables. El calendario completo nace plegado detrás de «Ver más fechas».</div>
+      </div>
+
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Tira de horas</div>
+        <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">
+          <sc-for list="{{ horas }}" as="h" hint-placeholder-count="5">
+            <button type="button" onClick="{{ h.elige }}" style="flex:none;width:76px;height:76px;border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:{{ h.fondo }};color:{{ h.texto }};border:1px solid {{ h.borde }};transition:background .18s,color .18s;">
+              <span style="font-family:'JetBrains Mono';font-size:15px;font-weight:700;">{{ h.h }}</span>
+              <sc-if value="{{ h.casi }}" hint-placeholder-val="{{ true }}">
+                <span style="font-size:10px;line-height:1.1;color:{{ h.aviso }};">Casi llena</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">76×76, la misma familia que el día · la hora manda, el aviso es contexto<br>«Casi llena» no publica el aforo: el umbral lo pone el operador y un 0 lo apaga.</div>
+      </div>
+
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Selector de menores</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <sc-for list="{{ menores }}" as="m" hint-placeholder-count="3">
+            <label style="display:flex;gap:12px;align-items:center;background:#101418;border:1px solid #2A3138;border-radius:10px;padding:13px 16px;min-height:48px;cursor:pointer;opacity:{{ m.opacidad }};">
+              <input type="checkbox" checked="{{ m.puesta }}" disabled="{{ m.apagada }}" onChange="{{ m.alterna }}" style="width:22px;height:22px;accent-color:#1AA9DE;flex:none;cursor:pointer;">
+              <span style="flex:1;min-width:0;">
+                <span style="display:block;font-size:15px;font-weight:700;">{{ m.nombre }}</span>
+                <span style="display:block;font-size:12px;color:#9AA1A8;margin-top:2px;">{{ m.edad }}</span>
+              </span>
+              <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;text-align:right;">{{ m.nota }}{{ m.motivo }}</span>
+            </label>
+          </sc-for>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">La fila que no cabe se apaga; la que no se puede marcar nunca lleva su motivo al lado.<br>Que una fila sea marcable ya significa que su justificante está firmado: eso no se dice.</div>
+      </div>
+
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+        <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Banda de progreso y velo</div>
+        <div style="background:#101418;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;">
+            <button type="button" style="min-height:48px;background:none;border:0;padding:15px 0;font-size:14px;font-weight:700;color:#1AA9DE;cursor:pointer;">← Volver</button>
+            <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Paso 3 de 5</span>
+          </div>
+          <div style="display:flex;height:4px;">
+            <span style="flex:3;background:#1AA9DE;"></span>
+            <span style="flex:2;background:#2A3138;"></span>
+          </div>
+          <div style="height:104px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;color:#3B434B;">contenido del paso</div>
+        </div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">Banda de 4px · «Volver» llega a 48 de alto por relleno vertical, sin engordar la banda<br>El velo del cajón es el mismo del modal, y la página deja de animar detrás de él.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">11 / QUIÉN VIGILA CADA REGLA</span>
+      <span style="flex:1;height:1px;background:#2A3138;"></span>
+    </div>
+    <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Una regla que nadie mide<br>es una intención</h2>
+    <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Cada fila dice qué se mide para saber que la pieza cumple. No son pruebas escritas todavía: son la lista de lo que hay que comprobar antes de dar una pantalla por buena, y el orden en que se irán convirtiendo en guardas.</p>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="display:grid;grid-template-columns:.8fr 1.2fr 1.6fr;gap:0;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;padding:14px 24px;border-bottom:1px solid #2A3138;">
+        <div>Pieza</div><div>Qué se exige</div><div>Cómo se comprueba</div>
+      </div>
+      <sc-for list="{{ guardas }}" as="g" hint-placeholder-count="17">
+        <div style="display:grid;grid-template-columns:.8fr 1.2fr 1.6fr;gap:0;padding:13px 24px;border-bottom:1px solid #22282E;align-items:baseline;">
+          <div style="font-size:14.5px;font-weight:700;padding-right:12px;">{{ g.p }}</div>
+          <div style="font-size:14px;color:#C9CDD1;line-height:1.5;padding-right:12px;">{{ g.m }}</div>
+          <div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;">{{ g.c }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { personas: 4, pestana: 'kids', filtros: ['Kids'], modal: false, aviso: null, faq: 0, pagina: 2, diapo: 0,
+    dia: 2, hora: 1, menores: ['Lucía'], T: null };
+
+  componentDidMount() {
+    import('./tokens-pjp.js').then((m) => this.setState({ T: m.default || m })).catch(() => {});
+  }
+
+  muestraAviso(tipo) {
+    const self = this;
+    this.setState({ aviso: tipo });
+    clearTimeout(this._t);
+    this._t = setTimeout(function () { self.setState({ aviso: null }); }, 5000);
+  }
+
+  componentWillUnmount() { clearTimeout(this._t); }
+
+  renderVals() {
+    const self = this;
+    const st = this.state;
+    const pestanas = [
+      { id: 'kids', t: 'Kids', d: 'Hasta 6 años', n: '6 juegos' },
+      { id: 'jump', t: 'Jump', d: 'Desde 7 años', n: '11 juegos' },
+      { id: 'ocio', t: 'Ocio', d: 'Para todos', n: '4 zonas' }
+    ];
+    const filtros = ['Kids', 'Jump', 'Cumples', 'Grupos', 'Fin de semana'];
+    const avisos = {
+      exito:   { c: '#5FA82E', bg: '#1B2A16', bd: '#2F4A24', ico: '✓', t: 'Reserva confirmada', d: 'Te hemos enviado el código al correo.' },
+      error:   { c: '#FF8A6B', bg: '#2C1A17', bd: '#4A2620', ico: '!', t: 'No hemos podido cobrar', d: 'Revisa la tarjeta e inténtalo otra vez.' },
+      aviso:   { c: '#F5C400', bg: '#2E2708', bd: '#4A3D0C', ico: '!', t: 'Quedan 3 plazas a las 17:30', d: 'Puedes elegir otra hora con más sitio.' },
+      info:    { c: '#1AA9DE', bg: '#112934', bd: '#1A4657', ico: 'i', t: 'Calcetines obligatorios', d: '2,50 € y te los quedas. Se venden en recepción.' }
+    };
+    const faqs = [
+      { p: '¿Hace falta reservar?', r: 'No es obligatorio, pero los fines de semana el parque se llena. Reservando entras a tu hora sin cola.' },
+      { p: '¿Desde qué edad se puede saltar?', r: 'Desde los 2 años en la zona Kids, siempre con un adulto dentro del recinto. Desde los 7, en Jump.' },
+      { p: '¿Puedo entrar con mis calcetines?', r: 'Solo con calcetines antideslizantes homologados. Si no traes, se venden en recepción por 2,50 €.' },
+      { p: '¿Qué pasa si llego tarde?', r: 'La hora empieza cuando la reservaste. Si llegas dentro de los primeros 15 minutos, saltas el tiempo que quede.' }
+    ];
+    const horario = [
+      { d: 'Lunes a jueves', h: '17:00 – 21:00', n: 'Aforo tranquilo' },
+      { d: 'Viernes', h: '17:00 – 22:00', n: 'Última entrada 21:00' },
+      { d: 'Sábado', h: '11:00 – 22:00', n: 'Pico de 17:00 a 20:00' },
+      { d: 'Domingo', h: '11:00 – 21:00', n: 'Mañana casi vacía' },
+      { d: 'Festivos', h: '11:00 – 21:00', n: 'Precio de fin de semana' }
+    ];
+    const diapos = [
+      { t: 'Camas elásticas', c: '#1AA9DE' },
+      { t: 'Foam pit', c: '#F2711C' },
+      { t: 'Ninja warrior', c: '#A3C21C' },
+      { t: 'Baloncesto', c: '#E6007E' }
+    ];
+    const nav = [
+      { t: 'Inicio', ico: '⌂' },
+      { t: 'Zonas', ico: '◈' },
+      { t: 'Reservar', ico: '＋' },
+      { t: 'Mis saltos', ico: '☰' }
+    ];
+
+    return {
+      personas: this.state.personas,
+      pestanas: pestanas.map(function (p) {
+        const on = p.id === st.pestana;
+        return Object.assign({}, p, {
+          fondo: on ? '#FFFFFF' : 'transparent',
+          texto: on ? '#101418' : '#626A72',
+          click: function () { self.setState({ pestana: p.id }); }
+        });
+      }),
+      pestanaActiva: st.pestana,
+      pestanaInfo: pestanas.filter(function (x) { return x.id === st.pestana; })[0],
+      ponPestana: function (id) { return function () { self.setState({ pestana: id }); }; },
+      filtros: filtros.map(function (f) {
+        const on = st.filtros.indexOf(f) >= 0;
+        return {
+          t: f, on: on,
+          fondo: on ? '#1AA9DE' : 'transparent',
+          texto: on ? '#101418' : '#C9CDD1',
+          borde: on ? '#1AA9DE' : '#3B434B',
+          alterna: function () {
+            self.setState(function (s) {
+              const l = s.filtros.slice();
+              const i = l.indexOf(f);
+              if (i >= 0) { l.splice(i, 1); } else { l.push(f); }
+              return { filtros: l };
+            });
+          }
+        };
+      }),
+      cuentaFiltros: st.filtros.length,
+      limpiaFiltros: function () { self.setState({ filtros: [] }); },
+      modalAbierto: st.modal,
+      abreModal: function () { self.setState({ modal: true }); },
+      cierraModal: function () { self.setState({ modal: false }); },
+      tiposAviso: ['exito', 'error', 'aviso', 'info'],
+      lanzaAviso: function (t) { return function () { self.muestraAviso(t); }; },
+      avisoActivo: st.aviso ? avisos[st.aviso] : null,
+      ejemplosAviso: ['exito', 'error', 'aviso', 'info'].map(function (k) { return Object.assign({ id: k, lanza: function () { self.muestraAviso(k); } }, avisos[k]); }),
+      faqs: faqs.map(function (f, i) {
+        const abierta = st.faq === i;
+        return Object.assign({}, f, {
+          abierta: abierta,
+          signo: abierta ? '−' : '+',
+          alto: abierta ? 'auto' : '0',
+          opacidad: abierta ? '1' : '0',
+          alterna: function () { self.setState({ faq: abierta ? -1 : i }); }
+        });
+      }),
+      horario: horario,
+      nav: nav.map(function (n, i) {
+        return Object.assign({}, n, { color: i === 0 ? '#1AA9DE' : '#9AA1A8', peso: i === 0 ? 700 : 500 });
+      }),
+      paginas: [1, 2, 3, 4, 5].map(function (n) {
+        const on = st.pagina === n;
+        return { n: n, fondo: on ? '#1AA9DE' : 'transparent', texto: on ? '#101418' : '#C9CDD1', borde: on ? '#1AA9DE' : '#2A3138', ve: function () { self.setState({ pagina: n }); } };
+      }),
+      diapos: diapos.map(function (d, i) {
+        return Object.assign({}, d, { activa: i === st.diapo, ancho: i === st.diapo ? '26px' : '9px', opacidad: i === st.diapo ? '1' : '.35', ve: function () { self.setState({ diapo: i }); } });
+      }),
+      diapoActiva: diapos[st.diapo],
+      desplaza: 'translateX(-' + Math.min(st.diapo * 86, 244) + '%)',
+      anterior: function () { self.setState(function (s) { return { diapo: Math.max(0, s.diapo - 1) }; }); },
+      siguiente: function () { self.setState(function (s) { return { diapo: Math.min(3, s.diapo + 1) }; }); },
+      mas: function () { self.setState(function (s) { return { personas: Math.min(12, s.personas + 1) }; }); },
+      menos: function () { self.setState(function (s) { return { personas: Math.max(1, s.personas - 1) }; }); },
+      noBoton: [
+        'Para navegar entre secciones: eso es un enlace, aunque parezca menos importante.',
+        'Para más de tres palabras. Si no cabe en tres, el problema es el texto.',
+        'Para repetir la misma acción dos veces en una pantalla.',
+        'Bungee dentro: los botones son Hanken 800 siempre.'
+      ],
+      /* Los controles del cajón. Su medida sale de los tokens; el chip sabe
+         que «Casi llena» es contexto, no la decisión. */
+      dias: [
+        { mes: 'SEP' }, { d: 'Vie', n: '5' }, { d: 'Sáb', n: '6' }, { d: 'Dom', n: '7' },
+        { d: 'Lun', n: '8' }, { d: 'Mar', n: '9' }, { mes: 'OCT' }, { d: 'Mié', n: '1' }
+      ].map((x, i) => {
+        if (x.mes) return { separador: true, mes: x.mes, i: i };
+        const on = st.dia === i;
+        return {
+          separador: false, d: x.d, n: x.n, i: i,
+          fondo: on ? '#1AA9DE' : '#101418',
+          texto: on ? '#101418' : '#F4F4F1',
+          borde: on ? '#1AA9DE' : '#2A3138',
+          elige: function () { self.setState({ dia: i }); }
+        };
+      }),
+      horas: ['17:00', '17:30', '18:00', '18:30', '19:00'].map((h, i) => {
+        const on = st.hora === i;
+        return {
+          h: h, casi: i === 1 || i === 4,
+          fondo: on ? '#1AA9DE' : '#101418',
+          texto: on ? '#101418' : '#F4F4F1',
+          borde: on ? '#1AA9DE' : '#2A3138',
+          aviso: on ? '#101418' : '#9AA1A8',
+          elige: function () { self.setState({ hora: i }); }
+        };
+      }),
+      menores: [
+        { nombre: 'Lucía', edad: '8 años' },
+        { nombre: 'Mateo', edad: '5 años' },
+        { nombre: 'Sara', edad: '11 años', motivo: 'Sin justificante firmado' }
+      ].map(function (m) {
+        const puesta = st.menores.indexOf(m.nombre) >= 0;
+        const lleno = st.menores.length >= 1 && !puesta && !m.motivo;
+        const apagada = !!m.motivo || lleno;
+        return {
+          nombre: m.nombre, edad: m.edad, motivo: m.motivo || '',
+          puesta: puesta, apagada: apagada, bloqueada: !!m.motivo,
+          opacidad: apagada ? '.55' : '1',
+          nota: puesta ? '1 entrada asignada' : '',
+          alterna: function () {
+            if (apagada) return;
+            self.setState(function (s) {
+              const l = s.menores.slice();
+              const i = l.indexOf(m.nombre);
+              if (i >= 0) { l.splice(i, 1); } else { l.push(m.nombre); }
+              return { menores: l };
+            });
+          }
+        };
+      }),
+      guardas: [
+        { p: 'Botón', m: 'Un solo relleno de acción por pantalla', c: 'Se cuenta el relleno de acción en el primer viewport de cada vista.' },
+        { p: 'Botón', m: 'Alto 48 y nunca Bungee', c: 'Se mide la caja de cada pulsable y la familia de su rótulo.' },
+        { p: 'Campo', m: 'Etiqueta visible y error en palabras', c: 'Un campo cuyo único aviso sea el color rojo no pasa.' },
+        { p: 'Foco', m: 'Anillo por superficie, ≥3 sobre su fondo', c: 'Se recorre con el tabulador y se mide el contraste del anillo, no del texto.' },
+        { p: 'Chip que filtra', m: '48 de alto y cuenta de filtros visible', c: 'Un filtro puesto sin contador se lee como lista vacía.' },
+        { p: 'Chip que informa', m: 'El color al 14%, nunca pleno', c: 'Un chip con relleno saturado compite con el botón de reservar.' },
+        { p: 'Pestañas', m: 'Máximo tres, una activa', c: 'A la cuarta, es un menú.' },
+        { p: 'Modal', m: 'Cierra con X, velo y Escape', c: 'Las tres, siempre. Y es la única sombra difusa del sistema.' },
+        { p: 'Hoja de ficha', m: 'Papel, sin botones y sombra hacia arriba', c: 'La variante de galería: se abre desde una foto para mirarla, no para decidir. Si no añade nada a la tarjeta, no se pone.' },
+        { p: 'Hoja inferior', m: 'Asa de 44×4 y radio solo arriba', c: 'Si el radio va abajo, no parece pegada al borde.' },
+        { p: 'Aviso', m: 'Fondo al 14%; el toast vive 5 s', c: 'El de bloque se queda hasta que se resuelve.' },
+        { p: 'FAQ', m: 'Una abierta a la vez; la primera abierta al cargar en una FAQ de página, TODAS cerradas en la portada', c: 'Una lista toda cerrada parece un menú apagado — pero con cuatro filas el índice entero es la respuesta a «¿está mi duda?» y una abierta empuja las otras fuera del pulgar (divergencia declarada, 08 Dudas 1a).' },
+        { p: 'Nav móvil', m: 'Cuatro destinos y etiqueta siempre visible', c: 'Un icono solo no se entiende.' },
+        { p: 'Tabla', m: 'Cifras en mono; en móvil se rompe en filas', c: 'Nunca desplazamiento horizontal.' },
+        { p: 'Carril con foco', m: 'Velo por superficie, nunca por opacidad', c: 'Nube + 94 % de escala; la cifra se queda a contraste pleno. Controles a 52 (la escala los encoge a 48,9) y el relleno de acción viaja con el foco: uno por pantalla.' },
+        { p: 'Carrusel', m: 'La pieza siguiente asoma cortada', c: 'Si no asoma, la mitad de la gente no sabe que hay más. Nada automático. Y cada carril con su propia identidad: un atributo que agrupa hizo que tres se movieran juntos.' },
+        { p: 'Tira de días', m: 'Solo días que ofrece el servidor', c: 'El cliente no decide hasta cuándo se vende.' },
+        { p: 'Tira de horas', m: '«Casi llena» lee plazas libres', c: 'No el tope de la fiesta: en un pack no son el mismo número.' },
+        { p: 'Banda de progreso', m: '«Volver» llega a 48 de área', c: 'Con relleno vertical, sin engordar la banda de 4px.' },
+        { p: 'Foco', m: 'Una sola fuente: la regla global', c: 'El anillo lo pone una regla de página, no cada control. Un control con su propio foco escrito al lado es una segunda fuente: se retira.' },
+        { p: 'Excepciones', m: 'Lo que puede medir menos de 48', c: 'Solo lo que no se pulsa para avanzar: el enlace en línea dentro de un párrafo (que WCAG exime), los puntos del carrusel (9, son indicador) y los botones de muestra de este documento. La lista solo encoge.' }
+      ],
+      reglasCampo: [
+        { n: '01', t: 'Etiqueta encima y visible. El texto de pista no es una etiqueta: desaparece al escribir.' },
+        { n: '02', t: 'El error va debajo, en palabras. Rojo solo, sin texto, no es un error: es un adorno.' },
+        { n: '03', t: 'Se valida al salir del campo, nunca a la primera tecla.' },
+        { n: '04', t: 'Teclado correcto en móvil: tel para teléfono, email para correo. Ahorra la mitad de los errores.' },
+        { n: '05', t: 'Campo obligatorio por defecto; se marca el opcional, que son menos.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

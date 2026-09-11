@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#6C747C}
+.dv-card button:focus-visible,.dv-card a[href]:focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-card [data-superficie="tinta"] button:focus-visible,.dv-card button[data-superficie="tinta"]:focus-visible,.dv-card a[data-superficie="tinta"]:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+.dv-card [data-mueve]{transition-property:box-shadow,border-color,color,background-color !important}
+.dv-card [data-mueve]:hover,.dv-card [data-mueve]:active{transform:none !important}
+}
+.dv-meta{font:400 10.5px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#6C747C;max-width:390px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t8">
+  <div class="dv-thd"><a class="dv-tid" href="#t8">8</a><span class="dv-tname">«Tu fiesta, tu manera» en la landing · lo que cuesta</span></div>
+  <p class="dv-intro">Se puede, y aquí está montado — con dos avisos. Uno: <span style="color:#F4F4F1;">04 ya contesta su pregunta</span> («el cumple, resuelto») con los dos packs, el aforo y la señal; lo que se añade después no decide esa compra, así que en la landing va <span style="color:#F4F4F1;">la promesa, no la lista</span> —titular, una frase y los dos nombres sin descripción—, y la lista entera vive en la página. Dos: la landing tiene <span style="color:#F4F4F1;">presupuesto de pantalla</span> (la ruta 1b recortó el aire de 240/160 a 144/96 y apagó la chapa de zona de Tarifas para ahorrar 331 px), así que este bloque <span style="color:#F4F4F1;">añade alto</span> a una sección que ya estaba cerrada: la cifra medida está en la nota. Si quieres que entre, yo lo pondría <span style="color:#F4F4F1;">al final de 04</span>, justo antes del aviso INFO, que es donde el cliente ya ha entendido el pack.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="8a">
+      <div class="dv-olabel"><a class="dv-oid" href="#8a">8a</a><span>La promesa en la landing: titular, frase y los dos nombres con su precio. Sin descripciones y sin iconos grandes — eso es de la página.</span></div>
+      <div class="dv-card">
+        <div style="padding:24px 16px;">
+          <div style="margin:0;">
+            <div style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1.05;color:#101418;">Tu fiesta, tu manera</div>
+            <p style="margin:10px 0 0;font-size:16px;line-height:1.5;color:#626A72;">Añade lo que quieras: nada de esto hace falta para reservar.</p>
+            <div style="margin-top:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.900 -0.500)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.4 2.4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1.2 3.2v4.6l3.4 2-1.2 2-4.6-2.7V5.6z"></path><rect x="17.8" y="14.6" width="2.6" height="8" rx="1.3"></rect><rect x="15.4" y="17.4" width="8" height="2.6" rx="1.3"></rect></g></svg></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">Hora extra de sala</span>
+                  <span style="font-size:15px;line-height:1.4;color:#626A72;">Al reservar</span>
+                </span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;white-space:nowrap;">Desde 4,00&#160;€</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid #E8E9E5;">
+                <span style="color:#101418;display:flex;flex:none;" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><g transform="translate(12 12) scale(0.9524) translate(-12 -12) translate(-0.000 0.700)"><circle cx="12" cy="2.2" r="1.4"></circle><rect x="10.9" y="4" width="2.2" height="4.4" rx="1.1"></rect><path d="M6.6 9h10.8a2 2 0 0 1 2 2v1.6H4.6V11a2 2 0 0 1 2-2z"></path><path d="M4.2 14.2h15.6a2.4 2.4 0 0 1 2.4 2.4v2.8a2.4 2.4 0 0 1-2.4 2.4H4.2a2.4 2.4 0 0 1-2.4-2.4v-2.8a2.4 2.4 0 0 1 2.4-2.4z"></path></g></svg></span>
+                <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:17px;line-height:1.25;color:#101418;">Tarta, monitor y más</span>
+                  <span style="font-size:15px;line-height:1.4;color:#626A72;">Después, por correo</span>
+                </span>
+                <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:17px;line-height:1.3;color:#101418;white-space:nowrap;">En el parque</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">el formato compartido, tal cual: rótulo 26, una frase y dos filas de icono + nombre + matiz corto + precio · sin párrafos y sin botón · mismo formato que el bloque de la página y el de las entradas (rótulo 26 · fila blanca · borde Línea · radio 16) · ⚠ suma alto a una sección cerrada: medido en 390 con offsetHeight, el bloque pide <span style="color:#9AA1A8;">332 px</span> (124 de ellos las dos filas) y con el aire de 40 que usa 04 entre bloques, <span style="color:#9AA1A8;">372</span> · si solo entran el titular y la frase, <span style="color:#9AA1A8;">87</span> (27 + 12 + 48)</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «solo el titular y la frase, sin las dos filas» · «con el enlace a la página del cumple debajo» · «que vaya arriba, junto a los packs»</p>
+</section>
+
+<section class="dv-turn" id="t7">
+  <div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">Después de reservar · el aviso «i», y ya</span></div>
+  <p class="dv-intro">Vale, y existe: es la pieza 05 de Componentes, el <span style="color:#F4F4F1;">aviso de tono INFO</span> —círculo con la «i», título corto y dos líneas—, y no hay que inventar nada porque sus tres colores están en tokens (tinte cian, su borde y el cian del título). Dos consecuencias: se va la ficha y se va la <span style="color:#F4F4F1;">pastilla magenta</span>, porque el magenta no es uno de los cuatro tonos de aviso del sistema y no voy a inventar un quinto. Y el aviso <span style="color:#F4F4F1;">no es pulsable</span>: no abre nada, así que no necesita los 48 px ni un tooltip. <a href="#7a">7a</a> es la pieza tal cual; <a href="#7b">7b</a> es el mismo texto sin caja de color, por si no quieres una segunda superficie oscura debajo del reloj. Todo lo demás es <a href="#5b">5b</a>.</p>
+
+  <div class="dv-opts">
+
+<div class="dv-opt" id="7a">
+      <div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a><span>El aviso INFO del sistema, tal cual: tinte cian, círculo con la «i» y dos líneas. Informa y no pide nada.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:8px;">El cumple, resuelto</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, resuelto</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, repartidas</div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <sc-for list="{{ reloj }}" as="r" hint-placeholder-count="3">
+              <div style="border-top:2px solid #A3C21C;padding-top:10px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;white-space:nowrap;">{{ r.v }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1A8;margin-top:7px;line-height:1.35;">{{ r.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1.5px solid #D6D8D4;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ kids }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2A3138;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ jump }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">Tarifa especial: viernes, findes, festivos y vísperas.</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.</p>
+        </div>
+
+        <div style="margin:24px 16px 24px;">
+          <div style="background:#112934;border:1px solid #1A4657;border-radius:10px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start;">
+            <span aria-hidden="true" style="width:26px;height:26px;flex:none;border-radius:999px;background:#1AA9DE;color:#101418;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:14px;font-weight:700;">i</span>
+            <div>
+              <div style="font-size:15.5px;font-weight:700;color:#1AA9DE;">Personalizamos cada cumple</div>
+              <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+                <div style="font-size:14.5px;line-height:1.5;color:#C9CDD1;margin-top:3px;">Después de reservar te pedimos el nombre, la edad y las alergias de cada niño. Y ahí eliges los extras para los adultos.</div>
+              </sc-if>
+              <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:14.5px;line-height:1.5;color:#C9CDD1;margin-top:3px;">Después de reservar te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</div>
+              </sc-if>
+            </div>
+          </div>
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;margin-top:20px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">es el AVISO INFO del sistema, sin inventar nada: tinte cian #112934, borde #1A4657, radio 10, relleno 14/18, círculo de 26 y título de 15,5 en cian · el fondo es el color al 14 %, nunca el cian pleno · fuera la pastilla magenta: el magenta no es uno de los cuatro tonos de aviso y no se inventa un quinto · no es pulsable, así que no necesita 48</div>
+    </div>
+
+<div class="dv-opt" id="7b">
+      <div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a><span>✅ 8 sep: los precios son ya los reales del catálogo (14,95 · 15,95, especiales 16,95 · 19,95, señal 50 €) — antes esta sección publicaba 11 y 15 y la página /cumpleanos los reales, o sea el mismo pack a dos precios. · Aún más callado: el mismo texto sin caja de color, con el filete de cierre y el círculo amarillo.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:8px;">El cumple, resuelto</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, resuelto</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <sc-if value="{{ conRelojFiesta }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, a vuestro ritmo</div>
+          <div style="margin-top:18px;display:flex;gap:8px;">
+            <sc-for list="{{ franja }}" as="f" hint-placeholder-count="3">
+              <span style="flex:1;text-align:center;border:1.5px solid #2A3138;border-radius:999px;padding:9px 4px;font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.2;color:#F4F4F1;">{{ f.t }}</span>
+            </sc-for>
+          </div>
+          <div aria-hidden="true" style="margin-top:10px;border-top:2px solid #A3C21C;"></div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Dentro cabe todo y sin horario: si meriendan rápido, saltan más rato. El orden lo decidís vosotros.</p>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+        </sc-if>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1.5px solid #D6D8D4;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ kids }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2A3138;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ jump }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">Tarifa especial: viernes, findes, festivos y vísperas.</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.</p>
+        </div>
+
+        <sc-if value="{{ conAvisoInfo }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:24px 16px 24px;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span aria-hidden="true" style="width:24px;height:24px;flex:none;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <div>
+              <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">Personalizamos cada cumple</div>
+              <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top:4px;font-size:15px;line-height:1.5;color:#626A72;">Después de reservar te pedimos el nombre, la edad y las alergias de cada niño. Y ahí eliges los extras para los adultos.</div>
+              </sc-if>
+              <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:4px;font-size:15px;line-height:1.5;color:#626A72;">Después de reservar te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</div>
+              </sc-if>
+            </div>
+          </div>
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;margin-top:20px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+        </sc-if>
+
+      </div>
+      <div class="dv-meta">CERRADA · el mismo texto sin caja de color: filete de cierre, círculo amarillo con troquel de tinta y título en Hanken 800 · más callado y no mete una segunda superficie oscura debajo del reloj · sección 04 completa: reloj de la fiesta, dos packs con su nombre real, los dos precios enteros con «en tarifa especial» y los días una vez, la edad mezclada en una línea y el aviso de cierre · pendiente: los cuatro precios reales, el reparto del reloj, foto del cumple montado, si la zona es exclusiva y que los extras de adultos aún no están construidos<br>⚠ <span style="color:#F4F4F1;">Recorte del presupuesto (ruta 1b, 7 sep 2026)</span>: de esta sección sale <span style="color:#C9CDD1;">el reloj de la fiesta y el aviso INFO</span>, y por eso lo que dice esta nota de esa pieza <span style="color:#C9CDD1;">sigue siendo verdad de la pieza, no de la sección</span>. No se ha borrado: vive detrás del interruptor <span style="color:#C9CDD1;">conRelojFiesta y conAvisoInfo</span>, apagado por defecto. La sección pasa de <span style="color:#C9CDD1;">1605</span> a <span style="color:#C9CDD1;">1153 px</span>, medido.<br>🔁 <span style="color:#F4F4F1;">8 sep · el reloj deja de repartir las dos horas</span>. Dato del dueño: las <span style="color:#C9CDD1;">dos horas son para todo</span> —merienda, tarta y saltos— y <span style="color:#C9CDD1;">no hay hora para nada</span>: si meriendan rápido, saltan más. Así que los tres tramos con sus minutos (1 h · 45 min · 15 min) <span style="color:#C9CDD1;">estaban contando algo que no existe</span>, y un diagrama de tramos promete horario aunque la letra diga lo contrario. La pieza pasa a ser <span style="color:#C9CDD1;">tres cosas sobre un solo carril de tiempo</span>: las tres en cápsula, el filete lima entero debajo —sin cortes, porque el bloque no se parte— y una línea que dice la regla. Los minutos del panel (<span style="color:#C9CDD1;">minSalto · minMesa · minTarta</span>) se quedan sin sujeto: se pueden retirar. Y la pregunta que contestaba —«¿cuándo comen?»— ahora se contesta mejor: <span style="color:#C9CDD1;">cuando queráis</span>.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «el aviso arriba, justo debajo del reloj» · «una sola línea, sin título» · «que diga cuándo llega el correo» · «el aviso también para la edad mezclada, dos avisos seguidos»</p>
+</section>
+
+<section class="dv-turn" id="t6">
+  <div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">Después de reservar · la prueba, no el adjetivo</span></div>
+  <p class="dv-intro">La sección tenía un adjetivo donde hacía falta una prueba: «te pedimos los datos de cada niño» describe un trámite. Lo que hace especial un cumple no es el formulario, es que el <span style="color:#F4F4F1;">día 20 alguien sepa que Lucía no toma gluten</span>. Así que el bloque pasa de contar el proceso a <span style="color:#F4F4F1;">enseñar el resultado</span>, que es donde tu sistema de contenido pone la portada: promesa, no ejecución. <a href="#6a">6a</a> lo demuestra con la ficha ya rellena —y el «ficha 3 de 12» es lo que de verdad dice «uno por uno»—; <a href="#6b">6b</a> lo consigue solo con tipografía y tres datos de verdad. El resto de la tarjeta es <a href="#5b">5b</a> sin tocar. ⚠ Los nombres son de ejemplo, y los extras de adultos siguen <span style="color:#F4F4F1;">sin construir</span> en el sistema: si la web sale antes, se apagan con su interruptor.</p>
+
+  <div class="dv-opts">
+
+<div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a><span>La ficha ya rellena. En vez de decir «personalizado», se enseña: nombre, edad, alergia y lo que nos cuenta la madre. Y «ficha 3 de 12», que dice que cada niño tiene la suya.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:8px;">El cumple, resuelto</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, resuelto</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, repartidas</div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <sc-for list="{{ reloj }}" as="r" hint-placeholder-count="3">
+              <div style="border-top:2px solid #A3C21C;padding-top:10px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;white-space:nowrap;">{{ r.v }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1A8;margin-top:7px;line-height:1.35;">{{ r.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1.5px solid #D6D8D4;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ kids }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2A3138;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ jump }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">Tarifa especial: viernes, findes, festivos y vísperas.</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.</p>
+        </div>
+
+        <div style="margin:24px 16px 24px;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Nos dices quién viene, y el día del cumple ya lo sabemos.</p>
+          <div style="margin-top:16px;background:#FFFFFF;border:1.5px solid #D6D8D4;border-radius:16px;padding:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:19px;line-height:1.2;color:#101418;">Lucía</span>
+                <span style="flex:none;background:#101418;border-radius:999px;padding:5px 10px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.1em;color:#F4F4F1;white-space:nowrap;">7 años</span>
+              </div>
+              <span style="flex:none;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#626A72;white-space:nowrap;">Ficha 3 de 12</span>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #E8E9E5;display:grid;grid-template-columns:74px 1fr;row-gap:8px;column-gap:12px;align-items:baseline;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Alergias</div>
+              <div style="font-size:15px;line-height:1.4;color:#101418;">Sin gluten</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Nos dice</div>
+              <div style="font-size:15px;line-height:1.4;color:#101418;">Le da miedo el foam</div>
+            </div>
+          </div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:14px 0 0;font-size:15px;line-height:1.45;color:#626A72;">Y ahí mismo eliges los extras para los adultos: cubo de refrescos, tapas…</p>
+          </sc-if>
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;margin-top:20px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">la prueba en vez del adjetivo: una ficha REAL ya rellena dice «personalizado» sin usar la palabra · «Ficha 3 de 12» es lo que comunica que cada niño tiene la suya · trato de DOCUMENTO, no de pegatina —filete de 1,5 y sin sombra dura— para no competir con las dos tarjetas · Humo #626A72 y no Humo Claro: sobre blanco el claro se queda en 2,3 · nombres de ejemplo</div>
+    </div>
+
+<div class="dv-opt" id="6b">
+      <div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a><span>Solo palabras: tres datos de verdad —una alergia, una edad, el número de adultos— en una frase. Lo más corto que consigue el mismo efecto.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:8px;">El cumple, resuelto</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, resuelto</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, repartidas</div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <sc-for list="{{ reloj }}" as="r" hint-placeholder-count="3">
+              <div style="border-top:2px solid #A3C21C;padding-top:10px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;white-space:nowrap;">{{ r.v }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1A8;margin-top:7px;line-height:1.35;">{{ r.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1.5px solid #D6D8D4;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ kids }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2A3138;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ jump }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">Tarifa especial: viernes, findes, festivos y vísperas.</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.</p>
+        </div>
+
+        <div style="margin:24px 16px 24px;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <p style="margin:14px 0 0;font-size:18px;line-height:1.45;font-weight:500;color:#626A72;">Que <strong style="font-weight:800;color:#101418;">Lucía no toma gluten</strong>, que <strong style="font-weight:800;color:#101418;">Mateo cumple 7</strong> y que <strong style="font-weight:800;color:#101418;">sois catorce adultos</strong>: el día del cumple ya lo sabemos.</p>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:14px 0 0;font-size:15px;line-height:1.45;color:#626A72;">Y ahí mismo eliges los extras para los adultos: cubo de refrescos, tapas…</p>
+          </sc-if>
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;margin-top:20px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">solo tipografía: tres datos reales del formulario —alergia, edad y número de adultos— en negrita dentro de una frase de 18 · cero componentes nuevos y el bloque más corto de los dos · pierde el «cada niño tiene su ficha», que es lo que 6a demuestra · nombres de ejemplo</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «la ficha con la tarta y el menú en vez del miedo al foam» · «tres fichas asomando, no una» · «que la ficha lleve la letra del homenajeado» · «la frase de 6b y la ficha de 6a juntas»</p>
+</section>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">4b más ligera · la palabra grande, el sello en su sitio y la mitad de bloques</span></div>
+  <p class="dv-intro">Las cuatro, contestadas. <span style="color:#F4F4F1;">La palabra</span>: llevas razón, «cumpleaños» a 11 px no se ve, y la pregunta que esta sección contesta en tu sistema de contenido es «¿puedo hacer aquí el cumple?» — así que el titular la dice, «El cumple, resuelto», y el rótulo numerado se queda como está. <span style="color:#F4F4F1;">La «i»</span>: no puede ir dentro de la tarjeta, porque la tarjeta ENTERA es un enlace y un botón dentro de un enlace no es HTML válido — y la salida es mejor que el tooltip: en vez de nombrar la «tarifa especial» y explicarla aparte, la línea dice los días directamente, «13 € los viernes, findes y festivos». Se entiende sin pulsar nada y desaparece un bloque y una palabra de jerga. <span style="color:#F4F4F1;">Debajo de las tarjetas</span>: de cuatro bloques a dos — la edad mezclada baja a una línea sin recuadro, y la pastilla, la frase y el botón se juntan en un solo cierre. <span style="color:#F4F4F1;">El sello</span>: no saturaba por ser sello, saturaba por ser un SEGUNDO precio. En el sitio que dices —donde está la tarifa— no duplica nada: es <a href="#5b">5b</a>.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="5a">
+      <div class="dv-olabel"><a class="dv-oid" href="#5a">5a</a><span>El reloj de 4b, el titular diciendo la palabra, los días escritos en vez de «tarifa especial» con su «i», y debajo de las tarjetas solo dos cosas.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:8px;">El cumple, resuelto</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, resuelto</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, repartidas</div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <sc-for list="{{ reloj }}" as="r" hint-placeholder-count="3">
+              <div style="border-top:2px solid #A3C21C;padding-top:10px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;white-space:nowrap;">{{ r.v }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1A8;margin-top:7px;line-height:1.35;">{{ r.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#101418;">{{ kids }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E8E9E5;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#F4F4F1;">{{ jump }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #2A3138;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">Tarifa especial: viernes, findes, festivos y vísperas.</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.</p>
+        </div>
+
+        <div style="margin:24px 16px 24px;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;margin-top:20px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">el titular dice la palabra: la sección contesta «¿puedo hacer aquí el cumple?» y eso no puede vivir en un rótulo de 11 px · la chapa lleva el nombre real del producto, el mismo que verá en el cajón · «en tarifa especial» se dice IGUAL que en Tarifas, y los días van una vez para la sección en vez de una por tarjeta · debajo de las tarjetas quedan DOS bloques en vez de cuatro, y la pastilla, la frase y el botón son un solo cierre · un botón dentro de la tarjeta-enlace no es HTML válido: por eso la «i» no podía ir ahí</div>
+    </div>
+
+    <div class="dv-opt" id="5b">
+      <div class="dv-olabel"><a class="dv-oid" href="#5b">5b</a><span>Igual, con la pegatina donde tú dices: el sello ES el precio, girado, en la esquina de la tarifa. No duplica nada porque sustituye a la cifra.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:8px;">El cumple, resuelto</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">El cumple, resuelto</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, repartidas</div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <sc-for list="{{ reloj }}" as="r" hint-placeholder-count="3">
+              <div style="border-top:2px solid #A3C21C;padding-top:10px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;white-space:nowrap;">{{ r.v }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1A8;margin-top:7px;line-height:1.35;">{{ r.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1.5px solid #D6D8D4;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ kids }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Pack Cumpleaños Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:18px;padding-top:16px;border-top:1px solid #2A3138;display:flex;align-items:flex-start;gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+                <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+              </div>
+              <div style="flex:none;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;margin:2px 4px 6px 0;">
+                <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ jump }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#101418;margin-top:3px;white-space:nowrap;">por niño</div>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">Tarifa especial: viernes, findes, festivos y vísperas.</div>
+          <p style="margin:12px 0 0;font-size:16px;line-height:1.5;color:#626A72;">¿Y si vienen niños de las dos edades? Se ajusta niño por niño en recepción.</p>
+        </div>
+
+        <div style="margin:24px 16px 24px;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;margin-top:20px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">el sello sustituye a la cifra en vez de añadirse: un solo precio grande por tarjeta · vive en la fila de la tarifa, con su margen para que la sombra dura no toque el filete · el sello solo dice «por niño»: el nombre de la tarifa va en su línea y los días, enteros, una vez para la sección — la regla de voz que cerró Precios («V · S · D · fest» es jerga de tabla) · el sello queda dentro de la tarjeta, así que no necesita hueco extra entre las dos</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «el titular solo “Cumpleaños”, sin la promesa» · «el sello con el precio de finde, que es el que más se vende» · «la línea de las dos edades, fuera de la portada» · «que el cierre no lleve pastilla, solo la frase»</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">El tiempo · sí, pero una vez y grande</span></div>
+  <p class="dv-intro">Sí, y el problema era peor de lo que parece: <span style="color:#F4F4F1;">«dos horas» salía TRES veces en 3a</span> —en la entradilla, en «monitor las dos horas» y en el pie de letra menuda— y ninguna de las tres se veía. Repetido y a la vez invisible, que es lo contrario de destacado. Así que sale de los tres sitios y vuelve una sola vez, con peso. Y hay un argumento de venta que no estábamos usando: la entrada de 2 horas de Jump cuesta <span style="color:#F4F4F1;">más por persona</span> que el cumple por niño, con el mismo tiempo — decir el tiempo <em>ayuda</em> a la comparación, no la perjudica. <a href="#4a">4a</a> lo pone dentro de cada tarjeta, junto a la edad. <a href="#4b">4b</a> va más lejos y contesta la pregunta que de verdad se hace una madre —<span style="color:#F4F4F1;">«¿y cuándo comen?»</span>— con el reparto de las dos horas. ⚠ Los minutos del reloj son <span style="color:#F4F4F1;">inventados</span>: dime el reparto real y son tres ajustes.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><span>El tiempo pegado a la edad, en cada tarjeta: los dos datos que se deciden, juntos y grandes. Fuera de la entradilla y del pie.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="display:grid;grid-template-columns:1fr auto;column-gap:14px;row-gap:5px;align-items:baseline;margin-top:12px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Para</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;text-align:right;">Dura</div>
+              <div style="font-family:'Bungee';font-size:24px;line-height:1.05;">De 2 a 6 años</div>
+              <div style="font-family:'Bungee';font-size:24px;line-height:1.05;white-space:nowrap;text-align:right;">{{ dur }}</div>
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Un monitor con ellos</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#101418;">{{ kids }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E8E9E5;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="display:grid;grid-template-columns:1fr auto;column-gap:14px;row-gap:5px;align-items:baseline;margin-top:12px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Para</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;text-align:right;">Dura</div>
+              <div style="font-family:'Bungee';font-size:24px;line-height:1.05;">Desde 7 años</div>
+              <div style="font-family:'Bungee';font-size:24px;line-height:1.05;white-space:nowrap;text-align:right;">{{ dur }}</div>
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Un monitor con ellos</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#F4F4F1;">{{ jump }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #2A3138;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <button type="button" onClick="{{ alterna }}" aria-expanded="{{ abierto }}" data-mueve="" style="display:flex;align-items:center;gap:9px;width:100%;min-height:48px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;">
+            <span aria-hidden="true" style="flex:none;width:24px;height:24px;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.3;color:#101418;">Qué es la tarifa especial</span>
+          </button>
+          <sc-if value="{{ abierto }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;background:#101418;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5;color:#C9CDD1;">Los viernes, los fines de semana, los festivos y sus vísperas. El día se elige al reservar y ahí ves el precio que te toca.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="margin:24px 16px 0;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">edad y duración al mismo tamaño (Bungee 24): son los dos datos que se deciden · rejilla de 2×2 —rótulos en una fila, valores en otra— y no dos columnas flex: así PARA y DURA comparten línea base aunque un valor envuelva, que es lo que rompía «Desde 7 años» a 26 · «dos horas» desaparece de la entradilla, de la viñeta del monitor y del pie: de tres menciones invisibles a una que se ve · rótulos mono PARA y DURA, que es el patrón de dato del sistema</div>
+    </div>
+
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a><span>El reloj de la fiesta: cómo se reparten las dos horas, dicho una vez para la sección. Contesta «¿cuándo comen?», que es la pregunta de verdad.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">Las {{ dur }}, repartidas</div>
+          <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <sc-for list="{{ reloj }}" as="r" hint-placeholder-count="3">
+              <div style="border-top:2px solid #A3C21C;padding-top:10px;">
+                <div style="font-family:'Bungee';font-size:20px;line-height:1;color:#F4F4F1;white-space:nowrap;">{{ r.v }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#9AA1A8;margin-top:7px;line-height:1.35;">{{ r.t }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.45;color:#C9CDD1;">Un monitor con ellos de principio a fin. Vosotros, sentados.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#101418;">{{ kids }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E8E9E5;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieSinDuracion }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#F4F4F1;">{{ jump }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #2A3138;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieSinDuracion }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <button type="button" onClick="{{ alterna }}" aria-expanded="{{ abierto }}" data-mueve="" style="display:flex;align-items:center;gap:9px;width:100%;min-height:48px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;">
+            <span aria-hidden="true" style="flex:none;width:24px;height:24px;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.3;color:#101418;">Qué es la tarifa especial</span>
+          </button>
+          <sc-if value="{{ abierto }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;background:#101418;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5;color:#C9CDD1;">Los viernes, los fines de semana, los festivos y sus vísperas. El día se elige al reservar y ahí ves el precio que te toca.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="margin:24px 16px 0;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">el reloj vive fuera de las tarjetas porque es igual en los dos: un dato, un sitio · tres cifras en Bungee 20, el mínimo que el sistema permite · filete lima de 2 px como eje de tiempo, no como adorno · el monitor sube al reloj y sale de las viñetas: las tarjetas bajan a tres líneas · ⚠ 1 h / 45 min / 15 min son inventados, y suman las dos horas: si el reparto real es otro, la suma tiene que seguir cuadrando</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «el reloj con horas de reloj: llegáis a las 17:00, comen a las 18:00» · «dos tramos en vez de tres: saltar y mesa» · «el reloj también en la tarjeta, con su franja» · «pon la duración en el sello, junto al precio»</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">2b afinada · cuatro arreglos y la chispa que faltaba</span></div>
+  <p class="dv-intro">2b cumple el sistema —radios de la escala, sombra dura, 48 px, cero naranja, magenta por debajo del 2 %, ningún degradado, Bungee nunca bajo 20— <span style="color:#F4F4F1;">con un matiz honesto: es el bloque más sobrio de la portada siendo el producto más festivo</span>. Cuatro arreglos. Uno, la primera línea deja de repetirse: cada tarjeta nombra <span style="color:#F4F4F1;">su</span> zona. Dos, el pie de 2b eran cuatro líneas de texto pequeño con el mismo peso —precio, especial, niños, señal—; ahora son <span style="color:#F4F4F1;">tres pesos distintos</span>: el precio manda, la especial lo acompaña y las condiciones bajan a pie de letra menuda. Tres, el bloque del formulario dejaba de flotar: la pastilla magenta le da cuerpo y es la única <span style="color:#F4F4F1;">chispa de fiesta</span> que el sistema autoriza aquí. Y cuatro, la pegatina: el sistema solo deja girar manchas, la cinta del eslogan y el <span style="color:#F4F4F1;">sello de precio</span> —así que si quieres el guiño de pegatina, tiene que ser el precio—. <a href="#3a">3a</a> va sin sello; <a href="#3b">3b</a> con él, y encima sale más corta.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a><span>2b con los cuatro arreglos y sin sello. El precio en fila, las condiciones a pie de tarjeta y la pastilla magenta cerrando.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Dos horas, vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Monitor las dos horas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#101418;">{{ kids }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #E8E9E5;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieCondiciones }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Monitor las dos horas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#F4F4F1;">{{ jump }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+            <div style="margin-top:14px;padding-top:10px;border-top:1px solid #2A3138;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieCondiciones }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <button type="button" onClick="{{ alterna }}" aria-expanded="{{ abierto }}" data-mueve="" style="display:flex;align-items:center;gap:9px;width:100%;min-height:48px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;">
+            <span aria-hidden="true" style="flex:none;width:24px;height:24px;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.3;color:#101418;">Qué es la tarifa especial</span>
+          </button>
+          <sc-if value="{{ abierto }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;background:#101418;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5;color:#C9CDD1;">Los viernes, los fines de semana, los festivos y sus vísperas. El día se elige al reservar y ahí ves el precio que te toca.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="margin:24px 16px 0;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">tres pesos en el pie: precio 26/800 · especial 15 · condiciones en mono 11 con su filete · la primera viñeta nombra SU zona: de cuatro repetidas quedan tres · pastilla magenta #AD0060 con papel encima (6,28) y por debajo del 2 % de superficie · sin rotación: el sistema solo la deja en manchas, cinta y sello</div>
+    </div>
+
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a><span>Igual, con el sello de precio girado −6°: el guiño de pegatina de Zonas. El precio sube al sello, así que el pie se queda en dos líneas.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Dos horas, vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="padding:26px 16px 0;display:flex;flex-direction:column;gap:28px;">
+
+          <a href="#cumple-kids" data-mueve="" style="position:relative;display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="position:absolute;right:12px;top:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;">
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ kids }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;margin-top:3px;">por niño</div>
+            </div>
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;padding-right:88px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">La zona Kids reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Monitor las dos horas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial · {{ kids }} de lunes a jueves</div>
+            <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#626A72;">{{ pieCondiciones }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="position:relative;display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="position:absolute;right:12px;top:-16px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);text-align:right;">
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">{{ jump }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;margin-top:3px;">por niño</div>
+            </div>
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;padding-right:88px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">La zona Jump reservada para vosotros</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Monitor las dos horas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial · {{ jump }} de lunes a jueves</div>
+            <div style="margin-top:8px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;color:#9AA1A8;">{{ pieCondiciones }}</div>
+            <div style="margin-top:14px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <button type="button" onClick="{{ alterna }}" aria-expanded="{{ abierto }}" data-mueve="" style="display:flex;align-items:center;gap:9px;width:100%;min-height:48px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;">
+            <span aria-hidden="true" style="flex:none;width:24px;height:24px;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.3;color:#101418;">Qué es la tarifa especial</span>
+          </button>
+          <sc-if value="{{ abierto }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;background:#101418;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5;color:#C9CDD1;">Los viernes, los fines de semana, los festivos y sus vísperas. El día se elige al reservar y ahí ves el precio que te toca.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="margin:24px 16px 0;padding-top:20px;border-top:1.5px solid #D6D8D4;">
+          <div style="display:inline-flex;background:#AD0060;border-radius:999px;padding:6px 12px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:12px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">sello girado −6°, dentro del margen de −2 a −8 · el precio sube al sello, así que abajo queda una sola línea con los dos precios enteros · el hueco entre tarjetas sube a 28 para que el sello no pise a la de arriba · el titular reserva 88 px a su derecha · ⚠ el sello compite con la edad: en Zonas era el único elemento fuerte, aquí hay dos</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «los cuatro incluidos en dos columnas, que ocupan menos» · «el sello con el precio de lunes a jueves y la especial dentro del sello» · «que el pie de condiciones diga también la duración» · «pastilla magenta también en la línea de las dos edades»</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">No es una entrada · y la tarifa especial, que me faltaba</span></div>
+  <p class="dv-intro">Tienes razón en las dos. <span style="color:#F4F4F1;">La tarifa especial son los viernes, los findes, los festivos y sus vísperas</span> —lo mismo que en Tarifas—, así que cada pack tiene dos precios y se dicen los dos <span style="color:#F4F4F1;">enteros</span>, nunca un «+2 €» que obligue a sumar. La explicación de qué es va <span style="color:#F4F4F1;">una vez para la sección</span>, no dos veces en las tarjetas. Y sobre la comparación con la entrada: el problema no es el precio —con los números de prueba el cumple sale <em>más barato</em> por niño que la entrada de 2 horas—, es que un precio a secas parece lo mismo. Así que el valor va <span style="color:#F4F4F1;">antes</span> del número: la zona reservada, el monitor y la comida se dicen a lo grande y en tinta, y las tarjetas se quedan con la edad y el precio. <a href="#2a">2a</a> lo dice una vez arriba; <a href="#2b">2b</a> lo repite dentro de cada tarjeta para que cada una se explique sola.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><span>Lo que no tiene una entrada, arriba y en tinta. Las tarjetas, solo edad y los dos precios. La explicación de la tarifa especial, una para las dos.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Dos horas, vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.15;color:#F4F4F1;">No es una entrada</div>
+          <div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;gap:11px;align-items:flex-start;">
+              <span aria-hidden="true" style="flex:none;width:9px;height:9px;background:#A3C21C;margin-top:7px;"></span>
+              <span style="font-size:17px;line-height:1.35;color:#F4F4F1;">Zona de cumpleaños reservada para vosotros</span>
+            </div>
+            <div style="display:flex;gap:11px;align-items:flex-start;">
+              <span aria-hidden="true" style="flex:none;width:9px;height:9px;background:#A3C21C;margin-top:7px;"></span>
+              <span style="font-size:17px;line-height:1.35;color:#F4F4F1;">Un monitor con ellos las dos horas</span>
+            </div>
+            <div style="display:flex;gap:11px;align-items:flex-start;">
+              <span aria-hidden="true" style="flex:none;width:9px;height:9px;background:#A3C21C;margin-top:7px;"></span>
+              <span style="font-size:17px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+            </div>
+            <div style="display:flex;gap:11px;align-items:flex-start;">
+              <span aria-hidden="true" style="flex:none;width:9px;height:9px;background:#A3C21C;margin-top:7px;"></span>
+              <span style="font-size:17px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+            </div>
+          </div>
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:grid;grid-template-columns:84px 1fr;row-gap:10px;column-gap:12px;align-items:baseline;">
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Niños</div>
+            <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ invitados }}</div>
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Señal</div>
+            <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ senal }}</div>
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Aparte</div>
+            <div style="font-size:16px;line-height:1.4;color:#C9CDD1;">Tarta y taquilla, si los quieres</div>
+          </div>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="font-size:16px;line-height:1.45;color:#626A72;margin-top:8px;">En la zona Kids, con sus ocho juegos.</div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#101418;">{{ kids }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="font-size:16px;line-height:1.45;color:#C9CDD1;margin-top:8px;">En la zona Jump, con las quince atracciones.</div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#F4F4F1;">{{ jump }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <button type="button" onClick="{{ alterna }}" aria-expanded="{{ abierto }}" data-mueve="" style="display:flex;align-items:center;gap:9px;width:100%;min-height:48px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;">
+            <span aria-hidden="true" style="flex:none;width:24px;height:24px;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.3;color:#101418;">Qué es la tarifa especial</span>
+          </button>
+          <sc-if value="{{ abierto }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;background:#101418;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5;color:#C9CDD1;">Los viernes, los fines de semana, los festivos y sus vísperas. El día se elige al reservar y ahí ves el precio que te toca.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#AD0060;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">el valor antes del número: la chapa de tinta se lee antes de ver un precio · los dos precios enteros, sin «+2 €» (regla de Tarifas) · «de lunes a jueves» como rótulo mono y la especial en Hanken, el patrón de Precios 6a · una sola «i» para la sección: la explicación no se dice dos veces · cuadrado lima como viñeta, no icono dibujado · cero naranja</div>
+    </div>
+
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><span>Sin chapa: los cuatro «no es una entrada» viven dentro de cada tarjeta, con sus dos precios. Cada una se explica sola y repite cuatro líneas.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Dos horas, vuestra zona reservada y la comida de los niños puesta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">De 2 a 6 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Zona de cumpleaños reservada</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Monitor las dos horas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#627411;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#101418;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1.5px solid #D6D8D4;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#101418;">{{ kids }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#101418;">{{ kidsEsp }} en tarifa especial</div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#626A72;">{{ invitados }} niños · señal {{ senalCorta }}</div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;">Desde 7 años</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Zona de cumpleaños reservada</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Monitor las dos horas</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Comida y bebida de los niños</span>
+              </div>
+              <div style="display:flex;gap:10px;align-items:flex-start;">
+                <span aria-hidden="true" style="flex:none;width:8px;height:8px;background:#A3C21C;margin-top:6px;"></span>
+                <span style="font-size:16px;line-height:1.35;color:#F4F4F1;">Calcetines e invitaciones</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #2A3138;display:flex;align-items:baseline;gap:8px;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:26px;line-height:1;color:#F4F4F1;">{{ jump }}</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">por niño</span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">de lunes a jueves</span>
+            </div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#F4F4F1;">{{ jumpEsp }} en tarifa especial</div>
+            <div style="margin-top:8px;font-size:15px;line-height:1.45;color:#9AA1A8;">{{ invitados }} niños · señal {{ senalCorta }}</div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="padding:18px 16px 0;">
+          <button type="button" onClick="{{ alterna }}" aria-expanded="{{ abierto }}" data-mueve="" style="display:flex;align-items:center;gap:9px;width:100%;min-height:48px;background:transparent;border:0;padding:0;cursor:pointer;text-align:left;">
+            <span aria-hidden="true" style="flex:none;width:24px;height:24px;border-radius:999px;background:#F5C400;border:2px solid #101418;display:flex;align-items:center;justify-content:center;font-family:'Hanken Grotesk';font-weight:800;font-size:13px;color:#101418;">i</span>
+            <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:15px;line-height:1.3;color:#101418;">Qué es la tarifa especial</span>
+          </button>
+          <sc-if value="{{ abierto }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;background:#101418;border-radius:10px;padding:14px 16px;font-size:15px;line-height:1.5;color:#C9CDD1;">Los viernes, los fines de semana, los festivos y sus vísperas. El día se elige al reservar y ahí ves el precio que te toca.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#AD0060;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">cada tarjeta se explica sola: quien cae en la de Jump ya sabe qué incluye · lima 800 (#627411) para la viñeta sobre papel y lima 500 sobre tinta: el 500 sobre claro se queda en 1,9 · precio de esta tarjeta antes de la puerta · cuesta cuatro líneas repetidas y una pantalla más</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «pon el precio arriba, antes de lo que incluye» · «que la chapa diga también qué NO incluye» · «compara con la entrada: “una entrada de 2 h son 12 €”» · «la tarifa especial como segunda columna, no como línea»</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">04 · Cumpleaños — las dos a lo grande, una debajo de otra</span></div>
+  <p class="dv-intro">Al montarlo salió un hallazgo que cambia la sección: <span style="color:#F4F4F1;">entre KIDS y JUMP solo cambian dos cosas</span> — la edad y el precio por niño. Los invitados, la duración, la señal y lo que incluye son idénticos. Así que <a href="#1a">1a</a> dice una vez lo que es igual y deja las tarjetas con lo único que hay que decidir; <a href="#1b">1b</a> es la versión clásica, cada tarjeta con sus seis filas, que repite cuatro datos dos veces. Lo demás es común a las dos: la duda de la edad mezclada contestada en una línea y sin cifras, una sola frase para el formulario de después —que es donde eliges los extras de los adultos— y <span style="color:#F4F4F1;">cero naranja</span>: aquí no se compra, se elige. La foto es la de las mesas, la única que me diste; el sitio pide una del cumple montado. <span style="color:#F4F4F1;">Los precios y las edades son los del catálogo de pruebas</span> (11 € y 15 € por niño, de 2 a 6 y desde 7): dímelos y los cambio en un minuto.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span>Lo que cambia, en las tarjetas. Lo que es igual, dicho una vez en la chapa de tinta. Dos pantallas menos y ninguna repetición.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Dos horas de parque, con monitor y la comida de los niños resuelta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="position:relative;display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="position:absolute;right:14px;top:14px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);">
+              <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">por niño</div>
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;margin-top:2px;">{{ kids }}</div>
+            </div>
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;padding-right:96px;">De 2 a 6 años</div>
+            <div style="font-size:16px;line-height:1.45;color:#626A72;margin-top:10px;padding-right:96px;">En la zona Kids, con sus ocho juegos y sin niños mayores dentro.</div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="position:relative;display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="position:absolute;right:14px;top:14px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);">
+              <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">por niño</div>
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;margin-top:2px;">{{ jump }}</div>
+            </div>
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;padding-right:96px;">Desde 7 años</div>
+            <div style="font-size:16px;line-height:1.45;color:#C9CDD1;margin-top:10px;padding-right:96px;">En la zona Jump, con las quince atracciones para ellos.</div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;" data-superficie="tinta">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Igual en los dos</div>
+          <div style="margin-top:14px;display:grid;grid-template-columns:84px 1fr;row-gap:11px;column-gap:12px;align-items:baseline;">
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Niños</div>
+            <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ invitados }}</div>
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Dura</div>
+            <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ dura }}</div>
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Señal</div>
+            <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ senal }}</div>
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Incluye</div>
+            <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">Monitor, comida y bebida de los niños, calcetines e invitaciones</div>
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Aparte</div>
+            <div style="font-size:16px;line-height:1.4;color:#C9CDD1;">Tarta y taquilla, si los quieres</div>
+          </div>
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#AD0060;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">solo va en la tarjeta lo que DIFIERE: edad y precio · lo común, una vez y en tinta · sello girado −6° y amarillo, el mismo de Zonas · cero naranja: el relleno de acción es tinta, el naranja se queda en Tarifas y en la barra · magenta solo en «después de reservar» (#AD0060 sobre papel = 6,28) · la tarjeta entera es el enlace y se aplasta, como Zonas 4a</div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><span>Cada tarjeta se explica sola: las seis filas alineadas en las dos, para poder comparar bajando. Cuesta cuatro datos repetidos y una pantalla más.</span></div>
+      <div class="dv-card">
+
+        <sc-if value="{{ conFoto }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;aspect-ratio:16/9;background:#2A3138;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:url(uploads/fotos-1788676478226-ed2f.png);background-size:cover;background-position:center;"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(16,20,24,.72);padding:14px 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">04 · Cumpleaños</div>
+              <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;margin-top:6px;">La fiesta</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sinFoto }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:24px 16px 0;">
+            <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">04 · Cumpleaños</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">La fiesta</div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px 16px 0;">
+          <p style="margin:0;font-size:16px;line-height:1.5;color:#626A72;">Dos horas de parque, con monitor y la comida de los niños resuelta. Solo hay que elegir la edad.</p>
+        </div>
+
+        <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:20px;">
+
+          <a href="#cumple-kids" data-mueve="" style="position:relative;display:block;text-decoration:none;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="position:absolute;right:14px;top:14px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);">
+              <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">por niño</div>
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;margin-top:2px;">{{ kids }}</div>
+            </div>
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Kids</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;padding-right:96px;">De 2 a 6 años</div>
+            <div style="margin-top:16px;padding-top:14px;border-top:2px solid #E8E9E5;display:grid;grid-template-columns:84px 1fr;row-gap:10px;column-gap:12px;align-items:baseline;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Zona</div>
+              <div style="font-size:16px;line-height:1.4;color:#101418;">Kids, sus ocho juegos</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Niños</div>
+              <div style="font-size:16px;line-height:1.4;color:#101418;">{{ invitados }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Dura</div>
+              <div style="font-size:16px;line-height:1.4;color:#101418;">{{ dura }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Señal</div>
+              <div style="font-size:16px;line-height:1.4;color:#101418;">{{ senal }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Incluye</div>
+              <div style="font-size:16px;line-height:1.4;color:#101418;">Monitor, comida y bebida, calcetines e invitaciones</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;">Aparte</div>
+              <div style="font-size:16px;line-height:1.4;color:#626A72;">Tarta y taquilla</div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #E8E9E5;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#0A5C93;">Ver el cumple Kids</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#0A5C93;">&#8594;</span>
+            </div>
+          </a>
+
+          <a href="#cumple-jump" data-superficie="tinta" data-mueve="" style="position:relative;display:block;text-decoration:none;color:#F4F4F1;background:#1A1F25;border:2px solid #101418;border-radius:16px;box-shadow:5px 5px 0 #101418;padding:18px 16px;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">
+            <div style="position:absolute;right:14px;top:14px;background:#F5C400;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;padding:8px 12px;transform:rotate(-6deg);">
+              <div style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;">por niño</div>
+              <div style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;margin-top:2px;">{{ jump }}</div>
+            </div>
+            <div style="display:inline-flex;background:#1AA9DE;border:2px solid #101418;border-radius:999px;padding:5px 11px;font-family:'JetBrains Mono';font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#101418;">Jump</div>
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;margin-top:12px;padding-right:96px;">Desde 7 años</div>
+            <div style="margin-top:16px;padding-top:14px;border-top:2px solid #2A3138;display:grid;grid-template-columns:84px 1fr;row-gap:10px;column-gap:12px;align-items:baseline;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Zona</div>
+              <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">Jump, las quince atracciones</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Niños</div>
+              <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ invitados }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Dura</div>
+              <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ dura }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Señal</div>
+              <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">{{ senal }}</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Incluye</div>
+              <div style="font-size:16px;line-height:1.4;color:#F4F4F1;">Monitor, comida y bebida, calcetines e invitaciones</div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#9AA1A8;">Aparte</div>
+              <div style="font-size:16px;line-height:1.4;color:#C9CDD1;">Tarta y taquilla</div>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:2px solid #2A3138;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:800;font-size:16px;color:#1AA9DE;">Ver el cumple Jump</span>
+              <span style="font-weight:800;font-size:16px;line-height:1;color:#1AA9DE;">&#8594;</span>
+            </div>
+          </a>
+
+        </div>
+
+        <div style="margin:20px 16px 0;border:1.5px solid #101418;border-radius:16px;padding:16px;">
+          <div style="font-family:'Hanken Grotesk';font-weight:800;font-size:15px;line-height:1.35;color:#101418;">¿Y si vienen niños de las dos edades?</div>
+          <div style="margin-top:5px;font-size:15px;line-height:1.45;color:#626A72;">No pasa nada: se ajusta niño por niño y se cierra en recepción el día de la fiesta.</div>
+        </div>
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#AD0060;">Después de reservar</div>
+          <sc-if value="{{ conExtras }}" hint-placeholder-val="{{ true }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño — y ahí mismo eliges los extras para los adultos.</p>
+          </sc-if>
+          <sc-if value="{{ sinExtras }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:8px 0 0;font-size:17px;line-height:1.45;color:#101418;">Te pedimos el nombre, la edad y las alergias de cada niño, para que el día del cumple ya lo sepamos.</p>
+          </sc-if>
+        </div>
+
+        <div style="padding:20px 16px 24px;">
+          <a href="#reservar-cumple" data-mueve="" style="display:flex;align-items:center;justify-content:center;width:100%;min-height:56px;background:#101418;border:2px solid #101418;border-radius:10px;color:#F4F4F1;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138">Reservar cumpleaños</a>
+        </div>
+
+      </div>
+      <div class="dv-meta">seis filas idénticas en las dos, misma columna de rótulos (84 px) para comparar bajando · cuatro de las seis dicen lo mismo dos veces: es el precio de que cada tarjeta se explique sola · útil si algún día KIDS y JUMP dejan de compartir condiciones · sin la chapa de «igual en los dos»</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «dale la vuelta: Kids en tinta y Jump en blanco» · «quita el sello de precio y pon el precio como fila» · «que la línea de la edad mezclada lleve el ejemplo con cifras» · «añade una segunda foto y una por tarjeta»</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;conRelojFiesta&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presupuesto&quot;,&quot;label&quot;:&quot;El reloj de la fiesta&quot;},&quot;conAvisoInfo&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presupuesto&quot;,&quot;label&quot;:&quot;El aviso INFO&quot;},&quot;precioKids&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:11,&quot;min&quot;:0,&quot;max&quot;:200,&quot;unit&quot;:&quot; €&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Precios · Kids&quot;,&quot;label&quot;:&quot;Por niño · de lunes a jueves&quot;},&quot;precioKidsEsp&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:13,&quot;min&quot;:0,&quot;max&quot;:200,&quot;unit&quot;:&quot; €&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Precios · Kids&quot;,&quot;label&quot;:&quot;Por niño · tarifa especial&quot;},&quot;precioJump&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:15,&quot;min&quot;:0,&quot;max&quot;:200,&quot;unit&quot;:&quot; €&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Precios · Jump&quot;,&quot;label&quot;:&quot;Por niño · de lunes a jueves&quot;},&quot;precioJumpEsp&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:18,&quot;min&quot;:0,&quot;max&quot;:200,&quot;unit&quot;:&quot; €&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Precios · Jump&quot;,&quot;label&quot;:&quot;Por niño · tarifa especial&quot;},&quot;duracion&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;2 horas&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Datos del cumple&quot;,&quot;label&quot;:&quot;Cuánto dura&quot;},&quot;senal&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:30,&quot;min&quot;:0,&quot;max&quot;:200,&quot;unit&quot;:&quot; €&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos del cumple&quot;,&quot;label&quot;:&quot;Señal al reservar&quot;},&quot;minNinos&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:8,&quot;min&quot;:1,&quot;max&quot;:60,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos del cumple&quot;,&quot;label&quot;:&quot;Mínimo de niños&quot;},&quot;maxNinos&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:20,&quot;min&quot;:1,&quot;max&quot;:60,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos del cumple&quot;,&quot;label&quot;:&quot;Máximo de niños&quot;},&quot;minSalto&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:60,&quot;min&quot;:0,&quot;max&quot;:240,&quot;unit&quot;:&quot; min&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Reloj de la fiesta&quot;,&quot;label&quot;:&quot;Saltos&quot;},&quot;minMesa&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:45,&quot;min&quot;:0,&quot;max&quot;:240,&quot;unit&quot;:&quot; min&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Reloj de la fiesta&quot;,&quot;label&quot;:&quot;Mesa y comida&quot;},&quot;minTarta&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:15,&quot;min&quot;:0,&quot;max&quot;:240,&quot;unit&quot;:&quot; min&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Reloj de la fiesta&quot;,&quot;label&quot;:&quot;Tarta y fotos&quot;},&quot;extrasAdultos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Qué se dice&quot;,&quot;label&quot;:&quot;Anunciar los extras para adultos&quot;},&quot;conFoto&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Qué se dice&quot;,&quot;label&quot;:&quot;Foto de apertura&quot;}}">
+class Component extends DCLogic {
+  state = { info: false };
+
+  /* 60 → «1 h», 45 → «45 min», 90 → «1 h 30». Nunca «1.5 h» (Voz PJP). */
+  reloj(min) {
+    const m = Math.max(0, Math.round(min));
+    if (m < 60) return m + ' min';
+    const h = Math.floor(m / 60), r = m % 60;
+    return r === 0 ? h + ' h' : h + ' h ' + r;
+  }
+
+  renderVals() {
+    const p = this.props;
+    /* Espacio duro antes del €: «11 €» es una unidad y no se parte de línea (Voz PJP). */
+    /* Coma decimal: en español 14,95 y no 14.95 (Voz PJP). Y espacio duro antes del €. */
+    const eur = (n) => String(n).replace('.', ',') + '\u00A0€';
+    const min = Math.max(1, p.minNinos ?? 8);
+    const max = Math.max(min, p.maxNinos ?? 20);
+    return {
+      kids: eur(p.precioKids ?? 14.95),
+      jump: eur(p.precioJump ?? 15.95),
+      /* Los dos precios se dan ENTEROS: la regla de Tarifas prohíbe el «+2 €» que
+         obliga a sumar. La tarifa especial son viernes, findes, festivos y vísperas. */
+      kidsEsp: eur(p.precioKidsEsp ?? 16.95),
+      jumpEsp: eur(p.precioJumpEsp ?? 19.95),
+      abierto: this.state.info,
+      alterna: () => this.setState((s) => ({ info: !s.info })),
+      senal: eur(p.senal ?? 50) + ' al reservar',
+      senalCorta: eur(p.senal ?? 50),
+      dura: p.duracion ?? '2 horas',
+      invitados: 'De ' + min + ' a ' + max,
+      /* Pie de condiciones: tercera clase de dato, en mono y con su filete, para que
+         no compita con el precio ni con la tarifa especial. */
+      pieCondiciones: 'De ' + min + ' a ' + max + ' niños · ' + (p.duracion ?? '2 horas') + ' · señal ' + eur(p.senal ?? 50),
+      /* Cuando la duración se promociona (t4), sale del pie: un número, un sitio. */
+      pieSinDuracion: 'De ' + min + ' a ' + max + ' niños · señal ' + eur(p.senal ?? 50),
+      dur: p.duracion ?? '2 horas',
+      /* El reloj de la fiesta. Los minutos son PROVISIONALES: los pone el dueño. */
+      reloj: [
+        { v: this.reloj(p.minSalto ?? 60), t: 'Saltos' },
+        { v: this.reloj(p.minMesa ?? 45), t: 'Mesa y comida' },
+        { v: this.reloj(p.minTarta ?? 15), t: 'Tarta y fotos' }
+      ],
+      /* ⚠ Las dos horas NO se reparten (lo aclaró el dueño, 8 sep): dentro caben
+       * las tres cosas en cualquier orden y lo que sobra de merienda es rato de
+       * saltos. Los minutos de arriba se quedan SOLO para los turnos viejos, que
+       * son el registro de lo que se dibujó cuando se creía que había horario. */
+      franja: [{ t: 'Saltos' }, { t: 'Merienda' }, { t: 'Tarta' }],
+      conExtras: p.extrasAdultos !== false,
+      sinExtras: p.extrasAdultos === false,
+      conFoto: p.conFoto !== false,
+      sinFoto: p.conFoto === false
+    };
+  }
+}
+
+</script>
+</body>
+</html>

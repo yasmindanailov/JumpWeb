@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Anton&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#ECF3F7;color:#101113;font-family:'Space Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+a{color:#0E8FCB}a:hover{color:#0A6F9E}
+@keyframes pjpAsoma{0%,64%,100%{transform:translateX(0)}72%{transform:translateX(-7px)}80%{transform:translateX(0)}86%{transform:translateX(-3px)}92%{transform:translateX(0)}}
+@keyframes pjpAro{0%,62%{opacity:0;transform:scale(.7)}74%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(1.45)}}
+@keyframes pjpEmpuja{0%,64%,100%{transform:translateX(0)}74%{transform:translateX(13px)}86%{transform:translateX(0)}}
+@keyframes pjpGira{0%,68%,100%{transform:rotate(0)}80%,92%{transform:rotate(180deg)}}
+@keyframes pjpLatir{0%,66%,100%{opacity:.55}78%{opacity:1}}
+</style>
+</helmet>
+
+<section style="padding:44px 40px 70px;display:flex;flex-direction:column;gap:26px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <h1 style="font-family:'Anton';font-weight:400;font-size:30px;text-transform:uppercase;margin:0;">Reservar + Registrarse</h1>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#7B8791;">tres formas de meter las dos acciones en un botón</span>
+  </div>
+
+  <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;">
+
+    <div id="1a" style="width:420px;background:#fff;border:1px solid #D7E3EA;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;background:#101113;color:#ECF3F7;border-radius:6px;padding:3px 7px;">1a</span>
+        <strong style="font-size:15px;">Asoma y se cambia</strong>
+      </div>
+      <p style="margin:0;font-size:13.5px;line-height:1.55;color:#5A6670;">Solo se ve un trocito del segundo botón. Late y se asoma cada pocos segundos hasta que lo tocas; al clicarlo crece y el otro se encoge.</p>
+      <div style="padding:22px 4px 6px;display:flex;justify-content:flex-end;">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button onClick="{{ ponReservaA }}" style="{{ estiloReservaA }}">
+            <span style="width:30px;height:26px;border-radius:8px;background:{{ fondoIconoResA }};display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
+              <svg viewBox="0 0 50 32" width="26" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 8 3 L 44 3 L 44 7.5 A 2.8 2.8 0 0 0 44 13.1 L 44 19 L 8 19 L 8 13.1 A 2.8 2.8 0 0 0 8 7.5 Z"></path><path d="M 15 6 L 15 16" stroke-dasharray="2.4 2.4"></path><path d="M 19.5 8.5 L 38 8.5"></path></svg>
+            </span>
+            <span style="{{ estiloTextoResA }}">
+              <span style="font-family:'Anton';font-weight:400;font-size:17px;text-transform:uppercase;">Reservar</span>
+              <span style="font-size:11px;opacity:.62;">desde 8,50 €</span>
+            </span>
+          </button>
+          <span style="position:relative;display:inline-flex;">
+            <span style="{{ estiloAroA }}"></span>
+            <button onClick="{{ ponRegistroA }}" style="{{ estiloRegistroA }}">
+              <span style="width:30px;height:26px;border-radius:8px;background:{{ fondoIconoRegA }};display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.6"></circle><path d="M 3.6 20 c 0 -3.6 2.9 -6 6.4 -6 c 1.2 0 2.3 0.3 3.2 0.8"></path><path d="M 17.5 14.5 L 17.5 21"></path><path d="M 14.2 17.7 L 20.8 17.7"></path></svg>
+              </span>
+              <span style="{{ estiloTextoRegA }}">
+                <span style="font-family:'Anton';font-weight:400;font-size:17px;text-transform:uppercase;">Registrarse</span>
+                <span style="font-size:11px;opacity:.62;">entra a tus reservas</span>
+              </span>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div id="1b" style="width:420px;background:#fff;border:1px solid #D7E3EA;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;background:#101113;color:#ECF3F7;border-radius:6px;padding:3px 7px;">1b</span>
+        <strong style="font-size:15px;">Pastilla partida</strong>
+      </div>
+      <p style="margin:0;font-size:13.5px;line-height:1.55;color:#5A6670;">Un solo botón con dos mitades. La marca amarilla asoma hacia el otro lado cada pocos segundos para enseñar que se mueve.</p>
+      <div style="padding:22px 4px 6px;display:flex;justify-content:flex-end;">
+        <div style="{{ estiloPastillaB }}">
+          <span style="{{ estiloCarrilB }}"><span style="{{ estiloMarcaB }}"></span></span>
+          <button onClick="{{ ponReservaB }}" style="{{ estiloMitadResB }}">Reservar</button>
+          <button onClick="{{ ponRegistroB }}" style="{{ estiloMitadRegB }}">Registrarse</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="1c" style="width:420px;background:#fff;border:1px solid #D7E3EA;border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;background:#101113;color:#ECF3F7;border-radius:6px;padding:3px 7px;">1c</span>
+        <strong style="font-size:15px;">Cara y cruz</strong>
+      </div>
+      <p style="margin:0;font-size:13.5px;line-height:1.55;color:#5A6670;">Un botón con dos caras. El chip ⇄ gira solo de vez en cuando para pedir que lo pruebes; al clicarlo voltea el botón entero.</p>
+      <div style="padding:22px 4px 6px;display:flex;justify-content:flex-end;">
+        <div style="width:236px;height:54px;perspective:700px;">
+          <div style="{{ estiloGiroC }}">
+            <div style="{{ estiloCaraResC }}">
+              <button onClick="{{ nada }}" style="display:flex;align-items:center;gap:12px;flex:1;height:100%;background:none;border:0;color:inherit;cursor:pointer;padding:0 0 0 14px;text-align:left;">
+                <span style="width:30px;height:26px;border-radius:8px;background:rgba(236,243,247,.14);display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
+                  <svg viewBox="0 0 50 32" width="26" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M 8 3 L 44 3 L 44 7.5 A 2.8 2.8 0 0 0 44 13.1 L 44 19 L 8 19 L 8 13.1 A 2.8 2.8 0 0 0 8 7.5 Z"></path><path d="M 15 6 L 15 16" stroke-dasharray="2.4 2.4"></path><path d="M 19.5 8.5 L 38 8.5"></path></svg>
+                </span>
+                <span style="display:flex;flex-direction:column;line-height:1.16;">
+                  <span style="font-family:'Anton';font-weight:400;font-size:17px;text-transform:uppercase;">Reservar</span>
+                  <span style="font-size:11px;opacity:.62;">desde 8,50 €</span>
+                </span>
+              </button>
+              <button onClick="{{ giraC }}" aria-label="Cambiar a registrarse" style="{{ estiloChipResC }}"><span style="{{ estiloGlifoC }}">⇄</span></button>
+            </div>
+            <div style="{{ estiloCaraRegC }}">
+              <button onClick="{{ nada }}" style="display:flex;align-items:center;gap:12px;flex:1;height:100%;background:none;border:0;color:inherit;cursor:pointer;padding:0 0 0 14px;text-align:left;">
+                <span style="width:30px;height:26px;border-radius:8px;background:rgba(16,17,19,.1);display:flex;align-items:center;justify-content:center;flex:0 0 auto;">
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.6"></circle><path d="M 3.6 20 c 0 -3.6 2.9 -6 6.4 -6 c 1.2 0 2.3 0.3 3.2 0.8"></path><path d="M 17.5 14.5 L 17.5 21"></path><path d="M 14.2 17.7 L 20.8 17.7"></path></svg>
+                </span>
+                <span style="display:flex;flex-direction:column;line-height:1.16;">
+                  <span style="font-family:'Anton';font-weight:400;font-size:17px;text-transform:uppercase;">Registrarse</span>
+                  <span style="font-size:11px;opacity:.62;">entra a tus reservas</span>
+                </span>
+              </button>
+              <button onClick="{{ giraC }}" aria-label="Cambiar a reservar" style="{{ estiloChipRegC }}"><span style="{{ estiloGlifoC }}">⇄</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1360,&quot;height&quot;:460}}">
+class Component extends DCLogic {
+  state = { a: 'reserva', b: 'reserva', c: false, tocadoA: false, tocadoB: false, tocadoC: false };
+
+  ponReservaA = () => this.setState({ a: 'reserva', tocadoA: true });
+  ponRegistroA = () => this.setState({ a: 'registro', tocadoA: true });
+  ponReservaB = () => this.setState({ b: 'reserva', tocadoB: true });
+  ponRegistroB = () => this.setState({ b: 'registro', tocadoB: true });
+  giraC = () => this.setState((s) => ({ c: !s.c, tocadoC: true }));
+  nada = () => {};
+
+  botonA(activo, oscuro, guina) {
+    return 'display:inline-flex;align-items:center;gap:13px;height:54px;border:1px solid ' + (oscuro ? '#101113' : '#DCE7EE') + ';cursor:pointer;overflow:hidden;white-space:nowrap;' +
+      'width:' + (activo ? '236px' : '58px') + ';padding:0 0 0 14px;border-radius:14px;' +
+      'background:' + (oscuro ? '#101113' : '#fff') + ';color:' + (oscuro ? '#ECF3F7' : '#101113') + ';' +
+      'box-shadow:0 10px 26px rgba(16,17,19,.16);' +
+      'transition:width .46s cubic-bezier(.2,.9,.2,1),background .3s ease,color .3s ease;' +
+      (guina ? 'animation:pjpAsoma 4.6s ease-in-out infinite;' : '');
+  }
+
+  textoA(activo) {
+    return 'display:flex;flex-direction:column;text-align:left;line-height:1.16;transition:opacity .28s ease ' + (activo ? '.14s' : '0s') +
+      ',transform .4s cubic-bezier(.2,.9,.2,1);opacity:' + (activo ? 1 : 0) + ';transform:translateX(' + (activo ? '0' : '-6px') + ');';
+  }
+
+  renderVals() {
+    const st = this.state;
+    const resA = st.a === 'reserva', regA = st.a === 'registro';
+    const resB = st.b === 'reserva';
+    const guinaA = !st.tocadoA && regA === false;
+    const mitad = (activo) => 'position:relative;z-index:1;height:100%;flex:1;border:0;background:none;cursor:pointer;font-family:\'Anton\';font-weight:400;' +
+      'font-size:16px;text-transform:uppercase;letter-spacing:.01em;transition:color .3s ease;color:' + (activo ? '#101113' : '#5A6670') + ';';
+    const cara = (frente, oscuro) => 'position:absolute;inset:0;display:flex;align-items:center;border-radius:14px;overflow:hidden;' +
+      'backface-visibility:hidden;-webkit-backface-visibility:hidden;box-shadow:0 10px 26px rgba(16,17,19,.18);' +
+      'background:' + (oscuro ? '#101113' : '#FFC20E') + ';color:' + (oscuro ? '#ECF3F7' : '#101113') + ';' +
+      'transform:rotateX(' + (frente ? '0deg' : '180deg') + ');';
+    const chip = (oscuro) => 'width:38px;height:100%;background:none;border:0;border-left:1px solid ' +
+      (oscuro ? 'rgba(236,243,247,.16)' : 'rgba(16,17,19,.14)') + ';color:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;' +
+      (st.tocadoC ? 'opacity:.7;' : 'animation:pjpLatir 5s ease-in-out infinite;');
+
+    return {
+      ponReservaA: this.ponReservaA, ponRegistroA: this.ponRegistroA,
+      ponReservaB: this.ponReservaB, ponRegistroB: this.ponRegistroB,
+      giraC: this.giraC, nada: this.nada,
+
+      estiloReservaA: this.botonA(resA, true, false),
+      estiloRegistroA: this.botonA(regA, false, guinaA),
+      estiloTextoResA: this.textoA(resA),
+      estiloTextoRegA: this.textoA(regA),
+      fondoIconoResA: 'rgba(236,243,247,.14)',
+      fondoIconoRegA: 'rgba(16,17,19,.08)',
+      estiloAroA: 'position:absolute;inset:-4px;border-radius:18px;border:2px solid #0E8FCB;pointer-events:none;' +
+        (guinaA ? 'animation:pjpAro 4.6s ease-out infinite;' : 'opacity:0;'),
+
+      estiloPastillaB: 'position:relative;display:flex;align-items:center;height:54px;width:300px;border-radius:14px;padding:5px;' +
+        'background:#fff;border:1px solid #DCE7EE;box-shadow:0 10px 26px rgba(16,17,19,.16);',
+      estiloCarrilB: 'position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 5px);' +
+        'transition:transform .42s cubic-bezier(.2,.9,.2,1);transform:translateX(' + (resB ? '0' : '100%') + ');',
+      estiloMarcaB: 'display:block;width:100%;height:100%;border-radius:10px;background:#FFC20E;' +
+        (st.tocadoB ? '' : 'animation:pjpEmpuja 5s ease-in-out infinite;'),
+      estiloMitadResB: mitad(resB),
+      estiloMitadRegB: mitad(!resB),
+
+      estiloGiroC: 'position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,1.3,.4,1);' +
+        'transform:rotateX(' + (st.c ? '180deg' : '0deg') + ');',
+      estiloCaraResC: cara(true, true),
+      estiloCaraRegC: cara(false, false),
+      estiloChipResC: chip(true),
+      estiloChipRegC: chip(false),
+      estiloGlifoC: 'display:block;font-size:15px;' + (st.tocadoC ? '' : 'animation:pjpGira 5s ease-in-out infinite;')
+    };
+  }
+}
+</script>
+</body>
+</html>

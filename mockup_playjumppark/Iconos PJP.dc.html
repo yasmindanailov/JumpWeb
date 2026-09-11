@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:#101418;color:#F4F4F1;-webkit-font-smoothing:antialiased}
+@keyframes pjpgira{to{transform:rotate(360deg)}}
+@keyframes pjpbote{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+@keyframes pjpbarra{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+img{display:block;max-width:100%}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+</style>
+</helmet>
+
+<div style="background:#101418;color:#F4F4F1;padding:56px 44px 96px;min-height:100vh;">
+<div style="max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:72px;">
+
+<!-- ═══ PORTADA ═══ -->
+<section style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:#1AA9DE;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Iconos v1</span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Play Jump Park · Lorca</span>
+  </div>
+  <h1 style="font-family:'Bungee';font-size:64px;line-height:.95;letter-spacing:-.015em;margin:0;max-width:900px;">Silueta <span style="color:#1AA9DE;">plana</span>,<br>pegatina cuando <span style="color:#F2711C;">grita</span></h1>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:740px;color:#C9CDD1;text-wrap:pretty;">Los iconos de UI son señalética: masa sólida, un color, sin adorno. La marca solo entra por las juntas redondas — el eco de la letra burbuja — y sube a pegatina completa cuando el icono deja de servir y empieza a hablar.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono';font-size:12px;">
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">47 iconos UI</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">3 cargadores</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">14 zonas · 7 familias</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">4 estados</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">rejillas 24 y 64</span>
+    <span style="border:1px solid #2A3138;border-radius:999px;padding:8px 14px;color:#9AA1A8;">currentColor, siempre</span>
+  </div>
+</section>
+
+<!-- ═══ 00 REGISTRARSE · LOTE 5 ═══ -->
+<section style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">00 / REGISTRARSE · LOTE 5</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Registrarse:<br>la pareja de Cuenta</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Entrar y darse de alta no son lo mismo, y ahora los dos usarían <span style="font-family:'JetBrains Mono';font-size:13.5px;">ui/cuenta</span>. Si entra este glifo, <span style="font-family:'JetBrains Mono';font-size:13.5px;">ui/cuenta</span> pasa a etiquetar «Acceder» y este «Crear cuenta».</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,236px);justify-content:start;gap:12px;">
+    <div id="4a" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#A3C21C;color:#101418;padding:4px 7px;border-radius:5px;">4a</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">ui/registro</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.6"></circle><path d="M2.6 19.4a6.4 6.4 0 0 1 12.8 0 1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2z"></path><rect x="17.4" y="15.4" width="2.8" height="6" rx="1.4"></rect><rect x="15.8" y="17" width="6" height="2.8" rx="1.4"></rect></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.6"></circle><path d="M2.6 19.4a6.4 6.4 0 0 1 12.8 0 1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2z"></path><rect x="17.4" y="15.4" width="2.8" height="6" rx="1.4"></rect><rect x="15.8" y="17" width="6" height="2.8" rx="1.4"></rect></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Persona y más</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">La convención, sin invención ninguna: misma cabeza y mismos hombros que <span style="font-family:'JetBrains Mono';font-size:12px;">ui/cuenta</span> con el más separado abajo a la derecha.</div></div>
+    </div>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:20px 24px;">
+    <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;max-width:860px;text-wrap:pretty;"><a href="#4a">4a</a> y solo 4a. Probé una versión con la pulsera y el más, y aro más signo es el icono de zoom de medio internet: fuera. Registrarse es un trámite, y los trámites se piden clarísimos, no ingeniosos.</p>
+  </div>
+</section>
+
+<!-- ═══ 00 ENTRADA 1a · LOTE 4 ═══ -->
+<section style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">00 / ENTRADA 1a · LOTE 4</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">1a, apretando<br>la cintura</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Las tres comparten las mismas correcciones sobre <a href="#1a">1a</a>: la mordida pasa a semicírculo completo (1,5 de fondo en vez de 1,1), el talón se va al 30 % del ancho en vez de la mitad, y el cuerpo gana 0,4 de alto para que la cintura tenga sitio. Lo único que se decide aquí es qué lleva dentro.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(206px,1fr));gap:12px;">
+    <div style="background:#15191E;border:1px dashed #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div><span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;border:1px solid #3A424A;color:#9AA1A8;padding:3px 7px;border-radius:5px;">1a ACTUAL</span></div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#5E666D;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h9a1.7 1.7 0 0 0 3.2 0h3A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-3a1.7 1.7 0 0 0-3.2 0h-9A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM15 9.35a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1zm0 3.2a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h9a1.7 1.7 0 0 0 3.2 0h3A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-3a1.7 1.7 0 0 0-3.2 0h-9A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM15 9.35a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1zm0 3.2a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Cintura de 1,1</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Apenas se estrecha, y los dos puntos quedan flotando en el centro.</div></div>
+    </div>
+    <div id="3a" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">3a</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.75a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7zm0 2.4a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7zm0 2.4a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.75a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7zm0 2.4a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7zm0 2.4a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Columna de troquel</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Tres huecos en la línea de corte. Es la hermana exacta de <a href="#1k">1k</a>, el pack: mismo troquel, un solo cuerpo.</div></div>
+    </div>
+    <div id="3b" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">3b</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM6 10.5a1.5 1.5 0 0 0 0 3h5.6a1.5 1.5 0 0 0 0-3zm10 -1.75a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7zm0 4.8a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM6 10.5a1.5 1.5 0 0 0 0 3h5.6a1.5 1.5 0 0 0 0-3zm10 -1.75a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7zm0 4.8a0.85 0.85 0 1 0 0 1.7 0.85 0.85 0 1 0 0-1.7z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Con dato impreso</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Una barra troquelada en el cuerpo: la entrada lleva algo escrito y deja de estar en blanco.</div></div>
+    </div>
+    <div id="3c" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">3c</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Línea de corte</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Un solo hueco continuo en vez de tres. La que mejor aguanta a 20 px: nada que se pueda rellenar solo.</div></div>
+    </div>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:20px 24px;">
+    <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;max-width:860px;text-wrap:pretty;"><a href="#3c">3c</a> para producción y <a href="#3a">3a</a> si quieres que entrada y pack se vean claramente de la misma familia. <a href="#3b">3b</a> es la más rica a 44 pero la primera que se ensucia en el menú.</p>
+  </div>
+</section>
+
+<!-- ═══ 00 ENTRADA · LOTE 3 ═══ -->
+<section style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">00 / ENTRADA · LOTE 3</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">La entrada, por otros<br>tres caminos</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Todas las de abajo (<a href="#1a">1a</a>, <a href="#1b">1b</a>, <a href="#1c">1c</a>) son el mismo rectángulo con muescas cambiando de proporción. Estas tres no son ajustes: cambian de idea. El objeto que de verdad te dan al entrar, el formato de pase, y la entrada entendida como acceso.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;">
+    <div id="2a" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#F2711C;color:#101418;padding:4px 7px;border-radius:5px;">2a</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.8 5.5h10.4a4.8 4.8 0 0 1 4.8 4.8v3.4a4.8 4.8 0 0 1-4.8 4.8H6.8A4.8 4.8 0 0 1 2 13.7v-3.4A4.8 4.8 0 0 1 6.8 5.5zm3.7 3.4a3.1 3.1 0 0 0 0 6.2h5a3.1 3.1 0 0 0 0-6.2z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.8 5.5h10.4a4.8 4.8 0 0 1 4.8 4.8v3.4a4.8 4.8 0 0 1-4.8 4.8H6.8A4.8 4.8 0 0 1 2 13.7v-3.4A4.8 4.8 0 0 1 6.8 5.5zm3.7 3.4a3.1 3.1 0 0 0 0 6.2h5a3.1 3.1 0 0 0 0-6.2z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Pulsera</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Lo que de verdad te dan al entrar. Aro cerrado con el hueco grande y centrado, y el extremo izquierdo más macizo haciendo de cierre: sin apéndices, no hay anillo ni lupa ni interruptor.</div></div>
+    </div>
+    <div id="2b" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#F2711C;color:#101418;padding:4px 7px;border-radius:5px;">2b</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M8 2.8h8a2.4 2.4 0 0 1 2.4 2.4v7.2a2.6 2.6 0 0 0 0 5.2v1.2a2.4 2.4 0 0 1-2.4 2.4H8a2.4 2.4 0 0 1-2.4-2.4v-1.2a2.6 2.6 0 0 0 0-5.2V5.2A2.4 2.4 0 0 1 8 2.8z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 2.8h8a2.4 2.4 0 0 1 2.4 2.4v7.2a2.6 2.6 0 0 0 0 5.2v1.2a2.4 2.4 0 0 1-2.4 2.4H8a2.4 2.4 0 0 1-2.4-2.4v-1.2a2.6 2.6 0 0 0 0-5.2V5.2A2.4 2.4 0 0 1 8 2.8z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Pase vertical</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Cintura de 2,6 por lado y talón de un tercio. Ese cuello es lo que lo separa de una tarjeta o un móvil en vertical.</div></div>
+    </div>
+    <div id="2c" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#F2711C;color:#101418;padding:4px 7px;border-radius:5px;">2c</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6a8.4 8.4 0 0 1 8.4 8.4v9.2a1.4 1.4 0 0 1-1.4 1.4h-1.8a1.4 1.4 0 0 1-1.4-1.4V11a3.8 3.8 0 0 0-7.6 0v9.2a1.4 1.4 0 0 1-1.4 1.4H5a1.4 1.4 0 0 1-1.4-1.4V11A8.4 8.4 0 0 1 12 2.6z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6a8.4 8.4 0 0 1 8.4 8.4v9.2a1.4 1.4 0 0 1-1.4 1.4h-1.8a1.4 1.4 0 0 1-1.4-1.4V11a3.8 3.8 0 0 0-7.6 0v9.2a1.4 1.4 0 0 1-1.4 1.4H5a1.4 1.4 0 0 1-1.4-1.4V11A8.4 8.4 0 0 1 12 2.6z"></path></svg>
+      </div>
+      <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Arco de acceso</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Si lo que etiqueta es «entrar al parque» y no «comprar un papel», esto lo dice sin objeto y con una sola masa.</div></div>
+    </div>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F2711C;border-radius:16px;padding:20px 24px;">
+    <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;max-width:860px;text-wrap:pretty;">Si tengo que elegir: <a href="#2a">2a</a>. Es el único de todo el lote que no podría estar en el set de iconos de cualquier otra web, y encaja con el resto de la marca. <a href="#2c">2c</a> solo si «Entradas» pasa a llamarse «Acceso».</p>
+  </div>
+</section>
+
+<!-- ═══ 00 REVISIÓN · LOTE 2 ═══ -->
+<section style="display:flex;flex-direction:column;gap:26px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">00 / REVISIÓN · LOTE 2</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Tres que hay que arreglar<br>y dos que faltaban</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Misma rejilla de 24, misma masa de 3, mismo color único: nada de esto cambia. Lo que cambia es qué se reconoce a 20 px. Cada propuesta va con su glifo a 44 y a 20 — el segundo es el que decide. Dime los códigos que te quedas y los sustituyo en el set de la sección 02.</p>
+
+  <!-- entrada -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;">Entrada · ui/entrada</span>
+      <span style="font-size:14.5px;color:#9AA1A8;line-height:1.5;">Dos rectángulos de ancho casi igual se leen como dos tarjetas, no como una entrada con talón.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:12px;">
+      <div style="background:#15191E;border:1px dashed #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;border:1px solid #3A424A;color:#9AA1A8;padding:3px 7px;border-radius:5px;">ACTUAL</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#5E666D;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 5.4h7.6a2 2 0 0 1 2 2v9.2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.4a2 2 0 0 1 2-2zM17.6 5.4H20a2 2 0 0 1 2 2v9.2a2 2 0 0 1-2 2h-2.4a1.2 1.2 0 0 1-1.2-1.2V6.6a1.2 1.2 0 0 1 1.2-1.2z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 5.4h7.6a2 2 0 0 1 2 2v9.2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7.4a2 2 0 0 1 2-2zM17.6 5.4H20a2 2 0 0 1 2 2v9.2a2 2 0 0 1-2 2h-2.4a1.2 1.2 0 0 1-1.2-1.2V6.6a1.2 1.2 0 0 1 1.2-1.2z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Cuerpo y talón iguales</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">11,6 contra 6,4 de ancho. Demasiado parecidos.</div></div>
+      </div>
+      <div id="1a" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1a</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h9a1.7 1.7 0 0 0 3.2 0h3A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-3a1.7 1.7 0 0 0-3.2 0h-9A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM15 9.35a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1zm0 3.2a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h9a1.7 1.7 0 0 0 3.2 0h3A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-3a1.7 1.7 0 0 0-3.2 0h-9A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM15 9.35a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1zm0 3.2a1.05 1.05 0 1 0 0 2.1 1.05 1.05 0 1 0 0-2.1z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Troquel</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Muescas arriba y abajo más dos perforaciones. La silueta ya solo puede ser una entrada.</div></div>
+      </div>
+      <div id="1b" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1b</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" transform="rotate(-12 12 12)" d="M5 7h8.2a1.7 1.7 0 0 0 3.2 0H19a2.2 2.2 0 0 1 2.2 2.2v5.6A2.2 2.2 0 0 1 19 17h-2.6a1.7 1.7 0 0 0-3.2 0H5a2.2 2.2 0 0 1-2.2-2.2V9.2A2.2 2.2 0 0 1 5 7zM14.8 9.65a0.95 0.95 0 1 0 0 1.9 0.95 0.95 0 1 0 0-1.9zm0 2.8a0.95 0.95 0 1 0 0 1.9 0.95 0.95 0 1 0 0-1.9z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" transform="rotate(-12 12 12)" d="M5 7h8.2a1.7 1.7 0 0 0 3.2 0H19a2.2 2.2 0 0 1 2.2 2.2v5.6A2.2 2.2 0 0 1 19 17h-2.6a1.7 1.7 0 0 0-3.2 0H5a2.2 2.2 0 0 1-2.2-2.2V9.2A2.2 2.2 0 0 1 5 7zM14.8 9.65a0.95 0.95 0 1 0 0 1.9 0.95 0.95 0 1 0 0-1.9zm0 2.8a0.95 0.95 0 1 0 0 1.9 0.95 0.95 0 1 0 0-1.9z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Troquel inclinado</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">El mismo glifo a −12°. Gana carácter de parque, pierde alineación con el resto del set.</div></div>
+      </div>
+      <div id="1c" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1c</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="6.4" width="14.4" height="11.2" rx="2.4"></rect><rect x="18.4" y="6.4" width="3.6" height="11.2" rx="1.8"></rect></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="6.4" width="14.4" height="11.2" rx="2.4"></rect><rect x="18.4" y="6.4" width="3.6" height="11.2" rx="1.8"></rect></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Talón corregido</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Se mantiene la idea de ahora, pero el talón baja a 3,6 de ancho y deja de competir con el cuerpo.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- reserva -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;">Reserva · ui/reserva</span>
+      <span style="font-size:14.5px;color:#9AA1A8;line-height:1.5;">No existía: la landing usa <span style="font-family:'JetBrains Mono';font-size:13.5px;">ui/fecha</span> para reservar, y un calendario a secas no dice que la plaza ya esté cogida.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:12px;">
+      <div style="background:#15191E;border:1px dashed #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div><span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;border:1px solid #3A424A;color:#9AA1A8;padding:3px 7px;border-radius:5px;">ACTUAL</span></div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#5E666D;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><circle cx="8.6" cy="14.2" r="1.5"></circle><circle cx="12" cy="14.2" r="1.5"></circle><circle cx="15.4" cy="14.2" r="1.5"></circle></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><circle cx="8.6" cy="14.2" r="1.5"></circle><circle cx="12" cy="14.2" r="1.5"></circle><circle cx="15.4" cy="14.2" r="1.5"></circle></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Solo fecha</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Se queda como <span style="font-family:'JetBrains Mono';font-size:12px;">ui/fecha</span>: sigue haciendo falta en el selector.</div></div>
+      </div>
+      <div id="1d" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1d</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><path d="M8.4 14.6 10.9 17.1 15.6 12.4" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><path d="M8.4 14.6 10.9 17.1 15.6 12.4" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Calendario y check</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Reserva hecha. Es el gesto que se lee más rápido y el que mejor aguanta a 20.</div></div>
+      </div>
+      <div id="1e" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1e</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><rect x="10" y="12.6" width="4" height="4" rx="1.3"></rect></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><rect x="10" y="12.6" width="4" height="4" rx="1.3"></rect></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Día marcado</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Reserva como día elegido. Más neutro: sirve igual en el selector de fecha.</div></div>
+      </div>
+      <div id="1f" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1f</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><rect x="7.4" y="13" width="9.2" height="3.2" rx="1.6"></rect></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><rect x="7.4" y="13" width="9.2" height="3.2" rx="1.6"></rect></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Franja cogida</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">La barra es el tramo horario: aquí no se reserva un día, se reserva una franja.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- cumpleaños -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;">Cumpleaños · ui/cumple</span>
+      <span style="font-size:14.5px;color:#9AA1A8;line-height:1.5;">El regalo dice «tarjeta regalo», no «fiesta de cumpleaños en el parque».</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:12px;">
+      <div style="background:#15191E;border:1px dashed #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div><span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;border:1px solid #3A424A;color:#9AA1A8;padding:3px 7px;border-radius:5px;">ACTUAL</span></div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#5E666D;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z"></path><circle cx="8.9" cy="5.6" r="2.8"></circle><circle cx="15.1" cy="5.6" r="2.8"></circle></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z"></path><circle cx="8.9" cy="5.6" r="2.8"></circle><circle cx="15.1" cy="5.6" r="2.8"></circle></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Regalo</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Se queda como <span style="font-family:'JetBrains Mono';font-size:12px;">ui/regalo</span> para tarjetas regalo y vales.</div></div>
+      </div>
+      <div id="1g" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1g</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6.4" r="1.4"></circle><rect x="10.8" y="7.6" width="2.4" height="4.2" rx="1.2"></rect><path d="M6 11.4h12a1.6 1.6 0 0 1 1.6 1.6v2.4h2v3.6a2 2 0 0 1-2 2H4.4a2 2 0 0 1-2-2v-3.6h2V13a1.6 1.6 0 0 1 1.6-1.6z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6.4" r="1.4"></circle><rect x="10.8" y="7.6" width="2.4" height="4.2" rx="1.2"></rect><path d="M6 11.4h12a1.6 1.6 0 0 1 1.6 1.6v2.4h2v3.6a2 2 0 0 1-2 2H4.4a2 2 0 0 1-2-2v-3.6h2V13a1.6 1.6 0 0 1 1.6-1.6z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Tarta</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Dos pisos escalonados en una sola masa, con el de abajo más ancho, y la llama pegada al pábilo.</div></div>
+      </div>
+      <div id="1h" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1h</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6 18.9 19.4H5.1z"></path><circle cx="12" cy="3.4" r="1.9" stroke="none"></circle></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 6 18.9 19.4H5.1z"></path><circle cx="12" cy="3.4" r="1.9" stroke="none"></circle></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Gorro</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Cono y pompón: la silueta más limpia de las tres y la que también vale para «fiesta» en general.</div></div>
+      </div>
+      <div id="1i" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#1AA9DE;color:#101418;padding:4px 7px;border-radius:5px;">1i</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#1AA9DE;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><circle cx="8.6" cy="8.6" r="5"></circle><circle cx="17" cy="11" r="4"></circle><path d="M8.6 13.2c0 3.4 1.2 3.6 1.2 6.6M17 14.6c0 2.6-1 2.8-1 5.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="8.6" cy="8.6" r="5"></circle><circle cx="17" cy="11" r="4"></circle><path d="M8.6 13.2c0 3.4 1.2 3.6 1.2 6.6M17 14.6c0 2.6-1 2.8-1 5.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Globos</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Ambiente en vez de objeto. Muy bien a 44; a 20 los hilos empiezan a estorbar.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- pack de entradas -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;">Nuevo · pack de entradas · ui/pack</span>
+      <span style="font-size:14.5px;color:#9AA1A8;line-height:1.5;">Para bonos, entradas múltiples y packs familia. Tiene que distinguirse de <span style="font-family:'JetBrains Mono';font-size:13.5px;">ui/entrada</span> de un vistazo.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:12px;">
+      <div id="1j" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#A3C21C;color:#101418;padding:4px 7px;border-radius:5px;">1j</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#A3C21C;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><rect x="6.8" y="2.8" width="15.2" height="2.6" rx="1.3"></rect><rect x="4.4" y="6" width="15.4" height="2.6" rx="1.3"></rect><path fill-rule="evenodd" clip-rule="evenodd" d="M4.2 9.2h7.5a1.6 1.6 0 0 0 3 0h.7a2.2 2.2 0 0 1 2.2 2.2v6.2a2.2 2.2 0 0 1-2.2 2.2h-.7a1.6 1.6 0 0 0-3 0H4.2A2.2 2.2 0 0 1 2 17.6v-6.2A2.2 2.2 0 0 1 4.2 9.2z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6.8" y="2.8" width="15.2" height="2.6" rx="1.3"></rect><rect x="4.4" y="6" width="15.4" height="2.6" rx="1.3"></rect><path fill-rule="evenodd" clip-rule="evenodd" d="M4.2 9.2h7.5a1.6 1.6 0 0 0 3 0h.7a2.2 2.2 0 0 1 2.2 2.2v6.2a2.2 2.2 0 0 1-2.2 2.2h-.7a1.6 1.6 0 0 0-3 0H4.2A2.2 2.2 0 0 1 2 17.6v-6.2A2.2 2.2 0 0 1 4.2 9.2z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Pila</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Tres entradas apiladas con 0,6 de aire entre capas. Dice «varias» sin contar cuántas.</div></div>
+      </div>
+      <div id="1k" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#A3C21C;color:#101418;padding:4px 7px;border-radius:5px;">1k</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#A3C21C;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM8.8 9.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm6.4-4.2a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM8.8 9.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm6.4-4.2a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Tira troquelada</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Dos mordidas semicirculares y su columna de troquel: el pack de tres sin apilar nada. Hermana directa de 1a.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- fiestas y grupos -->
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+      <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;">Nuevo · fiestas y grupos · ui/fiestas</span>
+      <span style="font-size:14.5px;color:#9AA1A8;line-height:1.5;">Cumpleaños cerrado, despedidas, excursión de colegio. Son dos públicos con tarifa distinta, así que piden dos glifos: el general y el de colegios. Probé también una persona con gorro y se confundía con <span style="font-family:'JetBrains Mono';font-size:13.5px;">ui/cuenta</span>: fuera.</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(198px,1fr));gap:12px;">
+      <div id="1l" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#A3C21C;color:#101418;padding:4px 7px;border-radius:5px;">1l</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#A3C21C;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M2.6 7.2q9.4 3 18.8 0" fill="none" stroke-width="3" stroke-linecap="round"></path><path d="M3.4 9.4h4L5.4 14z"></path><path d="M10 10.2h4l-2 4.6z"></path><path d="M16.6 9.4h4L18.6 14z"></path></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><path d="M2.6 7.2q9.4 3 18.8 0" fill="none" stroke-width="3" stroke-linecap="round"></path><path d="M3.4 9.4h4L5.4 14z"></path><path d="M10 10.2h4l-2 4.6z"></path><path d="M16.6 9.4h4L18.6 14z"></path></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Banderines</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Servicio de fiestas en general: cumpleaños, despedidas, celebraciones de equipo.</div></div>
+      </div>
+      <div id="1m" style="background:#1A1F25;border:1px solid #2A3138;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:13px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.12em;background:#A3C21C;color:#101418;padding:4px 7px;border-radius:5px;">1m</span>
+          <span style="font-family:'JetBrains Mono';font-size:10px;color:#9AA1A8;">44 · 20</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;height:48px;color:#A3C21C;">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.6 3.8h12.8a3 3 0 0 1 3 3v8.4a3 3 0 0 1-3 3H5.6a3 3 0 0 1-3-3V6.8a3 3 0 0 1 3-3zm1.2 3.4a1.3 1.3 0 0 0-1.3 1.3v2.2a1.3 1.3 0 0 0 1.3 1.3h10.4a1.3 1.3 0 0 0 1.3-1.3V8.5a1.3 1.3 0 0 0-1.3-1.3z"></path><circle cx="7.6" cy="19.4" r="2.4"></circle><circle cx="16.4" cy="19.4" r="2.4"></circle></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M5.6 3.8h12.8a3 3 0 0 1 3 3v8.4a3 3 0 0 1-3 3H5.6a3 3 0 0 1-3-3V6.8a3 3 0 0 1 3-3zm1.2 3.4a1.3 1.3 0 0 0-1.3 1.3v2.2a1.3 1.3 0 0 0 1.3 1.3h10.4a1.3 1.3 0 0 0 1.3-1.3V8.5a1.3 1.3 0 0 0-1.3-1.3z"></path><circle cx="7.6" cy="19.4" r="2.4"></circle><circle cx="16.4" cy="19.4" r="2.4"></circle></svg>
+        </div>
+        <div><div style="font-size:14px;font-weight:700;line-height:1.25;">Autobús</div><div style="font-size:12.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Excursión de colegio. Otro público, otra tarifa: merece su propio glifo junto a 1l.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #1AA9DE;border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:10px;">
+    <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;">Mi apuesta</div>
+    <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;max-width:860px;text-wrap:pretty;"><a href="#1a">1a</a> entrada, <a href="#1d">1d</a> reserva, <a href="#1h">1h</a> cumpleaños, <a href="#1j">1j</a> pack y la pareja <a href="#1l">1l</a> + <a href="#1m">1m</a> para fiestas y colegios. Con esa combinación el gorro de 1h y los banderines de 1l comparten familia sin repetirse, y el pack se lee distinto de la entrada suelta.</p>
+    <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Dime los códigos que te quedas y los sustituyo en el set de la sección 02 con su nombre definitivo.</div>
+  </div>
+</section>
+
+<!-- ═══ 01 ANATOMÍA ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">01 / ANATOMÍA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">La rejilla de 24 y la masa de 3</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:800px;text-wrap:pretty;">Cada glifo se dibuja en un lienzo de 24 con 2 de margen: el área viva es 20×20. La masa mínima es 3 unidades — más fina y deja de parecer de esta marca; más gruesa y se cierra a 20px.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:20px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Lienzo</div>
+      <div style="position:relative;width:100%;max-width:216px;aspect-ratio:1;background:#101418;border:1px solid #2A3138;border-radius:10px;overflow:hidden;">
+        <sc-if value="{{ mostrarRejilla }}" hint-placeholder-val="{{ true }}">
+          <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(to right,rgba(26,169,222,.24) 1px,transparent 1px),linear-gradient(to bottom,rgba(26,169,222,.24) 1px,transparent 1px);background-size:9px 9px;"></div>
+          <div aria-hidden="true" style="position:absolute;inset:18px;border:1px dashed rgba(242,113,28,.7);border-radius:4px;"></div>
+        </sc-if>
+        <div style="position:absolute;inset:18px;display:flex;align-items:center;justify-content:center;color:#F4F4F1;">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:100%;height:100%;display:block;"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;line-height:1.6;">viewBox 0 0 24 24 · área viva 20 · margen 2<br>radios: 1.6 en barras, 2.6 en cuerpos</div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:20px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">El guiño, en tres detalles</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;">
+          <span style="color:#1AA9DE;display:flex;justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5.2" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="10.55" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="15.9" width="13" height="2.9" rx="1.45"></rect></svg></span>
+          <div><div style="font-size:15px;font-weight:700;">Juntas y extremos redondos</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Radio completo en cada barra. Es la contraforma de la letra burbuja, no una moda de UI.</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;">
+          <span style="color:#A3C21C;display:flex;justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path></svg></span>
+          <div><div style="font-size:15px;font-weight:700;">Masa, no contorno</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Relleno lleno con huecos recortados. A 20px un icono de línea desaparece; una silueta no.</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:center;">
+          <span style="color:#F5C400;display:flex;justify-content:center;"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z"></path></svg></span>
+          <div><div style="font-size:15px;font-weight:700;">Un solo color</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Nada de duotono ni relleno de acento dentro del glifo. El color lo pone el texto de al lado.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 02 SET UI ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">02 / SET UI · 24 px</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Treinta para la landing</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:800px;text-wrap:pretty;">Cubren la landing entera: cabecera, buscador, ficha de zona, formulario de reserva y pie. Si un flujo pide un icono que no está aquí, primero se comprueba si el flujo lo necesita de verdad.</p>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:800px;text-wrap:pretty;">El color de cada grupo es <strong style="color:#F4F4F1;">clasificación, no decoración</strong>: papel para lo que solo señala, <span style="color:#1AA9DE;font-weight:700;">cian</span> para lo que forma parte de la reserva, <span style="color:#A3C21C;font-weight:700;">lima</span> para lo que informa y <span style="color:#F2711C;font-weight:700;">naranja</span> para lo que solo existe en un parque de camas elásticas. En producción heredan <span style="font-family:'JetBrains Mono';font-size:14px;">currentColor</span> del texto que acompañan.</p>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#F4F4F1;margin-top:6px;">Navegación y estructura · papel</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#F4F4F1;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5.2" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="10.55" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="15.9" width="13" height="2.9" rx="1.45"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Menú</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/menu</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Cerrar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/cerrar</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Avanzar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/flecha-der</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M6.4 10.4 12 4.8l5.6 5.6z"></path><path d="M12 10.6v8.6" fill="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Subir</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/subir</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><circle cx="10.6" cy="10.6" r="6.4"></circle><path d="M15.6 15.6 20 20"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Buscar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/buscar</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5.4" width="18" height="2.9" rx="1.45"></rect><rect x="6" y="10.55" width="12" height="2.9" rx="1.45"></rect><rect x="9" y="15.7" width="6" height="2.9" rx="1.45"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Filtrar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/filtrar</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M8.4 5.2 19 12 8.4 18.8z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Reproducir</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/play</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><circle cx="18" cy="5.8" r="3.2"></circle><circle cx="6" cy="12" r="3.2"></circle><circle cx="18" cy="18.2" r="3.2"></circle><path d="M8.9 10.5l6.3-3.2M8.9 13.5l6.3 3.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Compartir</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/compartir</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" style="display:block;flex:0 0 auto;"><path d="M12.00 2.00L14.44 8.64L21.51 8.91L15.95 13.28L17.88 20.09L12.00 16.15L6.12 20.09L8.05 13.28L2.49 8.91L9.56 8.64Z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Valoración</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/valoracion</div></sc-if></div>
+    </div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;margin-top:10px;">Reserva y parque · cian</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#1AA9DE;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Entrada</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/entrada</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path><circle cx="8.6" cy="14.2" r="1.5"></circle><circle cx="12" cy="14.2" r="1.5"></circle><circle cx="15.4" cy="14.2" r="1.5"></circle></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Fecha</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/fecha</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.4V12l3.2 2.4"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Hora</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/hora</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 13a2.6 2.6 0 0 1 2.6-2.6h9.6A2.6 2.6 0 0 1 19.4 13v5.8a2.6 2.6 0 0 1-2.6 2.6H7.2a2.6 2.6 0 0 1-2.6-2.6zm7.4 1.8a1.7 1.7 0 0 0-1 3.1v1.1a1 1 0 0 0 2 0v-1.1a1.7 1.7 0 0 0-1-3.1z"></path><path d="M8.2 10.4V8.2a3.8 3.8 0 0 1 7.6 0v2.2" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Taquilla</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/taquilla</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7.8" r="4.2"></circle><path d="M4.4 20.4a7.6 7.6 0 0 1 15.2 0 1.4 1.4 0 0 1-1.4 1.4H5.8a1.4 1.4 0 0 1-1.4-1.4z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Acceder</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/cuenta</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="8" r="3.6"></circle><path d="M2.6 19.4a6.4 6.4 0 0 1 12.8 0 1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2z"></path><rect x="17.4" y="15.4" width="2.8" height="6" rx="1.4"></rect><rect x="15.8" y="17" width="6" height="2.8" rx="1.4"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Crear cuenta</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/registro</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="10.4" y="3.6" width="3.2" height="16.8" rx="1.6"></rect><rect x="3.6" y="10.4" width="16.8" height="3.2" rx="1.6"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Añadir</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/mas</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="3.6" y="10.4" width="16.8" height="3.2" rx="1.6"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Quitar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/menos</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Hecho</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/check</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M10.3 3.4h3.4a1.7 1.7 0 0 1 1.7 1.7v6.3h2.5a.9.9 0 0 1 .66 1.5l-5.6 6.1a1.2 1.2 0 0 1-1.76 0l-5.6-6.1A.9.9 0 0 1 5.83 11.4h2.5V5.1a1.7 1.7 0 0 1 1.97-1.7z"></path><rect x="3.6" y="19.2" width="16.8" height="2.6" rx="1.3"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Descargar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/descargar</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z"></path><circle cx="8.9" cy="5.6" r="2.8"></circle><circle cx="15.1" cy="5.6" r="2.8"></circle></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Cumpleaños</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/regalo</div></sc-if></div>
+    </div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;margin-top:10px;">Contacto e información · lima</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#A3C21C;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.6a7.4 7.4 0 0 0-7.4 7.4c0 5.4 7.4 11.4 7.4 11.4s7.4-6 7.4-11.4A7.4 7.4 0 0 0 12 2.6zm0 10.3a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Cómo llegar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/pin</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.4h9.2a2.4 2.4 0 0 1 2.4 2.4v14.4a2.4 2.4 0 0 1-2.4 2.4H7.4A2.4 2.4 0 0 1 5 19.2V4.8a2.4 2.4 0 0 1 2.4-2.4zm2.4 3a1 1 0 0 0 0 2h4.4a1 1 0 0 0 0-2zm2.2 10.2a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Llámanos</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/movil</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.6 6.2a1.8 1.8 0 0 1 1.8-1.8h15.2a1.8 1.8 0 0 1 1.8 1.8v11.6a1.8 1.8 0 0 1-1.8 1.8H4.4a1.8 1.8 0 0 1-1.8-1.8zm3.2 1.4 6.2 4.4 6.2-4.4z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Correo</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/correo</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 3.6h15.2a1.8 1.8 0 0 1 1.8 1.8v9.8a1.8 1.8 0 0 1-1.8 1.8H9.9l-4.3 3.4a1 1 0 0 1-1.6-.8v-2.6a1.8 1.8 0 0 1-1.4-1.8V5.4a1.8 1.8 0 0 1 1.8-1.8zm2.6 4.4a1.3 1.3 0 0 0 0 2.6h10a1.3 1.3 0 0 0 0-2.6zm0 4.2a1.3 1.3 0 0 0 0 2.6h6a1.3 1.3 0 0 0 0-2.6z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Preguntas</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/chat</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Info</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/info</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.6 4.4a1.6 1.6 0 0 1 2.8 0l8.4 14.6a1.6 1.6 0 0 1-1.4 2.4H3.6a1.6 1.6 0 0 1-1.4-2.4zM12 8.9a1.4 1.4 0 0 0-1.4 1.4v3.6a1.4 1.4 0 0 0 2.8 0v-3.6A1.4 1.4 0 0 0 12 8.9zm0 8.7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Normas</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/aviso</div></sc-if></div>
+    </div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#F2711C;margin-top:10px;">Del parque · naranja</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#F2711C;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.4" r="2.9" stroke="none"></circle><path d="M12 8.8v4.4" fill="none"></path><path d="M12 9.8 6.6 6.6M12 9.8l5.4-3.2" fill="none"></path><path d="M12 13.2 7.4 19.6M12 13.2l4.6 6.4" fill="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Saltador</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/saltador</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="4.4" r="2.6"></circle><rect x="2.4" y="8.8" width="19.2" height="3.4" rx="1.7"></rect><path d="M5.6 12.8 3.6 19.4M18.4 12.8l2 6.6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Cama elástica</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/cama</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="5.4" y="2.6" width="13.2" height="9.6" rx="1.8" fill="none" stroke-width="3"></rect><rect x="8.4" y="15" width="7.2" height="3" rx="1.5" stroke="none"></rect><path d="M9 18.8 10.4 21.6M15 18.8 13.6 21.6" fill="none" stroke-width="3"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Canasta</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/canasta</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-linecap="round"><path d="M4.8 15c2.4-8 8.4-8 10.6 0" fill="none" stroke-width="3"></path><circle cx="18.6" cy="16.4" r="2.8"></circle><rect x="2.4" y="19.6" width="19.2" height="3" rx="1.5"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Bote</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/bote</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><rect x="2.8" y="2.6" width="4.4" height="18.8" rx="1.8" stroke="none"></rect><path d="M16 5.6 12.8 8.8h6.4z"></path><path d="M16 18.4 12.8 15.2h6.4z"></path><path d="M16 9.6v4.8" fill="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Altura mínima</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">ui/altura</div></sc-if></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 03 EN PAPEL ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">03 / EN LAS DOS SUPERFICIES</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:800px;">El glifo no cambia: cambia el <span style="font-family:'JetBrains Mono';font-size:14px;">color</span> heredado. En tinta va papel #F4F4F1; en papel va tinta #101418. El cian solo entra en el icono cuando el icono es un enlace.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Sobre tinta · #F4F4F1</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;color:#F4F4F1;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5.2" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="10.55" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="15.9" width="13" height="2.9" rx="1.45"></rect></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.4V12l3.2 2.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.6a7.4 7.4 0 0 0-7.4 7.4c0 5.4 7.4 11.4 7.4 11.4s7.4-6 7.4-11.4A7.4 7.4 0 0 0 12 2.6zm0 10.3a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8z"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z"></path></svg>
+      </div>
+      <a href="#03" style="display:inline-flex;align-items:center;gap:9px;font-size:15px;font-weight:600;color:#1AA9DE;width:fit-content;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+        Icono de enlace: hereda el cian
+      </a>
+    </div>
+    <div style="background:#F4F4F1;border:1px solid #D6D8D4;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Sobre papel · #101418</div>
+      <div style="display:flex;gap:18px;flex-wrap:wrap;color:#101418;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="5.2" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="10.55" width="18" height="2.9" rx="1.45"></rect><rect x="3" y="15.9" width="13" height="2.9" rx="1.45"></rect></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"></circle><path d="M12 7.4V12l3.2 2.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.6a7.4 7.4 0 0 0-7.4 7.4c0 5.4 7.4 11.4 7.4 11.4s7.4-6 7.4-11.4A7.4 7.4 0 0 0 12 2.6zm0 10.3a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8z"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z"></path></svg>
+      </div>
+      <a href="#03" style="display:inline-flex;align-items:center;gap:9px;font-size:15px;font-weight:600;color:#0A5C93;width:fit-content;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+        En claro, el enlace es Azul Muro
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 04 ESTADOS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">04 / ESTADOS · PEGATINA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Aquí sí: keyline y sombra dura</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:820px;text-wrap:pretty;">Los cuatro estados no son señalética, son noticia — y son el único sitio donde el icono lleva color propio, borde de tinta 2px y sombra dura de 5px. Mínimo 40px: por debajo la pegatina se convierte en una mancha.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
+      <span style="width:56px;height:56px;border-radius:999px;background:#5FA82E;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg>
+      </span>
+      <div><div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Éxito</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Reserva creada, pago correcto.</div></div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Verde Salta #5FA82E</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
+      <span style="width:56px;height:56px;border-radius:999px;background:#D93E14;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg>
+      </span>
+      <div><div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Error</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Pago rechazado, dato inválido.</div></div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Rojo Goteo #D93E14</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
+      <span style="width:56px;height:56px;border-radius:999px;background:#F5C400;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.6 4.4a1.6 1.6 0 0 1 2.8 0l8.4 14.6a1.6 1.6 0 0 1-1.4 2.4H3.6a1.6 1.6 0 0 1-1.4-2.4zM12 8.9a1.4 1.4 0 0 0-1.4 1.4v3.6a1.4 1.4 0 0 0 2.8 0v-3.6A1.4 1.4 0 0 0 12 8.9zm0 8.7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path></svg>
+      </span>
+      <div><div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Sin plazas</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Franja completa, aforo lleno.</div></div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Amarillo Aviso #F5C400</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px 24px;display:flex;flex-direction:column;gap:16px;align-items:flex-start;">
+      <span style="width:56px;height:56px;border-radius:999px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 3.8a8.2 8.2 0 1 1-8.2 8.2"></path></svg>
+      </span>
+      <div><div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Cargando</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Anillo abierto: girará en el lote de microanimación.</div></div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Cian PJP #1AA9DE</div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">En contexto · aviso de una línea</div>
+    <div style="display:flex;align-items:center;gap:16px;background:{{ estado.tinte }};border:1px solid {{ estado.borde }};border-radius:14px;padding:16px 20px;flex-wrap:wrap;">
+      <span style="width:44px;height:44px;border-radius:999px;background:{{ estado.color }};border:2px solid #101418;box-shadow:4px 4px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="{{ estado.glifo }}"></path></svg>
+      </span>
+      <div style="flex:1 1 260px;">
+        <div style="font-size:16px;font-weight:800;line-height:1.3;">{{ estado.titulo }}</div>
+        <div style="font-size:14.5px;color:#C9CDD1;line-height:1.5;">{{ estado.texto }}</div>
+      </div>
+      <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">{{ estado.codigo }}</span>
+    </div>
+    <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;max-width:820px;">La pegatina de estado nunca convive con otra en la misma pantalla, y el texto que la acompaña dice qué hacer, no qué ha pasado. Cambia el estado desde los ajustes de la pieza.</div>
+  </div>
+</section>
+
+<!-- ═══ 05 TAMAÑOS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">05 / TAMAÑOS Y TACTO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:20px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Cuatro tallas</div>
+      <div style="display:flex;align-items:flex-end;gap:26px;color:#F4F4F1;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">20</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">24</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">32</span></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg><span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">48</span></div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;border-top:1px solid #2A3138;padding-top:14px;">20 solo dentro de chips mono. 24 es el tamaño de trabajo. 32 en cabecera y botón grande. 48 solo con pegatina.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:20px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Área táctil 44</div>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+        <span style="width:44px;height:44px;border-radius:10px;border:1px dashed rgba(242,113,28,.75);display:flex;align-items:center;justify-content:center;color:#F4F4F1;flex:none;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg>
+        </span>
+        <span style="width:44px;height:44px;border-radius:10px;background:#F2711C;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="10.4" y="3.6" width="3.2" height="16.8" rx="1.6"></rect><rect x="3.6" y="10.4" width="16.8" height="3.2" rx="1.6"></rect></svg>
+        </span>
+        <span style="width:44px;height:44px;border-radius:999px;background:#2A3138;display:flex;align-items:center;justify-content:center;color:#F4F4F1;flex:none;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+        </span>
+        <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;flex:1 1 150px;">El glifo mide 24; el objeto que se toca, 44. La diferencia es aire, no fondo — el fondo solo aparece si el botón es de verdad un botón.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 06 REGLAS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#FF8A6B;">06 / PROHIBIDO</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:14px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="height:96px;background:#101418;display:flex;align-items:center;justify-content:center;gap:14px;">
+        <span style="display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono';font-size:14px;color:#F4F4F1;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="opacity:.85;"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path></svg>
+          L–V 17:00–21:00
+        </span>
+      </div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ ICONO JUNTO A DATO MONO</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">El horario en JetBrains Mono ya se identifica solo. El icono ahí no informa: decora.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="height:96px;background:#101418;display:flex;align-items:center;justify-content:center;gap:16px;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1AA9DE" stroke-width="1.2" stroke-linecap="round"><circle cx="10.6" cy="10.6" r="6.4"></circle><path d="M15.6 15.6 20 20"></path></svg>
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="#F5C400"><circle cx="12" cy="12" r="9"></circle><path d="M12 6.4a1.5 1.5 0 0 1 1.5 1.5v8.2a1.5 1.5 0 0 1-3 0V7.9A1.5 1.5 0 0 1 12 6.4z" fill="#E6007E"></path></svg>
+      </div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ LÍNEA FINA · ✕ DUOTONO</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Trazo por debajo de 3 y dos colores dentro del mismo glifo. Ni el uno ni el otro son de esta marca.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="height:96px;background:#101418;display:flex;align-items:center;justify-content:center;">
+        <span style="width:26px;height:26px;border-radius:999px;background:#5FA82E;border:2px solid #101418;box-shadow:3px 3px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg>
+        </span>
+      </div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ PEGATINA POR DEBAJO DE 40</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">El keyline se come el glifo y la sombra se convierte en suciedad. A ese tamaño, silueta sólida y ya.</div></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+      <div style="height:96px;background:#101418;display:flex;align-items:center;justify-content:center;gap:10px;color:#F4F4F1;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="7.8" r="4.2"></circle><path d="M4.4 20.4a7.6 7.6 0 0 1 15.2 0 1.4 1.4 0 0 1-1.4 1.4H5.8a1.4 1.4 0 0 1-1.4-1.4z"></path></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z"></path></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="10.4" y="3.6" width="3.2" height="16.8" rx="1.6"></rect><rect x="3.6" y="10.4" width="16.8" height="3.2" rx="1.6"></rect></svg>
+        <span style="font-size:15px;font-weight:600;">Tres iconos, una frase</span>
+      </div>
+      <div style="padding:16px 18px;"><div style="font-family:'JetBrains Mono';font-size:11px;color:#FF8A6B;letter-spacing:.1em;margin-bottom:6px;">✕ RACIMO DE ICONOS</div><div style="font-size:14px;color:#9AA1A8;line-height:1.5;">Máximo uno por fila de texto. Si hacen falta tres, lo que falta es una lista, no iconos.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 07 ZONAS ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">07 / ZONAS · REJILLA 64</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Pose para saltar,<br>objeto para jugar</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:860px;text-wrap:pretty;">Rejilla propia de 64 con masa mínima de 8 — no es el set de UI ampliado, y ninguna de estas catorce baja de 48px. Donde se salta, el icono es el cuerpo del saltador en una postura; donde se juega, es el objeto del juego. Todas comparten el keyline de tinta de 2px con sombra dura de 5px, y el color agrupa por familia.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(214px,1fr));gap:16px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="11" r="7" stroke="none"></circle><path d="M32 21v15" fill="none"></path><path d="M32 25 19 14M32 25l13-11" fill="none"></path><path d="M32 36 23 49M32 36l9 13" fill="none"></path><rect x="8" y="54" width="48" height="7" rx="3.5" stroke="none"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Camas elásticas</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Rebote en tijera sobre la lona. La zona madre del parque.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#112934;color:#1AA9DE;border:1px solid #1A4657;padding:4px 9px;border-radius:999px;">pose</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#1AA9DE</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#F2711C;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="14" r="7" stroke="none"></circle><path d="M28 21l10 13" fill="none"></path><path d="M31 25 19 32M31 25l14-4" fill="none"></path><path d="M38 34 30 45M38 34l11-5" fill="none"></path><rect x="6" y="50" width="15" height="11" rx="3.5" stroke="none"></rect><rect x="25" y="50" width="15" height="11" rx="3.5" stroke="none"></rect><rect x="44" y="50" width="14" height="11" rx="3.5" stroke="none"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Foam pit</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Caída libre y bloques de espuma. La única pose horizontal.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#302119;color:#F2711C;border:1px solid #4A3120;padding:4px 9px;border-radius:999px;">pose</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#F2711C</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#A3C21C;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="54" height="7" rx="3.5" stroke="none"></rect><path d="M25 19v-4M39 19v-4" fill="none"></path><circle cx="32" cy="27" r="7" stroke="none"></circle><path d="M32 36v11" fill="none"></path><path d="M32 47 22 58M32 47l10 11" fill="none"></path></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Ninja · parkour</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Colgado de la barra: la única pose que no toca el suelo.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#252C19;color:#A3C21C;border:1px solid #3E4A21;padding:4px 9px;border-radius:999px;">pose</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#A3C21C</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#5FA82E;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="54" height="54" rx="15" fill="none" stroke-width="8"></rect><circle cx="32" cy="23" r="6.5" stroke="none"></circle><path d="M32 31v9" fill="none" stroke-width="8"></path><path d="M32 33 23.5 27.5M32 33l8.5-5.5" fill="none" stroke-width="8"></path><path d="M32 40 25.5 48.5M32 40l6.5 8.5" fill="none" stroke-width="8"></path></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Zona mini</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Saltador pequeño dentro de recinto: el marco es la norma de edad.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#1A2419;color:#5FA82E;border:1px solid #2F4A22;padding:4px 9px;border-radius:999px;">pose</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#5FA82E</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#D93E14;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round"><circle cx="38" cy="36" r="17" stroke="none"></circle><path d="M7 16h12M5 30h10M8 45h11" fill="none"></path></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Balón prisionero</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Balón con estelas de velocidad. Objeto, porque el juego es el balón.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#2C1A17;color:#FF8A6B;border:1px solid #4A2620;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#D93E14</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#F5C400;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="6" width="36" height="26" rx="4" fill="none" stroke-width="8"></rect><rect x="22" y="40" width="20" height="8" rx="4" stroke="none"></rect><path d="M24 50l4 8M40 50l-4 8" fill="none"></path></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Canasta</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Tablero, aro macizo y red en V. Sin balón: lo pone el saltador.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#2A2413;color:#F5C400;border:1px solid #4A4020;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#F5C400</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#E6007E;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"><circle cx="32" cy="9" r="7" stroke="none"></circle><path d="M32 16 50 51H14z"></path><rect x="9" y="50" width="46" height="9" rx="4.5" stroke="none"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Cumpleaños</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Gorro de fiesta con pompón y cinta. El único sitio donde el magenta manda.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#2A1122;color:#E6007E;border:1px solid #4A1E3A;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#E6007E</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 40c4-13 12-13 16 0M25 40c4-13 12-13 16 0M41 40c3.5-11 10.5-11 14 0" fill="none"></path><rect x="4" y="50" width="56" height="8" rx="4" stroke="none"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Pista de tumbling</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Tres rebotes encadenados sobre pista larga. El glifo es la trayectoria.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#112934;color:#1AA9DE;border:1px solid #1A4657;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#1AA9DE</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="12" stroke-linecap="round"><path d="M50 50 58 14" fill="none"></path><circle cx="26" cy="30" r="9" stroke="none"></circle><rect x="4" y="50" width="42" height="8" rx="4" stroke="none"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Paredes inclinadas</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Lona, muro en cuña y el cuerpo rebotando entre los dos.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#112934;color:#1AA9DE;border:1px solid #1A4657;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#1AA9DE</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#F2711C;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="14" width="26" height="8" rx="4" stroke="none"></rect><rect x="14" y="22" width="9" height="34" rx="4.5" stroke="none"></rect><path d="M46 18v20" fill="none"></path><path d="M46 52 36 40h20z"></path></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Torre de salto</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Plataforma y caída dirigida. La flecha es el salto, no una señal.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#302119;color:#F2711C;border:1px solid #4A3120;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#F2711C</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#D93E14;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor"><circle cx="17" cy="14" r="9"></circle><circle cx="47" cy="14" r="9"></circle><rect x="4" y="30" width="56" height="9" rx="4.5"></rect><rect x="12" y="39" width="9" height="19" rx="4.5"></rect><rect x="43" y="39" width="9" height="19" rx="4.5"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Battle beam</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Viga sobre dos apoyos y los dos rulos. Duelo de equilibrio.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#2C1A17;color:#FF8A6B;border:1px solid #4A2620;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#D93E14</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#F5C400;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linejoin="round"><path d="M8 52V16h48v36" fill="none"></path><circle cx="42" cy="42" r="9" stroke="none"></circle></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Portería</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Marco abierto y balón dentro. Fútbol sobre lona.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#2A2413;color:#F5C400;border:1px solid #4A4020;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#F5C400</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#F5C400;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8"><circle cx="32" cy="32" r="24" fill="none"></circle><circle cx="32" cy="32" r="10" fill="none"></circle><circle cx="32" cy="32" r="4" stroke="none"></circle></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Diana de velcro</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">Tres anillos concéntricos. Puntería en salto.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#2A2413;color:#F5C400;border:1px solid #4A4020;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#F5C400</span>
+      </div>
+    </div>
+
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px 22px;display:flex;flex-direction:column;gap:16px;">
+      <span style="width:88px;height:88px;border-radius:20px;background:#A3C21C;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+        <svg width="58" height="58" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="12" stroke-linecap="round"><path d="M16 54C16 24 32 12 52 12" fill="none"></path><rect x="4" y="50" width="34" height="8" rx="4" stroke="none"></rect></svg>
+      </span>
+      <div>
+        <div style="font-family:'Bungee';font-size:17px;line-height:1.15;">Muro de trepa</div>
+        <div style="font-size:14px;color:#9AA1A8;line-height:1.5;margin-top:6px;">La curva del warped wall. Familia ninja, sin figura encima.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#252C19;color:#A3C21C;border:1px solid #3E4A21;padding:4px 9px;border-radius:999px;">objeto</span>
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">#A3C21C</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:18px;">
+    <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Siete familias · el color agrupa, el glifo distingue</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:14px;">
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#1AA9DE;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Salto libre</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Camas, tumbling, paredes inclinadas</div></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#F2711C;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Caída</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Foam pit, torre de salto</div></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#A3C21C;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Reto físico</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Ninja-parkour, muro de trepa</div></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#D93E14;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Duelo</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Balón prisionero, battle beam</div></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#F5C400;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Juego con objeto</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Canasta, portería, diana</div></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#5FA82E;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Peques</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Zona mini</div></div></div>
+      <div style="display:flex;gap:12px;align-items:flex-start;"><span style="width:30px;height:30px;border-radius:8px;background:#E6007E;border:2px solid #101418;flex:none;"></span><div><div style="font-size:14.5px;font-weight:700;line-height:1.25;">Eventos</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.45;margin-top:3px;">Cumpleaños</div></div></div>
+    </div>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;border-top:1px solid #2A3138;padding-top:14px;max-width:880px;">Catorce zonas no caben en ocho colores, y forzarlo daría catorce tonos indistinguibles. Así que el color deja de nombrar la zona y pasa a nombrar la <strong style="color:#F4F4F1;">familia</strong>: en la parrilla el visitante ve de un golpe cuántas hay de saltar, cuántas de competir y cuántas de caerse. La zona la dice el glifo — y el nombre debajo.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+    <div style="background:#F4F4F1;border:1px solid #D6D8D4;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">En tarjeta de zona · sobre papel</div>
+      <div style="display:flex;gap:18px;align-items:flex-start;">
+        <span style="width:72px;height:72px;border-radius:18px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;flex:none;">
+          <svg width="48" height="48" viewBox="0 0 64 64" fill="currentColor" stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><circle cx="32" cy="11" r="7" stroke="none"></circle><path d="M32 21v15" fill="none"></path><path d="M32 25 19 14M32 25l13-11" fill="none"></path><path d="M32 36 23 49M32 36l9 13" fill="none"></path><rect x="8" y="54" width="48" height="7" rx="3.5" stroke="none"></rect></svg>
+        </span>
+        <div>
+          <div style="font-family:'Bungee';font-size:21px;line-height:1.1;color:#101418;">Camas elásticas</div>
+          <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:#626A72;">32 lonas conectadas, paredes inclinadas y dos pistas de carrera. Desde 6 años.</p>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;line-height:1.6;">La pegatina no cambia entre tinta y papel: el keyline ya la separa del fondo.</div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #FF8A6B;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:'Bungee';font-size:20px;line-height:1.15;">Los cuatro noes de este lote</div>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:12px;color:#FF8A6B;flex:none;">✕</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">No bajan de 48px ni se meten en una fila de texto: para eso está el set de 24.</span></div>
+        <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:12px;color:#FF8A6B;flex:none;">✕</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">No se apoyan sobre foto sin su caja de color: el keyline necesita fondo plano.</span></div>
+        <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:12px;color:#FF8A6B;flex:none;">✕</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">No cambian de color: el color <em style="font-style:normal;color:#F4F4F1;">es</em> el nombre de la zona en todo el sitio.</span></div>
+        <div style="display:flex;gap:10px;align-items:baseline;"><span style="font-family:'JetBrains Mono';font-size:12px;color:#FF8A6B;flex:none;">✕</span><span style="font-size:14.5px;line-height:1.5;color:#C9CDD1;">No aparecen las catorce juntas fuera de la parrilla de zonas. En el resto, una.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 08 RESERVAS Y CUENTA ═══ -->
+<section style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">08 / RESERVAS Y CUENTA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Diecisiete más<br>para el área de cliente</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:840px;text-wrap:pretty;">Misma rejilla de 24 y misma masa de 3 que el set de la landing: el área de cliente no es otro producto, es la misma marca haciendo gestiones. Tres subgrupos con el color de su familia — <span style="color:#1AA9DE;font-weight:700;">cian</span> lo que ya está reservado, <span style="color:#F2711C;font-weight:700;">naranja</span> lo que mueve dinero, <span style="color:#A3C21C;font-weight:700;">lima</span> lo que configura la cuenta.</p>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#1AA9DE;margin-top:6px;">Mis reservas · cian</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#1AA9DE;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3"><rect x="3.5" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none"></rect><rect x="14.1" y="3.5" width="6.4" height="6.4" rx="1.4" fill="none"></rect><rect x="3.5" y="14.1" width="6.4" height="6.4" rx="1.4" fill="none"></rect><rect x="13.4" y="13.4" width="3.4" height="3.4" rx="1" stroke="none"></rect><rect x="18.2" y="17.6" width="3.4" height="3.4" rx="1" stroke="none"></rect><rect x="13.4" y="18.2" width="3" height="3" rx="1" stroke="none"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Código QR</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">res/qr</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2a7.8 7.8 0 1 1-7.6 9.6" fill="none"></path><path d="M7.6 9.4 3 10.6l-1.2-4.6z" stroke="none"></path><path d="M12 8.6v3.8l3 2.2" fill="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Historial</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">res/historial</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5.4 9.6A7.4 7.4 0 0 1 19 8.4" fill="none"></path><path d="M15.8 4.6 20.6 5.6 19.6 10.4z" stroke="none"></path><path d="M18.6 14.4A7.4 7.4 0 0 1 5 15.6" fill="none"></path><path d="M8.2 19.4 3.4 18.4 4.4 13.6z" stroke="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Reprogramar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">res/reprogramar</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M9.2 2.4h5.6a1.6 1.6 0 0 1 1.6 1.6v1.2H21a1.3 1.3 0 0 1 0 2.6h-1.3l-.9 12a2.5 2.5 0 0 1-2.5 2.3H7.7a2.5 2.5 0 0 1-2.5-2.3l-.9-12H3a1.3 1.3 0 0 1 0-2.6h4.6V4a1.6 1.6 0 0 1 1.6-1.6zm.8 3.4h4v-.8h-4zm-.4 5.2v7.4h1.8v-7.4zm3.2 0v7.4h1.8v-7.4z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Cancelar</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">res/cancelar</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"><rect x="4" y="3.4" width="13.6" height="9.4" rx="2.4" fill="none" stroke-width="3"></rect><path d="M7 11.6h8.8a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2z" stroke="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Bonos</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">res/bono</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><circle cx="8.6" cy="7.6" r="3.6"></circle><circle cx="17.2" cy="8.8" r="2.8"></circle><path d="M2.4 19.8a6.2 6.2 0 0 1 12.4 0 1.2 1.2 0 0 1-1.2 1.2H3.6a1.2 1.2 0 0 1-1.2-1.2z"></path><path d="M16.4 13.6a5.2 5.2 0 0 1 5.2 6.2 1.2 1.2 0 0 1-1.2 1.2h-2.6v-1.2a7.8 7.8 0 0 0-1.6-4.8z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Acompañantes</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">res/grupo</div></sc-if></div>
+    </div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#F2711C;margin-top:10px;">Pedidos y pago · naranja</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#F2711C;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 7.4V6.6a4.6 4.6 0 0 1 9.2 0v.8H19a1.9 1.9 0 0 1 1.9 2l-.7 10.2a2.3 2.3 0 0 1-2.3 2.2H6.1a2.3 2.3 0 0 1-2.3-2.2L3.1 9.4a1.9 1.9 0 0 1 1.9-2zm2.8 0h3.6v-.8a1.8 1.8 0 0 0-3.6 0z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Pedido</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">pag/pedido</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 4.6h17.2a1.9 1.9 0 0 1 1.9 1.9v11a1.9 1.9 0 0 1-1.9 1.9H3.4a1.9 1.9 0 0 1-1.9-1.9v-11a1.9 1.9 0 0 1 1.9-1.9zm.1 4.2v2.4h17v-2.4zm2.1 5.8a1.4 1.4 0 0 0 0 2.8h4a1.4 1.4 0 0 0 0-2.8z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Tarjeta</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">pag/tarjeta</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.8 3.4a1.6 1.6 0 0 1 1.6-1.6h11.2a1.6 1.6 0 0 1 1.6 1.6v18.8l-3.2-2-3.2 2-3.2-2-3.2 2zm3.4 3.2a1.3 1.3 0 0 0 0 2.6h7.6a1.3 1.3 0 0 0 0-2.6zm0 4.8a1.3 1.3 0 0 0 0 2.6h4.8a1.3 1.3 0 0 0 0-2.6z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Factura</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">pag/factura</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6.6 8.8H15a5.6 5.6 0 0 1 0 11.2H9.4" fill="none"></path><path d="M9.8 3.8 4.8 8.8l5 5z" stroke="none"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Reembolso</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">pag/reembolso</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.6 2.4h7.8a2.2 2.2 0 0 1 2.2 2.2v7.8a2.2 2.2 0 0 1-.64 1.55l-7.2 7.2a2.2 2.2 0 0 1-3.11 0l-7.78-7.78a2.2 2.2 0 0 1 0-3.11l7.2-7.2A2.2 2.2 0 0 1 11.6 2.4zm5.4 3.4a2.1 2.1 0 1 0 0 4.2 2.1 2.1 0 0 0 0-4.2z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Cupón</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">pag/cupon</div></sc-if></div>
+    </div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;margin-top:10px;">Mi cuenta · lima</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;color:#A3C21C;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 4.4h17.2a1.9 1.9 0 0 1 1.9 1.9v11.4a1.9 1.9 0 0 1-1.9 1.9H3.4a1.9 1.9 0 0 1-1.9-1.9V6.3a1.9 1.9 0 0 1 1.9-1.9zm4.4 2.8a2.7 2.7 0 1 0 0 5.4 2.7 2.7 0 0 0 0-5.4zm6.6 1a1.3 1.3 0 0 0 0 2.6h4.2a1.3 1.3 0 0 0 0-2.6zm0 4.2a1.3 1.3 0 0 0 0 2.6h4.2a1.3 1.3 0 0 0 0-2.6zM4.8 15.6a1.2 1.2 0 0 0 0 2.4h6a1.2 1.2 0 0 0 0-2.4z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Mis datos</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">cta/datos</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.2 4 5.1v6.6c0 4.9 3.3 8.7 8 10.5 4.7-1.8 8-5.6 8-10.5V5.1zm-1 13.6L7.2 12l2-2 1.8 1.8 4.2-4.2 2 2z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Seguridad</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">cta/seguridad</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2a6.8 6.8 0 0 0-6.8 6.8v3.2l-1.9 3.6a1.3 1.3 0 0 0 1.15 1.9h15.1a1.3 1.3 0 0 0 1.15-1.9l-1.9-3.6V9A6.8 6.8 0 0 0 12 2.2z"></path><path d="M9.2 19.2h5.6a2.8 2.8 0 0 1-5.6 0z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Avisos</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">cta/avisos</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="2.6" y="5.4" width="18.8" height="3.2" rx="1.6"></rect><rect x="7" y="2.8" width="3.2" height="8.4" rx="1.6"></rect><rect x="2.6" y="15.4" width="18.8" height="3.2" rx="1.6"></rect><rect x="13.8" y="12.8" width="3.2" height="8.4" rx="1.6"></rect></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Preferencias</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">cta/ajustes</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M11 3h-5A2.6 2.6 0 0 0 3.4 5.6v12.8A2.6 2.6 0 0 0 6 21h5a1.5 1.5 0 0 0 0-3H6.4V6H11a1.5 1.5 0 0 0 0-3z"></path><path d="M16.4 6.9 14.3 9l2 2h-5.5a1.5 1.5 0 0 0 0 3h5.5l-2 2 2.1 2.1 5.1-5.6z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Salir</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">cta/salir</div></sc-if></div>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:12px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:12px;">
+      <span style="color:inherit;display:flex;"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.6a3.9 3.9 0 0 0-3.9 3.9 1.4 1.4 0 0 0 2.8 0 1.1 1.1 0 1 1 1.85.82c-.85.72-1.85 1.55-1.85 3.08v.5a1.4 1.4 0 0 0 2.8 0v-.5c0-.35.4-.7 1.05-1.25A3.9 3.9 0 0 0 12 6zm0 10.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z"></path></svg></span>
+      <div><div style="font-size:13.5px;font-weight:700;line-height:1.2;">Ayuda</div><sc-if value="{{ mostrarCodigos }}" hint-placeholder-val="{{ true }}"><div style="font-family:'JetBrains Mono';font-size:10.5px;color:#9AA1A8;margin-top:3px;">cta/ayuda</div></sc-if></div>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:20px;">
+    <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Cargadores · los únicos tres que se mueven</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(226px,1fr));gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="height:64px;display:flex;align-items:center;">
+          <span style="display:flex;color:#1AA9DE;animation:pjpgira 900ms linear infinite;transform-origin:50% 50%;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 3.8a8.2 8.2 0 1 1-8.2 8.2"></path></svg>
+          </span>
+        </div>
+        <div><div style="font-size:14.5px;font-weight:700;">Aro abierto</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">El botón que espera, la página que carga. 900ms lineal, sin rebote: aquí no hay gracia que hacer.</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="height:64px;display:flex;align-items:center;gap:9px;">
+          <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;animation:pjpbote 900ms ease-in-out infinite;"></span>
+          <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;animation:pjpbote 900ms ease-in-out .12s infinite;"></span>
+          <span style="width:11px;height:11px;border-radius:999px;background:#F2711C;animation:pjpbote 900ms ease-in-out .24s infinite;"></span>
+        </div>
+        <div><div style="font-size:14.5px;font-weight:700;">Tres botes</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Para esperas cortas dentro de una lista. Es el único guiño de rebote del sistema: 7px de salto, desfase de 120ms.</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="height:64px;display:flex;align-items:center;">
+          <span style="position:relative;display:block;width:100%;height:8px;border-radius:999px;background:#2A3138;overflow:hidden;">
+            <span style="position:absolute;inset:0;width:38%;border-radius:999px;background:#A3C21C;animation:pjpbarra 1.4s ease-in-out infinite;"></span>
+          </span>
+        </div>
+        <div><div style="font-size:14.5px;font-weight:700;">Barra indeterminada</div><div style="font-size:13.5px;color:#9AA1A8;line-height:1.5;margin-top:4px;">Cabecera de proceso: pago, emisión de entradas. Cuando hay porcentaje real, deja de ser indeterminada y se rellena.</div></div>
+      </div>
+    </div>
+    <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;border-top:1px solid #2A3138;padding-top:14px;max-width:880px;">Un cargador por pantalla y nunca dos tipos a la vez. Con <span style="font-family:'JetBrains Mono';font-size:13.5px;">prefers-reduced-motion</span> los tres se quedan quietos: el aro se cierra, los puntos se apagan al 40% y la barra se convierte en una línea fija.</p>
+  </div>
+</section>
+
+<!-- ═══ 09 SIGUIENTE ═══ -->
+<section style="display:flex;flex-direction:column;gap:18px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">09 / SIGUIENTE LOTE</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:22px;line-height:1.15;">Microanimaciones</div>
+    <p style="margin:0;font-size:15.5px;line-height:1.6;color:#C9CDD1;max-width:860px;text-wrap:pretty;">El set ya está construido para moverse: el anillo de «Cargando» está abierto para girar, el saltador tiene el eje en la cadera y la cama elástica tiene la lona separada del cuerpo. Falta decidir la física — cuánto rebote, cuánto tiempo y qué se mueve al pasar el cursor frente a lo que se mueve al entrar en pantalla.</p>
+    <div style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">Dime y arrancamos con eso.</div>
+  </div>
+</section>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;estadoDemo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Éxito&quot;,&quot;Error&quot;,&quot;Sin plazas&quot;,&quot;Cargando&quot;],&quot;default&quot;:&quot;Éxito&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Estados&quot;,&quot;label&quot;:&quot;Estado del aviso de ejemplo&quot;},&quot;mostrarRejilla&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Documento&quot;,&quot;label&quot;:&quot;Mostrar rejilla de 24&quot;},&quot;mostrarCodigos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Documento&quot;,&quot;label&quot;:&quot;Mostrar códigos de icono&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const check = 'M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z';
+    const aspa = 'M12 9.9 8.3 6.2 6.2 8.3 9.9 12l-3.7 3.7 2.1 2.1 3.7-3.7 3.7 3.7 2.1-2.1L14.1 12l3.7-3.7-2.1-2.1z';
+    const alerta = 'M10.6 4.4a1.6 1.6 0 0 1 2.8 0l8.4 14.6a1.6 1.6 0 0 1-1.4 2.4H3.6a1.6 1.6 0 0 1-1.4-2.4zM12 8.9a1.4 1.4 0 0 0-1.4 1.4v3.6a1.4 1.4 0 0 0 2.8 0v-3.6A1.4 1.4 0 0 0 12 8.9zm0 8.7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z';
+    const estados = {
+      'Éxito': { color: '#5FA82E', tinte: '#1A2419', borde: '#2F4A22', glifo: check, titulo: 'Reserva confirmada para el sábado a las 17:00', texto: 'Te la hemos enviado al correo. Llega 10 minutos antes con los calcetines puestos.', codigo: 'PJP-4471' },
+      'Error': { color: '#D93E14', tinte: '#2C1A17', borde: '#4A2620', glifo: aspa, titulo: 'No hemos podido cobrar la tarjeta', texto: 'Revisa el número o prueba con otra. No se ha reservado ninguna plaza.', codigo: 'err/pago' },
+      'Sin plazas': { color: '#F5C400', tinte: '#2A2413', borde: '#4A4020', glifo: alerta, titulo: 'La franja de 18:00 está completa', texto: 'Quedan 6 plazas a las 19:00 y el parque entero libre a las 20:00.', codigo: 'aforo/18' },
+      'Cargando': { color: '#1AA9DE', tinte: '#112934', borde: '#1A4657', glifo: 'M12 2.6a9.4 9.4 0 1 0 0 18.8 9.4 9.4 0 0 0 0-18.8zm0 3a1.4 1.4 0 0 1 1.4 1.4v4.3l2.7 2a1.4 1.4 0 0 1-1.7 2.2l-3.2-2.4a1.4 1.4 0 0 1-.6-1.1V7a1.4 1.4 0 0 1 1.4-1.4z', titulo: 'Comprobando plazas para el sábado', texto: 'Un segundo: estamos mirando el aforo real de cada franja.', codigo: '···' }
+    };
+    return {
+      estado: estados[p.estadoDemo] || estados['Éxito'],
+      mostrarRejilla: p.mostrarRejilla !== false,
+      mostrarCodigos: p.mostrarCodigos !== false
+    };
+  }
+}
+</script>
+</body>
+</html>

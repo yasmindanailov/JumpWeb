@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:#101418;color:#F4F4F1;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+</style>
+</helmet>
+
+<div style="background:#101418;color:#F4F4F1;padding:56px 44px 96px;min-height:100vh;">
+<section id="1a" style="max-width:1660px;margin:0 auto;display:flex;flex-direction:column;gap:64px;">
+
+<!-- ═══ CABECERA ═══ -->
+<div style="display:flex;flex-direction:column;gap:22px;">
+  <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;background:#F2711C;color:#101418;padding:6px 11px;border-radius:6px;font-weight:700;">Parada 04 · 1a</span>
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Pagar · el salto al banco · los cuatro desenlaces</span>
+  </div>
+  <h1 style="font-family:'Bungee';font-size:56px;line-height:.95;letter-spacing:-.015em;margin:0;max-width:1040px;">Pagar 162,40 €.<br>Te cobra <span style="color:#F5C400;">92,80</span>.</h1>
+  <p style="margin:0;font-size:19px;line-height:1.5;max-width:920px;color:#C9CDD1;text-wrap:pretty;">Seis pantallas: la de pagar, el salto al banco y los cuatro desenlaces. Al ponerlas juntas sale el fallo que ninguna de las tres auditorías vio, porque solo aparece <strong style="color:#F4F4F1;">cuando hay un cumpleaños en el carrito</strong>: el pie de la pantalla de pagar ancla en el total, y la tarjeta se lleva otra cifra. Se arregla decidiendo qué número va pegado al botón.</p>
+  <p style="margin:0;font-size:17px;line-height:1.6;max-width:920px;color:#9AA1A8;text-wrap:pretty;">Y de paso salen tres frases que el servidor ya tiene escritas y la pantalla no dice, un bloque que manda al cliente <strong style="color:#F4F4F1;">fuera de la web</strong> justo después de pagar, y el naranja: aparece una vez para cobrar y vuelve una vez para reintentar. En ninguna otra.</p>
+</div>
+
+<!-- ═══ A · LAS SEIS PANTALLAS ═══ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F5C400;">A / LAS SEIS PANTALLAS A 390</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:920px;text-wrap:pretty;">Dibujadas a la escala del sistema —cuerpo 16, notas 15— y no a la del cajón de hoy, que es 13. Es la grieta 00 de la auditoría y sigue siendo tu decisión: aquí puedes ver lo que cuesta en vez de imaginarlo. Medido en el navegador: <strong style="color:#F4F4F1;">cinco de las seis caben enteras en una pantalla de teléfono</strong> y a la sexta, la de pagar, le sobran 244 px la primera vez que compras. Los números están en cada nota.</p>
+
+  <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;">
+
+    <!-- ─── PASO 08 · PAGAR ─── -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#F2711C;">PASO 08</span>
+        <span style="font-size:15px;font-weight:800;">Pagar</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:#302119;color:#F2711C;">EL ÚNICO NARANJA</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;overflow:hidden;display:flex;flex-direction:column;height:880px;">
+        <div style="flex:none;padding:16px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-family:'Bungee';font-size:18px;color:#101418;">Reservar</span>
+          <span style="width:44px;height:44px;margin:-8px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#101418;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+        </div>
+
+        <sc-if value="{{ conBanda }}" hint-placeholder-val="{{ true }}">
+          <div style="flex:none;background:#E8E9E5;border-bottom:1px solid #D6D8D4;padding:14px 20px;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <span style="display:inline-flex;align-items:center;gap:7px;min-height:48px;margin:-12px 0;font-size:16px;font-weight:700;color:#0A5C93;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><g transform="translate(24 0) scale(-1 1)"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></g></svg>
+                Volver al carrito
+              </span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.06em;color:#626A72;">Paso 5 de 5</span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <sc-for list="{{ fasesPagar }}" as="f" hint-placeholder-count="5">
+                <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                  <div style="height:5px;border-radius:999px;background:rgba(16,20,24,.12);overflow:hidden;"><div style="height:5px;width:{{ f.relleno }};background:#1AA9DE;border-radius:999px;"></div></div>
+                  <div style="font-size:11.5px;font-weight:{{ f.peso }};color:{{ f.color }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ f.nom }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="flex:1;min-height:0;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:18px;">
+          <h3 style="flex:none;font-family:'Bungee';font-size:26px;line-height:1.05;margin:0;color:#101418;">Repasa tu reserva</h3>
+
+          <div style="flex:none;display:flex;flex-direction:column;gap:10px;">
+            <sc-for list="{{ resumen }}" as="l" hint-placeholder-count="2">
+              <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                  <span style="flex:none;width:30px;height:30px;border-radius:10px;background:#E8E9E5;display:flex;align-items:center;justify-content:center;color:#101418;" data-om-raster="true">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{ l.icono }}"></path></svg>
+                  </span>
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;">
+                    <span style="font-size:16px;font-weight:700;color:#101418;line-height:1.3;">{{ l.nom }}</span>
+                    <span style="font-size:15px;color:#626A72;">{{ l.cuando }}</span>
+                  </span>
+                  <span style="flex:none;font-size:16px;font-weight:700;color:#101418;white-space:nowrap;">{{ l.precio }}</span>
+                </div>
+                <sc-for list="{{ l.dentro }}" as="d" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-left:40px;">
+                    <span style="font-size:15px;color:#626A72;">{{ d.t }}</span>
+                    <span style="font-size:15px;color:#626A72;white-space:nowrap;">{{ d.v }}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ l.senal }}" hint-placeholder-val="{{ false }}">
+                  <div style="border-top:1px solid #D6D8D4;padding-top:8px;font-size:15px;font-weight:600;color:#101418;">{{ l.senal }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="flex:none;display:flex;flex-direction:column;gap:12px;background:#E8E9E5;border-radius:16px;padding:16px;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Nos falta esto</span>
+            <label style="display:flex;flex-direction:column;gap:7px;">
+              <span style="font-size:16px;font-weight:700;color:#101418;">Tu teléfono</span>
+              <span style="height:52px;border-radius:10px;background:#FFFFFF;border:1px solid #D6D8D4;display:flex;align-items:center;padding:0 16px;font-size:16px;color:#9AA1A8;">6</span>
+            </label>
+            <span style="font-size:15px;line-height:1.5;color:#626A72;">Para avisarte si algo cambia en tu reserva. No lo usamos para nada más.</span>
+            <div style="display:flex;flex-direction:column;gap:10px;border-top:1px solid #D6D8D4;padding-top:12px;">
+              <span style="min-height:48px;display:flex;align-items:center;gap:12px;">
+                <span style="flex:none;width:24px;height:24px;border-radius:6px;border:2px solid #101418;background:#FFFFFF;"></span>
+                <span style="flex:1;font-size:16px;font-weight:600;color:#101418;line-height:1.35;">He leído y acepto las condiciones de reserva</span>
+              </span>
+              <span style="min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:10px;">
+                <span style="font-size:16px;font-weight:700;color:#0A5C93;">Leer las condiciones</span>
+                <span style="flex:none;color:#0A5C93;display:flex;"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:none;background:#E8E9E5;border-top:1px solid #D6D8D4;padding:12px 20px;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-size:15px;color:#626A72;">Total</span>
+            <span style="font-size:16px;font-weight:700;color:#101418;">162,40 €</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-size:15px;color:#626A72;">A pagar en el parque</span>
+            <span style="font-size:16px;font-weight:700;color:#101418;">69,60 €</span>
+          </div>
+        </div>
+
+        <div style="flex:none;padding:14px 20px;background:#F4F4F1;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-size:15px;font-weight:700;color:#101418;">Pagas ahora</span>
+            <span style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">92,80 €</span>
+          </div>
+          <span style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 34px;border-radius:10px;background:#F2711C;color:#101418;font-size:16px;font-weight:800;letter-spacing:.01em;">Pagar con tarjeta
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 4.6h17.2a1.9 1.9 0 0 1 1.9 1.9v11a1.9 1.9 0 0 1-1.9 1.9H3.4a1.9 1.9 0 0 1-1.9-1.9v-11a1.9 1.9 0 0 1 1.9-1.9zm.1 4.2v2.4h17v-2.4zm2.1 5.8a1.4 1.4 0 0 0 0 2.8h4a1.4 1.4 0 0 0 0-2.8z"></path></svg>
+          </span>
+          <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.04em;line-height:1.5;color:#626A72;">Precios con IVA incluido. El pago se hace de forma segura con Redsys.</span>
+        </div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;"><strong style="color:#F4F4F1;">El pie ancla en lo que se cobra, y el total sube a la banda.</strong> Es el cambio de esta parada: hoy el número grande de al lado del botón es el total —162,40 €— y a la tarjeta van 92,80 €. Lo demás es lo ya decidido: el reparto sale de detrás del ⓘ y vive siempre a la vista, y el titular deja de ser «Pago» (la palabra salía tres veces en la misma pantalla).</div>
+      <div style="font-family:'JetBrains Mono';font-size:12.5px;line-height:1.7;color:#626A72;text-wrap:pretty;">MEDIDO · 61 cabecera + 91 fases + 698 cuerpo + 73 reparto + 165 pie = 1.088. La pantalla son 844, así que hay 244 de scroll — y el botón no se va con él: el pie está anclado. En cuanto tienes cuenta y condiciones aceptadas se cae el bloque de 328 y la pantalla mide 742, que cabe entera.</div>
+    </div>
+
+    <!-- ─── PASO 09 · REDIRIGIENDO ─── -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#9AA1A8;">PASO 09</span>
+        <span style="font-size:15px;font-weight:800;">Saliendo al banco</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:#1A1F25;color:#9AA1A8;">SIN VUELTA ATRÁS</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;overflow:hidden;display:flex;flex-direction:column;height:880px;">
+        <div style="flex:none;padding:16px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-family:'Bungee';font-size:18px;color:#101418;">Reservar</span>
+          <span style="width:44px;height:44px;margin:-8px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#9AA1A8;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+        </div>
+        <div style="flex:1;min-height:0;padding:20px;display:flex;flex-direction:column;gap:20px;align-items:center;text-align:center;padding-top:120px;">
+          <span style="flex:none;width:56px;height:56px;border-radius:999px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3.8a8.2 8.2 0 1 1-8.2 8.2"></path></svg>
+          </span>
+          <h3 style="font-family:'Bungee';font-size:26px;line-height:1.05;margin:0;color:#101418;">Te llevamos al banco</h3>
+          <p style="margin:0;font-size:16px;line-height:1.6;color:#626A72;max-width:280px;text-wrap:pretty;">Vas a pagar <strong style="color:#101418;">92,80 €</strong> en la pasarela segura de Redsys. Si no salta en unos segundos, pulsa el botón.</p>
+          <span style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 34px;border-radius:10px;background:#101418;color:#F4F4F1;font-size:16px;font-weight:800;">Continuar al pago</span>
+          <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.1em;color:#9AA1A8;">SOLO SIN JAVASCRIPT</span>
+        </div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;"><strong style="color:#F4F4F1;">La única pantalla del cajón sin salida, y tiene que ser así</strong>: aquí el pedido ya existe y ya está guardando la plaza. Se le añade la cifra: el cliente está a un segundo de teclear su tarjeta y debe saber cuánto le van a cobrar, porque en la pasarela ya no lo decide él. El botón solo existe para quien tenga el JavaScript apagado.</div>
+    </div>
+
+    <!-- ─── DESENLACE 06 · RESERVA CREADA ─── -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#5FA82E;">DESENLACE 06</span>
+        <span style="font-size:15px;font-weight:800;">Reserva creada</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;overflow:hidden;display:flex;flex-direction:column;height:880px;">
+        <div style="flex:none;padding:16px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-family:'Bungee';font-size:18px;color:#101418;">Tu reserva</span>
+          <span style="width:44px;height:44px;margin:-8px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#101418;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <span style="flex:none;width:56px;height:56px;border-radius:999px;background:#5FA82E;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg>
+          </span>
+          <h3 style="flex:none;font-family:'Bungee';font-size:26px;line-height:1.05;margin:0;color:#101418;">¡Reserva creada!</h3>
+
+          <div style="flex:none;display:flex;flex-direction:column;gap:9px;">
+            <sc-for list="{{ resumen }}" as="l" hint-placeholder-count="2">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+                <span style="flex:1;min-width:0;font-size:16px;color:#101418;line-height:1.4;">{{ l.nom }}<span style="color:#626A72;"> · {{ l.cuando }}</span></span>
+                <span style="flex:none;font-size:16px;font-weight:700;color:#101418;">{{ l.precio }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="flex:none;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+              <span style="font-size:15px;color:#626A72;">Total</span>
+              <span style="font-size:16px;font-weight:700;color:#101418;">162,40 €</span>
+            </div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+              <span style="font-size:15px;color:#626A72;">Pagado online</span>
+              <span style="font-family:'Bungee';font-size:18px;line-height:1;color:#627411;">92,80 €</span>
+            </div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+              <span style="font-size:15px;color:#626A72;">A pagar en el parque</span>
+              <span style="font-size:16px;font-weight:700;color:#101418;">69,60 €</span>
+            </div>
+          </div>
+
+          <div style="flex:none;display:flex;align-items:center;gap:12px;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Nº de pedido</span>
+            <span style="font-family:'JetBrains Mono';font-size:16px;font-weight:700;color:#101418;background:#FFFFFF;border:2px solid #101418;border-radius:10px;padding:7px 13px;box-shadow:3px 3px 0 #101418;transform:rotate(-2deg);">R-HXASTE</span>
+          </div>
+
+          <div style="flex:none;display:flex;flex-direction:column;gap:7px;">
+            <span style="font-size:16px;line-height:1.5;color:#101418;">Pago confirmado. Te hemos enviado el resumen a <strong>ana@correo.es</strong>.</span>
+            <span style="font-size:15px;line-height:1.5;color:#626A72;">Del cumpleaños te pediremos los datos de Su día especial: te mandamos el enlace por correo y también lo tienes en Mis reservas.</span>
+          </div>
+
+          <sc-if value="{{ conRegistroExterno }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:none;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;">
+              <span style="font-size:15px;line-height:1.5;color:#626A72;">Regístrate en el sistema del parque antes de venir.</span>
+              <span style="min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 16px;border:1.5px solid #0A5C93;border-radius:10px;font-size:16px;font-weight:800;color:#0A5C93;">Registro ↗</span>
+              <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;color:#D93E14;">BLOQUE HEREDADO · SALE DE LA WEB</span>
+            </div>
+          </sc-if>
+
+          <div style="flex:none;margin-top:auto;display:flex;flex-direction:column;gap:10px;">
+            <span style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 34px;border-radius:10px;background:#101418;color:#F4F4F1;font-size:16px;font-weight:800;">Ver Mi Play Jump QR</span>
+            <span style="min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 20px;border:1.5px solid #0A5C93;border-radius:10px;font-size:16px;font-weight:800;color:#0A5C93;">Hacer otra reserva</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;"><strong style="color:#F4F4F1;">Aquí no se vende nada, así que no hay naranja.</strong> La puerta principal es el código —es lo que hace falta en la entrada— y es <strong style="color:#F4F4F1;">el mismo de siempre</strong>: no hay un QR por pedido. «Hacer otra reserva» baja a fantasma. El sello va sobre el nº de pedido, girado −2°, que es lo que impide leerlo como un botón.</div>
+    </div>
+
+    <!-- ─── DESENLACE 10 · DENEGADO ─── -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#FF8A6B;">DESENLACE 10</span>
+        <span style="font-size:15px;font-weight:800;">Pago denegado</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:#302119;color:#F2711C;">VUELVE EL NARANJA</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;overflow:hidden;display:flex;flex-direction:column;height:880px;">
+        <div style="flex:none;padding:16px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-family:'Bungee';font-size:18px;color:#101418;">Tu reserva</span>
+          <span style="width:44px;height:44px;margin:-8px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#101418;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <span style="flex:none;width:56px;height:56px;border-radius:999px;background:#D93E14;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg>
+          </span>
+          <h3 style="flex:none;font-family:'Bungee';font-size:26px;line-height:1.05;margin:0;color:#101418;">El pago no se ha completado</h3>
+          <p style="flex:none;margin:0;font-size:16px;line-height:1.6;color:#101418;">Tu banco no autorizó el cobro. <strong>No se ha cargado nada</strong> en tu tarjeta.</p>
+
+          <div style="flex:none;background:#E8E9E5;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:5px;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Motivo</span>
+            <span style="font-size:16px;line-height:1.5;color:#101418;">El código CVV (3 dígitos del reverso) no es correcto.</span>
+          </div>
+
+          <div style="flex:none;display:flex;align-items:center;gap:12px;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Nº de pedido</span>
+            <span style="font-family:'JetBrains Mono';font-size:16px;font-weight:700;color:#101418;">R-HXASTE</span>
+          </div>
+
+          <p style="flex:none;margin:0;font-size:16px;line-height:1.6;color:#626A72;">Te guardamos la plaza <strong style="color:#101418;">hasta las 18:42</strong>. Si no se completa el pago, volverá a estar libre.</p>
+
+          <div style="flex:none;margin-top:auto;display:flex;flex-direction:column;gap:10px;">
+            <span style="min-height:56px;display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 34px;border-radius:10px;background:#F2711C;color:#101418;font-size:16px;font-weight:800;">Reintentar el pago
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 4.6h17.2a1.9 1.9 0 0 1 1.9 1.9v11a1.9 1.9 0 0 1-1.9 1.9H3.4a1.9 1.9 0 0 1-1.9-1.9v-11a1.9 1.9 0 0 1 1.9-1.9zm.1 4.2v2.4h17v-2.4zm2.1 5.8a1.4 1.4 0 0 0 0 2.8h4a1.4 1.4 0 0 0 0-2.8z"></path></svg>
+            </span>
+            <sc-if value="{{ conTercerBoton }}" hint-placeholder-val="{{ false }}">
+              <span style="min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 20px;border:1.5px solid #0A5C93;border-radius:10px;font-size:16px;font-weight:800;color:#0A5C93;">Hacer otra reserva</span>
+            </sc-if>
+            <span style="min-height:48px;display:flex;align-items:center;justify-content:center;padding:12px 20px;border:1.5px solid #0A5C93;border-radius:10px;font-size:16px;font-weight:800;color:#0A5C93;">Escribirnos</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;"><strong style="color:#F4F4F1;">Reintentar es comprar, así que aquí el naranja es correcto</strong> —y es el único de las cuatro pantallas de desenlace—. Dos salidas: la máquina falló (reintentar) o hace falta una persona (escribirnos). Y «unos minutos» pasa a ser <strong style="color:#F4F4F1;">una hora</strong>: el pedido ya guarda cuándo caduca.</div>
+    </div>
+
+    <!-- ─── DESENLACE 11 · VERIFICANDO ─── -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#1AA9DE;">DESENLACE 11</span>
+        <span style="font-size:15px;font-weight:800;">Verificando el pago</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;overflow:hidden;display:flex;flex-direction:column;height:880px;">
+        <div style="flex:none;padding:16px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-family:'Bungee';font-size:18px;color:#101418;">Tu reserva</span>
+          <span style="width:44px;height:44px;margin:-8px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#101418;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <span style="flex:none;width:56px;height:56px;border-radius:999px;background:#1AA9DE;border:2px solid #101418;box-shadow:5px 5px 0 #101418;display:flex;align-items:center;justify-content:center;color:#101418;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3.8a8.2 8.2 0 1 1-8.2 8.2"></path></svg>
+          </span>
+          <h3 style="flex:none;font-family:'Bungee';font-size:26px;line-height:1.05;margin:0;color:#101418;">Verificando tu pago</h3>
+          <p style="flex:none;margin:0;font-size:16px;line-height:1.6;color:#101418;">Tu banco ya lo ha procesado. Estamos confirmándolo con la pasarela y suele tardar unos segundos.</p>
+
+          <div style="flex:none;display:flex;align-items:center;gap:12px;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Nº de pedido</span>
+            <span style="font-family:'JetBrains Mono';font-size:16px;font-weight:700;color:#101418;">R-HXASTE</span>
+          </div>
+
+          <p style="flex:none;margin:0;font-size:16px;line-height:1.6;color:#626A72;"><strong style="color:#101418;">Puedes cerrar esto sin perder nada.</strong> Te escribimos en cuanto esté confirmado, y el estado también está en Mis reservas.</p>
+
+          <div style="flex:none;margin-top:auto;display:flex;flex-direction:column;gap:10px;">
+            <span style="min-height:56px;display:flex;align-items:center;justify-content:center;padding:18px 34px;border-radius:10px;background:#101418;color:#F4F4F1;font-size:16px;font-weight:800;">Ver mis reservas</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;"><strong style="color:#F4F4F1;">La pantalla pregunta al servidor cada 5 segundos y no tiene fin</strong>: se acaba cuando el pago se confirma o cuando el pedido caduca. En el peor caso son 15 minutos y 180 preguntas. Así que lo que hay que decir es que <strong style="color:#F4F4F1;">se puede ir</strong>: el correo llega igual, y quedarse mirando no acelera nada.</div>
+    </div>
+
+    <!-- ─── DESENLACE 07 · VERIFICA TU CORREO ─── -->
+    <div style="width:390px;flex:none;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#F5C400;">DESENLACE 07</span>
+        <span style="font-size:15px;font-weight:800;">Verifica tu correo</span>
+        <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:#1A1F25;color:#9AA1A8;">CASI NADIE LA VE</span>
+      </div>
+      <div style="background:#F4F4F1;border:1px solid #2A3138;overflow:hidden;display:flex;flex-direction:column;height:880px;">
+        <div style="flex:none;padding:16px 20px;background:#E8E9E5;border-bottom:1px solid #D6D8D4;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span style="font-family:'Bungee';font-size:18px;color:#101418;">Reservar</span>
+          <span style="width:44px;height:44px;margin:-8px 0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#101418;"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(45 12 12)"></rect><rect x="2.6" y="10.55" width="18.8" height="2.9" rx="1.45" transform="rotate(-45 12 12)"></rect></svg></span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:hidden;padding:20px;display:flex;flex-direction:column;gap:16px;">
+          <span style="flex:none;width:56px;height:56px;border-radius:16px;background:#E8E9E5;display:flex;align-items:center;justify-content:center;color:#101418;" data-om-raster="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.6 6.2a1.8 1.8 0 0 1 1.8-1.8h15.2a1.8 1.8 0 0 1 1.8 1.8v11.6a1.8 1.8 0 0 1-1.8 1.8H4.4a1.8 1.8 0 0 1-1.8-1.8zm3.2 1.4 6.2 4.4 6.2-4.4z"></path></svg>
+          </span>
+          <h3 style="flex:none;font-family:'Bungee';font-size:26px;line-height:1.05;margin:0;color:#101418;">Verifica tu correo</h3>
+          <p style="flex:none;margin:0;font-size:16px;line-height:1.6;color:#101418;">Te hemos escrito a <strong>ana@correo.es</strong>. Abre el enlace del correo para terminar tu reserva.</p>
+          <p style="flex:none;margin:0;font-size:16px;line-height:1.6;color:#626A72;">Tu plaza está reservada mientras confirmas.</p>
+        </div>
+      </div>
+      <div style="font-size:14.5px;line-height:1.6;color:#9AA1A8;text-wrap:pretty;"><strong style="color:#F4F4F1;">Tres nodos, sin pegatina y sin botón: no ha pasado nada, se está esperando a una persona.</strong> Y aquí faltaban las dos cosas que el cliente necesita: <strong style="color:#F4F4F1;">a qué correo</strong> se ha enviado —si te equivocaste al teclearlo, esta pantalla es donde se descubre— y que <strong style="color:#F4F4F1;">la plaza está guardada</strong>. La segunda frase ya existe en el servidor y esta pantalla no la pedía.</div>
+      <div style="font-family:'JetBrains Mono';font-size:12.5px;line-height:1.7;color:#626A72;text-wrap:pretty;">MEDIDO · 208 px de contenido y 609 de aire debajo, el hueco más grande de las seis. No se rellena: no hay nada más que decir, y meter aquí un botón sería inventar una acción que esta pantalla no puede hacer.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ B · EL NÚMERO DEL BOTÓN ═══ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">B / EL NÚMERO QUE TOCA EL BOTÓN</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Un botón y una cifra se leen como una frase</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:920px;text-wrap:pretty;">El pie del cajón ancla en el total en las cuatro pantallas donde eso es cierto. En la de pagar deja de serlo en cuanto el carrito lleva una señal: el total son 162,40 € y a la tarjeta van 92,80 €. Por eso no lo vio ninguna de las tres auditorías del desglose — <strong style="color:#F4F4F1;">con entradas sueltas los dos números son el mismo</strong>.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(370px,1fr));gap:18px;">
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#FF8A6B;">Hoy</div>
+      <div style="background:#F4F4F1;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+          <span style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;color:#101418;">Total
+            <span style="flex:none;display:flex;color:#0A5C93;"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z"></path></svg></span>
+          </span>
+          <span style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">162,40 €</span>
+        </div>
+        <span style="min-height:56px;display:flex;align-items:center;justify-content:center;padding:18px 34px;border-radius:10px;background:#F2711C;color:#101418;font-size:16px;font-weight:800;">Pagar con tarjeta</span>
+      </div>
+      <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">El reparto está detrás del ⓘ, así que la pantalla dice «Pagar con tarjeta · 162,40 €» y el banco cobra 92,80 €. Nada de lo que hay alrededor deshace esa lectura.</p>
+    </div>
+    <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+      <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#A3C21C;">Propuesta</div>
+      <div style="background:#F4F4F1;border-radius:10px;overflow:hidden;">
+        <div style="background:#E8E9E5;padding:12px 18px;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-size:15px;color:#626A72;">Total</span>
+            <span style="font-size:16px;font-weight:700;color:#101418;">162,40 €</span>
+          </div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-size:15px;color:#626A72;">A pagar en el parque</span>
+            <span style="font-size:16px;font-weight:700;color:#101418;">69,60 €</span>
+          </div>
+        </div>
+        <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+            <span style="font-size:15px;font-weight:700;color:#101418;">Pagas ahora</span>
+            <span style="font-family:'Bungee';font-size:22px;line-height:1;color:#101418;">92,80 €</span>
+          </div>
+          <span style="min-height:56px;display:flex;align-items:center;justify-content:center;padding:18px 34px;border-radius:10px;background:#F2711C;color:#101418;font-size:16px;font-weight:800;">Pagar con tarjeta</span>
+        </div>
+      </div>
+      <p style="margin:0;font-size:14.5px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">Tres cifras, ninguna escondida, y la que toca el botón es la que va a la tarjeta. El total no desaparece: sube a la banda, con lo que queda para el parque debajo. <strong style="color:#F4F4F1;">Ni una resta nueva</strong>: los tres importes los publica el servidor.</p>
+    </div>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F5C400;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">Y de paso: tres nombres para lo mismo</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">Lo que queda por pagar en el parque se llama <strong style="color:#F4F4F1;">«En el parque»</strong> en la ficha del producto, <strong style="color:#F4F4F1;">«Pendiente en el parque»</strong> en la reserva creada y <strong style="color:#F4F4F1;">«A pagar en el parque»</strong> en el libro del pedido. Son tres textos distintos del mismo idioma para el mismo euro. Manda el del libro, porque el libro es la fuente de verdad del dinero: <strong style="color:#F4F4F1;">«A pagar en el parque»</strong> en las tres superficies.</p>
+  </div>
+</div>
+
+<!-- ═══ C · LO QUE FALTA ANTES DE PAGAR ═══ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#1AA9DE;">C / LO QUE SE PIDE ANTES DE PAGAR</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">El enlace legal no cabe dentro de su frase</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:920px;text-wrap:pretty;">Es la misma regla que ya se aplicó al descargo de responsabilidad en la parada 03: un enlace metido en el texto de una casilla mide 19 px de alto y el mínimo para el dedo son 48. La casilla se queda con su frase entera y las condiciones pasan a ser un control propio, con su altura.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;">
+    <sc-for list="{{ pedir }}" as="p" hint-placeholder-count="3">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:{{ p.tinte }};">{{ p.n }}</span>
+          <span style="font-size:15px;font-weight:800;color:#F4F4F1;">{{ p.nom }}</span>
+        </div>
+        <div style="background:#F4F4F1;border-radius:10px;padding:16px;min-height:120px;display:flex;flex-direction:column;gap:10px;justify-content:center;">
+          <sc-if value="{{ p.vacio }}" hint-placeholder-val="{{ false }}">
+            <span style="display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center;">
+              <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.1em;color:#626A72;">NO SE PINTA</span>
+              <span style="font-size:15px;line-height:1.5;color:#626A72;">{{ p.motivo }}</span>
+            </span>
+          </sc-if>
+          <sc-if value="{{ p.conAviso }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:15px;line-height:1.5;color:#101418;background:#F5C400;padding:8px 12px;border-radius:10px;">{{ p.aviso }}</span>
+          </sc-if>
+          <sc-if value="{{ p.conCasilla }}" hint-placeholder-val="{{ true }}">
+            <span style="min-height:48px;display:flex;align-items:center;gap:12px;">
+              <span style="flex:none;width:24px;height:24px;border-radius:6px;border:2px solid {{ p.cajaBorde }};background:#FFFFFF;"></span>
+              <span style="flex:1;font-size:16px;font-weight:600;color:#101418;line-height:1.35;">He leído y acepto las condiciones de reserva</span>
+            </span>
+            <span style="min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:10px;">
+              <span style="font-size:16px;font-weight:700;color:#0A5C93;">Leer las condiciones</span>
+              <span style="flex:none;color:#0A5C93;display:flex;"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg></span>
+            </span>
+          </sc-if>
+          <sc-if value="{{ p.conError }}" hint-placeholder-val="{{ false }}">
+            <span style="font-size:15px;font-weight:600;line-height:1.4;color:#A52F0F;">{{ p.error }}</span>
+          </sc-if>
+        </div>
+        <div style="font-size:14.5px;line-height:1.55;color:#9AA1A8;text-wrap:pretty;">{{ p.d }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ═══ D · EL NARANJA ═══ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#F2711C;">D / EL NARANJA EN LAS SEIS PANTALLAS</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Un desenlace no vende</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:920px;text-wrap:pretty;">El mapa del naranja dice que ese color solo significa comprar. Aplicado a estas seis pantallas se convierte en una regla que se puede comprobar de un vistazo: <strong style="color:#F4F4F1;">aparece dos veces</strong> —al pagar y al reintentar— y en ninguna de las otras cuatro.</p>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1.1fr 1.4fr 1fr 1.4fr;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;padding:14px 24px;border-bottom:1px solid #2A3138;background:#161B21;">
+      <div>Pantalla</div><div>Su acción principal</div><div>Relleno</div><div>Por qué</div>
+    </div>
+    <sc-for list="{{ mapaNaranja }}" as="m" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:1.1fr 1.4fr 1fr 1.4fr;font-size:14.5px;line-height:1.55;border-bottom:1px solid #22282E;padding:15px 24px;align-items:baseline;">
+        <div style="font-weight:700;color:#F4F4F1;padding-right:14px;">{{ m.p }}</div>
+        <div style="color:#C9CDD1;padding-right:14px;">{{ m.a }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:12.5px;color:{{ m.tinte }};padding-right:14px;">{{ m.c }}</div>
+        <div style="color:#9AA1A8;padding-right:4px;">{{ m.o }}</div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ═══ E · EL REEMBOLSO ═══ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#A3C21C;">E / EL ROL QUE FALTABA EN LOS TOKENS</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <h2 style="font-family:'Bungee';font-size:34px;margin:0;line-height:1.05;">Una devolución no es un color: es un signo</h2>
+  <p style="margin:0;font-size:16px;line-height:1.6;color:#9AA1A8;max-width:920px;text-wrap:pretty;">Era la grieta 04 de la auditoría y había que cerrarla antes de dibujar dinero: el libro del pedido tiene líneas de devolución —«Devuelto a la tarjeta», «Devolución en curso», «Devolución fallida»— y el sistema no tenía rol para ellas. Sin rol, la siguiente pantalla que las pintara habría inventado un rojo.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;">
+    <sc-for list="{{ roles }}" as="r" hint-placeholder-count="4">
+      <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+        <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:{{ r.tinte }};">{{ r.n }}</div>
+        <div style="background:#F4F4F1;border-radius:10px;padding:14px 16px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+          <span style="font-size:15px;color:#626A72;">{{ r.rotulo }}</span>
+          <span style="font-family:'Bungee';font-size:20px;line-height:1;color:{{ r.color }};">{{ r.cifra }}</span>
+        </div>
+        <div style="font-size:14.5px;line-height:1.55;color:#9AA1A8;text-wrap:pretty;">{{ r.d }}</div>
+        <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">{{ r.hex }}</div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #A3C21C;border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'Bungee';font-size:19px;line-height:1.15;">Por qué no tiene color propio</div>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1000px;text-wrap:pretty;">No es error —nadie ha roto nada— y no es éxito: el verde de este sistema significa «reserva confirmada», así que una reserva devuelta se leería como confirmada. Y de los ocho colores de marca, cinco ya significan algo (identidad, comprar, cifra, éxito, error); un sexto significado los devalúa a todos. Así que la devolución va en tinta, con su «−» delante y su rótulo — que es exactamente lo que ya hace el libro del pedido. <strong style="color:#F4F4F1;">Con color solo la que falla</strong>, porque eso sí es una avería. Está en <span style="font-family:'JetBrains Mono';font-size:13px;color:#A3C21C;">tokens-pjp.js v1.9</span>, en los dos sentidos y con su mapa de cuatro papeles.</p>
+  </div>
+</div>
+
+<!-- ═══ F · DIVERGENCIAS ═══ -->
+<div style="display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.2em;color:#FF8A6B;">F / LO QUE CAMBIO, Y LO QUE CUESTA</span>
+    <span style="flex:1;height:1px;background:#2A3138;"></span>
+  </div>
+  <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;gap:20px;">
+    <sc-for list="{{ divergencias }}" as="d" hint-placeholder-count="9">
+      <div style="display:flex;flex-direction:column;gap:7px;border-top:1px solid #2A3138;padding-top:18px;">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+          <div style="font-family:'Bungee';font-size:17px;line-height:1.2;color:#F4F4F1;">{{ d.t }}</div>
+          <span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 9px;border-radius:999px;background:{{ d.bg }};color:{{ d.fg }};white-space:nowrap;">{{ d.sello }}</span>
+        </div>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:#C9CDD1;max-width:1020px;text-wrap:pretty;">{{ d.d }}</p>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ═══ G · TU OK ═══ -->
+<div style="background:#1A1F25;border:1px solid #2A3138;border-left:5px solid #F5C400;border-radius:16px;padding:26px 28px;display:flex;flex-direction:column;gap:16px;">
+  <div style="font-family:'Bungee';font-size:22px;line-height:1.15;">Lo que necesito de ti para cerrar la parada</div>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <sc-for list="{{ preguntas }}" as="q" hint-placeholder-count="5">
+      <div style="display:flex;gap:12px;align-items:baseline;border-top:1px solid #22282E;padding-top:12px;">
+        <span style="font-family:'JetBrains Mono';font-size:11px;color:#F5C400;white-space:nowrap;">{{ q.n }}</span>
+        <span style="font-size:15px;line-height:1.6;color:#C9CDD1;text-wrap:pretty;">{{ q.d }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1660},&quot;conBanda&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Pagar&quot;,&quot;label&quot;:&quot;Banda de cinco fases&quot;},&quot;conTercerBoton&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Desenlaces&quot;,&quot;label&quot;:&quot;Denegado: el tercer botón de hoy&quot;},&quot;conRegistroExterno&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Desenlaces&quot;,&quot;label&quot;:&quot;Reserva creada: el bloque de registro externo&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+
+    // La fase pendiente va en HUMO (#626A72): Humo Claro es el gris de TINTA y sobre Nube da 2,14.
+    const fase = (nom, estado) => ({
+      nom,
+      relleno: estado === 'todo' ? '0%' : '100%',
+      peso: estado === 'current' ? 800 : 700,
+      color: estado === 'todo' ? '#626A72' : '#101418'
+    });
+    const fasesPagar = ['Fecha', 'Hora', 'Extras', 'Quién eres', 'Pagar']
+      .map((n, i) => fase(n, i < 4 ? 'done' : 'current'));
+
+    const ICO_PACK = 'M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4z';
+    const ICO_GIFT = 'M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z';
+
+    /* Los importes CUADRAN y son los del catálogo real:
+     *   2 × Entrada Jump 18,90 = 37,80  ·  2 × calcetines 2,50 = 5,00
+     *   8 invitados × Pack Cumpleaños Kids 14,95 = 119,60, con señal de 50 €
+     *   total 162,40 = 42,80 + 119,60   ·   ahora 92,80 = 42,80 + 50   ·   parque 69,60 */
+    const resumen = [
+      { nom: '2× Entrada Jump', cuando: 'Sáb 12 sept · 17:00', precio: '37,80 €', icono: ICO_PACK,
+        dentro: [{ t: '+ 2× Calcetines antideslizantes', v: '5,00 €' }], senal: false },
+      { nom: '8 invitados · Pack Cumpleaños Kids', cuando: 'Dom 20 sept · 11:30', precio: '119,60 €', icono: ICO_GIFT,
+        dentro: [{ t: 'Cumple Lucía', v: '7 años' }], senal: 'Señal 50,00 € · 69,60 € en el parque' }
+    ];
+
+    const pedir = [
+      { n: 'LO NORMAL', nom: 'Ya está todo', tinte: '#A3C21C', vacio: true, conCasilla: false,
+        motivo: 'Quien tiene teléfono y ya aceptó las condiciones no ve este bloque.',
+        d: 'Es el caso mayoritario y por eso el bloque entero desaparece en vez de enseñarse relleno y en gris. Una pantalla de pagar sin nada que pedir es una pantalla más corta.' },
+      { n: 'PRIMERA COMPRA', nom: 'Las dos cosas', tinte: '#1AA9DE', vacio: false, conCasilla: true, cajaBorde: '#101418',
+        d: 'La casilla se queda con su frase entera y el enlace sale de dentro: pasa a control propio, con sus 48 px. Y el teléfono va con su por qué, no solo con su rótulo.' },
+      { n: 'CONDICIONES NUEVAS', nom: 'Cambiaron y hay que releerlas', tinte: '#F5C400', vacio: false,
+        conAviso: true, aviso: 'Hemos actualizado las condiciones de reserva.', conCasilla: true, cajaBorde: '#101418',
+        d: 'A quien ya las aceptó se le dice que han cambiado; a quien nunca lo hizo, no —sería contarle una historia que no es la suya—. El servidor manda los dos hechos separados justo para eso.' },
+      { n: 'SIN MARCAR', nom: 'Pulsó sin aceptar', tinte: '#FF8A6B', vacio: false, conCasilla: true, cajaBorde: '#D93E14',
+        conError: true, error: 'Tienes que aceptar las condiciones para poder pagar.',
+        d: 'No hay botón muerto: se valida al pulsar y el «no» vuelve pegado a su campo. Un botón apagado sin explicación es la fricción que esta pantalla no se puede permitir.' }
+    ];
+
+    const nj = (p, a, c, o, tinte) => ({ p, a, c, o, tinte });
+    const mapaNaranja = [
+      nj('08 · Pagar', 'Pagar con tarjeta', 'Naranja', 'Es el momento en que se compra. El único de todo el cajón.', '#F2711C'),
+      nj('09 · Saliendo', 'Ninguna: se va al banco', '—', 'Sin botón y sin salida. El de «continuar al pago» solo existe sin JavaScript, y va en tinta.', '#9AA1A8'),
+      nj('06 · Reserva creada', 'Ver Mi Play Jump QR', 'Tinta', 'Ya se ha comprado. La puerta principal es el código, que es lo que hace falta en la entrada.', '#F4F4F1'),
+      nj('07 · Verifica tu correo', 'Ninguna: la tiene el correo', '—', 'El botón está en el correo, no aquí. Poner uno sería inventar una acción que esta pantalla no puede hacer.', '#9AA1A8'),
+      nj('10 · Denegado', 'Reintentar el pago', 'Naranja', 'Reintentar es cobrar otra vez sobre el mismo pedido. Es comprar, así que le toca el naranja.', '#F2711C'),
+      nj('11 · Verificando', 'Ver mis reservas', 'Tinta', 'El dinero ya salió y no hay nada que comprar: es una espera con una puerta de salida.', '#F4F4F1')
+    ];
+
+    const roles = [
+      { n: 'COBRADO', tinte: '#A3C21C', rotulo: 'Pagado online', cifra: '92,80 €', color: '#627411',
+        hex: 'Lima 800 · el rol «cifra»', d: 'Lo que ya está cobrado. Es el único de los cuatro con color, y ya existía: es el color de las cifras del sistema.' },
+      { n: 'PENDIENTE', tinte: '#F4F4F1', rotulo: 'A pagar en el parque', cifra: '69,60 €', color: '#101418',
+        hex: 'Tinta 900', d: 'Lo que se debe. Va en tinta: es un dato del pedido, no un aviso, y colorearlo lo convertiría en una alarma.' },
+      { n: 'DEVUELTO', tinte: '#1AA9DE', rotulo: 'Devuelto a la tarjeta', cifra: '− 50,00 €', color: '#101418',
+        hex: 'Tinta 900 + signo', d: 'El rol nuevo. Misma tinta que lo pendiente, y lo que dice la dirección es el «−» y su rótulo con fecha.' },
+      { n: 'AVERÍA', tinte: '#FF8A6B', rotulo: 'Devolución fallida', cifra: '− 50,00 €', color: '#A52F0F',
+        hex: 'Rojo 800', d: 'La única devolución con color. No falló el pedido: falló el banco al devolver, y eso necesita que alguien lo mire.' }
+    ];
+
+    const dv = (t, sello, d, bg, fg) => ({ t, sello, d, bg, fg });
+    const divergencias = [
+      dv('El pie de pagar deja de anclar en el total', 'CAMBIO PRINCIPAL',
+        'Es lo único de esta parada que cambia una regla del armazón: en las otras cuatro pantallas con pie el ancla sigue siendo el total, porque allí es cierto. Aquí no lo es. El total no se pierde —sube a la banda, encima de lo que queda para el parque— y no hace falta ninguna resta nueva: los tres importes ya los publica el servidor por separado. Cuesta una fila más en el pie y tocar el módulo que lo compone, que es código, no dibujo.',
+        '#302119', '#F2711C'),
+      dv('Corrijo el mapa: no hay un QR por pedido', 'CORRECCIÓN',
+        'En el mapa del SPA escribí «confirmado con su QR». Es falso y contradice lo que ya está cerrado en la portada: el registro ES la cuenta, y el código es uno solo, el de Mi Play Jump, siempre el mismo. Un QR por pedido obligaría al cliente a buscar cuál toca hoy y a la puerta a leer varios. Así que el desenlace no genera nada: enseña la puerta al código que ya tiene.',
+        '#1A2733', '#1AA9DE'),
+      dv('El bloque de «registro del parque» se apaga', 'SE RETIRA',
+        'La pantalla de reserva creada puede pintar un bloque heredado del proyecto de origen: un texto y un botón que llevan a un sistema de registro EXTERNO, con target en otra pestaña. En Play Jump eso no existe —el registro es la cuenta que acabas de crear dos pantallas antes—, así que hoy mandaría al cliente fuera de la web justo después de pagar, a registrarse por segunda vez. Cuesta cero código: el bloque solo se pinta si el ajuste tiene una URL válida, así que se deja vacío y desaparece. Míralo con el interruptor.',
+        '#2C1A17', '#FF8A6B'),
+      dv('Tres frases que el servidor ya tiene y la pantalla no dice', 'SE AÑADEN',
+        '«Tu plaza está reservada mientras confirmas» existe en el idioma y la pantalla 07 no la pide: quien llega ahí no sabe si su plaza sigue guardada. A qué correo se ha escrito tampoco se dice en ninguna de las dos pantallas que hablan del correo, y es donde se descubre un correo mal teclado. Y la hora de caducidad del pedido ya está guardada: «unos minutos» puede ser «hasta las 18:42». Las dos primeras son texto; la tercera necesita que ese dato viaje hasta la pantalla.',
+        '#252C19', '#A3C21C'),
+      dv('«Pago» deja de titular la pantalla de pagar', 'COPY',
+        'El titular decía «Pago», debajo «Revisa tu reserva antes de pagar», la fase se llamaba «Pagar» y el botón «Pagar con tarjeta»: cuatro veces la misma palabra en una pantalla de 390. El titular pasa a ser el trabajo que hay que hacer —«Repasa tu reserva»— y la entradilla se cae, porque decía eso mismo. Se gana una línea y se pierde una repetición.',
+        '#2E2708', '#F5C400'),
+      dv('El «formulario» del cumpleaños se llama Su día especial', 'COPY',
+        'El aviso del pack dice hoy «completar el formulario de tu reserva». El vocabulario público ya decidió que a eso no se le llama formulario en ningún sitio: es Su día especial. Mismo aviso, mismo sitio, la palabra decidida.',
+        '#2E2708', '#F5C400'),
+      dv('El denegado pierde un botón', 'SE RETIRA',
+        'Tenía tres: reintentar, hacer otra reserva y escribirnos. «Hacer otra reserva» es el peor consejo de los tres en ese momento —tu plaza sigue guardada quince minutos y una tarjeta rechazada no se arregla eligiendo otra hora—, y el cajón ya tiene su salida propia arriba. Quedan dos, que son las dos causas reales: falló la máquina o hace falta una persona. Lo puedes ver con el interruptor.',
+        '#2C1A17', '#FF8A6B'),
+      dv('Hay un quinto desenlace y hoy es el catálogo', 'DECLARADO',
+        'Si el pedido caduca mientras la pantalla 11 pregunta, el cliente vuelve al catálogo con un aviso: «tu reserva caducó mientras esperábamos el pago». No hace falta una pantalla nueva. Lo que hace falta es que ese aviso no mienta: el pago puede llegar TARDE y bueno —el banco cobra y la plaza ya se cedió—, y entonces al cliente se le ha cobrado y el aviso le está diciendo que elija otra hora. Ese caso el sistema ya lo detecta y avisa por correo al parque; la frase tiene que dejar la puerta abierta en vez de mandar a reservar de nuevo.',
+        '#2C1A17', '#FF8A6B'),
+      dv('El rótulo del cajón dice «Reservar» cuando ya has reservado', 'CAMBIO MENOR',
+        'La cabecera del panel es la misma en las veinticinco pantallas. En los desenlaces 06, 10 y 11 el trabajo ya está hecho, así que ahí dice «Tu reserva»: es lo que el cliente viene a ver cuando vuelve del banco. En la 07 sigue diciendo «Reservar», porque la reserva todavía no existe.',
+        '#1A2733', '#1AA9DE'),
+      dv('Dibujado a 16, que es el suelo del sistema', 'PENDIENTE TUYO',
+        'El cajón está hoy a 13 y la grieta 00 sigue abierta. Estas seis pantallas están a 16 para que puedas verlo medido en vez de imaginarlo, y el resultado es mejor de lo que yo esperaba: cinco de las seis caben enteras en 844. La única que no es la de pagar, y solo la PRIMERA vez que se compra: con el bloque de teléfono y condiciones pide 1.088 px y hay que rodar 244. En cuanto esos dos datos están dados, ese bloque de 328 desaparece y la pantalla mide 742. Y el scroll cae donde debe: el pie va anclado, así que el botón de pagar no se va nunca de la vista. Si decides quedarte en 13, hay que volver a medirlas una por una — y entonces el número que hay que mirar no es el alto, es si tú lees 13 con el teléfono en la mano.',
+        '#2E2708', '#F5C400')
+    ];
+
+    const preguntas = [
+      { n: '01', d: 'El número pegado al botón: ¿te vale que sea lo que se cobra ahora y el total suba a la banda? Es el cambio de la parada y toca el módulo del pie, así que lo tiene que aplicar quien programa.' },
+      { n: '02', d: 'El bloque de registro externo del desenlace 06: lo apago, ¿verdad? Es vaciar un ajuste, no tocar código. Enciende el interruptor para ver lo que hay hoy.' },
+      { n: '03', d: 'El cuerpo a 16 (grieta 00) sigue siendo tu decisión y ya afecta a seis pantallas más. Míralas en tu móvil si puedes: es la única forma de saber si 13 se lee o no.' },
+      { n: '04', d: 'La pista del teléfono dice «para avisarte si algo cambia en tu reserva». ¿Es ese el motivo real, o lo pides para llamar el día del cumpleaños? La frase tiene que decir la verdad, y solo tú la sabes.' },
+      { n: '05', d: 'La banda de cinco fases sigue sin tu OK desde la parada 01. Aquí es la que dice «Paso 5 de 5» en la pantalla de pagar; sin ella, esa pantalla se queda con el «Volver al carrito» y sin contador. Se ve con el interruptor.' }
+    ];
+
+    return {
+      fasesPagar, resumen, pedir, mapaNaranja, roles, divergencias, preguntas,
+      conBanda: p.conBanda !== false,
+      conTercerBoton: p.conTercerBoton === true,
+      conRegistroExterno: p.conRegistroExterno === true
+    };
+  }
+}
+</script>
+</body>
+</html>

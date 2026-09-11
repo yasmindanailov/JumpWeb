@@ -1,0 +1,234 @@
+/* ═══════════════════════════════════════════════════════════════════════════════════════════
+   PLAY JUMP PARK · Lorca — PAQUETE DE TEMA DE LA INSTALACIÓN
+   ───────────────────────────────────────────────────────────────────────────────────────────
+   ⚠️ **Este fichero NO se versiona y NO se despliega con el producto.** Está en `.gitignore` y
+   `deploy.sh` lo excluye del `rsync --delete`, porque este repo es el PRODUCTO y no lleva la
+   marca de ningún cliente (`DECISIONES #1`). Es la hoja de UNA instalación.
+
+   Fuente: el canvas de diseño del owner, artboard **`Colores de Marca PJP`** (sistema de color
+   v1), contrastado con `Auditoría Landing PJP`. Receta del mecanismo:
+   `docs/INSTALACION-CLIENTE.md` §4.
+
+   Se carga **la última de las cuatro** —después de `landing.css`, del tema inyectado desde el
+   panel y de `site.css`—, así que lo de aquí gana en cascada.
+
+   ▶ **Lo que NO va aquí, y no es un olvido**: el color de marca (`theme.brand` /
+   `theme.brand_secondary`) va en el PANEL, porque es lo único que cruza al panel de administración
+   y a los correos, donde esta hoja no llega. Y qué fuentes se DESCARGAN va en `THEME_FONTS` del
+   `.env`; aquí solo se dice cuáles se USAN.
+   ═══════════════════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ── SUPERFICIE ──────────────────────────────────────────────────────────────────────────
+       Los cuatro neutros de papel del sistema. La superficie de TINTA se deriva sola de `--fg`
+       y `--bg`, así que no se teclea entera: solo se afinan abajo los tres tonos que el cliente
+       declara con nombre propio. */
+    --bg: #F4F4F1;        /* Papel — fondo claro */
+    --bg-soft: #E8E9E5;   /* Nube — relleno inerte, deshabilitado */
+    --bg-card: #FFFFFF;   /* Blanco — tarjetas sobre papel */
+    --sheet: #FFFFFF;     /* LA HOJA: la tarjeta que va ENCIMA de la superficie */
+    --fg: #101418;        /* Tinta — texto y fondo base de marca */
+    --fg-mute: #626A72;   /* Humo — texto 2.º en papel (4,98 sobre papel) */
+
+    /* ⚠️ Los tres tonos de tinta que el sistema nombra. El resto de `--ink-*` se deriva y **no se
+       toca**: si se tecleara la paleta oscura entera, cambiar la marca dejaría media web con el
+       color de otro cliente — que es lo que `SurfaceScopeTest` existe para impedir. */
+    --ink-bg-card: #1A1F25;     /* Tinta 800 — tarjetas y superficies sobre tinta */
+    --ink-sheet: #1A1F25;       /* la hoja, sobre tinta, es la misma tarjeta */
+    --ink-line: #2A3138;        /* Tinta 700 — bordes y divisores */
+    --ink-line-strong: #3B434B; /* Tinta 600 — borde de botón fantasma sobre tinta */
+    --ink-fg-mute: #9AA1A8;     /* Humo Claro — texto 2.º en tinta (5,24). El claro FALLA en papel */
+    --ink-fg-body: #C9CDD1;     /* Papel 200 — texto de CUERPO sobre tinta (`semantico.tinta.textoCuerpo`, #522) */
+
+    /* ── SEMÁNTICOS ──────────────────────────────────────────────────────────────────────────
+       Tres de los ocho colores de núcleo, cada uno en el rol que el sistema le da. */
+    --ok: #5FA82E;    /* Verde Salta — éxito: reserva confirmada, pago correcto */
+    --err: #D93E14;   /* Rojo Goteo — urgencia y error. Nunca decoración */
+    /* Amarillo Aviso — resalte tipo marcador y anillo de foco.
+       ⚠️ El sistema decía «nunca fondo ni botón» y el owner decidió lo contrario el 2026-08-28
+       (`DECISIONES #213`): el CTA del armazón SÍ se pinta de aviso mientras el menú lo tapa,
+       como hace su propio mockup. La contradicción entre su implementación y su norma está
+       anotada en `DEUDA.md`; aquí gana la implementación, por decisión suya. */
+    --attn: #F5C400;
+    /* El TEXTO sobre esos rellenos (`#434`, su tabla §2.1: Verde Salta → texto encima #101418; Rojo
+       Goteo → texto encima #FFFFFF). Con el verde CLARO de esta marca el papel del producto da 2,95
+       («✕ NUNCA» en su propia auditoría); la tinta da 7,6. Sobre su rojo el papel se queda en 4,11 y
+       el blanco puro en 4,52. ⚠️ Estas dos líneas viajan con el paquete, no con el repo: en
+       producción hay que añadirlas a mano al `client.css` instalado. */
+    --on-ok: #101418;
+    --on-err: #FFFFFF;
+
+    /* El VERDE y el AMARILLO cuando son TEXTO sobre claro (`#487`). Su norma lo dice: «cian,
+       naranja, lima, amarillo y verde no pueden ser texto sobre claro (< 3,0); sobre papel se usa
+       su variante oscura». Medido con los suyos: Verde Salta da 2,4 y Amarillo Aviso 1,5.
+       ⚠️ Son las variantes 800 de su propia paleta, las mismas que su artboard escribe a mano. */
+    --ok-ink: #447921;
+    --attn-ink: #8A6E00;
+
+    /* ── FOCO · UN COLOR POR SUPERFICIE ──────────────────────────────────────────────────────
+       ⚠️⚠️ **Aquí el paquete SE APARTA del sistema del cliente, y es una decisión suya con la
+       medida delante** (`[DECIDIDO owner, 2026-08-28]`, `specs/tema-por-instalacion.md` §14.2).
+
+       Su sistema declara Amarillo Aviso como **único** color de foco «en ambos fondos». Su
+       auditoría cubre 20 pares y es buena, pero **no incluye «Amarillo sobre Papel»**: auditó el
+       anillo sobre TINTA (11,26 ✓) y nunca contra el fondo claro — que es donde vive casi siempre
+       desde que su propio hallazgo `S-00` hizo la web papel continuo.
+
+           Amarillo #F5C400 sobre Papel #F4F4F1  →  1,49    (WCAG 1.4.11 exige 3,0)
+
+       No es marginal: es invisible. Así que el anillo cambia con la superficie —amarillo sobre
+       tinta, Azul Muro sobre papel—, que es la única de las tres salidas que no deja a nadie sin
+       ver dónde tiene el foco.
+
+       ▶ **Y no hace falta tocar el producto**: su `--focus-color` vale `var(--fg)` justo para
+       seguir a la superficie solo, y este paquete lo estaba ROMPIENDO al fijarlo a un literal. Se
+       arregla declarándolo en los dos ámbitos, que es el mecanismo de la tanda 1. */
+    --focus-w: 3px;
+    --focus-color: #0A5C93;  /* Azul Muro sobre papel — 6,43 */
+
+    /* ── EL COLOR DE LA INTERACCIÓN (`DECISIONES #436`, D1 de la auditoría) ──────────────────────
+       Lo que responde al ratón y al teclado fuera de una zona (la FAQ abierta, el destino enfocado
+       del menú, los enlaces del banner): su tabla de roles pone el ENLACE en papel en Azul Muro y en
+       tinta en cian (§2.4), y su auditoría de contraste marca «Cian sobre Papel 2,45 · ✕ NUNCA». El
+       producto trae tinta por defecto; aquí el par medido, por superficie, como el foco. */
+    --interactive: #0A5C93;  /* Azul Muro sobre papel — 6,43 */
+
+    /* ── LA CIFRA (`DECISIONES #479`) ────────────────────────────────────────────────────────
+       El rol «Precios, cifras, confirmación» del sistema: Lima Bote. ⚠️ **Sobre papel va su
+       variante OSCURA (Lima 800)**: el Lima 500 está en la lista de «no puede ser texto sobre
+       claro» de su propia tabla, así que un precio pintado con él no se leería. El par por
+       superficie va abajo, con el foco y la interacción. */
+    --money: #627411;        /* Lima 800 sobre papel */
+
+    /* ── EL MARCADOR (`DECISIONES #480`) ─────────────────────────────────────────────────────
+       Amarillo Aviso como resalte tipo rotulador, con la tinta encima: **11,26 de contraste**, el
+       par mejor medido de este sistema. ⚠️ Es el mismo amarillo que `--strip-3` y que el anillo de
+       foco sobre tinta, pero como ROL es otro: aquéllos son la tira del pie y el foco, y mezclarlos
+       haría que retocar uno moviera los otros dos. */
+    --marker: #F5C400;
+    /* ⚠️ La tinta va en `--on-marker-brand` y no en `--on-marker` (`DECISIONES #523`): el producto
+       re-declara `--on-marker` en cada superficie, y declarada aquí la pisaba la de tinta — el sello
+       amarillo del precio salía con texto CLARO en la tarjeta de cumpleaños de tinta (1,49 : 1). */
+    --on-marker-brand: #101418;
+
+    /* ── FORMA · la escala de canto ──────────────────────────────────────────────────────────
+       ⚠️⚠️ **v1.9 CIERRA la escala en CUATRO —0 · 10 · 16 · 999— y antes eran seis.** Su propia
+       auditoría del cajón lo pide como grieta 03: «sobran un 6 para chips y avisos pequeños y un
+       24 para bloques grandes; el 6 pasa a 10 y el 24 a 16». Aplicado aquí (`#470`).
+       ▶ El producto sigue teniendo SIETE roles y este paquete los colapsa a los cuatro del
+       cliente. No es una pérdida: es que el cliente no distingue entre «badge» e «item interior»,
+       ni entre «control» y «botón», ni entre «tarjeta» y «bloque grande».
+       ⚠️ **Y ahora los cuatro valores SON escalones del producto** (10 · 16 · 999 están en su
+       escala). Los de antes NO lo eran: `6` y `24` no existen en `5·8·10·14·16·28·999`, o sea que
+       este paquete inventaba dos cantos y nada lo veía. */
+    --r-xs: 10px;   /* chips mono, muestras, sellos, elementos dentro de tarjeta → control */
+    --r-sm: 10px;   /* ídem: el sistema no separa estos dos */
+    --r-md: 10px;   /* botones e inputs — alto 48px, así que 10 es canto redondo, no cápsula */
+    --r-btn: 10px;  /* ídem: en este sistema el control y el botón comparten canto */
+    --r: 16px;      /* tarjetas, tiles, imágenes en tarjeta. El radio por defecto */
+    --r-lg: 16px;   /* bloques grandes y modales → el MISMO canto de tarjeta, no uno propio */
+    --r-pill: 999px;/* cápsulas: filtros, contadores, «últimas 3 plazas», avatares */
+
+    /* ── RITMO · el aire entre secciones ─────────────────────────────────────────────────────
+       El sistema del cliente lo baja de **240/160 a 144/96** (`ritmo.seccion`), y su razón está
+       medida: con nueve preguntas contestadas en la portada, 160 en móvil **se comía 1,33
+       pantallas solo en huecos**. El de escritorio es derivado — mantiene la proporción 1,5×.
+       ⚠️ Hay que declarar los DOS: el producto los tiene separados justamente para que sobreescribir
+       uno solo no se lleve el escalón del otro por delante. `#470`. */
+    --sec-air: 144px;
+    --sec-air-mobile: 96px;
+
+    /* ── LA COLUMNA ──────────────────────────────────────────────────────────────────────────
+       **1120 px**, que es la retícula del cliente: 12 columnas de 64 con canal de 32. El producto
+       trae 1176 —el número que `#250` tomó del mockup ANTERIOR de este mismo cliente— y aquí se
+       corrige al vigente. `#472`.
+       ⚠️ De este token cuelgan las TRES formas en que el sitio expresa la misma columna: el `width`
+       de `.wrap`, el sangrado `--wrap-gutter` y la caja exterior del hero y el menú. Cambiarlo aquí
+       las mueve las tres a la vez — que es justo por lo que `#250` lo dejó en un solo sitio. */
+    --col-max: 1120px;
+
+    /* ── ELEVACIÓN · los tres roles ──────────────────────────────────────────────────────────
+       «Dura 5px 5px 0 o ninguna. La difusa solo existe en modales.» Y por eso el rol de
+       levantarse al pasar el ratón se apaga: en este sistema el hover **se aplasta**, no se
+       eleva. Leen `--paper-fg`, el alias que NO se invierte en superficie oscura — una sombra es
+       ausencia de luz y es oscura en los dos fondos. */
+    --shadow-lift: none;
+    --shadow-float: 5px 5px 0 var(--paper-fg);
+    --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.45);
+
+    /* ❗❗❗ **LOS DOS ESTADOS DE LA PEGATINA, y su ausencia era un DEFECTO MEDIDO** (`#483`).
+       `#478` escribió el hover de la tarjeta de zona con estos dos tokens y dejó dicho que «un
+       paquete de instalación con otra sombra los mueve con ella» — pero el paquete **no los
+       declaraba**, así que caían al valor del PRODUCTO, que es difuso. Medido en el navegador: la
+       tarjeta reposaba en `5px 5px 0` y al pasar el ratón saltaba a `0 6px 14px -8px`.
+       ▶ La física es la del sistema: la pegatina **se hunde 3 px y su sombra se acorta a 2**, así
+       que la suma sigue siendo 5 y el keyline no se mueve de sitio. Al apretar, la sombra
+       desaparece. Lo vigila `ClientThemePackageTest`: si el paquete declara `--shadow-float`, tiene
+       que declarar los tres. */
+    --shadow-float-hover: 2px 2px 0 var(--paper-fg);
+    --shadow-float-press: 0 0 0 var(--paper-fg);
+
+    /* ── LA TIRA DEL PIE ─────────────────────────────────────────────────────────────────────
+       Cinco franjas en orden fijo, tal como las declara el pie del mockup. Por defecto el
+       producto cicla sobre los dos colores de marca; aquí son cinco colores propios. */
+    --strip-1: #1AA9DE;  /* Cian PJP */
+    --strip-2: #A3C21C;  /* Lima Bote */
+    --strip-3: #F5C400;  /* Amarillo Aviso */
+    --strip-4: #F2711C;  /* Naranja Salto */
+    --strip-5: #D93E14;  /* Rojo Goteo */
+
+    /* ── TIPOGRAFÍA · qué se USA ─────────────────────────────────────────────────────────────
+       Qué se DESCARGA vive en `THEME_FONTS` del `.env`. Cambiar solo una de las dos mitades deja
+       la otra sin efecto: aquí se nombran, allí se traen.
+
+       El contrato del sistema: máx. 2 familias por pantalla + mono en etiquetas · cero cursivas ·
+       Bungee solo en mayúsculas y nunca por debajo de 20px · el rotulador, máx. 6 palabras y una
+       vez por página. */
+    --font-display: "Bungee", system-ui, sans-serif;        /* Rótulo */
+    --font-body: "Hanken Grotesk", system-ui, sans-serif;   /* Cuerpo, subtítulos y botones */
+    --font-mono: "JetBrains Mono", ui-monospace, monospace; /* Dato y etiqueta */
+    --font-accent: "Permanent Marker", cursive;             /* Guiño: el eslogan, nada más */
+
+    /* ── TEXTO SOBRE EL ACENTO ───────────────────────────────────────────────────────────────
+       El producto lo calcula por luminancia y con el cian acierta el sentido —texto oscuro—,
+       pero da su propio negro (`#14130F`). Aquí se iguala al de la marca para que no convivan
+       dos negros casi iguales. El panel y los correos conservan el calculado: la diferencia es
+       de dos unidades por canal y allí esta hoja no llega. */
+    --on-brand: #101418;
+}
+
+/* El anillo, por superficie. `--focus-outline` se resuelve en el punto de USO, así que basta con
+   re-declarar el color: cualquier elemento dentro de una sección de tinta hereda el amarillo. */
+[data-surface="ink"] {
+    --focus-color: #F5C400;  /* Amarillo Aviso sobre tinta — 11,26 */
+    --interactive: #1AA9DE;  /* Cian PJP sobre tinta — 6,85 (`#436`) */
+    --money: #A3C21C;        /* Lima Bote sobre tinta — el rol «cifra» del sistema (`#479`) */
+}
+
+[data-surface="paper"] {
+    --focus-color: #0A5C93;  /* Azul Muro sobre papel — 6,43 */
+    --interactive: #0A5C93;  /* Azul Muro sobre papel — 6,43 (`#436`) */
+    --money: #627411;        /* Lima 800 sobre papel — el claro no puede ser texto (`#479`) */
+}
+
+/* ── LAS MANCHAS DECORATIVAS ───────────────────────────────────────────────────────────────────
+   Las dos siluetas de salpicadura del sistema PJP (`assets/splash-*.svg` del canvas), que el
+   producto usa de MÁSCARA: la forma es de aquí, el color y la colocación los pone `site.css` a
+   partir de los tokens de marca. Van en línea como `data:` a propósito — un fichero suelto sería
+   una cuarta pieza que sincronizar en el despliegue, y estas pesan poco más de 1 KB.
+   ⚠️ Sin estas dos líneas el menú NO se rompe: el hueco se queda vacío, que es la conducta
+   correcta para una instalación que no traiga manchas. */
+:root {
+    --deco-blob-a: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-12%20-12%20224%20224%22%3E%3Cg%20fill=%22%23000%22%3E%3Cpath%20d=%22M156.1%20100.0C158.5%20104.4%20161.9%20110.7%20160.7%20115.0C159.4%20119.2%20153.2%20123.2%20148.6%20125.5C143.9%20127.8%20135.6%20125.7%20132.7%20129.0C129.8%20132.2%20133.2%20141.0%20131.1%20145.0C129.0%20149.0%20124.2%20151.7%20120.1%20152.9C115.9%20154.1%20110.8%20152.3%20106.4%20152.3C101.9%20152.4%2098.3%20152.1%2093.6%20153.1C88.8%20154.0%2081.8%20160.0%2077.9%20158.3C74.1%20156.5%2074.0%20146.1%2070.5%20142.8C66.9%20139.5%2060.2%20141.1%2056.5%20138.5C52.8%20135.9%2046.9%20132.1%2048.3%20127.1C49.8%20122.1%2069.9%20113.1%2065.1%20108.6C60.3%20104.1%2019.5%20102.9%2019.5%20100.0C19.5%2097.1%2064.9%2098.3%2065.1%2091.4C65.3%2084.5%2019.5%2061.0%2020.8%2058.5C22.2%2055.9%2065.2%2077.0%2073.1%2076.2C80.9%2075.4%2066.8%2058.4%2068.0%2053.7C69.2%2048.9%2075.9%2048.7%2080.2%2047.8C84.5%2046.9%2089.2%2050.0%2093.7%2048.4C98.3%2046.8%20102.8%2039.1%20107.5%2038.1C112.2%2037.2%20117.3%2040.6%20121.8%2042.6C126.2%2044.6%20131.8%2046.1%20134.4%2050.2C136.9%2054.3%20134.4%2063.3%20137.0%2067.2C139.7%2071.1%20148.8%2070.0%20150.4%2073.5C152.0%2077.1%20145.5%2084.1%20146.5%2088.5C147.5%2092.9%20153.8%2095.6%20156.1%20100.0Z%22%3E%3C/path%3E%3Ccircle%20cx=%22187.6%22%20cy=%22132.3%22%20r=%228.4%22%3E%3C/circle%3E%3Ccircle%20cx=%2279.1%22%20cy=%22168.9%22%20r=%226.8%22%3E%3C/circle%3E%3Ccircle%20cx=%2250.3%22%20cy=%22170.9%22%20r=%225.6%22%3E%3C/circle%3E%3Ccircle%20cx=%22140.6%22%20cy=%2240.7%22%20r=%227.5%22%3E%3C/circle%3E%3Ccircle%20cx=%22134.4%22%20cy=%2227.2%22%20r=%221.8%22%3E%3C/circle%3E%3Ccircle%20cx=%22185.9%22%20cy=%22144.9%22%20r=%225.1%22%3E%3C/circle%3E%3Ccircle%20cx=%2224.6%22%20cy=%2287.5%22%20r=%225.1%22%3E%3C/circle%3E%3C/g%3E%3C/svg%3E");
+    --deco-blob-b: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-12%20-12%20224%20224%22%3E%3Cg%20fill=%22%23000%22%3E%3Cpath%20d=%22M136.0%20100.0C129.8%20104.3%20145.5%20106.4%20146.4%20109.2C147.3%20112.1%20140.0%20112.6%20141.3%20117.1C142.6%20121.6%20155.1%20133.1%20154.0%20136.1C153.0%20139.1%20140.5%20135.9%20134.9%20134.9C129.2%20133.8%20120.3%20122.5%20120.0%20129.9C119.6%20137.3%20134.9%20178.2%20132.7%20179.1C130.6%20179.9%20112.5%20139.0%20107.0%20135.3C101.6%20131.5%20102.8%20153.9%20100.0%20156.5C97.2%20159.0%2092.7%20153.3%2090.0%20150.5C87.2%20147.7%2086.6%20141.1%2083.5%20139.8C80.5%20138.4%2074.1%20143.8%2071.8%20142.3C69.4%20140.7%2071.0%20133.4%2069.4%20130.6C67.7%20127.8%2066.6%20126.5%2061.8%20125.5C57.0%20124.5%2042.8%20127.2%2040.5%20124.6C38.2%20122.1%2046.3%20114.4%2048.1%20110.3C49.8%20106.2%2052.8%20103.7%2051.2%20100.0C49.7%2096.3%2039.3%2091.4%2038.8%2087.8C38.4%2084.3%2046.9%2082.4%2048.4%2078.6C49.9%2074.9%2044.4%2066.7%2047.8%2065.1C51.3%2063.6%2066.4%2072.3%2069.2%2069.2C72.0%2066.2%2061.7%2047.3%2064.5%2046.9C67.3%2046.5%2083.1%2072.0%2086.2%2066.8C89.4%2061.5%2080.9%2015.9%2083.2%2015.4C85.5%2015.0%2095.1%2060.4%20100.0%2064.0C104.9%2067.7%20109.0%2039.7%20112.5%2037.3C116.0%2034.9%20119.6%2044.1%20120.9%2049.6C122.1%2055.1%20112.5%2072.6%20120.0%2070.1C127.4%2067.6%20163.8%2032.9%20165.5%2034.5C167.1%2036.2%20135.3%2071.4%20129.9%2080.0C124.5%2088.6%20124.4%2085.7%20133.2%2086.2C142.1%2086.8%20182.6%2081.2%20183.1%2083.5C183.5%2085.8%20142.1%2095.7%20136.0%20100.0Z%22%3E%3C/path%3E%3Ccircle%20cx=%2261.5%22%20cy=%22185.3%22%20r=%227%22%3E%3C/circle%3E%3Ccircle%20cx=%22172%22%20cy=%2286.7%22%20r=%222.1%22%3E%3C/circle%3E%3Ccircle%20cx=%22186.2%22%20cy=%2270.1%22%20r=%227.6%22%3E%3C/circle%3E%3Ccircle%20cx=%2214.3%22%20cy=%22113.9%22%20r=%221.9%22%3E%3C/circle%3E%3Ccircle%20cx=%2249.5%22%20cy=%2238.6%22%20r=%223.9%22%3E%3C/circle%3E%3Ccircle%20cx=%2213.6%22%20cy=%22127%22%20r=%226.8%22%3E%3C/circle%3E%3Ccircle%20cx=%2297.9%22%20cy=%22171%22%20r=%227.9%22%3E%3C/circle%3E%3C/g%3E%3C/svg%3E");
+    /* ⚠️ El mockup pinta la mancha de abajo con su **acento 2** (Naranja Salto), que en este
+       sistema NO es `--zone-2` —ése es el Lima Bote—. El producto acierta con su default de marca
+       para una instalación cualquiera; aquí se afina al sistema del cliente, que es justo para lo
+       que existe el token. */
+    /* ⚠️ El TAG de la ciudad, en la esquina del hero del cierre. Va como FICHERO y no en línea:
+       son 199 KB de SVG trazado (45,6 gzipeado) — cabe de sobra por la red, pero como `data:` se
+       comería la hoja entera. Misma convención que el logotipo (`public/img/client-*`). */
+    --deco-tag: url('/img/client-tag.svg');
+    --deco-blob-a-color: #1AA9DE;   /* Cian PJP */
+    --deco-blob-b-color: #F2711C;   /* Naranja Salto */
+}

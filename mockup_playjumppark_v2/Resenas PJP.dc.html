@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#6C747C}
+.dv-card button:focus-visible,.dv-card a[href]:focus-visible,.dv-card [tabindex]:focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-card [data-superficie="tinta"] a[href]:focus-visible,.dv-card [data-superficie="tinta"] button:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+.dv-clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.dv-riel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.dv-riel::-webkit-scrollbar{display:none}
+.dv-riel>*{scroll-snap-align:start}
+@media (prefers-reduced-motion:reduce){
+.dv-card [data-mueve]{transition-property:box-shadow,border-color,color,background-color !important}
+.dv-card [data-mueve]:hover,.dv-card [data-mueve]:active{transform:none !important}
+}
+.dv-meta{font:400 10.5px/1.5 'JetBrains Mono',ui-monospace,monospace;color:#6C747C;max-width:390px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Cuatro arreglos de comprensión, y el dato por delante</span></div>
+  <p class="dv-intro">Sobre <a href="#1a">1a</a>, que es la que te gusta. No toco la forma: los cuatro cambios son de <span style="color:#F4F4F1;">entender más rápido</span>, y cada uno sale de una regla que ya está escrita. <span style="color:#F4F4F1;">Uno</span>, el titular dice quiénes son «ellos»: <span style="color:#F4F4F1;">«Lo dicen los que ya han venido»</span>. Eso es exactamente la credibilidad —no son opiniones de internet, son de gente que estuvo— y cabe en las seis palabras que permite la voz. <span style="color:#F4F4F1;">Dos</span>, «320 opiniones» sale del mono: en el sistema la letra mono es para <em>antetítulos, horarios y códigos</em>, y 320 no es un código, es el segundo argumento más fuerte de la sección. Estaba escrito en lo más pequeño de la chapa. <span style="color:#F4F4F1;">Tres</span>, la fecha pasa a <span style="color:#F4F4F1;">«hace 2 meses»</span>: lo que hace creíble una reseña no es el mes, es que sea reciente, y «hace 2 meses» se entiende sin hacer cuentas. <span style="color:#F4F4F1;">Cuatro</span>, el enlace deja de prometer texto que no existe: dice «Leer entera en Google» solo cuando la reseña se corta de verdad, y «Ver en Google» cuando ya la has leído toda — hoy las cinco decían «Leer», y cuatro no escondían nada. <a href="#2b">2b</a> prueba una idea más gorda, y es la única de las dos que cambia el orden: <span style="color:#F4F4F1;">el dato primero</span>. La chapa sube justo debajo del rótulo, el titular va después y la entradilla se convierte en una línea pequeña junto al cierre. Quien baja por la portada se encuentra el 4,8 antes de leer una palabra, que es lo más rápido que se puede contestar «¿me fío?». Se ahorran unos 9,5 px —medido, 756 contra 737,8—, o sea <span style="color:#F4F4F1;">casi nada</span>: su valor no es el alto, es el orden. Y se paga con esto: el titular ya no presenta la sección, la explica después. ⚠ Si eliges 2a hay que añadir el formato <span style="color:#F4F4F1;">«hace N meses»</span> a la tabla de cifras de Voz PJP, que hoy no lo tiene, y dejar la fecha con mes y año en francés, donde es obligatoria por ley.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><span>✅ 8 sep: el nombre del autor ya no es enlace. Era un pulsable de 24 px contra el mínimo de 48 —sin excepciones—, y estaba en los cuatro sitios del archivo; de paso la opinión se queda con una sola salida, la de Google. · La misma forma con los cuatro arreglos: quiénes son ellos, el recuento legible, la fecha en claro y el enlace honesto.</span></div>
+      <div class="dv-card" data-screen-label="2a">
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">06 · Reseñas</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Lo dicen los que ya han venido</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">No las elegimos nosotros: son las que Google pone primero.</p>
+        </div>
+
+        <sc-if value="{{ hayGoogle }}" hint-placeholder-val="{{ true }}">
+        <div>
+
+          <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:18px 20px;" data-superficie="tinta">
+            <div style="display:flex;align-items:baseline;gap:9px;">
+              <span style="font-family:'Bungee';font-size:52px;line-height:.9;color:#A3C21C;">{{ notaTexto }}</span>
+              <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:16px;color:#C9CDD1;">sobre 5</span>
+            </div>
+            <div role="img" aria-label="{{ etiquetaNota }}" style="display:flex;gap:2px;margin-top:8px;">
+              <sc-for list="{{ estrellas }}" as="e" hint-placeholder-count="5">
+                <span style="position:relative;display:block;width:24px;height:24px;flex:none;">
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;width:24px;height:24px;overflow:hidden;color:#6C747C;font-size:24px;line-height:24px;text-align:center;">&#9733;</span>
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;height:24px;overflow:hidden;width:{{ e.pct }};"><span style="display:block;width:24px;height:24px;color:#F5C400;font-size:24px;line-height:24px;text-align:center;">&#9733;</span></span>
+                </span>
+              </sc-for>
+            </div>
+            <div style="font-weight:700;font-size:15px;line-height:1.3;color:#C9CDD1;margin-top:10px;">{{ totalTexto }} opiniones</div>
+          </div>
+
+          <sc-if value="{{ conCarrusel }}" hint-placeholder-val="{{ false }}">
+          <div style="margin:16px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:18px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span aria-hidden="true" style="flex:none;width:56px;height:56px;border-radius:999px;background:#E8E9E5;border:1px solid #D6D8D4;display:flex;align-items:center;justify-content:center;font-family:'Bungee';font-size:22px;color:#101418;">{{ actual.inicial }}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:16px;line-height:1.2;color:#101418;">{{ actual.autor }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;margin-top:4px;">{{ actual.rel }}</div>
+              </div>
+              <div style="flex:none;font-size:15px;line-height:1;letter-spacing:.06em;" role="img" aria-label="{{ actual.etiqueta }}">
+                <span aria-hidden="true" style="color:#8A6E00;">{{ actual.llenas }}</span><span aria-hidden="true" style="color:#D6D8D4;">{{ actual.vacias }}</span>
+              </div>
+            </div>
+            <p class="dv-clamp" style="margin:14px 0 0;font-size:16px;line-height:1.45;color:#101418;min-height:93px;">{{ actual.texto }}</p>
+            <a href="#google" style="display:inline-flex;align-items:center;gap:7px;min-height:48px;font-weight:800;font-size:14px;color:#0A5C93;">
+              <span>{{ actual.enlaceLeer }}</span><span aria-hidden="true" style="line-height:1;">&#8594;</span>
+            </a>
+          </div>
+
+          <div onKeyDown="{{ teclas }}" style="margin:4px 16px 0;display:flex;align-items:center;justify-content:center;gap:4px;">
+            <sc-if value="{{ verFlechas }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ atras }}" disabled="{{ atrasOff }}" aria-label="Opinión anterior" data-mueve style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:none;border-style:solid;border-width:1.5px;border-radius:999px;font-size:19px;line-height:1;cursor:pointer;transition:border-color 120ms cubic-bezier(.4,0,.2,1),color 120ms cubic-bezier(.4,0,.2,1);border-color:{{ colorAtras }};color:{{ colorAtras }};"><span aria-hidden="true">&#8592;</span></button>
+            </sc-if>
+            <sc-if value="{{ verPuntos }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;">
+                <sc-for list="{{ puntos }}" as="pt" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ pt.ir }}" aria-label="{{ pt.etiqueta }}" aria-current="{{ pt.actual }}" data-mueve style="width:44px;height:48px;padding:0;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                    <span aria-hidden="true" data-mueve style="width:10px;height:10px;border-radius:999px;transition:background-color 120ms cubic-bezier(.4,0,.2,1);background:{{ pt.color }};"></span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ verContador }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.08em;color:#626A72;min-width:62px;text-align:center;">{{ contador }}</span>
+            </sc-if>
+            <sc-if value="{{ verFlechas }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ adelante }}" disabled="{{ adelanteOff }}" aria-label="Opinión siguiente" data-mueve style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:none;border-style:solid;border-width:1.5px;border-radius:999px;font-size:19px;line-height:1;cursor:pointer;transition:border-color 120ms cubic-bezier(.4,0,.2,1),color 120ms cubic-bezier(.4,0,.2,1);border-color:{{ colorAdelante }};color:{{ colorAdelante }};"><span aria-hidden="true">&#8594;</span></button>
+            </sc-if>
+          </div>
+          </sc-if>
+
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinNada }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:22px 20px;">
+          <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:10px;">Aquí no hay nada</div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Sin cookies aceptadas no se puede enseñar ninguna reseña de Google: la foto del autor es obligatoria y vive en su servidor. Y sin opiniones propias en el panel no hay nada que poner en su lugar.</p>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">La sección no se pinta y la portada pasa de <span style="color:#101418;font-weight:700;">Antes de venir</span> a <span style="color:#101418;font-weight:700;">Visítanos</span>. Tampoco sale la nota media: ese número es de Google.</p>
+        </div>
+        </sc-if>
+
+        <div style="margin:18px 16px 24px;">
+          <a href="#ficha" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding-top:12px;border-top:2px solid #E8E9E5;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>{{ enlaceFicha }}</span>
+            <span aria-hidden="true" style="line-height:1;">&#8594;</span>
+          </a>
+        </div>
+
+      </div>
+      <div class="dv-meta">los cuatro cambios, con la regla de la que sale cada uno · «Lo dicen los que ya han venido»: seis palabras, el techo que fija Voz PJP, y dice quiénes son «ellos» — la lección de Cumpleaños y de 05 otra vez, que se encuentre pesa más que sonar elegante · «320 opiniones» pasa de mono 11 a Hanken 700 a 15, porque en tokens la etiqueta mono es «mayúsculas, antetítulos, horarios, códigos» y un recuento no es un código: era el segundo argumento de la sección escrito en lo más pequeño de la chapa. Sube a Papel 200 sobre tinta 800, 10,37 · la fecha pasa a «hace 2 meses», que es lo que hace creíble una reseña —reciente— y no obliga a restar meses. Se queda en mono porque ahí sí es una etiqueta de dato. ⚠ Voz PJP no tiene ese formato en su tabla: si esta opción se aprueba, hay que añadirlo, y en francés la fecha se queda con mes y año porque allí es obligatoria por ley · el enlace ya no promete lo que no hay: dice «Leer entera en Google» solo cuando el texto se corta de verdad, y «Ver en Google» cuando no. En la maqueta se decide por longitud; en producción, midiendo el desbordamiento del párrafo. Pásalas con las flechas y verás las dos etiquetas — la de Ismael es la única que se corta · medido: 439 px = 0,52 pantallas, 37,7 más que 1a — el titular de seis palabras se parte en dos líneas a 32 px (65,3 de alto, o sea 2 × 32,65 de línea) y el recuento crece al subir de 11 a 15. Es lo que cuesta decir quiénes son «ellos», y aún así sigue siendo la sección más corta de la portada · lo que NO cambia: la forma, el sello de 4 líneas, los controles, la chapa oscura y el cero naranja<br>⚠ <span style="color:#F4F4F1;">Recorte del presupuesto (ruta 1b, 7 sep 2026)</span>: de esta sección sale <span style="color:#C9CDD1;">la opinión y sus controles</span>, y por eso lo que dice esta nota de esa pieza <span style="color:#C9CDD1;">sigue siendo verdad de la pieza, no de la sección</span>. No se ha borrado: vive detrás del interruptor <span style="color:#C9CDD1;">conCarrusel</span>, apagado por defecto. La sección pasa de <span style="color:#C9CDD1;">756</span> a <span style="color:#C9CDD1;">439 px</span>, medido.</div>
+    </div>
+
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><span>El dato primero: la chapa justo debajo del rótulo, el titular después y la entradilla en pequeño junto al cierre.</span></div>
+      <div class="dv-card" data-screen-label="2b">
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">06 · Reseñas</div>
+        </div>
+
+        <sc-if value="{{ hayGoogle }}" hint-placeholder-val="{{ true }}">
+        <div>
+
+          <div style="margin:14px 16px 0;background:#1A1F25;border-radius:16px;padding:18px 20px;" data-superficie="tinta">
+            <div style="display:flex;align-items:baseline;gap:9px;">
+              <span style="font-family:'Bungee';font-size:52px;line-height:.9;color:#A3C21C;">{{ notaTexto }}</span>
+              <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:16px;color:#C9CDD1;">sobre 5</span>
+            </div>
+            <div role="img" aria-label="{{ etiquetaNota }}" style="display:flex;gap:2px;margin-top:8px;">
+              <sc-for list="{{ estrellas }}" as="e" hint-placeholder-count="5">
+                <span style="position:relative;display:block;width:24px;height:24px;flex:none;">
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;width:24px;height:24px;overflow:hidden;color:#6C747C;font-size:24px;line-height:24px;text-align:center;">&#9733;</span>
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;height:24px;overflow:hidden;width:{{ e.pct }};"><span style="display:block;width:24px;height:24px;color:#F5C400;font-size:24px;line-height:24px;text-align:center;">&#9733;</span></span>
+                </span>
+              </sc-for>
+            </div>
+            <div style="font-weight:700;font-size:15px;line-height:1.3;color:#C9CDD1;margin-top:10px;">{{ totalTexto }} opiniones</div>
+          </div>
+
+          <div style="padding:18px 16px 0;">
+            <div style="font-family:'Bungee';font-size:28px;line-height:1.05;color:#101418;">Lo dicen los que ya han venido</div>
+          </div>
+
+          <div style="margin:16px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:18px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span aria-hidden="true" style="flex:none;width:56px;height:56px;border-radius:999px;background:#E8E9E5;border:1px solid #D6D8D4;display:flex;align-items:center;justify-content:center;font-family:'Bungee';font-size:22px;color:#101418;">{{ actual.inicial }}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:16px;line-height:1.2;color:#101418;">{{ actual.autor }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;margin-top:4px;">{{ actual.rel }}</div>
+              </div>
+              <div style="flex:none;font-size:15px;line-height:1;letter-spacing:.06em;" role="img" aria-label="{{ actual.etiqueta }}">
+                <span aria-hidden="true" style="color:#8A6E00;">{{ actual.llenas }}</span><span aria-hidden="true" style="color:#D6D8D4;">{{ actual.vacias }}</span>
+              </div>
+            </div>
+            <p class="dv-clamp" style="margin:14px 0 0;font-size:16px;line-height:1.45;color:#101418;min-height:93px;">{{ actual.texto }}</p>
+            <a href="#google" style="display:inline-flex;align-items:center;gap:7px;min-height:48px;font-weight:800;font-size:14px;color:#0A5C93;">
+              <span>{{ actual.enlaceLeer }}</span><span aria-hidden="true" style="line-height:1;">&#8594;</span>
+            </a>
+          </div>
+
+          <div onKeyDown="{{ teclas }}" style="margin:4px 16px 0;display:flex;align-items:center;justify-content:center;gap:4px;">
+            <sc-if value="{{ verFlechas }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ atras }}" disabled="{{ atrasOff }}" aria-label="Opinión anterior" data-mueve style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:none;border-style:solid;border-width:1.5px;border-radius:999px;font-size:19px;line-height:1;cursor:pointer;transition:border-color 120ms cubic-bezier(.4,0,.2,1),color 120ms cubic-bezier(.4,0,.2,1);border-color:{{ colorAtras }};color:{{ colorAtras }};"><span aria-hidden="true">&#8592;</span></button>
+            </sc-if>
+            <sc-if value="{{ verPuntos }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;">
+                <sc-for list="{{ puntos }}" as="pt" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ pt.ir }}" aria-label="{{ pt.etiqueta }}" aria-current="{{ pt.actual }}" data-mueve style="width:44px;height:48px;padding:0;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                    <span aria-hidden="true" data-mueve style="width:10px;height:10px;border-radius:999px;transition:background-color 120ms cubic-bezier(.4,0,.2,1);background:{{ pt.color }};"></span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ verContador }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.08em;color:#626A72;min-width:62px;text-align:center;">{{ contador }}</span>
+            </sc-if>
+            <sc-if value="{{ verFlechas }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ adelante }}" disabled="{{ adelanteOff }}" aria-label="Opinión siguiente" data-mueve style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:none;border-style:solid;border-width:1.5px;border-radius:999px;font-size:19px;line-height:1;cursor:pointer;transition:border-color 120ms cubic-bezier(.4,0,.2,1),color 120ms cubic-bezier(.4,0,.2,1);border-color:{{ colorAdelante }};color:{{ colorAdelante }};"><span aria-hidden="true">&#8594;</span></button>
+            </sc-if>
+          </div>
+
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinNada }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:22px 20px;">
+          <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:10px;">Aquí no hay nada</div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Sin cookies aceptadas no se puede enseñar ninguna reseña de Google: la foto del autor es obligatoria y vive en su servidor. Y sin opiniones propias en el panel no hay nada que poner en su lugar.</p>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">La sección no se pinta y la portada pasa de <span style="color:#101418;font-weight:700;">Antes de venir</span> a <span style="color:#101418;font-weight:700;">Visítanos</span>. Tampoco sale la nota media: ese número es de Google.</p>
+        </div>
+        </sc-if>
+
+        <div style="margin:16px 16px 24px;">
+          <p style="margin:0 0 12px;font-size:15px;line-height:1.5;color:#626A72;">No las elegimos nosotros: son las que Google pone primero.</p>
+          <a href="#ficha" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding-top:12px;border-top:2px solid #E8E9E5;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>{{ enlaceFicha }}</span>
+            <span aria-hidden="true" style="line-height:1;">&#8594;</span>
+          </a>
+        </div>
+
+      </div>
+      <div class="dv-meta">lleva los cuatro arreglos de 2a y encima mueve el orden: rótulo → chapa → titular → opinión · el argumento: la pregunta de esta sección es «¿me fío?» y la respuesta más rápida que existe es un número, así que se pone antes de cualquier frase — quien baja por la portada lo tiene resuelto sin leer · el titular baja a 28 porque ya no abre la sección, la explica; sigue en Bungee y por encima del mínimo de 20 · la entradilla se convierte en la línea que presenta el enlace de cierre, que es donde de verdad hace falta: justo cuando le ofreces ir a Google es cuando importa que sepa que no las elegimos nosotros · ⚠ medido, lo que ahorra es 9,5 px (737,8 contra 756): no se elige por alto, se elige por orden · ⚠ lo que se paga: la sección arranca con un bloque oscuro y sin titular, así que en un barrido rápido no se sabe de qué va hasta 150 px después — el rótulo mono de 11 es lo único que lo dice, y es lo más pequeño de la tarjeta. En una portada donde las otras cinco secciones abren con su titular en Bungee, ésta rompería el ritmo</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «el titular más corto, que a 32 se parte en dos líneas» · «la nota y el titular en la misma chapa» · «que el recuento diga 320 familias» · «la fecha en las dos formas» · «una línea que diga cuántas son de cumpleaños»</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">06 · Reseñas — la cifra manda, y no las elegimos nosotros</span></div>
+  <p class="dv-intro">Lo que pediste: la <span style="color:#F4F4F1;">nota media en grande</span>, una sola reseña con puntos para pasar, cuatro líneas y «leer en Google», y el cierre con el enlace a la ficha. Las dos opciones se diferencian en lo que dijiste —<span style="color:#F4F4F1;">la forma y la cara de la reseña</span>—: <a href="#1a">1a</a> es tu elección, una grande con puntos y flechas y la persona delante (foto de 56 y su nombre enlazado). <a href="#1b">1b</a> pone las cinco en una tira que asoma cortada y la persona al pie, para que se vea que hay más de una opinión sin tener que tocar nada. El eje de 1b, que iba a ser «las estrellas más grandes», pasa a ser la forma. ✅ La nota lleva <span style="color:#F4F4F1;">las cinco estrellas</span>, con el recorte caja a caja: la quinta se rellena al 80 % de la suya, 19,2 px de 24. Dibujar esa décima ha costado tres arreglos — el recorte de la fila entera escondía 3 px, el recorte por caja ya recorta bien, y la pista gris de debajo estaba tan oscura (1,65 de contraste) que la fila seguía leyéndose como cinco llenas. Ahora la pista va en el gris de «control inactivo», 3,49. ⚠ Y <span style="color:#F4F4F1;">fuera el logotipo de Google</span>, como has pedido. Lo que hay que saber: la atribución del AUTOR sigue entera en cada tarjeta —foto, nombre y enlace a su perfil—, que es la que exige la política; el crédito a Google como fuente se queda solo en palabras, en la entradilla y en el enlace de cierre. Si al encenderlo hace falta la marca, vuelve arriba de la chapa. ⚠ Sobre lo de «verificado»: <span style="color:#F4F4F1;">Google no marca las reseñas como verificadas</span> y nadie puede — no comprueba que quien escribe haya venido. Ponerlo sería decir algo que la fuente no dice. Lo que SÍ es comprobable está puesto dos veces: el nombre enlaza al perfil de quien la escribió y «Leer en Google» abre la reseña original. Esa es la verificación de verdad: que cualquiera puede ir a mirarla. Con el logotipo fuera, la línea de debajo dice «320 opiniones» y el nombre de la fuente vive en la entradilla y en el enlace de cierre. La cabecera es la misma en las dos a propósito, para que compares solo lo que cambia. Y el titular no repite la cifra: <span style="color:#F4F4F1;">«Lo dicen ellos»</span>, con la entradilla que convierte el límite de Google en el argumento — <span style="color:#F4F4F1;">«no las elegimos nosotros: son las que Google pone primero»</span>. Eso es lo que hace creíble una nota media, y es gratis: es la verdad. ⚠⚠ <span style="color:#F4F4F1;">Tus dos respuestas se contradicen y hay que resolverlo:</span> dijiste que quien no acepte cookies vea las opiniones escritas por vosotros, y también que <span style="color:#F4F4F1;">no piensas escribir ninguna</span>. Sin foto del autor no se puede enseñar ni una reseña de Google —es obligatoria y vive en su servidor—, así que sin opiniones propias la sección <span style="color:#F4F4F1;">desaparece</span> para ese visitante: acabas en la opción que no elegiste. Puedes verlo con el interruptor «Qué se está viendo» de los ajustes. Cuesta poco arreglarlo: tres opiniones dictadas una vez y no se vuelven a tocar. ⚠ La cuarta reseña del ejemplo tiene <span style="color:#F4F4F1;">2 estrellas</span> y está puesta a propósito: es lo que significa que Google elija. Y fíjate en lo que dice — los calcetines — porque es justo lo que 02 y 05 ya cuentan por delante.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span>Tu elección: la cifra en chapa de tinta, una sola opinión con la persona delante, y flechas con los cinco puntos para pasar.</span></div>
+      <div class="dv-card" data-screen-label="1a">
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">06 · Reseñas</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Lo dicen ellos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">No las elegimos nosotros: son las que Google pone primero.</p>
+        </div>
+
+        <sc-if value="{{ hayGoogle }}" hint-placeholder-val="{{ true }}">
+        <div>
+
+          <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:18px 20px;" data-superficie="tinta">
+            <div style="display:flex;align-items:baseline;gap:9px;">
+              <span style="font-family:'Bungee';font-size:52px;line-height:.9;color:#A3C21C;">{{ notaTexto }}</span>
+              <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:16px;color:#C9CDD1;">sobre 5</span>
+            </div>
+            <div role="img" aria-label="{{ etiquetaNota }}" style="display:flex;gap:2px;margin-top:8px;">
+              <sc-for list="{{ estrellas }}" as="e" hint-placeholder-count="5">
+                <span style="position:relative;display:block;width:24px;height:24px;flex:none;">
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;width:24px;height:24px;overflow:hidden;color:#6C747C;font-size:24px;line-height:24px;text-align:center;">&#9733;</span>
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;height:24px;overflow:hidden;width:{{ e.pct }};"><span style="display:block;width:24px;height:24px;color:#F5C400;font-size:24px;line-height:24px;text-align:center;">&#9733;</span></span>
+                </span>
+              </sc-for>
+            </div>
+            <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.06em;color:#9AA1A8;margin-top:10px;">{{ totalTexto }} opiniones</div>
+          </div>
+
+          <div style="margin:16px 16px 0;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:18px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span aria-hidden="true" style="flex:none;width:56px;height:56px;border-radius:999px;background:#E8E9E5;border:1px solid #D6D8D4;display:flex;align-items:center;justify-content:center;font-family:'Bungee';font-size:22px;color:#101418;">{{ actual.inicial }}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:700;font-size:16px;line-height:1.2;color:#101418;">{{ actual.autor }}</div>
+                <div style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;margin-top:4px;">{{ actual.fecha }}</div>
+              </div>
+              <div style="flex:none;font-size:15px;line-height:1;letter-spacing:.06em;" role="img" aria-label="{{ actual.etiqueta }}">
+                <span aria-hidden="true" style="color:#8A6E00;">{{ actual.llenas }}</span><span aria-hidden="true" style="color:#D6D8D4;">{{ actual.vacias }}</span>
+              </div>
+            </div>
+            <p class="dv-clamp" style="margin:14px 0 0;font-size:16px;line-height:1.45;color:#101418;min-height:93px;">{{ actual.texto }}</p>
+            <a href="#google" style="display:inline-flex;align-items:center;gap:7px;min-height:48px;font-weight:800;font-size:14px;color:#0A5C93;">
+              <span>Leer en Google</span><span aria-hidden="true" style="line-height:1;">&#8594;</span>
+            </a>
+          </div>
+
+          <div onKeyDown="{{ teclas }}" style="margin:4px 16px 0;display:flex;align-items:center;justify-content:center;gap:4px;">
+            <sc-if value="{{ verFlechas }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ atras }}" disabled="{{ atrasOff }}" aria-label="Opinión anterior" data-mueve style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:none;border-style:solid;border-width:1.5px;border-radius:999px;font-size:19px;line-height:1;cursor:pointer;transition:border-color 120ms cubic-bezier(.4,0,.2,1),color 120ms cubic-bezier(.4,0,.2,1);border-color:{{ colorAtras }};color:{{ colorAtras }};"><span aria-hidden="true">&#8592;</span></button>
+            </sc-if>
+            <sc-if value="{{ verPuntos }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;">
+                <sc-for list="{{ puntos }}" as="pt" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ pt.ir }}" aria-label="{{ pt.etiqueta }}" aria-current="{{ pt.actual }}" data-mueve style="width:44px;height:48px;padding:0;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                    <span aria-hidden="true" data-mueve style="width:10px;height:10px;border-radius:999px;transition:background-color 120ms cubic-bezier(.4,0,.2,1);background:{{ pt.color }};"></span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ verContador }}" hint-placeholder-val="{{ false }}">
+              <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.08em;color:#626A72;min-width:62px;text-align:center;">{{ contador }}</span>
+            </sc-if>
+            <sc-if value="{{ verFlechas }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ adelante }}" disabled="{{ adelanteOff }}" aria-label="Opinión siguiente" data-mueve style="width:48px;height:48px;flex:none;padding:0;display:flex;align-items:center;justify-content:center;background:none;border-style:solid;border-width:1.5px;border-radius:999px;font-size:19px;line-height:1;cursor:pointer;transition:border-color 120ms cubic-bezier(.4,0,.2,1),color 120ms cubic-bezier(.4,0,.2,1);border-color:{{ colorAdelante }};color:{{ colorAdelante }};"><span aria-hidden="true">&#8594;</span></button>
+            </sc-if>
+          </div>
+
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinNada }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:22px 20px;">
+          <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:10px;">Aquí no hay nada</div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Sin cookies aceptadas no se puede enseñar ninguna reseña de Google: la foto del autor es obligatoria y vive en su servidor. Y sin opiniones propias en el panel no hay nada que poner en su lugar.</p>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">La sección no se pinta y la portada pasa de <span style="color:#101418;font-weight:700;">Antes de venir</span> a <span style="color:#101418;font-weight:700;">Visítanos</span>. Tampoco sale la nota media: ese número es de Google.</p>
+        </div>
+        </sc-if>
+
+        <div style="margin:18px 16px 24px;">
+          <a href="#ficha" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding-top:12px;border-top:2px solid #E8E9E5;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>{{ enlaceFicha }}</span>
+            <span aria-hidden="true" style="line-height:1;">&#8594;</span>
+          </a>
+        </div>
+
+      </div>
+      <div class="dv-meta">papel de arriba abajo y una sola chapa de tinta: la cifra · cero naranja, que solo significa comprar, y aquí no se compra nada · el titular NO repite el 4,8 porque la regla de Juegos es un número por frase: el número es la chapa, el titular es la promesa · la cifra en Lima Bote, que en tokens es literalmente «precios, cifras, confirmación» — 8,12 sobre tinta 800 · ⚠ la nota lleva las cinco estrellas, y dibujar un decimal ha costado TRES arreglos, no dos: (1) recortando la fila ENTERA al 96 %, el corte caía en 83,3 px cuando cuatro estrellas miden 69,4 y cinco 86,7 — 3 px escondidos, el letter-spacing se comía la décima y el 4,8 salía igual que un 5,0; (2) recortando CAJA A CAJA sí se recorta bien, 19,2 px de 24, el 80 % exacto; (3) pero la pista de debajo estaba en Tinta 600 sobre la chapa, o sea 1,65 de contraste, así que los 4,8 px grises no se veían y la fila seguía escaneándose como cinco llenas. La pista sube a Tinta 500 (#6C747C, 3,49), que en tokens es literalmente «texto de control inactivo» — que es lo que es: la parte de la estrella que no se ha ganado · la variante de una sola estrella grande a la altura del «4» (54 px de fuente para 38 de tinta, igual que la cifra) se probó y se retiró: el dueño quiere las cinco · ⚠ <span style="color:#F4F4F1;">fuera el logotipo de Google de la chapa</span>, por decisión del dueño. Hay que saber lo que cuesta: la atribución del AUTOR sigue entera y es la que exige la política de reseñas —foto, nombre y enlace al perfil en cada tarjeta—, pero el crédito a Google como fuente se queda solo en palabras: la entradilla y el enlace de cierre. Si al encenderlo hace falta la marca, vuelve arriba y es un hueco de 56×18 · en Amarillo Aviso, cuyo rol declarado es «resalte tipo marcador»: 10,09 sobre tinta 800, pero 1,49 sobre papel — y por eso la nota tiene que ser chapa oscura y no una fila en claro · en la tarjeta blanca las estrellas bajan a Amarillo 800 (4,87) porque el 500 daría 1,64, la misma regla de variante oscura que ya usan Zonas y Cumpleaños, y ahí son las cinco y enteras porque la nota de una opinión no tiene decimales · el logotipo va ARRIBA, que es donde lo pone el widget oficial: la fuente se declara antes del dato, no como pie — y va el logotipo COMPLETO, la palabra «Google», no la «G» suelta: el kit de atribución entrega el crédito en esa forma y la G a solas es el favicon — <span style="color:#F4F4F1;">retirado por decisión del dueño</span>, y queda anotado aquí para cuando haya que volver a ponerlo · la línea del total — así la chapa se lee «Google», luego la nota, luego cuántas — y sin rótulo «Opiniones» encima, que decía la misma palabra que la línea de abajo · la línea del total va en su propia fila a todo el ancho: en la primera versión compartía columna con la cifra de Bungee 48 y se partía en dos líneas, contra el «0 líneas de dato partidas, de 320 a 414» del presupuesto · el nombre del autor es el enlace a su perfil en Azul Muro (7,08 sobre blanco), que es lo que Google exige junto con la foto: la atribución no es un adorno ni se puede apagar · la foto es un hueco con la inicial porque en la maqueta no hay foto de nadie; en producción viene del servidor de Google y no se puede copiar a nuestro dominio · el texto se tapa a 4 líneas con «Leer en Google»: recortar el texto está prohibido, taparlo con acceso a la reseña entera no · el párrafo lleva min-height de 93 (4 × 1,45 × 16) para que los puntos no salten al pasar de una opinión corta a una larga · cinco puntos, cada uno con su área de 44×48, que es el mínimo táctil sin excepciones, más dos flechas de 48 fantasma: los puntos dicen DÓNDE estás —cinco opiniones, vas por la primera— y las flechas dicen QUÉ HACER, que es lo que un punto de 10 px no sabe decir. Las dos cosas ya eran accesibles antes (los puntos son botones, tabulables, con su nombre leído «Opinión 1 de 5, Marta G.» y su aria-current), así que las flechas no arreglan el teclado: arreglan el pulgar. Lo que SÍ añade teclado es que el grupo escucha ← y →, y como el manejador vive en el grupo de los controles y no en la tarjeta, funciona con el foco puesto en cualquiera de ellos — la trampa que Componentes tiene fichada del carril de Tarifas · en los extremos la flecha se apaga en vez de dar la vuelta: si se enrolla, los puntos mienten sobre dónde estabas · y no llevan relleno: el naranja es de comprar y aquí no se compra · el logotipo de Google va en el hueco arrastrable de la chapa y NO lo dibujo yo: es una marca ajena y Google entrega el archivo en su kit de atribución de Places — arrastra ahí google_on_non_white, que es la versión para fondos oscuros (sobre papel iría la otra, pero aquí la única superficie con datos de Google es la chapa) · sus condiciones también son medidas: no se recolorea, no se estira, no baja de 16 px de alto —está a 18— y lleva de aire libre lo que mide su propia «G», de ahí los 12 hasta el total · y con el logotipo puesto, la línea deja de decir «opiniones en Google»: lo dice el logotipo, y el nombre no se escribe dos veces en la misma fila · medido tras la corrección: la línea del total mide 14,5 px de alto en un solo rectángulo (antes 29 en dos), y la sección entera 709,6 px = 0,84 pantallas a 390×844, la más corta de la portada, que es lo que le toca a la que solo confirma · el movimiento se queda en el hover del punto (120, instante) y el resto entra en la pasada de vestido, que se hace de una vez sobre todas las secciones</div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><span>Las cinco en una tira que asoma cortada y la persona al pie: se ve que hay más de una opinión sin tocar nada.</span></div>
+      <div class="dv-card" data-screen-label="1b">
+
+        <div style="padding:24px 16px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">06 · Reseñas</div>
+          <div style="font-family:'Bungee';font-size:34px;line-height:.95;letter-spacing:-.01em;color:#101418;margin-top:8px;">Lo dicen ellos</div>
+          <p style="margin:16px 0 0;font-size:18px;line-height:1.5;color:#626A72;">No las elegimos nosotros: son las que Google pone primero.</p>
+        </div>
+
+        <sc-if value="{{ hayGoogle }}" hint-placeholder-val="{{ true }}">
+        <div>
+
+          <div style="margin:20px 16px 0;background:#1A1F25;border-radius:16px;padding:20px;text-align:center;" data-superficie="tinta">
+            <div style="display:flex;align-items:baseline;justify-content:center;gap:9px;">
+              <span style="font-family:'Bungee';font-size:52px;line-height:.9;color:#A3C21C;">{{ notaTexto }}</span>
+              <span style="font-family:'Hanken Grotesk';font-weight:700;font-size:16px;color:#C9CDD1;">sobre 5</span>
+            </div>
+            <div role="img" aria-label="{{ etiquetaNota }}" style="display:flex;gap:2px;margin-top:8px;justify-content:center;">
+              <sc-for list="{{ estrellas }}" as="e" hint-placeholder-count="5">
+                <span style="position:relative;display:block;width:24px;height:24px;flex:none;">
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;width:24px;height:24px;overflow:hidden;color:#6C747C;font-size:24px;line-height:24px;text-align:center;">&#9733;</span>
+                  <span aria-hidden="true" style="position:absolute;left:0;top:0;height:24px;overflow:hidden;width:{{ e.pct }};"><span style="display:block;width:24px;height:24px;color:#F5C400;font-size:24px;line-height:24px;text-align:center;">&#9733;</span></span>
+                </span>
+              </sc-for>
+            </div>
+            <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.06em;color:#9AA1A8;margin-top:10px;">{{ totalTexto }} opiniones</div>
+          </div>
+
+          <div class="dv-riel" tabindex="0" role="group" aria-label="Opiniones en Google" style="margin:16px 0 0;padding:0 16px;">
+            <sc-for list="{{ resenas }}" as="r" hint-placeholder-count="5">
+              <div style="flex:none;width:308px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;">
+                <div style="font-size:22px;line-height:1;letter-spacing:.08em;" role="img" aria-label="{{ r.etiqueta }}">
+                  <span aria-hidden="true" style="color:#8A6E00;">{{ r.llenas }}</span><span aria-hidden="true" style="color:#D6D8D4;">{{ r.vacias }}</span>
+                </div>
+                <p class="dv-clamp" style="margin:12px 0 0;font-size:16px;line-height:1.45;color:#101418;min-height:93px;">{{ r.texto }}</p>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid #E8E9E5;display:flex;align-items:center;gap:10px;">
+                  <span aria-hidden="true" style="flex:none;width:32px;height:32px;border-radius:999px;background:#E8E9E5;border:1px solid #D6D8D4;display:flex;align-items:center;justify-content:center;font-family:'Bungee';font-size:13px;color:#101418;">{{ r.inicial }}</span>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:15px;line-height:1.2;color:#101418;">{{ r.autor }}</div>
+                    <div style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;margin-top:3px;">{{ r.fecha }}</div>
+                  </div>
+                  <a href="#google" aria-label="{{ r.leer }}" style="flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:48px;min-height:48px;font-weight:800;font-size:13px;color:#0A5C93;">
+                    <span>Leer&nbsp;&#8594;</span>
+                  </a>
+                </div>
+              </div>
+            </sc-for>
+            <span aria-hidden="true" style="flex:none;width:4px;"></span>
+          </div>
+
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ sinNada }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:20px 16px 0;border:1.5px dashed #D6D8D4;border-radius:16px;padding:22px 20px;">
+          <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Lo que ve · no es una pantalla</div>
+          <div style="font-family:'Bungee';font-size:20px;line-height:1.1;color:#101418;margin-top:10px;">Aquí no hay nada</div>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">Sin cookies aceptadas no se puede enseñar ninguna reseña de Google: la foto del autor es obligatoria y vive en su servidor. Y sin opiniones propias en el panel no hay nada que poner en su lugar.</p>
+          <p style="margin:10px 0 0;font-size:16px;line-height:1.45;color:#626A72;">La sección no se pinta y la portada pasa de <span style="color:#101418;font-weight:700;">Antes de venir</span> a <span style="color:#101418;font-weight:700;">Visítanos</span>. Tampoco sale la nota media: ese número es de Google.</p>
+        </div>
+        </sc-if>
+
+        <div style="margin:18px 16px 24px;">
+          <a href="#ficha" style="display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px;padding-top:12px;border-top:2px solid #E8E9E5;font-weight:800;font-size:16px;color:#0A5C93;">
+            <span>{{ enlaceFicha }}</span>
+            <span aria-hidden="true" style="line-height:1;">&#8594;</span>
+          </a>
+        </div>
+
+      </div>
+      <div class="dv-meta">misma cabecera y misma chapa, centrada, con las mismas cinco estrellas · las cinco en tira con la siguiente asomando cortada, que es el patrón del carrusel del sistema: tarjeta de 308 sobre 358 útiles = 86 %, exactamente lo que Componentes corrigió en su propio especimen · aquí la tira NO lleva foco destacado como el carril de Tarifas, y es a propósito: Google ordena por relevancia y no se puede elegir, así que destacar una sería destacar una al azar — el carril con foco es para comparar productos, no opiniones · la tira es enfocable con su anillo de foco (Azul Muro 6,43 sobre papel) para no caer en la trampa del «enfocable sin anillo» que Componentes ya tiene fichada · las estrellas suben a lo primero que se lee y la persona baja al pie con la línea de atribución: foto, nombre enlazado y acceso a la reseña, los tres obligatorios · el «Leer →» de cada tarjeta ocupa 48×48 · una opinión de 2 estrellas ocupa el mismo sitio que una de 5, que es la consecuencia de no poder elegirlas: si se ve rara en la tira, mírala en 1a, donde solo aparece al pasar · el logotipo va en su hueco igual que en 1a, centrado con el total · el hueco del logotipo se mide en el elemento y no por atributos: el componente se pone width/height al 100 % con proporción 3:2, así que con los atributos sueltos se comió los 316 px de la chapa, la estiró a 305 de alto y volvió a partir la línea del total. Con la medida en su propio style —y aspect-ratio anulada, porque 56×18 es 3,1:1— queda en 56×18 exactos, y `fit="contain"` para que el logotipo no se recorte: la marca no se estira ni se recorta · medido: cajas amarillas de 24 · 24 · 24 · 24 · 19,2, chapa de 143,5 y sección de 646,6 px = 0,77 pantallas a 390×844, 63 menos que 1a porque la tira ahorra la fila de control · ⚠ en móvil se ve una y media; en escritorio, cuando llegue la pasada de anchura, las cinco caben en fila y la tira deja de hacer falta</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Prueba: «tres opiniones propias, dictadas» · «la cifra fuera de la chapa, en el titular» · «sin la nota media, solo las voces» · «que la sección diga cuántas opiniones nuevas hay este mes» · «pedir reseña a quien ya vino» · «el enlace de cierre como botón fantasma»</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;conCarrusel&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Presupuesto&quot;,&quot;label&quot;:&quot;El carrusel de opiniones&quot;},&quot;nota&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;min&quot;:1,&quot;max&quot;:5,&quot;step&quot;:0.1,&quot;default&quot;:4.8,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos de Google&quot;,&quot;label&quot;:&quot;Nota media&quot;},&quot;total&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:0,&quot;max&quot;:5000,&quot;default&quot;:320,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos de Google&quot;,&quot;label&quot;:&quot;Cuántas opiniones tiene la ficha&quot;},&quot;cuantas&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;min&quot;:1,&quot;max&quot;:5,&quot;default&quot;:5,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Datos de Google&quot;,&quot;label&quot;:&quot;Cuántas devuelve Google (máx. 5)&quot;},&quot;control&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Puntos&quot;,&quot;Puntos y flechas&quot;,&quot;Flechas y contador&quot;],&quot;default&quot;:&quot;Puntos y flechas&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Cómo se pasa (1a)&quot;,&quot;label&quot;:&quot;Control&quot;},&quot;fuente&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Google, con consentimiento&quot;,&quot;Sin consentimiento y sin opiniones propias&quot;],&quot;default&quot;:&quot;Google, con consentimiento&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Qué se está viendo&quot;,&quot;label&quot;:&quot;Estado del visitante&quot;}}">
+class Component extends DCLogic {
+  state = { i: 0 };
+
+  mueve(d) {
+    this.setState((s) => ({ i: Math.min(this.total - 1, Math.max(0, s.i + d)) }));
+  }
+
+  /* Datos de ejemplo. En producción son las 5 que devuelve Places, en el orden
+   * que Google decide: no hay parámetro de selección ni de orden. La de 2
+   * estrellas está puesta a propósito. */
+  ejemplos() {
+    return [
+      { autor: 'Marta G.', fecha: 'julio de 2026', rel: 'hace 2 meses', nota: 5,
+        texto: 'Fuimos con dos niños de 5 y 9 años y cada uno tenía su zona. Reservamos la hora por la web y en la puerta no esperamos nada.' },
+      { autor: 'Ismael R.', fecha: 'junio de 2026', rel: 'hace 3 meses', nota: 5,
+        texto: 'El cumple de mi hija salió redondo. El monitor no se separó de los niños en las dos horas y nosotros pudimos sentarnos a comer tranquilos, que era justo lo que buscábamos. Repetimos el año que viene sin dudarlo, y ya hemos avisado a las madres de la clase para las suyas.' },
+      { autor: 'Nuria P.', fecha: 'junio de 2026', rel: 'hace 3 meses', nota: 4,
+        texto: 'Muy bien de precio y el personal atentísimo con los pequeños. El sábado por la tarde se llena bastante, así que mejor ir a primera hora.' },
+      { autor: 'Dani', fecha: 'mayo de 2026', rel: 'hace 4 meses', nota: 2,
+        texto: 'Los calcetines se pagan aparte y eso no lo vi en ningún sitio antes de llegar. El sitio está bien, pero avisad antes.' },
+      { autor: 'Carmen L.', fecha: 'mayo de 2026', rel: 'hace 4 meses', nota: 5,
+        texto: 'Mi hijo tiene 3 años y en Kids está seguro y vigilado. La cafetería nos salvó la tarde a los padres que no saltamos.' }
+    ];
+  }
+
+  renderVals() {
+    const p = this.props;
+    const nota = Math.min(5, Math.max(1, p.nota ?? 4.8));
+    const total = Math.max(0, Math.round(p.total ?? 320));
+    const cuantas = Math.min(5, Math.max(1, Math.round(p.cuantas ?? 5)));
+    const hayGoogle = (p.fuente ?? 'Google, con consentimiento') === 'Google, con consentimiento';
+
+    const estrellas = (n) => '\u2605'.repeat(n);
+    const coma = (x) => String(x).replace('.', ',');
+    const miles = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+    /* «Se corta» se decide por longitud porque la maqueta no mide el DOM: en
+     * producción es un test de desbordamiento real sobre el párrafo. De ahí
+     * sale la etiqueta del enlace, para no prometer texto escondido que no hay. */
+    const lista = this.ejemplos().slice(0, cuantas).map((r) => ({
+      autor: r.autor,
+      inicial: r.autor.charAt(0),
+      fecha: r.fecha,
+      rel: r.rel,
+      enlaceLeer: r.texto.length > 150 ? 'Leer entera en Google' : 'Ver en Google',
+      texto: r.texto,
+      llenas: estrellas(r.nota),
+      vacias: estrellas(5 - r.nota),
+      etiqueta: r.nota + ' de 5 estrellas',
+      leer: 'Leer la opinión de ' + r.autor + ' en Google'
+    }));
+
+    const i = Math.min(this.state.i, lista.length - 1);
+    this.total = lista.length;
+    const control = p.control ?? 'Puntos y flechas';
+    const inerte = '#9AA1A8';
+
+    return {
+      verPuntos: control !== 'Flechas y contador',
+      verFlechas: control !== 'Puntos',
+      verContador: control === 'Flechas y contador',
+      contador: (i + 1) + ' / ' + lista.length,
+      atras: () => this.mueve(-1),
+      adelante: () => this.mueve(1),
+      atrasOff: i === 0,
+      adelanteOff: i === lista.length - 1,
+      colorAtras: i === 0 ? inerte : '#101418',
+      colorAdelante: i === lista.length - 1 ? inerte : '#101418',
+      teclas: (e) => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); this.mueve(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); this.mueve(1); }
+      },
+      hayGoogle: hayGoogle,
+      sinNada: !hayGoogle,
+      notaTexto: coma(nota.toFixed(1)),
+      etiquetaNota: coma(nota.toFixed(1)) + ' de 5, media de ' + miles(total) + ' opiniones en Google',
+      estrellas: [0, 1, 2, 3, 4].map((k) => ({
+        pct: (Math.min(1, Math.max(0, nota - k)) * 100).toFixed(1) + '%'
+      })),
+      totalTexto: miles(total),
+      enlaceFicha: 'Ver las ' + miles(total) + ' opiniones en Google',
+      resenas: lista,
+      actual: lista[i],
+      puntos: lista.map((r, k) => ({
+        color: k === i ? '#101418' : '#D6D8D4',
+        actual: k === i ? 'true' : undefined,
+        etiqueta: 'Opinión ' + (k + 1) + ' de ' + lista.length + ', ' + r.autor,
+        ir: () => this.setState({ i: k })
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

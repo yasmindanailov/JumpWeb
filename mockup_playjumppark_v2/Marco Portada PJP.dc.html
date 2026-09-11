@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<script src="./image-slot.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#101418;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#1AA9DE;text-decoration:none}
+a:hover{color:#5CC3EB}
+.dv-turn{padding:44px 44px 36px;border-bottom:1px solid #2A3138;scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:700 10px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#F4F4F1;color:#101418;border-radius:6px;text-decoration:none}
+.dv-tname{font:700 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#F4F4F1}
+.dv-intro{margin:0 0 24px;font:400 14.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:700 10.5px 'JetBrains Mono',ui-monospace,monospace;padding:4px 8px;background:#2A3138;color:#F4F4F1;border-radius:6px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:9px;font:400 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:390px}
+.dv-olabel--w{max-width:760px}
+.dv-card{width:390px;background:#F4F4F1;border:1px solid #2A3138;border-radius:10px;overflow:hidden}
+.dv-card--w{width:760px}
+.dv-card--tinta{background:#101418}
+.dv-opt:target .dv-oid{background:#F5C400;color:#101418}
+.dv-next{margin:26px 0 0;font:400 12.5px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:#9AA1A8;max-width:860px}
+.dv-card button:focus-visible,.dv-card a[href]:focus-visible,.dv-card [tabindex]:focus-visible{outline:3px solid #0A5C93;outline-offset:2px}
+.dv-card [data-superficie="tinta"] a[href]:focus-visible,.dv-card [data-superficie="tinta"] button:focus-visible{outline:3px solid #F5C400;outline-offset:2px}
+.dv-meta{font:400 11px/1.55 'JetBrains Mono',ui-monospace,monospace;color:#9AA1A8;max-width:390px}
+.dv-meta--w{max-width:760px}
+.pjp-lista{overflow-y:auto;scrollbar-width:none}
+.pjp-lista::-webkit-scrollbar{display:none}
+.pjp-tira{overflow-x:auto;scrollbar-width:none}
+.pjp-tira::-webkit-scrollbar{display:none}
+@keyframes pjpAro{0%,72%{opacity:0;transform:scale(.7)}82%{opacity:.5;transform:scale(1.1)}100%{opacity:0;transform:scale(1.45)}}
+@keyframes pjpAsoma{0%,72%{transform:translateX(0)}84%{transform:translateX(-7px)}100%{transform:translateX(0)}}
+@keyframes pjpLatido{0%{opacity:.9;transform:scale(1)}70%,100%{opacity:0;transform:scale(2.4)}}
+@keyframes pjpBote{0%{opacity:0;transform:translateY(-30px) scale(.90,1.11)}62%{opacity:1;transform:translateY(0) scale(1.15,.87)}100%{opacity:1;transform:translateY(0) scale(1,1)}}
+@media (prefers-reduced-motion:reduce){
+.dv-card [data-mueve]{transition-property:box-shadow,border-color,color,background-color !important}
+.dv-card [data-mueve]:hover,.dv-card [data-mueve]:active{transform:none !important}
+.dv-card [data-invita],.dv-card [data-bucle],.dv-card [data-entra]{animation:none !important}
+}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Aprobado con seis cambios — el marco queda cerrado</span></div>
+  <p class="dv-intro">Tus decisiones, aplicadas sobre las piezas del turno 1: <span style="color:#F4F4F1;">el hero y el racimo se quedan</span> · <span style="color:#F4F4F1;">el eslogan pasa al cierre y al menú</span>, y sale del hero · <span style="color:#F4F4F1;">el logo mantiene su animación pero sin bucle</span> · <span style="color:#F4F4F1;">la barra del móvil pierde el fondo</span> y cada mitad se queda con su superficie opaca y su sombra · <span style="color:#F4F4F1;">el par sale del menú</span> · <span style="color:#F4F4F1;">el idioma entra en el menú</span> · y <span style="color:#F4F4F1;">el teléfono y el WhatsApp salen del cierre</span>: preguntar vive en el <span style="color:#F4F4F1;">menú y el pie</span>, y ahí está el teléfono. El idioma se queda en los <span style="color:#F4F4F1;">dos</span> —en el pie funciona sin JavaScript, que es por lo que estaba ahí—, y la página de grupos toma el nombre que <span style="color:#F4F4F1;">ya promete la web</span>: Servicios. Los interruptores enseñan lo que había en cada caso.</p>
+
+  <div class="dv-opts">
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><span>El acta: las seis decisiones aplicadas y las dos que quedan.</span></div>
+      <div class="dv-card dv-card--tinta" data-screen-label="2a" data-superficie="tinta">
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+
+          <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:10px;padding:16px 18px;">
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Los tres que contestaste con una pregunta</div>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:#C9CDD1;"><span style="color:#F4F4F1;">El logo</span>: mantiene animación pero <span style="color:#F4F4F1;">no en bucle</span> — bote de entrada una vez (420 ms, curva de lona, con squash que conserva volumen) y nada más. Un bucle permanente en la cabecera es lo único que se mueve solo en toda la página, y el que había (4600 ms) no está en la escala de ocho tiempos.</p>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:#C9CDD1;"><span style="color:#F4F4F1;">El par en el menú</span>: de acuerdo en quitarlo. El menú es una lista de destinos.</p>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:#C9CDD1;"><span style="color:#F4F4F1;">El juego tapando los CTA</span>: se arregla con el orden, y ya está así — titular, botón, y el juego <span style="color:#F4F4F1;">debajo</span>. El juego es el regalo, no la salida: si se come el botón, la última pantalla de la web se queda sin puerta.</p>
+          </div>
+
+          <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:10px;padding:16px 18px;">
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Y lo que queda pendiente de ti</div>
+            <p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:#C9CDD1;">Solo dos: las <span style="color:#F4F4F1;">dos cruces del menú</span> —Tarifas y Cumpleaños son sección <em>y</em> página, y aquí apuntan a la página— y el <span style="color:#F4F4F1;">alto del par en teléfono</span>, 48 o 56, que dos documentos dicen distinto. ⚠ Y una consecuencia de llamarla <span style="color:#F4F4F1;">Servicios</span>: arregla el enlace roto de Dudas sin tocar la respuesta publicada, pero el rótulo no dice «grupos» ni «colegios», que es lo que la gente busca.</p>
+          </div>
+
+        </div>
+      </div>
+      <div class="dv-meta">la barra sin fondo era ya lo escrito —«sin fondo» es el contenedor, no las piezas—, así que al quitarlo cada mitad se queda con su superficie opaca y la sombra del cuarto rol: naranja <span style="color:#9AA1A8;">0 10px 28px ·,24</span> y papel <span style="color:#9AA1A8;">0 10px 26px ·,18</span>, las mismas que ya llevaba el par del menú · el fantasma pasa de transparente a blanco macizo por la misma regla que lo obligó en el hero: sobre el contenido que pasa por detrás, su azul da 2,62 · el crecimiento del cierre a pantalla completa ya está: es el tercer factor del mecanismo del hero, medido en 0,19 sobre el progreso crudo — y por eso <span style="color:#9AA1A8;">armazon-y-menu.md §9.2 sigue caducada</span>, que dice que no se implementa · lo único que NO he tocado son las piezas del turno 1: son las mismas y ahora pintan lo aprobado</div>
+    </div>
+  </div>
+
+  <p class="dv-next">Con esto el marco queda cerrado y la portada entera está aprobada. Lo siguiente es la <span style="color:#9AA1A8;">pasada de vestido</span>: iconos, imagen y movimiento sobre las ocho secciones a la vez.</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">El marco: hero, racimo, barra doble, menú y cierre</span></div>
+  <p class="dv-intro">Antes de dibujar he leído <span style="font-family:'JetBrains Mono';font-size:11.5px;">docs/</span> y hay una noticia grande: <span style="color:#F4F4F1;">tres de tus cuatro piezas ya están decididas y construidas</span>, con tu firma y con medidas. El menú a pantalla completa (2c·1), el racimo de escritorio (2c·2), el par de CTA (2c·7, 2c·8) y el cierre con su minijuego e imán (#231, #235, #252, #256) existen. Así que esto <span style="color:#F4F4F1;">no es diseñar de cero: es pasar por el sistema lo que ya hay</span> y poner sobre la mesa los seis sitios donde el producto y estos documentos <span style="color:#F4F4F1;">dicen cosas distintas</span>. <span style="color:#F4F4F1;">Resumen de lo que hacemos</span> — ocho cosas: <span style="color:#F4F4F1;">(1) abre Reservar</span>, no el registro, porque si en el parque se lleva al cliente directo a la dirección del registro, el que viene mandado no pasa por la portada, y la Arquitectura ya tenía apuntado el defecto contrario («al que viene a mirar le pides el trámite»). El registro se queda plegado en 56 px en el racimo, la barra y el menú, y <span style="color:#F4F4F1;">entero en el hero</span> — que es donde la Arquitectura dice que la landing le pone la puerta · <span style="color:#F4F4F1;">(2) el par sigue doble</span> y con los rótulos decididos · <span style="color:#F4F4F1;">(3) las sombras son tus cinco</span> del cuarto rol, ya puestas: aquí me equivoqué ayer y lo digo en <a href="#1b">1b</a> · <span style="color:#F4F4F1;">(4) no se añade fondo</span> — la barra se disolvió en 2c·2 y eso arregló el salto al contenido en 12 de 12 vistas; lo que sostiene la legibilidad es que cada pieza traiga su superficie opaca. Y sale <span style="color:#F4F4F1;">un agujero nuevo que no es la sombra: el anillo de foco</span>, que va por fuera del botón y por tanto sobre un fondo que no controlamos (2,62 y 1,49 — los dos por debajo de 3). · <span style="color:#F4F4F1;">(5) en el hero móvil va el par, y tenías razón tú</span>: está publicado en playjump.es en los tres sitios. Entra <span style="color:#F4F4F1;">en fila</span>, flotando y sin barra detrás — pero <span style="color:#F4F4F1;">sin plegar ninguna mitad</span>, y esto es una corrección que me ha cazado la revisión: con el puck de 56 la palabra «Registrarse» desaparecía de la portada entera y el único camino al registro era un icono sin texto que, además, <span style="color:#F4F4F1;">no lleva al registro</span> — alterna el par. El plegado existe para compartir sitio con el contenido, y el hero no comparte. Así que aquí las dos puertas van con su rótulo: 94 + 112 + 10 de aire caben de sobra en los 316. Sin barra detrás, solo sus sombras, y cada mitad con <span style="color:#F4F4F1;">superficie opaca</span> — la de la cuenta en blanco macizo y no en su fantasma azul, que sobre el velo del hero da 2,62: el contrato «papel siempre» pasa a ser por superficie. En <a href="#1a">1a</a> · <span style="color:#F4F4F1;">(6) el par dice «Reservar» en las cuatro superficies</span>: en tu web pone «Llamar» porque las reservas están en mantenimiento, y eso es un estado de hoy y no el diseño — así el naranja vuelve a significar comprar, y el teléfono se queda en el cierre y en el menú · <span style="color:#F4F4F1;">(7) el menú sale del inventario de la Arquitectura</span> y no de los rótulos de la portada, en <span style="color:#F4F4F1;">dos grupos</span>: lo que baja a una sección y lo que te saca de aquí. Fuera Reseñas (no lleva página, y su sección desaparece sin cookies) y Mi Play Jump (es la mitad del par de abajo). En <a href="#1d">1d</a>, con las dos cruces que te quedan por decidir · <span style="color:#F4F4F1;">(8) y el inventario crece: seis páginas eran, ocho salen</span> — las 23 actividades y los grupos pasan las tres pruebas, y las dos primeras las estaban pidiendo ya dos secciones cerradas con enlaces que no apuntan a nada. En <a href="#1f">1f</a>. Y lo de antes sigue en pie: <span style="color:#F4F4F1;">El hero está bien y su transición es una sola</span>, compartida con el armazón por decisión expresa —dos señales lo dejaban entrando antes o después según el navegador—; lo que faltaba en <a href="#1a">1a</a> era decir su aritmética y una cosa más grave: el tercer factor de la fórmula sale del <span style="color:#F4F4F1;">hero del cierre</span>, o sea que tu punto 1 y tu punto 4 son <span style="color:#F4F4F1;">el mismo mecanismo</span> y no dos encargos. <span style="color:#F4F4F1;">El par se mantiene doble</span>: no es una opción abierta, lo decidiste dos veces —la segunda contra tu propio artboard, que pedía 3 iconos + 1 CTA—. Lo que sí estaba mal era <span style="color:#F4F4F1;">lo que el par dice</span>: he corregido los rótulos a los decididos —«Registrarse» con «o inicia sesión» debajo— y el aro de la invitación, que va <span style="color:#F4F4F1;">fuera</span>, a inset −4 con radio 14, como fija la spec. Las tarjetas son las piezas, no alternativas entre sí: <a href="#1a">1a</a> el hero, <a href="#1b">1b</a> el racimo de escritorio, <a href="#1c">1c</a> la barra doble del móvil, <a href="#1d">1d</a> el menú <span style="color:#F4F4F1;">en móvil</span> —que es lo único que de verdad nunca se diseñó—, <a href="#1e">1e</a> el cierre con el pie y <a href="#1f">1f</a> dónde va cada cosa. Todo a 390, que es tu requisito de pie desde el 3 de septiembre. Los interruptores del panel no son adornos: cada uno es una de las seis decisiones que te tocan.</p>
+
+  <div class="dv-opts">
+
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span>El hero. Dos estados y un imán entre ellos: prueba el interruptor «Hero».</span></div>
+      <div class="dv-card dv-card--tinta" data-screen-label="1a" data-superficie="tinta">
+
+        <sc-if value="{{ heroEstatico }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:12px 16px 0;display:flex;align-items:center;gap:10px;">
+          <img src="marca/logo-pjp-blanco.svg" alt="Play Jump Park" style="height:46px;width:auto;display:block;flex:none;filter:drop-shadow(0 6px 16px rgba(16,20,24,.45)) drop-shadow(0 0 1px rgba(255,255,255,.5));">
+          <span style="flex:1;"></span>
+          <button type="button" aria-label="Abrir el menú" data-mueve style="display:flex;align-items:center;justify-content:center;gap:0;width:48px;height:48px;flex:none;background:#FFFFFF;border:1.5px solid #D6D8D4;border-radius:10px;cursor:pointer;box-shadow:0 10px 28px rgba(16,20,24,.16);transition:transform 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translateY(-2px);">
+            <span aria-hidden="true" style="display:flex;flex-direction:column;gap:4px;align-items:flex-start;">
+              <span style="display:block;width:19px;height:2.5px;border-radius:999px;background:#101418;"></span>
+              <span style="display:block;width:12px;height:2.5px;border-radius:999px;background:#101418;"></span>
+            </span>
+          </button>
+        </div>
+        <div style="height:12px;"></div>
+        </sc-if>
+
+        <div style="padding:0 16px;">
+          <div style="position:relative;overflow:hidden;background:#1A1F25;border-radius:16px;height:{{ heroAlto }};">
+            <image-slot id="pjp-hero-poster" shape="rect" fit="cover" placeholder="Póster del vídeo: el mejor plano del parque (hoy es la cafetería)" style="position:absolute;inset:0;width:100%;height:100%;"></image-slot>
+            <div aria-hidden="true" style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,20,24,.30) 0%,rgba(16,20,24,.18) 38%,rgba(16,20,24,.88) 100%);"></div>
+            <span style="position:absolute;top:12px;right:12px;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#F4F4F1;background:rgba(16,20,24,.72);border-radius:999px;padding:5px 10px;">vídeo · 4 a 6 planos · sin sonido</span>
+
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:20px;display:flex;flex-direction:column;align-items:flex-start;">
+              <sc-if value="{{ esloganHero }}" hint-placeholder-val="{{ true }}">
+              <span style="display:inline-block;font-family:'Permanent Marker';font-size:24px;line-height:1.15;color:#F5C400;transform:rotate(-2deg);margin:0 0 14px 2px;">activa tu modo diversión</span>
+              </sc-if>
+              <h1 style="font-family:'Bungee';font-weight:400;font-size:{{ heroTitulo }};line-height:.92;letter-spacing:-.015em;color:#F4F4F1;margin:0;text-align:start;">Diversión<br>ON</h1>
+
+              <sc-if value="{{ heroEntrada }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;gap:10px;width:100%;max-width:640px;margin-top:20px;">
+                <a href="#reservar" data-mueve style="flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;height:56px;padding:0 14px;background:#F2711C;border-radius:10px;box-shadow:0 10px 28px rgba(16,20,24,.24);transition:background-color 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D56319;box-shadow:0 18px 40px rgba(16,20,24,.32);">
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="#101418" style="flex:none;"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#101418;white-space:nowrap;">Reservar</span>
+                </a>
+                <a href="#registro" data-mueve style="flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;height:56px;padding:0 14px;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;box-shadow:0 10px 26px rgba(16,20,24,.18);transition:background-color 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;box-shadow:0 16px 36px rgba(16,20,24,.26);">
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="#0A5C93" style="flex:none;"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+                  <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#0A5C93;white-space:nowrap;">Registrarse</span>
+                </a>
+              </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+
+        <sc-if value="{{ heroEstatico }}" hint-placeholder-val="{{ false }}">
+        <div aria-hidden="true" style="display:flex;height:4px;margin:16px 16px 0;border-radius:999px;overflow:hidden;">
+          <span style="flex:1;background:#1AA9DE;"></span><span style="flex:1;background:#F2711C;"></span><span style="flex:1;background:#A3C21C;"></span><span style="flex:1;background:#F5C400;"></span><span style="flex:1;background:#E6007E;"></span>
+        </div>
+        <div style="padding:20px 16px 0;background:#F4F4F1;margin-top:16px;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">01 · Para quién</div>
+          <div style="font-family:'Bungee';font-size:26px;line-height:1.05;color:#101418;margin-top:8px;">Zonas</div>
+          <div style="height:20px;"></div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ heroEntrada }}" hint-placeholder-val="{{ true }}">
+        <div style="height:16px;"></div>
+        </sc-if>
+      </div>
+      <div class="dv-meta"><span style="color:#9AA1A8;">el hero y el armazón son UN mecanismo, no dos</span>: el mismo recorrido de 420 px publica el progreso, y se hizo así a propósito — con dos señales (un observador y el scroll) el armazón podía entrar antes o después que el hero según el navegador · la ventana es <span style="color:#9AA1A8;">0,18 → 0,62</span> del recorrido (<span style="color:#9AA1A8;">nb = (bruto − 0,18) / 0,44</span>) y encima la cúbica de salida <span style="color:#9AA1A8;">ne = 1 − (1 − nb)³</span>: opacidad <span style="color:#9AA1A8;">v</span>, <span style="color:#9AA1A8;">translateY(−16 + 16·v)</span> y pulsable solo con <span style="color:#9AA1A8;">v &gt; 0,85</span>, porque <span style="color:#9AA1A8;">opacity: 0 sigue recibiendo clics</span> · verificado por aritmética y no de vista: a <span style="color:#9AA1A8;">scrollY 120</span> la fórmula da <span style="color:#9AA1A8;">0,5617</span> y el navegador midió <span style="color:#9AA1A8;">0,561</span> · encima va el <span style="color:#9AA1A8;">imán</span>, que te para en el punto estático: bajando encaja primero ahí y solo un segundo empujón pasado el 45 % completa la transición · <span style="color:#9AA1A8;">sin logo, sin menú y sin barra en «Entrada» no es fidelidad ciega: es tu decisión</span> del 28 de agosto —«el CTA en el hero se oculta, y el logo también, cuando el hero está a pantalla completa; se muestran cuando se minimiza»— y es justo lo que <span style="color:#9AA1A8;">obliga</span> al hero a llevar sus dos puertas: las dos mitades no se pueden separar, o la primera pantalla se queda sin ningún sitio donde comprar (#216, que reabrió #195). Retiro mi objeción de ayer: no es un descuido de marca, es la condición del trato · las dos puertas son <span style="color:#9AA1A8;">las que pide la Arquitectura de Contenido</span> para el hero —«la landing solo le pone la puerta en el hero», dice de /registro— y son la salida del <span style="color:#9AA1A8;">visitante 05</span>, el que entra más veces. Van las dos <span style="color:#9AA1A8;">con su rótulo</span>: la de comprar en relleno naranja y la del registro en papel macizo con borde, que en esta portada ya significa «esto es una puerta». Fantasma no puede ser sobre el vídeo, y relleno tampoco: <span style="color:#9AA1A8;">un solo relleno de acción por pantalla</span> · ⚠ y falta un tercer factor que <span style="color:#9AA1A8;">esta misma spec da por no implementable</span>: <span style="color:#9AA1A8;">v = ne · (1 − salida)³ · dir</span>, donde <span style="color:#9AA1A8;">salida</span> es el crecimiento del <span style="color:#9AA1A8;">hero del cierre</span>. <span style="color:#9AA1A8;">armazon-y-menu.md §9.2</span> dice «nosotros no lo tenemos, así que ese factor no se implementa» — y <span style="color:#9AA1A8;">#251 lo implementó y lo midió</span>: al 7 % del crecimiento el armazón valía 0,82 con curva lineal, 0,55 con la cúbica leyendo el progreso suavizado y <span style="color:#9AA1A8;">0,19</span> leyendo el crudo, que es el del mockup (peor desvío de 17 posiciones: 0,62 → 0,005). <span style="color:#9AA1A8;">Esa línea de la spec está caducada</span> y es la que hay que corregir · en «Punto estático» los dos botones <span style="color:#9AA1A8;">se van</span>: la acción ya la lleva el racimo · el titular encoge con la tarjeta (42 → 34, Display XL → Display L) y el <span style="color:#9AA1A8;">suelo del clamp es 38</span>, no 63 · radio <span style="color:#9AA1A8;">16</span>, no el 24 del mockup: no existe en la escala cerrada · ❗ <span style="color:#9AA1A8;">tenías razón y he cambiado la pieza: aquí va el par</span>. Ayer te dije que no cabía y que enseñaba menos en más sitio; fui a <span style="color:#9AA1A8;">playjump.es</span> y el par está en el hero, en el racimo y en la barra — <span style="color:#9AA1A8;">tres montajes del mismo mueble</span>, con el mismo rótulo y el mismo orden. Mi error de método fue discutir una pieza tuya que estaba publicada sin haberla mirado · <span style="color:#9AA1A8;">y dice «Reservar»</span>: en tu web pone «Llamar» porque las reservas están en mantenimiento, así que eso es <span style="color:#9AA1A8;">un estado de hoy y no el diseño</span> — con el naranja donde tiene que estar, que solo significa comprar. El teléfono no se pierde: vive en el cierre y en el menú · <span style="color:#9AA1A8;">en fila y las dos enteras, sin plegar ninguna</span> — y el enredo de ayer tenía una causa concreta: el teléfono. Con «Llamar +34 641 99 57 14» las dos mitades no caben a la vez, así que primero las apilé y después plegué una; con el rótulo que de verdad va, <span style="color:#9AA1A8;">94 + 112 + 10 = 216</span> y sobran 100 de los 316. <span style="color:#9AA1A8;">El plegado es del racimo, de la barra y del menú</span>, que comparten sitio con el contenido para siempre; el hero no comparte, y plegarlo aquí <span style="color:#9AA1A8;">borraba la palabra «Registrarse» de la portada entera</span> dejando como única vía un icono sin texto que además no lleva al registro: alterna el par · <span style="color:#9AA1A8;">sin fondo y solo sombra, y eso hay que traducirlo bien: «sin fondo» es el CONTENEDOR, no las piezas</span>. Lo que se va es la barra —igual que en <span style="color:#9AA1A8;">2c·2</span>, que disolvió la del racimo y arregló el salto al contenido en 12 de 12—, pero cada mitad <span style="color:#9AA1A8;">sigue trayendo su superficie opaca</span>: naranja macizo y papel macizo. Transparente no puede ser, y no es una opinión — es tu regla dura: «nada de texto de color sobre foto sin capa de tinta debajo». Un fantasma sobre el vídeo es exactamente eso · y por lo mismo el papel de la mitad de la cuenta <span style="color:#9AA1A8;">no es su fantasma azul</span>: <span style="color:#9AA1A8;">#0A5C93</span> sobre el velo del hero da <span style="color:#9AA1A8;">2,62</span>, así que va en blanco macizo con la tinta azul dentro. El contrato de #216 y #217 —«papel siempre», el que evitó el negro sobre negro— se escribió cuando el par vivía solo en el racimo; con un montaje <span style="color:#9AA1A8;">dentro</span> de una superficie de tinta pasa a ser <span style="color:#9AA1A8;">por superficie</span>, igual que el anillo de foco. Un mueble, tres montajes, dos superficies · <span style="color:#9AA1A8;">la sombra son tus tokens del cuarto rol</span>, los mismos del racimo: <span style="color:#9AA1A8;">0 10px 28px ·,24</span> el naranja y <span style="color:#9AA1A8;">0 10px 26px ·,18</span> el papel. ⚠ y con ellos puestos hay que decir la verdad: <span style="color:#9AA1A8;">una sombra de tinta sobre el vídeo casi no trabaja</span> — arriba, donde el velo es .30, se ve; abajo, con .88, la separación la hace la <span style="color:#9AA1A8;">superficie opaca</span> y no la sombra. Se queda por ser el mismo mueble, no porque aquí se luzca · y el foco, <span style="color:#9AA1A8;">por superficie</span>: aquí el amarillo de tinta, 11,26 · el rótulo es <span style="color:#9AA1A8;">«Registrarse» a secas, en una línea</span>: el «vengo a registrarme» de la Arquitectura pide 178 y no entra, y el «o inicia sesión» de tu web vive en el par de <a href="#1b">1b</a>, <a href="#1c">1c</a> y <a href="#1d">1d</a>, donde la mitad abierta va de 224 en el racimo —medida fija por spec— a 284 en la barra y 290 en el menú, y ahí las dos líneas entran. Aquí, con las dos puertas repartiéndose los 316, ese subtítulo se come el margen que las hace caber · con «reducir movimiento» se queda el póster</div>
+    </div>
+
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel dv-olabel--w"><a class="dv-oid" href="#1b">1b</a><span>El racimo de escritorio: logotipo · el par de CTA · el menú. Prueba «Arranque del par» y «CTA con el menú abierto».</span></div>
+      <div class="dv-card dv-card--w dv-card--tinta" data-screen-label="1b" data-superficie="tinta">
+        <div style="position:relative;height:300px;">
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:186px;background:#1A1F25;background-image:repeating-linear-gradient(135deg,#22282E 0 14px,#1A1F25 14px 28px);"></div>
+          <div style="position:absolute;left:0;right:0;top:186px;bottom:0;background:#F4F4F1;padding:14px 44px 0;">
+            <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">el racimo flota sobre lo que haya debajo · tinta o papel</span>
+          </div>
+
+          <div style="position:absolute;left:44px;top:22px;display:flex;align-items:center;">
+            <img data-entra src="marca/logo-pjp-blanco.svg" alt="Play Jump Park" style="height:70px;width:auto;display:block;animation:pjpBote 420ms cubic-bezier(.2,1.81,.25,1) 1 both;filter:drop-shadow(0 8px 20px rgba(16,20,24,.45)) drop-shadow(0 0 1px rgba(255,255,255,.55));">
+          </div>
+
+          <div style="position:absolute;right:44px;top:22px;display:flex;align-items:center;gap:10px;">
+
+            <sc-if value="{{ parComprar }}" hint-placeholder-val="{{ false }}">
+            <button type="button" data-mueve style="display:flex;align-items:center;gap:12px;width:224px;height:54px;padding:0 13px;background:#101418;border:1.5px solid #101418;border-radius:10px;cursor:pointer;text-align:left;box-shadow:0 10px 28px rgba(16,20,24,.24);transition:background-color 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138;box-shadow:0 18px 40px rgba(16,20,24,.32);">
+              <span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:30px;height:26px;flex:none;border-radius:10px;background:rgba(244,244,241,.14);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#F4F4F1" aria-hidden="true"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+              </span>
+              <span style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#F4F4F1;">Reservar</span>
+                <span style="font-size:11px;line-height:1.2;color:#C9CDD1;">desde 12 €</span>
+              </span>
+            </button>
+            <span style="position:relative;display:inline-flex;flex:none;">
+              <span aria-hidden="true" data-invita style="position:absolute;inset:-4px;border-radius:14px;border:2px solid #F4F4F1;animation:pjpAro 4600ms cubic-bezier(.4,0,.2,1) infinite;pointer-events:none;"></span>
+              <button type="button" aria-label="Cambiar a Mi Play Jump" data-invita data-mueve style="display:flex;align-items:center;justify-content:center;width:56px;height:54px;flex:none;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;box-shadow:0 10px 26px rgba(16,20,24,.18);animation:pjpAsoma 4600ms cubic-bezier(.4,0,.2,1) infinite;transition:background-color 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;box-shadow:0 16px 36px rgba(16,20,24,.26);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+              </button>
+            </span>
+            </sc-if>
+
+            <sc-if value="{{ parCuenta }}" hint-placeholder-val="{{ true }}">
+            <span style="position:relative;display:inline-flex;flex:none;">
+              <span aria-hidden="true" data-invita style="position:absolute;inset:-4px;border-radius:14px;border:2px solid #F4F4F1;animation:pjpAro 4600ms cubic-bezier(.4,0,.2,1) infinite;pointer-events:none;"></span>
+              <button type="button" aria-label="Cambiar a Reservar" data-invita data-mueve style="display:flex;align-items:center;justify-content:center;width:56px;height:54px;flex:none;background:#101418;border:1.5px solid #101418;border-radius:10px;cursor:pointer;box-shadow:0 10px 28px rgba(16,20,24,.24);animation:pjpAsoma 4600ms cubic-bezier(.4,0,.2,1) infinite;transition:background-color 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#2A3138;box-shadow:0 18px 40px rgba(16,20,24,.32);">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#F4F4F1" aria-hidden="true"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+              </button>
+            </span>
+            <a href="#registro" data-mueve style="display:flex;align-items:center;gap:12px;width:224px;height:54px;padding:0 13px;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;text-align:left;box-shadow:0 10px 26px rgba(16,20,24,.18);transition:background-color 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;box-shadow:0 16px 36px rgba(16,20,24,.26);">
+              <span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:30px;height:26px;flex:none;border-radius:10px;background:#E8E9E5;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+              </span>
+              <span style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#0A5C93;">Registrarse</span>
+                <span style="font-size:11px;line-height:1.2;color:#0A5C93;">o inicia sesión</span>
+              </span>
+            </a>
+            </sc-if>
+
+            <button type="button" aria-label="Abrir el menú" data-mueve style="display:flex;align-items:center;gap:12px;height:54px;flex:none;padding:0 18px;background:#FFFFFF;border:1.5px solid #D6D8D4;border-radius:10px;cursor:pointer;box-shadow:0 10px 28px rgba(16,20,24,.16);transition:transform 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translateY(-2px);">
+              <span aria-hidden="true" style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;">
+                <span style="display:block;width:19px;height:2.5px;border-radius:999px;background:#101418;"></span>
+                <span style="display:block;width:12px;height:2.5px;border-radius:999px;background:#101418;"></span>
+              </span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#101418;">Menú</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="background:#F4F4F1;padding:0 44px 24px;">
+          <div style="border-top:1px solid #D6D8D4;padding-top:20px;display:flex;flex-wrap:wrap;gap:24px;">
+            <div style="flex:1 1 220px;min-width:0;">
+              <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Con el menú abierto</div>
+              <div style="margin-top:12px;background:#101418;border-radius:16px;padding:16px;display:flex;align-items:center;gap:10px;" data-superficie="tinta">
+                <sc-if value="{{ menuAmarillo }}" hint-placeholder-val="{{ true }}">
+                <button type="button" data-mueve style="display:flex;align-items:center;gap:10px;height:54px;padding:0 16px;background:#F5C400;border:0;border-radius:10px;cursor:pointer;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#101418;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D8AC00;">Reservar</button>
+                </sc-if>
+                <sc-if value="{{ menuCian }}" hint-placeholder-val="{{ false }}">
+                <button type="button" data-mueve style="display:flex;align-items:center;gap:10px;height:54px;padding:0 16px;background:#1AA9DE;border:0;border-radius:10px;cursor:pointer;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#101418;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#1795C3;">Reservar</button>
+                </sc-if>
+                <button type="button" aria-label="Cerrar el menú" style="display:flex;align-items:center;gap:12px;height:54px;flex:none;padding:0 18px;background:#F4F4F1;border:0;border-radius:10px;cursor:pointer;">
+                  <span aria-hidden="true" style="position:relative;display:block;width:19px;height:19px;">
+                    <span style="position:absolute;left:0;top:8px;width:19px;height:2.5px;border-radius:999px;background:#101418;transform:rotate(45deg);"></span>
+                    <span style="position:absolute;left:0;top:8px;width:19px;height:2.5px;border-radius:999px;background:#101418;transform:rotate(-45deg);"></span>
+                  </span>
+                  <span style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#101418;">Cerrar</span>
+                </button>
+              </div>
+            </div>
+            <div style="flex:1 1 300px;min-width:0;font-size:15px;line-height:1.55;color:#626A72;">Con el menú abierto el racimo <span style="color:#101418;font-weight:700;">no se retira</span> y queda por encima de la capa: si no, desde arriba del todo la pantalla entera se queda sin ningún sitio donde comprar. La X <span style="color:#101418;font-weight:700;">se forma</span> girando las dos mismas rayas, y el botón pasa a papel macizo.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta dv-meta--w"><span style="color:#9AA1A8;">las sombras son las cinco tuyas, medidas y puestas</span>: reservar en relleno de tinta <span style="color:#9AA1A8;">0 10px 28px ·,24</span> → al pasar el cursor <span style="color:#9AA1A8;">0 18px 40px ·,32</span> · el fantasma <span style="color:#9AA1A8;">0 10px 26px ·,18</span> → <span style="color:#9AA1A8;">0 16px 36px ·,26</span> · el menú <span style="color:#9AA1A8;">0 10px 28px ·,16</span>, y su cursor <span style="color:#9AA1A8;">no toca la sombra: levanta el botón</span>. Tres pesos y dos alturas, porque el relleno de tinta pesa más y proyecta más · <span style="color:#9AA1A8;">y el fondo NO se añade</span>: la barra se disolvió en <span style="color:#9AA1A8;">2c·2</span> —sin fondo, sin desenfoque, sin línea— y eso compró algo medible, <span style="color:#9AA1A8;">el salto al contenido pasó de 1 de 12 a 12 de 12</span>. Lo que sostiene la legibilidad no es un fondo común: es que <span style="color:#9AA1A8;">cada pieza trae su propia superficie opaca</span> —tinta, blanco— y lee los alias de <span style="color:#9AA1A8;">papel</span> siempre, incluso dentro del menú de tinta, que es la corrección de <span style="color:#9AA1A8;">#216</span> y <span style="color:#9AA1A8;">#217</span>: con `var(--bg)` el botón salía negro sobre negro · <span style="color:#9AA1A8;">medidas del producto, no inventadas</span>: expandido <span style="color:#9AA1A8;">224</span> (182 en ≤1100, 138 en teléfono) · colapsado <span style="color:#9AA1A8;">56</span> (13+30+13) · alto <span style="color:#9AA1A8;">54</span> las tres piezas (48 en teléfono) · radio 10 y el aro a 14 con <span style="color:#9AA1A8;">inset −4</span>, así quedan concéntricos · logotipo a <span style="color:#9AA1A8;">70</span>, que es lo que mide en tinta —los 54 del mockup están en el enlace que lo envuelve, no en el dibujo—, con doble <span style="color:#9AA1A8;">drop-shadow</span> (sigue el alfa, no la caja) y sin pastilla detrás · <span style="color:#9AA1A8;">el par es UNO</span>: cabecera y barra de móvil comparten estado, así que quien lo cambia arriba y estrecha la ventana se lo encuentra igual abajo · primer clic en la mitad estrecha la expande y colapsa a la otra; el segundo <span style="color:#9AA1A8;">actúa</span> (reservar → paso 1 · registro → paso 5) · la mitad expandida de la cuenta es un <span style="color:#9AA1A8;">enlace</span> y no un botón: era la única rama del par sin suelo sin JavaScript, y una puerta aguanta el clic central y «abrir en pestaña nueva» · el rótulo dice <span style="color:#9AA1A8;">«Registrarse» con «o inicia sesión» DEBAJO</span>, y el sitio está medido, no elegido: «Entrar o registrarse» en el rótulo se sale <span style="color:#9AA1A8;">58 px</span> de los 224 (en el hero, 8), y el subtítulo no compite por ese ancho porque la fila ya sabe pintar dos líneas — es lo que hace la mitad de comprar con el precio · la invitación (asomo + aro, 4,6 s) <span style="color:#9AA1A8;">sigue a la mitad plegada</span>: sin sesión invita a Reservar y la cuenta descansa. Y su aro va <span style="color:#9AA1A8;">FUERA, a inset −4 con radio 14</span>, que es lo que la spec fija para esta familia: el mueble flotante va a radio 10 y los botones de contenido a 14, «y con inset −4 los dos cantos quedan <span style="color:#9AA1A8;">concéntricos</span>». Lo había metido dentro por un <span style="color:#9AA1A8;">overflow: hidden</span> que supuse y que no está escrito en ningún sitio: fuera. ▶ Y al ponerlo donde toca aparece <span style="color:#9AA1A8;">el mismo problema del anillo de foco</span>, que es la prueba de que no era un caso raro: un aro por fuera se dibuja sobre el fondo, no sobre el botón, así que aquí va papel porque el racimo cruza tinta, y en <a href="#1c">1c</a> va tinta porque la barra es blanca. <span style="color:#9AA1A8;">Dos piezas del mismo mueble con el aro de distinto color por lo que hay detrás</span>: es la decisión de abajo, y afecta a dos anillos, no a uno · se apaga al tocar el par <span style="color:#9AA1A8;">y</span> con «reducir movimiento», sin sustituto · ❗ <span style="color:#9AA1A8;">y aquí está el agujero de verdad de flotar sin fondo, y no es la sombra: es el FOCO</span>. Tu anillo se elige por superficie y va <span style="color:#9AA1A8;">por fuera</span> (`outline-offset: 2px`), así que no cae sobre el botón: cae sobre <span style="color:#9AA1A8;">lo que haya detrás</span>, y detrás hay cualquier cosa. Calculado: el de papel <span style="color:#9AA1A8;">#0A5C93 sobre tinta da 2,62</span> y el de tinta <span style="color:#9AA1A8;">#F5C400 sobre papel da 1,49</span> — <span style="color:#9AA1A8;">ninguno de los dos vale para el mobiliario flotante</span>, que pasa por encima de las dos superficies. El relleno se salvó leyendo los alias de papel; el anillo no puede, porque está fuera de la caja. Mi recomendación: para <span style="color:#9AA1A8;">esta familia y solo esta</span>, el anillo entra hacia dentro (`outline-offset: -3px`), donde la superficie sí se conoce. Es tuyo decidirlo: toca una regla dura. ⚠ <span style="color:#9AA1A8;">4600 ms no está en la escala</span> de ocho tiempos: o entra en tokens como noveno, o el bucle no es de sistema · <span style="color:#9AA1A8;">tres conflictos que decides tú</span>: (1) el producto pinta este CTA en <span style="color:#9AA1A8;">tinta</span> y en <span style="color:#9AA1A8;">Amarillo Aviso</span> con el menú abierto, mientras Colores de Marca dice «amarillo nunca botón» y su §14 pide naranja — el mapa del naranja te da la razón al producto en lo de no ser naranja, pero el amarillo sigue prohibido: el interruptor lo cambia a cian (6,85 en tinta); (2) el rótulo va aquí en <span style="color:#9AA1A8;">Hanken 800 a 16</span> y no en el Bungee 17 del producto, porque «Bungee nunca en un botón, nunca bajo 20 px» es regla dura; (3) <span style="color:#9AA1A8;">retiro lo que te dije ayer sobre la sombra: me equivoqué</span>. Dije «borde y no sombra difusa, que la difusa solo existe en modales, es tu hallazgo M-05». La regla existe, pero <span style="color:#9AA1A8;">este mueble ya está exento y por tu decisión</span>: cuando <span style="color:#9AA1A8;">#216</span> dejó el racimo con la sombra dura, tu mockup las pintaba difusas, se fichó como la <span style="color:#9AA1A8;">tercera contradicción de tus fuentes</span> y la resolviste — <span style="color:#9AA1A8;">gana el mockup</span>, igual que con el color del CTA. Así nació el <span style="color:#9AA1A8;">cuarto rol de elevación</span>, el mobiliario flotante (`--shadow-nav-*`). Y el sitio donde se decidió lo dice con todas las letras: «M-05 sigue valiendo para el resto; lo que cambia es que el mobiliario flotante deja de estar cubierto por esa norma, <span style="color:#9AA1A8;">porque el propio cliente lo dibuja así</span>» · ⚠ ojo, hay un documento que aún no lo sabe: <span style="color:#9AA1A8;">Espacio y Retícula §06 sigue titulando «Nada flota, salvo el modal»</span> y listando dos niveles. Son <span style="color:#9AA1A8;">cuatro</span>. Hay que añadirlo ahí y en `tokens-pjp.js`, que solo tiene `dura`, `duraS`, `duraHover`, `modal` y `nada`</div>
+    </div>
+
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a><span>La barra doble del móvil. El pulgar compra desde abajo.</span></div>
+      <div class="dv-card" data-screen-label="1c">
+        <div style="padding:20px 20px 0;">
+          <div style="font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">02 · Tarifas</div>
+          <div style="font-family:'Bungee';font-size:26px;line-height:1.05;color:#101418;margin-top:8px;">Lo que cuesta tu día</div>
+          <div style="margin-top:16px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:16px;">
+            <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Jump · 1 hora</div>
+            <div style="font-family:'Bungee';font-size:34px;line-height:.95;color:#627411;margin-top:6px;">12 €</div>
+            <div style="font-size:15px;line-height:1.55;color:#626A72;margin-top:4px;">14 € en tarifa especial</div>
+          </div>
+          <p style="margin:16px 0 0;font-size:16px;line-height:1.55;color:#626A72;">Mientras la tarifa solo <span style="color:#101418;font-weight:700;">informa</span>, la barra es el único sitio donde se compra. En cuanto Tarifas enfoca una tarjeta y le saca su botón naranja, <span style="color:#101418;font-weight:700;">la barra se retira</span>: nunca hay dos rellenos de acción a la vez.</p>
+        </div>
+        <div style="height:150px;"></div>
+
+        <div style="position:relative;padding:10px 20px 19px;display:flex;gap:8px;align-items:center;">
+          <sc-if value="{{ parComprar }}" hint-placeholder-val="{{ false }}">
+          <button type="button" data-mueve style="flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;background:#F2711C;border:0;border-radius:10px;cursor:pointer;text-align:left;box-shadow:0 10px 28px rgba(16,20,24,.24);transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D56319;">
+            <span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:30px;height:26px;flex:none;border-radius:10px;background:rgba(16,20,24,.14);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#101418" aria-hidden="true"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#101418;">Reservar</span>
+              <span style="font-size:11px;line-height:1.2;color:#101418;">desde 12 €</span>
+            </span>
+          </button>
+          <span style="position:relative;display:inline-flex;flex:none;">
+            <span aria-hidden="true" data-invita style="position:absolute;inset:-4px;border-radius:14px;border:2px solid #101418;animation:pjpAro 4600ms cubic-bezier(.4,0,.2,1) infinite;pointer-events:none;"></span>
+            <button type="button" aria-label="Cambiar a Mi Play Jump" data-invita data-mueve style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;box-shadow:0 10px 26px rgba(16,20,24,.18);animation:pjpAsoma 4600ms cubic-bezier(.4,0,.2,1) infinite;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+            </button>
+          </span>
+          </sc-if>
+
+          <sc-if value="{{ parCuenta }}" hint-placeholder-val="{{ true }}">
+          <span style="position:relative;display:inline-flex;flex:none;">
+            <span aria-hidden="true" data-invita style="position:absolute;inset:-4px;border-radius:14px;border:2px solid #101418;animation:pjpAro 4600ms cubic-bezier(.4,0,.2,1) infinite;pointer-events:none;"></span>
+            <button type="button" aria-label="Cambiar a Reservar" data-invita data-mueve style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;background:#F2711C;border:0;border-radius:10px;cursor:pointer;box-shadow:0 10px 28px rgba(16,20,24,.24);animation:pjpAsoma 4600ms cubic-bezier(.4,0,.2,1) infinite;transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D56319;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#101418" aria-hidden="true"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+            </button>
+          </span>
+          <a href="#registro" data-mueve style="flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;text-align:left;box-shadow:0 10px 26px rgba(16,20,24,.18);transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;">
+            <span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:30px;height:26px;flex:none;border-radius:10px;background:#E8E9E5;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+              <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#0A5C93;">Registrarse</span>
+              <span style="font-size:11px;line-height:1.2;color:#0A5C93;">o inicia sesión</span>
+            </span>
+          </a>
+          </sc-if>
+        </div>
+      </div>
+      <div class="dv-meta">barra de <span style="color:#9AA1A8;">85</span> (10 + 56 + 19 + zona segura), oculta desde 1024 (decisión del dueño, sep 2026: el 900 no existía en el sistema) y con reserva bajo la página para no tapar el pie · <span style="color:#9AA1A8;">¿se mantiene doble? Sí, y ya lo decidiste dos veces</span>: el <span style="color:#9AA1A8;">27 de agosto</span> lo pediste con tus palabras («al darle clic al icono de al lado se desplaza con una transición y se convierte en más ancho, y el botón de reservar se vuelve solo un icono») y el <span style="color:#9AA1A8;">28</span>, cuando tu propio artboard de móvil pedía «3 iconos + Reservar», se te preguntó con las dos opciones y su coste delante: <span style="color:#9AA1A8;">se queda el par doble</span>. El motivo sigue en pie — los tres destinos ya están en el menú a un toque, y partir el par deja la cuenta fuera del pulgar · ⚠ el alto: aquí dibuja <span style="color:#9AA1A8;">56</span>, y ahí <span style="color:#9AA1A8;">dos documentos no dicen lo mismo</span> — la spec viva pide 48 en teléfono y el guion archivado midió 56 en el producto. Los dos pasan tu mínimo de 48; es un número que hay que zanjar en un sitio · aquí el expandido <span style="color:#9AA1A8;">se estira</span>: los 138 px de teléfono son del racimo de arriba, no de la barra · el relleno naranja <span style="color:#9AA1A8;">viaja con la mitad de comprar</span>, sea la ancha o la estrecha, y la otra es siempre fantasma: en los dos estados hay exactamente un relleno · con el menú abierto en móvil <span style="color:#9AA1A8;">la barra se queda</span>: es lo que tapa el agujero de «no hay dónde comprar» sin sacar un CTA a la esquina más lejos de la mano · ⚠ un botón que cambia de significado al pulsarlo se pulsa por error: el nombre accesible del estrecho dice «cambiar a…», no lo que hará después, y sin JavaScript cada mitad navega de una sola pulsación · ❗ <span style="color:#9AA1A8;">arranque: le he dado la vuelta, abre RESERVAR</span> — y tu dato lo justifica. Estaba en la cuenta porque el día del lanzamiento dijiste «para que los clientes se registren rápido y ya»; si al cliente <span style="color:#9AA1A8;">se le lleva en el parque directo a la dirección del registro</span>, esa frase ya la cumple el enlace del mostrador y no la tiene que cumplir la portada — <span style="color:#9AA1A8;">el visitante del mandado no pasa por aquí</span>. Y entonces el defecto que la Arquitectura de Contenido ya te tenía apuntado vuelve a morder: «<span style="color:#9AA1A8;">al que viene a mirar le pides el trámite</span> — lo primero que pide la portada es Registrarse, antes de haber dicho para qué», con su propia frase al lado: <span style="color:#9AA1A8;">la web es para quien no nos conoce</span>. Tres fuentes apuntan al mismo sitio · <span style="color:#9AA1A8;">el registro NO se va</span>: se queda plegado, 56 px, porque cuesta eso y cubre a quien teclea la dirección en vez de escanear — y la Arquitectura pide expresamente que «la landing solo le ponga la puerta» · ⚠ el que sí pierde es el que aterriza aquí a registrarse: el par gasta <span style="color:#9AA1A8;">dos toques</span> (uno abre, otro actúa), y la promesa era «sale de la portada <span style="color:#9AA1A8;">en un toque</span>». La cumple <span style="color:#9AA1A8;">el hero</span>, que lleva las dos puertas enteras y una es «Registrarse» — no el par. Por eso la puerta del hero <a href="#1a">1a</a> no se toca · el servidor lo dice en el <span style="color:#9AA1A8;">body</span> y el par sale ya pintado, sin salto; con sesión abre comprar igual</div>
+    </div>
+
+    <div class="dv-opt" id="1d">
+      <div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a><span>❗ El menú a pantalla completa <span style="color:#F4F4F1;">en móvil</span> — lo único que nunca se diseñó.</span></div>
+      <div class="dv-card dv-card--tinta" data-screen-label="1d" data-superficie="tinta">
+        <div style="position:relative;height:844px;display:flex;flex-direction:column;">
+          <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.11) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+
+          <div style="position:relative;flex:none;padding:12px 16px 0;display:flex;align-items:center;gap:10px;">
+            <img src="marca/logo-pjp-blanco.svg" alt="Play Jump Park" style="height:46px;width:auto;display:block;flex:none;">
+            <span style="flex:1;"></span>
+            <button type="button" aria-label="Cerrar el menú" style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:none;background:#F4F4F1;border:0;border-radius:10px;cursor:pointer;">
+              <span aria-hidden="true" style="position:relative;display:block;width:19px;height:19px;">
+                <span style="position:absolute;left:0;top:8px;width:19px;height:2.5px;border-radius:999px;background:#101418;transform:rotate(45deg);"></span>
+                <span style="position:absolute;left:0;top:8px;width:19px;height:2.5px;border-radius:999px;background:#101418;transform:rotate(-45deg);"></span>
+              </span>
+            </button>
+          </div>
+
+          <div style="position:relative;flex:1;min-height:0;margin-top:16px;">
+            <div class="pjp-lista" style="height:100%;padding:0 16px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;padding-bottom:8px;">Esta página</div>
+              <sc-for list="{{ secciones }}" as="s" hint-placeholder-count="5">
+                <a href="#seccion" style="display:flex;align-items:flex-start;gap:12px;min-height:48px;padding:10px 0;border-bottom:1px solid #2A3138;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;color:#9AA1A8;width:24px;flex:none;padding-top:9px;">{{ s.n }}</span>
+                  <span style="flex:1;min-width:0;font-family:'Bungee';font-weight:400;font-size:30px;line-height:1.05;color:#F4F4F1;overflow-wrap:break-word;">{{ s.t }}</span>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1AA9DE" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;margin-top:14px;"><path d="M12 5.2v13.6"></path><path d="M6.4 13.2 12 18.8l5.6-5.6"></path></svg>
+                </a>
+              </sc-for>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;padding:20px 0 8px;">Páginas</div>
+              <sc-for list="{{ paginas }}" as="p" hint-placeholder-count="5">
+                <a href="#pagina" style="display:flex;align-items:flex-start;gap:12px;min-height:48px;padding:10px 0;border-bottom:1px solid #2A3138;">
+                  <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1.05;color:#F4F4F1;overflow-wrap:break-word;">{{ p.t }}</span>
+                    <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">{{ p.u }}</span>
+                  </span>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="#1AA9DE" stroke="#1AA9DE" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:none;margin-top:14px;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+                </a>
+              </sc-for>
+              <div style="height:8px;"></div>
+            </div>
+            <div aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:56px;background:linear-gradient(180deg,rgba(16,20,24,0),#101418);pointer-events:none;"></div>
+          </div>
+
+          <div style="position:relative;flex:none;padding:16px;border-top:1px solid #2A3138;display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span aria-hidden="true" style="position:relative;width:10px;height:10px;flex:none;">
+                <span style="position:absolute;inset:0;border-radius:999px;background:#5FA82E;"></span>
+                <span data-bucle style="position:absolute;inset:0;border-radius:999px;background:#5FA82E;animation:pjpLatido 2400ms cubic-bezier(.4,0,.2,1) infinite;"></span>
+              </span>
+              <span style="font-size:16px;line-height:1.4;color:#F4F4F1;font-weight:700;">Abierto ahora</span>
+              <span style="font-family:'JetBrains Mono';font-size:14px;color:#C9CDD1;">hasta las 21:30</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <a href="tel:+34641995714" style="display:flex;align-items:center;gap:9px;min-height:48px;padding:0 18px;border:1.5px solid #3B434B;border-radius:999px;font-size:15px;font-weight:700;color:#F4F4F1;">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex:none;"><path d="M8.3 3.2c.7 0 1.3.4 1.5 1l1 2.6c.2.6 0 1.3-.5 1.7l-1.2.9a11 11 0 0 0 4.6 4.6l.9-1.2c.4-.5 1-.7 1.7-.5l2.6 1c.6.2 1 .8 1 1.5v2.7c0 .9-.8 1.6-1.7 1.5-2.9-.2-6.6-1.4-9.5-4.3S3.6 8.1 3.4 5.2c-.1-.9.6-1.7 1.5-1.7z"></path></svg>
+                <span>Llamar</span>
+              </a>
+              <span style="display:flex;align-items:center;gap:4px;">
+                <sc-for list="{{ idiomas }}" as="i" hint-placeholder-count="3">
+                  <a href="#idioma" style="display:flex;align-items:center;min-height:48px;padding:0 12px;font-family:'JetBrains Mono';font-size:14px;letter-spacing:.08em;color:#C9CDD1;">{{ i.t }}</a>
+                </sc-for>
+              </span>
+            </div>
+            <sc-if value="{{ esloganMenu }}" hint-placeholder-val="{{ true }}">
+            <span style="display:inline-block;font-family:'Permanent Marker';font-size:24px;line-height:1.15;color:#F5C400;transform:rotate(-2deg);margin:2px 0 0 2px;">activa tu modo diversión</span>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ parEnMenu }}" hint-placeholder-val="{{ false }}">
+          <div style="position:relative;flex:none;padding:12px 16px 19px;display:flex;gap:10px;align-items:center;">
+            <sc-if value="{{ parCuenta }}" hint-placeholder-val="{{ true }}">
+            <button type="button" aria-label="Cambiar a Reservar" data-mueve style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;background:#F2711C;border:0;border-radius:10px;cursor:pointer;box-shadow:0 10px 28px rgba(16,20,24,.24);transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D56319;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#101418" aria-hidden="true"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+            </button>
+            <a href="#registro" data-mueve style="flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;text-align:left;box-shadow:0 10px 26px rgba(16,20,24,.18);transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;">
+              <span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:30px;height:26px;flex:none;border-radius:10px;background:#E8E9E5;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+              </span>
+              <span style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#0A5C93;">Registrarse</span>
+                <span style="font-size:11px;line-height:1.2;color:#0A5C93;">o inicia sesión</span>
+              </span>
+            </a>
+            </sc-if>
+            <sc-if value="{{ parComprar }}" hint-placeholder-val="{{ false }}">
+            <button type="button" data-mueve style="flex:1 1 0;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 14px;background:#F2711C;border:0;border-radius:10px;cursor:pointer;text-align:left;box-shadow:0 10px 28px rgba(16,20,24,.24);transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D56319;">
+              <span aria-hidden="true" style="display:flex;align-items:center;justify-content:center;width:30px;height:26px;flex:none;border-radius:10px;background:rgba(16,20,24,.14);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#101418" aria-hidden="true"><path d="M3 7h18v4a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zm11 1v8h1.4V8z"></path></svg>
+              </span>
+              <span style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+                <span style="font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#101418;">Reservar</span>
+                <span style="font-size:11px;line-height:1.2;color:#101418;">desde 12 €</span>
+              </span>
+            </button>
+            <button type="button" aria-label="Cambiar a Mi Play Jump" data-mueve style="display:flex;align-items:center;justify-content:center;width:56px;height:56px;flex:none;background:#FFFFFF;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;box-shadow:0 10px 26px rgba(16,20,24,.18);transition:background-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#E8E9E5;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#0A5C93" aria-hidden="true"><circle cx="10" cy="7.5" r="3.7"></circle><path d="M3.2 20c0-3.7 3-6.2 6.8-6.2 1.2 0 2.3.2 3.2.7-.6.9-1 2-1 3.2 0 .8.2 1.6.5 2.3z"></path><path d="M18.4 13.6h1.8v2.4h2.4v1.8h-2.4v2.4h-1.8v-2.4H16v-1.8h2.4z"></path></svg>
+            </button>
+            </sc-if>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+      <div class="dv-meta">❗ <span style="color:#9AA1A8;">preguntas qué ponemos: la Arquitectura de Contenido YA lo tiene decidido, y mi lista de ayer estaba mal</span>. Su sección 05 se titula <span style="color:#9AA1A8;">«Seis páginas, y ninguna repetida»</span> —/precios, /cumpleanos, /registro, /bar, /normas y /contacto, siete con la portada— y además dice <span style="color:#9AA1A8;">qué NO lleva página</span>: la hora extra, los complementos, <span style="color:#9AA1A8;">las reseñas</span>, los juegos de fuera y la galería. Yo había puesto los diez rótulos de la portada como si todos fueran lo mismo · así que la lista va en <span style="color:#9AA1A8;">dos grupos</span>, porque son dos cosas distintas: <span style="color:#9AA1A8;">«Esta página»</span> te baja a una sección —flecha hacia abajo— y <span style="color:#9AA1A8;">«Páginas»</span> te saca de aquí —flecha hacia la derecha, y la URL escrita debajo—. Una lista donde «Zonas» y «Normas» hacen cosas distintas con la misma flecha miente · <span style="color:#9AA1A8;">tres bajas, y cada una por una regla tuya</span>: <span style="color:#9AA1A8;">Reseñas</span> fuera —no lleva página y su sección <span style="color:#9AA1A8;">desaparece</span> sin cookies, así que sería un enlace a la nada—; <span style="color:#9AA1A8;">«Excursiones de colegio»</span> fuera, que me lo inventé y no está en el inventario (vive en Dudas); y <span style="color:#9AA1A8;">Mi Play Jump</span> fuera de la lista, porque es la mitad del par y un destino no se pone dos veces · ❗ <span style="color:#9AA1A8;">y el par sale del menú (decisión del dueño, sep 2026)</span>: el menú es una lista de destinos y el par no es un destino; al cerrarlo la barra sigue debajo con «Reservar», y «Registrarse» no se pierde —entero en el hero, plegado en la barra—. El interruptor «El par de CTA dentro del menú» enseña lo que había · ❗ <span style="color:#9AA1A8;">y entra el idioma, que baja del pie</span>: tres enlaces de 48 en la fila de abajo. ⚠ El pie los tenía por un motivo que sigue vivo — funcionan <span style="color:#9AA1A8;">sin JavaScript</span> y los ve Google, y el menú necesita JS para abrirse—: el interruptor «El idioma también en el pie» los devuelve, y es lo que yo recomiendo · ⚠ <span style="color:#9AA1A8;">y quedan dos cruces que decides tú</span>: Tarifas y Cumpleaños son sección <span style="color:#9AA1A8;">y</span> página, y aquí apuntan a la página porque es «la versión larga»; Visítanos apunta a la <span style="color:#9AA1A8;">sección</span> —tu regla: su sitio ES su sección, en vivo— y /contacto entra aparte como «Contacto», que es el formulario. Si prefieres que Tarifas baje a su sección, se cambia la flecha y ya · la lista <span style="color:#9AA1A8;">no cabe</span>, y ahora menos: por eso lleva la <span style="color:#9AA1A8;">vela</span> abajo, que se apaga sola al llegar al final — sin señal, una lista que sigue parece terminada. Y no es un número fijo: <span style="color:#9AA1A8;">los destinos los pone el panel</span> · los rótulos <span style="color:#9AA1A8;">envuelven</span>, y esto el mockup no lo puede resolver: sus cinco destinos son cortos y fijos («Zonas», «Entradas»), los nuestros los pone el parque desde el panel y hay «Excursiones de colegio». Copiar su <span style="color:#9AA1A8;">nowrap</span> era copiar una decisión que depende de un dato que no controlamos · Bungee a 30 y no a los 68 de escritorio; el <span style="color:#9AA1A8;">subtítulo se va</span>, así que deja de ser información garantizada y pasa a ser refuerzo en pantallas grandes · <span style="color:#9AA1A8;">no hay ficha lateral</span>: la foto y el reclamo de cada destino no caben, y el estado en vivo y el teléfono bajan a la fila fija de abajo, que no se desplaza — y el estado reusa los <span style="color:#9AA1A8;">cuatro</span> de 07, no un «abierto» de adorno · ❗ <span style="color:#9AA1A8;">dos cosas que me he quitado de aquí en esta pasada</span>: la chapa «Mi Play Jump», que era <span style="color:#9AA1A8;">el mismo destino que la mitad de la cuenta del par</span> tres centímetros más abajo —justo lo que dije que no se hacía al sacarla de la lista—, y el <span style="color:#9AA1A8;">idioma</span>, que se va al pie: aquí solo se alcanza abriendo el menú, o sea con JavaScript, y en el pie son tres enlaces que funcionan sin él, que es lo que ya hace tu web · <span style="color:#9AA1A8;">y el par cierra el menú abajo, flotando igual que en el hero</span>: sin barra blanca y sin línea, solo sus sombras — y por lo mismo su mitad de papel es <span style="color:#9AA1A8;">blanco macizo</span> y no el fantasma azul, que sobre esta tinta se queda en 2,62 · los números van <span style="color:#9AA1A8;">01 · 03 · 05 · 07 · 08</span>, salteados a propósito: no numeran la lista, <span style="color:#9AA1A8;">son el rótulo que esa sección lleva escrito en la portada</span>, y renumerarlos de 1 a 5 haría que el menú dijera un número y la sección otro · cerrado el menú <span style="color:#9AA1A8;">sale del orden de tabulación</span> con <span style="color:#9AA1A8;">visibility</span>, nunca con un recorte —un recorte no saca nada del foco y dejaría diez enlaces invisibles tabulables— y nunca con <span style="color:#9AA1A8;">aria-hidden</span>, que deja foco fantasma · lo cierran Escape, el telón, la X y pulsar un destino; el foco vuelve al botón que lo abrió · el recorte circular es movimiento grande: con «reducir movimiento» aparece <span style="color:#9AA1A8;">sin recorrido</span>, solo con opacidad · ⚠ el eslogan a rotulador está aquí porque lo pediste 1:1, y no rompe la norma de «uno por página» porque el menú tapa el hero entero. A 390 me sobra: son 30 px que se los podría comer la lista. El interruptor lo saca</div>
+    </div>
+
+    <div class="dv-opt" id="1e">
+      <div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a><span>El cierre y el pie, en su punto estático. Prueba «El juego» y «Contacto en el cierre».</span></div>
+      <div class="dv-card dv-card--tinta" data-screen-label="1e" data-superficie="tinta">
+        <div style="padding:16px;">
+          <div style="position:relative;background:#101418;border:1px solid #2A3138;border-radius:16px;overflow:hidden;padding:28px 20px 0;display:flex;flex-direction:column;align-items:center;">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.09) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+            <img src="assets/tag-lorca.svg" alt="" aria-hidden="true" style="position:absolute;right:14px;top:16px;width:76px;height:auto;transform:rotate(-6deg);opacity:.9;">
+
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+              <span style="font-family:'Bungee';font-weight:400;font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;">Vamos</span>
+              <span style="font-family:'Bungee';font-weight:400;font-size:34px;line-height:.95;letter-spacing:-.01em;color:#1AA9DE;">a</span>
+              <span style="font-family:'Bungee';font-weight:400;font-size:34px;line-height:.95;letter-spacing:-.01em;color:#F4F4F1;">saltar</span>
+            </div>
+            <p style="position:relative;margin:16px 0 0;max-width:280px;text-align:center;font-size:16px;line-height:1.55;color:#C9CDD1;">Elige día y hora, y a saltar. Se reserva en dos minutos.</p>
+
+            <sc-if value="{{ esloganCierre }}" hint-placeholder-val="{{ false }}">
+            <span style="position:relative;display:inline-block;font-family:'Permanent Marker';font-size:24px;line-height:1.15;color:#F5C400;transform:rotate(-2deg);margin:14px 0 0;">activa tu modo diversión</span>
+            </sc-if>
+
+            <div style="position:relative;width:100%;margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+              <button type="button" data-mueve style="width:100%;min-height:48px;padding:0 20px;background:#F2711C;border:0;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;color:#101418;cursor:pointer;transition:background-color 180ms cubic-bezier(.4,0,.2,1),transform 180ms cubic-bezier(.4,0,.2,1);" style-hover="background:#D56319;transform:translateY(-2px);">Reservar</button>
+              <sc-if value="{{ contactoDos }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;gap:10px;">
+                <a href="#tel" style="flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 12px;border:1.5px solid #3B434B;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#F4F4F1;">
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex:none;"><path d="M7.4 2.4h9.2a2.4 2.4 0 0 1 2.4 2.4v14.4a2.4 2.4 0 0 1-2.4 2.4H7.4A2.4 2.4 0 0 1 5 19.2V4.8a2.4 2.4 0 0 1 2.4-2.4zm2.4 3a1 1 0 0 0 0 2h4.4a1 1 0 0 0 0-2zm2.2 10.2a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8z"></path></svg>
+                  <span>Llamar</span>
+                </a>
+                <a href="#wa" style="flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 12px;border:1.5px solid #3B434B;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#F4F4F1;">
+                  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex:none;"><path d="M12 2.6a9.4 9.4 0 0 0-8 14.3L2.6 21.4l4.6-1.3A9.4 9.4 0 1 0 12 2.6zm0 2a7.4 7.4 0 1 1-3.9 13.7l-.4-.2-2.4.7.7-2.3-.2-.4A7.4 7.4 0 0 1 12 4.6zm-3 3.5c-.3 0-.7.1-.9.5-.3.4-.7 1.2-.4 2.2.4 1.3 1.6 3 3.6 4 1.6.7 2.4.7 3 .5.5-.1 1.1-.6 1.3-1.1.2-.5.2-.9.1-1l-1.6-.8c-.2-.1-.4 0-.5.2l-.5.7c-.1.1-.2.2-.4.1-.6-.3-1.4-.7-2.1-1.8-.1-.2 0-.3.1-.4l.5-.6c.1-.2.1-.3 0-.5l-.7-1.6c-.1-.2-.3-.2-.5-.2z"></path></svg>
+                  <span>WhatsApp</span>
+                </a>
+              </div>
+              </sc-if>
+              <sc-if value="{{ contactoUno }}" hint-placeholder-val="{{ false }}">
+              <a href="#tel" style="display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:1.5px solid #3B434B;border-radius:10px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;color:#F4F4F1;">
+                <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="flex:none;"><path d="M7.4 2.4h9.2a2.4 2.4 0 0 1 2.4 2.4v14.4a2.4 2.4 0 0 1-2.4 2.4H7.4A2.4 2.4 0 0 1 5 19.2V4.8a2.4 2.4 0 0 1 2.4-2.4zm2.4 3a1 1 0 0 0 0 2h4.4a1 1 0 0 0 0-2zm2.2 10.2a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8z"></path></svg>
+                <span>Llamar al parque</span>
+              </a>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ juegoNada }}" hint-placeholder-val="{{ false }}">
+            <div style="height:24px;"></div>
+            </sc-if>
+
+            <sc-if value="{{ juegoDemo }}" hint-placeholder-val="{{ true }}">
+            <div style="position:relative;width:100%;margin-top:20px;">
+              <div style="height:150px;border-top:1px dashed #2A3138;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;">
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;">lienzo · 150 · el castillo corre en demo</span>
+              </div>
+              <button type="button" data-mueve style="position:absolute;left:50%;bottom:52px;transform:translateX(-50%);display:flex;align-items:center;gap:9px;min-height:48px;padding:0 20px;background:none;border:1.5px solid #3B434B;border-radius:999px;font-family:'Hanken Grotesk';font-weight:800;font-size:15px;white-space:nowrap;color:#F4F4F1;cursor:pointer;transition:border-color 180ms cubic-bezier(.4,0,.2,1);" style-hover="border-color:#F5C400;">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="flex:none;"><path d="M6 3.6 20 12 6 20.4z"></path></svg>
+                <span>Saltar el castillo</span>
+              </button>
+            </div>
+            </sc-if>
+
+            <sc-if value="{{ juegoJugando }}" hint-placeholder-val="{{ false }}">
+            <div style="position:relative;width:100%;margin-top:20px;">
+              <div style="height:358px;border-top:1px dashed #2A3138;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;">
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;">lienzo · 358 · jugando · mantén para saltar más</span>
+              </div>
+            </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="padding:24px 16px 20px;">
+          <div aria-hidden="true" style="display:flex;height:4px;border-radius:999px;overflow:hidden;">
+            <span style="flex:1;background:#1AA9DE;"></span><span style="flex:1;background:#F2711C;"></span><span style="flex:1;background:#A3C21C;"></span><span style="flex:1;background:#F5C400;"></span><span style="flex:1;background:#E6007E;"></span>
+          </div>
+
+          <div style="position:relative;margin-top:18px;">
+            <div class="pjp-tira" style="display:flex;gap:16px;padding-bottom:2px;">
+              <sc-for list="{{ enlacesPie }}" as="e" hint-placeholder-count="8">
+                <a href="#pie" style="flex:none;display:flex;align-items:center;min-height:48px;font-size:15px;font-weight:600;color:#C9CDD1;white-space:nowrap;">{{ e.t }}</a>
+              </sc-for>
+            </div>
+            <div aria-hidden="true" style="position:absolute;right:0;top:0;bottom:2px;width:40px;background:linear-gradient(90deg,rgba(16,20,24,0),#101418);pointer-events:none;"></div>
+          </div>
+
+          <div style="margin-top:6px;padding-top:16px;border-top:1px solid #2A3138;display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;">
+            <a href="tel:+34641995714" style="display:flex;align-items:center;min-height:48px;font-family:'JetBrains Mono';font-size:15px;color:#F4F4F1;">+34 641 99 57 14</a>
+            <a href="mailto:info@playjump.es" style="display:flex;align-items:center;min-height:48px;font-size:15px;color:#F4F4F1;">info@playjump.es</a>
+            <span style="display:flex;align-items:center;gap:4px;">
+              <sc-if value="{{ idiomaPie }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ idiomas }}" as="i" hint-placeholder-count="3">
+                <a href="#idioma" style="display:flex;align-items:center;min-height:48px;padding:0 10px;font-family:'JetBrains Mono';font-size:14px;letter-spacing:.08em;color:#9AA1A8;">{{ i.t }}</a>
+              </sc-for>
+              </sc-if>
+            </span>
+          </div>
+
+          <div style="position:relative;margin-top:2px;padding-top:14px;border-top:1px solid #2A3138;">
+            <div class="pjp-tira" style="display:flex;gap:14px;">
+              <sc-for list="{{ legalPie }}" as="l" hint-placeholder-count="5">
+                <a href="#legal" style="flex:none;display:flex;align-items:center;min-height:48px;font-size:15px;color:#9AA1A8;white-space:nowrap;">{{ l.t }}</a>
+              </sc-for>
+            </div>
+            <div aria-hidden="true" style="position:absolute;right:0;top:14px;bottom:0;width:40px;background:linear-gradient(90deg,rgba(16,20,24,0),#101418);pointer-events:none;"></div>
+          </div>
+
+          <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;">Play Jump Park · Lorca</span>
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9AA1A8;">© 2026</span>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta">esto es el <span style="color:#9AA1A8;">segundo punto estático</span>: la tarjeta en reposo <span style="color:#9AA1A8;">y el pie entero debajo</span>, que es lo que el imán tiene que garantizar. A 390 la tarjeta mide <span style="color:#9AA1A8;">488</span> —medido en esta tarjeta y no traído del producto, que daba 521— y cupo quitando dos cosas con motivo propio: el idioma se fue al menú, y la tarjeta dejó de reservar en reposo la tira del juego —156 px literalmente vacíos— · el titular son <span style="color:#9AA1A8;">TRES partes apiladas</span>, no un par etiqueta + titular, y va en Display L: el Display XL es uno por página y lo gasta el hero · <span style="color:#9AA1A8;">el juego</span> arranca su demo en cuanto el lienzo SE VE —no cuando la tarjeta se ancla, que medido no pasa en 3 de 6 anchos— y solo es jugable a pantalla completa; el espacio arranca la partida, tocar el lienzo <span style="color:#9AA1A8;">no</span> (si no, el primer arrastre para desplazar empieza una partida que nadie pidió) y los CTA se apartan al jugar. Con «reducir movimiento» el hueco baja a <span style="color:#9AA1A8;">24</span> y el motor ni se descarga · el naranja está aquí solo porque <span style="color:#9AA1A8;">la barra se retira al llegar al pie</span>: sigue habiendo un relleno · <span style="color:#9AA1A8;">el teléfono y el WhatsApp son la deuda de 07</span>: salieron de Visítanos con la promesa de sostenerlos aquí, y aquí no había nada. Van <span style="color:#9AA1A8;">los dos a la vez y nunca en cascada</span> — un «si hay teléfono, no pongas WhatsApp» esconde el WhatsApp de toda instalación que tenga los dos · ❗ <span style="color:#9AA1A8;">el pie lo he reconstruido, y dos de sus enlaces eran relleno mío</span>: «Trabaja con nosotros» y «Tarjeta regalo» no están ni en tus doce URL ni en el inventario — me los inventé, exactamente lo que le reproché a «Excursiones». Fuera. Y fuera <span style="color:#9AA1A8;">Reseñas</span>, por lo mismo que en el menú. Ahora son <span style="color:#9AA1A8;">las ocho páginas y las cinco secciones</span>, en ese orden · <span style="color:#9AA1A8;">entra «Configuración de cookies»</span>, y no por trámite legal: dos secciones de esta portada viven detrás del consentimiento —el mapa de 07 y las reseñas de 06—, así que quien dijo no <span style="color:#9AA1A8;">no tenía forma de cambiar de opinión</span> y se quedaba sin las dos para siempre. Ese control es la única vuelta atrás · <span style="color:#9AA1A8;">y el correo</span>: <span style="color:#9AA1A8;">info@playjump.es</span> es el único canal escrito que tienes y no estaba en ninguna de mis piezas · el teléfono, el correo y el idioma van en su propia fila, <span style="color:#9AA1A8;">fuera de cualquier condicional</span>, por la regla que salió de 07 · el pie es <span style="color:#9AA1A8;">una fila que se desliza</span>, no dos renglones: medido aquí, los 14 destinos piden <span style="color:#9AA1A8;">1.266</span> px y a 390 la columna da <span style="color:#9AA1A8;">356</span> — cabe el 28 %, así que la fila que se desliza no es una comodidad, es la única forma; y hasta la fila legal, con cinco enlaces, pide 545 y se desliza también. Lo que no cabe se alcanza con un gesto, con su vela · aquí a 15 px (Cuerpo S) y no a los 12,5 del producto: a 390 se desliza igual, así que no hace falta encoger la letra · <span style="color:#9AA1A8;">el idioma acabó aquí</span> y no en el menú justamente por eso: tres enlaces en el pie cambian de idioma <span style="color:#9AA1A8;">sin JavaScript</span>, y dentro del menú no · ⚠ y queda una decisión que no es mía: el eslogan a rotulador. La <span style="color:#9AA1A8;">Arquitectura de Contenido dice que su sitio es el cierre</span> —«el único momento de sorpresa de la página, y el sitio del eslogan»— y tu web lo tiene en el hero <span style="color:#9AA1A8;">y</span> en el menú. Es una vez por página: hay tres candidatos para una plaza y el interruptor las enseña</div>
+    </div>
+
+    <div class="dv-opt" id="1f">
+      <div class="dv-olabel dv-olabel--w"><a class="dv-oid" href="#1f">1f</a><span>❗ Dónde va cada cosa: tus candidatos pasados por las tres pruebas del sistema.</span></div>
+      <div class="dv-card dv-card--w dv-card--tinta" data-screen-label="1f" data-superficie="tinta">
+        <div style="padding:22px 24px;">
+          <p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:#C9CDD1;">El Sistema de Contenido ya trae el filtro —<span style="color:#F4F4F1;">tres pruebas y hay que pasar las tres</span>— y una tabla con doce candidatos juzgados. <span style="color:#F4F4F1;">Excursiones no está en ella</span>: nunca se evaluó, ni en el sistema ni en el inventario de páginas. Así que aquí van los tuyos, con la misma vara.</p>
+
+          <div style="border:1px solid #2A3138;border-radius:10px;overflow:hidden;">
+            <div style="display:grid;grid-template-columns:1.35fr 76px 76px 76px 1.5fr;background:#1A1F25;border-bottom:1px solid #2A3138;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9AA1A8;">
+              <div style="padding:12px 16px;">Candidato</div>
+              <div style="padding:12px 8px;text-align:center;">Cambia solo</div>
+              <div style="padding:12px 8px;text-align:center;">La buscan</div>
+              <div style="padding:12px 8px;text-align:center;">Llena pantalla</div>
+              <div style="padding:12px 16px;">Veredicto</div>
+            </div>
+            <sc-for list="{{ sitios }}" as="s" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.35fr 76px 76px 76px 1.5fr;border-bottom:1px solid #2A3138;font-size:14px;line-height:1.5;">
+                <div style="padding:14px 16px;color:#F4F4F1;font-weight:700;">{{ s.n }}</div>
+                <div style="padding:14px 8px;text-align:center;font-family:'JetBrains Mono';color:{{ s.c1col }};">{{ s.c1 }}</div>
+                <div style="padding:14px 8px;text-align:center;font-family:'JetBrains Mono';color:{{ s.c2col }};">{{ s.c2 }}</div>
+                <div style="padding:14px 8px;text-align:center;font-family:'JetBrains Mono';color:{{ s.c3col }};">{{ s.c3 }}</div>
+                <div style="padding:14px 16px;color:{{ s.vcol }};">{{ s.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="margin-top:18px;display:flex;flex-direction:column;gap:12px;">
+            <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:10px;padding:16px 18px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Lo gordo que sale de aquí</div>
+              <p style="margin:8px 0 0;font-size:15px;line-height:1.6;color:#C9CDD1;">Las excursiones no son un servicio más: son <span style="color:#F4F4F1;">otro cliente</span>. Un profesor no es ninguno de los cinco visitantes de la Arquitectura, no viene a saltar, compra con factura y fuera de horario. Es el mismo agujero que el adulto que acompaña —«nadie lo contó como cliente»—, y por eso su sitio no puede ser una sección de una portada escrita para una familia.</p>
+            </div>
+            <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:10px;padding:16px 18px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Y un enlace roto que ya está publicado</div>
+              <p style="margin:8px 0 0;font-size:15px;line-height:1.6;color:#C9CDD1;">En playjump.es, la respuesta de Dudas sobre grupos dice «mira la <span style="color:#F4F4F1;">página de Servicios</span>». Esa página no existe ni en tus doce URL ni en el inventario: «Servicios» es solo un rótulo del menú con Cumpleaños debajo. Hoy estás mandando a un profesor a un sitio que no está.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-meta dv-meta--w">❗ <span style="color:#9AA1A8;">las 23 actividades: en la portada NO, y su destino ya estaba prometido dos veces</span>. 03 enseña <span style="color:#9AA1A8;">cinco fotos y una chapa con el «18 más»</span> —5 + 18 = 23, que son las 15 de Jump y las 8 de Kids que tienes publicadas— y dentro de esa chapa hay <span style="color:#9AA1A8;">dos puertas</span>, <span style="color:#9AA1A8;">#atracciones-jump</span> y <span style="color:#9AA1A8;">#atracciones-kids</span>. Esas puertas <span style="color:#9AA1A8;">no apuntan a nada</span> del inventario. Y la tarjeta de zona de 01 quiere ir al mismo sitio: <span style="color:#9AA1A8;">dos secciones cerradas por separado piden el mismo destino</span>, que es la mejor prueba de que hace falta · en la portada no caben y no ayudan: el objetivo de 03 es <span style="color:#9AA1A8;">«que se crea que hay de todo y que es grande»</span> —lo dice su propia pieza— y eso lo hacen cinco fotos y una cifra; 23 fichas con foto son unas cuatro pantallas de las <span style="color:#9AA1A8;">ocho</span> que el sistema da a TODA la portada. Ya lo juzgaste en Juegos t6: «no lo pondría en la portada, añade cinco toques que no acercan a reservar» · <span style="color:#9AA1A8;">y no es la galería</span>, que el inventario manda repartir como material: una galería son fotos, y esto son fichas con nombre, zona, edad, altura y etiquetas (XL, PRO, Grande, Baby). Es catálogo, o sea dato — la primera prueba, de calle · <span style="color:#9AA1A8;">mi propuesta: una página, /atracciones, con la zona en la URL</span>, no dos. Las puertas son dos pero la pregunta es una —«¿qué hay en mi zona?»— y la zona ya viene elegida de 01 o de las pestañas: una URL menos que mantener y las dos entradas siguen funcionando · <span style="color:#9AA1A8;">las zonas son el caso más incómodo, y el problema lo creé yo</span>: Zonas 4a cerró que <span style="color:#9AA1A8;">la tarjeta entera es el enlace</span> — y el inventario no tiene página de zona, así que ese enlace no tiene a dónde ir. Con lo de arriba se resuelve solo: la tarjeta lleva a <span style="color:#9AA1A8;">/atracciones con su zona</span>, que es la misma puerta que abre el «18 más». Así 01 → 03 → la lista es un camino, y no nacen tres URL sino una · <span style="color:#9AA1A8;">«la página del parque» es la portada</span>: una página que cuente el parque entero es literalmente el defecto que el sistema nombra —«tres de tus doce URL son un trozo de la portada con otro título»— y sección 03 ya lleva las cuatro cosas de dentro · <span style="color:#9AA1A8;">el bar ya estaba juzgado</span> 1·1·1 y tiene /bar, pero con una condición que sigue pendiente: el veredicto se apoya en «carta, precios y unas 50 mesas». Si resulta que es «hay cafetería» sin carta, pierde la primera y la tercera prueba y vuelve a ser una tarjeta de 03 · ⚠ <span style="color:#9AA1A8;">esto hace crecer el inventario de seis páginas a siete</span>, y el inventario es la fuente: si apruebas la de grupos hay que <span style="color:#9AA1A8;">escribirla en la Arquitectura de Contenido y en la tabla del Sistema</span>, no dejarla viviendo en el menú. ❗ <span style="color:#9AA1A8;">y su nombre ya está decidido: /servicios</span>, «lo que tiene ahora» — con eso el enlace roto que ya está publicado en Dudas queda arreglado sin tocar la respuesta. El precio, dicho: el rótulo no dice «grupos» ni «colegios», que es lo que se busca</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">Lo que sigue después de esto, por orden: <span style="color:#9AA1A8;">08 Dudas ya está cerrada</span> (Dudas PJP, 1a) y con ella la portada · la <span style="color:#9AA1A8;">pasada de vestido</span> (iconos, imagen y movimiento sobre las ocho secciones a la vez, no una a una) · y el <span style="color:#9AA1A8;">censo pieza × pantalla</span> del kit de fachada, que depende de la anterior.</p>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;heroFase&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Entrada&quot;, &quot;Punto estático&quot;], &quot;default&quot;: &quot;Entrada&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;1a · Hero&quot; },
+  &quot;esloganEn&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Cierre y menú&quot;, &quot;Solo el cierre&quot;, &quot;Hero y menú&quot;], &quot;default&quot;: &quot;Cierre y menú&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Eslogan a rotulador&quot; },
+  &quot;arranquePar&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Comprar&quot;, &quot;Cuenta&quot;], &quot;default&quot;: &quot;Comprar&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;1b · 1c · El par de CTA&quot; },
+  &quot;ctaEnMenu&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Amarillo (producto)&quot;, &quot;Cian (sistema)&quot;], &quot;default&quot;: &quot;Amarillo (producto)&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;1b · 1c · El par de CTA&quot; },
+  &quot;parEnMenu&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;1d · Menú&quot;, &quot;label&quot;: &quot;El par de CTA dentro del menú&quot; },
+  &quot;idiomaPie&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;1e · Cierre y pie&quot;, &quot;label&quot;: &quot;El idioma también en el pie&quot; },
+  &quot;juegoCierre&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Demo&quot;, &quot;Jugando&quot;, &quot;Sin juego&quot;], &quot;default&quot;: &quot;Demo&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;1e · Cierre&quot; },
+  &quot;cierreContacto&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Nada&quot;, &quot;Solo teléfono&quot;, &quot;Teléfono y WhatsApp&quot;], &quot;default&quot;: &quot;Nada&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;1e · Cierre y pie&quot; }
+}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const fase = p.heroFase ?? 'Entrada';
+    const eslogan = p.esloganEn ?? 'Cierre y menú';
+    const par = p.arranquePar ?? 'Comprar';
+    const menu = p.ctaEnMenu ?? 'Amarillo (producto)';
+    const juego = p.juegoCierre ?? 'Demo';
+    const cont = p.cierreContacto ?? 'Nada';
+    const entrada = fase === 'Entrada';
+
+    return {
+      heroEntrada: entrada,
+      heroEstatico: !entrada,
+      heroAlto: entrada ? '620px' : '300px',
+      heroTitulo: entrada ? '42px' : '34px',
+
+      esloganHero: eslogan === 'Hero y menú',
+      esloganMenu: eslogan !== 'Solo el cierre',
+      esloganCierre: eslogan !== 'Hero y menú',
+
+      parEnMenu: p.parEnMenu === true,
+      idiomaPie: p.idiomaPie !== false,
+
+      parCuenta: par === 'Cuenta',
+      parComprar: par !== 'Cuenta',
+
+      menuAmarillo: menu.slice(0, 8) === 'Amarillo',
+      menuCian: menu.slice(0, 8) !== 'Amarillo',
+
+      juegoDemo: juego === 'Demo',
+      juegoJugando: juego === 'Jugando',
+      juegoNada: juego === 'Sin juego',
+
+      contactoDos: cont === 'Teléfono y WhatsApp',
+      contactoUno: cont === 'Solo teléfono',
+
+      sitios: [
+        ['Excursiones de grupo', 1, 1, 1, 'Página nueva — y no está en el inventario', '#5FA82E'],
+        ['Las 23 actividades', 1, 1, 1, 'Página — ya la piden 01 y 03', '#5FA82E'],
+        ['El bar', 1, 1, 1, '/bar, ya decidido — si tiene carta', '#5FA82E'],
+        ['Las zonas', 1, 0, 1, 'Sección 01, y su tarjeta lleva a 03', '#9AA1A8'],
+        ['Una página del parque', 1, 0, 1, 'No: es la sección 03', '#9AA1A8']
+      ].map(function (r) {
+        const m = function (v) { return v ? '✓' : '—'; };
+        const c = function (v) { return v ? '#5FA82E' : '#6C747C'; };
+        return { n: r[0], c1: m(r[1]), c2: m(r[2]), c3: m(r[3]), c1col: c(r[1]), c2col: c(r[2]), c3col: c(r[3]), v: r[4], vcol: r[5] };
+      }),
+
+      secciones: [
+        { n: '01', t: 'Zonas' },
+        { n: '03', t: 'Qué hay dentro' },
+        { n: '05', t: 'Antes de venir' },
+        { n: '07', t: 'Visítanos' },
+        { n: '08', t: 'Dudas' }
+      ],
+
+      paginas: [
+        { t: 'Tarifas', u: '/precios' },
+        { t: 'Cumpleaños', u: '/cumpleanos' },
+        { t: 'El bar', u: '/bar' },
+        { t: 'Normas', u: '/normas' },
+        { t: 'Atracciones', u: '/atracciones' },
+        { t: 'Servicios', u: '/servicios' },
+        { t: 'Contacto', u: '/contacto' }
+      ],
+
+      enlacesPie: [
+        'Tarifas', 'Cumpleaños', 'Atracciones', 'El bar',
+        'Normas', 'Servicios', 'Contacto', 'Mi Play Jump',
+        'Zonas', 'Qué hay dentro', 'Antes de venir', 'Visítanos', 'Dudas'
+      ].map(function (t) { return { t: t }; }),
+
+      idiomas: [{ t: 'ES' }, { t: 'EN' }, { t: 'FR' }],
+
+      legalPie: [
+        'Aviso legal', 'Privacidad', 'Condiciones', 'Cookies',
+        'El descargo de responsabilidad', 'Configuración de cookies'
+      ].map(function (t) { return { t: t }; })
+    };
+  }
+}
+
+</script>
+</body>
+</html>

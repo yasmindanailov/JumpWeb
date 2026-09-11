@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;color:#101418;background:#E4E5E0;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{display:block;max-width:100%}
+a{color:#0A5C93;text-decoration:none}
+a:hover{color:#095181}
+button{font:inherit;color:inherit}
+::selection{background:#F5C400;color:#101418}
+@keyframes pjpcae{0%{opacity:0;transform:translateY(-32px) scale(.9,1.14)}52%{opacity:1;transform:translateY(0) scale(1.12,.76)}74%{transform:translateY(-7px) scale(.98,1.05)}90%{transform:translateY(0) scale(1.03,.97)}100%{opacity:1;transform:translateY(0) scale(1,1)}}
+@keyframes pjphunde{0%,42%{transform:scaleY(1)}58%{transform:scaleY(.34)}78%{transform:scaleY(1.12)}100%{transform:scaleY(1)}}
+@keyframes pjpsello{0%{opacity:0;transform:translateY(-34px) rotate(-16deg) scale(1.35)}60%{opacity:1}100%{opacity:1;transform:translateY(0) rotate(-6deg) scale(1)}}
+@keyframes pjpentra{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){
+@keyframes pjpcae{from{opacity:0}to{opacity:1}}
+@keyframes pjphunde{from{transform:none}to{transform:none}}
+@keyframes pjpsello{from{opacity:0;transform:rotate(-6deg)}to{opacity:1;transform:rotate(-6deg)}}
+@keyframes pjpentra{from{opacity:0}to{opacity:1}}
+}
+</style>
+</helmet>
+
+<section id="t7" style="padding:44px 48px 56px;display:flex;flex-direction:column;gap:30px;border-bottom:1px solid rgba(16,20,24,.14);">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 540px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t7" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">7</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 7 · Sin panel detrás: la tarjeta es el bloque</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:46px;line-height:.94;text-transform:uppercase;margin:0;">Tres bloques<br>sobre papel</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">Se cae el campo de color: la sección es papel y cada entrada es un bloque de tinta con fondo propio —radio 24, el escalón del sistema para eso—. El precio en Lima sobre tinta ya no necesita franja: va arriba, a la altura de la duración, y el bloque entero hace de contenedor.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 7a · BLOQUES DE TINTA SOBRE PAPEL ═══════════ -->
+    <div id="7a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#7a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">7a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Bloques sobre papel</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Cero manchas y cero panel: el contraste lo hace la tinta contra el papel. Un relleno naranja —la recomendada—, las otras en fantasma cian.</span>
+      </div>
+
+      <div style="width:1240px;background:#F4F4F1;border-radius:10px;padding:48px 44px;">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:34px;flex-wrap:wrap;">
+          <div style="flex:1 1 440px;min-width:0;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Entradas · precio por persona</span>
+            <h2 style="font-family:'Bungee';font-size:52px;line-height:.95;letter-spacing:-.01em;text-transform:uppercase;margin:14px 0 0;color:#101418;">Elige<br>cuánto salta</h2>
+            <p style="margin:18px 0 0;max-width:50ch;font-size:17px;line-height:1.6;color:#626A72;">Una, dos o tres horas. El precio de lunes a viernes va en grande; el de fin de semana, al pie de cada bloque.</p>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:34px;flex-wrap:wrap;">
+            <span style="font-family:'Permanent Marker';font-size:30px;line-height:1.15;color:#D93E14;transform:rotate(-2deg);white-space:nowrap;">−15% los martes</span>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Zona</span>
+              <div style="display:inline-flex;gap:4px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:999px;padding:4px;">
+                <sc-for list="{{ t7Zona }}" as="z" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ z.elegir }}" style="{{ z.estilo }}">{{ z.nombre }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:46px;">
+          <sc-for list="{{ t7Tickets }}" as="t" hint-placeholder-count="3">
+            <article style="display:flex;flex-direction:column;background:#101418;border-radius:24px;padding:30px;">
+              <div style="display:flex;align-items:center;gap:11px;min-height:26px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1AA9DE" style="flex:0 0 auto;"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+                <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.zonaEtq }}</span>
+                <sc-if value="{{ t.top }}" hint-placeholder-val="{{ false }}">
+                  <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:11px;line-height:1.2;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:5px 8px;white-space:nowrap;flex:none;">La más elegida</span>
+                </sc-if>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:14px;margin-top:26px;">
+                <span style="font-family:'Bungee';font-size:36px;line-height:1.05;text-transform:uppercase;color:#F4F4F1;white-space:nowrap;">{{ t.duracion }}</span>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-size:52px;line-height:.95;letter-spacing:-.01em;color:#A3C21C;">{{ t.precio }}</span>
+                    <span style="font-family:'Bungee';font-size:20px;color:#F4F4F1;">€</span>
+                  </span>
+                  <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;text-align:right;">{{ t.min }}</span>
+                </div>
+              </div>
+
+              <div aria-hidden="true" style="height:1px;background:#2A3138;margin:26px 0 22px;"></div>
+
+              <div style="display:flex;flex-direction:column;gap:11px;">
+                <sc-for list="{{ t.incluye }}" as="i" hint-placeholder-count="3">
+                  <span style="display:flex;align-items:flex-start;gap:11px;font-size:15px;line-height:1.55;color:#C9CDD1;">
+                    <span aria-hidden="true" style="width:6px;height:6px;background:#1AA9DE;transform:rotate(45deg);flex:0 0 auto;margin-top:8px;"></span>
+                    <span>{{ i }}</span>
+                  </span>
+                </sc-for>
+              </div>
+
+              <div style="margin-top:auto;padding-top:28px;display:flex;flex-direction:column;gap:13px;">
+                <button type="button" style="{{ t.estiloCta }}">{{ t.cta }}</button>
+                <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.04em;color:#9AA1A8;text-align:center;">{{ t.notaFinde }}</span>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="t6" style="padding:44px 48px 56px;display:flex;flex-direction:column;gap:30px;border-bottom:1px solid rgba(16,20,24,.14);">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 540px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t6" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">6</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 6 · <a href="#5c">5c</a> auditado contra el sistema de color</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:46px;line-height:.94;text-transform:uppercase;margin:0;">Cartel, con<br>las reglas puestas</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">Misma idea que <a href="#5c">5c</a> —tarjeta suelta, precio con carácter— pero con cada valor sacado de <em style="font-style:normal;color:#101418;">Colores de Marca PJP</em>: fondo de la sección en cian pleno, dato XL en Lima sobre tinta, un único relleno naranja, radios del sistema y una sola mancha por pantalla. El icono es <em style="font-style:normal;color:#101418;">ui/entrada 3c</em> de la página de iconos, a 20 px.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 6a · CARTEL AUDITADO ═══════════ -->
+    <div id="6a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#6a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">6a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Cartel auditado</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Sección 04 del stack: superficie de color pleno sin goteo —el canto recto del panel del rótulo—, precio en Lima sobre tinta y una sola mancha B5, la promo del martes.</span>
+      </div>
+
+      <div style="position:relative;width:1240px;background:#1AA9DE;border-radius:10px;overflow:hidden;padding:44px 40px;">
+
+        <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:34px;flex-wrap:wrap;">
+          <div style="flex:1 1 460px;min-width:0;">
+            <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#0A5C93;">Entradas · precio por persona</span>
+            <h2 style="font-family:'Bungee';font-size:52px;line-height:.95;letter-spacing:-.01em;text-transform:uppercase;margin:14px 0 0;color:#101418;">Pasen<br>y salten</h2>
+            <p style="margin:18px 0 0;max-width:52ch;font-size:17px;line-height:1.6;color:#101418;">Precio de lunes a viernes en tinta; el de fin de semana, impreso al lado. El día exacto se elige al reservar.</p>
+          </div>
+
+          <div style="display:flex;align-items:flex-end;gap:30px;flex-wrap:wrap;">
+            <div style="position:relative;width:172px;height:172px;flex:none;transform:rotate(-6deg);">
+              <svg viewBox="-12 -12 224 224" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;display:block;fill:#101418;"><g><path d="M156.1 100.0C158.5 104.4 161.9 110.7 160.7 115.0C159.4 119.2 153.2 123.2 148.6 125.5C143.9 127.8 135.6 125.7 132.7 129.0C129.8 132.2 133.2 141.0 131.1 145.0C129.0 149.0 124.2 151.7 120.1 152.9C115.9 154.1 110.8 152.3 106.4 152.3C101.9 152.4 98.3 152.1 93.6 153.1C88.8 154.0 81.8 160.0 77.9 158.3C74.1 156.5 74.0 146.1 70.5 142.8C66.9 139.5 60.2 141.1 56.5 138.5C52.8 135.9 46.9 132.1 48.3 127.1C49.8 122.1 69.9 113.1 65.1 108.6C60.3 104.1 19.5 102.9 19.5 100.0C19.5 97.1 64.9 98.3 65.1 91.4C65.3 84.5 19.5 61.0 20.8 58.5C22.2 55.9 65.2 77.0 73.1 76.2C80.9 75.4 66.8 58.4 68.0 53.7C69.2 48.9 75.9 48.7 80.2 47.8C84.5 46.9 89.2 50.0 93.7 48.4C98.3 46.8 102.8 39.1 107.5 38.1C112.2 37.2 117.3 40.6 121.8 42.6C126.2 44.6 131.8 46.1 134.4 50.2C136.9 54.3 134.4 63.3 137.0 67.2C139.7 71.1 148.8 70.0 150.4 73.5C152.0 77.1 145.5 84.1 146.5 88.5C147.5 92.9 153.8 95.6 156.1 100.0Z"></path><circle cx="187.6" cy="132.3" r="8.4"></circle><circle cx="79.1" cy="168.9" r="6.8"></circle><circle cx="50.3" cy="170.9" r="5.6"></circle><circle cx="140.6" cy="40.7" r="7.5"></circle><circle cx="134.4" cy="27.2" r="1.8"></circle><circle cx="185.9" cy="144.9" r="5.1"></circle><circle cx="24.6" cy="87.5" r="5.1"></circle></g></svg>
+              <div style="position:absolute;left:50%;top:50%;transform:translate(-52%,-52%);text-align:center;font-family:'Permanent Marker';font-size:26px;line-height:1.05;color:#F5C400;white-space:nowrap;">−15%<br>martes</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#0A5C93;">Zona</span>
+              <div style="display:inline-flex;gap:4px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:999px;padding:4px;">
+                <sc-for list="{{ t6Zona }}" as="z" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ z.elegir }}" style="{{ z.estilo }}">{{ z.nombre }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:44px;">
+          <sc-for list="{{ t6Tickets }}" as="t" hint-placeholder-count="3">
+            <article style="display:flex;flex-direction:column;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;">
+              <div style="padding:26px 26px 24px;display:flex;flex-direction:column;flex:1;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px;">
+                  <span style="display:inline-flex;align-items:center;gap:10px;min-width:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A5C93" style="flex:0 0 auto;"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+                    <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#626A72;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ t.zonaEtq }}</span>
+                  </span>
+                  <sc-if value="{{ t.top }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-family:'JetBrains Mono';font-size:11px;line-height:1.2;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:5px 8px;white-space:nowrap;flex:none;">La más elegida</span>
+                  </sc-if>
+                </div>
+                <div style="font-family:'Bungee';font-size:36px;line-height:1.05;text-transform:uppercase;margin-top:20px;color:#101418;">{{ t.duracion }}</div>
+                <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin-top:10px;">{{ t.min }}</span>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-top:22px;">
+                  <sc-for list="{{ t.incluye }}" as="i" hint-placeholder-count="3">
+                    <span style="display:flex;align-items:flex-start;gap:11px;font-size:15px;line-height:1.55;color:#101418;">
+                      <span aria-hidden="true" style="width:6px;height:6px;background:#101418;transform:rotate(45deg);flex:0 0 auto;margin-top:8px;"></span>
+                      <span>{{ i }}</span>
+                    </span>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="background:#101418;padding:18px 26px 20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px;">
+                <div style="display:flex;flex-direction:column;gap:7px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">L – V</span>
+                  <span style="display:flex;align-items:baseline;gap:6px;">
+                    <span style="font-family:'Bungee';font-size:52px;line-height:.95;letter-spacing:-.01em;color:#A3C21C;">{{ t.precio }}</span>
+                    <span style="font-family:'Bungee';font-size:20px;color:#F4F4F1;">€</span>
+                  </span>
+                </div>
+                <span style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:none;">
+                  <span style="font-family:'JetBrains Mono';font-size:12px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:#9AA1A8;">Finde</span>
+                  <span style="font-family:'JetBrains Mono';font-size:14px;line-height:1.2;color:#F4F4F1;white-space:nowrap;">{{ t.notaFinde }}</span>
+                </span>
+              </div>
+              <div style="padding:20px 26px 26px;">
+                <button type="button" style="{{ t.estiloCta }}">{{ t.cta }}</button>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="width:1240px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Auditoría · qué cambia respecto a <a href="#5c">5c</a> y qué regla lo obliga</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px 34px;">
+          <sc-for list="{{ t6Auditoria }}" as="a" hint-placeholder-count="7">
+            <div style="display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:baseline;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;color:#9AA1A8;">{{ a.n }}</span>
+              <div style="font-size:14.5px;line-height:1.55;color:#626A72;">
+                <span style="color:#101418;font-weight:700;">{{ a.t }}</span> {{ a.d }}
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="t5" style="padding:44px 48px 56px;display:flex;flex-direction:column;gap:30px;border-bottom:1px solid rgba(16,20,24,.14);">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 540px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t5" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">5</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 5 · Cada entrada, una card que se lee sola</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:46px;line-height:.94;text-transform:uppercase;margin:0;">Entradas<br>sueltas</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">Se rompe la tira: cada duración es una card independiente con su precio y su botón. <a href="#5a">5a</a> es el ticket troquelado con talón —el que ya está montado en la landing—; <a href="#5b">5b</a> pone las seis entradas a la vista, sin conmutadores, en formato billete horizontal; <a href="#5c">5c</a> cambia el troquel por un sello de precio y deja la card como cartel.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 5a · TICKET TROQUELADO ═══════════ -->
+    <div id="5a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#5a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">5a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Ticket con talón</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Tres tickets troquelados con el talón negro: precio, código y botón abajo. Zona y día se eligen arriba, así que solo hay tres cards a la vista.</span>
+      </div>
+
+      <div style="width:1240px;background:#1AA9DE;border:1px solid rgba(16,20,24,.14);border-radius:10px;padding:38px 36px 42px;">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap;">
+          <div style="flex:1 1 420px;min-width:0;">
+            <h2 style="font-family:'Bungee';font-size:42px;line-height:.94;text-transform:uppercase;margin:0;color:#101418;">Una hora,<br>dos o tres</h2>
+            <p style="margin:14px 0 0;max-width:44ch;font-size:16px;line-height:1.55;color:#101418;font-weight:500;">Eliges zona, horas y día. Pagas por persona, sin cuotas ni extras escondidos.</p>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#0A5C93;">Zona</span>
+              <div style="display:inline-flex;gap:4px;background:#FFFFFF;border:2px solid #101418;border-radius:12px;padding:4px;box-shadow:4px 5px 0 #101418;">
+                <sc-for list="{{ t5aZona }}" as="z" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ z.elegir }}" style="{{ z.estilo }}">{{ z.nombre }}</button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#0A5C93;">Día</span>
+              <div style="display:inline-flex;gap:4px;background:#FFFFFF;border:2px solid #101418;border-radius:12px;padding:4px;box-shadow:4px 5px 0 #101418;">
+                <sc-for list="{{ t5aDia }}" as="d" hint-placeholder-count="2">
+                  <button type="button" onClick="{{ d.elegir }}" style="{{ d.estilo }}">{{ d.nombre }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:38px;">
+          <sc-for list="{{ t5aTickets }}" as="t" hint-placeholder-count="3">
+            <article style="{{ t.estilo }}" style-hover="transform:rotate(0deg) translateY(-6px);box-shadow:8px 11px 0 #101418;">
+              <div style="padding:24px;display:flex;flex-direction:column;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;min-height:26px;">
+                  <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#101418;border:1.5px solid rgba(16,20,24,.32);border-radius:999px;padding:5px 10px;">{{ t.zonaEtq }}</span>
+                  <sc-if value="{{ t.top }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#101418;color:#F5C400;border-radius:6px;padding:4px 8px;">La más elegida</span>
+                  </sc-if>
+                </div>
+                <div style="font-family:'Bungee';font-size:42px;line-height:.95;text-transform:uppercase;margin-top:16px;color:#101418;">{{ t.duracion }}</div>
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.05em;color:#101418;opacity:.6;margin-top:9px;">{{ t.porHora }}</span>
+                <div style="display:flex;flex-direction:column;gap:9px;margin-top:20px;">
+                  <sc-for list="{{ t.incluye }}" as="i" hint-placeholder-count="3">
+                    <span style="display:flex;align-items:flex-start;gap:10px;font-size:14.5px;line-height:1.45;color:#101418;">
+                      <span aria-hidden="true" style="width:7px;height:7px;background:#101418;transform:rotate(45deg);flex:0 0 auto;margin-top:7px;"></span>
+                      <span style="opacity:.82;">{{ i }}</span>
+                    </span>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div style="position:relative;margin-top:auto;background:#101418;color:#F4F4F1;border-radius:0 0 12px 12px;padding:26px 22px 20px;">
+                <div aria-hidden="true" style="position:absolute;left:-2px;top:-12px;width:12px;height:24px;background:#1AA9DE;border-radius:0 14px 14px 0;"></div>
+                <div aria-hidden="true" style="position:absolute;right:-2px;top:-12px;width:12px;height:24px;background:#1AA9DE;border-radius:14px 0 0 14px;"></div>
+                <div aria-hidden="true" style="position:absolute;left:16px;right:16px;top:10px;border-top:2px dashed rgba(244,244,241,.45);"></div>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;">
+                  <div style="display:flex;flex-direction:column;gap:5px;min-width:0;">
+                    <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.58;">Por persona</span>
+                    <span style="display:flex;align-items:baseline;gap:6px;">
+                      <span style="font-family:'Bungee';font-size:46px;line-height:.86;color:#F5C400;">{{ t.precio }}</span>
+                      <span style="font-family:'Bungee';font-size:20px;">€</span>
+                    </span>
+                    <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.04em;opacity:.55;">{{ t.notaDia }}</span>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;">
+                    <div aria-hidden="true" style="width:62px;height:34px;border-radius:2px;background:repeating-linear-gradient(90deg,#F4F4F1 0 2px,transparent 2px 4px,#F4F4F1 4px 5px,transparent 5px 9px,#F4F4F1 9px 12px,transparent 12px 14px);opacity:.75;"></div>
+                    <span style="font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.1em;opacity:.5;white-space:nowrap;">{{ t.serie }}</span>
+                  </div>
+                </div>
+                <button type="button" style="margin-top:18px;width:100%;min-height:50px;font-family:'Hanken Grotesk';font-weight:800;font-size:16px;letter-spacing:.01em;background:#F2711C;color:#101418;border:0;border-radius:10px;cursor:pointer;transition:transform 150ms cubic-bezier(.2,.9,.2,1),filter 150ms linear;" style-hover="transform:translateY(-2px);filter:brightness(1.06)">{{ t.cta }}</button>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 5b · SEIS BILLETES, TODO A LA VISTA ═══════════ -->
+    <div id="5b" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#5b" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">5b</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Seis billetes</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Cero conmutadores: las seis entradas a la vista, formato billete horizontal con el talón amarillo a la derecha. Se compara Kids y Jump de un vistazo, sin pulsar nada.</span>
+      </div>
+
+      <div style="position:relative;width:1240px;background:#101418;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;padding:38px 36px 42px;">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.11) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+        <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap;">
+          <div style="flex:1 1 420px;min-width:0;">
+            <h2 style="font-family:'Bungee';font-size:42px;line-height:.94;text-transform:uppercase;margin:0;color:#F4F4F1;">Todas las<br>entradas</h2>
+            <p style="margin:14px 0 0;max-width:46ch;font-size:16px;line-height:1.55;color:rgba(244,244,241,.72);">Seis billetes, seis precios. El de finde va impreso en cada uno; el día exacto se elige en la reserva.</p>
+          </div>
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#F5C400;border:1px solid rgba(245,196,0,.5);border-radius:999px;padding:7px 13px;">Precio por persona</span>
+        </div>
+
+        <div style="position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:22px;margin-top:38px;">
+          <sc-for list="{{ t5bTickets }}" as="b" hint-placeholder-count="6">
+            <div style="{{ b.estilo }}" style-hover="transform:translateY(-4px)">
+              <div style="flex:1 1 auto;min-width:0;padding:18px 20px;display:flex;flex-direction:column;gap:9px;">
+                <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;">
+                  <span aria-hidden="true" style="{{ b.estiloPunto }}"></span>
+                  <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#3B434B;">{{ b.zonaEtq }}</span>
+                  <sc-if value="{{ b.top }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:.14em;text-transform:uppercase;background:#101418;color:#F5C400;border-radius:5px;padding:3px 7px;">La más elegida</span>
+                  </sc-if>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:9px;">
+                  <span style="font-family:'Bungee';font-size:30px;line-height:.95;text-transform:uppercase;">{{ b.duracion }}</span>
+                  <span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">{{ b.min }}</span>
+                </div>
+                <span style="font-size:13.5px;line-height:1.45;color:#3B434B;">{{ b.resumen }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.04em;color:#626A72;margin-top:auto;">{{ b.finde }}</span>
+              </div>
+              <div style="position:relative;flex:0 0 176px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:16px 14px;background:#F5C400;border-left:2px dashed rgba(16,20,24,.45);border-radius:0 10px 10px 0;">
+                <div aria-hidden="true" style="position:absolute;top:-2px;left:-13px;width:24px;height:12px;background:#101418;border-radius:0 0 14px 14px;"></div>
+                <div aria-hidden="true" style="position:absolute;bottom:-2px;left:-13px;width:24px;height:12px;background:#101418;border-radius:14px 14px 0 0;"></div>
+                <span style="display:flex;align-items:baseline;gap:5px;">
+                  <span style="font-family:'Bungee';font-size:34px;line-height:.9;">{{ b.precio }}</span>
+                  <span style="font-family:'Bungee';font-size:16px;">€</span>
+                </span>
+                <span style="display:inline-flex;align-items:center;gap:7px;font-family:'Hanken Grotesk';font-weight:800;font-size:13.5px;background:#101418;color:#F4F4F1;border-radius:999px;padding:8px 15px;">Reservar
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" style="flex:0 0 auto;"><path d="M13.6 6.4 19.2 12l-5.6 5.6z"></path><path d="M4.6 12h9.4" fill="none"></path></svg>
+                </span>
+                <span style="font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.12em;opacity:.6;">{{ b.serie }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 5c · CARTEL CON SELLO ═══════════ -->
+    <div id="5c" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#5c" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">5c</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Cartel con sello</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Sin troquel: la card es un cartel de feria y el precio va en un sello estampado en la esquina. Más gráfico y más barato de producir en cualquier ancho.</span>
+      </div>
+
+      <div style="width:1240px;background:#F5C400;border:1px solid rgba(16,20,24,.14);border-radius:10px;padding:38px 36px 44px;">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap;">
+          <div style="flex:1 1 420px;min-width:0;">
+            <h2 style="font-family:'Bungee';font-size:42px;line-height:.94;text-transform:uppercase;margin:0;color:#101418;">Pasen<br>y salten</h2>
+            <p style="margin:14px 0 0;max-width:44ch;font-size:16px;line-height:1.55;color:#101418;font-weight:500;">Precio de lunes a viernes en el sello; el de finde, impreso al pie de cada cartel.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#101418;opacity:.65;">Zona</span>
+            <div style="display:inline-flex;gap:4px;background:#FFFFFF;border:2.5px solid #101418;border-radius:4px;padding:4px;box-shadow:4px 5px 0 #101418;">
+              <sc-for list="{{ t5cZona }}" as="z" hint-placeholder-count="2">
+                <button type="button" onClick="{{ z.elegir }}" style="{{ z.estilo }}">{{ z.nombre }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:34px;margin-top:52px;">
+          <sc-for list="{{ t5cTickets }}" as="c" hint-placeholder-count="3">
+            <article style="{{ c.estilo }}" style-hover="transform:translateY(-6px)">
+              <div style="{{ c.estiloSello }}">
+                <span style="font-family:'JetBrains Mono';font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.75;">desde</span>
+                <span style="display:flex;align-items:baseline;gap:3px;">
+                  <span style="font-family:'Bungee';font-size:25px;line-height:1;">{{ c.precio }}</span>
+                  <span style="font-family:'Bungee';font-size:13px;">€</span>
+                </span>
+                <span style="font-family:'JetBrains Mono';font-size:8px;letter-spacing:.1em;text-transform:uppercase;opacity:.75;">por persona</span>
+              </div>
+              <div style="padding:26px 26px 24px;display:flex;flex-direction:column;flex:1;">
+                <span style="align-self:flex-start;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;background:#101418;color:#F4F4F1;padding:5px 9px;">{{ c.zonaEtq }}</span>
+                <div style="font-family:'Bungee';font-size:40px;line-height:.95;text-transform:uppercase;margin-top:18px;max-width:8ch;">{{ c.duracion }}</div>
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.05em;color:#626A72;margin-top:8px;">{{ c.min }} de salto</span>
+                <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px;">
+                  <sc-for list="{{ c.incluye }}" as="i" hint-placeholder-count="3">
+                    <span style="display:flex;align-items:flex-start;gap:9px;font-size:14px;line-height:1.45;color:#3B434B;">
+                      <span aria-hidden="true" style="width:6px;height:6px;background:#101418;flex:0 0 auto;margin-top:7px;"></span>
+                      <span>{{ i }}</span>
+                    </span>
+                  </sc-for>
+                </div>
+                <div style="margin-top:auto;padding-top:22px;">
+                  <button type="button" style="width:100%;min-height:50px;font-family:'Hanken Grotesk';font-weight:800;font-size:15.5px;background:#101418;color:#F4F4F1;border:0;border-radius:3px;cursor:pointer;transition:background 160ms linear;" style-hover="background:#F2711C;color:#101418">{{ c.cta }}</button>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.06em;color:#626A72;">
+                    <span>{{ c.notaDia }}</span>
+                    <sc-if value="{{ c.top }}" hint-placeholder-val="{{ false }}">
+                      <span style="letter-spacing:.14em;text-transform:uppercase;color:#101418;">La más elegida</span>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="t4" style="padding:44px 48px 56px;display:flex;flex-direction:column;gap:30px;border-bottom:1px solid rgba(16,20,24,.14);">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 540px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t4" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">4</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 4 · El día se elige al reservar, no al mirar</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:46px;line-height:.94;text-transform:uppercase;margin:0;">Fuera el<br>conmutador</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">La tira de <a href="#3b">3b</a> sin nada que configurar: precio «desde» y el día donde ya hay que elegirlo, en el calendario de la reserva. <a href="#4a">4a</a> es la sección; <a href="#4b">4b</a> es el paso del panel que resuelve el precio final. Para que «desde» no huela a cebo, cada entrada lleva impreso el precio de finde en pequeño: nadie llega a caja con otra cifra en la cabeza.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 4a · LA TIRA SIN CONMUTADOR ═══════════ -->
+    <div id="4a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#4a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">4a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">La tira, sin filtro</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Un solo dato por entrada —el precio de lunes a viernes— con el de finde impreso debajo en mono. Cero decisiones antes de la reserva: solo eliges zona y horas.</span>
+      </div>
+
+      <div style="position:relative;width:1240px;background:#101418;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;padding:40px 36px 36px;">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.11) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+
+        <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap;">
+          <div style="flex:1 1 460px;min-width:0;">
+            <h2 style="font-family:'Bungee';font-size:44px;line-height:.94;text-transform:uppercase;color:#F4F4F1;margin:0;">Arranca<br>la tuya</h2>
+            <p style="margin:14px 0 0;max-width:46ch;font-size:16px;line-height:1.55;color:rgba(244,244,241,.72);">Kids o Jump, de una a tres horas. Eliges el día al reservar y ahí ves el precio exacto de esa fecha.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:11px;background:rgba(244,244,241,.08);border:1px solid rgba(244,244,241,.18);border-radius:12px;padding:13px 16px;max-width:330px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#F5C400" style="flex:0 0 auto;"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.4 2.6a1.6 1.6 0 0 1 1.6 1.6v.6h6v-.6a1.6 1.6 0 0 1 3.2 0v.6h.6a2.8 2.8 0 0 1 2.8 2.8v10.8a2.8 2.8 0 0 1-2.8 2.8H5.2a2.8 2.8 0 0 1-2.8-2.8V7.6a2.8 2.8 0 0 1 2.8-2.8h.6v-.6a1.6 1.6 0 0 1 1.6-1.6zM5.6 10.6v8h12.8v-8z"></path></svg>
+            <span style="font-size:13.5px;line-height:1.45;color:rgba(244,244,241,.82);">Los sábados, domingos, festivos y vísperas suben un poco. Lo verás al elegir la fecha.</span>
+          </div>
+        </div>
+
+        <div style="position:relative;display:flex;flex-direction:column;gap:26px;margin-top:40px;">
+          <div style="display:flex;align-items:stretch;gap:18px;">
+            <div style="flex:0 0 128px;display:flex;flex-direction:column;justify-content:center;gap:6px;">
+              <span style="font-family:'Bungee';font-size:24px;line-height:1;color:#1AA9DE;">KIDS</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,244,241,.45);">1 – 12 años</span>
+            </div>
+            <div style="flex:1 1 auto;min-width:0;display:flex;background:transparent;border:0;border-radius:12px;">
+              <button type="button" onClick="{{ tk1 }}" style="{{ estTiraK1 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">1 hora · 60 min</span>
+                <span style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">desde</span><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ pDK1 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">finde y festivos {{ pFK1 }} €</span>
+              </button>
+              <button type="button" onClick="{{ tk2 }}" style="{{ estTiraK2 }}">
+                <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">2 horas · 120 min</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">desde</span><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ pDK2 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">finde y festivos {{ pFK2 }} €</span>
+              </button>
+              <button type="button" onClick="{{ tk3 }}" style="{{ estTiraK3 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">3 horas · 180 min</span>
+                <span style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">desde</span><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ pDK3 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">finde y festivos {{ pFK3 }} €</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:stretch;gap:18px;">
+            <div style="flex:0 0 128px;display:flex;flex-direction:column;justify-content:center;gap:6px;">
+              <span style="font-family:'Bungee';font-size:24px;line-height:1;color:#F2711C;">JUMP</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,244,241,.45);">Desde 6 años</span>
+            </div>
+            <div style="flex:1 1 auto;min-width:0;display:flex;background:transparent;border:0;border-radius:12px;">
+              <button type="button" onClick="{{ tj1 }}" style="{{ estTiraJ1 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">1 hora · 60 min</span>
+                <span style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">desde</span><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ pDJ1 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">finde y festivos {{ pFJ1 }} €</span>
+              </button>
+              <button type="button" onClick="{{ tj2 }}" style="{{ estTiraJ2 }}">
+                <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">2 horas · 120 min</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">desde</span><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ pDJ2 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">finde y festivos {{ pFJ2 }} €</span>
+              </button>
+              <button type="button" onClick="{{ tj3 }}" style="{{ estTiraJ3 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">3 horas · 180 min</span>
+                <span style="display:flex;align-items:baseline;gap:5px;"><span style="font-family:'JetBrains Mono';font-size:11px;color:#626A72;">desde</span><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ pDJ3 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">finde y festivos {{ pFJ3 }} €</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative;display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:36px;padding-top:24px;border-top:1px solid rgba(244,244,241,.16);">
+          <button type="button" style="min-height:52px;padding:0 30px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:0;border-radius:12px;cursor:pointer;">Elegir día y reservar</button>
+          <span style="font-size:14.5px;line-height:1.5;color:rgba(244,244,241,.72);">{{ notaTira }}</span>
+          <span style="font-size:14.5px;line-height:1.5;color:rgba(244,244,241,.5);margin-left:auto;">Cancelas gratis hasta 24 h antes · precios con IVA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 4b · EL DÍA, DENTRO DE LA RESERVA ═══════════ -->
+    <div id="4b" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#4b" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">4b</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">El día, dentro de la reserva</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">El calendario ya existía en el panel: ahora es él quien fija la tarifa. Al tocar una fecha, el precio se recalcula delante del cliente y le dice por qué. Pulsa las fechas para verlo.</span>
+      </div>
+
+      <div style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="width:390px;flex:none;background:#F4F4F1;border:1px solid #D6D8D4;border-radius:10px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:#101418;color:#F4F4F1;">
+            <span style="font-family:'Bungee';font-size:17px;">Reservar</span>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,244,241,.6);">Paso 2 de 5 · fecha</span>
+          </div>
+          <div style="padding:20px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:10px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#1AA9DE" style="flex:0 0 auto;"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+              <span style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+                <span style="font-size:14.5px;font-weight:700;">{{ nombre4 }}</span>
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;color:#626A72;">{{ zona4 }}</span>
+              </span>
+              <span style="margin-left:auto;font-family:'JetBrains Mono';font-size:11px;color:#626A72;flex:none;">desde {{ desde4 }} €</span>
+            </div>
+
+            <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;margin:22px 0 10px;">¿Qué día venís?</div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" onClick="{{ pon4Vie }}" style="{{ est4Vie }}">
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;">Vie</span>
+                <span style="font-family:'Bungee';font-size:19px;line-height:1;">11</span>
+                <span style="font-size:10.5px;opacity:.7;">L–V</span>
+              </button>
+              <button type="button" onClick="{{ pon4Sab }}" style="{{ est4Sab }}">
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;">Sáb</span>
+                <span style="font-family:'Bungee';font-size:19px;line-height:1;">12</span>
+                <span style="font-size:10.5px;opacity:.7;">finde</span>
+              </button>
+              <button type="button" onClick="{{ pon4Mar }}" style="{{ est4Mar }}">
+                <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;">Mar</span>
+                <span style="font-family:'Bungee';font-size:19px;line-height:1;">15</span>
+                <span style="font-size:10.5px;opacity:.7;">L–V</span>
+              </button>
+            </div>
+
+            <div style="margin-top:20px;padding:18px;background:#FFFFFF;border:1.5px solid #101418;border-radius:12px;">
+              <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+                <span style="display:flex;flex-direction:column;gap:3px;">
+                  <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">Precio de ese día</span>
+                  <span style="font-family:'JetBrains Mono';font-size:11px;color:#101418;">{{ etq4Dia }}</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:34px;line-height:.86;color:#627411;">{{ p4Final }}</span><span style="font-family:'Bungee';font-size:15px;">€</span></span>
+              </div>
+              <sc-if value="{{ esFin4 }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:9px;align-items:flex-start;margin-top:13px;padding-top:12px;border-top:1px solid #E8E9E5;">
+                  <span style="width:18px;height:18px;border-radius:5px;background:#F5C400;color:#101418;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:11px;font-weight:700;flex:0 0 auto;">!</span>
+                  <span style="font-size:12.5px;line-height:1.45;color:#101418;">{{ delta4 }}</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ esLab4 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:9px;align-items:flex-start;margin-top:13px;padding-top:12px;border-top:1px solid #E8E9E5;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#5FA82E" style="flex:0 0 auto;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg>
+                  <span style="font-size:12.5px;line-height:1.45;color:#101418;">{{ delta4 }}</span>
+                </div>
+              </sc-if>
+            </div>
+
+            <button type="button" style="width:100%;margin-top:18px;min-height:52px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:0;border-radius:12px;cursor:pointer;">Continuar a la hora</button>
+          </div>
+        </div>
+
+        <div style="flex:1 1 340px;min-width:280px;max-width:430px;background:#F7F5EF;border:1px solid #D6D8D4;border-radius:10px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que cambia y lo que hay que vigilar</span>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#5FA82E;flex:none;">SÍ</span><span style="font-size:14.5px;line-height:1.5;">Se va una decisión de la sección: el despistado ya no puede leer el precio equivocado, porque solo hay uno y dice «desde».</span></div>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#5FA82E;flex:none;">SÍ</span><span style="font-size:14.5px;line-height:1.5;">El precio final aparece en el mismo gesto en que elige la fecha, con el motivo escrito. Es donde ya está decidiendo, no antes.</span></div>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#F2711C;flex:none;">OJO</span><span style="font-size:14.5px;line-height:1.5;">«Desde» sin más es cebo. Por eso cada entrada imprime el precio de finde en mono y el aviso del calendario está en la cabecera de la sección.</span></div>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#F2711C;flex:none;">OJO</span><span style="font-size:14.5px;line-height:1.5;">Si vuelve atrás y cambia de fecha, el resumen del paso 4 tiene que recalcular y avisar. Sin eso, el «desde» se convierte en sorpresa en la caja.</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="t3" style="padding:44px 48px 56px;display:flex;flex-direction:column;gap:30px;border-bottom:1px solid rgba(16,20,24,.14);">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 540px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t3" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">3</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 3 · La sección entera, con el kit de fachada</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:46px;line-height:.94;text-transform:uppercase;margin:0;">La entrada,<br>como objeto</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">Las tres dejan de ser «tarjetas de precio» y pasan a ser la entrada de verdad: troquel del icono <span style="font-family:'JetBrains Mono';font-size:14px;">ui/entrada</span>, marquesina y bombillas de la fachada, mancha para el dato y rotulador solo en el guiño. Mi recomendación es <strong><a href="#3a">3a</a></strong>: es la única que explica el precio y el talón de un vistazo. <a href="#3b">3b</a> es la más divertida y <a href="#3c">3c</a> la que mejor aguanta en móvil.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 3a · LA TAQUILLA ═══════════ -->
+    <div id="3a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#3a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">3a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">La taquilla</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Marquesina con bombillas arriba y, debajo, las dos entradas troqueladas de verdad: cuerpo con las horas y talón con el precio que se paga. El conmutador de día vive dentro de la marquesina, como el cartel de horarios de la puerta.</span>
+      </div>
+
+      <div style="width:1240px;background:#1AA9DE;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;">
+
+        <div style="background:#101418;padding:17px 28px;display:flex;align-items:center;justify-content:space-between;gap:26px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+            <span style="display:flex;gap:9px;align-items:center;">
+              <span style="width:11px;height:11px;border-radius:50%;background:#F5C400;box-shadow:0 0 0 3px rgba(245,196,0,.22);"></span>
+              <span style="width:11px;height:11px;border-radius:50%;background:#F5C400;box-shadow:0 0 0 3px rgba(245,196,0,.22);"></span>
+              <span style="width:11px;height:11px;border-radius:50%;background:#F5C400;box-shadow:0 0 0 3px rgba(245,196,0,.22);"></span>
+            </span>
+            <span style="font-family:'Bungee';font-size:23px;line-height:1;color:#F4F4F1;">TAQUILLA</span>
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#F5C400;">Abierta · 10:00 – 22:00</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,244,241,.5);">¿Cuándo vienes?</span>
+            <div style="display:flex;gap:6px;background:rgba(244,244,241,.1);border-radius:10px;padding:5px;">
+              <button type="button" onClick="{{ diaLab }}" style="{{ est3DiaLab }}">Lunes a viernes</button>
+              <button type="button" onClick="{{ diaFin }}" style="{{ est3DiaFin }}">Fin de semana y festivos</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:26px;background:#101418;display:flex;align-items:flex-start;justify-content:center;gap:26px;">
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+          <span style="width:9px;height:9px;border-radius:50%;background:#F5C400;opacity:.55;transform:translateY(-4px);"></span>
+        </div>
+
+        <div style="padding:38px 34px 30px;display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start;">
+
+          <div style="position:relative;display:flex;background:#F4F4F1;border:2px solid #101418;border-radius:14px;box-shadow:7px 7px 0 #101418;transform:rotate(-.7deg);">
+            <div style="flex:1 1 auto;min-width:0;padding:24px 24px 24px 26px;">
+              <span style="display:inline-block;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px dashed rgba(16,20,24,.35);border-radius:999px;padding:5px 11px;">1 – 12 años</span>
+              <div style="font-family:'Bungee';font-size:33px;line-height:1;text-transform:uppercase;margin-top:14px;">Entradas<br>Kids</div>
+              <p style="margin:11px 0 0;font-size:15px;line-height:1.5;color:#626A72;max-width:32ch;">Juego blando y camas a su medida, sin mezclarse con los mayores.</p>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-top:20px;">
+                <button type="button" onClick="{{ k3h1 }}" style="{{ est3K1 }}">
+                  <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.06em;">1H · 60 MIN</span>
+                  <span style="display:flex;align-items:baseline;gap:4px;flex:none;"><span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ p2k1 }}</span><span style="font-family:'Bungee';font-size:11px;">€</span></span>
+                </button>
+                <button type="button" onClick="{{ k3h2 }}" style="{{ est3K2 }}">
+                  <span style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;"><span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.06em;">2H · 120 MIN</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span></span>
+                  <span style="display:flex;align-items:baseline;gap:4px;flex:none;"><span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ p2k2 }}</span><span style="font-family:'Bungee';font-size:11px;">€</span></span>
+                </button>
+                <button type="button" onClick="{{ k3h3 }}" style="{{ est3K3 }}">
+                  <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.06em;">3H · 180 MIN</span>
+                  <span style="display:flex;align-items:baseline;gap:4px;flex:none;"><span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ p2k3 }}</span><span style="font-family:'Bungee';font-size:11px;">€</span></span>
+                </button>
+              </div>
+              <button type="button" style="width:100%;margin-top:20px;min-height:50px;font-family:'Hanken Grotesk';font-size:15.5px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:11px;box-shadow:4px 4px 0 #101418;cursor:pointer;">{{ cta3Kids }}</button>
+            </div>
+            <div style="position:relative;flex:0 0 138px;border-left:2px dashed rgba(16,20,24,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:22px 12px;text-align:center;">
+              <span style="position:absolute;left:-13px;top:-13px;width:24px;height:24px;border-radius:50%;background:#1AA9DE;border:2px solid #101418;"></span>
+              <span style="position:absolute;left:-13px;bottom:-13px;width:24px;height:24px;border-radius:50%;background:#1AA9DE;border:2px solid #101418;"></span>
+              <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Talón</span>
+              <div style="display:flex;align-items:baseline;gap:3px;"><span style="font-family:'Bungee';font-size:40px;line-height:.86;color:#627411;">{{ p3Kids }}</span><span style="font-family:'Bungee';font-size:17px;">€</span></div>
+              <span style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">{{ u3Kids }}</span>
+              <span style="font-size:11.5px;line-height:1.35;color:#626A72;">por niño</span>
+            </div>
+          </div>
+
+          <div style="position:relative;display:flex;background:#F4F4F1;border:2px solid #101418;border-radius:14px;box-shadow:7px 7px 0 #101418;transform:rotate(.6deg);">
+            <div style="flex:1 1 auto;min-width:0;padding:24px 24px 24px 26px;">
+              <span style="display:inline-block;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px dashed rgba(16,20,24,.35);border-radius:999px;padding:5px 11px;">Desde 6 años</span>
+              <div style="font-family:'Bungee';font-size:33px;line-height:1;text-transform:uppercase;margin-top:14px;">Entradas<br>Jump</div>
+              <p style="margin:11px 0 0;font-size:15px;line-height:1.5;color:#626A72;max-width:32ch;">Cuarenta camas conectadas, foam pit, tirolina y circuito ninja.</p>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-top:20px;">
+                <button type="button" onClick="{{ j3h1 }}" style="{{ est3J1 }}">
+                  <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.06em;">1H · 60 MIN</span>
+                  <span style="display:flex;align-items:baseline;gap:4px;flex:none;"><span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ p2j1 }}</span><span style="font-family:'Bungee';font-size:11px;">€</span></span>
+                </button>
+                <button type="button" onClick="{{ j3h2 }}" style="{{ est3J2 }}">
+                  <span style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;"><span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.06em;">2H · 120 MIN</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span></span>
+                  <span style="display:flex;align-items:baseline;gap:4px;flex:none;"><span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ p2j2 }}</span><span style="font-family:'Bungee';font-size:11px;">€</span></span>
+                </button>
+                <button type="button" onClick="{{ j3h3 }}" style="{{ est3J3 }}">
+                  <span style="font-family:'JetBrains Mono';font-size:13px;letter-spacing:.06em;">3H · 180 MIN</span>
+                  <span style="display:flex;align-items:baseline;gap:4px;flex:none;"><span style="font-family:'Bungee';font-size:19px;line-height:1;">{{ p2j3 }}</span><span style="font-family:'Bungee';font-size:11px;">€</span></span>
+                </button>
+              </div>
+              <button type="button" style="width:100%;margin-top:20px;min-height:50px;font-family:'Hanken Grotesk';font-size:15.5px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:11px;box-shadow:4px 4px 0 #101418;cursor:pointer;">{{ cta3Jump }}</button>
+            </div>
+            <div style="position:relative;flex:0 0 138px;border-left:2px dashed rgba(16,20,24,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:22px 12px;text-align:center;">
+              <span style="position:absolute;left:-13px;top:-13px;width:24px;height:24px;border-radius:50%;background:#1AA9DE;border:2px solid #101418;"></span>
+              <span style="position:absolute;left:-13px;bottom:-13px;width:24px;height:24px;border-radius:50%;background:#1AA9DE;border:2px solid #101418;"></span>
+              <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Talón</span>
+              <div style="display:flex;align-items:baseline;gap:3px;"><span style="font-family:'Bungee';font-size:40px;line-height:.86;color:#627411;">{{ p3Jump }}</span><span style="font-family:'Bungee';font-size:17px;">€</span></div>
+              <span style="font-family:'JetBrains Mono';font-size:10px;line-height:1.4;color:#101418;">{{ u3Jump }}</span>
+              <span style="font-size:11.5px;line-height:1.35;color:#626A72;">por persona</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;gap:26px;flex-wrap:wrap;padding:0 34px 32px;font-size:14.5px;line-height:1.5;color:#101418;font-weight:500;">
+          <span>Cancelas gratis hasta 24 h antes.</span>
+          <span>Calcetines antideslizantes: 3,00 € el par, o tráelos de casa.</span>
+          <span>Bono Kids 5 sesiones 38,00 € · Bono Jump 10 sesiones 85,00 €.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 3b · LA TIRA ═══════════ -->
+    <div id="3b" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#3b" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">3b</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">La tira</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Dos tiras de tres entradas unidas por el troquel, sobre tinta con trama. Al elegir, la entrada se arranca de la tira: se levanta, se gira y proyecta sombra dura. La elección es el gesto, no un radio button.</span>
+      </div>
+
+      <div style="position:relative;width:1240px;background:#101418;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;padding:40px 36px 36px;">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.11) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+
+        <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap;">
+          <div style="flex:1 1 460px;min-width:0;">
+            <h2 style="font-family:'Bungee';font-size:44px;line-height:.94;text-transform:uppercase;color:#F4F4F1;margin:0;">Arranca<br>la tuya</h2>
+            <p style="margin:14px 0 0;max-width:44ch;font-size:16px;line-height:1.55;color:rgba(244,244,241,.72);">Kids o Jump, de una a tres horas. Tiras el troquel y esa es tu entrada: el precio de arriba es el que se paga en caja.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,244,241,.5);">¿Cuándo vienes?</span>
+            <div style="display:flex;gap:6px;background:rgba(244,244,241,.1);border-radius:10px;padding:5px;">
+              <button type="button" onClick="{{ diaLab }}" style="{{ est3DiaLab }}">Lunes a viernes</button>
+              <button type="button" onClick="{{ diaFin }}" style="{{ est3DiaFin }}">Fin de semana y festivos</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative;display:flex;flex-direction:column;gap:26px;margin-top:40px;">
+          <div style="display:flex;align-items:stretch;gap:18px;">
+            <div style="flex:0 0 128px;display:flex;flex-direction:column;justify-content:center;gap:6px;">
+              <span style="font-family:'Bungee';font-size:24px;line-height:1;color:#1AA9DE;">KIDS</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,244,241,.45);">1 – 12 años</span>
+            </div>
+            <div style="flex:1 1 auto;min-width:0;display:flex;background:transparent;border:0;border-radius:12px;">
+              <button type="button" onClick="{{ tk1 }}" style="{{ estTiraK1 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">1 hora · 60 min</span>
+                <span style="display:flex;align-items:baseline;gap:4px;"><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ p2k1 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-size:12.5px;line-height:1.35;color:#626A72;">por niño</span>
+              </button>
+              <button type="button" onClick="{{ tk2 }}" style="{{ estTiraK2 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">2 horas · 120 min</span>
+                <span style="display:flex;align-items:baseline;gap:4px;"><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ p2k2 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span>
+              </button>
+              <button type="button" onClick="{{ tk3 }}" style="{{ estTiraK3 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">3 horas · 180 min</span>
+                <span style="display:flex;align-items:baseline;gap:4px;"><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ p2k3 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-size:12.5px;line-height:1.35;color:#626A72;">por niño</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:stretch;gap:18px;">
+            <div style="flex:0 0 128px;display:flex;flex-direction:column;justify-content:center;gap:6px;">
+              <span style="font-family:'Bungee';font-size:24px;line-height:1;color:#F2711C;">JUMP</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,244,241,.45);">Desde 6 años</span>
+            </div>
+            <div style="flex:1 1 auto;min-width:0;display:flex;background:transparent;border:0;border-radius:12px;">
+              <button type="button" onClick="{{ tj1 }}" style="{{ estTiraJ1 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">1 hora · 60 min</span>
+                <span style="display:flex;align-items:baseline;gap:4px;"><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ p2j1 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-size:12.5px;line-height:1.35;color:#626A72;">por persona</span>
+              </button>
+              <button type="button" onClick="{{ tj2 }}" style="{{ estTiraJ2 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">2 horas · 120 min</span>
+                <span style="display:flex;align-items:baseline;gap:4px;"><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ p2j2 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span>
+              </button>
+              <button type="button" onClick="{{ tj3 }}" style="{{ estTiraJ3 }}">
+                <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">3 horas · 180 min</span>
+                <span style="display:flex;align-items:baseline;gap:4px;"><span style="font-family:'Bungee';font-size:30px;line-height:.9;color:#627411;">{{ p2j3 }}</span><span style="font-family:'Bungee';font-size:14px;">€</span></span>
+                <span style="font-size:12.5px;line-height:1.35;color:#626A72;">por persona</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:relative;display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:36px;padding-top:24px;border-top:1px solid rgba(244,244,241,.16);">
+          <button type="button" style="min-height:52px;padding:0 30px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:0;border-radius:12px;cursor:pointer;">{{ ctaTira }}</button>
+          <span style="font-size:14.5px;line-height:1.5;color:rgba(244,244,241,.72);">{{ notaTira }}</span>
+          <span style="font-size:14.5px;line-height:1.5;color:rgba(244,244,241,.5);margin-left:auto;">Cancelas gratis hasta 24 h antes · precios con IVA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 3d · LA TIRA EN MÓVIL ═══════════ -->
+    <div id="3d" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#3d" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">3d</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">La tira · móvil</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">La misma tira de <a href="#3b">3b</a> a 390 px: el troquel gira 90° y las tres entradas se apilan; la elegida se arranca hacia el lado en vez de hacia arriba. Mismo estado que el marco grande —pulsa en uno y el otro se mueve—, así que en la landing es un solo componente con un salto de layout, no dos secciones.</span>
+      </div>
+
+      <div style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="width:390px;flex:none;position:relative;background:#101418;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;padding:26px 20px 22px;">
+          <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.11) 1.4px,transparent 1.6px);background-size:20px 20px;"></div>
+
+          <div style="position:relative;">
+            <h2 style="font-family:'Bungee';font-size:32px;line-height:.94;text-transform:uppercase;color:#F4F4F1;margin:0;">Arranca<br>la tuya</h2>
+            <p style="margin:11px 0 0;font-size:14.5px;line-height:1.5;color:rgba(244,244,241,.72);">Tiras el troquel y esa es tu entrada.</p>
+
+            <div style="display:flex;gap:6px;background:rgba(244,244,241,.1);border-radius:10px;padding:5px;margin-top:18px;">
+              <button type="button" onClick="{{ diaLab }}" style="{{ est3DiaLab }}">L a V</button>
+              <button type="button" onClick="{{ diaFin }}" style="{{ est3DiaFin }}">Finde y festivos</button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;margin:26px 0 12px;">
+              <span style="font-family:'Bungee';font-size:21px;line-height:1;color:#1AA9DE;">KIDS</span>
+              <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,244,241,.45);">1 – 12 años</span>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+              <button type="button" onClick="{{ tk1 }}" style="{{ estMK1 }}">
+                <span style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">1 hora · 60 min</span>
+                  <span style="font-size:12.5px;color:#626A72;">por niño</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:26px;line-height:.9;color:#627411;">{{ p2k1 }}</span><span style="font-family:'Bungee';font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ tk2 }}" style="{{ estMK2 }}">
+                <span style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">2 horas · 120 min</span>
+                  <span style="align-self:flex-start;font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:26px;line-height:.9;color:#627411;">{{ p2k2 }}</span><span style="font-family:'Bungee';font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ tk3 }}" style="{{ estMK3 }}">
+                <span style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">3 horas · 180 min</span>
+                  <span style="font-size:12.5px;color:#626A72;">por niño</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:26px;line-height:.9;color:#627411;">{{ p2k3 }}</span><span style="font-family:'Bungee';font-size:12px;">€</span></span>
+              </button>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;margin:26px 0 12px;">
+              <span style="font-family:'Bungee';font-size:21px;line-height:1;color:#F2711C;">JUMP</span>
+              <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,244,241,.45);">Desde 6 años</span>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+              <button type="button" onClick="{{ tj1 }}" style="{{ estMJ1 }}">
+                <span style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">1 hora · 60 min</span>
+                  <span style="font-size:12.5px;color:#626A72;">por persona</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:26px;line-height:.9;color:#627411;">{{ p2j1 }}</span><span style="font-family:'Bungee';font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ tj2 }}" style="{{ estMJ2 }}">
+                <span style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">2 horas · 120 min</span>
+                  <span style="align-self:flex-start;font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:26px;line-height:.9;color:#627411;">{{ p2j2 }}</span><span style="font-family:'Bungee';font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ tj3 }}" style="{{ estMJ3 }}">
+                <span style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">3 horas · 180 min</span>
+                  <span style="font-size:12.5px;color:#626A72;">por persona</span>
+                </span>
+                <span style="display:flex;align-items:baseline;gap:3px;flex:none;"><span style="font-family:'Bungee';font-size:26px;line-height:.9;color:#627411;">{{ p2j3 }}</span><span style="font-family:'Bungee';font-size:12px;">€</span></span>
+              </button>
+            </div>
+
+            <div style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(244,244,241,.16);display:flex;flex-direction:column;gap:12px;">
+              <button type="button" style="width:100%;min-height:52px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:0;border-radius:12px;cursor:pointer;">Reservar {{ ctaTiraCorta }}</button>
+              <span style="font-size:13.5px;line-height:1.45;color:rgba(244,244,241,.6);">{{ notaTira }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1 1 340px;min-width:280px;max-width:420px;background:#F7F5EF;border:1px solid #D6D8D4;border-radius:10px;padding:24px 26px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Cómo salta de un layout al otro</span>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#1AA9DE;flex:none;">01</span><span style="font-size:14.5px;line-height:1.5;">Un solo punto de corte, a 720 px: por encima la tira va en fila y el troquel es vertical; por debajo se apila y el troquel pasa a horizontal.</span></div>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#1AA9DE;flex:none;">02</span><span style="font-size:14.5px;line-height:1.5;">El arranque cambia de eje: arriba sube 18 px, en móvil se desplaza 13 px a la derecha. La sombra dura es la misma tinta y la misma dirección.</span></div>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#1AA9DE;flex:none;">03</span><span style="font-size:14.5px;line-height:1.5;">Cada entrada mide 66 px de alto, por encima del mínimo de 44 px de toque, y el precio se lee a 26 px sin recortar el nombre.</span></div>
+          <div style="display:flex;gap:11px;"><span style="font-family:'Bungee';font-size:15px;color:#1AA9DE;flex:none;">04</span><span style="font-size:14.5px;line-height:1.5;">El conmutador de día encoge a «L a V / Finde y festivos» y el CTA se queda pegado al final del bloque con el precio dentro.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 3c · EL CARTEL ═══════════ -->
+    <div id="3c" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#3c" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">3c</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">El cartel</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Cero interacción: el cartel de precios de la taquilla, con las doce cifras a la vista y sin conmutador. La mancha lleva el «desde» y el rotulador el guiño del martes, tal como manda el kit.</span>
+      </div>
+
+      <div style="width:1240px;background:#F7F5EF;border:1px solid #D6D8D4;border-radius:10px;overflow:hidden;display:flex;flex-wrap:wrap;">
+        <div style="flex:1 1 400px;min-width:320px;position:relative;background:#101418;padding:40px 36px;display:flex;flex-direction:column;justify-content:space-between;gap:28px;">
+          <div>
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#F5C400;">Tarifas 2026</span>
+            <h2 style="font-family:'Bungee';font-size:42px;line-height:.94;text-transform:uppercase;color:#F4F4F1;margin:12px 0 0;">Precios<br>de puerta</h2>
+            <p style="margin:14px 0 0;max-width:34ch;font-size:15.5px;line-height:1.55;color:rgba(244,244,241,.72);">Por persona, IVA incluido. Sin cuota de entrada, sin extras escondidos y sin «desde».</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+            <div style="position:relative;width:168px;height:168px;display:flex;align-items:center;justify-content:center;flex:none;">
+              <span aria-hidden="true" style="position:absolute;inset:0;background:#F2711C;-webkit-mask:url(assets/splash-3.svg) center/contain no-repeat;mask:url(assets/splash-3.svg) center/contain no-repeat;"></span>
+              <span style="position:relative;text-align:center;color:#101418;transform:rotate(-6deg);">
+                <span style="display:block;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.16em;text-transform:uppercase;">desde</span>
+                <span style="display:block;font-family:'Bungee';font-size:27px;line-height:1;">8,50</span>
+                <span style="display:block;font-family:'Hanken Grotesk';font-weight:700;font-size:11px;letter-spacing:.14em;">€ / HORA</span>
+              </span>
+            </div>
+            <span style="font-family:'Permanent Marker';font-size:20px;line-height:1.15;color:#F5C400;transform:rotate(-3deg);max-width:170px;">los martes, 2x1 en la de 1 hora</span>
+          </div>
+        </div>
+
+        <div style="flex:1 1 640px;min-width:420px;padding:36px 34px 32px;">
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:end;padding-bottom:12px;border-bottom:2px solid #101418;">
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Entrada</span>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;text-align:right;">Lunes a viernes</span>
+            <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;text-align:right;">Finde y festivos</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:11px;margin-top:20px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#1AA9DE" style="flex:0 0 auto;"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+            <span style="font-family:'Bungee';font-size:22px;text-transform:uppercase;">Kids</span>
+            <span style="font-size:13.5px;color:#626A72;">1 – 12 años · un adulto entra gratis</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:baseline;padding:13px 0;border-bottom:1px solid #E1DED5;">
+            <span style="font-size:15.5px;font-weight:600;">1 hora</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">8,50 €</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">10,00 €</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:baseline;padding:13px 0;border-bottom:1px solid #E1DED5;">
+            <span style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;"><span style="font-size:15.5px;font-weight:600;">2 horas</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span></span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">14,00 €</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">16,50 €</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:baseline;padding:13px 0;border-bottom:1px solid #E1DED5;">
+            <span style="font-size:15.5px;font-weight:600;">3 horas</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">17,50 €</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">20,50 €</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:11px;margin-top:26px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#F2711C" style="flex:0 0 auto;"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.6 6.2h9.9a1.5 1.5 0 0 0 3 0h1.9A2.6 2.6 0 0 1 22 8.8v6.4a2.6 2.6 0 0 1-2.6 2.6h-1.9a1.5 1.5 0 0 0-3 0H4.6A2.6 2.6 0 0 1 2 15.2V8.8a2.6 2.6 0 0 1 2.6-2.6zM16 8.9a0.8 0.8 0 0 0-0.8 0.8v4.6a0.8 0.8 0 0 0 1.6 0V9.7a0.8 0.8 0 0 0-0.8-0.8z"></path></svg>
+            <span style="font-family:'Bungee';font-size:22px;text-transform:uppercase;">Jump</span>
+            <span style="font-size:13.5px;color:#626A72;">desde 6 años · sin edad máxima</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:baseline;padding:13px 0;border-bottom:1px solid #E1DED5;">
+            <span style="font-size:15.5px;font-weight:600;">1 hora</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">10,50 €</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">12,50 €</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:baseline;padding:13px 0;border-bottom:1px solid #E1DED5;">
+            <span style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;"><span style="font-size:15.5px;font-weight:600;">2 horas</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:5px;padding:3px 6px;">La más elegida</span></span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">16,50 €</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">19,50 €</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:0 18px;align-items:baseline;padding:13px 0;border-bottom:2px solid #101418;">
+            <span style="font-size:15.5px;font-weight:600;">3 horas</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">21,00 €</span>
+            <span style="font-family:'Bungee';font-size:24px;text-align:right;color:#627411;">24,50 €</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:24px;">
+            <button type="button" style="min-height:50px;padding:0 26px;font-family:'Hanken Grotesk';font-size:15.5px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:11px;box-shadow:4px 4px 0 #101418;cursor:pointer;">Reservar entrada Kids</button>
+            <button type="button" style="min-height:50px;padding:0 26px;font-family:'Hanken Grotesk';font-size:15.5px;font-weight:700;background:transparent;color:#101418;border:1.5px solid #101418;border-radius:11px;cursor:pointer;">Reservar entrada Jump</button>
+            <span style="font-size:13.5px;line-height:1.45;color:#626A72;margin-left:auto;max-width:26ch;">Calcetines 3,00 € · cancelas gratis hasta 24 h antes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="t2" style="padding:44px 48px 56px;display:flex;flex-direction:column;gap:30px;border-bottom:1px solid rgba(16,20,24,.14);">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 540px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t2" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">2</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 2 · Precio distinto en fin de semana, festivos y vísperas</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:46px;line-height:.94;text-transform:uppercase;margin:0;">Dos precios,<br>una tarjeta</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">Solo la parte que cambia: la tarjeta de <a href="#1a">1a</a>, sin la cabecera ni el goteo. En <a href="#2a">2a</a> el visitante elige el día y ve un precio; en <a href="#2b">2b</a> no hay nada que pulsar y ve los dos. Mi recomendación es <strong>2a</strong>: el «desde» a secas es lo que hace que la gente llegue a la caja con otra cifra en la cabeza, y aquí el día ya hay que elegirlo de todos modos para reservar.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 2a · CONMUTADOR DE DÍA ═══════════ -->
+    <div id="2a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#2a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">2a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Eliges el día</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Un conmutador para toda la sección —entre semana / fin de semana, festivos y vísperas— y cada entrada muestra un solo precio, el que se va a pagar. Sin «desde» y sin letra pequeña.</span>
+      </div>
+
+      <div style="width:1240px;background:#1AA9DE;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;padding:44px 48px 46px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-bottom:28px;">
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+            <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#101418;opacity:.72;">¿Cuándo vienes?</span>
+            <div style="display:flex;gap:8px;background:rgba(16,20,24,.12);border-radius:12px;padding:6px;">
+              <button type="button" onClick="{{ diaLab }}" style="{{ estDiaLab }}">Lunes a viernes</button>
+              <button type="button" onClick="{{ diaFin }}" style="{{ estDiaFin }}">Fin de semana y festivos</button>
+            </div>
+          </div>
+          <span style="font-size:14.5px;line-height:1.5;color:#101418;font-weight:500;max-width:34ch;">Las vísperas de festivo y los puentes van con la tarifa de fin de semana.</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+
+          <div onClick="{{ elige2Kids }}" style="{{ est2TarjetaKids }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#0A5C93;">01 · Kids</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px solid #D6D8D4;border-radius:999px;padding:5px 10px;">1 – 12 años</span>
+            </div>
+            <div style="font-family:'Bungee';font-weight:400;font-size:32px;line-height:1;text-transform:uppercase;margin-top:16px;">Entradas Kids</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px;">
+              <button type="button" onClick="{{ k2h1 }}" style="{{ est2Kids1 }}">
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 1H</span><span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">1 hora de salto</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;flex:none;"><span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ p2k1 }}</span><span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ k2h2 }}" style="{{ est2Kids2 }}">
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 2H</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:3px 7px;">La más elegida</span></span><span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">2 horas de salto</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;flex:none;"><span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ p2k2 }}</span><span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ k2h3 }}" style="{{ est2Kids3 }}">
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 3H</span><span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">3 horas de salto</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;flex:none;"><span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ p2k3 }}</span><span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span></span>
+              </button>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid #E8E9E5;">
+              <span style="font-family:'Bungee';font-weight:400;font-size:62px;line-height:.86;color:#627411;">{{ precio2Kids }}</span>
+              <span style="font-family:'Bungee';font-weight:400;font-size:24px;color:#101418;">€</span>
+              <span style="font-size:14px;color:#626A72;">{{ unidad2Kids }}</span>
+            </div>
+            <div style="margin-top:22px;">
+              <sc-if value="{{ kids2Activa }}" hint-placeholder-val="{{ true }}">
+                <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">{{ cta2Kids }}</button>
+              </sc-if>
+              <sc-if value="{{ kids2Inactiva }}" hint-placeholder-val="{{ false }}">
+                <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:700;background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;transition:background 180ms linear,color 180ms linear;" style-hover="background:#0A5C93;color:#FFFFFF">{{ cta2Kids }}</button>
+              </sc-if>
+            </div>
+          </div>
+
+          <div onClick="{{ elige2Jump }}" style="{{ est2TarjetaJump }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#0A5C93;">02 · Jump</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px solid #D6D8D4;border-radius:999px;padding:5px 10px;">Desde 6 años</span>
+            </div>
+            <div style="font-family:'Bungee';font-weight:400;font-size:32px;line-height:1;text-transform:uppercase;margin-top:16px;">Entradas Jump</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px;">
+              <button type="button" onClick="{{ j2h1 }}" style="{{ est2Jump1 }}">
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 1H</span><span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">1 hora de salto</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;flex:none;"><span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ p2j1 }}</span><span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ j2h2 }}" style="{{ est2Jump2 }}">
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 2H</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:3px 7px;">La más elegida</span></span><span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">2 horas de salto</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;flex:none;"><span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ p2j2 }}</span><span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span></span>
+              </button>
+              <button type="button" onClick="{{ j2h3 }}" style="{{ est2Jump3 }}">
+                <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 3H</span><span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;">3 horas de salto</span></span>
+                <span style="display:flex;align-items:baseline;gap:5px;flex:none;"><span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ p2j3 }}</span><span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span></span>
+              </button>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid #E8E9E5;">
+              <span style="font-family:'Bungee';font-weight:400;font-size:62px;line-height:.86;color:#627411;">{{ precio2Jump }}</span>
+              <span style="font-family:'Bungee';font-weight:400;font-size:24px;color:#101418;">€</span>
+              <span style="font-size:14px;color:#626A72;">{{ unidad2Jump }}</span>
+            </div>
+            <div style="margin-top:22px;">
+              <sc-if value="{{ jump2Activa }}" hint-placeholder-val="{{ false }}">
+                <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">{{ cta2Jump }}</button>
+              </sc-if>
+              <sc-if value="{{ jump2Inactiva }}" hint-placeholder-val="{{ true }}">
+                <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:700;background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;transition:background 180ms linear,color 180ms linear;" style-hover="background:#0A5C93;color:#FFFFFF">{{ cta2Jump }}</button>
+              </sc-if>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 2b · LOS DOS PRECIOS A LA VEZ ═══════════ -->
+    <div id="2b" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#2b" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">2b</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Los dos, a la vista</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Cero interacción: cada entrada trae sus dos precios en dos columnas y el titular dice «desde». Se lee de un golpe y se imprime tal cual, pero la cifra grande deja de existir y un botón único carga con toda la acción.</span>
+      </div>
+
+      <div style="width:1240px;background:#1AA9DE;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;padding:44px 48px 46px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-bottom:28px;">
+          <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#101418;opacity:.72;">Entradas · precio por persona</span>
+          <span style="font-size:14.5px;line-height:1.5;color:#101418;font-weight:500;max-width:44ch;">Fin de semana incluye festivos, vísperas de festivo y puentes.</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+
+          <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-top:5px solid #101418;border-radius:16px;padding:28px 30px 30px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#0A5C93;">01 · Kids</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px solid #D6D8D4;border-radius:999px;padding:5px 10px;">1 – 12 años</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:16px;">
+              <span style="font-family:'Bungee';font-weight:400;font-size:32px;line-height:1;text-transform:uppercase;">Entradas Kids</span>
+              <span style="font-size:15px;color:#626A72;">desde <strong style="font-family:'Bungee';font-weight:400;font-size:19px;color:#627411;">8,50</strong> €</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;margin-top:22px;padding-bottom:10px;border-bottom:1px solid #E8E9E5;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">
+              <div>Entrada</div><div style="text-align:right;">L – V</div><div style="text-align:right;">S · D · fest.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;align-items:center;padding:14px 0;border-bottom:1px solid #E8E9E5;">
+              <div><div style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 1H</div><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;margin-top:3px;">1 hora</div></div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#627411;">8,50</div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#101418;">10,00</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;align-items:center;padding:14px 0;border-bottom:1px solid #E8E9E5;">
+              <div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 2H</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:3px 7px;">Top</span></div><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;margin-top:3px;">2 horas</div></div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#627411;">14,00</div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#101418;">16,50</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;align-items:center;padding:14px 0;">
+              <div><div style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 3H</div><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;margin-top:3px;">3 horas</div></div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#627411;">17,50</div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#101418;">20,50</div>
+            </div>
+            <div style="font-size:14.5px;line-height:1.5;color:#626A72;margin-top:14px;padding-top:14px;border-top:1px solid #E8E9E5;">Un adulto acompañante entra gratis, cualquier día.</div>
+          </div>
+
+          <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-top:5px solid #101418;border-radius:16px;padding:28px 30px 30px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#0A5C93;">02 · Jump</span>
+              <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px solid #D6D8D4;border-radius:999px;padding:5px 10px;">Desde 6 años</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:16px;">
+              <span style="font-family:'Bungee';font-weight:400;font-size:32px;line-height:1;text-transform:uppercase;">Entradas Jump</span>
+              <span style="font-size:15px;color:#626A72;">desde <strong style="font-family:'Bungee';font-weight:400;font-size:19px;color:#627411;">10,50</strong> €</span>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;margin-top:22px;padding-bottom:10px;border-bottom:1px solid #E8E9E5;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#626A72;">
+              <div>Entrada</div><div style="text-align:right;">L – V</div><div style="text-align:right;">S · D · fest.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;align-items:center;padding:14px 0;border-bottom:1px solid #E8E9E5;">
+              <div><div style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 1H</div><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;margin-top:3px;">1 hora</div></div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#627411;">10,50</div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#101418;">12,50</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;align-items:center;padding:14px 0;border-bottom:1px solid #E8E9E5;">
+              <div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 2H</span><span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:3px 7px;">Top</span></div><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;margin-top:3px;">2 horas</div></div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#627411;">16,50</div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#101418;">19,50</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1.35fr .82fr .82fr;gap:0;align-items:center;padding:14px 0;">
+              <div><div style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 3H</div><div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#626A72;margin-top:3px;">3 horas</div></div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#627411;">21,00</div>
+              <div style="text-align:right;font-family:'Bungee';font-weight:400;font-size:21px;color:#101418;">24,50</div>
+            </div>
+            <div style="font-size:14.5px;line-height:1.5;color:#626A72;margin-top:14px;padding-top:14px;border-top:1px solid #E8E9E5;">Tarifa noche viernes y sábados, 22:00 – 01:00: 9,00 €.</div>
+          </div>
+
+        </div>
+
+        <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:28px;padding-top:22px;border-top:1px solid rgba(16,20,24,.22);">
+          <button type="button" style="min-height:48px;padding:0 28px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">Elegir día y reservar</button>
+          <span style="font-size:14.5px;line-height:1.5;color:#101418;font-weight:500;">Al elegir el día en la reserva ves el precio exacto antes de pagar.</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="t1" style="padding:44px 48px 64px;display:flex;flex-direction:column;gap:30px;">
+
+  <div style="display:flex;align-items:flex-end;gap:32px;flex-wrap:wrap;max-width:1240px;">
+    <div style="flex:1 1 560px;min-width:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <a href="#t1" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:#101418;color:#F4F4F1;border-radius:6px;padding:5px 9px;">1</a>
+        <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Turno 1 · Sección Precios · dos entradas: Kids y Jump</span>
+      </div>
+      <h1 style="font-family:'Bungee';font-weight:400;font-size:52px;line-height:.94;text-transform:uppercase;margin:0;">Precio de<br>la entrada</h1>
+    </div>
+    <p style="flex:0 1 470px;margin:0;font-size:16px;line-height:1.6;color:#626A72;text-wrap:pretty;">Tres tratamientos de la misma tarifa. Los tres cumplen el puesto 04 del orden de página de <a href="Colores%20de%20Marca%20PJP.dc.html">Colores de Marca</a>: un color dominante, la cifra en Lima o en tinta —nunca en cian sobre claro—, un solo relleno naranja por pantalla y el sello de bono como única pieza girada. El movimiento sale de <a href="Microanimaciones%20PJP.dc.html">Microanimaciones</a>: cascada de 420 ms con desfase 90, y los precios nunca se animan al cambiar.</p>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:14px;max-width:1240px;">
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid rgba(16,20,24,.2);border-radius:999px;padding:8px 14px;color:#101418;">Kids 1–12 · Jump desde 6, sin tope</span>
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid rgba(16,20,24,.2);border-radius:999px;padding:8px 14px;color:#101418;">Precio en Lima #A3C21C / #627411</span>
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid rgba(16,20,24,.2);border-radius:999px;padding:8px 14px;color:#101418;">1 pegatina naranja por pantalla</span>
+    <span style="font-family:'JetBrains Mono';font-size:11.5px;border:1px solid rgba(16,20,24,.2);border-radius:999px;padding:8px 14px;color:#101418;">1 sello B5 girado −6°</span>
+  </div>
+
+  <div style="max-width:1240px;background:#F4F4F1;border:1px solid rgba(16,20,24,.14);border-left:5px solid #F5C400;border-radius:16px;padding:22px 26px;display:flex;flex-direction:column;gap:12px;">
+    <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#626A72;">Decisiones y supuestos · confírmame estos cuatro</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;font-size:14.5px;line-height:1.55;color:#101418;">
+      <div><strong>La entrada de 1H es la real</strong><br><span style="color:#626A72;">Kids 8,50 € y Jump 10,50 €, como en la landing y en Zonas.</span></div>
+      <div><strong>2H, 3H y el recargo de finde, derivados</strong><br><span style="color:#626A72;">L–V: Kids 14,00 / 17,50 · Jump 16,50 / 21,00. Fin de semana: +1,50 en 1H, +2,50 en 2H, +3,00 y +3,50 en 3H.</span></div>
+      <div><strong>Calcetines no incluidos</strong><br><span style="color:#626A72;">La landing se contradecía: aquí manda «obligatorios, 3,00 € el par». Hay tweak para invertirlo.</span></div>
+      <div><strong>Bono como sello, no como tercera tarjeta</strong><br><span style="color:#626A72;">Kids 5 sesiones 38,00 € · Jump 10 sesiones 85,00 €. Se puede ocultar.</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+    <!-- ═══════════ 1a · FRANJA GOTEADA CIAN ═══════════ -->
+    <div id="1a" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#1a" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">1a</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Franja goteada</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 520px;min-width:280px;">C4 en cian pleno con goteo arriba y abajo. Conmutador de día arriba —de <a href="#2a">2a</a>— y dos tarjetas papel con tres entradas cada una: 1H, 2H y 3H, presentadas como producto y no como duración. El relleno naranja viaja a la tarjeta seleccionada; la otra se queda fantasma en Azul Muro.</span>
+        <button type="button" onClick="{{ juegaA }}" style="flex:none;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:rgba(16,20,24,.09);color:#101418;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:rgba(16,20,24,.18)">Reproducir entrada</button>
+      </div>
+
+      <div style="width:1240px;background:#F4F4F1;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;">
+        <div style="height:34px;background:#F4F4F1;"></div>
+        <div style="position:relative;background:#1AA9DE;padding:56px 56px 48px;">
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:52px;pointer-events:none;">
+            <svg viewBox="0 0 1200 110" preserveAspectRatio="none" style="width:100%;height:100%;display:block;fill:#F4F4F1;"><path d="M0 0H1200V26L1105 26C1106 48 1111 55 1106 62A12 12 0 1 1 1086 62C1082 55 1087 48 1088 26L990 26C991 62 996 70 991 78A13 13 0 1 1 970 78C965 70 971 62 972 26L799 26C800 76 804 82 800 88A10 10 0 1 1 784 88C781 82 785 76 786 26L691 26C692 82 695 86 692 90A6 6 0 1 1 684 90C682 86 684 82 685 26L578 26C579 79 585 87 580 95A13 13 0 1 1 558 95C553 87 559 79 560 26L422 26C423 89 427 94 424 99A9 9 0 1 1 410 99C407 94 411 89 412 26L355 26C356 73 362 82 357 90A14 14 0 1 1 333 90C328 82 334 73 335 26L236 26C237 85 243 94 238 102A14 14 0 1 1 215 102C211 94 216 85 217 26L98 26C99 67 105 75 100 82A12 12 0 1 1 80 82C76 75 81 67 82 26L0 26Z"></path></svg>
+          </div>
+
+          <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:36px;flex-wrap:wrap;margin-bottom:34px;">
+            <div style="flex:1 1 560px;min-width:0;">
+              <h2 style="font-family:'Bungee';font-weight:400;font-size:60px;line-height:.92;letter-spacing:-.01em;text-transform:uppercase;margin:0;color:#101418;">Dos entradas,<br>dos precios</h2>
+              <p style="margin:18px 0 0;max-width:52ch;font-size:17px;line-height:1.55;color:#101418;font-weight:500;">Kids para los peques, Jump para los mayores. Eliges cuánto tiempo saltas y pagas por persona: sin cuota de entrada, sin extras escondidos.</p>
+            </div>
+            <div style="flex:none;font-family:'Bungee';font-size:22px;line-height:1.1;text-align:center;background:#F5C400;color:#101418;border:2px solid #101418;border-radius:10px;padding:16px 22px;box-shadow:5px 5px 0 #101418;transform:rotate(-6deg);animation:pjpsello 420ms cubic-bezier(.2,1.56,.25,1) 380ms both;">Consigue<br>tu entrada</div>
+          </div>
+
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-bottom:28px;padding-top:22px;border-top:1px solid rgba(16,20,24,.22);">
+            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+              <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#101418;opacity:.72;">¿Cuándo vienes?</span>
+              <div style="display:flex;gap:8px;background:rgba(16,20,24,.12);border-radius:12px;padding:6px;">
+                <button type="button" onClick="{{ diaLab }}" style="{{ estDiaLab }}">Lunes a viernes</button>
+                <button type="button" onClick="{{ diaFin }}" style="{{ estDiaFin }}">Fin de semana y festivos</button>
+              </div>
+            </div>
+            <span style="font-size:14.5px;line-height:1.5;color:#101418;font-weight:500;max-width:36ch;">Las vísperas de festivo y los puentes van con la tarifa de fin de semana.</span>
+          </div>
+
+          <sc-if value="{{ verA }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+
+            <div onClick="{{ eligeKids }}" style="{{ estTarjetaKids }}">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px solid #D6D8D4;border-radius:999px;padding:5px 10px;">1 – 12 años</span>
+              </div>
+              <div style="font-family:'Bungee';font-weight:400;font-size:32px;line-height:1;text-transform:uppercase;margin-top:16px;">Entradas Kids</div>
+              <p style="margin:10px 0 0;font-size:15.5px;line-height:1.55;color:#626A72;max-width:34ch;">Juego blando y camas a su medida, sin mezclarse con los mayores.</p>
+
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px;">
+                <button type="button" onClick="{{ kids1 }}" style="{{ estKids1 }}">
+                  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;">
+                    <span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 1H</span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ pk1 }}</span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span>
+                  </span>
+                </button>
+                <button type="button" onClick="{{ kids2 }}" style="{{ estKids2 }}">
+                  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;">
+                    <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                      <span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 2H</span>
+                      <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:3px 7px;">La más elegida</span>
+                    </span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ pk2 }}</span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span>
+                  </span>
+                </button>
+                <button type="button" onClick="{{ kids3 }}" style="{{ estKids3 }}">
+                  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;">
+                    <span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Kids 3H</span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ pk3 }}</span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span>
+                  </span>
+                </button>
+              </div>
+
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;">
+                <span style="font-family:'Bungee';font-weight:400;font-size:72px;line-height:.86;color:#627411;">{{ precioKids }}</span>
+                <span style="font-family:'Bungee';font-weight:400;font-size:28px;color:#101418;">€</span>
+                <span style="font-size:14.5px;color:#626A72;">{{ unidadKids }}</span>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid #E8E9E5;">
+                <div style="display:flex;gap:10px;align-items:flex-start;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#447921" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15px;line-height:1.5;">Acceso a toboganes, piscina de bolas y camas Kids</span></div>
+                <div style="display:flex;gap:10px;align-items:flex-start;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#447921" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15px;line-height:1.5;">Un adulto acompañante entra gratis</span></div>
+                <sc-if value="{{ calcetinesDentro }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#447921" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15px;line-height:1.5;">Calcetines antideslizantes incluidos</span></div>
+                </sc-if>
+                <sc-if value="{{ calcetinesFuera }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex:none;width:15px;text-align:center;font-family:'JetBrains Mono';font-size:14px;color:#626A72;">+</span><span style="font-size:15px;line-height:1.5;color:#626A72;">Calcetines antideslizantes, 3,00 € el par</span></div>
+                </sc-if>
+              </div>
+
+              <div style="margin-top:24px;">
+                <sc-if value="{{ kidsActiva }}" hint-placeholder-val="{{ true }}">
+                  <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">{{ ctaKids }}</button>
+                </sc-if>
+                <sc-if value="{{ kidsInactiva }}" hint-placeholder-val="{{ false }}">
+                  <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:700;background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;transition:background 180ms linear,color 180ms linear;" style-hover="background:#0A5C93;color:#FFFFFF">{{ ctaKids }}</button>
+                </sc-if>
+              </div>
+            </div>
+
+            <div onClick="{{ eligeJump }}" style="{{ estTarjetaJump }}">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#626A72;border:1px solid #D6D8D4;border-radius:999px;padding:5px 10px;">Desde 6 años</span>
+              </div>
+              <div style="font-family:'Bungee';font-weight:400;font-size:32px;line-height:1;text-transform:uppercase;margin-top:16px;">Entradas Jump</div>
+              <p style="margin:10px 0 0;font-size:15.5px;line-height:1.55;color:#626A72;max-width:34ch;">Cuarenta camas conectadas, foam pit, tirolina y circuito ninja. Sin edad máxima.</p>
+
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px;">
+                <button type="button" onClick="{{ jump1 }}" style="{{ estJump1 }}">
+                  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;">
+                    <span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 1H</span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ pj1 }}</span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span>
+                  </span>
+                </button>
+                <button type="button" onClick="{{ jump2 }}" style="{{ estJump2 }}">
+                  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;">
+                    <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                      <span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 2H</span>
+                      <span style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:3px 7px;">La más elegida</span>
+                    </span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ pj2 }}</span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span>
+                  </span>
+                </button>
+                <button type="button" onClick="{{ jump3 }}" style="{{ estJump3 }}">
+                  <span style="display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;">
+                    <span style="font-size:16.5px;font-weight:700;line-height:1.2;">Entrada Jump 3H</span>
+                  </span>
+                  <span style="display:flex;align-items:baseline;gap:5px;flex:none;">
+                    <span style="font-family:'Bungee';font-weight:400;font-size:21px;line-height:1;color:#627411;">{{ pj3 }}</span>
+                    <span style="font-family:'Bungee';font-weight:400;font-size:12px;">€</span>
+                  </span>
+                </button>
+              </div>
+
+              <div style="display:flex;align-items:baseline;gap:10px;margin-top:22px;">
+                <span style="font-family:'Bungee';font-weight:400;font-size:72px;line-height:.86;color:#627411;">{{ precioJump }}</span>
+                <span style="font-family:'Bungee';font-weight:400;font-size:28px;color:#101418;">€</span>
+                <span style="font-size:14.5px;color:#626A72;">{{ unidadJump }}</span>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid #E8E9E5;">
+                <div style="display:flex;gap:10px;align-items:flex-start;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#447921" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15px;line-height:1.5;">Salto libre, foam pit, tirolina y circuito ninja</span></div>
+                <div style="display:flex;gap:10px;align-items:flex-start;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#447921" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15px;line-height:1.5;">Retos cronometrados con marcador</span></div>
+                <sc-if value="{{ calcetinesDentro }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;"><svg width="15" height="15" viewBox="0 0 24 24" fill="#447921" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15px;line-height:1.5;">Calcetines antideslizantes incluidos</span></div>
+                </sc-if>
+                <sc-if value="{{ calcetinesFuera }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex:none;width:15px;text-align:center;font-family:'JetBrains Mono';font-size:14px;color:#626A72;">+</span><span style="font-size:15px;line-height:1.5;color:#626A72;">Calcetines antideslizantes, 3,00 € el par</span></div>
+                </sc-if>
+              </div>
+
+              <div style="margin-top:24px;">
+                <sc-if value="{{ jumpActiva }}" hint-placeholder-val="{{ false }}">
+                  <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">{{ ctaJump }}</button>
+                </sc-if>
+                <sc-if value="{{ jumpInactiva }}" hint-placeholder-val="{{ true }}">
+                  <button type="button" style="width:100%;min-height:48px;font-family:'Hanken Grotesk';font-size:16px;font-weight:700;background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;border-radius:10px;cursor:pointer;transition:background 180ms linear,color 180ms linear;" style-hover="background:#0A5C93;color:#FFFFFF">{{ ctaJump }}</button>
+                </sc-if>
+              </div>
+            </div>
+
+          </div>
+          </sc-if>
+
+          <div style="position:relative;display:flex;gap:26px;flex-wrap:wrap;margin-top:34px;padding-top:20px;border-top:1px solid rgba(16,20,24,.22);font-size:14.5px;line-height:1.5;color:#101418;font-weight:500;">
+            <span>Cancelas gratis hasta 24 h antes.</span>
+            <span>{{ pieCalcetines }}</span>
+            <sc-if value="{{ verBonos }}" hint-placeholder-val="{{ true }}">
+              <span>Bono Kids 5 sesiones 38,00 € · Bono Jump 10 sesiones 85,00 €.</span>
+            </sc-if>
+          </div>
+
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:56px;transform:translateY(100%);pointer-events:none;">
+            <svg viewBox="0 0 1200 110" preserveAspectRatio="none" style="width:100%;height:100%;display:block;fill:#1AA9DE;"><path d="M0 0H1200V26L1105 26C1106 48 1111 55 1106 62A12 12 0 1 1 1086 62C1082 55 1087 48 1088 26L990 26C991 62 996 70 991 78A13 13 0 1 1 970 78C965 70 971 62 972 26L799 26C800 76 804 82 800 88A10 10 0 1 1 784 88C781 82 785 76 786 26L691 26C692 82 695 86 692 90A6 6 0 1 1 684 90C682 86 684 82 685 26L578 26C579 79 585 87 580 95A13 13 0 1 1 558 95C553 87 559 79 560 26L422 26C423 89 427 94 424 99A9 9 0 1 1 410 99C407 94 411 89 412 26L355 26C356 73 362 82 357 90A14 14 0 1 1 333 90C328 82 334 73 335 26L236 26C237 85 243 94 238 102A14 14 0 1 1 215 102C211 94 216 85 217 26L98 26C99 67 105 75 100 82A12 12 0 1 1 80 82C76 75 81 67 82 26L0 26Z"></path></svg>
+          </div>
+        </div>
+        <div style="height:74px;background:#F4F4F1;"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 1b · TINTA CON DATO XL ═══════════ -->
+    <div id="1b" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#1b" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">1b</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Dato XL en tinta</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">Fondo tinta con trama A1 y borde que gotea C1. La decisión en dos pasos —zona y duración— con las franjas y la lona de la cascada de Microanimaciones. Cifra en Lima a 96 px y una sola pegatina naranja.</span>
+        <button type="button" onClick="{{ juegaB }}" style="flex:none;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:rgba(16,20,24,.09);color:#101418;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:rgba(16,20,24,.18)">Reproducir entrada</button>
+      </div>
+
+      <div style="width:1240px;background:#F4F4F1;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;">
+        <div style="position:relative;background:#101418;color:#F4F4F1;padding:56px 56px 64px;">
+          <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(244,244,241,.5) 1.4px,transparent 1.6px);background-size:20px 20px;opacity:.1;pointer-events:none;"></div>
+
+          <div style="position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:36px;flex-wrap:wrap;">
+            <div style="flex:1 1 540px;min-width:0;">
+              <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#1AA9DE;">04 / Entradas</div>
+              <h2 style="font-family:'Bungee';font-weight:400;font-size:56px;line-height:.94;letter-spacing:-.01em;text-transform:uppercase;margin:14px 0 0;">El precio,<br>en dos pasos</h2>
+            </div>
+            <p style="flex:0 1 420px;margin:0 0 8px;font-size:16.5px;line-height:1.55;color:#9AA1A8;text-wrap:pretty;">Elige zona, elige cuánto saltas y ya tienes el precio por persona. Nada de tablas: una cifra, la que vas a pagar.</p>
+          </div>
+
+          <div style="position:relative;display:grid;grid-template-columns:1.15fr .85fr;gap:44px;margin-top:44px;align-items:start;">
+
+            <div>
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Paso 1 · Zona</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+                <button type="button" onClick="{{ eligeKidsB }}" style="{{ estPestanaKids }}">
+                  <span style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1;text-transform:uppercase;">Kids</span>
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;">1 – 12 años</span>
+                  <span style="font-size:14.5px;">desde 8,50 €</span>
+                </button>
+                <button type="button" onClick="{{ eligeJumpB }}" style="{{ estPestanaJump }}">
+                  <span style="font-family:'Bungee';font-weight:400;font-size:26px;line-height:1;text-transform:uppercase;">Jump</span>
+                  <span style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.8;">Desde 6 años</span>
+                  <span style="font-size:14.5px;">desde 10,50 €</span>
+                </button>
+              </div>
+
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;margin-top:34px;">Paso 2 · Cuánto saltas</div>
+              <sc-if value="{{ verB }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top:14px;">
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+                    <button type="button" onClick="{{ b60 }}" style="{{ estFranja60 }}">60 min</button>
+                    <button type="button" onClick="{{ b90 }}" style="{{ estFranja90 }}">90 min</button>
+                    <button type="button" onClick="{{ b120 }}" style="{{ estFranja120 }}">120 min</button>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:12px;">
+                    <span style="{{ estLona1 }}"></span>
+                    <span style="{{ estLona2 }}"></span>
+                    <span style="{{ estLona3 }}"></span>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:flex;align-items:baseline;gap:12px;margin-top:40px;">
+                <span style="font-family:'Bungee';font-weight:400;font-size:96px;line-height:.84;color:#A3C21C;">{{ precioB }}</span>
+                <span style="font-family:'Bungee';font-weight:400;font-size:34px;color:#F4F4F1;">€</span>
+                <span style="font-size:15px;color:#9AA1A8;">{{ unidadB }}</span>
+              </div>
+              <div style="font-size:15px;line-height:1.55;color:#9AA1A8;margin-top:14px;max-width:46ch;">{{ notaB }}</div>
+            </div>
+
+            <div style="background:#1A1F25;border:1px solid #2A3138;border-radius:24px;padding:30px 32px;display:flex;flex-direction:column;gap:20px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:#9AA1A8;">Incluye tu entrada</div>
+              <div style="display:flex;flex-direction:column;gap:11px;">
+                <sc-for list="{{ incluyeB }}" as="i" hint-placeholder-count="3">
+                  <div style="display:flex;gap:11px;align-items:flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#5FA82E" style="flex:none;margin-top:3px;"><path d="M9.8 18.6 3.6 12.4l2.6-2.6 3.6 3.6 8-8 2.6 2.6z"></path></svg><span style="font-size:15.5px;line-height:1.5;color:#F4F4F1;">{{ i.t }}</span></div>
+                </sc-for>
+                <div style="display:flex;gap:11px;align-items:flex-start;padding-top:11px;border-top:1px solid #2A3138;"><span style="flex:none;width:16px;text-align:center;font-family:'JetBrains Mono';font-size:14px;color:#9AA1A8;">·</span><span style="font-size:15px;line-height:1.5;color:#9AA1A8;">{{ pieCalcetines }}</span></div>
+              </div>
+              <button type="button" style="width:100%;min-height:52px;font-family:'Hanken Grotesk';font-size:17px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">{{ ctaB }}</button>
+              <div style="font-family:'JetBrains Mono';font-size:11px;line-height:1.6;color:#9AA1A8;">Cancelas gratis hasta 24 h antes<br>Pago al reservar · sin comisión</div>
+            </div>
+          </div>
+
+          <sc-if value="{{ verBonos }}" hint-placeholder-val="{{ true }}">
+            <div style="position:relative;display:flex;gap:14px;flex-wrap:wrap;margin-top:40px;padding-top:22px;border-top:1px solid #2A3138;">
+              <span style="font-family:'JetBrains Mono';font-size:12px;background:#252C19;color:#A3C21C;border:1px solid #3E4A21;padding:9px 14px;border-radius:999px;">Bono Kids · 5 × 60 min · 38,00 €</span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;background:#252C19;color:#A3C21C;border:1px solid #3E4A21;padding:9px 14px;border-radius:999px;">Bono Jump · 10 × 60 min · 85,00 €</span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;background:#2A2413;color:#F5C400;border:1px solid #4A4020;padding:9px 14px;border-radius:999px;">Martes de salto · −15% en 1 h</span>
+              <span style="font-family:'JetBrains Mono';font-size:12px;background:#112934;color:#1AA9DE;border:1px solid #1A4657;padding:9px 14px;border-radius:999px;">Tarifa noche V y S · 9,00 € · +14 años</span>
+            </div>
+          </sc-if>
+
+          <div aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:64px;transform:translateY(100%);pointer-events:none;">
+            <svg viewBox="0 0 1200 140" preserveAspectRatio="none" style="width:100%;height:100%;display:block;fill:#101418;"><path d="M0 0H1200V34L1109 34C1110 77 1113 82 1111 87A8 8 0 1 1 1099 87C1096 82 1099 77 1100 34L1042 34C1043 89 1046 94 1043 100A9 9 0 1 1 1030 100C1027 94 1030 89 1031 34L933 34C934 124 937 130 934 135A9 9 0 1 1 921 135C918 130 921 124 922 34L857 34C858 117 861 122 859 127A8 8 0 1 1 846 127C843 122 846 117 847 34L800 34C801 60 803 64 801 69A8 8 0 1 1 789 69C787 64 790 60 791 34L711 34C712 72 714 76 712 81A7 7 0 1 1 701 81C699 76 701 72 702 34L619 34C620 103 624 110 621 117A11 11 0 1 1 602 117C599 110 603 103 604 34L546 34C547 123 549 127 547 130A6 6 0 1 1 538 130C536 127 538 123 539 34L467 34C468 92 473 99 469 105A11 11 0 1 1 450 105C446 99 451 92 452 34L393 34C394 117 400 125 395 132A12 12 0 1 1 375 132C370 125 376 117 377 34L322 34C323 115 328 122 323 129A12 12 0 1 1 304 129C300 122 305 115 306 34L257 34C258 41 263 50 259 58A14 14 0 1 1 235 58C230 50 236 41 237 34L127 34C128 77 131 81 128 86A7 7 0 1 1 117 86C115 81 118 77 119 34L47 34C48 46 52 52 48 58A10 10 0 1 1 33 58C29 52 33 46 34 34L0 34Z"></path></svg>
+          </div>
+        </div>
+        <div style="height:84px;background:#F4F4F1;"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 1c · TABLA EN PAPEL ═══════════ -->
+    <div id="1c" style="flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px;">
+      <div style="display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;width:1240px;">
+        <a href="#1c" style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;background:rgba(16,20,24,.09);color:#101418;border-radius:6px;padding:5px 9px;flex:none;">1c</a>
+        <span style="font-family:'Bungee';font-size:19px;text-transform:uppercase;flex:none;">Tabla en papel</span>
+        <span style="font-size:14px;line-height:1.5;color:#626A72;flex:1 1 500px;min-width:280px;">La superficie de respiro que pide el sistema para tarifas: papel, cero manchas, cifras en Lima oscuro y las cuatro filas cayendo con desfase 90 ms. Para quien compara antes de decidir.</span>
+        <button type="button" onClick="{{ juegaC }}" style="flex:none;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.1em;text-transform:uppercase;background:rgba(16,20,24,.09);color:#101418;border:0;border-radius:8px;padding:8px 12px;cursor:pointer;transition:background 120ms linear;" style-hover="background:rgba(16,20,24,.18)">Reproducir entrada</button>
+      </div>
+
+      <div style="width:1240px;background:#F4F4F1;border:1px solid rgba(16,20,24,.14);border-radius:10px;overflow:hidden;">
+        <div style="padding:56px 56px 60px;">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:36px;flex-wrap:wrap;">
+            <div style="flex:1 1 520px;min-width:0;">
+              <div style="font-family:'JetBrains Mono';font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#0A5C93;">04 · Tarifas</div>
+              <h2 style="font-family:'Bungee';font-weight:400;font-size:52px;line-height:.94;letter-spacing:-.005em;text-transform:uppercase;margin:14px 0 0;">Tarifas de<br>un vistazo</h2>
+            </div>
+            <p style="flex:0 1 420px;margin:0 0 8px;font-size:16.5px;line-height:1.55;color:#626A72;text-wrap:pretty;">Precio por persona en las dos zonas. Los peques saltan en Kids; Jump es desde 6 años cumplidos y no tiene tope por arriba.</p>
+          </div>
+
+          <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;overflow:hidden;margin-top:36px;">
+            <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:0;padding:16px 28px;border-bottom:1px solid #D6D8D4;font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">
+              <div>Cuánto saltas</div>
+              <div>Kids · 1 – 12 años</div>
+              <div>Jump · desde 6 años</div>
+            </div>
+
+            <sc-if value="{{ verC }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:0;align-items:center;padding:20px 28px;border-bottom:1px solid #E8E9E5;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) both;transition:background 120ms linear;" style-hover="background:#F7F5EF">
+                <div style="font-size:17px;font-weight:700;">60 minutos</div>
+                <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">8,50</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+                <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">10,50</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:0;align-items:center;padding:20px 28px;border-bottom:1px solid #E8E9E5;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 90ms both;transition:background 120ms linear;" style-hover="background:#F7F5EF">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                  <span style="font-size:17px;font-weight:700;">90 minutos</span>
+                  <span style="font-family:'JetBrains Mono';font-size:10px;letter-spacing:.14em;text-transform:uppercase;background:#F5C400;color:#101418;border-radius:6px;padding:4px 8px;">La más elegida</span>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">11,50</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+                <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">13,50</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:0;align-items:center;padding:20px 28px;border-bottom:1px solid #E8E9E5;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 180ms both;transition:background 120ms linear;" style-hover="background:#F7F5EF">
+                <div style="font-size:17px;font-weight:700;">120 minutos</div>
+                <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">14,00</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+                <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">16,50</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+              </div>
+              <sc-if value="{{ verBonos }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:0;align-items:center;padding:20px 28px;background:#F7F5EF;transform-origin:50% 100%;animation:pjpcae 420ms cubic-bezier(.2,1.56,.25,1) 270ms both;">
+                  <div>
+                    <div style="font-size:17px;font-weight:700;">Bono de sesiones</div>
+                    <div style="font-size:14px;color:#626A72;line-height:1.45;margin-top:3px;">Válido 12 meses · compartible</div>
+                  </div>
+                  <div>
+                    <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">38,00</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+                    <div style="font-family:'JetBrains Mono';font-size:11.5px;color:#626A72;margin-top:5px;">5 × 60 min · sale a 7,60 €</div>
+                  </div>
+                  <div>
+                    <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-family:'Bungee';font-weight:400;font-size:30px;line-height:1;color:#627411;">85,00</span><span style="font-family:'Bungee';font-weight:400;font-size:15px;">€</span></div>
+                    <div style="font-family:'JetBrains Mono';font-size:11.5px;color:#626A72;margin-top:5px;">10 × 60 min · sale a 8,50 €</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            </sc-if>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px;">
+            <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:24px 26px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Lo que se paga aparte</div>
+              <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px;">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;"><span style="font-size:15.5px;">{{ etiquetaCalcetines }}</span><span style="font-family:'JetBrains Mono';font-size:14px;font-weight:500;">{{ precioCalcetines }}</span></div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;"><span style="font-size:15.5px;">Adulto acompañante en Kids</span><span style="font-family:'JetBrains Mono';font-size:14px;font-weight:500;color:#447921;">gratis</span></div>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;"><span style="font-size:15.5px;">Tarifa noche Jump · V y S, 22:00 – 01:00</span><span style="font-family:'JetBrains Mono';font-size:14px;font-weight:500;">9,00 €</span></div>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:24px 26px;">
+              <div style="font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:#626A72;">Ofertas de siempre</div>
+              <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px;">
+                <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:'Bungee';font-weight:400;font-size:14px;color:#627411;flex:none;">−15%</span><span style="font-size:15.5px;line-height:1.5;">Martes de salto, en entradas de 1 hora</span></div>
+                <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:'Bungee';font-weight:400;font-size:14px;color:#627411;flex:none;">2×1</span><span style="font-size:15.5px;line-height:1.5;">Trae a un amigo, de 16:00 a 18:00</span></div>
+                <div style="display:flex;gap:12px;align-items:baseline;"><span style="font-family:'Bungee';font-weight:400;font-size:14px;color:#627411;flex:none;">−20%</span><span style="font-size:15.5px;line-height:1.5;">Bono de 10 saltos, diez por el precio de ocho</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:32px;padding-top:24px;border-top:1px solid #D6D8D4;">
+            <button type="button" style="min-height:48px;padding:0 28px;font-family:'Hanken Grotesk';font-size:16px;font-weight:800;background:#F2711C;color:#101418;border:2px solid #101418;border-radius:10px;box-shadow:5px 5px 0 #101418;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1);" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #101418" style-active="transform:translate(5px,5px);box-shadow:0 0 0 #101418">Reservar mi hora</button>
+            <a href="#1c" style="font-size:16px;font-weight:700;color:#0A5C93;border-bottom:2px solid #1AA9DE;">Ver las normas antes de venir</a>
+            <span style="font-size:14.5px;color:#626A72;margin-left:auto;">Cancelas gratis hasta 24 h antes · precios con IVA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:1000},&quot;entradaPorDefecto&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;1H&quot;,&quot;2H&quot;,&quot;3H&quot;],&quot;default&quot;:&quot;2H&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tarifa&quot;,&quot;label&quot;:&quot;Entrada preseleccionada&quot;},&quot;precioIncluyeCalcetines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tarifa&quot;,&quot;label&quot;:&quot;Calcetines incluidos en el precio&quot;},&quot;mostrarBonos&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tarifa&quot;,&quot;label&quot;:&quot;Mostrar bonos y ofertas&quot;}}">
+class Component extends DCLogic {
+  state = { selA: 'kids', durKids: null, durJump: null, zonaB: null, durB: null, playA: 1, playB: 1, playC: 1 };
+
+  ENTRADAS = {
+    kids: { '1H': 850, '2H': 1400, '3H': 1750 },
+    jump: { '1H': 1050, '2H': 1650, '3H': 2100 }
+  };
+
+  POR_DIA = {
+    kids: { lab: { '1H': 850, '2H': 1400, '3H': 1750 }, fin: { '1H': 1000, '2H': 1650, '3H': 2050 } },
+    jump: { lab: { '1H': 1050, '2H': 1650, '3H': 2100 }, fin: { '1H': 1250, '2H': 1950, '3H': 2450 } }
+  };
+
+  ZONAS = {
+    kids: {
+      nombre: 'Zona Kids', corto: 'Kids', tinte: '#112934', borde: '#1A4657', barra: '#1AA9DE',
+      precios: { '60': 850, '90': 1150, '120': 1400 },
+      incluye: ['Toboganes, piscina de bolas y camas a su medida', 'Un adulto acompañante entra gratis', 'Zona acotada: no se mezclan con los mayores'],
+      nota: 'Precio por niño. El adulto que le acompaña no paga entrada.'
+    },
+    jump: {
+      nombre: 'Zona Jump', corto: 'Jump', tinte: '#302119', borde: '#4A3120', barra: '#F2711C',
+      precios: { '60': 1050, '90': 1350, '120': 1650 },
+      incluye: ['Cuarenta camas conectadas, foam pit y tirolina', 'Circuito ninja y retos cronometrados', 'Desde 6 años cumplidos y sin edad máxima'],
+      nota: 'Precio por persona. Los viernes y sábados hay tarifa noche a 9,00 € para mayores de 14.'
+    }
+  };
+
+  eur(c) { return (c / 100).toFixed(2).replace('.', ','); }
+
+  rejugar(k) {
+    return () => {
+      this.setState((s) => { const n = {}; n[k] = 0; return n; });
+      setTimeout(() => this.setState((s) => { const n = {}; n[k] = (s[k] || 0) + 1; return n; }), 40);
+    };
+  }
+
+  turno7() {
+    const st = this.state;
+    const eur = (c) => this.eur(c);
+    const z = st.z7 || 'jump';
+    const META = {
+      kids: { corto: 'Kids', zona: 'Zona Kids · 1–12 años',
+        incluye: ['Acceso a Zona Kids', 'Un adulto acompañante entra gratis'] },
+      jump: { corto: 'Jump', zona: 'Zona Jump · desde 6 años',
+        incluye: ['Acceso a Zona Jump', 'Circuito ninja y retos cronometrados'] }
+    };
+    const nom = { '1H': '1 hora', '2H': '2 horas', '3H': '3 horas' };
+    const mins = { '1H': '60 min', '2H': '120 min', '3H': '180 min' };
+    const extra = { '1H': 'Calcetines antideslizantes incluidos', '2H': 'Calcetines y taquilla incluidos', '3H': 'Calcetines, taquilla y bebida' };
+    const m = META[z];
+    const lab = this.POR_DIA[z].lab;
+    const fin = this.POR_DIA[z].fin;
+    const seg = (on) => "font-family:'Hanken Grotesk';font-size:15px;min-height:44px;padding:0 22px;border-radius:999px;border:0;cursor:pointer;transition:background 240ms linear,color 240ms linear;" +
+      (on ? 'background:#101418;color:#F4F4F1;font-weight:800;' : 'background:transparent;color:#101418;font-weight:600;');
+    const cta = (top) => 'width:100%;min-height:48px;font-family:\'Hanken Grotesk\';font-weight:800;font-size:16px;letter-spacing:.01em;border-radius:10px;cursor:pointer;transition:background 160ms linear,color 160ms linear;' +
+      (top ? 'background:#F2711C;color:#101418;border:0;' : 'background:transparent;color:#1AA9DE;border:1.5px solid #1AA9DE;');
+    return {
+      t7Zona: ['kids', 'jump'].map((k) => ({ nombre: META[k].corto, elegir: () => this.setState({ z7: k }), estilo: seg(z === k) })),
+      t7Tickets: ['1H', '2H', '3H'].map((k) => ({
+        zonaEtq: m.zona,
+        duracion: nom[k], min: mins[k], top: k === '2H',
+        precio: eur(lab[k]),
+        notaFinde: 'Finde y festivos ' + eur(fin[k]) + ' €',
+        incluye: m.incluye.concat([extra[k]]),
+        cta: 'Reservar ' + nom[k],
+        estiloCta: cta(k === '2H')
+      }))
+    };
+  }
+
+  turno6() {
+    const st = this.state;
+    const eur = (c) => this.eur(c);
+    const z = st.z6 || 'jump';
+    const META = {
+      kids: { corto: 'Kids', zona: 'Zona Kids', edad: '1–12 años',
+        incluye: ['Acceso a Zona Kids', 'Un adulto acompañante entra gratis'] },
+      jump: { corto: 'Jump', zona: 'Zona Jump', edad: 'desde 6 años',
+        incluye: ['Acceso a Zona Jump', 'Circuito ninja y retos cronometrados'] }
+    };
+    const nom = { '1H': '1 hora', '2H': '2 horas', '3H': '3 horas' };
+    const mins = { '1H': '60 min', '2H': '120 min', '3H': '180 min' };
+    const extra = { '1H': 'Calcetines antideslizantes incluidos', '2H': 'Calcetines y taquilla incluidos', '3H': 'Calcetines, taquilla y bebida' };
+    const m = META[z];
+    const lab = this.POR_DIA[z].lab;
+    const fin = this.POR_DIA[z].fin;
+    const seg = (on) => "font-family:'Hanken Grotesk';font-size:15px;min-height:44px;padding:0 22px;border-radius:999px;border:0;cursor:pointer;transition:background 240ms linear,color 240ms linear;" +
+      (on ? 'background:#101418;color:#F4F4F1;font-weight:800;' : 'background:transparent;color:#101418;font-weight:600;');
+    const cta = (top) => 'width:100%;min-height:48px;font-family:\'Hanken Grotesk\';font-weight:800;font-size:16px;letter-spacing:.01em;border-radius:10px;cursor:pointer;transition:background 160ms linear,color 160ms linear;' +
+      (top ? 'background:#F2711C;color:#101418;border:0;' : 'background:transparent;color:#0A5C93;border:1.5px solid #0A5C93;');
+    const AUDITORIA = [
+      { n: '01', t: 'Fondo cian pleno, no amarillo.', d: 'Amarillo Aviso #F5C400: «nunca fondo de sección ni botón». Se queda solo en el chip de «la más elegida», que es resalte tipo marcador. El fondo es el que fija el stack para Precios: cian #1AA9DE a sangre.' },
+      { n: '02', t: 'Un solo relleno naranja.', d: 'Naranja Salto #F2711C: «un único relleno naranja por pantalla». Lo lleva la entrada recomendada; las otras dos pasan a botón fantasma en Azul Muro #0A5C93 con borde 1,5 px.' },
+      { n: '03', t: 'Precio en Lima sobre tinta.', d: 'Ficha de Precios del stack: «dato XL en Lima sobre tinta, o en tinta sobre cian». Franja de tinta a sangre dentro de la tarjeta y cifra en #A3C21C a 52 px, el escalón Display L.' },
+      { n: '04', t: 'Fuera la pegatina.', d: 'Borde 2 px + sombra dura 5 px: «un solo elemento por pantalla lo lleva; en una rejilla de tarjetas, jamás». Tarjeta blanca con borde 1 px #D6D8D4 y sin sombra.' },
+      { n: '05', t: 'Radios del sistema.', d: '16 tarjeta, 10 botón de 48 px, 6 chip, 999 el filtro de zona. En 5c había un 4 y un 12 puestos a ojo, y el filtro era un rectángulo.' },
+      { n: '06', t: 'Una sola mancha.', d: 'B5: «mancha pequeña + texto girado 6–8°, máximo una por pantalla». En 5c había un sello por tarjeta; aquí hay una mancha en tinta con la promo del martes, girada −6°, dentro del rango −2° a −8°.' },
+      { n: '07', t: 'Icono ui/entrada 3c.', d: 'Lote 4 de la página de iconos: «3c para producción». Va a 20 px —uno de los dos tamaños del sistema— en Azul Muro, que es la voz del cian en superficie clara.' }
+    ];
+    return {
+      t6Auditoria: AUDITORIA,
+      t6Zona: ['kids', 'jump'].map((k) => ({ nombre: META[k].corto, elegir: () => this.setState({ z6: k }), estilo: seg(z === k) })),
+      t6Tickets: ['1H', '2H', '3H'].map((k) => ({
+        zonaEtq: m.zona,
+        duracion: nom[k], min: mins[k] + ' · ' + m.edad, top: k === '2H',
+        precio: eur(lab[k]),
+        notaFinde: eur(fin[k]) + ' €',
+        incluye: m.incluye.concat([extra[k]]),
+        cta: 'Reservar ' + nom[k],
+        estiloCta: cta(k === '2H')
+      }))
+    };
+  }
+
+  turno5() {
+    const s = this.state;
+    const eur = (c) => this.eur(c);
+    const nom = { '1H': '1 hora', '2H': '2 horas', '3H': '3 horas' };
+    const mins = { '1H': '60 min', '2H': '120 min', '3H': '180 min' };
+    const hrs = { '1H': 1, '2H': 2, '3H': 3 };
+    const extra = { '1H': 'Calcetines antideslizantes incluidos', '2H': 'Calcetines y taquilla incluidos', '3H': 'Calcetines, taquilla y bebida' };
+    const META = {
+      kids: { corto: 'Kids', zona: 'Zona Kids', edad: '1 – 12 años', color: '#1AA9DE',
+        incluye: ['Acceso a Zona Kids', 'Un adulto acompañante entra gratis'] },
+      jump: { corto: 'Jump', zona: 'Zona Jump', edad: 'Desde 6 años', color: '#F2711C',
+        incluye: ['Acceso a Zona Jump', 'Circuito ninja y retos cronometrados'] }
+    };
+    const claves = ['1H', '2H', '3H'];
+    const seg = (on) => "font-family:'Hanken Grotesk';font-size:14px;min-height:42px;padding:0 16px;border-radius:8px;border:0;cursor:pointer;transition:background 240ms linear,color 240ms linear;" +
+      (on ? 'background:#101418;color:#F4F4F1;font-weight:800;' : 'background:transparent;color:#101418;font-weight:600;');
+
+    const z5a = s.z5a || 'kids';
+    const d5a = s.d5a || 'lab';
+    const m5a = META[z5a];
+    const tarA = this.POR_DIA[z5a][d5a];
+    const otraA = this.POR_DIA[z5a][d5a === 'lab' ? 'fin' : 'lab'];
+    const giro = [-1.2, 0.9, -0.7];
+
+    const t5bTickets = [];
+    ['kids', 'jump'].forEach((zs) => {
+      const m = META[zs];
+      claves.forEach((k) => {
+        const lab = this.POR_DIA[zs].lab[k];
+        const fin = this.POR_DIA[zs].fin[k];
+        t5bTickets.push({
+          zonaEtq: m.zona + ' · ' + m.edad,
+          duracion: nom[k], min: mins[k], top: k === '2H',
+          precio: eur(lab), finde: 'Finde y festivos ' + eur(fin) + ' €',
+          resumen: m.incluye[1] + '. ' + extra[k] + '.',
+          serie: m.corto.toUpperCase() + ' · ' + k,
+          estiloPunto: 'width:11px;height:11px;border-radius:50%;background:' + m.color + ';border:1.5px solid #101418;flex:0 0 auto;',
+          estilo: 'position:relative;display:flex;align-items:stretch;text-align:left;background:#F4F4F1;color:#101418;border:2px solid #101418;border-radius:12px;cursor:pointer;' +
+            'box-shadow:' + (k === '2H' ? '5px 7px 0 #F5C400' : '5px 7px 0 rgba(244,244,241,.22)') + ';transition:transform 220ms cubic-bezier(.2,.9,.2,1),box-shadow 220ms ease;'
+        });
+      });
+    });
+
+    const z5c = s.z5c || 'jump';
+    const m5c = META[z5c];
+    const tarC = this.POR_DIA[z5c].lab;
+    const finC = this.POR_DIA[z5c].fin;
+
+    return {
+      t5aZona: ['kids', 'jump'].map((k) => ({ nombre: META[k].corto, elegir: () => this.setState({ z5a: k }), estilo: seg(z5a === k) })),
+      t5aDia: [{ k: 'lab', n: 'Entre semana' }, { k: 'fin', n: 'Finde y festivos' }].map((d) => ({ nombre: d.n, elegir: () => this.setState({ d5a: d.k }), estilo: seg(d5a === d.k) })),
+      t5aTickets: claves.map((k, i) => ({
+        zonaEtq: m5a.zona + ' · ' + m5a.edad,
+        duracion: nom[k], top: k === '2H',
+        precio: eur(tarA[k]),
+        porHora: eur(Math.round(tarA[k] / hrs[k])) + ' € por hora',
+        notaDia: (d5a === 'lab' ? 'Finde y festivos ' : 'Entre semana ') + eur(otraA[k]) + ' €',
+        serie: 'PJP · ' + m5a.corto.toUpperCase() + ' · ' + k,
+        incluye: m5a.incluye.concat([extra[k]]),
+        cta: 'Reservar ' + nom[k],
+        estilo: 'position:relative;display:flex;flex-direction:column;text-align:left;background:' + (k === '2H' ? '#F5C400' : '#FFFFFF') +
+          ';border:2px solid #101418;border-radius:14px;box-shadow:' + (k === '2H' ? '7px 9px 0 #101418' : '5px 6px 0 #101418') +
+          ';transform:rotate(' + giro[i] + 'deg);transition:transform 240ms cubic-bezier(.2,.9,.2,1),box-shadow 240ms cubic-bezier(.2,.9,.2,1);'
+      })),
+      t5bTickets,
+      t5cZona: ['kids', 'jump'].map((k) => ({ nombre: META[k].corto, elegir: () => this.setState({ z5c: k }), estilo: seg(z5c === k) })),
+      t5cTickets: claves.map((k) => ({
+        zonaEtq: m5c.zona + ' · ' + m5c.edad,
+        duracion: nom[k], min: mins[k], top: k === '2H',
+        precio: eur(tarC[k]),
+        notaDia: 'Finde y festivos ' + eur(finC[k]) + ' €',
+        incluye: m5c.incluye.concat([extra[k]]),
+        cta: 'Reservar ' + nom[k],
+        estilo: 'position:relative;display:flex;flex-direction:column;background:#FFFFFF;border:2.5px solid #101418;border-radius:4px;transition:transform 200ms cubic-bezier(.2,.9,.2,1),box-shadow 200ms ease;' +
+          'box-shadow:' + (k === '2H' ? '9px 10px 0 #101418' : '5px 6px 0 rgba(16,20,24,.5)') + ';',
+        estiloSello: 'position:absolute;top:-20px;right:-16px;width:98px;height:98px;border-radius:50%;background:' + (k === '2H' ? '#F2711C' : m5c.color) +
+          ';border:2.5px solid #101418;color:#101418;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;transform:rotate(-9deg);box-shadow:3px 4px 0 #101418;'
+      }))
+    };
+  }
+
+  renderVals() {
+    const p = this.props;
+    const s = this.state;
+    const Z = this.ZONAS;
+    const eur = (c) => this.eur(c);
+    const pordef = String(p.entradaPorDefecto || '2H');
+    const dK = s.durKids || pordef;
+    const dJ = s.durJump || pordef;
+    const zB = s.zonaB || 'jump';
+    const dB = s.durB || '90';
+    const zona = Z[zB];
+    const calcDentro = p.precioIncluyeCalcetines === true;
+
+    const fila = (on) => 'display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;text-align:left;min-height:62px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:background 240ms linear,border-color 240ms linear,box-shadow 240ms linear;' +
+      (on
+        ? 'background:#F7F5EF;border:1.5px solid #101418;box-shadow:none;'
+        : 'background:#FFFFFF;border:1px solid #E8E9E5;box-shadow:none;');
+
+    const tarjeta = (activa) => 'position:relative;background:#FFFFFF;border:1px solid #D6D8D4;border-radius:16px;padding:28px 30px 30px;cursor:pointer;transition:transform 180ms cubic-bezier(.4,0,.2,1),box-shadow 180ms cubic-bezier(.4,0,.2,1),border-color 180ms linear;transform-origin:50% 100%;' +
+      (activa
+        ? 'border-top:5px solid #101418;box-shadow:0 14px 30px rgba(16,20,24,.16);transform:translateY(-4px);'
+        : 'border-top:5px solid #D6D8D4;box-shadow:none;');
+
+    const pestana = (on, z) => 'display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:20px 22px;border-radius:16px;cursor:pointer;transition:background 240ms linear,border-color 240ms linear,color 240ms linear;' +
+      (on
+        ? 'background:' + Z[z].tinte + ';border:1.5px solid ' + Z[z].borde + ';color:#F4F4F1;'
+        : 'background:#1A1F25;border:1.5px solid #2A3138;color:#9AA1A8;');
+
+    const franja = (on) => 'font-family:\'JetBrains Mono\';font-size:14px;min-height:52px;border-radius:8px;cursor:pointer;transition:background 240ms linear,color 240ms linear,border-color 240ms linear;' +
+      (on
+        ? 'background:' + zona.barra + ';color:#101418;border:1px solid ' + zona.barra + ';font-weight:700;'
+        : 'background:#1A1F25;color:#9AA1A8;border:1px solid #2A3138;');
+
+    const lona = (i, on) => 'height:7px;transform-origin:50% 0;background:' + (on ? zona.barra : '#2A3138') + ';transition:background 240ms linear;animation:pjphunde 420ms cubic-bezier(.2,1.56,.25,1) ' + (i * 90) + 'ms both;' +
+      (i === 0 ? 'border-radius:999px 0 0 999px;' : i === 2 ? 'border-radius:0 999px 999px 0;' : '');
+
+    const activa = s.selA;
+    const dia = s.dia2 || 'lab';
+    const sel2 = s.sel2 || 'kids';
+    const dK2 = s.durK2 || pordef;
+    const dJ2 = s.durJ2 || pordef;
+    const tarifaK = this.POR_DIA.kids[dia];
+    const tarifaJ = this.POR_DIA.jump[dia];
+    const etiquetaDia = dia === 'lab' ? 'de lunes a viernes' : 'fin de semana y festivos';
+    const segmento = (on) => 'font-family:\'Hanken Grotesk\';font-size:14.5px;min-height:44px;padding:0 18px;border-radius:8px;border:0;cursor:pointer;transition:background 240ms linear,color 240ms linear;' +
+      (on ? 'background:#101418;color:#F4F4F1;font-weight:800;' : 'background:transparent;color:#101418;font-weight:600;');
+    const pieCalc = calcDentro
+      ? 'Calcetines antideslizantes incluidos en la entrada.'
+      : 'Calcetines antideslizantes obligatorios: 3,00 € el par, o tráelos de casa.';
+
+    const d3K = s.d3K || pordef;
+    const d3J = s.d3J || pordef;
+    const tiraZ = s.tiraZ || 'jump';
+    const tiraD = s.tiraD || pordef;
+    const seg3 = (on) => 'font-family:\'Hanken Grotesk\';font-size:14px;min-height:40px;padding:0 16px;border-radius:8px;border:0;cursor:pointer;transition:background 240ms linear,color 240ms linear;' +
+      (on ? 'background:#F5C400;color:#101418;font-weight:800;' : 'background:transparent;color:rgba(244,244,241,.6);font-weight:600;');
+    const fila3 = (on) => 'display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;min-height:52px;padding:9px 14px;border-radius:9px;cursor:pointer;transition:background 220ms linear,color 220ms linear,border-color 220ms linear;' +
+      (on ? 'background:#101418;color:#F4F4F1;border:1.5px solid #101418;' : 'background:transparent;color:#101418;border:1.5px dashed rgba(16,20,24,.3);');
+    const boleto = (on, i) => 'position:relative;flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:17px 16px 15px;background:#F4F4F1;color:#101418;cursor:pointer;text-align:left;transition:transform 300ms cubic-bezier(.34,1.42,.5,1),box-shadow 300ms ease;' +
+      (i > 0 ? 'border:0;border-left:2px dashed rgba(16,20,24,.42);' : 'border:0;') +
+      (i === 0 ? 'border-radius:10px 0 0 10px;' : i === 2 ? 'border-radius:0 10px 10px 0;' : '') +
+      (on ? 'transform:translateY(-18px) rotate(-2.4deg);box-shadow:8px 10px 0 #101418;z-index:2;border-radius:10px;' : 'transform:none;z-index:1;');
+    const tarifaTira = tiraZ === 'kids' ? tarifaK : tarifaJ;
+    const f4 = s.fecha4 || 'sab12';
+    const dia4 = f4 === 'sab12' ? 'fin' : 'lab';
+    const chip4 = (on) => 'display:flex;flex-direction:column;align-items:center;gap:2px;flex:1 1 0;min-height:64px;padding:10px 8px;border-radius:10px;cursor:pointer;transition:background 200ms linear,color 200ms linear,border-color 200ms linear;' +
+      (on ? 'background:#101418;color:#F4F4F1;border:1.5px solid #101418;' : 'background:#FFFFFF;color:#101418;border:1px solid #D6D8D4;');
+    const boletoM = (on, i) => 'position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:66px;padding:13px 15px;background:#F4F4F1;color:#101418;cursor:pointer;text-align:left;transition:transform 300ms cubic-bezier(.34,1.42,.5,1),box-shadow 300ms ease;' +
+      (i > 0 ? 'border:0;border-top:2px dashed rgba(16,20,24,.42);' : 'border:0;') +
+      (i === 0 ? 'border-radius:10px 10px 0 0;' : i === 2 ? 'border-radius:0 0 10px 10px;' : '') +
+      (on ? 'transform:translateX(13px) rotate(-1.4deg);box-shadow:6px 8px 0 #101418;z-index:2;border-radius:10px;' : 'transform:none;z-index:1;');
+
+    return {
+      ...this.turno7(),
+      ...this.turno6(),
+      ...this.turno5(),
+      verA: !!s.playA, verB: !!s.playB, verC: !!s.playC,
+      est3DiaLab: seg3(dia === 'lab'), est3DiaFin: seg3(dia === 'fin'),
+      k3h1: () => this.setState({ d3K: '1H' }), k3h2: () => this.setState({ d3K: '2H' }), k3h3: () => this.setState({ d3K: '3H' }),
+      j3h1: () => this.setState({ d3J: '1H' }), j3h2: () => this.setState({ d3J: '2H' }), j3h3: () => this.setState({ d3J: '3H' }),
+      est3K1: fila3(d3K === '1H'), est3K2: fila3(d3K === '2H'), est3K3: fila3(d3K === '3H'),
+      est3J1: fila3(d3J === '1H'), est3J2: fila3(d3J === '2H'), est3J3: fila3(d3J === '3H'),
+      p3Kids: eur(tarifaK[d3K]), u3Kids: 'Kids ' + d3K + ' · ' + (dia === 'lab' ? 'L–V' : 'finde'),
+      p3Jump: eur(tarifaJ[d3J]), u3Jump: 'Jump ' + d3J + ' · ' + (dia === 'lab' ? 'L–V' : 'finde'),
+      cta3Kids: 'Reservar Kids ' + d3K + ' · ' + eur(tarifaK[d3K]) + ' €',
+      cta3Jump: 'Reservar Jump ' + d3J + ' · ' + eur(tarifaJ[d3J]) + ' €',
+      tk1: () => this.setState({ tiraZ: 'kids', tiraD: '1H' }), tk2: () => this.setState({ tiraZ: 'kids', tiraD: '2H' }), tk3: () => this.setState({ tiraZ: 'kids', tiraD: '3H' }),
+      tj1: () => this.setState({ tiraZ: 'jump', tiraD: '1H' }), tj2: () => this.setState({ tiraZ: 'jump', tiraD: '2H' }), tj3: () => this.setState({ tiraZ: 'jump', tiraD: '3H' }),
+      estTiraK1: boleto(tiraZ === 'kids' && tiraD === '1H', 0), estTiraK2: boleto(tiraZ === 'kids' && tiraD === '2H', 1), estTiraK3: boleto(tiraZ === 'kids' && tiraD === '3H', 2),
+      estTiraJ1: boleto(tiraZ === 'jump' && tiraD === '1H', 0), estTiraJ2: boleto(tiraZ === 'jump' && tiraD === '2H', 1), estTiraJ3: boleto(tiraZ === 'jump' && tiraD === '3H', 2),
+      pDK1: eur(this.POR_DIA.kids.lab['1H']), pDK2: eur(this.POR_DIA.kids.lab['2H']), pDK3: eur(this.POR_DIA.kids.lab['3H']),
+      pDJ1: eur(this.POR_DIA.jump.lab['1H']), pDJ2: eur(this.POR_DIA.jump.lab['2H']), pDJ3: eur(this.POR_DIA.jump.lab['3H']),
+      pFK1: eur(this.POR_DIA.kids.fin['1H']), pFK2: eur(this.POR_DIA.kids.fin['2H']), pFK3: eur(this.POR_DIA.kids.fin['3H']),
+      pFJ1: eur(this.POR_DIA.jump.fin['1H']), pFJ2: eur(this.POR_DIA.jump.fin['2H']), pFJ3: eur(this.POR_DIA.jump.fin['3H']),
+      pon4Vie: () => this.setState({ fecha4: 'vie11' }), pon4Sab: () => this.setState({ fecha4: 'sab12' }), pon4Mar: () => this.setState({ fecha4: 'mar15' }),
+      est4Vie: chip4(f4 === 'vie11'), est4Sab: chip4(f4 === 'sab12'), est4Mar: chip4(f4 === 'mar15'),
+      etq4Dia: dia4 === 'lab' ? 'Lunes a viernes' : 'Fin de semana y festivos',
+      nombre4: (tiraZ === 'kids' ? 'Entrada Kids ' : 'Entrada Jump ') + tiraD,
+      zona4: tiraZ === 'kids' ? 'Zona Kids · 1 – 12 años' : 'Zona Jump · desde 6 años',
+      desde4: eur(this.POR_DIA[tiraZ].lab[tiraD]),
+      p4Final: eur(this.POR_DIA[tiraZ][dia4][tiraD]),
+      delta4: dia4 === 'lab'
+        ? 'Es la tarifa más barata: el día que has elegido entra en lunes a viernes.'
+        : 'Sábado, domingo, festivo o víspera: ' + eur(this.POR_DIA[tiraZ].fin[tiraD] - this.POR_DIA[tiraZ].lab[tiraD]) + ' € más que de lunes a viernes.',
+      esFin4: dia4 === 'fin', esLab4: dia4 === 'lab',
+      estMK1: boletoM(tiraZ === 'kids' && tiraD === '1H', 0), estMK2: boletoM(tiraZ === 'kids' && tiraD === '2H', 1), estMK3: boletoM(tiraZ === 'kids' && tiraD === '3H', 2),
+      estMJ1: boletoM(tiraZ === 'jump' && tiraD === '1H', 0), estMJ2: boletoM(tiraZ === 'jump' && tiraD === '2H', 1), estMJ3: boletoM(tiraZ === 'jump' && tiraD === '3H', 2),
+      ctaTira: 'Reservar ' + (tiraZ === 'kids' ? 'Kids ' : 'Jump ') + tiraD + ' · ' + eur(tarifaTira[tiraD]) + ' €',
+      ctaTiraCorta: (tiraZ === 'kids' ? 'Kids ' : 'Jump ') + tiraD + ' · ' + eur(tarifaTira[tiraD]) + ' €',
+      notaTira: tiraZ === 'kids' ? 'Kids: un adulto acompañante entra gratis con cada entrada.' : 'Jump: desde 6 años cumplidos y sin edad máxima.',
+      juegaA: this.rejugar('playA'), juegaB: this.rejugar('playB'), juegaC: this.rejugar('playC'),
+      verBonos: p.mostrarBonos !== false,
+      calcetinesDentro: calcDentro, calcetinesFuera: !calcDentro, pieCalcetines: pieCalc,
+      etiquetaCalcetines: calcDentro ? 'Calcetines antideslizantes' : 'Calcetines antideslizantes (obligatorios)',
+      precioCalcetines: calcDentro ? 'incluidos' : '3,00 €',
+
+      eligeKids: () => this.setState({ selA: 'kids' }),
+      eligeJump: () => this.setState({ selA: 'jump' }),
+      kidsActiva: activa === 'kids', kidsInactiva: activa !== 'kids',
+      jumpActiva: activa === 'jump', jumpInactiva: activa !== 'jump',
+      estTarjetaKids: tarjeta(activa === 'kids'),
+      estTarjetaJump: tarjeta(activa === 'jump'),
+      kids1: () => this.setState({ selA: 'kids', durKids: '1H' }),
+      kids2: () => this.setState({ selA: 'kids', durKids: '2H' }),
+      kids3: () => this.setState({ selA: 'kids', durKids: '3H' }),
+      jump1: () => this.setState({ selA: 'jump', durJump: '1H' }),
+      jump2: () => this.setState({ selA: 'jump', durJump: '2H' }),
+      jump3: () => this.setState({ selA: 'jump', durJump: '3H' }),
+      estKids1: fila(dK === '1H'), estKids2: fila(dK === '2H'), estKids3: fila(dK === '3H'),
+      estJump1: fila(dJ === '1H'), estJump2: fila(dJ === '2H'), estJump3: fila(dJ === '3H'),
+      pk1: eur(tarifaK['1H']), pk2: eur(tarifaK['2H']), pk3: eur(tarifaK['3H']),
+      pj1: eur(tarifaJ['1H']), pj2: eur(tarifaJ['2H']), pj3: eur(tarifaJ['3H']),
+      precioKids: eur(tarifaK[dK]), unidadKids: 'Entrada Kids ' + dK + ' · ' + etiquetaDia,
+      precioJump: eur(tarifaJ[dJ]), unidadJump: 'Entrada Jump ' + dJ + ' · ' + etiquetaDia,
+      ctaKids: 'Reservar Entrada Kids ' + dK + ' · ' + eur(tarifaK[dK]) + ' €',
+      ctaJump: 'Reservar Entrada Jump ' + dJ + ' · ' + eur(tarifaJ[dJ]) + ' €',
+
+      eligeKidsB: () => this.setState({ zonaB: 'kids' }),
+      eligeJumpB: () => this.setState({ zonaB: 'jump' }),
+      estPestanaKids: pestana(zB === 'kids', 'kids'),
+      estPestanaJump: pestana(zB === 'jump', 'jump'),
+      b60: () => this.setState({ durB: '60' }),
+      b90: () => this.setState({ durB: '90' }),
+      b120: () => this.setState({ durB: '120' }),
+      estFranja60: franja(dB === '60'), estFranja90: franja(dB === '90'), estFranja120: franja(dB === '120'),
+      estLona1: lona(0, dB === '60'), estLona2: lona(1, dB === '90'), estLona3: lona(2, dB === '120'),
+      precioB: eur(zona.precios[dB]),
+      unidadB: '/ ' + dB + ' min en ' + zona.nombre,
+      notaB: zona.nota,
+      incluyeB: zona.incluye.map((t) => ({ t: t })),
+      ctaB: 'Reservar ' + zona.corto + ' · ' + dB + ' min',
+
+      diaLab: () => this.setState({ dia2: 'lab' }),
+      diaFin: () => this.setState({ dia2: 'fin' }),
+      estDiaLab: segmento(dia === 'lab'),
+      estDiaFin: segmento(dia === 'fin'),
+      elige2Kids: () => this.setState({ sel2: 'kids' }),
+      elige2Jump: () => this.setState({ sel2: 'jump' }),
+      kids2Activa: sel2 === 'kids', kids2Inactiva: sel2 !== 'kids',
+      jump2Activa: sel2 === 'jump', jump2Inactiva: sel2 !== 'jump',
+      est2TarjetaKids: tarjeta(sel2 === 'kids'),
+      est2TarjetaJump: tarjeta(sel2 === 'jump'),
+      k2h1: () => this.setState({ sel2: 'kids', durK2: '1H' }),
+      k2h2: () => this.setState({ sel2: 'kids', durK2: '2H' }),
+      k2h3: () => this.setState({ sel2: 'kids', durK2: '3H' }),
+      j2h1: () => this.setState({ sel2: 'jump', durJ2: '1H' }),
+      j2h2: () => this.setState({ sel2: 'jump', durJ2: '2H' }),
+      j2h3: () => this.setState({ sel2: 'jump', durJ2: '3H' }),
+      est2Kids1: fila(dK2 === '1H'), est2Kids2: fila(dK2 === '2H'), est2Kids3: fila(dK2 === '3H'),
+      est2Jump1: fila(dJ2 === '1H'), est2Jump2: fila(dJ2 === '2H'), est2Jump3: fila(dJ2 === '3H'),
+      p2k1: eur(tarifaK['1H']), p2k2: eur(tarifaK['2H']), p2k3: eur(tarifaK['3H']),
+      p2j1: eur(tarifaJ['1H']), p2j2: eur(tarifaJ['2H']), p2j3: eur(tarifaJ['3H']),
+      precio2Kids: eur(tarifaK[dK2]), unidad2Kids: 'Entrada Kids ' + dK2 + ' · ' + etiquetaDia,
+      precio2Jump: eur(tarifaJ[dJ2]), unidad2Jump: 'Entrada Jump ' + dJ2 + ' · ' + etiquetaDia,
+      cta2Kids: 'Reservar Kids ' + dK2 + ' · ' + eur(tarifaK[dK2]) + ' €',
+      cta2Jump: 'Reservar Jump ' + dJ2 + ' · ' + eur(tarifaJ[dJ2]) + ' €'
+    };
+  }
+}
+
+</script>
+</body>
+</html>
