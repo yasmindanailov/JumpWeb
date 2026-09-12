@@ -948,7 +948,7 @@ de escritorio) y `doc/paginas.md` del canvas.
 | T3a·3 | **El armazón · la CABECERA de página**: rótulo con la ruta · Display L · entradilla · aire 96/144 | ✅ `#525` — las interiores sencillas y las pantallas de servicio; `/cumpleanos` y `/servicios` en su T3b · revisada por el owner: OK |
 | T3a·4 | **El armazón · el CIERRE en las interiores**: la tarjeta de la portada sin juego ni eslogan, solo «Reservar» | ↩️ `#526` construida y **revertida por `#527`** (`[DECIDIDO owner]`): las interiores acaban en el pie de `#522`, sin tarjeta |
 | T3b·1 | **`/atracciones`** | ✅ `#481` (adelantada en la Fase 2: la puerta de la sección 03 la necesitaba) |
-| T3b·2 | **`/cumpleanos`**: el reloj, los packs comparados con contador, qué comen, el carril, «Igual en los dos», «Después de reservar» y el cierre | ✅ `#528` — revisada por el owner en vivo: OK · el vídeo del hero, cambiado en la misma jornada (`#529`) |
+| T3b·2 | **`/cumpleanos`**: el reloj, los packs comparados con contador, qué comen, el carril, «Igual en los dos», «Después de reservar» y el cierre | ✅ `#528` — revisada por el owner en vivo: OK · el vídeo del hero, cambiado en la misma jornada (`#529`) · **la FOTO de la zona entró después** (`#532`, `[DECIDIDO owner]`): es `zones.image`, va en la fila **736 + 352** con el reloj, y es la misma que `#484` retiró de la portada — falta la de la mesa, que el parque no tiene |
 | T3b·3 | **`/precios`**: sin pestaña de zona · la semana dibujada · una tabla por zona con las dos columnas de precio entero · la hora extra como fila · los festivos · «Lo que se añade» | ✅ `#531` |
 | T3b… | **Las páginas** que quedan, en el orden del Layout: `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
 
@@ -1122,7 +1122,9 @@ tarjeta de **edades mezcladas** y el aviso. ❗❗❗ *«Una comparativa solo co
 calcula en el SERVIDOR para cada número de niños** con el precio que cobra la cesta (tramos incluidos). ▶ Lo
 que no entra, por decisión del owner: **las dos fotos** (hasta que las mande), el paso a paso, el editor de
 invitaciones (con `html2canvas`) y la ficha de ejemplo. ⚠️ Quedan sin pantalla `zones.image` de cumpleaños y
-`<x-site.ilu>` (`DEUDA.md`). Guarda `BirthdayPageTest` (14) + `scripts/mutar-cumple.py` (**18/18**).
+`<x-site.ilu>` (`DEUDA.md`). Guarda `BirthdayPageTest` (14) + `scripts/mutar-cumple.py` (**20/20** desde
+`#532`, que le añadió la foto de la zona; eran 18/18 al cerrar la T3b·2). ⚠️ **`zones.image` ya NO está
+sin pantalla**: la publica esta página desde `#532`.
 
 ▶ **EL ARMAZÓN QUEDA COMPLETO con T3a·1 → T3a·3** (la T3a·4 se retiró por decisión del owner), y de las páginas
 están `/atracciones` y `/cumpleanos`. Lo siguiente, en el orden del Layout: `/precios` · `/normas` ·

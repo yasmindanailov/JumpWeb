@@ -64,22 +64,42 @@ class PublicPagesTest extends TestCase
         }
     }
 
-    public function test_the_step_by_step_and_the_zone_photo_are_gone_too(): void
+    public function test_the_step_by_step_is_gone_and_the_zone_photo_lives_only_on_its_page(): void
     {
         /*
          * El «paso a paso» (`birthdayProcess`) salió de la portada en `#483` y de su página en `#528`
-         * (`[DECIDIDO owner]`: el artboard no lo trae).
-         * ⚠️⚠️ **Y la foto de la zona cumpleaños ya no la pinta NADIE**: salió de la portada en
-         * `#484` —era el comedor vacío— y la página rehecha **no lleva fotos hasta que el owner mande
-         * las del artboard** (`[DECIDIDO owner]`, `#528`: «o la foto vende o no está»). Con eso
-         * `zones.image` de esa zona se queda **sin consumidor**; ficha en `DEUDA.md`.
+         * (`[DECIDIDO owner]`: el artboard no lo trae). Eso no ha cambiado.
+         *
+         * ❗❗ **ESTE CASO CAMBIÓ DE PREMISA EN `#532` Y SE REESCRIBIÓ** (el precedente de `#324`):
+         * hasta entonces aseveraba que la foto de la zona **no la pinta NADIE**, porque `#484` la
+         * retiró de la portada —era el comedor vacío— y `#528` dejó su página sin fotos. El owner
+         * decidió en `#532`, viéndola en vivo y con el rechazo de `#484` delante, **publicarla en
+         * `/cumpleanos`**.
+         *
+         * ▶ Y por eso las dos superficies **dejan de ir en un bucle**: hoy dicen cosas distintas, y
+         * meterlas en la misma vuelta era lo que hacía que una decisión sobre una tocara a la otra.
+         *  · **PORTADA**: la foto sigue FUERA, y esa mitad es la que protege `#484` —*volver a la
+         *    cabecera sobre foto tiene que ser una decisión, no el efecto lateral de subir una imagen
+         *    al panel*—. `#532` retiró además el `partyImage` que la portada calculaba sin pintarlo.
+         *  · **`/cumpleanos`**: la foto ESTÁ, y sale de `zones.image` (el campo del panel).
+         * ⚠️ La aserción de la página se acota al bloque de la foto: la ruta suelta también viaja en
+         * el `data-boot` del cajón y en el JSON-LD, así que buscarla en el documento entero pasaría
+         * en verde con la figura retirada.
          */
-        foreach (['/', '/cumpleanos'] as $url) {
-            $this->get($url)->assertOk()
-                ->assertDontSee('birthdayProcess', false)
-                ->assertDontSee('Cómo se reserva')
-                ->assertDontSee('images/attractions/cumplea_1.webp', false);
-        }
+        $this->get('/')->assertOk()
+            ->assertDontSee('birthdayProcess', false)
+            ->assertDontSee('Cómo se reserva')
+            ->assertDontSee('images/attractions/cumplea_1.webp', false);
+
+        $pagina = (string) $this->get('/cumpleanos')->assertOk()
+            ->assertDontSee('birthdayProcess', false)
+            ->assertDontSee('Cómo se reserva')
+            ->getContent();
+
+        preg_match('#<figure class="party-photo">.*?</figure>#s', $pagina, $figura);
+
+        $this->assertNotEmpty($figura, 'la página de cumpleaños perdió la foto de la zona (`#532`)');
+        $this->assertStringContainsString('images/attractions/cumplea_1.webp', $figura[0]);
     }
 
     public function test_footer_has_account_link_in_info(): void

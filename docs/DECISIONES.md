@@ -28887,3 +28887,77 @@ suite.*
 los complementos y la salida a 287×48—, con desborde **0**. No declara ni un comportamiento propio, pero
 **eso se comprueba y no se supone**: el armazón sí lleva JS, y una pieza que naciera esperando a Alpine se
 quedaría invisible sin que nada fallara.
+
+## #532 · 2026-09-12 · `[DECIDIDO owner]` La foto de la zona entra en `/cumpleanos` — y es la misma que `#484` retiró de la portada
+
+**Contexto.** El owner: *«no veo las fotos de cumpleanos»*. La página se construyó **sin ninguna**
+(`#528`, `[DECIDIDO owner]`: *«o la foto vende o no está»*), así que lo primero fue medir si había
+algo que enseñar.
+
+---
+
+**❗❗❗ 1 · MEDIDO ANTES DE OFRECER NADA: EL PARQUE NO TIENE LAS FOTOS DEL ARTBOARD.**
+
+`Cumpleanos Pagina PJP` pide **dos a 16:9**: la zona montada y la mesa puesta. Revisadas **las 35
+fotos** de `public/images/attractions/` —las 26 asignadas y las 9 sueltas de `#314`— mirándolas una a
+una: piscina de bolas, camas elásticas, coches, futbolín, el cubo… **ninguna enseña una fiesta montada
+ni una mesa con comida**. La única llamada «cumpleaños» es `cumplea_1.webp`, **el comedor vacío**.
+
+▶ Se le ofrecieron **cuatro salidas con su consecuencia** (mandarlas él · usar el comedor · elegir
+entre las 35 · dejarla sin fotos) y eligió **el comedor**.
+
+**❗❗❗ 2 · Y ES LA FOTO QUE ÉL MISMO RECHAZÓ HACE DOS DÍAS.** `#484` la retiró de la cabecera de la
+sección 04 `[DECIDIDO owner]`, sobre **tres variantes renderizadas**, con el motivo escrito: *«el
+comedor vacío: filas de mesas y sillas, sin tarta y sin niños. Dice cafetería a la hora de cerrar»*.
+▶ Por eso **no se dio por buena**: se montó y se le enseñó **en vivo** con ese hecho delante, que es
+como se decidió aquello y lo que la casa hace con lo que ocupa más de una pantalla (`#527`). Con la
+página cargada dijo que sí. ⚠️ **Y no vuelve a la portada**: `#484` dejó escrito que recuperar la
+cabecera sobre foto tiene que ser **una decisión**, no el efecto lateral de subir una imagen al panel.
+
+---
+
+**❗❗ 3 · LA FOTO ES DATO, Y SU AUSENCIA ES UNA RESPUESTA.**
+
+Sale de **`zones.image`** de la zona del pack —el campo que el panel ya ofrece, del que salía la
+polaroid de la página anterior—, así que el día que llegue una foto de un cumple montado **se cambia
+en el panel y no se toca una línea de código**. Sin foto **no se pinta nada**: ni figura ni hueco gris
+esperando, que es la regla del canvas para la tarjeta del bar y la que `/atracciones` ya aplica.
+⚠️ **El `alt` es el nombre de la ZONA y también sale del panel** (la convención de `/atracciones` con
+el nombre de la atracción): describir con una frase escrita en la vista lo que enseña una imagen que
+cambia por instalación sería afirmar algo que el producto no sabe.
+
+**❗❗ 4 · LA FILA DEL ARTBOARD, 736 + 352, SIN ESCRIBIR NINGUNA DE LAS DOS MEDIDAS.**
+
+En escritorio la foto va con el reloj al lado, que es el reparto que el artboard publica en datos. Se
+consigue con la rejilla de **doce pistas y 32 de hueco sobre 1120** que ya usan Reseñas y Dudas
+(`#488`): cada pista mide 64, así que `span 8` da **736** y `span 4` **352**, al dígito.
+⚠️ **Sin foto el reloj es hijo único y ocupa las doce pistas**, o sea la misma fila entera que tenía
+antes: la rejilla no estorba cuando el dato falta.
+⚠️⚠️ **Dentro de 352 el reloj vuelve a UNA columna.** En escritorio se parte en dos —regla a la
+izquierda, carril a la derecha— y eso vale en la fila entera de la portada, que comparte el
+componente; en la columna estrecha las dos mitades se estrangulan. **La regla de la portada no se
+toca**: la nueva acota por el contenedor (`.party-hero > .party__clock`).
+
+---
+
+**▶ 5 · Y DESTAPÓ UN HUÉRFANO EN LA PORTADA, QUE SE RETIRA.**
+
+`HomeController` seguía calculando **`partyImage`** —con su relación `zone` cargada— en **cada visita**
+a la portada, y **ninguna vista lo pintaba** desde `#484`. Medido: cero consumidores en `resources/`,
+y `PartyCards` no mira la zona, así que el *eager load* tampoco servía a nadie. Retirado con su
+comentario, que además afirmaba lo contrario de lo que pasaba (*«conserva su consumidor»*).
+▶ *Un dato que se calcula para nadie no falla, no avisa y sobrevive a la decisión que lo dejó sin
+pantalla.* Con esto `zones.image` tiene **exactamente una** superficie, y la ficha de `DEUDA.md` que
+lo daba por huérfano se cierra.
+
+---
+
+**⚠️ Lo que NO se resolvió y sigue fichado**: la **foto de la mesa** (en «Qué comen», donde el artboard
+reparte 544 + 544) **no existe y no tiene campo** — cuando llegue hay que decidir de dónde sale. Y la
+que se publica hoy sigue siendo un comedor vacío: la sustituye el owner desde el panel el día que
+tenga una de un cumple montado.
+
+**Guarda**: `BirthdayPageTest::test_the_zone_photo_is_data_and_its_absence_is_an_answer` — con foto se
+publica con su `alt` del panel; **sin foto ni figura ni hueco**, y el reloj sigue ahí (el control).
+Dos mutaciones nuevas en `scripts/mutar-cumple.py`: pintar la foto aunque el panel no tenga ninguna, y
+dejar el `alt` sin decir de qué zona es.
