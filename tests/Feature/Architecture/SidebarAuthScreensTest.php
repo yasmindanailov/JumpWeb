@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use Illuminate\Support\Facades\Lang;
 use Tests\TestCase;
 
 /**
@@ -109,7 +110,7 @@ class SidebarAuthScreensTest extends TestCase
                 // siempre. Es el mismo hueco que `#508` pagó con `Lang::has()` y su tercer
                 // parámetro. *Una aserción que no puede fallar no vigila nada.*
                 $this->assertTrue(
-                    \Illuminate\Support\Facades\Lang::has("account.{$grupo}.eyebrow", $idioma, false),
+                    Lang::has("account.{$grupo}.eyebrow", $idioma, false),
                     "`account.{$grupo}.eyebrow` se ha borrado en `{$idioma}`: NO era del cajón, la pinta la web."
                 );
             }

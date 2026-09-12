@@ -59,7 +59,10 @@ agente, en el primer ordenador, sigue con la **Fase 3** (las páginas públicas:
 > ⚠️⚠️ **ESTA SECCIÓN ES DEL 2026-09-11 Y SUS DOS PRIMEROS PUNTOS YA ESTÁN HECHOS.** Se conservan
 > porque explican de dónde viene el carril, pero **el estado real está en `ESTADO.md`** (bloque
 > «🧩 CARRIL DEL SPA»), que es lo que hay que leer para saber por dónde seguir. Al 2026-09-12: el
-> ARMAZÓN completo y **las paradas 02, 03, 04 y 05 CERRADAS** (`#550`→`#565`); **queda la parada 06**.
+> ARMAZÓN completo y **LAS SEIS PARADAS CERRADAS** (`#550`→`#566`), o sea **las 25 pantallas del cajón
+> construidas**. ▶ **Lo siguiente que el canvas deja escrito es el CUADERNO DE ENTREGA** del cajón,
+> como el que se hizo con la portada — y antes, el **OJO del owner en un teléfono de verdad**, que es
+> lo único que no puede hacer un agente y que ninguna de las 25 ha tenido.
 
 - ~~**Grieta 00** · el cuerpo del cajón está a **13 px** y el suelo del sistema son **16**~~ **CERRADA
   en `#550`** (`[DECIDIDO owner]`: 16 en las 25 pantallas).
@@ -205,6 +208,24 @@ aquí y no se reescribe lo de arriba: **la corrección va delante del texto que 
    y el cajón no es una ruta suya — la misma lección que `#557` pagó con el stepper. **Antes de
    arreglarlo hace falta una guarda que vea el cajón**; el censo bueno lo da la sonda. Ficha en
    `DEUDA.md` (Alta) y es decisión del owner: toca el armazón, o sea las 25 a la vez.
+
+   ⚠️⚠️ **CORREGIDO Y CERRADO A MEDIAS POR `#566`, y la corrección va delante del texto de arriba.**
+   **La mitad de esa medición era FALSA**: `.bk-back` **cumple** —su pseudo absoluto le da 48
+   exactos— y lo que aquella pasada leyó fue la **CAJA**, no el **ÁREA** efectiva. Es la trampa de
+   `#264` y `#307`, pagada por **tercera** vez. ⚠️ Y el que sí fallaba estaba **peor**: el aspa mide
+   **15 × 26**, o sea que tampoco llegaba de ancho — esa columna no la mira la sonda.
+   ▶ **Lo que la frase «el censo bueno lo da la sonda» tiene de engañoso**: la sonda mide cajas, así
+   que acusa a **cuatro** controles que cumplen por su pseudo (`.bk-back`, `.cart__remove`,
+   `.cal__nav`, `.bk-foot__info-btn`). *Un instrumento que acusa a lo que ya está bien no sirve para
+   escribir una guarda*: lo que vale es lo DECLARADO, y eso se lee del CSS.
+   ▶ La guarda que este punto pedía ya existe: **`SidebarTouchTargetTest`**, con el censo sacado del
+   MARCADO y una lista de 24 nominados que **solo encoge**.
+
+9. **Antes de dar por bueno un censo del canvas, cuéntalo en el código** (`#566`). En una sola tanda,
+   **tres** de sus cifras se quedaron cortas: «las únicas tres pantallas con antetítulo» eran cinco
+   —y su propio artboard dibuja cuatro—, «el alta» eran las dos, y el `<summary>` que daba por
+   resuelto estaba en cinco sitios con los mismos 20 px. ▶ *Un artboard describe el código del día en
+   que se dibujó*, y la parada 05 ya lo había pagado con tres de sus ocho puntos.
 
 9. **Hay un PEDIDO PAGADO sembrado en local, y sin él media cuenta no se puede mirar** (`#565`). El
    cliente de sonda no tenía ninguno, así que «Mis pagos», el historial y el desenlace de la reserva

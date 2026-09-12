@@ -30969,3 +30969,142 @@ pagado con señal (`R-UNPIRD`: 119,60 € · 50,00 € online · 69,60 € en el
 ❗ **QUEDA de la parada 05**: el **OJO del owner** en un teléfono de verdad. Y sigue abierta la
 negociación con el carril de la web —el canvas manda la puerta a la cuenta al racimo de la cabecera, y
 el botón del sistema (16/800 con borde) toca la familia `.btn` entera—.
+
+## #566 · T4·10 — LA PARADA 06: el suelo táctil del cajón, los antetítulos y el documento legal
+
+**Fecha**: 2026-09-12 · **Carril**: 🧩 diseño del SPA · **Fuente**: `Entrar y Crear Cuenta PJP` (6a).
+
+Cierra las **dos grietas** que le quedaban al cajón (12 y 13) y, con ellas, el **suelo táctil del
+ARMAZÓN**, que era ficha de `DEUDA.md` desde `#563`. `[DECIDIDO owner, 2026-09-12]`, con las cifras
+delante y sobre tres opciones por decisión.
+
+### Lo primero: TRES censos del canvas se quedaban cortos, y se midió antes de tocar nada
+
+| lo que decía | lo medido |
+|---|---|
+| grieta 12 · «son las únicas **TRES** pantallas con antetítulo» | son **CINCO** — y su propio artboard dibuja **cuatro**, con «Casi listo» colgando del mismo interruptor que los otros tres. El quinto (el alta con Google) ni lo dibuja |
+| grieta 13 · «en **el alta**, la política sigue metida en su párrafo» | lo pintan **las DOS** altas; y el `<summary>` del descargo —que el canvas invoca como precedente YA resuelto por la parada 03— está en **CINCO** sitios y mide los **mismos 20 px** que el enlace que venía a arreglar |
+| grieta 14 · «el alta **y la pantalla de Google** no dicen para qué piden el teléfono» | cerrada en `#561`, y su segunda mitad **ya no tiene sujeto**: esa pantalla no pide teléfono desde `#350` |
+
+▶ *Un artboard describe el código del día en que se dibujó.* Es la misma lección que la parada 05
+pagó con tres de sus ocho puntos.
+
+### Y una ficha propia que estaba MAL: `.bk-back` cumple
+
+`#563` fichó en `DEUDA.md` que el armazón no llega al suelo —«`.sidecart__close` **26** px y
+`.bk-back` **20**, contra 48»—. Medida el **área efectiva** (la caja MÁS el pseudo absoluto que la
+cubre, que es lo que pulsa el dedo): **`.bk-back` da 82 × 48 y CUMPLE**. Aquella ficha midió la
+**CAJA**, que es lo que devuelve la sonda — la trampa de `#264` y `#307`, por **tercera** vez.
+
+⚠️ Y el que sí falla está **peor** de lo fichado: el aspa de cerrar mide **15 × 26**, o sea que
+tampoco llega de ancho, y esa columna no la miraba nadie.
+
+⚠️⚠️ Pero `.bk-back` cumplía **por casualidad aritmética**: su pseudo se escribió en `#237` con
+`inset: -14px` cuando el control medía 17 px y el suelo era 44 —daba 45—, y al subir el cuerpo del
+cajón (`#550`) el control pasó a 20 y el área a **48 exactos**. *Nadie ató ese número al suelo*: el
+día que `--tap-min` suba o el cuerpo baje se queda corto sin que falle nada. Es el defecto que `#476`
+midió en la web con cinco familias que daban «exactamente 44». Hoy lee la receta del «Lote 9».
+
+### La GUARDA va primero, porque sin ella el arreglo se deshace solo
+
+`SidebarTouchTargetTest` es lo que `CARRIL-SPA.md` §7.8 pedía antes de tocar nada: **una guarda que
+vea el cajón**. `TouchTargetTest` recorre RUTAS de la web pública y el cajón no es una ruta — la
+lección que `#557` pagó con el stepper y `#563` con el armazón.
+
+▶ **El censo sale del MARCADO**, no de una lista escrita a mano: se leen las plantillas de
+`resources/js/sidebar/**` y el armazón del cajón en `layout.blade.php`, y se recogen los `<button>`,
+`<a href>`, `<summary>` y `<label class="check">` con sus clases. *Una lista a mano se queda corta en
+silencio* — es lo que le pasó a `SidebarBodySizeTest` con `qr-pass` y `dep-pick`.
+
+▶ **Y se asevera lo DECLARADO, no lo medido, a propósito.** La sonda mide cajas: con ella salen
+acusados `.bk-back`, `.cart__remove`, `.cal__nav` y `.bk-foot__info-btn`, y **los cuatro cumplen** por
+su pseudo. *Un instrumento que acusa a lo que ya está bien no sirve para escribir una guarda.*
+
+Un control alcanza el suelo por una de tres vías: `min-height: var(--tap-min)`, un `min-height`
+literal por encima del suelo, o el pseudo del «Lote 9» con `max(100%, var(--tap-min))`. Los **24** que
+hoy no lo declaran quedan **NOMINADOS con su cifra**, en una lista con trinquete que **solo encoge**.
+
+### Lo construido
+
+1. **El aspa de cerrar al suelo con el PSEUDO y no con `min-height`**: crecer de verdad engordaría la
+   cabecera **25 px** en las 32 pantallas (su alto lo manda el contenido). Dibujo intacto —15 × 26— y
+   área **48 × 48**, medida.
+2. **`.bk-back::before` deja de cumplir por casualidad** y lee el token.
+3. **Los CINCO antetítulos fuera**, con sus cinco cadenas en los tres idiomas. ⚠️ **Sobreviven los DOS
+   que pinta la WEB** (`reset` en restablecer contraseña, `orders` en reintentar el pago), y hay caso
+   que lo impide para que nadie «termine el trabajo».
+4. **El documento legal es un CONTROL**: el enlace de la política sale de su frase a una fila de **48**
+   en las dos altas (**flecha**, porque SALE a otra página) y el descargo pasa a **`WaiverDoc.vue`**,
+   una pieza para los cinco sitios que lo escribían idéntico (**chevron**, porque despliega AQUÍ). La
+   receta es la **compartida** con «Ver más fechas» y «Leer las condiciones», no una copia.
+
+### El defecto vivo que destapó buscarle sujeto a una regla
+
+Al sacar el enlace de su frase, `.form__hint a` se quedó **sin sujeto**. Antes de retirarla se buscó
+quién más hacía lo mismo sin ella, y apareció: **`NoPasswordHint` pinta un `<button>` dentro de una
+pista** —«¿no tienes contraseña? · Recupérala»— **sin ninguna regla**, así que heredaba `color:
+inherit` del párrafo y salía **sin subrayado**. Es, literalmente, el defecto que `#350` midió para el
+enlace de privacidad (*«el mismo color exacto que el párrafo»*), una pantalla más allá y sin que lo
+viera nadie en tres meses.
+
+▶ *Una regla que se queda sin sujeto no siempre sobra: a veces lo que falta es mirar quién más hacía
+lo mismo sin ella.*
+
+### Cuatro guardas cambian de premisa, y se re-apuntan MÁS FUERTES
+
+La regla de `#295`: una guarda re-apuntada no puede quedar más floja que la que sustituye.
+
+- **`SidebarTokenBudgetTest`** pedía el literal `min-height: 48px` en la receta compartida — o sea,
+  cementaba justo lo que la guarda nueva prohíbe. Hoy pide el TOKEN, y gana un caso que impide que
+  `.legal-more` COPIE la receta en vez de usarla.
+- **`SidebarMountTest`** exigía el antetítulo en tres listas y el enlace dentro del texto legal.
+- **`PrivacyNoticeIsVisibleTest`** pedía el `v-html`, que ERA la grieta. Gana el caso que ata las dos
+  mitades del mecanismo: el rótulo de la fila y su URL suelta.
+- **`SidebarActionRoleTest`** amplía su entrada acotada al `<button>` de una pista.
+
+⚠️ **El contrato de árbol se regenera a propósito** y cambian **dos** entradas —`identify_step` y
+`register_form`—, con el diff verificado: se va el `<span class=eyebrow>` y el `<a>` sale de dentro
+del párrafo para ser fila hermana. Ninguna otra se mueve.
+
+### El arnés: 11/15 a la primera, y las cuatro que no mordían eran MÍAS
+
+*Si una mutación no muerde, se arregla la guarda, no la mutación.* Las cinco debilidades que destapó:
+
+1. el pseudo se daba por bueno con «lleva el token y es absoluto» → pasaba cambiar `max(100%, …)` por
+   `var(--tap-min)` a secas, que **ENCOGE** los controles que ya cumplen (el defecto de `#264`,
+   advertido en el propio comentario del CSS);
+2. …y pasaba quitarle al anfitrión su `position: relative`, que deja el área anclada **en otro sitio**;
+3. el `height` del PSEUDO satisfacía la comprobación de «declara el suelo» **antes** de llegar a la del
+   pseudo — *el alto de un pseudo-elemento no es el alto del control: es el de la capa que lo cubre*;
+4. los dos antetítulos de la web se comprobaban con `__() !== ''`, y Laravel devuelve **la clave**
+   cuando falta: la aserción **no podía fallar** (el hueco de `#508`, hoy `Lang::has(…, false)`);
+5. el chevron se aseveraba por **SUBCADENA**, así que renombrarlo a `cal-more__chevron` pasaba en verde
+   con el CSS ya sin casar. La trampa que este repo lleva pagada cuatro veces, pagada otra vez.
+
+▶ Tras arreglarlas: **15/15**.
+
+### El presupuesto: el techo NO sube, y quedan 0,01 KiB
+
+Medido **283,99 KiB** contra un techo de 284. La parada entra casi entera **por extracción**
+—`WaiverDoc` recoge los cinco `<details>` idénticos— y lo que pesa son las dos filas con su `<svg>`.
+⚠️⚠️ **La poda obvia se intentó y se MIDIÓ**: extraer esa fila a un `LegalRow.vue` compartido subió el
+chunk a **284,17**, así que se revirtió. Dos copias de diez líneas de marcado cuestan **menos** que el
+envoltorio de un componente — el patrón de `#553`/`#561`/`#563`, no la excepción de `#565`. Queda
+escrito en el ledger para que nadie la repita.
+
+### Medido
+
+| | antes | después |
+|---|---|---|
+| aspa de cerrar · área efectiva | **15 × 26** | **48 × 48** (dibujo intacto) |
+| «Volver» · área efectiva | 82 × 48 *(por casualidad)* | 66 × **48** *(del token)* |
+| enlace de la política · alto | **20** | **48** (fila) |
+| `<summary>` del descargo · alto | **20**, en 8 pantallas | **48** |
+| pantallas con antetítulo | **5** | **0** |
+| selectores que la sonda acusa | 17 (134 apariciones) | 16 (**126**) |
+
+Suite **4818 · 30.365 · 1 skipped** (+15 casos · +104 aserciones) · JS **980/980** · **15/15 mutaciones** · Pint 1284 ·
+sonda de navegador sobre **32 pantallas**, cero recortes y cero desborde.
+
+❗ **QUEDA**: el **OJO del owner**. Y con esta tanda **las 25 pantallas del cajón están construidas**;
+lo siguiente que el canvas tiene escrito es el **cuaderno de entrega**, como se hizo con la portada.

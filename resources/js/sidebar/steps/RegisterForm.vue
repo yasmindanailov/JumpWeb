@@ -22,10 +22,16 @@ import { useWaiverStore } from '../stores/waiver.js';
  * (A11y de formulario largo): el banner deja ver el conjunto y los de debajo permiten corregir uno a
  * uno. El banner lleva `<strong>` + `<ul>`, y el número de `<li>` es parte del árbol.
  *
- * ⚠️ **3. El texto legal lleva HTML del servidor.** `privacy_notice` es un literal con un `<a href>`
- * cuya URL compone `route()`. Aquí llega **ya interpolado** en el payload del montaje y se pinta con
- * `v-html`: es la única forma de no partir un texto legal traducido en trozos. El contenido sale de
- * `lang/` y de `route()`, nunca de una entrada de usuario, así que no hay superficie XSS.
+ * ⚠️⚠️ **3. El texto legal ya NO lleva HTML, desde `#566`** (grieta 13, `[DECIDIDO owner]`). Hasta
+ * entonces `privacy_notice` era un literal con un `<a href>` interpolado por el servidor y se pintaba
+ * con `v-html`; medido a 390 px, **ese enlace daba 20 px de alto contra el suelo táctil de 48** que
+ * declara el propio producto. Hoy el párrafo es TEXTO y el documento se abre desde su propia fila
+ * —la receta de «Ver más fechas» y «Leer las condiciones», compartida y no copiada—, con la URL
+ * viajando suelta en `urls.privacy`.
+ * ▶ Y al quedarse en texto plano desaparece el `v-html`: un literal de `lang/` que ya no trae marcado
+ * no necesita inyectarse como HTML. ⚠️ **Si alguien le devuelve el `<a>` al literal, saldría ESCRITO
+ * en pantalla** —y ni el diff de árbol ni la suite lo verían, porque para los dos es texto—; lo
+ * vigilan `SidebarAuthScreensTest` y `PrivacyNoticeIsVisibleTest`.
  *
  * ⚠️⚠️ **Y ya NO es una casilla, desde la T8·c** (`[DECIDIDO owner, 2026-09-02]`,
  * `specs/auth-con-google.md` §21.4.3): el art. 13 del RGPD pide **informar**, no que se acepte, y la

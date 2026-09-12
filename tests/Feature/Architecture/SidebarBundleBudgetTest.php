@@ -774,6 +774,17 @@ class SidebarBundleBudgetTest extends TestCase
      * por slot— el bundle bajó **290,65 → 290,36 kB** y `PrivacyZone` volvió bajo su techo de líneas.
      * ▶ *Extraer un componente sube el peso cuando el envoltorio cuesta más que lo que deja de
      * repetirse; con TRES consumidores y lógica de verdad dentro, deja de ser así.*
+     *
+     * ❗❗❗ **EL TECHO NO SUBE EN `#566`, Y EL MARGEN QUE QUEDA SON 0,01 KiB.** Medido **283,99**: la
+     * parada 06 entra casi entera por extracción —`WaiverDoc` recoge los CINCO `<details>` que estaban
+     * escritos idénticos— y lo que pesa son las dos filas de privacidad con su `<svg>` en línea.
+     * ⚠️⚠️ **La poda obvia se intentó y se MIDIÓ, y no paga**: extraer esa fila a un `LegalRow.vue`
+     * compartido por las dos altas subió el chunk de **283,99 a 284,17** —dos copias de diez líneas de
+     * marcado cuestan menos que el envoltorio de un componente—, así que se REVIRTIÓ. Es el patrón de
+     * `#553`/`#561`/`#563`, no la excepción de `#565`: aquélla traía lógica dentro y tres consumidores.
+     * ▶ **Para quien venga**: con 0,01 KiB de margen, lo siguiente que entre pone esto en rojo. No es
+     * un fallo, es el trinquete haciendo su trabajo — y la poda de la fila **ya está descartada con su
+     * número**, así que no vuelvas a intentarla: busca otra o sube el techo con su medición.
      */
     private const SIDEBAR_CHUNK_MAX_KB = 284;
 
