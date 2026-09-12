@@ -71,6 +71,24 @@ const dayLabel = (date) => {
 const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
     ? t('addon_included')
     : tp('addon_included_partial', { count: addon.free_quantity }));
+
+/**
+ * El nombre con su cantidad delante, **y la cantidad solo si informa** (`#559`).
+ *
+ * ⚠️ «1× Calcetines antideslizantes» multiplica por uno: el signo no dice nada y encima roba el
+ * primer golpe de vista al nombre, que es lo único que el cliente viene a reconocer. Con dos o más sí
+ * informa, y entonces va delante.
+ */
+const named = (quantity, name) => (quantity > 1 ? `${quantity}\u00d7 ${name}` : name);
+
+/**
+ * ¿Se pinta el importe de este complemento?
+ *
+ * ⚠️ **Un complemento incluido ENTERO ya lo dice con su palabra**, así que el «0,00 €» de al lado lo
+ * repite — y dos formas de decir «gratis» en la misma línea hacen dudar de si son lo mismo. Con la
+ * inclusión PARCIAL sí se pinta: ahí el importe es lo que se paga por el resto, que es un dato nuevo.
+ */
+const showsAddonPrice = (addon) => ! (addon.free_quantity >= addon.quantity);
 </script>
 
 <template>
@@ -106,8 +124,12 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
                          resto de la tarjeta. -->
                     <span class="cart__main">
                         <span class="cart__when">
+                            <!-- ⚠️ En un PACK la cantidad va con su sustantivo («8 invitados · …»), que es la
+                                 doctrina de `#128`: sin él, «8×119,60 €» se lee como una multiplicación. En una
+                                 ENTRADA el sustantivo es el propio producto, así que basta el número — y solo
+                                 si hay más de una (`#559`). -->
                             <template v-if="line.is_pack">{{ tp('guests_count', { count: line.quantity }) }} · {{ line.product_name }}</template>
-                            <template v-else>{{ line.quantity }}&times; {{ line.product_name }}</template>
+                            <template v-else>{{ named(line.quantity, line.product_name) }}</template>
                         </span>
                         <!-- Se emite SIEMPRE, aunque quede vacío: el condicional va DENTRO. -->
                         <span class="cart__lines">
@@ -157,10 +179,15 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
                                  :options="dependentOptions" :selected="line.dependent_ids ?? []" :quantity="line.quantity" :messages="messages"
                                  @toggle="$emit('toggle-dependent', line.index, $event)" />
 
+                <!-- ⚠️⚠️ **Sin el «+» de delante** (`#559`): su trabajo —decir «esto es un añadido a lo de
+                     arriba»— lo hace la SANGRÍA, alineada con el azulejo del producto, que es como lo
+                     dibuja el artboard del paso 08. Y el signo no era neutro: en este mismo embudo
+                     `+` es el botón de añadir uno, así que delante de un complemento se lee como un
+                     control que no se puede pulsar. -->
                 <ul v-if="line.addons.length" class="cart__addons">
                     <li v-for="addon in line.addons" :key="addon.product_id">
-                        <span>+ {{ addon.quantity }}&times; {{ addon.product_name }}<em v-if="addon.free_quantity" class="cart__addon-incl">{{ includedLabel(addon) }}</em></span>
-                        <span>{{ money(addon.subtotal_cents) }}</span>
+                        <span>{{ named(addon.quantity, addon.product_name) }}<em v-if="addon.free_quantity" class="cart__addon-incl">{{ includedLabel(addon) }}</em></span>
+                        <span v-if="showsAddonPrice(addon)">{{ money(addon.subtotal_cents) }}</span>
                     </li>
                 </ul>
 

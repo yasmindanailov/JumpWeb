@@ -2496,8 +2496,15 @@ body.no-scroll { overflow: hidden; }
 .orders__line-unit { color: var(--fg-mute); font-size: var(--fs-body-s); font-weight: 400; }
 
 /* Complementos agrupados bajo su producto (carrito/pago/confirmación) */
-.cart__addons { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-6) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3); }
-.cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
+/* ⚠️⚠️ **Los complementos CUELGAN de su producto, y lo dice la SANGRÍA** (`#559`, artboard
+   `Pago y Desenlaces` paso 08): 40 px, que es el azulejo (30) más su hueco (10), así que el nombre de
+   un complemento arranca justo bajo el nombre de la línea a la que pertenece.
+   ▶ Sustituye a un «+» delante de cada uno — un signo que en este mismo embudo es el botón de añadir
+   uno, y que delante de un texto se lee como un control muerto.
+   ⚠️ Y pierde el borde DISCONTINUO: en este sistema el trazo roto significa «aquí falta algo», y aquí
+   no falta nada; lo que agrupa es la sangría. */
+.cart__addons { list-style: none; margin: var(--sp-6) 0 0; padding: 0 0 0 40px; display: flex; flex-direction: column; gap: var(--sp-3); }
+.cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 /* Nota de señal por producto (#227 F2): «Señal X€ ahora · resto en el parque» en la card del
    producto que cobra señal — evita etiquetar el agregado como «(señal)» en cestas mixtas. */
 .cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
