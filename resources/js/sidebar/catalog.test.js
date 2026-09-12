@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { sectionsFrom, toItem, totalItems, searchIsEnabled } from './catalog.js';
+import { sectionsFrom, toItem, totalItems, searchIsEnabled, alternarSeccion, cuerpoVisible } from './catalog.js';
 
 /**
  * El catálogo del paso 1 (Fase 4 · paso 4.7·2b·2·B).
@@ -177,4 +177,36 @@ test('sin umbral numérico no se enseña el buscador', () => {
     for (const threshold of [null, undefined, '1', NaN]) {
         assert.equal(searchIsEnabled(dos, threshold), false, String(threshold));
     }
+});
+
+/**
+ * ❗❗❗ **LA PUERTA DE CATEGORÍA** (`#553`, `[DECIDIDO owner]`).
+ *
+ * Las dos categorías arrancan CERRADAS —dos tarjetas grandes— y al pulsarlas se abren en la franja con
+ * sus productos. **Abrir una cierra la otra**: con las dos abiertas se vuelve a la lista larga de hoy
+ * (1.033 px de contenido en una ventana de 650) y la bifurcación desaparece.
+ */
+test('abrir una categoría cierra la otra, y volver a pulsarla la cierra', () => {
+    assert.equal(alternarSeccion('', 'entries'), 'entries', 'pulsar una cerrada la abre');
+    assert.equal(alternarSeccion('entries', 'services'), 'services', 'abrir la otra cierra la primera');
+    assert.equal(alternarSeccion('entries', 'entries'), '', 'volver a pulsar la abierta la cierra');
+    assert.equal(alternarSeccion('', 'services'), 'services');
+});
+
+/** El estado de partida: NINGUNA abierta. Es lo que hace que la primera vista sean dos puertas. */
+test('sin nada pulsado no hay ninguna sección abierta', () => {
+    for (const key of ['entries', 'services']) {
+        assert.equal(cuerpoVisible('', key, false, true), false);
+    }
+});
+
+/**
+ * ⚠️⚠️ **BUSCAR ABRE**: con el buscador escrito manda el resultado, no lo que esté pulsado. Sin esta
+ * regla, quien busca «cumple» recibe una puerta cerrada y la sensación de que no hay nada.
+ */
+test('con búsqueda mandan los resultados, no lo que haya pulsado', () => {
+    // La sección que CASA se ve, aunque no sea la abierta…
+    assert.equal(cuerpoVisible('entries', 'services', true, true), true);
+    // …y la que NO casa se esconde, aunque sea la que estaba abierta.
+    assert.equal(cuerpoVisible('entries', 'entries', true, false), false);
 });

@@ -2182,11 +2182,38 @@ body.no-scroll { overflow: hidden; }
    inmediatamente inferior de la escala cerrada. */
 .catalog-acc__sec { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--bg-card); }
 .catalog-acc__sec + .catalog-acc__sec { margin-top: var(--sp-12); }
-.catalog-acc__head { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-14) var(--sp-16); }
-/* Las dos superficies de la franja. El icono y el recuento SIGUEN a la suya: sobre tinta, un recuento
-   en Nube con texto Humo sería una pastilla clara ilegible. */
+
+/* ❗❗❗ **LA PUERTA DE CATEGORÍA, CERRADA** (`#553`, `[DECIDIDO owner]`). Es la MISMA pieza que la
+   franja, con otra disposición: en columna, alta y centrada, con el icono grande. Las dos categorías
+   arrancan así, y **abrir una cierra la otra** — con las dos abiertas se vuelve a la lista larga de
+   hoy (1.033 px de contenido en una ventana de 650) y la bifurcación desaparece.
+   ⚠️ `width: 100%`, `border: 0`, `font: inherit` y `text-align: left` no son adorno: la cabecera
+   volvió a ser un `<button>` porque ahora PLIEGA, y un botón trae su propia caja y su propia letra. */
+.catalog-acc__head {
+    width: 100%; border: 0; font: inherit; text-align: left; cursor: pointer; position: relative;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+    gap: var(--sp-8); min-height: 152px; padding: var(--sp-20) var(--sp-16);
+    transition: min-height var(--dur-entra) var(--ease-sale), padding var(--dur-entra) var(--ease-sale);
+}
+/* Las dos superficies. El icono y el recuento SIGUEN a la suya: sobre tinta, un recuento en Nube con
+   texto Humo sería una pastilla clara ilegible. */
 .catalog-acc__sec--ink .catalog-acc__head { background: var(--fg); color: var(--bg); }
 .catalog-acc__sec--paper .catalog-acc__head { background: var(--bg-soft); color: var(--fg); }
+/* Cerrada, el rótulo pesa más y el icono es grande: es una PUERTA, no una cabecera. */
+.catalog-acc__head .catalog-acc__icon svg { width: 34px; height: 34px; }
+.catalog-acc__head .catalog-acc__title { font-size: var(--fs-20); }
+/* ⚠️ El recuento se va a la esquina mientras la puerta está cerrada: en una columna quedaría debajo de
+   la frase, leyéndose como parte de ella. */
+.catalog-acc__count { position: absolute; top: var(--sp-14); right: var(--sp-16); }
+
+/* ABIERTA: la misma pieza se aplana en la franja de `#552`. */
+.catalog-acc__sec.is-open .catalog-acc__head {
+    flex-direction: row; align-items: center;
+    gap: var(--sp-12); min-height: 0; padding: var(--sp-14) var(--sp-16);
+}
+.catalog-acc__sec.is-open .catalog-acc__icon svg { width: 24px; height: 24px; }
+.catalog-acc__sec.is-open .catalog-acc__title { font-size: var(--fs-body); }
+.catalog-acc__sec.is-open .catalog-acc__count { position: static; }
 /* ⚠️ **El icono pierde su azulejo, y no es un recorte**: el azulejo existía para darle una superficie
    propia sobre el papel del panel, y ahora la superficie es la FRANJA. Un azulejo dentro de una banda
    llena es un rectángulo dentro de otro. Hereda el color de su franja con `currentColor`. */
@@ -2208,13 +2235,26 @@ body.no-scroll { overflow: hidden; }
 .catalog-acc__sec--ink .catalog-acc__count { background: color-mix(in srgb, var(--bg) 18%, transparent); color: var(--bg); }
 .catalog-acc__sec--paper .catalog-acc__count { background: var(--bg-card); color: var(--fg-mute); }
 
-/* El cuerpo de la tarjeta: la superficie blanca donde viven las filas.
-   ⚠️ **Aquí vivía el plegado y se retiró con su sujeto** (`#552`): `grid-template-rows: 0fr` + `.is-open`
-   + un envoltorio con `overflow` para un acordeón que **no se pliega desde `#P6`**. Los dos motores
-   emitían `is-open` fijo, y el día que uno se olvidó **el catálogo entero salió a altura 0**. */
-.catalog-acc__body { padding: var(--sp-12); }
-.catalog-acc__body .catalog { margin-bottom: 0; }
+/* El cuerpo de la tarjeta: la superficie blanca donde viven las filas, y lo que la puerta esconde.
+   ⚠️⚠️ **El plegado VUELVE en `#553`, y no contradice a `#552`**: aquélla lo retiró porque era un
+   mecanismo que *siempre estaba en el mismo estado* —los dos motores emitían `is-open` fijo desde un
+   paso del refactor viejo—. Ahora pliega de verdad y lo decide el cliente.
+   ⚠️ Se colapsa con la técnica de rejilla `1fr → 0fr`, que es el idioma que este repo ya usa en
+   `.acct`: anima la altura REAL sin inventarse un techo, y por eso el hijo lleva su `overflow`.
+   ⚠️ **El relleno VERTICAL se colapsa con ella**: sin eso, una puerta cerrada deja 24 px de blanco
+   debajo y parece una tarjeta rota. El horizontal se queda: no afecta al alto. */
+.catalog-acc__body {
+    display: grid; grid-template-rows: 0fr; padding: 0 var(--sp-12);
+    transition: grid-template-rows var(--dur-entra) var(--ease-sale), padding var(--dur-entra) var(--ease-sale);
+}
+.catalog-acc__sec.is-open .catalog-acc__body { grid-template-rows: 1fr; padding: var(--sp-12); }
+.catalog-acc__body .catalog { overflow: hidden; min-height: 0; margin-bottom: 0; }
 .catalog-acc__none { margin-top: var(--sp-12); }
+
+@media (prefers-reduced-motion: reduce) {
+    .catalog-acc__head,
+    .catalog-acc__body { transition: none; }
+}
 
 /* Chip de hora seleccionado (paso 3) */
 /* ❗❗❗ **LA FRANJA ELEGIDA VA EN TINTA, Y ESTA REGLA ESTABA EXCEPTUADA POR UN MOTIVO FALSO** (`#551`).

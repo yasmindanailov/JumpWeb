@@ -93,30 +93,100 @@ class SidebarCatalogCardTest extends TestCase
     }
 
     /**
-     * ❗❗ **El plegado se retiró con su sujeto y no vuelve** (`#552`).
+     * ❗❗❗ **LA PUERTA PLIEGA, Y LO ANUNCIA** (`#553`, `[DECIDIDO owner]`).
      *
-     * Eran tres piezas para un acordeón que **no se pliega desde `#P6`**: los dos motores emitían
-     * `is-open` fijo, y el día que uno se olvidó **el catálogo entero salió a altura 0 y no se podía
-     * comprar nada** — y el diff de árbol no lo vio, porque en el Blade la clase la ponía un `:class`
-     * de Alpine y el normalizador descarta los `:*` como andamiaje.
+     * ⚠️⚠️ **Este caso CAMBIÓ DE PREMISA y se reescribió, no se relajó.** En `#552` decía lo contrario
+     * —«el plegado no vuelve»— y tenía razón entonces: lo que había era un mecanismo que *siempre
+     * estaba en el mismo estado*, heredado de un paso del refactor viejo, y el día que un motor se
+     * olvidó de emitir su clase **el catálogo entero salió a altura 0 y no se podía comprar nada**.
+     * Hoy pliega de verdad y lo decide el cliente, así que lo que hay que vigilar es lo contrario: que
+     * pliegue **y que el plegado se anuncie**. Es el precedente del `SlotOfferTest` de `#324`.
+     *
+     * ⚠️ **`aria-expanded` no es accesibilidad de adorno**: el estado de una puerta no puede vivir solo
+     * en una clase, porque una clase no la lee nadie más que el CSS. Y el diff de árbol **descarta los
+     * `:*` como andamiaje**, así que un `aria-expanded` dinámico le resulta invisible — es el agujero
+     * que este proyecto ya pagó dos veces (`#58(f)` y `#P6`) y por eso se asevera aquí.
      */
-    public function test_the_collapse_machinery_does_not_come_back(): void
+    public function test_the_door_folds_and_announces_it(): void
     {
-        $this->assertStringNotContainsString(
-            'grid-template-rows',
-            $this->regla('.catalog-acc__body'),
-            'Ha vuelto el plegado del catálogo. Las secciones NO se pliegan desde `#P6`: un mecanismo '.
-            'que siempre está en el mismo estado no es un mecanismo, es una trampa esperando a que '.
-            'alguien se olvide de su clase.',
+        $cuerpo = $this->regla('.catalog-acc__body');
+
+        $this->assertStringContainsString(
+            'grid-template-rows: 0fr',
+            $cuerpo,
+            'La puerta de categoría ha dejado de plegar: sin esto las dos secciones nacen abiertas y '.
+            'la primera vista vuelve a ser la lista larga (1.033 px de contenido en una ventana de 650).',
+        );
+
+        $this->assertStringContainsString(
+            'grid-template-rows: 1fr',
+            $this->regla('.catalog-acc__sec.is-open .catalog-acc__body'),
+            '`.is-open` ha dejado de abrir el cuerpo: el catálogo saldría a altura 0 y no se podría '.
+            'comprar nada — que es exactamente lo que ya pasó una vez.',
+        );
+
+        // ⚠️ El relleno VERTICAL se colapsa con la rejilla: sin eso una puerta cerrada deja 24 px de
+        // blanco debajo y se lee como una tarjeta rota. Medido al construirla.
+        $this->assertMatchesRegularExpression(
+            '/padding:\s*0 /',
+            $cuerpo,
+            'El relleno del cuerpo ya no se colapsa con la puerta: cerrada dejaría una franja de blanco.',
         );
 
         $plantilla = (string) file_get_contents(base_path(self::PLANTILLA));
 
-        $this->assertDoesNotMatchRegularExpression(
-            '/class="catalog-acc__body[^"]*is-open/',
+        $this->assertMatchesRegularExpression(
+            '/<button[^>]*class="catalog-acc__head"/s',
             $plantilla,
-            'La plantilla vuelve a emitir `is-open` en el cuerpo del catálogo: esa clase solo existía '.
-            'para abrir un acordeón que ya no se pliega.',
+            'La cabecera del catálogo ha dejado de ser un `<button>`. Ahora PLIEGA: un `<div>` que '.
+            'despliega no lo alcanza el teclado ni lo anuncia ningún lector de pantalla.',
+        );
+
+        // ⚠️⚠️ **Se desnudan los comentarios y se busca el ATRIBUTO, no la palabra — y esto lo dijo el
+        // ARNÉS.** La primera versión aseveraba la subcadena `aria-expanded` sobre el fichero entero, y
+        // la mutación que lo retiraba del marcado **SOBREVIVÍA**: la palabra sigue ahí, en el comentario
+        // que explica por qué hace falta. ▶ *La prosa absolvía al código* — es la trampa de la subcadena
+        // de `#253`, por la puerta de atrás: allí acusaba a un comentario y aquí lo salvaba.
+        $desnuda = (string) preg_replace('#<!--.*?-->|/\*.*?\*/#s', '', $plantilla);
+
+        foreach (['aria-expanded', 'aria-controls'] as $atributo) {
+            $this->assertMatchesRegularExpression(
+                '/:?'.preg_quote($atributo, '/').'=/',
+                $desnuda,
+                "La puerta ha dejado de emitir `{$atributo}`: su estado viviría solo en una clase, y una ".
+                'clase no la lee nadie más que el CSS.',
+            );
+        }
+    }
+
+    /**
+     * **Las DOS caras de la misma pieza.** Cerrada es una puerta alta en columna; abierta, la franja.
+     * Si una de las dos disposiciones desaparece, la tarjeta se queda con una sola cara — y entonces o
+     * no hay bifurcación o no hay productos.
+     */
+    public function test_the_head_has_its_two_layouts(): void
+    {
+        $cerrada = $this->regla('.catalog-acc__head');
+        $abierta = $this->regla('.catalog-acc__sec.is-open .catalog-acc__head');
+
+        $this->assertStringContainsString(
+            'flex-direction: column',
+            $cerrada,
+            'La puerta CERRADA ha dejado de ser una tarjeta alta en columna: es lo que hace que la '.
+            'bifurcación se vea al abrir el cajón.',
+        );
+
+        $this->assertStringContainsString(
+            'min-height: 152px',
+            $cerrada,
+            'La puerta cerrada ha perdido su alto: sin él las dos categorías se leen como dos filas más.',
+        );
+
+        $this->assertStringContainsString(
+            'flex-direction: row',
+            $abierta,
+            'La sección ABIERTA ha dejado de aplanarse en franja: seguiría ocupando 152 px por encima '.
+            'de sus productos.',
         );
     }
 

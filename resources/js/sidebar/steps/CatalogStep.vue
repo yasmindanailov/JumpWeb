@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
+import { alternarSeccion, cuerpoVisible } from '../catalog.js';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import ProductIcon from '../ProductIcon.vue';
@@ -49,6 +50,36 @@ const matches = (item) => normalised.value === '' || (item.search ?? '').include
 const sectionMatches = (section) => (section.items ?? []).some((item) => matches(item));
 
 const anyMatch = computed(() => normalised.value === '' || props.sections.some((s) => sectionMatches(s)));
+
+/**
+ * ❗❗❗ **LA PUERTA DE CATEGORÍA, y es del owner** (`#553`, `[DECIDIDO owner]`).
+ *
+ * El canvas dibujó DOS formas para el paso 1 y el owner propuso una TERCERA que es mejor que las dos:
+ * **las categorías salen cerradas, como las dos tarjetas grandes de su «puerta de categoría», y al
+ * pulsarlas se abren en la «tarjeta grande sin puerta»**. Con eso se consigue lo que la puerta quería
+ * —que la bifurcación se vea— **sin pantalla nueva, sin navegación y sin botón de volver**, que era
+ * justo lo que el canvas le reprochaba.
+ *
+ * ⚠️ **El coste, dicho y asumido**: cuesta un toque llegar a los precios, el mismo que el canvas le
+ * reprochaba a la puerta. Lo que lo compensa es que la otra puerta **nunca se pierde de vista**.
+ *
+ * `[DECIDIDO owner]` las dos cosas que lo definen: **las dos arrancan CERRADAS** y **abrir una cierra
+ * la otra**. Lo segundo no es un capricho: con las dos abiertas se vuelve a la lista larga de hoy
+ * —medida en **1.033 px de contenido en una ventana de 650**— y la bifurcación desaparece.
+ *
+ * ⚠️⚠️ Esto **reabre el plegado que `#552` retiró**, y no es una contradicción: aquélla lo quitó porque
+ * era un mecanismo que *siempre estaba en el mismo estado* —los dos motores emitían `is-open` fijo
+ * desde un paso del refactor viejo, no desde una decisión de diseño—. Ahora pliega de verdad.
+ */
+const abierta = ref('');
+
+/** ⚠️ Las DOS reglas viven en `catalog.js`, que es plano y tiene `node --test` (`CE-6`): aquí solo se
+ *  conectan con el estado de la pantalla. */
+const alternar = (key) => {
+    abierta.value = alternarSeccion(abierta.value, key);
+};
+
+const seVe = (section) => cuerpoVisible(abierta.value, section.key, normalised.value !== '', sectionMatches(section));
 </script>
 
 <template>
@@ -66,24 +97,33 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
         </div>
 
         <!--
-          ❗❗❗ **LA TARJETA GRANDE, SIN PUERTA** (`#552`, `[DECIDIDO owner]`, `Decisiones SPA PJP` 02).
-          Cada sección es una TARJETA con su franja arriba: icono grande, nombre en rótulo y una frase
-          que dice a qué vienes. El argumento del canvas, medido: *«Vengo a saltar» y «celebro un cumple»
-          son dos clientes distintos con dos precios distintos, y eso merece verse* — pero **una pantalla
-          de categorías cobraría un toque a todo el mundo** para repartir cinco productos en dos montones.
-          Así que se ve la bifurcación **y los precios siguen debajo, a un toque. Cero pantallas nuevas.**
+          ❗❗❗ **LA PUERTA DE CATEGORÍA QUE SE ABRE EN TARJETA GRANDE** (`#553`, `[DECIDIDO owner]`).
+          Cada sección es una TARJETA que tiene dos caras con el MISMO marcado:
+           · **cerrada** — una puerta alta: icono grande, nombre en rótulo y la frase, centrados;
+           · **abierta** — la franja de `#552` con los productos debajo.
+          Cambia el CSS, no el árbol: una sola pieza, dos disposiciones.
 
-          ⚠️ **El nombre `catalog-acc` es HISTÓRICO**: esto fue un acordeón y dejó de plegarse en `#P6`.
-          No se renombra aquí a propósito —tocaría el manifiesto congelado y cuatro guardas por cero
-          ganancia para el cliente—, pero ya no describe nada: si alguien lo renombra algún día, que sea
-          su propio cambio.
+          ⚠️ **El nombre `catalog-acc` vuelve a ser cierto**: fue un acordeón, dejó de plegarse en un
+          paso del refactor viejo, `#552` retiró la maquinaria muerta y `#553` la devuelve **con su
+          motivo**. No se renombra.
         -->
         <section v-for="section in sections.filter((s) => (s.items ?? []).length > 0)" :key="section.key"
                  v-show="sectionMatches(section)"
-                 class="catalog-acc__sec" :class="section.ink ? 'catalog-acc__sec--ink' : 'catalog-acc__sec--paper'"
+                 class="catalog-acc__sec"
+                 :class="[section.ink ? 'catalog-acc__sec--ink' : 'catalog-acc__sec--paper', seVe(section) ? 'is-open' : '']"
                  :aria-labelledby="'catalog-title-' + section.key">
-            <!-- La franja. NO se pliega: las secciones están siempre abiertas (P6). -->
-            <div class="catalog-acc__head">
+            <!--
+              ⚠️⚠️ **VUELVE A SER UN `<button>`, y con `aria-expanded`.** Un `<div>` que pliega y
+              despliega no lo anuncia ningún lector de pantalla y no se alcanza con el teclado; y el
+              estado no puede vivir solo en una clase, porque una clase no la lee nadie más que el CSS.
+              ▶ Es el agujero que este proyecto ya pagó dos veces (`#58(f)` y `#P6`): el diff de árbol
+              **descarta los `:*` como andamiaje**, así que un `aria-expanded` dinámico le resulta
+              invisible. Quien lo vigila es `SidebarCatalogCardTest`, no el gate de árbol.
+            -->
+            <button type="button" class="catalog-acc__head"
+                    :aria-expanded="seVe(section) ? 'true' : 'false'"
+                    :aria-controls="'catalog-sec-' + section.key"
+                    @click="alternar(section.key)">
                 <span class="catalog-acc__icon" aria-hidden="true">
                     <!--
                       Los iconos son componentes Blade que envuelven su SVG en un `<span class="icon …">`,
@@ -120,18 +160,12 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                     <span class="catalog-acc__sub">{{ t('section_' + section.key + '_sub') }}</span>
                 </span>
                 <span class="catalog-acc__count">{{ section.items.length }}</span>
-            </div>
-            <!-- ❗❗ **AQUÍ VIVÍA LA MAQUINARIA DE PLEGADO, Y SE RETIRA CON SU SUJETO** (`#552`).
-                 Eran tres piezas —`__body` con `grid-template-rows: 0fr`, `__body-inner` con su
-                 `overflow`, y la clase `is-open` que lo abría— para un acordeón que **no se pliega desde
-                 `#P6`**: el Blade emitía `is-open` fijo y esta plantilla también.
-                 ⚠️⚠️ Y no era inofensivo: cuando el motor SPA se olvidó de emitir `is-open`, **el
-                 catálogo entero salía a altura 0 y no se podía comprar nada**, y el diff de árbol no lo
-                 veía. *Un mecanismo que siempre está en el mismo estado no es un mecanismo: es una
-                 trampa esperando a que alguien se olvide de su clase.*
-                 ⚠️ El `id` del cuerpo se va con ellas: no lo referenciaba ningún `aria-controls` — la
-                 cabecera dejó de ser un `<button>` cuando dejó de plegarse. -->
-            <div class="catalog-acc__body">
+            </button>
+            <!-- ⚠️ El cuerpo recupera su `id` porque vuelve a tener quién lo referencie: el
+                 `aria-controls` de la cabecera. Se PINTA siempre y lo esconde el CSS —la técnica de
+                 rejilla `0fr → 1fr`, que anima la altura real sin medirla y es el idioma que este repo
+                 ya usa en `.acct`—: con `v-if` el contenido no existiría y no habría nada que animar. -->
+            <div class="catalog-acc__body" :id="'catalog-sec-' + section.key">
                 <div class="catalog">
                     <button v-for="item in section.items" :key="item.id"
                             v-show="matches(item)"

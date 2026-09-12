@@ -733,8 +733,21 @@ class SidebarBundleBudgetTest extends TestCase
      * muerde con razón. La poda que sí existiría es estructural (la geometría vive DUPLICADA en
      * Blade y en Vue, que es el precio del mecanismo de paridad de `#140`), y rediseñar eso a ciegas
      * —sin navegador instalado— para ganar 2 KiB sería cambiar una certeza por un ahorro.
+     *
+     * ▶ **280 (`#553`, la puerta de categoría)**: medido **279,23 KiB**. Entra el acordeón del paso 1
+     * —las dos reglas del plegado en `catalog.js`, el `<button>` con su `aria-expanded`/`aria-controls`
+     * y la clase de estado—, que es lo que convierte el catálogo en **dos puertas** en vez de una lista
+     * de 1.033 px. Quedan **0,77 KiB**.
+     * ⚠️⚠️ **Se intentó podar ANTES de subir, como manda la norma, y la poda NO podó**: se cambiaron
+     * los argumentos de `cuerpoVisible()` de objeto a posicionales creyendo que ahorraban bytes y
+     * medido salió **al revés** (279,17 → 279,23). *Una poda que no se mide no es una poda.*
+     * ⚠️ Y el barrido de símbolos exportados sin importador **dio 29 falsos positivos**: excluía el
+     * fichero que define cada símbolo, así que marcaba como huérfano todo lo que se usa dentro de su
+     * propio módulo. No se actuó sobre él — es el instrumento, no el código.
+     * ▶ Lo que SÍ podó esta banda está en `#552`: la maquinaria de plegado muerta, el chevron sin
+     * consumidor y cuatro reglas de hover escritas para un árbol que ya no existe.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 279;
+    private const SIDEBAR_CHUNK_MAX_KB = 280;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

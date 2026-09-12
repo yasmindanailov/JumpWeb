@@ -7,13 +7,19 @@ Cada mutación reproduce una forma distinta de deshacer la tanda o de relajar su
    1. la sección deja de recortar su franja        → «each section is a card»
    2. se cae la franja de tinta                    → «the two band surfaces are declared…»
    3. el recuento deja de seguir a su franja       → lo mismo (la pastilla clara sobre tinta)
-   4. vuelve el plegado en el CSS                  → «the collapse machinery does not come back»
-   5. la plantilla vuelve a emitir `is-open`       → lo mismo, por la otra puerta
-   6. la unidad del pack vuelve dentro del precio  → «the pack unit is a sibling…» (el defecto medido)
-   7. falta la frase en un idioma                  → «the band phrase has text in the three locales»
-   8. las DOS franjas serían de tinta              → el caso de JS del módulo
-   9. `.catalog__per` pierde su regla propia       → `SidebarStyleWiringTest` (salió de su lista de huecos)
-  10. el localizador del árbol se queda sin sujeto → «the scan sees its subject»
+   4. la puerta deja de plegar                     → «the door folds and announces it»
+   5. `.is-open` deja de abrir el cuerpo           → lo mismo (el catálogo a altura 0, que ya pasó)
+   6. la cabecera deja de ser un `<button>`        → lo mismo (ni teclado ni lector de pantalla)
+   7. se cae el `aria-expanded`                    → lo mismo (el estado viviría solo en una clase)
+   8. la puerta cerrada pierde su alto             → «the head has its two layouts»
+   9. la sección abierta no se aplana              → lo mismo
+  10. abrir una NO cierra la otra                  → el caso de JS de la exclusividad
+  11. buscar deja de ABRIR                         → el caso de JS de la búsqueda
+  12. la unidad del pack vuelve dentro del precio  → «the pack unit is a sibling…» (el defecto medido)
+  13. falta la frase en un idioma                  → «the band phrase has text in the three locales»
+  14. las DOS franjas serían de tinta              → el caso de JS del módulo
+  15. `.catalog__per` pierde su regla propia       → `SidebarStyleWiringTest` (salió de su lista de huecos)
+  16. el localizador del árbol se queda sin sujeto → «the scan sees its subject»
 
 ⚠️ **Exige el árbol COMMITEADO**: el arnés restaura con `git checkout` (`#448`).
 ⚠️⚠️ **Y después de correrlo, `npm run build:ssr` ANTES DE LA SUITE**: muta ficheros `.vue`, y
@@ -50,13 +56,40 @@ MUTACIONES = [
      '.catalog-acc__sec--ink .catalog-acc__count { background: color-mix(in srgb, var(--bg) 18%, transparent); color: var(--bg); }',
      '/* el recuento sobre tinta, retirado por la mutación */'),
 
-    ('vuelve el plegado en el CSS', 'php', SITE,
-     '.catalog-acc__body { padding: var(--sp-12); }',
-     '.catalog-acc__body { padding: var(--sp-12); display: grid; grid-template-rows: 0fr; }'),
+    # ⚠️ Estas dos decían lo CONTRARIO hasta `#553`: `#552` retiró un plegado que nunca plegaba y su
+    # arnés vigilaba que no volviera. El owner lo devolvió **con su motivo**, así que las mutaciones
+    # cambian de sentido con su guarda. *Un arnés hereda la premisa del caso que muta.*
+    ('la puerta deja de plegar', 'php', SITE,
+     'display: grid; grid-template-rows: 0fr; padding: 0 var(--sp-12);',
+     'display: grid; grid-template-rows: 1fr; padding: 0 var(--sp-12);'),
 
-    ('la plantilla vuelve a emitir `is-open`', 'php', VUE,
-     '<div class="catalog-acc__body">',
-     '<div class="catalog-acc__body is-open">'),
+    ('`.is-open` deja de abrir el cuerpo', 'php', SITE,
+     '.catalog-acc__sec.is-open .catalog-acc__body { grid-template-rows: 1fr; padding: var(--sp-12); }',
+     '.catalog-acc__sec.is-open .catalog-acc__body { padding: var(--sp-12); }'),
+
+    ('la cabecera deja de ser un `<button>`', 'php', VUE,
+     '<button type="button" class="catalog-acc__head"',
+     '<div type="button" class="catalog-acc__head"'),
+
+    ('se cae el `aria-expanded` de la puerta', 'php', VUE,
+     ":aria-expanded=\"seVe(section) ? 'true' : 'false'\"",
+     ':data-abierta="seVe(section)"'),
+
+    ('la puerta cerrada pierde su alto', 'php', SITE,
+     'gap: var(--sp-8); min-height: 152px; padding: var(--sp-20) var(--sp-16);',
+     'gap: var(--sp-8); padding: var(--sp-20) var(--sp-16);'),
+
+    ('la sección abierta no se aplana', 'php', SITE,
+     'flex-direction: row; align-items: center;\n    gap: var(--sp-12); min-height: 0;',
+     'align-items: center;\n    gap: var(--sp-12); min-height: 0;'),
+
+    ('abrir una NO cierra la otra', 'js', CATALOGO,
+     'return abierta === key ? \'\' : key;',
+     'return key;'),
+
+    ('buscar deja de ABRIR', 'js', CATALOGO,
+     'return hayBusqueda ? casa : abierta === key;',
+     'return abierta === key;'),
 
     # ⚠️ Se muta el ÁRBOL CONGELADO y no la plantilla: lo que esta guarda comprueba es quién acaba
     # siendo hijo de quién, y eso vive en el manifiesto. Mutar el `.vue` probaría otra cosa —que el

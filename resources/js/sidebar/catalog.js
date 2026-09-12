@@ -86,6 +86,45 @@ export function toItem(product) {
     };
 }
 
+/**
+ * **La puerta de categoría: qué sección queda abierta al pulsar una** (`#553`).
+ *
+ * `[DECIDIDO owner]`: **exclusivo**. Abrir una cierra la otra, y volver a pulsar la abierta la cierra.
+ * Con las dos abiertas se vuelve a la lista larga de hoy —medida en **1.033 px de contenido en una
+ * ventana de 650**— y la bifurcación, que es lo que esta forma viene a dar, desaparece.
+ *
+ * ⚠️ Vive aquí y no dentro del componente porque **es una regla, no un estado de pintura** (`CE-6`):
+ * en un módulo plano tiene `node --test`, y dentro de un `.vue` no la alcanza ninguna red.
+ *
+ * @param {string} abierta la sección abierta ahora, o `''` si no hay ninguna
+ * @param {string} key la que se acaba de pulsar
+ * @returns {string} la que queda abierta
+ */
+export function alternarSeccion(abierta, key) {
+    return abierta === key ? '' : key;
+}
+
+/**
+ * **¿Se ve el cuerpo de esta sección?**
+ *
+ * ⚠️⚠️ **BUSCAR ABRE.** Con el buscador escrito, las secciones con resultados se enseñan ABIERTAS
+ * aunque nadie las haya pulsado: si no, quien busca «cumple» recibe una puerta cerrada y la sensación
+ * de que no hay nada. *El texto del buscador ES la intención; pedir además un toque para ver lo que ya
+ * has pedido es cobrar dos veces por la misma decisión.*
+ *
+ * ⚠️ Argumentos POSICIONALES y no un objeto, **y no por peso**: se cambió creyendo que ahorraba bytes
+ * del chunk y medido salió al revés (279,17 → 279,23 kB). Se queda porque cuatro valores sueltos leen
+ * mejor que una desestructuración, no porque pese menos. *Una poda que no se mide no es una poda.*
+ *
+ * @param {string} abierta la sección abierta ahora, o `''`
+ * @param {string} key la sección que se está pintando
+ * @param {boolean} hayBusqueda si el buscador tiene texto
+ * @param {boolean} casa si esta sección tiene resultados para esa búsqueda
+ */
+export function cuerpoVisible(abierta, key, hayBusqueda, casa) {
+    return hayBusqueda ? casa : abierta === key;
+}
+
 /** Cuántos productos hay en total, contando las dos secciones. */
 export function totalItems(sections) {
     return (Array.isArray(sections) ? sections : [])
