@@ -3269,12 +3269,20 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4818 en verde** (30.365 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol
-> CONJUNTO, con la **PARADA 06 del cajón** (`#566`: **+7** de `SidebarTouchTargetTest` —la guarda que
+> Suite **4833 en verde** (30.723 aserciones, 1 skipped), medida el **2026-09-12** de madrugada sobre
+> el árbol CONJUNTO: la **PARADA 06 del cajón** (`#566`) **más** la tanda de fachada de la web
+> (`#543`→`#549`, **+15** casos: 2 de `LandingAddonsTest` y el resto del arco anterior).
+>
+> Antes de juntarlas, **4818 en verde** (30.365 aserciones), medida sobre el árbol con la
+> **PARADA 06 del cajón** (`#566`: **+7** de `SidebarTouchTargetTest` —la guarda que
 > el cajón no tenía—, **+6** de `SidebarAuthScreensTest`, **+1** de `SidebarTokenBudgetTest` (que
 > `.legal-more` no copie la receta) y **+1** de `PrivacyNoticeIsVisibleTest` (que la política tenga su
 > propio control en las dos altas)).
 > ⚠️ Antes de esa tanda el mismo árbol daba **4803 / 30.261**, medido sobre el árbol
+> ⚠️⚠️ **UNA CIFRA DE UN SOLO CARRIL NO VALE, Y ESTE MISMO CONTADOR LO DEMUESTRA DOS VECES**: los dos
+> carriles midieron **4818** el mismo día sobre árboles DISTINTOS —30.365 aserciones el cajón, 30.619
+> la web— y el árbol conjunto no da ninguna de las dos. *El número que vale es el de después del
+> rebase, y hay que volver a medirlo cada vez que el remoto se mueve.*
 > CONJUNTO, con la **pasada de vestido** del carril de diseño (`#537`→`#542`) y las **PARADAS 04 y 05
 > del cajón** (`#562`/`#563`: **+2** casos y **+4** de JS, que suben ese total a **980** · `#564`:
 > **+3** de `SemanticFillTextTest` —las superficies de aviso derivadas, los hex que no vuelven y el rol
