@@ -29516,3 +29516,189 @@ owner]`: se enciende **al terminar** la página, no antes.
 —Kids es 4–7 y Jump desde 8, así que P3 y 4º de primaria no son el mismo producto y hoy los packs
 **no declaran edad**—, cuánto dura, mínimo y máximo publicables, el horario especial y el precio de
 la merienda.
+
+---
+
+## #535 · 2026-09-12 · `[DECIDIDO owner]` `/contacto` rehecha desde su artboard (T3b): preguntar, y nada de lo que ya hace «Visítanos» — más el horario de atención que resultó no existir
+
+**Contexto.** Sexta página de la Fase 3 y la última con artboard cerrado y sin bloqueo: grupos está
+PAUSADA (`#534`) y `/bar` es nueva y con su pareja fuera de la portada desde `#482`. Artboard
+`Contacto PJP` **1a** (móvil) + **1b** (escritorio), leído entero del canvas, sin truncar.
+
+---
+
+**❗❗❗ 1 · EL ARGUMENTO QUE SALVA A ESTA PÁGINA CAMBIÓ DENTRO DE LA TANDA, Y HAY QUE SABERLO.**
+
+El artboard es explícito: lo que separa `/contacto` de la sección «Visítanos» —y lo que la salva de
+ser *«un trozo de la portada con otro título»*, riesgo que el propio canvas le pone— es que
+**«el horario de atención no es el horario de apertura»**. Preguntado el owner con esa frase delante:
+
+> `[DECIDIDO owner]`: **es el mismo horario.**
+
+▶ Eso **tira la premisa** y obliga a decir en qué queda la página. Lo que la separa no es *cuándo*,
+es **qué se hace en cada sitio**: en la sección se CONSULTA (horario en vivo + mapa), aquí se
+ESCRIBE (los canales y el formulario). Consecuencias, las dos escritas en el código:
+
+- **NO hay campo nuevo de horario de atención.** Se evaluó y se descartó: el plazo se deriva del
+  horario que ya existe (`$heroStatus`, que el payload compartido trae resuelto → **cero consultas
+  nuevas**). ⚠️ **Y a nadie se le ocurra añadirlo luego «para completar el artboard»**.
+- **Sin horario publicado no se promete nada.** `HeroStatus::current()` devuelve `null` cuando no hay
+  ninguna apertura configurada, y entonces la entradilla cae a `contact_intro_plain`, que no cita
+  horario. *Una promesa que el producto no puede sostener no se escribe en el producto.*
+
+⚠️ El plazo se reparte en DOS sitios a propósito: la **entradilla** dice CUÁNDO y la línea junto al
+botón dice POR DÓNDE. El artboard pide que se repita junto al botón *«que es donde se decide
+enviar»*; repetir la misma frase habría sido ruido.
+
+---
+
+**❗❗❗ 2 · LO QUE LA PÁGINA DEJA DE TENER, Y ES SU DISEÑO.**
+
+Fuera **el mapa**, la tarjeta de ubicación, los CTA rápidos y el «Volver al inicio». La dirección va
+**escrita** bajo un rótulo, con un enlace a `/#info` — la regla que cerró «Visítanos»: *el dato
+crítico, siempre fuera del iframe*.
+
+⚠️⚠️ **Por eso la guarda es INVERTIDA**: `ContactPageTest::test_there_is_no_map_on_this_page`
+comprueba las TRES formas de traerlo de vuelta (la tarjeta, el marco de consentimiento y la URL de
+inserción, que **sigue configurada en el panel**). Un mapa devuelto por descuido no rompería nada y
+ninguna guarda normal lo vería.
+
+⚠️ **Y el ancla de salida se comprueba contra la portada de verdad**, no contra una constante: el
+precedente roto está medido y fichado —`#478` enlazó a `/precios#zona-<slug>` y esa página emite
+**cero** anclas así—. Un ancla que no existe no falla: el navegador se queda donde estaba.
+
+---
+
+**❗❗ 3 · LOS CANALES SALEN DEL DATO, Y EL DATO CONTESTA SOLO UNA PREGUNTA DEL CANVAS.**
+
+El artboard dibuja TRES tarjetas (fijo · móvil con WhatsApp · correo) porque su dueño tiene esos tres
+datos; aquí se pintan los que el panel tenga. Su cierre le hacía al owner tres preguntas, y **una la
+contesta el dato sin molestarle**: *«¿el WhatsApp es el mismo número que el móvil?»*.
+
+▶ **Cuando lo son, sale UNA tarjeta que dice las dos cosas.** Con dos, la página repetiría el mismo
+número bajo dos rótulos distintos — que es justo lo que hace creer que son dos números. ⚠️ La
+comparación es por **DÍGITOS**: `contact.phone` se escribe «+34 641 99 57 14» y el payload normaliza
+`contact.whatsapp` a «34641995714», así que en crudo no coincidirían nunca y la regla habría quedado
+escrita y muerta. Hay caso **con su control** (números distintos → dos tarjetas).
+
+⚠️ **Se compone en un componente Blade y no en el controlador**: `$site` lo reparte un
+`View::composer('*')`, así que fuera de una vista no existe —`view()->shared('site')` devuelve
+`null`— y hacerlo antes obligaba a releer `settings` y a repetir la normalización del teléfono. Dos
+derivaciones del mismo dato es como divergen.
+
+---
+
+**▶ 4 · EL FORMULARIO: tres decisiones y un campo nuevo.**
+
+- **El botón es `.btn--ink`, no naranja.** El relleno de acción significa COMPRAR en toda la web
+  (`#551`, la grieta 01 del canvas) y enviar un mensaje no es comprar. ⚠️ Su hover va a marca y **eso
+  no se «arregla»**: está razonado y enumerado en `ActionFillTest` desde `#551`.
+- **`[DECIDIDO owner]`: aviso de privacidad SIN casilla**, el mismo criterio que `#350` fijó para las
+  dos altas. ▶ Cierra un hueco real: hasta hoy esta página **no decía nada** de qué se hace con lo
+  que escribes. ⚠️ **El enlace va FUERA de la frase y es un control propio**: dentro medía **18 px**
+  de alto contra el suelo de 48 (medido), y habría estrenado la segunda excepción táctil de `#264` —
+  hoy solo hay una en toda la web, el enlace en línea del texto de cookies.
+- **Campo nuevo «¿Sobre qué?»**, opcional y **sin opción preseleccionada**. El artboard deja «Un
+  cumpleaños» arriba; así quien no toca el desplegable manda un tema que no ha elegido y el correo
+  llega mal clasificado sin que nadie lo sepa. *Una ausencia no es una afirmación.* ⚠️ Viaja al
+  **ASUNTO** del correo, que es lo que se lee en la bandeja (`#506`), y **en el idioma del PARQUE**:
+  traducirlo al del visitante le dejaría la bandeja en tres idiomas.
+
+---
+
+**▶ 5 · LA CHAPA DE ATAJOS SALE DEL INVENTARIO**, no de tres `href` en la plantilla
+(`SiteDestinations::answersItself()`, la casa que `#521` creó): así hereda gratis la regla de
+mantenimiento —una página apagada deja de ofrecerse aquí— y el ancla de Dudas solo sale si la portada
+pinta la sección. ⚠️ **Los rótulos son los del inventario y no los del artboard** («Tarifas», no
+«Todas las tarifas»): el propio canvas prohíbe dos nombres para el mismo sitio.
+
+---
+
+**❗❗ 6 · SEIS GUARDAS AJENAS SE MOVIERON, Y UNA DE ELLAS LLEVABA UNA AFIRMACIÓN FALSA.**
+
+- **`TouchTargetTest`** vigilaba `page__back` **en `/contacto`**, adonde `#533` lo mudó con esta nota:
+  *«medido en vivo, `/contacto` lo pinta y las legales ya no»*. ⚠️⚠️ **Es falso**: las cuatro legales
+  lo pintan (`pages/text.blade.php`, sin tocar), verificado con `curl` sobre las cinco URL. Re-apuntado
+  a **`/privacidad`**, que es el único sitio donde el sujeto no depende de una tanda de este carril.
+- **`CardSkinTest`**: `.visit-card` sale (se fue con la página) y entran `.channel` y `.contact-form`
+  en **APOYO**. ⚠️⚠️ **`.channel` es una tarjeta que SE PULSA y aun así va en apoyo**, y hay que
+  declararlo o alguien la asciende: el criterio de `#323` era «pegatina = lo que se elige o se
+  compra», pero el sistema adoptado en `#469` **acota la pegatina a hero y cierre** (`#480`) — que es
+  por lo que `#531` ya bajó `.price`. Su afordancia la da el HOVER, no una sombra.
+- **`CookieGateBlockingTest`** pierde el caso del mapa de contacto (sin sujeto). La propiedad no se
+  pierde: el mapa sigue en la portada y allí se cubre; y `/contacto` gana una guarda **más fuerte**,
+  que no exige que esté bien gateado sino que no esté.
+- **`Detalles216Test`** deja de aseverar el enlace a Maps aquí; lo sigue ofreciendo la portada.
+- **`FacadeCssHasNoOrphansTest`** cazó `.spray` sin consumidor **y luego su propia guarda-de-la-guarda
+  se puso roja** porque la citaba como control. Las dos con razón.
+
+▶ **Se retiran sin consumidor**, censados **por TOKEN del atributo `class`** y no por subcadena:
+`.map-card`, `.visit-card`, `.visit-card__ico`, `.visit__addr`, `.visit__actions`, `.contact-quick`,
+`.contact-quick__label`, `.contact-layout*` viejo, `.map-card--aside` y la niebla `.spray` con su
+token `--spray`. ⚠️⚠️ **Tres trampas del censo, todas pagadas aquí**: `grep visit__addr` casa dentro
+de `visit__addr-1`, que es una clase VIVA de la sección 07; `home.blade.php` nombra `.map-card`
+**dentro de un comentario**, así que un `grep` la daba viva (la trampa de `#302`/`#481`); y
+**`.contact-quick__row` la usaba `errors/page-maintenance.blade.php`** —prestada—, así que retirarla
+habría dejado esa pantalla sin regla. Pasa a `.page__actions`.
+
+---
+
+**❗❗ 7 · TRES DEFECTOS DE INSTRUMENTO Y DE MÉTODO, los tres ya escritos en el repo y pagados otra vez.**
+
+1. **`scripts/medir-seccion.mjs` parseaba `--url=` y dejaba el `goto` clavado en `/`.** `#531` lo
+   añadió a medias: la variable existía y no la leía nadie. Entre `#531` y hoy, **cualquier medida
+   pedida sobre una página interior devolvía la de la portada** — y no fallaba: los selectores salían
+   «NO EXISTE» y el alto era plausible. ▶ *Un argumento parseado no es un argumento aplicado.*
+   Arreglado, y ahora **la sonda imprime la URL que ha cargado**. ⚠️ Verificado que **la doc no está
+   envenenada**: `/precios` da **2.131 / 2.382 px**, exactamente las cifras que escribió `#531`, así
+   que sus números salieron por otra vía. *Descartar lo trivial primero.*
+2. **Un `*/` dentro de un docblock cierra el comentario.** Escribir la ruta con comodín de los
+   ficheros de idioma dejó `ContactController` sin compilar y `/contacto` en **500**. Es la trampa de
+   `#503`, escrita en este mismo repo y en este mismo mes.
+3. **Una aserción sobre la página entera no vigila un elemento.** La mutación «las dos líneas de la
+   dirección se unen sin coma» **sobrevivió**: el JSON-LD de schema.org pinta el mismo
+   `streetAddress` unido con coma. *Acota al elemento antes de creerte un test verde* (`#295`,
+   `#303`) — y aquí lo cazó el arnés, no una relectura.
+
+⚠️ **Y una trampa de CASCADA que no estaba escrita**: `landing.css` se carga **ANTES** que
+`site.css`, así que a igual especificidad **gana la hoja compartida**. `.contact-form { max-width:
+none }` no hacía nada contra `.form { max-width: 640px }`: el área de la rejilla medía 736 y la
+tarjeta se quedaba en **638 px**, sin que fallara nada. Va acotado `.page--contact .contact-form`
+**solo en lo que choca** —escribir todo el vestido ahí lo sacaba del censo de `CardSkinTest`, que
+localiza por selector exacto—.
+
+---
+
+**▶ 8 · EL VESTIDO DEL CAMPO VA ACOTADO A LA PÁGINA, A PROPÓSITO.** El sistema fija `campo.alto: 52` y
+el foco al color interactivo, y `site.css` ya lo tenía anotado («eso llega al vestir los
+formularios»). ⚠️ Pero `.form__field` tiene **dos consumidores Blade y NUEVE del cajón** (medido), y
+el cajón lo está vistiendo el otro ordenador (`CARRIL-SPA.md`): subir la regla base le cambiaría nueve
+pantallas sin que nadie lo haya decidido allí. Va bajo `.page--contact`, con la nota de retirarlo
+cuando ese carril vista sus formularios.
+
+---
+
+**▶ MEDIDO EN NAVEGADOR** (390 y 1280, con las fuentes cargadas):
+
+| | antes | después |
+|---|---|---|
+| documento · móvil | 1.939 px (2,30 pantallas) | **2.196 px (2,60)** |
+| documento · escritorio | 1.394 px (1,55) | **1.373 px (1,53)** |
+| tarjeta del formulario | — | **736 × 617** (el número del artboard) |
+| columna derecha | — | **352** (ídem) |
+| alto de campo | 48 | **52** |
+| controles bajo 48 px (propios) | 1 | **0** |
+| desborde horizontal | 0 | **0** |
+
+⚠️ **Móvil crece 257 px y se dice**: las tarjetas de canal cuestan alto y antes eran dos botones en
+fila; a cambio cada canal dice para qué sirve, que es lo que el artboard pide. Escritorio baja.
+⚠️ Los **4 solapes** que la sonda cuenta en `/contacto` son controles del **menú cerrado** contra el
+contenido —el defecto ya fichado en `armazon-y-menu.md` §1.7—: **cero** entre dos piezas de la página.
+
+▶ Guardas: **`ContactPageTest` rehecha (14 casos, con guarda-de-la-guarda)** +
+`scripts/mutar-contacto.py` (**14/14 mutaciones mueren**) · suite **4.761** verde (29.851 aserciones,
+1 skipped) · Pint ✓ · docs-check ✓ · sonda de geometría sobre las 13 vistas: desborde 0.
+
+**❗ LO QUE QUEDA DEL OWNER**: el ojo en vivo, y **dos de las tres preguntas del artboard** siguen
+abiertas porque son dato suyo — el **teléfono fijo** (hoy solo hay un móvil en el panel, así que salen
+dos canales y no tres) y **quién lee el WhatsApp**. Ninguna bloquea: lo que no tiene dato no se pinta.
