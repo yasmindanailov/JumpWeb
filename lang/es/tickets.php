@@ -25,6 +25,14 @@ return [
     // («En el parque») reutiliza tickets.pay_at_park.
     'footer_pay_now' => 'Pagas ahora',
     'footer_pay_now_deposit' => 'Pagas ahora (señal)',
+    // En la BANDA del paso de pagar la segunda fila lleva el verbo («A pagar en el parque») y no el
+    // «En el parque» del ⓘ: allí cuelga de «Pagas ahora», que ya dice qué se hace, y aquí de «Total»,
+    // que no lo dice (`#554`).
+    'footer_park_total' => 'A pagar en el parque',
+    // El MOTIVO de que no se pueda avanzar va en el rótulo del total, donde se lee, y no dentro del
+    // botón apagado (`#554`).
+    'footer_pick_day' => 'Elige un día para ver el precio',
+    'footer_pick_time' => 'Elige una hora para ver el precio',
     'deposit_info' => 'Ver desglose de la señal',
     'back_to_cart' => 'Volver al carrito',
     'section_entries' => 'Entradas',

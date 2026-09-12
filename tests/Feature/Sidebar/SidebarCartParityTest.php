@@ -139,9 +139,12 @@ class SidebarCartParityTest extends TestCase
 
         // Sin hora: importe «—» y CTA inactivo. Es el único estado en que el pie no lleva importe,
         // así que el marcador tiene que ser el del módulo y no un importe de cero.
+        // ⚠️ **Y el rótulo dice POR QUÉ no se puede avanzar** (`#554`), no «Total»: el motivo vive
+        // donde se lee, y el CTA conserva el nombre de la acción. Aquí se compara contra el
+        // diccionario real, que es lo que `foot.test.js` no puede mirar.
         $this->assertFooterTexts($this->stepState(hasTime: false, line: null), [
             'cta' => __('tickets.add_to_cart'),
-            'label' => __('tickets.total'),
+            'label' => __('tickets.footer_pick_time'),
             'amount' => self::AMOUNT_PLACEHOLDER,
             'note' => __('tickets.iva_note'),
         ]);
@@ -160,9 +163,10 @@ class SidebarCartParityTest extends TestCase
             'amount' => $this->money($line['total_cents']),
             // ⚠️ El rótulo CON «(señal)»: aquí se sabe que todo lo que se cobra ahora lo es. En la
             // cesta no, y por eso el de abajo es otro.
-            'nowLabel' => __('tickets.footer_pay_now_deposit'),
-            'now' => $this->money($line['deposit_cents']),
-            'park' => $this->money($line['gate_remainder_cents']),
+            'rows' => [
+                ['label' => __('tickets.footer_pay_now_deposit'), 'value' => $this->money($line['deposit_cents'])],
+                ['label' => __('tickets.pay_at_park'), 'value' => $this->money($line['gate_remainder_cents'])],
+            ],
             'note' => __('tickets.iva_note'),
         ]);
     }
@@ -212,14 +216,42 @@ class SidebarCartParityTest extends TestCase
                     'amount' => $this->money($quote['total_cents']),
                     // ⚠️ Rótulo NEUTRO, sin «(señal)»: en una cesta mixta lo que se cobra ahora no es
                     // solo señal (#225). Es el otro rótulo del paso 3, y confundirlos es silencioso.
-                    'nowLabel' => __('tickets.footer_pay_now'),
-                    'now' => $this->money($quote['online_amount_cents']),
-                    'park' => $this->money($quote['total_cents'] - $quote['online_amount_cents']),
+                    'rows' => [
+                        ['label' => __('tickets.footer_pay_now'), 'value' => $this->money($quote['online_amount_cents'])],
+                        ['label' => __('tickets.pay_at_park'), 'value' => $this->money($quote['total_cents'] - $quote['online_amount_cents'])],
+                    ],
                     'note' => __('tickets.iva_note'),
                 ];
 
             $this->assertFooterTexts($state, $expected);
         }
+
+        // ── EL PASO 08 · el único que ancla en lo que se COBRA ────────────────────────────────────
+        //
+        // ❗❗❗ **Es el cambio de `#554` y ningún caso lo cubría**: los dos de arriba recorren los pasos
+        // 1 y 4, y el 8 —el único donde el ancla deja de ser el total— se componía con la misma
+        // función y nadie lo comparaba contra los importes REALES. Con esta cesta mixta el defecto que
+        // el canvas midió es visible: el pie decía el total y a la tarjeta iba otra cifra.
+        $this->assertFooterTexts([
+            'step' => 8,
+            'messages' => __('tickets'),
+            'locale' => app()->getLocale(),
+            'cartCount' => $count,
+            'cartTotalCents' => $quote['total_cents'],
+            'cartOnlineCents' => $quote['online_amount_cents'],
+        ], [
+            'cta' => __('tickets.pay_confirm'),
+            'label' => __('tickets.footer_pay_now'),
+            // ▶ **Lo que va a la tarjeta**, no el total: es toda la decisión de la parada 04.
+            'amount' => $this->money($quote['online_amount_cents']),
+            'rows' => [
+                ['label' => __('tickets.total'), 'value' => $this->money($quote['total_cents'])],
+                // ⚠️ Con el VERBO: en el ⓘ esta fila cuelga de «Pagas ahora», que ya dice qué se hace;
+                // aquí cuelga de «Total», que no lo dice.
+                ['label' => __('tickets.footer_park_total'), 'value' => $this->money($quote['total_cents'] - $quote['online_amount_cents'])],
+            ],
+            'note' => __('tickets.iva_note'),
+        ]);
     }
 
     /**
@@ -574,12 +606,24 @@ class SidebarCartParityTest extends TestCase
 
         $this->assertIsArray($footer, "el paso {$state['step']} tiene que componer pie con esta cesta");
 
-        $flat = $footer + ($footer['split'] ?? []);
+        // ⚠️ **El desglose son FILAS desde `#554`** (`split.rows`), no tres campos sueltos: cada fila
+        // trae su etiqueta porque el ⓘ y la banda del paso 08 dicen palabras distintas en la misma
+        // posición. Se comparan ENTERAS —etiquetas e importes, y en su orden—, que es más fuerte que
+        // el aplanado de antes: éste no habría visto dos filas intercambiadas.
+        if (array_key_exists('rows', $expected)) {
+            $this->assertSame(
+                $expected['rows'],
+                $footer['split']['rows'] ?? null,
+                "El DESGLOSE del pie del paso {$state['step']} no es el del diccionario/`number_format`.\n".
+                '⚠️ Se compara en ORDEN: la fila de arriba es la que manda en esa pantalla.'
+            );
+            unset($expected['rows']);
+        }
 
         foreach ($expected as $key => $value) {
-            $this->assertArrayHasKey($key, $flat, "el pie del paso {$state['step']} no lleva «{$key}»");
+            $this->assertArrayHasKey($key, $footer, "el pie del paso {$state['step']} no lleva «{$key}»");
             $this->assertSame(
-                $value, $flat[$key],
+                $value, $footer[$key],
                 "El «{$key}» del pie del paso {$state['step']} NO es el del diccionario/`number_format`.\n".
                 '⚠️ Ni el diff de árbol ni ninguna otra prueba pueden cazar esto: los importes y los '.
                 'rótulos son TEXTO, y el normalizador del gate descarta los nodos de texto.'

@@ -61,9 +61,12 @@ const open = ref(false);
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.4a9.6 9.6 0 1 0 0 19.2 9.6 9.6 0 0 0 0-19.2zm0 3.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm-1.5 5.4a1.5 1.5 0 0 1 3 0v5.2a1.5 1.5 0 0 1-3 0z" />
                             </svg>
                         </button>
+                        <!-- ⚠️ Las DOS filas las compone `foot.js` con su etiqueta (`#554`): aquí no
+                             se nombra ninguna. Antes la segunda leía `messages.pay_at_park` a mano, y
+                             eso era media regla en el marcado — el paso 08 necesita otra palabra en
+                             esa misma fila y la plantilla no se habría enterado. -->
                         <span v-show="open" class="bk-foot__pop">
-                            <span class="bk-foot__pop-row"><span>{{ footer.split.nowLabel }}</span><span>{{ footer.split.now }}</span></span>
-                            <span class="bk-foot__pop-row"><span>{{ messages.pay_at_park ?? '' }}</span><span>{{ footer.split.park }}</span></span>
+                            <span v-for="(row, i) in footer.split.rows" :key="i" class="bk-foot__pop-row"><span>{{ row.label }}</span><span>{{ row.value }}</span></span>
                         </span>
                     </span></span>
                     <span class="bk-foot__v">{{ footer.amount }}</span>

@@ -24,6 +24,14 @@ return [
     // précise « (acompte) ». Le reste (« Au parc ») réutilise tickets.pay_at_park.
     'footer_pay_now' => 'Tu paies maintenant',
     'footer_pay_now_deposit' => 'Tu paies maintenant (acompte)',
+    // Dans la BANDE de l'étape de paiement, la seconde ligne porte le verbe (« À payer au parc ») et
+    // non le « Au parc » du ⓘ : là elle dépend de « Tu paies maintenant », qui dit déjà ce qui se
+    // passe, et ici de « Total », qui ne le dit pas (`#554`).
+    'footer_park_total' => 'À payer au parc',
+    // La RAISON pour laquelle on ne peut pas avancer va dans le libellé du total, là où elle se lit,
+    // et non dans le bouton désactivé (`#554`).
+    'footer_pick_day' => 'Choisis un jour pour voir le prix',
+    'footer_pick_time' => 'Choisis une heure pour voir le prix',
     'deposit_info' => "Voir le détail de l'acompte",
     'back_to_cart' => 'Retour au panier',
     'section_entries' => 'Billets',

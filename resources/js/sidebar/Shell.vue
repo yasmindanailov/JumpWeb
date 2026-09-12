@@ -111,13 +111,12 @@ defineEmits(['back', 'action']);
           gobierna los cuatro sitios en el Blade.
         -->
         <div v-if="! notice && footer && footer.splitMode === 'band' && footer.split" class="bk-paybreakdown">
-            <div class="bk-paybreakdown__row">
-                <span class="bk-paybreakdown__l">{{ footer.split.nowLabel }}</span>
-                <span class="bk-paybreakdown__v">{{ footer.split.now }}</span>
-            </div>
-            <div class="bk-paybreakdown__row">
-                <span class="bk-paybreakdown__l">{{ messages.pay_at_park ?? '' }}</span>
-                <span class="bk-paybreakdown__v">{{ footer.split.park }}</span>
+            <!-- ⚠️ Desde `#554` la banda dice **Total** y **A pagar en el parque**, no «Pagas ahora»:
+                 ese importe se mudó al pie, que es el que toca el botón. Las dos filas y sus dos
+                 etiquetas las compone `foot.js`. -->
+            <div v-for="(row, i) in footer.split.rows" :key="i" class="bk-paybreakdown__row">
+                <span class="bk-paybreakdown__l">{{ row.label }}</span>
+                <span class="bk-paybreakdown__v">{{ row.value }}</span>
             </div>
         </div>
 

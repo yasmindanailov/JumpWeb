@@ -220,34 +220,25 @@ class SidebarActionRoleTest extends TestCase
             'no se enterará y el botón saldrá en tinta SIN QUE NADA FALLE.',
         );
 
-        // Y las CUATRO formas del pie declaran el campo: tres con un literal y la cuarta por parámetro
-        // (`cartFooter`, que lo recibe con `false` por defecto y lo recoge con la forma corta).
-        // ⚠️ Se cuenta por FORMA y no por literal: la primera versión pedía cuatro `sells: true|false`
-        // y contaba tres, porque la del paso 08 viaja como argumento — una aserción que cuenta una
-        // sintaxis concreta falla con el producto sano en cuanto una de las formas se escribe distinto.
-        $footJs = (string) file_get_contents(base_path('resources/js/sidebar/foot.js'));
-
-        $this->assertSame(
-            3,
-            preg_match_all('/\bsells:\s*false\b/', $footJs),
-            'Las tres formas del pie que NO cobran tienen que declarar `sells: false`. Dejarlo en '.
-            '`undefined` funciona —es falsy, o sea el lado seguro— pero entonces el censo no lo cuenta.',
-        );
-
-        $this->assertMatchesRegularExpression(
-            '/function cartFooter\([^)]*\bsells = false\b/',
-            $footJs,
-            'La cuarta forma del pie ha dejado de recibir `sells` con su defecto seguro: un pie nuevo '.
-            'que se olvide del argumento tiene que salir en tinta, no en naranja.',
-        );
-
-        // ⚠️ Sin `[^)]*`: el argumento del rótulo es `t(messages, 'pay_confirm')`, o sea que trae su
-        // propio paréntesis y el localizador paraba antes de llegar al `true`.
-        $this->assertMatchesRegularExpression(
-            '/cartFooter\(state, .confirmReservation.,.+,\s*true\)/',
-            $footJs,
-            'El pie del paso 08 («Pagar») ha dejado de declararse como el que cobra: es el ÚNICO relleno '.
-            'de acción del embudo.',
+        // ⚠️⚠️ **AQUÍ HABÍA TRES ASERCIONES SOBRE LA SINTAXIS DE `foot.js` Y SE RETIRAN** (`#554`):
+        // contaban literales `sells: false`, la firma de `cartFooter(… sells = false)` y la llamada del
+        // paso 08 con su `true`. Las tres se pusieron ROJAS con el producto sano en cuanto el módulo
+        // separó el pie de la cesta del de pagar — y la de contar literales **ya había fallado antes
+        // por lo mismo y su propio comentario lo advertía**. *Una guarda que describe cómo está
+        // escrita una regla envejece con cada forma nueva de escribirla.*
+        //
+        // ▶ **Lo que protegían lo cubre `foot.test.js` por CONDUCTA, y más fuerte**: «las cuatro formas
+        // del pie declaran el campo» exige `typeof sells === 'boolean'` —que caza también un `null` o
+        // un `undefined` explícito, invisibles para una regex— y «solo el pie del paso 08 declara que
+        // vende» compara el conjunto de los que valen `true` contra `[8]`. Y esos casos **están en el
+        // gate**: el `pre-push` corre `npm run test:js`.
+        // ▶ Lo que queda aquí es lo que ningún test de módulo puede ver: que la PLANTILLA saque la
+        // clase del dato, que es la aserción de arriba.
+        $this->assertStringContainsString(
+            'assert.deepEqual(venden, [8]',
+            (string) file_get_contents(base_path('resources/js/sidebar/foot.test.js')),
+            'El caso de `foot.test.js` que fija el mapa del naranja por conducta ha desaparecido, y esta '.
+            'guarda delega en él: sin ese caso, quién vende deja de estar vigilado en ninguna parte.',
         );
     }
 

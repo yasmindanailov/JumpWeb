@@ -1658,11 +1658,21 @@ body.no-scroll { overflow: hidden; }
 .bk-context .jj-block { width: 11px; height: 11px; border-radius: 3px; transform: rotate(20deg); background: var(--zone-1); flex: none; }
 
 /* (3) Footer sticky y dinámico: anclado al fondo del panel, fuera del scroll. En columna porque
-   reúne TODOS los textos de pago: fila [total + CTA], y debajo la señal/«En el parque» y la nota
-   de IVA/Redsys (todo lo relativo al pago vive aquí, no en el cuerpo). */
-.bk-foot { position: relative; flex: none; display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-14) var(--sp-20); border-top: 1px solid var(--line); background: var(--bg); }
-.bk-foot__row { display: flex; align-items: center; gap: var(--sp-14); }
-.bk-foot__total { display: flex; flex-direction: column; flex-shrink: 0; }
+   reúne TODOS los textos de pago: la fila del total, el CTA a fila completa, y debajo la nota
+   de IVA/Redsys (todo lo relativo al pago vive aquí, no en el cuerpo).
+
+   ❗❗ **EL CTA VA A FILA COMPLETA, DEBAJO DEL TOTAL** (`#554`, `[DECIDIDO owner]` con las dos formas
+   renderizadas delante). Compartía fila con el total y no cabía: el botón grande del sistema
+   —relleno 18/34— con «Añadir al carrito» dentro pide ~250 px y el total otros 95 de los 350 que hay
+   dentro del cajón a 390, así que el botón se quedaba en 51 de alto con un relleno de 15 que no es
+   ningún tamaño declarado. ▶ Medido a 390×844: el pie pasa de **130 a 170,2 px**, el botón de **249,5
+   a 350** de ancho, y el aire de la pantalla MÁS cargada baja de 177 a 137 — sigue sobrando en las
+   ocho. De paso el objetivo táctil pasa a ser toda la anchura. */
+.bk-foot { position: relative; flex: none; display: flex; flex-direction: column; gap: var(--sp-10); padding: var(--sp-14) var(--sp-20); border-top: 1px solid var(--line); background: var(--bg); }
+.bk-foot__row { display: flex; flex-direction: column; align-items: stretch; row-gap: var(--sp-10); }
+/* El rótulo a la izquierda y la cifra a la derecha, alineados por su BASE: son dos tallas distintas
+   (15 y 22) y con `center` el rótulo flotaría por encima de la línea de la cifra. */
+.bk-foot__total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); }
 .bk-foot__l { font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); letter-spacing: 0.04em; }
 .bk-foot__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; font-size: var(--fs-22); letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap; }
 .bk-foot__note { margin: 0; font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4; }
@@ -1680,13 +1690,21 @@ body.no-scroll { overflow: hidden; }
 .bk-foot__pop-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .bk-foot__pop-row span:last-child { font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap; }
 
-/* Banda de desglose del pago: sticky propia ENCIMA del footer, con bordes top+bottom. Solo en el
-   paso de pago, donde el cliente debe ver siempre lo que pagará. */
-.bk-paybreakdown { flex: none; display: flex; flex-direction: column; gap: var(--sp-6); padding: var(--sp-12) var(--sp-20); background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.bk-paybreakdown + .bk-foot { border-top: 0; }   /* evita el doble 1px contra el footer */
+/* Banda de desglose del pago: propia ENCIMA del pie. Solo en el paso de pago, donde el cliente debe
+   ver siempre lo que pagará.
+
+   ⚠️ **Va en NUBE, no en papel** (`#554`): desde que el pie ancla en lo que se cobra, la banda lleva
+   el TOTAL —el dato de apoyo— y el pie la cifra que toca el botón. Que sean dos superficies distintas
+   es lo que dice cuál manda; con las dos en papel eran tres cifras del mismo peso en 100 px.
+   ⚠️ Y por eso **pierde su `border-bottom`**: la separación contra el pie ya la hace el cambio de
+   superficie, y una línea encima de ese cambio es la línea de más que el artboard no dibuja. */
+.bk-paybreakdown { flex: none; display: flex; flex-direction: column; gap: var(--sp-6); padding: var(--sp-12) var(--sp-20); background: var(--bg-soft); border-top: 1px solid var(--line); }
+.bk-paybreakdown + .bk-foot { border-top: 0; }   /* la superficie ya separa: sin línea entre las dos */
 .bk-paybreakdown__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .bk-paybreakdown__l { font-weight: var(--fw-semibold); }
-.bk-paybreakdown__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; color: var(--fg); white-space: nowrap; }
+/* ⚠️ La cifra de la banda va en CUERPO, no en rótulo: el rótulo (Bungee) lo lleva el ancla del pie, y
+   dos cifras de rótulo más el ancla serían tres números compitiendo en la misma esquina. */
+.bk-paybreakdown__v { font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap; }
 
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
 .purchase__back { margin-bottom: var(--sp-14); }
@@ -1697,7 +1715,13 @@ body.no-scroll { overflow: hidden; }
    botón de relleno de acción por pantalla»*, *«en claro el secundario es tinta, nunca cian»*.
    ▶ Quién vende NO se deduce aquí: lo dice `foot.js` con `sells`, y la plantilla solo traduce ese
    dato a `.bk-cta--sells`. El hover va a marca, que es el idioma de `.cta-med` (`#217`). */
-.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--fg); color: var(--bg); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
+/* ⚠️ **El tamaño GRANDE del sistema, al dígito** (`#554`): alto 56, relleno 18/34, peso 800. Los tres
+   valores salen de la hoja de componentes del cliente y **el alto es exacto por el `line-height`**:
+   con 18 de relleno y una línea de 16 px a 1,25 salen 20 + 36 = 56. Sin declararlo, la línea heredada
+   mide 21 y el botón sale a 57 — un píxel que no cumple ningún token y que nadie vería.
+   ⚠️ El 34 NO tiene escalón en la escala de espacio (llega a 28), así que va en literal a propósito:
+   `ScaleTokensAreUsedTest` prohíbe fabricarlo con un `calc()` a mano (`#437`). */
+.bk-cta { display: inline-flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-18) 34px; line-height: 1.25; border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--fg); color: var(--bg); font-family: var(--font-body); font-weight: var(--fw-black); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
 .bk-cta:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
 /* El pie que COBRA: el único relleno de acción del embudo («Pagar», paso 08). Sin color de acción en
    la instalación, `--action` cae a `--fg` y este botón vuelve a ser idéntico a sus hermanos — que es

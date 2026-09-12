@@ -24,6 +24,14 @@ return [
     // («At the park») reuses tickets.pay_at_park.
     'footer_pay_now' => 'You pay now',
     'footer_pay_now_deposit' => 'You pay now (deposit)',
+    // On the pay step's BAND the second row carries the verb («To pay at the park») instead of the
+    // ⓘ's «At the park»: there it hangs off «You pay now», which already says what happens; here it
+    // hangs off «Total», which doesn't (`#554`).
+    'footer_park_total' => 'To pay at the park',
+    // The REASON you can't move on goes in the total's label, where it can be read, and not inside
+    // the disabled button (`#554`).
+    'footer_pick_day' => 'Pick a day to see the price',
+    'footer_pick_time' => 'Pick a time to see the price',
     'deposit_info' => 'See deposit breakdown',
     'back_to_cart' => 'Back to cart',
     'section_entries' => 'Tickets',

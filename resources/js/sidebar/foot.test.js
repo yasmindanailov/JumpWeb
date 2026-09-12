@@ -18,10 +18,15 @@ const MESSAGES = {
     add_to_cart: 'Añadir al carrito',
     go_to_cart: 'Ir al carrito',
     go_to_pay: 'Ir a pagar',
+    pay_confirm: 'Pagar con tarjeta',
     cart_items: ':count artículo|:count artículos',
     iva_note: 'Precios con IVA incluido',
     footer_pay_now: 'Pagas ahora',
     footer_pay_now_deposit: 'Pagas ahora (señal)',
+    footer_park_total: 'A pagar en el parque',
+    footer_pick_day: 'Elige un día para ver el precio',
+    footer_pick_time: 'Elige una hora para ver el precio',
+    pay_at_park: 'En el parque',
 };
 
 const state = (overrides) => ({ messages: MESSAGES, locale: 'es', ...overrides });
@@ -74,10 +79,23 @@ describe('el calendario', () => {
         assert.equal(footer.split, null);
     });
 
-    test('elegir día habilita el CTA y NO cambia el importe', () => {
+    /**
+     * ⚠️ **El MOTIVO vive en el rótulo, no en el botón** (`#554`). El botón apagado del sistema es
+     * Nube con su gris, y una instrucción que hay que leer no puede vivir ahí; además el rótulo del
+     * CTA tiene que seguir siendo el nombre de la acción, o deja de decir qué va a pasar al pulsarlo.
+     */
+    test('sin día el rótulo dice POR QUÉ no se puede avanzar, y el CTA conserva su nombre', () => {
+        const footer = buildFooter(state({ step: 2, hasDate: false }));
+
+        assert.equal(footer.label, 'Elige un día para ver el precio');
+        assert.equal(footer.cta, 'Continuar');
+    });
+
+    test('elegir día habilita el CTA, devuelve el rótulo a «Total» y NO cambia el importe', () => {
         const footer = buildFooter(state({ step: 2, hasDate: true }));
 
         assert.equal(footer.disabled, false);
+        assert.equal(footer.label, 'Total');
         assert.equal(footer.amount, AMOUNT_PLACEHOLDER, 'el precio depende del día pero no se enseña aquí');
     });
 });
@@ -87,17 +105,20 @@ describe('la hora', () => {
      * El CTA solo se inactiva hasta elegir HORA: lo demás —cantidad mínima, campos obligatorios— se
      * valida AL PULSAR, con un aviso que dice qué falta, y no con un botón muerto que no lo explica.
      */
-    test('sin hora el importe es un guion y el CTA está inactivo', () => {
+    test('sin hora el importe es un guion, el CTA está inactivo y el rótulo dice por qué', () => {
         const footer = buildFooter(state({ step: 3, hasTime: false, lineTotalCents: null }));
 
         assert.equal(footer.amount, AMOUNT_PLACEHOLDER);
         assert.equal(footer.disabled, true);
+        assert.equal(footer.label, 'Elige una hora para ver el precio');
+        assert.equal(footer.cta, 'Añadir al carrito');
     });
 
     test('con hora se pinta el total publicado, sin sumar nada', () => {
         const footer = buildFooter(state({ step: 3, hasTime: true, lineTotalCents: 120000, lineHasDeposit: false }));
 
         assert.equal(footer.amount, '1.200,00 €');
+        assert.equal(footer.label, 'Total');
         assert.equal(footer.disabled, false);
         assert.equal(footer.split, null, 'sin señal no hay desglose que enseñar');
     });
@@ -113,11 +134,12 @@ describe('la hora', () => {
             lineHasDeposit: true, lineDepositCents: 3000, lineGateRemainderCents: 117000,
         }));
 
-        assert.equal(footer.split.nowLabel, 'Pagas ahora (señal)');
-        assert.equal(footer.split.now, '30,00 €');
-        // El resto llega PUBLICADO, no restado: reconstruirlo sería reimplementar la regla de #225
-        // (los complementos de una línea con señal van íntegros al parque).
-        assert.equal(footer.split.park, '1.170,00 €');
+        assert.deepEqual(footer.split.rows, [
+            { label: 'Pagas ahora (señal)', value: '30,00 €' },
+            // El resto llega PUBLICADO, no restado: reconstruirlo sería reimplementar la regla de
+            // #225 (los complementos de una línea con señal van íntegros al parque).
+            { label: 'En el parque', value: '1.170,00 €' },
+        ]);
     });
 });
 
@@ -135,9 +157,61 @@ describe('la cesta', () => {
     test('con señal el desglose usa el rótulo neutro', () => {
         const footer = buildFooter(state({ step: 4, cartCount: 2, cartTotalCents: 129900, cartOnlineCents: 30000 }));
 
-        assert.equal(footer.split.nowLabel, 'Pagas ahora');
-        assert.equal(footer.split.now, '300,00 €');
-        assert.equal(footer.split.park, '999,00 €');
+        assert.deepEqual(footer.split.rows, [
+            { label: 'Pagas ahora', value: '300,00 €' },
+            { label: 'En el parque', value: '999,00 €' },
+        ]);
+    });
+});
+
+/**
+ * ❗❗❗ **EL ANCLA DEL PASO 08** (`#554`, parada 04 del canvas).
+ *
+ * *Un botón y la cifra de al lado se leen como una frase.* En las cuatro pantallas con pie el número
+ * grande es el TOTAL porque allí es cierto; en la de pagar deja de serlo en cuanto el carrito lleva
+ * una señal — el canvas lo midió: el pie decía **162,40 €** y a la tarjeta iban **92,80 €**. Aquí se
+ * fija que el número pegado al botón es **siempre el que va a la tarjeta**.
+ *
+ * ⚠️ Es la única pantalla del embudo donde el ancla no es el total, y por eso tiene su propia forma
+ * (`payFooter`) en vez de un parámetro más en la de la cesta: con una sola función y una bandera, la
+ * regla —qué ancla dónde— se lee en la llamada y no donde se decide.
+ */
+describe('pagar: el ancla es lo que se cobra', () => {
+    const conSenal = { step: 8, cartCount: 2, cartTotalCents: 16240, cartOnlineCents: 9280 };
+
+    test('el importe grande es lo que va a la tarjeta, NO el total', () => {
+        const footer = buildFooter(state(conSenal));
+
+        assert.equal(footer.amount, '92,80 €', 'lo que se cobra ahora');
+        assert.equal(footer.label, 'Pagas ahora');
+        assert.equal(footer.sells, true);
+        assert.equal(footer.icon, 'card');
+    });
+
+    /** El total no se pierde: sube a la banda, encima de lo que queda para el parque. */
+    test('el total sube a la banda, con el resto debajo', () => {
+        const footer = buildFooter(state(conSenal));
+
+        assert.equal(footer.splitMode, 'band');
+        assert.deepEqual(footer.split.rows, [
+            { label: 'Total', value: '162,40 €' },
+            // ⚠️ Con el VERBO: en el ⓘ esta fila cuelga de «Pagas ahora», que ya dice qué se hace;
+            // aquí cuelga de «Total», que no lo dice.
+            { label: 'A pagar en el parque', value: '69,60 €' },
+        ]);
+    });
+
+    /**
+     * ⚠️ **Sin señal el rótulo vuelve a «Total», y no es cosmética**: las dos cifras son la misma,
+     * así que «Pagas ahora» insinuaría un resto que no existe. El importe sigue saliendo de lo que se
+     * cobra —que ahí ES el total—, o sea que la regla no tiene dos caminos.
+     */
+    test('sin señal no hay banda y el rótulo no insinúa ningún resto', () => {
+        const footer = buildFooter(state({ step: 8, cartCount: 1, cartTotalCents: 4500, cartOnlineCents: 4500 }));
+
+        assert.equal(footer.label, 'Total');
+        assert.equal(footer.amount, '45,00 €');
+        assert.equal(footer.split, null);
     });
 });
 

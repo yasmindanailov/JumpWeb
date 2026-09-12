@@ -22,6 +22,18 @@
  * ahora», NEUTRO a propósito, porque en una cesta mixta (una entrada que se paga entera y un
  * cumpleaños con señal) no todo lo que se cobra ahora es señal (#225). Reutilizar el mismo rótulo
  * pasa el diff de árbol —que no compara texto— y cambia la copia.
+ *
+ * ❗❗❗ **EL ANCLA NO ES SIEMPRE EL TOTAL, Y EL PASO 08 ES LA EXCEPCIÓN** (`#554`, parada 04 del
+ * canvas). En las cuatro pantallas con pie el número pegado al botón es el total **porque allí es
+ * cierto**; en la de pagar deja de serlo en cuanto el carrito lleva una señal — medido por el canvas:
+ * el pie decía **162,40 €** y a la tarjeta iban **92,80 €**. ▶ *Un botón y la cifra de al lado se leen
+ * como una frase*, así que ahí ancla en **lo que se cobra ahora** y el total sube a la banda.
+ * ⚠️ **Sin ninguna resta nueva**: los tres importes los publica el presupuesto por separado.
+ *
+ * ⚠️ **El desglose tiene UNA forma, `split.rows`, y dos sitios donde se pinta** —el ⓘ de los pasos 3
+ * y 4, y la banda del 8—. Nació con campos `nowLabel`/`now`/`park`, y con el ancla nueva eso obligaba
+ * a que en la banda `nowLabel` valiera «Total»: un nombre diciendo lo contrario de su contenido, que
+ * es justo la clase de mentira que este proyecto paga cara. Dos filas con su etiqueta no mienten.
  */
 
 import { t, tc } from './i18n.js';
@@ -65,7 +77,11 @@ export function buildFooter(state) {
             type: 'bar',
             action: 'goToTime',
             cta: t(messages, 'continue'),
-            label: t(messages, 'total'),
+            // ⚠️ **El MOTIVO va en el rótulo del total, no dentro del botón apagado** (`#554`). La
+            // primera versión del artboard lo metía en el botón, y está mal medido: el inactivo del
+            // sistema es Nube con su gris, y una instrucción que hay que leer no puede vivir ahí. El
+            // botón se queda con el nombre de la acción y el pie dice qué falta, donde se lee.
+            label: state.hasDate ? t(messages, 'total') : t(messages, 'footer_pick_day'),
             // El precio depende del día, así que hasta elegirlo no hay total que enseñar. El CTA se
             // habilita al elegir; no auto-avanza, que es lo que da control y mantiene el pie
             // coherente con los demás pasos.
@@ -88,17 +104,18 @@ export function buildFooter(state) {
     }
 
     if (step === 4) {
-        return state.cartCount > 0 ? cartFooter(state, 'checkout', t(messages, 'go_to_pay'), 'arrow', 'popover') : null;
+        return state.cartCount > 0 ? cartFooter(state) : null;
     }
 
-    // ⚠️ **El paso de PAGO cambia las dos cosas que el carrito dejaba fijas**: el icono es una tarjeta
-    // y el desglose sube a una BANDA propia (`bk-paybreakdown`, siempre visible) en vez de esconderse
-    // tras el ⓘ. No es cosmética: en la pantalla donde se paga, lo que se va a cobrar no puede estar
-    // detrás de un clic. Y a diferencia del paso 4, **no se condiciona a que haya cesta**: aquí ya se
-    // ha pasado por la identificación, así que una cesta vacía en este paso no es un estado alcanzable
-    // — el servidor mismo lo rechazaría con `cart_empty`.
+    // ⚠️ **El paso de PAGO cambia TRES cosas que el carrito dejaba fijas**: el icono es una tarjeta, el
+    // desglose sube a una BANDA propia (`bk-paybreakdown`, siempre visible) en vez de esconderse tras
+    // el ⓘ, y el importe grande **deja de ser el total**. Las tres son la misma idea: en la pantalla
+    // donde se paga, lo que se va a cobrar no puede estar escondido ni ser otro número.
+    // Y a diferencia del paso 4, **no se condiciona a que haya cesta**: aquí ya se ha pasado por la
+    // identificación, así que una cesta vacía en este paso no es un estado alcanzable — el servidor
+    // mismo lo rechazaría con `cart_empty`.
     if (step === 8) {
-        return cartFooter(state, 'confirmReservation', t(messages, 'pay_confirm'), 'card', 'band', true);
+        return payFooter(state);
     }
 
     return null;
@@ -133,9 +150,10 @@ function stepFooter(state) {
     // configurada al 100 % no deja nada, y un desglose vacío es ruido.
     const split = hasTime && lineHasDeposit
         ? {
-            nowLabel: t(messages, 'footer_pay_now_deposit'),
-            now: money(lineDepositCents),
-            park: money(lineGateRemainderCents),
+            rows: [
+                { label: t(messages, 'footer_pay_now_deposit'), value: money(lineDepositCents) },
+                { label: t(messages, 'pay_at_park'), value: money(lineGateRemainderCents) },
+            ],
         }
         : null;
 
@@ -143,7 +161,11 @@ function stepFooter(state) {
         type: 'bar',
         action: 'addToCart',
         cta: t(messages, 'add_to_cart'),
-        label: t(messages, 'total'),
+        // El motivo en el rótulo, como en el paso 2: sin hora no hay precio que dar, y decirlo donde
+        // se lee es lo que evita un botón muerto que no explica nada.
+        // ⚠️ El artboard dibuja este estado solo para el DÍA; aquí se aplica su regla a la HORA, que
+        // no dibuja. Es extrapolación declarada, no una cita.
+        label: hasTime ? t(messages, 'total') : t(messages, 'footer_pick_time'),
         amount: hasTime && lineTotalCents !== null ? money(lineTotalCents) : AMOUNT_PLACEHOLDER,
         disabled: ! hasTime,
         icon: 'arrow',
@@ -156,10 +178,40 @@ function stepFooter(state) {
 }
 
 /**
- * La barra de la cesta y del pago. Ancla en el TOTAL, como el catálogo.
+ * La barra de la CESTA. Ancla en el TOTAL, como el catálogo, **porque ahí el total es cierto**: de la
+ * cesta no se sale pagando, se sale pasando al paso siguiente.
  *
  * ⚠️ Aquí el rótulo del desglose es NEUTRO («Pagas ahora»), no «Pagas ahora (señal)»: en una cesta
  * mixta lo que se cobra ahora no es solo señal (#225).
+ */
+function cartFooter(state) {
+    const { messages, cartTotalCents, cartOnlineCents } = state;
+
+    return {
+        type: 'bar',
+        action: 'checkout',
+        cta: t(messages, 'go_to_pay'),
+        label: t(messages, 'total'),
+        amount: money(cartTotalCents),
+        disabled: false,
+        icon: 'arrow',
+        splitMode: 'popover',
+        // «Ir a pagar» no cobra: lleva a la pantalla que cobra (`#551`).
+        sells: false,
+        split: cartOnlineCents < cartTotalCents
+            ? {
+                rows: [
+                    { label: t(messages, 'footer_pay_now'), value: money(cartOnlineCents) },
+                    { label: t(messages, 'pay_at_park'), value: money(parkCents(state)) },
+                ],
+            }
+            : null,
+        note: t(messages, 'iva_note'),
+    };
+}
+
+/**
+ * El pie del paso 08 · **el único que ancla en lo que se cobra** y el único que vende.
  *
  * ❗❗❗ **`sells` NO es cosmética: es el MAPA DEL NARANJA, y lo decide este módulo** (`#551`). El
  * sistema del cliente dice que el relleno de acción significa **comprar** y que *solo hay un botón de
@@ -171,30 +223,45 @@ function stepFooter(state) {
  * del rótulo o del `action` en el marcado sería una segunda copia de la regla, y el día que alguien
  * añada un paso que cobre, la plantilla no se enteraría — y el botón saldría en tinta sin que nada
  * fallara.
+ *
+ * ⚠️ **El rótulo sigue al hecho**: con desglose dice «Pagas ahora», y sin él «Total». Sin señal no hay
+ * ningún «después», así que «Pagas ahora» insinuaría un resto que no existe — y las dos cifras son la
+ * misma, porque lo que se cobra ES el total.
  */
-function cartFooter(state, action, cta, icon, splitMode, sells = false) {
+function payFooter(state) {
     const { messages, cartTotalCents, cartOnlineCents } = state;
+    const conDesglose = cartOnlineCents < cartTotalCents;
 
     return {
         type: 'bar',
-        action,
-        cta,
-        label: t(messages, 'total'),
-        amount: money(cartTotalCents),
+        action: 'confirmReservation',
+        cta: t(messages, 'pay_confirm'),
+        label: t(messages, conDesglose ? 'footer_pay_now' : 'total'),
+        amount: money(cartOnlineCents),
         disabled: false,
-        icon,
-        splitMode,
-        sells,
-        // La ÚNICA resta permitida del cajón, y lo es porque es la diferencia de dos AGREGADOS de la
-        // MISMA fuente —el presupuesto— y porque es literalmente lo que hace el servidor. Sumar
-        // subtotales de línea en su lugar dejaría los complementos fuera.
-        split: cartOnlineCents < cartTotalCents
+        icon: 'card',
+        splitMode: 'band',
+        sells: true,
+        // El total no se pierde: sube a la banda, encima de lo que queda para el parque.
+        split: conDesglose
             ? {
-                nowLabel: t(messages, 'footer_pay_now'),
-                now: money(cartOnlineCents),
-                park: money(cartTotalCents - cartOnlineCents),
+                rows: [
+                    { label: t(messages, 'total'), value: money(cartTotalCents) },
+                    { label: t(messages, 'footer_park_total'), value: money(parkCents(state)) },
+                ],
             }
             : null,
         note: t(messages, 'iva_note'),
     };
+}
+
+/**
+ * Lo que queda para el parque.
+ *
+ * **La ÚNICA resta permitida del cajón**, y lo es porque es la diferencia de dos AGREGADOS de la MISMA
+ * fuente —el presupuesto— y porque es literalmente lo que hace el servidor. Sumar subtotales de línea
+ * en su lugar dejaría los complementos fuera.
+ */
+function parkCents({ cartTotalCents, cartOnlineCents }) {
+    return cartTotalCents - cartOnlineCents;
 }
