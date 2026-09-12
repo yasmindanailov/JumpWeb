@@ -1674,6 +1674,13 @@ body.no-scroll { overflow: hidden; }
    (15 y 22) y con `center` el rótulo flotaría por encima de la línea de la cifra. */
 .bk-foot__total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); }
 .bk-foot__l { font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); letter-spacing: 0.04em; }
+/* ⚠️ **En el pie que COBRA el rótulo deja de ser apoyo** (`#554`): en las cuatro pantallas anteriores
+   «Total» acompaña a una cifra informativa y va en Humo; en la de pagar acompaña a la que va a la
+   tarjeta, y encima tiene justo encima una banda donde «Total» SÍ es apoyo. Con los dos en el mismo
+   gris, las tres cifras de esa esquina pesan igual.
+   ▶ Se ata a `.bk-cta--sells` y no a una clase nueva en el pie: quién cobra ya lo dice `foot.js` con
+   su `sells`, y una segunda marca en el marcado sería la misma regla escrita dos veces. */
+.bk-foot:has(.bk-cta--sells) .bk-foot__l { font-weight: var(--fw-bold); color: var(--fg); }
 .bk-foot__v { font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; font-size: var(--fs-22); letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap; }
 .bk-foot__note { margin: 0; font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4; }
 

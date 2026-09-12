@@ -135,6 +135,10 @@ mutar "las dos tallas se alinean por su centro" "$CSS" \
   '.bk-foot__total { display: flex; align-items: baseline;' \
   '.bk-foot__total { display: flex; align-items: center;'
 
+mutar "el rotulo del pie que cobra vuelve al gris de apoyo" "$CSS" \
+  '.bk-foot:has(.bk-cta--sells) .bk-foot__l { font-weight: var(--fw-bold); color: var(--fg); }' \
+  '.bk-foot:has(.bk-cta--sells) .bk-foot__l { font-weight: var(--fw-semibold); color: var(--fg-mute); }'
+
 echo
 echo '── La banda del pago ──'
 
@@ -182,4 +186,9 @@ mutar "la hora sin elegir deja de decir por que" "$JS" \
 
 echo
 echo "── veredicto: ${muerden}/${total} muerden ──"
+# ⚠️⚠️ **AL SALIR, EL BUNDLE SSR QUEDA RANCIO.** Restaurar hace `touch` sobre las fuentes, así que
+# `foot.js` pasa a ser más nuevo que `storage/ssr/` — y `SidebarDomContractTest` renderiza el BUNDLE:
+# 35 casos en rojo con el árbol perfectamente limpio. Su guarda de rancidez lo dice con todas las
+# letras, pero solo si se lee el fallo en vez de suponerlo.
+echo '⚠️  corre `npm run build:ssr` antes de la suite: restaurar ha dejado las fuentes más nuevas que el bundle.'
 [ "$muerden" -eq "$total" ] || exit 1

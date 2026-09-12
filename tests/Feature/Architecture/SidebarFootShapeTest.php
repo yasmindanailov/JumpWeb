@@ -129,6 +129,35 @@ class SidebarFootShapeTest extends TestCase
     }
 
     /**
+     * **En el pie que COBRA el rótulo deja de ser apoyo.**
+     *
+     * En las cuatro pantallas anteriores «Total» acompaña a una cifra informativa; en la de pagar
+     * acompaña a la que va a la tarjeta, y tiene justo encima una banda donde «Total» SÍ es apoyo. Con
+     * los dos en el mismo gris, las tres cifras de esa esquina pesan igual — y eso no falla: solo
+     * deshace la jerarquía que la tanda construyó.
+     */
+    public function test_the_selling_foot_raises_its_label_out_of_the_support_grey(): void
+    {
+        $reglas = $this->reglas();
+        $clave = '.bk-foot:has(.bk-cta--sells) .bk-foot__l';
+
+        $this->assertArrayHasKey(
+            $clave,
+            $reglas,
+            "El pie que cobra ha dejado de subir su rótulo.\n".
+            '▶ Se ata a `.bk-cta--sells` a propósito: quién cobra lo dice `foot.js` con su `sells`, y '.
+            'marcarlo otra vez en el marcado sería la misma regla escrita dos veces.',
+        );
+
+        $this->assertSame('var(--fg)', $this->declaracion($reglas[$clave], 'color'), 'el rótulo del pie que cobra ha vuelto al gris de apoyo');
+        $this->assertSame(
+            '700',
+            $this->declaracion($reglas[$clave], 'font-weight', resolver: true),
+            'el rótulo del pie que cobra ha vuelto al peso de apoyo',
+        );
+    }
+
+    /**
      * **La banda del pago y el pie son DOS superficies, y entre ellas no hay línea.**
      *
      * Desde que el pie ancla en lo que se cobra, la banda lleva el TOTAL —el dato de apoyo— y el pie

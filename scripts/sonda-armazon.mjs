@@ -219,6 +219,9 @@ async function recorrer(context, viewport, nombreViewport, informe) {
         })).catch(() => {});
         const datos = await page.evaluate(MEDIR);
         informe.push({ pantalla, viewport: nombreViewport, ...datos });
+        // ⚠️ Captura de VENTANA y no de elemento: una de elemento cose los `fixed` y enseña piezas que
+        // no están ahí (la trampa de `#303`, pagada dos veces en este repo).
+        await page.screenshot({ path: `${SALIDA}/armazon-${ETIQUETA}/${pantalla}@${viewport.width}.png` });
         return datos;
     };
 
@@ -285,7 +288,7 @@ const informe = [];
 
 for (const [nombre, viewport] of [['movil', MOVIL], ['escritorio', ESCRITORIO]]) {
     const context = await navegador.newContext({ viewport, reducedMotion: 'no-preference' });
-    await mkdir(SALIDA, { recursive: true });
+    await mkdir(`${SALIDA}/armazon-${ETIQUETA}`, { recursive: true });
     try {
         await recorrer(context, viewport, nombre, informe);
     } catch (e) {
