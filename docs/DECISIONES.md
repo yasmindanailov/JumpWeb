@@ -29971,3 +29971,108 @@ sonda de geometría sobre las **catorce** vistas (`/bar` entra en su lista).
 publica — es el único dato que bloquea), **la foto de las mesas** y **la carta**. Y una pregunta del
 artboard que sigue sin contestar y no bloquea: si la carta de papel ya trae los alérgenos, la línea
 que remite a la barra sobra.
+
+---
+
+## #555 · 2026-09-12 · `[DECIDIDO owner]` La BANDA DE CINCO FASES, del día al pago — y un solo «Volver» en el embudo
+
+**Contexto.** T4·4b del carril del SPA, la segunda mitad del **armazón**, y con ella el armazón queda
+completo. Es la decisión 5 de las doce que el owner cerró en la parada 05 del canvas, y el problema que
+resuelve lo escribió él mismo en su auditoría: *«la barra de fases promete tres y desaparece en la
+cuarta pantalla… desde la cesta hasta pagar el cliente no tiene ni idea de cuánto le queda, justo en el
+tramo donde se abandona una compra»*.
+
+### La decisión del owner, y la que no estaba escrita
+
+**1 · Cinco fases hasta pagar** (ya cerrada en la parada 05). ⚠️ **Corrección medida antes de empezar**:
+el canvas dice en TRES sitios que esto es trabajo de SERVIDOR. No lo es — `Purchase.php` está retirado
+desde que el cajón es motor único y hoy la banda la compone `progress.js` en el cliente.
+
+**2 · Una fase por PANTALLA**, con la tercera llamándose como la pantalla a la que lleva. Esto **no
+estaba en el canvas y hubo que preguntarlo**: sus cinco rótulos («Fecha · Hora · Extras · Quién eres ·
+Pagar») no encajan 1:1 con sus cinco pantallas (día · hora · **cesta** · quién eres · pagar), porque
+«Extras» nombraba lo que se elige DENTRO de la pantalla de la hora.
+
+▶ **El argumento que decidió**, y es técnico y no de gusto: hasta esta tanda la tercera fase se
+encendía al elegir hora, así que un mismo «Paso 3 de N» salía en **dos pantallas distintas** — y una
+banda que existe para decir cuánto queda no puede repetir su número.
+
+### El «Volver»: de tres piezas a una
+
+Los pasos 4, 5 y 8 traían su propio `bk-back` encima del título **porque no tenían banda**. Con la
+banda en las cinco, conservarlo dejaba **dos «Volver» en la misma pantalla**. Los tres se retiran y
+`.purchase__back` se va con su sujeto.
+
+❗❗ **A dónde vuelve y cómo se llama salen de LA MISMA FILA de `progress.js`**, y eso no es orden: con
+el rótulo en un sitio y el destino en otro, cambiar uno sin el otro deja un botón que dice «Volver al
+carrito» y lleva a otra parte **sin que nada falle**. Los cinco destinos son los que el mapa del canvas
+enumera y los que `machine.js` ya admitía: día → catálogo · hora → día · cesta → catálogo · quién eres
+→ cesta · pagar → cesta.
+
+⚠️⚠️ **Y juntarlos NO bastaba: lo demostró el arnés.** La mutación «el destino se separa de su rótulo»
+—cambiar `backTo` de «quién eres» al catálogo— **no la cazaba ninguna de las doce guardas**: la misma
+fila los mantiene juntos pero no impide que se contradigan dentro de ella. Se cierra con una
+**EQUIVALENCIA** —dice «al carrito» si y solo si va al carrito—, que es la forma fuerte; dos listas
+paralelas habrían dejado el mismo hueco.
+
+### El defecto que solo vio la sonda: «Your basket» se recortaba en inglés
+
+Con cinco fases el carril de cada una mide **64,4 px** a 390, y el rótulo va `nowrap` con elipsis.
+Medido con la tinta real: **«Your basket» pedía 66** — se cortaba, y en la captura no se nota.
+
+⚠️⚠️ **`scrollWidth` NO sirve para esto y por poco lo da por bueno**: se capa al `clientWidth` cuando el
+texto cabe, así que devuelve el mismo número para un rótulo holgado y para uno al borde del recorte
+(los cinco daban «64/64,4»). La tinta se mide con un **`Range`** sobre el nodo de texto.
+
+▶ **La causa era decoración**: el rótulo iba en MAYÚSCULAS con `letter-spacing: 0.06em`, que costaban
+~9 px cada uno — y el artboard **ya los dibuja capitalizados y sin espaciado**. La regla vieja venía de
+cuando eran tres rótulos cortos y sobraba sitio. Retiradas las dos, los tres idiomas pasan con
+**6,4 · 8,4 · 6,4 px** de margen.
+
+⚠️ **Y había una incoherencia que era MÍA**: propuse «Tu cesta» sin mirar que esa pantalla se llama
+«Tu carrito». Una fase nombra una pantalla; si no la llama por su nombre, el cliente no sabe que ya ha
+estado ahí. Los tres idiomas leen ahora `cart_title`, y hay guarda que los ata.
+
+### Lo que se decidió sin preguntar, y por qué
+
+**El contexto muere en la cesta.** La línea «producto · día · hora» describe UNA reserva, y de la cesta
+en adelante puede haber varias: rotularía la del producto que quedó seleccionado, que no es «la
+reserva» de nadie. El artboard del paso 08 también la dibuja sin contexto.
+
+**Los desenlaces no llevan banda** (confirmado · denegado · verificando · revisa-tu-correo ·
+redirigiendo): de tres de ellos no se sale, y contarles una fase prometería un camino que no existe.
+
+**El catálogo tampoco es una fase**: ahí no se ha empezado a reservar nada, y contarlo haría empezar el
+embudo en «Paso 1 de 6» con la cesta vacía.
+
+### Lo que costó, y lo que el techo hizo bien
+
+⚠️ **El presupuesto de `PurchaseSection` sube 444 → 445, y el techo hizo su trabajo**: la primera
+versión metía allí los cinco destinos con sus `if`, y eso es una REGLA. Se fue a `progress.js` y el
+fichero bajó de **451 a 445**. Lo que queda es una línea de cableado, y a cambio tres componentes
+pierden su botón, su `emit` y su cableado.
+
+⚠️ **El manifiesto del contrato de árbol se regenera**, y se revisó línea a línea antes de aceptarlo:
+los ocho casos cambian **exactamente** en las dos cosas de la tanda (la banda gana dos `bk-seg__item`;
+los cinco pasos pierden su `<button class=bk-back>`), sin una sola deriva colateral. ▶ Seis casos
+vuelven a anclar en `wiz__title` y **no es una relajación**: anclaban en `bk-back` desde `#210` porque
+el botón iba ANTES del título y `treeOf()` solo recorre hermanos siguientes — *un ancla se elige por
+dónde empieza el sujeto, y el sujeto cambió*.
+
+### La red
+
+**`SidebarPhaseBandTest`** (6 casos) + **`scripts/mutar-banda-fases.sh`: 13/13 mutaciones muerden.**
+
+⚠️ Su tope de longitud es **una aproximación declarada**: diez caracteres salen de dividir el carril
+medido (64,4) entre los ~5,8 px por carácter que dan los rótulos reales. Los caracteres no miden
+píxeles, y diez letras anchas pasarían igual — **la medida que manda es la de la sonda**, y el caso lo
+dice.
+
+**Verificación**: suite **4773 · 29.959 aserciones** (1 skipped) · JS **972** · **13/13 mutaciones** ·
+Pint y docs-check ✓ · sonda de navegador en 8 pantallas × 2 anchos con capturas, la tinta de los quince
+rótulos en los tres idiomas, y el paso 08 con señal recorrido de punta a punta.
+
+⚠️ **Paso de despliegue: ninguno.**
+
+❗ **Queda el OJO del owner en un teléfono de verdad** — el mismo que dejó `#554`, y ahora con el
+armazón entero delante.
