@@ -3104,7 +3104,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4792 en verde** (30.187 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol
+> Suite **4799 en verde** (30.248 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol
 > CONJUNTO, con la **PARADA 04 del cajón** encima (`#562`: **+1** de `SidebarDomContractTest` —el caso
 > de «lo que falta antes de pagar», que no existía— y **+3** aserciones de `SidebarOutcomeParityTest`
 > y `SidebarMountTest` · `#563`: **+1** de `SidebarOutcomeParityTest` —el buzón del paso 7, que el diff
@@ -3115,9 +3115,16 @@ aquí lo que no se podaría son datos de menores de terceros.
 > suben el total a **976**) y **`/contacto`** + **`/bar`**
 > del carril de diseño (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que
 > `CookieGateBlockingTest` pierde con su sujeto · `#536`: **+15** de `BarPageTest`).
-> ✅ **Re-medida al cerrar el carril de diseño (12-09)**: idéntica, **4789 / 30.101** — su medición
-> ya incluía `/contacto` y `/bar`. ⚠️ Medida **después** de `npm run build:ssr`, que es lo que hay
-> que correr al traer trabajo del carril del SPA.
+> ✅ **Re-medida al cerrar la PASADA DE VESTIDO (12-09, noche)**: **4799 / 30.248**, sobre el árbol
+> CONJUNTO tras rebasar el carril del SPA (`#557`→`#563`, que vistió las paradas 02, 03 y 04).
+> ⚠️⚠️ **Los dos carriles tocaron el CSS de los MISMOS botones** —la web cambió `.btn--ink`,
+> `.cartbar`, `.bk-cta`, `.acct__btn--primary`, `.acct__qr` y `.zone-tab`, y el SPA estaba vistiendo
+> esas pantallas— y **no chocaron**: el único conflicto del rebase fue el final de `DECISIONES.md`,
+> donde los dos añaden. ▶ *La cifra se mide DESPUÉS de rebasar y DESPUÉS de los dos `build`: ninguna
+> de las que traía cada carril por separado valía.*
+> ⚠️ Antes de esta tanda, el mismo árbol daba **4789 / 30.101**.
+> ⚠️ Medida **después** de `npm run build` Y `npm run build:ssr` — son DOS bundles, y
+> `SidebarDomContractTest` renderiza el SSR: sin él da 35 rojos que no son del código.
 > ⚠️⚠️ **Ninguna de las dos cifras que traía cada carril valía** —4767 se midió sin `/bar` y 4775
 > sin el pie del cajón—, y la buena salió de MEDIR tras rebasar: *se re-mide DESPUÉS de rebasar,
 > nunca antes*, que es lo que la vuelta anterior ya dejó escrito aquí.
