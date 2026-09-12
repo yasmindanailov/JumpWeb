@@ -307,3 +307,23 @@ Route::get('/admin/calendario/eventos', CalendarEventsController::class)
 Route::get('/admin/calendario/resumen-dia', DailySummaryController::class)
     ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.calendario.resumen-dia'); // L1: el resumen lista clientes/teléfonos/cumpleañeros (PII).
+
+/*
+ * ══ EL LABORATORIO DE FACHADA ══════════════════════════════════════════════════════════════════
+ * `DECISIONES #545` · pasada de vestido (`#497`). Dos pantallas donde el owner elige MIRANDO cómo
+ * se coloca el material de fachada, con el mecanismo real (`<x-site.ilu>` sobre el kit de la
+ * instalación) y no con una maqueta aparte.
+ *
+ * ❗❗❗ **CERRADAS POR ENTORNO Y TEMPORALES.** Fuera de `local` la ruta **no se registra**, así que
+ * en producción es un 404 y no una página oculta: una pantalla de prototipo alcanzable por URL es
+ * exactamente la clase de superficie que nadie revisa y que acaba indexada. Llevan además su
+ * `noindex`. ▶ Cuando el owner elija, estas dos rutas se van con sus vistas y con las 18 ranuras de
+ * laboratorio de `IllustrationKit::SLOTS`.
+ *
+ * ⚠️ Sin `web` completo a propósito: no necesitan sesión, ni CSRF, ni cookies. Lo único que piden
+ * es el idioma, para que los tokens y las fuentes sean los de la web.
+ */
+if (app()->environment('local')) {
+    Route::get('/_diseno/splash', fn () => view('lab.splash'))->name('lab.splash');
+    Route::get('/_diseno/siluetas', fn () => view('lab.siluetas'))->name('lab.siluetas');
+}

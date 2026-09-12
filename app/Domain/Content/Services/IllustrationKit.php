@@ -72,6 +72,21 @@ class IllustrationKit
         'slot-visitanos',
         'slot-dudas',
 
+        // ── EL LABORATORIO DE FACHADA ────────────────────────────────────────────────────────
+        // ⚠️⚠️ **Estas 18 son TEMPORALES y su consumidor son las dos pantallas de variantes**
+        // (`/_diseno/splash` y `/_diseno/siluetas`, `#545`), que existen para que el owner elija
+        // mirando y **no se sirven en producción**. Cuando elija, aquí se quedan solo las que se
+        // coloquen de verdad y el resto se va con su pantalla — que es la regla de siempre: una
+        // ranura vive exactamente lo que vive su consumidor.
+        // ▶ Están declaradas y no coladas por la puerta de atrás **a propósito**: sin declararlas,
+        // `kit:build` rechaza el kit entero y el laboratorio no podría pintar nada. Mejor 18 claves
+        // visibles con fecha de caducidad escrita que un mecanismo con un agujero para prototipos.
+        'slot-splash-1', 'slot-splash-2', 'slot-splash-3',
+        'slot-splash-4', 'slot-splash-5', 'slot-splash-6',
+        'slot-pose-p1', 'slot-pose-p2', 'slot-pose-p3', 'slot-pose-p4', 'slot-pose-p5',
+        'slot-pose-p6', 'slot-pose-p7', 'slot-pose-p8', 'slot-pose-p9',
+        'slot-pose-k1', 'slot-pose-k2', 'slot-pose-k3',
+
         // ⚠️⚠️ **SEXTA VEZ QUE ESTA LISTA ENCOGIÓ POR LA MISMA REGLA: una ranura vive exactamente lo
         // que vive su consumidor.** El historial, para que nadie lo lea como un olvido:
         //

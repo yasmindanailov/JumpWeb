@@ -107,6 +107,49 @@ def manchas(art: str) -> list[str]:
     return [por_forma[k] for k in orden]
 
 
+def poses(art: str) -> list[tuple[str, str, str, str]]:
+    """
+    Las DOCE poses (9 de adulto + 3 de niño), con el nombre que les da el artboard.
+
+    ⚠️⚠️ **El rótulo va DESPUÉS del dibujo, no antes**, y por eso el mapeo «el `<svg>` más cercano»
+    sale desplazado UNO: con él, `abierto` se quedaba con la figura de `picado` y las dos últimas de
+    cada grupo apuntaban al dibujo de otra sección. Cada rótulo se empareja con el `<svg>` que lo
+    PRECEDE, y el guion comprueba que salen **doce `viewBox` distintos**: si el artboard cambia su
+    maquetación, eso es lo que lo pone en rojo en vez de escribir doce veces la misma figura.
+
+    ⚠️ **Se sacan del ARTBOARD y no de `assets/pose-*.svg`**, aunque los ficheros sueltos existan:
+    medido en `#281`, los sueltos traen `fill="#000"` (7 de 7) y el artboard no (1 de 138, y vale
+    `none`). Un `fill` propio haría que `kit:build` rechazara el kit entero — y con razón, porque
+    ganaría al color que pone el producto.
+
+    @return (clave, viewBox, título, cuerpo)
+    """
+    svgs = [(m.start(), m.group(1), m.group(2)) for m in
+            re.finditer(r'<svg[^>]*viewBox="([^"]+)"[^>]*>\s*<path[^>]*\sd="([^"]{40,})"', art, re.S)]
+
+    rotulos = [(m.start(), m.group(1).lower(), m.group(2)) for m in
+               re.finditer(r'>([PK]\d)<br>([a-záéíóúñ]+)<', art, re.I)]
+
+    if len(rotulos) != 12:
+        sys.exit(f"✗ Esperaba 12 poses rotuladas y he encontrado {len(rotulos)}.")
+
+    salida, cajas = [], set()
+
+    for pos, codigo, nombre in rotulos:
+        previos = [s for s in svgs if s[0] < pos]
+        if not previos:
+            sys.exit(f"✗ La pose «{codigo} {nombre}» no tiene ningún dibujo delante.")
+        _, vb, d = previos[-1]
+        cajas.add(vb)
+        salida.append((f'slot-pose-{codigo}', vb, f'Silueta · {nombre}', f'<path d="{d}"></path>'))
+
+    if len(cajas) != 12:
+        sys.exit(f"✗ Las 12 poses comparten solo {len(cajas)} `viewBox`: el emparejamiento se ha "
+                 "desplazado. El rótulo va DESPUÉS de su dibujo.")
+
+    return salida
+
+
 def friso(art: str) -> tuple[str, float, float]:
     """
     El friso familiar (`G3`): tres poses en fila, con la caja que el artboard les da.
@@ -170,6 +213,16 @@ def main() -> int:
     nuevos: list[tuple[str, str, str, str]] = []
     for clave, idx, titulo in REPARTO_MANCHAS:
         nuevos.append((clave, '-12 -12 224 224', titulo, formas[idx]))
+
+    # ── EL LABORATORIO ───────────────────────────────────────────────────────────────────────
+    # Las SEIS manchas y las DOCE poses, cada una con su clave, para las dos pantallas de variantes
+    # (`/_diseno/splash` y `/_diseno/siluetas`). ⚠️ Tres de los seis splash repiten la geometría de
+    # las manchas del reparto de arriba: es a propósito —la clave es el SITIO, no el dibujo— y
+    # cuesta ~3 KB en un fichero externo que el navegador cachea una vez.
+    for i, cuerpo in enumerate(formas, start=1):
+        nuevos.append((f'slot-splash-{i}', '-12 -12 224 224', f'Mancha {i} · laboratorio', cuerpo))
+
+    nuevos.extend(poses(art))
 
     salida = ['<svg xmlns="http://www.w3.org/2000/svg">']
     salida += ['  ' + p for p in previos]
