@@ -1,5 +1,6 @@
 <script setup>
 import { t as translate } from '../i18n.js';
+import AuthTabset from './AuthTabset.vue';
 import LoginForm from './LoginForm.vue';
 import RegisterForm from './RegisterForm.vue';
 
@@ -74,14 +75,10 @@ const a = (key) => translate(props.account, key);
 <template>
 
     <h3 class="wiz__title">{{ t('identify_title') }}</h3>
-    <p class="purchase__note">{{ t('identify_intro') }}</p>
+    <p class="wiz__lede">{{ t('identify_intro') }}</p>
 
-    <div class="zone-tabs purchase__authtabs">
-        <button type="button" class="zone-tab" :class="{ active: mode === 'login' }"
-                @click="$emit('set-mode', 'login')">{{ a('login.cta') }}</button>
-        <button type="button" class="zone-tab" :class="{ active: mode === 'register' }"
-                @click="$emit('set-mode', 'register')">{{ a('register.cta') }}</button>
-    </div>
+    <AuthTabset :active="mode" :login-label="a('login.cta')" :register-label="a('register.cta')"
+                @select="$emit('set-mode', $event)" />
 
     <!-- ⚠️ La ida a Google baja a los DOS formularios y no cuelga de aquí: dentro va entre la cabecera
          y los campos, que es donde el owner la pidió (T8·d). Sigue ofreciéndose en las dos pestañas —

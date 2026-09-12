@@ -2,6 +2,7 @@
 import { useAccountStore } from '../../stores/account.js';
 import { ZONES } from '../navigation.js';
 import { t as translate } from '../../i18n.js';
+import AuthTabset from '../../steps/AuthTabset.vue';
 
 /**
  * **Las dos pestañas de auth: entrar y crear cuenta** (`specs/auth-en-cajon.md` §3.2).
@@ -35,10 +36,11 @@ const a = (key) => translate(props.account, key);
 </script>
 
 <template>
-    <div class="zone-tabs purchase__authtabs">
-        <button type="button" class="zone-tab" :class="{ active: active === ZONES.LOGIN }"
-                @click="nav.replace(ZONES.LOGIN)">{{ a('login.cta') }}</button>
-        <button type="button" class="zone-tab" :class="{ active: active === ZONES.REGISTER }"
-                @click="nav.replace(ZONES.REGISTER)">{{ a('register.cta') }}</button>
-    </div>
+    <!-- ⚠️ El marcado vive en `steps/AuthTabset.vue`, UNA vez (`#561`): estaba escrito aquí y en el
+         paso 5, y al cambiar la pieza hubo que tocar los dos a mano. Lo que esta capa añade es lo
+         suyo —que conmutar sea NAVEGAR entre zonas con `replace()`—, que es justo lo que el embudo no
+         hace. -->
+    <AuthTabset :active="active === ZONES.REGISTER ? 'register' : 'login'"
+                :login-label="a('login.cta')" :register-label="a('register.cta')"
+                @select="nav.replace($event === 'register' ? ZONES.REGISTER : ZONES.LOGIN)" />
 </template>

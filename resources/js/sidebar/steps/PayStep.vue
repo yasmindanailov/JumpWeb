@@ -64,7 +64,10 @@ const t = (key) => translate(props.messages, key);
          seguro y no pierde la cesta. -->
 
     <h3 class="wiz__title">{{ t('pay_title') }}</h3>
-    <p class="purchase__note">{{ t('pay_intro') }}</p>
+    <!-- ⚠️ `.wiz__lede` y no `.purchase__note` (`#561`): la entradilla de un paso es una pieza y
+         `.purchase__note` es otra —las notas sueltas de los desenlaces, que no titulan nada—. Con las
+         dos haciendo lo mismo, el aire bajo el título dependía de cuál hubiera tocado. -->
+    <p class="wiz__lede">{{ t('pay_intro') }}</p>
 
     <ul class="cart cart--summary">
         <SummaryLine v-for="line in lines" :key="line.index" :line="line" :messages="messages" :locale="locale" />

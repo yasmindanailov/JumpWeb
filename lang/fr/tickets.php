@@ -119,8 +119,9 @@ return [
     'pending_discard' => 'Annuler',
     'add_another' => 'Ajouter une autre réservation',
     'remove' => 'Retirer',
-    'identify_title' => 'Identifie-toi',
-    'identify_intro' => 'Connecte-toi ou crée ton compte pour finaliser ta réservation.',
+    // Le chapô dit À QUOI SERT le compte, pas qu'il en faut un (`#561`).
+    'identify_title' => 'On y est presque',
+    'identify_intro' => "Ton compte garde ton code et ta signature. Avec ça, à l'entrée tu montres juste ton téléphone.",
     'pay_title' => 'Paiement',
     'pay_intro' => 'Vérifie ta réservation avant de payer.',
     // ── Ce qui manque avant de payer (`#349`) ──────────────────────────────────────────────────

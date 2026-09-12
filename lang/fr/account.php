@@ -229,11 +229,14 @@ return [
         'name' => 'Nom et prénom',
         'email' => 'E-mail',
         'phone' => 'Téléphone',
+        // Le téléphone dit À QUOI IL SERT (`#561`).
+        'phone_hint' => "Pour t'appeler à propos de ta réservation, quoi qu'il arrive.",
         'password' => 'Mot de passe',
         'password_hint' => 'Au moins 8 caractères. Évitez les mots de passe courants ou compromis.',
         'must_accept' => 'Vous devez accepter cette condition pour continuer.',
         'accept_waiver' => "J'ai lu et j'accepte la décharge de responsabilité.",
-        'waiver_read' => 'Lire le texte complet',
+        // La décharge se nomme EN ENTIER et toujours pareil (`#561`, `Voz PJP`).
+        'waiver_read' => 'Lire la décharge de responsabilité',
         // Voir l'avertissement dans `lang/es/account.php` : c'est un AVIS, pas une case à cocher.
         'privacy_notice' => 'En créant votre compte, nous traitons vos données conformément à notre <a href=":url" target="_blank" rel="noopener">politique de confidentialité</a>.',
         'submit' => 'Créer le compte',

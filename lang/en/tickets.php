@@ -120,8 +120,9 @@ return [
     'pending_discard' => 'Discard',
     'add_another' => 'Add another booking',
     'remove' => 'Remove',
-    'identify_title' => 'Identify yourself',
-    'identify_intro' => 'Log in or create your account to complete your booking.',
+    // The lede says WHAT the account is for, not that one is required (`#561`).
+    'identify_title' => 'Almost there',
+    'identify_intro' => 'Your account keeps your code and your signature. With that, at the door you just show your phone.',
     'pay_title' => 'Payment',
     'pay_intro' => 'Review your booking before paying.',
     // ── What is missing before paying (`#349`) ─────────────────────────────────────────────────

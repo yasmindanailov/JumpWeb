@@ -228,11 +228,15 @@ return [
         'name' => 'Full name',
         'email' => 'Email',
         'phone' => 'Phone',
+        // The phone says WHAT FOR (`#561`): the sign-up asked for it without explaining while the pay
+        // step did. The wording is the one closed by the owner: «about anything to do with your booking».
+        'phone_hint' => 'So we can call you about anything to do with your booking.',
         'password' => 'Password',
         'password_hint' => 'At least 8 characters. Avoid common or breached passwords.',
         'must_accept' => 'You must accept this to continue.',
         'accept_waiver' => 'I have read and accept the liability waiver.',
-        'waiver_read' => 'Read the full text',
+        // The waiver is named IN FULL and always the same (`#561`, `Voz PJP`).
+        'waiver_read' => 'Read the liability waiver',
         // Ver el aviso de `lang/es/account.php`: es un AVISO, no una casilla, y por eso no dice «I accept».
         'privacy_notice' => 'When you create your account we handle your data as described in our <a href=":url" target="_blank" rel="noopener">privacy policy</a>.',
         'submit' => 'Create account',

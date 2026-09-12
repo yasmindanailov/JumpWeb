@@ -1170,8 +1170,17 @@
    apoya entero en que se pueda ver. Un enlace que no se distingue no informa.
 
    ⚠️ Los valores son los que `.check span a` ya usaba para lo mismo: no se inventa un tratamiento
-   nuevo para un enlace legal que hasta ayer vivía dentro de una casilla. */
-.form__hint a { color: var(--zone-1); text-decoration: underline; }
+   nuevo para un enlace legal que hasta ayer vivía dentro de una casilla.
+
+   ❗❗ **Y ahí estaba el arreglo A MEDIAS** (`#561`): `#551` rescató los cinco roles de TEXTO que leían
+   la marca y arregló `.check span a` —el enlace legal DENTRO de una casilla, con su regla acotada al
+   panel— pero **no éste, que es el mismo enlace fuera de ella**. Es el que `#350` sacó de la casilla,
+   así que se quedó justo en el hueco entre las dos tandas. Sobre papel el cian da **2,45**, y el
+   artboard de la parada 03 lo dibuja en Azul Muro (`#0A5C93`), que es `--interactive`.
+   ▶ *Una pieza corregida no corrige a sus hermanas, y menos si acaba de mudarse.*
+   ⚠️ La regla base cambia sin acotar porque `.form__hint a` **solo lo emite el cajón**: medido, ninguna
+   vista de la web pública pinta un enlace dentro de una pista de formulario. */
+.form__hint a { color: var(--interactive); text-decoration: underline; }
 
 /* casillas legales / marketing */
 .form__checks { display: flex; flex-direction: column; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-20); }
@@ -3316,18 +3325,12 @@ body[data-has-hero].nav--live .hero__pair-slot {
    `<h2>` del armazón lo tapaba por accidente hasta que dejó de pintarse en las zonas de auth.
    ▶ Se arregla aquí, en el modificador que el cajón YA tenía para este componente, y no tocando
    `.zone-tabs`: la landing sigue exactamente como estaba. */
-.purchase__authtabs { display: flex; width: 100%; margin-bottom: var(--sp-16); }
-/* ⚠️⚠️ **Y los BOTONES se reparten ese ancho 50/50** (2026-08-23, `DECISIONES #125`). La regla de
-   arriba sacó del media query de móvil la mitad de `.zone-tabs` y dejó fuera la otra mitad del par:
-   en `landing.css` las dos van juntas —`.zone-tabs { width: 100% }` **y** `.zone-tab { flex: 1 }`,
-   con un comentario que dice literalmente «los 2 botones repartidos 50/50, sin hueco vacío»—, y aquí
-   solo se trajo la primera. Resultado medido en navegador: la barra ocupaba sus 400 px y dentro los
-   botones salían a **103 px y 156 px**, dimensionados por la longitud de su rótulo, con el hueco
-   sobrante a la derecha. Dos pestañas hermanas de anchos distintos se leen como una jerarquía que no
-   existe: «Entrar» parecía menos que «Crear cuenta».
-   ▶ Va acotado a `.purchase__authtabs` por lo mismo que la regla de arriba: la landing sigue
-   exactamente como estaba, y el cajón no depende del ancho de la ventana. */
-.purchase__authtabs .zone-tab { flex: 1; text-align: center; }
+/* La barra de «Entrar / Crear cuenta» ocupa el ancho del panel. ⚠️ Desde `#561` la pieza es
+   `.tabset`, la del SISTEMA, y con ella **se cae la regla que repartía los botones 50/50**: la traía
+   `.zone-tab`, que se dimensionaba por la longitud de su rótulo —medido en `#125`: 103 px y 156 px,
+   con el hueco a la derecha, y «Entrar» leyéndose como menos que «Crear cuenta»—. `.tabset__tab` ya
+   declara `flex: 1` de fábrica, así que el defecto desaparece con su causa en vez de con un parche. */
+.purchase__authtabs { width: 100%; margin-bottom: var(--sp-16); }
 
 /* ====================================================================
    Mis pedidos (Fase 5): lista de reservas con detalle.

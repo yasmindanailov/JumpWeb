@@ -277,12 +277,48 @@ class SidebarTokenBudgetTest extends TestCase
         $sinMedia = (string) preg_replace('/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', $css);
 
         $this->assertMatchesRegularExpression(
-            '/\.purchase__authtabs\s*\{[^}]*display:\s*flex[^}]*width:\s*100%/s',
+            '/\.purchase__authtabs\s*\{[^}]*width:\s*100%/s',
             $sinMedia,
-            "La barra de pestañas del cajón ha vuelto a depender del viewport.\n".
-            "⚠️ `.zone-tabs` es `inline-flex` por defecto —está pensada para la landing— y el cajón es\n".
-            "un panel estrecho SIEMPRE. Sin esta declaración incondicional, en escritorio las pestañas\n".
-            'comparten línea con el botón «Volver», que también es `inline-flex`.'
+            "La barra de pestañas del cajón ha dejado de ocupar el ancho del panel, o lo hace dentro de\n".
+            'un `@media` — y entonces vuelve a depender del tamaño de la ventana.'
+        );
+
+        // ❗❗ **Y se ata la PIEZA, que es donde estaba el agujero** (`#561`). El defecto original era que
+        // `.zone-tabs` es `inline-flex` —está pensada para la landing— y en escritorio las pestañas
+        // compartían línea con el «Volver». Desde `#561` la barra usa `.tabset`, la del SISTEMA, que
+        // declara `display: flex` de fábrica; por eso la declaración local sobra. ▶ Pero si alguien
+        // volviera a `.zone-tabs`, el defecto reaparecería **y las dos aserciones de arriba seguirían en
+        // verde**: el ancho estaría puesto y el `inline-flex` heredado haría el resto.
+        // ⚠️ La barra la pinta UN componente desde `#561` —estaba escrita dos veces y hubo que
+        // sincronizarla a mano al cambiar la pieza—, así que basta mirar ése.
+        $barra = (string) preg_replace(
+            '#<!--.*?-->#s', '',
+            (string) file_get_contents(resource_path('js/sidebar/steps/AuthTabset.vue')),
+        );
+
+        $this->assertStringContainsString(
+            'tabset purchase__authtabs',
+            $barra,
+            "La barra de auth ha dejado de usar la pestaña del SISTEMA.\n".
+            '⚠️ `.zone-tabs` es `inline-flex`, así que con ella las pestañas vuelven a compartir línea '.
+            'con el «Volver» en escritorio — y el `width: 100%` de arriba no lo impide.'
+        );
+
+        // ▶ Y que siga siendo UNA: dos copias del mismo control no divergen el día que se escriben,
+        // sino el día que alguien arregla una.
+        foreach (['steps/IdentifyStep.vue', 'account/zones/AuthTabs.vue'] as $consumidor) {
+            $this->assertStringContainsString(
+                '<AuthTabset',
+                (string) file_get_contents(resource_path('js/sidebar/'.$consumidor)),
+                "«{$consumidor}» ha vuelto a pintar la barra de auth por su cuenta.",
+            );
+        }
+
+        $this->assertMatchesRegularExpression(
+            '/\.tabset\s*\{[^}]*display:\s*flex/s',
+            (string) preg_replace('/@media[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}/s', '', (string) file_get_contents(public_path('css/landing.css'))),
+            'La pestaña del sistema ha dejado de declarar `display: flex` incondicionalmente, y el cajón '.
+            'depende de eso: es lo que la barra dejó de declarar por su cuenta al adoptarla.'
         );
     }
 

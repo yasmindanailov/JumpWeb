@@ -277,7 +277,11 @@
                             // en cada página pública sin tener quien los pintara.
                             'register' => array_replace(\Illuminate\Support\Arr::only(__('account.register'), [
                                 'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-                                'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                                // ⚠️ `phone_hint` entra con el campo (`#561`): la pista dice para qué se
+                                // pide el teléfono, y sin ella en esta lista el `t()` del cajón devolvería
+                                // CADENA VACÍA sin fallar — el hueco de `#333`, que se ve como un campo sin
+                                // explicación y no como algo roto.
+                                'password_hint', 'phone_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
                                 'submit', 'submitting', 'fix_errors', 'leave_blank',
                                 // ⚠️ **El botón de Google viaja SIEMPRE y su pantalla NO** (`#343`): el
                                 // rótulo lo pintan las dos pestañas de auth, que las ve quien no tiene

@@ -746,8 +746,18 @@ class SidebarBundleBudgetTest extends TestCase
      * propio módulo. No se actuó sobre él — es el instrumento, no el código.
      * ▶ Lo que SÍ podó esta banda está en `#552`: la maquinaria de plegado muerta, el chevron sin
      * consumidor y cuatro reglas de hover escritas para un árbol que ya no existe.
+     * ▶ **281 (`#561`, la parada 03)**: medido **280,17 KiB**. Entra la pestaña del SISTEMA en el paso 5
+     * y en la barra del área, la pista del teléfono y el texto nuevo de la cabecera.
+     * ⚠️⚠️ **Se intentó podar antes de subirlo, como manda la norma, y la poda NO podó — otra vez.** La
+     * barra de auth estaba escrita DOS veces (el paso 5 y `AuthTabs.vue`) y hubo que sincronizarla a
+     * mano al cambiar la pieza; extraerla a `AuthTabset.vue` parecía poda evidente y **medido subió**:
+     * 280,08 → 280,17. ▶ *Un componente de Vue trae su propio envoltorio —props, emits, su función de
+     * render— y eso pesa más que las quince líneas de marcado que deja de repetir.* Es la misma
+     * medición que `#553` hizo con otro sujeto.
+     * ▶ La extracción **se queda igual**, y no por el peso: dos copias del mismo control no divergen el
+     * día que se escriben, sino el día que alguien arregla una. El techo paga eso.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 280;
+    private const SIDEBAR_CHUNK_MAX_KB = 281;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

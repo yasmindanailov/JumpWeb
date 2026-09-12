@@ -324,7 +324,11 @@ class SidebarMountTest extends TestCase
         $this->assertSame(
             // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
             [
-                'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
+                'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone',
+                // ⚠️ **`phone_hint` viaja con su campo** (`#561`, grieta 14 del canvas): el teléfono es
+                // obligatorio y el alta lo pedía **sin decir para qué**, mientras el paso de pagar sí lo
+                // hacía. El ORDEN lo fija `lang/*/account.php`, y ahí va pegada a `phone` por lo mismo.
+                'phone_hint', 'password',
                 'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
                 'submit', 'submitting', 'fix_errors', 'leave_blank',
                 // ⚠️ **`google_cta` viaja SIEMPRE y su PANTALLA no** (`#343`): el rótulo lo pintan las
@@ -866,8 +870,18 @@ class SidebarMountTest extends TestCase
         // clave propia y reutiliza `dependents.title`, que ya viajaba (−35 B). Lo que queda no se
         // acorta sin empeorarlo, que es exactamente lo que el párrafo anterior dice que no se hace.
         // Deja **49 B**.
+        //
+        // ▶ **10.200 (`#561`, la parada 03)**: medido **10.177 B**. Entra la PISTA DEL TELÉFONO del
+        // alta —la grieta 14 del canvas: el campo era obligatorio y **no decía para qué**, mientras el
+        // paso de pagar sí lo hacía; mismo dato, dos tratamientos, y el que se saltaba la explicación
+        // era el PRIMERO que lo pide— y el descargo pasa a nombrarse entero («Leer el descargo de
+        // responsabilidad» en vez de «Leer el texto completo»), que es lo que fija `Voz PJP`.
+        // ⚠️ **Se buscó poda antes de subir y NO la hay**: censadas las diecinueve claves de
+        // `register` que viajan, las diecinueve tienen consumidor en un `.vue` del cajón. Y las dos
+        // frases nuevas no se acortan sin empeorarlas, que es lo que el párrafo de arriba prohíbe.
+        // Deja **23 B**.
         $this->assertLessThan(
-            10150, $bytes,
+            10200, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

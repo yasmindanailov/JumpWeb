@@ -173,7 +173,14 @@ const summary = computed(() => props.errors?.summary ?? []);
                 </div>
                 <div class="form__field">
                     <label class="form__label" for="reg-phone">{{ a('register.phone') }}</label>
-                    <input id="reg-phone" v-model="phone" type="tel" autocomplete="tel" required>
+                    <!-- ⚠️ **La pista dice PARA QUÉ se pide** (`#561`, grieta 14 del canvas): el alta lo
+                         exigía sin explicarlo mientras el paso de pagar sí lo hacía — mismo dato, dos
+                         tratamientos, y el que se saltaba la explicación era el PRIMERO que lo pide.
+                         ⚠️ `aria-describedby` y no solo un `<span>` suelto: sin él, quien navega con
+                         lector de pantalla oye «Teléfono, obligatorio» y nunca el motivo. -->
+                    <input id="reg-phone" v-model="phone" type="tel" autocomplete="tel" required
+                           aria-describedby="reg-phone-hint">
+                    <span id="reg-phone-hint" class="form__hint">{{ a('register.phone_hint') }}</span>
                     <span v-if="fieldErrors.phone" class="form__error">{{ fieldErrors.phone }}</span>
                 </div>
             </div>

@@ -156,8 +156,12 @@ return [
     'pending_discard' => 'Descartar',
     'add_another' => 'Añadir otra reserva',
     'remove' => 'Quitar',
-    'identify_title' => 'Identifícate',
-    'identify_intro' => 'Inicia sesión o crea tu cuenta para completar tu reserva.',
+    // ❗❗ **La entradilla dice PARA QUÉ SIRVE la cuenta, no que haga falta una** (`#561`, artboard
+    // `Identificacion PJP`): es el único sitio de esta pantalla donde un muro se puede convertir en un
+    // motivo, y «necesitas una cuenta para continuar» solo explicaba el obstáculo. Las palabras son las
+    // de la sección 05 de la portada.
+    'identify_title' => 'Ya casi está',
+    'identify_intro' => 'Tu cuenta guarda tu código y tu firma. Con eso, en la puerta solo enseñas el móvil.',
     'pay_title' => 'Pago',
     'pay_intro' => 'Revisa tu reserva antes de pagar.',
     // ── Lo que falta antes de pagar (`#349`) ───────────────────────────────────────────────────

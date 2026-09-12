@@ -255,11 +255,21 @@ return [
         'name' => 'Nombre y apellidos',
         'email' => 'Email',
         'phone' => 'Teléfono',
+        // ❗❗ **El teléfono dice PARA QUÉ se pide** (`#561`, grieta 14 del canvas). El alta lo exigía
+        // sin explicarlo mientras el paso de pagar sí lo hacía: mismo dato, dos tratamientos, y el que
+        // se saltaba la explicación era el PRIMERO que lo pide.
+        // ⚠️ La frase es la que el owner cerró en la parada 05 (`doc/spa.md`, decisión 12): «por
+        // cualquier cosa de tu reserva». La anterior —«para avisarte si algo cambia»— **prometía menos
+        // de lo que se hace**, y una promesa corta sobre un dato personal se rompe sola.
+        'phone_hint' => 'Para llamarte por cualquier cosa de tu reserva.',
         'password' => 'Contraseña',
         'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',
         'accept_waiver' => 'He leído y acepto el descargo de responsabilidad.',
-        'waiver_read' => 'Leer el texto completo',
+        // ⚠️ **El descargo se nombra ENTERO y siempre igual** (`#561`, `Voz PJP`): la casilla dice «el
+        // descargo de responsabilidad» y el enlace decía «el texto completo», así que eran dos cosas
+        // para el cliente. El vocabulario público no se abrevia según quepa.
+        'waiver_read' => 'Leer el descargo de responsabilidad',
         // ⚠️⚠️ **NO es una casilla y por eso NO dice «acepto»** (T8·c, `specs/auth-con-google.md`
         // §21.4.3). El art. 13 del RGPD pide INFORMAR, no que se acepte, y la base legal de una
         // reserva es el contrato (art. 6.1.b). Hasta la T8·c este literal decía «He leído y acepto…» y
