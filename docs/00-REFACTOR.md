@@ -1941,6 +1941,10 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       (`#528`: una comparativa que solo compara lo que difiere, con el total del servidor para cada
       número de niños); el vídeo del hero es el nuevo (`#529`) y **la Fase 4 (el SPA) la lleva otro
       ordenador desde `#530`** (`docs/CARRIL-SPA.md`, material del cliente en la rama `cliente/playjump`).
+      ▶ **Estado de ese carril al 2026-09-12**: el ARMAZÓN del cajón completo y **las paradas 02, 03,
+      04 y 05 CERRADAS** (`#550`→`#565`) — el día, la hora y la cesta; el paso de identificarse; pagar
+      y los cuatro desenlaces del banco; y las nueve pantallas de la cuenta. **Queda la parada 06** (el
+      historial y las tres de invitado) y, con ella, las 25 pantallas dibujadas quedarían construidas.
       Sigue `/precios`. ▶ Y la mitad de Google de la **06** cambia de fuente: la spec
       de **Business Profile** está aprobada (`#524`, `specs/google-business-profile.md`), **código no
       empezado** — la próxima sesión la abre el owner decidiendo sobre las reseñas.

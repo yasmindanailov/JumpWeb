@@ -588,13 +588,27 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > ⚠️ **Para poder MIRAR el dinero hizo falta sembrar un pedido**: el cliente de sonda no tenía
 > ninguno y las pantallas del libro salían vacías. Hay uno pagado con señal en local (`R-UNPIRD`).
 >
-> ❗❗ **LO SIGUIENTE: la parada 06** —el historial y las tres pantallas de invitado— **y con ella las
-> 25 dibujadas quedan construidas**. Del owner siguen abiertas sus tres decisiones (los antetítulos de
-> auth, la política de privacidad fuera de su frase, y el velo del historial ya está hecho en `#564`).
-> ⚠️ Y sigue la negociación con el carril de la web: la puerta a la cuenta al racimo de la cabecera y
-> el botón del sistema (16/800 con borde), que toca la familia `.btn` entera.
+> ❗❗❗ **LO SIGUIENTE: LA PARADA 06** —el historial y las tres pantallas de invitado— **y con ella las
+> 25 dibujadas quedan construidas.** ▶ **Su fuente es `Entrar y Crear Cuenta PJP` (6a)** del canvas, que
+> se lee con `DesignSync` (`projectId = 8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad`); el resumen vivo está en
+> **`doc/spa.md`**, sus grietas son la **11 · 12 · 13 · 14**, y `doc/pendiente.md` tiene la lista de
+> encargos. ⚠️ **De las cuatro, DOS ya están hechas**: la 11 (el velo del historial) en `#564` y la 14
+> (la pista del teléfono en el alta) en `#561`. **Quedan la 12 y la 13, y las dos son decisiones del
+> owner**: los TRES antetítulos de entrar / crear cuenta / recuperar —son las únicas 3 de 25 que los
+> llevan, vienen del modal del que se mudaron, y el propio canvas dice que las quitaría pero que «es de
+> gusto»— y **la política de privacidad fuera de su frase**, como control propio de 48 (hoy mide 19 de
+> alto). ⚠️ Esta última es **la misma regla** que el owner ya aprobó en `#562` para las condiciones del
+> paso de pagar, así que conviene preguntársela con ese precedente delante.
 >
-> ❗❗ **Lo que decía antes: la parada 05** — las ocho zonas de la cuenta y el carné. ⚠️ Con una negociación
+> ⚠️ **Antes de empezar, releer el artboard**: el de la parada 05 estaba caducado en TRES de sus ocho
+> puntos y se descubrió midiendo, no leyendo. *Un artboard describe el código del día en que se dibujó.*
+>
+> ▶ **Y sigue la negociación con el carril de la web**: el canvas manda la puerta a la cuenta al racimo
+> de la cabecera (que es suyo) y el **botón del sistema** (16/800 con borde) toca la familia `.btn`
+> entera — se acuerda con él antes de tocarla.
+>
+> ✅ **Lo que decía antes —la parada 05— está HECHO** (`#564`/`#565`): las ocho zonas de la cuenta y el
+> carné. ⚠️ Con una negociación
 > pendiente: el canvas manda la **puerta a la cuenta** al racimo de la cabecera de la WEB, que es del
 > otro carril, y su decisión 02 («Mi QR» como botón fijo) **sigue abierta**. Y el **botón del sistema**
 > (16/800 con borde) toca la familia `.btn` entera: se acuerda con el otro carril antes de tocarla.

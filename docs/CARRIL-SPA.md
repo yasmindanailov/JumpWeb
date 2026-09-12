@@ -56,10 +56,15 @@ agente, en el primer ordenador, sigue con la **Fase 3** (las páginas públicas:
 
 ## 3 · Dónde empiezas
 
-- **Grieta 00** · el cuerpo del cajón está a **13 px** y el suelo del sistema son **16**: subirlo es
-  revisar el reflujo de 25 pantallas. **Es decisión del owner y está ABIERTA** — pregúntala primero.
-- **Grieta 01** · el botón que avanza la compra se pinta con `var(--zone-1)`, el color de una ZONA (de los
-  datos): tiene que pasar al rol de acción (`--action`/`--interactive`, `#436`, `#209`).
+> ⚠️⚠️ **ESTA SECCIÓN ES DEL 2026-09-11 Y SUS DOS PRIMEROS PUNTOS YA ESTÁN HECHOS.** Se conservan
+> porque explican de dónde viene el carril, pero **el estado real está en `ESTADO.md`** (bloque
+> «🧩 CARRIL DEL SPA»), que es lo que hay que leer para saber por dónde seguir. Al 2026-09-12: el
+> ARMAZÓN completo y **las paradas 02, 03, 04 y 05 CERRADAS** (`#550`→`#565`); **queda la parada 06**.
+
+- ~~**Grieta 00** · el cuerpo del cajón está a **13 px** y el suelo del sistema son **16**~~ **CERRADA
+  en `#550`** (`[DECIDIDO owner]`: 16 en las 25 pantallas).
+- ~~**Grieta 01** · el botón que avanza la compra se pinta con `var(--zone-1)`~~ **CERRADA en `#551`**:
+  `.btn--zone` está retirada del producto y el censo de `--zone-*` del cajón bajó de 29 a 13.
 - **El botón del sistema** (16/800 con borde) se aplazó expresamente a esta fase (`rediseno` §5,
   «`[DECIDIDO owner]` espera a la Fase 4»): estrenarlo mueve la familia `.btn` entera, que llega al cajón.
 - Specs que mandan en el cajón: `docs/specs/sidebar-spa.md` (§4.2: **el contrato visual es el ÁRBOL, no
@@ -200,6 +205,20 @@ aquí y no se reescribe lo de arriba: **la corrección va delante del texto que 
    y el cajón no es una ruta suya — la misma lección que `#557` pagó con el stepper. **Antes de
    arreglarlo hace falta una guarda que vea el cajón**; el censo bueno lo da la sonda. Ficha en
    `DEUDA.md` (Alta) y es decisión del owner: toca el armazón, o sea las 25 a la vez.
+
+9. **Hay un PEDIDO PAGADO sembrado en local, y sin él media cuenta no se puede mirar** (`#565`). El
+   cliente de sonda no tenía ninguno, así que «Mis pagos», el historial y el desenlace de la reserva
+   creada salían **vacíos** — y ahí es donde vive todo el dinero del cajón. Se sembró `R-UNPIRD`
+   (119,60 € con señal de 50: total · pagado online · a pagar en el parque, los tres importes) con el
+   DOMINIO (`OrderCreator`) y un `Payment` real por `onlineDueCents()`: **un pedido `paid` sin cobro lo
+   rechaza el libro** (identidad I2) y la pantalla diría «en revisión». ⚠️ Si tu BD local se recrea,
+   hay que volver a sembrarlo o esas pantallas vuelven a no tener sujeto.
+
+10. **Un token que por defecto vale tinta esconde su propio error** (`#565`). `--money` —y cualquier
+    rol que el producto declare como `var(--fg)`— **no cambia nada en la suite ni en un clon limpio**:
+    solo se ve con el paquete del cliente instalado. Se colocó mal en cinco importes y **ni la suite ni
+    una relectura lo vieron; lo vio la captura**. ▶ Con roles de este tipo, la guarda no puede mirar el
+    color: tiene que mirar **qué regla lleva el rol**.
 
 ⚠️ **Y el reparto por TÍTULO de sección de §5 se queda corto**: medido, **31 declaraciones** de clases
 del cajón viven fuera de esos bloques (`.auth__*`, `.acct__*`, `.whoblock__*`, `.guardnote__*`,
