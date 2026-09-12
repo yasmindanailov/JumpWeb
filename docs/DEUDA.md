@@ -894,3 +894,34 @@ siempre»): **la API de Google Business Profile**, no la de Places. Leído en la
 | **Activar los packs de EXCURSIÓN los publica como CUMPLEAÑOS** (Media) | `scopeBirthdaySurfacePacks()` coge *todo pack vendible de zona operativa **sin** `LandingService`*, y la zona **no se nombra en ningún sitio del código**. Reproducido en una transacción revertida: con los dos packs de excursión activos, la superficie de cumpleaños devuelve **4 packs** en vez de 2. Hoy no muerde **por casualidad**: los únicos packs que existían eran los de cumpleaños. | La portada y `/cumpleanos` anunciarían «Excursión 2 h» y «Excursión 3 h» como fiestas de cumpleaños, con su precio por niño y su CTA. Y el vínculo que lo evitaría es **uno a uno** (`ticket_type_id` es `unique`), así que con **dos** packs de excursión no llega. | La tanda de `/servicios`, cuando el owner cierre la presentación: clasificar por **zona** (lo que eligió) o encontrar otra forma de que dos duraciones convivan. ⚠️ Es revertir el **modelo A** de `sistemas/SERVICIOS-CMS.md` §2, que descartó justamente eso — se hace a sabiendas o no se hace. ▶ **Mientras los packs sigan inactivos, no muerde.** |
 | **La tabla de precios TECLEADA contradice a los tramos reales** (Media) | `landing_services.price_table` es JSON escrito a mano (lo dice `landing-white-label.md` §4: *«tabla de precios tecleada a mano»*). Medido contra el catálogo de producción: teclea cortes en **30/75/100** y Kids desde **12,00 €**; el producto real corta en **30/70/100** y empieza en **15,00 €**, con su tarifa especial aparte. | En lo que se publica: hoy `/servicios` enseña precios que **el checkout no cobraría**. No falla nada porque la página está apagada (503) y los packs inactivos. | `[DECIDIDO owner]`: la página publicará **los precios del catálogo** y la tabla tecleada se jubila. Se ejecuta con la tanda de `/servicios`. |
 | **Los packs de excursión no declaran EDAD** (Baja) | `guest_age_family`, `guest_age_min` y `guest_age_max` están a `NULL` en los dos. El artboard pregunta *«¿qué cursos pueden venir?»* y el sistema hoy **no lo sabe**: Kids publica 4–7 y Jump desde 8, así que una excursión de P3 y una de 4º de primaria no caben en la misma zona. | En que la web no puede decir para qué edades es la excursión, ni el cobro puede distinguirlas. Sin ventas todavía, no ha hecho daño. | Del owner: decidir los cursos y rellenar los campos en el panel. ⚠️ Si dos edades necesitan zonas distintas, son **dos productos**, no uno con rango ancho. |
+
+---
+
+## ▶ Media/Baja · lo que deja `/bar` (2026-09-12, `DECISIONES #536`)
+
+**1 · «Los juegos de fuera» se quedan fuera, y son media pareja del artboard.** El turno 7 de
+`Juegos PJP` dibuja **dos** tarjetas bajo la pregunta «¿Y yo qué hago mientras?»: el bar (enlace) y
+los juegos de fuera (dato, sin enlace — *«una tarjeta que no esconde nada no promete nada»*). Entró
+solo el bar: **garra de peluches y billar** no existen en ninguna parte del producto, así que
+escribirlos sería clavar contenido de PlayJump en JumpWeb (el filtro de `rediseno-desde-canvas.md`
+§2). ▶ **Dos salidas**: un campo de texto por instalación bajo `bar.*` —barato, y la pareja queda
+completa— o dejarlo fuera y anotar la divergencia con el artboard. **Es del owner**, y no bloquea:
+la pregunta se contesta igual con una respuesta.
+
+**2 · `atracciones` NO está en `MaintenanceSettings::PAGE_KEYS`, y es un hueco preexistente.** La
+página nació en `#481` y nunca se añadió a la lista, así que **no se puede poner en mantenimiento**
+como las otras seis (hoy siete con `bar`). Se descubrió al añadir `bar` y **no se arregló aquí a
+propósito**: no es de esta tanda y el orden de la lista es lo que decide el orden de los toggles en
+el panel. ▶ Es una línea en la constante más su rótulo `admin.maintenance.page_atracciones`.
+
+**3 · Una carta en imagen no se traduce, y el producto tiene tres idiomas.** `alt` sí es por idioma,
+pero **la carta en sí es una sola imagen para ES/EN/FR**. Hoy no es un problema real —el parque tiene
+una carta en español— pero si algún día quiere publicarla en dos idiomas hay que decidirlo: hoy la
+tabla no tiene columna de idioma y añadirla cambiaría el lector. ▶ **La salida barata cuando llegue**:
+`locale` nullable en `bar_images` y filtrar por el activo con respaldo a las sin idioma.
+
+**4 · La regla de «carta corta» dejó de ser exigible desde el diseño.** El contrato de la tarjeta de
+la sección 03 promete *«carta corta»*, y el artboard la hacía cumplir dibujando **dos grupos**: *«si
+la carta se estira a veinte platos, la tarjeta de 03 pasa a mentir»*. Con la carta como imagen, lo
+que se publica lo decide el fichero que suba el parque — el producto ya no puede acotarlo. ▶ **No hay
+nada que construir**: queda escrito para que nadie lo lea como un descuido.

@@ -29831,3 +29831,136 @@ señal recorrido de punta a punta.
 ❗ **Queda el OJO del owner en un teléfono de verdad**, que es lo único que esta tanda no puede darse a
 sí misma. Y **la T4·4b**: la banda de cinco fases, del día al pago, con el «Volver» de los pasos 4, 5 y
 8 unificado en la banda.
+
+---
+
+## #536 · 2026-09-12 · `[DECIDIDO owner]` `/bar`: la carta se publica como IMAGEN desde el panel, y su puerta vuelve a la portada
+
+**Contexto.** La séptima y última página del inventario del canvas, y la única que **no existía**.
+Artboard `Bar PJP` **1a** (móvil) + **1b** (escritorio), leído entero. Existe por un contrato ya
+escrito: la tarjeta del bar de la sección 03 promete *«mesas con el parque a la vista y carta
+corta»*, y la carta es lo único de esa promesa que no cabe en una tarjeta.
+
+---
+
+**❗❗❗ 1 · LA CARTA NO SE TECLEA: SE SUBE.** `[DECIDIDO owner]`, y cambia el bloque central del
+artboard —que la dibuja plato a plato, en dos grupos, con el precio en mono—. El parque sube la foto
+de la carta que ya tiene impresa, que es lo único que va a mantener de verdad.
+
+⚠️⚠️ **Lo que eso cuesta se dijo antes de construirlo y NO se puede arreglar desde el panel**: el
+texto dentro de una imagen **no lo lee un lector de pantalla, no se traduce, no se indexa y no
+escala**. ▶ Por eso la página hace tres cosas que el artboard no pide:
+
+1. **`alt` OBLIGATORIO** en el formulario (no en el esquema: una fila sembrada no debe reventar). Es
+   lo ÚNICO que va a encontrar quien no ve la imagen — y en una carta eso es todo el contenido.
+2. **Varias caras**, ordenadas y activables, para no obligar a un montaje a mano cuando la carta
+   tiene dos lados.
+3. **Cada cara es un ENLACE a su fichero**: ahí el navegador da zoom nativo, que es lo que hace
+   legible una carta en un teléfono — sin una línea de JavaScript y sin un visor que mantener.
+
+⚠️ **Y las dimensiones se MIDEN al subir** (`getimagesizefromstring` contra el DISCO, no contra una
+ruta local): sin `width`/`height` el navegador no reserva el hueco y la página salta al cargar la
+imagen más grande del sitio. El repo lo tiene fichado como hueco general desde `#314`; esta pieza no
+lo hereda.
+
+---
+
+**❗❗ 2 · SIN NOMBRE DE BAR, LA PÁGINA NO EXISTE.** El titular de `/bar` es el nombre del local —lo
+dejó escrito el propio canvas: *«el nombre real del bar, que ya estaba pendiente de 03 y aquí es el
+titular»*— y el producto no se lo inventa. Sin él: **404**, y el destino **no sale ni en el menú, ni
+en el pie, ni en la portada**.
+
+▶ Las dos mitades van juntas a propósito: *un 404 al que se llega desde el menú es un defecto; un 404
+al que no lleva ningún enlace es una página que todavía no existe.* Falla hacia invisible, como el
+resto del armazón.
+
+⚠️ **Y hay UN solo criterio para las tres superficies.** La tarjeta de la portada preguntaba a
+`BarPage::isPublished()` por su cuenta y **la guarda lo cazó**: con `/bar` en MANTENIMIENTO ese
+predicado seguía diciendo «publicado» y la portada ofrecía una puerta a un **503**, mientras el menú y
+el pie —que leen el inventario— ya la habían retirado. Hoy los tres leen `SiteDestinations::pages()`.
+
+---
+
+**▶ 3 · EL PANEL: un solo sitio para las imágenes, y los textos donde ya viven los textos.**
+
+- **«Ajustes → El bar»** (`BarImageResource`, molde exacto de Ofertas `#270`): las caras de la CARTA
+  y la FOTO del local, con orden arrastrable, activación y `alt` por idioma. Disco `uploads`,
+  servido nativo, con **limpieza de huérfanos** al reemplazar y al borrar.
+  ⚠️ **Una sola tabla con `kind`** porque el owner pidió un solo sitio; de la foto del local se
+  publica **la primera activa por orden**, y no se impone unicidad en el esquema porque eso obligaría
+  a borrar la vieja ANTES de subir la nueva —justo cuando un parque se queda sin foto— (la resolución
+  de `#479` para dos tarifas destacadas).
+- **«Ajustes → Textos y aspecto web → El bar»**: nombre, frase y pie de foto por idioma, más el
+  acceso. ⚠️ **Las imágenes NO van ahí**: esa página no sube ficheros —cero `FileUpload` en sus 992
+  líneas— y la carta es una colección ordenable.
+- ⚠️ **Lo que NO es dato y es a propósito**: «se pide en la barra» y la línea de alérgenos viven en
+  `site.php`. Ninguna instalación vende comida por la web, así que son ciertas en todas.
+
+---
+
+**▶ 4 · LAS TRES DECISIONES DEL OWNER que el artboard dejaba abiertas.**
+
+- **Vuelve la tarjeta del bar a la sección 03.** El motivo con el que `#482` la retiró —*«el bar no
+  entra todavía porque no existe en ninguna parte del producto y su tarjeta es un enlace a `/bar`,
+  que tampoco»*— desaparece con esta tanda. ⚠️⚠️ **Viene SOLA y el artboard la dibuja en pareja**: su
+  otra mitad son «los juegos de fuera» (garra de peluches y billar), y **no entra** porque no hay
+  dato detrás en ningún sitio del producto — escribirla clavaría contenido de PlayJump en JumpWeb,
+  que es el filtro de `rediseno-desde-canvas.md` §2. Ficha en `DEUDA.md`.
+  ⚠️ La pregunta **«¿Y yo qué hago mientras?» SÍ entra**: es lo que convierte la tarjeta en respuesta
+  en vez de en un aviso suelto al final de una sección de juegos.
+- **Se puede entrar solo al bar.** ⚠️ En el panel son **TRES estados y no un interruptor**: sí · no ·
+  **sin decidir**, que es el de fábrica y no publica nada. Un booleano habría afirmado «no se puede
+  entrar» en toda instalación recién montada — una afirmación de negocio que nadie ha hecho.
+- **Alérgenos: una línea que remite a la barra.** ❗ Es obligación legal (Reglamento UE 1169/2011), y
+  la norma admite informar de viva voz **siempre que se indique de forma visible dónde preguntarlo**.
+  Va PEGADA a la carta, que es donde se mira lo que se va a pedir.
+
+---
+
+**⚠️ 5 · CERO RELLENO DE ACCIÓN EN LA PÁGINA, y aquí no es estética**: el bar está fuera del modelo
+de reserva, así que nada suyo puede vestirse de compra. El único naranja de la pantalla lo trae la
+barra del armazón. Hay guarda que cuenta los botones dentro de `main.page--bar`.
+
+---
+
+**❗❗ 6 · DOS DEFECTOS DE MAQUETACIÓN Y UNO DE ARQUITECTURA, los tres encontrados midiendo.**
+
+1. ⚠️⚠️ **`height: auto` no es adorno: sin él `aspect-ratio` NO HACE NADA.** Los atributos
+   `width`/`height` de un `<img>` son *presentational hints* que el navegador mapea a las propiedades
+   CSS `width` y `height`; con `width: 100%` en la hoja (que gana al hint) y `height` sin declarar,
+   **manda el hint**. ▶ Medido: la foto del local salía a **544×900** en vez de 544×306, y
+   `aspect-ratio` computaba «16 / 9» perfectamente — *leer el valor calculado no delataba nada*. Lo
+   vio la captura.
+2. ⚠️ **La carta NO se recorta y NO se limita en alto** (al revés que la foto del local, que sí):
+   una carta con `object-fit: cover` o con un `max-height` deja de ser una carta.
+3. ⚠️⚠️ **Había TRES copias de `MaintenanceSettings::PAGE_KEYS`** —la constante, el seeder y un
+   fixture—, y las dos últimas escritas a mano bajo un comentario que decía «lista fija = PAGE_KEYS».
+   Al entrar `bar` se desincronizaron: el panel pasó a auditar un cambio en cada guardado sin tocar
+   nada (la fila no existía y `''` no es `'0'`), y **el fixture puso en rojo un caso con el producto
+   sano**. ▶ *Un fixture que copia una lista del producto caduca el día que la lista crece, y lo hace
+   acusando al código.* Las dos se derivan.
+
+---
+
+**❗ 7 · LO QUE EL ARNÉS DESTAPÓ DE LA PROPIA GUARDA** (16/18 en la primera pasada, las dos
+supervivientes de la guarda y no del producto): comprobar que **falta un texto** deja pasar el caso
+en que **se publica otro**. Con la condición de la vista forzada, el estado «sin decidir» pintaba
+`__('site.bar_free_entry_')`, o sea **la clave de traducción en crudo**, que no contiene ninguna de
+las dos frases que el caso buscaba. ▶ Se asevera por ELEMENTO (`.bar-counter__entry`), y nace una
+guarda más: un valor desconocido en el ajuste no publica nada.
+
+---
+
+**▶ MEDIDO EN NAVEGADOR** (390 y 1280, fuentes cargadas): documento **2.163 px** en móvil (2,6
+pantallas) y **1.946** en escritorio (2,16); formulario de dos columnas **544 + 544**, el reparto del
+artboard; foto del local **544×306**; **cero** controles propios bajo 48 px —los 4 que la sonda cuenta
+son del armazón y el pie, idénticos en las catorce vistas— y **desborde 0**.
+
+▶ Guardas: **`BarPageTest`** (15 casos, con guarda-de-la-guarda) + `scripts/mutar-bar.py`
+(**18/18 mutaciones mueren**) · suite **4.775** verde (29.989 aserciones, 1 skipped) · Pint ✓ ·
+sonda de geometría sobre las **catorce** vistas (`/bar` entra en su lista).
+
+**❗ LO QUE QUEDA DEL OWNER**: el ojo en vivo, **el nombre real del bar** (sin él la página no se
+publica — es el único dato que bloquea), **la foto de las mesas** y **la carta**. Y una pregunta del
+artboard que sigue sin contestar y no bloquea: si la carta de papel ya trae los alérgenos, la línea
+que remite a la barra sobra.

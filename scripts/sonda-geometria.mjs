@@ -50,7 +50,7 @@ const BASE = 'http://localhost:8081';
 
 /** Las vistas públicas renderizables sin sesión ni enlace firmado. */
 const VISTAS = [
-    '/', '/entradas', '/precios', '/cumpleanos', '/servicios', '/normas', '/contacto',
+    '/', '/entradas', '/precios', '/cumpleanos', '/servicios', '/normas', '/contacto', '/bar',
     '/cookies', '/privacidad', '/aviso-legal', '/condiciones', '/login', '/registro',
 ];
 

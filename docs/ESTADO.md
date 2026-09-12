@@ -39,7 +39,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#535`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) · **`/contacto` ✅ `#535`** (los canales del dato, el formulario con su tema y su aviso, la chapa de atajos del inventario y la dirección escrita **sin mapa**) — siguen · `/servicios` (grupos, PAUSADA) · `/bar` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
+> | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#536`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) · **`/contacto` ✅ `#535`** (los canales del dato, el formulario con su tema y su aviso, la chapa de atajos del inventario y la dirección escrita **sin mapa**) · **`/bar` ✅ `#536`** (la carta como IMAGEN subida en «Ajustes → El bar», su puerta de vuelta en la portada) — **las SIETE páginas del inventario, construidas**; queda `/servicios` (grupos, PAUSADA por el owner) · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 > | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#554`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y CINCO tandas hechas** · ✅ **T4·4a · EL PIE DEL ARMAZÓN** (`#554`, `[DECIDIDO owner]` sobre las dos formas **renderizadas**): el CTA a **fila completa** con el tamaño grande del sistema (56 · 18/34 · 800) y **el paso 08 ancla en LO QUE SE COBRA** — con señal el pie decía el total y a la tarjeta iba otra cifra; hoy la banda dice «Total» y «A pagar en el parque» y pegado al botón va lo que va a la tarjeta. ⚠️⚠️ **Tres cosas del canvas no se sostuvieron al medirlas**, y la que más cambia el plan: **la banda de fases NO es trabajo de servidor** (lo dice en tres sitios) — `Purchase.php` está retirado y hoy la compone el cliente. **17/17 mutaciones** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` **29 → 13**, **17/17 mutaciones** · ✅ **T4·3 · la TARJETA GRANDE del catálogo** (`#552`): dos tarjetas con su franja y su frase, el cumpleaños en tinta, «Servicios» → **«Grupos»**, y el defecto medido del precio de un pack (**159 px de 324**, la descripción en 55 y cortada) → las siete filas iguales · ✅ **T4·3 bis · la PUERTA de categoría** (`#553`, **la propuso el owner**): las dos categorías salen CERRADAS y al pulsarlas se abren en la tarjeta grande — la bifurcación se ve **sin pantalla nueva**; puerta cerrada **154 px** y el panel **817** contra 1.033; **16/16 mutaciones** · **lo siguiente**: la **T4·4b, la banda de CINCO fases** (`[DECIDIDO owner]`), del día al pago — y con ella el «Volver» de carrito, identificarse y pagar, que hoy traen el suyo propio y con la banda serían dos · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
@@ -58,6 +58,22 @@ y ahora escanea también `resources/js/sidebar/**`. ⚠️ Y te toqué **un come
 quedado apuntando a una clase inexistente — hoy no cita ninguna variante concreta, a propósito.
 >
 > ▶ **Para el agente de la web** (lo compartido que tocó `#550`, y por qué): **`landing.css` `:root` pierde `--fs-9`** —se quedó con CERO usos al subir sus tres consumidores del cajón, y `SidebarTokenBudgetTest` exige retirar el token sin consumidores—; **`TypeScaleTest`** y **`ScaleTokensAreUsedTest`** dejan de exigir ese escalón (sus listas pasan a empezar en 10, con el porqué escrito dentro); y **`SemanticFillTextTest::CAJON_BAJO_EL_SUELO` queda VACÍA** (era `.bk-seg__label`, a 9,5 px). ⚠️ **Eran TRES guardas diciendo cosas distintas del mismo token** —retíralo por muerto · que la escala siga completa · que exista para que ningún literal lo esquive—, y la que manda es la que mide el uso real; un literal de 9 px lo siguen prohibiendo las otras dos. ⚠️ **Ninguna regla de la web cambia de talla**: las clases que compartís (`.form__label`, `.check`, `.switch`, `.zone-tab`, `.cal__*`, `.btn`…) **conservan su regla base** y solo suben dentro de `.sidecart__panel`. Cuando vistas una de esas superficies, ese bloque acotado encoge. Retíralo cuando lo hagas.
+>
+> ▶ **Cierre del carril de diseño (12-09, noche)**: **`/bar` construida** (`#536`) — y con ella
+**las SIETE páginas del inventario del canvas están hechas**. ❗❗❗ **Lo que no puedes no saber**:
+`[DECIDIDO owner]` **la carta se publica como IMAGEN**, subida en «Ajustes → El bar», no tecleando
+los platos como dibuja el artboard. ⚠️⚠️ Eso trae un coste que **no se puede arreglar desde el
+panel** —el texto dentro de una imagen no lo lee un lector de pantalla, no se traduce y no se
+indexa—, y por eso la página hace tres cosas que el artboard no pide: **`alt` obligatorio**, **varias
+caras** y **cada una como enlace a su fichero** (así se amplía en un móvil sin visor propio). ⚠️ Las
+**dimensiones se miden al subir**, o la página salta al cargar la imagen más grande del sitio.
+❗❗ **SIN NOMBRE DE BAR EN EL PANEL, `/bar` RESPONDE 404** y no se ofrece ni en el menú, ni en el pie,
+ni en la portada: es la conducta querida. ▶ `[DECIDIDO owner]` vuelve **la tarjeta del bar a la
+sección 03** (el motivo de `#482` desapareció), **se puede entrar solo al bar** (tres estados en el
+panel) y los **alérgenos** remiten a la barra. ⚠️⚠️ **La tarjeta de la portada leía su propio
+predicado y la guarda lo cazó**: con `/bar` en mantenimiento ofrecía una puerta a un 503 mientras el
+menú y el pie ya la habían retirado — hoy las tres superficies leen el inventario. ▶ **Queda del
+OWNER**: el **nombre del bar** (es lo único que bloquea), la **carta** y la **foto de las mesas**.
 >
 > ▶ **Cierre del carril de diseño (12-09, tarde)**: **`/contacto` rehecha** (`#535`). ❗❗❗ **Lo que no
 puedes no saber de esa tanda**: `[DECIDIDO owner]` **el horario de atención ES el de apertura**, y eso
@@ -82,9 +98,9 @@ Lo que hay que saber antes de tocar una línea: el producto de excursiones **exi
 está en local** (dos packs, 12 tramos, apagados), y **clasificar los grupos por zona —lo que el owner
 eligió— revierte el modelo A** de `sistemas/SERVICIOS-CMS.md` §2; sin resolver eso, activar las
 excursiones **las publica como cumpleaños** (reproducido). Tres fichas en `DEUDA.md`.
-⚠️ Después de grupos ya solo queda **`/bar`**, que es NUEVA (ruta, controlador, vista y dato) y cuya
-pareja en la portada está fuera desde `#482`: hoy no se llegaría a ella navegando, y el propio canvas
-declara que «falla la tercera prueba de página».
+⚠️ **Y con `/bar` (`#536`) ya no queda ninguna página por construir**: de las siete del inventario
+del canvas, seis están hechas y `/servicios` (grupos) espera tu artboard. Lo siguiente del carril,
+cuando llegue, es grupos.
 >
 > ⚠️⚠️ **Y una trampa que costó 35 casos rojos al traer el trabajo del otro ordenador**: los commits
 del carril del SPA tocan componentes de Vue, y **`SidebarDomContractTest` renderiza el BUNDLE, no el
@@ -2802,11 +2818,11 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4767 en verde** (29.883 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol CONJUNTO tras la SÉPTIMA
-> fusión, con el **PIE del armazón** del carril del SPA encima (`#554`: **+6** de `SidebarFootShapeTest`,
-> la guarda nueva, y **+4** de JS en `foot.test.js`, que sube el total a **967**) y **`/contacto`** del
-> carril de diseño (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que
-> `CookieGateBlockingTest` pierde con su sujeto).
+> Suite **PENDIENTE-DE-MEDIR** sobre el árbol CONJUNTO tras la OCTAVA fusión, con el **PIE del
+> armazón** del carril del SPA (`#554`: **+6** de `SidebarFootShapeTest` y **+4** de JS en
+> `foot.test.js`, que sube el total a **967**) y **`/contacto`** + **`/bar`** del carril de diseño
+> (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que `CookieGateBlockingTest`
+> pierde con su sujeto · `#536`: **+15** de `BarPageTest`).
 > Antes, **4751** (29.762) con la **puerta de categoría** (`#553`: **+1** de `SidebarCatalogCardTest`
 > —sus casos pasan de 6 a 7— y **+3** de JS en `catalog.test.js`, que subió a **963**).
 > Antes, **4750** (29.734) con la **tarjeta grande del catálogo** (`#552`: **+6** de
