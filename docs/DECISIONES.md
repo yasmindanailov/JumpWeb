@@ -29081,3 +29081,140 @@ algo que conviene saber antes de rehacer otra página:
 por comida de fuera, móviles, joyas, gafas, saltar dos a la vez, embarazadas y lesiones—, que ahora ya
 tienen dónde escribirse desde el panel con su momento y su porqué; y si `/normas` **recupera o no** el
 enlace de vuelta al final.
+
+## #551 · 2026-09-12 · La GRIETA 01: el cajón deja de pintar la ACCIÓN con el color de la marca
+
+**Carril del SPA, T4·2** (banda 550–579). El canvas marca esta grieta como la que más importa de las
+dieciséis: *«el botón que avanza la compra se pinta con `var(--zone-1)`»*, un token cuyo valor no lo
+decide el diseño —lo pone el tema de la instalación y, sobre una zona, el servidor desde
+`zones.color`—. `[DECIDIDO owner]` el orden de la T4: **primero el rol, después el catálogo**, con el
+argumento medido de que **4 de las 8 reglas enumeradas de la grieta viven dentro del catálogo**.
+
+### Lo medido antes de tocar nada
+
+**El mapa del naranja estaba INVERTIDO.** Sonda de navegador propia (`scripts/color-del-cajon.mjs`,
+nueva y versionada) sobre las quince pantallas:
+
+- `.bk-cta` —el CTA del pie en las once del embudo, **incluida la de pagar**— en cian `#1AA9DE`;
+- `.btn--zone` en **26 sitios** de 22 componentes, también en cian;
+- y los **dos** únicos rellenos de acción del cajón eran «Ir al carrito» y «Iniciar sesión», **los dos
+  en la misma pantalla** (`05b-catalogo-con-cesta`, los dos en `#F2711C`) — justo lo que la hoja de
+  componentes del sistema prohíbe: *«solo un botón de relleno de acción por pantalla; si dos botones
+  compiten, ninguno gana»*.
+- **Cinco roles de TEXTO por debajo del suelo**: `.bk-back` 2,21 · `.bk-context` 2,21 ·
+  `.auth__link` 2,45 · `.auth__switch button` 2,45 · `.cart__when` 2,70. El 3,0 es el suelo de un texto
+  **GRANDE**, y el de cuerpo es 4,5. ⚠️ El sistema ya tenía escrito su número: *«en claro el secundario
+  es tinta, nunca cian (2.45)»* — el mismo 2,45 que `#436` corrigió en la FAQ de la web.
+
+❗❗ **Y una corrección al canvas, medida**: dentro del cajón **nadie re-escopa `--zone-1`** (0 nodos de
+los quince recorridos), así que ahí el token vale la marca global, no el color de una zona. La grieta
+existe igual —acción ≠ marca—, pero su mecanismo no es el que la nota describe.
+
+### Lo hecho
+
+- **`.btn--zone` se RETIRA del producto** y la sustituye **`.btn--ink`**, el *secundario* que el sistema
+  declara en su jerarquía de cuatro (acción · secundario · fantasma · enlace). 22 sitios la estrenan.
+- **Los CUATRO que cobran pasan a `.btn` pelado**, que ES el relleno de acción: los dos «Reintentar el
+  pago», el reintento del desenlace y el pago manual sin JS.
+- **El pie**: quién vende lo decide **`foot.js` con `sells`**, y `Foot.vue` solo traduce ese dato a
+  `.bk-cta--sells`. Un único relleno de acción en el embudo. ⚠️ Va en el módulo y no en el marcado
+  porque quien sabe si un pie cobra es quien lo compone: deducirlo del rótulo o del `action` sería una
+  segunda copia de la regla, y un paso nuevo que cobrara saldría en tinta **sin que nada fallara**.
+- **Todo lo ELEGIDO del cajón va en TINTA**, que es la frase del artboard (*«relleno de tinta, como
+  todo lo elegido del cajón»*): el día de la tira y el del calendario, la franja de la hora, el tilde
+  de la casilla, la chapa del destacado y la pestaña de «Entrar / Crear cuenta».
+- **Los enlaces a `--interactive`** (Azul Muro, el rol de `#436`) y **la píldora del contador a `--ok`**
+  —el artboard la dibuja en Lima y aquí los colores son ROLES, no sus literales (`#254`)—.
+- **La barra del carrito y el primario de la tira de cuenta bajan a tinta**: ninguno compra.
+- **El censo de `--zone-*` del cajón pasa de 29 reglas a 13**, y las trece con su motivo.
+
+▶ **Medido después**: los cinco textos **2,21 · 2,21 · 2,45 · 2,45 · 2,70 → 5,81 · 15,17 · 6,43 ·
+6,43 · 18,50**. Geometría idéntica: cero recortes y todas las tallas en los dos niveles legales
+(12 y 15). **Es una tanda de color: no mueve un píxel.**
+
+### Lo que se queda en marca, y por qué (el censo de trece)
+
+⚠️⚠️ **Casi cambio la barra de fase por aplicar la regla general sin mirar el dibujo.** El artboard la
+pinta literalmente en `#1AA9DE`, igual que el cuadradito del contexto: *la grieta manda sacar la marca
+de la ACCIÓN, de la CIFRA, del ENLACE y de la CASILLA — no de todas partes*. Se revirtió antes de
+commitear. Los otros: tres **hovers de relleno de marca** (el idioma de `.cta-med`, `#217`), el
+**spinner** «Tres botes» (`#259`), la inicial del avatar, y cinco del **aviso sobre papel**, que es
+deuda declarada: su rol (`tintePapel`) es el punto 7 de la lista del canvas y nace en otra tanda.
+
+### Tres defectos que destapó, todos en verde
+
+**(a) El canal SECUNDARIO del aviso de «ventas pausadas» llevaba el naranja** y el principal la marca:
+o sea que en una pantalla donde **no se puede comprar**, el botón que menos importaba era el único que
+pesaba. La causa es general y merece quedar escrita: **`.btn` a secas hereda el rol de la base de la
+familia, y la base ES la acción** — *pintar «lo demás» con la clase base no es neutro*. Lo destapó el
+diff del manifiesto de árbol, no una lectura.
+
+**(b) `.purchase__chip.is-active` estaba exceptuada con un motivo FALSO.**
+`InteractionColourIsNotAZoneTest` la enumeraba como *«el chip de ZONA del embudo»*, o sea como
+identidad de zona, que es el único uso legítimo de `--zone-*`. Medido: esa clase la emite **solo**
+`TimeStep.vue` — **es la HORA**. ▶ *Una excepción justificada con un motivo que no describe a su sujeto
+sobrevive a todas las revisiones, porque quien revisa lee el motivo y no el selector.*
+
+**(c) Una guarda con un hueco de vocabulario.** `InteractionColourIsNotAZoneTest` conocía `:hover`,
+`:focus`, `.open`, `.is-active`, `.is-on`, `.active` y `aria-selected` — **y no `.is-selected` ni
+`.is-current`**. Con eso, `.daystrip__day.is-selected`, `.cal__day.is-selected` y
+`.bk-seg__item.is-current` se pintaban con el color de una zona **sin que las acusara ni las
+enumerara**: no estaban permitidas, es que no se las miraba. Se amplía con su caso de CONTROL.
+
+### La red
+
+- **`SidebarActionRoleTest`** (9 casos): el relleno de acción del cajón es exactamente el que cobra ·
+  el pie lo saca del dato · el censo de marca es el declarado y **solo encoge** · los cinco textos
+  rescatados leen su rol · las compartidas se corrigen **acotadas al panel** y su regla base no.
+- **`SingleButtonFamilyTest` deja de exceptuar al cajón**: la exención tenía su motivo escrito —el SPA
+  aparcado— y esta tanda lo retiró. *Una exención sobrevive a su motivo si nadie la revisa, y es por
+  donde vuelve lo retirado.*
+- **`scripts/mutar-rol-accion.py`**: **17/17 mutaciones muerden**, con control en los dos motores.
+
+### Las trampas pagadas
+
+⚠️⚠️ **El predicado de la guarda nueva se equivocó DOS veces y las dos las dijo el ARNÉS.** Primero
+**unía las ramas del ternario**, así que un `'btn--ink' : ''` parecía llevar siempre la variante y la
+rama vacía —la que deja el botón en naranja— pasaba invisible; y después **tomaba como clase el literal
+de una comparación** (`=== 'pending' ? …`) e inventaba una rama que no existe. Hoy lee **una rama por
+alternativa** y tiene caso propio. ▶ *Un predicado sin casos propios es una opinión con forma de
+código.*
+
+⚠️ **Y nació con dos listas mal calibradas**: una **estrecha** —acusaba al botón de borrar la cuenta y
+al de Google, que declaran su propio relleno (`--err` y el blanco de Google)— y otra **ancha**:
+`var(--action\b` casa también con `var(--action-hover)`, porque la frontera de palabra cae en el guion.
+Hoy «qué clase declara un relleno» **se mide en las hojas**, no se escribe a mano.
+
+⚠️⚠️ **La sonda de color medía un `:hover` y una transición a medias.** El ratón se queda donde pulsó,
+así que tras pulsar la barra del carrito el puntero acaba sobre el CTA; y `.bk-cta` interpola su fondo,
+de modo que salía `rgb(24,145,190)` — **un valor que no existe en el sistema**, el punto intermedio
+entre la tinta y la marca. Se aparta el ratón y el contexto corre con **movimiento reducido**, donde el
+propio CSS del cajón declara `transition: none` para estas piezas.
+
+⚠️⚠️ **La pestaña de «Entrar / Crear cuenta» la cazó una CAPTURA, no el censo.** `.zone-tab` es una
+clase COMPARTIDA —tarifas y `/servicios`, donde sí identifica una zona—, así que queda fuera del
+vocabulario del cajón por construcción. Y el canvas tenía escrito el hallazgo con estas palabras en su
+propuesta 1 del paso 05: *«usa el cian de identidad para decir "pestaña activa", que es un rol que el
+cian no tiene»*. Se corrige **el color**, acotado al panel; **su FORMA** —la pestaña del sistema, con
+pista en Nube y activa en blanco— es su pregunta 01 y **sigue abierta**.
+
+⚠️ **La sonda de geometría medía el embudo con el VELO puesto.** `#550` puso la espera del spinner en
+el bucle de las zonas de cuenta y no en el instrumento, así que las seis pantallas del embudo se medían
+—y se fotografiaban— cargando: la captura de «hora elegida» salía con el velo encima. Con la espera en
+`medir()`, el inventario de nodos por debajo de 16 pasa de **207 a 900** (680 de ellos son
+`.daystrip__wd` y `.daystrip__price`, la tira de días que antes no había cargado). **Ninguno baja de
+12**: la grieta 00 sigue cerrada, lo que cambió es que ahora se mide entera.
+
+⚠️ **Y el arnés deja el ÁRBOL como estaba pero no el BUNDLE**: muta ficheros `.vue`, y
+`SidebarDomContractTest` renderiza el bundle SSR. Tras la pasada salieron los **35** casos en rojo de
+siempre con el árbol limpio. `npm run build:ssr` antes de la suite, siempre.
+
+**Verificación**: suite **4725 · 29.510 aserciones** (1 skipped) · JS **959** · **17/17 mutaciones** ·
+Pint y docs-check ✓ · sonda de color y sonda de geometría sobre las quince pantallas a 390 y 1280.
+
+⚠️ **Paso de despliegue: ninguno.** No toca `client.css`: `--action`, `--interactive` y `--ok` ya
+estaban declarados (`#209`, `#436`, `#434`).
+
+❗ **Queda el OJO del owner** y **dos sujetos que el recorrido no alcanza**: `.acct__count` y
+`.acct__alert` necesitan una reserva viva en la cuenta de sonda, y los pedidos locales se borraron al
+importar el catálogo del cliente. Su evidencia es el censo y la guarda, no el navegador.

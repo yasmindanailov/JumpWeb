@@ -42,7 +42,20 @@ no suponerlo.
 > | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#533`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) — siguen · `/servicios` · `/bar` · `/contacto` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
-> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#550`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y primera tanda HECHA** · el paquete de `cliente/playjump` aplicado con sus datos, suite verde con él puesto, Chromium y `socat` instalados, sonda propia versionada (`scripts/sonda-cajon.mjs`) · ✅ **T4·1 · la GRIETA 00** (`#550`, `[DECIDIDO owner]`): el cuerpo del cajón sube al suelo del sistema —103 reglas a los cuatro niveles, 17 muertas retiradas, 23 compartidas **acotadas al panel**— y en el embudo los nodos bajo 16 pasan de **226 a 110**, con cero desborde · **lo siguiente**: el rol de ACCIÓN (grieta 01, `var(--zone-1)` en el botón de comprar) · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
+> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#551`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y DOS tandas hechas** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema, nodos bajo 16 de **226 a 110** en el embudo · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, todo lo ELEGIDO en tinta, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` del cajón **29 → 13 reglas**, **17/17 mutaciones** · **lo siguiente**: el **catálogo** (T4·3, «tarjeta grande, sin puerta», `[DECIDIDO owner]`) · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
+>
+> ▶ **Para el agente de la web** (lo compartido que tocó `#551`, y por qué): **`.btn--zone` YA NO
+EXISTE** en `landing.css` — la sustituye **`.btn--ink`** (relleno de tinta, el *secundario* que la hoja
+de componentes del sistema declara). ⚠️ **Ninguna vista tuya cambia**: `#321` ya la había prohibido en
+Blade y sobrevivía solo porque el cajón la emitía. Si la necesitas para una superficie de la web, la
+variante está lista y con guarda. ⚠️⚠️ **Tres listas globales se mueven** y todas **encogen o se
+acotan**: `ActionFillTest` pierde `.cartbar` y `.acct__btn--primary` —los dos son del cajón y ninguno
+compra— y gana `.bk-cta--sells`; `InteractionColourIsNotAZoneTest` pasa su lista `CAJON` de **8 a 1** y
+**amplía su vocabulario de estados con `.is-selected` y `.is-current`**, que no conocía (verificado: no
+deja al descubierto ninguna regla de la web); y `SingleButtonFamilyTest` **deja de exceptuar al cajón**
+y ahora escanea también `resources/js/sidebar/**`. ⚠️ Y te toqué **un comentario** de
+`components/site/cookie-banner.blade.php`: citaba `.btn--zone` en su nota de la AEPD y la frase habría
+quedado apuntando a una clase inexistente — hoy no cita ninguna variante concreta, a propósito.
 >
 > ▶ **Para el agente de la web** (lo compartido que tocó `#550`, y por qué): **`landing.css` `:root` pierde `--fs-9`** —se quedó con CERO usos al subir sus tres consumidores del cajón, y `SidebarTokenBudgetTest` exige retirar el token sin consumidores—; **`TypeScaleTest`** y **`ScaleTokensAreUsedTest`** dejan de exigir ese escalón (sus listas pasan a empezar en 10, con el porqué escrito dentro); y **`SemanticFillTextTest::CAJON_BAJO_EL_SUELO` queda VACÍA** (era `.bk-seg__label`, a 9,5 px). ⚠️ **Eran TRES guardas diciendo cosas distintas del mismo token** —retíralo por muerto · que la escala siga completa · que exista para que ningún literal lo esquive—, y la que manda es la que mide el uso real; un literal de 9 px lo siguen prohibiendo las otras dos. ⚠️ **Ninguna regla de la web cambia de talla**: las clases que compartís (`.form__label`, `.check`, `.switch`, `.zone-tab`, `.cal__*`, `.btn`…) **conservan su regla base** y solo suben dentro de `.sidecart__panel`. Cuando vistas una de esas superficies, ese bloque acotado encoge. Retíralo cuando lo hagas.
 >
@@ -95,12 +108,37 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > medidas), **cero desborde** y **cero recortes**. Guarda `SidebarBodySizeTest` (5 casos) con
 > **7/7 mutaciones** y su control.
 >
-> ❗❗ **LO SIGUIENTE: LA GRIETA 01**, que es la que el canvas marca como la que más importa — el botón
-> que avanza la compra se pinta con `var(--zone-1)`, **el color de una ZONA, que llega desde los
-> datos**: si alguien retiñe Kids o Jump, el botón de comprar cambia de color a mitad del embudo. Va al
-> rol de acción (`--action`/`--interactive`, `#436`/`#209`). Después, el **botón del sistema** (16/800
-> con borde), que `rediseno-desde-canvas.md` §5 aplazó a esta fase y que **toca la familia `.btn`
-> entera**, o sea las doce vistas de la web: se acuerda con el otro carril antes de tocarla.
+> ✅ **T4·2 · LA GRIETA 01** (`#551`): **el cajón deja de pintar la ACCIÓN con el color de la marca.**
+> ▶ **Medido antes, y el mapa del naranja estaba INVERTIDO**: los **dos** únicos rellenos de acción del
+> cajón eran «Ir al carrito» e «Iniciar sesión» —**los dos en la misma pantalla**, que es justo lo que
+> el sistema prohíbe— y «Pagar» salía en **cian**. Más **cinco roles de TEXTO** por debajo del suelo:
+> 2,21 · 2,21 · 2,45 · 2,45 · 2,70 (el 3,0 es el suelo de un texto GRANDE).
+> ▶ **Hecho**: `.btn--zone` **retirada del producto** y sustituida por **`.btn--ink`** (22 sitios); los
+> **cuatro que cobran** a `.btn` pelado; el pie saca su relleno del dato (**`foot.js::sells`**), así que
+> «Pagar» es el único naranja del embudo; **todo lo ELEGIDO en tinta** (día, franja, casilla, chapa y la
+> pestaña de «Entrar/Crear cuenta»); enlaces a `--interactive` y la píldora del contador a `--ok`.
+> ▶ **Medido después**: **5,81 · 15,17 · 6,43 · 6,43 · 18,50**, cero recortes y **geometría idéntica** —
+> es una tanda de color y no mueve un píxel. Censo de `--zone-*` del cajón **29 → 13**, con motivo cada
+> una. Guardas: `SidebarActionRoleTest` (9) + `scripts/mutar-rol-accion.py` (**17/17**).
+>
+> ⚠️⚠️ **LO QUE NO HAY QUE VOLVER A DESCUBRIR DE ESTA TANDA**: la regla general **no vale para todo** —
+> el artboard dibuja la **barra de fase** y el **cuadradito del contexto** en cian, y casi los cambio
+> por aplicarla sin mirar el dibujo · `.btn` a secas **hereda el rol de la base, que ES la acción**, así
+> que pintar «lo demás» con la clase base no es neutro (en «ventas pausadas» el canal SECUNDARIO era el
+> único naranja) · una **excepción con un motivo falso** sobrevive a todas las revisiones, porque quien
+> revisa lee el motivo y no el selector (`.purchase__chip.is-active` estaba exceptuada como «chip de
+> ZONA» y la emite solo `TimeStep.vue`) · y **la sonda de color medía un `:hover` y una transición a
+> medias**, devolviendo un valor que no existe en el sistema.
+>
+> ❗❗ **LO SIGUIENTE: EL CATÁLOGO** (T4·3), que es el paso 1 del embudo y lo que el owner quiere ver.
+> `[DECIDIDO owner]`: **«tarjeta grande, sin puerta»** —la decisión 01 de `Decisiones SPA PJP`—, o sea
+> que la cabecera de cada categoría pasa a ser una franja con su icono grande, su nombre en rótulo y su
+> frase, con el cumpleaños en TINTA contra el papel del resto; **cero pantallas nuevas**. ⚠️ La puerta
+> de categoría **NO se monta** (está dibujada al lado y cuesta un toque a todo el mundo antes de ver un
+> precio). Después, el **armazón** — ⚠️ con una negociación pendiente: el canvas manda la **puerta a la
+> cuenta** al racimo de la cabecera de la WEB, que es del otro carril, y su decisión 02 («Mi QR» como
+> botón fijo) **sigue abierta**. Y el **botón del sistema** (16/800 con borde) toca la familia `.btn`
+> entera: se acuerda con el otro carril antes de tocarla.
 >
 > ⚠️ **LO QUE NO HAY QUE VOLVER A DESCUBRIR** (lo caro de esta tanda): el reparto por TÍTULO de sección
 > de `CARRIL-SPA.md` §5 **se queda corto** —31 declaraciones del cajón viven fuera de sus bloques; lo
@@ -2644,7 +2682,14 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4732 en verde** (29.653 aserciones, 1 skipped), medida el **2026-09-12** con **`/normas`**
+> Suite **4744 en verde** (29.713 aserciones, 1 skipped), medida el **2026-09-12** sobre el
+> árbol **CONJUNTO tras la SEXTA fusión**, con la **grieta 01 del cajón** encima (`#551`, el segundo
+> ordenador: **+9** de `SidebarActionRoleTest` —la guarda del rol de acción del SPA—, **+2** del
+> vocabulario de estados de `InteractionColourIsNotAZoneTest` y del casco de la familia de botones, y
+> **+2** de JS en `foot.test.js`). ⚠️ **Ninguna de las dos cifras que traía cada carril valía**: 4732
+> medía sin la grieta 01 y 4725 sin `/normas` — *se re-mide DESPUÉS de rebasar, nunca antes*, que es
+> exactamente lo que la vuelta anterior dejó escrito aquí.
+> Antes, **4732** con **`/normas`**
 > encima (`#533`: **+9** de `RulesPageTest`; y TRES guardas ajenas se pusieron rojas **con razón** —la
 > de fronteras de módulos corrigió una flecha `Content → Booking` que no se podía escribir, y las
 > otras dos se habían quedado sin sujeto al rehacerse la página). Antes, **4723** sobre el árbol
