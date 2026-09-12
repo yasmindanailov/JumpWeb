@@ -36,12 +36,20 @@ defineProps({
         <div class="purchase__maint-ctas">
             <!--
               Los canales van A LA VEZ, no en cascada: si hay teléfono y WhatsApp se pintan los dos.
-              Solo el de llamar lleva `btn--zone` (es el canal principal).
+              Solo el de llamar lleva `btn--ink` (es el canal principal).
+
+              ❗❗❗ **DEFECTO PREEXISTENTE, ARREGLADO EN `#551` Y LO DESTAPÓ EL MANIFIESTO**: el que NO
+              era principal se quedaba en `.btn` pelado, o sea en el **relleno de ACCIÓN**, mientras el
+              principal llevaba la marca. Resultado: en una pantalla donde **no se puede comprar** —las
+              ventas están pausadas— el único naranja era el canal SECUNDARIO, y pesaba más que el
+              primero. Ahora el secundario es fantasma, que es lo que el sistema declara para el que
+              baja de jerarquía. ▶ *Pintar «lo demás» con la clase base es heredar el rol que la base
+              tenga, y la base de esta familia ES la acción.*
             -->
             <a v-for="cta in notice.ctas" :key="cta.key"
                :href="cta.href"
                class="btn btn--lg"
-               :class="cta.primary ? 'btn--zone' : ''"
+               :class="cta.primary ? 'btn--ink' : 'btn--ghost'"
                :target="cta.external ? '_blank' : null"
                :rel="cta.external ? 'noopener' : null">{{ cta.label }}</a>
         </div>

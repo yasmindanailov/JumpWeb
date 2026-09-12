@@ -35,26 +35,42 @@ class InteractionColourIsNotAZoneTest extends TestCase
         // `/atracciones` es `.tabset__tab`, que NO se tiñe con el color de zona: su activa se
         // levanta a blanco, que es lo que el sistema declara — así que no necesita excepción.
         '.zone-tab.active' => 'la pestaña de zona de tarifas y /servicios',
-        '.purchase__chip.is-active' => 'cajón: el chip de zona del embudo',
-        '.btn--zone:disabled:hover, .btn--zone[aria-disabled="true"]:hover' => 'cajón: el botón de zona, prohibido en Blade (#321) y vivo en el CSS a propósito',
+        // ⚠️⚠️ **Aquí vivían DOS entradas del cajón y las dos cayeron en `#551`**, cada una por su
+        // motivo, y la primera merece quedar escrita:
+        //  · `.purchase__chip.is-active` estaba exceptuada como «el chip de ZONA del embudo», y
+        //    medido NO LO ERA: esa clase la emite **solo** `TimeStep.vue`, o sea que es la HORA. El
+        //    artboard la dibuja en tinta. ▶ *Una excepción justificada con un motivo que no describe a
+        //    su sujeto sobrevive a todas las revisiones, porque quien revisa lee el motivo.*
+        //  · `.btn--zone:*` desapareció con la variante: hoy es `.btn--ink`, relleno de tinta.
     ];
 
     /** RELLENOS de marca: un fondo, con el texto encima calculado por luminancia (`--on-brand`). No es texto de color. */
     private const RELLENO_DE_MARCA = [
         '.cta-med:hover' => 'el CTA del armazón pasa a marca al pasar, como el mockup (#217)',
         '.salta__btn:hover' => 'el botón del minijuego oscurece su relleno de marca',
+        // ❗❗ Los tres del cajón (`#551`) son el MISMO idioma que `.cta-med`: reposan en tinta y acusan
+        // el paso del cursor pasando a marca. No es la grieta 01 por la puerta de atrás — aquélla era
+        // un valor haciendo de acción, de cifra, de enlace y de casilla a la vez; aquí hace UNA cosa.
+        // ⚠️ No lo «arregles» quitándolo: sin él estos botones se quedan sin hover, y `#435` exige que
+        // los controles respondan.
+        '.btn--ink:hover' => 'cajón: el secundario de tinta acusa el paso a marca, como `.cta-med`',
+        '.bk-cta:hover' => 'cajón: el CTA del pie, ídem',
+        '.cartbar:hover' => 'cajón: la barra del carrito, ídem',
+        '.acct__btn--primary:hover' => 'cajón: el primario de la tira de cuenta, ídem',
+        // ⚠️⚠️ Esta entró al AMPLIAR el vocabulario de estados (abajo): llevaba desde `#436` leyendo
+        // `--zone-1` sin que la guarda la viera, porque `is-current` no estaba en la lista. Y es
+        // legítima: el artboard dibuja el relleno de la fase en cian, así que su halo lo sigue.
+        '.bk-seg__item.is-current .bk-seg__bar' => 'cajón: el halo de la fase actual sigue a su relleno, que el artboard dibuja en marca',
     ];
 
-    /** El cajón SPA, aparcado (`[DECIDIDO owner, 2026-09-01]`). Solo encoge. */
+    /**
+     * El cajón SPA. **Pasó de OCHO a UNA en `#551`** (la grieta 01), y la que queda no es un descuido:
+     * `.acct__alert` es un **aviso sobre papel**, y ese rol (`tintePapel`, punto 7 de la lista del
+     * canvas) nace en otra tanda. Teñirlo de gris mientras tanto le quitaría el significado —«algo
+     * falta»— sin ganar nada. Solo encoge.
+     */
     private const CAJON = [
-        '.bk-foot__info-btn:hover',
-        '.purchase__add-more:hover',
-        '.catalog__item:hover .catalog__ico',
-        '.catalog__item:hover .catalog__go',
-        '.catalog-acc__head:hover .catalog-acc__icon',
-        '.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ',
         '.acct__alert:hover',
-        '.acc-tile:hover .acc-tile__ico svg',
     ];
 
     public function test_the_scan_sees_the_corpus_and_every_exception_has_a_subject(): void
@@ -68,6 +84,40 @@ class InteractionColourIsNotAZoneTest extends TestCase
         }
     }
 
+    /**
+     * El CONTROL del vocabulario: cada palabra de estado tiene que casar con un selector que la use, y
+     * un selector sin estado tiene que quedar FUERA. Sin este caso, ampliar la lista es un gesto que
+     * nadie comprueba — y recortarla pasaría en verde dejando reglas sin vigilar, que es justo lo que
+     * pasó con `.is-selected` hasta `#551`.
+     */
+    public function test_the_state_vocabulary_sees_every_state_word(): void
+    {
+        $sujetos = [
+            '.x:hover' => true,
+            '.x:focus-visible' => true,
+            '.faq__item.open .faq__q' => true,
+            '.purchase__chip.is-active' => true,
+            '.switch.is-on' => true,
+            '.daystrip__day.is-selected' => true,
+            '.bk-seg__item.is-current .bk-seg__bar' => true,
+            '.zone-tab.active' => true,
+            '[aria-selected="true"]' => true,
+            // Y lo que NO es un estado: un selector de reposo no entra en el censo.
+            '.bk-cta' => false,
+            '.catalog__badge' => false,
+            // ⚠️ Frontera de palabra: `.is-onboarding` NO es `.is-on` (la trampa de la subcadena, `#253`).
+            '.x.is-onboarding' => false,
+        ];
+
+        foreach ($sujetos as $selector => $esEstado) {
+            $this->assertSame(
+                $esEstado,
+                (bool) preg_match('/'.self::ESTADOS.'/', $selector),
+                "el vocabulario de estados no clasifica bien `{$selector}`",
+            );
+        }
+    }
+
     public function test_the_interaction_token_exists_in_root_and_both_surfaces(): void
     {
         $rules = $this->rules();
@@ -76,6 +126,21 @@ class InteractionColourIsNotAZoneTest extends TestCase
             $this->assertMatchesRegularExpression('/--interactive:/', $rules[$scope], "`{$scope}` no declara `--interactive`: en esa superficie el rol vuelve a caer al valor de otra (`#436`).");
         }
     }
+
+    /**
+     * El vocabulario de ESTADOS que esta guarda reconoce.
+     *
+     * ❗❗❗ **Nació con un hueco y lo midió `#551`**: conocía `:hover`, `:focus`, `.open`, `.is-active`,
+     * `.is-on`, `.active` y `aria-selected` — y **no `.is-selected` ni `.is-current`**. Con eso,
+     * `.daystrip__day.is-selected`, `.cal__day.is-selected` y `.bk-seg__item.is-current .bk-seg__bar`
+     * se pintaban con el color de una zona **sin que la guarda las acusara ni las enumerara**: no
+     * estaban permitidas, simplemente no se las miraba.
+     *
+     * ▶ *Una guarda que censa estados por una lista de palabras deja fuera los estados que no se le
+     * ocurrieron a quien la escribió.* El arreglo no es adivinar mejor: es que el caso de control
+     * (`test_the_state_vocabulary_sees_every_state_word`) falle si la lista pierde una.
+     */
+    private const ESTADOS = ':hover|:focus|\.open\b|\.is-active|\.is-on\b|\.is-selected\b|\.is-current\b|\.active\b|aria-selected';
 
     public function test_no_interaction_state_reads_a_zone_token(): void
     {
@@ -86,7 +151,7 @@ class InteractionColourIsNotAZoneTest extends TestCase
             if (! preg_match('/--zone-[12]/', $body)) {
                 continue;
             }
-            if (! preg_match('/:hover|:focus|\.open\b|\.is-active|\.is-on\b|\.active\b|aria-selected/', $selector)) {
+            if (! preg_match('/'.self::ESTADOS.'/', $selector)) {
                 continue;
             }
             if (in_array($selector, $permitidos, true)) {

@@ -1024,9 +1024,12 @@
 /* fila "recordar sesión" + "¿olvidaste tu contraseña?" */
 .auth__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-18); }
 .auth__row .check--opt { margin: 0; }
+/* ⚠️ `--interactive` y no `--zone-1` (`#551`): medido, el cian daba **2,45** sobre papel — el mismo
+   número que el sistema escribe en su hoja de componentes cuando prohíbe el cian como secundario en
+   claro, y el mismo que `#436` corrigió en la FAQ de la web. */
 .auth__link {
     background: none; border: none; cursor: pointer; padding: 0;
-    font-family: var(--font-body); font-size: var(--fs-button); color: var(--zone-1);
+    font-family: var(--font-body); font-size: var(--fs-button); color: var(--interactive);
     font-weight: 600; text-decoration: underline; white-space: nowrap;
 }
 
@@ -1038,9 +1041,11 @@
     margin: var(--sp-16) 0 0; text-align: center;
     font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
 }
+/* ⚠️ Los tres botones de texto del área («Cerrar sesión», «Quitar», «Firmarla») salen de aquí, y el
+   canvas los nombra uno a uno en la grieta 01 ampliada: son ENLACES, así que `--interactive` (`#551`). */
 .auth__switch button {
     background: none; border: none; cursor: pointer; padding: 0;
-    font: inherit; color: var(--zone-1); font-weight: 600; text-decoration: underline;
+    font: inherit; color: var(--interactive); font-weight: 600; text-decoration: underline;
 }
 
 /* ---------- banner de avisos (flash) ---------- */
@@ -1444,7 +1449,9 @@ body.no-scroll { overflow: hidden; }
    y se queda en el ámbar de señal del producto. */
 .purchase__chip-full { max-width: 100%; font-size: var(--fs-label); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn); }
 /* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
-.purchase__chip.is-active .purchase__chip-full { color: var(--fg); opacity: 0.78; }
+/* ⚠️ La otra mitad del relleno en tinta: la nota («Casi llena») iba en tinta sobre el cian y ahora
+   tiene que ir sobre la superficie, o desaparece (`#551`). */
+.purchase__chip.is-active .purchase__chip-full { color: var(--bg); opacity: 0.78; }
 
 .purchase__entries { display: flex; flex-direction: column; gap: var(--sp-8); }
 .entry { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
@@ -1603,7 +1610,10 @@ body.no-scroll { overflow: hidden; }
 @keyframes bk-fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .bk-progress { flex: none; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-14) var(--sp-20); background: var(--bg-soft); border-bottom: 1px solid var(--line); animation: bk-fade var(--dur-entra) var(--ease-sale); }
 .bk-progress__top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
-.bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-bold); color: var(--zone-1); transition: gap var(--dur-sale) var(--ease-sale); }
+/* ❗❗ **«VOLVER» ES UN ENLACE, Y UN ENLACE LEE `--interactive`** (`#551`, la regla de `#436`). Iba en
+   `var(--zone-1)`: medido, **2,21** sobre papel. El artboard lo dibuja en `#0A5C93` —Azul Muro—, que
+   es exactamente el valor que el paquete del cliente pone en este rol (6,43 declarado). */
+.bk-back { display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-bold); color: var(--interactive); transition: gap var(--dur-sale) var(--ease-sale); }
 .bk-back svg { width: 15px; height: 15px; }
 /* Flecha/chevron canónicos (componentes x-icons.arrow-right/arrow-left). En contexto inline
    (enlace con texto + flecha) se alinea al centro de la línea; dentro de flex (botones) manda
@@ -1628,6 +1638,11 @@ body.no-scroll { overflow: hidden; }
 .bk-seg { display: flex; gap: var(--sp-7); }
 .bk-seg__item { flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 .bk-seg__bar { height: 5px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; position: relative; }
+/* ⚠️⚠️ **LA BARRA DE FASE SE QUEDA EN MARCA, y casi la cambio** (`#551`): la grieta 01 manda sacar el
+   color de marca de la ACCIÓN, de la CIFRA, del ENLACE y de la CASILLA — no de todas partes. El
+   artboard la dibuja literalmente en `#1AA9DE` (`background:#1AA9DE` en el relleno de cada tramo), y
+   tiene sentido: el progreso no es un control, es el hilo de la marca que recorre el embudo.
+   ▶ *Lo comprobé contra el dibujo antes de creerme la regla general, y la regla general se equivocaba.* */
 .bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--zone-1); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-cae) var(--ease-sale); }
 .bk-seg__item.is-done .bk-seg__bar::after,
 .bk-seg__item.is-current .bk-seg__bar::after { transform: scaleX(1); }
@@ -1635,7 +1650,11 @@ body.no-scroll { overflow: hidden; }
 .bk-seg__label { font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-mute); text-align: center; white-space: nowrap; transition: color var(--dur-estado) var(--ease-sale); }
 .bk-seg__item.is-current .bk-seg__label,
 .bk-seg__item.is-done .bk-seg__label { color: var(--fg); }
-.bk-context { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--zone-1); line-height: 1.2; }
+/* ❗❗ **LA LÍNEA DE CONTEXTO ES UN DATO, NO UN ENLACE** (`#551`): dice qué estás comprando y cuándo, y
+   no lleva a ninguna parte. Iba en `var(--zone-1)` y medido daba **2,21** sobre papel, por debajo
+   incluso del 3,0 que es el suelo de un texto GRANDE. El artboard la dibuja en tinta (`#101418`) y le
+   deja la marca **al cuadradito**, que sí es motivo y no texto. */
+.bk-context { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--fg); line-height: 1.2; }
 .bk-context .jj-block { width: 11px; height: 11px; border-radius: 3px; transform: rotate(20deg); background: var(--zone-1); flex: none; }
 
 /* (3) Footer sticky y dinámico: anclado al fondo del panel, fuera del scroll. En columna porque
@@ -1652,7 +1671,7 @@ body.no-scroll { overflow: hidden; }
    La ⓘ va junto al rótulo del total; el popover abre HACIA ARRIBA (el footer está al fondo del panel). */
 .bk-foot__info { display: inline-flex; vertical-align: middle; margin-left: 5px; }
 .bk-foot__info-btn { display: inline-grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--fg-mute); transition: color var(--dur-sale) var(--ease-sale); }
-.bk-foot__info-btn:hover { color: var(--zone-1); }
+.bk-foot__info-btn:hover { color: var(--interactive); }
 .bk-foot__info-btn svg { width: 15px; height: 15px; }
 /* Anclado al FOOTER (no al icono): abarca su ancho interior (left/right = padding) y se abre justo
    encima. Así queda SIEMPRE dentro del panel — no lo recorta el `overflow:hidden` de `.sidecart__body`
@@ -1671,8 +1690,20 @@ body.no-scroll { overflow: hidden; }
 
 /* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
 .purchase__back { margin-bottom: var(--sp-14); }
-.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
-.bk-cta:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg); box-shadow: var(--shadow-lift); }
+/* ❗❗❗ **EL CTA DEL PIE ES SECUNDARIO, Y SOLO UNO DE LOS CUATRO VENDE** (`#551`, la grieta 01).
+   Pintaba con `var(--zone-1)` —la MARCA— en las once pantallas del embudo, incluida la de pagar: o
+   sea que el único botón que cobra de verdad salía del mismo color que «Continuar». El artboard
+   (`Pasos Compra PJP`) los dibuja los tres en **tinta `#101418`** y el sistema lo declara: *«solo un
+   botón de relleno de acción por pantalla»*, *«en claro el secundario es tinta, nunca cian»*.
+   ▶ Quién vende NO se deduce aquí: lo dice `foot.js` con `sells`, y la plantilla solo traduce ese
+   dato a `.bk-cta--sells`. El hover va a marca, que es el idioma de `.cta-med` (`#217`). */
+.bk-cta { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-15); border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--fg); color: var(--bg); font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
+.bk-cta:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
+/* El pie que COBRA: el único relleno de acción del embudo («Pagar», paso 08). Sin color de acción en
+   la instalación, `--action` cae a `--fg` y este botón vuelve a ser idéntico a sus hermanos — que es
+   el fallo correcto: un naranja inventado sería peor que no distinguirlo. */
+.bk-cta--sells { background: var(--action); color: var(--on-action); }
+.bk-cta--sells:hover { background: var(--action-hover); color: var(--on-action-hover); }
 .bk-cta svg { width: 17px; height: 17px; transition: transform var(--dur-entra) var(--ease-entra); }
 .bk-cta:hover svg { transform: translateX(4px); }
 .bk-cta:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; transform: none; box-shadow: none; }
@@ -1680,10 +1711,19 @@ body.no-scroll { overflow: hidden; }
 /* (3.bis) Barra-carrito del catálogo (estilo mockup `.cart`): un único botón con badge de cantidad
    + (artículos / total) + «Ir al carrito». Clase propia (`.cartbar`) para no colisionar con `.cart`
    (lista de líneas del carrito). */
-.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--action); color: var(--on-action); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
-.cartbar:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); }
-.cartbar:hover .cartbar__count { background: var(--fg); color: var(--action-hover); }
-.cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: var(--zone-1); color: var(--on-brand); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
+/* ❗❗❗ **«IR AL CARRITO» NO COBRA: BAJA A TINTA** (`#551`). Era uno de los **dos** rellenos de acción
+   que convivían en la pantalla del catálogo —el otro era `.acct__btn--primary`, o sea «Iniciar
+   sesión»—, y eso rompe la regla dura del sistema: *«solo un botón de relleno de acción por pantalla.
+   Si dos botones compiten, ninguno gana»*. Medido antes de la tanda: los dos en `#F2711C`, y el que
+   de verdad cobra («Pagar») en cian.
+   ⚠️ **Su píldora pasa a `--ok`** porque el artboard la dibuja en Lima Bote, y aquí los colores son
+   ROLES y no sus literales (la regla de `#254`: *su pista es Lima, la nuestra `--ok`*). Sobre una
+   barra de tinta una píldora de tinta no existiría.
+   ⚠️ **Y la píldora ya NO cambia al pasar el cursor**: antes se invertía a `--fg` sobre `--action-hover`,
+   un par que con el relleno nuevo dejaba de tener sentido. Un rol no se repinta por un hover. */
+.cartbar { display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--fg); color: var(--bg); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
+.cartbar:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); }
+.cartbar__count { display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: var(--ok); color: var(--on-ok); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .cartbar__txt { display: flex; flex-direction: column; gap: var(--sp-1); flex: 1; min-width: 0; text-align: left; }
 .cartbar__label { font-size: var(--fs-label); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em; }
 .cartbar__total { font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-18); letter-spacing: -0.01em; }
@@ -1712,7 +1752,7 @@ body.no-scroll { overflow: hidden; }
 .purchase__cta-secondary {
     width: 100%; justify-content: center;
     /* hereda padding base de .btn (12px 20px); no usamos --lg para que el principal
-       (btn--zone btn--lg) tenga jerarquía visual más fuerte. */
+       (`.btn btn--lg`, relleno de ACCIÓN desde `#551`) tenga jerarquía visual más fuerte. */
 }
 /* CTA terciario (audit edge cases 2026-05-28): "Escribenos" en paso 10 del KO.
    Mismo ancho + centrado para coherencia con secundario, pero MÁS sutil: sin
@@ -1824,13 +1864,25 @@ body.no-scroll { overflow: hidden; }
 .daystrip__day--special .daystrip__price { color: var(--fg); opacity: 0.78; }
 /* Elegido: mismo tratamiento que `.cal__day.is-selected` — acento de zona + anillo, y tinta sobre el
    acento para que el contraste aguante cualquier marca white-label (`#213`). */
+/* ❗❗ **EL DÍA ELEGIDO VA EN TINTA** (`#551`). El artboard lo dibuja así —`fondo: sel ? '#101418'`— y
+   su nota lo generaliza en una frase que gobierna media tanda: *«relleno de tinta, como todo lo
+   elegido del cajón»*. Antes era `var(--zone-1)`, o sea la marca haciendo de selección.
+   ⚠️⚠️ Y esta regla **se le escapaba a `InteractionColourIsNotAZoneTest`**: su vocabulario de estados
+   conocía `:hover`, `.is-active`, `.open` y `.active` — pero no `.is-selected`, así que ni la
+   acusaba ni la enumeraba. El hueco se cierra en esa guarda con esta tanda. */
 .daystrip__day.is-selected {
-    background: var(--zone-1); border-color: var(--zone-1);
+    background: var(--fg); border-color: var(--fg);
     box-shadow: 0 0 0 2px var(--fg) inset;
-    color: var(--on-brand);
+    color: var(--bg);
 }
+/* ⚠️⚠️ **ESTA LÍNEA ES LA MITAD DEL CAMBIO DE ARRIBA, y sin ella el día elegido se queda MUDO**: sobre
+   el cian estos dos textos iban en tinta, y con el relleno en tinta serían tinta sobre tinta. Pasan a
+   la superficie (`--bg`) al 78 %, que es lo que el artboard dibuja —`#F4F4F1` el precio y un gris
+   claro el día de la semana—. ▶ *Cambiar un relleno obliga a mirar TODO lo que vive encima.*
+   ❗ Lo que el artboard separa y aquí no: él da al precio papel pleno y al día de la semana un gris
+   propio; eso es JERARQUÍA, no color, y entra con el vestido de la pieza. */
 .daystrip__day.is-selected .daystrip__wd,
-.daystrip__day.is-selected .daystrip__price { color: var(--fg); opacity: 0.78; }
+.daystrip__day.is-selected .daystrip__price { color: var(--bg); opacity: 0.78; }
 
 /* ══ LAS FLECHAS DE LAS TIRAS (`#241`) ═════════════════════════════════════════════════════════
    `[OWNER, 2026-08-28]`: «en escritorio no hay manera de deslizar con el ratón, y no hay flechas —
@@ -1936,8 +1988,9 @@ body.no-scroll { overflow: hidden; }
 /* Día elegido (Sidebar v2): como ya no se auto-avanza, el día seleccionado queda MARCADO con el
    acento de zona + anillo, hasta pulsar «Continuar». Tinta oscura sobre el acento = contraste
    robusto con cualquier marca white-label (#213), igual que el badge del carrito. */
-.cal__day.is-selected { background: var(--zone-1); box-shadow: 0 0 0 2px var(--fg) inset; color: var(--on-brand); font-weight: var(--fw-black); }
-.cal__day.is-selected .cal__day-price { color: var(--fg); opacity: 0.78; }
+/* El día del calendario, igual que el de la tira: tinta, y su precio sobre la superficie (`#551`). */
+.cal__day.is-selected { background: var(--fg); box-shadow: 0 0 0 2px var(--fg) inset; color: var(--bg); font-weight: var(--fw-black); }
+.cal__day.is-selected .cal__day-price { color: var(--bg); opacity: 0.78; }
 
 /* Jerarquía de la celda del calendario: día (principal, grande) + precio (secundario,
    pequeño y atenuado). Línea-altura 1 para que el gap entre ambos sea exacto. El precio
@@ -2011,7 +2064,10 @@ body.no-scroll { overflow: hidden; }
 .cart { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
 .cart__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-12) var(--sp-14); }
 .cart__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-10); }
-.cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--zone-1); text-transform: capitalize; }
+/* ⚠️ Pese al nombre, esta línea es **el NOMBRE del producto** («2× Entrada Jump»), no la fecha —ésa
+   vive en `.cart__lines`—. El artboard la dibuja en tinta y en negrita, y medida en `var(--zone-1)`
+   daba **2,70** sobre papel (`#551`). *Un nombre de clase no dice qué pinta: hay que leer el marcado.* */
+.cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); text-transform: capitalize; }
 .cart__price { flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); }
 .cart__remove { background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer; }
 .cart__remove:hover { color: var(--fg); }
@@ -2023,7 +2079,7 @@ body.no-scroll { overflow: hidden; }
     font-family: var(--font-body); font-size: var(--fs-button); font-weight: var(--fw-semibold); color: var(--fg); cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
 }
-.purchase__add-more:hover { border-color: var(--fg); color: var(--zone-1); }
+.purchase__add-more:hover { border-color: var(--fg); color: var(--interactive); }
 
 /* Catálogo de entradas (paso 1 del flujo de compra: elegir producto) */
 .catalog { display: flex; flex-direction: column; gap: var(--sp-8); margin-bottom: var(--sp-4); }
@@ -2057,10 +2113,12 @@ body.no-scroll { overflow: hidden; }
    rótulo largo —el contenedor es flex— y `margin-right` porque el `gap` de `.catalog__item` separa
    sus HIJOS, y esto va dentro del rótulo. */
 .catalog__ico { flex: none; margin-right: var(--sp-10); color: var(--fg-mute); }
-.catalog__item:hover .catalog__ico { color: var(--zone-1); }
+.catalog__item:hover .catalog__ico { color: var(--interactive); }
 .catalog__badge {
     font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
-    background: var(--zone-1); color: var(--on-brand); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
+    /* La chapa del destacado en TINTA (`#551`): el artboard la dibuja `background:#101418` con el
+       texto en papel. Marcar «la más vendida» es decir algo del producto, no pintar la marca. */
+    background: var(--fg); color: var(--bg); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
     white-space: nowrap;
 }
 /* La línea de ventajas del catálogo, acotada a DOS líneas (`[DECIDIDO owner]`, grieta 00).
@@ -2081,7 +2139,7 @@ body.no-scroll { overflow: hidden; }
 /* Flecha CTA de la card (Sidebar v2): affordance de «entra a reservar», se desliza y toma el acento al hover. */
 .catalog__go { flex: none; display: inline-grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .catalog__go svg { width: 18px; height: 18px; }
-.catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--zone-1); }
+.catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--interactive); }
 /* Anuncio de señal en el catálogo (#227 F2): «Señal 30,00 €» bajo el PRECIO (en `.catalog__pricecol`). */
 .catalog__deposit { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--warn); line-height: 1.3; }
 
@@ -2109,10 +2167,14 @@ body.no-scroll { overflow: hidden; }
 .catalog-acc__head { width: 100%; display: flex; align-items: center; gap: var(--sp-11); padding: var(--sp-15) var(--sp-2); background: none; border: 0; text-align: left; }
 .catalog-acc__icon { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
 .catalog-acc__icon svg { width: 24px; height: 24px; }
-.catalog-acc__head:hover .catalog-acc__icon { background: var(--zone-1); color: var(--on-brand); }
-/* El icono de entradas apiladas (E5): el occluder de las cards de delante debe fundirse con el
-   fondo naranja del box al hover (si no, se ven cards blancas sobre el naranja). Igual que E2 en los CTAs. */
-.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ { fill: var(--zone-1); }
+/* La cabecera de categoría al pasar: relleno de TINTA, no de marca (`#551`). ⚠️ Y es la pieza que la
+   **T4·3 va a rehacer** («tarjeta grande, sin puerta», `Decisiones SPA PJP` 02): aquí solo se le quita
+   el color de marca; su forma nueva viene con la tanda del catálogo. */
+.catalog-acc__head:hover .catalog-acc__icon { background: var(--fg); color: var(--bg); }
+/* El icono de entradas apiladas (E5): el occluder de las cards de delante tiene que fundirse con el
+   fondo del box al hover (si no, se ven cards claras sobre el relleno). Igual que E2 en los CTAs.
+   ⚠️ Sigue al relleno: antes era el cian y ahora es la tinta. */
+.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ { fill: var(--fg); }
 .catalog-acc__title { flex: 1; font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-body); letter-spacing: -0.01em; color: var(--fg); }
 .catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); color: var(--fg-mute); }
 .catalog-acc__chev { width: 20px; height: 20px; flex: none; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale); }
@@ -2131,7 +2193,14 @@ body.no-scroll { overflow: hidden; }
 }
 
 /* Chip de hora seleccionado (paso 3) */
-.purchase__chip.is-active { background: var(--zone-1); color: var(--on-brand); border-color: var(--zone-1); }
+/* ❗❗❗ **LA FRANJA ELEGIDA VA EN TINTA, Y ESTA REGLA ESTABA EXCEPTUADA POR UN MOTIVO FALSO** (`#551`).
+   `InteractionColourIsNotAZoneTest` la enumeraba como *«el chip de ZONA del embudo»*, o sea como
+   identidad de zona —el único uso legítimo de `--zone-*`—. Medido: `.purchase__chip` lo emite **solo**
+   `TimeStep.vue`, así que no es un chip de zona: **es la HORA**. Y el artboard la dibuja en tinta, con
+   su nota al lado: *«ELEGIDA · relleno de tinta, como todo lo elegido del cajón»*.
+   ▶ *Una excepción justificada con un motivo que no describe a su sujeto sobrevive a todas las
+   revisiones, porque quien revisa lee el motivo y no el selector.* */
+.purchase__chip.is-active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
 /* Caja de cantidad (paso 3, tras elegir la hora) */
 .qtybox { margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
@@ -4534,14 +4603,22 @@ body[data-has-hero] .nav--over .nav__cta {
     transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
 }
 .acct__btn svg { width: 15px; height: 15px; }
-.acct__btn--primary { background: var(--action); color: var(--on-action); }
-.acct__btn--primary:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift); }
+/* ❗❗❗ **«MIS RESERVAS» / «INICIAR SESIÓN» NO VENDEN: BAJAN A TINTA** (`#551`). Este botón era el
+   SEGUNDO relleno de acción de la pantalla del catálogo —el otro, `.cartbar`— y la regla del sistema
+   dice *«solo un botón de relleno de acción por pantalla; si dos botones compiten, ninguno gana»*.
+   Medido antes: los dos en `#F2711C` a la vez, y el que de verdad cobra en cian.
+   ▶ Es la misma decisión que el canvas tomó para las catorce pantallas de cuenta: *una cuenta no
+   vende*. `ActionFillTest` deja de enumerarlo como relleno de acción.
+   ⚠️ Esta pieza la va a SUSTITUIR el armazón (`Decisiones SPA PJP` 03: la puerta a la cuenta sale de
+   aquí y sube a la cabecera), así que esto es lo mínimo: quitarle el rol que no le toca, no vestirla. */
+.acct__btn--primary { background: var(--fg); color: var(--bg); }
+.acct__btn--primary:hover { transform: translateY(-2px); background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-lift); }
 .acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 .acct__btn--ghost:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
 /* Bloqueado en el paso de identificación del flujo (login/registro ya pedido abajo): atenuado,
    cursor not-allowed y SIN efecto hover (el `disabled` lo fija Alpine vía $store.purchase.identifying). */
 .acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.acct__btn--primary:disabled:hover { transform: none; background: var(--action); color: var(--on-action); box-shadow: none; }
+.acct__btn--primary:disabled:hover { transform: none; background: var(--fg); color: var(--bg); box-shadow: none; }
 .acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--line-strong); }
 /* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
    salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`
@@ -4566,7 +4643,9 @@ body[data-has-hero] .nav--over .nav__cta {
 }
 .acct__count {
     display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
-    border-radius: var(--r-pill); background: var(--zone-1); color: var(--on-brand); font-size: var(--fs-label); font-weight: 700;
+    /* La píldora del contador a `--ok` (`#551`): el canvas la dibuja en Lima y aquí los colores son
+       ROLES, no sus literales (`#254`). Sobre un botón de tinta, tinta no se vería. */
+    border-radius: var(--r-pill); background: var(--ok); color: var(--on-ok); font-size: var(--fs-label); font-weight: 700;
 }
 /* Aviso de formulario de reserva pendiente (#217), accionable. */
 .acct__alert {
@@ -4592,7 +4671,7 @@ body[data-has-hero] .nav--over .nav__cta {
 .account__logout { margin: var(--sp-8) 0 0; }
 
 /* (1) CTAs directos de la página de contacto (llamar / WhatsApp). Solo LAYOUT: los botones usan
-   los componentes del sistema de diseño de la landing (`.btn`, `.btn--zone`, `.btn--ghost`). */
+   los componentes del sistema de diseño de la landing (`.btn`, `.btn--ink`, `.btn--ghost`). */
 .contact-quick { margin-bottom: 36px; }
 .contact-quick__label {
     display: block; margin-bottom: var(--sp-12);
@@ -5110,7 +5189,7 @@ html.gf-initing .gf-fiche__body, html.gf-initing .gf-fiche__chev { transition: n
 .gf-fiche__pad .eventfields { margin-top: 0; }
 .gf-fiche__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-20); }
 html:not(.js) .gf-fiche__foot { display: none; }
-/* Prev/Siguiente usan el componente .btn del sitio (.btn--ghost / .btn--zone, .btn--sm). El .btn
+/* Prev/Siguiente usan el componente .btn del sitio (.btn--ghost / .btn--ink, .btn--sm). El .btn
    desliza su icono a la DERECHA al hover; en «Anterior» (flecha izquierda) lo corregimos a la izquierda. */
 .gf-nav-prev:hover svg { transform: translateX(-3px); }
 
@@ -5935,7 +6014,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     color: var(--fg-mute);
     transition: color var(--dur-toque) var(--ease-sale);
 }
-.acc-tile:hover .acc-tile__ico svg { color: var(--zone-1); }
+.acc-tile:hover .acc-tile__ico svg { color: var(--interactive); }
 .acc-tile__name {
     font-family: var(--font-body); font-weight: var(--fw-semibold);
     font-size: var(--fs-body); line-height: 1.25; color: var(--fg);
@@ -6179,7 +6258,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    (encargo del owner, 2026-08-28: «en vez de añadir el formulario completo para añadir menor,
    añade un botón y que salga el form… y añade paginación de ser necesario»; `DependentsZone.vue`).
 
-   ⚠️ **Casi todo se resuelve SIN CSS nuevo**: el disparador es `.btn--zone.auth__submit` (el mismo
+   ⚠️ **Casi todo se resuelve SIN CSS nuevo**: el disparador es `.btn--ink.auth__submit` (el mismo
    botón a todo el ancho del resto del área), el formulario sigue dentro de `.account__card`, sus
    dos botones van en `.acc-actions` —la fila que este mismo bloque estrenó para la confirmación del
    QR— y el paginador es `.pagination` + `.pagination__info` + `.btn--ghost`, exactamente el de «Mis
@@ -6877,3 +6956,36 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
 .sidecart__panel .eventfields select { font-size: var(--fs-body); }  /* campo del pack */
 .sidecart__panel .eventfields textarea { font-size: var(--fs-body); }  /* campo del pack */
 .sidecart__panel .pagination__info { font-size: var(--fs-body-s); }  /* el «1 de 3» de las listas de la cuenta */
+
+/* ====================================================================
+   EL COLOR DEL CAJÓN · las clases COMPARTIDAS, acotadas al panel (grieta 01, `#551`).
+
+   Mismo mecanismo que el bloque de arriba y por el mismo motivo: estas tres reglas
+   las emiten también el formulario de contacto, el de recuperar contraseña, el
+   post-form y el justificante. El cajón es lo que esta tanda vista, así que su color
+   se corrige AQUÍ y la regla base se queda como está — la sube el carril que vista
+   esa superficie. Este bloque **encoge** el día que lo haga.
+
+   ⚠️⚠️ Y no es cosmética: en el cajón los tres leían `var(--zone-1)` haciendo de
+   ENLACE y de TILDE DE CASILLA, que son dos de los cuatro papeles que el canvas
+   enumera en la grieta 01 ampliada. Medido antes: los enlaces a **2,45** sobre papel.
+   ==================================================================== */
+.sidecart__panel .form__hint a { color: var(--interactive); }  /* el enlace de una pista de campo */
+.sidecart__panel .check span a { color: var(--interactive); }  /* el enlace legal dentro de una casilla */
+/* ⚠️ El tilde de la casilla va en TINTA, no en `--interactive`: el artboard dibuja la casilla marcada
+   con `cajaFondo: '#101418'`, y es coherente con el resto —todo lo ELEGIDO del cajón es tinta—. */
+.sidecart__panel .check input { accent-color: var(--fg); }
+
+/* ❗❗❗ **LA PESTAÑA DE «ENTRAR / CREAR CUENTA» NO ELIGE UNA ZONA** (`#551`). El cajón reutiliza
+   `.zone-tab` para los dos formularios de identificación, y esa clase tiñe su activa con `--zone-1`
+   —el color de la zona del parque—. Aquí no hay ninguna zona: lo que dice es **cuál de los dos
+   formularios estás mirando**, que es una SELECCIÓN. Y el canvas lo tiene escrito con estas mismas
+   palabras en su propuesta 1 del paso 05: *«usa el cian de identidad para decir "pestaña activa", que
+   es un rol que el cian no tiene»*.
+   ▶ El censo no la vio porque `.zone-tab` es una clase COMPARTIDA —la emiten tarifas y `/servicios`,
+   donde sí identifica una zona— y por eso queda fuera del vocabulario del cajón. **La cazó una
+   CAPTURA**, no una lectura.
+   ⚠️ Esto es solo el COLOR. El canvas propone además cambiarla por la pestaña del SISTEMA (pista en
+   Nube, activa en blanco con texto tinta, radio 16 fuera y 10 dentro): eso es FORMA, es su pregunta 01
+   del paso 05 y **sigue abierta** — entra con el vestido de la identificación, no aquí. */
+.sidecart__panel .zone-tab.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }

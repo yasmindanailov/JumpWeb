@@ -15,11 +15,14 @@ use Tests\TestCase;
  *
  * Lo que este fichero vigila, y por qué cada cosa:
  *
- *  1. **Que ningún Blade use una variante retirada** (`bd-btn`, `btn--zone`). El cian de
- *     `.btn--zone` es color de ZONA pintando ACCIÓN — la confusión de rol exacta que
- *     `ActionFillTest` documenta. ⚠️ El CAJÓN Vue queda EXENTO a propósito: el SPA está aparcado
- *     (`[DECIDIDO owner, 2026-09-01]`) y su contrato (`SidebarDomContractTest`) emite `btn--zone`;
- *     por eso la variante sigue DECLARADA en el CSS y este test solo mira `*.blade.php`.
+ *  1. **Que ninguna fuente use una variante retirada** (`bd-btn`, `btn--zone`). El cian de
+ *     `.btn--zone` era color de ZONA pintando ACCIÓN — la confusión de rol exacta que
+ *     `ActionFillTest` documenta.
+ *     ❗❗ **Y desde `#551` el CAJÓN tampoco está exento.** Lo estuvo con su motivo escrito —el SPA
+ *     aparcado y su contrato de árbol emitiendo `btn--zone`—, y la grieta 01 retiró la variante del
+ *     producto entero: hoy el secundario del cajón es `.btn--ink` (relleno de tinta) y los cuatro
+ *     botones que COBRAN van en `.btn` pelado. *Una exención sobrevive a su motivo si nadie la
+ *     revisa, y es por donde vuelve lo retirado.*
  *  2. **Que el hover no salte y su texto siga al rol.** La física la fijaron el CTA del armazón
  *     (`#217` §9.4) y la pegatina (`#303`): responde el color, no la posición. El texto en
  *     `--on-action-hover` retiró la excepción que `ActionFillTest::EXCEPTIONS` enumeraba y su
@@ -61,6 +64,17 @@ class SingleButtonFamilyTest extends TestCase
         $this->assertSame(0, preg_match($this->retiredPattern(), $this->stripBladeComments(
             'hola {{-- aquí se cita `.btn--zone` y no cuenta --}} adiós',
         )));
+
+        // El corpus del CAJÓN también se ve, y su desnudador desnuda las TRES formas de comentario
+        // que conviven en un `.vue`: el docblock, la línea y el comentario de marcado.
+        $this->assertGreaterThan(
+            30, count($this->drawerSources()),
+            'el escaneo ve muy pocas fuentes del cajón: ¿ha cambiado la carpeta?',
+        );
+        $this->assertSame(0, preg_match($this->retiredPattern(), $this->stripJsComments(
+            "/** antes era `btn--zone` */\n// y aquí `btn--zone`\n<!-- y aquí `btn--zone` -->",
+        )));
+        $this->assertSame(1, preg_match($this->retiredPattern(), $this->stripJsComments('class="btn btn--zone"')));
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -83,14 +97,49 @@ class SingleButtonFamilyTest extends TestCase
             ['Estos blades usan una variante de botón RETIRADA en la T9:'],
             array_map(fn (string $o): string => '  · '.$o, $offenders),
             ['',
-                '▶ La familia del contenido es UNA: `.btn` (+ `--ghost`/`--sm`/`--lg`). La acción',
-                '  es `--action` en toda la web; `btn--zone` era MARCA pintando acción.',
-                '▶ `bd-btn` se absorbió en `.btn` — el par del editor no perdió nada.',
-                '▶ El cajón Vue está EXENTO (SPA aparcado): esto solo mira `*.blade.php`.'],
+                '▶ La familia del contenido es UNA: `.btn` (+ `--ghost`/`--ink`/`--sm`/`--lg`). La',
+                '  acción es `--action` en toda la web; `btn--zone` era MARCA pintando acción.',
+                '▶ `bd-btn` se absorbió en `.btn` — el par del editor no perdió nada.'],
         )));
     }
 
-    /** Y la familia absorbida tampoco sigue DECLARADA en las hojas del producto. */
+    /**
+     * ❗❗❗ **Y EL CAJÓN YA NO ESTÁ EXENTO** (`#551`).
+     *
+     * Hasta hoy esta guarda solo miraba `*.blade.php`, con su motivo escrito: *«el cajón Vue queda
+     * EXENTO a propósito: el SPA está aparcado y su contrato emite `btn--zone`; por eso la variante
+     * sigue DECLARADA en el CSS»*. La grieta 01 desaparcó el cajón y retiró la variante del producto,
+     * así que la exención **se queda sin motivo** — y una exención sin motivo es justo por donde
+     * vuelve lo retirado.
+     *
+     * ⚠️ Los comentarios se desnudan antes de escanear: dos fuentes del cajón CITAN `btn--zone` en un
+     * docblock para contar su historia («hasta hoy era un `.btn--zone`»), y eso es verdadero y tiene
+     * que poder seguir ahí — la trampa de la prosa, ya pagada en el banner de cookies.
+     */
+    public function test_no_drawer_source_uses_a_retired_button_variant(): void
+    {
+        $offenders = [];
+
+        foreach ($this->drawerSources() as $path) {
+            $clean = $this->stripJsComments((string) file_get_contents($path));
+
+            if (preg_match($this->retiredPattern(), $clean, $m)) {
+                $offenders[] = str_replace(base_path().'/', '', $path).' → '.$m[0];
+            }
+        }
+
+        $this->assertSame([], $offenders, implode("\n", array_merge(
+            ['Estas fuentes del cajón usan una variante de botón RETIRADA:'],
+            array_map(fn (string $o): string => '  · '.$o, $offenders),
+            ['',
+                '▶ El secundario del cajón es `.btn--ink` (relleno de TINTA), que es lo que el sistema',
+                '  declara: «en claro el secundario es tinta, nunca cian».',
+                '▶ Y si el botón COBRA —«Reintentar el pago», el pago manual— va en `.btn` pelado, que',
+                '  ES el relleno de acción. Son cuatro en las 25 pantallas.'],
+        )));
+    }
+
+    /** Y las familias retiradas tampoco siguen DECLARADAS en las hojas del producto. */
     public function test_the_absorbed_family_is_not_in_the_sheets(): void
     {
         foreach (self::SHEETS as $sheet) {
@@ -101,7 +150,32 @@ class SingleButtonFamilyTest extends TestCase
                 "`{$sheet}` vuelve a declarar `.bd-btn`: la familia se absorbió en `.btn` (T9) y ".
                 'resucitarla es volver a tres anatomías para la misma función.',
             );
+
+            // ⚠️ `.btn--zone` pintaba con `--zone-1`, o sea con la MARCA, y lo que el cajón necesitaba
+            // de ella era BAJAR DE JERARQUÍA. Se retiró en `#551` y su sustituta es `.btn--ink`.
+            $this->assertDoesNotMatchRegularExpression(
+                '/\.btn--zone(?![\w-])/', $css,
+                "`{$sheet}` vuelve a declarar `.btn--zone`: esa variante era marca pintando acción y ".
+                'la sustituye `.btn--ink` (relleno de tinta), que es el secundario que el sistema declara.',
+            );
         }
+    }
+
+    /** La sustituta existe y rellena con TINTA, no con un color. */
+    public function test_the_ink_variant_fills_with_ink(): void
+    {
+        $landing = $this->strippedCss('public/css/landing.css');
+
+        $this->assertMatchesRegularExpression(
+            '/\.btn--ink\s*\{[^}]*background:\s*var\(--fg\)/', $landing,
+            '`.btn--ink` ya no rellena con tinta: es el SECUNDARIO del sistema («en claro el '.
+            'secundario es tinta, nunca cian») y sin ese relleno la jerarquía se queda en dos.',
+        );
+
+        $this->assertMatchesRegularExpression(
+            '/\.btn--ink\s*\{[^}]*color:\s*var\(--bg\)/', $landing,
+            '`.btn--ink` pierde el texto de su superficie: tinta sobre tinta no se lee.',
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -193,6 +267,24 @@ class SingleButtonFamilyTest extends TestCase
         return $out;
     }
 
+    /** @return list<string> las fuentes del cajón: sus componentes Vue y sus módulos planos */
+    private function drawerSources(): array
+    {
+        $out = [];
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(base_path('resources/js/sidebar'), \FilesystemIterator::SKIP_DOTS),
+        );
+
+        foreach ($it as $file) {
+            $path = $file->getPathname();
+            if (str_ends_with($path, '.vue') || str_ends_with($path, '.js')) {
+                $out[] = $path;
+            }
+        }
+
+        return $out;
+    }
+
     private function retiredPattern(): string
     {
         return '/(?<![\w-])(bd-btn|btn--zone)(?![\w-])/';
@@ -201,6 +293,20 @@ class SingleButtonFamilyTest extends TestCase
     private function stripBladeComments(string $blade): string
     {
         return (string) preg_replace('/\{\{--.*?--\}\}/s', '', $blade);
+    }
+
+    /**
+     * Las TRES formas de comentario que conviven en un `.vue`: el docblock de su `<script>`, la línea
+     * y el comentario de marcado. Se quitan las tres, o un docblock que cuente la historia de una
+     * clase retirada acusaría a la prosa.
+     */
+    private function stripJsComments(string $source): string
+    {
+        return (string) preg_replace(
+            ['#/\*.*?\*/#s', '#^\s*//.*$#m', '#<!--.*?-->#s'],
+            '',
+            $source,
+        );
     }
 
     /** CSS con los comentarios blanqueados conservando longitud (la trampa de `#193`). */

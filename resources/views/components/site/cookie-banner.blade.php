@@ -42,7 +42,10 @@
             {{-- ───────── Capa 1: compacta ───────── --}}
             <div class="cookie__compact" x-show="!$store.cookies.panel">
                 {{-- IGUALDAD (AEPD): los tres comparten EXACTAMENTE la misma clase/peso; ninguno se
-                     resalta con el color de marca (`.btn--zone`). --}}
+                     resalta — ni con el relleno de acción (`.btn` pelado) ni con el de tinta
+                     (`.btn--ink`). ⚠️ La frase ya no cita una variante concreta a propósito: citaba
+                     `.btn--zone`, que `#551` retiró del producto, y una prueba legal no puede
+                     apoyarse en el nombre de una clase que puede desaparecer. --}}
                 <div class="cookie__actions">
                     <button type="button" class="btn btn--ghost cookie-btn" @click="$store.cookies.rejectAll()">{{ __('cookies.banner.reject') }}</button>
                     <button type="button" class="btn btn--ghost cookie-btn" @click="$store.cookies.acceptAll()">{{ __('cookies.banner.accept') }}</button>

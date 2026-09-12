@@ -88,10 +88,17 @@ class ActionFillTest extends TestCase
         // compra— y con el sitio: el cierre es donde más falta hace que se distinga.
         // Nuestra versión anterior usaba `.btn--zone`, que es la MARCA (el cian).
         '.reserve__act' => 'el CTA del hero del cierre',
-        '.cartbar' => 'la barra del carrito: lleva a pagar',
         '.svc-cta--book' => '«Reservar» de servicios',
-        '.acct__btn--primary' => 'el primario del cajón de cuenta',
-        '.acct__btn--primary:disabled:hover' => 'su guarda de deshabilitado',
+        // ❗❗❗ **`.cartbar` Y `.acct__btn--primary` SALEN DEL ROL EN `#551`** (la grieta 01 del canvas),
+        // y no por gusto: medido en navegador, los DOS rellenaban con `#F2711C` **en la misma pantalla**
+        // —el catálogo con cesta—, y la hoja de componentes del sistema dice *«solo un botón de relleno
+        // de acción por pantalla; si dos botones compiten, ninguno gana»*. Encima, ninguno de los dos
+        // compra: uno lleva al carrito y el otro a «Mis reservas» o a «Iniciar sesión». Y el que de
+        // verdad cobra («Pagar») salía en CIAN.
+        // ▶ Los dos bajan a relleno de tinta. `.cartbar` conserva su jerarquía —es el único control de
+        // su pantalla— y su píldora pasa a `--ok`, que es donde el artboard pone su Lima.
+        // ⚠️ La lista solo ENCOGE, y aquí encoge de 13 a 11 + la entrada nueva del pie.
+        '.bk-cta--sells' => 'cajón: el ÚNICO pie que cobra, «Pagar» (paso 08)',
     ];
 
     /**

@@ -426,15 +426,20 @@ class SidebarDrawerPolishTest extends TestCase
      * ⚠️ **La jerarquía de las dos acciones es la decisión, no el estilo.** Renovar **invalida en el
      * acto** el QR del correo y cualquier copia impresa (§4.5): una acción destructiva y rara no puede
      * llevar el botón principal, y descargar —lo que el cliente hace de verdad con su QR— sí.
-     * Hasta el rediseño era justo al revés: renovar era `btn--zone auth__submit` y descargar un enlace
+     * Hasta el rediseño era justo al revés: renovar era el botón a todo el ancho y descargar un enlace
      * subrayado.
+     *
+     * ⚠️ **La variante del principal cambió en `#551` y la JERARQUÍA no**: era `.btn--zone` —la marca— y
+     * hoy es `.btn--ink`, el secundario de tinta que el sistema declara. Lo que esta guarda vigila es
+     * cuál de las dos acciones pesa más, no con qué color; pero se asevera la clase concreta a propósito,
+     * porque «pesa más» sin un valor detrás no es comprobable.
      */
     public function test_downloading_is_the_primary_action_and_renewing_is_the_quiet_one(): void
     {
         $card = $this->code($this->source(self::CARD));
 
         $this->assertMatchesRegularExpression(
-            '/<a class="btn btn--zone"[^>]*download="carne-qr\.png"/', $card,
+            '/<a class="btn btn--ink"[^>]*download="carne-qr\.png"/', $card,
             'Descargar ha dejado de ser la acción principal de la pantalla.'
         );
 

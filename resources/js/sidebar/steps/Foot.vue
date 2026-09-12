@@ -68,7 +68,11 @@ const open = ref(false);
                     </span></span>
                     <span class="bk-foot__v">{{ footer.amount }}</span>
                 </span>
-                <button type="button" class="bk-cta" :disabled="footer.disabled" @click="$emit('action', footer.action)">
+                <!-- ⚠️ **El relleno de acción lo decide `foot.js`, no este marcado** (`#551`): la
+                     clase `bk-cta--sells` solo la lleva el pie que COBRA, que en el cajón es uno —
+                     «Pagar», paso 08—. Los otros tres son secundarios en relleno de tinta. -->
+                <button type="button" class="bk-cta" :class="footer.sells ? 'bk-cta--sells' : ''"
+                        :disabled="footer.disabled" @click="$emit('action', footer.action)">
                     <span>{{ footer.cta }}</span>
                     <!-- ⚠️⚠️ **Dejan de ser un solo NODO con dos `<template>` dentro, y no es un
                          capricho** (`#257`). Los dos dibujos son ahora los del set, y **no

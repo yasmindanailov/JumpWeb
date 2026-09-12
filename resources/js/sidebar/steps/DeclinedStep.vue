@@ -14,9 +14,14 @@ import { t as translate } from '../i18n.js';
  * —cae a `default`—, así que con sesión y con código de pedido el bloque está siempre. Condicionarlo a
  * «hay motivo conocido» habría emitido un nodo de menos justo en el caso más frecuente.
  *
- * ⚠️ **La jerarquía de los tres CTA es contrato visual**: principal reintenta (`btn--zone btn--lg`),
- * secundario empieza otra reserva (`btn--ghost`) y terciario escribe a soporte (`btn--ghost`, y es un
- * `<a>`, no un `<button>` — el diff de árbol compara el tipo de elemento).
+ * ⚠️ **La jerarquía de los tres CTA es contrato visual**: principal reintenta (`btn btn--lg`, relleno
+ * de ACCIÓN), secundario empieza otra reserva (`btn--ghost`) y terciario escribe a soporte
+ * (`btn--ghost`, y es un `<a>`, no un `<button>` — el diff de árbol compara el tipo de elemento).
+ *
+ * ⚠️⚠️ **Por qué el principal es el único naranja de un DESENLACE** (`#551`): la regla del sistema dice
+ * que un desenlace no vende —cuando el trabajo ya está hecho no hay nada que comprar—, y ésta es su
+ * excepción escrita: **reintentar un cobro SÍ es comprar**. Llevaba `btn--zone`, o sea la marca, que no
+ * significaba ni una cosa ni la otra.
  *
  * ⚠️ **Los dos `<span>` del botón principal están SIEMPRE en el árbol.** En Livewire `wire:loading` es
  * un atributo, no un condicional de servidor: el rótulo y el `.btn__loading` con su spinner viajan los
@@ -77,7 +82,7 @@ const t = (key) => translate(props.messages, key);
         <p class="purchase__note">{{ t('payment_failed_retry') }}</p>
 
         <div class="purchase__final-actions">
-            <button type="button" class="btn btn--zone btn--lg purchase__cta" :disabled="retrying" @click="$emit('retry')">
+            <button type="button" class="btn btn--lg purchase__cta" :disabled="retrying" @click="$emit('retry')">
                 <span v-show="! retrying">{{ t('payment_failed_retry_cta') }}</span>
                 <span v-show="retrying" class="btn__loading">
                     <span class="jj-spinner jj-spinner--xs" aria-hidden="true"></span> {{ t('pay_redirecting') }}

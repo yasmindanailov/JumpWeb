@@ -1028,9 +1028,23 @@ img { display: block; max-width: 100%; }
    T9: UNA familia para todo el contenido. El hover NO salta — la física la fijaron el CTA del
    armazón (#217 §9.4) y la pegatina (#303): responde el color, no la posición — y su texto SIGUE
    AL ROL (`--on-action-hover`), lo que retira la excepción que `ActionFillTest` enumeraba y su
-   ficha de `DEUDA.md`. ⚠️ `.btn--zone` ya NO se usa en ningún Blade (acción ≠ marca): se queda
-   SOLO porque el cajón Vue la emite (`SidebarDomContractTest`) y el SPA está aparcado — cuando el
-   cajón se rediseñe, se va con él. `SingleButtonFamilyTest` vigila las dos cosas. */
+   ficha de `DEUDA.md`.
+
+   ❗❗❗ **`.btn--zone` YA NO EXISTE: la sustituye `.btn--ink`** (`#551`, la grieta 01 del canvas).
+   Aquélla pintaba con `--zone-1`, que es la MARCA, y lo que el cajón necesitaba de ella era **bajar
+   de jerarquía**, no llevar color de marca. La hoja de componentes del sistema declara **CUATRO
+   jerarquías** —acción · secundario · fantasma · enlace— con una regla dura: *«solo un botón de
+   relleno de acción por pantalla»* y *«en claro el secundario es TINTA, nunca cian (2.45)»*. Ese
+   2,45 no es retórica: es exactamente el contraste que la sonda midió en `.auth__link` y
+   `.auth__switch button` del cajón antes de esta tanda.
+   ▶ `.btn--ink` ES ese secundario: relleno de tinta, texto de la superficie. Se estrena en el cajón
+   —22 de sus 26 botones— y queda disponible para la web el día que la necesite.
+
+   ⚠️⚠️ **Su HOVER va a marca, y eso NO reabre la grieta 01**: la grieta era que un mismo valor
+   pintaba acción, cifra, enlace y casilla a la vez, así que ninguna significaba nada. Aquí `--zone-1`
+   hace UNA cosa —el acuse de un secundario al pasar el cursor—, que es el mismo idioma que el CTA del
+   armazón (`.cta-med:hover`, `#217`) y está enumerado como RELLENO DE MARCA en `ActionFillTest`.
+   No lo «arregles» quitándolo: sin él este botón se queda sin hover, y `#435` exige que responda. */
 /* ❗❗❗ **EL MÍNIMO TÁCTIL DE LA FAMILIA, y por qué faltaba** (`DECISIONES #476`).
    Hasta el 2026-09-09 `.btn` **no declaraba ningún mínimo**: su alto salía de `padding` (12+12) más
    la línea del texto, y daba **exactamente 44** — o sea que cumplía el objetivo táctil viejo **por
@@ -1063,8 +1077,8 @@ img { display: block; max-width: 100%; }
 .btn:active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
 .btn svg { transition: transform var(--dur-entra) var(--ease-entra); }
 .btn:hover svg { transform: translateX(5px); }
-.btn--zone { background: var(--zone-1); color: var(--on-brand); }
-.btn--zone:hover { background: var(--fg); color: var(--bg); }
+.btn--ink { background: var(--fg); color: var(--bg); }
+.btn--ink:hover { background: var(--zone-1); color: var(--on-brand); }
 .btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
 .btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn--lg { padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16); }
@@ -1096,8 +1110,8 @@ img { display: block; max-width: 100%; }
 .btn[aria-disabled="true"]:hover { transform: none; background: var(--action); color: var(--on-action); }
 .btn:disabled:hover svg,
 .btn[aria-disabled="true"]:hover svg { transform: none; }
-.btn--zone:disabled:hover,
-.btn--zone[aria-disabled="true"]:hover { background: var(--zone-1); color: var(--on-brand); }
+.btn--ink:disabled:hover,
+.btn--ink[aria-disabled="true"]:hover { background: var(--fg); color: var(--bg); }
 .btn--ghost:disabled:hover,
 .btn--ghost[aria-disabled="true"]:hover { background: transparent; color: var(--fg); border-color: var(--line-strong); }
 

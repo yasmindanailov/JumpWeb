@@ -53,7 +53,9 @@ describe('la barra-carrito del catálogo', () => {
         assert.equal(footer.count, 2);
         assert.equal(footer.amount, '1.234,50 €');
         // La rama `cart` emite UN solo hijo: sin nota de IVA, sin desglose y sin CTA deshabilitable.
-        assert.deepEqual(Object.keys(footer), ['type', 'action', 'cta', 'count', 'label', 'amount']);
+        // ⚠️ `sells` entra en las CUATRO formas del pie desde `#551` (el mapa del naranja): la lista de
+        // claves se actualiza a propósito, no se relaja — sigue exigiendo el conjunto EXACTO.
+        assert.deepEqual(Object.keys(footer), ['type', 'action', 'cta', 'count', 'label', 'amount', 'sells']);
     });
 
     /** ⚠️ Pluralización de Laravel, no `n === 1`: en francés el cero cae en el SINGULAR. */
@@ -136,6 +138,47 @@ describe('la cesta', () => {
         assert.equal(footer.split.nowLabel, 'Pagas ahora');
         assert.equal(footer.split.now, '300,00 €');
         assert.equal(footer.split.park, '999,00 €');
+    });
+});
+
+/**
+ * ❗❗❗ **EL MAPA DEL NARANJA, y lo decide ESTE módulo** (`DECISIONES #551`, la grieta 01 del canvas).
+ *
+ * El sistema del cliente declara cuatro jerarquías de botón y una regla dura: *«solo un botón de
+ * relleno de acción por pantalla»*, y el relleno de acción significa **comprar**. Dentro del cajón eso
+ * es **uno solo en las once pantallas del embudo: «Pagar»** (paso 08). Los otros tres CTA del pie
+ * —«Continuar», «Añadir al carrito», «Ir a pagar»— son secundarios, y el artboard los dibuja en
+ * relleno de tinta.
+ *
+ * ⚠️ Se prueba aquí y no en la plantilla porque el dato nace aquí: `Foot.vue` solo traduce `sells` a
+ * una clase. Si la regla viviera en el marcado, el día que alguien añada un paso que cobre la
+ * plantilla no se enteraría — y el botón saldría en tinta **sin que nada fallara**.
+ */
+describe('el mapa del naranja: quién vende', () => {
+    test('solo el pie del paso 08 declara que vende', () => {
+        const conPie = [
+            { step: 1, cartCount: 2 },
+            { step: 2, hasDate: true },
+            { step: 3, hasTime: true, lineTotalCents: 1000 },
+            { step: 4, cartCount: 2 },
+            { step: 8, cartCount: 2 },
+        ];
+
+        const venden = conPie
+            .map((extra) => [extra.step, buildFooter(state(extra))])
+            .filter(([, footer]) => footer !== null && footer.sells === true)
+            .map(([step]) => step);
+
+        assert.deepEqual(venden, [8], 'el relleno de acción del embudo es «Pagar» y solo «Pagar»');
+    });
+
+    /** Y el campo está escrito en las CUATRO formas: un pie que lo deje en `undefined` no se censa. */
+    test('las cuatro formas del pie declaran el campo', () => {
+        for (const extra of [{ step: 1, cartCount: 2 }, { step: 2 }, { step: 3 }, { step: 4, cartCount: 2 }, { step: 8 }]) {
+            const footer = buildFooter(state(extra));
+            assert.ok(footer !== null, `el paso ${extra.step} tiene pie en este escenario`);
+            assert.equal(typeof footer.sells, 'boolean', `el pie del paso ${extra.step} no declara \`sells\``);
+        }
     });
 });
 

@@ -59,7 +59,9 @@ const t = (key) => translate(props.messages, key);
         <form ref="el" :action="form.url" :method="form.method" target="_top">
             <input v-for="field in form.fields" :key="field.name" type="hidden" :name="field.name" :value="field.value">
             <noscript>
-                <button type="submit" class="btn btn--zone btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
+                <!-- ⚠️ El suelo sin JS del salto al banco: lleva al COBRO, así que es relleno de acción
+                     (`.btn` pelado) y no el secundario de tinta (`#551`). -->
+                <button type="submit" class="btn btn--lg purchase__cta">{{ t('pay_proceed_manual') }}</button>
             </noscript>
         </form>
     </div>

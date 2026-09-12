@@ -115,7 +115,7 @@ const fieldErrors = computed(() => props.errors?.fields ?? {});
                 </button>
             </div>
 
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="submitting">
+            <button type="submit" class="btn btn--ink auth__submit" :disabled="submitting">
                 <span v-show="! submitting">{{ a('login.submit') }}</span>
                 <span v-show="submitting" class="btn__loading">
                     <span class="jj-spinner jj-spinner--xs" aria-hidden="true"></span> {{ a('login.submitting') }}

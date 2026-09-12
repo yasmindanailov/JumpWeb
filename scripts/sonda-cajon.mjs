@@ -159,8 +159,20 @@ async function recorrer(context, viewport, nombreViewport, informe) {
     let paso = 'arranque';
     page.on('pageerror', (e) => console.error(`   JS en ${paso}: ${e.message.split('\n')[0]}`));
 
+    /**
+     * ⚠️⚠️ **LA ESPERA DEL VELO SUBE AQUÍ, Y NO ESTABA EN EL EMBUDO** (`#551`). La pasada de `#550` la
+     * hacía solo en las zonas de CUENTA, así que las seis pantallas del embudo se medían —y se
+     * fotografiaban— con el spinner puesto: la captura de «hora elegida» salía con el velo encima y
+     * dentro de la medición entraban `.jj-spinner-label` (14 px) y `.jj-spinner__sr`, que está recortado
+     * a 1 px **por diseño**. O sea defectos que no existen, con cifras creíbles.
+     * ▶ Es la misma trampa que aquella tanda documentó para la cuenta, **pagada otra vez en el embudo**
+     * por haber puesto la espera en el bucle y no en el instrumento.
+     * ⚠️ Se espera por CONDICIÓN, nunca por reloj, y con `catch` porque hay pantallas que no cargan nada.
+     */
     const medir = async (pantalla) => {
         paso = pantalla;
+        await page.waitForSelector('.jj-loading', { state: 'hidden' }).catch(() => {});
+        await page.waitForFunction(() => ! document.querySelector('.sidecart__panel .jj-spinner')).catch(() => {});
         const datos = await page.evaluate(MEDIR, SUELO);
         informe.push({ pantalla, viewport: nombreViewport, ...datos });
         await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/${pantalla}@${viewport.width}.png` });

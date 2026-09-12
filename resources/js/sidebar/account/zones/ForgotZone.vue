@@ -73,7 +73,7 @@ const submit = () => store.requestPasswordLink({ api, messages: props.messages, 
                     <span v-if="store.forgotError.fields.email" class="form__error">{{ store.forgotError.fields.email }}</span>
                 </div>
 
-                <button type="submit" class="btn btn--zone auth__submit" :disabled="store.busy">
+                <button type="submit" class="btn btn--ink auth__submit" :disabled="store.busy">
                     {{ store.busy ? a('forgot.submitting') : a('forgot.submit') }}
                 </button>
 

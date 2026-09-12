@@ -86,7 +86,7 @@ describe('los canales', () => {
         assert.deepEqual(notice.ctas.map((c) => c.key), ['call', 'whatsapp']);
     });
 
-    /** Solo el de llamar es el canal principal: es el único con `btn--zone`. */
+    /** Solo el de llamar es el canal principal: es el único con `btn--ink`. */
     test('solo el de llamar es el principal', () => {
         const notice = buildNotice({
             status: status({ phone: '968', phone_tel: '968', whatsapp: '34600112233' }),

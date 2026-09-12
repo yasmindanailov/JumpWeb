@@ -145,9 +145,14 @@ defineEmits(['toggle', 'retry']);
           ⚠️ El reintento va FUERA del desplegable, igual que en la tarjeta de la reserva: un pedido a
           medio pagar es lo más urgente de la pantalla y esconderlo tras un clic sería enterrar el
           único camino que le queda al cliente para no perder su plaza.
+
+          ⚠️⚠️ **Y es uno de los DOS botones de relleno de ACCIÓN de las catorce pantallas de cuenta**
+          (`#551`, el mapa del naranja): aquí se cobra, así que va en `.btn` pelado —que ES el relleno
+          de acción— y no en `.btn--ink`. *Una cuenta no vende; reintentar un cobro sí.* Los otros doce
+          botones de esta área son secundarios en tinta.
         -->
         <div v-if="row.canRetry" class="orders__retry">
-            <button type="button" class="btn btn--zone" :disabled="busy" @click="$emit('retry')">{{ account?.orders?.retry_payment ?? '' }}</button>
+            <button type="button" class="btn" :disabled="busy" @click="$emit('retry')">{{ account?.orders?.retry_payment ?? '' }}</button>
             <p class="orders__retry-hint">{{ account?.orders?.retry_hint ?? '' }}</p>
         </div>
     </li>

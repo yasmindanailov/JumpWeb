@@ -108,7 +108,7 @@ const t = (key) => translate(props.messages, key);
         <!-- #225 F3: «Ver mis reservas» se retiró (ya está SIEMPRE en el bloque de cuenta del cajón),
              así que queda UNA sola acción y por eso es primaria. -->
         <div class="purchase__final-actions">
-            <button type="button" class="btn btn--zone btn--lg purchase__cta" @click="$emit('add-another')">{{ t('new_purchase') }}</button>
+            <button type="button" class="btn btn--ink btn--lg purchase__cta" @click="$emit('add-another')">{{ t('new_purchase') }}</button>
         </div>
     </div>
 </template>

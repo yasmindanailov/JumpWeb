@@ -79,7 +79,7 @@ const mustVerify = computed(() => action.value === DEPENDENT_WAIVER_VERIFY);
                     <span>{{ a('register.accept_waiver') }}</span>
                 </label>
             </div>
-            <button type="submit" class="btn btn--zone auth__submit" :disabled="busy || ! accept">
+            <button type="submit" class="btn btn--ink auth__submit" :disabled="busy || ! accept">
                 {{ signing ? a('account.privacy.waiver.signing') : a('account.privacy.waiver.sign_btn') }}
             </button>
         </form>

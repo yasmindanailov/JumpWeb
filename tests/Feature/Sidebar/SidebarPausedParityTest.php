@@ -21,9 +21,9 @@ use Tests\TestCase;
  *
  * ⚠️ **Aquí está casi todo lo que el diff de árbol NO puede ver de este bloque**, y es mucho:
  *  - **`href`, `target` y `rel` no son atributos de contrato**, así que el enlace de WhatsApp y el de
- *    `/contacto` producen árboles **byte a byte idénticos** (`<a class=btn.btn--lg>`). Un motor que
- *    mandara a la página de contacto donde el servidor manda al WhatsApp —o que apuntara el `tel:` al
- *    número equivocado— pasaría el gate en verde;
+ *    `/contacto` producen árboles **byte a byte idénticos** (`<a class=btn.btn--ghost.btn--lg>` desde
+ *    `#551`). Un motor que mandara a la página de contacto donde el servidor manda al WhatsApp —o que
+ *    apuntara el `tel:` al número equivocado— pasaría el gate en verde;
  *  - el normalizador descarta los nodos de TEXTO, así que el título, el mensaje y los rótulos de los
  *    tres botones tampoco entran;
  *  - **en qué pasos se enseña el aviso no lo publica ningún endpoint**: es una regla de interfaz, y
@@ -108,12 +108,13 @@ class SidebarPausedParityTest extends TestCase
                 array_map(fn (array $cta): array => [
                     'href' => $cta['href'],
                     'label' => $cta['label'],
-                    // ⚠️ `primary` y `external` no son cosmética: el primero pinta el botón con el color
-                    // de la zona y el segundo abre en pestaña nueva CON `rel="noopener"`. Ninguno de
-                    // los dos lo compara el diff de árbol —`target` y `rel` no son atributos de
-                    // contrato, y `btn--zone` solo se compararía si el test fabricara el aviso él
-                    // mismo, que es justo lo que ya no hace—.
-                    'zone' => $cta['primary'],
+                    // ⚠️ `primary` y `external` no son cosmética: el primero decide la JERARQUÍA del
+                    // botón —desde `#551`, relleno de tinta frente a fantasma; antes, el color de la
+                    // zona frente al de acción, que es el defecto que aquella tanda arregló— y el
+                    // segundo abre en pestaña nueva CON `rel="noopener"`. Ninguno de los dos lo compara
+                    // el diff de árbol: `target` y `rel` no son atributos de contrato, y la clase solo
+                    // se compararía si el test fabricara el aviso él mismo, que es justo lo que ya no hace.
+                    'primary' => $cta['primary'],
                     'external' => $cta['external'],
                 ], $client['ctas']),
                 "Los canales de «{$label}» NO son los que sale de los ajustes y el diccionario.\n".
@@ -221,7 +222,7 @@ class SidebarPausedParityTest extends TestCase
             $ctas[] = [
                 'href' => 'tel:+'.$digits($phone),
                 'label' => __('tickets.paused.call', ['phone' => $phone]),
-                'zone' => true,
+                'primary' => true,
                 'external' => false,
             ];
         }
@@ -230,7 +231,7 @@ class SidebarPausedParityTest extends TestCase
             $ctas[] = [
                 'href' => 'https://wa.me/'.$digits($whatsapp),
                 'label' => __('tickets.paused.whatsapp'),
-                'zone' => false,
+                'primary' => false,
                 'external' => true,
             ];
         }
@@ -238,7 +239,7 @@ class SidebarPausedParityTest extends TestCase
         return $ctas !== [] ? $ctas : [[
             'href' => url('/contacto'),
             'label' => __('tickets.paused.contact'),
-            'zone' => false,
+            'primary' => false,
             'external' => false,
         ]];
     }

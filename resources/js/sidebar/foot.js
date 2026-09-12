@@ -74,6 +74,11 @@ export function buildFooter(state) {
             icon: 'arrow',
             splitMode: null,
             split: null,
+            // «Continuar» no cobra: secundario, relleno de tinta (`#551`). Se declara en las CUATRO
+            // formas del pie y no se deja en `undefined` a propósito — un pie nuevo que se olvide del
+            // campo sale en tinta, que es el lado seguro, pero el censo de `SidebarActionRoleTest`
+            // solo puede contarlo si está escrito.
+            sells: false,
             note: t(messages, 'iva_note'),
         };
     }
@@ -93,7 +98,7 @@ export function buildFooter(state) {
     // ha pasado por la identificación, así que una cesta vacía en este paso no es un estado alcanzable
     // — el servidor mismo lo rechazaría con `cart_empty`.
     if (step === 8) {
-        return cartFooter(state, 'confirmReservation', t(messages, 'pay_confirm'), 'card', 'band');
+        return cartFooter(state, 'confirmReservation', t(messages, 'pay_confirm'), 'card', 'band', true);
     }
 
     return null;
@@ -108,6 +113,8 @@ export function buildFooter(state) {
             // ⚠️ Pluralización de Laravel, no `n === 1`: en francés el CERO cae en el singular.
             label: tc(messages, 'cart_items', cartCount, locale),
             amount: money(cartTotalCents),
+            // «Ir al carrito» tampoco cobra: el artboard la dibuja en tinta con su píldora en Lima.
+            sells: false,
         };
     }
 }
@@ -142,6 +149,8 @@ function stepFooter(state) {
         icon: 'arrow',
         splitMode: 'popover',
         split,
+        // «Añadir al carrito» no cobra (`#551`).
+        sells: false,
         note: t(messages, 'iva_note'),
     };
 }
@@ -151,8 +160,19 @@ function stepFooter(state) {
  *
  * ⚠️ Aquí el rótulo del desglose es NEUTRO («Pagas ahora»), no «Pagas ahora (señal)»: en una cesta
  * mixta lo que se cobra ahora no es solo señal (#225).
+ *
+ * ❗❗❗ **`sells` NO es cosmética: es el MAPA DEL NARANJA, y lo decide este módulo** (`#551`). El
+ * sistema del cliente dice que el relleno de acción significa **comprar** y que *solo hay un botón de
+ * relleno de acción por pantalla*; dentro del cajón eso es **un solo CTA en las once pantallas del
+ * embudo: «Pagar»**. Los otros tres del pie —«Continuar», «Añadir al carrito», «Ir a pagar»— son
+ * secundarios, y el artboard los dibuja en **relleno de tinta** (`#101418`).
+ *
+ * ⚠️ Va aquí y no en la plantilla porque **quien sabe si un pie vende es quien lo compone**. Deducirlo
+ * del rótulo o del `action` en el marcado sería una segunda copia de la regla, y el día que alguien
+ * añada un paso que cobre, la plantilla no se enteraría — y el botón saldría en tinta sin que nada
+ * fallara.
  */
-function cartFooter(state, action, cta, icon, splitMode) {
+function cartFooter(state, action, cta, icon, splitMode, sells = false) {
     const { messages, cartTotalCents, cartOnlineCents } = state;
 
     return {
@@ -164,6 +184,7 @@ function cartFooter(state, action, cta, icon, splitMode) {
         disabled: false,
         icon,
         splitMode,
+        sells,
         // La ÚNICA resta permitida del cajón, y lo es porque es la diferencia de dos AGREGADOS de la
         // MISMA fuente —el presupuesto— y porque es literalmente lo que hace el servidor. Sumar
         // subtotales de línea en su lugar dejaría los complementos fuera.
