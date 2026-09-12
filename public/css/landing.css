@@ -1063,7 +1063,11 @@ img { display: block; max-width: 100%; }
   padding: var(--sp-12) var(--sp-20);
   background: var(--action); color: var(--on-action);
   border-radius: var(--r-btn);
-  font-weight: 600; font-size: var(--fs-14);
+  /* ⚠️ `#538` · 800 y no 600 (`[DECIDIDO owner, 2026-09-12]`): el sistema declara
+     `componente.boton.peso: 800` y su regla dura lo repite —«Botones en Hanken Grotesk 800»—.
+     Medido antes: la web usaba CINCO pesos de botón (400, 500, 600, 700, 800) y solo dos clases
+     cumplían. Éste es el más repetido de todos: 17 apariciones en las siete páginas. */
+  font-weight: var(--fw-black); font-size: var(--fs-14);
   transition:
     transform var(--dur-toque) var(--ease-sale),
     background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
@@ -1081,7 +1085,13 @@ img { display: block; max-width: 100%; }
 .btn--ink:hover { background: var(--zone-1); color: var(--on-brand); }
 .btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
 .btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
-.btn--lg { padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16); }
+/* ⚠️ `#538` · el `min-height` lo declara `.btn` (48) pero aquí NO manda: con `line-height: normal`
+   el contenido pedía **57 px**, una altura que no sale de ninguna escala. El sistema declara para
+   todo botón `lh: '1'` (`tipo.escala.boton`), y con él la caja obedece a su tamaño grande, 56. */
+.btn--lg {
+  padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16);
+  line-height: 1; min-height: var(--book-bar-h);
+}
 
 /* ❗❗❗ **EL KEYLINE · variante declarada de la familia, no un borde escrito a mano** (`#480`).
    La hoja de componentes del sistema declara **DOS** rellenos de acción y los nombra:
@@ -2150,6 +2160,13 @@ img { display: block; max-width: 100%; }
    medía **45 px reales**, por debajo del objetivo táctil, y no lo veía ninguna guarda porque la
    suite no mide píxeles y el token sí valía 48. Lo cazó la sonda. 52 × 0,94 = 48,9, así que el
    mínimo se cumple **también apagado**, que es cuando de verdad hay que poder pulsarlo. */
+/* ⚠️⚠️ `#538` · ESTE 52 NO ES UN DESCUIDO Y NO SE LLEVA A LA ESCALA. Se bajó a 48 al unificar
+   alturas y **el propio sistema del cliente lo tiene razonado**: el carril con foco aplica un velo
+   que ESCALA la tarjeta no enfocada al 94 %, y la escala encoge también el área de pulsación —
+   `componente.carril` declara `control: 52` con su cuenta al lado, «52 × 0,94 = 48,9».
+   ▶ Medido al romperlo: el botón computa 48 y se PINTA a **45**, por debajo del suelo táctil, en
+   las tarjetas vecinas. Lo cazó `scripts/censo-botones.mjs`, no una guarda.
+   *Una altura fuera de la escala puede ser la única que cumple el mínimo cuando algo la encoge.* */
 .rate-card__btn { width: 100%; justify-content: center; min-height: 52px; }
 
 /* ❗❗❗ **EL RELLENO DE ACCIÓN VIAJA CON EL FOCO, y es el mapa del naranja del sistema.**

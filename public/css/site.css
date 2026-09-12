@@ -108,7 +108,12 @@
        **la hamburguesa no es descendiente suya**: leía `var(--cta-pair-h, 54px)` y se quedaba
        siempre en el 54 de la reserva, aunque su propio comentario dijera «54, o 48 en teléfono».
        Medido a 390: 54. Un token fuera de alcance no falla, rinde su reserva. */
-    --nav-btn-h: 54px;
+    /* ⚠️ `#538` · 56 y no 54 (`[DECIDIDO owner, 2026-09-12]`): el sistema declara DOS alturas de
+       botón —48 (`altoMin`/`altoS`) y 56 (`altoL`)— y la web usaba OCHO. El 54 salía del mockup y
+       tenía decisión escrita en `#218`, así que subirlo se decidió a sabiendas: una escala con una
+       excepción medida deja de ser una escala. El logotipo (`--nav-logo-h`, 70) NO cambia: ése sí
+       está medido sobre la TINTA del mockup y no es un control. */
+    --nav-btn-h: 56px;
     /* ⚠️ **El CTA flotante de móvil NO mide lo que el racimo de arriba** (`#265`, `[DECIDIDO
        owner]`: «hazlo más grande»). Heredaba `--nav-btn-h`, que en teléfono baja a 48 porque
        arriba comparte fila con el logotipo y la hamburguesa — abajo no comparte con nadie y el
@@ -276,7 +281,7 @@
     display: inline-flex; align-items: center; min-height: var(--tap-min);
     padding: var(--sp-10) var(--sp-16); border-radius: var(--r-btn);
     background: var(--fg); color: var(--bg);
-    font-family: var(--font-body); font-weight: 700; font-size: var(--fs-14);
+    font-family: var(--font-body); font-weight: var(--fw-black); font-size: var(--fs-14);  /* `#538` · el peso de botón del sistema */
     transform: translateY(calc(-100% - 16px));
     transition: transform var(--dur-sale) var(--ease-sale);
 }
@@ -2944,7 +2949,7 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 .reserve__act {
     flex: 1 1 240px; max-width: 340px;
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: 58px; padding: 0 30px;
+    min-height: var(--book-bar-h); padding: 0 30px;  /* `#538` · 58 → el `altoL` del sistema */
     font-family: var(--font-body); font-weight: 800; font-size: 17.5px; letter-spacing: 0.01em;
     border: 0; border-radius: var(--r-btn); cursor: pointer; text-decoration: none;
     background: var(--action); color: var(--on-action);
@@ -3202,7 +3207,9 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 .hero__pair-slot .cta-pair {
     --cta-pair-w: clamp(260px, 22vw, 320px);
     --cta-pair-mini: clamp(64px, 5.4vw, 76px);
-    --cta-pair-h: clamp(64px, 5.2vw, 74px);
+    /* ⚠️ `#538` · el par del hero baja de `clamp(64px, 5.2vw, 74px)` al `altoL` del sistema.
+       Era la mayor de las ocho alturas y la única que crecía con la ventana. */
+    --cta-pair-h: var(--book-bar-h);
     --cta-pair-fs: clamp(16px, 1.3vw, 19px);
     --cta-pair-pad: clamp(15px, 1.3vw, 18px);
 }
