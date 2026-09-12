@@ -7,8 +7,14 @@ return [
     'title' => 'Reservas',
     'my_reservations' => 'Ver mis reservas',
     'intro' => 'Elige tu entrada o pack, el día y la hora. Añade lo que quieras al carrito; el precio se ajusta según el día.',
-    'step_date' => 'Elige el día',
-    'step_time' => 'Elige la hora de entrada',
+    // ⚠️ Los títulos de paso son PREGUNTAS (`#557`, artboard `Pasos Compra PJP`): «¿Qué día venís?»
+    // en vez de «Elige el día». Es la voz del cajón, y el imperativo lo lleva ya el botón del pie.
+    'step_date' => '¿Qué día venís?',
+    'step_time' => '¿A qué hora?',
+    // ⚠️⚠️ **La entradilla NO dice la duración**, y el artboard sí («Dos horas de salto»): eso es un
+    // dato de ESTA instalación y lo pone el catálogo (la lección de `#487`). Lo que se conserva es lo
+    // que la frase venía a hacer —quitar la prisa de llegar puntual—, que sí es del producto.
+    'step_time_lede' => 'Entra cuando quieras dentro de tu franja.',
     'step_tickets' => 'Elige tus entradas',
     // Sidebar v2 — banda de fases y pie dinámico. Desde `#555` son CINCO fases, una por PANTALLA del
     // camino (día · hora · carrito · quién eres · pagar).
@@ -82,7 +88,10 @@ return [
     'units_count' => ':count unidad|:count unidades',
     'per_child' => 'por niño',
     'step_complements' => 'Complementos',
-    'complements_intro' => 'Añade extras a tu reserva (opcional).',
+    // ⚠️ Es un RÓTULO, no una entradilla (`#557`, artboard `Pasos Compra PJP`): una pregunta corta en
+    // tinta encima de sus filas, no un párrafo gris que hay que leer. El «(opcional)» se cae porque
+    // una pregunta ya no obliga a nada.
+    'complements_intro' => '¿Quieres añadir algo?',
     'addon_choose_one' => 'Elige una opción:',
     'addon_badge_included' => 'Incluido',
     'addon_badge_free' => 'Gratis',

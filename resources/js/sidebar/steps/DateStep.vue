@@ -145,7 +145,15 @@ const dayClasses = (cell) => [
             :aria-expanded="calendarOpen ? 'true' : 'false'"
             @click="$emit('toggle-calendar')">
         <span>{{ calendarOpen ? t('calendar_hide') : t('calendar_show') }}</span>
-        <span class="cal-more__chev" aria-hidden="true"></span>
+        <!-- ⚠️ **El chevron pasa a ser el del SET** (`#557`): era un cuadrado con dos bordes girado 45°,
+             o sea un dibujo propio dentro de un cajón que tiene su juego de iconos con guarda de
+             paridad (`SidebarIconParityTest`). Es `chevron-down`, y gira 180° al abrirse.
+             ⚠️ El giro va en el `<svg>` y no en la ruta: una animación sobre un elemento de `<defs>`
+             no pinta nada (`#266`), y aquí además el dibujo es propio del componente. -->
+        <svg class="cal-more__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <path d="M5.5 9 12 15.5 18.5 9" />
+        </svg>
     </button>
 
     <div v-if="calendarOpen" class="cal">

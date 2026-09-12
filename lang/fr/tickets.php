@@ -6,8 +6,11 @@ return [
     'title' => 'Réservations',
     'my_reservations' => 'Voir mes réservations',
     'intro' => "Choisis ton billet ou pack, le jour et l'heure. Ajoute ce que tu veux au panier ; le prix s'ajuste selon le jour.",
-    'step_date' => 'Choisis le jour',
-    'step_time' => "Choisis l'heure d'entrée",
+    // Les titres d'étape sont des QUESTIONS (`#557`) : l'impératif vit déjà dans le bouton du pied.
+    'step_date' => 'Quel jour venez-vous ?',
+    'step_time' => 'À quelle heure ?',
+    // ⚠️ Pas de durée ici : c'est la donnée de CETTE installation et le catalogue la dit (`#487`).
+    'step_time_lede' => 'Entre quand tu veux dans ton créneau.',
     'step_tickets' => 'Choisis tes billets',
     // Sidebar v2 — bande de phases et pied de page dynamique. Depuis `#555` il y a CINQ phases, une
     // par ÉCRAN du parcours (jour · heure · panier · qui es-tu · payer).
@@ -63,7 +66,8 @@ return [
     'units_count' => ':count unité|:count unités',
     'per_child' => 'par enfant',
     'step_complements' => 'Compléments',
-    'complements_intro' => 'Ajoute des extras à ta réservation (facultatif).',
+    // Un LIBELLÉ, pas un chapô (`#557`) : une question courte en encre au-dessus de ses lignes.
+    'complements_intro' => 'Tu veux ajouter quelque chose ?',
     'addon_choose_one' => 'Choisis une option :',
     'addon_badge_included' => 'Inclus',
     'addon_badge_free' => 'Gratuit',

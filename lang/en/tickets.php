@@ -6,8 +6,11 @@ return [
     'title' => 'Bookings',
     'my_reservations' => 'View my bookings',
     'intro' => 'Pick your ticket or pack, the day and the time. Add what you want to your cart; the price adjusts to the day.',
-    'step_date' => 'Pick the day',
-    'step_time' => 'Pick the entry time',
+    // Step titles are QUESTIONS (`#557`): the imperative already lives in the footer button.
+    'step_date' => 'What day are you coming?',
+    'step_time' => 'What time?',
+    // ⚠️ No duration here: that is this installation's data and the catalogue says it (`#487`).
+    'step_time_lede' => 'Come in whenever you like within your slot.',
     'step_tickets' => 'Choose your tickets',
     // Sidebar v2 — phase band and dynamic footer. Since `#555` there are FIVE phases, one per SCREEN
     // of the path (day · time · cart · about you · pay).
@@ -63,7 +66,9 @@ return [
     'units_count' => ':count unit|:count units',
     'per_child' => 'per child',
     'step_complements' => 'Add-ons',
-    'complements_intro' => 'Add extras to your booking (optional).',
+    // A LABEL, not a lede (`#557`): a short question in ink above its rows. «(optional)» goes away
+    // because a question no longer compels anything.
+    'complements_intro' => 'Anything else?',
     'addon_choose_one' => 'Choose one:',
     'addon_badge_included' => 'Included',
     'addon_badge_free' => 'Free',

@@ -1346,7 +1346,18 @@ body.no-scroll { overflow: hidden; }
 .purchase__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--sp-20); }
 .purchase__scroll::-webkit-scrollbar { width: 10px; }
 .purchase__scroll::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--r-pill); border: 3px solid var(--bg); }
-.wiz__title { margin: 0 0 var(--sp-14); font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-20); color: var(--fg); }
+/* ❗❗ **El TÍTULO DE PASO sube a 24** (`#557`, artboard `Pasos Compra PJP`), que es lo que dibuja para
+   sus tres pantallas —día, hora y carrito—. ⚠️ El 24 va en LITERAL a propósito: la escala de texto
+   salta de 22 a los niveles con `clamp`, así que no tiene escalón, y `ScaleTokensAreUsedTest` prohíbe
+   fabricarlo con un `calc()` a mano (`#437`). Mismo caso que el relleno 34 del CTA en `#554`. */
+.wiz__title { margin: 0 0 var(--sp-14); font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: 24px; line-height: 1.05; color: var(--fg); }
+/* ⚠️⚠️ **La entradilla es HERMANA del título, sin envoltorio** (`#557`): envolverlos rompía los dos
+   casos del contrato de árbol de ese paso —anclan en `wiz__title` y el diff recorre hermanos
+   SIGUIENTES, así que el paso entero se quedaba fuera **y el manifiesto lo daba por bueno**—.
+   ▶ El aire lo reparte la cascada: con entradilla debajo, el título cede su margen y lo pone ella,
+   porque los dos son la MISMA cabecera y tienen que separarse menos entre sí que del bloque siguiente. */
+.wiz__title:has(+ .wiz__lede) { margin-bottom: var(--sp-7); }
+.wiz__lede { margin: 0 0 var(--sp-14); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
 .purchase__empty { color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-body); }
 
 /* ══ LA TIRA DE HORAS (paso 3 · `DECISIONES #239`) ═════════════════════════════════════════════
@@ -1441,7 +1452,9 @@ body.no-scroll { overflow: hidden; }
 @keyframes chip-cae-quieta { from { opacity: 0; } to { opacity: 1; } }
 /* La hora MANDA en el chip: es lo que se elige. `line-height: 1` para que el aviso quede pegado
    debajo sin que el interlineado le abra un hueco que descoloca la altura de la tira. */
-.purchase__chip-t { font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1; }
+/* La hora sube a 17/800 (`#557`): es lo que se elige, y a 16/700 pesaba lo mismo que la nota de
+   debajo, que solo matiza. */
+.purchase__chip-t { font-size: var(--fs-17); font-weight: var(--fw-black); line-height: 1; }
 /* «Casi llena»: `--warn` es el token de señal del producto (el mismo del «a cobrar en el parque»),
    no un amarillo nuevo. ⚠️ Es ESCAPARATE, no aforo: quien decide el cupo es `SlotOffer` (`AFORO-02`). */
 /* ⚠️ **El aviso va en SEGUNDO plano, no al mismo nivel que la hora** (`[OWNER, 2026-08-28]`). Es
@@ -1457,8 +1470,16 @@ body.no-scroll { overflow: hidden; }
 .entry { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .entry.is-out { opacity: 0.55; }
 .entry__info { display: flex; flex-direction: column; gap: var(--sp-2); }
-.entry__stepper { display: flex; align-items: center; gap: var(--sp-8); flex: none; }
-.entry__stepper button { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-17); line-height: 1; cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale); }
+/* ❗❗ **El stepper es CUADRADO y grande** (`#557`, artboard `Pasos Compra PJP`): 44×44 con el canto
+   del sistema, y **48×48 en la cantidad principal**, que es el control más pulsado del embudo. Eran
+   **32 redondos**, o sea doce por debajo del suelo táctil del producto — y en un cajón que se usa con
+   el pulgar eso no es un detalle de estilo.
+   ⚠️ Las dos tallas salen del artboard y no de una escala: el de los extras es menor a propósito,
+   porque en su fila compite con el nombre del complemento y su nota. */
+.entry__stepper { display: flex; align-items: center; gap: var(--sp-7); flex: none; }
+.entry__stepper button { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1; cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale); }
+.entry__stepper--lg { gap: var(--sp-10); }
+.entry__stepper--lg button { width: 48px; height: 48px; font-size: var(--fs-22); }
 .entry__stepper button:hover:not(:disabled) { border-color: var(--fg); }
 .entry__stepper button:disabled { opacity: 0.4; cursor: not-allowed; }
 /* `#327` — el contador pasó de `<span>` a `<input>`: la cantidad SE ESCRIBE (con un mínimo de 30
@@ -1468,6 +1489,10 @@ body.no-scroll { overflow: hidden; }
    botones redondos. ⚠️ Y las flechas nativas (`spin buttons`) se retiran: al lado de un `+` y un `−`
    de 32 px son un tercer control que hace lo mismo y en móvil roban la mitad del ancho. */
 .entry__qty { min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-sm); }
+/* ⚠️ En la cantidad principal la cifra va en ROTULO (Bungee 24, como el título del paso): es el dato
+   que el cliente está decidiendo, y en el cuerpo pesaba menos que los dos signos de al lado. El 24 en
+   literal, sin escalón, igual que el título. */
+.entry__stepper--lg .entry__qty { min-width: 46px; font-family: var(--font-display); font-stretch: 75%; font-size: 24px; }
 /* ⚠️ Decía `var(--r-5)`, que no existe (`#414`): la declaración se descartaba y el radio valía 0.
    Medido en navegador: **0px → 6px**, con un `<input>` sin la clase como control (0px), que es lo
    que demuestra que la clase hace algo. ⚠️ Este control **no tiene borde ni fondo**, así que lo
@@ -1877,14 +1902,16 @@ body.no-scroll { overflow: hidden; }
 }
 .daystrip__month:first-child { border-left: 0; padding-left: 0; }
 
-/* 56×76: por encima del mínimo táctil de 44 en los dos ejes, y con sitio para las tres líneas
-   (día de la semana · número · precio) que hacen que se ELIJA de un vistazo. */
+/* 64×80 (`#557`, artboard `Pasos Compra PJP`): por encima del mínimo táctil en los dos ejes, y con
+   sitio para las tres líneas (día de la semana · número · precio) que hacen que se ELIJA de un
+   vistazo. Creció de 56×76 al subir el número a rótulo — con la talla vieja, «31» en Bungee 21 no
+   dejaba aire a los lados. */
 .daystrip__day {
     flex: none;
     scroll-snap-align: start;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: var(--sp-2);
-    min-width: 56px; min-height: 76px;
+    min-width: 64px; min-height: 80px;
     padding: var(--sp-8) var(--sp-6);
     border: 1px solid var(--line); border-radius: var(--r-md);
     background: var(--bg-card);
@@ -1894,8 +1921,14 @@ body.no-scroll { overflow: hidden; }
 }
 .daystrip__day:hover { border-color: var(--fg); }
 .daystrip__wd { font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
-.daystrip__num { font-size: var(--fs-18); font-weight: var(--fw-bold); line-height: 1; }
-.daystrip__price { font-size: var(--fs-label); font-weight: 500; line-height: 1; color: var(--fg-mute); }
+/* ⚠️ **El número del día es una CIFRA, y las cifras de este sistema van en rótulo** (`#557`): Bungee
+   21, como lo dibuja el artboard. El 21 va en literal —no tiene escalón— igual que el 24 del título.
+   ⚠️ `font-stretch` es obligatorio con esta familia: sin él el navegador SINTETIZA la condensada y el
+   dígito sale con otro grosor que el resto de rótulos del cajón (la deuda de `#479`). */
+.daystrip__num { font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: 21px; line-height: 1; }
+/* El precio sube a peso FUERTE: es el dato que hace elegir un día y no otro, y en gris claro a peso
+   500 pesaba menos que el día de la semana, que no decide nada. */
+.daystrip__price { font-size: var(--fs-label); font-weight: var(--fw-bold); line-height: 1; color: var(--fg-mute); }
 /* Día especial (festivo, finde o víspera): el MISMO código de color que la rejilla, para que la
    leyenda del calendario siga explicando la tira. */
 .daystrip__day--special { background: var(--attn); border-color: var(--attn); }
@@ -1976,18 +2009,27 @@ body.no-scroll { overflow: hidden; }
 
 /* «Ver más fechas» / «Ocultar el calendario». Ancho completo y 44 px de alto: es el único camino al
    calendario, así que fallarlo con el pulgar deja sin salida al que reserva a tres meses. */
+/* ❗❗ **«Ver más fechas» es una FILA, no un botón centrado** (`#557`, artboard `Pasos Compra PJP`):
+   rótulo en tinta a la izquierda y el chevron al otro extremo, sobre tarjeta blanca. El cambio no es
+   de gusto — así se lee como lo que es, *una puerta a otra cosa*, y no como una segunda acción que
+   compite con el CTA del pie. Es la misma forma que «¿Quiénes vienen?» y que el bloque de extras, que
+   son las otras dos puertas de este embudo.
+   ⚠️ El alto pasa de 44 a **48**, que es el suelo táctil del producto desde `#470`. */
 .cal-more {
-    display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
-    width: 100%; min-height: 44px; margin-top: var(--sp-10);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
+    width: 100%; min-height: 48px; margin-top: var(--sp-10);
+    padding: var(--sp-12) var(--sp-16);
     border: 1px solid var(--line); border-radius: var(--r-btn);
-    background: transparent; color: var(--fg-mute);
-    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold);
+    background: var(--bg-card); color: var(--fg);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold);
+    text-align: left;
     cursor: pointer;
-    transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+    transition: border-color var(--dur-sale) var(--ease-sale);
 }
-.cal-more:hover { border-color: var(--fg); color: var(--fg); }
-.cal-more__chev { width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform var(--dur-estado) var(--ease-sale); }
-.cal-more.is-open .cal-more__chev { transform: translateY(2px) rotate(225deg); }
+.cal-more:hover { border-color: var(--fg); }
+/* El chevron lleva el color de ENLACE, no el de la tinta: es lo que dice que la fila abre algo. */
+.cal-more__chev { flex: none; width: 18px; height: 18px; color: var(--interactive); transition: transform var(--dur-estado) var(--ease-sale); }
+.cal-more.is-open .cal-more__chev { transform: rotate(180deg); }
 .cal-more.is-open + .cal { margin-top: var(--sp-10); }
 
 /* Calendario (paso 1): rejilla mensual coloreada por tipo de tarifa */
@@ -2306,11 +2348,16 @@ body.no-scroll { overflow: hidden; }
 .purchase__chip.is-active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
 /* Caja de cantidad (paso 3, tras elegir la hora) */
+/* ❗❗ **Cabecera arriba, control abajo** (`#557`, artboard `Pasos Compra PJP`): con los botones a 48
+   y la cifra en rótulo ya no cabe todo en una fila, y el artboard lo parte. Arriba qué se cuenta y
+   cuánto queda; abajo el control, ancho y cómodo para el pulgar. */
 .qtybox { margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
-.qtybox__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); }
-.qtybox__label { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg); }
-.qtybox__avail { margin: var(--sp-8) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
+.qtybox__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; }
+.qtybox__label { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); }
+/* ⚠️ Ya no lleva margen propio: el hueco lo pone la fila del control, que es quien va debajo. */
+.qtybox__avail { margin: 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); text-align: right; }
 .qtybox__price { font-weight: var(--fw-bold); color: var(--fg); }
+.qtybox__control { margin-top: var(--sp-12); }
 
 /* Datos del evento del pack (paso 3): campos configurables por pack (#86). Mismo aspecto que .form__field. */
 /* ══ LO QUE FALTA ANTES DE PAGAR (`specs/auth-con-google.md` §21.4.2, `#349`) ══════════════════
@@ -2395,8 +2442,12 @@ body.no-scroll { overflow: hidden; }
 
 /* Complementos del producto (paso 3): "mejora tu reserva" (#87) */
 .addons { margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-10); }
-.addons__intro { margin: 0 0 var(--sp-2); font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg); }
-.addons__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
+/* ⚠️ **RÓTULO, no entradilla** (`#557`): sube a cuerpo y a peso fuerte porque titula sus filas — en
+   apoyo gris se leía como una nota al pie de lo anterior y no como la cabecera de lo que viene. */
+.addons__intro { margin: 0 0 var(--sp-2); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--fg); }
+/* La fila crece a 48 de alto y su canto pasa al del sistema: es la misma pieza que «Ver más fechas» y
+   que «¿Quiénes vienen?», y las tres tienen que leerse como la misma cosa (`#557`). */
+.addons__row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; min-height: 48px; padding: var(--sp-11) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-btn); background: var(--bg-card); }
 .addons__info { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
 .addons__name { font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg); }
 .addons__price { font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }

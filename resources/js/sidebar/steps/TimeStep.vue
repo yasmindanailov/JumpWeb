@@ -157,7 +157,13 @@ const toggleInfo = (id) => {
 </script>
 
 <template>
+    <!-- ⚠️⚠️ **La entradilla es HERMANA del título, no van envueltos** (`#557`). Con un envoltorio se
+         leen igual y **se rompen los dos casos del contrato de árbol de este paso**: anclan en
+         `wiz__title` y `treeOf()` recorre hermanos SIGUIENTES, así que el paso entero —sesenta nodos—
+         se quedaba fuera y el manifiesto lo daba por bueno. *Un ancla se cae cuando cambia lo que
+         tiene encima, y en verde.* El aire entre los dos lo reparte el CSS. -->
     <h3 class="wiz__title">{{ t('step_time') }}</h3>
+    <p class="wiz__lede">{{ t('step_time_lede') }}</p>
 
     <!-- La tira de horas: deslizable con ajuste (`#239`, `[DECIDIDO owner]`). `role="group"` porque
          son botones hermanos que forman UNA elección; el nombre lo pone el rótulo del paso. -->
@@ -198,13 +204,24 @@ const toggleInfo = (id) => {
 
     <template v-if="selectedTime">
         <div class="qtybox">
+            <!-- ⚠️ **La cabecera y los controles van en DOS filas** (`#557`, artboard `Pasos Compra
+                 PJP`): con los controles a 48 y la cifra en rótulo, la fila única dejaba al rótulo y a
+                 la disponibilidad peleando por lo que sobraba. Arriba, qué se cuenta y cuánto queda;
+                 abajo, el control, ancho y cómodo. -->
             <div class="qtybox__row">
                 <span class="qtybox__label">{{ isPack ? t('guests') : t('quantity') }}</span>
-                <!-- `#327`: la cantidad SE ESCRIBE, no solo se pulsa. Con un mínimo de 30 (una
-                     excursión de colegio) el `+` obligaba a treinta clics antes de poder comprar, y
-                     cien para llenar el grupo. El acotado NO se hace aquí: se emite el número
-                     tecleado y lo acota el mismo sitio que ya acota `+`/`−`, o serían dos reglas. -->
-                <div class="entry__stepper">
+                <p class="qtybox__avail">
+                    <template v-if="maxQuantity > 0">{{ tp(isPack ? 'guests_left' : 'seats_left', { count: maxQuantity }) }}</template>
+                    <template v-else>{{ t('sold_out') }}</template>
+                    <span v-if="dayPriceCents !== null" class="qtybox__price"> · {{ money(dayPriceCents) }}<template v-if="isPack"> {{ periodLabel || t('per_child') }}</template></span>
+                </p>
+            </div>
+            <!-- `#327`: la cantidad SE ESCRIBE, no solo se pulsa. Con un mínimo de 30 (una
+                 excursión de colegio) el `+` obligaba a treinta clics antes de poder comprar, y
+                 cien para llenar el grupo. El acotado NO se hace aquí: se emite el número
+                 tecleado y lo acota el mismo sitio que ya acota `+`/`−`, o serían dos reglas. -->
+            <div class="qtybox__control">
+                <div class="entry__stepper entry__stepper--lg">
                     <button type="button" :disabled="! canDecrease" :aria-label="t('qty_less')" @click="$emit('dec')">&minus;</button>
                     <input class="entry__qty" type="number" inputmode="numeric"
                            :value="quantity"
@@ -216,11 +233,6 @@ const toggleInfo = (id) => {
                     <button type="button" :disabled="! canIncrease" :aria-label="t('qty_more')" @click="$emit('inc')">+</button>
                 </div>
             </div>
-            <p class="qtybox__avail">
-                <template v-if="maxQuantity > 0">{{ tp(isPack ? 'guests_left' : 'seats_left', { count: maxQuantity }) }}</template>
-                <template v-else>{{ t('sold_out') }}</template>
-                <span v-if="dayPriceCents !== null" class="qtybox__price"> · {{ money(dayPriceCents) }}<template v-if="isPack"> {{ periodLabel || t('per_child') }}</template></span>
-            </p>
         </div>
 
         <!--
@@ -308,6 +320,7 @@ const toggleInfo = (id) => {
         </div>
 
         <div v-if="hasAddons" class="addons">
+            <!-- ⚠️ RÓTULO, no entradilla (`#557`): una pregunta corta en tinta encima de sus filas. -->
             <p class="addons__intro">{{ t('complements_intro') }}</p>
 
             <!-- Grupos EXCLUYENTES: dentro de cada uno hay exactamente uno activo. -->
