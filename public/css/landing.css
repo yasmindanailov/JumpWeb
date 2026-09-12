@@ -4981,6 +4981,14 @@ select:focus-visible {
 @media (min-width: 1024px) {
   .bar-layout {
     grid-template-columns: minmax(0, 544fr) minmax(0, 544fr);
+    /* ❗❗ **`auto 1fr` NO es decoración: sin él la chapa se despega de la foto.** La carta abarca
+       las DOS filas, y una carta es mucho más alta que la foto: sin altura declarada, las dos filas
+       se reparten ese sobrante y la chapa baja a media columna. ▶ Medido con una carta A4: **272 px
+       de aire muerto** entre el pie de la foto y la chapa. Con `auto 1fr` la primera fila mide lo
+       que mide la foto, la segunda se queda el resto, y `align-self: start` pega la chapa arriba —
+       que es donde el artboard la pone, *«acompañando a la imagen, que es lo que describe»*.
+       ⚠️ Lo vio la CAPTURA: la sonda medía cada caja por separado y las tres salían correctas. */
+    grid-template-rows: auto 1fr;
     grid-template-areas:
       "foto  carta"
       "chapa carta";

@@ -29925,6 +29925,13 @@ barra del armazón. Hay guarda que cuenta los botones dentro de `main.page--bar`
 
 **❗❗ 6 · DOS DEFECTOS DE MAQUETACIÓN Y UNO DE ARQUITECTURA, los tres encontrados midiendo.**
 
+0. ⚠️⚠️ **`grid-template-rows: auto 1fr`, o la chapa se despega de la foto.** La carta abarca las
+   DOS filas de la rejilla de escritorio y es mucho más alta que la foto; sin altura declarada, las
+   dos filas se reparten ese sobrante y «Se pide en la barra» baja a media columna. ▶ Medido con una
+   carta A4: **272 px de aire muerto** entre el pie de la foto y la chapa, contra los **32** del
+   `gap`. ⚠️ **Lo vio la CAPTURA, no la sonda**: ésta medía cada caja por separado y las tres salían
+   correctas — *tres cajas con la medida correcta pueden estar mal colocadas entre sí*.
+
 1. ⚠️⚠️ **`height: auto` no es adorno: sin él `aspect-ratio` NO HACE NADA.** Los atributos
    `width`/`height` de un `<img>` son *presentational hints* que el navegador mapea a las propiedades
    CSS `width` y `height`; con `width: 100%` en la hoja (que gana al hint) y `height` sin declarar,
