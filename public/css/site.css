@@ -63,6 +63,11 @@
        blanco —el Cian 800 del sistema da 5,13—, y el defecto cae del lado seguro: cuanto más
        oscuro salga en otra instalación, más contraste tiene el rótulo. */
     --identity-deep: color-mix(in srgb, var(--identity-fill) 65%, var(--fg));
+    /* Sus dos estados. Van hacia lo OSCURO, al revés que el secundario de tinta del sistema:
+       aclarar el azul le baja el contraste contra el papel (al 75 % da 4,26 y no llega a AA),
+       mientras que oscurecerlo lo sube — 4,72 reposo · 5,82 hover · 7,24 pulsado, medidos. */
+    --identity-deep-hover: color-mix(in srgb, var(--identity-fill) 55%, var(--fg));
+    --identity-deep-press: color-mix(in srgb, var(--identity-fill) 45%, var(--fg));
     /* ⚠️ Sobre un tinte SOLO aguantan Tinta (14,8) y Azul Muro (5,68): Humo da 4,40, Lima 800
        4,18, Verde 800 4,19 y Amarillo 800 3,90. No es criterio propio — `tokens-pjp.js` ya lo
        trae escrito con esas mismas cifras. Lo que se pinte encima va en `--fg`. */

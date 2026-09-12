@@ -1081,10 +1081,27 @@ img { display: block; max-width: 100%; }
 .btn:active:not(:disabled):not([aria-disabled="true"]) { transform: translateY(1px); }
 .btn svg { transition: transform var(--dur-entra) var(--ease-entra); }
 .btn:hover svg { transform: translateX(5px); }
+/* ❗❗ `#539` · EL FANTASMA PASA A AZUL MURO, y es lo ÚNICO que cambia aquí.
+   Medido: la web tenía **NUEVE rellenos de botón** donde el sistema declara tres visibles y un
+   inactivo, y el fantasma solo tenía CUATRO formas (blanco+tinta · transparente+tinta ·
+   transparente+Tinta 600 · blanco+Azul Muro). El sistema declara UNA para superficie clara —
+   `componente.boton.fantasma.papel`: borde y texto en Azul Muro, relleno al pasar el cursor—,
+   que es la voz que ese mismo sistema le da al cian sobre papel («enlaces, botón fantasma,
+   anillo de foco en papel»).
+
+   ⚠️⚠️ **EL SECUNDARIO (`--ink`) NO SE TOCA, y se intentó dos veces en esta tanda.**
+   · Su RELLENO es tinta y está decidido dos veces: `componente.boton` declara
+     `secundario.papel = { fondo: tinta, texto: papel }` —el cian es el secundario de la superficie
+     OSCURA— y el owner lo cerró en septiembre en el canvas («el botón del área es de tinta, y el
+     naranja solo vuelve para reintentar un cobro»).
+   · Su HOVER lee `--zone-*` A PROPÓSITO: `#551` lo dejó razonado —reposa en tinta y acusa el paso
+     del cursor pasando a marca, el mismo idioma que `.cta-med`— y su guarda avisa por escrito de
+     no «arreglarlo», porque sin él el botón se queda sin hover y `#435` exige que responda.
+   ▶ Las dos las paró una guarda, no una lectura. */
 .btn--ink { background: var(--fg); color: var(--bg); }
 .btn--ink:hover { background: var(--zone-1); color: var(--on-brand); }
-.btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--line-strong); }
-.btn--ghost:hover { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.btn--ghost { background: transparent; color: var(--interactive); border: 1px solid var(--interactive); }
+.btn--ghost:hover { background: var(--interactive); color: var(--paper-bg); border-color: var(--interactive); }
 /* ⚠️ `#538` · el `min-height` lo declara `.btn` (48) pero aquí NO manda: con `line-height: normal`
    el contenido pedía **57 px**, una altura que no sale de ninguna escala. El sistema declara para
    todo botón `lh: '1'` (`tipo.escala.boton`), y con él la caja obedece a su tamaño grande, 56. */
@@ -2174,15 +2191,18 @@ img { display: block; max-width: 100%; }
    control inerte. No es decoración — es lo que dice cuál es la compra que estás mirando.
    ⚠️ El inerte SIGUE SIENDO PULSABLE: cambia el aspecto, no la conducta. Un botón que solo
    funcionara al enfocarlo obligaría a dos gestos para comprar la tarifa de al lado. */
+/* ⚠️ `#539` · la vecina lleva el FANTASMA de la familia, que en superficie clara es Azul Muro
+   —lo que declara `componente.boton.fantasma.papel`—, no tinta. Así el carril usa DOS variantes
+   del sistema (relleno de acción · fantasma) en vez de inventar una tercera piel. */
 .rate-card:not(.is-focus) .rate-card__btn {
   background: transparent;
-  color: var(--fg-mute);
-  border: 1.5px solid var(--line-strong);
+  color: var(--interactive);
+  border: 1.5px solid var(--interactive);
 }
 .rate-card:not(.is-focus) .rate-card__btn:hover {
-  background: transparent;
-  color: var(--fg);
-  border-color: var(--fg);
+  background: var(--interactive);
+  color: var(--paper-bg);
+  border-color: var(--interactive);
 }
 
 /* Los días de la tarifa especial, UNA vez por sección. */
