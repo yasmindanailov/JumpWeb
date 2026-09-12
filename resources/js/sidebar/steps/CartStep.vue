@@ -93,22 +93,30 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
         <ul class="cart">
             <li v-for="line in lines" :key="line.index" class="cart__item">
                 <div class="cart__head">
-                    <span class="cart__when">
-                        <!-- ⚠️ El icono lo manda el SERVIDOR (`line.icon`, `DECISIONES #140`). Aquí vivía un
-                             `v-if="line.is_pack"` con la geometría entera escrita dentro, y el mismo bloque
-                             estaba copiado en el otro paso: cuatro copias de dos dibujos, y un catálogo
-                             entero repartido en esos dos. -->
-                        <ProductIcon :icon="line.icon" />
-                        <template v-if="line.is_pack">{{ tp('guests_count', { count: line.quantity }) }} · {{ line.product_name }}</template>
-                        <template v-else>{{ line.quantity }}&times; {{ line.product_name }}</template>
+                    <!-- ⚠️ **El icono sale del texto y pasa a su propio cuadro** (`#558`, artboard
+                         `Pasos Compra PJP`): iba dentro del `<span>` del nombre, así que con un nombre
+                         de dos líneas quedaba flotando a mitad de la primera. En su azulejo ancla
+                         arriba, alineado con la primera línea, y la tarjeta se lee de izquierda a
+                         derecha — qué es, qué es, cuánto.
+                         ⚠️ El dibujo lo manda el SERVIDOR (`line.icon`, `DECISIONES #140`). -->
+                    <span class="cart__ico" aria-hidden="true"><ProductIcon :icon="line.icon" /></span>
+
+                    <!-- El nombre y el CUÁNDO son una columna: el segundo describe al primero, y
+                         separarlos en dos bloques hermanos los dejaba a la misma distancia que del
+                         resto de la tarjeta. -->
+                    <span class="cart__main">
+                        <span class="cart__when">
+                            <template v-if="line.is_pack">{{ tp('guests_count', { count: line.quantity }) }} · {{ line.product_name }}</template>
+                            <template v-else>{{ line.quantity }}&times; {{ line.product_name }}</template>
+                        </span>
+                        <!-- Se emite SIEMPRE, aunque quede vacío: el condicional va DENTRO. -->
+                        <span class="cart__lines">
+                            <span v-if="line.date">{{ dayLabel(line.date) }} · {{ shortTime(line.time) }}</span>
+                        </span>
                     </span>
+
                     <span class="cart__price">{{ money(line.subtotal_cents) }}</span>
                     <button type="button" class="cart__remove" :aria-label="t('remove')" @click="$emit('remove', line.index)">&times;</button>
-                </div>
-
-                <!-- Se emite SIEMPRE, aunque quede vacío: el condicional del Blade está DENTRO. -->
-                <div class="cart__lines">
-                    <span v-if="line.date">{{ dayLabel(line.date) }} · {{ shortTime(line.time) }}</span>
                 </div>
 
                 <ul v-if="line.event.length" class="cart__event">

@@ -2143,24 +2143,42 @@ body.no-scroll { overflow: hidden; }
    Carrito de visitas (Fase 5.4): varias visitas en un mismo pedido.
    ==================================================================== */
 .cart { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-.cart__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-12) var(--sp-14); }
-.cart__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-10); }
+/* ❗❗ **La línea de carrito, desde su artboard** (`#558`, `Pasos Compra PJP`): tarjeta blanca con el
+   canto de TARJETA —16, no el del control—, y su cabecera en cuatro columnas:
+   azulejo del producto · (nombre + cuándo) · precio · quitar.
+   ⚠️ Se alinea ARRIBA (`flex-start`) y no al centro: con un nombre de dos líneas —«8 invitados · Pack
+   Cumpleaños Jump» a 390 px son dos—, centrar deja el precio y la × flotando a media tarjeta. */
+.cart__item { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-14); }
+.cart__head { display: flex; align-items: flex-start; gap: var(--sp-10); }
+/* El azulejo del producto: Nube sobre blanco, que es el mismo escalón que usa la banda del pago. */
+.cart__ico { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-btn); background: var(--bg-soft); color: var(--fg); }
+/* ⚠️ Dentro del azulejo el marcador NO se atenúa ni se separa: su regla general (`opacity: .75` y un
+   margen a la derecha) está pensada para cuando va PEGADO a un texto, y aquí ya tiene su propia caja. */
+.cart__ico .prod-ico { margin-inline-end: 0; opacity: 1; }
+.cart__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 /* ⚠️ Pese al nombre, esta línea es **el NOMBRE del producto** («2× Entrada Jump»), no la fecha —ésa
    vive en `.cart__lines`—. El artboard la dibuja en tinta y en negrita, y medida en `var(--zone-1)`
    daba **2,70** sobre papel (`#551`). *Un nombre de clase no dice qué pinta: hay que leer el marcado.* */
 .cart__when { flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); text-transform: capitalize; }
 .cart__price { flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); }
-.cart__remove { background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer; }
+/* ⚠️ **44×44 con margen negativo** (`#558`): el área táctil crece sin mover el aspa ni empujar la
+   tarjeta — un control de quitar que hay que acertar con el dedo borra la reserva equivocada. */
+.cart__remove { flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: calc(var(--sp-10) * -1) calc(var(--sp-10) * -1) calc(var(--sp-10) * -1) 0; background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer; }
 .cart__remove:hover { color: var(--fg); }
-.cart__lines { list-style: none; margin: var(--sp-8) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
+/* El CUÁNDO, bajo el nombre y en apoyo: describe la línea, no la titula. */
+.cart__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 .cart__lines li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
+/* «+ Añadir otra reserva» (`#558`): tarjeta blanca con borde CONTINUO y el rótulo en color de enlace.
+   ⚠️ Pierde el borde discontinuo a propósito — en este sistema el trazo roto significa «aquí falta
+   algo», y aquí no falta nada: es una puerta más. Y sube a 48, el suelo táctil del producto. */
 .purchase__add-more {
-    width: 100%; margin-top: var(--sp-14); padding: var(--sp-11) var(--sp-16);
-    background: none; border: 1px dashed var(--line-strong); border-radius: var(--r-btn);
-    font-family: var(--font-body); font-size: var(--fs-button); font-weight: var(--fw-semibold); color: var(--fg); cursor: pointer;
-    transition: border-color var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+    display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
+    width: 100%; min-height: 48px; margin-top: var(--sp-14); padding: var(--sp-12) var(--sp-16);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--interactive); cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale);
 }
-.purchase__add-more:hover { border-color: var(--fg); color: var(--interactive); }
+.purchase__add-more:hover { border-color: var(--fg); }
 
 /* Catálogo de entradas (paso 1 del flujo de compra: elegir producto) */
 .catalog { display: flex; flex-direction: column; gap: var(--sp-8); margin-bottom: var(--sp-4); }
@@ -6196,17 +6214,19 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    propio elemento debajo, y el bloque se separa de lo que tiene encima (es una pregunta
    distinta de «cuántas entradas quieres»). Quién puede marcarse lo sigue decidiendo
    `assignment.js` y lo vuelve a decidir el servidor. */
-.dep-pick { padding-top: var(--sp-12); border-top: 1px solid var(--line); }
-.dep-pick__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
-.dep-pick__row {
-    padding: var(--sp-10) var(--sp-12);
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    background: var(--bg-card);
-}
-/* Apagada: fondo del segundo tono y el rótulo atenuado. `.check` fija `cursor: pointer` con
-   especificidad (0,1,0); esta regla es (0,2,0) y además va después, así que gana sin tocarla. */
-.dep-pick__row--off { background: var(--bg-soft); }
+.dep-pick { padding-top: var(--sp-11); border-top: 1px solid var(--line); }
+/* ❗❗ **Las filas pierden su CAJA** (`#558`, artboard `Pasos Compra PJP`): cada menor era una tarjeta
+   con borde DENTRO de la tarjeta de la línea, o sea el mismo canto anidado dos veces —lo que `#484`
+   llamó romper el concéntrico—. Aquí son una lista dentro de una tarjeta, y lo que las separa es el
+   aire, no un borde.
+   ⚠️ **Cada fila conserva 44 de alto**: es una casilla que se pulsa con el pulgar, y sin la caja el
+   área táctil se quedaría en la altura del texto. */
+.dep-pick__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dep-pick__row { min-height: 44px; display: flex; flex-direction: column; justify-content: center; }
+/* ⚠️ Apagada se dice ATENUANDO el texto, no pintando el fondo: dentro de una tarjeta blanca, un
+   segundo tono de fondo se lee como otra tarjeta y vuelve a anidar lo que acabamos de quitar.
+   `.check` fija `cursor: pointer` con especificidad (0,1,0); esta regla es (0,2,0) y además va
+   después, así que gana sin tocarla. */
 .dep-pick__row--off .dep-pick__pick { opacity: 0.55; cursor: not-allowed; }
 .dep-pick__pick { align-items: center; }
 .dep-pick__who { display: flex; align-items: baseline; gap: var(--sp-7); flex-wrap: wrap; }
