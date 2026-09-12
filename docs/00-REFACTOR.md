@@ -1868,8 +1868,33 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       canvas ha dibujado **cuatro áreas más** que no están en el plan —el PANEL (5 artboards, ~25
       decisiones del owner), la APP móvil, las INVITACIONES digitales y las BANDAS—, ninguna con
       carril asignado. El inventario completo, con lo que bloquea de quién, vive en `ESTADO.md`.
-      ▶ Lo siguiente de este carril, con grupos pausado, es la **Fase 5** (post-form y justificante):
-      **está dibujada entera en el canvas y decidida por el owner**, y no depende de nadie más.
+      🟦 **LA PASADA DE VESTIDO, PRIMERA TANDA: EL REPARTO DEL COLOR** (`#537`→`#542`, 2026-09-12).
+      Medido antes de tocar: la portada tenía **1,1 %** de color y las seis páginas interiores
+      **0,0 %**, mientras el sistema del cliente declara `60/30/10` y su masa de mural da azul 46 %.
+      **El reparto estaba invertido**: el Amarillo Aviso —«nunca fondo ni botón»— ocupaba el 54,9 %
+      del color y el Cian, que ES la identidad, el 0,10 % de la página. ▶ Para meter color no hubo
+      que romper ninguna regla del canvas: hubo que CUMPLIRLAS.
+      ▶ De ahí salió todo lo demás, porque el owner preguntó por los botones al verlo: la familia
+      pasa de **8 alturas y 5 pesos a la escala** (`#538`), el fantasma de **cuatro formas a una**
+      (`#539`), **ningún botón con fondo negro** en la web ni en el cajón (`#540`), **el cian pasa a
+      ser la acción y el naranja sale** (`#541`) y la tarifa especial se explica con **una «i» única
+      y un tooltip** (`#542`).
+      ❗❗❗ **`#541` contradice el «mapa del naranja»**, que es regla dura del sistema, y el owner lo
+      decidió a sabiendas. ⚠️⚠️ **Y no es código, es un DATO**: `--action` lo pone el panel.
+      ⚠️ **DOS PASOS DE DESPLIEGUE que no viajan en el commit**: `theme.action` en el panel de
+      producción y `--money: #7C9315` en su `client.css`.
+      ⚠️⚠️ **Dos guardas pararon dos cambios que habrían pasado la revisión visual**: el secundario
+      a azul contradecía una decisión del owner de septiembre escrita en el canvas, y el hover de
+      `.btn--ink` que lee `--zone-*` **no es un defecto** (`#551` lo razonó y su guarda avisa de no
+      arreglarlo). *Las dos las paró una guarda, no una lectura.*
+      ⚠️ **Y una altura fuera de escala resultó ser la única que cumplía el mínimo táctil**: el 52
+      del carril de tarifas, que al bajarlo a 48 se pintaba a **45** por el velo del 94 %.
+      ▶ **Quedan los otros tres ejes de la pasada**: iconos (con los 19 de zona) · piezas de fachada
+      (las 12 poses) · imagen y movimiento · y el censo pieza × pantalla.
+
+      ▶ Lo siguiente de este carril, con grupos pausado, son **los otros tres ejes de la pasada** o
+      la **Fase 5** (post-form y justificante): **está dibujada entera en el canvas y decidida por el
+      owner**, y no depende de nadie más.
       ⚠️⚠️ A la **06** le falta su mitad de Google, y la verificación contra la API la reordenó: el
       parque tiene **UNA** reseña, así que `[DECIDIDO owner]` hay **umbral de 10** y hoy la sección la
       sostienen las opiniones PROPIAS. ▶ Y deja escrito que **«que la chapa se vea siempre» no es

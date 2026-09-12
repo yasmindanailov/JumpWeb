@@ -39,7 +39,7 @@ no suponerlo.
 >
 > | carril | banda | dónde | estado |
 > |---|---|---|---|
-> | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#536`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) · **`/contacto` ✅ `#535`** (los canales del dato, el formulario con su tema y su aviso, la chapa de atajos del inventario y la dirección escrita **sin mapa**) · **`/bar` ✅ `#536`** (la carta como IMAGEN subida en «Ajustes → El bar», su puerta de vuelta en la portada; **el bar se llama «Cantina»**, `[owner, 2026-09-12]` — puesto en LOCAL, y es **paso de despliegue** en producción: sin nombre la ruta da 404 y el destino no sale en ninguna superficie) — **las SIETE páginas del inventario, construidas**; queda `/servicios` (grupos, PAUSADA por el owner) · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
+> | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#542`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) · **`/contacto` ✅ `#535`** (los canales del dato, el formulario con su tema y su aviso, la chapa de atajos del inventario y la dirección escrita **sin mapa**) · **`/bar` ✅ `#536`** (la carta como IMAGEN subida en «Ajustes → El bar», su puerta de vuelta en la portada; **el bar se llama «Cantina»**, `[owner, 2026-09-12]` — puesto en LOCAL, y es **paso de despliegue** en producción: sin nombre la ruta da 404 y el destino no sale en ninguna superficie) — **las SIETE páginas del inventario, construidas**; queda `/servicios` (grupos, PAUSADA por el owner) · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
 > | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#563`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada, CATORCE tandas hechas, el ARMAZÓN COMPLETO y las PARADAS 02, 03 y 04 CERRADAS** · ✅ **T4·8b · LOS CUATRO DESENLACES** (`#563`, `[DECIDIDO owner]`): **tres frases que el servidor ya tenía escritas y la pantalla no pedía** —`verify_hold` con CERO consumidores desde hace meses, a qué correo se ha escrito, y la HORA de caducidad, que el denegado resumía en «unos minutos» teniendo el dato en la misma respuesta que ya pedía—; la **puerta al CARNÉ** en la reserva creada (**el mismo código de siempre: no hay un QR por pedido**) y el denegado pierde «hacer otra reserva», que era el peor consejo con la plaza aún guardada. ⚠️⚠️ **HALLAZGO QUE NO ES DE LA TANDA: el armazón del cajón no llega al suelo táctil** — `.sidecart__close` mide **26 px** en las 32 pantallas medidas y `.bk-back` **20**, contra 48; son los dos controles que salen en TODAS y **no lo ve ninguna guarda** (`TouchTargetTest` recorre rutas públicas, la lección de `#557`). Ficha en `DEUDA.md`, tanda propia y del owner · ✅ **T4·8a · EL PASO DE PAGAR** (`#562`, `[DECIDIDO owner]`): el titular decía **cuatro veces la misma palabra** en 390 px y hoy dice el trabajo («Repasa tu reserva»); el **enlace de las condiciones sale de la casilla** a su propia fila de 48 (medido: inline eran 19), **compartiendo receta con «Ver más fechas»** en vez de copiarla. ⚠️⚠️ **Y el bloque que el cliente RELLENA no lo vigilaba ningún diff desde `#349`**: su caso de contrato nace sin sujeto —comprador con teléfono y sin condiciones publicadas— **y el renderizador SSR no componía `need`**, así que no había forma de que apareciera · ✅ **T4·7 · LA PARADA 03** (`#561`, `[DECIDIDO owner]`): el paso 05 —«donde se pierde gente»— con la pestaña del SISTEMA (era la de las ZONAS del parque), la entradilla que da un MOTIVO en vez de explicar el obstáculo, el descargo nombrado entero y la pista del teléfono en el alta. ⚠️⚠️ **Hallazgo: un arreglo A MEDIAS de `#551`** — el enlace de la política de privacidad seguía en `--zone-1` (**2,45** de contraste): aquella tanda arregló el enlace legal DENTRO de una casilla y no éste, que es el mismo FUERA de ella, y `form__*` está fuera de su censo · ✅ **T4·6 · LA CESTA** (`#558`): la línea cambia de ESTRUCTURA —azulejo · nombre+cuándo · precio · quitar— y **se deshacen dos tarjetas anidadas** (cada menor era una tarjeta con borde dentro de la tarjeta de la línea, lo que `#484` prohibió en la portada) · ✅ **`#559`**: la línea decía «+ 1× Calcetines» — **tres defectos en una frase**, y el artboard no los veía porque **transcribió nuestro propio texto** · ❗❗ ✅ **`#560` · EL ÚNICO DEFECTO DE DATOS**: el campo obligatorio de una línea restaurada **se borraba del DOM con la primera letra dentro** —emitía en cada pulsación y `pending` lista los VACÍOS—, así que el nombre del homenajeado se guardaba con un carácter; hoy hay borrador con «Guardar»/«Descartar» · ✅ **T4·5 · EL DÍA Y LA HORA** (`#557`, vestidas desde `Pasos Compra PJP` 4a): títulos como PREGUNTAS a 24, «Ver más fechas» como FILA con el chevron del set, el chip de día a 64×80 con su número en rótulo, y **el stepper de 32 redondo a 44/48 cuadrado** — ⚠️⚠️ **doce píxeles por debajo del suelo táctil en el control más pulsado del embudo, y ninguna guarda lo veía**: `TouchTargetTest` recorre RUTAS de la web pública y el cajón no es una ruta. ⚠️ **Dos cosas del artboard NO se copian**: el mes horizontal (su dibujo son 4 días de un mes; la tira lleva 182 que cruzan varios) y sus tallas de texto pequeñas (es anterior a la grieta 00 — del artboard, la GEOMETRÍA; las tallas, el suelo de `#550`) · ✅ **T4·4c · CON SESIÓN, «QUIÉN ERES» NO ES UNA FASE** (`#556`, **lo vio el owner**): con sesión el carrito manda DIRECTO al pago, así que esa pantalla no se visita nunca — y la banda **prometía dos donde quedaba una, el contador saltaba del 3 al 5, y la fase salía HECHA** sin que el cliente hubiera estado. Hoy cuenta cuatro. ⚠️ La señal es `auth()->id()` **al pintar la página**, no la sesión de ahora: con el estado vivo, quien se identifica por el camino vería desaparecer la fase al completarla. **16/16 mutaciones** · ✅ **T4·4b · LA BANDA DE CINCO FASES** (`#555`, `[DECIDIDO owner]`): del día al pago, **una fase por PANTALLA** —lo que hace honesto el contador, que antes repetía «Paso 3» en dos pantallas— y **un solo «Volver»** en el embudo, el de la banda (los pasos 4, 5 y 8 pierden el suyo). ⚠️⚠️ **Defecto que solo vio la sonda: «Your basket» se RECORTABA en inglés** (66 px en un carril de 64,4), y `scrollWidth` lo daba por bueno — se mide la TINTA con un `Range`. **13/13 mutaciones** · ✅ **T4·4a · EL PIE DEL ARMAZÓN** (`#554`, `[DECIDIDO owner]` sobre las dos formas **renderizadas**): el CTA a **fila completa** con el tamaño grande del sistema (56 · 18/34 · 800) y **el paso 08 ancla en LO QUE SE COBRA** — con señal el pie decía el total y a la tarjeta iba otra cifra; hoy la banda dice «Total» y «A pagar en el parque» y pegado al botón va lo que va a la tarjeta. ⚠️⚠️ **Tres cosas del canvas no se sostuvieron al medirlas**, y la que más cambia el plan: **la banda de fases NO es trabajo de servidor** (lo dice en tres sitios) — `Purchase.php` está retirado y hoy la compone el cliente. **17/17 mutaciones** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` **29 → 13**, **17/17 mutaciones** · ✅ **T4·3 · la TARJETA GRANDE del catálogo** (`#552`): dos tarjetas con su franja y su frase, el cumpleaños en tinta, «Servicios» → **«Grupos»**, y el defecto medido del precio de un pack (**159 px de 324**, la descripción en 55 y cortada) → las siete filas iguales · ✅ **T4·3 bis · la PUERTA de categoría** (`#553`, **la propuso el owner**): las dos categorías salen CERRADAS y al pulsarlas se abren en la tarjeta grande — la bifurcación se ve **sin pantalla nueva**; puerta cerrada **154 px** y el panel **817** contra 1.033; **16/16 mutaciones** · **lo siguiente**: la **T4·4b, la banda de CINCO fases** (`[DECIDIDO owner]`), del día al pago — y con ella el «Volver» de carrito, identificarse y pagar, que hoy traen el suyo propio y con la banda serían dos · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
@@ -121,6 +121,68 @@ quedado apuntando a una clase inexistente — hoy no cita ninguna variante concr
 >
 > ▶ **Para el agente de la web** (lo compartido que tocó `#550`, y por qué): **`landing.css` `:root` pierde `--fs-9`** —se quedó con CERO usos al subir sus tres consumidores del cajón, y `SidebarTokenBudgetTest` exige retirar el token sin consumidores—; **`TypeScaleTest`** y **`ScaleTokensAreUsedTest`** dejan de exigir ese escalón (sus listas pasan a empezar en 10, con el porqué escrito dentro); y **`SemanticFillTextTest::CAJON_BAJO_EL_SUELO` queda VACÍA** (era `.bk-seg__label`, a 9,5 px). ⚠️ **Eran TRES guardas diciendo cosas distintas del mismo token** —retíralo por muerto · que la escala siga completa · que exista para que ningún literal lo esquive—, y la que manda es la que mide el uso real; un literal de 9 px lo siguen prohibiendo las otras dos. ⚠️ **Ninguna regla de la web cambia de talla**: las clases que compartís (`.form__label`, `.check`, `.switch`, `.zone-tab`, `.cal__*`, `.btn`…) **conservan su regla base** y solo suben dentro de `.sidecart__panel`. Cuando vistas una de esas superficies, ese bloque acotado encoge. Retíralo cuando lo hagas.
 >
+> ═══════ 🎨 CIERRE DEL CARRIL DE DISEÑO · 2026-09-12, NOCHE (`#537`→`#542`) ═══════
+>
+> ▶ **LA PASADA DE VESTIDO, PRIMERA TANDA: EL REPARTO DEL COLOR — y todo lo que arrastró.**
+> El owner abrió pidiendo «diversión, colores; la página está sosa», y **estaba medido**: la portada
+tenía **1,1 % de color** y las seis páginas interiores **0,0 %**, mientras su propio sistema declara
+`60/30/10`. ▶ **El reparto estaba INVERTIDO**: el Amarillo Aviso —«nunca fondo ni botón», masa 3 %
+en su mural— ocupaba el **54,9 %** del color, y el Cian, que ES la identidad (masa 46 %), el
+**0,10 % de la página**. *Para meter color no hubo que romper ninguna regla del canvas: hubo que
+cumplirlas.* Hoy: `/` **4,5 %** · `/contacto` 16,1 · `/normas` 11,7 · `/precios` 2,7 · `/bar` 3,4.
+>
+> ▶ **De ahí salió el resto, porque el owner preguntó por los botones al verlo**: `#538` la familia
+de **8 alturas y 5 pesos a la escala** · `#539` el fantasma de **cuatro formas a una** · `#540`
+**ningún botón con fondo negro**, web y cajón · `#541` **el cian pasa a ser la acción, el naranja
+sale**, y el SPA deja de divergir · `#542` la tarifa especial con **una «i» única y un tooltip**.
+>
+> ❗❗❗ **LO QUE NO PUEDES NO SABER SI TOCAS UN BOTÓN O UN COLOR:**
+> · **El naranja ya NO es la acción** (`#541`, `[DECIDIDO owner]`). Eso **contradice el «mapa del
+naranja»**, que es una regla dura del sistema, y se decidió a sabiendas. ⚠️⚠️ **No es código, es un
+DATO**: lo pone el panel (`theme.action`).
+> · **El Bungee del CTA es una EXCEPCIÓN DECIDIDA, no un defecto** (`#538`). El artboard del canvas
+dibuja ese botón en Hanken 800 —se renderizó y se comprobó, las siete apariciones— y el owner eligió
+conservarlo. **Su guarda está escrita al revés que las demás: protege la desviación**, porque el
+modo de fallo es que alguien lo «ARREGLE» leyendo la regla.
+> · **El rótulo del secundario es `var(--bg)`, no un blanco fijo**: es lo que lo hace cumplir en las
+dos superficies. *Cuando el relleno sigue a la superficie, el rótulo también.*
+>
+> ⚠️⚠️ **DOS GUARDAS PARARON DOS CAMBIOS QUE HABRÍAN PASADO LA REVISIÓN VISUAL** (`#539`): el
+secundario a azul contradecía una decisión del owner de septiembre escrita en el canvas, y el hover
+de `.btn--ink` que lee `--zone-*` **no es la grieta 01** —`#551` lo razonó y su guarda avisa por
+escrito de no arreglarlo—. *Las dos las paró una guarda, no una lectura.*
+>
+> ⚠️ **Y una altura fuera de escala resultó ser la ÚNICA que cumplía el mínimo táctil**: el 52 del
+carril de tarifas, que al bajarlo a 48 «por coherencia» se pintaba a **45** por el velo del 94 %.
+Lo cazó el instrumento, no una guarda. *Una excepción puede ser la regla de otra cosa.*
+>
+> ❗❗ **PASOS DE DESPLIEGUE (DOS, y NINGUNO viaja en el commit)**: `app:set-setting theme.action
+"#1AA9DE"` en el panel de producción, y `--money: #7C9315` en su `client.css`. **Sin ellos producción
+se queda con el naranja y el verde viejo.**
+>
+> ▶ **CINCO INSTRUMENTOS NUEVOS VERSIONADOS** en `scripts/`: `sonda-color` (cuánta superficie es
+color) · `sonda-contraste` (el ratio real, sobre la pila de fondos) · `sonda-aire-tenido` (si una
+caja teñida tiene aire) · `censo-candidatos` · `censo-botones`. ⚠️ **Las tres sondas entienden
+`color(srgb …)`**, que es como computa `color-mix()`: un parser que solo lea `rgb()` mide una web sin
+color sobre una web teñida.
+>
+> ▶ **LO QUE QUEDA DE LA PASADA** (era de cuatro ejes y se hizo el previo): **iconos** —con los 19 de
+zona que el owner decidió, que cierran la deuda de `#257`— · **piezas de fachada** (las 12 poses) ·
+**imagen y movimiento** · y el **censo pieza × pantalla**.
+>
+> ❗ **ENCARGO A MEDIAS, y es lo primero que el owner espera**: **las BANDAS** (`Bandas PJP` del
+canvas). Investigado y decidido, **cero código**: la **gorda al final** de la página (⚠️ el artboard
+dice «a media página» y **su motivo caducó** — era evitar dos bloques de tinta seguidos, y ese cierre
+lo retiró `#527`), las **finas** antes del cierre, y el **reparto del canvas tal cual**
+(`/atracciones`→normas · `/precios`→cumpleaños · `/cumpleanos`→bar · `/bar`→atracciones ·
+`/normas`→precios · `/contacto` sin gorda). Después, la banda de arriba con sus cuatro tonos.
+> ⚠️ Su botón «cian relleno con texto tinta sobre tinta» **ya encaja al dígito** con el secundario de
+hoy. ⚠️ Y su regla «nunca naranja» **sigue valiendo con otro argumento**: el naranja ya no existe.
+>
+> ❓ **UNA PREGUNTA DEL OWNER SIN RESOLVER**: dice que hay una «i» en la card del QR. Se buscó y lo
+que hay ahí es un **párrafo de ayuda**, no una «i». Las tres que sí se unificaron son la del pie del
+cajón, la de la sección 05 y la de la tarifa especial.
+>
 > ═══════ 🎨 INVENTARIO DEL CARRIL DE DISEÑO · lo que FALTA (2026-09-12, cierre) ═══════
 >
 > ❗❗❗ **EL CANVAS SE HA SALIDO DE LAS CINCO FASES, y la spec ya no describe el trabajo que hay.**
@@ -142,11 +204,12 @@ quedado apuntando a una clase inexistente — hoy no cita ninguna variante concr
 >
 > 1. **`/servicios` → «Grupos»** ⏸️ PAUSADA por el owner. La lógica está medida y escrita en `#534`,
 >    **cero código**; espera su artboard. No hay que volver a investigarla.
-> 2. **La «pasada de vestido»** (`#497`, `specs/pasada-de-vestido.md`) — el cuarto eje que cada
->    sección fue aplazando: iconos · imagen · movimiento · piezas de fachada, **sobre todas las
->    secciones a la vez y con presupuesto de bytes**. **Cinco decisiones del owner abiertas** (D3
->    densidad · D4 qué familias entran · D5 dos contradicciones del artboard · D6 la cinta `C3` ·
->    D7 refrescar el canvas).
+> 2. **La «pasada de vestido»** (`#497`, `specs/pasada-de-vestido.md`) — ▶ **PRIMERA TANDA HECHA el
+>    12-09** (`#537`→`#542`, el reparto del COLOR sobre las siete páginas; ver el bloque de cierre de
+>    arriba). Sus decisiones de alcance están **cerradas**: las siete páginas a la vez · la vara es
+>    el `60/30/10` del sistema · entran el kit por el hueco por instalación **y los 19 iconos de
+>    zona**. **Quedan los otros tres ejes**: iconos · piezas de fachada (las 12 poses) · imagen y
+>    movimiento, más el censo pieza × pantalla.
 > 3. **Fase 5 · el post-form y el justificante** ⬜ — **las dos páginas están DIBUJADAS ENTERAS** en
 >    el canvas (`Formulario Post Reserva PJP`, con su **turno 2 ya decidido por el owner** —el pegado
 >    de la lista de nombres, que baja de 60 toques a 23—, y `Justificante Invitado PJP`), con su

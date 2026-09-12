@@ -30594,3 +30594,211 @@ Lo que sí era una regla **se extrajo**: formatear la hora vive en `outcome.js` 
 ❗ **QUEDA**: el **OJO del owner** en los desenlaces —solo el paso de pagar se ha visto en navegador;
 06, 07, 10 y 11 piden un pedido pagado, uno denegado y uno sin datos firmados (guion en
 `VERIFICACION-E2E-CAJON.md`)— y el **suelo táctil del armazón**, que es tanda propia.
+
+## #537 · 2026-09-12 · `[DECIDIDO owner]` La pasada de vestido: la identidad como SUPERFICIE — la portada tenía 1,1 % de color y su propio sistema pide 30
+
+El owner abrió el carril diciendo que la página estaba «sosa». **Estaba medido antes de tocar nada**
+(`scripts/sonda-color.mjs`, muestreo con `elementFromPoint`, que resuelve la pila de capas como la ve
+el navegador):
+
+    portada   1,1 % de color vivo    ·    las SEIS páginas interiores   0,0 %
+    cinco de las diez zonas de la portada sin UN PÍXEL de color
+    reseñas · visítanos · dudas → 100 % papel: ni color, ni foto, ni tinta
+
+### ❗❗❗ El reparto estaba INVERTIDO respecto al sistema del propio cliente
+
+`tokens-pjp.js` declara `limite.proporcion: '60/30/10'` (neutro / **cian identidad** / naranja acción)
+y la masa cromática medida en el mural del parque. Sobre los 643 puntos de color de la portada:
+
+| color | rol que le da el sistema | masa en el mural | ocupaba |
+|---|---|---|---|
+| Amarillo Aviso | «resalte tipo marcador… nunca fondo ni botón» | 3 % | **54,9 %** |
+| **Cian PJP** | **LA IDENTIDAD** | **46 %** | **9,0 %** → 0,10 % de la página |
+
+▶ **Para meter color no hubo que romper ninguna regla del canvas: hubo que CUMPLIRLAS.**
+`fondosColor: 0` sigue intacto — el fondo de sección es papel y el color entra en TARJETAS, DATOS y
+BOTONES, que es lo que el sistema manda.
+
+### Las cuatro reglas, las cuatro descubiertas rompiéndolas
+
+- **R1 · el color depende de la SUPERFICIE.** Azul Muro sobre tinta da **2,61** —lo vio el owner antes
+  que ninguna sonda— y el cian 6,85. Un token de identidad con un solo valor está mal en media web.
+- **R2 · sobre un tinte solo aguantan Tinta y Azul Muro**: Humo 4,40 · Lima 800 4,18 · Amarillo 800
+  3,90. No es criterio propio — `tokens-pjp.js` ya lo trae escrito **con esas mismas cifras**, y que
+  el cálculo las reprodujera fue lo que validó el método.
+- **R3 · teñir es convertir en CAJA, así que solo se tiñe lo que tiene AIRE.** `.before__row` es una
+  FILA de una `<dl>` con `padding: 14px 0`: el tinte llegaba a **0 px** de la letra.
+- **R4 · una tarjeta con un dato de color propio no se tiñe.** Las estrellas de una reseña son
+  Amarillo 800 y solo pasan sobre BLANCO (4,87); sobre cualquier tinte caen a 3,89.
+
+### Lo que costó
+
+⚠️⚠️ **CUATRO trampas de instrumento, todas con cifras creíbles.** La sonda daba «0,0 % foto» en una
+página con vídeo (las imágenes van en `<img>`, no en `background-image`); su umbral descartaba los
+PASTELES, así que una familia entera de reparto se medía como si no existiera; **`color-mix()` computa
+como `color(srgb …)`, NO como `rgb()`**, así que al consolidar las reglas estaban aplicadas y la sonda
+seguía dando 1,2 %; y el censo de candidatas buscaba por NOMBRE de clase y daba **22 iconos donde el
+set tiene 63**. *Esa última es la trampa que la propia spec tenía escrita desde §2.1 y se volvió a
+pagar.*
+
+⚠️ Y un reemplazo por texto **aterrizó en la regla equivocada**: el de `.rev__card` casó en
+`.addon-card`, que tenía la misma secuencia de líneas. Lo cazó medir el DOM, no leer el diff.
+
+▶ **HALLAZGO LATERAL: `/entradas` no es una página.** La sonda dio «100 % papel» con todas sus filas a
+0,0 —una incoherencia interna— y resultó que sirve la portada y abre el CAJÓN encima (capa `fixed` al
+100 %). Es una PUERTA, como las `/mi-cuenta/…` de `#120`: contesta una pregunta que el `ESTADO` tenía
+abierta.
+
+**Medido después** (color vivo + tinte): `/` 1,1 → **4,5 %** · `/precios` 0,0 → 2,7 · `/cumpleanos`
+0,0 → 2,3 · `/normas` 0,0 → 11,7 · `/contacto` 0,0 → 16,1 · `/bar` 0,0 → 3,4.
+⚠️ `/normas` llegó a dar **51,4 %** al teñir sus 27 tarjetas: el presupuesto mandó sobre la regla y
+ahí el color entra solo por el borde.
+
+⚠️ Los tintes **se DERIVAN** de `--strip-1`, que ya viaja en el paquete de cada instalación: la receta
+del 14 % y el 30 % devuelve `#D5EAEE` y `#B3DDEB`, al dígito los dos valores que el sistema declara
+como `tintePapel`. **Cero paso de despliegue.**
+
+### La red
+
+`IdentityTintTest` (una caso por regla) + `scripts/mutar-vestido.py`. Cinco instrumentos versionados:
+`sonda-color`, `sonda-contraste`, `sonda-aire-tenido`, `censo-candidatos`, `censo-botones`.
+
+---
+
+## #538 · 2026-09-12 · `[DECIDIDO owner]` Los botones vuelven a ser UNA familia: de 8 alturas y 5 pesos a la escala
+
+El owner no sabía decidir el color del botón, y midiéndolo se vio que **el problema no era el color**:
+en las siete páginas hay **78 botones con 23 apariencias**, y él las había descrito una a una sin
+saber nombrarlas.
+
+    alturas   la web usaba 8 (48·49·52·54·56·57·58·74)   el sistema declara 2 (48 y 56)
+    pesos     la web usaba 5 (400·500·600·700·800)       el sistema declara 1 («Hanken 800»)
+
+- `--nav-btn-h` 54 → 56 y el par del hero `clamp(64px, 5.2vw, 74px)` → 56. **Salían del mockup y
+  tenían decisión escrita**; subirlos se decidió a sabiendas, porque una escala con una excepción
+  medida deja de ser una escala. ⚠️ El logotipo (70) NO cambia: no es un control.
+- `.btn--lg` no obedecía a su `min-height`: con `line-height: normal` el contenido pedía 57. El
+  sistema declara `lh: '1'` para todo botón.
+- `.btn` (17 apariciones) y `skip-link` suben a peso 800. ⚠️ Los CHIPS quedan fuera: son otra familia.
+
+⚠️⚠️ **UNA ALTURA FUERA DE ESCALA RESULTÓ SER LA ÚNICA QUE CUMPLE EL MÍNIMO.** El 52 de
+`.rate-card__btn` se bajó a 48 «por coherencia» y el censo lo cazó pintándose a **45 px**, por debajo
+del suelo táctil: el carril con foco ESCALA la tarjeta no enfocada al 94 %, y `tokens-pjp.js` lo tiene
+razonado —`componente.carril.control: 52`, «52 × 0,94 = 48,9»—. *Lo cazó el instrumento, no una guarda.*
+
+❗❗❗ **Y el Bungee del CTA pasa de desviación silenciosa a EXCEPCIÓN DECIDIDA.** El rótulo de
+`.cta-med` va en Bungee 400 a 17-19 px y la regla dura lo prohíbe dos veces («Bungee nunca en un
+botón, nunca bajo 20px»). Se renderizó `Marco Portada PJP` y se le preguntó al navegador con qué
+fuente dibuja ÉL ese botón: **las siete apariciones de «Reservar» salen en Hanken Grotesk 800 a 16 px**
+— canvas, escala y regla decían lo mismo, y el Bungee era una desviación del CÓDIGO. Puesto delante,
+el owner eligió conservarlo. ▶ Su guarda está escrita **al revés que las demás**: protege la
+excepción, porque el modo de fallo aquí no es que se rompa, es que alguien lo «ARREGLE».
+
+▶ De paso, dos cifras que desmienten una impresión extendida («toda la web es Bungee»): por ÁREA de
+tinta es **Hanken 56,4 % · Bungee 36,7 %**, y por número de textos **Hanken 62,2 % · Bungee 13,6 %**.
+Bungee es la que se VE; Hanken la que se LEE.
+
+---
+
+## #539 · 2026-09-12 · El fantasma vuelve a ser UNO — y dos decisiones que casi piso, paradas por guardas
+
+Medido: **nueve rellenos de botón** donde el sistema declara tres visibles y un inactivo. El desorden
+estaba concentrado en una variante: **el fantasma tenía CUATRO formas**. Queda una, la que declara
+`componente.boton.fantasma.papel`: borde y texto en Azul Muro.
+
+❗❗❗ **Y DOS COSAS QUE SE INTENTARON Y SE REVIRTIERON, LAS DOS PARADAS POR UNA GUARDA:**
+
+1. **El secundario a azul** contradecía la decisión del owner de septiembre escrita en el canvas
+   («el botón del área es de tinta») y lo que declara `componente.boton`. Lo cazó
+   `SingleButtonFamilyTest`, con la cita del sistema en su mensaje.
+2. **Sanear el hover de `.btn--ink`**, que lee `--zone-*`. Parecía la grieta 01 y **no lo es**: `#551`
+   lo dejó razonado y su guarda avisa por escrito de no «arreglarlo».
+
+▶ *Las dos las paró una guarda, no una lectura* — y las dos habrían pasado la revisión visual sin que
+nadie notara nada. Es exactamente para lo que esas listas existen.
+
+▶ **`#539 bis`**: el secundario pasa después a **Azul Muro**, con el owner reafirmándolo con el
+conflicto delante. ⚠️ Su rótulo es `--on-secondary: var(--bg)` y **no un blanco fijo**: es lo que lo
+hace cumplir en las dos superficies (6,43 en papel · 6,85 en tinta). *Cuando el relleno sigue a la
+superficie, el rótulo también* — lo cazó una guarda del otro carril.
+
+---
+
+## #540 · 2026-09-12 · `[DECIDIDO owner]` Tres botones y ningún fondo negro, en la web y en el cajón
+
+Elegido sobre tres formas renderizadas en una URL de prueba que alcanzaba también al cajón. Nace el
+rol `--secondary` y pasan a él `.btn--ink`, `.cta-med`, **`.cartbar` y `.bk-cta`** (el pie del cajón),
+`.acct__btn--primary` y el salto al contenido. ⚠️ **`.bk-cta--sells` se queda naranja**: es el que cobra.
+
+⚠️⚠️ El rótulo en blanco sobre cian pleno da **2,70**. Se montaron las tres formas con el número
+delante (tinta 6,85 · Cian 800 con blanco 5,13) y el owner eligió viéndolas. Después lo cambió a Azul
+Muro en `#541`, con lo que el contraste dejó de ser una desviación.
+
+Y tres cosas más del encargo: **el keyline pierde su borde** (el sistema declara «Completo» sin borde
+como su DEFECTO) · **el verde salvia sale** —los tintes pasan a cian y el precio de Lima 800 a **Lima
+700**— · ⚠️ el owner pidió «el mismo verde del hero» y **no se puede literalmente**: ése es Lima Bote
+y sobre PAPEL da **1,85**, invisible. Lima 700 es el escalón más cercano que aún se lee (3,15, y
+cumple porque el precio va a 26 px). ⚠️⚠️ **El rol `--ok` no se toca**: significa éxito, que es
+significado y no decoración.
+
+---
+
+## #541 · 2026-09-12 · `[DECIDIDO owner]` El CIAN pasa a ser la acción, el naranja sale, y el SPA deja de divergir
+
+❗❗❗ **Contradice el «MAPA DEL NARANJA», que es una regla dura del sistema** («el naranja solo
+significa comprar») y el owner lo decidió a sabiendas.
+⚠️⚠️ **Y no es código, es un DATO**: `--action` lo pone el panel (`theme.action`, `#209`), así que el
+cambio es `app:set-setting theme.action "#1AA9DE"`. El servidor recalculó solo su par —tinta— porque
+el cian con blanco daría 2,70. ▶ **Paso de despliegue**: no viaja en el commit.
+
+**El SPA deja de divergir**, y eran cuatro cosas que nadie había decidido:
+- **`.acct__qr` era una QUINTA PIEL DE BOTÓN** (cápsula de radio 999, su relleno, su peso, su borde).
+- **`.acct__btn--ghost` llevaba borde de TINTA**: un segundo fantasma distinto del de la web.
+- **Las pestañas «Entrar / Crear cuenta» usaban la piel de las pestañas de ZONA**, y con ella su
+  `--zone-1`, que en el área cae a tinta. Y `#436` dejó `--zone-*` para lo que **identifica una zona**:
+  un conmutador de formularios no lo es.
+- **«Mis reservas» y «Mi cuenta» bajan a FANTASMA**: los rellenos son los que hacen AVANZAR.
+
+⚠️ **El par del hero recupera su altura** (`[DECIDIDO owner]`, literal: «no tan fino, es mi decisión»),
+como excepción declarada a la escala de `#538`.
+
+⚠️⚠️ **Y el botón «Mi QR» salió como TEXTO PLANO**: se retiró el CSS de `.acct__qr` y el `npm run
+build` se hizo ANTES de tocar el componente, así que el bundle publicado seguía emitiendo la clase
+vieja contra un CSS que ya no existía. ▶ *Retirar el CSS de una clase que emite un componente de Vue
+no basta con editar el `.vue`.*
+
+---
+
+## #542 · 2026-09-12 · `[DECIDIDO owner]` «Tarifa especial X €» con una «i», y las TRES «i» del producto pasan a ser una
+
+«En todos los sitios donde se ponga un precio quitamos lo de lunes a jueves, eso es implícito».
+
+▶ **Los días se DERIVAN de `weekdays`, no del rótulo del panel.** `rate_types` guarda las dos cosas y
+**no dicen lo mismo**: `weekdays` es `[5, 6, 0]` y el rótulo, tecleado a mano, dice «Viernes, findes y
+festivos». El rótulo puede desmentir al cálculo sin que nada falle — el defecto de `#531`.
+⚠️ **No afirma nada de festivos ni de vísperas**: no viven en `rate_types` sino en `special_dates`. El
+owner los creía dentro.
+
+❗❗❗ **«Lunes a jueves» eran DOS frases con el mismo texto, y solo una sobraba**: el día normal en
+las tarjetas repetía lo que las cifras ya cuentan (**retirado**), pero «solo de lunes a jueves» es la
+ÚNICA señal de que «Todo el día» no se puede comprar un sábado (**se queda**). ▶ *Lo implícito era el
+día normal, no la restricción de venta.*
+
+▶ **Una sola «i» en todo el producto**: había TRES con tres aspectos. ⚠️⚠️ Se comparte la
+DECLARACIÓN y no la clase, **y eso lo decidió una guarda**: añadir `info-i` al marcado del cajón puso
+**35 casos en rojo** (`SidebarDomContractTest` congela su árbol y es de otro carril).
+
+▶ **El tooltip es un `popover` NATIVO**, y la técnica la decide el requisito del owner —«que esté
+encima siempre y no se recorte»—: se pinta en la **top layer**, por encima de todo y sin recorte
+posible, y cierra con Escape y al pulsar fuera **sin una línea de JS**.
+
+⚠️⚠️ **Tres trampas, dos de ellas la MISMA lección**: `--sp-24` y `--sp-32` **no existen** (la escala
+salta de 20 a 28) y un `calc()` inválido descarta la declaración entera —el tooltip salió de 856 px—;
+un corte mal terminado dejó `/precios` en **500**; y **editar un `.vue` no basta: hay DOS bundles** —
+`npm run build` no toca el SSR, y eso dejó 35 guardas en rojo. Tercera vez en la jornada.
+
+**Verificación de la jornada**: suite **4796 · 30.162 aserciones** (1 skipped) · Pint ✓ · docs-check ✓
+· los dos bundles reconstruidos · 12/12 mutaciones en `mutar-vestido.py`.
+
+⚠️ **Pasos de despliegue de la jornada (DOS, y ninguno viaja en el commit)**:
+`app:set-setting theme.action "#1AA9DE"` en producción, y `--money: #7C9315` en su `client.css`.
