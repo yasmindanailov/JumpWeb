@@ -2802,7 +2802,7 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **PENDIENTE-MEDIR en verde**, medida el **2026-09-12** sobre el árbol CONJUNTO tras la SÉPTIMA
+> Suite **4767 en verde** (29.883 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol CONJUNTO tras la SÉPTIMA
 > fusión, con el **PIE del armazón** del carril del SPA encima (`#554`: **+6** de `SidebarFootShapeTest`,
 > la guarda nueva, y **+4** de JS en `foot.test.js`, que sube el total a **967**) y **`/contacto`** del
 > carril de diseño (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que
