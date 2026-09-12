@@ -30312,3 +30312,92 @@ docs-check ✓ · manifiesto del contrato de árbol revisado línea a línea en 
 lo puso el owner en navegador**, que es como pidió trabajar este carril.
 
 ⚠️ **Paso de despliegue: ninguno.**
+
+---
+
+## #561 · 2026-09-12 · `[DECIDIDO owner]` La PARADA 03: la pestaña del SISTEMA, la entradilla que da un motivo, y el enlace legal que se quedó atrás
+
+**Contexto.** Paso 05 del embudo, que el canvas señala como *«la pantalla donde se pierde gente»*.
+Artboard `Identificacion PJP` 7a. ▶ Su propia cabecera avisa de que **llega tarde a la mitad del
+trabajo**: Google encima de los campos y la privacidad fuera de la casilla ya se hicieron en
+septiembre (`#343`, `#350`). De sus **tres propuestas**, dos estaban ya cerradas en `doc/spa.md` y una
+era decisión del owner.
+
+### Las cuatro cosas que entran
+
+1. **La pestaña era la de las ZONAS DEL PARQUE** (`[DECIDIDO owner]`). La pieza que dice qué zona
+   miras —mayúsculas a 13 con espaciado de letra, un rótulo de CATEGORÍA, sobre pista blanca con
+   borde— usada para elegir entre entrar y registrarse. Hoy es `.tabset`, la del sistema, con la
+   activa **levantada en blanco** sobre pista gris; la misma de `/precios`.
+   ⚠️ `#551` ya le había quitado el color de marca: lo que quedaba era la **FORMA**.
+   ⚠️ `aria-pressed` y **no** `aria-selected`: esto no es un `tablist` —no hay paneles hermanos que se
+   conmuten, el formulario se sustituye entero—, así que anunciarlo como pestañas ARIA prometería una
+   navegación con flechas que no existe.
+2. **La entradilla da un MOTIVO en vez de explicar el obstáculo**: «Tu cuenta guarda tu código y tu
+   firma. Con eso, en la puerta solo enseñas el móvil», con las palabras de la sección 05 de la
+   portada. Antes decía «Inicia sesión o crea tu cuenta para completar tu reserva».
+3. **El descargo se nombra ENTERO** (`Voz PJP`): la casilla decía «el descargo de responsabilidad» y
+   el enlace «el texto completo» — dos cosas distintas para quien lee.
+4. **La pista del teléfono entra en el ALTA** (grieta 14 del canvas): el campo era obligatorio y no
+   decía para qué, mientras el paso de pagar sí lo hacía. *Mismo dato, dos tratamientos, y el que se
+   saltaba la explicación era el PRIMERO que lo pide.* La frase es la que el owner cerró en la parada
+   05 —«por cualquier cosa de tu reserva»— y no la vieja, que **prometía menos de lo que se hace**.
+
+### El hallazgo: un arreglo A MEDIAS de `#551`
+
+⚠️⚠️ **`.form__hint a` —el enlace de la política de privacidad— seguía leyendo `var(--zone-1)`**, o sea
+**2,45 de contraste** sobre papel. Aquella tanda rescató los cinco roles de TEXTO que leían la marca y
+arregló `.check span a`, el enlace legal **dentro** de una casilla… pero no éste, que es el mismo
+enlace **fuera** de ella — justo el que `#350` había sacado de la casilla.
+
+▶ Se quedó en el hueco entre las dos tandas, y **`form__*` está fuera de `PREFIJOS_DEL_CAJON`**, así
+que el censo de `SidebarActionRoleTest` no lo veía. *Una pieza corregida no corrige a sus hermanas, y
+menos si acaba de mudarse.* La regla base cambia sin acotar porque `.form__hint a` **solo lo emite el
+cajón**: medido, ninguna vista de la web pública pinta un enlace dentro de una pista de formulario.
+
+### La barra estaba escrita DOS veces
+
+El paso 5 y `AuthTabs.vue` pintaban el mismo marcado, y el docblock del segundo ya decía que compartían
+clases «a propósito, es el mismo widget» — pero nada lo impedía. **Al cambiar la pieza hubo que tocar
+los dos a mano**, y ahí se ve el coste: *dos copias del mismo control no divergen el día que se
+escriben, sino el día que alguien arregla una.* Hoy es `steps/AuthTabset.vue`, y la guarda ata que siga
+siendo uno.
+
+### Y la poda NO podó, otra vez
+
+⚠️⚠️ Extraer ese componente parecía poda evidente —quita quince líneas repetidas— y **medido SUBIÓ**:
+280,08 → **280,17 KiB**. ▶ *Un componente de Vue trae su propio envoltorio —props, emits, su función de
+render— y eso pesa más que el marcado que deja de repetir.* Es la misma medición que `#553` hizo con
+otro sujeto. **La extracción se queda igual, y no por el peso**: lo que compra es que no diverjan.
+
+▶ Techo del chunk **280 → 281** con su medición. El del payload de textos, **10.150 → 10.200**, tras
+**censar las diecinueve claves** de `register` que viajan: las diecinueve tienen consumidor en un
+`.vue` del cajón, así que ahí no hay poda.
+
+### Dos guardas re-apuntadas, y una más FUERTE que antes
+
+- **`SidebarTokenBudgetTest::the_drawer_tabs_do_not_depend_on_the_viewport`** pedía `display: flex` +
+  `width: 100%` en `.purchase__authtabs`. Su razón era que `.zone-tabs` es `inline-flex` y en
+  escritorio las pestañas compartían línea con el «Volver»; con `.tabset` —que declara `flex` de
+  fábrica— la declaración local sobra. ▶ **Pero si alguien volviera a `.zone-tabs`, el defecto
+  reaparecería y la guarda vieja seguiría en verde**: el ancho estaría puesto y el `inline-flex`
+  heredado haría el resto. Hoy ata también **la PIEZA** y que siga habiendo **un solo** componente.
+- **`SidebarMountTest`**: la clave nueva se declara en la lista congelada del payload. Sin ella en la
+  poda de `layout.blade.php`, `t()` habría devuelto **cadena vacía sin fallar** (el hueco de `#333`):
+  un campo sin explicación, que no se ve como algo roto.
+
+⚠️ **`.wiz__lede` unifica la entradilla de paso**: `PayStep` usaba `.purchase__note`, que es otra pieza
+—las notas sueltas de los desenlaces, que no titulan nada—, así que el aire bajo el título dependía de
+cuál hubiera tocado.
+
+**Verificación**: suite **4789 · 30.138 aserciones** (1 skipped) · JS **978** · Pint y docs-check ✓ ·
+manifiesto del contrato de árbol regenerado y **revisado línea a línea** (cuatro casos, y los cuatro
+cambian exactamente en lo que esta tanda toca) · **el OJO lo pone el owner en navegador**.
+
+⚠️ **Paso de despliegue: ninguno.**
+
+❗ **QUEDA DEL OWNER LA GRIETA 13**: el enlace de la política de privacidad, **fuera de su frase** como
+control propio de 48 (hoy mide 19 de alto). **No se toca sin él**: `#350` ya lo tocó con cuidado —era
+invisible, del mismo color que su párrafo— y sacarlo de la frase cambia cómo se lee un texto legal.
+⚠️ El artboard de esta parada **tampoco lo resuelve**: lo dibuja inline, porque la grieta nació en la
+parada 06, posterior.
