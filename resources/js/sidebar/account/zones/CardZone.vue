@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, ref } from 'vue';
+import ConfirmInline from '../ConfirmInline.vue';
 import { useCardStore } from '../../stores/card.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import { cardImageUrl, cardIsDrawable, tokenGroups } from '../card.js';
@@ -71,39 +71,13 @@ store.ensure();
 
 const a = (key) => translate(props.account, key);
 
-/** ¿Se está preguntando? Nace en `false` en cada entrada a la zona porque el componente se remonta. */
-const asking = ref(false);
-const confirmBtn = ref(null);
-const renewBtn = ref(null);
-
-// ⚠️ El foco viaja al botón que CONFIRMA, no al que cancela: es donde está la pregunta, y quien
-// navega con teclado tendría que tabular a ciegas hasta encontrarla. Cancelar sigue a un `Tab`.
-function ask() {
-    asking.value = true;
-    nextTick(() => confirmBtn.value?.focus());
-}
-
-async function rotate() {
-    asking.value = false;
-
-    await store.rotate({ messages: props.messages, auth: props.auth });
-    backToRenew();
-}
-
 /**
- * ⚠️ **El foco vuelve al botón que abrió la pregunta** (2026-08-28, revisión de `#217`). Al cerrar la
- * confirmación —cancelando o renovando— el botón enfocado DESAPARECE del árbol, y el navegador manda
- * el foco al `<body>`: quien navega con teclado o con lector de pantalla se queda al principio del
- * documento y tiene que volver a tabular el cajón entero. Con `nextTick` porque el botón no existe
- * hasta que Vue repinta.
+ * ⚠️ **Toda la mecánica de la pregunta vive en `ConfirmInline` desde `#565`**: abrir, esconder el
+ * disparador, llevar el foco al botón que confirma y devolverlo al cerrar. Aquí queda el GESTO, que
+ * es lo único de esto que es de esta pantalla.
  */
-function backToRenew() {
-    nextTick(() => renewBtn.value?.focus());
-}
-
-function dismiss() {
-    asking.value = false;
-    backToRenew();
+async function rotate() {
+    await store.rotate({ messages: props.messages, auth: props.auth });
 }
 </script>
 
@@ -172,29 +146,29 @@ function dismiss() {
                 <!-- ⚠️ El botón DESAPARECE mientras se pregunta, y la confirmación ocupa su sitio:
                      dejarlo permitiría pulsarlo otra vez sobre la pregunta abierta, que es la
                      ambigüedad que este cambio existe para quitar. -->
-                <button v-if="! asking" ref="renewBtn" type="button" class="btn btn--ghost" :disabled="store.busy" @click="ask">
-                    {{ store.busy ? a('account.card.rotating') : a('account.card.rotate') }}
-                </button>
-
-                <!-- ⚠️ El aviso va SIEMPRE visible y fuera de la confirmación: es lo que hace que el
-                     cliente sepa qué va a pasar ANTES de pulsar. Dentro del diálogo llegaba tarde. -->
-                <p class="account__card-sub qr-pass__notice">{{ a('account.card.rotate_notice') }}</p>
-
                 <!-- ⚠️ `role="group"` + `aria-labelledby`, no `alertdialog`: no hay trampa de foco propia
                      —la del panel del cajón ya envuelve todo esto— y anunciar un diálogo que no lo es
                      deja al lector de pantalla esperando un cierre que nadie va a emitir. -->
-                <div v-if="asking" class="purchase__confirm" role="group" aria-labelledby="acct-card-rotate-q">
-                    <p id="acct-card-rotate-q">{{ a('account.card.rotate_confirm_title') }}</p>
+                <!-- ⚠️ **La pregunta es `ConfirmInline` desde `#565`**, no marcado propio: era la
+                     ÚNICA del cajón que se hacía dentro, y al llevarla también a «quitar un menor» y
+                     a «borrar la cuenta» pasó a ser una pieza. -->
+                <ConfirmInline id="acct-card-rotate-q"
+                               :question="a('account.card.rotate_confirm_title')"
+                               :confirm-label="a('account.card.rotate_confirm_yes')"
+                               :cancel-label="a('account.card.rotate_confirm_no')"
+                               :busy-label="a('account.card.rotating')"
+                               :busy="store.busy"
+                               @confirm="rotate">
+                    <template #trigger="{ ask }">
+                        <button type="button" class="btn btn--ghost" :disabled="store.busy" @click="ask">
+                            {{ store.busy ? a('account.card.rotating') : a('account.card.rotate') }}
+                        </button>
+                    </template>
+                </ConfirmInline>
 
-                    <div class="acc-actions">
-                        <button ref="confirmBtn" type="button" class="btn btn--ink" :disabled="store.busy" @click="rotate">
-                            {{ store.busy ? a('account.card.rotating') : a('account.card.rotate_confirm_yes') }}
-                        </button>
-                        <button type="button" class="btn btn--ghost" :disabled="store.busy" @click="dismiss">
-                            {{ a('account.card.rotate_confirm_no') }}
-                        </button>
-                    </div>
-                </div>
+                <!-- ⚠️ El aviso va SIEMPRE visible y FUERA de la confirmación: es lo que hace que el
+                     cliente sepa qué va a pasar ANTES de pulsar. Dentro del diálogo llegaba tarde. -->
+                <p class="account__card-sub qr-pass__notice">{{ a('account.card.rotate_notice') }}</p>
             </div>
         </section>
     </div>

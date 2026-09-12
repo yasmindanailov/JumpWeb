@@ -10,7 +10,7 @@ use Tests\TestCase;
  *
  * «Incluido» pintaba `#fff` quemado sobre `--ok`: con el verde del 2.º cliente da 2,95 (su propia
  * tabla de contraste lo marca «Blanco sobre Verde ✕ NUNCA»). No hay luminancia en CSS, así que el
- * PAR lo declara quien declara el color: el producto pone `--on-ok/--on-err/--on-warn` sobre sus
+ * PAR lo declara quien declara el color: el producto pone `--on-ok/--on-err` sobre sus
  * verde y rojo oscuros y el paquete del cliente los redefine para los suyos. Un `color: #fff` junto a
  * un relleno semántico vuelve a romperlo sin que falle nada.
  *
@@ -19,9 +19,17 @@ use Tests\TestCase;
  *
  * Lo que este fichero vigila:
  *  1. Que los tres tokens existan en el `:root` del producto.
- *  2. Que ninguna regla combine `background: var(--ok|--err|--warn)` con un blanco quemado.
- *  3. Que `.cta-ghost__s` lea el gris de PAPEL a opacidad 1.
- *  4. El suelo tipográfico de `docs/archivo/design-producto-2026-09-03.md` §3 (el `design.md` de la
+ *  2. Que ninguna regla combine `background: var(--ok|--err)` con un blanco quemado.
+ *
+ * ⚠️ **Eran TRES hasta `#564`.** `--warn` se retiró con el aviso sobre papel: era el MISMO rol que
+ * `--attn` con otro nombre y un hex del primer cliente, y su par `--on-warn` tenía **cero
+ * consumidores** —ninguna regla rellenaba con él— ni lo declaraba el paquete del cliente. *Un par de
+ * texto para un relleno que nadie usa no vigila nada.* El tercer tono rellena hoy con `--attn`, y
+ * sobre amarillo el texto es tinta por aritmética (11,26), no por elección: no necesita par.
+ *  3. Que las cuatro SUPERFICIES de aviso se DERIVEN de su color sólido y que nadie pinte ese
+ *     color como texto sobre ellas (`#564`, grieta 10).
+ *  4. Que `.cta-ghost__s` lea el gris de PAPEL a opacidad 1.
+ *  5. El suelo tipográfico de `docs/archivo/design-producto-2026-09-03.md` §3 (el `design.md` de la
  *     raíz hasta `#452`; la regla sigue vigente aunque el documento esté archivado): ningún
  *     `font-size` literal por debajo de 10 px en la
  *     web pública. ⚠️ La lista de excepciones es del CAJÓN (aparcado) y solo encoge.
@@ -45,11 +53,160 @@ class SemanticFillTextTest extends TestCase
         $this->assertGreaterThan(1500, count($this->rules()), 'el localizador de reglas se ha roto');
     }
 
+    /**
+     * **LAS SUPERFICIES DE AVISO SE DERIVAN DE SU COLOR, NUNCA SE QUEMAN** (`#564`, grieta 10).
+     *
+     * ⚠️⚠️ **El defecto que esto cierra estaba MEDIDO y publicado**: `--ok` y `--err` SÍ los
+     * sobrescribe el paquete del cliente y sus fondos claros NO —eran siete hex del PRIMER cliente—,
+     * así que «Pagado» pintaba Verde Salta sobre un verde azulado ajeno y daba **2,64** de contraste;
+     * «Cancelado» **3,88**; y «Gratis» **2,64**, éste también en la landing. *Un fondo que no sigue a
+     * su color no es un tono más claro: es otro color.*
+     *
+     * ⚠️ **Y la segunda mitad es la que de verdad se rompe sola**: el color de marca **como TEXTO**
+     * sobre su propio tinte no llega —2,67 · 4,10 · 1,49 sobre papel—, así que pintar
+     * `color: var(--ok)` encima de `background: var(--ok-bg)` es exactamente el defecto que había.
+     * El texto de un aviso va en tinta; el tono se queda en el fondo y en el borde.
+     */
+    public function test_the_warning_surfaces_are_derived_and_never_burnt(): void
+    {
+        $root = $this->rootOf('public/css/site.css');
+
+        foreach (['--ok-bg', '--ok-border', '--err-bg', '--err-border', '--attn-bg', '--attn-border'] as $token) {
+            $this->assertMatchesRegularExpression(
+                '/'.preg_quote($token, '/').':\s*color-mix\(in srgb, var\(--(ok|err|attn)\) \d+%, var\(--bg\)\)/',
+                $root,
+                "`{$token}` ha dejado de DERIVARSE de su color sólido.\n".
+                "⚠️ Un hex aquí vuelve al defecto de `#564`: el paquete del cliente redefine `--ok`/`--err`\n".
+                "y no el tinte, así que el fondo deja de seguir al color — medido, «Pagado» daba 2,64.\n".
+                'Se mezcla con `var(--bg)` para que sobre superficie de tinta salga oscuro solo.'
+            );
+        }
+
+        $culpables = [];
+
+        foreach ($this->rules() as $selector => $body) {
+            if (! preg_match('/background(?:-color)?:\s*var\(--(ok|err|attn)-bg\)/', $body, $m)) {
+                continue;
+            }
+            if (preg_match('/(?<![-\w])color:\s*var\(--'.$m[1].'\)/', $body)) {
+                $culpables[] = $selector;
+            }
+        }
+
+        $this->assertSame(
+            [], $culpables,
+            "El color de marca pintado como TEXTO sobre su propio tinte:\n  ".implode("\n  ", $culpables)."\n".
+            "⚠️ No llega al suelo y está medido: 2,67 · 4,10 · 1,49 sobre papel con el paquete puesto.\n".
+            'El texto de un aviso va en `var(--fg)`; el tono se queda en el fondo y en el borde.'
+        );
+    }
+
+    /**
+     * **LOS CINCO HEX DEL PRIMER CLIENTE NO VUELVEN, Y LO PASADO NO SE DICE CON OPACIDAD** (`#564`).
+     *
+     * ⚠️ Los cinco se retiraron porque **ninguno fue elegido para esta marca**: `--warn` era el mismo
+     * rol que `--attn` con otro nombre, `--err-strong` un texto que hoy es tinta, y `--refund` un
+     * color para algo que **no es error ni éxito** —la grieta 04 lo cerró: una devolución se dice con
+     * su signo y su fecha, no con un color—. Declarar cualquiera de ellos otra vez es reabrir el
+     * hueco, y hacerlo no rompe nada: solo devuelve a la instalación los colores del parque anterior.
+     *
+     * ⚠️⚠️ **Y el velo**: `opacity` sobre una tarjeta entera mueve el fondo, la tinta y el gris a la
+     * vez, así que la FECHA —lo único que se viene a mirar en el historial— caía a **3,10** contra un
+     * suelo de 4,5. Lo inerte se dice **cambiando de superficie**. Es una regla que este sistema ya
+     * había pagado en el carril con foco y que aquí se estaba pagando otra vez.
+     */
+    public function test_the_inherited_hexes_stay_out_and_the_past_is_a_surface(): void
+    {
+        $root = $this->rootOf('public/css/site.css');
+
+        foreach (['--warn', '--warn-hover', '--err-strong', '--refund', '--refund-bg', '--on-warn'] as $token) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/'.preg_quote($token, '/').':/',
+                $root,
+                "`{$token}` ha vuelto al `:root`. Era un hex del PRIMER cliente y su rol ya tiene dueño:\n".
+                '`--attn` el aviso, `--fg` el texto sobre un tinte y `--money` cualquier cifra.'
+            );
+        }
+
+        $this->assertArrayHasKey(
+            '.orders__item--past', $this->rules(),
+            'la regla del historial ha desaparecido: sin sujeto, esta guarda no vigila nada'
+        );
+        $this->assertStringNotContainsString(
+            'opacity', $this->rules()['.orders__item--past'],
+            "El historial ha vuelto a atenuarse con OPACIDAD.\n".
+            '⚠️ Eso mueve fondo, tinta y gris a la vez: medido, la fecha de la visita cae a 3,10 '.
+            'contra un suelo de 4,5. Lo pasado se dice con otra SUPERFICIE.'
+        );
+    }
+
+    /**
+     * **LA CIFRA DE COLOR ES LA YA COBRADA; LO PENDIENTE VA EN TINTA** (`#565`).
+     *
+     * ⚠️⚠️ **Este error lo cometió la propia tanda que lo arregla, y solo lo vio la CAPTURA.** Al sacar
+     * el naranja heredado del dinero se pusieron los cinco importes en `--money`, que **por defecto
+     * vale la tinta** — así que en la suite y en un clon sin paquete no cambia nada. Con el paquete del
+     * cliente, `--money` es Lima 800: el libro quedó con «A pagar en el parque» en COLOR y «Pagado» en
+     * tinta, **al revés que el artboard**.
+     *
+     * ▶ El criterio: un importe **pendiente** es un dato del pedido, no un aviso, y teñirlo lo
+     * convierte en una alarma; el color se reserva a lo que **ya se cobró**. Una devolución tampoco lo
+     * lleva: lo dicen su signo y su fecha (grieta 04). *Un token que por defecto vale tinta esconde su
+     * propio error hasta que alguien instala un paquete.*
+     */
+    public function test_only_what_is_already_collected_wears_the_money_role(): void
+    {
+        $pendientes = [
+            '.orders__balance--pay_at_park',
+            '.orders__balance--refund_at_park',
+            '.orders__gate-amount',
+            '.orders__mov--neg',
+            '.orders__refund-amount',
+        ];
+
+        // ⚠️ Se busca la regla POR SU SELECTOR y no por clave exacta: varias viven en un selector
+        // agrupado (`.orders__balance--pay_at_park strong, .orders__balance--pay_online strong`), y
+        // una clave literal se queda sin sujeto en cuanto alguien agrupa o desagrupa una.
+        $reglas = $this->rules();
+        $culpables = [];
+        $vistos = [];
+
+        foreach ($reglas as $selector => $body) {
+            foreach ($pendientes as $pendiente) {
+                if (! str_contains($selector, $pendiente)) {
+                    continue;
+                }
+                $vistos[$pendiente] = true;
+                if (str_contains($body, 'var(--money)')) {
+                    $culpables[] = $selector;
+                }
+            }
+        }
+
+        $encontrados = array_keys($vistos);
+        sort($encontrados);
+
+        $this->assertSame(
+            $pendientes, $encontrados,
+            'alguno de los importes pendientes ya no existe: esta guarda se ha quedado sin sujeto'
+        );
+        $this->assertSame(
+            [], $culpables,
+            "Importes PENDIENTES o DEVUELTOS con el rol de cifra:\n  ".implode("\n  ", $culpables)."\n".
+            '⚠️ Con el paquete del cliente eso los pinta de color y se leen como una alarma. Van en tinta.'
+        );
+
+        $this->assertStringContainsString(
+            'var(--money)', $reglas['.orders__ledger--cash .orders__final strong'] ?? '',
+            'lo ya COBRADO ha dejado de llevar el rol de cifra, que es lo único a lo que le toca'
+        );
+    }
+
     public function test_the_on_tokens_are_declared_in_the_product_root(): void
     {
         $root = $this->rootOf('public/css/site.css');
 
-        foreach (['--on-ok', '--on-err', '--on-warn'] as $token) {
+        foreach (['--on-ok', '--on-err'] as $token) {
             $this->assertStringContainsString(
                 $token.':',
                 $root,
@@ -63,7 +220,7 @@ class SemanticFillTextTest extends TestCase
         $culpables = [];
 
         foreach ($this->rules() as $selector => $body) {
-            if (! preg_match('/background(?:-color)?:\s*var\(--(ok|err|warn)\)/', $body)) {
+            if (! preg_match('/background(?:-color)?:\s*var\(--(ok|err)\)/', $body)) {
                 continue;
             }
             if (preg_match('/(?<![-\w])color:\s*(#fff\b|#ffffff\b|white\b)/i', $body)) {
@@ -75,7 +232,7 @@ class SemanticFillTextTest extends TestCase
             [],
             $culpables,
             "Texto blanco QUEMADO sobre un relleno semántico (con el verde del 2.º cliente da 2,95):\n  ".
-            implode("\n  ", $culpables)."\nUsa `var(--on-ok)` / `var(--on-err)` / `var(--on-warn)`.",
+            implode("\n  ", $culpables)."\nUsa `var(--on-ok)` / `var(--on-err)`.",
         );
     }
 

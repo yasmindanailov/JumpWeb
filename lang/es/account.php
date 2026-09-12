@@ -79,7 +79,9 @@ return [
             'link_google' => 'Vincular mi cuenta de Google',
         ],
         'privacy' => [
-            'title' => 'Privacidad y datos (RGPD)',
+            // ⚠️ **Sin la sigla** (`#565`, decisión 11 de las doce del owner): «RGPD» es jerga y le
+            // costaba un tercer renglón a la tarjeta del índice. Dentro de la pantalla se queda.
+            'title' => 'Privacidad y datos',
             'intro' => 'Descarga una copia de tus datos o elimina tu cuenta.',
             'consents_title' => 'Tus consentimientos',
             'no_consents' => 'No hay consentimientos registrados.',
@@ -97,6 +99,9 @@ return [
             'delete_intro' => 'Borraremos tu nombre, email, teléfono y contraseña de forma permanente, y cerraremos tu sesión. Por ley, conservamos los datos mínimos de tus pedidos (sin tu identidad) para la facturación. Esta acción no se puede deshacer.',
             'delete_password' => 'Contraseña actual',
             'delete_confirm' => '¿Seguro que quieres eliminar tu cuenta? Esta acción es permanente.',
+            // La pregunta de borrar la cuenta pasa a hacerse DENTRO del cajón (`#565`).
+            'delete_confirm_yes' => 'Sí, eliminar',
+            'delete_confirm_no' => 'Cancelar',
             'delete_btn' => 'Eliminar mi cuenta',
             // Fase 6 · waiver (`specs/waiver-probatorio.md` §4.5, §4.8): la tarjeta del waiver en esta
             // zona y el aviso del índice. Viajan solo con sesión (poda de `layout.blade.php`).
@@ -155,6 +160,10 @@ return [
             'remove' => 'Quitar',
             'removing' => 'Quitando…',
             'remove_confirm' => '¿Quitar a :name de tu cuenta? Si firmaste el descargo en su nombre, ese registro se conserva.',
+            // ⚠️ Los dos rótulos de la pregunta (`#565`): el que confirma lleva el VERBO, no un «Sí» a
+            // secas — es lo único que se lee cuando el foco salta ahí.
+            'remove_confirm_yes' => 'Sí, quitar',
+            'remove_confirm_no' => 'Cancelar',
             'waiver_unsigned' => 'Descargo sin firmar en su nombre.',
             'waiver_awaiting_verification' => 'Podrás firmar su descargo en cuanto verifiques tu correo.',
             'waiver_pending_notice' => 'Alguno de tus menores no tiene el descargo firmado.',
@@ -194,7 +203,15 @@ return [
             'alt' => 'Tu QR',
             'token_label' => 'Si la cámara falla, dicta este código:',
             'download' => 'Descargar (PNG)',
-            'hint' => 'Comparte este enlace con los padres. Cada uno rellena SUS datos.',
+            // ⚠️⚠️ **Aquí había un texto de OTRA pantalla** (`#565`, grieta 08): decía «comparte este
+            // enlace con los padres», que es la pista de los JUSTIFICANTES de menores invitados —y en
+            // esta pantalla no hay ningún enlace—. La frase nueva dice lo único que faltaba por decir
+            // del código: que **no caduca ni cambia por reserva**. Y suelta el consejo de guardarlo a
+            // propósito: eso ya lo dice el botón que hay justo encima, y una pista que repite el botón
+            // gasta la línea sin añadir nada.
+            // ▶ Lo cazó el MÉTODO, no el ojo: al transcribir una pantalla se compara con el
+            // DICCIONARIO, no solo con la pantalla de al lado (la regla que salió de `#563`).
+            'hint' => 'Este código es tuyo y no cambia. Sirve para todas tus reservas.',
             'unavailable' => 'Este QR ya no se puede mostrar. Renuévalo y tendrás uno nuevo al instante.',
             'rotate' => 'Renovar mi QR',
             'rotating' => 'Renovando…',
@@ -464,6 +481,9 @@ return [
      */
     'purchases' => [
         'guest_minors' => [
+            // ⚠️ El rótulo del bloque (`#565`, decisión 9 de las doce del owner): es la pieza que no
+            // se encontraba, y llegó a «Mis reservas» **sin nombre**.
+            'title' => 'Justificantes de los invitados',
             'count' => ':count firmados',
             'waiver_outdated' => 'versión anterior',
             'waiver_missing' => 'falta la firma',
@@ -480,7 +500,12 @@ return [
             // denominador inventado que §4.10 prohíbe.
             'places' => 'plazas libres: :count',
         ],
-        'title' => 'Mis pedidos',
+        // ⚠️⚠️ **«Mis pagos», no «Mis pedidos»** (`#565`, decisión 10 de las doce del owner): eran dos
+        // tarjetas casi iguales una al lado de la otra en el índice —ésta y «Mis reservas»—, y esta
+        // pantalla es el DINERO. ▶ Los nombres del CÓDIGO siguen cruzados y no se tocan: la ruta
+        // `/mi-cuenta/pedidos` la llevan **ocho correos ya entregados**. Y la unidad sigue siendo
+        // «Pedido R-…», que es el código que el cliente tiene en su correo.
+        'title' => 'Mis pagos',
         'empty' => 'Todavía no tienes ningún pedido.',
         'ref' => 'Pedido :code',
         'show' => 'Ver el desglose',

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import ConfirmInline from '../ConfirmInline.vue';
 import { DEPENDENT_WAIVER_SIGN, DEPENDENT_WAIVER_VERIFY, bornOnLabel, coverageKey, dependentWaiverAction, dependentWaiverKey } from '../dependents.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 
@@ -35,6 +36,12 @@ const props = defineProps({
 
 const emit = defineEmits(['remove', 'sign']);
 
+/**
+ * ⚠️⚠️ **La pregunta de quitar vive AQUÍ y no en la zona** (`#565`): quitar a un menor se confirma
+ * en SU tarjeta, no en un sitio común — con varios menores a cargo, una pregunta suelta arriba no
+ * diría a cuál se refiere. Y su texto lleva el nombre, que es justo lo que **no** puede salir en un
+ * diálogo del sistema operativo. La mecánica entera la trae `ConfirmInline`.
+ */
 const accept = ref(false);
 watch(() => props.reread, () => { accept.value = false; });
 
@@ -44,6 +51,8 @@ const coverage = computed(() => coverageKey(props.dependent));
 const action = computed(() => dependentWaiverAction(props.dependent, props.emailVerified));
 const canSign = computed(() => action.value === DEPENDENT_WAIVER_SIGN && props.document !== null);
 const mustVerify = computed(() => action.value === DEPENDENT_WAIVER_VERIFY);
+// La pregunta lleva el NOMBRE del menor, que es lo que la hace inequívoca con varios a cargo.
+const removeQuestion = computed(() => translateWith(props.account, 'account.dependents.remove_confirm', { name: props.dependent.name }));
 </script>
 
 <template>
@@ -93,8 +102,18 @@ const mustVerify = computed(() => action.value === DEPENDENT_WAIVER_VERIFY);
             </li>
         </ul>
 
-        <button type="button" class="btn btn--ghost" :disabled="busy" @click="emit('remove')">
-            {{ removing ? a('account.dependents.removing') : a('account.dependents.remove') }}
-        </button>
+        <ConfirmInline :id="'acct-dep-remove-q-' + dependent.id"
+                       :question="removeQuestion"
+                       :confirm-label="a('account.dependents.remove_confirm_yes')"
+                       :cancel-label="a('account.dependents.remove_confirm_no')"
+                       :busy-label="a('account.dependents.removing')"
+                       :busy="busy" danger
+                       @confirm="emit('remove')">
+            <template #trigger="{ ask }">
+                <button type="button" class="btn btn--ghost" :disabled="busy" @click="ask">
+                    {{ removing ? a('account.dependents.removing') : a('account.dependents.remove') }}
+                </button>
+            </template>
+        </ConfirmInline>
     </section>
 </template>

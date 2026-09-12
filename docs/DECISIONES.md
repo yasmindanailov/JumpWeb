@@ -30802,3 +30802,170 @@ un corte mal terminado dejó `/precios` en **500**; y **editar un `.vue` no bast
 
 ⚠️ **Pasos de despliegue de la jornada (DOS, y ninguno viaja en el commit)**:
 `app:set-setting theme.action "#1AA9DE"` en producción, y `--money: #7C9315` en su `client.css`.
+
+---
+
+## #564 · T4·9a — EL COLOR de la cuenta: el aviso sobre papel (parada 05)
+
+**Fecha**: 2026-09-12 · **Carril**: 🧩 diseño del SPA (banda 550–579) · **Fuente**: canvas,
+`Mi Play Jump PJP` (5a) + `doc/spa.md` (grietas 08–11).
+
+### Lo primero: TRES de las ocho cosas del artboard ya estaban hechas
+
+Medido antes de tocar nada: el «cambio principal» que pide —el primario del área a tinta— **lo cerró
+`#551`** (censo: los únicos `.btn` de acción del área de cuenta son los **dos** «Reintentar el pago»,
+que es exactamente lo decidido); el objetivo táctil **ya es 48** desde `#470`; y la corrección del
+«Volver» ya está aplicada. ▶ *Un artboard describe el código del día en que se dibujó.*
+
+### El defecto de fondo, y no era estético
+
+El sistema del 2.º cliente solo declara avisos **sobre tinta** y el cajón es papel de arriba abajo, así
+que el hueco lo rellenaban **siete hexadecimales del PRIMER cliente** clavados en `site.css`, en 18
+sitios. `#480` ya los tenía fichados.
+
+⚠️⚠️ **Y el paquete del cliente sobrescribe `--ok`/`--err`/`--attn` pero NO sus fondos claros**, así
+que el fondo dejó de seguir a su color. Medido con el paquete puesto:
+
+| Hoy | Contraste | |
+|---|---|---|
+| «Pagado» — Verde Salta sobre un verde azulado ajeno | **2,64** | ✗ |
+| «Cancelado» | **3,88** | ✗ |
+| «Gratis» — **y también en la landing** | **2,64** | ✗ |
+
+Con la receta del sistema —fondo al **14 %**, borde al **30 %**, texto en **TINTA**— quedan en
+**14,77 · 13,89 · 15,73**.
+
+⚠️ **El texto en tinta es aritmética, no gusto**: los tres colores de marca **como texto** sobre papel
+dan **2,67 · 4,10 · 1,49**. Es la misma conclusión a la que `#487` llegó al declarar `--ok-ink`.
+
+⚠️⚠️ **Se derivan en el PRODUCTO, no en el paquete** —el canvas pedía «siete líneas en `client.css`»—:
+así una instalación que solo declare su verde y su rojo obtiene sus cuatro avisos **sin escribir
+nada**, y una que no declare nada conserva los del producto. El tinte se mezcla con `var(--bg)`, así
+que sobre una superficie de tinta sale oscuro solo.
+
+### Lo que se retira, y por qué ninguno era una elección
+
+`--warn` era **el mismo rol que `--attn`** con otro nombre y un hex ajeno · `--warn-hover` su derivado
+· `--err-strong` un texto que hoy es tinta · `--refund` y `--refund-bg` un color para algo que **no es
+error ni éxito** (grieta 04: una devolución se dice con su signo y su fecha) · y **`--on-warn`, que
+tenía CERO consumidores** —ninguna regla rellenaba con `--warn`— y que el paquete del cliente tampoco
+declaraba. *Un par de texto para un relleno que nadie usa no vigila nada.*
+
+### Las dos decisiones del owner que van con esto
+
+- **El dinero va en TINTA** (`[DECIDIDO owner]`): el naranja heredado pintaba **cinco textos de
+  dinero**. Una cifra es un dato del pedido, no una alarma.
+- **Lo pasado se dice cambiando de SUPERFICIE, no con opacidad** (`[DECIDIDO owner]`, grieta 11): el
+  velo del 72 % sobre la tarjeta entera dejaba la FECHA —lo único que se viene a mirar al historial—
+  en **3,10** contra un suelo de 4,5. Con la superficie apagada vuelve a **4,50** con el mismo gris.
+  Se va con él el «vuelve a plena opacidad al pasar el ratón», que en un teléfono no existe.
+
+### ❗❗❗ EL ERROR QUE COMETIÓ ESTA MISMA TANDA, Y SOLO LO VIO LA CAPTURA
+
+Al sacar el naranja del dinero, los cinco importes se pusieron en **`--money`** — que **por defecto
+vale la tinta**, así que en la suite y en un clon sin paquete **no cambia nada**. Con el paquete del
+cliente `--money` es Lima 800, y el libro quedó con **«A pagar en el parque» en COLOR y «Pagado» en
+tinta**, justo al revés que el artboard.
+
+▶ El criterio correcto: **el color se reserva a lo que YA SE COBRÓ**; un importe pendiente es un dato
+del pedido y teñirlo lo convierte en una alarma. Es lo mismo que `#563` aplicó al desenlace de la
+reserva creada. ⚠️ *Un token que por defecto vale tinta esconde su propio error hasta que alguien
+instala un paquete* — y por eso la guarda no mira el color, mira **qué regla lleva el rol**.
+
+**Guardas**: `SemanticFillTextTest` gana tres casos —las superficies se DERIVAN y nadie pinta el color
+sobre su propio tinte · los hex retirados no vuelven y el historial no usa opacidad · solo lo cobrado
+lleva el rol de cifra— y encoge el de `--on-*` con su motivo.
+**Arnés `scripts/mutar-aviso-papel.py`: 10/10 mutaciones muerden.**
+
+⚠️ **Para el carril de la web**: cambia **una** regla suya, `.addons-mini__badge--free` (el distintivo
+«Gratis» de los complementos en la landing) — y es el arreglo de un contraste de **2,64**.
+
+⚠️ **Paso de despliegue: ninguno.** Los siete colores se derivan solos; `client.css` no cambia.
+
+---
+
+## #565 · T4·9b — LAS PIEZAS de la cuenta, y la parada 05 cerrada
+
+**Fecha**: 2026-09-12 · **Carril**: 🧩 diseño del SPA · **Fuente**: `Mi Play Jump PJP` (5a).
+
+### Las dos preguntas que las hacía el navegador (grieta 09)
+
+Quedaban **dos `window.confirm`** vivos —quitar un menor a cargo y **borrar la cuenta**, la única
+acción irreversible del producto—. El diálogo lo pinta el NAVEGADOR, con su tipografía y un
+«Aceptar/Cancelar» que no habla nuestros tres idiomas; y el de menores enseñaba **el nombre de un
+menor** en un diálogo del sistema operativo.
+
+▶ Nace **`ConfirmInline`**, con el gesto ENTERO: el disparador **desaparece** mientras se pregunta, el
+foco **salta** al botón que confirma y **vuelve** al cerrar.
+
+⚠️⚠️ **Es un componente por el FOCO, no por las líneas** — y la primera versión lo demostró: dejaba
+fuera el disparador, las tres zonas volvían a escribir el estado y los dos focos, y **`PrivacyZone` se
+pasó de su techo de líneas**, que es lo que lo delató. Con el gesto dentro, el bundle **bajó**
+(290,65 → 290,36 kB) y la zona volvió bajo su techo. ▶ *Extraer un componente sube el peso cuando el
+envoltorio cuesta más que lo que deja de repetirse; con TRES consumidores y lógica de verdad dentro,
+deja de ser así* — la excepción al patrón de `#553`/`#561`/`#563`.
+
+⚠️ **El disparador llega por SLOT porque los tres son distintos**: un botón suelto, un botón dentro de
+la tarjeta de un menor y **el formulario entero** de borrar la cuenta —que se envía con su botón y
+también con Intro desde el campo de la contraseña, y las dos vías tienen que preguntar—. Al abrirse,
+el formulario desaparece y la contraseña tecleada **sobrevive**, porque vive en el estado de la zona.
+⚠️ **El foco vuelve a lo que lo TENÍA** (`document.activeElement`), no a una `ref`: en ese caso el
+disparador puede ser un campo, no un botón.
+
+▶ Verificado en navegador real: el foco aterriza en «Sí, eliminar» y en «Sí, quitar».
+
+### Un texto de OTRA pantalla (grieta 08)
+
+Debajo del QR ponía literalmente *«Comparte este enlace con los padres. Cada uno rellena SUS datos»* —
+la pista de los **justificantes de menores invitados**, en una pantalla donde **no hay ningún enlace**.
+Hoy dice lo único que faltaba del código: **que no caduca ni cambia por reserva**. Y suelta el consejo
+de guardarlo a propósito: eso ya lo dice el botón de encima.
+
+### Lo demás, decidido por el owner en las doce
+
+- **«Mis pedidos» → «Mis pagos»**: eran dos tarjetas casi iguales en el índice y esta pantalla es el
+  DINERO. ⚠️ Los nombres del CÓDIGO siguen cruzados y no se tocan: la ruta `/mi-cuenta/pedidos` la
+  llevan **ocho correos ya entregados**, y la unidad sigue siendo «Pedido R-…».
+- **«Privacidad y datos (RGPD)» pierde la sigla**, que es jerga y costaba un tercer renglón.
+- **El justificante digital estrena rótulo** —«Justificantes de los invitados», la pieza que el owner
+  no encontraba y que llegó a «Mis reservas» **sin nombre**—, su enlace sube de 12 a **15** ⚠️ (el
+  artboard pedía 14 y **no está en la escala**: los escalones son 12 y 15, y se sube al que existe en
+  vez de estrenar un valor para una regla) y su botón pasa al radio de **control**, que estaba en el
+  de tarjeta dentro de una tarjeta del mismo canto.
+- **El borde de la tarjeta de peligro es el rojo PLENO**, no su tinte: «el borde dice lo mismo que el
+  botón que contiene».
+
+**Guardas**: `SidebarDrawerPolishTest` re-apunta su ancla a la pieza **y queda más fuerte** —censa
+`window.confirm` en TODO el cajón, no solo en «Mi carné», y añade un caso que ata las tres cosas que
+se pierden al copiar—; `SidebarMountTest` suma los cuatro rótulos a sus dos listas congeladas (sin
+ellos el botón que borra la cuenta saldría **mudo**, la trampa de `#333`).
+
+⚠️ **Presupuestos**: chunk **283 → 284** (medido 283,56) y textos del montaje **10.200 → 10.400**
+(medido 10.343). ⚠️⚠️ **Se buscó poda y el censo salió FALSO**: un `grep` por `dependents.<clave>`
+marcó **nueve huérfanas** y las nueve tienen consumidor —cinco se componen dinámicamente
+(`'relationship_' + key`) y cuatro se leen con notación de propiedad—. *Que un `grep` no encuentre una
+clave no es que nadie la pinte.*
+
+### ⚠️ Una trampa de instrumento nueva, y parecía un defecto del producto
+
+La captura enseñaba el «Cancelar» de borrar la cuenta **gris y con el texto casi ilegible**, como un
+botón deshabilitado. Medido: los dos botones están habilitados y en reposo es fantasma correcto.
+▶ **Era la TRANSICIÓN de salida del `:hover`**: el botón nace justo donde estaba el que se pulsó, y
+apartar el ratón no basta — hay que **esperar a que la transición termine**. Es la trampa de `#554`
+por la otra puerta, y queda escrita en la cabecera de la sonda. *Un color a medio camino es tan falso
+como el del estado equivocado, y encima parece un defecto.*
+
+**Verificación de las dos tandas**: suite **4796 · 30.200 aserciones** antes de rebasar y **4803 ·
+30.261** sobre el árbol CONJUNTO con la pasada de vestido del otro carril (`#537`→`#542`) · JS **980** · Pint
+y docs-check ✓ · sonda de navegador sobre **32 pantallas**: cero errores, cero recortes reales y las
+tallas bajo 16 son solo los dos niveles legítimos (780 a 12 · 204 a 15) · **capturas dirigidas** del
+libro desplegado y de las dos preguntas nuevas.
+
+⚠️ **Para poder MIRAR el dinero hizo falta sembrar un pedido**: el cliente de sonda no tenía ninguno,
+así que las pantallas del libro salían vacías y el cambio de color no se podía ver. Se sembró uno
+pagado con señal (`R-UNPIRD`: 119,60 € · 50,00 € online · 69,60 € en el parque) con el DOMINIO y un
+`Payment` real — un pedido `paid` sin cobro lo rechaza el libro (identidad I2).
+
+❗ **QUEDA de la parada 05**: el **OJO del owner** en un teléfono de verdad. Y sigue abierta la
+negociación con el carril de la web —el canvas manda la puerta a la cuenta al racimo de la cabecera, y
+el botón del sistema (16/800 con borde) toca la familia `.btn` entera—.

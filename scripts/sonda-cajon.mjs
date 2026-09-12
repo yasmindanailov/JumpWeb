@@ -23,7 +23,16 @@
  *   · y una CAPTURA de ventana por pantalla.
  *
  * ⚠️ **Captura de VENTANA y no de elemento** (la trampa de `#303`, pagada dos veces): una captura de
- * elemento cose los `fixed` y enseña piezas que no están ahí.
+ * elemento cose los `fixed` y enseña piezas que no están ahí. ⚠️ Y tampoco `fullPage`: la página de
+ * fondo del cajón mide **10.734 px**, así que el panel se pierde dentro y la captura no se puede leer.
+ *
+ * ⚠️⚠️ **APARTAR EL RATÓN NO BASTA: hay que esperar a que la transición TERMINE** (`#565`). La trampa
+ * de `#554` decía que tras un clic el ratón se queda donde pulsó y la pantalla siguiente se mide en
+ * `:hover`; lo que falta es la otra mitad — al apartarlo, el color vuelve **con una transición**, y
+ * capturar en ese instante devuelve un valor intermedio que no existe en ningún estado. Medido: el
+ * «Cancelar» de borrar la cuenta salía gris con el texto casi ilegible y parecía un botón
+ * deshabilitado; en reposo es fantasma correcto (tinta sobre transparente). *Un color a medio camino
+ * es tan falso como el del estado equivocado, y encima parece un defecto.*
  *
  * ── CÓMO SE CORRE ────────────────────────────────────────────────────────────────────────────────
  *   1. Chromium y el puente, una vez por contenedor:

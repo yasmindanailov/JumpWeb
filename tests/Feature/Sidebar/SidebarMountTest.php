@@ -571,7 +571,10 @@ class SidebarMountTest extends TestCase
                 // El alta se DESPLIEGA desde un botón (2026-08-28): el disparador se rotula con
                 // `add_title` —el mismo texto que titula lo que abre— y `add_cancel` lo pliega.
                 'add_cancel',
-                'age', 'adult', 'remove', 'removing', 'remove_confirm',
+                // ⚠️ Los dos rótulos de la PREGUNTA entran en `#565`, cuando quitar a un menor dejó
+                // de confirmarse con `window.confirm` —que enseñaba el nombre del menor en un diálogo
+                // del sistema operativo—. Sin ellos aquí, el botón que confirma sale MUDO (`#333`).
+                'age', 'adult', 'remove', 'removing', 'remove_confirm', 'remove_confirm_yes', 'remove_confirm_no',
                 'waiver_unsigned',
                 // `#441` · el estado que faltaba, y va PEGADO a «sin firmar» porque es su matiz:
                 // falta su firma **y esta cuenta todavía no puede darla**. Hasta hoy la tarjeta
@@ -614,7 +617,10 @@ class SidebarMountTest extends TestCase
                 // `Arr::only` conserva el de `lang/`.
                 'consent_revoked', 'marketing_label', 'marketing_hint',
                 'delete_title', 'delete_intro', 'delete_password',
-                'delete_confirm', 'delete_btn',
+                // ⚠️ Los dos rótulos de la PREGUNTA entran en `#565`, cuando borrar la cuenta dejó de
+                // confirmarse con `window.confirm`. Sin ellos aquí el botón que borra la cuenta sale
+                // MUDO: `t()` devuelve cadena vacía en silencio (`#333`).
+                'delete_confirm', 'delete_confirm_yes', 'delete_confirm_no', 'delete_btn',
                 // Fase 6 · waiver (`DECISIONES #166`): el subgrupo entero, 12 rótulos que la tarjeta
                 // y el aviso del índice pintan todos. Va antes de `deleting` porque `Arr::only`
                 // conserva el orden de `lang/`, y ahí `waiver` se declaró junto a `delete_btn`.
@@ -896,8 +902,17 @@ class SidebarMountTest extends TestCase
         // `register` que viajan, las diecinueve tienen consumidor en un `.vue` del cajón. Y las dos
         // frases nuevas no se acortan sin empeorarlas, que es lo que el párrafo de arriba prohíbe.
         // Deja **23 B**.
+        // ▶ **10.200 → 10.400 en `#565`** (medido **10.343 B**): entran los **cuatro rótulos de las dos
+        // preguntas nuevas** —quitar un menor y borrar la cuenta dejaron de confirmarse con
+        // `window.confirm`— y el **título del bloque de justificantes**, que era la pieza que el owner
+        // no encontraba porque no tenía nombre.
+        // ⚠️⚠️ **Se buscó poda y el censo salió FALSO, que es la trampa de siempre**: un `grep` por
+        // `dependents.<clave>` marcó nueve huérfanas, y las nueve tienen consumidor — cinco se componen
+        // dinámicamente (`'relationship_' + key`) y cuatro se leen con notación de propiedad
+        // (`account?.account?.dependents?.assigned_hide`), que ningún patrón de cadena literal ve.
+        // *Que un `grep` no encuentre una clave no es que nadie la pinte.*
         $this->assertLessThan(
-            10200, $bytes,
+            10400, $bytes,
             "Los textos del montaje con sesión pesan {$bytes} B. Poda antes de subir el techo: el ".
             'grupo `account` entero son 9,6 kB, y la diferencia la paga cada página que el cliente abre.'
         );

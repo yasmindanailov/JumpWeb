@@ -80,6 +80,12 @@ async function repartir(id, url) {
     <!-- Solo aparece si hay algo que enseñar: en una reserva normal —que son casi todas— no existe,
          en vez de existir vacía. -->
     <div v-for="group in groups" :key="group.reservation_id" class="orders__guests" data-guest-minors>
+        <!-- ⚠️⚠️ **El bloque se NOMBRA** (`#565`): es la pieza que el owner no encontraba, y moverla a
+             «Mis reservas» no lo arregló del todo — seguía siendo una línea de puntos con un «2
+             firmados» debajo de una tarjeta, sin nada que dijera qué era. Es la etiqueta mono del
+             sistema, el mismo tratamiento con el que el resto del cajón rotula un bloque. -->
+        <p class="orders__guests-title">{{ a('purchases.guest_minors.title') }}</p>
+
         <!-- QUÉ visita. ⚠️ Solo cuando se pintan VARIAS —«Mis pedidos»—: en la tarjeta de una reserva
              el nombre ya está tres líneas más arriba, y repetirlo sería ruido. -->
         <p v-if="reservationId === null" class="orders__guests-what">{{ group.product_name }}</p>

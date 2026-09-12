@@ -7,7 +7,7 @@ import ZoneLoading from '../ZoneLoading.vue';
 import DependentCard from './DependentCard.vue';
 import { fieldError } from '../form-outcome.js';
 import { RELATIONSHIPS, dependentsPager, dependentsView, signupNeedsWaiver } from '../dependents.js';
-import { t as translate, tp as translateWith } from '../../i18n.js';
+import { t as translate } from '../../i18n.js';
 
 /**
  * **«Menores a cargo»** (Fase 6 · C, `docs/specs/menores-a-cargo.md` §4.1–§4.5, §9.8): declarar de
@@ -105,9 +105,14 @@ async function add() {
     if (await store.add(view.form, ctx())) { view.added(store.items.length); nextTick(() => addBtn.value?.focus()); }
 }
 
+/**
+ * ⚠️ **La PREGUNTA ya no vive aquí** (`#565`, grieta 09): era un `window.confirm`, que lo pinta el
+ * navegador —con su tipografía y un «Aceptar/Cancelar» que no habla nuestros tres idiomas— y que
+ * enseñaba **el nombre de un menor** en un diálogo del sistema operativo. Hoy la hace `ConfirmInline`
+ * dentro de la tarjeta de ese menor, que es donde se sabe a cuál se refiere; aquí solo queda el
+ * gesto, que llega ya confirmado.
+ */
 async function remove(dependent) {
-    if (! window.confirm(translateWith(props.account, 'account.dependents.remove_confirm', { name: dependent.name }))) return;
-
     if (await store.remove(dependent.id, ctx())) view.removed(store.items.length);
 }
 

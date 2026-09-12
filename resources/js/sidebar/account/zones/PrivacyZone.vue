@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import ConfirmInline from '../ConfirmInline.vue';
 import { usePrivacyStore } from '../../stores/privacy.js';
 import { useWaiverStore } from '../../stores/waiver.js';
 import { useAccountContextStore } from '../../stores/accountContext.js';
@@ -60,9 +61,19 @@ const a = (key) => translate(props.account, key);
 
 const ctx = () => ({ messages: props.messages, auth: props.auth });
 
+/**
+ * **BORRAR LA CUENTA — la única acción irreversible del producto** (`#565`, grieta 09).
+ *
+ * ⚠️⚠️ Se preguntaba con `window.confirm`: lo pinta el NAVEGADOR, con su tipografía y un
+ * «Aceptar/Cancelar» que no habla nuestros tres idiomas, y encima del cajón — por un segundo la
+ * pantalla que estabas usando deja de ser tuya. Hoy la pregunta se hace dentro, con la pieza que ya
+ * existía en «renovar mi QR» y el botón de confirmar en el rojo de error.
+ *
+ * ⚠️ El formulario deja de enviar directamente: su `submit` ABRE la pregunta. La contraseña se sigue
+ * validando donde se validaba —en el servidor—, y lo que cambia es que entre teclearla y perder la
+ * cuenta hay un gesto más, que es lo que esta pantalla necesitaba.
+ */
 async function remove() {
-    if (! window.confirm(a('account.privacy.delete_confirm'))) return;
-
     if (await store.deleteAccount({ currentPassword: current.value }, ctx())) window.location.assign('/');
 }
 
@@ -219,18 +230,34 @@ async function sign() {
             <h3 class="account__card-title">{{ a('account.privacy.delete_title') }}</h3>
             <p class="account__card-sub">{{ a('account.privacy.delete_intro') }}</p>
 
-            <form class="form auth__form" novalidate @submit.prevent="remove">
-                <div class="form__field">
-                    <label class="form__label" for="acct-delete-password">{{ a('account.privacy.delete_password') }}</label>
-                    <PasswordInput :id="'acct-delete-password'" v-model="current" autocomplete="current-password" />
-                    <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
-                    <NoPasswordHint :account="account" />
-                </div>
+            <!-- ⚠️⚠️ **Aquí el disparador es el FORMULARIO ENTERO** (`#565`), no un botón: se envía
+                 con su botón y también con la tecla Intro desde el campo de la contraseña, y las dos
+                 vías tienen que preguntar. Al abrirse, el formulario desaparece y la pregunta ocupa
+                 su sitio —que es lo que la pieza hace con cualquier disparador—; la contraseña
+                 tecleada **sobrevive**, porque vive en el estado de la zona y no en el DOM.
+                 ▶ Y de paso la pregunta no compite con el campo: lo único en pantalla es la decisión. -->
+            <ConfirmInline id="acct-delete-q"
+                           :question="a('account.privacy.delete_confirm')"
+                           :confirm-label="a('account.privacy.delete_confirm_yes')"
+                           :cancel-label="a('account.privacy.delete_confirm_no')"
+                           :busy-label="a('account.privacy.deleting')"
+                           :busy="store.busy" danger
+                           @confirm="remove">
+                <template #trigger="{ ask }">
+                    <form class="form auth__form" novalidate @submit.prevent="ask">
+                        <div class="form__field">
+                            <label class="form__label" for="acct-delete-password">{{ a('account.privacy.delete_password') }}</label>
+                            <PasswordInput :id="'acct-delete-password'" v-model="current" autocomplete="current-password" />
+                            <span v-if="fieldError(store.fields, 'current_password')" class="form__error">{{ fieldError(store.fields, 'current_password') }}</span>
+                            <NoPasswordHint :account="account" />
+                        </div>
 
-                <button type="submit" class="btn account__delete-btn" :disabled="store.busy">
-                    {{ store.busy ? a('account.privacy.deleting') : a('account.privacy.delete_btn') }}
-                </button>
-            </form>
+                        <button type="submit" class="btn account__delete-btn" :disabled="store.busy">
+                            {{ store.busy ? a('account.privacy.deleting') : a('account.privacy.delete_btn') }}
+                        </button>
+                    </form>
+                </template>
+            </ConfirmInline>
         </section>
     </div>
 </template>

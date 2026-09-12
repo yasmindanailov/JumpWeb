@@ -166,15 +166,30 @@ class SidebarDrawerPolishTest extends TestCase
     {
         $card = $this->source(self::CARD);
 
-        $this->assertStringNotContainsString(
-            'window.confirm', $this->code($card),
-            "«Mi carné» ha vuelto al diálogo del NAVEGADOR. Sale fuera del cajón, no habla nuestros\n".
-            'tres idiomas y el owner no llegó a verlo en su recorrido por staging.'
+        // ⚠️⚠️ **Ya no es «Mi carné»: es TODO el cajón** (`#565`). Quedaban dos `window.confirm` vivos
+        // —quitar un menor y borrar la cuenta—, y el de menores enseñaba **el nombre de un menor** en
+        // un diálogo del sistema operativo. Un censo por carpeta es lo único que impide que vuelva
+        // uno por la puerta de al lado.
+        $vivos = [];
+
+        foreach (glob(resource_path('js/sidebar/**/*.vue')) + glob(resource_path('js/sidebar/**/**/*.vue')) as $ruta) {
+            if (str_contains($this->code(file_get_contents($ruta) ?: ''), 'window.confirm')) {
+                $vivos[] = str_replace(resource_path('js/sidebar/').'', '', $ruta);
+            }
+        }
+
+        $this->assertSame(
+            [], $vivos,
+            "Ha vuelto el diálogo del NAVEGADOR al cajón:\n  ".implode("\n  ", $vivos)."\n".
+            "⚠️ Sale FUERA del cajón, con la tipografía del sistema y un «Aceptar/Cancelar» que no habla\n".
+            'nuestros tres idiomas. La pregunta se hace con `ConfirmInline`.'
         );
 
         $this->assertStringContainsString("a('account.card.rotate_notice')", $card);
 
-        $bloque = $this->between($card, '<div v-if="asking"', '</section>');
+        // ⚠️ **El ancla se re-apunta a la PIEZA y no queda más débil**: la pregunta vive hoy en
+        // `ConfirmInline`, así que lo que hay que comprobar aquí es que el aviso está fuera de ELLA.
+        $bloque = $this->between($card, '<ConfirmInline', '</ConfirmInline>');
 
         $this->assertStringNotContainsString(
             'rotate_notice', $bloque,
@@ -182,10 +197,48 @@ class SidebarDrawerPolishTest extends TestCase
             'volveríamos al defecto que este cambio arregla.'
         );
 
-        // Dos salidas: confirmar y cancelar. Con una sola, la pregunta es una trampa.
-        $this->assertSame(2, substr_count($bloque, '<button'), 'la confirmación necesita SUS DOS botones');
-        $this->assertStringContainsString("a('account.card.rotate_confirm_yes')", $bloque);
-        $this->assertStringContainsString("a('account.card.rotate_confirm_no')", $bloque);
+        // Los tres rótulos que esta zona le pasa a la pieza: la pregunta y sus dos salidas.
+        foreach (['rotate_confirm_title', 'rotate_confirm_yes', 'rotate_confirm_no'] as $clave) {
+            $this->assertStringContainsString("a('account.card.{$clave}')", $bloque);
+        }
+    }
+
+    /**
+     * **LA PIEZA DE LA PREGUNTA, por dentro** (`#565`).
+     *
+     * ⚠️⚠️ Lo que se asevera aquí es lo que **se pierde al copiarla y no falla**: que el disparador
+     * DESAPAREZCA mientras se pregunta —dejarlo permite pulsarlo otra vez sobre la pregunta abierta—,
+     * que el foco SALTE al botón que confirma —si no, quien navega con teclado tabula a ciegas— y que
+     * VUELVA al cerrar —si no, se queda en el `<body>` y hay que tabular el cajón entero—.
+     *
+     * ⚠️ **Dos salidas: con una sola, la pregunta es una trampa.**
+     */
+    public function test_the_inline_confirm_hides_its_trigger_and_moves_the_focus(): void
+    {
+        $pieza = $this->source('resources/js/sidebar/account/ConfirmInline.vue');
+
+        $this->assertStringContainsString(
+            '<slot v-if="! asking" name="trigger"', $pieza,
+            'el disparador tiene que desaparecer mientras la pregunta está abierta'
+        );
+        $this->assertSame(2, substr_count($pieza, '<button'), 'la pregunta necesita SUS DOS salidas');
+        $this->assertStringContainsString(
+            'confirmBtn.value?.focus()', $pieza,
+            'el foco tiene que saltar al botón que CONFIRMA: es donde está la pregunta'
+        );
+        $this->assertStringContainsString(
+            'volverA?.focus?.()', $pieza,
+            'y volver a lo que lo tenía al cerrar, o se queda en el `<body>`'
+        );
+
+        // ▶ Y sus TRES consumidores siguen usándola: es lo que impide que una zona vuelva a escribirla.
+        foreach (['CardZone', 'DependentCard', 'PrivacyZone'] as $zona) {
+            $this->assertStringContainsString(
+                '<ConfirmInline', $this->source("resources/js/sidebar/account/zones/{$zona}.vue"),
+                "«{$zona}» ha dejado de usar la pieza: dos copias del mismo control no divergen el día ".
+                'que se escriben, sino el día que alguien arregla una.'
+            );
+        }
     }
 
     // ── D·2 · El selector de menores ──────────────────────────────────────────────────────────

@@ -766,8 +766,16 @@ class SidebarBundleBudgetTest extends TestCase
      * muerto de un store no devuelve peso: lo que pesa en un bundle son las dependencias que entran,
      * no las líneas que salen.* La poda se queda igual, porque un método que nadie llama es una
      * respuesta a una pregunta que ya no existe.
+     * ▶ **284 (`#565`, la parada 05)**: medido **283,56 KiB**. Entran `ConfirmInline` —la pregunta que
+     * saca los dos últimos `window.confirm` del navegador— y el rótulo del bloque de justificantes.
+     * ⚠️⚠️ **Y aquí la extracción SÍ ahorró, que es la excepción al patrón de `#553`/`#561`/`#563`.**
+     * La primera versión de la pieza dejaba fuera el disparador y las tres zonas volvían a escribir el
+     * estado, el foco al abrir y el foco al volver; con el gesto entero dentro —el disparador llega
+     * por slot— el bundle bajó **290,65 → 290,36 kB** y `PrivacyZone` volvió bajo su techo de líneas.
+     * ▶ *Extraer un componente sube el peso cuando el envoltorio cuesta más que lo que deja de
+     * repetirse; con TRES consumidores y lógica de verdad dentro, deja de ser así.*
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 283;
+    private const SIDEBAR_CHUNK_MAX_KB = 284;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

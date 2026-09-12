@@ -73,7 +73,7 @@ return [
             'link_google' => 'Lier mon compte Google',
         ],
         'privacy' => [
-            'title' => 'Confidentialité et données (RGPD)',
+            'title' => 'Confidentialité et données',
             'intro' => 'Téléchargez une copie de vos données ou supprimez votre compte.',
             'consents_title' => 'Vos consentements',
             'no_consents' => 'Aucun consentement enregistré.',
@@ -91,6 +91,8 @@ return [
             'delete_intro' => 'Nous supprimons définitivement votre nom, e-mail, téléphone et mot de passe, et vous déconnectons. Par obligation légale, nous conservons les données minimales de vos commandes (sans votre identité) pour la facturation. Cette action est irréversible.',
             'delete_password' => 'Mot de passe actuel',
             'delete_confirm' => 'Voulez-vous vraiment supprimer votre compte ? Action définitive.',
+            'delete_confirm_yes' => 'Oui, supprimer',
+            'delete_confirm_no' => 'Annuler',
             'delete_btn' => 'Supprimer mon compte',
             'waiver' => [
                 'title' => 'Décharge de responsabilité',
@@ -138,6 +140,8 @@ return [
             'remove' => 'Retirer',
             'removing' => 'Retrait…',
             'remove_confirm' => 'Retirer :name de votre compte ? Si vous avez signé la décharge en son nom, ce registre est conservé.',
+            'remove_confirm_yes' => 'Oui, retirer',
+            'remove_confirm_no' => 'Annuler',
             'waiver_unsigned' => 'Décharge non signée en son nom.',
             'waiver_awaiting_verification' => 'Vous pourrez signer sa décharge dès que vous aurez vérifié votre e-mail.',
             'waiver_pending_notice' => 'L’un de vos mineurs n’a pas sa décharge signée.',
@@ -168,7 +172,8 @@ return [
             'alt' => 'Ton QR',
             'token_label' => 'Si la caméra ne lit pas, dicte ce code :',
             'download' => 'Télécharger (PNG)',
-            'hint' => 'Partagez ce lien avec les parents. Chacun remplit SES données.',
+            // Un texte d'un AUTRE écran vivait ici (`#565`, brèche 08).
+            'hint' => 'Ce code est le tien et ne change pas. Il vaut pour toutes tes réservations.',
             'unavailable' => 'Ce QR ne peut plus être affiché. Renouvelle-le et tu en auras un nouveau immédiatement.',
             'rotate' => 'Renouveler mon QR',
             'rotating' => 'Renouvellement…',
@@ -389,6 +394,7 @@ return [
      * « Mes réservations » (sa route web est `/mi-cuenta/pedidos`). */
     'purchases' => [
         'guest_minors' => [
+            'title' => 'Autorisations des invités',
             'count' => ':count signées',
             'waiver_outdated' => 'version précédente',
             'waiver_missing' => 'signature manquante',
@@ -399,7 +405,8 @@ return [
             'failed' => 'Impossible de copier. Sélectionnez le lien et copiez-le à la main.',
             'places' => 'places libres : :count',
         ],
-        'title' => 'Mes commandes',
+        // « Mes paiements », pas « Mes commandes » (`#565`) : cet écran, c'est l'ARGENT.
+        'title' => 'Mes paiements',
         'empty' => "Tu n'as encore aucune commande.",
         'ref' => 'Commande :code',
         'show' => 'Voir le détail',

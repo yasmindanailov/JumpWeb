@@ -73,7 +73,7 @@ return [
             'link_google' => 'Link my Google account',
         ],
         'privacy' => [
-            'title' => 'Privacy & data (GDPR)',
+            'title' => 'Privacy & data',
             'intro' => 'Download a copy of your data or delete your account.',
             'consents_title' => 'Your consents',
             'no_consents' => 'No consents on record.',
@@ -91,6 +91,8 @@ return [
             'delete_intro' => 'We will permanently delete your name, email, phone and password, and log you out. By law we keep the minimum order data (without your identity) for invoicing. This cannot be undone.',
             'delete_password' => 'Current password',
             'delete_confirm' => 'Are you sure you want to delete your account? This is permanent.',
+            'delete_confirm_yes' => 'Yes, delete',
+            'delete_confirm_no' => 'Cancel',
             'delete_btn' => 'Delete my account',
             'waiver' => [
                 'title' => 'Liability waiver',
@@ -138,6 +140,8 @@ return [
             'remove' => 'Remove',
             'removing' => 'Removing…',
             'remove_confirm' => 'Remove :name from your account? If you signed the waiver on their behalf, that record is kept.',
+            'remove_confirm_yes' => 'Yes, remove',
+            'remove_confirm_no' => 'Cancel',
             'waiver_unsigned' => 'Waiver not signed on their behalf.',
             'waiver_awaiting_verification' => 'You will be able to sign their waiver as soon as you verify your email.',
             'waiver_pending_notice' => 'One of your minors does not have their waiver signed.',
@@ -167,7 +171,8 @@ return [
             'alt' => 'Your QR',
             'token_label' => 'If the camera fails, read out this code:',
             'download' => 'Download (PNG)',
-            'hint' => 'Share this link with the parents. Each fills in THEIR details.',
+            // A text from ANOTHER screen used to live here (`#565`, gap 08).
+            'hint' => 'This code is yours and does not change. It works for all your bookings.',
             'unavailable' => 'This QR can no longer be shown. Renew it and you will have a new one right away.',
             'rotate' => 'Renew my QR',
             'rotating' => 'Renewing…',
@@ -389,6 +394,7 @@ return [
      * route is `/mi-cuenta/pedidos`), so this screen's group has to be called something else. */
     'purchases' => [
         'guest_minors' => [
+            'title' => 'Guest authorisations',
             'count' => ':count signed',
             'waiver_outdated' => 'earlier version',
             'waiver_missing' => 'signature missing',
@@ -399,7 +405,8 @@ return [
             'failed' => 'Could not copy: select the link and copy it by hand.',
             'places' => 'free places: :count',
         ],
-        'title' => 'My orders',
+        // «My payments», not «My orders» (`#565`): this screen is the MONEY. The code names stay.
+        'title' => 'My payments',
         'empty' => 'You do not have any orders yet.',
         'ref' => 'Order :code',
         'show' => 'Show the breakdown',

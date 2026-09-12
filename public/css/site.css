@@ -192,33 +192,59 @@
        no. Que un cliente NO pueda bajarlo está garantizado por construcción — `siteSheets()`
        incluye `client.css`, así que la aserción de «declarado una sola vez» lo impide. */
     --tap-min: 48px;
-    /* Colores SEMÁNTICOS de estado (Lote 12): éxito / error / señal·depósito / reembolso.
+    /* Colores SEMÁNTICOS de estado (Lote 12): éxito / error / atención.
        Consolidan ~25 hex con deriva (verdes/rojos/ámbares casi-idénticos) en un set único; el
        valor es el dominante de cada rol (antes repartidos por badges, estados de pedido,
-       formularios, depósito y reembolsos). */
+       formularios, depósito y reembolsos).
+
+       ══ EL AVISO SOBRE PAPEL (`#564`, grieta 10, `[DECIDIDO owner]`) ═══════════════════════════
+       ⚠️⚠️ **Los fondos y bordes claros SE DERIVAN de su color sólido, y antes eran siete hex del
+       PRIMER cliente.** El sistema del 2.º cliente solo declara avisos sobre TINTA y el cajón es
+       papel de arriba abajo, así que el hueco lo rellenaba el producto con los colores que traía
+       —`#e7f6ec`, `#fbeaea`, `#b45309`…—, que nadie eligió para esta marca. `#480` ya los tenía
+       fichados.
+       ▶ **El defecto no era estético y está MEDIDO**: `--ok` y `--err` SÍ los sobrescribe el paquete
+       del cliente, y sus fondos claros NO — así que «Pagado» pintaba Verde Salta sobre un verde
+       azulado ajeno y daba **2,64** de contraste; «Cancelado» **3,88**; «Gratis» **2,64**, éste
+       también en la landing. Con la receta del sistema —fondo al **14 %**, borde al **30 %**, texto
+       en **TINTA**— quedan en **14,77 · 13,89 · 15,73**.
+       ⚠️ **El texto va en tinta y eso no es conservadurismo, es aritmética**: los tres colores de
+       marca como TEXTO sobre papel dan 2,67 · 4,10 · 1,49 — los tres por debajo del suelo. Es la
+       misma conclusión a la que llegó `#487` al declarar `--ok-ink` y `--attn-ink`.
+       ⚠️⚠️ **Se derivan en el PRODUCTO y no en el paquete**, que es mejor que las «siete líneas en
+       `client.css`» que el canvas proponía: así una instalación que solo declare sus verde y rojo
+       obtiene sus cuatro avisos **sin escribir nada**, y una que no declare nada sigue teniendo los
+       del producto. El tinte se mezcla con `--bg`, así que sobre una superficie de tinta sale
+       oscuro solo — que es la conducta correcta. */
     --ok: #1f7a3d;          /* éxito: texto y fondo sólido (consolida #1a7f37, #15803d) */
-    --ok-bg: #e7f6ec;       /* éxito: fondo claro (consolida #e3f6e8) */
-    --ok-border: #b7e2c5;
+    --ok-bg: color-mix(in srgb, var(--ok) 14%, var(--bg));
+    --ok-border: color-mix(in srgb, var(--ok) 30%, var(--bg));
     --err: #c0392b;         /* error: texto y fondo sólido */
-    --err-strong: #8a2b22;  /* error: texto sobre fondo claro (cancelado/expirado) */
-    --err-hover: #a93226;
-    --err-bg: #fbeaea;      /* error: fondo claro (consolida #fde8e8) */
-    --err-border: #e3b5b0;
-    --warn: #b45309;        /* señal/depósito: texto «a cobrar en el parque» */
-    --warn-hover: #92400e;
-    --refund: #8a5a16;      /* reembolso: texto/importe devuelto */
-    --refund-bg: #fdf1d8;
+    /* El hover de un relleno de error, con el MISMO factor que `actionHover()` usa en el servidor
+       (`#209`): ×0,88 sobre cada canal es mezclar con negro al 12 %. Un hex aquí sería un segundo
+       criterio para lo mismo. */
+    --err-hover: color-mix(in srgb, var(--err) 88%, #000);
+    --err-bg: color-mix(in srgb, var(--err) 14%, var(--bg));
+    --err-border: color-mix(in srgb, var(--err) 30%, var(--bg));
+    /* El tercer tono. `--attn` ya existía como relleno sólido (19 usos); lo que faltaba era su
+       superficie. ⚠️ **Y con él se retira `--warn`**, que era el MISMO rol con otro nombre y un hex
+       del primer cliente — dos tokens para «atención» son dos sitios donde equivocarse. */
+    --attn-bg: color-mix(in srgb, var(--attn) 14%, var(--bg));
+    --attn-border: color-mix(in srgb, var(--attn) 30%, var(--bg));
 
     /* ── TEXTO SOBRE UN RELLENO SEMÁNTICO (auditoría C3, `#434`) ─────────────────────────────────
        «Incluido» pintaba `#fff` quemado sobre `--ok`, y con el verde del 2.º cliente eso da **2,95**
        — su propia tabla de contraste lo marca «Blanco sobre Verde ✕ NUNCA». No hay luminancia en
        CSS, así que el PAR lo declara quien declara el color: el producto pone papel sobre sus verde y
        rojo OSCUROS (4,96 y 5,3 medidos), y `client.css` pone tinta sobre su verde CLARO y blanco
-       sobre su rojo (su tabla §2.1). ⚠️ Un `color: #fff` junto a `background: var(--ok|--err|--warn)`
-       vuelve a romper esto sin que falle nada: lo vigila `SemanticFillTextTest`. */
+       sobre su rojo (su tabla §2.1). ⚠️ Un `color: #fff` junto a `background: var(--ok|--err)`
+       vuelve a romper esto sin que falle nada: lo vigila `SemanticFillTextTest`.
+       ⚠️ **`--on-warn` se retiró en `#564` con su color**: tenía CERO consumidores —ninguna regla
+       rellenaba con `--warn`— y el paquete del cliente tampoco lo declaraba, así que era un par
+       para un relleno que no existía. El tercer tono rellena hoy con `--attn`, y sobre amarillo el
+       texto es tinta por aritmética (11,26), no por elección. */
     --on-ok: var(--paper-bg);
     --on-err: var(--paper-bg);
-    --on-warn: var(--paper-bg);
 
     /* ══ EL MOVIMIENTO — CUATRO CURVAS Y SIETE DURACIONES (tanda 2d, `#222`) ════════════════════
        ⚠️⚠️ **Aquí había DOS duraciones y DOS curvas, y no era un sistema: era un parche.**
@@ -1267,7 +1293,7 @@
 
 /* resumen de errores del formulario */
 .auth__errors {
-    background: var(--err-bg); border: 1px solid var(--err-border); color: var(--err-strong);
+    background: var(--err-bg); border: 1px solid var(--err-border); color: var(--fg);
     border-radius: var(--r-sm); padding: var(--sp-12) var(--sp-14); margin-bottom: var(--sp-16);
     font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5;
 }
@@ -1351,7 +1377,10 @@
 .switch__input:disabled { opacity: 0.55; cursor: not-allowed; }
 .switch__label { flex: 1 1 auto; }
 .account__export-btn { margin-top: var(--sp-4); }
-.account__card--danger { border-color: var(--err-border); }
+/* ⚠️ **El borde de la tarjeta de PELIGRO es el rojo PLENO, no su tinte** (`#564`, decisión 7 de
+   las doce del owner): «el borde dice lo mismo que el botón que contiene, y en una tarjeta que
+   borra una cuenta eso es correcto». Es la única superficie del cajón donde el borde no se atenúa. */
+.account__card--danger { border-color: var(--err); }
 .account__delete-btn { width: 100%; justify-content: center; background: var(--err); color: var(--on-err); border: 1px solid var(--err); }
 .account__delete-btn:hover { background: var(--err-hover); border-color: var(--err-hover); }
 
@@ -1541,7 +1570,7 @@ body.no-scroll { overflow: hidden; }
 /* ⚠️ **El aviso va en SEGUNDO plano, no al mismo nivel que la hora** (`[OWNER, 2026-08-28]`). Es
    contexto de la decisión, no la decisión: por eso baja de peso, envuelve en dos líneas si hace falta
    y se queda en el ámbar de señal del producto. */
-.purchase__chip-full { max-width: 100%; font-size: var(--fs-label); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--warn); }
+.purchase__chip-full { max-width: 100%; font-size: var(--fs-label); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--attn-ink); }
 /* Sobre el acento de zona el ámbar se pierde: el rótulo hereda la tinta del chip elegido. */
 /* ⚠️ La otra mitad del relleno en tinta: la nota («Casi llena») iba en tinta sobre el cian y ahora
    tiene que ir sobre la superficie, o desaparece (`#551`). */
@@ -2351,7 +2380,7 @@ body.no-scroll { overflow: hidden; }
 .catalog__go svg { width: 18px; height: 18px; }
 .catalog__item:hover .catalog__go { transform: translateX(3px); color: var(--interactive); }
 /* Anuncio de señal en el catálogo (#227 F2): «Señal 30,00 €» bajo el PRECIO (en `.catalog__pricecol`). */
-.catalog__deposit { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--warn); line-height: 1.3; }
+.catalog__deposit { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--money); line-height: 1.3; }
 
 /* ====================================================================
    Paso 1: catálogo en secciones-acordeón POR TIPO + buscador progresivo.
@@ -2597,7 +2626,7 @@ body.no-scroll { overflow: hidden; }
 /* Complementos avanzados: incluidos/gratis, grupos de elección y "Más info" */
 .addons__badge { display: inline-block; margin-left: var(--sp-6); padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle; }
 .addons__badge--included { background: var(--ok); color: var(--on-ok); }
-.addons__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
+.addons__badge--free { background: var(--ok-bg); color: var(--fg); border: 1px solid var(--ok-border); }
 .addons__charged { font-weight: var(--fw-bold); color: var(--fg); }
 .addons__group { border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-10) var(--sp-12); margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6); }
 .addons__group-label { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body-s); color: var(--fg); padding: 0; }
@@ -2613,7 +2642,7 @@ body.no-scroll { overflow: hidden; }
 .addons__features li::before { content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: var(--fw-bold); }
 /* Dependencia «requiere» (data-driven): el complemento dependiente se atenúa y muestra la nota
    «Requiere: X» hasta que su requisito esté elegido. Los controles ya van `disabled` desde el blade. */
-.addons__requires { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--warn); }
+.addons__requires { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--attn-ink); }
 .addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled { opacity: 0.6; }
 .addons__row.is-disabled .entry__stepper button[disabled] { cursor: not-allowed; }
 /* ⚠️ **Con su hueco delante** (`#559`): el `<em>` va pegado al nombre en el marcado —no hay espacio
@@ -2656,7 +2685,7 @@ body.no-scroll { overflow: hidden; }
 .cart__addons li { display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 /* Nota de señal por producto (#227 F2): «Señal X€ ahora · resto en el parque» en la card del
    producto que cobra señal — evita etiquetar el agregado como «(señal)» en cestas mixtas. */
-.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: color-mix(in srgb, var(--warn) 8%, transparent); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--warn); font-weight: var(--fw-semibold); }
+.cart__deposit { margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: var(--attn-bg); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--money); font-weight: var(--fw-semibold); }
 
 /* ====================================================================
    Pulido visual (demo): fotos de atracciones + hero full-bleed con vídeo.
@@ -3492,10 +3521,17 @@ body[data-has-hero].nav--live .hero__pair-slot {
    ⚠️ La atenuación **no baja del contraste que exige WCAG AA** sobre el fondo de la tarjeta: 0.72
    es lo más bajo que lo mantiene con `--fg-mute`, medido; por debajo el texto secundario deja de
    leerse. */
-.orders__item--past { opacity: 0.72; transition: opacity var(--dur-estado) var(--ease-sale); }
-.orders__item--past:hover,
-.orders__item--past:focus-within { opacity: 1; }
-@media (prefers-reduced-motion: reduce) { .orders__item--past { transition: none; } }
+/* ⚠️⚠️ **Lo pasado se dice cambiando de SUPERFICIE, nunca con opacidad** (`#564`, grieta 11,
+   `[DECIDIDO owner]`). Un velo del 72 % sobre la tarjeta entera mueve el fondo, la tinta y el gris a
+   la vez, así que lo único que se viene a mirar aquí —la FECHA de la visita— caía a **3,10** de
+   contraste contra un suelo de 4,5. Con la superficie apagada vuelve a **4,50** con el mismo gris y
+   **no entra ni un valor nuevo**: es la regla que este sistema ya tenía escrita en el carril con foco
+   y que aquí se estaba volviendo a pagar.
+   ⚠️ **Y se va el «vuelve a plena opacidad al pasar el ratón»** (`[DECIDIDO owner]`): en un teléfono
+   ese gesto no existe, y con la fecha ya legible no hay nada que recuperar al pasar por encima.
+   ⚠️ Con ella se va también su `transition` y la excepción de movimiento reducido, que existían solo
+   para animar esa opacidad. */
+.orders__item--past { background: var(--bg-soft); }
 
 /* La referencia del pedido dentro de la tarjeta de una reserva: la tarjeta ya no ES el pedido, así
    que su código va en una fila propia y discreta, no en el encabezado. */
@@ -3506,14 +3542,14 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; }
 .orders__code { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 .orders__status { font-family: var(--font-body); font-size: var(--fs-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute); }
-.orders__status--paid { background: var(--ok-bg); color: var(--ok); }
-.orders__status--pending { background: var(--attn); color: var(--fg); }
-.orders__status--cancelled, .orders__status--expired { background: var(--err-bg); color: var(--err-strong); }
+.orders__status--paid { background: var(--ok-bg); color: var(--fg); }
+.orders__status--pending { background: var(--attn-bg); color: var(--fg); }
+.orders__status--cancelled, .orders__status--expired { background: var(--err-bg); color: var(--fg); }
 /* Badge secundario "Reembolsado" (#146): tono ámbar para diferenciarlo del estado
    principal del pedido. Aparece junto a `.orders__status` cuando hay reembolso
    anotado — no sustituye al status (un "Completado" con reembolso sigue siendo
    "Completado"). El reembolso es una dimensión independiente del servicio. */
-.orders__status--refunded-badge { background: var(--refund-bg); color: var(--refund); }
+.orders__status--refunded-badge { background: var(--bg-soft); color: var(--fg); }
 .orders__meta { margin: var(--sp-4) 0 var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); }
 .orders__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
 .orders__line { display: flex; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
@@ -3527,7 +3563,7 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__event-label { font-weight: 600; color: var(--fg); }
 .orders__total { display: flex; justify-content: space-between; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; }
 .orders__refund-label { color: var(--fg-mute); }
-.orders__refund-amount { color: var(--refund); font-weight: 700; }
+.orders__refund-amount { color: var(--fg); font-weight: 700; }
 /* EL ANCLA DE CAJA (`DECISIONES #128`): lo REALMENTE cobrado, con su método y su fecha. Va NEUTRA
    porque no es una devolución — el bloque entero heredaba el color de reembolso, y mientras solo se
    pintaba habiendo devoluciones no se notaba; desde que el ancla se enseña en todo pedido cobrado,
@@ -3539,10 +3575,10 @@ body[data-has-hero].nav--live .hero__pair-slot {
    acaba pagando neto). Mismo patrón flex space-between que `.orders__total`. */
 .orders__gate { display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg); }
 .orders__gate-label { color: var(--fg-mute); }
-.orders__gate-amount { color: var(--warn); font-weight: 700; }
+.orders__gate-amount { color: var(--fg); font-weight: 700; }
 /* Toggle "Ver desglose" del desglose ↳ (#227 F3): link sobrio, sin fondo de botón. */
-.orders__gate-toggle { margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-button); font-weight: 600; color: var(--warn); text-decoration: underline; }
-.orders__gate-toggle:hover { color: var(--warn-hover); }
+.orders__gate-toggle { margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-button); font-weight: 600; color: var(--interactive); text-decoration: underline; }
+.orders__gate-toggle:hover { color: var(--fg); }
 
 /* Los JUSTIFICANTES de menores invitados de un pedido (#336, `specs/waiver-por-reserva.md` §4.10):
    quién ha firmado ya y el enlace para repartir. Mismos TOKENS que el resto del bloque de pedidos —
@@ -3550,6 +3586,13 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__guests { margin-top: var(--sp-10); padding-top: var(--sp-10); border-top: 1px dashed var(--line); }
 /* A QUÉ visita pertenecen estos justificantes (`#401`). Solo se pinta en «Mis pedidos», donde se
    listan VARIAS reservas; en la tarjeta de una reserva el nombre ya está tres líneas más arriba. */
+/* ⚠️ El rótulo del bloque de justificantes (`#565`): etiqueta mono, el mismo tratamiento con el que
+   el resto del cajón nombra un bloque. Sin él, la pieza no decía qué era. */
+.orders__guests-title {
+    margin: 0 0 var(--sp-8);
+    font-family: var(--font-mono); font-size: var(--fs-label); font-weight: var(--fw-semibold);
+    letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute);
+}
 .orders__guests-what { margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
 .orders__guests-count { margin: 0; font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--fg); }
 /* Las plazas LIBRES, junto al contador y en tinta atenuada: es contexto del número de al lado, no un
@@ -3569,7 +3612,10 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__guests-copy {
     flex: none; width: var(--tap-min); min-height: var(--tap-min);
     display: grid; place-items: center;
-    border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card);
+    /* ⚠️ **Radio de CONTROL, no de tarjeta** (`#565`): llevaba `--r` (16), que es el canto de la
+       tarjeta que lo contiene — un 16 dentro de un 16 rompe el concéntrico y el botón se lee como un
+       trozo de la tarjeta en vez de como un control. */
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-card);
     color: var(--fg); cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale), background var(--dur-sale) var(--ease-sale);
 }
@@ -3579,14 +3625,22 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__guests-list { list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
 .orders__guests-item { font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 /* Solo la EXCEPCIÓN se marca (#320): un justificante vigente es la condición para estar en la lista. */
-.orders__guests-item em { font-style: normal; font-weight: var(--fw-semibold); color: var(--warn); }
+.orders__guests-item em { font-style: normal; font-weight: var(--fw-semibold); color: var(--attn-ink); }
 .orders__guests-hint { margin: var(--sp-8) 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.45; }
 /* El enlace se autoselecciona al enfocarlo: es lo que sustituye al botón de copiar que la poda del
    presupuesto del chunk se llevó (`SidebarBundleBudgetTest`, la subida a 263). */
-.orders__guests-link { width: 100%; font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10); }
+/* ⚠️ **A 15 y no a 12** (`#565`): es el PLAN B si el botón de compartir falla, así que hay que poder
+   teclearlo y dictarlo. El artboard pedía 14, que **no está en la escala del sistema** —los escalones
+   son 12 (etiqueta) y 15 (apoyo)—: se sube al siguiente que existe en vez de estrenar un valor para
+   una sola regla. */
+.orders__guests-link { width: 100%; font-family: var(--font-mono); font-size: var(--fs-body-s); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10); }
 .orders__guests-link:focus { border-color: var(--fg); }
 .orders__gate-caption { margin: var(--sp-2) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
 .orders__final { display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+/* ⚠️ **Lo ya COBRADO es la única cifra con el rol de color** (`--money`, `#565`): es lo que el
+   artboard reserva para «Pagado online», y por defecto vale la tinta —así que estrenarlo no mueve un
+   píxel en una instalación sin paquete—. Lo pendiente y lo devuelto se quedan en tinta. */
+.orders__ledger--cash .orders__final strong { color: var(--money); }
 /* ⚠️⚠️ LOS DOS BLOQUES del desglose (`DECISIONES #127`). Arriba lo que vale y por qué canal se
    paga; abajo qué ha pasado con su dinero. **La separación es la corrección**: hasta la tanda B,
    «Devuelto» y «Pendiente de devolverte» se pintaban como restas dentro de la columna del valor —de
@@ -3610,13 +3664,20 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__mov-label { color: var(--fg-mute); }
 .orders__mov-date { font-size: var(--fs-body-s); white-space: nowrap; }
 .orders__mov strong { font-weight: 700; color: var(--fg); white-space: nowrap; }
-.orders__mov--neg strong { color: var(--refund); }
+.orders__mov--neg strong { color: var(--fg); }
 .orders__mov--pending { opacity: 0.7; }
 .orders__balance { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-2) var(--sp-12); margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg); }
+/* ⚠️⚠️ **El saldo va en TINTA y la cifra de COLOR se reserva a lo ya COBRADO** (`#565`): un importe
+   pendiente es un dato del pedido, no un aviso, y teñirlo lo convierte en una alarma —que es justo lo
+   que hacía con el naranja heredado—. ▶ Lo vio la CAPTURA, no la suite: con el paquete del cliente
+   `--money` vale Lima 800, así que poner el rol aquí dejaba «a pagar en el parque» en color y
+   «Pagado» en tinta, **al revés que el artboard**. Es la misma distinción que `#563` aplicó al
+   desenlace de la reserva creada. */
 .orders__balance--pay_at_park strong,
-.orders__balance--pay_online strong { color: var(--warn); }
+.orders__balance--pay_online strong { color: var(--fg); }
+/* Una devolución tampoco lleva color: lo dice su SIGNO y su fecha (grieta 04). */
 .orders__balance--refund_at_park strong,
-.orders__balance--refund_pending strong { color: var(--refund); }
+.orders__balance--refund_pending strong { color: var(--fg); }
 .orders__balance .orders__gate-caption { flex-basis: 100%; font-weight: 400; }
 /* Badge "Finalizado" en Mis pedidos (Fase 7.1b, #127). Sutil para no competir
    con el resto del row; gris/atenuado porque para el cliente "finished" no
@@ -3628,8 +3689,8 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .orders__line--finished .orders__line-price { color: var(--fg-mute); }
 /* #172: producto/complemento cancelado — tachado + badge rojo suave para que
    el cliente vea claramente que se canceló/quitó (el reembolso va en el resumen). */
-.orders__line-badge--cancelled { background: var(--err-bg); color: var(--err); }
-.orders__line-badge--refunded { background: var(--refund-bg); color: var(--refund); }
+.orders__line-badge--cancelled { background: var(--err-bg); color: var(--fg); }
+.orders__line-badge--refunded { background: var(--bg-soft); color: var(--fg); }
 /* El tachado va sobre el TEXTO del nombre (`.orders__line-text`), no sobre todo
    `.orders__line-name`: así el `.prod-ico` que lo precede se atenúa (color heredado)
    pero NO queda cruzado por la línea (un icono tachado se leería como glitch). */
@@ -4883,7 +4944,7 @@ body[data-has-hero] .nav--over .nav__cta {
 /* Variantes Incluido/Gratis (espejo de `.addons__badge--*` del sidebar, #194) — el blade genera
    `addons-mini__badge--{incluido|gratis}`; sin estas reglas ambos se veían idénticos (revisión #233). */
 .addons-mini__badge--included { background: var(--ok); color: var(--on-ok); }
-.addons-mini__badge--free { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
+.addons-mini__badge--free { background: var(--ok-bg); color: var(--fg); border: 1px solid var(--ok-border); }
 /* Landing (decisión clienta): el botón «Más info +» (mismo patrón que el sidebar, `.addons__moreinfo`
    definido arriba) va INLINE en la fila, justo tras el NOMBRE — no en su propia línea. El badge + el
    precio se agrupan en `.addons-mini__meta`, empujado a la derecha, para que el «Más info» quede
@@ -6450,7 +6511,7 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     margin: var(--sp-6) 0 0;
     padding-left: calc(var(--sp-16) + var(--sp-10) + var(--sp-7));
     font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.35;
-    color: var(--warn);
+    color: var(--attn-ink);
 }
 /* ⚠️ **Cambia de sujeto y de PESO en `#242`**: aquí decía «EXENCIÓN FIRMADA» en verde, mayúsculas y
    negrita —un estado que el owner retiró por obvio: una fila marcable ya lo significa—. Ahora dice

@@ -427,7 +427,13 @@
                                 'privacy' => \Illuminate\Support\Arr::only(__('account.account.privacy'), [
                                     'title', 'intro', 'consents_title', 'no_consents', 'export_btn',
                                     'delete_title', 'delete_intro', 'delete_password',
-                                    'delete_confirm', 'delete_btn', 'deleting', 'waiver',
+                                    // ⚠️ **Los dos rótulos de la pregunta entran en `#565`**, cuando
+                                    // borrar la cuenta dejó de confirmarse con `window.confirm`. Sin
+                                    // ellos aquí la clave EXISTE en `lang/` y el botón sale MUDO —
+                                    // `t()` devuelve cadena vacía en silencio (la trampa de `#333`),
+                                    // y el botón mudo sería el que borra la cuenta.
+                                    'delete_confirm', 'delete_confirm_yes', 'delete_confirm_no',
+                                    'delete_btn', 'deleting', 'waiver',
                                     // El interruptor de marketing y la palabra que marca una fila
                                     // RETIRADA (art. 7.3, `#344`). Van con sesión, como el resto de
                                     // esta zona: nadie los pinta sin haber entrado.
