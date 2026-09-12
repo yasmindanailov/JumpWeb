@@ -2818,11 +2818,18 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **PENDIENTE-DE-MEDIR** sobre el árbol CONJUNTO tras la OCTAVA fusión, con el **PIE del
+> Suite **4782 en verde** (30.023 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol CONJUNTO tras la OCTAVA fusión, con el **PIE del
 > armazón** del carril del SPA (`#554`: **+6** de `SidebarFootShapeTest` y **+4** de JS en
 > `foot.test.js`, que sube el total a **967**) y **`/contacto`** + **`/bar`** del carril de diseño
 > (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que `CookieGateBlockingTest`
 > pierde con su sujeto · `#536`: **+15** de `BarPageTest`).
+> ⚠️⚠️ **Ninguna de las dos cifras que traía cada carril valía** —4767 se midió sin `/bar` y 4775
+> sin el pie del cajón—, y la buena salió de MEDIR tras rebasar: *se re-mide DESPUÉS de rebasar,
+> nunca antes*, que es lo que la vuelta anterior ya dejó escrito aquí.
+> ⚠️ **Y la trampa del bundle son DOS comandos**: `npm run build` no basta, porque
+> `SidebarDomContractTest` renderiza el bundle **SSR** — con solo el primero salieron **12**
+> casos rojos con el árbol limpio. El que hace falta tras traer trabajo del carril del SPA es
+> **`npm run build:ssr`**.
 > Antes, **4751** (29.762) con la **puerta de categoría** (`#553`: **+1** de `SidebarCatalogCardTest`
 > —sus casos pasan de 6 a 7— y **+3** de JS en `catalog.test.js`, que subió a **963**).
 > Antes, **4750** (29.734) con la **tarjeta grande del catálogo** (`#552`: **+6** de
