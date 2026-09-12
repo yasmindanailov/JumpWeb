@@ -4500,6 +4500,26 @@ select:focus-visible {
   font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute);
 }
 
+/* ── LA FOTO DE LA ZONA Y EL RELOJ (`#532`) ───────────────────────────────────────────────────
+   El artboard reparte **736 + 352** en escritorio (abajo, en su `@media`); en móvil van apilados y
+   la foto abre la página.
+   ⚠️ **La foto va a 16:9 recortando, no deformando** (`object-fit: cover`): la del panel puede venir
+   en cualquier proporción —la de esta instalación es 3:2— y estirarla para llenar la caja deforma a
+   quien salga dentro. El recorte lo decide el navegador por el centro, que es lo que ya hacen el
+   mosaico de la portada y las fichas de `/atracciones`.
+   ⚠️⚠️ **La proporción se declara en la CAJA y no con `width`/`height` del `<img>`**: así el hueco
+   está reservado antes de que la imagen llegue —sin salto de maquetación— sea cual sea el fichero
+   que suba el cliente. */
+.party-hero { margin-top: var(--sp-20); }
+.party-photo {
+  margin: 0 0 var(--sp-20);
+  aspect-ratio: 16 / 9; overflow: hidden;
+  border-radius: var(--r-lg);
+}
+.party-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* El reloj ya trae su propio margen superior: dentro de la fila lo pone la foto. */
+.party-hero > .party__clock { margin-top: 0; }
+
 /* EL CONTADOR: un solo control, y el total aparece en la columna de cada pack. */
 .party-compare { margin-top: var(--sp-20); }
 .party-count { display: flex; align-items: center; gap: var(--sp-14); }
@@ -4647,6 +4667,25 @@ select:focus-visible {
   .party-page__block { margin-top: var(--sec-air); }
   .party-page__lede { margin-top: var(--sp-16); }
   .party-page__note { font-size: var(--fs-17); }
+
+  /* ── LA FILA DEL ARTBOARD: 736 + 352 (`#532`) ───────────────────────────────────────────────
+     Doce pistas con 32 de hueco sobre 1120: cada pista mide 64, así que `span 8` da **736** y
+     `span 4` da **352**, al dígito y sin escribir ninguna de las dos medidas. Es la misma rejilla
+     que ya usan Reseñas y Dudas (`#488`).
+     ⚠️ **Sin foto la rejilla no estorba**: el reloj es hijo único y ocupa las doce pistas, que es
+     exactamente la fila entera que tenía antes de que la foto existiera. */
+  .party-hero {
+    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px; align-items: start;
+  }
+  .party-hero > .party-photo { grid-column: span 8; margin-bottom: 0; }
+  .party-hero > .party__clock { grid-column: span 4; }
+  .party-hero > .party__clock:only-child { grid-column: 1 / -1; }
+  /* ⚠️⚠️ **Dentro de 352 el reloj vuelve a UNA columna.** En escritorio se parte en dos —regla a la
+     izquierda, carril a la derecha— y eso vale en la fila entera de la portada; en la columna
+     estrecha de esta página las dos mitades se estrangulan. La regla de la portada no se toca: ésta
+     acota por el contenedor. */
+  .party-hero > .party__clock { grid-template-columns: 1fr; }
+  .party-hero > .party__clock .party__clock-rail { margin-top: var(--sp-18); }
 
   .party-count__q { font-size: 21px; }
   .party-count__btn { width: 56px; height: 56px; }

@@ -206,6 +206,39 @@ class BirthdayPageTest extends TestCase
      * **EL RELOJ SOLO HABLA POR UNA DURACIÓN COMPARTIDA.** Si los packs duran distinto, su titular
      * diría la de uno como si fuera de todos: se retira y la duración baja a una fila.
      */
+    /**
+     * **La foto de la zona es DATO y su ausencia es una respuesta** (`#532`).
+     *
+     * El artboard abre la página con la foto de la zona montada —*«la prueba del acceso
+     * exclusivo»*— al lado del reloj. Sale de `zones.image`, el campo del panel, así que:
+     *  · con foto, la página la publica **con el nombre de la zona por `alt`** (la convención de
+     *    `/atracciones`, donde el `alt` es el nombre de la atracción);
+     *  · **sin foto no se pinta NADA** — ni `<figure>`, ni un hueco gris esperando.
+     *
+     * ⚠️ Lo que se rompería en silencio es lo segundo: una caja vacía reservada no falla, no avisa
+     * y deja la página con un rectángulo encima de todo lo demás.
+     */
+    public function test_the_zone_photo_is_data_and_its_absence_is_an_answer(): void
+    {
+        $zone = $this->pack('Cumpleaños Kids')->zone;
+        $zone->update(['image' => 'images/attractions/cumplea_1.webp']);
+
+        $html = $this->page();
+        $hero = $this->cut($html, '#<div class="party-hero">.*?</div>\s*<section#s');
+
+        $this->assertStringContainsString('class="party-photo"', $hero, 'la foto de la zona no se publica');
+        $this->assertStringContainsString('images/attractions/cumplea_1.webp', $hero);
+        // El `alt` lo escribe el PANEL, no la vista: es el nombre de la zona.
+        $this->assertStringContainsString('alt="'.e($zone->tr('name')).'"', $hero);
+
+        // CONTROL: sin foto en el panel, ni figura ni hueco — y el reloj sigue ahí.
+        $zone->update(['image' => null]);
+        $sinFoto = $this->page();
+
+        $this->assertStringNotContainsString('party-photo', $sinFoto, 'se reserva un hueco de foto que no existe');
+        $this->assertStringContainsString('party__clock', $sinFoto, 'sin foto la página perdió también el reloj');
+    }
+
     public function test_the_clock_speaks_only_for_a_shared_duration(): void
     {
         $this->assertStringContainsString('class="party__clock"', $this->page());

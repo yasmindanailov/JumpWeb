@@ -112,6 +112,17 @@ MUTACIONES = [
      "        @if (! $compare)",
      "        @if (false)"),
 
+    # ── La foto de la zona (`#532`) ──
+    ("la foto se pinta aunque el panel no tenga ninguna (hueco gris esperando)",
+     VISTA,
+     "                @if ($zone?->image)",
+     "                @if (true)"),
+
+    ("el alt de la foto deja de decir de qué zona es",
+     VISTA,
+     'alt="{{ $zone->tr(\'name\') }}"',
+     'alt=""'),
+
     # ── Lo retirado ──
     ("vuelve una clase de la página vieja",
      VISTA,

@@ -21,14 +21,24 @@ class EventsController extends Controller
         // operativa SIN un `LandingService` que los reubique en /servicios (idéntico en Home).
         $packages = TicketType::birthdaySurfacePacks()
             // ⚠️ `priceTiers` va cargado porque la comparativa pregunta el precio para CADA número
-            // de niños: sin él serían una consulta por pack y por pregunta. `zone` ya no hace falta
-            // —era para la foto de la zona, que la página nueva no pinta—.
-            ->with(['prices.rateType', 'priceTiers', 'addons.prices.rateType'])
+            // de niños: sin él serían una consulta por pack y por pregunta. `zone` vuelve porque la
+            // página publica su FOTO (`#532`).
+            ->with(['zone', 'prices.rateType', 'priceTiers', 'addons.prices.rateType'])
             ->orderBy('position')
             ->get();
 
         return view('pages.events', [
             'packages' => $packages,
+            /*
+             * ⚠️ **La foto es DATO, nunca una ruta escrita aquí**: sale de `zones.image` de la zona
+             * del pack, que es el campo que el panel ya ofrece y el mismo del que salía la polaroid
+             * de la página anterior. Sin foto en el panel la página no reserva hueco: vacío es una
+             * respuesta (`#485`), y un rectángulo gris esperando es peor que no tener nada.
+             * ⚠️⚠️ La zona se toma del PRIMER pack a propósito: los packs de cumpleaños comparten
+             * zona por construcción (`birthdaySurfacePacks()` los saca de la zona operativa), y
+             * cruzar varias fotos en una sola cabecera no es una decisión que pueda tomar la vista.
+             */
+            'zone' => $packages->first()?->zone,
             'compare' => $packages->isEmpty() ? null : $comparison->compose($packages),
             'form' => $packages->isEmpty() ? null : $comparison->form($packages),
             'choices' => LandingAddonPresenter::choiceGroups($packages),

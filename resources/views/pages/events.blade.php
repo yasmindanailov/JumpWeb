@@ -34,12 +34,33 @@
                  página dice cómo reservar igualmente. --}}
             <a href="{{ route('contacto') }}" class="btn">{{ __('landing.events.coming_soon_cta') }}</a>
         @else
-            {{-- EL RELOJ DE LAS DOS HORAS, el MISMO componente que la portada. ⚠️ Solo si todos los
-                 packs duran lo mismo: si no, su titular hablaría de uno como si fuera de todos, y la
-                 duración baja a una fila de la comparativa. --}}
-            @if ($compare['duration'])
-                <x-site.party-clock :duration="$compare['duration']" :level="2" />
-            @endif
+            {{-- ══ LA FOTO DE LA ZONA Y EL RELOJ, EN LA MISMA FILA ═════════════════════════════════
+                 El artboard reparte aquí **736 + 352** (`Cumpleanos Pagina PJP` 1b): la foto es *«la
+                 prueba del acceso exclusivo —la promesa que más cuesta creer—»* y el reloj va a su
+                 derecha. Hasta `#532` la página no tenía foto y el reloj ocupaba la fila entera.
+
+                 ⚠️ **La foto es DATO** (`zones.image`, el campo del panel): si la zona no tiene, no
+                 se pinta nada y el reloj recupera la fila — **no se reserva un hueco gris**, que es
+                 la regla que el canvas escribió para la tarjeta del bar y que `/atracciones` ya
+                 aplica en sus fichas.
+                 ⚠️⚠️ **El `alt` es el nombre de la ZONA y sale del panel**, como en `/atracciones`
+                 con el nombre de la atracción: describir la foto con una frase escrita aquí sería
+                 afirmar lo que enseña una imagen que cambia con cada instalación. --}}
+            <div class="party-hero">
+                @if ($zone?->image)
+                    <figure class="party-photo">
+                        <img src="{{ asset($zone->image) }}" alt="{{ $zone->tr('name') }}"
+                             loading="lazy" decoding="async">
+                    </figure>
+                @endif
+
+                {{-- EL RELOJ DE LAS DOS HORAS, el MISMO componente que la portada. ⚠️ Solo si todos
+                     los packs duran lo mismo: si no, su titular hablaría de uno como si fuera de
+                     todos, y la duración baja a una fila de la comparativa. --}}
+                @if ($compare['duration'])
+                    <x-site.party-clock :duration="$compare['duration']" :level="2" />
+                @endif
+            </div>
 
             {{-- ══ LOS PACKS, COMPARADOS ══════════════════════════════════════════════════════════
                  ❗❗ **Solo compara lo que DIFIERE**: lo común baja a «Igual en los dos».

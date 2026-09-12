@@ -105,7 +105,7 @@ class HomeController extends Controller
             // Fuente ÚNICA (#256, modelo A): packs de la superficie Cumpleaños = vendibles de zona
             // operativa SIN un `LandingService` que los reubique en /servicios (idéntico en Events).
             'packages' => ($packs = TicketType::birthdaySurfacePacks()
-                ->with(['zone', 'prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get()),
+                ->with(['prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get()),
             /*
              * Las dos tarjetas de «Cumpleaños» (`#483`). Se componen en el dominio y no en la vista:
              * cruzar el pack con su tarifa especial, elegir qué edad se publica y escribir los
@@ -114,13 +114,14 @@ class HomeController extends Controller
             'partyCards' => ($partyCards = new PartyCards)->compose($packs),
             'partyFrom' => $partyCards->cheapest($packs),
             /*
-             * ⚠️ La FOTO de la sección sale de la zona del pack (`zones.image`), que es de donde ya
-             * salía la polaroid heredada. Sin ella la cabecera cae a papel — la variante `sinFoto`
-             * del propio artboard— en vez de reservar un hueco gris.
-             * ⚠️⚠️ Y con esto `zones.image` **conserva su consumidor**, que es justo lo que `#302`
-             * dejó fichado como dudoso al retirar las tarjetas de zona.
+             * ⚠️ Aquí vivía `partyImage`, la foto de la zona para la cabecera de la sección 04.
+             * `#484` retiró esa cabecera `[DECIDIDO owner]` y **el dato se quedó sin pintar**: la
+             * portada lo calculaba —con su `zone` cargada— en cada visita para nadie. Retirado en
+             * `#532`, que es donde esa foto encontró pantalla: `/cumpleanos`.
+             * ⚠️⚠️ Y NO vuelve aquí por la puerta de atrás: `#484` dejó escrito que recuperar la
+             * cabecera sobre foto tiene que ser una decisión, no el efecto lateral de subir una
+             * imagen al panel.
              */
-            'partyImage' => $packs->first()?->zone?->image,
             // La duración del pack, ya escrita. La compone el mismo servicio que las tarjetas, con
             // el trait que escribe los valores de la landing: aquí no se formatea nada.
             'partyDuration' => $partyCards->durationLabel($packs),
