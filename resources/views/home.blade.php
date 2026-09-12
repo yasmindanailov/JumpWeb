@@ -557,7 +557,7 @@
         {{-- ⚠️ TEMPORAL (`#547`) · el TRÍO DE NIÑOS (`G4`), solo con `?fachada=2` en `local`.
              Va al lado del titular, en el hueco de 512 px que su cabecera deja a la derecha. --}}
         @if (app()->environment('local') && (int) request()->query('fachada', 0) === 2)
-            <x-site.trio clase="trio--events" :escala="1.5" />
+            <x-site.trio clase="trio--events" :escala="2" />
         @endif
             {{-- ⚠️⚠️ **AQUÍ HUBO UNA CABECERA SOBRE FOTO A SANGRE Y SE RETIRÓ** (`[DECIDIDO owner]`,
                  `#484`). El artboard la dibuja —es la única sección que la lleva— pero la foto que la

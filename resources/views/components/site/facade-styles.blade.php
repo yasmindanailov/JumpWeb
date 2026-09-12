@@ -79,12 +79,32 @@
         .trio__n { display: block; flex: 0 0 auto; }
         .trio--events {
             position: absolute; z-index: -1; pointer-events: none;
-            right: 8px; top: 54px; opacity: .9;
+            right: 8px; top: 30px; opacity: .9;
         }
+        /*
+         * ⚠️⚠️ **EN MÓVIL EL TRÍO SE MUDA A LA TARJETA DEL RELOJ** (`[DECIDIDO owner]`: «ponemos las
+         * siluetas de los niños encima de la card 2h»). Y no es el mismo sitio más pequeño: en
+         * estrecho el titular ocupa el ancho entero y **no hay lateral donde vivir**, así que el
+         * trío estaba al fondo de la sección, a 1.498 px del titular y sin nada que acompañar.
+         * ▶ Se APOYA en el canto superior de esa tarjeta, por la derecha: los pies caen dentro y el
+         * cuerpo queda en el aire de encima. Y **por ENCIMA** (`z-index`), porque la tarjeta es opaca
+         * y en la capa de fondo quedaría enterrada — la lección que ya pagó la figura de esta misma
+         * sección en escritorio.
+         *
+         * ⚠️⚠️ **El pie de la tarjeta NO está libre, aunque el número lo pareciera.** Medí «contenido
+         * hasta 432, tarjeta hasta 520 → 88 px de aire» y ahí viven los tres chips (Saltos ·
+         * Merienda · Tarta): el trío les caía encima. *Segunda vez en esta tanda que un hueco
+         * calculado entre dos cotas resulta estar ocupado.*
+         * ⚠️⚠️ **Y `transform-origin: right bottom` lo bajaba 120 px sin que nada fallara**: `scale`
+         * encoge el DIBUJO pero no la caja, así que con el origen abajo el visual se queda pegado al
+         * borde inferior de una caja que sigue midiendo lo de antes. Con `right top` el dibujo se
+         * queda donde dice `top`, que es lo que uno supone al escribirlo.
+         */
         @media (max-width: 900px) {
-            /* En estrecho el titular ocupa el ancho entero y el trío no tiene lateral donde vivir:
-               baja debajo, más pequeño y al margen derecho. */
-            .trio--events { right: 0; top: auto; bottom: -14px; scale: .62; transform-origin: right bottom; }
+            .trio--events {
+                z-index: 2; right: 6px; top: 196px; bottom: auto;
+                scale: .34; transform-origin: right top; opacity: 1;
+            }
         }
 
         /* ⚠️ La mancha de Reseñas NO se declara aquí, y no es un olvido: esa pieza se pinta SIEMPRE,
@@ -99,6 +119,21 @@
            sección. No es una variante distinta, es la misma con el tamaño que cabe. */
         @media (max-width: 700px) {
             .fac-p { max-height: 46vh; max-width: 62vw; }
+
+            /* ⚠️ **«Antes de venir»: la mancha se muda DETRÁS DE LA TARJETA** (`[DECIDIDO owner]`).
+               En escritorio vive al lado del titular; en móvil no hay lado, así que se coloca contra
+               la tarjeta del QR —medido: `y 268..550`— y asoma por su canto inferior izquierdo. Va
+               en la capa de fondo, así que la tarjeta la tapa salvo por donde sobresale.
+
+               ⚠️⚠️ **`!important` porque la posición de base viene en `style` INLINE**, que es como el
+               mapa declara cada pieza — y un atributo `style` gana a cualquier regla de hoja. Sin
+               esto la mancha se quedaba arriba, **encima del titular y de la entradilla**, con la
+               media query aplicándose y sin que nada fallara. ▶ Se va el día que esta colocación se
+               confirme y los estilos bajen a `landing.css`, donde ya no habrá inline que vencer. */
+            #before .fac-p {
+                left: -66px !important; right: auto !important; top: 330px !important;
+                width: 240px !important; max-width: none; max-height: none;
+            }
         }
 
         /* El rótulo de la variante, para no confundir una captura con la portada de verdad. */

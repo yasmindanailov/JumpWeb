@@ -1898,13 +1898,18 @@ img { display: block; max-width: 100%; }
    encima del titular**. Medido: la caja salía en `x −70..270` cuando la tarjeta empieza en 384.
    *`isolation` crea contexto de apilamiento, no de posición: son dos cosas distintas.* */
 .rev { position: relative; isolation: isolate; }
+/* ⚠️⚠️ **En MÓVIL asoma por el LATERAL, no por arriba** (`[DECIDIDO owner]`: «en la sección de
+   reseñas el splash lo ponemos en un lateral para que se vea un poco más»). En estrecho la tarjeta
+   ocupa el ancho entero —medido: `x 0..358` de 358—, así que una mancha anclada arriba a la
+   izquierda se sale de la pantalla y solo se intuye; pegada al canto derecho y más abajo, lo que
+   sobresale cae dentro del papel de la sección y se ve. */
 .rev__mancha {
   position: absolute; z-index: -1; pointer-events: none;
-  left: -50px; top: -40px; width: 230px; height: auto;
+  right: -64px; left: auto; top: 92px; width: 250px; height: auto;
   --ilu-fg: var(--strip-1); opacity: 0.22;
 }
 @media (min-width: 1024px) {
-  .rev__mancha { left: -70px; top: -60px; width: 340px; }
+  .rev__mancha { left: -70px; right: auto; top: -60px; width: 340px; }
 }
 @media (min-width: 1024px) {
   .sec-head,
