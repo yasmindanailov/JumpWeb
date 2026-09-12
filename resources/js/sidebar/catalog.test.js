@@ -51,7 +51,25 @@ test('un catálogo sin packs sigue emitiendo las DOS secciones, la segunda vací
     const sections = sectionsFrom([ENTRY]);
 
     assert.equal(sections.length, 2);
-    assert.deepEqual(sections[1], { key: 'services', items: [] });
+    // ⚠️ `ink` entra en la forma de la sección con `#552`: la franja de la «tarjeta grande» es de tinta
+    // en una y de papel en la otra, y cuál lo decide este módulo. Se actualiza la forma EXACTA a
+    // propósito — no se relaja a un `assert.partialDeepStrictEqual`, que dejaría de vigilar el resto.
+    assert.deepEqual(sections[1], { key: 'services', ink: true, items: [] });
+});
+
+/**
+ * ❗❗ **Cuál de las dos franjas va en TINTA lo decide este módulo, y es UNA sola.**
+ *
+ * La «tarjeta grande» separa las dos mitades del catálogo cambiando de SUPERFICIE, no inventando un
+ * color: si las dos fueran de tinta no habría bifurcación, y si ninguna lo fuera tampoco.
+ * ⚠️ Hubo que preguntarlo porque las dos fuentes del canvas se contradicen: su argumento dice «el
+ * cumpleaños en tinta contra el papel del resto» y sus dos dibujos ponen la tinta en las ENTRADAS.
+ */
+test('exactamente una de las dos secciones lleva la franja de tinta', () => {
+    const enTinta = sectionsFrom([]).filter((s) => s.ink);
+
+    assert.equal(enTinta.length, 1, 'la bifurcación necesita UNA franja de tinta y una de papel');
+    assert.equal(enTinta[0].key, 'services');
 });
 
 test('un catálogo vacío, nulo o corrupto no revienta y da dos secciones vacías', () => {

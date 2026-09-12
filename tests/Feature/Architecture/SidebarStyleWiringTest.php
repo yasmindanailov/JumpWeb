@@ -60,7 +60,10 @@ class SidebarStyleWiringTest extends TestCase
         // pantallas que el owner ya validó en navegador, y cambiarles el aspecto sin pedirlo sería
         // meter riesgo visual en un sitio que funciona. Quedan nombrados para que se decidan aparte.
         'cart__pending' => '⚠️ HUECO: modificador sin regla en el aviso de respuestas pendientes del carrito',
-        'catalog__per' => '⚠️ HUECO: sufijo del precio de un pack en el catálogo',
+        // ⚠️ `catalog__per` SALIÓ de esta lista en `#552`, y el hueco no era inofensivo: sin regla propia
+        // heredaba el `white-space: nowrap` de `.catalog__price`, así que «desde 14,95 € por niño» era
+        // una sola línea irrompible y la columna del precio de un pack se llevaba **159 px de 324**,
+        // dejando su descripción en 55 y recortada a mitad de palabra. Hoy tiene su regla y su línea.
         'addons__check' => '⚠️ HUECO: la casilla de un complemento',
         'addons__perguest-toggle' => '⚠️ HUECO: el conmutador de complemento por invitado',
         'addons__features--single' => '⚠️ HUECO: modificador de la lista de características',

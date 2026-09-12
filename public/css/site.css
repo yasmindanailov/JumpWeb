@@ -2133,6 +2133,10 @@ body.no-scroll { overflow: hidden; }
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
 .catalog__price { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); white-space: nowrap; flex: none; }
+/* La UNIDAD de un pack («por niño»), en su propia línea bajo la cifra (`#552`). Hasta esta tanda no
+   tenía regla: vivía dentro de `.catalog__price` y heredaba su `nowrap`, que es lo que hacía
+   imposible maquetar la fila. Es un apoyo, así que lee el gris y el nivel de apoyo. */
+.catalog__per { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); line-height: 1.2; }
 /* Columna derecha de la card: precio y, DEBAJO, el anuncio de señal del producto, alineados a la
    derecha (#227 F2 → la señal va bajo el precio, no bajo la descripción). */
 .catalog__pricecol { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-3); text-align: right; }
@@ -2161,36 +2165,56 @@ body.no-scroll { overflow: hidden; }
 .catalog-search__input:focus { border-color: var(--fg); }
 .catalog-search__input::placeholder { color: var(--fg-mute); }
 
-/* Sección (cabecera-acordeón: icono de tipo + título + contador + chevron). */
-.catalog-acc__sec { border-bottom: 1px solid var(--line); }
-.catalog-acc__sec:last-of-type { border-bottom: 0; }
-.catalog-acc__head { width: 100%; display: flex; align-items: center; gap: var(--sp-11); padding: var(--sp-15) var(--sp-2); background: none; border: 0; text-align: left; }
-.catalog-acc__icon { width: 30px; height: 30px; flex: none; border-radius: 9px; display: grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
+/* ❗❗❗ **LA TARJETA GRANDE, SIN PUERTA** (`#552`, `[DECIDIDO owner]`, `Decisiones SPA PJP` 02).
+   Cada sección es una TARJETA —borde, radio y `overflow` que recorta su franja— con una CABECERA
+   llena arriba: icono grande, nombre en rótulo y una frase que dice a qué vienes.
+
+   ▶ **El porqué, medido por el canvas**: «vengo a saltar» y «celebro un cumple» son dos clientes
+   distintos con dos precios distintos, y eso merece verse — pero una PANTALLA de categorías cobraría
+   un toque a todo el mundo para repartir cinco productos en dos montones. Así que la bifurcación se ve
+   y los precios siguen debajo, **a un toque y sin pantallas nuevas**.
+
+   ⚠️ **Las dos se separan CAMBIANDO DE SUPERFICIE, no inventando un color**: una franja en tinta y la
+   otra en papel marcado. Es lo que el sistema ya hace en la web, y por eso esta pieza no estrena ni un
+   valor. Cuál de las dos va en tinta lo dice `catalog.js`, en un sitio y con nombre.
+
+   ⚠️ **Concéntricos**: tarjeta a `--r` (16) y las filas de dentro a `--r-md` (10), que es el escalón
+   inmediatamente inferior de la escala cerrada. */
+.catalog-acc__sec { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--bg-card); }
+.catalog-acc__sec + .catalog-acc__sec { margin-top: var(--sp-12); }
+.catalog-acc__head { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-14) var(--sp-16); }
+/* Las dos superficies de la franja. El icono y el recuento SIGUEN a la suya: sobre tinta, un recuento
+   en Nube con texto Humo sería una pastilla clara ilegible. */
+.catalog-acc__sec--ink .catalog-acc__head { background: var(--fg); color: var(--bg); }
+.catalog-acc__sec--paper .catalog-acc__head { background: var(--bg-soft); color: var(--fg); }
+/* ⚠️ **El icono pierde su azulejo, y no es un recorte**: el azulejo existía para darle una superficie
+   propia sobre el papel del panel, y ahora la superficie es la FRANJA. Un azulejo dentro de una banda
+   llena es un rectángulo dentro de otro. Hereda el color de su franja con `currentColor`. */
+.catalog-acc__icon { flex: none; display: grid; place-items: center; color: inherit; }
 .catalog-acc__icon svg { width: 24px; height: 24px; }
-/* La cabecera de categoría al pasar: relleno de TINTA, no de marca (`#551`). ⚠️ Y es la pieza que la
-   **T4·3 va a rehacer** («tarjeta grande, sin puerta», `Decisiones SPA PJP` 02): aquí solo se le quita
-   el color de marca; su forma nueva viene con la tanda del catálogo. */
-.catalog-acc__head:hover .catalog-acc__icon { background: var(--fg); color: var(--bg); }
-/* El icono de entradas apiladas (E5): el occluder de las cards de delante tiene que fundirse con el
-   fondo del box al hover (si no, se ven cards claras sobre el relleno). Igual que E2 en los CTAs.
-   ⚠️ Sigue al relleno: antes era el cian y ahora es la tinta. */
-.catalog-acc__head:hover .catalog-acc__icon .ic-e5 svg .occ { fill: var(--fg); }
-.catalog-acc__title { flex: 1; font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-body); letter-spacing: -0.01em; color: var(--fg); }
-.catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; background: var(--bg-soft, var(--bg-soft)); font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); color: var(--fg-mute); }
-.catalog-acc__chev { width: 20px; height: 20px; flex: none; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale); }
-.catalog-acc__chev.is-open { transform: rotate(180deg); }
+/* ⚠️⚠️ **AQUÍ VIVÍAN CUATRO REGLAS DE HOVER Y ESTABAN MUERTAS** (`#552`). Dos animaban el icono de la
+   cabecera al pasar el cursor —la cabecera dejó de ser un `<button>` cuando dejó de plegarse, así que
+   era una afordancia sin consumidor (`#295`)— y las otras dos apuntaban a `.ic-e5` **dentro** de la
+   cabecera, que es un dibujo que ahí no llega nunca: `ProductIcon` lo emite en los ÍTEMS, y la
+   cabecera pinta un `<svg>` suelto desde que el motor Blade se retiró. *Una regla escrita para un
+   árbol que ya no existe pasa todas las revisiones: nadie la ve fallar porque nunca se aplica.* */
+.catalog-acc__txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.catalog-acc__title { font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-body); letter-spacing: -0.01em; color: inherit; }
+/* La FRASE de la franja. Hereda el color y lo atenúa con opacidad y no con un gris propio: sobre tinta
+   y sobre papel hacen falta dos grises distintos, y un solo token no puede ser los dos (`#487`). */
+.catalog-acc__sub { font-family: var(--font-body); font-size: var(--fs-body-s); color: inherit; opacity: 0.72; line-height: 1.3; }
+/* El recuento sigue a su franja: sobre tinta, papel translúcido; sobre papel, la pastilla de Nube. */
+.catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); }
+.catalog-acc__sec--ink .catalog-acc__count { background: color-mix(in srgb, var(--bg) 18%, transparent); color: var(--bg); }
+.catalog-acc__sec--paper .catalog-acc__count { background: var(--bg-card); color: var(--fg-mute); }
 
-/* Cuerpo colapsable: técnica grid 0fr→1fr (sin medir alturas, anima suave). */
-.catalog-acc__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-entra) var(--ease-sale); }
-.catalog-acc__body.is-open { grid-template-rows: 1fr; }
-.catalog-acc__body-inner { overflow: hidden; min-height: 0; }
-.catalog-acc__body .catalog { padding: var(--sp-2) 0 var(--sp-14); margin-bottom: 0; }
+/* El cuerpo de la tarjeta: la superficie blanca donde viven las filas.
+   ⚠️ **Aquí vivía el plegado y se retiró con su sujeto** (`#552`): `grid-template-rows: 0fr` + `.is-open`
+   + un envoltorio con `overflow` para un acordeón que **no se pliega desde `#P6`**. Los dos motores
+   emitían `is-open` fijo, y el día que uno se olvidó **el catálogo entero salió a altura 0**. */
+.catalog-acc__body { padding: var(--sp-12); }
+.catalog-acc__body .catalog { margin-bottom: 0; }
 .catalog-acc__none { margin-top: var(--sp-12); }
-
-@media (prefers-reduced-motion: reduce) {
-    .catalog-acc__body,
-    .catalog-acc__chev { transition: none; }
-}
 
 /* Chip de hora seleccionado (paso 3) */
 /* ❗❗❗ **LA FRANJA ELEGIDA VA EN TINTA, Y ESTA REGLA ESTABA EXCEPTUADA POR UN MOTIVO FALSO** (`#551`).
@@ -3399,15 +3423,13 @@ body[data-has-hero].nav--live .hero__pair-slot {
    ve como un bloque crema sobre fondo oscuro».
    ⚠️ `ic-e2` sigue vivo como MARCADOR DE PRODUCTO en el catálogo, con sus reglas allí. */
 
-/* E5 — Taco de entradas: cabecera «Entradas» del catálogo. La de atrás se dispensa al hover
-   de la cabecera del acordeón (no en bucle); reduced-motion la deja en reposo. */
-.catalog-acc__head:hover .ic-e5 svg .t-deal {
-    animation: e5-deal 1.4s var(--ease-entra);
-}
-@keyframes e5-deal {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    45%, 60% { transform: translate(2.5px, -3px) rotate(2deg); }
-}
+/* ⚠️⚠️ **E5 — el taco de entradas TENÍA AQUÍ SU ANIMACIÓN Y NO SE VEÍA NUNCA** (retirada en `#552`).
+   Se disparaba con `.catalog-acc__head:hover .ic-e5`, o sea con un `.ic-e5` DENTRO de la cabecera de
+   sección — y ahí no llega: `ProductIcon` emite ese dibujo en los ÍTEMS del catálogo, y la cabecera
+   pinta un `<svg>` suelto desde que el motor Blade se retiró. Se va con su `@keyframes`.
+   ▶ *Una animación escrita para un árbol que ya no existe no falla: simplemente no se aplica, y por eso
+   sobrevive a todas las revisiones.* Es el mismo modo de fallo que `#263` pagó con el salto del
+   logotipo, donde la animación existía y computaba **sobre un elemento que no se dibuja**. */
 
 /* B7 — Cañón de confeti: «reserva confirmada». Recula y dispara trocitos (acento --zone-1);
    reduced-motion lo deja en pose final. */

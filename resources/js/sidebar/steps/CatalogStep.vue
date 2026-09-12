@@ -65,10 +65,24 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                    :placeholder="t('catalog_search')" :aria-label="t('catalog_search')">
         </div>
 
+        <!--
+          ❗❗❗ **LA TARJETA GRANDE, SIN PUERTA** (`#552`, `[DECIDIDO owner]`, `Decisiones SPA PJP` 02).
+          Cada sección es una TARJETA con su franja arriba: icono grande, nombre en rótulo y una frase
+          que dice a qué vienes. El argumento del canvas, medido: *«Vengo a saltar» y «celebro un cumple»
+          son dos clientes distintos con dos precios distintos, y eso merece verse* — pero **una pantalla
+          de categorías cobraría un toque a todo el mundo** para repartir cinco productos en dos montones.
+          Así que se ve la bifurcación **y los precios siguen debajo, a un toque. Cero pantallas nuevas.**
+
+          ⚠️ **El nombre `catalog-acc` es HISTÓRICO**: esto fue un acordeón y dejó de plegarse en `#P6`.
+          No se renombra aquí a propósito —tocaría el manifiesto congelado y cuatro guardas por cero
+          ganancia para el cliente—, pero ya no describe nada: si alguien lo renombra algún día, que sea
+          su propio cambio.
+        -->
         <section v-for="section in sections.filter((s) => (s.items ?? []).length > 0)" :key="section.key"
                  v-show="sectionMatches(section)"
-                 class="catalog-acc__sec" :aria-labelledby="'catalog-title-' + section.key">
-            <!-- Cabecera NO plegable: las secciones están siempre abiertas (P6). -->
+                 class="catalog-acc__sec" :class="section.ink ? 'catalog-acc__sec--ink' : 'catalog-acc__sec--paper'"
+                 :aria-labelledby="'catalog-title-' + section.key">
+            <!-- La franja. NO se pliega: las secciones están siempre abiertas (P6). -->
             <div class="catalog-acc__head">
                 <span class="catalog-acc__icon" aria-hidden="true">
                     <!--
@@ -98,56 +112,71 @@ const anyMatch = computed(() => normalised.value === '' || props.sections.some((
                         </svg>
                     </span>
                 </span>
-                <span class="catalog-acc__title" :id="'catalog-title-' + section.key">{{ t('section_' + section.key) }}</span>
+                <!-- ⚠️ El título y la FRASE van en el mismo bloque para que la franja los alinee como
+                     una unidad: el icono y el recuento se centran contra los DOS, no contra el título.
+                     La frase es lo que convierte un rótulo de categoría en una bifurcación legible. -->
+                <span class="catalog-acc__txt">
+                    <span class="catalog-acc__title" :id="'catalog-title-' + section.key">{{ t('section_' + section.key) }}</span>
+                    <span class="catalog-acc__sub">{{ t('section_' + section.key + '_sub') }}</span>
+                </span>
                 <span class="catalog-acc__count">{{ section.items.length }}</span>
             </div>
-            <!-- ⚠️ **`is-open` NO es decorativa: sin ella el catálogo no enseña NADA.** El CSS colapsa
-                 el cuerpo con `grid-template-rows: 0fr` y solo `.is-open` lo abre. El Blade la emite
-                 SIEMPRE —su `isOpen()` devuelve `true` fijo: las secciones no son plegables desde #P6—
-                 y aquí faltaba, así que con el motor SPA las secciones salían a altura 0 y no se podía
-                 comprar nada. Lo encontró el extremo a extremo con navegador; **el diff de árbol no
-                 podía verlo**, porque en el Blade la clase la pone un `:class` de Alpine y el
-                 normalizador descarta los `:*` como andamiaje — el mismo agujero que `aria-expanded`. -->
-            <div class="catalog-acc__body is-open" :id="'catalog-sec-' + section.key">
-                <div class="catalog-acc__body-inner">
-                    <div class="catalog">
-                        <button v-for="item in section.items" :key="item.id"
-                                v-show="matches(item)"
-                                type="button"
-                                class="catalog__item"
-                                :class="{ 'catalog__item--feat': item.featured }"
-                                :data-search="item.search"
-                                @click="emit('select', item.id)">
-                            <!-- ⚠️⚠️ **Aquí el catálogo elegía su dibujo con `v-if="item.is_pack"`** — el patrón
-                                 exacto que `#140` retiró de la cesta y del resumen, y que sobrevivió aquí porque
-                                 la guarda miraba una lista de DOS ficheros escrita a mano y ésta no estaba
-                                 (`#259`). Con él, un catálogo entero se repartía en dos dibujos y elegir el
-                                 icono de un producto exigía tocar Vue.
-                                 ▶ La clave la manda ahora el servidor en `item.icon`, resuelta por
-                                 `Booking\Services\ProductIcon`, igual que en las otras dos superficies. -->
-                            <span class="catalog__tk">
-                                <ProductIcon :icon="item.icon" />
-                            </span>
-                            <span class="catalog__info">
-                                <span class="catalog__name">{{ item.name }}<span v-if="item.badge" class="catalog__badge">{{ item.badge }}</span></span>
-                                <span v-if="item.features" class="catalog__feat">{{ item.features }}</span>
-                            </span>
-                            <span v-if="item.from !== null || item.deposit_label" class="catalog__pricecol">
-                                <span v-if="item.from !== null" class="catalog__price"><span class="price__from">{{ t('from') }}</span>{{ money(item.from) }}<span v-if="item.is_pack" class="catalog__per"> {{ item.period_label || t('per_child') }}</span></span>
-                                <span v-if="item.deposit_label" class="catalog__deposit">{{ tp('deposit_catalog', { amount: item.deposit_label }) }}</span>
-                            </span>
-                            <span class="catalog__go" aria-hidden="true">
-                                <!-- `arrow-right` del sistema de diseño, copiado byte a byte
-                                     (`SidebarIconParityTest`). -->
-                                <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-                                     stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
-                                     aria-hidden="true" focusable="false">
-                                    <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
-                                    <path d="M4.6 12h9.4" fill="none" />
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
+            <!-- ❗❗ **AQUÍ VIVÍA LA MAQUINARIA DE PLEGADO, Y SE RETIRA CON SU SUJETO** (`#552`).
+                 Eran tres piezas —`__body` con `grid-template-rows: 0fr`, `__body-inner` con su
+                 `overflow`, y la clase `is-open` que lo abría— para un acordeón que **no se pliega desde
+                 `#P6`**: el Blade emitía `is-open` fijo y esta plantilla también.
+                 ⚠️⚠️ Y no era inofensivo: cuando el motor SPA se olvidó de emitir `is-open`, **el
+                 catálogo entero salía a altura 0 y no se podía comprar nada**, y el diff de árbol no lo
+                 veía. *Un mecanismo que siempre está en el mismo estado no es un mecanismo: es una
+                 trampa esperando a que alguien se olvide de su clase.*
+                 ⚠️ El `id` del cuerpo se va con ellas: no lo referenciaba ningún `aria-controls` — la
+                 cabecera dejó de ser un `<button>` cuando dejó de plegarse. -->
+            <div class="catalog-acc__body">
+                <div class="catalog">
+                    <button v-for="item in section.items" :key="item.id"
+                            v-show="matches(item)"
+                            type="button"
+                            class="catalog__item"
+                            :class="{ 'catalog__item--feat': item.featured }"
+                            :data-search="item.search"
+                            @click="emit('select', item.id)">
+                        <!-- ⚠️⚠️ **Aquí el catálogo elegía su dibujo con `v-if="item.is_pack"`** — el patrón
+                             exacto que `#140` retiró de la cesta y del resumen, y que sobrevivió aquí porque
+                             la guarda miraba una lista de DOS ficheros escrita a mano y ésta no estaba
+                             (`#259`). Con él, un catálogo entero se repartía en dos dibujos y elegir el
+                             icono de un producto exigía tocar Vue.
+                             ▶ La clave la manda ahora el servidor en `item.icon`, resuelta por
+                             `Booking\Services\ProductIcon`, igual que en las otras dos superficies. -->
+                        <span class="catalog__tk">
+                            <ProductIcon :icon="item.icon" />
+                        </span>
+                        <span class="catalog__info">
+                            <span class="catalog__name">{{ item.name }}<span v-if="item.badge" class="catalog__badge">{{ item.badge }}</span></span>
+                            <span v-if="item.features" class="catalog__feat">{{ item.features }}</span>
+                        </span>
+                        <!-- ❗❗ **LA UNIDAD DEL PACK BAJA A SU PROPIA LÍNEA** (`#552`), y no es cosmética.
+                             Vivía DENTRO de `.catalog__price`, que es `white-space: nowrap`, así que
+                             «desde 14,95 € por niño» ocupaba una sola línea irrompible: medido, la
+                             columna del precio de un pack se llevaba **159 px de 324** y dejaba la
+                             descripción en **55**, recortada a mitad de palabra. Las entradas, sin
+                             sufijo, tenían 115. ▶ *Una unidad pegada a su cifra dentro de un `nowrap`
+                             no es un detalle tipográfico: es una columna que no se puede maquetar.* -->
+                        <span v-if="item.from !== null || item.deposit_label" class="catalog__pricecol">
+                            <span v-if="item.from !== null" class="catalog__price"><span class="price__from">{{ t('from') }}</span>{{ money(item.from) }}</span>
+                            <span v-if="item.from !== null && item.is_pack" class="catalog__per">{{ item.period_label || t('per_child') }}</span>
+                            <span v-if="item.deposit_label" class="catalog__deposit">{{ tp('deposit_catalog', { amount: item.deposit_label }) }}</span>
+                        </span>
+                        <span class="catalog__go" aria-hidden="true">
+                            <!-- `arrow-right` del sistema de diseño, copiado byte a byte
+                                 (`SidebarIconParityTest`). -->
+                            <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                 stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+                                 aria-hidden="true" focusable="false">
+                                <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                                <path d="M4.6 12h9.4" fill="none" />
+                            </svg>
+                        </span>
+                    </button>
                 </div>
             </div>
         </section>

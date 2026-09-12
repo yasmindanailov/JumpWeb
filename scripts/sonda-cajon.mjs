@@ -173,6 +173,20 @@ async function recorrer(context, viewport, nombreViewport, informe) {
         paso = pantalla;
         await page.waitForSelector('.jj-loading', { state: 'hidden' }).catch(() => {});
         await page.waitForFunction(() => ! document.querySelector('.sidecart__panel .jj-spinner')).catch(() => {});
+        // ⚠️⚠️ **Y el PANEL tiene que estar QUIETO** (`#552`). El cajón entra deslizándose, y esperar a
+        // que exista un `.catalog__item` no es esperar a que haya terminado de abrirse: medido, en esa
+        // ventana las filas salen más estrechas y aparecen «recortes» que no existen —dos
+        // `.catalog__feat` de 68 en una caja de 55, cuando en reposo miden 124 de 124—.
+        // ▶ Se espera **por CONDICIÓN**: que el ancho del panel sea el mismo en dos fotogramas
+        // seguidos. Un reloj fijo volvería a medir antes de tiempo en la máquina que vaya más lenta.
+        await page.waitForFunction(() => new Promise((listo) => {
+            const panel = document.querySelector('.sidecart__panel');
+            if (! panel) return listo(false);
+            const antes = panel.getBoundingClientRect().width;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                listo(Math.abs(panel.getBoundingClientRect().width - antes) < 0.5);
+            }));
+        })).catch(() => {});
         const datos = await page.evaluate(MEDIR, SUELO);
         informe.push({ pantalla, viewport: nombreViewport, ...datos });
         await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/${pantalla}@${viewport.width}.png` });

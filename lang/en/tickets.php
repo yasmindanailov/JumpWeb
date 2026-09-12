@@ -27,7 +27,13 @@ return [
     'deposit_info' => 'See deposit breakdown',
     'back_to_cart' => 'Back to cart',
     'section_entries' => 'Tickets',
-    'section_services' => 'Services',
+    // «Grupos», no «Servicios» (`[DECIDIDO owner]`, `#552`): la sección agrupa los productos de tipo
+    // `pack`, que son los de GRUPO. La clave se queda; lo que cambia es lo que lee el cliente.
+    'section_services' => 'Groups',
+    // La frase de cada franja del catálogo (`#552`). Sin datos de la instalación: la duración de un
+    // pack la pone el panel (`#487`).
+    'section_entries_sub' => 'Pick a zone and how long',
+    'section_services_sub' => 'The whole zone for you',
     'catalog_search' => 'Search the catalogue…',
     'catalog_search_none' => 'No results.',
     'guests' => 'Guests',

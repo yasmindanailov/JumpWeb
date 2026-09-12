@@ -27,7 +27,13 @@ return [
     'deposit_info' => "Voir le détail de l'acompte",
     'back_to_cart' => 'Retour au panier',
     'section_entries' => 'Billets',
-    'section_services' => 'Services',
+    // « Grupos », pas « Servicios » (`[DECIDIDO owner]`, `#552`) : la section regroupe les produits de
+    // type `pack`, qui sont ceux de GROUPE. La clé ne change pas ; ce qui change, c'est ce qu'on lit.
+    'section_services' => 'Groupes',
+    // La frase de cada franja del catálogo (`#552`). Sans données de l'installation : la durée d'un
+    // pack vient du panneau (`#487`).
+    'section_entries_sub' => 'Choisis ta zone et la durée',
+    'section_services_sub' => 'La zone entière pour vous',
     'catalog_search' => 'Rechercher dans le catalogue…',
     'catalog_search_none' => 'Aucun résultat.',
     'guests' => 'Invités',

@@ -28,7 +28,20 @@ return [
     'deposit_info' => 'Ver desglose de la señal',
     'back_to_cart' => 'Volver al carrito',
     'section_entries' => 'Entradas',
-    'section_services' => 'Servicios',
+    // ❗❗ **«Grupos», no «Servicios»** (`[DECIDIDO owner]`, `#552`). La clave se queda en
+    // `section_services` porque es el `key` que compone `catalog.js` y renombrarla no cambiaría nada
+    // para el cliente; lo que cambia es lo que LEE. Esta sección agrupa los productos de tipo `pack`,
+    // que son los de GRUPO —cumpleaños hoy, y también las excursiones de colegio (`#322`) o un grupo de
+    // empresa—, así que «Servicios» no decía nada y «Cumpleaños» habría metido el uso de este parque
+    // dentro del producto. *La palabra del dominio es la que sobrevive a la siguiente instalación.*
+    'section_services' => 'Grupos',
+    // ❗❗ **La frase de cada franja del catálogo** (`#552`): es lo que convierte un rótulo de categoría
+    // en una bifurcación legible —«vengo a saltar» y «celebro un cumple» son dos clientes distintos—.
+    // ⚠️⚠️ **No dicen NINGÚN dato de la instalación, y el canvas sí lo hacía**: su frase para los packs
+    // era «Dos horas y la zona para vosotros», y la duración de un pack la pone el PANEL. Escribirla
+    // aquí metería la configuración de este parque dentro del producto, que es la lección de `#487`.
+    'section_entries_sub' => 'Elige zona y cuánto rato',
+    'section_services_sub' => 'La zona entera para vosotros',
     'catalog_search' => 'Buscar en el catálogo…',
     'catalog_search_none' => 'Sin resultados.',
     'guests' => 'Invitados',

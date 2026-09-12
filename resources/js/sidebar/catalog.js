@@ -19,6 +19,20 @@
  */
 
 /**
+ * **Cuál de las dos secciones lleva la franja de TINTA** (`#552`).
+ *
+ * La «tarjeta grande» separa las dos mitades del catálogo **cambiando de superficie, no inventando un
+ * color**: una franja en tinta y la otra en papel. Cuál de las dos va en tinta es una decisión de
+ * DISEÑO, así que vive en un sitio y con nombre — no repartida en un `v-if` de la plantilla.
+ *
+ * ⚠️⚠️ **Y hubo que preguntarla porque las dos fuentes del canvas se contradicen**: su argumento dice
+ * *«el cumpleaños en tinta contra el papel del resto»* y sus dos dibujos —la propuesta y la puerta
+ * descartada— ponen la tinta en «Vengo a saltar», o sea en las ENTRADAS. `[DECIDIDO owner]` con las dos
+ * renderizadas delante.
+ */
+const SECCION_EN_TINTA = 'services';
+
+/**
  * Agrupa el catálogo plano en las DOS secciones que el cajón enseña.
  *
  * El orden dentro de cada sección es el de llegada, que es el `position` del panel: la API ya lo
@@ -29,14 +43,14 @@
  * devolver una lista corta cambiaría el árbol sin que nadie lo pidiera.
  *
  * @param {Array<object>} products lo que viene en `data` de `GET /catalog/products`
- * @returns {Array<{key: string, items: Array<object>}>}
+ * @returns {Array<{key: string, ink: boolean, items: Array<object>}>}
  */
 export function sectionsFrom(products) {
     const list = Array.isArray(products) ? products : [];
 
     return [
-        { key: 'entries', items: list.filter((p) => p?.type === 'entry').map(toItem) },
-        { key: 'services', items: list.filter((p) => p?.type === 'pack').map(toItem) },
+        { key: 'entries', ink: SECCION_EN_TINTA === 'entries', items: list.filter((p) => p?.type === 'entry').map(toItem) },
+        { key: 'services', ink: SECCION_EN_TINTA === 'services', items: list.filter((p) => p?.type === 'pack').map(toItem) },
     ];
 }
 
