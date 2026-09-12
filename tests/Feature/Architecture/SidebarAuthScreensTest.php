@@ -103,11 +103,16 @@ class SidebarAuthScreensTest extends TestCase
     public function test_the_two_web_eyebrows_survive_with_their_painter(): void
     {
         foreach (self::ANTETITULOS_DE_LA_WEB as $grupo => $vista) {
-            $this->assertNotSame(
-                '',
-                (string) __("account.{$grupo}.eyebrow"),
-                "`account.{$grupo}.eyebrow` se ha borrado: NO era del cajón, la pinta la web."
-            );
+            foreach (['es', 'en', 'fr'] as $idioma) {
+                // ⚠️⚠️ **Con `__()` esto pasaba en VERDE con la clave borrada, y lo dijo el arnés**:
+                // Laravel devuelve **la propia clave** cuando falta, así que `!== ''` se cumple
+                // siempre. Es el mismo hueco que `#508` pagó con `Lang::has()` y su tercer
+                // parámetro. *Una aserción que no puede fallar no vigila nada.*
+                $this->assertTrue(
+                    \Illuminate\Support\Facades\Lang::has("account.{$grupo}.eyebrow", $idioma, false),
+                    "`account.{$grupo}.eyebrow` se ha borrado en `{$idioma}`: NO era del cajón, la pinta la web."
+                );
+            }
 
             $this->assertStringContainsString(
                 "account.{$grupo}.eyebrow",
@@ -160,8 +165,12 @@ class SidebarAuthScreensTest extends TestCase
             'la fila del descargo ha dejado de compartir la receta de «Ver más fechas».'
         );
 
-        $this->assertStringContainsString(
-            'cal-more__chev',
+        // ⚠️⚠️ **Con `assertStringContainsString` esto pasaba en verde renombrando la clase a
+        // `cal-more__chevron`, y lo dijo el arnés**: el nombre nuevo CONTIENE al viejo, así que la
+        // aserción se cumple mientras el CSS ya no casa con nada. Es la trampa de la subcadena que
+        // este repo lleva pagada cuatro veces (`#253`, `#257`, `#264`, `#295`) — y la pagué otra vez.
+        $this->assertMatchesRegularExpression(
+            '/cal-more__chev(?![\w-])/',
             $fuente,
             "la fila del descargo ha perdido su chevron.\n".
             'El icono es lo que distingue las dos filas-puerta (`#562`): chevron cuando despliega AQUÍ, '.

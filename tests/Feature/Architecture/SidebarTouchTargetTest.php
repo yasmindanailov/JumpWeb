@@ -364,15 +364,62 @@ class SidebarTouchTargetTest extends TestCase
                     return 'literal';
                 }
 
-                if ((str_contains($selector, '::after') || str_contains($selector, '::before'))
-                    && str_contains($cuerpo, 'var(--tap-min)')
-                    && str_contains($cuerpo, 'position: absolute')) {
+                if ($this->pseudoValido($selector, $cuerpo) && $this->anclaElPseudo($clase)) {
                     return 'pseudo';
                 }
             }
         }
 
         return null;
+    }
+
+    /**
+     * ¿El pseudo amplía de verdad el área?
+     *
+     * ⚠️⚠️ **Las dos condiciones las puso el ARNÉS, no una relectura.** La primera versión de este
+     * método aceptaba «lleva `var(--tap-min)` y es absoluto», y con eso **dos mutaciones reales
+     * pasaron en verde**: cambiar `max(100%, var(--tap-min))` por `var(--tap-min)` a secas —que
+     * ENCOGE los controles que ya cumplen, el defecto de `#264` que el propio comentario del CSS
+     * advierte— y quitarle al anfitrión su `position: relative`, que deja el pseudo anclado al
+     * ancestro posicionado más cercano, o sea el área táctil **en otro sitio de la pantalla**.
+     */
+    private function pseudoValido(string $selector, string $cuerpo): bool
+    {
+        if (! str_contains($selector, '::after') && ! str_contains($selector, '::before')) {
+            return false;
+        }
+
+        if (! str_contains($cuerpo, 'position: absolute')) {
+            return false;
+        }
+
+        foreach (['width', 'height'] as $eje) {
+            if (! preg_match('/(?<![-\w])'.$eje.'\s*:\s*max\(\s*100%\s*,\s*var\(--tap-min\)\s*\)/', $cuerpo)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** ¿El anfitrión del pseudo está posicionado? Sin eso, el área se ancla donde no toca. */
+    private function anclaElPseudo(string $clase): bool
+    {
+        foreach ($this->reglas() as $selector => $cuerpo) {
+            if (str_contains($selector, '::')) {
+                continue;
+            }
+
+            if (! preg_match('/'.preg_quote('.'.$clase, '/').'(?![\w-])/', $selector)) {
+                continue;
+            }
+
+            if (preg_match('/(?<![-\w])position:\s*(relative|absolute|sticky|fixed)/', $cuerpo)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** ¿El selector es vocabulario del cajón? */
