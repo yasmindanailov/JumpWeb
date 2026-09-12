@@ -98,7 +98,6 @@ return [
         'zone_tablist' => 'Zone',
         'count_phrase' => 'attractions pour :age',
         'count_phrase_plain' => 'attractions dans :zone',
-        'see_zones' => 'Voir les zones',
     ],
     'pricing' => [
         'title' => 'Tous les tarifs',
@@ -128,8 +127,6 @@ return [
         'addons_title' => 'Ce qui s\'ajoute',
         'addons_lede' => 'À acheter en réservant ou au parc.',
 
-        'birthdays' => 'Les anniversaires ont leur propre tarif, repas compris.',
-        'birthdays_cta' => 'Voir les formules anniversaire',
     ],
 
     /* Section 02 de la page d'accueil. Voir le fichier espagnol pour le motif du bloc à part. */

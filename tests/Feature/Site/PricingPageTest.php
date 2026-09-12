@@ -397,7 +397,15 @@ class PricingPageTest extends TestCase
         $this->assertStringContainsString('purchase.open()', $html, 'con la venta abierta, el armazón no ofrece comprar');
     }
 
-    /** La salida de la página es su línea a cumpleaños, que lleva a la página de los packs. */
+    /**
+     * La salida de la página lleva a la página de los packs.
+     *
+     * ▶ **La PROPIEDAD no cambia; cambia quién la cumple.** Hasta las bandas de enlace esto lo
+     * pintaba `.rate-page__birthdays`, una línea con su enlace escrita solo para esta página; hoy
+     * es la banda GORDA, que en el reparto del canvas contesta desde aquí exactamente eso. El caso
+     * se re-apunta al bloque nuevo y **no queda más débil**: sigue acotado y sigue exigiendo la
+     * ruta de cumpleaños dentro de él.
+     */
     public function test_the_page_ends_pointing_at_the_birthday_packages(): void
     {
         $html = $this->html();
@@ -405,10 +413,10 @@ class PricingPageTest extends TestCase
         // ⚠️ **Acotado al BLOQUE y no a la página**, que fue lo que dijo el arnés: la ruta de
         // cumpleaños la escriben también el menú y el pie, así que sobre el documento entero la
         // aserción pasaba aunque el enlace de la salida apuntara a ninguna parte.
-        preg_match('#<div class="rate-page__birthdays">.*?</div>#s', $html, $bloque);
+        preg_match('#<div class="band-wide".*?</div>\s*</div>#s', $html, $bloque);
         $this->assertNotEmpty($bloque, 'la página no pinta su salida a cumpleaños');
 
-        $this->assertStringContainsString(__('landing.pricing.birthdays'), $bloque[0]);
+        $this->assertStringContainsString(__('site.bands.ask.precios.q'), $bloque[0]);
         $this->assertStringContainsString(route('cumpleanos'), $bloque[0]);
     }
 }

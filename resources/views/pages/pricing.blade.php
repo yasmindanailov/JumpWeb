@@ -227,17 +227,15 @@
              componente se guarda solo). Aquí no se pinta. --}}
         <x-site.registration-qr :svg="$registrationSvg" />
 
-        {{-- ══ LA LÍNEA A CUMPLEAÑOS ════════════════════════════════════════════════════════════
-             Los packs no están en esta tabla —tienen su propia página y su propia tarifa— y el
-             artboard cierra con esta línea. ⚠️ «con la comida incluida» es comprobable: el pack
-             trae un menú marcado como incluido en el catálogo. --}}
-        <div class="rate-page__birthdays">
-            <p class="rate-page__birthdays-text">{{ __('landing.pricing.birthdays') }}</p>
-            <a href="{{ route('cumpleanos') }}" class="rate-page__birthdays-link">
-                <span>{{ __('landing.pricing.birthdays_cta') }}</span>
-                <x-icons.arrow-right :width="18" :height="18" aria-hidden="true" />
-            </a>
-        </div>
+        {{-- ══ LA SALIDA A CUMPLEAÑOS, AHORA EN SU PIEZA ════════════════════════════════════════
+             Aquí vivía `.rate-page__birthdays`: una línea con su enlace a los packs, escrita a mano.
+             La PROPIEDAD no cambia —esta página sigue acabando apuntando a los packs, porque los
+             packs no están en su tabla y tienen su propia tarifa—, cambia quién la pinta: era una de
+             las cuatro salidas a medida del producto y ahora es la banda GORDA, que en el reparto
+             del canvas contesta desde aquí exactamente eso («¿y si venís en grupo?» → `/cumpleanos`).
+             ⚠️ Su frase decía «con la comida incluida», comprobable en ESTE catálogo pero no en el
+             producto: el cuerpo de la banda describe el destino y deja el dato a quien lo tiene. --}}
+        <x-site.link-bands />
     </main>
 
     <x-site.footer />

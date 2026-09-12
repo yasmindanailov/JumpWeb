@@ -221,12 +221,27 @@ class AttractionsPageTest extends TestCase
      * parque y se dice igual en todas las superficies; escribirla otra vez es cómo dos sitios acaban
      * publicando la misma norma con dos redacciones.
      */
-    public function test_the_foot_repeats_the_park_rule_verbatim_and_leads_back_to_the_zones(): void
+    public function test_the_foot_repeats_the_park_rule_verbatim_and_no_longer_leads_back_to_the_zones(): void
     {
         $html = $this->get('/atracciones')->assertOk()->getContent();
 
         $this->assertStringContainsString(e(__('landing.zones.rule')), $html);
-        $this->assertStringContainsString('href="'.url('/#zones').'"', $html);
+
+        /*
+         * ❗ **La segunda mitad de este caso está INVERTIDA a propósito.** Aseveraba que el pie
+         * llevaba de vuelta a `/#zones`, y ese enlace se retiró con las bandas de enlace: era una
+         * salida a otro destino escrita a mano —la función de la banda con otra piel— y su destino
+         * no está en el reparto del canvas. Lo que queda del pie es la REGLA, que es contenido.
+         * ▶ Se asevera la AUSENCIA y no solo se borra la línea, porque el modo de fallo es que
+         * alguien vuelva a añadir una salida propia aquí y el producto tenga otra vez cinco cierres
+         * de página con cinco pieles. Quien ofrece destinos es `<x-site.link-bands />`.
+         * ⚠️ El ancla no se queda huérfana: la ofrecen el menú y el pie de la PORTADA, que son los
+         * que reciben `homeSections()`.
+         */
+        $this->assertStringNotContainsString(
+            'href="'.url('/#zones').'"', $html,
+            'la página ha recuperado una salida propia a las zonas: los destinos los ofrece la banda',
+        );
     }
 
     /**

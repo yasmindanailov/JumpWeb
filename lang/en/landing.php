@@ -98,7 +98,6 @@ return [
         'zone_tablist' => 'Zone',
         'count_phrase' => 'rides for :age',
         'count_phrase_plain' => 'rides in :zone',
-        'see_zones' => 'See the zones',
     ],
     'pricing' => [
         'title' => 'All the rates',
@@ -128,8 +127,6 @@ return [
         'addons_title' => 'What you can add',
         'addons_lede' => 'Buy it when booking or at the park.',
 
-        'birthdays' => 'Birthdays have their own rate, food included.',
-        'birthdays_cta' => 'See the birthday packages',
     ],
 
     /* Section 02 of the home page. See the Spanish file for why this is its own block. */

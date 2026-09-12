@@ -186,6 +186,7 @@
                 @endif
             </div>
         </div>
+        <x-site.link-bands />
     </main>
 
     <x-site.footer />

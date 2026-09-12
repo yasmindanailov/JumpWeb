@@ -77,7 +77,6 @@ return [
     'bar_free_entry_yes' => 'You can come just for the bar, without buying a park ticket.',
     'bar_free_entry_no' => 'You need a park ticket to come into the bar.',
     'bar_party_line' => 'If you are here for a birthday, the children\'s food is included in the pack and is served at these tables.',
-    'bar_party_cta' => 'See the birthday packs',
 
     'visit_hours' => 'Hours & location',
     'visit_hours_sub' => 'When and where to find us',
@@ -104,5 +103,51 @@ return [
         'eyebrow' => 'Section unavailable',
         'title' => 'This section is under maintenance',
         'body' => "We're updating this page. Please check back shortly; meanwhile, you can keep browsing the rest of the site.",
+    ],
+
+    // ── THE LINK BANDS ──────────────────────────────────────────────────────────────────────────
+    // Design track phase 3 · `Bandas PJP` artboard · the map lives in `Content\Services\LinkBands`.
+    // ⚠️⚠️ No body states a fact about the park: heights, ages and rules live in `park_rules` and are
+    // painted by `/normas` (`#533`). Each body DESCRIBES its destination; the destination states the
+    // facts. See the Spanish file for the full reasoning.
+    'bands' => [
+        'lead' => 'Carry on this way',
+
+        'ask' => [
+            'atracciones' => [
+                'q' => 'Can your child go on it?',
+                'body' => 'What each zone needs, the ages and what to wear. It is all on one page.',
+            ],
+            'precios' => [
+                'q' => 'And if we come as a group?',
+                'body' => 'Birthdays have their own rate, and it is not the same as adding up single tickets.',
+            ],
+            'cumpleanos' => [
+                'q' => 'And what do the grown-ups do?',
+                'body' => 'What there is to eat and drink while the children celebrate, and where to sit and wait.',
+            ],
+            'bar' => [
+                'q' => 'And what is there to jump on?',
+                'body' => 'The park zones, one by one, with what you can do in each.',
+            ],
+            'normas' => [
+                'q' => 'I know it all — how much is it?',
+                'body' => 'The rates by zone and by time, and what each one includes.',
+            ],
+            'servicios' => [
+                'q' => 'How many of you are coming?',
+                'body' => 'Tell us what you need and we will come back with what we can offer.',
+            ],
+        ],
+
+        'go' => [
+            'atracciones' => ['cta' => 'See the attractions', 'what' => 'Everything inside'],
+            'precios' => ['cta' => 'See the rates', 'what' => 'What jumping costs'],
+            'cumpleanos' => ['cta' => 'See the birthdays', 'what' => 'Celebrate it here'],
+            'bar' => ['cta' => 'See the bar', 'what' => 'What there is to eat'],
+            'normas' => ['cta' => 'See the rules', 'what' => 'What you have to follow'],
+            'servicios' => ['cta' => 'See the groups', 'what' => 'Coming as a group'],
+            'contacto' => ['cta' => 'Write to us', 'what' => 'Talk to us'],
+        ],
     ],
 ];

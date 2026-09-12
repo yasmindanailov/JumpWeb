@@ -152,15 +152,17 @@
              7 en adelante saltan en Jump, que tiene 15»): esa frase supone EXACTAMENTE dos zonas y
              nombra la otra, y las zonas las pone el panel. Se toma el pie de su opción 1b, que es
              esta misma regla. --}}
+        {{-- ⚠️ **Aquí había un «Ver las zonas» y se ha ido con las bandas de enlace**: era una
+             salida a otro destino escrita a mano, o sea la función de la banda con otra piel — una
+             de las CUATRO que el producto tenía, cada una con su familia de clases y su talla de
+             texto. Lo que se queda es la REGLA, que es contenido de esta página y no navegación.
+             ⚠️ `/#zones` tampoco está en el reparto del canvas, y no se queda huérfano: el menú y
+             el pie ya lo ofrecen desde `SiteDestinations::homeSections()`. --}}
         <div class="page__foot">
             <p class="page__foot-rule">{{ __('landing.zones.rule') }}</p>
-            {{-- ⚠️ Sin `data-tap`: el enlace declara `min-height` de objetivo táctil por su cuenta,
-                 así que el pseudo centrado del mecanismo no tendría nada que ampliar. --}}
-            <a class="page__foot-link" href="{{ url('/#zones') }}">
-                {{ __('landing.attractions.see_zones') }}
-                <x-icons.arrow-right class="arrow" :width="16" :height="16" />
-            </a>
         </div>
+
+        <x-site.link-bands />
     </main>
 
     <x-site.footer />

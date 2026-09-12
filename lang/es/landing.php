@@ -166,7 +166,6 @@ return [
         // que aquí solo viaja la parte de texto.
         'count_phrase' => 'atracciones para :age',
         'count_phrase_plain' => 'atracciones en :zone',
-        'see_zones' => 'Ver las zonas',
     ],
     /*
      * ══ LA PÁGINA `/precios` ═══════════════════════════════════════════════════════════════════
@@ -225,8 +224,6 @@ return [
         // ── LA LÍNEA A CUMPLEAÑOS ─────────────────────────────────────────────────────────
         // ⚠️ «con la comida incluida» es comprobable: el pack trae un menú marcado como incluido.
         // La zona NO se nombra —el canvas tiene pendiente si es exclusiva durante la fiesta—.
-        'birthdays' => 'Los cumpleaños tienen su propia tarifa, con la comida incluida.',
-        'birthdays_cta' => 'Ver los packs de cumpleaños',
     ],
 
     /*

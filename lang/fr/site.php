@@ -77,7 +77,6 @@ return [
     'bar_free_entry_yes' => 'Tu peux venir seulement au bar, sans billet pour le parc.',
     'bar_free_entry_no' => 'Il faut un billet pour le parc pour entrer au bar.',
     'bar_party_line' => 'Si vous venez pour un anniversaire, le repas des enfants est inclus dans le pack et servi à ces tables.',
-    'bar_party_cta' => 'Voir les packs anniversaire',
 
     'visit_hours' => 'Horaires & lieu',
     'visit_hours_sub' => 'Quand et où nous trouver',
@@ -104,5 +103,52 @@ return [
         'eyebrow' => 'Section indisponible',
         'title' => 'Cette section est en maintenance',
         'body' => 'Nous mettons cette page à jour. Reviens dans un instant ; en attendant, tu peux continuer à parcourir le reste du site.',
+    ],
+
+    // ── LES BANDEAUX DE LIEN ────────────────────────────────────────────────────────────────────
+    // Chantier design phase 3 · planche `Bandas PJP` · la répartition vit dans
+    // `Content\Services\LinkBands`.
+    // ⚠️⚠️ Aucun corps n'affirme une donnée du parc : tailles, âges et règles vivent dans
+    // `park_rules` et c'est `/normas` qui les affiche (`#533`). Chaque corps DÉCRIT sa destination ;
+    // les données, c'est la destination qui les dit. Le raisonnement complet est dans le fichier ES.
+    'bands' => [
+        'lead' => 'Continue par ici',
+
+        'ask' => [
+            'atracciones' => [
+                'q' => 'Ton enfant peut-il y monter ?',
+                'body' => "Ce qu'il faut pour entrer dans chaque zone, les âges et ce qu'il faut porter. Tout est sur une page.",
+            ],
+            'precios' => [
+                'q' => 'Et si nous venons en groupe ?',
+                'body' => "Les anniversaires ont leur propre tarif, et ce n'est pas la même chose que d'additionner des entrées.",
+            ],
+            'cumpleanos' => [
+                'q' => 'Et les adultes, ils font quoi ?',
+                'body' => 'Ce qu\'il y a à manger et à boire pendant que les enfants font la fête, et où s\'asseoir.',
+            ],
+            'bar' => [
+                'q' => 'Et il y a quoi pour sauter ?',
+                'body' => 'Les zones du parc, une par une, avec ce qu\'on peut y faire.',
+            ],
+            'normas' => [
+                'q' => 'Je sais tout — ça coûte combien ?',
+                'body' => 'Les tarifs par zone et par durée, et ce que chacun comprend.',
+            ],
+            'servicios' => [
+                'q' => 'Vous venez à combien ?',
+                'body' => 'Dis-nous ce dont vous avez besoin et nous revenons vers vous avec ce que nous pouvons proposer.',
+            ],
+        ],
+
+        'go' => [
+            'atracciones' => ['cta' => 'Voir les attractions', 'what' => "Tout ce qu'il y a dedans"],
+            'precios' => ['cta' => 'Voir les tarifs', 'what' => 'Combien coûte le saut'],
+            'cumpleanos' => ['cta' => 'Voir les anniversaires', 'what' => 'Le fêter ici'],
+            'bar' => ['cta' => 'Voir le bar', 'what' => "Ce qu'il y a à manger"],
+            'normas' => ['cta' => 'Voir les règles', 'what' => 'Ce qu\'il faut respecter'],
+            'servicios' => ['cta' => 'Voir les groupes', 'what' => 'Venir en groupe'],
+            'contacto' => ['cta' => 'Écris-nous', 'what' => 'Nous parler'],
+        ],
     ],
 ];

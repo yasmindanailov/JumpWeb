@@ -224,6 +224,7 @@
                 </div>
             </div>
         </section>
+        <x-site.link-bands />
     </main>
 
     <x-site.footer />

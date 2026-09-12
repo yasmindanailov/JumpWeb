@@ -288,6 +288,7 @@
                 </aside>
             </div>
         @endif
+        <x-site.link-bands />
     </main>
 
     <x-site.footer />

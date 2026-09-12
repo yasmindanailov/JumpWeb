@@ -97,19 +97,24 @@
             </aside>
         </div>
 
-        {{-- ── El cierre: los que vienen de cumpleaños ───────────────────────────────────────
+        {{-- ── La nota de los que vienen de cumpleaños ───────────────────────────────────────
              ⚠️ **No repite los menús del pack**, que son de `/cumpleanos`: solo dice que las mesas
-             son éstas. Y el enlace sale del INVENTARIO, así que si esa página está en mantenimiento
-             la línea no se pinta — un destino que no se puede visitar no se anuncia (`#521`). --}}
+             son éstas. Sigue colgando de `$partyUrl` —que sale del INVENTARIO— porque la frase
+             habla de una página que puede estar en mantenimiento, y entonces no hay mesas de las
+             que hablar (`#521`).
+             ⚠️ **Aquí había además un «Ver los packs de cumpleaños» y se ha ido con las bandas**: la
+             frase es CONTENIDO —un hecho del bar— y el enlace era navegación. `/cumpleanos` sigue
+             ofreciéndose desde aquí, como FINA, que es su sitio en el reparto del canvas; la GORDA
+             de esta página contesta otra cosa («¿y qué hay para saltar?» → `/atracciones`).
+             ⚠️ Y su rótulo era, palabra por palabra, el mismo que el de `/precios`: dos páginas
+             ofreciendo el mismo destino con la misma frase y dos pieles distintas. --}}
         @if ($partyUrl)
             <div class="bar-party">
                 <p class="bar-party__line">{{ __('site.bar_party_line') }}</p>
-                <a class="bar-party__cta" href="{{ $partyUrl }}" data-tap>
-                    <span>{{ __('site.bar_party_cta') }}</span>
-                    <span aria-hidden="true">&rarr;</span>
-                </a>
             </div>
         @endif
+
+        <x-site.link-bands />
     </main>
 
     <x-site.footer />

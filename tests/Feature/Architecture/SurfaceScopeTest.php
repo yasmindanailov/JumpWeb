@@ -80,10 +80,24 @@ class SurfaceScopeTest extends TestCase
      * ⚠️⚠️ **`--marker` NO está aquí, y no es un olvido**: vale `transparent`, que no depende de la
      * superficie, así que re-declararlo no cambiaría nada y solo añadiría una línea que mantener.
      * *Un token se re-declara porque su valor DEPENDE del ámbito, no porque tenga un hermano que sí.*
+     *
+     * ❗❗❗ **Y LOS CUATRO DEL ROL SECUNDARIO ENTRAN AQUÍ PORQUE NACIERON FUERA** (2026-09-12).
+     * `#540` creó el rol en `site.css` —`--secondary: var(--interactive)` y `--on-secondary:
+     * var(--bg)`— y no le dio su re-declaración de ámbito. Como la sustitución de `var()` ocurre en
+     * el elemento que DECLARA la propiedad, los dos bajaban computados contra PAPEL y el rol **no
+     * podía seguir a ninguna superficie**. Medido dentro de `[data-surface="ink"]`: `--secondary`
+     * daba `#0A5C93` con `--interactive` valiendo `#1AA9DE`, y `--on-secondary` daba `#F4F4F1` con
+     * `--bg` valiendo `#101418`.
+     * ▶ **Esta constante es la razón de que el defecto pasara en verde durante una jornada**: el
+     * caso que compara los dos juegos ya existía y el rol nuevo no estaba en su lista. *Una guarda
+     * que enumera roles solo vigila los roles que alguien acordó enumerar.*
+     * ⚠️ `--secondary-hover` y `--secondary-press` entran con ellos: se derivan de `--secondary` con
+     * un `color-mix`, así que sin re-declararse se mezclarían a partir del valor de papel.
      */
     private const ROLE_TOKENS = [
         '--action', '--on-action', '--action-hover', '--on-action-hover', '--interactive', '--money',
         '--on-marker',
+        '--secondary', '--secondary-hover', '--secondary-press', '--on-secondary',
     ];
 
     /** @var ?array<string, array<string, string>> */

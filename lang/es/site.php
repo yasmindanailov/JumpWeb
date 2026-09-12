@@ -121,7 +121,6 @@ return [
     'bar_free_entry_yes' => 'Puedes venir solo al bar, sin sacar entrada al parque.',
     'bar_free_entry_no' => 'Para entrar al bar hace falta entrada al parque.',
     'bar_party_line' => 'Si venís de cumpleaños, la comida de los niños va incluida en el pack y se sirve en estas mesas.',
-    'bar_party_cta' => 'Ver los packs de cumpleaños',
 
     'visit_hours' => 'Horarios y ubicación',
     'visit_hours_sub' => 'Cuándo y dónde estamos',
@@ -149,5 +148,64 @@ return [
         'eyebrow' => 'Sección no disponible',
         'title' => 'Esta sección está en mantenimiento',
         'body' => 'Estamos actualizando esta página. Vuelve dentro de un rato; mientras, puedes seguir navegando por el resto de la web.',
+    ],
+
+    // ── LAS BANDAS DE ENLACE ────────────────────────────────────────────────────────────────────
+    // Carril de diseño Fase 3 · artboard `Bandas PJP` · reparto en `Content\Services\LinkBands`.
+    //
+    // ⚠️⚠️ **NINGÚN CUERPO AFIRMA UN DATO DEL PARQUE, y es una desviación deliberada del artboard.**
+    // Él escribe la gorda de `/atracciones` como «A partir de 1,30 m se sube solo. Desde 1 m, con un
+    // adulto al lado», y esas alturas son de ESTE parque: viven en `park_rules`, las pone el panel y
+    // `/normas` las pinta desde ahí (`#533`). Escribirlas aquí las clavaría en el producto
+    // (`DECISIONES #1`) y, peor, podrían **desmentir a la página a la que la banda lleva** sin que
+    // nada fallara. Cada cuerpo DESCRIBE su destino; los datos los dice el destino.
+    //
+    // ⚠️ Y la pregunta de `/precios` dice «en grupo» donde el artboard dice «ocho»: el número de
+    // personas a partir del cual sale a cuenta un pack es `min_qty`, que es dato del catálogo.
+    //
+    // ▶ Varias frases de `go` reutilizan a propósito palabras que el producto ya escribe («Lo que
+    // hay que cumplir» es `rules_headline`; «Todo lo que hay dentro» titula `/atracciones`): dos
+    // nombres para el mismo sitio son dos sitios para quien lee.
+    'bands' => [
+        'lead' => 'Sigue por aquí',
+
+        // Lo que cada página deja abierto, por página de ORIGEN.
+        'ask' => [
+            'atracciones' => [
+                'q' => '¿Puede subir tu hijo?',
+                'body' => 'Qué hace falta para entrar en cada zona, las edades y lo que hay que traer puesto. Está todo en una página.',
+            ],
+            'precios' => [
+                'q' => '¿Y si venís en grupo?',
+                'body' => 'Los cumpleaños tienen su propia tarifa, y no es lo mismo que sumar entradas sueltas.',
+            ],
+            'cumpleanos' => [
+                'q' => '¿Y los adultos qué hacen?',
+                'body' => 'Qué hay para comer y beber mientras los niños celebran, y dónde sentarse a esperar.',
+            ],
+            'bar' => [
+                'q' => '¿Y qué hay para saltar?',
+                'body' => 'Las zonas del parque, una por una, con lo que se puede hacer en cada una.',
+            ],
+            'normas' => [
+                'q' => 'Ya lo sé todo, ¿cuánto es?',
+                'body' => 'Las tarifas por zona y por tiempo, y qué incluye cada una.',
+            ],
+            'servicios' => [
+                'q' => '¿Cuántos venís?',
+                'body' => 'Cuéntanos qué necesitáis y os contestamos con lo que podemos ofreceros.',
+            ],
+        ],
+
+        // Qué se encuentra en cada DESTINO: el rótulo del botón de la gorda y el nombre de la fina.
+        'go' => [
+            'atracciones' => ['cta' => 'Ver las atracciones', 'what' => 'Todo lo que hay dentro'],
+            'precios' => ['cta' => 'Ver las tarifas', 'what' => 'Cuánto cuesta saltar'],
+            'cumpleanos' => ['cta' => 'Ver los cumpleaños', 'what' => 'Celebrarlo aquí'],
+            'bar' => ['cta' => 'Ver el bar', 'what' => 'Qué hay para comer'],
+            'normas' => ['cta' => 'Ver las normas', 'what' => 'Lo que hay que cumplir'],
+            'servicios' => ['cta' => 'Ver los grupos', 'what' => 'Venir en grupo'],
+            'contacto' => ['cta' => 'Escríbenos', 'what' => 'Hablar con nosotros'],
+        ],
     ],
 ];

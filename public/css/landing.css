@@ -608,6 +608,27 @@
   --on-action: var(--on-action-brand, var(--bg));
   --action-hover: var(--action-brand-hover, var(--zone-1));
   --on-action-hover: var(--on-action-brand-hover, var(--on-brand));
+
+  /* ❗❗❗ **EL ROL SECUNDARIO SE RE-DECLARA POR EL MISMO MOTIVO, Y NACIÓ SIN ESTAS LÍNEAS.**
+     `#540` lo creó en `site.css` como `--secondary: var(--interactive)` y `--on-secondary:
+     var(--bg)` — y una custom property con `var()` dentro **se sustituye en el elemento que la
+     DECLARA** y baja ya computada. Declarado solo en `:root`, resolvía contra los valores de PAPEL
+     y los heredaba todo el documento, así que **el rol no podía seguir a ninguna superficie**.
+     ▶ Medido el 2026-09-12 dentro de `[data-surface="ink"]`: `--secondary` computaba **#0A5C93**
+     (el Azul Muro de papel) donde `--interactive` ya valía **#1AA9DE**, y `--on-secondary`
+     **#F4F4F1** donde `--bg` valía **#101418**. O sea que la propiedad que `site.css` afirma
+     —«6,43 en papel y 6,85 en tinta», «cuando el relleno sigue a la superficie, el rótulo
+     también»— **no se cumplía: el 6,85 no ocurría nunca**.
+     ⚠️⚠️ **Y no fallaba nada**: el rótulo claro sobre Azul Muro da 5,98, que PASA AA. Lo que se
+     rompía es que el RELLENO deja de separarse de su propia tarjeta — Azul Muro sobre tinta son
+     **2,79 : 1** de forma, contra **7,5 : 1** del cian. Un botón que no se ve como botón.
+     ▶ Tenía víctima ANTES de esta tanda: `.cta-med` dentro del hero de la portada, desde `#540`.
+     ⚠️ La declaración de `:root` se queda en `site.css`, que es la hoja compartida con el cajón;
+     aquí van solo las dos re-declaraciones de ámbito, junto a las de los otros seis roles. */
+  --secondary: var(--interactive);
+  --secondary-hover: color-mix(in srgb, var(--secondary) 88%, #000);
+  --secondary-press: color-mix(in srgb, var(--secondary) 77%, #000);
+  --on-secondary: var(--bg);
 }
 
 [data-surface="paper"] {
@@ -632,6 +653,15 @@
   --on-action: var(--on-action-brand, var(--bg));
   --action-hover: var(--action-brand-hover, var(--zone-1));
   --on-action-hover: var(--on-action-brand-hover, var(--on-brand));
+
+  /* El rol SECUNDARIO, por el mismo motivo que arriba. ⚠️ Aquí los valores computados coinciden con
+     los que ya bajaban de `:root`, así que esta mitad **no mueve un píxel**: está para que las dos
+     superficies declaren el mismo juego —lo que falte HEREDA del ámbito de fuera, y una tarjeta de
+     papel anidada en una sección de tinta se quedaría con el secundario de tinta—. */
+  --secondary: var(--interactive);
+  --secondary-hover: color-mix(in srgb, var(--secondary) 88%, #000);
+  --secondary-press: color-mix(in srgb, var(--secondary) 77%, #000);
+  --on-secondary: var(--bg);
 }
 
 /* La superficie se PINTA sola: quien la declara no tiene que acordarse de poner el fondo ni
@@ -2328,8 +2358,7 @@ img { display: block; max-width: 100%; }
 .week,
 .rate-page__zones,
 .rate-page__pair,
-.extras,
-.rate-page__birthdays { margin-top: 40px; }
+.extras { margin-top: 40px; }
 
 /* El titular de bloque comparte declaración con el de `/cumpleanos` (ver más abajo): una página no
    estrena tipografía. */
@@ -2471,24 +2500,15 @@ img { display: block; max-width: 100%; }
 .holidays__name { display: block; font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
 .holidays__fact { flex: none; font-family: var(--font-mono); font-size: var(--fs-body-s); color: var(--fg-mute); white-space: nowrap; }
 
-/* ── LA LÍNEA A CUMPLEAÑOS ─────────────────────────────────────────────────────────────────
-   Cierra la página con un filete, como el artboard: no es una sección más, es la salida a la otra
-   tarifa. El enlace lee `--interactive`, que es el color de lo que se pulsa (`#436`). */
-.rate-page__birthdays { padding-top: var(--sp-18); border-top: 1.5px solid var(--line-strong); }
-.rate-page__birthdays-text { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
-.rate-page__birthdays-link {
-  display: inline-flex; align-items: center; gap: var(--sp-8);
-  min-height: var(--tap-min); color: var(--interactive);
-  font-weight: 800; font-size: var(--fs-body); text-decoration: none;
-}
-.rate-page__birthdays-link:hover { text-decoration: underline; }
+/* ⚠️ Aquí vivía «LA LÍNEA A CUMPLEAÑOS» (`.rate-page__birthdays*`): la salida de la página, escrita
+   a mano con su filete y su enlace. La retiran las bandas de enlace, que son la pieza del sistema
+   para esa función — ver «LAS BANDAS DE ENLACE» al final de esta hoja. */
 
 @media (min-width: 1024px) {
   .week,
   .rate-page__zones,
   .rate-page__pair,
-  .extras,
-  .rate-page__birthdays { margin-top: var(--sec-air); }
+  .extras { margin-top: var(--sec-air); }
 
   .extras__row { padding: var(--sp-16) 24px; }
 
@@ -4250,20 +4270,14 @@ select:focus-visible {
    igual dejan de distinguirse. Nube es la superficie inerte del sistema, que es lo que es. */
 .ride-tile__badge { background: var(--bg-soft); }
 
-/* EL PIE de la página: la regla del parque y la vuelta a las zonas. */
+/* EL PIE de la página: la REGLA del parque, y nada más.
+   ⚠️ Aquí vivía también `.page__foot-link`, la vuelta a las zonas: se retira con las bandas de
+   enlace, que son la pieza del sistema para esa función (ver «LAS BANDAS DE ENLACE» al final). */
 .page--rides .page__foot {
   margin-top: var(--sp-28); padding-top: var(--sp-18);
   border-top: 1.5px solid var(--line-strong);
 }
 .page--rides .page__foot-rule { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
-.page--rides .page__foot-link {
-  display: inline-flex; align-items: center; gap: var(--sp-8);
-  min-height: var(--tap-min);
-  font-family: var(--font-body); font-weight: 800; font-size: var(--fs-16);
-  color: var(--interactive);
-  transition: color var(--dur-toque) var(--ease-sale);
-}
-.page--rides .page__foot-link:hover { color: var(--fg); }
 
 @media (min-width: 1024px) {
   /* ⚠️ El carril de pestañas **NO se estira** a la columna: se queda en 352, que es lo que el
@@ -4282,10 +4296,10 @@ select:focus-visible {
   .rides-zone__count { margin-top: 0; }
   .rides-grid { grid-template-columns: repeat(4, 1fr); gap: 32px; margin-top: 32px; }
   .ride-tile { gap: var(--sp-10); }
-  .page--rides .page__foot {
-    margin-top: 40px; padding-top: var(--sp-20);
-    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
-  }
+  /* ⚠️ Sin `display: flex` desde que se fue el enlace: la fila existía para poner la regla y la
+     vuelta a las zonas una al lado de otra, y con un solo hijo no reparte nada. Una declaración de
+     maquetación que sobrevive a lo que maquetaba no falla — solo miente sobre lo que hay aquí. */
+  .page--rides .page__foot { margin-top: 40px; padding-top: var(--sp-20); }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -5146,21 +5160,16 @@ select:focus-visible {
    no una coletilla del párrafo de arriba. */
 .bar-counter__entry { margin: var(--sp-12) 0 0; font-size: var(--fs-16); line-height: 1.5; font-weight: 700; }
 
-/* ── EL CIERRE: los que vienen de cumpleaños ────────────────────────────────────────────────── */
+/* ── LA NOTA DE LOS QUE VIENEN DE CUMPLEAÑOS ──────────────────────────────────────────────────
+   ⚠️ Aquí vivía también `.bar-party__cta`, un enlace a `/cumpleanos` escrito a mano: se retira con
+   las bandas de enlace, que ofrecen ese destino como FINA. Lo que queda es la frase, que es un
+   hecho del bar.
+   ⚠️ Y su `@media` ya no reparte una fila de dos: con un solo hijo, `display: flex` no coloca nada. */
 .bar-party { margin-top: var(--sp-28); padding-top: var(--sp-18); border-top: 1.5px solid var(--line-strong); }
 .bar-party__line { margin: 0; font-size: var(--fs-17); line-height: 1.5; color: var(--fg-mute); }
-.bar-party__cta {
-  display: inline-flex; align-items: center; gap: var(--sp-8);
-  min-height: var(--tap-min);
-  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
-}
-.bar-party__cta:hover { text-decoration: underline; }
 
 @media (min-width: 1024px) {
-  /* El aire del ritmo antes del pie, como el resto de las interiores. */
-  .bar-party { margin-top: var(--sec-air); display: flex; align-items: center; gap: var(--sp-20); }
-  .bar-party__line { flex: 1; }
-  .bar-party__cta { flex: none; }
+  .bar-party { margin-top: var(--sec-air); }
 }
 
 /* ── LA PUERTA DEL BAR, EN LA SECCIÓN 03 ────────────────────────────────────────────────────
@@ -5239,4 +5248,84 @@ select:focus-visible {
     margin-block-start: var(--sp-8);
     position-try-fallbacks: flip-block, flip-inline;
   }
+}
+
+/* ══ LAS BANDAS DE ENLACE (carril de diseño Fase 3, artboard `Bandas PJP` · `doc/bandas.md`) ═════
+   Dos piezas al final de cada página interior: la GORDA, que contesta la pregunta que la página
+   deja abierta, y las FINAS, que llevan a las hermanas. El reparto vive en `Content\Services\
+   LinkBands` y el marcado en `components/site/link-bands.blade.php`, que razona la COLOCACIÓN.
+
+   ⚠️ **El aire de abajo no lo pone esta pieza**: `main.page` ya trae `padding-bottom` de aire de
+   sección (medido: 144 px en escritorio y 96 en móvil), así que las bandas quedan a una sección del
+   pie sin escribir ningún margen inferior. El de arriba sí es suyo, y es el mismo número: una banda
+   es un bloque de nivel de sección y respira como tal.
+
+   ⚠️ 24, 32 y 22 van en LITERAL a propósito: la escala de espaciado salta de 20 a 28 y `#437` dejó
+   escrito que lo que no tiene escalón se queda en literal —no se compone con un `calc()` a mano—.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+.bands { display: flex; flex-direction: column; gap: var(--sp-28); margin-top: var(--sec-air-mobile); }
+@media (min-width: 1024px) { .bands { margin-top: var(--sec-air); } }
+
+/* ── LA GORDA ───────────────────────────────────────────────────────────────────────────────────
+   Tarjeta de tinta, sin sombra y sin keyline: *«no es una pegatina»*. La superficie la declara el
+   marcado (`data-surface="ink"`), así que aquí no hay ni un color literal — el rótulo sale en Cian
+   y el botón en «cian relleno con texto tinta» porque el paquete fija `--interactive` por
+   superficie (`#436`) y `--secondary` lo sigue (`#540`).
+   ⚠️ El titular NO estrena tipografía: es el nivel **Título** de la escala (`--fs-title`,
+   clamp 26 → 36), que son al dígito los dos tamaños del artboard (`1c` móvil, `1f` escritorio). */
+.band-wide { display: flex; flex-direction: column; gap: var(--sp-16); padding: 24px; border-radius: var(--r-lg); }
+.band-wide__say { display: flex; flex-direction: column; gap: var(--sp-12); }
+.band-wide__route {
+  margin: 0; font-family: var(--font-mono); font-size: var(--fs-12);
+  letter-spacing: .16em; text-transform: uppercase; color: var(--interactive);
+}
+.band-wide__q {
+  margin: 0; font-family: var(--font-display); font-weight: 400;
+  font-size: var(--fs-title); line-height: 1.05; color: var(--fg);
+}
+.band-wide__body { margin: 0; font-size: var(--fs-body); line-height: 1.6; color: var(--fg-body); }
+.band-wide__cta { flex: none; align-self: flex-start; }
+/* El gesto es el del sistema para un enlace: 3 px en `--dur-toque` (120 ms), que es el token cuyo
+   uso declarado es literalmente «hover de icono y de enlace». */
+.band-wide__arrow { transition: transform var(--dur-toque) var(--ease-sale); }
+.band-wide__cta:hover .band-wide__arrow { transform: translateX(3px); }
+
+@media (min-width: 1024px) {
+  /* El artboard `1f`: «solo se ensancha» — mismo radio, mismo botón, titular y botón enfrentados a
+     los extremos y el texto acotado a 620 para que no persiga al botón. */
+  .band-wide { flex-direction: row; align-items: center; justify-content: space-between; gap: 32px; padding: 32px; }
+  .band-wide__say { max-width: 620px; }
+}
+
+/* ── LAS FINAS ──────────────────────────────────────────────────────────────────────────────────
+   La tarjeta-enlace del sistema: blanco, borde de Línea y radio 16 ya significan «esto es una
+   puerta», así que no lleva botón dentro, ni sombra, ni color de fondo. Van sobre PAPEL, y eso es
+   lo que deja un bloque claro entre la gorda y el pie. */
+.bands-thin { display: flex; flex-direction: column; gap: var(--sp-12); }
+.bands-thin__lead {
+  margin: 0; font-family: var(--font-mono); font-size: var(--fs-12);
+  letter-spacing: .16em; text-transform: uppercase; color: var(--fg-mute);
+}
+.bands-thin__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-12); }
+.band-thin {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-14);
+  min-height: 72px; padding: var(--sp-16) var(--sp-18);
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-lg);
+  color: var(--fg); text-decoration: none;
+  transition: border-color var(--dur-toque) var(--ease-sale);
+}
+.band-thin:hover { border-color: var(--fg); }
+.band-thin__say { display: flex; flex-direction: column; gap: var(--sp-3); }
+.band-thin__route {
+  font-family: var(--font-mono); font-size: var(--fs-11);
+  letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute);
+}
+.band-thin__what { font-size: var(--fs-17); font-weight: 800; line-height: 1.2; }
+.band-thin__arrow { flex: none; color: var(--interactive); transition: transform var(--dur-toque) var(--ease-sale); }
+.band-thin:hover .band-thin__arrow { transform: translateX(3px); }
+
+@media (min-width: 1024px) {
+  /* Seis columnas cada una, con el canal de 32 de la retícula de escritorio (artboard `1f`). */
+  .bands-thin__list { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .band-thin { min-height: 76px; padding: var(--sp-18) 22px; }
 }
