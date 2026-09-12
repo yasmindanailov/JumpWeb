@@ -40,6 +40,14 @@ MUTACIONES = [
     ('landing.css', 'background: var(--tint-attn);\n  border: 1px solid var(--tint-attn-border);',
      'background: var(--bg-card);\n  border: 1px solid var(--line);',
      'Dudas · la tarjeta pierde su tinte'),
+    # ⚠️ Estas dos mutan AL REVÉS que sus vecinas: la guarda del rótulo protege una EXCEPCIÓN
+    # decidida (Bungee en el CTA), así que el defecto a reproducir es que alguien la «arregle».
+    ('site.css', 'font-family: var(--font-display); font-weight: 400;\n    font-size: var(--cta-pair-fs, 17px);',
+     'font-family: var(--font-body); font-weight: 800;\n    font-size: var(--cta-pair-fs, 17px);',
+     'CTA · alguien «arregla» la excepción y se lleva Bungee del botón'),
+    ('site.css', 'font-family: var(--font-display); font-weight: 400;\n    font-size: var(--cta-pair-fs, 17px);',
+     'font-family: var(--font-display); font-weight: 800;\n    font-size: var(--cta-pair-fs, 17px);',
+     'CTA · le suben el peso a Bungee, que tiene UNA cara y se sintetiza'),
 ]
 
 def corre():

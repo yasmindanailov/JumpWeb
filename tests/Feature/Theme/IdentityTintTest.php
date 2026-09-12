@@ -152,4 +152,38 @@ class IdentityTintTest extends TestCase
             'con blanco da **2,70** y no llega ni al umbral de texto grande.',
         );
     }
+
+    /**
+     * ❗❗❗ **EL RÓTULO DEL CTA CONSERVA BUNGEE, Y ESTA GUARDA PROTEGE LA EXCEPCIÓN, NO LA NORMA.**
+     *
+     * Está escrita al revés que sus hermanas a propósito. La regla dura del sistema prohíbe Bungee
+     * en un botón **dos veces**, y el artboard del canvas dibuja este mismo botón en Hanken Grotesk
+     * 800 a 16 px (verificado renderizándolo: las siete apariciones de «Reservar»). Con todo eso
+     * delante, `[DECIDIDO owner, 2026-09-12]` **se queda en Bungee**: el CTA es la pieza que más
+     * identifica la web y en Hanken pierde el carácter del parque.
+     *
+     * ▶ Lo que esta guarda impide es que alguien lo «ARREGLE» leyendo la regla y creyendo que
+     * encontró un defecto — que es exactamente lo que pasó hoy hasta que se preguntó. Es el mismo
+     * trato que `GoogleButtonBrandingTest` da a la otra excepción declarada de esta regla.
+     *
+     * ⚠️ Y no se «mejora» subiendo el peso: Bungee trae UNA sola cara, así que un 800 la SINTETIZA
+     * (el defecto que `#479` midió en `.rides__title`); no falla nada, solo se ve peor.
+     */
+    public function test_el_rotulo_del_cta_conserva_su_excepcion_de_bungee(): void
+    {
+        $css = $this->site();
+
+        $this->assertMatchesRegularExpression(
+            '/\.cta-med__t,\s*\.cta-ghost__t\s*\{[^}]*font-family:\s*var\(--font-display\)/s',
+            $css,
+            'el rótulo del CTA perdió Bungee. NO es un defecto que corregir: es una excepción '.
+            'decidida por el owner con la regla y el artboard delante. Si de verdad se quiere '.
+            'cambiar, se reabre la decisión y se borra esta guarda con ella.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.cta-med__t,\s*\.cta-ghost__t\s*\{[^}]*font-weight:\s*400/s',
+            $css,
+            'el rótulo del CTA subió de peso. Bungee tiene UNA sola cara: un 800 la sintetiza.',
+        );
+    }
 }

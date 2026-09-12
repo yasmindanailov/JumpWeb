@@ -4029,6 +4029,27 @@ body[data-has-hero].nav--live .hero__pair-slot {
 /* ⚠️ La talla sale de un token porque el par vive en TRES sitios con tres escalas: el racimo de
    la cabecera (17), la barra de móvil y **el hueco del hero, donde el owner lo quiso más grande**
    (`#254`). Con el literal, agrandarlo en uno los agrandaba en los tres. */
+/* ❗❗❗ `#538` · ESTE RÓTULO VA EN BUNGEE A PROPÓSITO, Y ES LA SEGUNDA EXCEPCIÓN ESCRITA A LA
+   REGLA DE TIPOGRAFÍA DE BOTÓN (`[DECIDIDO owner, 2026-09-12]`, elegido viendo las dos formas
+   renderizadas sobre el hero real).
+
+   ⚠️⚠️ **No es un descuido, y hasta hoy lo parecía.** La regla dura del sistema lo prohíbe DOS
+   veces —«Botones en Hanken Grotesk 800. **Bungee nunca en un botón**, nunca bajo 20px»— y el
+   nivel «Botón» de la escala tipográfica lo repite en su propio campo `uso`. Y no había
+   contradicción del cliente: se renderizó `Marco Portada PJP` y se le preguntó al navegador con
+   qué fuente dibuja ÉL este botón — las **siete** apariciones de «Reservar» salen en **Hanken
+   Grotesk 800 a 16 px**. O sea que el canvas, la escala y la regla decían lo mismo, y el Bungee
+   era una desviación del CÓDIGO que no miraba ninguna guarda.
+   ▶ Puesto delante, el owner eligió conservarlo: el CTA es la pieza que más identifica la web y
+   en Hanken pierde el carácter del parque. **La desviación pasa de silenciosa a decidida**, que
+   es la diferencia entre una excepción y un defecto — el mismo trato que tiene el botón de
+   Google, la otra excepción declarada de esta regla.
+
+   ⚠️ El peso 400 NO es un descuido y no se «corrige»: Bungee trae UNA sola cara, así que subirlo
+   a 800 la SINTETIZA — el defecto que `#479` midió en `.rides__title` y que no falla, solo se ve.
+   ⚠️ Y va a 17-19 px, por debajo del «nunca bajo 20px» de la misma regla: entra en la excepción.
+   ▶ Lo vigila `IdentityTintTest::test_el_rotulo_del_cta_conserva_su_excepcion_de_bungee`, que
+   está escrita AL REVÉS que las demás: protege la desviación, no la norma. */
 .cta-med__t,
 .cta-ghost__t {
     font-family: var(--font-display); font-weight: 400;
