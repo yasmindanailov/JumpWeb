@@ -44,7 +44,8 @@ const props = defineProps({
     notice: { type: String, default: '' },
 });
 
-defineEmits(['back', 'remove', 'add-another', 'update-field', 'toggle-dependent']);
+// ⚠️ Sin `back`: el «Volver» de esta pantalla lo trae la banda desde `#555`.
+defineEmits(['remove', 'add-another', 'update-field', 'toggle-dependent']);
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -74,30 +75,15 @@ const includedLabel = (addon) => (addon.free_quantity >= addon.quantity
 
 <template>
     <!--
-        ⚠️ **El paso 4 no tiene banda de progreso** —`progress.js` solo la compone para el 2 y el 3—, así
-        que hasta el 2026-08-28 el carrito era la única pantalla del embudo CON paso anterior y SIN
-        «Volver» ni CTA propio (el 2 y el 3 lo traen por la banda; el 5 y el 8, por su `bk-back`; el
-        1, 6, 7, 9, 10 y 11 no lo llevan a propósito): se entraba desde la hora y la única salida era
-        «+ Añadir otra reserva», al pie. Lo vio el owner
-        (`DECISIONES #210`). Mismo nodo que el «Volver» de los pasos 5 y 8 (`bk-back purchase__back`), y
-        el mismo destino que «añadir otra»: el catálogo, con la selección limpia. Con la cesta VACÍA
-        también se pinta —es justo la pantalla que se quedaba sin CTA y sin salida—.
+        ⚠️⚠️ **EL «VOLVER» DE ESTA PANTALLA SE RETIRÓ EN `#555`, y no es una pérdida**: la banda de
+        progreso vive ahora en las cinco pantallas del camino y trae el suyo, así que mantener el
+        propio dejaba **dos** en la misma pantalla. Su destino —el catálogo, con la selección limpia—
+        se mudó a `goBack()`, que es hoy el único «Volver» del embudo.
+        ▶ La historia de por qué existía se conserva porque explica el agujero que tapó: hasta el
+        2026-08-28 el carrito era la única pantalla del embudo CON paso anterior y SIN salida, y lo vio
+        el owner (`DECISIONES #210`). Eso ya no puede repetirse: con la banda en las cinco, una
+        pantalla sin «Volver» sería una pantalla sin banda.
     -->
-    <button type="button" class="bk-back purchase__back" @click="$emit('back')">
-        <!-- `arrow-left` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`).
-             ⚠️ Este dibujo llevaba SIN COMPROBARSE desde que se escribió el docblock del fichero:
-             la guarda arrancaba en un «`<svg>`» citado en un comentario de JS y se lo saltaba
-             (`#258`). Al arreglarla aparecieron tres iconos ciegos, y éste era uno. -->
-        <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-             stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
-             aria-hidden="true" focusable="false">
-            <g transform="translate(24 0) scale(-1 1)">
-                <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
-                <path d="M4.6 12h9.4" fill="none" />
-            </g>
-        </svg>
-        <span>{{ t('back') }}</span>
-    </button>
 
     <h3 class="wiz__title">{{ t('cart_title') }}</h3>
 

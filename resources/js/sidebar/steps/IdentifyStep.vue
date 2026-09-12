@@ -12,8 +12,9 @@ import RegisterForm from './RegisterForm.vue';
  * servidor dice que no vive en `login.js` y `register.js`, con su red.
  *
  * ⚠️ **Tres detalles del árbol que no se adivinan leyendo el Blade** y que el diff sí ve:
- *  - este paso **no tiene banda de progreso**, así que trae su propio «Volver» (`bk-back
- *    purchase__back`): la cuenta y la reserva todavía no existen, y retroceder al carrito es seguro;
+ *  - desde `#555` este paso **sí tiene banda de progreso**, y con ella su «Volver»: antes lo traía
+ *    él, y el rótulo —«Volver al carrito»— se conserva porque la cuenta y la reserva todavía no
+ *    existen, así que retroceder es seguro;
  *  - los textos NO son del grupo `tickets`: los rótulos salen de `account.*` y los avisos de `auth.*`,
  *    así que el montaje inyecta esos dos grupos aparte (§4.5);
  *  - las dos pestañas se emiten SIEMPRE; lo que cambia con el modo es cuál lleva `active` y qué
@@ -55,7 +56,8 @@ const props = defineProps({
     googleUrl: { type: String, default: '' },
 });
 
-defineEmits(['back', 'set-mode', 'submit-login', 'submit-register', 'recover']);
+// ⚠️ Sin `back`: el «Volver» de esta pantalla lo trae la banda desde `#555`.
+defineEmits(['set-mode', 'submit-login', 'submit-register', 'recover']);
 
 /**
  * Los campos de los dos formularios, en un solo objeto.
@@ -70,19 +72,6 @@ const a = (key) => translate(props.account, key);
 </script>
 
 <template>
-    <!-- Este paso no lleva banda de progreso, así que el «Volver» es suyo. -->
-    <button type="button" class="bk-back purchase__back" @click="$emit('back')">
-        <!-- `arrow-left` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-        <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-             stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
-             aria-hidden="true" focusable="false">
-            <g transform="translate(24 0) scale(-1 1)">
-                <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
-                <path d="M4.6 12h9.4" fill="none" />
-            </g>
-        </svg>
-        <span>{{ t('back_to_cart') }}</span>
-    </button>
 
     <h3 class="wiz__title">{{ t('identify_title') }}</h3>
     <p class="purchase__note">{{ t('identify_intro') }}</p>

@@ -1629,7 +1629,8 @@ body.no-scroll { overflow: hidden; }
 
 /* ⚠️ **El «Volver» del ÁREA lleva su propio aire abajo.** `.bk-back` es la base compartida y no debe
    traer margen —en el embudo vive dentro de la banda de progreso, cuyo `gap` ya lo separa—, así que
-   el espaciado lo pone quien lo COLOCA. Mismo patrón que `.purchase__back` en el paso de pago.
+   el espaciado lo pone quien lo COLOCA. ⚠️ La cita a `.purchase__back` cayó con esa clase en `#555`:
+   hoy `.account__back` es el ÚNICO colocador, porque en el embudo ya no hay «Volver» fuera de la banda.
    ▶ Nace de un fallo real: sin él, el ritmo del armazón dependía de que la pantalla siguiente
    empezara por un bloque con margen. El día que una dejó de traer título, «Volver» y las pestañas
    quedaron pegados. Un elemento que no se separa solo acaba dependiendo del que venga detrás. */
@@ -1647,7 +1648,14 @@ body.no-scroll { overflow: hidden; }
 .bk-seg__item.is-done .bk-seg__bar::after,
 .bk-seg__item.is-current .bk-seg__bar::after { transform: scaleX(1); }
 .bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--zone-1) 30%, transparent); }
-.bk-seg__label { font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-mute); text-align: center; white-space: nowrap; transition: color var(--dur-estado) var(--ease-sale); }
+/* ⚠️⚠️ **NI MAYÚSCULAS NI ESPACIADO DE LETRA, y no es gusto: con cinco fases NO CABEN** (`#555`).
+   Medido a 390: «Quién eres» pedía **73 px en un carril de 64,4** y salía con puntos suspensivos —una
+   fase que no se puede leer no dice en qué paso estás—. Las mayúsculas y el `letter-spacing: 0.06em`
+   costaban justo esos ~9 px, y el artboard **ya los dibuja capitalizados y sin espaciado**: la regla
+   vieja venía de cuando eran tres rótulos cortos y sobraba sitio.
+   ⚠️ La talla se queda en `--fs-label` (12) y NO baja a los 11,5 del artboard: sería estrenar un valor
+   fuera de la escala, que es justo lo que `#550` retiró al quitar `--fs-9`. */
+.bk-seg__label { font-size: var(--fs-label); font-weight: var(--fw-bold); color: var(--fg-mute); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--dur-estado) var(--ease-sale); }
 .bk-seg__item.is-current .bk-seg__label,
 .bk-seg__item.is-done .bk-seg__label { color: var(--fg); }
 /* ❗❗ **LA LÍNEA DE CONTEXTO ES UN DATO, NO UN ENLACE** (`#551`): dice qué estás comprando y cuándo, y
@@ -1713,8 +1721,8 @@ body.no-scroll { overflow: hidden; }
    dos cifras de rótulo más el ancla serían tres números compitiendo en la misma esquina. */
 .bk-paybreakdown__v { font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap; }
 
-/* Enlace «volver al carrito» del paso de pago (reusa el estilo de `.bk-back`). */
-.purchase__back { margin-bottom: var(--sp-14); }
+/* ⚠️ `.purchase__back` se RETIRÓ en `#555` con su sujeto: era el hueco bajo el «Volver» propio de
+   los pasos 4, 5 y 8, y esos tres botones se fueron a la banda, que trae el suyo. */
 /* ❗❗❗ **EL CTA DEL PIE ES SECUNDARIO, Y SOLO UNO DE LOS CUATRO VENDE** (`#551`, la grieta 01).
    Pintaba con `var(--zone-1)` —la MARCA— en las once pantallas del embudo, incluida la de pagar: o
    sea que el único botón que cobra de verdad salía del mismo color que «Continuar». El artboard

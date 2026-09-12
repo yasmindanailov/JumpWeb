@@ -13,12 +13,14 @@ import { buildProgress, shortDate } from './progress.js';
 const MESSAGES = {
     phase_date: 'Fecha',
     phase_time: 'Hora',
-    phase_extras: 'Extras',
-    phase_details: 'Datos',
+    phase_cart: 'Tu cesta',
+    phase_identify: 'Quién eres',
+    phase_pay: 'Pagar',
+    back: 'Volver',
+    back_to_cart: 'Volver al carrito',
 };
 
 const base = {
-    isPack: false,
     productName: 'Entrada 1 hora',
     date: null,
     time: null,
@@ -28,46 +30,89 @@ const base = {
 
 describe('en qué pasos existe la banda', () => {
     /**
-     * ⚠️ La banda es EXCLUSIVA del modo «booking». En el carrito no la hay —y el paso 4 tampoco tiene
-     * «Volver» propio—, así que emitirla ahí sería un nodo de más que el diff de árbol vería.
+     * ⚠️ **Las CINCO pantallas del camino la llevan** (`#555`). Antes solo el 2 y el 3, y desde la
+     * cesta hasta pagar el cliente no sabía cuánto le quedaba ni tenía «Volver» en la banda — los
+     * pasos 4, 5 y 8 traían el suyo propio, que es lo que esta tanda retiró.
      */
-    test('solo los pasos 2 y 3 la llevan', () => {
-        assert.equal(buildProgress({ ...base, step: 1 }), null);
-        assert.equal(buildProgress({ ...base, step: 4 }), null);
-        assert.equal(buildProgress({ ...base, step: 8 }), null);
-        assert.notEqual(buildProgress({ ...base, step: 2 }), null);
-        assert.notEqual(buildProgress({ ...base, step: 3 }), null);
+    test('las cinco pantallas del camino la llevan, y ninguna más', () => {
+        for (const step of [2, 3, 4, 5, 8]) {
+            assert.notEqual(buildProgress({ ...base, step }), null, `el paso ${step} tiene que llevar banda`);
+        }
+
+        // ⚠️ El catálogo NO es una fase: ahí todavía no se ha empezado a reservar nada. Y los
+        // desenlaces tampoco — de tres de ellos no se sale, así que contarles una fase prometería un
+        // camino que no existe.
+        for (const step of [1, 6, 7, 9, 10, 11]) {
+            assert.equal(buildProgress({ ...base, step }), null, `el paso ${step} NO lleva banda`);
+        }
     });
 });
 
 describe('avance dentro del flujo', () => {
-    test('el paso de fecha es la fase 1 y las otras dos están por hacer', () => {
-        const progress = buildProgress({ ...base, step: 2 });
+    /**
+     * ❗❗ **Una fase por PANTALLA, y eso es lo que hace honesto el contador** (`#555`,
+     * `[DECIDIDO owner]`). Hasta esta tanda la tercera fase se encendía DENTRO de la pantalla de la
+     * hora al elegirla, así que el mismo «Paso 3 de N» salía en dos pantallas distintas — y una banda
+     * que existe para decir cuánto queda no puede repetir su número.
+     */
+    test('cada pantalla es una fase, y el contador no repite', () => {
+        const vistos = [2, 3, 4, 5, 8].map((step) => buildProgress({ ...base, step }).active);
 
-        assert.equal(progress.active, 1);
-        assert.equal(progress.total, 3);
-        assert.deepEqual(progress.steps.map((s) => s.state), ['current', 'todo', 'todo']);
+        assert.deepEqual(vistos, [1, 2, 3, 4, 5]);
+        assert.equal(buildProgress({ ...base, step: 2 }).total, 5);
     });
 
-    /** El progreso avanza DENTRO del paso 3: elegir hora mueve la fase activa de la 2 a la 3. */
-    test('el paso de hora avanza al elegir la hora', () => {
+    test('el paso de fecha es la fase 1 y las otras cuatro están por hacer', () => {
+        const progress = buildProgress({ ...base, step: 2 });
+
+        assert.deepEqual(progress.steps.map((s) => s.state), ['current', 'todo', 'todo', 'todo', 'todo']);
+    });
+
+    /**
+     * ⚠️ **Elegir la hora YA NO mueve la fase**, y es la consecuencia de la decisión de arriba: el
+     * avance dentro de una pantalla es justo lo que hacía repetir el número.
+     */
+    test('elegir la hora no mueve la fase: la pantalla es la misma', () => {
         const sinHora = buildProgress({ ...base, step: 3, date: '2026-09-05' });
         const conHora = buildProgress({ ...base, step: 3, date: '2026-09-05', time: '10:00:00' });
 
         assert.equal(sinHora.active, 2);
-        assert.deepEqual(sinHora.steps.map((s) => s.state), ['done', 'current', 'todo']);
-
-        assert.equal(conHora.active, 3);
-        assert.deepEqual(conHora.steps.map((s) => s.state), ['done', 'done', 'current']);
+        assert.equal(conHora.active, 2);
+        assert.deepEqual(conHora.steps.map((s) => s.state), ['done', 'current', 'todo', 'todo', 'todo']);
     });
 
+    test('en la última pantalla todas las anteriores están hechas', () => {
+        const progress = buildProgress({ ...base, step: 8 });
+
+        assert.deepEqual(progress.steps.map((s) => s.state), ['done', 'done', 'done', 'done', 'current']);
+        assert.deepEqual(progress.steps.map((s) => s.label), ['Fecha', 'Hora', 'Tu cesta', 'Quién eres', 'Pagar']);
+    });
+});
+
+describe('el «Volver» de la banda', () => {
     /**
-     * La tercera fase cambia de nombre según el producto: «Extras» en una entrada, «Datos» en un pack
-     * (que reúne los datos del cumpleaños). Es lo que el cliente espera encontrar al llegar.
+     * ⚠️ **El rótulo sigue al DESTINO, no a la pantalla** (`#555`): desde quién-eres y desde pagar se
+     * vuelve al carrito y hay que decirlo —es el rótulo que esas dos pantallas ya traían en su botón
+     * propio, y el que dibuja el artboard del paso 08—. Componerlo en la plantilla con un `v-if` sobre
+     * el paso sería la misma regla escrita en dos sitios.
      */
-    test('la tercera fase se llama distinto en un pack', () => {
-        assert.equal(buildProgress({ ...base, step: 2 }).steps[2].label, 'Extras');
-        assert.equal(buildProgress({ ...base, step: 2, isPack: true }).steps[2].label, 'Datos');
+    test('dice a dónde vuelve', () => {
+        const rotulos = [2, 3, 4, 5, 8].map((step) => buildProgress({ ...base, step }).backLabel);
+
+        assert.deepEqual(rotulos, ['Volver', 'Volver', 'Volver', 'Volver al carrito', 'Volver al carrito']);
+    });
+});
+
+describe('la línea de contexto (sigue)', () => {
+    /**
+     * ⚠️ **El contexto muere en la cesta, y no es un olvido**: dice «producto · día · hora» de UNA
+     * línea, y de ahí en adelante puede haber varias — rotularía la del producto que quedó
+     * seleccionado, que no es «la reserva» de nadie. El artboard del paso 08 también lo dibuja sin él.
+     */
+    test('solo las dos primeras pantallas lo llevan', () => {
+        for (const step of [4, 5, 8]) {
+            assert.equal(buildProgress({ ...base, step }).context, '', `el paso ${step} no lleva contexto`);
+        }
     });
 });
 

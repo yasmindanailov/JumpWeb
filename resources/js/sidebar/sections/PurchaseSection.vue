@@ -16,7 +16,7 @@ import { api } from '../api.js';
 import { searchIsEnabled, sectionsFrom } from '../catalog.js';
 import { initialQuantity, minQuantityFor } from '../offer.js';
 import { nextQuantity, unitPriceToShow } from '../quantity.js';
-import { buildProgress } from '../progress.js';
+import { backPlan, buildProgress } from '../progress.js';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { buildFooter } from '../foot.js';
 import { buildNotice } from '../paused.js';
@@ -482,16 +482,15 @@ const locale = document.documentElement.lang || 'es';
 dateStore.setLocale(locale);
 
 /**
- * La banda de progreso de los pasos 2 y 3.
+ * La banda de progreso de las CINCO pantallas del camino, del día al pago (`#555`).
  *
  * ⚠️ **Hasta 4.3·1 esto era `null` fijo**, así que el cajón SPA vivo iba sin «Volver» y sin contador
  * de fases aunque el componente existiera y el gate lo comparase en verde: el diff alimenta a Vue con
  * el view-model del SERVIDOR. La composición vive en `progress.js` —módulo plano— para poder
- * compararla contra `bookingProgress()` dato a dato.
+ * compararla dato a dato.
  */
 const progress = computed(() => buildProgress({
     step: store.step,
-    isPack: catalogStore.selectedRow?.is_pack ?? false,
     productName: catalogStore.selectedRow?.name ?? '',
     date: dateStore.selected,
     time: timeStore.selected,
@@ -1154,20 +1153,30 @@ const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
 
 /**
- * «Volver» de la banda. Espejo de `Purchase::back()`: desde la hora se DESHACE la elección de hora y
- * de cantidad —volver con la hora puesta dejaría el paso 2 mostrando un progreso que ya no aplica— y
- * desde el calendario se vuelve al catálogo.
+ * **«Volver» de la banda, y desde `#555` el ÚNICO del embudo.**
+ *
+ * Hasta esta tanda la banda solo existía en los pasos 2 y 3, así que la cesta, la identificación y el
+ * pago traían cada uno su propio `bk-back` encima del título — tres piezas para un gesto. Con la banda
+ * en las cinco pantallas eso serían **dos «Volver» en la misma pantalla**, así que los tres se retiran.
+ *
+ * ⚠️ **A dónde vuelve y qué se deshace NO se decide aquí**: sale de la misma fila que su rótulo, en
+ * `progress.js` (`CE-6`). Aquí solo se APLICA — que es lo que evita que el botón diga «Volver al
+ * carrito» y lleve a otro sitio sin que nada falle.
  */
 function goBack() {
-    if (store.step === STEPS.TIME) {
+    // ⚠️ `?? {}` y no una guarda: en un paso sin banda no hay «Volver» que pulsar, así que el plan
+    // ausente no es un caso a contemplar — es que nadie puede llegar aquí. Sin destino no se navega.
+    const { to, clear } = backPlan(store.step) ?? {};
+
+    if (clear === 'time') {
         timeStore.clearSelection();
         selectionStore.setQuantity(0);
-        store.go(STEPS.DATE);
-
-        return;
+    } else if (clear === 'selection') {
+        clearSelection();
+        outcomeStore.clear();
     }
 
-    store.go(STEPS.CATALOG);
+    if (to) store.go(to);
 }
 </script>
 
@@ -1236,7 +1245,6 @@ function goBack() {
             :locale="locale"
             :dependent-options="dependentsStore.optionsFor(messages)"
             :notice="cartStore.notice"
-            @back="addAnother"
             @remove="removeLine"
             @add-another="addAnother"
             @update-field="updateCartField"
@@ -1253,7 +1261,6 @@ function goBack() {
             :account="account"
             :turnstile-site-key="authStore.signupSiteKey"
             :google-url="urls.google ?? ''"
-            @back="goToCart"
             @set-mode="authStore.setMode"
             @submit-login="submitLogin"
             @submit-register="submitRegister"
@@ -1272,8 +1279,7 @@ function goBack() {
             :messages="messages"
             :locale="locale"
             :need="buyerNeed"
-            :due-errors="buyerDue.errors"
-            @back="goToCart" />
+            :due-errors="buyerDue.errors" />
 
         <RedirectStep
             v-else-if="store.step === STEPS.REDIRECTING"

@@ -87,13 +87,31 @@ const MEDIR = () => {
         progress: progress ? {
             caja: caja(progress),
             estilo: estilo(progress, ['backgroundColor', 'paddingTop', 'paddingBottom', 'paddingLeft', 'rowGap', 'borderBottomWidth']),
-            fases: [...progress.querySelectorAll('.bk-seg__item')].map((i) => ({
-                rotulo: i.querySelector('.bk-seg__label')?.textContent.trim() ?? '',
-                estado: [...i.classList].find((c) => c.startsWith('is-')) ?? '',
-                barra: caja(i.querySelector('.bk-seg__bar')),
-                // El relleno vive en el pseudo: sin el segundo argumento sale la PISTA.
-                relleno: estilo(i.querySelector('.bk-seg__bar'), ['backgroundColor', 'transform'], '::after'),
-            })),
+            fases: [...progress.querySelectorAll('.bk-seg__item')].map((i) => {
+                const rot = i.querySelector('.bk-seg__label');
+
+                return {
+                    rotulo: rot?.textContent.trim() ?? '',
+                    estado: [...i.classList].find((c) => c.startsWith('is-')) ?? '',
+                    barra: caja(i.querySelector('.bk-seg__bar')),
+                    // ⚠️ Los rótulos van `nowrap` con elipsis, así que un nombre largo se RECORTA sin
+                    // que nada falle: con cinco fases en 390 px eso deja de ser teórico.
+                    recortado: rot ? rot.scrollWidth > rot.clientWidth + 0.5 : false,
+                    ancho: rot ? +rot.getBoundingClientRect().width.toFixed(1) : 0,
+                    // ⚠️⚠️ **`scrollWidth` NO dice cuánto PIDE el texto cuando cabe**: se capa al
+                    // `clientWidth`, así que un rótulo al borde del recorte y uno con sito de sobra
+                    // devuelven el mismo número. La TINTA se mide con un `Range` sobre el nodo de
+                    // texto — es la única forma de saber cuánto margen queda antes de la elipsis.
+                    tinta: rot && rot.firstChild ? (() => {
+                        const r = document.createRange();
+                        r.selectNodeContents(rot);
+
+                        return +r.getBoundingClientRect().width.toFixed(1);
+                    })() : 0,
+                    // El relleno vive en el pseudo: sin el segundo argumento sale la PISTA.
+                    relleno: estilo(i.querySelector('.bk-seg__bar'), ['backgroundColor', 'transform'], '::after'),
+                };
+            }),
             contador: progress.querySelector('.bk-step-count')?.textContent.trim() ?? null,
             contexto: progress.querySelector('.bk-context')?.textContent.trim() ?? null,
             // El cuadradito del contexto: el artboard lo dibuja en cian a propósito.

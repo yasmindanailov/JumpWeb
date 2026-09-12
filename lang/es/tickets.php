@@ -10,13 +10,17 @@ return [
     'step_date' => 'Elige el día',
     'step_time' => 'Elige la hora de entrada',
     'step_tickets' => 'Elige tus entradas',
-    // Sidebar v2 — stepper detallado y footer dinámico. La 3.ª fase es «Extras» (entrada) o
-    // «Datos» (pack: datos de la reserva + extras), según el tipo de producto.
+    // Sidebar v2 — banda de fases y pie dinámico. Desde `#555` son CINCO fases, una por PANTALLA del
+    // camino (día · hora · carrito · quién eres · pagar).
     'step_count' => 'Paso :n de :total',
     'phase_date' => 'Fecha',
     'phase_time' => 'Hora',
-    'phase_extras' => 'Extras',
-    'phase_details' => 'Datos',
+    // ⚠️ Las CINCO fases son una por PANTALLA del camino (`#555`). Se van `phase_extras` y
+    // `phase_details`, que nombraban la tercera según el tipo de producto y se encendían DENTRO de la
+    // pantalla de la hora: con una fase por pantalla, el mismo «Paso 3 de 5» salía en dos sitios.
+    'phase_cart' => 'Tu carrito',
+    'phase_identify' => 'Quién eres',
+    'phase_pay' => 'Pagar',
     'go_to_cart' => 'Ir al carrito',
     'go_to_pay' => 'Ir a pagar',
     'cart_items' => ':count artículo|:count artículos',

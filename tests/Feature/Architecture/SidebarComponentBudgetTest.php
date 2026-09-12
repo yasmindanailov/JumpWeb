@@ -139,7 +139,14 @@ class SidebarComponentBudgetTest extends TestCase
         // teclea aquí es dejarle sin la corrección a la vista.
         // ▶ La extracción se midió: bajó de 448 a 444. *Subir un techo después de extraer no es lo
         // mismo que subirlo en vez de extraer.*
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 444, 'api' => 2],
+        // ⚠️ **444 → 445 el 2026-09-12 (`#555`), y el techo volvió a hacer su trabajo**: la primera
+        // versión del «Volver» de las cinco pantallas metía aquí los cinco destinos con sus `if`, y
+        // eso es una REGLA. Se fue a `progress.js` —a la MISMA fila que el rótulo de cada fase, que es
+        // lo que impide que el botón diga «Volver al carrito» y lleve a otro sitio— y con ella el
+        // fichero pasó de **451 a 445**. ▶ Lo que queda es una línea de cableado: el gesto ahora
+        // gobierna CINCO pasos en vez de dos, y a cambio `CartStep`, `IdentifyStep` y `PayStep`
+        // pierden su botón, su `emit` y su cableado. *Una línea aquí por tres piezas menos allí.*
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 445, 'api' => 2],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:

@@ -9,13 +9,17 @@ return [
     'step_date' => 'Pick the day',
     'step_time' => 'Pick the entry time',
     'step_tickets' => 'Choose your tickets',
-    // Sidebar v2 — detailed stepper and dynamic footer. The 3rd phase is «Extras» (entry) or
-    // «Details» (pack: reservation data + extras), depending on the product type.
+    // Sidebar v2 — phase band and dynamic footer. Since `#555` there are FIVE phases, one per SCREEN
+    // of the path (day · time · cart · about you · pay).
     'step_count' => 'Step :n of :total',
     'phase_date' => 'Date',
     'phase_time' => 'Time',
-    'phase_extras' => 'Extras',
-    'phase_details' => 'Details',
+    // ⚠️ The FIVE phases are one per SCREEN of the path (`#555`). `phase_extras` and `phase_details`
+    // are gone: they named the third one by product type and lit up INSIDE the time screen, so the
+    // same «Step 3 of 5» showed up in two places.
+    'phase_cart' => 'Your cart',
+    'phase_identify' => 'About you',
+    'phase_pay' => 'Pay',
     'go_to_cart' => 'Go to cart',
     'go_to_pay' => 'Go to payment',
     'cart_items' => ':count item|:count items',

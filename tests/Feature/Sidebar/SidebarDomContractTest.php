@@ -425,13 +425,14 @@ class SidebarDomContractTest extends TestCase
         $api['cart'][0]['dependent_ids'] = [$dependents['data'][0]['id']];
         $api['dependents'] = $dependents;
 
-        // ⚠️ Anclado en `bk-back`, no en `wiz__title`, desde que el paso 4 tiene «Volver» (`#210`): el
-        // botón va ANTES del título y `treeOf()` solo recorre hermanos SIGUIENTES — anclar en el título
-        // dejaría el botón fuera del contrato, y un CTA que se cae del árbol sin que nada lo vea es
-        // exactamente lo que este test existe para impedir. Los tres casos del paso 4 alimentados por
-        // la API anclan igual; el de la línea SIN fecha (props cocinadas, más abajo) sigue anclado en
-        // `cart__item` y a propósito NO contiene el botón: lo fijan estos tres.
-        $vue = $this->vueTree(4, [], 'bk-back', withSiblings: true, api: $api,
+        // ⚠️⚠️ **Vuelve a anclar en `wiz__title` en `#555`, y NO es una relajación.** Estuvo anclado en
+        // `bk-back` desde `#210` porque el paso 4 tenía «Volver» propio, el botón iba ANTES del título
+        // y `treeOf()` solo recorre hermanos SIGUIENTES: anclar en el título habría dejado el botón
+        // fuera del contrato. Hoy ese botón **ya no está en el paso** —se mudó a la banda, que lo
+        // trae para las cinco pantallas—, así que el título vuelve a ser el primer nodo y anclar ahí
+        // cubre el paso ENTERO. El «Volver» no queda sin vigilar: lo fijan los dos casos de la banda.
+        // ▶ *Un ancla se elige por dónde empieza el sujeto, y el sujeto cambió.*
+        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true, api: $api,
             state: [...$this->clientState(), 'cartNotice' => 'assign']);
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -449,7 +450,7 @@ class SidebarDomContractTest extends TestCase
     {
         $this->setUpFullCart();
 
-        $vue = $this->vueTree(4, [], 'bk-back', withSiblings: true,
+        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
             api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -468,7 +469,7 @@ class SidebarDomContractTest extends TestCase
     public function test_the_empty_cart_step_emits_the_same_tree_in_both_engines(): void
     {
 
-        $vue = $this->vueTree(4, [], 'bk-back', withSiblings: true,
+        $vue = $this->vueTree(4, [], 'wiz__title', withSiblings: true,
             api: $this->cartApiPayload([]), state: $this->clientState());
 
         $this->assertTree(__FUNCTION__, $vue,
@@ -530,7 +531,7 @@ class SidebarDomContractTest extends TestCase
     public function test_the_identify_step_emits_the_same_tree_in_both_engines(): void
     {
 
-        $vue = $this->vueTree(5, $this->identifyProps(), 'bk-back', withSiblings: true);
+        $vue = $this->vueTree(5, $this->identifyProps(), 'wiz__title', withSiblings: true);
 
         $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la identificación DIFIERE entre los dos motores.\n".
@@ -552,7 +553,7 @@ class SidebarDomContractTest extends TestCase
     public function test_the_register_form_emits_the_same_tree_in_both_engines(): void
     {
 
-        $vue = $this->vueTree(5, $this->identifyProps('register'), 'bk-back', withSiblings: true);
+        $vue = $this->vueTree(5, $this->identifyProps('register'), 'wiz__title', withSiblings: true);
 
         $this->assertTree(__FUNCTION__, $vue,
             "El árbol del ALTA DIFIERE entre los dos motores.\n".
@@ -680,7 +681,7 @@ class SidebarDomContractTest extends TestCase
         $this->setUpFullCart();
         $this->actingAs(User::factory()->create());
 
-        $vue = $this->vueTree(8, [], 'bk-back', withSiblings: true,
+        $vue = $this->vueTree(8, [], 'wiz__title', withSiblings: true,
             api: $this->cartApiPayload($this->fullCartItems()), state: $this->clientState(step: 8));
 
         $this->assertTree(__FUNCTION__, $vue,

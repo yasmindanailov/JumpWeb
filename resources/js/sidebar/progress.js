@@ -31,6 +31,50 @@
  */
 
 import { t } from './i18n.js';
+import { STEPS } from './machine.js';
+
+/**
+ * **LAS CINCO FASES, y una por PANTALLA** (`#555`, `[DECIDIDO owner]`).
+ *
+ * El camino del embudo tras el catálogo son cinco pantallas —día, hora, cesta, quién eres, pagar— y la
+ * banda tiene una fase para cada una. ⚠️ **El 1:1 es lo que hace honesto el contador**: hasta `#555` la
+ * tercera fase («Extras») se encendía DENTRO de la pantalla de la hora, así que un mismo «Paso 3 de N»
+ * salía en dos pantallas distintas — y una banda que existe para decir cuánto queda no puede repetir
+ * su número.
+ *
+ * ⚠️ **El catálogo NO es una fase**: ahí todavía no se ha empezado a reservar nada, y contarlo haría
+ * que el cliente empezara el embudo en «Paso 1 de 6» con la cesta vacía.
+ *
+ * ❗❗ **El destino del «Volver» y su rótulo salen de LA MISMA FILA, y eso no es orden: es la única
+ * forma de que no se separen.** Con el rótulo aquí y el destino en el embudo, cambiar uno sin el otro
+ * deja un botón que dice «Volver al carrito» y lleva a otro sitio — **sin que nada falle**.
+ *
+ * `clear` es lo que hay que DESHACER al volver, y también pertenece al destino: volver de la hora con
+ * la hora puesta dejaría el paso anterior mostrando un progreso que ya no aplica, y volver de la cesta
+ * al catálogo sin limpiar lo abriría con el producto anterior elegido.
+ */
+const FASES = [
+    { step: STEPS.DATE, label: 'phase_date', back: 'back', backTo: STEPS.CATALOG, clear: null },
+    { step: STEPS.TIME, label: 'phase_time', back: 'back', backTo: STEPS.DATE, clear: 'time' },
+    { step: STEPS.CART, label: 'phase_cart', back: 'back', backTo: STEPS.CATALOG, clear: 'selection' },
+    { step: STEPS.IDENTIFY, label: 'phase_identify', back: 'back_to_cart', backTo: STEPS.CART, clear: null },
+    { step: STEPS.PAY, label: 'phase_pay', back: 'back_to_cart', backTo: STEPS.CART, clear: null },
+];
+
+/**
+ * A dónde vuelve el «Volver» desde este paso, y qué hay que deshacer por el camino.
+ *
+ * Devuelve `null` en los pasos sin banda — que son los que no tienen «Volver», así que preguntar por
+ * ellos es un error de quien llama y no un caso a contemplar.
+ *
+ * @param {number} step
+ * @returns {{to: number, clear: string|null}|null}
+ */
+export function backPlan(step) {
+    const fase = FASES.find((f) => f.step === step);
+
+    return fase ? { to: fase.backTo, clear: fase.clear } : null;
+}
 
 /** Mayúscula inicial, como el `Str::ucfirst` que el servidor aplica al contexto. */
 function ucfirst(text) {
@@ -61,40 +105,49 @@ export function shortDate(ymd, locale) {
 /**
  * El view-model de la banda, o `null` en los pasos que no la llevan.
  *
- * Espejo de `Purchase::bookingProgress()`: la banda es EXCLUSIVA del modo «booking» (pasos 2 y 3), y
- * dentro del paso 3 el progreso avanza según se haya elegido hora o no.
+ * La banda vive en las **cinco pantallas del camino**, del día al pago (`#555`). Antes solo existía en
+ * los pasos 2 y 3, así que desde la cesta hasta pagar —justo el tramo donde se abandona una compra— el
+ * cliente no tenía ni idea de cuánto le quedaba, ni por dónde volver dentro de la propia banda.
  *
- * @param {{step: number, isPack: boolean, productName: string, date: string|null, time: string|null, messages: object, locale: string}} state
- * @returns {{active: number, total: number, steps: Array<{label: string, state: string}>, context: string}|null}
+ * ⚠️ **Los desenlaces no la llevan** (confirmado, denegado, verificando, revisa-tu-correo, redirigiendo):
+ * de tres de ellos no se sale, y contar una fase para una pantalla sin vuelta atrás prometería un
+ * camino que no existe.
+ *
+ * ⚠️ **El CONTEXTO solo en las dos primeras**, y no es un olvido: dice «producto · día · hora» de UNA
+ * línea, y de la cesta en adelante puede haber varias — una cesta con dos reservas rotularía la del
+ * producto que quedó seleccionado, que no es «la reserva» de nadie. El artboard del paso 08 también la
+ * dibuja sin contexto.
+ *
+ * @param {{step: number, productName: string, date: string|null, time: string|null, messages: object, locale: string}} state
+ * @returns {{active: number, total: number, steps: Array<{label: string, state: string}>, context: string, backLabel: string}|null}
  */
-export function buildProgress({ step, isPack = false, productName = '', date = null, time = null, messages = {}, locale = 'es' }) {
-    if (step !== 2 && step !== 3) {
+export function buildProgress({ step, productName = '', date = null, time = null, messages = {}, locale = 'es' }) {
+    const actual = FASES.findIndex((f) => f.step === step);
+
+    if (actual === -1) {
         return null;
     }
 
     const hasTime = time !== null && time !== '';
 
-    // La tercera fase cambia de NOMBRE según el tipo de producto: en una entrada son «Extras», en un
-    // pack son «Datos» (los del cumpleaños más los extras). No es cosmético: es lo que el cliente
-    // espera encontrar al llegar.
-    const third = isPack ? t(messages, 'phase_details') : t(messages, 'phase_extras');
-
     // El contexto se va llenando conforme el cliente elige. `filter(Boolean)` descarta los tramos
     // vacíos igual que el `array_filter` del servidor — sin él quedarían separadores sueltos.
-    const context = [
-        productName,
-        date ? ucfirst(shortDate(date, locale)) : null,
-        hasTime ? String(time).slice(0, 5) : null,
-    ].filter(Boolean).join(' · ');
+    const context = step === STEPS.DATE || step === STEPS.TIME
+        ? [
+            productName,
+            date ? ucfirst(shortDate(date, locale)) : null,
+            hasTime ? String(time).slice(0, 5) : null,
+        ].filter(Boolean).join(' · ')
+        : '';
 
     return {
-        active: step === 2 ? 1 : (hasTime ? 3 : 2),
-        total: 3,
-        steps: [
-            { label: t(messages, 'phase_date'), state: step === 2 ? 'current' : 'done' },
-            { label: t(messages, 'phase_time'), state: step === 2 ? 'todo' : (hasTime ? 'done' : 'current') },
-            { label: third, state: (step === 3 && hasTime) ? 'current' : 'todo' },
-        ],
+        active: actual + 1,
+        total: FASES.length,
+        steps: FASES.map((fase, i) => ({
+            label: t(messages, fase.label),
+            state: i < actual ? 'done' : (i === actual ? 'current' : 'todo'),
+        })),
         context,
+        backLabel: t(messages, FASES[actual].back),
     };
 }

@@ -45,7 +45,8 @@ const props = defineProps({
     dueErrors: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['back']);
+// ⚠️ Este paso ya no emite nada: su «Volver» lo trae la banda desde `#555`.
+defineEmits([]);
 
 /**
  * Lo que el comprador teclea aquí. Sube al padre con `v-model`, que es quien lo manda: esta pantalla
@@ -58,20 +59,9 @@ const t = (key) => translate(props.messages, key);
 </script>
 
 <template>
-    <!-- El pedido AÚN NO existe (se crea al confirmar), así que volver al carrito es seguro y no
-         pierde la cesta. Este paso no tiene banda de progreso, igual que la identificación. -->
-    <button type="button" class="bk-back purchase__back" @click="$emit('back')">
-        <!-- `arrow-left` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-        <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
-             stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
-             aria-hidden="true" focusable="false">
-            <g transform="translate(24 0) scale(-1 1)">
-                <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
-                <path d="M4.6 12h9.4" fill="none" />
-            </g>
-        </svg>
-        <span>{{ t('back_to_cart') }}</span>
-    </button>
+    <!-- ⚠️ El «Volver» de esta pantalla lo trae la BANDA desde `#555`, con el rótulo «Volver al
+         carrito» que ya tenía: el pedido AÚN NO existe (se crea al confirmar), así que volver es
+         seguro y no pierde la cesta. -->
 
     <h3 class="wiz__title">{{ t('pay_title') }}</h3>
     <p class="purchase__note">{{ t('pay_intro') }}</p>

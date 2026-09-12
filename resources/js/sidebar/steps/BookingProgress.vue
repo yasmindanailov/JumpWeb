@@ -10,7 +10,9 @@
  * entrada, «Datos» en un pack— y qué contexto se enseña lo compone `progress.js`, un módulo plano con
  * su propia paridad contra el servidor. Aquí se pinta.
  */
-import { t as translate, tp as translateWith } from '../i18n.js';
+// ⚠️ Solo `tp`: desde `#555` el único texto que este componente traduce por su cuenta es el contador.
+// Los rótulos de fase y el del «Volver» llegan ya resueltos en el view-model.
+import { tp as translateWith } from '../i18n.js';
 
 const props = defineProps({
     /** `{active, total, steps: [{label, state}], context}`, tal cual lo compone el servidor. */
@@ -20,7 +22,6 @@ const props = defineProps({
 
 defineEmits(['back']);
 
-const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
 </script>
 
@@ -37,7 +38,11 @@ const tp = (key, params) => translateWith(props.messages, key, params);
                         <path d="M4.6 12h9.4" fill="none" />
                     </g>
                 </svg>
-                <span>{{ t('back') }}</span>
+                <!-- ⚠️ El rótulo lo trae el view-model (`#555`): desde quién-eres y desde pagar se
+                     vuelve al CARRITO y hay que decirlo, y quién sabe a dónde vuelve cada paso es
+                     `progress.js`. Escribirlo aquí con un `v-if` sobre el paso sería la misma regla
+                     en dos sitios. -->
+                <span>{{ progress.backLabel }}</span>
             </button>
             <span class="bk-step-count">{{ tp('step_count', { n: progress.active, total: progress.total }) }}</span>
         </div>
