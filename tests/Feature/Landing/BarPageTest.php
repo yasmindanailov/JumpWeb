@@ -206,8 +206,13 @@ class BarPageTest extends TestCase
     {
         $this->publish();
 
-        $this->assertStringNotContainsString((string) __('site.bar_free_entry_yes'), $this->html());
-        $this->assertStringNotContainsString((string) __('site.bar_free_entry_no'), $this->html());
+        /*
+         * ⚠️⚠️ **Se asevera que la LÍNEA no existe, no que no aparezca su texto**, y lo enseñó el
+         * arnés: con la condición de la vista abierta a la fuerza, el estado `null` pinta
+         * `__('site.bar_free_entry_')` — o sea **la clave en crudo**, que no contiene ninguna de las
+         * dos frases. Comprobar que falta un texto deja pasar el caso en el que se publica otro.
+         */
+        $this->assertSame(0, $this->entryLines(), 'se dice algo del acceso sin que nadie lo haya decidido');
 
         foreach (['yes', 'no'] as $valor) {
             Setting::updateOrCreate(['key' => 'bar.free_entry'], ['value' => $valor, 'group' => 'bar']);
@@ -215,6 +220,22 @@ class BarPageTest extends TestCase
             Setting::flushMemo();
             $this->assertStringContainsString((string) __('site.bar_free_entry_'.$valor), $this->html(), "el acceso «{$valor}» no se publica");
         }
+    }
+
+    /**
+     * ⚠️ **Un valor que el producto no conoce no publica nada.** `bar.free_entry` se escribe desde
+     * un desplegable, pero el ajuste se puede fijar por consola o por SQL: sin esta guarda, un
+     * «quizá» acabaría pintando `site.bar_free_entry_quizá` en la página. Lo destapó el arnés.
+     */
+    public function test_an_unknown_free_entry_value_says_nothing(): void
+    {
+        $this->publish();
+        Setting::updateOrCreate(['key' => 'bar.free_entry'], ['value' => 'quizá', 'group' => 'bar']);
+        Cache::flush();
+        Setting::flushMemo();
+
+        $this->assertSame(0, $this->entryLines(), 'un valor desconocido publica una línea de acceso');
+        $this->assertStringNotContainsString('bar_free_entry', $this->html(), 'se escapa una clave de traducción en crudo a la página');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -322,6 +343,14 @@ class BarPageTest extends TestCase
         Storage::disk(BarImage::IMAGE_DISK)->put($path, $bytes);
 
         return $path;
+    }
+
+    /** Cuántas líneas de acceso pinta la página. Cero = no se dice nada, que es un estado. */
+    private function entryLines(): int
+    {
+        return $this->xpath()
+            ->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' bar-counter__entry ')]")
+            ->length;
     }
 
     private function html(): string
