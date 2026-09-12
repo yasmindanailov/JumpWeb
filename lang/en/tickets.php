@@ -123,12 +123,17 @@ return [
     // The lede says WHAT the account is for, not that one is required (`#561`).
     'identify_title' => 'Almost there',
     'identify_intro' => 'Your account keeps your code and your signature. With that, at the door you just show your phone.',
-    'pay_title' => 'Payment',
-    'pay_intro' => 'Review your booking before paying.',
+    // The heading says the WORK to do, not the transaction (`#562`): «Payment» made it four times the
+    // same word on one 390 px screen, and `pay_intro` said what the heading now says.
+    'pay_title' => 'Review your booking',
     // ── What is missing before paying (`#349`) ─────────────────────────────────────────────────
+    'due_heading' => 'We still need this',
     'due_phone_label' => 'Your phone number',
-    'due_phone_hint' => 'We need it so we can let you know if anything changes about your booking. We use it for nothing else.',
-    'due_terms' => 'I have read and accept the <a href=":url" target="_blank" rel="noopener">booking terms</a>.',
+    'due_phone_hint' => 'So we can call you about anything to do with your booking. We use it for nothing else.',
+    // The link is no longer inside the sentence (`#562`): inline it was 19 px tall against a 48 px
+    // touch floor. It has its own row now, so this string is plain text.
+    'due_terms' => 'I have read and accept the booking terms',
+    'due_terms_read' => 'Read the terms',
     'terms_link' => 'By booking you accept the <a href=":url" target="_blank" rel="noopener">booking terms</a>.',
     'due_terms_updated' => 'We have updated the booking terms. Please read and accept them to continue.',
     'pay_notice' => 'Secure card payment via Redsys. Your card details are not stored on this site.',
@@ -140,6 +145,8 @@ return [
     'payment_failed_title' => 'The payment did not go through',
     'payment_failed_intro' => 'Your bank declined the charge. Nothing was billed to your card.',
     'payment_failed_retry' => 'We are holding your booking for a few more minutes in case you want to retry the payment. If it does not go through, the spot will become available again.',
+    // The same promise WITH the time (`#563`): the order already stores when it expires.
+    'payment_failed_retry_until' => 'We are holding your spot until :time. If the payment is not completed, it will be free again.',
     'payment_failed_contact' => 'Contact us',
     'payment_failed_retry_cta' => 'Retry payment',
     'payment_failed_reason_label' => 'Reason',
@@ -161,9 +168,13 @@ return [
     'payment_rejected_generic' => 'We could not verify the payment result. If in doubt, please contact us.',
     'payment_verifying_title' => 'Verifying your payment',
     'payment_verifying_intro' => 'Your bank has processed the payment. We are confirming the operation with the gateway; this usually takes a few seconds.',
-    'payment_verifying_email_note' => 'We will email you when it is confirmed. You can also check the status from "My bookings".',
+    // The PERMISSION comes first (`#563`): this screen polls every 5 s and has no end, so what the
+    // customer needs to know is that they can leave. Watching it does not make it any faster.
+    'payment_verifying_email_note' => 'You can close this without losing anything: we will write as soon as it is confirmed, and the status is also in «My bookings».',
     'verify_title' => 'Verify your email',
     'verify_intro' => 'To complete your booking, verify your account from the email we sent you.',
+    // With the mailbox in front, which is where a mistyped address is found out (`#563`).
+    'verify_intro_sent' => 'We have written to :email. Open the link in the email to finish your booking.',
     'verify_hold' => 'Your spot is reserved while you confirm.',
     'reservation_created' => 'Booking created!',
     'reservation_thanks' => 'Thank you! Your spot is reserved. Here’s your summary:',
@@ -173,6 +184,9 @@ return [
     'payment_confirmed_note' => 'Payment confirmed.',
     'new_purchase' => 'Make another booking',
     'see_my_orders' => 'See my bookings',
+    // The door to the CARD from «booking created» (`#563`): it is the same code as always — there
+    // is no QR per order. The label repeats its zone's so the button promises the screen it opens.
+    'see_my_card' => 'View My QR',
     'guest_form_notice' => 'We’ll ask you to complete your booking form: we’ll email you the link (also in “My bookings”).',
     'statuses' => [
         'pending' => 'Pending payment',
@@ -192,7 +206,9 @@ return [
     'deposit_card_note' => 'Deposit :deposit · :rest at the park',
     'pay_at_park' => 'At the park',
     'paid_online_confirmed' => 'Paid online',
-    'pending_at_park' => 'Pending at the park',
+    // The VERB, as in the footer band (`#562`): here it hangs off «Total», which does not say what
+    // happens with that money. «At the park» stays where it hangs off «Paying now» (`pay_at_park`).
+    'pending_at_park' => 'To pay at the park',
     'subtotal' => 'Subtotal',
     // ▶ The two-axis labels (`ledger.*`, the gate-charge lines, «Refund pending», «Final total»…)
     // lived here until T3·4 of the book (`DECISIONES #315`): the book uses `journal.*` instead.

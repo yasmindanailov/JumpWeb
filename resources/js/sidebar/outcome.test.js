@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    answersByReservation, buildConfirmation, confirmationLine, declinedReasonText, dependentsByReservation,
+    answersByReservation, buildConfirmation, confirmationLine, declinedReasonText, dependentsByReservation, holdUntilLabel,
     loadConfirmation, loadPaymentStatus, pollVerdict, runRetry,
 } from './outcome.js';
 
@@ -434,4 +434,25 @@ test('un código desconocido o un corte de red no dejan el reintento mudo', asyn
         assert.equal(result.error, MESSAGES.errors.try_later);
         assert.equal(result.goTo, null, 'ante la duda, la reserva NO se da por perdida');
     }
+});
+
+/**
+ * **HASTA QUÉ HORA se guarda la plaza** (`#563`).
+ *
+ * ⚠️ Lo que esta guarda protege no es el formato: es que **una fecha que no se puede leer devuelva
+ * CADENA VACÍA**. La pantalla decide con eso si promete una hora o se queda en su frase de siempre, y
+ * un «Invalid Date» dentro de «te guardamos la plaza hasta las …» sería basura en un desenlace de
+ * dinero. Los tres casos que la producen son los tres que el contrato admite: ausente, nula y rota.
+ */
+test('la hora de retención solo se promete cuando se puede leer', () => {
+    assert.equal(holdUntilLabel(null), '', 'sin dato no se promete nada');
+    assert.equal(holdUntilLabel(undefined), '');
+    assert.equal(holdUntilLabel(''), '');
+    assert.equal(holdUntilLabel('mañana por la tarde'), '', 'una fecha rota NO se pinta: se calla');
+
+    // ⚠️ Con offset explícito, que es como la serializa el servidor (`toIso8601String`): así el
+    // resultado no depende de la zona horaria de la máquina que corre la suite.
+    const conOffset = holdUntilLabel('2026-09-13T18:42:00+02:00', 'es');
+
+    assert.match(conOffset, /\d{1,2}[:.]\d{2}/, 'con dato bueno se promete una hora legible');
 });

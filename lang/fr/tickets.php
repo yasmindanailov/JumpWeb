@@ -122,12 +122,17 @@ return [
     // Le chapô dit À QUOI SERT le compte, pas qu'il en faut un (`#561`).
     'identify_title' => 'On y est presque',
     'identify_intro' => "Ton compte garde ton code et ta signature. Avec ça, à l'entrée tu montres juste ton téléphone.",
-    'pay_title' => 'Paiement',
-    'pay_intro' => 'Vérifie ta réservation avant de payer.',
+    // Le titre dit le TRAVAIL à faire, pas la transaction (`#562`) : « Paiement » faisait quatre fois
+    // le même mot sur un écran de 390, et `pay_intro` disait ce que le titre dit maintenant.
+    'pay_title' => 'Vérifie ta réservation',
     // ── Ce qui manque avant de payer (`#349`) ──────────────────────────────────────────────────
+    'due_heading' => 'Il nous manque ceci',
     'due_phone_label' => 'Ton téléphone',
-    'due_phone_hint' => "Il nous manque pour pouvoir te prévenir si quelque chose change dans ta réservation. Nous ne l'utilisons pour rien d'autre.",
-    'due_terms' => 'J\'ai lu et j\'accepte les <a href=":url" target="_blank" rel="noopener">conditions de réservation</a>.',
+    'due_phone_hint' => "Pour t'appeler pour tout ce qui concerne ta réservation. Nous ne l'utilisons pour rien d'autre.",
+    // Le lien n'est plus dans la phrase (`#562`) : en ligne il mesurait 19 px de haut contre un seuil
+    // tactile de 48. Il a sa propre rangée, donc cette chaîne est du texte brut.
+    'due_terms' => 'J\'ai lu et j\'accepte les conditions de réservation',
+    'due_terms_read' => 'Lire les conditions',
     'terms_link' => 'En réservant, tu acceptes les <a href=":url" target="_blank" rel="noopener">conditions de réservation</a>.',
     'due_terms_updated' => 'Nous avons mis à jour les conditions de réservation. Merci de les lire et de les accepter pour continuer.',
     'pay_notice' => 'Paiement par carte sécurisé via Redsys. Tes données de carte ne sont pas conservées sur ce site.',
@@ -139,6 +144,8 @@ return [
     'payment_failed_title' => 'Le paiement n’a pas abouti',
     'payment_failed_intro' => 'Ta banque n’a pas autorisé le paiement. Rien n’a été débité de ta carte.',
     'payment_failed_retry' => 'Nous gardons ta réservation encore quelques minutes au cas où tu voudrais réessayer le paiement. Si cela n’aboutit pas, la place redeviendra disponible.',
+    // La même promesse AVEC l'heure (`#563`) : la commande sait déjà quand elle expire.
+    'payment_failed_retry_until' => 'Nous gardons ta place jusqu’à :time. Si le paiement n’aboutit pas, elle redeviendra libre.',
     'payment_failed_contact' => 'Nous contacter',
     'payment_failed_retry_cta' => 'Réessayer le paiement',
     'payment_failed_reason_label' => 'Motif',
@@ -160,9 +167,13 @@ return [
     'payment_rejected_generic' => 'Nous n’avons pas pu vérifier le résultat du paiement. En cas de doute, contacte-nous.',
     'payment_verifying_title' => 'Vérification de ton paiement',
     'payment_verifying_intro' => 'Ta banque a traité le paiement. Nous confirmons l’opération avec la passerelle ; cela prend généralement quelques secondes.',
-    'payment_verifying_email_note' => 'Nous t’enverrons un e-mail dès que ce sera confirmé. Tu peux aussi vérifier l’état depuis "Mes réservations".',
+    // La PERMISSION d'abord (`#563`) : cet écran interroge le serveur toutes les 5 s et n'a pas de
+    // fin, donc ce que le client a besoin de savoir c'est qu'il peut partir.
+    'payment_verifying_email_note' => 'Tu peux fermer ceci sans rien perdre : nous t’écrivons dès que ce sera confirmé, et l’état est aussi dans « Mes réservations ».',
     'verify_title' => 'Vérifie ton e-mail',
     'verify_intro' => 'Pour finaliser ta réservation, vérifie ton compte depuis l’e-mail que nous t’avons envoyé.',
+    // Avec la boîte mail devant, c'est là qu'on découvre une adresse mal saisie (`#563`).
+    'verify_intro_sent' => 'Nous avons écrit à :email. Ouvre le lien de l’e-mail pour terminer ta réservation.',
     'verify_hold' => 'Ta place est réservée pendant que tu confirmes.',
     'reservation_created' => 'Réservation créée !',
     'reservation_thanks' => 'Merci ! Ta place est réservée. Voici le récapitulatif :',
@@ -172,6 +183,9 @@ return [
     'payment_confirmed_note' => 'Paiement confirmé.',
     'new_purchase' => 'Faire une autre réservation',
     'see_my_orders' => 'Voir mes réservations',
+    // La porte vers la CARTE depuis « réservation créée » (`#563`) : c'est le même code que
+    // toujours. Le libellé reprend celui de sa zone pour promettre l'écran où il mène.
+    'see_my_card' => 'Voir Mon QR',
     'guest_form_notice' => 'Nous te demanderons de compléter le formulaire de ta réservation : nous t’enverrons le lien par e-mail (aussi dans « Mes réservations »).',
     'statuses' => [
         'pending' => 'En attente de paiement',
@@ -191,7 +205,9 @@ return [
     'deposit_card_note' => 'Acompte :deposit · :rest au parc',
     'pay_at_park' => 'Au parc',
     'paid_online_confirmed' => 'Payé en ligne',
-    'pending_at_park' => 'En attente au parc',
+    // Le VERBE, comme dans la bande du pied (`#562`) : ici il pend de « Total », qui ne dit pas ce
+    // qu'on fait de cet argent. « Au parc » reste là où il pend de « Tu paies » (`pay_at_park`).
+    'pending_at_park' => 'À payer au parc',
     'subtotal' => 'Sous-total',
     // ▶ Les libellés du modèle à deux axes (`ledger.*`, les lignes de frais à l'accueil,
     // « Remboursement en attente », « Total final »…) vivaient ici jusqu'à la T3·4 du livre

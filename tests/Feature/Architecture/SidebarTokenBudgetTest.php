@@ -323,6 +323,32 @@ class SidebarTokenBudgetTest extends TestCase
     }
 
     /**
+     * **Las dos filas que son PUERTA comparten receta** (`#562`).
+     *
+     * «Ver más fechas» (`#557`) y «Leer las condiciones» son la misma cosa del embudo —una fila que
+     * lleva a otro sitio, con sus 48 px de alto— y por eso la forma se declara UNA vez para las dos en
+     * vez de copiarse.
+     *
+     * ⚠️⚠️ **Sin esto, el modo de fallo no es que se rompa: es que la copia se quede atrás.** Quien
+     * ajuste el alto, el canto o el relleno de una tocará su regla y la otra seguirá con los valores
+     * viejos, **sin que falle nada** — es como murió el sistema de sombras de `#196` y el de badges de
+     * la tanda A de `#292`. Y no lo ve ninguna otra guarda: `TouchTargetTest` recorre RUTAS de la web
+     * pública, y el cajón no es una ruta (la lección de `#557`).
+     */
+    public function test_the_two_door_rows_of_the_funnel_share_one_recipe(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.cal-more,\s*\n\.paydue__terms\s*\{[^}]*min-height:\s*48px/s',
+            $css,
+            "«Leer las condiciones» ha dejado de compartir la receta de «Ver más fechas».\n".
+            'Las dos son la misma pieza del embudo; si una copia los valores, se quedará atrás en '.
+            'cuanto alguien ajuste la otra, y el suelo táctil de 48 se pierde sin que falle nada.'
+        );
+    }
+
+    /**
      * ⚠️ **Y el «Volver» del área lleva su propio aire**, en vez de depender de que la pantalla
      * siguiente empiece por un bloque con margen. Así estuvo hasta el 2026-08-23, y se rompió en
      * cuanto una zona dejó de traer título.

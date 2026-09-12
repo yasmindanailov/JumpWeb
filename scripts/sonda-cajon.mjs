@@ -15,7 +15,11 @@
  *     está cerrada de verdad;
  *   · el REFLUJO, que es lo que puede romper subir el cuerpo: alto del contenido contra el del panel,
  *     desborde horizontal y textos RECORTADOS (`scrollWidth > clientWidth`);
- *   · los objetivos táctiles por debajo de `--tap-min`;
+ *   · los objetivos táctiles por debajo de `--tap-min`. ⚠️⚠️ **Un `<input type=checkbox>` sale SIEMPRE
+ *     acusado y casi nunca es culpable**: lo que el dedo pulsa es el `<label class="check">` que lo
+ *     envuelve —la fila entera—, y esta sonda mide la CAJA del control. O sea que su cifra ahí es un
+ *     suelo, no el área real. Los que sí cuentan son los controles sueltos: `.sidecart__close` y
+ *     `.bk-back`, que no tienen etiqueta alrededor que los agrande.
  *   · y una CAPTURA de ventana por pantalla.
  *
  * ⚠️ **Captura de VENTANA y no de elemento** (la trampa de `#303`, pagada dos veces): una captura de
@@ -28,6 +32,10 @@
  *      ⚠️ El navegador se instala con la CLI del PROYECTO. Con `npx playwright install` cae en la caché
  *      de `npx` y el `playwright-core` de `node_modules` **no lo encuentra** (medido el 2026-09-11).
  *      ⚠️ `npm install` PODA `playwright-core` (va sin guardar): hay que reinstalarlo después.
+ *      ⚠️⚠️ **`ERR_CONNECTION_REFUSED` en `localhost:8081` NO es un defecto del producto: es el
+ *      puente**, que se cae solo. Se relanza con la línea de arriba y se vuelve a medir — la sonda
+ *      sale con código 0 igualmente y su tabla imprime «ERROR» en las dos filas, así que leer solo el
+ *      «0 nodos bajo 16 px» del final diría que todo está perfecto **sin haber medido nada**.
  *   2. docker compose exec -u sail -T laravel.test node scripts/sonda-cajon.mjs antes
  *      … y tras el cambio: `node scripts/sonda-cajon.mjs despues`
  *
@@ -148,6 +156,30 @@ async function aceptarCookies(page) {
     }
 }
 
+/**
+ * Abre la primera categoría del catálogo.
+ *
+ * ⚠️⚠️ **Sin esto la sonda agota el tiempo con el cajón SANO, y llevaba así desde `#553`.** Aquella
+ * tanda hizo que las dos categorías nazcan CERRADAS, y sus productos **siguen en el DOM**: el
+ * `waitForSelector('.catalog__item')` pasa en verde y el clic siguiente se queda esperando a un
+ * elemento que existe pero no se puede pulsar. `#554` dejó el diagnóstico escrito y la sonda sin
+ * arreglar. ▶ *Que un nodo esté en el árbol no es que se pueda pulsar.*
+ *
+ * Se comprueba con `aria-expanded`, que es el estado REAL del acordeón: una clase la lee solo el CSS.
+ */
+async function abrirCategoria(page) {
+    const cabecera = page.locator('.catalog-acc__head').first();
+
+    if (! await cabecera.count()) return;
+
+    if (await cabecera.getAttribute('aria-expanded') === 'false') {
+        await cabecera.click();
+        await page.waitForFunction(
+            () => document.querySelector('.catalog-acc__head')?.getAttribute('aria-expanded') === 'true',
+        ).catch(() => {});
+    }
+}
+
 async function recorrer(context, viewport, nombreViewport, informe) {
     const page = await context.newPage();
     await page.setViewportSize(viewport);
@@ -201,6 +233,7 @@ async function recorrer(context, viewport, nombreViewport, informe) {
     await page.waitForSelector('.catalog__item');
     await medir('01-catalogo');
 
+    await abrirCategoria(page);
     await page.locator('.catalog__item').first().click();
     await page.waitForSelector('.daystrip__day, .purchase__empty');
     await medir('02-fecha');
@@ -268,6 +301,48 @@ async function recorrer(context, viewport, nombreViewport, informe) {
         await page.waitForFunction(() => ! document.querySelector('.sidecart__panel .jj-spinner')).catch(() => {});
         await medir(`1${i + 1}-zona-${rotulo}`);
     }
+
+    // ── EL PASO DE PAGAR ─────────────────────────────────────────────────────────────────────────
+    // ⚠️⚠️ **Va aquí, DESPUÉS de la cuenta, y el orden es el instrumento** (`#562`): a la pantalla de
+    // pagar solo se llega CON SESIÓN, y la sesión la acaba de conseguir el bloque de arriba. Hasta
+    // esta tanda la sonda se quedaba en «identificarse», así que **la pantalla donde el cliente teclea
+    // su teléfono y acepta las condiciones no la medía nadie** — ni ésta ni `sonda-geometria.mjs`,
+    // que solo llega a lo público.
+    // ⚠️ Con sesión el carrito manda **directo al pago** (`#556`): la fase de «quién eres» no se
+    // visita, así que un solo CTA separa el carrito de esta pantalla.
+    paso = '20-pagar · volviendo al embudo';
+    await page.goto(`${BASE}/entradas`, { waitUntil: 'domcontentloaded' });
+    await esperarCajon(page);
+    await page.waitForSelector('.catalog__item, .cart__item');
+    // ⚠️ La traza no es ruido: un `click` que agota el tiempo dice el selector y **no dice en qué
+    // pantalla estaba el cajón**, que es lo único que hace falta para arreglarlo. La primera versión
+    // de este bloque murió dos veces con «Timeout 12000ms» y sin nada más que leer.
+    console.log(`   · ${nombreViewport}: al volver al embudo → «${await page.locator('.wiz__title').first().innerText().catch(() => '—')}»`);
+
+    // ⚠️ **Se decide por lo que HAY en pantalla, no por lo que debería haber**: la cesta sobrevive a
+    // la pasada anterior, así que el cajón puede nacer en el catálogo o en el carrito. Preguntarle al
+    // DOM cuesta una línea; suponerlo cuesta un `click` que agota el tiempo con el cajón sano.
+    if (! await page.locator('.cart__item').count()) {
+        await abrirCategoria(page);
+        await page.locator('.catalog__item').first().click();
+        await page.waitForSelector('.daystrip__day, .purchase__empty');
+        await page.locator('.daystrip__day').first().click();
+        await page.waitForSelector('.purchase__chip');
+        await page.locator('.purchase__chip:not(.is-full)').first().click();
+        await page.waitForSelector('.qtybox');
+        await page.locator('.bk-cta').click();
+        await page.waitForSelector('.cartbar, .cart__item');
+        if (await page.locator('.cartbar').count()) await page.locator('.cartbar').click();
+        await page.waitForSelector('.cart__item');
+    }
+
+    await page.locator('.bk-cta').click();
+    await page.waitForSelector('.cart--summary', { timeout: 20000 });
+    // ⚠️ **El ratón se aparta antes de medir** (`#554`): tras un clic se queda donde pulsó, y el CTA
+    // de la pantalla siguiente ocupa el mismo sitio — se mediría en `:hover` y saldría un color que
+    // en reposo no existe.
+    await page.mouse.move(0, 0);
+    await medir('20-pagar');
 
     await page.close();
 }

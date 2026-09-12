@@ -60,6 +60,7 @@ import { buildFooter } from '../resources/js/sidebar/foot.js';
 import { gatewayForm } from '../resources/js/sidebar/pay.js';
 import { registerErrors } from '../resources/js/sidebar/register.js';
 import { buildConfirmation, declinedReasonText } from '../resources/js/sidebar/outcome.js';
+import { buyerNeeds } from '../resources/js/sidebar/buyer-due.js';
 
 /** Los pasos que ya están transcritos. Un paso que no esté aquí falla en voz alta. */
 const COMPONENTS = {
@@ -196,11 +197,27 @@ const PROPS_FROM_API = {
         account: state.account ?? {},
     }),
 
+    /**
+     * ⚠️⚠️ **`need` se COMPONE aquí con `buyer-due.js`, y hasta `#562` no viajaba**: sin él las dos
+     * cosas que esta pantalla puede pedir —el teléfono y la aceptación de las condiciones— salían
+     * siempre `false` y el bloque entero **no se emitía nunca**, así que el gate congelaba un árbol
+     * sin la única parte de esta pantalla que el cliente rellena.
+     *
+     * Lo que lo cierra es que el contexto de cuenta llegue del SERVIDOR (`api.accountContext`, el
+     * mismo que siembra el montaje) y que la decisión la tome el módulo real. Un `need` inyectado a
+     * mano por el test habría pintado el bloque sin ejercitar `CheckoutDuties`, que es quien decide.
+     *
+     * ⚠️ Los errores por campo van vacíos a propósito: son el «no» de un intento anterior, y el árbol
+     * que se congela es el de la pantalla **en reposo**, como el velo del armazón.
+     */
     [STEPS.PAY]: (api, messages, state) => ({
         lines: cartRows(api.quote?.lines ?? [], api.cart ?? [], api.fieldsByProduct ?? {}, dependentsById(api.dependents?.data ?? [])),
         error: state.error ?? '',
         messages,
         locale: state.locale ?? 'es',
+        need: buyerNeeds(api.accountContext ?? null, {}),
+        // La ruta la compone el SERVIDOR, como `contactUrl` del paso 10: el cajón no las conoce.
+        termsUrl: state.termsUrl ?? '',
     }),
 
     /**
@@ -225,6 +242,10 @@ const PROPS_FROM_API = {
     [STEPS.CONFIRMED]: (api, messages, state) => ({
         confirmation: api.order ? buildConfirmation(api.order, api.eventData ?? {}) : null,
         orderCode: state.orderCode ?? '',
+        // ⚠️ **Sin sesión no hay carné que ofrecer** (`#563`): la puerta al QR solo se pinta con
+        // titular, porque los textos del área viajan solo con sesión. Viaja como estado —igual que
+        // `registration`— porque lo decide el SERVIDOR al pintar la página, no el cliente.
+        hasSession: state.hasSession === true,
         // El enlace de registro lo inyecta el SERVIDOR en el montaje (`RegistrationLink`): no es una
         // derivación del cliente, así que viaja como estado y no se recompone aquí.
         registration: state.registration ?? null,

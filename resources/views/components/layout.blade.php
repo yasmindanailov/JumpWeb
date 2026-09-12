@@ -249,12 +249,15 @@
                     <div id="sidecart-spa" data-boot="{{ json_encode([
                         'outcome' => $sidebarEntry->outcome,
                         'orderCode' => $sidebarEntry->orderCode,
-                        {{-- ⚠️ Los dos textos de CONDICIONES del paso de pagar llevan un `<a href>` dentro
-                             y viajan **ya interpolados**, por lo mismo que los del alta: recomponer una
-                             frase traducida en el cliente obliga a partirla, y en francés y en inglés
-                             no ordena igual. La URL la decide `routes/web.php`, no el cajón (`#349`). --}}
+                        {{-- ⚠️ `terms_link` lleva un `<a href>` dentro y viaja **ya interpolado**, por lo
+                             mismo que los del alta: recomponer una frase traducida en el cliente obliga
+                             a partirla, y en francés y en inglés no ordena igual. La URL la decide
+                             `routes/web.php`, no el cajón (`#349`).
+                             ⚠️⚠️ **`due_terms` salió de aquí en `#562`**: la casilla dejó de llevar el
+                             enlace dentro —19 px de alto contra un suelo táctil de 48— y las condiciones
+                             se abren desde su propia fila, que recibe la URL por `urls.terms`. Al ser ya
+                             texto plano, interpolarlo sería pasarle un `:url` que nadie sustituye. --}}
                         'messages' => array_replace(__('tickets'), [
-                            'due_terms' => __('tickets.due_terms', ['url' => route('legal.condiciones')]),
                             'terms_link' => __('tickets.terms_link', ['url' => route('legal.condiciones')]),
                         ]),
                         'ui' => __('ui'),
@@ -508,6 +511,13 @@
                             // SERVIDOR — un «/» quemado en el cliente fallaría en una instalación con
                             // prefijo de idioma.
                             'home' => route('home'),
+                            // ⚠️ **Las CONDICIONES de reserva, para la fila del paso de pagar**
+                            // (`#562`). Antes la URL viajaba dentro del literal `due_terms`; al salir
+                            // el enlace de la frase tiene que viajar suelta, y por el mismo motivo que
+                            // las otras tres: es `routes/web.php` quien decide el slug, y un `href` no
+                            // es atributo de contrato del diff de árbol, así que un enlace roto aquí
+                            // pasaría el gate en verde.
+                            'terms' => route('legal.condiciones'),
                             // ⚠️ **La IDA a Google, y solo si esta instalación la ofrece**
                             // (`specs/auth-con-google.md` §10): su presencia ES el interruptor del
                             // botón — sin claves no viaja la clave y el botón no se pinta, que es el

@@ -56,7 +56,8 @@ describe('el store del desenlace', () => {
         o.setOrderCode('JW-123');
         o.setGateway({ action: 'https://sis-t.redsys.es', fields: {} });
         o.confirmation = { code: 'JW-123' };
-        o.setDeclinedReason('Tarjeta caducada');
+        o.declinedReason = 'Tarjeta caducada';
+        o.holdUntil = '18:42';
         o.confirming = true;
         o.retrying = true;
 
@@ -69,6 +70,7 @@ describe('el store del desenlace', () => {
         assert.equal(o.gateway, null);
         assert.equal(o.confirmation, null);
         assert.equal(o.declinedReason, '');
+        assert.equal(o.holdUntil, '', 'la hora de caducidad es del pedido anterior: se barre con él');
         assert.equal(o.confirming, false);
         assert.equal(o.retrying, false);
     });
@@ -87,13 +89,42 @@ describe('el store del desenlace', () => {
         assert.deepEqual(o.registration, { url: 'https://parque.test/registro' });
     });
 
-    test('vacío en el motivo del rechazo significa «no se pudo preguntar»', () => {
+    /**
+     * ⚠️ **Sin respuesta no se pinta el bloque; CON respuesta se pinta siempre.** El servidor cae a
+     * `default` cuando no conoce el código, así que «hay respuesta» y «hay motivo conocido» no son lo
+     * mismo — y la diferencia se ve en pantalla.
+     *
+     * ⚠️ **Y la hora de caducidad sigue la misma regla** (`#563`): sin respuesta no se promete un
+     * plazo, porque no se conoce. Un desenlace de dinero no puede inventar una hora.
+     */
+    test('sin respuesta no hay ni motivo ni hora que prometer', () => {
         const o = store();
+        const messages = { payment_failed: { reasons: { cvv_wrong: 'El CVV no es correcto.', default: 'No se pudo completar.' } } };
 
+        o.applyDeclinedReason(messages, { declined_reason: 'cvv_wrong', expires_at: '2026-09-13T18:42:00+02:00' }, 'es');
+        assert.equal(o.declinedReason, 'El CVV no es correcto.');
+        // ⚠️ **Se asevera que está FORMATEADA, no solo que no esté vacía**: lo que va a pantalla es
+        // «te guardamos la plaza hasta las …», y ahí un ISO crudo sería basura dentro de una promesa.
+        // Con `assert.notEqual(…, '')` la guarda pasaba en verde poniendo el `expires_at` tal cual.
+        assert.match(o.holdUntil, /^\d{1,2}[:.]\d{2}$/, 'la hora va FORMATEADA, no el ISO del contrato');
+
+        o.applyDeclinedReason(messages, null, 'es');
         assert.equal(o.declinedReason, '');
-        o.setDeclinedReason('Tarjeta caducada');
-        assert.equal(o.declinedReason, 'Tarjeta caducada');
-        o.setDeclinedReason(null);
-        assert.equal(o.declinedReason, '');
+        assert.equal(o.holdUntil, '');
+    });
+
+    /**
+     * ⚠️ **Un pedido SIN caducidad no deja la promesa a medias**: `expires_at` es anulable en el
+     * contrato, y ahí la pantalla tiene que volver a su frase de siempre en vez de pintar una hora
+     * vacía dentro de una frase que la anuncia.
+     */
+    test('con motivo pero sin caducidad se dice el motivo y no la hora', () => {
+        const o = store();
+        const messages = { payment_failed: { reasons: { default: 'No se pudo completar.' } } };
+
+        o.applyDeclinedReason(messages, { declined_reason: null, expires_at: null }, 'es');
+
+        assert.equal(o.declinedReason, 'No se pudo completar.');
+        assert.equal(o.holdUntil, '');
     });
 });

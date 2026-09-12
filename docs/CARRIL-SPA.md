@@ -178,6 +178,24 @@ aquí y no se reescribe lo de arriba: **la corrección va delante del texto que 
    deja el bundle SSR rancio** por su `touch` al restaurar → 35 casos del contrato en rojo con el árbol
    limpio.
 
+7. **La sonda no llegaba al paso de PAGAR, y llevaba rota desde `#553`** (`#562`). El recorrido moría
+   en el primer clic del catálogo: desde aquella tanda las categorías nacen **cerradas** y sus
+   productos **siguen en el DOM**, así que `waitForSelector('.catalog__item')` pasa en verde y el clic
+   siguiente agota el tiempo con el cajón sano. `#554` dejó el diagnóstico escrito y la sonda sin
+   arreglar. ▶ *Que un nodo esté en el árbol no es que se pueda pulsar.* Hoy `abrirCategoria()` mira
+   `aria-expanded` —el estado REAL del acordeón; una clase la lee solo el CSS— y el recorrido termina
+   en `20-pagar`, **la pantalla que no medía nadie**: ni esta sonda ni `sonda-geometria.mjs`, que solo
+   llega a lo público. ⚠️ Ese bloque va **después** del de la cuenta a propósito: a pagar solo se
+   llega CON sesión, y la sesión la consigue ese bloque.
+
+8. **El suelo táctil del cajón NO está cumplido, y no lo ve ninguna guarda** (`#563`). Medido sobre
+   **32 pantallas**: `.sidecart__close` **26 px** en las 32 · `.bk-back` **20** en 30 ·
+   `.pwd-input__toggle` **32** · `.acct__btn` **45**, contra los **48** del producto. Son los dos
+   controles que existen en las 25 pantallas. ▶ `TouchTargetTest` recorre **RUTAS** de la web pública
+   y el cajón no es una ruta suya — la misma lección que `#557` pagó con el stepper. **Antes de
+   arreglarlo hace falta una guarda que vea el cajón**; el censo bueno lo da la sonda. Ficha en
+   `DEUDA.md` (Alta) y es decisión del owner: toca el armazón, o sea las 25 a la vez.
+
 ⚠️ **Y el reparto por TÍTULO de sección de §5 se queda corto**: medido, **31 declaraciones** de clases
 del cajón viven fuera de esos bloques (`.auth__*`, `.acct__*`, `.whoblock__*`, `.guardnote__*`,
 `.acc-tile__name`…), más dos familias enteras (`.qr-pass__*`, `.dep-pick__*`). ▶ *Lo que define al cajón

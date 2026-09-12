@@ -35,6 +35,16 @@ const t = (key) => translate(props.messages, key);
 
 <template>
     <div class="purchase__verifying" role="status" aria-live="polite">
+        <!-- ⚠️ **La pegatina de ESPERA, que llevaba sin consumidor desde `#258`** (`#563`): el sistema
+             declara cuatro estados y ésta era el único sin superficie que lo pintara. Su anillo lo pone
+             el spinner del producto, que es sustituible por instalación (`UI-SPINNER.md`); duplicarlo
+             como icono quieto serían dos dibujos de lo mismo.
+             ⚠️ Va `aria-hidden`: el estado ya lo anuncian el `role="status"` y el titular. -->
+        <div class="purchase__party" aria-hidden="true">
+            <span class="state-badge state-badge--wait">
+                <span class="jj-spinner jj-spinner--xs"></span>
+            </span>
+        </div>
         <h3 class="wiz__title">{{ t('payment_verifying_title') }}</h3>
         <p class="purchase__note">{{ t('payment_verifying_intro') }}</p>
         <p v-if="orderCode" class="purchase__code">{{ t('order_code') }}: <strong>{{ orderCode }}</strong></p>

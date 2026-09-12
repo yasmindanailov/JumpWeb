@@ -10,6 +10,10 @@ import { useCatalogStore } from '../stores/catalog.js';
 import { useBookingStore } from '../stores/booking.js';
 import { useSelectionStore } from '../stores/selection.js';
 import { useDependentsStore } from '../stores/dependents.js';
+// ⚠️ El desenlace abre la zona del CARNÉ, que vive en la OTRA sección (`#563`). Se hace con el store,
+// que es global, y con `openZone()`, que ya siembra la vuelta: ver `showCard()`.
+import { useAccountStore } from '../stores/account.js';
+import { ZONES } from '../account/navigation.js';
 import { needsAssignment } from '../assignment.js';
 import { STEPS, isOutcome } from '../machine.js';
 import { api } from '../api.js';
@@ -671,6 +675,7 @@ async function checkout() {
  * serán suyos también, y encontrárselo ya fuera del componente del embudo era el objetivo.
  */
 const authStore = useAuthStore();
+const accountStore = useAccountStore();
 
 /**
  * Envía las credenciales y, si entra, continúa la compra donde la dejó.
@@ -909,7 +914,9 @@ async function loadOutcome() {
     if (store.step === STEPS.DECLINED) {
         const status = await tracked(loadPaymentStatus({ orderCode: outcomeStore.orderCode, api }));
 
-        outcomeStore.applyDeclinedReason(props.messages, status);
+        // ⚠️ El idioma entra porque la MISMA respuesta trae la hora de caducidad (`#563`) y una hora
+        // se formatea distinto en cada uno: sin él, un cliente en inglés leería el formato español.
+        outcomeStore.applyDeclinedReason(props.messages, status, props.locale);
 
         return;
     }
@@ -1145,6 +1152,32 @@ function addAnother() {
     store.enter(STEPS.CATALOG);
 }
 
+/**
+ * **La puerta al CARNÉ desde la reserva creada** (`#563`, `[DECIDIDO owner]`).
+ *
+ * ⚠️ **`openZone()` y no `showAccount()` + `go()`**: aquélla existe justo para «abrir el área EN una
+ * zona viniendo de fuera de ella», y siembra la vuelta — sin ella, «volver» sacaría de la sección en
+ * vez de llevar al índice de la cuenta. Escribirlo aquí a mano sería el tercer sitio donde recordar
+ * que hay que sembrar `under`.
+ *
+ * ⚠️ **El desenlace NO se barre**: si el cliente vuelve a la compra, su reserva creada sigue ahí. Eso
+ * lo hace `addAnother()`, que es el gesto que dice «empiezo otra».
+ */
+function showCard() {
+    accountStore.openZone(ZONES.CARD);
+}
+
+/**
+ * ¿Hay sesión con la que enseñar el carné?
+ *
+ * ⚠️⚠️ **Se mira el titular del HTML, no la sesión de ahora, y aquí eso es lo CORRECTO**: los textos
+ * del área de cuenta viajan **solo con sesión** (`layout.blade.php`), así que si la página se pintó
+ * anónima la zona del carné saldría en blanco — ofrecer el botón sería mandar al que acaba de pagar a
+ * una pantalla vacía. Y no hay caso perdido: a esta pantalla se llega SIEMPRE por una navegación
+ * completa (la vuelta del banco o el enlace del correo), así que el dato del HTML está al día.
+ */
+const hasSession = computed(() => props.userId !== null && props.userId !== '');
+
 /** Deja la SELECCIÓN en blanco sin tocar la cesta. Espejo de `Purchase::clearSelection()`. */
 function clearSelection() {
     catalogStore.clearSelection();
@@ -1272,6 +1305,7 @@ function goBack() {
 
         <VerifyStep
             v-else-if="store.step === STEPS.VERIFY_EMAIL"
+            :email="authStore.pendingEmail"
             :messages="messages" />
 
         <PayStep
@@ -1283,7 +1317,8 @@ function goBack() {
             :messages="messages"
             :locale="locale"
             :need="buyerNeed"
-            :due-errors="buyerDue.errors" />
+            :due-errors="buyerDue.errors"
+            :terms-url="urls.terms ?? ''" />
 
         <RedirectStep
             v-else-if="store.step === STEPS.REDIRECTING"
@@ -1295,9 +1330,11 @@ function goBack() {
             :confirmation="outcomeStore.confirmation"
             :order-code="outcomeStore.orderCode"
             :registration="outcomeStore.registration"
+            :has-session="hasSession"
             :messages="messages"
             :locale="locale"
-            @add-another="addAnother" />
+            @add-another="addAnother"
+            @show-card="showCard" />
 
         <DeclinedStep
             v-else-if="store.step === STEPS.DECLINED"
@@ -1305,9 +1342,9 @@ function goBack() {
             :reason="outcomeStore.declinedReason"
             :retrying="outcomeStore.retrying"
             :contact-url="urls.contact ?? ''"
+            :hold-until="outcomeStore.holdUntil"
             :messages="messages"
-            @retry="retryPayment"
-            @add-another="addAnother" />
+            @retry="retryPayment" />
 
         <VerifyingStep
             v-else-if="store.step === STEPS.VERIFYING"

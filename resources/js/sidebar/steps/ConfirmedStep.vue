@@ -30,6 +30,16 @@ const props = defineProps({
     orderCode: { type: String, default: '' },
 
     /**
+     * ¿Hay sesión con la que enseñar el carné? (`#563`)
+     *
+     * ⚠️ **La puerta al QR NO se puede ofrecer siempre**: a esta pantalla se llega también por el
+     * enlace de verificación de correo, y ahí puede no haber sesión — el botón llevaría a una zona de
+     * cuenta que pediría identificarse, justo al que acaba de pagar. Sin sesión, la única acción es
+     * «hacer otra reserva», y entonces vuelve a ser primaria.
+     */
+    hasSession: { type: Boolean, default: false },
+
+    /**
      * El bloque de «registro del parque» que publica `GET /config`, o `null`.
      *
      * ⚠️ Su `url` llega **ya saneada por el servidor** (`SEC-07`): la edita un operador y en la web el
@@ -42,7 +52,7 @@ const props = defineProps({
     locale: { type: String, default: 'es' },
 });
 
-defineEmits(['add-another']);
+defineEmits(['add-another', 'show-card']);
 
 const t = (key) => translate(props.messages, key);
 </script>
@@ -69,23 +79,34 @@ const t = (key) => translate(props.messages, key);
             <ul class="cart cart--summary">
                 <SummaryLine v-for="(line, i) in confirmation.lines" :key="i" :line="line" :messages="messages" :locale="locale" />
             </ul>
-            <div class="purchase__total">
-                <span>{{ t('total') }}</span>
-                <strong>{{ money(confirmation.total_cents) }}</strong>
+            <!-- ⚠️ **Los tres importes van JUNTOS, en una caja** (`#563`, artboard
+                 `Pago y Desenlaces PJP`): sueltos, «Total», «Pagado online» y «A pagar en el parque»
+                 se leían como tres frases de la pantalla y no como las tres partes de una misma
+                 cuenta. Es la misma pieza de superficie que el resto del cajón, sin estrenar nada.
+                 ⚠️ **Los importes se PINTAN, no se suman** (`PAY-12`), como dice el docblock. -->
+            <div class="purchase__money">
+                <div class="purchase__total">
+                    <span>{{ t('total') }}</span>
+                    <strong>{{ money(confirmation.total_cents) }}</strong>
+                </div>
+                <!-- #225 F3: el agregado se etiqueta NEUTRO «Pagado online» —lo cobrado ahora es señal(es)
+                     + productos de pago completo— y la señal por-producto se nombra en su card. Solo con el
+                     pedido PAGADO y algo pendiente en el parque: en «verifica tu correo» sigue `pending`. -->
+                <template v-if="confirmation.status === 'paid' && confirmation.park_cents > 0">
+                    <!-- ⚠️ **Lo COBRADO lleva el rol de CIFRA** (`--money`, `#479`) y lo pendiente no:
+                         son dos cosas distintas y el artboard las distingue así. Con `--money` valiendo
+                         la tinta por defecto, estrenarlo aquí no mueve un píxel en esta instalación —y
+                         en la que le dé color, la cifra cobrada se separa sola. -->
+                    <div class="purchase__split purchase__split--paid">
+                        <span>{{ t('paid_online_confirmed') }}</span>
+                        <strong>{{ money(confirmation.online_cents) }}</strong>
+                    </div>
+                    <div class="purchase__split">
+                        <span>{{ t('pending_at_park') }}</span>
+                        <strong>{{ money(confirmation.park_cents) }}</strong>
+                    </div>
+                </template>
             </div>
-            <!-- #225 F3: el agregado se etiqueta NEUTRO «Pagado online» —lo cobrado ahora es señal(es)
-                 + productos de pago completo— y la señal por-producto se nombra en su card. Solo con el
-                 pedido PAGADO y algo pendiente en el parque: en «verifica tu correo» sigue `pending`. -->
-            <template v-if="confirmation.status === 'paid' && confirmation.park_cents > 0">
-                <div class="purchase__split">
-                    <span>{{ t('paid_online_confirmed') }}</span>
-                    <strong>{{ money(confirmation.online_cents) }}</strong>
-                </div>
-                <div class="purchase__split">
-                    <span>{{ t('pending_at_park') }}</span>
-                    <strong>{{ money(confirmation.park_cents) }}</strong>
-                </div>
-            </template>
         </template>
 
         <!-- ⚠️ **El SELLO va sobre el CÓDIGO, que es lo que el cliente se lleva** (`#278`). En el
@@ -105,10 +126,30 @@ const t = (key) => translate(props.messages, key);
             <a :href="registration.url" target="_blank" rel="noopener" class="btn btn--ghost purchase__reginfo-btn">{{ registration.label }} →</a>
         </div>
 
-        <!-- #225 F3: «Ver mis reservas» se retiró (ya está SIEMPRE en el bloque de cuenta del cajón),
-             así que queda UNA sola acción y por eso es primaria. -->
+        <!--
+          **LAS DOS SALIDAS** (`#563`, `[DECIDIDO owner]`).
+
+          ⚠️⚠️ **La principal es el CARNÉ, que es lo que hace falta en la puerta del parque** — y es
+          **el mismo de siempre**: no hay un QR por pedido. Un código por compra obligaría al cliente a
+          buscar cuál toca hoy y a la puerta a leer varios; el registro ES la cuenta, y su código no
+          cambia. Así que esta pantalla no genera nada: enseña la puerta al que ya tiene.
+
+          ⚠️ **Aquí no se vende, así que no hay naranja**: las dos van en tinta y fantasma. La regla
+          del sistema dice que el relleno de acción significa comprar, y cuando el trabajo ya está
+          hecho no hay nada que comprar (`#551`).
+
+          ⚠️ Sin sesión el carné no se puede ofrecer (ver `hasSession`), y entonces «hacer otra
+          reserva» recupera el peso primario: una sola acción es primaria.
+        -->
         <div class="purchase__final-actions">
-            <button type="button" class="btn btn--ink btn--lg purchase__cta" @click="$emit('add-another')">{{ t('new_purchase') }}</button>
+            <button v-if="hasSession" type="button" class="btn btn--ink btn--lg purchase__cta" @click="$emit('show-card')">{{ t('see_my_card') }}</button>
+            <!-- ⚠️ La clase de ancho va DENTRO de cada rama, no en la base: `.purchase__cta` y
+                 `.purchase__cta-secondary` declaran lo mismo (`width: 100%` + centrado), así que
+                 llevarlas las dos sería decir dos veces lo mismo — y el fantasma queda idéntico al de
+                 su hermano del paso 10, que es lo que impide que diverjan. -->
+            <button type="button" class="btn"
+                    :class="hasSession ? 'btn--ghost purchase__cta-secondary' : 'btn--ink btn--lg purchase__cta'"
+                    @click="$emit('add-another')">{{ t('new_purchase') }}</button>
         </div>
     </div>
 </template>

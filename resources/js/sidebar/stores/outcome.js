@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { declinedReasonText, loadConfirmation } from '../outcome.js';
+import { declinedReasonText, holdUntilLabel, loadConfirmation } from '../outcome.js';
 
 /**
  * El estado del DESENLACE del pago — pasos 6, 9, 10 y 11 (reorganización del SPA, 2026-08-22).
@@ -46,6 +46,15 @@ export const useOutcomeStore = defineStore('outcome', {
          */
         declinedReason: '',
 
+        /**
+         * Hasta cuándo se guarda la plaza, ya formateado como hora (`#563`), o cadena vacía.
+         *
+         * ⚠️ Viene de la MISMA respuesta que el motivo (`payment-status`), así que no cuesta ni una
+         * petición más: el dato llevaba viajando desde que existe ese contrato y la pantalla decía
+         * «unos minutos».
+         */
+        holdUntil: '',
+
         /** `true` mientras se reintenta el cobro. */
         retrying: false,
 
@@ -77,9 +86,8 @@ export const useOutcomeStore = defineStore('outcome', {
             this.registration = block ?? null;
         },
 
-        setDeclinedReason(text) {
-            this.declinedReason = text ?? '';
-        },
+        /* ⚠️ `setDeclinedReason()` se retiró en `#563`: su único consumidor era su propio test. Quien
+           escribe el motivo es `applyDeclinedReason()`, que además decide si hay bloque que pintar. */
 
         /** Pide el resumen del pedido pagado. `null` si no se pudo, que es un estado legítimo. */
         async loadConfirmation({ api }) {
@@ -96,8 +104,11 @@ export const useOutcomeStore = defineStore('outcome', {
          * quien pregunta—; CON respuesta se pinta siempre, porque el servidor cae a `default` cuando no
          * conoce el código. La regla vive aquí y no en quien llama, que es donde se olvidaría.
          */
-        applyDeclinedReason(messages, status) {
+        applyDeclinedReason(messages, status, locale = 'es') {
             this.declinedReason = status === null ? '' : declinedReasonText(messages, status.declined_reason);
+            // ⚠️ La hora va con el motivo porque llega en la MISMA respuesta y se pinta en la MISMA
+            // pantalla: separarlas obligaría a quien llama a acordarse de las dos.
+            this.holdUntil = status === null ? '' : holdUntilLabel(status.expires_at, locale);
 
             return this.declinedReason;
         },
@@ -114,6 +125,7 @@ export const useOutcomeStore = defineStore('outcome', {
             this.orderCode = '';
             this.confirmation = null;
             this.declinedReason = '';
+            this.holdUntil = '';
             this.confirming = false;
             this.retrying = false;
         },

@@ -265,8 +265,12 @@ class SidebarMountTest extends TestCase
      * obligaría al cliente a recomponer una frase traducida que no ordena igual en cada idioma.
      *
      * ⚠️ **Era una lista de DOS hasta la T8·c** (`#350`): `accept_terms` se fue con su casilla, y su
-     * enlace vive ahora en el paso de pagar (`tickets.due_terms` y `tickets.terms_link`), que es donde
-     * la ley pide que se pueda leer.
+     * enlace vive ahora en el paso de pagar, que es donde la ley pide que se pueda leer.
+     *
+     * ⚠️ **Y allí ya no es un texto con enlace dentro** (`#562`): `tickets.due_terms` perdió su `<a>`
+     * —inline medía 19 px contra un suelo táctil de 48— y las condiciones se abren desde su propia
+     * fila, que recibe la URL por `urls.terms`. El único que sigue llevando el enlace embebido es
+     * `tickets.terms_link`, el párrafo de quien ya las aceptó.
      */
     public function test_the_mount_payload_carries_the_legal_texts_with_their_links(): void
     {
@@ -285,6 +289,18 @@ class SidebarMountTest extends TestCase
                     "«{$key}» no apunta a la página legal que compone `route()`"
                 );
             }
+
+            // ⚠️⚠️ **Y la otra mitad: el texto de la casilla NO puede llevar marcado** (`#562`). Al
+            // sacar el enlace a su propia fila, el cajón dejó de pintarlo con `v-html` — así que un
+            // `<a>` que volviera al literal **saldría escrito en pantalla**, con el marcado a la vista
+            // dentro de un texto legal, y ni el diff de árbol ni la suite lo verían: para los dos es
+            // texto. El único sitio donde se nota es mirando la pantalla.
+            $this->assertStringNotContainsString(
+                '<', (string) (__('tickets.due_terms')),
+                "«due_terms» ha vuelto a llevar marcado dentro.\n".
+                'Desde `#562` se pinta como texto, así que un `<a>` aquí se vería literal. El enlace '.
+                'vive en su propia fila, que recibe la URL por `urls.terms`.'
+            );
         }
     }
 

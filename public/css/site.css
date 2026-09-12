@@ -1522,6 +1522,19 @@ body.no-scroll { overflow: hidden; }
 /* Señal/depósito (#227): sub-líneas «Pagas ahora (señal) / En el parque» bajo el total. */
 .purchase__split { display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); }
 .purchase__split strong { font-weight: var(--fw-bold); color: var(--fg); }
+/* ⚠️ **La CAJA que junta los tres importes de la reserva creada** (`#563`): Total, lo cobrado y lo que
+   queda son las tres partes de una cuenta, y sueltas se leían como tres frases más de la pantalla.
+   Reutiliza la superficie de tarjeta del cajón —no estrena tratamiento— y el desenlace centra su
+   contenido, así que dentro se vuelve a alinear a la izquierda: una cuenta se lee en columna. */
+.purchase__money {
+    margin-top: var(--sp-14);
+    padding: var(--sp-14) var(--sp-16);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+    text-align: left;
+}
+/* El rol de CIFRA para lo ya cobrado (`--money`, `#479`). Por defecto vale la tinta, así que estrenarlo
+   no mueve nada aquí; en la instalación que le dé color, lo pagado se separa de lo pendiente solo. */
+.purchase__split--paid strong { color: var(--money); }
 
 /* ====================================================================
    SIDEBAR v2 (mockup `Sidebar Catalogo v2`): cuenta minimizable + stepper
@@ -2023,8 +2036,15 @@ body.no-scroll { overflow: hidden; }
    de gusto — así se lee como lo que es, *una puerta a otra cosa*, y no como una segunda acción que
    compite con el CTA del pie. Es la misma forma que «¿Quiénes vienen?» y que el bloque de extras, que
    son las otras dos puertas de este embudo.
-   ⚠️ El alto pasa de 44 a **48**, que es el suelo táctil del producto desde `#470`. */
-.cal-more {
+   ⚠️ El alto pasa de 44 a **48**, que es el suelo táctil del producto desde `#470`.
+
+   ❗❗ **`.paydue__terms` COMPARTE esta receta y no la copia** (`#562`): «Leer las condiciones» es la
+   misma cosa —una fila que es puerta a otro sitio— y el embudo ya tenía decidida su forma aquí. La
+   receta se declara UNA vez para las dos en vez de duplicarla, que es como divergen dos piezas que
+   nadie quería distintas. Lo que cambia es el icono: chevron cuando despliega AQUÍ, flecha cuando
+   SALE (ver más abajo). */
+.cal-more,
+.paydue__terms {
     display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
     width: 100%; min-height: 48px; margin-top: var(--sp-10);
     padding: var(--sp-12) var(--sp-16);
@@ -2035,7 +2055,8 @@ body.no-scroll { overflow: hidden; }
     cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale);
 }
-.cal-more:hover { border-color: var(--fg); }
+.cal-more:hover,
+.paydue__terms:hover { border-color: var(--fg); }
 /* El chevron lleva el color de ENLACE, no el de la tinta: es lo que dice que la fila abre algo. */
 .cal-more__chev { flex: none; width: 18px; height: 18px; color: var(--interactive); transition: transform var(--dur-estado) var(--ease-sale); }
 .cal-more.is-open .cal-more__chev { transform: rotate(180deg); }
@@ -2410,6 +2431,23 @@ body.no-scroll { overflow: hidden; }
    soso. El 18 es el mismo aire con el que el bloque se separa del resumen: se repite el número que ya
    dice «aquí empieza otra cosa» en vez de estrenar uno. */
 .paydue__checks { margin: var(--sp-18) 0 0; }
+/* ⚠️ **El bloque se nombra** (`#562`): es la etiqueta mono del sistema, el mismo tratamiento con el
+   que esta parada rotula «Motivo» y «Nº de pedido». Sin él, lo que se pide aparecía suelto debajo del
+   resumen y nada decía que fuese lo que queda. */
+.paydue__heading {
+    margin: 0 0 var(--sp-14);
+    font-family: var(--font-mono); font-size: var(--fs-label); font-weight: var(--fw-semibold);
+    letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute);
+}
+/* La fila de «Leer las condiciones». La forma la trae `.cal-more` (arriba, receta compartida); aquí
+   solo va lo que la diferencia.
+   ⚠️ Es un `<a>` y no un `<button>`: `.cal-more` nació para un botón, así que hay que anular el
+   subrayado que la hoja pone a los enlaces — sin esto, el rótulo sale subrayado dentro de una caja
+   que ya dice que se pulsa. */
+.paydue__terms { margin-top: var(--sp-12); text-decoration: none; }
+/* Como el chevron de `.cal-more`: el icono lleva el color de ENLACE, que es lo que dice que la fila
+   lleva a otro sitio. No gira — no despliega nada, SALE. */
+.paydue__terms-ico { flex: none; width: 18px; height: 18px; color: var(--interactive); }
 /* Pero si la casilla es lo PRIMERO del bloque —cuando solo faltan las condiciones— ese aire se
    sumaría al del propio bloque y dejaría el control flotando a 34 px de su regla. */
 .paydue > :first-child { margin-top: 0; }
@@ -3250,6 +3288,26 @@ body[data-has-hero].nav--live .hero__pair-slot {
    es sustituible por instalación (`UI-SPINNER.md`): duplicarlo aquí como icono quieto sería tener
    dos dibujos de lo mismo, y el del artboard además nace para GIRAR (lote de microanimación). */
 .state-badge--wait { --state-fill: var(--zone-1); }
+
+/* ══ EL AZULEJO DE ESPERA: lo que NO es una pegatina de estado (`#563`) ════════════════════════
+   Las cuatro pegatinas de arriba dicen que algo HA PASADO. «Verifica tu correo» no es eso: no ha
+   pasado nada, se está esperando a una persona — así que su dibujo va en una caja de SUPERFICIE, con
+   el canto de tarjeta y sin sombra ni keyline. Es la misma distinción que el artboard hace al
+   dibujarla: círculo de color para los desenlaces, cuadrado de superficie para la espera.
+   ⚠️ **Comparte la MEDIDA con la pegatina** (`--state-size`, 56): las dos ocupan el mismo sitio en
+   la misma posición de la pantalla, y si divergieran el salto se vería al pasar de una a otra. */
+.state-tile {
+    display: inline-grid; place-items: center; flex: none;
+    width: max(40px, var(--state-size, 56px));
+    height: max(40px, var(--state-size, 56px));
+    border-radius: var(--r);
+    background: var(--bg-soft);
+    color: var(--fg);
+}
+.state-tile svg { width: 54%; height: 54%; display: block; }
+/* El bloque del dibujo no se centra cuando lo que hay debajo tampoco: `.purchase__confirm` alinea a
+   la izquierda, al revés que `.purchase__done`. */
+.purchase__party--inert { margin-bottom: var(--sp-10); }
 
 .purchase__done { text-align: center; }
 .purchase__done .wiz__title { text-align: center; }
@@ -7160,6 +7218,12 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
 /* ⚠️ El tilde de la casilla va en TINTA, no en `--interactive`: el artboard dibuja la casilla marcada
    con `cajaFondo: '#101418'`, y es coherente con el resto —todo lo ELEGIDO del cajón es tinta—. */
 .sidecart__panel .check input { accent-color: var(--fg); }
+/* ⚠️ **Y su caja sube a 24** (`#562`, el artboard la dibuja así): con el texto a 16 y la caja a 16, la
+   casilla legal más importante del embudo se leía más pequeña que su propia frase. Va acotado al panel
+   como sus hermanas de arriba — el formulario de contacto, el post-form y el justificante emiten esta
+   misma clase y los viste su carril. Este bloque ENCOGE el día que lo hagan.
+   ⚠️ El `margin-top` sube con ella: alinea la caja con la primera línea del texto, no con su centro. */
+.sidecart__panel .check input { width: 24px; height: 24px; margin-top: var(--sp-1); }
 
 /* ❗❗❗ **LA PESTAÑA DE «ENTRAR / CREAR CUENTA» NO ELIGE UNA ZONA** (`#551`). El cajón reutiliza
    `.zone-tab` para los dos formularios de identificación, y esa clase tiñe su activa con `--zone-1`

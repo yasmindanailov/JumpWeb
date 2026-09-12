@@ -30401,3 +30401,196 @@ control propio de 48 (hoy mide 19 de alto). **No se toca sin él**: `#350` ya lo
 invisible, del mismo color que su párrafo— y sacarlo de la frase cambia cómo se lee un texto legal.
 ⚠️ El artboard de esta parada **tampoco lo resuelve**: lo dibuja inline, porque la grieta nació en la
 parada 06, posterior.
+
+---
+
+## #562 · T4·8a — el paso de PAGAR (parada 04, primera mitad)
+
+**Fecha**: 2026-09-12 · **Carril**: 🧩 diseño del SPA (banda 550–579) · **Fuente**: canvas,
+`Pago y Desenlaces PJP` (1a) + `doc/spa.md`.
+
+La pantalla de pagar, que es por la que pasa **todo el que compra**. Cuatro cambios y los cuatro
+salen de algo medido, no de gusto.
+
+### El titular decía cuatro veces la misma palabra
+
+«Pago» de título, «Revisa tu reserva antes de pagar» de entradilla, la fase llamada «Pagar» y el botón
+«Pagar con tarjeta»: **cuatro veces en una pantalla de 390 px**. Hoy el titular dice el TRABAJO —
+**«Repasa tu reserva»**— y `pay_intro` **se retira**, porque decía exactamente lo que ahora dice el
+titular. ▶ No contradice a `#561`: aquélla fijó que la entradilla de un paso es `.wiz__lede` y no
+`.purchase__note`; aquí no hay entradilla que colocar.
+
+### El enlace de las condiciones sale de la casilla (`[DECIDIDO owner]`)
+
+Metido en la frase medía **19 px de alto contra el suelo táctil de 48** del producto — la **grieta 13**
+de la auditoría, la misma regla que la parada 03 aplicó al descargo. Hoy la casilla **se lee entera** y
+las condiciones se abren desde **su propia fila**.
+
+⚠️⚠️ **Y la fila NO estrena forma: comparte la receta de «Ver más fechas»** (`.cal-more`, `#557`), que
+es la pieza con la que este embudo dice «esto es una puerta a otra cosa». Se declara **una vez para las
+dos** —selector agrupado— en vez de copiarse: *el modo de fallo de una copia no es romperse, es
+quedarse atrás en cuanto alguien ajusta la otra*, y eso es como murió el sistema de sombras de `#196`.
+Lo único que cambia es el icono: **chevron cuando despliega AQUÍ, flecha cuando SALE**.
+
+⚠️ Al perder el `<a>`, `due_terms` **deja de necesitar `v-html`** y sale del `array_replace` del
+montaje; la URL viaja suelta en `urls.terms`, como `contact` y `my_orders`.
+
+### Lo demás
+
+- **El bloque se NOMBRA** («Nos falta esto»): sin rótulo, el teléfono y la casilla aparecían sueltos
+  bajo el resumen y nada decía que fuesen lo que queda por dar.
+- **La pista del teléfono dice lo que el owner decidió** (decisión 12 de las doce): «para llamarte por
+  cualquier cosa de tu reserva». La anterior —«para avisarte si algo cambia»— **prometía menos de lo
+  que se hace**, y esta pista es el único sitio donde el cliente se entera de para qué sirve el dato.
+- **La casilla sube de 16 a 24 px** dentro del panel: con el texto a 16, la casilla legal más
+  importante del embudo se leía más pequeña que su propia frase.
+- **`pending_at_park` pasa a «A pagar en el parque»** (`[DECIDIDO owner]`). ⚠️ **Y son DOS nombres, no
+  tres**: el artboard dice que el mismo euro se llama de tres maneras, y medido **dos de ellas tienen
+  su motivo escrito desde `#554`** — «En el parque» se queda donde cuelga de «Pagas ahora», que ya
+  lleva el verbo; el verbo entra donde cuelga de «Total», que no lo dice. *El síntoma era cierto y el
+  alcance no.*
+
+### ❗❗ EL HALLAZGO: el bloque que el cliente RELLENA no lo vigilaba ningún diff
+
+El caso del contrato de árbol del paso 8 existe desde `#349` y su comprador **tiene teléfono** y esta
+instalación **no publica condiciones**, así que `need.phone` y `need.terms` salían los dos `false` y el
+`.paydue` entero **no se emitía**: en el manifiesto solo aparecía el `paydue__legal` del otro camino.
+▶ Lo que lo cerraba no era escribir el caso: **el renderizador SSR no componía `need`** y no había
+forma de que apareciera. Hoy lo compone con `buyer-due.js` a partir del contexto de cuenta que siembra
+el servidor, así que el gate ejercita el camino entero —`CheckoutDuties` → contexto → montaje →
+`buyer-due.js` → pantalla— y no un doble. ⚠️ *Un caso puede existir desde hace meses y no tener sujeto.*
+
+**Guardas**: `SidebarDomContractTest::the_pay_step_emits_what_is_missing_before_paying` (caso nuevo) ·
+`SidebarOutcomeParityTest` gana la tercera URL **y la cablea** —las otras dos son comodidades y ésta es
+una obligación (LCGC art. 5, TRLGDCU art. 97): una fila que se pinta y no lleva a ninguna parte deja al
+cliente contratando sin haber podido leerlas, y el árbol no lo ve— · `SidebarMountTest` asevera que
+`due_terms` **no lleva marcado** (sin `v-html`, un `<a>` saldría escrito en pantalla) ·
+`SidebarTokenBudgetTest::the_two_door_rows_of_the_funnel_share_one_recipe`.
+**Arnés `scripts/mutar-paso-pagar.py`: 9/9 mutaciones muerden.**
+
+**Verificación**: suite **4792 · 30.187 aserciones** (1 skipped) · JS **980** · Pint y docs-check ✓ ·
+manifiesto regenerado y **revisado línea a línea** (una sola línea de diff en el caso viejo: la
+entradilla que se cae) · **medido en navegador a 390 y
+1280** con `scripts/sonda-cajon.mjs`: cero recortes, cero desborde, y los tres objetivos táctiles bajo
+48 que quedan son **preexistentes del armazón** (ver `#563`).
+
+⚠️ **La sonda del cajón llevaba ROTA desde `#553`** y no llegaba al paso de pagar: las categorías nacen
+cerradas y sus productos **siguen en el DOM**, así que el `waitForSelector` pasa en verde y el clic
+agota el tiempo. `#554` dejó el diagnóstico escrito y la sonda sin arreglar. ▶ *Que un nodo esté en el
+árbol no es que se pueda pulsar.* Hoy abre la categoría comprobando `aria-expanded`, y **el recorrido
+llega hasta la pantalla de pagar**, que no medía nadie.
+
+⚠️ **Paso de despliegue: ninguno.**
+
+---
+
+## #563 · T4·8b — el salto al banco y los CUATRO DESENLACES (parada 04, cerrada)
+
+**Fecha**: 2026-09-12 · **Carril**: 🧩 diseño del SPA · **Fuente**: `Pago y Desenlaces PJP` (1a).
+
+### Tres frases que el servidor ya tenía escritas y la pantalla no pedía
+
+- **`verify_hold`** —«Tu plaza está reservada mientras confirmas»— lleva **meses en los tres idiomas
+  con cero consumidores**: quien llegaba a «verifica tu correo» no sabía si su plaza seguía guardada.
+- **A qué correo se ha escrito**: lo sabe el store de auth desde el propio alta (`pendingEmail`), así
+  que no cuesta ni una petición ni un campo de contrato — y es **donde se descubre un correo mal
+  tecleado**. ⚠️ Vacío es una respuesta: al recargar el store nace limpio y se pinta la frase genérica.
+- **La hora de caducidad**: el denegado decía «unos minutos» **teniendo el dato**. `expires_at` viaja
+  en `payment-status` desde que ese contrato existe, con su descripción escrita —«hasta cuándo se
+  retiene la plaza; es el margen que queda para reintentar»—. Hoy dice la hora.
+
+▶ *Una frase que el servidor ya tiene escrita y la pantalla no pide, no existe.* Al transcribir una
+pantalla se compara con **el diccionario**, no solo con la pantalla de al lado.
+
+⚠️ **La hora se formatea en el reloj del NAVEGADOR y aquí eso es lo correcto**: `expires_at` es un
+instante real y viaja con su offset. **No es el caso de las FRANJAS**, que guardan hora de pared del
+parque y no se pueden parsear como instantes (`#426`) — son dos cosas distintas y se tratan distinto.
+⚠️ **Y una fecha que no se puede leer devuelve cadena VACÍA, nunca «Invalid Date»**: la pantalla decide
+con eso si promete un plazo o se queda en su frase de siempre. Un desenlace de dinero no puede enseñar
+basura donde va una promesa.
+
+### Las salidas (`[DECIDIDO owner]`)
+
+- **La reserva creada gana la puerta al CARNÉ**, primaria y en tinta, con «hacer otra reserva» de
+  fantasma. Es lo que hace falta en la entrada del parque, y es **el mismo código de siempre**: **no
+  hay un QR por pedido** —uno por compra obligaría al cliente a buscar cuál toca hoy y a la puerta a
+  leer varios—, así que esta pantalla no genera nada, enseña la puerta al que ya tiene.
+  ⚠️ **Sin sesión NO se ofrece**: a esta pantalla se llega también por el enlace de verificación de
+  correo, y los textos del área viajan solo con sesión — el botón llevaría al que acaba de pagar a una
+  pantalla en blanco. Sin ella, «hacer otra reserva» recupera el peso primario.
+  ⚠️ Se abre con **`openZone()`**, que existe justo para «abrir el área en una zona viniendo de fuera»
+  y **siembra la vuelta**: escribirlo a mano sería el tercer sitio donde recordar sembrar `under`.
+- **El denegado pierde «Hacer otra reserva»**: era el peor consejo de los tres en ese momento —la plaza
+  sigue guardada y una tarjeta rechazada no se arregla eligiendo otra hora—. Quedan las dos causas
+  reales: falló la máquina, o hace falta una persona.
+
+### El vestido
+
+- **La pegatina de ESPERA estrena consumidor**: `state-badge--wait` estaba declarada desde `#258` y era
+  el único de los cuatro estados del sistema sin ninguna superficie que lo pintara. Hoy la lleva el
+  paso 11.
+- ⚠️⚠️ **«Verifica tu correo» NO lleva pegatina, y la distinción es la que manda**: las cuatro
+  pegatinas dicen que algo **ha pasado**, y ahí no ha pasado nada — se está esperando a una persona.
+  Nace `.state-tile`, una caja de **superficie** con el canto de tarjeta, que comparte medida con la
+  pegatina para que no haya salto entre pantallas.
+- **Los tres importes de la reserva creada van JUNTOS** en una caja: sueltos se leían como tres frases
+  más de la pantalla y no como las tres partes de una cuenta. Lo cobrado estrena el rol **`--money`**
+  (`#479`), que por defecto vale la tinta: aquí no mueve un píxel y en la instalación que le dé color
+  se separa solo.
+- **El paso 11 dice el PERMISO primero**: pregunta cada 5 s y no tiene fin —en el peor caso 15 minutos
+  y 180 preguntas—, así que lo que hace falta decir es que **se puede cerrar sin perder nada**.
+
+### ⚠️ Lo que el artboard pedía y NO se hizo, con su motivo
+
+- **Renombrar el post-form a «Su día especial»**: `#462` ya decidió que **no se renombra** y el
+  formulario tiene nombre de cara al cliente (`guestform.title`), que es el que llega en el correo. El
+  aviso ya lo usa. *Un artboard puede pedir una palabra que el producto ya decidió no usar.*
+- **El `<noscript>` del salto al banco en tinta**: `#551` lo dejó en relleno de acción con su motivo
+  escrito —sin JS, ese botón **ES** el de pagar—. El mapa del naranja del artboard lo cuenta como
+  «ninguna acción: se va al banco», y eso es cierto **con** JavaScript. Se queda como está.
+- **Apagar el bloque de «registro del parque»** (decisión 6 de las doce): es **vaciar un ajuste de la
+  instalación**, no tocar código. Queda como paso de despliegue, no como cambio del producto.
+
+### ❗❗❗ HALLAZGO QUE NO ES DE ESTA TANDA: el armazón del cajón no llega al suelo táctil
+
+Medido con la sonda en **32 pantallas**: **`.sidecart__close` mide 26 px de alto en las 32** y
+**`.bk-back` 20 px en 30**, contra un suelo de **48**. Son los dos controles que salen en **todas** las
+pantallas del cajón — cerrar y volver. Con ellos, `.pwd-input__toggle` (32) y los dos `.acct__btn` (45).
+▶ Y **no lo ve ninguna guarda**: `TouchTargetTest` recorre RUTAS de la web pública, y el cajón no es una
+ruta suya — la misma lección que `#557` pagó con el stepper. Ficha en `DEUDA.md`; es del armazón
+(`#554`/`#555`) y toca las 25 pantallas, así que es tanda propia y decisión del owner.
+
+**Guardas**: seis casos del contrato de árbol se mueven (los dos del confirmado, los dos del denegado,
+el de verificar correo y el de verificando) · `outcome.test.js` gana el formateo de la hora con sus
+tres formas de «no se puede leer» · `stores/outcome.test.js` gana los dos caminos de la promesa.
+**Arnés `scripts/mutar-desenlaces.py`: 11/11 mutaciones muerden.** ⚠️ Dos de ellas —«a qué correo se
+ha escrito»— **no las puede cazar el diff de árbol**: las dos ramas emiten el MISMO nodo y solo cambia
+el texto de dentro, así que quitar el ternario dejaría la pantalla sin decir el buzón **con el
+manifiesto en verde**. Las ata el cableado, en `SidebarOutcomeParityTest`.
+
+**Verificación**: suite **4792 · 30.187 aserciones** (1 skipped) · JS **980** · Pint y docs-check ✓ ·
+manifiesto del contrato de árbol regenerado y **revisado línea a línea** —seis casos, y los seis
+cambian exactamente en lo que esta tanda toca, incluidos los DOS caminos del desenlace 06 (con sesión y
+sin ella)— · los dos arneses re-corridos tras el cambio, **9/9 y 11/11** · **sonda de navegador sobre
+las 32 pantallas** (16 × móvil 390 y escritorio 1280): **cero errores, CERO recortes** y las tallas bajo
+16 son solo los dos niveles legítimos del sistema —**774 a 12** (etiqueta) y **194 a 15** (apoyo),
+ninguna por debajo—.
+
+⚠️⚠️ **Una de las nueve nació DÉBIL y no mordía**, y el defecto era de la mutación: cambiaba
+`status === null ? ''` por `status?.expires_at`, que con `status` nulo da `undefined` — lo que
+`holdUntilLabel()` ya convierte en cadena vacía. **Dos capas defendiendo lo mismo.** ▶ *Una mutación
+que no distingue dos mundos no prueba nada.* La que sí distingue es la hora **sin formatear**, y para
+que mordiera hubo que **fortalecer el caso**: aseveraba `notEqual(holdUntil, '')`, que pasa en verde
+pintando el ISO crudo dentro de «te guardamos la plaza hasta las …».
+
+⚠️ **Presupuestos**: el chunk sube **281 → 283** (medido 282,09) y `PurchaseSection` **446 → 453**.
+**La poda NO podó, por TERCERA vez seguida** (`#553`, `#561`, ésta): se retiró `setDeclinedReason()`,
+código muerto de verdad —su único consumidor era su propio test—, y devolvió **50 bytes de los 1.140**
+que hacían falta. ▶ *Lo que pesa en un bundle son las dependencias que entran, no las líneas que salen.*
+Lo que sí era una regla **se extrajo**: formatear la hora vive en `outcome.js` con su `node --test`.
+
+⚠️ **Paso de despliegue**: vaciar `registration.url` en la instalación que lo tenga puesto (arriba).
+
+❗ **QUEDA**: el **OJO del owner** en los desenlaces —solo el paso de pagar se ha visto en navegador;
+06, 07, 10 y 11 piden un pedido pagado, uno denegado y uno sin datos firmados (guion en
+`VERIFICACION-E2E-CAJON.md`)— y el **suelo táctil del armazón**, que es tanda propia.

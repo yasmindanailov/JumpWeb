@@ -16,6 +16,7 @@ use App\Domain\Identity\Services\WaiverSigner;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Services\RedsysResponseCode;
 use App\Domain\Platform\Models\Setting;
+use App\Http\Sidebar\AccountContextSeed;
 use App\Http\Sidebar\RegistrationLink;
 use App\Http\Sidebar\SidebarEntry;
 use DOMDocument;
@@ -692,6 +693,45 @@ class SidebarDomContractTest extends TestCase
     }
 
     /**
+     * El paso 8 **con lo que falta antes de pagar** (`#562`).
+     *
+     * ⚠️⚠️ **El caso de arriba NO ve este bloque, y estuvo así desde `#349`.** Su comprador tiene
+     * teléfono y esta instalación no publica condiciones, así que `need.phone` y `need.terms` salen
+     * los dos `false` y el `.paydue` entero **no se emite**: en el manifiesto congelado solo aparece
+     * el `.paydue__legal` del otro camino. O sea que el teléfono, la casilla legal y la fila de las
+     * condiciones —lo único de esta pantalla que el cliente **rellena**— no lo vigilaba ningún diff.
+     *
+     * ▶ Lo que lo hace aparecer es el estado REAL, no un doble: un comprador **sin teléfono** y una
+     * instalación **con las condiciones publicadas**. Así el bloque llega por su camino entero
+     * —`CheckoutDuties` → contexto de cuenta → montaje → `buyer-due.js` → la pantalla—, que es lo que
+     * un doble de `need` no probaría.
+     */
+    public function test_the_pay_step_emits_what_is_missing_before_paying(): void
+    {
+        $this->setUpFullCart();
+        app(LegalDocumentPublisher::class)->publish('condiciones', [
+            'es' => ['title' => 'Condiciones', 'body' => [['h' => 'Reserva', 'p' => 'Texto.']]],
+        ]);
+        $this->actingAs(User::factory()->create(['phone' => '', 'email_verified_at' => now()]));
+
+        $vue = $this->vueTree(8, [], 'paydue', withSiblings: true,
+            api: $this->cartApiPayload($this->fullCartItems()) + [
+                // El MISMO contexto que siembra el montaje: el renderizador le pasa esto a
+                // `buyerNeeds()`, que es quien decide qué se pide.
+                'accountContext' => AccountContextSeed::forCurrentRequest(),
+            ],
+            state: $this->clientState(step: 8) + ['termsUrl' => route('legal.condiciones')]);
+
+        $this->assertTree(__FUNCTION__, $vue,
+            "El árbol de LO QUE FALTA ANTES DE PAGAR ha cambiado.\n".
+            "Aquí viven las tres piezas que el cliente rellena: el teléfono con su pista, la casilla de\n".
+            "condiciones —que desde `#562` se lee ENTERA, sin el enlace dentro— y la FILA que las abre,\n".
+            "con sus 48 px de alto. Si la fila desaparece, el único enlace a las condiciones de quien\n".
+            "todavía no las ha aceptado se va con ella.\n\n"
+        );
+    }
+
+    /**
      * ⚠️ **La BANDA de desglose del pago**, que llevaba declarada en `SHELL_BLOCKS_NOT_YET_IN_SPA`
      * desde 4.3·1 y ahora se retira de esa lista.
      *
@@ -815,11 +855,17 @@ class SidebarDomContractTest extends TestCase
             state: $this->clientState(step: 6) + [
                 'orderCode' => $this->confirmedOrderCode(),
                 'registration' => RegistrationLink::current()?->toArray(),
+                // ⚠️ **CON sesión, que es el camino de la vuelta del banco** (`#563`): es lo que hace
+                // aparecer la puerta al carné. Sin esto el manifiesto congelaría la pantalla del otro
+                // camino —el enlace del correo, sin titular— y el botón nuevo no lo vigilaría nadie.
+                'hasSession' => true,
             ]);
 
         $this->assertTree(__FUNCTION__, $vue,
             "El árbol de la RESERVA CREADA difiere entre los dos motores.\n".
-            "Es el más largo del cajón y casi todo en él es condicional.\n\n"
+            "Es el más largo del cajón y casi todo en él es condicional.\n\n".
+            "⚠️ Sus DOS salidas son condicionales: con sesión, «Ver Mi QR» en tinta y «hacer otra\n".
+            "reserva» de fantasma; sin ella, solo la segunda y recuperando el peso primario.\n\n"
         );
     }
 

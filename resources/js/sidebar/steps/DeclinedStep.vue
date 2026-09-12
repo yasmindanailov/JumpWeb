@@ -1,5 +1,5 @@
 <script setup>
-import { t as translate } from '../i18n.js';
+import { t as translate, tp as interpolate } from '../i18n.js';
 
 /**
  * Paso 10 — **el pago denegado**, con su reintento (Fase 4 · paso 4.6·2).
@@ -14,9 +14,10 @@ import { t as translate } from '../i18n.js';
  * —cae a `default`—, así que con sesión y con código de pedido el bloque está siempre. Condicionarlo a
  * «hay motivo conocido» habría emitido un nodo de menos justo en el caso más frecuente.
  *
- * ⚠️ **La jerarquía de los tres CTA es contrato visual**: principal reintenta (`btn btn--lg`, relleno
- * de ACCIÓN), secundario empieza otra reserva (`btn--ghost`) y terciario escribe a soporte
- * (`btn--ghost`, y es un `<a>`, no un `<button>` — el diff de árbol compara el tipo de elemento).
+ * ⚠️ **La jerarquía de los DOS CTA es contrato visual**: principal reintenta (`btn btn--lg`, relleno
+ * de ACCIÓN) y el otro escribe a soporte (`btn--ghost`, y es un `<a>`, no un `<button>` — el diff de
+ * árbol compara el tipo de elemento). ▶ Eran TRES hasta `#563`: «hacer otra reserva» se retiró
+ * (`[DECIDIDO owner]`) porque salía justo cuando la plaza sigue guardada.
  *
  * ⚠️⚠️ **Por qué el principal es el único naranja de un DESENLACE** (`#551`): la regla del sistema dice
  * que un desenlace no vende —cuando el trabajo ya está hecho no hay nada que comprar—, y ésta es su
@@ -46,12 +47,20 @@ const props = defineProps({
     /** Adónde escribir. Lo compone el servidor con `route()`: el cajón no conoce las rutas. */
     contactUrl: { type: String, default: '' },
 
+    /**
+     * Hasta qué hora se guarda la plaza, ya formateada (`#563`). Vacío = no se pudo preguntar, y
+     * entonces se dice la frase de siempre en vez de una hora inventada.
+     */
+    holdUntil: { type: String, default: '' },
+
     messages: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['retry', 'add-another']);
+// ⚠️ `add-another` se fue con su botón (`#563`): esta pantalla ya no ofrece empezar otra reserva.
+defineEmits(['retry']);
 
 const t = (key) => translate(props.messages, key);
+const tp = (key, params) => interpolate(props.messages, key, params);
 </script>
 
 <template>
@@ -79,17 +88,25 @@ const t = (key) => translate(props.messages, key);
         </p>
 
         <p v-if="orderCode" class="purchase__code">{{ t('order_code') }}: <strong>{{ orderCode }}</strong></p>
-        <p class="purchase__note">{{ t('payment_failed_retry') }}</p>
+        <!-- ⚠️⚠️ **«Unos minutos» pasa a ser UNA HORA** (`#563`): el pedido ya guarda cuándo caduca y
+             `expires_at` viaja en la misma respuesta que el motivo, con su descripción escrita en el
+             contrato —«hasta cuándo se retiene la plaza; es el margen que queda para reintentar»—. Con
+             la hora delante el cliente sabe si le da tiempo a buscar otra tarjeta.
+             ⚠️ **Y si no se pudo preguntar se dice lo de siempre**, nunca una hora inventada: un
+             desenlace de dinero no puede prometer un plazo que no conoce. -->
+        <p class="purchase__note">{{ holdUntil ? tp('payment_failed_retry_until', { time: holdUntil }) : t('payment_failed_retry') }}</p>
 
+        <!-- ⚠️⚠️ **DOS salidas, y el que se fue era el peor consejo de los tres** (`#563`,
+             `[DECIDIDO owner]`): «Hacer otra reserva» aparecía justo cuando la plaza SIGUE guardada y
+             una tarjeta rechazada no se arregla eligiendo otra hora. Las dos que quedan son las dos
+             causas reales: falló la máquina (reintentar) o hace falta una persona (escribirnos). El
+             cajón ya tiene su propia salida arriba. -->
         <div class="purchase__final-actions">
             <button type="button" class="btn btn--lg purchase__cta" :disabled="retrying" @click="$emit('retry')">
                 <span v-show="! retrying">{{ t('payment_failed_retry_cta') }}</span>
                 <span v-show="retrying" class="btn__loading">
                     <span class="jj-spinner jj-spinner--xs" aria-hidden="true"></span> {{ t('pay_redirecting') }}
                 </span>
-            </button>
-            <button type="button" class="btn btn--ghost purchase__cta-secondary" @click="$emit('add-another')">
-                {{ t('new_purchase') }}
             </button>
             <a :href="contactUrl" class="btn btn--ghost purchase__cta-tertiary">{{ t('payment_failed_contact') }}</a>
         </div>

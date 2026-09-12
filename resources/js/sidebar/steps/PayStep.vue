@@ -43,6 +43,13 @@ const props = defineProps({
     need: { type: Object, default: () => ({ terms: false, phone: false, termsUpdated: false }) },
     /** Los «no» del servidor por campo, ya traducidos: `{accept_terms, phone}`. */
     dueErrors: { type: Object, default: () => ({}) },
+
+    /**
+     * Adónde lleva «Leer las condiciones». La compone el servidor con `route()` (`#562`), igual que
+     * las de los desenlaces: el cajón no conoce las rutas, y un `href` no es atributo de contrato del
+     * diff de árbol, así que si se quemara aquí un slug roto pasaría el gate en verde.
+     */
+    termsUrl: { type: String, default: '' },
 });
 
 // ⚠️ Este paso ya no emite nada: su «Volver» lo trae la banda desde `#555`.
@@ -63,11 +70,13 @@ const t = (key) => translate(props.messages, key);
          carrito» que ya tenía: el pedido AÚN NO existe (se crea al confirmar), así que volver es
          seguro y no pierde la cesta. -->
 
+    <!-- ⚠️ **El titular dice el TRABAJO, y la entradilla se cae con él** (`#562`, artboard
+         `Pago y Desenlaces PJP`): decía «Pago», con «Revisa tu reserva antes de pagar» debajo, la fase
+         llamándose «Pagar» y el botón «Pagar con tarjeta» — cuatro veces la misma palabra en 390 px.
+         Hoy titula el trabajo («Repasa tu reserva») y la entradilla sobra, porque decía eso mismo.
+         ▶ Esto NO contradice a `#561`: aquélla fijó que la entradilla de un paso es `.wiz__lede` y no
+         `.purchase__note`; aquí no hay entradilla que colocar. -->
     <h3 class="wiz__title">{{ t('pay_title') }}</h3>
-    <!-- ⚠️ `.wiz__lede` y no `.purchase__note` (`#561`): la entradilla de un paso es una pieza y
-         `.purchase__note` es otra —las notas sueltas de los desenlaces, que no titulan nada—. Con las
-         dos haciendo lo mismo, el aire bajo el título dependía de cuál hubiera tocado. -->
-    <p class="wiz__lede">{{ t('pay_intro') }}</p>
 
     <ul class="cart cart--summary">
         <SummaryLine v-for="line in lines" :key="line.index" :line="line" :messages="messages" :locale="locale" />
@@ -85,6 +94,11 @@ const t = (key) => translate(props.messages, key);
       muerto que no lo explica»*. Aquí el «no» lo da el SERVIDOR y vuelve pegado a su campo.
     -->
     <div v-if="need.phone || need.terms" class="paydue">
+        <!-- ⚠️ **El bloque se NOMBRA** (`#562`): sin rótulo, el teléfono y la casilla aparecían sueltos
+             bajo el resumen sin nada que dijera que son lo que queda por dar. Es la etiqueta mono del
+             sistema, la misma que rotula los bloques de las otras pantallas de esta parada. -->
+        <p class="paydue__heading">{{ t('due_heading') }}</p>
+
         <div v-if="need.phone" class="eventfields">
             <label class="eventfields__field">
                 <span class="eventfields__label">{{ t('due_phone_label') }}</span>
@@ -101,12 +115,32 @@ const t = (key) => translate(props.messages, key);
                  sería contarle una historia que no es la suya. Los dos hechos vienen separados del
                  servidor por eso mismo. -->
             <p v-if="need.termsUpdated" class="paydue__hint">{{ t('due_terms_updated') }}</p>
+            <!-- ⚠️⚠️ **La casilla se lee entera y ya NO lleva el enlace dentro** (`#562`,
+                 `[DECIDIDO owner]`): metido en la frase medía 19 px de alto contra el suelo táctil de
+                 48 del producto —la grieta 13 de la auditoría—, y es la misma regla que la parada 03
+                 aplicó al descargo. ▶ Al quedarse en texto plano desaparece el `v-html`: un literal de
+                 `lang/` que ya no trae marcado no necesita inyectarse como HTML. -->
             <label class="check">
                 <input v-model="acceptTerms" type="checkbox">
-                <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                <span v-html="t('due_terms')"></span>
+                <span>{{ t('due_terms') }}</span>
             </label>
             <span v-if="dueErrors.accept_terms" class="form__error">{{ dueErrors.accept_terms }}</span>
+
+            <!-- ⚠️ **La FILA que abre las condiciones**: misma receta que «Ver más fechas» (`#557`),
+                 que es la pieza con la que este embudo dice «esto es una puerta a otra cosa». Lleva
+                 `arrow-right` y no el chevron de aquélla a propósito: el chevron despliega AQUÍ y esto
+                 SALE a otra página, en otra pestaña. -->
+            <a :href="termsUrl" target="_blank" rel="noopener" class="cal-more paydue__terms">
+                <span>{{ t('due_terms_read') }}</span>
+                <!-- `arrow-right` del sistema de diseño, copiado byte a byte
+                     (`SidebarIconParityTest`). -->
+                <svg class="arrow-ico paydue__terms-ico" viewBox="0 0 24 24" fill="currentColor"
+                     stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+                     aria-hidden="true" focusable="false">
+                    <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                    <path d="M4.6 12h9.4" fill="none" />
+                </svg>
+            </a>
         </div>
     </div>
 
@@ -116,10 +150,14 @@ const t = (key) => translate(props.messages, key);
       cuenta compraba sin que se le mostraran nunca. La LCGC (art. 5) pide que el consumidor haya
       podido conocerlas para que se incorporen al contrato, y el TRLGDCU (art. 97) las sitúa antes de
       quedar vinculado.
-      ▶ **Cuando hay casilla, el enlace va DENTRO de ella** y esta línea sobra: puestas las dos, la
-      pantalla decía «léelas y acéptalas» y treinta píxeles más abajo «al reservar las aceptas» — dos
-      frases casi iguales que se estorban. *Lo vio la captura, no la suite.* La obligación se cumple
-      igual: el enlace está, y donde de verdad hay que leerlo.
+      ▶ **Cuando hay casilla, esta línea sobra** y lo que cumple la obligación es la fila «Leer las
+      condiciones» de arriba: puestas las dos, la pantalla decía «léelas y acéptalas» y treinta píxeles
+      más abajo «al reservar las aceptas» — dos frases casi iguales que se estorban. *Lo vio la
+      captura, no la suite.*
+      ⚠️ **`#562` cambió DÓNDE vive el enlace cuando hay casilla, no si lo hay**: antes iba dentro de
+      la frase de la casilla y hoy es su propia fila. Esta línea sigue existiendo para el otro caso —el
+      cliente que ya aceptó—, donde además dice la VINCULACIÓN («al reservar aceptas»), que es lo que
+      esa persona necesita leer y la fila no dice.
     -->
     <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
     <p v-if="! need.terms" class="paydue__legal" v-html="t('terms_link')"></p>

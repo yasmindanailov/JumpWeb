@@ -162,15 +162,31 @@ return [
     // de la sección 05 de la portada.
     'identify_title' => 'Ya casi está',
     'identify_intro' => 'Tu cuenta guarda tu código y tu firma. Con eso, en la puerta solo enseñas el móvil.',
-    'pay_title' => 'Pago',
-    'pay_intro' => 'Revisa tu reserva antes de pagar.',
+    // ⚠️ El titular dice el TRABAJO que hay que hacer, no el trámite (`#562`, artboard
+    // `Pago y Desenlaces PJP`): decía «Pago», debajo «Revisa tu reserva antes de pagar», la fase se
+    // llama «Pagar» y el botón «Pagar con tarjeta» — cuatro veces la misma palabra en una pantalla de
+    // 390. Y con el titular diciendo lo mismo que la entradilla, `pay_intro` se retiró: no se gana
+    // nada repitiendo la frase treinta píxeles más abajo.
+    'pay_title' => 'Repasa tu reserva',
     // ── Lo que falta antes de pagar (`#349`) ───────────────────────────────────────────────────
     // ⚠️ El teléfono se pide con su PORQUÉ y en tono de favor, no de trámite: es un dato que el
     // cliente no esperaba dar aquí, y decirle para qué sirve es la diferencia entre un formulario y
     // un peaje. `[owner]`: «algo amable y sutil, solo si falta su número de teléfono».
+    // ⚠️ El rótulo del bloque nombra lo que se pide antes de pedirlo: sin él, el teléfono y la
+    // casilla aparecían sueltos bajo el resumen sin nada que dijera que son lo que queda.
+    'due_heading' => 'Nos falta esto',
     'due_phone_label' => 'Tu teléfono',
-    'due_phone_hint' => 'Nos falta para poder avisarte si algo cambia en tu reserva. No lo usamos para nada más.',
-    'due_terms' => 'He leído y acepto las <a href=":url" target="_blank" rel="noopener">condiciones de reserva</a>.',
+    // ⚠️ `[DECIDIDO owner]`: «para llamarle sobre su reserva en cualquier caso». La frase anterior
+    // —«para avisarte si algo cambia»— PROMETÍA MENOS de lo que se hace, y esta pista es el único
+    // sitio donde el cliente se entera de para qué sirve el dato.
+    'due_phone_hint' => 'Para llamarte por cualquier cosa de tu reserva. No lo usamos para nada más.',
+    // ⚠️⚠️ **La casilla ya NO lleva el enlace dentro** (`#562`, `[DECIDIDO owner]`): metido en la
+    // frase medía 19 px de alto y el suelo táctil del producto son 48. Se lee entera y las
+    // condiciones se abren desde su propia fila (`due_terms_read`), que es la regla que la parada 03
+    // aplicó al descargo. ▶ Al perder el `<a href>` deja de necesitar interpolación y de viajar por
+    // el `array_replace` del montaje: es texto plano y el cajón lo pinta sin `v-html`.
+    'due_terms' => 'He leído y acepto las condiciones de reserva',
+    'due_terms_read' => 'Leer las condiciones',
     // ⚠️⚠️ Este enlace se pinta SIEMPRE, se pida la casilla o no: antes de `#349` el embudo no
     // enseñaba las condiciones en ningún sitio, y la LCGC (art. 5) pide que el consumidor haya
     // podido conocerlas para que se incorporen al contrato.
@@ -185,6 +201,11 @@ return [
     'payment_failed_title' => 'El pago no se ha completado',
     'payment_failed_intro' => 'Tu banco no autorizó el cobro. No se ha cargado nada en tu tarjeta.',
     'payment_failed_retry' => 'Mantenemos tu reserva unos minutos más por si quieres reintentar el pago. Si no se completa, la plaza volverá a estar disponible.',
+    // ⚠️ **La misma promesa CON la hora** (`#563`): el pedido ya guarda cuándo caduca y ese dato viaja
+    // en la respuesta que esta pantalla ya pide. Con la hora delante el cliente sabe si le da tiempo a
+    // buscar otra tarjeta; «unos minutos» no se puede usar para decidir nada. La de arriba se queda
+    // para cuando no se pudo preguntar — inventar una hora sería peor que ser vago.
+    'payment_failed_retry_until' => 'Te guardamos la plaza hasta las :time. Si no se completa el pago, volverá a estar libre.',
     'payment_failed_contact' => 'Escribirnos',
     'payment_failed_retry_cta' => 'Reintentar el pago',
     'payment_failed_reason_label' => 'Motivo',
@@ -208,9 +229,17 @@ return [
     'payment_rejected_generic' => 'No hemos podido verificar el resultado del pago. Si tienes dudas, contáctanos.',
     'payment_verifying_title' => 'Verificando tu pago',
     'payment_verifying_intro' => 'Tu banco ha procesado el pago. Estamos confirmando la operación con la pasarela; suele tardar unos segundos.',
-    'payment_verifying_email_note' => 'Te enviaremos un email cuando esté confirmado. También puedes ver el estado en "Mis reservas".',
+    // ⚠️ **El PERMISO va delante** (`#563`): esta pantalla pregunta al servidor cada 5 s y no tiene
+    // fin —se acaba cuando el pago se confirma o cuando el pedido caduca, y en el peor caso son 15
+    // minutos—, así que lo que el cliente necesita saber es que puede irse. Quedarse mirando no
+    // acelera nada, y el correo llega igual.
+    'payment_verifying_email_note' => 'Puedes cerrar esto sin perder nada: te escribimos en cuanto esté confirmado, y el estado también está en «Mis reservas».',
     'verify_title' => 'Verifica tu correo',
     'verify_intro' => 'Para completar tu reserva, verifica tu cuenta desde el correo que te hemos enviado.',
+    // ⚠️ **Con el buzón delante, que es donde se descubre un correo mal tecleado** (`#563`): esta
+    // pantalla es la única del embudo que lo puede decir. `verify_intro` se queda como respaldo para
+    // cuando no se sabe —al recargar, el cliente nace sin él—: inventarlo sería peor que no decirlo.
+    'verify_intro_sent' => 'Te hemos escrito a :email. Abre el enlace del correo para terminar tu reserva.',
     'verify_hold' => 'Tu plaza está reservada mientras confirmas.',
     'reservation_created' => '¡Reserva creada!',
     'reservation_thanks' => '¡Gracias! Tu plaza está reservada. Aquí tienes el resumen:',
@@ -220,6 +249,10 @@ return [
     'payment_confirmed_note' => 'Pago confirmado.',
     'new_purchase' => 'Hacer otra reserva',
     'see_my_orders' => 'Ver mis reservas',
+    // ⚠️ **La puerta al CARNÉ desde la reserva creada** (`#563`): es lo que hace falta en la
+    // entrada del parque, y es **el mismo de siempre** — no hay un QR por pedido. El rótulo repite el
+    // de su zona («Mi QR») a propósito: el botón promete exactamente la pantalla a la que lleva.
+    'see_my_card' => 'Ver Mi QR',
     'guest_form_notice' => 'Te pediremos completar el formulario de tu reserva: te enviaremos el enlace por email (también en «Mis reservas»).',
     // #146: el Order status `paid` lee "Completado" (no "Pagado"). Un Order
     // completado puede llevar reembolso anotado — el reembolso es una dimensión
@@ -249,7 +282,11 @@ return [
     'deposit_card_note' => 'Señal :deposit · :rest en el parque',
     'pay_at_park' => 'En el parque',
     'paid_online_confirmed' => 'Pagado online',
-    'pending_at_park' => 'Pendiente en el parque',
+    // ⚠️ **El VERBO, como en la banda del pie** (`#562`): aquí cuelga de «Total», que no dice qué se
+    // hace con ese dinero, así que le toca «A pagar en el parque» — es la misma regla que `#554`
+    // escribió para `footer_park_total`. El «En el parque» a secas se queda donde cuelga de «Pagas
+    // ahora» (`pay_at_park`, el ⓘ de la señal), que ya lleva el verbo delante.
+    'pending_at_park' => 'A pagar en el parque',
     // Robustez del desglose (#196/#198): desglose detallado en "Mis pedidos".
     'subtotal' => 'Subtotal',
     // ▶ Hasta la T3·4 del libro (`DECISIONES #315`) aquí vivían los rótulos del modelo de DOS EJES

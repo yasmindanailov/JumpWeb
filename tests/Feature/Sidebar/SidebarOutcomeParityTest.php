@@ -384,12 +384,67 @@ class SidebarOutcomeParityTest extends TestCase
 
         $this->assertSame(route('contacto'), $boot['urls']['contact'] ?? null);
         $this->assertSame(route('account.orders'), $boot['urls']['my_orders'] ?? null);
+        // ⚠️ **La TERCERA desde `#562`**: las condiciones dejaron de viajar dentro del texto de la
+        // casilla —allí el enlace medía 19 px contra un suelo táctil de 48— y su fila propia recibe la
+        // URL por aquí. Y eso la mete en el mismo punto ciego que las otras dos: si algún día no
+        // viajara, la fila seguiría pintándose y llevaría a ninguna parte, **con el árbol en verde**.
+        $this->assertSame(route('legal.condiciones'), $boot['urls']['terms'] ?? null);
 
         // ⚠️ **Lo que se comprobaba sobre el Blade se fue con él, y es un residual DECLARADO**
         // (`DECISIONES #84(c)`): que un motor PINTE esas URLs no lo puede ver el diff de árbol
         // —`href` no es atributo de contrato— ni los módulos planos, que no las tocan: las consumen
         // los `.vue`. Lo que se queda es que el servidor las COMPONE con `route()` y las publica.
         $this->assertNotSame('', (string) ($boot['urls']['contact'] ?? ''), 'la URL tiene que viajar compuesta');
+
+        // ⚠️⚠️ **La de las condiciones SÍ se cablea, y es la única de las tres** (`#562`): las otras
+        // dos son comodidades —escribir a soporte, ver los pedidos— y ésta es una OBLIGACIÓN (LCGC
+        // art. 5, TRLGDCU art. 97). Una fila que se pinta y no lleva a ninguna parte deja al cliente
+        // contratando sin haber podido leerlas, y eso el árbol congelado no lo ve. Es el mismo
+        // mecanismo con el que `AccountDoorWiringTest` ata la puerta de la cuenta.
+        $this->assertMatchesRegularExpression(
+            '/:terms-url="urls\.terms/', (string) file_get_contents(resource_path('js/sidebar/sections/PurchaseSection.vue')),
+            'el paso de pagar tiene que recibir la URL de las condiciones del SERVIDOR'
+        );
+        $this->assertMatchesRegularExpression(
+            '/<a :href="termsUrl"[^>]*class="cal-more paydue__terms"/', (string) file_get_contents(resource_path('js/sidebar/steps/PayStep.vue')),
+            'la fila «Leer las condiciones» tiene que colgar de `termsUrl`, no de una ruta quemada'
+        );
+    }
+
+    /**
+     * **«Verifica tu correo» dice A QUÉ correo** (`#563`).
+     *
+     * ⚠️⚠️ **Y esto NO lo puede ver el diff de árbol**: las dos ramas emiten el MISMO nodo —un
+     * `<p class="purchase__note">`— y solo cambia el texto de dentro. Quien quitara el ternario dejaría
+     * la pantalla diciendo «te hemos escrito» sin decir dónde, **con el manifiesto congelado en verde**
+     * — y ésta es la única pantalla del embudo donde se descubre un correo mal tecleado.
+     *
+     * ⚠️ El dato **no cuesta una petición ni un campo de contrato**: el store de auth lo sabe desde el
+     * propio alta (`awaitVerification`), así que lo que hay que atar es el cableado.
+     */
+    public function test_the_verify_screen_names_the_mailbox_it_wrote_to(): void
+    {
+        $this->assertMatchesRegularExpression(
+            '/<VerifyStep\s+[^>]*:email="authStore\.pendingEmail"/s',
+            (string) file_get_contents(resource_path('js/sidebar/sections/PurchaseSection.vue')),
+            'el paso 7 tiene que recibir el buzón al que se escribió, que lo sabe el store de auth'
+        );
+
+        $paso = (string) file_get_contents(resource_path('js/sidebar/steps/VerifyStep.vue'));
+
+        $this->assertStringContainsString(
+            "email ? tp('verify_intro_sent', { email }) : t('verify_intro')", $paso,
+            "La pantalla ha dejado de nombrar el buzón.\n".
+            '⚠️ Y las dos ramas tienen que seguir existiendo: al recargar, el store nace limpio y ahí '.
+            'la frase genérica es la respuesta honesta — inventar un correo sería peor que no decirlo.'
+        );
+
+        // ▶ Y la frase que el servidor ya tenía escrita y esta pantalla no pedía (`verify_hold`).
+        $this->assertStringContainsString(
+            "{{ t('verify_hold') }}", $paso,
+            'quien llega aquí tiene que saber que su plaza sigue guardada: la frase lleva meses en los '.
+            'tres idiomas y hasta `#563` no la pedía nadie'
+        );
     }
 
     // ── Herramientas ──────────────────────────────────────────────────────────────────────────

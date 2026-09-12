@@ -756,8 +756,18 @@ class SidebarBundleBudgetTest extends TestCase
      * medición que `#553` hizo con otro sujeto.
      * ▶ La extracción **se queda igual**, y no por el peso: dos copias del mismo control no divergen el
      * día que se escriben, sino el día que alguien arregla una. El techo paga eso.
+     * ▶ **283 (`#563`, la parada 04)**: medido **282,09 KiB**. Entran la hora de retención del pago
+     * denegado (`holdUntilLabel` + su sitio en el store), la puerta al carné desde la reserva creada
+     * —que trae el store de cuenta y su mapa de zonas a esta sección—, la pegatina de espera del paso
+     * 11 y el azulejo del 07.
+     * ⚠️⚠️ **Y la poda NO podó, por TERCERA vez seguida** (`#553`, `#561`, ésta): se retiró
+     * `setDeclinedReason()` del store, que era código muerto de verdad —su único consumidor era su
+     * propio test—, y el chunk bajó **50 bytes** de los 1.140 que hacían falta. ▶ *Retirar un método
+     * muerto de un store no devuelve peso: lo que pesa en un bundle son las dependencias que entran,
+     * no las líneas que salen.* La poda se queda igual, porque un método que nadie llama es una
+     * respuesta a una pregunta que ya no existe.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 281;
+    private const SIDEBAR_CHUNK_MAX_KB = 283;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

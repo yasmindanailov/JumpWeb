@@ -227,6 +227,37 @@ export function declinedReasonText(messages, code) {
 }
 
 /**
+ * **HASTA QUÉ HORA se guarda la plaza**, para el paso 10 (`#563`).
+ *
+ * La pantalla del pago denegado decía «unos minutos» **teniendo el dato**: `expires_at` viaja en
+ * `payment-status` desde que ese contrato existe, con su descripción escrita —«hasta cuándo se retiene
+ * la plaza; es el margen que queda para reintentar»—. Decir la hora convierte una vaguedad en algo que
+ * el cliente puede usar: sabe si le da tiempo a buscar otra tarjeta.
+ *
+ * ⚠️ **Se formatea en la hora del NAVEGADOR, y aquí eso es lo correcto**: `expires_at` es un instante
+ * real y viaja con su offset (`toIso8601String`), así que lo que se pinta es la hora del reloj de quien
+ * mira. No es el caso de las FRANJAS, que guardan hora de pared del parque y no se pueden parsear como
+ * instantes (`#426`) — son dos cosas distintas y se tratan distinto.
+ *
+ * ⚠️ **Una fecha que no se puede leer devuelve cadena vacía, nunca «Invalid Date»**: la pantalla
+ * decide con eso si promete una hora o se queda en la frase de siempre. Un desenlace de dinero no
+ * puede enseñar basura donde va una promesa.
+ *
+ * @param {string|null|undefined} expiresAt  el `expires_at` del contrato, en ISO 8601
+ * @param {string} locale
+ * @returns {string}  la hora ya formateada, o `''` si no hay nada que prometer
+ */
+export function holdUntilLabel(expiresAt, locale = 'es') {
+    if (typeof expiresAt !== 'string' || expiresAt === '') return '';
+
+    const instante = new Date(expiresAt);
+
+    if (Number.isNaN(instante.getTime())) return '';
+
+    return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(instante);
+}
+
+/**
  * Sondea el desenlace del pago.
  *
  * `GET orders/{code}/payment-status` es deliberadamente pequeño porque se pregunta EN BUCLE; para el

@@ -149,7 +149,14 @@ class SidebarComponentBudgetTest extends TestCase
         // ⚠️ **445 → 446 en `#556`**, y la línea es `pideIdentificarse: ! props.userId`. No hay regla
         // que extraer: la REGLA —qué fases recorre este cliente— vive en `progress.js`; esto es pasarle
         // un dato que solo el componente tiene, que es exactamente para lo que sirve el cableado.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 446, 'api' => 2],
+        // ⚠️ **446 → 453 en `#563`** (la parada 04), y las siete son cableado: dos imports y el store
+        // de cuenta, `showCard()` —que es una sola llamada a `openZone()`, la pieza que YA existe para
+        // «abrir el área en una zona viniendo de fuera»—, `hasSession` —un dato del HTML, como el
+        // `pideIdentificarse` de arriba— y los props nuevos de tres desenlaces. ▶ **Lo que sí era una
+        // regla se extrajo**: formatear la hora de retención vive en `outcome.js` con su `node --test`,
+        // junto a `declinedReasonText`, porque decidir cuándo NO se promete un plazo es una decisión y
+        // no un cableado. Y el denegado DEVUELVE una línea al perder su `@add-another`.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 453, 'api' => 2],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:
