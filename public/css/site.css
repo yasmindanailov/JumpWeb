@@ -71,16 +71,22 @@
        `[DECIDIDO owner, 2026-09-12]`, elegido viendo tres formas renderizadas en la web Y en el
        cajón: **ningún botón con fondo negro en ningún sitio**, y tres variantes — primario
        naranja · secundario CIAN · fantasma sin relleno con borde cian.
-       ⚠️⚠️ **El rótulo va en BLANCO y eso da 2,70 de contraste**, por debajo del 4,5 de texto
-       normal y también del 3,0 de texto grande. Se le enseñaron las tres variantes con el número
-       delante —la de rótulo en tinta da 6,85 y la de Cian 800 con blanco 5,13— y eligió ésta.
-       Queda como **desviación DECIDIDA**, no como descuido; si se reabre, las otras dos están
-       medidas. ▶ Lo vigila `ButtonFamilyColourTest`.
+       ▶ **Es `--interactive`, o sea AZUL MURO en papel y CIAN en tinta** — el mismo color que ya
+       lleva el fantasma en el borde, así que secundario y fantasma son UN color con dos
+       tratamientos, que es lo que el owner pedía al decir que eran demasiados colores de botón.
+
+       ⚠️⚠️ **Y con esto el contraste deja de ser una desviación.** Llegó a estar en CIAN pleno con
+       rótulo blanco, que da **2,70** —por debajo del 4,5 de texto normal y del 3,0 de texto
+       grande—; el owner lo eligió viéndolo y luego lo cambió a Azul Muro. Hoy: **6,43** en papel y
+       **6,85** en tinta.
+       ⚠️ **El rótulo es `--on-secondary: var(--bg)` y NO un blanco fijo, y eso es lo que lo hace
+       cumplir en las dos superficies**: cuando el relleno sigue a la superficie, el rótulo también.
+       Con blanco fijo, sobre tinta el relleno sería cian y el rótulo caería a 2,45.
        ⚠️ Los estados se derivan con el paso 0,88 de `ThemeSettings::actionHover()` (`#209`). */
-    --secondary: var(--identity-fill);
+    --secondary: var(--interactive);
     --secondary-hover: color-mix(in srgb, var(--secondary) 88%, #000);
     --secondary-press: color-mix(in srgb, var(--secondary) 77%, #000);
-    --on-secondary: #FFFFFF;
+    --on-secondary: var(--bg);
 
     --interactive-hover: color-mix(in srgb, var(--interactive) 88%, #000);
     --interactive-press: color-mix(in srgb, var(--interactive) 77%, #000);
@@ -3240,9 +3246,14 @@ body[data-has-hero] { --cierre-runway: max(420px, 75vh); }
 .hero__pair-slot .cta-pair {
     --cta-pair-w: clamp(260px, 22vw, 320px);
     --cta-pair-mini: clamp(64px, 5.4vw, 76px);
-    /* ⚠️ `#538` · el par del hero baja de `clamp(64px, 5.2vw, 74px)` al `altoL` del sistema.
-       Era la mayor de las ocho alturas y la única que crecía con la ventana. */
-    --cta-pair-h: var(--book-bar-h);
+    /* ⚠️⚠️ `#541` · **EL PAR DEL HERO RECUPERA SU ALTURA** (`[DECIDIDO owner, 2026-09-12]`, literal:
+       «dale la altura que tenía antes, no tan fino; es mi decisión»). `#538` lo había bajado al
+       `altoL` del sistema (56) al llevar las ocho alturas de botón a la escala de dos.
+       ▶ Queda como **EXCEPCIÓN DECIDIDA a esa escala**, con su motivo: el par del hero no es un
+       control más de una lista — es la primera pantalla y la única pieza de acción que se ve sobre
+       el vídeo, y a 56 se quedaba fino para el peso que tiene ahí. El resto de la escala no se
+       toca: las otras siete alturas siguen en 48 y 56. */
+    --cta-pair-h: clamp(64px, 5.2vw, 74px);
     --cta-pair-fs: clamp(16px, 1.3vw, 19px);
     --cta-pair-pad: clamp(15px, 1.3vw, 18px);
 }
@@ -4982,13 +4993,16 @@ body[data-has-hero] .nav--over .nav__cta {
    aquí y sube a la cabecera), así que esto es lo mínimo: quitarle el rol que no le toca, no vestirla. */
 .acct__btn--primary { background: var(--secondary); color: var(--on-secondary); }
 .acct__btn--primary:hover { transform: translateY(-2px); background: var(--secondary-hover); color: var(--on-secondary); box-shadow: var(--shadow-lift); }
-.acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
-.acct__btn--ghost:hover { transform: translateY(-2px); background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
+/* ⚠️ `#541` · el fantasma del área toma el borde de IDENTIDAD, como el resto de la familia
+   (`componente.boton.fantasma.papel`). Llevaba `--line-strong`, o sea tinta, así que era un
+   SEGUNDO fantasma distinto del de la web sin que nadie lo decidiera. */
+.acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--interactive); }
+.acct__btn--ghost:hover { transform: translateY(-2px); background: var(--interactive); color: var(--paper-bg); border-color: var(--interactive); }
 /* Bloqueado en el paso de identificación del flujo (login/registro ya pedido abajo): atenuado,
    cursor not-allowed y SIN efecto hover (el `disabled` lo fija Alpine vía $store.purchase.identifying). */
 .acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .acct__btn--primary:disabled:hover { transform: none; background: var(--fg); color: var(--bg); box-shadow: none; }
-.acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--line-strong); }
+.acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--interactive); }
 /* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
    salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`
    lo deja cuadrado sin fijarle un tamaño, así que sigue creciendo con el padding del sistema. */
@@ -6379,20 +6393,12 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
    cobertura: pedirle que abra «Mi cuenta» y busque la sexta tarjeta es una pantalla de más en
    el peor momento. El hueco lo deja la sub-línea de la próxima reserva, que se retira de aquí
    porque el índice del área ya la enseña (§9.7 C·2). */
-.acct__qr {
-    flex: none;
-    display: inline-flex; align-items: center; gap: var(--sp-6);
-    padding: var(--sp-6) var(--sp-10);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r-pill);
-    background: transparent;
-    color: var(--fg);
-    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold);
-    white-space: nowrap; cursor: pointer;
-    transition: background var(--dur-toque) var(--ease-sale), color var(--dur-toque) var(--ease-sale), border-color var(--dur-toque) var(--ease-sale);
-}
-.acct__qr:hover { background: var(--fg); color: var(--bg-card); border-color: var(--fg); }
-.acct__qr:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+/* ⚠️⚠️ `#541` · **AQUÍ VIVÍA `.acct__qr`, UNA QUINTA PIEL DE BOTÓN**: cápsula de radio 999, su
+   propio relleno, su propio peso y su propio borde, fuera de la familia `.acct__btn`. El owner la
+   señaló —«ese badge tipo chapa no, usa un botón que tengamos»— y el botón entra en la familia
+   como `.acct__btn--primary.acct__btn--qr`. Lo único que sobrevive es el hueco de su ICONO, que
+   sigue necesitando su tamaño propio. */
+.acct__btn--qr { flex: none; }
 .acct__qr-ico { flex: none; display: inline-flex; }
 .acct__qr-ico svg { width: 14px; height: 14px; }
 
@@ -7344,3 +7350,17 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    Nube, activa en blanco con texto tinta, radio 16 fuera y 10 dentro): eso es FORMA, es su pregunta 01
    del paso 05 y **sigue abierta** — entra con el vestido de la identificación, no aquí. */
 .sidecart__panel .zone-tab.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+
+/* ══ LAS PESTAÑAS DEL CAJÓN NO IDENTIFICAN UNA ZONA · `#541` ═══════════════════════════════════
+   «Entrar / Crear cuenta» reutiliza `.zone-tab`, que es la piel de las pestañas de ZONA — y con
+   ella su relleno `--zone-1`, que en el área de cuenta cae a TINTA: un fondo negro en el cajón,
+   que es justo lo que el owner ha pedido retirar.
+   ⚠️ Y no es solo color: `#436` dejó `--zone-*` para lo que **identifica una zona**, y un
+   conmutador entre dos formularios no lo es. El sistema declara su propia pieza —
+   `componente.pestana`: pista en Nube, la activa se LEVANTA a blanco con texto tinta—, que es lo
+   que se aplica aquí. La web conserva la suya: allí las pestañas sí dicen qué zona miras. */
+.sidecart__panel .zone-tab.active {
+    background: var(--bg-card);
+    color: var(--fg);
+}

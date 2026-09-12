@@ -95,7 +95,14 @@ async function leave() {
                   ⚠️ Sin `href`: no hay página que sirva de suelo para el carné —es una credencial y
                   su única superficie es esta zona—, al revés que «Mis reservas», que sí la tiene.
                 -->
-                <button type="button" class="acct__qr"
+                <!--
+                  ⚠️ `#541` · **ENTRA EN LA FAMILIA** (`[DECIDIDO owner, 2026-09-12]`: «usa un botón
+                  que tengamos, ese badge tipo chapa no»). Era una cápsula propia —radio 999, su
+                  propio relleno y su propio peso— fuera de `.acct__btn`, o sea una quinta piel de
+                  botón que nadie había decidido. Va en RELLENO porque es lo que más se usa de esta
+                  tira: el carné es lo que se enseña en la puerta.
+                -->
+                <button type="button" class="acct__btn acct__btn--primary acct__btn--qr"
                         @click="accountStore.openZone(ZONES.CARD)">
                     <span class="acct__qr-ico" aria-hidden="true">
                         <!-- `qr` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
@@ -132,7 +139,7 @@ async function leave() {
               peso visual: un «cerrar sesión» que grita se pulsa sin querer.
             -->
             <div class="acct__cta">
-                <a :href="urls.my_orders" class="acct__btn acct__btn--primary acct__btn--reservas"
+                <a :href="urls.my_orders" class="acct__btn acct__btn--ghost acct__btn--reservas"
                    @click="$event.preventDefault(), accountStore.openZone(ZONES.ORDERS)">
                     {{ panel.reservations }}
                     <template v-if="panel.counter">
@@ -141,6 +148,11 @@ async function leave() {
                     </template>
                 </a>
 
+                <!--
+                  ⚠️ `#541` · FANTASMA (`[DECIDIDO owner, 2026-09-12]`): los rellenos son los que
+                  hacen AVANZAR —«ir al carrito», «ir a pagar», «continuar»— y mirar la cuenta no
+                  avanza nada. En esta tira el único relleno es el carné.
+                -->
                 <a :href="urls.account" class="acct__btn acct__btn--ghost"
                    @click="$event.preventDefault(), accountStore.openZone(ZONES.HOME)">
                     {{ panel.account }}
