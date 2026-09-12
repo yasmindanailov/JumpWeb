@@ -1858,8 +1858,18 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       (`#485`), **06** (`#490`+`#491`), **07** (`#487`) y **08** (`#488`).
       ❗❗ Con la **06** entra una regla de arquitectura que vale para cualquier tercero: **la portada
       no llama a Google**, lee de una caché corta que llena un comando programado, y hay un caso que
-      **prohíbe el mecanismo** con su guarda-de-la-guarda. ▶ Lo siguiente es la **Fase 3, las
-      páginas**, y empieza por su ARMAZÓN.
+      **prohíbe el mecanismo** con su guarda-de-la-guarda.
+      ✅ **Fase 3 · las SIETE páginas del inventario, CONSTRUIDAS** (2026-09-12): el armazón
+      (`#521`→`#525`, con la T3a·4 revertida por `#527`) y las páginas —`/atracciones` (`#481`),
+      `/cumpleanos` (`#528`), `/precios` (`#531`), `/normas` (`#533`), `/contacto` (`#535`) y
+      `/bar` (`#536`, la única que no existía)—. ⏸️ Queda **`/servicios` → «Grupos»**, PAUSADA por el
+      owner mientras itera su presentación en Claude Design; su lógica está medida en `#534`.
+      ❗❗❗ **Y las cinco fases de `rediseno-desde-canvas.md` YA NO DESCRIBEN EL TRABAJO QUE HAY**: el
+      canvas ha dibujado **cuatro áreas más** que no están en el plan —el PANEL (5 artboards, ~25
+      decisiones del owner), la APP móvil, las INVITACIONES digitales y las BANDAS—, ninguna con
+      carril asignado. El inventario completo, con lo que bloquea de quién, vive en `ESTADO.md`.
+      ▶ Lo siguiente de este carril, con grupos pausado, es la **Fase 5** (post-form y justificante):
+      **está dibujada entera en el canvas y decidida por el owner**, y no depende de nadie más.
       ⚠️⚠️ A la **06** le falta su mitad de Google, y la verificación contra la API la reordenó: el
       parque tiene **UNA** reseña, así que `[DECIDIDO owner]` hay **umbral de 10** y hoy la sección la
       sostienen las opiniones PROPIAS. ▶ Y deja escrito que **«que la chapa se vea siempre» no es
