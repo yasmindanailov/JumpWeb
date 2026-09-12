@@ -30203,3 +30203,112 @@ cambian exactamente en lo que esta tanda toca). ▶ **El OJO lo puso el owner en
 pidió trabajar esta tanda.
 
 ⚠️ **Paso de despliegue: ninguno.**
+
+---
+
+## #558 · 2026-09-12 · La CESTA, desde su artboard — y se deshacen dos tarjetas anidadas
+
+**Contexto.** Cierra la parada 02 del canvas (`Pasos Compra PJP` 4a). Es **vestir**: ni una regla de
+negocio cambia.
+
+### La línea cambia de ESTRUCTURA, no solo de vestido
+
+El artboard la ordena en cuatro columnas: **azulejo del producto · (nombre + cuándo) · precio ·
+quitar**. Hoy el icono vivía **dentro del `<span>` del nombre**, así que con un nombre de dos líneas
+—«8 invitados · Pack Cumpleaños Jump» lo es a 390— quedaba flotando a mitad de la primera; y el CUÁNDO
+era un bloque hermano, a la misma distancia del nombre que del resto de la tarjeta.
+
+⚠️ **Y la cabecera se alinea ARRIBA, no al centro**: centrada, con un nombre de dos líneas el precio y
+la × flotaban a media tarjeta.
+
+### Dos tarjetas anidadas que se deshacen
+
+Cada menor del selector era **una tarjeta con borde DENTRO de la tarjeta de la línea** —el mismo canto
+dos veces, que es lo que `#484` llamó romper el concéntrico—. Hoy son una lista dentro de una tarjeta:
+lo que las separa es el aire.
+
+⚠️ **Conservan 44 de alto**: es una casilla que se pulsa con el pulgar, y sin la caja el área táctil se
+quedaría en la altura del texto. ⚠️ Y «apagada» se dice **atenuando el texto**, no pintando el fondo:
+un segundo tono dentro de una tarjeta blanca vuelve a leerse como otra tarjeta.
+
+### Lo demás
+
+- **La × de quitar pasa a 44×44 con margen negativo**: el área crece sin mover el aspa ni empujar la
+  tarjeta. *Un control de quitar que hay que acertar con el dedo borra la reserva equivocada.*
+- **«+ Añadir otra reserva» pierde el borde DISCONTINUO** —en este sistema el trazo roto significa
+  «aquí falta algo», y aquí no falta nada: es una puerta— y sube a **48**.
+
+⚠️ Manifiesto del contrato de árbol regenerado y **revisado línea a línea**: los tres casos cambian
+solo en la reestructuración y los árboles **CRECEN** (8→10, 22→24, 32→34). Con la trampa de `#557`
+recién pagada, se comprueba que ninguno se mutila.
+
+---
+
+## #559 · 2026-09-12 · La línea de la cesta decía «+ 1× Calcetines» — tres cosas en una frase, y ninguna informaba
+
+**Contexto.** Lo vio el owner mirándolo en vivo. Al medirlo eran **tres defectos superpuestos**, y el
+artboard no los resuelve porque **transcribió nuestro propio texto**: su fixture dice literalmente
+`'+ 2× Calcetines antideslizantes'`.
+
+1. **El «+» sobra, y no era neutro.** Su trabajo —decir «esto es un añadido a lo de arriba»— lo hace la
+   **SANGRÍA** de 40 px (el azulejo más su hueco), que es como lo dibuja el artboard del paso 08. Y en
+   este mismo embudo `+` es el botón de añadir uno: delante de un texto se leía como un control muerto.
+2. **«1×» multiplica por uno.** El signo no dice nada y le roba el primer golpe de vista al nombre, que
+   es lo único que el cliente viene a reconocer. La cantidad se pinta **de dos en adelante**, y la misma
+   regla vale para la línea principal o serían dos formatos en la misma tarjeta. ⚠️ **En un PACK no
+   cambia**: ahí la cantidad va con su sustantivo («8 invitados · …»), que es la doctrina de `#128` —sin
+   él, «8×119,60 €» se lee como una multiplicación—.
+3. **«Incluido» y «0,00 €» decían lo mismo dos veces.** Con la inclusión ENTERA el importe no se pinta;
+   con la PARCIAL sí, porque ahí es lo que se paga por el resto: un dato nuevo.
+
+⚠️ El bloque pierde también su borde **discontinuo**, por lo mismo que «+ Añadir otra reserva».
+
+---
+
+## #560 · 2026-09-12 · El campo que faltaba se borraba con la PRIMERA letra — y ahora se confirma
+
+**Contexto.** También del ojo del owner, y es el único defecto de DATOS de la jornada.
+
+### Reproducido antes de tocarlo
+
+El bloque «faltan datos» de una línea restaurada emitía **en cada pulsación**. `line.pending` lista los
+obligatorios que siguen **vacíos**, así que en cuanto el valor dejaba de estarlo el campo salía de la
+lista y el `v-for` **lo quitaba del DOM con la letra dentro**:
+
+```
+sin teclear     → 1 campo pendiente
+tras UNA letra  → 0 campos pendientes
+```
+
+▶ *El cliente perdía el foco a la primera tecla y el nombre del homenajeado se guardaba con un
+carácter.* Y eso llegaba al pedido.
+
+### El arreglo, y por qué la regla no se queda en el componente
+
+Lo tecleado vive en un **borrador local** y no entra en la cesta hasta confirmarse, con los dos
+controles que pidió el owner: **«Guardar»** —inactivo hasta que están todos, porque el bloque existe
+*porque* faltan obligatorios y confirmar a medias no cerraría nada— y **«Descartar»**, de texto.
+
+❗❗ **`allPendingAnswered()` vive en `cart.js` y COMPARTE criterio de «vacío» con
+`pendingEventFields()`**, y eso no es formalismo: si no lo compartieran, el botón se ofrecería con un
+valor que la lista sigue considerando pendiente — o sea un botón que al pulsarlo no cierra nada. Hay
+caso que ata los dos, comprobando que el borrador está completo **exactamente cuando** la lista se
+vaciaría.
+
+⚠️ **`pendingAnswers()` recorre los campos que se PIDEN, no las claves del borrador**: lo que quedara
+de un campo retirado del catálogo entre dos visitas no se cuela en el pedido.
+
+⚠️ **El techo de `CartStep` hizo su trabajo**: la primera versión metía la regla en el componente (48
+líneas sobre 40) y la respuesta fue **extraerla, no subirlo**.
+
+### Y lo pegado
+
+«Menú 1**Incluido**» salía sin espacio: el `<em>` va junto al nombre en el marcado y el HTML no lo
+inventa. Lo pone el estilo y no un `&nbsp;`, que no se podría quitar el día que ese rótulo cambie de
+sitio.
+
+**Verificación de las tres**: suite **4789 · 30.136 aserciones** (1 skipped) · JS **978** · Pint y
+docs-check ✓ · manifiesto del contrato de árbol revisado línea a línea en cada regeneración · **el OJO
+lo puso el owner en navegador**, que es como pidió trabajar este carril.
+
+⚠️ **Paso de despliegue: ninguno.**
