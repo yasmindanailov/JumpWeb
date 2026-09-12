@@ -2837,11 +2837,12 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4782 en verde** (30.023 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol CONJUNTO tras la OCTAVA fusión, con el **PIE del
-> armazón** del carril del SPA (`#554`: **+6** de `SidebarFootShapeTest` y **+4** de JS en
-> `foot.test.js`, que sube el total a **967**) y **`/contacto`** + **`/bar`** del carril de diseño
-> (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que `CookieGateBlockingTest`
-> pierde con su sujeto · `#536`: **+15** de `BarPageTest`).
+> Suite **4788 en verde** (30.099 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol
+> CONJUNTO tras la NOVENA fusión, con el **ARMAZÓN del cajón COMPLETO** del carril del SPA
+> (`#554`: **+6** de `SidebarFootShapeTest` y **+4** de JS · `#555`: **+6** de `SidebarPhaseBandTest`
+> y **+5** de JS en `progress.test.js`, que sube el total a **972**) y **`/contacto`** + **`/bar`**
+> del carril de diseño (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que
+> `CookieGateBlockingTest` pierde con su sujeto · `#536`: **+15** de `BarPageTest`).
 > ⚠️⚠️ **Ninguna de las dos cifras que traía cada carril valía** —4767 se midió sin `/bar` y 4775
 > sin el pie del cajón—, y la buena salió de MEDIR tras rebasar: *se re-mide DESPUÉS de rebasar,
 > nunca antes*, que es lo que la vuelta anterior ya dejó escrito aquí.
