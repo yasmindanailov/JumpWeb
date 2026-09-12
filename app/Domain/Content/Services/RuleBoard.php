@@ -2,8 +2,6 @@
 
 namespace App\Domain\Content\Services;
 
-use App\Domain\Booking\Models\Zone;
-use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Models\VenueRule;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -87,13 +85,19 @@ final class RuleBoard
      * ⚠️ **Sin ninguna zona con altura no hay tarjeta**: vacío es una respuesta (`#485`), y un eje
      * con una sola banda a lo largo de toda la escala no dice nada.
      *
-     * @param  Collection<int, Zone>  $zones
+     * ❗❗❗ **NO NOMBRA A `Booking`, Y ESO LO IMPONE EL GRAFO DE MÓDULOS**: `Content` solo puede mirar
+     * a `Platform` y a los **contratos** de Booking y Payments, nunca a sus modelos ni a sus
+     * servicios (`ModuleBoundariesTest`). La primera versión importaba `Zone` y `ZoneCards` y la
+     * guarda la paró con las dos flechas escritas. ▶ Es el mismo trato que `RideMosaic`, que recibe
+     * las zonas **sin nombrar el tipo**: aquí llegan el techo y el suelo ya escritos por quien sí
+     * puede componerlos, y este servicio solo reparte porcentajes.
+     *
+     * @param  Collection<int, object>  $zones  zonas con `height_min_cm`/`height_max_cm` y `tr('name')`
+     * @param  int  $techo  el tope de la escala en cm — el MISMO que usa el eje de la portada
      * @return array{ceiling: string, floor: string, bands: list<array{top: float, height: float, label: string, cm: int}>}|null
      */
-    public function heightScale(Collection $zones, ZoneCards $cards): ?array
+    public function heightScale(Collection $zones, int $techo, string $ceiling, string $floor): ?array
     {
-        $techo = ZoneCards::ESCALA_CM;
-
         $bands = [];
         foreach ($zones as $zone) {
             $min = $zone->height_min_cm;
@@ -123,8 +127,8 @@ final class RuleBoard
         }
 
         return [
-            'ceiling' => $cards->ceilingLabel(),
-            'floor' => $cards->floorLabel(),
+            'ceiling' => $ceiling,
+            'floor' => $floor,
             'bands' => $bands,
         ];
     }

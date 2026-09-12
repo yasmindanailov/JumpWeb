@@ -28973,3 +28973,111 @@ página se le enseñó en vivo antes de commitear, que es lo que decidió repone
 ⚠️ Y queda una pregunta de rendimiento **sin medir**: la figura se sirve con `loading="lazy"`, que es
 lo correcto para lo que está por debajo del pliegue; si en la primera pantalla aparece, le conviene
 carga inmediata. No se toca a ciegas.
+
+## #533 · 2026-09-12 · `[DECIDIDO owner]` `/normas` rehecha desde su artboard (T3b): el MOMENTO y el PORQUÉ como dato, y una escala que solo dibuja lo que el dato sostiene
+
+**Contexto.** Carril de diseño, Fase 3 · T3b (`specs/rediseno-desde-canvas.md` §5.5). Artboard
+`Normas PJP` **1a** (móvil) + **1b** (escritorio), leído del canvas con `DesignSync`: **la copia
+local no lo trae**, igual que pasó con `/precios`.
+
+---
+
+**❗❗❗ 1 · LOS DOS HUECOS QUE EL INVENTARIO MIDIÓ SE CIERRAN, Y ERAN DOMINIO.**
+
+`park_rules` tenía **cuatro** columnas (`name`, `description`, `position`, `is_active`) y el diseño
+pide dos cosas que no cabían en ninguna: **el porqué** de cada norma y **el momento** —antes de venir
+· en la puerta · dentro—. Es exactamente lo que §4.2 dejó fichado al inventariar, y por eso entra
+como migración y no como cadenas en la plantilla: *«una norma con motivo se cumple y una norma sola
+se discute en la puerta»*, y el motivo lo tiene que poder escribir el parque desde el panel.
+
+**❗❗❗ 2 · EL MOMENTO ES OPCIONAL, Y ESA DECISIÓN TIENE GUARDA.** `null` significa «sin agrupar», no
+un grupo por defecto: **una norma sin momento se publica igual, al final**. El modo de fallo que esto
+evita no es un error — es una norma que el parque escribe, da por publicada, y que **no aparece en
+ninguna parte sin que nada falle**. Lo mismo con un momento que el producto ya no declare: la norma
+sale igual (`momentOrNull()` decide en **un** sitio, y las dos ramas tienen caso).
+⚠️ El PORQUÉ también es opcional: no toda norma tiene motivo que contar —la de la zona Kids no lleva
+ni en el artboard— y la página lo pinta **solo si está**.
+
+**❗❗ 3 · EL ORDEN DE LOS GRUPOS SALE DE LA CONSTANTE, NO DE LOS DATOS.** Con `groupBy` a secas
+mandaría qué norma aparece antes en la tabla, así que **reordenar en el panel cambiaría el sentido de
+la página** sin que nada fallara: lo primero que se lee tiene que ser lo que decide si entras.
+
+---
+
+**❗❗❗ 4 · LA ESCALA DE ALTURA SE DIBUJA CON LO QUE EL DATO DICE, Y NADA MÁS.**
+
+Las fronteras salen de `zones.height_min_cm`/`height_max_cm` (`#478`) y el techo es **la misma
+constante** que usa el eje de las tarjetas de zona de la portada: dos escalas con topes distintos
+pondrían el mismo 1,30 a distinta altura en dos pantallas del mismo sitio. Sin ninguna zona con
+altura **no hay tarjeta**.
+⚠️⚠️ **DESVIACIÓN DECLARADA**: el artboard dibuja **tres** bandas y la de en medio es «de 1 a 1,30 m,
+con tutor». **Ese 1,00 no existe como dato en ninguna parte**: vive dentro del TEXTO de la norma de
+Jump, que es donde debe estar —es una excepción con condiciones, no un umbral—. Inventarlo habría
+sido poner en el dibujo un número que ningún panel puede cambiar y que ninguna otra instalación
+tendría.
+
+---
+
+**❗❗❗ 5 · LAS EDADES: CUATRO FUENTES DECÍAN TRES COSAS, Y LA NORMA ERA LA ÚNICA QUE AFIRMABA LA
+TERCERA.** Medido: las ZONAS publican «Kids 4 — 7» y «Jump +8»; el CATÁLOGO cobra los packs con 4–7
+y 8+; **las dos coinciden**. El artboard propone «Kids 2–6 · Jump desde 7» como *lo aprobado*, y la
+norma publicada decía «desde los **6** años». `[DECIDIDO owner]`: **manda el catálogo para el producto
+y la zona para la edad de acceso**, así que el contenido entra con esas edades y el artboard queda
+corregido, no copiado.
+
+**▶ 6 · EL CONTENIDO ENTRA COMO SEMILLA EDITABLE**: siete normas en tres momentos. Entran los
+**calcetines**, que no estaban escritos en ninguna parte de la web; se caen **«Zona Kids · consulta
+las condiciones del centro»** (no dice nada) e **«Información»**, que no es una norma sino «pregunta
+al staff» y baja a una línea al pie, fuera de la lista.
+⚠️ La chapa del descargo sigue **el mismo ajuste que el pie** (`#216`): dos criterios para el mismo
+enlace acaban con una página que lleva a otra que no se enseña.
+⚠️ La fecha de «Actualizado en …» sale de la norma tocada más recientemente, **nunca de hoy**:
+escribir el mes actual afirmaría una revisión que nadie ha hecho.
+
+---
+
+**⚠️⚠️ LO QUE ENSEÑÓ EL ARNÉS, y son dos lecciones de guarda:**
+· **Contar no es comprobar**: la guarda contaba las bandas y no miraba **dónde empieza cada una**, así
+que dibujar «hasta» como «a partir de» —la banda de Kids del suelo al techo, o sea *«Kids no tiene
+límite de altura»*— pasaba en verde. Hoy asevera el corte al 31,58 %.
+· **Una mutación que no se aplica no es una guarda que aguanta**: la del porqué salía «NO APLICADA (2
+coincidencias)» porque su bloque está **dos veces** en la vista, y el arnés la daba por
+superviviente sin cambiar nada. Las dos copias son la misma regla: se mutan las dos, y el molde
+aprende un **recuento esperado** para que una copia nueva no pase de largo.
+⚠️ Trampa de instrumento: `grep -c` dio **cero** para un texto que está dos veces —aquí `grep` es
+ugrep en ERE y los paréntesis de `@if (...)` son metacaracteres—. El recuento que vale es el de una
+herramienta que no interpreta el patrón.
+
+⚠️ **El caso de la escala nació SIN SUJETO**: el seeder **no siembra ninguna altura**, así que
+comparaba cero bandas contra cero zonas y habría pasado en verde. Lo cazó la aserción de sujeto, no
+el resultado; hoy el caso siembra sus dos zonas, como ya hace la guarda hermana de la portada.
+
+**Guardas**: `RulesPageTest` (9 casos) + `scripts/mutar-normas.py` (**9/9**).
+
+**Verificación**: suite **4732 en verde** (29.653 aserciones, 1 skipped) · mutaciones **9/9** · Pint ✓ ·
+docs-check ✓ · la página servida en vivo con sus tres grupos, sus seis porqués y la escala de dos
+bandas.
+
+**⚠️⚠️ TRES GUARDAS SE PUSIERON ROJAS Y LAS TRES TENÍAN RAZÓN** — ninguna era ruido, y las tres dicen
+algo que conviene saber antes de rehacer otra página:
+· **`ModuleBoundariesTest` corrigió un error de ARQUITECTURA mío**: `RuleBoard` vive en `Content`, que
+  solo puede mirar a `Platform` y a los **contratos** de Booking y Payments — importaba
+  `Booking\Models\Zone` y `Booking\Services\ZoneCards`, dos flechas prohibidas. ⚠️ **Y el precedente
+  en el que me apoyé decía lo CONTRARIO de lo que creía**: `RideMosaic` **no importa `Zone`**, recibe
+  la colección sin nombrar el tipo. Hoy la escala recibe el techo y sus dos extremos **ya resueltos**
+  por quien sí puede componerlos, y lo que importa se conserva: el tope es el mismo que el de la
+  portada, así que el 1,30 cae a la misma altura en las dos pantallas.
+· **`TouchTargetTest` vigilaba el «Volver al inicio» usando `/normas` como muestra**, y la página
+  rehecha ya no lo lleva (el armazón da menú y pie, `#527`). Medido en vivo: el control **sigue
+  existiendo** en `/contacto` y las legales ya no lo pintan — la guarda **se muda con su sujeto**, que
+  es lo que `#531` hizo con `zone-tab`, en vez de retirarse.
+· **`PagesRoutesTest` se quedó SIN SUJETO**: aseveraba la norma «Conducta», que dejó de existir al
+  reescribir el contenido (hoy es «Haz caso al monitor»). Re-apuntado a **la primera norma sembrada,
+  leída de la base**: sigue vigilando lo suyo —que la página lista lo del panel— y no se vuelve a caer
+  el día que el parque cambie un título.
+⚠️ La migración dejó el recuento de la doc desfasado (108 → **109**) y lo cazó `docs-check`.
+
+**❗ QUEDA DEL OWNER, y no se toca sin él**: **qué normas faltan de «dentro»** —el artboard pregunta
+por comida de fuera, móviles, joyas, gafas, saltar dos a la vez, embarazadas y lesiones—, que ahora ya
+tienen dónde escribirse desde el panel con su momento y su porqué; y si `/normas` **recupera o no** el
+enlace de vuelta al final.

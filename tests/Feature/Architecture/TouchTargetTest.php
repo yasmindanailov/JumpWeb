@@ -108,7 +108,12 @@ class TouchTargetTest extends TestCase
         'cookie__config' => ['/', 'el «Configurar» del banner, 17'],
         'cookie__policy' => ['/', 'el enlace de la política dentro del panel, 16'],
         'ck-tgl' => ['/', 'el interruptor de finalidad: 42×24, y su ::after ya dibuja el pomo'],
-        'page__back' => ['/normas', 'el «Volver al inicio» de las páginas de contenido, 21'],
+        // ⚠️ **Se mira en `/contacto` desde `#533`**, y es la mudanza de `zone-tab` otra vez:
+        // `/normas` se rehízo desde su artboard y **ya no lleva «Volver al inicio»** —el armazón da
+        // menú y pie, y `#527` decidió que las interiores acaban ahí—. El control **no ha muerto**:
+        // medido en vivo, `/contacto` lo pinta y las legales ya no. La guarda se muda con su sujeto,
+        // no se retira.
+        'page__back' => ['/contacto', 'el «Volver al inicio» de las páginas de contenido, 21'],
         'svc-hero__jump' => ['/servicios', 'los saltos a cada servicio, 36'],
     ];
 

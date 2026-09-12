@@ -36,7 +36,18 @@ class PageController extends Controller
 
         return view('pages.rules', [
             'board' => $board->compose($rules),
-            'scale' => $board->heightScale($zones, new ZoneCards),
+            /*
+             * ⚠️ El techo y los dos extremos escritos los compone `ZoneCards`, que es de Booking y
+             * es quien ya dibuja el eje de la portada: `RuleBoard` vive en Content y **no puede
+             * nombrar a Booking** (`ModuleBoundariesTest`), así que recibe la escala resuelta. Lo
+             * que no cambia es que el techo sea el MISMO en las dos pantallas.
+             */
+            'scale' => $board->heightScale(
+                $zones,
+                ZoneCards::ESCALA_CM,
+                ($cards = new ZoneCards)->ceilingLabel(),
+                $cards->floorLabel(),
+            ),
             /*
              * ⚠️ **El descargo se ofrece con el MISMO criterio que el pie** (`#216`): si la
              * instalación no usa la exención, el pie retira su enlace y aquí no se pinta la chapa.

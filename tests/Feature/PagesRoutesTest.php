@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Content\Models\Page;
+use App\Domain\Content\Models\VenueRule;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -44,9 +45,18 @@ class PagesRoutesTest extends TestCase
 
     public function test_rules_page_lists_seeded_rules(): void
     {
+        /*
+         * ⚠️ **Se asevera lo SEMBRADO, no un nombre escrito a mano.** Este caso decía «Conducta» y
+         * se quedó **sin sujeto** en `#533`, cuando las normas se reescribieron desde el artboard
+         * (esa misma norma es hoy «Haz caso al monitor»). Leyendo el nombre de la primera norma
+         * sembrada, el caso sigue vigilando lo suyo —que la página lista lo que hay en el panel— y
+         * no se vuelve a caer el día que el parque cambie un título.
+         */
+        $primera = VenueRule::where('is_active', true)->orderBy('position')->firstOrFail();
+
         $this->get('/normas')
             ->assertOk()
-            ->assertSee('Conducta'); // norma sembrada (ES); las normas se renovaron (#10)
+            ->assertSee((string) $primera->tr('name'));
     }
 
     public function test_inactive_page_returns_404(): void
