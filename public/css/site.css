@@ -4996,13 +4996,13 @@ body[data-has-hero] .nav--over .nav__cta {
 /* ⚠️ `#541` · el fantasma del área toma el borde de IDENTIDAD, como el resto de la familia
    (`componente.boton.fantasma.papel`). Llevaba `--line-strong`, o sea tinta, así que era un
    SEGUNDO fantasma distinto del de la web sin que nadie lo decidiera. */
-.acct__btn--ghost { background: transparent; color: var(--fg); border-color: var(--interactive); }
+.acct__btn--ghost { background: transparent; color: var(--interactive); border-color: var(--interactive); }
 .acct__btn--ghost:hover { transform: translateY(-2px); background: var(--interactive); color: var(--paper-bg); border-color: var(--interactive); }
 /* Bloqueado en el paso de identificación del flujo (login/registro ya pedido abajo): atenuado,
    cursor not-allowed y SIN efecto hover (el `disabled` lo fija Alpine vía $store.purchase.identifying). */
 .acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .acct__btn--primary:disabled:hover { transform: none; background: var(--fg); color: var(--bg); box-shadow: none; }
-.acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--fg); border-color: var(--interactive); }
+.acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--interactive); border-color: var(--interactive); }
 /* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
    salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`
    lo deja cuadrado sin fijarle un tamaño, así que sigue creciendo con el padding del sistema. */
