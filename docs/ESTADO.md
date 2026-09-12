@@ -74,6 +74,12 @@ del carril del SPA tocan componentes de Vue, y **`SidebarDomContractTest` render
 fuente** — tras un `pull` que traiga cambios suyos hay que **`npm run build:ssr` ANTES de medir la
 suite**, o salen 35 fallos con el árbol limpio. Es la trampa que `#475` ya dejó escrita, con el mismo
 número exacto de casos.
+> ▶ **Y hay un SEGUNDO disparador que no es el `pull`, y lo aporta el carril del SPA** (le mordió
+tres veces el 12-09): **los arneses de mutación también mutan ficheros `.vue` y los restauran con
+`git checkout`**, así que devuelven el ÁRBOL a su sitio **pero no el BUNDLE**. Tras correr un arnés
+del cajón hay que reconstruir igual, **aunque `git status` salga limpio** — *un árbol limpio no
+significa un bundle al día*. Escrito también en la cabecera de `scripts/mutar-rol-accion.py` y en
+`DECISIONES #551`.
 >
 > ▶ **Cierre del carril de diseño (11-09, noche)**: `#528`→`#530` empujados en `dd3b6a0e` con el gate
 en verde, y la rama `cliente/playjump` en `19f2bc8c`. **Por dónde retomar**: **`/precios`**, la
