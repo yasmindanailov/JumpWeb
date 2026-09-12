@@ -920,7 +920,15 @@
             <div class="rev-sec{{ $socialRating ? ' rev-sec--scored' : '' }}">
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
-                    <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
+                    {{-- ⚠️ La mancha va ANCLADA AL TITULAR, no a la cabecera entera, y es la lección
+                         de `#303`: colocada contra el bloque completo, su sitio depende de cuánto
+                         texto tenga la entradilla, y el día que crece la mancha **cae sobre el
+                         párrafo**. Su propia nota del artboard dice lo mismo: «detrás de la PRIMERA
+                         PALABRA, nunca detrás de todo el bloque». --}}
+                    <div class="sec-head__lockup">
+                        <x-site.ilu clave="slot-resenas" class="sec-head__mancha" />
+                        <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
+                    </div>
                     {{-- ⚠️⚠️ **La entradilla sigue a la fuente de las OPINIONES, no a la de la
                          chapa — y las dos pueden no coincidir.** La cifra se sirve sin
                          consentimiento y las reseñas no, así que el caso más frecuente es
@@ -1232,7 +1240,10 @@
              cierre un día**. El porqué, en `ScheduleDisplay::weeklyLede()`. --}}
         <div class="sec-head">
             <p class="sec-head__eyebrow">{{ __('landing.info.eyebrow') }}</p>
-            <h2 class="sec-head__title">{{ __('landing.info.title') }}</h2>
+            <div class="sec-head__lockup">
+                <x-site.ilu clave="slot-visitanos" class="sec-head__mancha" />
+                <h2 class="sec-head__title">{{ __('landing.info.title') }}</h2>
+            </div>
             @if ($scheduleLede)
                 <p class="sec-head__lede">{{ $scheduleLede }}</p>
             @endif
@@ -1297,7 +1308,10 @@
                      su titular decía «Dudas», que es el RÓTULO — el titular es una frase. --}}
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.faq.eyebrow') }}</p>
-                    <h2 class="sec-head__title">{{ __('landing.faq.title') }}</h2>
+                    <div class="sec-head__lockup">
+                        <x-site.ilu clave="slot-dudas" class="sec-head__mancha" />
+                        <h2 class="sec-head__title">{{ __('landing.faq.title') }}</h2>
+                    </div>
                     <p class="sec-head__lede">{{ __('landing.faq.lede') }}</p>
                 </div>
                 <div class="faq">

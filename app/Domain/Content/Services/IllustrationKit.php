@@ -48,13 +48,31 @@ class IllustrationKit
      * @var list<string>
      */
     public const SLOTS = [
-        // ❗❗❗ **ESTÁ VACÍA, Y ES LA CONDUCTA CORRECTA HOY** (`#496`): el rediseño desde el canvas
-        // ha retirado la última. Medido sobre los artboards vigentes, `Portada PJP` y `Zonas PJP`
-        // llevan **cero** manchas, siluetas, tramas y frisos — la decoración del segundo cliente
-        // existe y está aprobada (32 piezas, `#281`), pero vive en su propio artboard
-        // `Elementos Fachada` como REPERTORIO, y su portada no coloca ninguna.
+        // ❗❗❗ **LA PASADA DE VESTIDO LA VUELVE A LLENAR, Y CON TRES** (`#497`, primera tanda de
+        // fachada). Estuvo VACÍA desde `#496` a propósito —el rediseño había retirado la última—, y
+        // el reparto de hoy **no lo eligió nadie: lo fijan las reglas duras del propio canvas**,
+        // medidas sección a sección sobre la portada de hoy:
         //
-        // ⚠️⚠️ **SEXTA VEZ QUE ESTA LISTA ENCOGE POR LA MISMA REGLA: una ranura vive exactamente lo
+        //     02 «Cuánto»          su artboard: «cero superficies nuevas y cero manchas»
+        //     03 «Qué hay dentro»  su artboard: «la foto de apertura es la mancha grande: aquí no
+        //                          entra ninguna otra» — y medido, 5 `<img>`
+        //     01 «Para quién»      2 `<img>`: las fotos de zona
+        //     05 «Antes de venir»  ya lleva dibujo (el QR y el teléfono)
+        //     04 «Cumpleaños»      0 `<img>`, pero **solo porque el owner aún no ha mandado sus dos
+        //                          fotos** (`#528`): una mancha aquí la desplazaría al llegar
+        //     06 · 07 · 08         **cero imagen y cero dibujo** — y son justo las tres zonas que
+        //                          `#537` midió como 100 % papel
+        //
+        // ▶ Tres coincide **al dígito** con el presupuesto heredado de `#292` («una pieza por
+        // sección, tres en toda la portada»), que la pasada tenía como decisión abierta (su D3).
+        // *No hacía falta decidirla: las reglas duras ya la fijaban.*
+        // ⚠️ El canvas sí coloca dos piezas —la trama de puntos y el sello del CIERRE
+        // (`Escritorio PJP` 1e)— y **las dos ya estaban puestas**: aquí no se toca ninguna.
+        'slot-resenas',
+        'slot-visitanos',
+        'slot-dudas',
+
+        // ⚠️⚠️ **SEXTA VEZ QUE ESTA LISTA ENCOGIÓ POR LA MISMA REGLA: una ranura vive exactamente lo
         // que vive su consumidor.** El historial, para que nadie lo lea como un olvido:
         //
         //     `slot-mancha-esquina` · `slot-friso-1..5` · `slot-normas`   → se fueron en `#300`
@@ -63,7 +81,8 @@ class IllustrationKit
         //     `slot-zonas`          (la mancha `B1·02` tras el titular)   → `#496`
         //
         // ▶ Las tres últimas se fueron con la sección que el canvas rehízo **sin ninguna pieza de
-        // dibujo**, no porque estorbaran.
+        // dibujo**, no porque estorbaran. ⚠️ Y las de hoy **no son aquéllas con otro nombre**: son
+        // otras secciones y otra regla —la del canvas, no la del carril anterior—.
         //
         // ⚠️ **Dejar declarada una ranura sin pantalla NO es inocuo**: `kit:build` seguiría
         // exigiendo un dibujo que no pinta nadie y **la guarda de paridad se pondría roja con el

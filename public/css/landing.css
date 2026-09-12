@@ -1835,6 +1835,42 @@ img { display: block; max-width: 100%; }
 .page__head { margin: 0 0 var(--sp-28); }
 .sec-head__lede,
 .page__lede { margin-top: var(--sp-16); }
+
+/* ══ LA MANCHA DE SECCIÓN (`#497`, pasada de vestido · primera tanda de fachada) ═══════════════
+   El dibujo lo trae la INSTALACIÓN en su kit (`<x-site.ilu>`); aquí solo se decide dónde cae, de
+   qué tamaño y con qué tinta. Sin paquete el componente **no emite nada** y estas dos reglas se
+   quedan sin sujeto — que es la conducta querida: nunca una caja vacía.
+
+   ⚠️⚠️ **Va anclada al TITULAR, no a la cabecera entera**, y es la lección más cara de `#303`: la
+   mancha de zonas se colocó contra el bloque completo y, al acortarse los titulares, su `top` —un
+   porcentaje de una cabecera que encogió de 264 a 153 px— **la dejó cayendo sobre el párrafo**
+   (11.016 px² medidos). *Un ajuste sobrevive a la razón que lo justificaba.* Contra el titular no
+   puede alcanzarlo por mucho que crezca la entradilla.
+   ⚠️ **Contexto de apilamiento PROPIO** (`isolation`): con `z-index: -1` y sin él, la mancha se
+   hunde por detrás del fondo de la sección y desaparece. Es el patrón de `#286`.
+   ⚠️⚠️ **Las medidas son FIJAS y no porcentajes, y eso corrige a `#302`/`#309`.** Aquélla usaba
+   `width: min(22%, 165px)` con `left: -5%`, porcentajes del ANCHO del contenedor — y ese ancho ya
+   no es el mismo en las tres secciones: `#reviews` y `#faq` meten su cabecera en una columna de
+   **352 px** de la rejilla de doce (`#488`) y `#info` la deja a **750**. Medido con la regla
+   heredada: **77 px en dos secciones y 165 en la otra**, la misma pieza con dos tallas. Con
+   valores fijos las tres miden igual y el aire de arriba tampoco depende de si el titular ocupa
+   una línea o dos. ▶ La opacidad **sí** se conserva de `#309` (0,30, el doble de la original):
+   *se ve más porque pinta más, no porque ocupe más.*
+   ⚠️⚠️ **La tinta es `--strip-1` y NO `--zone-1`**, que es lo que usaba la mancha de `#302`: aquel
+   `--zone-1` lo tiñe en vivo la zona activa dentro de `#rides`, y fuera de ahí cae al naranja por
+   defecto del PRODUCTO — el color que `#541` acaba de sacar de la web. `--strip-1` es el Cian PJP,
+   que el sistema del cliente declara como su identidad y que `#537` midió ocupando **0,10 % de la
+   página** contra el 30 % que ese mismo sistema pide. */
+.sec-head__lockup { position: relative; isolation: isolate; }
+.sec-head__mancha {
+  position: absolute; z-index: -1; pointer-events: none;
+  left: -26px; top: -72px; width: 132px; height: auto;
+  --ilu-fg: var(--strip-1);
+  opacity: 0.30;
+}
+@media (min-width: 1024px) {
+  .sec-head__mancha { left: -34px; top: -88px; width: 165px; }
+}
 @media (min-width: 1024px) {
   .sec-head,
   .page__head { margin-bottom: 40px; }
