@@ -42,7 +42,7 @@ no suponerlo.
 > | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#533`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) — siguen · `/servicios` · `/bar` · `/contacto` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
-> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#551`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y DOS tandas hechas** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema, nodos bajo 16 de **226 a 110** en el embudo · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, todo lo ELEGIDO en tinta, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` del cajón **29 → 13 reglas**, **17/17 mutaciones** · **lo siguiente**: el **catálogo** (T4·3, «tarjeta grande, sin puerta», `[DECIDIDO owner]`) · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
+> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#552`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y TRES tandas hechas** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` **29 → 13**, **17/17 mutaciones** · ✅ **T4·3 · la TARJETA GRANDE del catálogo** (`#552`): dos tarjetas con su franja y su frase, el cumpleaños en tinta, «Servicios» → **«Grupos»**, y el defecto medido del precio de un pack (**159 px de 324**, la descripción en 55 y cortada) → las siete filas iguales, **10/10 mutaciones** · **lo siguiente**: el **armazón** (T4·4), que lo comparten las 25 pantallas · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
 >
 > ▶ **Para el agente de la web** (lo compartido que tocó `#551`, y por qué): **`.btn--zone` YA NO
 EXISTE** en `landing.css` — la sustituye **`.btn--ink`** (relleno de tinta, el *secundario* que la hoja
@@ -130,15 +130,38 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > ZONA» y la emite solo `TimeStep.vue`) · y **la sonda de color medía un `:hover` y una transición a
 > medias**, devolviendo un valor que no existe en el sistema.
 >
-> ❗❗ **LO SIGUIENTE: EL CATÁLOGO** (T4·3), que es el paso 1 del embudo y lo que el owner quiere ver.
-> `[DECIDIDO owner]`: **«tarjeta grande, sin puerta»** —la decisión 01 de `Decisiones SPA PJP`—, o sea
-> que la cabecera de cada categoría pasa a ser una franja con su icono grande, su nombre en rótulo y su
-> frase, con el cumpleaños en TINTA contra el papel del resto; **cero pantallas nuevas**. ⚠️ La puerta
-> de categoría **NO se monta** (está dibujada al lado y cuesta un toque a todo el mundo antes de ver un
-> precio). Después, el **armazón** — ⚠️ con una negociación pendiente: el canvas manda la **puerta a la
-> cuenta** al racimo de la cabecera de la WEB, que es del otro carril, y su decisión 02 («Mi QR» como
-> botón fijo) **sigue abierta**. Y el **botón del sistema** (16/800 con borde) toca la familia `.btn`
-> entera: se acuerda con el otro carril antes de tocarla.
+> ✅ **T4·3 · LA TARJETA GRANDE DEL CATÁLOGO** (`#552`, `[DECIDIDO owner]`): el paso 1 deja de ser una
+> lista con cabeceras y pasa a **dos tarjetas con su franja** —icono grande, rótulo y una frase—, con
+> **el cumpleaños en TINTA** contra el papel del resto. **Cero pantallas nuevas**: la puerta de
+> categoría está dibujada al lado y **no se monta**, porque cobraría un toque a todo el mundo para
+> repartir cinco productos en dos montones. ⚠️ El canvas escribió cuándo cambiaría de opinión: con
+> ocho o diez productos, o el día que entren las excursiones y los grupos como productos vendibles.
+> ▶ **Los rótulos**: la segunda sección pasa de «Servicios» a **«Grupos»** (`[DECIDIDO owner]`), que es
+> la palabra del dominio —agrupa los `pack`: cumpleaños, colegios (`#322`), empresas— y no clava el uso
+> de este parque dentro del producto, que es lo que habría hecho «Celebro un cumple».
+> ▶ **Y un defecto MEDIDO que no era de la tanda**: la unidad de un pack vivía dentro de
+> `.catalog__price`, que es `nowrap`, así que **el precio se llevaba 159 px de 324** y la descripción
+> quedaba en **55**, cortada a mitad de palabra. Hoy las siete filas miden lo mismo: **115 de texto y 99
+> de precio**, cero recortes. ⚠️ `.catalog__per` era una clase **sin regla**, y ese hueco era justo lo
+> que le hacía heredar el `nowrap`.
+> ▶ Se retiran con su sujeto el **plegado** (para un acordeón que no pliega desde `#P6`), el chevron y
+> **cuatro reglas de hover escritas para un árbol que ya no existe**. Guardas: `SidebarCatalogCardTest`
+> (6) + **10/10 mutaciones**.
+>
+> ⚠️⚠️ **LO QUE NO HAY QUE VOLVER A DESCUBRIR DE ESTA TANDA**: la sonda de geometría **medía el embudo
+> con el velo puesto y el panel abriéndose** —`#550` puso esa espera en el bucle de la CUENTA y no en el
+> instrumento—, así que el inventario de nodos bajo 16 px pasa de **207 a 908** sin que haya cambiado
+> nada (680 son la tira de días, que antes no había cargado) y **ninguno baja de 12** · y **cambiar un
+> instrumento mientras corre su propio control** invalida las dos pasadas, que es un error de método que
+> costó repetir la medición.
+>
+> ❗❗ **LO SIGUIENTE: EL ARMAZÓN** (T4·4), que lo comparten las 25 pantallas. ⚠️ Con una negociación
+> pendiente: el canvas manda la **puerta a la cuenta** al racimo de la cabecera de la WEB, que es del
+> otro carril, y su decisión 02 («Mi QR» como botón fijo) **sigue abierta**. Y el **botón del sistema**
+> (16/800 con borde) toca la familia `.btn` entera: se acuerda con el otro carril antes de tocarla.
+> ▶ **Y queda abierta una pregunta del canvas que esta tanda rozó**: la pestaña de «Entrar / Crear
+> cuenta» usa la de ZONAS; `#551` le quitó el color de marca, pero su **FORMA** —la pestaña del sistema,
+> con pista en Nube y activa en blanco— es la pregunta 01 del paso 05 y no se ha decidido.
 >
 > ⚠️ **LO QUE NO HAY QUE VOLVER A DESCUBRIR** (lo caro de esta tanda): el reparto por TÍTULO de sección
 > de `CARRIL-SPA.md` §5 **se queda corto** —31 declaraciones del cajón viven fuera de sus bloques; lo
@@ -2682,7 +2705,10 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4744 en verde** (29.713 aserciones, 1 skipped), medida el **2026-09-12** sobre el
+> Suite **4750 en verde** (29.734 aserciones, 1 skipped), medida el **2026-09-12** con la **tarjeta
+> grande del catálogo** encima (`#552`: **+6** de `SidebarCatalogCardTest`, la guarda de la T4·3; y
+> **+1** de JS en `catalog.test.js`, que sube a **960**).
+> Antes, **4744** sobre el
 > árbol **CONJUNTO tras la SEXTA fusión**, con la **grieta 01 del cajón** encima (`#551`, el segundo
 > ordenador: **+9** de `SidebarActionRoleTest` —la guarda del rol de acción del SPA—, **+2** del
 > vocabulario de estados de `InteractionColourIsNotAZoneTest` y del casco de la familia de botones, y

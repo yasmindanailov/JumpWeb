@@ -29218,3 +29218,122 @@ estaban declarados (`#209`, `#436`, `#434`).
 ❗ **Queda el OJO del owner** y **dos sujetos que el recorrido no alcanza**: `.acct__count` y
 `.acct__alert` necesitan una reserva viva en la cuenta de sonda, y los pedidos locales se borraron al
 importar el catálogo del cliente. Su evidencia es el censo y la guarda, no el navegador.
+
+## #552 · 2026-09-12 · `[DECIDIDO owner]` La TARJETA GRANDE del catálogo: la bifurcación se ve y no cuesta un toque
+
+**Carril del SPA, T4·3** (banda 550–579). El paso 1 del embudo, desde `Decisiones SPA PJP` 02.
+
+### La decisión, y lo que se descarta con ella
+
+El canvas dibujó **dos** formas para la bifurcación del catálogo y dejó la elección al owner:
+**tarjeta grande sin puerta** contra **puerta de categoría** («¿a qué venís?»). `[DECIDIDO owner]`:
+**la tarjeta, sin puerta**.
+
+▶ **El argumento, con su número**: «vengo a saltar» y «celebro un cumple» son dos clientes distintos
+con dos precios distintos, y eso merece verse — pero una pantalla de categorías **cobra un toque a
+todo el mundo para repartir cinco productos en dos montones**, y detrás no hay ninguna lista larga
+que evitar. El propio catálogo ya razona así con su buscador, que solo aparece por encima de un
+umbral. ⚠️ **Y el canvas escribió cuándo cambiaría de opinión**: con ocho o diez productos, o el día
+que entren las excursiones de colegio y los grupos como productos vendibles, la puerta empieza a
+pagar — el dibujo está hecho.
+
+### Lo construido
+
+Cada sección es una **tarjeta** (borde, radio 16 y el `overflow` que recorta su franja) con una
+**franja** arriba: icono grande, nombre en rótulo y **una frase**. Las dos mitades se separan
+**cambiando de superficie** —una en tinta y otra en papel marcado—, que es como el sistema separa
+cosas sin inventar colores.
+
+⚠️⚠️ **Cuál va en tinta hubo que PREGUNTARLO porque las dos fuentes del canvas se contradicen**: su
+argumento dice *«el cumpleaños en tinta contra el papel del resto»* y **sus dos dibujos** —la
+propuesta y la puerta descartada, consistentes entre sí— ponen la tinta en «Vengo a saltar», o sea en
+las ENTRADAS. Se renderizaron las dos y `[DECIDIDO owner]`: **el cumpleaños en tinta**. El dato vive
+en `catalog.js` con nombre (`SECCION_EN_TINTA`), no repartido en un `v-if` de la plantilla, y tiene
+su caso de `node --test`: **exactamente una** de las dos.
+
+### Los dos rótulos, y por qué «Grupos»
+
+`[DECIDIDO owner]`: la segunda sección pasa de **«Servicios»** a **«Grupos»** (y «Groups» /
+«Groupes»). Es la palabra del DOMINIO —agrupa los productos de tipo `pack`, que son los de grupo:
+cumpleaños hoy, las excursiones de colegio de `#322` o una empresa— y **no clava el uso de este
+parque dentro del producto**, que es lo que habría hecho «Celebro un cumple», la propuesta del canvas.
+⚠️ La CLAVE se queda en `section_services`: es el `key` que compone `catalog.js`, y renombrarla no
+cambiaría nada para el cliente.
+
+⚠️ **Y la FRASE no dice ningún dato de la instalación.** La del canvas para los packs era «Dos horas y
+la zona para vosotros», y **la duración de un pack la pone el PANEL**: escribirla en el diccionario
+metería la configuración de este parque en el producto. Es la lección de `#487`, aplicada antes de
+pagarla.
+
+### El defecto MEDIDO que destapó, y que no era de esta tanda
+
+La tarjeta añade 12 px de relleno a cada lado, y con ellos **aparecieron dos recortes** que la sonda
+no había visto nunca. No eran del relleno: la causa estaba debajo.
+
+❗❗❗ **La unidad de un pack vivía DENTRO de `.catalog__price`, que es `white-space: nowrap`**, así que
+«desde 14,95 € por niño» era **una sola línea irrompible**. Medido en navegador a 390 px:
+
+| fila | texto | precio |
+|---|---|---|
+| las cinco entradas | 115–124 px | 90–99 px |
+| **los dos packs** | **55 px** | **159 px de 324** |
+
+O sea que **la mitad de la fila se la llevaba el precio** y la descripción quedaba en 55 px, cortada a
+mitad de palabra. Con la unidad en su propia línea las **siete filas miden lo mismo: 115 de texto y 99
+de precio**, y cero recortes.
+
+⚠️⚠️ **Y `.catalog__per` era una clase SIN REGLA**, enumerada como hueco declarado en
+`SidebarStyleWiringTest`. El hueco no era inofensivo: **era exactamente lo que le hacía heredar el
+`nowrap`**. ▶ *Una unidad pegada a su cifra dentro de un `nowrap` no es un detalle tipográfico: es una
+columna que no se puede maquetar.*
+
+### Lo que se retira con su sujeto
+
+- **La maquinaria de PLEGADO**: `grid-template-rows: 0fr`, su envoltorio con `overflow` y la clase
+  `is-open`, para un acordeón que **no se pliega desde `#P6`**. Los dos motores la emitían fija, y el
+  día que uno se olvidó **el catálogo entero salió a altura 0 y no se podía comprar nada** — y el diff
+  de árbol no lo vio. *Un mecanismo que siempre está en el mismo estado no es un mecanismo: es una
+  trampa esperando a que alguien se olvide de su clase.*
+- **El chevron** (`.catalog-acc__chev` ×2), sin un solo consumidor.
+- **Cuatro reglas de hover escritas para un árbol que ya no existe**: dos animaban el icono de una
+  cabecera que dejó de ser `<button>` —afordancia sin consumidor, `#295`— y **dos apuntaban a `.ic-e5`
+  DENTRO de la cabecera**, donde ese dibujo no llega nunca: `ProductIcon` lo emite en los ÍTEMS.
+  Una de ellas era una animación completa con su `@keyframes`. ▶ *Una regla escrita para un árbol que
+  ya no existe pasa todas las revisiones: nadie la ve fallar porque nunca se aplica* — el mismo modo de
+  fallo que `#263` pagó con el salto del logotipo.
+- El `id` del cuerpo, que no referenciaba ningún `aria-controls`.
+
+### Lo que enseñó el instrumento
+
+⚠️⚠️ **La sonda de geometría medía el embudo con el VELO puesto y el panel aún abriéndose.** `#550`
+puso la espera del spinner en el bucle de las zonas de CUENTA y no en el instrumento, así que las seis
+pantallas del embudo se medían —y se fotografiaban— cargando. Las dos esperas suben a `medir()`, la
+segunda **por condición** (el ancho del panel, igual en dos fotogramas seguidos) y no por reloj.
+▶ Con eso el inventario de nodos por debajo de 16 px pasa de **207 a 908** —680 de ellos son la tira
+de días, que antes no había cargado— y **ninguno baja de 12**: la grieta 00 sigue cerrada; lo que
+cambió es que ahora se mide entera.
+
+⚠️ **Y un error de método propio, dicho**: cambié la sonda **mientras corría su propio control**, así
+que las dos pasadas dejaron de ser comparables y hubo que repetir la medición. *Un control se corre
+con el instrumento quieto.*
+
+### La red
+
+`SidebarCatalogCardTest` (6 casos) + `scripts/mutar-tarjeta-catalogo.py`: **10/10 mutaciones muerden**.
+
+⚠️⚠️ **Una de las diez encontró una laxitud REAL de la guarda nueva y es la trampa de `#506` otra
+vez**: el caso de la frase preguntaba con `trans($clave, [], $locale)`, y **Laravel cae al idioma de
+RESPALDO**, así que borrar la frase del español devolvía la inglesa y el caso pasaba en verde. Hoy usa
+`Lang::has($clave, $locale, false)`. ▶ *Un localizador de traducciones que no desactiva el respaldo no
+comprueba un idioma: comprueba que la cadena exista en alguno.*
+
+**Verificación**: suite **4750 · 29.734 aserciones** (1 skipped) · JS **960** · **10/10 mutaciones** ·
+Pint y docs-check ✓ · sonda de geometría sobre las quince pantallas y medición directa de las siete
+filas del catálogo, antes y después.
+
+⚠️ **Paso de despliegue: ninguno.**
+
+❗ **Queda el OJO del owner en un teléfono de verdad**, y dos cosas que esta tanda deja anotadas: el
+nombre `catalog-acc` es **histórico** —fue un acordeón y ya no pliega nada, pero renombrarlo tocaría
+el manifiesto congelado y cuatro guardas por cero ganancia para el cliente— y el nombre de un pack
+sigue envolviendo en tres líneas en 390 px, que es del vestido de la FILA y no de la tarjeta.
