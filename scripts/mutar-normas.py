@@ -22,7 +22,13 @@ VISTA = 'resources/views/pages/rules.blade.php'
 CONTROLADOR = 'app/Http/Controllers/PageController.php'
 FICHEROS = [SERVICIO, MODELO, VISTA, CONTROLADOR]
 
-# (nombre, fichero, texto que se busca, texto por el que se cambia)
+# (nombre, fichero, texto que se busca, texto por el que se cambia[, cuántas veces se espera])
+#
+# ⚠️⚠️ **EL RECUENTO ES PARTE DE LA MUTACIÓN, y lo enseñó esta tanda.** El molde exigía UNA
+# coincidencia y la mutación del porqué salió «NO APLICADA (2)»: su bloque está dos veces en la
+# vista —los grupos y las normas sin agrupar—, así que el arnés la dio por superviviente sin haber
+# cambiado nada. Las dos copias son **la misma regla**, y mutar una sola dejaría la otra sosteniendo
+# la página: se mutan las DOS, y el número se declara aquí para que una copia nueva no pase de largo.
 MUTACIONES = [
     # ── Que ninguna norma se pierda ──
     ("una norma sin momento desaparece de la página",
@@ -42,10 +48,11 @@ MUTACIONES = [
      "foreach ($porMomento->keys()->filter(fn ($k) => $k !== '')->all() as $moment) {"),
 
     # ── El porqué ──
-    ("el porqué se pinta aunque la norma no lo tenga",
+    ("el porqué se pinta aunque la norma no lo tenga (las DOS copias)",
      VISTA,
-     "@if ($rule->tr('reason'))\n                                <p class=\"rule-card__why\">{{ $rule->tr('reason') }}</p>\n                            @endif",
-     "<p class=\"rule-card__why\">{{ $rule->tr('reason') }}</p>"),
+     "@if ($rule->tr('reason'))",
+     "@if (true)",
+     2),
 
     # ── La fecha ──
     ("la fecha de revisión pasa a ser la de HOY",
@@ -112,16 +119,20 @@ def main():
     print('── mutaciones ──')
     vivas = []
     try:
-        for nombre, rel, busca, cambia in MUTACIONES:
+        for mutacion in MUTACIONES:
+            nombre, rel, busca, cambia = mutacion[:4]
+            # Cuántas copias se esperan: una salvo que la mutación declare otra cosa.
+            esperadas = mutacion[4] if len(mutacion) > 4 else 1
             ruta = RAIZ / rel
             antes = ruta.read_text(encoding='utf-8')
             n = antes.count(busca)
-            if n != 1:
-                # ⚠️ Una mutación que no se aplica NO es una guarda que aguanta.
-                print('  ⚠ NO APLICADA (%d coincidencias)  %s' % (n, nombre))
+            if n != esperadas:
+                # ⚠️ Una mutación que no se aplica NO es una guarda que aguanta — y una que se aplica
+                # a MENOS copias de las que hay tampoco: la copia intacta sostiene la página.
+                print('  ⚠ NO APLICADA (%d coincidencias, se esperaban %d)  %s' % (n, esperadas, nombre))
                 vivas.append(nombre + ' [no aplicada]')
                 continue
-            ruta.write_text(antes.replace(busca, cambia, 1), encoding='utf-8')
+            ruta.write_text(antes.replace(busca, cambia, esperadas), encoding='utf-8')
             assert ruta.read_text(encoding='utf-8') != antes, 'el fichero no cambió'
 
             ok, _ = verde()

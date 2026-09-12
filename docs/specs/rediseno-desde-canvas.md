@@ -155,6 +155,11 @@ owner.**
 
 De los que no se ven hasta que estás montando:
 
+✅ ~~**`park_rules` tiene CUATRO columnas**~~ **CERRADO por `#533`** (2026-09-12): entraron las dos,
+`moment` y `reason`, con su panel y su semilla. ⚠️ Las dos **nullable**, y el momento vacío significa
+«sin agrupar», no un grupo por defecto: **una norma sin momento se publica igual**, al final — si
+fuera obligatorio, una creada con prisa desaparecería de la web sin fallar. El texto original, que
+sigue explicando por qué era dominio y no diseño:
 **`park_rules` tiene CUATRO columnas** (`name`, `description`, `position`, `is_active`). El diseño
 de `/normas` pide dos cosas que no tienen dónde guardarse: **el porqué de cada norma** (*«una norma
 con motivo se cumple y una norma sola se discute en la puerta»*) y **agruparlas por momento**
@@ -950,7 +955,8 @@ de escritorio) y `doc/paginas.md` del canvas.
 | T3b·1 | **`/atracciones`** | ✅ `#481` (adelantada en la Fase 2: la puerta de la sección 03 la necesitaba) |
 | T3b·2 | **`/cumpleanos`**: el reloj, los packs comparados con contador, qué comen, el carril, «Igual en los dos», «Después de reservar» y el cierre | ✅ `#528` — revisada por el owner en vivo: OK · el vídeo del hero, cambiado en la misma jornada (`#529`) · **la FOTO de la zona entró después** (`#532`, `[DECIDIDO owner]`): es `zones.image`, va en la fila **736 + 352** con el reloj, y es la misma que `#484` retiró de la portada — falta la de la mesa, que el parque no tiene |
 | T3b·3 | **`/precios`**: sin pestaña de zona · la semana dibujada · una tabla por zona con las dos columnas de precio entero · la hora extra como fila · los festivos · «Lo que se añade» | ✅ `#531` |
-| T3b… | **Las páginas** que quedan, en el orden del Layout: `/normas` · `/servicios` · `/bar` · `/contacto` | ⬜ |
+| T3b·4 | **`/normas`**: la escala de altura, las normas por MOMENTO con su porqué, la chapa del descargo y la fecha de revisión | ✅ `#533` — entran **dos columnas** (`moment`, `reason`), que es el hueco que §4.2 midió · el momento es OPCIONAL y una norma sin él **se publica igual** · la escala sale de `zones.height_*` y **no** dibuja la tercera banda del artboard (ese 1,00 no es dato) · las EDADES son las del catálogo y la zona, no las suyas |
+| T3b… | **Las páginas** que quedan, en el orden del Layout: `/servicios` · `/bar` · `/contacto` | ⬜ |
 
 #### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
 

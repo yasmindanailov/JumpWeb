@@ -220,6 +220,20 @@ class RulesPageTest extends TestCase
         $this->assertGreaterThan(0, $conAltura, 'el caso nace sin sujeto: ninguna zona declara altura');
         $this->assertSame($conAltura, substr_count($html, 'rules-axis__band" style'), 'las bandas no salen de las zonas con altura');
 
+        /*
+         * ❗❗❗ **Y DÓNDE EMPIEZA CADA BANDA, QUE ES LO QUE LA HACE SIGNIFICAR ALGO.** Contar bandas
+         * no basta y lo dijo el arnés: con «hasta» dibujado como «a partir de», la de Kids iba del
+         * suelo al techo —o sea, «Kids no tiene límite de altura»— y el caso pasaba en verde.
+         * ▶ Sobre la escala de 190, el umbral de 130 cae al **31,58 %**: «a partir de» ocupa de ahí
+         * hacia ARRIBA (top 0) y «hasta» de ahí hacia ABAJO. La misma cifra, lo contrario.
+         */
+        $corte = round((1 - 130 / \App\Domain\Booking\Services\ZoneCards::ESCALA_CM) * 100, 2);
+
+        $this->assertStringContainsString('style="top: 0%; height: '.$corte.'%;"', $html,
+            'la zona con «a partir de» no ocupa la franja ALTA de la escala');
+        $this->assertStringContainsString('style="top: '.$corte.'%; height: '.round(100 - $corte, 2).'%;"', $html,
+            'la zona con «hasta» no ocupa la franja BAJA: su banda dice que no tiene límite');
+
         // CONTROL: sin ninguna regla de altura, la tarjeta entera desaparece.
         Zone::query()->update(['height_min_cm' => null, 'height_max_cm' => null]);
         $this->assertStringNotContainsString('rules-axis', $this->html(), 'se pinta un eje vacío');
