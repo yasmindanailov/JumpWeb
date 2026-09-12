@@ -144,11 +144,11 @@ class IdentityTintTest extends TestCase
         $css = $this->site();
 
         $this->assertMatchesRegularExpression(
-            '/\.cta-med\s*\{\s*background:\s*var\(--interactive\);\s*color:\s*var\(--bg\)/s',
+            '/\.cta-med\s*\{\s*background:\s*var\(--secondary\);\s*color:\s*var\(--on-secondary\)/s',
             $css,
-            'el CTA del armazón perdió el relleno de identidad, o su rótulo dejó de seguir a la '.
-            'superficie. Los dos leen tokens que cambian con ella: sobre tinta el relleno es CIAN y '.
-            'ahí `--paper-bg` daría 2,45 mientras `--bg` da 6,85.',
+            'el CTA del armazón perdió el relleno del SECUNDARIO. ⚠️ Su rótulo va en BLANCO y eso '.
+            'da **2,70** de contraste: es una desviación DECIDIDA por el owner sobre tres formas '.
+            'renderizadas (las otras dos, medidas, daban 6,85 y 5,13). No lo «arregles» sin reabrirla.',
         );
         $this->assertDoesNotMatchRegularExpression(
             '/var\(--identity-deep/', $css,

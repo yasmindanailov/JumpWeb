@@ -775,12 +775,15 @@ class RateRailSectionTest extends TestCase
     }
 
     /**
-     * ❗❗ **EL KEYLINE DEL BOTÓN ES UNA VARIANTE DE LA FAMILIA, no un borde escrito a mano.**
+     * ❗❗ **EL KEYLINE SIGUE SIENDO UNA VARIANTE DE LA FAMILIA — y desde `#540` NO LLEVA BORDE.**
      *
-     * ⚠️ La hoja de componentes del sistema declara dos rellenos —«Completo», sin borde, y
-     * «Pegatina», con keyline— y este botón vive dentro de una pegatina. Escribir el borde en el
-     * selector de la tarjeta dejaría el valor en un sitio que nadie más puede reutilizar, que es
-     * justo cómo nace una divergencia.
+     * ⚠️⚠️ **ESTA ASERCIÓN CAMBIÓ DE PREMISA, no se relajó.** Exigía `border: 2px solid var(--fg)`
+     * porque la hoja de componentes del sistema declara DOS rellenos de acción —«Completo», sin
+     * borde, y «Keyline», con él— y `#480` eligió el segundo. `[DECIDIDO owner, 2026-09-12]`: el
+     * producto se queda con el primero, que era el DEFECTO del propio sistema.
+     * ▶ Lo que esta guarda vigila sigue siendo lo mismo y es lo que importa: que el botón tome su
+     * piel de la FAMILIA y no de un valor escrito en el selector de la tarjeta, que es justo como
+     * nace una divergencia. La clase no se retira: su `:not(.is-focus)` la usa para el fantasma.
      */
     public function test_the_card_button_takes_the_keyline_from_the_family(): void
     {
@@ -788,10 +791,14 @@ class RateRailSectionTest extends TestCase
 
         $this->assertStringContainsString('class="btn btn--keyline rate-card__btn"', $seccion);
 
-        // Y la variante existe en la hoja, o la clase no pintaría nada.
-        $this->assertMatchesRegularExpression(
-            '/\.btn--keyline\s*\{[^}]*border:\s*2px solid var\(--fg\)/',
-            implode("\n", $this->siteSheets()),
+        // La variante existe en la hoja, o la clase no pintaría nada.
+        $hojas = implode("\n", $this->siteSheets());
+        $this->assertMatchesRegularExpression('/\.btn--keyline\s*\{[^}]*border:\s*0/', $hojas);
+
+        // Y el borde no ha vuelto por la puerta de atrás, escrito en la tarjeta.
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.rate-card__btn\s*\{[^}]*border:\s*\dpx/', $hojas,
+            'el borde ha vuelto escrito en el selector de la tarjeta: ahí nadie puede reutilizarlo.',
         );
     }
 

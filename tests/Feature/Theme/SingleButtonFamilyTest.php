@@ -175,13 +175,13 @@ class SingleButtonFamilyTest extends TestCase
         // ⚠️ Lo que se sigue vigilando es lo mismo: que el secundario TENGA relleno propio y que no
         // sea el de acción, que es lo que sostiene los tres escalones de jerarquía.
         $this->assertMatchesRegularExpression(
-            '/\.btn--ink\s*\{[^}]*background:\s*var\(--interactive\)/', $landing,
+            '/\.btn--ink\s*\{[^}]*background:\s*var\(--secondary\)/', $landing,
             '`.btn--ink` perdió su relleno de identidad. Sin relleno propio la jerarquía se queda '.
             'en dos escalones, y si se le pone `--action` deja de distinguirse de comprar.',
         );
 
         $this->assertMatchesRegularExpression(
-            '/\.btn--ink\s*\{[^}]*color:\s*var\(--bg\)/', $landing,
+            '/\.btn--ink\s*\{[^}]*color:\s*var\(--on-secondary\)/', $landing,
             '`.btn--ink` pierde el texto de su superficie: tinta sobre tinta no se lee.',
         );
     }

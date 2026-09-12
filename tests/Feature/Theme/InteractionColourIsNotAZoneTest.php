@@ -57,9 +57,6 @@ class InteractionColourIsNotAZoneTest extends TestCase
         //   dejó de reposar en tinta —hoy reposa en Azul Muro—, así que el argumento «acusa el paso
         //   PASANDO a marca» murió con su premisa: un botón que ya reposa en marca no puede pasar a
         //   ella. Su hover es ahora el escalón siguiente de su propia escala.
-        '.bk-cta:hover' => 'cajón: el CTA del pie, ídem',
-        '.cartbar:hover' => 'cajón: la barra del carrito, ídem',
-        '.acct__btn--primary:hover' => 'cajón: el primario de la tira de cuenta, ídem',
         // ⚠️⚠️ Esta entró al AMPLIAR el vocabulario de estados (abajo): llevaba desde `#436` leyendo
         // `--zone-1` sin que la guarda la viera, porque `is-current` no estaba en la lista. Y es
         // legítima: el artboard dibuja el relleno de la fase en cian, así que su halo lo sigue.
@@ -73,6 +70,11 @@ class InteractionColourIsNotAZoneTest extends TestCase
      * falta»— sin ganar nada. Solo encoge.
      */
     private const CAJON = [
+        // ▶ `#540` · SALIERON de esta lista `.bk-cta:hover`, `.cartbar:hover` y
+        //   `.acct__btn--primary:hover`, y la lista solo encoge: sus tres botones dejaron de
+        //   reposar en TINTA —hoy reposan en el CIAN del secundario—, así que el argumento
+        //   «acusa el paso PASANDO a marca» murió con su premisa: un botón que ya reposa en
+        //   marca no puede pasar a ella. Su hover es el escalón siguiente de su propia escala.
         '.acct__alert:hover',
     ];
 

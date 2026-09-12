@@ -67,6 +67,25 @@ las mueves te saldrá en rojo con el motivo escrito. ⚠️ Y `.zone-tab` **sigu
 usan `/servicios` y el bloque acotado del cajón de `#550`, que ya no tiene sujeto en el paso 5 — si
 algún día `/servicios` la pierde, ese bloque se puede podar.
 >
+> ❗❗❗ **PARA EL AGENTE DEL CAJÓN · `#540` LE CAMBIA MÁS BOTONES TODAVÍA — y esto SUSTITUYE al
+aviso de `#539` de abajo, que se quedó a medias.** `[DECIDIDO owner, 2026-09-12]` sobre tres
+formas renderizadas en la web Y en el cajón: **ningún botón con fondo negro en ningún sitio**.
+> ▶ Pasan al CIAN del secundario (`--secondary`, con `--secondary-hover/-press` y `--on-secondary`):
+**`.cartbar`** y **`.bk-cta`** (el pie del cajón: carrito e ir a pagar), **`.acct__btn--primary`**
+(el primario del área de cuenta), **`.btn--ink`** y el salto al contenido. ⚠️ **`.bk-cta--sells` se
+queda NARANJA**: es «el del final», el que cobra, y el naranja sigue significando comprar.
+> ⚠️⚠️ **El rótulo va en BLANCO y da 2,70 de contraste** — por debajo del 4,5 de texto normal y del
+3,0 de texto grande. Se le enseñaron las tres variantes con el número delante (rótulo en tinta 6,85
+· Cian 800 con blanco 5,13) y eligió ésta. Es **desviación DECIDIDA**: si la reabres, las otras dos
+están medidas y escritas en el CSS.
+> ⚠️ **Dos listas tuyas ENCOGEN en 3**: `SidebarActionRoleTest::CENSO_DE_MARCA` e
+`InteractionColourIsNotAZoneTest` pierden `.bk-cta:hover`, `.cartbar:hover` y
+`.acct__btn--primary:hover` — su argumento («reposa en TINTA y acusa el paso pasando a marca») murió
+con su premisa: hoy reposan en marca.
+> ▶ **Quedan DOS fondos oscuros en el cajón y NO son botones**: `party-card` (la tarjeta de pack, que
+`#484` decidió en tinta) y **`catalog-acc__head`** (la cabecera del acordeón del catálogo de `#553`,
+que sí es pulsable). Pendiente del owner si la segunda entra en el encargo.
+>
 > ❗❗❗ **PARA EL AGENTE DEL CAJÓN · `#539` LE CAMBIA EL BOTÓN SECUNDARIO A LAS 25 PANTALLAS.**
 > `.btn--ink` deja de rellenar con TINTA y pasa a **`--interactive`** (Azul Muro sobre papel · Cian
 sobre tinta), con sus dos estados nuevos `--interactive-hover` y `--interactive-press`, derivados

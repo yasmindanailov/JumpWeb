@@ -1104,11 +1104,13 @@ img { display: block; max-width: 100%; }
    con su premisa —un botón que ya reposa en marca no puede «pasar a marca»—, así que va al
    escalón siguiente de su propia escala, que es lo que el sistema declara para un secundario.
    ▶ **TOCA LAS 25 PANTALLAS DEL CAJÓN**, que lleva el otro ordenador: avisado en `ESTADO.md`. */
-.btn--ink { background: var(--interactive); color: var(--bg); }
-.btn--ink:hover { background: var(--interactive-hover); color: var(--bg); }
-.btn--ink:active { background: var(--interactive-press); color: var(--bg); }
-.btn--ghost { background: transparent; color: var(--interactive); border: 1px solid var(--interactive); }
-.btn--ghost:hover { background: var(--interactive); color: var(--paper-bg); border-color: var(--interactive); }
+.btn--ink { background: var(--secondary); color: var(--on-secondary); }
+.btn--ink:hover { background: var(--secondary-hover); color: var(--on-secondary); }
+.btn--ink:active { background: var(--secondary-press); color: var(--on-secondary); }
+/* ⚠️ El TEXTO del fantasma no va en cian: sobre papel el cian da **2,45** y no puede ser letra.
+   Va en tinta. El cian se queda en el BORDE, que no es texto y le aplica el umbral de 3,0. */
+.btn--ghost { background: transparent; color: var(--fg); border: 1px solid var(--secondary); }
+.btn--ghost:hover { background: var(--secondary); color: var(--on-secondary); border-color: var(--secondary); }
 /* ⚠️ `#538` · el `min-height` lo declara `.btn` (48) pero aquí NO manda: con `line-height: normal`
    el contenido pedía **57 px**, una altura que no sale de ninguna escala. El sistema declara para
    todo botón `lh: '1'` (`tipo.escala.boton`), y con él la caja obedece a su tamaño grande, 56. */
@@ -1133,7 +1135,13 @@ img { display: block; max-width: 100%; }
    Blade y **22 de Vue**), que es Fase 4.
    ▶ Lo que sí evita la divergencia es esto: el valor vive **una vez**, y quien lo necesita se
    apunta a la variante en vez de volver a teclear un borde. */
-.btn--keyline { border: 2px solid var(--fg); }
+/* ⚠️⚠️ `#540` · **EL KEYLINE SE QUEDA SIN BORDE** (`[DECIDIDO owner, 2026-09-12]`: «quita el borde
+   del botón de Reservar en las cards de las entradas»). `#480` lo trajo como la segunda variante de
+   relleno de acción que declara la hoja de componentes del sistema —«Completo» sin borde y
+   «Keyline» con él—, así que el producto se queda con la primera, que era su DEFECTO.
+   ▶ La clase NO se retira: la emiten las tarjetas de tarifa y su `:not(.is-focus)` la usa para el
+   fantasma. Lo que se retira es el borde. */
+.btn--keyline { border: 0; }
 .btn--sm { padding: var(--sp-10) var(--sp-16); font-size: var(--fs-13); }
 /* Estado deshabilitado del sistema (antes inexistente: los botones con
    `wire:loading.attr="disabled"` conservaban el hover pleno). Atenúa y congela el
@@ -3377,7 +3385,7 @@ img { display: block; max-width: 100%; }
 .rev__who { display: flex; align-items: center; gap: var(--sp-12); }
 .rev__ini {
   flex: none; width: 56px; height: 56px; border-radius: var(--r-pill);
-  background: var(--ok); border: 1px solid var(--ok);
+  background: var(--identity-fill); border: 1px solid var(--identity-fill);  /* `#540` · cian, no salvia */
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-weight: 400; font-size: var(--fs-22); color: var(--on-ok);
 }

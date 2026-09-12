@@ -102,11 +102,13 @@ class SidebarActionRoleTest extends TestCase
         '.bk-seg__bar::after' => 'artboard: el relleno de la fase va en cian',
         '.bk-seg__item.is-current .bk-seg__bar' => 'su halo sigue al relleno',
         '.bk-context .jj-block' => 'artboard: el cuadradito del contexto es motivo de marca',
-        '.bk-cta:hover' => 'relleno de marca al pasar, como `.cta-med`',
-        '.cartbar:hover' => 'ídem',
-        '.acct__btn--primary:hover' => 'ídem',
         '.purchase-loading' => 'el spinner «Tres botes» es pieza de MARCA (#259)',
         '.acct__avatar' => 'la inicial de marca sobre un azulejo de tinta (6,85 medido)',
+        // ▶ `#540` · SALIERON de esta lista `.bk-cta:hover`, `.cartbar:hover` y
+        //   `.acct__btn--primary:hover`, y la lista solo encoge: sus tres botones dejaron de
+        //   reposar en TINTA —hoy reposan en el CIAN del secundario—, así que el argumento
+        //   «acusa el paso PASANDO a marca» murió con su premisa: un botón que ya reposa en
+        //   marca no puede pasar a ella. Su hover es el escalón siguiente de su propia escala.
         '.acct__alert' => 'AVISO sobre papel: su rol (`tintePapel`) nace en otra tanda',
         '.acct__alert:hover' => 'ídem',
         '.acct__alert-ico' => 'ídem',
