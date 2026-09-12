@@ -1,6 +1,7 @@
 # [SPEC] La pasada de vestido — dónde se ubican los elementos de diseño
 
-> **Estado**: 🟦 EN EJECUCIÓN · alcance, vara y familias DECIDIDOS (2026-09-12, §3.bis).
+> **Estado**: 🟦 **CONSTRUIDA SOBRE LA PORTADA** (`#544`→`#549`, §3.ter) y desplegada a staging;
+> las dos VARIANTES siguen siendo prototipo local (`?fachada=`) y su colocación final es del owner.
 > Lo medido va en §3.bis y **caduca la D1 de §3**.
 > **Decisión**: `DECISIONES #497` · **Carril**: diseño, Fase 2 (`specs/rediseno-desde-canvas.md`).
 > **Depende de**: `elementos-fachada.md` (el kit, 32 piezas) · `hueco-ilustracion.md` (el mecanismo).
@@ -198,6 +199,39 @@ defecto del instrumento *y* el hecho: **`/entradas` sirve la portada y abre el C
 (capa `fixed` que tapa el 100 %). Es una PUERTA, como las `/mi-cuenta/…` de `#120`, no una página
 de contenido. ▶ Eso contesta la pregunta abierta del `ESTADO` («qué pasa con `/entradas`, que
 existe y no está en el inventario del canvas»): **no es de este carril, es del cajón**.
+
+---
+
+## 3.ter · ✅ EJECUTADO sobre la portada (2026-09-12 noche y madrugada, `#544`→`#549`)
+
+**La pasada está CONSTRUIDA y desplegada a staging** (commit `57515c56`). Lo que existe hoy, y por
+dónde se retoma:
+
+| tanda | qué entró | dónde vive |
+|---|---|---|
+| `#544` | **tres manchas** detrás de los titulares de Reseñas, Visítanos y Dudas | `landing.css` (`.sec-head__mancha`, con su `--xxl`) |
+| `#545` | el **laboratorio**: `/_diseno/splash` y `/_diseno/siluetas`, **solo en `local`**, siete colocaciones de cada familia con su coste escrito | `resources/views/lab/`, `components/lab/frame` |
+| `#546` | las **dos variantes sobre la portada real**, `?fachada=1\|2`, con un MAPA único y una hoja que se emite solo con variante | `components/site/facade.blade.php` + `facade-styles.blade.php` |
+| `#547` | la variante 2 pulida con seis puntos del owner + el **arco `F3`** y el **trío `G4`**, que el producto COMPONE de poses sueltas | `components/site/arc.blade.php`, `trio.blade.php` |
+| `#548` | las tres colocaciones de **MÓVIL** (trío sobre la tarjeta de 2 h, mancha del QR detrás de la tarjeta, la de Reseñas a un lateral) | `facade-styles` (media queries con `!important`, y su porqué) |
+| `#549` | el detalle del ojo del owner: sello de zona con **edad y altura**, **«Más info»** en la ficha de complemento, **flechas laterales** del carril y las opiniones **deslizables en todos los anchos** | `landing.css`, `addons-rail`, `ui/rail-arrows.js`, `ui/rail-drag.js` |
+
+▶ **Lo que esto CONTESTA de la §4, de hecho y no por decisión escrita**: la **D3** (densidad) quedó en
+lo que el owner fue aprobando pieza a pieza —hoy la portada gasta **una mancha en tres cabeceras de
+sección**, el arco y el trío en dos secciones y las tres piezas de móvil—, y la **D4** (familias) se
+cumplió por construcción: **todo lo que entró son manchas y poses, y todas por el hueco por
+instalación** (`client-kit.svg`, 23 símbolos). Ninguna pieza del kit vive en el repo.
+
+❗❗ **LO QUE SIGUE SIENDO DEL OWNER, y es lo primero que hay que preguntarle:**
+
+1. **Las dos variantes son un PROTOTIPO, no la colocación definitiva.** Viven en `facade.blade.php` +
+   `facade-styles.blade.php` y **solo se pintan con `?fachada=` en `local`**: en staging y en
+   producción la portada va sin ellas. Hay que decidir si bajan a `landing.css` como colocación fija
+   —y entonces se van los `!important` de las media queries, que existen porque el mapa posiciona en
+   línea— o si se retiran.
+2. **El laboratorio, ¿se queda?** Mientras esté, `IllustrationKit::SLOTS` arrastra **18 ranuras
+   marcadas como temporales** (las 6 manchas + las 12 poses del muestrario). Retirarlo las retira.
+3. **D5, D6 y D7 siguen abiertas** tal cual están escritas abajo.
 
 ---
 

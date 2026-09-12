@@ -182,6 +182,41 @@ guarda apareció un **incumplimiento de la R2 de `#537` en `/contacto`**: dos te
 `4,40 : 1`. Corregido. ⚠️ Con el Humo por defecto del producto la cuenta da 4,52 y parecería sana: el
 contraste se calcula **con el tema del cliente instalado**.
 >
+> ▶ 🚀 **DESPLEGADO A STAGING el 2026-09-12 de madrugada, commit `57515c56`** (`scripts/deploy.sh --go`,
+salud **8/8**): lleva los DOS carriles —la tanda de fachada de la web (`#543`→`#549`) y las paradas 04,
+05 y 06 del cajón (`#562`→`#566`)—, **2 migraciones** aplicadas (`park_rules` momento/porqué y
+`bar_images`), 6.760 franjas y las cachés. Ocho de las nueve páginas en **200**; `/servicios` da **503
+a propósito** (`maintenance.page.servicios = "1"`, pausada por el owner).
+>
+> ❗❗❗ **EL DESPLIEGUE ABORTÓ LA PRIMERA VEZ EN LA GUARDA 7 Y TENÍA RAZÓN: el kit de ilustración
+instalado se había quedado VIEJO.** Staging servía el de `#309` —`slot-zonas`, `slot-tarifas` y las dos
+de normas, las cuatro RETIRADAS— y el código de hoy declara otras 23 ranuras. ⚠️⚠️ **El kit NO viaja en
+el `rsync`** (está excluido a propósito, `#286`: es arte del cliente), así que **un despliegue nunca lo
+actualiza solo**: se sube a mano y se valida con `php artisan kit:build --check` en el servidor
+(«Kit servible: 23 símbolo(s)»). *El único punto del sistema que mira el fichero real es esa guarda, y
+por eso el despliegue no se dio por bueno hasta arreglarlo.*
+>
+> ❗❗ **Y el `client.css` de staging iba TRECE tokens por detrás** —`--money`, `--marker`,
+`--on-marker-brand`, `--col-max`, `--ok-ink`, `--attn-ink`, `--ink-fg-body`, `--sec-air`,
+`--sec-air-mobile`, `--shadow-float-hover`, `--shadow-float-press`…—, o sea los «pasos de despliegue»
+que `#480`, `#483` y `#487` fueron dejando escritos. Misma exclusión y mismo remedio: se sube a mano.
+▶ **Los dos ajustes de BD que eran paso de despliegue, aplicados**: `theme.action` **`#F2711C` →
+`#1AA9DE`** (el cian de `#541`; staging seguía con el naranja) y **`bar.name.{es,en,fr} = «Cantina»`**
+(`#536`), con lo que `/bar` pasa de **404 a 200** y el destino vuelve a las tres superficies.
+⚠️ **La clave del bar es POR IDIOMA** (`bar.name.es`), no `bar.name`: la primera versión creó una fila
+huérfana que no lee nadie —se borró—, y `/bar` seguía en 404 con el ajuste «puesto».
+>
+> ⚠️⚠️ **DOS COSAS DE ESTA SESIÓN NO SE PUEDEN REVISAR EN STAGING, y es DATO, no código**: el carril de
+opiniones **no se pinta** (0 testimonios en el CMS y **sin clave de Google**, así que la caché de
+`social-proof:refresh` nunca se llena — y sin fuente la sección entera no existe, regla de `#490`), y la
+mancha XXL de «Dudas» tampoco, porque **las 6 preguntas están `is_active = 0`**. Se arregla desde el
+panel; **no se han sembrado opiniones ni activado preguntas a propósito** (`#490`: el seeder alimenta el
+arranque en frío de producción, no rellena un escaparate).
+> ▶ **Medido EN STAGING** (1280 y 390, cero errores de consola): el sello de zona dice
+**«+8 años · +1,30 m»**, `--action` resuelve **`#1AA9DE`** y `--money` **`#7C9315`**, el «Más info» abre
+su texto, y la flecha lateral **mueve el carril 0 → 304** en móvil y **se esconde en escritorio**, donde
+las tres fichas caben (desborde 0) — que es su conducta diseñada, no un fallo.
+>
 > ▶ **Lo que queda de esta pasada**: el owner decide si las dos variantes de fachada bajan a
 `landing.css` como colocación definitiva (hoy viven en `facade.blade.php` + `facade-styles`, que solo
 se emiten con `?fachada=` en `local`) y si el laboratorio se retira. Mientras eso no se cierre, **las
