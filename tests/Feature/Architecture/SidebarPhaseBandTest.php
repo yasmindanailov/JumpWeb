@@ -147,6 +147,42 @@ class SidebarPhaseBandTest extends TestCase
     }
 
     /**
+     * **Con sesión, «Quién eres» no se pinta — y la señal es la del SERVIDOR, no la sesión de ahora.**
+     *
+     * Medido en vivo antes de tocarlo: con sesión el carrito manda DIRECTO al pago, así que esa
+     * pantalla no se visita nunca. La banda la pintaba igual y hacía tres cosas mal a la vez —prometía
+     * dos pantallas donde quedaba una, el contador saltaba del 3 al 5, y la fase salía HECHA sin que
+     * el cliente hubiera estado en ella—.
+     *
+     * ⚠️ **`props.userId` viene del HTML** (`auth()->id()` al pintar la página) y ahí está la gracia:
+     * no cambia dentro del embudo. Con el estado vivo, quien entra sin sesión y se identifica por el
+     * camino vería desaparecer la fase **justo después de completarla**.
+     */
+    public function test_the_identify_phase_follows_the_session_the_page_was_painted_with(): void
+    {
+        $seccion = (string) file_get_contents(resource_path('js/sidebar/sections/PurchaseSection.vue'));
+
+        $this->assertStringContainsString(
+            'pideIdentificarse: ! props.userId',
+            $seccion,
+            "La señal de la fase de identificación ha dejado de salir del HTML.\n".
+            '▶ Con el estado vivo de sesión, quien se identifica DENTRO del embudo ve desaparecer esa '.
+            'fase justo al completarla — y esa pantalla sí la visitó.',
+        );
+
+        $progress = (string) file_get_contents(resource_path('js/sidebar/progress.js'));
+
+        // ⚠️ La segunda mitad de la regla, y sin ella la sesión caída en otra pestaña deja al cliente
+        // en una pantalla que la banda no reconoce: `buildProgress` devolvería `null`.
+        $this->assertStringContainsString(
+            'step === STEPS.IDENTIFY',
+            $progress,
+            'La fase de identificación ha dejado de volver cuando el cliente ESTÁ en ella: con la '.
+            'sesión caída, la banda no reconocería esa pantalla.',
+        );
+    }
+
+    /**
      * **A dónde vuelve y cómo se llama salen de LA MISMA fila.**
      *
      * Con el rótulo en un sitio y el destino en otro, cambiar uno sin el otro deja un botón que dice

@@ -14,7 +14,7 @@ import { STEPS } from './machine.js';
 const MESSAGES = {
     phase_date: 'Fecha',
     phase_time: 'Hora',
-    phase_cart: 'Tu cesta',
+    phase_cart: 'Tu carrito',
     phase_identify: 'Quién eres',
     phase_pay: 'Pagar',
     back: 'Volver',
@@ -22,6 +22,8 @@ const MESSAGES = {
 };
 
 const base = {
+    // ⚠️ El defecto de `buildProgress` es PINTAR la fase de identificación, que es el lado seguro.
+    // Los casos con sesión lo dicen a propósito.
     productName: 'Entrada 1 hora',
     date: null,
     time: null,
@@ -86,7 +88,7 @@ describe('avance dentro del flujo', () => {
         const progress = buildProgress({ ...base, step: 8 });
 
         assert.deepEqual(progress.steps.map((s) => s.state), ['done', 'done', 'done', 'done', 'current']);
-        assert.deepEqual(progress.steps.map((s) => s.label), ['Fecha', 'Hora', 'Tu cesta', 'Quién eres', 'Pagar']);
+        assert.deepEqual(progress.steps.map((s) => s.label), ['Fecha', 'Hora', 'Tu carrito', 'Quién eres', 'Pagar']);
     });
 });
 
@@ -138,6 +140,49 @@ describe('la línea de contexto (sigue)', () => {
         for (const step of [4, 5, 8]) {
             assert.equal(buildProgress({ ...base, step }).context, '', `el paso ${step} no lleva contexto`);
         }
+    });
+});
+
+describe('con sesión, «Quién eres» sobra', () => {
+    const conSesion = { ...base, pideIdentificarse: false };
+
+    /**
+     * ❗❗ **Medido en vivo antes de tocar nada** (`#556`, idea del owner): con sesión
+     * `decideCheckout()` manda del carrito DIRECTO al pago, así que esa pantalla no se visita nunca.
+     * Pintarla igual hacía tres cosas mal a la vez — prometía dos pantallas donde quedaba una, el
+     * contador saltaba del 3 al 5, y la fase salía HECHA sin que el cliente hubiera estado en ella.
+     */
+    test('la fase no se pinta y el contador cuenta cuatro', () => {
+        const carrito = buildProgress({ ...conSesion, step: 4 });
+
+        assert.deepEqual(carrito.steps.map((s) => s.label), ['Fecha', 'Hora', 'Tu carrito', 'Pagar']);
+        assert.equal(carrito.active, 3);
+        assert.equal(carrito.total, 4);
+    });
+
+    /** Y el contador no se salta ningún número: del carrito al pago va 3 → 4. */
+    test('el contador no salta', () => {
+        assert.equal(buildProgress({ ...conSesion, step: 8 }).active, 4);
+        assert.equal(buildProgress({ ...conSesion, step: 8 }).total, 4);
+    });
+
+    /**
+     * ⚠️ **La fase VUELVE si el cliente está en ella**: la sesión puede caer en otra pestaña y
+     * entonces aterriza en una pantalla que la banda no contaba. Aparece, con su número, en vez de
+     * dejar al cliente en un paso que la banda no reconoce.
+     */
+    test('si la sesión cae y aterriza ahí, la fase aparece', () => {
+        const progress = buildProgress({ ...conSesion, step: 5 });
+
+        assert.notEqual(progress, null, 'la pantalla existe, así que la banda tiene que reconocerla');
+        assert.equal(progress.total, 5);
+        assert.equal(progress.steps[3].state, 'current');
+    });
+
+    /** El «Volver» de un paso no depende de si su fase se pinta: el destino es del paso. */
+    test('el plan de vuelta no cambia con la sesión', () => {
+        assert.deepEqual(backPlan(STEPS.PAY), { to: STEPS.CART, clear: null });
+        assert.deepEqual(backPlan(STEPS.IDENTIFY), { to: STEPS.CART, clear: null });
     });
 });
 

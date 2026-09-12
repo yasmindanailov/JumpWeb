@@ -146,7 +146,10 @@ class SidebarComponentBudgetTest extends TestCase
         // fichero pasó de **451 a 445**. ▶ Lo que queda es una línea de cableado: el gesto ahora
         // gobierna CINCO pasos en vez de dos, y a cambio `CartStep`, `IdentifyStep` y `PayStep`
         // pierden su botón, su `emit` y su cableado. *Una línea aquí por tres piezas menos allí.*
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 445, 'api' => 2],
+        // ⚠️ **445 → 446 en `#556`**, y la línea es `pideIdentificarse: ! props.userId`. No hay regla
+        // que extraer: la REGLA —qué fases recorre este cliente— vive en `progress.js`; esto es pasarle
+        // un dato que solo el componente tiene, que es exactamente para lo que sirve el cableado.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 446, 'api' => 2],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:

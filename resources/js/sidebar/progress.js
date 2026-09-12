@@ -67,6 +67,9 @@ const FASES = [
  * Devuelve `null` en los pasos sin banda — que son los que no tienen «Volver», así que preguntar por
  * ellos es un error de quien llama y no un caso a contemplar.
  *
+ * ⚠️ Lee la tabla ENTERA, sin filtrar por sesión: el destino de un paso no cambia porque el cliente
+ * vaya a visitarlo o no. Lo que se filtra es lo que se PINTA.
+ *
  * @param {number} step
  * @returns {{to: number, clear: string|null}|null}
  */
@@ -74,6 +77,24 @@ export function backPlan(step) {
     const fase = FASES.find((f) => f.step === step);
 
     return fase ? { to: fase.backTo, clear: fase.clear } : null;
+}
+
+/**
+ * **Las fases que ESTE cliente va a recorrer** (`#556`, idea del owner).
+ *
+ * Con sesión, «Quién eres» **no se visita nunca**: `decideCheckout()` manda del carrito directo al
+ * pago en cuanto `GET /me` responde que hay alguien. Pintarla igual hacía tres cosas mal a la vez
+ * —medido en vivo—: prometía dos pantallas desde el carrito cuando quedaba una, el contador **saltaba
+ * del 3 al 5**, y la fase aparecía como HECHA sin que el cliente hubiera estado en ella.
+ *
+ * ⚠️ **La señal es si la PÁGINA cargó con sesión, no si la hay ahora**, y por eso no cambia a mitad de
+ * camino: quien entra sin sesión y se identifica dentro del embudo **sí pasó** por esa pantalla, y
+ * verla desaparecer justo después de completarla sería peor que no haberla pintado nunca.
+ * ⚠️ **Y la fase vuelve si se está EN ella**: la sesión puede caer en otra pestaña, y entonces el
+ * cliente aterriza en una pantalla que la banda no contaba. Aparece, con su número.
+ */
+function fasesDe(step, pideIdentificarse) {
+    return FASES.filter((f) => f.step !== STEPS.IDENTIFY || pideIdentificarse || step === STEPS.IDENTIFY);
 }
 
 /** Mayúscula inicial, como el `Str::ucfirst` que el servidor aplica al contexto. */
@@ -118,11 +139,14 @@ export function shortDate(ymd, locale) {
  * producto que quedó seleccionado, que no es «la reserva» de nadie. El artboard del paso 08 también la
  * dibuja sin contexto.
  *
- * @param {{step: number, productName: string, date: string|null, time: string|null, messages: object, locale: string}} state
+ * @param {{step: number, pideIdentificarse?: boolean, productName: string, date: string|null, time: string|null, messages: object, locale: string}} state
  * @returns {{active: number, total: number, steps: Array<{label: string, state: string}>, context: string, backLabel: string}|null}
  */
-export function buildProgress({ step, productName = '', date = null, time = null, messages = {}, locale = 'es' }) {
-    const actual = FASES.findIndex((f) => f.step === step);
+export function buildProgress({ step, pideIdentificarse = true, productName = '', date = null, time = null, messages = {}, locale = 'es' }) {
+    // ⚠️ El defecto es `true` —pintar la fase— porque es el lado SEGURO: prometer una pantalla de más
+    // molesta, y ocultarla para que luego aparezca rompe la promesa de la banda.
+    const fases = fasesDe(step, pideIdentificarse);
+    const actual = fases.findIndex((f) => f.step === step);
 
     if (actual === -1) {
         return null;
@@ -142,12 +166,12 @@ export function buildProgress({ step, productName = '', date = null, time = null
 
     return {
         active: actual + 1,
-        total: FASES.length,
-        steps: FASES.map((fase, i) => ({
+        total: fases.length,
+        steps: fases.map((fase, i) => ({
             label: t(messages, fase.label),
             state: i < actual ? 'done' : (i === actual ? 'current' : 'todo'),
         })),
         context,
-        backLabel: t(messages, FASES[actual].back),
+        backLabel: t(messages, fases[actual].back),
     };
 }

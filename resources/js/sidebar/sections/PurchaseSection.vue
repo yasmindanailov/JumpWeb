@@ -491,6 +491,10 @@ dateStore.setLocale(locale);
  */
 const progress = computed(() => buildProgress({
     step: store.step,
+    // ⚠️ **`props.userId` es el dato del SERVIDOR al pintar la página**, y aquí eso es una virtud: no
+    // cambia dentro del embudo, así que quien entra sin sesión y se identifica por el camino conserva
+    // su fase «Quién eres» —por la que SÍ pasó— en vez de verla desaparecer al completarla (`#556`).
+    pideIdentificarse: ! props.userId,
     productName: catalogStore.selectedRow?.name ?? '',
     date: dateStore.selected,
     time: timeStore.selected,

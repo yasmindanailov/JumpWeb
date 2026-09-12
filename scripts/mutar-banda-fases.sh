@@ -168,6 +168,21 @@ mutar "la fase del carrito deja de llamarlo por su nombre" "$ES" \
   "    'phase_cart' => 'Tu cesta',"
 
 echo
+echo '── Con sesión, «Quién eres» sobra ──'
+
+mutar "la fase de identificarse se pinta siempre, haya sesion o no" "$JS" \
+  "    return FASES.filter((f) => f.step !== STEPS.IDENTIFY || pideIdentificarse || step === STEPS.IDENTIFY);" \
+  "    return FASES;"
+
+mutar "la fase NO vuelve cuando el cliente esta en ella" "$JS" \
+  " || pideIdentificarse || step === STEPS.IDENTIFY);" \
+  " || pideIdentificarse);"
+
+mutar "el embudo lee la sesion VIVA en vez de la del servidor" "$SEC" \
+  '    pideIdentificarse: ! props.userId,' \
+  '    pideIdentificarse: ! cartStore.owner,'
+
+echo
 echo '── El contexto ──'
 
 mutar "el contexto sobrevive a la cesta, donde ya no hay UNA linea" "$JS" \
