@@ -1373,13 +1373,26 @@ img { display: block; max-width: 100%; }
    («ZONAS» sobre «Dos zonas»); ésta dice a QUIÉN va dirigida la sección, que el titular no dice.
    ▶ Comparte declaración con el molde nuevo: es el nivel **Etiqueta** del canvas, y `--fs-label` es
    el token que lo nombra (`--fs-12` valía lo mismo, pero no decía qué era). */
+/* ⚠️ `#537` · LA IDENTIDAD ENTRA POR AQUÍ, y es deliberado: el rótulo es la pieza más repetida
+   de la web —una por sección y una por página, las tres clases comparten regla desde `#525`—, así
+   que es el sitio más barato donde el color alcanza las siete páginas a la vez.
+   ⚠️⚠️ El TEXTO va en `--interactive` (Azul Muro sobre papel, 6,43) y el filete en
+   `--identity-fill` (Cian pleno): sobre papel el cian da **2,45** y no puede ser letra, pero como
+   barra sí. Los dos son el mismo color con dos voces, que es lo que el sistema declara. */
 .sec-head__eyebrow,
 .zones__eyebrow,
 .page__eyebrow {
   margin: 0 0 var(--sp-8);
   font-family: var(--font-mono); font-size: var(--fs-label);
   text-transform: uppercase; letter-spacing: 0.16em;
-  color: var(--fg-mute);
+  color: var(--interactive);
+  display: inline-flex; align-items: center; gap: var(--sp-10);
+}
+.sec-head__eyebrow::before,
+.zones__eyebrow::before,
+.page__eyebrow::before {
+  content: ""; flex: none; width: 28px; height: 4px;
+  border-radius: var(--r-pill); background: var(--identity-fill);
 }
 
 /* La REGLA del parque. Es una frase, no una entradilla larga: manda la edad y la altura desempata.
@@ -2101,8 +2114,9 @@ img { display: block; max-width: 100%; }
   scroll-snap-align: center;
   display: flex; align-items: center; gap: var(--sp-12);
   padding: var(--sp-14) var(--sp-16);
-  background: var(--bg-card);
-  border: 1px solid var(--line);
+  /* `#537` · tinte de identidad. Lo que va encima pasa a TINTA: sobre un tinte, Humo da 4,40. */
+  background: var(--tint-info);
+  border: 1px solid var(--tint-info-border);
   border-radius: var(--r-lg);
 }
 .addon-card__ico { color: var(--fg); display: flex; flex: none; }
@@ -2117,7 +2131,9 @@ img { display: block; max-width: 100%; }
 .addon-card__unit {
   margin-left: var(--sp-6);
   font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-label);
-  color: var(--fg-mute);
+  /* ⚠️ `#537` · TINTA y no Humo: sobre el tinte de la tarjeta, Humo da **4,40** y no llega a AA.
+     Sobre una superficie teñida solo aguantan la tinta (14,8) y el Azul Muro (5,68). */
+  color: var(--fg);
 }
 
 @media (min-width: 1024px) {
@@ -2271,7 +2287,7 @@ img { display: block; max-width: 100%; }
 .week__day {
   flex: 1; min-width: 0; height: 56px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--tint-ok); border: 1px solid var(--tint-ok-border); border-radius: var(--r-md);
 }
 .week__day--special { background: var(--fg); border-color: var(--fg); }
 .week__initial {
@@ -2942,7 +2958,10 @@ img { display: block; max-width: 100%; }
 .rules-group__label { margin: 0; font-family: var(--font-mono); font-size: var(--fs-12); letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute); }
 .rules-group__title { margin: var(--sp-6) 0 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-title); line-height: 1.05; color: var(--fg); }
 .rules-list { list-style: none; margin: var(--sp-14) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
-.rule-card { background: var(--bg-card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-18); }
+/* ⚠️ `#537` · aquí el color entra SOLO por el borde. Son 27 tarjetas en una página y
+   teñirlas llevaba `/normas` al 51 % de color, muy por encima del 30 % que pide el sistema:
+   el presupuesto manda sobre la regla. */
+.rule-card { background: var(--bg-card); border: 1.5px solid var(--tint-info-border); border-radius: var(--r-lg); padding: var(--sp-18); }
 .rule-card__name { margin: 0; font-weight: 800; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
 .rule-card__desc { margin: var(--sp-8) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); max-width: 70ch; }
 /* ⚠️ El PORQUÉ va en TINTA y no en el gris de apoyo: es lo que hace que la norma se cumpla, así que
@@ -3106,7 +3125,10 @@ img { display: block; max-width: 100%; }
 }
 .before__row-key {
   font-family: var(--font-mono); font-size: var(--fs-label);
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-mute);
+  letter-spacing: 0.14em; text-transform: uppercase;
+  /* ⚠️ `#537` · sobre TINTA `--interactive` vale Cian (6,85). Y la FILA no se tiñe: es una `<dl>`
+     con `padding: 14px 0`, así que un fondo llegaría a 0 px de la letra. */
+  color: var(--interactive);
 }
 .before__row-val {
   margin: 0; font-size: var(--fs-body); font-weight: 700; line-height: 1.4; color: var(--fg);
@@ -3298,7 +3320,10 @@ img { display: block; max-width: 100%; }
   min-width: 0;
   visibility: hidden;
   background: var(--bg-card);
-  border: 1px solid var(--line);
+  /* ⚠️ `#537` · esta tarjeta NO se tiñe y el motivo es aritmético: sus estrellas son Amarillo 800,
+     que sobre BLANCO dan 4,87 y sobre cualquier tinte caen a 3,89. El color le entra por el borde
+     y por la inicial del autor, que sí es un relleno. */
+  border: 1px solid var(--tint-ok-border);
   border-radius: var(--r-lg);
   padding: var(--sp-18);
 }
@@ -3308,9 +3333,9 @@ img { display: block; max-width: 100%; }
 .rev__who { display: flex; align-items: center; gap: var(--sp-12); }
 .rev__ini {
   flex: none; width: 56px; height: 56px; border-radius: var(--r-pill);
-  background: var(--bg-soft); border: 1px solid var(--line);
+  background: var(--ok); border: 1px solid var(--ok);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-display); font-weight: 400; font-size: var(--fs-22); color: var(--fg);
+  font-family: var(--font-display); font-weight: 400; font-size: var(--fs-22); color: var(--on-ok);
 }
 .rev__id { flex: 1; min-width: 0; }
 .rev__author { margin: 0; font-size: var(--fs-16); font-weight: 700; line-height: 1.2; color: var(--fg); }
@@ -3519,9 +3544,13 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
    la rejilla `1fr 2fr` con `gap: 60px` (la cabecera vivía DENTRO del acordeón), los filetes de
    `--line` arriba y abajo de cada ítem sin tarjeta que los contuviera, la pregunta a `--fs-22`
    con peso 600, y el signo como UN icono girado 45° sobre un círculo con borde. */
+/* ⚠️ `#537` · el tinte va en LA TARJETA, no en sus filas. `.faq__item` son las filas de esta
+   caja —separadas por un filete, sin fondo propio—, así que teñirlas una a una pintaría lo mismo
+   por accidente y dejaría el color colgando de una pieza que no es la unidad visual. Es la misma
+   lección que `.before__row`, cazada antes de repetirla. */
 .faq {
-  background: var(--bg-card);
-  border: 1px solid var(--line);
+  background: var(--tint-attn);
+  border: 1px solid var(--tint-attn-border);
   border-radius: var(--r-lg);
   /* Recorta las esquinas de la primera y la última fila contra el radio de la tarjeta. */
   overflow: hidden;
@@ -3531,7 +3560,7 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
    dos líneas seguidas es lo que el owner señaló en `#486`. Y va en Nube (`--bg-soft`), que es el
    `#E8E9E5` del artboard: más claro que el borde exterior, porque separa dentro de una caja que ya
    tiene su propio contorno. */
-.faq__item + .faq__item { border-top: 1px solid var(--bg-soft); }
+.faq__item + .faq__item { border-top: 1px solid var(--tint-attn-border); }
 
 .faq__q {
   /* Lote 6 (a11y): es un <button> (operable por teclado + aria-expanded). El reset global de
@@ -3557,7 +3586,7 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
    de la fila: lo que cambia es CUÁL de los dos iconos se ve. */
 .faq__sign {
   flex: none; width: 32px; height: 32px; border-radius: var(--r-pill);
-  background: var(--bg); color: var(--interactive);
+  background: var(--attn); color: var(--fg);
   display: grid; place-items: center;
 }
 /* Los dos iconos ocupan la MISMA celda de la rejilla, así que el círculo no cambia de tamaño al
@@ -4840,7 +4869,8 @@ select:focus-visible {
 .channels__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-10); }
 .channel {
   display: flex; align-items: center; gap: var(--sp-14);
-  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+    /* `#537` · tinte de identidad. Encima, TINTA: sobre un tinte Humo da 4,40. */
+  background: var(--tint-info); border: 1px solid var(--tint-info-border); border-radius: var(--r);
   padding: var(--sp-16) var(--sp-18); color: var(--fg);
   transition: border-color var(--dur-sale) var(--ease-sale);
 }
@@ -5028,7 +5058,8 @@ select:focus-visible {
    `width`/`height` del propio `<img>`, medidos al subirla. */
 .bar-sheet {
   display: block; position: relative;
-  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+    /* `#537` · tinte de identidad. Encima, TINTA: sobre un tinte Humo da 4,40. */
+  background: var(--tint-info); border: 1px solid var(--tint-info-border); border-radius: var(--r);
   overflow: hidden; color: var(--fg);
   transition: border-color var(--dur-sale) var(--ease-sale);
 }

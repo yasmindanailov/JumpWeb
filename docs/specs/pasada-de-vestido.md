@@ -1,6 +1,7 @@
 # [SPEC] La pasada de vestido — dónde se ubican los elementos de diseño
 
-> **Estado**: ⬜ VALORACIÓN ABIERTA · el owner ha tomado dos decisiones y quedan cinco.
+> **Estado**: 🟦 EN EJECUCIÓN · alcance, vara y familias DECIDIDOS (2026-09-12, §3.bis).
+> Lo medido va en §3.bis y **caduca la D1 de §3**.
 > **Decisión**: `DECISIONES #497` · **Carril**: diseño, Fase 2 (`specs/rediseno-desde-canvas.md`).
 > **Depende de**: `elementos-fachada.md` (el kit, 32 piezas) · `hueco-ilustracion.md` (el mecanismo).
 
@@ -118,6 +119,85 @@ una geometría única.
 ⚠️ **Con dos trampas ya pagadas en `#266`**: una animación CSS sobre un elemento de `<defs>` **no
 pinta nada** —lo que se dibuja son los `<use>`—, y **los `px` de un `transform` dentro de un SVG son
 unidades del `viewBox`**, no píxeles.
+
+---
+
+## 3.bis · ✅ Lo DECIDIDO por el owner (2026-09-12) — y lo que MIDIÓ la sesión
+
+> Esta sección va **antes** que §4 y §5: reencuadra el trabajo y **caduca la D1**.
+
+### 3.bis.0 · El diagnóstico: la portada tiene **1,1 % de color**
+
+Medido con `scripts/sonda-color.mjs` (muestreo con `elementFromPoint`, que resuelve la pila de
+capas como la ve el navegador — un `background` declarado no dice qué se ve encima):
+
+| | escritorio 1440 | móvil 390 |
+|---|---|---|
+| **color vivo** | **1,1 %** | 2,5 % |
+| tinta | 16,3 % | 13,9 % |
+| medio (vídeo + fotos) | 20,7 % | 18,1 % |
+| papel | 61,9 % | 65,5 % |
+
+⚠️ **Cinco de las diez zonas de la portada no tienen NI UN PÍXEL de color** —«Qué hay dentro»,
+«Antes de venir», «Reseñas», «Visítanos» y «Dudas»— y las tres últimas son **100 % papel**: ni
+color, ni foto, ni tinta. La página arranca con energía y se apaga entera desde la mitad.
+
+⚠️⚠️ **Y las SEIS páginas interiores están a 0,0 %.** `/precios` —la que vende— es **98 % papel**
+con **cuatro muestras** de color en toda la página.
+
+### 3.bis.1 · ❗❗❗ El reparto está INVERTIDO respecto al sistema del propio cliente
+
+`tokens-pjp.js` declara `limite.proporcion: '60/30/10'` (neutro / **cian identidad** / naranja
+acción) y la **masa cromática medida en el mural** del parque. Contra los 643 puntos de color de
+toda la portada:
+
+| color | rol que le da el sistema | masa en el mural | ocupa hoy |
+|---|---|---|---|
+| Amarillo Aviso | *«resalte tipo marcador… nunca fondo ni botón»* | 3 % | **54,9 %** |
+| Naranja Salto | acción, comprar | 36 % | 28,5 % |
+| **Cian PJP** | **identidad** | **46 %** | **9,0 %** → 0,10 % de la página |
+| Verde Salta | éxito | 13 % | 7,2 % |
+
+▶ **El color más accesorio del sistema domina la portada, y el color que ES la identidad ocupa
+una milésima** — 300× por debajo del 30 % que el propio sistema pide.
+
+❗❗ **Consecuencia que cambia el encargo**: para meter color **no hay que romper ninguna regla del
+canvas, hay que CUMPLIRLAS**. Las reglas duras siguen intactas y son las que acotan el cómo:
+`fondosColor: 0` · *«el color nunca es fondo de sección; entra en tarjetas, datos y botones»* ·
+naranja solo para comprar · magenta máx. 2 % · los cinco claros no pueden ser texto sobre papel.
+
+### 3.bis.2 · El censo de candidatas
+
+`scripts/censo-candidatos.mjs`, por COMPORTAMIENTO sobre las siete páginas: **407 piezas** de las
+cuatro familias donde el sistema deja entrar color, **282 en neutro**. Las que se repiten en las
+**siete**: `btn` (20) · `cta-med` y `cta-ghost` (8 cada uno) · `user-plus-ico` (8) · `nav__burger`
+(7) · `foot__contact` y `foot__legal-wrap` (7). ▶ **El armazón entero está en neutro**, y es la
+pieza que toca las siete páginas de una vez.
+
+⚠️⚠️ **La primera versión del censo buscaba por NOMBRE de clase** (`.icon`, `[class*="card"]`) y
+daba **22 iconos donde el set tiene 63**: aquí los iconos se emiten con clase semántica propia
+(`arrow-ico`, `faq__sign-i`, `chev`). Es la trampa que §2.1 ya había pagado con `.menu__blob` —
+*buscar por nombre supone conocer los nombres*— y se volvió a pagar.
+
+### 3.bis.3 · Las tres decisiones
+
+- ✅ **D1 CADUCA · la pasada se hace sobre LAS SIETE PÁGINAS** (`[DECIDIDO owner]`). El motivo que
+  acotaba a la portada está escrito en §3 —*«de las siete solo `/atracciones` está rehecha»*— y
+  **dejó de ser cierto el 2026-09-12** (`#536`): las siete están construidas. Vuelve el «todas a la
+  vez» que el canvas repite en siete artboards.
+- ✅ **D3+ · la vara es el `60/30/10` del sistema** (`[DECIDIDO owner]`): el cian sube a identidad
+  visible en tarjetas, datos, iconos y subrayados, **sin tocar `fondosColor: 0`**. El fondo de
+  sección sigue siendo papel y el naranja sigue significando solo comprar.
+- ✅ **D4 · entra el kit por el hueco por instalación Y los 19 iconos de zona** (`[DECIDIDO owner]`),
+  que cierra la deuda que `#257` dejó escrita.
+
+### 3.bis.4 · Un hallazgo lateral: **`/entradas` no es una página**
+
+La sonda dio «100 % papel» con todas sus filas a 0,0 — una incoherencia interna que delató el
+defecto del instrumento *y* el hecho: **`/entradas` sirve la portada y abre el CAJÓN encima**
+(capa `fixed` que tapa el 100 %). Es una PUERTA, como las `/mi-cuenta/…` de `#120`, no una página
+de contenido. ▶ Eso contesta la pregunta abierta del `ESTADO` («qué pasa con `/entradas`, que
+existe y no está en el inventario del canvas»): **no es de este carril, es del cajón**.
 
 ---
 

@@ -42,6 +42,36 @@
        paleta de esa zona repintaba el calendario y el estado de un pedido sin que nadie lo pidiera.
        Un color con significado no puede vivir en la paleta de una zona. */
     --attn: #FFE14A;
+
+    /* ══ LA IDENTIDAD COMO SUPERFICIE · la pasada de vestido (`#537`) ═══════════════════════
+       Medido antes de existir: la portada tenía **1,1 %** de color y las seis páginas
+       interiores **0,0 %**, mientras el sistema del cliente declara `proporcion: '60/30/10'`
+       —neutro / CIAN IDENTIDAD / naranja acción— y su masa de mural da azul 46 %. El color
+       que ES la identidad ocupaba el **0,10 %** de la página.
+
+       ⚠️ NO son fondos de sección: el sistema lo prohíbe (`fondosColor: 0`, «el fondo es papel
+       y el material vive DENTRO de las tarjetas»). Son la superficie de las TARJETAS.
+
+       ⚠️⚠️ **Se DERIVAN, no se teclean**, y eso es lo que los hace white-label: `--strip-1` es
+       el primer color de marca y ya viaja en el paquete de cada instalación, así que el tinte
+       sale del cian de ESTE cliente y del que venga. El fallback es el azul del producto, para
+       una instalación sin paquete. Verificado en navegador: la receta del 14 % y el 30 %
+       devuelve **#D5EAEE** y **#B3DDEB**, que son al dígito los dos valores que el sistema del
+       cliente declara como `tintePapel.cian` / `bordeCian`. */
+    --identity-fill: var(--strip-1, #2F7FA8);
+    /* Su variante PROFUNDA: la que aguanta texto blanco. Al 65 % sobre tinta da 5,20 contra
+       blanco —el Cian 800 del sistema da 5,13—, y el defecto cae del lado seguro: cuanto más
+       oscuro salga en otra instalación, más contraste tiene el rótulo. */
+    --identity-deep: color-mix(in srgb, var(--identity-fill) 65%, var(--fg));
+    /* ⚠️ Sobre un tinte SOLO aguantan Tinta (14,8) y Azul Muro (5,68): Humo da 4,40, Lima 800
+       4,18, Verde 800 4,19 y Amarillo 800 3,90. No es criterio propio — `tokens-pjp.js` ya lo
+       trae escrito con esas mismas cifras. Lo que se pinte encima va en `--fg`. */
+    --tint-info:        color-mix(in srgb, var(--identity-fill) 14%, var(--bg));
+    --tint-info-border: color-mix(in srgb, var(--identity-fill) 30%, var(--bg));
+    --tint-attn:        color-mix(in srgb, var(--attn) 14%, var(--bg));
+    --tint-attn-border: color-mix(in srgb, var(--attn) 30%, var(--bg));
+    --tint-ok:          color-mix(in srgb, var(--ok) 14%, var(--bg));
+    --tint-ok-border:   color-mix(in srgb, var(--ok) 30%, var(--bg));
     /* ⚠️ **El PAR lo declara quien declara el color** (`#434`: no se deriva, se escribe). El resalte
        es un amarillo claro, así que encima siempre va TINTA — y tenerlo escrito es lo que impide que
        la próxima pieza que lo use elija el suyo a ojo, que es como nacieron los cuatro contrastes
@@ -3925,8 +3955,19 @@ body[data-has-hero].nav--live .hero__pair-slot {
    ⚠️ **NO es el rol de acción** (`#213`): el CTA fijo del mockup pinta tinta fuera del menú y
    AVISO dentro, o sea una coreografía, no un rol. Su hermano `.cta-prime` —la barra de móvil— sí
    está en el rol, y eso es una diferencia real entre las dos piezas. */
+/* ⚠️ `#537` · el relleno pasa de TINTA a la variante profunda de la identidad
+   (`[DECIDIDO owner, 2026-09-12]`, elegido sobre cinco formas renderizadas). El argumento no es de
+   gusto, es de JERARQUÍA y está medido contra el Papel: el botón de tinta destacaba **16,79** y el
+   naranja de comprar **2,66**, o sea que el secundario gritaba 6,3× más fuerte que la acción. Con
+   `--identity-deep` baja a ~5,2 y deja de aplastarlo.
+   ⚠️⚠️ El rótulo va en BLANCO y eso obliga al tono profundo: el cian pleno con blanco da **2,70**,
+   que no llega ni al umbral de texto grande. `--identity-deep` da 5,20 con blanco y 4,72 con
+   Papel, que es el token que su propio icono ya usaba: se escribe el token, no un literal.
+   ⚠️⚠️ Y es `--paper-bg`, NO `--bg`: dentro del hero la superficie es tinta y ahí `--bg` vale
+   TINTA, así que el rótulo salía oscuro sobre el azul (**3,55** medido) mientras en el nav salía
+   bien. Es el mismo alias y el mismo motivo que `#196` dejó escrito para las sombras. */
 .cta-med {
-    background: var(--fg); color: var(--bg);
+    background: var(--identity-deep); color: var(--paper-bg);
     border: 0;
     font-weight: 600;
     box-shadow: var(--shadow-nav-fill);

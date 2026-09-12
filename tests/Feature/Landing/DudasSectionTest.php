@@ -249,8 +249,13 @@ class DudasSectionTest extends TestCase
         $reglas = $this->reglasCss();
 
         $this->assertArrayHasKey('.faq', $reglas, 'la tarjeta del acordeón no tiene regla');
-        $this->assertMatchesRegularExpression('/background:\s*var\(--bg-card\)/', $reglas['.faq'], 'la tarjeta no es blanca');
-        $this->assertMatchesRegularExpression('/border:\s*1px solid var\(--line\)/', $reglas['.faq'], 'la tarjeta perdió su borde de Línea');
+        // ⚠️ **ESTA ASERCIÓN CAMBIÓ DE PREMISA en `#537`, no se relajó.** Decía «la tarjeta no es
+        // blanca» porque `#488` la dejó en `--bg-card`; la pasada de vestido la tiñe con el tinte
+        // de AVISO (`[DECIDIDO owner, 2026-09-12]`), que es la superficie que el sistema del
+        // cliente declara al 14 % sobre papel. Lo que se sigue vigilando es lo mismo que antes:
+        // que la tarjeta TENGA superficie declarada y que su borde la acompañe — no un valor.
+        $this->assertMatchesRegularExpression('/background:\s*var\(--tint-attn\)/', $reglas['.faq'], 'la tarjeta perdió su tinte de aviso');
+        $this->assertMatchesRegularExpression('/border:\s*1px solid var\(--tint-attn-border\)/', $reglas['.faq'], 'el borde dejó de seguir al tinte de la tarjeta');
         $this->assertMatchesRegularExpression('/border-radius:\s*var\(--r-lg\)/', $reglas['.faq'], 'el canto de la tarjeta dejó de salir de la escala');
         $this->assertMatchesRegularExpression('/overflow:\s*hidden/', $reglas['.faq'], 'sin recorte, la primera y la última fila se salen del radio');
 
