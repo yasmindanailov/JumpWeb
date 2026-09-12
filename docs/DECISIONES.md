@@ -30076,3 +30076,65 @@ rótulos en los tres idiomas, y el paso 08 con señal recorrido de punta a punta
 
 ❗ **Queda el OJO del owner en un teléfono de verdad** — el mismo que dejó `#554`, y ahora con el
 armazón entero delante.
+
+---
+
+## #556 · 2026-09-12 · `[DECIDIDO owner]` Con sesión, «Quién eres» no es una fase: la banda cuenta el camino de ESTE cliente
+
+**Contexto.** Lo vio el owner con la banda de `#555` delante: *«si el cliente ha iniciado sesión la
+parte de "quién eres" sobra, ¿no?»*. Sí — y al medirlo era **peor** de lo que parecía.
+
+### Medido en vivo ANTES de tocar nada, y son tres síntomas de lo mismo
+
+`decideCheckout()` manda del carrito **directo a `STEPS.PAY`** en cuanto `GET /me` responde que hay
+alguien: el paso 5 existe solo para invitados. Recorrido con sesión, antes:
+
+| pantalla | contador | fases |
+|---|---|---|
+| día | Paso 1 de 5 | Fecha(current) · … |
+| hora | Paso 2 de 5 | … |
+| carrito | **Paso 3 de 5** | promete DOS pantallas y queda UNA |
+| pagar | **Paso 5 de 5** | el contador **salta el 4**, y «Quién eres» sale **HECHA** |
+
+▶ Hoy: **1 → 2 → 3 → 4 de 4**, sin saltos y sin una fase que el cliente no visitó nunca marcada como
+completada.
+
+### La señal es la del SERVIDOR, no la sesión de ahora
+
+`props.userId` es `auth()->id()` **al pintar la página**, y ahí está la gracia: **no cambia dentro del
+embudo**. Con el estado vivo de sesión, quien entra sin sesión y se identifica por el camino vería
+desaparecer esa fase **justo después de completarla** — y esa pantalla sí la visitó. Verificado: sin
+sesión son cinco todo el recorrido, **incluido el paso 8 posterior a identificarse**.
+
+⚠️ **Y la fase VUELVE si el cliente está en ella.** La sesión puede caer en otra pestaña; sin esa
+segunda mitad de la regla, `buildProgress()` devolvería `null` y la banda no reconocería la pantalla
+donde el cliente acaba de aterrizar.
+
+⚠️ **El defecto del parámetro es `true` —pintarla—, que es el lado seguro**: prometer una pantalla de
+más molesta; ocultarla para que luego aparezca rompe la promesa de la banda.
+
+⚠️ **`backPlan()` NO se filtra**: el destino de un paso no cambia porque el cliente vaya a visitarlo o
+no. Lo que se filtra es lo que se PINTA.
+
+### Lo que costó
+
+⚠️ El presupuesto de `PurchaseSection` sube **445 → 446**, y la línea es `pideIdentificarse: !
+props.userId`. No hay regla que extraer: la regla —qué fases recorre este cliente— vive en
+`progress.js`; esto es pasarle un dato que solo el componente tiene.
+
+⚠️⚠️ **Y el arnés de `#555` cazó su propio envejecimiento**: dos mutaciones dejaron de aplicarse porque
+esta tanda renombró `FASES.length` → `fases.length` y `FASES[actual].back` → `fases[actual].back`.
+▶ **No las contó como «no muerden»: dijo «NO SE APLICÓ, el veredicto no vale»** — que es exactamente
+para lo que existe esa comprobación. *Una mutación que no casa es un arnés roto, no una guarda ciega, y
+confundirlos da un veredicto tranquilizador y falso.*
+
+### La red
+
+**`SidebarPhaseBandTest`** (7 casos) + **4 casos nuevos en `progress.test.js`** +
+**`scripts/mutar-banda-fases.sh`: 16/16 mutaciones muerden**, con las tres de esta tanda —la fase
+pintada siempre, la fase que no vuelve, y el embudo leyendo la sesión viva—.
+
+**Verificación**: suite **4789 · 30.101 aserciones** (1 skipped) · JS **976** · **16/16 mutaciones** ·
+Pint y docs-check ✓ · el embudo recorrido en navegador **con sesión y sin ella**, con capturas.
+
+⚠️ **Paso de despliegue: ninguno.**

@@ -123,14 +123,14 @@ mutar "el contador vuelve a avanzar DENTRO de la pantalla de la hora" "$JS" \
   "        active: actual + 1 + (step === STEPS.TIME && hasTime ? 1 : 0),"
 
 mutar "el total deja de contar las fases y se clava en tres" "$JS" \
-  "        total: FASES.length," \
+  "        total: fases.length," \
   "        total: 3,"
 
 echo
 echo '── El «Volver» ──'
 
 mutar "el rotulo del Volver deja de decir a donde vuelve" "$JS" \
-  "        backLabel: t(messages, FASES[actual].back)," \
+  "        backLabel: t(messages, fases[actual].back)," \
   "        backLabel: t(messages, 'back'),"
 
 mutar "el destino se separa de su rotulo" "$JS" \
