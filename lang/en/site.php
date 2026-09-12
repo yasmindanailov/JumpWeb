@@ -4,7 +4,25 @@ return [
     'legal_eyebrow' => 'Legal information',
     'rules_eyebrow' => 'Rules',
     'rules_title' => 'Rules',
-    'rules_intro' => 'What you need to follow to jump. Read it once.',
+    'rules_headline' => 'What you have to follow',
+    'rules_intro' => 'There are few of them and they all have a reason. Read them once and that is that.',
+
+    'rules_moment' => [
+        'before' => ['label' => 'Before you come', 'title' => 'At home'],
+        'gate' => ['label' => 'At the door', 'title' => 'When you arrive'],
+        'inside' => ['label' => 'Inside', 'title' => 'While you jump'],
+    ],
+    'rules_other' => 'Also',
+
+    'rules_axis_title' => 'Height at a glance',
+    'rules_axis_label' => 'height',
+
+    'rules_waiver_title' => 'The text you sign',
+    'rules_waiver_text' => 'When you register you approve these rules and the liability waiver: the document where you acknowledge that jumping carries risk and that you will follow instructions. You sign it once, for you and for your children.',
+    'rules_waiver_cta' => 'Read the full waiver',
+
+    'rules_staff' => 'Any questions about rates, birthdays or promotions, ask the park staff: that is what they are there for.',
+    'rules_updated' => 'Updated in :fecha',
     'back_home' => '← Back to home',
     'legal_draft_notice' => 'Draft text, pending legal review.',
 

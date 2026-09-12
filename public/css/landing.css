@@ -2922,6 +2922,57 @@ img { display: block; max-width: 100%; }
    consumidores **por fichero**, no por «esto ya no lo usa la home».
    ▶ Lo que SÍ se fue por no tener más consumidor: `.rules-layout`, `.rules-layout__media` y
    `.rules-vslider` (en `site.css`). */
+/* ══ /normas · LO QUE HAY QUE CUMPLIR (`#533`) ═══════════════════════════════════════════════════
+   Artboard `Normas PJP` 1a/1b. La página se recorre por MOMENTOS: en móvil el rótulo del grupo abre
+   y sus normas van debajo; en escritorio el momento se queda quieto en su columna y las normas se
+   leen al lado (su `@media`, más abajo).
+   ⚠️ El titular de grupo NO estrena tipografía: comparte la declaración del titular de bloque de las
+   otras interiores (`#525`, `#531`). */
+.rules-axis { margin-top: var(--sp-20); background: var(--bg-card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-20); }
+.rules-axis__title { margin: 0; font-weight: 700; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
+.rules-axis__chart { margin-top: var(--sp-18); display: flex; gap: var(--sp-16); height: 260px; }
+/* La regla vertical con sus dos extremos escritos, la misma pieza que el eje de las tarjetas de zona
+   de la portada: comparten techo, así que el mismo 1,30 cae a la misma altura en las dos pantallas. */
+.rules-axis__ruler { flex: none; width: 56px; position: relative; border-left: 2px solid var(--fg); font-family: var(--font-mono); font-size: var(--fs-12); color: var(--fg-mute); }
+.rules-axis__top { position: absolute; left: var(--sp-4); top: 0; white-space: nowrap; }
+.rules-axis__top b { font-weight: 700; color: var(--fg); }
+.rules-axis__top i { font-style: normal; }
+.rules-axis__zero { position: absolute; left: var(--sp-4); bottom: 0; white-space: nowrap; }
+/* ⚠️ `top` y `height` los calcula el SERVIDOR desde `zones.height_min_cm/max`: aquí no se decide
+   ninguna altura, y una zona sin regla no pinta banda. */
+.rules-axis__bands { flex: 1; min-width: 0; position: relative; }
+.rules-axis__band {
+  position: absolute; left: 0; right: 0;
+  display: flex; align-items: center;
+  padding: var(--sp-10) var(--sp-14); border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--interactive) 16%, var(--bg-card));
+  font-weight: 800; font-size: var(--fs-16); line-height: 1.2; color: var(--fg);
+}
+
+.rules-group { margin-top: 40px; }
+.rules-group__label { margin: 0; font-family: var(--font-mono); font-size: var(--fs-12); letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute); }
+.rules-group__title { margin: var(--sp-6) 0 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-title); line-height: 1.05; color: var(--fg); }
+.rules-list { list-style: none; margin: var(--sp-14) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
+.rule-card { background: var(--bg-card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-18); }
+.rule-card__name { margin: 0; font-weight: 800; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
+.rule-card__desc { margin: var(--sp-8) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); max-width: 70ch; }
+/* ⚠️ El PORQUÉ va en TINTA y no en el gris de apoyo: es lo que hace que la norma se cumpla, así que
+   pesa más que su descripción. Del mismo gris se leería como una coletilla. */
+.rule-card__why { margin: var(--sp-8) 0 0; font-size: var(--fs-15); line-height: 1.5; color: var(--fg); max-width: 70ch; }
+
+.rules-close { margin-top: 40px; }
+.rules-waiver { border-radius: var(--r-lg); padding: var(--sp-20); }
+.rules-waiver__title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-20); line-height: 1.15; color: var(--fg); }
+.rules-waiver__text { margin: var(--sp-12) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); max-width: 70ch; }
+.rules-waiver__cta {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min); margin-top: var(--sp-8);
+  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
+}
+.rules-foot { margin-top: var(--sp-20); padding-top: var(--sp-18); border-top: 1.5px solid var(--line-strong); }
+.rules-foot__staff { margin: 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); max-width: 70ch; }
+.rules-foot__updated { margin: var(--sp-10) 0 0; font-family: var(--font-mono); font-size: var(--fs-12); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-mute); }
+
 /* T10: el mismo aire que la otra rejilla de pegatinas (`.visit__col`, `--sp-16`) — con 12 px la
    sombra dura de 5 px se comía casi la mitad del hueco entre tarjetas. */
 .rules-grid {

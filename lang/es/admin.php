@@ -2954,6 +2954,9 @@ return [
         'model_label_plural' => 'Normas',
 
         'col_name' => 'Norma',
+        // El MOMENTO se ve en el listado (`#533`) porque es lo que agrupa la página: desde aquí se
+        // nota de un vistazo cuál se ha quedado sin él, que son las que salen al final y sin grupo.
+        'col_moment' => 'Momento',
         'col_active' => 'Activa',
         'active_yes' => 'Activa',
         'active_no' => 'Inactiva',
@@ -2964,6 +2967,20 @@ return [
         'field_is_active' => 'Activa',
         'field_is_active_hint' => 'Si se desactiva, la norma no aparece en la landing ni en /normas.',
 
+        /*
+         * EL MOMENTO (`DECISIONES #533`): agrupa las normas en la página pública. Los tres rótulos
+         * son los del artboard y describen CUÁNDO le toca al visitante, no de qué trata la norma.
+         * ⚠️ «Sin agrupar» no es un momento: es el hueco vacío, y esas normas se publican al final.
+         */
+        'field_moment' => 'Momento',
+        'field_moment_hint' => 'Cuándo le toca al visitante. Agrupa las normas en /normas; si lo dejas vacío, la norma sale al final y sin grupo.',
+        'field_moment_none' => 'Sin agrupar',
+        'moments' => [
+            'before' => 'Antes de venir',
+            'gate' => 'En la puerta',
+            'inside' => 'Dentro',
+        ],
+
         'lang' => [
             'es' => 'Español',
             'en' => 'Inglés',
@@ -2971,6 +2988,8 @@ return [
         ],
         'field_name' => 'Título',
         'field_description' => 'Descripción',
+        'field_reason' => 'Por qué',
+        'field_reason_hint' => 'El motivo de la norma, en una frase. Se publica debajo de ella. Opcional: si no lo pones, no se pinta nada.',
 
         'create_title' => 'Crear norma',
         'edit_title' => 'Editar norma: :name',

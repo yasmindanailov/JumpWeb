@@ -3,9 +3,43 @@
 return [
     'legal_eyebrow' => 'Información legal',
     'rules_eyebrow' => 'Normas',
+    /*
+     * ⚠️ `rules_title` es el NOMBRE del destino —lo usan el 404 y el `<title>`— y el TITULAR de la
+     * página es otro: el artboard `Normas PJP` escribe «Lo que hay que cumplir», que dice qué vas a
+     * leer en vez de repetir la etiqueta del menú (`DECISIONES #533`).
+     */
     'rules_title' => 'Normas',
+    'rules_headline' => 'Lo que hay que cumplir',
     // La entradilla de la cabecera de `/normas` (`#525`), la que escribe `Layout Paginas PJP`.
-    'rules_intro' => 'Lo que hay que cumplir para saltar. Se lee una vez.',
+    'rules_intro' => 'Son pocas y todas tienen un motivo. Se leen una vez y ya está.',
+
+    /*
+     * LOS TRES MOMENTOS (`#533`). Cada uno lleva DOS rótulos y no es redundancia: el de arriba dice
+     * **cuándo** (es el índice por el que se recorre la página) y el titular dice **dónde estás**.
+     * ⚠️ Las claves son las de `VenueRule::MOMENTS`: si alguien añade un momento sin su rótulo, la
+     * página lo diría con la clave en crudo — lo vigila la guarda.
+     */
+    'rules_moment' => [
+        'before' => ['label' => 'Antes de venir', 'title' => 'En casa'],
+        'gate' => ['label' => 'En la puerta', 'title' => 'Al llegar'],
+        'inside' => ['label' => 'Dentro', 'title' => 'Mientras saltas'],
+    ],
+    // Las normas que el panel dejó sin momento: se publican igual, al final y sin rótulo de grupo.
+    'rules_other' => 'Además',
+
+    // LA ESCALA DE ALTURA. ⚠️ La nota va debajo y NO dentro de las bandas: son las excepciones con
+    // condiciones («si tiene la edad pero mide entre…»), y ahí no caben ni se leen.
+    'rules_axis_title' => 'La altura, de un vistazo',
+    'rules_axis_label' => 'altura',
+
+    // LA CHAPA DEL DESCARGO: lo único de la página que se FIRMA, y por eso va en tinta.
+    'rules_waiver_title' => 'El texto que firmas',
+    'rules_waiver_text' => 'Al registrarte apruebas estas normas y el descargo de responsabilidad: el documento donde reconoces que saltar tiene su riesgo y que vas a seguir las indicaciones. Se firma una vez, para ti y para tus hijos.',
+    'rules_waiver_cta' => 'Leer el descargo entero',
+
+    // La línea final: lo que antes era el bloque «Información», que no es una norma.
+    'rules_staff' => 'Cualquier duda sobre tarifas, cumpleaños o promociones, pregunta al personal del parque: están para eso.',
+    'rules_updated' => 'Actualizado en :fecha',
     'back_home' => '← Volver al inicio',
     'legal_draft_notice' => 'Texto provisional pendiente de revisión legal.',
 

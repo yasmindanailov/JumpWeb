@@ -250,6 +250,18 @@ final class ZoneCards
         return $this->metros(self::ESCALA_CM).' m';
     }
 
+    /**
+     * La altura en METROS, escrita como la escribe el sitio («1,30»).
+     *
+     * ⚠️ **Es pública desde `#533` porque `/normas` dibuja la MISMA escala** con las mismas
+     * fronteras: si allí se formateara aparte, la portada y la página de normas podrían escribir
+     * «1,30» y «1,3» para el mismo umbral. Un formato, un sitio.
+     */
+    public function metersLabel(int $cm): string
+    {
+        return $this->metros($cm);
+    }
+
     /** El suelo de la escala, escrito. */
     public function floorLabel(): string
     {

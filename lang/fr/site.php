@@ -4,7 +4,25 @@ return [
     'legal_eyebrow' => 'Informations légales',
     'rules_eyebrow' => 'Règles',
     'rules_title' => 'Règles',
-    'rules_intro' => 'Ce qu’il faut respecter pour sauter. À lire une fois.',
+    'rules_headline' => 'Ce qu’il faut respecter',
+    'rules_intro' => 'Elles sont peu nombreuses et ont toutes une raison. On les lit une fois et c’est tout.',
+
+    'rules_moment' => [
+        'before' => ['label' => 'Avant de venir', 'title' => 'À la maison'],
+        'gate' => ['label' => 'À l’entrée', 'title' => 'En arrivant'],
+        'inside' => ['label' => 'À l’intérieur', 'title' => 'Pendant que tu sautes'],
+    ],
+    'rules_other' => 'En plus',
+
+    'rules_axis_title' => 'La taille, en un coup d’œil',
+    'rules_axis_label' => 'taille',
+
+    'rules_waiver_title' => 'Le texte que tu signes',
+    'rules_waiver_text' => 'En t’inscrivant, tu approuves ce règlement et la décharge de responsabilité : le document où tu reconnais que sauter comporte des risques et que tu suivras les consignes. Elle se signe une seule fois, pour toi et pour tes enfants.',
+    'rules_waiver_cta' => 'Lire la décharge en entier',
+
+    'rules_staff' => 'Pour toute question sur les tarifs, les anniversaires ou les promotions, demande au personnel du parc : il est là pour ça.',
+    'rules_updated' => 'Mis à jour en :fecha',
     'back_home' => '← Retour à l\'accueil',
     'legal_draft_notice' => 'Texte provisoire, en attente de révision juridique.',
 

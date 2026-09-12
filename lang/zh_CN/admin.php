@@ -2395,6 +2395,7 @@ return [
         'model_label_plural' => '园区规则',
 
         'col_name' => '规则',
+        'col_moment' => '时机',
         'col_active' => '启用',
         'active_yes' => '启用',
         'active_no' => '停用',
@@ -2405,6 +2406,16 @@ return [
         'field_is_active' => '启用',
         'field_is_active_hint' => '停用后该规则不在落地页及 /normas 显示。',
 
+        // 时机（`DECISIONES #533`）：在 /normas 页面按时机分组。留空不是错误，该规则仍会发布，排在最后且不分组。
+        'field_moment' => '时机',
+        'field_moment_hint' => '访客何时需要遵守。用于在 /normas 分组；留空则该规则排在最后且不分组。',
+        'field_moment_none' => '不分组',
+        'moments' => [
+            'before' => '来之前',
+            'gate' => '在入口',
+            'inside' => '在园内',
+        ],
+
         'lang' => [
             'es' => '西班牙语',
             'en' => '英语',
@@ -2412,6 +2423,8 @@ return [
         ],
         'field_name' => '标题',
         'field_description' => '描述',
+        'field_reason' => '原因',
+        'field_reason_hint' => '用一句话说明这条规则的原因，显示在规则下方。可留空：留空则不显示。',
 
         'create_title' => '创建规则',
         'edit_title' => '编辑规则：:name',

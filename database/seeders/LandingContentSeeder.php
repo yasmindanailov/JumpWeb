@@ -604,18 +604,133 @@ class LandingContentSeeder extends Seeder
 
     private function seedRules(): void
     {
+        /*
+         * ❗❗❗ **LAS NORMAS SE REESCRIBEN ENTERAS** (`DECISIONES #533`, `[DECIDIDO owner]`, artboard
+         * `Normas PJP` 1a/1b): siete en tres MOMENTOS, cada una con su porqué cuando lo tiene.
+         *  · Se caen **«Zona Kids · consulta las condiciones del centro»** (no dice nada) e
+         *    **«Información»** (no es una norma: es «pregunta al staff», y baja a una línea al pie
+         *    de la página, fuera de la lista).
+         *  · Entran los **CALCETINES**, que no estaban escritos en ninguna parte de la web.
+         *  · Se acaba el orden alfabético, que mezclaba lo que decide si entras con lo que pasa
+         *    dentro.
+         *
+         * ❗❗❗ **LAS EDADES NO SON LAS DEL ARTBOARD, Y ES UNA DESVIACIÓN DECLARADA.** Él escribe
+         * «Kids 2–6 · Jump desde 7» como lo aprobado; medido aquí, las dos fuentes reales dicen otra
+         * cosa **y coinciden entre sí**: las ZONAS publican «Kids 4 — 7» y «Jump +8», y el CATÁLOGO
+         * cobra los packs con `guest_age_min/max` 4–7 y 8+. `[DECIDIDO owner]`: **manda el catálogo
+         * para el producto y la zona para la edad de acceso**, así que aquí se escribe eso.
+         * ⚠️⚠️ Y la norma que había **decía una TERCERA cosa** —«Entrada desde los 6 años»—, que no
+         * la sostiene ninguna de las dos fuentes: era el único sitio del sistema que lo afirmaba.
+         *
+         * ⚠️ El texto es SEMILLA, no ley: el parque lo edita desde el panel (momento y porqué
+         * incluidos). Esto solo alimenta el arranque en frío.
+         */
         $rules = [
-            [['Registro', 'Registration', 'Inscription'], ['Si es tu primera visita, antes de hacer cola para entrar debes registrarte en nuestra web para aprobar las normas del parque y el contenido legal. En el caso de menores de 16 años, el registro lo realiza el/la tutor/a legal.', "If it's your first visit, before queueing to enter you must register on our website to approve the park rules and legal terms. For under-16s, the legal guardian completes the registration.", "Lors de ta première visite, avant de faire la queue, tu dois t'inscrire sur notre site pour approuver le règlement du parc et les mentions légales. Pour les moins de 16 ans, l'inscription est faite par le tuteur légal."]],
-            [['Zona Kids', 'Kids zone', 'Zone Kids'], ['Consulta las condiciones del centro.', 'Check the conditions of the centre.', 'Consulte les conditions du centre.']],
-            [['Zona Jump', 'Jump zone', 'Zone Jump'], ['Entrada desde los 6 años y 1,30 m de estatura. Si se supera la edad mínima y la estatura está comprendida entre 1 m y 1,30 m, la entrada deberá ser con el/la tutor/a.', 'Entry from age 6 and 1.30 m tall. If the minimum age is met and height is between 1 m and 1.30 m, entry must be with a guardian.', "Entrée dès 6 ans et 1,30 m. Si l'âge minimum est atteint et la taille est entre 1 m et 1,30 m, l'entrée doit se faire avec un tuteur."]],
-            [['Conducta', 'Conduct', 'Conduite'], ['Un uso inadecuado de las instalaciones, hacer caso omiso a las indicaciones del Staff o generar altercados con otros usuarios puede ser motivo de expulsión.', 'Improper use of the facilities, ignoring staff instructions or causing altercations with other users may result in expulsion.', "Un usage inapproprié des installations, le non-respect des consignes du Staff ou des altercations avec d'autres usagers peuvent entraîner l'expulsion."]],
-            [['Información', 'Information', 'Information'], ['No dudes en consultar con nuestro Staff cualquier término o condición sobre tarifas, promociones, cumpleaños o de otra índole.', 'Feel free to ask our staff about any term or condition regarding rates, promotions, birthdays or anything else.', "N'hésite pas à demander à notre Staff toute information sur les tarifs, promotions, anniversaires ou autre."]],
+            [
+                'moment' => VenueRule::MOMENTS[0],
+                'name' => ['Regístrate en la web', 'Register on the website', 'Inscris-toi sur le site'],
+                'desc' => [
+                    'Si es tu primera visita, hazlo antes de venir: es donde apruebas las normas y el descargo de responsabilidad. Los menores de 16 los registra su padre, madre o tutor.',
+                    "If it's your first visit, do it before you come: that's where you approve the park rules and the liability waiver. Under-16s are registered by a parent or guardian.",
+                    "Lors de ta première visite, fais-le avant de venir : c'est là que tu approuves le règlement et la décharge de responsabilité. Les moins de 16 ans sont inscrits par un parent ou tuteur.",
+                ],
+                'reason' => [
+                    'Así no haces cola para rellenar papeles con el niño tirándote del brazo.',
+                    "That way you're not queueing to fill in forms with a child pulling at your arm.",
+                    'Ainsi tu ne fais pas la queue pour remplir des papiers avec un enfant qui te tire le bras.',
+                ],
+            ],
+            [
+                'moment' => VenueRule::MOMENTS[0],
+                'name' => ['Añade a tus hijos a tu cuenta', 'Add your children to your account', 'Ajoute tes enfants à ton compte'],
+                'desc' => [
+                    'Cada niño que salte tiene que estar en tu cuenta, con su nombre y su edad. Se hace una vez y queda guardado.',
+                    'Every child who jumps has to be on your account, with their name and age. You do it once and it stays saved.',
+                    "Chaque enfant qui saute doit figurer sur ton compte, avec son nom et son âge. Ça se fait une fois et c'est enregistré.",
+                ],
+                'reason' => [
+                    'En la puerta basta con tu código: ya sabemos quién viene contigo.',
+                    'At the door your code is enough: we already know who is coming with you.',
+                    "À l'entrée, ton code suffit : nous savons déjà qui vient avec toi.",
+                ],
+            ],
+            [
+                'moment' => VenueRule::MOMENTS[1],
+                'name' => ['Calcetines antideslizantes, obligatorios', 'Non-slip socks are compulsory', 'Chaussettes antidérapantes obligatoires'],
+                'desc' => [
+                    'No se salta con los pies descalzos ni con calcetines normales. Tráelos de casa o cómpralos aquí, y te los quedas.',
+                    'No jumping barefoot or in ordinary socks. Bring them from home or buy them here, and they are yours to keep.',
+                    'On ne saute ni pieds nus ni en chaussettes ordinaires. Apporte-les de chez toi ou achète-les ici, et tu les gardes.',
+                ],
+                'reason' => [
+                    'Sin ellos resbalas en la lona, y es la lesión más tonta del parque.',
+                    "Without them you slip on the trampoline, and it's the silliest injury in the park.",
+                    "Sans elles tu glisses sur la toile, et c'est la blessure la plus bête du parc.",
+                ],
+            ],
+            [
+                'moment' => VenueRule::MOMENTS[1],
+                'name' => ['Zona Kids: hasta 1,30 m, con un adulto en el parque', 'Kids zone: up to 1.30 m, with an adult in the park', "Zone Kids : jusqu'à 1,30 m, avec un adulte dans le parc"],
+                'desc' => [
+                    'La zona Kids es para los de 4 a 7 años. Hasta los 14, un adulto tiene que estar en el parque con ellos.',
+                    'The Kids zone is for ages 4 to 7. Up to age 14, an adult has to be in the park with them.',
+                    "La zone Kids est pour les 4 à 7 ans. Jusqu'à 14 ans, un adulte doit être dans le parc avec eux.",
+                ],
+                // Sin porqué: el artboard tampoco le pone uno, y no toda norma tiene motivo que contar.
+                'reason' => null,
+            ],
+            [
+                'moment' => VenueRule::MOMENTS[1],
+                'name' => ['Zona Jump: desde 8 años y 1,30 m', 'Jump zone: from age 8 and 1.30 m', 'Zone Jump : dès 8 ans et 1,30 m'],
+                'desc' => [
+                    'Si tiene la edad pero mide entre 1 m y 1,30 m, puede entrar acompañado por su tutor.',
+                    'If they meet the age but are between 1 m and 1.30 m tall, they can enter accompanied by their guardian.',
+                    "S'il a l'âge mais mesure entre 1 m et 1,30 m, il peut entrer accompagné de son tuteur.",
+                ],
+                'reason' => [
+                    'La altura no es un capricho: las atracciones grandes están calculadas para ese tamaño.',
+                    'The height is not a whim: the big attractions are designed for that size.',
+                    "La taille n'est pas un caprice : les grandes attractions sont conçues pour cette taille.",
+                ],
+            ],
+            [
+                'moment' => VenueRule::MOMENTS[2],
+                'name' => ['Haz caso al monitor', 'Listen to the monitors', 'Écoute les moniteurs'],
+                'desc' => [
+                    'El personal del parque puede parar un salto, cambiarte de zona o pedirte que salgas. Un uso inadecuado de las instalaciones, no atender sus indicaciones o generar altercados es motivo de expulsión.',
+                    'Park staff can stop a jump, move you to another zone or ask you to leave. Improper use of the facilities, ignoring their instructions or causing altercations is grounds for expulsion.',
+                    "Le personnel peut arrêter un saut, te changer de zone ou te demander de sortir. Un usage inapproprié des installations, le non-respect des consignes ou des altercations sont motifs d'expulsion.",
+                ],
+                'reason' => [
+                    'Son los que ven lo que tú no ves desde la lona.',
+                    'They see what you cannot see from the trampoline.',
+                    'Ce sont eux qui voient ce que tu ne vois pas depuis la toile.',
+                ],
+            ],
+            [
+                'moment' => VenueRule::MOMENTS[2],
+                'name' => ['Un salto por persona y por lona', 'One jumper per trampoline', 'Un sauteur par toile'],
+                'desc' => [
+                    'No se salta a la vez en la misma lona ni se empuja a nadie en el aire.',
+                    'No jumping on the same trampoline at the same time, and no pushing anyone in mid-air.',
+                    "On ne saute pas à deux sur la même toile et on ne pousse personne en l'air.",
+                ],
+                'reason' => [
+                    'Los choques en el aire son casi todos los golpes que atendemos.',
+                    'Mid-air collisions are nearly every injury we treat.',
+                    "Les collisions en l'air représentent presque tous les chocs que nous soignons.",
+                ],
+            ],
         ];
 
-        foreach ($rules as $i => [$name, $desc]) {
+        foreach ($rules as $i => $rule) {
             VenueRule::updateOrCreate(['position' => $i + 1], [
-                'name' => ['es' => $name[0], 'en' => $name[1], 'fr' => $name[2]],
-                'description' => ['es' => $desc[0], 'en' => $desc[1], 'fr' => $desc[2]],
+                'name' => ['es' => $rule['name'][0], 'en' => $rule['name'][1], 'fr' => $rule['name'][2]],
+                'description' => ['es' => $rule['desc'][0], 'en' => $rule['desc'][1], 'fr' => $rule['desc'][2]],
+                'moment' => $rule['moment'],
+                'reason' => $rule['reason'] === null
+                    ? null
+                    : ['es' => $rule['reason'][0], 'en' => $rule['reason'][1], 'fr' => $rule['reason'][2]],
             ]);
         }
 
