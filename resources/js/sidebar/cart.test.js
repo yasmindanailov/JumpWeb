@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { addLine, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems, toCheckoutItems, todayIso } from './cart.js';
+import { addLine, allPendingAnswered, cartRows, decideOwnership, eventAnswers, hasPendingEventFields, load, pendingAnswers, pendingEventFields, reconcile, removeLine, sanitizeLine, save, toApiItems, toCheckoutItems, todayIso } from './cart.js';
 
 /**
  * Fase 4 · paso 4.3·2 — la red de la cesta (criterio CE-6).
@@ -480,6 +480,38 @@ describe('lo que una línea restaurada tiene que volver a pedir', () => {
         const pendientes = pendingEventFields(ESQUEMA, { celebrant: 'Mara' });
 
         assert.deepEqual(pendientes, []);
+    });
+
+    /**
+     * ❗❗ **El borrador y la lista de pendientes tienen que decir lo MISMO** (`#560`).
+     *
+     * El bloque «faltan datos» se pinta mientras `pendingEventFields()` devuelva algo, y su botón de
+     * guardar se activa con `allPendingAnswered()`. Si los dos no compartieran criterio de «vacío»,
+     * el botón se ofrecería con un valor que la lista sigue considerando pendiente — y guardar no
+     * cerraría el bloque, que es un botón que parece roto.
+     */
+    test('el borrador está completo exactamente cuando la lista se vaciaría', () => {
+        const pendientes = pendingEventFields(ESQUEMA, {});
+
+        for (const valor of ['', '   ', null, undefined]) {
+            assert.equal(allPendingAnswered(pendientes, { celebrant: valor }), false, `«${valor}» no es una respuesta`);
+            assert.equal(pendingEventFields(ESQUEMA, { celebrant: valor }).length, 1);
+        }
+
+        assert.equal(allPendingAnswered(pendientes, { celebrant: 'Mara' }), true);
+        assert.equal(pendingEventFields(ESQUEMA, { celebrant: 'Mara' }).length, 0);
+    });
+
+    /**
+     * ⚠️ **Se recorren los campos que se PIDEN, no las claves del borrador**: lo que quedara ahí de un
+     * campo retirado del catálogo entre dos visitas no puede colarse en el pedido. Y el valor viaja
+     * recortado, que es lo que hace que «  Mara  » y «Mara» sean la misma respuesta.
+     */
+    test('solo se emite lo que se pidió, y recortado', () => {
+        assert.deepEqual(
+            pendingAnswers(pendingEventFields(ESQUEMA, {}), { celebrant: '  Mara  ', fantasma: 'x' }),
+            [{ key: 'celebrant', value: 'Mara' }],
+        );
     });
 
     /** Una respuesta en blanco no cuenta como contestada, ni con espacios. */

@@ -223,6 +223,38 @@ export function pendingEventFields(fields, answers) {
 }
 
 /**
+ * ¿Está contestado en el borrador TODO lo que esta línea pide? (`#560`)
+ *
+ * Es lo que decide si el botón de guardar del bloque «faltan datos» está activo. Vive aquí y no en el
+ * componente porque es una REGLA —qué cuenta como contestado— y comparte criterio de «vacío» con
+ * `pendingEventFields()`: si los dos no lo dijeran igual, el botón se activaría con un valor que la
+ * lista sigue considerando pendiente, y guardar no cerraría el bloque.
+ *
+ * @param {Array<{key: string}>} pending  los campos que faltan
+ * @param {Record<string, unknown>} draft  lo tecleado, sin confirmar
+ * @returns {boolean}
+ */
+export function allPendingAnswered(pending, draft) {
+    return (Array.isArray(pending) ? pending : [])
+        .every((field) => String(draft?.[field.key] ?? '').trim() !== '');
+}
+
+/**
+ * Las respuestas del borrador listas para emitirse, **solo de lo que se pidió** (`#560`).
+ *
+ * ⚠️ Se recorren los campos PENDIENTES y no las claves del borrador: así, lo que quedara ahí de un
+ * campo que ya no se pide —porque el catálogo cambió entre dos visitas— no entra en el pedido.
+ *
+ * @param {Array<{key: string}>} pending
+ * @param {Record<string, unknown>} draft
+ * @returns {Array<{key: string, value: string}>}
+ */
+export function pendingAnswers(pending, draft) {
+    return (Array.isArray(pending) ? pending : [])
+        .map((field) => ({ key: field.key, value: String(draft?.[field.key] ?? '').trim() }));
+}
+
+/**
  * ¿Hay alguna línea de la cesta que no se pueda comprar todavía por falta de respuestas?
  *
  * Es la guarda que impide llevar al pago una cesta que el servidor va a rechazar. Recorre las FILAS

@@ -115,6 +115,9 @@ return [
     'add_to_cart' => 'Add to cart',
     'cart_title' => 'Your cart',
     'cart_empty' => 'Your cart is empty.',
+    // The two controls of a restored line's «missing data» block (`#560`).
+    'pending_save' => 'Save',
+    'pending_discard' => 'Discard',
     'add_another' => 'Add another booking',
     'remove' => 'Remove',
     'identify_title' => 'Identify yourself',

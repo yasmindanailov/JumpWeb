@@ -114,6 +114,9 @@ return [
     'add_to_cart' => 'Ajouter au panier',
     'cart_title' => 'Ton panier',
     'cart_empty' => 'Ton panier est vide.',
+    // Les deux contrôles du bloc « données manquantes » d'une ligne restaurée (`#560`).
+    'pending_save' => 'Enregistrer',
+    'pending_discard' => 'Annuler',
     'add_another' => 'Ajouter une autre réservation',
     'remove' => 'Retirer',
     'identify_title' => 'Identifie-toi',

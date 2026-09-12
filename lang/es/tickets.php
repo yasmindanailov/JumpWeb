@@ -149,6 +149,11 @@ return [
     'add_to_cart' => 'Añadir al carrito',
     'cart_title' => 'Tu carrito',
     'cart_empty' => 'Tu carrito está vacío.',
+    // Los dos controles del bloque «faltan datos» de una línea restaurada (`#560`). Lo tecleado no
+    // entra en la cesta hasta que se confirma: antes se guardaba a cada tecla y el campo desaparecía
+    // con la primera letra dentro.
+    'pending_save' => 'Guardar',
+    'pending_discard' => 'Descartar',
     'add_another' => 'Añadir otra reserva',
     'remove' => 'Quitar',
     'identify_title' => 'Identifícate',

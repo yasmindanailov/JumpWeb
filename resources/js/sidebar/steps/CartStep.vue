@@ -1,9 +1,11 @@
 <script setup>
+import { reactive } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
 import ProductIcon from '../ProductIcon.vue';
 import DependentPicker from './DependentPicker.vue';
 import { shortDate } from '../progress.js';
+import { allPendingAnswered, pendingAnswers } from '../cart.js';
 
 /**
  * Paso 4 — el CARRITO (Fase 4 · paso 4.3·2).
@@ -45,7 +47,45 @@ const props = defineProps({
 });
 
 // ⚠️ Sin `back`: el «Volver» de esta pantalla lo trae la banda desde `#555`.
-defineEmits(['remove', 'add-another', 'update-field', 'toggle-dependent']);
+const emit = defineEmits(['remove', 'add-another', 'update-field', 'toggle-dependent']);
+
+/**
+ * ❗❗❗ **LO TECLEADO EN «FALTAN DATOS» NO SALE DE AQUÍ HASTA QUE SE CONFIRMA** (`#560`).
+ *
+ * El bloque emitía en cada pulsación, y eso **borraba el campo con la primera letra**: `line.pending`
+ * lista los obligatorios que siguen VACÍOS, así que en cuanto el valor deja de estarlo el campo sale
+ * de la lista y el `v-for` lo quita del DOM — con la letra dentro. Reproducido: un campo pendiente,
+ * se teclea «S», y `pendingEventFields()` pasa de 1 a 0. ▶ *El cliente perdía el foco a la primera
+ * tecla y el nombre del homenajeado se guardaba con un carácter.*
+ *
+ * ⚠️ El borrador es local y **sin estado compartido a propósito**: no es del pedido hasta que se
+ * confirma, así que ni se persiste ni pasa por el store. Es también lo que hace que el componente
+ * siga siendo renderizable en Node —no toca `document` ni `window`—, que es la condición del diff.
+ */
+const drafts = reactive({});
+
+/** El borrador de una línea, creado al vuelo la primera vez que se escribe en ella. */
+const draftOf = (index) => (drafts[index] ??= {});
+
+/** ¿Se puede guardar ya? La REGLA vive en `cart.js`, que comparte su criterio de «vacío». */
+const draftIsComplete = (line) => allPendingAnswered(line.pending, draftOf(line.index));
+
+/** Descarta lo tecleado. El bloque sigue ahí: lo que falta sigue faltando. */
+const discardPending = (line) => { delete drafts[line.index]; };
+
+/**
+ * Confirma el borrador: emite un cambio por campo y lo suelta.
+ *
+ * ⚠️ Emite **uno por campo y no el objeto entero** porque ése es el contrato que ya existe
+ * (`update-field`), y el store escribe respuesta a respuesta.
+ */
+function confirmPending(line) {
+    for (const answer of pendingAnswers(line.pending, draftOf(line.index))) {
+        emit('update-field', line.index, answer.key, answer.value);
+    }
+
+    delete drafts[line.index];
+}
 
 const t = (key) => translate(props.messages, key);
 const tp = (key, params) => translateWith(props.messages, key, params);
@@ -160,16 +200,27 @@ const showsAddonPrice = (addon) => ! (addon.free_quantity >= addon.quantity);
                 -->
                 <div v-if="line.pending?.length" class="eventfields cart__pending">
                     <p class="form__error">{{ t('errors.event_required') }}</p>
+                    <!-- ⚠️⚠️ **`v-model` sobre el BORRADOR, no `@input` sobre la cesta** (`#560`): emitir en
+                         cada tecla sacaba el campo de `line.pending` con la primera letra, y el `v-for`
+                         lo quitaba del DOM con ella dentro. Lo tecleado no es del pedido hasta que se
+                         confirma. -->
                     <label v-for="field in line.pending" :key="field.key" class="eventfields__field">
                         <span class="eventfields__label">{{ field.label }}<span class="eventfields__req" aria-hidden="true">*</span></span>
                         <textarea v-if="field.type === 'textarea'" rows="2" required
-                                  @input="$emit('update-field', line.index, field.key, $event.target.value)"></textarea>
+                                  v-model="draftOf(line.index)[field.key]"></textarea>
                         <input v-else
                                :type="field.type === 'number' ? 'number' : 'text'"
                                :min="field.type === 'number' ? 0 : null"
                                required
-                               @input="$emit('update-field', line.index, field.key, $event.target.value)">
+                               v-model="draftOf(line.index)[field.key]">
                     </label>
+                    <!-- ⚠️ «Guardar» queda INACTIVO hasta que están todos: el bloque existe porque
+                         faltan obligatorios, así que confirmar a medias no cambiaría nada y solo
+                         parecería que el botón no funciona. -->
+                    <div class="cart__pending-actions">
+                        <button type="button" class="cart__pending-discard" @click="discardPending(line)">{{ t('pending_discard') }}</button>
+                        <button type="button" class="cart__pending-save" :disabled="! draftIsComplete(line)" @click="confirmPending(line)">{{ t('pending_save') }}</button>
+                    </div>
                 </div>
 
                 <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4): solo ENTRADAS, solo con menores

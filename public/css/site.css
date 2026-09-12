@@ -2492,7 +2492,32 @@ body.no-scroll { overflow: hidden; }
 .addons__requires { font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--warn); }
 .addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled { opacity: 0.6; }
 .addons__row.is-disabled .entry__stepper button[disabled] { cursor: not-allowed; }
-.cart__addon-incl { font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-body-s); color: var(--ok); }
+/* ⚠️ **Con su hueco delante** (`#559`): el `<em>` va pegado al nombre en el marcado —no hay espacio
+   entre etiquetas, y el HTML no lo inventa—, así que salía «Menú 1Incluido». El hueco lo pone el
+   estilo y no un `&nbsp;` en la plantilla: un espacio dentro del marcado no se puede quitar el día
+   que este rótulo cambie de sitio. */
+/* Los dos controles del bloque «faltan datos» (`#560`): a la derecha, el que confirma. El de
+   descartar es de TEXTO —no compite con el de guardar, y descartar nunca es lo que se viene a hacer—. */
+.cart__pending-actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-10); margin-top: var(--sp-12); }
+.cart__pending-discard {
+    min-height: 44px; padding: 0 var(--sp-8);
+    background: none; border: 0; cursor: pointer;
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute);
+    transition: color var(--dur-sale) var(--ease-sale);
+}
+.cart__pending-discard:hover { color: var(--fg); }
+.cart__pending-save {
+    min-height: 44px; padding: 0 var(--sp-16);
+    border: 0; border-radius: var(--r-btn); cursor: pointer;
+    background: var(--fg); color: var(--bg);
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-black);
+    transition: background var(--dur-sale) var(--ease-sale);
+}
+/* ⚠️ El apagado es el del sistema para papel (Nube + gris de apoyo), el mismo que el CTA del pie:
+   el bloque existe porque faltan obligatorios, así que guardar a medias no cambiaría nada. */
+.cart__pending-save:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; }
+
+.cart__addon-incl { margin-left: var(--sp-7); font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-body-s); color: var(--ok); }
 .orders__line-unit { color: var(--fg-mute); font-size: var(--fs-body-s); font-weight: 400; }
 
 /* Complementos agrupados bajo su producto (carrito/pago/confirmación) */
