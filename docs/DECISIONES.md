@@ -28961,3 +28961,15 @@ tenga una de un cumple montado.
 publica con su `alt` del panel; **sin foto ni figura ni hueco**, y el reloj sigue ahí (el control).
 Dos mutaciones nuevas en `scripts/mutar-cumple.py`: pintar la foto aunque el panel no tenga ninguna, y
 dejar el `alt` sin decir de qué zona es.
+
+**Verificación**: suite **4723 en verde** (29.565 aserciones, 1 skipped) sobre el árbol conjunto ·
+`scripts/mutar-cumple.py` **20/20** · `PublicPagesTest` + `BirthdayPageTest` **25 casos / 189
+aserciones** · Pint ✓ · docs-check ✓ · la página servida en vivo con la imagen y el fichero
+respondiendo 200.
+⚠️ **Lo que NO se ha medido y se dice**: el reparto **en pantalla** no se ha visto en un navegador —el
+Chromium de las sondas no está instalado en esta máquina—, así que 736 + 352 sale de la aritmética de
+la rejilla (verificada al dígito en `#488`) y no de una medición de hoy. **El OJO del owner sí**: la
+página se le enseñó en vivo antes de commitear, que es lo que decidió reponer la foto.
+⚠️ Y queda una pregunta de rendimiento **sin medir**: la figura se sirve con `loading="lazy"`, que es
+lo correcto para lo que está por debajo del pliegue; si en la primera pantalla aparece, le conviene
+carga inmediata. No se toca a ciegas.

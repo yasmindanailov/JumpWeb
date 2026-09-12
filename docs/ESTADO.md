@@ -2644,9 +2644,15 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4713 en verde** (29.450 aserciones, 1 skipped), medida el **2026-09-12** (madrugada) sobre
-> `main` con la **grieta 00 del cajón** encima (`#550`: **+5** de `SidebarBodySizeTest`, la guarda del
-> suelo tipográfico del SPA). Antes, **4708** (29.415 aserciones) con `/cumpleanos` (`#528`: **+14** de
+> Suite **4723 en verde** (29.565 aserciones, 1 skipped), medida el **2026-09-12** sobre el árbol
+> **CONJUNTO tras la QUINTA fusión**, que es la primera a TRES bandas: la **grieta 00 del cajón**
+> (`#550`, el otro ordenador: **+5** de `SidebarBodySizeTest`), **`/precios`** (`#531`: **+5** de
+> `PricingPageTest`) y **la foto de la zona en `/cumpleanos`** (`#532`: **+1**, y `PublicPagesTest`
+> cambió de premisa). ⚠️⚠️ **Las tres cifras que traía cada carril eran ciertas y ninguna valía**:
+> 4713 medía sin `/precios` ni la foto, y 4717 sin la grieta 00 — *una cifra medida sobre tu propio
+> árbol caduca en cuanto otro carril empuja*, y la línea la compara el `pre-push`, así que se
+> re-mide DESPUÉS de rebasar y nunca antes. Antes, **4713** (29.450) con `#550`; antes, **4708**
+> (29.415 aserciones) con `/cumpleanos` (`#528`: **+14** de
 > `BirthdayPageTest`, y los casos de la página vieja —la
 > invitación, el paso a paso— retirados con su sujeto), el vídeo del hero (`#529`) y los documentos del
 > segundo ordenador (`#530`). ⚠️ Los *skipped* dependen de la máquina (aquí 1, en la medida anterior 6):
