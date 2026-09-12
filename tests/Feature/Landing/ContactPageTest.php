@@ -124,11 +124,22 @@ class ContactPageTest extends TestCase
      */
     public function test_the_address_is_written_and_points_at_a_real_anchor(): void
     {
-        $html = $this->html();
+        $xpath = $this->xpath();
 
-        $this->assertStringContainsString('Ctra. de Prueba, 1, 30000 Ciudad', $html, 'la dirección no se pinta escrita, o las dos líneas no se unen con coma');
+        // ⚠️⚠️ **Acotado al ELEMENTO, y no es celo.** La primera versión aseveraba la dirección sobre
+        // la página entera y **la mutación sobrevivió**: el JSON-LD de schema.org pinta el mismo
+        // `streetAddress` unido con coma, así que el caso pasaba en verde con el bloque visible
+        // uniendo las dos líneas con un espacio. *Acota al elemento antes de creerte un test verde*
+        // (`#295`, `#303`) — aquí lo cazó el arnés, no una relectura.
+        $direccion = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' where__addr ')]");
+        $this->assertSame(1, $direccion->length, 'la dirección no se pinta escrita');
+        $this->assertSame(
+            'Ctra. de Prueba, 1, 30000 Ciudad',
+            trim((string) $direccion->item(0)?->textContent),
+            'las dos líneas del panel no se unen con coma: «Ctra. de Prueba, 1 30000 Ciudad» se lee como un número de portal',
+        );
 
-        $destino = $this->xpath()->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' where__cta ')]/@href");
+        $destino = $xpath->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' where__cta ')]/@href");
         $this->assertSame(1, $destino->length, 'falta la salida al mapa y al horario');
         $href = (string) $destino->item(0)?->nodeValue;
         $ancla = (string) parse_url($href, PHP_URL_FRAGMENT);
