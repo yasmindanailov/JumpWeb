@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildProgress, shortDate } from './progress.js';
+import { backPlan, buildProgress, shortDate } from './progress.js';
+import { STEPS } from './machine.js';
 
 /**
  * Fase 4 · paso 4.3·1 — la red de la banda de progreso (criterio CE-6).
@@ -100,6 +101,30 @@ describe('el «Volver» de la banda', () => {
         const rotulos = [2, 3, 4, 5, 8].map((step) => buildProgress({ ...base, step }).backLabel);
 
         assert.deepEqual(rotulos, ['Volver', 'Volver', 'Volver', 'Volver al carrito', 'Volver al carrito']);
+    });
+
+    /**
+     * ❗❗ **Y no puede MENTIR: dice «al carrito» si y solo si va al carrito.**
+     *
+     * Es una EQUIVALENCIA y no dos listas, porque el hueco que cierra lo encontró el arnés: poner los
+     * dos campos en la misma fila los mantiene juntos, pero **no impide que se contradigan dentro de
+     * ella**. Cambiar el destino de «quién eres» al catálogo dejaba un botón que dice «Volver al
+     * carrito» y lleva a otra parte — y ninguna de las doce mutaciones anteriores lo cazaba.
+     */
+    test('el rótulo del Volver no puede contradecir a su destino', () => {
+        for (const step of [2, 3, 4, 5, 8]) {
+            const dice = buildProgress({ ...base, step }).backLabel === 'Volver al carrito';
+            const va = backPlan(step).to === STEPS.CART;
+
+            assert.equal(dice, va, `el paso ${step} dice una cosa y hace otra: rótulo=${dice}, destino=${va}`);
+        }
+    });
+
+    /** El plan solo existe donde hay «Volver» que pulsar: preguntarlo fuera es un error de quien llama. */
+    test('los pasos sin banda no tienen plan de vuelta', () => {
+        for (const step of [1, 6, 7, 9, 10, 11]) {
+            assert.equal(backPlan(step), null, `el paso ${step} no tiene «Volver»`);
+        }
     });
 });
 
