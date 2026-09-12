@@ -59,15 +59,22 @@
        devuelve **#D5EAEE** y **#B3DDEB**, que son al dígito los dos valores que el sistema del
        cliente declara como `tintePapel.cian` / `bordeCian`. */
     --identity-fill: var(--strip-1, #2F7FA8);
-    /* Su variante PROFUNDA: la que aguanta texto blanco. Al 65 % sobre tinta da 5,20 contra
-       blanco —el Cian 800 del sistema da 5,13—, y el defecto cae del lado seguro: cuanto más
-       oscuro salga en otra instalación, más contraste tiene el rótulo. */
-    --identity-deep: color-mix(in srgb, var(--identity-fill) 65%, var(--fg));
-    /* Sus dos estados. Van hacia lo OSCURO, al revés que el secundario de tinta del sistema:
-       aclarar el azul le baja el contraste contra el papel (al 75 % da 4,26 y no llega a AA),
-       mientras que oscurecerlo lo sube — 4,72 reposo · 5,82 hover · 7,24 pulsado, medidos. */
-    --identity-deep-hover: color-mix(in srgb, var(--identity-fill) 55%, var(--fg));
-    --identity-deep-press: color-mix(in srgb, var(--identity-fill) 45%, var(--fg));
+    /* Los dos estados del color INTERACTIVO, para cuando hace de RELLENO (el secundario de la
+       familia de botones, `#539`). Se derivan con el paso **0,88** que el producto ya usa para el
+       hover de acción (`ThemeSettings::actionHover()`, `#209`) — y no es una coincidencia feliz:
+       aplicado al Azul Muro da **#095181**, que es al dígito el escalón 600 que declara el sistema
+       del cliente, y otro paso da #084772 contra su 700 (#084670).
+       ⚠️ Se derivan y no se teclean por lo mismo que los tintes: `--interactive` cambia con la
+       superficie —Azul Muro en papel, Cian en tinta— y con el paquete de cada instalación.
+       Medido: 6,43 · 7,61 · 8,99 contra el Papel. */
+    --interactive-hover: color-mix(in srgb, var(--interactive) 88%, #000);
+    --interactive-press: color-mix(in srgb, var(--interactive) 77%, #000);
+
+    /* ⚠️ Aquí vivieron `--identity-deep` y sus dos estados —un azul derivado al 65 % para poder
+       llevar texto blanco— y **se retiraron** (`[DECIDIDO owner, 2026-09-12]`): el relleno azul es
+       el **Azul Muro de la paleta**, que ya existe, ya tiene sus tres escalones declarados y ya
+       hace de fantasma. Un segundo azul solo para un botón era el cuarto color que el owner vio
+       de más. */
     /* ⚠️ Sobre un tinte SOLO aguantan Tinta (14,8) y Azul Muro (5,68): Humo da 4,40, Lima 800
        4,18, Verde 800 4,19 y Amarillo 800 3,90. No es criterio propio — `tokens-pjp.js` ya lo
        trae escrito con esas mismas cifras. Lo que se pinte encima va en `--fg`. */
@@ -3972,14 +3979,18 @@ body[data-has-hero].nav--live .hero__pair-slot {
    gusto, es de JERARQUÍA y está medido contra el Papel: el botón de tinta destacaba **16,79** y el
    naranja de comprar **2,66**, o sea que el secundario gritaba 6,3× más fuerte que la acción. Con
    `--identity-deep` baja a ~5,2 y deja de aplastarlo.
-   ⚠️⚠️ El rótulo va en BLANCO y eso obliga al tono profundo: el cian pleno con blanco da **2,70**,
-   que no llega ni al umbral de texto grande. `--identity-deep` da 5,20 con blanco y 4,72 con
-   Papel, que es el token que su propio icono ya usaba: se escribe el token, no un literal.
-   ⚠️⚠️ Y es `--paper-bg`, NO `--bg`: dentro del hero la superficie es tinta y ahí `--bg` vale
-   TINTA, así que el rótulo salía oscuro sobre el azul (**3,55** medido) mientras en el nav salía
-   bien. Es el mismo alias y el mismo motivo que `#196` dejó escrito para las sombras. */
+   ⚠️ El relleno es **Azul Muro** (`--interactive`), el de la paleta: con Papel da **6,43**, y sus
+   estados ya están declarados (600 → 7,61 · 700 → 8,99). El cian PLENO no vale como relleno con
+   rótulo claro —da **2,70**, por debajo incluso del umbral de texto grande—.
+   ❗❗❗ **EL RÓTULO ES `--bg`, Y ESTO CORRIGE LO QUE ESTA MISMA TANDA HABÍA ESCRITO.** Mientras el
+   relleno fue un azul FIJO, el rótulo tenía que ser `--paper-bg` —dentro del hero `--bg` vale tinta
+   y el texto salía oscuro sobre el azul, 3,55 medido—. Al pasar el relleno a `--interactive`, que
+   **cambia con la superficie** (Azul Muro en papel · Cian en tinta), la regla se invierte: sobre
+   tinta el relleno es CIAN, y ahí `--paper-bg` da **2,45** mientras `--bg` da **6,85**.
+   ▶ *Cuando el relleno sigue a la superficie, el rótulo también.* Medido: 6,43 en papel · 6,85 en
+   tinta. Lo cazó una guarda del otro carril, que exigía `--bg` con su motivo escrito. */
 .cta-med {
-    background: var(--identity-deep); color: var(--paper-bg);
+    background: var(--interactive); color: var(--bg);
     border: 0;
     font-weight: 600;
     box-shadow: var(--shadow-nav-fill);

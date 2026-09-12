@@ -130,26 +130,30 @@ class IdentityTintTest extends TestCase
     }
 
     /**
-     * El CTA del armazón · `[DECIDIDO owner, 2026-09-12]` sobre cinco formas renderizadas.
+     * El CTA del armazón · `[DECIDIDO owner, 2026-09-12]` sobre formas renderizadas.
+     *
+     * ⚠️ Su relleno es **Azul Muro** (`--interactive`), el de la paleta — no un azul propio. Llegó a
+     * haber uno derivado al 65 % para poder llevar rótulo blanco (`--identity-deep`) y **se retiró**:
+     * era un cuarto color de botón, que es justo lo que el owner señaló como ruido.
      * ⚠️⚠️ El rótulo lee `--paper-bg` y NO `--bg`: dentro del hero la superficie es tinta y ahí
-     * `--bg` vale TINTA, así que el rótulo salía a **3,55** sobre el azul mientras en el nav salía
-     * bien. Mismo alias y mismo motivo que `#196` dejó escrito para las sombras.
+     * `--bg` vale TINTA, así que salía oscuro sobre el azul (**3,55** medido) mientras en el nav
+     * salía bien. Mismo alias y mismo motivo que `#196` dejó escrito para las sombras.
      */
-    public function test_el_cta_del_armazon_lleva_la_identidad_profunda(): void
+    public function test_el_cta_del_armazon_lleva_el_relleno_de_identidad(): void
     {
         $css = $this->site();
 
         $this->assertMatchesRegularExpression(
-            '/\.cta-med\s*\{\s*background:\s*var\(--identity-deep\);\s*color:\s*var\(--paper-bg\)/s',
+            '/\.cta-med\s*\{\s*background:\s*var\(--interactive\);\s*color:\s*var\(--bg\)/s',
             $css,
-            'el CTA del armazón perdió el relleno de identidad o volvió a `--bg`. Con `--bg`, dentro '.
-            'del hero el rótulo sale en tinta sobre el azul: 3,55, por debajo de AA.',
+            'el CTA del armazón perdió el relleno de identidad, o su rótulo dejó de seguir a la '.
+            'superficie. Los dos leen tokens que cambian con ella: sobre tinta el relleno es CIAN y '.
+            'ahí `--paper-bg` daría 2,45 mientras `--bg` da 6,85.',
         );
-        $this->assertMatchesRegularExpression(
-            '/--identity-deep:\s*color-mix\(in srgb, var\(--identity-fill\) 65%, var\(--fg\)\)/',
-            $css,
-            'la variante profunda dejó de derivarse. Al 65 % da 5,20 contra blanco; el cian pleno '.
-            'con blanco da **2,70** y no llega ni al umbral de texto grande.',
+        $this->assertDoesNotMatchRegularExpression(
+            '/var\(--identity-deep/', $css,
+            'ha vuelto un azul propio para el botón. El relleno azul es el Azul Muro de la paleta, '.
+            'que ya existe y ya hace de fantasma: un segundo azul es un cuarto color de botón.',
         );
     }
 

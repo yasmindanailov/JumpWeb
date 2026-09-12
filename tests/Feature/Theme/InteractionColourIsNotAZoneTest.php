@@ -48,12 +48,15 @@ class InteractionColourIsNotAZoneTest extends TestCase
     private const RELLENO_DE_MARCA = [
         '.cta-med:hover' => 'el CTA del armazón pasa a marca al pasar, como el mockup (#217)',
         '.salta__btn:hover' => 'el botón del minijuego oscurece su relleno de marca',
-        // ❗❗ Los tres del cajón (`#551`) son el MISMO idioma que `.cta-med`: reposan en tinta y acusan
+        // ❗❗ Los del cajón (`#551`) son el MISMO idioma que `.cta-med`: reposan en tinta y acusan
         // el paso del cursor pasando a marca. No es la grieta 01 por la puerta de atrás — aquélla era
         // un valor haciendo de acción, de cifra, de enlace y de casilla a la vez; aquí hace UNA cosa.
         // ⚠️ No lo «arregles» quitándolo: sin él estos botones se quedan sin hover, y `#435` exige que
         // los controles respondan.
-        '.btn--ink:hover' => 'cajón: el secundario de tinta acusa el paso a marca, como `.cta-med`',
+        // ▶ `.btn--ink:hover` SALIÓ de esta lista en `#539`, y la lista solo encoge: su secundario
+        //   dejó de reposar en tinta —hoy reposa en Azul Muro—, así que el argumento «acusa el paso
+        //   PASANDO a marca» murió con su premisa: un botón que ya reposa en marca no puede pasar a
+        //   ella. Su hover es ahora el escalón siguiente de su propia escala.
         '.bk-cta:hover' => 'cajón: el CTA del pie, ídem',
         '.cartbar:hover' => 'cajón: la barra del carrito, ídem',
         '.acct__btn--primary:hover' => 'cajón: el primario de la tira de cuenta, ídem',

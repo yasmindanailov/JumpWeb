@@ -166,10 +166,18 @@ class SingleButtonFamilyTest extends TestCase
     {
         $landing = $this->strippedCss('public/css/landing.css');
 
+        // ❗❗❗ **ESTA ASERCIÓN CAMBIÓ DE PREMISA en `#539`, no se relajó.** Exigía relleno de TINTA
+        // citando el sistema («en claro el secundario es tinta, nunca cian»), y sigue siendo lo que
+        // `componente.boton.secundario.papel` declara. El owner lo REVIRTIÓ con las dos fuentes
+        // delante —el token y su propia decisión de septiembre en el canvas— para que el secundario
+        // y el fantasma sean el MISMO color con dos tratamientos, relleno y borde, en vez de dos
+        // azules distintos. Queda como desviación DECIDIDA.
+        // ⚠️ Lo que se sigue vigilando es lo mismo: que el secundario TENGA relleno propio y que no
+        // sea el de acción, que es lo que sostiene los tres escalones de jerarquía.
         $this->assertMatchesRegularExpression(
-            '/\.btn--ink\s*\{[^}]*background:\s*var\(--fg\)/', $landing,
-            '`.btn--ink` ya no rellena con tinta: es el SECUNDARIO del sistema («en claro el '.
-            'secundario es tinta, nunca cian») y sin ese relleno la jerarquía se queda en dos.',
+            '/\.btn--ink\s*\{[^}]*background:\s*var\(--interactive\)/', $landing,
+            '`.btn--ink` perdió su relleno de identidad. Sin relleno propio la jerarquía se queda '.
+            'en dos escalones, y si se le pone `--action` deja de distinguirse de comprar.',
         );
 
         $this->assertMatchesRegularExpression(

@@ -67,6 +67,26 @@ las mueves te saldrá en rojo con el motivo escrito. ⚠️ Y `.zone-tab` **sigu
 usan `/servicios` y el bloque acotado del cajón de `#550`, que ya no tiene sujeto en el paso 5 — si
 algún día `/servicios` la pierde, ese bloque se puede podar.
 >
+> ❗❗❗ **PARA EL AGENTE DEL CAJÓN · `#539` LE CAMBIA EL BOTÓN SECUNDARIO A LAS 25 PANTALLAS.**
+> `.btn--ink` deja de rellenar con TINTA y pasa a **`--interactive`** (Azul Muro sobre papel · Cian
+sobre tinta), con sus dos estados nuevos `--interactive-hover` y `--interactive-press`, derivados
+con el paso **0,88** de `actionHover()` (`#209`) — que aplicado al Azul Muro da **#095181**, al
+dígito el escalón 600 que declara el sistema del cliente.
+> ⚠️⚠️ **Esto REVIERTE una decisión del owner de septiembre** escrita en el canvas (`doc/spa.md`:
+«el botón del área es de tinta, y el naranja solo vuelve para reintentar un cobro») y se aparta de
+`componente.boton.secundario.papel`. Se le señaló el conflicto con las dos fuentes delante y lo
+reafirmó: **es desviación decidida, no descuido**. Su motivo: que el secundario y el fantasma sean
+el MISMO color con dos tratamientos —relleno y borde— en vez de dos azules.
+> ⚠️ **Tres guardas se mueven y dos de ellas eran tuyas**: `SingleButtonFamilyTest` cambia de premisa
+(exigía `var(--fg)`, ahora `var(--interactive)`); `InteractionColourIsNotAZoneTest` **encoge** —
+`.btn--ink:hover` sale de `RELLENO_DE_MARCA` porque su argumento («reposa en TINTA y acusa el paso
+pasando a marca») murió con su premisa—; y nace `IdentityTintTest`.
+> ⚠️⚠️ **El rótulo es `var(--bg)`, NO `--paper-bg`**, y tu guarda tenía razón: cuando el relleno
+sigue a la superficie el rótulo también. Sobre tinta el relleno es CIAN y ahí `--paper-bg` da
+**2,45** mientras `--bg` da 6,85. Lo probé al revés y me paró tu aserción.
+> ▶ **El fantasma `.btn--ghost` también cambia**: de tinta a Azul Muro, que es lo que declara
+`componente.boton.fantasma.papel`. Tenía CUATRO formas en la web.
+>
 > ▶ **Para el agente de la web** (lo compartido que tocó `#551`, y por qué): **`.btn--zone` YA NO
 EXISTE** en `landing.css` — la sustituye **`.btn--ink`** (relleno de tinta, el *secundario* que la hoja
 de componentes del sistema declara). ⚠️ **Ninguna vista tuya cambia**: `#321` ya la había prohibido en
