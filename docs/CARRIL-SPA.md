@@ -111,6 +111,11 @@ globales de las guardas** (`MotionBudgetTest`, `ShapeScaleTest`, `TouchTargetTes
 - **La línea «Suite N en verde»** de `ESTADO.md` la lee el `pre-push` y tiene que coincidir con la suite
   REAL. Con dos carriles cambiando tests, **quien empuja la vuelve a medir tras su `git pull --rebase`**;
   un conflicto en esa línea no se resuelve eligiendo una cifra, se resuelve **corriendo la suite**.
+  ⚠️⚠️ **Y NO la busques con `grep 'Suite [0-9]'`: no la encuentra** (`#563`, un push rechazado). El
+  formato real lleva el número dentro de negritas —`Suite **4792 en verde** (30.187 aserciones…)`—, así
+  que el patrón obvio da cero resultados y se concluye que la línea no existe. Búscala **por la cifra
+  vieja** o por `en verde`. El hook dice exactamente qué declara y qué midió, así que si llegas ahí se
+  arregla en un minuto: lo caro es creer que no hay nada que actualizar.
 - `CLAUDE.md`, `DEUDA.md`, `00-REFACTOR.md`: tus filas y tus secciones; no reescribas las del otro.
 
 **El ritmo**: `git pull --rebase` antes de cada push · empuja cada unidad verde pronto · **commit por
