@@ -67,6 +67,18 @@ return [
     'contact_where_title' => 'Où nous sommes',
     'contact_where_cta' => 'Voir le plan et les horaires',
 
+    // ══ /bar (`DECISIONES #536`) ══════════════════════════════════════════════════════════════
+    'bar_menu_title' => 'La carte',
+    'bar_menu_zoom' => 'Voir en grand',
+    'bar_menu_hint' => 'Touche la carte pour la voir en grand.',
+    'bar_counter_title' => 'On commande au comptoir',
+    'bar_counter_text' => 'Pas besoin de réserver une table ni de commander sur le site : installe-toi où tu veux et commande au comptoir. On paie sur place.',
+    'bar_allergens' => 'Si tu as une allergie ou une intolérance, demande au comptoir avant de commander : on te dit les allergènes de chaque plat.',
+    'bar_free_entry_yes' => 'Tu peux venir seulement au bar, sans billet pour le parc.',
+    'bar_free_entry_no' => 'Il faut un billet pour le parc pour entrer au bar.',
+    'bar_party_line' => 'Si vous venez pour un anniversaire, le repas des enfants est inclus dans le pack et servi à ces tables.',
+    'bar_party_cta' => 'Voir les packs anniversaire',
+
     'visit_hours' => 'Horaires & lieu',
     'visit_hours_sub' => 'Quand et où nous trouver',
 

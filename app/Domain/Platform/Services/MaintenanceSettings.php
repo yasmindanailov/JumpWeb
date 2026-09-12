@@ -30,7 +30,7 @@ class MaintenanceSettings
      *
      * @var list<string>
      */
-    public const PAGE_KEYS = ['home', 'precios', 'cumpleanos', 'servicios', 'normas', 'contacto'];
+    public const PAGE_KEYS = ['home', 'precios', 'cumpleanos', 'servicios', 'normas', 'contacto', 'bar'];
 
     /**
      * ¿Toda la web pública está en mantenimiento? (item 2)

@@ -26,17 +26,22 @@ final class SiteDestinations
      * Las páginas del inventario, en SU orden (`Layout Paginas PJP`): nombre de ruta → clave del
      * rótulo en `landing.nav.pages`.
      *
-     * ⚠️ **`/bar` está en el inventario y NO aquí**: la página no existe (el owner la dejó para más
-     * adelante en `#482`), y un destino a una ruta inexistente es el ancla muerta que la regla del
-     * canvas prohíbe. Entra el día que nazca su ruta.
+     * ✅ **`/bar` ENTRA en `#536`**, que es cuando nace su ruta. Esta nota decía «está en el
+     * inventario y NO aquí porque la página no existe, y un destino a una ruta inexistente es el
+     * ancla muerta que la regla del canvas prohíbe. Entra el día que nazca su ruta». Ese día es hoy.
+     * ⚠️⚠️ **Pero `/bar` puede existir y no estar publicada**: sin nombre de bar en el panel la ruta
+     * da 404, así que es la ÚNICA de las siete con una condición extra en `pages()`. Sin ella, el
+     * menú y el pie ofrecerían un destino que responde 404 — exactamente el ancla muerta que la regla
+     * prohíbe, entrando por la otra puerta.
      * ⚠️ El rótulo es el del INVENTARIO y no el titular de cada página: `/contacto` se titula
      * «Hablamos» y `/atracciones` «Todo lo que hay dentro», que son frases de su cabecera y no
-     * nombres de destino.
+     * nombres de destino. Y `/bar` se titula con el NOMBRE del bar, que lo pone el panel.
      */
     public const PAGES = [
         'precios' => 'pricing',
         'cumpleanos' => 'events',
         'atracciones' => 'attractions',
+        'bar' => 'bar',
         'normas' => 'rules',
         'servicios' => 'services',
         'contacto' => 'contact',
@@ -88,6 +93,17 @@ final class SiteDestinations
 
         foreach (self::PAGES as $route => $label) {
             if (MaintenanceSettings::pageInMaintenance($route)) {
+                continue;
+            }
+
+            /*
+             * ⚠️ **El bar solo se ofrece si está publicado** (`#536`): sin nombre en el panel su ruta
+             * responde 404, y un destino que lleva a un 404 es peor que no tenerlo. Es la misma regla
+             * que el mantenimiento —no se anuncia lo que no se puede visitar— con otro motivo.
+             * ⚠️ Cuesta CERO consultas nuevas: `isPublished()` solo lee `settings`, que están
+             * memoizados para toda la petición, y esto corre en las doce vistas.
+             */
+            if ($route === 'bar' && ! BarPage::isPublished()) {
                 continue;
             }
 

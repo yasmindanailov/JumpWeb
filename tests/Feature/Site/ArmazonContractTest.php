@@ -52,6 +52,8 @@ class ArmazonContractTest extends TestCase
         // `/atracciones` (carril de diseño, T2d·1): la página de las 23, destino de la única puerta
         // de la sección 03. Se añade a sabiendas — sin armazón se quedaría sin vuelta.
         'pages/attractions',
+        // `#536`: `/bar` nace con el armazón puesto — es la séptima del inventario del canvas.
+        'pages/bar',
         'pages/contact',
         'pages/events',
         'pages/pricing',

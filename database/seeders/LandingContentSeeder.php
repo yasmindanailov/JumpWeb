@@ -13,6 +13,7 @@ use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\CookiePolicyContent;
 use App\Domain\Content\Services\LegalContent;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\MaintenanceSettings;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -112,19 +113,22 @@ class LandingContentSeeder extends Seeder
             // que `maintenance.site` (default '0', estado de mantenimiento = '1').
             ['key' => 'reservations.paused', 'value' => '0', 'group' => 'maintenance'],
             // Mantenimiento POR PÁGINA (#218, item 1): '0' = disponible (default). '1' = esa página
-            // muestra «sección no disponible» (503) con el nav/pie para navegar a otras. Lista fija
-            // = App\Domain\Platform\Services\MaintenanceSettings::PAGE_KEYS (home/precios/cumpleanos/servicios/normas/contacto).
-            ['key' => 'maintenance.page.home', 'value' => '0', 'group' => 'maintenance'],
-            ['key' => 'maintenance.page.precios', 'value' => '0', 'group' => 'maintenance'],
-            ['key' => 'maintenance.page.cumpleanos', 'value' => '0', 'group' => 'maintenance'],
-            ['key' => 'maintenance.page.servicios', 'value' => '0', 'group' => 'maintenance'],
-            ['key' => 'maintenance.page.normas', 'value' => '0', 'group' => 'maintenance'],
-            ['key' => 'maintenance.page.contacto', 'value' => '0', 'group' => 'maintenance'],
+            // muestra «sección no disponible» (503) con el nav/pie para navegar a otras.
+            // ⚠️⚠️ **Las filas se DERIVAN de `PAGE_KEYS`, no se escriben a mano** (`#536`). Este
+            // bloque llevaba las seis claves copiadas y su propio comentario decía «lista fija =
+            // MaintenanceSettings::PAGE_KEYS» — o sea, una segunda copia que se presentaba como la
+            // primera. Al entrar `bar` se desincronizó y el panel pasó a auditar un cambio en cada
+            // guardado sin tocar nada, porque la fila no existía y `''` no es `'0'`.
             // Cookies (#219): mostrar el banner de consentimiento. Default ON ('1'). Apagarlo solo
             // oculta el banner; el bloqueo previo de los iframes de tercero sigue activo (gateado por
             // la cookie de consentimiento). Ver App\Domain\Identity\Services\CookieConsent y docs/PLAN-COOKIES.md.
             ['key' => 'cookies.banner_enabled', 'value' => '1', 'group' => 'cookies'],
         ];
+
+        // Una fila por página gestionable, derivada de la lista que el producto declara (`#536`).
+        foreach (MaintenanceSettings::PAGE_KEYS as $page) {
+            $settings[] = ['key' => 'maintenance.page.'.$page, 'value' => '0', 'group' => 'maintenance'];
+        }
 
         foreach ($settings as $s) {
             Setting::updateOrCreate(['key' => $s['key']], $s);

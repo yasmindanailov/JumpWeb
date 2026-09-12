@@ -5,6 +5,7 @@ return [
         'menu_group' => ['section' => 'Sur cette page', 'page' => 'Pages'],
         'pages' => [
             'pricing' => 'Tarifs', 'events' => 'Anniversaires', 'attractions' => 'Attractions',
+            'bar' => 'Le bar',
             'rules' => 'Règles', 'services' => 'Services', 'contact' => 'Contact',
         ],
         'zones' => 'Zones', 'rides' => 'Attractions', 'pricing' => 'Tarifs',
@@ -84,6 +85,7 @@ return [
         'title' => 'Saute, grimpe et lâche-toi',
         'intro' => ':count attractions dedans. Trampolines, toboggans, foam et piscine à balles.',
         'door' => 'Voir les :count attractions',
+        'aside_title' => 'Et moi, je fais quoi pendant ce temps ?',
         'zone_tab' => 'Zone',
         'book_zone' => 'Réserver :zone',
         'buy' => 'Acheter',

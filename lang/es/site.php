@@ -102,6 +102,27 @@ return [
     'contact_where_title' => 'Dónde estamos',
     'contact_where_cta' => 'Ver el mapa y el horario',
 
+    // ══ /bar ══════════════════════════════════════════════════════════════════════════════════
+    // Carril de diseño Fase 3 · T3b (`DECISIONES #536`). Artboard `Bar PJP` 1a/1b.
+    // ⚠️ **Aquí SOLO va lo que es del PRODUCTO.** El nombre del bar, su frase y el pie de la foto
+    // son de este cliente y viven en el panel (`bar.*`). Lo de abajo es cierto en cualquier
+    // instalación: ninguna vende comida por la web, así que en todas se pide en la barra.
+    'bar_menu_title' => 'La carta',
+    'bar_menu_zoom' => 'Ver a tamaño completo',
+    // ⚠️ **La carta es una IMAGEN** (`[DECIDIDO owner]`), así que esta frase es la que explica por
+    // qué hay que ampliarla en un móvil. Sin ella, quien no puede leerla no sabe que puede.
+    'bar_menu_hint' => 'Toca la carta para verla a tamaño completo.',
+    'bar_counter_title' => 'Se pide en la barra',
+    'bar_counter_text' => 'No hace falta reservar mesa ni pedir por la web: te sientas donde quieras y pides en la barra. Se paga allí mismo.',
+    // ❗ Obligación legal (Reglamento UE 1169/2011): con comida hay que informar de los alérgenos, y
+    // la norma admite hacerlo de viva voz SIEMPRE que se diga de forma visible dónde preguntarlo.
+    // `[DECIDIDO owner, 2026-09-12]`: esta línea es esa indicación.
+    'bar_allergens' => 'Si tienes alguna alergia o intolerancia, pregunta en la barra antes de pedir: te decimos los alérgenos de cualquier plato.',
+    'bar_free_entry_yes' => 'Puedes venir solo al bar, sin sacar entrada al parque.',
+    'bar_free_entry_no' => 'Para entrar al bar hace falta entrada al parque.',
+    'bar_party_line' => 'Si venís de cumpleaños, la comida de los niños va incluida en el pack y se sirve en estas mesas.',
+    'bar_party_cta' => 'Ver los packs de cumpleaños',
+
     'visit_hours' => 'Horarios y ubicación',
     'visit_hours_sub' => 'Cuándo y dónde estamos',
 

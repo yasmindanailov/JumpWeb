@@ -5,6 +5,7 @@ return [
         'menu_group' => ['section' => 'On this page', 'page' => 'Pages'],
         'pages' => [
             'pricing' => 'Pricing', 'events' => 'Birthdays', 'attractions' => 'Attractions',
+            'bar' => 'The bar',
             'rules' => 'Rules', 'services' => 'Services', 'contact' => 'Contact',
         ],
         'zones' => 'Zones', 'rides' => 'Rides', 'pricing' => 'Pricing',
@@ -84,6 +85,7 @@ return [
         'title' => 'Jump, climb and let go',
         'intro' => ':count rides inside. Trampolines, slides, foam and a ball pit.',
         'door' => 'See all :count rides',
+        'aside_title' => 'And what do I do meanwhile?',
         'zone_tab' => 'Zone',
         'book_zone' => 'Book :zone',
         'buy' => 'Buy',

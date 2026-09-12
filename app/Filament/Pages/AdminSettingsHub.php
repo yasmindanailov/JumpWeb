@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\Attractions\AttractionResource;
 use App\Filament\Resources\AuditLogs\AuditLogResource;
+use App\Filament\Resources\BarImages\BarImageResource;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Faqs\FaqResource;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
@@ -113,6 +114,10 @@ class AdminSettingsHub extends Page
                 ['key' => 'faqs', 'class' => FaqResource::class],
                 ['key' => 'testimonials', 'class' => TestimonialResource::class],
                 ['key' => 'offers', 'class' => OfferResource::class],
+                // `#536`: las imágenes de `/bar` — las caras de la CARTA y la foto del local. Van
+                // aquí, junto al resto del CMS, y no en Ajustes: la página de ajustes no sube
+                // ficheros (cero `FileUpload` en ella) y esto es una colección ordenable.
+                ['key' => 'bar_images', 'class' => BarImageResource::class],
                 ['key' => 'park_rules', 'class' => ParkRuleResource::class],
                 ['key' => 'pages', 'class' => PageResource::class],
             ],

@@ -21,6 +21,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Attraction;
+use App\Domain\Content\Models\BarImage;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Offer;
@@ -158,6 +159,10 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'attraction' => Attraction::class,
             'audit_log' => AuditLog::class,
+            // `#536`: las imágenes de `/bar` (la carta y la foto del local). Todo modelo necesita
+            // alias de morfo — lo exige `MorphMapTest` y es lo que hace que el AUDIT guarde `bar_image`
+            // y no el nombre de clase, que se rompe al mover el fichero de sitio.
+            'bar_image' => BarImage::class,
             'consent' => Consent::class,
             'cookie_consent_log' => CookieConsentLog::class,
             'customer_card' => CustomerCard::class,

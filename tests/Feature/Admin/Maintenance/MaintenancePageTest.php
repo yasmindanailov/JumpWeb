@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin\Maintenance;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\MaintenanceSettings;
 use App\Filament\Pages\Maintenance;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
@@ -39,14 +40,23 @@ class MaintenancePageTest extends TestCase
             ['reservations.message.es', '', 'maintenance'],
             ['reservations.message.en', '', 'maintenance'],
             ['reservations.message.fr', '', 'maintenance'],
-            ['maintenance.page.home', '0', 'maintenance'],
-            ['maintenance.page.precios', '0', 'maintenance'],
-            ['maintenance.page.cumpleanos', '0', 'maintenance'],
-            ['maintenance.page.servicios', '0', 'maintenance'],
-            ['maintenance.page.normas', '0', 'maintenance'],
-            ['maintenance.page.contacto', '0', 'maintenance'],
         ] as [$key, $value, $group]) {
             Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => $group]);
+        }
+
+        /*
+         * ⚠️⚠️ **Las páginas se DERIVAN de `PAGE_KEYS`, no se copian aquí** (`#536`). Estaban
+         * escritas a mano —la TERCERA copia de la misma lista, con la constante y el seeder—, y al
+         * entrar `/bar` este `setUp` dejó de sembrar su fila: `save()` veía `''` donde esperaba
+         * `'0'`, lo contaba como cambio y `test_save_without_changes_does_not_audit` se puso rojo
+         * **con el producto sano**. *Un fixture que copia una lista del producto caduca el día que
+         * la lista crece, y lo hace acusando al código.*
+         */
+        foreach (MaintenanceSettings::PAGE_KEYS as $page) {
+            Setting::updateOrCreate(
+                ['key' => 'maintenance.page.'.$page],
+                ['value' => '0', 'group' => 'maintenance'],
+            );
         }
     }
 

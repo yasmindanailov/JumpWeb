@@ -151,6 +151,30 @@ class Settings extends Page
         'landing.footer_rights.es' => 'landing',
         'landing.footer_rights.en' => 'landing',
         'landing.footer_rights.fr' => 'landing',
+        /*
+         * **`/bar`** (`#536`). ⚠️ Aquí van solo los TEXTOS; las imágenes viven en su propia pantalla
+         * («Ajustes → El bar»), porque esta página **no sube ficheros** —cero `FileUpload` en las 992
+         * líneas de su formulario— y la carta es una colección ordenable.
+         * ⚠️ **Lo que NO está aquí y es a propósito**: «se pide en la barra» y la línea de alérgenos
+         * son del PRODUCTO —ninguna instalación vende comida por la web—, así que viven en `site.php`
+         * y no como texto editable. Lo que sí es de este cliente es su nombre, su promesa y su foto.
+         */
+        'bar.name.es' => 'bar',
+        'bar.name.en' => 'bar',
+        'bar.name.fr' => 'bar',
+        'bar.lede.es' => 'bar',
+        'bar.lede.en' => 'bar',
+        'bar.lede.fr' => 'bar',
+        'bar.photo_caption.es' => 'bar',
+        'bar.photo_caption.en' => 'bar',
+        'bar.photo_caption.fr' => 'bar',
+        /*
+         * ⚠️ **TRES estados y no un interruptor**: «sí se puede entrar solo», «no se puede» y **«no
+         * lo hemos decidido»**, que es el estado de fábrica y no publica nada. Un toggle solo tiene
+         * dos, y su `false` afirmaría «no se puede entrar» en toda instalación recién montada — una
+         * afirmación de negocio que nadie ha hecho.
+         */
+        'bar.free_entry' => 'bar',
         // Operativa
         'sales.hold_minutes' => 'payment',
         'sales.purchase_horizon_months' => 'payment',
@@ -425,6 +449,7 @@ class Settings extends Page
             ->icon(Heroicon::OutlinedPaintBrush)
             ->schema([
                 $this->landingTextsSection(),
+                $this->barSection(),
                 $this->mixedPartySection(),
                 $this->webAppearanceSection(),
             ]);
@@ -621,6 +646,59 @@ class Settings extends Page
                     $this->landingTextTab('fr', __('admin.settings.lang_fr')),
                 ]),
             ]);
+    }
+
+    /**
+     * **`/bar` · los textos** (`DECISIONES #536`, artboard `Bar PJP`).
+     *
+     * ⚠️ **Sin nombre, la página no se publica.** No es un fallo: el titular de `/bar` es el nombre
+     * del bar, y el propio canvas lo dejó como la pregunta que bloquea la página («el nombre real del
+     * bar — ya estaba pendiente de 03 y aquí es el titular»). Publicarla con un genérico sería
+     * inventarle nombre al local de un cliente.
+     *
+     * ⚠️ Las IMÁGENES no están aquí: se suben en «Ajustes → El bar», que es una colección ordenable
+     * y esta página no sube ficheros.
+     */
+    private function barSection(): Section
+    {
+        return Section::make(__('admin.settings.section_bar'))
+            ->description(__('admin.settings.section_bar_hint'))
+            ->schema([
+                Select::make('bar.free_entry')
+                    ->label(__('admin.settings.bar_free_entry'))
+                    ->helperText(__('admin.settings.bar_free_entry_hint'))
+                    ->options([
+                        '' => __('admin.settings.bar_free_entry_unset'),
+                        'yes' => __('admin.settings.bar_free_entry_yes'),
+                        'no' => __('admin.settings.bar_free_entry_no'),
+                    ])
+                    ->default('')
+                    ->native(false),
+
+                Tabs::make('bar_texts')->tabs([
+                    $this->barTextTab('es', __('admin.settings.lang_es')),
+                    $this->barTextTab('en', __('admin.settings.lang_en')),
+                    $this->barTextTab('fr', __('admin.settings.lang_fr')),
+                ]),
+            ]);
+    }
+
+    private function barTextTab(string $loc, string $label): Tab
+    {
+        return Tab::make($label)->schema([
+            TextInput::make("bar.name.{$loc}")
+                ->label(__('admin.settings.bar_name'))
+                ->helperText(__('admin.settings.bar_name_hint'))
+                ->maxLength(80),
+            TextInput::make("bar.lede.{$loc}")
+                ->label(__('admin.settings.bar_lede'))
+                ->helperText(__('admin.settings.bar_lede_hint'))
+                ->maxLength(200),
+            TextInput::make("bar.photo_caption.{$loc}")
+                ->label(__('admin.settings.bar_photo_caption'))
+                ->helperText(__('admin.settings.bar_photo_caption_hint'))
+                ->maxLength(200),
+        ]);
     }
 
     private function landingTextTab(string $loc, string $label): Tab

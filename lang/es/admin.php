@@ -42,6 +42,7 @@ return [
             'faqs' => ['label' => 'Preguntas frecuentes', 'description' => 'Las preguntas y respuestas que se publican.'],
             'testimonials' => ['label' => 'Opiniones propias', 'description' => 'Lo que ve quien no acepta cookies de terceros.'],
             'offers' => ['label' => 'Ofertas', 'description' => 'Promociones informativas del aviso flotante.'],
+            'bar_images' => ['label' => 'El bar', 'description' => 'La carta del bar y la foto del local que se publican en la web.'],
             'park_rules' => ['label' => 'Normas', 'description' => 'Las normas del recinto que se publican en la web.'],
             'pages' => ['label' => 'Páginas legales', 'description' => 'Aviso legal, privacidad, cookies y condiciones.'],
             'settings' => ['label' => 'Configuración', 'description' => 'Datos del negocio, fiscales, venta, puerta y pagos.'],
@@ -2271,6 +2272,9 @@ return [
         'page_servicios' => 'Servicios',
         'page_normas' => 'Normas',
         'page_contacto' => 'Contacto',
+        // `#536`: la página del bar. ⚠️ `atracciones` sigue SIN estar en `PAGE_KEYS` desde `#481`:
+        // es un hueco preexistente, no de esta tanda — ficha en `DEUDA.md`.
+        'page_bar' => 'El bar',
     ],
 
     'settings' => [
@@ -2340,6 +2344,23 @@ return [
         'landing_tagline_hint' => 'Título de la pestaña de la portada cuando no hay «Título web». Ej.: «Parque de saltos para toda la familia · Murcia».',
         'landing_footer_rights' => 'Coletilla del copyright',
         'landing_footer_rights_hint' => 'Texto tras «© AÑO NOMBRE —» en el pie del formulario de invitados. Ej.: «Hecho para reír.».',
+
+        // ── /bar · los textos (`DECISIONES #536`) ────────────────────────────────────────────
+        // ⚠️ Las IMÁGENES no están aquí: se suben en «Ajustes → El bar». Esta pantalla no sube
+        // ficheros y la carta es una colección ordenable.
+        'section_bar' => 'El bar',
+        'section_bar_hint' => 'Lo que se publica en la página del bar. Las imágenes de la carta y la foto del local se suben en «Ajustes → El bar». ⚠️ Sin nombre, la página del bar no se publica.',
+        'bar_name' => 'Nombre del bar',
+        'bar_name_hint' => 'El titular de la página. Si lo dejas vacío en todos los idiomas, la página no se publica y el bar no sale ni en el menú ni en el pie.',
+        'bar_lede' => 'Frase de presentación',
+        'bar_lede_hint' => 'Una línea bajo el titular. Ej.: «Mesas con el parque a la vista y carta corta. Puedes comer sin saltar.».',
+        'bar_photo_caption' => 'Pie de la foto del local',
+        'bar_photo_caption_hint' => 'Qué contar de la foto. Ej.: «Desde la mesa se les ve saltar, así que puedes sentarte sin perderlos de vista.». Vacío: la foto sale sin pie.',
+        'bar_free_entry' => '¿Se puede entrar solo al bar?',
+        'bar_free_entry_hint' => 'Lo pregunta quien vive al lado y no viene a saltar. Sin decidir no se publica nada: es mejor callar que afirmar algo que no has decidido.',
+        'bar_free_entry_unset' => 'Sin decidir — no se publica',
+        'bar_free_entry_yes' => 'Sí, se puede entrar solo al bar',
+        'bar_free_entry_no' => 'No, hace falta entrada al parque',
 
         'section_registration' => 'Registro (sistema externo)',
         'section_registration_hint' => 'El botón «Registro» del header de la web lleva a vuestro sistema externo de registro/descargo. Etiqueta y subtítulo editables por idioma; si la URL queda vacía, el botón abre el registro interno de reservas.',
@@ -2944,6 +2965,63 @@ return [
                 'modal_description' => 'Esta acción es irreversible. También se borrará su imagen.',
                 'submit' => 'Borrar',
                 'success' => 'Oferta borrada.',
+            ],
+        ],
+    ],
+
+    // ══ /bar · LAS IMÁGENES (`DECISIONES #536`) ═══════════════════════════════════════════════
+    // `[DECIDIDO owner]`: la carta se publica como IMAGEN, no tecleando los platos. Este es el
+    // sitio ÚNICO donde se suben las dos cosas que la página enseña.
+    'bar_images' => [
+        'nav_label' => 'El bar',
+        'model_label_singular' => 'imagen del bar',
+        'model_label_plural' => 'Imágenes del bar',
+
+        'col_image' => 'Imagen',
+        'col_kind' => 'Tipo',
+        'col_alt' => 'Qué se ve',
+        'col_active' => 'Activa',
+        'active_yes' => 'Activa',
+        'active_no' => 'Inactiva',
+
+        'kind' => [
+            'menu' => 'Carta',
+            'venue' => 'Foto del local',
+        ],
+
+        'section_image' => 'La imagen',
+        'section_image_hint' => 'La CARTA admite varias imágenes, una por cara: se publican en este orden. De la FOTO DEL LOCAL se publica la primera activa.',
+        'field_kind' => 'Tipo',
+        'field_kind_hint' => '«Carta» para las caras del menú; «Foto del local» para la foto de las mesas.',
+        'field_position' => 'Orden',
+        'field_position_hint' => 'Orden en que se publican (menor primero). También se puede arrastrar en el listado.',
+        'field_is_active' => 'Activa',
+        'field_is_active_hint' => 'Si se desactiva, deja de publicarse sin borrarla. Sin ninguna carta activa, la página no enseña carta.',
+        'field_image' => 'Imagen',
+        'field_image_hint' => 'webp, jpg o png; máx. 3 MB. La descarga el visitante desde el móvil: recorta el margen blanco del escáner antes de subirla.',
+
+        'section_alt' => 'Qué se ve en la imagen',
+        'section_alt_hint' => 'Obligatorio. Una carta en imagen no la puede leer una persona ciega ni un buscador: esta frase es lo único que van a encontrar.',
+        'field_alt' => 'Qué se ve',
+        'field_alt_hint' => 'Descríbelo en una frase. Por ejemplo: «Carta del bar: bocadillos, pizzas y bebidas, con sus precios».',
+
+        'lang' => [
+            'es' => 'Español',
+            'en' => 'Inglés',
+            'fr' => 'Francés',
+        ],
+
+        'create_title' => 'Añadir una imagen del bar',
+        'edit_title' => 'Editar imagen: :name',
+
+        'actions' => [
+            'create' => 'Añadir imagen',
+            'delete' => [
+                'label' => 'Borrar imagen',
+                'modal_heading' => 'Borrar esta imagen',
+                'modal_description' => 'Esta acción es irreversible. También se borra el fichero subido.',
+                'submit' => 'Borrar',
+                'success' => 'Imagen borrada.',
             ],
         ],
     ],

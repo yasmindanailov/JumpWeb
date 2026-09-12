@@ -494,6 +494,41 @@
                 </a>
             </p>
         @endif
+
+        {{-- ══ ¿Y YO QUÉ HAGO MIENTRAS? · la puerta del bar ═══════════════════════════════════
+             `DECISIONES #536`, `[DECIDIDO owner]`. Artboard `Juegos PJP` turno **7a**.
+
+             ▶ **La pregunta no es adorno: es lo que convierte la tarjeta en respuesta.** El canvas:
+             *«dentro hay cuatro cosas y no dos —Kids, Jump, los juegos de fuera y el bar— y abre una
+             pregunta que no estaba en las nueve: voy con dos hijos y solo salta uno, ¿qué hago yo
+             mientras? El bar es su respuesta»*. Sin la pregunta escrita, la tarjeta es un aviso
+             suelto al final de una sección de juegos.
+
+             ⚠️⚠️ **VIENE SOLA, Y EL ARTBOARD LA DIBUJA EN PAREJA.** Su otra mitad son «los juegos de
+             fuera» —garra de peluches y billar—, y **no entra**: no hay dato detrás de eso en ningún
+             sitio del producto, así que escribirla sería clavar el contenido de PlayJump en JumpWeb,
+             que es justo lo que el filtro de `rediseno-desde-canvas.md` §2 impide. Entra el día que
+             tenga dónde guardarse. Ficha en `DEUDA.md`.
+
+             ⚠️ **Solo si el bar está publicado** (tiene nombre en el panel): es el mismo predicado
+             que decide su ruta, el menú y el pie. `#482` retiró esta tarjeta porque `/bar` no
+             existía; hoy existe, y si el panel no la ha nombrado sigue sin existir.
+             ⚠️ **Cero naranja**, y aquí no es estética: el bar está fuera del modelo de reserva
+             (`[DECIDIDO owner]`), así que su puerta no puede vestirse de compra. --}}
+        @if (filled($barName))
+            <div class="rides__aside">
+                <h3 class="rides__aside-title">{{ __('landing.rides.aside_title') }}</h3>
+                <a class="bar-door" href="{{ route('bar') }}">
+                    <span class="bar-door__body">
+                        <span class="bar-door__name">{{ $barName }}</span>
+                        @if (filled($barLede))
+                            <span class="bar-door__lede">{{ $barLede }}</span>
+                        @endif
+                    </span>
+                    <x-icons.arrow-right class="bar-door__arrow" :width="20" :height="20" />
+                </a>
+            </div>
+        @endif
     </section>
 
     {{-- ══ 04 · CUMPLEAÑOS · los dos packs ═════════════════════════════════════════════════════

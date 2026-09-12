@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\BarController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CookieConsentController;
 use App\Http\Controllers\EventsController;
@@ -154,6 +155,13 @@ Route::get('/atracciones', AttractionsController::class)->name('atracciones');
 // Servicios: página data-driven (#256, modelo A). Las secciones editoriales salen de la entidad CMS
 // `LandingService` (panel); cada una conserva su anchor estable (el nav enlaza a /servicios#slug).
 Route::get('/servicios', ServicesController::class)->name('servicios');
+
+// El bar (`#536`, carril de diseño Fase 3 · T3b, artboard `Bar PJP`). ⚠️ La CARTA se publica como
+// IMAGEN (`[DECIDIDO owner]`), subida en «Ajustes → El bar». ⚠️⚠️ **Sin nombre del bar en el panel
+// la ruta da 404**: el titular de la página es el nombre del local y el producto no se lo inventa
+// —lo decide `BarPage::isPublished()`, el mismo predicado que decide si el destino sale en el menú,
+// en el pie y en la portada—.
+Route::get('/bar', BarController::class)->name('bar');
 
 // Compra de entradas (Fase 5.2): el sidebar de compra se abre sobre la página. `/entradas`
 // es un enlace profundo: renderiza la home y abre el sidebar (vía data-purchase-open en el layout).

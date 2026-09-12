@@ -17,6 +17,7 @@ return [
         // «Hablamos» en su cabecera y aquí se llama por lo que es.
         'pages' => [
             'pricing' => 'Tarifas', 'events' => 'Cumpleaños', 'attractions' => 'Atracciones',
+            'bar' => 'El bar',
             'rules' => 'Normas', 'services' => 'Servicios', 'contact' => 'Contacto',
         ],
         'zones' => 'Zonas', 'rides' => 'Atracciones', 'pricing' => 'Precios',
@@ -142,6 +143,7 @@ return [
         'intro' => ':count atracciones dentro. Camas elásticas, toboganes, foam y piscina de bolas.',
         // La única puerta de la sección, y la única entrada a `/atracciones` desde la portada.
         'door' => 'Ver las :count atracciones',
+        'aside_title' => '¿Y yo qué hago mientras?',
         'zone_tab' => 'Zona',
         'book_zone' => 'Reservar :zone',
         'buy' => 'Comprar',

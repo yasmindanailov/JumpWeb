@@ -4955,3 +4955,138 @@ select:focus-visible {
    `/contacto`: cuando esa página la retiró (`#535`) `errors/page-maintenance.blade.php` se habría
    quedado sin regla, y el censo por subcadena no lo veía. */
 .page__actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   /bar · LA CARTA CORTA, Y NADA MÁS
+   `DECISIONES #536` · carril de diseño Fase 3 · T3b. Artboard `Bar PJP` 1a/1b.
+
+   ❗❗❗ **LA CARTA ES UNA IMAGEN** (`[DECIDIDO owner]`), no una tabla de platos como dibuja el
+   artboard. Eso cambia el problema de maquetación: en vez de una tabla que se adapta sola, hay un
+   bloque de proporción desconocida que el parque sube y que tiene que poder LEERSE en un teléfono.
+   ▶ Se resuelve con tres cosas: la imagen ocupa su columna entera y **no se recorta nunca** (una
+   carta recortada no se lee), declara sus dimensiones reales para que la página no salte, y es un
+   ENLACE a su fichero — ahí el navegador da zoom nativo, sin un visor que mantener.
+
+   ⚠️ **Cero relleno de acción**: en el bar no se compra por la web. El único naranja de esta
+   pantalla lo trae la barra del armazón.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ⚠️ **En escritorio las dos columnas son IGUALES (544 + 544), y sale del artboard**: su reparto
+   dice «544 + resto» dentro de una columna de 1120 con 32 de hueco — o sea, la otra mitad mide
+   también 544. Escribirlo como `544fr 544fr` lo deja proporcional en cualquier ventana, en vez de
+   clavar un ancho que se rompe por debajo de 1120. */
+.bar-layout { display: grid; gap: var(--sp-28); align-items: start; margin-top: var(--sp-20); }
+
+@media (min-width: 1024px) {
+  .bar-layout {
+    grid-template-columns: minmax(0, 544fr) minmax(0, 544fr);
+    grid-template-areas:
+      "foto  carta"
+      "chapa carta";
+    gap: 32px;
+  }
+  .bar-photo { grid-area: foto; }
+  .bar-menu { grid-area: carta; }
+  .bar-counter { grid-area: chapa; }
+}
+
+/* ── LA FOTO DEL LOCAL ──────────────────────────────────────────────────────────────────────
+   16:9 y una sola, por la regla que `/cumpleanos` ya fijó: para unas mesas hace falta anchura.
+   ⚠️ Aquí SÍ se recorta (`cover`): la proporción la manda el diseño y lo que importa es el
+   ambiente, no leer nada dentro. Es justo lo contrario que la carta. */
+.bar-photo { margin: 0; }
+/* ❗❗ **`height: auto` NO es adorno: sin él `aspect-ratio` NO HACE NADA.** El `<img>` lleva sus
+   dimensiones reales como ATRIBUTOS —para que la página no salte al cargar— y los atributos
+   `width`/`height` de una imagen son *presentational hints* que el navegador mapea a las propiedades
+   CSS `width` y `height`. Con `width: 100%` en la hoja (que gana al hint) y `height` sin declarar,
+   **manda el hint**: `height: 900px`. ▶ Medido antes del arreglo: la foto del local salía a
+   **544×900** en vez de 544×306, y `aspect-ratio` computaba «16 / 9» perfectamente — o sea que leer
+   el valor calculado NO delataba nada. Lo vio la captura. */
+.bar-photo img {
+  display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover;
+  border-radius: var(--r); background: var(--bg-soft);
+}
+.bar-photo figcaption { margin: var(--sp-12) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); }
+
+/* ── LA CARTA ───────────────────────────────────────────────────────────────────────────────── */
+.bar-menu { display: grid; gap: var(--sp-14); align-content: start; }
+.bar-menu__title { margin: 0; font-family: var(--font-display); font-size: var(--fs-title); line-height: 1.05; font-weight: 400; }
+.bar-menu__hint { margin: 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); }
+.bar-menu__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-16); }
+
+/* ❗ **La imagen NO se recorta y NO se limita en alto.** Una carta con `object-fit: cover` o con un
+   `max-height` deja de ser una carta: se lee entera o no sirve. El `aspect-ratio` lo pone el
+   `width`/`height` del propio `<img>`, medidos al subirla. */
+.bar-sheet {
+  display: block; position: relative;
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+  overflow: hidden; color: var(--fg);
+  transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.bar-sheet:hover { border-color: var(--fg); }
+.bar-sheet img { display: block; width: 100%; height: auto; }
+/* El rótulo va DENTRO del enlace: así el nombre accesible dice qué se ve Y que se abre a tamaño
+   completo. Y cumple el mínimo táctil por sí mismo, que es lo que se pulsa en un móvil. */
+.bar-sheet__zoom {
+  display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
+  min-height: var(--tap-min); padding: var(--sp-10) var(--sp-16);
+  border-top: 1px solid var(--line);
+  font-weight: 800; font-size: var(--fs-15); color: var(--interactive);
+}
+.bar-sheet:hover .bar-sheet__zoom { text-decoration: underline; }
+
+/* ❗ La línea de alérgenos va PEGADA a la carta y no en el pie: es obligación legal decir dónde se
+   pregunta, y se dice donde se mira lo que se va a pedir. */
+.bar-menu__allergens {
+  margin: var(--sp-4) 0 0; padding: var(--sp-14) var(--sp-16);
+  background: var(--bg-soft); border-radius: var(--r-sm);
+  font-size: var(--fs-15); line-height: 1.5; color: var(--fg-mute);
+}
+
+/* ── «SE PIDE EN LA BARRA» ──────────────────────────────────────────────────────────────────── */
+.bar-counter { border-radius: var(--r); padding: var(--sp-20); align-self: start; }
+.bar-counter__title { margin: 0; font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.15; font-weight: 400; }
+.bar-counter__text { margin: var(--sp-12) 0 0; font-size: var(--fs-16); line-height: 1.5; }
+/* ⚠️ El acceso libre va en peso fuerte: es la respuesta a la pregunta que trae a media página aquí,
+   no una coletilla del párrafo de arriba. */
+.bar-counter__entry { margin: var(--sp-12) 0 0; font-size: var(--fs-16); line-height: 1.5; font-weight: 700; }
+
+/* ── EL CIERRE: los que vienen de cumpleaños ────────────────────────────────────────────────── */
+.bar-party { margin-top: var(--sp-28); padding-top: var(--sp-18); border-top: 1.5px solid var(--line-strong); }
+.bar-party__line { margin: 0; font-size: var(--fs-17); line-height: 1.5; color: var(--fg-mute); }
+.bar-party__cta {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
+}
+.bar-party__cta:hover { text-decoration: underline; }
+
+@media (min-width: 1024px) {
+  /* El aire del ritmo antes del pie, como el resto de las interiores. */
+  .bar-party { margin-top: var(--sec-air); display: flex; align-items: center; gap: var(--sp-20); }
+  .bar-party__line { flex: 1; }
+  .bar-party__cta { flex: none; }
+}
+
+/* ── LA PUERTA DEL BAR, EN LA SECCIÓN 03 ────────────────────────────────────────────────────
+   `#536` · artboard `Juegos PJP` 7a. La pregunta abre el bloque y la tarjeta la contesta.
+   ⚠️ El título va en el tipo de CUERPO en peso fuerte, **no en Bungee**: es una pregunta que se lee,
+   no un rótulo de sección — así lo dibuja el artboard (22/700) y así se distingue del titular de la
+   sección, que está tres piezas más arriba. */
+.rides__aside { margin-top: var(--sp-20); padding-top: var(--sp-20); border-top: 1px solid var(--line); }
+.rides__aside-title { margin: 0 0 var(--sp-16); font-size: var(--fs-22); line-height: 1.25; font-weight: 700; }
+
+/* ⚠️ **Cero relleno de acción**: el bar está fuera del modelo de reserva, así que su puerta no se
+   viste de compra. El acuse es el BORDE al pasar, como las tarjetas de canal de `/contacto`. */
+.bar-door {
+  display: flex; align-items: center; gap: var(--sp-16);
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: var(--sp-20); color: var(--fg);
+  transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.bar-door:hover { border-color: var(--interactive); }
+.bar-door__body { flex: 1; min-width: 0; display: grid; gap: var(--sp-4); }
+.bar-door__name { font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.15; font-weight: 400; }
+.bar-door__lede { font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); }
+.bar-door__arrow { flex: none; color: var(--interactive); }

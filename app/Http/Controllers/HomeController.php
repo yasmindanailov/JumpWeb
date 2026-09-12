@@ -9,6 +9,7 @@ use App\Domain\Booking\Services\RateCards;
 use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Services\BarPage;
 use App\Domain\Content\Services\RideMosaic;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
@@ -73,6 +74,24 @@ class HomeController extends Controller
              * dentro» y la puerta dice «ver las N» — si divergen, el cliente cuenta y no le salen.
              */
             'ridesTotal' => $zones->sum(fn (Zone $zone): int => $zone->attractions->count()),
+            /*
+             * **LA PUERTA DEL BAR** (`#536`, `[DECIDIDO owner, 2026-09-12]`). Vuelve a la sección 03,
+             * que es donde el canvas la coloca: *«dentro hay cuatro cosas y no dos —Kids, Jump, los
+             * juegos de fuera y el bar— y abre una pregunta que no estaba en las nueve: voy con dos
+             * hijos y solo salta uno, ¿qué hago yo mientras?»*.
+             * ⚠️ `#482` la retiró con un motivo que ya no existe —«el bar no entra todavía porque no
+             * existe en ninguna parte del producto y su tarjeta es un enlace a `/bar`, que tampoco»—:
+             * hoy la página existe.
+             * ⚠️⚠️ **La tarjeta sale del INVENTARIO y no de `BarPage::isPublished()` a pelo**, y eso
+             * lo cazó su guarda: con `/bar` en MANTENIMIENTO el predicado del bar seguía diciendo
+             * «publicado» y la portada ofrecía una puerta a un 503, mientras el menú y el pie —que sí
+             * leen el inventario— ya la habían retirado. *Tres superficies con el mismo destino no
+             * pueden tener tres criterios.*
+             * ⚠️ Cero consultas nuevas: `pages()` ya se resuelve para el menú y el pie de esta misma
+             * petición, y solo lee `settings`, memoizados.
+             */
+            'barName' => collect(SiteDestinations::pages())->contains('route', 'bar') ? BarPage::name() : null,
+            'barLede' => BarPage::lede(),
             /*
              * Las tarifas de «Cuánto» (`#479`). ⚠️ **Reciben el MISMO `ZoneCards` que ya se ha
              * construido**, no uno propio: de él sale el eje de altura que la chapa vuelve a

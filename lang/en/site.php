@@ -67,6 +67,18 @@ return [
     'contact_where_title' => 'Where we are',
     'contact_where_cta' => 'See the map and the opening hours',
 
+    // ══ /bar (`DECISIONES #536`) ══════════════════════════════════════════════════════════════
+    'bar_menu_title' => 'The menu',
+    'bar_menu_zoom' => 'View full size',
+    'bar_menu_hint' => 'Tap the menu to see it full size.',
+    'bar_counter_title' => 'Order at the bar',
+    'bar_counter_text' => 'No need to book a table or order online: sit wherever you like and order at the bar. You pay right there.',
+    'bar_allergens' => 'If you have an allergy or intolerance, ask at the bar before ordering: we will tell you the allergens in any dish.',
+    'bar_free_entry_yes' => 'You can come just for the bar, without buying a park ticket.',
+    'bar_free_entry_no' => 'You need a park ticket to come into the bar.',
+    'bar_party_line' => 'If you are here for a birthday, the children\'s food is included in the pack and is served at these tables.',
+    'bar_party_cta' => 'See the birthday packs',
+
     'visit_hours' => 'Hours & location',
     'visit_hours_sub' => 'When and where to find us',
 

@@ -1778,6 +1778,7 @@ return [
         'page_servicios' => '服务',
         'page_normas' => '规则',
         'page_contacto' => '联系',
+        'page_bar' => '酒吧',
     ],
 
     'settings' => [
