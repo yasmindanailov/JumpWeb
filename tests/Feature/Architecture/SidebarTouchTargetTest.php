@@ -356,11 +356,18 @@ class SidebarTouchTargetTest extends TestCase
                     continue;
                 }
 
-                if (preg_match('/(?<![-\w])(?:min-)?height:\s*var\(--tap-min\)/', $cuerpo)) {
+                // ⚠️⚠️ **Las dos vías de «crecer de verdad» NO valen sobre un pseudo-elemento, y eso lo
+                // dijo el ARNÉS**: al mutar la receta del «Lote 9» a `width/height: var(--tap-min)` —el
+                // defecto de `#264`, que ENCOGE— la guarda pasaba en VERDE, porque ese `height` del
+                // PSEUDO casaba aquí antes de llegar a la comprobación de abajo. *El alto de un
+                // pseudo-elemento no es el alto del control: es el de la capa que lo cubre.*
+                $esPseudo = str_contains($selector, '::');
+
+                if (! $esPseudo && preg_match('/(?<![-\w])(?:min-)?height:\s*var\(--tap-min\)/', $cuerpo)) {
                     return 'token';
                 }
 
-                if (preg_match('/(?<![-\w])min-height:\s*(\d+)px/', $cuerpo, $m) && (int) $m[1] >= 48) {
+                if (! $esPseudo && preg_match('/(?<![-\w])min-height:\s*(\d+)px/', $cuerpo, $m) && (int) $m[1] >= 48) {
                     return 'literal';
                 }
 
