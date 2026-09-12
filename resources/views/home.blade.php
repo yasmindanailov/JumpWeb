@@ -290,14 +290,33 @@
                                 <img src="{{ $card['image'] }}" alt="" aria-hidden="true" loading="lazy" decoding="async" width="800" height="450">
                             @endif
 
-                            {{-- El SELLO de precio. ⚠️ Solo si la zona tiene entrada vendible: sin
-                                 precio no se pinta un sello vacío ni un «consultar». --}}
-                            @if ($card['from'] !== null)
+                            {{-- ══ EL SELLO: A QUIÉN LE TOCA ESTA ZONA, no cuánto cuesta ══════════
+                                 `[DECIDIDO owner]`: «en el sticker de las zonas quitamos “desde X €”;
+                                 ahí ponemos la edad y la altura».
+
+                                 ⚠️⚠️ **Esto cambia lo que la sección 01 dice de sí misma.** El sello
+                                 llevaba el precio desde que la tarjeta existe, y con él la sección
+                                 respondía «para quién» y «cuánto» a la vez. Hoy responde solo lo
+                                 primero — que es su rótulo, literalmente («Para quién»)—, y el
+                                 cuánto lo dice la 02, que es la sección que vende. *Dos secciones
+                                 seguidas contestando la misma pregunta era la repetición.*
+                                 ⚠️ **El precio no se pierde**: sigue en la 02 y en `/precios`, que
+                                 son sus dos superficies. Lo que se retira aquí es una tercera copia.
+
+                                 ⚠️⚠️ **La condición pasa de `from` a los DOS datos del sello**: con
+                                 la de antes, una zona sin entrada vendible se quedaba sin sello —
+                                 pero su edad y su altura existen igual, así que ahora el sello se
+                                 pinta si tiene alguno de los dos. Y si no tiene ninguno **no se
+                                 pinta un sello vacío**, que es la regla que ya traía.
+                                 ⚠️ Los dos datos ya viven en la tarjeta (`age` y `height`), así que
+                                 esto no añade ni una consulta. --}}
+                            @if ($card['age'] || $card['height'])
                                 <p class="zone-card__seal">
-                                    <span class="zone-card__from">{{ __('landing.zones.from') }}</span>
-                                    <span class="zone-card__price">{{ $card['from'] }}</span>
-                                    @if ($card['special'] !== null)
-                                        <span class="zone-card__special">{{ $card['special'] }} {{ $card['specialLabel'] }}</span>
+                                    @if ($card['age'])
+                                        <span class="zone-card__seal-age">{{ $card['age'] }}</span>
+                                    @endif
+                                    @if ($card['height'])
+                                        <span class="zone-card__seal-height">{{ $card['height'] }}</span>
                                     @endif
                                 </p>
                             @endif
@@ -347,15 +366,17 @@
                                 <span class="zone-card__tint" aria-hidden="true"></span>
                                 <span class="zone-card__inner">
                                     <h3 class="zone-card__name">{{ $card['name'] }}</h3>
-                                    <span class="zone-card__who">
-                                        <span>{{ $card['age'] }}</span>
-                                        @if ($card['height'])
-                                            <span>{{ $card['height'] }}</span>
-                                        @endif
-                                        @if ($card['description'])
+                                    {{-- ⚠️ **La EDAD y la ALTURA salieron de aquí** (`[DECIDIDO owner]`:
+                                         «quita lo de "de 4 a 7 años" de la card, ya lo tenemos en el
+                                         sticker»). Las decía el cuerpo y ahora las dice el sello, y
+                                         tenerlas en los dos sitios era leer la tarjeta dos veces.
+                                         ▶ El bloque se queda porque la DESCRIPCIÓN sigue aquí: es lo
+                                         único que el sello no puede llevar. --}}
+                                    @if ($card['description'])
+                                        <span class="zone-card__who">
                                             <span class="zone-card__what">{{ $card['description'] }}</span>
-                                        @endif
-                                    </span>
+                                        </span>
+                                    @endif
                                 </span>
                             </div>
 
@@ -1004,19 +1025,47 @@
                 {{-- ⚠️ La mancha va DETRÁS de la tarjeta de opinión (`[DECIDIDO owner]`) y **fuera
                      del `@foreach`**: dentro saldría una por opinión, y `FacadeDecorationIsPerScreenTest`
                      prohíbe decoración dentro de un bucle. --}}
-                <div class="rev" x-data="{ i: 0, n: {{ $socialProof->count() }} }"
-                     @keydown.left.prevent="i = Math.max(0, i - 1)"
-                     @keydown.right.prevent="i = Math.min(n - 1, i + 1)">
+                {{-- ❗❗ **EN MÓVIL SE DESLIZA CON EL DEDO** (`[owner]`, `#549`: «haz las reseñas que se
+                     pueda hacer slide en el móvil, tipo slider»), y por eso el estado tiene ahora dos
+                     direcciones: los puntos MUEVEN el carril y el carril DICE en qué opinión se ha
+                     parado. En escritorio el carril no desborda —las tarjetas se apilan en una celda—,
+                     así que `ir()` no mueve nada y `desdeScroll()` no se dispara nunca: la misma
+                     plantilla sirve a los dos sin un segundo mecanismo.
+                     ⚠️⚠️ **El «cómo» del movimiento NO se pasa aquí**: `scrollTo` sin `behavior` obedece
+                     al `scroll-behavior` de la hoja, que es donde vive la excepción de movimiento
+                     reducido. Escribirlo en la llamada gana a la hoja y se la salta. --}}
+                <div class="rev" x-data="{
+                         i: 0, n: {{ $socialProof->count() }},
+                         ir(k) {
+                             this.i = Math.max(0, Math.min(this.n - 1, k));
+                             const t = this.$refs.track;
+                             if (t && t.children[this.i]) t.scrollTo({ left: t.children[this.i].offsetLeft });
+                         },
+                         desdeScroll(t) {
+                             /* ⚠️ El paso es `scrollWidth / n` y no `clientWidth`: entre tarjeta y
+                                tarjeta hay hueco, así que medir por el ancho visible acumula error
+                                tarjeta a tarjeta y el punto marcado se retrasa al final del carril. */
+                             if (t.scrollWidth > t.clientWidth) {
+                                 this.i = Math.round(t.scrollLeft / (t.scrollWidth / this.n));
+                             }
+                         },
+                     }"
+                     @keydown.left.prevent="ir(i - 1)"
+                     @keydown.right.prevent="ir(i + 1)">
                     <x-site.ilu clave="slot-resenas" class="rev__mancha" />
+                    {{-- ⚠️ El carril es un envoltorio PROPIO y no `.rev`: ahí dentro solo pueden vivir
+                         las tarjetas. Con el scroll en `.rev`, los puntos —que son su segundo hijo— se
+                         irían dentro del carril y se deslizarían con él. --}}
+                    <div class="rev__track" x-ref="track" @scroll.passive="desdeScroll($el)">
                     @foreach ($socialProof as $k => $op)
-                        {{-- ⚠️⚠️ **La primera nace con `is-on` puesto POR EL SERVIDOR, y ése es el
-                             suelo sin JavaScript.** Con `x-show` + `x-cloak` —lo primero que se me
-                             ocurrió— la sección se queda **vacía** sin JS y parpadea en blanco
-                             mientras Alpine arranca. Con la clase servida, sin JS se lee la primera
-                             opinión y los controles simplemente no hacen nada. Es el mismo patrón
-                             que el acordeón de Dudas. --}}
-                        <article class="rev__card{{ $k === 0 ? ' is-on' : '' }}"
-                                 :class="i === {{ $k }} && 'is-on'">
+                        {{-- ⚠️⚠️ **AQUÍ VIVÍA `is-on`, LA CLASE QUE ENCENDÍA UNA TARJETA DE LA PILA, y se
+                             retira con la pila** (`#549`): en un carril las tres están visibles y la
+                             que se lee la decide el scroll. El suelo sin JavaScript **mejora** —antes
+                             se leía una opinión y las otras dos estaban ocultas; ahora se recorren
+                             las tres desplazando el carril—, y sigue siendo el motivo por el que esto
+                             NO se hace con `x-show` + `x-cloak`: con eso la sección se queda VACÍA
+                             sin JS y parpadea en blanco mientras Alpine arranca. --}}
+                        <article class="rev__card">
                             <div class="rev__who">
                                 {{-- ⚠️⚠️ **La foto es OBLIGATORIA cuando la reseña es de Google** (R3:
                                      «you must always credit the author»), y por eso llega solo con
@@ -1174,6 +1223,7 @@
                             </div>
                         </article>
                     @endforeach
+                    </div>{{-- /.rev__track --}}
 
                     {{-- Los controles solo existen si hay más de una: un punto solo son 48 px para
                          no decir nada — la misma regla que el pliegue de las fechas especiales
@@ -1193,7 +1243,7 @@
                                     <button type="button" class="rev__dot"
                                             aria-label="{{ __('landing.reviews.go', ['n' => $k + 1]) }}"
                                             x-bind:aria-current="i === {{ $k }} ? 'true' : 'false'"
-                                            @click="i = {{ $k }}"><span aria-hidden="true"></span></button>
+                                            @click="ir({{ $k }})"><span aria-hidden="true"></span></button>
                                 @endforeach
                             </div>
                         </div>

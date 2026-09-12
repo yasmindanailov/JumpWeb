@@ -161,4 +161,119 @@ class LandingAddonsTest extends TestCase
         // La nota estática de calcetines se sustituye por los complementos reales por producto.
         $this->get('/cumpleanos')->assertOk()->assertDontSee('Calcetines antideslizantes obligatorios para saltar');
     }
+
+    /**
+     * **EL «MÁS INFO» DE LA FICHA ABRE LO QUE EL PANEL HAYA ESCRITO, Y SOLO SI HAY ALGO** (`#549`).
+     *
+     * `[owner]`: *«les añadimos la opción de "más info" y eso abre la desc de ese complemento»*.
+     *
+     * ❗❗ **Lo que de verdad protege este caso son los DOS campos.** El texto de un complemento vive
+     * en `features` (lista) o en `description` (prosa), y en el catálogo real están repartidos: once
+     * complementos llevan lo primero y ninguno lo segundo, los dos extensores de sala lo segundo y
+     * ninguna lo primero. Una versión que leyera solo uno **dejaría muda a una mitad sin que nada
+     * fallara**, así que aquí hay un sujeto de cada tipo.
+     *
+     * ▶ Y el tercer sujeto es el que no tiene nada: ahí el botón **no nace**, porque un «Más info»
+     * que abre el vacío son 48 px para no decir nada (la regla de `#487`).
+     *
+     * ⚠️ El recuento se hace sobre la página porque en `/cumpleanos` **el único emisor de esa clase
+     * es este carril** (los chips de `.addons-mini` viven en `/precios` y `/servicios`), y los
+     * complementos que siembra el seeder no traen texto: la línea base es 0. Si algún día otra pieza
+     * de esta página pinta un «Más info», este recuento mide otra cosa y hay que acotarlo.
+     *
+     * ⚠️⚠️ **Esto RECUPERA la propiedad de `test_addon_features_open_from_an_inline_more_info_button
+     * _on_the_landing`**, que `#531` retiró con su sujeto (el bloque compacto de la banda vieja de
+     * `/cumpleanos`). Vuelve en otra superficie y con el campo de prosa añadido.
+     */
+    public function test_the_more_info_button_opens_the_addon_text_and_only_exists_when_there_is_text(): void
+    {
+        $jump = TicketType::where('name->es', 'Cumpleaños Jump')->firstOrFail();
+
+        $conVentajas = $this->addon('Piñata', 1500, 84, ['features' => ['es' => ['Con chuches dentro', 'La cuelga el monitor']]]);
+        $conProsa = $this->addon('Photocall', 2000, 85, ['description' => ['es' => 'Un fondo para las fotos del grupo.']]);
+        $sinNada = $this->addon('Globos', 500, 86);
+
+        foreach ([$conVentajas, $conProsa, $sinNada] as $i => $extra) {
+            $jump->configurableAddons()->attach($extra->id, ['quantity_mode' => 'fixed', 'position' => 10 + $i]);
+        }
+
+        $html = (string) $this->get('/cumpleanos')->assertOk()->getContent();
+
+        // Las dos fichas con texto llevan su control, y ninguna más.
+        $this->assertSame(
+            2, substr_count($html, 'class="addons__moreinfo addon-card__more"'),
+            'el «Más info» no sale una vez por ficha CON texto: o falta en una, o lo pinta la que no '.
+            'tiene nada que abrir.',
+        );
+        $this->assertStringContainsString(__('tickets.addon_more_info'), $html);
+
+        // El texto viaja en el marcado, plegado: se lee sin una segunda petición.
+        $this->assertStringContainsString('<li>Con chuches dentro</li>', $html);
+        $this->assertStringContainsString('Un fondo para las fotos del grupo.', $html);
+
+        // Y el área táctil: el control mide ~20 px y el suelo del sistema es 48 (`#264`).
+        $this->assertSame(
+            2, substr_count($html, 'addon-card__more" data-tap'),
+            'el «Más info» de la ficha ha perdido su área táctil.',
+        );
+
+        // Control: el complemento sin texto sí se pinta. Sin esto, los recuentos de arriba también
+        // pasarían con las tres fichas fuera del carril.
+        $this->assertStringContainsString('<span class="addon-card__name">Globos</span>', $html);
+    }
+
+    /**
+     * **LAS FLECHAS DEL CARRIL SE EMITEN SIEMPRE Y SE VEN SOLO SI EL CARRIL NO CABE** (`#549`).
+     *
+     * `[owner]`: *«unas flechas para que el usuario sepa que hay que hacer slide, y si no puede hacer
+     * slide con móvil entonces por accesibilidad necesitamos unas flechas»*.
+     *
+     * ❗❗ **Quién las enseña no es el servidor: es el CSS, a partir de `data-rail-scroll`** —el hecho
+     * que `ui/rail-sails.js` ya publicaba para las velas—. No se puede decidir aquí porque depende
+     * del ANCHO y no del número de fichas (medido en `#498`: el mismo carril cabe entero en
+     * escritorio y desborda 330 px en móvil).
+     * ▶ Por eso este caso comprueba las dos mitades: que el marcado sale y que la regla que las
+     * muestra **cuelga del atributo**. Sin la segunda, un carril que cabe enseñaría dos botones
+     * muertos; y sin JavaScript no hay atributo, que es el defecto del lado seguro.
+     */
+    public function test_the_rail_arrows_are_emitted_and_only_shown_when_the_rail_overflows(): void
+    {
+        $html = (string) $this->get('/cumpleanos')->assertOk()->getContent();
+
+        $this->assertStringContainsString('<div class="addons-rail__nav" data-rail-nav>', $html);
+        $this->assertStringContainsString('data-rail-prev', $html);
+        $this->assertStringContainsString('data-rail-next', $html);
+        $this->assertStringContainsString(__('landing.rates.addon_next'), $html);
+
+        $css = (string) file_get_contents(public_path('css/landing.css'));
+
+        $this->assertMatchesRegularExpression(
+            '/\.addons-rail__nav\s*\{[^}]*display:\s*none/s', $css,
+            'la nave del carril ya no nace oculta: sin JavaScript se verían dos flechas que no '.
+            'pueden mover nada.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.addons-rail__wrap\[data-rail-scroll\]\s+\.addons-rail__nav\s*\{[^}]*display:\s*block/s', $css,
+            'las flechas ya no cuelgan de `data-rail-scroll`: o no se ven nunca, o se ven en un '.
+            'carril que cabe entero.',
+        );
+
+        // ❗❗ **Flotan sobre los cantos del carril y NO se tragan el gesto** (`[owner]`: en los
+        // laterales). Sin `pointer-events: none` en la capa, deslizar con el dedo por encima del
+        // carril dejaría de funcionar justo donde las flechas vienen a ayudar — y eso no lo ve
+        // ninguna captura.
+        $this->assertMatchesRegularExpression(
+            '/\.addons-rail__nav\s*\{[^}]*position:\s*absolute/s', $css,
+            'la nave ha dejado de flotar sobre el carril: las flechas volverían a caer debajo.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.addons-rail__nav\s*\{[^}]*pointer-events:\s*none/s', $css,
+            'la capa de las flechas recibe el puntero: se traga el deslizamiento con el dedo sobre '.
+            'el carril entero.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.addons-rail__nav\s\.rail-arrow\s*\{[^}]*pointer-events:\s*auto/s', $css,
+            'las flechas no recuperan el puntero dentro de una capa que no lo recibe: no se podrían pulsar.',
+        );
+    }
 }

@@ -24,7 +24,8 @@ use Tests\TestCase;
  *  3. **La atribución de Google NO viaja en una opinión propia.** Es el defecto que un decorador mal
  *     escrito produce —hereda la vista de la otra fuente— y que la spec pide vigilar expresamente
  *     (§6·3.bis). Hoy no hay decorador, así que este caso es la red que lo esperará.
- *  4. **La primera nace con `is-on` puesta por el SERVIDOR**, que es el suelo sin JavaScript. Con
+ *  4. **Las opiniones nacen VISIBLES desde el servidor y se recorren deslizando** (`#549`; hasta
+ *     entonces nacía encendida una sola, con `is-on`, porque eran una pila superpuesta). Con
  *     `x-show` + `x-cloak` la sección se queda vacía sin JS, y eso no lo ve ninguna prueba de PHP
  *     que solo mire que el marcado existe.
  *  5. **La vista pide el CONTRATO, no el modelo.** Es lo que hace que el día que entre Google no
@@ -157,21 +158,42 @@ class ReviewsSectionTest extends TestCase
     // ── 4 · El suelo sin JavaScript ──────────────────────────────────────────────────
 
     /**
-     * **La primera opinión nace visible desde el servidor, y solo la primera.**
+     * **LAS OPINIONES NACEN VISIBLES DESDE EL SERVIDOR, Y AHORA LAS TRES.**
      *
      * ⚠️ Sin esto, con `x-show` la sección se queda **vacía** sin JavaScript y parpadea en blanco
      * mientras Alpine arranca. Que el marcado exista no es que se vea.
+     *
+     * ❗❗❗ **CAMBIÓ DE PREMISA EN `#549`, no se relajó.** Exigía que **una sola** naciera encendida
+     * (`class="rev__card is-on"`), porque la sección era una PILA de tarjetas superpuestas con
+     * `visibility` de interruptor. `[owner]`: las opiniones se deslizan «en todo tipo de dispositivo»,
+     * así que la pila murió y con ella su clase — en un carril no hay nada que ocultar y el suelo sin
+     * JavaScript **mejora**: se leen las tres desplazando, no una con dos escondidas.
+     * ▶ Por eso el caso vigila hoy las dos mitades de la propiedad NUEVA: que se sirvan las tres y que
+     * **ninguna regla las esconda**. Sin la segunda, volver a meter un `visibility: hidden` dejaría la
+     * sección con una sola opinión legible y este caso seguiría verde.
      */
-    public function test_la_primera_opinion_nace_visible_sin_javascript(): void
+    public function test_las_opiniones_nacen_visibles_sin_javascript(): void
     {
         $this->sembrar();
         $seccion = $this->seccion();
 
         $this->assertSame(3, preg_match_all('/class="rev__card/', $seccion), 'no se sirven las tres opiniones');
-        $this->assertSame(
-            1,
-            preg_match_all('/class="rev__card is-on"/', $seccion),
-            'o ninguna opinión nace visible sin JS, o nacen varias a la vez.',
+        $this->assertStringNotContainsString(
+            'is-on', $seccion,
+            'ha vuelto la clase de la pila: en un carril no enciende nada y el siguiente que la lea '.
+            'creerá que sí.',
+        );
+
+        $css = (string) file_get_contents(public_path('css/landing.css'));
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.rev__card[^{]*\{[^}]*visibility:\s*hidden/s', $css,
+            'alguna regla vuelve a esconder tarjetas de opinión: sin JavaScript la sección se queda '.
+            'con una sola legible.',
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.rev__track\s*\{[^}]*scroll-snap-type:\s*x mandatory/s', $css,
+            'el carril de opiniones ha perdido el ajuste por tarjeta: se queda a medio camino entre dos.',
         );
     }
 

@@ -962,7 +962,77 @@ de escritorio) y `doc/paginas.md` del canvas.
 | T3b·6 | **`/contacto`**: los tres canales, el formulario con su tema y su aviso, la chapa de atajos y la dirección escrita | ✅ `#535` — ❗ **la premisa del artboard cayó dentro de la tanda**: él dice que lo que salva a esta página es que «el horario de atención no es el de apertura» y `[DECIDIDO owner]` **son el mismo**, así que lo que la separa de «Visítanos» es *qué se hace* (allí se consulta, aquí se escribe) y **no hay campo nuevo**: el plazo se deriva de `heroStatus`, y sin horario no se promete nada · **fuera el mapa** (guarda INVERTIDA: no basta con que esté bien gateado, es que no esté) · el mismo número de teléfono y WhatsApp sale en **UNA** tarjeta · botón `.btn--ink` · aviso de privacidad **sin casilla** (`#350`) con el enlace como control propio |
 | T3b·7 | **`/bar`**: la carta, la foto del local, la chapa de la barra y la puerta de la portada | ✅ `#536` — ❗❗❗ **la carta se publica como IMAGEN** (`[DECIDIDO owner]`), no tecleando los platos como dibuja el artboard: se sube en «Ajustes → El bar», admite **varias caras**, cada una con `alt` **obligatorio** y como **enlace a su fichero** (así se amplía en un móvil sin visor propio), y sus **dimensiones se miden al subir** para que la página no salte · **404 sin nombre de bar**, y entonces el destino no sale ni en menú, ni en pie, ni en portada · **vuelve la tarjeta a la sección 03** (`[DECIDIDO owner]`; el motivo de `#482` desapareció) pero **sola**: «los juegos de fuera» no tienen dato detrás · **se puede entrar solo al bar** (tres estados en el panel) y los **alérgenos** remiten a la barra (Rgto. UE 1169/2011) · **cero relleno de acción**: el bar está fuera del modelo de reserva |
 
+| T3c | **LAS BANDAS DE ENLACE** (`Bandas PJP` turno 1 · `doc/bandas.md`): la GORDA que contesta la pregunta que cada página deja abierta y las DOS FINAS que llevan a las hermanas | ✅ `#543` — ver §5.5.2 |
+
 **Con `/bar`, las SIETE páginas del inventario del canvas están construidas.**
+
+#### 5.5.2 · Las bandas de enlace (`#543`) · lo medido y las tres desviaciones
+
+❗❗❗ **El diagnóstico no era que faltara una pieza: era que SOBRABAN.** Antes de construir nada,
+**cuatro** de las seis interiores ya acababan con un enlace a otro destino escrito a mano:
+
+| página | cierre a medida | destino | talla |
+|---|---|---|---|
+| `/atracciones` | `.page--rides .page__foot-link` | `/#zones` *(sección)* | `--fs-body` (clamp 16→17) |
+| `/precios` | `.rate-page__birthdays-link` | `/cumpleanos` | `--fs-body` |
+| `/bar` | `.bar-party__cta` | `/cumpleanos` | `--fs-17` |
+| `/contacto` | `.where__cta` | `/#info` *(dentro de su tarjeta, se queda)* | — |
+
+Cuatro familias de clases · **tres tallas para la misma línea** · y `/precios` y `/bar` ofreciendo
+**el mismo destino con el mismo rótulo**. Del reparto del canvas coincidía **1 de 6**. Es la forma de
+defecto de `#538` (8 alturas de botón), `#196` (53 sombras, 42 formas) y los badges de la tanda A, y
+**no lo veía ninguna guarda**: de los cuatro bloques solo dos se mencionaban en un test, y eran tests
+*de su página*.
+
+▶ **El mecanismo**: `Content\Services\LinkBands` es el **tercer consumidor de `SiteDestinations`**, así
+que hereda gratis las dos reglas que `#521` y `#536` pagaron —una página en mantenimiento no se
+anuncia, y `/bar` sin nombre tampoco, porque su ruta responde 404—. ⚠️ Un destino que no se puede
+ofrecer **RETIRA la pieza, no la sustituye**: la pregunta y su destino son lo mismo.
+
+##### Las TRES desviaciones del artboard, con su motivo
+
+**1 · La gorda va al FINAL y por encima de las finas, no a media página.** El artboard lo razona así:
+*«el cierre de las interiores ya es una tarjeta de tinta, y dos bloques negros separados solo por el
+aire de sección se leen como uno mal cortado»*. `ESTADO` concluyó que ese motivo caducó con `#527`.
+**No caducó: cambió de sujeto**, y está medido:
+
+    las seis interiores acaban en un bloque de PAPEL
+    · 144 px de aire de sección (`--sec-air`) ·
+    `<x-site.footer />` sin `surface` → `data-surface="ink"` — TINTA (L = 0,007)
+
+⚠️⚠️ Y **no tiene precedente**: la única pareja de bloques oscuros del producto está en la portada,
+**pegada (0 px medidos) y contra un pie de PAPEL** (`#523`). O sea que «dos tintas seguidas» no es lo
+que el producto hace hoy — lo que el artboard tolera es una pareja *a hueso*, no una separada por el
+aire de sección, que es exactamente lo que su frase nombra.
+▶ **Lo resuelve el propio orden del artboard**: con la gorda encima de las finas, las dos tarjetas
+blancas quedan entre las dos tintas (medido: 104 px de papel en escritorio, 184 en móvil).
+⚠️ Y a media página **no cabía**: en `/atracciones` y `/bar` el contenido es **UN** bloque de 1.510 y
+997 px, y la costura más cercana a la mitad cae a **771** y **487 px** de ella.
+
+**2 · `/bar` no lleva gorda**, aunque el artboard le da una («¿qué hay para saltar?» → `/atracciones`).
+La retira `#536`, que es `[DECIDIDO owner]`: cero relleno de acción en esa página, con guarda propia.
+⚠️⚠️ **Y el choque es más profundo que un botón de más: desde `#541` la ACCIÓN y el SECUNDARIO son el
+MISMO cian sobre tinta** —los dos `#1AA9DE` dentro de `[data-surface="ink"]`—, así que un relleno
+dentro de la gorda **no puede decir «esto no es comprar»**. `[DECIDIDO owner, 2026-09-12]`: se queda
+sin gorda; sus finas, que no llevan relleno, se quedan.
+
+**3 · El rótulo es la RUTA escrita del destino**, no «Antes de venir» como escribe el artboard: ese
+rótulo nombra una SECCIÓN de la portada y no el destino, y el propio canvas prohíbe lo contrario
+—*«dos nombres para el mismo sitio son dos sitios para quien lee»*—. Sale de `writtenPath()`, la misma
+función que lo escribe en el menú y en la cabecera de página (`#525`).
+
+##### ⚠️⚠️ Ningún cuerpo afirma un dato del parque
+
+El artboard escribe la gorda de `/atracciones` como *«A partir de 1,30 m se sube solo. Desde 1 m, con
+un adulto al lado»*. **Esas alturas son de este parque**: viven en `park_rules`, las pone el panel y
+`/normas` las pinta desde ahí (`#533`). Escribirlas en `lang/` las clavaría en el producto
+(`DECISIONES #1`) y —peor— podrían **desmentir a la página a la que la banda lleva** sin que nada
+fallara. Cada cuerpo DESCRIBE su destino; los datos los dice el destino.
+
+##### Medido contra el artboard
+
+radio **16** · padding **32 / 24** · finas **76 / 72** · cuerpo sobre tinta **11,57 : 1** (su cifra
+exacta) · botón **56** · cero desborde horizontal en 1440 y 390.
 
 #### 5.5.1 · El contraste del Layout con el código, y lo que el owner decidió NO adoptar
 

@@ -4,6 +4,8 @@ import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
 import { installHeroSwitch } from './ui/hero-switch.js';
 import { initRailSails } from './ui/rail-sails.js';
+import { initRailArrows } from './ui/rail-arrows.js';
+import { initRailDrag } from './ui/rail-drag.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
 // importamos ni iniciamos Alpine: registramos nuestros componentes/almacenes
@@ -1507,6 +1509,14 @@ installHeroSwitch();
 
 // Las velas del carril de complementos: el módulo solo publica si hay scroll; el CSS decide (`#498`).
 initRailSails();
+
+// Y las flechas del mismo carril (`#549`). Va DESPUÉS de las velas y no es casual: quien decide si
+// las flechas se ven es el CSS a partir del `data-rail-scroll` que publica el módulo de arriba.
+initRailArrows();
+
+// Arrastrar un carril con el RATÓN (`#549`, `[owner]`: «que se pueda hacer slide en todo tipo de
+// dispositivo»). Con el dedo no hace falta: eso ya lo hace el navegador.
+initRailDrag();
 
 // ⚠️⚠️ **Aquí escuchaba el evento `logged-in` de Livewire, y se retiró el 2026-08-23**
 // (`specs/account-context-vue.md` §4.6). Ese bus existía porque el bloque de cuenta era un componente

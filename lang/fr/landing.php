@@ -151,6 +151,8 @@ return [
         'from' => 'dès',
         'addon_per_guest' => 'par invité',
         'addon_each' => 'l\'unité',
+        'addon_prev' => 'Voir les compléments précédents',
+        'addon_next' => 'Voir plus de compléments',
         'from' => 'dès',
     ],
     'registration' => [

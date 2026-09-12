@@ -151,6 +151,8 @@ return [
         'from' => 'from',
         'addon_per_guest' => 'per guest',
         'addon_each' => 'each',
+        'addon_prev' => 'See the previous add-ons',
+        'addon_next' => 'See more add-ons',
         'from' => 'from',
     ],
     'registration' => [

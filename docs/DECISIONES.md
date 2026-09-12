@@ -18985,8 +18985,6 @@ la regla que ya nos costó dos choques el 2026-08-31.
 
 ---
 
----
-
 ## #322 · 2026-09-01 · Una ZONA puede tener su propio horario y operar con el recinto cerrado (tanda A de las excursiones de colegio)
 
 > ⚠️ Esta entrada nació como `#321` y se renumeró a `#322` al integrar: el carril del idioma visual
@@ -19368,8 +19366,6 @@ prueba él. ▶ **Y la regla que el owner subrayó al cerrar: la instalación de
 mantener una DISTANCIA SANA del producto** — lo suyo (textos, documento, usuarios, claves, fuentes,
 puente del servidor) vive en su BD, su `.env` o ficheros gitignorados; el repo solo lleva
 mecanismos. Así se hizo, y así se vigila desde ahora.
-
----
 
 ---
 
@@ -31108,3 +31104,349 @@ sonda de navegador sobre **32 pantallas**, cero recortes y cero desborde.
 
 ❗ **QUEDA**: el **OJO del owner**. Y con esta tanda **las 25 pantallas del cajón están construidas**;
 lo siguiente que el canvas tiene escrito es el **cuaderno de entrega**, como se hizo con la portada.
+---
+
+## #543 · 2026-09-12 · `[DECIDIDO owner]` Las bandas de enlace: una familia para lo que había cuatro veces — y el rol secundario que nunca siguió a la superficie
+
+El encargo a medias de `Bandas PJP` (la mitad que NO interrumpe): la banda **gorda**, que contesta la
+pregunta que cada página deja abierta, y las dos **finas**, que llevan a las hermanas.
+
+### ❗❗❗ El diagnóstico no era que faltara una pieza: era que SOBRABAN
+
+Medido antes de tocar nada, **cuatro** de las seis interiores ya acababan con un enlace a otro destino
+escrito a mano:
+
+    /atracciones  .page--rides .page__foot-link  → /#zones      --fs-body (clamp 16→17)
+    /precios      .rate-page__birthdays-link     → /cumpleanos  --fs-body
+    /bar          .bar-party__cta                → /cumpleanos  --fs-17
+    /contacto     .where__cta                    → /#info       (dentro de su tarjeta: se queda)
+
+Cuatro familias de clases · **tres tallas para la misma línea** · `/precios` y `/bar` ofreciendo **el
+mismo destino con el mismo rótulo** · y del reparto del canvas coincidía **1 de 6**. Es la forma de
+defecto de `#538` (8 alturas de botón), `#196` (53 sombras para 42 formas) y los badges de la tanda A.
+⚠️ **No lo veía ninguna guarda**: de los cuatro bloques solo dos se mencionaban en un test, y eran
+tests *de su página*. Un quinto cierre a medida habría entrado en verde.
+
+▶ `Content\Services\LinkBands` es el **TERCER consumidor de `SiteDestinations`** y no compone ni una
+URL propia: así hereda gratis las dos reglas que `#521` y `#536` ya pagaron —una página en
+mantenimiento no se anuncia, y `/bar` sin nombre tampoco, porque su ruta responde **404**—.
+⚠️ **Un destino que no se puede ofrecer RETIRA la pieza, no la sustituye**: la pregunta y su destino
+son lo mismo, así que otro destino contestaría otra cosa. Y en las finas tampoco se rellena el hueco:
+las parejas están puestas *«por lo que la gente hace después, no por simetría»*.
+
+### ❗❗ La gorda va al FINAL y por encima de las finas — el motivo del artboard no caducó, cambió de sujeto
+
+El artboard dice «a media página, no al final» y lo razona: *«el cierre de las interiores ya es una
+tarjeta de tinta, y dos bloques negros separados solo por el aire de sección se leen como uno mal
+cortado»*. `ESTADO` concluyó que eso caducó con `#527`, que retiró ese cierre. **Medido, no**:
+
+    las seis interiores acaban en un bloque de PAPEL
+    · 144 px de aire de sección (`--sec-air`) ·
+    `<x-site.footer />` sin `surface` → `data-surface="ink"` — TINTA (L = 0,007)
+
+⚠️⚠️ **Y la configuración no tiene precedente en el producto**: la única pareja de bloques oscuros
+está en la portada, **pegada (0 px medidos) y contra un pie de PAPEL** (`#523`). Lo que el artboard
+tolera es una pareja a hueso; lo que su frase nombra —«separados solo por el aire de sección»— es
+exactamente lo que habría al final de una interior.
+▶ **Lo resuelve su propio orden**: con la gorda encima de las finas, las dos tarjetas blancas quedan
+entre las dos tintas (104 px de papel en escritorio, 184 en móvil).
+⚠️ Y a media página **no cabía**: en `/atracciones` y `/bar` el contenido es **UN** bloque de 1.510 y
+997 px, y la costura más cercana a la mitad cae a **771** y **487 px** de ella. Colocarla ahí sería
+partir un componente por dentro.
+
+### ❗❗❗ Y destapó un defecto de `#540` que llevaba una jornada en verde: `--secondary` NUNCA siguió a la superficie
+
+`#540` creó el rol en `site.css` como `--secondary: var(--interactive)` y `--on-secondary: var(--bg)`,
+**y no le dio la re-declaración por superficie que `--action` sí tiene**. Una custom property con
+`var()` dentro **se sustituye en el elemento que la DECLARA** y baja ya computada, así que desde
+`:root` resolvía contra los valores de PAPEL y los heredaba todo el documento. Medido dentro de
+`[data-surface="ink"]`:
+
+    --secondary     #0A5C93   con --interactive valiendo  #1AA9DE
+    --on-secondary  #F4F4F1   con --bg          valiendo  #101418
+
+▶ O sea que la propiedad que `site.css` afirma —*«6,43 en papel y 6,85 en tinta»*, *«cuando el relleno
+sigue a la superficie, el rótulo también»*— **no se cumplía: el 6,85 no ocurría nunca**.
+⚠️⚠️ **Y no fallaba nada**: el rótulo claro sobre Azul Muro da **5,98**, que pasa AA. Lo que se rompía
+es que el RELLENO deja de separarse de su propia tarjeta — **2,79 : 1** de forma, contra **6,85** del
+cian. Un botón que no se lee como botón.
+▶ **Tenía víctima ANTES de esta tanda**: `.cta-med` dentro del hero de la portada, desde `#540`.
+`[DECIDIDO owner, 2026-09-12]` con las dos formas y sus números delante: **se confirma el cian**.
+
+⚠️ **`SurfaceScopeTest` es la razón de que pasara en verde**: el caso que compara los dos juegos de
+tokens ya existía, y el rol nuevo no estaba en su `ROLE_TOKENS`. *Una guarda que enumera roles solo
+vigila los roles que alguien acordó enumerar.* Hoy los cuatro están, y la mutación que retira la
+re-declaración de tinta la pone roja.
+
+### Las otras dos desviaciones del artboard
+
+- **`/bar` no lleva gorda** aunque él le da una («¿qué hay para saltar?» → `/atracciones`): la retira
+  `#536`, que es `[DECIDIDO owner]` —cero relleno de acción ahí—. ⚠️⚠️ **Y el choque es más profundo
+  que un botón de más: desde `#541` la ACCIÓN y el SECUNDARIO son el MISMO cian sobre tinta**, así que
+  un relleno dentro de la gorda no tiene forma de decir «esto no es comprar». `[DECIDIDO owner]`
+  re-confirmado con la consecuencia delante: se queda sin gorda, y sus finas se quedan.
+- **El rótulo es la RUTA escrita del destino**, no «Antes de venir»: ese rótulo nombra una SECCIÓN de
+  la portada y no el destino, y el canvas prohíbe lo contrario —*«dos nombres para el mismo sitio son
+  dos sitios para quien lee»*—. Sale de `writtenPath()`, la misma función del menú y de la cabecera.
+
+### ⚠️⚠️ Ningún cuerpo afirma un dato del parque
+
+El artboard escribe la gorda de `/atracciones` como *«A partir de 1,30 m se sube solo. Desde 1 m, con
+un adulto al lado»*. **Esas alturas son de este parque**: viven en `park_rules` y las pinta `/normas`
+(`#533`). Escribirlas en `lang/` las clavaría en el producto (`DECISIONES #1`) y, peor, podrían
+**desmentir a la página a la que la banda lleva** sin que nada fallara. Cada cuerpo DESCRIBE su
+destino. Por lo mismo, la pregunta de `/precios` dice «en grupo» donde el artboard dice «ocho»: el
+número a partir del cual sale a cuenta un pack es `min_qty`, que es dato del catálogo.
+
+### Lo medido
+
+Contra el artboard: radio **16** · padding **32 / 24** · finas **76 / 72** · cuerpo sobre tinta
+**11,57 : 1** (su cifra exacta) · botón **56** · cero desborde horizontal en 1440 y 390.
+
+⚠️ Se retiran con su consumidor **tres claves de idioma** en los tres idiomas
+(`landing.attractions.see_zones`, `landing.pricing.birthdays`/`_cta`, `site.bar_party_cta`) y sus
+`@media` huérfanos —la lección de `#295`: retirar CSS deja los `@media` detrás si solo se borra la
+regla base—. Y dos `display: flex` que ya no reparten nada: una fila de dos con un solo hijo.
+
+⚠️ **Dos casos se re-apuntan y ninguno queda más débil**: el de `/precios` conserva su propiedad
+—la página acaba apuntando a los packs— y sigue acotado al bloque; el de `/atracciones` **se invierte
+a propósito** y asevera la AUSENCIA de su salida propia, porque el modo de fallo es que alguien vuelva
+a escribir la quinta.
+
+### La red
+
+`LinkBandsTest` (13 casos, con guarda de la guarda) · `SurfaceScopeTest` amplía `ROLE_TOKENS` con los
+cuatro del rol secundario · `scripts/mutar-bandas.py`, **13/13 mutaciones mueren**.
+**Verificación**: suite **4812 · 30.514 aserciones** (1 skipped) · Pint ✓ · docs-check ✓ · sonda de
+navegador en 1440 y 390 sobre las siete páginas.
+
+---
+
+## #544 · 2026-09-12 · `[DECIDIDO owner]` La pasada de vestido, primera tanda: vuelven las manchas, y el reparto lo fijan las reglas del canvas
+
+`specs/pasada-de-vestido.md` decidió que la decoración se reparte **sobre todas las secciones a la vez
+y con presupuesto**, no una mancha por sección para rellenar. Esta tanda es la primera aplicación: tres
+manchas del kit detrás de tres titulares de sección (Reseñas, Visítanos, Dudas).
+
+### Lo que se aprendió colocándolas
+
+⚠️⚠️ **Las manchas salían de dos tamaños distintos con el MISMO valor escrito** (77 px contra 165):
+`min(22%, 165px)` es **relativo al contenedor**, y dos de esas cabeceras viven en una columna de 352 px
+de la rejilla de doce. Un porcentaje describe una proporción, no una medida: pasan a talla FIJA.
+
+⚠️ La de Dudas necesita un tamaño propio (`--xxl`, 440 × 300 al 16 %): su cabecera ocupa el ancho
+entero y a la talla de las otras dos la mancha no se leía como pieza, se leía como suciedad.
+
+⚠️ **`isolation: isolate` es lo que hace que una pieza a `z-index: -1` se vea**: `.sec-head__lockup` es
+`position: relative` sin `z-index`, así que no crea contexto de apilamiento y la pieza se hunde **por
+detrás del fondo de la página** — sin fallar, que es como este defecto se cuela.
+
+---
+
+## #545 · 2026-09-12 · `[DECIDIDO owner]` El laboratorio de fachada: dos pantallas para elegir MIRANDO, no leyendo
+
+`[owner]`: *«quiero dos enlaces para ver variantes»*. Nacen `/_diseno/splash` y `/_diseno/siluetas`,
+**solo en `local`**, con siete colocaciones de cada familia (mancha y pose) y una nota por colocación
+que dice lo que cuesta: si añade alto, si tapa texto, si se sale de la caja, si escala en móvil.
+
+▶ **Usan el mecanismo REAL** (`<x-site.ilu>` sobre el paquete de la instalación), no una maqueta
+aparte: lo que se ve en el laboratorio es lo que se vería en la web. Y por eso sirve para decidir.
+
+⚠️⚠️ **Las claves del kit van ESCRITAS ENTERAS y no compuestas** (`'slot-splash-'.$i`): una clave
+armada por concatenación es invisible para cualquier censo, y `ZonesSectionTest` —que exige que toda
+ranura declarada la pinte alguna vista— **se puso ROJA con el laboratorio funcionando**. Es la trampa
+de `#287` (`'ilu--'.$trato`) por la otra puerta.
+
+---
+
+## #546 · 2026-09-12 · `[DECIDIDO owner]` Las dos variantes de fachada sobre la PORTADA REAL, con `?fachada=1|2`
+
+`[owner]`: *«ponlos en la landing, pero hazme dos variaciones»*. El laboratorio enseña piezas; lo que
+hay que decidir es cómo se ven **dentro de la página de verdad**, con su texto y sus tarjetas.
+
+▶ **Un solo sitio decide**: `components/site/facade.blade.php` es un MAPA —sección → variante → pieza,
+tratamiento, posición y opciones—, y `facade-styles.blade.php` emite su hoja **una vez y solo con
+variante activa**. Sin `?fachada=` la portada no lleva ni una regla de más, que es la condición para
+que un prototipo pueda vivir dentro de la vista de producción sin ensuciarla.
+
+⚠️ El mapa solo se lee en `local`: en producción `$v` vale 0 por construcción.
+
+### Dos trampas medidas
+
+⚠️⚠️ **El primer reparto ancló las figuras por `bottom`** y las mandó al fondo de secciones de 1.150 px,
+detrás de las tarjetas. Se re-ancló a la banda del titular, que es donde hay hueco de verdad.
+
+⚠️⚠️ **Una media query no puede ganarle a un `style` en línea**, y el mapa declara cada pieza en línea:
+las correcciones de móvil necesitan `!important`, documentado, y se van el día que una colocación se
+confirme y baje a `landing.css`.
+
+---
+
+## #547 · 2026-09-12 · `[DECIDIDO owner]` La variante 2, pulida con el ojo del owner — y dos piezas del kit que el producto DIBUJA
+
+Seis puntos del owner sobre la variante 2 (fuera la silueta del hero del pie · fuera el splash de
+«Visítanos» · el de Reseñas a XXL y detrás de la tarjeta · un niño encima de una tarjeta de cumpleaños
+· las tarifas centradas con el **arco F3** encima · un niño al lado de la silueta de zonas), más el
+**trío G4** en el lateral del titular de cumpleaños.
+
+▶ **`F3` y `G4` los COMPONE el producto**: el kit trae poses sueltas y la parábola del arco y la fila
+del trío son geometría nuestra. Las cuatro alturas del arco **están calculadas evaluando la propia
+Bézier** (`M6 134 Q170 -16 334 122`) en las fracciones donde `space-between` coloca a las figuras —14 ·
+74 · 78 · 25—: la primera versión las puso a ojo y se veía (una figura flotaba bajo el trazo y otra por
+encima).
+
+### Lo que se descubrió midiendo huecos
+
+⚠️⚠️ **Dos veces en la misma tanda, un hueco calculado entre dos cotas resultó estar OCUPADO**: la
+banda de 229 px de cumpleaños tenía dentro la tarjeta del reloj, y el pie de esa tarjeta tenía los tres
+chips. *Restar dos números no dice que ahí no haya nada.*
+
+⚠️⚠️ **`transform-origin: right bottom` bajó el trío 120 px sin que nada fallara**: `scale` encoge el
+DIBUJO, no la caja, así que con el origen abajo el visual se queda pegado al borde inferior de una caja
+que sigue midiendo lo de antes.
+
+⚠️ **Una sonda que mide `offsetHeight` sobre un `<svg>` devuelve `undefined`** y las piezas parecen
+ausentes: la primera medición de esta tanda dijo que no se pintaba nada.
+
+---
+
+## #548 · 2026-09-12 · `[DECIDIDO owner]` El trío más grande, y las tres piezas de MÓVIL en su sitio
+
+Cuatro puntos del owner: el trío de cumpleaños más grande en escritorio y, en móvil, las siluetas
+**encima de la tarjeta de 2 h**, el splash de «Antes de venir» **detrás de la tarjeta del QR** y el de
+Reseñas **a un lateral** para que se vea más.
+
+⚠️⚠️ **En móvil una pieza no es «la misma más pequeña»**: en estrecho el titular ocupa el ancho entero y
+**no hay lateral donde vivir**, así que el trío estaba al fondo de la sección, a 1.498 px del titular y
+sin nada que acompañar. Cada una de las tres tiene colocación propia, no una escala.
+
+⚠️ Y una pieza que se apoya en una tarjeta va **por ENCIMA** (`z-index`), porque la tarjeta es opaca:
+en la capa de fondo queda enterrada. Misma lección que la figura del cierre en `#547`.
+
+---
+
+## #549 · 2026-09-12 · `[DECIDIDO owner]` Lo que dice un sello de zona, lo que abre un complemento, y los dos carriles que ya se deslizan
+
+Tanda de detalle sobre lo construido, toda del ojo del owner, con **cuatro decisiones y tres defectos
+que solo vio el navegador**.
+
+### 1 · El sello de la zona dice EDAD y ALTURA, no precio
+
+`[owner]`: *«en esos sticker vamos a poner la edad y la altura: +8 años desde x m»*. El precio ya lo
+publica la sección 02 entera; en el sello competía con ella y no decía lo que se pregunta delante de
+una zona.
+
+⚠️⚠️ **Y el CSS del sello se metió en la tarjeta**: el owner lo vio —*«el texto está en negrita y
+mayúscula»*—. La causa es una **colisión de nombre de clase**: `.zone-card__who` ya existía en el
+cuerpo de la tarjeta y el sello estrenó la misma. Renombradas a `.zone-card__seal-age` /
+`-height`. *Un nombre de clase es un identificador global: estrenarlo sin buscarlo es editar código
+que no estás mirando.*
+
+▶ De paso sale del cuerpo la edad duplicada, y con ella **67 px de aire muerto**: el reparto de la
+tarjeta (`.zone-card__body[data-axis]`) baja de **320 a 253 px** (`[owner]`). *Una cota calculada con
+un contenido encima sobrevive a que ese contenido se vaya.*
+
+### 2 · La ficha de complemento vuelve a ser BLANCA
+
+`[owner]`: *«quítale ese color azul, déjalo como estaba antes»*. Se retira el tinte de identidad que
+`#537` le puso, con los valores recuperados del árbol (`7100621f^`) y **no reconstruidos a ojo**.
+
+❗❗❗ **Y al buscarle un sujeto vivo a la guarda de ese tinte apareció el defecto que no vigilaba.** La
+regla R2 de `#537` («sobre un tinte solo aguantan Tinta y Azul Muro; Humo da 4,40») estaba escrita,
+decidida y medida, y su caso vigilaba **un solo sujeto**: la unidad de esta ficha. Al destinarse la
+ficha, ese caso se quedaba verde para siempre sobre una superficie blanca. Las otras dos superficies
+teñidas se midieron y la tarjeta de canal de `/contacto` llevaba **dos textos en Humo sobre el tinte**:
+`4,40 : 1`, por debajo de AA. Corregidos (etiqueta a Azul Muro, como `.before__row-key`; pista a tinta)
+y la guarda re-apuntada a los dos, con guarda-de-la-guarda de que siguen teñidos.
+
+⚠️⚠️ **Con el Humo POR DEFECTO del producto la cuenta sale 4,52 y parecería sana**: el fallo lo estrena
+el paquete del cliente (`#626A72`). Un cálculo de contraste hecho sin el tema instalado no vale.
+
+### 3 · «Más info» en la ficha, y el texto sale del PANEL
+
+`[owner]`: *«les añadimos la opción de "más info" y eso abre la desc de ese complemento»*, en la segunda
+fila del texto.
+
+❗❗ **Son DOS campos del catálogo y no uno.** Medido sobre el catálogo real (16 complementos): **once
+llevan `features`** (lista) **y ninguno `description`**; los **dos** extensores de sala llevan
+`description` (prosa) **y ninguna `features`**. Leer solo uno habría dejado muda a una mitad **sin que
+nada fallara**. El botón nace solo si hay algo que abrir.
+
+▶ La piel del control es `.addons__moreinfo`, la que ya visten el cajón y los chips de `/servicios`:
+una receta, tres superficies. Y `data-tap` para el suelo táctil de 48.
+
+⚠️⚠️ **La ficha mide `max-content`, así que el texto desplegado la ENSANCHARÍA al abrirse** (de su
+ancho de fila al tope de 380) y eso es un salto a mitad de un gesto. Lo evita el par `width: 0` +
+`min-width: 100%`: un hijo de ancho cero no aporta nada al tamaño intrínseco del padre. **Medido: la
+ficha abre y cierra sin moverse a lo ancho** (372 → 372 en escritorio, 314 → 314 en móvil; solo crece
+de alto, 92 → 155 y 112 → 173).
+
+⚠️ **Su guarda no puede vivir en el censo de `TouchTargetTest`**: ese caso exige que la clase se pinte
+en una ruta real, y el texto lo escribe cada instalación —el seeder no lo siembra, ni debe (`#490`)—,
+así que ahí vigilaría el vacío. La vigila `LandingAddonsTest`, que se trae su propio sujeto.
+
+### 4 · Los dos carriles se deslizan, y las flechas van en los laterales
+
+`[owner]`: *«unas flechas para que el usuario sepa que hay que hacer slide, y si no puede hacer slide
+con móvil entonces por accesibilidad necesitamos unas flechas»*, en los **laterales**; y *«haz las
+reseñas que se pueda hacer slide»*, primero en móvil y —viéndolo— **en todo tipo de dispositivo**.
+
+▶ **Las flechas no deciden si se ven: las enciende el hecho que ya existía.** `ui/rail-sails.js`
+publica `data-rail-scroll` cuando el carril no cabe, y de ahí cuelgan las velas **y** las flechas. Un
+carril que cabe entero no las pinta, y **sin JavaScript tampoco** —no hay atributo—, que es el defecto
+del lado seguro: nunca dos botones muertos.
+
+▶ **Una sola receta de flecha**: `.rail-arrow` comparte bloque con `.rev__arrow` (48 × 48, keyline de
+identidad, cápsula, glifo de 19), la pieza que `#490` ajustó contra el artboard. Estrenar una segunda
+flecha es como murió el sistema de sombras de `#196`.
+
+❗❗❗ **Y LA PILA DE OPINIONES DE `#490` MUERE CON ESTO.** La primera versión dejó la pila en escritorio
+razonando que «una pasada de móvil no rediseña el escritorio»; el owner pidió lo contrario, así que el
+carril es uno y el mismo en todos los anchos. Con él se van `visibility` de interruptor y la clase
+`is-on`, **retirada del marcado y del CSS**: un modificador que no cambia nada es el que el siguiente
+lee como si significara algo. ▶ El suelo sin JavaScript **mejora**: antes se leía una opinión con dos
+ocultas; ahora las tres se recorren desplazando.
+
+### ❗❗❗ El defecto que cazó el CONTROL de la sonda, no una relectura
+
+`setPointerCapture()` no solo redirige los `pointermove`: **el `click` posterior se dispara sobre el
+elemento que capturó**. Con la captura pedida en el `pointerdown` del arrastre con ratón, **ningún
+control de dentro del carril volvía a funcionar** —el «Más info» se quedaba en `aria-expanded="false"`
+con el panel cerrado—, sin un error en consola y con la suite en verde. Lo cazó el control de la sonda
+(un clic normal, medido después del arrastre). Hoy la captura se pide en el primer `pointermove` que
+pasa del umbral: hasta entonces eso es un clic y el navegador lo entrega a quien le toca.
+
+⚠️⚠️ **El ajuste por tarjeta hay que APAGARLO mientras se arrastra**: con `scroll-snap-type: x
+mandatory` puesto, cada `scrollLeft` que escribe el arrastre hace que el navegador vuelva a encajar y
+el carril no se mueve. Se apaga con una clase y **volver a ponerla al soltar es lo que encaja el carril
+en la tarjeta más cercana**: no hay ninguna parada calculada a mano.
+
+⚠️ **El «cómo» se mueve un carril es DISEÑO y vive en la hoja** (`scroll-behavior`, con su excepción de
+`prefers-reduced-motion`). Un `behavior: 'smooth'` en la llamada de JavaScript **gana a la hoja** y se
+lleva por delante esa excepción.
+
+### ⚠️ Y un instrumento que dijo que nada funcionaba
+
+Un gesto táctil sintético (`Input.synthesizeScrollGesture` en `headless_shell`) da **0 px de scroll**
+sobre el carril de complementos, que lleva semanas deslizándose en el teléfono del owner. Con ese
+control delante, el cero es del instrumento. *Cuando una sonda dice que nada funciona, la primera
+hipótesis es la sonda* (`#196` §10.6).
+
+### Lo medido en navegador
+
+Flechas: móvil desborde **656** → un toque mueve **304** (una ficha y su hueco); escritorio desborde
+**36** → mueve 36 y la flecha del extremo se esconde. Opiniones: móvil tarjeta **358** = ancho del
+carril, desborde **740**; escritorio **736** y **1.496**; un punto lleva al **748** exacto de la segunda
+tarjeta y el índice se sincroniza. Arrastre con ratón: 100 px **vuelven** (menos de media tarjeta) y
+500 px **avanzan** una. Cero errores de consola en los cuatro recorridos.
+
+### La red
+
+`LandingAddonsTest` (+2 casos: el «Más info» con sus tres sujetos —ventajas, prosa y nada— y las
+flechas con sus dos mitades) · `ReviewsSectionTest` cambia de premisa (las tres nacen visibles, ninguna
+regla las esconde, el carril conserva su ajuste) · `IdentityTintTest` R2 re-apuntada a las dos
+superficies teñidas vivas · `RateRailSectionTest` arregla un **localizador que dependía del vecino**
+(buscaba el precio seguido de `</div>` y la ficha pasó a dos filas: devolvía cero coincidencias y el
+caso afirmaba sobre una cadena vacía — la lección de `#314`).
+**Verificación**: suite **4814 · 30.606 aserciones** (1 skipped) · Pint ✓ · docs-check ✓ · sonda de
+navegador en 1280 y 390 con control en cada medición.

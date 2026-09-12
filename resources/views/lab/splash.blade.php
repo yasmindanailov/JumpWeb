@@ -86,13 +86,20 @@
     {{-- ── G · el muestrario ────────────────────────────────────────────────────────────── --}}
     <figure class="lab-v">
         <div class="lab-v__head"><span class="lab-v__code">G</span><span class="lab-v__name">Las seis, para elegir cuáles</span></div>
+        {{-- ⚠️⚠️ **Las claves van ESCRITAS ENTERAS y no compuestas con `'slot-splash-'.$i`.** Una
+             clave armada por concatenación es invisible para cualquier censo: `ZonesSectionTest`
+             comprueba que toda ranura declarada la pinta alguna vista, y con el bucle **se puso ROJA
+             con el laboratorio funcionando**. Es la misma trampa que `#287` pagó con `'ilu--'.$trato`
+             y que `#302` documentó. Escribirlas enteras no es complacer a una guarda: es que el
+             producto se pueda medir. --}}
         <div class="lab-grid">
-            @for ($i = 1; $i <= 6; $i++)
+            @foreach (['slot-splash-1', 'slot-splash-2', 'slot-splash-3',
+                       'slot-splash-4', 'slot-splash-5', 'slot-splash-6'] as $i => $clave)
                 <div class="lab-cell">
-                    <x-site.ilu :clave="'slot-splash-'.$i" style="--ilu-fg: var(--strip-1);" />
-                    <span class="lab-cell__n">mancha {{ $i }}</span>
+                    <x-site.ilu :clave="$clave" style="--ilu-fg: var(--strip-1);" />
+                    <span class="lab-cell__n">mancha {{ $i + 1 }}</span>
                 </div>
-            @endfor
+            @endforeach
         </div>
         <p class="lab-v__note">Son las seis formas fijas del kit. <b>Tres de ellas ya están colocadas</b> en la portada
             (A). El artboard dice que se repartan sin repetir la misma en una pantalla.</p>

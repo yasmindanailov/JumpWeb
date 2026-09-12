@@ -284,6 +284,11 @@ return [
         // «por persona» en uno `fixed`** — de ésos se elige cantidad, no se cobra uno por cabeza.
         'addon_per_guest' => 'por invitado',
         'addon_each' => 'cada uno',
+        // Los rótulos de las flechas del carril (`#549`). ⚠️ **Dicen QUÉ recorren y no «anterior» /
+        // «siguiente» a secas**: las flechas viven fuera del grupo del carril, así que un lector de
+        // pantalla las anuncia sin el contexto que da su `aria-label`.
+        'addon_prev' => 'Ver los complementos anteriores',
+        'addon_next' => 'Ver más complementos',
         'from' => 'desde',
     ],
     'registration' => [

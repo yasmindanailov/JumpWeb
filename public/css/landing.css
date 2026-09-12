@@ -1564,14 +1564,20 @@ img { display: block; max-width: 100%; }
      quedaba TAPADO (lo vio el owner en la captura). */
   z-index: 3;
 }
-.zone-card__from {
-  font-family: var(--font-mono); font-size: var(--fs-10);
-  letter-spacing: 0.1em; text-transform: uppercase;
-}
-.zone-card__price { font-family: var(--font-display); font-size: var(--fs-22); line-height: 1; }
-.zone-card__special {
+/* ⚠️ Aquí vivían `.zone-card__from`, `.zone-card__price` y `.zone-card__special`, las tres piezas
+   del sello de PRECIO: se van con él (`#549`). El sello dice ahora a quién le toca la zona.
+
+   ⚠️⚠️ **`__seal-age` y `__seal-height`, y NO `__who`/`__tall`: la primera versión colisionó.**
+   `.zone-card__who` **ya existía** —es el bloque de edad, altura y descripción del CUERPO— y darle
+   aquí `font-family: var(--font-display)` a 22 px se lo aplicó también a él: el texto de dentro de
+   la tarjeta salió en Bungee y grande, con el marcado correcto y sin que nada fallara. Lo vio el
+   owner. ▶ *Antes de estrenar un nombre de clase dentro de un bloque que ya existe, hay que mirar
+   si ese bloque ya lo usa.* */
+.zone-card__seal-age { font-family: var(--font-display); font-size: var(--fs-22); line-height: 1; }
+.zone-card__seal-height {
   font-family: var(--font-mono); font-size: var(--fs-10); line-height: 1.4;
-  /* Envuelve en vez de empujar: es la línea que trae el rótulo de la tarifa desde la BD. */
+  letter-spacing: 0.1em; text-transform: uppercase;
+  /* Envuelve en vez de empujar: la frase de altura la redacta `ZoneCards` y cambia con el dato. */
   white-space: normal; text-wrap: balance;
 }
 
@@ -1592,8 +1598,13 @@ img { display: block; max-width: 100%; }
    un sangrado del cuerpo. */
 .zone-card__body[data-axis] {
   display: flex; flex-direction: column;
-  /* Alto mínimo de la escala: por debajo, los dos tramos no caben y el reparto deja de leerse. */
-  min-height: 320px;
+  /* Alto mínimo de la escala: por debajo, los dos tramos no caben y el reparto deja de leerse.
+     ⚠️ **253 y no 320 desde `#549`** (`[owner]`): la edad y la altura salieron del cuerpo al sello,
+     así que los 67 px que el reparto reservaba para ese texto quedaron como aire al pie de la
+     tarjeta. *Una cota que se calculó con un contenido encima sobrevive a que ese contenido se
+     vaya.* Los dos tramos siguen cabiendo — es lo que hay que volver a comprobar si alguien la baja
+     más. */
+  min-height: 253px;
 }
 
 .zone-card__axis {
@@ -1769,10 +1780,9 @@ img { display: block; max-width: 100%; }
   .zone-card__axis-zero,
   .zone-card__chip,
   .zone-card__neighbour,
-  .zone-card__from,
-  .zone-card__special { font-size: var(--fs-12); }
+  .zone-card__seal-height { font-size: var(--fs-12); }
   .zone-card__seal { right: var(--sp-16); padding: var(--sp-10) var(--sp-14); }
-  .zone-card__price { font-size: var(--fs-30, 30px); }
+  .zone-card__seal-age { font-size: var(--fs-30, 30px); }
   .zone-card__who { font-size: var(--fs-17); }
 }
 /* ⚠️⚠️ **`isolation: isolate` + `z-index: -1`, y NO «subir el contenido con `position: relative`».**
@@ -2247,6 +2257,10 @@ img { display: block; max-width: 100%; }
      borde que su propio contenedor alcanza. */
   margin: 0;
   padding: var(--sp-4) 64px var(--sp-8) var(--col-gutter);
+  /* ❗ **El «cómo» se mueve un carril es DISEÑO y vive aquí** (`#549`): las flechas solo dicen cuánto.
+     Un `behavior: 'smooth'` en la llamada de JavaScript gana a esta línea y se lleva por delante la
+     excepción de movimiento reducido de más abajo. */
+  scroll-behavior: smooth;
 }
 .addons-rail__track::-webkit-scrollbar { display: none; }
 
@@ -2263,14 +2277,30 @@ img { display: block; max-width: 100%; }
   width: max-content;
   min-width: 220px; max-width: min(380px, calc(100vw - 76px));
   scroll-snap-align: center;
-  display: flex; align-items: center; gap: var(--sp-12);
+  /* ⚠️ **`flex-start` y no `center` desde `#549`**: el cuerpo pasó a ser una columna de dos filas, y
+     centrado el icono caía entre las dos — y con el texto desplegado, en medio de una ficha alta. */
+  display: flex; align-items: flex-start; gap: var(--sp-12);
   padding: var(--sp-14) var(--sp-16);
-  /* `#537` · tinte de identidad. Lo que va encima pasa a TINTA: sobre un tinte, Humo da 4,40. */
-  background: var(--tint-info);
-  border: 1px solid var(--tint-info-border);
+  /* ⚠️⚠️ **LA FICHA ES BLANCA, y el tinte de identidad que `#537` le puso se RETIRA** (`[owner]`:
+     «quítale ese color azul, déjalo como estaba antes»). Los valores son los de antes de `#537`,
+     recuperados del árbol (`7100621f^`) y no reconstruidos a ojo.
+     ▶ Lo que el tinte rompía está escrito dos comentarios más arriba y seguía siendo verdad: *«la
+     ficha: blanca, borde de Línea»* — o sea que `#537` ya contradecía la nota que tenía al lado. */
+  background: var(--bg-card);
+  border: 1px solid var(--line);
   border-radius: var(--r-lg);
 }
 .addon-card__ico { color: var(--fg); display: flex; flex: none; }
+/* ── EL CUERPO, EN DOS FILAS (`#549`) ─────────────────────────────────────────────────────────
+   `[owner]`: el «Más info» va **en la segunda fila del texto**. La primera es la de siempre.
+   ⚠️⚠️ **La ficha mide `max-content`, así que el texto desplegado la ENSANCHARÍA al abrirse** —de
+   su ancho de fila al tope de 380— y eso es un salto a mitad de un gesto. `.addon-card__info` lo
+   evita con el par `width: 0` + `min-width: 100%`: un hijo de ancho cero **no aporta nada** al
+   tamaño intrínseco del padre y el porcentaje lo rellena después, ya sabido el ancho. Por eso la
+   ficha abre y cierra sin moverse a lo ancho; si alguien retira ese par, el salto vuelve. */
+.addon-card__body { flex: 1; min-width: 0; }
+/* La fila del dato conserva el centrado que tenía la ficha entera: nombre de 16 y precio de 17. */
+.addon-card__row { margin: 0; display: flex; align-items: center; gap: var(--sp-12); }
 .addon-card__name { flex: 1; min-width: 0; font-weight: 800; font-size: var(--fs-16); line-height: 1.25; color: var(--fg); }
 /* El precio no se parte ni se encoge: es el dato que se busca de un vistazo. */
 .addon-card__price {
@@ -2282,10 +2312,72 @@ img { display: block; max-width: 100%; }
 .addon-card__unit {
   margin-left: var(--sp-6);
   font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-label);
-  /* ⚠️ `#537` · TINTA y no Humo: sobre el tinte de la tarjeta, Humo da **4,40** y no llega a AA.
-     Sobre una superficie teñida solo aguantan la tinta (14,8) y el Azul Muro (5,68). */
+  /* ⚠️ **Se queda en TINTA aunque el tinte que lo obligaba se haya ido** (`#537` → `#549`): lo puso
+     el contraste sobre el tinte (Humo daba 4,40), y sobre la ficha blanca Humo ya pasaría. No se
+     devuelve a Humo porque en la fila del dato **no hay nada secundario**: el «+2,00 €» y su «cada
+     uno» son la misma cifra dicha en dos voces, y el gris la partiría en dos jerarquías. */
   color: var(--fg);
 }
+
+/* ── EL «MÁS INFO» Y SU TEXTO (`#549`) ────────────────────────────────────────────────────────
+   `[owner]`: *«les añadimos la opción de "más info" y eso abre la desc de ese complemento»*.
+   ❗ La PIEL del control no se declara aquí: la trae `.addons__moreinfo` de `site.css`, que es la
+   misma que llevan el cajón de compra y los chips de `/servicios`. Aquí solo se coloca.
+   ⚠️ Sin `margin-top` el control se pega al nombre y parece parte de él. */
+.addon-card__more { margin-top: var(--sp-2); }
+/*
+ * ⚠️⚠️ **`width: 0` + `min-width: 100%` es GEOMETRÍA, no un truco**: sin el par, el texto
+ * desplegado entra en el `max-content` de la ficha y la ensancha al abrirla (ver `.addon-card__body`).
+ * ⚠️ **Y `[data-tap]` sí vale aquí, aunque la ficha viva en un carril que recorta.** La regla del
+ * mecanismo avisa de que un área ampliada se corta dentro de un `overflow` (`#264`, el caso de las
+ * tiras del pie), y aquí NO llega a pasar: el pseudo crece 14 px por lado desde un control de ~20 y
+ * se queda dentro del relleno de la propia ficha (14) más el del carril (8). Es lo primero que hay
+ * que volver a medir si alguien aprieta esos rellenos.
+ */
+.addon-card__info {
+  width: 0; min-width: 100%;
+  margin-top: var(--sp-6);
+}
+/* La descripción es prosa, así que va en cuerpo de texto y NO en la talla de las ventajas: los
+   12 px de `.addons__features` vienen del cajón, y `#474` midió que por debajo de 15 está la
+   «grieta 00». Por eso la lista de al lado también sube a 15 dentro de esta ficha — dos tallas en
+   el mismo párrafo desplegado se leen como dos cosas distintas. */
+.addon-card__desc { margin: 0; font-size: var(--fs-15); line-height: 1.45; color: var(--fg); }
+.addon-card__info .addons__features li { font-size: var(--fs-15); }
+
+/* ── LAS FLECHAS DEL CARRIL (`#549`) ──────────────────────────────────────────────────────────
+   `[owner]`: *«unas flechas para que el usuario sepa que hay que hacer slide, y si no puede hacer
+   slide con móvil entonces por accesibilidad necesitamos unas flechas»*.
+
+   ❗❗ **Solo existen si el carril no cabe, y quien lo dice es `data-rail-scroll`** —el hecho que
+   `ui/rail-sails.js` ya publicaba para las velas—. Un carril que cabe entero no enseña flechas, y
+   **sin JavaScript tampoco**: no hay atributo, así que el defecto cae del lado seguro (nunca dos
+   botones muertos). Es el mismo criterio con el que los controles de «Reseñas» solo salen con más de
+   una opinión (`#490`).
+
+   ❗❗ **VAN EN LOS LATERALES, FLOTANDO SOBRE LOS CANTOS DEL CARRIL** (`[owner]`). La nave es una capa
+   que cubre el envoltorio y **no recibe el puntero** (`pointer-events: none`): si lo recibiera se
+   tragaría el deslizamiento con el dedo justo encima del carril, que es el gesto que las flechas
+   vienen a complementar y no a sustituir. Lo reciben solo los dos botones.
+   ⚠️ `z-index: 2` porque las velas del envoltorio van en 1: por debajo, el degradado pasaría por
+   encima de la flecha del extremo.
+   ⚠️ Y **las flechas se rellenan de papel** (`--bg`), al revés que la receta base, que es transparente:
+   flotan sobre las fichas y sin fondo el glifo se leería encima del texto de una. El relleno es el
+   mismo color al que funden las velas, así que la pieza se lee como una sola cosa. */
+.addons-rail__nav { display: none; position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.addons-rail__wrap[data-rail-scroll] .addons-rail__nav { display: block; }
+.addons-rail__nav .rail-arrow {
+  position: absolute; top: 50%; translate: 0 -50%;
+  pointer-events: auto; background: var(--bg);
+}
+/* ⚠️ Metidas 6 px hacia dentro y no a 0: en móvil el envoltorio sangra hasta el borde de la pantalla
+   y una cápsula pegada al canto se sale del sangrado de 16 px que el sistema pide en todo ancho. */
+.addons-rail__nav [data-rail-prev] { left: var(--sp-6); }
+.addons-rail__nav [data-rail-next] { right: var(--sp-6); }
+/* ⚠️ **La flecha del extremo se ESCONDE en vez de quedarse apagada.** Sobre el carril, una cápsula
+   deshabilitada tapa una ficha para no hacer nada; abajo y centrada sí tenía sentido dejarla gris. Y
+   `visibility` y no `display`, para que la que queda no se mueva de sitio. */
+.addons-rail__nav .rail-arrow:disabled { visibility: hidden; }
 
 @media (min-width: 1024px) {
   /* Sin carril: dentro de la columna, como la rejilla de tarifas. */
@@ -3463,13 +3555,39 @@ img { display: block; max-width: 100%; }
    tarjeta salte de alto al pasar de una opinión corta a una larga. */
 .rev { display: grid; }
 
-/* ⚠️ Las tarjetas se apilan en la MISMA celda de la rejilla y se enseña una. Así el alto del carril
-   es el de la más alta y no cambia al pasar, que es lo que hace que los controles no se muevan bajo
-   el dedo. Con `display:none` a secas cada carta mediría su propio alto y el pie bailaría. */
+/* ── EL CARRIL QUE SE DESLIZA, EN TODOS LOS ANCHOS (`#549`) ───────────────────────────────────
+   `[owner]`: *«haz las reseñas que se pueda hacer slide, tipo slider»* y, con la primera versión
+   delante, *«que se pueda hacer slide también en escritorio, en todo tipo de dispositivo»*.
+
+   ❗❗ **Es el mecanismo del canvas y no un invento**: su pasada de móvil escribe «carruseles con
+   `scroll-snap`», que es lo mismo que ya hacen el carril de complementos y las dos tiras del pie. Con
+   él el deslizamiento es NATIVO —inercia y rebote con el dedo, rueda horizontal y `shift` con ratón, y
+   el teclado y las tecnologías de apoyo recorren la región sin que nadie escriba un gesto a mano—.
+
+   ❗❗❗ **Y CON ÉL MUERE LA PILA DE `#490`** —tarjetas superpuestas en una celda, `visibility` haciendo
+   de interruptor y la clase `is-on` que el servidor ponía a la primera—. La primera versión de esta
+   tanda dejó la pila en escritorio razonando que «una pasada de móvil no rediseña el escritorio»; el
+   owner lo vio y pidió lo contrario, así que **el carril es uno y el mismo en todos los anchos**.
+   ▶ El suelo sin JavaScript sale MEJOR de lo que era: donde antes se leía una opinión y las otras dos
+   estaban ocultas, ahora las tres están en el carril y se recorren desplazándolo.
+   ⚠️ Lo único que sigue necesitando el índice son los PUNTOS, para decir en cuál estás: eso lo escribe
+   el scroll, no una clase.
+
+   ⚠️ El `scroll-behavior` es el mismo criterio que el carril de complementos: el «cómo» del
+   movimiento es diseño y vive en la hoja, con su excepción de movimiento reducido. */
+.rev__track {
+  display: flex; gap: var(--sp-12); align-items: stretch;
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.rev__track::-webkit-scrollbar { display: none; }
+
+/* Una opinión por pantalla: el ancho lo manda el carril, no el texto. */
 .rev__card {
-  grid-area: 1 / 1;
+  flex: 0 0 100%;
+  scroll-snap-align: center;
   min-width: 0;
-  visibility: hidden;
   background: var(--bg-card);
   /* ⚠️ `#537` · esta tarjeta NO se tiñe y el motivo es aritmético: sus estrellas son Amarillo 800,
      que sobre BLANCO dan 4,87 y sobre cualquier tinte caen a 3,89. El color le entra por el borde
@@ -3478,8 +3596,10 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   padding: var(--sp-18);
 }
-/* La primera nace con `is-on` puesto por el SERVIDOR: ése es el suelo sin JavaScript. */
-.rev__card.is-on { visibility: visible; }
+/* ⚠️⚠️ **AQUÍ VIVÍA `.rev__card.is-on { visibility: visible }`, el interruptor de la pila, y se RETIRA
+   CON SU SUJETO** (`#549`): sin tarjetas ocultas no hay nada que encender, y una regla que no cambia
+   nada es la que el siguiente lee como si significara algo. La clase también sale del marcado — no se
+   deja emitida «por si acaso», que es como un modificador sobrevive a su regla (`#253`). */
 
 .rev__who { display: flex; align-items: center; gap: var(--sp-12); }
 .rev__ini {
@@ -3517,7 +3637,16 @@ img { display: block; max-width: 100%; }
 
 /* Los controles. Van en su propia fila de la rejilla, DEBAJO de la pila de tarjetas. */
 .rev__nav { grid-area: 2 / 1; margin: var(--sp-4) 0 0; display: flex; align-items: center; justify-content: center; gap: var(--sp-4); }
-.rev__arrow {
+/* ❗❗ **UNA SOLA RECETA DE FLECHA DE CARRIL, y por eso los dos selectores comparten bloque**
+   (`#549`). El dibujo lo fijó «Reseñas» contra el artboard —48 × 48, keyline de identidad, cápsula,
+   glifo de 19— y el carril de complementos estrena `.rail-arrow` **sin estrenar otra flecha**: es la
+   técnica del enlace de condiciones con «Ver más fechas» (`#562`), y evita que el día que alguien
+   ajuste una queden dos flechas distintas a media pantalla.
+   ⚠️ **`.rev__arrow` ya no tiene marcado que lo emita** —las flechas de «Reseñas» se retiraron en
+   `#494`, los puntos hacen su trabajo— pero la regla se queda: la mide `scripts/comparar-seccion.mjs`
+   contra el artboard y es la fuente de estos números. */
+.rev__arrow,
+.rail-arrow {
   flex: none; width: 48px; height: 48px; padding: 0;
   display: flex; align-items: center; justify-content: center;
   background: none; border: 1.5px solid var(--interactive); border-radius: var(--r-pill);
@@ -3528,7 +3657,14 @@ img { display: block; max-width: 100%; }
 }
 /* ⚠️ El deshabilitado se dice con COLOR, no con opacidad: la opacidad mueve el borde y el glifo a
    la vez y deja el control por debajo del contraste mínimo (la lección del velo de `#436`). */
-.rev__arrow:disabled { border-color: var(--line); color: var(--fg-mute); cursor: default; }
+/* ⚠️ **El hover RESPONDE EN COLOR y no mueve el control**, que es la física del sistema (`#217`,
+   `#303`, y la auditoría de hovers de `#435`: los catorce públicos responden y ninguno salta).
+   ⚠️ `:not(:disabled)` o la flecha del extremo se encendería al pasar por encima diciendo que lleva
+   a algún sitio — y no lleva. */
+.rev__arrow:hover:not(:disabled),
+.rail-arrow:hover:not(:disabled) { border-color: var(--fg); color: var(--fg); }
+.rev__arrow:disabled,
+.rail-arrow:disabled { border-color: var(--line); color: var(--fg-mute); cursor: default; }
 .rev__dots { display: flex; }
 /* 44 × 48: el alto es el del sistema y el ancho es el del artboard. El punto que se ve mide 10. */
 .rev__dot {
@@ -3672,8 +3808,39 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
   .rev-sec__policy { grid-column: 1 / -1; }
 
   /* El tope de medida del artboard: 65ch. Sin él, a 736 px de ancho una opinión larga pasa del
-     máximo de línea del sistema. */
+     máximo de línea del sistema.
+     ⚠️⚠️ **Y esto es LO ÚNICO que el escritorio le cambia al carril de opiniones.** Aquí se restauró
+     por un momento la PILA de `#490` —tarjetas superpuestas, una visible— y se retiró: `[owner]`,
+     «que se pueda hacer slide también en escritorio, en todo tipo de dispositivo». */
   .rev__text { max-width: 65ch; }
+}
+
+/* ══ ARRASTRAR UN CARRIL CON EL RATÓN (`#549`) ══════════════════════════════════════════════════
+   `[owner]`: *«que se pueda hacer slide también en escritorio, en todo tipo de dispositivo»*. Con el
+   dedo el deslizamiento es del navegador; con ratón lo monta `ui/rail-drag.js`, que solo pone esta
+   clase mientras se arrastra.
+
+   ❗❗❗ **LAS DOS PRIMERAS DECLARACIONES SON LA PIEZA, NO EL ADORNO.** Con el ajuste por tarjeta puesto,
+   cada píxel que escribe el arrastre hace que el navegador vuelva a encajar en la parada más cercana y
+   el carril **no se mueve**; y con el `scroll-behavior: smooth` de la hoja, cada escritura se anima y
+   el carril va por detrás del cursor. Al soltar, la clase se va y el ajuste que vuelve es justo lo que
+   encaja el carril en la tarjeta más cercana — no hay ninguna parada calculada a mano.
+   ⚠️ `user-select: none` o arrastrar sobre una opinión selecciona su texto en vez de moverla. */
+.addons-rail__track.is-arrastrando,
+.rev__track.is-arrastrando {
+  scroll-snap-type: none;
+  scroll-behavior: auto;
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* ❗❗ **CON MOVIMIENTO REDUCIDO LOS CARRILES SALTAN A SU SITIO, NO SE DESLIZAN** (`#549`). Es el
+   «cómo» del movimiento y por eso vive en la hoja: los dos controles —las flechas del carril de
+   complementos y los puntos de las reseñas— llaman a `scrollTo`/`scrollBy` **sin `behavior`** para que
+   esta regla pueda ganarles. Lo que no se toca es el QUÉ: el control sigue llevando al sitio. */
+@media (prefers-reduced-motion: reduce) {
+  .addons-rail__track,
+  .rev__track { scroll-behavior: auto; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
@@ -5021,14 +5188,24 @@ select:focus-visible {
 }
 .channel:hover { border-color: var(--fg); }
 .channel__body { flex: 1; min-width: 0; display: grid; gap: var(--sp-3); }
+/* ⚠️⚠️ **AZUL MURO Y NO HUMO, y es aritmética** (`#549`): esta fila está TEÑIDA desde `#537`, y sobre
+   el tinte Humo da **4,40** con el paquete de esta instalación (`#626A72`) — por debajo de AA—. El
+   defecto lo trajo el tinte y su propia guarda no lo veía: R2 solo vigilaba la unidad del complemento.
+   ▶ Es la misma salida que la clave de «Antes de venir» (`.before__row-key`): sobre un tinte solo
+   aguantan la tinta (14,83) y el Azul Muro (5,68).
+   ⚠️ Y ojo con confiar en el defecto del producto: con el Humo que JumpWeb trae de serie (`#6B675D`)
+   la cuenta sale **4,52** y pasaría por los pelos — el fallo lo estrena el paquete del cliente, así
+   que un cálculo hecho sin instalar el tema habría dicho que aquí no hay nada. */
 .channel__label {
   font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 500;
-  text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--interactive);
 }
 /* ⚠️ `overflow-wrap` y no `nowrap`: un correo largo de una instalación cualquiera desbordaría la
    tarjeta, y aquí el ancho lo manda la columna. */
 .channel__value { font-size: var(--fs-18); font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
-.channel__hint { font-size: var(--fs-15); line-height: 1.4; color: var(--fg-mute); }
+/* ⚠️ TINTA por el mismo motivo que la etiqueta de arriba: va sobre el tinte. La jerarquía la sigue
+   dando el peso —el dato es 800 a 18 y esto es regular a 15—, no el gris. */
+.channel__hint { font-size: var(--fs-15); line-height: 1.4; color: var(--fg); }
 .channel__arrow { flex: none; font-weight: 800; font-size: var(--fs-16); color: var(--interactive); }
 
 /* ── EL FORMULARIO, EN TARJETA ──────────────────────────────────────────────────────────────

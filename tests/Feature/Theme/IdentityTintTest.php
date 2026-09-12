@@ -77,18 +77,46 @@ class IdentityTintTest extends TestCase
     }
 
     /**
-     * R2 · lo que se pinta sobre un tinte va en TINTA. No es criterio propio: `tokens-pjp.js` ya
-     * lo trae escrito («Humo da 4,43»), y el cálculo de esta tanda devolvió esas mismas cifras.
+     * R2 · lo que se pinta sobre un tinte va en TINTA (o en Azul Muro). No es criterio propio:
+     * `tokens-pjp.js` ya lo trae escrito («Humo da 4,43»), y el cálculo de esta tanda devolvió esas
+     * mismas cifras.
+     *
+     * ❗❗❗ **RE-APUNTADO EN `#549`, Y AL RE-APUNTARLO APARECIÓ EL DEFECTO QUE NO VIGILABA.** El sujeto
+     * era `.addon-card__unit`, y la ficha de complemento **ya no está teñida** (`[owner]`: «quítale
+     * ese color azul»), así que este caso se quedaba pasando sobre una superficie blanca donde Humo
+     * es legítimo — verde para siempre, sin mirar nada.
+     *
+     * ▶ Al buscarle un sujeto vivo se midieron las DOS superficies teñidas que quedan, y la tarjeta de
+     * canal de `/contacto` llevaba **dos textos en Humo encima del tinte**: 4,40 con el paquete de
+     * esta instalación. *La regla estaba escrita, decidida y medida desde `#537`, y se incumplía en la
+     * pantalla de al lado porque la guarda tenía un solo sujeto.*
+     *
+     * ⚠️ Se vigilan las dos superficies vivas, no una: el día que una se destiña, la otra sostiene el
+     * caso — y si se destiñen las dos, el caso hay que retirarlo con la regla, no dejarlo huérfano.
      */
     public function test_lo_que_va_sobre_un_tinte_no_usa_el_gris_de_apoyo(): void
     {
         $css = $this->landing();
 
-        $this->assertDoesNotMatchRegularExpression(
-            '/\.addon-card__unit\s*\{[^}]*color:\s*var\(--fg-mute\)/s', $css,
-            'la unidad del complemento volvió a Humo sobre el tinte de su tarjeta: da **4,40** y no '.
-            'llega a AA. Sobre un tinte solo aguantan Tinta (14,8) y Azul Muro (5,68).',
-        );
+        // Guarda de la guarda: los sujetos SIGUEN teñidos. Sin esto, destiñe la tarjeta y el caso
+        // pasa en verde vigilando dos superficies blancas.
+        foreach (['.channel', '.bar-sheet'] as $tenido) {
+            $this->assertMatchesRegularExpression(
+                '/'.preg_quote($tenido, '/').'\s*\{[^}]*background:\s*var\(--tint-info\)/s', $css,
+                "`{$tenido}` ya no está teñido: este caso se quedaría sin sujeto. Si el tinte se ha ".
+                'retirado a propósito, re-apunta la regla a la superficie teñida que quede.',
+            );
+        }
+
+        foreach (['.channel__label', '.channel__hint'] as $encima) {
+            $this->assertDoesNotMatchRegularExpression(
+                '/'.preg_quote($encima, '/').'\s*\{[^}]*color:\s*var\(--fg-mute\)/s', $css,
+                "`{$encima}` va en Humo sobre el tinte de su tarjeta: da **4,40** con el paquete de ".
+                'esta instalación y no llega a AA. Sobre un tinte solo aguantan Tinta (14,83) y Azul '.
+                'Muro (5,68). ⚠️ Con el Humo por defecto del producto sale 4,52 y parecería sano: el '.
+                'cálculo hay que hacerlo con el tema instalado.',
+            );
+        }
     }
 
     /**

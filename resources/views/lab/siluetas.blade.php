@@ -80,8 +80,8 @@
             <p class="lab-box__eyebrow">Visítanos</p>
             <h2 class="lab-box__title">Dónde estamos y cuándo abrimos</h2>
             <div style="display: flex; align-items: flex-end; justify-content: center; gap: var(--sp-16); margin-top: var(--sp-28);">
-                @foreach (['p3', 'k1', 'p6', 'k3', 'p9'] as $p)
-                    <x-site.ilu :clave="'slot-pose-'.$p" style="height: 120px; width: auto; --ilu-fg: var(--strip-1); opacity: .85;" />
+                @foreach (['slot-pose-p3', 'slot-pose-k1', 'slot-pose-p6', 'slot-pose-k3', 'slot-pose-p9'] as $clave)
+                    <x-site.ilu :clave="$clave" style="height: 120px; width: auto; --ilu-fg: var(--strip-1); opacity: .85;" />
                 @endforeach
             </div>
         </div>
@@ -93,13 +93,21 @@
     {{-- ── G · el muestrario ────────────────────────────────────────────────────────────── --}}
     <figure class="lab-v">
         <div class="lab-v__head"><span class="lab-v__code">G</span><span class="lab-v__name">Las doce, para elegir cuáles</span></div>
+        {{-- ⚠️⚠️ **Claves ESCRITAS ENTERAS, no compuestas con `'slot-pose-'.$cod`**: una clave
+             armada por concatenación es invisible para cualquier censo, y con el bucle de antes
+             `ZonesSectionTest` se puso ROJA con el laboratorio funcionando (la trampa de `#287`). --}}
         <div class="lab-grid">
-            @foreach (['p1' => 'abierto', 'p2' => 'picado', 'p3' => 'zancada', 'p4' => 'tijera',
-                       'p5' => 'victoria', 'p6' => 'impulso', 'p7' => 'estrella', 'p8' => 'cohete',
-                       'p9' => 'puños', 'k1' => 'aspas (niño)', 'k2' => 'antena (niño)', 'k3' => 'estrellita (niño)'] as $cod => $nombre)
+            @foreach ([
+                'slot-pose-p1' => 'P1 · abierto', 'slot-pose-p2' => 'P2 · picado',
+                'slot-pose-p3' => 'P3 · zancada', 'slot-pose-p4' => 'P4 · tijera',
+                'slot-pose-p5' => 'P5 · victoria', 'slot-pose-p6' => 'P6 · impulso',
+                'slot-pose-p7' => 'P7 · estrella', 'slot-pose-p8' => 'P8 · cohete',
+                'slot-pose-p9' => 'P9 · puños', 'slot-pose-k1' => 'K1 · aspas (niño)',
+                'slot-pose-k2' => 'K2 · antena (niño)', 'slot-pose-k3' => 'K3 · estrellita (niño)',
+            ] as $clave => $nombre)
                 <div class="lab-cell">
-                    <x-site.ilu :clave="'slot-pose-'.$cod" style="--ilu-fg: var(--strip-1); height: 108px; width: auto;" />
-                    <span class="lab-cell__n">{{ strtoupper($cod) }} · {{ $nombre }}</span>
+                    <x-site.ilu :clave="$clave" style="--ilu-fg: var(--strip-1); height: 108px; width: auto;" />
+                    <span class="lab-cell__n">{{ $nombre }}</span>
                 </div>
             @endforeach
         </div>

@@ -114,10 +114,21 @@ class RateRailSectionTest extends TestCase
      *
      * @return list<string>
      */
+    /**
+     * Los precios de las fichas de complemento, cada uno con su unidad dentro.
+     *
+     * ⚠️⚠️ **ESTE LOCALIZADOR DEPENDÍA DE LO QUE VENÍA DESPUÉS y se puso rojo con el producto sano**
+     * (`#549`): buscaba el precio seguido de `</div>` —el cierre de la ficha— y al pasar la ficha a
+     * dos filas el precio quedó seguido de `</p>`, así que devolvía **cero coincidencias** y el caso
+     * afirmaba sobre una cadena vacía. Es la lección de `#314` (un localizador que se apoya en el
+     * vecino no acota un elemento, acota un tramo de documento).
+     * ▶ Hoy acota al ELEMENTO y admite un nivel de anidado, que es el que tiene de verdad: dentro del
+     * precio vive `.addon-card__unit`, y por eso no basta un `(.*?)</span>` perezoso.
+     */
     private function preciosDeFicha(): array
     {
         preg_match_all(
-            '#<span class="addon-card__price">(.*?)</span>\s*</div>#s',
+            '#<span class="addon-card__price">((?:[^<]|<span[^>]*>[^<]*</span>)*)</span>#s',
             $this->panel('jump').$this->panel('kids'), $m,
         );
 

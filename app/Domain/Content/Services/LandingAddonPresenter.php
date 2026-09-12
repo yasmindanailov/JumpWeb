@@ -84,6 +84,19 @@ class LandingAddonPresenter
                 ? array_values(array_filter(array_map(fn ($f) => trim((string) $f), $features), fn ($f): bool => $f !== ''))
                 : [];
 
+            // **EL TEXTO DESCRIPTIVO DEL COMPLEMENTO** — lo que abre el «Más info» del carril (`#549`).
+            //
+            // ⚠️⚠️ **Son DOS campos del catálogo y no uno, y publicar solo uno dejaría a la mitad de
+            // los complementos mudos.** Medido sobre el catálogo real (16 complementos): **once
+            // llevan `features`** —los menús, los combos, los cubos, la tarta, los calcetines— **y
+            // ninguno `description`**; los **dos** extensores de sala llevan `description` («La fiesta
+            // se queda una hora más en la sala») **y ninguna `features`**. Los tres que no tienen ni
+            // una ni otra son los portadores internos del suplemento mixto y las horas extra viejas.
+            // ▶ Así que la vista enseña **lo que haya**, y el botón solo existe si hay algo. Es DATO:
+            // el texto se escribe en el panel, no aquí.
+            $description = $addon->tr('description');
+            $description = is_string($description) ? trim($description) : '';
+
             $rows[] = [
                 // El ID del complemento, para poder unir las listas de varios productos SIN repetir
                 // (`unique()`). Sin él la deduplicación tendría que hacerse por NOMBRE, y dos
@@ -120,6 +133,10 @@ class LandingAddonPresenter
                 'price' => ($included || $priceCents === 0) ? null : Money::showcase($priceCents),
                 'perGuest' => $perGuest,
                 'features' => $features,
+                // `null` y no `''`: la vista pregunta por la EXISTENCIA del texto para decidir si
+                // pinta el «Más info», y una cadena vacía es verdadera en cuanto alguien escribe
+                // `isset()` en vez de un truthy.
+                'description' => $description === '' ? null : $description,
                 'group' => $pivot->choiceGroup(),
             ];
         }
