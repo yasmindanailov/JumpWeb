@@ -143,20 +143,24 @@ class AddonsRailSailsTest extends TestCase
     }
 
     /**
-     * **La nota de los días SÍ se queda en la portada**, y con aire.
+     * **El término «tarifa especial» SIGUE definido en la portada** — y desde `#542` lo define la «i».
      *
-     * ⚠️ Sin ella «16,95 € en tarifa especial» no significa nada: el término hay que definirlo una
-     * vez y en el sitio donde se usa (`#479`). El margen lo pone el CONTEXTO —`.rates__note` nace
-     * con 4 px porque en tarifas va pegada a su carril—, y ésa era la queja literal del owner.
+     * ⚠️⚠️ **CAMBIÓ DE PIEZA, no de propiedad.** Aseveraba `.rates__note`, la nota de días al pie de
+     * cada sección, que el owner retiró por ocupar sitio en reposo (`[DECIDIDO owner, 2026-09-12]`).
+     * La razón que la justificaba —«sin ella, "16,95 € en tarifa especial" no significa nada: el
+     * término se define una vez y donde se usa»— **sigue en pie y es lo que sostiene la "i"**: la
+     * definición está, pegada a la cifra, y sale bajo demanda.
+     * ⚠️ Y su contenido cambia de fuente: ya no lee el rótulo tecleado en el panel sino `weekdays`,
+     * que es el dato del cálculo. Los dos existen y en esta instalación no dicen lo mismo.
      */
-    public function test_the_special_days_note_stays_on_the_home_with_room(): void
+    public function test_the_special_rate_term_is_defined_on_the_home(): void
     {
-        $this->assertStringContainsString('rates__note', $this->home(),
-            'la nota de los días de la tarifa especial ha desaparecido de la portada');
+        $home = $this->home();
 
-        $this->assertMatchesRegularExpression('/#events\s+\.rates__note\s*\{[^}]*margin-top:/', $this->css(),
-            "La nota bajo las tarjetas de cumpleaños ha vuelto a quedarse sin aire propio.\n".
-            '▶ `.rates__note` nace con 4 px, que es lo correcto en tarifas y la deja colgando aquí.');
+        $this->assertStringContainsString('infotip', $home,
+            'la portada escribe «en tarifa especial» sin definir en ninguna parte qué es.');
+        $this->assertStringContainsString('popover', $home,
+            'la «i» perdió su panel: el término vuelve a quedarse sin explicación.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

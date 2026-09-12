@@ -187,6 +187,74 @@ trait ReadsRateFacts
     }
 
     /**
+     * **Los días en los que rige la tarifa ESPECIAL, escritos** — el espejo de `plainDaysPhrase()`,
+     * y `null` si no se pueden saber (`DECISIONES #542`).
+     *
+     * ❗❗❗ **Nace porque la web dejó de decir los días NORMALES** (`[DECIDIDO owner, 2026-09-12]`:
+     * «quitamos lo de lunes a jueves, eso es implícito»). Al retirarlos, «tarifa especial» se queda
+     * sin definir en ninguna parte, así que el término pasa a explicarse donde se usa — y esa
+     * explicación tiene que salir del MISMO sitio del que sale el cálculo.
+     *
+     * ⚠️⚠️ **Se derivan de `weekdays`, NO del rótulo del panel.** `rate_types` guarda las dos cosas
+     * y **no dicen lo mismo**: aquí `weekdays` es `[5, 6, 0]` —viernes, sábado y domingo— mientras
+     * el rótulo, tecleado a mano, dice «Viernes, findes y festivos». El rótulo puede desmentir al
+     * cálculo sin que nada falle, que es exactamente el defecto que `#531` encontró con la frase
+     * «solo de lunes a jueves».
+     *
+     * ⚠️ **No nombra los festivos ni las vísperas, y no es un olvido**: no viven en `rate_types`
+     * sino en `special_dates`, que es otra tabla y otra pregunta. Afirmar aquí que las vísperas
+     * cobran especial sería publicar una regla que el cálculo no aplica.
+     *
+     * @return list<int>|null los weekdays, para quien necesite la lista en vez de la frase
+     */
+    private function specialWeekdays(): ?array
+    {
+        $especiales = RateType::query()->where('is_active', true)->where('is_special', true)->get();
+
+        if ($especiales->isEmpty()) {
+            return null;
+        }
+
+        /** @var list<int> $tomados */
+        $tomados = $especiales->flatMap(fn (RateType $r): array => array_map('intval', (array) $r->weekdays))->unique()->all();
+
+        if ($tomados === []) {
+            return null;
+        }
+
+        return array_values(array_filter(self::WEEK_ORDER, fn (int $d): bool => in_array($d, $tomados, true)));
+    }
+
+    /** La frase de los días especiales, con la misma regla de rango que su espejo. */
+    private function specialDaysPhrase(): ?string
+    {
+        $dias = $this->specialWeekdays();
+
+        if ($dias === null || $dias === []) {
+            return null;
+        }
+
+        if (count($dias) === 1) {
+            return $this->dayName($dias[0]);
+        }
+
+        /*
+         * ⚠️ Rango solo si son contiguos: con un conjunto suelto —viernes y domingo— «de viernes a
+         * domingo» sería literalmente falso, porque incluiría el sábado.
+         */
+        if ($this->areContiguous($dias)) {
+            return __('landing.rates.days_range', [
+                'from' => $this->dayName($dias[0]),
+                'to' => $this->dayName($dias[count($dias) - 1]),
+            ]);
+        }
+
+        return __('landing.rates.days_list', [
+            'days' => implode(', ', array_map(fn (int $d): string => $this->dayName($d), $dias)),
+        ]);
+    }
+
+    /**
      * Los weekdays de Carbon que NO reclama ninguna tarifa especial, en orden de presentación
      * (lunes → domingo), o `null` cuando no se puede afirmar cuáles son.
      *

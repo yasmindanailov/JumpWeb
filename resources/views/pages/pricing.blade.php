@@ -83,7 +83,14 @@
                                     <td class="rate-table__corner"></td>
                                     <th scope="col" class="rate-table__col">{{ $colNormal }}</th>
                                     @if ($colSpecial)
-                                        <th scope="col" class="rate-table__col">{{ $colSpecial }}</th>
+                                        {{-- ⚠️ `#542` · la «i» va en la CABECERA de la columna, no en cada celda:
+                                             la tabla escribe la especial en todas sus filas y una «i» por
+                                             celda sería la misma explicación repetida doce veces. Aquí
+                                             define el término justo donde el visitante lo lee por primera vez. --}}
+                                        <th scope="col" class="rate-table__col">
+                                            {{ $colSpecial }}
+                                            <x-site.special-rate-tip />
+                                        </th>
                                     @endif
                                 </tr>
                             </thead>
@@ -138,18 +145,15 @@
              —cerrado, su tarifa o su horario—. «Cuentan como fin de semana» es justo lo que `#487`
              retiró de la portada, porque el producto no puede afirmarlo. --}}
         <div class="rate-page__pair">
-            @if ($specialLabel)
-                <section class="rate-note" aria-labelledby="rate-note-title">
-                    <h2 class="rate-note__title" id="rate-note-title">{{ __('landing.pricing.special_title') }}</h2>
-                    {{-- ⚠️ El rótulo va en negrita y **escapado antes de entrar**: el dato lo escribe
-                         el panel, así que se resalta sin darle permiso para traer marcado. --}}
-                    <p class="rate-note__text">{!! __('landing.pricing.special_text', ['label' => '<b>'.e($specialLabel).'</b>']) !!}</p>
-                    @if ($plainDays)
-                        <p class="rate-note__text">{{ __('landing.pricing.special_plain', ['days' => $plainDays]) }}</p>
-                    @endif
-                    <p class="rate-note__text">{{ __('landing.pricing.special_calm') }}</p>
-                </section>
-            @endif
+            {{-- ⚠️⚠️ `#542` · **AQUÍ VIVÍA EL BLOQUE «QUÉ ES LA TARIFA ESPECIAL»**, cuatro frases en
+                 reposo al pie de la página (`[DECIDIDO owner, 2026-09-12]`). Lo sustituye la «i»
+                 que va pegada a cada cifra especial, con el MISMO criterio que lo justificaba —el
+                 término se define una vez y donde se usa— pero bajo demanda.
+                 ▶ Y su contenido cambia de fuente: decía los días leyendo el rótulo tecleado en el
+                 panel («Viernes, findes y festivos») y ahora los DERIVA de `weekdays`, que es el
+                 dato que usa el cálculo. En esta instalación no coinciden.
+                 ⚠️ Con él se va también «El resto de días, de lunes a jueves, es la tarifa normal»,
+                 que era la frase redundante que el owner señaló. --}}
 
             @if ($holidays !== [])
                 <section class="holidays" aria-labelledby="holidays-title">

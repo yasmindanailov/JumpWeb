@@ -180,13 +180,17 @@ class SpecialRateSurchargeTest extends TestCase
         preg_match('#<section id="pricing".*?</section>#s', $html, $m);
         $this->assertNotEmpty($m, 'la sección de tarifas perdió su `id`: este caso miraría el vacío.');
 
-        // El rótulo de la tarifa aparece EXACTAMENTE una vez por panel de zona, dentro de su nota.
-        $this->assertStringContainsString('Findes y festivos', $m[0]);
-        $this->assertSame(
-            substr_count($m[0], 'rates__note'),
-            substr_count($m[0], 'Findes y festivos'),
-            'el nombre de la tarifa especial se escribe fuera de su nota: han vuelto los días por tarjeta.',
-        );
+        /*
+         * ⚠️⚠️ **CAMBIÓ DE PREMISA en `#542`.** Contaba que el RÓTULO del panel («Findes y festivos»)
+         * saliera una vez por panel de zona, dentro de su nota. Hoy los días no se escriben en
+         * reposo: los explica la «i», y su texto ya no sale del rótulo tecleado sino de `weekdays`.
+         * ▶ Lo que se sigue vigilando es lo mismo y es lo que importa: que los días **no vuelvan por
+         * tarjeta**. Por eso se cuenta que haya una «i» por panel y NINGÚN día suelto fuera de ella.
+         */
+        $this->assertStringContainsString('infotip', $m[0],
+            'la sección de tarifas dejó de definir qué es la tarifa especial.');
+        $this->assertStringNotContainsString('Findes y festivos', $m[0],
+            'han vuelto los días escritos en reposo: hoy los explica la «i», bajo demanda.');
     }
 
     public function test_the_birthday_comparison_writes_the_whole_special_price_too(): void

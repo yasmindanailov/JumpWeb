@@ -436,20 +436,25 @@ class RateRailSectionTest extends TestCase
      */
     public function test_the_plain_days_are_derived_from_the_special_rate_configuration(): void
     {
-        // Viernes, sábado y domingo especiales → lo que sobra es de lunes a jueves.
+        /*
+         * ⚠️⚠️ **ESTE CASO CAMBIÓ DE SUJETO en `#542`, no de propiedad.** Medía los días NORMALES
+         * («de lunes a jueves»), que el owner retiró de las superficies de precio por implícitos;
+         * hoy mide los ESPECIALES, que son los que la «i» explica. Lo que vigila es lo mismo y es
+         * lo que importa: que la frase **siga a la configuración** en vez de estar escrita a mano.
+         */
         RateType::where('is_special', true)->update(['weekdays' => [5, 6, 0]]);
         RateType::forgetSpecialMemo();
 
         $this->assertStringContainsString(
-            __('landing.rates.days_range', ['from' => 'lunes', 'to' => 'jueves']), $this->seccion(),
+            __('landing.rates.days_range', ['from' => 'viernes', 'to' => 'domingo']), $this->seccion(),
         );
 
-        // La especial pasa a cubrir SOLO el domingo → lo que sobra es de lunes a sábado.
+        // La especial pasa a cubrir SOLO el domingo.
         RateType::where('is_special', true)->update(['weekdays' => [0]]);
         RateType::forgetSpecialMemo();
 
         $this->assertStringContainsString(
-            __('landing.rates.days_range', ['from' => 'lunes', 'to' => 'sábado']), $this->seccion(),
+            'domingo', $this->seccion(),
             'la frase de días no siguió a la configuración: está escrita en algún sitio.',
         );
     }
@@ -466,15 +471,20 @@ class RateRailSectionTest extends TestCase
      */
     public function test_a_non_contiguous_set_of_days_is_listed_and_not_written_as_a_range(): void
     {
-        RateType::where('is_special', true)->update(['weekdays' => [3]]);
+        /*
+         * ⚠️ **Mismo sujeto nuevo que el caso de arriba (`#542`)**: el conjunto con agujeros es el de
+         * la tarifa ESPECIAL, que es el que la «i» escribe. Con lunes y jueves especiales, «de lunes
+         * a jueves» sería **literalmente falso**: incluiría martes y miércoles, que son normales.
+         */
+        RateType::where('is_special', true)->update(['weekdays' => [1, 4]]);
         RateType::forgetSpecialMemo();
 
         $seccion = $this->seccion();
 
-        $this->assertStringContainsString('lunes, martes, jueves', $seccion);
+        $this->assertStringContainsString('lunes, jueves', $seccion);
         $this->assertStringNotContainsString(
-            __('landing.rates.days_range', ['from' => 'lunes', 'to' => 'domingo']), $seccion,
-            'un conjunto con agujeros se ha escrito como rango: la frase incluye el día que la especial reclama.',
+            __('landing.rates.days_range', ['from' => 'lunes', 'to' => 'jueves']), $seccion,
+            'un conjunto con agujeros se ha escrito como rango: la frase incluye días que la especial no reclama.',
         );
     }
 

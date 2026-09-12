@@ -690,9 +690,8 @@
                  quitarla sin más la habría hecho desaparecer del sitio entero — y el suplemento
                  mixto es una feature que cobra dinero (`specs/cumple-mixto.md`). Quien lleva niños de
                  dos edades tiene que enterarse en alguna parte. --}}
-            @if ($ratesSpecialLabel && collect($partyCards)->contains(fn ($c) => $c['special'] !== null))
-                <x-site.special-rate-note />
-            @endif
+{{-- ⚠️ `#542` · la nota de días se sustituye por la «i» pegada a la cifra: el término se sigue
+                 definiendo una vez y donde se usa, pero bajo demanda y sin ocupar sitio en reposo. --}}
 
             {{-- EL BLOQUE DE COMPLEMENTOS, con el molde compartido con las tarifas
                  (`[DECIDIDO owner]`, `#483`: *«es el mismo formato y diseño que los complementos
@@ -829,7 +828,9 @@
              `#301` pagaron dos veces. ▶ Y no hace falta: el precio ya se publica en esta misma
              página, en el carril de complementos de la sección 02 (medido: «+2 € cada uno»). --}}
         <p class="before__socks">
-            <span class="before__i" aria-hidden="true"><x-icons.info :width="24" :height="24" /></span>
+            {{-- ⚠️ `#542` · comparte el aspecto de la «i» del producto (`.info-i`). Aquí es DECORATIVA
+                 —no abre nada— así que va `aria-hidden` y sin `role`: el dato lo dice el texto de al lado. --}}
+            <span class="before__i info-i" aria-hidden="true"><x-icons.info :width="16" :height="16" /></span>
             <span><strong>{{ __('landing.before.socks_lead') }}</strong> {{ __('landing.before.socks_text') }}</span>
         </p>
 

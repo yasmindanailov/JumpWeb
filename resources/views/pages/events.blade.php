@@ -127,9 +127,16 @@
 
                     <div class="party-compare__foot">
                         <div class="party-compare__notes">
-                            {{-- Los días de la tarifa especial, UNA vez por página (`#479`). --}}
+{{-- ⚠️ `#542` · la nota de días se sustituye por la «i»: el término se sigue definiendo una
+                                 vez y donde se usa, pero bajo demanda y sin ocupar sitio en reposo.
+                                 ⚠️ Aquí la «i» va al pie de la comparativa y no pegada a cada celda: la tabla
+                                 escribe la tarifa especial en varias filas y una «i» por celda sería la misma
+                                 explicación repetida cuatro veces. --}}
                             @if ($compare['special'])
-                                <x-site.special-rate-note />
+                                <p class="party-page__note party-page__note--tip">
+                                    <span>{{ __('landing.rates.special_suffix') }}</span>
+                                    <x-site.special-rate-tip />
+                                </p>
                             @endif
                             @if ($compare['deposit'])
                                 <p class="party-page__note">{{ __('landing.birthday.deposit_line', ['deposit' => $compare['deposit']]) }}</p>
