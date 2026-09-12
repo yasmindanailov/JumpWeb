@@ -44,6 +44,13 @@
         @endforeach
     </div>
 
+    {{-- ⚠️ TEMPORAL (`#547`) · el ARCO DE REBOTE (`F3`), solo con `?fachada=2` en `local`.
+         Va aquí —entre las pestañas y los paneles— y **fuera del `@foreach`** a propósito: dentro
+         saldría un arco por zona, y `FacadeDecorationIsPerScreenTest` prohíbe justamente eso. --}}
+    @if (app()->environment('local') && (int) request()->query('fachada', 0) === 2)
+        <x-site.arc />
+    @endif
+
     @foreach ($zones as $z)
         <div class="rates__panel" role="tabpanel"
              id="rate-panel-{{ $z['slug'] }}"

@@ -68,8 +68,11 @@ class IllustrationKit
         // *No hacía falta decidirla: las reglas duras ya la fijaban.*
         // ⚠️ El canvas sí coloca dos piezas —la trama de puntos y el sello del CIERRE
         // (`Escritorio PJP` 1e)— y **las dos ya estaban puestas**: aquí no se toca ninguna.
+        // ⚠️ **`slot-visitanos` se fue en `#547`** (`[DECIDIDO owner]`, viendo la portada vestida:
+        // «en la sección de dónde estamos quitamos el splash, con la silueta es suficiente»). La
+        // sección recibió figura de fachada y dos piezas en la misma cabecera se estorban — que es
+        // el presupuesto del canvas aplicado a una sección concreta, no un cambio de criterio.
         'slot-resenas',
-        'slot-visitanos',
         'slot-dudas',
 
         // ── EL LABORATORIO DE FACHADA ────────────────────────────────────────────────────────

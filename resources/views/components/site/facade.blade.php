@@ -65,26 +65,42 @@
 
         // 01 · Para quién — el hueco a la derecha del titular es el más estrecho de las cinco (200).
         'zones' => [
-            1 => ['slot-pose-p5', 'plano', 'right:0; top:70px; height:320px; --ilu-fg:var(--strip-1); opacity:.12', false],
-            2 => ['slot-pose-p5', 'plano', 'right:0; top:50px; height:400px; --ilu-fg:var(--strip-1); opacity:.30', false],
+            1 => ['slot-pose-p5', 'plano', 'right:0; top:70px; height:320px; --ilu-fg:var(--strip-1); opacity:.12', ''],
+            2 => ['slot-pose-p5', 'plano', 'right:0; top:50px; height:400px; --ilu-fg:var(--strip-1); opacity:.30', ''],
+        ],
+        /*
+         * ⚠️ **El NIÑO al lado del adulto** (`[DECIDIDO owner]`). Va a su izquierda, más bajo y más
+         * pequeño: dos figuras a la misma altura y el mismo tamaño se leen como una pareja, no como
+         * «cada uno tiene su zona», que es lo que dice el titular que tienen encima.
+         * ⚠️ Y en LIMA, no en cian: es la única distinción de color del reparto —niño lima, adulto
+         * cian— y es la que hace que se entienda sin explicarla.
+         */
+        'zones-nino' => [
+            2 => ['slot-pose-k3', 'plano', 'right:170px; top:130px; height:220px; --ilu-fg:var(--strip-2); opacity:.30', ''],
         ],
 
-        // 04 · Cumpleaños — la única sección con figura de NIÑO, y la única que se sale en la 2.
-        'events' => [
-            1 => ['slot-pose-k2', 'plano', 'right:40px; top:30px; height:300px; --ilu-fg:var(--strip-2); opacity:.16', false],
-            2 => ['slot-pose-k1', 'plano', 'right:60px; top:-80px; height:290px; --ilu-fg:var(--strip-2); opacity:1', true],
-        ],
+        /*
+         * ⚠️⚠️ **04 · Cumpleaños ya no pasa por aquí: lleva el TRÍO DE NIÑOS (`G4`)**
+         * (`[DECIDIDO owner]`), que es una COMPOSICIÓN de tres figuras y no una pieza suelta, así
+         * que tiene componente propio (`<x-site.trio>`) y se inserta en la vista.
+         *
+         * ▶ Antes de eso hubo aquí una figura sola, y **aterrizó encima del titular de la tarjeta
+         * del reloj y lo tapaba entero**. La causa merece quedarse escrita: restar «dónde acaba la
+         * cabecera» de «dónde empiezan las tarjetas» daba una banda de 229 px que **no estaba
+         * vacía** —en medio hay una tarjeta a ancho completo—. *Un hueco calculado entre dos piezas
+         * no es un hueco: hay que mirar qué hay dentro.* Lo vio la captura, no el número.
+         */
 
         // 05 · Antes de venir — mancha, no figura: aquí ya hay dibujo (el QR y el teléfono).
         'before' => [
-            1 => ['slot-splash-4', 'plano', 'right:40px; top:30px; width:300px; --ilu-fg:var(--strip-1); opacity:.18', false],
-            2 => ['slot-splash-4', 'contorno', 'right:10px; top:0; width:420px; --ilu-fg:var(--strip-1); opacity:.55', false],
+            1 => ['slot-splash-4', 'plano', 'right:40px; top:30px; width:300px; --ilu-fg:var(--strip-1); opacity:.18', ''],
+            2 => ['slot-splash-4', 'contorno', 'right:10px; top:0; width:420px; --ilu-fg:var(--strip-1); opacity:.55', ''],
         ],
 
         // 07 · Visítanos — el canvas deja esta sección explícitamente a la pasada de vestido.
         'info' => [
-            1 => ['slot-pose-p3', 'plano', 'right:10px; top:40px; height:260px; --ilu-fg:var(--strip-1); opacity:.14', false],
-            2 => ['slot-pose-p3', 'plano', 'right:0; top:20px; height:340px; --ilu-fg:var(--strip-1); opacity:.32', false],
+            1 => ['slot-pose-p3', 'plano', 'right:10px; top:40px; height:260px; --ilu-fg:var(--strip-1); opacity:.14', ''],
+            2 => ['slot-pose-p3', 'plano', 'right:0; top:20px; height:340px; --ilu-fg:var(--strip-1); opacity:.32', ''],
         ],
 
         /*
@@ -94,25 +110,31 @@
          * con la sonda de cobertura: una mancha ahí queda **14 % visible** — el 86 % son bytes que
          * no se ven. Se retira. ▶ La sección no se queda pelada: ya lleva su mancha tras el titular
          * desde `#544`.
+         *
+         * ⚠️⚠️ **El CIERRE tampoco lleva** (`[DECIDIDO owner]`, sobre la variante 2 renderizada: «en
+         * el hero del footer no ponemos nada»). La figura estaba ahí y a plena opacidad; se retira
+         * entera. ▶ La tarjeta conserva lo que el canvas SÍ coloca en ella: la trama de puntos y el
+         * sello de Lorca (`Escritorio PJP` 1e), que ya estaban antes de esta pasada.
          */
-
-        /*
-         * El CIERRE — la pieza va DENTRO de `.reserve__box`, no en la sección: la tarjeta no llena su
-         * sección y anclada fuera la figura caía en el papel de al lado (medido: solo asomaba un
-         * fragmento por el borde). Sobre tinta aguanta plena opacidad, que es lo que hace el mural.
-         */
-        'reserve' => [
-            1 => ['slot-pose-p8', 'plano', 'right:40px; bottom:0; height:300px; --ilu-fg:var(--strip-1); opacity:.20', false],
-            2 => ['slot-pose-p8', 'plano', 'right:60px; bottom:0; height:420px; --ilu-fg:var(--strip-1); opacity:1', false],
-        ],
     ];
 
     $pieza = $mapa[$en][$v] ?? null;
 @endphp
 
 @if ($pieza)
-    @php([$clave, $trato, $estilo, $escapa] = $pieza)
-    <div class="fac-slot" @if ($escapa) style="overflow: visible" @endif aria-hidden="true">
+    @php
+        [$clave, $trato, $estilo, $opciones] = $pieza;
+
+        /*
+         * ⚠️ Dos opciones y las dos son de CAPA o de RECORTE, no de dibujo:
+         *   · `escapa` apaga el recorte de la sección (la pieza puede salirse de su caja);
+         *   · `encima` la saca de la capa de fondo y la pone sobre el contenido — hace falta cuando
+         *     cae sobre algo OPACO, que si no la entierra sin que nada falle.
+         * Van como cadena y no como dos booleanos: leyendo el mapa se ve qué hace cada fila.
+         */
+        $ranura = 'fac-slot'.(str_contains($opciones, 'encima') ? ' fac-slot--encima' : '');
+    @endphp
+    <div class="{{ $ranura }}" @if (str_contains($opciones, 'escapa')) style="overflow: visible" @endif aria-hidden="true">
         <x-site.ilu :clave="$clave" :trato="$trato" class="fac-p" :style="$estilo" />
     </div>
 @endif

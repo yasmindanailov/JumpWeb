@@ -48,9 +48,10 @@ PROHIBIDOS = ['fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejo
 # El índice es el orden en que el artboard las dibuja. Las seis son intercambiables desde aquí.
 REPARTO_MANCHAS = [
     ('slot-resenas', 0, 'Mancha · sección de reseñas'),
-    ('slot-visitanos', 1, 'Mancha · sección de horarios y ubicación'),
     ('slot-dudas', 2, 'Mancha · sección de dudas'),
 ]
+# ⚠️ `slot-visitanos` (la mancha 1) se retiró en `#547`: esa sección recibió figura de fachada y el
+# owner decidió que con una basta. La mancha sigue disponible como `slot-splash-2`.
 
 # ⚠️⚠️ **SON TRES Y NO SEIS, y el número no lo elegí yo: lo fijan las reglas del propio canvas.**
 # Medido sobre la portada de hoy, sección a sección:

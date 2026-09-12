@@ -225,6 +225,7 @@
          pestañas perderían el color de su zona. --}}
     <section id="zones" class="section wrap">
         <x-site.facade en="zones" />
+        <x-site.facade en="zones-nino" />
         <div class="zones__head">
             {{-- 📜 **AQUÍ VIVÍA LA MANCHA `B1·02`** (ranura `slot-zonas`, `#302`→`#309`), y se
                  retira en `#496`: **el artboard `Zonas PJP` no lleva ninguna pieza decorativa**
@@ -553,7 +554,11 @@
          van a `route('cumpleanos')`, medido— pero una URL con ancla puede estar repartida fuera. --}}
     @if ($partyCards !== [])
         <section id="events" class="section wrap">
-        <x-site.facade en="events" />
+        {{-- ⚠️ TEMPORAL (`#547`) · el TRÍO DE NIÑOS (`G4`), solo con `?fachada=2` en `local`.
+             Va al lado del titular, en el hueco de 512 px que su cabecera deja a la derecha. --}}
+        @if (app()->environment('local') && (int) request()->query('fachada', 0) === 2)
+            <x-site.trio clase="trio--events" :escala="1.5" />
+        @endif
             {{-- ⚠️⚠️ **AQUÍ HUBO UNA CABECERA SOBRE FOTO A SANGRE Y SE RETIRÓ** (`[DECIDIDO owner]`,
                  `#484`). El artboard la dibuja —es la única sección que la lleva— pero la foto que la
                  instalación tiene en `zones.image` para cumpleaños es **el comedor vacío**: filas de
@@ -927,15 +932,7 @@
             <div class="rev-sec{{ $socialRating ? ' rev-sec--scored' : '' }}">
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.reviews.eyebrow') }}</p>
-                    {{-- ⚠️ La mancha va ANCLADA AL TITULAR, no a la cabecera entera, y es la lección
-                         de `#303`: colocada contra el bloque completo, su sitio depende de cuánto
-                         texto tenga la entradilla, y el día que crece la mancha **cae sobre el
-                         párrafo**. Su propia nota del artboard dice lo mismo: «detrás de la PRIMERA
-                         PALABRA, nunca detrás de todo el bloque». --}}
-                    <div class="sec-head__lockup">
-                        <x-site.ilu clave="slot-resenas" class="sec-head__mancha" />
-                        <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
-                    </div>
+                    <h2 class="sec-head__title">{{ __('landing.reviews.title') }}</h2>
                     {{-- ⚠️⚠️ **La entradilla sigue a la fuente de las OPINIONES, no a la de la
                          chapa — y las dos pueden no coincidir.** La cifra se sirve sin
                          consentimiento y las reseñas no, así que el caso más frecuente es
@@ -1004,9 +1001,13 @@
 
                 {{-- ⚠️ `x-data` con el número de opiniones dentro: el carril tiene que saber dónde
                      acaba para deshabilitar la flecha, y ese número lo sabe el servidor. --}}
+                {{-- ⚠️ La mancha va DETRÁS de la tarjeta de opinión (`[DECIDIDO owner]`) y **fuera
+                     del `@foreach`**: dentro saldría una por opinión, y `FacadeDecorationIsPerScreenTest`
+                     prohíbe decoración dentro de un bucle. --}}
                 <div class="rev" x-data="{ i: 0, n: {{ $socialProof->count() }} }"
                      @keydown.left.prevent="i = Math.max(0, i - 1)"
                      @keydown.right.prevent="i = Math.min(n - 1, i + 1)">
+                    <x-site.ilu clave="slot-resenas" class="rev__mancha" />
                     @foreach ($socialProof as $k => $op)
                         {{-- ⚠️⚠️ **La primera nace con `is-on` puesto POR EL SERVIDOR, y ése es el
                              suelo sin JavaScript.** Con `x-show` + `x-cloak` —lo primero que se me
@@ -1248,10 +1249,10 @@
              cierre un día**. El porqué, en `ScheduleDisplay::weeklyLede()`. --}}
         <div class="sec-head">
             <p class="sec-head__eyebrow">{{ __('landing.info.eyebrow') }}</p>
-            <div class="sec-head__lockup">
-                <x-site.ilu clave="slot-visitanos" class="sec-head__mancha" />
-                <h2 class="sec-head__title">{{ __('landing.info.title') }}</h2>
-            </div>
+            {{-- ⚠️ **Sin mancha** (`[DECIDIDO owner]`: «en la sección de dónde estamos quitamos el
+                 splash, con la silueta es suficiente»). La sección lleva ya su figura de fachada, y
+                 dos piezas en la misma cabecera se estorban. --}}
+            <h2 class="sec-head__title">{{ __('landing.info.title') }}</h2>
             @if ($scheduleLede)
                 <p class="sec-head__lede">{{ $scheduleLede }}</p>
             @endif
@@ -1318,7 +1319,7 @@
                 <div class="sec-head">
                     <p class="sec-head__eyebrow">{{ __('landing.faq.eyebrow') }}</p>
                     <div class="sec-head__lockup">
-                        <x-site.ilu clave="slot-dudas" class="sec-head__mancha" />
+                        <x-site.ilu clave="slot-dudas" class="sec-head__mancha sec-head__mancha--xxl" />
                         <h2 class="sec-head__title">{{ __('landing.faq.title') }}</h2>
                     </div>
                     <p class="sec-head__lede">{{ __('landing.faq.lede') }}</p>
@@ -1405,9 +1406,6 @@
              @pointerdown="toca($event)"
              @pointerup="sueltaTap($event)"
              :class="fase === 'jugando' && 'reserve__box--jugando'">
-            {{-- ⚠️ La pieza va DENTRO de la tarjeta y no en la sección: la tarjeta no llena su
-                 sección, así que anclada fuera la figura caía en el papel de al lado. --}}
-            <x-site.facade en="reserve" />
             {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
                  admite sobre tinta, y aquí sale del mismo mecanismo. --}}
             <div class="grain" aria-hidden="true"></div>

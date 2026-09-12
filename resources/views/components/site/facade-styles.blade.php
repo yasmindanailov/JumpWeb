@@ -26,6 +26,75 @@
         .fac-slot { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
         .fac-p { position: absolute; height: auto; }
 
+        /* La capa de ENCIMA: sobre el contenido, no detrás. La necesita la figura que se apoya en
+           una tarjeta, porque la tarjeta es opaca y en la capa de fondo la entierra.
+           ⚠️ `pointer-events: none` lo hereda de `.fac-slot`: una figura decorativa por encima de
+           una tarjeta que es un ENLACE no puede robarle el clic. */
+        .fac-slot--encima { z-index: 2; }
+
+        /* ── EL ARCO DE REBOTE (`F3`) ──────────────────────────────────────────────────────
+           ⚠️ Va sobre la banda que queda entre las pestañas y las tarjetas, no dentro de ellas.
+           ⚠️ La curva se estira al ancho disponible (`preserveAspectRatio="none"`) y las figuras
+           se alinean por ABAJO para que los pies caigan sobre ella. */
+        .arc { position: relative; height: 132px; margin: 0 auto var(--sp-20); max-width: 560px; }
+        .arc__curve { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .arc__curve path { stroke: var(--line-strong); }
+        .arc__row {
+            position: absolute; inset: 0; display: flex; align-items: flex-end;
+            justify-content: space-between; padding: 0 6px;
+        }
+        .arc__fig { display: block; flex: 0 0 auto; color: var(--strip-1); }
+        .arc__fig .ilu { --ilu-fg: var(--strip-1); }
+        /*
+         * ⚠️⚠️ **Los pies van sobre la curva, y las cuatro alturas están CALCULADAS, no puestas a
+         * ojo.** La primera versión lo estaba (0 · 42 · 62 · 16) y se veía: la figura de la
+         * izquierda flotaba por debajo del trazo y la de la derecha por encima.
+         * ▶ Se evalúa la propia parábola —`M6 134 Q170 -16 334 122`, una Bézier cuadrática— en las
+         * cuatro fracciones donde `space-between` coloca a las figuras (0 · ⅓ · ⅔ · 1):
+         *
+         *     f      y de la curva      margen = (150 − y) / 150 × 132
+         *     0      134                14
+         *     ⅓       66,4              74
+         *     ⅔       61,4              78
+         *     1      122                25
+         *
+         * ⚠️ `x(t)` es casi lineal aquí porque el punto de control (170) cae en el medio del tramo
+         * (6→334): por eso la fracción de ancho vale como `t` sin corregir. Si alguien mueve ese
+         * control, esta equivalencia deja de valer y hay que volver a despejar.
+         */
+        .arc__fig:nth-child(1) { margin-bottom: 14px; }
+        .arc__fig:nth-child(2) { margin-bottom: 74px; }
+        .arc__fig:nth-child(3) { margin-bottom: 78px; }
+        .arc__fig:nth-child(4) { margin-bottom: 25px; }
+
+        /* Las tarjetas de tarifa, CENTRADAS (`[DECIDIDO owner]`): con dos productos el carril las
+           dejaba pegadas a la izquierda y 395 px muertos a la derecha. */
+        .rates__rail { justify-content: center; }
+
+        /* ── EL TRÍO DE NIÑOS (`G4`), al lado del titular de Cumpleaños ────────────────────
+           ⚠️ Su cabecera deja **512 px libres** a la derecha del titular (medido): el trío cabe
+           ahí sin empujar nada. Va en la capa de fondo —no tapa texto— y los pies en la misma
+           línea, que es la regla de la pieza. */
+        .trio { display: flex; align-items: flex-end; }
+        .trio__n { display: block; flex: 0 0 auto; }
+        .trio--events {
+            position: absolute; z-index: -1; pointer-events: none;
+            right: 8px; top: 54px; opacity: .9;
+        }
+        @media (max-width: 900px) {
+            /* En estrecho el titular ocupa el ancho entero y el trío no tiene lateral donde vivir:
+               baja debajo, más pequeño y al margen derecho. */
+            .trio--events { right: 0; top: auto; bottom: -14px; scale: .62; transform-origin: right bottom; }
+        }
+
+        /* ⚠️ La mancha de Reseñas NO se declara aquí, y no es un olvido: esa pieza se pinta SIEMPRE,
+           no solo con variante, así que su CSS vive en `landing.css` con el resto de la producción.
+           Declararla aquí la dejaría sin estilo —estática y en el flujo— en la portada normal. */
+
+        @media (max-width: 700px) {
+            .arc { height: 104px; max-width: 340px; }
+        }
+
         /* En teléfono las figuras se encogen y se apartan: a 390 px una silueta de 560 tapa media
            sección. No es una variante distinta, es la misma con el tamaño que cabe. */
         @media (max-width: 700px) {

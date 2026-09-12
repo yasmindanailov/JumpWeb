@@ -1871,6 +1871,41 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1024px) {
   .sec-head__mancha { left: -34px; top: -88px; width: 165px; }
 }
+
+/* ⚠️ **XXL** (`#547`, `[DECIDIDO owner]`: «en la sección de reseñas el splash lo hacemos XXL donde
+   está»). Es la MISMA pieza en el MISMO sitio, a escala de fondo — no una colocación nueva.
+   ⚠️⚠️ **La opacidad BAJA al crecer, y eso no es un ajuste a ojo**: a 165 px la mancha es un acento
+   al lado del titular; a 420 pasa por detrás de él y de su entradilla, así que al 30 % competiría
+   con el texto. La misma lección que `#309` dejó escrita al revés —*se ve más porque pinta más*—
+   aplicada en la otra dirección: cuando lo que crece es el ÁREA, la tinta tiene que ceder. */
+.sec-head__mancha--xxl { left: -70px; top: -120px; width: 300px; opacity: 0.16; }
+@media (min-width: 1024px) {
+  .sec-head__mancha--xxl { left: -110px; top: -190px; width: 440px; opacity: 0.16; }
+}
+
+/* ══ LA MANCHA DE RESEÑAS, DETRÁS DE LA TARJETA DE OPINIÓN (`#547`, `[DECIDIDO owner]`) ════════
+   Sale de la cabecera —donde `#544` la puso— y baja al carril de opiniones: la sección de reseñas
+   es la única de las ocho **sin una sola imagen ni dibujo**, y su tarjeta flotaba sobre papel liso.
+
+   ⚠️⚠️ **Va en el CARRIL y no dentro de la tarjeta**: las opiniones se pintan en un `@foreach` y
+   `FacadeDecorationIsPerScreenTest` prohíbe decoración dentro de un bucle — saldría una mancha por
+   opinión, y además cambiaría de sitio al pasar de una a otra.
+   ⚠️ `isolation` en el carril, por lo de siempre: sin contexto de apilamiento propio, `z-index: -1`
+   la hunde por detrás del fondo de la página y no se ve (el patrón de `#286`).
+   ⚠️⚠️ **Y `position: relative`, que es lo que faltaba y no se veía como error.** Sin él la mancha
+   no se posiciona contra el carril sino contra el primer ancestro posicionado —la sección—, así que
+   un `left: -70px` pensado para asomar por el canto de la tarjeta la mandaba **al otro extremo,
+   encima del titular**. Medido: la caja salía en `x −70..270` cuando la tarjeta empieza en 384.
+   *`isolation` crea contexto de apilamiento, no de posición: son dos cosas distintas.* */
+.rev { position: relative; isolation: isolate; }
+.rev__mancha {
+  position: absolute; z-index: -1; pointer-events: none;
+  left: -50px; top: -40px; width: 230px; height: auto;
+  --ilu-fg: var(--strip-1); opacity: 0.22;
+}
+@media (min-width: 1024px) {
+  .rev__mancha { left: -70px; top: -60px; width: 340px; }
+}
 @media (min-width: 1024px) {
   .sec-head,
   .page__head { margin-bottom: 40px; }
