@@ -29337,3 +29337,92 @@ filas del catálogo, antes y después.
 nombre `catalog-acc` es **histórico** —fue un acordeón y ya no pliega nada, pero renombrarlo tocaría
 el manifiesto congelado y cuatro guardas por cero ganancia para el cliente— y el nombre de un pack
 sigue envolviendo en tres líneas en 390 px, que es del vestido de la FILA y no de la tarjeta.
+
+## #553 · 2026-09-12 · `[DECIDIDO owner]` La PUERTA de categoría que se abre en tarjeta grande — la tercera forma, y la propuso él
+
+**Carril del SPA, T4·3 bis** (banda 550–579). Sobre `#552`, y la reemplaza en su parte de forma.
+
+### La decisión
+
+El canvas dibujó **dos** formas para el paso 1 —«tarjeta grande sin puerta» y «puerta de categoría»— y
+`#552` construyó la primera. Con ella delante, el owner propuso una **tercera**: *«primero salen las
+cards tipo categorías, como la puerta; al darle clic se abren y se queda tipo tarjeta grande»*.
+
+▶ **Y es mejor que las dos**, con el propio argumento del canvas: lo que él le reprochaba a la puerta
+era que **añade una pantalla** —un toque, una navegación y un botón de volver para repartir cinco
+productos en dos montones—. Esta forma consigue lo que la puerta quería, que la bifurcación se vea,
+**sin pantalla nueva, sin navegación y sin volver**.
+
+⚠️ **El coste, dicho y asumido**: sigue costando **un toque** llegar a los precios. Lo que lo compensa
+—y es lo que la puerta no podía dar— es que **la otra puerta nunca se pierde de vista**.
+
+`[DECIDIDO owner]`, preguntado con las consecuencias delante:
+
+| | |
+|---|---|
+| **Las dos arrancan CERRADAS** | Es lo que hace que la primera vista sean dos puertas y no una lista. |
+| **Abrir una CIERRA la otra** | Con las dos abiertas se vuelve a la lista larga de hoy —**1.033 px de contenido en una ventana de 650**— y la bifurcación desaparece. |
+
+### Lo construido
+
+**Una pieza con dos disposiciones**, no dos componentes: el mismo marcado en **columna alta** cuando
+está cerrada —icono de 34, rótulo a `--fs-20`, la frase, y el recuento en la esquina— y **aplanado en
+franja** cuando está abierta, que es la de `#552`.
+
+▶ **Medido en navegador a 390 px**: puerta cerrada **154 px**; el panel con una abierta **817** contra
+**1.033** con todo abierto; `aria-expanded` en `["true","false"]` y **una sola** sección abierta.
+
+- **La cabecera vuelve a ser un `<button>`** con `aria-expanded` y `aria-controls`. Un `<div>` que
+  despliega no lo alcanza el teclado ni lo anuncia ningún lector de pantalla, y **el estado no puede
+  vivir solo en una clase**: una clase no la lee nadie más que el CSS. ⚠️ El diff de árbol **descarta
+  los `:*` como andamiaje**, así que un `aria-expanded` dinámico le resulta invisible — es el agujero
+  que este proyecto ya pagó dos veces (`#58(f)` y `#P6`), y por eso lo vigila la guarda y no el gate.
+- **Las dos reglas del acordeón bajan a `catalog.js`** —módulo plano con `node --test` (`CE-6`)—: qué
+  queda abierta al pulsar, y si el cuerpo se ve.
+- ⚠️⚠️ **BUSCAR ABRE.** Con el buscador escrito mandan los RESULTADOS, no lo que esté pulsado. Sin esa
+  regla, quien busca «cumple» recibe una puerta cerrada y la sensación de que no hay nada. *El texto
+  del buscador ES la intención; pedir además un toque para ver lo que ya has pedido es cobrar dos veces
+  por la misma decisión.*
+- **El relleno vertical del cuerpo se colapsa con la rejilla**: sin eso una puerta cerrada deja 24 px
+  de blanco debajo y se lee como una tarjeta rota.
+
+### Lo que reabre, y por qué no se contradice
+
+⚠️⚠️ **`#552` retiró el plegado y `#553` lo devuelve.** No es una contradicción y conviene dejarlo
+escrito: aquélla lo quitó porque era **un mecanismo que siempre estaba en el mismo estado** —heredado
+de un paso del refactor viejo, no de una decisión de diseño— y el día que un motor se olvidó de emitir
+su clase **el catálogo entero salió a altura 0 y no se podía comprar nada**. Ahora pliega de verdad y
+lo decide el cliente.
+
+▶ **La guarda de `#552` cambió de premisa y se REESCRIBIÓ, no se relajó**: decía «el plegado no
+vuelve» y hoy dice «pliega **y lo anuncia**». Es el precedente del `SlotOfferTest` de `#324`.
+
+### El techo del chunk, y una poda que no podó
+
+El chunk del cajón pasa de **279 a 280 KiB** (medido **279,23**). ⚠️ **Se intentó podar antes de subir,
+como manda la norma, y la poda NO podó**: se cambiaron los argumentos de `cuerpoVisible()` de objeto a
+posicionales creyendo que ahorraban bytes y medido salió **al revés** (279,17 → 279,23). ▶ *Una poda
+que no se mide no es una poda.*
+
+⚠️⚠️ **Y el barrido de símbolos exportados sin importador dio 29 FALSOS POSITIVOS**: excluía el fichero
+que define cada símbolo, así que marcaba como huérfano todo lo que se usa dentro de su propio módulo.
+No se actuó sobre él. ▶ *Cuando un instrumento dice que hay veintinueve cosas muertas, la primera
+hipótesis es el instrumento.* Las dos cosas quedan escritas donde vive el techo, no en un commit.
+
+### La red
+
+`SidebarCatalogCardTest` (7 casos) + `scripts/mutar-tarjeta-catalogo.py`: **16/16 mutaciones muerden**.
+
+⚠️⚠️ **Una de las dieciséis encontró una laxitud REAL y es la trampa de la subcadena por la puerta de
+atrás**: la aserción de `aria-expanded` buscaba la palabra sobre el fichero entero, y **el comentario
+que explica por qué hace falta la absolvía** — la mutación que lo retiraba del marcado sobrevivía. Hoy
+desnuda comentarios y busca el ATRIBUTO. *En `#253` la prosa acusaba al código; aquí lo salvaba.*
+
+**Verificación**: suite **4751 · 29.762 aserciones** (1 skipped) · JS **963** · **16/16 mutaciones** ·
+Pint y docs-check ✓ · capturas de las dos caras y medición del estado en el DOM.
+
+⚠️ **Paso de despliegue: ninguno.**
+
+❗ **Queda el OJO del owner en un teléfono**, y una consecuencia anotada: con las dos puertas cerradas
+la primera vista deja **mucho aire** debajo — que es lo que `cajon-en-movil.md` §7.4 ya tiene abierto
+para los pasos de fecha y hora (366 y 452 px vacíos). Ahora alcanza también al catálogo.

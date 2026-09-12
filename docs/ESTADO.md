@@ -155,6 +155,26 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > instrumento mientras corre su propio control** invalida las dos pasadas, que es un error de método que
 > costó repetir la medición.
 >
+> ✅ **T4·3 bis · LA PUERTA DE CATEGORÍA** (`#553`, `[DECIDIDO owner]`, y **la propuso él**): con la
+> tarjeta grande delante, el owner propuso una **tercera** forma que es mejor que las dos del canvas —
+> *las categorías salen CERRADAS, como su «puerta de categoría», y al pulsarlas se abren en la tarjeta
+> grande*. Consigue lo que la puerta quería, que la bifurcación se vea, **sin pantalla nueva, sin
+> navegación y sin volver**, que es justo lo que el canvas le reprochaba. ⚠️ Sigue costando **un
+> toque**; lo que lo compensa es que la otra puerta **nunca se pierde de vista**.
+> ▶ **Las dos arrancan cerradas** y **abrir una cierra la otra** (`[DECIDIDO owner]`: con las dos
+> abiertas se vuelve a la lista larga). Medido: puerta cerrada **154 px**, panel con una abierta **817**
+> contra **1.033** con todo abierto. Es **una pieza con dos disposiciones**, no dos componentes.
+> ⚠️⚠️ **Reabre el plegado que `#552` retiró y NO lo contradice**: aquélla lo quitó porque era un
+> mecanismo que siempre estaba en el mismo estado; ahora pliega de verdad. **La guarda cambió de premisa
+> y se reescribió** —dice «pliega y lo ANUNCIA»—, que es el precedente del `SlotOfferTest` de `#324`.
+> ▶ La cabecera vuelve a ser un `<button>` con `aria-expanded`/`aria-controls`, las dos reglas del
+> acordeón bajan a `catalog.js` (plano, con `node --test`) y **buscar ABRE**. Guardas:
+> `SidebarCatalogCardTest` (7) + **16/16 mutaciones**.
+> ⚠️ **El techo del chunk sube de 279 a 280** (medido 279,23), y se intentó podar antes: **la poda no
+> podó** (279,17 → 279,23) y el barrido de huérfanos dio **29 falsos positivos** por excluir el fichero
+> que define cada símbolo. *Cuando un instrumento dice que hay 29 cosas muertas, el sospechoso es el
+> instrumento.*
+>
 > ❗❗ **LO SIGUIENTE: EL ARMAZÓN** (T4·4), que lo comparten las 25 pantallas. ⚠️ Con una negociación
 > pendiente: el canvas manda la **puerta a la cuenta** al racimo de la cabecera de la WEB, que es del
 > otro carril, y su decisión 02 («Mi QR» como botón fijo) **sigue abierta**. Y el **botón del sistema**
@@ -2705,9 +2725,11 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4750 en verde** (29.734 aserciones, 1 skipped), medida el **2026-09-12** con la **tarjeta
-> grande del catálogo** encima (`#552`: **+6** de `SidebarCatalogCardTest`, la guarda de la T4·3; y
-> **+1** de JS en `catalog.test.js`, que sube a **960**).
+> Suite **4751 en verde** (29.762 aserciones, 1 skipped), medida el **2026-09-12** con la **puerta de
+> categoría** encima (`#553`: **+1** de `SidebarCatalogCardTest` —sus casos pasan de 6 a 7— y **+3** de
+> JS en `catalog.test.js`, que sube a **963**).
+> Antes, **4750** (29.734) con la **tarjeta grande del catálogo** (`#552`: **+6** de
+> `SidebarCatalogCardTest` y **+1** de JS).
 > Antes, **4744** sobre el
 > árbol **CONJUNTO tras la SEXTA fusión**, con la **grieta 01 del cajón** encima (`#551`, el segundo
 > ordenador: **+9** de `SidebarActionRoleTest` —la guarda del rol de acción del SPA—, **+2** del
