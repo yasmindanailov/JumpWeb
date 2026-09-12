@@ -29702,3 +29702,132 @@ contenido —el defecto ya fichado en `armazon-y-menu.md` §1.7—: **cero** ent
 **❗ LO QUE QUEDA DEL OWNER**: el ojo en vivo, y **dos de las tres preguntas del artboard** siguen
 abiertas porque son dato suyo — el **teléfono fijo** (hoy solo hay un móvil en el panel, así que salen
 dos canales y no tres) y **quién lee el WhatsApp**. Ninguna bloquea: lo que no tiene dato no se pinta.
+
+---
+
+## #554 · 2026-09-12 · `[DECIDIDO owner]` El PIE del cajón: el CTA a fila completa y el paso 08 ancla en lo que se COBRA
+
+**Contexto.** T4·4a del carril del SPA (`docs/CARRIL-SPA.md`), primera mitad del **armazón**, que es lo
+que comparten las veinticinco pantallas. Fuentes: el artboard `Armazon Cajon PJP` (parada 01) para la
+forma y `Pago y Desenlaces PJP` (parada 04) para el paso de pagar, más las doce decisiones que el owner
+cerró en la parada 05 (`doc/spa.md`).
+
+### Lo medido ANTES, que es lo que ordenó la tanda
+
+Sonda nueva y versionada, `scripts/sonda-armazon.mjs` (hermana de `sonda-cajon.mjs`, que mide talla de
+letra; ésta mide la CAJA). Ocho pantallas × dos anchos:
+
+| pieza | hoy | el canvas | |
+|---|---|---|---|
+| banda de fases: superficie, relleno, barra | Nube · 14/20 · gap 12 · barra 5 | idéntico | ✓ |
+| «Volver»: área efectiva y color | 82×48 · Azul Muro | ≥48 · enlace | ✓ |
+| zona que scrollea | relleno 20 | 20 | ✓ |
+| pie: superficie, relleno, borde | Papel · 14/20 · línea arriba | idéntico | ✓ |
+| **el CTA: alto · relleno · peso** | **51 · 15/15 · 700** | **56 · 18/34 · 800** | ✗ |
+| **el CTA: sitio** | **al lado del total, 71–87 %** | **fila completa** | ✗ |
+| **el rótulo cuando no se puede avanzar** | **«Total» y un guion** | **el motivo** | ✗ |
+| **el ancla del paso 08** | **el TOTAL** | **lo que se cobra** | ✗ |
+| banda de fases: cuántas | 3, y solo en dos pasos | 5, del día al pago | ✗ (T4·4b) |
+
+### Las dos decisiones del owner, con el número delante
+
+**1 · El CTA a fila completa.** Elegido sobre las dos formas **renderizadas** (no descritas). Medido a
+390×844: el pie pasa de **130 a 170,2 px**, el botón de **249,5 a 350** de ancho y el aire de la
+pantalla MÁS cargada baja de **177 a 137** — sigue sobrando en las ocho. ▶ El artboard estimaba «unos
+60 px» de coste; **medido son 40,2**.
+
+**2 · La banda de cinco fases** (T4·4b, siguiente tanda).
+
+### El paso 08: un botón y la cifra de al lado se leen como una frase
+
+Es la decisión 4 de las doce que el owner cerró, y el canvas la midió: con señal en la cesta el pie
+decía **162,40 €** y a la tarjeta iban **92,80 €**. Hoy el pie ancla en lo que se cobra y el total sube
+a la banda, **sin ninguna resta nueva** (los tres importes los publica el presupuesto por separado).
+
+▶ Verificado en vivo con un pack real: banda «Total 127,60 €» · «A pagar en el parque 77,60 €», y
+pegado al botón **50,00 €**.
+
+⚠️ **Sin señal el rótulo vuelve a «Total», y no es cosmética**: las dos cifras son la misma, así que
+«Pagas ahora» insinuaría un resto que no existe. El importe sigue saliendo de lo que se cobra —que ahí
+ES el total—, o sea que la regla no tiene dos caminos.
+
+⚠️ **La banda baja a NUBE y pierde su línea de abajo**: desde que el pie ancla en lo que se cobra, la
+banda lleva el dato de APOYO y el pie la cifra que manda; que sean dos superficies es lo que dice cuál
+es cuál, y entonces una línea encima de ese escalón es la línea de más. Y por lo mismo **el rótulo del
+pie que cobra sale del gris de apoyo** (tinta, peso 700): con los dos en Humo, las tres cifras de esa
+esquina pesaban igual.
+
+### Tres cosas del canvas que NO se sostuvieron al medirlas
+
+1. ⚠️⚠️ **«La banda de fases la compone el SERVIDOR» es falso**, y el canvas lo repite en TRES sitios
+   («lo único de la lista que no es cliente», «hay una prueba que congela sus tres fases»). `Purchase.php`
+   está retirado desde que el cajón es motor único: hoy la compone **`progress.js`, en el cliente**, y la
+   comparación contra el servidor «se fue con el motor» —lo dice el docblock de `SidebarProgressParityTest`—.
+   ▶ Eso **abarata la T4·4b**: es cliente, dos rótulos y los manifiestos del contrato de árbol.
+2. ⚠️ **«El botón del cajón mide 41» está CADUCADO por `#550`**: con el cuerpo a 16 mide **51**, así que
+   ya cumplía el objetivo táctil de 48 antes de esta tanda. Lo que no cumplía era el TOKEN.
+3. ⚠️ **El `:hover` con color de marca NO es una grieta abierta**: `#551` lo decidió ayer con motivo
+   escrito y su guarda dice literalmente «no lo arregles quitándolo». El artboard de la parada 01 pide
+   Tinta 600 y queda caducado ahí. ▶ *Antes de discutir si un color está bien, se mira si en el propio
+   código ya hay alguien que lo discutió y ganó* — la regla es del canvas y se aplicó a él.
+
+### El desglose pasa a FILAS, y el porqué
+
+`split` nació con `nowLabel`/`now`/`park`. Con el ancla nueva, la banda del paso 08 tenía que decir
+«Total» en el campo llamado `nowLabel`: **un nombre diciendo lo contrario de su contenido**. Hoy es
+`split.rows`, dos filas con su etiqueta, y los dos sitios que lo pintan —el ⓘ y la banda— dejan de
+nombrar ninguna: `Foot.vue` leía `messages.pay_at_park` a mano, o sea media regla en el marcado.
+
+### Lo que se retiró de una guarda, y por qué no la debilita
+
+⚠️⚠️ **TRES aserciones de `SidebarActionRoleTest` sobre la SINTAXIS de `foot.js` se retiran.** Contaban
+literales `sells: false`, la firma de `cartFooter(… sells = false)` y la llamada del paso 08 con su
+`true`. Las tres se pusieron **ROJAS con el producto sano** en cuanto el módulo separó el pie de la
+cesta del de pagar — y la de contar literales **ya había fallado antes por lo mismo, con su propio
+comentario advirtiéndolo**. ▶ *Una guarda que describe cómo está escrita una regla envejece con cada
+forma nueva de escribirla.*
+
+Lo que protegían lo cubre `foot.test.js` **por conducta y más fuerte**: `typeof sells === 'boolean'`
+caza también un `null` o un `undefined` explícito, invisibles para una regex, y el conjunto de los que
+valen `true` se compara contra `[8]`. Y esos casos **están en el gate**: el `pre-push` corre
+`npm run test:js`. Queda en el PHP una aserción que delega y falla si ese caso desaparece.
+
+### La red
+
+**`SidebarFootShapeTest`** (6 casos) + **`scripts/mutar-pie-cajon.sh`: 17/17 mutaciones muerden.**
+
+❗ **Mide la PROPIEDAD, no la sintaxis**, que es la lección que esta misma tanda acababa de pagar: el
+alto del botón no se compara contra un texto, se **calcula** (relleno + tamaño × interlineado) y se
+contrasta con el alto declarado del sistema. Así muerde igual si alguien toca el relleno, el cuerpo de
+letra o el interlineado — y una de las diecisiete es justo ésa: *sin `line-height` propio la línea
+heredada mide 21 y el botón sale a 57, con el `min-height` diciendo 56 y nadie notándolo.*
+
+### Cuatro trampas de instrumento, todas pagadas aquí
+
+1. ⚠️⚠️ **La sonda midió un `:hover` y devolvió un color que no existe en reposo.** «Ir a pagar» salía
+   en cian donde es tinta. No fue por forzar el hover: **tras un clic el ratón se queda donde pulsó**, y
+   el CTA del paso siguiente ocupa el mismo sitio que el del anterior. ▶ La trampa estaba escrita en la
+   cabecera de `SidebarActionRoleTest` desde `#551` **y en la cabecera de mi propia sonda**, y se pagó
+   igual. Hoy el puntero se aparta antes de medir.
+2. ⚠️⚠️ **`scrollHeight` no mide el contenido de una caja recortada**, y el hueco salía **0** en las seis
+   pantallas — cifra creíble y falsa. La trampa está escrita en `doc/spa.md` («cómo se miden los altos
+   de un documento como éste») y esta sonda la pagó igual. Se suman hijos + huecos + relleno.
+3. ⚠️⚠️ **`sonda-cajon.mjs` quedó ROTA por `#553` y nadie lo vio**: esa tanda cerró las categorías del
+   catálogo, y los productos **se pintan igual** (los esconde el CSS para poder animarlos), así que
+   `waitForSelector('.catalog__item')` pasa en verde y el clic de después agota el tiempo con el cajón
+   perfectamente sano. ▶ *Un instrumento que el cambio rompe y nadie vuelve a correr sigue diciendo lo
+   que medía antes.* Arreglado en las dos sondas.
+4. ⚠️⚠️ **El arnés deja el bundle SSR RANCIO**: restaurar hace `touch` sobre las fuentes, así que
+   `foot.js` pasa a ser más nuevo que `storage/ssr/` y `SidebarDomContractTest` —que renderiza el
+   BUNDLE— saca **35 casos en rojo con el árbol limpio**. Es el número exacto que `CARRIL-SPA.md` §4
+   tenía escrito. El arnés lo avisa al salir.
+
+**Verificación**: suite **4757 · 29.794 aserciones** (1 skipped) · JS **967** · **17/17 mutaciones** ·
+Pint y docs-check ✓ · sonda de navegador en 8 pantallas × 2 anchos, con capturas, y el paso 08 con
+señal recorrido de punta a punta.
+
+⚠️ **Paso de despliegue: ninguno.**
+
+❗ **Queda el OJO del owner en un teléfono de verdad**, que es lo único que esta tanda no puede darse a
+sí misma. Y **la T4·4b**: la banda de cinco fases, del día al pago, con el «Volver» de los pasos 4, 5 y
+8 unificado en la banda.

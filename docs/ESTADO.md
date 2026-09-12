@@ -42,7 +42,7 @@ no suponerlo.
 > | 🎨 **Diseño de la web · este ordenador** | ~~470–499~~ → **520–549** (último `#535`) | `specs/rediseno-desde-canvas.md` §5.5 | portada CERRADA · **Fase 3 EN CURSO**: el armazón de páginas — T3a·1 (destinos) ✅ `#521` · T3a·2 (el pie y las velas) ✅ `#522` · el ojo del owner (pie de la portada en papel, «Reservar» abierto) ✅ `#523` · la spec de Google Business Profile ✅ aprobada, **código no empezado** (`#524`) · T3a·3 (la cabecera de página) ✅ `#525` · T3a·4 (el cierre en las interiores) ↩️ construida en `#526` y **revertida por `#527`** (`[DECIDIDO owner]`: las interiores acaban en el pie, sin tarjeta) — **el armazón, COMPLETO** · las páginas: `/atracciones` ✅ `#481` · **`/cumpleanos` ✅ `#528`** (revisada en vivo por el owner; sin sus dos fotos hasta que las mande) · **el vídeo del hero, el nuevo** ✅ `#529` · **el segundo ordenador, montado** ✅ `#530` · **`/precios` ✅ `#531`** (dos columnas de precio entero, la hora extra como fila y los festivos) · **la FOTO de la zona en `/cumpleanos`** ✅ `#532` (`[DECIDIDO owner]` con el rechazo de `#484` delante; falta la de la mesa, que el parque no tiene) · **`/normas` ✅ `#533`** (el MOMENTO y el PORQUÉ entran como columnas —el hueco que midió §4.2—, la escala sale del dato y las edades las mandan el catálogo y la zona, no el artboard) · **`/contacto` ✅ `#535`** (los canales del dato, el formulario con su tema y su aviso, la chapa de atajos del inventario y la dirección escrita **sin mapa**) — siguen · `/servicios` (grupos, PAUSADA) · `/bar` · **las reseñas van DESPUÉS del diseño** (`[owner, 2026-09-11]`) |
 > | 📧 **Correos** | **500–519** (último `#508`) | `specs/correos-desde-canvas.md` §17 | **carril ENTERO en el árbol y son 25 correos, no 23** (`#508`: los dos del framework no vivían en ninguna carpeta) · el inventario del artboard queda sin ningún RECHAZADO · quedan los **4 ámbar** y el **OJO del owner** en un cliente real |
 > | 🏦 **Pasarela / producto (este ordenador)** | **4xx** (último `#454`; libres `#455`–`#459`) | `sistemas/REDSYS.md` §14.bis · `ENTORNOS.md` §1 | staging es el entorno de validación del banco; el go-live espera el pase a real |
-> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#553`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y CUATRO tandas hechas** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` **29 → 13**, **17/17 mutaciones** · ✅ **T4·3 · la TARJETA GRANDE del catálogo** (`#552`): dos tarjetas con su franja y su frase, el cumpleaños en tinta, «Servicios» → **«Grupos»**, y el defecto medido del precio de un pack (**159 px de 324**, la descripción en 55 y cortada) → las siete filas iguales · ✅ **T4·3 bis · la PUERTA de categoría** (`#553`, **la propuso el owner**): las dos categorías salen CERRADAS y al pulsarlas se abren en la tarjeta grande — la bifurcación se ve **sin pantalla nueva**; puerta cerrada **154 px** y el panel **817** contra 1.033; **16/16 mutaciones** · **lo siguiente**: el **armazón** (T4·4), que lo comparten las 25 pantallas · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
+> | 🧩 **Diseño del SPA (el cajón) · el OTRO ordenador** | **550–579** (último `#554`) | **`CARRIL-SPA.md`** · `specs/rediseno-desde-canvas.md` §5 (Fase 4) | **máquina montada y CINCO tandas hechas** · ✅ **T4·4a · EL PIE DEL ARMAZÓN** (`#554`, `[DECIDIDO owner]` sobre las dos formas **renderizadas**): el CTA a **fila completa** con el tamaño grande del sistema (56 · 18/34 · 800) y **el paso 08 ancla en LO QUE SE COBRA** — con señal el pie decía el total y a la tarjeta iba otra cifra; hoy la banda dice «Total» y «A pagar en el parque» y pegado al botón va lo que va a la tarjeta. ⚠️⚠️ **Tres cosas del canvas no se sostuvieron al medirlas**, y la que más cambia el plan: **la banda de fases NO es trabajo de servidor** (lo dice en tres sitios) — `Purchase.php` está retirado y hoy la compone el cliente. **17/17 mutaciones** · ✅ **T4·1 · la GRIETA 00** (`#550`): el cuerpo del cajón al suelo del sistema · ✅ **T4·2 · la GRIETA 01** (`#551`): el cajón deja de pintar la ACCIÓN con la marca — `.btn--zone` **retirada del producto** y sustituida por `.btn--ink`, «Pagar» como **único** relleno de acción del embudo, y los cinco textos que daban **2,21–2,70** de contraste a **5,81–18,50**; censo de `--zone-*` **29 → 13**, **17/17 mutaciones** · ✅ **T4·3 · la TARJETA GRANDE del catálogo** (`#552`): dos tarjetas con su franja y su frase, el cumpleaños en tinta, «Servicios» → **«Grupos»**, y el defecto medido del precio de un pack (**159 px de 324**, la descripción en 55 y cortada) → las siete filas iguales · ✅ **T4·3 bis · la PUERTA de categoría** (`#553`, **la propuso el owner**): las dos categorías salen CERRADAS y al pulsarlas se abren en la tarjeta grande — la bifurcación se ve **sin pantalla nueva**; puerta cerrada **154 px** y el panel **817** contra 1.033; **16/16 mutaciones** · **lo siguiente**: la **T4·4b, la banda de CINCO fases** (`[DECIDIDO owner]`), del día al pago — y con ella el «Volver» de carrito, identificarse y pagar, que hoy traen el suyo propio y con la banda serían dos · **el reparto por FICHERO con la web está en `CARRIL-SPA.md` §5 y §7**, y lo compartido se avisa AQUÍ antes de tocarlo |
 >
 > ▶ **Para el agente de la web** (lo compartido que tocó `#551`, y por qué): **`.btn--zone` YA NO
 EXISTE** en `landing.css` — la sustituye **`.btn--ink`** (relleno de tinta, el *secundario* que la hoja
@@ -214,7 +214,45 @@ cerrar el 10-09 se llegó a numerar un `#507` que caía dentro de su banda — c
 > que define cada símbolo. *Cuando un instrumento dice que hay 29 cosas muertas, el sospechoso es el
 > instrumento.*
 >
-> ❗❗ **LO SIGUIENTE: EL ARMAZÓN** (T4·4), que lo comparten las 25 pantallas. ⚠️ Con una negociación
+> ✅ **T4·4a · EL PIE DEL ARMAZÓN** (`#554`, `[DECIDIDO owner]`): primera mitad del armazón, que es lo
+> que comparten las 25 pantallas. **El CTA pasa a FILA COMPLETA** con el tamaño grande del sistema
+> (alto 56 · relleno 18/34 · peso 800) —medido: el pie crece **40,2 px**, el botón de 249,5 a **350**
+> de ancho, y el aire de la pantalla más cargada baja de 177 a **137**, o sea que sigue sobrando en las
+> ocho—; **el paso 08 ancla en LO QUE SE COBRA** y el total sube a la banda (verificado en vivo con un
+> pack real: banda «Total 127,60 €» · «A pagar en el parque 77,60 €», y pegado al botón **50,00 €**);
+> y **el MOTIVO de que no se pueda avanzar vive en el rótulo**, no dentro del botón apagado.
+>
+> ⚠️⚠️ **TRES AFIRMACIONES DEL CANVAS QUE NO SE SOSTUVIERON AL MEDIRLAS**, y la primera cambia el plan:
+> **(1) la banda de fases NO es trabajo de servidor** —lo dice en TRES sitios («lo único de la lista que
+> no es cliente»)— y `Purchase.php` está retirado desde que el cajón es motor único: hoy la compone
+> `progress.js` **en el cliente**, y la comparación contra el servidor «se fue con el motor». ▶ Eso
+> **abarata la T4·4b**. **(2)** «El botón del cajón mide 41» está CADUCADO por `#550`: mide **51**, o
+> sea que ya cumplía el táctil de 48 — lo que no cumplía era el token. **(3)** El `:hover` con color de
+> marca **no es una grieta abierta**: `#551` lo decidió ayer y su guarda dice «no lo arregles
+> quitándolo»; el artboard de la parada 01 queda caducado ahí.
+>
+> ⚠️⚠️ **LO QUE NO HAY QUE VOLVER A DESCUBRIR DE ESTA TANDA** (cuatro trampas de instrumento, todas
+> pagadas aquí): la sonda **midió un `:hover`** y devolvió un color que no existe en reposo —no por
+> forzarlo, sino porque **tras un clic el ratón se queda donde pulsó** y el CTA del paso siguiente ocupa
+> el mismo sitio; la trampa estaba escrita en `SidebarActionRoleTest` desde `#551` **y en la cabecera de
+> la propia sonda**— · **`scrollHeight` no mide una caja recortada** y el hueco salía **0** en las seis
+> pantallas, con `doc/spa.md` teniéndolo escrito · **`sonda-cajon.mjs` quedó ROTA por `#553`** y nadie
+> lo vio: las categorías cerradas pintan sus productos igual, así que el `waitForSelector` pasa en verde
+> y el clic agota el tiempo con el cajón sano · y **el arnés deja el bundle SSR rancio** (`touch` al
+> restaurar) → **35 casos en rojo con el árbol limpio**, el número exacto de `CARRIL-SPA.md` §4.
+>
+> ⚠️ **Y una guarda perdió tres aserciones a propósito**: las de `SidebarActionRoleTest` que describían
+> la SINTAXIS de `foot.js` se pusieron rojas con el producto sano, y **la de contar literales ya había
+> fallado antes con su propio comentario advirtiéndolo**. Lo que protegían lo cubre `foot.test.js` por
+> CONDUCTA y más fuerte, y el gate corre `npm run test:js`.
+>
+> ❗❗ **LO SIGUIENTE: LA T4·4b, LA BANDA DE CINCO FASES** (`[DECIDIDO owner]`), del día al pago. Es
+> cliente, dos rótulos nuevos y los manifiestos del contrato de árbol. ⚠️ **Lleva una consecuencia que
+> el canvas no resolvió y el owner ya decidió**: carrito, identificarse y pagar **ya traen su propio
+> «Volver»** encima del título, así que con la banda habría dos — se retira el propio y manda el de la
+> banda, que es una sola pieza en las cinco.
+>
+> ❗❗ **DESPUÉS DEL ARMAZÓN** ⚠️ Con una negociación
 > pendiente: el canvas manda la **puerta a la cuenta** al racimo de la cabecera de la WEB, que es del
 > otro carril, y su decisión 02 («Mi QR» como botón fijo) **sigue abierta**. Y el **botón del sistema**
 > (16/800 con borde) toca la familia `.btn` entera: se acuerda con el otro carril antes de tocarla.
@@ -2764,12 +2802,13 @@ aquí lo que no se podaría son datos de menores de terceros.
 > entradas nacieron como `#327` (en el código) y `#328` (en el documento), y **las dos eran suyas**.
 > Renumeradas a `#329`→`#333` con mapa explícito: 82 referencias en código y 15 en el documento.
 > ▶ *No basta con mirar el remoto al ABRIR la tanda: hay que volver a mirarlo al CERRARLA.*
-> Suite **4761 en verde** (29.851 aserciones, 1 skipped), medida el **2026-09-12** con **`/contacto`**
-> encima (`#535`: **+11** de `ContactPageTest`, que pasa de 3 casos a 14, **−1** por el caso del mapa
-> de contacto que `CookieGateBlockingTest` pierde con su sujeto).
-> Antes, **4751** (29.762) con la **puerta de
-> categoría** (`#553`: **+1** de `SidebarCatalogCardTest` —sus casos pasan de 6 a 7— y **+3** de
-> JS en `catalog.test.js`, que sube a **963**).
+> Suite **PENDIENTE-MEDIR en verde**, medida el **2026-09-12** sobre el árbol CONJUNTO tras la SÉPTIMA
+> fusión, con el **PIE del armazón** del carril del SPA encima (`#554`: **+6** de `SidebarFootShapeTest`,
+> la guarda nueva, y **+4** de JS en `foot.test.js`, que sube el total a **967**) y **`/contacto`** del
+> carril de diseño (`#535`: **+11** de `ContactPageTest` y **−1** del caso del mapa que
+> `CookieGateBlockingTest` pierde con su sujeto).
+> Antes, **4751** (29.762) con la **puerta de categoría** (`#553`: **+1** de `SidebarCatalogCardTest`
+> —sus casos pasan de 6 a 7— y **+3** de JS en `catalog.test.js`, que subió a **963**).
 > Antes, **4750** (29.734) con la **tarjeta grande del catálogo** (`#552`: **+6** de
 > `SidebarCatalogCardTest` y **+1** de JS).
 > Antes, **4744** sobre el

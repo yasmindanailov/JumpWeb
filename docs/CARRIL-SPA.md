@@ -164,6 +164,20 @@ aquí y no se reescribe lo de arriba: **la corrección va delante del texto que 
    `node node_modules/playwright-core/cli.js install chromium`. Y hacía falta instalar **`socat`**
    (`apt-get install -y socat`, como root) para el puente 8081→80.
 
+5. **La banda de fases NO es trabajo de servidor, y el canvas lo dice en TRES sitios** (`#554`). Su
+   `doc/spa.md` la lista como «lo único de la lista que no es cliente» y habla de «una prueba que
+   congela sus tres fases». Medido: **`Purchase.php` está retirado** desde que el cajón es motor único,
+   así que hoy la compone **`progress.js` en el cliente**, y la comparación contra el servidor «se fue
+   con el motor» —lo dice el docblock de `SidebarProgressParityTest`—. Lo que queda del servidor son
+   las claves de `lang/` y los manifiestos congelados del contrato de árbol.
+6. **Dos sondas y un arnés tienen trampas que ya se pagaron** (`#554`): tras un clic **el ratón se queda
+   donde pulsó**, así que la pantalla siguiente se mide con su CTA en `:hover` (apártalo antes de medir)
+   · `scrollHeight` **no mide una caja recortada** y el hueco sale 0 (se suman hijos + huecos + relleno)
+   · desde `#553` **las categorías del catálogo salen cerradas y sus productos se pintan igual**, así
+   que esperar a `.catalog__item` pasa en verde y el clic agota el tiempo · y **el arnés de mutación
+   deja el bundle SSR rancio** por su `touch` al restaurar → 35 casos del contrato en rojo con el árbol
+   limpio.
+
 ⚠️ **Y el reparto por TÍTULO de sección de §5 se queda corto**: medido, **31 declaraciones** de clases
 del cajón viven fuera de esos bloques (`.auth__*`, `.acct__*`, `.whoblock__*`, `.guardnote__*`,
 `.acc-tile__name`…), más dos familias enteras (`.qr-pass__*`, `.dep-pick__*`). ▶ *Lo que define al cajón
