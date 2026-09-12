@@ -5,6 +5,7 @@ import { useDependentsStore } from '../../stores/dependents.js';
 import { useWaiverStore } from '../../stores/waiver.js';
 import ZoneLoading from '../ZoneLoading.vue';
 import DependentCard from './DependentCard.vue';
+import WaiverDoc from '../../WaiverDoc.vue';
 import { fieldError } from '../form-outcome.js';
 import { RELATIONSHIPS, dependentsPager, dependentsView, signupNeedsWaiver } from '../dependents.js';
 import { t as translate } from '../../i18n.js';
@@ -203,12 +204,7 @@ async function sign(dependent) {
                       sistema de sombras de `#196`.
                     -->
                     <template v-if="signupNeedsWaiver(waiver.document)">
-                        <details class="form__hint">
-                            <summary>{{ a('register.waiver_read') }}</summary>
-                            <p v-for="(section, i) in waiver.document.sections" :key="i">
-                                <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
-                            </p>
-                        </details>
+                        <WaiverDoc :document="waiver.document" :label="a('register.waiver_read')" />
                         <div class="form__checks">
                             <label class="check">
                                 <input v-model="view.form.accept_waiver" type="checkbox" required>

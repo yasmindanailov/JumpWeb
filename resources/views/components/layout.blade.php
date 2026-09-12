@@ -278,13 +278,22 @@
                             // casillas salieron de las dos altas —las condiciones se aceptan al contratar y el
                             // marketing vive en el interruptor de la cuenta—, así que eran bytes que viajaban
                             // en cada página pública sin tener quien los pintara.
-                            'register' => array_replace(\Illuminate\Support\Arr::only(__('account.register'), [
-                                'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
+                            // ⚠️ **`eyebrow` se va en `#566`** (grieta 12, `[DECIDIDO owner]`): las cinco
+                            // pantallas de auth pierden su antetítulo —era la costura del modal del que
+                            // se mudaron— y en las otras veinte el cajón titula y punto.
+                            // ⚠️ **Y `array_replace` se va con él**: estaba solo para interpolar el `:url`
+                            // dentro de `privacy_notice`, y desde `#566` el enlace vive en su propia fila
+                            // (`privacy_read`) con la URL viajando suelta en `urls.privacy`.
+                            'register' => \Illuminate\Support\Arr::only(__('account.register'), [
+                                'cta', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
                                 // ⚠️ `phone_hint` entra con el campo (`#561`): la pista dice para qué se
                                 // pide el teléfono, y sin ella en esta lista el `t()` del cajón devolvería
                                 // CADENA VACÍA sin fallar — el hueco de `#333`, que se ve como un campo sin
                                 // explicación y no como algo roto.
                                 'password_hint', 'phone_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                                // ⚠️ El rótulo de la fila que abre la política (`#566`). Sin él aquí, la
+                                // fila se pinta MUDA: `t()` devuelve cadena vacía sin fallar (`#333`).
+                                'privacy_read',
                                 'submit', 'submitting', 'fix_errors', 'leave_blank',
                                 // ⚠️ **El botón de Google viaja SIEMPRE y su pantalla NO** (`#343`): el
                                 // rótulo lo pintan las dos pestañas de auth, que las ve quien no tiene
@@ -294,8 +303,6 @@
                                 // ⚠️ Y con él su «o» (T8·d, `#350`): el separador se pinta pegado al
                                 // botón y desaparece con él, así que viaja igual y por lo mismo.
                                 'google_cta', 'or',
-                            ]), [
-                                'privacy_notice' => __('account.register.privacy_notice', ['url' => route('legal.privacidad')]),
                             ]),
                             // ⚠️ **Recuperar contraseña viaja SIN sesión, igual que entrar y darse de
                             // alta** (`specs/auth-en-cajon.md` §4.1): sus tres pantallas son
@@ -366,8 +373,10 @@
                             // en el acto—, así que ese rótulo no lo pinta nadie. Un texto que viaja
                             // en cada página para no pintarse nunca es exactamente lo que este
                             // presupuesto existe para cazar.
+                            // ⚠️ `eyebrow` se va en `#566`, como en `register`: el «Casi listo» era la
+                            // cuarta costura del modal, y el canvas solo había contado tres.
                             'verify' => \Illuminate\Support\Arr::only(__('account.verify'), [
-                                'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend',
+                                'title', 'sent_to', 'spam_hint', 'resend',
                                 'resend_in', 'resends_left', 'resend_limit', 'already_have_account',
                                 // `#331`: el aviso del índice de la cuenta para quien entró sin
                                 // verificar. Va en `verify` y no en `privacy.waiver` porque el aviso
@@ -524,6 +533,12 @@
                             // es atributo de contrato del diff de árbol, así que un enlace roto aquí
                             // pasaría el gate en verde.
                             'terms' => route('legal.condiciones'),
+                            // ⚠️ **La POLÍTICA DE PRIVACIDAD, para la fila de las dos altas** (`#566`).
+                            // Antes viajaba interpolada dentro de `privacy_notice`; al salir el enlace de
+                            // la frase tiene que viajar suelta, y por el mismo motivo que `terms`: el slug
+                            // lo decide `routes/web.php` y un `href` no es atributo de contrato del diff de
+                            // árbol, así que un enlace roto aquí pasaría el gate en VERDE.
+                            'privacy' => route('legal.privacidad'),
                             // ⚠️ **La IDA a Google, y solo si esta instalación la ofrece**
                             // (`specs/auth-con-google.md` §10): su presencia ES el interruptor del
                             // botón — sin claves no viaja la clave y el botón no se pinta, que es el

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
 import ConfirmInline from '../ConfirmInline.vue';
+import WaiverDoc from '../../WaiverDoc.vue';
 import { DEPENDENT_WAIVER_SIGN, DEPENDENT_WAIVER_VERIFY, bornOnLabel, coverageKey, dependentWaiverAction, dependentWaiverKey } from '../dependents.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 
@@ -76,12 +77,7 @@ const removeQuestion = computed(() => translateWith(props.account, 'account.depe
         <p v-if="mustVerify" class="auth__sub" role="status">{{ a('account.dependents.waiver_awaiting_verification') }}</p>
 
         <form v-if="canSign" class="form auth__form" novalidate @submit.prevent="emit('sign')">
-            <details class="form__hint">
-                <summary>{{ a('register.waiver_read') }}</summary>
-                <p v-for="(section, i) in document.sections" :key="i">
-                    <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
-                </p>
-            </details>
+            <WaiverDoc :document="document" :label="a('register.waiver_read')" />
             <div class="form__checks">
                 <label class="check">
                     <input v-model="accept" type="checkbox">

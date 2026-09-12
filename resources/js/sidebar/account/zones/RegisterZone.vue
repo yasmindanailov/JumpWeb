@@ -70,7 +70,6 @@ async function submit() {
          robar el foco, igual que el paso 7 del embudo. -->
     <div v-if="store.pendingEmail" class="auth">
         <div class="auth__head">
-            <span class="eyebrow">{{ a('verify.eyebrow') }}</span>
             <h2 class="auth__title">{{ a('verify.title') }}</h2>
         </div>
 
@@ -114,5 +113,6 @@ async function submit() {
         :submitting="store.busy"
         :account="account"
         :google-url="urls.google ?? ''"
+        :privacy-url="urls.privacy ?? ''"
         @submit="submit" />
 </template>

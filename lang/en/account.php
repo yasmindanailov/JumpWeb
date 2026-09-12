@@ -28,7 +28,6 @@ return [
     ],
 
     'account' => [
-        'eyebrow' => 'Your space',
         'title' => 'My account',
         'subtitle' => 'Manage your details, your access and your privacy.',
         'wrong_password' => 'Your current password is incorrect.',
@@ -192,7 +191,6 @@ return [
 
     'login' => [
         'cta' => 'Log in',
-        'eyebrow' => 'Welcome back',
         'title' => 'Log in',
         'email' => 'Email',
         'password' => 'Password',
@@ -203,7 +201,6 @@ return [
     ],
 
     'forgot' => [
-        'eyebrow' => 'Recover access',
         'title' => 'Reset your password',
         'intro' => 'Enter your email and we will send you a link to set a new password.',
         'email' => 'Email',
@@ -227,7 +224,6 @@ return [
 
     'register' => [
         'cta' => 'Sign up',
-        'eyebrow' => 'Join us',
         'title' => 'Create your account',
         'subtitle' => 'Needed to book tickets and birthdays.',
         'name' => 'Full name',
@@ -243,7 +239,9 @@ return [
         // The waiver is named IN FULL and always the same (`#561`, `Voz PJP`).
         'waiver_read' => 'Read the liability waiver',
         // Ver el aviso de `lang/es/account.php`: es un AVISO, no una casilla, y por eso no dice «I accept».
-        'privacy_notice' => 'When you create your account we handle your data as described in our <a href=":url" target="_blank" rel="noopener">privacy policy</a>.',
+        // Sin marcado desde `#566`: el enlace vive en su propia fila (grieta 13).
+        'privacy_notice' => 'When you create your account we handle your data as described in our privacy policy.',
+        'privacy_read' => 'Read the privacy policy',
         'submit' => 'Create account',
         'submitting' => 'Creating…',
         'fix_errors' => 'Please check these fields:',
@@ -256,7 +254,6 @@ return [
     ],
 
     'google' => [
-        'eyebrow' => 'Almost there',
         'title' => 'Finish signing up',
         // ⚠️ Said «…to book in your name», which was FALSE (`#345`): nothing is booked here — this
         // screen CREATES THE ACCOUNT, which is what its own submit button says.
@@ -305,7 +302,6 @@ return [
     ],
 
     'verify' => [
-        'eyebrow' => 'Almost done',
         'title' => 'Confirm your email',
         'intro' => 'We have sent a confirmation link to your email. Open it to activate your account.',
         'sent_to' => 'We have sent a confirmation email to :email. Open it to activate your account.',

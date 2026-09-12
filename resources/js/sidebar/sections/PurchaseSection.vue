@@ -1298,6 +1298,7 @@ function goBack() {
             :account="account"
             :turnstile-site-key="authStore.signupSiteKey"
             :google-url="urls.google ?? ''"
+            :privacy-url="urls.privacy ?? ''"
             @set-mode="authStore.setMode"
             @submit-login="submitLogin"
             @submit-register="submitRegister"

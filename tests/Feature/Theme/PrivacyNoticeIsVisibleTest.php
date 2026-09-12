@@ -62,8 +62,11 @@ class PrivacyNoticeIsVisibleTest extends TestCase
         foreach (self::SCREENS as $path) {
             $template = $this->template($path);
 
+            // ⚠️⚠️ **Este localizador CAMBIÓ en `#566`**: pedía el `v-html`, que era la forma en que el
+            // aviso llevaba su enlace DENTRO —los 20 px de la grieta 13—. Hoy el párrafo es texto y el
+            // documento se abre desde su propia fila, que es lo que comprueba el caso de más abajo.
             $this->assertMatchesRegularExpression(
-                '~<p\b[^>]*class="form__hint"[^>]*v-html="a\(\'register\.privacy_notice\'\)"~',
+                '~<p\b[^>]*class="form__hint"[^>]*>\s*\{\{\s*a\(\'register\.privacy_notice\'\)\s*\}\}~',
                 $template,
                 "`{$path}` ya no pinta el aviso de privacidad como AVISO.\n".
                 '▶ Es lo único que enseña la política donde se crea la cuenta (§7.1, art. 13 RGPD).'
@@ -87,25 +90,64 @@ class PrivacyNoticeIsVisibleTest extends TestCase
      */
     public function test_the_link_inside_a_notice_looks_like_a_link(): void
     {
-        $rule = $this->cssRule('.form__hint a');
+        // ⚠️⚠️ **Se mira `.form__hint button` desde `#566`, y NO es una relajación**: al sacar el enlace
+        // de privacidad a su propia fila, esta regla se quedó sin `<a>` que vigilar… y al buscarle
+        // sujeto apareció el que llevaba ahí desde siempre. `NoPasswordHint` pinta un `<button>` dentro
+        // de una pista —«¿no tienes contraseña? · Recupérala»— **sin ninguna regla**: heredaba
+        // `color: inherit` del párrafo y salía sin subrayado, o sea EXACTAMENTE el defecto que este
+        // fichero existe para que no vuelva, una pantalla más allá y sin que nadie lo viera.
+        // ▶ Los dos selectores comparten cuerpo, así que comprobar uno comprueba los dos.
+        $rule = $this->cssRule('.form__hint button');
 
         $this->assertMatchesRegularExpression(
             '/text-decoration:\s*underline/', $rule,
-            "`.form__hint a` ha perdido el subrayado: en un párrafo gris de 12 px es la mitad que\n".
-            'de verdad lo separa del texto.'
+            "El control dentro de una pista ha perdido el subrayado: en un párrafo gris es la mitad\n".
+            'que de verdad lo separa del texto.'
         );
 
         $this->assertMatchesRegularExpression(
             '/color:\s*var\(--/', $rule,
-            '`.form__hint a` ha dejado de declarar color propio: heredaría el del aviso.'
+            'El control dentro de una pista ha dejado de declarar color propio: heredaría el del aviso.'
         );
 
         $this->assertStringNotContainsString(
             '--fg-mute', $rule,
-            "`.form__hint a` se pinta con `--fg-mute`, que es **el color del párrafo que lo envuelve**.\n".
+            "Se pinta con `--fg-mute`, que es **el color del párrafo que lo envuelve**.\n".
             '▶ Ése era el defecto exacto que este fichero existe para que no vuelva: medido en'.
             " navegador,\n  enlace y párrafo daban `rgb(98,106,114)` los dos."
         );
+    }
+
+    /**
+     * **Y el documento se puede ABRIR: la política tiene su propio control en las dos altas** (`#566`).
+     *
+     * ⚠️⚠️ Ésta es la mitad que sostiene el razonamiento entero del fichero desde que el enlace salió
+     * de la frase. El aviso informa; lo que hace que se haya **informado de verdad** es que el
+     * documento esté a un toque. Un párrafo que menciona «nuestra política de privacidad» sin nada
+     * que la abra cumple menos que la casilla que se quitó.
+     *
+     * ⚠️ Se comprueban las dos mitades: el rótulo (o la fila sale MUDA, el hueco de `#333`) y el
+     * `href` (o la fila no lleva a ninguna parte, y eso lo pasa el gate en verde).
+     */
+    public function test_the_policy_has_its_own_control_in_both_signups(): void
+    {
+        foreach (self::SCREENS as $path) {
+            $template = $this->template($path);
+
+            $this->assertStringContainsString(
+                "a('register.privacy_read')",
+                $template,
+                "`{$path}` no pinta el rótulo de la fila que abre la política."
+            );
+
+            $this->assertMatchesRegularExpression(
+                '~<a\s[^>]*:href="(privacyUrl|urls\.privacy[^"]*)"[^>]*class="cal-more legal-more"~',
+                $template,
+                "`{$path}` no abre la política desde una fila con la receta compartida.\n".
+                '▶ La URL viaja SUELTA (`urls.privacy`) y la forma la declara `.cal-more`: si esta fila '.
+                'copia sus valores, se queda atrás en cuanto alguien ajuste la otra (`#562`).'
+            );
+        }
     }
 
     private function read(string $path): string

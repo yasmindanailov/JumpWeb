@@ -317,9 +317,16 @@
    `--tap-min` con el glifo anclado —junto a su regla—; burger/cerrar-drawer suben el
    visible por estar ya cerca; el chip de cuenta usa `min-height`.) Sin coste
    visual: el pseudo-elemento no pinta nada. Requiere `position` no estático. */
+/* ⚠️⚠️ **`.sidecart__close` entra en `#566`, y con el pseudo y no con `min-height`.** Medida su
+   área efectiva —caja MÁS pseudo, que es lo que pulsa el dedo—: **15 × 26**, el peor control del
+   cajón y el único que sale en las **32** pantallas. Crecerlo de verdad engordaría la cabecera
+   **25 px** en todas (su alto lo manda el contenido: relleno 16 + el rótulo), así que es justo el
+   caso para el que nació este bloque. ▶ Y el ancho también fallaba: la ficha de `#563` solo
+   apuntó el alto porque la sonda mide cajas y esa columna no la mira nadie. */
 .entry__stepper button,
 .cal__nav,
 .cart__remove,
+.sidecart__close,
 .bk-foot__info-btn { position: relative; }
 /* ⚠️⚠️ **Era `width: var(--tap-min)` a secas y eso ENCOGE** (`#264`): un área del mínimo —entonces 44— centrada
    sobre un control que ya mide 60 le quita 8 px por lado, y el defecto es invisible —el control
@@ -329,6 +336,7 @@
 .entry__stepper button::after,
 .cal__nav::after,
 .cart__remove::after,
+.sidecart__close::after,
 .bk-foot__info-btn::after {
     content: ""; position: absolute;
     top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -1188,9 +1196,13 @@
 
 /* ---------- formulario de autenticación ---------- */
 .auth__head { margin-bottom: var(--sp-18); }
+/* ⚠️ **El margen superior se va con el antetítulo** (`#566`). Era el hueco ENTRE el antetítulo y el
+   título; sin él delante, `.auth__head` no tiene relleno ni borde, así que ese margen se COLAPSA
+   fuera de la caja y baja la cabecera 8 px — un aire que nadie decidió, en las cinco pantallas.
+   *Un margen escrito para separar de un hermano deja de significar eso cuando el hermano se va.* */
 .auth__title {
     font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-    letter-spacing: -0.02em; line-height: 1; font-size: clamp(28px, 5vw, 38px); margin: var(--sp-8) 0 0;
+    letter-spacing: -0.02em; line-height: 1; font-size: clamp(28px, 5vw, 38px); margin: 0;
 }
 .auth__sub { margin: var(--sp-8) 0 0; color: var(--fg-mute); font-size: var(--fs-14); line-height: 1.5; }
 
@@ -1278,7 +1290,16 @@
    ▶ *Una pieza corregida no corrige a sus hermanas, y menos si acaba de mudarse.*
    ⚠️ La regla base cambia sin acotar porque `.form__hint a` **solo lo emite el cajón**: medido, ninguna
    vista de la web pública pinta un enlace dentro de una pista de formulario. */
-.form__hint a { color: var(--interactive); text-decoration: underline; }
+/* ⚠️⚠️ **El `<button>` entra en `#566`, y es el MISMO defecto una pantalla más allá.** Al sacar el
+   enlace de privacidad de su frase (grieta 13) esta regla se quedó SIN SUJETO… y al buscarle uno
+   apareció el que llevaba ahí desde siempre: `NoPasswordHint` pinta un `<button>` dentro de una
+   pista —«¿no tienes contraseña? · Recupérala»— y **no tenía ninguna regla**, así que heredaba
+   `color: inherit` del párrafo y salía sin subrayado. Es, literalmente, lo que `#350` midió para el
+   enlace de privacidad: *texto plano con una zona pulsable invisible*.
+   ▶ *Una regla que se queda sin sujeto no siempre sobra: a veces lo que falta es mirar quién más
+   hacía lo mismo sin ella.* */
+.form__hint a,
+.form__hint button { color: var(--interactive); text-decoration: underline; }
 
 /* casillas legales / marketing */
 .form__checks { display: flex; flex-direction: column; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-20); }
@@ -1770,10 +1791,22 @@ body.no-scroll { overflow: hidden; }
 .bk-back:hover { gap: var(--sp-11); }
 /* ⚠️ **El área táctil crece SIN mover el diseño** (`#237`: medido 61×17, muy por debajo de 44).
    Un `min-height: 44px` engordaría la banda de progreso, que se pinta en TODOS los pasos del embudo;
-   una capa transparente da los 45 px de alto y no ocupa una sola fila más. El pseudo va absoluto
-   sobre el propio botón, así que el clic sigue siendo del botón. */
+   una capa transparente da el alto y no ocupa una sola fila más. El pseudo va absoluto sobre el
+   propio botón, así que el clic sigue siendo del botón.
+   ⚠️⚠️ **Cumplía POR CASUALIDAD ARITMÉTICA hasta `#566`.** Se escribió `inset: -14px` cuando el
+   control medía 17 px y el suelo era 44: daba 45 y pasaba. Al subir el cuerpo del cajón (`#550`) el
+   control pasó a 20 y el área a **48 exactos** — o sea que el número acertaba y nadie lo había
+   atado al suelo; el día que `--tap-min` suba o el cuerpo baje se queda corto **sin que falle
+   nada**. Es el defecto que `#476` midió en la web con cinco familias que daban «exactamente 44».
+   ▶ Hoy lee la MISMA receta del «Lote 9»: `max()`, para que la regla solo pueda ampliar.
+   ⚠️ Y por eso la ficha de `#563` que acusaba a este control estaba mal: medía la CAJA (20) y no el
+   ÁREA (48). *Una sonda que mide cajas no sirve para decidir si un control cumple.* */
 .bk-back { position: relative; }
-.bk-back::before { content: ""; position: absolute; inset: -14px calc(var(--sp-8) * -1); }
+.bk-back::before {
+    content: ""; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: max(100%, var(--tap-min)); height: max(100%, var(--tap-min));
+}
 
 /* ⚠️ **El «Volver» del ÁREA lleva su propio aire abajo.** `.bk-back` es la base compartida y no debe
    traer margen —en el embudo vive dentro de la banda de progreso, cuyo `gap` ya lo separa—, así que
@@ -2152,7 +2185,7 @@ body.no-scroll { overflow: hidden; }
 .cal-more,
 .paydue__terms {
     display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
-    width: 100%; min-height: 48px; margin-top: var(--sp-10);
+    width: 100%; min-height: var(--tap-min); margin-top: var(--sp-10);
     padding: var(--sp-12) var(--sp-16);
     border: 1px solid var(--line); border-radius: var(--r-btn);
     background: var(--bg-card); color: var(--fg);
@@ -2167,6 +2200,26 @@ body.no-scroll { overflow: hidden; }
 .cal-more__chev { flex: none; width: 18px; height: 18px; color: var(--interactive); transition: transform var(--dur-estado) var(--ease-sale); }
 .cal-more.is-open .cal-more__chev { transform: rotate(180deg); }
 .cal-more.is-open + .cal { margin-top: var(--sp-10); }
+
+/* ══ LA FILA QUE ABRE UN DOCUMENTO LEGAL (`#566`, grieta 13 del canvas) ════════════════════════
+   Tercer consumidor de la receta de arriba, y por el mismo criterio que `#562` le dio a las
+   condiciones: **un documento que hay que poder leer es un control, no una palabra subrayada dentro
+   de una frase**. Medido a 390 px antes de esta tanda: el enlace de la política **20 px** de alto y
+   el `<summary>` del descargo **20**, contra los **48** que declara el propio producto.
+   ▶ Lo emiten dos piezas y el ICONO las distingue, que es la regla de `#562`: **flecha** cuando SALE
+   a otra página (la política, en pestaña nueva) y **chevron** cuando despliega AQUÍ (el descargo).
+   ⚠️ **`margin-top: 0` no es cosmética**: `.cal-more` trae el suyo para vivir suelta bajo el
+   calendario, y aquí las dos viven dentro de contenedores con `gap` —`.form__checks`— o pegadas al
+   filo de su `<details>`; sumar las dos cosas deja el control flotando. */
+.legal-more { margin-top: 0; }
+/* El marcador del navegador se va: si no, sale su triángulo AL LADO del chevron del set — dos
+   señales para lo mismo, y una de ellas fuera de nuestro sistema de iconos. */
+summary.legal-more { list-style: none; }
+summary.legal-more::-webkit-details-marker { display: none; }
+/* ⚠️ El giro cuelga de `[open]`, el estado REAL del elemento, y no de una clase: una clase la lee
+   solo el CSS y hay que mantenerla en el JS (la lección de `#562` con `aria-expanded`). */
+details[open] > summary.legal-more .cal-more__chev { transform: rotate(180deg); }
+details > summary.legal-more ~ p { margin-top: var(--sp-10); }
 
 /* Calendario (paso 1): rejilla mensual coloreada por tipo de tarifa */
 /* ⚠️ **El relleno baja de 12 a 8 y el hueco de 4 a 3, y no es cosmética: es el objetivo táctil.**
@@ -2309,7 +2362,7 @@ body.no-scroll { overflow: hidden; }
    algo», y aquí no falta nada: es una puerta más. Y sube a 48, el suelo táctil del producto. */
 .purchase__add-more {
     display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
-    width: 100%; min-height: 48px; margin-top: var(--sp-14); padding: var(--sp-12) var(--sp-16);
+    width: 100%; min-height: var(--tap-min); margin-top: var(--sp-14); padding: var(--sp-12) var(--sp-16);
     background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
     font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--interactive); cursor: pointer;
     transition: border-color var(--dur-sale) var(--ease-sale);
@@ -2553,7 +2606,8 @@ body.no-scroll { overflow: hidden; }
 .paydue__terms { margin-top: var(--sp-12); text-decoration: none; }
 /* Como el chevron de `.cal-more`: el icono lleva el color de ENLACE, que es lo que dice que la fila
    lleva a otro sitio. No gira — no despliega nada, SALE. */
-.paydue__terms-ico { flex: none; width: 18px; height: 18px; color: var(--interactive); }
+.paydue__terms-ico,
+.legal-more__ico { flex: none; width: 18px; height: 18px; color: var(--interactive); }
 /* Pero si la casilla es lo PRIMERO del bloque —cuando solo faltan las condiciones— ese aire se
    sumaría al del propio bloque y dejaría el control flotando a 34 px de su regla. */
 .paydue > :first-child { margin-top: 0; }
@@ -7389,7 +7443,8 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    ENLACE y de TILDE DE CASILLA, que son dos de los cuatro papeles que el canvas
    enumera en la grieta 01 ampliada. Medido antes: los enlaces a **2,45** sobre papel.
    ==================================================================== */
-.sidecart__panel .form__hint a { color: var(--interactive); }  /* el enlace de una pista de campo */
+.sidecart__panel .form__hint a,
+.sidecart__panel .form__hint button { color: var(--interactive); }  /* el enlace —o el botón— de una pista */
 .sidecart__panel .check span a { color: var(--interactive); }  /* el enlace legal dentro de una casilla */
 /* ⚠️ El tilde de la casilla va en TINTA, no en `--interactive`: el artboard dibuja la casilla marcada
    con `cajaFondo: '#101418'`, y es coherente con el resto —todo lo ELEGIDO del cajón es tinta—. */

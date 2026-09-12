@@ -30,7 +30,6 @@ return [
     ],
 
     'account' => [
-        'eyebrow' => 'Tu espacio',
         'title' => 'Mi cuenta',
         'subtitle' => 'Gestiona tus datos, tu acceso y tu privacidad.',
         'wrong_password' => 'La contraseña actual no es correcta.',
@@ -231,7 +230,6 @@ return [
 
     'login' => [
         'cta' => 'Entrar',
-        'eyebrow' => 'Bienvenido de nuevo',
         'title' => 'Inicia sesión',
         'email' => 'Email',
         'password' => 'Contraseña',
@@ -242,7 +240,6 @@ return [
     ],
 
     'forgot' => [
-        'eyebrow' => 'Recuperar acceso',
         'title' => 'Recupera tu contraseña',
         'intro' => 'Escribe tu email y te enviaremos un enlace para crear una nueva contraseña.',
         'email' => 'Email',
@@ -266,7 +263,6 @@ return [
 
     'register' => [
         'cta' => 'Crear cuenta',
-        'eyebrow' => 'Únete',
         'title' => 'Crea tu cuenta',
         'subtitle' => 'Necesaria para reservar entradas y cumpleaños.',
         'name' => 'Nombre y apellidos',
@@ -293,7 +289,10 @@ return [
         // ya se pintaba como párrafo suelto en la pantalla de Google: *un texto que afirma una
         // aceptación que la pantalla no recoge no crea consentimiento, solo despista*. Si alguien le
         // devuelve el verbo, lo que falta es la casilla, no el texto.
-        'privacy_notice' => 'Al crear tu cuenta tratamos tus datos según nuestra <a href=":url" target="_blank" rel="noopener">política de privacidad</a>.',
+        // ⚠️ **Sin marcado desde `#566`**: el enlace salió de la frase a su propia fila de 48 px
+        // (grieta 13), así que este literal ya no se inyecta con `v-html` ni necesita `:url`.
+        'privacy_notice' => 'Al crear tu cuenta tratamos tus datos según nuestra política de privacidad.',
+        'privacy_read' => 'Leer la política de privacidad',
         'submit' => 'Crear cuenta',
         'submitting' => 'Creando…',
         'fix_errors' => 'Revisa estos campos:',
@@ -316,7 +315,6 @@ return [
     // ser largo: a esta pantalla no se llega de ninguna otra forma —hay que volver de Google—, así
     // que mandarlo en todas las páginas públicas sería pagar bytes para no pintarlos nunca.
     'google' => [
-        'eyebrow' => 'Ya casi está',
         'title' => 'Completa tu registro',
         // ⚠️ Decía «…para poder reservar a tu nombre» y era FALSO (`#345`, lo cazó el owner): aquí no
         // se reserva nada — esta pantalla CREA LA CUENTA, y el botón de abajo lo dice literalmente.
@@ -374,7 +372,6 @@ return [
     ],
 
     'verify' => [
-        'eyebrow' => 'Casi listo',
         'title' => 'Confirma tu email',
         'intro' => 'Te hemos enviado un enlace de confirmación a tu correo. Ábrelo para activar tu cuenta.',
         'sent_to' => 'Te hemos enviado un correo de confirmación a :email. Ábrelo para activar tu cuenta.',

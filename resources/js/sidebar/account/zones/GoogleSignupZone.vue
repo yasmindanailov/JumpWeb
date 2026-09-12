@@ -6,6 +6,7 @@ import { emptyGoogleScreen, loadGoogleScreen, submitGoogleScreen } from '../goog
 import { landOnAccount } from '../after-auth.js';
 import { api } from '../../api.js';
 import { t as translate } from '../../i18n.js';
+import WaiverDoc from '../../WaiverDoc.vue';
 
 /**
  * **COMPLETAR un alta que viene de Google** (`specs/auth-con-google.md` §7, tanda T2).
@@ -103,7 +104,6 @@ async function submit() {
 
         <template v-else-if="ui.pending">
             <div class="auth__head">
-                <span class="eyebrow">{{ a('google.eyebrow') }}</span>
                 <h2 class="auth__title">{{ a('google.title') }}</h2>
                 <p class="auth__sub">{{ a('google.intro') }}</p>
             </div>
@@ -133,11 +133,23 @@ async function submit() {
                 </div>
 
                 <div class="form__checks">
-                    <!-- El enlace de privacidad, VISIBLE y sin casilla (§7.1). Se reutiliza el literal
+                    <!-- El aviso de privacidad, VISIBLE y sin casilla (§7.1). Se reutiliza el literal
                          del alta con contraseña: es la misma información, y una segunda redacción
-                         acabaría diciendo otra cosa. -->
-                    <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                    <p class="form__hint" v-html="a('register.privacy_notice')"></p>
+                         acabaría diciendo otra cosa.
+                         ⚠️ **Y el enlace sale de la frase igual que allí** (`#566`): son las DOS altas,
+                         no una — el censo del canvas contaba solo la de contraseña. -->
+                    <p class="form__hint">{{ a('register.privacy_notice') }}</p>
+
+                    <a :href="urls.privacy ?? ''" target="_blank" rel="noopener" class="cal-more legal-more">
+                        <span>{{ a('register.privacy_read') }}</span>
+                        <!-- `arrow-right` del set, copiado byte a byte (`SidebarIconParityTest`). -->
+                        <svg class="arrow-ico legal-more__ico" viewBox="0 0 24 24" fill="currentColor"
+                             stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+                             aria-hidden="true" focusable="false">
+                            <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                            <path d="M4.6 12h9.4" fill="none" />
+                        </svg>
+                    </a>
 
                     <!-- Solo con texto firmable en memoria. Sin él, ni casilla ni nodo. -->
                     <template v-if="waiverStore.document">
@@ -146,12 +158,7 @@ async function submit() {
                             <span>{{ a('register.accept_waiver') }}</span>
                         </label>
                         <span v-if="ui.errors.fields.accept_waiver || ui.errors.fields.waiver_document_id" class="form__error">{{ ui.errors.fields.accept_waiver || ui.errors.fields.waiver_document_id }}</span>
-                        <details class="form__hint">
-                            <summary>{{ a('register.waiver_read') }}</summary>
-                            <p v-for="(section, i) in waiverStore.document.sections" :key="i">
-                                <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
-                            </p>
-                        </details>
+                        <WaiverDoc :document="waiverStore.document" :label="a('register.waiver_read')" />
                     </template>
                 </div>
 

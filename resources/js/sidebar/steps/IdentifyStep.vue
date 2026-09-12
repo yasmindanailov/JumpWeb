@@ -55,6 +55,9 @@ const props = defineProps({
      * renderizarlo en Node para el contrato de árbol.
      */
     googleUrl: { type: String, default: '' },
+
+    /** La política de privacidad, para la fila del alta (`#566`). Baja tal cual a `RegisterForm`. */
+    privacyUrl: { type: String, default: '' },
 });
 
 // ⚠️ Sin `back`: el «Volver» de esta pantalla lo trae la banda desde `#555`.
@@ -110,5 +113,6 @@ const a = (key) => translate(props.account, key);
         :submitting="submitting"
         :account="account"
         :google-url="googleUrl"
+        :privacy-url="privacyUrl"
         @submit="$emit('submit-register')" />
 </template>

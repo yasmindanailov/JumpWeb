@@ -47,7 +47,6 @@ const submit = () => store.requestPasswordLink({ api, messages: props.messages, 
              cuenta que existe y para una que no, que es lo único para lo que sirve. -->
         <template v-if="store.forgotSent">
             <div class="auth__head">
-                <span class="eyebrow">{{ a('forgot.eyebrow') }}</span>
                 <h2 class="auth__title">{{ a('forgot.sent_title') }}</h2>
             </div>
             <p class="auth__sub" role="status">{{ a('forgot.sent_msg') }}</p>
@@ -55,7 +54,6 @@ const submit = () => store.requestPasswordLink({ api, messages: props.messages, 
 
         <template v-else>
             <div class="auth__head">
-                <span class="eyebrow">{{ a('forgot.eyebrow') }}</span>
                 <h2 class="auth__title">{{ a('forgot.title') }}</h2>
                 <p class="auth__sub">{{ a('forgot.intro') }}</p>
             </div>

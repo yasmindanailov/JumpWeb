@@ -71,8 +71,11 @@ const fieldErrors = computed(() => props.errors?.fields ?? {});
 
 <template>
     <div class="auth">
+        <!-- ⚠️ **Sin antetítulo** (`#566`, `[DECIDIDO owner]`, grieta 12 del canvas): en las otras
+             veinte pantallas el cajón titula y punto. El «Bienvenido de nuevo» venía del modal de la
+             cabecera, donde era su única jerarquía; aquí la pantalla ya se llama «Inicia sesión».
+             Lo vigila `SidebarAuthScreensTest`. -->
         <div class="auth__head">
-            <span class="eyebrow">{{ a('login.eyebrow') }}</span>
             <h2 class="auth__title">{{ a('login.title') }}</h2>
         </div>
 

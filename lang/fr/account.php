@@ -28,7 +28,6 @@ return [
     ],
 
     'account' => [
-        'eyebrow' => 'Votre espace',
         'title' => 'Mon compte',
         'subtitle' => 'Gérez vos informations, votre accès et votre confidentialité.',
         'wrong_password' => 'Votre mot de passe actuel est incorrect.',
@@ -193,7 +192,6 @@ return [
 
     'login' => [
         'cta' => 'Se connecter',
-        'eyebrow' => 'Bon retour',
         'title' => 'Connexion',
         'email' => 'E-mail',
         'password' => 'Mot de passe',
@@ -204,7 +202,6 @@ return [
     ],
 
     'forgot' => [
-        'eyebrow' => "Récupérer l'accès",
         'title' => 'Réinitialisez votre mot de passe',
         'intro' => 'Saisissez votre e-mail et nous vous enverrons un lien pour créer un nouveau mot de passe.',
         'email' => 'E-mail',
@@ -228,7 +225,6 @@ return [
 
     'register' => [
         'cta' => 'Créer un compte',
-        'eyebrow' => 'Rejoignez-nous',
         'title' => 'Créez votre compte',
         'subtitle' => 'Nécessaire pour réserver billets et anniversaires.',
         'name' => 'Nom et prénom',
@@ -243,7 +239,9 @@ return [
         // La décharge se nomme EN ENTIER et toujours pareil (`#561`, `Voz PJP`).
         'waiver_read' => 'Lire la décharge de responsabilité',
         // Voir l'avertissement dans `lang/es/account.php` : c'est un AVIS, pas une case à cocher.
-        'privacy_notice' => 'En créant votre compte, nous traitons vos données conformément à notre <a href=":url" target="_blank" rel="noopener">politique de confidentialité</a>.',
+        // Sin marcado desde `#566`: el enlace vive en su propia fila (grieta 13).
+        'privacy_notice' => 'En créant votre compte, nous traitons vos données conformément à notre politique de confidentialité.',
+        'privacy_read' => 'Lire la politique de confidentialité',
         'submit' => 'Créer le compte',
         'submitting' => 'Création…',
         'fix_errors' => 'Vérifiez ces champs :',
@@ -256,7 +254,6 @@ return [
     ],
 
     'google' => [
-        'eyebrow' => 'On y est presque',
         'title' => 'Termine ton inscription',
         // ⚠️ Disait «…pour réserver à ton nom», ce qui était FAUX (`#345`) : on ne réserve rien ici —
         // cet écran CRÉE LE COMPTE, ce que dit son propre bouton d'envoi.
@@ -305,7 +302,6 @@ return [
     ],
 
     'verify' => [
-        'eyebrow' => 'Presque terminé',
         'title' => 'Confirmez votre e-mail',
         'intro' => 'Nous avons envoyé un lien de confirmation à votre e-mail. Ouvrez-le pour activer votre compte.',
         'sent_to' => 'Nous avons envoyé un e-mail de confirmation à :email. Ouvrez-le pour activer votre compte.',

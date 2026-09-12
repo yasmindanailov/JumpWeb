@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { t as translate } from '../i18n.js';
 import PasswordInput from './PasswordInput.vue';
 import GoogleButton from './GoogleButton.vue';
+import WaiverDoc from '../WaiverDoc.vue';
 import { mountTurnstile } from '../turnstile.js';
 import { useWaiverStore } from '../stores/waiver.js';
 
@@ -58,8 +59,17 @@ const props = defineProps({
     /** `true` mientras la petición está en vuelo: cambia el rótulo del botón. */
     submitting: { type: Boolean, default: false },
 
-    /** El grupo `account`, con `register` entero y sus dos textos legales ya interpolados. */
+    /** El grupo `account`, con `register` entero y su texto legal. */
     account: { type: Object, default: () => ({}) },
+
+    /**
+     * La POLÍTICA DE PRIVACIDAD, para la fila que la abre (`#566`).
+     *
+     * ⚠️ Viaja SUELTA y no dentro del literal, por el mismo motivo que las condiciones en `#562`: al
+     * salir el enlace de la frase, quien decide el slug es `routes/web.php`, y un `href` no es
+     * atributo de contrato del diff de árbol — un enlace roto aquí pasaría el gate en verde.
+     */
+    privacyUrl: { type: String, default: '' },
 
     /** Clave pública del anti-bot. Vacía ⟺ apagado ⟺ no se emite el contenedor (detalle 6). */
     turnstileSiteKey: { type: String, default: '' },
@@ -133,8 +143,8 @@ const summary = computed(() => props.errors?.summary ?? []);
 
 <template>
     <div class="auth">
+        <!-- Sin antetítulo (`#566`): el «Únete» era la costura del modal. Ver `LoginForm`. -->
         <div class="auth__head">
-            <span class="eyebrow">{{ a('register.eyebrow') }}</span>
             <h2 class="auth__title">{{ a('register.title') }}</h2>
             <p class="auth__sub">{{ a('register.subtitle') }}</p>
         </div>
@@ -196,8 +206,26 @@ const summary = computed(() => props.errors?.summary ?? []);
                 <!-- El enlace de privacidad, VISIBLE y sin casilla (detalle 3). Mismo literal y mismo
                      tratamiento que en la pantalla de completar el alta con Google: es la misma
                      información, y una segunda redacción acabaría diciendo otra cosa. -->
-                <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
-                <p class="form__hint" v-html="a('register.privacy_notice')"></p>
+                <p class="form__hint">{{ a('register.privacy_notice') }}</p>
+
+                <!-- ⚠️⚠️ **El enlace SALE de la frase** (`#566`, `[DECIDIDO owner]`, grieta 13): metido
+                     dentro medía **20 px** de alto contra el suelo táctil de **48** que declara el
+                     producto, y es el único sitio donde las dos altas enseñan la política. Es la misma
+                     regla que la parada 03 aplicó al descargo y `#562` a las condiciones del paso de
+                     pagar — y la MISMA receta, compartida y no copiada.
+                     ▶ Lleva `arrow-right` y no el chevron: esto SALE a otra página, no despliega aquí.
+                     ⚠️ Al quedarse el párrafo en texto plano desaparece el `v-html`: un literal de
+                     `lang/` que ya no trae marcado no necesita inyectarse como HTML. -->
+                <a :href="privacyUrl" target="_blank" rel="noopener" class="cal-more legal-more">
+                    <span>{{ a('register.privacy_read') }}</span>
+                    <!-- `arrow-right` del set, copiado byte a byte (`SidebarIconParityTest`). -->
+                    <svg class="arrow-ico legal-more__ico" viewBox="0 0 24 24" fill="currentColor"
+                         stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+                         aria-hidden="true" focusable="false">
+                        <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                        <path d="M4.6 12h9.4" fill="none" />
+                    </svg>
+                </a>
 
                 <!-- Detalle 7: solo con texto firmable en memoria. Sin él, ni casilla ni nodo. -->
                 <template v-if="waiverStore.document">
@@ -206,12 +234,7 @@ const summary = computed(() => props.errors?.summary ?? []);
                         <span>{{ a('register.accept_waiver') }}</span>
                     </label>
                     <span v-if="fieldErrors.accept_waiver || fieldErrors.waiver_document_id" class="form__error">{{ fieldErrors.accept_waiver || fieldErrors.waiver_document_id }}</span>
-                    <details class="form__hint">
-                        <summary>{{ a('register.waiver_read') }}</summary>
-                        <p v-for="(section, i) in waiverStore.document.sections" :key="i">
-                            <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
-                        </p>
-                    </details>
+                    <WaiverDoc :document="waiverStore.document" :label="a('register.waiver_read')" />
                 </template>
             </div>
 

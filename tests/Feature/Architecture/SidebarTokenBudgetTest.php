@@ -339,13 +339,58 @@ class SidebarTokenBudgetTest extends TestCase
     {
         $css = (string) file_get_contents(public_path('css/site.css'));
 
-        $this->assertMatchesRegularExpression(
-            '/\.cal-more,\s*\n\.paydue__terms\s*\{[^}]*min-height:\s*48px/s',
-            $css,
+        preg_match('/\.cal-more,\s*\n\.paydue__terms\s*\{([^}]*)\}/s', $css, $receta);
+
+        $this->assertNotEmpty(
+            $receta,
             "«Leer las condiciones» ha dejado de compartir la receta de «Ver más fechas».\n".
             'Las dos son la misma pieza del embudo; si una copia los valores, se quedará atrás en '.
             'cuanto alguien ajuste la otra, y el suelo táctil de 48 se pierde sin que falle nada.'
         );
+
+        // ⚠️⚠️ **Esta aserción CAMBIÓ DE PREMISA en `#566` y se reescribió**: pedía el literal
+        // `min-height: 48px`, o sea que cementaba justo lo que `SidebarTouchTargetTest` prohíbe —el
+        // suelo escrito a mano—. Al pasar la receta al token se puso ROJA con el producto sano.
+        // ▶ Y se re-apunta MÁS FUERTE, no más débil, que es la regla de `#295`: antes solo fijaba
+        // que el número fuera 48; ahora fija que salga del token, así que el día que `--tap-min`
+        // suba, las dos filas suben con él.
+        $this->assertMatchesRegularExpression(
+            '/(?<![-\w])min-height:\s*var\(--tap-min\)/',
+            $receta[1],
+            'La receta compartida de las filas-puerta escribe el suelo táctil a mano: el número vive '.
+            'en `--tap-min` o vive en seis sitios (`#238`, `#250`, y lo que costó subirlo de 44 a 48).'
+        );
+    }
+
+    /**
+     * **El TERCER consumidor de esa receta no la copia: la usa** (`#566`).
+     *
+     * La fila que abre un documento legal —la política en las dos altas y el descargo en las cinco
+     * pantallas que lo enseñan— es la misma pieza que «Ver más fechas» y «Leer las condiciones».
+     *
+     * ⚠️⚠️ **Lo que este caso impide es la forma NORMAL de romperlo**: no borrar `.legal-more`, sino
+     * darle su propio `min-height`, su propio canto y su propio relleno «para ajustarlo un poco». Ese
+     * día hay tres filas que se parecen y ninguna es la misma, que es exactamente como murió el
+     * sistema de sombras de `#196` y el de badges de la tanda A de `#292`.
+     */
+    public function test_the_legal_document_row_reuses_the_recipe_instead_of_copying_it(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        preg_match_all('/(?<![-\w.])\.legal-more(?![\w-])[^{]*\{([^}]*)\}/s', $css, $suyas);
+
+        $this->assertNotEmpty($suyas[0], 'la fila del documento legal ha perdido sus reglas (`#566`)');
+
+        foreach (['min-height', 'padding', 'border-radius', 'font-size'] as $copiado) {
+            foreach ($suyas[1] as $cuerpo) {
+                $this->assertDoesNotMatchRegularExpression(
+                    '/(?<![-\w])'.$copiado.'\s*:/',
+                    $cuerpo,
+                    "`.legal-more` declara `{$copiado}` por su cuenta: eso es copiar la receta de ".
+                    '`.cal-more`, no compartirla — y la copia se queda atrás sin que falle nada.'
+                );
+            }
+        }
     }
 
     /**

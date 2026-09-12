@@ -11,6 +11,7 @@ import { fieldError } from '../form-outcome.js';
 import { t as translate, tp as translateWith } from '../../i18n.js';
 import PasswordInput from '../../steps/PasswordInput.vue';
 import NoPasswordHint from '../NoPasswordHint.vue';
+import WaiverDoc from '../../WaiverDoc.vue';
 
 /**
  * **Privacidad y datos**: los dos derechos RGPD del titular (`specs/area-cliente.md` §9, paso 8).
@@ -84,8 +85,7 @@ async function remove() {
  * contexto de cuenta, que es donde el índice lee «tienes pendiente el waiver».
  */
 const waiver = useWaiverStore();
-waiver.reset();
-waiver.ensureStatus(); waiver.ensureLegal();
+waiver.reset(); waiver.ensureStatus(); waiver.ensureLegal();
 const acceptWaiver = ref(false);
 // CAJ-REREAD (`#181`): volver a marcar tras releer apaga la relectura — un fallo posterior que no sea de texto no desmarca.
 watch(acceptWaiver, (v) => { if (v) waiver.reread = false; });
@@ -197,12 +197,7 @@ async function sign() {
             <div v-if="waiver.notice" class="auth__errors" role="alert"><p>{{ waiver.notice }}</p></div>
 
             <form v-if="waiverNeedsSignature(waiver.status) && waiver.document" class="form auth__form" novalidate @submit.prevent="sign">
-                <details class="form__hint">
-                    <summary>{{ a('register.waiver_read') }}</summary>
-                    <p v-for="(section, i) in waiver.document.sections" :key="i">
-                        <strong v-if="section.h">{{ section.h }}</strong> {{ section.p }}
-                    </p>
-                </details>
+                <WaiverDoc :document="waiver.document" :label="a('register.waiver_read')" />
                 <div class="form__checks">
                     <label class="check">
                         <input v-model="acceptWaiver" type="checkbox">

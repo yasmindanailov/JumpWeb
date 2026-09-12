@@ -345,7 +345,10 @@ class SidebarActionRoleTest extends TestCase
         $hoja = (string) file_get_contents(base_path('public/css/site.css'));
 
         $acotadas = [
-            '.sidecart__panel .form__hint a { color: var(--interactive); }' => 'el enlace de una pista de campo',
+            // ⚠️ **El `<button>` entra en `#566`**: `NoPasswordHint` pinta uno dentro de una pista y
+            // no tenía regla, así que heredaba el gris del párrafo y salía sin subrayado — el defecto
+            // que `#350` midió para el enlace de privacidad, una pantalla más allá.
+            '.sidecart__panel .form__hint button { color: var(--interactive); }' => 'el enlace —o el botón— de una pista',
             '.sidecart__panel .check span a { color: var(--interactive); }' => 'el enlace legal de una casilla',
             '.sidecart__panel .check input { accent-color: var(--fg); }' => 'el tilde de la casilla',
             '.sidecart__panel .zone-tab.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }' => 'la pestaña de «Entrar / Crear cuenta»',

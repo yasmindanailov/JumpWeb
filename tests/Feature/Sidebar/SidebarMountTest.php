@@ -222,7 +222,9 @@ class SidebarMountTest extends TestCase
     {
         $boot = $this->bootPayload();
 
-        foreach (['cta', 'eyebrow', 'title', 'email', 'password', 'remember', 'submit', 'submitting'] as $key) {
+        // ⚠️ `eyebrow` sale de la lista en `#566`: las cinco pantallas de auth pierden su antetítulo
+        // (grieta 12), así que pedirlo aquí sería exigir un texto que ya no pinta nadie.
+        foreach (['cta', 'title', 'email', 'password', 'remember', 'submit', 'submitting'] as $key) {
             $this->assertNotSame(
                 '', (string) ($boot['account']['login'][$key] ?? ''),
                 "El montaje no lleva `account.login.{$key}`, así que ese rótulo se pintaría VACÍO: ".
@@ -243,8 +245,10 @@ class SidebarMountTest extends TestCase
         $register = $this->bootPayload()['account']['register'] ?? [];
 
         foreach ([
-            'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
-            'password_hint', 'privacy_notice', 'submit', 'submitting', 'leave_blank', 'fix_errors',
+            // ⚠️ `eyebrow` fuera desde `#566` (grieta 12); `privacy_read` entra con él: es el rótulo
+            // de la fila que abre la política, y sin él en el payload la fila se pinta MUDA.
+            'cta', 'title', 'subtitle', 'name', 'email', 'phone', 'password',
+            'password_hint', 'privacy_notice', 'privacy_read', 'submit', 'submitting', 'leave_blank', 'fix_errors',
             // El botón de Google y el «o» que lo separa del formulario (T8·d): sin el segundo, la raya
             // se pinta con un hueco en medio y nadie avisa — `i18n.js` devuelve cadena vacía.
             'google_cta', 'or',
@@ -277,16 +281,37 @@ class SidebarMountTest extends TestCase
         foreach (SetLocale::SUPPORTED as $locale) {
             $this->app->setLocale($locale);
 
-            $register = $this->bootPayload()['account']['register'] ?? [];
+            $boot = $this->bootPayload();
+            $register = $boot['account']['register'] ?? [];
 
-            foreach (['privacy_notice' => 'legal.privacidad'] as $key => $route) {
+            // ⚠️⚠️ **ESTE CASO CAMBIÓ DE PREMISA en `#566` y se reescribió**: pedía que
+            // `privacy_notice` llevara su `<a>` DENTRO, que es exactamente lo que la grieta 13
+            // señalaba —un enlace inline de 20 px contra un suelo de 48—. Hoy pide lo contrario, y
+            // eso NO lo debilita: antes solo miraba un texto, ahora ata las dos mitades del
+            // mecanismo —el literal sin marcado **y** la URL viajando suelta—, que es donde se
+            // rompe de verdad (`#295`: una guarda re-apuntada no puede quedar más floja).
+            // ▶ Es el mismo camino que `due_terms` recorrió en `#562`, y por el mismo motivo.
+            foreach (['privacy_notice', 'privacy_read'] as $key) {
                 $text = (string) ($register[$key] ?? '');
 
-                $this->assertStringContainsString('<a ', $text, "«{$key}» tiene que llevar su enlace dentro");
-                $this->assertStringNotContainsString(':url', $text, "«{$key}» viaja SIN interpolar: se vería el marcador");
-                $this->assertStringContainsString(
-                    parse_url(route($route), PHP_URL_PATH) ?: '', $text,
-                    "«{$key}» no apunta a la página legal que compone `route()`"
+                $this->assertNotSame('', $text, "«{$key}» no viaja en el payload: la fila saldría muda (`#333`)");
+                $this->assertStringNotContainsString(
+                    '<', $text,
+                    "«{$key}» lleva marcado dentro.\n".
+                    'Desde `#566` el cajón lo pinta como TEXTO —ya no hay `v-html`—, así que un `<a>` '.
+                    'aquí se vería literal en pantalla, y eso no lo ve ni el diff de árbol ni la suite.'
+                );
+                $this->assertStringNotContainsString(':url', $text, "«{$key}» arrastra un marcador sin interpolar");
+            }
+
+            // La otra mitad: la URL de cada documento legal viaja SUELTA, porque el slug lo decide
+            // `routes/web.php` y un `href` no es atributo de contrato del diff de árbol — un enlace
+            // roto pasaría el gate en VERDE.
+            foreach (['privacy' => 'legal.privacidad', 'terms' => 'legal.condiciones'] as $clave => $route) {
+                $this->assertSame(
+                    route($route),
+                    $boot['urls'][$clave] ?? null,
+                    "`urls.{$clave}` no compone su ruta: la fila que abre ese documento no lleva a ninguna parte."
                 );
             }
 
@@ -340,12 +365,19 @@ class SidebarMountTest extends TestCase
         $this->assertSame(
             // ⚠️ El ORDEN lo fija `lang/*/account.php`, no la lista de `Arr::only`.
             [
-                'cta', 'eyebrow', 'title', 'subtitle', 'name', 'email', 'phone',
+                // ⚠️ **`eyebrow` se va en `#566`** (grieta 12, `[DECIDIDO owner]`): las CINCO pantallas
+                // de auth pierden su antetítulo —era la costura del modal del que se mudaron— y el
+                // canvas solo había contado tres. Con él se va el `array_replace` que interpolaba el
+                // `:url` de `privacy_notice`.
+                'cta', 'title', 'subtitle', 'name', 'email', 'phone',
                 // ⚠️ **`phone_hint` viaja con su campo** (`#561`, grieta 14 del canvas): el teléfono es
                 // obligatorio y el alta lo pedía **sin decir para qué**, mientras el paso de pagar sí lo
                 // hacía. El ORDEN lo fija `lang/*/account.php`, y ahí va pegada a `phone` por lo mismo.
                 'phone_hint', 'password',
-                'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice',
+                // ⚠️ **`privacy_read` entra con la FILA** (`#566`, grieta 13): el enlace de la política
+                // salió de su frase a un control propio de 48 px, y su rótulo tiene que viajar o la
+                // fila se pinta muda (`t()` devuelve cadena vacía sin fallar, `#333`).
+                'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice', 'privacy_read',
                 'submit', 'submitting', 'fix_errors', 'leave_blank',
                 // ⚠️ **`google_cta` viaja SIEMPRE y su PANTALLA no** (`#343`): el rótulo lo pintan las
                 // dos pestañas de auth, que las ve quien no tiene sesión, así que no hay condición
@@ -420,7 +452,9 @@ class SidebarMountTest extends TestCase
         // exención solo cambia la frase cuando además hay una esperando.
         $this->assertSame(
             [
-                'eyebrow', 'title', 'sent_to', 'spam_hint', 'resend', 'pending_notice',
+                // ⚠️ `eyebrow` fuera desde `#566`: el «Casi listo» era la CUARTA costura del modal, y
+                // el artboard la dibuja con interruptor mientras su texto dice «son las únicas tres».
+                'title', 'sent_to', 'spam_hint', 'resend', 'pending_notice',
                 'resend_in', 'resends_left', 'resend_limit', 'already_have_account',
             ],
             array_keys($boot['account']['verify'] ?? []),
