@@ -29,6 +29,15 @@ import { chromium } from 'playwright-core';
  * `/servicios`…) y este medidor iba clavado a la portada, así que cada tanda de página se escribía
  * su propio `page.evaluate` a mano — que es justo lo que este fichero existe para evitar. La ruta
  * por defecto sigue siendo `/`, así que las llamadas de la Fase 2 no cambian.
+ *
+ * ⚠️⚠️ **Y `#531` lo añadió A MEDIAS: parseaba `--url=` y dejaba el `goto` clavado en `/`.** La
+ * variable existía, no la leía nadie y **el navegador seguía abriendo la portada**, así que entre
+ * `#531` y `#535` cualquier medida pedida sobre una página INTERIOR devolvió la de la portada. No
+ * fallaba: los selectores de la página salían «NO EXISTE» y el alto del documento era plausible
+ * —11 pantallas es un número creíble para una página larga—, que es exactamente cómo una cifra
+ * falsa pasa por buena. *Un argumento parseado no es un argumento aplicado.*
+ * ▶ Por eso ahora la sonda IMPRIME la URL que ha cargado: un instrumento que no dice sobre qué ha
+ * medido no permite descubrir que midió otra cosa.
  */
 const args = process.argv.slice(2);
 const ruta = (args.find((a) => a.startsWith('--url=')) ?? '--url=/').slice('--url='.length);
@@ -44,7 +53,7 @@ const nav = await chromium.launch({ args: ['--no-sandbox'] });
 for (const [w, h, etiqueta] of [[390, 844, 'MÓVIL 390×844'], [1280, 900, 'ESCRITORIO 1280×900']]) {
     const ctx = await nav.newContext({ viewport: { width: w, height: h } });
     const page = await ctx.newPage();
-    await page.goto('http://localhost:8081/', { waitUntil: 'networkidle' });
+    await page.goto(`http://localhost:8081${ruta}`, { waitUntil: 'networkidle' });
     await page.addStyleTag({ content: '.cookie-banner,[class*="cookie"]{display:none!important}' });
     await page.evaluate(() => document.fonts.ready);
     await page.mouse.move(-50, -50);
@@ -65,7 +74,7 @@ for (const [w, h, etiqueta] of [[390, 844, 'MÓVIL 390×844'], [1280, 900, 'ESCR
         return out;
     }, [selectores, h]);
 
-    console.log(`\n══ ${etiqueta} ══`);
+    console.log(`\n══ ${etiqueta} · ${page.url()} ══`);
     for (const s of datos.secciones) {
         console.log(s.alto === null
             ? `  ✗ NO EXISTE  ${s.sel}`

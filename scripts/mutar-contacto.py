@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""Arnés de mutación de `#535` — la página `/contacto` rehecha desde su artboard (Fase 3 · T3b):
+los canales del dato, el formulario en tarjeta con su tema y su aviso de privacidad, la chapa de
+atajos sacada del inventario y la dirección escrita SIN mapa.
+
+Mismo molde endurecido que `mutar-normas.py` (`#533`) y `mutar-precios.py` (`#531`):
+  · en PYTHON, y cada mutación verifica que el fichero CAMBIÓ antes de correr nada;
+  · EXIGE VERDE antes de mutar (`#337`) y ÁRBOL LIMPIO en los ficheros que muta (`#181`);
+  · restaura SIEMPRE, también si el proceso revienta (`#448`).
+
+⚠️ **Varias mutaciones prueban una AUSENCIA** —que no vuelva el mapa, que no vuelva la casilla— y
+ésas son justo las que hay que mutar al revés: se AÑADE lo que no debe estar. Una guarda de ausencia
+que nadie ha intentado violar es una guarda que nadie sabe si mira.
+
+    python3 scripts/mutar-contacto.py
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+RAIZ = Path(__file__).resolve().parent.parent
+FILTRO = 'Tests\\\\Feature\\\\Landing\\\\ContactPageTest'
+VISTA = 'resources/views/pages/contact.blade.php'
+CANALES = 'resources/views/components/site/contact-channels.blade.php'
+CONTROLADOR = 'app/Http/Controllers/ContactController.php'
+DESTINOS = 'app/Domain/Content/Services/SiteDestinations.php'
+FICHEROS = [VISTA, CANALES, CONTROLADOR, DESTINOS]
+
+# (nombre, fichero, texto que se busca, texto por el que se cambia[, cuántas veces se espera])
+MUTACIONES = [
+    # ── Lo que esta página NO hace ──
+    ("vuelve el mapa a /contacto",
+     VISTA,
+     '<section class="where" aria-labelledby="where-title">',
+     '<div class="map-card"></div><section class="where" aria-labelledby="where-title">'),
+
+    # ── La dirección y su salida ──
+    ("las dos líneas de la dirección se unen sin coma",
+     VISTA,
+     "->implode(', ')",
+     "->implode(' ')"),
+
+    ("la salida apunta a un ancla que la portada no pinta",
+     VISTA,
+     "url('/#info')",
+     "url('/#visitanos')"),
+
+    # ── Los canales ──
+    ("el mismo número vuelve a salir en dos tarjetas",
+     CANALES,
+     "$mismoNumero = $whatsapp !== '' && $phoneTel !== ''\n        && preg_replace('/\\D/', '', $phoneTel) === $whatsapp;",
+     "$mismoNumero = false;"),
+
+    ("un canal sin dato se pinta igual",
+     CANALES,
+     "if ($email !== '') {",
+     "if (true) {"),
+
+    # ── El formulario ──
+    ("el botón de enviar vuelve al relleno de acción",
+     VISTA,
+     'class="btn btn--ink btn--lg"',
+     'class="btn btn--lg"'),
+
+    ("la página deja de decir qué se hace con lo que escribes",
+     VISTA,
+     '<div class="contact-form__privacy">',
+     '<div class="contact-form__privacy-NO" hidden>'),
+
+    ("vuelve la casilla de consentimiento que `#350` retiró",
+     VISTA,
+     '<p>{{ __(\'site.contact_privacy_notice\') }}</p>',
+     '<p><input type="checkbox" name="accept" required> {{ __(\'site.contact_privacy_notice\') }}</p>'),
+
+    ("el desplegable de tema viene con una opción ya elegida",
+     VISTA,
+     '<option value="">{{ __(\'site.contact_topic_none\') }}</option>',
+     ''),
+
+    ("el tema acepta cualquier valor que mande el cliente",
+     CONTROLADOR,
+     "'topic' => ['nullable', 'string', 'in:'.implode(',', self::TOPICS)],",
+     "'topic' => ['nullable', 'string'],"),
+
+    ("el tema elegido no llega al correo",
+     CONTROLADOR,
+     "'topic' => $data['topic'] ?? null,",
+     "'topic' => null,"),
+
+    # ── La chapa de atajos ──
+    ("una página en mantenimiento se sigue ofreciendo en la chapa",
+     DESTINOS,
+     "if (MaintenanceSettings::pageInMaintenance($route)) {",
+     "if (false) {"),
+
+    ("se ofrece el ancla de Dudas aunque la portada no pinte la sección",
+     DESTINOS,
+     "if ($withFaq) {",
+     "if (true) {"),
+
+    # ── El plazo ──
+    ("la entradilla promete un horario de respuesta aunque no haya horario",
+     VISTA,
+     ":lede=\"$heroStatus ? __('site.contact_intro') : __('site.contact_intro_plain')\"",
+     ":lede=\"__('site.contact_intro')\""),
+]
+
+
+def git(*args):
+    return subprocess.run(['git', *args], cwd=RAIZ, capture_output=True, text=True)
+
+
+def restaura():
+    git('checkout', '-q', '--', *FICHEROS)
+
+
+def verde():
+    r = subprocess.run(
+        ['docker', 'compose', 'exec', '-u', 'sail', '-T', 'laravel.test',
+         'php', 'artisan', 'test', '--filter=' + FILTRO],
+        cwd=RAIZ, capture_output=True, text=True)
+    return r.returncode == 0, r.stdout + r.stderr
+
+
+def main():
+    sucio = git('status', '--porcelain', '--', *FICHEROS).stdout.strip()
+    if sucio:
+        print('✗ hay cambios sin commitear en los ficheros que se mutan — commitea antes:')
+        print(sucio)
+        return 2
+
+    print('── CONTROL: la guarda tiene que estar VERDE antes de mutar ──')
+    ok, salida = verde()
+    if not ok:
+        print('✗ el árbol limpio ya sale ROJO: el arnés no mide nada')
+        print(salida[-1500:])
+        return 2
+    print('✓ verde\n')
+
+    print('── mutaciones ──')
+    vivas = []
+    try:
+        for mutacion in MUTACIONES:
+            nombre, rel, busca, cambia = mutacion[:4]
+            esperadas = mutacion[4] if len(mutacion) > 4 else 1
+            ruta = RAIZ / rel
+            antes = ruta.read_text(encoding='utf-8')
+            n = antes.count(busca)
+            if n != esperadas:
+                print('  ⚠ NO APLICADA (%d coincidencias, se esperaban %d)  %s' % (n, esperadas, nombre))
+                vivas.append(nombre + ' [no aplicada]')
+                continue
+            ruta.write_text(antes.replace(busca, cambia, esperadas), encoding='utf-8')
+            assert ruta.read_text(encoding='utf-8') != antes, 'el fichero no cambió'
+
+            ok, _ = verde()
+            print(('  ✗ SOBREVIVE  ' if ok else '  ✓ muere      ') + nombre)
+            if ok:
+                vivas.append(nombre)
+            restaura()
+    finally:
+        restaura()
+
+    print('\n' + '─' * 60)
+    print('%d/%d mutaciones mueren' % (len(MUTACIONES) - len(vivas), len(MUTACIONES)))
+    for v in vivas:
+        print('   sobrevive: ' + v)
+    return 1 if vivas else 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

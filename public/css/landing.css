@@ -2715,15 +2715,12 @@ img { display: block; max-width: 100%; }
    ⚠️ Aquí vivían `.info__grid`, `.info-card`, `.info-card h3` y `.hours` — la rejilla de DOS
    tarjetas simétricas del cliente antiguo, con un titular de 44 px dentro de cada una. Se fueron
    con su único consumidor cuando «Visítanos» pasó a tarjetas (`#307`, `§3.octies`), y con ellas
-   sus dos reglas de `@media`. `.map-card` y `.map-pin` SÍ se quedan: las usa `/contacto`. */
-.map-card {
-  border-radius: var(--r-lg); overflow: hidden;
-  background:
-    repeating-linear-gradient(45deg, var(--bg-soft) 0 28px, var(--bg-card) 28px 30px);
-  min-height: 360px; position: relative;
-  display: flex; align-items: end; padding: 24px; justify-content: flex-end;
-  border: 1px solid var(--line);
-}
+   sus dos reglas de `@media`.
+   ⚠️⚠️ **Y `.map-card` se fue en `#535`, cuando `/contacto` dejó de llevar mapa.** Era su ÚNICO
+   consumidor: la nota que había aquí decía «las usa `/contacto`» y era exacta. ▶ Ojo al censar esto:
+   `home.blade.php` **la nombra, pero dentro de un comentario** —la trampa de `#302`/`#481`, nombres
+   de clase dentro de comentarios—, así que un `grep` la daba viva. `.map-pin` SÍ se queda: la usa de
+   verdad el marco del mapa de «Visítanos» (`components/site/visit.blade.php`). */
 .map-pin {
   position: absolute; left: 50%; top: 40%; transform: translate(-50%,-50%);
   width: 28px; height: 28px; background: var(--zone-1); border-radius: 50%;
@@ -2731,35 +2728,13 @@ img { display: block; max-width: 100%; }
   animation: pulse 1.6s ease-in-out infinite;
 }
 
-/* ══ LO QUE `/contacto` SIGUE USANDO ════════════════════════════════════════════════════
-   ⚠️⚠️ **ESTAS CUATRO CLASES CASI SE VAN CON LA SECCIÓN, y es la trampa de `#485` otra vez.**
-   Nacieron en `#307` para «Visítanos» en tarjetas, pero **`pages/contact.blade.php` las usa**:
-   `.visit-card`, `.visit-card__ico`, `.visit__addr` y `.visit__actions`. Comprobado por FICHERO y
-   por clase EXACTA, no por «esto ya no lo usa la home».
-   ▶ La sección 07 rehecha **no las reestila**: estrena las suyas (`.visit__when`, `.visit__place`…)
-   precisamente para no cambiar `/contacto` desde una tanda de la portada — que es lo que `#479`
-   evitó con `/precios`. `/contacto` es página de la Fase 3 y allí se decidirá su forma.
-
-   ❗ La tarjeta es la PEGATINA de `#303`: borde de tinta (`--paper-fg`, NO `--fg`: dentro de una
-   superficie oscura `--fg` vale claro y el borde desaparecería), radio `--r-lg` y sombra por ROL.
-   ⚠️ **Sin `:hover`, a propósito**: no lleva a ninguna parte, y una afordancia sin consumidor es el
-   defecto de `#295`. */
-.visit-card {
-  min-width: 0;
-  border: 1px solid var(--paper-fg); border-radius: var(--r-lg);
-  padding: var(--sp-16); background: var(--bg-card);
-  box-shadow: var(--shadow-float);
-  display: grid; gap: var(--sp-12); align-content: start;
-}
-.visit-card__ico {
-  width: 34px; height: 34px; border-radius: var(--r-sm);
-  display: inline-grid; place-items: center;
-  background: var(--bg-soft); color: var(--paper-fg);
-}
-/* Sin `margin-bottom`: la tarjeta es una rejilla con `gap`, y sumar los dos daba 24 px donde el
-   sistema pide 12. Un margen heredado dentro de un contenedor con `gap` se paga dos veces. */
-.visit__addr { margin: 0; font-size: var(--fs-16); line-height: 1.5; }
-.visit__actions { display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+/* ══ LO QUE `/contacto` USABA · RETIRADO EN `#535` ══════════════════════════════════════════
+   ⚠️ `.visit-card`, `.visit-card__ico`, `.visit__addr` y `.visit__actions` nacieron en `#307` para
+   «Visítanos» en tarjetas y sobrevivieron **porque las usaba `/contacto`**. Esta nota decía —con
+   razón— que «`/contacto` es página de la Fase 3 y allí se decidirá su forma». Decidido: su
+   dirección ya no va en una pegatina con icono, va escrita bajo un rótulo (`.where`, más abajo).
+   ▶ Se van las cuatro, con el censo hecho por TOKEN del atributo `class` y no por subcadena: un
+   `grep visit__addr` casa dentro de `visit__addr-1`, que es una clase VIVA de la sección 07. */
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    SECCIÓN 07 · «VISÍTANOS» · el estado en vivo y el mapa
@@ -3980,9 +3955,8 @@ select:focus-visible {
   .events__timeline-steps::before { top: 8px; left: 6%; right: 6%; }
   .events__timeline-time { font-size: var(--fs-16); }
   .events__timeline-name { font-size: var(--fs-10); letter-spacing: 0.1em; }
-  /* ubicación — `.info-card` y su `h3` se fueron con «Visítanos» (`#307`); `.map-card` sigue
-     porque la usa `/contacto`. */
-  .map-card { min-height: 280px; padding: var(--sp-18); }
+  /* ubicación — `.info-card` y su `h3` se fueron con «Visítanos» (`#307`) y `.map-card` con el mapa
+     de `/contacto` (`#535`): aquí no queda nada de ese bloque. */
   /* rules */
   .rules-grid { grid-template-columns: 1fr; }
   /* gallery */
@@ -4069,10 +4043,12 @@ select:focus-visible {
 /* A5 · la niebla NO va en el formulario.
    ⚠️⚠️ Se probó ahí y se veía mal: los halos caían bajo «Nombre», «Teléfono» y «Mensaje», que es
    exactamente lo que su regla 02 prohíbe, y el recorte de la caja los cortaba en seco.
-   ▶ Su nota da la salida sin inventar nada: «formularios largos **y paneles laterales**». El panel
-   lateral de esta página es la tarjeta del mapa, que no lleva párrafo encima. */
-.map-card--aside { position: relative; overflow: hidden; isolation: isolate; }
-.map-card--aside .spray { z-index: -1; }
+   ▶ Su nota daba la salida sin inventar nada —«formularios largos **y paneles laterales**»— y el
+   panel lateral era la tarjeta del mapa.
+   ⚠️⚠️ **`#535` retiró el mapa de `/contacto`, así que la niebla se quedó SIN SITIO en esta página**
+   y se va con él. No la recoloques sobre el formulario: la razón por la que no cabe ahí sigue siendo
+   cierta, y está escrita justo arriba. `/contacto` queda **sin pieza decorativa** —el presupuesto de
+   `#292` es «una por pantalla», no «una obligatoria»—. */
 
 
 /* A3 · el abanico quieto de `/precios`. Su regla es «uno por página»: éste es ese uno.
@@ -4109,10 +4085,9 @@ select:focus-visible {
 .hero__strip-box.brand-strip--wedge,
 .foot__strip.brand-strip--wedge { height: 22px; }
 
-@media (max-width: 720px) {
-  /* En teléfono la niebla compite con los campos: se baja, no se retira. */
-  .form { --spray: 0.55; }
-}
+/* ⚠️ Aquí se bajaba la niebla en teléfono (`.form { --spray: 0.55 }`). Se va con ella (`#535`): la
+   pieza perdió su pantalla al retirarse el mapa de `/contacto`, y un ajuste de una pieza que no se
+   pinta es la clase de resto que sobrevive a la razón que lo justificaba. */
 
 /* ══════════════════════════════════════════════════════════════════════════════════════════
    `/atracciones` · LAS 23, CON SU ZONA EN LA PESTAÑA
@@ -4817,3 +4792,166 @@ select:focus-visible {
   .party-card__feat, .party-card__special { font-size: var(--fs-17); }
   .party-card__chip, .party-card__terms-line { font-size: var(--fs-12); }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════
+   /contacto · PREGUNTAR
+   `DECISIONES #535` · carril de diseño Fase 3 · T3b. Artboard `Contacto PJP` 1a/1b.
+
+   ❗❗❗ **LO QUE ESTA PÁGINA NO TIENE ES PARTE DE SU DISEÑO**: ni mapa, ni tabla de horario, ni
+   aparcamiento. Todo eso lo contesta la sección «Visítanos» de la portada con su horario EN VIVO, y
+   duplicarlo aquí la convertiría en «un trozo de la portada con otro título» — el riesgo que el
+   propio canvas le pone a esta URL. La dirección va escrita, con un enlace a donde el mapa vive.
+
+   ⚠️ **Cero pieza decorativa**: la niebla que había vivía en la tarjeta del mapa y se fue con ella.
+   El presupuesto de `#292` es «una por pantalla» como TECHO, no como cuota.
+   ══════════════════════════════════════════════════════════════════════════════════════════ */
+
+/* ❗ **EL REPARTO: el formulario es lo que la página viene a hacer**, así que se queda con las ocho
+   columnas (736 del artboard) y lo demás baja a la derecha.
+   ⚠️⚠️ **El DOM va en el orden de MÓVIL** —canales · formulario · chapa y dirección—, y en escritorio
+   lo recoloca la rejilla por ÁREAS. Así el orden de lectura y el de tabulación son el mismo en los
+   dos anchos: quien entra ve que puede llamar antes de ponerse a escribir, que es lo que el artboard
+   de móvil pide, y en escritorio esa columna queda a la altura del inicio del formulario. */
+.contact-layout { display: grid; gap: var(--sp-28); align-items: start; margin-top: var(--sp-20); }
+
+/* ⚠️ El corte es **1024**, el del sistema: «el 900 no existe en el sistema» (`#469` §3). */
+@media (min-width: 1024px) {
+  .contact-layout {
+    grid-template-columns: minmax(0, 736fr) minmax(0, 352fr);
+    grid-template-areas:
+      "form canales"
+      "form lado";
+    gap: 32px;
+  }
+  .contact-layout__channels { grid-area: canales; }
+  .contact-layout__form { grid-area: form; }
+  .contact-layout__side { grid-area: lado; }
+}
+
+/* ── LOS CANALES ────────────────────────────────────────────────────────────────────────────
+   Etiqueta en mono · el dato en Hanken 800 · para qué sirve · flecha. El hover mueve el BORDE a
+   tinta, no la posición: la física del botón (`#217`/`#303`) vale también para una tarjeta-enlace. */
+.channels { display: grid; gap: var(--sp-12); }
+.channels__title {
+  margin: 0; font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
+}
+.channels__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-10); }
+.channel {
+  display: flex; align-items: center; gap: var(--sp-14);
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: var(--sp-16) var(--sp-18); color: var(--fg);
+  transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.channel:hover { border-color: var(--fg); }
+.channel__body { flex: 1; min-width: 0; display: grid; gap: var(--sp-3); }
+.channel__label {
+  font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
+}
+/* ⚠️ `overflow-wrap` y no `nowrap`: un correo largo de una instalación cualquiera desbordaría la
+   tarjeta, y aquí el ancho lo manda la columna. */
+.channel__value { font-size: var(--fs-18); font-weight: 800; line-height: 1.2; overflow-wrap: anywhere; }
+.channel__hint { font-size: var(--fs-15); line-height: 1.4; color: var(--fg-mute); }
+.channel__arrow { flex: none; font-weight: 800; font-size: var(--fs-16); color: var(--interactive); }
+
+/* ── EL FORMULARIO, EN TARJETA ──────────────────────────────────────────────────────────────
+   ❗❗ **`.page--contact` NO es decoración del selector: es lo que lo hace ganar.** `.form` trae de
+   `site.css` un `max-width: 640px` pensado para una página de una sola columna, y **`site.css` se
+   carga DESPUÉS de `landing.css`** (el orden está en `components/layout.blade.php`), así que a igual
+   especificidad gana la hoja compartida. Escrito como `.contact-form` a secas, el `max-width: none`
+   no hacía nada: el área de la rejilla medía 736 y la tarjeta se quedaba en **638 px** — medido en
+   navegador, sin que fallara nada. *Una regla nueva de la web pública no gana a una de la hoja
+   compartida por ser más nueva.* */
+.contact-form {
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+  padding: var(--sp-20);
+  display: grid; gap: var(--sp-18);
+}
+/* ⚠️ **Solo lo que CHOCA con `.form` va acotado**, y no la regla entera: `CardSkinTest` localiza la
+   piel de una tarjeta por su selector EXACTO, así que escribir todo el vestido bajo
+   `.page--contact .contact-form` lo dejaba fuera del censo — la guarda se puso roja diciendo que no
+   encontraba la tarjeta, que es exactamente lo que tenía que hacer. */
+.page--contact .contact-form { max-width: none; margin: 0; }
+.contact-form__title { margin: 0; font-family: var(--font-display); font-size: var(--fs-22); line-height: 1.1; font-weight: 400; }
+.contact-form__lede { margin: calc(var(--sp-10) * -1) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); }
+/* El pie del campo opcional, dentro de su propia etiqueta: peso normal para que no compita con el
+   nombre del campo, que es lo que se busca al leer en diagonal. */
+.form__opt { font-style: normal; font-weight: 400; color: var(--fg-mute); }
+
+/* ❗❗ **EL AVISO DE PRIVACIDAD Y SU ENLACE** (`[DECIDIDO owner, 2026-09-12]`, sin casilla, como las
+   dos altas desde `#350`).
+   ⚠️⚠️ **El enlace se DISTINGUE del párrafo**: en `#350` el mismo enlace llevaba el color exacto del
+   texto y sin subrayado, y eso lo convertía en carga en vez de en información. Aquí va en
+   `--interactive` y subrayado — las dos cosas, porque el color solo no basta. */
+.contact-form__privacy { display: grid; gap: var(--sp-2); }
+.contact-form__privacy p { margin: 0; font-size: var(--fs-14); line-height: 1.5; color: var(--fg-mute); }
+/* ⚠️ El enlace es un CONTROL, no una palabra del párrafo: alcanza el suelo táctil por sí mismo. Ir
+   dentro de la frase lo dejaba en 18 px de alto, y eso habría estrenado la segunda excepción de
+   `#264` para nada. */
+.contact-form__privacy a {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  color: var(--interactive); text-decoration: underline; font-weight: 700; font-size: var(--fs-15);
+}
+
+/* La fila de envío. El plazo va AL LADO del botón, que es donde se decide enviar (el artboard lo
+   pide ahí a propósito, no solo en la entradilla). */
+.contact-form__send { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-16); }
+.contact-form__note { flex: 1; min-width: 12rem; font-size: var(--fs-15); line-height: 1.45; color: var(--fg-mute); }
+
+/* ── EL VESTIDO DEL CAMPO, ACOTADO A ESTA PÁGINA ────────────────────────────────────────────
+   ❗❗❗ **ACOTADO A PROPÓSITO, y no es timidez.** `.form__field` vive en `site.css` y sus
+   consumidores son DOS Blade y **NUEVE componentes del cajón** (medido). El cajón lo está vistiendo
+   el otro carril (`CARRIL-SPA.md`), así que subir aquí la regla base le cambiaría nueve pantallas
+   sin que nadie lo haya decidido allí.
+   ▶ Lo que el sistema fija y esto aplica: **alto 52** (`site.css` ya avisaba: «el sistema del canvas
+   fija `campo.alto: 52`; eso llega al vestir los formularios, y el token es el suelo mientras
+   tanto») y el **foco al color interactivo** en vez de a tinta.
+   ⚠️ Cuando el carril del SPA vista los formularios del cajón, esto sobra: retíralo entonces. */
+.page--contact .form__field { margin-bottom: 0; }
+.page--contact .form__field input,
+.page--contact .form__field select { min-height: 52px; }
+.page--contact .form__field textarea { min-height: 128px; }
+.page--contact .form__field input:focus,
+.page--contact .form__field select:focus,
+.page--contact .form__field textarea:focus { border-color: var(--interactive); }
+
+/* ── «QUIZÁ YA ESTÁ CONTESTADO» ─────────────────────────────────────────────────────────────
+   La única superficie de tinta de la página. `data-surface="ink"` va en la TARJETA y no en su
+   contenedor (`#484`): allí además PINTA, y en un contenedor sin radio dejaría un rectángulo. */
+.answers { border-radius: var(--r); padding: var(--sp-20); }
+.answers__title { margin: 0 0 var(--sp-12); font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.15; font-weight: 400; }
+.answers__list { list-style: none; margin: 0; padding: 0; display: grid; }
+/* Sobre tinta el rol interactivo lo resuelve el paquete por superficie (`#436`), así que aquí no se
+   escribe ningún color: `--interactive` ya vale cian dentro de `[data-surface="ink"]`. */
+.answers__link {
+  display: flex; align-items: center; gap: var(--sp-10);
+  min-height: var(--tap-min);
+  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
+}
+.answers__link:hover { text-decoration: underline; }
+
+/* ── DÓNDE ESTAMOS ──────────────────────────────────────────────────────────────────────────
+   Rótulo, dirección escrita y la salida al mapa. ⚠️ La dirección va en peso fuerte porque es EL
+   dato de este bloque; el enlace es lo secundario. */
+.where { border-top: 1.5px solid var(--line-strong); padding-top: var(--sp-18); }
+.where__label {
+  margin: 0; font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute);
+}
+.where__addr { margin: var(--sp-8) 0 0; font-size: var(--fs-17); line-height: 1.5; font-weight: 700; }
+.where__cta {
+  display: inline-flex; align-items: center; gap: var(--sp-8);
+  min-height: var(--tap-min);
+  font-weight: 800; font-size: var(--fs-16); color: var(--interactive);
+}
+.where__cta:hover { text-decoration: underline; }
+
+.contact-layout__side { display: grid; gap: var(--sp-20); align-content: start; }
+
+/* La fila de botones de una pantalla de servicio. ⚠️ Era `.contact-quick__row`, prestada de
+   `/contacto`: cuando esa página la retiró (`#535`) `errors/page-maintenance.blade.php` se habría
+   quedado sin regla, y el censo por subcadena no lo veía. */
+.page__actions { display: flex; flex-wrap: wrap; gap: var(--sp-12); }

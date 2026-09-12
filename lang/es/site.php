@@ -43,22 +43,64 @@ return [
     'back_home' => '← Volver al inicio',
     'legal_draft_notice' => 'Texto provisional pendiente de revisión legal.',
 
+    // ══ /contacto ═══════════════════════════════════════════════════════════════════════════
+    // Carril de diseño Fase 3 · T3b (`DECISIONES #535`). Artboard `Contacto PJP` 1a/1b.
+    // ⚠️ **La entradilla NO enumera canales** aunque el artboard lo haga: los suyos son tres y los
+    // de una instalación son los que su panel tenga. Quien los dice es el bloque de canales, que
+    // sale del dato.
     'contact_eyebrow' => 'Contacto',
     'contact_title' => 'Hablamos',
-    'contact_intro' => '¿Tienes dudas, quieres venir en grupo o organizar un evento? Escríbenos y te respondemos lo antes posible.',
+    // Dos redacciones porque el plazo se DERIVA: con horario declarado se dice cuándo, y sin él no
+    // se promete nada. `[DECIDIDO owner, 2026-09-12]`: el horario de atención ES el de apertura.
+    'contact_intro' => 'Cuéntanos qué necesitas: te contestamos dentro de nuestro horario de apertura.',
+    'contact_intro_plain' => 'Cuéntanos qué necesitas y te contestamos lo antes posible.',
     'contact_name' => 'Nombre',
-    'contact_email' => 'Email',
-    'contact_phone' => 'Teléfono (opcional)',
-    'contact_message' => 'Mensaje',
-    'contact_send' => 'Enviar mensaje',
+    'contact_email' => 'Correo',
+    'contact_phone' => 'Teléfono',
+    'contact_phone_hint' => 'si prefieres que te llamemos',
+    'contact_message' => 'Tu mensaje',
+    'contact_send' => 'Enviar',
     'contact_success' => '¡Gracias! Hemos recibido tu mensaje y te responderemos pronto.',
     'contact_hp' => 'No rellenar este campo',
+    'contact_form_title' => 'Escríbenos',
+    'contact_form_lede' => 'Cuéntanos qué necesitas y te contestamos al correo.',
+    // Junto al botón. La entradilla dice CUÁNDO; esto dice POR DÓNDE, que es lo que hay que saber
+    // justo antes de pulsar (el artboard lo pide ahí a propósito).
+    'contact_reply_note' => 'Te contestamos al correo.',
+    // ⚠️ El enlace va FUERA de la frase de la casilla y se distingue del párrafo: el mismo arreglo
+    // que `#350` («su enlace era INVISIBLE»). Sin casilla, por `[DECIDIDO owner, 2026-09-12]`.
+    'contact_privacy_notice' => 'Usamos lo que nos escribas solo para contestarte.',
+    'contact_privacy_link' => 'Cómo tratamos tus datos',
 
-    // CTAs directos de la página de contacto (data-driven: solo si el dato existe en Ajustes).
-    'contact_quick_title' => 'O contáctanos directamente',
-    'contact_call' => 'Llamar',
-    'contact_whatsapp' => 'WhatsApp',
-    'contact_location' => 'Cómo llegar',
+    // El motivo del mensaje. ⚠️ **Sin opción preseleccionada**: dejarla en «Un cumpleaños» haría
+    // que quien no lo toca mandara un tema que no ha elegido — una ausencia no es una afirmación.
+    'contact_topic' => '¿Sobre qué?',
+    'contact_topic_none' => 'Elige un tema (opcional)',
+    'contact_topics' => [
+        'birthday' => 'Un cumpleaños',
+        'groups' => 'Grupos y colegios',
+        'booking' => 'Una reserva que ya tengo',
+        'other' => 'Otra cosa',
+    ],
+
+    // Los canales. Salen del panel; el que no tiene dato no se pinta.
+    // ⚠️ `phone_whatsapp` es UNA tarjeta y existe porque el dato lo decide: cuando el teléfono y el
+    // WhatsApp son el mismo número, dos tarjetas dirían el mismo número dos veces.
+    'contact_channels_title' => 'Por dónde prefieras',
+    'contact_channel' => [
+        'phone' => ['t' => 'Teléfono', 'd' => 'Para hablar con recepción.'],
+        'phone_whatsapp' => ['t' => 'Teléfono y WhatsApp', 'd' => 'Llámanos o escríbenos al mismo número.'],
+        'whatsapp' => ['t' => 'WhatsApp', 'd' => 'Si prefieres escribir, es lo más rápido.'],
+        'email' => ['t' => 'Correo', 'd' => 'Para grupos, facturas y todo lo que necesite quedar por escrito.'],
+    ],
+
+    // La chapa de atajos: un contacto que se puede evitar es un correo que no hay que contestar.
+    'contact_answers_title' => 'Quizá ya está contestado',
+
+    // La dirección, escrita. ⚠️ **Aquí NO hay mapa**: vive en la sección de la portada y esto
+    // apunta a ella (regla del artboard, `#535`).
+    'contact_where_title' => 'Dónde estamos',
+    'contact_where_cta' => 'Ver el mapa y el horario',
 
     'visit_hours' => 'Horarios y ubicación',
     'visit_hours_sub' => 'Cuándo y dónde estamos',

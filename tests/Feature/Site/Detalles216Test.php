@@ -32,7 +32,11 @@ class Detalles216Test extends TestCase
         $res = $this->get('/contacto')->assertOk();
         $res->assertSee('tel:600112233', false);            // teléfono saneado a dígitos
         $res->assertSee('https://wa.me/34600112233', false); // WhatsApp
-        $res->assertSee('https://maps.google.com/?q=saltopark', false); // ubicación
+        // ⚠️ **Aquí se aseveraba también `address.maps_url` («Cómo llegar») y se retira** (`#535`):
+        // `/contacto` se rehizo desde su artboard y ya no lleva mapa ni enlace a Google Maps — la
+        // dirección va escrita y la salida es al ancla de «Visítanos», que es donde el mapa vive.
+        // ▶ **El dato no se queda sin sujeto**: la portada lo sigue ofreciendo (`visit__maps`,
+        // comprobado en vivo), y allí lo vigila `VisitSectionTest`.
     }
 
     public function test_contact_hides_quick_ctas_when_no_data(): void

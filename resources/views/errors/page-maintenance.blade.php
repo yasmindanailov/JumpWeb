@@ -16,7 +16,9 @@
 
         <p class="page__body" style="max-width:60ch; margin-bottom:32px">{{ __('site.page_maintenance.body') }}</p>
 
-        <div class="contact-quick__row">
+        {{-- ⚠️ Era `.contact-quick__row`, prestada de `/contacto` — y esa página la retiró en
+             `#535`. Pasa a `.page__actions`, que es el bloque al que esta pantalla pertenece. --}}
+        <div class="page__actions">
             <a href="{{ url('/') }}" class="btn btn--lg">{{ __('site.e404_home') }}</a>
         </div>
     </main>

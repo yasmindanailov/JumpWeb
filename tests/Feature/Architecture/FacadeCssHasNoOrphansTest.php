@@ -77,7 +77,12 @@ class FacadeCssHasNoOrphansTest extends TestCase
     {
         $classes = $this->facadeClassesInSelectors();
 
-        foreach (['grain', 'grain--fade', 'spray', 'rays', 'brand-strip--wedge', 'ilu'] as $needle) {
+        // ⚠️ `spray` salió de esta lista en `#535`: la niebla A5 perdió su única pantalla al
+        // retirarse el mapa de `/contacto` y se fue de la hoja, así que el control quedó apuntando a
+        // una clase que ya no está —y puso este caso en rojo con el producto sano, que es
+        // exactamente lo que una guarda-de-la-guarda tiene que hacer—. Las cinco que quedan siguen
+        // declaradas y cubren las dos hojas.
+        foreach (['grain', 'grain--fade', 'rays', 'brand-strip--wedge', 'ilu'] as $needle) {
             $this->assertContains(
                 $needle, $classes,
                 "el escaneo de las hojas no ve `.{$needle}`, que está declarada: el parser se ha ".

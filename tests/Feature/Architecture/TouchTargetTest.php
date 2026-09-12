@@ -108,12 +108,17 @@ class TouchTargetTest extends TestCase
         'cookie__config' => ['/', 'el «Configurar» del banner, 17'],
         'cookie__policy' => ['/', 'el enlace de la política dentro del panel, 16'],
         'ck-tgl' => ['/', 'el interruptor de finalidad: 42×24, y su ::after ya dibuja el pomo'],
-        // ⚠️ **Se mira en `/contacto` desde `#533`**, y es la mudanza de `zone-tab` otra vez:
-        // `/normas` se rehízo desde su artboard y **ya no lleva «Volver al inicio»** —el armazón da
-        // menú y pie, y `#527` decidió que las interiores acaban ahí—. El control **no ha muerto**:
-        // medido en vivo, `/contacto` lo pinta y las legales ya no. La guarda se muda con su sujeto,
-        // no se retira.
-        'page__back' => ['/contacto', 'el «Volver al inicio» de las páginas de contenido, 21'],
+        // ⚠️ **Se mira en `/privacidad` desde `#535`**, y es la TERCERA mudanza de este control:
+        // `/normas` lo perdió al rehacerse (`#533`) y `/contacto` al rehacerse (`#535`) — el armazón
+        // da menú y pie, y `#527` decidió que las interiores acaban ahí.
+        // ⚠️⚠️ **Y la nota que `#533` dejó aquí era FALSA**: decía «medido en vivo, `/contacto` lo
+        // pinta y las legales ya no», y las legales SÍ lo pintan — las cuatro (`/privacidad`,
+        // `/aviso-legal`, `/cookies`, `/condiciones`), porque las sirve `pages/text.blade.php`, que
+        // no se ha tocado. Verificado con `curl` sobre las cinco URL antes de mudarla otra vez.
+        // ▶ *La mudanza de `#533` no hacía falta, y la de ahora va al sitio donde el sujeto no
+        // depende de ninguna tanda del carril de diseño*: las legales no están en el inventario de
+        // páginas que la Fase 3 rehace.
+        'page__back' => ['/privacidad', 'el «Volver al inicio» de las páginas legales, 21'],
         'svc-hero__jump' => ['/servicios', 'los saltos a cada servicio, 36'],
     ];
 

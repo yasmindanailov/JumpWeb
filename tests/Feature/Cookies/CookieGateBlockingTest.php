@@ -13,7 +13,9 @@ use Tests\TestCase;
  * #219 — Bloqueo previo (LSSI art. 22.2 + Guía AEPD): los iframes de tercero (Google Maps, feed
  * social) NO se cargan hasta que el visitante consiente la categoría correspondiente. Sin
  * consentimiento se renderiza un placeholder y la URL va en `data-src` (no `src`) → el navegador
- * no la solicita. Cubre home (mapa + feed) y /contacto (mapa).
+ * no la solicita. Cubre la home (mapa).
+ * ⚠️ Decía «home (mapa + feed) y /contacto (mapa)» y las dos mitades caducaron: el feed se fue con
+ * la sección «En directo» (`#309`) y el mapa de `/contacto`, con la página rehecha (`#535`).
  *
  * Discriminador `src` cargado vs `data-src` bloqueado: ` src="…"` con espacio inicial solo matchea
  * el atributo real (en `data-src="…"` el carácter previo a `src` es `-`).
@@ -61,15 +63,14 @@ class CookieGateBlockingTest extends TestCase
         $response->assertDontSee('consent-frame__ph', false);          // sin placeholders
     }
 
-    public function test_contact_map_is_also_gated(): void
-    {
-        $this->get('/contacto')->assertOk()
-            ->assertSee('consent-frame__ph', false)
-            ->assertDontSee(' src="'.self::MAP.'"', false);
-
-        $this->consent(maps: true, social: false)->get('/contacto')->assertOk()
-            ->assertSee(' src="'.self::MAP.'"', false);
-    }
+    // ⚠️⚠️ **AQUÍ HABÍA UN CASO DEL MAPA DE `/contacto` Y SE RETIRA CON SU SUJETO** (`#535`):
+    // `test_contact_map_is_also_gated`. Esa página se rehízo desde su artboard y **ya no lleva
+    // mapa** —la dirección va escrita y enlaza a la sección de la portada, que es donde el mapa
+    // vive—, así que el caso probaba el gateo de un iframe que no se sirve.
+    // ▶ **La propiedad NO se pierde**: el mapa sigue estando en la portada y los dos casos de
+    // arriba la cubren ahí (sin consentimiento, placeholder; con él, el iframe). Lo que sí gana
+    // `/contacto` es una guarda propia que prohíbe el mapa entero (`ContactPageTest`), y esa es
+    // más fuerte que ésta: no exige que esté bien gateado, exige que no esté.
 
     // ⚠️⚠️ **AQUÍ HABÍA DOS CASOS DEL FEED SOCIAL Y SE HAN RETIRADO CON SU SUJETO** (`#309`):
     // `test_social_feed_blocked_without_consent` y `test_social_feed_loads_with_consent`. La

@@ -39,7 +39,8 @@ class CardSkinTest extends TestCase
         // ⚠️ `.ride-card` se fue de aquí en `#482`: la tarjeta de atracción vivía en el carrusel
         // de la portada, que se retiró con la sección 03. *Una entrada sin sujeto es una guarda
         // que pasa sin mirar nada*, y esta lista lo dice en su propia guarda-de-la-guarda.
-        '.visit-card' => 'las tres tarjetas de Visítanos (#307)',
+        // ⚠️ `.visit-card` se fue en `#535`: era de «Visítanos» (`#307`) y sobrevivía **porque la
+        // usaba `/contacto`**; la página rehecha escribe su dirección bajo un rótulo, sin tarjeta.
         // ⚠️ `.rules-must__card` se fue en `#485`, por el MISMO motivo que `.ride-card` en `#482`:
         // la sección de normas de la portada la sustituyó la 05 «Antes de venir», que no tiene
         // tarjetas —su pieza es un bloque de tinta— y por tanto no tiene piel que vigilar aquí.
@@ -57,6 +58,15 @@ class CardSkinTest extends TestCase
         '.rate-note' => 'la explicación de la tarifa especial en /precios — #531',
         '.holidays__list' => 'la lista de festivos de /precios — #531',
         '.extras__list' => 'los complementos de /precios — #531',
+        // ⚠️⚠️ **`.channel` es una tarjeta que SE PULSA y aun así va en APOYO, y eso hay que
+        // declararlo o alguien la «arregla»** (`#535`). El criterio del owner en `#323` era
+        // «pegatina = lo que se elige o se compra», y un canal de contacto se elige; pero el
+        // artboard `Contacto PJP` la dibuja con hairline y sin sombra, y el sistema adoptado en
+        // `#469` **acota la pegatina a hero y cierre** (`#480`) — que es por lo que `#531` ya bajó
+        // `.price` de primer nivel a apoyo. ▶ Su afordancia la da el HOVER, que lleva el borde a
+        // tinta, no una sombra.
+        '.channel' => 'las tarjetas de canal de /contacto — #535',
+        '.contact-form' => 'la tarjeta del formulario de /contacto — #535',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────────────

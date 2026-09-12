@@ -54,6 +54,15 @@ final class SiteDestinations
      * «Para quién», serían dos nombres para el mismo sitio, y el canvas lo avisa por lo mismo con los
      * números. Por eso la clave apunta al rótulo de la sección y no a una del menú.
      */
+    /**
+     * Las páginas del inventario que contestan una pregunta sin que nadie tenga que escribir, en el
+     * orden en que se ofrecen (`answersItself()`, `#535`).
+     *
+     * ⚠️ Son las dos que el artboard de `/contacto` nombra, y **no todas**: ofrecer el inventario
+     * entero convertiría la chapa en un segundo menú, que es justo lo que la sección dice no ser.
+     */
+    public const SELF_ANSWERING = ['precios', 'cumpleanos'];
+
     public const HOME_SECTIONS = [
         'zones' => 'landing.zones.eyebrow',
         'rides' => 'landing.rides.eyebrow',
@@ -136,5 +145,45 @@ final class SiteDestinations
         }
 
         return $sections;
+    }
+
+    /**
+     * **LOS DESTINOS QUE CONTESTAN SOLOS**: la chapa «Quizá ya está contestado» de `/contacto`
+     * (`DECISIONES #535`, carril de diseño Fase 3 · T3b).
+     *
+     * El artboard lo razona así: *«un contacto que se puede evitar es un correo que no hay que
+     * contestar; tres cuartos de lo que se pregunta ya está en Dudas y en Tarifas»*.
+     *
+     * ⚠️ **Salen del INVENTARIO y no de tres `href` escritos en la plantilla**, que es lo que
+     * `#521` vino a cerrar: así heredan gratis la regla de mantenimiento —una página apagada deja
+     * de ofrecerse aquí también— y no pueden apuntar a una ruta que no existe.
+     *
+     * ⚠️ **Y los rótulos son los del inventario, no los del artboard.** Él escribe «Todas las
+     * tarifas» y «Los packs de cumpleaños»; aquí dicen «Tarifas» y «Cumpleaños», que es como los
+     * llama el menú y el pie. El propio canvas prohíbe lo contrario: dos nombres para el mismo
+     * sitio son dos sitios para quien lee.
+     *
+     * @param  bool  $withFaq  ¿la portada pinta hoy la sección de Dudas? (cero dudas en el panel la
+     *                         retira, `#488`) — la misma condición que `homeSections()`
+     * @return list<array{t: string, url: string}>
+     */
+    public static function answersItself(bool $withFaq = true): array
+    {
+        $out = [];
+
+        if ($withFaq) {
+            $out[] = [
+                't' => (string) __(self::HOME_SECTIONS['faq']),
+                'url' => url('/#faq'),
+            ];
+        }
+
+        foreach (self::pages() as $page) {
+            if (in_array($page['route'], self::SELF_ANSWERING, true)) {
+                $out[] = ['t' => $page['t'], 'url' => $page['url']];
+            }
+        }
+
+        return $out;
     }
 }

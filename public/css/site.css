@@ -4732,32 +4732,14 @@ body[data-has-hero] .nav--over .nav__cta {
 /* Botón «Cerrar sesión» al pie de /mi-cuenta (#221). */
 .account__logout { margin: var(--sp-8) 0 0; }
 
-/* (1) CTAs directos de la página de contacto (llamar / WhatsApp). Solo LAYOUT: los botones usan
-   los componentes del sistema de diseño de la landing (`.btn`, `.btn--ink`, `.btn--ghost`). */
-.contact-quick { margin-bottom: 36px; }
-.contact-quick__label {
-    display: block; margin-bottom: var(--sp-12);
-    font-family: var(--font-mono); font-size: var(--fs-11);
-    text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
-}
-.contact-quick__row { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
-
-/* Contacto en 2 columnas: formulario + ubicación al lateral (#216). En móvil se apila (mapa debajo). */
-.contact-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 40px; align-items: start;
-}
-/* El panel lateral apila el mapa y la dirección (auditoría M4, `#434`): la tarjeta de la dirección
-   iba POSADA sobre el marco del mapa y tapaba el botón de consentimiento. Ahora son dos piezas, una
-   debajo de otra, y el mapa se queda con su tarjeta entera. */
-.contact-layout__aside { position: sticky; top: 96px; display: grid; gap: var(--sp-16); align-content: start; }
-.map-card--aside { min-height: 400px; height: auto; margin: 0; }
-@media (max-width: 768px) {
-    .contact-layout { grid-template-columns: 1fr; gap: var(--sp-28); }
-    .contact-layout__aside { position: static; }
-    .map-card--aside { min-height: 300px; }
-}
+/* ⚠️ **AQUÍ VIVÍA EL LAYOUT DE `/contacto` y se fue con su página** (`DECISIONES #535`, Fase 3 ·
+   T3b): `.contact-quick`, `.contact-quick__label`, `.contact-layout`, `.contact-layout__aside` y
+   `.map-card--aside` con sus tres reglas de `@media`. El vestido nuevo vive en `landing.css`, que es
+   la hoja de la web pública — ésta la comparte el CAJÓN (`CARRIL-SPA.md` §5) y una página de la web
+   no tiene por qué escribir en ella.
+   ❗❗ **`.contact-quick__row` NO se fue, y el censo por subcadena no lo habría visto**: la usa
+   `errors/page-maintenance.blade.php` para su fila de botones. Se renombró a `.page__actions`, que
+   es el bloque al que esa pantalla pertenece, y vive también en `landing.css`. */
 
 /* Post-formulario de datos por invitado de un cumpleaños (#217). Reutiliza el bloque
    `.eventfields` (etiqueta + input) para cada campo; aquí van el contenedor y las tarjetas. */
@@ -6872,7 +6854,9 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
        horneado. Generalizar no puede cambiar lo que ya se ve. */
     --trama: 0.2;
     --trama-fade: 0.55;   /* A2 · la variante que se apaga; suya al dígito */
-    --spray: 1;           /* A5 · la niebla */
+    /* ⚠️ `--spray` se fue con su pieza en `#535`: la niebla A5 perdió su única pantalla al retirarse
+       el mapa de `/contacto`. Un token sin consumidor deja de vigilar nada y encima invita a
+       reintroducir la pieza sin decidirlo (la regla que `#550` aplicó a `--fs-9`). */
     --rayos: 1;           /* A3 · el abanico quieto */
     --rayos-size: 520px;  /* suyo */
 }
@@ -6910,21 +6894,15 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
     mask-image: linear-gradient(115deg, #000, transparent var(--trama-fade-stop, 74%));
 }
 
-/* ── A5 · NIEBLA DE SPRAY ──────────────────────────────────────────────────────────────────────
-   Tres halos difusos, sin borde. Su nota: «versión suave para fondos claros: formularios largos y
-   paneles laterales». Geometría suya (260/240/170 px, sus posiciones y sus paradas de 62/60/62 %);
-   los tres colores son ROLES de la tira, no sus literales. */
-.spray {
-    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
-    opacity: var(--spray);
-    background:
-        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--strip-1) 50%, transparent), transparent 62%)
-            left -20px top -30px / 260px 260px no-repeat,
-        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--strip-2) 55%, transparent), transparent 60%)
-            right -40px bottom -50px / 240px 240px no-repeat,
-        radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--strip-4) 40%, transparent), transparent 62%)
-            left 34% top 38% / 170px 170px no-repeat;
-}
+/* ── A5 · NIEBLA DE SPRAY · RETIRADA EN `#535` ─────────────────────────────────────────────────
+   ⚠️ Tres halos difusos, sin borde. Su nota decía «versión suave para fondos claros: formularios
+   largos y **paneles laterales**», y su único sitio en toda la web era el panel lateral de
+   `/contacto` — la tarjeta del mapa—. Esa tarjeta se fue con el mapa (`#535`) y la niebla se quedó
+   **sin pantalla**: la cazó `FacadeCssHasNoOrphansTest`, que es para lo que está.
+   ⚠️⚠️ **Y NO se recoloca sobre el formulario**: se probó ahí cuando nació y se veía mal —los halos
+   caían bajo las etiquetas, que es lo que su propia regla 02 prohíbe—. La geometría vive en el kit
+   del cliente; el día que tenga pantalla, vuelve con ella, como pide `#287`: *una pieza nace en el
+   mismo cambio que su consumidor*. */
 
 /* ── A3 · RAYOS, la variante QUIETA ────────────────────────────────────────────────────────────
    ⚠️ **No es `.offw-rays`.** Aquél es el estallido del widget de ofertas: 2,6°/15° (24 rayos),
