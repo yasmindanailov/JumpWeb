@@ -20,6 +20,10 @@
     {{-- La portada es la única página con SECCIONES a las que bajar, y las pasa ella (`#521`): las
          demás no pasan nada y su menú se queda solo con «Páginas». --}}
     <x-site.nav :sections="$menuSections" />
+
+    {{-- ⚠️ TEMPORAL (`#546`): el andamio de las variantes de fachada. Sin `?fachada=1|2` en
+         `local` no emite absolutamente nada. --}}
+    <x-site.facade-styles />
     <main id="main">
 
     {{-- ===================== HERO ===================== --}}
@@ -220,6 +224,7 @@
          la paleta de la zona activa, así que si el ancla se quedara solo en el carrusel las
          pestañas perderían el color de su zona. --}}
     <section id="zones" class="section wrap">
+        <x-site.facade en="zones" />
         <div class="zones__head">
             {{-- 📜 **AQUÍ VIVÍA LA MANCHA `B1·02`** (ranura `slot-zonas`, `#302`→`#309`), y se
                  retira en `#496`: **el artboard `Zonas PJP` no lleva ninguna pieza decorativa**
@@ -548,6 +553,7 @@
          van a `route('cumpleanos')`, medido— pero una URL con ancla puede estar repartida fuera. --}}
     @if ($partyCards !== [])
         <section id="events" class="section wrap">
+        <x-site.facade en="events" />
             {{-- ⚠️⚠️ **AQUÍ HUBO UNA CABECERA SOBRE FOTO A SANGRE Y SE RETIRÓ** (`[DECIDIDO owner]`,
                  `#484`). El artboard la dibuja —es la única sección que la lleva— pero la foto que la
                  instalación tiene en `zones.image` para cumpleaños es **el comedor vacío**: filas de
@@ -750,6 +756,7 @@
          cifra queda escrita para que el owner pueda revertirlo con el número delante — que es lo que
          hizo en `#483` con el reloj. --}}
     <section id="before" class="section wrap">
+        <x-site.facade en="before" />
         <div class="sec-head">
             <p class="sec-head__eyebrow">{{ __('landing.before.eyebrow') }}</p>
             <h2 class="sec-head__title">{{ __('landing.before.title') }}</h2>
@@ -1233,6 +1240,7 @@
          las usa `/contacto`; `.info__grid`, `.info-card` y `.hours` se fueron con su único
          consumidor, que era esta sección. --}}
     <section id="info" class="section wrap">
+        <x-site.facade en="info" />
         {{-- ⚠️ **`.sec-head` y no `.rides__head`**: es la cabecera que el canvas cierra para las ocho
              secciones (`#479`). La vieja no tenía ni rótulo ni entradilla.
              ⚠️⚠️ **La entradilla se DERIVA del horario** y no es un texto fijo: el canvas escribe
@@ -1302,6 +1310,7 @@
          no hay preguntas tampoco hay `FAQPage` que declarar. --}}
     @if ($faqs->isNotEmpty())
         <section id="faq" class="section wrap">
+        <x-site.facade en="faq" />
             <div class="faq-sec">
                 {{-- ⚠️ **`.sec-head` y no un `<h2>` suelto**: es la cabecera que el canvas cierra
                      para las ocho secciones (`#479`). La vieja no tenía ni rótulo ni entradilla, y
@@ -1396,6 +1405,9 @@
              @pointerdown="toca($event)"
              @pointerup="sueltaTap($event)"
              :class="fase === 'jugando' && 'reserve__box--jugando'">
+            {{-- ⚠️ La pieza va DENTRO de la tarjeta y no en la sección: la tarjeta no llena su
+                 sección, así que anclada fuera la figura caía en el papel de al lado. --}}
+            <x-site.facade en="reserve" />
             {{-- La trama de puntos, la misma que el menú: es la única textura que el sistema
                  admite sobre tinta, y aquí sale del mismo mecanismo. --}}
             <div class="grain" aria-hidden="true"></div>
