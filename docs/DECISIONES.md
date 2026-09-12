@@ -30138,3 +30138,68 @@ pintada siempre, la fase que no vuelve, y el embudo leyendo la sesión viva—.
 Pint y docs-check ✓ · el embudo recorrido en navegador **con sesión y sin ella**, con capturas.
 
 ⚠️ **Paso de despliegue: ninguno.**
+
+---
+
+## #557 · 2026-09-12 · El DÍA y la HORA, vestidos desde su artboard — y el control más pulsado sale de 32 px
+
+**Contexto.** Parada 02 del canvas (`Pasos Compra PJP` 4a), las dos pantallas por las que pasa todo el
+mundo y donde vive «el paso más cargado del embudo». Es **vestir**: ni una regla de negocio cambia.
+
+### Lo que entra
+
+- **Los títulos son PREGUNTAS** —«¿Qué día venís?», «¿A qué hora?»— y suben a **24**, que es lo que el
+  artboard da a sus tres pantallas. El imperativo ya lo lleva el botón del pie. La hora gana entradilla.
+- **El stepper pasa de 32 redondo a 44 y 48 cuadrado**, con el canto del sistema. La cantidad principal
+  va a 48 y su cifra a rótulo (Bungee 24); los extras a 44, menores a propósito porque comparten fila
+  con el nombre del complemento y su nota.
+- **El contador se parte en dos filas** —arriba qué se cuenta y cuánto queda, abajo el control—: con
+  los botones a 48 y la cifra en rótulo ya no cabía todo en una.
+- **«Ver más fechas» es una FILA**, no un botón centrado: así se lee como una puerta y no como una
+  segunda acción que compite con el CTA del pie. Sube de 44 a **48**.
+- El chip de día crece a **64×80** con su número en rótulo (Bungee 21) y el precio a peso fuerte, que
+  es el dato que hace elegir un día y no otro. Los extras cambian su entradilla gris por un **rótulo**.
+
+### El hallazgo: el control más pulsado del embudo iba doce píxeles por debajo del suelo
+
+`.entry__stepper button` medía **32×32**. El suelo táctil del producto es **48** desde `#470`.
+⚠️⚠️ **Y ninguna guarda lo veía**: `TouchTargetTest` recorre RUTAS de la web pública (`/`, `/servicios`,
+`/privacidad`…) y el cajón no es una ruta suya. ▶ *Una guarda que recorre páginas no vigila lo que no
+es una página*, y el cajón es justo eso — un panel que se abre encima de todas.
+
+### Dos cosas del artboard que NO se copian, con su motivo
+
+1. **El mes como rótulo horizontal encima de la tira.** Su dibujo son **cuatro días de UN mes**; la
+   nuestra lleva **182 que cruzan varios**, y por eso el mes es un separador vertical dentro del carril.
+   ▶ *No se copia una solución a un caso que el dibujo no tiene.*
+2. **Las tallas de texto pequeñas** (14 · 11,5 · 10,5). Ese artboard es de la parada 02 y **la grieta 00
+   se cerró en la 05**: del artboard se toma la GEOMETRÍA —cajas, radios, huecos— y las tallas las manda
+   el suelo de `#550` (cuerpo 16 · apoyo 15 · etiqueta 12). Es la misma regla que ya aplicó `#555` al no
+   bajar los rótulos de fase a los 11,5 del dibujo.
+
+⚠️ Y tampoco **«Cuántos saltan»** como rótulo del contador: clava el uso de este parque dentro del
+producto (`rediseno-desde-canvas.md` §2). Se queda «Cantidad» / «Invitados», que además ya distinguen
+una entrada de un pack.
+
+### La trampa que por poco pasa en VERDE
+
+Título y entradilla se envolvieron primero en un `.wiz__head`. Eso **rompió los dos casos del contrato
+de árbol del paso de la hora**: anclan en `wiz__title` y `treeOf()` recorre hermanos **siguientes**, así
+que al meter el `h3` dentro del envoltorio el paso entero —sesenta nodos— se quedaba fuera… **y el
+manifiesto regenerado lo daba por bueno**.
+
+▶ Lo cazó **revisar el diff del manifiesto línea a línea**, no la suite: los 38 casos pasaban en verde
+vigilando un solo nodo. *Un ancla se cae cuando cambia lo que tiene ENCIMA, y lo hace sin fallar.* Es la
+segunda vez en tres tandas (`#555` lo pagó con `bk-back`).
+▶ La entradilla es **hermana** del título y el aire lo reparte la cascada (`:has(+ .wiz__lede)`).
+
+⚠️ El chevron de «Ver más fechas» era un `<span>` con dos bordes girado 45°: un dibujo propio dentro de
+un cajón que tiene su juego de iconos con guarda de paridad. Al cambiarlo **inventé otro** y lo cazó
+`SidebarIconParityTest` — hoy es el `chevron-down` del set, al dígito.
+
+**Verificación**: suite **4789 · 30.116 aserciones** (1 skipped) · JS **976** · Pint y docs-check ✓ ·
+manifiesto del contrato de árbol regenerado y **revisado línea a línea** (nueve casos, y los nueve
+cambian exactamente en lo que esta tanda toca). ▶ **El OJO lo puso el owner en navegador**, que es como
+pidió trabajar esta tanda.
+
+⚠️ **Paso de despliegue: ninguno.**
