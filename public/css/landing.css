@@ -5194,62 +5194,6 @@ select:focus-visible {
 .bar-door__lede { font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); }
 .bar-door__arrow { flex: none; color: var(--interactive); }
 
-/* ══ LA «i» DEL PRODUCTO · UNA SOLA · `#542` ═══════════════════════════════════════════════════
-   ❗❗❗ Unifica TRES aspectos que convivían (`[DECIDIDO owner, 2026-09-12]`): la del pie del cajón
-   (16 px, gris), la decorativa de la sección 05 (24 px) y la de la tarifa especial. El aspecto vive
-   AQUÍ y lo comparten los tres por CLASE — el cajón es Vue y no puede usar el componente Blade, así
-   que lo compartido tiene que ser la clase.
-   ⚠️ Va en la familia FANTASMA de botón: glifo en `--interactive`, sin relleno. No estrena piel.
-   ⚠️ El suelo táctil lo pone el pseudo de `[data-tap]`, que no mueve el dibujo (`#264`). */
-/* ⚠️⚠️ **DOS SELECTORES, UNA REGLA — y no es un atajo: es lo único que no rompe el contrato.**
-   El pie del cajón es Vue y su árbol está CONGELADO (`SidebarDomContractTest`): añadirle la clase
-   `info-i` puso **35 casos en rojo** de un carril que no es éste. Compartir la DECLARACIÓN
-   consigue lo mismo —un solo aspecto, en un solo sitio— sin tocar su marcado. */
-.info-i,
-.bk-foot__info-btn {
-  display: inline-grid; place-items: center;
-  width: 20px; height: 20px; padding: 0;
-  border: 0; background: none; cursor: pointer;
-  color: var(--interactive);
-  vertical-align: middle;
-  transition: color var(--dur-toque) var(--ease-sale);
-}
-.info-i:hover { color: var(--interactive-hover); }
-.info-i__ico { display: block; }
-
-/* ══ SU TOOLTIP · `popover` NATIVO ════════════════════════════════════════════════════════════
-   ⚠️⚠️ **La top layer es el requisito, no un lujo.** El owner pidió que no se recorte «por falta
-   de pantalla o porque haya un elemento encima»: un panel `absolute` lo recorta cualquier ancestro
-   con `overflow` —y esta «i» vive dentro de tarjetas, de una tabla y del pie del cajón, que los
-   tienen— y lo tapa cualquier `z-index` mayor. El `popover` se pinta fuera del flujo del documento,
-   por encima de todo y sin recorte posible.
-   ⚠️ **Sin sombra dura**: la dura dice «esto se coge» y un tooltip no se coge. Lleva la del sistema
-   para lo que flota, que es la de los modales. */
-.infotip { display: inline-flex; vertical-align: middle; }
-.infotip__panel {
-  margin: 0;
-  width: max-content; max-width: min(300px, calc(100vw - var(--sp-28)));
-  padding: var(--sp-12) var(--sp-14);
-  background: var(--bg-card); color: var(--fg);
-  border: 1px solid var(--tint-info-border); border-radius: var(--r-md);
-  box-shadow: var(--shadow-modal);
-  font-family: var(--font-body); font-size: var(--fs-15); line-height: 1.45;
-  font-weight: 400; text-align: left; white-space: normal;
-}
-.infotip__p { margin: 0; }
-.infotip__p + .infotip__p { margin-top: var(--sp-8); }
-/* Anclado al disparador donde el motor lo soporta; donde no, el `popover` cae a su posición por
-   defecto —centrado en la pantalla—, que sigue siendo legible y sigue sin recortarse. */
-@supports (anchor-name: --a) {
-  .infotip .info-i { anchor-name: --infotip-a; }
-  .infotip__panel {
-    position-anchor: --infotip-a;
-    position-area: block-end span-inline-start;
-    margin-block-start: var(--sp-8);
-    position-try-fallbacks: flip-block, flip-inline;
-  }
-}
-
 /* ══ LAS BANDAS DE ENLACE (carril de diseño Fase 3, artboard `Bandas PJP` · `doc/bandas.md`) ═════
    Dos piezas al final de cada página interior: la GORDA, que contesta la pregunta que la página
    deja abierta, y las FINAS, que llevan a las hermanas. El reparto vive en `Content\Services\

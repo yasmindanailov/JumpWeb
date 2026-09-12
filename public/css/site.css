@@ -1876,10 +1876,7 @@ body.no-scroll { overflow: hidden; }
 /* Desglose de la señal vía ⓘ (popover), para NO romper la estética «Total — CTA» con líneas extra.
    La ⓘ va junto al rótulo del total; el popover abre HACIA ARRIBA (el footer está al fondo del panel). */
 .bk-foot__info { display: inline-flex; vertical-align: middle; margin-left: 5px; }
-/* ⚠️ `#542` · el ASPECTO lo declara `landing.css` en la regla que este selector COMPARTE con
-   `.info-i`: aquí solo queda lo que es de esta posición. Antes tenía su propio tamaño (16), su
-   propio color (`--fg-mute`) y su propia transición, y por eso había tres «i» distintas. */
-.bk-foot__info-btn { position: relative; }
+.bk-foot__info-btn { display: inline-grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--fg-mute); transition: color var(--dur-sale) var(--ease-sale); }
 .bk-foot__info-btn:hover { color: var(--interactive); }
 .bk-foot__info-btn svg { width: 15px; height: 15px; }
 /* Anclado al FOOTER (no al icono): abarca su ancho interior (left/right = padding) y se abre justo

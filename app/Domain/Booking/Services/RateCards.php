@@ -208,20 +208,9 @@ final class RateCards
              * —que se vende el sábado— se anunciaba como «solo de lunes a jueves». *Existir un
              * precio y ser distinto son dos preguntas, y esta frase es de la primera.*
              */
-            /*
-             * ⚠️⚠️ `#542` · **LOS DÍAS NORMALES DEJAN DE ESCRIBIRSE, PERO LA EXCEPCIÓN SE QUEDA**
-             * (`[DECIDIDO owner, 2026-09-12]`: «quitamos lo de lunes a jueves, eso es implícito»).
-             * Y la frase era DOS frases con el mismo texto dentro:
-             *   · si la entrada SÍ se vende en especial, «de lunes a jueves» solo repetía lo que las
-             *     dos cifras ya cuentan → se retira, y el término lo explica la «i».
-             *   · si NO se vende, «solo de lunes a jueves» es la ÚNICA señal de que esa entrada no
-             *     se puede comprar un sábado → se queda. Medido en el catálogo real: la lleva
-             *     «Todo el día», una vez por página.
-             * ▶ *Lo implícito era el día normal, no la restricción de venta.*
-             */
-            'days' => ($diasNormales === null || $this->sellsOnSpecial($ticket))
-                ? null
-                : __('landing.rates.days_only', ['days' => $diasNormales]),
+            'days' => $diasNormales === null ? null : ($this->sellsOnSpecial($ticket)
+                ? $diasNormales
+                : __('landing.rates.days_only', ['days' => $diasNormales])),
             /*
              * La tarifa especial, **con su precio ENTERO y nunca como recargo**
              * (`[DECIDIDO owner, 2026-09-09]`, regla dura del canvas: *«un recargo no se publica

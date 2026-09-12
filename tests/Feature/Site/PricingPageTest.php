@@ -253,34 +253,16 @@ class PricingPageTest extends TestCase
         $this->assertStringNotContainsString('rate-note__title', $html, 'sin tarifa especial tampoco hay término que definir');
     }
 
-    /**
-     * La explicación nombra los días **derivados de `weekdays`**, no del rótulo tecleado en el panel.
-     *
-     * ⚠️⚠️ **CAMBIÓ DE FUENTE en `#542`, y ése es justo el defecto que evita.** Aseveraba el RÓTULO
-     * (`rate_types.label`), que un operador escribe a mano: en esta instalación dice «Viernes,
-     * findes y festivos» mientras `weekdays` dice `[5, 6, 0]` — viernes, sábado y domingo. Los dos
-     * existen, no coinciden, y el rótulo **puede desmentir al cálculo sin que nada falle**, que es
-     * el mismo modo de fallo que `#531` encontró con «solo de lunes a jueves».
-     * ▶ Por eso el caso mueve `weekdays` y comprueba que el texto lo sigue; y comprueba además que
-     * el rótulo tecleado **NO** se publica, para que nadie lo reintroduzca «porque es más bonito».
-     */
-    public function test_the_special_rate_tip_derives_its_days_from_the_configuration(): void
+    /** La explicación nombra la tarifa **con el rótulo del panel**, no con una lista escrita aquí. */
+    public function test_the_special_rate_card_names_the_rate_from_the_panel(): void
     {
-        RateType::query()->where('is_special', true)->update([
-            'label' => ['es' => 'Viernes, findes, festivos y vísperas'],
-            'weekdays' => [6, 0],
-        ]);
+        RateType::query()->where('is_special', true)->update(['label' => ['es' => 'Viernes, findes, festivos y vísperas']]);
         RateType::forgetSpecialMemo();
 
         $html = $this->html();
 
-        $this->assertStringContainsString(
-            __('landing.rates.days_range', ['from' => 'sábado', 'to' => 'domingo']), $html,
-            'los días no siguieron a `weekdays`: el texto está escrito en otro sitio.',
-        );
-        $this->assertStringNotContainsString('Viernes, findes, festivos y vísperas', $html,
-            'ha vuelto el rótulo tecleado del panel: puede desmentir al cálculo sin que nada falle.');
-        $this->assertStringContainsString(__('landing.rates.tip_calm'), $html);
+        $this->assertStringContainsString('Viernes, findes, festivos y vísperas', $html);
+        $this->assertStringContainsString(__('landing.pricing.special_calm'), $html);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

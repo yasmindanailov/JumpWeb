@@ -124,16 +124,12 @@
                             <p class="rate-card__days">{{ $card['days'] }}</p>
                         @endif
 
-                        {{-- La tarifa especial, con su precio ENTERO.
-                             ⚠️ `#542` · **los días dejan de escribirse y pasan a la «i»**
-                             (`[DECIDIDO owner, 2026-09-12]`). Antes iban una vez al pie de la
-                             sección; ahora el término se explica pegado a la cifra y bajo demanda.
-                             La `<x-site.special-rate-tip>` no se pinta si no hay nada que afirmar. --}}
+                        {{-- La tarifa especial, con su precio ENTERO. Los días NO se repiten aquí:
+                             van una vez al pie de la sección (regla dura del canvas). --}}
                         @if ($card['special'])
                             <p class="rate-card__special">
                                 <b>{{ $card['special'] }}</b>
                                 <span>{{ __('landing.rates.special_suffix') }}</span>
-                                <x-site.special-rate-tip />
                             </p>
                         @endif
 
@@ -161,13 +157,12 @@
                 @endforeach
             </ul>
 
-            {{-- ⚠️⚠️ `#542` · **AQUÍ IBA LA NOTA DE DÍAS AL PIE DE LA SECCIÓN, y se retira.** La regla
-                 del canvas que la justificaba —«el término se define una vez, en el sitio donde se
-                 usa»— **sigue en pie y es lo que la sustituye**: la definición vive ahora en la «i»
-                 que va pegada a cada cifra especial, bajo demanda. Lo que cambia no es la regla,
-                 es que el texto deja de ocupar sitio en reposo.
-                 ⚠️ Y su contenido ya no sale del rótulo tecleado en el panel sino de `weekdays`,
-                 que es el dato que usa el CÁLCULO: los dos existen y no dicen lo mismo. --}}
+            {{-- **Los días de la tarifa especial, UNA vez por sección.** Regla dura del canvas: un
+                 término que se usa en un sitio y se esquiva en otro no se aprende nunca.
+                 ⚠️ Sale del rótulo de la tarifa, o sea del panel: aquí no se escribe ningún día. --}}
+            @if ($specialLabel && collect($z['cards'])->contains(fn ($c) => $c['special'] !== null))
+                <x-site.special-rate-note />
+            @endif
 
             {{-- ⚠️⚠️ **EL BLOQUE DE COMPLEMENTOS ES UN COMPONENTE COMPARTIDO desde `#483`**: la
                  sección 04 pide exactamente la misma pieza con los packs dentro, y el owner lo dijo

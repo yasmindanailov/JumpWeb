@@ -261,14 +261,6 @@ return [
         // Los días de la especial, UNA vez por sección. `:label` es el rótulo de la tarifa tal y
         // como lo escribe el panel — hoy «Viernes, findes y festivos».
         'special_note' => 'Tarifa especial: :label.',
-        // ⚠️ `#542` · el cuerpo de la «i». `:days` lo DERIVA `SpecialRateExplainer` de `weekdays`,
-        //    no del rótulo del panel: son dos datos y en esta instalación no coinciden.
-        //    ⚠️ La segunda frase menciona los días sueltos sin nombrarlos —festivos, cierres— porque
-        //    viven en `special_dates` y el parque los marca uno a uno: afirmar cuáles serían aquí es
-        //    publicar una lista que nadie mantiene.
-        'tip_label' => 'Qué es la tarifa especial',
-        'tip_days' => 'La tarifa especial rige :days, y los días sueltos que el parque marque.',
-        'tip_calm' => 'No hay que calcular nada: al elegir el día, el precio que ves ya es el tuyo.',
 
         // ❗ **La ZONA la dice la CHAPA de la tarjeta, no el botón** (`#480`, sobre la nota del
         // turno 15b: «con la zona en la chapa, en el botón sobra»). La llevó mientras la chapa no
