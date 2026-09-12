@@ -3,6 +3,7 @@
 namespace Tests\Feature\Site;
 
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\ZoneCards;
 use App\Domain\Content\Models\VenueRule;
 use App\Domain\Identity\Services\WaiverSettings;
 use App\Domain\Platform\Models\Setting;
@@ -227,7 +228,7 @@ class RulesPageTest extends TestCase
          * ▶ Sobre la escala de 190, el umbral de 130 cae al **31,58 %**: «a partir de» ocupa de ahí
          * hacia ARRIBA (top 0) y «hasta» de ahí hacia ABAJO. La misma cifra, lo contrario.
          */
-        $corte = round((1 - 130 / \App\Domain\Booking\Services\ZoneCards::ESCALA_CM) * 100, 2);
+        $corte = round((1 - 130 / ZoneCards::ESCALA_CM) * 100, 2);
 
         $this->assertStringContainsString('style="top: 0%; height: '.$corte.'%;"', $html,
             'la zona con «a partir de» no ocupa la franja ALTA de la escala');
