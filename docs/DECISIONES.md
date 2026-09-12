@@ -29426,3 +29426,93 @@ Pint y docs-check ✓ · capturas de las dos caras y medición del estado en el 
 ❗ **Queda el OJO del owner en un teléfono**, y una consecuencia anotada: con las dos puertas cerradas
 la primera vista deja **mucho aire** debajo — que es lo que `cajon-en-movil.md` §7.4 ya tiene abierto
 para los pasos de fecha y hora (366 y 452 px vacíos). Ahora alcanza también al catálogo.
+## #534 · 2026-09-12 · `[DECIDIDO owner]` La página de GRUPOS, investigada y PAUSADA — el producto de excursiones existía en producción, y clasificar por zona revierte el modelo A
+
+**Contexto.** Tocaba `/servicios`, la siguiente de la Fase 3. El owner la pausa antes de escribir
+código: *«vamos a pausar la página de grupos/servicios, voy a iterar con Claude Design sobre la
+presentación y después iteramos aquí sobre la lógica»*. Queda **todo lo medido**, que es lo caro, y
+**cero código**.
+
+---
+
+**❗❗❗ 1 · EL PRODUCTO DE EXCURSIONES EXISTE, Y YO DIJE QUE NO.**
+
+Afirmé —revisando el catálogo— que no había nada que vender y que crearlo sería una tanda de dinero
+aparte. **Era falso, y el error fue de MÉTODO**: medí **en local**. El owner lo puso en duda
+(*«¿no tenemos el producto excursiones? Si lo tenemos, revísalo»*) y en **producción** está montado
+y bien montado:
+
+| | |
+|---|---|
+| **Zona propia** | `excursiones` — **08:00–15:00**, `ignores_venue_closure`, **1 grupo por franja**, 100 pax, oculta de la landing, **138 franjas** ya generadas |
+| **Dos packs** | «Excursión 2 h» (120 min) y «Excursión 3 h» (180 min), **30–100** personas, señal `fixed`, **justificante `required`** |
+| **12 tramos por cantidad** | cortes en **30 / 70 / 100**, en tarifa normal **y** especial |
+| **Estado** | **inactivos** (preparados, sin publicar) · **0 líneas de pedido**: nunca se ha vendido |
+
+▶ *Un catálogo medido en el entorno equivocado no es una medición del producto.* Y el dato estaba a
+una consulta de distancia: el acceso de solo lectura a producción existe y está documentado.
+
+⚠️ **CORRIGE AL ARTBOARD en un hecho**: su bloque dice que las excursiones se hacen «fuera del
+horario» porque *«el parque abre al público a las 16:30»*, o sea **después**. La zona real dice lo
+contrario: **por la mañana**, de 08:00 a 15:00, antes de abrir. Es la misma idea —el parque para
+ellos— con el reloj al revés.
+
+▶ **Traído a local** (zona, los dos packs, sus precios, sus 12 tramos), verificado pack a pack y
+**apagado igual que en producción**. ⚠️ Al volcarlo, dos columnas inventadas (`deposit_cents`,
+`deposit_percent`) reventaron el `insert`: las reales son `deposit_type`/`deposit_value`. El esquema
+de las dos bases es **idéntico** —38 columnas—; local va 3 migraciones por delante.
+
+---
+
+**❗❗❗ 2 · LO QUE EL OWNER ELIGIÓ REVIERTE UNA DECISIÓN DE ARQUITECTURA, Y HAY QUE SABERLO.**
+
+`[DECIDIDO owner]`: la lista de grupos sale **del catálogo, por ZONA** (una zona con packs es un
+grupo), para que **cumpleaños aparezca en la portada, en su página y en grupos** a la vez.
+
+⚠️⚠️ **Eso es el «modelo B» que este repo DESCARTÓ**, y está escrito en `sistemas/SERVICIOS-CMS.md`
+§2: la clasificación de superficie la manda **el vínculo** (`LandingService`) —pack con servicio → va
+a su página; pack sin servicio → es de cumpleaños— y la alternativa por zona quedó fuera con esta
+frase: *«la zona sigue siendo solo el contenedor de aforo»*. **Cambiarlo no es un ajuste de la
+página: es revertir el modelo A**, y toca la portada, `/cumpleanos` y `/servicios` más **cinco
+guardas** (`LandingServiceTest` afirma hoy, literalmente, que la superficie de cumpleaños son **2**
+packs).
+
+**❗❗ 3 · POR QUÉ EL MECANISMO DE HOY NO DA, y está REPRODUCIDO.** El vínculo es **uno a uno**
+(`ticket_type_id` es `unique`) y las excursiones son **dos** productos. Medido dentro de una
+transacción revertida: **activando los dos packs de excursión, la superficie de cumpleaños se lleva
+CUATRO packs** —los dos suyos y los dos de excursión—, o sea que se publicarían en la portada y en
+`/cumpleanos` como si fueran fiestas. Hoy no pasa **por casualidad**: los únicos packs que existían
+eran los de cumpleaños, y **la zona no se nombra en ningún sitio del código**.
+
+▶ **Y hay un criterio objetivo y sin nombres del cliente** para separarlas, medido: la zona de
+excursiones declara **un grupo por franja** e **ignora el cierre del recinto**; la de cumpleaños no
+declara ninguna de las dos. Si se hace el cambio, ése es el camino — no escribir `cumpleanos` ni
+`excursiones` en el producto.
+
+---
+
+**▶ 4 · LAS OTRAS TRES DECISIONES DEL OWNER**, tomadas con los hechos delante:
+
+- **Los precios que se publican son los del CATÁLOGO**, no la tabla tecleada del panel. ⚠️ Y **no
+  dicen lo mismo**: `landing_services.price_table` teclea cortes en **30/75/100** con Kids desde
+  **12,00 €**, y el producto real corta en **30/70/100** desde **15,00 €**. Publicar el dato bueno
+  **cambia los precios que se ven hoy**.
+- **«Empresas» y «Excursión para mayores» salen de la página** hasta que tengan producto: medido,
+  no existen en el catálogo **en ninguna zona**, así que hoy son texto editorial sin nada detrás.
+- **La página se llama «Grupos»** (titular del artboard: «Venir en grupo») **y conserva su
+  dirección** `/servicios`: cero enlaces rotos, incluida la respuesta de Dudas que ya apunta ahí.
+
+**▶ 5 · EL ARTBOARD, leído entero del canvas** (`Servicios PJP` 1a/1b; **no está en la copia
+local**): índice de grupos arriba —*«admite el tercer servicio sin tocar nada»*— y **detalle solo de
+los que no tienen página propia** (*«cumpleaños remata en su enlace»*); dentro de excursiones, el
+horario, la foto, un contador de niños con la **tabla de tramos que resalta el suyo**, qué incluye,
+la merienda, la **chapa de tinta de las firmas** —el justificante es obligatorio y *«el profesor no
+puede firmar por ellos»*— y el único relleno de acción de las cinco páginas.
+
+⚠️ **`/servicios` está en MANTENIMIENTO y responde 503 — también en producción.** `[DECIDIDO
+owner]`: se enciende **al terminar** la página, no antes.
+
+**❗ LO QUE SIGUE PENDIENTE DEL OWNER** (lo pregunta el propio artboard): **qué cursos pueden venir**
+—Kids es 4–7 y Jump desde 8, así que P3 y 4º de primaria no son el mismo producto y hoy los packs
+**no declaran edad**—, cuánto dura, mínimo y máximo publicables, el horario especial y el precio de
+la merienda.
