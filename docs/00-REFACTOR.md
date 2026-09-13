@@ -1941,10 +1941,10 @@ se lo lleva. Para una caché es un arranque en frío; para las sesiones, echar a
       (`#528`: una comparativa que solo compara lo que difiere, con el total del servidor para cada
       número de niños); el vídeo del hero es el nuevo (`#529`) y **la Fase 4 (el SPA) la lleva otro
       ordenador desde `#530`** (`docs/CARRIL-SPA.md`, material del cliente en la rama `cliente/playjump`).
-      ▶ **Estado de ese carril al 2026-09-12**: el ARMAZÓN del cajón completo y **las paradas 02, 03,
-      04 y 05 CERRADAS** (`#550`→`#565`) — el día, la hora y la cesta; el paso de identificarse; pagar
-      y los cuatro desenlaces del banco; y las nueve pantallas de la cuenta. **Queda la parada 06** (el
-      historial y las tres de invitado) y, con ella, las 25 pantallas dibujadas quedarían construidas.
+      ▶ **Estado de ese carril al 2026-09-13**: el ARMAZÓN del cajón completo y **las SEIS paradas
+      CERRADAS** (`#550`→`#566`), o sea **las 25 pantallas construidas**, más dos tandas de arreglos del
+      owner sobre lo construido (`#567`, `#568`). Queda el **cuaderno de entrega** del cajón y el ojo del
+      owner en un teléfono; el detalle, en el bloque «EL CAJÓN · FASE 4 DEL DISEÑO» de este fichero.
       Sigue `/precios`. ▶ Y la mitad de Google de la **06** cambia de fuente: la spec
       de **Business Profile** está aprobada (`#524`, `specs/google-business-profile.md`), **código no
       empezado** — la próxima sesión la abre el owner decidiendo sobre las reseñas.
@@ -4077,9 +4077,19 @@ todo lo de aquí sale de mirar lo que fallaba con ellos dentro. El detalle, deci
 - [ ] **El OJO del owner en un teléfono de verdad** — ninguna de las 25 pantallas se ha visto en uno,
       y ésta es la grieta que se juzga mirando. Capturas del antes y el después en
       `storage/app/audit/cajon-{antes,despues}/`
-- [ ] **T4·2 · la grieta 01**: el botón que avanza la compra se pinta con `var(--zone-1)`, el color de
-      una ZONA que llega desde los datos, así que cambia a mitad del embudo si alguien retiñe una zona.
-      Va al rol de acción (`#436`/`#209`)
+- [x] **T4·2 · la grieta 01** (`#551`): el cajón deja de pintar la ACCIÓN con el color de la marca —
+      `.btn--zone` retirada, «Pagar» único relleno de acción del embudo, censo de `--zone-*` 29 → 13
+- [x] **Las SEIS PARADAS del canvas, cerradas** (`#552`→`#566`): catálogo y puerta de categoría, pie y
+      banda de cinco fases, día/hora/cesta, identificarse, pagar y los cuatro desenlaces, las nueve
+      pantallas de la cuenta y la parada 06 (suelo táctil, antetítulos, documento legal) — **las 25
+      pantallas construidas**
+- [x] **Dos tandas de arreglos del owner sobre lo construido** (2026-09-12/13): `#567` (el mismo menor
+      en dos entradas, el desenlace sin el bloque de cuenta, «¿Quiénes vienen?» en una fila) y `#568`
+      (el cajón abre EN el producto desde la web, CTA en las tarjetas del catálogo, avatar del artboard
+      y fuera «Cerrar sesión» del bloque, iconos de Entradas y Grupos)
+- [ ] **El CUADERNO DE ENTREGA del cajón**, como el de la portada: lo único que `doc/spa.md` deja por
+      hacer. ⚠️ Y una pasada de iconos pendiente (`#568`): el set del canvas trae `ui/entrada` y
+      `ui/regalo` redibujados y los nuestros son la versión anterior
 - [ ] **El botón del SISTEMA** (16/800 con borde), aplazado a esta fase por `rediseno-desde-canvas.md`
       §5: **toca la familia `.btn` entera**, o sea las doce vistas de la web. Se acuerda con el carril
       de la web antes de tocarlo
