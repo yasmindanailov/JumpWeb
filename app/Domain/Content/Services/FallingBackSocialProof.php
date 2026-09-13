@@ -80,4 +80,17 @@ class FallingBackSocialProof implements SocialProof
 
         return $this->cms->testimonials();
     }
+
+    /**
+     * **Las reseñas de Google existen y solo falta el permiso** (`#592`).
+     *
+     * ⚠️ **No mira las opiniones propias, a propósito**: con ellas la sección enseña esas (el cruce de
+     * `#491`), y decidir qué va en el hueco de las tarjetas es de la vista, que ya tiene la colección.
+     * Mirarlas aquí costaría una segunda consulta por visita para una respuesta que ya está servida.
+     * ⚠️ El permiso se pregunta PRIMERO: con él dado no hace falta ni leer la caché.
+     */
+    public function reviewsAwaitConsent(): bool
+    {
+        return ! ($this->terceroPermitido)() && $this->google->testimonials()->isNotEmpty();
+    }
 }

@@ -564,6 +564,10 @@ return [
         // ⚠️ Nombra a Google DENTRO de la frase a propósito: la sección puede estar enseñando
         //    opiniones propias debajo, y una redacción impersonal las alcanzaría también.
         'google_policy' => 'Google no verifica las reseñas, pero retira el contenido falso cuando lo detecta.',
+        // `#592`: sin permiso de cookies y sin opiniones propias, este aviso va en el hueco de las
+        // tarjetas. El botón ABRE el panel de cookies: nombra lo que hace, no lo que se ve después.
+        'locked_text' => 'Las reseñas vienen de Google y, para leerlas aquí, necesitamos tu permiso para sus cookies.',
+        'locked_btn' => 'Elegir cookies',
     ],
 
     // ══ SECCIÓN 08 · «DUDAS» ═══════════════════════════════════════════════════════════════

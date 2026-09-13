@@ -961,7 +961,12 @@
          ❗❗❗ **CON CERO OPINIONES LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja—,
          que es la regla dura del sistema, y el propio artboard dibuja ese estado: «la sección no se
          pinta y la portada pasa de Antes de venir a Visítanos». --}}
-    @if ($socialProof->isNotEmpty())
+    {{-- ❗❗❗ **LA EXCEPCIÓN: RESEÑAS QUE SOLO ESPERAN EL PERMISO** (`[DECIDIDO owner, 2026-09-13]`,
+         `#592`). Sin cookies de Google y sin opiniones propias la sección se iba entera, y con ella la
+         nota, que no pide permiso: en producción era la primera visita de cualquiera. Ahora se pinta
+         con la nota y, en el hueco de las tarjetas, un aviso. Sin nada de nadie, sigue sin pintarse. --}}
+    @php($resenasPorPermiso = $socialProof->isEmpty() && $socialLocked)
+    @if ($socialProof->isNotEmpty() || $resenasPorPermiso)
         {{-- ❗❗❗ **DE DÓNDE VIENE CADA MITAD, RESUELTO UNA VEZ** (`#494`). La chapa y las opiniones
              **no vienen de la misma fuente** —la cifra se sirve sin consentimiento y las reseñas
              no—, así que el caso frecuente es el CRUCE: chapa de Google sobre opiniones propias.
@@ -979,7 +984,7 @@
                          justamente ése: chapa de Google encima de opiniones propias. Atada a la
                          chapa, la sección decía «no las elegimos nosotros» **sobre una opinión que
                          sí elegimos**. Lo vio la captura, no la suite. --}}
-                    <p class="sec-head__lede">{{ $socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE
+                    <p class="sec-head__lede">{{ ($socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE || $resenasPorPermiso)
                         ? __('landing.reviews.lede_google')
                         : __('landing.reviews.lede_own') }}</p>
                 </div>
@@ -1053,6 +1058,25 @@
                      ⚠️⚠️ **El «cómo» del movimiento NO se pasa aquí**: `scrollTo` sin `behavior` obedece
                      al `scroll-behavior` de la hoja, que es donde vive la excepción de movimiento
                      reducido. Escribirlo en la llamada gana a la hoja y se la salta. --}}
+                @if ($resenasPorPermiso)
+                {{-- ══ LAS RESEÑAS ESPERAN EL PERMISO (`#592`) ═════════════════════════════════════
+                     ⚠️ El botón ABRE EL PANEL y no concede nada por su cuenta (`[DECIDIDO owner]`): el
+                     permiso se da en el mismo sitio que los demás. Solo si esta instalación tiene el
+                     banner apagado —y entonces no hay panel— concede la categoría directamente, que es
+                     lo que ya hace el bloqueo previo del mapa.
+                     ⚠️ Al conceder el mapa y las reseñas la página se RECARGA: las tarjetas las pinta el
+                     servidor, y el evento llega solo cuando el servidor ya guardó la prueba.
+                     ⚠️ Tarjeta de APOYO, sin sombra (`#323`): no se elige ni se compra. --}}
+                <div class="rev" x-data
+                     x-on:cookies-updated.window="$event.detail && $event.detail.maps && window.location.reload()">
+                    <div class="rev__lock">
+                        <p class="rev__lock-text">{{ __('landing.reviews.locked_text') }}</p>
+                        <button type="button" class="btn btn--ghost" x-cloak
+                                @click="$store.cookies.enabled ? $store.cookies.openPanel() : $store.cookies.grant('maps')">{{ __('landing.reviews.locked_btn') }}</button>
+                        <noscript><p class="rev__lock-text">{{ __('cookies.frame.noscript') }}</p></noscript>
+                    </div>
+                </div>
+                @else
                 <div class="rev" x-data="{
                          i: 0, n: {{ $socialProof->count() }},
                          ir(k) {
@@ -1272,6 +1296,7 @@
                         </div>
                     @endif
                 </div>
+                @endif
 
                 {{-- ❗❗ **LA POLÍTICA DE RESEÑAS DE GOOGLE** (`[DECIDIDO owner, 2026-09-10]`, `#494`).
                      Su documentación lo pide —*«Inform end users of Google's review policy when

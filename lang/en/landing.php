@@ -330,6 +330,8 @@ return [
         //   but Google checks for and removes fake content when it's identified». En inglés se cita
         //   tal cual; en los otros idiomas se traduce esa misma frase.
         'google_policy' => 'Reviews aren\'t verified by Google, but Google checks for and removes fake content when it\'s identified.',
+        'locked_text' => 'The reviews come from Google, and to read them here we need your permission for its cookies.',
+        'locked_btn' => 'Choose cookies',
     ],
 
     // Sección 08 · «Dudas» (`#488`). El titular es una frase; «FAQ» pasa a ser el RÓTULO.

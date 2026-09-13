@@ -172,6 +172,12 @@ class HomeController extends Controller
              */
             'socialRating' => app(SocialProof::class)->rating(),
             /*
+             * **¿Hay reseñas que solo esperan el permiso del visitante?** (`#592`). Con ellas y sin
+             * ninguna opinión que enseñar, la sección no desaparece: queda la nota y, en lugar de las
+             * tarjetas, un aviso que abre el panel de cookies (`[DECIDIDO owner, 2026-09-13]`).
+             */
+            'socialLocked' => app(SocialProof::class)->reviewsAwaitConsent(),
+            /*
              * **¿Se ofrece el justificante de un menor invitado?** (`#485`, sección 05.)
              *
              * ⚠️⚠️ **Es DATO y no copia fija.** La línea «¿viene un niño que no es de tu familia?»

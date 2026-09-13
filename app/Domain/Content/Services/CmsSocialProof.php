@@ -34,6 +34,12 @@ class CmsSocialProof implements SocialProof
         return null;
     }
 
+    /** Siempre `false`: una opinión propia no pide permiso a nadie. */
+    public function reviewsAwaitConsent(): bool
+    {
+        return false;
+    }
+
     /** @return Collection<int, TestimonialData> */
     public function testimonials(): Collection
     {

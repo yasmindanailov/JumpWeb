@@ -3635,6 +3635,18 @@ img { display: block; max-width: 100%; }
   border-radius: var(--r-lg);
   padding: var(--sp-18);
 }
+/* ── RESEÑAS QUE ESPERAN EL PERMISO (`#592`) ───────────────────────────────────────────────────
+   Tarjeta de APOYO —sin sombra, `#323`— en el hueco de las opiniones, con el borde discontinuo del
+   bloqueo previo del mapa (`.consent-frame__ph`): «aquí hay contenido de un tercero que espera tu
+   permiso» se dice igual en toda la web. */
+.rev__lock {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12);
+  background: var(--bg-card);
+  border: 1px dashed var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-18);
+}
+.rev__lock-text { margin: 0; max-width: 52ch; color: var(--fg); font-size: var(--fs-16); line-height: 1.5; }
 /* ⚠️⚠️ **AQUÍ VIVÍA `.rev__card.is-on { visibility: visible }`, el interruptor de la pila, y se RETIRA
    CON SU SUJETO** (`#549`): sin tarjetas ocultas no hay nada que encender, y una regla que no cambia
    nada es la que el siguiente lee como si significara algo. La clase también sale del marcado — no se

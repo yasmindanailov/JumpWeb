@@ -31815,3 +31815,47 @@ instalación** (la alternativa, los tres idiomas cada 30 minutos, eran ~83 USD a
   re-apuntan tres que no se aplicaban: el `cacheKey($locale)` de este cambio y los dos de la PILA de
   opiniones, retirada en `#549`. ⚠️ El arnés ya lo decía («NO SE APLICÓ») y salía con código 1; nadie lo
   había vuelto a correr desde entonces.
+
+## #592 · 2026-09-13 · `[DECIDIDO owner]` Sin cookies de Google la sección de reseñas ya no desaparece, y el banner dice que el permiso del mapa es también el de las reseñas
+
+Desplegado `#591`, el owner seguía sin ver las reseñas. **Medido en producción** —Google ya respondía
+4,9 · 50 reseñas— la portada se servía con y sin permiso:
+- **con** la categoría «Mapa» aceptada: la sección con sus 5 reseñas, la nota y los logotipos;
+- **sin** ella: **la sección entera desaparecía, nota incluida**. Las reseñas piden permiso (la foto del
+  autor es una petición del visitante a Google, `RGPD-05`) y producción no tiene opiniones propias, así
+  que se cumplía la «sexta salida» de `#491` —sin permiso y sin propias, sección ausente—. Eso es la
+  primera visita de cualquiera, y escondía también la nota, que no pide permiso.
+- **Y el banner no lo decía**: «cookies de terceros para mostrar el mapa». El permiso que enseña las
+  reseñas se pedía sin nombrarlas.
+- En local no salen porque Google rechaza la IP de casa: la clave solo admite la del servidor.
+
+`[DECIDIDO owner]`, con las opciones renderizadas delante:
+- **Nota + aviso**: sin permiso y sin opiniones propias, la sección queda con la nota y, en el hueco de
+  las tarjetas, un aviso con un botón que ABRE el panel de cookies. Al conceder la categoría la página se
+  recarga, porque las tarjetas las pinta el servidor. Con opiniones propias se enseñan ellas, como antes;
+  sin nada de nadie la sección sigue sin pintarse.
+  - la señal vive en el CONTRATO (`SocialProof::reviewsAwaitConsent()`) y solo la cascada responde `true`;
+    las fuentes sueltas dicen `false`;
+  - con el banner apagado no hay panel, y el botón concede la categoría como el bloqueo previo del mapa.
+- **«Mapa y reseñas»**: banner, panel y política de cookies nombran las reseñas y la foto del autor, en
+  los tres idiomas. De paso, la política deja de decir que `/contacto` lleva mapa (no lo lleva desde `#535`).
+- **Se vuelve a pedir el permiso**: `CookieConsent::POLICY_VERSION` pasa a `2026-09-13`, porque cambia la
+  finalidad de la categoría (la regla del propio código y la guía de la AEPD). La clave `maps` no se
+  renombra. ⚠️ Coste asumido: todo visitante vuelve a ver el banner, y hasta que acepte no ve ni el mapa
+  ni las reseñas.
+- **`/cookies` vive en la BD**: la migración `2026_09_13_140000` sustituye solo los párrafos que siguen
+  siendo EXACTAMENTE los del producto, lleva el texto de antes y el de después escritos dentro y es
+  idempotente. ⚠️ Medido: en esta instalación el párrafo del mapa es el del producto (se actualiza), pero
+  el de **transferencias** está reescrito («Actualmente no incrustamos contenido de redes sociales…») y la
+  migración lo deja: es dato de la instalación y va por su script de contenido, no por el producto.
+- **Guardas**: `SocialProofNeverHitsTheRenderPathTest` —el caso «sin permiso y sin propias, la sección
+  desaparece» **cambió de premisa y se reescribió**, y entran el aviso que abre el panel y recarga, sin
+  aviso con opiniones propias ni con permiso, y que solo la cascada responde—; `CookiePolicyContentTest`
+  —la política nombra las reseñas y la migración solo toca lo intacto—.
+- **Arnés** `scripts/mutar-resenas.sh`: **36/36**. Entran seis casos y se re-apuntan tres que miraban
+  líneas que este cambio tocó. ⚠️ Uno de ellos mordía por un ERROR DE COMPILACIÓN y no por la regla:
+  metía un ternario sin paréntesis delante de otro, que PHP 8 rechaza. Hoy la mutación deja el código
+  válido.
+- **El texto de la instalación** (el párrafo de transferencias, reescrito) va por el script gitignorado
+  `aplicar-produccion-592.php`: cambia dos fragmentos por idioma, solo si siguen ahí, y es idempotente
+  (probado en local dos veces).

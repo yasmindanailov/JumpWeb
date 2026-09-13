@@ -29,8 +29,13 @@ class CookieConsent
      * Versión de la política de cookies (patrón `Consent::CURRENT_VERSION`). Subirla cuando cambie
      * materialmente el inventario, las finalidades o los terceros → el gate la verá «caducada» y
      * volverá a pedir el consentimiento (Guía AEPD: re-pedir si cambian finalidades/terceros).
+     *
+     * ▶ v1 `2026-06-08`. v2 `2026-09-13` (`#592`, `[DECIDIDO owner]`): la categoría `maps` pasa a
+     * cubrir también las RESEÑAS de Google y la foto de quien las escribe. Ya dependían de este
+     * permiso desde `#491` sin que el banner lo dijera, así que se vuelve a pedir con el texto nuevo.
+     * ⚠️ La CLAVE `maps` no se renombra: el texto cambia, el identificador guardado no.
      */
-    public const POLICY_VERSION = '2026-06-08';
+    public const POLICY_VERSION = '2026-09-13';
 
     /** Categorías NO necesarias gobernables (granularidad por finalidad). El resto son exentas. */
     public const OPTIONAL = ['maps', 'social'];

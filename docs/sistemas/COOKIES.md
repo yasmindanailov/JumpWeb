@@ -30,7 +30,7 @@ arquitectónica del universo cerrado de orígenes externos.
 | Sesión Laravel (nombre derivado de `APP_NAME`) | Propia | Técnica necesaria | **No** | Siempre |
 | `XSRF-TOKEN` | Propia | Seguridad (CSRF) | **No** | Siempre (formularios/Livewire) |
 | `remember_web_<hash>` | Propia | Funcional (login) | **No** | Solo si marca «recordarme» |
-| Google Maps (`NID`, `SOCS`…) | Tercero (google.com) | **Mapa** | **SÍ** | Solo si hay `address.maps_embed_url`; home `#info` + `/contacto` |
+| Google Maps (`NID`, `SOCS`…) y reseñas de Google (foto del autor en `lh3.googleusercontent.com`) | Tercero (google.com) | **Mapa y reseñas** (clave `maps`) | **SÍ** | Mapa: solo si hay `address.maps_embed_url`, home `#info` (`/contacto` ya no lleva mapa, `#535`). Reseñas: home `#reviews` (`#592`); la NOTA media no pide permiso, la trae el servidor |
 | Feed social (SnapWidget/LightWidget) | Tercero | **Social** | **SÍ** | Solo si hay `social.feed_embed_url`; home `#gallery` |
 | Cloudflare Turnstile (`__cf_bm`) | Tercero | Seguridad | **No** (exenta) | Si Turnstile está activo |
 | Redsys | Tercero (en SU dominio) | Técnica necesaria | **No** | Solo al pagar (redirección, no iframe) |
@@ -81,6 +81,9 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
   `00-REFACTOR.md` (renombrarla invalida consentimientos ya dados → re-pediría a todos).
 - **D5 — Versión de política como constante** (`CookieConsent::POLICY_VERSION`, patrón de
   `Consent::CURRENT_VERSION`): subirla fuerza re-consentir (el gate la ve caducada). v1 = `2026-06-08`.
+  v2 = `2026-09-13` (`#592`, `[DECIDIDO owner]`): la categoría `maps` pasa a cubrir también las
+  reseñas de Google y la foto de quien las escribe —dependían de ella desde `#491` sin que el banner lo
+  dijera—, así que se vuelve a pedir. La clave `maps` NO se renombra.
 - **D6 — Acreditación en tabla propia `cookie_consent_logs`** (NO reutiliza `consents`: su
   `user_id` es FK NOT NULL y no tiene `user_agent` → no cubre al visitante anónimo). Modelo
   `App\Domain\Identity\Models\CookieConsentLog` (nombre distinto del helper `App\Domain\Identity\Services\CookieConsent` para no
@@ -97,7 +100,7 @@ solo de cookies técnicas exentas). Test que lo protege: `CookieWallInvariantTes
 
 **Autoridad única — [`App\Domain\Identity\Services\CookieConsent`](../../app/Domain/Identity/Services/CookieConsent.php)**
 (helper estático, sin BD):
-- `COOKIE_NAME='cookie_consent'` · `POLICY_VERSION='2026-06-08'` · `OPTIONAL=['maps','social']`
+- `COOKIE_NAME='cookie_consent'` · `POLICY_VERSION='2026-09-13'` · `OPTIONAL=['maps','social']`
   · `LIFETIME_MINUTES` (24 meses).
 - `state(Request): array{maps:bool,social:bool,decided:bool}` — defensivo: base64/JSON inválido o
   versión distinta ⇒ todo `false`, `decided=false`. Nunca lanza (se invoca en cada render).

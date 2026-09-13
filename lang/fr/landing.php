@@ -334,6 +334,8 @@ return [
 
         // La frase es la de Google, traducida (ver la nota en `lang/en`).
         'google_policy' => 'Google ne vérifie pas les avis, mais supprime les faux contenus lorsqu\'il les détecte.',
+        'locked_text' => 'Les avis viennent de Google et, pour les lire ici, nous avons besoin de ton accord pour ses cookies.',
+        'locked_btn' => 'Choisir les cookies',
     ],
 
     // Sección 08 · «Dudas» (`#488`). El titular es una frase; «Questions» pasa a ser el RÓTULO.

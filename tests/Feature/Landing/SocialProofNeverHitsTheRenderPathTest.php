@@ -5,6 +5,7 @@ namespace Tests\Feature\Landing;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Content\Models\Testimonial;
+use App\Domain\Content\Services\CmsSocialProof;
 use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\SocialProofRefresh;
 use App\Domain\Identity\Services\CookieConsent;
@@ -473,17 +474,99 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
     }
 
     /**
-     * **Sin consentimiento Y sin opiniones propias → 200 y la sección AUSENTE**, sin hueco ni
-     * esqueleto. Es la sexta salida, la que se olvida.
+     * ❗❗❗ **SIN CONSENTIMIENTO NI OPINIONES PROPIAS YA NO DESAPARECE: QUEDA LA NOTA Y UN AVISO**
+     * (`[DECIDIDO owner, 2026-09-13]`, `#592`).
+     *
+     * ⚠️⚠️ **Este caso CAMBIÓ DE PREMISA y se reescribió** (el precedente de `#324`): afirmaba «200 y la
+     * sección AUSENTE». En producción eso era la primera visita de cualquiera —el parque no tiene
+     * opiniones propias—, así que la portada escondía también la nota de Google, que no pide permiso.
+     * ▶ Lo que NO cambia: sin permiso no sale ni una tarjeta de Google ni una foto de sus servidores
+     * (`RGPD-05`).
      */
-    public function test_sin_consentimiento_y_sin_opiniones_propias_la_seccion_desaparece(): void
+    public function test_sin_consentimiento_ni_opiniones_propias_queda_la_nota_y_el_aviso(): void
     {
         Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
         app(GoogleSocialProof::class)->refresh();
 
-        $html = (string) $this->get('/')->assertOk()->getContent();
+        $seccion = $this->seccionDeResenas((string) $this->get('/')->assertOk()->getContent());
 
-        $this->assertStringNotContainsString('rev__card', $html, 'queda un hueco donde no hay nada que enseñar');
+        $this->assertNotSame('', $seccion, 'la sección vuelve a desaparecer entera por un permiso');
+        $this->assertStringContainsString('rev-score__val', $seccion, 'la nota de Google, que no pide permiso, no sale');
+        $this->assertStringContainsString('class="rev__lock"', $seccion, 'no se avisa de que las reseñas esperan el permiso');
+        $this->assertStringContainsString(__('landing.reviews.locked_text'), $seccion);
+        $this->assertStringContainsString(__('landing.reviews.lede_google'), $seccion,
+            'la entradilla habla de opiniones propias sobre unas reseñas que son de Google');
+        $this->assertStringNotContainsString('rev__card', $seccion, 'sale una tarjeta de Google sin permiso');
+        $this->assertStringNotContainsString('googleusercontent.com', $seccion, 'se pide una foto a Google sin permiso (RGPD-05)');
+    }
+
+    /**
+     * **El aviso abre el panel de cookies y, al conceder, recarga**: las tarjetas las pinta el servidor,
+     * así que sin recargar el permiso recién dado no enseñaría nada.
+     */
+    public function test_el_aviso_abre_el_panel_y_recarga_al_conceder(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+        app(GoogleSocialProof::class)->refresh();
+
+        $seccion = $this->seccionDeResenas((string) $this->get('/')->assertOk()->getContent());
+
+        $this->assertStringContainsString('$store.cookies.openPanel()', $seccion, 'el aviso no abre el panel de cookies');
+        $this->assertMatchesRegularExpression('/x-on:cookies-updated\.window="[^"]*detail\.maps[^"]*reload\(\)"/', $seccion,
+            'al conceder el mapa y las reseñas la página no se recarga: el aviso se queda donde deberían salir');
+    }
+
+    /** **Con opiniones propias no hay aviso**: se enseñan ellas, como siempre (el cruce de `#491`). */
+    public function test_con_opiniones_propias_no_sale_el_aviso(): void
+    {
+        $this->conOpinionPropia();
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+        app(GoogleSocialProof::class)->refresh();
+
+        $seccion = $this->seccionDeResenas((string) $this->get('/')->assertOk()->getContent());
+
+        $this->assertStringContainsString('Nuestra propia opinión', $seccion, 'el caso se quedó sin opiniones propias: no mediría el cruce');
+        $this->assertStringNotContainsString('rev__lock', $seccion, 'el aviso tapa las opiniones propias que sí se pueden enseñar');
+    }
+
+    /** **Con el permiso dado no hay aviso**: salen las reseñas de Google. */
+    public function test_con_consentimiento_no_sale_el_aviso(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+        app(GoogleSocialProof::class)->refresh();
+
+        $this->withUnencryptedCookie(CookieConsent::COOKIE_NAME, CookieConsent::encode(['maps' => true, 'social' => false]));
+        $seccion = $this->seccionDeResenas((string) $this->get('/')->assertOk()->getContent());
+
+        $this->assertStringContainsString('rev__card', $seccion, 'con permiso no salen las reseñas de Google');
+        $this->assertStringNotContainsString('rev__lock', $seccion, 'con el permiso dado sigue pidiéndolo');
+    }
+
+    /**
+     * **Solo la cascada sabe que las reseñas esperan el permiso**: lo dice con reseñas de Google y sin
+     * permiso, y en ningún otro caso; las fuentes sueltas no lo dicen nunca.
+     */
+    public function test_solo_la_cascada_dice_que_las_resenas_esperan_el_permiso(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+        app(GoogleSocialProof::class)->refresh();
+
+        $this->assertTrue(app(SocialProof::class)->reviewsAwaitConsent(), 'con reseñas de Google y sin permiso no lo dice');
+        $this->assertFalse(app(GoogleSocialProof::class)->reviewsAwaitConsent());
+        $this->assertFalse(app(CmsSocialProof::class)->reviewsAwaitConsent());
+
+        request()->cookies->set(CookieConsent::COOKIE_NAME, CookieConsent::encode(['maps' => true, 'social' => false]));
+        $this->assertFalse(app(SocialProof::class)->reviewsAwaitConsent(), 'con el permiso dado sigue diciendo que lo espera');
+
+        request()->cookies->remove(CookieConsent::COOKIE_NAME);
+        Cache::forget(GoogleSocialProof::cacheKey());
+        $this->assertFalse(app(SocialProof::class)->reviewsAwaitConsent(), 'sin reseñas de Google anuncia unas que no hay');
+    }
+
+    /** El HTML de la sección 06, o `''` si no se pinta. */
+    private function seccionDeResenas(string $html): string
+    {
+        return preg_match('#<section id="reviews".*?</section>#s', $html, $m) === 1 ? $m[0] : '';
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

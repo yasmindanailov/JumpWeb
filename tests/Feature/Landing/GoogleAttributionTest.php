@@ -711,6 +711,11 @@ class GoogleAttributionTest extends TestCase
             {
                 return $this->lista;
             }
+
+            public function reviewsAwaitConsent(): bool
+            {
+                return false;
+            }
         });
     }
 

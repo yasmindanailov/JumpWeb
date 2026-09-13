@@ -443,6 +443,9 @@ Sin esto no puede llegar a ✅ (`/dod` §3.bis).
    clave inválida (403). **En las cinco: 200, y se sirven las del CMS.**
    ⚠️ **Y la sexta, que es la que se olvida**: sin consentimiento **Y** sin testimonios en el CMS →
    200 y **sección ausente**, sin hueco ni esqueleto.
+   ⚠️ **CORREGIDO por `#592`** (`[DECIDIDO owner, 2026-09-13]`): si lo único que falta es el PERMISO —hay
+   reseñas de Google en caché—, la sección ya no desaparece. Queda la nota, que no pide permiso, y en el
+   hueco de las tarjetas un aviso que abre el panel de cookies. Sin nada de nadie sigue sin pintarse.
    ⚠️ No vale probar el camino feliz y un error: las salidas tienen tratamiento distinto, y la de
    consentimiento es la que ocurre a diario.
 3.bis **La atribución NO viaja cuando la fuente es el CMS** (futuro): un testimonio propio no puede

@@ -110,7 +110,7 @@ RC=routes/console.php
 echo '── El panel vacío ──'
 
 mutar "la sección se pinta sin ninguna opinión" "$HB" \
-  '    @if ($socialProof->isNotEmpty())' \
+  '    @if ($socialProof->isNotEmpty() || $resenasPorPermiso)' \
   '    @if (true)'
 
 echo
@@ -136,15 +136,18 @@ mutar "una opinión propia sale con enlace a Google" "$CS" \
   '                url: "https://maps.google.com/?cid=1",'
 
 # ⚠️ La entradilla dejó de ser un literal al entrar la cifra: es un ternario. Se fuerza la rama.
+# ⚠️ `#592` metió la condición entre paréntesis (`… || $resenasPorPermiso`). La mutación de antes ponía un
+# ternario delante SIN paréntesis, que en PHP 8 es un error de compilación: mordía por el FATAL y no por
+# la regla. Ésta deja el código válido y la condición siempre cierta.
 mutar "la entradilla pasa a ser la de Google" "$HB" \
-  '<p class="sec-head__lede">{{ $socialProof->first()?->source' \
-  '<p class="sec-head__lede">{{ true ? true : $socialProof->first()?->source'
+  '<p class="sec-head__lede">{{ ($socialProof->first()?->source' \
+  '<p class="sec-head__lede">{{ (true || $socialProof->first()?->source'
 
 # El defecto REAL que encontró la captura: la entradilla atada a la CHAPA y no a las opiniones, con
 # lo que la sección dice «no las elegimos nosotros» sobre una opinión propia.
 mutar "la entradilla se ata a la chapa y no a las opiniones" "$HB" \
-  '{{ $socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE' \
-  '{{ $socialRating'
+  '{{ ($socialProof->first()?->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE' \
+  '{{ ($socialRating'
 
 echo
 echo '── El suelo sin JavaScript ──'
@@ -278,6 +281,33 @@ mutar "el comando vuelve a llamar una vez por idioma" "$CM" \
   '        $r = $google->refresh();' \
   '        $google->refresh(); $google->refresh();
         $r = $google->refresh();'
+
+echo
+echo '── Google: las reseñas que esperan el permiso (#592) ──'
+
+mutar "la sección vuelve a desaparecer entera por un permiso" "$HB" \
+  '    @if ($socialProof->isNotEmpty() || $resenasPorPermiso)' \
+  '    @if ($socialProof->isNotEmpty())'
+
+mutar "la cascada no avisa de que las reseñas esperan el permiso" "$FB" \
+  '        return ! ($this->terceroPermitido)() && $this->google->testimonials()->isNotEmpty();' \
+  '        return false;'
+
+mutar "avisa también con el permiso dado" "$FB" \
+  '        return ! ($this->terceroPermitido)() && $this->google->testimonials()->isNotEmpty();' \
+  '        return $this->google->testimonials()->isNotEmpty();'
+
+mutar "el aviso tapa las opiniones propias" "$HB" \
+  '    @php($resenasPorPermiso = $socialProof->isEmpty() && $socialLocked)' \
+  '    @php($resenasPorPermiso = $socialLocked)'
+
+mutar "al conceder el permiso la página no se recarga" "$HB" \
+  '                     x-on:cookies-updated.window="$event.detail && $event.detail.maps && window.location.reload()">' \
+  '                     >'
+
+mutar "la entradilla habla de opiniones propias sobre reseñas de Google" "$HB" \
+  ' || $resenasPorPermiso)' \
+  ')'
 
 echo
 echo '── Google: la cascada ──'

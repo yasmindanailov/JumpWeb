@@ -3,6 +3,7 @@
 namespace Tests\Feature\Cookies;
 
 use App\Domain\Content\Models\Page;
+use App\Domain\Content\Services\CookiePolicyContent;
 use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -95,5 +96,59 @@ class CookiePolicyContentTest extends TestCase
         $migration->up();
         $page->refresh();
         $this->assertSame('Texto propio de la clienta.', $page->body['es'][0]['p']);
+    }
+
+    /**
+     * `#592` — **La política dice para qué es el permiso**: la categoría del mapa enseña también las
+     * reseñas de Google y la foto de quien las escribe.
+     */
+    public function test_policy_names_google_reviews_in_the_map_category(): void
+    {
+        $this->seed(LandingContentSeeder::class);
+
+        $this->withSession(['locale' => 'es'])->get('/cookies')->assertOk()->assertSee('Mapa y reseñas (Google)');
+        $this->withSession(['locale' => 'en'])->get('/cookies')->assertOk()->assertSee('Map and reviews (Google)');
+        $this->withSession(['locale' => 'fr'])->get('/cookies')->assertOk()->assertSee('Carte et avis (Google)');
+    }
+
+    /**
+     * `#592` — **La migración nombra las reseñas en una BD ya sembrada, solo donde el texto sigue
+     * siendo el del producto**, deja lo que la clienta reescribió, es idempotente y deja EXACTAMENTE
+     * lo que sembraría una instalación nueva.
+     */
+    public function test_reviews_migration_rewrites_only_untouched_paragraphs(): void
+    {
+        $nuevo = collect(CookiePolicyContent::body()['es']);
+        $mapaNuevo = $nuevo->firstWhere('h', 'Mapa y reseñas (Google)');
+        $transferenciasNuevo = $nuevo->firstWhere('h', 'Transferencias internacionales de datos');
+        $this->assertNotNull($mapaNuevo, 'la política ya no tiene la sección del mapa y las reseñas: el caso miraría el vacío');
+
+        $mapaViejo = ['h' => 'Mapa de ubicación (Google Maps)', 'p' => 'En la página de inicio y en la de contacto mostramos un mapa de Google Maps, pero solo se carga si das tu consentimiento a la categoría «mapa». Al cargarlo, Google LLC puede instalar cookies propias en tu navegador con finalidades de funcionamiento, seguridad y, en su caso, medición. Mientras no lo autorices, verás un aviso en lugar del mapa y no se instala ninguna cookie de Google.'];
+        $transferenciasViejo = ['h' => $transferenciasNuevo['h'], 'p' => str_replace(
+            ['Si activas el mapa y las reseñas o el contenido', 'Google LLC (mapa y reseñas)'],
+            ['Si activas el mapa o el contenido', 'Google LLC (mapa)'],
+            $transferenciasNuevo['p'],
+        )];
+        $deLaClienta = ['h' => 'Carte (Google Maps)', 'p' => 'Texte réécrit par la cliente.'];
+
+        $page = Page::create([
+            'slug' => 'cookies',
+            'title' => CookiePolicyContent::title(),
+            'body' => ['es' => [$mapaViejo, $transferenciasViejo], 'fr' => [$deLaClienta]],
+            'is_active' => true,
+        ]);
+
+        $migration = require database_path('migrations/2026_09_13_140000_cookie_policy_names_google_reviews.php');
+        $migration->up();
+        $page->refresh();
+
+        $this->assertSame($mapaNuevo, $page->body['es'][0], 'el párrafo del mapa no queda como lo siembra una instalación nueva');
+        $this->assertSame($transferenciasNuevo, $page->body['es'][1], 'el párrafo de transferencias no nombra las reseñas');
+        $this->assertSame($deLaClienta, $page->body['fr'][0], 'la migración reescribe un texto que editó la clienta');
+
+        $tras = $page->body;
+        $migration->up();
+        $page->refresh();
+        $this->assertSame($tras, $page->body, 'la migración no es idempotente');
     }
 }

@@ -209,6 +209,15 @@ class GoogleSocialProof implements SocialProof
         return ($texto !== '' && $idioma !== '') ? new OriginalText($texto, $idioma) : null;
     }
 
+    /**
+     * Siempre `false`: esta fuente no sabe nada del permiso del visitante. Lo sabe la cascada
+     * ({@see FallingBackSocialProof}), que es donde se decide qué se enseña sin él.
+     */
+    public function reviewsAwaitConsent(): bool
+    {
+        return false;
+    }
+
     /** ¿Está configurada esta instalación? Sin las dos cosas, no hay nada que traer. */
     public function configured(): bool
     {

@@ -43,8 +43,23 @@ interface SocialProof
      *
      * Vacía es una respuesta válida: con ella la sección **no se pinta** —ni rótulo, ni titular, ni
      * caja vacía—, que es la regla dura del sistema para una sección cuyo contenido pone el panel.
+     * ⚠️ Salvo una excepción, la de {@see reviewsAwaitConsent()}: hay opiniones, y solo falta el
+     * permiso del visitante para enseñarlas.
      *
      * @return Collection<int, Testimonial>
      */
     public function testimonials(): Collection;
+
+    /**
+     * **¿Hay opiniones de un tercero que solo esperan el permiso del visitante?**
+     * (`[DECIDIDO owner, 2026-09-13]`, `#592`).
+     *
+     * ❗❗ **Existe para que la sección no desaparezca entera por un permiso.** Sin cookies de terceros
+     * las reseñas de Google no se sirven (su foto es una petición del visitante a Google, `RGPD-05`),
+     * y sin opiniones propias detrás la sección se iba **con la nota incluida**, aunque la nota no
+     * pide permiso. En producción eso era la primera visita de cualquiera.
+     * ⚠️ **Solo lo sabe quien conoce el permiso**: una fuente sola (el panel, Google) responde
+     * `false`, y la cascada lo resuelve en un único sitio.
+     */
+    public function reviewsAwaitConsent(): bool;
 }
