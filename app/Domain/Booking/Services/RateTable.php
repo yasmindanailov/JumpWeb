@@ -21,12 +21,9 @@ use Illuminate\Support\Collection;
  * especial. Lo que cambia es la FORMA —allí tarjetas en un carril, aquí filas— y lo que la tabla
  * necesita de más: el precio de CADA tarifa por separado.
  *
- * ❗❗❗ **LA HORA EXTRA ES UNA FILA DE LA TABLA, y lo decidió el owner** (`#531`) con los datos
- * delante: el artboard dibuja una sola a 3 € «en las entradas de 2 horas» y este catálogo tiene DOS
- * productos distintos —uno por zona— que además **solo tienen precio en la tarifa especial**. En su
- * fila, la columna normal dice «—», que es exactamente lo que pasa: ese día no se vende.
- * ⚠️ **Se reconoce por el MECANISMO** (`occupiesAfterParent()`), nunca por el nombre: es el mismo
- * criterio con el que `/cumpleanos` distingue la suya (`extends_parent_stay`, `#528`).
+ * ⚠️⚠️ **SOLO ENTRADAS.** La hora extra fue una fila de esta tabla (`#531`) y se retiró con el resto
+ * de complementos de la web (`[DECIDIDO owner, 2026-09-13]`, `#583`): *«solo los dejamos en el SPA al
+ * reservar»*. No la reintroduzcas aquí sin reabrir esa decisión.
  *
  * ⚠️ **No calcula ni un precio**: pregunta a `displayPriceCentsForRate()`, que es la resolución de
  * precio de presentación que ya usa el resto de la landing. *El precio se resuelve en un sitio.*
@@ -160,10 +157,9 @@ final class RateTable
                 // La edad la manda la BD, como en la sección 01 (`#478`): aquí se dice una vez por
                 // zona y no una vez por entrada.
                 'age' => $zone->tr('age_range') ?: null,
-                'rows' => array_merge(
-                    $entradas->map(fn (TicketType $t, int $i): array => $this->entryRow($t, $zone, $i === $lidera))->all(),
-                    $this->extraRows($entradas, $zone),
-                ),
+                // ⚠️ Solo ENTRADAS: la fila de la hora extra se retiró con el resto de complementos de
+                // la web (`[DECIDIDO owner, 2026-09-13]`, `#583`), que solo se ofrecen al reservar.
+                'rows' => $entradas->map(fn (TicketType $t, int $i): array => $this->entryRow($t, $zone, $i === $lidera))->all(),
             ];
         })->filter()->values()->all();
     }
@@ -182,17 +178,14 @@ final class RateTable
 
         return [
             'name' => $nombre,
+            // El matiz es solo del NOMBRE (`#585`): el `badge` ya tiene su chip en toda fila.
+            'nuance' => $matiz,
             /*
-             * **El `badge` de una entrada que NO lidera baja al matiz** y no se pierde (`#480`): el
-             * panel lo ha escrito y tiene que salir en alguna parte. Si el nombre ya trae matiz
-             * propio, manda el del nombre — es parte de cómo se llama el producto.
+             * **La etiqueta destacada sale en TODA fila que la tenga** (`#585`, `[DECIDIDO owner,
+             * 2026-09-13]`), lidere o no: revierte `#480`, donde era el chip de la que lidera. Sin
+             * `badge` no hay chip. La misma regla que el carril de la portada (`RateCards`).
              */
-            'nuance' => $matiz ?? ($lidera ? null : $badge),
-            /*
-             * **El chip es el MARCADOR de la que lidera** y su texto lo escribe el panel: la señal
-             * es del diseño y la palabra del dueño. Una destacada sin `badge` no pinta chip.
-             */
-            'badge' => $lidera ? $badge : null,
+            'badge' => $badge,
             /*
              * ⚠️ La NOTA solo existe para decir la excepción: esta entrada **no se vende** los días
              * de la tarifa especial. Cuando sí se vende, las dos columnas ya lo cuentan y una frase
@@ -204,71 +197,6 @@ final class RateTable
             'normal' => $this->writeCents($this->normalPriceCents($ticket)),
             'special' => $this->writeCents($especial),
         ];
-    }
-
-    /**
-     * **LAS FILAS DE TIEMPO EXTRA**: los complementos que ocupan la franja siguiente («Hora extra»).
-     *
-     * ▶ Van en la tabla y no en el bloque de complementos `[DECIDIDO owner, 2026-09-11]`: son dos
-     * productos con dos precios y **solo se venden en tarifa especial**, así que en una ficha de
-     * escaparate habría que escribir esa excepción a mano, mientras que en la tabla la dice la
-     * columna con un «—».
-     *
-     * ⚠️ **Se deduplican por ID**, nunca por nombre: en otra instalación dos complementos distintos
-     * pueden llamarse igual y fundirlos publicaría el precio de uno bajo el nombre del otro.
-     * ⚠️ **Solo los que se venden AL RESERVAR** (`addonsSoldAtBooking()`): uno de fase `postform` no
-     * se puede comprar aquí, y anunciarlo en la tabla de precios sería ofrecer lo que el embudo
-     * rechaza.
-     *
-     * @param  Collection<int, TicketType>  $entradas
-     * @return list<array<string, mixed>>
-     */
-    private function extraRows(Collection $entradas, Zone $zone): array
-    {
-        /** @var array<int, array<string, mixed>> $filas */
-        $filas = [];
-        /** @var array<int, list<string>> $padres */
-        $padres = [];
-
-        foreach ($entradas as $entrada) {
-            [$nombrePadre] = $this->nameAndNuance((string) $entrada->tr('name'), (string) $zone->tr('name'));
-
-            foreach ($entrada->addonsSoldAtBooking() as $addon) {
-                if (! $addon->occupiesAfterParent()) {
-                    continue;
-                }
-
-                [$nombre, $matiz] = $this->nameAndNuance((string) $addon->tr('name'), (string) $zone->tr('name'));
-
-                // ⚠️ Aquí el nombre del catálogo lleva la zona como SUFIJO —«Hora extra · KIDS»—, así
-                // que el matiz sale siendo la zona: dentro de su propia tabla, decirlo sería repetir
-                // la cabecera en cada fila.
-                if ($matiz !== null && mb_strtolower($matiz) === mb_strtolower((string) $zone->tr('name'))) {
-                    $matiz = null;
-                }
-
-                $filas[$addon->id] ??= [
-                    'name' => $nombre,
-                    'nuance' => $matiz,
-                    'badge' => null,
-                    'note' => null,
-                    'normal' => $this->writeCents($this->normalPriceCents($addon)),
-                    'special' => $this->writeCents($this->specialPriceCents($addon)),
-                ];
-
-                $padres[$addon->id][] = $nombrePadre;
-            }
-        }
-
-        foreach ($filas as $id => $fila) {
-            // **Con qué entradas se puede comprar**, escrito desde el PIVOTE: es la diferencia entre
-            // «se añade a lo que quieras» y «solo con la de 2 horas», y el catálogo ya lo sabe.
-            $filas[$id]['note'] = __('landing.pricing.with_entry', [
-                'entries' => implode(', ', array_unique($padres[$id])),
-            ]);
-        }
-
-        return array_values($filas);
     }
 
     /**

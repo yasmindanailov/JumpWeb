@@ -53,6 +53,9 @@ class FacadeCssHasNoOrphansTest extends TestCase
         'brand-strip',  // C2 · la tira, continua y en cuñas
         'brand-dots',   // C2 · la tira punteada
         'ilu',          // el hueco de ilustración por instalación
+        'fac',          // la capa del mural y sus colocaciones (`#580`)
+        'arc',          // F3 · el arco de rebote
+        'trio',         // G4 · el trío de niños y su soporte
     ];
 
     /**

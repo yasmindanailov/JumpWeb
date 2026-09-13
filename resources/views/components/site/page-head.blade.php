@@ -16,12 +16,14 @@
      debajo del titular, y es lo que tienen hoy las páginas legales.
 
      ❗❗ **LA DECORACIÓN VA EN SU RANURA (`deco`) Y VIVE DENTRO DEL CONJUNTO rótulo + titular**
-     (`.page__lockup`), que la recorta — la ENTRADILLA queda fuera. Las dos piezas que la llevan
-     (la trama de `/normas`, el abanico de `/precios`) tienen la misma regla escrita, «detrás del
-     titular y NUNCA detrás de un párrafo», y las dos la incumplían en cuanto la cabecera tuvo
-     entradilla: medido en `#525`, en móvil el abanico ya caía sobre la de `/precios` ANTES de esta
-     tanda, y la trama cayó sobre la nueva de `/normas`. *Colocarla contra la cabecera entera la
-     dejaba a merced de lo largo que fuera el texto; contra el conjunto, no puede alcanzarlo.*
+     (`.page__lockup`), que la recorta — la ENTRADILLA queda fuera. La trama de `/normas` tiene la
+     regla escrita «detrás del titular y NUNCA detrás de un párrafo», y la incumplía en cuanto la
+     cabecera tuvo entradilla (medido en `#525`). *Colocarla contra la cabecera entera la dejaba a
+     merced de lo largo que fuera el texto; contra el conjunto, no puede alcanzarlo.*
+     ⚠️⚠️ **Y por eso SOLO vale para lo que cabe en el alto del conjunto** (unos 80 px en escritorio).
+     El abanico de `/precios` vivía aquí y salía como una banda con los dos cantos rectos: se mudó
+     detrás de la figura de la fachada (`#580`). Una pieza más alta que el titular no va en esta
+     ranura.
 
      El `$slot` normal va al FINAL y es para una línea de dato de una pantalla de servicio. --}}
 @props([

@@ -34,33 +34,29 @@
                  página dice cómo reservar igualmente. --}}
             <a href="{{ route('contacto') }}" class="btn">{{ __('landing.events.coming_soon_cta') }}</a>
         @else
-            {{-- ══ LA FOTO DE LA ZONA Y EL RELOJ, EN LA MISMA FILA ═════════════════════════════════
-                 El artboard reparte aquí **736 + 352** (`Cumpleanos Pagina PJP` 1b): la foto es *«la
-                 prueba del acceso exclusivo —la promesa que más cuesta creer—»* y el reloj va a su
-                 derecha. Hasta `#532` la página no tenía foto y el reloj ocupaba la fila entera.
+            {{-- ══ LA FOTO DE LA ZONA ══════════════════════════════════════════════════════════════
+                 La foto es *«la prueba del acceso exclusivo —la promesa que más cuesta creer—»*
+                 (`Cumpleanos Pagina PJP` 1b). ⚠️ Hasta `#583` compartía fila con el reloj «Las 2 h, a
+                 vuestro ritmo»; el reloj se retiró con el de la portada y la duración va ahora en lo
+                 que incluye cada pack, en la comparativa.
 
-                 ⚠️ **La foto es DATO** (`zones.image`, el campo del panel): si la zona no tiene, no
-                 se pinta nada y el reloj recupera la fila — **no se reserva un hueco gris**, que es
-                 la regla que el canvas escribió para la tarjeta del bar y que `/atracciones` ya
-                 aplica en sus fichas.
+                 ⚠️ **La foto es DATO** (`zones.image`, el campo del panel): si la zona no tiene, **no
+                 se pinta ni la fila** — ni un hueco gris, que es la regla que el canvas escribió para
+                 la tarjeta del bar y que `/atracciones` ya aplica en sus fichas.
                  ⚠️⚠️ **El `alt` es el nombre de la ZONA y sale del panel**, como en `/atracciones`
                  con el nombre de la atracción: describir la foto con una frase escrita aquí sería
                  afirmar lo que enseña una imagen que cambia con cada instalación. --}}
-            <div class="party-hero">
-                @if ($zone?->image)
+            {{-- EL TRÍO (`G4`, `#580`): en ancho al lado del titular; en estrecho, sentado sobre esta
+                 fila — por eso va JUSTO encima de ella y no al principio de la página. --}}
+            <x-site.trio clase="trio--page" />
+            @if ($zone?->image)
+                <div class="party-hero">
                     <figure class="party-photo">
                         <img src="{{ asset($zone->image) }}" alt="{{ $zone->tr('name') }}"
                              loading="lazy" decoding="async">
                     </figure>
-                @endif
-
-                {{-- EL RELOJ DE LAS DOS HORAS, el MISMO componente que la portada. ⚠️ Solo si todos
-                     los packs duran lo mismo: si no, su titular hablaría de uno como si fuera de
-                     todos, y la duración baja a una fila de la comparativa. --}}
-                @if ($compare['duration'])
-                    <x-site.party-clock :duration="$compare['duration']" :level="2" />
-                @endif
-            </div>
+                </div>
+            @endif
 
             {{-- ══ LOS PACKS, COMPARADOS ══════════════════════════════════════════════════════════
                  ❗❗ **Solo compara lo que DIFIERE**: lo común baja a «Igual en los dos».
@@ -97,7 +93,7 @@
                                 <tr>
                                     <td class="party-compare__corner"></td>
                                     @foreach ($compare['columns'] as $column)
-                                        <th scope="col" class="party-compare__pack">{{ $column['name'] }}</th>
+                                        <th scope="col" class="party-compare__pack">{{ $column['name'] }}@if ($column['badge'])<span class="party-compare__badge">{{ $column['badge'] }}</span>@endif</th>
                                     @endforeach
                                 </tr>
                             </thead>
@@ -187,11 +183,9 @@
             {{-- ══ TU FIESTA, TU MANERA · el carril compartido con la portada y las tarifas ══════════
                  Lo que se añade AL RESERVAR, sin el menú (que ya tiene su bloque). `#483`: *«el mismo
                  formato y diseño que los complementos de las entradas»*. --}}
-            <div class="party-page__block">
-                <x-site.addons-rail :products="$packages" :without-choices="true" :level="2"
-                                    :title="__('landing.events.addons_title')"
-                                    :lede="__('landing.events.addons_intro')" />
-            </div>
+            {{-- ⚠️ Aquí vivía el carril de complementos «Tu fiesta, tu manera», y se retiró (`[DECIDIDO
+                 owner, 2026-09-13]`, `#583`): los complementos solo se ofrecen en el cajón, al reservar.
+                 El menú de arriba NO es un complemento —es una elección dentro del pack— y se queda. --}}
 
             {{-- ══ IGUAL EN LOS DOS ══════════════════════════════════════════════════════════════
                  La otra mitad de la regla de la comparativa: lo que coincide en todos los packs, dicho

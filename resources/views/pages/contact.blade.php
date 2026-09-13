@@ -24,6 +24,7 @@
          de al lado del botón dice **por dónde**. El artboard pide que el plazo se repita junto al
          botón «que es donde se decide enviar»; repetir la misma frase habría sido ruido. --}}
     <main id="main" class="page page--contact wrap">
+        <x-site.facade en="page-contacto" />
         {{-- La entradilla promete el plazo SOLO si hay horario publicado: `$heroStatus` es `null`
              cuando no hay ninguna apertura configurada (`HeroStatus::current()`), y prometer «te
              contestamos en nuestro horario» sin horario sería una promesa que el producto no puede
@@ -152,6 +153,8 @@
                      además PINTA, y en un contenedor sin radio dejaría un rectángulo detrás. --}}
                 @if ($answers)
                     <aside class="answers" data-surface="ink" aria-labelledby="answers-title">
+                        {{-- A1 · la trama de puntos (`#580`). --}}
+                        <div class="grain" aria-hidden="true"></div>
                         <h2 class="answers__title" id="answers-title">{{ __('site.contact_answers_title') }}</h2>
                         <ul class="answers__list" role="list">
                             @foreach ($answers as $a)

@@ -368,13 +368,15 @@ class CatalogCreateTest extends TestCase
             ->assertFormFieldVisible('description.es');
     }
 
-    public function test_pack_form_hides_badge_and_featured(): void
+    public function test_pack_form_shows_badge_and_hides_featured(): void
     {
-        // El pack no consume badge ni "destacado"; sí usa unidad de precio y descripción.
+        // El pack SÍ lleva la etiqueta destacada desde `#585` (la web la pinta en las tarjetas de
+        // cumpleaños, en `/cumpleanos` y en `/servicios`); «destacado» sigue siendo de entradas:
+        // es quien lidera su zona en el carril de tarifas. Usa también unidad de precio y descripción.
         Livewire::actingAs($this->admin())
             ->test(CreateCatalog::class)
             ->fillForm(['type' => TicketType::TYPE_PACK])
-            ->assertFormFieldHidden('badge.es')
+            ->assertFormFieldVisible('badge.es')
             ->assertFormFieldHidden('featured')
             ->assertFormFieldVisible('period_label.es')
             ->assertFormFieldVisible('description.es');

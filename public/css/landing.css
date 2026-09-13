@@ -1736,13 +1736,15 @@ img { display: block; max-width: 100%; }
 /* La afordancia de destino. **No es un botón**: la tarjeta ya es el enlace, y un control dentro de
    un `<a>` es marcado inválido además de dos dianas para el mismo sitio.
    ⚠️ Va en `--interactive`, que es el rol del enlace en papel (`#436`), no en el color de la zona. */
-/* ⚠️ **El CTA está FUERA de la escala, así que no lleva su sangrado.** Con los 76 px del eje se
-   quedaba metido hacia dentro y descolgado del resto de la tarjeta; su aire es el normal de la
-   pegatina, el mismo por los dos lados. */
+/* ⚠️ **En MÓVIL el CTA arranca en la columna del TEXTO** (`#583`, `[DECIDIDO owner]`: «la 4a,
+   cerrando diferencias»). La 4a de `Zonas PJP` —copiada a `Portada PJP` como aprobada— lo pone con el
+   mismo sangrado que el nombre y la descripción, así que «Ver la zona» se lee como la última línea de
+   ese bloque. Hasta aquí iba sin sangrado (aire de pegatina a los dos lados).
+   ▶ En escritorio sigue como estaba (su `@media`, abajo): el owner no quiso tocar el escritorio. */
 .zone-card__go {
   margin-top: auto;
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8);
-  padding: var(--sp-16);
+  padding: var(--sp-12) var(--sp-16) var(--sp-16) 76px;
   font-weight: 800; font-size: var(--fs-16);
   color: var(--interactive);
 }
@@ -1921,6 +1923,232 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1024px) {
   .rev__mancha { left: -70px; right: auto; top: -60px; width: 340px; }
 }
+
+/* ══ LA FACHADA · EL MURAL (`#580`, `[DECIDIDO owner]`: la variante 2 «mural») ═══════════════════
+   El DIBUJO sale del kit de la instalación (`client-kit.svg`) y la COLOCACIÓN vive aquí; el mapa de
+   qué pieza va en cada sitio es `<x-site.facade>`. Sin kit no se emite ninguna pieza.
+
+   ⚠️⚠️ **El anfitrión tiene que ser contexto de apilamiento Y de posición, y los dos se piden AQUÍ.**
+   Con `z-index: -1` y sin `isolation` la pieza se hunde por detrás del fondo de la página y
+   desaparece sin fallar (`#286`); sin `position` se coloca contra otro ancestro (`#547`, la mancha
+   de reseñas). Por `:has()` la pieza se lleva su requisito consigo: un anfitrión nuevo no tiene que
+   acordarse de nada, y un navegador sin `:has()` degrada hacia NO decorar.
+   ⚠️ Solo el anfitrión de una pieza lo recibe: crear un contexto de apilamiento puede mover cualquier
+   `z-index` de dentro, y `.section` y `.page` las comparten todas las vistas. */
+:is(.section, .page):has(> .fac-slot, > .trio-stand) { position: relative; isolation: isolate; }
+
+/* El recorte es del ANFITRIÓN: una figura más alta que su caja se corta por el borde en vez de
+   empujar el alto de la página. */
+.fac-slot { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.fac-p { position: absolute; height: auto; }
+
+/* ── PORTADA · ancladas a la banda de la CABECERA de su sección ──────────────────────────────────
+   ⚠️⚠️ Arriba y no abajo: con `bottom` caían al fondo de secciones de 1.150 px, detrás de las
+   tarjetas (`#547`). El papel libre de una sección está al lado de su titular.
+   ⚠️ Dos clases en el selector a propósito: `site.css` se carga DESPUÉS y su `.ilu` declara
+   `height` y `max-width`, que a igual especificidad ganarían. */
+.fac-p.fac-p--zones      { right: 0; top: 50px; height: 400px; --ilu-fg: var(--strip-1); opacity: 0.30; }
+.fac-p.fac-p--zones-nino { right: 170px; top: 130px; height: 220px; --ilu-fg: var(--strip-2); opacity: 0.30; }
+.fac-p.fac-p--before     { right: 10px; top: 0; width: 420px; --ilu-fg: var(--strip-1); opacity: 0.55; }
+.fac-p.fac-p--info       { right: 0; top: 20px; height: 340px; --ilu-fg: var(--strip-1); opacity: 0.32; }
+
+/* ── PÁGINAS · una pieza por cabecera ────────────────────────────────────────────────────────────
+   ▶ En estrecho el titular ocupa el ancho entero y no hay lateral: la pieza se queda pequeña y
+   tenue en la esquina, detrás del rótulo y del titular, **sin bajar a la entradilla** (regla 02 del
+   kit: la pintura nunca va debajo de un párrafo). */
+/* ⚠️⚠️ **Los 104 px no son un tamaño a ojo: son lo que cabe ENCIMA de la entradilla más temprana.**
+   Con un titular de una línea («Cantina», «Hablamos») la entradilla empieza a ~170 px a 390, y la
+   pieza va de 60 a 164. La primera versión medía 128 desde 56 y la mancha de `/bar` caía sobre «y
+   carta corta» — lo vio la captura. Un titular más largo solo baja la entradilla: nunca la acerca. */
+.fac-p.fac-p--page     { right: -16px; top: 60px; height: 104px; --ilu-fg: var(--strip-1); opacity: 0.22; }
+.fac-p.fac-p--page-bar { height: auto; width: 104px; opacity: 0.45; }
+/* ── A3 · LOS RAYOS DE `/precios`, centrados en su figura ─────────────────────────────────────────
+   Su nota: «foco detrás de un precio o de una silueta. Uno por página». La FORMA es la de `.rays`
+   (`site.css`, suya al dígito); aquí va solo el sitio y el tamaño, que es lo que pone un consumidor.
+   ⚠️⚠️ **El centro del abanico es el de la figura, CALCULADO**: en ancho la figura mide 222 × 190 a
+   99 px del canto y 90 del techo → centro a 210 del canto derecho y 185 del techo; en estrecho,
+   122 × 104 a −16 y 60 → 45 y 112. Si la figura se mueve, estos dos números se mueven con ella.
+   ⚠️ En la capa del mural y NO en la cabecera: allí el conjunto rótulo + titular lo recortaba en una
+   banda de 80 px con los dos cantos rectos (lo vio el owner). Aquí su caja es la de la página y el
+   desvanecido circular termina entero. */
+.fac-slot > .rays.fac-rays--precios { --rayos-size: 220px; right: -65px; top: 2px; }
+@media (min-width: 1024px) {
+  .fac-slot > .rays.fac-rays--precios { --rayos-size: 340px; right: 40px; top: 15px; }
+}
+
+/* ── A1 · LA TRAMA DENTRO DE LAS TARJETAS DE TINTA (`#580`) ──────────────────────────────────────
+   Su grupo, en el artboard: «van debajo del contenido, siempre dentro de un contenedor; nunca como
+   fondo de sección, y nunca dos a la vez». A1 es la única que el sistema admite sobre TINTA («la
+   misma del menú»), así que entra en las tarjetas de tinta: una por tarjeta, y ninguna en una página
+   que ya lleva otra textura (`/normas` tiene su A2 y `/precios` su A3).
+   ⚠️⚠️ **`isolation` + `z-index: -1`, y no posicionar el contenido como el menú y el cierre**: estas
+   tarjetas tienen el contenido EN FLUJO, y una capa absoluta sin `z-index` se pinta ENCIMA del texto.
+   Con contexto propio la trama queda sobre el fondo de la tarjeta y debajo de todo lo demás.
+   ⚠️ La capa es un rectángulo: sin canto, los puntos asoman por fuera de las esquinas. Lleva el MISMO
+   token que su tarjeta (y no `inherit`, que `ShapeScaleTest` no deja escribir: un canto es escala o
+   no es canto). Sin `overflow: hidden` en la tarjeta a propósito: recortaría los anillos de foco y las
+   áreas táctiles de `[data-tap]`. */
+/* ⚠️ `.party__clock` estuvo en esta lista y se fue con el reloj (`#583`). */
+:is(.before__code, .answers, .bar-counter) { position: relative; isolation: isolate; }
+:is(.before__code, .answers, .bar-counter) > .grain { z-index: -1; }
+.before__code > .grain { border-radius: var(--r-lg); }
+:is(.answers, .bar-counter) > .grain { border-radius: var(--r); }
+
+/* ══ LOS ICONOS DEL KIT (`#582`, pasada de vestido · eje de iconos) ══════════════════════════════
+   Los DIBUJOS son de la instalación (`client-kit.svg`, generados por `scripts/kit-iconos.py`); aquí
+   solo va lo que los PRESENTA. Sin kit, los componentes no emiten nada y estas reglas no tienen sujeto.
+
+   ── LA PEGATINA DE ZONA (`Iconos PJP` §07) ──────────────────────────────────────────────────────
+   Sus números, del artboard: keyline de tinta de 2, sombra dura de 5 y el glifo a dos tercios de la
+   caja (58 de 88 · 48 de 72). ⚠️ La sombra es el ROL `--shadow-float` y no su `5px 5px 0` escrito: en
+   este paquete vale eso mismo, y otra instalación trae la suya. */
+.zone-sticker {
+  --sticker: 56px;
+  flex: none; display: grid; place-items: center;
+  width: var(--sticker); height: var(--sticker);
+  border: 2px solid var(--paper-fg); border-radius: var(--r-lg);
+  background: var(--sticker-bg, var(--zone-1));
+  box-shadow: var(--shadow-float);
+}
+/* ⚠️ 48 es su SUELO («ninguna baja de 48»), y a esa talla el canto de 16 se come la caja: baja al
+   escalón de la escala que le toca, sin inventar un radio. */
+.zone-sticker--sm { --sticker: 48px; border-radius: var(--r-btn); }
+.zone-sticker--lg { --sticker: 64px; }
+/* ⚠️ Dos clases: `site.css` se carga después y su `.ilu` declara `height: auto`. */
+.zone-sticker .zone-sticker__g { width: 66%; height: 66%; --ilu-fg: var(--sticker-fg, var(--paper-fg)); }
+
+/* Dónde va: SOLO junto a la cifra de `/atracciones`. ⚠️ Estuvo también en las tarjetas de «Para quién»
+   y en las cabeceras de `/precios`, y se retiró de las dos (`[DECIDIDO owner, 2026-09-13]`, `#583`).
+   La fila de la cifra se alinea por la LÍNEA BASE del número, y una caja sin texto
+   se colgaría de esa línea por su borde inferior. */
+.rides-zone__count > .zone-sticker { align-self: center; }
+
+/* ── LOS «DEL PARQUE» (`slot-ico-*`, rejilla 24) ──────────────────────────────────────────────────
+   Heredan el color del texto que acompañan, como todo el set. */
+.ilu.kit-ico { --ilu-fg: currentColor; flex: none; width: 24px; height: 24px; }
+.rules-axis__title:has(> .kit-ico) { display: flex; align-items: center; gap: var(--sp-8); }
+/* En un titular de rótulo el icono va a la talla de la LETRA (`1em`), no a 24: al lado de un Bungee de
+   26–36 px un glifo fijo de 24 se lee como una errata. */
+.rules-group__title:has(> .kit-ico) { display: flex; align-items: center; gap: var(--sp-10); }
+.rules-group__title > .ilu.kit-ico { width: 1em; height: 1em; }
+
+/* Los CALCETINES en la pegatina de aviso. ⚠️ La «i» del set dibuja ELLA el disco, así que la pegatina
+   no tenía fondo propio; el calcetín es un glifo suelto y el disco lo pone la caja. Y a 24 un calcetín
+   dentro de un disco de 24 no se lee: el disco sube a 32 y la línea del niño invitado se alinea con él.
+   ⚠️⚠️ **Dos clases, y con una fallaba sin avisar**: `.before__i` se declara MÁS ABAJO en esta hoja y a
+   igual especificidad le ganaba el `color` —el calcetín salía amarillo sobre su disco amarillo, o sea
+   invisible— y la talla, mientras el fondo sí se aplicaba. Lo vio la captura. */
+.before__i.before__i--sock { width: 32px; height: 32px; margin-top: 0; background: var(--attn); color: var(--paper-fg); }
+.before__i--sock > .ilu.kit-ico { width: 20px; height: 20px; }
+.section:has(.before__i--sock) .before__guest { padding-left: calc(32px + var(--sp-12)); }
+@media (min-width: 1024px) {
+  /* ⚠️ Todas entre el racimo del armazón (acaba a 72 px) y la primera fila de contenido (330): en ese
+     tramo el titular deja libre la derecha de la columna. La de `/precios` va centrada en su abanico
+     (`.pricing__rays`), que es la composición: las rayas salen de detrás de la figura — y a 90 px y
+     no a 76, porque a 76 la mano de la figura tocaba el borde del racimo. */
+  .fac-p.fac-p--page             { opacity: 0.30; }
+  .fac-p.fac-p--page-atracciones { right: 20px; top: 84px; height: 240px; }
+  .fac-p.fac-p--page-precios     { right: 99px; top: 90px; height: 190px; }
+  .fac-p.fac-p--page-normas      { right: 30px; top: 80px; height: 210px; }
+  .fac-p.fac-p--page-contacto    { right: 40px; top: 80px; height: 230px; }
+  .fac-p.fac-p--page-bar         { right: 0; top: 80px; width: 270px; opacity: 0.55; }
+}
+
+/* En teléfono las figuras de la portada se encogen y se apartan: a 390 px una silueta de 400 tapa
+   media sección. ⚠️ `.fac-slot .fac-p` y no `.fac-p`, por el `.ilu` de `site.css` (arriba). */
+@media (max-width: 700px) {
+  .fac-slot .fac-p { max-height: 46vh; max-width: 62vw; }
+
+  /* «Antes de venir»: la mancha se muda DETRÁS DE LA TARJETA del QR y asoma por su canto inferior
+     izquierdo (`[DECIDIDO owner]`, `#548`). En escritorio vive al lado del titular; en móvil no hay
+     lado. */
+  .fac-p.fac-p--before { left: -66px; right: auto; top: 330px; width: 240px; max-width: none; max-height: none; }
+}
+
+/* ── EL ARCO DE REBOTE (`F3`) ────────────────────────────────────────────────────────────────────
+   Sobre la banda entre las pestañas y las tarjetas de «Cuánto». La curva se estira al ancho
+   (`preserveAspectRatio="none"`) y las figuras se alinean por ABAJO para que los pies caigan en ella. */
+.arc { --arc-h: 132px; position: relative; height: var(--arc-h); margin: 0 auto var(--sp-20); max-width: 560px; }
+.arc__curve { position: absolute; inset: 0; width: 100%; height: 100%; }
+.arc__curve path { stroke: var(--line-strong); }
+.arc__row {
+  position: absolute; inset: 0; display: flex; align-items: flex-end;
+  justify-content: space-between; padding: 0 var(--sp-6);
+}
+.arc__fig { display: block; flex: 0 0 auto; color: var(--strip-1); }
+.arc__fig .ilu { --ilu-fg: var(--strip-1); }
+/*
+ * ⚠️⚠️ **Los pies van sobre la curva y las cuatro alturas están CALCULADAS**: se evalúa la propia
+ * parábola —`M6 134 Q170 -16 334 122`— en las fracciones donde `space-between` coloca a las figuras
+ * (0 · ⅓ · ⅔ · 1), y el margen es `(150 − y) / 150` del alto del arco:
+ *
+ *     f      y de la curva      margen a 132 px
+ *     0      134                14
+ *     ⅓       66,4              74
+ *     ⅔       61,4              78
+ *     1      122                25
+ *
+ * ⚠️⚠️ **En función de `--arc-h` y no en píxeles**: el prototipo los escribía a 132 y en móvil el
+ * arco mide 104, así que las figuras flotaban lejos del trazo. `x(t)` es casi lineal porque el
+ * control (170) cae en el medio del tramo (6→334): si alguien lo mueve, hay que volver a despejar.
+ */
+.arc__fig:nth-child(1) { margin-bottom: calc(var(--arc-h) * 14 / 132); }
+.arc__fig:nth-child(2) { margin-bottom: calc(var(--arc-h) * 74 / 132); }
+.arc__fig:nth-child(3) { margin-bottom: calc(var(--arc-h) * 78 / 132); }
+.arc__fig:nth-child(4) { margin-bottom: calc(var(--arc-h) * 25 / 132); }
+/*
+ * ⚠️⚠️ **La cumbre SOBRESALE por arriba de la caja** (sus 64 px no caben sobre su margen), y por
+ * debajo de 1024 las pestañas ocupan el ancho entero: sin este aire la mano de la figura se montaba
+ * sobre la pestaña KIDS — medido en el prototipo a 820 y a 390. En escritorio las pestañas miden 352
+ * y la figura cae lejos, así que ahí no se reserva nada.
+ */
+@media (max-width: 1023px) {
+  .arc { margin-top: var(--sp-16); }
+}
+@media (max-width: 700px) {
+  .arc { --arc-h: 104px; max-width: 340px; margin-top: var(--sp-28); }
+}
+
+/* ── EL TRÍO DE NIÑOS (`G4`) ─────────────────────────────────────────────────────────────────────
+   En ancho va al lado del titular, en la capa de fondo: el soporte no genera caja (`display:
+   contents`) y el trío se coloca contra su anfitrión. */
+.trio-stand { display: contents; }
+.trio {
+  position: absolute; z-index: -1; pointer-events: none;
+  display: flex; align-items: flex-end; opacity: 0.9;
+}
+.trio__n { display: block; flex: 0 0 auto; }
+/* Portada · la cabecera de Cumpleaños deja 512 px libres a la derecha del titular (medido, `#547`). */
+.trio--events { right: 8px; top: 30px; }
+/* `/cumpleanos` · a 0,8 del de la portada: su titular es más largo.
+   ⚠️ `transform-origin: right top`: `scale` encoge el DIBUJO y no la caja, y con el origen abajo el
+   dibujo se despegaría de donde dice `top` (la trampa medida en `#548`). */
+.trio--page { right: 0; top: 96px; scale: 0.8; transform-origin: right top; }
+/*
+ * ⚠️⚠️ **Entre 1024 y 1280 la columna encoge más deprisa que el titular**, y medido con la TINTA del
+ * titular (un `Range` sobre su texto, no la caja del `<h1>`, que ocupa la columna entera y acusa a
+ * todas): a 1024 el trío se montaba 45 px sobre «DETALLE» y la figura de `/atracciones` 13 px sobre
+ * «DENTRO». Desde 1180 las seis tienen holgura, así que el ajuste se acota a este tramo.
+ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .fac-p.fac-p--page-atracciones { height: 200px; }
+  .trio--page { scale: 0.62; }
+}
+/*
+ * ⚠️⚠️ **EN ESTRECHO SE APOYA EN LA TARJETA DE DEBAJO** (`[DECIDIDO owner]`, `#548`: «encima de la
+ * card 2h»). El soporte pasa a ser un bloque que RESERVA su sitio y el trío se sienta en su borde
+ * inferior con los pies dentro de la tarjeta — **por ENCIMA** de ella, porque es opaca.
+ * ▶ Con la reserva lo largo que sea el texto de encima deja de importar: el prototipo lo colocaba a
+ * `top: 196px` de la sección, y a 390 px los brazos tapaban «14,95 € por niño». A 0,34 el trío mide
+ * 71 px: 17 caen dentro de la tarjeta y el resto sale de estos 36 y del aire que la cabecera ya deja.
+ */
+@media (max-width: 900px) {
+  .trio-stand { display: block; position: relative; height: 36px; }
+  .trio-stand > .trio {
+    z-index: 2; top: auto; right: 6px; bottom: -17px;
+    scale: 0.34; transform-origin: right bottom; opacity: 1;
+  }
+}
 @media (min-width: 1024px) {
   .sec-head,
   .page__head { margin-bottom: 40px; }
@@ -2085,13 +2313,25 @@ img { display: block; max-width: 100%; }
   letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--fg-mute);
 }
-/* El chip del catálogo (`ticket_types.badge`). Cápsula de tinta, texto en papel. */
-.rate-card__badge {
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  letter-spacing: 0.06em;
-  background: var(--fg); color: var(--bg);
-  border-radius: var(--r-pill);
-  padding: var(--sp-4) var(--sp-10);
+/* ❗❗ **LA ETIQUETA DESTACADA ES UNA SOLA PIEZA EN TODA LA WEB** (`#585`, `[DECIDIDO owner,
+   2026-09-13]`): `ticket_types.badge` («Etiqueta destacada» en el panel) sale donde salga el producto
+   —el carril de tarifas, `/precios`, las tarjetas de cumpleaños, la comparativa de `/cumpleanos` y
+   `/servicios`— con el AMARILLO del sistema, que es el rol del marcador.
+   ⚠️ Es `--marker` y no un amarillo escrito: sin paquete es transparente y la palabra se lee en la
+   tinta de su superficie (`#480`). Y el texto va en `--on-marker`, nunca en `--fg`: dentro de una
+   tarjeta de tinta `--fg` es CLARO y sobre el amarillo daría 1,49 (`#523`).
+   ▶ El cajón pinta la misma etiqueta (`.catalog__badge`, en `site.css`) con el mismo rol. Lo vigila
+   `FeaturedBadgeColourTest`. */
+.rate-card__badge,
+.rate-table__badge,
+.party-card__badge,
+.party-compare__badge,
+.svc-ed2__badge {
+  display: inline-flex; align-items: center;
+  padding: var(--sp-4) var(--sp-10); border-radius: var(--r-pill);
+  background: var(--marker); color: var(--on-marker);
+  font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.3;
 }
 
 /* La CIFRA. ⚠️ La unidad es HERMANA del número: dentro heredaría su interlineado y se partiría en
@@ -2163,227 +2403,10 @@ img { display: block; max-width: 100%; }
 .rate-card__special b { font-weight: 700; color: var(--fg); white-space: nowrap; }
 .rate-card__special span { color: var(--fg-mute); }
 
-/* ── EL BLOQUE DE COMPLEMENTOS, DEBAJO DEL CARRIL ─────────────────────────────────────────
-   `Cumpleanos Pagina PJP` 5a · `DECISIONES #480`. Salieron de la tarjeta porque **los comparten casi
-   todas**, y hay una regla del sistema que lo pide: *«una comparativa solo compara lo que difiere;
-   lo común va a su propio bloque»*.
-   ⚠️ Van en CARRIL horizontal y no en filas: `[DECIDIDO owner]` sobre la propia recomendación del
-   canvas, que para las entradas proponía filas. */
-.addons-rail { margin: var(--sp-28) 0 0; }
-.addons-rail__title {
-  font-family: var(--font-display); font-weight: 400;
-  font-size: var(--fs-title); line-height: 1.05;
-  color: var(--fg); margin: 0;
-}
-.addons-rail__lede {
-  margin: var(--sp-10) 0 0;
-  font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute);
-}
-
-/* ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO** (`tabindex="0"` en el marcado), y sin eso la segunda
-   ficha **no se alcanza sin ratón**: aquí dentro no hay ningún control —son fichas, no botones—,
-   así que el Tab no tiene a qué entrar y el carril no se puede desplazar. Es la única pieza de la
-   sección que necesita foco propio, y por eso lleva su anillo. */
-/* ══ LAS VELAS DEL CARRIL ═══════════════════════════════════════════════════════════════════
-   `[DECIDIDO owner, 2026-09-10]`: con muchos complementos el carril llega a un ancho amplio y hay
-   que decir que sigue **por los dos lados**.
-
-   ❗❗ **Van en el ENVOLTORIO, no en el carril**, y es la misma razón que la vela del pie (`#252`):
-   un pseudo-elemento dentro de un contenedor con scroll **viaja con el contenido** y se iría hacia
-   la izquierda en cuanto alguien deslizara.
-
-   ⚠️⚠️ **Los dos defectos por defecto son OPUESTOS, y eso no es un descuido.** Donde el navegador
-   no entienda `animation-timeline`, la de la DERECHA se queda puesta —el estado seguro: decir que
-   hay más cuando ya no lo hay es un adorno, y no decirlo cuando sí lo hay es una lista que parece
-   terminada y no lo está— y la de la IZQUIERDA se queda APAGADA, porque al principio del carril no
-   hay nada a la izquierda y anunciarlo sería falso.
-
-   ⚠️ El degradado va a `--bg` y no a un literal: el carril vive en dos superficies distintas —dentro
-   del panel de una zona en tarifas y sobre papel en cumpleaños— y `[data-surface]` ya redefine ese
-   token. Un color escrito a mano se vería como una banda en una de las dos. */
-/* ⚠️⚠️ **`timeline-scope` es lo que hace que esto funcione, y sin él sale AL REVÉS.**
-   `animation-timeline: --carril` busca ese nombre en un ANCESTRO del elemento animado, y aquí quien
-   lo declara es el track, que es HIJO del envoltorio. Sin elevar el ámbito, las velas no encuentran
-   su eje y se quedan en un fotograma que no significa nada — medido: salían las dos invertidas.
-   `timeline-scope` sube la timeline del hijo al padre, que es justo este caso. */
-.addons-rail__wrap {
-  position: relative; timeline-scope: --carril;
-  margin: var(--sp-16) calc(var(--col-gutter) * -1) 0;
-}
-.addons-rail__wrap::before,
-.addons-rail__wrap::after {
-  content: ""; position: absolute; top: 0; bottom: 0; width: 64px;
-  pointer-events: none; z-index: 1;
-}
-.addons-rail__wrap::before {
-  left: 0; opacity: 0;
-  background: linear-gradient(to left, transparent, var(--bg));
-}
-.addons-rail__wrap::after {
-  right: 0; opacity: 1;
-  background: linear-gradient(to right, transparent, var(--bg));
-}
-/* ❗❗ **SIN SCROLL NO HAY VELAS, y esto es lo único que el CSS no puede saber solo.** Sin
-   desbordamiento la timeline no tiene rango, la animación se queda en su fotograma inicial y la vela
-   derecha aparecería **sin nada detrás** — medido: con dos complementos el carril de tarifas cabe
-   entero en escritorio y desborda 330 px en móvil, así que depende del ANCHO y no del número de
-   fichas, y por eso tampoco se puede decidir en el servidor.
-   ▶ El atributo lo pone `ui/rail-sails.js`, que **publica un hecho y no decide diseño** (`#195`).
-   ⚠️ La regla mira la AUSENCIA del atributo: sin JavaScript no hay marca y las velas se comportan
-   como si hubiera más — el mismo defecto seguro que eligió la vela del pie (`#252`). */
-.addons-rail__wrap:not([data-rail-scroll])::before,
-.addons-rail__wrap:not([data-rail-scroll])::after { opacity: 0; animation: none; }
-@supports (animation-timeline: scroll()) {
-  .addons-rail__wrap::before,
-  .addons-rail__wrap::after { animation: var(--ease-bucle) both; animation-timeline: --carril; }
-  .addons-rail__wrap::before { animation-name: rail-vela-izq; }
-  .addons-rail__wrap::after { animation-name: rail-vela-der; }
-  /* ⚠️ El carril declara el eje del que cuelgan las dos velas. Sin `scroll-timeline-name` en él,
-     `animation-timeline: --carril` no encuentra nada y las velas se quedan en su fotograma inicial
-     — que es justo el defecto seguro de arriba, así que falla bien. */
-  .addons-rail__track { scroll-timeline-name: --carril; scroll-timeline-axis: inline; }
-  @keyframes rail-vela-izq { 0% { opacity: 0; } 12%, 100% { opacity: 1; } }
-  @keyframes rail-vela-der { 0%, 88% { opacity: 1; } 100% { opacity: 0; } }
-}
-
-.addons-rail__track {
-  display: flex; gap: var(--sp-12); align-items: stretch;
-  overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory; scrollbar-width: none;
-  /* A sangre por la derecha, igual que el carril de tarifas: el asoma es la señal de que hay más.
-     ⚠️⚠️ **El sangrado vive en el ENVOLTORIO desde `#498`, no aquí.** Con los márgenes negativos en
-     el carril, el envoltorio acababa en el borde de la columna y **las velas caían donde el carril
-     ya no está** — medido: la de la derecha no se veía. Un pseudo-elemento solo puede velar el
-     borde que su propio contenedor alcanza. */
-  margin: 0;
-  padding: var(--sp-4) 64px var(--sp-8) var(--col-gutter);
-  /* ❗ **El «cómo» se mueve un carril es DISEÑO y vive aquí** (`#549`): las flechas solo dicen cuánto.
-     Un `behavior: 'smooth'` en la llamada de JavaScript gana a esta línea y se lleva por delante la
-     excepción de movimiento reducido de más abajo. */
-  scroll-behavior: smooth;
-}
-.addons-rail__track::-webkit-scrollbar { display: none; }
-
-/* La ficha: blanca, borde de Línea y radio de tarjeta. **Cero controles y cero naranja** — aquí no
-   se compra, se informa; el único relleno de acción de la pantalla es el de la tarifa enfocada. */
-/* ⚠️ **La ficha es UNA fila** (`[owner]`): icono, nombre y precio en la misma línea. Con el nombre
-   encima del precio la ficha subía a tres renglones para decir dos cosas.
-   ⚠️⚠️ **El ancho se AJUSTA al contenido y no es fijo en 250**, que es lo que el artboard dibuja
-   para nombres cortos («Tarta, monitor y más»). Los de este catálogo son largos —«Calcetines
-   antideslizantes»— y con 250 la fila se partía igual: el `max-content` acotado deja la fila entera
-   cuando cabe, y el mínimo evita que una ficha de nombre corto quede raquítica al lado de otra. */
-.addon-card {
-  flex: none;
-  width: max-content;
-  min-width: 220px; max-width: min(380px, calc(100vw - 76px));
-  scroll-snap-align: center;
-  /* ⚠️ **`flex-start` y no `center` desde `#549`**: el cuerpo pasó a ser una columna de dos filas, y
-     centrado el icono caía entre las dos — y con el texto desplegado, en medio de una ficha alta. */
-  display: flex; align-items: flex-start; gap: var(--sp-12);
-  padding: var(--sp-14) var(--sp-16);
-  /* ⚠️⚠️ **LA FICHA ES BLANCA, y el tinte de identidad que `#537` le puso se RETIRA** (`[owner]`:
-     «quítale ese color azul, déjalo como estaba antes»). Los valores son los de antes de `#537`,
-     recuperados del árbol (`7100621f^`) y no reconstruidos a ojo.
-     ▶ Lo que el tinte rompía está escrito dos comentarios más arriba y seguía siendo verdad: *«la
-     ficha: blanca, borde de Línea»* — o sea que `#537` ya contradecía la nota que tenía al lado. */
-  background: var(--bg-card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-}
-.addon-card__ico { color: var(--fg); display: flex; flex: none; }
-/* ── EL CUERPO, EN DOS FILAS (`#549`) ─────────────────────────────────────────────────────────
-   `[owner]`: el «Más info» va **en la segunda fila del texto**. La primera es la de siempre.
-   ⚠️⚠️ **La ficha mide `max-content`, así que el texto desplegado la ENSANCHARÍA al abrirse** —de
-   su ancho de fila al tope de 380— y eso es un salto a mitad de un gesto. `.addon-card__info` lo
-   evita con el par `width: 0` + `min-width: 100%`: un hijo de ancho cero **no aporta nada** al
-   tamaño intrínseco del padre y el porcentaje lo rellena después, ya sabido el ancho. Por eso la
-   ficha abre y cierra sin moverse a lo ancho; si alguien retira ese par, el salto vuelve. */
-.addon-card__body { flex: 1; min-width: 0; }
-/* La fila del dato conserva el centrado que tenía la ficha entera: nombre de 16 y precio de 17. */
-.addon-card__row { margin: 0; display: flex; align-items: center; gap: var(--sp-12); }
-.addon-card__name { flex: 1; min-width: 0; font-weight: 800; font-size: var(--fs-16); line-height: 1.25; color: var(--fg); }
-/* El precio no se parte ni se encoge: es el dato que se busca de un vistazo. */
-.addon-card__price {
-  flex: none; white-space: nowrap;
-  font-weight: 700; font-size: var(--fs-17); line-height: 1.3; color: var(--fg);
-}
-/* La UNIDAD es hermana del importe y va en Etiqueta: dice de qué es ese «+», y en mono para que no
-   compita con la cifra. ⚠️ Con `font-weight: 400` explícito porque hereda el 700 del importe. */
-.addon-card__unit {
-  margin-left: var(--sp-6);
-  font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-label);
-  /* ⚠️ **Se queda en TINTA aunque el tinte que lo obligaba se haya ido** (`#537` → `#549`): lo puso
-     el contraste sobre el tinte (Humo daba 4,40), y sobre la ficha blanca Humo ya pasaría. No se
-     devuelve a Humo porque en la fila del dato **no hay nada secundario**: el «+2,00 €» y su «cada
-     uno» son la misma cifra dicha en dos voces, y el gris la partiría en dos jerarquías. */
-  color: var(--fg);
-}
-
-/* ── EL «MÁS INFO» Y SU TEXTO (`#549`) ────────────────────────────────────────────────────────
-   `[owner]`: *«les añadimos la opción de "más info" y eso abre la desc de ese complemento»*.
-   ❗ La PIEL del control no se declara aquí: la trae `.addons__moreinfo` de `site.css`, que es la
-   misma que llevan el cajón de compra y los chips de `/servicios`. Aquí solo se coloca.
-   ⚠️ Sin `margin-top` el control se pega al nombre y parece parte de él. */
-.addon-card__more { margin-top: var(--sp-2); }
-/*
- * ⚠️⚠️ **`width: 0` + `min-width: 100%` es GEOMETRÍA, no un truco**: sin el par, el texto
- * desplegado entra en el `max-content` de la ficha y la ensancha al abrirla (ver `.addon-card__body`).
- * ⚠️ **Y `[data-tap]` sí vale aquí, aunque la ficha viva en un carril que recorta.** La regla del
- * mecanismo avisa de que un área ampliada se corta dentro de un `overflow` (`#264`, el caso de las
- * tiras del pie), y aquí NO llega a pasar: el pseudo crece 14 px por lado desde un control de ~20 y
- * se queda dentro del relleno de la propia ficha (14) más el del carril (8). Es lo primero que hay
- * que volver a medir si alguien aprieta esos rellenos.
- */
-.addon-card__info {
-  width: 0; min-width: 100%;
-  margin-top: var(--sp-6);
-}
-/* La descripción es prosa, así que va en cuerpo de texto y NO en la talla de las ventajas: los
-   12 px de `.addons__features` vienen del cajón, y `#474` midió que por debajo de 15 está la
-   «grieta 00». Por eso la lista de al lado también sube a 15 dentro de esta ficha — dos tallas en
-   el mismo párrafo desplegado se leen como dos cosas distintas. */
-.addon-card__desc { margin: 0; font-size: var(--fs-15); line-height: 1.45; color: var(--fg); }
-.addon-card__info .addons__features li { font-size: var(--fs-15); }
-
-/* ── LAS FLECHAS DEL CARRIL (`#549`) ──────────────────────────────────────────────────────────
-   `[owner]`: *«unas flechas para que el usuario sepa que hay que hacer slide, y si no puede hacer
-   slide con móvil entonces por accesibilidad necesitamos unas flechas»*.
-
-   ❗❗ **Solo existen si el carril no cabe, y quien lo dice es `data-rail-scroll`** —el hecho que
-   `ui/rail-sails.js` ya publicaba para las velas—. Un carril que cabe entero no enseña flechas, y
-   **sin JavaScript tampoco**: no hay atributo, así que el defecto cae del lado seguro (nunca dos
-   botones muertos). Es el mismo criterio con el que los controles de «Reseñas» solo salen con más de
-   una opinión (`#490`).
-
-   ❗❗ **VAN EN LOS LATERALES, FLOTANDO SOBRE LOS CANTOS DEL CARRIL** (`[owner]`). La nave es una capa
-   que cubre el envoltorio y **no recibe el puntero** (`pointer-events: none`): si lo recibiera se
-   tragaría el deslizamiento con el dedo justo encima del carril, que es el gesto que las flechas
-   vienen a complementar y no a sustituir. Lo reciben solo los dos botones.
-   ⚠️ `z-index: 2` porque las velas del envoltorio van en 1: por debajo, el degradado pasaría por
-   encima de la flecha del extremo.
-   ⚠️ Y **las flechas se rellenan de papel** (`--bg`), al revés que la receta base, que es transparente:
-   flotan sobre las fichas y sin fondo el glifo se leería encima del texto de una. El relleno es el
-   mismo color al que funden las velas, así que la pieza se lee como una sola cosa. */
-.addons-rail__nav { display: none; position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.addons-rail__wrap[data-rail-scroll] .addons-rail__nav { display: block; }
-.addons-rail__nav .rail-arrow {
-  position: absolute; top: 50%; translate: 0 -50%;
-  pointer-events: auto; background: var(--bg);
-}
-/* ⚠️ Metidas 6 px hacia dentro y no a 0: en móvil el envoltorio sangra hasta el borde de la pantalla
-   y una cápsula pegada al canto se sale del sangrado de 16 px que el sistema pide en todo ancho. */
-.addons-rail__nav [data-rail-prev] { left: var(--sp-6); }
-.addons-rail__nav [data-rail-next] { right: var(--sp-6); }
-/* ⚠️ **La flecha del extremo se ESCONDE en vez de quedarse apagada.** Sobre el carril, una cápsula
-   deshabilitada tapa una ficha para no hacer nada; abajo y centrada sí tenía sentido dejarla gris. Y
-   `visibility` y no `display`, para que la que queda no se mueva de sitio. */
-.addons-rail__nav .rail-arrow:disabled { visibility: hidden; }
-
-@media (min-width: 1024px) {
-  /* Sin carril: dentro de la columna, como la rejilla de tarifas. */
-  .addons-rail__track { margin: 0; padding: var(--sp-4) 0 var(--sp-8); }
-  .addons-rail__wrap { margin: var(--sp-16) 0 0; }
-}
+/* ⚠️⚠️ **AQUÍ VIVÍA EL CARRIL DE COMPLEMENTOS (`.addons-rail*`, `.addon-card*`) Y SE RETIRÓ CON SU
+   COMPONENTE** (`[DECIDIDO owner, 2026-09-13]`, `#583`): *«quita los complementos de la página web,
+   solo los dejamos en el SPA al reservar»*. Se fueron con él sus velas, sus flechas (`ui/rail-arrows.js`)
+   y su «Más info». `ui/rail-sails.js` y `ui/rail-drag.js` se quedan: los usan el pie, el menú y Reseñas. */
 
 /* El CTA, pegado abajo para que las tarjetas de una fila alineen sus botones aunque su texto mida
    distinto. ⚠️ `margin-top: auto` y no un alto fijo: el contenido lo manda la BD. */
@@ -2438,13 +2461,23 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1024px) {
   .tabset { width: 352px; }
 
-  /* ⚠️ **Tres pistas SIEMPRE, y las manda la zona con más tarifas.** Si la rejilla se ajustara al
-     número de tarjetas de la zona activa, cambiar de pestaña cambiaría el ANCHO de las tarjetas y
-     la sección daría un salto. Con un número fijo, la zona que tiene menos deja el hueco. */
+  /* ⚠️ **El ANCHO de pista lo manda la zona con más tarifas (`--rates-max`); el NÚMERO, la de cada
+     carril (`--rates-tracks`).** Si el ancho se ajustara a la zona activa, cambiar de pestaña
+     cambiaría el tamaño de las tarjetas y la sección daría un salto.
+     ▶ Y la que tiene menos se CENTRA (`[DECIDIDO owner]`, `#547` · `#580`). Con `1fr` no había
+     espacio libre que repartir y `justify-content` no hacía nada: con dos tarifas quedaban 384 px
+     muertos a la derecha, que es justo lo que el owner pidió quitar y el prototipo no quitaba.
+     ⚠️ Solo aquí, en la rejilla: en el carril de móvil centrar un contenido que desborda **corta la
+     primera tarjeta** y la deja inalcanzable (medido en el prototipo a 390). */
   .rates__rail {
+    --rates-gap: 32px;
     display: grid;
-    grid-template-columns: repeat(var(--rates-tracks, 3), 1fr);
-    gap: 32px;
+    grid-template-columns: repeat(
+      var(--rates-tracks, 3),
+      calc((100% - (var(--rates-max, 3) - 1) * var(--rates-gap)) / var(--rates-max, 3))
+    );
+    justify-content: center;
+    gap: var(--rates-gap);
     overflow: visible;
     /* ⚠️ Sin carril no hay sangre: la rejilla vuelve dentro de la columna. Y el relleno inferior no
        es aire decorativo: **es el sitio de la SOMBRA**. La pegatina proyecta 5 px hacia abajo y sin
@@ -2525,8 +2558,7 @@ img { display: block; max-width: 100%; }
    escribe entre bloques grandes. */
 .week,
 .rate-page__zones,
-.rate-page__pair,
-.extras { margin-top: 40px; }
+.rate-page__pair { margin-top: 40px; }
 
 /* El titular de bloque comparte declaración con el de `/cumpleanos` (ver más abajo): una página no
    estrena tipografía. */
@@ -2600,16 +2632,9 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-mono); font-size: var(--fs-label);
   text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute);
 }
-/* El CHIP de la que lidera: pastilla del sistema con el resalte del marcador. ⚠️ Es `--marker` y no
-   un amarillo escrito: transparente por defecto, o sea que sin paquete la palabra sigue leyéndose
-   en tinta (`#480`). */
-.rate-table__badge {
-  display: inline-flex; align-items: center; margin-top: var(--sp-6);
-  padding: var(--sp-4) var(--sp-10); border-radius: var(--r-pill);
-  background: var(--marker); color: var(--on-marker);
-  font-family: var(--font-mono); font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: 0.1em; line-height: 1.3;
-}
+/* La etiqueta destacada de la fila: la pieza es la de toda la web (ver `.rate-card__badge`, `#585`);
+   aquí solo se separa del nombre. */
+.rate-table__badge { margin-top: var(--sp-6); }
 .rate-table__note { display: block; margin-top: var(--sp-4); font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
 .rate-table__cell { text-align: right; }
 /* La cifra en RÓTULO y con el rol de CIFRA, como en el carril de la portada: en este sistema toda
@@ -2624,27 +2649,8 @@ img { display: block; max-width: 100%; }
    familia del texto — es una AUSENCIA, y las ausencias no se resaltan. */
 .rate-table__cell [aria-hidden] { font-family: var(--font-body); font-weight: 400; color: var(--fg-mute); }
 
-/* ── LO QUE SE AÑADE ───────────────────────────────────────────────────────────────────────
-   Una LISTA de filas, no el carril de fichas de la portada: aquí el artboard pide la línea de
-   debajo —la ventaja que el panel escribe en el complemento—, y una ficha de escaparate no la
-   tiene. Tarjeta blanca sin sombra: es apoyo, no algo que se elija aquí. */
-.extras__lede { margin: var(--sp-12) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute); }
-.extras__list {
-  list-style: none; margin: var(--sp-14) 0 0; padding: 0;
-  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
-  overflow: hidden;
-}
-.extras__row { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-14) var(--sp-16); }
-.extras__row + .extras__row { border-top: 1px solid var(--line); }
-.extras__ico { flex: none; display: flex; color: var(--fg); }
-.extras__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
-.extras__name { font-weight: 800; font-size: var(--fs-body); line-height: 1.25; color: var(--fg); }
-.extras__note { font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
-.extras__price { flex: none; font-weight: 700; font-size: var(--fs-body); line-height: 1.3; color: var(--fg); white-space: nowrap; }
-.extras__unit {
-  display: block; font-family: var(--font-mono); font-weight: 400; font-size: var(--fs-label);
-  text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute);
-}
+/* ⚠️ Aquí vivía «Lo que se añade» (`.extras*`), la lista de complementos de `/precios`. Se retiró con
+   su bloque (`[DECIDIDO owner, 2026-09-13]`, `#583`). */
 
 /* ── QUÉ ES LA TARIFA ESPECIAL ─────────────────────────────────────────────────────────────── */
 .rate-note { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-20); }
@@ -2675,10 +2681,7 @@ img { display: block; max-width: 100%; }
 @media (min-width: 1024px) {
   .week,
   .rate-page__zones,
-  .rate-page__pair,
-  .extras { margin-top: var(--sec-air); }
-
-  .extras__row { padding: var(--sp-16) 24px; }
+  .rate-page__pair { margin-top: var(--sec-air); }
 
   .week__day { height: 72px; }
   .week__initial { font-size: var(--fs-22); }
@@ -3826,7 +3829,6 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
    el carril va por detrás del cursor. Al soltar, la clase se va y el ajuste que vuelve es justo lo que
    encaja el carril en la tarjeta más cercana — no hay ninguna parada calculada a mano.
    ⚠️ `user-select: none` o arrastrar sobre una opinión selecciona su texto en vez de moverla. */
-.addons-rail__track.is-arrastrando,
 .rev__track.is-arrastrando {
   scroll-snap-type: none;
   scroll-behavior: auto;
@@ -3835,11 +3837,11 @@ a.rev-score__src { display: inline-flex; align-items: center; min-height: 48px; 
 }
 
 /* ❗❗ **CON MOVIMIENTO REDUCIDO LOS CARRILES SALTAN A SU SITIO, NO SE DESLIZAN** (`#549`). Es el
-   «cómo» del movimiento y por eso vive en la hoja: los dos controles —las flechas del carril de
-   complementos y los puntos de las reseñas— llaman a `scrollTo`/`scrollBy` **sin `behavior`** para que
-   esta regla pueda ganarles. Lo que no se toca es el QUÉ: el control sigue llevando al sitio. */
+   «cómo» del movimiento y por eso vive en la hoja: los puntos de las reseñas llaman a
+   `scrollTo`/`scrollBy` **sin `behavior`** para que esta regla pueda ganarles. Lo que no se toca es el
+   QUÉ: el control sigue llevando al sitio. (Las flechas del carril de complementos se fueron con él en
+   `#583`.) */
 @media (prefers-reduced-motion: reduce) {
-  .addons-rail__track,
   .rev__track { scroll-behavior: auto; }
 }
 
@@ -4398,29 +4400,12 @@ select:focus-visible {
    `#292` es «una por pantalla», no «una obligatoria»—. */
 
 
-/* A3 · el abanico quieto de `/precios`. Su regla es «uno por página»: éste es ese uno.
-   ⚠️ Su posición original (`top: 118%`) era para una tarjeta de 186 px; aquí la caja es otra, así
-   que la COLOCACIÓN se decide aquí —que es lo que hace un consumidor— y la FORMA sigue siendo suya
-   al dígito: 3,2° encendido y 8° de periodo.
-   ⚠️⚠️ **Su caja es el CONJUNTO rótulo + titular (`.page__lockup`), que lo recorta** (`#525`): la
-   entradilla queda fuera, así que el abanico ya no puede caer detrás de ella. Medido: en MÓVIL ya
-   caía detrás de las tres líneas de la anterior, antes de la cabecera de página.
-   ⚠️ Y la cabecera va a la COLUMNA ENTERA (`max-width: none`): se acota a 820 por la trama de
-   `/normas`, y dentro de 820 el abanico —a 30 px del canto derecho y de 360— se echaría encima del
-   titular en escritorio. Va con el compuesto porque `site.css` se carga después y ganaría. */
-.page__head.pricing__head { max-width: none; }
-
-.pricing__rays {
-  z-index: -1;
-  /* ⚠️⚠️ Va ENTERO dentro del contenedor, y no es capricho: con la caja sobresaliendo, el
-     `overflow: hidden` de la cabecera la corta en un CANTO RECTO **antes** de que el
-     desvanecido de la propia pieza haya terminado — y eso se lee como un fallo de render, no como
-     decoración. En su artboard el corte lo da el borde visible de una tarjeta; aquí no hay borde
-     que justifique una línea recta. */
-  right: 30px; top: 50%;
-  transform: translateY(-50%);
-  --rayos-size: 360px;
-}
+/* ⚠️⚠️ A3 · EL ABANICO DE `/precios` YA NO VIVE AQUÍ (`#580`). Iba en la ranura `deco` de la cabecera,
+   y esa caja —el conjunto rótulo + titular, ~80 px de alto— lo RECORTABA: un abanico de 360 salía
+   como una banda con los dos cantos rectos, que es exactamente el defecto que su propio comentario
+   decía evitar. *Una pieza más alta que su caja no se arregla colocándola mejor dentro de la caja.*
+   ▶ Se mudó detrás de la figura de la fachada («LA FACHADA · EL MURAL», A3), y con él se fue el
+   `max-width: none` de la cabecera, que existía solo para dejarle sitio. */
 
 /* C2 en CUÑAS · las dos tiras de BORDE (cabecera del hero y remate del pie).
    ⚠️⚠️ **Esto se aparta de su nota a propósito** (`[DECIDIDO owner, 2026-08-31]`). Ella dice
@@ -4664,7 +4649,7 @@ select:focus-visible {
    `Escritorio PJP` **5a** (escritorio).
 
    ⚠️ El marcado heredado (`.bd-*`) que pintaba `/cumpleanos` se retiró en `#528`, cuando la página
-   se rehízo desde su artboard; de esta sección la página comparte el reloj (`x-site.party-clock`).
+   se rehízo desde su artboard. El reloj de las dos horas que las dos compartían se retiró en `#583`.
    ══════════════════════════════════════════════════════════════════════════════════════════ */
 
 /* ⚠️⚠️ **AQUÍ VIVÍA LA CABECERA SOBRE FOTO A SANGRE, y se retiró con su marcado** (`#484`,
@@ -4673,43 +4658,9 @@ select:focus-visible {
    tenía pendiente del dueño «la foto del cumple montado». La sección abre con `.sec-head`, la
    cabecera común de las ocho. Con ella se van `.party__head`, `.party__img`, `.party__eyebrow` y
    `.party__title`: una regla sin pantalla es deuda que parece una decisión. */
-/* EL RELOJ DE LAS DOS HORAS · `[DECIDIDO owner]`: dentro en las DOS superficies, contra el artboard,
-   que lo apaga en móvil por presupuesto de pantalla.
-   ❗❗ **NO REPARTE**: las tres cosas van sobre UN carril entero, sin tramos. Un diagrama de tramos
-   promete horario aunque la letra diga lo contrario, y aquí no hay hora para nada. */
-.party__clock {
-  margin-top: var(--sp-20);
-  background: var(--bg-card);
-  border-radius: var(--r-lg);
-  padding: var(--sp-20);
-}
-.party__clock-title {
-  margin: 0;
-  font-family: var(--font-display); font-weight: 400;
-  font-size: var(--fs-20); line-height: 1.15;
-  color: var(--fg);
-}
-.party__clock-rule { margin: var(--sp-16) 0 0; font-size: var(--fs-body); line-height: 1.45; color: var(--fg-mute); }
-.party__clock-rail { margin-top: var(--sp-18); }
-.party__clock-caps { list-style: none; margin: 0; padding: 0; display: flex; gap: var(--sp-8); }
-.party__clock-caps li {
-  flex: 1; text-align: center;
-  border: 1.5px solid var(--line-strong); border-radius: var(--r-pill);
-  padding: 9px var(--sp-4);
-  font-family: var(--font-body); font-weight: 700; font-size: var(--fs-15); line-height: 1.2;
-  color: var(--fg);
-}
-/* ⚠️ El filete va **entero y sin cortes**: es el carril de las dos horas, y partirlo volvería a
-   dibujar los tramos que la pieza existe para no dibujar.
-   ⚠️⚠️ **Lee `--money`, y es un rol prestado que se declara.** El artboard lo pinta en Lima Bote, y
-   `--money` es el token cuyo valor ES ese lima en las dos superficies (`#479`) — su nombre dice
-   «cifra», y aquí la cifra que se dibuja son las dos horas. Se prefiere prestarlo a inventar un
-   token para una línea: sin él el filete cae a la tinta de la superficie, que sobre el bloque oscuro
-   sale CLARO y pierde el acento (medido antes de corregirlo). */
-.party__clock-line {
-  display: block; margin-top: var(--sp-10);
-  border-top: 2px solid var(--money, var(--fg));
-}
+/* ⚠️⚠️ **AQUÍ VIVÍA EL RELOJ «LAS 2 H, A VUESTRO RITMO» (`.party__clock*`) Y SE RETIRÓ CON SU
+   COMPONENTE** (`[DECIDIDO owner, 2026-09-13]`, `#583`). La duración pasó a la primera línea de lo
+   que incluye cada pack. */
 
 /* LAS DOS TARJETAS. Alternan SUPERFICIE —papel y tinta—, no color de zona: pintarlas con la paleta
    sería la «grieta 01» que el propio canvas nos reportó. */
@@ -4781,6 +4732,8 @@ select:focus-visible {
   letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--on-brand);
 }
+/* La chapa del nombre y la etiqueta destacada, en una fila que envuelve (`#585`). */
+.party-card__tags { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-8); }
 .party-card__age {
   font-family: var(--font-display); font-weight: 400;
   font-size: var(--fs-title); line-height: 1.05;
@@ -4859,7 +4812,6 @@ select:focus-visible {
    ⚠️ El aire entre bloques es 40 en móvil (el del artboard dentro de una página) y el AIRE DE
    SECCIÓN en escritorio (`--sec-air`, 144 en esta instalación), que es lo que el artboard escribe. */
 .party-page__block { margin-top: 40px; }
-.party-page__block > .addons-rail { margin-top: 0; }
 /* ⚠️ **El titular de bloque de una página interior se declara UNA vez** (`#531`): lo comparten
    `/cumpleanos`, los bloques de `/precios` y el nombre de cada zona de su tabla. «Una página no
    estrena tipografía» es la regla del armazón (`#525`), y aquí se cumple compartiendo la
@@ -4881,9 +4833,10 @@ select:focus-visible {
   font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute);
 }
 
-/* ── LA FOTO DE LA ZONA Y EL RELOJ (`#532`) ───────────────────────────────────────────────────
-   El artboard reparte **736 + 352** en escritorio (abajo, en su `@media`); en móvil van apilados y
-   la foto abre la página.
+/* ── LA FOTO DE LA ZONA (`#532`) ──────────────────────────────────────────────────────────────
+   Abre la página. ⚠️ Hasta `#583` compartía fila con el reloj de las dos horas (**736 + 352** en
+   escritorio, del artboard); el reloj se retiró —la duración va en lo que incluye cada pack— y la
+   foto se queda con la fila entera. Sin foto no se pinta ni la fila (la guarda está en la vista).
    ⚠️ **La foto va a 16:9 recortando, no deformando** (`object-fit: cover`): la del panel puede venir
    en cualquier proporción —la de esta instalación es 3:2— y estirarla para llenar la caja deforma a
    quien salga dentro. El recorte lo decide el navegador por el centro, que es lo que ya hacen el
@@ -4893,13 +4846,11 @@ select:focus-visible {
    que suba el cliente. */
 .party-hero { margin-top: var(--sp-20); }
 .party-photo {
-  margin: 0 0 var(--sp-20);
+  margin: 0;
   aspect-ratio: 16 / 9; overflow: hidden;
   border-radius: var(--r-lg);
 }
 .party-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* El reloj ya trae su propio margen superior: dentro de la fila lo pone la foto. */
-.party-hero > .party__clock { margin-top: 0; }
 
 /* EL CONTADOR: un solo control, y el total aparece en la columna de cada pack. */
 .party-compare { margin-top: var(--sp-20); }
@@ -4945,6 +4896,8 @@ select:focus-visible {
 .party-compare__table tbody tr + tr { border-top: 1px solid var(--line); }
 .party-compare__corner { width: 96px; }
 .party-compare__pack { font-weight: 800; font-size: var(--fs-16); line-height: 1.2; color: var(--fg); overflow-wrap: anywhere; }
+/* La etiqueta destacada del pack, en su propia línea bajo el nombre (`#585`). */
+.party-compare__badge { display: flex; width: fit-content; margin-top: var(--sp-6); }
 .party-compare__label {
   font-family: var(--font-mono); font-weight: 400;
   font-size: var(--fs-11); letter-spacing: 0.1em; text-transform: uppercase;
@@ -5049,24 +5002,8 @@ select:focus-visible {
   .party-page__lede { margin-top: var(--sp-16); }
   .party-page__note { font-size: var(--fs-17); }
 
-  /* ── LA FILA DEL ARTBOARD: 736 + 352 (`#532`) ───────────────────────────────────────────────
-     Doce pistas con 32 de hueco sobre 1120: cada pista mide 64, así que `span 8` da **736** y
-     `span 4` da **352**, al dígito y sin escribir ninguna de las dos medidas. Es la misma rejilla
-     que ya usan Reseñas y Dudas (`#488`).
-     ⚠️ **Sin foto la rejilla no estorba**: el reloj es hijo único y ocupa las doce pistas, que es
-     exactamente la fila entera que tenía antes de que la foto existiera. */
-  .party-hero {
-    display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 32px; align-items: start;
-  }
-  .party-hero > .party-photo { grid-column: span 8; margin-bottom: 0; }
-  .party-hero > .party__clock { grid-column: span 4; }
-  .party-hero > .party__clock:only-child { grid-column: 1 / -1; }
-  /* ⚠️⚠️ **Dentro de 352 el reloj vuelve a UNA columna.** En escritorio se parte en dos —regla a la
-     izquierda, carril a la derecha— y eso vale en la fila entera de la portada; en la columna
-     estrecha de esta página las dos mitades se estrangulan. La regla de la portada no se toca: ésta
-     acota por el contenedor. */
-  .party-hero > .party__clock { grid-template-columns: 1fr; }
-  .party-hero > .party__clock .party__clock-rail { margin-top: var(--sp-18); }
+  /* ⚠️ La rejilla 8 + 4 de la foto y el reloj (`#532`) se fue con el reloj (`#583`): sola, la foto
+     es un bloque a la anchura de la columna y no necesita pistas. */
 
   .party-count__q { font-size: 21px; }
   .party-count__btn { width: 56px; height: 56px; }
@@ -5119,11 +5056,6 @@ select:focus-visible {
 }
 
 @media (min-width: 1024px) {
-  /* El reloj a DOS columnas: la regla escrita a la izquierda y el carril a la derecha, dentro del
-     ancho que ya había. Por eso en escritorio no cuesta alto. */
-  .party__clock { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
-  .party__clock-rail { margin-top: 0; }
-
   /* Las dos tarjetas se comparan AL LADO, que es lo que el artboard pide. */
   .party__packs { grid-template-columns: 1fr 1fr; gap: 32px; }
 

@@ -98,7 +98,10 @@ class ActionFillTest extends TestCase
         // ▶ Los dos bajan a relleno de tinta. `.cartbar` conserva su jerarquía —es el único control de
         // su pantalla— y su píldora pasa a `--ok`, que es donde el artboard pone su Lima.
         // ⚠️ La lista solo ENCOGE, y aquí encoge de 13 a 11 + la entrada nueva del pie.
-        '.bk-cta--sells' => 'cajón: el ÚNICO pie que cobra, «Pagar» (paso 08)',
+        // ❗❗ **`#584` · el relleno pasa a la BASE del pie** (`[DECIDIDO owner, 2026-09-13]`): «Continuar»,
+        // «Añadir al carrito», «Ir a pagar» y «Pagar» en primario. Sale `.bk-cta--sells` —una copia
+        // exacta de la base desde ese momento— y entra `.bk-cta`. Sigue siendo UNO por pantalla.
+        '.bk-cta' => 'cajón: el CTA del pie, que avanza el embudo en las cuatro pantallas que lo llevan',
     ];
 
     /**

@@ -158,25 +158,24 @@ class IdentityTintTest extends TestCase
     }
 
     /**
-     * El CTA del armazón · `[DECIDIDO owner, 2026-09-12]` sobre formas renderizadas.
+     * El CTA del armazón · `[DECIDIDO owner, 2026-09-12]` (`#581`): «el reservar principal, color cian».
      *
-     * ⚠️ Su relleno es **Azul Muro** (`--interactive`), el de la paleta — no un azul propio. Llegó a
-     * haber uno derivado al 65 % para poder llevar rótulo blanco (`--identity-deep`) y **se retiró**:
-     * era un cuarto color de botón, que es justo lo que el owner señaló como ruido.
-     * ⚠️⚠️ El rótulo lee `--paper-bg` y NO `--bg`: dentro del hero la superficie es tinta y ahí
-     * `--bg` vale TINTA, así que salía oscuro sobre el azul (**3,55** medido) mientras en el nav
-     * salía bien. Mismo alias y mismo motivo que `#196` dejó escrito para las sombras.
+     * ⚠️ Su relleno es la MARCA de la instalación (`--brand`, que emite el panel) — no el cian escrito
+     * ni el Azul Muro del secundario, que es lo que `#537` le había puesto. Llegó a haber además un
+     * azul derivado al 65 % (`--identity-deep`) y **se retiró**: era un cuarto color de botón.
+     * ⚠️⚠️ El rótulo es `--on-brand`, calculado por luminancia para esa marca: sobre el Cian PJP el
+     * blanco da **2,70** y la tinta **6,85**.
      */
     public function test_el_cta_del_armazon_lleva_el_relleno_de_identidad(): void
     {
         $css = $this->site();
 
         $this->assertMatchesRegularExpression(
-            '/\.cta-med\s*\{\s*background:\s*var\(--secondary\);\s*color:\s*var\(--on-secondary\)/s',
+            '/\.cta-med\s*\{\s*background:\s*var\(--brand\);\s*color:\s*var\(--on-brand\)/s',
             $css,
-            'el CTA del armazón perdió el relleno del SECUNDARIO. ⚠️ Su rótulo va en BLANCO y eso '.
-            'da **2,70** de contraste: es una desviación DECIDIDA por el owner sobre tres formas '.
-            'renderizadas (las otras dos, medidas, daban 6,85 y 5,13). No lo «arregles» sin reabrirla.',
+            'el CTA del armazón perdió el relleno de MARCA (`#581`). Es el color del panel, y su rótulo '.
+            'va con `--on-brand` porque blanco sobre el cian da **2,70**: no lo cambies a un color '.
+            'escrito ni a blanco sin reabrir la decisión.',
         );
         $this->assertDoesNotMatchRegularExpression(
             '/var\(--identity-deep/', $css,

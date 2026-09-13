@@ -37,7 +37,8 @@
  */
 
 /** Los carriles que se pueden arrastrar. Los dos comparten receta; el CSS pone el resto. */
-const CARRILES = ['.addons-rail__track', '.rev__track'];
+// ⚠️ El carril de complementos (`.addons-rail__track`) estaba aquí y se retiró con su pieza (`#583`).
+const CARRILES = ['.rev__track'];
 
 /** Por debajo de esto no fue un arrastre, fue un clic con pulso. */
 const UMBRAL = 4;

@@ -1831,15 +1831,16 @@ body.no-scroll { overflow: hidden; }
 .bk-seg { display: flex; gap: var(--sp-7); }
 .bk-seg__item { flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0; }
 .bk-seg__bar { height: 5px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; position: relative; }
-/* ⚠️⚠️ **LA BARRA DE FASE SE QUEDA EN MARCA, y casi la cambio** (`#551`): la grieta 01 manda sacar el
-   color de marca de la ACCIÓN, de la CIFRA, del ENLACE y de la CASILLA — no de todas partes. El
-   artboard la dibuja literalmente en `#1AA9DE` (`background:#1AA9DE` en el relleno de cada tramo), y
-   tiene sentido: el progreso no es un control, es el hilo de la marca que recorre el embudo.
-   ▶ *Lo comprobé contra el dibujo antes de creerme la regla general, y la regla general se equivocaba.* */
-.bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--zone-1); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-cae) var(--ease-sale); }
+/* ❗❗ **LA LÍNEA DE PASOS VA EN EL SECUNDARIO** (`#584`, `[DECIDIDO owner, 2026-09-13]`): el relleno de
+   cada tramo y el halo de la fase actual leen `--secondary` —Azul Muro sobre papel—, el mismo color
+   que el botón secundario de la familia.
+   ⚠️ Hasta aquí iba en `var(--zone-1)`, la marca (`#551`: el artboard la dibuja en `#1AA9DE`). Con el
+   CTA del pie en el color de ACCIÓN, una barra en ese mismo cian competía con él en cada pantalla; en
+   el secundario acompaña sin pedir el clic. Y deja de leer un token de ZONA, que es la grieta 01. */
+.bk-seg__bar::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--secondary); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-cae) var(--ease-sale); }
 .bk-seg__item.is-done .bk-seg__bar::after,
 .bk-seg__item.is-current .bk-seg__bar::after { transform: scaleX(1); }
-.bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--zone-1) 30%, transparent); }
+.bk-seg__item.is-current .bk-seg__bar { box-shadow: 0 0 0 2px color-mix(in srgb, var(--secondary) 30%, transparent); }
 /* ⚠️⚠️ **NI MAYÚSCULAS NI ESPACIADO DE LETRA, y no es gusto: con cinco fases NO CABEN** (`#555`).
    Medido a 390: «Quién eres» pedía **73 px en un carril de 64,4** y salía con puntos suspensivos —una
    fase que no se puede leer no dice en qué paso estás—. Las mayúsculas y el `letter-spacing: 0.06em`
@@ -1915,28 +1916,27 @@ body.no-scroll { overflow: hidden; }
 
 /* ⚠️ `.purchase__back` se RETIRÓ en `#555` con su sujeto: era el hueco bajo el «Volver» propio de
    los pasos 4, 5 y 8, y esos tres botones se fueron a la banda, que trae el suyo. */
-/* ❗❗❗ **EL CTA DEL PIE ES SECUNDARIO, Y SOLO UNO DE LOS CUATRO VENDE** (`#551`, la grieta 01).
-   Pintaba con `var(--zone-1)` —la MARCA— en las once pantallas del embudo, incluida la de pagar: o
-   sea que el único botón que cobra de verdad salía del mismo color que «Continuar». El artboard
-   (`Pasos Compra PJP`) los dibuja los tres en **tinta `#101418`** y el sistema lo declara: *«solo un
-   botón de relleno de acción por pantalla»*, *«en claro el secundario es tinta, nunca cian»*.
-   ▶ Quién vende NO se deduce aquí: lo dice `foot.js` con `sells`, y la plantilla solo traduce ese
-   dato a `.bk-cta--sells`. El hover va a marca, que es el idioma de `.cta-med` (`#217`). */
+/* ❗❗❗ **EL CTA DEL PIE ES PRIMARIO EN LAS CUATRO PANTALLAS QUE LO LLEVAN** (`#584`, `[DECIDIDO owner,
+   2026-09-13]`): «Continuar», «Añadir al carrito», «Ir a pagar» y «Pagar» avanzan el embudo con el
+   color de ACCIÓN, el mismo que «Reservar» en el armazón.
+   ⚠️ **Esto REVIERTE el reparto de `#551`**, donde solo «Pagar» llevaba acción y los otros tres iban
+   en el secundario. «Un solo relleno de acción por pantalla» se sigue cumpliendo: cada pantalla lleva
+   UN pie. «Ir al carrito» del catálogo (`.cartbar`) se queda en secundario, preguntado.
+   ▶ `.bk-cta--sells` sigue marcando el pie que COBRA —lo dice `foot.js`—, pero ya no pinta: decide el
+   ancla de la cifra y el rótulo del pie de pagar (`.bk-foot:has(.bk-cta--sells)`). */
 /* ⚠️ **El tamaño GRANDE del sistema, al dígito** (`#554`): alto 56, relleno 18/34, peso 800. Los tres
    valores salen de la hoja de componentes del cliente y **el alto es exacto por el `line-height`**:
    con 18 de relleno y una línea de 16 px a 1,25 salen 20 + 36 = 56. Sin declararlo, la línea heredada
    mide 21 y el botón sale a 57 — un píxel que no cumple ningún token y que nadie vería.
    ⚠️ El 34 NO tiene escalón en la escala de espacio (llega a 28), así que va en literal a propósito:
    `ScaleTokensAreUsedTest` prohíbe fabricarlo con un `calc()` a mano (`#437`). */
-.bk-cta { display: inline-flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-18) 34px; line-height: 1.25; border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--secondary); color: var(--on-secondary); font-family: var(--font-body); font-weight: var(--fw-black); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
-/* ⚠️ `#540` · el hover deja de leer `--zone-*` —el color de la zona del catálogo— porque su
-   premisa («reposa en TINTA y acusa el paso pasando a marca») murió al pasar el reposo a cian. */
-.bk-cta:hover { transform: translateY(-2px); background: var(--secondary-hover); color: var(--on-secondary); box-shadow: var(--shadow-lift); }
-/* El pie que COBRA: el único relleno de acción del embudo («Pagar», paso 08). Sin color de acción en
-   la instalación, `--action` cae a `--fg` y este botón vuelve a ser idéntico a sus hermanos — que es
-   el fallo correcto: un naranja inventado sería peor que no distinguirlo. */
-.bk-cta--sells { background: var(--action); color: var(--on-action); }
-.bk-cta--sells:hover { background: var(--action-hover); color: var(--on-action-hover); }
+.bk-cta { display: inline-flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-18) 34px; line-height: 1.25; border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--action); color: var(--on-action); font-family: var(--font-body); font-weight: var(--fw-black); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
+/* El hover oscurece su propio relleno con el escalón derivado del rol (`ThemeSettings::actionHover()`),
+   como `.btn`. ⚠️ Sin color de acción en la instalación, `--action` cae a `--fg`: el pie sale en tinta,
+   que es el fallo correcto — un color inventado sería peor.
+   ⚠️ Aquí vivían `.bk-cta--sells` y su `:hover`, el relleno de acción SOLO del pie de pagar (`#551`),
+   y se retiraron en `#584`: con el relleno en la base eran una copia exacta de ella. */
+.bk-cta:hover { transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift); }
 .bk-cta svg { width: 17px; height: 17px; transition: transform var(--dur-entra) var(--ease-entra); }
 .bk-cta:hover svg { transform: translateX(4px); }
 .bk-cta:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; transform: none; box-shadow: none; }
@@ -2412,9 +2412,11 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
 .catalog__item:hover .catalog__ico { color: var(--interactive); }
 .catalog__badge {
     font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
-    /* La chapa del destacado en TINTA (`#551`): el artboard la dibuja `background:#101418` con el
-       texto en papel. Marcar «la más vendida» es decir algo del producto, no pintar la marca. */
-    background: var(--fg); color: var(--bg); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
+    /* ❗❗ **La etiqueta destacada en el AMARILLO del sistema** (`#585`, `[DECIDIDO owner, 2026-09-13]`):
+       la misma pieza que la web pinta donde salga el producto, con el rol del marcador. Hasta aquí iba
+       en tinta (`#551`). Los respaldos cubren una vista sin `landing.css`: sin paquete `--marker` es
+       transparente y la palabra se lee en tinta. Lo vigila `FeaturedBadgeColourTest`. */
+    background: var(--marker, transparent); color: var(--on-marker, var(--fg)); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
     white-space: nowrap;
 }
 /* La línea de ventajas del catálogo, acotada a DOS líneas (`[DECIDIDO owner]`, grieta 00).
@@ -4142,32 +4144,30 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .cta-ghost__ico .ic-reg { width: calc(var(--cta-ico) * 0.86); height: auto; }
 .cta-ghost__ico .ic-reg svg { width: 100%; height: auto; }
 
-/* MED — COMPRAR. Peso alto: relleno de tinta, color de marca al pasar el cursor.
-   ⚠️ **NO es el rol de acción** (`#213`): el CTA fijo del mockup pinta tinta fuera del menú y
-   AVISO dentro, o sea una coreografía, no un rol. Su hermano `.cta-prime` —la barra de móvil— sí
+/* MED — COMPRAR. Peso alto: relleno de MARCA, que se oscurece al pasar el cursor (`#581`).
+   ⚠️ **NO es el rol de acción** (`#213`): el CTA fijo del mockup cambia a AVISO dentro del menú, o
+   sea una coreografía, no un rol. Su hermano `.cta-prime` —la barra de móvil— sí
    está en el rol, y eso es una diferencia real entre las dos piezas. */
-/* ⚠️ `#537` · el relleno pasa de TINTA a la variante profunda de la identidad
-   (`[DECIDIDO owner, 2026-09-12]`, elegido sobre cinco formas renderizadas). El argumento no es de
-   gusto, es de JERARQUÍA y está medido contra el Papel: el botón de tinta destacaba **16,79** y el
-   naranja de comprar **2,66**, o sea que el secundario gritaba 6,3× más fuerte que la acción. Con
-   `--identity-deep` baja a ~5,2 y deja de aplastarlo.
-   ⚠️ El relleno es **Azul Muro** (`--interactive`), el de la paleta: con Papel da **6,43**, y sus
-   estados ya están declarados (600 → 7,61 · 700 → 8,99). El cian PLENO no vale como relleno con
-   rótulo claro —da **2,70**, por debajo incluso del umbral de texto grande—.
-   ❗❗❗ **EL RÓTULO ES `--bg`, Y ESTO CORRIGE LO QUE ESTA MISMA TANDA HABÍA ESCRITO.** Mientras el
-   relleno fue un azul FIJO, el rótulo tenía que ser `--paper-bg` —dentro del hero `--bg` vale tinta
-   y el texto salía oscuro sobre el azul, 3,55 medido—. Al pasar el relleno a `--interactive`, que
-   **cambia con la superficie** (Azul Muro en papel · Cian en tinta), la regla se invierte: sobre
-   tinta el relleno es CIAN, y ahí `--paper-bg` da **2,45** mientras `--bg` da **6,85**.
-   ▶ *Cuando el relleno sigue a la superficie, el rótulo también.* Medido: 6,43 en papel · 6,85 en
-   tinta. Lo cazó una guarda del otro carril, que exigía `--bg` con su motivo escrito. */
+/* ❗❗❗ `#581` · EL RELLENO ES LA MARCA DE LA INSTALACIÓN (`[DECIDIDO owner, 2026-09-12]`: «el CTA
+   reservar de arriba a la derecha, el principal, color cian»). Revierte `#537`, que lo había bajado
+   a Azul Muro (`--secondary`) para que no gritara más que el naranja de comprar: ese argumento
+   caducó cuando el naranja dejó de ser el color de reservar.
+   ▶ Es `--brand` y NO el cian escrito: lo emite el panel (`ThemeSettings::cssRootDeclarations()`),
+   así que otra instalación pinta el botón con SU marca sin tocar esta hoja.
+   ⚠️⚠️ **El rótulo es `--on-brand` —elegido por luminancia para ESE color— y no blanco.** Sobre el
+   Cian PJP el blanco da **2,70**, por debajo incluso del 3,0 de texto grande, y la tinta **6,85**.
+   Es además el par que este botón ya enseñaba al pasar el cursor: no estrena combinación.
+   ⚠️⚠️ **El hover ELEVA y NO cambia el relleno**, igual que su fantasma (`#216`). Se probó a
+   oscurecer la marca ×0,88 —el factor de `actionHover()`— y el rótulo aguantaba (5,5) pero el
+   SUB-rótulo, que va rebajado, caía a **4,1**: por debajo de AA justo en el estado que se mira.
+   Un botón que ya reposa en marca no tiene a qué color «pasar»; la señal es la sombra. */
 .cta-med {
-    background: var(--secondary); color: var(--on-secondary);
+    background: var(--brand); color: var(--on-brand);
     border: 0;
     font-weight: 600;
     box-shadow: var(--shadow-nav-fill);
 }
-.cta-med:hover { background: var(--zone-1); color: var(--on-brand); box-shadow: var(--shadow-nav-fill-lift); }
+.cta-med:hover { box-shadow: var(--shadow-nav-fill-lift); }
 .cta-med:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
 /* ⚠️⚠️ **El chip y su glifo SALEN DE LA ALTURA DEL BOTÓN, y antes no** (`#260`). Medido en el hero:
    el botón crece a **74 px** con la coreografía (`--cta-pair-h`) y el icono se quedaba en **22**,
@@ -4197,20 +4197,19 @@ body[data-has-hero].nav--live .hero__pair-slot {
 .cta-ghost { --cta-border: 1px; }
 .cta-med__ico {
     width: var(--cta-ico); height: var(--cta-ico);
-    /* El velo del chip sale del TEMA: sobre el botón de tinta rinde claro, y dentro del menú lo
-       re-escopa la regla de superficie de abajo. Antes era `rgba(255,255,255,.10)`, un blanco
-       crudo que ninguna instalación podía tocar (ficha de `DEUDA.md`, `#194`). */
-    background: color-mix(in srgb, var(--bg) 14%, transparent);
+    /* El velo del chip sale del TEMA y sigue al RÓTULO (`#581`): sobre la marca el rótulo es
+       `--on-brand`, así que el velo es ese mismo color muy rebajado —tinta sobre el cian, crema
+       sobre una marca oscura—. Dentro del menú lo re-escopa la regla de superficie de abajo. Antes
+       era `rgba(255,255,255,.10)`, un blanco crudo que ninguna instalación podía tocar (`#194`). */
+    background: color-mix(in srgb, var(--on-brand) 12%, transparent);
     border-radius: var(--r-xs);
     display: grid; place-items: center;
     flex-shrink: 0;
     transition: background var(--dur-sale) var(--ease-sale);
 }
 .cta-med__ico svg { width: calc(var(--cta-ico) * 0.7333); height: calc(var(--cta-ico) * 0.7333); }
-.cta-med__ico .tk { width: 28px; height: 18px; color: var(--bg); }
+.cta-med__ico .tk { width: 28px; height: 18px; color: var(--on-brand); }
 .cta-med__ico .tk svg { width: 28px; height: 18px; }
-.cta-med:hover .cta-med__ico { background: color-mix(in srgb, var(--fg) 10%, transparent); }
-.cta-med:hover .cta-med__ico .tk { color: var(--fg); }
 
 /* El rótulo va en la fuente de ROTULO y en mayúsculas, como el CTA fijo del mockup. La fuente sale
    del TOKEN —no del nombre—, así que una instalación la cambia con `THEME_FONTS` y esto la sigue. */
@@ -4245,11 +4244,15 @@ body[data-has-hero].nav--live .hero__pair-slot {
     text-transform: uppercase; letter-spacing: 0.01em;
 }
 /* ⚠️ HEREDAN el color del botón y solo bajan la opacidad, en vez de calcularlo con un token: el
-   botón pinta de TRES colores distintos —tinta, marca al pasar el cursor y aviso dentro del
-   menú— y cualquier token elegido aquí fallaría en dos de los tres. Es también lo que hace el
-   mockup (`opacity:.62`). */
+   botón pinta de TRES colores distintos —la marca, la marca oscurecida al pasar el cursor y el
+   aviso dentro del menú (`#581`)— y cualquier token elegido aquí fallaría en alguno. Es también lo
+   que hace el mockup (`opacity:.62`). */
 .cta-med__s,
 .cta-ghost__s { font-size: calc(var(--cta-pair-fs, 17px) * 0.647); color: inherit; opacity: 0.62; }
+/* ⚠️⚠️ **Sobre la MARCA el `.62` del mockup no llega** (`#581`): «desde 8,00 €» es texto de 11 px y
+   la tinta al 62 % sobre el Cian PJP da **3,44**, por debajo del 4,5 de AA. Al 80 % da **4,96** y
+   la jerarquía la sigue haciendo la talla —11 px en Hanken contra 17 en Bungee—, no la opacidad. */
+.cta-med__s { opacity: 0.8; }
 
 /* ══ EL INTERCAMBIO ═══════════════════════════════════════════════════════════════════════════
    Reposo: COMPRAR ancho, la cuenta a su icono. Es la jerarquía, no un default cualquiera —comprar

@@ -200,8 +200,6 @@ return [
         // ⚠️ **«—» no es «gratis»: es que ese día no se vende.** Lo dice en voz alta el lector de
         // pantalla, que no ve la raya.
         'not_sold' => 'No se vende ese día',
-        // La fila de la hora extra dice con qué entradas se puede comprar, y sale del PIVOTE.
-        'with_entry' => 'con :entries',
 
         // ── QUÉ ES LA TARIFA ESPECIAL ─────────────────────────────────────────────────────
         // ⚠️ Los días salen del rótulo del panel (`:label`) y los normales se derivan: ni una lista
@@ -216,10 +214,6 @@ return [
         // artboard escribe «cuentan como fin de semana, en precio y en horario» y eso es justo lo
         // que `#487` retiró de la 07, porque el producto no puede afirmarlo.
         'holidays_title' => 'Los festivos',
-
-        // ── LO QUE SE AÑADE ───────────────────────────────────────────────────────────────
-        'addons_title' => 'Lo que se añade',
-        'addons_lede' => 'Se compra al reservar o en el parque.',
 
         // ── LA LÍNEA A CUMPLEAÑOS ─────────────────────────────────────────────────────────
         // ⚠️ «con la comida incluida» es comprobable: el pack trae un menú marcado como incluido.
@@ -276,20 +270,14 @@ return [
         // dominio cae al dígito, que es preferible a inventar la palabra.
         'times' => [2 => 'dos', 3 => 'tres', 4 => 'cuatro', 5 => 'cinco', 6 => 'seis'],
 
-        // ── El bloque de COMPLEMENTOS, debajo del carril ──────────────────────────────────
-        'addons_title' => 'Complementos disponibles',
-        'addons_intro' => 'Puedes añadirlos a cualquier entrada.',
+        // ── El precio de un COMPLEMENTO ───────────────────────────────────────────────────
+        // ⚠️ Desde `#583` la web no publica complementos al reservar (se ofrecen en el cajón): estas
+        // tres las lee solo lo que se elige DESPUÉS de reservar, en `/cumpleanos`.
         'from' => 'desde',
         // ⚠️ La unidad de un complemento sale del PIVOTE: `per_guest` o `fixed`. **No se escribe
         // «por persona» en uno `fixed`** — de ésos se elige cantidad, no se cobra uno por cabeza.
         'addon_per_guest' => 'por invitado',
         'addon_each' => 'cada uno',
-        // Los rótulos de las flechas del carril (`#549`). ⚠️ **Dicen QUÉ recorren y no «anterior» /
-        // «siguiente» a secas**: las flechas viven fuera del grupo del carril, así que un lector de
-        // pantalla las anuncia sin el contexto que da su `aria-label`.
-        'addon_prev' => 'Ver los complementos anteriores',
-        'addon_next' => 'Ver más complementos',
-        'from' => 'desde',
     ],
     'registration' => [
         'title' => 'Completa tu registro en casa',
@@ -321,19 +309,9 @@ return [
         'per_child' => 'por niño',
         'special_suffix' => 'en tarifa especial',
         'see_pack' => 'Ver el cumple',
-        /*
-         * EL RELOJ de las dos horas. ⚠️⚠️ **No reparte, y ésa es la regla**: las dos horas son para
-         * todo —merienda, tarta y saltos— y no hay hora para nada. Un diagrama de tramos promete
-         * horario aunque la letra diga lo contrario, así que se dibuja el TOTAL entero con las tres
-         * cosas encima. `:duration` sale del catálogo.
-         */
-        'clock_title' => 'Las :duration, a vuestro ritmo',
-        'clock_a' => 'Saltos', 'clock_b' => 'Merienda', 'clock_c' => 'Tarta',
-        'clock_rule' => 'Dentro cabe todo y sin horario: si meriendan rápido, saltan más rato. El orden lo decidís vosotros.',
-        'clock_monitor' => 'Un monitor con ellos de principio a fin. Vosotros, sentados.',
-        // El bloque de complementos, con el molde compartido con las tarifas (`#483`).
-        'addons_title' => 'Tu fiesta, tu manera',
-        'addons_intro' => 'Añade lo que quieras: nada de esto hace falta para reservar.',
+        // La DURACIÓN del pack, primera línea de lo que incluye (`#583`): sustituye al reloj «Las 2 h, a
+        // vuestro ritmo», que se retiró. `:duration` sale del catálogo, ya escrita («2 h»).
+        'duration_feature' => ':duration de fiesta',
         'eyebrow' => 'Cumpleaños',
         'reserve_terms' => 'De :min a :max niños · Señal de :deposit € para reservar',
         // `/cumpleanos` sin packs vendibles: la entradilla y su salida.
@@ -358,10 +336,8 @@ return [
         'row_each_special' => 'En tarifa especial',
         'row_age' => 'Edad',
         'row_kids' => 'Niños',
-        'row_duration' => 'Duración',
         'row_deposit' => 'Señal',
         'row_features' => 'Incluye',
-        'row_extend' => 'Alargar la fiesta',
         'row_total' => 'Total',
         'row_total_special' => 'Total en tarifa especial',
         'kids' => 'De :min a :max niños',

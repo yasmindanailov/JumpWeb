@@ -178,9 +178,10 @@ class ShapeScaleTest extends TestCase
         );
 
         // Por NOMBRE, no por umbral: un contador no distingue «leo poco» de «leo otra cosa».
-        // ⚠️ `.bd-card` era una de las tres agujas y se fue en `#528`: la sustituye la ficha del
-        // carril de complementos, que vive en la portada, en tarifas y en `/cumpleanos`.
-        foreach (['.foot__strip', '.addon-card', '.offw-card'] as $needle) {
+        // ⚠️ `.bd-card` era una de las tres agujas y se fue en `#528`; la ficha del carril de
+        // complementos (`.addon-card`) la sustituyó y se fue a su vez en `#583` — hoy la ocupa la foto
+        // de `/cumpleanos`, que declara su canto en `landing.css`.
+        foreach (['.foot__strip', '.party-photo', '.offw-card'] as $needle) {
             $this->assertNotEmpty(
                 array_filter($radii, fn (array $r) => str_contains($r['selector'], $needle))
                     ?: array_filter($this->sheetContents(), fn (string $c) => str_contains($c, $needle)),

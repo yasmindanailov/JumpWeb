@@ -4,7 +4,6 @@ import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
 import { installHeroSwitch } from './ui/hero-switch.js';
 import { initRailSails } from './ui/rail-sails.js';
-import { initRailArrows } from './ui/rail-arrows.js';
 import { initRailDrag } from './ui/rail-drag.js';
 
 // Livewire (Fase 4) trae su propio Alpine y lo arranca él. Por eso aquí NO
@@ -1510,9 +1509,8 @@ installHeroSwitch();
 // Las velas del carril de complementos: el módulo solo publica si hay scroll; el CSS decide (`#498`).
 initRailSails();
 
-// Y las flechas del mismo carril (`#549`). Va DESPUÉS de las velas y no es casual: quien decide si
-// las flechas se ven es el CSS a partir del `data-rail-scroll` que publica el módulo de arriba.
-initRailArrows();
+// ⚠️ Aquí se armaban las flechas del carril de complementos (`#549`), que se retiró de la web con
+// su módulo (`#583`): los complementos solo se ofrecen en el cajón, al reservar.
 
 // Arrastrar un carril con el RATÓN (`#549`, `[owner]`: «que se pueda hacer slide en todo tipo de
 // dispositivo»). Con el dedo no hace falta: eso ya lo hace el navegador.

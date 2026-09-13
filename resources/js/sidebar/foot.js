@@ -90,10 +90,10 @@ export function buildFooter(state) {
             icon: 'arrow',
             splitMode: null,
             split: null,
-            // «Continuar» no cobra: secundario, relleno de tinta (`#551`). Se declara en las CUATRO
-            // formas del pie y no se deja en `undefined` a propósito — un pie nuevo que se olvide del
-            // campo sale en tinta, que es el lado seguro, pero el censo de `SidebarActionRoleTest`
-            // solo puede contarlo si está escrito.
+            // «Continuar» no cobra. ⚠️ Desde `#584` eso ya NO decide su color —el pie entero va en
+            // primario—: decide el ancla de la cifra y el rótulo del pie de pagar. Se declara en las
+            // CUATRO formas del pie y no se deja en `undefined` a propósito: `foot.test.js` exige un
+            // booleano en cada una.
             sells: false,
             note: t(messages, 'iva_note'),
         };
@@ -171,7 +171,7 @@ function stepFooter(state) {
         icon: 'arrow',
         splitMode: 'popover',
         split,
-        // «Añadir al carrito» no cobra (`#551`).
+        // «Añadir al carrito» no cobra (y aun así va en primario desde `#584`).
         sells: false,
         note: t(messages, 'iva_note'),
     };
@@ -196,7 +196,7 @@ function cartFooter(state) {
         disabled: false,
         icon: 'arrow',
         splitMode: 'popover',
-        // «Ir a pagar» no cobra: lleva a la pantalla que cobra (`#551`).
+        // «Ir a pagar» no cobra: lleva a la pantalla que cobra (y va en primario desde `#584`).
         sells: false,
         split: cartOnlineCents < cartTotalCents
             ? {
@@ -213,16 +213,16 @@ function cartFooter(state) {
 /**
  * El pie del paso 08 · **el único que ancla en lo que se cobra** y el único que vende.
  *
- * ❗❗❗ **`sells` NO es cosmética: es el MAPA DEL NARANJA, y lo decide este módulo** (`#551`). El
- * sistema del cliente dice que el relleno de acción significa **comprar** y que *solo hay un botón de
- * relleno de acción por pantalla*; dentro del cajón eso es **un solo CTA en las once pantallas del
- * embudo: «Pagar»**. Los otros tres del pie —«Continuar», «Añadir al carrito», «Ir a pagar»— son
- * secundarios, y el artboard los dibuja en **relleno de tinta** (`#101418`).
+ * ❗❗❗ **`sells` dice QUIÉN COBRA, y lo decide este módulo** (`#551`). Nació como el mapa del relleno
+ * de acción —solo «Pagar» lo llevaba—, y **`#584` lo desató del color** (`[DECIDIDO owner, 2026-09-13]`):
+ * los cuatro pies del embudo van en primario, porque el pie es la navegación y avanza con un solo color.
+ * Lo que `sells` sigue gobernando es lo que cambia en la pantalla que cobra: el rótulo del ancla sube
+ * de peso (`.bk-foot:has(.bk-cta--sells)`).
  *
  * ⚠️ Va aquí y no en la plantilla porque **quien sabe si un pie vende es quien lo compone**. Deducirlo
  * del rótulo o del `action` en el marcado sería una segunda copia de la regla, y el día que alguien
- * añada un paso que cobre, la plantilla no se enteraría — y el botón saldría en tinta sin que nada
- * fallara.
+ * añada un paso que cobre, la plantilla no se enteraría — y su pie no ganaría el rótulo de cobro sin
+ * que nada fallara.
  *
  * ⚠️ **El rótulo sigue al hecho**: con desglose dice «Pagas ahora», y sin él «Total». Sin señal no hay
  * ningún «después», así que «Pagas ahora» insinuaría un resto que no existe — y las dos cifras son la

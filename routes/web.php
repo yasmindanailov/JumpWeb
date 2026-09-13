@@ -317,8 +317,9 @@ Route::get('/admin/calendario/resumen-dia', DailySummaryController::class)
  * ❗❗❗ **CERRADAS POR ENTORNO Y TEMPORALES.** Fuera de `local` la ruta **no se registra**, así que
  * en producción es un 404 y no una página oculta: una pantalla de prototipo alcanzable por URL es
  * exactamente la clase de superficie que nadie revisa y que acaba indexada. Llevan además su
- * `noindex`. ▶ Cuando el owner elija, estas dos rutas se van con sus vistas y con las 18 ranuras de
- * laboratorio de `IllustrationKit::SLOTS`.
+ * `noindex`. ▶ El owner ya eligió (la variante 2, `#580`) y 14 de las 18 ranuras que esto declaraba
+ * tienen hoy pantalla de producción: el día que estas dos rutas se vayan, con ellas se van solo las
+ * cuatro manchas que nadie más pinta (`IllustrationKit::SLOTS`, «EL LABORATORIO DE FACHADA»).
  *
  * ⚠️ Sin `web` completo a propósito: no necesitan sesión, ni CSRF, ni cookies. Lo único que piden
  * es el idioma, para que los tokens y las fuentes sean los de la web.

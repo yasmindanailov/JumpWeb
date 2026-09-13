@@ -75,20 +75,34 @@ class IllustrationKit
         'slot-resenas',
         'slot-dudas',
 
-        // ── EL LABORATORIO DE FACHADA ────────────────────────────────────────────────────────
-        // ⚠️⚠️ **Estas 18 son TEMPORALES y su consumidor son las dos pantallas de variantes**
-        // (`/_diseno/splash` y `/_diseno/siluetas`, `#545`), que existen para que el owner elija
-        // mirando y **no se sirven en producción**. Cuando elija, aquí se quedan solo las que se
-        // coloquen de verdad y el resto se va con su pantalla — que es la regla de siempre: una
-        // ranura vive exactamente lo que vive su consumidor.
-        // ▶ Están declaradas y no coladas por la puerta de atrás **a propósito**: sin declararlas,
-        // `kit:build` rechaza el kit entero y el laboratorio no podría pintar nada. Mejor 18 claves
-        // visibles con fecha de caducidad escrita que un mecanismo con un agujero para prototipos.
-        'slot-splash-1', 'slot-splash-2', 'slot-splash-3',
-        'slot-splash-4', 'slot-splash-5', 'slot-splash-6',
+        // ── EL MURAL (`#580`) ────────────────────────────────────────────────────────────────
+        // ❗ La variante 2 de la fachada, elegida por el owner y en producción: sus consumidores
+        // son `<x-site.facade>` (portada y las seis páginas), `<x-site.arc>` y `<x-site.trio>`.
+        //     manchas   · 4 «Antes de venir» · 6 `/bar`
+        //     adultos   · p1 `/atracciones` · p2 p8 p9 el arco · p3 «Visítanos» · p4 `/normas`
+        //               · p5 «Para quién» y la cumbre del arco · p6 `/precios` · p7 `/contacto`
+        //     niños     · k1 k2 k3 el trío · k3 también al lado del adulto en «Para quién»
+        'slot-splash-4', 'slot-splash-6',
         'slot-pose-p1', 'slot-pose-p2', 'slot-pose-p3', 'slot-pose-p4', 'slot-pose-p5',
         'slot-pose-p6', 'slot-pose-p7', 'slot-pose-p8', 'slot-pose-p9',
         'slot-pose-k1', 'slot-pose-k2', 'slot-pose-k3',
+
+        // ── LOS ICONOS «DEL PARQUE» (`#582`) ─────────────────────────────────────────────────
+        // Los del set de 24 que son de PlayJump (`#475`) y por eso entran por aquí, cada uno el día
+        // que tiene pantalla. Los genera `scripts/kit-iconos.py`, con los trazos pasados a relleno.
+        //     calcetines · la nota de «Antes de venir» (portada)
+        //     altura     · «La altura, de un vistazo» (`/normas`)
+        //     saltador   · el grupo «Mientras saltas» (`/normas`)
+        // ⚠️ `cama`, `canasta` y `bote` NO están, a propósito (`[DECIDIDO owner, 2026-09-13]`): con los
+        // iconos por zona del parque no tienen pantalla, y declararlas sin ella tumba esta guarda.
+        'slot-ico-calcetines', 'slot-ico-altura', 'slot-ico-saltador',
+
+        // ── EL LABORATORIO DE FACHADA ────────────────────────────────────────────────────────
+        // ⚠️⚠️ **Estas cuatro son TEMPORALES y su ÚNICO consumidor es el laboratorio**
+        // (`/_diseno/splash`, `#545`, solo en `local`). El día que el laboratorio se retire se van
+        // con él —la regla de siempre: una ranura vive lo que vive su consumidor— y el kit de cada
+        // instalación tiene que dejar de traerlas en el mismo cambio, o `kit:build` lo rechaza.
+        'slot-splash-1', 'slot-splash-2', 'slot-splash-3', 'slot-splash-5',
 
         // ⚠️⚠️ **SEXTA VEZ QUE ESTA LISTA ENCOGIÓ POR LA MISMA REGLA: una ranura vive exactamente lo
         // que vive su consumidor.** El historial, para que nadie lo lea como un olvido:

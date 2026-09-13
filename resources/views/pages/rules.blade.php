@@ -26,6 +26,7 @@
          artboard (2–6 / desde 7): `[DECIDIDO owner]`, manda el catálogo para el producto y la zona
          para el acceso. El texto vive en el panel, así que esto no lo decide la plantilla. --}}
     <main id="main" class="page page--rules wrap">
+        <x-site.facade en="page-normas" />
         <x-site.page-head :title="__('site.rules_headline')" :lede="__('site.rules_intro')">
             {{-- A2 · la trama que se apaga. **UNA por pantalla** (`[DECIDIDO owner, 2026-08-31]`),
                  no una por tarjeta. Va en la CABECERA y dentro del conjunto rótulo + titular, que la
@@ -40,7 +41,8 @@
              ⚠️ Sin ninguna zona con altura declarada no se pinta: vacío es una respuesta. --}}
         @if ($scale)
             <section class="rules-axis" aria-labelledby="rules-axis-title">
-                <h2 class="rules-axis__title" id="rules-axis-title">{{ __('site.rules_axis_title') }}</h2>
+                {{-- El icono de ALTURA (`#582`), del kit de la instalación: sin él, el titular solo. --}}
+                <h2 class="rules-axis__title" id="rules-axis-title"><x-site.kit-ico clave="slot-ico-altura" />{{ __('site.rules_axis_title') }}</h2>
                 {{-- ⚠️ `aria-hidden`: es el DIBUJO de lo que las normas de abajo ya dicen con
                      palabras, y una escala de estatura no se recorre con un lector de pantalla. --}}
                 <div class="rules-axis__chart" aria-hidden="true">
@@ -63,10 +65,15 @@
              ⚠️ El porqué se pinta SOLO si la norma lo tiene: no toda norma tiene motivo que contar,
              y una frase inventada para rellenar el hueco es peor que el hueco. --}}
         @foreach ($board['groups'] as $group)
+            {{-- El icono del MOMENTO (`#582`): hoy solo «Mientras saltas» tiene uno —el saltador, del kit—
+                 (`[DECIDIDO owner]`). ⚠️ La clave DEPENDE de la fila y es `null` para las demás: un dibujo
+                 fijo dentro de este bucle saldría en los tres grupos, que es lo que
+                 `FacadeDecorationIsPerScreenTest` impide. --}}
+            @php($iconoMomento = ['inside' => 'slot-ico-saltador'][$group['moment']] ?? null)
             <section class="rules-group" aria-labelledby="rules-{{ $group['moment'] }}">
                 <div class="rules-group__head">
                     <p class="rules-group__label">{{ __('site.rules_moment.'.$group['moment'].'.label') }}</p>
-                    <h2 class="rules-group__title" id="rules-{{ $group['moment'] }}">{{ __('site.rules_moment.'.$group['moment'].'.title') }}</h2>
+                    <h2 class="rules-group__title" id="rules-{{ $group['moment'] }}"><x-site.kit-ico :clave="$iconoMomento" />{{ __('site.rules_moment.'.$group['moment'].'.title') }}</h2>
                 </div>
                 <ul class="rules-list" role="list">
                     @foreach ($group['rules'] as $rule)

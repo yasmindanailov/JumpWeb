@@ -1,140 +1,80 @@
-{{-- ══ FACHADA · LAS DOS VARIANTES SOBRE LA PORTADA REAL ══════════════════════════════════════
-     `DECISIONES #546` · pasada de vestido (`#497`). El laboratorio (`/_diseno/…`) enseña las
-     colocaciones **sueltas**; esto las pone en la portada de verdad para poder juzgar el conjunto,
-     que es lo único que dice si la página está «sosa» o no.
+{{-- ══ LA FACHADA · el mural de la instalación sobre la web ═══════════════════════════════════
+     `DECISIONES #580` · pasada de vestido (`specs/pasada-de-vestido.md` §3.quater). Es la variante
+     2 «mural» (`#546`→`#548`), que el owner eligió sobre la portada real con `?fachada=2`, pasada a
+     producción y extendida a las páginas interiores.
 
-         localhost:8081/?fachada=1     «dentro»  · el material vive dentro de las cajas
-         localhost:8081/?fachada=2     «mural»   · el material toma la pantalla
+     ❗❗ **EL DIBUJO ES DEL CLIENTE Y LA COLOCACIÓN ES DEL PRODUCTO.** Cada fila dice qué pieza del
+     kit (`client-kit.svg`), con qué tratamiento y con qué clase; **dónde y con cuánta presencia lo
+     dice `landing.css`** («LA FACHADA · EL MURAL»). Sin kit —o sin esa pieza dentro— `<x-site.ilu>`
+     no emite nada y aquí queda una capa vacía de cero bytes visibles (`#286`).
 
-     ❗❗❗ **ES TEMPORAL Y NO SE SIRVE EN PRODUCCIÓN.** El parámetro solo se lee en `local`, así que
-     fuera de ahí la portada es exactamente la de siempre — ni una pieza, ni un `<style>`, ni un
-     byte de más. Cuando el owner elija, aquí queda **una** colocación y este `@if` se va.
+     ⚠️⚠️ **La posición NO va en `style` en línea, y el prototipo sí la llevaba.** Un atributo `style`
+     gana a cualquier regla de hoja, así que colocar una pieza distinta en móvil obligaba a
+     `!important` —y sin él la mancha de «Antes de venir» se quedaba encima del titular con la media
+     query aplicándose, sin fallar—.
+     ⚠️ **Y la clase va con DOS selectores en la hoja** (`.fac-p.fac-p--x`): `site.css` se carga
+     DESPUÉS de `landing.css` y declara `.ilu { height: auto }`, que a igual especificidad ganaría.
 
-     ⚠️⚠️ **TODO EL DISEÑO VIVE EN EL MAPA DE ABAJO, y es a propósito.** Cada pieza es una línea:
-     qué dibujo, con qué tratamiento, dónde y con cuánta presencia. Iterar es editar una fila —no
-     buscar por siete vistas—, que es justo lo que esta pieza necesita mientras se decide.
+     ⚠️ **Una clave desconocida LANZA**, como el tratamiento de `<x-site.ilu>`: una errata en `en`
+     pintaría nada sin avisar, y una sección sin su figura no la echa en falta ninguna guarda.
 
-     ⚠️ **El `z-index: -1` necesita que la sección sea un contexto de apilamiento.** `.section` es
-     `position: relative` pero sin `z-index`, así que no lo crea: sin `isolation` la pieza se hunde
-     por detrás del fondo de la página y desaparece (el patrón de `#286`). La regla se inyecta aquí
-     y **solo con variante activa**, para no tocar una declaración que comparten las doce vistas.
-
-     ⚠️ El recorte es de la SECCIÓN: `inset: 0` + `overflow: hidden` hacen que una figura más alta
-     que su caja se corte por el borde en vez de empujar el alto de la página. Las que el mapa marca
-     como `escapa` lo apagan a sabiendas. --}}
+     ⚠️ **La capa necesita un anfitrión que sea contexto de apilamiento** (`z-index: -1` se hundiría
+     por detrás del fondo de la página). No se pide a quien la usa: lo pone la hoja con
+     `:has(> .fac-slot)`, así que la pieza se lleva su requisito consigo. --}}
 @props(['en'])
 
 @php
     /*
-     * ⚠️ **La variante se lee AQUÍ y no se pasa por prop**: con siete llamadas, un prop obligaría a
-     * calcularla en el controlador y a enhebrarla por la vista, y este bloque tiene que poder
-     * borrarse de un tirón sin dejar una variable huérfana detrás.
-     * ⚠️ Y se lee solo en `local`: en producción `$v` es siempre 0 y no se emite nada.
-     */
-    $v = app()->environment('local') ? (int) request()->query('fachada', 0) : 0;
-
-    /*
-     * ── EL MAPA ──────────────────────────────────────────────────────────────────────────────
-     * sección → variante → [clave del kit, tratamiento, estilo, ¿se sale de la caja?]
+     * clave de colocación => [pieza del kit, tratamiento, clases, textura detrás de la figura]
      *
-     * **VARIANTE 1 · «dentro»** — la lectura literal del canvas: *«el fondo es papel y el material
-     * vive dentro de las tarjetas»*. Opacidades bajas, nada se sale, la figura se lee como textura.
-     * **VARIANTE 2 · «mural»** — lo que el parque tiene pintado en su fachada: figuras grandes, a
-     * plena opacidad donde el fondo lo aguanta, y una que se sale de su caja.
+     * ⚠️⚠️ **02 «Cuánto» y 03 «Qué hay dentro» no tienen fila, y no es un olvido**: sus artboards lo
+     * prohíben —«cero superficies nuevas y cero manchas» y «la foto de apertura es la mancha grande:
+     * aquí no entra ninguna otra»—. «Cuánto» lleva el ARCO (`<x-site.arc>`), que va en su carril y
+     * no en la cabecera. 04 lleva el TRÍO (`<x-site.trio>`), que es una composición y no una pieza.
+     * 06 y 08 llevan su mancha tras el titular desde `#544`, y el CIERRE no lleva nada
+     * (`[DECIDIDO owner]`: «en el hero del footer no ponemos nada»).
      *
-     * ⚠️⚠️ **Ni 02 «Cuánto» ni 03 «Qué hay dentro» llevan pieza en NINGUNA de las dos**, y no es un
-     * olvido: sus artboards lo prohíben con todas las letras —«cero superficies nuevas y cero
-     * manchas» y «la foto de apertura es la mancha grande: aquí no entra ninguna otra»—. Son las dos
-     * únicas secciones donde el canvas dice que no.
+     * ▶ **Las figuras de adulto van en Cian y las de niño en Lima** (`--strip-1` · `--strip-2`): es
+     * la única distinción de color del reparto, y se lee sin explicarla.
      *
-     * ⚠️ Las manchas de 06 · 07 · 08 **no están aquí**: ya viven en el árbol (`#544`) detrás de sus
-     * titulares. Lo que estas variantes añaden es lo que iría ENCIMA de eso.
-     *
-     * ⚠️ La tinta sale de `--strip-*`, los cinco colores de marca del cliente. Las figuras de niño
-     * van en Lima (`--strip-2`) y las de adulto en Cian (`--strip-1`): es la única distinción de
-     * color del reparto, y se lee sin que nadie la explique.
+     * ⚠️ **Las páginas no repiten la pose de la portada que habla de lo mismo**: `/atracciones` no
+     * es «Para quién», y una pose que sale dos veces se nota (la regla 05 del kit).
      */
     $mapa = [
+        // ── PORTADA ─────────────────────────────────────────────────────────────────────────
+        'zones' => ['slot-pose-p5', 'plano', 'fac-p--zones', null],
+        // El NIÑO al lado del adulto, más bajo y en Lima (`[DECIDIDO owner]`, `#547`).
+        'zones-nino' => ['slot-pose-k3', 'plano', 'fac-p--zones-nino', null],
+        // Mancha y no figura: la sección ya tiene dibujo (el QR y el teléfono).
+        'before' => ['slot-splash-4', 'contorno', 'fac-p--before', null],
+        'info' => ['slot-pose-p3', 'plano', 'fac-p--info', null],
+
+        // ── PÁGINAS · una pieza por cabecera, en el papel que el titular deja a la derecha ──
+        'page-atracciones' => ['slot-pose-p1', 'plano', 'fac-p--page fac-p--page-atracciones', null],
         /*
-         * ⚠️⚠️ **TODAS SE ANCLAN A LA BANDA DE LA CABECERA, y la primera versión no.** Estaban
-         * puestas con `bottom`, y medido eso las mandaba **al fondo de secciones de 1.150 px**,
-         * detrás de las tarjetas y de sus fotos: una figura de 640 px invisible entera. El hueco de
-         * papel de una sección está ARRIBA, al lado del titular — medido: 512 px libres a la derecha
-         * en 04, 05 y 07, y 200 en 01.
+         * ❗❗ **A3 · LOS RAYOS van AQUÍ, detrás de la figura, y no en la cabecera** (`#580`). Su nota
+         * los define como «foco detrás de un precio o de una silueta», y ésta es la silueta. Vivían
+         * en la ranura `deco` del conjunto rótulo + titular, que RECORTA (`#525`): un abanico de 360
+         * dentro de una caja de 80 px de alto salía como una BANDA con los dos cantos rectos —lo vio
+         * el owner—, y su desvanecido circular no llegaba a terminar en ningún lado.
+         * ⚠️ Los rayos son MECANISMO (un degradado), no arte del kit: se pintan también sin kit.
          */
-
-        // 01 · Para quién — el hueco a la derecha del titular es el más estrecho de las cinco (200).
-        'zones' => [
-            1 => ['slot-pose-p5', 'plano', 'right:0; top:70px; height:320px; --ilu-fg:var(--strip-1); opacity:.12', ''],
-            2 => ['slot-pose-p5', 'plano', 'right:0; top:50px; height:400px; --ilu-fg:var(--strip-1); opacity:.30', ''],
-        ],
-        /*
-         * ⚠️ **El NIÑO al lado del adulto** (`[DECIDIDO owner]`). Va a su izquierda, más bajo y más
-         * pequeño: dos figuras a la misma altura y el mismo tamaño se leen como una pareja, no como
-         * «cada uno tiene su zona», que es lo que dice el titular que tienen encima.
-         * ⚠️ Y en LIMA, no en cian: es la única distinción de color del reparto —niño lima, adulto
-         * cian— y es la que hace que se entienda sin explicarla.
-         */
-        'zones-nino' => [
-            2 => ['slot-pose-k3', 'plano', 'right:170px; top:130px; height:220px; --ilu-fg:var(--strip-2); opacity:.30', ''],
-        ],
-
-        /*
-         * ⚠️⚠️ **04 · Cumpleaños ya no pasa por aquí: lleva el TRÍO DE NIÑOS (`G4`)**
-         * (`[DECIDIDO owner]`), que es una COMPOSICIÓN de tres figuras y no una pieza suelta, así
-         * que tiene componente propio (`<x-site.trio>`) y se inserta en la vista.
-         *
-         * ▶ Antes de eso hubo aquí una figura sola, y **aterrizó encima del titular de la tarjeta
-         * del reloj y lo tapaba entero**. La causa merece quedarse escrita: restar «dónde acaba la
-         * cabecera» de «dónde empiezan las tarjetas» daba una banda de 229 px que **no estaba
-         * vacía** —en medio hay una tarjeta a ancho completo—. *Un hueco calculado entre dos piezas
-         * no es un hueco: hay que mirar qué hay dentro.* Lo vio la captura, no el número.
-         */
-
-        // 05 · Antes de venir — mancha, no figura: aquí ya hay dibujo (el QR y el teléfono).
-        'before' => [
-            1 => ['slot-splash-4', 'plano', 'right:40px; top:30px; width:300px; --ilu-fg:var(--strip-1); opacity:.18', ''],
-            2 => ['slot-splash-4', 'contorno', 'right:10px; top:0; width:420px; --ilu-fg:var(--strip-1); opacity:.55', ''],
-        ],
-
-        // 07 · Visítanos — el canvas deja esta sección explícitamente a la pasada de vestido.
-        'info' => [
-            1 => ['slot-pose-p3', 'plano', 'right:10px; top:40px; height:260px; --ilu-fg:var(--strip-1); opacity:.14', ''],
-            2 => ['slot-pose-p3', 'plano', 'right:0; top:20px; height:340px; --ilu-fg:var(--strip-1); opacity:.32', ''],
-        ],
-
-        /*
-         * ⚠️⚠️ **08 · Dudas NO lleva pieza en ninguna de las dos, y se intentó.** Su cabecera vive en
-         * una columna de 352 de la rejilla de doce y **el resto de la fila lo ocupa el acordeón**
-         * (`#488`), así que el único papel libre es una franja de ~150 px bajo el titular. Medido
-         * con la sonda de cobertura: una mancha ahí queda **14 % visible** — el 86 % son bytes que
-         * no se ven. Se retira. ▶ La sección no se queda pelada: ya lleva su mancha tras el titular
-         * desde `#544`.
-         *
-         * ⚠️⚠️ **El CIERRE tampoco lleva** (`[DECIDIDO owner]`, sobre la variante 2 renderizada: «en
-         * el hero del footer no ponemos nada»). La figura estaba ahí y a plena opacidad; se retira
-         * entera. ▶ La tarjeta conserva lo que el canvas SÍ coloca en ella: la trama de puntos y el
-         * sello de Lorca (`Escritorio PJP` 1e), que ya estaban antes de esta pasada.
-         */
+        'page-precios' => ['slot-pose-p6', 'plano', 'fac-p--page fac-p--page-precios', 'rays fac-rays--precios'],
+        'page-normas' => ['slot-pose-p4', 'plano', 'fac-p--page fac-p--page-normas', null],
+        'page-contacto' => ['slot-pose-p7', 'plano', 'fac-p--page fac-p--page-contacto', null],
+        // Mancha y no figura: en el bar no se salta.
+        'page-bar' => ['slot-splash-6', 'contorno', 'fac-p--page fac-p--page-bar', null],
     ];
 
-    $pieza = $mapa[$en][$v] ?? null;
+    [$clave, $trato, $clases, $textura] = $mapa[$en]
+        ?? throw new \InvalidArgumentException("Colocación de fachada desconocida: «{$en}».");
 @endphp
 
-@if ($pieza)
-    @php
-        [$clave, $trato, $estilo, $opciones] = $pieza;
-
-        /*
-         * ⚠️ Dos opciones y las dos son de CAPA o de RECORTE, no de dibujo:
-         *   · `escapa` apaga el recorte de la sección (la pieza puede salirse de su caja);
-         *   · `encima` la saca de la capa de fondo y la pone sobre el contenido — hace falta cuando
-         *     cae sobre algo OPACO, que si no la entierra sin que nada falle.
-         * Van como cadena y no como dos booleanos: leyendo el mapa se ve qué hace cada fila.
-         */
-        $ranura = 'fac-slot'.(str_contains($opciones, 'encima') ? ' fac-slot--encima' : '');
-    @endphp
-    <div class="{{ $ranura }}" @if (str_contains($opciones, 'escapa')) style="overflow: visible" @endif aria-hidden="true">
-        <x-site.ilu :clave="$clave" :trato="$trato" class="fac-p" :style="$estilo" />
-    </div>
-@endif
+{{-- ⚠️ Las clases van ESCRITAS ENTERAS en el mapa y no compuestas: una clase armada por
+     concatenación no la ve ningún inventario de CSS (`FacadeCssHasNoOrphansTest`, `#287`). --}}
+<div class="fac-slot" aria-hidden="true">
+    @if ($textura)
+        <div class="{{ $textura }}"></div>
+    @endif
+    <x-site.ilu :clave="$clave" :trato="$trato" :class="'fac-p '.$clases" />
+</div>

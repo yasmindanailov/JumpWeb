@@ -547,11 +547,12 @@ class AddonStageTest extends TestCase
             'app/Domain/Booking/Services/AddonResolver.php' => 'la AUTORIDAD: el eje entra aquí',
             'app/Domain/Booking/Services/PostFormAddons.php' => 'VENDE en la otra fase: filtra a `postform` y además por PLAZO',
             'app/Domain/Booking/Models/TicketType.php' => 'expone `addonsSoldAtBooking()` y `addonsSoldAfterBooking()` para que la landing nombre la fase sin arrastrar flechas nuevas al grafo de módulos',
-            'app/Domain/Booking/Services/BirthdayComparison.php' => 'vende: el escaparate de `/cumpleanos` lee cada fase por su NOMBRE — la hora extra de `booking` y lo que se añade de `postform` (`#528`)',
+            'app/Domain/Booking/Services/BirthdayComparison.php' => 'vende: el escaparate de `/cumpleanos` lee la fase por su NOMBRE — lo que se añade de `postform` (`#528`; la hora extra de `booking` salió de la web en `#583`)',
             'app/Domain/Booking/Services/AddonOfferReader.php' => 'vende: la oferta del embudo',
             'app/Domain/Booking/Services/CatalogReader.php' => 'vende: la ficha pública del producto',
             'app/Domain/Content/Services/LandingAddonPresenter.php' => 'vende: anuncia bajo la tarjeta',
-            'app/Domain/Booking/Services/RateTable.php' => 'vende: la tabla de `/precios` lleva a una FILA los complementos de TIEMPO, y los pide por su fase con `addonsSoldAtBooking()` — uno de `postform` no se compra al reservar y anunciarlo aquí ofrecería lo que el embudo rechaza (`#531`)',
+            // ⚠️ `RateTable.php` estuvo aquí: llevaba la hora extra a una fila de `/precios` (`#531`) y
+            // dejó de leer complementos cuando la web dejó de publicarlos (`#583`).
             'app/Filament/Pages/CreateManualOrderPage.php' => 'vende: el alta manual del mostrador',
             'app/Domain/Booking/Services/CartPricer.php' => 'vende: presupuesto, delega en el resolutor',
             'app/Domain/Booking/Services/OrderCreator.php' => 'vende: cobro, delega en el resolutor',

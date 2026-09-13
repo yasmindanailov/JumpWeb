@@ -265,7 +265,9 @@ final class ZoneCards
     /** El suelo de la escala, escrito. */
     public function floorLabel(): string
     {
-        return $this->metros(0);
+        // «0 m» y no «0,00» (`[DECIDIDO owner, 2026-09-13]`, `#583`): es como lo escribe el artboard
+        // aprobado (`Zonas PJP` 4a). Un cero con dos decimales se leía como una cifra que medir.
+        return '0 m';
     }
 
     /**

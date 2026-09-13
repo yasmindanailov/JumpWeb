@@ -143,7 +143,6 @@ class HomeController extends Controller
              */
             // La duración del pack, ya escrita. La compone el mismo servicio que las tarjetas, con
             // el trait que escribe los valores de la landing: aquí no se formatea nada.
-            'partyDuration' => $partyCards->durationLabel($packs),
             'faqs' => ($faqs = Faq::where('is_active', true)->orderBy('position')->get()),
             /*
              * **Las secciones que el menú y el pie ofrecen de ESTA página** (`#521`). Solo la

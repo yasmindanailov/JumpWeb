@@ -114,27 +114,6 @@ class RateRailSectionTest extends TestCase
      *
      * @return list<string>
      */
-    /**
-     * Los precios de las fichas de complemento, cada uno con su unidad dentro.
-     *
-     * ⚠️⚠️ **ESTE LOCALIZADOR DEPENDÍA DE LO QUE VENÍA DESPUÉS y se puso rojo con el producto sano**
-     * (`#549`): buscaba el precio seguido de `</div>` —el cierre de la ficha— y al pasar la ficha a
-     * dos filas el precio quedó seguido de `</p>`, así que devolvía **cero coincidencias** y el caso
-     * afirmaba sobre una cadena vacía. Es la lección de `#314` (un localizador que se apoya en el
-     * vecino no acota un elemento, acota un tramo de documento).
-     * ▶ Hoy acota al ELEMENTO y admite un nivel de anidado, que es el que tiene de verdad: dentro del
-     * precio vive `.addon-card__unit`, y por eso no basta un `(.*?)</span>` perezoso.
-     */
-    private function preciosDeFicha(): array
-    {
-        preg_match_all(
-            '#<span class="addon-card__price">((?:[^<]|<span[^>]*>[^<]*</span>)*)</span>#s',
-            $this->panel('jump').$this->panel('kids'), $m,
-        );
-
-        return $m[1];
-    }
-
     /** Deja una entrada con UN solo precio, el de la tarifa normal. */
     private function reprecio(TicketType $ticket, int $cents): void
     {
@@ -309,72 +288,24 @@ class RateRailSectionTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **LOS COMPLEMENTOS SALEN DE LA TARJETA Y VIVEN EN SU PROPIO CARRIL, DEBAJO.**
-     *
-     * `[DECIDIDO owner, 2026-09-09]` sobre `Cumpleanos Pagina PJP` 5a, y hay una regla del sistema
-     * que lo pide: *«una comparativa solo compara lo que difiere; lo común va a su propio bloque»*.
-     * Los calcetines estaban en las tres tarifas, o sea escritos tres veces dentro de una
-     * comparativa — y el hueco que dejaron lo ocupa el AHORRO, que sí difiere.
-     *
-     * ⚠️ **Son los de los productos QUE SE VEN**, así que el bloque vive DENTRO del panel de cada
-     * zona: «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos con dos precios.
+     * ❗❗❗ **LOS COMPLEMENTOS NO SE PUBLICAN EN ESTA SECCIÓN** (`[DECIDIDO owner, 2026-09-13]`, `#583`):
+     * *«solo los dejamos en el SPA al reservar»*. Vivieron en un carril debajo de las tarjetas
+     * (`#480`) y antes dentro de cada tarjeta; se fueron los dos, y con ellos los casos que vigilaban
+     * su foco y su deduplicación, que se van con su sujeto (`CONVENCIONES §3.quater`).
+     * ⚠️ El caso nace con sujeto: la zona tiene complementos, así que su ausencia es decisión y no vacío.
      */
-    public function test_the_addons_live_in_their_own_rail_below_the_cards(): void
-    {
-        $seccion = $this->seccion();
-
-        $this->assertStringContainsString('addons-rail__track', $seccion);
-        // Y NO dentro de la tarjeta, ni con la lista de la tarjeta vieja.
-        $this->assertStringNotContainsString('rate-card__addons', $seccion);
-        $this->assertStringNotContainsString('addons-mini', $seccion);
-
-        // El carril está DENTRO del panel de la zona, no suelto en la sección.
-        $this->assertStringContainsString('addons-rail', $this->panel('jump'));
-    }
-
-    /**
-     * ❗❗ **EL CARRIL LLEVA EL FOCO DEL TECLADO, y sin eso la segunda ficha NO SE ALCANZA.**
-     *
-     * ⚠️⚠️ Dentro no hay ningún control —son fichas, no botones—, así que el Tab no tiene a qué
-     * entrar y el carril no se puede desplazar sin ratón. Lo declara el propio artboard, y es la
-     * única pieza de la sección que necesita foco propio.
-     */
-    public function test_the_addon_rail_can_be_reached_with_the_keyboard(): void
-    {
-        $seccion = $this->seccion();
-
-        $this->assertMatchesRegularExpression(
-            '/<div class="addons-rail__track" tabindex="0" role="group"\s+aria-label="[^"]+"/',
-            $seccion,
-            'el carril de complementos perdió su foco: sin él la segunda ficha no se alcanza sin ratón.',
-        );
-    }
-
-    /**
-     * ❗❗❗ **LOS COMPLEMENTOS NO SE REPITEN, y la deduplicación es por ID.**
-     *
-     * ⚠️⚠️ «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos distintos con precios
-     * distintos, y en otra instalación podrían llamarse igual: fundirlos por RÓTULO publicaría **el
-     * precio de uno bajo el nombre del otro**.
-     */
-    public function test_each_addon_appears_once_per_zone(): void
+    public function test_the_section_does_not_publish_addons(): void
     {
         $zona = Zone::where('slug', 'kids')->firstOrFail();
         $entradas = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
             ->where('zone_id', $zona->id)->orderBy('position')->get();
+        $this->assertNotEmpty(LandingAddonPresenter::unique($entradas), 'la zona no ofrece complementos: el caso miraría el vacío.');
 
-        $esperados = LandingAddonPresenter::unique($entradas);
-        $this->assertNotEmpty($esperados, 'la zona no ofrece complementos: este caso miraría el vacío.');
+        $seccion = $this->seccion();
 
-        // El mismo complemento cuelga de VARIAS entradas de la zona: sin deduplicar saldría repetido.
-        $this->assertGreaterThan(
-            count($esperados),
-            $entradas->sum(fn (TicketType $t): int => count(LandingAddonPresenter::rows($t, false))),
-            'ningún complemento se comparte entre entradas: la deduplicación no tendría sujeto.',
-        );
-
-        $panel = $this->panel($zona->slug);
-        $this->assertSame(count($esperados), substr_count($panel, 'class="addon-card"'));
+        foreach (['addons-rail', 'addon-card', 'rate-card__addons', 'addons-mini'] as $pieza) {
+            $this->assertStringNotContainsString($pieza, $seccion, "la sección vuelve a publicar complementos (`{$pieza}`)");
+        }
     }
 
     /**
@@ -539,41 +470,34 @@ class RateRailSectionTest extends TestCase
 
     // ─────────────────────────────────────────────────────────────────────────────────
     /**
-     * ❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA, Y SOLO DE ELLA.**
+     * ❗❗❗ **LA ETIQUETA DESTACADA SALE EN TODA TARJETA QUE LA TENGA, LIDERE O NO** (`#585`).
      *
-     * `[DECIDIDO owner, 2026-09-09]`. En el artboard el chip negro es `esHero`: la señal de cuál
-     * coger. ⚠️⚠️ **Antes colgaba solo del `badge` y eso los separaba**, con daño reproducido sobre
-     * los datos de esta instalación: «Kids · Ilimitada» llevaba el chip **sin ser destacada** —su
-     * `badge` dice «Todo el día»— mientras ninguna entrada estaba marcada, o sea que la zona tenía
-     * un marcador de líder y **ninguna líder**. *Un marcador que puede aparecer en cualquier tarjeta
-     * deja de decir cuál coger, que es lo único para lo que existe.*
+     * `[DECIDIDO owner, 2026-09-13]`: «si un producto tiene badge destacado, lo ponemos en la página
+     * web, en todas las páginas que salga». ⚠️ Revierte `#479`, donde el chip era el marcador de la
+     * que lidera; la que lidera se sigue diciendo con el ancho y el foco (`data-featured`).
+     * ⚠️ Y la otra mitad no cambia: sin `badge` no hay chip, ni siquiera en la que lidera.
      */
-    public function test_the_chip_only_marks_the_card_that_leads(): void
+    public function test_every_card_with_a_badge_carries_its_chip(): void
     {
         // ⚠️ El reset masivo, ANTES de leer: ver el motivo en `test_two_featured_entries…`.
         TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
 
         $entradas = TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+            ->where('zone_id', Zone::where('slug', 'kids')->value('id'))
             ->orderBy('position')->get();
-        $this->assertGreaterThan(1, $entradas->count(), 'hace falta más de una entrada para distinguir líder de vecina.');
+        $this->assertGreaterThan(1, $entradas->count(), 'hace falta más de una entrada en la zona para distinguir líder de vecina.');
 
-        // Una NO líder con `badge`: no lleva chip.
-        $entradas->first()->update(['badge' => ['es' => 'Top', 'en' => 'Top', 'fr' => 'Top']]);
-
-        $this->assertStringNotContainsString(
-            'rate-card__badge', $this->seccion(),
-            'una tarjeta que no lidera lleva el chip: el marcador deja de decir cuál coger.',
-        );
-
-        // La misma, marcada como líder: ahora sí, y con SU texto.
+        // La que lidera, SIN etiqueta: no hay chip — no se inventa una palabra que el panel no escribió.
         $entradas->first()->update(['featured' => true]);
+        $this->assertStringNotContainsString('rate-card__badge', $this->seccion(), 'una tarjeta sin etiqueta pinta chip.');
+
+        // Una que NO lidera, CON etiqueta: lleva su chip, con SU texto.
+        $entradas->get(1)->update(['badge' => ['es' => 'Top', 'en' => 'Top', 'fr' => 'Top']]);
 
         $seccion = $this->seccion();
-        $this->assertStringContainsString('<span class="rate-card__badge">Top</span>', $seccion);
-        $this->assertSame(
-            1, substr_count($seccion, 'rate-card__badge'),
-            'hay más de un chip en la sección: solo lidera una tarjeta por zona.',
-        );
+        $this->assertStringContainsString('<span class="rate-card__badge">Top</span>', $seccion,
+            'la etiqueta de una tarjeta que no lidera no sale: el panel la escribe y no aparece.');
+        $this->assertSame(1, substr_count($seccion, 'rate-card__badge'), 'hay un chip en una tarjeta sin etiqueta.');
     }
 
     /**
@@ -619,18 +543,17 @@ class RateRailSectionTest extends TestCase
             'el localizador no ve todas las tarjetas de la zona: contaría sobre un recorte.',
         );
         $this->assertSame(1, substr_count($panel, 'data-featured'), 'hay dos tarjetas anchas en la misma zona.');
-        $this->assertSame(1, substr_count($panel, 'rate-card__badge'), 'hay dos chips en la misma zona.');
+        // ⚠️ `#585`: el chip ya no es del líder, es de toda tarjeta con etiqueta — aquí las dos la llevan.
+        $this->assertSame(2, substr_count($panel, 'rate-card__badge'), 'una de las dos tarjetas con etiqueta ha perdido su chip.');
     }
 
     /**
-     * ❗❗ **EL `badge` DE UNA TARJETA QUE NO LIDERA NO SE PIERDE: BAJA AL MATIZ.**
+     * ❗❗ **EL `badge` DE UNA TARJETA QUE NO LIDERA ES SU CHIP, NO EL MATIZ** (`#585`).
      *
-     * ⚠️⚠️ Es la mitad que evita un fallo SILENCIOSO: sin esto, el operador escribe una etiqueta en
-     * el panel y **no aparece en ninguna parte**. Baja al registro donde el artboard pone «sin
-     * límite» —un dato del nombre, en mono y junto a él—, que es exactamente lo que «Todo el día»
-     * es en este catálogo.
+     * Hasta `#585` bajaba al matiz para no perderse en silencio. Hoy toda etiqueta tiene su chip, y
+     * dejarla también en el matiz la diría dos veces en la misma tarjeta.
      */
-    public function test_a_badge_on_a_card_that_does_not_lead_becomes_the_nuance(): void
+    public function test_a_badge_on_a_card_that_does_not_lead_is_its_chip_not_the_nuance(): void
     {
         // ⚠️ El reset masivo, ANTES de leer: ver el motivo en `test_two_featured_entries…`.
         TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
@@ -645,18 +568,18 @@ class RateRailSectionTest extends TestCase
 
         $seccion = $this->seccion();
 
-        $this->assertStringContainsString('<span class="rate-card__nuance">Todo el día</span>', $seccion);
-        $this->assertStringNotContainsString('rate-card__badge', $seccion);
+        $this->assertStringContainsString('<span class="rate-card__badge">Todo el día</span>', $seccion);
+        $this->assertStringNotContainsString('<span class="rate-card__nuance">Todo el día</span>', $seccion,
+            'la etiqueta se dice dos veces: en su chip y en el matiz.');
     }
 
     /**
-     * **Si el nombre ya trae matiz propio, manda el del NOMBRE.**
+     * **El matiz del NOMBRE y la etiqueta destacada son dos cosas y salen las dos** (`#585`).
      *
-     * ⚠️ La precedencia se declara porque las dos fuentes pueden coexistir, y sin decidirla el matiz
-     * dependería del orden en que estuvieran escritas. El del nombre gana porque es parte de cómo se
-     * llama el producto; el `badge` es una etiqueta añadida.
+     * ⚠️ Hasta `#585` competían por el mismo sitio y ganaba el nombre. Hoy el matiz es solo del
+     * nombre y la etiqueta tiene su chip, así que una tarjeta con las dos las enseña a la vez.
      */
-    public function test_the_name_nuance_wins_over_the_badge(): void
+    public function test_the_name_nuance_and_the_badge_are_both_painted(): void
     {
         // ⚠️ El reset masivo, ANTES de leer: ver el motivo en `test_two_featured_entries…`.
         TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
@@ -672,7 +595,7 @@ class RateRailSectionTest extends TestCase
         $seccion = $this->seccion();
 
         $this->assertStringContainsString('<span class="rate-card__nuance">sin límite</span>', $seccion);
-        $this->assertStringNotContainsString('>Top<', $seccion);
+        $this->assertStringContainsString('<span class="rate-card__badge">Top</span>', $seccion);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -757,35 +680,6 @@ class RateRailSectionTest extends TestCase
     }
 
     /**
-     * ❗❗ **UN COMPLEMENTO DE PRECIO VARIABLE SE ANUNCIA CON «DESDE».**
-     *
-     * ⚠️⚠️ Sin él el bloque publica **el más barato como si fuera el único** y el checkout cobra
-     * otro: el complemento se tarifica por el día de la VISITA (`#415`), así que el finde puede
-     * costar más. Es la misma regla que la tarjeta del producto principal ya cumplía.
-     */
-    public function test_an_addon_whose_price_changes_by_day_is_announced_with_from(): void
-    {
-        $addon = TicketType::ofType(TicketType::TYPE_ADDON)
-            ->whereIn('id', fn ($q) => $q->select('addon_id')->from('product_addons'))
-            ->orderBy('id')->firstOrFail();
-
-        // ⚠️⚠️ Se asevera sobre el PRECIO de la ficha y no sobre el documento: «Desde 8 €» ya vive
-        //    en la entradilla de la sección y «desde» en el sello de las tarjetas de zona, así que
-        //    un `assertDontSee` global saldría rojo con el producto sano.
-        $precios = fn (): string => implode('|', $this->preciosDeFicha());
-
-        $this->assertStringNotContainsString(__('landing.rates.from'), $precios());
-
-        $especial = RateType::where('is_special', true)->value('id');
-        $addon->prices()->updateOrCreate(['rate_type_id' => $especial], ['amount_cents' => 900, 'currency' => 'EUR']);
-
-        $this->assertStringContainsString(
-            __('landing.rates.from'), $precios(),
-            'un complemento que cambia de precio según el día se anuncia como si tuviera uno solo.',
-        );
-    }
-
-    /**
      * ❗❗ **EL KEYLINE SIGUE SIENDO UNA VARIANTE DE LA FAMILIA — y desde `#540` NO LLEVA BORDE.**
      *
      * ⚠️⚠️ **ESTA ASERCIÓN CAMBIÓ DE PREMISA, no se relajó.** Exigía `border: 2px solid var(--fg)`
@@ -846,7 +740,8 @@ class RateRailSectionTest extends TestCase
         //    permite mirar la familia esté donde esté declarada.
         $css = implode("\n", $this->siteSheets());
 
-        foreach (['.tabset', '.rate-card', '.rates__', '.addon-card', '.addons-rail'] as $familia) {
+        // ⚠️ `.addon-card` y `.addons-rail` estaban en esta lista y se fueron con su carril (`#583`).
+        foreach (['.tabset', '.rate-card', '.rates__'] as $familia) {
             preg_match_all('/'.preg_quote($familia, '/').'[^{}]*\{([^{}]*)\}/', $css, $m);
 
             $this->assertNotEmpty($m[1], "no hay ninguna regla de `{$familia}`: este caso miraría el vacío.");

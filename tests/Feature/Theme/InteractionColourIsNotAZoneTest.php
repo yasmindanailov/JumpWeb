@@ -46,10 +46,12 @@ class InteractionColourIsNotAZoneTest extends TestCase
 
     /** RELLENOS de marca: un fondo, con el texto encima calculado por luminancia (`--on-brand`). No es texto de color. */
     private const RELLENO_DE_MARCA = [
-        '.cta-med:hover' => 'el CTA del armazón pasa a marca al pasar, como el mockup (#217)',
+        // ▶ `.cta-med:hover` SALIÓ de esta lista en `#581`, y la lista solo encoge: el CTA del armazón
+        //   dejó de reposar en Azul Muro y reposa en la MARCA (`--brand`), así que su hover oscurece
+        //   su propio relleno y ya no lee ningún color de zona.
         '.salta__btn:hover' => 'el botón del minijuego oscurece su relleno de marca',
-        // ❗❗ Los del cajón (`#551`) son el MISMO idioma que `.cta-med`: reposan en tinta y acusan
-        // el paso del cursor pasando a marca. No es la grieta 01 por la puerta de atrás — aquélla era
+        // ❗❗ Los del cajón (`#551`) reposan en tinta y acusan el paso del cursor pasando a marca, el
+        // idioma que tenía el CTA del armazón hasta `#581`. No es la grieta 01 por la puerta de atrás — aquélla era
         // un valor haciendo de acción, de cifra, de enlace y de casilla a la vez; aquí hace UNA cosa.
         // ⚠️ No lo «arregles» quitándolo: sin él estos botones se quedan sin hover, y `#435` exige que
         // los controles respondan.
@@ -57,10 +59,9 @@ class InteractionColourIsNotAZoneTest extends TestCase
         //   dejó de reposar en tinta —hoy reposa en Azul Muro—, así que el argumento «acusa el paso
         //   PASANDO a marca» murió con su premisa: un botón que ya reposa en marca no puede pasar a
         //   ella. Su hover es ahora el escalón siguiente de su propia escala.
-        // ⚠️⚠️ Esta entró al AMPLIAR el vocabulario de estados (abajo): llevaba desde `#436` leyendo
-        // `--zone-1` sin que la guarda la viera, porque `is-current` no estaba en la lista. Y es
-        // legítima: el artboard dibuja el relleno de la fase en cian, así que su halo lo sigue.
-        '.bk-seg__item.is-current .bk-seg__bar' => 'cajón: el halo de la fase actual sigue a su relleno, que el artboard dibuja en marca',
+        // ▶ `.bk-seg__item.is-current .bk-seg__bar` SALIÓ de esta lista en `#584`, y la lista solo
+        //   encoge: la línea de pasos pasó al secundario (`[DECIDIDO owner]`) y su halo ya no lee
+        //   `--zone-*`. Entró en `#551` al ampliar el vocabulario de estados, que sigue cubriéndolo.
     ];
 
     /**

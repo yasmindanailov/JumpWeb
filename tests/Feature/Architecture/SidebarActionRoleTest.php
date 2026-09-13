@@ -46,14 +46,19 @@ class SidebarActionRoleTest extends TestCase
     ];
 
     /**
-     * **Las reglas del cajón que rellenan con el rol de ACCIÓN.** Una, y es la que cobra.
+     * **Las reglas del cajón que rellenan con el rol de ACCIÓN.** Una: el CTA del PIE.
      *
-     * `--action` significa comprar en toda la web (`#209`, `ActionFillTest`), y dentro del cajón eso es
-     * **«Pagar»**, el pie del paso 08. Quién vende no lo decide el CSS ni la plantilla: lo decide
-     * `foot.js` con su campo `sells`, y `Foot.vue` solo traduce ese dato a esta clase.
+     * ❗❗ **`#584` REVIERTE EL REPARTO DE `#551`** (`[DECIDIDO owner, 2026-09-13]`). Hasta aquí el relleno
+     * de acción lo llevaba solo «Pagar», y los otros tres pies —«Continuar», «Añadir al carrito», «Ir a
+     * pagar»— iban en el secundario. El owner los quiere en PRIMARIO: el pie es la navegación del embudo
+     * y avanza con un solo color. «Un relleno de acción por pantalla» se sigue cumpliendo, porque cada
+     * pantalla lleva UN pie.
+     * ⚠️ «Ir al carrito» del catálogo (`.cartbar`) NO entra: se quedó en secundario, preguntado.
+     * ⚠️ `sells` sigue existiendo y sigue diciendo quién COBRA, pero ya no decide el color: decide el
+     * ancla de la cifra y el rótulo del pie de pagar (`SidebarFootShapeTest`).
      */
     private const RELLENO_DE_ACCION = [
-        '.bk-cta--sells' => 'el pie del paso 08: «Pagar», el único del embudo que cobra',
+        '.bk-cta' => 'el CTA del pie en las cuatro pantallas que lo llevan: «Continuar», «Añadir al carrito», «Ir a pagar» y «Pagar» (#584)',
     ];
 
     /**
@@ -84,11 +89,11 @@ class SidebarActionRoleTest extends TestCase
     /**
      * **EL CENSO: lo que todavía lee `--zone-*` dentro del cajón, y por qué cada uno.**
      *
-     * Eran **29 reglas** y quedan **13**. Ninguna es un descuido, y el reparto importa:
+     * Eran **29 reglas** y quedan **8**. Ninguna es un descuido, y el reparto importa:
      *
-     *  · **lo que el ARTBOARD dibuja en cian** (la barra de fase y el cuadradito del contexto): la
-     *    grieta 01 manda sacar la marca de la acción, de la cifra, del enlace y de la casilla — no de
-     *    todas partes. *Casi cambié la barra de fase por aplicar la regla general sin mirar el dibujo.*
+     *  · **lo que el ARTBOARD dibuja en cian** (el cuadradito del contexto): la grieta 01 manda sacar
+     *    la marca de la acción, de la cifra, del enlace y de la casilla — no de todas partes. ⚠️ La
+     *    barra de fase estuvo aquí por lo mismo y salió en `#584`: el owner la quiere en SECUNDARIO.
      *  · **los tres hovers de relleno de marca**: reposan en tinta y acusan el paso del cursor pasando
      *    a marca, que es el idioma de `.cta-med` (`#217`) y está enumerado en `ActionFillTest`.
      *  · **la marca como IDENTIDAD**: el spinner «Tres botes» (`#259`) y la inicial del avatar.
@@ -99,8 +104,8 @@ class SidebarActionRoleTest extends TestCase
      * **Solo encoge.**
      */
     private const CENSO_DE_MARCA = [
-        '.bk-seg__bar::after' => 'artboard: el relleno de la fase va en cian',
-        '.bk-seg__item.is-current .bk-seg__bar' => 'su halo sigue al relleno',
+        // ▶ `#584` · SALIERON `.bk-seg__bar::after` y `.bk-seg__item.is-current .bk-seg__bar`: la línea
+        //   de pasos pasó a `--secondary` (`[DECIDIDO owner]`), así que ya no lee ningún `--zone-*`.
         '.bk-context .jj-block' => 'artboard: el cuadradito del contexto es motivo de marca',
         '.purchase-loading' => 'el spinner «Tres botes» es pieza de MARCA (#259)',
         // ▶ `#568` · SALIÓ `.acct__avatar`: el avatar pasa al círculo del artboard, con la inicial en
@@ -205,7 +210,7 @@ class SidebarActionRoleTest extends TestCase
             $esperadas,
             $encontradas,
             "El reparto del relleno de ACCIÓN dentro del cajón ha cambiado.\n".
-            "▶ El naranja significa COMPRAR, y en el cajón eso es «Pagar» (paso 08) y nada más.\n".
+            "▶ En el cajón el relleno de acción es el CTA del PIE (#584): uno por pantalla, y nada más.\n".
             '▶ Si de verdad entra o sale uno, dilo en `RELLENO_DE_ACCION` con su sujeto y su porqué.',
         );
     }

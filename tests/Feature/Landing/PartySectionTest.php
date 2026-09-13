@@ -3,7 +3,6 @@
 namespace Tests\Feature\Landing;
 
 use App\Domain\Booking\Models\TicketType;
-use App\Domain\Content\Services\LandingAddonPresenter;
 use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,6 +50,28 @@ class PartySectionTest extends TestCase
         $this->assertGreaterThan(1500, strlen($seccion), 'el recorte de la sección 04 es sospechosamente corto');
         $this->assertStringContainsString('party-card', $seccion, 'no hay ni una tarjeta de pack dentro');
         $this->assertStringNotContainsString('bd-pack', $seccion, 'ha vuelto la banda heredada a la portada');
+    }
+
+    /**
+     * **La etiqueta destacada de un pack sale junto a la chapa de su nombre** (`#585`, `[DECIDIDO
+     * owner, 2026-09-13]`): el panel la deja escribir en los packs y la web la pinta donde salga el
+     * producto. Sin etiqueta, no hay chip.
+     */
+    public function test_a_pack_badge_sits_next_to_its_name_chip(): void
+    {
+        TicketType::ofType(TicketType::TYPE_PACK)->update(['badge' => null]);
+        $this->assertStringNotContainsString('party-card__badge', $this->seccion(), 'sin etiqueta no hay chip');
+
+        $pack = TicketType::ofType(TicketType::TYPE_PACK)->where('is_sellable', true)->orderBy('position')->firstOrFail();
+        $pack->update(['badge' => ['es' => 'La favorita', 'en' => 'Favourite', 'fr' => 'La préférée']]);
+
+        $seccion = $this->seccion();
+        $this->assertSame(1, substr_count($seccion, 'party-card__badge'), 'el chip sale en una tarjeta que no lo lleva');
+        $this->assertMatchesRegularExpression(
+            '#<span class="party-card__chip">'.preg_quote(e($pack->tr('name')), '#').'</span>\s*<span class="party-card__badge">La favorita</span>#',
+            $seccion,
+            'la etiqueta no va junto a la chapa del nombre de SU pack',
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -154,49 +175,27 @@ class PartySectionTest extends TestCase
     }
 
     /**
-     * **EL BLOQUE DE COMPLEMENTOS ES EL MISMO MOLDE QUE EL DE LAS TARIFAS** (`[DECIDIDO owner]`), y
-     * sus fichas **no se repiten**.
+     * **LA DURACIÓN ABRE LO QUE INCLUYE CADA PACK, Y EL RELOJ YA NO ESTÁ** (`[DECIDIDO owner,
+     * 2026-09-13]`, `#583`). La tarjeta «Las 2 h, a vuestro ritmo» se retiró y la duración pasó a la
+     * tarjeta del pack, como primera línea de lo que incluye.
      *
-     * ⚠️ La deduplicación es **por ID y nunca por nombre**: los dos «Hora extra de sala» son
-     * productos distintos con precios distintos, y fundirlos por rótulo publicaría el precio de uno
-     * bajo el nombre del otro.
+     * ⚠️ Sale del CATÁLOGO (`duration_min`), no del texto que escribe el panel: por eso el control
+     * cambia la duración y comprueba que la línea la sigue. Una línea escrita a mano pasaría la
+     * primera mitad y fallaría la segunda.
      */
-    public function test_the_addons_block_shares_the_mould_and_never_repeats_a_row(): void
+    public function test_the_pack_card_leads_with_its_duration_and_the_clock_is_gone(): void
     {
-        $packs = TicketType::birthdaySurfacePacks()->with('addons.prices.rateType')->get();
-        $esperados = LandingAddonPresenter::unique($packs);
-
-        $this->assertNotEmpty($esperados, 'el caso nace sin sujeto: los packs no tienen complementos');
-
+        TicketType::birthdaySurfacePacks()->update(['duration_min' => 120]);
         $seccion = $this->seccion();
 
-        // El molde: la misma clase que pinta la sección de tarifas, no una copia.
-        $this->assertStringContainsString('addons-rail', $seccion);
-        $this->assertSame(count($esperados), substr_count($seccion, 'class="addon-card"'),
-            'el número de fichas no coincide con los complementos únicos de los packs');
+        $this->assertStringNotContainsString('party__clock', $seccion, 'ha vuelto el reloj de las dos horas');
+        $this->assertStringContainsString(e(__('landing.events.duration_feature', ['duration' => '2 h'])), $seccion,
+            'la tarjeta del pack no dice su duración');
 
-        // Y el carril lleva el foco del teclado: dentro no hay ningún control.
-        $this->assertStringContainsString('class="addons-rail__track" tabindex="0"', $seccion);
-    }
+        TicketType::birthdaySurfacePacks()->update(['duration_min' => 90]);
 
-    /**
-     * **EL RELOJ NO REPARTE LAS DOS HORAS**, y ésa es toda la pieza (`[DECIDIDO owner]`: las dos
-     * horas son para todo y no hay hora para nada).
-     *
-     * ⚠️ Un diagrama de tramos promete horario aunque la letra diga lo contrario, así que las tres
-     * cosas van sobre UN carril y **ninguna lleva minutos**. Si alguien vuelve a repartirlas, esto
-     * se pone rojo.
-     */
-    public function test_the_clock_draws_the_whole_stay_and_never_splits_it(): void
-    {
-        $seccion = $this->seccion();
-
-        $this->assertStringContainsString('party__clock-line', $seccion, 'el reloj no dibuja su carril');
-        $this->assertSame(3, substr_count($seccion, '<li>'), 'las cosas del reloj han dejado de ser tres');
-        $this->assertDoesNotMatchRegularExpression(
-            '/party__clock-caps.*?\d+\s*min/s', $seccion,
-            'una cápsula del reloj ha vuelto a llevar minutos: eso reparte las dos horas',
-        );
+        $this->assertStringContainsString(e(__('landing.events.duration_feature', ['duration' => '1 h 30 min'])), $this->seccion(),
+            'la duración de la tarjeta no sale del catálogo: no ha seguido el cambio de `duration_min`');
     }
 
     /**

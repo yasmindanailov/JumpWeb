@@ -26,6 +26,7 @@
          en su lugar: una disculpa en una página pública es peor que un hueco. Lo que falta lo dice
          el panel, no la web. --}}
     <main id="main" class="page page--bar wrap">
+        <x-site.facade en="page-bar" />
         <x-site.page-head :title="$barName" :lede="$barLede" />
 
     {{-- ⚠️⚠️ **EL DOM VA EN EL ORDEN DE MÓVIL** —foto · carta · chapa— y en escritorio lo recoloca la
@@ -86,6 +87,8 @@
                  en su contenedor (`#484`): ahí además PINTA, y en un contenedor sin radio dejaría un
                  rectángulo detrás. --}}
             <aside class="bar-counter" data-surface="ink" aria-labelledby="bar-counter-title">
+                {{-- A1 · la trama de puntos (`#580`). --}}
+                <div class="grain" aria-hidden="true"></div>
                 <h2 class="bar-counter__title" id="bar-counter-title">{{ __('site.bar_counter_title') }}</h2>
                 <p class="bar-counter__text">{{ __('site.bar_counter_text') }}</p>
                 {{-- ⚠️ **Tres estados, no dos** (`#536`): sin decidir en el panel no se escribe nada.

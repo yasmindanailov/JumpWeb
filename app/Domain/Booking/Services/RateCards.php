@@ -164,31 +164,24 @@ final class RateCards
              */
             'name' => $nombre,
             /*
-             * ❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA, y su texto lo escribe el PANEL**
-             * (`[DECIDIDO owner, 2026-09-09]`). En el artboard es `esHero` con copy fijo; aquí sale
-             * de `ticket_types.badge`, así que la señal es del diseño y **la palabra es del dueño**.
+             * ❗❗❗ **LA ETIQUETA DESTACADA SALE EN TODA TARJETA QUE LA TENGA** (`#585`, `[DECIDIDO owner,
+             * 2026-09-13]`: «si un producto tiene badge destacado, lo ponemos en la página web, en todas
+             * las páginas que salga»). El panel la escribe (`ticket_types.badge`, «Etiqueta destacada»)
+             * y la web la pinta como el chip amarillo del sistema: aquí, en `/precios`, en los packs de
+             * cumpleaños, en `/servicios` y en el cajón.
              *
-             * ⚠️⚠️ **Antes colgaba SOLO del `badge`, y eso los separaba.** Reproducido con los datos
-             * de esta instalación: «Kids · Ilimitada» llevaba el chip **sin ser destacada** —su
-             * `badge` dice «Todo el día»— y ninguna entrada estaba marcada, así que ninguna zona
-             * tenía tarjeta ancha. *Un marcador que puede aparecer en cualquier tarjeta deja de
-             * decir cuál coger, que es lo único para lo que existe.*
-             *
-             * ⚠️ **Una destacada SIN `badge` no pinta chip**: el marcador lo dan igual el ancho y el
-             * foco, y no se inventa aquí una palabra que el panel no ha escrito.
+             * ⚠️⚠️ **Esto REVIERTE `#479`/`#480`**, donde el chip era el marcador de la que lidera y el
+             * `badge` de las demás bajaba al matiz. La que lidera (`featured`) se sigue diciendo con el
+             * ANCHO y el FOCO con los que abre el carril; el chip ya no es suyo.
+             * ⚠️ Sin `badge` no hay chip, lidere o no: no se inventa una palabra que el panel no ha escrito.
              */
-            'badge' => $lidera ? $badge : null,
+            'badge' => $badge,
             /*
-             * **EL MATIZ, y por qué el `badge` de una tarjeta que no lidera NO se pierde.**
-             *
-             * ⚠️⚠️ Si el chip pasa a ser de la destacada, un `badge` escrito en cualquier otra se
-             * quedaría sin pintar **en silencio** — el operador lo escribe en el panel y no aparece
-             * en ninguna parte. Aquí baja al matiz, que es exactamente el registro donde el artboard
-             * pone «sin límite»: un dato del nombre, en mono y junto a él.
-             * ▶ **La precedencia está declarada**: si el nombre ya trae matiz propio, manda el del
-             * nombre — es parte de cómo se llama el producto, y el `badge` es una etiqueta añadida.
+             * **EL MATIZ es solo del NOMBRE**: la parte de «{nombre} · {matiz}» que añade un dato. Hasta
+             * `#585` recogía también el `badge` de una tarjeta que no lideraba, para que no se perdiera;
+             * hoy ese `badge` tiene su chip en todas, y meterlo aquí lo diría dos veces.
              */
-            'nuance' => $matiz ?? ($lidera ? null : $badge),
+            'nuance' => $matiz,
             // ⚠️ La cifra SIN el símbolo: el artboard los pinta a 38 y a 20, así que el «€» es un
             // elemento aparte del marcado. Ver `WritesLandingValues::numero()`.
             'price' => $this->numero($ticket->displayPriceCents()),

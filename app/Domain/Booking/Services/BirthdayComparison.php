@@ -53,7 +53,6 @@ final class BirthdayComparison
      *     counter: array{from: int, to: int},
      *     live: array<string, array<int, list<?string>>>,
      *     shared: list<array{title: string, note: ?string}>,
-     *     duration: ?string,
      *     deposit: ?string,
      *     special: bool,
      *     mixed: int,
@@ -94,14 +93,21 @@ final class BirthdayComparison
         $this->place($rows, $shared, __('landing.birthday.row_kids'), $kids, __('landing.birthday.kids_note'));
 
         /*
-         * ⚠️ La DURACIÓN compartida no va a «Igual»: es el titular del reloj, que la dice más grande
-         * y con su regla. Solo si difiere entre packs baja a una fila — y entonces el reloj NO se
-         * pinta, porque su titular hablaría de uno de los packs como si fuera de todos.
+         * ⚠️⚠️ **LA DURACIÓN VA CON LO QUE INCLUYE CADA PACK** (`[DECIDIDO owner, 2026-09-13]`, `#583`),
+         * como PRIMERA línea. La decía el reloj «Las 2 h, a vuestro ritmo», que se retiró. La regla del
+         * owner es de SITIO —«al lado de "Acceso exclusivo a la zona…"»—, así que va donde vaya eso:
+         *  · con VARIOS packs, en la columna de cada uno, aunque coincida en todos (lo que se lee para
+         *    elegir es la columna);
+         *  · con UN pack, todo lo que incluye es común consigo mismo y vive en «Igual»: la duración
+         *    abre esa lista. Dejarla sola en la tabla haría una fila «Incluye» con una línea y el resto
+         *    de lo incluido en otro bloque.
          */
         $durations = $packs->map(fn (TicketType $p): ?string => $p->duration_min ? $this->duracion((int) $p->duration_min) : null)->all();
-        $duration = $this->same($durations) ? $durations[0] : null;
-        if ($duration === null && ! $this->blank($durations)) {
-            $rows[] = ['label' => __('landing.birthday.row_duration'), 'kind' => 'text', 'live' => null, 'cells' => $durations];
+        if ($packs->count() === 1) {
+            if ($durations[0] !== null) {
+                array_unshift($shared, ['title' => __('landing.events.duration_feature', ['duration' => $durations[0]]), 'note' => null]);
+            }
+            $durations = [null];
         }
 
         $deposits = $packs->map(fn (TicketType $p): ?string => $this->deposit($p))->all();
@@ -112,26 +118,27 @@ final class BirthdayComparison
             $rows[] = ['label' => __('landing.birthday.row_deposit'), 'kind' => 'text', 'live' => null, 'cells' => $deposits];
         }
 
-        if (! $this->blank($features['own'])) {
+        // Lo que incluye cada pack: la duración primero (del catálogo) y detrás lo propio del panel.
+        $incluye = array_map(
+            fn (?string $duracion, array $propias): array => array_merge(
+                $duracion !== null ? [['t' => __('landing.events.duration_feature', ['duration' => $duracion]), 's' => null]] : [],
+                array_map(fn (string $f): array => ['t' => $f, 's' => null], $propias),
+            ),
+            $durations,
+            $features['own'],
+        );
+        if (! $this->blank($incluye)) {
             $rows[] = [
                 'label' => __('landing.birthday.row_features'), 'kind' => 'list', 'live' => null,
-                'cells' => array_map(fn (array $own): ?array => $own === [] ? null : array_map(fn (string $f): array => ['t' => $f, 's' => null], $own), $features['own']),
+                'cells' => array_map(fn (array $lineas): ?array => $lineas === [] ? null : $lineas, $incluye),
             ];
         }
 
         /*
-         * ⚠️⚠️ **LA HORA EXTRA VA A LA TABLA Y NO AL CARRIL POR SU PRECIO**, y lo dice el artboard:
-         * *«su precio cambia por zona: un complemento con dos precios no es una tarjeta, es una
-         * fila»*. Se reconoce por el MECANISMO (`extends_parent_stay`, `#421`), nunca por el nombre:
-         * en otra instalación se llamará de otra forma.
+         * ⚠️⚠️ **AQUÍ IBA LA FILA «ALARGAR LA FIESTA» (la hora extra) Y SE RETIRÓ** (`[DECIDIDO owner,
+         * 2026-09-13]`, `#583`): la hora extra es un complemento, y los complementos ya no se publican
+         * en la web — solo se ofrecen en el cajón, al reservar.
          */
-        $extenders = $packs->map(fn (TicketType $p): array => $this->extenders($p, $this->normalRate($p), $withSpecial ? $special : null))->all();
-        if (! $this->blank($extenders)) {
-            $rows[] = [
-                'label' => __('landing.birthday.row_extend'), 'kind' => 'list', 'live' => null,
-                'cells' => array_map(fn (array $lines): ?array => $lines === [] ? null : $lines, $extenders),
-            ];
-        }
 
         $rows[] = $this->liveRow(__('landing.birthday.row_total'), 'total', 'total', $live, $from);
         if ($withSpecial) {
@@ -139,12 +146,14 @@ final class BirthdayComparison
         }
 
         return [
-            'columns' => $packs->map(fn (TicketType $p): array => ['id' => (int) $p->id, 'name' => (string) $p->tr('name')])->all(),
+            // Con la etiqueta destacada de cada pack (`#585`), que va bajo su nombre en la cabecera.
+            'columns' => $packs->map(fn (TicketType $p): array => [
+                'id' => (int) $p->id, 'name' => (string) $p->tr('name'), 'badge' => $p->tr('badge') ?: null,
+            ])->all(),
             'rows' => $rows,
             'counter' => ['from' => $from, 'to' => $to],
             'live' => $live,
             'shared' => $shared,
-            'duration' => $duration,
             'deposit' => $deposit,
             'special' => $withSpecial,
             'mixed' => $this->mixedFamilySize($packs),
@@ -318,40 +327,6 @@ final class BirthdayComparison
             'common' => $common,
             'own' => array_map(fn (array $list): array => array_values(array_diff($list, $common)), $lists),
         ];
-    }
-
-    /**
-     * La hora extra de un pack: los complementos que ALARGAN la fiesta, con su duración y su precio.
-     *
-     * ⚠️ La especial va entera y en su propia línea, igual que el precio del pack. Y la unidad sale
-     * del PIVOTE: «por niño» solo si el enganche es por invitado.
-     *
-     * @return list<array{t: string, s: ?string}>
-     */
-    private function extenders(TicketType $pack, ?RateType $normal, ?RateType $special): array
-    {
-        $lines = [];
-
-        foreach ($pack->addonsSoldAtBooking() as $addon) {
-            if (! $addon->extendsParentStay()) {
-                continue;
-            }
-            $cents = $addon->priceCentsForRate($normal);
-            if ($cents === null) {
-                continue;
-            }
-
-            $unit = $addon->pivot->isPerGuest() ? ' '.__('landing.events.per_child') : '';
-            $time = $addon->duration_min ? $this->duracion((int) $addon->duration_min) : null;
-            $sp = $special ? $addon->priceCentsForRate($special) : null;
-
-            $lines[] = [
-                't' => ($time ? '+'.$time.' · ' : '').$this->euros($cents).$unit,
-                's' => $sp !== null && $sp !== $cents ? $this->euros($sp).$unit.' '.__('landing.events.special_suffix') : null,
-            ];
-        }
-
-        return $lines;
     }
 
     private function kids(TicketType $pack): string

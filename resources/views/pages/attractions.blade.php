@@ -27,6 +27,7 @@
          de la ZONA 23 veces (y su propia nota lo señalaba como saturación); aquí cada atracción
          declara la suya —23 de 23, medido—, así que el chip dice algo distinto en cada ficha. --}}
     <main id="main" class="page page--rides wrap">
+        <x-site.facade en="page-atracciones" />
 
         {{-- LA CABECERA DE PÁGINA del canvas: rótulo con la RUTA, titular en Display L y entradilla.
              La estrenó esta página (`#481`) y desde la T3a·3 es el componente del armazón (`#525`).
@@ -75,6 +76,8 @@
                             <p class="rides-zone__count"
                                style="{{ \App\Domain\Content\Services\ThemeSettings::zoneStyle($zone->color, $zone->color_secondary, $zone->accent) }}"
                                x-show="zone === @js($zone->slug)" @if ($zone->slug !== $active) x-cloak @endif>
+                                {{-- La pegatina de la zona (`#582`): cambia con la pestaña, con la cifra. --}}
+                                <x-site.zone-sticker :slug="$zone->slug" :color="$zone->color" />
                                 <span class="rides-zone__n">{{ $zone->attractions->count() }}</span>
                                 <span class="rides-zone__phrase">{{ $zone->tr('age_range')
                                     ? __('landing.attractions.count_phrase', ['age' => $zone->tr('age_range')])

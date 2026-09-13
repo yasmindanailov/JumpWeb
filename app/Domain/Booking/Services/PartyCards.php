@@ -39,21 +39,6 @@ final class PartyCards
     }
 
     /**
-     * La duración del pack, escrita para el escaparate. Es el TITULAR del reloj.
-     *
-     * ⚠️ `null` cuando el pack no la declara: sin ella el reloj no se pinta, porque un carril de
-     * tiempo que no dice cuánto dura no dice nada. **Vacío es una respuesta.**
-     *
-     * @param  Collection<int, TicketType>  $packs
-     */
-    public function durationLabel(Collection $packs): ?string
-    {
-        $min = $packs->map(fn (TicketType $pack): ?int => $pack->duration_min)->filter()->first();
-
-        return $min ? $this->duracion((int) $min) : null;
-    }
-
-    /**
      * El precio más barato de los packs, para la entradilla que vende con una cifra.
      *
      * ⚠️ `null` cuando no hay ninguno con precio: una entradilla que promete un «desde» que no
@@ -84,6 +69,8 @@ final class PartyCards
             // El nombre del CATÁLOGO, que es lo que va en la chapa. El titular de la tarjeta lo
             // ocupa la EDAD, que es lo que de verdad elige quien reserva.
             'name' => $pack->tr('name'),
+            // La etiqueta destacada del panel (`#585`): chip amarillo junto a la chapa del nombre.
+            'badge' => $pack->tr('badge') ?: null,
             'age' => $this->ageLabel($pack),
             /*
              * Lo que incluye, tal cual lo escribe el panel. ⚠️ **El tope de TRES lo declara la
@@ -109,6 +96,8 @@ final class PartyCards
             'min' => (int) $pack->min_qty,
             'max' => (int) $pack->max_qty,
             'duration' => $pack->duration_min ? (int) $pack->duration_min : null,
+            // La misma duración, ESCRITA, para la primera línea de lo que incluye (`#583`).
+            'durationLabel' => $pack->duration_min ? $this->duracion((int) $pack->duration_min) : null,
             /*
              * ⚠️ **Aquí NO viaja la zona, y se probó.** La tarjeta enlazaba a
              * `/cumpleanos#<slug de zona>` y medido salía el MISMO destino para las dos: los dos

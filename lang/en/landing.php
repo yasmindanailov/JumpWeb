@@ -115,7 +115,6 @@ return [
         'col_special' => 'Special',
         'table_label' => ':zone rates',
         'not_sold' => 'Not sold that day',
-        'with_entry' => 'with :entries',
 
         'special_title' => 'What the special rate is',
         'special_text' => 'The special rate days are: :label.',
@@ -123,10 +122,6 @@ return [
         'special_calm' => 'Nothing to work out: when you pick the day, the price you see is yours.',
 
         'holidays_title' => 'Public holidays',
-
-        'addons_title' => 'What you can add',
-        'addons_lede' => 'Buy it when booking or at the park.',
-
     ],
 
     /* Section 02 of the home page. See the Spanish file for why this is its own block. */
@@ -146,14 +141,9 @@ return [
         'saving' => 'You save',
         'saving_base' => 'versus :count of :unit',
         'times' => [2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six'],
-        'addons_title' => 'Available add-ons',
-        'addons_intro' => 'You can add them to any ticket.',
         'from' => 'from',
         'addon_per_guest' => 'per guest',
         'addon_each' => 'each',
-        'addon_prev' => 'See the previous add-ons',
-        'addon_next' => 'See more add-ons',
-        'from' => 'from',
     ],
     'registration' => [
         'title' => 'Complete your registration at home',
@@ -176,12 +166,7 @@ return [
         'per_child' => 'per child',
         'special_suffix' => 'on the special rate',
         'see_pack' => 'See this party',
-        'clock_title' => 'The :duration, at your own pace',
-        'clock_a' => 'Jumping', 'clock_b' => 'Snack', 'clock_c' => 'Cake',
-        'clock_rule' => 'It all fits, with no timetable: if they eat fast, they jump longer. You decide the order.',
-        'clock_monitor' => 'A host with them from start to finish. You, sitting down.',
-        'addons_title' => 'Your party, your way',
-        'addons_intro' => 'Add whatever you like: none of it is needed to book.',
+        'duration_feature' => ':duration of party',
         'eyebrow' => 'Birthdays',
         'reserve_terms' => 'From :min to :max kids · :deposit € deposit to book',
         'coming_soon' => 'We are preparing the birthday packs. If you want to book sooner, write to us and we will help you.',
@@ -200,10 +185,8 @@ return [
         'row_each_special' => 'On the special rate',
         'row_age' => 'Age',
         'row_kids' => 'Kids',
-        'row_duration' => 'Duration',
         'row_deposit' => 'Deposit',
         'row_features' => 'Includes',
-        'row_extend' => 'Extend the party',
         'row_total' => 'Total',
         'row_total_special' => 'Total on the special rate',
         'kids' => 'From :min to :max kids',

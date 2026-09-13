@@ -21,9 +21,6 @@
          demás no pasan nada y su menú se queda solo con «Páginas». --}}
     <x-site.nav :sections="$menuSections" />
 
-    {{-- ⚠️ TEMPORAL (`#546`): el andamio de las variantes de fachada. Sin `?fachada=1|2` en
-         `local` no emite absolutamente nada. --}}
-    <x-site.facade-styles />
     <main id="main">
 
     {{-- ===================== HERO ===================== --}}
@@ -366,15 +363,23 @@
                                 <span class="zone-card__tint" aria-hidden="true"></span>
                                 <span class="zone-card__inner">
                                     <h3 class="zone-card__name">{{ $card['name'] }}</h3>
-                                    {{-- ⚠️ **La EDAD y la ALTURA salieron de aquí** (`[DECIDIDO owner]`:
-                                         «quita lo de "de 4 a 7 años" de la card, ya lo tenemos en el
-                                         sticker»). Las decía el cuerpo y ahora las dice el sello, y
-                                         tenerlas en los dos sitios era leer la tarjeta dos veces.
-                                         ▶ El bloque se queda porque la DESCRIPCIÓN sigue aquí: es lo
-                                         único que el sello no puede llevar. --}}
-                                    @if ($card['description'])
+                                    {{-- ❗ **LA EDAD Y LA ALTURA VUELVEN AL CUERPO** (`[DECIDIDO owner,
+                                         2026-09-13]`, `#583`), además de en el sello: es la tarjeta del
+                                         artboard aprobado (`Zonas PJP` 4a), que las escribe debajo del
+                                         nombre y encima de la descripción. Revierte la retirada de `#549`.
+                                         ⚠️ Son los MISMOS dos datos que el sello, del mismo sitio
+                                         (`ZoneCards`): una segunda redacción acabaría diciendo otra edad. --}}
+                                    @if ($card['age'] || $card['height'] || $card['description'])
                                         <span class="zone-card__who">
-                                            <span class="zone-card__what">{{ $card['description'] }}</span>
+                                            @if ($card['age'])
+                                                <span class="zone-card__fact">{{ $card['age'] }}</span>
+                                            @endif
+                                            @if ($card['height'])
+                                                <span class="zone-card__fact">{{ \Illuminate\Support\Str::ucfirst($card['height']) }}</span>
+                                            @endif
+                                            @if ($card['description'])
+                                                <span class="zone-card__what">{{ $card['description'] }}</span>
+                                            @endif
                                         </span>
                                     @endif
                                 </span>
@@ -575,11 +580,6 @@
          van a `route('cumpleanos')`, medido— pero una URL con ancla puede estar repartida fuera. --}}
     @if ($partyCards !== [])
         <section id="events" class="section wrap">
-        {{-- ⚠️ TEMPORAL (`#547`) · el TRÍO DE NIÑOS (`G4`), solo con `?fachada=2` en `local`.
-             Va al lado del titular, en el hueco de 512 px que su cabecera deja a la derecha. --}}
-        @if (app()->environment('local') && (int) request()->query('fachada', 0) === 2)
-            <x-site.trio clase="trio--events" :escala="2" />
-        @endif
             {{-- ⚠️⚠️ **AQUÍ HUBO UNA CABECERA SOBRE FOTO A SANGRE Y SE RETIRÓ** (`[DECIDIDO owner]`,
                  `#484`). El artboard la dibuja —es la única sección que la lleva— pero la foto que la
                  instalación tiene en `zones.image` para cumpleaños es **el comedor vacío**: filas de
@@ -599,21 +599,14 @@
                     : __('landing.events.section_intro', ['from' => $partyFrom]) }}</p>
             </div>
 
-            {{-- EL RELOJ DE LAS DOS HORAS (`[DECIDIDO owner]`: **dentro en las dos superficies**,
-                 contra el artboard, que lo apaga en móvil por presupuesto de pantalla).
+            {{-- EL TRÍO DE NIÑOS (`G4`, `#547` · `#580`): en ancho, al lado del titular; en estrecho,
+                 sentado sobre la primera tarjeta de pack — por eso va JUSTO encima de ellas. --}}
+            <x-site.trio clase="trio--events" />
 
-                 ❗❗ **NO REPARTE, y ésa es toda la pieza.** Las dos horas son para todo —merienda,
-                 tarta y saltos— y **no hay hora para nada**: si meriendan rápido, saltan más. Los
-                 tres tramos con sus minutos que había antes contaban un horario que no existe, y
-                 *un diagrama de tramos promete horario aunque la letra diga lo contrario*. Se
-                 dibuja el TOTAL entero con las tres cosas encima.
-                 ⚠️ **La duración sale del catálogo**; sin ella el reloj no se pinta, porque su
-                 titular es la duración. --}}
-            @if ($partyDuration)
-                {{-- ⚠️ Desde `#528` es un COMPONENTE: `/cumpleanos` lo pinta también, y el artboard
-                     de la página dice que va «copiado del marcado de 04, no redibujado». --}}
-                <x-site.party-clock :duration="$partyDuration" />
-            @endif
+            {{-- ⚠️⚠️ **AQUÍ VIVÍA EL RELOJ «LAS 2 H, A VUESTRO RITMO» Y SE RETIRÓ** (`[DECIDIDO owner,
+                 2026-09-13]`, `#583`). La duración no se pierde: pasa a la PRIMERA línea de lo que
+                 incluye cada pack, que es donde el owner la quiere, y sale del catálogo
+                 (`duration_min`), no de un texto. --}}
 
             {{-- LAS DOS TARJETAS. `[DECIDIDO owner]`: **la tarjeta entera es el enlace y lleva a
                  `/cumpleanos`**, no al cajón. Su razón la escribe el canvas: *«en la landing va la
@@ -654,7 +647,13 @@
                              hay un pack «al que llegar» — la tarjeta lleva a la comparativa. --}}
                         <a class="party-card" @if ($loop->even) data-surface="ink" @endif
                            href="{{ route('cumpleanos') }}">
-                            <span class="party-card__chip">{{ $card['name'] }}</span>
+                            {{-- La chapa del nombre y, si el panel la escribe, la etiqueta destacada (`#585`). --}}
+                            <span class="party-card__tags">
+                                <span class="party-card__chip">{{ $card['name'] }}</span>
+                                @if ($card['badge'])
+                                    <span class="party-card__badge">{{ $card['badge'] }}</span>
+                                @endif
+                            </span>
                             @if ($card['age'])
                                 <span class="party-card__age">{{ $card['age'] }}</span>
                             @endif
@@ -664,8 +663,18 @@
                                  dejó escrita para las normas de la portada. Con las cinco que
                                  esta instalación tiene hoy, dos repiten lo que la tarjeta ya
                                  dice (la duración y la edad). --}}
-                            @if ($card['features'] !== [])
+                            @if ($card['durationLabel'] || $card['features'] !== [])
                                 <span class="party-card__list">
+                                    {{-- LA DURACIÓN, primera línea (`[DECIDIDO owner, 2026-09-13]`, `#583`):
+                                         la decía el reloj «Las 2 h, a vuestro ritmo», que se retiró. Sale del
+                                         catálogo (`duration_min`), así que cuenta aparte del tope de TRES, que
+                                         es para lo que escribe el panel. --}}
+                                    @if ($card['durationLabel'])
+                                        <span class="party-card__feat">
+                                            <span class="party-card__dot" aria-hidden="true"></span>
+                                            <span>{{ __('landing.events.duration_feature', ['duration' => $card['durationLabel']]) }}</span>
+                                        </span>
+                                    @endif
                                     @foreach (array_slice($card['features'], 0, 3) as $feature)
                                         <span class="party-card__feat">
                                             <span class="party-card__dot" aria-hidden="true"></span>
@@ -726,16 +735,9 @@
                 <x-site.special-rate-note />
             @endif
 
-            {{-- EL BLOQUE DE COMPLEMENTOS, con el molde compartido con las tarifas
-                 (`[DECIDIDO owner]`, `#483`: *«es el mismo formato y diseño que los complementos
-                 de las entradas; simplemente mostramos los complementos disponibles para los
-                 cumpleaños sin repetirse»*).
-                 ⚠️ Aquí el alcance es LOS DOS packs a la vez —se ven juntos, al revés que las
-                 tarifas, donde cada zona tiene el suyo— y la deduplicación es **por ID**: las dos
-                 «Hora extra de sala» son productos distintos con precios distintos. --}}
-            <x-site.addons-rail :products="$packages"
-                                :title="__('landing.events.addons_title')"
-                                :lede="__('landing.events.addons_intro')" />
+            {{-- ⚠️ Aquí vivía «Tu fiesta, tu manera», el carril de complementos de los packs, y se
+                 retiró (`[DECIDIDO owner, 2026-09-13]`, `#583`): los complementos solo se ofrecen en
+                 el cajón, al reservar. --}}
     </section>
     @endif
 
@@ -791,6 +793,8 @@
 
         {{-- EL BLOQUE: el objeto a un lado y lo que abre al otro. --}}
         <div class="before__code" data-surface="ink">
+            {{-- A1 · la trama de puntos (`#580`): la única textura que el sistema admite sobre tinta. --}}
+            <div class="grain" aria-hidden="true"></div>
             {{-- ── EL OBJETO ────────────────────────────────────────────────────────────────────
                  ⚠️ **El código se enseña dentro de un MÓVIL** (`Escritorio PJP` 3a, 8 sep): *«el
                  sitio del código es el teléfono, y así la sección contesta sola el "¿tengo que
@@ -862,7 +866,12 @@
              `#301` pagaron dos veces. ▶ Y no hace falta: el precio ya se publica en esta misma
              página, en el carril de complementos de la sección 02 (medido: «+2 € cada uno»). --}}
         <p class="before__socks">
-            <span class="before__i" aria-hidden="true"><x-icons.info :width="24" :height="24" /></span>
+            {{-- El icono de los CALCETINES (`#582`), del kit de la instalación, en la misma pegatina de
+                 aviso. ▶ Sin él, la «i» de siempre: el aviso no puede quedarse sin marca. --}}
+            @php($calcetines = \App\Domain\Content\Services\IllustrationKit::has('slot-ico-calcetines'))
+            <span @class(['before__i', 'before__i--sock' => $calcetines]) aria-hidden="true">
+                <x-site.kit-ico clave="slot-ico-calcetines"><x-icons.info :width="24" :height="24" /></x-site.kit-ico>
+            </span>
             <span><strong>{{ __('landing.before.socks_lead') }}</strong> {{ __('landing.before.socks_text') }}</span>
         </p>
 
@@ -1361,7 +1370,6 @@
          no hay preguntas tampoco hay `FAQPage` que declarar. --}}
     @if ($faqs->isNotEmpty())
         <section id="faq" class="section wrap">
-        <x-site.facade en="faq" />
             <div class="faq-sec">
                 {{-- ⚠️ **`.sec-head` y no un `<h2>` suelto**: es la cabecera que el canvas cierra
                      para las ocho secciones (`#479`). La vieja no tenía ni rótulo ni entradilla, y

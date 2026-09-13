@@ -71,9 +71,9 @@ const open = ref(false);
                     </span></span>
                     <span class="bk-foot__v">{{ footer.amount }}</span>
                 </span>
-                <!-- ⚠️ **El relleno de acción lo decide `foot.js`, no este marcado** (`#551`): la
-                     clase `bk-cta--sells` solo la lleva el pie que COBRA, que en el cajón es uno —
-                     «Pagar», paso 08—. Los otros tres son secundarios en relleno de tinta. -->
+                <!-- ⚠️ **Quién cobra lo decide `foot.js`, no este marcado** (`#551`): la clase
+                     `bk-cta--sells` solo la lleva el pie que COBRA —«Pagar», paso 08—. Desde `#584`
+                     ya no le da color (los cuatro pies van en primario): le sube el rótulo del ancla. -->
                 <button type="button" class="bk-cta" :class="footer.sells ? 'bk-cta--sells' : ''"
                         :disabled="footer.disabled" @click="$emit('action', footer.action)">
                     <span>{{ footer.cta }}</span>

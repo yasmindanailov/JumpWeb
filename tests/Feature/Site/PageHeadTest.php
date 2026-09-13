@@ -126,7 +126,10 @@ class PageHeadTest extends TestCase
      */
     public function test_the_decoration_lives_in_the_lockup_and_never_reaches_the_lede(): void
     {
-        foreach (['/precios' => 'rays', '/normas' => 'grain'] as $ruta => $pieza) {
+        // ⚠️ `/precios` estuvo en este bucle con su abanico en la ranura `deco`, y salió en `#580`: el
+        // owner lo vio recortado en una banda («A3 Rayos… recortado») y hoy vive detrás de la figura de
+        // su fachada, fuera de la cabecera. Lo que se vigila de él es justo eso, al final del caso.
+        foreach (['/normas' => 'grain'] as $ruta => $pieza) {
             $x = $this->xpath($this->get($ruta)->assertOk()->getContent());
             $cabecera = $x->query('//main//'.$this->clase('div', 'page__head'))->item(0);
 
@@ -150,9 +153,17 @@ class PageHeadTest extends TestCase
         $reglas = $this->reglas('public/css/landing.css');
         $this->assertMatchesRegularExpression('/overflow:\s*(hidden|clip)/', $this->declaracion($reglas, '.page__lockup--deco'),
             'el conjunto decorado no recorta: la decoración puede volver a alcanzar a la entradilla');
-        // Y la cabecera de `/precios` va a la columna entera: dentro de 820 px el abanico se echaría
-        // encima del titular en escritorio.
-        $this->assertMatchesRegularExpression('/max-width:\s*none/', $this->declaracion($reglas, '.page__head.pricing__head'));
+
+        // `/precios` (`#580`): el abanico NO vuelve a la cabecera, donde el conjunto lo recorta, y
+        // sigue en su ranura de fachada. ⚠️ Con él se fue `.page__head.pricing__head` (la cabecera a la
+        // columna entera existía para que el abanico no pisara el titular dentro de 820 px).
+        $x = $this->xpath($this->get('/precios')->assertOk()->getContent());
+        $cabecera = $x->query('//main//'.$this->clase('div', 'page__head'))->item(0);
+        $this->assertNotNull($cabecera, '«/precios» no pinta su cabecera: el caso no distingue nada');
+        $this->assertSame(0, $x->query('.//'.$this->clase('div', 'rays'), $cabecera)->length,
+            'el abanico de «/precios» ha vuelto a la cabecera, donde se recorta en una banda');
+        $this->assertSame(1, $x->query('//'.$this->clase('div', 'fac-slot').'/'.$this->clase('div', 'rays'))->length,
+            'el abanico de «/precios» ya no está en su ranura de fachada');
     }
 
     /**

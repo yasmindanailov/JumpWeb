@@ -57,7 +57,7 @@ class CardSkinTest extends TestCase
         // nadie ascienda a pegatina algo que solo se lee— sigue siendo verdad en las tres.
         '.rate-note' => 'la explicación de la tarifa especial en /precios — #531',
         '.holidays__list' => 'la lista de festivos de /precios — #531',
-        '.extras__list' => 'los complementos de /precios — #531',
+        // ⚠️ `.extras__list` (los complementos de `/precios`) se fue con su bloque en `#583`.
         // ⚠️⚠️ **`.channel` es una tarjeta que SE PULSA y aun así va en APOYO, y eso hay que
         // declararlo o alguien la «arregla»** (`#535`). El criterio del owner en `#323` era
         // «pegatina = lo que se elige o se compra», y un canal de contacto se elige; pero el

@@ -217,6 +217,25 @@ class ThemeSettings
         return self::PRODUCT_INK;
     }
 
+    /**
+     * **LA TINTA DEL GLIFO SOBRE UNA PEGATINA DE ZONA** (`#582`): `var(--paper-fg)` o `var(--paper-bg)`.
+     *
+     * El artboard pinta la silueta SIEMPRE en tinta («silueta en tinta sobre color, nunca al revés»)
+     * y con los colores de esta instalación se cumple. Pero el color de una zona lo pone el PANEL, y
+     * sobre uno oscuro la tinta dejaría de verse. Se decide por el **3:1 de un gráfico** (WCAG 1.4.11):
+     * tinta mientras llegue, papel si no.
+     *
+     * ⚠️ **No es `onBrand()`**: aquél PREFIERE blanco —lo pidió así el primer cliente para sus CTA— y
+     * pondría la silueta del cumpleaños en blanco sobre su magenta, contra el dibujo.
+     * ⚠️ Devuelve el TOKEN y no un hex: la tinta y el papel concretos son los del paquete instalado.
+     */
+    public static function stickerInk(string $hex): string
+    {
+        return self::contrastRatio(self::hex($hex, self::DEFAULT_BRAND), self::PRODUCT_INK) >= 3.0
+            ? 'var(--paper-fg)'
+            : 'var(--paper-bg)';
+    }
+
     /** Ratio de contraste WCAG entre dos hex. */
     private static function contrastRatio(string $a, string $b): float
     {

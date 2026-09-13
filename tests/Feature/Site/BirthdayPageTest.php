@@ -5,7 +5,6 @@ namespace Tests\Feature\Site;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\BirthdayComparison;
-use App\Domain\Content\Services\LandingAddonPresenter;
 use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -189,6 +188,21 @@ class BirthdayPageTest extends TestCase
         $this->assertStringContainsString('De 8 a 15 niños', $this->table($html));
     }
 
+    /**
+     * **La etiqueta destacada de un pack sale bajo su nombre** (`#585`, `[DECIDIDO owner, 2026-09-13]`):
+     * el panel la deja escribir también en los packs, y la web la pinta donde salga el producto.
+     */
+    public function test_a_pack_badge_is_painted_under_its_name(): void
+    {
+        $this->assertStringNotContainsString('party-compare__badge', $this->page(), 'sin etiqueta no hay chip');
+
+        $this->pack('Cumpleaños Jump')->update(['badge' => ['es' => 'La favorita', 'en' => 'Favourite', 'fr' => 'La préférée']]);
+
+        $html = $this->page();
+        $this->assertSame(1, substr_count($html, 'party-compare__badge'), 'el chip sale en una columna que no lo lleva');
+        $this->assertStringContainsString('Cumpleaños Jump<span class="party-compare__badge">La favorita</span></th>', $html);
+    }
+
     public function test_with_a_single_pack_everything_is_what_it_includes(): void
     {
         $this->pack('Cumpleaños Kids')->update(['is_sellable' => false]);
@@ -200,6 +214,10 @@ class BirthdayPageTest extends TestCase
         // Con un pack solo, todo coincide consigo mismo: nada que comparar en la tabla.
         $this->assertStringNotContainsString(__('landing.birthday.row_features'), $this->table($html));
         $this->assertStringContainsString('Acceso exclusivo a la zona Jump', $this->shared($html));
+        // ⚠️ La duración va donde va lo que incluye (`#583`): aquí, abriendo «Igual», no sola en la tabla.
+        $duracion = e(__('landing.events.duration_feature', ['duration' => '2 h']));
+        $this->assertStringContainsString($duracion, $this->shared($html), 'con un pack, la duración no abre lo que incluye');
+        $this->assertStringNotContainsString($duracion, $this->table($html));
     }
 
     /**
@@ -231,41 +249,45 @@ class BirthdayPageTest extends TestCase
         // El `alt` lo escribe el PANEL, no la vista: es el nombre de la zona.
         $this->assertStringContainsString('alt="'.e($zone->tr('name')).'"', $hero);
 
-        // CONTROL: sin foto en el panel, ni figura ni hueco — y el reloj sigue ahí.
+        // CONTROL: sin foto en el panel, ni figura ni hueco.
         $zone->update(['image' => null]);
         $sinFoto = $this->page();
 
         $this->assertStringNotContainsString('party-photo', $sinFoto, 'se reserva un hueco de foto que no existe');
-        $this->assertStringContainsString('party__clock', $sinFoto, 'sin foto la página perdió también el reloj');
     }
 
-    public function test_the_clock_speaks_only_for_a_shared_duration(): void
+    /**
+     * **LA DURACIÓN ABRE LO QUE INCLUYE CADA PACK, EN SU COLUMNA** (`[DECIDIDO owner, 2026-09-13]`,
+     * `#583`). El reloj «Las 2 h, a vuestro ritmo» se retiró; la duración va con «Acceso exclusivo a la
+     * zona…», que es lo que se lee para elegir, aunque coincida en todos los packs.
+     * ⚠️ El control cambia UNA duración: cada columna tiene que decir la suya, sale del catálogo.
+     */
+    public function test_the_duration_leads_what_each_pack_includes(): void
     {
-        $this->assertStringContainsString('class="party__clock"', $this->page());
+        $html = $this->page();
+        $linea = fn (string $d): string => e(__('landing.events.duration_feature', ['duration' => $d]));
+
+        $this->assertStringNotContainsString('party__clock', $html, 'ha vuelto el reloj de las dos horas');
+        $this->assertSame(2, substr_count($this->table($html), $linea('2 h')),
+            'la duración no abre la columna de cada pack');
 
         $this->pack('Cumpleaños Kids')->update(['duration_min' => 90]);
-        $html = $this->page();
+        $tabla = $this->table($this->page());
 
-        $this->assertStringNotContainsString('class="party__clock"', $html);
-        $this->assertStringContainsString(__('landing.birthday.row_duration'), $this->table($html));
-        $this->assertStringContainsString('1 h 30 min', $this->table($html));
+        $this->assertStringContainsString($linea('1 h 30 min'), $tabla, 'la columna del pack cambiado no dice su duración');
+        $this->assertSame(1, substr_count($tabla, $linea('2 h')), 'la otra columna perdió la suya');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
-    //  Los complementos: el menú, el carril y lo que se añade después
+    //  El menú y lo que se añade después (los complementos de reservar ya no salen, `#583`)
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    public function test_the_rail_leaves_the_menu_to_its_own_block(): void
+    public function test_the_menu_keeps_its_own_block(): void
     {
         $menu = $this->addon('Menú Pizza', 800, 81);
         $this->pack('Cumpleaños Jump')->configurableAddons()->attach($menu->id, ['quantity_mode' => 'per_guest', 'choice_group' => 'menu', 'position' => 2]);
 
-        $html = $this->page();
-
-        $this->assertSame(count(LandingAddonPresenter::unique($this->packs(), true)), substr_count($html, 'class="addon-card"'),
-            'el carril no tiene los complementos de reservar sin el menú');
-        $this->assertStringNotContainsString('<span class="addon-card__name">Menú Pizza</span>', $html);
-        $this->assertStringContainsString('<h3 class="party-menu__name">Menú Pizza</h3>', $html);
+        $this->assertStringContainsString('<h3 class="party-menu__name">Menú Pizza</h3>', $this->page());
     }
 
     /**
@@ -290,7 +312,6 @@ class BirthdayPageTest extends TestCase
         $this->assertStringContainsString('Nº aproximado de adultos', $after);
         $this->assertStringContainsString('Cubo de refrescos', $after);
         $this->assertStringContainsString('23,99 € · hasta 48 h antes', $after);
-        $this->assertStringNotContainsString('<span class="addon-card__name">Cubo de refrescos</span>', $html);
     }
 
     public function test_the_mixed_age_card_needs_a_shared_age_family(): void

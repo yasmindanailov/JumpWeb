@@ -184,12 +184,13 @@ class CatalogForm
                 ->maxLength(2000)
                 ->visible(fn (Get $get): bool => $get('type') !== TicketType::TYPE_ADDON),
 
-            // La etiqueta destacada ("Top"…) solo la pinta la tarjeta de ENTRADA; ni el pack
-            // ni el complemento la usan (auditoría de consumo por tipo) → solo para entry.
+            // La etiqueta destacada ("Top"…) la pintan la ENTRADA y el PACK: desde `#585` sale donde
+            // salga el producto —carril de tarifas, `/precios`, tarjetas de cumpleaños, `/cumpleanos`,
+            // `/servicios` y el cajón—. El complemento no la consume → oculta para addon.
             TextInput::make("badge.{$locale}")
                 ->label(__('admin.catalog.field_badge'))
                 ->maxLength(60)
-                ->visible(fn (Get $get): bool => $get('type') === TicketType::TYPE_ENTRY)
+                ->visible(fn (Get $get): bool => $get('type') !== TicketType::TYPE_ADDON)
                 ->helperText(__('admin.catalog.badge_hint')),
 
             Textarea::make("features_{$locale}")

@@ -20,8 +20,8 @@ use Tests\TestCase;
  *
  *  1. **Una entrada que no se vende un día dice que no se vende** («—» y «solo …»), y una que sí se
  *     vende al mismo precio **NO lo dice**. Es el defecto que `#531` reprodujo con control.
- *  2. **La hora extra vive en la tabla** —con «—» en la columna donde no tiene precio— y **no** en el
- *     bloque de complementos, donde su excepción habría que escribirla a mano.
+ *  2. **Ningún complemento se publica aquí, tampoco la hora extra** (`#583`): solo se ofrecen en el
+ *     cajón, al reservar. Revierte `#531`, que la había puesto como fila de la tabla.
  *  3. **Los bloques que alimenta el panel desaparecen con cero filas** (los festivos), que es regla
  *     dura del sistema de diseño.
  */
@@ -153,21 +153,19 @@ class PricingPageTest extends TestCase
     }
 
     /**
-     * ❗❗ **LA HORA EXTRA ES UNA FILA DE LA TABLA, no una ficha del bloque de complementos**
-     * (`[DECIDIDO owner, 2026-09-11]`): son dos productos con dos precios y **solo** se venden en
-     * tarifa especial, así que en la tabla esa excepción la cuenta la columna sola.
+     * ❗❗ **NI LA HORA EXTRA NI NINGÚN COMPLEMENTO SE PUBLICAN EN `/precios`** (`[DECIDIDO owner,
+     * 2026-09-13]`, `#583`): solo se ofrecen en el cajón, al reservar. Revierte `#531`, que había
+     * puesto la hora extra como fila de la tabla y el resto en un bloque de filas.
      */
-    public function test_the_extra_hour_is_a_row_of_its_zone_and_not_an_addon_card(): void
+    public function test_neither_the_extra_hour_nor_any_addon_is_published(): void
     {
-        // ⚠️ El complemento de TIEMPO se siembra aquí: el catálogo de la suite no trae ninguno, y un
-        // caso que lo buscara se quedaría mirando el vacío en verde.
+        // ⚠️ El complemento de TIEMPO se siembra aquí: el catálogo de la suite no trae ninguno, y sin
+        // él que no esté en la tabla no demostraría nada.
         $extra = TicketType::create([
             'name' => ['es' => 'Hora extra'], 'type' => TicketType::TYPE_ADDON,
             'is_active' => true, 'is_sellable' => true, 'seats_per_unit' => 1,
             'occupies_after_parent' => true, 'duration_min' => 60, 'position' => 90,
         ]);
-        // **Solo precio ESPECIAL**: es el caso real —la hora extra es de fin de semana (`#415`)— y
-        // es lo que hace que su columna normal tenga que decir que ese día no se vende.
         $extra->prices()->create([
             'rate_type_id' => RateType::where('key', RateType::KEY_SPECIAL)->value('id'),
             'amount_cents' => 500,
@@ -178,44 +176,33 @@ class PricingPageTest extends TestCase
 
         $html = $this->html();
 
-        [$nombre] = explode(' · ', (string) $extra->tr('name'), 2);
-
-        $fila = collect($this->rows($html))->first(fn (string $f): bool => str_contains($f, $nombre));
-        $this->assertNotNull($fila, 'la hora extra no está en la tabla');
-        $this->assertStringContainsString(__('landing.pricing.not_sold'), $fila, 'su columna normal no dice que ese día no se vende');
-
-        // Y NO está en el bloque de complementos, que es lo que la decisión separó.
-        preg_match('#<ul class="extras__list".*?</ul>#s', $html, $m);
-        $this->assertNotEmpty($m, 'el bloque de complementos no se pinta: la otra mitad miraría el vacío');
-        $this->assertStringNotContainsString($nombre, strip_tags($m[0]));
-
-        /*
-         * ⚠️⚠️ **Y LA OTRA MITAD, que el arnés obligó a escribir**: a la tabla suben SOLO los
-         * complementos de TIEMPO. Sin esta aserción, quitarle el predicado del mecanismo dejaba
-         * pasar la mutación —la hora extra seguía en su fila y fuera del carril—, con **todos** los
-         * complementos convertidos en filas de precio. *Un caso que mira lo que debe estar no ve lo
-         * que no debería.*
-         */
-        $enLaTabla = implode(' ', $this->rows($html));
-        $this->assertStringNotContainsString('Taquilla', $enLaTabla, 'un complemento que no es tiempo se ha colado en la tabla');
+        $this->assertNotEmpty($this->rows($html), 'la tabla no se pinta: el caso miraría el vacío');
+        $this->assertStringNotContainsString('Hora extra', implode(' ', $this->rows($html)),
+            'la hora extra ha vuelto a la tabla de precios');
+        $this->assertStringNotContainsString('extras__list', $html, 'ha vuelto el bloque de complementos');
     }
 
     /**
-     * **El CHIP marca a la que lidera y su palabra la escribe el panel.** Una entrada destacada sin
-     * `badge` no pinta chip: no se inventa aquí una palabra que el dueño no ha escrito.
+     * **La etiqueta destacada sale en toda fila que la tenga, lidere o no** (`#585`, `[DECIDIDO owner,
+     * 2026-09-13]`; revierte `#480`). Y sin `badge` no hay chip, ni siquiera en la destacada: no se
+     * inventa aquí una palabra que el dueño no ha escrito.
      */
-    public function test_the_chip_only_marks_the_featured_entry(): void
+    public function test_every_entry_with_a_badge_carries_its_chip(): void
     {
-        TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false]);
+        TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
 
-        $this->assertStringNotContainsString('rate-table__badge', $this->html(), 'sin destacada no hay chip');
+        $this->assertStringNotContainsString('rate-table__badge', $this->html(), 'sin etiqueta no hay chip');
 
         $entrada = $this->anEntry();
-        $entrada->forceFill(['featured' => true, 'badge' => ['es' => 'La favorita']])->save();
+        $entrada->forceFill(['featured' => true])->save();
+        $this->assertStringNotContainsString('rate-table__badge', $this->html(), 'una destacada sin etiqueta pinta chip');
+
+        // Con etiqueta y SIN destacar: el chip sale igual.
+        $entrada->forceFill(['featured' => false, 'badge' => ['es' => 'La favorita']])->save();
 
         $html = $this->html();
-        $this->assertSame(1, substr_count($html, 'rate-table__badge'), 'el chip tiene que ser uno y solo uno por zona destacada');
-        $this->assertStringContainsString('La favorita', $html);
+        $this->assertSame(1, substr_count($html, 'rate-table__badge'), 'la etiqueta de una fila que no lidera no sale');
+        $this->assertStringContainsString('<span class="rate-table__badge">La favorita</span>', $html);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -328,44 +315,12 @@ class PricingPageTest extends TestCase
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
-    //  4 · Lo que se añade, la salida y lo que la página NO hace
+    //  4 · La salida y lo que la página NO hace
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    /**
-     * **Cada complemento dice su ventaja con el texto que el panel escribe en él.**
-     *
-     * ⚠️ Es lo que permite publicar «imprescindibles para saltar» **sin que el producto deduzca cuál
-     * de sus complementos son los calcetines**, que sería usar un campo de presentación como
-     * identidad (`#485`).
-     */
-    public function test_each_addon_row_writes_the_advantage_from_the_panel(): void
-    {
-        // La ventaja la escribe el PANEL en el propio complemento: se siembra aquí porque el
-        // catálogo de la suite no la trae, y el caso tiene que tener sujeto.
-        $complemento = TicketType::create([
-            'name' => ['es' => 'Calcetines antideslizantes'], 'type' => TicketType::TYPE_ADDON,
-            'is_active' => true, 'is_sellable' => true, 'seats_per_unit' => 1, 'position' => 91,
-            'features' => ['es' => ['Imprescindibles para saltar', 'Te los quedas']],
-        ]);
-        $complemento->prices()->create([
-            'rate_type_id' => RateType::where('key', RateType::KEY_NORMAL)->value('id'),
-            'amount_cents' => 200,
-        ]);
-        $this->anEntry()->configurableAddons()->attach($complemento->id, ['quantity_mode' => 'fixed', 'position' => 2]);
-
-        $html = $this->html();
-
-        preg_match('#<ul class="extras__list".*?</ul>#s', $html, $m);
-        $this->assertNotEmpty($m, 'el bloque de complementos no se pinta');
-
-        $bloque = strip_tags($m[0]);
-
-        $this->assertStringContainsString('Calcetines antideslizantes', $bloque);
-        // ⚠️ La PRIMERA ventaja, no todas: la fila dice una línea, y publicar la lista entera
-        // convertiría el bloque en la ficha desplegable que esta página ya no tiene.
-        $this->assertStringContainsString('Imprescindibles para saltar', $bloque);
-        $this->assertStringNotContainsString('Te los quedas', $bloque);
-    }
+    // ⚠️ Aquí vivía `test_each_addon_row_writes_the_advantage_from_the_panel`, y se fue con su bloque
+    // (`#583`): los complementos ya no se publican en `/precios`. Lo vigila, al revés, el caso de la
+    // hora extra de arriba.
 
     /**
      * ❗❗ **LA PÁGINA NO LLEVA CTA PROPIO, y el armazón sigue ofreciendo la acción en los dos

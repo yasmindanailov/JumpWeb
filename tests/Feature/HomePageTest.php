@@ -132,72 +132,31 @@ class HomePageTest extends TestCase
      * de seguridad; lo que no puede volver es el callout del catálogo.
      */
     /**
-     * El complemento de los calcetines **con su ventaja escrita**, como la tiene el catálogo real.
-     *
-     * ⚠️⚠️ El seeder de la suite crea el complemento **sin `features`**, y eso no es un descuido del
-     * fixture: es el estado de una instalación recién sembrada. La página publica lo que el panel
-     * escribe y **no inventa la frase**, así que para vigilar que la publica hay que escribirla — y
-     * queda dicho que sin ella la página solo dice el nombre y el precio (paso de puesta en marcha,
-     * `#531`).
-     */
-    private function socksWithAdvantage(): void
-    {
-        TicketType::ofType(TicketType::TYPE_ADDON)->where('name->es', 'Calcetines antideslizantes')
-            ->firstOrFail()
-            ->forceFill(['features' => [
-                'es' => ['Imprescindibles para saltar'],
-                'en' => ['Required to jump'],
-                'fr' => ['Indispensables pour sauter'],
-            ]])->save();
-    }
-
-    /**
-     * ⚠️⚠️ **RE-APUNTADO EN `#531`, y el requisito cambia de FUENTE, no de sitio.** La nota estática
-     * del producto (`<x-site.socks-note>`, con su título y su texto en `lang/`) se retiró al rehacer
-     * `/precios` desde su artboard: los calcetines son ahora una FILA del bloque «Lo que se añade»,
-     * con el nombre del complemento y **la ventaja que el panel escribe en él**. Es más fuerte que
-     * antes —lo que se publica es el dato del dueño— y por eso el caso asevera ahora el nombre del
-     * complemento y su ventaja, no una cadena del producto.
+     * ⚠️⚠️ **RE-APUNTADO EN `#583`: el requisito se queda en la PORTADA.** Desde `#531` `/precios` lo
+     * publicaba como una fila del bloque «Lo que se añade», con el nombre del complemento y la
+     * ventaja del panel. `[DECIDIDO owner, 2026-09-13]`: los complementos ya no se publican en la web
+     * —solo se ofrecen en el cajón, al reservar—, así que `/precios` deja de decirlo.
      * ▶ La otra mitad no cambia: en la portada el requisito sigue dicho dentro de la frase de la
-     * sección 05, y el callout del catálogo no puede volver.
+     * sección 05, que es de seguridad, y el callout del catálogo no puede volver.
      */
-    public function test_the_socks_requirement_lives_on_pricing_and_no_longer_on_the_home(): void
+    public function test_the_socks_requirement_lives_on_the_home_and_not_as_an_addon(): void
     {
-        // ⚠️⚠️ **La ventaja se SIEMBRA aquí, y eso es parte de lo que el caso dice**: el catálogo de
-        // la suite no la trae, y la página **no la inventa** — publica lo que el panel escribe. Un
-        // caso que la diera por hecha estaría midiendo el catálogo de esta máquina, no la página.
-        $this->socksWithAdvantage();
-
         $this->get('/precios')->assertOk()
-            ->assertSee('Calcetines antideslizantes')        // el nombre del complemento, del panel
-            ->assertSee('Imprescindibles para saltar')       // su ventaja, también del panel
-            ->assertSee('extras__row', false)                // la fila del bloque «Lo que se añade»
-            ->assertDontSee('socks-note__title', false);     // el callout del catálogo no vuelve
+            ->assertDontSee('extras__row', false)
+            ->assertDontSee('socks-note__title', false);
 
         $this->get('/')->assertOk()
             ->assertDontSee('socks-note__title', false)
             ->assertSee('calcetines antideslizantes');
     }
 
-    /**
-     * ⚠️ **La nota se traduce en `/precios`, que es donde vive** (`#485`), y la frase de la portada
-     * se comprueba aparte: son dos textos distintos desde que la sección 05 sustituyó a la de
-     * normas, y aseverar los dos en la misma página dejaba este caso mirando al vacío.
-     */
+    /** La frase de la portada que dice el requisito, en los otros dos idiomas. */
     public function test_socks_requirement_is_translated(): void
     {
-        // ⚠️ En `/precios` lo que se traduce es el DATO —el nombre del complemento y su ventaja, que
-        // el panel escribe en los tres idiomas—, no una cadena del producto (`#531`).
-        $this->socksWithAdvantage();
-
-        // ⚠️ El nombre es el que el catálogo tenga en ese idioma —aquí «Grip socks»—, no una cadena
-        // del producto: es exactamente lo que esta tanda cambió de fuente.
         $this->get('/lang/en');
-        $this->get('/precios')->assertSee('Grip socks')->assertSee('Required to jump');
         $this->get('/')->assertSee('non-slip socks', false);
 
         $this->get('/lang/fr');
-        $this->get('/precios')->assertSee('Chaussettes antidérapantes')->assertSee('Indispensables pour sauter');
         $this->get('/')->assertSee('chaussettes antidérapantes', false);
     }
 

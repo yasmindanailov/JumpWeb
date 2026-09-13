@@ -20,11 +20,10 @@
          compra) y la nota estática de calcetines, que ahora es una ficha del bloque de abajo **con
          el texto que el panel escribe en el propio complemento**. --}}
     <main id="main" class="page rate-page wrap">
-        <x-site.page-head class="pricing__head" :title="__('landing.pricing.title')" :lede="__('landing.pricing.intro')">
-            {{-- A3 · el abanico de rayos, QUIETO. Su regla es «uno por página», y éste es el de
-                 `/precios`. Detrás del titular y NUNCA detrás de un párrafo (`#525`). --}}
-            <x-slot:deco><div class="rays pricing__rays" aria-hidden="true"></div></x-slot:deco>
-        </x-site.page-head>
+        <x-site.facade en="page-precios" />
+        {{-- ⚠️ A3 · el abanico de rayos ya NO va en la ranura `deco`: la cabecera lo recortaba en una
+             banda. Vive detrás de la figura de la fachada (`<x-site.facade>`, `#580`). --}}
+        <x-site.page-head :title="__('landing.pricing.title')" :lede="__('landing.pricing.intro')" />
 
         {{-- ══ LA SEMANA DIBUJADA ═══════════════════════════════════════════════════════════════
              ❗❗ **El día especial se marca con SUPERFICIE —tinta contra papel—, no con color**: es la
@@ -58,9 +57,8 @@
              y 4 € en la otra).
              ⚠️ **La raya no es «gratis»: es que ese día no se vende**, y lo dice en voz alta el texto
              para lector de pantalla. La misma regla que pone el «solo …» en la nota de la fila.
-             ⚠️ **La hora extra es una fila más** (`[DECIDIDO owner]`, `#531`): son dos productos con
-             dos precios y solo se venden en tarifa especial — en la tabla esa excepción la cuenta la
-             columna sola, en una ficha de escaparate habría que escribirla a mano. --}}
+             ⚠️ **La hora extra ya NO es una fila** (`[DECIDIDO owner, 2026-09-13]`, `#583`, revierte la
+             decisión de `#531`): es un complemento, y los complementos solo se ofrecen al reservar. --}}
         <div class="rate-page__zones">
             @foreach ($rateTable as $zona)
                 <section class="rate-zone" aria-labelledby="zone-{{ $zona['slug'] }}">
@@ -95,8 +93,8 @@
                                             @if ($fila['nuance'])
                                                 <span class="rate-table__nuance">{{ $fila['nuance'] }}</span>
                                             @endif
-                                            {{-- El CHIP marca la que lidera, y su palabra la escribe
-                                                 el panel (`ticket_types.badge`). --}}
+                                            {{-- La ETIQUETA DESTACADA del panel (`ticket_types.badge`),
+                                                 en toda fila que la tenga (`#585`). --}}
                                             @if ($fila['badge'])
                                                 <span class="rate-table__badge">{{ $fila['badge'] }}</span>
                                             @endif
@@ -171,53 +169,9 @@
             @endif
         </div>
 
-        {{-- ══ LO QUE SE AÑADE ══════════════════════════════════════════════════════════════════
-             ❗❗❗ **Cada complemento dice su ventaja con el TEXTO QUE EL PANEL ESCRIBE EN ÉL**
-             (`ticket_types.features`), y eso es lo que hace que los calcetines sigan diciendo
-             «imprescindibles para saltar» **sin que el producto tenga que adivinar cuál es el de los
-             calcetines** — deducirlo por su icono sería usar un campo de PRESENTACIÓN como
-             identidad, el defecto que `#485` evitó y que `#295`/`#301` ya pagaron dos veces.
-
-             ⚠️⚠️ **Es una LISTA y no el carril de fichas de la portada, a propósito**: aquella pieza
-             dice nombre y precio, y aquí el artboard pide la línea de debajo. Comparten el
-             presentador —o sea el DATO y sus reglas de precio—, que es lo que no puede divergir;
-             la forma es de cada superficie.
-
-             ⚠️ **Sin los de TIEMPO**: la hora extra ya es una fila de la tabla de su zona, donde la
-             columna dice sola en qué tarifa se vende. --}}
-        @php($extras = \App\Domain\Content\Services\LandingAddonPresenter::unique($tickets, false, true))
-        @if ($extras !== [])
-            <section class="extras" aria-labelledby="extras-title">
-                <h2 class="rate-page__title" id="extras-title">{{ __('landing.pricing.addons_title') }}</h2>
-                <p class="extras__lede">{{ __('landing.pricing.addons_lede') }}</p>
-                <ul class="extras__list" role="list">
-                    @foreach ($extras as $extra)
-                        <li class="extras__row">
-                            {{-- El MARCADOR del complemento es el que ya elige el panel
-                                 (`ticket_types.icon`); `aria-hidden` porque su nombre va al lado. --}}
-                            <span class="extras__ico" aria-hidden="true">
-                                <x-dynamic-component :component="'icons.'.$extra['icon']" :width="24" :height="24" />
-                            </span>
-                            <span class="extras__body">
-                                <span class="extras__name">{{ $extra['name'] }}</span>
-                                @if ($extra['features'] !== [])
-                                    <span class="extras__note">{{ $extra['features'][0] }}</span>
-                                @endif
-                            </span>
-                            {{-- ⚠️ La unidad solo se escribe cuando es POR INVITADO: en uno de
-                                 cantidad libre, «cada uno» sobra y «por persona» sería falso. --}}
-                            <span class="extras__price">
-                                @if ($extra['price'])
-                                    @if ($extra['varies']){{ __('landing.rates.from') }} @endif{{ $extra['price'] }}&nbsp;€@if ($extra['perGuest'])<span class="extras__unit">{{ __('landing.rates.addon_per_guest') }}</span>@endif
-                                @elseif ($extra['badge'])
-                                    {{ __('tickets.addon_badge_'.$extra['badge']) }}
-                                @endif
-                            </span>
-                        </li>
-                    @endforeach
-                </ul>
-            </section>
-        @endif
+        {{-- ⚠️⚠️ **AQUÍ VIVÍA «LO QUE SE AÑADE», LOS COMPLEMENTOS, Y SE RETIRÓ** (`[DECIDIDO owner,
+             2026-09-13]`, `#583`): *«quita los complementos de la página web, solo los dejamos en el
+             SPA al reservar»*. Se fue con él la fila de la hora extra de cada tabla. --}}
 
         {{-- El QR del registro EXTERNO: solo existe en una instalación que registre fuera (el
              componente se guarda solo). Aquí no se pinta. --}}

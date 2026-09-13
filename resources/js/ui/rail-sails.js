@@ -32,7 +32,6 @@
  * que desliza; el eje es por dónde (`inline` si no se dice: la lista del menú es la única vertical).
  */
 const CARRILES = [
-    ['.addons-rail__wrap', '.addons-rail__track'],
     ['.foot__links-wrap', '.foot__links'],
     ['.foot__legal-wrap', '.foot__legal'],
     ['.menu__inner', '.menu__col-list', 'block'],

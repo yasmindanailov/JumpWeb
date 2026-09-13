@@ -23,7 +23,11 @@
      ⚠️ **En escritorio NO hay carril**: la lista cabe en la columna, así que las piezas pasan a
      pistas de rejilla. Sin scroll no hay asoma, ni ajuste, ni foco por arrastre — pero **sí hay
      foco**, que es lo que `Escritorio PJP` 2b intentó quitar y quedó descartado. --}}
+{{-- ⚠️ `--rates-max` (la zona con más tarifas) fija el ANCHO de pista en escritorio y
+     `--rates-tracks` (la de cada carril) cuántas hay: así las tarjetas miden lo mismo en todas las
+     zonas y la que tiene menos se centra en vez de dejar el hueco a la derecha (`#580`). --}}
 <div class="rates"
+     style="--rates-max: {{ max(1, (int) collect($zones)->max(fn ($z) => count($z['cards']))) }}"
      x-data="rateRail(@js(collect($zones)->pluck('slug')->first()), @js(collect($zones)->mapWithKeys(fn ($z) => [$z['slug'] => $z['featured'] ?? 0])))">
 
     {{-- ⚠️⚠️ **LA PESTAÑA DEL SISTEMA, y no `.zone-tab`.** Aquella clase la comparten `/servicios`
@@ -44,12 +48,11 @@
         @endforeach
     </div>
 
-    {{-- ⚠️ TEMPORAL (`#547`) · el ARCO DE REBOTE (`F3`), solo con `?fachada=2` en `local`.
-         Va aquí —entre las pestañas y los paneles— y **fuera del `@foreach`** a propósito: dentro
-         saldría un arco por zona, y `FacadeDecorationIsPerScreenTest` prohíbe justamente eso. --}}
-    @if (app()->environment('local') && (int) request()->query('fachada', 0) === 2)
-        <x-site.arc />
-    @endif
+    {{-- EL ARCO DE REBOTE (`F3`, `#547` · `#580`). Va aquí —entre las pestañas y los paneles— y
+         **fuera del `@foreach`** a propósito: dentro saldría un arco por zona, y
+         `FacadeDecorationIsPerScreenTest` prohíbe justamente eso. Sin las cuatro poses en el kit
+         no se pinta. --}}
+    <x-site.arc />
 
     @foreach ($zones as $z)
         <div class="rates__panel" role="tabpanel"
@@ -61,6 +64,7 @@
                  lector de pantalla anuncia cuántas hay antes de recorrerlas. En un carril donde
                  solo se ve una y media, saber que son tres es justo lo que falta. --}}
             <ul class="rates__rail" role="list"
+                style="--rates-tracks: {{ count($z['cards']) }}"
                 x-ref="rail-{{ $z['slug'] }}"
                 @scroll.passive="mira(@js($z['slug']))">
 
@@ -74,12 +78,13 @@
                         {{-- ══ LA FILA DE CHAPAS ══════════════════════════════════════════════
                              ❗ **La chapa de ZONA va en cada tarjeta** (15b, ✅ del owner), y su
                              coste está dicho: se repite tantas veces como tarifas tenga la zona.
-                             ⚠️ Es de BORDE y no maciza a propósito — la maciza es la del chip que
-                             marca quién lidera, y en esa tarjeta saldrían las dos juntas. --}}
+                             ⚠️ Es de BORDE y no maciza a propósito — la maciza es la etiqueta
+                             destacada, y en una tarjeta con las dos se distinguen. --}}
                         <p class="rate-card__tags">
                             <span class="rate-card__zone">{{ $card['zone'] }}</span>
-                            {{-- El chip de quien LIDERA. Su texto sale de `ticket_types.badge`, que
-                                 el panel ya rellena. «Lo que no hay, no se pinta». --}}
+                            {{-- La ETIQUETA DESTACADA (`ticket_types.badge`), en toda tarjeta que la
+                                 tenga (`#585`): ya no es solo la de quien lidera. «Lo que no hay, no
+                                 se pinta». --}}
                             @if ($card['badge'])
                                 <span class="rate-card__badge">{{ $card['badge'] }}</span>
                             @endif
@@ -173,17 +178,9 @@
                 <x-site.special-rate-note />
             @endif
 
-            {{-- ⚠️⚠️ **EL BLOQUE DE COMPLEMENTOS ES UN COMPONENTE COMPARTIDO desde `#483`**: la
-                 sección 04 pide exactamente la misma pieza con los packs dentro, y el owner lo dijo
-                 con esas palabras —*«es el mismo formato y diseño que los complementos de las
-                 entradas»*—. Sus reglas y sus trampas viven ahora en `<x-site.addons-rail>`.
-                 ⚠️ Lo que se queda AQUÍ es el ALCANCE: los complementos de los productos de ESTA
-                 zona, porque «Hora extra · KIDS» y «Hora extra · JUMP» son dos productos con dos
-                 precios y un bloque único para la sección tendría que enseñar los dos o elegir uno.
-                 Al cambiar de pestaña cambia el bloque. --}}
-            <x-site.addons-rail :products="collect($z['cards'])->pluck('ticket')"
-                                :title="__('landing.rates.addons_title')"
-                                :lede="__('landing.rates.addons_intro')" />
+            {{-- ⚠️⚠️ **LOS COMPLEMENTOS YA NO SE PUBLICAN EN LA WEB** (`[DECIDIDO owner, 2026-09-13]`,
+                 `#583`): *«solo los dejamos en el SPA al reservar»*. Aquí vivía su carril de fichas
+                 (`<x-site.addons-rail>`, `#480`/`#483`), que se retiró con su componente. --}}
         </div>
     @endforeach
 </div>

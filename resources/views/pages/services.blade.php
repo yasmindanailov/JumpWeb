@@ -174,6 +174,10 @@
 
                                 <div class="svc-ed2__foot">
                                     @if ($pack)
+                                        {{-- La etiqueta destacada del pack (`#585`): sale donde salga el producto. --}}
+                                        @if ($pack->tr('badge'))
+                                            <span class="svc-ed2__badge">{{ $pack->tr('badge') }}</span>
+                                        @endif
                                         <span class="svc-ed2__price">
                                             <span class="from">{{ __('landing.pricing.from') }}</span>
                                             <span class="val">{{ $pack->euros() }},{{ $pack->cents() }}€</span>

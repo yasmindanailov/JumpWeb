@@ -115,7 +115,6 @@ return [
         'col_special' => 'Spécial',
         'table_label' => 'Tarifs :zone',
         'not_sold' => 'Pas vendu ce jour-là',
-        'with_entry' => 'avec :entries',
 
         'special_title' => 'Ce qu\'est le tarif spécial',
         'special_text' => 'Les jours de tarif spécial sont : :label.',
@@ -123,10 +122,6 @@ return [
         'special_calm' => 'Rien à calculer : en choisissant le jour, le prix que tu vois est le tien.',
 
         'holidays_title' => 'Les jours fériés',
-
-        'addons_title' => 'Ce qui s\'ajoute',
-        'addons_lede' => 'À acheter en réservant ou au parc.',
-
     ],
 
     /* Section 02 de la page d'accueil. Voir le fichier espagnol pour le motif du bloc à part. */
@@ -146,14 +141,9 @@ return [
         'saving' => 'Tu économises',
         'saving_base' => 'face à :count de :unit',
         'times' => [2 => 'deux', 3 => 'trois', 4 => 'quatre', 5 => 'cinq', 6 => 'six'],
-        'addons_title' => 'Compléments disponibles',
-        'addons_intro' => 'Tu peux les ajouter à n\'importe quel billet.',
         'from' => 'dès',
         'addon_per_guest' => 'par invité',
         'addon_each' => 'l\'unité',
-        'addon_prev' => 'Voir les compléments précédents',
-        'addon_next' => 'Voir plus de compléments',
-        'from' => 'dès',
     ],
     'registration' => [
         'title' => 'Finalise ton inscription à la maison',
@@ -176,12 +166,7 @@ return [
         'per_child' => 'par enfant',
         'special_suffix' => 'en tarif spécial',
         'see_pack' => 'Voir cet anniversaire',
-        'clock_title' => 'Les :duration, à votre rythme',
-        'clock_a' => 'Sauts', 'clock_b' => 'Goûter', 'clock_c' => 'Gâteau',
-        'clock_rule' => 'Tout y tient et sans horaire : s’ils goûtent vite, ils sautent plus. L’ordre, c’est vous.',
-        'clock_monitor' => 'Un animateur avec eux du début à la fin. Vous, assis.',
-        'addons_title' => 'Ta fête, à ta manière',
-        'addons_intro' => 'Ajoute ce que tu veux : rien de tout ça n’est nécessaire pour réserver.',
+        'duration_feature' => ':duration de fête',
         'eyebrow' => 'Anniversaires',
         'reserve_terms' => 'De :min à :max enfants · Acompte de :deposit € pour réserver',
         'coming_soon' => 'Nous préparons les packs d’anniversaire. Si tu veux réserver plus tôt, écris-nous et nous t’aiderons.',
@@ -200,10 +185,8 @@ return [
         'row_each_special' => 'En tarif spécial',
         'row_age' => 'Âge',
         'row_kids' => 'Enfants',
-        'row_duration' => 'Durée',
         'row_deposit' => 'Acompte',
         'row_features' => 'Comprend',
-        'row_extend' => 'Prolonger la fête',
         'row_total' => 'Total',
         'row_total_special' => 'Total en tarif spécial',
         'kids' => 'De :min à :max enfants',
