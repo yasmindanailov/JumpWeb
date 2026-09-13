@@ -31749,3 +31749,30 @@ Once notas del owner sobre el local de `#588`, con las opciones delante donde ha
 - **`/servicios`**: un producto por fila en las tarifas de grupo, y la banda del pie invita a **otro tipo
   de grupo** («¿Venís con otro tipo de grupo?» → «Pedir información»). De paso, los `bands.go.*` de
   en/fr alcanzan a los del español.
+
+## #590 · 2026-09-13 · `[DECIDIDO owner]` La web nueva en producción, con el contenido de la sesión y la configuración que difería decidida una a una
+
+El owner eligió staging primero y, visto, pidió producción «con todo lo que tenemos: los copys, los
+productos y su configuración», revisando antes las divergencias. Séptimo despliegue (`89e49ed0`); el
+procedimiento y la evidencia están en `ENTORNOS.md` §6.
+- **Lo que difería entre local y producción se decidió pregunta a pregunta**, sobre un diff de solo
+  lectura (`[DECIDIDO owner]`):
+  - enganches de los packs: **los de producción** — calcetines incluidos y obligatorios por invitado
+    (cuadra con el regalo «calcetines para todos») y hora extra de cumpleaños por invitado y sin tope;
+    los menús, por persona;
+  - precios: la hora extra se queda con los de producción (Jump 5 € / 5 €, Kids 4 € / 4 €); la excursión
+    de 3 h con 100 alumnos en tarifa especial pasa a **17 €**, la del cartel;
+  - packs: las reglas de la sesión —edad del cumpleañero obligatoria, notas al post-form, 1 día de
+    antelación, autorización de menores opcional— **conservando el máximo de 50 niños**;
+  - excursiones: **activas**, con `/servicios` fuera de mantenimiento y «Sesión adultos» y «Team
+    building» apagados;
+  - complementos: nombres, iconos y «Traemos nuestra tarta» (10 €);
+  - el botón de acción en **cian** (`#581`) y **la compra online, cerrada** hasta el TPV real;
+  - dudas y normas: **fuera las antiguas**, dentro las 12 y las 10 nuevas.
+- ⚠️ **No van, a propósito**: las tres reseñas locales —escritas a mano como ejemplo; publicarlas sería
+  inventar opiniones— y las dos imágenes locales de la cafetería, que son marcadores de diseño.
+- ⚠️ **Lección de método**: la copia de producción se bajó a local, contra lo que `ENTORNOS.md` §6 ya
+  decía (un volcado de producción lleva datos personales y se queda en el servidor). Se subió a
+  `~/backups/` y se borró la local.
+- Quedan: la T6 (en/fr de lo que escribe el panel) y el título de la pestaña de la portada, que dice
+  «Murcia» (`landing.footer.tag`).

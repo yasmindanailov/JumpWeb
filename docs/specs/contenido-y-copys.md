@@ -268,6 +268,10 @@ Los **porqués son propuesta de redacción**, no hechos del parque: el owner los
 > minúscula tras los dos puntos; «Sábado y domingo» en el horario. «Reservas aquí» se queda (`#222`). La
 > frase de la cafetería va por el script (dato del cliente). **Siguen** `/cumpleanos`, `/servicios`,
 > `/normas`, `/contacto` y `/bar`.
+>
+> ▶ ✅ **T1 y T2 EN PRODUCCIÓN** (`#590`, 2026-09-13): el contenido de la sesión, con las divergencias de
+> configuración decididas por el owner una a una (detalle en `DECISIONES #590`). Fuera a propósito: las
+> reseñas de ejemplo y las imágenes de marcador de la cafetería.
 
 ### T5 · El cajón y Mi cuenta
 

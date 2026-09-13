@@ -378,6 +378,31 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🚀 **SÉPTIMO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-13, commit `89e49ed0`, `DECISIONES #590`).
+> **La web nueva entera** —181 commits desde `e76d6f2a`: la portada y las páginas rehechas, las paradas
+> 03–06 del cajón y `#587`–`#589`— **con el contenido de Play Jump Park** (`storage/app/contenido/
+> aplicar-produccion-589.php`, fuera del repo) y las decisiones del owner sobre la configuración que
+> difería entre local y producción, tomadas una a una tras un diff de solo lectura.
+>
+> ▶ **Orden, y cada paso tiene su porqué**: copia → **paquete de tema por `scp`** (`client.css`,
+> `client-kit.svg`, `client-menu.webp`, `client-tag.svg`), con los hashes comparados antes de seguir —
+> ⚠️ sin el kit nuevo **la GUARDA 7 falla DESPUÉS de `artisan up`**, con las migraciones ya aplicadas —
+> → `deploy.sh --go` (**6 migraciones**; la de `landing_service_products` BORRA la columna vieja, que en
+> producción estaba a NULL en los tres servicios) → el contenido, **probado antes en local con 0
+> diferencias** (es idempotente) → `artisan cache:clear` (la caché es **Redis**: sin él, la portada sirve
+> cifras y ajustes de antes).
+> ▶ **Copia previa**: `~/backups/playjump2_pre589-20260913-132313.sql.gz` · 50 tablas · gzip verificado ·
+> **se queda en el servidor**. ⚠️ Esta vez se bajó primero a local y se corrigió: se subió aquí y se
+> borró la copia local — un volcado de producción lleva datos personales.
+> ▶ **Verificado**: salud en verde (kit con 26 símbolos, ninguna migración pendiente, `failed_jobs` vacía); las
+> ocho páginas públicas en 200 con sus piezas nuevas; y el diff de configuración contra local deja
+> **SOLO lo elegido** (enganches y precios de la hora extra de producción, calcetines incluidos por
+> invitado, máximo de 50 niños, compra online CERRADA) y lo excluido a propósito.
+> ⚠️ **Siguen fuera, a propósito**: la compra online (`sales.online_enabled = 0`), las reseñas (sin
+> `place_id` ni opiniones propias reales) y las imágenes de la cafetería (las locales eran marcadores de
+> diseño). ⚠️ **El título de la pestaña de la portada dice «Murcia»** (`landing.footer.tag`, el respaldo
+> cuando no hay «Título web»): pendiente de corregir.
+
 > 🚀 **SEXTO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-08, commit `e76d6f2a`, `DECISIONES #448`/`#449`).
 > El **SELLO DEL MODO** de un complemento: T1–T4 más el re-escalado por-invitado del post-form.
 >
