@@ -178,14 +178,18 @@ class BirthdayPageTest extends TestCase
         $this->assertStringNotContainsString('Acceso exclusivo a la zona Kids', $this->shared($html));
 
         // Un HECHO igual en los dos va a «Igual»; en cuanto difiere, baja a su fila.
-        $this->assertStringContainsString('De 8 a 20 niños', $this->shared($html));
+        $this->assertStringContainsString('Desde 8 niños', $this->shared($html));
 
+        // ⚠️ El MÁXIMO no es un hecho publicado (`#586`): con topes distintos sigue siendo «Igual».
         $this->pack('Cumpleaños Kids')->update(['max_qty' => 15]);
+        $this->assertStringContainsString('Desde 8 niños', $this->shared($this->page()));
+
+        $this->pack('Cumpleaños Kids')->update(['min_qty' => 10]);
         $html = $this->page();
 
-        $this->assertStringNotContainsString('De 8 a 20 niños', $this->shared($html));
+        $this->assertStringNotContainsString('Desde 8 niños', $this->shared($html));
         $this->assertStringContainsString(__('landing.birthday.row_kids'), $this->table($html));
-        $this->assertStringContainsString('De 8 a 15 niños', $this->table($html));
+        $this->assertStringContainsString('Desde 10 niños', $this->table($html));
     }
 
     /**

@@ -329,13 +329,14 @@ final class BirthdayComparison
         ];
     }
 
+    /**
+     * Cuántos niños hacen falta: **solo el mínimo** (`#586`, `[DECIDIDO owner]`). El máximo es un tope
+     * técnico del panel y la web no lo publica, así que dos packs con el mismo mínimo dicen lo mismo
+     * aunque sus topes difieran.
+     */
     private function kids(TicketType $pack): string
     {
-        $max = (int) ($pack->max_qty ?? 0);
-
-        return $max > 0
-            ? __('landing.birthday.kids', ['min' => $pack->contractableMinimum(), 'max' => $max])
-            : __('landing.birthday.kids_from', ['min' => $pack->contractableMinimum()]);
+        return __('landing.birthday.kids_from', ['min' => $pack->contractableMinimum()]);
     }
 
     /** La señal, escrita en registro de escaparate. `null` sin señal: se paga el total al reservar. */

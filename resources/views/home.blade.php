@@ -125,6 +125,9 @@
                      ⚠️ El rótulo sale del idioma (`hero.l2`): el dibujo es del producto, la
                      palabra es de la instalación. --}}
                     <h1 class="hero__title hero__title--onvideo">{{ __('landing.hero.l1') }} <span class="hero__switch"><span class="hero__switch-sw" aria-hidden="true"><span class="hero__switch-knob"></span><span class="hero__switch-on">{{ __('landing.hero.l2') }}</span></span><span class="sr-only">{{ __('landing.hero.l2') }}</span></span></h1>
+                    {{-- QUÉ ES, PARA QUIÉN Y DÓNDE (`#586`, `[DECIDIDO owner]`): la primera pantalla no
+                         lo decía. Es la misma frase que la descripción de la página para buscadores. --}}
+                    <p class="hero__tag">{{ __('landing.hero.tag') }}</p>
                 </div>
 
                 {{-- ⚠️⚠️ **EL CTA DEL HERO ES EL PAR DEL ARMAZÓN, y baja aquí** (`#254`,
@@ -268,7 +271,9 @@
                          dos zonas sale exactamente el mockup, y con tres o con una sigue teniendo
                          sentido. Pintarlas con el color de la zona sería la grieta 01 del propio
                          canvas —el color de un DATO decidiendo el aspecto de un componente—. --}}
-                    <a class="zone-card" href="{{ route('precios') }}#zona-{{ $card['slug'] }}"
+                    {{-- «Ver la zona» lleva a SUS atracciones (`#586`): antes apuntaba a un ancla de
+                         `/precios` que no existe y aterrizaba arriba de la página de tarifas. --}}
+                    <a class="zone-card" href="{{ route('atracciones', ['zona' => $card['slug']]) }}"
                        data-zone="{{ $card['slug'] }}"
                        @if ($card['tint']) style="--zone-tint: {{ $card['tint'] }}; --zone-tint-op: {{ $card['tintOpacity'] }};" @endif>
 

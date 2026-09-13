@@ -115,6 +115,7 @@ return [
         'col_special' => 'Spécial',
         'table_label' => 'Tarifs :zone',
         'not_sold' => 'Pas vendu ce jour-là',
+        'vat_note' => 'Prix TVA incluse.',
 
         'special_title' => 'Ce qu\'est le tarif spécial',
         'special_text' => 'Les jours de tarif spécial sont : :label.',
@@ -189,7 +190,6 @@ return [
         'row_features' => 'Comprend',
         'row_total' => 'Total',
         'row_total_special' => 'Total en tarif spécial',
-        'kids' => 'De :min à :max enfants',
         'kids_from' => 'Dès :min enfants',
         'kids_note' => 'Le minimum et le maximum pour réserver.',
         'deposit_title' => 'Acompte de :deposit pour réserver',

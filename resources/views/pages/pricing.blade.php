@@ -71,6 +71,9 @@
                         @if ($zona['age'])
                             <span class="rate-zone__age">{{ $zona['age'] }}</span>
                         @endif
+                        @if ($zona['unit'])
+                            <span class="rate-zone__unit">{{ $zona['unit'] }}</span>
+                        @endif
                     </h2>
 
                     <div class="rate-table">
@@ -128,6 +131,11 @@
                 </section>
             @endforeach
         </div>
+        {{-- Quien compara precios pregunta si el IVA va dentro (`#586`). Fuera de `.rate-page__zones`,
+             que en escritorio es una fila: dentro sería una columna más al lado de las tablas. --}}
+        @if ($rateTable !== [])
+            <p class="rate-page__vat">{{ __('landing.pricing.vat_note') }}</p>
+        @endif
 
         {{-- ══ QUÉ ES LA TARIFA ESPECIAL · Y LOS FESTIVOS ════════════════════════════════════════
              ⚠️ **Los días salen del panel** (`rate_types.label`) y los normales se derivan: sin la

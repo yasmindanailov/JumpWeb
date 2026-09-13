@@ -85,14 +85,11 @@ final class LinkBands
     /**
      * La banda GORDA de una página, o `null` si no lleva (o si su destino no se puede visitar hoy).
      *
-     * ▶ **El rótulo es la RUTA ESCRITA del destino**, no un nombre propio, y sale de la misma
-     * función que lo escribe en el menú y en la cabecera de página (`SiteDestinations::writtenPath`,
-     * `#525`). ⚠️ **Es una desviación DECIDIDA del artboard**, que ahí escribe «Antes de venir»:
-     * ese rótulo nombra una SECCIÓN de la portada y no el destino, y el propio canvas prohíbe lo
-     * contrario — *«dos nombres para el mismo sitio son dos sitios para quien lee»*. Con la ruta,
-     * las tres superficies que anuncian un destino dicen lo mismo.
+     * ⚠️ **Sin rótulo de ruta** (`#586`, `[DECIDIDO owner]`): hasta entonces encabezaba la pieza la
+     * ruta escrita del destino («/normas»), que el owner retiró por jerga. Lo que dice a dónde vas es
+     * la pregunta y el botón.
      *
-     * @return array{s: string, q: string, body: string, cta: string, url: string}|null
+     * @return array{q: string, body: string, cta: string, url: string}|null
      */
     public static function wide(string $route): ?array
     {
@@ -109,7 +106,6 @@ final class LinkBands
         }
 
         return [
-            's' => $pagina['s'],
             'q' => (string) __('site.bands.ask.'.$route.'.q'),
             'body' => (string) __('site.bands.ask.'.$route.'.body'),
             'cta' => (string) __('site.bands.go.'.$destino.'.cta'),
@@ -120,10 +116,10 @@ final class LinkBands
     /**
      * Las FINAS de una página: como mucho dos, y solo las que hoy se pueden visitar.
      *
-     * ⚠️ El nombre dice **qué encuentras allí**, no cómo se llama el destino —«/bar · Qué hay para
-     * comer», no «Bar»—: el rótulo de arriba ya dice a dónde vas.
+     * ⚠️ El nombre dice **qué encuentras allí**, no cómo se llama el destino —«Para comer y esperar»,
+     * no «Bar»—.
      *
-     * @return list<array{s: string, t: string, url: string}>
+     * @return list<array{t: string, url: string}>
      */
     public static function thin(string $route): array
     {
@@ -137,7 +133,6 @@ final class LinkBands
             }
 
             $finas[] = [
-                's' => $pagina['s'],
                 't' => (string) __('site.bands.go.'.$destino.'.what'),
                 'url' => $pagina['url'],
             ];

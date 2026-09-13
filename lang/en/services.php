@@ -25,6 +25,7 @@ return [
         'group' => 'Group',
         'weekday' => 'Mon–Fri',
         'weekend' => 'Weekend/holiday',
+        'hours' => '{1} :count hour|[2,*] :count hours',
         'kids' => ':count kids',
         'people' => ':count people',
         'note_kids' => 'Price per child; lower for bigger groups. Sessions outside public opening hours. Book by phone or ask us for details.',
@@ -32,9 +33,4 @@ return [
     ],
     // `sections` moved to the `LandingService` CMS entity (#256, model A): the /servicios blade
     // reads them from the DB (seeded in LandingContentSeeder). Only page chrome remains here.
-    'other' => [
-        'anchor' => 'eventos',
-        'title' => 'Other events',
-        'body' => "Hen/stag parties, private parties, film shoots or any other idea. Tell us what you have in mind and we'll tailor a proposal.",
-    ],
 ];

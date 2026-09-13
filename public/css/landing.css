@@ -1348,6 +1348,12 @@ img { display: block; max-width: 100%; }
    se aplicaba a medias — cerraba la parte del eslogan y no la del titular, y **nada fallaba**. */
 .hero__headline .hero__title.hero__title--onvideo { margin-top: -0.018em; }
 
+/* La frase de qué es el parque, bajo el titular (`#586`). Cuerpo, no rótulo: se lee, no se mira. */
+.hero__tag {
+  margin: var(--sp-12) 0 0; max-width: 34ch;
+  font-family: var(--font-body); font-weight: 600;
+  font-size: clamp(15px, 1.4vw, 19px); line-height: 1.35;
+}
 .hero__kicker {
   font-family: var(--font-accent);
   font-size: clamp(16px, 1.6vw, 22px);
@@ -2627,6 +2633,11 @@ img { display: block; max-width: 100%; }
 .rate-table__table tbody tr + tr :is(th, td) { border-top: 1px solid var(--line); }
 .rate-table__what { font-weight: 400; }
 .rate-table__name { display: block; font-weight: 700; font-size: var(--fs-body); line-height: 1.25; color: var(--fg); }
+.rate-page__vat { margin: var(--sp-12) 0 0; font-size: var(--fs-body-s); color: var(--fg-mute); }
+.rate-zone__unit {
+  font-family: var(--font-mono); font-size: var(--fs-label);
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute);
+}
 .rate-table__nuance {
   display: block; margin-top: var(--sp-2);
   font-family: var(--font-mono); font-size: var(--fs-label);
@@ -4480,6 +4491,7 @@ select:focus-visible {
   font-family: var(--font-body); font-weight: 800;
   font-size: var(--fs-body); line-height: 1.2; color: var(--fg);
 }
+.ride-tile__desc { margin: var(--sp-4) 0 0; font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
 /* El chip `chipDato` del sistema: cápsula, mono 11 y el color de la zona AL 14 %.
    ⚠️ **Nunca a color pleno**: un chip que informa no es un control. Y su texto es TINTA, así que se
    lee sea cual sea el color que el panel le ponga a la zona. */
@@ -5404,10 +5416,6 @@ select:focus-visible {
    clamp 26 → 36), que son al dígito los dos tamaños del artboard (`1c` móvil, `1f` escritorio). */
 .band-wide { display: flex; flex-direction: column; gap: var(--sp-16); padding: 24px; border-radius: var(--r-lg); }
 .band-wide__say { display: flex; flex-direction: column; gap: var(--sp-12); }
-.band-wide__route {
-  margin: 0; font-family: var(--font-mono); font-size: var(--fs-12);
-  letter-spacing: .16em; text-transform: uppercase; color: var(--interactive);
-}
 .band-wide__q {
   margin: 0; font-family: var(--font-display); font-weight: 400;
   font-size: var(--fs-title); line-height: 1.05; color: var(--fg);
@@ -5445,10 +5453,6 @@ select:focus-visible {
 }
 .band-thin:hover { border-color: var(--fg); }
 .band-thin__say { display: flex; flex-direction: column; gap: var(--sp-3); }
-.band-thin__route {
-  font-family: var(--font-mono); font-size: var(--fs-11);
-  letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute);
-}
 .band-thin__what { font-size: var(--fs-17); font-weight: 800; line-height: 1.2; }
 .band-thin__arrow { flex: none; color: var(--interactive); transition: transform var(--dur-toque) var(--ease-sale); }
 .band-thin:hover .band-thin__arrow { transform: translateX(3px); }

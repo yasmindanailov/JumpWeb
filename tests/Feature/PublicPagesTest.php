@@ -60,7 +60,9 @@ class PublicPagesTest extends TestCase
                 ->assertDontSee('tarjeta-invitacion', false)
                 ->assertDontSee('Descargar tarjeta')
                 ->assertDontSee('¿Te gustaría crear tu invitación')
-                ->assertSee('De 8 a 20 niños');
+                // Solo el mínimo (`#586`, `[DECIDIDO owner]`): el máximo no se publica.
+                ->assertSee('Desde 8 niños')
+                ->assertDontSee('De 8 a 20 niños');
         }
     }
 
@@ -123,25 +125,25 @@ class PublicPagesTest extends TestCase
 
     public function test_services_page_renders_with_all_anchors(): void
     {
-        // /servicios (diseño v2 «Editorial XL») reúne 4 líneas comerciales: 3 servicios en
-        // filas editoriales (excursiones, teambuilding, sesión adultos) + «otros eventos» como
-        // banda catch-all final. Cada una conserva un anchor ESTABLE enlazado desde el nav.
+        // /servicios (diseño v2 «Editorial XL»): una fila editorial por servicio del panel, cada una
+        // con un anchor ESTABLE enlazado desde el nav. ⚠️ La banda «Otros eventos» se retiró (`#586`,
+        // `[DECIDIDO owner]`: solo se ofrecen excursiones de colegio) y con ella su ancla `eventos`.
         $response = $this->get('/servicios')->assertOk();
 
         // Títulos de los servicios.
         $response->assertSee('Excursiones de colegio');
         $response->assertSee('Empresas');
         $response->assertSee('Excursión para mayores');
-        $response->assertSee('Otros eventos');
+        $response->assertDontSee('Otros eventos');
 
         // Anchors HTML (contrato: el nav enlaza /servicios#xxx directamente) + índice del hero.
         $response->assertSee('id="excursionescolegio"', false);
         $response->assertSee('id="teambuilding"', false);
         $response->assertSee('id="sesionadultos"', false);
-        $response->assertSee('id="eventos"', false);
+        $response->assertDontSee('id="eventos"', false);
         $response->assertSee('href="#excursionescolegio"', false); // el índice del hero apunta al anchor
 
-        // Estructura del layout editorial: hero con índice, la CINTA, filas y banda.
+        // Estructura del layout editorial: hero con índice, la CINTA y filas.
         // ⚠️ Aquí se aseveraba `svc-marquee`, la marquesina heredada del cliente antiguo. La
         // sustituye la cinta `C3` (T2 del idioma visual, 2026-08-31) y el contrato pasa a ser
         // `brand-band`: misma función —los títulos en bucle— y otra forma.
@@ -149,7 +151,7 @@ class PublicPagesTest extends TestCase
         $response->assertSee('brand-band', false);
         $response->assertDontSee('svc-marquee', false);
         $response->assertSee('svc-ed2__row', false);
-        $response->assertSee('svc-other', false);
+        $response->assertDontSee('svc-other', false);
 
         // Kicker (etiqueta · zona, SIN número) + ficha de specs derivados de los datos i18n.
         $response->assertSee('Servicio · Kids + Jump');
@@ -181,7 +183,7 @@ class PublicPagesTest extends TestCase
         // nada que destacar: envolverla entera convertiría el titular en una pastilla de color.
         // ▶ Por eso `services.title_accent` se deja VACÍO, que es la rama de degradación que el
         // propio hero ya tenía escrita («si no aparece, cae con elegancia al título plano»).
-        $response->assertSee('Servicios');
+        $response->assertSee(__('services.title'));
         $response->assertDontSee('<span class="blink">', false);
     }
 

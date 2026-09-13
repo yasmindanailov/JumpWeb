@@ -7,6 +7,7 @@ use App\Domain\Booking\Concerns\WritesLandingValues;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * **LA TABLA DE TARIFAS DE `/precios`** (`DECISIONES #531`, carril de diseño Fase 3 · T3b).
@@ -65,11 +66,12 @@ final class RateTable
     }
 
     /**
-     * El rótulo de la columna de la tarifa NORMAL: «L a J».
+     * El rótulo de la columna de la tarifa NORMAL: «Lunes a jueves».
      *
      * ⚠️ Se DERIVA de los días que ninguna especial reclama, igual que la frase larga. Y cuando no
      * se pueden saber cae al rótulo de la propia tarifa en el panel («Día normal»), que es un dato
      * y no una suposición.
+     * ⚠️ Con los NOMBRES de los días, no con sus iniciales (`#586`): «L a J» había que descifrarlo.
      */
     public function normalColumnLabel(): string
     {
@@ -79,28 +81,38 @@ final class RateTable
             return (string) ($this->normalRate()?->tr('label') ?? '');
         }
 
-        $inicial = fn (int $d): string => (string) __('landing.pricing.week_initials.'.$d);
+        $nombre = fn (int $d): string => $this->dayName($d);
 
         if (count($normales) === 1) {
-            return $inicial($normales[0]);
+            return Str::ucfirst($nombre($normales[0]));
         }
 
-        // Solo como RANGO si son contiguos: con un conjunto suelto —martes y viernes— «L a V»
-        // incluiría días que no son. La misma regla que la frase larga del trait.
+        // Solo como RANGO si son contiguos: con un conjunto suelto —martes y viernes— «lunes a
+        // viernes» incluiría días que no son. La misma regla que la frase larga del trait.
         if ($this->areContiguous($normales)) {
-            return (string) __('landing.pricing.col_range', [
-                'from' => $inicial($normales[0]),
-                'to' => $inicial($normales[count($normales) - 1]),
-            ]);
+            return Str::ucfirst((string) __('landing.pricing.col_range', [
+                'from' => $nombre($normales[0]),
+                'to' => $nombre($normales[count($normales) - 1]),
+            ]));
         }
 
-        return implode(' · ', array_map($inicial, $normales));
+        return Str::ucfirst(implode(' · ', array_map($nombre, $normales)));
     }
 
-    /** El rótulo de la columna especial, o `null` si la instalación no tiene tarifa especial. */
+    /**
+     * El rótulo de la columna especial, o `null` si la instalación no tiene tarifa especial.
+     *
+     * ▶ Es el rótulo de la tarifa en el PANEL («Viernes, fines de semana, vísperas y festivos»,
+     * `#586`): «Especial» obligaba a bajar a la nota para saber qué días eran. El genérico solo
+     * queda para una tarifa sin rótulo.
+     */
     public function specialColumnLabel(): ?string
     {
-        return $this->specialRate() === null ? null : (string) __('landing.pricing.col_special');
+        if ($this->specialRate() === null) {
+            return null;
+        }
+
+        return $this->specialLabel() ?? (string) __('landing.pricing.col_special');
     }
 
     /**
@@ -157,6 +169,9 @@ final class RateTable
                 // La edad la manda la BD, como en la sección 01 (`#478`): aquí se dice una vez por
                 // zona y no una vez por entrada.
                 'age' => $zone->tr('age_range') ?: null,
+                // La UNIDAD del precio de la zona (`#586`): la tabla decía cifras sin decir si eran por
+                // niño o por persona. Sale de la primera entrada, que es lo que el panel escribe.
+                'unit' => $entradas->first()?->tr('period_label') ?: null,
                 // ⚠️ Solo ENTRADAS: la fila de la hora extra se retiró con el resto de complementos de
                 // la web (`[DECIDIDO owner, 2026-09-13]`, `#583`), que solo se ofrecen al reservar.
                 'rows' => $entradas->map(fn (TicketType $t, int $i): array => $this->entryRow($t, $zone, $i === $lidera))->all(),

@@ -18,7 +18,7 @@ return [
         'pages' => [
             'pricing' => 'Tarifas', 'events' => 'Cumpleaños', 'attractions' => 'Atracciones',
             'bar' => 'El bar',
-            'rules' => 'Normas', 'services' => 'Servicios', 'contact' => 'Contacto',
+            'rules' => 'Normas', 'services' => 'Excursiones', 'contact' => 'Contacto',
         ],
         'zones' => 'Zonas', 'rides' => 'Atracciones', 'pricing' => 'Precios',
         'events' => 'Cumpleaños', 'info' => 'Visítanos', 'reserve' => 'Registrarse',
@@ -78,7 +78,7 @@ return [
         //    dice el interruptor. Si algún día una instalación lo quiere en su idioma, se
         //    cambia aquí y el interruptor no se entera.
         'l1' => 'DIVERSIÓN', 'l2' => 'ON',
-        'tag' => 'Parque de saltos, trampolines, tirolinas y mucho más en plena Murcia. Hecho para reír.',
+        'tag' => 'Parque de trampolines en Lorca, para peques y mayores.',
         'cta' => 'Reservas aquí', 'cta2' => 'Ver atracciones', 'reel' => 'Vídeo del parque',
         // CTA "prime" del hero (mockup). Subtítulo con precio cuando hay catálogo,
         // fallback `cta_buy_no_price` cuando aún no hay productos vendibles.
@@ -115,7 +115,7 @@ return [
          */
         'eyebrow' => 'Para quién',
         'title' => 'Cada uno tiene su zona',
-        'rule' => 'Manda la edad. Si no cuadra, manda la altura.',
+        'rule' => 'Con 8 años se puede elegir. Los menores de 4 entran en Kids con un adulto si miden más de 90 cm; en Jump, entre 1,10 y 1,30 m, también con un adulto.',
         'from' => 'desde',
         'see_zone' => 'Ver la zona :zone',
         /*
@@ -140,7 +140,7 @@ return [
     'rides' => [
         'eyebrow' => 'Qué hay dentro',
         'title' => 'Salta, trepa y déjate caer',
-        'intro' => ':count atracciones dentro. Camas elásticas, toboganes, foam y piscina de bolas.',
+        'intro' => ':count atracciones: trampolines, toboganes, piscina de espuma y piscina de bolas.',
         // La única puerta de la sección, y la única entrada a `/atracciones` desde la portada.
         'door' => 'Ver las :count atracciones',
         'aside_title' => '¿Y yo qué hago mientras?',
@@ -193,13 +193,15 @@ return [
 
         // ── LA TABLA ──────────────────────────────────────────────────────────────────────
         // ⚠️ La cabecera de la columna normal se DERIVA de los días que ninguna especial reclama:
-        // aquí solo va la forma del rango («L a J»).
+        // aquí solo va la forma del rango («lunes a jueves»). La especial lleva el rótulo del panel y
+        // `col_special` es solo el suelo de una tarifa sin rótulo (`#586`).
         'col_range' => ':from a :to',
         'col_special' => 'Especial',
         'table_label' => 'Tarifas de :zone',
         // ⚠️ **«—» no es «gratis»: es que ese día no se vende.** Lo dice en voz alta el lector de
         // pantalla, que no ve la raya.
         'not_sold' => 'No se vende ese día',
+        'vat_note' => 'Precios con IVA incluido.',
 
         // ── QUÉ ES LA TARIFA ESPECIAL ─────────────────────────────────────────────────────
         // ⚠️ Los días salen del rótulo del panel (`:label`) y los normales se derivan: ni una lista
@@ -313,7 +315,9 @@ return [
         // vuestro ritmo», que se retiró. `:duration` sale del catálogo, ya escrita («2 h»).
         'duration_feature' => ':duration de fiesta',
         'eyebrow' => 'Cumpleaños',
-        'reserve_terms' => 'De :min a :max niños · Señal de :deposit € para reservar',
+        // ⚠️ Sin máximo a la vista (`#586`, `[DECIDIDO owner]`): el panel guarda un tope técnico y la web
+        // solo publica el mínimo. `:max` sigue llegando y no se escribe.
+        'reserve_terms' => 'Desde :min niños · Señal de :deposit € para reservar',
         // `/cumpleanos` sin packs vendibles: la entradilla y su salida.
         'coming_soon' => 'Estamos preparando los packs de cumpleaños. Si quieres reservar antes, escríbenos y te ayudamos.',
         'coming_soon_cta' => 'Contactar',
@@ -340,9 +344,8 @@ return [
         'row_features' => 'Incluye',
         'row_total' => 'Total',
         'row_total_special' => 'Total en tarifa especial',
-        'kids' => 'De :min a :max niños',
         'kids_from' => 'Desde :min niños',
-        'kids_note' => 'El mínimo y el máximo para reservar.',
+        'kids_note' => 'El mínimo para reservar.',
         'deposit_title' => 'Señal de :deposit para reservar',
         'deposit_note' => 'Se descuenta del total.',
         'deposit_line' => 'La señal de :deposit se descuenta del total; el resto se paga el día de la fiesta, en el parque.',
@@ -361,7 +364,7 @@ return [
         'cutoff' => 'hasta :time antes',
         'cutoff_start' => 'hasta que empiece la fiesta',
         'mixed_title' => '{2} ¿Y si vienen niños de las dos edades?|[3,*] ¿Y si vienen niños de edades distintas?',
-        'mixed_text' => 'Cada niño paga el pack que le toca por su edad, y la diferencia —a favor o en contra— se ajusta en recepción el día de la fiesta. Esa diferencia nunca se cobra online: lo que cambia después de reservar se arregla en el parque.',
+        'mixed_text' => 'Si vienen niños de las dos edades, cada uno paga el precio del pack de su edad. La diferencia se ajusta en el parque el día de la fiesta, nunca online.',
         'mixed_seal' => 'Y lo que reservaste no se mueve: cada reserva guarda las condiciones del día en que la hiciste, aunque cambien los precios.',
         'info_title' => 'Personalizamos cada cumple',
         'info_text' => 'Si hay una alergia, un miedo o una sorpresa que preparar, dínoslo y lo montamos.',
@@ -589,7 +592,7 @@ return [
     ],
     'reserve' => [
         'title' => 'VAMOS', 'stroke' => 'A', 'fill' => 'SALTAR',
-        'copy' => 'Reserva tu cumpleaños online en un minuto, con confirmación al instante. ¿Solo vienes a saltar? Ven directo o llámanos.',
+        'copy' => 'Entradas, cumpleaños y excursiones, con día y hora, en un minuto. Te confirmamos al momento.',
         'cta' => 'Reservas aquí', 'cta2' => 'Llamar',
     ],
     'footer' => [

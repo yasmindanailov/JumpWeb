@@ -38,7 +38,7 @@ return [
     'rules_waiver_cta' => 'Leer el descargo entero',
 
     // La línea final: lo que antes era el bloque «Información», que no es una norma.
-    'rules_staff' => 'Cualquier duda sobre tarifas, cumpleaños o promociones, pregunta al personal del parque: están para eso.',
+    'rules_staff' => '¿Te queda alguna duda? Pregúntanos en el parque, por teléfono o desde Contacto.',
     'rules_updated' => 'Actualizado en :fecha',
     'back_home' => '← Volver al inicio',
     'legal_draft_notice' => 'Texto provisional pendiente de revisión legal.',
@@ -63,7 +63,8 @@ return [
     'contact_success' => '¡Gracias! Hemos recibido tu mensaje y te responderemos pronto.',
     'contact_hp' => 'No rellenar este campo',
     'contact_form_title' => 'Escríbenos',
-    'contact_form_lede' => 'Cuéntanos qué necesitas y te contestamos al correo.',
+    // No repite la entradilla (`#586`): la de arriba ya dice «cuéntanos qué necesitas».
+    'contact_form_lede' => 'Te contestamos al correo en horario de apertura.',
     // Junto al botón. La entradilla dice CUÁNDO; esto dice POR DÓNDE, que es lo que hay que saber
     // justo antes de pulsar (el artboard lo pide ahí a propósito).
     'contact_reply_note' => 'Te contestamos al correo.',
@@ -192,20 +193,22 @@ return [
                 'body' => 'Las tarifas por zona y por tiempo, y qué incluye cada una.',
             ],
             'servicios' => [
-                'q' => '¿Cuántos venís?',
-                'body' => 'Cuéntanos qué necesitáis y os contestamos con lo que podemos ofreceros.',
+                'q' => '¿Venís con el cole?',
+                'body' => 'Excursiones con precio por alumno y monitores. Todo lo que necesitáis saber, y la reserva.',
             ],
         ],
 
         // Qué se encuentra en cada DESTINO: el rótulo del botón de la gorda y el nombre de la fina.
+        // ▶ `what` es también la frase bajo cada destino del MENÚ (`SiteDestinations::pages()`, `#587`):
+        // una frase por destino, la misma en las dos superficies.
         'go' => [
             'atracciones' => ['cta' => 'Ver las atracciones', 'what' => 'Todo lo que hay dentro'],
             'precios' => ['cta' => 'Ver las tarifas', 'what' => 'Cuánto cuesta saltar'],
-            'cumpleanos' => ['cta' => 'Ver los cumpleaños', 'what' => 'Celebrarlo aquí'],
-            'bar' => ['cta' => 'Ver el bar', 'what' => 'Qué hay para comer'],
-            'normas' => ['cta' => 'Ver las normas', 'what' => 'Lo que hay que cumplir'],
-            'servicios' => ['cta' => 'Ver los grupos', 'what' => 'Venir en grupo'],
-            'contacto' => ['cta' => 'Escríbenos', 'what' => 'Hablar con nosotros'],
+            'cumpleanos' => ['cta' => 'Ver los cumpleaños', 'what' => 'Celebra su día aquí'],
+            'bar' => ['cta' => 'Ver el bar', 'what' => 'Para comer y esperar'],
+            'normas' => ['cta' => 'Ver las normas', 'what' => 'Lo que hay que saber'],
+            'servicios' => ['cta' => 'Ver las excursiones', 'what' => 'Para colegios'],
+            'contacto' => ['cta' => 'Escríbenos', 'what' => 'Llámanos o escríbenos'],
         ],
     ],
 ];

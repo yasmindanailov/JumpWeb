@@ -6,11 +6,10 @@
      cabecera de las ocho secciones de la portada, así que su CSS comparte declaración con
      `.sec-head` y no tiene reglas propias de tamaño (lo vigila `PageHeadTest`).
 
-     ▶ **El rótulo, por defecto, es la ruta ESCRITA de la página** y sale de la MISMA función que
-     escribe la ruta debajo de cada destino del menú (`SiteDestinations::writtenPath`). Con dos
-     derivaciones, el menú y la cabecera de la misma página podían decir direcciones distintas.
+     ▶ **Una página interior NO lleva rótulo** (`#586`, `[DECIDIDO owner]`: la ruta escrita «/precios»
+     era jerga de quien construyó la web). Hasta entonces el rótulo por defecto era la ruta.
      ⚠️ Las pantallas de SERVICIO (mantenimiento, pago, contraseña, verificar el correo) pasan su
-     rótulo a mano: no son destinos, y escribir su URL no le diría nada a quien la mira.
+     rótulo a mano y lo siguen pintando: nombran lo que está pasando, no una dirección.
 
      ⚠️ **Sin entradilla no se pinta el párrafo**: un párrafo vacío deja 16/20 px de aire colgando
      debajo del titular, y es lo que tienen hoy las páginas legales.
@@ -31,13 +30,12 @@
     'lede' => null,
     'eyebrow' => null,
 ])
-@php
-    $eyebrow ??= \App\Domain\Content\Services\SiteDestinations::writtenPath(url()->current());
-@endphp
 <div {{ $attributes->class('page__head') }}>
     <div @class(['page__lockup', 'page__lockup--deco' => isset($deco)])>
         {{ $deco ?? '' }}
-        <p class="page__eyebrow">{{ $eyebrow }}</p>
+        @if (filled($eyebrow))
+            <p class="page__eyebrow">{{ $eyebrow }}</p>
+        @endif
         <h1 class="page__title">{{ $title }}</h1>
     </div>
     @if (filled($lede))

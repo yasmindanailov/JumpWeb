@@ -25,6 +25,7 @@ return [
         'group' => 'Groupe',
         'weekday' => 'Lun–Ven',
         'weekend' => 'Week-end/férié',
+        'hours' => '{1} :count heure|[2,*] :count heures',
         'kids' => ':count enfants',
         'people' => ':count personnes',
         'note_kids' => "Prix par enfant ; dégressif selon la taille du groupe. Séances hors horaires d'ouverture au public. Réserve par téléphone ou demande-nous des infos.",
@@ -32,9 +33,4 @@ return [
     ],
     // `sections` migrées vers l'entité CMS `LandingService` (#256, modèle A) : le blade /servicios
     // les lit depuis la BD (semées dans LandingContentSeeder). Ici ne reste que le chrome de page.
-    'other' => [
-        'anchor' => 'eventos',
-        'title' => 'Autres événements',
-        'body' => 'EVJF/EVG, fêtes privées, tournages ou toute autre idée. Dis-nous ce que tu as en tête et on te propose une formule sur mesure.',
-    ],
 ];

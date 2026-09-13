@@ -70,11 +70,11 @@ class ServicesPageTest extends TestCase
             // zona, que es lo que se ve, y funciona con cualquier acento (antes solo con jump/kids).
             ->assertSee(ThemeSettings::zoneStyleForAccent('kids'), false)
             ->assertSee(ThemeSettings::zoneStyleForAccent('jump'), false)
-            ->assertSee('Kids 2H')                         // caption «{zona} {N}H» (en mayúsculas por CSS)
-            ->assertSee('Jump 3H')
+            ->assertSee('Kids · 2 horas')                  // caption «{zona} · {N} horas» (`#586`: antes «2H»)
+            ->assertSee('Jump · 3 horas')
             ->assertSee('10 €')                            // Kids · 2 h · L–V · 100 niños (precio mínimo, único)
             ->assertSee('20 €')                            // Jump · 3 h · finde · 30 niños (panel oculto, pero en el DOM)
-            ->assertSee('30 niños')                        // unidad «niños» (colegio)
+            ->assertSee('Desde 30 alumnos')                // unidad del colegio: alumnos (`#586`)
             ->assertSee('Pedir información');              // sigue siendo contact-only
     }
 
@@ -86,8 +86,8 @@ class ServicesPageTest extends TestCase
             ->assertOk()
             ->assertSee('30 personas')
             ->assertSee('100 personas')
-            ->assertSee('Jump 2H')
-            ->assertSee('Jump 3H');
+            ->assertSee('Jump · 2 horas')
+            ->assertSee('Jump · 3 horas');
     }
 
     public function test_a_single_zone_price_table_renders_without_tabs(): void
@@ -109,7 +109,7 @@ class ServicesPageTest extends TestCase
 
         $res = $this->get('/servicios')->assertOk();
         $res->assertSee('svc-rates__table', false);    // la tabla se renderiza
-        $res->assertSee('Jump 2H');                    // caption «{zona} {N}H»
+        $res->assertSee('Jump · 2 horas');             // caption «{zona} · {N} horas»
         $res->assertSee('30 personas');                // unidad personas
         $res->assertDontSee('zone-tabs', false);       // PERO sin pestañas (1 sola zona)
     }
@@ -130,13 +130,16 @@ class ServicesPageTest extends TestCase
         $this->assertNull(LandingService::where('slug', 'sesionadultos')->value('price_table'));
     }
 
-    public function test_zero_services_degrades_to_hero_and_other_events(): void
+    public function test_zero_services_degrades_to_hero_and_link_bands(): void
     {
         LandingService::query()->delete();
 
+        // ⚠️ Hasta `#586` sobrevivía la banda «Otros eventos»; se retiró y lo que queda son las
+        // bandas de enlace, que llevan a las demás páginas.
         $this->get('/servicios')
             ->assertOk()
-            ->assertSee('Otros eventos')               // banda catch-all estática sobrevive
+            ->assertSee('bands-thin', false)
+            ->assertDontSee('Otros eventos')
             ->assertDontSee('svc-ed2__row', false)     // sin filas editoriales
             ->assertDontSee('svc-hero__index', false); // sin índice del hero
     }

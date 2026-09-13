@@ -85,6 +85,9 @@ final class SiteDestinations
      * (`MaintenanceSettings::PAGE_KEYS`; una clave que no está ahí nunca lo está).
      *
      * @param  ?string  $currentRoute  la ruta de la página que pinta el menú, para marcarla
+     *                                 ▶ `s` es la FRASE de lo que hay en el destino («Cuánto cuesta saltar»), la misma que dicen las
+     *                                 bandas de enlace (`site.bands.go.<ruta>.what`). Hasta `#586` era la ruta escrita («/precios»),
+     *                                 que el owner retiró por jerga.
      * @return list<array{route: string, t: string, url: string, s: string, current: bool}>
      */
     public static function pages(?string $currentRoute = null): array
@@ -113,26 +116,12 @@ final class SiteDestinations
                 'route' => $route,
                 't' => (string) __('landing.nav.pages.'.$label),
                 'url' => $url,
-                's' => self::writtenPath($url),
+                's' => (string) __('site.bands.go.'.$route.'.what'),
                 'current' => $currentRoute === $route,
             ];
         }
 
         return $pages;
-    }
-
-    /**
-     * **La RUTA ESCRITA de una URL**: lo que el menú pone debajo de cada destino y lo que la cabecera
-     * de una página pone en su rótulo (`DECISIONES #525`, T3a·3).
-     *
-     * ⚠️ Sale de la URL real y no de una tabla aparte, así que no puede decir una dirección que no
-     * es. Y es UNA función para los dos a propósito: con dos derivaciones, el menú y la cabecera de
-     * la misma página podían escribir rutas distintas sin que nada lo avisara — `/atracciones` la
-     * llevaba escrita a mano en los ficheros de idioma hasta `#525`.
-     */
-    public static function writtenPath(string $url): string
-    {
-        return (string) (parse_url($url, PHP_URL_PATH) ?: '/');
     }
 
     /**

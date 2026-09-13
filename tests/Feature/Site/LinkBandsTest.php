@@ -114,24 +114,19 @@ class LinkBandsTest extends TestCase
     }
 
     /**
-     * **El rótulo de las dos piezas es la RUTA ESCRITA del destino, y sale de la función del menú.**
+     * **Ninguna de las dos piezas escribe la ruta del destino** (`#586`, `[DECIDIDO owner]`).
      *
-     * ⚠️ No se asevera el literal «/normas» sino la salida de `SiteDestinations::writtenPath()`: con
-     * el literal, el día que el producto sirva las páginas bajo un prefijo la guarda seguiría verde
-     * describiendo una dirección que no existe.
+     * Hasta entonces las rotulaba la ruta escrita («/normas»), y el owner la retiró por jerga. La fina
+     * sigue diciendo qué hay allí («Cuánto cuesta saltar»).
      */
-    public function test_both_pieces_label_the_destination_with_its_written_path(): void
+    public function test_neither_piece_writes_the_destination_route(): void
     {
         $html = $this->page('atracciones');
 
-        $this->assertStringContainsString(
-            '<p class="band-wide__route">'.SiteDestinations::writtenPath(route('normas')).'</p>', $html,
-            'la gorda no rotula su destino con la ruta escrita',
-        );
-        $this->assertStringContainsString(
-            '<span class="band-thin__route">'.SiteDestinations::writtenPath(route('precios')).'</span>', $html,
-            'la fina no rotula su destino con la ruta escrita',
-        );
+        $this->assertStringNotContainsString('band-wide__route', $html, 'la gorda vuelve a rotular con la ruta');
+        $this->assertStringNotContainsString('band-thin__route', $html, 'la fina vuelve a rotular con la ruta');
+        $this->assertStringNotContainsString('>/normas<', $html);
+        $this->assertStringContainsString(e(__('site.bands.go.precios.what')), $html, 'la fina ya no dice qué hay en su destino');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ return [
         'aria' => 'Aviso de cookies',
         'eyebrow' => 'Cookies',
         'title' => 'Antes de saltar…',
-        'text' => 'Usamos cookies propias para que la web funcione y, solo con tu permiso, cookies de terceros para mostrar el mapa y el contenido de redes sociales.',
+        'text' => 'Usamos cookies propias para que la web funcione y, solo con tu permiso, cookies de terceros para mostrar el mapa.',
         'policy' => 'Más información',
         'accept' => 'Aceptar',
         'reject' => 'Rechazar',

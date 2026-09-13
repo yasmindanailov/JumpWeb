@@ -922,32 +922,13 @@
 .svc-ed2__row--flip .svc-ed2__big { right: -8px; }
 .svc-ed2__row--flip .svc-photo__tag { right: auto; left: 16px; transform: rotate(-5deg); }
 
-/* ---------- banda final «Otros eventos» (catch-all) ---------- */
-.svc-other {
-  margin: 88px 0 96px; scroll-margin-top: clamp(108px, 14vh, 156px);
-  border: 1px solid var(--line); border-radius: var(--r-lg);
-  background: var(--bg-card); padding: clamp(36px, 5vw, 64px);
-  display: grid; grid-template-columns: minmax(0, 1.4fr) auto; gap: 32px; align-items: center;
-  position: relative; overflow: hidden;
-}
-.svc-other::after {
-  content: ""; position: absolute; right: -70px; bottom: -110px;
-  width: 260px; height: 260px; border-radius: 50%;
-  background: var(--zone-1); opacity: 0.5; pointer-events: none;
-}
-.svc-other__title {
-  font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
-  font-size: clamp(34px, 4vw, 56px); line-height: 0.9; letter-spacing: -0.03em; margin: 0 0 var(--sp-14);
-}
-.svc-other__copy { font-size: var(--fs-16); line-height: 1.6; color: var(--fg-mute); max-width: 52ch; margin: 0; }
-.svc-other__cta { position: relative; z-index: 1; }
+/* ⚠️ Aquí vivía la banda final «Otros eventos» (`.svc-other`), retirada en `#586` con su marcado. */
 
 @media (max-width: 900px) {
   .svc-ed2__inner { grid-template-columns: 1fr; gap: 30px; padding: 48px 0; }
   .svc-ed2__row--flip .svc-ed2__media { order: 0; }
   .svc-ed2__row:not(.svc-ed2__row--flip) .svc-ed2__big { left: -4px; }
   .svc-ed2__row--flip .svc-ed2__big { right: -4px; }
-  .svc-other { grid-template-columns: 1fr; }
   .svc-marquee__item { font-size: 19px; }
 }
 
@@ -6378,12 +6359,12 @@ a.menu__fact:focus-visible { outline: var(--focus-outline); outline-offset: 3px;
     border-radius: 50%; background: var(--ok);
 }
 
-/* ⚠️ El subtítulo de un destino es ya SIEMPRE su ruta escrita (`#521`: «/precios» debajo de
-   «Tarifas», como el canvas), y una ruta es un DATO: va en la letra mono, que el sistema reserva
-   para etiquetas y códigos. Sin mayúsculas, porque una dirección en mayúsculas no es la dirección. */
+/* El subtítulo de un destino es la FRASE de lo que hay allí («Cuánto cuesta saltar», `#586`): hasta
+   entonces era su ruta escrita («/precios», `#521`), en mono, y el owner la retiró por jerga. Una
+   frase va en la letra de cuerpo, no en la de códigos. */
 .menu__s {
     flex: 0 0 auto;
-    font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: 0.02em;
+    font-family: var(--font-body); font-size: var(--fs-body-s);
     color: var(--fg-mute); white-space: nowrap;
 }
 .menu__arrow {

@@ -115,6 +115,11 @@
                                              alt="{{ $ride->tr('name') }}" loading="lazy" decoding="async">
                                     @endif
                                     <p class="ride-tile__name">{{ $ride->tr('name') }}</p>
+                                    {{-- Qué es (`#586`): el panel ya lo tenía escrito en las 23 y nadie lo
+                                         pintaba, así que «Barredora» o «Bee Jump» no decían nada. --}}
+                                    @if ($ride->tr('description'))
+                                        <p class="ride-tile__desc">{{ $ride->tr('description') }}</p>
+                                    @endif
                                     {{-- El chip de edad es `chipDato` entero: cápsula, mono 11 y el
                                          color de la zona AL 14 %, nunca pleno. Un chip que informa
                                          no va a color macizo, y su texto es tinta, así que se lee

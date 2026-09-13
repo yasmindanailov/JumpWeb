@@ -4,12 +4,10 @@
      lee EN VIVO del `ticketType` vinculado; si el servicio tiene un pack comprable → precio + CTA
      «Reservar» (abre el sidebar, deep-link `show-packs`), si no → CTA «Pedir información» (/contacto).
      Cada fila conserva su anchor estable (`slug`): el nav enlaza a `/servicios#slug` y los tests lo
-     verifican. El hero (eyebrow/título/intro), la banda «Otros eventos» y las etiquetas siguen en
-     `lang/services.php` (chrome de página). Con 0 servicios la página NO rompe: hero + «Otros
-     eventos» (degradación editorial/contacto, §9). La palabra grande sobre la imagen es el
-     `accent_word` (contextual), no una enumeración. --}}
+     verifican. El hero (título/intro) y las etiquetas siguen en `lang/services.php` (chrome de
+     página). Con 0 servicios la página NO rompe: hero + bandas de enlace. La palabra grande sobre la
+     imagen es el `accent_word` (contextual), no una enumeración. --}}
 @php
-    $other = __('services.other');
     // Hero: resalta `title_accent` (subcadena exacta de `title`) con `.blink`, fiel al mockup v2.
     // Se escapa todo; si el fragmento no aparece en el título, queda el título plano escapado.
     $svcTitle = __('services.title');
@@ -139,7 +137,7 @@
                                                  x-show="rz === {{ $z }}">
                                                 @foreach ($zone['durations'] as $dur)
                                                     <table class="svc-rates__table">
-                                                        <caption><span class="svc-rates__cap">{{ $zone['label'] }} {{ intdiv((int) $dur['minutes'], 60) }}H</span></caption>
+                                                        <caption><span class="svc-rates__cap">{{ $zone['label'] }} · {{ trans_choice('services.rates.hours', intdiv((int) $dur['minutes'], 60)) }}</span></caption>
                                                         <thead>
                                                             <tr>
                                                                 <th scope="col">{{ __('services.rates.group') }}</th>
@@ -213,21 +211,9 @@
             </div>
         @endif
 
-        {{-- Banda final «Otros eventos» (catch-all). Conserva el anchor `eventos` (contrato del nav). --}}
-        <section class="wrap">
-            <div id="{{ $other['anchor'] }}" class="svc-other">
-                <div class="svc-other__head">
-                    <h2 class="svc-other__title">{{ $other['title'] }}</h2>
-                    <p class="svc-other__copy">{{ $other['body'] }}</p>
-                </div>
-                <div class="svc-other__cta">
-                    <a href="{{ route('contacto') }}" class="svc-cta svc-cta--info">
-                        {{ __('services.cta_contact') }}
-                        <x-icons.arrow-right :width="15" :height="15" />
-                    </a>
-                </div>
-            </div>
-        </section>
+        {{-- ⚠️ Aquí vivía la banda «Otros eventos» (despedidas, fiestas privadas, rodajes), y se
+             retiró (`#586`, `[DECIDIDO owner, 2026-09-13]`): solo se ofrecen las excursiones de colegio.
+             Si vuelve un servicio, entra como fila desde el panel. --}}
         <x-site.link-bands />
     </main>
 

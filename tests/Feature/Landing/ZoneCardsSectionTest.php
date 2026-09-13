@@ -177,20 +177,22 @@ class ZoneCardsSectionTest extends TestCase
     }
 
     /**
-     * **La tarjeta lleva a la TARIFA de su zona**, que es el eslabón siguiente del recorrido.
+     * **La tarjeta lleva a las ATRACCIONES de su zona, con la zona ya elegida** (`#586`).
      *
-     * ⚠️ No lleva al carrusel de atracciones: eso sería mandar a elegir zona otra vez, que es el
-     * defecto que `#295` midió y por el que las tarjetas se retiraron en su día.
+     * ⚠️ Hasta entonces apuntaba a `/precios#zona-<slug>`, un ancla que esa página no emite: se
+     * aterrizaba arriba de la tabla. La zona viaja en `?zona=`, nunca en el hash (`#481`), así que
+     * no obliga a elegirla otra vez.
      */
-    public function test_the_card_leads_to_the_price_of_its_zone(): void
+    public function test_the_card_leads_to_the_attractions_of_its_zone(): void
     {
         $seccion = $this->seccion();
 
         $this->assertMatchesRegularExpression(
-            '#href="[^"]*'.preg_quote(parse_url(route('precios'), PHP_URL_PATH) ?? '/precios', '#').'\#zona-[a-z0-9-]+"#',
+            '#href="[^"]*'.preg_quote(parse_url(route('atracciones'), PHP_URL_PATH) ?? '/atracciones', '#').'\?zona=[a-z0-9-]+"#',
             $seccion,
-            'la tarjeta de zona no lleva a la tarifa de esa zona.',
+            'la tarjeta de zona no lleva a las atracciones de esa zona.',
         );
+        $this->assertStringNotContainsString('#zona-', $seccion);
     }
 
     /**

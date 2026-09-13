@@ -44,7 +44,6 @@
                  ⚠️ Sin sombra y sin keyline a propósito: *«no es una pegatina»*. --}}
             <div class="band-wide" data-surface="ink">
                 <div class="band-wide__say">
-                    <p class="band-wide__route">{{ $gorda['s'] }}</p>
                     <p class="band-wide__q">{{ $gorda['q'] }}</p>
                     <p class="band-wide__body">{{ $gorda['body'] }}</p>
                 </div>
@@ -72,7 +71,6 @@
                         <li>
                             <a class="band-thin" href="{{ $fina['url'] }}">
                                 <span class="band-thin__say">
-                                    <span class="band-thin__route">{{ $fina['s'] }}</span>
                                     <span class="band-thin__what">{{ $fina['t'] }}</span>
                                 </span>
                                 <x-icons.arrow-right class="band-thin__arrow" :width="20" :height="20" />

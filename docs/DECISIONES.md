@@ -31652,3 +31652,22 @@ y de ellos sale el ajuste de precio de las fiestas mixtas.
 ⚠️ **El dato del cliente no entra en `main`** (`#1`): la configuración y los textos del panel se aplican con un
 script idempotente que vive fuera del repo y localiza por clave estable (nombre, slug, fecha), nunca por id
 —local y producción tienen ids distintos—; se guarda en `cliente/playjump` cuando se apruebe.
+
+## #587 · 2026-09-13 · `[DECIDIDO owner]` Fuera la jerga de la web: sin rutas escritas, una frase por destino y un dato por cara
+
+Tandas T3 y T4 de `docs/specs/contenido-y-copys.md`, aplicadas en local y pendientes del ojo del owner.
+- **La ruta escrita («/precios») ya no se pinta en ninguna superficie**: el menú dice qué hay en cada destino
+  con la misma frase que las bandas de enlace (`site.bands.go.<ruta>.what`), las cabeceras de página van sin
+  rótulo —las pantallas de servicio conservan el suyo— y las bandas pierden el suyo.
+  `SiteDestinations::writtenPath()` se retira.
+- **La portada dice qué es el parque** bajo el titular, y «Ver la zona» lleva a `/atracciones?zona=<slug>`:
+  el ancla de `/precios` a la que apuntaba no existía. `/atracciones` pinta la descripción de cada atracción.
+- **`/precios`**: la columna normal con los NOMBRES de los días y la especial con el rótulo de la tarifa en
+  el panel, no «Especial»; la unidad de cada zona sale de `period_label` y una línea dice que el IVA va
+  incluido. ⚠️ Desviación de la spec: pedía «Precios por persona» para la página entera y Kids se vende
+  por niño.
+- **La web no publica el máximo de niños** de un cumpleaños: `landing.birthday.kids` se retira y dos packs
+  con el mismo mínimo son «Igual» en la comparativa aunque sus topes difieran.
+- **`/servicios` es de excursiones de colegio** y la banda «Otros eventos» se retira con su ancla `eventos`,
+  su CSS y sus claves en los tres idiomas.
+⚠️ Queda la T4·8: `/servicios` sigue leyendo su tabla tecleada, porque un servicio vincula un solo producto.

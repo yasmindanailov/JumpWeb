@@ -217,6 +217,14 @@ Los **porqués son propuesta de redacción**, no hechos del parque: el owner los
 | Menú · frases | nuevas, una por destino | la ruta escrita | Tarifas «Cuánto cuesta saltar» · Cumpleaños «Celebra su día aquí» · Atracciones «Todo lo que hay dentro» · Cafetería «Para comer y esperar» · Normas «Lo que hay que saber» · Excursiones «Para colegios» · Contacto «Llámanos o escríbenos» |
 | Cookies | `cookies.banner.text`, `panel.social_*` | «…y el contenido de redes sociales» | se retira la mención: hay enlaces a las redes, pero ningún contenido incrustado |
 
+> ▶ **APLICADA EN LOCAL** (`#587`, 2026-09-13), pendiente del ojo del owner. **Dos desviaciones, las dos
+> por el dato**: la columna especial de `/precios` lleva el **rótulo de la tarifa en el panel** —una sola
+> fuente con la leyenda y la nota de la misma página—, y la nota general dice solo «Precios con IVA
+> incluido.» porque la unidad va **por zona** desde `period_label` (Kids se vende por niño, no por
+> persona). Las frases del menú son el mismo texto que el nombre de las bandas de enlace
+> (`site.bands.go.*.what`). **«Otros eventos» retirado** con las opciones delante (`[DECIDIDO owner]`).
+> ⚠️ `panel.social_*` no se toca: la categoría de cookies sigue fichada en `DEUDA.md` (`#309`).
+
 ### T4 · Jerga y armazón (código)
 
 **Hecho cuando**: cada cambio tiene su caso de test y se ha comprobado en el navegador en móvil y escritorio.
@@ -229,6 +237,11 @@ Los **porqués son propuesta de redacción**, no hechos del parque: el owner los
 6. **La unidad del precio** («por persona» / «por niño») en la tabla de `/precios` y en la fila de entradas del cajón.
 7. **La web no publica el máximo de niños** de un cumpleaños (con el cambio de claves de T3).
 8. **`/servicios` lee la tabla de precios del producto de excursión** en vez de la tecleada, para que haya una sola fuente.
+
+> ▶ **APLICADA EN LOCAL** (`#587`): 1, 2, 3, 5, 6 (en `/precios`; la del cajón va con la T5) y 7. La **4**
+> ya la hizo el carril del SPA (`#568`). ⚠️ **Queda la 8**: un servicio vincula UN producto y la tabla
+> necesita los dos (2 h y 3 h); mientras tanto el script de contenido escribe los mismos importes en los dos
+> sitios.
 
 ### T5 · El cajón y Mi cuenta
 

@@ -47,14 +47,14 @@ class PageHeadTest extends TestCase
     }
 
     /**
-     * **Cada página abre con UNA cabecera, su rótulo es su RUTA y su único `<h1>` vive dentro.**
+     * **Cada página abre con UNA cabecera, SIN rótulo, y su único `<h1>` vive dentro.**
      *
-     * ⚠️ La ruta sale de la URL real (`SiteDestinations::writtenPath`, la misma función que escribe
-     * la ruta debajo de cada destino del menú). Hasta `#525` `/atracciones` la llevaba tecleada en los
-     * ficheros de idioma de los tres idiomas, y las demás no la llevaban.
+     * ⚠️⚠️ Hasta `#586` el rótulo era la ruta escrita («/precios»); el owner la retiró por jerga
+     * (`[DECIDIDO owner]`: «nada arriba»). Lo que se vigila es que no vuelva: ni la ruta ni ningún
+     * otro rótulo encima del titular de una página interior.
      * ⚠️ Y **sin entradilla no hay párrafo**: uno vacío deja 16/20 px colgando bajo el titular.
      */
-    public function test_every_interior_page_opens_with_its_written_path_and_one_h1(): void
+    public function test_every_interior_page_opens_with_one_h1_and_no_route_label(): void
     {
         foreach (self::PAGINAS as $ruta => $conEntradilla) {
             $x = $this->xpath($this->get($ruta)->assertOk()->getContent());
@@ -64,8 +64,8 @@ class PageHeadTest extends TestCase
             $cabecera = $cabeceras->item(0);
 
             $rotulo = $x->query('.//'.$this->clase('p', 'page__eyebrow'), $cabecera);
-            $this->assertSame(1, $rotulo->length, "«{$ruta}» no pinta el rótulo");
-            $this->assertSame($ruta, trim($rotulo->item(0)->textContent), "el rótulo de «{$ruta}» no es su ruta");
+            $this->assertSame(0, $rotulo->length, "«{$ruta}» vuelve a pintar un rótulo encima del titular");
+            $this->assertStringNotContainsString($ruta, $cabecera->textContent, "la cabecera de «{$ruta}» escribe su ruta");
 
             $h1 = $x->query('//h1');
             $this->assertSame(1, $h1->length, "«{$ruta}» tiene {$h1->length} `<h1>`");

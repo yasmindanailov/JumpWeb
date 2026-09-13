@@ -115,6 +115,7 @@ return [
         'col_special' => 'Special',
         'table_label' => ':zone rates',
         'not_sold' => 'Not sold that day',
+        'vat_note' => 'Prices include VAT.',
 
         'special_title' => 'What the special rate is',
         'special_text' => 'The special rate days are: :label.',
@@ -189,7 +190,6 @@ return [
         'row_features' => 'Includes',
         'row_total' => 'Total',
         'row_total_special' => 'Total on the special rate',
-        'kids' => 'From :min to :max kids',
         'kids_from' => 'From :min kids',
         'kids_note' => 'The minimum and the maximum to book.',
         'deposit_title' => ':deposit deposit to book',
