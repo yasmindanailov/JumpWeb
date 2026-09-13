@@ -39,6 +39,15 @@
     <link rel="stylesheet" href="{{ asset('css/landing.css') }}?v={{ @filemtime(public_path('css/landing.css')) }}">
     <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
     <link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ @filemtime(public_path('css/site.css')) }}">
+    {{-- ── EL PAQUETE DE TEMA DE ESTA INSTALACIÓN (`DECISIONES #143`), el MISMO hueco que el layout
+         público, y la ÚLTIMA hoja por la misma razón: es lo único que hace que redefinir un token gane.
+         ⚠️⚠️ **Faltaba aquí desde que existe** (`#570`): el post-form y el justificante pintaban los
+         colores del PRODUCTO en una instalación con paquete —lo hecho salía verde en vez de Lima— y no
+         fallaba nada. Lo vio la captura de la T1, no la suite. --}}
+    @php($clientTheme = @filemtime(public_path('css/client.css')))
+    @if ($clientTheme)
+        <link rel="stylesheet" href="{{ asset('css/client.css') }}?v={{ $clientTheme }}">
+    @endif
 </head>
 <body class="gf">
     {{ $slot }}

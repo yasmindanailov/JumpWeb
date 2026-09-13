@@ -157,6 +157,10 @@
        mockup lo pone en **56** (`min-height:56px` en su barra de acciones). Es el único sitio del
        armazón donde el alto no puede salir del racimo: son dos piezas con dos restricciones. */
     --book-bar-h: 56px;
+    /* La sombra de un mueble ANCLADO ABAJO (`#571`: la barra de guardar del formulario post-reserva). Es la
+       de la familia `--shadow-nav` pero hacia ARRIBA: una sombra hacia abajo en una barra pegada al borde
+       inferior cae fuera de la pantalla y no separa nada. */
+    --shadow-nav-dock: 0 -8px 24px color-mix(in srgb, var(--paper-fg) 12%, transparent);
     --nav-cluster-h: max(var(--nav-logo-h), var(--nav-btn-h));
 
     --col-max: 1176px;
@@ -5292,18 +5296,20 @@ body[data-has-hero] .nav--over .nav__cta {
     border-radius: 50%; background: var(--fg); color: var(--bg);
     font-family: var(--font-mono); font-size: var(--fs-12); font-weight: 600; letter-spacing: 0;
 }
-/* A QUÉ visita autoriza el padre (`#401`). Va DENTRO del resguardo oscuro, así que su color se deriva
-   de `--bg` como el de sus vecinos y nunca de `--fg`: ahí `--fg` es el fondo (la lección de `.gf-mix`). */
+/* A QUÉ visita autoriza el padre (`#401`). Va DENTRO del resguardo.
+   ⚠️⚠️ **Se derivaba de `--bg` invertido** («ahí `--fg` es el fondo») y con la T1 dejó de ser cierto:
+   el resguardo DECLARA su superficie (`data-surface="ink"`, `#570`), así que `--bg` ya vale tinta y el
+   nombre del producto se pintaba **tinta sobre tinta** —un hueco oscuro vacío en el resguardo, visto en
+   la captura—. Ahora lee los tokens de la superficie, como el resto del resguardo. */
 .guardian__what {
-    margin: var(--sp-14) 0 0;
+    margin: 0;
     padding: var(--sp-11) var(--sp-14);
-    border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent);
+    border: 1px solid var(--line);
     border-radius: var(--r-md);
-    background: color-mix(in srgb, var(--bg) 8%, transparent);
-    font-family: var(--font-body); font-size: var(--fs-14); line-height: 1.45;
-    color: color-mix(in srgb, var(--bg) 88%, transparent);
+    font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.45;
+    color: var(--fg-body);
 }
-.guardian__what strong { color: var(--bg); }
+.guardian__what strong { color: var(--fg); }
 
 /* El selector de menores a cargo (§12.5). Va SEPARADO de los campos que rellena —caja propia sobre
    el segundo tono— porque no es un dato que se envíe: es un atajo. Confundirlo con un campo del
@@ -5600,125 +5606,184 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 }
 
 /* ====================================================================
-   Formulario post-reserva — HOJA ENFOCADA (#264)
-   Página `reservation.guests` sin nav/footer: una hoja centrada con stub
-   tipo ticket + acordeón de fichas. REUTILIZA el sistema del sitio: tokens
-   de landing.css (--bg, --fg, --zone-1, --font-…, --r-…, --line), y los componentes
-   .btn / .eventfields / .eyebrow / .guestform__readonly|privacy|hint. Solo se
-   añade aquí la ESTRUCTURA propia de la hoja (gf-*), con esos mismos tokens.
+   Formulario post-reserva — HOJA ENFOCADA (#264) · VESTIDA desde el canvas (`#570`, T1)
+   Página `reservation.guests` sin nav/footer. ⚠️ El MOLDE (`gf-page`, `gf-sheet`, `gf-stub`,
+   `gf-form`, `gf-group`, `gf-savebar`, `gf-mark`) lo comparte el JUSTIFICANTE del menor invitado
+   (`reservation/authorization.blade.php`): lo que se viste aquí lo viste a él.
+   ▶ Lo decidido vive en `docs/specs/celebracion-e-invitacion.md` §4.2 y en `doc/formulario.md` del
+   canvas (grietas F-01…F-08): papel liso y UNA columna de 640 · UNA sola superficie de tinta, el
+   resguardo · lo hecho con el rol `--done` · seis tallas de letra · radios `--r-md`, `--r` y
+   `--r-pill` · una sola sombra difusa, la del aviso flotante. La guarda es `GuestFormSkinTest`.
    Mejora progresiva: sin JS las fichas salen abiertas (form usable); html.js
    las convierte en acordeón.
    ==================================================================== */
 .gf-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
+/* ⚠️ La hoja FLOTANTE se retira (F-04 · F-05 · F-06): era una tarjeta de 700 con sombra de modal y
+   radio 28 sobre una trama de puntos que no es de la marca, y en un teléfono ni se veía —ocupaba el
+   ancho entero—. Queda papel liso y una columna de 640, que son siete columnas de la retícula. */
 .gf-page {
     min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-    padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 40px) 0;
-    background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--fg) 5%, transparent) 1px, transparent 0);
-    background-size: 24px 24px;
+    padding-block: var(--sp-20) 0; padding-inline: var(--sp-20);
+    background: var(--bg);
 }
 
-.gf-mark { display: inline-flex; flex-direction: column; align-items: center; gap: var(--sp-4); margin-bottom: clamp(20px, 3vw, 30px); text-align: center; }
+.gf-mark { display: inline-flex; flex-direction: column; align-items: center; gap: var(--sp-8); margin-bottom: var(--sp-20); text-align: center; }
 /* El logotipo de la instalación en el parte (`#334`). Alto acotado y ancho libre: los logotipos
    de cliente no comparten proporción, así que fijar el ANCHO deformaría unos y dejaría enanos otros.
    El suelo de texto (`.gf-mark__brand`) sigue debajo para quien no instale logotipo. */
 .gf-mark__logo { display: block; height: 48px; width: auto; max-width: min(280px, 70vw); }
-.gf-mark__brand { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-22); letter-spacing: -0.04em; color: var(--fg); }
-.gf-mark__sub { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: var(--fg-mute); }
+.gf-mark__brand { font-family: var(--font-display); font-size: var(--fs-20); color: var(--fg); }
+.gf-mark__sub { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.16em; color: var(--fg-mute); }
 
-.gf-sheet {
-    width: 100%; max-width: 700px; background: var(--bg-card); border-radius: var(--r-lg);
-    box-shadow: var(--shadow-modal);
-    overflow: hidden; position: relative;
-}
+.gf-sheet { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: var(--sp-20); }
 
-/* stub (contexto de la reserva) */
-.gf-stub { background: var(--fg); color: var(--bg); padding: clamp(28px, 4vw, 38px) clamp(24px, 5vw, 44px); }
-.gf-stub__top { margin-bottom: 22px; }
-/* Badge = nombre del producto (data-driven). Recto, sin rotación. */
+/* El RESGUARDO: lo que ya está comprado, y la ÚNICA superficie de tinta de la página.
+   ⚠️ La superficie la declara el MARCADO (`data-surface="ink"`), no una inversión a mano: los grises
+   de dentro se apagaban con CINCO porcentajes (`color-mix` al 88, 70, 60, 50 y 16 %, F-03) donde la
+   superficie ya trae los suyos. Por eso aquí se leen `--fg`, `--fg-body`, `--fg-mute` y `--line`
+   tal cual: dentro de la tinta valen lo que tienen que valer. */
+.gf-stub { border-radius: var(--r); padding: var(--sp-20); display: flex; flex-direction: column; gap: var(--sp-16); }
+.gf-stub__top { display: flex; }
+/* Badge = nombre del producto (data-driven), recto y en el TINTE de identidad. Con el color de zona de
+   relleno era la grieta 01 del cajón fuera del cajón (F-01). ⚠️ El tinte se mezcla con `var(--bg)`
+   DENTRO de la regla: un token de `:root` ya trae el papel sustituido y dentro de la tinta mentiría. */
 .gf-stub__badge {
     display: inline-flex; align-items: center; gap: var(--sp-8);
-    font-family: var(--font-body); font-size: var(--fs-12); font-weight: 700;
-    text-transform: uppercase; letter-spacing: 0.1em;
-    padding: var(--sp-8) var(--sp-14); border-radius: var(--r-sm);
-    background: var(--zone-1); color: var(--on-brand);
+    font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    padding: var(--sp-6) var(--sp-10); border-radius: var(--r-md); color: var(--fg);
+    background: color-mix(in srgb, var(--identity-fill) 14%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--identity-fill) 30%, var(--bg));
 }
-.gf-stub__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: clamp(30px, 6vw, 44px); line-height: 0.95; letter-spacing: -0.03em; margin: 0 0 var(--sp-12); }
-.gf-stub__lede { font-size: var(--fs-14); line-height: 1.55; margin: 0; color: color-mix(in srgb, var(--bg) 70%, transparent); max-width: 54ch; }
-.gf-stub__meta { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 24px; border: 1px solid color-mix(in srgb, var(--bg) 16%, transparent); border-radius: var(--r); overflow: hidden; }
-.gf-stub__cell { padding: var(--sp-15) var(--sp-18); border-left: 1px solid color-mix(in srgb, var(--bg) 16%, transparent); display: flex; flex-direction: column; gap: 5px; }
-.gf-stub__cell:first-child { border-left: none; }
-.gf-stub__cell .k { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.16em; color: color-mix(in srgb, var(--bg) 50%, transparent); }
-.gf-stub__cell .v { font-family: var(--font-body); font-size: var(--fs-14); font-weight: 600; line-height: 1.25; }
-.gf-stub__cell .v.mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
+.gf-stub__title { font-family: var(--font-display); font-size: var(--fs-title); line-height: 1.05; margin: 0; }
+.gf-stub__lede { font-size: var(--fs-lede); line-height: 1.5; margin: 0; color: var(--fg-body); max-width: 54ch; }
+/* Las tres celdas se APILAN en el teléfono: en fila de tres a 390 quedaban 100 px por celda y por eso
+   el valor iba a 14 y el rótulo a 10. Apiladas caben a 16 y 12; en escritorio vuelven a tres. */
+.gf-stub__meta { display: grid; grid-template-columns: 1fr; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.gf-stub__cell { padding: var(--sp-14) var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-4); }
+.gf-stub__cell + .gf-stub__cell { border-top: 1px solid var(--line); }
+.gf-stub__cell .k { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.gf-stub__cell .v { font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); line-height: 1.3; }
+.gf-stub__cell .v.mono { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.02em; }
+/* El número de invitados que el cliente cambia desde aquí (`#444`). ⚠️ Hasta la T1 estas dos clases
+   no tenían REGLA: el control era un `input` de navegador de 21 px de alto dentro de la tinta. */
+.gf-stub__count input { width: 88px; min-height: var(--tap-min); border-radius: var(--r-md); border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-body); font-weight: var(--fw-semibold); text-align: center; }
+.gf-stub__count input:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.gf-stub__hint { font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
 
-/* progreso */
-.gf-meter { margin-top: 22px; }
-.gf-meter__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); margin-bottom: 9px; }
-.gf-meter__label { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); }
-.gf-meter__count { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: var(--fs-18); letter-spacing: -0.02em; }
-.gf-meter__count em { font-style: normal; color: var(--zone-1); }
-.gf-meter__track { height: 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--bg) 14%, transparent); overflow: hidden; }
-.gf-meter__bar { height: 100%; width: 0%; background: var(--zone-1); border-radius: var(--r-pill); transition: width var(--dur-cae) var(--ease-sale); }
+/* El medidor: la cifra de lo hecho y su barra en el ROL `--done`, no en el color de zona (F-01). */
+.gf-meter { display: flex; flex-direction: column; gap: var(--sp-8); }
+.gf-meter__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); }
+.gf-meter__label { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.gf-meter__count { font-family: var(--font-display); font-size: var(--fs-20); }
+.gf-meter__count em { font-style: normal; color: var(--done); }
+.gf-meter__track { height: 8px; border-radius: var(--r-pill); background: var(--line); overflow: hidden; }
+.gf-meter__bar { height: 100%; width: 0%; background: var(--done); border-radius: var(--r-pill); transition: width var(--dur-cae) var(--ease-sale); }
 
-/* Aviso de fiesta MIXTA en el post-form (`docs/specs/cumple-mixto.md` §9·7). Vive DENTRO del
-   `.gf-stub`, que es superficie oscura: sus colores se derivan de `--bg` como los de sus vecinos,
-   nunca de `--fg` —ahí `--fg` es el fondo—. */
-.gf-mix { margin-top: var(--sp-18); padding: var(--sp-13) var(--sp-15); border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--bg) 26%, transparent); background: color-mix(in srgb, var(--bg) 8%, transparent); }
-.gf-mix__title { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: color-mix(in srgb, var(--bg) 60%, transparent); margin: 0 0 var(--sp-6); }
-.gf-mix__text { font-size: 13.5px; line-height: 1.5; margin: 0; color: color-mix(in srgb, var(--bg) 88%, transparent); }
+/* ─── LOS AVISOS · un solo componente, sobre tinta y sobre papel (`#570`) ───────────────────────
+   La receta del aviso de v1.10: tinte del TONO al 14 %, borde al 30 %, un punto del tono delante del
+   título, y título y cuerpo en el color de la superficie — nunca en el del tono (F-02, y la frase que
+   explica un cobro no puede ir en letra pequeña). Info en cian (fiesta mixta), plazo en amarillo,
+   rechazo en rojo.
+   ⚠️⚠️ El tinte se mezcla con `var(--bg)` DENTRO de la regla, y por eso el mismo componente sirve en
+   el resguardo y en el papel: `--tint-attn` y compañía se declaran en `:root`, donde `--bg` ya se
+   sustituyó por el papel, y dentro de la tinta pintarían un recuadro claro. */
+.gf-notice {
+    --gf-tone: var(--identity-fill);
+    display: flex; flex-direction: column; gap: var(--sp-6);
+    padding: var(--sp-14) var(--sp-16); border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--gf-tone) 14%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--gf-tone) 30%, var(--bg));
+}
+.gf-notice[hidden] { display: none; }
+.gf-notice--attn { --gf-tone: var(--attn); }
+.gf-notice--err { --gf-tone: var(--err); }
+.gf-notice__title { display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-body); font-weight: 700; line-height: 1.3; color: var(--fg); margin: 0; }
+.gf-notice__title::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: var(--r-pill); background: var(--gf-tone); }
+.gf-notice__text { font-size: var(--fs-body); line-height: 1.5; margin: 0; color: var(--fg-body); }
 
-/* perforación entre stub y form */
-.gf-perf { position: relative; height: 0; border-top: 2px dashed var(--line-strong); margin: 0 clamp(24px, 5vw, 44px); }
-.gf-perf::before, .gf-perf::after { content: ""; position: absolute; top: 0; width: 28px; height: 28px; background: var(--bg); border-radius: 50%; transform: translateY(-50%); }
-.gf-perf::before { left: calc(-1 * clamp(24px, 5vw, 44px) - 14px); }
-.gf-perf::after { right: calc(-1 * clamp(24px, 5vw, 44px) - 14px); }
+/* ⚠️ La PERFORACIÓN entre el resguardo y el formulario se retira con la hoja flotante: dibujaba un
+   ticket recortado sobre una tarjeta que ya no existe, y su borde discontinuo no está en el sistema. */
 
 /* cuerpo del formulario */
-.gf-form { padding: clamp(28px, 4vw, 40px) clamp(24px, 5vw, 44px) clamp(32px, 4vw, 44px); }
-.gf-form .guestform__readonly, .gf-form .guestform__privacy { margin-bottom: var(--sp-4); }
+.gf-form { display: flex; flex-direction: column; gap: var(--sp-28); }
+/* La privacidad y el solo lectura son componentes `guestform__*` que comparte el justificante: se
+   visten SOLO dentro de esta hoja. Lo INERTE es superficie Nube, nunca opacidad. */
+.gf-page .guestform__privacy { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; }
+.gf-page .guestform__readonly { margin: 0; padding: var(--sp-14) var(--sp-16); border-radius: var(--r-md); background: var(--bg-soft); border: 1px solid var(--line); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
+/* La política FUERA de su frase, como control propio de 48 (F-08): dentro del párrafo corría en cajas de
+   línea de 20 px. */
+.gf-intro { display: flex; flex-direction: column; gap: var(--sp-4); }
+.gf-legal { align-self: flex-start; display: inline-flex; align-items: center; min-height: var(--tap-min); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--interactive); text-decoration: underline; }
+.gf-legal:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
-.gf-group { padding: 30px 0; border-top: 1px dashed var(--line-strong); }
-.gf-group:first-of-type { border-top: none; padding-top: 26px; }
+/* ⚠️ Sin bordes DISCONTINUOS entre grupos: el sistema declara tres bordes y los tres son continuos
+   (J-06), y el aire entre grupos ya los separa. */
+.gf-group { display: flex; flex-direction: column; gap: var(--sp-16); }
 /* ⚠️ **`flex-wrap` lo pidió una CAPTURA, no un test** (T8 del justificante): con un titular largo
    —«Descargo de responsabilidad»— y la versión del documento a su derecha, en un teléfono el título
    se estrangulaba a tres líneas rotas («Descargo / de / responsabilidad») mientras el rótulo de la
    versión ocupaba su columna. Ninguna guarda mira anchos; esto solo se ve mirando. */
-.gf-group__head { display: flex; align-items: baseline; gap: var(--sp-12); margin-bottom: var(--sp-18); flex-wrap: wrap; }
-.gf-group__title { font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: 24px; letter-spacing: -0.02em; line-height: 1; margin: 0; }
-.gf-group__opt { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
+.gf-group__head { display: flex; align-items: baseline; gap: var(--sp-12); flex-wrap: wrap; }
+.gf-group__title { font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.1; margin: 0; }
+.gf-group__opt { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
 
-.gf-bulk { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; margin-bottom: var(--sp-16); font-size: 12.5px; color: var(--fg-mute); }
-html:not(.js) .gf-bulk { display: none; }
+/* El PEGADO de la lista (2b, `#571`): una frase y un botón fantasma encima de las fichas. Solo con JS: sin él
+   no hay diálogo, y el formulario sigue siendo completo. */
+.gf-paste { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-10); }
+.gf-paste__prompt { margin: 0; font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
+.gf-paste .gf-notice { align-self: stretch; }
+html:not(.js) .gf-paste { display: none; }
 
-/* fichas (acordeón) */
+/* Los CAMPOS de la hoja: rótulo a 16 y lo OPCIONAL marcado, en vez del asterisco de lo obligatorio —de
+   cinco columnas, dos son obligatorias, y el asterisco se pintaba con el color de la zona y sin leyenda—.
+   ⚠️ `.eventfields` lo comparte el cajón: se viste SOLO dentro de esta hoja. */
+.gf-page .eventfields { margin-top: 0; }
+.gf-page .eventfields__label { font-size: var(--fs-body); }
+.gf-opt { font-weight: 400; color: var(--fg-mute); }
+.gf-page .eventfields input,
+.gf-page .eventfields select,
+.gf-page .eventfields textarea { font-size: var(--fs-body); border-radius: var(--r-md); }
+
+/* fichas (acordeón) · ⚠️ sin sombra al abrirse (F-04) y sin el color de zona al completarse (F-01): el
+   estado de la ficha lo dicen el CUBO y una PALABRA. */
 .gf-fiches { display: flex; flex-direction: column; gap: var(--sp-10); }
-.gf-fiche { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg); overflow: hidden; transition: border-color var(--dur-estado) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale); }
-.gf-fiche.is-open { border-color: var(--line-strong); box-shadow: var(--shadow-lift); }
-.gf-fiche.is-complete { border-color: color-mix(in oklab, var(--zone-1) 55%, var(--line)); }
-.gf-fiche__head { display: flex; align-items: center; gap: var(--sp-14); width: 100%; padding: var(--sp-15) var(--sp-16); text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background var(--dur-sale) var(--ease-sale); }
-.gf-fiche__head:hover { background: var(--bg-card); }
+.gf-fiches__label { margin: var(--sp-6) 0 0; font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
+/* Las fichas LISTAS, plegadas en un grupo (2b). `details` nativo: se abre sin JS y lo que hay dentro sigue en
+   el POST aunque esté cerrado. Superficie Nube: es lo que ya está hecho, no lo que falta. */
+.gf-done { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-soft); }
+.gf-done__summary { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); min-height: var(--tap-min); padding: var(--sp-12) var(--sp-14); cursor: pointer; list-style: none; font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg); }
+.gf-done__summary::-webkit-details-marker { display: none; }
+.gf-done__summary:focus-visible { outline: var(--focus-outline); outline-offset: -3px; }
+.gf-done[open] > .gf-done__summary .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
+.gf-done__list { display: flex; flex-direction: column; gap: var(--sp-10); padding: 0 var(--sp-10) var(--sp-10); }
+.gf-fiche { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); overflow: hidden; transition: border-color var(--dur-estado) var(--ease-sale); }
+.gf-fiche.is-open { border-color: var(--line-strong); }
+.gf-fiche__head { display: flex; align-items: center; gap: var(--sp-14); width: 100%; padding: var(--sp-12) var(--sp-14); text-align: left; background: none; border: none; cursor: pointer; font: inherit; color: inherit; transition: background var(--dur-sale) var(--ease-sale); }
+.gf-fiche__head:hover { background: var(--bg); }
 .gf-fiche__head:focus-visible { outline: var(--focus-outline); outline-offset: -3px; }   /* el anillo del token, no el color de zona (`#436`) */
 html:not(.js) .gf-fiche__head { cursor: default; }
 html:not(.js) .gf-fiche__chev { display: none; }
-.gf-fiche__cube { width: 42px; height: 42px; flex-shrink: 0; border-radius: var(--r-md); background: var(--bg-card); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-stretch: 75%; font-size: var(--fs-18); letter-spacing: -0.03em; color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
-.gf-fiche.is-complete .gf-fiche__cube { background: var(--zone-1); border-color: transparent; color: var(--on-brand); }
-.gf-fiche__who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
-.gf-fiche__role { font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-fiche__name { font-family: var(--font-body); font-size: var(--fs-16); font-weight: 600; line-height: 1.2; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.gf-fiche__name.is-empty { color: var(--fg-mute); font-weight: 500; font-style: italic; }
-.gf-fiche__status { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; padding: 5px 11px; border-radius: var(--r-pill); }
-.gf-fiche__status--pending { color: var(--fg-mute); background: var(--bg-soft); }
-.gf-fiche__status--done { color: var(--on-brand); background: var(--zone-1); }
-.gf-fiche.is-complete .gf-fiche__status--pending { display: none; }
-.gf-fiche:not(.is-complete) .gf-fiche__status--done { display: none; }
+/* El CUBO es el estado: Nube con borde cuando falta, el rol `--done` cuando está lista. */
+.gf-fiche__cube { width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--r-md); background: var(--bg-soft); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--font-display); font-size: var(--fs-18); color: var(--fg); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale); }
+.gf-fiche.is-complete .gf-fiche__cube { background: var(--done); border-color: transparent; color: var(--on-done); }
+.gf-fiche__who { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+.gf-fiche__role { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; color: var(--fg-mute); }
+/* «Falta edad» (2b): el dato que falta en una ficha a medias, en rojo de TEXTO sobre papel y en una línea. */
+.gf-fiche__role.is-missing { color: var(--err-ink); font-weight: 700; }
+/* ⚠️ «· Lista» vive DENTRO del rótulo y no en una chapa aparte: la chapa se OCULTABA en el teléfono por
+   falta de sitio, y entonces el estado dependía solo del color. */
+.gf-fiche__done { color: var(--done-ink); font-weight: 700; }
+.gf-fiche:not(.is-complete) .gf-fiche__done { display: none; }
+.gf-fiche__name { max-width: 100%; font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); line-height: 1.2; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gf-fiche__name.is-empty { color: var(--fg-mute); }
 .gf-fiche__chev { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-entra) var(--ease-sale), color var(--dur-sale) var(--ease-sale); }
-/* El régimen del niño dentro de su ficha (`docs/specs/cumple-mixto.md` §15). Discreto por defecto
-   —es contexto, no un estado— y marcado cuando NO es el pack reservado, que es el que mueve el
-   precio. Reutiliza la forma del `__status` vecino para no inventar una pastilla nueva. */
-.gf-fiche__regime { display: inline-flex; align-items: center; flex-shrink: 0; font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500; letter-spacing: 0.06em; padding: 5px 10px; border-radius: var(--r-pill); color: var(--fg-mute); background: var(--bg-soft); }
-.gf-fiche__regime.is-other { color: var(--on-brand); background: var(--zone-1); }
-.gf-fiche__regime.is-unknown { color: var(--err); background: color-mix(in srgb, var(--err) 12%, transparent); }
+/* El régimen del niño (`docs/specs/cumple-mixto.md` §15), SOLO cuando difiere del pack reservado o no
+   hay producto para esa edad: repetir el pack que ya dice el resguardo no informa y se come el nombre.
+   Chapa de TINTE, nunca relleno de zona. */
+.gf-fiche__regime { display: inline-flex; align-items: center; margin-top: var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.06em; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-pill); color: var(--fg); background: var(--tint-info); border: 1px solid var(--tint-info-border); }
+.gf-fiche__regime.is-unknown { background: var(--err-bg); border-color: var(--err-border); }
 .gf-fiche.is-open .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
 .gf-fiche__body { display: grid; grid-template-rows: 1fr; }
 html.js .gf-fiche__body { grid-template-rows: 0fr; transition: grid-template-rows var(--dur-entra) var(--ease-sale); }
@@ -5726,26 +5791,46 @@ html.js .gf-fiche.is-open .gf-fiche__body { grid-template-rows: 1fr; }
 /* Durante la activación JS (#264-audit): el colapso inicial (todas abiertas → acordeón) sin animación. */
 html.gf-initing .gf-fiche__body, html.gf-initing .gf-fiche__chev { transition: none !important; }
 .gf-fiche__body > div { overflow: hidden; }
-.gf-fiche__pad { padding: var(--sp-18) var(--sp-18) var(--sp-20); border-top: 1px dashed var(--line); }
+.gf-fiche__pad { padding: var(--sp-16) var(--sp-14) var(--sp-18); border-top: 1px solid var(--line); }
 .gf-fiche__pad .eventfields { margin-top: 0; }
-.gf-fiche__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-20); }
+.gf-fiche__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-18); }
 html:not(.js) .gf-fiche__foot { display: none; }
-/* Prev/Siguiente usan el componente .btn del sitio (.btn--ghost / .btn--ink, .btn--sm). El .btn
-   desliza su icono a la DERECHA al hover; en «Anterior» (flecha izquierda) lo corregimos a la izquierda. */
+/* Prev/Siguiente usan el componente .btn del sitio (.btn--ghost / .btn--ink). El .btn desliza su icono a
+   la DERECHA al hover; en «Anterior» (flecha izquierda) lo corregimos a la izquierda. */
 .gf-nav-prev:hover svg { transform: translateX(-3px); }
+/* Los botones de la hoja a 16, el nivel Botón del sistema (el mismo que estrenó el cajón en `#550`).
+   ⚠️ La FAMILIA `.btn` —su radio y su relleno— no se toca aquí: es de la web entera. */
+.gf-page .btn { font-size: var(--fs-button); }
 
-/* barra de guardar (botón = componente .btn del sitio) */
-.gf-savebar { margin-top: 30px; padding-top: var(--sp-28); border-top: 1px dashed var(--line-strong); display: flex; flex-direction: column; gap: var(--sp-14); }
-.gf-savebar .btn { width: 100%; justify-content: center; }
-.gf-savebar__help { font-size: 12.5px; line-height: 1.5; color: var(--fg-mute); text-align: center; margin: 0; }
+/* ─── GUARDAR, PEGADO abajo (2b, `#571`) ───────────────────────────────────────────────────────────
+   Con veinte fichas el único botón de la página quedaba al final de toda la página. ⚠️ `sticky` y no
+   `fixed`: viaja mientras se rellena y al llegar al final se queda en su sitio, sin tapar el pie. Es el
+   mueble anclado que el sistema excepcionó (`#217`): superficie opaca, sombra difusa HACIA ARRIBA
+   (`--shadow-nav-dock`), la cuenta a la izquierda y «Guardar» a 56. */
+.gf-savebar__help { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); text-align: center; margin: 0; }
+.gf-savebar {
+    position: sticky; bottom: 0; z-index: 20;
+    display: flex; align-items: center; gap: var(--sp-16);
+    margin-inline: calc(var(--sp-20) * -1);
+    padding: var(--sp-14) var(--sp-20) calc(var(--sp-14) + env(safe-area-inset-bottom, 0px));
+    background: var(--bg-card); border-top: 1px solid var(--line); box-shadow: var(--shadow-nav-dock);
+}
+.gf-savebar__count { display: flex; flex-direction: column; gap: var(--sp-2); }
+.gf-savebar__label { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.gf-savebar__num { font-family: var(--font-display); font-size: var(--fs-20); color: var(--fg); white-space: nowrap; }
+.gf-savebar__num em { font-style: normal; color: var(--done-ink); }
+.gf-savebar .btn { flex: 1; justify-content: center; }
+/* El campo que se está escribiendo no puede quedar DEBAJO de la barra al recibir el foco. */
+html:has(.gf-savebar) { scroll-padding-bottom: calc(var(--book-bar-h) + var(--sp-28) + var(--sp-20)); }
 
 /* ─── EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413` T3) ───────────────
    La tercera zona del post-form y la única que mueve dinero. ⚠️ El control base es un
    `input[type=number]`: esta página es de mejora progresiva declarada, así que un stepper a botones
    dejaría sin comprar a quien no tiene JavaScript. El JS lo decora; el importe lo recalcula el
    servidor. Todo con tokens: `RawColourIsNotATokenTest` y `ShapeScaleTest` barren este fichero. */
-.gf-extras__lead { font-size: var(--fs-13); line-height: 1.55; color: var(--fg-mute); margin: 0 0 var(--sp-14); }
-.gf-extras__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10); }
+.gf-extras__lead { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; }
+/* Los extras en FILAS de una sola tarjeta (2b, `#571`): de 152 a 69 px cada uno. */
+.gf-extras__list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); overflow: hidden; }
 /* ⚠️⚠️ Dos correcciones MEDIDAS en navegador, las dos del mismo tipo: una declaración que suponía
    algo no declarado, sin que fallara nada.
    ▶ El radio decía `var(--r-card)`, y **ese token no existe** en la escala (`--r-xs · --r-sm ·
@@ -5758,15 +5843,17 @@ html:not(.js) .gf-fiche__foot { display: none; }
      línea — pero sin `wrap` ese `100%` no salta: se queda en la fila y aplasta a los hermanos.
      Medido en una fila cerrada: el motivo se llevaba 424 px de 612 y el nombre caía a 119 px
      necesitando 164, o sea partido en dos líneas con sitio de sobra al lado. */
-.gf-extra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-14); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
+.gf-extra { display: flex; align-items: center; gap: var(--sp-12); min-height: 69px; padding: var(--sp-12) var(--sp-16); }
+.gf-extra + .gf-extra { border-top: 1px solid var(--line); }
 .gf-extra__id { display: flex; flex-direction: column; gap: var(--sp-2); flex: 1 1 auto; min-width: 0; }
-.gf-extra__name { font-weight: 600; font-size: var(--fs-15); }
-.gf-extra__price { font-size: var(--fs-12); color: var(--fg-mute); }
+.gf-extra__name { display: inline-flex; align-items: center; gap: var(--sp-6); font-weight: var(--fw-semibold); font-size: var(--fs-body); }
+.gf-extra__price { font-size: var(--fs-body-s); color: var(--fg-mute); }
 /* El «Más info» de cada extra (`#416`): `<details>` nativo, así que funciona sin una línea de JS —
    la condición de esta página. Se le quita el marcador propio del navegador y se pone el nuestro,
    que gira al abrir, para que no salga la flecha del sistema junto a los iconos del set. */
-.gf-extra__more { margin-top: var(--sp-4); }
-.gf-extra__more > summary { display: inline-flex; align-items: center; gap: var(--sp-6); cursor: pointer; font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--interactive); list-style: none; min-height: var(--tap-min); }
+.gf-extra__more { margin: 0; }
+/* ▶ T2 (`#571`): el `summary` es el NOMBRE y el PRECIO de la fila, que así hace de «Más info» entera (2b). */
+.gf-extra__more > summary { display: flex; flex-direction: column; justify-content: center; gap: var(--sp-2); cursor: pointer; list-style: none; min-height: var(--tap-min); }
 .gf-extra__more > summary::-webkit-details-marker { display: none; }
 /* ⚠️ Apunta al `svg`, NO a `.icon`: el componente del set **no emite esa clase** (medido —
    `getAttribute('class')` → `null`), así que la primera versión de estas dos reglas no giraba nada
@@ -5774,39 +5861,73 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .gf-extra__more > summary svg { transition: transform var(--dur-sale) var(--ease-sale); }
 .gf-extra__more[open] > summary svg { transform: rotate(180deg); }
 .gf-extra__more > summary:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
-.gf-extra__more ul { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-12); color: var(--fg-mute); }
+/* `:not(.gifts)`: los regalos (`#589`) son otra lista dentro del mismo desplegable y traen su propia regla. */
+.gf-extra__more > ul:not(.gifts) { list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-8) 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-body-s); color: var(--fg-mute); }
 
 .gf-extra__field { flex: 0 0 auto; }
-.gf-extra__field input { width: 88px; min-height: var(--tap-min); text-align: center; font-size: var(--fs-15); font-weight: 600; }
-.gf-extra__qty { flex: 0 0 auto; font-weight: 600; font-size: var(--fs-15); color: var(--fg-mute); }
-.gf-extra__why { flex: 1 1 100%; font-size: var(--fs-12); color: var(--fg-mute); }
-.gf-extra.is-closed { border-style: dashed; }
-.gf-extras__total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); margin: var(--sp-16) 0 0; padding-top: var(--sp-12); border-top: 1px dashed var(--line-strong); font-size: var(--fs-15); }
-.gf-extras__where { font-size: var(--fs-12); color: var(--fg-mute); margin: var(--sp-6) 0 0; }
-.gf-extras__warn { margin: var(--sp-16) auto 0; max-width: 700px; }
+.gf-extra__field input { width: 88px; min-height: var(--tap-min); text-align: center; font-size: var(--fs-body); font-weight: var(--fw-semibold); border-radius: var(--r-md); }
+.gf-extra__qty { flex: 0 0 auto; font-family: var(--font-display); font-size: var(--fs-body); color: var(--fg); }
+.gf-extra__why { font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute); }
+/* Lo INERTE es superficie Nube: ni un borde discontinuo —no está en el sistema— ni opacidad. */
+.gf-extra.is-closed { background: var(--bg-soft); }
+/* El dinero de los extras va en RÓTULO y en TINTA: es lo que se debe, y el color de lo cobrado no pinta
+   aquí, porque aquí no se ha cobrado nada. */
+.gf-extras__total { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); margin: 0; padding-top: var(--sp-12); border-top: 1px solid var(--line); font-size: var(--fs-body); font-weight: var(--fw-semibold); }
+.gf-extras__total strong { font-family: var(--font-display); font-size: var(--fs-20); font-weight: 400; color: var(--fg); }
+.gf-extras__where { font-size: var(--fs-body-s); color: var(--fg-mute); margin: 0; }
 
 /* El stepper que el JS monta encima del `input[type=number]`. Sin JS no existe y no hace falta. */
 .gf-extra__step { display: inline-flex; align-items: center; gap: var(--sp-6); }
-.gf-extra__step button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--line-strong); border-radius: var(--r-btn); background: var(--bg); color: var(--fg); font-size: var(--fs-15); font-weight: 700; cursor: pointer; line-height: 1; }
-.gf-extra__step button:disabled { opacity: 0.4; cursor: default; }
+.gf-extra__step button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--bg-card); color: var(--fg); font-size: var(--fs-body); font-weight: 700; cursor: pointer; line-height: 1; }
+/* Lo inerte es Nube, nunca opacidad. */
+.gf-extra__step button:disabled { background: var(--bg-soft); color: var(--fg-mute); cursor: default; }
+/* Dentro del stepper el número es la CIFRA (2b): sin caja ni flechas del navegador, en rótulo. El control
+   accesible sigue siendo el `input`, así que conserva su anillo de foco. */
+.gf-extra__step input { width: 40px; padding-inline: 0; border-color: transparent; background: transparent; font-family: var(--font-display); font-size: var(--fs-body); font-weight: 400; appearance: textfield; -moz-appearance: textfield; }
+.gf-extra__step input::-webkit-inner-spin-button,
+.gf-extra__step input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.gf-extra__step input:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
-/* toast del flash de guardado */
-.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-btn); font-size: var(--fs-13); font-weight: 600; display: inline-flex; align-items: center; gap: var(--sp-10); box-shadow: var(--shadow-float); opacity: 0; pointer-events: none; transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-entra) var(--ease-sale); z-index: 200; }
-.gf-toast .tcheck { width: 20px; height: 20px; border-radius: 50%; background: var(--zone-1); color: var(--on-brand); display: grid; place-items: center; flex-shrink: 0; }
+/* toast del flash de guardado: mobiliario flotante (`#217`). ⚠️ Su sombra es de la familia `--shadow-nav` y
+   no `--shadow-float`, que con el paquete del cliente vale una sombra DURA (`#265`, la misma corrección de
+   rol que tuvo la barra de móvil). */
+.gf-toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: var(--fg); color: var(--bg); padding: 13px 22px; border-radius: var(--r-md); font-size: var(--fs-body); font-weight: var(--fw-semibold); display: inline-flex; align-items: center; gap: var(--sp-10); box-shadow: var(--shadow-nav); opacity: 0; pointer-events: none; transition: opacity var(--dur-entra) var(--ease-sale), transform var(--dur-entra) var(--ease-sale); z-index: 200; }
+.gf-toast .tcheck { width: 20px; height: 20px; border-radius: var(--r-pill); background: var(--done); color: var(--on-done); display: grid; place-items: center; flex-shrink: 0; }
 .gf-toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* Con la barra de guardar pegada abajo, el aviso sube por encima de ella. */
+body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) + var(--sp-20)); }
 
-/* footer mínimo */
-.gf-foot { width: 100%; max-width: 700px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-10) var(--sp-20); padding: 26px 4px 34px; margin-top: auto; font-family: var(--font-mono); font-size: var(--fs-10); text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
-.gf-foot a { text-decoration: none; color: inherit; transition: color var(--dur-sale) var(--ease-sale); }
-.gf-foot a:hover { color: var(--fg); }
-.gf-foot__links { display: flex; gap: var(--sp-18); flex-wrap: wrap; }
+/* ─── El diálogo del PEGADO (2b, `#571`) ─────────────────────────────────────────────────────────────
+   Un modal del sistema: radio 16, sombra de modal y dos botones de 48. `dialog` nativo en la capa superior
+   del navegador, así que no entra en la escala de `z-index`. */
+.gf-dialog { width: min(calc(100% - var(--sp-20) * 2), 480px); padding: 0; border: 0; border-radius: var(--r); background: var(--bg-card); color: var(--fg); box-shadow: var(--shadow-modal); }
+.gf-dialog::backdrop { background: color-mix(in srgb, var(--paper-fg) 45%, transparent); }
+.gf-dialog__body { display: flex; flex-direction: column; gap: var(--sp-14); padding: var(--sp-20); }
+.gf-dialog__title { margin: 0; font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.1; }
+.gf-dialog__help { margin: 0; font-size: var(--fs-body); line-height: 1.5; }
+.gf-dialog__text { width: 100%; min-height: 120px; resize: vertical; padding: var(--sp-14); border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; }
+.gf-dialog__text:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.gf-dialog__actions { display: flex; gap: var(--sp-10); }
+.gf-dialog__actions .btn { flex: 1; justify-content: center; }
 
-@media (max-width: 560px) {
-    .gf-stub__meta { grid-template-columns: 1fr 1fr; }
-    .gf-stub__cell:nth-child(3) { border-left: none; border-top: 1px solid color-mix(in srgb, var(--bg) 16%, transparent); grid-column: 1 / -1; }
-    .gf-stub__title { font-size: clamp(28px, 9vw, 38px); }
-    .gf-group__title { font-size: 21px; }
-    .gf-fiche__status { display: none; }
+/* El pie: el copyright en rótulo y los enlaces como CONTROLES de 48 (F-08). Antes era mono de 10 px en
+   versalitas sin alto mínimo, y el de la política era el único control legal que quedaba en solo
+   lectura. */
+.gf-page .gf-sheet { padding-bottom: var(--sp-28); }
+.gf-foot { width: 100%; max-width: 640px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-4) var(--sp-20); padding-block: var(--sp-12) var(--sp-28); margin-top: auto; border-top: 1px solid var(--line); }
+.gf-foot__copy { font-family: var(--font-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-mute); }
+.gf-foot__links { display: flex; gap: var(--sp-16); flex-wrap: wrap; }
+.gf-foot a { display: inline-flex; align-items: center; min-height: var(--tap-min); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--interactive); text-decoration: underline; }
+.gf-foot a.gf-foot__tel { font-family: var(--font-mono); font-size: var(--fs-body-s); font-weight: 400; color: var(--fg); text-decoration: none; }
+.gf-foot a:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+
+/* Escritorio: las celdas del resguardo vuelven a FILA —tantas como haya: la del día no sale sin franja— y
+   el resguardo gana aire. El título ya sube solo a 36 con `--fs-title`. */
+@media (min-width: 1024px) {
+    .gf-page { padding-block-start: var(--sp-28); }
+    .gf-stub { padding: var(--sp-28); }
+    .gf-stub__meta { grid-auto-flow: column; grid-auto-columns: 1fr; }
+    .gf-stub__cell + .gf-stub__cell { border-top: 0; border-left: 1px solid var(--line); }
 }
 
 @media (prefers-reduced-motion: reduce) {

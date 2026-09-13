@@ -1236,9 +1236,19 @@ class TicketType extends Model
     public function sanitizeGuestData(array $rows, int $count): array
     {
         $count = max(0, $count);
+        // ⚠️⚠️ **Ordenar por CLAVE antes de reindexar, o el orden de la PÁGINA reordena a los invitados**
+        // (`#571`, T2 de `specs/celebracion-e-invitacion.md`). PHP conserva el orden en que LLEGAN
+        // los campos (`guests[5][…]` antes que `guests[0][…]`), y `array_values` convierte ese orden
+        // en posiciones: con las fichas pendientes pintadas ARRIBA, cada guardado movía a los
+        // invitados de sitio —no mezcla datos, pero de la posición cuelgan el régimen de cada ficha,
+        // las que se descartan al bajar invitados y la hoja de sala—. Solo se ordena si TODAS las
+        // claves son enteras: una lista ya ordenada queda igual, y la API manda listas.
+        if (! array_is_list($rows) && array_filter(array_keys($rows), 'is_int') === array_keys($rows)) {
+            ksort($rows);
+        }
         // Reindexa a una lista contigua 0..n: robusto frente a payloads asociativos o con huecos
         // (p. ej. una UI JS que borra una fila sin reindexar) — el saneo NO confía en que el
-        // cliente mande una lista perfecta (regla 12). El orden de los invitados se preserva.
+        // cliente mande una lista perfecta (regla 12).
         $rows = array_values($rows);
         $fields = $this->guestFields();
 

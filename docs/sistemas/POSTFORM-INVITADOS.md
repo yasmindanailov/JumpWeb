@@ -150,6 +150,16 @@ seed siempre incluye `guest_fields`).
 
 ### 4.1 Cara cliente (web pública, es/en/fr)
 
+- **La piel** (2026-09-13, `#570`, `specs/celebracion-e-invitacion.md` §10.1): papel liso y columna de 640,
+  el resguardo con `data-surface="ink"`, los avisos en un solo componente (`.gf-notice`) y lo hecho con el
+  rol `--done`. ⚠️ El molde `.gf-*` lo comparte el JUSTIFICANTE, y `focused-layout` carga ahora el paquete
+  de tema de la instalación (`client.css`), que antes no cargaba. Guarda: `GuestFormSkinTest`.
+- **Muchos invitados** (2026-09-13, `#571`, §10.2 de la misma spec): fichas pendientes arriba y listas plegadas en un
+  `details`, «Falta :field», barra de guardar pegada, extras en filas y el **pegado de la lista de nombres**. ⚠️⚠️ **El
+  orden de la PÁGINA ya no es el de las POSICIONES**: `TicketType::sanitizeGuestData()` ordena por clave antes de
+  reindexar, y el JS navega por la página y cuenta pérdidas por `data-i`. ⚠️ El JS es un módulo que importa
+  `public/js/guest-form/logic.js` (estático, sin Vite). ⚠️ El número de invitados lleva `form="gf-form"`: vive fuera
+  del formulario y sin el atributo no se enviaba. Guardas: `GuestFormManyGuestsTest` + `scripts/mutar-postform-t2.py`.
 - **Ruta**: `/reserva/{reservation}/datos-invitados` — nombres `reservation.guests` /
   `reservation.guests.store`. El parámetro es el **OrderItem del pack**: **1 post-form POR
   RESERVA**, no por pedido. Un pedido con 2 packs → 2 post-forms, 2 emails, 2 botones.

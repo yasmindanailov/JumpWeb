@@ -85,6 +85,11 @@ class GuestCountSurfacesTest extends TestCase
         $this->get($item->guestFormSignedUrl())
             ->assertOk()
             ->assertSee('name="guest_count"', false)
+            // ⚠️⚠️ El campo vive en el RESGUARDO, FUERA del formulario: sin `form=` el navegador no lo envía y
+            // cambiar el número no hacía nada en un navegador real (`#571`). Los casos de abajo mandan el POST a
+            // mano, así que ninguno podía verlo.
+            ->assertSee('form="gf-form"', false)
+            ->assertSee('id="gf-form"', false)
             // El SUELO es el mínimo del pack y el TECHO su máximo, resueltos por el dominio.
             ->assertSee('min="8"', false)
             ->assertSee('max="20"', false);
@@ -155,23 +160,35 @@ class GuestCountSurfacesTest extends TestCase
 
     public function test_the_discard_warning_travels_in_a_form_the_browser_can_render(): void
     {
-        // ⚠️⚠️ **Guarda nacida de un defecto propio.** El aviso lo pinta JS plano sustituyendo dos
-        // marcadores, y la primera versión de la cadena venía con la sintaxis de PLURAL de Laravel
-        // (`{1} …|[2,*] …`): en el navegador no hay `trans_choice`, así que la barra vertical y las
-        // dos formas habrían llegado enteras a la pantalla. Ninguna guarda del repo mira `guestform`
-        // —`SidebarTextParityTest` solo vigila `tickets`—, así que esto tenía que existir.
+        // ⚠️⚠️ **Guarda nacida de un defecto propio, y CAMBIÓ DE PREMISA en `#571`** (el precedente del
+        // `SlotOfferTest` de `#324`). El aviso lo pinta el JS, y en el navegador no hay `trans_choice`: con la
+        // sintaxis de plural de Laravel, la barra vertical y las dos formas llegaban enteras a la pantalla, así
+        // que la cadena tenía UNA sola forma —y la pantalla decía «de 1 fichas»—.
+        // ▶ Desde la T2 el JS SÍ pluraliza: `choice()` de `public/js/guest-form/logic.js`, con sus casos de
+        // `node --test`. Lo que se vigila ahora es la PAREJA: si la cadena trae dos formas, el script tiene que
+        // resolverlas con `choice()` y no con un `replace` a secas, que es exactamente cómo volvería el defecto.
         $item = $this->reservation(10);
 
-        $this->get($item->guestFormSignedUrl())
+        $html = $this->get($item->guestFormSignedUrl())
             ->assertOk()
             ->assertSee('id="gf-count-warn"', false)
-            ->assertSee(':discarded', false);
+            ->assertSee(':discarded', false)
+            ->getContent();
+
+        $this->assertStringContainsString(
+            'choice(countWarnTpl', (string) $html,
+            'el aviso de fichas perdidas no pasa por `choice()`: una cadena con dos formas llegaría entera a la pantalla',
+        );
 
         foreach (['es', 'en', 'fr'] as $locale) {
             $text = (string) __('guestform.count_warn_discard', [], $locale);
-            $this->assertStringNotContainsString('|', $text, "«count_warn_discard» ({$locale}) trae dos formas y el JS no sabe pluralizar.");
-            $this->assertStringContainsString(':count', $text);
-            $this->assertStringContainsString(':discarded', $text);
+            $forms = explode('|', $text);
+
+            $this->assertLessThanOrEqual(2, count($forms), "«count_warn_discard» ({$locale}) trae más formas de las que resuelve `choice()` sin intervalos.");
+            foreach ($forms as $form) {
+                $this->assertStringContainsString(':count', $form, "«count_warn_discard» ({$locale}): a una forma le falta :count");
+                $this->assertStringContainsString(':discarded', $form, "«count_warn_discard» ({$locale}): a una forma le falta :discarded");
+            }
         }
     }
 

@@ -3,6 +3,13 @@
 > Estado: 🟦 **código completo en el árbol; queda el OJO del owner** · Última actualización: 2026-09-07
 > · Decisión asociada: `DECISIONES #444`. ▶ **Lo ejecutado está en §8.**
 >
+> ⚠️⚠️ **CORRECCIÓN (2026-09-13, `#571`): en un navegador real el cambio NO se enviaba.** El campo
+> `guest_count` vive en el resguardo, FUERA del `<form id="gf-form">`, y sin el atributo `form="gf-form"`
+> el navegador no lo incluye en el POST: cambiar el número de invitados no hacía nada desde el despliegue
+> del 08-09. Los casos de este sistema mandan el POST a mano y no podían verlo, y la verificación en
+> navegador de §6 seguía pendiente. Arreglado y verificado en navegador (20 → 19); lo vigila
+> `GuestCountSurfacesTest`. *Que el servidor acepte un campo no es que el formulario lo envíe.*
+>
 > ❗❗❗ **Esto NO es «una pantalla»: es la primera vez que el cliente mueve AFORO y DINERO por su
 > cuenta.** `complementos-post-reserva.md` §4.3·5 dejó fuera *a propósito* todo lo que ocupa
 > —*«esta feature no toca aforo, y esa es la mitad de su coste»*—. Aquí no hay escapatoria: subir

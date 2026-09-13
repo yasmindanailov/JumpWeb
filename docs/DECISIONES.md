@@ -31922,3 +31922,59 @@ hasta que alguien la levante a mano. Se propuso comprobarla también antes de ba
 `[DECIDIDO owner, 2026-09-13]` **no se toca el script**: *«el despliegue la próxima vez lo haremos por la
 noche, cuando no haya clientes»*. ▶ **Los despliegues a producción se hacen de noche o con el parque
 cerrado.**
+## #569 · 2026-09-13 · `[DECIDIDO owner]` El formulario de celebración vestido, el justificante vestido y la invitación digital
+
+Spec: `docs/specs/celebracion-e-invitacion.md` (🟦, código no empezado). Diseño leído del canvas (`doc/formulario.md`,
+`doc/invitaciones.md`, turno **2a**) y contrastado con el código; dos rondas de preguntas al owner.
+▶ **Orden**: T1 piel del formulario → T2 muchos invitados y pegado de nombres → T3 piel del justificante → T4 dominio
+y contrato de la invitación → T5 su página → T7 correos → **T6 el aterrizaje en el formulario, puerta y hoja** (lo
+más difícil al final).
+▶ **Del owner (D1–D17)**: con la lista completa **no se admite un «sí»** · se recoge el **«no podemos»** y el
+anfitrión lo ve con la sugerencia de bajar invitados · **«voy con él» no pide firma** y el adulto se queda en el
+parque · la autorización sigue al **interruptor del producto** (los packs pasan a `optional`, dato) · la invitación
+enseña quién cumple, fecha, hora de inicio y fin, dónde con «Cómo llegar», el menú, quién invita y el calendario ·
+**temas abstractos del producto** (tres, elegidos renderizados) · vista previa con **imagen fija por tema** y los
+datos en el título · **el padre no corrige** lo que envió · el **nombre del niño antes del sí/no** · se funde con una
+ficha ya escrita solo con **un único candidato** · el menú es una **casilla del enganche** · «Te invita» editable y el
+teléfono solo si el anfitrión lo marca · respuestas hasta el **plazo de cambiar invitados** · interruptor
+**«Invitación digital»** por producto, incompatible con `required`.
+❗❗ **La decisión técnica que ordena todo (§3.1, vetable V1)**: lo que contesta un padre **no escribe `guest_data`**:
+vive en `invitation_replies`, el formulario lo **propone** sobre una ficha y el anfitrión lo **adopta al guardar**.
+Medido: `submitGuestForm()` sustituye la lista entera (el guardado del anfitrión borraría al padre) y `updated_at` es
+el testigo de extras e invitados (cada respuesta dejaría obsoleta la página que el anfitrión tiene abierta justo para
+compartir). Consecuencia: **un padre no mueve dinero, ni aforo, ni ningún fichero del `CRITICAL_RE`**.
+⚠️ Queda **un borde con fecha** (§7·5): bajar invitados descarta las filas del FINAL, así que un «sí» adoptado en
+una fila final puede caer aunque el suelo cuente plazas — se decide midiendo al abrir la T6.
+⚠️ Lo que el canvas tenía caducado, medido: la tarjeta de `/cumpleanos` ya no existe (`#528`), la columna Edad sí
+existe en esta instalación, los plazos ya existen en código, son **9** `--zone-1` y no 7, y hay **25** correos.
+▶ **Segunda revisión adversarial (§7.2, a petición del owner): 16 hallazgos, 14 aplicados.** Los que más pesan:
+**R1** — rechazar un nombre repetido («ya nos habéis contestado por Hugo») le confirmaba a cualquiera con el enlace
+**quién va a la fiesta**: hoy se acepta en silencio (V6) · **R7** — la invitación no tenía aviso de privacidad y
+recoge alergias de un menor que lee un tercero · y **tres afirmaciones de la primera versión que el código
+desmentía**: «el servidor ignora la marca» obligaba a tocar `OrderCreator` (`CRITICAL_RE`), el módulo del pegado
+fuera de `resources/js/**` no lo ejecutaría `test:js`, y las FK nuevas sin acción rompían la purga y la poda.
+
+## #570 · 2026-09-13 · T1 · el formulario post-reserva vestido desde el canvas (y el justificante hereda el molde)
+
+Spec `docs/specs/celebracion-e-invitacion.md` §10.1. La hoja `.gf-*` se rehace con lo decidido en `doc/formulario.md`
+(F-01…F-08): papel liso y columna de 640, el resguardo con `data-surface="ink"`, un solo componente de aviso, cubo y
+«· Lista», «(opcional)» en vez del asterisco y la política como control de 48. Nace el rol **`--done`/`--on-done`/
+`--done-ink`** (defecto `--ok`; Lima en el paquete). Medido a 390: texto bajo 15 px **164 → 20**, controles bajo 48
+**3 → 0**, sombras **3 → 1**, color de zona **6 → 0**.
+⚠️⚠️ **`focused-layout` no cargaba `client.css` desde que existe**: las dos páginas de enlace firmado iban con los
+colores del producto en una instalación con paquete. Arreglado y vigilado (`ClientThemePackageTest`).
+⚠️ «Guardar» va en el **secundario** (Azul Muro, `#539`), no en tinta como decía la decisión 13 del canvas, que es
+anterior: pendiente del ojo del owner. ⚠️ Para la T3: el justificante escribe el fin de la FRANJA (trampa de `#426`).
+
+## #571 · 2026-09-13 · T2 · muchos invitados en el formulario post-reserva, y el número de invitados que no se enviaba
+
+Spec `docs/specs/celebracion-e-invitacion.md` §10.2 (la 2b del canvas con los rótulos de la 3a). Las fichas pendientes
+arriba y las listas plegadas en un `details` nativo, «Falta :field» en la ficha a medias (token nuevo `--err-ink`), la
+barra de guardar pegada (`--shadow-nav-dock`, peso nuevo de la familia de mobiliario), los extras en filas y el
+**pegado de la lista de nombres** en un `dialog` nativo, que solo reparte sobre fichas vacías y dice que pegar no
+guarda. El JS pasa a módulo e importa `public/js/guest-form/logic.js`, estático y con `node --test`.
+⚠️⚠️ **Pintar las pendientes arriba reordenaba a los invitados al guardar** (PHP conserva el orden del POST y
+`sanitizeGuestData()` reindexaba): se ordena por clave en el dominio, medido en navegador con 20 fichas.
+⚠️⚠️ **Defecto en producción desde `#444`**: el campo del número de invitados vive en el resguardo, fuera del `<form>`, y el
+navegador no lo enviaba — cambiarlo no hacía nada. Arreglado con `form="gf-form"`, vigilado en `GuestCountSurfacesTest` y
+verificado en navegador (20 → 19). ▶ «Abrir la primera pendiente» se retira (la 3a no lo dibuja). Mutaciones **5/5**.

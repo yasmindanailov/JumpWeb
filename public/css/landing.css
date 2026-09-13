@@ -382,6 +382,19 @@
          el defecto **pierde el color** en vez de arriesgar la lectura. */
   --ok-ink: var(--ok);
   --attn-ink: var(--fg);
+  /* El ROJO como texto sobre papel (`#571`: «Falta edad» en una ficha a medias). Cae en `--err`, que el
+     producto ya declara oscuro; un paquete con un rojo claro declara su variante 800. */
+  --err-ink: var(--err);
+
+  /* ── LO HECHO (`#570`, `docs/specs/celebracion-e-invitacion.md` T1) ───────────────────────────
+     Un ROL y no un color: «esta ficha está lista», «guardado». El canvas lo pinta en LIMA y reserva
+     el VERDE para «reserva confirmada» — si lo hecho fuera verde, el verde dejaría de decirlo.
+     ▶ Sus defectos caen en `--ok`: una instalación sin paquete sigue viendo lo hecho como éxito, que
+     es lo que era. El paquete que lo distingue declara los TRES —el relleno, su texto encima y su
+     variante de TEXTO sobre papel—, porque el par lo declara quien declara el color (`#434`). */
+  --done: var(--ok);
+  --on-done: var(--on-ok);
+  --done-ink: var(--ok-ink);
 
   /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
      Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del

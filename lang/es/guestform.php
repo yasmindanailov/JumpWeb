@@ -35,7 +35,17 @@ return [
     'privacy' => 'Solo usamos estos datos para preparar tu evento. Los datos de los menores se tratan de forma confidencial y se eliminan según nuestra política de privacidad.',
     'readonly_notice' => 'Esta reserva ya se ha celebrado. El formulario es de solo lectura: puedes consultar los datos pero ya no editarlos.',
     'general_heading' => 'Datos generales',
-    'children_heading' => 'Datos de cada invitado',
+    // `#570` (T1 de `specs/celebracion-e-invitacion.md`): la página ya se titula «Datos de los
+    // invitados» y la palabra que usa el resto de la pantalla es «ficha».
+    'children_heading' => 'Una ficha por invitado',
+    // La receta del aviso sobre papel pide TÍTULO, y estos dos avisos eran solo su frase. El de error
+    // sirve para los cinco rechazos: cuentan lo mismo y solo cambian de remedio.
+    'count_warn_title' => 'Antes de guardar',
+    'count_error_title' => 'Los invitados no se han cambiado',
+    // Se marca lo OPCIONAL en vez de lo obligatorio: de cinco columnas, dos son obligatorias.
+    'optional' => '(opcional)',
+    // La política sale de su frase y es un control propio de 48 (F-08 del canvas).
+    'privacy_link' => 'Leer la política de privacidad',
     'saved' => 'Formulario guardado. ¡Gracias! Puedes volver a editarlo cuando quieras.',
     'child' => 'Invitado/a :n',
     // Los EXTRAS de venta posterior (`specs/complementos-post-reserva.md`, `#413`): lo que se
@@ -57,9 +67,10 @@ return [
     'count_hint' => 'Puedes cambiarlo hasta el :when (máximo :max).',
     'count_closed_cutoff' => 'Ya no se puede cambiar el número de invitados: ha pasado el plazo.',
     'count_closed' => 'El número de invitados ya no se puede cambiar.',
-    // ⚠️ UNA sola forma, sin plural: la pinta el JS sustituyendo dos marcadores, y `trans_choice`
-    // no existe en el navegador — una cadena con `|` habría llegado entera a la pantalla.
-    'count_warn_discard' => 'Al bajar a :count invitados se perderán los datos ya rellenados de :discarded fichas.',
+    // ⚠️ La pinta el JS. Hasta la T2 era UNA sola forma porque `trans_choice` no existe en el navegador y una
+    // cadena con `|` habría llegado entera a la pantalla («de 1 fichas»); desde `#571` la resuelve `choice()`
+    // de `public/js/guest-form/logic.js`, que elige por las fichas que se pierden.
+    'count_warn_discard' => 'Al bajar a :count invitados se perderán los datos ya rellenados de :discarded ficha.|Al bajar a :count invitados se perderán los datos ya rellenados de :discarded fichas.',
     'count_saved_up' => 'Tus datos se han guardado y tu reserva pasa a :count invitados. La diferencia se abona en el parque.',
     'count_saved_down' => 'Tus datos se han guardado y tu reserva pasa a :count invitados.',
     'count_error_above_max' => 'Tus datos se han guardado, pero el número de invitados no: es más de lo que admite este cumpleaños. Llámanos y lo vemos contigo.',
@@ -81,6 +92,27 @@ return [
     'bulk_action' => 'Abrir la primera pendiente',
     'status_pending' => 'Pendiente',
     'status_done' => 'Lista',
+
+    // T2 de `specs/celebracion-e-invitacion.md` (`#571`): muchos invitados. ⚠️ Las que pinta el JS del
+    // pegado usan el formato «uno|varios»: lo resuelve `choice()` de `public/js/guest-form/logic.js`,
+    // porque `trans_choice` no existe en el navegador.
+    'group_pending' => 'Falta algo · :count',
+    'group_done' => '{1} :count ficha ya lista|[2,*] :count fichas ya listas',
+    'status_missing' => 'Falta :field',
+    'extras_chosen' => '{0} Ninguno elegido|{1} :count elegido|[2,*] :count elegidos',
+    'paste_prompt' => '¿Tienes la lista escrita? Pégala y solo te quedan las edades.',
+    'paste_open' => 'Pegar la lista de nombres',
+    'paste_title' => 'Pega la lista de nombres',
+    'paste_help' => 'Uno por línea. Los ponemos en orden y tú repasas las edades.',
+    'paste_label' => 'Lista de nombres',
+    'paste_count' => 'Hemos leído :count nombre|Hemos leído :count nombres',
+    'paste_scope' => 'Irá a la ficha que está sin rellenar.|Irán a las :count fichas que están sin rellenar.',
+    'paste_kept' => 'La que ya tiene datos no se toca.|Las :count que ya tienen datos no se tocan.',
+    'paste_overflow' => 'No cabe :count nombre: no quedan fichas sin rellenar.|No caben :count nombres: no quedan fichas sin rellenar.',
+    'paste_apply' => 'Poner el nombre|Poner los :count',
+    'paste_cancel' => 'Cancelar',
+    // ⚠️ Pegar NO guarda: los nombres viven en la página hasta que se pulsa «Guardar», y se dice.
+    'paste_done' => ':count nombre puesto. Guarda para que no se pierda.|:count nombres puestos. Guarda para que no se pierdan.',
     'name_empty' => 'Sin completar',
     'nav_prev' => 'Anterior',
     'nav_next' => 'Siguiente',

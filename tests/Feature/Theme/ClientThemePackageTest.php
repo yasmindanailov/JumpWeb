@@ -254,6 +254,27 @@ class ClientThemePackageTest extends TestCase
     }
 
     /**
+     * **Y las DOS plantillas cargan el paquete de tema, y lo cargan el ÚLTIMO.**
+     *
+     * ⚠️⚠️ `focused-layout` —el post-form y el justificante— **no lo cargaba desde que existe**
+     * (`#570`): una instalación con paquete veía esas dos pantallas con los colores del PRODUCTO, y
+     * los casos de arriba no podían verlo porque solo renderizan la portada. Lo cazó una captura.
+     */
+    public function test_both_layouts_load_the_client_sheet_after_the_product_sheets(): void
+    {
+        foreach (['layout', 'focused-layout'] as $vista) {
+            $blade = (string) file_get_contents(resource_path("views/components/{$vista}.blade.php"));
+            $clientAt = strpos($blade, "asset('css/client.css')");
+
+            $this->assertNotFalse($clientAt, "`{$vista}.blade.php` no carga el paquete de tema de la instalación");
+            $this->assertGreaterThan(
+                (int) strpos($blade, "asset('css/site.css')"), $clientAt,
+                "`{$vista}.blade.php` carga `client.css` antes que `site.css`: sus tokens pierden la cascada.",
+            );
+        }
+    }
+
+    /**
      * **Sin hoja del cliente, el `<head>` no cambia** — que es el estado de este repo y el de
      * cualquier instalación que aún no tenga tema propio.
      *

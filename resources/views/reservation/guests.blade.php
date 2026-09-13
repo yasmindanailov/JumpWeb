@@ -15,11 +15,10 @@
         ];
     }
 
-    // Claves de los campos por-niño OBLIGATORIOS → una ficha está "completa" cuando todas están
-    // rellenas (espejo de TicketType::guestDataCompletedCount; vacío de requeridas ⇒ completa). El
-    // primer campo se usa como "nombre" mostrado en la cabecera de la ficha.
-    $requiredKeys = collect($guestFields)->where('required', true)->pluck('key')->all();
-    $nameKey = $guestFields[0]['key'] ?? null;
+    // La columna de NOMBRE es la primera de tipo TEXTO, no la primera a secas (`#571`, spec §4.4): el
+    // esquema no tiene un tipo «nombre» y las columnas las ordena el panel. De ella salen la cabecera de
+    // la ficha y el destino del pegado de la lista.
+    $nameKey = collect($guestFields)->firstWhere('type', TicketType::FIELD_TYPE_TEXT)['key'] ?? null;
     $emptyLabel = __('guestform.name_empty');
 @endphp
 <x-focused-layout :title="__('guestform.title')">
@@ -61,7 +60,9 @@
 
         <main class="gf-sheet">
             {{-- ───── Contexto de la reserva (stub tipo ticket) ───── --}}
-            <div class="gf-stub">
+            {{-- El RESGUARDO: lo que ya está comprado, y la ÚNICA superficie de tinta de la página
+                 (`#570`). La superficie la declara el MARCADO: pintar el fondo no cambia los tokens. --}}
+            <div class="gf-stub" data-surface="ink">
                 <div class="gf-stub__top">
                     {{-- Badge = nombre del producto (data-driven), recto. --}}
                     <span class="gf-stub__badge">{{ $type->tr('name') }}@if ($type->duration_min) · {{ $type->duration_min }} min @endif</span>
@@ -88,7 +89,12 @@
                         @if ($guestCount['editable'] && ! $readonly)
                             <label class="gf-stub__count">
                                 <span class="sr-only">{{ __('guestform.count_label') }}</span>
-                                <input type="number" name="guest_count" inputmode="numeric"
+                                {{-- ⚠️⚠️ `form="gf-form"` NO es decorativo (`#571`): este campo vive en el
+                                     RESGUARDO, que queda FUERA del formulario, y sin el atributo el navegador
+                                     no lo envía — cambiar el número de invitados no hacía nada en un
+                                     navegador real desde `#444`. Los casos lo mandaban a mano y no podían
+                                     verlo; lo vio la sonda de la T2. --}}
+                                <input type="number" name="guest_count" inputmode="numeric" form="gf-form"
                                        value="{{ $reservation->quantity }}"
                                        min="{{ $guestCount['min'] }}"
                                        @if ($guestCount['max'] !== null) max="{{ $guestCount['max'] }}" @endif
@@ -96,11 +102,8 @@
                                        data-current="{{ $reservation->quantity }}">
                             </label>
                             <span class="gf-stub__hint">{{ $guestCount['hint'] }}</span>
-                            {{-- El aviso de pérdida lo rellena el JS con el número REAL de fichas
-                                 rellenas que se perderían; sin JS no se pinta, y el servidor sigue
-                                 devolviendo cuántas se perdieron de verdad. --}}
-                            <span class="gf-stub__warn" id="gf-count-warn" role="alert" hidden
-                                  data-tpl="{{ __('guestform.count_warn_discard', ['count' => ':count', 'discarded' => ':discarded']) }}"></span>
+                            {{-- El aviso de pérdida ya no vive en esta celda: sale al PAPEL, debajo del
+                                 resguardo, con su título (`#570`). --}}
                         @else
                             <span class="v">{{ __('tickets.guests_count', ['count' => $reservation->quantity]) }}</span>
                             @if ($guestCount['locked_reason'] !== null)
@@ -149,10 +152,10 @@
                          retiró la familia): mientras lo deba, tiene derecho a leer por qué.
                          ▶ T4 (§24.5): el DESCUENTO es una línea más de lo escrito, con su frase
                          compuesta por el dominio, y el total es el NETO — que puede ser a favor. --}}
-                    <div class="gf-mix" role="status">
-                        <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
+                    <div class="gf-notice" role="status">
+                        <p class="gf-notice__title">{{ __('guestform.mixed_title') }}</p>
                         @foreach ($ageSurcharge['lines'] as $line)
-                            <p class="gf-mix__text">
+                            <p class="gf-notice__text">
                                 {{ __('guestform.mixed_line_written', [
                                     'count' => $line['count'],
                                     'target' => $line['name'],
@@ -161,11 +164,11 @@
                             </p>
                         @endforeach
                         @if ($ageSurcharge['credit'] !== null)
-                            <p class="gf-mix__text">
+                            <p class="gf-notice__text">
                                 {{ $ageSurcharge['credit']['label'] }}: −{{ \App\Domain\Platform\Services\Money::format($ageSurcharge['credit']['cents']) }}
                             </p>
                         @endif
-                        <p class="gf-mix__text">
+                        <p class="gf-notice__text">
                             @if ($ageSurcharge['cents'] > 0)
                                 {{ __('guestform.mixed_surcharge', ['amount' => \App\Domain\Platform\Services\Money::format($ageSurcharge['cents'])]) }}
                             @elseif ($ageSurcharge['cents'] < 0)
@@ -177,10 +180,10 @@
                     </div>
                 @elseif ($ageMix->mixed)
                     {{-- Sin dinero escrito manda el veredicto de hoy: es información, no una deuda. --}}
-                    <div class="gf-mix" role="status">
-                        <p class="gf-mix__title">{{ __('guestform.mixed_title') }}</p>
+                    <div class="gf-notice" role="status">
+                        <p class="gf-notice__title">{{ __('guestform.mixed_title') }}</p>
                         @foreach ($ageMix->upgrades as $up)
-                            <p class="gf-mix__text">
+                            <p class="gf-notice__text">
                                 {{ __('guestform.mixed_line', [
                                     'count' => $up['count'],
                                     'target' => $up['name'],
@@ -190,7 +193,7 @@
                                 ]) }}
                             </p>
                         @endforeach
-                        <p class="gf-mix__text">
+                        <p class="gf-notice__text">
                             @if ($ageMix->hasSavings())
                                 {{-- El veredicto aún no gobierna (faltan edades por declarar): se
                                      anuncia que el descuento llegará al completar, no que «no se
@@ -207,9 +210,9 @@
                      escrito y edades en blanco, el cliente tiene que saber que está congelado — antes
                      el congelado era silencioso (lo cazó el T0). --}}
                 @if ($frozenMissingAges > 0)
-                    <div class="gf-mix" role="status">
+                    <div class="gf-notice gf-notice--attn" role="status">
                         {{-- `trans_choice`: «Faltan 1 edades» es el «1 invitadoS» de `#247`. --}}
-                        <p class="gf-mix__text">{{ trans_choice('guestform.frozen_missing_ages', $frozenMissingAges, ['count' => $frozenMissingAges]) }}</p>
+                        <p class="gf-notice__text">{{ trans_choice('guestform.frozen_missing_ages', $frozenMissingAges, ['count' => $frozenMissingAges]) }}</p>
                     </div>
                 @endif
 
@@ -217,16 +220,56 @@
                      hay producto para esa edad en tus condiciones». Un texto por caso, el del parque
                      si lo escribió, con su teléfono. --}}
                 @if ($noProductNotices !== [])
-                    <div class="gf-mix" role="alert">
-                        <p class="gf-mix__title">{{ __('guestform.no_product_title') }}</p>
+                    <div class="gf-notice gf-notice--err" role="alert">
+                        <p class="gf-notice__title">{{ __('guestform.no_product_title') }}</p>
                         @foreach ($noProductNotices as $notice)
-                            <p class="gf-mix__text">{{ $notice }}</p>
+                            <p class="gf-notice__text">{{ $notice }}</p>
                         @endforeach
                     </div>
                 @endif
             </div>
 
-            <div class="gf-perf"></div>
+            {{-- ───── Los avisos sobre PAPEL (`#570`): el plazo en amarillo, el rechazo en rojo ─────
+                 ⚠️ Los rechazos se pintaban DESPUÉS del pie: quien guardaba y volvía arriba no veía que
+                 algo no se había aplicado. Van pegados al resguardo, delante de lo que se vuelve a tocar.
+                 ⚠️ Forma de BLOQUE a propósito: la de paréntesis se emparejaría con el cierre del bloque
+                 de las fichas, más abajo, y dejaría media plantilla sin compilar (`#298`). --}}
+            @if ($guestCount['editable'] && ! $readonly)
+                {{-- El aviso de pérdida lo rellena el JS con el número REAL de fichas rellenas que se
+                     perderían; sin JS no se pinta, y el servidor sigue devolviendo cuántas se perdieron. --}}
+                <div class="gf-notice gf-notice--attn" id="gf-count-warn" role="alert" hidden
+                     data-tpl="{{ __('guestform.count_warn_discard', ['count' => ':count', 'discarded' => ':discarded']) }}">
+                    <p class="gf-notice__title">{{ __('guestform.count_warn_title') }}</p>
+                    <p class="gf-notice__text" data-warn-text></p>
+                </div>
+            @endif
+
+            @php
+                $countStatus = is_string(session('status')) && str_starts_with(session('status'), 'guest-count-')
+                    ? substr(session('status'), strlen('guest-count-'))
+                    : null;
+            @endphp
+            {{-- El motivo viaja en el flash porque el REMEDIO de cada rechazo es distinto
+                 (`specs/invitados-en-post-form.md` §4.7·1, `#444`): el título lo dice una vez y la
+                 frase dice qué hacer. --}}
+            @if ($countStatus !== null)
+                <div class="gf-notice gf-notice--err" role="alert">
+                    <p class="gf-notice__title">{{ __('guestform.count_error_title') }}</p>
+                    <p class="gf-notice__text">{{ __('guestform.count_error_'.$countStatus) }}</p>
+                </div>
+            @endif
+
+            {{-- Lo que de los EXTRAS no se pudo aplicar se DICE y no se calla: los datos del formulario
+                 SÍ se guardaron (van por otra transacción, §4.5.3) y el aviso lo separa. --}}
+            @if (in_array(session('status'), ['guest-form-extras-blocked', 'guest-form-stale'], true))
+                <div class="gf-notice gf-notice--err" role="alert">
+                    <p class="gf-notice__text">
+                        {{ session('status') === 'guest-form-stale'
+                            ? __('guestform.extras_stale')
+                            : __('guestform.extras_blocked') }}
+                    </p>
+                </div>
+            @endif
 
             <form method="POST" action="{{ $formAction }}" class="gf-form" id="gf-form">
                 @csrf
@@ -239,7 +282,11 @@
                 @if ($readonly)
                     <div class="guestform__readonly" role="status">{{ __('guestform.readonly_notice') }}</div>
                 @else
-                    <p class="guestform__privacy">{{ __('guestform.privacy') }}</p>
+                    <div class="gf-intro">
+                        <p class="guestform__privacy">{{ __('guestform.privacy') }}</p>
+                        {{-- La política FUERA de su frase, como control propio (F-08, `#570`). --}}
+                        <a class="gf-legal" href="{{ route('legal.privacidad') }}">{{ __('guestform.privacy_link') }}</a>
+                    </div>
                 @endif
 
                 {{-- ───── 00 · Datos generales (event_fields fase postform, data-driven) ───── --}}
@@ -251,7 +298,7 @@
                         <div class="eventfields">
                             @foreach ($generalFields as $field)
                                 <label class="eventfields__field" for="g-{{ $field['key'] }}">
-                                    <span class="eventfields__label">{{ $type->eventFieldLabel($field) }}@if ($field['required']) <span class="eventfields__req" aria-hidden="true">*</span>@endif</span>
+                                    <span class="eventfields__label">{{ $type->eventFieldLabel($field) }}@unless ($field['required']) <span class="gf-opt">{{ __('guestform.optional') }}</span>@endunless</span>
                                     @if ($field['type'] === 'textarea')
                                         <textarea id="g-{{ $field['key'] }}" name="general[{{ $field['key'] }}]" rows="2" @disabled($readonly)>{{ $reservation->event_data[$field['key']] ?? '' }}</textarea>
                                     @else
@@ -276,35 +323,38 @@
                      ⚠️ Se pintan también los CERRADOS, con su motivo: quien pidió tapas hace dos
                      semanas tiene que seguir viéndolas, o creería que se han perdido. --}}
                 @if (count($addons))
+                    @php
+                        // T2 (`#571`): los CERRADOS al final, con su motivo. ⚠️ Los extras se leen por
+                        // `product_id` (`GuestFormController::desiredQuantities`), así que moverlos no cambia
+                        // lo que se compra: el índice de cada uno viaja igual en su nombre.
+                        $addonRows = collect($addons)->sortBy(fn ($addon) => $addon->closed ? 1 : 0);
+                        $extrasChosen = collect($addons)->filter(fn ($addon) => $addon->quantity > 0)->count();
+                    @endphp
                     <section class="gf-group gf-extras" id="gf-extras">
                         <div class="gf-group__head">
                             <h2 class="gf-group__title">{{ __('guestform.extras_heading') }}</h2>
+                            <span class="gf-group__opt" data-extras-chosen data-tpl="{{ __('guestform.extras_chosen') }}">{{ trans_choice('guestform.extras_chosen', $extrasChosen, ['count' => $extrasChosen]) }}</span>
                         </div>
                         <p class="gf-extras__lead">{{ __('guestform.extras_lead') }}</p>
 
+                        {{-- Filas de UNA tarjeta y no una tarjeta por extra (2b: de 152 a 69 px cada uno), y el
+                             motivo de un cerrado dentro de su fila, debajo del nombre. --}}
                         <ul class="gf-extras__list">
-                            @foreach ($addons as $i => $addon)
+                            @foreach ($addonRows as $i => $addon)
                                 <li class="gf-extra {{ $addon->closed ? 'is-closed' : '' }}">
                                     <div class="gf-extra__id">
-                                        <span class="gf-extra__name">{{ $addon->productName }}</span>
-                                        <span class="gf-extra__price">{{ $addon->note }}</span>
-
-                                        {{-- El «Más info» del catálogo (`#416`). ⚠️ Es un `<details>`
-                                             NATIVO, no el toggle de Alpine que usa la landing
-                                             (`addon-chip.blade.php`): esta página nace `no-js` por
-                                             decisión declarada, y con Alpine quien no tenga
-                                             JavaScript se quedaría **sin poder leer qué lleva lo que
-                                             está comprando**. Aquí no es adorno — estos extras se
-                                             eligen en esta pantalla y en ninguna otra. --}}
+                                        {{-- ▶ T2 (`#571`): la FILA hace de «Más info» (2b). El nombre y el precio son
+                                             el `summary` de un `details` NATIVO, y el stepper queda FUERA: un control
+                                             dentro de un `summary` no es HTML válido. Con «Más info» en su propia
+                                             línea la fila medía 97 px en vez de 69 (medido en navegador). --}}
                                         @if ($addon->features !== [] || $addon->gifts !== [])
                                             <details class="gf-extra__more">
-                                                {{-- El chevron sale del SET de iconos (`#257`), no de
-                                                     bordes rotados a mano: un dibujo propio aquí iría
-                                                     en otra rejilla y con otro trazo que el resto de
-                                                     la página, y eso no falla — solo se nota mirando
-                                                     la pantalla entera. Esta misma vista ya lo usa
-                                                     para plegar la ficha de cada invitado. --}}
-                                                <summary>{{ __('tickets.addon_more_info') }}<x-icons.chevron-down :width="14" :height="14" /></summary>
+                                                <summary>
+                                                    <span class="gf-extra__name">{{ $addon->productName }}<x-icons.chevron-down :width="14" :height="14" /></span>
+                                                    <span class="gf-extra__price">{{ $addon->note }}</span>
+                                                    {{-- Se VE el chevron; se ANUNCIA el nombre del desplegable. --}}
+                                                    <span class="gf-sr-only">{{ __('tickets.addon_more_info') }}</span>
+                                                </summary>
                                                 @if ($addon->features !== [])
                                                     <ul>
                                                         @foreach ($addon->features as $feature)
@@ -315,7 +365,21 @@
                                                 {{-- Los regalos, DENTRO del «Más info» como en el cajón (`#589`, `[DECIDIDO owner]`). --}}
                                                 <x-site.gifts :gifts="$addon->gifts" class="gf-extra__gifts" />
                                             </details>
+                                        @else
+                                            <span class="gf-extra__name">{{ $addon->productName }}</span>
+                                            <span class="gf-extra__price">{{ $addon->note }}</span>
                                         @endif
+                                        @if ($addon->closed || $readonly)
+                                            <span class="gf-extra__why">
+                                                {{ $addon->closedReason === \App\Domain\Booking\Contracts\PostFormAddonView::REASON_SOLD_AT_BOOKING
+                                                    ? __('guestform.extras_closed_sold')
+                                                    : __('guestform.extras_closed_cutoff') }}
+                                            </span>
+                                        @endif
+                                        {{-- ⚠️ El «Más info» del catálogo (`#416`) es un `details` NATIVO y no el
+                                             toggle de Alpine de la landing: esta página nace `no-js`, y quien no
+                                             tenga JavaScript tiene que poder leer qué lleva lo que compra. El
+                                             chevron sale del SET de iconos (`#257`). --}}
                                     </div>
 
                                     {{-- El id viaja SIEMPRE, también en los cerrados: si no, un envío
@@ -326,11 +390,6 @@
                                     @if ($addon->closed || $readonly)
                                         <input type="hidden" name="addons[{{ $i }}][quantity]" value="{{ $addon->quantity }}">
                                         <span class="gf-extra__qty" aria-live="polite">{{ $addon->quantity }}</span>
-                                        <span class="gf-extra__why">
-                                            {{ $addon->closedReason === \App\Domain\Booking\Contracts\PostFormAddonView::REASON_SOLD_AT_BOOKING
-                                                ? __('guestform.extras_closed_sold')
-                                                : __('guestform.extras_closed_cutoff') }}
-                                        </span>
                                     @else
                                         <label class="gf-extra__field" for="x-{{ $addon->productId }}">
                                             <span class="sr-only">{{ __('guestform.extras_qty_label', ['name' => $addon->productName]) }}</span>
@@ -360,49 +419,93 @@
                 @endif
 
                 {{-- ───── 01 · Ficha de cada invitado (acordeón; una ficha por niño, data-driven) ───── --}}
+                @php
+                    // ▶ T2 (`#571`): el ESTADO de cada ficha se decide aquí, una vez, con la MISMA regla que el
+                    // JS (`ficheState()` de `public/js/guest-form/logic.js`): completa si no le falta ninguna
+                    // columna obligatoria —y sin edad sin producto, D6—, y «Falta …» nombra la primera
+                    // obligatoria vacía de una ficha que YA tiene algún dato.
+                    $ficheStates = [];
+                    for ($i = 0; $i < $reservation->quantity; $i++) {
+                        $row = $rows[$i] ?? [];
+                        $noProduct = in_array($i, $noProductIndexes, true);
+                        $firstEmpty = collect($guestFields)->first(fn ($field) => $field['required'] && ! filled($row[$field['key']] ?? null));
+                        $hasData = collect($guestFields)->contains(fn ($field) => filled($row[$field['key']] ?? null));
+                        $ficheStates[$i] = [
+                            'no_product' => $noProduct,
+                            'complete' => ! $noProduct && $firstEmpty === null,
+                            'missing' => $hasData && $firstEmpty !== null ? $type->guestFieldLabel($firstEmpty) : null,
+                            'name' => $nameKey ? trim((string) ($row[$nameKey] ?? '')) : '',
+                            'regime' => $guestRegimes[$i] ?? null,
+                        ];
+                    }
+                    // ▶ Pendientes ARRIBA y las listas PLEGADAS (2b), solo mientras se puede editar: en solo
+                    // lectura se lee la lista en su orden.
+                    // ⚠️⚠️ El orden de la PÁGINA deja de ser el de las POSICIONES, y por eso
+                    // `TicketType::sanitizeGuestData()` ordena por clave al guardar: sin eso, cada guardado
+                    // movería a los invitados de sitio.
+                    $doneIdx = $readonly ? [] : array_keys(array_filter($ficheStates, fn ($state) => $state['complete']));
+                    $pendingIdx = array_values(array_diff(array_keys($ficheStates), $doneIdx));
+                    $pageOrder = array_merge($pendingIdx, $doneIdx);
+                    $lastPos = count($pageOrder) - 1;
+                    $pasteable = ! $readonly && $nameKey !== null;
+                @endphp
                 <section class="gf-group">
                     <div class="gf-group__head">
                         <h2 class="gf-group__title">{{ __('guestform.children_heading') }}</h2>
                         <span class="gf-group__opt" id="gf-group-count">{{ $progress['done'] }} / {{ (int) $reservation->quantity }}</span>
                     </div>
 
-                    @unless ($readonly)
-                        <div class="gf-bulk">
-                            <span>{{ __('guestform.bulk_prompt') }}</span>
-                            <button type="button" id="gf-open-pending" class="btn btn--ghost btn--sm">{{ __('guestform.bulk_action') }}</button>
+                    {{-- El PEGADO de la lista de nombres (2b): solo con JS —sin él no hay diálogo, y el formulario
+                         sigue completo— y solo si el esquema tiene una columna de nombre donde dejarlo. --}}
+                    @if ($pasteable)
+                        <div class="gf-paste" data-paste>
+                            <p class="gf-paste__prompt">{{ __('guestform.paste_prompt') }}</p>
+                            <button type="button" class="btn btn--ghost" data-paste-open aria-haspopup="dialog">{{ __('guestform.paste_open') }}</button>
+                            <div class="gf-notice" id="gf-paste-done" role="status" hidden>
+                                <p class="gf-notice__text"></p>
+                            </div>
                         </div>
-                    @endunless
+                    @endif
 
                     <div class="gf-fiches" id="gf-fiches">
-                        @for ($i = 0; $i < $reservation->quantity; $i++)
-                            @php
-                                // Una ficha con edad SIN PRODUCTO no está completa aunque tenga todas
-                                // sus columnas (D6): el servidor manda, y el JS lo respeta por `data-no-product`.
-                                $noProduct = in_array($i, $noProductIndexes, true);
-                                $complete = ! $noProduct && collect($requiredKeys)->every(fn ($k) => filled($rows[$i][$k] ?? null));
-                                $headName = $nameKey ? trim((string) ($rows[$i][$nameKey] ?? '')) : '';
-                            @endphp
-                            <div class="gf-fiche {{ $complete ? 'is-complete' : '' }}" data-i="{{ $i }}" @if ($noProduct) data-no-product="1" @endif>
+                        @if ($pendingIdx !== [] && $doneIdx !== [])
+                            <p class="gf-fiches__label">{{ __('guestform.group_pending', ['count' => count($pendingIdx)]) }}</p>
+                        @endif
+                        @foreach ($pageOrder as $pos => $i)
+                            @if ($doneIdx !== [] && $i === $doneIdx[0])
+                                {{-- Las fichas LISTAS, plegadas en un `details` NATIVO: se abre sin JS, nada queda
+                                     inalcanzable y sus campos viajan en el POST aunque esté cerrado. --}}
+                                <details class="gf-done" id="gf-done">
+                                    <summary class="gf-done__summary">
+                                        <span>{{ trans_choice('guestform.group_done', count($doneIdx), ['count' => count($doneIdx)]) }}</span>
+                                        <span class="gf-fiche__chev" aria-hidden="true"><x-icons.chevron-down :width="16" :height="16" /></span>
+                                    </summary>
+                                    <div class="gf-done__list">
+                            @endif
+                            @php $state = $ficheStates[$i]; @endphp
+                            <div class="gf-fiche {{ $state['complete'] ? 'is-complete' : '' }}" data-i="{{ $i }}" @if ($state['no_product']) data-no-product="1" @endif>
                                 <button type="button" class="gf-fiche__head" data-act="toggle" aria-expanded="false" aria-controls="gf-body-{{ $i }}">
                                     <span class="gf-fiche__cube">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
                                     <span class="gf-fiche__who">
-                                        <span class="gf-fiche__role">{{ __('guestform.child', ['n' => $i + 1]) }}</span>
-                                        <span class="gf-fiche__name {{ $headName === '' ? 'is-empty' : '' }}" data-name data-empty="{{ $emptyLabel }}">{{ $headName !== '' ? $headName : $emptyLabel }}</span>
+                                        {{-- El estado con PALABRA dentro del rótulo (`#570`): «Invitado/a 01 · Lista»,
+                                             «Falta edad» en una ficha a medias (2b) o solo el número en una en
+                                             blanco. El JS lo recalcula al teclear con las dos plantillas. --}}
+                                        <span @class(['gf-fiche__role', 'is-missing' => $state['missing'] !== null]) data-role
+                                              data-role-default="{{ __('guestform.child', ['n' => $i + 1]) }}"
+                                              data-missing-tpl="{{ __('guestform.status_missing', ['field' => ':field']) }}"><span data-role-text>{{ $state['missing'] !== null ? __('guestform.status_missing', ['field' => $state['missing']]) : __('guestform.child', ['n' => $i + 1]) }}</span><span class="gf-fiche__done"> · {{ __('guestform.status_done') }}</span></span>
+                                        <span class="gf-fiche__name {{ $state['name'] === '' ? 'is-empty' : '' }}" data-name data-empty="{{ $emptyLabel }}">{{ $state['name'] !== '' ? $state['name'] : $emptyLabel }}</span>
+                                        {{-- El régimen que le toca a ESTE niño por su edad
+                                             (`docs/specs/cumple-mixto.md` §15), y **solo cuando difiere** del
+                                             pack reservado o no hay producto para esa edad (`#570`): repetir el
+                                             pack que ya dice el resguardo no informaba y se comía el nombre.
+                                             ⚠️ Refleja lo GUARDADO: se actualiza al guardar, no al
+                                             teclear — el veredicto es del servidor (`CE-4`). --}}
+                                        @if ($state['regime'] !== null && $state['regime']['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OK && ! $state['regime']['own'])
+                                            <span class="gf-fiche__regime is-other">{{ $state['regime']['name'] }}</span>
+                                        @elseif ($state['regime'] !== null && $state['regime']['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OUT_OF_RANGE)
+                                            <span class="gf-fiche__regime is-unknown">{{ __('guestform.regime_no_product') }}</span>
+                                        @endif
                                     </span>
-                                    {{-- El régimen que le toca a ESTE niño por su edad
-                                         (`docs/specs/cumple-mixto.md` §15). Informativo: dice a qué
-                                         pack de la familia pertenece, y se marca cuando NO es el
-                                         reservado, que es el que mueve el precio de la fiesta.
-                                         ⚠️ Refleja lo GUARDADO: se actualiza al guardar, no al
-                                         teclear — el veredicto es del servidor (`CE-4`). --}}
-                                    @php($regime = $guestRegimes[$i] ?? null)
-                                    @if ($regime !== null && $regime['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OK)
-                                        <span @class(['gf-fiche__regime', 'is-other' => ! $regime['own']])>{{ $regime['name'] }}</span>
-                                    @elseif ($regime !== null && $regime['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OUT_OF_RANGE)
-                                        <span class="gf-fiche__regime is-unknown">{{ __('guestform.regime_no_product') }}</span>
-                                    @endif
-                                    <span class="gf-fiche__status gf-fiche__status--pending">{{ __('guestform.status_pending') }}</span>
-                                    <span class="gf-fiche__status gf-fiche__status--done">{{ __('guestform.status_done') }}</span>
                                     <span class="gf-fiche__chev" aria-hidden="true">
                                         <x-icons.chevron-down :width="16" :height="16" />
                                     </span>
@@ -414,23 +517,26 @@
                                             <div class="eventfields">
                                                 @foreach ($guestFields as $idx => $field)
                                                     <label class="eventfields__field" for="c-{{ $i }}-{{ $field['key'] }}">
-                                                        <span class="eventfields__label">{{ $type->guestFieldLabel($field) }}@if ($field['required']) <span class="eventfields__req" aria-hidden="true">*</span>@endif</span>
+                                                        <span class="eventfields__label">{{ $type->guestFieldLabel($field) }}@unless ($field['required']) <span class="gf-opt">{{ __('guestform.optional') }}</span>@endunless</span>
                                                         @if ($field['type'] === 'textarea')
-                                                            <textarea id="c-{{ $i }}-{{ $field['key'] }}" name="guests[{{ $i }}][{{ $field['key'] }}]" rows="2" @if ($field['required']) data-required @endif @if ($idx === 0) data-name-input @endif @disabled($readonly)>{{ $rows[$i][$field['key']] ?? '' }}</textarea>
+                                                            <textarea id="c-{{ $i }}-{{ $field['key'] }}" name="guests[{{ $i }}][{{ $field['key'] }}]" rows="2" data-label="{{ $type->guestFieldLabel($field) }}" @if ($field['required']) data-required @endif @if ($field['key'] === $nameKey) data-name-input @endif @disabled($readonly)>{{ $rows[$i][$field['key']] ?? '' }}</textarea>
                                                         @else
-                                                            <input id="c-{{ $i }}-{{ $field['key'] }}" type="{{ $guestInput[$field['key']]['type'] }}" @if ($guestInput[$field['key']]['min'] !== null) min="{{ $guestInput[$field['key']]['min'] }}" inputmode="numeric" @endif @if ($guestInput[$field['key']]['max'] !== null) max="{{ $guestInput[$field['key']]['max'] }}" @endif name="guests[{{ $i }}][{{ $field['key'] }}]" value="{{ $rows[$i][$field['key']] ?? '' }}" @if ($field['required']) data-required @endif @if ($idx === 0) data-name-input @endif @disabled($readonly)>
+                                                            <input id="c-{{ $i }}-{{ $field['key'] }}" type="{{ $guestInput[$field['key']]['type'] }}" @if ($guestInput[$field['key']]['min'] !== null) min="{{ $guestInput[$field['key']]['min'] }}" inputmode="numeric" @endif @if ($guestInput[$field['key']]['max'] !== null) max="{{ $guestInput[$field['key']]['max'] }}" @endif name="guests[{{ $i }}][{{ $field['key'] }}]" value="{{ $rows[$i][$field['key']] ?? '' }}" data-label="{{ $type->guestFieldLabel($field) }}" @if ($field['required']) data-required @endif @if ($field['key'] === $nameKey) data-name-input @endif @disabled($readonly)>
                                                         @endif
                                                     </label>
                                                 @endforeach
                                             </div>
 
+                                            {{-- «Anterior» y «Siguiente» siguen el orden de la PÁGINA, no el de las
+                                                 posiciones (T2): con las pendientes arriba, «la siguiente» es la
+                                                 que se ve debajo. --}}
                                             @unless ($readonly)
                                                 <div class="gf-fiche__foot">
-                                                    <button type="button" class="btn btn--ghost btn--sm gf-nav-prev" data-act="prev" @if ($i === 0) disabled @endif>
+                                                    <button type="button" class="btn btn--ghost gf-nav-prev" data-act="prev" @if ($pos === 0) disabled @endif>
                                                         <x-icons.arrow-left :width="13" :height="13" />{{ __('guestform.nav_prev') }}
                                                     </button>
-                                                    <button type="button" class="btn btn--sm" data-act="next" @if ($i === $reservation->quantity - 1) disabled @endif>
-                                                        {{ $i === $reservation->quantity - 1 ? __('guestform.nav_last') : __('guestform.nav_next') }}<x-icons.arrow-right :width="13" :height="13" />
+                                                    <button type="button" class="btn btn--ink" data-act="next" @if ($pos === $lastPos) disabled @endif>
+                                                        {{ $pos === $lastPos ? __('guestform.nav_last') : __('guestform.nav_next') }}<x-icons.arrow-right :width="13" :height="13" />
                                                     </button>
                                                 </div>
                                             @endunless
@@ -438,13 +544,25 @@
                                     </div>
                                 </div>
                             </div>
-                        @endfor
+                        @endforeach
+                        @if ($doneIdx !== [])
+                                    </div>
+                                </details>
+                        @endif
                     </div>
                 </section>
 
-                {{-- ───── Barra de guardar (botón = componente .btn del sitio) ───── --}}
+                {{-- ───── GUARDAR, PEGADO abajo con la cuenta (2b, `#571`) ─────
+                     ⚠️ Con veinte fichas el único botón de la página quedaba al final de toda la página. La
+                     barra es `sticky` y no `fixed`: viaja mientras se rellena y al final se queda en su sitio.
+                     La cuenta va oculta para lectores de pantalla: la dice ya el estado del resguardo. --}}
                 @unless ($readonly)
+                    <p class="gf-savebar__help">{{ __('guestform.hint') }}</p>
                     <div class="gf-savebar">
+                        <span class="gf-savebar__count" aria-hidden="true">
+                            <span class="gf-savebar__label">{{ __('guestform.meter_label') }}</span>
+                            <span class="gf-savebar__num"><em id="gf-savebar-done">{{ $progress['done'] }}</em> / {{ $progress['total'] }}</span>
+                        </span>
                         {{-- ⚠️⚠️ **El DISQUETE se retira y no se sustituye** (`#258`). Tres motivos, y
                              el tercero decide: el set del artboard no dibuja «guardar» y no había
                              equivalente; un disquete es el único anacronismo que quedaba en toda la
@@ -453,10 +571,12 @@
                              «Guardar» con todas sus letras, así que el icono no informaba: decoraba.
                              ▶ Si el owner lo quiere de vuelta, es una línea y un glifo del
                              diseñador. --}}
-                        <button type="submit" class="btn btn--lg">
+                        {{-- `#570` · el botón que GUARDA no es el color de comprar: aquí no se compra nada
+                             (los extras y el suplemento se pagan en el parque). Va en el secundario del
+                             sistema, que `#539` pasó de tinta a Azul Muro. --}}
+                        <button type="submit" class="btn btn--lg btn--ink">
                             {{ __('guestform.submit') }}
                         </button>
-                        <p class="gf-savebar__help">{{ __('guestform.hint') }}</p>
                     </div>
                 @endunless
             </form>
@@ -465,13 +585,13 @@
         {{-- Footer mínimo, DATA-DRIVEN (mismas fuentes que el footer del sitio): nombre del negocio +
              texto de derechos editable (con fallback i18n) + teléfono; etiqueta «Privacidad» de
              `landing.footer.legal` (la misma que usa el footer principal). --}}
-        @php($gfLegal = (array) __('landing.footer.legal'))
+        @php $gfLegal = (array) __('landing.footer.legal'); @endphp
         <footer class="gf-foot">
-            <span>© {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}</span>
+            <span class="gf-foot__copy">© {{ date('Y') }} {{ \Illuminate\Support\Str::upper($site['name'] ?? config('app.name')) }} — {{ $site['footer_rights'] ?? __('landing.footer.rights') }}</span>
             <span class="gf-foot__links">
                 <a href="{{ route('legal.privacidad') }}">{{ $gfLegal[1] ?? __('guestform.footer_privacy') }}</a>
                 @if (! empty($site['phone']))
-                    <a href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">{{ $site['phone'] }}</a>
+                    <a class="gf-foot__tel" href="tel:{{ preg_replace('/\s+/', '', $site['phone']) }}">{{ $site['phone'] }}</a>
                 @endif
             </span>
         </footer>
@@ -484,236 +604,305 @@
         <span>{{ __('guestform.toast_saved') }}</span>
     </div>
 
-    {{-- ⚠️⚠️ Cuando algo de los EXTRAS no se pudo aplicar, **se dice y no se calla**: los datos del
-         formulario SÍ se guardaron (van por otra transacción, §4.5.3) y el aviso lo separa. Callarlo
-         sería que quien creyó pedir tapas se entere en la puerta del parque. Va como aviso PERSISTENTE
-         y no como toast: es una noticia, no una confirmación. --}}
-    @if (in_array(session('status'), ['guest-form-extras-blocked', 'guest-form-stale'], true))
-        <div class="guestform__readonly gf-extras__warn" role="alert">
-            {{ session('status') === 'guest-form-stale'
-                ? __('guestform.extras_stale')
-                : __('guestform.extras_blocked') }}
-        </div>
+    {{-- ───── El diálogo del PEGADO de la lista de nombres (2b, `#571`) ─────
+         `dialog` NATIVO con `showModal()`: atrapa el foco, se cierra con Esc y devuelve el foco al botón que
+         lo abrió sin una línea propia. Va FUERA del formulario de las fichas: su texto no se envía nunca.
+         Las frases con plural las resuelve `choice()` en el navegador, porque `trans_choice` no existe allí. --}}
+    @if ($pasteable)
+        <dialog class="gf-dialog" id="gf-paste" aria-labelledby="gf-paste-title" aria-describedby="gf-paste-help"
+                data-count-tpl="{{ __('guestform.paste_count') }}"
+                data-scope-tpl="{{ __('guestform.paste_scope') }}"
+                data-kept-tpl="{{ __('guestform.paste_kept') }}"
+                data-overflow-tpl="{{ __('guestform.paste_overflow') }}"
+                data-apply-tpl="{{ __('guestform.paste_apply') }}"
+                data-done-tpl="{{ __('guestform.paste_done') }}">
+            <form method="dialog" class="gf-dialog__body">
+                <h2 class="gf-dialog__title" id="gf-paste-title">{{ __('guestform.paste_title') }}</h2>
+                <p class="gf-dialog__help" id="gf-paste-help">{{ __('guestform.paste_help') }}</p>
+                <label class="gf-sr-only" for="gf-paste-text">{{ __('guestform.paste_label') }}</label>
+                <textarea class="gf-dialog__text" id="gf-paste-text" rows="6" autocomplete="off" spellcheck="false"></textarea>
+                <div class="gf-notice" data-paste-summary aria-live="polite" hidden>
+                    <p class="gf-notice__title" data-paste-count></p>
+                    <p class="gf-notice__text" data-paste-scope></p>
+                </div>
+                <div class="gf-dialog__actions">
+                    <button type="submit" class="btn btn--ghost" value="cancel">{{ __('guestform.paste_cancel') }}</button>
+                    <button type="button" class="btn btn--ink" data-paste-apply disabled>{{ trans_choice('guestform.paste_apply', 0, ['count' => 0]) }}</button>
+                </div>
+            </form>
+        </dialog>
     @endif
 
-    {{-- ⚠️⚠️ Y cuando lo que no se pudo aplicar es el número de INVITADOS, también se dice
-         (`specs/invitados-en-post-form.md` §4.7·1, `#444`). El motivo viaja en el flash porque el
-         REMEDIO de cada uno es distinto: el techo y el suelo del pack se resuelven llamando; «ya has
-         asignado más plazas» se resuelve quitando a alguien de la lista. Fundirlos en «no se pudo»
-         deja al cliente sin saber qué hacer, que es el mismo modo de fallo que esta tanda cierra. --}}
-    @php($countStatus = is_string(session('status')) && str_starts_with(session('status'), 'guest-count-')
-        ? substr(session('status'), strlen('guest-count-'))
-        : null)
-    @if ($countStatus !== null)
-        <div class="guestform__readonly gf-extras__warn" role="alert">
-            {{ __('guestform.count_error_'.$countStatus) }}
-        </div>
-    @endif
+    {{-- El JS de la página. Mejora progresiva: sin JS las fichas salen abiertas y el formulario funciona.
+         ⚠️ Es un MÓDULO desde la T2 (`#571`): importa la lógica pura —el pegado y el estado de una ficha—, que
+         así se prueba con `node --test`. Si el módulo no llega, la página se queda en `no-js`, que es un
+         formulario completo. La URL lleva la fecha del fichero, como las hojas de estilo. --}}
+    <script type="module">
+        import { choice, ficheState, parseNames, planPaste } from '{{ asset('js/guest-form/logic.js') }}?v={{ @filemtime(public_path('js/guest-form/logic.js')) }}';
 
-    {{-- Acordeón (JS plano; mejora progresiva: sin JS las fichas salen abiertas y el form funciona). --}}
-    <script>
-        (function () {
-            'use strict';
-            var de = document.documentElement;
-            var form = document.getElementById('gf-form');
-            var fichesEl = document.getElementById('gf-fiches');
-            if (!form || !fichesEl) return; // sin form/fichas → se queda en no-js (todo abierto y usable)
+        const de = document.documentElement;
+        const form = document.getElementById('gf-form');
+        const fichesEl = document.getElementById('gf-fiches');
 
+        if (form && fichesEl) {
             try {
-            var fiches = Array.prototype.slice.call(fichesEl.querySelectorAll('.gf-fiche'));
-            var total = fiches.length;
-            var meterDone = document.getElementById('gf-meter-done');
-            var meterBar = document.getElementById('gf-meter-bar');
-            var groupCount = document.getElementById('gf-group-count');
+                // ⚠️⚠️ Desde la T2 el ORDEN DE LA PÁGINA no es el de las POSICIONES: pendientes arriba y las
+                // listas plegadas. La navegación sigue a la página (`fiches`); lo que depende de la POSICIÓN
+                // —qué fichas se pierden al bajar invitados, dónde cae cada nombre pegado— se lee por
+                // `data-i` (`byIndex`).
+                const fiches = [...fichesEl.querySelectorAll('.gf-fiche')];
+                const byIndex = [...fiches].sort((a, b) => Number(a.dataset.i) - Number(b.dataset.i));
+                const total = fiches.length;
+                const doneGroup = document.getElementById('gf-done');
+                const meterDone = document.getElementById('gf-meter-done');
+                const meterBar = document.getElementById('gf-meter-bar');
+                const groupCount = document.getElementById('gf-group-count');
+                const barDone = document.getElementById('gf-savebar-done');
 
-            function isComplete(fiche) {
-                // Una edad SIN PRODUCTO la decide el SERVIDOR (D6): mientras esté, la ficha no se da
-                // por completa aunque tenga todas sus columnas. Se recalcula al guardar.
-                if (fiche.getAttribute('data-no-product') === '1') return false;
-                var req = fiche.querySelectorAll('[data-required]');
-                for (var i = 0; i < req.length; i++) {
-                    if (req[i].value.trim() === '') return false;
-                }
-                return true; // vacuosamente completa si no hay campos obligatorios
-            }
+                const fieldsOf = (fiche) => [...fiche.querySelectorAll('input[name^="guests["], textarea[name^="guests["]')];
+                const filled = (el) => (el.value || '').trim() !== '';
+                const isEmpty = (fiche) => !fieldsOf(fiche).some(filled);
+                // La MISMA regla que pinta el servidor al cargar. Una edad sin producto la decide él (D6).
+                const stateOf = (fiche) => ficheState(
+                    fieldsOf(fiche).map((el) => ({ required: el.hasAttribute('data-required'), filled: filled(el), label: el.dataset.label || '' })),
+                    fiche.dataset.noProduct === '1',
+                );
 
-            function setOpen(idx) {
-                fiches.forEach(function (f) {
-                    var on = (+f.getAttribute('data-i') === idx);
-                    f.classList.toggle('is-open', on);
-                    var head = f.querySelector('.gf-fiche__head');
-                    if (head) head.setAttribute('aria-expanded', on ? 'true' : 'false');
-                    // a11y: la ficha colapsada sale del orden de foco / árbol de accesibilidad (#264-audit).
-                    // `inert` NO desactiva el envío del formulario (los valores siguen yendo en el POST).
-                    var body = f.querySelector('.gf-fiche__body');
-                    if (body) body.inert = !on;
-                });
-            }
-
-            function refresh(fiche) {
-                fiche.classList.toggle('is-complete', isComplete(fiche));
-                var nameEl = fiche.querySelector('[data-name]');
-                var nameInput = fiche.querySelector('[data-name-input]');
-                if (nameEl && nameInput) {
-                    var val = nameInput.value.trim();
-                    nameEl.textContent = val !== '' ? val : (nameEl.getAttribute('data-empty') || '');
-                    nameEl.classList.toggle('is-empty', val === '');
-                }
-            }
-
-            function updateProgress() {
-                var done = 0;
-                fiches.forEach(function (f) { if (isComplete(f)) done++; });
-                if (meterDone) meterDone.textContent = done;
-                if (meterBar) meterBar.style.width = (total ? (done / total * 100) : 0) + '%';
-                if (groupCount) groupCount.textContent = done + ' / ' + total;
-            }
-
-            fichesEl.addEventListener('click', function (e) {
-                var act = e.target.closest('[data-act]');
-                var fiche = e.target.closest('.gf-fiche');
-                if (!fiche || !act) return;
-                var i = +fiche.getAttribute('data-i');
-                var a = act.getAttribute('data-act');
-                if (a === 'toggle') {
-                    setOpen(fiche.classList.contains('is-open') ? -1 : i);
-                } else if (a === 'prev' && i > 0) {
-                    setOpen(i - 1);
-                } else if (a === 'next' && i < total - 1) {
-                    setOpen(i + 1);
-                }
-            });
-
-            fichesEl.addEventListener('input', function (e) {
-                var fiche = e.target.closest('.gf-fiche');
-                if (!fiche) return;
-                refresh(fiche);
-                updateProgress();
-            });
-
-            var openPending = document.getElementById('gf-open-pending');
-            if (openPending) {
-                openPending.addEventListener('click', function () {
-                    var target = fiches.find(function (f) { return !isComplete(f); }) || fiches[0];
-                    if (!target) return;
-                    setOpen(+target.getAttribute('data-i'));
-                    var input = target.querySelector('input, textarea');
-                    if (input) setTimeout(function () { try { input.focus({ preventScroll: false }); } catch (e) { input.focus(); } }, 320);
-                });
-            }
-
-            var toast = document.getElementById('gf-toast');
-            if (toast && toast.classList.contains('is-on')) {
-                setTimeout(function () { toast.classList.remove('is-on'); }, 2600);
-            }
-
-            // ── EXTRAS: el stepper y el total en vivo (`#413` T3) ──────────────────────────────
-            // ⚠️⚠️ Esto es DECORADO, no el suelo. El control real es el `input[type=number]` que ya
-            // está en el HTML: sin JavaScript se teclea la cantidad y se guarda igual. Y el importe
-            // que vale es el que recalcula el SERVIDOR (`PAY-12`); esto solo lo anticipa.
-            var extrasTotal = document.querySelector('[data-extras-total]');
-            var extraInputs = [].slice.call(document.querySelectorAll('[data-extra-price]'));
-
-            function moneyFromPage(cents) {
-                // El formato lo pinta el servidor en el HTML; aquí solo se sustituye el número, así
-                // que se toma la forma del propio texto en vez de inventar una convención nueva.
-                return (cents / 100).toFixed(2).replace('.', ',') + ' €';
-            }
-
-            function refreshExtrasTotal() {
-                if (!extrasTotal) { return; }
-                var cents = 0;
-                extraInputs.forEach(function (input) {
-                    var qty = parseInt(input.value, 10);
-                    if (!isNaN(qty) && qty > 0) { cents += qty * parseInt(input.getAttribute('data-extra-price'), 10); }
-                });
-                extrasTotal.textContent = moneyFromPage(cents);
-            }
-
-            extraInputs.forEach(function (input) {
-                var min = parseInt(input.getAttribute('min'), 10) || 0;
-                var max = parseInt(input.getAttribute('max'), 10);
-                var step = document.createElement('span');
-                step.className = 'gf-extra__step';
-
-                function button(label, delta) {
-                    var b = document.createElement('button');
-                    b.type = 'button';           // dentro de un <form>, un <button> sin type ENVÍA
-                    b.textContent = label;
-                    b.setAttribute('aria-hidden', 'true');   // el control accesible es el input
-                    b.tabIndex = -1;
-                    b.addEventListener('click', function () {
-                        var next = (parseInt(input.value, 10) || 0) + delta;
-                        if (next < min) { next = min; }
-                        if (!isNaN(max) && next > max) { next = max; }
-                        input.value = String(next);
-                        refreshExtrasTotal();
-                        sync();
+                function setOpen(target) {
+                    fiches.forEach((fiche) => {
+                        const on = fiche === target;
+                        fiche.classList.toggle('is-open', on);
+                        const head = fiche.querySelector('.gf-fiche__head');
+                        if (head) head.setAttribute('aria-expanded', on ? 'true' : 'false');
+                        // a11y: la ficha colapsada sale del orden de foco (#264-audit). `inert` NO desactiva el
+                        // envío del formulario (los valores siguen yendo en el POST).
+                        const body = fiche.querySelector('.gf-fiche__body');
+                        if (body) body.inert = !on;
                     });
-                    return b;
+                    // Una ficha lista vive dentro del grupo plegado: abrirla abre el grupo.
+                    if (target && doneGroup && doneGroup.contains(target)) doneGroup.open = true;
                 }
 
-                var minus = button('−', -1);
-                var plus = button('+', 1);
-
-                function sync() {
-                    var qty = parseInt(input.value, 10) || 0;
-                    minus.disabled = qty <= min;
-                    plus.disabled = !isNaN(max) && qty >= max;
-                }
-
-                input.addEventListener('input', function () { refreshExtrasTotal(); sync(); });
-                input.parentNode.insertBefore(step, input);
-                step.appendChild(minus);
-                step.appendChild(input);
-                step.appendChild(plus);
-                sync();
-            });
-            refreshExtrasTotal();
-
-            // ⚠️⚠️ **BAJAR INVITADOS DESTRUYE FICHAS, y se dice ANTES de guardar**
-            // (`specs/invitados-en-post-form.md` §4.7·1, `#444`). Hoy el panel hace exactamente lo
-            // mismo en silencio; aquí no, porque quien pierde los nombres y las alergias que ya
-            // escribió es la persona que los escribió. ⚠️ Se cuentan las fichas **RELLENAS** y no las
-            // filas: «se perderán 5» de cinco fichas vacías es ruido que enseña a ignorar el aviso.
-            var countInput = form.querySelector('[data-guest-count]');
-            var countWarn = document.getElementById('gf-count-warn');
-            if (countInput && countWarn) {
-                var countWarnTpl = countWarn.getAttribute('data-tpl') || '';
-                countInput.addEventListener('input', function () {
-                    var wanted = parseInt(countInput.value, 10);
-                    var current = parseInt(countInput.getAttribute('data-current'), 10) || 0;
-                    if (!wanted || wanted >= current) { countWarn.hidden = true; return; }
-                    var lost = 0;
-                    for (var i = wanted; i < fiches.length; i++) {
-                        var any = Array.prototype.slice.call(fiches[i].querySelectorAll('input, textarea'))
-                            .some(function (el) { return (el.value || '').trim() !== ''; });
-                        if (any) lost++;
+                function refresh(fiche) {
+                    const state = stateOf(fiche);
+                    fiche.classList.toggle('is-complete', state.complete);
+                    const role = fiche.querySelector('[data-role]');
+                    const roleText = fiche.querySelector('[data-role-text]');
+                    if (role && roleText) {
+                        role.classList.toggle('is-missing', state.missing !== null);
+                        roleText.textContent = state.missing !== null
+                            ? (role.dataset.missingTpl || '').replace(':field', state.missing)
+                            : (role.dataset.roleDefault || '');
                     }
-                    countWarn.hidden = lost === 0;
-                    countWarn.textContent = countWarnTpl
-                        .replace(':count', String(wanted))
-                        .replace(':discarded', String(lost));
-                });
-            }
+                    const nameEl = fiche.querySelector('[data-name]');
+                    const nameInput = fiche.querySelector('[data-name-input]');
+                    if (nameEl && nameInput) {
+                        const value = nameInput.value.trim();
+                        nameEl.textContent = value !== '' ? value : (nameEl.dataset.empty || '');
+                        nameEl.classList.toggle('is-empty', value === '');
+                    }
+                }
 
-            // Acordeón ya cableado → activar modo JS (las fichas no-abiertas se colapsan). La clase `js`
-            // se marca AQUÍ, AL FINAL: si algo de arriba hubiera fallado, el documento se queda en
-            // `no-js` (todo abierto y usable) en vez de colapsado-inaccesible. `gf-initing` suprime la
-            // animación del colapso inicial (se quita en el siguiente frame).
-            de.classList.add('gf-initing');
-            de.classList.remove('no-js');
-            de.classList.add('js');
-            var firstPending = fiches.find(function (f) { return !isComplete(f); });
-            setOpen(firstPending ? +firstPending.getAttribute('data-i') : (fiches[0] ? 0 : -1));
-            updateProgress();
-            requestAnimationFrame(function () { de.classList.remove('gf-initing'); });
-            } catch (e) {
-                // Fallo del acordeón → reponer no-js: fichas abiertas y formulario usable (nunca stuck).
-                de.classList.remove('js');
-                de.classList.remove('gf-initing');
+                function updateProgress() {
+                    const done = fiches.filter((fiche) => stateOf(fiche).complete).length;
+                    if (meterDone) meterDone.textContent = done;
+                    if (meterBar) meterBar.style.width = (total ? (done / total) * 100 : 0) + '%';
+                    if (groupCount) groupCount.textContent = done + ' / ' + total;
+                    if (barDone) barDone.textContent = done;
+                }
+
+                fichesEl.addEventListener('click', (event) => {
+                    const act = event.target.closest('[data-act]');
+                    const fiche = event.target.closest('.gf-fiche');
+                    if (!fiche || !act) return;
+                    if (act.dataset.act === 'toggle') {
+                        setOpen(fiche.classList.contains('is-open') ? null : fiche);
+                        return;
+                    }
+                    const pos = fiches.indexOf(fiche);
+                    const target = act.dataset.act === 'prev' ? fiches[pos - 1] : fiches[pos + 1];
+                    if (!target) return;
+                    setOpen(target);
+                    // Con la barra pegada abajo, la ficha de al lado puede quedar debajo: se trae a la vista.
+                    target.querySelector('.gf-fiche__head')?.scrollIntoView({ block: 'nearest' });
+                });
+
+                fichesEl.addEventListener('input', (event) => {
+                    const fiche = event.target.closest('.gf-fiche');
+                    if (!fiche) return;
+                    refresh(fiche);
+                    updateProgress();
+                });
+
+                const toast = document.getElementById('gf-toast');
+                if (toast && toast.classList.contains('is-on')) {
+                    setTimeout(() => toast.classList.remove('is-on'), 2600);
+                }
+
+                // ── El PEGADO de la lista de nombres (2b, `#571`) ──────────────────────────────────────
+                // ⚠️ Pegar NO guarda: escribe en los campos, y se dice. Y NUNCA pisa una ficha con datos, que
+                // es lo que el diálogo promete antes de aplicar (`planPaste`).
+                const paste = document.querySelector('[data-paste]');
+                const dialog = document.getElementById('gf-paste');
+                if (paste && dialog && typeof dialog.showModal === 'function') {
+                    const opener = paste.querySelector('[data-paste-open]');
+                    const doneNotice = document.getElementById('gf-paste-done');
+                    const text = dialog.querySelector('textarea');
+                    const summary = dialog.querySelector('[data-paste-summary]');
+                    const countEl = dialog.querySelector('[data-paste-count]');
+                    const scopeEl = dialog.querySelector('[data-paste-scope]');
+                    const apply = dialog.querySelector('[data-paste-apply]');
+                    const slots = () => byIndex.map((fiche) => ({ index: Number(fiche.dataset.i), empty: isEmpty(fiche) }));
+                    let plan = planPaste([], slots());
+
+                    const preview = () => {
+                        const names = parseNames(text.value);
+                        plan = planPaste(names, slots());
+                        summary.hidden = names.length === 0;
+                        countEl.textContent = choice(dialog.dataset.countTpl, names.length);
+                        scopeEl.textContent = [
+                            plan.placed > 0 ? choice(dialog.dataset.scopeTpl, plan.placed) : '',
+                            plan.placed > 0 && plan.kept > 0 ? choice(dialog.dataset.keptTpl, plan.kept) : '',
+                            plan.overflow > 0 ? choice(dialog.dataset.overflowTpl, plan.overflow) : '',
+                        ].filter(Boolean).join(' ');
+                        apply.disabled = plan.placed === 0;
+                        apply.textContent = choice(dialog.dataset.applyTpl, plan.placed);
+                    };
+
+                    opener.addEventListener('click', () => {
+                        text.value = '';
+                        preview();
+                        dialog.showModal();
+                        text.focus();
+                    });
+                    text.addEventListener('input', preview);
+
+                    apply.addEventListener('click', () => {
+                        preview();
+                        if (plan.placed === 0) return;
+                        const touched = plan.assignments.map(({ index, name }) => {
+                            const fiche = byIndex.find((candidate) => Number(candidate.dataset.i) === index);
+                            fiche.querySelector('[data-name-input]').value = name;
+                            refresh(fiche);
+                            return fiche;
+                        });
+                        updateProgress();
+                        dialog.close();
+                        doneNotice.querySelector('.gf-notice__text').textContent = choice(dialog.dataset.doneTpl, plan.placed);
+                        doneNotice.hidden = false;
+                        // Lo que el pegado no puede poner es la EDAD: se abre la primera ficha y el foco va al
+                        // primer campo obligatorio que siga vacío.
+                        setOpen(touched[0]);
+                        const next = [...touched[0].querySelectorAll('[data-required]')].find((el) => !filled(el));
+                        (next || opener).focus();
+                    });
+                }
+
+                // ── EXTRAS y NÚMERO DE INVITADOS: el stepper (`#413` T3, `#444`) ─────────────────────────
+                // ⚠️⚠️ Esto es DECORADO, no el suelo. El control real es el `input[type=number]` que ya está en
+                // el HTML: sin JavaScript se teclea la cantidad y se guarda igual. Y el importe que vale es el
+                // que recalcula el SERVIDOR (`PAY-12`); esto solo lo anticipa.
+                const extrasTotal = document.querySelector('[data-extras-total]');
+                const extrasChosen = document.querySelector('[data-extras-chosen]');
+                const extraInputs = [...document.querySelectorAll('[data-extra-price]')];
+
+                // El formato lo pinta el servidor; aquí solo se sustituye el número.
+                const moneyFromPage = (cents) => (cents / 100).toFixed(2).replace('.', ',') + ' €';
+
+                function refreshExtras() {
+                    if (extrasTotal) {
+                        const cents = extraInputs.reduce((sum, input) => {
+                            const qty = parseInt(input.value, 10);
+                            return !isNaN(qty) && qty > 0 ? sum + qty * parseInt(input.dataset.extraPrice, 10) : sum;
+                        }, 0);
+                        extrasTotal.textContent = moneyFromPage(cents);
+                    }
+                    if (extrasChosen) {
+                        // Cuenta TODOS los extras con cantidad, también los cerrados, igual que el servidor.
+                        const chosen = [...form.querySelectorAll('input[name^="addons["][name$="[quantity]"]')]
+                            .filter((input) => (parseInt(input.value, 10) || 0) > 0).length;
+                        extrasChosen.textContent = choice(extrasChosen.dataset.tpl, chosen);
+                    }
+                }
+
+                function stepper(input, onChange) {
+                    const min = parseInt(input.getAttribute('min'), 10) || 0;
+                    const max = parseInt(input.getAttribute('max'), 10);
+                    const wrap = document.createElement('span');
+                    wrap.className = 'gf-extra__step';
+                    let sync = () => {};
+
+                    const button = (label, delta) => {
+                        const b = document.createElement('button');
+                        b.type = 'button';           // dentro de un <form>, un <button> sin type ENVÍA
+                        b.textContent = label;
+                        b.setAttribute('aria-hidden', 'true');   // el control accesible es el input
+                        b.tabIndex = -1;
+                        b.addEventListener('click', () => {
+                            let next = (parseInt(input.value, 10) || 0) + delta;
+                            if (next < min) next = min;
+                            if (!isNaN(max) && next > max) next = max;
+                            input.value = String(next);
+                            onChange();
+                            sync();
+                        });
+                        return b;
+                    };
+                    const minus = button('−', -1);
+                    const plus = button('+', 1);
+                    sync = () => {
+                        const qty = parseInt(input.value, 10) || 0;
+                        minus.disabled = qty <= min;
+                        plus.disabled = !isNaN(max) && qty >= max;
+                    };
+
+                    input.addEventListener('input', () => { onChange(); sync(); });
+                    input.parentNode.insertBefore(wrap, input);
+                    wrap.append(minus, input, plus);
+                    sync();
+                }
+
+                extraInputs.forEach((input) => stepper(input, refreshExtras));
+                refreshExtras();
+
+                // ⚠️⚠️ BAJAR INVITADOS DESTRUYE FICHAS, y se dice ANTES de guardar (`#444`). Se cuentan las
+                // fichas RELLENAS y no las filas, y POR POSICIÓN (`byIndex`): las que se pierden son las del
+                // final de la lista, y la página ya no las enseña en ese orden.
+                // ⚠️ En el DOCUMENTO y no dentro del formulario: el campo vive en el resguardo (ver su `form=`).
+                const countInput = document.querySelector('[data-guest-count]');
+                const countWarn = document.getElementById('gf-count-warn');
+                if (countInput && countWarn) {
+                    const countWarnTpl = countWarn.dataset.tpl || '';
+                    // El título del aviso es fijo (`#570`): lo que se reescribe es SU FRASE.
+                    const countWarnText = countWarn.querySelector('[data-warn-text]') || countWarn;
+                    stepper(countInput, () => {
+                        const wanted = parseInt(countInput.value, 10);
+                        const current = parseInt(countInput.dataset.current, 10) || 0;
+                        if (!wanted || wanted >= current) {
+                            countWarn.hidden = true;
+                            return;
+                        }
+                        const lost = byIndex.slice(wanted).filter((fiche) => !isEmpty(fiche)).length;
+                        countWarn.hidden = lost === 0;
+                        // Singular y plural por las fichas que se pierden («de 1 fichas» era la forma única de antes).
+                        countWarnText.textContent = choice(countWarnTpl, lost, { count: wanted, discarded: lost });
+                    });
+                }
+
+                // Acordeón ya cableado → modo JS. La clase `js` se marca AL FINAL: si algo de arriba falla, el
+                // documento se queda en `no-js` (todo abierto y usable). `gf-initing` suprime la animación del
+                // colapso inicial. Se abre la primera PENDIENTE; si están todas listas, ninguna.
+                de.classList.add('gf-initing');
+                de.classList.remove('no-js');
+                de.classList.add('js');
+                setOpen(fiches.find((fiche) => !stateOf(fiche).complete) || null);
+                updateProgress();
+                requestAnimationFrame(() => de.classList.remove('gf-initing'));
+            } catch (error) {
+                // Fallo del acordeón → reponer no-js: fichas abiertas y formulario usable (nunca atascado).
+                de.classList.remove('js', 'gf-initing');
                 de.classList.add('no-js');
             }
-        })();
+        }
     </script>
 </x-focused-layout>

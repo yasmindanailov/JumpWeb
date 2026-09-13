@@ -44,7 +44,7 @@
                  Reutiliza `.gf-stub` del post-form entero: mismos tokens, mismo molde. Son la misma
                  clase de pantalla —enfocada, pública, sin nav— y darle a ésta una cabecera propia
                  sería inventar un segundo lenguaje para el mismo problema. --}}
-            <div class="gf-stub">
+            <div class="gf-stub" data-surface="ink">
                 <div class="gf-stub__top">
                     <span class="gf-stub__badge">{{ __('guardian.stub.badge') }}</span>
                 </div>
@@ -88,8 +88,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="gf-perf"></div>
 
             <div class="gf-form">
 
