@@ -1,9 +1,6 @@
 # Estado del proyecto — foto viva
 
-> 🎨 **SI ENTRAS NUEVO (cierre 2026-09-13, noche · carril web): `#591` → `#594`, TODO EN PRODUCCIÓN**
-> (suite en verde tras fusionar el carril del SPA, 2026-09-13 noche; el contador vive en su línea «Suite»).
->
-> 🧩 **Y EL CARRIL DEL SPA CERRÓ LA MISMA NOCHE: `#569` → `#571` en el árbol, SIN DESPLEGAR**
+> 🧩 **SI ENTRAS NUEVO · carril del SPA (cierre 2026-09-13, noche): `#569` → `#571` en el árbol, SIN DESPLEGAR**
 > (spec `specs/celebracion-e-invitacion.md`, ejecución en su §10):
 > - **T1 `#570`** la piel del formulario post-reserva y del justificante · **T2 `#571`** muchos invitados;
 > - ❗❗ **defecto en PRODUCCIÓN desde `#444`**: el número de invitados del post-form **no se envía**
@@ -12,6 +9,9 @@
 >   `--on-done`, `--done-ink`, `--err-ink`; ya en la rama `cliente/playjump`);
 > - ▶ **lo siguiente del carril: la T3** (la piel del justificante; su hora pinta el FIN de la franja,
 >   «17:00 – 18:00», la trampa de `#426`: usar la duración efectiva).
+>
+> 🎨 **SI ENTRAS NUEVO (cierre 2026-09-13, noche · carril web): `#591` → `#594`, TODO EN PRODUCCIÓN**
+> (suite en verde tras fusionar el carril del SPA, 2026-09-13 noche; el contador vive en su línea «Suite»).
 > - **`#591` · las reseñas de Google, siempre puestas**:
 >   - refresco cada 30 minutos, en el idioma de la instalación, con caché de 35; la guarda lee la cadencia
 >     REAL del scheduler;
