@@ -155,7 +155,9 @@
                                  borde, y «Pegatina», con keyline— y este botón vive dentro de una
                                  pegatina. El valor vive en la hoja, una sola vez. --}}
                             @if ($card['sellable'] && $site['sales_online'])
-                                <button type="button" class="btn btn--keyline rate-card__btn" @click="$store.purchase.open()">{{ $card['cta'] }}</button>
+                                {{-- `#568` · abre el cajón EN este producto, listo para elegir día: quien pulsa
+                                     «comprar» en una tarifa ya ha elegido, y no tiene que buscarla otra vez. --}}
+                                <button type="button" class="btn btn--keyline rate-card__btn" @click="$store.purchase.openWith({ type: 'product', id: {{ (int) $card['id'] }} })">{{ $card['cta'] }}</button>
                             @elseif ($site['has_phone'])
                                 <a href="tel:{{ $site['phone_tel'] }}" class="btn btn--keyline rate-card__btn">{{ __('landing.pricing.call') }}</a>
                             @endif

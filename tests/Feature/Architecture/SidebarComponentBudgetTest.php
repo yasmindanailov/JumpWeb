@@ -156,7 +156,11 @@ class SidebarComponentBudgetTest extends TestCase
         // regla se extrajo**: formatear la hora de retención vive en `outcome.js` con su `node --test`,
         // junto a `declinedReasonText`, porque decidir cuándo NO se promete un plazo es una decisión y
         // no un cableado. Y el denegado DEVUELVE una línea al perder su `@add-another`.
-        'sidebar/sections/PurchaseSection.vue' => ['code' => 453, 'api' => 2],
+        // ⚠️ **453 → 464 en `#568`**, y son `openProduct()` con su espera al montaje: abrir el cajón EN
+        // un producto desde la landing. La DECISIÓN —qué intención es un producto y qué se hace si no
+        // se puede abrir— vive en `intent.js` con su `node --test`; aquí queda lo que solo la sección
+        // sabe: si la pausa está puesta, si el catálogo publica esa fila y cuándo terminó de montar.
+        'sidebar/sections/PurchaseSection.vue' => ['code' => 464, 'api' => 2],
 
         // ⚠️ **`TimeStep.vue` estrena excepción el 2026-09-01 (`#327`): 44 sobre un techo de 40.**
         // Son cuatro líneas y son TRABAJO DE DOM, que es justo lo que un módulo plano no puede hacer:

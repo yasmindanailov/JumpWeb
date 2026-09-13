@@ -198,9 +198,26 @@ export function mount(el, boot = {}) {
                     if (store.step !== STEPS.CATALOG) store.go(STEPS.CATALOG);
                 },
                 waitForAnchor: (id) => waitForAnchor(id),
+                // `#568` · la tarjeta nace cerrada: se despliega con SU PROPIO botón, que es quien
+                // sabe cerrar la otra (`catalog.js::alternarSeccion`). Solo si está cerrada, o la
+                // cerraríamos.
+                expand: (element) => {
+                    const head = document.querySelector(`[aria-controls="${element.id}"]`);
+
+                    if (head?.getAttribute('aria-expanded') === 'false') head.click();
+                },
                 // `block: 'start'` y no `center`: la sección tiene que quedar arriba del panel, que es
                 // donde el cliente espera encontrarla tras pedirla desde la landing.
                 scrollTo: (element) => element.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+                // `#568` · abrir un producto concreto lo decide la sección de compra, que es quien
+                // sabe si el catálogo lo publica y si las reservas están abiertas.
+                // Antes, la sección de COMPRA: si el cajón se quedó en «Mi cuenta», el producto se
+                // abriría detrás, en una sección que no se ve.
+                openProduct: async (id) => {
+                    sectionStore.showPurchase();
+
+                    return (await root.openProduct?.(id)) === true;
+                },
             });
         },
         /**

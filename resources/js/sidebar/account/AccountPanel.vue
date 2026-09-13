@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useAccountContextStore } from '../stores/accountContext.js';
 import { useAccountStore } from '../stores/account.js';
 import { usePurchaseStore } from '../stores/purchase.js';
@@ -7,7 +7,6 @@ import { useSectionStore } from '../stores/section.js';
 import { publishedIdentifying } from '../section.js';
 import { ZONES } from './navigation.js';
 import { panelOf } from './panel.js';
-import { signOut } from './sign-out.js';
 
 /**
  * **El bloque de cuenta del panel** (`docs/specs/account-context-vue.md` §4.2), que hasta el
@@ -24,6 +23,10 @@ import { signOut } from './sign-out.js';
  * Vue→Pinia→Alpine→DOM→Vue sería reintroducir a mano la frontera que este trabajo retira. Se usa la
  * MISMA función que publica la señal hacia fuera (`section.js::publishedIdentifying`), para que el
  * bloque y el resto de la página no puedan discrepar.
+ *
+ * ⚠️ `#568` · **«Cerrar sesión» ya no vive aquí** (`[DECIDIDO owner, 2026-09-13]`): se cierra desde el
+ * índice de «Mi cuenta», bajo las tarjetas (`#332`, con `account/sign-out.js`). El SUELO sin JS de
+ * `layout.blade.php` no cambia: si el motor no llega, ese formulario sigue siendo la salida.
  */
 const context = useAccountContextStore();
 // ⚠️ `accountStore`, no `account`: este componente declara la prop `account` (el diccionario) y una
@@ -48,20 +51,6 @@ const panel = computed(() => panelOf(context.context, {
 
 /** El paso 5 ya pide identificarse abajo: ofrecer lo mismo arriba sería ruido con botones muertos. */
 const identifying = computed(() => publishedIdentifying(section.active, purchase.identifying));
-
-const leaving = ref(false);
-
-/**
- * ⚠️ Se re-habilita si el cierre NO se confirma. Un botón que se queda muerto tras un fallo deja al
- * cliente sin forma de reintentar, creyéndose fuera de una sesión que sigue abierta.
- */
-async function leave() {
-    if (leaving.value) return;
-
-    leaving.value = true;
-
-    if (! await signOut({ urls: props.urls })) leaving.value = false;
-}
 </script>
 
 <template>
@@ -81,6 +70,8 @@ async function leave() {
               suya, que dice otra cosa: por qué merece la pena entrar.
             -->
             <div class="acct__row">
+                <!-- `#568` · el avatar del artboard `Navegacion Cuenta PJP`: círculo de tinta, con la
+                     INICIAL dentro (la inicial la pidió el owner; el dibujo lleva una silueta). -->
                 <span class="acct__avatar" aria-hidden="true">{{ panel.initial }}</span>
                 <span class="acct__txt">
                     <span class="acct__hello">{{ panel.hello }}</span>
@@ -133,10 +124,8 @@ async function leave() {
             </a>
 
             <!--
-              ⚠️⚠️ **TRES destinos en una fila, y el orden no es casual**: primero lo que el cliente
-              viene a ver (sus reservas), luego el resto de su cuenta, y **al final la salida** — que
-              es la única acción de la que uno no vuelve. Por eso además es la ÚNICA que no lleva
-              peso visual: un «cerrar sesión» que grita se pulsa sin querer.
+              ⚠️ **DOS destinos en la fila, y el orden no es casual**: primero lo que el cliente viene
+              a ver (sus reservas) y luego el resto de su cuenta. La salida se fue al índice en `#568`.
             -->
             <div class="acct__cta">
                 <a :href="urls.my_orders" class="acct__btn acct__btn--ghost acct__btn--reservas"
@@ -157,32 +146,23 @@ async function leave() {
                    @click="$event.preventDefault(), accountStore.openZone(ZONES.HOME)">
                     {{ panel.account }}
                 </a>
-
-                <!--
-                  ⚠️⚠️ **Solo icono, así que su nombre accesible va en `aria-label`.** Sin texto
-                  visible no hay «label in name» que respetar (WCAG 2.5.3 habla de cuando SÍ lo hay),
-                  y sin `aria-label` un lector de pantalla anunciaría «botón» a secas. El `title` es
-                  para el ratón, y no sustituye al anterior: no lo lee todo el mundo.
-
-                  ⚠️ NO es un `<form>` con `@csrf`: el `_token` de la página está caducado en cuanto
-                  alguien entra en el paso 5, y daría 419. El porqué, en `account/sign-out.js`.
-                -->
-                <button type="button" class="acct__btn acct__btn--ghost acct__btn--icon"
-                        :disabled="leaving" :aria-label="panel.signOut" :title="panel.signOut"
-                        @click="leave()">
-                    <!-- `logout` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"
-                         aria-hidden="true" focusable="false">
-                        <path d="M11 3h-5A2.6 2.6 0 0 0 3.4 5.6v12.8A2.6 2.6 0 0 0 6 21h5a1.5 1.5 0 0 0 0-3H6.4V6H11a1.5 1.5 0 0 0 0-3z" />
-                        <path d="M16.4 6.9 14.3 9l2 2h-5.5a1.5 1.5 0 0 0 0 3h5.5l-2 2 2.1 2.1 5.1-5.6z" />
-                    </svg>
-                </button>
             </div>
         </template>
 
         <template v-else>
             <div class="acct__row">
-                <span class="acct__avatar" aria-hidden="true">?</span>
+                <!-- `#568` · sin sesión, el avatar lleva `ui/registro` —persona con un «más»— como en el
+                     artboard `Navegacion Cuenta PJP`. `user-plus` del sistema de diseño, copiado byte a
+                     byte (`SidebarIconParityTest`). -->
+                <span class="acct__avatar acct__avatar--guest" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"
+                         aria-hidden="true" focusable="false">
+                        <circle cx="9" cy="8" r="3.6" />
+                        <path d="M2.6 19.4a6.4 6.4 0 0 1 12.8 0 1.2 1.2 0 0 1-1.2 1.2H3.8a1.2 1.2 0 0 1-1.2-1.2z" />
+                        <rect x="17.4" y="15.4" width="2.8" height="6" rx="1.4" />
+                        <rect x="15.8" y="17" width="6" height="2.8" rx="1.4" />
+                    </svg>
+                </span>
                 <span class="acct__txt">
                     <span class="acct__hello">{{ panel.hello }}</span>
                     <span class="acct__sub">{{ panel.subline }}</span>

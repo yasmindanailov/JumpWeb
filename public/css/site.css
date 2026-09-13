@@ -2526,6 +2526,20 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
 /* La FRASE de la franja. Hereda el color y lo atenúa con opacidad y no con un gris propio: sobre tinta
    y sobre papel hacen falta dos grises distintos, y un solo token no puede ser los dos (`#487`). */
 .catalog-acc__sub { font-family: var(--font-body); font-size: var(--fs-body-s); color: inherit; opacity: 0.72; line-height: 1.3; }
+/* ❗ `#568` · **LA INVITACIÓN A ABRIR la tarjeta cerrada** (`[DECIDIDO owner]`). Tiene piel de botón
+   porque dice lo que hace el botón que la contiene —la cabecera entera, de 152 px—, pero NO es un
+   control propio: un botón no puede ir dentro de otro. Va en la superficie CONTRARIA a la de su tarjeta
+   (papel sobre tinta, tinta sobre papel) y NO en naranja: abrir una categoría no es comprar.
+   ⚠️ Solo con la tarjeta cerrada: abierta, la franja ya enseña lo que había que abrir. */
+.catalog-acc__cta {
+    display: inline-flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-8);
+    padding: var(--sp-8) var(--sp-14); border-radius: var(--r-btn);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1.2;
+}
+.catalog-acc__cta svg { width: 16px; height: 16px; flex: none; }
+.catalog-acc__sec--ink .catalog-acc__cta { background: var(--bg); color: var(--fg); }
+.catalog-acc__sec--paper .catalog-acc__cta { background: var(--fg); color: var(--bg); }
+.catalog-acc__sec.is-open .catalog-acc__cta { display: none; }
 /* El recuento sigue a su franja: sobre tinta, papel translúcido; sobre papel, la pastilla de Nube. */
 .catalog-acc__count { flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); }
 .catalog-acc__sec--ink .catalog-acc__count { background: color-mix(in srgb, var(--bg) 18%, transparent); color: var(--bg); }
@@ -5086,12 +5100,18 @@ body[data-has-hero] .nav--over .nav__cta {
    colapsa a `0fr` durante el proceso de compra (ver el bloque «(1) Mi cuenta» de más arriba). */
 .acct__inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-13); }
 .acct__row { display: flex; align-items: center; gap: var(--sp-13); }
+/* ❗ `#568` · **El avatar es el del artboard `Navegacion Cuenta PJP`** (`[DECIDIDO owner]`): CÍRCULO de
+   36 en tinta y sin giro, con la INICIAL dentro —la inicial no está en el dibujo y la pidió el owner—.
+   Va en Hanken y no en Bungee («nunca por debajo de 20 px») y en papel, no en `--zone-1`: el color de
+   una zona no hace de marca (grieta 01). Sin sesión, la persona con «+» de `ui/registro` sobre Nube. */
 .acct__avatar {
-    width: 44px; height: 44px; border-radius: var(--r-btn); flex-shrink: 0;
-    background: var(--fg); color: var(--zone-1);
-    display: grid; place-items: center; transform: rotate(-3deg);
-    font-family: var(--font-display); font-weight: 800; font-size: 19px;
+    width: 36px; height: 36px; border-radius: var(--r-pill); flex-shrink: 0;
+    background: var(--fg); color: var(--bg);
+    display: grid; place-items: center;
+    font-family: var(--font-body); font-weight: 800; font-size: var(--fs-body); line-height: 1;
 }
+.acct__avatar--guest { background: var(--bg-card); color: var(--fg-mute); border: 1px solid var(--line); }
+.acct__avatar svg { width: 20px; height: 20px; }
 .acct__txt { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; flex: 1; }
 .acct__hello {
     font-family: var(--font-display); font-weight: 800; font-size: var(--fs-17);
@@ -5129,10 +5149,8 @@ body[data-has-hero] .nav--over .nav__cta {
 .acct__btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .acct__btn--primary:disabled:hover { transform: none; background: var(--fg); color: var(--bg); box-shadow: none; }
 .acct__btn--ghost:disabled:hover { transform: none; background: transparent; color: var(--interactive); border-color: var(--interactive); }
-/* ⚠️ El botón de SOLO ICONO no se reparte el ancho: con `flex: 1` los tres saldrían iguales y el de
-   salir —que es el menos importante de los tres— ocuparía tanto como los otros dos. `aspect-ratio`
-   lo deja cuadrado sin fijarle un tamaño, así que sigue creciendo con el padding del sistema. */
-.acct__btn--icon { flex: none; gap: 0; padding-left: 0; padding-right: 0; aspect-ratio: 1; }
+/* ⚠️ `#568` · aquí vivía `.acct__btn--icon`, el botón de solo icono de «Cerrar sesión», que salió del
+   bloque: cerrar sesión vive en el índice de la cuenta. */
 
 .acct__btn--reservas { position: relative; }
 

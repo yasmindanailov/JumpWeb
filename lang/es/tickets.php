@@ -59,7 +59,13 @@ return [
     // era «Dos horas y la zona para vosotros», y la duración de un pack la pone el PANEL. Escribirla
     // aquí metería la configuración de este parque dentro del producto, que es la lección de `#487`.
     'section_entries_sub' => 'Elige zona y cuánto rato',
-    'section_services_sub' => 'La zona entera para vosotros',
+    // ❗ `#568` · **Un grupo NO tiene la zona en exclusiva** (`[DECIDIDO owner, 2026-09-13]`): lo que le
+    // distingue es el servicio personalizado y la merienda. «La zona entera para vosotros» prometía algo
+    // que en el parque no pasa.
+    'section_services_sub' => 'Servicio personalizado y merienda',
+    // `#568` · La invitación a abrir cada tarjeta del catálogo mientras está cerrada.
+    'section_entries_cta' => 'Ver entradas',
+    'section_services_cta' => 'Ver grupos',
     'catalog_search' => 'Buscar en el catálogo…',
     'catalog_search_none' => 'Sin resultados.',
     'guests' => 'Invitados',

@@ -795,8 +795,13 @@ class SidebarBundleBudgetTest extends TestCase
      * selector y ahora elegir el rótulo) y pasó a un solo `computed` —**284,08 → 284,04**, 41 B—. Se
      * queda por lo mismo que `#561`: tres copias de una condición divergen el día que alguien arregla
      * una, y aquí la divergencia era un rótulo prometiendo menores que el bloque no enseña.
+     *
+     * ▶ **286 (`#568`)**: medido **285,29 KiB**. Entran abrir el cajón EN un producto desde la landing
+     * (`openProduct()` y la intención `product`), la invitación a abrir cada tarjeta del catálogo y el
+     * `ui/pack` vigente del set, que dibuja la entrada dos veces. Sale el botón de cerrar sesión del
+     * bloque de cuenta con su lógica, que no llega a compensarlo.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 285;
+    private const SIDEBAR_CHUNK_MAX_KB = 286;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

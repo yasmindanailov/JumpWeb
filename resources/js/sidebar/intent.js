@@ -1,9 +1,10 @@
 /**
  * La COSTURA DE INTENCIÓN, lado SPA (`docs/specs/sidebar-spa.md` §4.1, `DECISIONES #117`).
  *
- * Tres vistas de la landing no abren el cajón «vacío»: lo abren PIDIENDO algo concreto —los packs, o
- * las entradas de una zona—. La landing solo DECLARA la intención (`$store.purchase.openWith(...)`);
- * **cada motor registra cómo se aplica**, que es lo que impide que la landing sepa qué hay dentro.
+ * Varias vistas de la landing no abren el cajón «vacío»: lo abren PIDIENDO algo concreto —los packs,
+ * las entradas de una zona o, desde `#568`, un PRODUCTO—. La landing solo DECLARA la intención
+ * (`$store.purchase.openWith(...)`); **cada motor registra cómo se aplica**, que es lo que impide que
+ * la landing sepa qué hay dentro.
  *
  * ⚠️⚠️ **Este módulo existe porque ese último eslabón NO ESTABA.** Medido en staging con un navegador
  * el 2026-08-21: la cadena llegaba hasta `machine.queueIntent()` y ahí moría —`takeIntent()` no lo
@@ -27,11 +28,20 @@ const SECTION_FOR = { packs: 'services', zone: 'entries' };
 /**
  * Traduce la intención de la landing a un destino dentro del catálogo.
  *
- * @param {{type?: string, slug?: string}|null} intent
- * @returns {{section: string, zone: string|null, exact: boolean}|null} `null` si no hay nada que hacer
+ * @param {{type?: string, slug?: string, id?: number|string}|null} intent
+ * @returns {{section: string, zone: string|null, exact: boolean}|{product: number}|null} `null` si no hay nada que hacer
  */
 export function resolveIntent(intent) {
     const type = intent && typeof intent === 'object' ? intent.type : null;
+
+    // `#568` · **Un producto concreto**: el botón de comprar de una tarifa sabe qué vende, así que el
+    // cajón abre ese producto listo para elegir día en vez de dejar al cliente buscándolo otra vez.
+    if (type === 'product') {
+        const id = Number(intent.id);
+
+        return Number.isInteger(id) && id > 0 ? { product: id } : null;
+    }
+
     const section = SECTION_FOR[type];
 
     if (! section) {
@@ -63,18 +73,19 @@ export function anchorFor(target) {
 }
 
 /**
- * Aplica una intención: lleva el cajón al catálogo y desplaza hasta la sección pedida.
+ * Aplica una intención: lleva el cajón al catálogo y desplaza hasta la sección pedida, o abre el
+ * producto pedido.
  *
- * Todo el contacto con el mundo va INYECTADO —el paso, la búsqueda del ancla y el desplazamiento—
- * para que la decisión se pruebe entera sin DOM y sin Vue.
+ * Todo el contacto con el mundo va INYECTADO —el paso, la búsqueda del ancla, el despliegue, el
+ * desplazamiento y la apertura del producto— para que la decisión se pruebe entera sin DOM y sin Vue.
  *
  * ⚠️ **El ancla se ESPERA, no se supone.** El catálogo llega por red y el componente lo pinta después;
  * mirar el DOM en el instante del clic encontraría la nada. La espera es por CONDICIÓN y acotada: si
  * el ancla no aparece se devuelve el motivo en vez de fallar en silencio.
  *
- * @param {{type?: string, slug?: string}|null} intent
- * @param {{goToCatalog: Function, waitForAnchor: Function, scrollTo: Function}} deps
- * @returns {Promise<{applied: boolean, reason?: string, anchor?: string|null, exact?: boolean, zone?: string|null}>}
+ * @param {{type?: string, slug?: string, id?: number|string}|null} intent
+ * @param {{goToCatalog: Function, waitForAnchor: Function, scrollTo: Function, expand?: Function, openProduct?: Function}} deps
+ * @returns {Promise<{applied: boolean, reason?: string, anchor?: string|null, exact?: boolean, zone?: string|null, product?: number}>}
  */
 export async function applyIntent(intent, deps) {
     const target = resolveIntent(intent);
@@ -87,6 +98,16 @@ export async function applyIntent(intent, deps) {
     // Es lo mismo que hacía `showPacks()` del motor retirado antes de emitir su evento.
     deps.goToCatalog();
 
+    if (target.product) {
+        // ⚠️ Si el producto no se puede abrir —no está en el catálogo publicado, o las reservas están
+        // en pausa— el cajón se queda en el catálogo, que es el mejor sitio posible: nunca en blanco.
+        const opened = deps.openProduct ? await deps.openProduct(target.product) : false;
+
+        return opened
+            ? { applied: true, product: target.product }
+            : { applied: false, reason: 'product_unavailable', product: target.product };
+    }
+
     const anchor = anchorFor(target);
     const element = await deps.waitForAnchor(anchor);
 
@@ -97,6 +118,9 @@ export async function applyIntent(intent, deps) {
         return { applied: false, reason: 'anchor_missing', anchor };
     }
 
+    // ⚠️ `#568` · **Las tarjetas del catálogo nacen CERRADAS** (`#553`): desplazarse hasta un cuerpo
+    // plegado no enseña nada. La sección pedida se despliega antes de llevarla a la vista.
+    deps.expand?.(element);
     deps.scrollTo(element);
 
     return { applied: true, anchor, exact: target.exact, zone: target.zone };

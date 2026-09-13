@@ -43,7 +43,9 @@ class ServicesPageTest extends TestCase
         // Deep-link al sidebar de compra. Desde Fase 4 · paso 4.0a la landing declara la INTENCIÓN
         // en vez de despachar un evento de Livewire: el mismo destino, pero sin atar la página al
         // motor del cajón (con otro motor, aquel `dispatch` no fallaba — no hacía nada).
-        $res->assertSee("openWith({ type: 'packs' })", false);
+        // ▶ `#568`: la intención es ESTE pack, no la sección de packs — el cajón lo abre listo para
+        // elegir día. Se asevera con su id, que es lo que distingue abrir el producto de abrir la lista.
+        $res->assertSee("openWith({ type: 'product', id: {$pack->id} })", false);
     }
 
     public function test_contact_only_services_show_get_in_touch_without_price(): void

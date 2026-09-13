@@ -219,7 +219,6 @@ describe('el bloque entero', () => {
         assert.equal(p.card, 'Mi QR', 'el atajo se rotula con el título de su zona');
         assert.equal(p.alert.text, 'Tienes pendiente un formulario para Cumpleaños Jump');
         assert.equal(p.counter.count, 2);
-        assert.equal(p.signOut, 'Cerrar sesión');
         assert.equal(p.reservations, 'Ver mis reservas');
         assert.equal(p.account, 'Mi cuenta', 'el tercer destino de la fila de botones');
     });
@@ -250,7 +249,7 @@ describe('el bloque entero', () => {
     });
 });
 
-describe('los tres destinos de la fila de botones', () => {
+describe('los destinos de la fila de botones', () => {
     /**
      * ⚠️ **El rótulo de «Mi cuenta» es el MISMO que el índice usa para su propia pantalla**
      * (`account.account.title`). Dos nombres para el mismo sitio hacen creer al cliente que va a
@@ -273,11 +272,11 @@ describe('los tres destinos de la fila de botones', () => {
     });
 
     /**
-     * ⚠️ **El de salir conserva su rótulo aunque se pinte solo con icono**: es su nombre accesible
-     * (`aria-label`), y sin él un lector de pantalla anunciaría «botón» a secas.
+     * ⚠️ `#568` · **«Cerrar sesión» ya no es un destino del bloque** (`[DECIDIDO owner]`): vive en el
+     * índice de la cuenta. Se asevera la AUSENCIA para que no vuelva por inercia.
      */
-    test('el de salir conserva su rótulo, que es su nombre accesible', () => {
-        assert.equal(panelOf(ctx(), DEPS).signOut, 'Cerrar sesión');
+    test('el bloque ya no ofrece cerrar sesión', () => {
+        assert.equal(panelOf(ctx(), DEPS).signOut, undefined);
     });
 
     /** Y la cara de invitado no tiene tercer destino: no hay cuenta a la que ir. */

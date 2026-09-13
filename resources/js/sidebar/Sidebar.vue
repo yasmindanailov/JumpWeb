@@ -81,6 +81,8 @@ watch(
 defineExpose({
     refreshBookingStatus: () => purchase.value?.refreshBookingStatus(),
     refreshIdentity: () => purchase.value?.refreshIdentity(),
+    // `#568` · abrir el cajón EN un producto desde la landing. Mismo reenvío, mismo motivo.
+    openProduct: (id) => purchase.value?.openProduct(id),
 });
 </script>
 

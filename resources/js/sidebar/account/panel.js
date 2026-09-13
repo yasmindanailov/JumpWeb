@@ -146,7 +146,8 @@ export function panelOf(context, { account = {}, messages = {}, urls = {} } = {}
         hello: tp(account, 'nav.hello', { name: context.first_name }),
         alert: alertOf(context, account, urls),
         counter: counterOf(context, account),
-        signOut: t(account, 'nav.sign_out'),
+        // ⚠️ `#568` · aquí vivía `signOut`: «Cerrar sesión» salió del bloque y vive en el índice de la
+        // cuenta, que lleva su propio rótulo.
         reservations: t(messages, 'my_reservations'),
         // ⚠️ El MISMO rótulo que el índice usa para su propia pantalla (`account.account.title`): el
         // botón y su destino tienen que llamarse igual, o el cliente cree que va a otro sitio.

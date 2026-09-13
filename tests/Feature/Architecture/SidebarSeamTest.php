@@ -90,10 +90,18 @@ class SidebarSeamTest extends TestCase
             );
         }
 
+        // ⚠️ `#568` · **`/servicios` declara ahora el PRODUCTO concreto**, no la sección de packs: su botón
+        // sabe qué pack vende y el cajón lo abre listo para elegir día. La intención de SECCIÓN sigue
+        // viva en `/cumpleanos`, cuyo botón no elige entre los packs de la tabla. Se vigilan las dos.
         $this->assertStringContainsString(
-            "openWith({ type: 'packs' })",
+            "openWith({ type: 'product', id:",
             (string) file_get_contents(resource_path('views/pages/services.blade.php')),
             'la sección de servicios ha dejado de declarar su intención'
+        );
+        $this->assertStringContainsString(
+            "openWith({ type: 'packs' })",
+            (string) file_get_contents(resource_path('views/pages/events.blade.php')),
+            'la página de cumpleaños ha dejado de declarar su intención'
         );
 
         /*
@@ -123,8 +131,10 @@ class SidebarSeamTest extends TestCase
 
         // ⚠️ `#528`: la superficie de cumpleaños se MUDA, no se pierde — el componente de la página
         // vieja se retiró y la página rehecha abre el cajón en los packs desde su comparativa.
+        // ▶ `#568`: ENTRA la tarjeta de tarifa, y con ella se cierra la pérdida de arriba en su mitad
+        // de producto — su botón ya no llama a `open()` a secas: abre el cajón EN su producto.
         $this->assertSame(
-            ['pages/events.blade.php', 'pages/services.blade.php'],
+            ['components/site/rate-rail.blade.php', 'pages/events.blade.php', 'pages/services.blade.php'],
             $declaran,
             "la lista de superficies que declaran su intención de compra ha cambiado.\n".
             "Si es una nueva, añádela aquí; si una la ha perdido, ese camino de compra se ha cerrado\n".

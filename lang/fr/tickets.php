@@ -48,7 +48,9 @@ return [
     // La frase de cada franja del catálogo (`#552`). Sans données de l'installation : la durée d'un
     // pack vient du panneau (`#487`).
     'section_entries_sub' => 'Choisis ta zone et la durée',
-    'section_services_sub' => 'La zone entière pour vous',
+    'section_services_sub' => 'Service personnalisé et goûter',
+    'section_entries_cta' => 'Voir les billets',
+    'section_services_cta' => 'Voir les groupes',
     'catalog_search' => 'Rechercher dans le catalogue…',
     'catalog_search_none' => 'Aucun résultat.',
     'guests' => 'Invités',

@@ -72,7 +72,6 @@ class SidebarTouchTargetTest extends TestCase
         'acc-tile' => 'su alto lo da el contenido (tarjeta del índice de cuenta), no una declaración',
         'acct__alert' => 'su alto lo da el contenido: el aviso del índice es un párrafo enlazado',
         'acct__btn acct__btn--primary acct__btn--qr' => 'variante con icono del primario: hereda el hueco de `.acct__btn`',
-        'acct__btn acct__btn--ghost acct__btn--icon' => 'ídem, variante de icono',
         'acct__btn acct__btn--ghost acct__btn--reservas' => 'ídem, variante de «Mis reservas»',
         'cart__pending-save' => 'su alto lo da el contenido: el «Guardar» del borrador de línea (`#560`)',
         'cart__pending-discard' => 'su hermano «Descartar», misma fila',

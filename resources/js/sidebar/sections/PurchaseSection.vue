@@ -245,6 +245,10 @@ onMounted(async () => {
     // ⚠️ **En paralelo y no en cadena**: son independientes, y con un desenlace en pantalla el cliente
     // acaba de pagar — encadenarlas le regalaría la espera de la cesta antes de ver su reserva.
     await Promise.all([restoreCart(), loadOutcome()]);
+
+    // `#568` · el montaje terminó: un producto pedido desde la landing ya se puede abrir sin que la
+    // restauración de la cesta lo pise después llevando el cajón al carrito.
+    markMounted();
 });
 
 /**
@@ -559,7 +563,36 @@ function actOnIdentity(decision) {
  * catálogo. Exponer el store pelado en su lugar perdería esa navegación — pasó dos veces el
  * 2026-08-22, la segunda al partir el componente.
  */
-defineExpose({ refreshBookingStatus, refreshIdentity });
+/**
+ * `#568` · **Abrir el cajón EN un producto** pedido desde la landing (`intent.js`, `{ type: 'product' }`):
+ * quien pulsa «comprar» en una tarifa o «reservar» en un pack ya ha elegido, y el cajón lo abre listo
+ * para elegir día en vez de dejarle buscándolo otra vez en el catálogo.
+ *
+ * ⚠️ **Espera al MONTAJE, no solo al catálogo**: el montaje restaura la cesta y, con cesta, lleva el
+ * cajón al carrito; abrir el producto antes haría que esa restauración lo pisara. La espera tiene
+ * techo: un fallo de red no puede dejar la intención colgada en una página que el cliente sigue usando.
+ *
+ * ⚠️ Devuelve `false` —y el cajón se queda en el catálogo— si las reservas están en pausa o el
+ * catálogo publicado no trae ese producto. Nunca inventa uno: la fila sale del listado del servidor.
+ */
+let markMounted = () => {};
+const mounted = new Promise((resolve) => { markMounted = resolve; });
+
+async function openProduct(id) {
+    await Promise.race([mounted, new Promise((resolve) => setTimeout(resolve, 8000))]);
+
+    if (bookingStore.isPaused) return false;
+
+    const item = catalogStore.sections.flatMap((section) => section.items ?? []).find((row) => row.id === id);
+
+    if (! item) return false;
+
+    await selectProduct(item.id);
+
+    return true;
+}
+
+defineExpose({ refreshBookingStatus, refreshIdentity, openProduct });
 
 /**
  * El aviso de pausa, si toca en este paso (`paused.js`).

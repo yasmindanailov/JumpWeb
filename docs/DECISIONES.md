@@ -31540,3 +31540,49 @@ Tras arreglarlas, **16/16** (`scripts/mutar-567.py`, por código de salida y con
 
 **Verificación**: suite **4838 · 30.759 aserciones** (1 skipped) · JS **980** · Pint ✓ · docs-check ✓ ·
 arnés **16/16** · sonda de navegador en 390 y 1280 con control en cada medida.
+
+## #568 · El cajón abre EN el producto, las tarjetas del catálogo invitan a abrirse y el bloque de cuenta se aligera
+
+**Fecha**: 2026-09-13 · **Carril**: 🧩 diseño del SPA · **Fuente**: el owner, sobre `Navegacion Cuenta PJP` y el set `Iconos PJP`.
+
+`[DECIDIDO owner, 2026-09-13]`, en una tanda corta y sin tests nuevos a petición suya («ahórrate tests, hay
+que ir más rapiditos»): solo se movieron las guardas que el cambio rompía.
+
+- **Del rediseño del bloque de cuenta se hace SOLO el avatar y la salida.** El owner descartó la fila
+  nueva del artboard entera: queda el bloque de hoy con el **avatar del artboard** —círculo de 36 en
+  tinta, con la INICIAL dentro para quien ha entrado y la persona con «+» (`ui/registro`) para quien no— y
+  **sin «Cerrar sesión»**, que sigue en el índice de «Mi cuenta» (`#332`). El suelo sin JS del layout no
+  cambia. La inicial va en Hanken (Bungee nunca bajo 20 px) y en papel, no en `--zone-1`: sale del censo
+  de marca.
+- **Las dos tarjetas del catálogo llevan un CTA** («Ver entradas», «Ver grupos») mientras están cerradas.
+  No es un control propio —la cabecera entera ya es el botón— y va en la superficie contraria a la de su
+  tarjeta, nunca en naranja: abrir una categoría no es comprar.
+- **Grupos no tiene la zona en exclusiva**: su frase pasa de «La zona entera para vosotros» a «Servicio
+  personalizado y merienda» (en/fr igual).
+- **Los iconos de las tarjetas.** ENTRADAS lleva el **`ui/pack` vigente del set** —la entrada repetida, dos
+  copias a ±8°—, que sustituye a la «tira troquelada» del lote 2 que el cliente nunca eligió; se actualizó
+  el componente y sus dos copias del cajón. GRUPOS deja el regalo, que se leía como tarta, y lleva los
+  **banderines de `ui/fiestas`**. ⚠️ **Se usa la variante ya instalada (trazo 3), no la del set de hoy**:
+  la del set dibuja la guirnalda a **2,4** y `IconSetAnatomyTest` prohíbe la línea fina donde el trazo es
+  la forma.
+- **Abrir el cajón EN el producto.** La costura de intención (`intent.js`) aprende `{ type: 'product', id }`:
+  el botón de una tarifa y el de un pack de `/servicios` abren el cajón listo para elegir día. La sección
+  lo abre **después del montaje** —la restauración de la cesta lo pisaría— y **nunca en pausa ni con un
+  producto que el catálogo no publique**: entonces se queda en el catálogo. Y la intención de SECCIÓN
+  (`packs`, el botón de `/cumpleanos`) ahora **despliega la tarjeta**: hasta hoy desplazaba hasta un
+  acordeón cerrado (`#553`) y no enseñaba nada.
+
+⚠️ **Hallazgos que NO se tocaron**: el set del canvas trae también `ui/entrada` y `ui/regalo` redibujados
+(la entrada con ventana; el regalo pasa a gorro de fiesta), y los nuestros son la versión anterior. Afectan a
+los iconos de los productos del catálogo; queda para una pasada de iconos.
+
+**Guardas movidas**: el manifiesto de árbol (solo el CTA), el censo de marca (sale `.acct__avatar`), el
+área táctil (sale el botón de icono), `panel.js` sin `signOut`, `SidebarSeamTest` (vigila ahora las DOS
+intenciones: producto en `/servicios`, sección en `/cumpleanos`, y su censo de superficies suma la tarifa),
+`ServicesPageTest` (asevera la intención con el id del pack), `PurchaseSection` 453 → **464** líneas y el chunk
+285,29 KiB → techo **286**.
+
+**Verificación**: suite **4838 · 30.777 aserciones** (1 skipped) · JS **980** · Pint ✓ · docs-check ✓ · sonda
+de navegador en 390 y 1280: la tarifa abre «¿Qué día venís?» con su producto, `/cumpleanos` abre Grupos
+desplegado, los dos CTA y los dos avatares pintados. El botón de `/servicios` no se pudo ver: en local no hay
+ningún pack vinculado.

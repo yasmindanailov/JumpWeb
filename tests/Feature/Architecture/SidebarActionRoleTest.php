@@ -103,7 +103,8 @@ class SidebarActionRoleTest extends TestCase
         '.bk-seg__item.is-current .bk-seg__bar' => 'su halo sigue al relleno',
         '.bk-context .jj-block' => 'artboard: el cuadradito del contexto es motivo de marca',
         '.purchase-loading' => 'el spinner «Tres botes» es pieza de MARCA (#259)',
-        '.acct__avatar' => 'la inicial de marca sobre un azulejo de tinta (6,85 medido)',
+        // ▶ `#568` · SALIÓ `.acct__avatar`: el avatar pasa al círculo del artboard, con la inicial en
+        //   PAPEL sobre tinta, y deja de leer el color de zona.
         // ▶ `#540` · SALIERON de esta lista `.bk-cta:hover`, `.cartbar:hover` y
         //   `.acct__btn--primary:hover`, y la lista solo encoge: sus tres botones dejaron de
         //   reposar en TINTA —hoy reposan en el CIAN del secundario—, así que el argumento

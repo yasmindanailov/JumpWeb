@@ -142,9 +142,17 @@ const key = computed(() => (KNOWN.includes(props.icon) ? props.icon : 'ticket'))
         </svg>
     </span>
 
+    <!-- `#568` · el `ui/pack` vigente del set: la entrada repetida (ver `components/icons/pack.blade.php`). -->
     <span v-else-if="key === 'pack'" class="prod-ico" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM8.8 9.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm6.4-4.2a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6z" />
+            <g transform="translate(12 12) scale(1.5038) translate(-12 -12)">
+                <g transform="translate(-1 -3.4) translate(12 12) scale(0.5) rotate(-8) translate(-12 -12)">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4 6.6h16a2.2 2.2 0 0 1 2.2 2.2v1.4a1.9 1.9 0 0 0 0 3.6v1.4a2.2 2.2 0 0 1-2.2 2.2H4a2.2 2.2 0 0 1-2.2-2.2v-1.4a1.9 1.9 0 0 0 0-3.6V8.8A2.2 2.2 0 0 1 4 6.6zm2.2 3.2v4.8h7.6V9.8z" />
+                </g>
+                <g transform="translate(1 3.4) translate(12 12) scale(0.5) rotate(8) translate(-12 -12)">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4 6.6h16a2.2 2.2 0 0 1 2.2 2.2v1.4a1.9 1.9 0 0 0 0 3.6v1.4a2.2 2.2 0 0 1-2.2 2.2H4a2.2 2.2 0 0 1-2.2-2.2v-1.4a1.9 1.9 0 0 0 0-3.6V8.8A2.2 2.2 0 0 1 4 6.6zm2.2 3.2v4.8h7.6V9.8z" />
+                </g>
+            </g>
         </svg>
     </span>
 

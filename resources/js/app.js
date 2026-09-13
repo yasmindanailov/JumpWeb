@@ -108,7 +108,7 @@ document.addEventListener('alpine:init', () => {
             this.intentAdapter = fn;
             this.flushIntent();
         },
-        /** Abre el cajón pidiendo algo: `{ type: 'packs' }` · `{ type: 'zone', slug }`. */
+        /** Abre el cajón pidiendo algo: `{ type: 'packs' }` · `{ type: 'zone', slug }` · `{ type: 'product', id }`. */
         openWith(intent) {
             this.open();
             this.intent = intent;

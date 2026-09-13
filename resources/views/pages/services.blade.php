@@ -179,10 +179,10 @@
                                             <span class="val">{{ $pack->euros() }},{{ $pack->cents() }}€</span>
                                             <span class="per">{{ $pack->tr('period_label') }}</span>
                                         </span>
-                                        {{-- Deep-link al sidebar (mismo cableado que la card de cumpleaños): abre el
-                                             catálogo en la pestaña «Servicios» (packs); el pack es vendible+zona operativa. --}}
+                                        {{-- Deep-link al sidebar: `#568` abre el cajón EN este pack, listo para elegir
+                                             día (antes llevaba a la sección de packs y el cliente tenía que buscarlo). --}}
                                         <button type="button" class="svc-cta svc-cta--book"
-                                                @click="$store.purchase.openWith({ type: 'packs' })">
+                                                @click="$store.purchase.openWith({ type: 'product', id: {{ (int) $pack->id }} })">
                                             {{ __('landing.pricing.book') }}
                                             <x-icons.arrow-right :width="15" :height="15" />
                                         </button>

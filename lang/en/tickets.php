@@ -48,7 +48,9 @@ return [
     // La frase de cada franja del catálogo (`#552`). Sin datos de la instalación: la duración de un
     // pack la pone el panel (`#487`).
     'section_entries_sub' => 'Pick a zone and how long',
-    'section_services_sub' => 'The whole zone for you',
+    'section_services_sub' => 'Tailored service and a snack',
+    'section_entries_cta' => 'See tickets',
+    'section_services_cta' => 'See groups',
     'catalog_search' => 'Search the catalogue…',
     'catalog_search_none' => 'No results.',
     'guests' => 'Guests',

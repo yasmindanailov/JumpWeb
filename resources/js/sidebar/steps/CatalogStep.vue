@@ -136,19 +136,30 @@ const seVe = (section) => cuerpoVisible(abierta.value, section.key, normalised.v
                          Es correcta para las ilustraciones del idioma anterior y convertiría estos
                          dos glifos de MASA en un contorno fino. El envoltorio que sí es contrato es
                          `.catalog-acc__icon`, que sigue igual.
-                         `pack` y `gift` del sistema de diseño, copiados byte a byte
-                         (`SidebarIconParityTest`). La sección de ENTRADAS lleva `ui/pack` —la tira
-                         troquelada, «varias entradas»— y no `ui/entrada`, porque rotula un GRUPO. -->
+                         `pack` y `party` del sistema de diseño, copiados byte a byte
+                         (`SidebarIconParityTest`).
+                         ❗ `#568` (`[DECIDIDO owner]`): ENTRADAS lleva el `ui/pack` vigente del set —la
+                         entrada repetida, no la «tira troquelada» que no se reconocía como pack— y
+                         GRUPOS los banderines de `ui/fiestas` («fiestas y grupos»), no el regalo, que
+                         se leía como una tarta: un grupo no es solo un cumpleaños. -->
                     <span v-if="section.key === 'entries'" aria-hidden="true">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4 6.4h2.9a1.5 1.5 0 0 0 3 0h3.4a1.5 1.5 0 0 0 3 0h2.9A2.4 2.4 0 0 1 22 8.8v6.4a2.4 2.4 0 0 1-2.4 2.4h-2.9a1.5 1.5 0 0 0-3 0h-3.4a1.5 1.5 0 0 0-3 0H4.4A2.4 2.4 0 0 1 2 15.2V8.8a2.4 2.4 0 0 1 2.4-2.4zM8.8 9.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm6.4-4.2a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6zm0 2.1a0.8 0.8 0 1 0 0 1.6 0.8 0.8 0 1 0 0-1.6z" />
+                            <g transform="translate(12 12) scale(1.5038) translate(-12 -12)">
+                                <g transform="translate(-1 -3.4) translate(12 12) scale(0.5) rotate(-8) translate(-12 -12)">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4 6.6h16a2.2 2.2 0 0 1 2.2 2.2v1.4a1.9 1.9 0 0 0 0 3.6v1.4a2.2 2.2 0 0 1-2.2 2.2H4a2.2 2.2 0 0 1-2.2-2.2v-1.4a1.9 1.9 0 0 0 0-3.6V8.8A2.2 2.2 0 0 1 4 6.6zm2.2 3.2v4.8h7.6V9.8z" />
+                                </g>
+                                <g transform="translate(1 3.4) translate(12 12) scale(0.5) rotate(8) translate(-12 -12)">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M4 6.6h16a2.2 2.2 0 0 1 2.2 2.2v1.4a1.9 1.9 0 0 0 0 3.6v1.4a2.2 2.2 0 0 1-2.2 2.2H4a2.2 2.2 0 0 1-2.2-2.2v-1.4a1.9 1.9 0 0 0 0-3.6V8.8A2.2 2.2 0 0 1 4 6.6zm2.2 3.2v4.8h7.6V9.8z" />
+                                </g>
+                            </g>
                         </svg>
                     </span>
                     <span v-else aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.4 9.2h17.2v3.4h-1.2v7.2a1.8 1.8 0 0 1-1.8 1.8H6.4a1.8 1.8 0 0 1-1.8-1.8v-7.2H3.4zm7 3.4v6.6h3.2v-6.6z" />
-                            <circle cx="8.9" cy="5.6" r="2.8" />
-                            <circle cx="15.1" cy="5.6" r="2.8" />
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round">
+                            <path d="M2.6 7.2q9.4 3 18.8 0" fill="none" stroke-width="3" stroke-linecap="round" />
+                            <path d="M3.4 9.4h4L5.4 14z" />
+                            <path d="M10 10.2h4l-2 4.6z" />
+                            <path d="M16.6 9.4h4L18.6 14z" />
                         </svg>
                     </span>
                 </span>
@@ -158,6 +169,19 @@ const seVe = (section) => cuerpoVisible(abierta.value, section.key, normalised.v
                 <span class="catalog-acc__txt">
                     <span class="catalog-acc__title" :id="'catalog-title-' + section.key">{{ t('section_' + section.key) }}</span>
                     <span class="catalog-acc__sub">{{ t('section_' + section.key + '_sub') }}</span>
+                </span>
+                <!-- ❗ `#568` · **LA INVITACIÓN A ABRIR** (`[DECIDIDO owner]`). No es un control aparte —la
+                     cabecera entera ya es el botón, y un botón no puede ir dentro de otro—: dice qué pasa
+                     al pulsar. Solo con la tarjeta CERRADA; abierta ya no hay nada que invitar. -->
+                <span class="catalog-acc__cta" aria-hidden="true">
+                    {{ t('section_' + section.key + '_cta') }}
+                    <!-- `arrow-right` del sistema de diseño, copiado byte a byte (`SidebarIconParityTest`). -->
+                    <svg class="arrow-ico" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                         stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+                         aria-hidden="true" focusable="false">
+                        <path d="M13.6 6.4 19.2 12l-5.6 5.6z" />
+                        <path d="M4.6 12h9.4" fill="none" />
+                    </svg>
                 </span>
                 <span class="catalog-acc__count">{{ section.items.length }}</span>
             </button>
