@@ -64,6 +64,16 @@
        ⚠️ Son las variantes 800 de su propia paleta, las mismas que su artboard escribe a mano. */
     --ok-ink: #447921;
     --attn-ink: #8A6E00;
+    /* Rojo 800 como texto sobre papel (`#571`, «Falta edad» de una ficha): el Rojo Goteo da 4,11 sobre
+       papel y el rótulo va a 12 px. Viaja con el paquete: producción y `cliente/playjump`. */
+    --err-ink: #C83912;
+
+    /* LO HECHO en LIMA (`#570`): el sistema reserva el verde para «reserva confirmada». Relleno Lima
+       Bote con TINTA encima, y Lima 800 cuando es texto sobre papel. ⚠️ Viaja con el paquete: en
+       producción y en la rama `cliente/playjump` hay que añadir estas tres líneas. */
+    --done: #A3C21C;
+    --on-done: #101418;
+    --done-ink: #627411;
 
     /* ── FOCO · UN COLOR POR SUPERFICIE ──────────────────────────────────────────────────────
        ⚠️⚠️ **Aquí el paquete SE APARTA del sistema del cliente, y es una decisión suya con la
