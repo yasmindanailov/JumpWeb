@@ -125,7 +125,7 @@ antes de construir encima (`CONVENCIONES §7`).
 
    | carril | banda | estado |
    |---|---|---|
-   | 🎨 **Diseño de la web** (este ordenador) | ~~470–499~~ → **520–549** | viva — último `#536` (la anterior se agotó en `#499`) |
+   | 🎨 **Diseño de la web** (este ordenador) | ~~470–499~~ · ~~520–549~~ → **580–609** | viva — último `#586` |
    | 🧩 **Diseño del SPA** (el OTRO ordenador) | **550–579** | viva — último `#568` — arranque en `docs/CARRIL-SPA.md` |
    | 📧 **Correos** | **500–519** | viva |
    | Google auth (portátil) | `#34x` | viva |

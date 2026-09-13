@@ -31586,3 +31586,69 @@ intenciones: producto en `/servicios`, sección en `/cumpleanos`, y su censo de 
 de navegador en 390 y 1280: la tarifa abre «¿Qué día venís?» con su producto, `/cumpleanos` abre Grupos
 desplegado, los dos CTA y los dos avatares pintados. El botón de `/servicios` no se pudo ver: en local no hay
 ningún pack vinculado.
+
+## #580 · 2026-09-13 · `[DECIDIDO owner]` La fachada elegida, en producción y en las páginas, con las texturas de tarjeta
+
+La variante 2 (`?fachada=2`) pasa a ser LA fachada y el andamio `?fachada` se retira. `<x-site.facade en="…">`
+lleva un mapa cerrado pieza · tratamiento · clases · textura por pantalla (portada y cinco páginas); una clave
+desconocida lanza. Las texturas de tarjeta (trama A1) van en `before__code`, `answers` y `bar-counter`, con
+`isolation` en el anfitrión y la capa en `z-index: -1`. ⚠️ **El abanico A3 de `/precios` sale de la cabecera**:
+la cabecera lo recortaba en una banda (lo vio el owner) y hoy vive detrás de la figura de su fachada;
+`PageHeadTest` se re-apunta a eso. ⚠️ `site.css` carga DESPUÉS de `landing.css`: a igual especificidad gana
+`.ilu`, así que las colocaciones van con dos clases.
+
+## #581 · 2026-09-13 · `[DECIDIDO owner]` El CTA principal «Reservar», en el cian de la marca
+
+`.cta-med` rellena con `--brand` y su texto con `--on-brand`. ⚠️ Medido: el sub-rótulo del precio quedaba en
+**3,44** de contraste con su opacidad antigua → `0.8`; y el hover pasa a solo sombra (oscurecer un relleno de
+marca no es un escalón de su escala).
+
+## #582 · 2026-09-13 · `[DECIDIDO owner]` Los iconos del kit: por zona del parque y los del parque
+
+Los 14 de zona (rejilla 64) van por ZONA; de «Del parque» entran calcetines, altura y saltador (cama, canasta y
+bote esperan). `scripts/kit-iconos.py` los extrae del canvas convirtiendo trazos en rellenos (el kit prohíbe
+atributos de presentación). ⚠️ **El kit está gitignorado**: se sube a staging, producción y `cliente/playjump`
+y se valida con `kit:build --check`.
+
+## #583 · 2026-09-13 · `[DECIDIDO owner]` Fuera el reloj, los complementos y los iconos de la web; las cards de zona en móvil como la 4a
+
+- **El reloj «Las 2 h, a vuestro ritmo» se retira** de la portada y de `/cumpleanos`: la duración es la primera
+  línea de lo que incluye cada pack. Con un solo pack va a «Igual» — ⚠️ la primera versión la dejaba sola en la
+  tabla y **lo cazó la suite**: la regla del owner es de SITIO («al lado de lo que incluye»).
+- **Los complementos salen de la web** (portada, `/precios`, `/cumpleanos`): solo se ofrecen en el cajón al
+  reservar. Con ellos se van la fila «Hora extra» y el carril con flechas. Se quedan los extras de después de
+  reservar y «Qué comen». `RateTable` deja de leer complementos (sale del censo de `AddonStageTest`).
+- **Fuera los iconos** de las cards de zona y de `/precios`; la pegatina de zona queda en `/atracciones`.
+- **Cards de zona en móvil**: la regla y la chapa del 1,30 m ya estaban; se cierran las diferencias con la 4a
+  («0 m», el CTA alineado con el texto, edad y altura también en el cuerpo). El escritorio no se toca.
+
+## #584 · 2026-09-13 · `[DECIDIDO owner]` El pie del cajón en primario y la línea de pasos en secundario
+
+«Continuar», «Añadir al carrito», «Ir a pagar» y «Pagar» rellenan con `--action`; «Ir al carrito» sigue en
+secundario (preguntado). ⚠️ **Revierte el reparto de `#551`** (solo «Pagar» llevaba acción): cada pantalla
+sigue teniendo un único relleno de acción porque lleva un único pie. `sells` sigue diciendo quién cobra y ya
+no pinta: decide el ancla y el rótulo del pie de pagar. La barra y el halo de la fase leen `--secondary` y
+salen del censo de marca. ⚠️ Tras tocar `foot.js`/`Foot.vue`, **el bundle SSR queda rancio** y 36 casos de
+árbol lo dicen: `npm run build:ssr`.
+
+## #585 · 2026-09-13 · `[DECIDIDO owner]` La etiqueta destacada, amarilla y en todas las páginas donde salga el producto
+
+`ticket_types.badge` («Etiqueta destacada») se pinta como chip en el carril de tarifas, `/precios`, las
+tarjetas de cumpleaños, la comparativa de `/cumpleanos`, `/servicios` y el cajón, con el rol del marcador
+(`--marker` + `--on-marker`: nunca `--fg`, que en una tarjeta de tinta es claro). ⚠️ **Revierte `#479`/`#480`**:
+el chip ya no es el marcador de la que lidera (la destacada se sigue diciendo con el ancho y el foco) y el
+`badge` de las demás ya no baja al matiz. El panel deja escribir la etiqueta también en packs. Guarda:
+`FeaturedBadgeColourTest`.
+
+## #586 · 2026-09-13 · `[DECIDIDO owner]` El contenido de Play Jump Park, desde sus carteles oficiales
+
+El owner entrega los carteles del parque (precios, cumpleaños, excursiones, horario y zonas) y responde, con
+opciones delante, a cada contradicción entre carteles, panel y web: edades (Kids 4–8 y hasta 1,50 m; menores
+de 4 con adulto si miden más de 90 cm; Jump desde 8 y 1,30 m, con adulto entre 1,10 y 1,30), políticas
+(entradas 24 h; cumpleaños y excursiones 5 días con devolución a la tarjeta), vísperas y festivos a las 11:00,
+excursiones solo de colegio y online, y el resto en `docs/specs/contenido-y-copys.md` §2.
+⚠️⚠️ **Los PACKS siguen en 4–7 / 8+ aunque la zona Kids pase a 4–8**: sus tramos de edad no pueden solaparse
+y de ellos sale el ajuste de precio de las fiestas mixtas.
+⚠️ **El dato del cliente no entra en `main`** (`#1`): la configuración y los textos del panel se aplican con un
+script idempotente que vive fuera del repo y localiza por clave estable (nombre, slug, fecha), nunca por id
+—local y producción tienen ids distintos—; se guarda en `cliente/playjump` cuando se apruebe.
