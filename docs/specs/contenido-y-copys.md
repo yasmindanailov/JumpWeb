@@ -269,6 +269,11 @@ Los **porqués son propuesta de redacción**, no hechos del parque: el owner los
 > frase de la cafetería va por el script (dato del cliente). **Siguen** `/cumpleanos`, `/servicios`,
 > `/normas`, `/contacto` y `/bar`.
 >
+> ▶ **Los titulares de la portada** (`#593`, `[DECIDIDO owner]`: elección delegada con el criterio de
+> convertir): cambian tres —«Una zona para cada edad», «Llega con tu QR y a saltar», «Horarios y cómo
+> llegar»— y se quedan cinco, cada uno con su motivo en `DECISIONES #593`. El criterio: un beneficio o lo que
+> se busca en la sección, sin repetir el rótulo ni la entradilla y en dos líneas de móvil como mucho.
+>
 > ▶ ✅ **T1 y T2 EN PRODUCCIÓN** (`#590`, 2026-09-13): el contenido de la sesión, con las divergencias de
 > configuración decididas por el owner una a una (detalle en `DECISIONES #590`). Fuera a propósito: las
 > reseñas de ejemplo y las imágenes de marcador de la cafetería.

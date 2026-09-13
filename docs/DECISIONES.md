@@ -31859,3 +31859,28 @@ Desplegado `#591`, el owner seguía sin ver las reseñas. **Medido en producció
 - **El texto de la instalación** (el párrafo de transferencias, reescrito) va por el script gitignorado
   `aplicar-produccion-592.php`: cambia dos fragmentos por idioma, solo si siguen ahí, y es idempotente
   (probado en local dos veces).
+
+## #593 · 2026-09-13 · `[DECIDIDO owner]` Tres titulares de la portada cambian para convertir, y cinco se quedan
+
+El owner preguntó por qué los titulares seguían igual: la pasada de copys (`#587`–`#589`) cambió las
+entradillas, no los titulares, que venían del canvas. Se prepararon tres alternativas por sección y se
+midieron en local, en móvil y escritorio. El owner delegó la elección (*«procede según tu valoración
+profesional con la mejor conversión enfocada al público»*).
+- **Criterio**: lo lee una madre o un padre que decide con prisa, así que el titular dice un beneficio
+  o lo que se busca en esa sección. No repite el rótulo de encima ni la entradilla de debajo, no ocupa más
+  de dos líneas en el móvil y no promete nada que el parque no pueda sostener.
+- **Cambian tres**:
+  - *Para quién* → «Una zona para cada edad» (era «Cada uno tiene su zona»): responde la duda de quien
+    decide, «¿es para mi hijo?»;
+  - *Antes de venir* → «Llega con tu QR y a saltar» (era «Tu registro es este QR»): dice el resultado,
+    entrar sin esperas de papeleo, en vez de un término que obliga a pensar;
+  - *Visítanos* → «Horarios y cómo llegar» (era «Dónde estamos y cuándo abrimos»): son las palabras con
+    las que se busca esa sección, y el rótulo ya invita.
+- **Se quedan cinco**, con su motivo:
+  - «Una hora, dos o el día»: en precios, las opciones concretas se leen de un vistazo;
+  - «Salta, trepa y déjate caer»: ya es concreta y activa;
+  - «El cumple, resuelto»: habla a quien paga, y la alternativa repetía la entradilla y ocupaba 4 líneas;
+  - «Lo dicen los que ya han venido»: prueba social clara, y «al salir» no encaja con reseñas de Google;
+  - «Lo que más nos preguntáis»: las alternativas repetían el rótulo o prometían otra cosa.
+- En inglés y francés se traducen los mismos tres.
+- ⚠️ El laboratorio de la elección (`?titulares=` en local) **no se commiteó** y se retiró al elegir.

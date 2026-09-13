@@ -232,13 +232,13 @@ color y nombra piezas del ARCHIVO.
 
 | Rótulo | Titular | Artboard |
 |---|---|---|
-| Para quién | Cada uno tiene su zona | `Zonas PJP` (4a) · ✅ `#478` |
+| Para quién | Una zona para cada edad (era «Cada uno tiene su zona», `#593`) | `Zonas PJP` (4a) · ✅ `#478` |
 | Cuánto | Una hora, dos o el día | `Precios PJP` (10a) · ✅ `#479` + `#480` |
 | Qué hay dentro | Salta, trepa y déjate caer | `Juegos PJP` (6a) + `Escritorio PJP` (4b) · ✅ `#482` |
 | Cumpleaños | El cumple, resuelto | `Cumpleanos PJP` (7b) + `Escritorio PJP` (5a) · ✅ `#483` |
-| Antes de venir | Tu registro es este QR | `Antes de Venir PJP` (2a) + `Escritorio PJP` (3a) · ✅ `#485` |
+| Antes de venir | Llega con tu QR y a saltar (era «Tu registro es este QR», `#593`) | `Antes de Venir PJP` (2a) + `Escritorio PJP` (3a) · ✅ `#485` |
 | Reseñas | Lo dicen los que ya han venido | `Resenas PJP` (2a) + `Escritorio PJP` (5b) · ✅ `#490` + `#491` |
-| Visítanos | Dónde estamos y cuándo abrimos | `Visitanos PJP` (7b) + `Escritorio PJP` (3b) · ✅ `#487` |
+| Visítanos | Horarios y cómo llegar (era «Dónde estamos y cuándo abrimos», `#593`) | `Visitanos PJP` (7b) + `Escritorio PJP` (3b) · ✅ `#487` |
 | Dudas | Lo que más nos preguntáis | `Dudas PJP` (1a) + `Escritorio PJP` (5c) · ✅ `#488` |
 
 Marco: `Marco Portada PJP` (móvil) · `Escritorio PJP` (escritorio, turnos 1–6).

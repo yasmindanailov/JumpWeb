@@ -114,7 +114,7 @@ return [
          * desempate. Partirla en dos líneas la convierte en dos reglas.
          */
         'eyebrow' => 'Para quién',
-        'title' => 'Cada uno tiene su zona',
+        'title' => 'Una zona para cada edad',
         // La entradilla (`#589`, `[DECIDIDO owner]`): la sección era la única sin ella. ⚠️ No repite
         // edades ni alturas —las dice cada tarjeta— y no nombra zonas: el texto es del PRODUCTO.
         'lede' => 'Cada zona está pensada para una edad, con sus propias atracciones y su tarifa, para que todos salten a su ritmo y con seguridad. Elige la tuya y reserva tu hora en un minuto.',
@@ -390,7 +390,7 @@ return [
     ],
     'info' => [
         'eyebrow' => 'Visítanos',
-        'title' => 'Dónde estamos y cuándo abrimos',
+        'title' => 'Horarios y cómo llegar',
         'closed' => 'Cerrado',
         'open_generic' => 'Abierto',
         'day_range' => ':from a :to',
@@ -479,7 +479,7 @@ return [
      */
     'before' => [
         'eyebrow' => 'Antes de venir',
-        'title' => 'Tu registro es este QR',
+        'title' => 'Llega con tu QR y a saltar',
         'lede' => 'Firmas el descargo de responsabilidad una vez, en el móvil. En la puerta solo enseñas el código.',
 
         // ⚠️ **El nombre accesible dice «de ejemplo»**: sin eso, un lector de pantalla anuncia un

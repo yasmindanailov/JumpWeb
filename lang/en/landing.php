@@ -71,7 +71,7 @@ return [
         'below_is' => 'below, :zone',
         'above_is' => 'above, :zone',
         'eyebrow' => 'Who it is for',
-        'title' => 'Everyone has their zone',
+        'title' => 'A zone for every age',
         'lede' => 'Each zone is designed for an age, with its own attractions and its own rate, so everyone jumps at their own pace and safely. Pick yours and book your time in a minute.',
         'from' => 'from',
         'see_zone' => 'See the :zone zone',
@@ -232,7 +232,7 @@ return [
     ],
     'info' => [
         'eyebrow' => 'Visit us',
-        'title' => 'Where we are and when we open',
+        'title' => 'Opening hours and how to get here',
         'closed' => 'Closed',
         'open_generic' => 'Open',
         'day_range' => ':from to :to',
@@ -274,7 +274,7 @@ return [
     // y lo vigila `WaiverWordingIsOneTermTest`.
     'before' => [
         'eyebrow' => 'Before you come',
-        'title' => 'Your sign-up is this QR',
+        'title' => 'Bring your QR and start jumping',
         'lede' => 'You sign the liability waiver once, on your phone. At the door you just show the code.',
 
         'qr_aria' => 'My QR, sample',

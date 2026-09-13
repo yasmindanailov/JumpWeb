@@ -71,7 +71,7 @@ return [
         'below_is' => 'en dessous, :zone',
         'above_is' => 'au-dessus, :zone',
         'eyebrow' => 'Pour qui',
-        'title' => 'Chacun a sa zone',
+        'title' => 'Une zone pour chaque âge',
         'lede' => 'Chaque zone est pensée pour un âge, avec ses propres attractions et son tarif, pour que chacun saute à son rythme et en toute sécurité. Choisis la tienne et réserve ton heure en une minute.',
         'from' => 'à partir de',
         'see_zone' => 'Voir la zone :zone',
@@ -232,7 +232,7 @@ return [
     ],
     'info' => [
         'eyebrow' => 'Nous visiter',
-        'title' => 'Où nous sommes et quand nous ouvrons',
+        'title' => 'Horaires et accès',
         'closed' => 'Fermé',
         'open_generic' => 'Ouvert',
         'day_range' => ':from à :to',
@@ -274,7 +274,7 @@ return [
     // responsabilité», y lo vigila `WaiverWordingIsOneTermTest`.
     'before' => [
         'eyebrow' => 'Avant de venir',
-        'title' => 'Ton inscription, c’est ce QR',
+        'title' => 'Viens avec ton QR et saute',
         'lede' => 'Tu signes la décharge de responsabilité une seule fois, sur ton téléphone. À l’entrée, tu montres juste le code.',
 
         'qr_aria' => 'Mon QR, exemple',
