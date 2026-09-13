@@ -152,14 +152,15 @@ class RideMosaicSectionTest extends TestCase
         $this->assertGreaterThan(5, $total, 'con cinco o menos no hay puerta que comprobar');
 
         $seccion = $this->seccion();
-        $this->assertStringContainsString($total.' atracciones dentro', $seccion);
+        // La entradilla dice «N atracciones: trampolines…» desde `#587` (antes «N atracciones dentro»).
+        $this->assertStringContainsString($total.' atracciones:', $seccion);
         $this->assertStringContainsString('Ver las '.$total.' atracciones', $seccion);
 
         // Y se MUEVE con el dato: una atracción menos, dos cifras menos.
         Attraction::where('is_active', true)->firstOrFail()->update(['is_active' => false]);
 
         $seccion = $this->seccion();
-        $this->assertStringContainsString(($total - 1).' atracciones dentro', $seccion);
+        $this->assertStringContainsString(($total - 1).' atracciones:', $seccion);
         $this->assertStringContainsString('Ver las '.($total - 1).' atracciones', $seccion);
     }
 
