@@ -31884,3 +31884,39 @@ profesional con la mejor conversión enfocada al público»*).
   - «Lo que más nos preguntáis»: las alternativas repetían el rótulo o prometían otra cosa.
 - En inglés y francés se traducen los mismos tres.
 - ⚠️ El laboratorio de la elección (`?titulares=` en local) **no se commiteó** y se retiró al elegir.
+
+## #594 · 2026-09-13 · `[DECIDIDO owner]` En producción la guarda de Redsys admite «live»; el despliegue de `#593` dejó el sitio tres minutos en mantenimiento
+
+**Qué pasó.**
+- A las 17:19 el owner configuró en el panel el TPV real: código de comercio, terminal, nombre y
+  `redsys_merchant_url`. A las 17:29 pasó `redsys_environment` a `live` (rastro en `audit_logs`, usuario 1).
+- A las 17:36 se inició un pago real: el pedido `R-AFO3SG`, 10,00 €.
+- A las 17:37 el despliegue de `#593` se paró en la **GUARDA 1**, que exigía `test` exacto. Para entonces
+  ya había sincronizado el código, instalado dependencias y migrado, y **dejó el sitio en mantenimiento**:
+  503 durante unos tres minutos.
+- Se levantó con `artisan up` y se completaron a mano los pasos que faltaban: franjas, `artisan optimize`
+  y la verificación de salud. Todo en verde, incluidas las reseñas con y sin permiso.
+
+**Los pagos de esa ventana, comprobados** (solo lectura, sin datos personales):
+- `R-AFO3SG` se quedó `pending`: el banco no llegó a confirmar el pago y el owner lo canceló a las 17:41.
+  No hay cargo en nuestros registros.
+- `R-VPCOHW` (10,00 €), iniciado a las 17:41:50, **se cobró en `live` a las 17:42:35**, y el owner lo devolvió
+  por REST a las 17:51 (`succeeded`). El TPV real funciona de punta a punta: cobro y devolución.
+- ⚠️ El riesgo de un corte así sigue en pie para la próxima vez, porque ninguna ruta está exceptuada del
+  modo mantenimiento. Si el banco autoriza un cargo y su notificación cae en un 503, Redsys la reintenta; y
+  una notificación tardía con la reserva ya caducada deja el pedido **pagado SIN entradas**, con la
+  incidencia `overbooked` (`REDSYS.md`). La consulta de operaciones pendientes sigue sin implementar
+  (`REDSYS.md`, punto 7).
+
+**Decisión** (`[DECIDIDO owner]`):
+- en producción, la guarda admite exactamente `test` o `live`, dice cuál y avisa si es `live`;
+- en staging sigue exigiendo `test`;
+- cualquier otro valor, o un error, sigue abortando.
+- ⚠️ `DeployScriptGateTest::test_the_redsys_guard_is_fail_closed` **cambió de premisa y se reescribió**:
+  fijaba el literal `"$redsys_env" != "test"`, y el primer push lo paró. Ahora EJECUTA la condición del
+  propio script en `bash` con doce valores por entorno —`test`, `live`, vacío, un error de lectura, `liv`,
+  `testlive`, `*`—, que es más fuerte que buscar un texto.
+
+⚠️ **Queda anotado, sin decidir**: la guarda aborta DESPUÉS de `artisan down`, así que cualquier otra
+guarda que falle ahí deja producción en 503 hasta que alguien la levante a mano. Comprobar el ajuste también
+antes de bajar el sitio evitaría el corte; es una propuesta para el owner.

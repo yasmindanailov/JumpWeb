@@ -489,15 +489,27 @@ info "migraciones aplicadas"
 #   · se lee por `DB::table('settings')`, que NO necesita namespaces y por tanto no se puede mutilar;
 #   · y es FAIL-CLOSED: se exige `test` EXACTO (o vacío = el default del código). Cualquier otra cosa
 #     —incluido un error— aborta. Preguntar «¿es lo que espero?» en vez de «¿es lo que temo?».
+# ▶ `#594` (`[DECIDIDO owner, 2026-09-13]`): en PRODUCCIÓN `live` es el estado BUSCADO desde que el owner
+#   activó el TPV real, y la guarda paraba todo despliegue con el sitio ya en mantenimiento (medido: tres
+#   minutos de 503 con un pago real recién iniciado). En producción se admite EXACTO `test` o `live`, y se
+#   dice cuál; en staging, solo `test`. Sigue siendo FAIL-CLOSED: cualquier otro valor, o un error, aborta.
+# ⚠️ La comparación va con el valor ENTRE COMILLAS dentro de `[[ ]]`: así es literal y un valor con `*`
+#   no se interpreta como patrón.
 redsys_env=$(remote_php "artisan tinker --execute='echo DB::table(\"settings\")->where(\"key\",\"redsys_environment\")->value(\"value\");'" 2>/dev/null | tr -d '[:space:]' || echo "")
-if [[ -n "$redsys_env" && "$redsys_env" != "test" ]]; then
-    die "GUARDA 1 · redsys_environment = '${redsys_env}' — NO es 'test'.
-   Si fuera 'live', staging cobraría de verdad con tarjetas de verdad: es el único fallo de la lista
+if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
+    redsys_ok="test live"
+else
+    redsys_ok="test"
+fi
+if [[ -n "$redsys_env" && " $redsys_ok " != *" $redsys_env "* ]]; then
+    die "GUARDA 1 · redsys_environment = '${redsys_env}' — se esperaba: ${redsys_ok// / o }.
+   En staging, 'live' cobraría de verdad con tarjetas de verdad: es el único fallo de la lista
    que cuesta DINERO. Y si es un valor raro o un error, tampoco se sigue: esta guarda es FAIL-CLOSED
    a propósito (un verde que no se ha podido comprobar NO es un verde).
    El sitio queda en mantenimiento. ▶ Revísalo en el panel y vuelve a lanzar."
 fi
 info "guarda 1 ✓ · redsys_environment = '${redsys_env:-test (default)}' — exacto, no 'contiene'"
+[[ "$redsys_env" == "live" ]] && warn "PRODUCCIÓN con Redsys en live: los pagos son REALES."
 
 if [[ $DO_SEED -eq 1 ]]; then
     warn "Sembrando con ProductionSeeder (borra y recrea el CATÁLOGO; aborta solo si ya hay PEDIDOS)."

@@ -217,17 +217,16 @@ class DeployScriptGateTest extends TestCase
      *
      * La regla que fija este caso: **una guarda de dinero pregunta «¿es lo que espero?», nunca «¿es lo
      * que temo?»**. Lo primero falla cerrado ante un error; lo segundo lo bendice.
+     *
+     * ⚠️⚠️ **Este caso CAMBIÓ DE PREMISA y se reescribió** (`#594`, `[DECIDIDO owner]`): fijaba el literal
+     * `"$redsys_env" != "test"`, y desde que el owner activó el TPV real, en PRODUCCIÓN `live` es el estado
+     * BUSCADO. La propiedad no cambia —solo pasa lo que se espera; lo demás, incluido un error, aborta—, y
+     * ahora se comprueba **EJECUTANDO la condición del propio script** con los valores que importan: un
+     * literal satisface una guarda de texto aunque la lógica de alrededor la desmienta.
      */
     public function test_the_redsys_guard_is_fail_closed(): void
     {
         $s = $this->executable();
-
-        $this->assertStringContainsString(
-            '"$redsys_env" != "test"',
-            $s,
-            'La guarda de `redsys_environment` debe exigir `test` EXACTO. Si vuelve a preguntar si '.
-            '«contiene live», cualquier error de lectura pasará por verde — que es justo lo que ocurrió.',
-        );
 
         $this->assertStringNotContainsString(
             '== *live*',
@@ -235,6 +234,39 @@ class DeployScriptGateTest extends TestCase
             'La guarda NO puede preguntar «¿contiene live?»: una salida corrupta no contiene «live» '.
             'y pasaría, con el entorno de pago sin comprobar de verdad.',
         );
+
+        // Lo que se espera en cada entorno, y la condición que aborta: se extraen tal cual del script.
+        preg_match('/^if \[\[ "\$\{DEPLOY_PRODUCTION:-0\}" == "1" \]\]; then\n\s*redsys_ok=[^\n]*\nelse\n\s*redsys_ok=[^\n]*\nfi$/m', $s, $esperado);
+        preg_match('/^if \[\[ -n "\$redsys_env" &&[^\n]*; then$/m', $s, $condicion);
+
+        $this->assertNotEmpty($esperado, 'La guarda ya no declara qué valores espera en cada entorno (`redsys_ok`).');
+        $this->assertNotEmpty($condicion, 'Falta la condición que aborta con un `redsys_environment` inesperado.');
+
+        // [producción, valor leído, ¿debe pasar?]
+        $casos = [
+            [false, 'test', true], [false, '', true], [false, 'live', false],
+            [false, 'PHPParseError', false], [false, 'testlive', false],
+            [true, 'test', true], [true, 'live', true], [true, '', true],
+            [true, 'liv', false], [true, 'livetest', false], [true, '*', false], [true, 'PHPParseError', false],
+        ];
+
+        foreach ($casos as [$produccion, $valor, $pasa]) {
+            $codigo = 'DEPLOY_PRODUCTION='.($produccion ? '1' : '0')."\n"
+                .'redsys_env='.escapeshellarg($valor)."\n"
+                .$esperado[0]."\n"
+                .$condicion[0]."\n    echo ABORTA\nelse\n    echo PASA\nfi\n";
+
+            $this->assertSame(
+                $pasa ? 'PASA' : 'ABORTA',
+                trim((string) shell_exec('bash -c '.escapeshellarg($codigo))),
+                sprintf(
+                    'En %s, con redsys_environment=%s, la guarda %s.',
+                    $produccion ? 'PRODUCCIÓN' : 'staging',
+                    var_export($valor, true),
+                    $pasa ? 'aborta un valor legítimo' : 'deja pasar un valor que no espera: cobraría sin comprobar',
+                ),
+            );
+        }
     }
 
     /**

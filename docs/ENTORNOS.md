@@ -408,6 +408,23 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > Restricciones de aplicación). Hecho eso, `artisan social-proof:refresh` una vez a mano y mirar la
 > portada con las cookies de terceros aceptadas. El refresco va **cada 30 minutos** (48 llamadas al día):
 > el tope diario de la API en la consola tiene que ser **100**, no 50.
+> ✅ La IP ya está admitida: Google responde 200 (4,9 · 50 reseñas).
+>
+> 🚀 **TRES DESPLIEGUES MÁS EL MISMO DÍA** (2026-09-13):
+> - `88c947d2` (`#591`, las reseñas cada 30 minutos) — limpio;
+> - `bc538fb8` (`#592`, el aviso de reseñas y el banner de cookies) — más el script gitignorado
+>   `aplicar-produccion-592.php`, que se sube a `~/contenido/` y se ejecuta desde `~/public_html`;
+> - `bd61e5a9` (`#593`, tres titulares).
+>
+> ❗❗ **Después de un `artisan cache:clear`, `artisan social-proof:refresh`**: la caché de las reseñas vive en
+> Redis con las demás, y sin refresco la sección se queda vacía hasta el siguiente medio punto.
+> ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
+> pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
+> `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.
+> ▶ **Redsys está en `live`** desde el 2026-09-13 (TPV real, notificación en
+> `https://playjump.es/pago/redsys/notificacion`). **Probado de punta a punta por el owner**: `R-VPCOHW`
+> (10,00 €) se cobró a las 17:42 y se devolvió por REST a las 17:51. `R-AFO3SG`, iniciado un minuto antes del
+> corte, no llegó a confirmarse y se canceló: no hay cargo en nuestros registros.
 
 > 🚀 **SEXTO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-08, commit `e76d6f2a`, `DECISIONES #448`/`#449`).
 > El **SELLO DEL MODO** de un complemento: T1–T4 más el re-escalado por-invitado del post-form.
@@ -570,4 +587,4 @@ clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel
 | Paquete del cliente | `client.css` + `client-*` **no viajan por rsync** (excluidos y protegidos del `--delete`): se suben por `scp` a `public/css` y `public/img` | hecho el 01-09 |
 | Datos | `migrate` + `REPLACE INTO` de las tablas de catálogo/config del local (`~/prod-datos-catalogo.replace.sql`) | dos migraciones siembran filas: por eso `REPLACE`, no `INSERT` |
 | Post-despliegue | `~/post-deploy.sh` (import si `zones` vacía · Turnstile · usuarios · `post-deploy.php`: roles de puerta + publicar la descarga v1 · cachés · `up`) | idempotente |
-| Redsys | `redsys_environment=test`, comercio de pruebas | **compra online cerrada** (`sales.online_enabled=0`) hasta tener claves reales |
+| Redsys | ~~`redsys_environment=test`, comercio de pruebas~~ → **`live` desde el 2026-09-13** (TPV real configurado por el owner en el panel; `#594`) | la compra online está **abierta** (`sales.online_enabled=1`); la GUARDA 1 del despliegue admite `live` solo en producción |
