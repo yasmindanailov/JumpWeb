@@ -53,6 +53,15 @@ final readonly class Testimonial
          * `bool $translated` que pudiera contradecirla. {@see isTranslated()}.
          */
         public ?OriginalText $originalText = null,
+        /**
+         * **El idioma en que está escrito `text` cuando NO es el de la página** (`#591`), o `null`.
+         *
+         * ⚠️ Desde `#591` las reseñas de Google se piden en UN idioma y las otras versiones del sitio
+         * las enseñan tal cual: sin esto la tarjeta no puede poner `lang`, y un lector de pantalla lee
+         * español con la voz de la página. `null` es lo normal: toda opinión propia y toda reseña en
+         * el idioma de la página.
+         */
+        public ?string $language = null,
     ) {}
 
     /**

@@ -6,7 +6,6 @@ use App\Domain\Content\Contracts\Rating;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Content\Models\Testimonial;
-use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Support\Collection;
 
 /**
@@ -64,23 +63,12 @@ class CmsSocialProof implements SocialProof
      * texto libre que proponía la spec: «hace 2 meses» escrito a mano es verdad el día que se
      * escribe y mentira dos meses después.
      *
-     * ⚠️ Una fecha FUTURA no se cuenta: `diffForHumans` diría «en 2 meses», que sobre una opinión
-     * no significa nada. Se calla, que es lo que hace la ausencia de fecha.
+     * ⚠️ Cómo se cuenta —y que una fecha FUTURA se calla— vive en {@see RelativeAge}, que se comparte
+     * con las reseñas de Google desde `#591`: dos copias acabarían contando distinto en la misma
+     * sección.
      */
     private function cuando(Testimonial $t): ?string
     {
-        $fecha = $t->published_at;
-
-        if ($fecha === null) {
-            return null;
-        }
-
-        $hoy = DisplayTime::now()->startOfDay();
-
-        if ($fecha->startOfDay()->greaterThan($hoy)) {
-            return null;
-        }
-
-        return $fecha->locale(app()->getLocale())->diffForHumans(['parts' => 1]);
+        return RelativeAge::of($t->published_at);
     }
 }

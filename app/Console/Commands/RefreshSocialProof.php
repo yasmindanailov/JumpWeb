@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\SocialProofRefresh;
-use App\Domain\Platform\Services\SiteLocales;
 use Illuminate\Console\Command;
 
 /**
@@ -15,10 +14,15 @@ use Illuminate\Console\Command;
  * llama nunca: `PERF-02` mide el presupuesto de la home, y una llamada HTTP síncrona a un tercero en
  * el camino del render es peor que las ~1.900 consultas que aquella invariante existe para evitar.
  *
- * ❗❗ **Cada hora** (`[DECIDIDO owner, 2026-09-10]`), y el motivo no es el coste: a este volumen da
- * igual —~720 llamadas al mes, gratis—. Es que **la caché puede evictarse antes de su TTL**
- * (`allkeys-lru`, `#137`), y cuanto más corta sea la cadencia, más corto es el rato en que la
- * sección cae al respaldo propio.
+ * ❗❗ **Cada media hora y en UN idioma** (`[DECIDIDO owner, 2026-09-13]`, `#591`), para que las
+ * reseñas estén siempre puestas: la caché dura 35 minutos y el refresco siguiente llega antes. Hasta
+ * `#591` eran tres idiomas cada tres horas con una caché de media hora, y la sección enseñaba Google
+ * media hora de cada tres.
+ * ⚠️ **Cuesta dinero, poco, y conviene tenerlo escrito**: el campo `reviews` es el SKU Place Details
+ * Enterprise + Atmosphere (25 USD por 1.000 llamadas y 1.000 gratis al mes, tarifa leída el
+ * 2026-09-13). Son 48 llamadas al día, ~1.440 al mes: ~440 de pago, unos 11 USD.
+ * ⚠️ La caché puede además evictarse antes de su TTL (`allkeys-lru`, `#137`): ahí la sección cae al
+ * respaldo propio hasta el refresco siguiente, como mucho media hora.
  *
  * ⚠️⚠️ **NINGUNA salida vacía es un error**: sin configurar, con la cuota agotada, con Google caído
  * o por debajo del umbral de reseñas, la sección enseña las opiniones propias — que es su conducta
@@ -36,16 +40,13 @@ class RefreshSocialProof extends Command
 
     public function handle(GoogleSocialProof $google): int
     {
-        // ⚠️⚠️ **UNA LLAMADA POR IDIOMA.** Google devuelve la fecha relativa y el texto en el idioma
-        // que se le pide, así que una sola caché serviría «a week ago» a la página en español — lo
-        // vio renderizar con datos reales. Son tres llamadas por pasada, y por eso la cadencia bajó
-        // a cada tres horas: **24 al día**, que cabe con holgura en el tope de 50 que se recomienda
-        // poner en la consola. Con una llamada por hora y tres idiomas serían 72 y el tope lo
-        // cortaría a media tarde.
-        foreach (SiteLocales::SUPPORTED as $locale) {
-            $r = $google->refresh($locale);
-            $this->line("[{$locale}] ".$this->explica($r));
-        }
+        // ⚠️⚠️ **UNA LLAMADA POR PASADA, en el idioma de la instalación** (`#591`). Fueron tres —una
+        // por idioma, `#491`— y obligaban a refrescar cada tres horas; hoy las tres versiones leen la
+        // misma caché. Cada media hora son **48 al día**, así que el tope diario que se ponga en la
+        // consola de Google tiene que quedar holgado POR ENCIMA (100): con 50, un par de refrescos a
+        // mano lo agotan y la sección se apaga hasta el día siguiente.
+        $r = $google->refresh();
+        $this->line('['.GoogleSocialProof::sourceLocale().'] '.$this->explica($r));
 
         return self::SUCCESS;
     }

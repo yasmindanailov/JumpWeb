@@ -7,6 +7,8 @@ use App\Domain\Content\Contracts\Rating;
 use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Contracts\Testimonial as TestimonialData;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\SiteLocales;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -41,24 +43,34 @@ class GoogleSocialProof implements SocialProof
     public const PLACE_ID_SETTING = 'social.google_place_id';
 
     /**
-     * ⚠️⚠️ **La caché es POR IDIOMA, y lo descubrió renderizar con datos reales.** Google devuelve
-     * `relativePublishTimeDescription` —y el propio `text`— **en el idioma que se le pida**, y sin
-     * pedirle ninguno contestó «a week ago» sobre una página en español. La landing es ES/EN/FR, así
-     * que una sola caché serviría la fecha de un idioma a los tres.
-     * ▶ Y no vale traducirlo nosotros: R4 prohíbe alterar el contenido del usuario. Se le pide a
-     * Google, que es quien puede.
+     * ❗❗❗ **UNA sola caché, en el idioma de la instalación** (`[DECIDIDO owner, 2026-09-13]`, `#591`).
+     *
+     * Fue una por idioma desde `#491`: Google devuelve `relativePublishTimeDescription` —y el propio
+     * `text`— **en el idioma que se le pida**, y sin pedirle ninguno contestó «a week ago» sobre la
+     * página en español. Pero tres idiomas eran tres llamadas por pasada, la cadencia tuvo que bajar a
+     * cada tres horas con un TTL de media hora, y **las reseñas se veían media hora de cada tres**. El
+     * owner eligió verlas siempre en un idioma antes que a ratos en tres.
+     * ▶ Las otras versiones leen esta misma caché y **no fingen otro idioma**: el texto sale como está
+     * escrito y dice cuál es, y la fecha relativa se cuenta en el de la página ({@see testimonials()}).
+     * Traducir el texto nosotros sigue prohibido: R4 no deja alterar el contenido del usuario.
      */
     public const CACHE_PREFIX = 'social-proof.google.';
 
     /**
-     * Cuánto vive la respuesta en caché.
+     * Cuánto vive la respuesta en caché: **35 minutos para un refresco cada 30** (`#591`).
      *
-     * ⚠️ **Es la mitad del refresco (que va cada hora), no el doble.** Con un TTL más largo que la
-     * cadencia, una respuesta vieja sobreviviría a un refresco fallido y la sección publicaría una
-     * cifra de ayer creyéndola de hoy; con la mitad, el hueco cae al CMS, que es la conducta
-     * declarada. Y sigue siendo «temporary caching», que es lo que la política permite.
+     * ❗❗ **Tiene que ser MAYOR que el hueco entre dos refrescos, y el defecto lo vio el owner mirando
+     * la portada**: hasta `#591` valía la mitad de la cadencia —30 minutos contra un refresco cada tres
+     * horas— y la sección enseñaba Google media hora de cada tres. La regla de `#491` («la mitad, para
+     * que una respuesta vieja no sobreviva a un refresco fallido») protegía un borde a costa del caso
+     * normal.
+     * ⚠️ Lo que se acepta a cambio está acotado: si un refresco falla, lo último bueno se sirve **cinco
+     * minutos más** —35 de antigüedad como mucho— y después la sección cae a las opiniones propias. Los
+     * cinco minutos cubren el reloj del cron y el timeout de la llamada. Sigue siendo *«temporary
+     * caching»*, que es lo que la política permite.
+     * ▶ `SocialProofNeverHitsTheRenderPathTest` ata este número a la cadencia REAL del scheduler.
      */
-    public const CACHE_TTL_SECONDS = 1800;
+    public const CACHE_TTL_SECONDS = 2100;
 
     /**
      * `[DECIDIDO owner, 2026-09-10]`. Por debajo, Google no se toca.
@@ -99,10 +111,21 @@ class GoogleSocialProof implements SocialProof
 
     private const TIMEOUT_SECONDS = 8;
 
-    /** La clave de ESTE idioma. */
-    public static function cacheKey(?string $locale = null): string
+    /**
+     * **El idioma en que se le piden las reseñas a Google**: el primero de la instalación (`#591`).
+     *
+     * ⚠️ Sale de {@see SiteLocales::SUPPORTED} y no de un `'es'` escrito aquí: qué idioma habla el
+     * sitio es de la instalación, no del producto.
+     */
+    public static function sourceLocale(): string
     {
-        return self::CACHE_PREFIX.($locale ?? app()->getLocale());
+        return SiteLocales::SUPPORTED[0];
+    }
+
+    /** La clave de la caché. Es UNA y la leen las tres versiones del sitio (`#591`). */
+    public static function cacheKey(): string
+    {
+        return self::CACHE_PREFIX.self::sourceLocale();
     }
 
     private const CONNECT_TIMEOUT_SECONDS = 4;
@@ -123,26 +146,50 @@ class GoogleSocialProof implements SocialProof
         );
     }
 
-    /** @return Collection<int, TestimonialData> */
+    /**
+     * Las reseñas, **tal y como las puede enseñar la versión del sitio que se está pintando**.
+     *
+     * ❗❗ **La caché está en UN idioma y la leen las tres versiones** (`#591`), así que aquí se decide
+     * qué hace una página que no habla ese idioma, y la regla es **no fingir**:
+     *  - el texto sale **como está escrito** y viaja con su idioma, para que la tarjeta ponga `lang`
+     *    (sin él, un lector de pantalla lee español con la voz de la página);
+     *  - si la reseña se escribió en el idioma DE LA PÁGINA —una en inglés, en la versión inglesa— se
+     *    enseña **lo que escribió su autor** y no la traducción de Google al idioma de la caché;
+     *  - la fecha relativa se cuenta en el idioma de la página desde `publishTime`, porque la de Google
+     *    viene escrita en el de la caché: «hace una semana» en la versión francesa es el defecto de
+     *    `#491` al revés.
+     *
+     * @return Collection<int, TestimonialData>
+     */
     public function testimonials(): Collection
     {
         $datos = $this->cached();
+        $pagina = app()->getLocale();
+        $idiomaCache = (string) ($datos['lang'] ?? self::sourceLocale());
+        $mismoIdioma = self::sameLanguage($idiomaCache, $pagina);
 
         // ⚠️⚠️ **Las claves nuevas se leen con `?? null` porque la CACHÉ SOBREVIVE AL DESPLIEGUE.**
         // Al subir `#494` había entradas escritas por el código anterior, sin `author_url` ni
-        // `original`: leerlas por acceso directo revienta la portada hasta el primer refresco, que
-        // puede tardar una hora. No es defensa por si acaso — es la forma de este dato.
-        return collect($datos['reviews'] ?? [])->map(fn (array $r): TestimonialData => new TestimonialData(
-            text: (string) $r['text'],
-            author: (string) $r['author'],
-            rating: $r['rating'],
-            when: $r['when'],
-            url: $r['url'],
-            source: TestimonialData::SOURCE_GOOGLE,
-            avatarUrl: $r['avatar'],
-            authorUrl: $r['author_url'] ?? null,
-            originalText: $this->original($r),
-        ))->values();
+        // `original`: leerlas por acceso directo revienta la portada hasta el primer refresco. Con
+        // `lang` y `published` (`#591`) pasa lo mismo. No es defensa por si acaso — es la forma de este
+        // dato.
+        return collect($datos['reviews'] ?? [])->map(function (array $r) use ($pagina, $idiomaCache, $mismoIdioma): TestimonialData {
+            $original = $this->original($r);
+            $delAutor = $original !== null && self::sameLanguage($original->language, $pagina);
+
+            return new TestimonialData(
+                text: $delAutor ? $original->text : (string) $r['text'],
+                author: (string) $r['author'],
+                rating: $r['rating'],
+                when: $mismoIdioma ? $r['when'] : RelativeAge::of(self::instant($r['published'] ?? null)),
+                url: $r['url'],
+                source: TestimonialData::SOURCE_GOOGLE,
+                avatarUrl: $r['avatar'],
+                authorUrl: $r['author_url'] ?? null,
+                originalText: $delAutor ? null : $original,
+                language: ($delAutor || $mismoIdioma) ? null : $idiomaCache,
+            );
+        })->values();
     }
 
     /**
@@ -176,9 +223,11 @@ class GoogleSocialProof implements SocialProof
      * cosas distintas**: un ajuste, tiempo, la consola de Google o la red. Con un `null` para las
      * cuatro, distinguirlas obligaba a mirar el log y deducirlo de una ausencia.
      */
-    public function refresh(?string $locale = null): SocialProofRefresh
+    public function refresh(): SocialProofRefresh
     {
-        $locale ??= app()->getLocale();
+        // ⚠️ El idioma sale de la INSTALACIÓN y no de la petición en curso: quien llama es un comando
+        // que corre sin página, y con `app()->getLocale()` pediría el que le tocara (`#591`).
+        $locale = self::sourceLocale();
 
         if (! $this->configured()) {
             return new SocialProofRefresh(SocialProofRefresh::NOT_CONFIGURED);
@@ -192,7 +241,7 @@ class GoogleSocialProof implements SocialProof
                 ->timeout(self::TIMEOUT_SECONDS)
                 ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
                 // ⚠️ `languageCode` es lo que hace que la fecha y el texto lleguen en el idioma de
-                // la página. Sin él, Google elige y una página en español publica «a week ago».
+                // la caché. Sin él, Google elige y la versión en español publica «a week ago».
                 ->get(self::ENDPOINT.$this->placeId(), ['languageCode' => $locale]);
         } catch (\Throwable $e) {
             // Un timeout o un DNS caído no son un fallo nuestro: se anota y se cae al CMS.
@@ -209,17 +258,17 @@ class GoogleSocialProof implements SocialProof
             return new SocialProofRefresh(SocialProofRefresh::REJECTED, status: $respuesta->status());
         }
 
-        $datos = $this->normalize($respuesta->json() ?? []);
+        $datos = $this->normalize($respuesta->json() ?? [], $locale);
 
         if ($datos === null) {
             // ⚠️ Se OLVIDA lo que hubiera: si el sitio baja del umbral —o pierde la nota— la caché
             // no puede seguir sirviendo la cifra de antes. Es el mismo criterio que el TTL corto.
-            Cache::forget(self::cacheKey($locale));
+            Cache::forget(self::cacheKey());
 
             return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);
         }
 
-        Cache::put(self::cacheKey($locale), $datos, self::CACHE_TTL_SECONDS);
+        Cache::put(self::cacheKey(), $datos, self::CACHE_TTL_SECONDS);
 
         return new SocialProofRefresh(SocialProofRefresh::CACHED, reviews: count($datos['reviews']));
     }
@@ -228,9 +277,10 @@ class GoogleSocialProof implements SocialProof
      * Traduce la respuesta de Places a lo que la landing necesita, o `null` si no es publicable.
      *
      * @param  array<string,mixed>  $json
-     * @return array{value:float,count:int,url:?string,reviews:array<int,array<string,mixed>>}|null
+     * @param  ?string  $locale  el idioma en que se pidió; `null` es el de la instalación
+     * @return array{value:float,count:int,url:?string,lang:string,reviews:array<int,array<string,mixed>>}|null
      */
-    private function normalize(array $json): ?array
+    private function normalize(array $json, ?string $locale = null): ?array
     {
         $count = (int) ($json['userRatingCount'] ?? 0);
         $value = (float) ($json['rating'] ?? 0);
@@ -257,6 +307,9 @@ class GoogleSocialProof implements SocialProof
                 'author' => $autor,
                 'rating' => isset($r['rating']) ? (int) $r['rating'] : null,
                 'when' => ($r['relativePublishTimeDescription'] ?? null) ?: null,
+                // El INSTANTE, para contar la fecha en las versiones que no hablan el idioma de la
+                // caché (`#591`): la descripción de arriba viene escrita en ése.
+                'published' => self::instant($r['publishTime'] ?? null)?->toIso8601String(),
                 'url' => $this->safeUrl($r['googleMapsUri'] ?? null),
                 'avatar' => $this->safeUrl($r['authorAttribution']['photoUri'] ?? null),
                 // ❗❗ **La tercera pata de la atribución de R3**, que hasta `#494` no se leía: *«author's
@@ -272,6 +325,7 @@ class GoogleSocialProof implements SocialProof
             'value' => $value,
             'count' => $count,
             'url' => $this->safeUrl($json['googleMapsUri'] ?? null),
+            'lang' => $locale ?? self::sourceLocale(),
             'reviews' => $reviews,
         ];
     }
@@ -328,13 +382,45 @@ class GoogleSocialProof implements SocialProof
     }
 
     /**
+     * ¿Hablan el mismo idioma dos códigos? Compara la subetiqueta PRIMARIA: Google declara `en-US` y
+     * la página es `en`.
+     */
+    private static function sameLanguage(string $a, string $b): bool
+    {
+        $primaria = static fn (string $codigo): string => strtolower(explode('-', str_replace('_', '-', trim($codigo)))[0]);
+
+        return $primaria($a) !== '' && $primaria($a) === $primaria($b);
+    }
+
+    /**
+     * Un instante de la fuente, o `null` si no se puede leer.
+     *
+     * ⚠️ Se valida al ENTRAR y otra vez al LEER: la caché sobrevive al despliegue y puede traer lo que
+     * escribiera otra versión del código.
+     */
+    private static function instant(mixed $valor): ?CarbonImmutable
+    {
+        $valor = trim((string) ($valor ?? ''));
+
+        if ($valor === '') {
+            return null;
+        }
+
+        try {
+            return CarbonImmutable::parse($valor);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
      * Lo que hay en la caché, o `null`.
      *
      * ⚠️ **Aquí NO se llama a Google, ni siquiera si está vacía**, y ésa es la propiedad entera de
      * esta clase: un `Cache::remember` convertiría la primera visita tras una evicción en una
      * llamada de tercero dentro del render.
      *
-     * @return array{value:float,count:int,url:?string,reviews:array<int,array<string,mixed>>}|null
+     * @return array{value:float,count:int,url:?string,lang?:string,reviews:array<int,array<string,mixed>>}|null
      */
     private function cached(): ?array
     {

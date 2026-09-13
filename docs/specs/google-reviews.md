@@ -24,6 +24,11 @@
 > ❗❗ **«QUE LA CHAPA SE VEA SIEMPRE» NO ES IMPLEMENTABLE**, y el owner lo preguntó con razón: no es
 > mentir, es que **R2 prohíbe almacenarla** más allá de una caché corta. Lo que sí se consigue es que
 > esté puesta **prácticamente siempre**, refrescando **cada hora** (~720 llamadas/mes, gratis).
+> ⚠️ **CORREGIDO por `#591`** (2026-09-13): la cadencia llegó a ser cada tres horas —tres idiomas por
+> pasada— con una caché de media hora, y **la sección enseñaba Google media hora de cada tres**. Hoy es
+> **cada 30 minutos, en UN idioma** (el de la instalación, que leen las tres versiones) **y con caché de
+> 35**: 48 llamadas al día, ~1.440 al mes, **unos 11 USD al mes** (Place Details Enterprise + Atmosphere:
+> 25 USD por 1.000, 1.000 gratis al mes). El tope diario de la consola, **100**.
 >
 > ⚠️⚠️ **Y hay una AMBIGÜEDAD en esta spec que juega a favor del owner y hay que resolver en la `b`**:
 > §4.4.bis afirma «sin consentimiento la cabecera no se pinta» **sin argumentarlo** —su razón escrita

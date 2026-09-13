@@ -10,7 +10,9 @@
 #   · los controles piden más de una opinión;
 #   · la inicial se corta por caracteres y no por bytes;
 #   · las estrellas leen `--attn-ink` y no `--attn` (1,5 de contraste sobre la tarjeta blanca);
-#   · la portada pide el CONTRATO y no el modelo.
+#   · la portada pide el CONTRATO y no el modelo;
+#   · Google se pide en UN idioma, las tres versiones lo leen sin fingirlo y la caché dura más que
+#     el hueco entre dos refrescos (`#591`).
 #
 # Reglas de la casa dentro: verde antes de mutar · veredicto por CÓDIGO DE SALIDA (nunca
 # `grep passed`) · comprobar que la mutación SE APLICÓ · restaurar por COPIA en RUTA FIJA que se
@@ -31,6 +33,8 @@ FICHEROS=(
     public/css/landing.css
     app/Domain/Content/Services/GoogleSocialProof.php
     app/Domain/Content/Services/FallingBackSocialProof.php
+    app/Console/Commands/RefreshSocialProof.php
+    routes/console.php
 )
 restaurar() {
     for f in "${FICHEROS[@]}"; do
@@ -100,6 +104,8 @@ DT=app/Domain/Content/Contracts/Testimonial.php
 CSS=public/css/landing.css
 GS=app/Domain/Content/Services/GoogleSocialProof.php
 FB=app/Domain/Content/Services/FallingBackSocialProof.php
+CM=app/Console/Commands/RefreshSocialProof.php
+RC=routes/console.php
 
 echo '── El panel vacío ──'
 
@@ -144,13 +150,16 @@ echo
 echo '── El suelo sin JavaScript ──'
 
 # Con `x-show` + `x-cloak` la sección se queda VACÍA sin JS. Aquí el equivalente: que ninguna nazca.
-mutar "ninguna opinión nace visible sin JavaScript" "$HB" \
-  "{{ \$k === 0 ? ' is-on' : '' }}" \
-  "{{ '' }}"
+# ⚠️ Estos dos casos mutaban `is-on`, la clase de la PILA, y llevaban sin aplicarse desde `#549`, que
+# retiró la pila por un carril: el arnés lo decía («NO SE APLICÓ») y nadie lo había vuelto a correr.
+# Hoy la propiedad es que el servidor sirve TODAS las opiniones y ninguna nace escondida.
+mutar "el servidor sirve una sola opinión" "$HB" \
+  '                    @foreach ($socialProof as $k => $op)' \
+  '                    @foreach ($socialProof->take(1) as $k => $op)'
 
-mutar "todas las opiniones nacen visibles a la vez" "$HB" \
-  "{{ \$k === 0 ? ' is-on' : '' }}" \
-  "{{ ' is-on' }}"
+mutar "vuelve la clase de la pila" "$HB" \
+  '                        <article class="rev__card">' \
+  '                        <article class="rev__card is-on">'
 
 echo
 echo '── Los controles ──'
@@ -199,7 +208,7 @@ mutar "el umbral desaparece" "$GS" \
   '        if ($count < 0 || $value <= 0) {'
 
 mutar "la caché conserva una cifra que ya no es publicable" "$GS" \
-  '            Cache::forget(self::cacheKey($locale));
+  '            Cache::forget(self::cacheKey());
 
             return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);' \
   '            return new SocialProofRefresh(SocialProofRefresh::BELOW_THRESHOLD);'
@@ -217,14 +226,58 @@ echo '── Google: el idioma ──'
 
 # El defecto REAL que encontró renderizar con la reseña de verdad: sin `languageCode`, Google
 # contesta «a week ago» y la portada en español lo publica tal cual.
-mutar "no se le pide a Google el idioma de la página" "$GS" \
+mutar "no se le pide a Google ningún idioma" "$GS" \
   "['languageCode' => \$locale]" \
   '[]'
 
-# Y su otra mitad: con una sola caché, el primer refresco sirve su idioma a las tres versiones.
-mutar "la caché deja de ser por idioma" "$GS" \
-  "        return self::CACHE_PREFIX.(\$locale ?? app()->getLocale());" \
-  '        return self::CACHE_PREFIX;'
+# `#591`: el idioma es el de la INSTALACIÓN. Sacado de la petición en curso, el comando —que corre sin
+# página— pediría el que le tocara.
+mutar "el idioma sale de la petición y no de la instalación" "$GS" \
+  '        $locale = self::sourceLocale();' \
+  '        $locale = app()->getLocale();'
+
+# Y su otra mitad: UNA caché que leen las tres versiones. Con una por idioma, dos se quedan sin reseñas.
+mutar "cada versión busca su propia caché" "$GS" \
+  '        return self::CACHE_PREFIX.self::sourceLocale();' \
+  '        return self::CACHE_PREFIX.app()->getLocale();'
+
+mutar "otra versión publica la fecha que Google escribió en el idioma de la caché" "$GS" \
+  "                when: \$mismoIdioma ? \$r['when'] : RelativeAge::of(self::instant(\$r['published'] ?? null))," \
+  "                when: \$r['when'],"
+
+mutar "el texto no dice su idioma fuera de él" "$GS" \
+  '                language: ($delAutor || $mismoIdioma) ? null : $idiomaCache,' \
+  '                language: null,'
+
+mutar "la tarjeta no pinta el idioma del texto" "$HB" \
+  '                                   @if ($op->language) lang="{{ $op->language }}" @endif' \
+  ''
+
+mutar "se enseña la traducción aunque la página hable el idioma del autor" "$GS" \
+  '            $delAutor = $original !== null && self::sameLanguage($original->language, $pagina);' \
+  '            $delAutor = false;'
+
+mutar "en-US deja de ser inglés" "$GS" \
+  "explode('-', str_replace('_', '-', trim(\$codigo)))[0]" \
+  'trim($codigo)'
+
+echo
+echo '── Google: la cadencia (#591) ──'
+
+# El defecto que vio el owner: una caché más corta que el hueco entre dos refrescos apaga las reseñas
+# un rato de cada ciclo sin que falle nada. La guarda lee las DOS mitades; hay que morder por las dos.
+mutar "la caché vuelve a durar lo mismo que el hueco" "$GS" \
+  '    public const CACHE_TTL_SECONDS = 2100;' \
+  '    public const CACHE_TTL_SECONDS = 1800;'
+
+mutar "el refresco vuelve a cada tres horas" "$RC" \
+  "Schedule::command('social-proof:refresh')->everyThirtyMinutes()" \
+  "Schedule::command('social-proof:refresh')->everyThreeHours()"
+
+mutar "el comando vuelve a llamar una vez por idioma" "$CM" \
+  '        $r = $google->refresh();' \
+  '        $google->refresh(); $google->refresh();
+        $r = $google->refresh();'
 
 echo
 echo '── Google: la cascada ──'

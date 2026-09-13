@@ -752,7 +752,7 @@ class GoogleAttributionTest extends TestCase
 
         $this->assertNotNull($datos, 'la respuesta de ejemplo no pasa el umbral: el caso miraría el vacío');
 
-        Cache::put(GoogleSocialProof::cacheKey('es'), $datos, 60);
+        Cache::put(GoogleSocialProof::cacheKey(), $datos, 60);
 
         $opiniones = $servicio->testimonials();
 

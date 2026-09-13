@@ -31776,3 +31776,42 @@ procedimiento y la evidencia están en `ENTORNOS.md` §6.
   `~/backups/` y se borró la local.
 - Quedan: la T6 (en/fr de lo que escribe el panel) y el título de la pestaña de la portada, que dice
   «Murcia» (`landing.footer.tag`).
+
+## #591 · 2026-09-13 · `[DECIDIDO owner]` Las reseñas de Google, siempre puestas: un refresco cada media hora, en un solo idioma
+
+El owner vio la portada de producción sin reseñas de Google y pidió que estuvieran siempre. Eran **dos
+causas**, y solo una es del producto:
+- **Producción**: la clave de Places está restringida por IP y Google responde **403
+  `API_KEY_IP_ADDRESS_BLOCKED`**. Falta añadir la IP del servidor en Google Cloud, y eso lo hace el owner
+  (`ENTORNOS.md` §6).
+- **El producto**: la caché duraba **30 minutos** y el refresco iba **cada tres horas**, así que la sección
+  enseñaba Google **media hora de cada tres** y el resto del tiempo caía a las opiniones propias, **sin que
+  fallara nada**: cada pieza hacía lo que decía su comentario. `#491` fijó el TTL en «la mitad de la
+  cadencia» cuando la cadencia era de una hora; al pedir tres idiomas por pasada la cadencia bajó a tres
+  horas y el TTL se quedó donde estaba.
+
+`[DECIDIDO owner]`, entre opciones con su coste delante: **cada 30 minutos y solo en el idioma de la
+instalación** (la alternativa, los tres idiomas cada 30 minutos, eran ~83 USD al mes).
+- **Cadencia y caché**: `everyThirtyMinutes()` y TTL de **35 minutos**. Revierte a sabiendas la regla de
+  `#491`: tras un refresco fallido, lo último bueno se sirve cinco minutos más (35 de antigüedad como mucho).
+- **Un idioma**: el primero de la instalación (`SiteLocales::SUPPORTED[0]`, no un `'es'` escrito), una
+  llamada por pasada y **una caché que leen las tres versiones**.
+- **Las versiones en inglés y francés no fingen**: el texto sale como está escrito y con `lang` (campo nuevo
+  `Testimonial::$language`); si la reseña se escribió en el idioma de la página, se enseña lo que escribió
+  su autor y no la traducción de Google; y la fecha relativa se cuenta en el idioma de la página desde
+  `publishTime`. Esa cuenta vive en `RelativeAge`, que sale de `CmsSocialProof` para que la misma sección no
+  cuente las fechas de dos maneras.
+- **Coste, leído en la tarifa de Google el 2026-09-13**: el campo `reviews` es Place Details Enterprise +
+  Atmosphere, **25 USD por 1.000 llamadas y 1.000 gratis al mes**. 48 llamadas al día son ~1.440 al mes:
+  ~440 de pago, **unos 11 USD**. El tope diario de la consola pasa a **100**: con el de 50 que se
+  recomendaba, un par de refrescos a mano lo agotan y la sección se apaga hasta el día siguiente.
+- **Guardas** (`SocialProofNeverHitsTheRenderPathTest`): el caso del idioma **cambió de premisa y se
+  reescribió** —afirmaba una caché por idioma— y entran cinco: el texto dice su idioma y la fecha es la de la
+  página · la reseña escrita en el idioma de la página sale como la escribió su autor · la tarjeta pone
+  `lang` solo fuera de su idioma · el comando hace una llamada por pasada · y **la caché dura más que el
+  hueco entre dos refrescos**, leyendo la cadencia del scheduler REAL: el defecto solo existe mirando las
+  dos mitades a la vez.
+- **Arnés** `scripts/mutar-resenas.sh`: **30/30**. Entran once casos (idioma, cadencia y comando) y se
+  re-apuntan tres que no se aplicaban: el `cacheKey($locale)` de este cambio y los dos de la PILA de
+  opiniones, retirada en `#549`. ⚠️ El arnés ya lo decía («NO SE APLICÓ») y salía con código 1; nadie lo
+  había vuelto a correr desde entonces.

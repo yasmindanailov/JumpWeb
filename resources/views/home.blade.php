@@ -1184,8 +1184,12 @@
                                 {{-- ⚠️ UN solo atributo `class`: el servidor lo pinta recortado —ése
                                      es el suelo sin JavaScript— y Alpine solo AÑADE `--open`. Dos
                                      atributos `class` en el mismo elemento son HTML inválido y el
-                                     navegador se queda con el primero. --}}
+                                     navegador se queda con el primero.
+                                     ⚠️ `lang` solo cuando el texto NO está en el idioma de la página
+                                     (`#591`): las reseñas de Google se piden en uno y las leen las
+                                     tres versiones. --}}
                                 <p class="rev__text rev__text--clamp" x-ref="txt"
+                                   @if ($op->language) lang="{{ $op->language }}" @endif
                                    x-show="!original"
                                    :class="abierto && 'rev__text--open'">{{ $op->text }}</p>
                                 @if ($op->isTranslated())

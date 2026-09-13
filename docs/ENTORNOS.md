@@ -402,6 +402,12 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > `place_id` ni opiniones propias reales) y las imágenes de la cafetería (las locales eran marcadores de
 > diseño). ⚠️ **El título de la pestaña de la portada dice «Murcia»** (`landing.footer.tag`, el respaldo
 > cuando no hay «Título web»): pendiente de corregir.
+> ▶ **Las reseñas de Google, después** (`#591`): la clave de Places va en el `.env` (con `config:cache`) y
+> el `place_id` en Ajustes, pero Google responde **403 `API_KEY_IP_ADDRESS_BLOCKED`**: la clave está
+> restringida por IP y falta la del servidor, **51.38.54.41** (Google Cloud → Credenciales → la clave →
+> Restricciones de aplicación). Hecho eso, `artisan social-proof:refresh` una vez a mano y mirar la
+> portada con las cookies de terceros aceptadas. El refresco va **cada 30 minutos** (48 llamadas al día):
+> el tope diario de la API en la consola tiene que ser **100**, no 50.
 
 > 🚀 **SEXTO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-08, commit `e76d6f2a`, `DECISIONES #448`/`#449`).
 > El **SELLO DEL MODO** de un complemento: T1–T4 más el re-escalado por-invitado del post-form.

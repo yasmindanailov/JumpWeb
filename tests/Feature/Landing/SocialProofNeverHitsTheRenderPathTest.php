@@ -9,6 +9,9 @@ use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\SocialProofRefresh;
 use App\Domain\Identity\Services\CookieConsent;
 use App\Domain\Platform\Models\Setting;
+use Carbon\CarbonImmutable;
+use Cron\CronExpression;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
@@ -84,6 +87,16 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
                 ],
             ]],
         ];
+    }
+
+    /** Una reseña ESCRITA en español y pedida en español: la forma real de las del parque. */
+    private function resenaEscritaEnEspanol(): array
+    {
+        $json = $this->respuestaDeGoogle();
+        $json['reviews'][0]['text'] = ['text' => 'Muy limpio y seguro.', 'languageCode' => 'es'];
+        $json['reviews'][0]['originalText'] = ['text' => 'Muy limpio y seguro.', 'languageCode' => 'es'];
+
+        return $json;
     }
 
     private function conOpinionPropia(): void
@@ -257,26 +270,122 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
     }
 
     /**
-     * ❗❗❗ **SE LE PIDE A GOOGLE EL IDIOMA DE LA PÁGINA, Y LA CACHÉ ES POR IDIOMA.**
+     * ❗❗❗ **SE LE PIDE A GOOGLE UN SOLO IDIOMA —EL DE LA INSTALACIÓN— Y LO LEEN LAS TRES VERSIONES**
+     * (`[DECIDIDO owner, 2026-09-13]`, `#591`).
      *
-     * ⚠️ **Lo encontró renderizar con la reseña REAL, no una relectura**: sin `languageCode`, Google
-     * contestó `relativePublishTimeDescription` = «a week ago» y la portada en español lo publicó
-     * tal cual. Y no vale traducirlo nosotros: **R4 prohíbe alterar el contenido del usuario**, así
-     * que se le pide a quien puede hacerlo.
-     * ⚠️ Y por eso la caché lleva el idioma en la clave: con una sola, el primer refresco serviría
-     * su idioma a las tres versiones del sitio.
+     * ⚠️⚠️ **Este caso CAMBIÓ DE PREMISA y se reescribió** (el precedente de `#324`): hasta `#591`
+     * afirmaba lo contrario —el idioma de la página y una caché por idioma—, y eso costaba tres
+     * llamadas por pasada, una cadencia de tres horas y una sección que enseñaba Google media hora de
+     * cada tres.
+     * ⚠️ Lo que NO cambia es la mitad que encontró la reseña REAL: **se le pide un idioma a Google**
+     * (sin `languageCode` contestó «a week ago» sobre la página en español).
+     * ⚠️ Se refresca con la aplicación en FRANCÉS a propósito: si el idioma saliera de la petición en
+     * curso y no de la instalación, el comando —que corre sin página— pediría el que le tocara.
      */
-    public function test_se_pide_el_idioma_de_la_pagina_y_la_cache_es_por_idioma(): void
+    public function test_se_pide_el_idioma_de_la_instalacion_y_lo_leen_las_tres_versiones(): void
     {
-        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+        Http::fake(['places.googleapis.com/*' => Http::response($this->resenaEscritaEnEspanol())]);
 
-        app(GoogleSocialProof::class)->refresh('fr');
+        app()->setLocale('fr');
+        app(GoogleSocialProof::class)->refresh();
 
-        Http::assertSent(fn ($req) => str_contains($req->url(), 'languageCode=fr'));
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($req) => str_contains($req->url(), 'languageCode=es'));
 
-        // La clave lleva el idioma: lo cacheado en francés no se sirve en español.
-        $this->assertNotNull(Cache::get(GoogleSocialProof::cacheKey('fr')));
-        $this->assertNull(Cache::get(GoogleSocialProof::cacheKey('es')), 'una sola caché serviría el idioma equivocado');
+        foreach (['es', 'en', 'fr'] as $idioma) {
+            app()->setLocale($idioma);
+
+            $this->assertCount(1, app(GoogleSocialProof::class)->testimonials(),
+                "La versión «{$idioma}» no lee la caché de la instalación: esa página se queda sin reseñas de Google.");
+        }
+    }
+
+    /**
+     * ❗❗ **LA VERSIÓN QUE NO HABLA EL IDIOMA DE LA CACHÉ NO LO FINGE** (`#591`): el texto sale como
+     * está escrito y DICE su idioma, y la fecha se cuenta en el de la página.
+     *
+     * ⚠️ Sin el idioma la tarjeta no pone `lang` y un lector de pantalla lee español con la voz
+     * inglesa; sin contar la fecha aquí, «hace una semana» sale en la versión inglesa — el defecto de
+     * `#491` al revés.
+     */
+    public function test_en_otra_version_el_texto_dice_su_idioma_y_la_fecha_es_la_de_la_pagina(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-09-10T12:00:00Z'));
+        Http::fake(['places.googleapis.com/*' => Http::response($this->resenaEscritaEnEspanol())]);
+        app(GoogleSocialProof::class)->refresh();
+
+        app()->setLocale('en');
+        $op = app(GoogleSocialProof::class)->testimonials()->first();
+
+        $this->assertSame('Muy limpio y seguro.', $op->text, 'el texto no sale como está escrito');
+        $this->assertSame('es', $op->language, 'el texto en español no dice su idioma en la versión inglesa');
+        $this->assertFalse($op->isTranslated(), 'se anuncia como traducida una reseña que se enseña tal cual');
+        $this->assertSame('1 week ago', $op->when, 'la fecha relativa sale en el idioma de la caché');
+
+        // CONTROL: en la versión de la caché manda la fecha que escribió Google y no se declara idioma.
+        app()->setLocale('es');
+        $op = app(GoogleSocialProof::class)->testimonials()->first();
+
+        $this->assertSame('hace una semana', $op->when);
+        $this->assertNull($op->language);
+    }
+
+    /**
+     * **Una reseña escrita en el idioma de la página se enseña como la escribió su autor**, no en la
+     * traducción de Google al idioma de la caché (`#591`). Y en la versión de la caché sigue siendo una
+     * traducción, con su aviso: es el mismo dato leído desde dos páginas.
+     */
+    public function test_una_resena_escrita_en_el_idioma_de_la_pagina_sale_como_la_escribio_su_autor(): void
+    {
+        $json = $this->respuestaDeGoogle();
+        $json['reviews'][0]['text'] = ['text' => '¡Excelente parque!', 'languageCode' => 'es'];
+        $json['reviews'][0]['originalText'] = ['text' => 'Excellent playground!', 'languageCode' => 'en-US'];
+
+        Http::fake(['places.googleapis.com/*' => Http::response($json)]);
+        app(GoogleSocialProof::class)->refresh();
+
+        app()->setLocale('en');
+        $op = app(GoogleSocialProof::class)->testimonials()->first();
+
+        $this->assertSame('Excellent playground!', $op->text,
+            'La versión inglesa enseña la traducción al español de una reseña escrita en inglés.');
+        $this->assertFalse($op->isTranslated());
+        $this->assertNull($op->language);
+
+        app()->setLocale('es');
+        $op = app(GoogleSocialProof::class)->testimonials()->first();
+
+        $this->assertSame('¡Excelente parque!', $op->text);
+        $this->assertTrue($op->isTranslated(), 'la versión española pierde el aviso de traducción');
+    }
+
+    /** **Y la TARJETA lo pinta**: `lang` en el texto, solo en la versión que no habla su idioma. */
+    public function test_la_tarjeta_pone_lang_al_texto_solo_fuera_de_su_idioma(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->resenaEscritaEnEspanol())]);
+        app(GoogleSocialProof::class)->refresh();
+
+        $consentimiento = CookieConsent::encode(['maps' => true, 'social' => false]);
+
+        foreach (['en' => true, 'es' => false] as $idioma => $debeLlevarlo) {
+            $html = (string) $this->withUnencryptedCookie(CookieConsent::COOKIE_NAME, $consentimiento)
+                ->withSession(['locale' => $idioma])
+                ->get('/')->assertOk()->getContent();
+
+            preg_match('#<section id="reviews".*?</section>#s', $html, $m);
+            $seccion = $m[0] ?? '';
+
+            $this->assertStringContainsString('Muy limpio y seguro.', $seccion,
+                "la versión «{$idioma}» no pinta la reseña: el caso miraría el vacío");
+
+            $this->assertSame(
+                $debeLlevarlo,
+                preg_match('/<p class="rev__text[^"]*"[^>]*\blang="es"/', $seccion) === 1,
+                $debeLlevarlo
+                    ? 'La versión inglesa pinta un texto en español sin `lang`: un lector de pantalla lo lee con la voz inglesa.'
+                    : 'La versión española declara `lang` sobre un texto en su propio idioma.',
+            );
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -375,5 +484,70 @@ class SocialProofNeverHitsTheRenderPathTest extends TestCase
         $html = (string) $this->get('/')->assertOk()->getContent();
 
         $this->assertStringNotContainsString('rev__card', $html, 'queda un hueco donde no hay nada que enseñar');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  4 · La cadencia
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * ❗❗❗ **LA CACHÉ VIVE MÁS QUE EL HUECO ENTRE DOS REFRESCOS** (`#591`).
+     *
+     * ⚠️⚠️ **Es el defecto que vio el owner mirando la portada, y no fallaba nada**: con una caché de
+     * 30 minutos y un refresco cada tres horas, las reseñas de Google estaban puestas media hora de
+     * cada tres. Cada pieza hacía lo que decía su comentario; el defecto solo existe mirando las DOS a
+     * la vez, y eso es lo que hace este caso — lee la cadencia del scheduler REAL, no una copia.
+     * ⚠️ Mide el hueco MÁS LARGO del día y no el primero: una cadencia irregular tiene huecos
+     * distintos, y el que manda es el mayor.
+     */
+    public function test_la_cache_vive_mas_que_el_hueco_entre_dos_refrescos(): void
+    {
+        $eventos = collect(app(Schedule::class)->events())
+            ->filter(fn ($evento): bool => str_contains((string) $evento->command, 'social-proof:refresh'))
+            ->values();
+
+        $this->assertCount(1, $eventos, 'el refresco de las reseñas ha dejado de estar programado, o lo está dos veces');
+
+        $hueco = $this->huecoMaximoEnMinutos($eventos[0]->expression);
+
+        $this->assertGreaterThan(
+            $hueco * 60,
+            GoogleSocialProof::CACHE_TTL_SECONDS,
+            "La caché dura menos que el hueco entre dos refrescos ({$hueco} min): las reseñas de Google\n".
+            'desaparecen un rato de cada ciclo y la sección cae a las opiniones propias sin que falle nada.',
+        );
+    }
+
+    /**
+     * **El comando hace UNA llamada por pasada** (`#591`). Eran tres —una por idioma— y ésa era la
+     * aritmética que obligaba a refrescar cada tres horas: tres cada media hora agotarían a media
+     * mañana el tope diario de la consola.
+     */
+    public function test_el_comando_hace_una_sola_llamada_por_pasada(): void
+    {
+        Http::fake(['places.googleapis.com/*' => Http::response($this->respuestaDeGoogle())]);
+
+        $this->artisan('social-proof:refresh')->assertExitCode(0);
+
+        Http::assertSentCount(1);
+    }
+
+    /** El hueco MÁS LARGO entre dos disparos de una expresión cron, a lo largo de un día. */
+    private function huecoMaximoEnMinutos(string $expresion): int
+    {
+        $cron = new CronExpression($expresion);
+        $inicio = CarbonImmutable::parse('2026-09-10 00:00:00');
+        $fin = $inicio->addDay();
+
+        $anterior = CarbonImmutable::instance($cron->getNextRunDate($inicio, 0, true));
+        $hueco = 0;
+
+        while ($anterior->lessThan($fin)) {
+            $siguiente = CarbonImmutable::instance($cron->getNextRunDate($anterior));
+            $hueco = max($hueco, (int) abs($anterior->diffInMinutes($siguiente)));
+            $anterior = $siguiente;
+        }
+
+        return $hueco;
     }
 }
