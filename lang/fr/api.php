@@ -60,6 +60,7 @@ return [
         'waiver_unsigned' => 'Sa décharge n\'est pas signée : signez-la dans « Personnes à charge » avant de lui attribuer un billet.',
         'too_many' => 'Vous avez choisi plus de personnes à charge que de billets.',
         'entries_only' => 'Les personnes à charge ne s\'attribuent qu\'aux billets : un pack anniversaire demande déjà ses invités.',
+        'repeated' => 'Vous avez choisi deux fois la même personne à charge pour ces billets.',
     ],
 
     'register' => [

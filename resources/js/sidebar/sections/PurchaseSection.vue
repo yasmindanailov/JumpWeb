@@ -10,8 +10,8 @@ import { useCatalogStore } from '../stores/catalog.js';
 import { useBookingStore } from '../stores/booking.js';
 import { useSelectionStore } from '../stores/selection.js';
 import { useDependentsStore } from '../stores/dependents.js';
-// ⚠️ El desenlace abre la zona del CARNÉ, que vive en la OTRA sección (`#563`). Se hace con el store,
-// que es global, y con `openZone()`, que ya siembra la vuelta: ver `showCard()`.
+// ⚠️ El desenlace abre el área de CUENTA, que vive en la OTRA sección (`#563`; al índice desde `#567`).
+// Se hace con el store, que es global, y con `openZone()`, que ya siembra la vuelta: ver `goToAccount()`.
 import { useAccountStore } from '../stores/account.js';
 import { ZONES } from '../account/navigation.js';
 import { needsAssignment } from '../assignment.js';
@@ -1153,7 +1153,9 @@ function addAnother() {
 }
 
 /**
- * **La puerta al CARNÉ desde la reserva creada** (`#563`, `[DECIDIDO owner]`).
+ * **La puerta a la CUENTA desde la reserva creada** (`#567`, `[DECIDIDO owner, 2026-09-12]`; hasta
+ * entonces llevaba al carné, `#563`). Al ÍNDICE y no a una zona concreta: ahí están el QR, «Mis
+ * reservas» y el resto, y no existe una pantalla de una sola reserva a la que mandar.
  *
  * ⚠️ **`openZone()` y no `showAccount()` + `go()`**: aquélla existe justo para «abrir el área EN una
  * zona viniendo de fuera de ella», y siembra la vuelta — sin ella, «volver» sacaría de la sección en
@@ -1163,8 +1165,8 @@ function addAnother() {
  * ⚠️ **El desenlace NO se barre**: si el cliente vuelve a la compra, su reserva creada sigue ahí. Eso
  * lo hace `addAnother()`, que es el gesto que dice «empiezo otra».
  */
-function showCard() {
-    accountStore.openZone(ZONES.CARD);
+function goToAccount() {
+    accountStore.openZone(ZONES.HOME);
 }
 
 /**
@@ -1335,7 +1337,7 @@ function goBack() {
             :messages="messages"
             :locale="locale"
             @add-another="addAnother"
-            @show-card="showCard" />
+            @go-account="goToAccount" />
 
         <DeclinedStep
             v-else-if="store.step === STEPS.DECLINED"

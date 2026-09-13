@@ -1708,10 +1708,20 @@ body.no-scroll { overflow: hidden; }
    del área de cliente este bloque es redundante —sus botones llevan a donde el cliente YA está—, así
    que se colapsa igual. Es un modo PROPIO y no `is-cart` reutilizado a propósito: `cart` también lo
    colapsaría, pero haría que la señal dijera «carrito» con el cliente mirando sus pedidos, que es el
-   fallo de `DECISIONES #115` —una comprobación que mide una cosa y se lee como otra—. */
+   fallo de `DECISIONES #115` —una comprobación que mide una cosa y se lee como otra—.
+   ❗❗ **`is-result` entra en `#567` y REVIERTE lo que esta regla decía** (`[DECIDIDO owner,
+   2026-09-12]`: «en la página final el banner molesta para leer el mensaje y no es útil»). Se dejaba
+   visible porque «el proceso ya terminó y es cuando un invitado tiene más motivo para registrarse»;
+   con sesión repetía lo que la pantalla ya ofrece —«Mi QR» salía DOS veces— y tapaba su único mensaje.
+   ⚠️ **`result` no es UNA pantalla, son CINCO** (`machine.js::modeOf()`): reserva creada, revisa tu
+   correo, saltando al banco, pago denegado y verificando pago. Se oculta en las cinco a sabiendas
+   (`[DECIDIDO owner]`): en todas el bloque compite con un mensaje que ya trae su propia acción.
+   ⚠️ La lista está escrita DOS veces —aquí y en su gemela de movimiento reducido, más abajo— y la
+   guarda exige las dos. */
 .sidecart__panel.is-booking .acct,
 .sidecart__panel.is-cart .acct,
-.sidecart__panel.is-account .acct {
+.sidecart__panel.is-account .acct,
+.sidecart__panel.is-result .acct {
     grid-template-rows: 0fr;
     padding-top: 0;
     padding-bottom: 0;
@@ -1761,7 +1771,8 @@ body.no-scroll { overflow: hidden; }
     .acct,
     .sidecart__panel.is-booking .acct,
     .sidecart__panel.is-cart .acct,
-    .sidecart__panel.is-account .acct {
+    .sidecart__panel.is-account .acct,
+    .sidecart__panel.is-result .acct {
         transition: opacity var(--dur-toque) var(--ease-sale), visibility 0s var(--ease-bucle) var(--dur-toque);
     }
 }

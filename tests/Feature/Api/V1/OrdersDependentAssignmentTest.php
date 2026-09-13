@@ -217,19 +217,57 @@ class OrdersDependentAssignmentTest extends ApiTestCase
         $this->assertSame(0, Order::count());
     }
 
-    /** La FORMA la valida la capa de entrega: un id repetido o que no es entero es un 422 de validación. */
+    /**
+     * La FORMA la valida la capa de entrega: un id repetido o que no es entero es un 422 de validación.
+     *
+     * ⚠️⚠️ **Este caso CAMBIÓ DE PREMISA en `#567` y se reescribió**: aseveraba el campo
+     * `items.0.dependent_ids.0`, que es el que emitía el `distinct` de Laravel —la regla que comparaba
+     * contra la cesta ENTERA y rechazaba compras legítimas—. «Sin repetidos» es de la LÍNEA, así que
+     * el aviso cae sobre la línea y con su motivo en nuestro idioma, no con «has a duplicate value».
+     */
     public function test_the_shape_of_the_field_is_validated_before_anything_else(): void
     {
         $lucas = $this->add($this->user);
 
-        $this->actingAs($this->user)->postJson(self::PATH, $this->cart([['quantity' => 2, 'dependent_ids' => [$lucas->id, $lucas->id]]]))
-            ->assertStatus(422)->assertJsonPath('error.code', 'validation_failed')
-            ->assertJsonStructure(['error' => ['fields' => ['items.0.dependent_ids.0']]]);
+        $repeated = $this->actingAs($this->user)->postJson(self::PATH, $this->cart([['quantity' => 2, 'dependent_ids' => [$lucas->id, $lucas->id]]]))
+            ->assertStatus(422)->assertJsonPath('error.code', 'validation_failed');
+        $this->assertSame(['items.0.dependent_ids' => [__('api.dependents.repeated')]], $repeated->json('error.fields'));
+        // Y el motivo existe en los TRES idiomas: si faltara en uno, ese cliente leería la CLAVE.
+        foreach (['es', 'en', 'fr'] as $locale) {
+            $this->assertTrue(app('translator')->has('api.dependents.repeated', $locale, false), "Falta «api.dependents.repeated» en {$locale}.");
+        }
 
         $this->actingAs($this->user)->postJson(self::PATH, $this->cart([['quantity' => 2, 'dependent_ids' => ['x']]]))
             ->assertStatus(422)->assertJsonPath('error.code', 'validation_failed');
 
         $this->assertSame(0, Order::count());
+    }
+
+    /**
+     * ❗❗❗ **EL MISMO MENOR EN DOS ENTRADAS SE COMPRA** (`#567`, `[DECIDIDO owner, 2026-09-12]`).
+     *
+     * Es el caso que faltaba, y por su ausencia el defecto llegó al navegador del owner con la suite en
+     * verde: ningún test mandaba dos líneas con el mismo niño, y el `distinct` de dos comodines compara
+     * contra la cesta entera. Lo sostienen `DependentAssigner`, que valida línea a línea, y el índice
+     * único `(order_item_id, dependent_id)`, que también es por LÍNEA.
+     */
+    public function test_the_same_dependent_may_go_on_two_different_lines(): void
+    {
+        $lucas = $this->add($this->user);
+
+        $response = $this->actingAs($this->user)->postJson(self::PATH, $this->cart([
+            ['quantity' => 1, 'dependent_ids' => [$lucas->id]],
+            ['quantity' => 1, 'time' => '11:00:00', 'dependent_ids' => [$lucas->id]],
+        ]));
+
+        $response->assertCreated()->assertValidRequest()->assertValidResponse(201);
+
+        $items = Order::firstOrFail()->items()->whereNull('parent_item_id')->orderBy('id')->get();
+        $this->assertCount(2, $items, 'dos líneas a horas distintas son dos reservas, no una fundida');
+
+        foreach ($items as $item) {
+            $this->assertSame([$lucas->id], DependentAssignment::where('order_item_id', $item->id)->pluck('dependent_id')->all());
+        }
     }
 
     // ── La escritura no puede tirar el pedido ─────────────────────────────────────────────────

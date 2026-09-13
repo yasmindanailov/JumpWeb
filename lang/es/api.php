@@ -64,6 +64,9 @@ return [
         'waiver_unsigned' => 'Falta su descargo firmado: fírmalo en «Menores a cargo» antes de asignarle una entrada.',
         'too_many' => 'Has elegido más menores que entradas.',
         'entries_only' => 'Los menores solo se asignan a entradas: un pack ya pide a sus invitados.',
+        // `#567`: «sin repetidos» es de la LÍNEA. El mismo menor SÍ puede ir en otra entrada del
+        // pedido; lo que no tiene sentido es marcarlo dos veces en la misma.
+        'repeated' => 'Has marcado al mismo menor dos veces en estas entradas.',
     ],
 
     // Avisos POR CAMPO del alta (`POST /auth/register`) que solo emite el servidor en el 422.

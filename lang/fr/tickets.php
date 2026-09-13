@@ -183,9 +183,9 @@ return [
     'payment_confirmed_note' => 'Paiement confirmé.',
     'new_purchase' => 'Faire une autre réservation',
     'see_my_orders' => 'Voir mes réservations',
-    // La porte vers la CARTE depuis « réservation créée » (`#563`) : c'est le même code que
-    // toujours. Le libellé reprend celui de sa zone pour promettre l'écran où il mène.
-    'see_my_card' => 'Voir Mon QR',
+    // La porte vers le COMPTE depuis « réservation créée » (`#567` ; elle ouvrait la carte en `#563`) :
+    // l'index contient le QR et « Mes réservations ».
+    'go_to_account' => 'Aller à mon compte',
     'guest_form_notice' => 'Nous te demanderons de compléter le formulaire de ta réservation : nous t’enverrons le lien par e-mail (aussi dans « Mes réservations »).',
     'statuses' => [
         'pending' => 'En attente de paiement',
@@ -330,10 +330,11 @@ return [
      */
     'who_block' => [
         'title' => 'Qui vient ?',
-        'none' => 'Mineurs à votre charge et autorisations',
-        'some' => 'Mineurs à votre charge : :count',
-        'guardian' => "Avec l'autorisation d'un mineur invité",
-        'both' => 'Mineurs à votre charge : :count · et une autorisation',
+        'none' => 'Mineurs à votre charge',
+        'some' => 'Mineurs : :count',
+        'guardian' => 'Avec autorisation',
+        'both' => 'Mineurs : :count · autorisation',
+        'guardian_only' => 'Autorisation',
     ],
     'guardian_no_places' => 'Il ne reste plus de places libres sur cette réservation : vous les avez toutes attribuées à des mineurs à votre charge. Ajoutez un billet ou retirez une attribution.',
     'guardian_optional' => "Un mineur qui n'est pas à ma charge vient",

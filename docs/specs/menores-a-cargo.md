@@ -735,6 +735,16 @@ Recuentos del gate tras la tanda 1 (entonces): **33 modelos y 80 migraciones**; 
 
 #### 9.9.3 Decisiones de diseño `[DECIDIDO agente]` — todas reversibles, cada una con su porqué
 
+> ⚠️⚠️ **D1 CORREGIDA por `#567` (2026-09-12), y la corrección va delante del texto**: «lista de enteros
+> distintos» con `*.integer|min:1|distinct` **no validaba lo que dice**. Con dos comodines
+> (`items.*.dependent_ids.*`) Laravel toma los valores desde `items` hacia abajo, o sea que compara
+> contra los menores de **TODAS** las líneas: el mismo menor en dos entradas del pedido —sábado y
+> domingo, Jump y Kids— daba **422 antes de pagar**, con el texto de Laravel en inglés («has a duplicate
+> value»), mientras `check()` valida línea a línea y el índice único `(order_item_id, dependent_id)` es
+> por línea. Ningún test mandaba dos líneas con el mismo niño. ▶ `[DECIDIDO owner]`: **el mismo menor
+> puede ir en líneas distintas**; «sin repetidos» es DENTRO de la línea, lo valida una regla sobre
+> `dependent_ids` y el aviso cae en `items.{i}.dependent_ids` con `api.dependents.repeated` (tres idiomas).
+>
 - **D1 · Transporte: `dependent_ids` DENTRO de `CartLine`**, opcional (`OPTIONAL_BY_DESIGN`), lista de
   enteros distintos, ≤ `quantity`. Es el esquema compartido por cuatro endpoints, y se decide que los
   tres públicos lo **validan e ignoran** (descripción en el contrato); solo `POST /orders` lo lee.
@@ -930,7 +940,7 @@ con sesión, A5·4 nuevo).
 | `Dependent` | `app/Domain/Identity/Models/Dependent.php` | D5: `assignments()`, y los scopes `referenced()`/`unreferenced()` —firma O asignación— de los que salen `hasReferences()` y `prunable()`: **un predicado, tres consumidores** (`remove()`, `anonymize()`, `model:prune`) |
 | El contrato de Booking | `app/Domain/Booking/Contracts/{CheckoutLines,CheckoutLine}.php` · `app/Domain/Booking/Services/CheckoutLinesReader.php` · `BookingServiceProvider` | D2: los principales del pedido del titular, `orderBy('id')` = orden de la cesta, con `index`, `orderItemId`, `quantity`, `isEntry`, `date`. Un pedido ajeno devuelve la lista VACÍA. Doble en `ModuleContractsTest` (devuelve el orden INVERTIDO a los ids y el asignador le obedece) |
 | El asignador | `app/Domain/Identity/Services/DependentAssigner.php` · `app/Domain/Identity/Contracts/AssignmentOutcome.php` | D3: `check()` antes del dinero (rechazos POR CAMPO, traducidos) · `assign()` tras el `allow` bajo el `lockForUpdate()` del titular, re-validando, `insertOrIgnore` sobre el único, auditando `dependents.assigned` sin nombre, y **sin lanzar nunca** (`AssignmentOutcome::aborted`) · `forOrderItems()` con el recorte a la cantidad actual (D4). Las reglas se escriben UNA vez (`rejections()`) y las usan las dos fases. Declarado control negativo en `CriticalPathGateTest` (D11) |
-| La entrada HTTP | `app/Http/Api/CartPayload.php` · `app/Http/Controllers/Api/V1/OrdersController.php` | D1: `dependent_ids` (`sometimes|array`, `*.integer|min:1|distinct`) en `lineRules()`; `toCart()` NO se lo pasa a Booking; `assignments()` extrae TODAS las líneas con su `index`. El controlador: `check()` → `ValidationException::withMessages()` (422 `validation_failed`, `fields['items.{i}.dependent_ids.{j}']`) → `start()` → si `allow`, `assign()` → `fresh()` → 201. `CheckoutOrchestrator` y `OrderCreator` **intactos** |
+| La entrada HTTP | `app/Http/Api/CartPayload.php` · `app/Http/Controllers/Api/V1/OrdersController.php` | D1: `dependent_ids` (`sometimes|array`, `*.integer|min:1` y sin repetidos DENTRO de la línea — `#567`: el `distinct` miraba la cesta entera) en `lineRules()`; `toCart()` NO se lo pasa a Booking; `assignments()` extrae TODAS las líneas con su `index`. El controlador: `check()` → `ValidationException::withMessages()` (422 `validation_failed`, `fields['items.{i}.dependent_ids.{j}']`) → `start()` → si `allow`, `assign()` → `fresh()` → 201. `CheckoutOrchestrator` y `OrderCreator` **intactos** |
 | La lectura | `app/Http/Resources/Api/V1/OrderEventDataResource.php` | D7: `dependents[{id, name}]` por reserva, una consulta por pedido, recortada a la cantidad actual |
 | RGPD | `app/Domain/Identity/Models/User.php` (`anonymize()`) · `app/Domain/Identity/Services/AccountPrivacy.php` · `app/Domain/Booking/Services/CustomerOrderHistoryReader.php` | D6: `anonymize()` borra las asignaciones ANTES de tratar a los menores; el export lleva `dependents: [nombres]` por línea (Booking añade un `id` interno por línea y `AccountPrivacy` lo retira tras cruzar) |
 | El contrato | `openapi/v1.yaml` · `ApiContractTest::OPTIONAL_BY_DESIGN` | `CartLine.dependent_ids` (opcional; los tres endpoints públicos lo validan e ignoran) · `OrderEventDataReservation.dependents` + `AssignedDependent` · `ExportedOrderItem.dependents` |

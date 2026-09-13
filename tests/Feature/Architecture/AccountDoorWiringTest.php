@@ -324,6 +324,36 @@ class AccountDoorWiringTest extends TestCase
         $this->assertStringNotContainsString('data-auth-modal', $html, 'el layout sigue emitiendo el atributo del modal');
     }
 
+    /**
+     * ❗❗ **La salida de la RESERVA CREADA lleva al ÍNDICE de la cuenta** (`#567`, `[DECIDIDO owner]`).
+     *
+     * Es la otra puerta al área, y nació en `#563` SIN guarda: llevaba al carné y nada vigilaba a qué
+     * zona pedía. Cambiar la zona, o que el evento dejara de llegar a su manejador, no ponía rojo ni un
+     * test — el botón seguía pintándose y el clic «no falla, no hace nada» (`DECISIONES #117`). Se
+     * vigilan los TRES eslabones —el botón emite, la sección escucha, el manejador pide `HOME`— y el
+     * rótulo en los tres idiomas.
+     */
+    public function test_the_booking_created_door_asks_for_the_account_index(): void
+    {
+        $step = $this->source('resources/js/sidebar/steps/ConfirmedStep.vue');
+        $section = $this->source('resources/js/sidebar/sections/PurchaseSection.vue');
+
+        $this->assertMatchesRegularExpression("/defineEmits\\(\\[[^\\]]*'go-account'/", $step,
+            'ConfirmedStep ya no declara el evento de la salida a la cuenta.');
+        $this->assertStringContainsString('@click="$emit(\'go-account\')">{{ t(\'go_to_account\') }}', $step,
+            'El botón principal de la reserva creada ya no emite la salida a la cuenta con su rótulo.');
+
+        $this->assertMatchesRegularExpression('/<ConfirmedStep\b[^>]*@go-account="goToAccount"/', $section,
+            'La sección de compra no escucha la salida a la cuenta: el botón se pinta y no hace nada.');
+        $this->assertMatchesRegularExpression('/function goToAccount\(\)\s*\{\s*accountStore\.openZone\(ZONES\.HOME\);\s*\}/', $section,
+            'La salida de la reserva creada tiene que pedir el ÍNDICE (`ZONES.HOME`) con `openZone()`, que siembra la vuelta.');
+
+        foreach (['es', 'en', 'fr'] as $locale) {
+            $this->assertTrue(app('translator')->has('tickets.go_to_account', $locale, false),
+                "Falta «tickets.go_to_account» en {$locale}: el botón saldría sin rótulo.");
+        }
+    }
+
     private function source(string $relative): string
     {
         $path = base_path($relative);

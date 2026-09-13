@@ -184,9 +184,9 @@ return [
     'payment_confirmed_note' => 'Payment confirmed.',
     'new_purchase' => 'Make another booking',
     'see_my_orders' => 'See my bookings',
-    // The door to the CARD from «booking created» (`#563`): it is the same code as always — there
-    // is no QR per order. The label repeats its zone's so the button promises the screen it opens.
-    'see_my_card' => 'View My QR',
+    // The door to the ACCOUNT from «booking created» (`#567`; it opened the card in `#563`): the index
+    // holds the QR and «My bookings», and there is no single-booking screen to send them to.
+    'go_to_account' => 'Go to my account',
     'guest_form_notice' => 'We’ll ask you to complete your booking form: we’ll email you the link (also in “My bookings”).',
     'statuses' => [
         'pending' => 'Pending payment',
@@ -329,10 +329,11 @@ return [
      */
     'who_block' => [
         'title' => 'Who is coming?',
-        'none' => 'Minors in your care and authorizations',
-        'some' => 'Minors in your care: :count',
-        'guardian' => 'With an invited minor’s authorization',
-        'both' => 'Minors in your care: :count · and an authorization',
+        'none' => 'Minors in your care',
+        'some' => 'Minors: :count',
+        'guardian' => 'With authorization',
+        'both' => 'Minors: :count · authorization',
+        'guardian_only' => 'Authorization',
     ],
     'guardian_no_places' => 'There are no free places left on this booking: you have already assigned them all to minors in your care. Add another ticket or remove an assignment.',
     'guardian_optional' => 'A minor who is not in my care is coming',

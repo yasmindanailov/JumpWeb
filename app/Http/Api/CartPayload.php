@@ -76,7 +76,7 @@ final class CartPayload
      * mínimo de invitados de un pack— sigue contestándose como tal.
      *
      * @param  string  $prefix  `items.*` para las líneas de una cesta, `line` para una suelta
-     * @return array<string, array<int, string>>
+     * @return array<string, array<int, string|\Closure>>
      */
     public static function lineRules(string $prefix): array
     {
@@ -93,12 +93,21 @@ final class CartPayload
             $prefix.'.addons.*.product_id' => ['required', 'integer', 'min:1'],
             $prefix.'.addons.*.quantity' => ['required', 'integer', 'min:1'],
             // Fase 6 · menores a cargo, tanda 4 (`specs/menores-a-cargo.md` §9.9.3 D1): los ids de los
-            // menores para los que son estas entradas. Es FORMA: enteros, sin repetidos. Si son suyos, si
-            // son menores ese día y si han firmado lo decide `Identity\Services\DependentAssigner`, y
-            // SOLO `POST /orders` lo lee — los otros tres endpoints que comparten esta línea lo validan
-            // e ignoran, y `toCart()` no se lo pasa a Booking (§4.6: Booking no conoce a los menores).
-            $prefix.'.dependent_ids' => ['sometimes', 'array', 'max:'.self::MAX_LINES],
-            $prefix.'.dependent_ids.*' => ['integer', 'min:1', 'distinct'],
+            // menores para los que son estas entradas. Es FORMA: enteros, sin repetidos DENTRO de la
+            // línea. Si son suyos, si son menores ese día y si han firmado lo decide
+            // `Identity\Services\DependentAssigner`, y SOLO `POST /orders` lo lee — los otros tres
+            // endpoints que comparten esta línea lo validan e ignoran, y `toCart()` no se lo pasa a
+            // Booking (§4.6: Booking no conoce a los menores).
+            // ❗❗❗ **`#567`: aquí había un `distinct` y rechazaba compras LEGÍTIMAS.** Con dos comodines
+            // Laravel no compara dentro de la línea: toma los valores desde `items` hacia abajo
+            // (`ValidationData::getLeadingExplicitAttributePath()`), o sea **contra los menores de
+            // TODAS las líneas**. Asignar el mismo niño a dos entradas —sábado y domingo, Jump y Kids—
+            // daba un 422 antes de pagar, con el texto de Laravel en inglés («has a duplicate value»),
+            // mientras `DependentAssigner` y el índice único `(order_item_id, dependent_id)` lo
+            // permiten. ▶ «Sin repetidos» es de LA LÍNEA y se escribe sobre la línea: el mismo menor
+            // puede ir en otra (`[DECIDIDO owner, 2026-09-12]`).
+            $prefix.'.dependent_ids' => ['sometimes', 'array', 'max:'.self::MAX_LINES, self::noRepeatedDependents(...)],
+            $prefix.'.dependent_ids.*' => ['integer', 'min:1'],
             // El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2): «viene un
             // menor que NO está a mi cargo». Es FORMA —un booleano— y nada más: si el producto lo
             // ofrece, si lo exige, o si esto se ignora por completo lo decide `OrderCreator` con el
@@ -195,5 +204,28 @@ final class CartPayload
     private static function normalizeTime(string $time): string
     {
         return mb_strlen($time) === 5 ? $time.':00' : $time;
+    }
+
+    /**
+     * `#567` — «sin repetidos» DENTRO de la línea, y el aviso sobre la línea.
+     *
+     * ⚠️ No es `distinct`: con `items.*.dependent_ids.*` esa regla compara contra los menores de TODAS
+     * las líneas (ver `lineRules()`). Aquí `$value` es la lista de UNA línea y no ve ninguna otra, que
+     * es exactamente la frontera del dominio.
+     * ⚠️ Lo que no es escalar no se compara: el tipo lo rechaza `dependent_ids.*` con su mensaje, y
+     * convertir un array a cadena aquí sería un aviso de PHP convertido en 500.
+     * ⚠️ Se compara como CADENA porque `integer` admite `7` y `'7'`, y los dos son el mismo menor.
+     */
+    private static function noRepeatedDependents(string $attribute, mixed $value, \Closure $fail): void
+    {
+        if (! is_array($value)) {
+            return;
+        }
+
+        $ids = array_map(strval(...), array_filter($value, is_scalar(...)));
+
+        if (count(array_unique($ids)) !== count($ids)) {
+            $fail(__('api.dependents.repeated'));
+        }
     }
 }

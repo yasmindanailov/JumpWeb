@@ -5046,10 +5046,13 @@ components:
             $ref: '#/components/schemas/CartLineAddon'
         dependent_ids:
           type: array
+          uniqueItems: true
           description: |
             Los menores a cargo del titular para los que son estas entradas (Fase 6 · menores a cargo,
-            tanda 4). Enteros de `GET /me/dependents`, sin repetidos y nunca más que `quantity`; el
-            resto de unidades son adultos. **Solo `POST /orders` lo lee**: la disponibilidad, la
+            tanda 4). Enteros de `GET /me/dependents`, sin repetidos **dentro de la línea** y nunca más
+            que `quantity`; el resto de unidades son adultos. **El mismo menor SÍ puede ir en otra
+            línea de la cesta** (`#567`): un id repetido en la misma responde 422 sobre
+            `items.{i}.dependent_ids`. **Solo `POST /orders` lo lee**: la disponibilidad, la
             validación de línea y el presupuesto aceptan el mismo cuerpo y lo ignoran. El servidor
             comprueba ANTES de crear el pedido que cada menor es suyo, que es menor el día de la
             visita y que tiene la exención firmada y vigente (modo interno); si no, `422

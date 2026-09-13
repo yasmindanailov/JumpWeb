@@ -249,10 +249,10 @@ return [
     'payment_confirmed_note' => 'Pago confirmado.',
     'new_purchase' => 'Hacer otra reserva',
     'see_my_orders' => 'Ver mis reservas',
-    // ⚠️ **La puerta al CARNÉ desde la reserva creada** (`#563`): es lo que hace falta en la
-    // entrada del parque, y es **el mismo de siempre** — no hay un QR por pedido. El rótulo repite el
-    // de su zona («Mi QR») a propósito: el botón promete exactamente la pantalla a la que lleva.
-    'see_my_card' => 'Ver Mi QR',
+    // ⚠️ **La puerta a la CUENTA desde la reserva creada** (`#567`; en `#563` llevaba al carné): con el
+    // bloque de cuenta oculto en las pantallas finales, el botón lleva al índice, donde están el QR y
+    // «Mis reservas». Dice «Ir a» y no «Ver» porque SALE de la compra a otra sección del cajón.
+    'go_to_account' => 'Ir a mi cuenta',
     'guest_form_notice' => 'Te pediremos completar el formulario de tu reserva: te enviaremos el enlace por email (también en «Mis reservas»).',
     // #146: el Order status `paid` lee "Completado" (no "Pagado"). Un Order
     // completado puede llevar reembolso anotado — el reembolso es una dimensión
@@ -433,12 +433,16 @@ return [
      * El bloque PLEGADO de «¿quiénes vienen?» (`[DECIDIDO owner, 2026-09-02]`: más sutil, menos
      * centrado en el proceso). El rótulo dice lo que hay dentro SIN obligar a abrirlo.
      */
+    // `#567` — rótulos CORTOS a propósito (`[DECIDIDO owner]`): van en la misma fila que el título y,
+    // largos, partían la cabecera en dos. El detalle está dentro del bloque, a un toque.
+    // ⚠️ `guardian_only` es el bloque que trae SOLO el justificante: ahí «Menores» sería falso.
     'who_block' => [
         'title' => '¿Quiénes vienen?',
-        'none' => 'Menores a cargo y justificantes',
-        'some' => 'Menores a tu cargo: :count',
-        'guardian' => 'Con justificante de un menor invitado',
-        'both' => 'Menores a tu cargo: :count · y un justificante',
+        'none' => 'Menores a cargo',
+        'some' => 'Menores: :count',
+        'guardian' => 'Con justificante',
+        'both' => 'Menores: :count · justificante',
+        'guardian_only' => 'Justificante',
     ],
     'guardian_no_places' => 'No quedan plazas libres en esta reserva: ya has asignado todas a menores a tu cargo. Añade una entrada más o quita una asignación.',
     'guardian_optional' => 'Viene un menor que no está a mi cargo',

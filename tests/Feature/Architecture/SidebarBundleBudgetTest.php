@@ -785,8 +785,18 @@ class SidebarBundleBudgetTest extends TestCase
      * ▶ **Para quien venga**: con 0,01 KiB de margen, lo siguiente que entre pone esto en rojo. No es
      * un fallo, es el trinquete haciendo su trabajo — y la poda de la fila **ya está descartada con su
      * número**, así que no vuelvas a intentarla: busca otra o sube el techo con su medición.
+     *
+     * ▶ **285 (`#567`)**: medido **284,04 KiB**, y fue lo siguiente que entró, como estaba avisado.
+     * Entran el quinto rótulo de «¿Quiénes vienen?» —el bloque que trae SOLO el justificante decía
+     * «menores», y con los rótulos cortos eso habría sido falso— y la salida «Ir a mi cuenta» de la
+     * reserva creada.
+     * ⚠️ **Se podó antes de subir, y esta vez la poda SÍ podó, pero no llegó**: la condición «hay
+     * menores que ofrecer» estaba escrita TRES veces en `TimeStep` (abrir el bloque, pintar el
+     * selector y ahora elegir el rótulo) y pasó a un solo `computed` —**284,08 → 284,04**, 41 B—. Se
+     * queda por lo mismo que `#561`: tres copias de una condición divergen el día que alguien arregla
+     * una, y aquí la divergencia era un rótulo prometiendo menores que el bloque no enseña.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 284;
+    private const SIDEBAR_CHUNK_MAX_KB = 285;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

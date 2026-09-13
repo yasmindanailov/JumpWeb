@@ -245,15 +245,22 @@ export function applyRejections(lines, fields) {
  * ⚠️ Devuelve la CLAVE y no el texto: quien traduce es quien tiene el diccionario, y devolver texto
  * desde aquí obligaría a pasarle los mensajes a un módulo que no los necesita.
  *
- * @param {{dependents: number, guardian: boolean}} state
- * @returns {'who_block.both'|'who_block.some'|'who_block.guardian'|'who_block.none'}
+ * ❗❗ **`offers` entra en `#567`, y no es un adorno.** El bloque existe si hay menores que ofrecer **o**
+ * si el producto admite justificante, y el rótulo de «nada marcado» decía «Menores a cargo y
+ * justificantes» también cuando dentro SOLO había el justificante. Con los rótulos cortos que pidió el
+ * owner (una fila, dos columnas) ese caso habría pasado a decir «Menores a cargo» —algo falso—, así
+ * que tiene clave propia. ⚠️ Por defecto `true`: sin decirlo, el bloque es el de siempre.
+ *
+ * @param {{dependents?: number, guardian?: boolean, offers?: boolean}} state
+ * @returns {'who_block.both'|'who_block.some'|'who_block.guardian'|'who_block.guardian_only'|'who_block.none'}
  */
-export function whoSummaryKey({ dependents = 0, guardian = false } = {}) {
+export function whoSummaryKey({ dependents = 0, guardian = false, offers = true } = {}) {
     const marcados = Number.isFinite(dependents) && dependents > 0 ? dependents : 0;
 
     if (marcados > 0 && guardian) return 'who_block.both';
     if (marcados > 0) return 'who_block.some';
     if (guardian) return 'who_block.guardian';
+    if (offers === false) return 'who_block.guardian_only';
 
     return 'who_block.none';
 }

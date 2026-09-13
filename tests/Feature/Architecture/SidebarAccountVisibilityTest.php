@@ -45,26 +45,36 @@ class SidebarAccountVisibilityTest extends TestCase
             'identificación, donde además salen DESHABILITADOS.',
         );
 
+        // ⚠️ Se recorta desde el FINAL de lo anterior —la regla o el comentario que la precede— y no
+        // desde el selector conocido: un modo añadido al PRINCIPIO de la lista quedaba fuera del recorte
+        // y la guarda no lo veía (`#567`, lo cazó el arnés con el catálogo puesto delante).
+        $before = mb_substr($css, 0, $at);
+        $start = max((int) mb_strrpos($before, '}'), (int) mb_strrpos($before, '*/'));
         $end = mb_strpos($css, '}', $at);
 
-        return mb_substr($css, $at, $end - $at);
+        return mb_substr($css, $start, $end - $start);
     }
 
     /**
-     * Los modos que ocultan son EXACTAMENTE tres, y **cada uno por un motivo distinto**.
+     * Los modos que ocultan son EXACTAMENTE cuatro, y **cada uno por un motivo distinto**.
      *
      * ⚠️⚠️ **Este caso se quedó corto el 2026-08-22 y hay que decirlo**: el paso 1 del área de cliente
      * añadió `is-account` a la regla del CSS y **este test pasó por omisión** —solo aseveraba sobre
      * cuatro modos, y el nuevo no era ninguno—. No estaba roto: es que su título decía «exactamente
      * los del proceso de compra» mientras la regla ya cubría uno que no lo es. Una comprobación que
-     * mide una cosa y se lee como otra es peor que no tenerla (`DECISIONES #115`), así que ahora
-     * enumera **los tres** y sigue prohibiendo los dos que deben verse.
+     * mide una cosa y se lee como otra es peor que no tenerla (`DECISIONES #115`), así que enumera
+     * **todos** los que ocultan y sigue prohibiendo el que debe verse.
+     *
+     * ❗❗ **Y CAMBIÓ DE PREMISA en `#567`**: prohibía `is-result` —«en el desenlace debe volver»— y el
+     * owner decidió lo contrario con la pantalla delante. No se relaja: la aserción que lo PROHIBÍA
+     * pasa a EXIGIRLO, con su motivo, y además vigila la gemela de movimiento reducido, que repite la
+     * lista y podía quedarse atrás sin que nada fallara.
      *
      * El mapa paso→modo vive en `machine.js::modeOf()` y está bajo paridad con el servidor
      * (`SidebarProgressParityTest`); el modo `account` lo publica `section.js`. Aquí se comprueba que
      * el CSS reacciona a los modos correctos, no se redefine ningún mapa.
      */
-    public function test_the_account_block_is_hidden_exactly_in_the_three_modes_that_need_it(): void
+    public function test_the_account_block_is_hidden_exactly_in_the_modes_that_need_it(): void
     {
         $rule = $this->hideRule();
 
@@ -82,12 +92,32 @@ class SidebarAccountVisibilityTest extends TestCase
             'reserva se pintaría DOS veces —el bloque y el índice—, que es justo lo que el índice '.
             'existe para evitar (`specs/area-cliente.md` §4.2).');
 
+        // Y el DESENLACE (`#567`, `[DECIDIDO owner]`): las cinco pantallas finales ya traen su propia
+        // salida, y el bloque tapaba su único mensaje.
+        $this->assertStringContainsString('.sidecart__panel.is-result .acct', $rule,
+            'Falta el modo `result`. En la pantalla final el bloque compite con el mensaje que el '.
+            'cliente viene a leer, y con sesión repetía la salida que la pantalla ya ofrece.');
+
         $this->assertStringNotContainsString('.sidecart__panel.is-catalog .acct', $rule,
             'En el CATÁLOGO el bloque debe verse: el cliente aún no ha entrado en el proceso y ahí '.
             'el CTA de iniciar sesión sí sirve para algo.');
-        $this->assertStringNotContainsString('.sidecart__panel.is-result .acct', $rule,
-            'En el DESENLACE debe volver: el proceso ya terminó, que es literalmente lo que se pidió '.
-            '(«hasta finalizar»), y es cuando un invitado tiene más motivo para registrarse.');
+
+        // ⚠️ La gemela de movimiento reducido repite la lista. Si se queda atrás, el modo que falte
+        // se oculta con recorrido completo para quien pidió no tenerlo, y nada falla.
+        // Se localiza por su propio selector y se lee ENTERA, desde la llave que la abre: por el mismo
+        // motivo que `hideRule()`, un modo puesto delante no puede quedarse fuera.
+        $css = $this->css();
+        $twin = mb_strpos($css, '    .sidecart__panel.is-booking .acct,');
+        $this->assertIsInt($twin, 'Ha desaparecido la lista gemela de movimiento reducido.');
+        $open = (int) mb_strrpos(mb_substr($css, 0, $twin), '{') + 1;
+        $this->assertStringContainsString('prefers-reduced-motion', mb_substr($css, max(0, $open - 60), 60),
+            'La lista gemela ya no vive dentro de su `@media (prefers-reduced-motion: reduce)`.');
+        $motion = mb_substr($css, $open, (int) mb_strpos($css, '{', $twin) - $open);
+        foreach (['booking', 'cart', 'account', 'result'] as $mode) {
+            $this->assertStringContainsString(".sidecart__panel.is-{$mode} .acct", $motion,
+                "La lista de movimiento reducido no lleva el modo `{$mode}`: se oculta, pero con el recorrido que esa preferencia pide quitar.");
+        }
+        $this->assertStringNotContainsString('.sidecart__panel.is-catalog .acct', $motion);
     }
 
     /**

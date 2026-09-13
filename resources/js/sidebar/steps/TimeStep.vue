@@ -109,9 +109,12 @@ const { track, nav, move } = useStrip();
 const hasAddons = computed(() => props.addons.groups.length > 0 || props.addons.singles.length > 0);
 
 // Las dos REGLAS del bloque viven en `assignment.js`, con sus casos de `node --test` (`CE-6`): cuál
-// de los cuatro rótulos toca y si la casilla se puede marcar. Aquí solo se pinta.
+// de los cinco rótulos toca y si la casilla se puede marcar. Aquí solo se pinta.
+// ⚠️ `offersDependents` es UNA condición con TRES lectores —abre el bloque, pinta el selector y elige
+// el rótulo (`#567`)—: escrita tres veces, el rótulo podía prometer menores que el bloque no enseña.
+const offersDependents = computed(() => ! props.isPack && props.dependentOptions.length > 0);
 const guardianBlocked = computed(() => guardianIsBlocked({ quantity: props.quantity, dependents: props.dependentIds.length, checked: props.guardianChecked }));
-const whoSummary = computed(() => tp(whoSummaryKey({ dependents: props.dependentIds.length, guardian: props.guardianMode === 'required' || props.guardianChecked }), { count: props.dependentIds.length }));
+const whoSummary = computed(() => tp(whoSummaryKey({ dependents: props.dependentIds.length, guardian: props.guardianMode === 'required' || props.guardianChecked, offers: offersDependents.value }), { count: props.dependentIds.length }));
 
 /**
  * `#327` — la cantidad tecleada sale, y el campo se REPINTA desde la prop.
@@ -252,7 +255,7 @@ const toggleInfo = (id) => {
           ⚠️ Se pinta si hay algo que ofrecer: menores a cargo declarados **o** un producto que admite
           justificante. Ni una cosa ni otra → el bloque no existe (no vacío: no está).
         -->
-        <details v-if="(! isPack && dependentOptions.length) || guardianMode !== 'none'"
+        <details v-if="offersDependents || guardianMode !== 'none'"
                  class="whoblock" data-who-block>
             <summary class="whoblock__head">
                 <span class="whoblock__title">{{ t('who_block.title') }}</span>
@@ -263,7 +266,7 @@ const toggleInfo = (id) => {
                 <!-- ¿Para quién son estas entradas? (Fase 6 · tanda 4, `menores-a-cargo.md` §4.7): solo
                      en ENTRADAS, solo con sesión y menores declarados. Un pack pide a sus invitados
                      abajo. -->
-                <DependentPicker v-if="! isPack && dependentOptions.length"
+                <DependentPicker v-if="offersDependents"
                                  :options="dependentOptions" :selected="dependentIds" :quantity="quantity" :messages="messages"
                                  @toggle="$emit('toggle-dependent', $event)" />
 

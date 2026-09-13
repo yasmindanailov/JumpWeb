@@ -31450,3 +31450,93 @@ superficies teñidas vivas · `RateRailSectionTest` arregla un **localizador que
 caso afirmaba sobre una cadena vacía — la lección de `#314`).
 **Verificación**: suite **4814 · 30.606 aserciones** (1 skipped) · Pint ✓ · docs-check ✓ · sonda de
 navegador en 1280 y 390 con control en cada medición.
+
+## #567 · Tres arreglos del owner sobre el cajón construido: el mismo menor en dos entradas, el desenlace sin el bloque de cuenta y «¿Quiénes vienen?» en una fila
+
+**Fecha**: 2026-09-12 · **Carril**: 🧩 diseño del SPA · **Fuente**: el owner, usando el cajón en local.
+
+Tres cosas que el owner encontró comprando, cada una con su decisión (`[DECIDIDO owner, 2026-09-12]`,
+preguntadas con el coste delante).
+
+### 1 · «The items.0.dependent_ids.0 field has a duplicate value» era un defecto de VALIDACIÓN
+
+Salía **antes de pagar**, en inglés, al asignar el MISMO menor a dos entradas del pedido. Medido en el
+código del framework y en el nuestro:
+
+- con dos comodines (`items.*.dependent_ids.*`) `distinct` **no compara dentro de la línea**:
+  `ValidationData::getLeadingExplicitAttributePath()` devuelve `items` y `extractDistinctValues()`
+  recoge los ids de TODAS las líneas;
+- el dominio dice lo contrario: `DependentAssigner::check()` valida línea a línea y el índice único es
+  `(order_item_id, dependent_id)`, por LÍNEA;
+- el texto salía en inglés porque `lang/es/validation.php` no traduce `distinct`, y el cliente
+  (`assignment.js::applyRejections`) vaciaba la asignación de la línea rechazada;
+- **ningún test mandaba dos líneas con el mismo niño**, y por eso llegó al navegador con la suite en verde.
+
+▶ **El mismo menor puede ir en líneas distintas.** «Sin repetidos» pasa a ser una regla sobre
+`dependent_ids` —la LÍNEA—, que responde `422` en `items.{i}.dependent_ids` con
+`api.dependents.repeated` en los tres idiomas; el contrato gana `uniqueItems: true` y dice «dentro de la
+línea». Caso nuevo: dos líneas con el mismo menor → 201, contrato válido, una asignación por línea. El
+caso de la forma **cambió de premisa y se reescribió**: aseveraba el campo que emitía el `distinct`.
+`specs/menores-a-cargo.md` D1 lleva la corrección delante del texto.
+
+### 2 · La reserva creada, sin el bloque de cuenta y con «Ir a mi cuenta»
+
+El owner: en la página final «el banner molesta para leer el mensaje y no es útil». El bloque `.acct`
+seguía visible en modo `result` **a propósito** —`SidebarAccountVisibilityTest` lo exigía: «es cuando un
+invitado tiene más motivo para registrarse»— y, con sesión, la pantalla enseñaba «Mi QR» dos veces.
+
+▶ Se oculta en las **CINCO** pantallas de `result` (reserva creada, revisa tu correo, saltando al banco,
+pago denegado y verificando pago; el owner eligió las cinco sabiendo que son cinco), y el botón principal
+pasa de «Ver Mi QR» a **«Ir a mi cuenta»**, que abre el ÍNDICE del área (`openZone(ZONES.HOME)`): ahí
+están el QR y «Mis reservas», y no existe una pantalla de una sola reserva. **Revierte la puerta al carné
+de `#563`.** La guarda de visibilidad **cambió de premisa** —la aserción que prohibía `is-result` lo
+exige— y vigila también la lista gemela de movimiento reducido, que repite los selectores.
+
+⚠️ **La puerta de `#563` no tenía guarda**: cambiar la zona o desconectar el evento no ponía nada en rojo.
+Hoy `AccountDoorWiringTest` vigila los tres eslabones —el botón emite, la sección escucha, el manejador
+pide `HOME`— y el rótulo en los tres idiomas.
+
+### 3 · «¿Quiénes vienen?» en una fila
+
+La cabecera del bloque plegado se partía en dos filas porque el rótulo de la derecha era largo («Menores
+a cargo y justificantes», «Menores a tu cargo: 2 · y un justificante»).
+
+▶ Rótulos CORTOS por estado —«Menores a cargo» · «Menores: :count» · «Con justificante» · «Menores:
+:count · justificante»— y un **quinto, «Justificante»** (`guardian_only`): con el rótulo corto, el bloque
+que trae SOLO el justificante habría dicho «Menores a cargo», que es falso. La regla vive en
+`assignment.js::whoSummaryKey()` con su caso de `node --test`; la condición «hay menores que ofrecer»
+estaba escrita dos veces en `TimeStep` y el rótulo la necesitaba por tercera, así que pasa a un solo
+`computed`.
+
+⚠️ **La clave la construye el módulo**, así que ninguna guarda de `t('…')` la veía:
+`WhoBlockLabelTest` saca las claves de `assignment.js`, exige los tres idiomas y vigila que `TimeStep` le
+pase `offers`.
+
+### Lo medido
+
+- **Navegador, con control en cada medida** (390 y 1280): la cabecera con los textos VIEJOS mide 73 px en
+  dos filas —el control, sin el cual «una fila» no demostraría nada—; con los nuevos, **45 px y una
+  fila en los 15 rótulos × 3 idiomas**. La reserva creada, entrando por la misma puerta que la vuelta del
+  banco (un pase de un solo uso sembrado para un pedido pagado local): `.acct` con `visibility: hidden` y
+  alto 0 en `is-result`, **visible (209 px) en el catálogo** —el control—, botón «Ir a mi cuenta» y, al
+  pulsarlo, el índice con sus 8 tarjetas.
+- **Presupuestos**: el chunk pasó de 283,99 a **284,08 KiB**; la poda —el `computed` único— lo dejó en
+  **284,04** y el techo sube a **285** con su medida. `TimeStep` 49 → **50** líneas, y la línea es esa
+  poda.
+
+### El arnés, y lo que dijo de mis guardas
+
+La primera pasada dio **14/16**, y las dos que no mordían eran debilidades de las guardas, no mutaciones
+flojas:
+
+- `hideRule()` recortaba la regla **desde su primer selector conocido**: un modo añadido al PRINCIPIO de
+  la lista quedaba fuera del recorte y la guarda no lo veía. Hoy recorta desde el final de lo anterior, y
+  la gemela se lee entera desde su llave.
+- **Nada vigilaba que `TimeStep` le pasara `offers` al módulo**: sin el argumento, el valor por defecto
+  devuelve «menores» y la regla, sus casos y los textos siguen en verde. *Un módulo probado no dice nada
+  sobre si alguien le pasa el dato.*
+
+Tras arreglarlas, **16/16** (`scripts/mutar-567.py`, por código de salida y con verde de partida).
+
+**Verificación**: suite **4838 · 30.759 aserciones** (1 skipped) · JS **980** · Pint ✓ · docs-check ✓ ·
+arnés **16/16** · sonda de navegador en 390 y 1280 con control en cada medida.

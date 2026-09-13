@@ -150,7 +150,7 @@ class SidebarComponentBudgetTest extends TestCase
         // que extraer: la REGLA —qué fases recorre este cliente— vive en `progress.js`; esto es pasarle
         // un dato que solo el componente tiene, que es exactamente para lo que sirve el cableado.
         // ⚠️ **446 → 453 en `#563`** (la parada 04), y las siete son cableado: dos imports y el store
-        // de cuenta, `showCard()` —que es una sola llamada a `openZone()`, la pieza que YA existe para
+        // de cuenta, `showCard()` —hoy `goToAccount()` (`#567`), igual de corta: una sola llamada a `openZone()`, la pieza que YA existe para
         // «abrir el área en una zona viniendo de fuera»—, `hasSession` —un dato del HTML, como el
         // `pideIdentificarse` de arriba— y los props nuevos de tres desenlaces. ▶ **Lo que sí era una
         // regla se extrajo**: formatear la hora de retención vive en `outcome.js` con su `node --test`,
@@ -185,7 +185,14 @@ class SidebarComponentBudgetTest extends TestCase
         // regla existe para provocar: **las dos REGLAS se fueron a `assignment.js`** —cuál de los
         // cuatro rótulos toca y si la casilla se puede marcar— con sus casos de `node --test`. Aquí
         // queda el cableado, que es lo que un componente sí hace.
-        'sidebar/steps/TimeStep.vue' => ['code' => 49, 'api' => 0],
+        // ⚠️ **49 → 50 en `#567`: SUBE UNA**, y es `offersDependents`, que no añade condición: la QUITA
+        // de dos sitios. «Hay menores que ofrecer» estaba escrita en el `v-if` del bloque y en el del
+        // selector, y el quinto rótulo (`guardian_only`) la necesitaba por TERCERA vez. Tres copias de
+        // la misma condición divergen el día que alguien arregla una —y aquí la divergencia sería un
+        // rótulo prometiendo menores que el bloque no enseña—. La REGLA de qué rótulo toca sigue en
+        // `assignment.js` con su caso; esto le pasa un dato que solo el componente tiene (`#556`).
+        // ▶ Además podó el chunk **41 B** (284,08 → 284,04 KiB, `SidebarBundleBudgetTest`).
+        'sidebar/steps/TimeStep.vue' => ['code' => 50, 'api' => 0],
     ];
 
     /**

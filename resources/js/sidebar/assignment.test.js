@@ -188,11 +188,16 @@ describe('el 422 del checkout aplicado a la cesta', () => {
  * Las dos reglas salieron del componente porque `SidebarComponentBudgetTest` lo pidió, y aquí es
  * donde ganan la red que un árbol no puede darles: un árbol dice qué se pintó, no qué rama se eligió.
  */
-test('el rótulo del bloque dice lo que hay dentro, en sus cuatro casos', () => {
+test('el rótulo del bloque dice lo que hay dentro, en sus cinco casos', () => {
     assert.equal(whoSummaryKey({ dependents: 0, guardian: false }), 'who_block.none');
     assert.equal(whoSummaryKey({ dependents: 2, guardian: false }), 'who_block.some');
     assert.equal(whoSummaryKey({ dependents: 0, guardian: true }), 'who_block.guardian');
     assert.equal(whoSummaryKey({ dependents: 2, guardian: true }), 'who_block.both');
+    // `#567` — el bloque trae SOLO el justificante (no hay menores que ofrecer) y no hay nada marcado:
+    // decir «menores» ahí sería falso.
+    assert.equal(whoSummaryKey({ dependents: 0, guardian: false, offers: false }), 'who_block.guardian_only');
+    // …pero marcado o exigido, manda el justificante, ofrezca menores o no.
+    assert.equal(whoSummaryKey({ dependents: 0, guardian: true, offers: false }), 'who_block.guardian');
     // Sin argumentos: el caso que se pinta antes de elegir nada.
     assert.equal(whoSummaryKey(), 'who_block.none');
 });
