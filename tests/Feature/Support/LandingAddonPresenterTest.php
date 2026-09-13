@@ -150,8 +150,8 @@ class LandingAddonPresenterTest extends TestCase
 
         $rows = LandingAddonPresenter::rows($pack->fresh(), isPack: true);
 
-        // Formato compacto «precio/invitado» (sin «por invitado», para ahorrar espacio).
-        $this->assertStringContainsString('8,00 €/invitado', $rows[0]['note']);
+        // «precio por invitado», escrito entero desde `#588` (antes «precio/invitado», una abreviatura de catálogo).
+        $this->assertStringContainsString('8,00 € por invitado', $rows[0]['note']);
     }
 
     public function test_paid_addon_without_price_is_excluded(): void

@@ -115,7 +115,6 @@ return [
          */
         'eyebrow' => 'Para quién',
         'title' => 'Cada uno tiene su zona',
-        'rule' => 'Con 8 años se puede elegir. Los menores de 4 entran en Kids con un adulto si miden más de 90 cm; en Jump, entre 1,10 y 1,30 m, también con un adulto.',
         'from' => 'desde',
         'see_zone' => 'Ver la zona :zone',
         /*

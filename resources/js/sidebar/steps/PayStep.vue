@@ -161,6 +161,10 @@ const t = (key) => translate(props.messages, key);
     -->
     <!-- eslint-disable-next-line vue/no-v-html -- literal de `lang/` + `route()`, sin entrada de usuario -->
     <p v-if="! need.terms" class="paydue__legal" v-html="t('terms_link')"></p>
+    <!-- La política de cambios y el pago seguro, dichos ANTES de pagar (`#588`, contenido T5): es lo que
+         el cliente quiere saber justo antes de comprometerse. El documento entero sigue en su fila. -->
+    <p class="paydue__legal">{{ t('pay_policy') }}</p>
+    <p class="paydue__legal">{{ t('pay_notice') }}</p>
 
     <div class="purchase__foot purchase__foot--info">
         <p v-if="error" class="form__error">{{ error }}</p>

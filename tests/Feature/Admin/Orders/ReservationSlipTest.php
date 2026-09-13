@@ -479,11 +479,13 @@ class ReservationSlipTest extends TestCase
         // Complemento + totales del producto.
         $this->assertStringContainsString('Calcetines antideslizantes', $html);
         $this->assertStringContainsString('Totales del producto', $html);
-        // Pulidos clienta: NO waiver, NO email, NO badge "Completado".
+        // Pulidos clienta: NO waiver, NO email, NO badge del estado del pedido.
+        // ⚠️ Por la CLAVE y no por el literal: el estado pasó de «Completado» a «Confirmado» en `#588`, y
+        // con el literal viejo esta línea habría seguido en verde sin mirar nada.
         $this->assertStringNotContainsString('Waiver', $html);
         $this->assertStringNotContainsString('Aceptado', $html);
         $this->assertStringNotContainsString((string) $order->user->email, $html);
-        $this->assertStringNotContainsString('Completado', $html);
+        $this->assertStringNotContainsString((string) __('admin.orders.status.paid'), $html);
         // Ninguna clave i18n cruda debe filtrarse al PDF (todas traducidas).
         $this->assertStringNotContainsString('admin.orders.', $html);
     }

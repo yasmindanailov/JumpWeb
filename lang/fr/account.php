@@ -113,7 +113,7 @@ return [
         // Phase 6 · mineurs à charge (`specs/menores-a-cargo.md` §9.8) : la zone et ses cartes, avec session.
         'dependents' => [
             'title' => 'Mineurs à ma charge',
-            'intro' => 'Déclarez les mineurs dont vous êtes responsable et signez la décharge au nom de chacun. À l\'entrée, seuls leur âge et l\'état de leur décharge sont visibles, jamais leur nom.',
+            'intro' => 'Ajoutez les mineurs dont vous êtes responsable et signez la décharge en leur nom. Vous pourrez ainsi leur attribuer des entrées en réservant.',
             'empty' => 'Vous n\'avez encore déclaré aucun mineur.',
             'add_title' => 'Ajouter un mineur',
             'name' => 'Prénom',
@@ -236,6 +236,7 @@ return [
         'password_hint' => 'Au moins 8 caractères. Évitez les mots de passe courants ou compromis.',
         'must_accept' => 'Vous devez accepter cette condition pour continuer.',
         'accept_waiver' => "J'ai lu et j'accepte la décharge de responsabilité.",
+        'waiver_hint' => 'C’est le document que signe toute personne qui saute : règles de sécurité et responsabilité. Sans elle, on ne peut pas entrer dans le parc.',
         // La décharge se nomme EN ENTIER et toujours pareil (`#561`, `Voz PJP`).
         'waiver_read' => 'Lire la décharge de responsabilité',
         // Voir l'avertissement dans `lang/es/account.php` : c'est un AVIS, pas une case à cocher.

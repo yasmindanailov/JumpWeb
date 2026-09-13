@@ -67,6 +67,8 @@ class CardSkinTest extends TestCase
         // tinta, no una sombra.
         '.channel' => 'las tarjetas de canal de /contacto — #535',
         '.contact-form' => 'la tarjeta del formulario de /contacto — #535',
+        '.zones__access' => 'la nota de acceso bajo las tarjetas de zona de la portada — #587',
+        '.svc-party__card' => 'los cumpleaños resumidos al final de /servicios — #588',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────────────

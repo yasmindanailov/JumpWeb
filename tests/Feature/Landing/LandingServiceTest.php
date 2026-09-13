@@ -5,12 +5,15 @@ namespace Tests\Feature\Landing;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Content\Models\LandingService;
 use Database\Seeders\LandingContentSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
  * F1 (#256, modelo A): la entidad `LandingService` es la ÚNICA fuente de clasificación de
- * superficie. La existencia de un LandingService que referencie un pack lo saca de Cumpleaños.
+ * superficie. Un pack vinculado a un servicio sale de Cumpleaños.
+ * ▶ Desde `#588` un servicio vende VARIOS productos (una excursión son dos: 2 y 3 horas), y un
+ * producto sigue estando en UN servicio como mucho.
  */
 class LandingServiceTest extends TestCase
 {
@@ -35,28 +38,55 @@ class LandingServiceTest extends TestCase
         LandingService::create([
             'slug' => 'eventos-empresa',
             'title' => ['es' => 'Eventos de empresa'],
-            'ticket_type_id' => $pack->id,
             'position' => 1,
-        ]);
+        ])->products()->attach($pack->id);
 
         $ids = TicketType::birthdaySurfacePacks()->pluck('id');
         $this->assertSame(1, $ids->count());
         $this->assertFalse($ids->contains($pack->id), 'El pack con LandingService sale de Cumpleaños.');
     }
 
-    public function test_is_purchasable_reflects_the_linked_pack(): void
+    /**
+     * **Los DOS productos de un servicio salen de Cumpleaños** (`#588`). Era el síntoma: con el 1:1 la
+     * excursión de 3 horas no tenía servicio y se anunciaba en la página de cumpleaños.
+     */
+    public function test_a_service_sells_several_products_and_all_of_them_leave_the_birthday_surface(): void
+    {
+        $packs = TicketType::ofType(TicketType::TYPE_PACK)->pluck('id');
+        $this->assertCount(2, $packs);
+
+        $service = LandingService::create(['slug' => 'excursiones', 'title' => ['es' => 'Excursiones']]);
+        $service->products()->attach($packs->all());
+
+        $this->assertSame(0, TicketType::birthdaySurfacePacks()->count());
+        $this->assertEqualsCanonicalizing($packs->all(), $service->fresh()->products->pluck('id')->all());
+    }
+
+    /** Un producto se vende desde UN servicio como mucho: en dos se duplicaría su tabla. */
+    public function test_a_product_cannot_be_sold_from_two_services(): void
+    {
+        $pack = TicketType::ofType(TicketType::TYPE_PACK)->first();
+        LandingService::create(['slug' => 'uno', 'title' => ['es' => 'Uno']])->products()->attach($pack->id);
+
+        $this->expectException(QueryException::class);
+        LandingService::create(['slug' => 'dos', 'title' => ['es' => 'Dos']])->products()->attach($pack->id);
+    }
+
+    public function test_is_purchasable_reflects_the_linked_packs(): void
     {
         $pack = TicketType::ofType(TicketType::TYPE_PACK)->first();
 
-        $withPack = LandingService::create(['slug' => 'con-pack', 'title' => ['es' => 'Con pack'], 'ticket_type_id' => $pack->id]);
-        $contactOnly = LandingService::create(['slug' => 'solo-contacto', 'title' => ['es' => 'Solo contacto'], 'ticket_type_id' => null]);
+        $withPack = LandingService::create(['slug' => 'con-pack', 'title' => ['es' => 'Con pack']]);
+        $withPack->products()->attach($pack->id);
+        $contactOnly = LandingService::create(['slug' => 'solo-contacto', 'title' => ['es' => 'Solo contacto']]);
 
-        $this->assertTrue($withPack->isPurchasable());
-        $this->assertFalse($contactOnly->isPurchasable(), 'Sin pack vinculado = solo-contacto.');
+        $this->assertTrue($withPack->fresh()->isPurchasable());
+        $this->assertFalse($contactOnly->isPurchasable(), 'Sin packs vinculados = solo-contacto.');
 
         // Si el pack deja de ser vendible, la sección degrada a contacto (coherencia #226).
         $pack->update(['is_sellable' => false]);
         $this->assertFalse($withPack->fresh()->isPurchasable());
+        $this->assertCount(0, $withPack->fresh()->purchasableProducts());
 
         // Si la ZONA del pack se desactiva, tampoco es comprable: los packs venden por aforo de zona
         // y el sidebar no podría venderlo (coherencia CTA⟺catálogo, #210/#226).
@@ -65,17 +95,17 @@ class LandingServiceTest extends TestCase
         $this->assertFalse($withPack->fresh()->isPurchasable(), 'zona desactivada = no comprable');
     }
 
-    public function test_deleting_the_pack_nulls_the_link_and_degrades_to_contact(): void
+    public function test_deleting_the_pack_removes_the_link_and_degrades_to_contact(): void
     {
         $pack = TicketType::ofType(TicketType::TYPE_PACK)->first();
-        $svc = LandingService::create(['slug' => 'con-pack', 'title' => ['es' => 'X'], 'ticket_type_id' => $pack->id]);
-        $this->assertTrue($svc->isPurchasable());
+        $svc = LandingService::create(['slug' => 'con-pack', 'title' => ['es' => 'X']]);
+        $svc->products()->attach($pack->id);
+        $this->assertTrue($svc->fresh()->isPurchasable());
 
         $pack->delete();
 
-        $svc->refresh();
-        $this->assertNull($svc->ticket_type_id, 'nullOnDelete: la FK queda en NULL al borrar el pack');
-        $this->assertFalse($svc->isPurchasable(), 'sin pack vinculado = solo-contacto');
+        $this->assertTrue($svc->products()->doesntExist(), 'borrar el pack borra su enlace (cascada)');
+        $this->assertFalse($svc->fresh()->isPurchasable(), 'sin packs vinculados = solo-contacto');
     }
 
     /**

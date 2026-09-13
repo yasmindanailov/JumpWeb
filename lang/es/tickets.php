@@ -14,7 +14,7 @@ return [
     // ⚠️⚠️ **La entradilla NO dice la duración**, y el artboard sí («Dos horas de salto»): eso es un
     // dato de ESTA instalación y lo pone el catálogo (la lección de `#487`). Lo que se conserva es lo
     // que la frase venía a hacer —quitar la prisa de llegar puntual—, que sí es del producto.
-    'step_time_lede' => 'Entra cuando quieras dentro de tu franja.',
+    'step_time_lede' => 'Tu tiempo empieza a la hora que elijas: llega unos minutos antes.',
     'step_tickets' => 'Elige tus entradas',
     // Sidebar v2 — banda de fases y pie dinámico. Desde `#555` son CINCO fases, una por PANTALLA del
     // camino (día · hora · carrito · quién eres · pagar).
@@ -29,7 +29,8 @@ return [
     'phase_pay' => 'Pagar',
     'go_to_cart' => 'Ir al carrito',
     'go_to_pay' => 'Ir a pagar',
-    'cart_items' => ':count artículo|:count artículos',
+    // «Reserva», no «artículo» (`#588`, contenido T5): es la palabra con la que el cliente piensa su compra.
+    'cart_items' => ':count reserva|:count reservas',
     // Desglose de la señal en el sticky footer, bajo el Total. «Pagas ahora» es neutro en el carrito
     // (en cestas mixtas no es solo señal); en el paso de producto único se aclara «(señal)». El resto
     // («En el parque») reutiliza tickets.pay_at_park.
@@ -52,7 +53,10 @@ return [
     // que son los de GRUPO —cumpleaños hoy, y también las excursiones de colegio (`#322`) o un grupo de
     // empresa—, así que «Servicios» no decía nada y «Cumpleaños» habría metido el uso de este parque
     // dentro del producto. *La palabra del dominio es la que sobrevive a la siguiente instalación.*
-    'section_services' => 'Grupos',
+    // ▶ `[DECIDIDO owner, 2026-09-13]` (`#586`, «Cajón: Cumpleaños y excursiones»): en ESTA instalación la
+    // tarjeta nombra lo que vende. Lo que razona arriba sigue valiendo para el producto —otra instalación
+    // escribirá aquí lo suyo—, pero para quien compra «Grupos» no decía qué había dentro.
+    'section_services' => 'Cumpleaños y excursiones',
     // ❗❗ **La frase de cada franja del catálogo** (`#552`): es lo que convierte un rótulo de categoría
     // en una bifurcación legible —«vengo a saltar» y «celebro un cumple» son dos clientes distintos—.
     // ⚠️⚠️ **No dicen NINGÚN dato de la instalación, y el canvas sí lo hacía**: su frase para los packs
@@ -62,14 +66,16 @@ return [
     // ❗ `#568` · **Un grupo NO tiene la zona en exclusiva** (`[DECIDIDO owner, 2026-09-13]`): lo que le
     // distingue es el servicio personalizado y la merienda. «La zona entera para vosotros» prometía algo
     // que en el parque no pasa.
-    'section_services_sub' => 'Servicio personalizado y merienda',
+    'section_services_sub' => 'Para celebrar o venir con el cole',
     // `#568` · La invitación a abrir cada tarjeta del catálogo mientras está cerrada.
     'section_entries_cta' => 'Ver entradas',
-    'section_services_cta' => 'Ver grupos',
+    'section_services_cta' => 'Ver cumpleaños y excursiones',
     'catalog_search' => 'Buscar en el catálogo…',
     'catalog_search_none' => 'Sin resultados.',
     'guests' => 'Invitados',
-    'guests_left' => 'quedan :count plazas',
+    // El MÍNIMO del pack, no las plazas que quedan (`#588`, contenido T5): la web no publica el máximo
+    // de niños (`[DECIDIDO owner]`), y «quedan 50 plazas» lo contaba de otra forma.
+    'guests_min' => 'mínimo :count',
     'guests_count' => ':count invitados',
     // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·7): un dato PROPIO de la reserva, no un
     // trozo del nombre del producto. Vive en `tickets.*` y no en `admin.*` porque lo leen los
@@ -104,9 +110,12 @@ return [
     'addon_more_info' => 'Más info',
     'addon_included' => 'Incluido',
     'addon_included_partial' => ':count incluido(s) gratis',
-    'addon_included_extra' => 'Incluido · extras :price/u',
-    'addon_extra_each' => 'extras :price/u',
-    'addon_per_unit' => ':price/invitado',
+    // El precio de un complemento dice a qué se aplica (`#588`, contenido T5): «2,00 €» a secas no decía
+    // si era por unidad o por la fiesta, y «/u» o «/invitado» eran abreviaturas de catálogo.
+    'addon_included_extra' => 'Incluido · extras a :price cada uno',
+    'addon_extra_each' => 'extras a :price cada uno',
+    'addon_each' => ':price cada uno',
+    'addon_per_unit' => ':price por invitado',
     // La HORA EXTRA (`specs/hora-extra.md` §8.6): la cantidad son ENTRADAS que se quedan.
     'addon_stay_price' => ':price por entrada que se queda',
     'addon_stay_selected' => 'Para 1 entrada que se queda · :price|Para :count entradas que se quedan · :price',
@@ -121,7 +130,7 @@ return [
     // ⚠️ Forma `singular|plural` y NO la de RANGOS de Laravel: el cajón SPA resuelve el plural con
     // su propio módulo (`resources/js/sidebar/i18n.js`), que no entiende `{1}…|[2,*]…` — lo cazó
     // `SidebarTextParityTest` con la clave ya escrita. Es la misma forma que `addon_stay_selected`.
-    'addon_stay_per_guest_selected' => 'Una hora más para 1 invitado · :price/invitado|Una hora más para los :count invitados · :price/invitado',
+    'addon_stay_per_guest_selected' => 'Una hora más para 1 invitado · :price por invitado|Una hora más para los :count invitados · :price por invitado',
     'addon_requires' => 'Requiere: :name',
     'from' => 'desde',
     'qty_less' => 'Quitar uno',
@@ -136,7 +145,9 @@ return [
     'total' => 'Total',
     'continue' => 'Continuar',
     'confirm_next' => 'Carrito listo. Continúa para identificarte y pagar.',
-    'iva_note' => 'Precios con IVA incluido. El pago se realiza de forma segura con Redsys.',
+    // ⚠️ Sin el nombre de la pasarela (`#588`, contenido T5): «Redsys» no le dice nada a quien compra, y
+    // el pago seguro lo dice la pantalla de pagar, que es donde se paga.
+    'iva_note' => 'Precios con IVA incluido.',
     'prev_month' => 'Mes anterior',
     'next_month' => 'Mes siguiente',
     'legend_normal' => 'Día normal',
@@ -198,7 +209,11 @@ return [
     // podido conocerlas para que se incorporen al contrato.
     'terms_link' => 'Al reservar aceptas las <a href=":url" target="_blank" rel="noopener">condiciones de reserva</a>.',
     'due_terms_updated' => 'Hemos actualizado las condiciones de reserva. Léelas y acéptalas para seguir.',
-    'pay_notice' => 'Pago seguro con tarjeta a través de Redsys. Tu tarjeta no se guarda en este sitio.',
+    'pay_notice' => 'Pago seguro con tarjeta a través de tu banco. Tu tarjeta no se guarda en esta web.',
+    // La POLÍTICA de cambios y cancelación, dicha antes de pagar (`#586`, `[DECIDIDO owner]`): es lo que
+    // el cliente quiere saber justo antes de comprometerse, y el documento entero sigue en «Leer las
+    // condiciones». ⚠️ Es la política de ESTA instalación: la escribe su diccionario, no el producto.
+    'pay_policy' => 'Entradas: cambio o devolución hasta 24 h antes. Cumpleaños y excursiones: te devolvemos la señal si cancelas con 5 días.',
     'pay_confirm' => 'Pagar con tarjeta',
     'pay_redirecting' => 'Te llevamos a la pasarela de pago segura. Si no se redirige en unos segundos, pulsa el botón.',
     'pay_redirecting_title' => 'Redirigiendo al pago',
@@ -259,15 +274,17 @@ return [
     // bloque de cuenta oculto en las pantallas finales, el botón lleva al índice, donde están el QR y
     // «Mis reservas». Dice «Ir a» y no «Ver» porque SALE de la compra a otra sección del cajón.
     'go_to_account' => 'Ir a mi cuenta',
-    'guest_form_notice' => 'Te pediremos completar el formulario de tu reserva: te enviaremos el enlace por email (también en «Mis reservas»).',
-    // #146: el Order status `paid` lee "Completado" (no "Pagado"). Un Order
-    // completado puede llevar reembolso anotado — el reembolso es una dimensión
+    'guest_form_notice' => 'Para preparar la visita te pediremos los datos de los invitados (nombre, edad, alergias). Te llega el enlace por correo.',
+    // El SIGUIENTE PASO tras reservar (`#588`, contenido T5): lo que hay que hacer el día de la visita.
+    'confirmed_next_step' => 'El día de la visita, enseña tu QR en la entrada. Todo el que salta necesita calcetines antideslizantes.',
+    // #146: el Order status `paid` lee «Confirmado» (no «Pagado») desde `#588` (`[DECIDIDO owner]`: antes
+    // «Completado», que se leía como «ya pasó»). Un pedido confirmado puede llevar reembolso anotado — el reembolso es una dimensión
     // independiente con su propio badge (`tickets.refunded_badge`). El estado
     // del COBRO (Payment) sigue siendo "Pagado", pero la card de pagos donde
     // se ve no aparece en mi-cuenta, solo en el panel admin.
     'statuses' => [
         'pending' => 'Pendiente de pago',
-        'paid' => 'Completado',
+        'paid' => 'Confirmado',
         'cancelled' => 'Cancelado',
         'refunded' => 'Reembolsado',
         'expired' => 'Caducado',
@@ -292,7 +309,7 @@ return [
     // hace con ese dinero, así que le toca «A pagar en el parque» — es la misma regla que `#554`
     // escribió para `footer_park_total`. El «En el parque» a secas se queda donde cuelga de «Pagas
     // ahora» (`pay_at_park`, el ⓘ de la señal), que ya lleva el verbo delante.
-    'pending_at_park' => 'A pagar en el parque',
+    'pending_at_park' => 'A pagar en el parque el día de la visita',
     // Robustez del desglose (#196/#198): desglose detallado en "Mis pedidos".
     'subtotal' => 'Subtotal',
     // ▶ Hasta la T3·4 del libro (`DECISIONES #315`) aquí vivían los rótulos del modelo de DOS EJES
@@ -345,7 +362,7 @@ return [
         'settlements_title' => 'Pagos y devoluciones',
         'total' => 'Total',
         'paid' => 'Pagado',
-        'balance_pay_at_park' => 'A pagar en el parque',
+        'balance_pay_at_park' => 'A pagar en el parque el día de la visita',
         'balance_refund_at_park' => 'A devolver en el parque',
         'balance_refund_pending' => 'Pendiente de devolución',
         'balance_pay_online' => 'Pendiente de pagar por web',
@@ -358,8 +375,8 @@ return [
     ],
     'errors' => [
         'choose_one' => 'Elige al menos una entrada para continuar.',
-        'cart_empty' => 'Añade al menos una visita para continuar.',
-        'cart_too_large' => 'Has alcanzado el máximo de líneas en el carrito. Termina esta reserva antes de añadir más.',
+        'cart_empty' => 'Añade al menos una reserva para continuar.',
+        'cart_too_large' => 'Has alcanzado el máximo de reservas en el carrito. Termina esta compra antes de añadir más.',
         'login_required' => 'Inicia sesión para completar tu reserva.',
         // Mensajes genéricos (fallback, sin contexto de línea).
         'sold_out' => 'Lo sentimos, esa franja se acaba de agotar. Prueba con otra hora.',
@@ -371,6 +388,14 @@ return [
         // y mensaje por-campo bajo cada input resaltado.
         'fields_missing' => 'Falta rellenar: :fields.',
         'field_required' => 'Campo obligatorio.',
+        // La EDAD del cumpleañero fuera del tramo del pack (`#588`): el tramo y, si la hay, la recomendación.
+        // ⚠️ Los compone `CelebrantAgeMismatch::sentence()` en el servidor y `line-problems.js` en el
+        // cajón: la misma frase con los mismos textos.
+        'celebrant_age_between' => 'Este pack es para cumpleaños de :min a :max años.',
+        'celebrant_age_from' => 'Este pack es para cumpleaños desde los :min años.',
+        'celebrant_age_up_to' => 'Este pack es para cumpleaños de hasta :max años.',
+        'celebrant_age_try' => 'Para esa edad, elige «:product».',
+        'celebrant_age_generic' => 'La edad del cumpleañero no encaja en este pack.',
         // Mensajes específicos por línea (auditoría 2026-05-26 2ª ronda, P-13/P-14): incluyen
         // qué producto y franja tienen el problema, para que el cliente pueda corregir sin adivinar.
         'sold_out_line' => '«:product» del :when se ha agotado. Quítalo del carrito y elige otra franja.',
@@ -389,6 +414,7 @@ return [
         'stay_extension_line' => 'El pack «:product» del :when no cabe con la hora extra: la sala está ocupada después. Quita la hora extra o elige otra franja.',
         'pack_guests_range_line' => 'El nº de invitados de «:product» debe estar entre :min y :max.',
         'event_required_line' => 'Faltan datos del cumpleaños para «:product». Vuelve atrás y rellénalos.',
+        'celebrant_age_line' => 'La edad del cumpleañero no encaja en «:product». :detail',
         'too_many_pending' => 'Tienes :max reservas pendientes (el máximo). Si necesitas cancelar alguna, escríbenos desde Contacto y te ayudamos.',
         'try_later' => 'Demasiados intentos seguidos. Espera un minuto antes de volver a intentarlo.',
         'payment_unavailable' => 'No hemos podido iniciar el pago. Vuelve a intentarlo en un momento; si el problema persiste, escríbenos desde Contacto.',
@@ -446,8 +472,8 @@ return [
         'title' => '¿Quiénes vienen?',
         'none' => 'Menores a cargo',
         'some' => 'Menores: :count',
-        'guardian' => 'Con justificante',
-        'both' => 'Menores: :count · justificante',
+        'guardian' => 'Con autorización',
+        'both' => 'Menores: :count · autorización',
         'guardian_only' => 'Justificante',
     ],
     'guardian_no_places' => 'No quedan plazas libres en esta reserva: ya has asignado todas a menores a tu cargo. Añade una entrada más o quita una asignación.',

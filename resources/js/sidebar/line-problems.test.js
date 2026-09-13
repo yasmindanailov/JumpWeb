@@ -12,6 +12,11 @@ const MESSAGES = {
         cart_too_large: 'La cesta tiene demasiadas líneas.',
         choose_one: 'Elige producto, día y hora.',
         fields_missing: 'Faltan: :fields.',
+        celebrant_age_between: 'Es para cumpleaños de :min a :max años.',
+        celebrant_age_from: 'Es para cumpleaños desde los :min años.',
+        celebrant_age_up_to: 'Es para cumpleaños de hasta :max años.',
+        celebrant_age_try: 'Para esa edad, elige «:product».',
+        celebrant_age_generic: 'La edad no encaja.',
     },
 };
 
@@ -47,6 +52,29 @@ describe('el «no» al añadir una línea', () => {
         const outcome = lineProblems([{ reason: 'sold_out' }, { reason: 'event_field_required', field: 'age' }], FIELDS, MESSAGES);
 
         assert.equal(outcome.error, 'Faltan: Edad.');
+    });
+
+    test('la edad del cumpleañero fuera de tramo dice el tramo del pack y recomienda el que la admite (#588)', () => {
+        const fields = [{ key: 'age', label: 'Edad', min: 4, max: 7 }];
+        const outcome = lineProblems([
+            { reason: 'celebrant_age_out_of_range', field: 'age', suggestion: { product_id: 9, name: 'Pack Jump' } },
+        ], fields, MESSAGES);
+
+        assert.deepEqual(outcome.fieldErrors, { age: 'Es para cumpleaños de 4 a 7 años. Para esa edad, elige «Pack Jump».' });
+        assert.equal(outcome.error, '', 'el aviso va en su campo, no en el resumen');
+    });
+
+    test('sin recomendación se dice solo el tramo, y un tramo abierto se escribe por su lado', () => {
+        const desde = lineProblems([{ reason: 'celebrant_age_out_of_range', field: 'age', suggestion: null }],
+            [{ key: 'age', min: 8, max: null }], MESSAGES);
+        assert.equal(desde.fieldErrors.age, 'Es para cumpleaños desde los 8 años.');
+
+        const hasta = lineProblems([{ reason: 'celebrant_age_out_of_range', field: 'age' }],
+            [{ key: 'age', min: null, max: 7 }], MESSAGES);
+        assert.equal(hasta.fieldErrors.age, 'Es para cumpleaños de hasta 7 años.');
+
+        const sinTramo = lineProblems([{ reason: 'celebrant_age_out_of_range', field: 'age' }], [], MESSAGES);
+        assert.equal(sinTramo.fieldErrors.age, 'La edad no encaja.');
     });
 
     test('sin problemas no hay nada que enseñar, y una entrada rara no revienta', () => {

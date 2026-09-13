@@ -237,6 +237,13 @@ class OrderCreator
                     if ($type->missingRequiredEventFields($line['event_data'] ?? [], TicketType::EVENT_STAGE_BOOKING) !== []) {
                         throw ReservationException::withContext('tickets.errors.event_required_line', $context);
                     }
+                    // La EDAD del cumpleañero tiene que caber en el tramo del pack (`#588`, `[DECIDIDO
+                    // owner]`) — re-validado aquí por la regla 12, o un cuerpo a mano saltaría la del
+                    // carrito. ⚠️ Solo ATA a quien compra solo: en el mostrador el parque tiene al
+                    // cliente delante y el panel AVISA y deja (la naturaleza de `CounterSale`, `#330`).
+                    if (! $sale->byOperator && ($mismatch = $type->celebrantAgeMismatch($line['event_data'] ?? [])) !== null) {
+                        throw ReservationException::withContext('tickets.errors.celebrant_age_line', $context + ['detail' => $mismatch->sentence()]);
+                    }
                 } else {
                     // Entrada: aforo cumulativo por ocupación (#60); debe caber contando los DEMÁS
                     // ocupantes que la cesta aporta a esta zona/día — líneas base Y sus hijas que

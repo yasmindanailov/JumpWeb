@@ -15,10 +15,11 @@ import { t, tp } from './i18n.js';
  *
  * ⚠️ Los `problems` vienen SIN contexto a propósito: el mínimo, el tope y las etiquetas ya los
  * publican `catalog/products/{id}` y `config`, y republicarlos sería un segundo sitio del que leer el
- * mismo valor.
+ * mismo valor. La excepción es `suggestion` (`#588`): el pack que admite la edad del cumpleañero es
+ * una respuesta del servidor que no publica nadie más.
  *
- * @param {Array<{reason: string, field?: string|null}>} problems  del veredicto del servidor
- * @param {Array<{key: string, label: string}>} eventFields  el esquema del producto, para nombrar lo que falta
+ * @param {Array<{reason: string, field?: string|null, suggestion?: {product_id: number, name: string}|null}>} problems  del veredicto del servidor
+ * @param {Array<{key: string, label: string, min?: number|null, max?: number|null}>} eventFields  el esquema del producto, para nombrar lo que falta
  * @param {object} messages  el grupo `tickets`
  * @returns {{fieldErrors: Record<string, string>, error: string}}
  */
@@ -37,6 +38,13 @@ export function lineProblems(problems, eventFields = [], messages = {}) {
             continue;
         }
 
+        if (problem?.reason === 'celebrant_age_out_of_range' && problem.field) {
+            const field = (Array.isArray(eventFields) ? eventFields : []).find((f) => f?.key === problem.field);
+            fieldErrors[problem.field] = celebrantAgeSentence(field, problem.suggestion, messages);
+
+            continue;
+        }
+
         error = problem?.reason === 'cart_full'
             ? t(messages, 'errors.cart_too_large')
             : t(messages, 'errors.choose_one');
@@ -47,4 +55,27 @@ export function lineProblems(problems, eventFields = [], messages = {}) {
     }
 
     return { fieldErrors, error };
+}
+
+/**
+ * La frase de la edad del cumpleañero fuera de tramo (`#588`): el tramo del pack —lo publica el
+ * catálogo en el propio campo (`min`/`max`)— y, si el servidor la trae, el pack que sí la admite.
+ * ⚠️ Es la misma composición que `CelebrantAgeMismatch::sentence()` en el servidor, con los mismos textos.
+ */
+function celebrantAgeSentence(field, suggestion, messages) {
+    const min = Number.isInteger(field?.min) ? field.min : null;
+    const max = Number.isInteger(field?.max) ? field.max : null;
+
+    let sentence = t(messages, 'errors.celebrant_age_generic');
+    if (min !== null && max !== null) {
+        sentence = tp(messages, 'errors.celebrant_age_between', { min, max });
+    } else if (min !== null) {
+        sentence = tp(messages, 'errors.celebrant_age_from', { min });
+    } else if (max !== null) {
+        sentence = tp(messages, 'errors.celebrant_age_up_to', { max });
+    }
+
+    return suggestion?.name
+        ? `${sentence} ${tp(messages, 'errors.celebrant_age_try', { product: suggestion.name })}`
+        : sentence;
 }

@@ -31671,3 +31671,31 @@ Tandas T3 y T4 de `docs/specs/contenido-y-copys.md`, aplicadas en local y pendie
 - **`/servicios` es de excursiones de colegio** y la banda «Otros eventos» se retira con su ancla `eventos`,
   su CSS y sus claves en los tres idiomas.
 ⚠️ Queda la T4·8: `/servicios` sigue leyendo su tabla tecleada, porque un servicio vincula un solo producto.
+
+## #588 · 2026-09-13 · `[DECIDIDO owner]` La edad del cumpleañero decide el pack, las excursiones salen de cumpleaños y el cajón habla como el parque
+
+Cuatro notas del owner sobre el local de `#587`, con las opciones delante donde había que elegir.
+- **La edad del cumpleañero es OBLIGATORIA y decide el pack.** Nace el tipo de campo `celebrant_age`
+  (una edad por fiesta, en `event_fields`; la `age` por invitado sigue siendo del post-form) y
+  `TicketType::celebrantAgeMismatch()` la compara con `guest_age_min`/`guest_age_max`. Fuera del tramo
+  **la web no deja reservar** —la validación de línea devuelve `celebrant_age_out_of_range` con el
+  pack de la misma familia que sí la admite en `suggestion`, y `OrderCreator` lo re-valida— y **el
+  panel avisa y deja** (`[DECIDIDO owner]`: el parque tiene al cliente delante; mismo criterio que
+  `CounterSale`, `#330`). ⚠️ El tramo viaja en el propio campo del catálogo (`min`/`max`) y la frase
+  la componen el servidor (`CelebrantAgeMismatch::sentence()`) y el cajón con los mismos textos.
+- **Un servicio vende VARIOS productos** (`landing_service_products`, sustituye a
+  `landing_services.ticket_type_id`): la excursión de 3 horas no tenía servicio y **salía anunciada en
+  cumpleaños**. Con las dos vinculadas salen de `/cumpleanos` y de la portada, `/servicios` pinta una
+  tabla por producto **leída de sus tramos** (`GroupRateTables`, cierra la T4·8) con su «Reservar», y
+  termina con los **cumpleaños resumidos** y su puerta a `/cumpleanos` (`[DECIDIDO owner]`: la página
+  sigue llamándose «Excursiones»). Fuera sus complementos, por la decisión de `#583`.
+- **Zonas de la portada**: fuera la regla bajo el titular (repetía las tarjetas) y la edad y la altura
+  del cuerpo de la tarjeta (ya están en el sello); lo que las tarjetas no dicen va en una **nota de
+  acceso** bajo ellas, que escribe el panel (`landing.zones_access`, «Ajustes → Web») y repite el pie
+  de `/atracciones`.
+- **T5, los textos del cajón, los hace este carril** (`[DECIDIDO owner]`): la tarjeta «Cumpleaños y
+  excursiones», el paso de la hora, la política de cambios y el pago seguro antes de pagar, el siguiente
+  paso al confirmar, los complementos «cada uno» / «por invitado», el mínimo del pack en vez de las
+  plazas que quedan, «reserva» en vez de «artículo», «autorización» en vez de «justificante», el
+  descargo en masculino, el saldo «el día de la visita», el login y los menores a cargo. El estado de un
+  pedido pagado pasa de «Completado» a **«Confirmado»** (`[DECIDIDO owner]`, P6).

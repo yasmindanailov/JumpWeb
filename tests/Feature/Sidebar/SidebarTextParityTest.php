@@ -35,7 +35,8 @@ class SidebarTextParityTest extends TestCase
     {
         return [
             'guests_count' => ['count' => 8],
-            'guests_left' => ['count' => 12],
+            // `#588`: el pack dice su MÍNIMO y no las plazas que quedan.
+            'guests_min' => ['count' => 8],
             'seats_left' => ['count' => 5],
             'addon_included_partial' => ['count' => 1],
             'addon_requires' => ['name' => 'Tarta'],

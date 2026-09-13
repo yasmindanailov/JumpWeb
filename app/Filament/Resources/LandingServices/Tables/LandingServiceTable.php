@@ -33,8 +33,9 @@ class LandingServiceTable
 
                 TextColumn::make('pack')
                     ->label(__('admin.landing_services.col_pack'))
-                    ->getStateUsing(fn (LandingService $record): string => $record->ticketType
-                        ? (string) ($record->ticketType->tr('name') ?? '—')
+                    // Los packs que vende (`#588`: pueden ser varios), o «solo contacto» sin ninguno.
+                    ->getStateUsing(fn (LandingService $record): string => $record->products->isNotEmpty()
+                        ? $record->products->map(fn ($pack): string => (string) $pack->tr('name'))->implode(' · ')
                         : __('admin.landing_services.contact_only')),
 
                 TextColumn::make('is_active')

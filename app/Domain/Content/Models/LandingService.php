@@ -6,16 +6,18 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Platform\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 
 /**
  * Sección editorial de la página /servicios + item del selector «Servicios» del nav (#256,
  * `docs/PLAN-SERVICIOS-DATA-DRIVEN.md`, modelo A). Es EDITORIAL (texto/imagen/orden/toggles); lo
- * COMERCIAL lo lee en vivo del `ticketType` vinculado + su `Zone` (precio, complementos, mín/máx,
- * aforo) → cero drift. `ticket_type_id` NULL = sección de solo-contacto («Pedir información»).
+ * COMERCIAL lo lee en vivo de los PRODUCTOS vinculados + su `Zone` (precio, tramos, mín/máx,
+ * aforo) → cero drift. Sin productos = sección de solo-contacto («Pedir información»).
  *
- * Su mera existencia reclasifica el pack vinculado a la superficie «Servicios»: la sección
- * Cumpleaños lo excluye con `TicketType::whereDoesntHave('landingService')` (fuente única).
+ * Su mera existencia reclasifica los packs vinculados a la superficie «Servicios»: la sección
+ * Cumpleaños los excluye con `TicketType::whereDoesntHave('landingServices')` (fuente única).
+ * ▶ Desde `#588` un servicio vende VARIOS productos (una excursión son dos: 2 y 3 horas).
  */
 class LandingService extends Model
 {
@@ -36,25 +38,34 @@ class LandingService extends Model
     ];
 
     /**
-     * Pack comprable de esta sección (#228 patrón espejo de `Attraction::ticketType`). Opcional:
-     * `null` = sección de solo-contacto. Si está y es comprable (`isPurchasable`), la card muestra
-     * precio + complementos + CTA «Reservar»; si no, CTA «Pedir información».
+     * Los packs que se venden desde esta sección (`#588`). Opcional: sin ninguno = solo-contacto.
+     * ⚠️ Un producto está en UN servicio como mucho (índice único en la tabla de enlace): en dos se
+     * duplicaría su tabla, y su existencia es la que lo saca de Cumpleaños.
      *
-     * @return BelongsTo<TicketType, $this>
+     * @return BelongsToMany<TicketType, $this>
      */
-    public function ticketType(): BelongsTo
+    public function products(): BelongsToMany
     {
-        return $this->belongsTo(TicketType::class);
+        return $this->belongsToMany(TicketType::class, 'landing_service_products')
+            ->withTimestamps()
+            ->orderBy('ticket_types.position');
     }
 
     /**
-     * ¿El pack vinculado es realmente COMPRABLE? Coherencia #226 (la landing solo anuncia lo que la
-     * cesta puede vender): delega en la fuente única `TicketType::isSellablePackForLanding()` (pack
-     * vendible + activo, con precio y en zona operativa). Si no, la card degrada a solo-contacto.
+     * Los productos vinculados que la web puede VENDER de verdad. Coherencia #226 (la landing solo
+     * anuncia lo que la cesta puede vender): delega en `TicketType::isSellablePackForLanding()`.
+     *
+     * @return Collection<int, TicketType>
      */
+    public function purchasableProducts(): Collection
+    {
+        return $this->products->filter(fn (TicketType $product): bool => $product->isSellablePackForLanding())->values();
+    }
+
+    /** ¿Tiene algo que vender? Si no, la sección degrada a «Pedir información». */
     public function isPurchasable(): bool
     {
-        return $this->ticketType?->isSellablePackForLanding() ?? false;
+        return $this->purchasableProducts()->isNotEmpty();
     }
 
     /** @param  Builder<LandingService>  $query */

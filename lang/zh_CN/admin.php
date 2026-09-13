@@ -318,6 +318,7 @@ return [
             'quantity' => '数量',
             'guests' => '人数',
             'qty_out_of_range' => '数量必须在 :min 到 :max 之间。',
+            'celebrant_age_warning' => '寿星年龄不在该套餐的年龄段内',
             'below_minimum_label' => '低于套餐最低人数销售(留有记录)',
             'guardian_label' => '有并非客户监护的未成年人同行',
             'guardian_help' => '其父母或法定监护人需要签署一份授权书。收款后我们会把链接发给客户转交。',
@@ -416,7 +417,7 @@ return [
         // 实际付款的状态（在「付款记录」中显示）保留为「已付款」。
         'status' => [
             'pending' => '待付款',
-            'paid' => '已完成',
+            'paid' => '已确认',
             'cancelled' => '已取消',
             'refunded' => '已退款',
             'expired' => '已过期',
@@ -751,6 +752,7 @@ return [
             'flash_no_changes' => '无需保存的修改。',
             'flash_stale' => '其他操作员已在此期间编辑过该产品。请先刷新页面查看最新数据，再重新编辑。',
             'flash_required_missing' => '缺少必填字段：:missing',
+            'flash_celebrant_age' => '已保存，但寿星年龄不在该套餐的年龄段内',
             'flash_blocked' => [
                 'not_pack' => '该产品不是套餐：没有可编辑的活动数据。',
                 'no_event_fields' => '该套餐未配置活动数据字段。',
@@ -1510,6 +1512,7 @@ return [
             'number' => '数字',
             'textarea' => '长文本',
             'age' => '年龄',
+            'celebrant_age' => '寿星年龄（与套餐年龄段比对）',
         ],
         'event_field_required' => '必填',
         'event_field_label' => '标签',
@@ -1850,6 +1853,8 @@ return [
         'landing_tagline_hint' => '未设置“网站标题”时，首页浏览器标签页的标题。例如：「Parque de saltos para toda la familia · Murcia」。',
         'landing_footer_rights' => '版权附言',
         'landing_footer_rights_hint' => '宾客信息表页脚「© 年份 名称 —」之后的文字。例如：「Hecho para reír.」。',
+        'landing_zones_access' => '区域入场说明',
+        'landing_zones_access_hint' => '显示在首页区域卡片下方和 /atracciones 页脚：卡片没有说明的内容（幼儿由谁陪同、身高范围）。留空则不显示。',
 
         'section_registration' => '注册（外部系统）',
         'section_registration_hint' => '网站头部的「注册」按钮跳转到你们的外部注册/免责声明系统。标签和副标题可按语言编辑；若网址留空，按钮将打开内部预订注册。',
@@ -2274,7 +2279,8 @@ return [
         'field_image_hint' => '相对于 public/ 的路径（例如 images/attractions/park_jump.webp）。文件上传将随图库功能推出。',
         'field_pack' => '关联套餐（可选）',
         'field_pack_hint' => '关联可售套餐后，板块会显示价格和“预订”按钮；不关联则显示“咨询”。关联套餐会将其从“生日”板块中移除。',
-        'pack_not_purchasable_warning' => '提示：该套餐在网站上无法购买（板块将显示“咨询”）。请在“目录”中确认其已在线发售、已启用、有价格且属于运营中的区域。',
+        'pack_not_purchasable_warning' => '提示：其中有套餐在网站上无法购买，其价格表不会显示。请在“目录”中确认其已在线发售、已启用、有价格且属于运营中的区域。',
+        'pack_taken' => '其中有套餐已由其他服务销售：一个套餐只能属于一个服务。',
         'field_is_active' => '在 /servicios 显示',
         'field_is_active_hint' => '关闭后，该板块不会出现在 /servicios 页面。',
 

@@ -72,7 +72,6 @@ return [
         'above_is' => 'above, :zone',
         'eyebrow' => 'Who it is for',
         'title' => 'Everyone has their zone',
-        'rule' => 'Age decides. If it does not fit, height decides.',
         'from' => 'from',
         'see_zone' => 'See the :zone zone',
         'height_up_to' => 'up to :h m',

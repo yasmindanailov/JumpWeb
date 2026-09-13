@@ -262,7 +262,7 @@ class OrderInfolistEnrichedTest extends TestCase
 
     public function test_page_heading_status_badge_uses_success_color_for_paid(): void
     {
-        // #145: el badge del Order status pasa a leer "Completado" (no "Pagado").
+        // #145: el badge del Order status pasa a leer «Confirmado» (no «Pagado»; era «Completado» hasta `#588`).
         // La constante `STATUS_PAID = 'paid'` y los colores son los mismos —
         // solo cambia el texto operativo. El estado "Pagado" sigue existiendo,
         // pero referido al Payment (card Pagos), no al Order.
@@ -272,22 +272,22 @@ class OrderInfolistEnrichedTest extends TestCase
         $response = $this->actingAs($this->staff())->get('/admin/orders/JJ-DETAIL1');
         $body = $response->getContent();
 
-        $this->assertStringContainsString('Completado', $body);
+        $this->assertStringContainsString('Confirmado', $body);
         $this->assertMatchesRegularExpression(
             '/bg-green-100[^"]*ring-green|ring-green[^"]*bg-green-100/',
             $body,
-            'Badge de "Completado" debe usar bg-green-100 + ring-green (variante success).'
+            'Badge de «Confirmado» debe usar bg-green-100 + ring-green (variante success).'
         );
     }
 
-    public function test_order_status_text_for_paid_changed_to_completado(): void
+    public function test_order_status_text_for_paid_changed_to_confirmado(): void
     {
-        // Robustez del rename (#145 + #146): tanto el panel admin como la zona del
-        // cliente leen "Completado" para el Order status `paid`. El estado del
-        // Payment (card Pagos) sigue siendo "Pagado" porque es la dimensión del
+        // Robustez del rename (#145 + #146, y `#588` `[DECIDIDO owner]`: «Completado» se leía como «ya
+        // pasó»): tanto el panel admin como la zona del cliente leen «Confirmado» para el Order status
+        // `paid`. El estado del Payment (card Pagos) sigue siendo «Pagado» porque es la dimensión del
         // cobro, no del servicio.
-        $this->assertSame('Completado', __('admin.orders.status.paid'));
-        $this->assertSame('Completado', __('tickets.statuses.paid'));
+        $this->assertSame('Confirmado', __('admin.orders.status.paid'));
+        $this->assertSame('Confirmado', __('tickets.statuses.paid'));
         // El Payment status (card Pagos del admin) sigue siendo "Pagado".
         $this->assertSame('Pagado', __('admin.orders.payments.status.paid'));
     }

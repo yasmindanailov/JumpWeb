@@ -33,10 +33,19 @@ return [
         'weekend' => 'Viernes a domingo y festivos',
         // El pie de cada tabla: su duración, escrita («2 horas»; antes «2H»).
         'hours' => '{1} :count hora|[2,*] :count horas',
+        // Las tablas leídas de los PRODUCTOS (`#588`): la fila es el tramo y la nota lleva su unidad.
+        'from_count' => 'Desde :count',
+        'note_products' => 'Precio :unit, con IVA incluido.',
         'kids' => 'Desde :count alumnos',
         'people' => ':count personas',
         'note_kids' => 'Precio por alumno. Incluye calcetines y monitores; un profesor gratis por cada 15 alumnos. ¿Merienda? Pregúntanos.',
         'note_people' => 'Precio por persona; baja según el tamaño del grupo. Sesiones fuera del horario de apertura al público. Reserva por teléfono o pídenos información.',
+    ],
+    // Los cumpleaños resumidos al final de la página, con su puerta a /cumpleanos (`#588`).
+    'party' => [
+        'title' => 'Cumpleaños',
+        'lede' => '¿Lo celebráis aquí? Estos son los packs; en su página está todo lo que incluyen.',
+        'cta' => 'Ver los cumpleaños',
     ],
     // `sections` migradas a la entidad CMS `LandingService` (#256, modelo A): el blade /servicios
     // las lee de BD (sembradas en LandingContentSeeder). Aquí queda solo el chrome de página.

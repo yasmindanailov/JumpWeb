@@ -337,6 +337,10 @@ class AppServiceProvider extends ServiceProvider
                 'og_image' => self::safeExternalUrl($get('seo.og_image')),
                 'tagline' => $get('landing.tagline.'.$locale) ?: __('landing.footer.tag'),
                 'footer_rights' => $get('landing.footer_rights.'.$locale) ?: __('landing.footer.rights'),
+                // La NOTA DE ACCESO de las zonas (`#587`, `[DECIDIDO owner]`): con quién entran los
+                // pequeños y entre qué alturas. Es un dato del parque, así que SIN respaldo del
+                // diccionario: vacía, la portada y `/atracciones` no pintan nada.
+                'zones_access' => $get('landing.zones_access.'.$locale) ?: null,
                 'seo_title' => $get('seo.title.'.$locale) ?: null,
                 // Registro «del parque» (#216): URL del sistema externo + etiqueta/subtítulo por idioma
                 // (fallback a los textos i18n del nav). URL vacía → el CTA cae al modal de registro interno.

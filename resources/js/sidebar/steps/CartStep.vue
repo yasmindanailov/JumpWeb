@@ -209,8 +209,8 @@ const showsAddonPrice = (addon) => ! (addon.free_quantity >= addon.quantity);
                         <textarea v-if="field.type === 'textarea'" rows="2" required
                                   v-model="draftOf(line.index)[field.key]"></textarea>
                         <input v-else
-                               :type="field.type === 'number' ? 'number' : 'text'"
-                               :min="field.type === 'number' ? 0 : null"
+                               :type="['number', 'celebrant_age'].includes(field.type) ? 'number' : 'text'"
+                               :min="['number', 'celebrant_age'].includes(field.type) ? 0 : null"
                                required
                                v-model="draftOf(line.index)[field.key]">
                     </label>

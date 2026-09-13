@@ -355,6 +355,8 @@ return [
             'quantity' => 'Cantidad',
             'guests' => 'Invitados',
             'qty_out_of_range' => 'La cantidad debe estar entre :min y :max.',
+            // `#588`, `[DECIDIDO owner]`: en el mostrador la edad fuera de tramo AVISA y deja añadir.
+            'celebrant_age_warning' => 'La edad del cumpleañero no encaja en este pack',
             // `#329` — el gemelo de D7 al CREAR el pedido. La ayuda dice el precio a propósito: por
             // debajo del mínimo la escala de tramos no baja más, y el operador tiene que saberlo
             // ANTES de vender, no al ver el total.
@@ -475,7 +477,8 @@ return [
         // (servicio del pedido vs cobro de la pasarela).
         'status' => [
             'pending' => 'Pendiente',
-            'paid' => 'Completado',
+            // `#588`, `[DECIDIDO owner]`: «Completado» se leía como «ya pasó»; el panel dice lo mismo que el cliente.
+            'paid' => 'Confirmado',
             'cancelled' => 'Cancelado',
             'refunded' => 'Reembolsado',
             'expired' => 'Caducado',
@@ -934,6 +937,7 @@ return [
             'flash_no_changes' => 'No había cambios que guardar.',
             'flash_stale' => 'Otro operador editó este producto entretanto. Recarga la página para ver los cambios actuales antes de volver a editar.',
             'flash_required_missing' => 'Faltan campos obligatorios: :missing',
+            'flash_celebrant_age' => 'Guardado, pero la edad del cumpleañero no encaja en este pack',
             // Bloqueos del handler (cada caso lleva su propia clave para que el
             // operador sepa exactamente qué pasó). Genérico = fallback.
             'flash_blocked' => [
@@ -2000,6 +2004,8 @@ return [
             'number' => 'Número',
             'textarea' => 'Texto largo',
             'age' => 'Edad',
+            // `#588`: una por fiesta; con la edad fuera del tramo del pack, la web no deja reservarlo.
+            'celebrant_age' => 'Edad del cumpleañero (se comprueba con el tramo del pack)',
         ],
         'event_field_required' => 'Obligatorio',
         'event_field_label' => 'Etiqueta',
@@ -2344,6 +2350,8 @@ return [
         'landing_tagline_hint' => 'Título de la pestaña de la portada cuando no hay «Título web». Ej.: «Parque de saltos para toda la familia · Murcia».',
         'landing_footer_rights' => 'Coletilla del copyright',
         'landing_footer_rights_hint' => 'Texto tras «© AÑO NOMBRE —» en el pie del formulario de invitados. Ej.: «Hecho para reír.».',
+        'landing_zones_access' => 'Nota de acceso a las zonas',
+        'landing_zones_access_hint' => 'Sale en una tarjeta bajo las zonas de la portada y al pie de /atracciones: lo que las tarjetas no dicen (con quién entran los pequeños, entre qué alturas). Vacía, no se pinta.',
 
         // ── /bar · los textos (`DECISIONES #536`) ────────────────────────────────────────────
         // ⚠️ Las IMÁGENES no están aquí: se suben en «Ajustes → El bar». Esta pantalla no sube
@@ -2801,9 +2809,10 @@ return [
         'field_position_hint' => 'Orden de aparición en /servicios (menor primero).',
         'field_image' => 'Imagen (ruta)',
         'field_image_hint' => 'Ruta relativa a public/ (p. ej. images/attractions/park_jump.webp). La subida de ficheros llegará con la galería.',
-        'field_pack' => 'Pack vinculado (opcional)',
-        'field_pack_hint' => 'Si vinculas un pack vendible, la sección muestra su precio y un botón «Reservar». Sin pack, muestra «Pedir información». Vincular un pack lo SACA de la sección Cumpleaños.',
-        'pack_not_purchasable_warning' => 'Aviso: este pack no se podrá comprar en la web (la sección mostrará «Pedir información»). Revisa en Catálogo que esté en venta online, activo, con precio y en una zona operativa.',
+        'field_pack' => 'Packs que se venden desde este servicio (opcional)',
+        'field_pack_hint' => 'Cada pack vendible sale en la sección con su tabla de precios y su botón «Reservar». Sin packs, la sección muestra «Pedir información». Vincular un pack lo SACA de la sección Cumpleaños, y un pack solo puede estar en un servicio.',
+        'pack_not_purchasable_warning' => 'Aviso: alguno de estos packs no se podrá comprar en la web y no saldrá su tabla. Revisa en Catálogo que esté en venta online, activo, con precio y en una zona operativa.',
+        'pack_taken' => 'Alguno de estos packs ya se vende desde otro servicio: un pack solo puede estar en uno.',
         'field_is_active' => 'Visible en /servicios',
         'field_is_active_hint' => 'Si se desactiva, la sección no aparece en la página /servicios.',
 

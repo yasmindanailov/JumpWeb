@@ -243,12 +243,8 @@
             <div class="zones__titulo">
                 <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
             </div>
-            {{-- ⚠️⚠️ **La REGLA va entera y en una frase.** Es la del parque —manda la edad, y la
-                 altura desempata— y partirla en dos líneas la convierte en dos reglas, que es justo
-                 lo que la sección existe para evitar: que el visitante llegue a la puerta sin saber
-                 cuál manda. Sustituye a la entradilla larga, cuya última frase («Elige el tuyo»)
-                 tenía como sujeto el selector de pestañas que esta tanda retira. --}}
-            <p class="zones__rule">{{ __('landing.zones.rule') }}</p>
+            {{-- ⚠️ Aquí vivía la REGLA bajo el titular, y se retiró (`#587`, `[DECIDIDO owner]`): repetía
+                 lo que ya dicen las tarjetas. Lo que ellas no dicen va en la nota de acceso de debajo. --}}
         </div>
 
         {{-- ══ LAS DOS TARJETAS DE ZONA ═══════════════════════════════════════════════════════
@@ -368,23 +364,12 @@
                                 <span class="zone-card__tint" aria-hidden="true"></span>
                                 <span class="zone-card__inner">
                                     <h3 class="zone-card__name">{{ $card['name'] }}</h3>
-                                    {{-- ❗ **LA EDAD Y LA ALTURA VUELVEN AL CUERPO** (`[DECIDIDO owner,
-                                         2026-09-13]`, `#583`), además de en el sello: es la tarjeta del
-                                         artboard aprobado (`Zonas PJP` 4a), que las escribe debajo del
-                                         nombre y encima de la descripción. Revierte la retirada de `#549`.
-                                         ⚠️ Son los MISMOS dos datos que el sello, del mismo sitio
-                                         (`ZoneCards`): una segunda redacción acabaría diciendo otra edad. --}}
-                                    @if ($card['age'] || $card['height'] || $card['description'])
+                                    {{-- ⚠️ **La edad y la altura viven SOLO en el sello** (`#587`,
+                                         `[DECIDIDO owner]`): repetirlas bajo el nombre decía dos veces lo
+                                         mismo en la misma tarjeta. Revierte la vuelta al cuerpo de `#583`. --}}
+                                    @if ($card['description'])
                                         <span class="zone-card__who">
-                                            @if ($card['age'])
-                                                <span class="zone-card__fact">{{ $card['age'] }}</span>
-                                            @endif
-                                            @if ($card['height'])
-                                                <span class="zone-card__fact">{{ \Illuminate\Support\Str::ucfirst($card['height']) }}</span>
-                                            @endif
-                                            @if ($card['description'])
-                                                <span class="zone-card__what">{{ $card['description'] }}</span>
-                                            @endif
+                                            <span class="zone-card__what">{{ $card['description'] }}</span>
                                         </span>
                                     @endif
                                 </span>
@@ -407,6 +392,14 @@
                 </li>
             @endforeach
         </ul>
+
+        {{-- ══ LA NOTA DE ACCESO ════════════════════════════════════════════════════════════════
+             `#587`, `[DECIDIDO owner]`: lo que las tarjetas NO dicen —con quién entran los pequeños y
+             entre qué alturas— en una tarjeta de apoyo bajo las dos zonas. Es un dato del parque y lo
+             escribe el panel («Ajustes → Web»); sin nota, no hay tarjeta. --}}
+        @if ($site['zones_access'] ?? null)
+            <p class="zones__access">{{ $site['zones_access'] }}</p>
+        @endif
     </section>
 
     {{-- ══ 02 · CUÁNTO · el carril de tarifas ══════════════════════════════════════════════════

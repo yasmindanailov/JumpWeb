@@ -96,6 +96,27 @@ class CartLineValidationTest extends ApiTestCase
         return $pack;
     }
 
+    /**
+     * Un pack de cumpleaños con TRAMO de edades y el campo de edad del CUMPLEAÑERO (`#588`), dentro de
+     * una familia: es lo que permite recomendar el pack hermano.
+     */
+    private function makeAgePack(string $name, ?int $min, ?int $max, int $position): TicketType
+    {
+        $pack = TicketType::create([
+            'name' => ['es' => $name], 'type' => TicketType::TYPE_PACK, 'zone_id' => $this->zone->id,
+            'duration_min' => 60, 'min_qty' => 6, 'max_qty' => 20, 'seats_per_unit' => 1,
+            'is_sellable' => true, 'is_active' => true, 'position' => $position,
+            'guest_age_family' => 'cumple', 'guest_age_min' => $min, 'guest_age_max' => $max,
+            'event_fields' => [
+                ['key' => 'celebrant', 'type' => 'text', 'required' => true, 'stage' => 'booking', 'label' => ['es' => 'Homenajeado']],
+                ['key' => 'age', 'type' => 'celebrant_age', 'required' => true, 'stage' => 'booking', 'label' => ['es' => '¿Cuántos años cumple?']],
+            ],
+        ]);
+        $pack->prices()->create(['rate_type_id' => $this->normalRateId, 'amount_cents' => 5000]);
+
+        return $pack;
+    }
+
     /** @param array<string, mixed> $overrides */
     private function line(TicketType $product, int $quantity = 2, array $overrides = []): array
     {
@@ -160,6 +181,53 @@ class CartLineValidationTest extends ApiTestCase
      * responder y cualquier validación ingenua en el cliente lo ve contestado. Es el caso que no
      * encuentra ninguna revisión de código.
      */
+    /**
+     * **La edad del cumpleañero fuera del tramo del pack no entra, y se recomienda el que la admite**
+     * (`#588`, `[DECIDIDO owner]`). El control es la misma línea con una edad del tramo, que sí entra.
+     */
+    public function test_a_celebrant_age_outside_the_pack_range_is_rejected_and_the_sibling_pack_is_suggested(): void
+    {
+        $kids = $this->makeAgePack('Pack Kids', 4, 7, 10);
+        $jump = $this->makeAgePack('Pack Jump', 8, null, 11);
+
+        $this->check(['line' => $this->line($kids, 8, ['event_data' => ['celebrant' => 'Mara', 'age' => '9']])])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('valid', false)
+            ->assertJsonCount(1, 'problems')
+            ->assertJsonPath('problems.0.reason', 'celebrant_age_out_of_range')
+            ->assertJsonPath('problems.0.field', 'age')
+            ->assertJsonPath('problems.0.suggestion', ['product_id' => $jump->id, 'name' => 'Pack Jump']);
+
+        $this->check(['line' => $this->line($kids, 8, ['event_data' => ['celebrant' => 'Mara', 'age' => '5']])])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('valid', true);
+    }
+
+    /** Sin hermano que la admita no se recomienda nada: se dice que no cabe y ya. */
+    public function test_without_a_sibling_that_fits_no_pack_is_suggested(): void
+    {
+        $kids = $this->makeAgePack('Pack Kids', 4, 7, 10);
+
+        $this->check(['line' => $this->line($kids, 8, ['event_data' => ['celebrant' => 'Mara', 'age' => '2']])])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('problems.0.reason', 'celebrant_age_out_of_range')
+            ->assertJsonPath('problems.0.suggestion', null);
+    }
+
+    /** El TRAMO lo publica el catálogo en el propio campo, que es con lo que el cajón escribe el aviso. */
+    public function test_the_catalog_publishes_the_pack_range_on_the_celebrant_age_field(): void
+    {
+        $kids = $this->makeAgePack('Pack Kids', 4, 7, 10);
+
+        $campos = collect($this->getJson(self::ROOT.'/catalog/products/'.$kids->id)
+            ->assertOk()->assertValidResponse(200)->json('event_fields') ?? [])->keyBy('key');
+
+        $this->assertSame('celebrant_age', $campos['age']['type']);
+        $this->assertSame(4, $campos['age']['min']);
+        $this->assertSame(7, $campos['age']['max']);
+        $this->assertNull($campos['celebrant']['min'], 'el tramo solo viaja con la edad del cumpleañero');
+    }
+
     public function test_an_age_answered_in_words_is_seen_as_unanswered_by_the_server(): void
     {
         $pack = $this->makePack();

@@ -24,5 +24,8 @@ final readonly class CatalogEventField
         /** Tipo de control: `text`, `number` o `textarea`. */
         public string $type,
         public bool $required,
+        /** Solo en `celebrant_age` (`#588`): el tramo de edades del pack, para decir cuál es. */
+        public ?int $min = null,
+        public ?int $max = null,
     ) {}
 }

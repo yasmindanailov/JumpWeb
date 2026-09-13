@@ -3,6 +3,7 @@
 namespace Tests\Feature\Landing;
 
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -52,23 +53,49 @@ class ZoneCardsSectionTest extends TestCase
         );
     }
 
-    /** El molde del canvas: rótulo, titular y la regla, en ese orden. */
+    /**
+     * El molde: rótulo y titular, en ese orden, y SIN regla debajo (`#587`, `[DECIDIDO owner]`: repetía
+     * lo que ya dicen las tarjetas).
+     */
     public function test_the_section_follows_the_canvas_frame(): void
     {
         $seccion = $this->seccion();
 
-        foreach (['zones__eyebrow', 'zones__title', 'zones__rule'] as $pieza) {
+        foreach (['zones__eyebrow', 'zones__title'] as $pieza) {
             $this->assertStringContainsString($pieza, $seccion, "falta `{$pieza}` en la cabecera de la sección");
         }
 
-        $rotulo = strpos($seccion, 'zones__eyebrow');
-        $titular = strpos($seccion, 'zones__title');
-        $regla = strpos($seccion, 'zones__rule');
-
         $this->assertTrue(
-            $rotulo < $titular && $titular < $regla,
-            'el orden de la cabecera no es rótulo → titular → regla, que es el molde del sistema.',
+            strpos($seccion, 'zones__eyebrow') < strpos($seccion, 'zones__title'),
+            'el orden de la cabecera no es rótulo → titular, que es el molde del sistema.',
         );
+        $this->assertStringNotContainsString('zones__rule', $seccion, 'vuelve la regla bajo el titular');
+    }
+
+    /**
+     * **La nota de acceso va en una tarjeta DEBAJO de las zonas, y la escribe el panel** (`#587`).
+     *
+     * ⚠️ Sin nota no hay tarjeta: es un dato del parque y el producto no tiene respaldo que inventar.
+     */
+    public function test_the_access_note_sits_under_the_cards_and_comes_from_the_panel(): void
+    {
+        $this->assertStringNotContainsString('zones__access', $this->seccion(), 'sin nota en el panel no hay tarjeta');
+
+        $nota = 'Los menores de 4 entran en Kids con un adulto si miden más de 90 cm.';
+        Setting::updateOrCreate(['key' => 'landing.zones_access.es'], ['value' => $nota, 'group' => 'landing']);
+
+        $seccion = $this->seccion();
+        $this->assertStringContainsString('<p class="zones__access">'.e($nota).'</p>', $seccion);
+        $this->assertGreaterThan(
+            strrpos($seccion, 'class="zone-card"'), strpos($seccion, 'zones__access'),
+            'la nota de acceso no va debajo de las tarjetas',
+        );
+    }
+
+    /** **La edad y la altura viven solo en el SELLO**, no repetidas bajo el nombre (`#587`). */
+    public function test_age_and_height_are_not_repeated_in_the_card_body(): void
+    {
+        $this->assertStringNotContainsString('zone-card__fact', $this->seccion());
     }
 
     /**

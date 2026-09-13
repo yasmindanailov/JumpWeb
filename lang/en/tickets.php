@@ -10,7 +10,7 @@ return [
     'step_date' => 'What day are you coming?',
     'step_time' => 'What time?',
     // ⚠️ No duration here: that is this installation's data and the catalogue says it (`#487`).
-    'step_time_lede' => 'Come in whenever you like within your slot.',
+    'step_time_lede' => 'Your time starts at the hour you pick: arrive a few minutes early.',
     'step_tickets' => 'Choose your tickets',
     // Sidebar v2 — phase band and dynamic footer. Since `#555` there are FIVE phases, one per SCREEN
     // of the path (day · time · cart · about you · pay).
@@ -25,7 +25,7 @@ return [
     'phase_pay' => 'Pay',
     'go_to_cart' => 'Go to cart',
     'go_to_pay' => 'Go to payment',
-    'cart_items' => ':count item|:count items',
+    'cart_items' => ':count booking|:count bookings',
     // Deposit breakdown in the sticky footer, under the Total. «You pay now» is neutral in the cart
     // (mixed baskets aren't only a deposit); the single-product step clarifies «(deposit)». The rest
     // («At the park») reuses tickets.pay_at_park.
@@ -44,17 +44,17 @@ return [
     'section_entries' => 'Tickets',
     // «Grupos», no «Servicios» (`[DECIDIDO owner]`, `#552`): la sección agrupa los productos de tipo
     // `pack`, que son los de GRUPO. La clave se queda; lo que cambia es lo que lee el cliente.
-    'section_services' => 'Groups',
+    'section_services' => 'Birthdays and school trips',
     // La frase de cada franja del catálogo (`#552`). Sin datos de la instalación: la duración de un
     // pack la pone el panel (`#487`).
     'section_entries_sub' => 'Pick a zone and how long',
-    'section_services_sub' => 'Tailored service and a snack',
+    'section_services_sub' => 'To celebrate or come with your school',
     'section_entries_cta' => 'See tickets',
-    'section_services_cta' => 'See groups',
+    'section_services_cta' => 'See birthdays and trips',
     'catalog_search' => 'Search the catalogue…',
     'catalog_search_none' => 'No results.',
     'guests' => 'Guests',
-    'guests_left' => ':count spots left',
+    'guests_min' => 'minimum :count',
     'guests_count' => ':count guests',
     'mixed_party_badge' => 'MIXED',
     'mixed_party_product_name' => ':name · :badge',
@@ -79,13 +79,14 @@ return [
     'addon_included_partial' => ':count included free',
     'addon_included_extra' => 'Included · extras :price each',
     'addon_extra_each' => 'extras :price each',
-    'addon_per_unit' => ':price/guest',
+    'addon_each' => ':price each',
+    'addon_per_unit' => ':price per guest',
     // The EXTRA HOUR (`specs/hora-extra.md` §8.6): the quantity is TICKETS that stay.
     'addon_stay_price' => ':price per ticket that stays',
     'addon_stay_selected' => 'For 1 ticket staying · :price|For :count tickets staying · :price',
     'addon_per_guest_qty' => ':count (one per guest)',
     'addon_per_guest_add' => 'Add',
-    'addon_stay_per_guest_selected' => 'One extra hour for 1 guest · :price/guest|One extra hour for all :count guests · :price/guest',
+    'addon_stay_per_guest_selected' => 'One extra hour for 1 guest · :price per guest|One extra hour for all :count guests · :price per guest',
     'addon_requires' => 'Requires: :name',
     'from' => 'from',
     'qty_less' => 'Remove one',
@@ -100,7 +101,7 @@ return [
     'total' => 'Total',
     'continue' => 'Continue',
     'confirm_next' => 'Cart ready. Continue to sign in and pay.',
-    'iva_note' => 'Prices include VAT. Payment is processed securely with Redsys.',
+    'iva_note' => 'Prices include VAT.',
     'prev_month' => 'Previous month',
     'next_month' => 'Next month',
     'legend_normal' => 'Regular day',
@@ -138,7 +139,8 @@ return [
     'due_terms_read' => 'Read the terms',
     'terms_link' => 'By booking you accept the <a href=":url" target="_blank" rel="noopener">booking terms</a>.',
     'due_terms_updated' => 'We have updated the booking terms. Please read and accept them to continue.',
-    'pay_notice' => 'Secure card payment via Redsys. Your card details are not stored on this site.',
+    'pay_notice' => 'Secure card payment through your bank. Your card is not stored on this website.',
+    'pay_policy' => 'Tickets: change or refund up to 24 h before. Birthdays and school trips: we refund the deposit if you cancel 5 days ahead.',
     'pay_confirm' => 'Pay by card',
     'pay_redirecting' => 'Taking you to the secure payment page. If you are not redirected in a few seconds, tap the button.',
     'pay_redirecting_title' => 'Redirecting to payment',
@@ -189,10 +191,11 @@ return [
     // The door to the ACCOUNT from «booking created» (`#567`; it opened the card in `#563`): the index
     // holds the QR and «My bookings», and there is no single-booking screen to send them to.
     'go_to_account' => 'Go to my account',
-    'guest_form_notice' => 'We’ll ask you to complete your booking form: we’ll email you the link (also in “My bookings”).',
+    'guest_form_notice' => 'To get your visit ready we will ask for your guests’ details (name, age, allergies). The link reaches you by email.',
+    'confirmed_next_step' => 'On the day of your visit, show your QR code at the entrance. Everyone who jumps needs non-slip socks.',
     'statuses' => [
         'pending' => 'Pending payment',
-        'paid' => 'Completed',
+        'paid' => 'Confirmed',
         'cancelled' => 'Cancelled',
         'refunded' => 'Refunded',
         'expired' => 'Expired',
@@ -210,7 +213,7 @@ return [
     'paid_online_confirmed' => 'Paid online',
     // The VERB, as in the footer band (`#562`): here it hangs off «Total», which does not say what
     // happens with that money. «At the park» stays where it hangs off «Paying now» (`pay_at_park`).
-    'pending_at_park' => 'To pay at the park',
+    'pending_at_park' => 'To pay at the park on the day of your visit',
     'subtotal' => 'Subtotal',
     // ▶ The two-axis labels (`ledger.*`, the gate-charge lines, «Refund pending», «Final total»…)
     // lived here until T3·4 of the book (`DECISIONES #315`): the book uses `journal.*` instead.
@@ -252,7 +255,7 @@ return [
         'settlements_title' => 'Payments and refunds',
         'total' => 'Total',
         'paid' => 'Paid',
-        'balance_pay_at_park' => 'To pay at the park',
+        'balance_pay_at_park' => 'To pay at the park on the day of your visit',
         'balance_refund_at_park' => 'To be refunded at the park',
         'balance_refund_pending' => 'Refund pending',
         'balance_pay_online' => 'Left to pay online',
@@ -264,7 +267,7 @@ return [
     ],
     'errors' => [
         'choose_one' => 'Choose at least one ticket to continue.',
-        'cart_empty' => 'Add at least one visit to continue.',
+        'cart_empty' => 'Add at least one booking to continue.',
         'login_required' => 'Log in to complete your booking.',
         'sold_out' => 'Sorry, that time slot has just sold out. Try another time.',
         'unavailable' => 'That time slot is no longer available. Please review your cart.',
@@ -275,7 +278,12 @@ return [
         // per-field message under each highlighted input.
         'fields_missing' => 'Still to fill in: :fields.',
         'field_required' => 'Required field.',
-        'cart_too_large' => 'You’ve reached the maximum number of cart lines. Finish this booking before adding more.',
+        'celebrant_age_between' => 'This pack is for birthdays from :min to :max years old.',
+        'celebrant_age_from' => 'This pack is for birthdays from age :min.',
+        'celebrant_age_up_to' => 'This pack is for birthdays up to age :max.',
+        'celebrant_age_try' => 'For that age, choose “:product”.',
+        'celebrant_age_generic' => 'The birthday child’s age does not fit this pack.',
+        'cart_too_large' => 'You’ve reached the maximum number of bookings in the cart. Finish this purchase before adding more.',
         // Per-line messages (2nd-round audit, P-13/P-14).
         'sold_out_line' => '“:product” on :when has sold out. Remove it from the cart and pick another slot.',
         'unavailable_line' => '“:product” on :when is no longer available. Please review your cart.',
@@ -290,6 +298,7 @@ return [
         'stay_extension_line' => 'Pack “:product” on :when does not fit with the extra hour: the room is taken afterwards. Remove the extra hour or pick another slot.',
         'pack_guests_range_line' => 'Number of guests for “:product” must be between :min and :max.',
         'event_required_line' => 'Missing birthday details for “:product”. Go back and fill them in.',
+        'celebrant_age_line' => 'The birthday child’s age does not fit “:product”. :detail',
         'too_many_pending' => 'You have :max pending bookings (the maximum). If you need to cancel one, write to us from Contact and we will help you.',
         'try_later' => 'Too many attempts in a row. Wait a minute before trying again.',
         'payment_unavailable' => 'We could not start the payment. Please try again in a moment; if the problem persists, contact us.',

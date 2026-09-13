@@ -884,7 +884,6 @@ class LandingContentSeeder extends Seeder
                 ['slug' => $data['slug']],
                 array_merge($data, [
                     'position' => $i + 1,
-                    'ticket_type_id' => null,
                     'is_active' => true,
                     'show_in_nav' => true,
                 ]),

@@ -214,7 +214,9 @@ const toggleInfo = (id) => {
             <div class="qtybox__row">
                 <span class="qtybox__label">{{ isPack ? t('guests') : t('quantity') }}</span>
                 <p class="qtybox__avail">
-                    <template v-if="maxQuantity > 0">{{ tp(isPack ? 'guests_left' : 'seats_left', { count: maxQuantity }) }}</template>
+                    <!-- En un pack se dice el MÍNIMO y no las plazas que quedan (`#588`): la web no publica el
+                         máximo de niños. Las entradas siguen diciendo cuántas quedan. -->
+                    <template v-if="maxQuantity > 0">{{ isPack ? tp('guests_min', { count: minQuantity }) : tp('seats_left', { count: maxQuantity }) }}</template>
                     <template v-else>{{ t('sold_out') }}</template>
                     <span v-if="dayPriceCents !== null" class="qtybox__price"> · {{ money(dayPriceCents) }}<template v-if="isPack"> {{ periodLabel || t('per_child') }}</template></span>
                 </p>
@@ -314,8 +316,8 @@ const toggleInfo = (id) => {
                 <textarea v-if="field.type === 'textarea'" rows="2" :required="field.required"
                           @input="$emit('update-field', field.key, $event.target.value)"></textarea>
                 <input v-else
-                       :type="field.type === 'number' ? 'number' : 'text'"
-                       :min="field.type === 'number' ? 0 : null"
+                       :type="['number', 'celebrant_age'].includes(field.type) ? 'number' : 'text'"
+                       :min="['number', 'celebrant_age'].includes(field.type) ? 0 : null"
                        :required="field.required"
                        @input="$emit('update-field', field.key, $event.target.value)">
                 <span v-if="errors[field.key]" class="form__error">{{ errors[field.key] }}</span>

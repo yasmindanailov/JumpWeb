@@ -106,17 +106,18 @@ return [
             // zona y el aviso del índice. Viajan solo con sesión (poda de `layout.blade.php`).
             'waiver' => [
                 'title' => 'Descargo de responsabilidad',
-                'status_external' => 'La gestiona el parque fuera de esta web.',
-                'status_unsigned' => 'Todavía no la has firmado.',
-                'status_current' => 'Firmada, versión vigente (v:version).',
-                'status_outdated' => 'La firmaste en una versión anterior del texto: puedes entrar igual, pero te pedimos que aceptes la nueva.',
+                // «El descargo» es masculino (`#588`, contenido T5): estos rótulos venían de «la exención».
+                'status_external' => 'Lo gestiona el parque fuera de esta web.',
+                'status_unsigned' => 'Todavía no lo has firmado.',
+                'status_current' => 'Firmado, versión vigente (v:version).',
+                'status_outdated' => 'Lo firmaste en una versión anterior del texto: puedes entrar igual, pero te pedimos que aceptes la nueva.',
                 'sign_btn' => 'Firmar',
                 'signing' => 'Firmando…',
                 'signed_ok' => 'Firma registrada ✓',
                 'declared' => 'declarada en mostrador',
                 'pdf' => 'PDF',
                 'pending_notice' => 'Tienes pendiente el descargo de responsabilidad.',
-                'pending_cta' => 'Firmarla',
+                'pending_cta' => 'Firmarlo',
                 // `#329` — el estado «la aceptó al registrarse y falta verificar el correo». No dice
                 // que no la haya firmado, porque sí la aceptó: dice qué falta y ofrece la salida.
                 'status_awaiting_verification' => 'Tu descargo de responsabilidad quedará firmado en cuanto verifiques tu correo.',
@@ -128,7 +129,9 @@ return [
         // «Firmando…», «Firma registrada» y «PDF» se REUTILIZAN de `register.*` y `privacy.waiver.*`.
         'dependents' => [
             'title' => 'Menores a cargo',
-            'intro' => 'Declara a los menores de los que te haces responsable y firma el descargo en nombre de cada uno. En la puerta solo se ve su edad y si tiene el descargo al día, nunca su nombre.',
+            // ⚠️ Ya no dice «nunca su nombre» (`#588`): desde `#236` la puerta SÍ lo enseña, y la pista del
+            // nombre, justo debajo, lo dice. La frase dice ahora para qué sirve declararlos.
+            'intro' => 'Añade a los menores de los que te haces responsable y firma el descargo en su nombre. Así podrás asignarles entradas al reservar.',
             'empty' => 'Todavía no has declarado ningún menor.',
             'add_title' => 'Añadir un menor',
             'name' => 'Nombre',
@@ -279,6 +282,9 @@ return [
         'password_hint' => 'Mínimo 8 caracteres. Evita contraseñas comunes o filtradas.',
         'must_accept' => 'Debes aceptar esta condición para continuar.',
         'accept_waiver' => 'He leído y acepto el descargo de responsabilidad.',
+        // Qué es el descargo, dicho junto a la casilla (`#588`, contenido T5): la casilla sola pedía
+        // aceptar un documento sin decir para qué sirve.
+        'waiver_hint' => 'Es la hoja que firma todo el que entra a saltar: normas de seguridad y responsabilidad. Sin ella no se puede entrar al parque.',
         // ⚠️ **El descargo se nombra ENTERO y siempre igual** (`#561`, `Voz PJP`): la casilla dice «el
         // descargo de responsabilidad» y el enlace decía «el texto completo», así que eran dos cosas
         // para el cliente. El vocabulario público no se abrevia según quepa.

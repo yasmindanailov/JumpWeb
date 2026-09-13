@@ -239,13 +239,26 @@ Los **porqués son propuesta de redacción**, no hechos del parque: el owner los
 8. **`/servicios` lee la tabla de precios del producto de excursión** en vez de la tecleada, para que haya una sola fuente.
 
 > ▶ **APLICADA EN LOCAL** (`#587`): 1, 2, 3, 5, 6 (en `/precios`; la del cajón va con la T5) y 7. La **4**
-> ya la hizo el carril del SPA (`#568`). ⚠️ **Queda la 8**: un servicio vincula UN producto y la tabla
-> necesita los dos (2 h y 3 h); mientras tanto el script de contenido escribe los mismos importes en los dos
-> sitios.
+> ya la hizo el carril del SPA (`#568`). ✅ **La 8, en `#588`**: un servicio vende varios productos
+> (`landing_service_products`) y la tabla sale de sus tramos.
+>
+> ▶ **Y las notas del owner sobre el local** (`#588`, `[DECIDIDO owner]`):
+> - la **edad del cumpleañero** es obligatoria y decide el pack: fuera del tramo la web no deja reservar y
+>   recomienda el de su familia; el panel avisa y deja;
+> - las **excursiones no salen en cumpleaños** (ni en `/cumpleanos` ni en la portada); `/servicios`
+>   presenta las excursiones y termina con los cumpleaños resumidos y su enlace;
+> - en la portada, **sin regla bajo el titular de zonas** y **sin edad ni altura en el cuerpo** de la
+>   tarjeta; la nota de menores de 4 y alturas va en una tarjeta bajo las zonas, escrita en el panel.
 
 ### T5 · El cajón y Mi cuenta
 
 Terreno del carril del SPA: se avisa en `ESTADO.md` antes de tocar nada. **Hecho cuando**: textos cambiados en los tres idiomas y recorrido completo en el navegador.
+
+> ▶ **APLICADA EN LOCAL por el carril web** (`#588`, `[DECIDIDO owner]`: «hazlo tú aquí»), en los tres
+> idiomas; queda el recorrido en el navegador. La política y el pago seguro se pintan en el paso de pagar,
+> el siguiente paso en la confirmación y la pista del descargo junto a su casilla del alta. El «Pies de
+> fecha, hora y carrito» es `iva_note`. «Toda la compra» se aplicó donde el cliente lo lee (contador del
+> carrito y avisos de la cesta); los identificadores internos (`…_line`) no cambian.
 
 | Pantalla | Hoy | Nuevo |
 |---|---|---|
@@ -289,4 +302,4 @@ Cuando el español esté aprobado. **Hecho cuando** las claves nuevas y cambiada
 | P3 | Vale de 1 hora del cumpleañero: cómo se entrega y cuánto dura (hoy no hay mecanismo de vales) | se pregunta al ejecutar T1 |
 | P4 | URL de Facebook e imagen para compartir la web | se pide al ejecutar T1 |
 | P5 | Datos por alumno en las excursiones (o solo la autorización por enlace) | se pregunta al ejecutar T1 |
-| P6 | Estado «Completado» de un pedido pagado (se lee como «ya pasó») | se pregunta en T5 |
+| P6 | Estado «Completado» de un pedido pagado (se lee como «ya pasó») | ✅ **«Confirmado»** (`#588`, `[DECIDIDO owner]`) |

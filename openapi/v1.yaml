@@ -4978,7 +4978,7 @@ components:
         Un motivo por el que la línea no puede entrar. **Sin contexto a propósito**: los números que
         dan sentido al aviso ya los publican `GET catalog/products/{id}` (`min_quantity` y los
         `event_fields` con su etiqueta) y `GET config` (`cart_max_lines`).
-      required: [reason, field]
+      required: [reason, field, suggestion]
       additionalProperties: false
       properties:
         reason:
@@ -4990,6 +4990,7 @@ components:
             - quantity_below_minimum
             - cart_full
             - event_field_required
+            - celebrant_age_out_of_range
           description: |
             - `product_unavailable` — no existe, no se vende online o su zona no opera. Las tres dan
               la misma respuesta: distinguirlas contaría qué hay en la base de datos.
@@ -5005,12 +5006,30 @@ components:
             - `event_field_required` — falta un campo obligatorio del pack. ⚠️ **«Falta» lo decide el
               saneo del servidor**: un campo `number` se reduce a dígitos, así que una edad
               contestada «cinco» llega vacía aunque el cliente la vea rellena.
+            - `celebrant_age_out_of_range` — la edad del cumpleañero no cabe en el tramo del pack
+              (el tramo lo publica el propio campo en `catalog/products/{id}`). Si hay un pack de la
+              misma familia que la admite, viene en `suggestion`.
         field:
           type: string
           nullable: true
           description: |
             Clave del campo del evento afectado, para resaltar ESE input. `null` cuando el problema
             es de la línea entera.
+        suggestion:
+          type: object
+          nullable: true
+          description: |
+            Solo con `celebrant_age_out_of_range`: el pack de la misma familia de edades que SÍ admite
+            esa edad y se vende online, para recomendarlo. `null` si no hay ninguno o en otro motivo.
+            ⚠️ Es la única pieza de contexto que viaja: es una respuesta del servidor que ningún otro
+            endpoint publica.
+          required: [product_id, name]
+          additionalProperties: false
+          properties:
+            product_id:
+              type: integer
+            name:
+              type: string
 
     CartLine:
       type: object
@@ -5336,7 +5355,7 @@ components:
     CatalogEventField:
       type: object
       description: Un campo del formulario de evento, definido desde el panel.
-      required: [key, label, type, required]
+      required: [key, label, type, required, min, max]
       additionalProperties: false
       properties:
         key:
@@ -5346,9 +5365,20 @@ components:
           type: string
         type:
           type: string
-          enum: [text, number, textarea]
+          enum: [text, number, textarea, celebrant_age]
+          description: |
+            `celebrant_age` es la edad del CUMPLEAÑERO (una por fiesta): se contesta como número y el
+            servidor la compara con el tramo del pack (`min`/`max`).
         required:
           type: boolean
+        min:
+          type: integer
+          nullable: true
+          description: Solo en `celebrant_age` — la edad mínima del tramo del pack. `null` si no tiene.
+        max:
+          type: integer
+          nullable: true
+          description: Solo en `celebrant_age` — la edad máxima del tramo del pack. `null` si es abierto.
 
     AddonSelectionRequest:
       type: object

@@ -26,10 +26,17 @@ return [
         'weekday' => 'Lun–Ven',
         'weekend' => 'Week-end/férié',
         'hours' => '{1} :count heure|[2,*] :count heures',
+        'from_count' => 'Dès :count',
+        'note_products' => 'Prix :unit, TVA incluse.',
         'kids' => ':count enfants',
         'people' => ':count personnes',
         'note_kids' => "Prix par enfant ; dégressif selon la taille du groupe. Séances hors horaires d'ouverture au public. Réserve par téléphone ou demande-nous des infos.",
         'note_people' => "Prix par personne ; dégressif selon la taille du groupe. Séances hors horaires d'ouverture au public. Réserve par téléphone ou demande-nous des infos.",
+    ],
+    'party' => [
+        'title' => 'Anniversaires',
+        'lede' => "Vous le fêtez ici ? Voici les formules ; tout ce qu'elles incluent est sur leur page.",
+        'cta' => 'Voir les anniversaires',
     ],
     // `sections` migrées vers l'entité CMS `LandingService` (#256, modèle A) : le blade /servicios
     // les lit depuis la BD (semées dans LandingContentSeeder). Ici ne reste que le chrome de page.

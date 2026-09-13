@@ -151,6 +151,9 @@ class Settings extends Page
         'landing.footer_rights.es' => 'landing',
         'landing.footer_rights.en' => 'landing',
         'landing.footer_rights.fr' => 'landing',
+        'landing.zones_access.es' => 'landing',
+        'landing.zones_access.en' => 'landing',
+        'landing.zones_access.fr' => 'landing',
         /*
          * **`/bar`** (`#536`). ⚠️ Aquí van solo los TEXTOS; las imágenes viven en su propia pantalla
          * («Ajustes → El bar»), porque esta página **no sube ficheros** —cero `FileUpload` en las 992
@@ -716,6 +719,11 @@ class Settings extends Page
                 ->label(__('admin.settings.landing_footer_rights'))
                 ->helperText(__('admin.settings.landing_footer_rights_hint'))
                 ->maxLength(120),
+            Textarea::make("landing.zones_access.{$loc}")
+                ->label(__('admin.settings.landing_zones_access'))
+                ->helperText(__('admin.settings.landing_zones_access_hint'))
+                ->rows(2)
+                ->maxLength(300),
         ]);
     }
 

@@ -836,6 +836,8 @@
    para `jump` y `kids`: cualquier otro acento se quedaba sin color, en silencio. `.zone-tab.active`
    ya es genérica en `landing.css`, así que no hace falta ninguna. */
 .svc-rates__panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 18px 26px; }
+/* La tabla de UN producto con su «Reservar» debajo (`#588`). */
+.svc-rates__product { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12); }
 .svc-rates__table { width: 100%; border-collapse: collapse; font-size: var(--fs-14); }
 .svc-rates__table caption { text-align: left; padding-bottom: var(--sp-12); }
 /* Chip del caption (duración por zona): FONDO del color de zona + texto legible (arregla el bajo
@@ -889,7 +891,7 @@
 
 /* Variante COMPRABLE (#256): un LandingService con pack vendible muestra precio + «Reservar»
    (deep-link al sidebar). Los servicios solo-contacto siguen con «Pedir información». */
-.svc-ed2__addons { margin: 0 0 26px; max-width: 480px; }
+/* ⚠️ `.svc-ed2__addons` se fue con los complementos de `/servicios` (`#588`, la decisión de `#583`). */
 .svc-ed2__price { display: inline-flex; align-items: baseline; gap: var(--sp-7); }
 .svc-ed2__price .from {
   font-family: var(--font-mono); font-size: var(--fs-10); font-weight: 500;
@@ -923,6 +925,23 @@
 .svc-ed2__row--flip .svc-photo__tag { right: auto; left: 16px; transform: rotate(-5deg); }
 
 /* ⚠️ Aquí vivía la banda final «Otros eventos» (`.svc-other`), retirada en `#586` con su marcado. */
+
+/* ---------- los cumpleaños, en corto (`#588`) ----------
+   Tarjeta de APOYO —borde, sin sombra— al final de `/servicios`: resume los packs y lleva a su página. */
+.svc-party { margin-block: var(--sec-air-mobile) 0; }
+@media (min-width: 1024px) { .svc-party { margin-block-start: var(--sec-air); } }
+.svc-party__card {
+  display: flex; flex-direction: column; gap: var(--sp-16); padding: var(--sp-28);
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-lg);
+}
+.svc-party__title { margin: 0; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-title); line-height: 1.05; color: var(--fg); }
+.svc-party__lede { margin: 0; font-size: var(--fs-body); line-height: 1.6; color: var(--fg-body); }
+.svc-party__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-12); }
+.svc-party__item { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-4) var(--sp-12); }
+.svc-party__name { font-weight: 800; color: var(--fg); }
+.svc-party__age { color: var(--fg-mute); }
+.svc-party__price { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--fg); }
+.svc-party__cta { align-self: flex-start; }
 
 @media (max-width: 900px) {
   .svc-ed2__inner { grid-template-columns: 1fr; gap: 30px; padding: 48px 0; }

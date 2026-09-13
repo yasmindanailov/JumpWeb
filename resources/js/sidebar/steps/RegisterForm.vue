@@ -239,6 +239,9 @@ const summary = computed(() => props.errors?.summary ?? []);
                         <input v-model="acceptWaiver" type="checkbox">
                         <span>{{ a('register.accept_waiver') }}</span>
                     </label>
+                    <!-- Qué es el descargo, junto a la casilla (`#588`, contenido T5): sola pedía aceptar un
+                         documento sin decir para qué sirve. -->
+                    <small class="form__hint">{{ a('register.waiver_hint') }}</small>
                     <span v-if="fieldErrors.accept_waiver || fieldErrors.waiver_document_id" class="form__error">{{ fieldErrors.accept_waiver || fieldErrors.waiver_document_id }}</span>
                     <WaiverDoc :document="waiverStore.document" :label="a('register.waiver_read')" />
                 </template>

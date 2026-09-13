@@ -5,6 +5,7 @@ namespace Tests\Feature\Landing;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Services\ThemeSettings;
+use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -217,15 +218,19 @@ class AttractionsPageTest extends TestCase
     }
 
     /**
-     * ⚠️ **La regla del pie es LA MISMA cadena que la sección 01**, no una copia. Es la regla del
-     * parque y se dice igual en todas las superficies; escribirla otra vez es cómo dos sitios acaban
-     * publicando la misma norma con dos redacciones.
+     * ⚠️ **La nota del pie es LA MISMA que la de la sección 01**, no una copia: sale del mismo ajuste
+     * del panel (`landing.zones_access`, `#587`). Escribirla otra vez es cómo dos sitios acaban
+     * publicando la misma norma con dos redacciones. Sin nota no hay pie.
      */
     public function test_the_foot_repeats_the_park_rule_verbatim_and_no_longer_leads_back_to_the_zones(): void
     {
+        $this->assertStringNotContainsString('page__foot-rule', $this->get('/atracciones')->assertOk()->getContent());
+
+        $nota = 'Los menores de 4 entran en Kids con un adulto.';
+        Setting::updateOrCreate(['key' => 'landing.zones_access.es'], ['value' => $nota, 'group' => 'landing']);
         $html = $this->get('/atracciones')->assertOk()->getContent();
 
-        $this->assertStringContainsString(e(__('landing.zones.rule')), $html);
+        $this->assertStringContainsString('<p class="page__foot-rule">'.e($nota).'</p>', $html);
 
         /*
          * ❗ **La segunda mitad de este caso está INVERTIDA a propósito.** Aseveraba que el pie

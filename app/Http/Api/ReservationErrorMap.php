@@ -40,6 +40,9 @@ final class ReservationErrorMap
         'tickets.errors.pack_sold_out_line' => ApiErrorCode::LinePackSoldOut,
         'tickets.errors.pack_guests_range_line' => ApiErrorCode::LinePackGuestsRange,
         'tickets.errors.event_required_line' => ApiErrorCode::LineEventRequired,
+        // La edad del cumpleañero fuera del tramo del pack (`#588`): son datos del evento que no valen
+        // para ese pack, así que comparte código con los que faltan; el mensaje dice cuál es el tramo.
+        'tickets.errors.celebrant_age_line' => ApiErrorCode::LineEventRequired,
         // La HORA EXTRA (`specs/hora-extra.md`): la hija no cabe en la franja siguiente · la suma
         // de ocupantes pide que se queden más de los que entran.
         'tickets.errors.addon_occupancy_line' => ApiErrorCode::LineAddonOccupancy,

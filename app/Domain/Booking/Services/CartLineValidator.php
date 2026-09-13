@@ -97,6 +97,21 @@ class CartLineValidator implements CartLineValidation
             return CartLineVerdict::reject($problems, $offer->maxQuantity);
         }
 
+        // La EDAD del cumpleañero tiene que caber en el tramo del pack (`#588`, `[DECIDIDO owner]`): la
+        // web no deja reservar un pack que no es el suyo, y recomienda el de su familia que sí lo es.
+        if (($mismatch = $product->celebrantAgeMismatch($candidate['event_data'])) !== null) {
+            return CartLineVerdict::reject([
+                new CartLineProblem(CartLineProblem::CELEBRANT_AGE_OUT_OF_RANGE, field: $mismatch->field, context: [
+                    'minimum' => $mismatch->min,
+                    'maximum' => $mismatch->max,
+                    'suggestion' => $mismatch->suggestedProductId === null ? null : [
+                        'product_id' => $mismatch->suggestedProductId,
+                        'name' => $mismatch->suggestedProductName,
+                    ],
+                ]),
+            ], $offer->maxQuantity);
+        }
+
         $mergesWith = $this->mergeTarget($product, $candidate, $cart);
 
         // Re-tope en servidor (anti-manipulación): la cantidad efectiva nunca pasa del cupo. La web

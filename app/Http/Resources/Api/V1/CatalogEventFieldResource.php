@@ -25,6 +25,9 @@ class CatalogEventFieldResource extends JsonResource
             'label' => $this->resource->label,
             'type' => $this->resource->type,
             'required' => $this->resource->required,
+            // El tramo de edades del pack, solo en `celebrant_age` (`#588`); `null` en el resto.
+            'min' => $this->resource->min,
+            'max' => $this->resource->max,
         ];
     }
 }

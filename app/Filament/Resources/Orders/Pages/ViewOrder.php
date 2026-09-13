@@ -2476,6 +2476,16 @@ class ViewOrder extends ViewRecord
             return;
         }
 
+        // La edad del cumpleañero fuera del tramo del pack (`#588`, `[DECIDIDO owner]`): el operador
+        // guarda igual —tiene al cliente delante— y se le avisa, con el pack que sí la admite.
+        if (($mismatch = $item->ticketType?->celebrantAgeMismatch((array) ($data['event_data'] ?? []))) !== null) {
+            Notification::make()
+                ->title(__('admin.orders.item_detail.flash_celebrant_age'))
+                ->body($mismatch->sentence())
+                ->warning()
+                ->send();
+        }
+
         if (! $outcome->changed) {
             if (! $quietWhenUnchanged) {
                 Notification::make()

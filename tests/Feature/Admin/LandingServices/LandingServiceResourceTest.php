@@ -83,7 +83,7 @@ class LandingServiceResourceTest extends TestCase
         $this->assertSame('images/attractions/park_jump.webp', $svc->image, 'ruta recortada');
         $this->assertSame(['es' => 'Eventos de empresa', 'en' => 'Company events'], $svc->title, 'fr vacío descartado');
         $this->assertSame([['label' => 'Grupo', 'value' => 'Mín. 30']], $svc->tr('specs', 'es'), 'fila vacía descartada');
-        $this->assertNull($svc->ticket_type_id, 'sin pack = solo contacto');
+        $this->assertTrue($svc->products()->doesntExist(), 'sin packs = solo contacto');
         $this->assertDatabaseHas('audit_logs', ['action' => 'content.landing_service_created', 'target_id' => $svc->id]);
     }
 
@@ -107,6 +107,22 @@ class LandingServiceResourceTest extends TestCase
             ->assertHasFormErrors(['title.es']);
     }
 
+    /** Un pack que ya vende otro servicio no se puede vincular otra vez: lo dice el formulario (`#588`). */
+    public function test_a_pack_sold_by_another_service_cannot_be_linked_again(): void
+    {
+        $pack = TicketType::create([
+            'name' => ['es' => 'Pack empresa'], 'type' => TicketType::TYPE_PACK,
+            'is_sellable' => true, 'is_active' => true, 'position' => 1,
+        ]);
+        LandingService::create(['slug' => 'otro', 'title' => ['es' => 'Otro']])->products()->attach($pack->id);
+
+        Livewire::actingAs($this->admin())
+            ->test(CreateLandingService::class)
+            ->fillForm($this->validForm(['slug' => 'pack-empresa', 'products' => [$pack->id]]))
+            ->call('create')
+            ->assertHasFormErrors(['products']);
+    }
+
     public function test_linking_a_pack_moves_it_out_of_the_birthday_surface(): void
     {
         $pack = TicketType::create([
@@ -116,13 +132,13 @@ class LandingServiceResourceTest extends TestCase
 
         Livewire::actingAs($this->admin())
             ->test(CreateLandingService::class)
-            ->fillForm($this->validForm(['slug' => 'pack-empresa', 'ticket_type_id' => $pack->id]))
+            ->fillForm($this->validForm(['slug' => 'pack-empresa', 'products' => [$pack->id]]))
             ->call('create')
             ->assertHasNoFormErrors();
 
         $svc = LandingService::firstOrFail();
-        $this->assertSame($pack->id, $svc->ticket_type_id);
-        $this->assertTrue($pack->fresh()->landingService()->exists());
+        $this->assertSame([$pack->id], $svc->products()->pluck('ticket_types.id')->all());
+        $this->assertTrue($pack->fresh()->landingServices()->exists());
         $this->assertFalse(
             TicketType::birthdaySurfacePacks()->pluck('id')->contains($pack->id),
             'un pack con LandingService sale de la superficie Cumpleaños',

@@ -37,6 +37,10 @@ class CartLineVerdictResource extends JsonResource
                 // La clave del campo del evento que falta, para resaltar ESE input. `null` cuando el
                 // problema es de la línea entera.
                 'field' => $problem->field,
+                // ⚠️ La ÚNICA pieza de contexto que viaja (`#588`): qué pack de la familia admite la
+                // edad del cumpleañero. Es una respuesta del servidor que ningún otro endpoint publica
+                // —el tramo sí lo publica ya el catálogo, en el propio campo—. `null` en el resto.
+                'suggestion' => $problem->context['suggestion'] ?? null,
             ], $verdict->problems),
             // Con qué cantidad entraría de verdad. 0 si no entra: una línea rechazada no tiene
             // cantidad efectiva, y devolver la pedida invitaría a usarla igualmente.

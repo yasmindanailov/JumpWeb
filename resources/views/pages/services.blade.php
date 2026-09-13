@@ -1,8 +1,8 @@
 {{-- Página /servicios — diseño v2 «Editorial XL» (mockup design_mockup/pagina-servicios-v2.*),
      ahora DATA-DRIVEN (#256, modelo A): cada fila editorial es un `LandingService` (entidad CMS,
-     gestionable en el panel) en vez de `lang/services.php`. Lo COMERCIAL (precio/complementos) se
-     lee EN VIVO del `ticketType` vinculado; si el servicio tiene un pack comprable → precio + CTA
-     «Reservar» (abre el sidebar, deep-link `show-packs`), si no → CTA «Pedir información» (/contacto).
+     gestionable en el panel) en vez de `lang/services.php`. Lo COMERCIAL (precio y tramos) se lee
+     EN VIVO de sus PRODUCTOS (`#588`: varios por servicio); cada producto comprable sale con su tabla
+     y su «Reservar» (abre el cajón en ese producto), y sin ninguno → CTA «Pedir información» (/contacto).
      Cada fila conserva su anchor estable (`slug`): el nav enlaza a `/servicios#slug` y los tests lo
      verifican. El hero (título/intro) y las etiquetas siguen en `lang/services.php` (chrome de
      página). Con 0 servicios la página NO rompe: hero + bandas de enlace. La palabra grande sobre la
@@ -75,7 +75,10 @@
                     @php
                         $flip = $loop->iteration % 2 === 0;
                         $zoneLabel = $service->tr('zone_label');
-                        $pack = $service->isPurchasable() ? $service->ticketType : null;
+                        // Las tablas de sus productos comprables (`#588`), ya compuestas en el dominio.
+                        $tables = $groupRates[$service->id] ?? [];
+                        $lowest = collect($tables)->pluck('lowest_cents')->filter()->min();
+                        $unit = $tables[0]['unit'] ?? null;
                     @endphp
                     <section id="{{ $service->slug }}"
                              class="svc-ed2__row @if ($flip) svc-ed2__row--flip svc-ed2__row--band @endif">
@@ -99,10 +102,72 @@
                                     @endif
                                 </dl>
 
-                                {{-- Tabla de tarifas de grupo (informativa, data-driven): solo si el servicio define
-                                     `price_table` (hoy «Excursiones de colegio»). Pestañas de zona (Kids/Jump) +
-                                     tablitas por duración con columnas L–V / finde. SOLO presentación; reserva por teléfono. --}}
-                                @if (! empty($service->price_table['zones'] ?? null))
+                                {{-- ══ LAS TABLAS DE SUS PRODUCTOS (`#588`) ══════════════════════════════════
+                                     Una por producto, leída de sus TRAMOS: la tabla dice lo mismo que cobra la
+                                     cesta, sin una segunda copia tecleada. Cada una con su «Reservar», que abre el
+                                     cajón en ESE producto (`#568`). Las columnas son las de `/precios`. --}}
+                                @if ($tables !== [])
+                                    <div class="svc-rates">
+                                        <span class="svc-rates__title">{{ __('services.rates.title') }}</span>
+                                        <div class="svc-rates__panel">
+                                            @foreach ($tables as $table)
+                                                <div class="svc-rates__product">
+                                                    <table class="svc-rates__table">
+                                                        <caption>
+                                                            <span class="svc-rates__cap">{{ $table['name'] }}</span>
+                                                            @if ($table['badge'])
+                                                                <span class="svc-ed2__badge">{{ $table['badge'] }}</span>
+                                                            @endif
+                                                        </caption>
+                                                        <thead>
+                                                            <tr>
+                                                                <th scope="col">{{ __('services.rates.group') }}</th>
+                                                                <th scope="col">{{ $rateColumns['normal'] }}</th>
+                                                                @if ($rateColumns['special'])
+                                                                    <th scope="col">{{ $rateColumns['special'] }}</th>
+                                                                @endif
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach ($table['rows'] as $row)
+                                                                <tr>
+                                                                    <th scope="row">{{ __('services.rates.from_count', ['count' => $row['from']]) }}</th>
+                                                                    <td>
+                                                                        @if ($row['normal'])
+                                                                            {{ $row['normal'] }}
+                                                                        @else
+                                                                            <span aria-hidden="true">—</span>
+                                                                            <span class="sr-only">{{ __('landing.pricing.not_sold') }}</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    @if ($rateColumns['special'])
+                                                                        <td>
+                                                                            @if ($row['special'])
+                                                                                {{ $row['special'] }}
+                                                                            @else
+                                                                                <span aria-hidden="true">—</span>
+                                                                                <span class="sr-only">{{ __('landing.pricing.not_sold') }}</span>
+                                                                            @endif
+                                                                        </td>
+                                                                    @endif
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    <button type="button" class="svc-cta svc-cta--book"
+                                                            aria-label="{{ __('landing.pricing.book') }} · {{ $table['name'] }}"
+                                                            @click="$store.purchase.openWith({ type: 'product', id: {{ $table['id'] }} })">
+                                                        {{ __('landing.pricing.book') }}
+                                                        <x-icons.arrow-right :width="15" :height="15" />
+                                                    </button>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <p class="svc-rates__note">{{ $unit ? __('services.rates.note_products', ['unit' => $unit]) : __('landing.pricing.vat_note') }}</p>
+                                    </div>
+                                {{-- La tabla TECLEADA (`price_table`) queda solo para un servicio SIN productos que se
+                                     vendan online: informativa, con reserva por teléfono. --}}
+                                @elseif (! empty($service->price_table['zones'] ?? null))
                                     @php($fmt = fn (int $c): string => $c % 100 === 0 ? intdiv($c, 100).' €' : \App\Domain\Platform\Services\Money::format($c))
                                     @php($unit = $service->price_table['unit'] ?? 'kids')
                                     <div class="svc-rates" x-data="{ rz: 0 }">
@@ -162,32 +227,22 @@
                                     </div>
                                 @endif
 
-                                {{-- Pack comprable vinculado (#256): complementos reales del pivote (lectura en vivo).
-                                     Solo si el pack es realmente comprable (coherencia #226); si no, no se muestra. --}}
-                                @if ($pack)
-                                    <div class="svc-ed2__addons">
-                                        <x-site.product-addons :product="$pack" :is-pack="true" />
-                                    </div>
-                                @endif
+                                {{-- ⚠️ Aquí vivían los COMPLEMENTOS del pack, y se fueron (`#588`) con la misma decisión
+                                     que los retiró del resto de la web (`#583`): solo se ofrecen al reservar. --}}
 
                                 <div class="svc-ed2__foot">
-                                    @if ($pack)
-                                        {{-- La etiqueta destacada del pack (`#585`): sale donde salga el producto. --}}
-                                        @if ($pack->tr('badge'))
-                                            <span class="svc-ed2__badge">{{ $pack->tr('badge') }}</span>
+                                    @if ($tables !== [])
+                                        {{-- El «desde» es el precio MÁS BAJO de sus tablas (`#329`). La reserva va en cada
+                                             tabla, que es donde se elige cuál; la etiqueta destacada, en su título (`#585`). --}}
+                                        @if ($lowest !== null)
+                                            <span class="svc-ed2__price">
+                                                <span class="from">{{ __('landing.pricing.from') }}</span>
+                                                <span class="val">{{ \App\Domain\Platform\Services\Money::format((int) $lowest) }}</span>
+                                                @if ($unit)
+                                                    <span class="per">{{ $unit }}</span>
+                                                @endif
+                                            </span>
                                         @endif
-                                        <span class="svc-ed2__price">
-                                            <span class="from">{{ __('landing.pricing.from') }}</span>
-                                            <span class="val">{{ $pack->euros() }},{{ $pack->cents() }}€</span>
-                                            <span class="per">{{ $pack->tr('period_label') }}</span>
-                                        </span>
-                                        {{-- Deep-link al sidebar: `#568` abre el cajón EN este pack, listo para elegir
-                                             día (antes llevaba a la sección de packs y el cliente tenía que buscarlo). --}}
-                                        <button type="button" class="svc-cta svc-cta--book"
-                                                @click="$store.purchase.openWith({ type: 'product', id: {{ (int) $pack->id }} })">
-                                            {{ __('landing.pricing.book') }}
-                                            <x-icons.arrow-right :width="15" :height="15" />
-                                        </button>
                                     @else
                                         <a href="{{ route('contacto') }}" class="svc-cta svc-cta--info">
                                             {{ __('services.cta_contact') }}
@@ -209,6 +264,34 @@
                     </section>
                 @endforeach
             </div>
+        @endif
+
+        {{-- ══ LOS CUMPLEAÑOS, EN CORTO ═════════════════════════════════════════════════════════
+             `#588`, `[DECIDIDO owner]`: esta página presenta las excursiones y termina con los packs de
+             cumpleaños resumidos y su puerta a `/cumpleanos`, donde está todo. Son los de la superficie
+             de cumpleaños, así que un pack que vende un servicio no sale dos veces. Sin packs, nada. --}}
+        @if ($birthdayCards !== [])
+            <section class="svc-party wrap" aria-labelledby="svc-party-title">
+                <div class="svc-party__card">
+                    <h2 class="svc-party__title" id="svc-party-title">{{ __('services.party.title') }}</h2>
+                    <p class="svc-party__lede">{{ __('services.party.lede') }}</p>
+                    <ul class="svc-party__list" role="list">
+                        @foreach ($birthdayCards as $card)
+                            <li class="svc-party__item">
+                                <span class="svc-party__name">{{ $card['name'] }}</span>
+                                @if ($card['age'])
+                                    <span class="svc-party__age">{{ $card['age'] }}</span>
+                                @endif
+                                <span class="svc-party__price">{{ __('landing.pricing.from') }} {{ $card['price'] }}&nbsp;€</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <a class="btn btn--ink svc-party__cta" href="{{ route('cumpleanos') }}">
+                        {{ __('services.party.cta') }}
+                        <x-icons.arrow-right :width="18" :height="18" />
+                    </a>
+                </div>
+            </section>
         @endif
 
         {{-- ⚠️ Aquí vivía la banda «Otros eventos» (despedidas, fiestas privadas, rodajes), y se

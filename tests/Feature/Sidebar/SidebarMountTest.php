@@ -377,7 +377,8 @@ class SidebarMountTest extends TestCase
                 // ⚠️ **`privacy_read` entra con la FILA** (`#566`, grieta 13): el enlace de la política
                 // salió de su frase a un control propio de 48 px, y su rótulo tiene que viajar o la
                 // fila se pinta muda (`t()` devuelve cadena vacía sin fallar, `#333`).
-                'password_hint', 'accept_waiver', 'waiver_read', 'privacy_notice', 'privacy_read',
+                // `waiver_hint` entra con la pista del descargo junto a su casilla (`#588`).
+                'password_hint', 'accept_waiver', 'waiver_hint', 'waiver_read', 'privacy_notice', 'privacy_read',
                 'submit', 'submitting', 'fix_errors', 'leave_blank',
                 // ⚠️ **`google_cta` viaja SIEMPRE y su PANTALLA no** (`#343`): el rótulo lo pintan las
                 // dos pestañas de auth, que las ve quien no tiene sesión, así que no hay condición

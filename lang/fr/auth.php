@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'failed' => 'Ces identifiants ne correspondent pas à nos enregistrements.',
+    'failed' => 'L’e-mail ou le mot de passe n’est pas correct.',
     'password' => 'Le mot de passe fourni est incorrect.',
     'throttle' => 'Trop de tentatives. Réessayez dans :seconds secondes.',
 ];

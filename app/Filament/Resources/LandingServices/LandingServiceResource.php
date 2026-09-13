@@ -19,11 +19,11 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * Servicios de la landing (`landing_services`) — entidad CMS editorial de la página /servicios y
  * del selector «Servicios» del nav (#256, modelo A). Cada servicio es una fila editorial (slug =
- * anchor estable, textos i18n, imagen, orden, toggles) que OPCIONALMENTE referencia un pack
- * comprable (`ticket_type_id`): con pack → precio + CTA «Reservar» en la landing; sin pack → CTA
- * «Pedir información». Lo comercial vive en el `TicketType` + su `Zone` (fuente única, sin drift).
+ * anchor estable, textos i18n, imagen, orden, toggles) que OPCIONALMENTE vende packs (`#588`:
+ * varios, en `landing_service_products`): cada pack comprable sale con su tabla y su «Reservar»; sin
+ * packs → CTA «Pedir información». Lo comercial vive en el `TicketType` + su `Zone` (fuente única).
  *
- * La existencia de un LandingService que referencie un pack lo SACA de la sección Cumpleaños.
+ * Vincular un pack a un servicio lo SACA de la sección Cumpleaños.
  *
  * **Acceso solo admin** (`content.manage`). Vive en el grupo «Contenido».
  */
@@ -57,7 +57,7 @@ class LandingServiceResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('ticketType');
+        return parent::getEloquentQuery()->with('products');
     }
 
     public static function form(Schema $schema): Schema

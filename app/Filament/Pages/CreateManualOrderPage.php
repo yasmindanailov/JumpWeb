@@ -917,6 +917,15 @@ class CreateManualOrderPage extends Page
 
         $eventData = is_array($this->data['event_data'] ?? null) ? $this->data['event_data'] : [];
 
+        // La edad del cumpleañero fuera del tramo del pack (`#588`, `[DECIDIDO owner]`): en el mostrador
+        // AVISA y deja añadir —el parque tiene al cliente delante—; la web, en cambio, no lo deja.
+        if (($mismatch = $type->celebrantAgeMismatch($eventData)) !== null) {
+            Notification::make()->warning()
+                ->title(__('admin.orders.create_manual.celebrant_age_warning'))
+                ->body($mismatch->sentence())
+                ->send();
+        }
+
         // Menores a cargo (D14·5): solo los ASIGNABLES del cliente en esa fecha (un id forzado que no lo
         // sea se descarta aquí y lo volvería a rechazar `check()`), y nunca más menores que unidades —
         // con aviso, no recortando en silencio.

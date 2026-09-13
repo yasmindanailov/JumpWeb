@@ -8,8 +8,10 @@
  * nada de eso: se envía, y se traduce el «no».
  *
  * ⚠️ **El texto del «no» sale del DICCIONARIO, no del `message` del sobre, y eso está MEDIDO.** Los
- * dos motores dicen hoy cosas distintas para el mismo rechazo:
- *  - web (`auth.failed`): «Estas credenciales no coinciden con nuestros registros.»
+ * dos motores decían cosas distintas para el mismo rechazo (`auth.failed` era «Estas credenciales no
+ * coinciden con nuestros registros.»); desde `#588` el diccionario dice lo mismo que la API, pero la
+ * regla no cambia —el literal lo pone `lang/`, y el sobre puede volver a divergir sin avisar—:
+ *  - web (`auth.failed`): «El correo o la contraseña no son correctos.»
  *  - API (`invalid_credentials`): «El correo o la contraseña no son correctos.»
  *  - web (`auth.throttle`): «Demasiados intentos. Inténtalo de nuevo en 59 segundos.»
  *  - API (`too_many_requests`): «Has hecho demasiadas peticiones seguidas…» + `params.retry_after`

@@ -166,12 +166,20 @@ class CatalogReader implements ProductCatalog
         }
 
         return array_map(
-            fn (array $field): CatalogEventField => new CatalogEventField(
-                key: (string) $field['key'],
-                label: $product->eventFieldLabel($field),
-                type: (string) $field['type'],
-                required: (bool) $field['required'],
-            ),
+            function (array $field) use ($product): CatalogEventField {
+                // El tramo viaja SOLO con la edad del cumpleañero (`#588`): es lo que da sentido a su
+                // aviso, y en cualquier otro campo sería un número sin significado.
+                $esEdad = $field['type'] === TicketType::FIELD_TYPE_CELEBRANT_AGE;
+
+                return new CatalogEventField(
+                    key: (string) $field['key'],
+                    label: $product->eventFieldLabel($field),
+                    type: (string) $field['type'],
+                    required: (bool) $field['required'],
+                    min: $esEdad && $product->guest_age_min !== null ? (int) $product->guest_age_min : null,
+                    max: $esEdad && $product->guest_age_max !== null ? (int) $product->guest_age_max : null,
+                );
+            },
             $product->eventFields(TicketType::EVENT_STAGE_BOOKING),
         );
     }

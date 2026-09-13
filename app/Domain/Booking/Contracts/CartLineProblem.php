@@ -42,6 +42,13 @@ final readonly class CartLineProblem
     public const EVENT_FIELD_REQUIRED = 'event_field_required';
 
     /**
+     * La edad del cumpleañero no cabe en el tramo del pack (`#588`). `field` = la clave del campo;
+     * `context.minimum`/`context.maximum` = el tramo; `context.suggestion` = el pack de la familia que
+     * sí la admite (`{product_id, name}`) o `null`.
+     */
+    public const CELEBRANT_AGE_OUT_OF_RANGE = 'celebrant_age_out_of_range';
+
+    /**
      * @param  self::*  $reason
      * @param  array<string, mixed>  $context
      */

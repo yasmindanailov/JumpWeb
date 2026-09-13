@@ -628,7 +628,9 @@ class AddonResolver
                     ? trans_choice('tickets.addon_stay_per_guest_selected', $qty, ['count' => $qty, 'price' => $priceStr])
                     : __('tickets.addon_per_unit', ['price' => $priceStr]);
             } else {
-                $note = $priceStr;
+                // «2,00 € cada uno» y no el precio pelado (`#588`, contenido T5): sin la unidad no se sabía
+                // si era por complemento o por la fiesta entera.
+                $note = __('tickets.addon_each', ['price' => $priceStr]);
             }
 
             $row = [

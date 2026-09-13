@@ -800,8 +800,14 @@ class SidebarBundleBudgetTest extends TestCase
      * (`openProduct()` y la intención `product`), la invitación a abrir cada tarjeta del catálogo y el
      * `ui/pack` vigente del set, que dibuja la entrada dos veces. Sale el botón de cerrar sesión del
      * bloque de cuenta con su lógica, que no llega a compensarlo.
+     *
+     * ▶ **287 (`#588`)**: medido **286,19 KiB**. Entran la edad del cumpleañero —el tipo `celebrant_age`
+     * en los dos pasos que pintan campos y la frase del tramo con su recomendación en
+     * `line-problems.js`— y las tres líneas de texto de la T5 de contenido (política y pago seguro al
+     * pagar, siguiente paso al confirmar, la pista del descargo). No hay poda que lo compense: son
+     * frases que el cliente tiene que leer.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 286;
+    private const SIDEBAR_CHUNK_MAX_KB = 287;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

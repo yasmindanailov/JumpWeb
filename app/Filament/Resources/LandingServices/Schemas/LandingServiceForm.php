@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\LandingServices\Schemas;
 
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Content\Models\LandingService;
+use Closure;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -12,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Formulario de alta/edición de un servicio de la landing (#256). Identidad (slug/anchor, imagen,
@@ -20,8 +23,8 @@ use Filament\Schemas\Schema;
  * la normalización de imagen y los defaults viven en `InteractsWithLandingServiceForm`.
  *
  * La imagen es una RUTA relativa a `public/` (coherente con atracciones/zonas; la subida de
- * ficheros llegará con la galería). El `ticket_type_id` es OPCIONAL: con un pack comprable la card
- * muestra precio + CTA «Reservar»; sin pack, CTA «Pedir información».
+ * ficheros llegará con la galería). Los PACKS son OPCIONALES (`#588`, varios): cada uno comprable sale
+ * con su tabla y su «Reservar»; sin packs, CTA «Pedir información».
  */
 class LandingServiceForm
 {
@@ -55,23 +58,37 @@ class LandingServiceForm
                             ->helperText(__('admin.landing_services.field_image_hint'))
                             ->maxLength(255)
                             ->columnSpanFull(),
-                        // Pack comprable vinculado (opcional). Si no es realmente comprable (sin
-                        // precio, no vendible o zona desactivada), se avisa: la card degradaría a
-                        // «Pedir información» (coherencia #226).
-                        Select::make('ticket_type_id')
+                        // Los packs que se venden desde este servicio (`#588`: varios; una excursión son
+                        // dos). Si alguno no es realmente comprable se avisa: no saldría su tabla
+                        // (coherencia #226). ⚠️ Un pack está en UN servicio como mucho: la regla lo dice
+                        // antes de que lo diga el índice único con un error de base de datos.
+                        Select::make('products')
                             ->label(__('admin.landing_services.field_pack'))
-                            ->helperText(fn ($state): string => self::packWarning($state ? (int) $state : null)
+                            ->helperText(fn ($state): string => self::packWarning(array_map('intval', (array) $state))
                                 ?? __('admin.landing_services.field_pack_hint'))
-                            ->options(fn (): array => TicketType::query()
-                                ->ofType(TicketType::TYPE_PACK)
-                                ->orderBy('position')
-                                ->get()
-                                ->mapWithKeys(fn (TicketType $pack): array => [$pack->id => (string) $pack->tr('name')])
-                                ->all())
-                            ->nullable()
+                            ->relationship(
+                                'products',
+                                'id',
+                                fn (Builder $query): Builder => $query->where('ticket_types.type', TicketType::TYPE_PACK),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn (TicketType $pack): string => (string) $pack->tr('name'))
+                            ->multiple()
+                            ->preload()
                             ->native(false)
-                            ->searchable()
                             ->live()
+                            ->rules([
+                                fn (?LandingService $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                    $ids = array_map('intval', (array) $value);
+                                    $taken = $ids !== [] && TicketType::query()->whereKey($ids)
+                                        ->whereHas('landingServices', fn (Builder $q): Builder => $record === null
+                                            ? $q
+                                            : $q->whereKeyNot($record->getKey()))
+                                        ->exists();
+                                    if ($taken) {
+                                        $fail(__('admin.landing_services.pack_taken'));
+                                    }
+                                },
+                            ])
                             ->columnSpanFull(),
                         Toggle::make('is_active')
                             ->label(__('admin.landing_services.field_is_active'))
@@ -93,22 +110,22 @@ class LandingServiceForm
     }
 
     /**
-     * Aviso si el pack elegido NO será comprable en la landing (sin precio, no vendible, inactivo, sin
-     * zona o zona desactivada): la card mostraría «Pedir información». Delega en la fuente única
+     * Aviso si ALGUNO de los packs elegidos NO será comprable en la landing (sin precio, no vendible,
+     * inactivo, sin zona o zona desactivada): no saldría su tabla. Delega en la fuente única
      * `TicketType::isSellablePackForLanding()` (la misma que decide el render). null = todo coherente.
+     *
+     * @param  list<int>  $packIds
      */
-    private static function packWarning(?int $packId): ?string
+    private static function packWarning(array $packIds): ?string
     {
-        if (! $packId) {
+        if ($packIds === []) {
             return null;
         }
 
-        $pack = TicketType::with('zone')->find($packId);
-        if ($pack === null) {
-            return null;
-        }
+        $noVendible = TicketType::with('zone')->whereKey($packIds)->get()
+            ->contains(fn (TicketType $pack): bool => ! $pack->isSellablePackForLanding());
 
-        return $pack->isSellablePackForLanding() ? null : __('admin.landing_services.pack_not_purchasable_warning');
+        return $noVendible ? __('admin.landing_services.pack_not_purchasable_warning') : null;
     }
 
     private static function translatableTab(string $locale, string $label): Tab

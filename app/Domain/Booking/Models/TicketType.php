@@ -2,6 +2,7 @@
 
 namespace App\Domain\Booking\Models;
 
+use App\Domain\Booking\Contracts\CelebrantAgeMismatch;
 use App\Domain\Booking\Exceptions\OverlappingAgeRangeException;
 use App\Domain\Booking\Services\AddonResolver;
 use App\Domain\Booking\Services\ProductIcon;
@@ -13,7 +14,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -103,6 +103,14 @@ class TicketType extends Model
      */
     public const FIELD_TYPE_AGE = 'age';
 
+    /**
+     * **La EDAD DEL CUMPLEAÑERO** (`DECISIONES #588`, `[DECIDIDO owner]`). No es la `age` por
+     * invitado: es UNA por fiesta, se pide al RESERVAR y decide si el pack es el suyo —con la edad
+     * fuera del tramo del pack la web no deja reservarlo (`celebrantAgeMismatch()`)—. Como la otra,
+     * la declara el ESQUEMA y no una convención sobre la clave, y su saneo tiene cota real.
+     */
+    public const FIELD_TYPE_CELEBRANT_AGE = 'celebrant_age';
+
     /** Todos los tipos que el producto conoce. **No es la lista que acepta cada esquema**: ver abajo. */
     /** @var list<string> */
     public const FIELD_TYPES = [
@@ -110,12 +118,14 @@ class TicketType extends Model
         self::FIELD_TYPE_NUMBER,
         self::FIELD_TYPE_TEXTAREA,
         self::FIELD_TYPE_AGE,
+        self::FIELD_TYPE_CELEBRANT_AGE,
     ];
 
     /**
      * Los tipos que acepta el esquema de datos del EVENTO (`event_fields`), que se piden UNA vez al
-     * reservar. **La EDAD no está, y no es una omisión**: es un dato POR INVITADO del que sale un
-     * cobro, y una sola edad para toda la fiesta no significa nada.
+     * reservar. **La EDAD por invitado no está, y no es una omisión**: es un dato POR INVITADO del que
+     * sale un cobro, y una sola edad para toda la fiesta no significa nada. La del CUMPLEAÑERO sí
+     * está (`#588`): esa es una por fiesta.
      *
      * ⚠️⚠️ **Esta lista es también el CONTRATO de la API.** `GET /api/v1/catalog/products/{id}`
      * publica estos campos y `openapi/v1.yaml` los declara con `enum` cerrado y
@@ -129,6 +139,7 @@ class TicketType extends Model
         self::FIELD_TYPE_TEXT,
         self::FIELD_TYPE_NUMBER,
         self::FIELD_TYPE_TEXTAREA,
+        self::FIELD_TYPE_CELEBRANT_AGE,
     ];
 
     /** Los que acepta el esquema POR INVITADO (`guest_fields`), el único donde la EDAD significa algo. */
@@ -226,11 +237,14 @@ class TicketType extends Model
      * (`scopeBirthdaySurfacePacks` lo excluye con `whereDoesntHave('landingService')`). NULL = el
      * pack es de cumpleaños (defecto). Editorial; lo comercial sigue en este TicketType + su Zone.
      *
-     * @return HasOne<LandingService, $this>
+     * ▶ Desde `#588` es una tabla de enlace (un servicio vende varios productos), pero un producto
+     * sigue estando en UN servicio como mucho: el índice único vive en `ticket_type_id`.
+     *
+     * @return BelongsToMany<LandingService, $this>
      */
-    public function landingService(): HasOne
+    public function landingServices(): BelongsToMany
     {
-        return $this->hasOne(LandingService::class);
+        return $this->belongsToMany(LandingService::class, 'landing_service_products')->withTimestamps();
     }
 
     /**
@@ -663,7 +677,7 @@ class TicketType extends Model
      */
     public static function isNumericFieldType(?string $type): bool
     {
-        return in_array($type, [self::FIELD_TYPE_NUMBER, self::FIELD_TYPE_AGE], true);
+        return in_array($type, [self::FIELD_TYPE_NUMBER, self::FIELD_TYPE_AGE, self::FIELD_TYPE_CELEBRANT_AGE], true);
     }
 
     /**
@@ -683,6 +697,68 @@ class TicketType extends Model
         }
 
         return null;
+    }
+
+    /**
+     * La CLAVE del campo de EDAD DEL CUMPLEAÑERO de este pack (fase de reserva), o `null` si su esquema
+     * no lo declara. Se busca por TIPO, nunca por nombre de clave; con varios manda el PRIMERO, la
+     * misma regla que `guestAgeFieldKey()`.
+     */
+    public function celebrantAgeFieldKey(): ?string
+    {
+        foreach ($this->eventFields(self::EVENT_STAGE_BOOKING) as $field) {
+            if ($field['type'] === self::FIELD_TYPE_CELEBRANT_AGE) {
+                return (string) $field['key'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * **¿La edad del cumpleañero cabe en el tramo de este pack?** (`DECISIONES #588`, `[DECIDIDO
+     * owner]`). `null` cuando cabe o cuando no hay nada que comprobar: no es un pack, no declara tramo,
+     * no pide la edad o no está contestada —lo que FALTA lo dice la regla de obligatorios, no ésta—.
+     *
+     * ▶ Con la edad fuera recomienda el pack de su MISMA familia de edades (`guest_age_family`) que la
+     * admite, activo y en venta online; sin familia no hay a quién recomendar y no recomienda nada.
+     * ⚠️ La edad se lee SANEADA (`sanitizeEventData`): «cinco» o «999» no es una edad, es un hueco.
+     *
+     * @param  array<string, mixed>  $answers  las respuestas del evento, tal como llegan
+     */
+    public function celebrantAgeMismatch(array $answers): ?CelebrantAgeMismatch
+    {
+        if (! $this->isPack() || ($this->guest_age_min === null && $this->guest_age_max === null)) {
+            return null;
+        }
+
+        $key = $this->celebrantAgeFieldKey();
+        $answer = $key === null ? null : ($this->sanitizeEventData($answers, self::EVENT_STAGE_BOOKING)[$key] ?? null);
+
+        if ($answer === null || $this->coversGuestAge((int) $answer)) {
+            return null;
+        }
+
+        $age = (int) $answer;
+        $family = trim((string) $this->guest_age_family);
+        $suggestion = $family === '' ? null : self::query()
+            ->ofType(self::TYPE_PACK)
+            ->where('guest_age_family', $family)
+            ->whereKeyNot($this->getKey())
+            ->where('is_active', true)
+            ->sellable()
+            ->orderBy('position')
+            ->get()
+            ->first(fn (self $pack): bool => $pack->coversGuestAge($age));
+
+        return new CelebrantAgeMismatch(
+            field: (string) $key,
+            age: $age,
+            min: $this->guest_age_min === null ? null : (int) $this->guest_age_min,
+            max: $this->guest_age_max === null ? null : (int) $this->guest_age_max,
+            suggestedProductId: $suggestion === null ? null : (int) $suggestion->getKey(),
+            suggestedProductName: $suggestion === null ? null : (string) $suggestion->tr('name'),
+        );
     }
 
     /**
@@ -1044,7 +1120,7 @@ class TicketType extends Model
         // ⚠️ La EDAD además se ACOTA, y fuera de rango vale «no respondido» (no se recorta ni se
         // clampa): de este campo sale un cobro, y un valor imposible tiene que verse como el hueco
         // que es —el campo se marca incompleto y el cliente lo corrige— y no colarse como un 120.
-        if ($type === self::FIELD_TYPE_AGE && $value !== '') {
+        if (in_array($type, [self::FIELD_TYPE_AGE, self::FIELD_TYPE_CELEBRANT_AGE], true) && $value !== '') {
             $age = (int) $value;
             if ($age < self::GUEST_AGE_MIN || $age > self::GUEST_AGE_MAX) {
                 return null;
@@ -1288,7 +1364,7 @@ class TicketType extends Model
             ->where('is_active', true)
             ->sellable()
             ->inOperationalZone()
-            ->whereDoesntHave('landingService');
+            ->whereDoesntHave('landingServices');
     }
 
     /**

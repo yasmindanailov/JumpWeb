@@ -10,7 +10,7 @@ return [
     'step_date' => 'Quel jour venez-vous ?',
     'step_time' => 'À quelle heure ?',
     // ⚠️ Pas de durée ici : c'est la donnée de CETTE installation et le catalogue la dit (`#487`).
-    'step_time_lede' => 'Entre quand tu veux dans ton créneau.',
+    'step_time_lede' => 'Ton temps commence à l’heure que tu choisis : arrive quelques minutes avant.',
     'step_tickets' => 'Choisis tes billets',
     // Sidebar v2 — bande de phases et pied de page dynamique. Depuis `#555` il y a CINQ phases, une
     // par ÉCRAN du parcours (jour · heure · panier · qui es-tu · payer).
@@ -25,7 +25,7 @@ return [
     'phase_pay' => 'Payer',
     'go_to_cart' => 'Voir le panier',
     'go_to_pay' => 'Payer',
-    'cart_items' => ':count article|:count articles',
+    'cart_items' => ':count réservation|:count réservations',
     // Détail de l'acompte dans le pied de page sticky, sous le Total. « Tu paies maintenant » est
     // neutre dans le panier (un panier mixte n'est pas que de l'acompte) ; l'étape produit unique
     // précise « (acompte) ». Le reste (« Au parc ») réutilise tickets.pay_at_park.
@@ -44,17 +44,17 @@ return [
     'section_entries' => 'Billets',
     // « Grupos », pas « Servicios » (`[DECIDIDO owner]`, `#552`) : la section regroupe les produits de
     // type `pack`, qui sont ceux de GROUPE. La clé ne change pas ; ce qui change, c'est ce qu'on lit.
-    'section_services' => 'Groupes',
+    'section_services' => 'Anniversaires et sorties scolaires',
     // La frase de cada franja del catálogo (`#552`). Sans données de l'installation : la durée d'un
     // pack vient du panneau (`#487`).
     'section_entries_sub' => 'Choisis ta zone et la durée',
-    'section_services_sub' => 'Service personnalisé et goûter',
+    'section_services_sub' => 'Pour fêter ou venir avec l’école',
     'section_entries_cta' => 'Voir les billets',
-    'section_services_cta' => 'Voir les groupes',
+    'section_services_cta' => 'Voir anniversaires et sorties',
     'catalog_search' => 'Rechercher dans le catalogue…',
     'catalog_search_none' => 'Aucun résultat.',
     'guests' => 'Invités',
-    'guests_left' => ':count places restantes',
+    'guests_min' => 'minimum :count',
     'guests_count' => ':count invités',
     'mixed_party_badge' => 'MIXTE',
     'mixed_party_product_name' => ':name · :badge',
@@ -76,15 +76,16 @@ return [
     'addon_more_info' => 'Plus d’infos',
     'addon_included' => 'Inclus',
     'addon_included_partial' => ':count inclus gratuitement',
-    'addon_included_extra' => 'Inclus · extras :price/u',
-    'addon_extra_each' => 'extras :price/u',
-    'addon_per_unit' => ':price/invité',
+    'addon_included_extra' => 'Inclus · extras à :price l’unité',
+    'addon_extra_each' => 'extras à :price l’unité',
+    'addon_each' => ':price l’unité',
+    'addon_per_unit' => ':price par invité',
     // L'HEURE SUPPLÉMENTAIRE (`specs/hora-extra.md` §8.6) : la quantité, ce sont des ENTRÉES qui restent.
     'addon_stay_price' => ':price par entrée qui reste',
     'addon_stay_selected' => 'Pour 1 entrée qui reste · :price|Pour :count entrées qui restent · :price',
     'addon_per_guest_qty' => ':count (un par invité)',
     'addon_per_guest_add' => 'Ajouter',
-    'addon_stay_per_guest_selected' => 'Une heure de plus pour 1 invité · :price/invité|Une heure de plus pour les :count invités · :price/invité',
+    'addon_stay_per_guest_selected' => 'Une heure de plus pour 1 invité · :price par invité|Une heure de plus pour les :count invités · :price par invité',
     'addon_requires' => 'Nécessite : :name',
     'from' => 'à partir de',
     'qty_less' => 'Retirer un',
@@ -99,7 +100,7 @@ return [
     'total' => 'Total',
     'continue' => 'Continuer',
     'confirm_next' => 'Panier prêt. Continue pour t\'identifier et payer.',
-    'iva_note' => 'Prix TTC. Le paiement est traité en toute sécurité avec Redsys.',
+    'iva_note' => 'Prix TTC.',
     'prev_month' => 'Mois précédent',
     'next_month' => 'Mois suivant',
     'legend_normal' => 'Jour normal',
@@ -137,7 +138,8 @@ return [
     'due_terms_read' => 'Lire les conditions',
     'terms_link' => 'En réservant, tu acceptes les <a href=":url" target="_blank" rel="noopener">conditions de réservation</a>.',
     'due_terms_updated' => 'Nous avons mis à jour les conditions de réservation. Merci de les lire et de les accepter pour continuer.',
-    'pay_notice' => 'Paiement par carte sécurisé via Redsys. Tes données de carte ne sont pas conservées sur ce site.',
+    'pay_notice' => 'Paiement par carte sécurisé via ta banque. Ta carte n’est pas conservée sur ce site.',
+    'pay_policy' => 'Entrées : échange ou remboursement jusqu’à 24 h avant. Anniversaires et sorties scolaires : on te rembourse l’acompte si tu annules 5 jours avant.',
     'pay_confirm' => 'Payer par carte',
     'pay_redirecting' => 'Nous t’emmenons vers la page de paiement sécurisée. Si la redirection ne se fait pas dans quelques secondes, appuie sur le bouton.',
     'pay_redirecting_title' => 'Redirection vers le paiement',
@@ -188,10 +190,11 @@ return [
     // La porte vers le COMPTE depuis « réservation créée » (`#567` ; elle ouvrait la carte en `#563`) :
     // l'index contient le QR et « Mes réservations ».
     'go_to_account' => 'Aller à mon compte',
-    'guest_form_notice' => 'Nous te demanderons de compléter le formulaire de ta réservation : nous t’enverrons le lien par e-mail (aussi dans « Mes réservations »).',
+    'guest_form_notice' => 'Pour préparer la visite, nous te demanderons les données des invités (nom, âge, allergies). Le lien t’arrive par e-mail.',
+    'confirmed_next_step' => 'Le jour de la visite, montre ton QR à l’entrée. Toute personne qui saute a besoin de chaussettes antidérapantes.',
     'statuses' => [
         'pending' => 'En attente de paiement',
-        'paid' => 'Terminé',
+        'paid' => 'Confirmé',
         'cancelled' => 'Annulé',
         'refunded' => 'Remboursé',
         'expired' => 'Expiré',
@@ -209,7 +212,7 @@ return [
     'paid_online_confirmed' => 'Payé en ligne',
     // Le VERBE, comme dans la bande du pied (`#562`) : ici il pend de « Total », qui ne dit pas ce
     // qu'on fait de cet argent. « Au parc » reste là où il pend de « Tu paies » (`pay_at_park`).
-    'pending_at_park' => 'À payer au parc',
+    'pending_at_park' => 'À payer au parc le jour de la visite',
     'subtotal' => 'Sous-total',
     // ▶ Les libellés du modèle à deux axes (`ledger.*`, les lignes de frais à l'accueil,
     // « Remboursement en attente », « Total final »…) vivaient ici jusqu'à la T3·4 du livre
@@ -253,7 +256,7 @@ return [
         'settlements_title' => 'Paiements et remboursements',
         'total' => 'Total',
         'paid' => 'Payé',
-        'balance_pay_at_park' => 'À régler au parc',
+        'balance_pay_at_park' => 'À régler au parc le jour de la visite',
         'balance_refund_at_park' => 'À vous rembourser au parc',
         'balance_refund_pending' => 'Remboursement en attente',
         'balance_pay_online' => 'Reste à payer en ligne',
@@ -265,7 +268,7 @@ return [
     ],
     'errors' => [
         'choose_one' => 'Choisis au moins un billet pour continuer.',
-        'cart_empty' => 'Ajoute au moins une visite pour continuer.',
+        'cart_empty' => 'Ajoute au moins une réservation pour continuer.',
         'login_required' => 'Connecte-toi pour finaliser ta réservation.',
         'sold_out' => 'Désolé, ce créneau vient d’être complet. Essaie une autre heure.',
         'unavailable' => 'Ce créneau n’est plus disponible. Vérifie ton panier.',
@@ -276,7 +279,12 @@ return [
         // message par champ sous chaque saisie mise en évidence.
         'fields_missing' => 'Reste à remplir : :fields.',
         'field_required' => 'Champ obligatoire.',
-        'cart_too_large' => 'Tu as atteint le maximum de lignes dans le panier. Termine cette réservation avant d’en ajouter d’autres.',
+        'celebrant_age_between' => 'Ce pack est pour les anniversaires de :min à :max ans.',
+        'celebrant_age_from' => 'Ce pack est pour les anniversaires à partir de :min ans.',
+        'celebrant_age_up_to' => 'Ce pack est pour les anniversaires jusqu’à :max ans.',
+        'celebrant_age_try' => 'Pour cet âge, choisis « :product ».',
+        'celebrant_age_generic' => 'L’âge de l’enfant fêté ne correspond pas à ce pack.',
+        'cart_too_large' => 'Tu as atteint le maximum de réservations dans le panier. Termine cet achat avant d’en ajouter d’autres.',
         // Messages par ligne (2e audit, P-13/P-14).
         'sold_out_line' => '« :product » du :when est complet. Retire-le du panier et choisis un autre créneau.',
         'unavailable_line' => "« :product » du :when n'est plus disponible. Vérifie ton panier.",
@@ -291,6 +299,7 @@ return [
         'stay_extension_line' => 'Le pack « :product » du :when ne rentre pas avec l’heure supplémentaire : la salle est occupée ensuite. Retire l’heure supplémentaire ou choisis un autre créneau.',
         'pack_guests_range_line' => 'Le nombre d’invités pour « :product » doit être entre :min et :max.',
         'event_required_line' => 'Il manque des données d’anniversaire pour « :product ». Reviens en arrière et remplis-les.',
+        'celebrant_age_line' => 'L’âge de l’enfant fêté ne correspond pas à « :product ». :detail',
         'too_many_pending' => 'Tu as :max réservations en attente (le maximum). Si tu as besoin d’annuler l’une d’elles, écris-nous depuis Contact et nous t’aidons.',
         'try_later' => 'Trop de tentatives à la suite. Attends une minute avant de réessayer.',
         'payment_unavailable' => 'Nous n’avons pas pu démarrer le paiement. Réessaie dans un instant ; si le problème persiste, contacte-nous.',

@@ -152,10 +152,10 @@
             </div>
         @endif
 
-        {{-- EL PIE de la página: la regla del parque y la vuelta a las zonas.
-             ⚠️⚠️ **La regla es la MISMA cadena que la sección 01** (`landing.zones.rule`), no una
-             copia: es la regla del parque y se dice igual en todas las superficies. Escribirla otra
-             vez aquí es cómo dos sitios acaban publicando la misma norma con dos redacciones.
+        {{-- EL PIE de la página: la nota de acceso del parque.
+             ⚠️⚠️ **Es la MISMA nota que la sección 01** (`site.zones_access`, del panel desde `#587`), no
+             una copia: se dice igual en todas las superficies. Escribirla otra vez aquí es cómo dos
+             sitios acaban publicando la misma norma con dos redacciones. Sin nota no hay pie.
              ⚠️ Divergencia declarada con el artboard 1a, que aquí escribe una nota cruzada («los de
              7 en adelante saltan en Jump, que tiene 15»): esa frase supone EXACTAMENTE dos zonas y
              nombra la otra, y las zonas las pone el panel. Se toma el pie de su opción 1b, que es
@@ -166,9 +166,11 @@
              texto. Lo que se queda es la REGLA, que es contenido de esta página y no navegación.
              ⚠️ `/#zones` tampoco está en el reparto del canvas, y no se queda huérfano: el menú y
              el pie ya lo ofrecen desde `SiteDestinations::homeSections()`. --}}
-        <div class="page__foot">
-            <p class="page__foot-rule">{{ __('landing.zones.rule') }}</p>
-        </div>
+        @if ($site['zones_access'] ?? null)
+            <div class="page__foot">
+                <p class="page__foot-rule">{{ $site['zones_access'] }}</p>
+            </div>
+        @endif
 
         <x-site.link-bands />
     </main>

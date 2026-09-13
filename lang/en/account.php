@@ -113,7 +113,7 @@ return [
         // Phase 6 · dependents (`specs/menores-a-cargo.md` §9.8): the zone and its cards, signed-in only.
         'dependents' => [
             'title' => 'Minors in my care',
-            'intro' => 'Declare the minors you are responsible for and sign the waiver on behalf of each one. At the door only their age and whether their waiver is current are shown, never their name.',
+            'intro' => 'Add the minors you are responsible for and sign the waiver on their behalf. That way you can assign them tickets when you book.',
             'empty' => 'You have not declared any minor yet.',
             'add_title' => 'Add a minor',
             'name' => 'Name',
@@ -236,6 +236,7 @@ return [
         'password_hint' => 'At least 8 characters. Avoid common or breached passwords.',
         'must_accept' => 'You must accept this to continue.',
         'accept_waiver' => 'I have read and accept the liability waiver.',
+        'waiver_hint' => 'It is the form everyone who jumps signs: safety rules and responsibility. Without it you cannot enter the park.',
         // The waiver is named IN FULL and always the same (`#561`, `Voz PJP`).
         'waiver_read' => 'Read the liability waiver',
         // Ver el aviso de `lang/es/account.php`: es un AVISO, no una casilla, y por eso no dice «I accept».

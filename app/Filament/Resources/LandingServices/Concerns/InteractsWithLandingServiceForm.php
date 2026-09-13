@@ -8,7 +8,7 @@ namespace App\Filament\Resources\LandingServices\Concerns;
  *    todos vacíos. (`nav_subtitle` salió del formulario con `#521` y ya no llega aquí.)
  *  - `specs`: por idioma, descarta filas vacías (sin label ni value); `null` si todas vacías.
  *  - `image`: ruta recortada con saneo anti-traversal; vacío → `null`.
- *  - `ticket_type_id`: entero o `null` (servicio de solo-contacto).
+ *  - los packs vinculados NO pasan por aquí: los guarda la relación del `Select` (`#588`).
  *  - defaults de columnas NOT NULL (is_active, position) — el Toggle de Filament
  *    dehidrata `false` [[feedback_filament_create_defaults]].
  *
@@ -43,9 +43,6 @@ trait InteractsWithLandingServiceForm
         if (array_key_exists('slug', $data) && $data['slug'] !== null) {
             $data['slug'] = trim((string) $data['slug']);
         }
-
-        // Pack vinculado (#256): entero o null (servicio de solo-contacto).
-        $data['ticket_type_id'] = ! empty($data['ticket_type_id']) ? (int) $data['ticket_type_id'] : null;
 
         $data['is_active'] = (bool) ($data['is_active'] ?? true);
         $data['position'] = (int) ($data['position'] ?? 0);

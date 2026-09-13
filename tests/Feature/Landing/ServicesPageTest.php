@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Landing;
 
+use App\Domain\Booking\Models\PriceTier;
+use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Services\ThemeSettings;
@@ -31,10 +33,9 @@ class ServicesPageTest extends TestCase
             'slug' => 'eventos-empresa',
             'title' => ['es' => 'Eventos de empresa'],
             'zone_label' => ['es' => 'Parque completo'],
-            'ticket_type_id' => $pack->id,
             'position' => 0,
             'is_active' => true,
-        ]);
+        ])->products()->attach($pack->id);
 
         $res = $this->get('/servicios')->assertOk();
         $res->assertSee('Eventos de empresa');
@@ -46,6 +47,66 @@ class ServicesPageTest extends TestCase
         // ▶ `#568`: la intención es ESTE pack, no la sección de packs — el cajón lo abre listo para
         // elegir día. Se asevera con su id, que es lo que distingue abrir el producto de abrir la lista.
         $res->assertSee("openWith({ type: 'product', id: {$pack->id} })", false);
+    }
+
+    /**
+     * **La tabla de un servicio sale de los TRAMOS de sus productos** (`#588`): una tabla por producto,
+     * una fila por tramo y el «Reservar» de cada uno. La tabla tecleada no se pinta cuando hay
+     * productos: el precio tiene una sola fuente.
+     */
+    public function test_the_rate_table_is_read_from_the_products_tiers(): void
+    {
+        $packs = TicketType::ofType(TicketType::TYPE_PACK)->orderBy('position')->get();
+        $normal = RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
+
+        foreach ($packs as $pack) {
+            // Tramos y familia de edades son excluyentes (`#329`): el fixture de cumpleaños la trae.
+            $pack->update(['guest_age_family' => null, 'guest_age_min' => null, 'guest_age_max' => null, 'min_qty' => 30]);
+            PriceTier::create(['ticket_type_id' => $pack->id, 'rate_type_id' => $normal->id, 'min_qty' => 30, 'amount_cents' => 1500]);
+            PriceTier::create(['ticket_type_id' => $pack->id, 'rate_type_id' => $normal->id, 'min_qty' => 70, 'amount_cents' => 1300]);
+        }
+
+        LandingService::query()->delete();
+        LandingService::create([
+            'slug' => 'excursiones',
+            'title' => ['es' => 'Excursiones'],
+            'is_active' => true,
+            'price_table' => ['unit' => 'people', 'zones' => [[
+                'label' => 'Jump', 'accent' => 'jump',
+                'durations' => [['minutes' => 120, 'tiers' => [['size' => 30, 'weekday' => 9999, 'weekend' => 9999]]]],
+            ]]],
+        ])->products()->attach($packs->pluck('id')->all());
+
+        $html = $this->get('/servicios')->assertOk()->getContent();
+
+        $this->assertSame($packs->count(), substr_count($html, 'class="svc-rates__product"'), 'una tabla por producto');
+        $this->assertStringContainsString(e(__('services.rates.from_count', ['count' => 70])), $html);
+        $this->assertStringContainsString('13 €', $html);
+        foreach ($packs as $pack) {
+            $this->assertStringContainsString("openWith({ type: 'product', id: {$pack->id} })", $html);
+        }
+        $this->assertStringNotContainsString('99,99', $html, 'la tabla tecleada se pinta aunque haya productos');
+    }
+
+    /**
+     * **La página termina con los cumpleaños resumidos y su puerta** (`#588`, `[DECIDIDO owner]`), y un
+     * pack que vende un servicio sale de ese resumen y de la página de cumpleaños.
+     */
+    public function test_birthdays_are_summarised_at_the_end_and_a_service_pack_leaves_them(): void
+    {
+        $jump = TicketType::where('name->es', 'Cumpleaños Jump')->firstOrFail();
+
+        $html = $this->get('/servicios')->assertOk()->getContent();
+        $this->assertStringContainsString('class="svc-party__card"', $html);
+        $this->assertStringContainsString('svc-party__cta" href="'.route('cumpleanos').'"', $html);
+        $this->assertSame(2, substr_count($html, 'class="svc-party__item"'));
+
+        LandingService::query()->delete();
+        LandingService::create(['slug' => 'excursiones', 'title' => ['es' => 'Excursiones'], 'is_active' => true])
+            ->products()->attach($jump->id);
+
+        $this->assertSame(1, substr_count($this->get('/servicios')->assertOk()->getContent(), 'class="svc-party__item"'));
+        $this->get('/cumpleanos')->assertOk()->assertDontSee('Cumpleaños Jump');
     }
 
     public function test_contact_only_services_show_get_in_touch_without_price(): void

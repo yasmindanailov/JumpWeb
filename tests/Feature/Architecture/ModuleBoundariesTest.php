@@ -107,7 +107,7 @@ class ModuleBoundariesTest extends TestCase
         //    Anotado aquí para que la decisión exista y no se pierda.
         'Identity/Models/User.php' => ['App\Domain\Booking\Models\Order', 'App\Domain\Booking\Models\OrderItem', 'App\Domain\Booking\Models\Ticket'],
         // Relaciones Eloquent Content↔Booking: `attractions.zone_id`, `attractions.ticket_type_id`,
-        // `landing_services.ticket_type_id`. Son FKs del esquema, no llamadas de dominio; el
+        // `landing_service_products` (`#588`). Son FKs del esquema, no llamadas de dominio; el
         // spec §4 las exime a propósito. Sobreviven a la mudanza de Booking (paso 6).
         'Content/Models/Attraction.php' => ['App\Domain\Booking\Models\TicketType', 'App\Domain\Booking\Models\Zone'],
         'Content/Models/LandingService.php' => ['App\Domain\Booking\Models\TicketType'],
@@ -161,7 +161,7 @@ class ModuleBoundariesTest extends TestCase
         'Booking/Services/ReservationAdmissionPolicy.php' => ['App\Domain\Payments\Services\PaymentSettings'],
 
         // ─── BOOKING → CONTENT (paso 6) ───
-        // Relaciones Eloquent inversas (`landing_services.ticket_type_id`, `attractions.zone_id`)
+        // Relaciones Eloquent inversas (`landing_service_products`, `attractions.zone_id`)
         // + la costura que la revisión del spec ya había previsto en §6.7: la tarjeta de producto
         // del email pinta el color de la zona leyendo el tema. Muere cuando Content exponga el
         // color por contrato o cuando la tarjeta deje de decidir su propio color.

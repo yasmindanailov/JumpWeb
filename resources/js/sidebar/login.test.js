@@ -46,10 +46,10 @@ describe('el reparto de los avisos', () => {
     });
 
     /**
-     * ⚠️ **El texto sale del DICCIONARIO, no del sobre**, y los dos existen y son distintos: la web
-     * dice «Estas credenciales no coinciden con nuestros registros.» y la API «El correo o la
-     * contraseña no son correctos.». Pintar el segundo cambia la copia del cajón sin que el diff de
-     * árbol pueda verlo, porque descarta los nodos de texto.
+     * ⚠️ **El texto sale del DICCIONARIO, no del sobre.** El fixture usa a propósito un literal DISTINTO
+     * del de la API (el que el diccionario tuvo hasta `#588`): con los dos iguales este caso no podría
+     * distinguir qué se pinta. Pintar el sobre cambiaría la copia del cajón sin que el diff de árbol
+     * pueda verlo, porque descarta los nodos de texto.
      */
     test('el `message` del sobre NO es lo que se pinta', () => {
         const message = 'El correo o la contraseña no son correctos.';

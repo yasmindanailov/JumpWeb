@@ -37,7 +37,8 @@ class CreateLandingService extends CreateRecord
         AuditLogger::log('content.landing_service_created', $record, [
             'slug' => (string) $record->slug,
             'title' => $record->tr('title'),
-            'ticket_type_id' => $record->ticket_type_id ? (int) $record->ticket_type_id : null,
+            // Los packs vinculados (`#588`): la relación ya está guardada cuando corre este gancho.
+            'product_ids' => $record->products()->pluck('ticket_types.id')->map(fn ($id): int => (int) $id)->all(),
             'is_active' => (bool) $record->is_active,
             'position' => (int) $record->position,
         ]);

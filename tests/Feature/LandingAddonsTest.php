@@ -21,8 +21,8 @@ use Tests\TestCase;
  *
  * ▶ Lo que queda aquí es la GUARDA de esa decisión y lo que no era complemento: una columna por pack
  * y el menú, que el canvas define como *«una elección dentro del pack»*.
- * ▶ `<x-site.product-addons>` sigue vivo en `/servicios` (pausada); su nota por invitado se vigila en
- * el presentador, que es donde se compone.
+ * ▶ `/servicios` también dejó de pintarlos (`#588`); la nota por invitado se sigue vigilando en el
+ * presentador, que es donde se compone.
  */
 class LandingAddonsTest extends TestCase
 {
@@ -116,15 +116,15 @@ class LandingAddonsTest extends TestCase
 
     public function test_per_guest_addon_note_includes_the_plus_sign(): void
     {
-        // #270-bis punto 3: un complemento POR-INVITADO de pago muestra «+X€/invitado» (con «+»,
-        // coherente con los sueltos «+X€»), no «X€/invitado» a secas. Es la nota del bloque compacto
+        // #270-bis punto 3: un complemento POR-INVITADO de pago muestra «+X € por invitado» (con «+»,
+        // coherente con los sueltos «+X€»; «por invitado» y no «/invitado» desde `#588`). Es la nota del bloque compacto
         // que pinta `/servicios`.
         $jump = TicketType::where('name->es', 'Cumpleaños Jump')->firstOrFail();
         $menu = $this->addon('Menú extra', 200, 90);
         $jump->configurableAddons()->attach($menu->id, ['quantity_mode' => 'per_guest', 'position' => 3]);
 
         $row = collect(LandingAddonPresenter::rows($jump->fresh(['addons.prices.rateType']), true))->firstWhere('name', 'Menú extra');
-        $this->assertSame('+2,00 €/invitado', $row['note']);
+        $this->assertSame('+2,00 € por invitado', $row['note']);
     }
 
     public function test_static_socks_note_is_gone(): void

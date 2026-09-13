@@ -26,10 +26,17 @@ return [
         'weekday' => 'Mon–Fri',
         'weekend' => 'Weekend/holiday',
         'hours' => '{1} :count hour|[2,*] :count hours',
+        'from_count' => 'From :count',
+        'note_products' => 'Price :unit, VAT included.',
         'kids' => ':count kids',
         'people' => ':count people',
         'note_kids' => 'Price per child; lower for bigger groups. Sessions outside public opening hours. Book by phone or ask us for details.',
         'note_people' => 'Price per person; lower for bigger groups. Sessions outside public opening hours. Book by phone or ask us for details.',
+    ],
+    'party' => [
+        'title' => 'Birthdays',
+        'lede' => 'Celebrating here? These are the packs; everything they include is on their page.',
+        'cta' => 'See the birthdays',
     ],
     // `sections` moved to the `LandingService` CMS entity (#256, model A): the /servicios blade
     // reads them from the DB (seeded in LandingContentSeeder). Only page chrome remains here.
