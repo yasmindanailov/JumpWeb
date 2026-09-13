@@ -591,6 +591,7 @@ class ModuleContractsTest extends TestCase
                     name: 'Entrada del contrato',
                     badge: 'Sello',
                     features: ['Ventaja A', 'Ventaja B'],
+                    gifts: ['Regalo A'],
                     fromPriceCents: 1234,
                     priceVaries: true,
                     depositLabel: null,

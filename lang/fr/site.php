@@ -15,7 +15,8 @@ return [
     'rules_other' => 'En plus',
 
     'rules_axis_title' => 'La taille, en un coup d’œil',
-    'rules_axis_label' => 'taille',
+    'rules_axis_overlap' => ':zones · selon l’âge',
+    'rules_axis_or' => 'ou',
 
     'rules_waiver_title' => 'Le texte que tu signes',
     'rules_waiver_text' => 'En t’inscrivant, tu approuves ce règlement et la décharge de responsabilité : le document où tu reconnais que sauter comporte des risques et que tu suivras les consignes. Elle se signe une seule fois, pour toi et pour tes enfants.',
@@ -136,19 +137,19 @@ return [
                 'body' => 'Les tarifs par zone et par durée, et ce que chacun comprend.',
             ],
             'servicios' => [
-                'q' => 'Vous venez à combien ?',
-                'body' => 'Dis-nous ce dont vous avez besoin et nous revenons vers vous avec ce que nous pouvons proposer.',
+                'q' => 'Vous venez avec un autre type de groupe ?',
+                'body' => 'Entreprises, associations, colonies ou groupe d’amis : dis-nous combien vous êtes et ce que vous avez en tête, et nous te répondons avec les options et le prix.',
             ],
         ],
 
         'go' => [
             'atracciones' => ['cta' => 'Voir les attractions', 'what' => "Tout ce qu'il y a dedans"],
             'precios' => ['cta' => 'Voir les tarifs', 'what' => 'Combien coûte le saut'],
-            'cumpleanos' => ['cta' => 'Voir les anniversaires', 'what' => 'Le fêter ici'],
-            'bar' => ['cta' => 'Voir le bar', 'what' => "Ce qu'il y a à manger"],
-            'normas' => ['cta' => 'Voir les règles', 'what' => 'Ce qu\'il faut respecter'],
-            'servicios' => ['cta' => 'Voir les groupes', 'what' => 'Venir en groupe'],
-            'contacto' => ['cta' => 'Écris-nous', 'what' => 'Nous parler'],
+            'cumpleanos' => ['cta' => 'Voir les anniversaires', 'what' => 'Fêter son jour ici'],
+            'bar' => ['cta' => 'Voir la cafétéria', 'what' => 'Pour manger et attendre'],
+            'normas' => ['cta' => 'Voir les règles', 'what' => 'Ce qu’il faut savoir'],
+            'servicios' => ['cta' => 'Voir les sorties scolaires', 'what' => 'Pour les écoles'],
+            'contacto' => ['cta' => 'Demander des infos', 'what' => 'Appelle-nous ou écris-nous'],
         ],
     ],
 ];

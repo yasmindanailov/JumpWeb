@@ -198,10 +198,8 @@
                         <img class="menu__preview-img" :src="vistas[mira].img" alt="" aria-hidden="true">
                     </template>
                     <div class="menu__preview-body">
-                        {{-- ⚠️ El sombrerete es el NÚMERO del destino, no una etiqueta inventada:
-                             el mockup pone ahí una etiqueta por sección que nosotros no tenemos en
-                             ninguna tabla, y rellenarla con un texto fijo sería fingir un dato. --}}
-                        <span class="menu__preview-n" x-text="String(mira + 1).padStart(2, '0')"></span>
+                        {{-- ⚠️ Aquí iba el NÚMERO del destino («01», «02»), y se retiró (`#589`,
+                             `[DECIDIDO owner]`): era jerga de maqueta, no un dato para quien navega. --}}
                         <span class="menu__preview-t" x-text="vistas[mira] ? vistas[mira].t : ''"></span>
                         <span class="menu__preview-s" x-text="vistas[mira] ? vistas[mira].s : ''"></span>
                     </div>

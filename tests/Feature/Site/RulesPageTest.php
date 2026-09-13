@@ -193,9 +193,9 @@ class RulesPageTest extends TestCase
     /**
      * **LA ESCALA SALE DEL DATO, Y SIN DATO NO SE PINTA.**
      *
-     * ⚠️ Una banda por zona con regla de altura — ni una más. El artboard dibuja una tercera («de 1 a
-     * 1,30 con tutor») que **no existe como dato**: vive en el texto de la norma de Jump, y por eso
-     * no se inventa aquí.
+     * ⚠️ Una franja por TRAMO de la escala, cortada en cada frontera que el dato declara (`#589`): sin
+     * solape, una por zona con altura. El artboard dibuja además «de 1 a 1,30 con tutor», que **no
+     * existe como dato**: es texto de acceso del panel, y va debajo de la escala.
      */
     public function test_the_height_scale_is_data_and_without_it_there_is_no_card(): void
     {
@@ -219,7 +219,8 @@ class RulesPageTest extends TestCase
             ->count();
 
         $this->assertGreaterThan(0, $conAltura, 'el caso nace sin sujeto: ninguna zona declara altura');
-        $this->assertSame($conAltura, substr_count($html, 'rules-axis__band" style'), 'las bandas no salen de las zonas con altura');
+        // ⚠️ Con el espacio o la comilla detrás: `rules-axis__bands` es el CONTENEDOR y contaba como una más.
+        $this->assertSame($conAltura, preg_match_all('#class="rules-axis__band[ "]#', $html), 'las bandas no salen de las zonas con altura');
 
         /*
          * ❗❗❗ **Y DÓNDE EMPIEZA CADA BANDA, QUE ES LO QUE LA HACE SIGNIFICAR ALGO.** Contar bandas
@@ -230,14 +231,55 @@ class RulesPageTest extends TestCase
          */
         $corte = round((1 - 130 / ZoneCards::ESCALA_CM) * 100, 2);
 
-        $this->assertStringContainsString('style="top: 0%; height: '.$corte.'%;"', $html,
+        $this->assertStringContainsString('style="top: 0%; height: '.$corte.'%;', $html,
             'la zona con «a partir de» no ocupa la franja ALTA de la escala');
-        $this->assertStringContainsString('style="top: '.$corte.'%; height: '.round(100 - $corte, 2).'%;"', $html,
+        $this->assertStringContainsString('style="top: '.$corte.'%; height: '.round(100 - $corte, 2).'%;', $html,
             'la zona con «hasta» no ocupa la franja BAJA: su banda dice que no tiene límite');
+
+        // LA REGLA (`#589`): una marca por cota —techo, la frontera y suelo—, y la frontera en fuerte.
+        $this->assertSame(3, substr_count($html, 'class="rules-axis__tick'), 'la regla no lleva una marca por cota');
+        $this->assertSame(1, substr_count($html, 'rules-axis__tick--strong'), 'la frontera de zona no va marcada');
 
         // CONTROL: sin ninguna regla de altura, la tarjeta entera desaparece.
         Zone::query()->update(['height_min_cm' => null, 'height_max_cm' => null]);
         $this->assertStringNotContainsString('rules-axis', $this->html(), 'se pinta un eje vacío');
+    }
+
+    /**
+     * ❗❗ **LAS FRANJAS NO SE PISAN** (`#589`, `[DECIDIDO owner]`). Con «hasta 1,50» y «desde 1,30» —los
+     * datos del parque, donde manda la edad— una banda por zona dibujaba una ENCIMA de la otra. La
+     * escala se corta en cada frontera y el tramo compartido es su propia franja, que dice las dos.
+     */
+    public function test_overlapping_zones_get_a_shared_band_and_no_band_covers_another(): void
+    {
+        $zonas = Zone::where('is_active', true)->where('show_in_landing', true)->orderBy('position')->get();
+        $this->assertGreaterThanOrEqual(2, $zonas->count(), 'el caso nace sin sujeto: hacen falta dos zonas publicadas');
+
+        Zone::query()->update(['height_min_cm' => null, 'height_max_cm' => null]);
+        $zonas[0]->forceFill(['height_min_cm' => 130])->save();
+        $zonas[1]->forceFill(['height_max_cm' => 150])->save();
+
+        $html = $this->html();
+        $escala = ZoneCards::ESCALA_CM;
+
+        $this->assertSame(3, preg_match_all('#class="rules-axis__band[ "]#', $html), 'el solape no se ha cortado en tres franjas');
+        $this->assertSame(1, substr_count($html, 'rules-axis__band--overlap'), 'el tramo compartido no es su propia franja');
+        $this->assertStringContainsString(
+            'style="top: '.round((1 - 150 / $escala) * 100, 2).'%; height: '.round(20 / $escala * 100, 2).'%;',
+            $html,
+            'la franja compartida no ocupa exactamente de 1,30 a 1,50',
+        );
+        $this->assertStringContainsString(e($zonas[0]->tr('name').' o '.$zonas[1]->tr('name').' · según la edad'), $html);
+
+        // Contiguas y sin solape: cada franja empieza donde acaba la de encima.
+        preg_match_all('#rules-axis__band[^"]*"\s+style="top: ([\d.]+)%; height: ([\d.]+)%;#', $html, $m, PREG_SET_ORDER);
+        $this->assertCount(3, $m, 'la sonda no enmarca las franjas');
+        for ($i = 1; $i < count($m); $i++) {
+            $this->assertEqualsWithDelta((float) $m[$i - 1][1] + (float) $m[$i - 1][2], (float) $m[$i][1], 0.02, 'dos franjas se pisan o dejan un hueco');
+        }
+
+        $this->assertSame(2, substr_count($html, 'rules-axis__tick--strong'), 'las dos fronteras no van marcadas en la regla');
+        $this->assertStringContainsString('>1,50</span>', $html);
     }
 
     /**

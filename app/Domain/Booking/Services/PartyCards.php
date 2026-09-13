@@ -78,6 +78,9 @@ final class PartyCards
              * la regla que `#293` dejó escrita para las normas de la portada.
              */
             'features' => array_values(array_filter((array) ($pack->tr('features') ?: []))),
+            // LOS REGALOS (`#589`): aparte de lo que incluye y SIN el tope de tres — cada uno va en su
+            // etiqueta, y es lo que la tarjeta tiene que destacar.
+            'gifts' => $pack->giftLines(),
             'price' => $this->numero($pack->displayPriceCents()),
             /*
              * ⚠️ **La especial se publica ENTERA, nunca como recargo** (regla dura del canvas,

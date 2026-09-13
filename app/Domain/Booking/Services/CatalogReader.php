@@ -116,6 +116,7 @@ class CatalogReader implements ProductCatalog
             // `?:` y no `??`: una traducción vacía es «sin distintivo», igual que la ausencia.
             badge: $product->tr('badge') ?: null,
             features: self::features($product),
+            gifts: $product->giftLines(),
             fromPriceCents: $this->fromPriceCents($product),
             priceVaries: $product->priceVaries(),
             depositLabel: $product->depositLabel(),
@@ -228,6 +229,7 @@ class CatalogReader implements ProductCatalog
                 id: (int) $addon->id,
                 name: (string) $addon->tr('name'),
                 features: self::features($addon),
+                gifts: $addon->giftLines(),
                 priceCents: (int) ($price ?? 0),
                 included: (bool) $pivot->is_included,
                 mandatory: (bool) $pivot->is_mandatory,

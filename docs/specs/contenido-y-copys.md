@@ -249,6 +249,25 @@ Los **porqués son propuesta de redacción**, no hechos del parque: el owner los
 >   presenta las excursiones y termina con los cumpleaños resumidos y su enlace;
 > - en la portada, **sin regla bajo el titular de zonas** y **sin edad ni altura en el cuerpo** de la
 >   tarjeta; la nota de menores de 4 y alturas va en una tarjeta bajo las zonas, escrita en el panel.
+>
+> ▶ **Y la segunda vuelta sobre el local** (`#589`, `[DECIDIDO owner]`):
+> - los **regalos** tienen campo propio y se destacan uno a uno en amarillo con la caja de regalo — packs:
+>   cono de chuches para cada niño, calcetines antideslizantes para todos y entrada gratis de 1 hora para
+>   el cumpleañero; menús: cono de chuches; excursiones: un profesor gratis por cada 15 alumnos. En un
+>   **complemento**, solo dentro de su «Más info»;
+> - «¿Algo que debamos saber?» pasa al **post-form**; Menú 1 y Menú 2, siempre **por invitado**; bajo los
+>   invitados del pack, que **se pueden cambiar después**;
+> - la sección de zonas lleva **entradilla** y la nota de acceso lleva la «i»; `/normas` dibuja la altura
+>   con su **regla** y **sin franjas pisadas**; el pie de `/servicios` invita a **otro tipo de grupo**;
+> - las **entradas se compran para hoy**, a cualquier hora que no haya empezado (antelación cero, por el
+>   script), y la frase del hero va **sutil y centrada**.
+>
+> ▶ **Pasada «página a página», 1 · la portada** (`#589`, `[DECIDIDO owner]`: con el criterio del agente y
+> el objetivo de convertir): entradillas de tarifas, cumpleaños, reseñas y dudas; «Un código para todo» más
+> corto; el botón de reservar dice «desde 8 €» como la sección de tarifas; la nota de la tarifa especial en
+> minúscula tras los dos puntos; «Sábado y domingo» en el horario. «Reservas aquí» se queda (`#222`). La
+> frase de la cafetería va por el script (dato del cliente). **Siguen** `/cumpleanos`, `/servicios`,
+> `/normas`, `/contacto` y `/bar`.
 
 ### T5 · El cajón y Mi cuenta
 

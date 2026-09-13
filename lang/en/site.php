@@ -15,7 +15,8 @@ return [
     'rules_other' => 'Also',
 
     'rules_axis_title' => 'Height at a glance',
-    'rules_axis_label' => 'height',
+    'rules_axis_overlap' => ':zones · by age',
+    'rules_axis_or' => 'or',
 
     'rules_waiver_title' => 'The text you sign',
     'rules_waiver_text' => 'When you register you approve these rules and the liability waiver: the document where you acknowledge that jumping carries risk and that you will follow instructions. You sign it once, for you and for your children.',
@@ -135,19 +136,19 @@ return [
                 'body' => 'The rates by zone and by time, and what each one includes.',
             ],
             'servicios' => [
-                'q' => 'How many of you are coming?',
-                'body' => 'Tell us what you need and we will come back with what we can offer.',
+                'q' => 'Coming with another kind of group?',
+                'body' => 'Companies, associations, camps or a group of friends: tell us how many you are and what you have in mind, and we will reply with the options and the price.',
             ],
         ],
 
         'go' => [
             'atracciones' => ['cta' => 'See the attractions', 'what' => 'Everything inside'],
             'precios' => ['cta' => 'See the rates', 'what' => 'What jumping costs'],
-            'cumpleanos' => ['cta' => 'See the birthdays', 'what' => 'Celebrate it here'],
-            'bar' => ['cta' => 'See the bar', 'what' => 'What there is to eat'],
-            'normas' => ['cta' => 'See the rules', 'what' => 'What you have to follow'],
-            'servicios' => ['cta' => 'See the groups', 'what' => 'Coming as a group'],
-            'contacto' => ['cta' => 'Write to us', 'what' => 'Talk to us'],
+            'cumpleanos' => ['cta' => 'See the birthdays', 'what' => 'Celebrate their day here'],
+            'bar' => ['cta' => 'See the café', 'what' => 'To eat and wait'],
+            'normas' => ['cta' => 'See the rules', 'what' => 'What you need to know'],
+            'servicios' => ['cta' => 'See the school trips', 'what' => 'For schools'],
+            'contacto' => ['cta' => 'Ask for information', 'what' => 'Call or write to us'],
         ],
     ],
 ];

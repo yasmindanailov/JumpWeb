@@ -41,8 +41,19 @@ class ScheduleDisplayTest extends TestCase
         $this->assertSame('Lunes a viernes', $rows[0]['label']);
         $this->assertStringContainsString('16:00', $rows[0]['time']);
         $this->assertStringContainsString('22:00', $rows[0]['time']);
-        $this->assertSame('Sábado a domingo', $rows[1]['label']);
+        // Dos días seguidos se unen con «y», no con «a» (`#589`): «Sábado a domingo» no se dice.
+        $this->assertSame('Sábado y domingo', $rows[1]['label']);
         $this->assertStringContainsString('11:00', $rows[1]['time']);
+
+        // Y la entradilla lleva la coma que separa los dos horarios cuando uno de ellos ya lleva «y».
+        $this->assertSame('Dos horarios: lunes a viernes, y sábado y domingo.', app(ScheduleDisplay::class)->weeklyLede());
+
+        // En inglés los días llevan mayúscula también dentro de la frase: «Monday to friday» era una falta.
+        app()->setLocale('en');
+        $en = app(ScheduleDisplay::class)->weeklyRows();
+        $this->assertSame('Monday to Friday', $en[0]['label']);
+        $this->assertSame('Saturday and Sunday', $en[1]['label']);
+        $this->assertSame('Two sets of hours: Monday to Friday, and Saturday and Sunday.', app(ScheduleDisplay::class)->weeklyLede());
     }
 
     public function test_weekly_rows_show_closed_days(): void

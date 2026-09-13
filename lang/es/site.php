@@ -30,7 +30,9 @@ return [
     // LA ESCALA DE ALTURA. ⚠️ La nota va debajo y NO dentro de las bandas: son las excepciones con
     // condiciones («si tiene la edad pero mide entre…»), y ahí no caben ni se leen.
     'rules_axis_title' => 'La altura, de un vistazo',
-    'rules_axis_label' => 'altura',
+    // La franja que comparten dos zonas en la escala de altura (`#589`): «Kids o Jump · según la edad».
+    'rules_axis_overlap' => ':zones · según la edad',
+    'rules_axis_or' => 'o',
 
     // LA CHAPA DEL DESCARGO: lo único de la página que se FIRMA, y por eso va en tinta.
     'rules_waiver_title' => 'El texto que firmas',
@@ -192,9 +194,12 @@ return [
                 'q' => 'Ya lo sé todo, ¿cuánto es?',
                 'body' => 'Las tarifas por zona y por tiempo, y qué incluye cada una.',
             ],
+            // ⚠️ `ask` va por la página de ORIGEN: esta es la banda del pie de `/servicios`, que lleva a
+            // Contacto (`#589`, `[DECIDIDO owner]`: la página vende excursiones, y a quien viene con otro
+            // grupo se le invita a escribir).
             'servicios' => [
-                'q' => '¿Venís con el cole?',
-                'body' => 'Excursiones con precio por alumno y monitores. Todo lo que necesitáis saber, y la reserva.',
+                'q' => '¿Venís con otro tipo de grupo?',
+                'body' => 'Empresas, asociaciones, campamentos o un grupo de amigos: cuéntanos cuántos sois y qué tenéis en mente, y te respondemos con las opciones y el precio.',
             ],
         ],
 
@@ -208,7 +213,7 @@ return [
             'bar' => ['cta' => 'Ver el bar', 'what' => 'Para comer y esperar'],
             'normas' => ['cta' => 'Ver las normas', 'what' => 'Lo que hay que saber'],
             'servicios' => ['cta' => 'Ver las excursiones', 'what' => 'Para colegios'],
-            'contacto' => ['cta' => 'Escríbenos', 'what' => 'Llámanos o escríbenos'],
+            'contacto' => ['cta' => 'Pedir información', 'what' => 'Llámanos o escríbenos'],
         ],
     ],
 ];

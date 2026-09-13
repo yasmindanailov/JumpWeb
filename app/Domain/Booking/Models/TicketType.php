@@ -197,6 +197,7 @@ class TicketType extends Model
         'description' => 'array',
         'period_label' => 'array',
         'features' => 'array',
+        'gifts' => 'array',
         'conditions' => 'array',
         'badge' => 'array',
         'event_fields' => 'array',
@@ -280,6 +281,29 @@ class TicketType extends Model
     public function isPack(): bool
     {
         return $this->type === self::TYPE_PACK;
+    }
+
+    /**
+     * **Los REGALOS del producto** (`#589`, `[DECIDIDO owner]`), en el idioma activo y sin vacíos: lo
+     * que el parque da sin cobrar —«cono de chuches», «calcetines para todos»—, aparte de lo que
+     * INCLUYE (`features`).
+     *
+     * ⚠️ Una sola normalización para todas las superficies —portada, `/cumpleanos`, `/servicios`, el
+     * post-form, el panel y la API—: cada una pinta la lista tal cual, cada regalo en su etiqueta.
+     * ⚠️ Admite el texto suelto además de la lista, como `CatalogReader::features()`: un campo
+     * traducible puede llegar de las dos formas según quién lo haya escrito.
+     *
+     * @return list<string>
+     */
+    public function giftLines(): array
+    {
+        $gifts = $this->tr('gifts');
+        $gifts = is_array($gifts) ? $gifts : [$gifts];
+
+        return array_values(array_filter(
+            array_map(fn (mixed $gift): string => is_scalar($gift) ? trim((string) $gift) : '', $gifts),
+            fn (string $gift): bool => $gift !== '',
+        ));
     }
 
     /**

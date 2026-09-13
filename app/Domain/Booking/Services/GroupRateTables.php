@@ -28,7 +28,7 @@ final class GroupRateTables
 
     /**
      * @param  Collection<int, TicketType>  $products  con `priceTiers` y `prices.rateType` cargados
-     * @return list<array{id: int, name: string, unit: ?string, badge: ?string, lowest_cents: ?int, rows: list<array{from: int, normal: ?string, special: ?string}>}>
+     * @return list<array{id: int, name: string, unit: ?string, badge: ?string, gifts: list<string>, lowest_cents: ?int, rows: list<array{from: int, normal: ?string, special: ?string}>}>
      */
     public function compose(Collection $products): array
     {
@@ -57,6 +57,8 @@ final class GroupRateTables
                 'name' => (string) $product->tr('name'),
                 'unit' => $product->tr('period_label') ?: null,
                 'badge' => $product->tr('badge') ?: null,
+                // Los REGALOS del servicio (`#589`): «un profesor gratis por cada 15 alumnos».
+                'gifts' => $product->giftLines(),
                 // El «desde» del servicio es el precio MÁS BAJO de sus tablas (`#329`: el más barato).
                 'lowest_cents' => $filas->flatMap(fn (array $f): array => [$f['normal'], $f['special']])->filter()->min(),
                 'rows' => $filas->map(fn (array $f): array => [

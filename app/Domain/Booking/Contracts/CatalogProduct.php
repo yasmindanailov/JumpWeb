@@ -38,6 +38,7 @@ final readonly class CatalogProduct
     /**
      * @param  'entry'|'pack'  $type  entrada o pack; los complementos (`addon`) no son seleccionables
      * @param  list<string>  $features  ventajas del producto, ya normalizadas (sin vacíos)
+     * @param  list<string>  $gifts  regalos del producto (`#589`), ya normalizados (sin vacíos)
      */
     public function __construct(
         public int $id,
@@ -48,6 +49,13 @@ final readonly class CatalogProduct
         public ?string $badge,
         /** @var list<string> */
         public array $features,
+        /**
+         * Lo que el parque da SIN COBRAR (`#589`), aparte de lo que incluye: se pinta distinto —cada
+         * regalo en su etiqueta—, y por eso no viaja mezclado en `features`.
+         *
+         * @var list<string>
+         */
+        public array $gifts,
         /**
          * Precio MÍNIMO configurado, en céntimos. Es un «precio desde», **no un precio real**: el
          * que se cobra lo decide la tarifa del día (`RateResolver`) y puede ser mayor. `null` = el

@@ -57,7 +57,7 @@ class EditCatalog extends EditRecord
 
     /** Campos i18n/JSON cuyo cambio se audita solo por nombre (no se vuelca el contenido). */
     private const TEXT_FIELDS = [
-        'name', 'description', 'period_label', 'badge', 'features', 'event_fields', 'guest_fields',
+        'name', 'description', 'period_label', 'badge', 'features', 'gifts', 'event_fields', 'guest_fields',
     ];
 
     /** @var array<string,mixed> Diff capturado en `mutateFormDataBeforeSave` para auditar en `afterSave`. */
@@ -79,19 +79,21 @@ class EditCatalog extends EditRecord
     }
 
     /**
-     * Rellena los campos virtuales de "ventajas" (texto, una por línea) a partir de la
-     * lista i18n almacenada.
+     * Rellena los campos virtuales de "ventajas" y "regalos" (texto, uno por línea) a partir de
+     * la lista i18n almacenada.
      *
      * @param  array<string,mixed>  $data
      * @return array<string,mixed>
      */
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $features = is_array($data['features'] ?? null) ? $data['features'] : [];
+        foreach (self::I18N_LIST_FIELDS as $field) {
+            $lists = is_array($data[$field] ?? null) ? $data[$field] : [];
 
-        foreach (['es', 'en', 'fr'] as $locale) {
-            $list = is_array($features[$locale] ?? null) ? $features[$locale] : [];
-            $data["features_{$locale}"] = implode("\n", array_map('strval', $list));
+            foreach (['es', 'en', 'fr'] as $locale) {
+                $list = is_array($lists[$locale] ?? null) ? $lists[$locale] : [];
+                $data["{$field}_{$locale}"] = implode("\n", array_map('strval', $list));
+            }
         }
 
         // Precios: un campo €/tarifa activa, leído de la matriz `prices` (céntimos → euros).

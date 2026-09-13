@@ -181,10 +181,13 @@ class SpecialRateSurchargeTest extends TestCase
         $this->assertNotEmpty($m, 'la sección de tarifas perdió su `id`: este caso miraría el vacío.');
 
         // El rótulo de la tarifa aparece EXACTAMENTE una vez por panel de zona, dentro de su nota.
-        $this->assertStringContainsString('Findes y festivos', $m[0]);
+        // ⚠️ La nota lo escribe en minúscula tras los dos puntos (`#589`), así que se cuenta SIN
+        // distinguir mayúsculas: contar solo la minúscula dejaría pasar una copia en la tarjeta con su
+        // mayúscula, que es justo lo que este caso vigila.
+        $this->assertStringContainsString('Tarifa especial: findes y festivos.', $m[0]);
         $this->assertSame(
             substr_count($m[0], 'rates__note'),
-            substr_count($m[0], 'Findes y festivos'),
+            substr_count(mb_strtolower($m[0]), 'findes y festivos'),
             'el nombre de la tarifa especial se escribe fuera de su nota: han vuelto los días por tarjeta.',
         );
     }

@@ -85,7 +85,9 @@ class ZoneCardsSectionTest extends TestCase
         Setting::updateOrCreate(['key' => 'landing.zones_access.es'], ['value' => $nota, 'group' => 'landing']);
 
         $seccion = $this->seccion();
-        $this->assertStringContainsString('<p class="zones__access">'.e($nota).'</p>', $seccion);
+        $this->assertStringContainsString('<p class="zones__access-text">'.e($nota).'</p>', $seccion);
+        // Con la MISMA «i» de información que `/cumpleanos` (`#589`).
+        $this->assertMatchesRegularExpression('#<aside class="zones__access">\s*<span class="party-info__mark" aria-hidden="true">i</span>#', $seccion);
         $this->assertGreaterThan(
             strrpos($seccion, 'class="zone-card"'), strpos($seccion, 'zones__access'),
             'la nota de acceso no va debajo de las tarjetas',

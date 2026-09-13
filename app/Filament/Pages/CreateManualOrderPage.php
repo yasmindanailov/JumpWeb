@@ -1876,6 +1876,14 @@ class CreateManualOrderPage extends Page
                 ->state(implode(' · ', $features));
         }
 
+        // Los regalos (`#589`): el operador tiene que poder decírselos al cliente que tiene delante.
+        $gifts = $type->giftLines();
+        if ($gifts !== []) {
+            $filas[] = TextEntry::make('info_gifts')
+                ->label(__('admin.catalog.field_gifts'))
+                ->state(implode(' · ', $gifts));
+        }
+
         return $filas;
     }
 

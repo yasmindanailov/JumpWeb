@@ -1348,11 +1348,18 @@ img { display: block; max-width: 100%; }
    se aplicaba a medias — cerraba la parte del eslogan y no la del titular, y **nada fallaba**. */
 .hero__headline .hero__title.hero__title--onvideo { margin-top: -0.018em; }
 
-/* La frase de qué es el parque, bajo el titular (`#586`). Cuerpo, no rótulo: se lee, no se mira. */
+/* La frase de qué es el parque, bajo el titular (`#586`). Cuerpo, no rótulo: se lee, no se mira.
+   ▶ `#589`, `[DECIDIDO owner]`: **SUTIL Y CENTRADA**. Se probó antes, en esta misma tanda, con una
+   raya amarilla delante y en seminegrita, y competía con el titular: ahora va sin raya, en peso medio,
+   un punto más pequeña y levemente translúcida, centrada bajo el titular y con los renglones
+   equilibrados. La sombra no es adorno: sobre el vídeo un fotograma claro se comería el blanco. */
 .hero__tag {
-  margin: var(--sp-12) 0 0; max-width: 34ch;
-  font-family: var(--font-body); font-weight: 600;
-  font-size: clamp(15px, 1.4vw, 19px); line-height: 1.35;
+  margin: var(--sp-12) auto 0; max-width: 40ch;
+  text-align: center; text-wrap: balance;
+  font-family: var(--font-body); font-weight: 500;
+  font-size: clamp(15px, 1.25vw, 18px); line-height: 1.45; letter-spacing: 0.01em;
+  opacity: 0.88;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 0.35);
 }
 .hero__kicker {
   font-family: var(--font-accent);
@@ -1483,9 +1490,12 @@ img { display: block; max-width: 100%; }
    —borde, sin sombra: se lee, no se elige—. Sustituye a la regla que iba bajo el titular. */
 .zones__access {
   margin: var(--sp-16) 0 0; padding: var(--sp-16) var(--sp-18);
+  display: flex; gap: var(--sp-12); align-items: flex-start;
   background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-lg);
-  font-size: var(--fs-body); line-height: 1.5; color: var(--fg);
 }
+/* La «i» (`.party-info__mark`, `#589`) mide 24: el texto baja 1 px para que su primera línea quede
+   centrada con ella en vez de colgando por encima. */
+.zones__access-text { margin: var(--sp-1) 0 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg); }
 
 /* Las dos tarjetas. **Rejilla, no carril**: son dos y caben — un carril con dos piezas obliga a
    arrastrar para ver la segunda, que es esconder la mitad de la respuesta. */
@@ -3195,22 +3205,35 @@ img { display: block; max-width: 100%; }
 .rules-axis { margin-top: var(--sp-20); background: var(--bg-card); border: 1.5px solid var(--line); border-radius: var(--r-lg); padding: var(--sp-20); }
 .rules-axis__title { margin: 0; font-weight: 700; font-size: var(--fs-17); line-height: 1.25; color: var(--fg); }
 .rules-axis__chart { margin-top: var(--sp-18); display: flex; gap: var(--sp-16); height: 260px; }
-/* La regla vertical con sus dos extremos escritos, la misma pieza que el eje de las tarjetas de zona
-   de la portada: comparten techo, así que el mismo 1,30 cae a la misma altura en las dos pantallas. */
+/* LA REGLA (`#589`): la línea vertical con una MARCA por cota —el techo, cada frontera de zona y el
+   suelo—, la pieza del artboard. Comparte techo con el eje de las tarjetas de zona de la portada, así
+   que el mismo 1,30 cae a la misma altura en las dos pantallas.
+   ⚠️ Cada marca se CENTRA en su cota (`translateY(-50%)`): alineada por el borde de su caja, el techo
+   caería por debajo del tope y el suelo se saldría (la trampa que el canvas dejó escrita). */
 .rules-axis__ruler { flex: none; width: 56px; position: relative; border-left: 2px solid var(--fg); font-family: var(--font-mono); font-size: var(--fs-12); color: var(--fg-mute); }
-.rules-axis__top { position: absolute; left: var(--sp-4); top: 0; white-space: nowrap; }
-.rules-axis__top b { font-weight: 700; color: var(--fg); }
-.rules-axis__top i { font-style: normal; }
-.rules-axis__zero { position: absolute; left: var(--sp-4); bottom: 0; white-space: nowrap; }
+.rules-axis__tick { position: absolute; left: 0; display: flex; align-items: center; gap: var(--sp-6); line-height: 1; white-space: nowrap; transform: translateY(-50%); }
+.rules-axis__tick::before { content: ""; flex: none; width: 12px; height: 1px; background: var(--fg); }
+.rules-axis__tick--strong { font-weight: 700; color: var(--fg); }
+.rules-axis__tick--strong::before { width: 20px; height: 2px; }
 /* ⚠️ `top` y `height` los calcula el SERVIDOR desde `zones.height_min_cm/max`: aquí no se decide
-   ninguna altura, y una zona sin regla no pinta banda. */
+   ninguna altura, y una zona sin regla no pinta franja.
+   ▶ LAS FRANJAS NO SE PISAN (`#589`, `[DECIDIDO owner]`): el servidor las corta en cada frontera, así
+   que son contiguas por construcción. Cada una lleva el tinte de SU zona (`--band`, del panel) y el
+   tramo que comparten dos zonas, el del marcador.
+   ⚠️ Sin relleno vertical: con los tramos reales la franja compartida mide ~27 px y el texto se
+   centra en ella; con el relleno del artboard se saldría. */
 .rules-axis__bands { flex: 1; min-width: 0; position: relative; }
 .rules-axis__band {
   position: absolute; left: 0; right: 0;
   display: flex; align-items: center;
-  padding: var(--sp-10) var(--sp-14); border-radius: var(--r-md);
-  background: color-mix(in srgb, var(--interactive) 16%, var(--bg-card));
+  padding: 0 var(--sp-14); border-radius: var(--r-md); overflow: hidden;
+  background: color-mix(in srgb, var(--band, var(--interactive)) 22%, var(--bg-card));
   font-weight: 800; font-size: var(--fs-16); line-height: 1.2; color: var(--fg);
+}
+.rules-axis__band--overlap { --band: var(--marker, var(--interactive)); }
+.rules-axis__note { margin: var(--sp-16) 0 0; font-size: var(--fs-16); line-height: 1.5; color: var(--fg-mute); max-width: 70ch; }
+@media (min-width: 1024px) {
+  .rules-axis__chart { height: 300px; }
 }
 
 .rules-group { margin-top: 40px; }
@@ -4755,6 +4778,13 @@ select:focus-visible {
 }
 .party-card__list { display: flex; flex-direction: column; gap: 9px; margin-top: var(--sp-14); }
 .party-card__feat { display: flex; gap: var(--sp-10); align-items: flex-start; font-size: var(--fs-body); line-height: 1.35; }
+/* LOS REGALOS en la web (`#589`): dónde se sienta la etiqueta en cada superficie. La pieza vive en
+   `site.css` («Los regalos»), que la comparte con el cajón. En la columna de la comparativa, uno bajo
+   otro: lado a lado, en una columna estrecha, se partirían a mitad de frase. */
+.party-card__gifts { margin-top: var(--sp-14); }
+.party-menu__gifts { margin-top: var(--sp-12); }
+.svc-rates__gifts { margin-top: var(--sp-12); }
+.party-compare__cell .gifts { flex-direction: column; }
 /* ⚠️⚠️ **El punto es CUADRADO y lee `--money`**, que es el token cuyo valor es el lima del artboard
    **en las dos superficies** —oscuro sobre papel y vivo sobre tinta—. Antes leía `--zone-ink`, que
    solo lo emite un elemento con la paleta de su zona compuesta, y aquí no hay ninguno: caía a `--fg`

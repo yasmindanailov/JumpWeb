@@ -806,8 +806,15 @@ class SidebarBundleBudgetTest extends TestCase
      * `line-problems.js`— y las tres líneas de texto de la T5 de contenido (política y pago seguro al
      * pagar, siguiente paso al confirmar, la pista del descargo). No hay poda que lo compense: son
      * frases que el cliente tiene que leer.
+     *
+     * ▶ **288 (`#589`)**: medido **287,10 KiB**. Entran los regalos —`GiftList.vue`, que reutiliza el
+     * dibujo de `ProductIcon`, dentro del «Más info» de los complementos—, la pista de invitados del pack
+     * y `addon-info.js`, el módulo plano que decide qué enseña ese «Más info». Sin el módulo medía
+     * 287,00, pero con las condiciones dentro de `TimeStep.vue` (CE-6, `SidebarComponentBudgetTest`):
+     * se paga el centenar de bytes para que la regla tenga su caso de `node --test`. Con los regalos
+     * también en la tarjeta del catálogo medía 287,14; el owner los retiró de ahí.
      */
-    private const SIDEBAR_CHUNK_MAX_KB = 287;
+    private const SIDEBAR_CHUNK_MAX_KB = 288;
 
     /**
      * Firmas del runtime que NO pueden aparecer en el entry de la landing. Es la guarda de verdad: un

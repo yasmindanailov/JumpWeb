@@ -47,6 +47,8 @@ class PageController extends Controller
                 ZoneCards::ESCALA_CM,
                 ($cards = new ZoneCards)->ceilingLabel(),
                 $cards->floorLabel(),
+                // Las marcas de la regla (`#589`) se escriben con el MISMO formato que el eje de la portada.
+                $cards->metersLabel(...),
             ),
             /*
              * ⚠️ **El descargo se ofrece con el MISMO criterio que el pie** (`#216`): si la

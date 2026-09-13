@@ -224,6 +224,7 @@ class SidebarAddonsParityTest extends TestCase
             'allow_extra' => $opt['allow_extra'],
             'badge' => $opt['badge'],
             'features' => $opt['features'],
+            'gifts' => $opt['gifts'],
             'selected' => $opt['selected'],
             'available' => $opt['available'],
             'requires_name' => $opt['requires_name'],

@@ -203,7 +203,8 @@ class VisitSectionTest extends TestCase
         // Dos: el fin de semana cambia.
         OpeningHour::query()->whereIn('weekday', [0, 6])->update(['open_time' => '11:00:00']);
         $this->assertStringContainsString(
-            __('landing.info.lede_two', ['a' => 'lunes a viernes', 'b' => 'sábado a domingo']),
+            // Dos días seguidos se escriben «sábado y domingo», no «sábado a domingo» (`#589`).
+            __('landing.info.lede_two', ['a' => 'lunes a viernes', 'b' => 'sábado y domingo']),
             $this->seccion(),
         );
     }

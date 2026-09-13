@@ -647,6 +647,8 @@ class AddonResolver
                 'can_toggle' => $available && $pivot->isPerGuest() && $pivot->choiceGroup() === null && ! $pivot->is_mandatory && ! $pivot->is_included,
                 'badge' => $badge,
                 'features' => $features,
+                // Los REGALOS (`#589`), con la misma normalización (`TicketType::giftLines()`).
+                'gifts' => $addon->giftLines(),
                 'selected' => $selected,
                 // Dependencia «requiere»: si el requisito no está elegido, el complemento se muestra
                 // DESHABILITADO con la nota «Requiere: X» (los controles `can_*` quedan en false).

@@ -57,6 +57,7 @@ use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\QrLogo;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -427,13 +428,13 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Formato consistente de precio para los CTAs (nav + hero): coma decimal y `€` final,
-     * convención europea. Se usa en los 3 idiomas (mercado primario español). Si en el futuro hay
-     * que diferenciar por locale, pasa al composer.
+     * El precio del CTA de reservar («desde 8 €»), en registro de ESCAPARATE (`#589`): sin ceros a la
+     * derecha, como lo escribe la sección de tarifas justo debajo (`Money::showcase()`, `#479`). Con dos
+     * decimales la primera pantalla decía «8,00 €» y la sección siguiente «8 €» para la misma cifra.
      */
     public static function formatPriceLabel(int $cents): string
     {
-        return number_format($cents / 100, 2, ',', '.').' €';
+        return Money::showcase($cents).' €';
     }
 
     /**

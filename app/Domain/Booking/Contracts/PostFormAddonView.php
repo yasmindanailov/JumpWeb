@@ -33,6 +33,13 @@ final readonly class PostFormAddonView
          * @var list<string>
          */
         public array $features,
+        /**
+         * Lo que el extra trae de REGALO (`#589`). A la vista y no dentro del «Más info»: cada regalo
+         * se pinta en su etiqueta.
+         *
+         * @var list<string>
+         */
+        public array $gifts,
         /** Lo que el cliente tiene AHORA de este extra. */
         public int $quantity,
         /** El tope del enganche, obligatorio en esta fase: la deuda máxima la declara el parque. */

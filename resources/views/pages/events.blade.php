@@ -104,7 +104,14 @@
                                         @foreach ($row['cells'] as $i => $cell)
                                             <td class="party-compare__cell"
                                                 @if ($row['live']) x-text="live.{{ $row['live'] }}[n][{{ $i }}] ?? '—'" @endif>
-                                                @if (is_array($cell))
+                                                {{-- LOS REGALOS (`#589`): cada uno en su etiqueta, también en la columna. --}}
+                                                @if ($row['kind'] === 'gifts')
+                                                    @if ($cell !== null)
+                                                        <x-site.gifts :gifts="$cell" />
+                                                    @else
+                                                        —
+                                                    @endif
+                                                @elseif (is_array($cell))
                                                     @foreach ($cell as $line)
                                                         {{-- ⚠️ El espacio antes de la línea de la especial no es de maquetación (la línea es un
                                                              bloque): sin él un lector de pantalla leería «3 €5 € en tarifa especial». --}}
@@ -174,6 +181,7 @@
                                         @endforeach
                                     </ul>
                                 @endif
+                                <x-site.gifts :gifts="$row['gifts']" class="party-menu__gifts" />
                             </li>
                         @endforeach
                     </ul>

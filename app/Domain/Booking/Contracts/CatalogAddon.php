@@ -27,6 +27,7 @@ final readonly class CatalogAddon
 {
     /**
      * @param  list<string>  $features  ventajas del complemento, ya normalizadas (sin vacíos)
+     * @param  list<string>  $gifts  regalos del complemento (`#589`), ya normalizados (sin vacíos)
      */
     public function __construct(
         public int $id,
@@ -34,6 +35,8 @@ final readonly class CatalogAddon
         public string $name,
         /** @var list<string> */
         public array $features,
+        /** @var list<string> */
+        public array $gifts,
         /**
          * Precio unitario en céntimos para la tarifa vigente. `0` en un complemento INCLUIDO sin
          * precio propio (es gratis de verdad). Nunca es `null`: un complemento de pago sin precio

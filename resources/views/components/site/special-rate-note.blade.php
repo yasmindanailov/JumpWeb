@@ -19,5 +19,7 @@
 @php($rate = \App\Domain\Booking\Models\RateType::firstSpecial())
 
 @if ($rate && $rate->tr('label'))
-    <p class="rates__note">{{ __('landing.rates.special_note', ['label' => $rate->tr('label')]) }}</p>
+    {{-- `label_lc` para los idiomas que escriben en minúscula tras los dos puntos (`#589`); el inglés usa
+         `label`, porque allí los días llevan mayúscula. --}}
+    <p class="rates__note">{{ __('landing.rates.special_note', ['label' => $rate->tr('label'), 'label_lc' => \Illuminate\Support\Str::lcfirst($rate->tr('label'))]) }}</p>
 @endif

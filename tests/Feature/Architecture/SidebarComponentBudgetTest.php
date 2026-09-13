@@ -196,7 +196,12 @@ class SidebarComponentBudgetTest extends TestCase
         // rótulo prometiendo menores que el bloque no enseña—. La REGLA de qué rótulo toca sigue en
         // `assignment.js` con su caso; esto le pasa un dato que solo el componente tiene (`#556`).
         // ▶ Además podó el chunk **41 B** (284,08 → 284,04 KiB, `SidebarBundleBudgetTest`).
-        'sidebar/steps/TimeStep.vue' => ['code' => 50, 'api' => 0],
+        // ⚠️ **50 → 52 en `#589`: SUBE DOS, y son dos `import`**, no lógica: `GiftList.vue` (los regalos
+        // de un complemento, dentro de su «Más info») y el módulo que decide qué enseña ese «Más info».
+        // ▶ **Subió a 53 y se bajó a 52 antes de commitear**: las dos condiciones —la lista de regalos
+        // aunque el campo no venga, y si hay algo que abrir— se fueron a `addon-info.js` con sus casos
+        // de `node --test`. Aquí queda el cableado.
+        'sidebar/steps/TimeStep.vue' => ['code' => 52, 'api' => 0],
     ];
 
     /**

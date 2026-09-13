@@ -29,6 +29,7 @@ class CatalogAddonResource extends JsonResource
             'id' => $this->resource->id,
             'name' => $this->resource->name,
             'features' => $this->resource->features,
+            'gifts' => $this->resource->gifts,
             'price_cents' => $this->resource->priceCents,
             'included' => $this->resource->included,
             'included_quantity' => $this->resource->includedQuantity,

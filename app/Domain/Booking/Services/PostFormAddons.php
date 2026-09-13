@@ -246,6 +246,7 @@ final class PostFormAddons
                     static fn ($f): string => trim((string) $f),
                     is_array($addon->tr('features')) ? $addon->tr('features') : [],
                 ), static fn (string $f): bool => $f !== '')),
+                gifts: $addon->giftLines(),
                 quantity: $quantity,
                 maxQuantity: (int) ($addon->pivot->max_qty ?? 0),
                 chargedCents: $quantity * $unit,

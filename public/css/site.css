@@ -836,6 +836,8 @@
    para `jump` y `kids`: cualquier otro acento se quedaba sin color, en silencio. `.zone-tab.active`
    ya es genérica en `landing.css`, así que no hace falta ninguna. */
 .svc-rates__panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 18px 26px; }
+/* Las tablas de los PRODUCTOS van una por fila (`#589`): lado a lado se leían como una sola tabla. */
+.svc-rates__panel--rows { grid-template-columns: 1fr; gap: var(--sp-28); }
 /* La tabla de UN producto con su «Reservar» debajo (`#588`). */
 .svc-rates__product { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12); }
 .svc-rates__table { width: 100%; border-collapse: collapse; font-size: var(--fs-14); }
@@ -2430,6 +2432,30 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
     font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4;
     display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
 }
+/* ══ LOS REGALOS (`#589`, `[DECIDIDO owner]`) ════════════════════════════════════════════════════════
+   Lo que el parque da SIN COBRAR, cada regalo en su etiqueta: el amarillo del marcador —el rol de la
+   etiqueta destacada (`#585`)— con la caja de regalo delante. UNA regla para la web y el cajón:
+   `components/site/gifts.blade.php` y `sidebar/GiftList.vue` emiten las mismas clases, y dónde se
+   sienta cada una lo dice su superficie (`landing.css` para la web).
+   ⚠️ Sin versalitas ni mono, al revés que la etiqueta destacada: aquí el texto es una FRASE del panel
+   («Calcetines antideslizantes para todos»), y en mayúsculas a talla de etiqueta no se lee.
+   ⚠️ Los respaldos son los de `.catalog__badge`: una vista sin `landing.css` no declara el marcador. */
+.gifts { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-6); margin: 0; padding: 0; list-style: none; }
+.gift {
+    display: inline-flex; align-items: center; gap: var(--sp-6);
+    padding: var(--sp-4) var(--sp-10) var(--sp-4) var(--sp-8); border-radius: var(--r-pill, 999px);
+    background: var(--marker, transparent); color: var(--on-marker, var(--fg));
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-bold); line-height: 1.3;
+}
+/* El dibujo, a la talla del texto. En el cajón llega envuelto en `.prod-ico` —el marcador de producto—,
+   que trae el margen y la atenuación de una lista: dentro de la etiqueta sobran. */
+.gift svg { flex: none; width: 16px; height: 16px; }
+.gift .prod-ico { margin-inline-end: 0; opacity: 1; }
+/* En un complemento los regalos viven DENTRO del «Más info» (`#589`, `[DECIDIDO owner]`), como la
+   última fila de lo que lleva. */
+.addons__features .addons__features-gifts { padding: var(--sp-4) 0 0; }
+.addons__features .addons__features-gifts::before { content: none; }
+.gf-extra__gifts { margin-top: var(--sp-6); }
 .catalog__price { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); white-space: nowrap; flex: none; }
 /* La UNIDAD de un pack («por niño»), en su propia línea bajo la cifra (`#552`). Hasta esta tanda no
    tenía regla: vivía dentro de `.catalog__price` y heredaba su `nowrap`, que es lo que hacía
@@ -2584,6 +2610,9 @@ details > summary.legal-more ~ p { margin-top: var(--sp-10); }
    cuánto queda; abajo el control, ancho y cómodo para el pulgar. */
 .qtybox { margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); }
 .qtybox__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; }
+/* La pista de que los invitados se pueden cambiar después (`#589`): microcopy bajo la cabecera, en el
+   gris de apoyo y a la talla de las demás pistas del cajón. */
+.qtybox__hint { margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg-mute); }
 .qtybox__label { font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); }
 /* ⚠️ Ya no lleva margen propio: el hueco lo pone la fila del control, que es quien va debajo. */
 .qtybox__avail { margin: 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); text-align: right; }
@@ -6343,11 +6372,6 @@ html:not(.js) .gf-fiche__foot { display: none; }
 .menu__preview-body {
     position: relative; z-index: 1;
     display: flex; flex-direction: column; gap: var(--sp-7); min-width: 0;
-}
-.menu__preview-n {
-    font-family: var(--font-mono); font-size: 10.5px;
-    letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--zone-1);
 }
 .menu__preview-t {
     font-family: var(--font-display); font-weight: 400;

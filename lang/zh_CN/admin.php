@@ -1431,6 +1431,8 @@ return [
         'badge_hint' => '卡片上的短标签,如「Top」。留空 = 无标签。',
         'field_features' => '亮点',
         'features_hint' => '每行一个亮点。',
+        'field_gifts' => '赠品',
+        'gifts_hint' => '每行一个赠品：免费赠送的内容（例如“糖果筒”“全员防滑袜”）。网站和预订面板会用黄色标签逐个突出显示，请勿在亮点中重复填写。',
 
         'field_is_active' => '在网站上显示',
         'is_active_hint' => '停用后将不再显示在公开网站上。',

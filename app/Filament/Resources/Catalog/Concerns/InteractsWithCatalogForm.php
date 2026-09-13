@@ -15,8 +15,8 @@ use Filament\Support\Exceptions\Halt;
  * `AddonResolver` con el precio de complementos): así no divergen las dos páginas.
  *
  * Cubre lo NO específico de una u otra operación:
- *  - **i18n con listas**: las "ventajas" (`features`) se editan como texto (una por
- *    línea) y se guardan como `{es:[…],en:[…],fr:[…]}`.
+ *  - **i18n con listas**: las "ventajas" (`features`) y los "regalos" (`gifts`, `#589`) se
+ *    editan como texto (uno por línea) y se guardan como `{es:[…],en:[…],fr:[…]}`.
  *  - **Limpieza i18n**: los textos traducibles vacíos no se persisten como `''`.
  *  - **Editor de `event_fields`**: saneo + claves únicas (bloquea el guardado si hay
  *    duplicados).
@@ -30,6 +30,13 @@ use Filament\Support\Exceptions\Halt;
  */
 trait InteractsWithCatalogForm
 {
+    /**
+     * Los campos traducibles que el formulario edita como TEXTO, un elemento por línea. Una sola
+     * lista para guardar (aquí) y para rellenar (`EditCatalog`): con dos, un campo nuevo se guardaría
+     * y no volvería a salir en el formulario, o al revés, sin que nada fallara.
+     */
+    protected const I18N_LIST_FIELDS = ['features', 'gifts'];
+
     /** @var array<int,?string> Importes (€) por rate_type_id capturados del form para el upsert. */
     protected array $priceInputs = [];
 
@@ -43,15 +50,15 @@ trait InteractsWithCatalogForm
      */
     protected function applyCommonFormTransforms(array $data): array
     {
-        // 1) Ventajas: texto (una por línea) → lista i18n; eliminar los campos virtuales.
-        $features = [];
-        foreach (['es', 'en', 'fr'] as $locale) {
-            $features[$locale] = $this->linesToList($data["features_{$locale}"] ?? null);
-            unset($data["features_{$locale}"]);
-        }
-        $data['features'] = array_filter($features, fn (array $list): bool => $list !== []);
-        if ($data['features'] === []) {
-            $data['features'] = null;
+        // 1) Ventajas y regalos: texto (uno por línea) → lista i18n; eliminar los campos virtuales.
+        foreach (self::I18N_LIST_FIELDS as $field) {
+            $lists = [];
+            foreach (['es', 'en', 'fr'] as $locale) {
+                $lists[$locale] = $this->linesToList($data["{$field}_{$locale}"] ?? null);
+                unset($data["{$field}_{$locale}"]);
+            }
+            $lists = array_filter($lists, fn (array $list): bool => $list !== []);
+            $data[$field] = $lists === [] ? null : $lists;
         }
 
         // 2) Limpieza de textos i18n simples: descartar idiomas vacíos; null si quedan todos vacíos.

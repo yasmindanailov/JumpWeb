@@ -112,6 +112,7 @@ class ResolvedAddonsResource extends JsonResource
             'allow_extra' => $addon->allowExtra,
             'badge' => $addon->badge,
             'features' => $addon->features,
+            'gifts' => $addon->gifts,
             // ⚠️ `selected` NO se deduce de `quantity`: en un grupo lo que selecciona es ser el
             // elegido, y un dependiente huérfano queda fuera aunque el cliente lo marcara.
             'selected' => $addon->selected,

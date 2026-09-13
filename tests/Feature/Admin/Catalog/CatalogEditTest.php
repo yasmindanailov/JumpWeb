@@ -181,6 +181,25 @@ class CatalogEditTest extends TestCase
         $this->assertSame(['Uno', 'Dos', 'Tres'], $entry->fresh()->features['es']);
     }
 
+    /**
+     * Los REGALOS (`#589`) se editan como las ventajas: uno por línea, y lo guardado vuelve al
+     * formulario. ⚠️ Las dos mitades: con una sola lista de campos para guardar y otra para rellenar,
+     * un campo nuevo se guardaría y no volvería a salir en el formulario.
+     */
+    public function test_gifts_textarea_is_stored_as_i18n_list_and_filled_back(): void
+    {
+        $entry = $this->makeEntry(['gifts' => ['es' => ['Cono'], 'en' => ['Cone']]]);
+
+        Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $entry->id])
+            ->assertFormSet(['gifts_es' => 'Cono', 'gifts_en' => 'Cone', 'gifts_fr' => ''])
+            ->fillForm(['gifts_es' => "Calcetines\n  Cono  \n\n", 'gifts_en' => ''])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(['es' => ['Calcetines', 'Cono']], $entry->fresh()->gifts, 'un idioma vacío no se guarda');
+    }
+
     public function test_empty_i18n_strings_are_compacted_to_null(): void
     {
         // badge con solo es, en/fr vacíos → se guarda solo es; si todo vacío → null.

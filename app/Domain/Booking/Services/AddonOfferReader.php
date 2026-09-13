@@ -369,6 +369,7 @@ class AddonOfferReader implements AddonOffer
             allowExtra: (bool) $row['allow_extra'],
             badge: $row['badge'] !== null ? (string) $row['badge'] : null,
             features: array_values(array_map(strval(...), $row['features'])),
+            gifts: array_values(array_map(strval(...), $row['gifts'])),
             selected: (bool) $row['selected'],
             available: (bool) $row['available'],
             requiresName: $row['requires_name'] !== null ? (string) $row['requires_name'] : null,

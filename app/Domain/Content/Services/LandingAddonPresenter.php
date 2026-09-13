@@ -21,7 +21,7 @@ use App\Domain\Platform\Services\Money;
 class LandingAddonPresenter
 {
     /**
-     * @return list<array{name:string, badge:?string, note:?string, features:list<string>, group:?string}>
+     * @return list<array{name:string, badge:?string, note:?string, features:list<string>, gifts:list<string>, group:?string}>
      */
     public static function rows(TicketType $product, bool $isPack): array
     {
@@ -133,6 +133,8 @@ class LandingAddonPresenter
                 'price' => ($included || $priceCents === 0) ? null : Money::showcase($priceCents),
                 'perGuest' => $perGuest,
                 'features' => $features,
+                // Los REGALOS (`#589`): se pintan aparte, cada uno en su etiqueta.
+                'gifts' => $addon->giftLines(),
                 // `null` y no `''`: la vista pregunta por la EXISTENCIA del texto para decidir si
                 // pinta el «Más info», y una cadena vacía es verdadera en cuanto alguien escribe
                 // `isset()` en vez de un truthy.

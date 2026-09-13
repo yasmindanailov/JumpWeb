@@ -296,7 +296,7 @@
                                              JavaScript se quedaría **sin poder leer qué lleva lo que
                                              está comprando**. Aquí no es adorno — estos extras se
                                              eligen en esta pantalla y en ninguna otra. --}}
-                                        @if ($addon->features !== [])
+                                        @if ($addon->features !== [] || $addon->gifts !== [])
                                             <details class="gf-extra__more">
                                                 {{-- El chevron sale del SET de iconos (`#257`), no de
                                                      bordes rotados a mano: un dibujo propio aquí iría
@@ -305,11 +305,15 @@
                                                      la pantalla entera. Esta misma vista ya lo usa
                                                      para plegar la ficha de cada invitado. --}}
                                                 <summary>{{ __('tickets.addon_more_info') }}<x-icons.chevron-down :width="14" :height="14" /></summary>
-                                                <ul>
-                                                    @foreach ($addon->features as $feature)
-                                                        <li>{{ $feature }}</li>
-                                                    @endforeach
-                                                </ul>
+                                                @if ($addon->features !== [])
+                                                    <ul>
+                                                        @foreach ($addon->features as $feature)
+                                                            <li>{{ $feature }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                @endif
+                                                {{-- Los regalos, DENTRO del «Más info» como en el cajón (`#589`, `[DECIDIDO owner]`). --}}
+                                                <x-site.gifts :gifts="$addon->gifts" class="gf-extra__gifts" />
                                             </details>
                                         @endif
                                     </div>

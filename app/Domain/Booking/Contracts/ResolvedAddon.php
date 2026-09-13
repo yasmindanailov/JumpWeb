@@ -32,6 +32,7 @@ final readonly class ResolvedAddon
      * @param  string|null  $badge  `included` | `free` | `null` — la etiqueta que distingue «va con
      *                              el pack» de «no cuesta nada», que no son lo mismo
      * @param  list<string>  $features  ventajas para el desplegable «Más info»
+     * @param  list<string>  $gifts  regalos (`#589`): a la vista, cada uno en su etiqueta, no en el «Más info»
      * @param  bool  $selected  veredicto AUTORITATIVO tras aplicar grupos, obligatorios y la poda
      * @param  bool  $available  su requisito («requiere X») está elegido. Si es `false` el
      *                           complemento se enseña pero no se puede activar
@@ -58,6 +59,7 @@ final readonly class ResolvedAddon
         public bool $allowExtra,
         public ?string $badge,
         public array $features,
+        public array $gifts,
         public bool $selected,
         public bool $available,
         public ?string $requiresName,

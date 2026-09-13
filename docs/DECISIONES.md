@@ -31699,3 +31699,53 @@ Cuatro notas del owner sobre el local de `#587`, con las opciones delante donde 
   plazas que quedan, «reserva» en vez de «artículo», «autorización» en vez de «justificante», el
   descargo en masculino, el saldo «el día de la visita», el login y los menores a cargo. El estado de un
   pedido pagado pasa de «Completado» a **«Confirmado»** (`[DECIDIDO owner]`, P6).
+
+## #589 · 2026-09-13 · `[DECIDIDO owner]` Los regalos en su etiqueta, la escala de altura sin franjas pisadas y los detalles del local
+
+Once notas del owner sobre el local de `#588`, con las opciones delante donde había que elegir.
+- **Los REGALOS tienen campo propio** (`ticket_types.gifts`, i18n como `features`; «Catálogo → Regalos»,
+  uno por línea) y se pintan **cada uno en una etiqueta amarilla con la caja de regalo**
+  (`components/site/gifts.blade.php` y `sidebar/GiftList.vue`, una sola regla en `site.css`).
+  `[DECIDIDO owner]` **web y cajón**: las tarjetas de cumpleaños de la portada, la fila «De regalo» de la
+  comparativa de `/cumpleanos` —**aunque coincidan en todos los packs**, la misma excepción que la
+  duración: lo que se lee para elegir es la columna—, los menús y las tablas de `/servicios`.
+  ⚠️⚠️ **EN EL CAJÓN NINGUNA FILA LOS ENSEÑA** (`[DECIDIDO owner]`, visto en local): ni la tarjeta del
+  catálogo ni la fila de un complemento — **solo dentro del «Más info» del complemento**, y el botón sale
+  también con regalos y sin ventajas. El post-form sigue la misma regla en sus extras. La normalización es UNA (`TicketType::giftLines()`) y la API los publica
+  aparte de `features` en `CatalogProduct`, `CatalogProductDetail`, `CatalogAddon`, `ResolvedAddon` y
+  `PostFormAddon` (evolutivo: un cliente anterior no se rompe).
+- **La escala de altura de `/normas` ya no pisa franjas** (`[DECIDIDO owner]`: «franjas apiladas», frente a
+  «una columna por zona»). El artboard apila tres franjas contiguas porque supone que una zona acaba donde
+  empieza la otra, y los datos se SOLAPAN (Kids hasta 1,50 · Jump desde 1,30: manda la edad); una banda
+  por zona las dibujaba una encima de otra. `RuleBoard::heightScale()` corta la escala en CADA frontera
+  declarada: una franja por tramo, con el tinte de su zona, y la que comparten dos zonas en amarillo
+  («Jump o Kids · según la edad»). Vuelve **la regla** del artboard —una marca por cota: techo, fronteras
+  en fuerte y suelo, centradas en su cota— y los matices van **debajo**, con la nota de acceso del panel.
+  El 1,00 del artboard sigue sin dibujarse: no es un dato.
+- **Zonas de la portada**: entradilla propia (`landing.zones.lede`, sin repetir edades ni alturas ni
+  nombrar zonas) y la «i» de «Personalizamos cada cumple» en la nota de acceso.
+- **La frase del hero, SUTIL Y CENTRADA** (`[DECIDIDO owner]`): se eligió primero «raya amarilla + cuerpo»
+  entre tres renderizadas y, visto en local, competía con el titular — queda sin raya, en peso medio,
+  más pequeña, levemente translúcida y centrada.
+- **Las entradas se compran para HOY** (`[DECIDIDO owner]`): la única barrera es que la hora no haya
+  empezado, que ya la pone el corte intra-día de `SlotOffer` (`#330`). La antelación mínima de las
+  entradas pasa a cero —es DATO del cliente, por el script de contenido— y la duda «¿Puedo comprar la
+  entrada para hoy?» deja de decir «hasta el día anterior».
+- **Cumpleaños**: bajo los invitados del pack, que se pueden cambiar después (`tickets.guests_change_later`);
+  «¿Algo que debamos saber?» pasa al post-form y Menú 1 y Menú 2 se cobran siempre por invitado —esos dos
+  son DATO del cliente y van por el script de contenido, fuera del repo—.
+- **Menú**: fuera el «01 / 02» de la vista previa.
+- **Copys de la portada, primera página de la pasada «página a página»** (`[DECIDIDO owner]`: «aplícalo
+  según tu recomendación profesional, teniendo en cuenta el objetivo»): las entradillas de tarifas,
+  cumpleaños («Dos horas de fiesta, merienda y regalos para todos: tú solo traes a los invitados»),
+  reseñas y dudas, el «Un código para todo» sin «el empleado» ni la lista de lo que no hace falta, el
+  precio del botón de reservar en formato de escaparate («desde 8 €», como la sección de tarifas), la
+  nota de la tarifa especial en minúscula tras los dos puntos (`label_lc`; el inglés conserva la
+  mayúscula) y el horario: **dos días seguidos son «Sábado y domingo»**, no «Sábado a domingo», y la
+  entradilla lleva la coma que separa los dos horarios. De paso, **en inglés los días dentro de una frase
+  ya no se escriben en minúscula** («Monday to friday» era una falta desde `#487`). ▶ «Reservas aquí»
+  **se queda**: lo decidió `#222` sobre «Reservar ahora». ▶ La frase de la cafetería es DATO del cliente
+  y va por el script de contenido, no por el producto.
+- **`/servicios`**: un producto por fila en las tarifas de grupo, y la banda del pie invita a **otro tipo
+  de grupo** («¿Venís con otro tipo de grupo?» → «Pedir información»). De paso, los `bands.go.*` de
+  en/fr alcanzan a los del español.

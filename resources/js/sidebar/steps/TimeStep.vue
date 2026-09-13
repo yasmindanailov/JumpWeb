@@ -2,6 +2,8 @@
 import { computed, nextTick, ref } from 'vue';
 import { t as translate, tp as translateWith } from '../i18n.js';
 import { money } from '../money.js';
+import GiftList from '../GiftList.vue';
+import { addonGifts, hasAddonInfo } from '../addon-info.js';
 import { isAlmostFull, isSoldOut } from '../offer.js';
 import { useStrip } from '../useStrip.js';
 import { guardianIsBlocked, whoSummaryKey } from '../assignment.js';
@@ -221,6 +223,10 @@ const toggleInfo = (id) => {
                     <span v-if="dayPriceCents !== null" class="qtybox__price"> · {{ money(dayPriceCents) }}<template v-if="isPack"> {{ periodLabel || t('per_child') }}</template></span>
                 </p>
             </div>
+            <!-- ⚠️ En un pack se dice que el número NO es definitivo (`#589`, `[DECIDIDO owner]`): quien
+                 reserva un cumple no sabe aún cuántos vendrán, y sin esto se para a adivinarlo. Lo que
+                 permite cambiarlo después es el post-form (`#444`). -->
+            <p v-if="isPack" class="qtybox__hint">{{ t('guests_change_later') }}</p>
             <!-- `#327`: la cantidad SE ESCRIBE, no solo se pulsa. Con un mínimo de 30 (una
                  excursión de colegio) el `+` obligaba a treinta clics antes de poder comprar, y
                  cien para llenar el grupo. El acotado NO se hace aquí: se emite el número
@@ -344,12 +350,16 @@ const toggleInfo = (id) => {
                             <span v-if="! opt.available && opt.requires_name" class="addons__requires">{{ tp('addon_requires', { name: opt.requires_name }) }}</span>
                         </span>
                     </label>
-                    <template v-if="opt.features.length">
+                    <!-- Los REGALOS van DENTRO del «Más info» (`#589`, `[DECIDIDO owner]`): la fila del
+                         complemento no los enseña; se descubren al abrir lo que lleva. Por eso el botón
+                         sale también con regalos y sin ventajas. -->
+                    <template v-if="hasAddonInfo(opt)">
                         <button type="button" class="addons__moreinfo"
                                 :aria-expanded="isExpanded(opt.product_id) ? 'true' : 'false'"
                                 @click="toggleInfo(opt.product_id)">{{ t('addon_more_info') }} <span aria-hidden="true"></span></button>
                         <ul v-if="isExpanded(opt.product_id)" class="addons__features">
                             <li v-for="(f, i) in opt.features" :key="i">{{ f }}</li>
+                            <li v-if="addonGifts(opt).length" class="addons__features-gifts"><GiftList :gifts="addonGifts(opt)" :label="t('gifts_label')" /></li>
                         </ul>
                     </template>
                 </div>
@@ -361,7 +371,7 @@ const toggleInfo = (id) => {
                     <span class="addons__name">{{ opt.product_name }}<span v-if="opt.badge" class="addons__badge" :class="'addons__badge--' + opt.badge">{{ t('addon_badge_' + opt.badge) }}</span></span>
                     <span class="addons__price">{{ opt.note }}</span>
                     <span v-if="! opt.available && opt.requires_name" class="addons__requires">{{ tp('addon_requires', { name: opt.requires_name }) }}</span>
-                    <button v-if="opt.features.length" type="button" class="addons__moreinfo"
+                    <button v-if="hasAddonInfo(opt)" type="button" class="addons__moreinfo"
                             :aria-expanded="isExpanded(opt.product_id) ? 'true' : 'false'"
                             @click="toggleInfo(opt.product_id)">{{ t('addon_more_info') }} <span aria-hidden="true"></span></button>
                 </span>
@@ -384,8 +394,9 @@ const toggleInfo = (id) => {
                     <button type="button" :disabled="! opt.can_increase" @click="$emit('inc-addon', opt.product_id)">+</button>
                 </div>
 
-                <ul v-if="opt.features.length && isExpanded(opt.product_id)" class="addons__features addons__features--single">
+                <ul v-if="hasAddonInfo(opt) && isExpanded(opt.product_id)" class="addons__features addons__features--single">
                     <li v-for="(f, i) in opt.features" :key="i">{{ f }}</li>
+                    <li v-if="addonGifts(opt).length" class="addons__features-gifts"><GiftList :gifts="addonGifts(opt)" :label="t('gifts_label')" /></li>
                 </ul>
             </div>
         </div>

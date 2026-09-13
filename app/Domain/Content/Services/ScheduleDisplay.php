@@ -121,8 +121,8 @@ class ScheduleDisplay
             0 => null,
             1 => (string) __('landing.info.lede_one'),
             2 => (string) __('landing.info.lede_two', [
-                'a' => mb_strtolower($abiertos[0]['label']),
-                'b' => mb_strtolower($abiertos[1]['label']),
+                'a' => $this->inSentence($abiertos[0]['label']),
+                'b' => $this->inSentence($abiertos[1]['label']),
             ]),
             default => (string) __('landing.info.lede_many'),
         };
@@ -232,8 +232,8 @@ class ScheduleDisplay
     }
 
     /**
-     * Etiqueta del rango de días en el idioma activo: un día («Lunes») o un rango
-     * («Lunes a viernes»).
+     * Etiqueta del rango de días en el idioma activo: un día («Lunes»), dos seguidos
+     * («Sábado y domingo») o un rango («Lunes a viernes»).
      *
      * @param  array<int, int>  $days  weekdays de Carbon en orden de presentación
      */
@@ -246,10 +246,21 @@ class ScheduleDisplay
 
         // "Lunes a viernes": el primer día capitalizado (inicia la etiqueta), el segundo en
         // minúscula (lectura natural del rango).
-        return __('landing.info.day_range', [
+        // ⚠️ Dos días seguidos no son un rango (`#589`): «Sábado y domingo», no «Sábado a domingo». Los
+        // grupos son de días CONSECUTIVOS por construcción (`weeklyRows()`), así que dos días son un par.
+        return __(count($days) === 2 ? 'landing.info.day_pair' : 'landing.info.day_range', [
             'from' => $first,
-            'to' => mb_strtolower(__('landing.info.weekdays.'.end($days))),
+            'to' => $this->inSentence(__('landing.info.weekdays.'.end($days))),
         ]);
+    }
+
+    /**
+     * Un nombre de día DENTRO de una frase. En español y francés va en minúscula («lunes a viernes»);
+     * en inglés los días llevan mayúscula siempre, y bajarlos escribía «Monday to friday» (`#589`).
+     */
+    private function inSentence(string $text): string
+    {
+        return app()->getLocale() === 'en' ? $text : mb_strtolower($text);
     }
 
     /**

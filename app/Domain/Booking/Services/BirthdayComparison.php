@@ -135,6 +135,20 @@ final class BirthdayComparison
         }
 
         /*
+         * ⚠️⚠️ **LOS REGALOS VAN EN LA TABLA AUNQUE COINCIDAN** (`#589`, `[DECIDIDO owner]`: «que esté bien
+         * destacado»). Es la misma excepción que la duración a «lo común baja a Igual»: lo que se lee
+         * para elegir es la COLUMNA, y un regalo que baja al final de la página deja de venderse.
+         * Cada uno en su etiqueta, en la fila que sigue a lo que incluye.
+         */
+        $regalos = $packs->map(fn (TicketType $p): array => $p->giftLines())->all();
+        if (collect($regalos)->flatten()->isNotEmpty()) {
+            $rows[] = [
+                'label' => __('landing.birthday.row_gifts'), 'kind' => 'gifts', 'live' => null,
+                'cells' => array_map(fn (array $lista): ?array => $lista === [] ? null : $lista, $regalos),
+            ];
+        }
+
+        /*
          * ⚠️⚠️ **AQUÍ IBA LA FILA «ALARGAR LA FIESTA» (la hora extra) Y SE RETIRÓ** (`[DECIDIDO owner,
          * 2026-09-13]`, `#583`): la hora extra es un complemento, y los complementos ya no se publican
          * en la web — solo se ofrecen en el cajón, al reservar.

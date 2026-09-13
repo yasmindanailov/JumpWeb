@@ -5166,6 +5166,7 @@ components:
         - name
         - badge
         - features
+        - gifts
         - from_price_cents
         - price_varies
         - deposit_label
@@ -5191,6 +5192,14 @@ components:
         features:
           type: array
           description: Ventajas del producto, ya normalizadas. Unirlas con un separador es cosa del cliente.
+          items:
+            type: string
+        gifts:
+          type: array
+          description: |
+            Lo que el parque da SIN COBRAR (`DECISIONES #589`), ya normalizado y traducido. Va aparte de
+            `features` porque se pinta distinto: **cada regalo en su etiqueta**, no unido a las ventajas.
+            Lista vacía si el producto no declara ninguno.
           items:
             type: string
         from_price_cents:
@@ -5255,6 +5264,7 @@ components:
         - name
         - badge
         - features
+        - gifts
         - from_price_cents
         - price_varies
         - deposit_label
@@ -5282,6 +5292,11 @@ components:
           nullable: true
         features:
           type: array
+          items:
+            type: string
+        gifts:
+          type: array
+          description: Los regalos, como en `CatalogProduct.gifts`.
           items:
             type: string
         from_price_cents:
@@ -5431,6 +5446,7 @@ components:
         - product_name
         - unit_price_cents
         - note
+        - gifts
         - features
         - quantity
         - max_quantity
@@ -5453,6 +5469,13 @@ components:
         note:
           type: string
           description: La línea de precio ya compuesta y traducida. Viaja hecha, como en el embudo.
+        gifts:
+          type: array
+          description: |
+            Lo que el extra trae de REGALO (`DECISIONES #589`), traducido. A la vista, cada uno en su
+            etiqueta —no dentro del «Más info»—. Lista vacía si no declara ninguno.
+          items:
+            type: string
         features:
           type: array
           description: |
@@ -5631,6 +5654,7 @@ components:
         - per_guest
         - allow_extra
         - badge
+        - gifts
         - features
         - selected
         - available
@@ -5677,6 +5701,13 @@ components:
           description: |
             `included` = va con el producto · `free` = no cuesta nada. **No son lo mismo** y por eso
             no se derivan del precio.
+        gifts:
+          type: array
+          description: |
+            Lo que el complemento trae de REGALO (`DECISIONES #589`). A la vista, cada uno en su
+            etiqueta; no va dentro del «Más info» de `features`.
+          items:
+            type: string
         features:
           type: array
           description: Ventajas, para el desplegable «Más info».
@@ -5733,6 +5764,7 @@ components:
         - id
         - name
         - features
+        - gifts
         - price_cents
         - included
         - included_quantity
@@ -5752,6 +5784,11 @@ components:
           type: string
         features:
           type: array
+          items:
+            type: string
+        gifts:
+          type: array
+          description: Los regalos del complemento (`DECISIONES #589`), como en `CatalogProduct.gifts`.
           items:
             type: string
         price_cents:

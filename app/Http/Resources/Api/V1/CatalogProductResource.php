@@ -34,6 +34,7 @@ class CatalogProductResource extends JsonResource
             'name' => $this->resource->name,
             'badge' => $this->resource->badge,
             'features' => $this->resource->features,
+            'gifts' => $this->resource->gifts,
             'from_price_cents' => $this->resource->fromPriceCents,
             'price_varies' => $this->resource->priceVaries,
             'deposit_label' => $this->resource->depositLabel,

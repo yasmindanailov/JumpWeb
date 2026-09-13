@@ -244,7 +244,9 @@
                 <h2 class="zones__title">{{ __('landing.zones.title') }}</h2>
             </div>
             {{-- ⚠️ Aquí vivía la REGLA bajo el titular, y se retiró (`#587`, `[DECIDIDO owner]`): repetía
-                 lo que ya dicen las tarjetas. Lo que ellas no dicen va en la nota de acceso de debajo. --}}
+                 lo que ya dicen las tarjetas. Lo que ellas no dicen va en la nota de acceso de debajo.
+                 ▶ `#589`, `[DECIDIDO owner]`: la sección vuelve a tener ENTRADILLA, como las demás. --}}
+            <p class="sec-head__lede">{{ __('landing.zones.lede') }}</p>
         </div>
 
         {{-- ══ LAS DOS TARJETAS DE ZONA ═══════════════════════════════════════════════════════
@@ -398,7 +400,12 @@
              entre qué alturas— en una tarjeta de apoyo bajo las dos zonas. Es un dato del parque y lo
              escribe el panel («Ajustes → Web»); sin nota, no hay tarjeta. --}}
         @if ($site['zones_access'] ?? null)
-            <p class="zones__access">{{ $site['zones_access'] }}</p>
+            {{-- La «i» es la MISMA marca de información de `/cumpleanos` («Personalizamos cada cumple»,
+                 `#589`): una sola pieza para decir «ten esto en cuenta». --}}
+            <aside class="zones__access">
+                <span class="party-info__mark" aria-hidden="true">i</span>
+                <p class="zones__access-text">{{ $site['zones_access'] }}</p>
+            </aside>
         @endif
     </section>
 
@@ -681,6 +688,11 @@
                                     @endforeach
                                 </span>
                             @endif
+
+                            {{-- LOS REGALOS (`#589`, `[DECIDIDO owner]`): cada uno en su etiqueta, fuera del tope
+                                 de TRES —no son lo que incluye, son lo que se lleva de más—. En `span` porque la
+                                 tarjeta entera es un enlace. --}}
+                            <x-site.gifts :gifts="$card['gifts']" tag="span" class="party-card__gifts" />
 
                             <span class="party-card__money">
                                 <span class="party-card__terms">

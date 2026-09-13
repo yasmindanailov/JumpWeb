@@ -1872,6 +1872,8 @@ return [
         'badge_hint' => 'Texto corto tipo "Top" sobre la tarjeta. Vacío = sin etiqueta.',
         'field_features' => 'Ventajas',
         'features_hint' => 'Una ventaja por línea.',
+        'field_gifts' => 'Regalos',
+        'gifts_hint' => 'Un regalo por línea: lo que se da sin cobrar («Cono de chuches», «Calcetines antideslizantes para todos»). La web y el cajón destacan cada uno en una etiqueta amarilla, así que no lo repitas en las ventajas.',
 
         'field_is_active' => 'Visible en la web',
         'is_active_hint' => 'Si se desactiva, deja de mostrarse en la web pública.',

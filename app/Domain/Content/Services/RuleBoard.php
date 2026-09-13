@@ -3,6 +3,7 @@
 namespace App\Domain\Content\Services;
 
 use App\Domain\Content\Models\VenueRule;
+use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -76,11 +77,18 @@ final class RuleBoard
      * (`ZoneCards::ESCALA_CM`): dos escalas con topes distintos harían que el mismo 1,30 cayera a
      * distinta altura en dos pantallas del mismo sitio.
      *
-     * ⚠️⚠️ **DESVIACIÓN DECLARADA DEL ARTBOARD**: él dibuja **tres** bandas y la de en medio es «de
-     * 1 a 1,30 m, con tutor». **Ese 1,00 no existe como dato en ninguna parte**: vive dentro del
-     * TEXTO de la norma de la zona Jump, que es donde debe estar —es una excepción con condiciones,
-     * no un umbral—. Inventarlo aquí sería poner un número en un dibujo que ningún panel puede
-     * cambiar y que ninguna otra instalación tendría. Se dibujan las bandas que el dato sostiene.
+     * ⚠️⚠️ **DESVIACIÓN DECLARADA DEL ARTBOARD**: su franja de en medio es «de 1 a 1,30 m, con
+     * tutor». **Ese 1,00 no existe como dato en ninguna parte**: vive en el TEXTO de acceso del
+     * panel, que es donde debe estar —es una excepción con condiciones, no un umbral—, y la vista lo
+     * pinta DEBAJO de la escala, que es donde el artboard pone los matices. Inventarlo aquí sería
+     * poner un número en un dibujo que ningún panel puede cambiar.
+     *
+     * ❗❗ **LAS FRANJAS NO SE PISAN, Y LO GARANTIZA EL CORTE** (`#589`, `[DECIDIDO owner]`). El
+     * artboard las apila porque supone que una zona acaba donde empieza la otra, y los datos reales
+     * se SOLAPAN (Kids hasta 1,50 · Jump desde 1,30: manda la edad). Una banda por zona las dibujaba
+     * una encima de otra. ▶ La escala se corta en CADA frontera declarada y cada tramo es una franja:
+     * la de una zona lleva su nombre y su color, y la que comparten dos o más, las dos.
+     * ▶ La REGLA lleva una marca por cota —techo, fronteras y suelo—, con las fronteras en fuerte.
      *
      * ⚠️ **Sin ninguna zona con altura no hay tarjeta**: vacío es una respuesta (`#485`), y un eje
      * con una sola banda a lo largo de toda la escala no dice nada.
@@ -92,13 +100,16 @@ final class RuleBoard
      * las zonas **sin nombrar el tipo**: aquí llegan el techo y el suelo ya escritos por quien sí
      * puede componerlos, y este servicio solo reparte porcentajes.
      *
-     * @param  Collection<int, object>  $zones  zonas con `height_min_cm`/`height_max_cm` y `tr('name')`
+     * @param  Collection<int, object>  $zones  zonas con `height_min_cm`/`height_max_cm`, `color` y `tr('name')`
      * @param  int  $techo  el tope de la escala en cm — el MISMO que usa el eje de la portada
-     * @return array{ceiling: string, floor: string, bands: list<array{top: float, height: float, label: string, cm: int}>}|null
+     * @param  string  $ceiling  el techo, escrito con su unidad («1,90 m»)
+     * @param  string  $floor  el suelo, escrito («0 m»)
+     * @param  Closure(int): string  $metres  cómo escribe el sitio una altura («1,30»): un formato, un sitio
+     * @return array{ticks: list<array{top: float, label: string, strong: bool}>, bands: list<array{top: float, height: float, label: string, overlap: bool, color: ?string}>}|null
      */
-    public function heightScale(Collection $zones, int $techo, string $ceiling, string $floor): ?array
+    public function heightScale(Collection $zones, int $techo, string $ceiling, string $floor, Closure $metres): ?array
     {
-        $bands = [];
+        $tramos = [];
         foreach ($zones as $zone) {
             $min = $zone->height_min_cm;
             $max = $zone->height_max_cm;
@@ -107,29 +118,78 @@ final class RuleBoard
                 continue;
             }
 
-            // `height_min_cm` es «a partir de» —la banda va de su cifra al techo— y `height_max_cm`
+            // `height_min_cm` es «a partir de» —la zona va de su cifra al techo— y `height_max_cm`
             // es «hasta» —del suelo a su cifra—. La misma cifra significa lo contrario según la
             // columna, que es justo por lo que son dos y no un número con el sentido deducido.
-            $desde = $min ?? 0;
-            $hasta = $min !== null ? $techo : $max;
+            $desde = min((int) ($min ?? 0), $techo);
+            $hasta = $min !== null ? $techo : min((int) $max, $techo);
 
-            $bands[] = [
-                // En porcentaje y desde ARRIBA, que es como se apila el dibujo.
-                'top' => round((1 - $hasta / $techo) * 100, 2),
-                'height' => round((($hasta - $desde) / $techo) * 100, 2),
+            if ($hasta <= $desde) {
+                continue;
+            }
+
+            $tramos[] = [
+                'desde' => $desde,
+                'hasta' => $hasta,
+                'frontera' => (int) ($min ?? $max),
                 'label' => (string) $zone->tr('name'),
-                'cm' => $min ?? $max,
+                'color' => $this->hexOrNull($zone->color ?? null),
             ];
         }
 
-        if ($bands === []) {
+        if ($tramos === []) {
             return null;
         }
 
-        return [
-            'ceiling' => $ceiling,
-            'floor' => $floor,
-            'bands' => $bands,
-        ];
+        // En porcentaje y desde ARRIBA, que es como se apila el dibujo.
+        $y = fn (int $cm): float => round((1 - $cm / $techo) * 100, 2);
+
+        // Las cotas donde se corta la escala: el techo, cada frontera declarada y el suelo.
+        $cotas = collect($tramos)
+            ->flatMap(fn (array $t): array => [$t['desde'], $t['hasta']])
+            ->push(0)->push($techo)
+            ->unique()->sortDesc()->values()->all();
+
+        // Las franjas, de arriba abajo. Un tramo que no cubre ninguna zona no se pinta: la escala no
+        // afirma nada donde el dato calla.
+        $bands = [];
+        for ($i = 0; $i < count($cotas) - 1; $i++) {
+            [$alto, $bajo] = [$cotas[$i], $cotas[$i + 1]];
+            $cubren = array_values(array_filter($tramos, fn (array $t): bool => $t['desde'] <= $bajo && $t['hasta'] >= $alto));
+
+            if ($cubren === []) {
+                continue;
+            }
+
+            $compartida = count($cubren) > 1;
+            $bands[] = [
+                'top' => $y($alto),
+                'height' => round((($alto - $bajo) / $techo) * 100, 2),
+                'label' => $compartida
+                    ? __('site.rules_axis_overlap', ['zones' => implode(' '.__('site.rules_axis_or').' ', array_column($cubren, 'label'))])
+                    : $cubren[0]['label'],
+                'overlap' => $compartida,
+                // El tinte de la zona sale del panel; el de la compartida es el del marcador y lo pone el CSS.
+                'color' => $compartida ? null : $cubren[0]['color'],
+            ];
+        }
+
+        // LA REGLA: el techo, cada frontera de zona —en fuerte— y el suelo, de arriba abajo.
+        $ticks = [['top' => 0.0, 'label' => $ceiling, 'strong' => false]];
+        $fronteras = collect($tramos)->pluck('frontera')
+            ->filter(fn (int $cm): bool => $cm > 0 && $cm < $techo)
+            ->unique()->sortDesc()->values();
+        foreach ($fronteras as $cm) {
+            $ticks[] = ['top' => $y($cm), 'label' => $metres($cm), 'strong' => true];
+        }
+        $ticks[] = ['top' => 100.0, 'label' => $floor, 'strong' => false];
+
+        return ['ticks' => $ticks, 'bands' => $bands];
+    }
+
+    /** Un color del panel solo entra en un `style` si es un hex: cualquier otra cosa se ignora. */
+    private function hexOrNull(mixed $color): ?string
+    {
+        return is_string($color) && preg_match('/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i', $color) === 1 ? $color : null;
     }
 }

@@ -115,6 +115,9 @@ return [
          */
         'eyebrow' => 'Para quién',
         'title' => 'Cada uno tiene su zona',
+        // La entradilla (`#589`, `[DECIDIDO owner]`): la sección era la única sin ella. ⚠️ No repite
+        // edades ni alturas —las dice cada tarjeta— y no nombra zonas: el texto es del PRODUCTO.
+        'lede' => 'Cada zona está pensada para una edad, con sus propias atracciones y su tarifa, para que todos salten a su ritmo y con seguridad. Elige la tuya y reserva tu hora en un minuto.',
         'from' => 'desde',
         'see_zone' => 'Ver la zona :zone',
         /*
@@ -239,8 +242,8 @@ return [
         // ⚠️ El precio va INTERPOLADO y no escrito: es el más barato del catálogo, con el criterio
         // de `#324` («desde» anuncia el precio real más bajo que existe). Sin catálogo vendible se
         // usa `intro_plain`, porque una entradilla que promete un precio que no hay miente.
-        'intro' => 'Eliges la zona y cuánto rato. Desde :from.',
-        'intro_plain' => 'Eliges la zona y cuánto rato.',
+        'intro' => 'Elige tu zona y cuánto tiempo quieres saltar, y reserva la hora que mejor te venga. Desde :from.',
+        'intro_plain' => 'Elige tu zona y cuánto tiempo quieres saltar, y reserva la hora que mejor te venga.',
         'pick_zone' => 'Elige la zona',
 
         // ── Los DÍAS de cada tarifa ────────────────────────────────────────────────────────
@@ -255,7 +258,9 @@ return [
         'special_suffix' => 'en tarifa especial',
         // Los días de la especial, UNA vez por sección. `:label` es el rótulo de la tarifa tal y
         // como lo escribe el panel — hoy «Viernes, findes y festivos».
-        'special_note' => 'Tarifa especial: :label.',
+        // Tras los dos puntos, en minúscula (`#589`): el rótulo de la tarifa viene del panel con mayúscula
+        // inicial porque también es cabecera de columna. `:label_lc` lo trae ya en minúscula.
+        'special_note' => 'Tarifa especial: :label_lc.',
 
         // ❗ **La ZONA la dice la CHAPA de la tarjeta, no el botón** (`#480`, sobre la nota del
         // turno 15b: «con la zona en la chapa, en el botón sobra»). La llevó mientras la chapa no
@@ -300,8 +305,8 @@ return [
         'section_title' => 'El cumple, resuelto',
         // ⚠️ La entradilla **vende con una cifra** del catálogo; sin packs con precio cae a la
         // variante sin cifra, porque un «desde» que no existe miente (la regla de `#479`).
-        'section_intro' => 'Dos horas, la comida de los niños y los calcetines. Desde :from por niño.',
-        'section_intro_plain' => 'Dos horas, la comida de los niños y los calcetines.',
+        'section_intro' => 'Dos horas de fiesta, merienda y regalos para todos: tú solo traes a los invitados. Desde :from por niño.',
+        'section_intro_plain' => 'Dos horas de fiesta, merienda y regalos para todos: tú solo traes a los invitados.',
         // La edad del PACK. Son tres formas y no una con un valor opcional: dicen cosas distintas.
         'age_between' => 'De :a a :b años',
         'age_from' => 'Desde :a años',
@@ -341,6 +346,7 @@ return [
         'row_kids' => 'Niños',
         'row_deposit' => 'Señal',
         'row_features' => 'Incluye',
+        'row_gifts' => 'De regalo',
         'row_total' => 'Total',
         'row_total_special' => 'Total en tarifa especial',
         'kids_from' => 'Desde :min niños',
@@ -388,6 +394,8 @@ return [
         'closed' => 'Cerrado',
         'open_generic' => 'Abierto',
         'day_range' => ':from a :to',
+        // Dos días seguidos no son un rango: «Sábado y domingo», no «Sábado a domingo» (`#589`).
+        'day_pair' => ':from y :to',
         // ⚠️ **Aquí vivían `hours_title`, `special_dates_title`, `hours_tbd` y `until`, y se han ido
         // con su consumidor** (`#487`): la sección 07 rehecha desde el canvas no lleva rótulos
         // dentro de la tarjeta —el estado y la tabla se presentan solos— y la cola «· hasta las
@@ -405,7 +413,9 @@ return [
          * El porqué y el reparto, en `ScheduleDisplay::weeklyLede()`.
          */
         'lede_one' => 'Un mismo horario todos los días.',
-        'lede_two' => 'Dos horarios: :a y :b.',
+        // ⚠️ La coma no es adorno (`#589`): con dos días seguidos en un grupo («sábado y domingo»), sin
+        // ella la frase encadena dos «y» y no se sabe dónde acaba el primer horario.
+        'lede_two' => 'Dos horarios: :a, y :b.',
         'lede_many' => 'El horario cambia según el día.',
 
         /*
@@ -483,7 +493,7 @@ return [
         // empleado es su trabajo, no la ventaja del cliente»*. Lo que se cuenta no es que ellos
         // tengan una pantalla: es que tú no repites nada.
         'carries_title' => 'Un código para todo',
-        'carries_lede' => 'Lo enseñas en la puerta y el empleado lo ve todo de una vez: qué has reservado, que ya firmaste y quién viene contigo. Sin buscar tu nombre, sin enseñar el correo y sin rellenar nada allí.',
+        'carries_lede' => 'Lo enseñas en la puerta y lo vemos todo de un vistazo: tu reserva, tu firma y quién viene contigo. Sin papeles y sin buscar tu nombre.',
         'rows' => [
             // ⚠️ Las tres filas dicen lo que el código lleva **siempre**, no una reserva concreta.
             'booking' => ['key' => 'Tus reservas', 'val' => 'Las que tengas y las que hagas después'],
@@ -515,7 +525,7 @@ return [
     'reviews' => [
         'eyebrow' => 'Reseñas',
         'title' => 'Lo dicen los que ya han venido',
-        'lede_own' => 'Algunas de las cosas que nos dicen al salir.',
+        'lede_own' => 'Lo que nos cuentan las familias al salir.',
         'lede_google' => 'No las elegimos nosotros: son las que Google pone primero.',
         // `role="img"` necesita un nombre que diga la NOTA. Cinco glifos sueltos los lee un lector
         // de pantalla como «estrella estrella estrella…», que no es el dato.
@@ -565,7 +575,7 @@ return [
     'faq' => [
         'eyebrow' => 'Dudas',
         'title' => 'Lo que más nos preguntáis',
-        'lede' => 'Las que llegan por teléfono, contestadas aquí.',
+        'lede' => 'Las que más nos hacéis por teléfono, respondidas aquí.',
     ],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.

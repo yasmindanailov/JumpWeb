@@ -76,6 +76,8 @@ return [
     // El MÍNIMO del pack, no las plazas que quedan (`#588`, contenido T5): la web no publica el máximo
     // de niños (`[DECIDIDO owner]`), y «quedan 50 plazas» lo contaba de otra forma.
     'guests_min' => 'mínimo :count',
+    // `#589`, `[DECIDIDO owner]`: el número de invitados NO es definitivo al reservar.
+    'guests_change_later' => 'No hace falta que sepas ya cuántos seréis: podrás ajustar el número de invitados después, desde el formulario de tu reserva.',
     'guests_count' => ':count invitados',
     // Fiesta MIXTA (`docs/specs/cumple-mixto.md` §9·7): un dato PROPIO de la reserva, no un
     // trozo del nombre del producto. Vive en `tickets.*` y no en `admin.*` porque lo leen los
@@ -108,6 +110,9 @@ return [
     'addon_badge_included' => 'Incluido',
     'addon_badge_free' => 'Gratis',
     'addon_more_info' => 'Más info',
+    // Lo que oye un lector de pantalla delante de cada etiqueta de regalo (`#589`): a la vista lo dice
+    // la caja de regalo. La usan el cajón y la web.
+    'gifts_label' => 'De regalo',
     'addon_included' => 'Incluido',
     'addon_included_partial' => ':count incluido(s) gratis',
     // El precio de un complemento dice a qué se aplica (`#588`, contenido T5): «2,00 €» a secas no decía

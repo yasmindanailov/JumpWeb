@@ -72,6 +72,7 @@ return [
         'above_is' => 'above, :zone',
         'eyebrow' => 'Who it is for',
         'title' => 'Everyone has their zone',
+        'lede' => 'Each zone is designed for an age, with its own attractions and its own rate, so everyone jumps at their own pace and safely. Pick yours and book your time in a minute.',
         'from' => 'from',
         'see_zone' => 'See the :zone zone',
         'height_up_to' => 'up to :h m',
@@ -128,8 +129,8 @@ return [
     'rates' => [
         'eyebrow' => 'How much',
         'title' => 'An hour, two or all day',
-        'intro' => 'Pick your zone and how long. From :from.',
-        'intro_plain' => 'Pick your zone and how long.',
+        'intro' => 'Pick your zone and how long you want to jump, and book the time that suits you best. From :from.',
+        'intro_plain' => 'Pick your zone and how long you want to jump, and book the time that suits you best.',
         'pick_zone' => 'Choose a zone',
         'days_range' => ':from to :to',
         'days_list' => ':days',
@@ -158,8 +159,8 @@ return [
     'events' => [
         // La sección 04 rehecha desde el canvas (`#483`). `/cumpleanos` tiene su grupo, `birthday`.
         'section_title' => 'Birthdays, sorted',
-        'section_intro' => 'Two hours, the kids’ food and the socks. From :from per child.',
-        'section_intro_plain' => 'Two hours, the kids’ food and the socks.',
+        'section_intro' => 'Two hours of party, a snack and gifts for everyone: you just bring the guests. From :from per child.',
+        'section_intro_plain' => 'Two hours of party, a snack and gifts for everyone: you just bring the guests.',
         'age_between' => 'Ages :a to :b',
         'age_from' => 'From age :a',
         'age_up_to' => 'Up to age :b',
@@ -187,6 +188,7 @@ return [
         'row_kids' => 'Kids',
         'row_deposit' => 'Deposit',
         'row_features' => 'Includes',
+        'row_gifts' => 'Free gifts',
         'row_total' => 'Total',
         'row_total_special' => 'Total on the special rate',
         'kids_from' => 'From :min kids',
@@ -234,13 +236,14 @@ return [
         'closed' => 'Closed',
         'open_generic' => 'Open',
         'day_range' => ':from to :to',
+        'day_pair' => ':from and :to',
         'weekdays' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
         'address_title' => 'Location', 'directions' => 'Directions',
 
         // ── 07 · VISIT US ── (`#487`). La entradilla se DERIVA del horario: el porqué, en
         // `lang/es/landing.php` y en `ScheduleDisplay::weeklyLede()`.
         'lede_one' => 'The same hours every day.',
-        'lede_two' => 'Two sets of hours: :a and :b.',
+        'lede_two' => 'Two sets of hours: :a, and :b.',
         'lede_many' => 'Our hours change from day to day.',
 
         'today_is' => 'Today, :day',
@@ -280,7 +283,7 @@ return [
         'qr_where' => 'In your account and in every booking email. No need to print it.',
 
         'carries_title' => 'One code for everything',
-        'carries_lede' => 'You show it at the door and staff see it all at once: what you booked, that you already signed, and who is coming with you. No looking up your name, no showing your email, nothing to fill in there.',
+        'carries_lede' => 'You show it at the door and we see everything at a glance: your booking, your signature and who is coming with you. No paperwork and no looking up your name.',
         'rows' => [
             'booking' => ['key' => 'Your bookings', 'val' => 'The ones you have and the ones you make later'],
             'waiver' => ['key' => 'Your signature', 'val' => 'The liability waiver, signed once'],
@@ -300,7 +303,7 @@ return [
     'reviews' => [
         'eyebrow' => 'Reviews',
         'title' => 'From the people who came',
-        'lede_own' => 'Some of the things people tell us on their way out.',
+        'lede_own' => 'What families tell us on their way out.',
         'lede_google' => 'We do not pick them: these are the ones Google puts first.',
         'stars' => '{1} :n star out of 5|[2,*] :n stars out of 5',
         'out_of' => 'out of 5',
@@ -333,7 +336,7 @@ return [
     'faq' => [
         'eyebrow' => 'FAQ',
         'title' => 'What people ask us most',
-        'lede' => 'The ones that come in by phone, answered here.',
+        'lede' => 'The ones you ask us most by phone, answered here.',
     ],
     // **«Salta la ciudad»**, el minijuego del hero del cierre (`#231`). Rótulos cortos: viven
     // dentro de una tarjeta que ya está llena, y el juego se explica solo al primer toque.

@@ -197,6 +197,13 @@ class CatalogForm
                 ->label(__('admin.catalog.field_features'))
                 ->rows(4)
                 ->helperText(__('admin.catalog.features_hint')),
+
+            // LOS REGALOS (`#589`): lo que se da sin cobrar, aparte de lo que incluye. La web y el cajón
+            // los destacan cada uno en su etiqueta; escritos entre las ventajas no se distinguían.
+            Textarea::make("gifts_{$locale}")
+                ->label(__('admin.catalog.field_gifts'))
+                ->rows(3)
+                ->helperText(__('admin.catalog.gifts_hint')),
         ]);
     }
 

@@ -109,7 +109,9 @@
                                 @if ($tables !== [])
                                     <div class="svc-rates">
                                         <span class="svc-rates__title">{{ __('services.rates.title') }}</span>
-                                        <div class="svc-rates__panel">
+                                        {{-- Un producto por FILA (`#589`, `[DECIDIDO owner]`): lado a lado las dos tablas
+                                             quedaban estrechas y se leían como una sola. --}}
+                                        <div class="svc-rates__panel svc-rates__panel--rows">
                                             @foreach ($tables as $table)
                                                 <div class="svc-rates__product">
                                                     <table class="svc-rates__table">
@@ -154,6 +156,8 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
+                                                    {{-- Los regalos del servicio (`#589`), cada uno en su etiqueta. --}}
+                                                    <x-site.gifts :gifts="$table['gifts']" class="svc-rates__gifts" />
                                                     <button type="button" class="svc-cta svc-cta--book"
                                                             aria-label="{{ __('landing.pricing.book') }} · {{ $table['name'] }}"
                                                             @click="$store.purchase.openWith({ type: 'product', id: {{ $table['id'] }} })">

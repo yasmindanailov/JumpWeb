@@ -46,18 +46,30 @@
                 {{-- ⚠️ `aria-hidden`: es el DIBUJO de lo que las normas de abajo ya dicen con
                      palabras, y una escala de estatura no se recorre con un lector de pantalla. --}}
                 <div class="rules-axis__chart" aria-hidden="true">
+                    {{-- LA REGLA (`#589`, artboard `Normas PJP` 1a/1b): una marca por frontera que el dato
+                         declara, más el techo y el suelo; las fronteras de zona, marcadas fuertes. --}}
                     <div class="rules-axis__ruler">
-                        <span class="rules-axis__top"><b>{{ __('site.rules_axis_label') }}</b> <i>{{ $scale['ceiling'] }}</i></span>
-                        <span class="rules-axis__zero">{{ $scale['floor'] }}</span>
+                        @foreach ($scale['ticks'] as $tick)
+                            <span @class(['rules-axis__tick', 'rules-axis__tick--strong' => $tick['strong']]) style="top: {{ $tick['top'] }}%;">{{ $tick['label'] }}</span>
+                        @endforeach
                     </div>
+                    {{-- LAS FRANJAS, APILADAS Y SIN PISARSE (`#589`, `[DECIDIDO owner]`): se cortan en cada
+                         frontera, y el tramo que dos zonas comparten es su propia franja, en amarillo. --}}
                     <div class="rules-axis__bands">
                         @foreach ($scale['bands'] as $band)
-                            <div class="rules-axis__band" style="top: {{ $band['top'] }}%; height: {{ $band['height'] }}%;">
+                            <div @class(['rules-axis__band', 'rules-axis__band--overlap' => $band['overlap']])
+                                 style="top: {{ $band['top'] }}%; height: {{ $band['height'] }}%;@if ($band['color']) --band: {{ $band['color'] }};@endif">
                                 <span>{{ $band['label'] }}</span>
                             </div>
                         @endforeach
                     </div>
                 </div>
+                {{-- Los matices, DEBAJO de la escala y no dentro de una franja (el canvas: una franja
+                     proporcional no lleva el texto que le apetezca). Es el texto de acceso del panel, el
+                     mismo que la portada pone bajo las zonas: una frase, dos sitios. --}}
+                @if ($site['zones_access'] ?? null)
+                    <p class="rules-axis__note">{{ $site['zones_access'] }}</p>
+                @endif
             </section>
         @endif
 
