@@ -421,6 +421,9 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 > ❗❗❗ **El tercero se paró en la GUARDA 1 y dejó el sitio 3 minutos en 503** (`#594`): el owner había
 > pasado Redsys a `live` a las 17:29. Se levantó con `artisan up` y se completaron a mano las franjas,
 > `artisan optimize` y la salud. Desde `#594`, en producción la guarda admite `test` o `live`.
+> ❗❗ **CUÁNDO SE DESPLIEGA** (`[DECIDIDO owner, 2026-09-13]`, `#594`): **de noche o con el parque cerrado**.
+> El script baja el sitio antes de sus guardas, y una que falle lo deja en mantenimiento hasta levantarlo a
+> mano; con la compra en `live`, eso puede pillar un pago a medias.
 > ▶ **Redsys está en `live`** desde el 2026-09-13 (TPV real, notificación en
 > `https://playjump.es/pago/redsys/notificacion`). **Probado de punta a punta por el owner**: `R-VPCOHW`
 > (10,00 €) se cobró a las 17:42 y se devolvió por REST a las 17:51. `R-AFO3SG`, iniciado un minuto antes del

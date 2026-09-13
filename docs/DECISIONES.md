@@ -31917,6 +31917,8 @@ profesional con la mejor conversión enfocada al público»*).
   propio script en `bash` con doce valores por entorno —`test`, `live`, vacío, un error de lectura, `liv`,
   `testlive`, `*`—, que es más fuerte que buscar un texto.
 
-⚠️ **Queda anotado, sin decidir**: la guarda aborta DESPUÉS de `artisan down`, así que cualquier otra
-guarda que falle ahí deja producción en 503 hasta que alguien la levante a mano. Comprobar el ajuste también
-antes de bajar el sitio evitaría el corte; es una propuesta para el owner.
+⚠️ **La guarda sigue abortando DESPUÉS de `artisan down`**, así que si vuelve a fallar deja producción en 503
+hasta que alguien la levante a mano. Se propuso comprobarla también antes de bajar el sitio, y
+`[DECIDIDO owner, 2026-09-13]` **no se toca el script**: *«el despliegue la próxima vez lo haremos por la
+noche, cuando no haya clientes»*. ▶ **Los despliegues a producción se hacen de noche o con el parque
+cerrado.**
