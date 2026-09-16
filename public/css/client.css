@@ -108,7 +108,14 @@
        variante OSCURA (Lima 800)**: el Lima 500 está en la lista de «no puede ser texto sobre
        claro» de su propia tabla, así que un precio pintado con él no se leería. El par por
        superficie va abajo, con el foco y la interacción. */
-    --money: #627411;        /* Lima 800 sobre papel */
+    /* ⚠️ `#540` · Lima 700 y no 800 (`[DECIDIDO owner, 2026-09-12]`: «el precio es un verde salvia,
+       lo quiero el mismo verde del hero, para que no haya tanta divergencia de verdes»).
+       El del eslogan es **Lima Bote #A3C21C** y sobre PAPEL da **1,85** — invisible, así que no se
+       puede usar tal cual: son el mismo color con dos voces, la clara para tinta y la oscura para
+       papel. Lima 700 es el escalón MÁS CERCANO al del eslogan que aún se lee: **3,15**, que cumple
+       porque el precio se pinta a 26 px (umbral 3,0). ⚠️ Si alguna vez se pinta más pequeño, deja
+       de cumplir y hay que volver a 800. */
+    --money: #7C9315;        /* Lima 700 sobre papel */
 
     /* ── EL MARCADOR (`DECISIONES #480`) ─────────────────────────────────────────────────────
        Amarillo Aviso como resalte tipo rotulador, con la tinta encima: **11,26 de contraste**, el
@@ -218,7 +225,7 @@
 [data-surface="paper"] {
     --focus-color: #0A5C93;  /* Azul Muro sobre papel — 6,43 */
     --interactive: #0A5C93;  /* Azul Muro sobre papel — 6,43 (`#436`) */
-    --money: #627411;        /* Lima 800 sobre papel — el claro no puede ser texto (`#479`) */
+    --money: #7C9315;        /* Lima 700 sobre papel — el claro no puede ser texto (`#479`) */
 }
 
 /* ── LAS MANCHAS DECORATIVAS ───────────────────────────────────────────────────────────────────
