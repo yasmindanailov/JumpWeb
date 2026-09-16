@@ -31,6 +31,13 @@
 
 ## Por dónde retomar, en orden
 
+0. **El octavo despliegue a producción, CON EL PARQUE CERRADO** (de noche; cierra a las 21:30 entre
+   semana). Está preparado y ensayado el 16-09 a las 20:30 y no se hizo porque el parque estaba abierto
+   (`#594`). Sube `448ea4f5` (`#569`–`#571`: el arreglo del número de invitados del post-form, defecto vivo en
+   producción desde el 08-09), sin migraciones. **La receta completa, con los hashes y los controles, está en
+   `ENTORNOS.md` §6** (bloque «OCTAVO DESPLIEGUE»): copia previa con `scripts/copia-bd-remota.sh` → `scp` del
+   `client.css` de la rama `cliente/playjump` (`3ded45ee`, sha1 `687ffcb3…`) → `deploy.sh --go` → verificar.
+   Al terminar: registrar el resultado en ese bloque y avisar al SPA en el buzón (su foto dice «sin desplegar»).
 1. **F2 · la capa de agente** (spec §4.7): el plugin `jumpweb-agente` (repo privado como marketplace) con las
    skills `carril` (sustituye a `arranque-sesion`), `handoff` (a `cierre-sesion`), `decision`, `ligero`, `spec`,
    `release`, `mutar`, `desplegar`, `sonda`, `instancia` y `dod`; los hooks `SessionStart` («ejecuta
@@ -74,6 +81,10 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
 - Tu fichero es **`docs/carriles/spa.md`**: lo escribí yo desde tu bloque del estado del 13-09. Hazlo tuyo en
   tu siguiente cierre; nadie más lo toca. Los `§0` de `sidebar-spa.md` y `celebracion-e-invitacion.md` también
   los escribí yo desde tus filas del enrutador: revísalos.
+- **Tu arreglo de `#571` sigue SIN desplegar** (el 16-09 el parque estaba abierto): va en el siguiente
+  despliegue, receta en `ENTORNOS.md` §6. ⚠️ **La rama `cliente/playjump` iba por detrás en `--money`**: tu
+  commit `dface9c4` añadió los cuatro tokens sobre una copia con Lima 800, y `#540` (12-09) manda Lima 700;
+  corregido en `3ded45ee`. Antes de tocar el `client.css` de la rama, compárala con la copia local.
 
 ### Atendido
 - Nada todavía.

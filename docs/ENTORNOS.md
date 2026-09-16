@@ -378,6 +378,32 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🕗 **OCTAVO DESPLIEGUE · PREPARADO Y ENSAYADO, NO HECHO** (2026-09-16, 20:20–20:35). Lo que sube es
+> **un solo commit de código, `448ea4f5`** (`#569`–`#571`: la piel del formulario post-reserva y **el arreglo
+> del número de invitados, que no se enviaba en producción desde el 08-09**), 11 ficheros, **sin migraciones**
+> (113 = 113, verificado por la columna de estado de `migrate:status`; ⚠️ un `grep -i pending` da 4 porque
+> casa con NOMBRES de migraciones). Producción sirve `bd61e5a9` (`#593`).
+> ▶ **Por qué no se hizo**: eran las 20:20 y la portada decía «Abierto ahora» hasta las 21:30; la regla de
+> `#594` es del owner y **se respeta**. Se hace en la siguiente sesión, con el parque cerrado.
+> ▶ **Receta, en este orden** (cada paso ensayado o medido el 16-09):
+> 1. Copia previa: `ssh jumpweb-prod bash -s -- pre571 < scripts/copia-bd-remota.sh` — ensayada (668 KB,
+>    53 tablas, gzip verificado, fichero de opciones borrado). ⚠️ **El cliente `mariadb` del servidor IGNORA
+>    `MYSQL_PWD`**: la contraseña parseada del `.env` era la correcta (mismo sha1 que la de Laravel) y daba
+>    «Access denied»; por eso el guion deja que Laravel escriba un fichero de opciones 0600.
+> 2. El `client.css`: producción sirve el sha1 `d265355e…` (idéntico a la copia local antes del 16-09). El
+>    fichero a subir es **el de la rama `cliente/playjump` en `3ded45ee`** (sha1 `687ffcb3…`): el servido más
+>    `--err-ink`, `--done`, `--on-done` y `--done-ink`. ⚠️ **La rama iba por detrás en `--money`** (Lima 800;
+>    `#540` manda Lima 700): subirla tal cual habría revertido esa decisión. Corregida y empujada el 16-09; la
+>    copia local ya lleva ese mismo fichero. `scp` y comparar el hash antes y después.
+> 3. `DEPLOY_PRODUCTION=1 DEPLOY_SSH_HOST=jumpweb-prod DEPLOY_URL=https://playjump.es scripts/deploy.sh --go`
+>    — el ensayo en seco salió limpio: 80 entradas, casi todas el build y las fuentes de Filament por fecha.
+> 4. Verificar: las diez páginas en 200 (`/`, `/entradas`, `/precios`, `/cumpleanos`, `/normas`, `/contacto`,
+>    `/bar`, `/atracciones`, `/admin/login`, `/up`) · el `client.css` servido con el sha1 nuevo · en la vista
+>    desplegada `grep -c 'form="gf-form"' resources/views/reservation/*.blade.php` **> 0** (control previo:
+>    **0**) · `migrate:status` sin `Pending` en la columna de estado · la portada sigue nombrando reseñas.
+>    El script no hace `cache:clear`, así que las reseñas no se pierden.
+> ⚠️ El servidor va en **UTC** (la copia del ensayo se llama 18:31 siendo las 20:31 en local).
+
 > 🚀 **SÉPTIMO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-13, commit `89e49ed0`, `DECISIONES #590`).
 > **La web nueva entera** —181 commits desde `e76d6f2a`: la portada y las páginas rehechas, las paradas
 > 03–06 del cajón y `#587`–`#589`— **con el contenido de Play Jump Park** (`storage/app/contenido/
