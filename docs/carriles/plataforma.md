@@ -35,13 +35,12 @@
   las once skills se listan como `jumpweb-agente:<skill>` junto a las tres viejas del repo. Referencia:
   `sistemas/CAPA-DE-AGENTE.md`; el enrutador ya nombra `/carril` y `/handoff` con `/arranque-sesion` y
   `/cierre-sesion` como respaldo hasta cerrar F2.
-  ❗ **Seis ficheros del plugin NO están en su repo**: el clasificador del modo «auto» denegó escribirlos
-  (`.claude-plugin/marketplace.json`, `hooks/hooks.json`, `hooks/comun.py`, `reglas/owner.md`,
-  `reglas/momentos.json`, `README.md`). Sus copias exactas quedaron en el scratchpad de la sesión
-  (`…/scratchpad/denegados/`, se pierde con ella); su comportamiento está especificado por el arnés (que SÍ
-  está en el repo) y por `sistemas/CAPA-DE-AGENTE.md` §3, así que se reescriben desde ahí si hace falta. El
-  `.claude/settings.json` del producto (marketplace + `enabledPlugins`) se toca en la sesión 2, cuando el repo
-  exista en GitHub: antes daría error en cada arranque.
+  El clasificador del modo «auto» denegó primero seis ficheros (`marketplace.json`, `hooks.json`, `comun.py`,
+  `owner.md`, `momentos.json`, `README.md`); **el owner concedió el permiso en la misma sesión** y quedaron
+  escritos (commit `62360b1` del plugin, byte a byte iguales a las copias probadas; 22 ficheros versionados,
+  arnés 38/38 sobre el árbol real). El repo del plugin está COMPLETO y sin remoto. El `.claude/settings.json`
+  del producto (marketplace + `enabledPlugins`) se toca cuando el repo exista en GitHub: antes daría error en
+  cada arranque.
 
 ## Por dónde retomar, en orden
 
@@ -53,17 +52,16 @@
    `client.css` de la rama `cliente/playjump` (`3ded45ee`, sha1 `687ffcb3…`) → `deploy.sh --go` → verificar.
    Al terminar: registrar el resultado en ese bloque y avisar al SPA en el buzón (su foto dice «sin desplegar»).
 1. **F2 · sesión 2, la capa de agente** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
-   (a) el owner concede escribir los seis ficheros denegados en `~/proyectos/jumpweb-agente` (o los copia él
-   desde el scratchpad de la sesión 1 si sigue viva; si no, se reescriben desde `sistemas/CAPA-DE-AGENTE.md`
-   §3 y el arnés) → `bash pruebas/probar-hooks.sh` en verde → primer commit del plugin; (b) el owner crea el
-   repo privado `yasmindanailov/jumpweb-agente` en GitHub (no hay `gh` en la máquina) y se empuja
-   (`git remote add origin https://github.com/yasmindanailov/jumpweb-agente.git && git push -u origin main`);
-   (c) `.claude/settings.json` del producto: `extraKnownMarketplaces` con fuente `url` HTTPS + `enabledPlugins`
-   `jumpweb-agente@jumpweb-agente`; (d) en cada máquina, si no se instala solo al confiar en la carpeta,
-   `/plugin marketplace add …` + `/plugin install …`, y `/hooks` abierto una vez; (e) **la prueba de las seis
-   frases** (README del plugin) en sesión nueva de cada máquina, 6 de 6, anotada en la spec §6; (f) retirar
-   `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador, CONVENCIONES §1 y §5,
-   `CARRIL-SPA.md` §1) y cerrar F2 en el tracker. ⚠️ Hasta (f), `arranque-sesion` y `cierre-sesion` siguen.
+   (a) el owner crea el repo privado `yasmindanailov/jumpweb-agente` en GitHub (no hay `gh` en la máquina) y
+   se empuja desde `~/proyectos/jumpweb-agente` (`git remote add origin
+   https://github.com/yasmindanailov/jumpweb-agente.git && git push -u origin main`; dos commits, `a5b476d`
+   y `62360b1`); (b) `.claude/settings.json` del producto: `extraKnownMarketplaces` con fuente `url` HTTPS +
+   `enabledPlugins` `jumpweb-agente@jumpweb-agente`; (c) en cada máquina, si no se instala solo al confiar en la
+   carpeta, `/plugin marketplace add …` + `/plugin install …`, y `/hooks` abierto una vez; (d) **la prueba de
+   las seis frases** (README del plugin) en sesión nueva de cada máquina, 6 de 6, anotada en la spec §6;
+   (e) retirar `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador, CONVENCIONES
+   §1 y §5, `CARRIL-SPA.md` §1) y cerrar F2 en el tracker. ⚠️ Hasta (e), `arranque-sesion` y `cierre-sesion`
+   siguen. Antes de cada commit del plugin: `bash pruebas/probar-hooks.sh` en verde.
 2. **F3 · versión**: v1.0.0 sobre `b0ea5a16` (producción del 13-09), `CHANGELOG.md` con dos mitades, guarda 8
    del despliegue (producción solo etiquetas). Después F4 (cajón empaquetable y token) → F5 (instancia
    PlayJump, v2.0.0) → F6 (app nativa, spec).

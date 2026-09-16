@@ -198,8 +198,8 @@ propio marketplace con el plugin bajo `plugins/`; las skills se invocan como `/j
 y no en `jq` (no está en las máquinas), fallan abiertos, y `Stop` bloquea una vez por estado solo con commits sin
 empujar, porque en ese evento el owner no ve otra cosa. Medido: arnés de hooks 38/38 y una sesión real
 `claude -p --plugin-dir` sobre el repo con los tres hooks disparando. ⚠️ El clasificador del modo «auto» deniega
-escribir los ficheros que inyectan contexto (hooks, manifiesto, reglas, momentos): la sesión 2 empieza por el
-permiso del owner.
+escribir los ficheros que inyectan contexto (hooks, manifiesto, reglas, momentos): el owner lo concedió en la
+misma sesión y el plugin quedó completo en local; la sesión 2 empieza por el repo en GitHub.
 
 **Las skills, una a una** (lo que hace cada una y la medida que la motiva):
 

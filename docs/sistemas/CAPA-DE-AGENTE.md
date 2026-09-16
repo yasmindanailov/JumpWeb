@@ -95,6 +95,7 @@ Una skill se puede no invocar; un gate no.
   «instruction poisoning» y «unauthorized persistence». Las once skills y los tres guiones de evento sí pasaron.
   Se resuelve con permiso explícito del owner en esa sesión (o una regla `Write` para el repo del plugin),
   nunca con un `cp` por Bash que rodee la denegación: la intención del clasificador es que lo apruebe una persona.
+  Así se hizo el 16-09: con el permiso dado en el chat, los mismos Write pasaron a la primera.
 - `jq` no está en las máquinas: los hooks van en Python 3, que `scripts/guard-bash.sh` ya exige.
 - En `Stop` nada llega al owner salvo un bloqueo: por eso avisa así, y solo de commits sin empujar.
 - `claude plugin details` no acepta `--plugin-dir`; la sesión `-p` con `--plugin-dir` sí carga el plugin entero
