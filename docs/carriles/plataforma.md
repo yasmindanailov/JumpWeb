@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#622`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#623`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-16.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -28,6 +28,20 @@
   2.039 · **arranque en frío 35.918 B** (enrutador + índice + carril + tracker + un §0; era 1,57 MB). Las tres
   mutaciones de tamaño (enrutador, §0, decisión) pusieron el gate en rojo y se restauraron byte a byte; la
   huella se reproduce sobre el enrutador histórico con `git show <sha>:CLAUDE.md` y `--enrutador`.
+- **F2 · sesión 1** (2026-09-16, `#623`): el plugin `jumpweb-agente` construido en `~/proyectos/jumpweb-agente`
+  (git init, sin remoto): 11 skills, 3 hooks en Python, las reglas del owner, el mapa de momentos y el arnés
+  `pruebas/probar-hooks.sh` (38/38). **Medido en una sesión real** `claude -p --plugin-dir` sobre este repo:
+  `SessionStart` inyectó la foto y la orden de `/carril`, `UserPromptSubmit` sugirió `/carril` por «arranca», y
+  las once skills se listan como `jumpweb-agente:<skill>` junto a las tres viejas del repo. Referencia:
+  `sistemas/CAPA-DE-AGENTE.md`; el enrutador ya nombra `/carril` y `/handoff` con `/arranque-sesion` y
+  `/cierre-sesion` como respaldo hasta cerrar F2.
+  ❗ **Seis ficheros del plugin NO están en su repo**: el clasificador del modo «auto» denegó escribirlos
+  (`.claude-plugin/marketplace.json`, `hooks/hooks.json`, `hooks/comun.py`, `reglas/owner.md`,
+  `reglas/momentos.json`, `README.md`). Sus copias exactas quedaron en el scratchpad de la sesión
+  (`…/scratchpad/denegados/`, se pierde con ella); su comportamiento está especificado por el arnés (que SÍ
+  está en el repo) y por `sistemas/CAPA-DE-AGENTE.md` §3, así que se reescriben desde ahí si hace falta. El
+  `.claude/settings.json` del producto (marketplace + `enabledPlugins`) se toca en la sesión 2, cuando el repo
+  exista en GitHub: antes daría error en cada arranque.
 
 ## Por dónde retomar, en orden
 
@@ -38,12 +52,18 @@
    `ENTORNOS.md` §6** (bloque «OCTAVO DESPLIEGUE»): copia previa con `scripts/copia-bd-remota.sh` → `scp` del
    `client.css` de la rama `cliente/playjump` (`3ded45ee`, sha1 `687ffcb3…`) → `deploy.sh --go` → verificar.
    Al terminar: registrar el resultado en ese bloque y avisar al SPA en el buzón (su foto dice «sin desplegar»).
-1. **F2 · la capa de agente** (spec §4.7): el plugin `jumpweb-agente` (repo privado como marketplace) con las
-   skills `carril` (sustituye a `arranque-sesion`), `handoff` (a `cierre-sesion`), `decision`, `ligero`, `spec`,
-   `release`, `mutar`, `desplegar`, `sonda`, `instancia` y `dod`; los hooks `SessionStart` («ejecuta
-   /carril»), `UserPromptSubmit` (sugiere la skill) y `Stop` (avisa si hay cambios sin cierre); salida: seis
-   frases del owner en sesión nueva de cada máquina, 6 de 6, y `/hooks` abierto una vez tras escribirlos.
-   ⚠️ Hasta entonces `arranque-sesion` y `cierre-sesion` siguen, y ya apuntan a los carriles.
+1. **F2 · sesión 2, la capa de agente** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
+   (a) el owner concede escribir los seis ficheros denegados en `~/proyectos/jumpweb-agente` (o los copia él
+   desde el scratchpad de la sesión 1 si sigue viva; si no, se reescriben desde `sistemas/CAPA-DE-AGENTE.md`
+   §3 y el arnés) → `bash pruebas/probar-hooks.sh` en verde → primer commit del plugin; (b) el owner crea el
+   repo privado `yasmindanailov/jumpweb-agente` en GitHub (no hay `gh` en la máquina) y se empuja
+   (`git remote add origin https://github.com/yasmindanailov/jumpweb-agente.git && git push -u origin main`);
+   (c) `.claude/settings.json` del producto: `extraKnownMarketplaces` con fuente `url` HTTPS + `enabledPlugins`
+   `jumpweb-agente@jumpweb-agente`; (d) en cada máquina, si no se instala solo al confiar en la carpeta,
+   `/plugin marketplace add …` + `/plugin install …`, y `/hooks` abierto una vez; (e) **la prueba de las seis
+   frases** (README del plugin) en sesión nueva de cada máquina, 6 de 6, anotada en la spec §6; (f) retirar
+   `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador, CONVENCIONES §1 y §5,
+   `CARRIL-SPA.md` §1) y cerrar F2 en el tracker. ⚠️ Hasta (f), `arranque-sesion` y `cierre-sesion` siguen.
 2. **F3 · versión**: v1.0.0 sobre `b0ea5a16` (producción del 13-09), `CHANGELOG.md` con dos mitades, guarda 8
    del despliegue (producción solo etiquetas). Después F4 (cajón empaquetable y token) → F5 (instancia
    PlayJump, v2.0.0) → F6 (app nativa, spec).
@@ -69,6 +89,12 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   («536 entradas en 000–099»). Se repitieron con el campo correcto antes de creerlas.
 - La guarda de idempotencia de un anexo era por FICHERO y dos filas comparten spec: la huella se quedó en
   944/974 hasta hacerla por FILA. Un instrumento que dice 96,9 % también hay que leerlo.
+- **El clasificador del modo «auto» deniega escribir hooks, manifiestos de marketplace, mapas de disparo y
+  reglas que inyecten contexto en sesiones futuras** («self-modification», «instruction poisoning»,
+  «unauthorized persistence»), aunque el owner lo haya pedido en la spec. No se rodea con `cp` por Bash: se
+  hace lo demás, se para y se le pide permiso (o una regla `Write` para el repo del plugin).
+- `rm -rf` está en el deny del repo y **un comando compuesto que lo lleve dentro se deniega entero**: carpeta
+  nueva en vez de borrar. Y `claude plugin details` no acepta `--plugin-dir`; `claude -p … --plugin-dir` sí.
 
 ## Buzón
 
@@ -85,6 +111,11 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   despliegue, receta en `ENTORNOS.md` §6. ⚠️ **La rama `cliente/playjump` iba por detrás en `--money`**: tu
   commit `dface9c4` añadió los cuatro tokens sobre una copia con Lima 800, y `#540` (12-09) manda Lima 700;
   corregido en `3ded45ee`. Antes de tocar el `client.css` de la rama, compárala con la copia local.
+- **Llega la capa de agente (F2, `#623`)**: el plugin `jumpweb-agente` con `/carril` (en vez de
+  `/arranque-sesion`), `/handoff` (en vez de `/cierre-sesion`) y nueve más, y un hook que inyecta las reglas
+  del owner en cada sesión. Cuando esté en GitHub, tu máquina lo instalará al confiar en la carpeta; hasta
+  entonces sigues con las skills viejas. **Toqué `CARRIL-SPA.md`** (§1, paso 8 nuevo, y la primera línea de
+  §6) y el enrutador ya nombra las skills nuevas. Detalle: `sistemas/CAPA-DE-AGENTE.md`.
 
 ### Atendido
 - Nada todavía.

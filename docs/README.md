@@ -102,6 +102,7 @@
 | `sistemas/COOKIES.md` | Consentimiento de cookies (banner 2 capas + bloqueo previo). ✅ implementado. |
 | `sistemas/UI-SPINNER.md` | Sistema de feedback de carga. |
 | `sistemas/AFORO-FRANJAS.md` | La rejilla de franjas, la oferta (`SlotOffer`, dos recorridos y una fuente) y los contadores de aforo: qué hay que saber ANTES de tocar aforo (`#420`, `#465`). Nace en F1 (`#619`); las reglas siguen en `INVARIANTES.md` §2. |
+| `sistemas/CAPA-DE-AGENTE.md` | La capa de agente (`#614`, `#623`): el plugin `jumpweb-agente` (once skills, tres hooks, las reglas del owner) en su repo-marketplace; cómo se instala, actualiza y prueba; el disparo sin barra en tres capas y la tabla momento → skill; qué sigue siendo gate del repo. |
 
 ## Qué NO hay aquí (y dónde está)
 Los trackers del ciclo de vida del cliente origen (producción, handoffs, audits de copys,

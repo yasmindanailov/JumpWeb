@@ -37,6 +37,11 @@ agente, en el primer ordenador, sigue con la **Fase 3** (las páginas públicas:
    (no está en `package.json` a propósito): medido el 2026-09-11, hay que reinstalarlo después.
    ⚠️ **El Chromium de la sonda NO reproduce H.264**: un `<video>` mp4 sale con `readyState 0` y no es
    un defecto (`DECISIONES #529`).
+8. **La capa de agente** (F2, `#623`): cuando el plugin `jumpweb-agente` esté en GitHub, tu máquina lo añade e
+   instala al confiar en la carpeta (lo declara `.claude/settings.json`); si no ves `/carril` y `/handoff` en el
+   menú `/`, ejecuta `/plugin marketplace add https://github.com/yasmindanailov/jumpweb-agente.git` y
+   `/plugin install jumpweb-agente@jumpweb-agente`, y abre `/hooks` una vez. Detalle:
+   `docs/sistemas/CAPA-DE-AGENTE.md`. Hasta entonces, `/arranque-sesion` y `/cierre-sesion`.
 
 ## 2 · De dónde sale el diseño
 
@@ -137,7 +142,8 @@ canvas), va en tu clon **y** en la rama `cliente/playjump` (su `README.md` lo ex
 
 ## 6 · Cómo trabaja el owner contigo
 
-Esto vive en la memoria del agente del primer ordenador, y aquí queda escrito para ti:
+Desde F2 (`#623`) estas reglas viajan en el plugin `jumpweb-agente` (`reglas/owner.md`) y el hook de arranque
+las inyecta en cada sesión de cualquier máquina; esta lista es su copia legible:
 
 - **Edita con las herramientas de Read / Write / Edit**, no con `sed` ni con heredocs (lo pidió así).
 - **Las decisiones de producto se PREGUNTAN, en simple** (con opciones y la recomendada primero), nunca

@@ -1,6 +1,6 @@
 # [SPEC] Producto e instancias — la separación de JumpWeb y sus clientes
 
-> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) y **F2 es lo siguiente** ·
+> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) y **F2 en curso** (`#623`, sesión 1: plugin construido y medido; falta instalarlo en las dos máquinas y el 6 de 6) ·
 > Última actualización: 2026-09-16 · Decisiones: `DECISIONES #610` → `#616` · Carril: **plataforma**, banda **610–639**.
 > Origen: sesión de análisis del 2026-09-16 con el owner; inventario medido sobre el árbol de ese día.
 > Las dos páginas de trabajo que se iteraron con el owner son borradores de ESTA spec, no fuente:
@@ -192,6 +192,15 @@ existen, la guarda 8 del despliegue y el comando que valida una instancia contra
 reglas del owner en `CONVENCIONES §10` y en las reglas 8 y 9 de `CLAUDE.md`; plantilla de `CLAUDE.md` de 4 KB para
 instancia y app.
 
+**Ejecución, sesión 1** (`#623`, 2026-09-16; referencia `docs/sistemas/CAPA-DE-AGENTE.md`): el repo del plugin es su
+propio marketplace con el plugin bajo `plugins/`; las skills se invocan como `/jumpweb-agente:<skill>` y también
+`/<skill>` si nadie más usa el nombre (por eso las tres viejas conviven hasta el 6 de 6); los hooks van en Python 3
+y no en `jq` (no está en las máquinas), fallan abiertos, y `Stop` bloquea una vez por estado solo con commits sin
+empujar, porque en ese evento el owner no ve otra cosa. Medido: arnés de hooks 38/38 y una sesión real
+`claude -p --plugin-dir` sobre el repo con los tres hooks disparando. ⚠️ El clasificador del modo «auto» deniega
+escribir los ficheros que inyectan contexto (hooks, manifiesto, reglas, momentos): la sesión 2 empieza por el
+permiso del owner.
+
 **Las skills, una a una** (lo que hace cada una y la medida que la motiva):
 
 | Skill | Sustituye o cubre | Qué la motiva, medido |
@@ -274,7 +283,12 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 
 - F1: `wc -c` de los ficheros con techo; huella con extracción de frases ⚠️/❗ y `grep -F` en destino; comprobación
   9 vista en rojo con una mutación de tamaño.
-- F2: prueba de seis frases en sesión nueva de cada máquina; hooks canalizados con su JSON y validados con `jq`.
+- F2: prueba de seis frases en sesión nueva de cada máquina (las seis: «lee la doc y arranca» → `carril` ·
+  «cerramos, haz el handoff» → `handoff` · «queda decidido: …» → `decision` · «hazlo en ligero» → `ligero` ·
+  «¿está hecho de verdad?» → `dod` · «despliega a producción» → `desplegar`, que debe negarse con el parque
+  abierto); hooks canalizados con su JSON y validados con python3 (`pruebas/probar-hooks.sh` del plugin, 38
+  casos; `jq` no está en las máquinas) y una sesión real `claude -p --plugin-dir` sobre el repo — hecho en la
+  sesión 1 (`#623`); las seis frases, pendientes.
 - F3: `git describe --tags` en producción; un despliegue sin etiqueta abortando.
 - F4: caso que monta el cajón desde un HTML mínimo ajeno; tests de contrato del esquema Bearer; huella de
   maquetación de las doce vistas (el instrumento de `#437`) idéntica.

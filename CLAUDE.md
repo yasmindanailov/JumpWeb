@@ -5,7 +5,7 @@
 > tendrá el siguiente (`docs/CONVENCIONES.md` §7 y §5).
 
 ## ▶ Para continuar el proyecto (handoff)
-0. Skill **`/arranque-sesion`** → base verde VERIFICADA (árbol, push, hook, stack, gates). Obligatorio tras un cierre abrupto.
+0. Skill **`/carril`** (sin el plugin, `/arranque-sesion`) → base verde VERIFICADA (árbol, push, hook, stack, gates). Obligatorio tras un cierre abrupto.
 1. **`docs/ESTADO.md`** (índice de carriles) → **tu `docs/carriles/<carril>.md`** (foto, por dónde retomar, buzón).
 2. **`docs/00-REFACTOR.md`** → tracker de fases (marcadores y casillas; sus marcadores mandan).
 3. Para tu tarea: **solo su fila** de la tabla de abajo → el **§0** de esa spec. El resto de la spec, por secciones.
@@ -21,15 +21,14 @@ Laravel 13 + MySQL · Blade SSR (landing) · Vue 3 + Pinia (el cajón, contra `/
 Redsys (primer driver de pago). **Local:** Docker (Sail) en WSL2, repo en `~/proyectos/JumpWeb`; puertos propios
 web `localhost:8081` · MySQL `3308` · Mailpit `8028` (en `.env`, no versionado).
 
-## Comandos clave (Docker)
-- Arrancar / parar: `docker compose up -d` · `docker compose down`
-- Artisan: `docker compose exec -u sail laravel.test php artisan <cmd>` · Tests: `… php artisan test --parallel`
-- Estilo: `… ./vendor/bin/pint` · Assets: `… npm run build` (y `npm run build:ssr` tras traer commits del cajón)
-  > ⚠️ **Siempre `-u sail`** (como root deja ficheros de root en `storage/` → 500 por permisos).
-- **CI = gate local**: el hook `pre-push` (`.githooks/`) corre **docs-check + Pint + suite** en pushes de `main` y
-  bloquea en rojo (`wip/…` exento). Tocar dinero/aforo exige además `VERIFY_CONC=1` tras los verificadores
-  (`INVARIANTES §6`); la lista viva es el `CRITICAL_RE` del hook. **El contador de la suite va en el trailer del
-  commit** (`#618`). Si no salta: `git config core.hooksPath .githooks` (`#9`/`#10`).
+## Momentos → skill (`docs/sistemas/CAPA-DE-AGENTE.md`)
+arrancar o retomar → **`/carril`** · cerrar → **`/handoff`** · decidir → `/decision` · ir rápido → `/ligero` ·
+diseñar antes → `/spec` · versión → `/release` · mutación → `/mutar` · desplegar → `/desplegar` · navegador →
+`/sonda` · instancia → `/instancia` · ¿hecho? → `/dod`. Sin barra, por la frase del owner. Docker:
+`README.md` raíz; siempre `docker compose exec -u sail …`. **CI = gate local**: el hook `pre-push` (`.githooks/`)
+corre **docs-check + Pint + build + suite** en pushes de `main` y bloquea en rojo (`wip/…` exento). Dinero/aforo
+exige `VERIFY_CONC=1` tras los verificadores (`INVARIANTES §6`; la lista viva es el `CRITICAL_RE` del hook). **El
+contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git config core.hooksPath .githooks`.
 
 ## Principios (NO romper)
 - **Data-driven:** todo configurable desde el panel; nada de negocio quemado en código.
@@ -42,7 +41,8 @@ web `localhost:8081` · MySQL `3308` · Mailpit `8028` (en `.env`, no versionado
 | Si trabajas en… | Lee solo |
 |---|---|
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
-| **Producto e instancias** · la landing fuera del producto · repos · versionado · capa de agente · F0→F6 | `docs/specs/producto-e-instancias.md` §0 |
+| **Producto e instancias** · la landing fuera del producto · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 |
+| La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
 | Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |
 | Secuencia de compra (admitir → crear → cobrar) | `docs/specs/checkout-orquestado.md` §0 |
@@ -113,8 +113,8 @@ web `localhost:8081` · MySQL `3308` · Mailpit `8028` (en `.env`, no versionado
    (≤ 1,5 KB). ❗ **El número sale de la BANDA de tu carril** (`docs/DECISIONES.md`, `CONVENCIONES §10.6`); el «último
    usado» está en tu carril. Mirar `origin/main` antes de empujar NO basta: chocó trece veces.
 4. Doc nuevo/renombrado → `docs/README.md` **y** esta tabla (una línea). Toda spec lleva `## §0 · Antes de tocar` (≤ 2 KB).
-5. Al empezar: **`/arranque-sesion`**. Al terminar: **`/cierre-sesion`** (suite+Pint+docs-check, tracker, TU carril,
-   commit con el trailer de verificación, push).
+5. Al empezar: **`/carril`**. Al terminar: **`/handoff`** (suite+Pint+docs-check, tracker, TU carril, commit con el
+   trailer de verificación, push).
 6. **«Hecho» (✅) = código + prueba + verificación empírica + doc al día** (skill **`/dod`**). Si falta algo, es 🟦.
 7. **No tocar el repo del cliente origen** (`~/proyectos/jumpingjump`) desde sesiones de JumpWeb.
 8. **Herramientas**: leer con Read y editar con Edit/Write; Bash solo para git, docker, tests, búsquedas y mediciones
