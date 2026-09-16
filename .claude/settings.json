@@ -64,5 +64,16 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "jumpweb-agente": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/yasmindanailov/jumpweb-agente.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "jumpweb-agente@jumpweb-agente": true
   }
 }

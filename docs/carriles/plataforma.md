@@ -38,9 +38,12 @@
   El clasificador del modo «auto» denegó primero seis ficheros (`marketplace.json`, `hooks.json`, `comun.py`,
   `owner.md`, `momentos.json`, `README.md`); **el owner concedió el permiso en la misma sesión** y quedaron
   escritos (commit `62360b1` del plugin, byte a byte iguales a las copias probadas; 22 ficheros versionados,
-  arnés 38/38 sobre el árbol real). El repo del plugin está COMPLETO y sin remoto. El `.claude/settings.json`
-  del producto (marketplace + `enabledPlugins`) se toca cuando el repo exista en GitHub: antes daría error en
-  cada arranque.
+  arnés 38/38 sobre el árbol real). **Empujado a GitHub** (`yasmindanailov/jumpweb-agente`, `c8e74b1`) y
+  **instalado en ESTA máquina por el CLI**: `claude plugin marketplace add <url .git>` (queda en los settings
+  de usuario con la forma `{"source":"git","url":…}`) y `claude plugin install jumpweb-agente@jumpweb-agente
+  --scope project`, que escribió `enabledPlugins` en `.claude/settings.json`; añadí a mano
+  `extraKnownMarketplaces` con esa misma forma para que la otra máquina lo añada al confiar en la carpeta. La
+  versión instalada es el sha del commit (`c8e74b1de042`); actualizar = `/plugin marketplace update jumpweb-agente`.
 
 ## Por dónde retomar, en orden
 
@@ -51,17 +54,15 @@
    `ENTORNOS.md` §6** (bloque «OCTAVO DESPLIEGUE»): copia previa con `scripts/copia-bd-remota.sh` → `scp` del
    `client.css` de la rama `cliente/playjump` (`3ded45ee`, sha1 `687ffcb3…`) → `deploy.sh --go` → verificar.
    Al terminar: registrar el resultado en ese bloque y avisar al SPA en el buzón (su foto dice «sin desplegar»).
-1. **F2 · sesión 2, la capa de agente** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
-   (a) el owner crea el repo privado `yasmindanailov/jumpweb-agente` en GitHub (no hay `gh` en la máquina) y
-   se empuja desde `~/proyectos/jumpweb-agente` (`git remote add origin
-   https://github.com/yasmindanailov/jumpweb-agente.git && git push -u origin main`; dos commits, `a5b476d`
-   y `62360b1`); (b) `.claude/settings.json` del producto: `extraKnownMarketplaces` con fuente `url` HTTPS +
-   `enabledPlugins` `jumpweb-agente@jumpweb-agente`; (c) en cada máquina, si no se instala solo al confiar en la
-   carpeta, `/plugin marketplace add …` + `/plugin install …`, y `/hooks` abierto una vez; (d) **la prueba de
-   las seis frases** (README del plugin) en sesión nueva de cada máquina, 6 de 6, anotada en la spec §6;
-   (e) retirar `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador, CONVENCIONES
-   §1 y §5, `CARRIL-SPA.md` §1) y cerrar F2 en el tracker. ⚠️ Hasta (e), `arranque-sesion` y `cierre-sesion`
-   siguen. Antes de cada commit del plugin: `bash pruebas/probar-hooks.sh` en verde.
+1. **F2 · lo que queda** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
+   (a) **la prueba de las seis frases en ESTA máquina**, en sesión nueva (README del plugin; el owner abre
+   `/hooks` una vez): 6 de 6, anotado en la spec §6; (b) **la otra máquina**: `git pull` en JumpWeb y confiar
+   en la carpeta instala el plugin solo (`extraKnownMarketplaces` + `enabledPlugins`); si no aparece `/carril`
+   en el menú `/`, la receta manual de `CARRIL-SPA.md` §1 paso 8; después sus seis frases, 6 de 6; (c) retirar
+   `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador paso 0, CONVENCIONES §1 y
+   §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker. ⚠️ Hasta (c), `arranque-sesion` y
+   `cierre-sesion` siguen. Cada cambio del plugin: `bash pruebas/probar-hooks.sh` en verde → commit → push →
+   `/plugin marketplace update jumpweb-agente` en cada máquina (la versión es el sha del commit).
 2. **F3 · versión**: v1.0.0 sobre `b0ea5a16` (producción del 13-09), `CHANGELOG.md` con dos mitades, guarda 8
    del despliegue (producción solo etiquetas). Después F4 (cajón empaquetable y token) → F5 (instancia
    PlayJump, v2.0.0) → F6 (app nativa, spec).

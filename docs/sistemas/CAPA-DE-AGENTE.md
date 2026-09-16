@@ -68,15 +68,20 @@ El mapa vive en un solo sitio, `reglas/momentos.json`; esta tabla es su copia le
 | cliente | «aplica el paquete del cliente» · «instancia nueva» | `instancia` |
 
 ## 4 · Instalar, actualizar, probar
-- **Automático** (desde que F2 cierre): `.claude/settings.json` del producto declara el marketplace
-  (`extraKnownMarketplaces`, fuente `url` HTTPS al repo privado, porque el owner usa credenciales HTTPS de git y
-  no SSH) y `enabledPlugins`. Al confiar en la carpeta del repo, Claude Code lo añade e instala.
+- **Automático**: `.claude/settings.json` del producto declara el marketplace en `extraKnownMarketplaces`
+  con la forma que escribe el propio CLI, `{"source": "git", "url": "https://github.com/yasmindanailov/jumpweb-agente.git"}`
+  (HTTPS porque el owner usa credenciales HTTPS de git, no SSH), y `enabledPlugins`
+  `"jumpweb-agente@jumpweb-agente": true`. Al confiar en la carpeta del repo, Claude Code lo añade e instala.
+  Hecho en la primera máquina el 2026-09-16 con `claude plugin marketplace add <url .git>` (registro en
+  settings de usuario) y `claude plugin install jumpweb-agente@jumpweb-agente --scope project` (escribe
+  `enabledPlugins` en el proyecto); el plugin queda en `~/.claude/plugins/cache/jumpweb-agente/…/<sha>`.
 - **A mano**: `/plugin marketplace add https://github.com/yasmindanailov/jumpweb-agente.git` y
   `/plugin install jumpweb-agente@jumpweb-agente`. Desarrollo local: `/plugin marketplace add
   ~/proyectos/jumpweb-agente` (mismo nombre: sustituye al de GitHub en esa máquina).
-- **Actualizar**: `/plugin marketplace update jumpweb-agente`. Sin `version` en el manifiesto a propósito: cada
-  push es una versión (hash del contenido). La actualización en segundo plano no autentica en repos privados
-  por HTTPS: se hace a mano. Tras escribir o cambiar hooks, abrir `/hooks` una vez (spec §4.10).
+- **Actualizar**: `/plugin marketplace update jumpweb-agente`. Sin `version` en el manifiesto a propósito: la
+  versión instalada es el sha del commit (`claude plugin list` lo enseña), así que cada push es una versión.
+  La actualización en segundo plano no autentica en repos privados por HTTPS: se hace a mano. Tras escribir o
+  cambiar hooks, abrir `/hooks` una vez (spec §4.10).
 - **Probar**: `bash pruebas/probar-hooks.sh` (38 casos: los tres eventos, los once momentos, el dedupe del Stop,
   fail-open; veredicto por código de salida) y una sesión real sin instalar nada, desde la raíz del repo:
   `claude -p "…" --plugin-dir ~/proyectos/jumpweb-agente/plugins/jumpweb-agente --max-turns 1`.

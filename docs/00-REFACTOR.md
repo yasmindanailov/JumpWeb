@@ -21,7 +21,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### PRODUCTO E INSTANCIAS 🟦 — `specs/producto-e-instancias.md` §0 y §4.9 (`#610`→`#621`)
 - [x] F0 · gobierno: spec ✅ owner, `#610`–`#616`, reglas 8 y 9 de `CLAUDE.md` (`d898c76a`)
 - [x] F1 · doc caliente: decisiones por centenas · contador al trailer · §0 en las 46 specs · huella 974/974 · enrutador ≤ 12 KB · carriles y `ESTADO.md` índice · tracker ≤ 16 KB · comprobación 10 (`#617`→`#621`)
-- [ ] F2 · capa de agente (`#623`, sesión 1: plugin completo en local, arnés 38/38, sesión real con los tres hooks) · falta: repo en GitHub, `settings.json` del producto, instalado en las dos máquinas, 6 de 6, retirar las skills viejas
+- [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub, instalado en la primera máquina; arnés 38/38; dos sesiones reales con los tres hooks) · falta: 6 de 6 en la primera máquina, instalar y 6 de 6 en la segunda, retirar las skills viejas
 - [ ] F3 · versión: v1.0.0 sobre `b0ea5a16`, changelog, guarda 8 del despliegue
 - [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0

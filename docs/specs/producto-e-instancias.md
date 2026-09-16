@@ -1,6 +1,6 @@
 # [SPEC] Producto e instancias — la separación de JumpWeb y sus clientes
 
-> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) y **F2 en curso** (`#623`, sesión 1: plugin construido y medido; falta instalarlo en las dos máquinas y el 6 de 6) ·
+> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) y **F2 en curso** (`#623`: plugin construido, en GitHub e instalado en la primera máquina; falta el 6 de 6 en las dos y retirar las skills viejas) ·
 > Última actualización: 2026-09-16 · Decisiones: `DECISIONES #610` → `#616` · Carril: **plataforma**, banda **610–639**.
 > Origen: sesión de análisis del 2026-09-16 con el owner; inventario medido sobre el árbol de ese día.
 > Las dos páginas de trabajo que se iteraron con el owner son borradores de ESTA spec, no fuente:
@@ -199,7 +199,8 @@ y no en `jq` (no está en las máquinas), fallan abiertos, y `Stop` bloquea una 
 empujar, porque en ese evento el owner no ve otra cosa. Medido: arnés de hooks 38/38 y una sesión real
 `claude -p --plugin-dir` sobre el repo con los tres hooks disparando. ⚠️ El clasificador del modo «auto» deniega
 escribir los ficheros que inyectan contexto (hooks, manifiesto, reglas, momentos): el owner lo concedió en la
-misma sesión y el plugin quedó completo en local; la sesión 2 empieza por el repo en GitHub.
+misma sesión; el plugin quedó completo, empujado a `yasmindanailov/jumpweb-agente` e instalado en la primera
+máquina por el CLI (marketplace `{"source":"git","url":…}` en `.claude/settings.json`, `enabledPlugins`).
 
 **Las skills, una a una** (lo que hace cada una y la medida que la motiva):
 
