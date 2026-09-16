@@ -11,6 +11,24 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Unidades 1–3 en `main`** (`#237` · `#239` · `#241` · `#242`); queda la unidad 5 (carrito e identificación,
+  SIN medir) y el ✅ del owner. Lo posterior del cajón en móvil lo lleva el carril del SPA (`sidebar-spa.md` §0).
+- **§1.1 CORRIGE la medición anterior**: no faltaban días (hay **182** reservables, horizonte de 6 meses),
+  sobraba rejilla. La FECHA es una tira de días reservables con el calendario plegado tras «Ver más fechas»
+  (`[DECIDIDO owner]`: 182 chips no se recorren con el dedo).
+- **§4.2 lleva una objeción MEDIDA que el owner mantuvo**: las 11 horas cabían a la vez y la tira enseña 4.
+  Está escrito para que se lea como decisión, no como descuido.
+- **§5.2: la vela sola no bastaba** (`--bg` y `--bg-card` casi coinciden): lo que dice «hay más» es el chip
+  CORTADO por el borde, y por eso las tiras van a sangre; el separador de mes nacía cortado sin `scroll-snap-align`.
+- **«Casi llena» lee `available`, NUNCA `max_quantity`** (en un pack son 60 y 20); `0` en el umbral es una
+  RESPUESTA («no avisar»), no una falta.
+- **§7.2: dos instrumentos propios salieron mal** (la caja pintada acusaba al «Volver» arreglado;
+  `elementFromPoint()` daba 178 defectos fuera del viewport). **§7.4 sigue abierto y es del owner**: 366 px
+  vacíos en fecha y 452 en hora.
+- Anexo al final con la fila del enrutador.
+
 ## 1. Lo MEDIDO, que es de donde sale todo
 
 Recorrido del embudo en **390×844** el 2026-08-28 (`#237`), antes de tocar una línea. No se repite:
@@ -397,3 +415,21 @@ entrada asignada» a 10 px frente a los 13 del nombre y sin mayúsculas; y **al 
   lleva del paso **antes** de tocarlo; sin ese número «más sutil» es una opinión.
 - Y lo que este documento **no** cubre: `/admin/crear-pedido` en tablet, que es otro encargo y vive en
   `panel-navegacion.md` §6·U7.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El CAJÓN en MÓVIL · el paso de FECHA · el paso de HORA · objetivos táctiles · la ocupación de una franja»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/cajon-en-movil.md`.
+
+- **`docs/specs/cajon-en-movil.md`**
+- 🟦 **UNIDADES 1–3 EN EL ÁRBOL** (`#237` · **`#239`**) —
+- ▶ **EMPIEZA POR §1.1, que CORRIGE la medición anterior**: `#237` dedujo que sobraban días de un «2 de 42», y medido son **182 días reservables** (horizonte 6 meses) — no faltaban días, **sobraba rejilla**; lo de «2 de 42» solo vale del mes en curso, que abre casi entero en el pasado. La FECHA es una **tira de días reservables** con el calendario plegado detrás de «Ver más fechas» (`[DECIDIDO owner]`: 182 chips no se recorren con el dedo, un cumpleaños se reserva con meses).
+- ⚠️⚠️ **§4.2 lleva una OBJECIÓN MEDIDA que el owner mantuvo**: son 11 horas y **cabían las 11 a la vez** en tres filas; la tira enseña **4 de 11**. Está escrito para que la siguiente sesión sepa que fue una decisión y no un descuido.
+- ⚠️⚠️ **§5.2: la vela sola NO bastaba** —`--bg` (#F4EFE3) y `--bg-card` (#FBF7EC) casi coinciden—: lo que dice «hay más» es el chip **cortado por el borde**, y por eso las tiras salen **a sangre**.
+- ⚠️ **El separador de mes NACÍA CORTADO** sin `scroll-snap-align`: una parada de ajuste no es «donde se pulsa», es «donde la tira puede quedarse quieta».
+- ⚠️⚠️ **El aviso «Casi llena» lee `available`, NUNCA `max_quantity`** (en un pack son 60 y 20), y su guarda **nació laxa** con los dos números al mismo lado del umbral.
+- ⚠️ **`0` en el umbral es una RESPUESTA («no avisar»), no una falta** — las dos implementaciones comprueban el umbral antes de comparar.
+- ⚠️ **§7.2: dos instrumentos propios salieron mal** —medir la caja pintada llamaba defecto al «Volver» arreglado; `elementFromPoint()` daba 178 defectos porque los chips fuera del carril están fuera del viewport—.
+- ❗ **§7.4 sigue abierto y es del owner**: **366 px vacíos** en fecha y **452** en hora, y la tira los EMPEORÓ ~50.
+- ▶ Queda la unidad 5 (carrito e identificación, **sin medir**) y el OJO del owner

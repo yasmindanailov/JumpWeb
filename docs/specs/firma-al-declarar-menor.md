@@ -18,6 +18,24 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Código NO empezado**; spec revisada (adversarial de 7 lentes, `#441`). **`#179` NO se relaja: se REUTILIZA**
+  (`[DECIDIDO owner]`): al declarar se ACEPTA; con el correo verificado se firma en el acto y si no la aceptación
+  queda RETENIDA y se sella al verificar, en cuatro columnas nullable de `dependents`. La relajación reproducía
+  el daño: un tercero con el correo de otro declara 20 menores REALES y los firma; al reclamar la cuenta (P12)
+  la víctima los hereda con firmas indelebles (art. 17.3.e). Hoy, sin firma, se borran de verdad.
+- **EMPIEZA POR §1.2, un defecto reproducido con control**: `dependentNeedsSignature()` no mira el correo
+  verificado y ofrece el formulario, y `WaiverSigner` lo exige → **409** al pulsar (201 con el correo verificado).
+  Solo en modo `interno`; 17 de 25 cuentas locales. **Mide en producción antes**: el síntoma no está medido.
+- **Dos afirmaciones propias eran FALSAS**: «la transacción no puede fallar tras crear nada» (500 medido, donde
+  sus hermanos dan 409) y «`RGPD-01`: ninguno» (cambia la POBLACIÓN: una firma deja PII de un niño; hoy
+  `prunable()` devuelve `where 1 = 0`). Los plazos —60 meses y 60 desde los 18— son REQUISITO DE SALIDA.
+- **El contrato va antes que el código** (`additionalProperties: false` → 422; falta el 409; dos campos).
+- **Sin el censo, la suite sale verde sin probar nada**: 15 ficheros / 28 métodos pierden su premisa;
+  `DependentPrivacyTest` nunca fija el modo; `VerifyWaiverChainConcurrency` no menciona `DependentRegistry`.
+- `WaiverSigner` y `DependentRegistry` están en el `CRITICAL_RE` → `VERIFY_CONC=1`. Anexo al final.
+
 ## 1. Contexto y problema
 
 ### 1.1 · El diagnóstico del owner es correcto — cinco puertas y ninguna obliga
@@ -476,3 +494,22 @@ producción da igual —cada petición levanta su contenedor—. Es la trampa de
 
 ▶ **Lo que queda del carril: nada de código.** Solo el OJO del owner y, al desplegar, las cuatro
 lecturas de §7 más los dos ajustes de retención.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Firmar la exención AL DECLARAR un menor · por qué muchos menores se quedan sin firma · el 409 de la tarjeta»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/firma-al-declarar-menor.md`.
+
+- **`docs/specs/firma-al-declarar-menor.md`**
+- 🟦 **REVISADA (adversarial de 7 lentes) — código NO empezado** (`#441`, 2026-09-06) —
+- ❗❗❗ **`#179` NO SE RELAJA: SE REUTILIZA.** La primera versión proponía exceptuar al menor a cargo de la regla del correo verificado y **la revisión REPRODUJO el daño**: un tercero abre cuenta con el correo de otra persona (sin verificar, hoy ya puede), declara **20 menores REALES** y los firma; cuando la víctima reclama su cuenta por P12 la defensa funciona **y le entrega los 20 menores con sus firmas intactas**, y **no puede deshacerlo** (con firma detrás `remove()` solo desvincula y `anonymize()` conserva por el art. 17.3.e). **CONTROL: hoy, sin firma, se borran de verdad.**
+- ⚠️⚠️ Ese estado ya es alcanzable **pagando** (`autoVerifyBuyer`), así que la relajación no inventaba la amenaza: **le retiraba el peaje** — y `#342` aceptó ese residuo porque «dejar reservas exige pagarlas»; *declarar menores no cuesta nada*.
+- ▶ **`[DECIDIDO owner]`: al declarar se ACEPTA; si el correo está verificado se firma en el acto y si no la aceptación queda RETENIDA** y se sella al verificar (el mecanismo de `#179`), en **cuatro columnas nullable de `dependents`** porque hoy solo hay UNA ranura por cuenta.
+- ❗❗❗ **EMPIEZA POR §1.2, UN DEFECTO REPRODUCIDO CON CONTROL**: `WaiverSigner` exige correo verificado para el menor pero `dependentNeedsSignature()` **no lo mira** y ofrece el formulario igual → **409** al pulsar, **201** con el correo verificado. *El defecto que `#329` arregló para el TITULAR, vivo en el MENOR.*
+- ⚠️ No afecta a quien entra con Google (verifica en el acto): **17 de 25 cuentas locales**.
+- ⚠️⚠️ **«La transacción no puede fallar tras crear nada» era FALSO** —la garantía venía de `SelfSignup`, que **no firma** desde `#179`—: `WaiverSigner` re-comprueba bajo el lock y lanza desde dentro → **500 medido**, donde sus hermanos dan **409**.
+- ⚠️⚠️ **«`RGPD-01`: ninguno» era FALSO**: no cambia la conducta, **cambia la POBLACIÓN** —una firma es una referencia, así que «lo declaré por error y lo quito», que hoy **no deja ni un byte**, pasaría a dejar PII de un niño— y **hoy no se poda nada** (`prunable()` devuelve `where 1 = 0`): `[DECIDIDO owner]` los plazos son **REQUISITO DE SALIDA**, 60 meses y 60 desde los 18.
+- ⚠️ **El CONTRATO va antes que el código** (`additionalProperties: false` → 422; falta el 409; dos campos, no uno).
+- ⚠️⚠️ **Sin el censo la suite sale verde sin probar nada**: **15 ficheros / 28 métodos** pierden su premisa y ~32 más sobreviven **por orden accidental**; `DependentPrivacyTest` **nunca fija el modo** y el fallback es `externo`; `VerifyWaiverChainConcurrency` **no menciona `DependentRegistry`**, que además **no está en ninguna de las tres listas** del gate.
+- ⚠️ **MIDE EN PRODUCCIÓN ANTES**: el síntoma **no está medido en ninguna instalación** y solo puede darse en modo `interno`

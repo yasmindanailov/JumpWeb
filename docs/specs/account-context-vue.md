@@ -11,6 +11,19 @@
 > del trabajo**. §8 lleva la lista de lo que cambió y quién lo encontró. La lección, otra vez:
 > *verde no es funciona, y razonado no es medido.*
 
+## §0 · Antes de tocar
+
+- **EJECUTADO** (`#123`, v2 tras revisión adversarial ×3), validado por el owner en navegador
+  (`VERIFICACION-E2E-CAJON.md` §5.sexies). Se conserva por lo que MIDIÓ.
+- **§4.7: el `no-store` de TODA página web lo ponía un ACCIDENTE de Livewire** — hoy lo pone
+  `NoStoreWebResponses`, global y con puerta para `/api/v1`.
+- **§4.8: `route('logout')` aparece UNA vez en toda la aplicación** y vive como suelo dentro del hueco.
+- **§4.6: lo que ninguna guarda estática puede cubrir.** El gate de iconos estaba ciego a 10 de sus 32
+  componentes.
+- **§8.1: cuatro afirmaciones del autor de la v1 no salían del código** — *verde no es funciona, y razonado
+  no es medido.*
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 `livewire:site.account-context` es **el único componente Livewire que renderiza

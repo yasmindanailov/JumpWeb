@@ -8,6 +8,26 @@
 > Sistemas afectados: `docs/sistemas/POSTFORM-INVITADOS.md` · `docs/specs/waiver-por-reserva.md` ·
 > `docs/specs/invitados-en-post-form.md` · `docs/specs/correos-desde-canvas.md`.
 
+## §0 · Antes de tocar
+
+- **Carril del SPA** (banda 550–579). T1 y T2 en el árbol (`#570`, `#571`, §10.1–§10.2); **T3→T6 sin
+  empezar** y **si vas a construir, §7.2 primero** (la segunda revisión cambió seis cosas). Orden
+  `[DECIDIDO owner]`: T1 → T2 → T3 → T4 → T5 → T7 → **T6**, el aterrizaje, al final.
+- **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
+  `invitation_replies`, el formulario lo PROPONE sobre una ficha y el anfitrión lo ADOPTA al guardar —
+  `submitGuestForm()` sustituye la lista entera y `updated_at` es el testigo de extras e invitados (medido)—.
+  Por eso un padre no mueve dinero, aforo ni ningún fichero del `CRITICAL_RE`, y `OrderCreator` no se toca.
+- Con la lista completa no se admite un «sí» y el «no podemos» se enseña al anfitrión (D2/D3) · «voy con él»
+  no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja con una ficha
+  escrita solo con UN candidato (D11) · un nombre repetido **no se anuncia** (confirmaría quién va).
+- **Lo que enseñó §10**: `focused-layout` no cargaba `client.css` desde que existe (las dos páginas iban con
+  los colores del producto); el orden de la PÁGINA ya no es el de las POSICIONES (`sanitizeGuestData()`
+  ordena por clave); el número de invitados lleva `form="gf-form"` o no se envía (defecto en producción
+  desde `#444`, arreglado en el árbol, **pide despliegue**).
+- **T3**: la hora del justificante pinta el FIN de la franja («17:00 – 18:00»), la trampa de `#426`: usar la
+  duración efectiva. **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.
+- Anexo al final con la fila del enrutador.
+
 ## 0. En una línea cada cosa
 
 - **A · Vestir el formulario post-reserva** (turnos 1 y 2b del canvas, ya decididos): cero dominio.
@@ -696,3 +716,18 @@ es el suelo táctil de 48 del desplegable).
 **Guardas**: `GuestFormManyGuestsTest` (5) · `logic.test.js` (16) · `scripts/mutar-postform-t2.py` (**5/5**,
 con control). ⚠️ **Sin guarda automática**, a sabiendas: el `sticky` de la barra y el alto de las filas, que
 son geometría y se miden con la sonda.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Vestir el formulario de CELEBRACIÓN o el JUSTIFICANTE · la INVITACIÓN digital de un cumpleaños · el «sí / no podemos» de un padre · el pegado de nombres · «¿vas tú con él?»»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/celebracion-e-invitacion.md`.
+
+- **`docs/specs/celebracion-e-invitacion.md`**
+- 🟦 **SPEC REVISADA dos veces · T1 y T2 EN EL ÁRBOL (`#570`–`#571`, §10.1–§10.2:
+- ⚠️ `focused-layout` NO cargaba `client.css`;
+- ⚠️⚠️ **el orden de la PÁGINA ya no es el de las POSICIONES** —`sanitizeGuestData()` ordena por clave—;
+- ❗ el número de invitados lleva `form="gf-form"` o no se envía) · T3→T6 sin empezar; si vas a construir, EMPIEZA POR §7.2** (`#569`, 2026-09-13, carril SPA; un nombre repetido **no se anuncia** —confirmaría quién va a la fiesta— y `OrderCreator` **no se toca**) — siete tandas: T1 piel del formulario · T2 muchos invitados · T3 piel del justificante · T4 dominio y contrato · T5 la página · T7 correos · **T6 el aterrizaje, al final**.
+- ❗❗❗ **LO QUE CONTESTA UN PADRE NO ESCRIBE `guest_data`** (§3.1): vive en `invitation_replies`, el formulario lo PROPONE sobre una ficha y el anfitrión lo ADOPTA al guardar — medido: `submitGuestForm()` sustituye la lista entera y `updated_at` es el testigo de extras e invitados. Por eso un padre **no mueve dinero, aforo ni ningún fichero del `CRITICAL_RE`**.
+- ⚠️ Con la lista completa **no se admite un «sí»** y el «no podemos» se enseña al anfitrión (D2/D3) · «voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja con una ficha escrita solo con **un** candidato (D11).
+- ⚠️ **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.

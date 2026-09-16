@@ -13,6 +13,27 @@
 > **La conclusión que lo reordena todo: el sidebar no es un nodo, es un nodo MÁS un bus de eventos
 > que cruza la landing, un traspaso por sesión, una superficie de i18n y un presupuesto de bundle.**
 
+## §0 · Antes de tocar
+
+- **Fase 4 hecha**: los once pasos en Vue 3 + Pinia, `Purchase.php` retirado (`#111`/`#112`), y las 25
+  pantallas del cajón vestidas por el carril del SPA (banda 550–579, el otro ordenador: `CARRIL-SPA.md` y
+  `docs/carriles/spa.md`). §8 es el mapa del cajón. Contrato de la API: `openapi/v1.yaml`.
+- **§4.2: el contrato visual es el ÁRBOL, no las clases** (90 de 292 selectores no se satisfacen emitiendo la
+  clase correcta). El diff de árbol NO ve el interior de un `<svg>` ni el texto: eso necesita paridad propia
+  (`TESTING.md` §2.ter/§2.quater, `#113`).
+- **Rótulos (`#333`)**: el prop `account` YA ES el grupo (`verify.resend`, no `account.verify.resend`); `t()`
+  devuelve `''` en silencio; una clave puede existir y quedar fuera de la poda de `layout.blade.php`. Guarda
+  `SidebarTranslationKeysExistTest`. *Que el texto llegue no es que se pinte*: se verifica RENDERIZANDO.
+- **Tras traer commits del SPA, `npm run build:ssr` ANTES de la suite**: `SidebarDomContractTest` renderiza el
+  BUNDLE (35 rojos con el árbol limpio), y los arneses que mutan `.vue` restauran el árbol pero no el bundle.
+- **Reglas del carril (`#562`→`#568`)**: el cajón titula y punto (cero antetítulos); un documento legal es un
+  CONTROL de 48, nunca una palabra subrayada (`WaiverDoc.vue`); toda pregunta es `ConfirmInline`, nunca
+  `window.confirm`; los colores de estado se DERIVAN del sólido con `color-mix` y `--money` solo lo ya
+  COBRADO; `distinct` con dos comodines es GLOBAL (el mismo menor en dos líneas se compra); el bloque «lo que
+  falta antes de pagar» lo compone `buyer-due.js`; una fecha ilegible devuelve cadena VACÍA. La sonda táctil
+  mide CAJAS: `SidebarTouchTargetTest` censa desde el MARCADO y asevera lo DECLARADO. Techo del chunk: 285.
+- Anexo al final (dos filas del enrutador).
+
 ## 1. Contexto y problema
 
 `Livewire\Tickets\Purchase` son **1.859 líneas** y su vista **706**: una máquina de **11 pasos**
@@ -661,3 +682,50 @@ idioma del documento— y monta los ONCE componentes de paso con props que const
 planos. O sea que el contrato prueba **los pasos y los módulos**, y **no ejerce el orquestador**.
 ▶ Para un cambio en el orquestador (`sections/PurchaseSection.vue`, `Sidebar.vue`) la red es el
 NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Sidebar SPA (Fase 4) / Vue / tema por instalación»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/sidebar-spa.md` · `docs/specs/api-v1.md` · `docs/TESTING.md`.
+
+- `docs/specs/sidebar-spa.md` (**§4.2: el contrato visual es el ÁRBOL, NO las clases** — medido: 90 de 292 selectores no se satisfacen emitiendo la clase correcta) ·
+- ⚠️ **el diff de árbol NO ve el interior de un `<svg>` ni el texto**: eso necesita paridad propia (`TESTING.md` §2.ter/§2.quater, `DECISIONES #113`) · `docs/specs/api-v1.md` §10 → §10.sexdecies
+
+## Anexo 2 · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Sidebar SPA (Fase 4) / Vue / tema por instalación · el suelo TÁCTIL de un control del cajón · un documento legal (la política, el descargo) · el antetítulo de una pantalla»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/sidebar-spa.md` · `docs/specs/api-v1.md` · `docs/DEUDA.md` · `docs/TESTING.md`.
+
+- ❗❗❗ **`#567` SI TOCAS `dependent_ids`, EL DESENLACE O «¿QUIÉNES VIENEN?»**: **`distinct` con DOS comodines es GLOBAL** —`items.*.dependent_ids.*` compara contra los menores de TODAS las líneas— y rechazaba con 422 (y con el texto de Laravel en inglés) el mismo niño en dos entradas, que `DependentAssigner` y el índice único `(order_item_id, dependent_id)` permiten; hoy «sin repetidos» es una regla sobre la LÍNEA (`api.dependents.repeated`) y `[DECIDIDO owner]` **el mismo menor puede ir en líneas distintas**.
+- ⚠️ **El bloque `.acct` se oculta también en `result`** —las CINCO pantallas finales, revierte lo que `#563` dejaba visible— y la lista está escrita DOS veces (la gemela de movimiento reducido), con guarda en las dos.
+- ⚠️ La salida de la reserva creada es **«Ir a mi cuenta» → `ZONES.HOME`**, y esa puerta **no tenía guarda desde `#563`** (hoy `AccountDoorWiringTest`).
+- ⚠️ Los rótulos de «¿Quiénes vienen?» son CORTOS para caber en una fila, y hay un **quinto, `guardian_only`**: el bloque que trae SOLO el justificante decía «menores»; la clave la construye `assignment.js`, así que ninguna guarda de `t('…')` la ve (`WhoBlockLabelTest`, que vigila también que `TimeStep` le pase `offers`).
+- ⚠️ Techo del chunk **285** (medido 284,04, tras una poda medida de 41 B). —
+- ❗❗❗ **`#566` SI TOCAS UN CONTROL DEL CAJÓN, UN TEXTO LEGAL O UN TÍTULO DE PANTALLA** (parada 06, **las 25 construidas**): **el cajón titula y punto** —los CINCO antetítulos se fueron, y el canvas contaba tres— y **un documento legal es un CONTROL de 48, nunca una palabra subrayada dentro de una frase** (la política en las dos altas, con **flecha** porque SALE; el descargo en los cinco sitios vía `WaiverDoc.vue`, con **chevron** porque despliega AQUÍ).
+- ⚠️⚠️ **La receta es COMPARTIDA con «Ver más fechas» y «Leer las condiciones», no copiada**: el modo de fallo no es romperse, es quedarse atrás.
+- ❗❗❗ **SI VAS A MEDIR UN ÁREA TÁCTIL DEL CAJÓN, LA SONDA MIDE CAJAS**: acusa a `.bk-back`, `.cart__remove`, `.cal__nav` y `.bk-foot__info-btn` y **los cuatro CUMPLEN** por su pseudo — la ficha de `#563` que decía «`.bk-back` 20 contra 48» estaba MAL por eso, y es la trampa de `#264`/`#307` por tercera vez. El que fallaba era el **aspa de cerrar** (**15×26**, y tampoco de ancho).
+- ⚠️⚠️ **El aspa crece con el PSEUDO y no con `min-height`**: crecerla de verdad engorda la cabecera **25 px** en las 32 pantallas.
+- ⚠️ **`.bk-back` cumplía por CASUALIDAD ARITMÉTICA** (`inset: -14px`, escrito cuando el control medía 17 y el suelo era 44): hoy lee el token.
+- ▶ **La guarda del cajón ya existe** (`SidebarTouchTargetTest`): censa los controles **desde el MARCADO** —una lista a mano se queda corta en silencio— y asevera lo **DECLARADO**, con **24 nominados** en una lista que solo encoge.
+- ⚠️⚠️ **Un `height` de PSEUDO no es el alto del control**, y eso lo dijo el arnés: satisfacía «declara el suelo» antes de llegar a la comprobación que iba a rechazarlo.
+- ⚠️ **`account.reset.eyebrow` y `account.orders.eyebrow` NO se borran**: los pinta la WEB.
+- ⚠️ **El techo del chunk queda con 0,01 KiB** (283,99 de 284) y **la poda obvia ya se midió y NO paga** (extraer la fila a un componente sube a 284,17): busca otra o súbelo con su medición.
+- ⚠️ Defecto vivo cerrado de paso: `NoPasswordHint` pintaba un `<button>` dentro de una pista **sin regla**, o sea gris del párrafo y sin subrayado — el defecto de `#350` una pantalla más allá. —
+- ❗❗❗ **`#564` SI TOCAS UN COLOR DE ESTADO O UNA CIFRA DE DINERO**: los fondos y bordes claros de aviso **se DERIVAN de su color sólido** (`color-mix` al 14 % y al 30 % sobre `--bg`) y **el texto va en TINTA** — un hex ahí reabre el defecto medido: el paquete del cliente sobrescribe `--ok`/`--err` y no el tinte, así que «Pagado» daba **2,64**, «Cancelado» 3,88 y «Gratis» 2,64 (éste también en la landing).
+- ⚠️⚠️ **`--warn`, `--warn-hover`, `--err-strong`, `--refund`, `--refund-bg` y `--on-warn` NO EXISTEN**: eran hex del PRIMER cliente; el aviso es `--attn`, el texto sobre un tinte `--fg` y cualquier cifra `--money`.
+- ⚠️⚠️ **Y `--money` SOLO lo lleva lo ya COBRADO**: por defecto vale tinta, así que ponerlo en un importe pendiente **no cambia nada en la suite ni en un clon sin paquete** y con el del cliente lo pinta de color — un pendiente es un dato del pedido, y teñirlo lo convierte en una alarma.
+- ⚠️ **Lo pasado se dice cambiando de SUPERFICIE, nunca con opacidad** (un velo sobre la tarjeta entera dejó la fecha del historial en 3,10). —
+- ❗❗ **`#565` SI AÑADES UNA PREGUNTA AL CAJÓN**: es `ConfirmInline` y **nunca `window.confirm`**; lleva el gesto entero —el disparador desaparece, el foco salta al que confirma y vuelve al cerrar—, y el disparador entra por SLOT porque los tres suyos son distintos (un botón, un botón dentro de una tarjeta y un formulario completo).
+- ⚠️ Sus rótulos tienen que entrar en la poda de `layout.blade.php` o el botón sale **mudo** (`#333`). —
+- ❗❗❗ **`#562`/`#563` SI TOCAS EL PASO DE PAGAR O UN DESENLACE DEL BANCO** (parada 04, CERRADA): el enlace de las condiciones **está FUERA de la casilla**, en su propia fila de 48 px —inline medía 19—, y esa fila **comparte receta con «Ver más fechas»** (`.cal-more`, selector agrupado): no la copies, que el modo de fallo no es romperse sino quedarse atrás.
+- ⚠️⚠️ **El bloque «lo que falta antes de pagar» no lo vigilaba NINGÚN diff desde `#349`**: su caso de contrato nace con un comprador que ya tiene teléfono y una instalación sin condiciones publicadas, así que `need` salía todo `false` y `.paydue` **no se emitía** — y el renderizador SSR tampoco componía `need`. Hoy lo compone con `buyer-due.js` desde el contexto real; si tocas ese bloque, el caso es `the_pay_step_emits_what_is_missing_before_paying`.
+- ⚠️ **Tres frases que el servidor ya tenía escritas no las pedía nadie** —`verify_hold` con CERO consumidores en los tres idiomas, a qué correo se ha escrito, y la HORA de caducidad (`expires_at` ya viaja en `payment-status`)—: *al transcribir una pantalla se compara con el DICCIONARIO, no con la de al lado*.
+- ⚠️ **Una fecha que no se puede leer devuelve cadena VACÍA, nunca «Invalid Date»**, y se formatea en el reloj del NAVEGADOR —es un instante real con su offset, al revés que las FRANJAS (`#426`)—.
+- ⚠️ **No hay un QR por pedido**: la reserva creada enseña la puerta al carné de siempre, y **solo con sesión** (sin ella los textos del área no viajan y el botón llevaría a una pantalla en blanco).
+- ❗❗ **Y el ARMAZÓN no llega al suelo táctil**: `.sidecart__close` mide **26 px** en las 32 pantallas medidas y `.bk-back` **20**, contra 48 — no lo ve ninguna guarda (`TouchTargetTest` recorre RUTAS y el cajón no es una) y es tanda propia, ficha en `DEUDA.md`. —
+- ❗❗❗ **`#333` SI ESCRIBES UN RÓTULO EN UNA ZONA DEL CAJÓN**: el prop `account` **ES YA** el grupo `account`, así que la clave va **`verify.resend`, NO `account.verify.resend`** — y `t()` devuelve **`''` en silencio** cuando falla, así que una ruta mal escrita **no rompe nada: deja el texto vacío y el botón sin rótulo** (llegó al navegador del owner en `#332`).
+- ⚠️⚠️ **Y hay una SEGUNDA forma de quedarse mudo que ningún `grep` en `lang/` ve**: que la clave exista pero **la poda del montaje la deje fuera** (`layout.blade.php` recorta subgrupos clave a clave). Guarda: `SidebarTranslationKeysExistTest`, contra el payload REAL y con control del propio localizador.
+- ⚠️ **Comprobar que el rótulo está en el HTML NO basta** — el montaje lo manda igual; *que el texto llegue no es que se pinte*. Se verifica RENDERIZANDO el componente. · `docs/specs/sidebar-spa.md` (**§4.2: el contrato visual es el ÁRBOL, NO las clases** — medido: 90 de 292 selectores no se satisfacen emitiendo la clase correcta) ·
+- ⚠️ **el diff de árbol NO ve el interior de un `<svg>` ni el texto**: eso necesita paridad propia (`TESTING.md` §2.ter/§2.quater, `DECISIONES #113`) · `docs/specs/api-v1.md` §10 → §10.sexdecies

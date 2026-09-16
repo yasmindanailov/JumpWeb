@@ -7,6 +7,28 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Es DINERO**: `CRITICAL_RE`, `PAY-16`/`PAY-17` (el libro), `VERIFY_CONC=1`. Las tres decisiones del
+  owner están en §7 y el estado en §8; la excursión es un producto `pack` (sin eso ni `min_qty` ni el cupo).
+- **La escala vive en UN sitio, `TicketType::tierPriceCents()`, y tiene SUELO en el mínimo contratable**:
+  por debajo del mínimo manda el PRIMER tramo, no el precio base (`[DECIDIDO owner]`). Propiedad
+  comprobable: vender por debajo del mínimo nunca sale más barato por cabeza que vender en el mínimo.
+- **El suelo NO va dentro de `PriceTier::resolve()`**: ahí regalaría el descuento de volumen a toda ENTRADA
+  comprada por debajo de su primer tramo (5 de un «10+ → 8 €» a 8 €), sin que nada falle. Hay caso de CONTROL.
+- **SEIS sitios resuelven el precio de una línea** (presupuesto, checkout, calendario, pedido manual,
+  ediciones y el sello): todos el mismo número. El pedido manual llamaba a `priceCents()` sin la cantidad.
+- **No metas la cantidad en `prices`** (media docena de agregados suponen UNA fila por tarifa): tabla propia
+  `price_tiers`, **sin `max_qty`**. Un COMPLEMENTO es una fila de `ticket_types` y un `instanceof` lo alcanza.
+- Editar la cantidad re-tarifica SOLO con tramos · tramos y familia de edades son excluyentes · el «desde
+  X €» es el más BARATO (`[DECIDIDO owner]`).
+- **Mostrador (`#330`)**: `Booking\Contracts\CounterSale` dice QUIÉN vende y viaja hasta `OrderCreator` y
+  `SlotOffer`; `null` = la web de siempre. La ANTELACIÓN MÍNIMA no ata al mostrador; el MÍNIMO del pack sí,
+  hasta que el operador lo levanta con permiso (`orders.edit_item_below_minimum`) y rastro. No relaja aforo,
+  máximo, ventana, estado de la franja ni el corte intra-día; `online_sales_open=false` tapa también en
+  mostrador, y `SlotOffer::offerableTimes()` descarta la franja si el hueco no llega al mínimo **sin avisar**.
+- ⏸️ El 2x1 y «la tercera más barata», aparcados (§1.1·4). Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 El cliente vende excursiones con este cuadro (`[owner, 2026-09-01]`), **por persona**:
@@ -220,3 +242,35 @@ la **frase** es nueva.
 ## 8. Estado
 
 🟦 **Diseño cerrado; pasa a ejecución.**
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Excursiones de colegio · horario de una ZONA distinto del recinto · fuera de apertura · descuentos por tramo de cantidad»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/precio-por-tramo.md` · `docs/specs/horario-por-zona.md` · `docs/DECISIONES.md`.
+
+- **`docs/specs/precio-por-tramo.md`**
+- 🟦 **TANDA B EN EL ÁRBOL** (`#324`) —
+- ❗❗❗ **`#330` SI TOCAS UNA REGLA DE VENTA DEL PANEL**: existe **`Booking\Contracts\CounterSale`**, que dice QUIÉN vende y viaja desde la página hasta `OrderCreator` **y** `SlotOffer` para que la OFERTA y el COBRO respondan lo mismo; `null` = la venta de siempre, así que **la web queda intacta por construcción**.
+- ⚠️⚠️ **La ANTELACIÓN MÍNIMA no ata al mostrador** (`[DECIDIDO owner]`, sin interruptor ni permiso: es una regla para quien compra SOLO), y **el MÍNIMO del pack sí ata** hasta que el operador lo levanta con permiso y rastro — *dos excepciones parecidas con naturaleza distinta, y por eso el objeto tiene dos campos y no uno*.
+- ⚠️ **Lo que NO relaja ninguna**: aforo, máximo, `>= 1`, ventana de horario, estado de la franja y **el corte intra-día** (una franja de hoy cuya hora ya pasó *no es antelación, es el pasado*).
+- ▶ Anotado sin cambiar: `online_sales_open=false` sigue tapando la franja también en mostrador.
+- ⚠️ **`SlotOfferTest::test_panel_calendar_blocks_lead_time_window_via_min_date` cambió de premisa y se reescribió**: afirmaba lo contrario. —
+- ❗❗❗ **`#329` SI TOCAS EL PRECIO O EL MÍNIMO DE UN PACK**: la regla de tramos vive ahora en **UN** sitio, `TicketType::tierPriceCents()` (antes en dos: `RateResolver::priceCents()` y `priceCentsForRate()`, los dos caminos por los que se tarifica de verdad), y **la escala tiene SUELO: el mínimo CONTRATABLE del producto**. `[DECIDIDO owner]`: por debajo del mínimo manda el **PRIMER tramo**, no el precio base — la propiedad comprobable es que *vender por debajo del mínimo nunca sale más barato por cabeza que vender justo en el mínimo*.
+- ⚠️⚠️ **El suelo NO va dentro de `PriceTier::resolve()`**: allí sería «si ninguno cubre, coge el más pequeño», y eso **regala el descuento de volumen a toda ENTRADA comprada por debajo de su primer tramo** (5 unidades de un «10+ → 8 €» pasarían de 10 a 8 €) — nada falla, solo se ingresa menos. Hay caso de CONTROL y la mutación lo pone rojo.
+- ⚠️ **El operador puede vender por debajo del mínimo al CREAR** (permiso `orders.edit_item_below_minimum`, el mismo de D7): el mínimo se impone en **CUATRO** sitios y el cuarto —`SlotOffer::offerableTimes()`, que descarta la franja entera si el hueco no llega al mínimo— **no avisa al fallar**.
+- ⚠️ Defecto de dinero preexistente arreglado: la previsualización del pedido manual llamaba a `priceCents()` **sin la cantidad** (140,00 € de desfase en una línea de 70) — *un parámetro con valor por defecto no avisa de que hacía falta*. —
+- ❗❗ **SI VAS A TOCAR EL PRECIO DE UNA LÍNEA**: son **SEIS** los sitios que lo resuelven (presupuesto, checkout, calendario, pedido manual, ediciones y el sello) y todos tienen que dar el mismo número.
+- ⚠️⚠️ **NO metas la cantidad en la tabla `prices`**: media docena de agregados la leen suponiendo UNA fila por tarifa y cambiarían de significado **sin que falle nada** (`displayPriceCents()` haría `first()` sobre tres filas; `priceVaries()`, que significa «varía según el DÍA», pasaría a ser cierto por la cantidad). Tabla propia `price_tiers`, **sin `max_qty`** (el tramo llega hasta el siguiente: ni huecos ni solapes por construcción).
+- ⚠️⚠️ **Un COMPLEMENTO es una fila de `ticket_types`**, así que un `instanceof TicketType` los alcanza: cada uno pagaba una consulta por unos tramos que no puede tener (10 → 16 en la ficha) y lo cazó el presupuesto de la API.
+- ⚠️ **Editar la cantidad re-tarifica SOLO con tramos** (excepción estrecha a `#127(d)`).
+- ⚠️ **Tramos y familia de edades son excluyentes**, con guarda en las dos direcciones.
+- ⚠️ El «desde X €» es el **más BARATO** (`[DECIDIDO owner]`, revierte la recomendación de la spec: no lo «corrijas»).
+- ⏸️ El 2x1 y «la tercera más barata», APARCADOS · **`docs/specs/horario-por-zona.md`**
+- 🟦 **TANDA A EN EL ÁRBOL** (`#322`) —
+- ❗❗ **Si retiras o añades un consumidor del HORARIO, lee §4.4 ANTES**: la spec afirmaba, medido y MAL, que eran DOS y son **TRES** — `ProductAvailability::allowsStart()` lo consulta y por él pasan `SlotOffer`, `OrderCreator`, `OrderItemEditor` e `ItemRescheduleOffer`; **lo cazó una guarda, no una lectura**, y *un `grep` del servicio deja fuera a quien pregunta por un tercero*.
+- ⚠️ **`effectiveFor()` es LA CARA PÚBLICA** (landing, «Abierto ahora») y no se toca: la variante por zona es un método aparte, y la duplicación es deliberada.
+- ⚠️ **Generar y podar leen la MISMA resolución** o la poda cierra lo que el generador acaba de crear, con ventas dentro (`AFORO-04`).
+- ⚠️ **Ignorar el cierre SIN declarar horas NO abre** (con el recinto cerrado no hay ventana que heredar y el fallback histórico es «abierto sin restricción»).
+- ▶ **Lo que NO hay que construir: `zones.max_per_slot`/`max_guests_per_slot` YA existen y ya son por zona** (el tope de grupos es configuración), igual que `min_qty`/`max_qty`, `duration_min` y la señal.
+- ▶ **Tanda B (precio por tramo) pendiente y es DINERO**; la excursión es un producto **`pack`** (`[DECIDIDO owner]`: `min_qty` y el cupo de grupos SOLO funcionan siendo pack) · `docs/DECISIONES.md` #322

@@ -3,6 +3,22 @@
 > Estado: 🟦 **DECISIONES DEL OWNER TOMADAS** (2026-09-13) · plan listo para ejecutar · quedan unos pocos puntos pendientes (§5).
 > Carril de diseño de la web (banda 580–609).
 
+## §0 · Antes de tocar
+
+- **Decisiones del owner tomadas** (2026-09-13); T1–T5 aplicadas (`#586`→`#589`; T1+T2 con el script de
+  contenido fuera del repo); **queda la T6** (en/fr de lo que escribe el panel: dudas, normas, nota de acceso)
+  y el título de la pestaña de la portada (`landing.footer.tag`). Carril de la web, banda 580–609.
+- **La jerarquía de fuentes es §0.1 y manda**: los CARTELES oficiales del parque, luego las respuestas del owner
+  (mandan sobre el cartel), luego la BD de producción; **Wild Jump Orihuela es modelo de QUÉ contar, nunca
+  fuente de hechos**. Los carteles se contradicen entre sí (§1): el de precios dice Jump desde 9 y manda el
+  owner (8).
+- **§2 las decisiones**: edades (Kids 4–8 y hasta 1,50 m; Jump desde 8 y 1,30 m; los PACKS siguen 4–7 / 8+
+  porque sus tramos no pueden solaparse), políticas (entradas 24 h; cumpleaños y excursiones 5 días), vísperas
+  y festivos a las 11:00, excursiones solo de colegio y ONLINE. **§3 el plan** con los textos por tanda.
+- **Producción no estaba lista para la web nueva** (0 de 6 dudas activas, normas sin momento ni porqué, sin
+  reseñas ni bar, excursiones inactivas) y **en 2027 faltan 1-nov y 6-dic** de festivos.
+- Anexo al final con la fila del enrutador.
+
 ## 0. Las fuentes y su jerarquía
 
 1. **Los carteles oficiales de Play Jump Park** (precios del parque, cumpleaños, excursiones, horario y zonas), recibidos el 2026-09-13. Son la referencia exacta de cómo funcionan sus productos.
@@ -331,3 +347,18 @@ Cuando el español esté aprobado. **Hecho cuando** las claves nuevas y cambiada
 | P4 | URL de Facebook e imagen para compartir la web | se pide al ejecutar T1 |
 | P5 | Datos por alumno en las excursiones (o solo la autorización por enlace) | se pregunta al ejecutar T1 |
 | P6 | Estado «Completado» de un pedido pagado (se lee como «ya pasó») | ✅ **«Confirmado»** (`#588`, `[DECIDIDO owner]`) |
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«CONTENIDO Y COPYS · textos de productos, zonas, dudas y normas · festivos y vísperas · jerga de la web («/precios», «L a J», «pax») · conversión»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/contenido-y-copys.md`.
+
+- **`docs/specs/contenido-y-copys.md`**
+- 🟦 **DECISIONES DEL OWNER TOMADAS, plan listo** (2026-09-13) —
+- ❗❗❗ **La jerarquía de fuentes es §0**: los CARTELES oficiales del parque, luego las respuestas del owner (mandan sobre el cartel), luego la BD de producción; **Wild Jump Orihuela es modelo de QUÉ contar, NUNCA fuente de hechos**.
+- ▶ **§2 son las decisiones** —edades (Kids 4–8 y hasta 1,50 m, menores de 4 con adulto si miden más de 90 cm; Jump desde 8 y 1,30 m, entre 1,10 y 1,30 con adulto; los PACKS siguen 4–7 / 8+ porque sus tramos no pueden solaparse), políticas (entradas 24 h, cumpleaños y excursiones 5 días con devolución a la tarjeta), vísperas y festivos a las 11:00, excursiones solo de colegio y ONLINE— y **§3 el plan** con los textos listos por tanda.
+- ⚠️⚠️ **Producción NO está lista para la web nueva**: 0 de 6 dudas activas, 0 de 5 normas con momento y porqué, sin reseñas ni bar, excursiones inactivas.
+- ⚠️ **Festivos: 2026 completo; en 2027 faltan 1-nov y 6-dic.**
+- ⚠️ Los carteles se contradicen entre sí (§1): el de precios dice Jump desde 9 y manda la respuesta del owner (8).
+- ▶ Tandas: panel → textos de datos → diccionario → jerga y armazón → cajón (carril SPA, avisar antes) → en/fr

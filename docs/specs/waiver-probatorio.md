@@ -29,6 +29,28 @@ pantalla de puerta (`identidad-qr-puerta.md`).
 
 ---
 
+## §0 · Antes de tocar
+
+- **Código completo, revisado dos veces; sigue 🟦 solo por el owner** (su ojo, el texto definitivo, la
+  retención). `WaiverSigner` está en el `CRITICAL_RE` → `VERIFY_CONC=1` y `waiver:verify-chain`. Orden de
+  lectura: **§10.11 y §9.10**, después §9 (qué existe y sus tres desviaciones), después §8 ANTES que el cuerpo
+  (§8.1 el texto es un borrador y publicar es irreversible; §8.5 la cadena se bifurca sin serialización →
+  cadena por titular; §8.6 tabla propia, no `consents`).
+- **El alta NO firma (`#179`)**: guarda la aceptación en ESPERA y se convierte en firma por TRES sucesos —el
+  enlace del correo, el pago (`autoVerifyBuyer`) y **el operador con la persona delante**
+  (`WaiverCounterDeclaration`, `#336`)—. El operador acredita a la PERSONA, nunca al BUZÓN: `email_verified_at`
+  no se toca, porque de él cuelga la recuperación de contraseña. Solo con aceptación RETENIDA, y si el texto
+  cambió no se firma el viejo.
+- **En la ventana sin verificar el servidor publica DOS datos** (`pending` y `required`) y el cajón decide en
+  `account/waiver.js` con dos estados, `sign` · `verify` (`#329`); el segundo ofrece REENVIAR el correo
+  (`POST /me/email/resend`, hermano autenticado; el público no se aflojó). El login responde 200 sin verificar.
+- **El alta suelta abre sesión** (`#331`, solo con sesión; entrar no es verificar) y `verified` salió del grupo
+  de rutas del área (`#332`): el aviso es un BLOQUE (`accountNoticeFrom()`, un texto en dos sitios, botón con
+  `resendGate()`) y «Mi cuenta» tiene salida (`account/sign-out.js`, nunca un `<form>` con `@csrf` → 419).
+- ⛔ **No se cierra el área a los no verificados**: sin entrar no hay QR y sin QR no hay identificación.
+- La identidad viaja EN la firma (§9.6); el modal de Filament es un `wire:partial` y `assertSee` no lo ve.
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 El sector exige que quien entra al recinto haya aceptado un documento de asunción de riesgo
@@ -1146,3 +1168,42 @@ el cliente puede decidir sobre su propia prueba (§10.2), lo que el mostrador de
 
 Las fichas están en `DEUDA.md` (una por grupo, con su severidad), y la entrada `DECISIONES #169`
 recoge el porqué de cada veredicto.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Waiver (firma, prueba, PDF, versiones del texto)»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/waiver-probatorio.md` · `docs/DEUDA.md` · `docs/VERIFICACION-E2E-CAJON.md`.
+
+- `docs/specs/waiver-probatorio.md`
+- 🟦 —
+- ❗❗❗ **`#336` SI TOCAS LA FIRMA EN LA PUERTA**: hay un **TERCER suceso** que convierte una aceptación retenida en firma, junto al enlace del correo y al pago — **el operador con la persona delante** (`WaiverCounterDeclaration`), y eso NO revierte `#179`: es más prueba que un enlace, no menos.
+- ⚠️⚠️ **EL OPERADOR ACREDITA A LA PERSONA, NUNCA AL BUZÓN**: `email_verified_at` **no se toca**, porque de él cuelga la RECUPERACIÓN DE CONTRASEÑA — quien se registrara con el correo de otro y pasara por la puerta se llevaría el control de esa dirección. Hay caso propio y es el que más protege.
+- ⚠️ **Solo con aceptación RETENIDA** (`pending_acceptance` en `GateProfile`): el operador confirma una aceptación que EXISTE, nunca la inventa; sin ella, la tablet.
+- ⚠️ **Si el texto cambió NO se firma el viejo** y la aceptación caducada se descarta.
+- ⚠️ La firma conserva la **IP y el navegador de la ACEPTACIÓN** (lo del operador va en `declared_by_user_id`), y la pendiente se limpia **bajo lock antes de firmar**.
+- ⚠️ `[DECIDIDO owner]`: permiso **el de validar**, confirmación con el nombre (**sin fecha**: no hay columna que la guarde), y **solo el titular** — los menores siguen con la tablet (ficha en `DEUDA.md`). —
+- ❗❗❗ **`#332` SI TOCAS LA PUERTA DE `/mi-cuenta` O EL AVISO DEL ÍNDICE**: **`verified` SALIÓ del grupo de rutas del área** y no es una relajación — es la puerta por la que `after-auth.js` trae al recién registrado (navega a propósito: **los textos del área solo viajan con sesión**, sin recargar el índice sale EN BLANCO), y con el rebote puesto el alta terminaba en `/email/verificar`, **fuera del cajón**.
+- ⚠️ La exportación RGPD entra en el mismo trato a sabiendas: una cuenta sin verificar solo contiene lo que esa persona acaba de teclear.
+- ▶ **El aviso es un BLOQUE, no una frase** (`[DECIDIDO owner]`, corrige la lectura de `#331`): mensaje + botón + **cuántos reenvíos quedan** + aviso de límite, y **debajo** la línea de la exención si hay una esperando.
+- ⚠️ La puerta del botón es **`resendGate()`, el mismo módulo que la pantalla del alta** — no un `disabled` a mano, o el botón se ofrece cuando el servidor ya lo descarta.
+- ▶ **Y de «Mi cuenta» ya se puede SALIR**: el botón del bloque `.acct` existe pero **se colapsa dentro de esa sección** (modo `account`, altura 0 medida en V4), así que el cliente entraba y se quedaba sin salida; va como acción de texto bajo las tarjetas —no como una tarjeta más, que invitaría a pulsarla— y reutiliza `account/sign-out.js` entero (**nunca un `<form>` con `@csrf`**: el `_token` caduca al pasar por el paso 5 → 419). —
+- ❗❗❗ **`#331` SI TOCAS EL ALTA O EL ÍNDICE DE LA CUENTA**: el alta SUELTA **abre sesión** (`[DECIDIDO owner]`; antes solo la de la compra, y terminar en «revisa tu correo» era un callejón: **sin sesión no hay QR, y el QR identifica en la puerta**).
+- ⚠️ Solo con sesión —la app nativa se da de alta sin origen *stateful*— y **entrar no es verificar**: el correo sigue sin verificar y el aviso se le da DENTRO de su cuenta.
+- ⚠️ Control: **un honeypot no deja sesión**.
+- ▶ **El aviso es UNO con los dos estados** (`accountNoticeFrom()`, `[DECIDIDO owner]`: «para no saturar»): con la exención esperando, *«quedará firmada en cuanto verifiques tu correo»* dice las dos cosas en una frase y **es el mismo rótulo que usa la tarjeta de privacidad** — un texto, dos sitios.
+- ⚠️ **El orden manda**: si falta verificar, ése es el aviso aunque el waiver «haga falta».
+- ▶ `email_verified` entra en el contexto de cuenta (y en el contrato), FUERA del `try`.
+- ⚠️⚠️ **SI CONSTRUYES «que la puerta firme»** (lo siguiente, ficha en `DEUDA.md`): el operador **acredita a la PERSONA, no al BUZÓN** — marcar el correo como verificado afirmaría sin prueba que ese buzón es suyo, y el correo verificado sostiene la RECUPERACIÓN DE CONTRASEÑA. Lo que escribe el operador es la FIRMA. —
+- ❗❗❗ **`#329` SI TOCAS UN AVISO DE LA EXENCIÓN**: el alta NO firma (`#179`), guarda la aceptación en ESPERA y la convierte en firma al verificar el correo; en esa ventana el servidor publica **DOS** datos —`pending` («la aceptó») y `required` («aún no hay firma»)— y el cajón **solo leía el segundo**: le decía «tienes pendiente la exención» a quien acababa de marcarla, con un botón «Firmarla» que **solo podía devolver 409** (`waiver_email_unverified`).
+- ⚠️⚠️ **Y no es una ventana de dos minutos: el login responde 200 SIN el correo verificado** (medido), así que quien no abre el correo ve el aviso falso cada vez que entra.
+- ⚠️ La decisión de qué avisar vive en `account/waiver.js` y son **DOS estados, no un booleano** (`sign` · `verify`): dicen cosas distintas y ofrecen botones distintos. `[DECIDIDO owner]`: el de verificación **ofrece REENVIAR el correo**, que es lo único que desbloquea la firma.
+- ⚠️⚠️ **El endpoint es `POST /me/email/resend`, hermano AUTENTICADO del público — y el público NO se aflojó**: su cuerpo es el `EmailRequest` del contrato, **compartido con `auth/password/forgot`**.
+- ⛔ **NO se cierra el área de cuenta a los no verificados** (`[owner]`: sin entrar no hay QR y sin QR no hay identificación en la puerta — sería cambiar una cola por otra peor); ficha en `DEUDA.md` con la salida propuesta: **que la PUERTA firme**, como tercer suceso junto al enlace y el pago (`autoVerifyBuyer`). — **CÓDIGO COMPLETO — las CUATRO tandas (`#160` · `#161` · `#163` · `#166`), el subsistema REVISADO de forma adversarial (§10, `#169`), la TANDA 4 que esa revisión exigía HECHA (§9.11, `#171`→`#180`: anti-bot, canal por guard, idempotencia, cajón, casilla del alta manual, casilla OBLIGATORIA en interno, correo verificado para firmar, texto del PDF) y la revisión de la propia tanda APLICADA (§9.12, `#183`); el guion `VERIFICACION-E2E-CAJON.md` §5.nonies recorrido en headless DOS veces (la última con la conducta definitiva: 111/111 ✓). Sigue
+- 🟦 solo por el owner: su
+- ✅ en navegador, el texto definitivo y la retención. EMPIEZA POR §10.11 y §9.10** (lo que exige antes del
+- ✅ —
+- ❗ **con el anti-bot activo el alta suelta de `/registro` NO TERMINA** (`DEUDA` Alta, no es del waiver) ·
+- ❗ el alta MANUAL registra una firma «declarada» que el operador no declara · el canal, la IP y el correo sin verificar los fija el cliente · tres grietas del cajón entre lo enseñado y lo firmado, una reproducida en navegador). Sigue
+- 🟦 hasta el OJO del owner, el texto definitivo, la retención y las decisiones de §7. **Después §9** (qué existe ya;
+- ⚠️ **§9.9: el diff de árbol NO ve la casilla del waiver** —en SSR no hay documento— y el aviso de re-firma vive en el índice de la cuenta, **no en el paso de pagar**, con su porqué; las TRES desviaciones de la spec —sin `retención_hasta`, tablas en Identity, sello ≠ prueba—, **§9.6 la identidad viaja EN la firma** `[DECIDIDO owner]`, y lo medido: cadena verificada con 8/16 procesos y vista FALLAR sin el lock; **§9.7 la trampa del arnés**: el modal de Filament es un `wire:partial` y `assertSee` no lo ve) · después **§8, que corrige el cuerpo**: **§8.1 el texto del waiver es literalmente un borrador y publicar es IRREVERSIBLE** (la maquinaria se construye; publicar la v1, no) · **§8.5 la cadena de hashes se BIFURCA en silencio** sin punto de serialización — cadena por titular · **§8.6 tabla propia, no ampliar `consents`** · §8.2 `anonymize()` borra la prueba en DOS sitios · **§8.3 `RGPD-01` no contiene hoy la frase que hay que modificar** · §8.4 el alta PRESENCIAL también firma. Luego: **§4.6 no se puede anonimizar un documento y que siga sirviendo de prueba** · §4.2 el idioma es parte de la prueba · §4.8 exigir la versión vigente en la puerta crea una cola. `DECISIONES #142` + **`#156`**

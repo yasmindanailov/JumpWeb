@@ -56,6 +56,25 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Ejecutada con la API de Places** (`#490` las opiniones propias · `#491` Google · `#493` umbral · `#494` la
+  atribución) y **a sustituir como fuente por `google-business-profile.md`** (`#524`, código no empezado).
+- **La CIFRA no necesita consentimiento y las RESEÑAS sí** (corrección a §4.4.bis): la cifra la trae nuestro
+  servidor; la reseña obliga al avatar en `lh3.googleusercontent.com`, que es una petición del visitante
+  (`RGPD-05`), y por eso `img-src` se amplía (`SEC-01`).
+- **La portada NO llama a Google**: lee de una caché corta que llena `social-proof:refresh` — desde `#591` cada
+  30 minutos, en UN idioma que leen las tres versiones, con caché de 35 (la caché dura más que el hueco entre
+  refrescos; `PERF-02`). `artisan cache:clear` en producción borra las reseñas: después va `social-proof:refresh`.
+  Guarda `SocialProofNeverHitsTheRenderPathTest` + `scripts/mutar-resenas.sh`.
+- **La caché corta es la ÚNICA forma legal**: R2 prohíbe almacenar reseñas y valoraciones (solo el `place_id`);
+  «que la chapa se vea siempre» copiando el dato no se puede. Places devuelve INSTANTÁNEAS DISTINTAS entre
+  llamadas consecutivas (`#493`); **el umbral es 1 y es DEFINITIVO** (`[DECIDIDO owner]`).
+- **§3.3: el respaldo NO es para cuando Google falle**, es lo que ve todo visitante que no acepta cookies de
+  terceros; desde `#592` la sección no desaparece sin cookies (nota + «Elegir cookies»). `rating()` es `null`
+  en el CMS a propósito; `SEC-07` se sanea DONDE NACE el dato; una reseña sin autor no se publica.
+- **Cinco restricciones DURAS** en §1.3. Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema — MEDIDO, no supuesto
 
 ### 1.1 De dónde viene

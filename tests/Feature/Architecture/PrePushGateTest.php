@@ -203,9 +203,8 @@ class PrePushGateTest extends TestCase
     }
 
     /**
-     * ⚠️ El contador de la suite que declara `ESTADO.md` es el único número «vivo» de la doc que
-     * **`docs-check` NO vigila**: sus cuatro patrones son modelos, migraciones, invariantes y
-     * Resources, y «N tests» no casa con ninguno.
+     * ⚠️ El contador de la suite es el único número «vivo» que **`docs-check` NO vigila**: sus
+     * patrones son modelos, migraciones, invariantes y Resources, y «N tests» no casa con ninguno.
      *
      * Y derivó, con una insistencia que da la medida del problema: el 2026-08-21 la doc decía
      * **2715** con la suite en **2642**, se retiró el duplicado por eso mismo… y en esa MISMA sesión
@@ -213,25 +212,46 @@ class PrePushGateTest extends TestCase
      * No es descuido de nadie: es un número sin receta.
      *
      * El gate es el sitio natural para la receta porque **ya tiene la cifra en la mano** — acaba de
-     * correr la suite—, así que compararla no cuesta nada. `DECISIONES #116`.
+     * correr la suite—, así que compararla no cuesta nada (`DECISIONES #116`). ⚠️ **Desde F1
+     * (`#618`, 2026-09-16) la copia declarada NO está en `docs/ESTADO.md`**: esa línea era la que los
+     * dos carriles reescribían en cada cierre. Vive en el trailer del commit («Verificación: suite N
+     * tests / M aserciones», `CONVENCIONES §8`), y el gate lo busca en los commits que el push lleva a
+     * `main`, del más nuevo al más viejo. Este caso fija las DOS mitades: que se compara, y de dónde se lee.
      */
-    public function test_the_gate_checks_the_suite_counter_declared_in_the_state_doc(): void
+    public function test_the_gate_checks_the_suite_counter_declared_in_the_commit_trailer(): void
     {
         $hook = $this->hook();
 
         $this->assertStringContainsString(
             'MIENTE sobre el tamaño de la suite',
             $hook,
-            'El gate ya no compara el contador de la suite con el que declara `docs/ESTADO.md`. '.
+            'El gate ya no compara el contador de la suite con el que declara el commit. '.
             'Sin esa comparación el número vuelve a ser una foto sin receta, y ya demostró que '.
             'deriva en cuestión de horas.',
         );
 
         $this->assertStringContainsString(
-            'Suite \*\*[0-9]+ en verde\*\*',
+            'suite[[:space:]]+[0-9][0-9.]*[[:space:]]+tests?[[:space:]]*/[[:space:]]*[0-9][0-9.]*[[:space:]]+aserciones',
             $hook,
-            'Falta la lectura del número declarado en `docs/ESTADO.md`. Si cambias el formato de '.
-            'esa línea, cambia también este patrón — o el gate dejará de leerla y no lo dirá.',
+            'Falta la lectura del trailer «suite N tests / M aserciones» del commit. Si cambias el '.
+            'formato del trailer (`CONVENCIONES §8`), cambia también este patrón — o el gate dejará '.
+            'de leerlo y no lo dirá.',
+        );
+
+        $this->assertStringContainsString(
+            'git rev-list',
+            $hook,
+            'El trailer tiene que buscarse en los COMMITS DEL PUSH (del más nuevo al más viejo), no en '.
+            'un documento: la copia en `docs/ESTADO.md` se retiró en `#618` porque era la línea que '.
+            'los dos carriles reescribían a la vez.',
+        );
+
+        // Solo las líneas de CÓDIGO: un comentario puede citar la historia (`#116` lo leía de ahí).
+        $this->assertDoesNotMatchRegularExpression(
+            '/^[^#\n]*docs\/ESTADO\.md/m',
+            $hook,
+            'El hook vuelve a leer algo de `docs/ESTADO.md`: desde `#618` ese fichero es un índice de '.
+            'carriles y no lleva el contador. Una segunda copia del número es la que deriva.',
         );
     }
 
@@ -239,17 +259,25 @@ class PrePushGateTest extends TestCase
      * Si no se puede leer alguno de los cuatro números, el gate **corta**. Un contador que no se ha
      * podido comprobar no es un contador comprobado — misma forma que la guarda de Redsys de `#106`,
      * donde preguntar por lo que se teme en vez de exigir lo que se espera bendijo un `PARSE ERROR`.
+     * Desde `#618` son dos puertas: la salida del runner y el trailer del commit.
      */
     public function test_the_counter_check_is_fail_closed(): void
     {
         $hook = $this->hook();
 
         $this->assertStringContainsString(
-            '-z "$ran_tests" || -z "$ran_asserts" || -z "$doc_tests" || -z "$doc_asserts"',
+            '-z "$ran_tests" || -z "$ran_asserts"',
             $hook,
-            'La comprobación del contador tiene que cortar cuando alguna lectura sale VACÍA. Sin '.
-            'eso, un cambio de formato en la salida del runner o en `ESTADO.md` la deja comparando '.
-            'dos cadenas vacías — que son iguales, o sea VERDE, sin haber comprobado nada.',
+            'La comprobación del contador tiene que cortar cuando la lectura de la SUITE sale VACÍA. '.
+            'Sin eso, un cambio de formato en la salida del runner la deja comparando cadenas '.
+            'vacías — que son iguales, o sea VERDE, sin haber comprobado nada.',
+        );
+
+        $this->assertStringContainsString(
+            '-z "$doc_tests" || -z "$doc_asserts"',
+            $hook,
+            'La comprobación del contador tiene que cortar cuando NINGÚN commit del push declara el '.
+            'trailer. Sin eso, un cierre sin la suite corrida pasaría el gate con dos cadenas vacías.',
         );
     }
 

@@ -613,3 +613,17 @@ vault. El owner lo acepta a cambio de aprovisionar sin tocar el `.env`.
 - `/admin` con el admin creado por `app:create-admin` (§5); `schedule:list` = **5** tareas (la 5.ª es `sanctum:prune-expired`,
   añadida en Fase 3 · paso 0); tabla `jobs` se vacía en ~1 min;
   `failed_jobs` vacía; compra sandbox completa (Redsys test → email de confirmación → QR).
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Instalar un cliente nuevo (white-label) · paquete de tema (`client.css`) · el color del botón de reservar · el logotipo y el icono»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/INSTALACION-CLIENTE.md`.
+
+- `docs/INSTALACION-CLIENTE.md` —
+- ▶ **§4.a.quinquies: QUÉ PEDIRLE AL DISEÑADOR**, con las tres reglas que no son opcionales (texto **en contornos**, nada externo, `viewBox`) y por qué cada una: el logo va dentro de un `<img>` y **ahí no cargan ni fuentes ni scripts**.
+- ⚠️ **El logotipo del 2.º cliente se intentó reconstruir y no salió idéntico** (`#211`, 29 % de píxeles distintos): son 6 capas por palabra + una figura que no es silueta plana. `[DECIDIDO owner]`: lo exporta él.
+- ▶ **§4.a.quater: el hueco del ICONO** (`client-favicon.svg`, solo SVG por decisión suya → iOS/Android siguen con el del producto).
+- ⚠️ **Falta el hueco de la variante sobre TINTA del logo**: con el menú abierto cae sobre fondo oscuro y una imagen no se adapta. (**§4: cada cosa entra por su mecanismo** —
+- ⚠️ el hueco de `client.css` son **tres piezas** y con dos parece que funciona: el orden, el `.gitignore` y la exclusión del `rsync --delete`) ·
+- ▶ **§4.a.ter: el COLOR DE ACCIÓN va en el PANEL (`theme.action`), NUNCA en `client.css`** — ahí funcionaría en la web y no llegaría al panel ni a los correos, y además se perderían el hover y el color del rótulo, que los calcula el servidor. **Vacío = el botón sigue al fondo** (`DECISIONES #209`)

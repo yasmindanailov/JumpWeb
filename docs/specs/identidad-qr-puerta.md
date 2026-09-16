@@ -21,6 +21,26 @@ Subsistema **A** de la visión de Fase 6. Va **después** de `waiver-probatorio.
 
 ---
 
+## §0 · Antes de tocar
+
+- **Código completo** (`#208` las cuatro unidades · `#212` las dos superficies · `#217` los ocho puntos del
+  owner); sigue 🟦 por su OJO (pantalla, correo en Gmail/Outlook, la zona en móvil y el LECTOR real).
+  **Empieza por §9.7.1** (lo medido), §9.6 y §9.4; §9.2 son las decisiones. `[DECIDIDO owner]`: el panel NO
+  declara menores.
+- **El carné es una credencial** (20 caracteres en `customer_cards`) y entra en `revokeAllAccess()` desde el
+  primer commit (`RGPD-06`, §4.4). El payload no puede ser una URL (§3, medido). Rotar `APP_KEY` LANZA, no degrada.
+- **La ficha caduca EN SERVIDOR** (`GateProfile`, presupuesto constante; `SEC-04` aplicado al tiempo): un
+  temporizador de navegador no es garantía (§4.8). **«Registrar visita» es idempotente y es donde se ACREDITA
+  la visita** —de ahí salen los JumpPoints (§8.3)— y no puede colgar de «se abrió la ficha».
+- **Los menores en la puerta**: edad + estado de la exención y, desde `#236`, el NOMBRE; jamás los apellidos
+  (estructural: el DTO no tiene campo).
+- **El QR lo dibuja el SERVIDOR** (`GET /me/card/png`, los mismos bytes que el correo). El icono de la
+  instalación dentro del QR: `extension_loaded('imagick')` NO es «sabe leer SVG» (local y staging rasterizan
+  distinto); sin rasterizador el QR sale LISO, **nunca con el icono del producto** (fuga white-label). Toda
+  degradación deja RASTRO (`#445`, §9.9).
+- La pantalla de puerta necesita `@filamentStyles` o su paleta computa VACÍA (§9.7.1).
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 El cliente llega al recinto y el empleado tiene que resolver dos cosas en segundos: **¿está cubierto?**
@@ -963,3 +983,20 @@ mutación cambia un aviso por otro en vez de quitarlo. La que vale es **borrar l
 ⚠️ **Lo que esto NO cierra**: el caso del rasterizador REAL sigue dependiendo de la máquina y puede
 caer bajo carga. Ahora al menos dice qué eslabón cedió y cuánto tardó. Ficha en `DEUDA.md` con las
 cifras (reposo 34–125 ms · peor bajo suite completa 571 ms · tope 2,0 s).
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Carné QR del cliente · pantalla de puerta / escaneo · zona «Mi carné» · «Rotar carné» en el panel»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/identidad-qr-puerta.md`.
+
+- `docs/specs/identidad-qr-puerta.md`
+- 🟦 **CÓDIGO COMPLETO (2026-08-28 madrugada, `#208`): las cuatro unidades de §9.3 EN EL ÁRBOL — §9.4** (el carné de 20 caracteres en `customer_cards` dentro de `revokeAllAccess()`; la ficha compuesta por `GateProfile` con presupuesto constante; la pantalla con el carné por el MISMO input, dos limitadores, caducidad EN SERVIDOR y «Registrar visita» idempotente; el PNG en el correo y `GET|POST /me/card`).
+- ▶ **Y LAS DOS SUPERFICIES DEL CARNÉ TAMBIÉN (2026-08-28 por la mañana, `#212`, §9.6)**: `GET /me/card/png` —**los mismos bytes que el correo**; el QR lo dibuja el SERVIDOR, no el navegador, porque el chunk estaba a 0,36 KiB del techo—, la zona `card` del cajón (imagen con `?v=issued_at`, token en grupos de 4 para dictarlo, descargar, renovar con confirmación) y «Rotar carné QR» en `ViewUser` (el `cards.rotated` lleva al OPERADOR de actor). `[DECIDIDO owner]`: **el panel NO declara menores**. Sigue
+- 🟦 por el OJO del owner (pantalla, correo en Gmail/Outlook, la zona en móvil y el LECTOR REAL con un PNG descargado).
+- ▶ **Y EL PULIDO DE LOS OCHO PUNTOS DEL OWNER (`#217`, §9.7 + §9.7.1)**: el **icono de la instalación DENTRO del QR** con margen (
+- ⚠️ **`extension_loaded('imagick')` NO es «sabe leer SVG»** — local y staging tienen rasterizadores DISTINTOS y la cadena degrada; sin rasterizador el QR sale LISO, **nunca con el icono del producto**: sería una fuga de white-label impresa en el correo de un cliente), el **QR como credencial** en el cajón, **«Mi cuenta» en tarjetas**, **«Mi QR» junto al nombre**, **menores** con alta desplegable y paginación, la **ficha del panel** con sus menores, la **pantalla de puerta** (
+- ⚠️ **su paleta estaba ROTA**: sin `@filamentStyles` los grises y el color de marca computaban VACÍO) y la palabra **«QR»**.
+- ▶ **EMPIEZA POR §9.7.1** (lo medido) y por §9.6 y §9.4 y sus trampas; §9.2 son las decisiones.
+- ⚠️ los menores en la puerta son **edad + estado de la exención, JAMÁS el nombre** (estructural: el DTO no tiene campo) (**§8.3: esta pantalla GANA una responsabilidad — es donde se ACREDITA LA VISITA y de ahí salen los JumpPoints**, y
+- ⚠️ **no puede colgar de «se abrió la ficha»**: se abre varias veces por cliente y también tecleando un correo · §8.1 rotar `APP_KEY` **lanza**, no degrada · §8.2 la entropía del carné es `2⁵⁰` en sha256 sin sal: decidirla o justificarla) · **§4.4: un carné es la siguiente credencial que `RGPD-06` existe para no perder** · §3: una URL sube el QR de versión 2 a 4, medido · **§4.8: un temporizador de navegador NO es garantía** — la ficha caduca en servidor, `SEC-04` aplicado al tiempo. `DECISIONES #142` + **`#156`**

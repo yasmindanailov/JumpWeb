@@ -9,6 +9,29 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Fases 1 y 2 CERRADAS** (la portada, ocho secciones en el orden del mockup, `#469`→`#495`); **Fase 3 hecha**
+  salvo `/servicios` (grupos, PAUSADA por el owner, `#534`); la Fase 4 (el cajón) la lleva el otro ordenador
+  (`docs/carriles/spa.md`); la Fase 5 es `specs/celebracion-e-invitacion.md`. El carril de la web numera hoy
+  en **580–609** (`docs/carriles/web.md`). ⚠️ El programa `producto-e-instancias.md` (`#611`) saca la landing
+  del producto: esta spec describe cómo se construyó la de PlayJump.
+- **§2 es el filtro que atraviesa todo**: el canvas es de PlayJump y este repo es el PRODUCTO (`#1`); cada
+  pieza pasa por «¿mecanismo o cliente?». `[DECIDIDO owner]`: se adopta el canvas entero, y con él seis cifras
+  cambiaron en Fase 1 (columna 1120 · táctil 48 · cuatro radios · aire 144/96 · 8 duraciones y 5 curvas · corte 1024).
+- **§1.2, la copia local**: `mockup_playjumppark/` es el ARCHIVO (la buena es `_v2/`), `Portada PJP.dc.html` se
+  baja TRUNCADO a 256 KiB pareciendo válido, y la copia caduca sin avisar: se lee del canvas con `DesignSync`,
+  antes de cada tanda y mientras dura.
+- **§5.1: el ORDEN de las ocho lo mandan DOS fuentes** (`Portada PJP` y `Marco Portada PJP`); `Landing PJP Modos`
+  NO cuenta. Guarda: `HomeSectionOrderTest`.
+- **Reglas duras que salieron por sección**, con guarda: `data-surface="ink"` va en la TARJETA, nunca en su
+  contenedor (`#484`) · con el panel vacío la sección no se pinta (`#488`) · el color de zona como texto es
+  `--zone-ink` (`#481`) · la portada NO llama a Google (`#491`), umbral de reseñas 1 y definitivo (`#493`), la
+  atribución es POLÍTICA de Places (`#494`) · la cabecera de página es `<x-site.page-head>` (`#525`) · las
+  interiores NO llevan cierre (`#527`) · `/bar`: la carta es IMAGEN y sin nombre la ruta da 404 (`#536`) ·
+  `landing.css` carga ANTES que `site.css` (`#535`).
+- §5.bis pasos de despliegue · §7 trampas pagadas. **Anexo al final** (133 avisos): léelo antes de tocar una sección.
+
 ## 1 · Por dónde se retoma
 
 `#452` paró el carril de diseño el 2026-09-03 con las palabras del owner: *«el diseño lo voy a
@@ -1275,3 +1298,158 @@ De las que este proyecto ya tiene fichadas y van a volver a aparecer:
   antes de su base **no hacen nada**.
 - **El canvas avisa de la suya**: *«una cifra en una nota se mide en el DOM o no se escribe»* y
   *«copiar una pieza del sistema es copiar sus ESTADOS, no solo sus colores»*.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«REDISEÑO desde el canvas de Claude Design · el sistema v1.9 · las 8 secciones · el ORDEN de las secciones · las 7 páginas · el SPA · post-form y justificante · el LOGOTIPO de Google en las reseñas · atribuir a un tercero»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/rediseno-desde-canvas.md` · `docs/DEUDA.md`.
+
+- **`docs/specs/rediseno-desde-canvas.md`**
+- 🟦 **FASE 1 y FASE 2 CERRADAS** (la portada entera con sus ocho secciones, **en el orden del mockup**) (`#469`→**`#495`**, 2026-09-10; banda 470–499) —
+- ❗❗❗ **`#536` SI TOCAS `/bar`, LA CARTA O UNA IMAGEN SUBIDA DESDE EL PANEL**: `[DECIDIDO owner]` **la carta se publica como IMAGEN** (`bar_images`, «Ajustes → El bar»), no tecleando los platos como dibuja el artboard.
+- ⚠️⚠️ **Eso cuesta tres cosas que NO se arreglan desde el panel** —el texto dentro de una imagen no lo lee un lector de pantalla, no se traduce y no se indexa—, y por eso: **`alt` OBLIGATORIO** en el formulario (es lo único que encuentra quien no la ve), **varias caras** admitidas, y **cada una es un ENLACE a su fichero** (el zoom nativo del navegador, sin visor que mantener).
+- ⚠️ **Las dimensiones se MIDEN al subir** (`getimagesizefromstring` contra el DISCO) o la página salta al cargar la imagen más grande del sitio.
+- ❗❗❗ **SIN NOMBRE DE BAR LA RUTA DA 404**, y entonces el destino **no sale ni en el menú, ni en el pie, ni en la portada** — *un 404 al que no lleva ningún enlace es una página que todavía no existe*; las **tres** superficies leen `SiteDestinations::pages()` y no un predicado propio (la tarjeta de la portada lo tenía y ofrecía una puerta a un **503** con `/bar` en mantenimiento).
+- ⚠️⚠️ **`height: auto` NO ES ADORNO: sin él `aspect-ratio` no hace nada** — los `width`/`height` de un `<img>` son *presentational hints* que mapean a CSS, así que con `width: 100%` y `height` sin declarar **manda el hint** (medido: la foto salía **544×900** en vez de 544×306 y `aspect-ratio` computaba «16 / 9» perfectamente; lo vio la captura).
+- ⚠️ **La CARTA no se recorta ni se limita en alto** (al revés que la foto del local): una carta recortada no se lee.
+- ▶ `[DECIDIDO owner]`: vuelve **la tarjeta del bar a la sección 03** pero **SOLA** —«los juegos de fuera» no tienen dato y escribirlos clavaría contenido de PlayJump—, **se puede entrar solo al bar** (TRES estados en el panel: sí · no · **sin decidir**, que no publica nada) y los **alérgenos remiten a la barra** (Rgto. UE 1169/2011, que admite informar de viva voz **si se dice dónde preguntarlo**).
+- ⚠️ **Cero relleno de acción en la página**: el bar está fuera del modelo de reserva.
+- ⚠️⚠️ **Y había TRES copias de `MaintenanceSettings::PAGE_KEYS`** —la constante, el seeder y un fixture—: al crecer la lista, el fixture puso en rojo un caso **con el producto sano**. —
+- ❗❗❗ **`#535` SI TOCAS `/contacto`, UN MAPA O EL HORARIO DE ATENCIÓN**: `[DECIDIDO owner]` **el horario de atención ES el de apertura**, lo que **tira la premisa con la que el artboard justifica la página** (él dice que lo que la salva de ser «un trozo de la portada» es que los dos son distintos) — lo que la separa de «Visítanos» es *qué se hace*: allí se consulta, aquí se escribe.
+- ▶ **NO hay campo de horario de atención y no se añade**: el plazo se deriva de `heroStatus` (cero consultas nuevas) y **sin horario publicado no se promete nada**.
+- ⚠️⚠️ **Aquí NO hay mapa**, y la guarda es INVERTIDA —no basta con que esté bien gateado: es que no esté—, con las TRES formas de traerlo cubiertas (la tarjeta, el marco de consentimiento y la URL de inserción, que **sigue configurada en el panel**). Con él se van `.map-card`, las cuatro `.visit-*` que sobrevivían por esta página y la niebla `.spray` con su token.
+- ⚠️ **El mismo número de teléfono y WhatsApp sale en UNA tarjeta** (comparado por DÍGITOS: en crudo no coinciden nunca), que es la respuesta que el dato da a una de las tres preguntas del artboard.
+- ⚠️ **El botón es `.btn--ink`** y el aviso de privacidad va **SIN casilla** (el criterio de `#350`) con el enlace como **control propio** —dentro de la frase medía 18 px contra el suelo de 48—.
+- ⚠️⚠️ **TRAMPA DE CASCADA que no estaba escrita: `landing.css` se carga ANTES que `site.css`**, así que a igual especificidad **gana la hoja compartida** — `.contact-form { max-width: none }` no hacía nada contra `.form { max-width: 640px }` y la tarjeta medía **638 donde el área daba 736**, sin fallar.
+- ⚠️ **Y `scripts/medir-seccion.mjs` parseaba `--url=` sin usarlo**: entre `#531` y hoy medía **la portada** dijeras lo que dijeras (verificado que las cifras de `#531` no salían de ahí). —
+- ❗❗❗ **`#527` LAS PÁGINAS INTERIORES NO LLEVAN CIERRE** (`[DECIDIDO owner]`): la tarjeta «Vamos a saltar» dentro de la banda del pie se construyó (`#526`) y **se revirtió** al verla en vivo —la banda llenaba un teléfono—; las interiores acaban en el pie de `#522`. Es el TERCER «no» al `Layout Paginas PJP` (con la barra blanca y el panel de 520): **no lo «termines»**. Si algún día se reabre, `#526` guarda lo medido (la tarjeta de la portada no se reutiliza tal cual —su alto sale de `--foot-h` y reserva el hueco del juego— y todo hijo nuevo del pie tiene que ir en su lista de «fila entera», delante del colofón).
+- ⚠️ *Lo que ocupa más de una pantalla se enseña desplazándose, no en un fotograma.* —
+- ❗❗❗ **`#525` SI TOCAS LA CABECERA DE UNA PÁGINA** (T3a·3, `rediseno-desde-canvas.md` §5.5): es **un componente** (`<x-site.page-head>`) y **comparte la declaración tipográfica** de la de sección —«una página no estrena tipografía»—; el rótulo es la **ruta escrita** con la MISMA función que el menú (`SiteDestinations::writtenPath`), salvo en las pantallas de servicio, que lo pasan a mano (**la de contraseña lleva un TOKEN en la URL**).
+- ⚠️⚠️ **La decoración va en la ranura `deco`, dentro del conjunto rótulo + titular que la RECORTA**: contra la cabecera entera caía detrás de la entradilla —medido: el abanico de `/precios` en móvil, desde ANTES— y ninguna guarda lo veía; lo vio la captura.
+- ⚠️ `/cumpleanos` y `/servicios` la reciben en su T3b (`[DECIDIDO owner]`). —
+- ❗❗❗ **`#495` SI REORDENAS SECCIONES DE LA PORTADA O BUSCAS EL ORDEN BUENO**: es **01 Para quién · 02 Cuánto · 03 Qué hay dentro · 04 Cumpleaños · 05 Antes de venir · 06 Reseñas · 07 Visítanos · 08 Dudas**, verificado contra **dos** fuentes del canvas (`Portada PJP`, **con control de que ningún `position: absolute` recoloque los rótulos**, y la numeración que `Marco Portada PJP` lleva en datos).
+- ⚠️⚠️ **Hay una TERCERA numeración que dice otra cosa y NO cuenta**: `Landing PJP Modos` (`[owner]`: «de esa maqueta solo sacaremos la sección de reseñas») — *mirarla y creerle es la forma de reordenar mal la portada con una fuente del canvas en la mano*; y una cuarta en `Colores de Marca PJP`, que es otro ejercicio y nombra piezas del ARCHIVO.
+- ⚠️ **REVIERTE el orden de `#314`** y no es contradicción: aquélla es del carril anterior y `#469` adoptó el canvas entero.
+- ❗❗ **REORDENAR NO ROMPE NADA** —la suite pasó en verde con el orden viejo y con el nuevo sin tocar un test: las guardas acotan por `id`, `--hero-air` cuelga de `.hero + .section` y **se muda solo** (medido: la primera recibe 112/136 px frente a 48/72), y los anclas siguen existiendo—, así que **lo único que caza un bloque descolocado es `HomeSectionOrderTest`**, que compara la SECUENCIA (por parejas, mover un bloque dos sitios sigue cumpliendo las parejas escritas) y además vigila que las ocho se PINTEN.
+- ⚠️ Su `setUp` **siembra una opinión**: la 06 no se pinta sin ellas y el seeder no las siembra (`#490`), así que sin eso compararía siete y llamaría «en orden» a una portada incompleta.
+- ⚠️⚠️ **Y correr los arneses vecinos destapó que `mutar-dudas` llevaba desde `#490` mutando la sección EQUIVOCADA** —`replace(…, 1)` sobre una indentación que comparte con «Reseñas», que entró delante—, o sea que **el rótulo de Dudas llevaba sin vigilar desde entonces**;
+- ▶ *antes de arreglar algo que tu cambio destapó, comprueba si tu cambio lo causó* (se reconstruyó `home.blade.php` desde `HEAD` y salió verde igual).
+- ⚠️ El movimiento se hizo con **control de permutación** (el multiconjunto de líneas con contenido, idéntico antes y después), no a ojo —
+- ❗❗❗ **`#494` SI TOCAS LA ATRIBUCIÓN DE GOOGLE, EL LOGOTIPO DE UN TERCERO O UNA RESEÑA**: el owner lo pidió como DISEÑO —«más veracidad con los logos de Google»— y **era un requisito INCUMPLIDO**; leída la política de Places el 2026-09-10 faltaban **cuatro** cosas obligatorias (el logotipo, el **enlace al perfil** del autor, el **aviso de traducción** y la distinción visual entre lo de Google y lo propio).
+- ⚠️⚠️ **EL LOGOTIPO NO ES LA «G» DE `google.svg`** —aquélla es Google Sign-In (`#345`); Places pide el de **Google Maps**, otro asset con sus reglas (alto **16–19 px**, espacio libre 10/10/10/5, prohibido modificarlo, `alt` con el texto «Google Maps»)—, y **el color se elige cambiando de FICHERO, jamás recoloreando**: hay dos variantes (blanca para tinta, gris para papel) y **comparten geometría al byte**, con guarda que las ata (la trampa de `#275`).
+- ❗❗❗ **Y NO PUEDE IR EN LA CABECERA DE LA SECCIÓN**: la chapa y las opiniones **no vienen de la misma fuente** y el caso frecuente es el **CRUCE** —chapa de Google sobre opiniones propias—, así que arriba marcaría como suyas unas opiniones que escribió el parque (*«misrepresent Google Maps by attributing it with non-Google Maps Platform content»*); es el defecto de `#491` pero **peor**, porque aquél era una frase inexacta y éste un incumplimiento de marca.
+- ❗❗ **«VERIFICADO POR GOOGLE» NO SE ESCRIBE**: su documentación dice *«Reviews aren't verified by Google»* — entra **esa misma frase**, que la política pide publicar, y sale siempre que haya ALGO de Google, chapa incluida.
+- ⚠️⚠️ **SI METES UN COMENTARIO EN UN SVG: dos guiones seguidos lo rompen** —XML lo prohíbe y un SVG servido como `image/svg+xml` se parsea estricto—, y **falla invisible**: HTTP 200, marcado correcto y **la caja midiendo 98×18** porque los atributos del `<img>` reservan el hueco; lo delató `naturalWidth`. *Que el fichero llegue y mida bien no es que se pinte.*
+- ⚠️ **La traducción se detecta por el IDIOMA, nunca comparando textos**: Google devuelve `originalText` SIEMPRE, y en inglés y francés traduce **las dos** reseñas del parque.
+- ⚠️ **`ext-intl` NO es requisito declarado** del producto: nombrar el idioma degrada a «Traducida automáticamente» en vez de reventar la portada.
+- ⚠️ **Cuatro mutaciones no mordían porque los casos de la vista doblan el CONTRATO** y por eso no pasan por el traductor — *doblar el contrato prueba la vista y deja el traductor sin cubrir* —
+- ❗❗❗ **`#493` SI TOCAS EL UMBRAL DE RESEÑAS O TE FÍAS DE UN DATO DE GOOGLE** (
+- ⚠️ **el umbral se queda en 1 y es DEFINITIVO**, `[DECIDIDO owner]` re-confirmado en `#494` con la inconsistencia delante): `[DECIDIDO owner]` el umbral bajó de **10 a 1** con la sección renderizada delante, y **al aplicarlo se midió que la API de Places devuelve INSTANTÁNEAS DISTINTAS entre llamadas consecutivas** —cinco consultas seguidas: **cuatro «5,0 · 1 reseña» y una «3,0 · 2 reseñas»**—.
+- ⚠️⚠️ Con el umbral en 1 y dos reseñas, **lo que publica la portada depende de qué instantánea pille el refresco de esa hora**; con recuento alto se diluye. Ficha en `DEUDA.md` con las tres salidas del owner, y una cuarta DESCARTADA: quedarse con la «mejor» es el control editorial que §1.4 dice que no tenemos.
+- ⚠️ **Y casi se informa al revés**: el primer dato visto fue el 3,0 — *una sola muestra de un tercero no es una medición*. —
+- ✅ **FASES 1 y 2 CERRADAS: la portada entera con sus ocho secciones**; lo siguiente es la **Fase 3, las páginas**, y empieza por su ARMAZÓN (`Layout Paginas PJP`), no por una página — lo comparten las siete. —
+- ❗❗❗ **`#491` SI TOCAS LA PRUEBA SOCIAL O LLAMAS A UN TERCERO DESDE LA WEB**: **la portada NO llama a Google**, lee de una caché CORTA que llena `social-proof:refresh` (
+- ⚠️ desde `#591`: cada 30 min, en UN idioma que leen las tres versiones, con caché de 35 — **la caché tiene que durar más que el hueco entre refrescos**) — `PERF-02` es la razón, y hay un caso que **PROHÍBE EL MECANISMO** (cliente HTTP falseado para explotar) **con su guarda-de-la-guarda**.
+- ⚠️⚠️ **La caché es la ÚNICA forma legal**: R2 prohíbe almacenar reseñas y valoraciones —«que la chapa se vea siempre» copiando el dato **no se puede**, no es mentir, es contrato— y el `place_id` es lo único exento.
+- ❗❗❗ **LA CIFRA NO NECESITA CONSENTIMIENTO Y LAS RESEÑAS SÍ** (resuelve la ambigüedad que §4.4.bis tenía SIN argumentar): la cifra la trae **nuestro servidor** y no lleva autor ni foto; la reseña obliga a su avatar en `lh3.googleusercontent.com`, que **sí** es una petición del visitante (`RGPD-05`) — y por eso `img-src` se amplía, que **relaja la CSP del sitio entero** (`SEC-01`).
+- ⚠️⚠️ **Defecto que solo vio la CAPTURA**: la entradilla atada a la CHAPA decía «no las elegimos nosotros» **sobre una opinión propia** — chapa y opiniones **no vienen de la misma fuente** y el cruce es el caso normal.
+- ⚠️ **El TTL es la MITAD de la cadencia**, no el doble (si no, una respuesta vieja sobrevive a un refresco fallido).
+- ⚠️ **Al bajar del umbral la caché se OLVIDA.**
+- ⚠️ **Una reseña sin autor no se publica** (R3).
+- ⚠️ **`SEC-07` se sanea DONDE NACE EL DATO**, no en la plantilla.
+- ⚠️ El consentimiento entra como **cierre desde el composition root**: `Content` no puede mirar a `Identity`.
+- ▶ Guardas `SocialProofNeverHitsTheRenderPathTest` (14) + `scripts/mutar-resenas.sh` (**19/19**) —
+- ❗❗❗ **`#490` SI TOCAS LA SECCIÓN DE RESEÑAS O LA PRUEBA SOCIAL**: la 06 va por su mitad **`a`** —las opiniones PROPIAS— y la vista **lee un CONTRATO** (`Content\Contracts\SocialProof`), no un modelo: el día que entre Google **no se toca el marcado**, se sustituye el binding por el decorador de la cascada.
+- ❗❗❗ **VERIFICADO CONTRA GOOGLE (HTTP 200) Y EL PARQUE TIENE UNA RESEÑA**: la chapa diría «5,0 · 1 reseña» y una segunda de 1 estrella publicaría un **3,0** al día siguiente → `[DECIDIDO owner]` **umbral de 10**.
+- ⚠️⚠️ **`rating()` devuelve `null` SIEMPRE en el CMS y no es una implementación a medias**: la media solo existe si viene de Google, y componerla con opiniones propias la haría pasar por la suya.
+- ❗❗❗ **«QUE LA CHAPA SE VEA SIEMPRE» NO SE PUEDE**: R2 prohíbe almacenar valoraciones más allá de una caché corta —no es mentir, es un contrato— y un número congelado deja de ser verdad; se consigue **refrescando cada hora** (~720 llamadas/mes, gratis).
+- ❗❗ **El artboard tiene la opinión APAGADA en móvil** (`conCarrusel`, sexta vez): `[DECIDIDO owner]` **sin chapa, el carril se enciende**, porque el recorte la apagó *cuando la chapa cargaba la sección*.
+- ⚠️ **`published_at` es una FECHA** y el «hace 2 meses» se deriva.
+- ⚠️ **El texto NO se recorta**: una opinión propia no tiene «la entera» adonde mandar.
+- ⚠️ **NO se siembran opiniones de ejemplo** — el seeder alimenta el arranque en frío de PRODUCCIÓN.
+- ⚠️ La ayuda del panel **no puede decir «por si Google falla»**: es lo que ve quien no acepta cookies, cada día.
+- ▶ Guardas `ReviewsSectionTest` (12) + `scripts/mutar-resenas.sh` (**11/11**) —
+- ❗❗❗ **`#488` SI TOCAS LA SECCIÓN DE DUDAS, UNA `faq` O UNA SECCIÓN QUE PINTE LO QUE PONE EL PANEL**: la 08 es **el acordeón del componente 06 del sistema** —tarjeta blanca, una fila por duda, pulsable de **64**, signo de **DOS iconos** (`plus`/`minus`) y **ninguno gira**: un aspa significa cerrar, no plegar—, **todas CERRADAS al cargar** (
+- ⚠️ y **no es divergencia**: la tabla de reglas del componente ya dice «la primera abierta en una FAQ de PÁGINA, todas cerradas en la PORTADA») y con **CERO salida**, porque preguntar vive en el cierre.
+- ❗❗❗ **CON EL PANEL VACÍO LA SECCIÓN ENTERA NO SE PINTA** —ni rótulo, ni titular, ni caja, **ni el `FAQPage`**—, regla dura del sistema;
+- ⚠️⚠️ **01, 02 y 03 NO la cumplen** y hay ficha en `DEUDA.md` (en la 03 el mosaico está guardado y la cabecera no: con cero atracciones se pinta un rótulo, un titular, una entradilla que dice «0» y 144 px de aire debajo de nada).
+- ❗❗❗ **EL HALLAZGO ESTABA EN EL DATO, NO EN EL DISEÑO**: la duda de la EDAD decía «Kids de 1 a 12 · Jump desde 6» y **la sección 01 publica «4 — 7» y «+8» desde `zones`** —la portada se contradecía a sí misma—; «¿Es necesario reservar?» **desmentía a la página**; y la de cancelar prometía devolver «**automáticamente**» con `#244` en pie (el saldo se liquida en el parque, `emails.php`: «se te devuelve allí ese día»).
+- ⚠️⚠️ **EL APARCAMIENTO SE QUEDA por lo CONTRARIO de lo que dice el canvas**: él lo quita «porque lo contesta 07» y aquí eso es **falso** —`#487` decidió no escribirlo—, y medido hay **cero apariciones en el repo**: esa duda es **el único sitio de la web que lo publica**.
+- ⚠️ **Las dudas son DATO** (`faqs`, panel): el seeder es solo la semilla, y **`seedFaqs()` no podaba aunque su docblock dijera que sí**.
+- ⚠️⚠️ **La rejilla de escritorio es de DOCE pistas**: `span 4` = **352** y `span 8` = **736** al dígito del artboard; con `1fr 2fr` salen 362,67 y 725,33 —se parece y no es su número—.
+- ⚠️ **`faq__q` sale del censo de `TouchTargetTest` porque desapareció su MOTIVO, no su sujeto** (medía 28, mide 64): la propiedad se muda a `DudasSectionTest`.
+- ⚠️ **`InteractionColourIsNotAZoneTest` se puso ROJA con el producto sano** por localizar una regla por su clave exacta: re-apuntada **por parte de selector**, más fuerte y no más débil (`#295`).
+- ⚠️⚠️ **Trampa de `#303` pagada otra vez**: una captura de ELEMENTO **cose los `fixed`** y enseñaba un «+» huérfano que no existe (el cajón cerrado lleva su botón de cantidad) — **se mide con captura de VENTANA**.
+- ▶ Medido: **735 → 623 px** en móvil y **715 → 490** en escritorio · guardas `DudasSectionTest` (11 casos) + `scripts/mutar-dudas.sh` (**19/19**) —
+- ❗❗❗ **`#487` SI TOCAS EL HORARIO, EL ESTADO EN VIVO O LA SECCIÓN «VISÍTANOS»**: `HeroStatus` distingue ahora **CUATRO** estados y no dos —«ya hemos cerrado» y «hoy cerrado» son hechos distintos, y decirlos igual contradice a la tabla que enseña las horas de hoy—.
+- ⚠️⚠️ **Los tres campos nuevos (`face`, `title`, `line`) NO tocan `status`**, que lo leen el chip del hero y el del menú: son piezas del ARMAZÓN.
+- ❗❗ **El día se resalta SOLO mientras su horario está vigente**, y son DOS condiciones (`is_today` **y** que el estado sea abierto o «abre hoy»).
+- ❗❗❗ **LA ENTRADILLA SE DERIVA DEL HORARIO** (`ScheduleDisplay::weeklyLede()`): el canvas escribe «Abrimos todos los días…», cierto en esta instalación y **falso en cualquiera que cierre un día** — y cuenta los grupos **ABIERTOS**, que tres filas con un sábado cerrado son DOS horarios.
+- ⚠️ **Tres cosas del artboard NO se escriben** (`[DECIDIDO owner]`): el aparcamiento —sin campo en el panel—, «los festivos como el finde» y el teléfono con «Cómo llegar»; esto REVIERTE parte de `#307`.
+- ❗❗ **Nacen `--ok-ink` y `--attn-ink`**, porque el verde de una marca casi nunca se lee como TEXTO sobre blanco (2,4 medido): **se declaran, no se derivan**, y sus defectos caen del lado seguro.
+- ⚠️⚠️ **Dos defectos que solo vio la CAPTURA**: `aspect-ratio` + `overflow: hidden` en el CONTENEDOR recorta el bloqueo previo del mapa y se come el enlace a la política —la proporción es del **iframe**—, y la dirección llevaba `visit__addr`, **la clase de `/contacto`**.
+- ⚠️ Y `.visit-card`, `.visit-card__ico`, `.visit__addr` y `.visit__actions` **las usa `/contacto`**: se conservan —
+- ❗❗❗ **`#485` SI TOCAS LA SECCIÓN «ANTES DE VENIR», EL QR DE LA PORTADA O BUSCAS LAS NORMAS**: la 05 **sustituye a la sección de NORMAS** (`#309`) —decía las dos mismas cosas, registrarse y traer calcetines— y **el ancla `#rules` ya no existe**; a cambio **enlaza a `/normas`**, con lo que se cierra la ficha de `#480`.
+- ❗❗❗ **EL CÓDIGO ES UN DIBUJO Y NO PUEDE SER OTRA COSA** (`SampleQrCode`, colocado **al lado del generador de verdad a propósito**): lo que hay que impedir no es que se rompa, es que alguien lo «ARREGLE» cambiándolo por `QrCode::svg()`. La propiedad no es parecerse a un QR: es **no poder decodificarse**, y es estructural —la banda de la información de formato queda vacía—.
+- ⚠️ Esa banda **no estaba reservada y la añadió una guarda**.
+- ❗❗ **LA SUPERFICIE NO PUEDE DEPENDER DEL ANCHO DE LA VENTANA**: `[data-surface]` **PINTA** (`background: var(--bg)`, la lección de `#484`), así que cuando los dos artboards discrepan —el de móvil pone la sección en papel y el de escritorio en tinta— **manda el más nuevo**.
+- ⚠️⚠️ **DOS GUARDAS NACIERON DEMASIADO ESTRECHAS Y LO DIJO EL ARNÉS**: aseverar `'<section id="rules"'` deja pasar el ancla en un `<span>`, y comprobar que la sección no pide dibujos **instalando un kit sin esas claves** mide una ausencia que el propio arnés causa.
+- ⚠️ **El precio de los calcetines NO se escribe**: el producto no sabe cuál de sus complementos son «los calcetines» y averiguarlo por su icono sería usar PRESENTACIÓN como identidad (el defecto de `accent` de `#295`/`#301`); la cifra ya la publica el carril de la 02.
+- ⚠️ **La línea del niño invitado es DATO** (`ticket_types.guardian_authorization`), y hoy no la ofrece ningún producto.
+- ⚠️⚠️ **`.btn` no declara `justify-content`**, así que cualquier botón con ancho deja su rótulo a la izquierda: las seis reglas del repo que dan ancho ya lo declaran a mano, y la convención no estaba escrita (ficha en `DEUDA.md`) —
+- ❗❗❗ **`#483` SI TOCAS LA SECCIÓN DE CUMPLEAÑOS, EL BLOQUE DE COMPLEMENTOS O EL HOVER DE UNA PEGATINA**: la sección 04 son **dos tarjetas que se comparan y NAVEGAN a `/cumpleanos`** —no venden— más el **reloj de las dos horas**, que **NO reparte** (un diagrama de tramos promete horario aunque la letra diga lo contrario).
+- ⚠️⚠️ **El bloque de complementos es UN molde compartido** (`<x-site.addons-rail>`) entre tarifas y cumpleaños: no lo copies, pásale otros productos — el ALCANCE lo decide el llamante y la deduplicación es **por ID**.
+- ❗❗ **La edad que se publica es la del PACK** (`guest_age_min/max`), no la de su zona: es el campo que **cobra el suplemento mixto**.
+- ❗❗❗ **SI PINTAS UNA TARJETA CON FONDO OSCURO, DECLÁRALE `data-surface="ink"` — Y EN LA TARJETA, NUNCA EN SU CONTENEDOR** (`#484`): pintarle el fondo **no le cambia los tokens** (sin el atributo su viñeta sale tinta sobre tinta, contraste 1,1), pero `[data-surface]` además **PINTA** (`background: var(--bg)`), así que en un contenedor sin radio deja un **rectángulo detrás de la tarjeta**.
+- ⚠️ Y su KEYLINE tiene que seguir a la superficie: con keyline y sombra en tinta sobre una tarjeta de tinta, la pegatina no se lee (contraste 1,19) y solo se ve el escalón de la esquina.
+- ❗❗❗ **Y si el paquete redefine `--shadow-float`, tiene que declarar TAMBIÉN `-hover` y `-press`**: sin ellos la pegatina reposa con la sombra dura del cliente y **salta a la difusa del producto** —defecto vivo desde `#478` en toda la portada, arreglado aquí—. Lo vigila `ClientThemePackageTest`.
+- ⚠️ **Por TERCERA vez el acta del canvas describe piezas que su artboard tiene APAGADAS**: no te la creas sin abrir el artboard. —
+- ❗❗❗ **`#481`/`#482` SI TOCAS LA SECCIÓN «QUÉ HAY DENTRO», `/atracciones` O EL COLOR DE UNA ZONA COMO TEXTO**: la portada enseña **cinco** atracciones —tres con nombre, dos **veladas**— y las 23 viven en **`/atracciones`**, que nació con esta tanda.
+- ⚠️⚠️ **El acta del canvas daba por cerradas DOS cosas que su propio artboard ya no dice**: la chapa del «18 más» está **apagada** desde el recorte del 7 sep y el titular es **«Salta, trepa y déjate caer»** — manda `doc/voz.md`, porque *los artboards de sección son el registro de sus turnos y el entregable es `Portada PJP`*.
+- ❗❗ **EL REPARTO DE LAS CINCO no es «las primeras»**: una de la primera zona y **dos de la segunda** (`RideMosaic`, sobre `zones.position` + `attractions.position`, **sin campo nuevo**); con el orden global aquí **las cinco saldrían de Jump**.
+- ❗❗ **EL VELO SON DOS CELDAS O NINGUNA** —es una BANDA que dice «la sección se acaba»—, así que con **cinco atracciones o menos** desaparece.
+- ❗❗❗ **SI PINTAS EL COLOR DE UNA ZONA COMO TEXTO, usa `--zone-ink`** (`ThemeSettings::zoneInk()`): sobre papel el lima da **1,85** y el cian **2,45**, y **un porcentaje FIJO de mezcla NO vale** —lo demostró la guarda: al 55 % esta instalación pasaba y el `#C6FF3A` que el PRODUCTO trae por defecto se quedaba en 3,14—. Oscurece por pasos de **0,88** (el de `actionHover()`, `#209`) y reproduce **al dígito el Lima 800** que el artboard escribe a mano.
+- ⚠️⚠️ **La zona de llegada va en `?zona=`, NUNCA en el hash** (un hash no llega al servidor; el precedente roto es `/precios#zona-<slug>`, que emite cero anclas).
+- ⚠️⚠️ **La retirada del carrusel cuesta TRES cosas, todas del owner y fichadas en `DEUDA.md`**: el complemento por atracción que el panel puede vincular y ya no publica nadie (**0 de 23**, la cifra de `#302` caducó) · los dibujos `zone-<slug>` del kit **sin pantalla** · y que el sitio ya no abra el cajón **posicionado en una zona**.
+- ⚠️ Si podas CSS: esta hoja tiene **llaves y nombres de clase dentro de comentarios**, y una regla solo se va si **todos** sus selectores se van (por poco se borra el foco de teclado de casillas y radios). —
+- ❗❗❗ **`#479` SI TOCAS LA SECCIÓN DE TARIFAS O LA CABECERA DE UNA SECCIÓN**: la cabecera es **UNA para las ocho** (rótulo Etiqueta · titular **Display L** · entradilla) y se aplicó a las cinco que compartían clase.
+- ⚠️⚠️ **`.rides__title` SINTETIZABA LA FUENTE** —peso 800 y `font-stretch: 75%` sobre Bungee, **que trae UNA cara**—: son **77 reglas** en el repo (ficha en `DEUDA.md`), aquí se arreglan las cinco.
+- ⚠️ **`SectionHeadlineTest` se había quedado SIN SUJETO** (vigila `class="eyebrow"` exacta y `#478` reintrodujo el rótulo con otro nombre).
+- ❗❗ **EL ARTBOARD CAMBIÓ A MITAD DE LA TANDA** (6a → **10a**): *esta fuente no solo se relee antes de cada tanda, también antes de cerrarla*. Con 10a **el NOMBRE manda** y **la zona va en el BOTÓN** — y su regla **no se copia tal cual**, porque el mockup parte `{nombre} · {matiz}` y este catálogo escribe `{ZONA} · {nombre}`: se retira el prefijo **solo cuando es exactamente el nombre de la zona**.
+- ⚠️⚠️ **Su ancho de 352 NO cierra con su propio asoma** (390,6 a la anchura de referencia): queda `min(352px, calc(100vw - 58px))`, medido en seis anchos.
+- ❗❗❗ **EL CHIP ES EL MARCADOR DE LA QUE LIDERA** (chip, ancho y foco salen del MISMO sitio, `featured`; el TEXTO lo escribe el panel).
+- ⚠️⚠️ Estuvo atado a `badge` —campo INDEPENDIENTE— y con los datos reales una tarjeta llevaba chip **sin ser destacada** mientras ninguna lo era.
+- ⚠️ El `badge` de una que no lidera **baja al MATIZ**, no se pierde.
+- ⚠️⚠️ **Si escribes un caso que reponga un valor tras un `update()` masivo: léelo DESPUÉS**, o Eloquent no lo ve sucio, **no emite la escritura** y el caso monta un escenario que no existe (lo cazó el arnés).
+- ❗❗❗ **`#480` SI TOCAS LA TARJETA DE TARIFA**: **chapa de ZONA** por tarjeta (de borde, nunca maciza: la maciza es la del líder) · **el AHORRO con marcador** —`--marker`, rol NUEVO porque `--warn` lleva un hex del PRIMER cliente y `--strip-3` cae en color de zona— · y **los COMPLEMENTOS FUERA**, en su carril.
+- ❗❗ **El ahorro se DERIVA de `duration_min` y sin duración NO se escribe** (`[DECIDIDO owner]`, contra el índice del artboard): medido, «Todo el día» contra tres ahorraría 6 € y **contra dos sale a −2 €**.
+- ❗❗ **El KEYLINE del botón es la VARIANTE `.btn--keyline`, NO un borde a mano, y NO va a todos**: el sistema declara «Completo» sin borde como defecto y acota la pegatina a hero y cierre (darlo a la familia alcanza al CAJÓN: 18 Blade + 22 Vue).
+- ⚠️ Complementos: dedup **por ID** (dos «Hora extra» distintas), bloque **dentro del panel de cada zona**, **foco de teclado en el carril** (dentro no hay controles) y la unidad sale del **PIVOTE** —«cada uno» para `fixed`, nunca «por persona»—.
+- ⚠️ **Sus iconos son DATO**: el mecanismo existe desde `#475` y el selector del panel no filtra por tipo.
+- ⚠️ **LA TARIFA ESPECIAL SE PUBLICA ENTERA, NUNCA COMO RECARGO**, en toda la web —también cumpleaños y `/precios`—, y los días **una vez por sección**.
+- ⚠️ Nace **`--money`**, el rol de CIFRA, con `var(--fg)` por defecto (estrenarlo no mueve un píxel) y su valor en el paquete.
+- ⚠️ **La CHAPA de zona se construyó y se RETIRÓ** (`[owner]`) y **`Booking` no puede mirar a `Content`**: los complementos los resuelve la VISTA.
+- ❗ **Y a la sección de NORMAS ya no se llega navegando**: el CTA retirado era su único enlace — táctil **48** · radios **0·10·16·999** · aire **144/96** · columna **1120** · la **ESCALA TIPOGRÁFICA** (diez niveles con nombre) · y el **SET DE ICONOS**, cerrado en **63 de 65**.
+- ❗❗❗ **`#475` SI TOCAS UN ICONO**: los dos que faltan **NO se copian** —son de PlayJump y `[DECIDIDO owner]` salen por el **kit de instalación**, cada uno el día que tenga pantalla—, y eso **CADUCA la ficha de `#257`** que decía que ese mecanismo no existía: existe desde `#286`.
+- ⚠️ **Sus 19 no eran los míos aunque el número coincidiera** (los suyos, 5 + **14 de zona** en rejilla 64): *dos cifras iguales no son la misma cifra.*
+- ▶ **Defecto preexistente cerrado**: cuatro de las once opciones del selector de icono del catálogo enseñaban **la clave de traducción en crudo** desde `#258`, y no lo miraba ninguna guarda — *que una opción se pueda elegir y se pueda pintar no es que se pueda leer*.
+- ⚠️ **El extractor está versionado** (`scripts/extraer-iconos.py`, el de `#257` no lo estaba) y **validado con control**; su trampa fue la de `#298`: `str.format` colapsa `{{` en `{` y dejaba el comentario Blade **sin abrir**.
+- ⚠️⚠️ **Los ocho de sección quedan sin guarda de consumidor porque NO es medible**: un `grep` da 51 huérfanos de 74 y es falso — se sirven por `<x-dynamic-component>` con la clave.
+- ⚠️⚠️ **Y si escribes un arnés que mute un componente de Vue: restaurar el fuente NO basta** — `SidebarDomContractTest` renderiza el BUNDLE, y 35 casos salieron rojos con el árbol limpio.
+- ❗❗❗ **`#474` SI TOCAS UN TAMAÑO DE TEXTO**: los diez niveles **NACEN SIN CONSUMIDOR a propósito** —se buscó una sustitución de reflujo cero y **no existe**: ni una regla coincide con su nivel en talla **y** en papel (las cuatro de mono a 12 no son «Etiqueta»: son un glifo de 6 px, un precio y un número en círculo)—, así que la excepción está nominada en `SidebarTokenBudgetTest::SIN_ESTRENAR` con un **trinquete que solo la deja encoger**: estrena un nivel sin sacarlo de ahí y se pone rojo.
+- ⚠️⚠️ **Un `clamp` tiene TRES partes y cada una manda en un tramo distinto**, así que `TypeScaleTest` mide en **cuatro** anchos (320 · 390 · 707 · 1920): nació con dos huecos simétricos que **encontró la mutación** —torcer el tramo salía verde midiendo en los extremos, y cambiar los extremos no movía nada entre 390 y 1024—. *Una medida en un punto no vigila una función.*
+- ⚠️ **La «grieta 00» es MAYOR FUERA del cajón que dentro** (281 de 412 por debajo de 15 px: **124 cajón · 125 web pública · 32 post-form**), y el reparto salió de cruzar con **las clases que el cajón emite**: el clasificador por prefijo **daba 226/55 y era falso**.
+- ▶ **Lo que la Fase 2 tiene que mover, medido**: titular de sección `clamp(48px, 7vw, **108px**)` contra Display L **52** —otro diseño, no un ajuste—, botón 14/600 contra 16/800, y **el cuerpo de texto no lo declara nadie**.
+- ⚠️ **Los tokens van por v1.10 y cambiaron en un día: reléelos antes de cada tanda** —
+- ▶ **EMPIEZA POR §2, que es el filtro que atraviesa las cinco fases**: el canvas es de PlayJump y **este repo es el PRODUCTO** (`DECISIONES #1`), así que cada pieza pasa por «¿es un mecanismo o es de este cliente?» antes de copiarse.
+- ⚠️⚠️ **La trampa está fichada desde `#257` y sigue abierta**: los 19 dibujos de parque no tienen mecanismo por instalación y `favicon.svg` conserva el naranja del PRIMER cliente — montar su landing tal cual **clava su mural dentro de JumpWeb sin que nada falle**.
+- ❗❗❗ **`[DECIDIDO owner]` SE ADOPTA EL CANVAS ENTERO, y con él SEIS cifras que hoy chocan con guardas verdes** (§3, medidas): columna **1120** contra `1176` · táctil **48** contra `44` · **cuatro** radios contra **siete** · aire **144/96** contra `240/160` · **8 duraciones y 5 curvas** contra 7 y 4 · corte **1024** (*«el 900 no existe en el sistema»*). **Se cambian en la Fase 1, antes de tocar una sección**: después obliga a rehacer lo construido encima.
+- ▶ **NO es conflicto** el papel ni la tinta del canvas: **ya están en `client.css`** (`--bg` y `--fg`); el papel viejo del primer cliente son comentarios rancios de `site.css`.
+- ❗❗❗ **EL CANVAS HA AUDITADO NUESTRO CÓDIGO** (§3.1): `Auditoria Sistema SPA PJP` está leído de `resources/js/sidebar/` y publica **nueve grietas**, tres coincidentes al dígito con lo medido aquí por separado.
+- ⚠️⚠️ **Grieta 01: el botón de comprar se pinta con `var(--zone-1)`** —la paleta de una zona, que llega desde los DATOS—, así que cambia de color a mitad del embudo si alguien retiñe una zona.
+- ⚠️ **Grieta 00**, la mayor y del owner: el cuerpo del cajón es **13 px** contra un suelo de **16**, y subirlo obliga a revisar el reflujo de **25 pantallas**.
+- ⚠️⚠️ **DOS TRAMPAS DE LA COPIA LOCAL** (§1.2): `mockup_playjumppark/` **no está caducada, ES EL ARCHIVO** —sus 21 artboards son los que el canvas movió a `archivo/`, con paleta antigua que su propia cabecera prohíbe copiar—; la buena es **`mockup_playjumppark_v2/`**. Y **`Portada PJP.dc.html` se baja TRUNCADO** (256 KiB exactos): trae `truncated: true` pero **el fichero parece válido y se corta por la mitad**, así que la portada se lee de sus artboards por sección.
+- ⚠️ **El inventario Fase 0 destapó TRES huecos de DATO** (§4.2): `park_rules` tiene cuatro columnas y `/normas` pide **el porqué** y **el momento** de cada norma · `attractions` **no tiene `slug`** · y la edad de la zona es **texto libre** mientras `ticket_types` la tiene estructurada — **dos fuentes de edad que discrepan, y de ahí sale el cobro del mixto**. De las siete páginas, **cinco existen**; faltan `/atracciones` y `/bar`, y **`/entradas` existe sin estar en el inventario del canvas**.
+- ▶ **Cinco fases** (§5): sistema → armazón y 8 secciones → páginas → SPA → post-form y justificante. **Las cuatro excepciones del owner** —racimo, hero de cabecera, hero del cierre, mega menú— se le enseñan **renderizadas** en la Fase 2.
+- ▶ **§6 es lo que el canvas le debe a él**, ocho cosas, y ninguna bloquea código porque todo es data-driven

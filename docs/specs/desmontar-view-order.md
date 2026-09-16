@@ -21,6 +21,22 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **El desmontaje TERMINÓ** (`#170`→`#177` y `#184`→`#189`, 2026-08-27): `ViewOrder` pasa de 5.280 líneas y 98
+  métodos a 2.355 y 50, **sin ninguna orquestación de dinero/aforo** — vive en `Booking\Services\{OrderItemEditor,
+  ItemEditPricing, OrderItemEventDataWriter, OrderItemCanceller, OrderItemRefunder, ZoneDaySlotLock}`.
+  `[DECIDIDO owner]` (`#181`): con la 4b el desmontaje termina (§4.4 cerrada). Sigue 🟦 solo por la pasada
+  de navegador del owner (§6·5, las diez acciones).
+- **`ZoneDaySlotLock` y `OrderItemEditor` están en el `CRITICAL_RE`** → `VERIFY_CONC=1` (escenario `panel-edit`
+  de `purchase:verify-oversell`). `ItemEditPricing` y `OrderItemEventDataWriter` son los controles negativos.
+- **Empieza por §9.6.1** (la ejecución sub-paso a sub-paso, con sus 70+ mutaciones) **y §4.3, el mapa
+  transaccional REAL**: la transacción contiene SOLO aforo bajo `withZoneDayLock()`; la secuencia financiera
+  corre POST-COMMIT. §1.4: el panel tenía su PROPIA disponibilidad y sustituirla puede destapar una diferencia
+  de CONDUCTA (hallazgo, no error de mudanza).
+- **Regla pagada (§9.1): commitear en local ANTES de mutar.** `AFORO-01`/`AFORO-05` son las invariantes más
+  expuestas (§5). Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema — MEDIDO, no supuesto
 
 `DEUDA.md` lo tiene en **Alta** con la etiqueta «sin plan» desde el 2026-08-14. Antes de diseñar
@@ -1084,3 +1100,15 @@ TERMINA.** La edición con dinero vive en el dominio:
 nuevos que ganaron reglas SIN red** — el hallazgo transversal de la extracción: reglas de defensa que
 la página no podía alcanzar (Filament valida antes, el despachador filtra el permiso, el dominio
 garantiza lo mismo por otro camino) y que solo un servicio invocable sin Filament permite probar.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Desmontar `ViewOrder` · el god-class del panel · tocar edición/reembolso/calendario de un pedido»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/desmontar-view-order.md` · `docs/DEUDA.md`.
+
+- `docs/specs/desmontar-view-order.md`
+- 🟦 **CÓDIGO COMPLETO — el desmontaje, de agente, TERMINÓ el 2026-08-27** (`#170`→`#177` las tandas del 26; la 4b entera el 27: `#184` A · `#185` B · `#186` C0 · `#187` C · `#188` D+E · `#189` F+G): **`ViewOrder` en 2.355 líneas y 50 métodos (de 5.280 y 98)**, sin NINGUNA orquestación de dinero/aforo — vive en `Booking\Services\{OrderItemEditor,ItemEditPricing,OrderItemEventDataWriter,OrderItemCanceller,OrderItemRefunder,ZoneDaySlotLock}` ·
+- ❗ **Sigue
+- 🟦 solo por la pasada de NAVEGADOR del owner (spec §6·5, las 10 acciones)** ·
+- ▶ **EMPIEZA POR §9.6.1 (la ejecución sub-paso a sub-paso, con sus 70+ mutaciones y los 15 tests que las reglas sin red ganaron) y §4.3 (el mapa transaccional REAL, que el editor conserva: la txn contiene SOLO aforo bajo `withZoneDayLock()`, la secuencia financiera corre POST-COMMIT)** · §8 es el registro de la revisión (`#167`/`#168`) · §5: once invariantes, `AFORO-01`/`AFORO-05` las más expuestas · `[DECIDIDO owner]` (`#181`): con la 4b el desmontaje TERMINA (§4.4 cerrada) · regla pagada §9.1: commitear en local ANTES de mutar · `docs/DEUDA.md`

@@ -33,6 +33,19 @@
 >
 > ⚠️ **Antes de tocar nada**: `docs/INVARIANTES.md` §1 (PAY) y `docs/sistemas/DEPOSITO.md`.
 
+## §0 · Antes de tocar
+
+- **📜 HISTÓRICO: no construyas sobre este texto.** El modelo de DOS EJES que diseñó y ejecutó se retiró del
+  árbol el 2026-09-01 (`#315`); lo vigente es el LIBRO (`specs/desglose-libro.md`, `Booking\Services\OrderBook`)
+  e `INVARIANTES` `PAY-16`/`PAY-17` reescritas. Este documento explica cómo se llegó al libro.
+- **Lo que sigue valiendo de aquí**: los CUATRO defectos de DOMINIO de §9.2 (arreglados y con guarda; el peor,
+  el pedido cancelado sin reembolsar, no lo caza ninguna identidad) · la receta reproducible de las 25
+  acciones y las cuatro puertas de `OrderCreator` (§4.quater) · el método (§9.4).
+- **`R-L6UTIA` (§17) parece un fallo del desglose y es un DATO ROTO**: comprueba si el dato es real antes de
+  buscar el fallo en el código.
+- `L6` (§23): «Importe al reservar» dice hacia dónde y cuánto, y su frase `null` ES la condición de enseñar la
+  línea; no la re-derives comparando importes. `L4` aparcado; `L5` retirado (no era un defecto).
+
 ## 1. Qué se auditó, y por qué
 
 El owner preguntó si el desglose que ve el cliente **es cierto**, y si el desglose del PANEL y el del
@@ -1792,3 +1805,15 @@ que es un fallo más silencioso todavía, porque parece texto. La comprobación 
 del cliente, y la guarda tiene que mirar el mecanismo del fallo real. Es la cuarta vez en esta spec
 que una comprobación escrita «de sentido común» resulta no medir nada (§16.5, §18.5, §19.6) — y las
 cuatro se descubrieron **rompiendo el código a propósito**, nunca leyendo el test.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Desglose de dinero que ve el CLIENTE (ledger, «Mis pedidos»)»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/desglose-dinero-cliente.md` · `docs/specs/desglose-libro.md`.
+
+- `docs/specs/desglose-dinero-cliente.md`
+- 📜 **HISTÓRICO desde la T3·4 del libro (`#315`, 2026-09-01): el modelo de DOS EJES que diseñó se RETIRÓ del árbol — lo vigente es `docs/specs/desglose-libro.md` (la fila de arriba) e `INVARIANTES` `PAY-16`/`PAY-17`; de aquí siguen valiendo el método (§9.4), los cuatro defectos de dominio (§9.2, con guarda) y la receta de las 25 acciones (§4.quater)** — antes
+- ✅ CERRADA (`#134`, §23: **`L6` ejecutado** — «Importe al reservar» dice hacia dónde y cuánto, y **su frase `null` ES la condición de enseñar la línea**: no la re-derives comparando importes) — **TANDAS A, B y C EJECUTADAS + los CUATRO defectos de lectura** (§15 el dominio dice la verdad · §16 el desglose ya es LEGIBLE · **§18: y ya es VERIFICABLE** · **§19: «Mis pedidos» es pantalla propia — y el suelo que la sostenía PERDÍA pedidos**) · marco en `DECISIONES #127`, lectura en `#128`, pantalla en `#129`, vueltas con el owner delante en **`#130`** (§20) y **`#131`** (§21: la fecha se pegaba a un importe que no se cobró ese día —7 pedidos, 6 SANOS— y la línea del cargo por cambios no decía por qué). · **`#132`** (§22: **auditoría de las 25 ACCIONES** —corpus borrado y reconstruido por los flujos reales, 25/25 cierran— y el desglose que NO cuadra deja de servirse como si nada: al cliente se le oculta, al operador se le enseña, y el parque se entera por log).
+- ❗ **§22.2 deja TRES cosas de PRODUCTO planteadas.**
+- ⚠️ **§22.3: cuatro trampas para conducir el panel** —el cambio de fecha lo mueve el CALENDARIO, no el formulario—. **Empieza por §9, §10 y §18, no por el principio**: §9.2 son **CUATRO defectos de DOMINIO** que las dos auditorías anteriores no llegaron a construir —y **el peor, el pedido cancelado sin reembolsar, no lo caza ninguna identidad**— · §9.3, la proyección son **cuatro** defectos y no uno · **§10: los DOS EJES CERRADOS, verificados en 58 de 58 pedidos reales** · **§17: el pedido `R-L6UTIA`, que parece un fallo del desglose y es un DATO ROTO** (comprueba si el dato es real ANTES de buscar el fallo en el código) · §18.5 y §19.1, lo que enseñó la ejecución —**incluido que `GET /me/orders` perdía dos pedidos de 57, y que la guarda de conducta salía VERDE en SQLite**— · §9.4, las trampas de método · §4.quater, la receta y las CUATRO puertas de `OrderCreator`

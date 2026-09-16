@@ -8,6 +8,27 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Tandas 1, 2, 3, 5 y 6 en el árbol** (`#223` el menú · `#224` el buscador · `#232` la puerta en tablet ·
+  `#320` el rol de puerta · `#461` el armazón); queda el OJO del owner. El menú es PLANO y de cinco sitios; las
+  19 pantallas de puesta en marcha viven en `/admin/ajustes`, por el menú del avatar.
+- **Si añades un Resource o una Page, colócala**: en el menú, en `AdminSettingsHub::areas()` o en
+  `OUTSIDE_HUB`; si no, `AdminNavigationTest` pone la suite en rojo, y con razón: quedaría inalcanzable salvo
+  tecleando la URL. **Ocultar NO es autorizar** (`canViewAny()`/`canAccess()` deciden).
+- **`#320`**: nace el rol `puerta` (dos permisos, entra por el mismo login y no navega, `RestrictsPuertaRole`);
+  retirar un ítem del menú lo borra TAMBIÉN del buscador y ninguna guarda lo ve; `puerta` está en `PANEL_ROLES`
+  porque esa lista responde «¿puede autenticarse?». Un docblock puede crear una flecha de arquitectura: Pint
+  convierte un `{@see}` en `use`.
+- **`#461` (§13)**: la marca por TEMA con `client-logo-ink.svg` (no crees un `client-logo-dark.svg`); con dos
+  imágenes el nombre accesible va en un `sr-only`; el idioma va en el menú del avatar (`Action::postToUrl()`,
+  un solo escritor de `panel_locale`); **`route()` en el cuerpo de `panel()` tumba el panel entero**: en closure.
+- **§4.5: no uses utilidades de color de Tailwind en el panel** (`--color-primary-500/600` no están declaradas:
+  el aro de foco sale invisible con el test en verde). **§7.3**: la búsqueda sobre un campo traducible distingue
+  mayúsculas en MySQL y la palanca de Filament revienta en SQLite. **§8: la puerta es un KIOSCO** de tablet, todo
+  CSS a propósito, y «Nueva búsqueda» no se oculta (privacidad). Filament MEMOIZA la navegación: un proceso por rol.
+- Anexo al final con la fila del enrutador.
+
 ## 1. El problema, medido
 
 Todo lo de esta sección se midió sobre `main` el **2026-08-28** antes de diseñar nada.
@@ -767,3 +788,41 @@ sitios; lo que cambia es cómo se ven y dónde vive cada control del armazón.
 sonda de navegador en tres anchos (sidebar 96 px · ítem 81×64 en columna con icono de 28 · buscador
 con **0 px de desvío** del centro a 1080 y 1440 · CTA 152×44 · cero desbordamiento horizontal) · los
 tres caminos de la marca probados con ficheros reales, en claro y en oscuro · suite **4.240 verde**.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Menú del panel · dónde vive una pantalla · añadir un Resource/Page nuevo · «Ajustes» · el BUSCADOR · la puerta en TABLET»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/panel-navegacion.md`.
+
+- **`docs/specs/panel-navegacion.md`**
+- 🟦 —
+- ❗❗❗ **`#320` SI RETIRAS UN ÍTEM DEL MENÚ, AÑADES UN ROL O TOCAS EL ACCESO AL PANEL** (§12): nace el rol **`puerta`** (dos permisos, entra por el mismo login y **no navega el panel**, `RestrictsPuertaRole`) y al ADMIN se le retira «Puerta» del menú, que baja a «Ajustes → Sistema». **`staff` NO se tocó.**
+- ⚠️⚠️ **Retirar un ítem del menú lo borra TAMBIÉN del buscador global** —saca sus pantallas de la propia navegación— **y ninguna guarda lo ve** si la pantalla vive fuera del shell de Filament (la de huérfanas solo mira las REGISTRADAS): habría quedado alcanzable solo tecleando la URL, en verde.
+- ⚠️ **`puerta` está en `PANEL_ROLES` aunque no navegue**, y no es contradicción: esa lista responde a «¿puede autenticarse?» — Filament comprueba `canAccessPanel()` DENTRO de `authenticate()` y si es falsa hace `logout()`, o sea que sacarlo de ahí le cierra el LOGIN.
+- ⚠️ **`RequiresStaffOrAdmin` → `RequiresPanelRole`** (alias `panel_role`), leyendo `User::PANEL_ROLES` en vez de una segunda copia.
+- ⚠️⚠️ **Un docblock puede crear una flecha de arquitectura**: Pint convirtió un `{@see}` en `use` y metió Identity→HTTP; reescribir la cita en prosa NO basta, hay que quitar el import.
+- ⚠️ **Se descartó un diseño ya implementado** (recortar diez permisos a `staff` y sacarlo del panel): rompía 116 tests, pero el motivo fue que **dejaba la matriz de 22 permisos SIN SUJETO** (admin se salta todo por `Gate::before`). — **TANDAS 1, 2 y 3 EN EL ÁRBOL** (`#223` el menú · `#224` el buscador · `#232` la puerta en tablet, 2026-08-28, `[DECIDIDO owner]`) — el menú es **PLANO y de cinco sitios** (Hoy · Calendario · Pedidos · Clientes · Puerta); las **19 pantallas de puesta en marcha** salieron a `/admin/ajustes`, y se entra por el **menú del avatar**.
+- ❗ **Si añades un Resource o una Page, tienes que colocarla**: en el menú, en `AdminSettingsHub::areas()`, o en `OUTSIDE_HUB` — si no, `AdminNavigationTest` te pone la suite en rojo, y con razón: quedaría **inalcanzable salvo tecleando la URL**.
+- ⚠️ **Ocultar NO es autorizar**: el acceso lo siguen decidiendo `canViewAny()`/`canAccess()`, intactos.
+- ⚠️⚠️ **La primera medición del agente fue FALSA** —Filament **memoiza** la navegación y dio que el empleado veía las 24 del admin—: para medir el menú de dos roles, **un proceso por rol**.
+- ⚠️⚠️ **§4.5: NO uses utilidades de color de Tailwind en el panel** — `hover:border-primary-500` y `focus-visible:ring-primary-600` compilan **pero `--color-primary-500/600` no están declaradas** (solo la 400), así que el aro de foco sale INVISIBLE con el test en verde; es el fallo de `#217`. El estilo va en `resources/css/filament/admin/theme.css` con `var(--primary-*)`.
+- ⚠️ **§5·3: un test se volvió VACÍO sin ponerse rojo** al cambiar la conducta.
+- ▶ **§6: lo que el menú NO puede arreglar** — la pantalla **«Hoy»** y la **búsqueda global (⌘K)**, que son las dos mitades del «todo está separado»; ~~la búsqueda global~~ **HECHA** (§7): 14 recursos + una categoría de **PANTALLAS** que Filament no trae, buscables por su descripción y sin tildes.
+- ⚠️ **El empleado busca PEDIDOS, NO clientes** (`[DECIDIDO owner]`).
+- ⚠️⚠️ **§7.3: si tocas una búsqueda sobre un campo traducible, lee esto antes** — MySQL extrae el JSON con colación `utf8mb4_bin` y el `LIKE` distingue mayúsculas («jump» daba 0, «Jump» daba 5, y estaba así en las tablas del panel desde siempre); **la palanca de Filament para arreglarlo revienta en SQLite, que es donde corre la suite**, y **un test en SQLite NO demuestra la conducta en MySQL**.
+- ⚠️ **§7.4·1: PHP 8.4+ prohíbe redeclarar una propiedad de un trait con otro valor** (error FATAL al cargar la clase).
+- ⚠️⚠️ **§7.4·2: una mutación que no muerde puede ser una mutación DÉBIL** — la guarda del empleado parecía ciega y lo que pasaba es que la defensa tiene DOS capas (`canViewAny` abre la búsqueda, `canView` da la URL, y sin URL no hay resultado).
+- ▶ **§8: la PUERTA es un KIOSCO de tablet** (`[DECIDIDO owner]`: fija en soporte, horizontal y con tablet propia).
+- ⚠️⚠️ **§8.2: cuatro columnas salieron PEOR que tres** —al estrecharse, las tarjetas envuelven y crecen a lo alto: la rejilla bajó 18 px y el total SUBIÓ 3—.
+- ⚠️ **§8.1: el caso PEOR no era el típico** (1.115 px vs 896).
+- ⚠️ **§8.3: es todo CSS a propósito** —el velo de privacidad es un `blur()` con un `.gate-veil` absoluto encima, y cualquier `display:contents` o scroll nuevo se lo lleva por delante—; y **«Nueva búsqueda» NO se puede ocultar**: quita de pantalla la ficha del cliente anterior.
+- ▶ **Lo que sigue abierto**:
+- ⚠️⚠️ **«Crear pedido» para TABLET (§6·U7), que CORRIGE la premisa de `#232`** —el owner dijo que el resto del panel se usaba en ordenador y luego que **el gerente creará las reservas desde la tablet**—; la pantalla «Hoy» (§6·U3, y OJO: **ya existe**, le faltan cinco columnas) y el **calendario/tablas en tablet** (§6·U6; la palanca `Split`/`Stack` de Filament **no se usa en ninguna tabla**) · —
+- ❗❗❗ **`#461` SI TOCAS EL ARMAZÓN** (§13): `[DECIDIDO owner]` la marca lleva el logotipo **por TEMA** (claro/oscuro) con «Administración» debajo · el **buscador va centrado** y dice qué encuentra · el **idioma salió del topbar al MENÚ DEL AVATAR** · «Crear pedido» pasa a la **escala de acción primaria** (127×32 → **152×44**) · y el **menú lateral es FIJO y estrecho** (`sidebarWidth('6rem')`, icono de 28 con el rótulo debajo, `sidebarCollapsibleOnDesktop()` RETIRADO, **cero vistas de Filament sobrescritas**).
+- ⚠️⚠️ **`route()` EN EL CUERPO DE `panel()` TUMBA EL PANEL ENTERO** —el proveedor se registra antes de que existan las rutas: `/admin` y hasta `/admin/login` dan **500**—; va en closure, como el ítem «Ajustes» ya hacía.
+- ⚠️⚠️ **NO crees un `client-logo-dark.svg`**: el hueco del logotipo sobre tinta es `client-logo-ink.svg` y existe desde `#216` (la nota que decía que faltaba estaba CADUCADA) — dos ficheros para un rol se desincronizan.
+- ⚠️⚠️ **Con DOS imágenes el nombre accesible se pierde en un tema** (`display: none` saca el `alt` del árbol): las dos van `aria-hidden` y el nombre en un `sr-only` permanente.
+- ⚠️ **El idioma NO va a «Ajustes»**: `staff` no puede abrirlo y se quedaría sin el idioma que existe para él; es `Action::postToUrl()` contra la MISMA ruta, **un solo escritor de `panel_locale`**.
+- ⚠️ **El rótulo del menú no pasa de 13 caracteres** o se parte («Calend/ario»), y lo que lo estrangulaba era el CARRIL (`.fi-sidebar-nav` se llevaba 48 de 96 px), no el cuerpo de letra.
+- ⚠️ **Un `public_path()` temporal en un test rompe el manifiesto de Vite** y toda petición al panel sale 500. Guarda: `PanelShellTest` (12 casos · 9/9 mutaciones)

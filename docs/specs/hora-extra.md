@@ -10,6 +10,28 @@
 > Carril: producto/reservas. Autor: agente, 2026-09-02 · segunda revisión y ejecución 2026-09-03.
 > ⚠️ **Toca AFORO**: `CartOccupants` · `AddonOccupancy` · `AddonResolver` están en el `CRITICAL_RE`.
 
+## §0 · Antes de tocar
+
+- **Toca AFORO y DINERO**: `CartOccupants`, `AddonOccupancy`, `AddonResolver` y `AddonDateReconciler` están en
+  el `CRITICAL_RE` → `VERIFY_CONC=1` y `purchase:verify-oversell` (escenarios `extra-hour` y `stay-extension`,
+  los dos vistos FALLAR sin la defensa). Código completo: **empieza por §8** (ejecución y trampas) y §12
+  (`#448`, la unidad sellada en la línea). Las cotas y el precio son DATO del panel.
+- **Dos mecanismos excluyentes, por unidad distinta**: para una ENTRADA la hora extra es *un ocupante nuevo,
+  más pequeño, pegado detrás* (`occupies_after_parent`: la franja siguiente es `start_time == fin del padre`,
+  si no existe es invendible); para un PACK *la fiesta dura más* (`extends_parent_stay` + `order_items.extra_minutes`,
+  hermano de `seats`). Un extensor devuelve `false` en `occupiesAfterParent()`: mira las dos ramas.
+- **`CartOccupants` es la derivación ÚNICA de ocupantes provisionales** (`OrderCreator` y `AvailabilityReader`);
+  el TOPE son dos mitades (`effectiveQuantity()` y la SUMA en `resolve()`); el editor mueve la familia ENTERA
+  bajo el lock (`landOccupyingFamily`).
+- **`#448`: la unidad con que se contó viaja en la LÍNEA** (`order_items.addon_quantity_mode`, `null` =
+  silencio) y la leen SOLO las tres preguntas sobre una línea VENDIDA vía `AddonResolver::soldQuantityUnit()`;
+  **la OFERTA lee el catálogo de hoy** o el escaparate se congela.
+- **`#426`: «cuándo termina» compara inicio + duración efectiva en hora del parque** (dos defectos opuestos
+  se compensaban: arreglar uno solo empeora); `resultingStayMinutes()` es la única derivación.
+- **`#415`: el complemento se tarifica por el día de la VISITA** (siete puntos); `#417`: mover el día retira
+  las hijas que ese día no se venden (sin hecho) y re-tarifica las que cambian (con hecho).
+- Anexo al final con la fila del enrutador. Queda la T4 de `#448` (doc + OJO del owner).
+
 ## 1. Contexto y problema
 
 `[owner, 2026-09-02]`: *«la idea es no tener 4 productos tipo entrada 1 hora, entrada 2 horas… para no
@@ -2392,3 +2414,70 @@ está bien puesto en las dos listas · **el contrato no cambia** · la regla de 
 de servidor (un `wire:click` forjado tampoco sube una línea divergente) · `#449` no añade arista al
 grafo de bloqueos · `AddonDateReconciler`, `OrderItemCanceller` y `markCancelled()` no invalidan el
 sello.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«La HORA EXTRA · un complemento que ocupa aforo · el precio de un complemento por DÍA · mover la fecha de una reserva con complementos · CAMBIAR LA CONFIGURACIÓN DE UN COMPLEMENTO YA VENDIDO · el modo «por invitado» · el candado que no deja»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/hora-extra.md` · `docs/specs/complementos-post-reserva.md`.
+
+- **`docs/specs/hora-extra.md`**
+- 🟦 —
+- ❗❗❗ **`#448` SI VAS A TOCAR LA CONFIGURACIÓN DE UN ENGANCHE, EL CANDADO DEL MODO O LA CANTIDAD DE UNA LÍNEA HIJA — §12, T1+T2+T3 EN EL ÁRBOL, queda la T4 (doc + OJO del owner)**.
+- ⚠️⚠️ **NADA DESPLEGADO todavía** (producción en `200b019a`) **y la T2 SÍ cambia conducta**: el despliegue se decide a la vista.
+- ▶ **La regla, en una línea: la unidad con la que se contó una cantidad viaja en la LÍNEA (`order_items.addon_quantity_mode`), no en el catálogo** — y la leen SOLO las tres preguntas sobre una línea VENDIDA (dinero, aforo, permiso) a través de `AddonResolver::soldQuantityUnit()`; **la OFERTA sigue leyendo el catálogo de hoy y debe seguir haciéndolo**, o el escaparate se congela.
+- ⚠️ **`null` es SILENCIO, jamás un default.**
+- ⚠️ **El patrón que ordena todo: la REGLA es una; de dónde sale el dato, no** — por eso cada derivación tiene su variante `…ForUnit()`.
+- ⚠️⚠️ **Decidir con el sello y CALCULAR con el catálogo deja la línea en CERO** (lo cazó su propio caso).
+- ⚠️ Guarda de censo: `SoldLineUnitHasOneSourceTest`, **dos listas** — OFERTA puede crecer, LÍNEA VENDIDA tiene que ser cero.
+- ▶ **`#449`**: `GuestCountAdjuster` no re-escalaba los por-invitado **y su spec decía tres veces que sí** — cerrado.
+- ❗❗ **Y el arnés de mutación dejó el árbol MUTADO dos veces en esta banda** (un `trap … EXIT` que no corre con SIGKILL, y un fichero fuera de `FICHEROS`): las dos las cazó **volver a correr la suite ENTERA antes de commitear**, no el arnés. El diagnóstico original: el owner no podía poner la hora extra «por invitado» y vio lo que `#443` no vio — **esa ventana NO SE ABRE NUNCA** (medido llamando al método real sobre producción: el candado **bloquea 9 de 29 enganches**, y entre ellos los menús, que **toda fiesta lleva** porque `groupDefault()` siempre elige uno del grupo).
+- ▶ **La salida es `PAY-19` con el molde de `#288`: la UNIDAD se escribe en la línea al nacer** (`order_items.addon_quantity_mode`, escalar y **nullable sin default** — `null` es SILENCIO, y un `default('fixed')` afirmaría un modo que nadie midió).
+- ⚠️⚠️ **NO es solo dinero: la otra mitad es AFORO y no estaba escrita en ningún sitio** — el modo gobierna `AddonOccupancy::blocksFor()` → `extra_minutes` del PADRE: **900 minutos de sala** con 15 invitados.
+- ⚠️⚠️ **Y el disparador es más ancho que «editar la cantidad»: mover el DÍA re-alarga la fiesta con el modo de hoy** (`OrderItemEditor::changeSlot()`) — y en ese mismo `forceFill` la línea siguiente re-precia bien el sello de EDADES: *la doctrina ya está aplicada justo al lado de la línea que la ignora*.
+- ⚠️⚠️ **La configuración vive en DOS tablas**: `extends_parent_stay`, `duration_min` y `seats_per_unit` son de `ticket_types`, **y este sello NO las alcanza** (deuda §12.15·3, la siguiente pared).
+- ❗❗❗ **EL DAÑO YA OCURRIÓ**: la línea #5 de `R-BOMAZH` se vendió el 01/09 como 1 menú a 2,00 € y el enganche pasó a `per_guest` el 06/09 → la primera edición la pondría en **34,00 €**; **es la ÚNICA** (control: 1 descuadre sobre 27 hijas vivas) y se sella como `fixed` en la migración, nominada.
+- ⚠️⚠️ **CADUCA §11.11·A3** («cero `per_guest` en producción»): **hay cuatro**.
+- ⚠️⚠️ **El relleno NO puede salir del pivote vivo** —convertiría un error hoy corregible en un hecho inmutable, y sobre `R-BOMAZH` escribiría una mentira—: **solo los dos extensores**, y su prueba es el **RASTRO** (`audit_logs` toca `108` y `110`, nunca `121` ni `122`), no el candado, que nació el 08.
+- ⚠️ **El candado se RE-APUNTA, no se retira** («¿hay líneas vivas SIN SELLO?», conjunto que solo encoge): sin un instante sin defensa.
+- ⚠️ **El sello del editor NO sale de `$offeredAddons`** sino de `ItemEditPricing`, del mismo `$pivot` que define la cantidad — hay TRES lecturas del pivote por `edit()` y solo una dentro de la transacción.
+- ⚠️ Todo lo demás es OFERTA y sigue leyendo el catálogo de hoy: *un sello que gobernara la oferta congelaría el escaparate*.
+- ❗❗ **CONVIENE CERRAR ANTES `GuestCountAdjuster`** (`DEUDA`): **no re-escala las hijas por-invitado** y su spec afirma dos veces que sí — se activa **exactamente** con este cambio. —
+- ❗❗❗ **`#424`→`#426` LA HORA EXTRA DE UN PACK ESTÁ COMPLETA** (§10, las CINCO tandas; solo quedan el PRECIO, el `max_qty` y las cotas del mostrador, que no bloquean el código) —
+- ⚠️⚠️ **`#426` SI TOCAS «CUÁNDO TERMINA» UNA RESERVA**: `isFinishedInPractice()` tenía **DOS** defectos en direcciones OPUESTAS que **se compensaban** (el fin de la FRANJA se queda corto; parsearla como UTC atrasa 1–2 h), así que **arreglar uno solo EMPEORA** — hoy compara **inicio + duración efectiva en hora del parque**, y de él cuelgan el post-form, el cierre de extras, la ventana de DINERO del suplemento mixto, el libro y «Mis reservas» —
+- ⚠️⚠️ **si tocas el EDITOR o la RE-PROGRAMACIÓN**: los minutos resultantes salen de **UNA** derivación (`resultingStayMinutes()`) que da a la vez el cupo que se revalida y el hecho que se escribe, y **el plan de fechas va ANTES de validar** (`#417` aplicada a la extensión: los minutos de una extensión que el día nuevo retira no pueden contar contra el cupo).
+- ⚠️⚠️ **La oferta de horas y la de días son DOS vías** (`displayAvailableFor` y `slotMeetsItemRequirements`) y hay que arreglar las dos; y **un caso que mire una hora DENTRO del tramo actual no mide nada**: la oferta cuenta la huella propia a propósito (`#173`), así que sale excluida igual — **se vende como complemento y se modela como DURACIÓN**: no añade un ocupante, **alarga la ventana de esa misma fiesta** (`extends_parent_stay` + `order_items.extra_minutes`, hermano de `seats`, que los dos mapas suman en el `SELECT`).
+- ⚠️⚠️ **El EDITOR la RECHAZA a propósito** (`addon_stay_extension_unsupported`) hasta la T3: añadirla a una fiesta vendida la alargaría sin revalidar el cupo, y eso no falla — sobrevende.
+- ⚠️⚠️ **Un extensor devuelve `false` en `occupiesAfterParent()`**, así que atravesaba CUATRO defensas escritas sobre ese predicado (`#423` · A3–A6): si tocas la oferta, el modelo de vista, la familia que aterriza bajo el lock o el tope, **mira las dos ramas**.
+- ⚠️ El tope de personas («no se quedan más de los que entran») **no significa nada** para bloques de tiempo: `max_qty` del enganche es OBLIGATORIO.
+- ▶ Verificado con **14/14 mutaciones** y **OCHO** escenarios de `purchase:verify-oversell` — el nuevo, `stay-extension`, es el primero que mide una **AUSENCIA** (nadie debe ganar) y su primera versión **nació inútil**: repartir los workers entre dos horas hacía que el veredicto dependiera de quién ganara la carrera.
+- ⚠️ Cuesta CAPACIDAD (si todas la compran, el sábado pasa de 15 fiestas a 9) y eso debe fijar su precio. —
+- ❗❗❗ **`#421`/`#423`: EL DISEÑO Y SU ADVERSARIAL** (§10.1–§10.8) — el hueco está REPRODUCIDO (con las tres guardas saltadas, una fiesta de 20 con hora extra dejaba el cupo en `fiestas=0 ninos=0` y **aceptaba otra fiesta encima**) y eran DOS defectos: el conocido y que **la hija nacía con `seats = 1`**, «una persona» donde hay veinte.
+- ⚠️⚠️ **Son DOS defectos y el segundo no estaba escrito**: la hija nace con `seats = 1` —`cantidad × seats_per_unit`—, así que aunque se contara en el pool de packs diría **una persona donde hay veinte**.
+- ▶ **El diseño: se vende como complemento y se modela como DURACIÓN** —interruptor hermano `extends_parent_stay` (excluyente con `occupies_after_parent`, porque la unidad es distinta: personas vs bloques de tiempo, y `prices` es una tabla sola) + **`order_items.extra_minutes` materializado**, hermano de `seats`, porque derivarlo cuesta una consulta por franja (18 el sábado).
+- ⚠️⚠️ **Cuesta CAPACIDAD y eso fija su precio**: si todas compran 1 hora extra, el sábado pasa de **15 fiestas a 9** y el martes de **6 a 3**.
+- ❗ **La decisión 1 de §10.6 manda sobre el resto**: «una hora más» son TRES cosas (la fiesta sigue en su sala · algunos niños se quedan saltando · el grupo entero) y **solo la primera encaja** — las otras ocupan OTRA zona y `childSlotAmong()` exige la misma que el padre. —
+- ❗❗❗ **`#417` SI TOCAS EL EDITOR O UNA LÍNEA HIJA (§9)**: mover el día **retira** los complementos que ese día no se venden (devolución EN EL PARQUE) y **re-tarifica** los que cambian de precio, con aviso al operador antes de confirmar.
+- ⚠️⚠️ **Las dos escrituras son ASIMÉTRICAS y está medido**: retirar **no** lleva hecho (el libro emite su `−fila`), re-tarificar **sí** — sin él el pedido pasa a `under_review` y **el cliente se queda sin desglose** (`#132`). Es la misma asimetría que `complementos-post-reserva.md` §4.5.1 alcanzó por otro camino.
+- ⚠️ **No era una feature nueva, era una INCOHERENCIA**: el padre ya re-tarificaba (`PAY-18`) y el suplemento mixto también (`cumple-mixto` §12).
+- ❗❗ **La revisión adversarial encontró TRES cosas mal en el plan, dos REPRODUCIDAS** (§9.8): el **ORDEN invertido** bloqueaba el movimiento por el aforo de una hija que se iba a retirar igualmente, y la regla **retiraba los PORTADORES de fiesta mixta en CADA cambio de fecha** (no tienen precio ningún día, y `MixedPartySurcharge` los gobierna en el mismo post-commit: dos servicios peleando por la misma línea).
+- ⚠️ `free_quantity` **no se toca**: un incluido re-tarificado sigue costando cero.
+- ⚠️ `AddonDateReconciler` está en el `CRITICAL_RE`. —
+- ❗❗❗ **`#415` SI TOCAS EL PRECIO DE UN COMPLEMENTO**: se tarifica por el día de la **VISITA**, no por `Carbon::today()`, en los **SIETE** puntos que lo hacen (la spec decía tres; el censo dio siete). Eso es lo que permite que la hora extra sea de FIN DE SEMANA — precio solo en la tarifa `special`, que es el mecanismo que YA existía.
+- ⚠️ **No movió un céntimo**: cero de los doce complementos varían por día, verificado también en producción sobre las 9 líneas hijas reales.
+- ⚠️⚠️ **Rompió un verificador y eso fue un hallazgo**: el fixture de `postform:verify-concurrency` daba precio solo en `normal` y siembra a hoy+10, así que 3 de cada 7 ejecuciones caían en finde y cantaba «✗ FALLA» con el producto sano — *un comando que mide CONCURRENCIA no puede depender del día de la semana*.
+- ⚠️ Y en `CartPricer` había una excepción escrita que era FALSA («un complemento no tiene fecha propia»): `date` es obligatorio en toda línea de cesta. —
+- ❗ **`#418`**: la T3 de `#413` y `#414`, de otra sesión, **revisadas antes de desplegarlas y las dos pasan**; destaparon un hueco propio — el cruce (re-tarificar una línea `postform`, con `birthValue = 0`) no lo cubría ninguna de las dos features. — **CÓDIGO COMPLETO — LAS CUATRO TANDAS EN EL ÁRBOL** (2026-09-03, `#410`/`#411`; suite 4.105 · 24/24 mutaciones · el verificador `extra-hour` visto FALLAR sin la validación —**5 asientos en una franja de 1, SIN carrera**— y los SIETE + Redsys en verde sobre InnoDB · sonda de navegador 4/4).
+- ▶ ❗❗❗ **EMPIEZA POR §8, que es la ejecución y sus trampas**; sigue
+- 🟦 por el **OJO del owner** y porque **el producto es DATO** (catálogo → complemento → «Ocupa la franja siguiente» + duración + precio + enganche; `false` por defecto = todo lo actual intacto por construcción).
+- ❗❗❗ **SI TOCAS OCUPANTES PROVISIONALES**: la derivación es **UNA** — `CartOccupants` (D1), usada por `OrderCreator` **y** `AvailabilityReader`, con etiquetas `(línea, complemento)` y exclusión EXACTA (los HERMANOS se quedan dentro: el borde que sobrevendía sin carrera).
+- ⚠️⚠️ **Y unificar destapó que la oferta y el cobro contaban DISTINTO los packs como ocupantes de plazas**: lo ALMACENADO manda (`occupancyMap` cuenta las líneas de pack — lo midió `#148`), y el test que cementaba la premisa contraria **cambió de premisa y se reescribió** (el precedente del `SlotOfferTest` de `#324`).
+- ❗❗ **SI TOCAS EL TOPE**: son DOS mitades — por-complemento en `effectiveQuantity()` y **la SUMA en `resolve()`**, el único sitio que ve todas las filas («1 hora» ×3 + «2 horas» ×3 sobre un padre de 4 = 6 de 4, y cada uno pasa por separado).
+- ❗❗ **SI TOCAS EL EDITOR**: la familia se mueve ENTERA o no se mueve nada (`landOccupyingFamily`, bajo el lock; la franja se busca entre las filas BLOQUEADAS); la huella excluida es la FAMILIAR (`excludeItemId` admite varios ids); bajar el padre bajo la suma → `addon_stay_exceeds_quantity`; subir la hija recalcula `seats`; el alta de «Gestionar» nace con franja y plazas; `ItemRescheduleOffer` esconde horas donde la hija no cabe.
+- ⚠️⚠️ **La regla de «la franja siguiente» es determinista y está ESCRITA** (§4.6·8): `start_time == fin del tramo del padre`, única por `UNIQUE(zone_id, date, start_time)`; si no existe, invendible — jamás «una parecida».
+- ⚠️⚠️ **El cinturón de §4.1**: una fila `occupies` sin duración metida por `Query\Builder::update()` **ni se ofrece ni se vende** — para `occupancyMap` duración nula sería «hasta el cierre».
+- ⚠️ `[DECIDIDO owner, 2026-09-03]`: **el precio NO varía por día** (los complementos se tarifican a HOY en los tres caminos; §4.11 lo deja escrito).
+- ⚠️ **Un ticket es una ADMISIÓN**: `TicketIssuer` salta las hijas, fijado con caso.
+- ⚠️ `CartOccupants` · `AddonOccupancy` · `AddonResolver` están en el `CRITICAL_RE` y `CriticalPathGateTest`.
+- ⚠️ **Deuda deliberada, dicha** (§8.3): la cota de la oferta va SIN la cesta (optimista en un borde que el checkout cierra con `addon_occupancy_line`) y la UI de complementos del alta MANUAL no decora (el operador recibe el rechazo claro al guardar).
+- ▶ **En un pack «todos se quedan» es que la fiesta DURA MÁS — otro mecanismo, otra spec** (D2: el pivote y `resolve()` lo prohíben en las dos direcciones)

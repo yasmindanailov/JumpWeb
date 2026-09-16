@@ -33,6 +33,25 @@ un menor es el mismo mecanismo aplicado a otro sujeto.
 
 ---
 
+## §0 · Antes de tocar
+
+- **Tandas 1–5 en el árbol** (`#191` · `#198` · `#199` · `#202` · `#208`); queda el OJO del owner.
+  **Empieza por §9**: §9.9 la asignación en el embudo (la exención firmada es CONDICIÓN para asignar; el panel
+  NO entra), §9.10.4 el panel. `DependentRegistry` está en el `CRITICAL_RE` → `VERIFY_CONC=1`.
+- **`#320`: la exención de un menor solo se ROTULA cuando es EXCEPCIÓN** (`outdated`, `missing`); regla en UN
+  sitio, `WaiverStatus::minorStateIsNoteworthy()`, y solo aplica en modo `interno`. La del ADULTO en la puerta y
+  el CAJÓN no se tocan. El estado sigue viajando en los `data-*`: se retira el rótulo, no el dato.
+- **`#236` (§10–§11): apellidos y relación** son columnas NULABLES —inventar un valor sería meter un dato
+  falso en una tabla que alimenta una FIRMA— y se exigen en el ALTA. **La puerta enseña el NOMBRE del menor**
+  (revierte una decisión escrita en cinco sitios); los apellidos siguen fuera, y es estructural
+  (`GateProfileData` no tiene campo). La firma guarda el nombre completo cambiando el VALOR, no el conjunto de
+  campos, porque el hash los cubre.
+- **§8.1 corrige a §4.8**: el mecanismo es la LISTA BLANCA de `cart.js::save()`; §8.2: subir `STORAGE_VERSION`
+  purga TODAS las cestas. §4.6: `Booking` no mira a `Identity`. §4.7: al elegir cantidad NO hay sesión.
+- Trampas: `ctx.request.get(pdf)` en Playwright da 401 sin `Referer` (§9.6); los rótulos del selector van en
+  `tickets.dependents`, no en `account` (eso viaja solo con sesión). Coste por feature: chunk 253 · payload 9.100.
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 Solo se registran adultos. Quien trae a un menor tiene que **hacerse responsable de él por escrito**,
@@ -1512,3 +1531,26 @@ llevando `current`. Es diagnóstico y es lo que aseveran las guardas: **se retir
 el dato**. Por lo mismo se CONSERVAN las claves i18n `*_current` — la clave se compone dinámicamente
 (`'waiver_'.$estado`) y sin fila se pintaría el identificador en crudo en pantalla; queda la nota en
 `lang/es/admin.php`.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Menores a cargo / asignar una entrada a un menor · apellidos y relación»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/menores-a-cargo.md` · `docs/VERIFICACION-E2E-CAJON.md`.
+
+- `docs/specs/menores-a-cargo.md`
+- 🟦 ▶ ❗❗ **`#320`: la exención de un menor solo se ROTULA cuando es EXCEPCIÓN** (§13) — fuera «exención ✓» en ficha de pedido, ficha de titular y puerta; `outdated` y `missing` SIGUEN.
+- ⚠️ La premisa «es obligatorio» vale **solo en el instante de asignar**: una firma vigente **caduca sola** al publicar versión nueva, y la regla del asignador **solo aplica en modo `interno`**. Regla en UN sitio (`WaiverStatus::minorStateIsNoteworthy()`), que mató una derivación **por triplicado** ya existente.
+- ⚠️ **La exención del ADULTO en la puerta NO se toca** (ahí el estado es lo que la puerta DECIDE) ni el CAJÓN (ahí el cliente FIRMA).
+- ⚠️ El estado sigue viajando en los `data-*`: se retira el rótulo, no el dato.
+- ▶ **§10 y §11 son de `#236` y van ANTES que el cuerpo**: al declarar un menor se piden también **APELLIDOS** (campo aparte) y **RELACIÓN** con el titular (lista fija: padre · madre · tutor/a legal · abuelo/a · otra), que es lo que sostiene que ese adulto pueda firmar por él.
+- ⚠️ **Las dos columnas son NULABLES**: las fichas anteriores no las tienen y **inventar un valor sería meter un dato falso en una tabla que alimenta una FIRMA legal**; se exigen en el ALTA, no en el esquema.
+- ⚠️⚠️ **§11: la PUERTA enseña ahora el NOMBRE del menor, revirtiendo una decisión escrita en CINCO sitios** —el motivo: con tres niños y una firma que falta, «7 años ✗» no dice a cuál—; **los APELLIDOS siguen fuera y es estructural** (`GateProfileData` no tiene campo).
+- ⚠️ La firma guarda el nombre COMPLETO cambiando el VALOR y **no el conjunto de campos**, porque el hash los cubre y las firmas antiguas tienen que conservar el suyo.
+- ⚠️ Coste por feature: chunk 253, payload 9.100. —
+- 🟦 ▶ **LA TANDA 5 (el PANEL, D14) ESTÁ EN EL ÁRBOL — §9.10.4** (`#208`: «Para:» en la ficha del pedido, «Asignar menores» en la línea con `sync()` bajo el lock, el alta manual con selector; +45 tests, sonda de 16 `sync()` concurrentes, headless 13/13; queda el OJO del owner).
+- ▶ **LA TANDA 4 (la asignación en el embudo) TERMINÓ EN CÓDIGO — §9.9** (`#202`:
+- ⚠️ **la exención firmada es CONDICIÓN para asignar** y el panel NO entra; **U0, U1 y U2 en el árbol** —la purga de la cesta; el SERVIDOR entero: `dependent_assignments`, `DependentAssigner`, `Booking\Contracts\CheckoutLines`, `CartLine.dependent_ids`, `event-data` con `dependents[]`; y el CAJÓN (§9.9.8): `assignment.js` + `DependentPicker.vue` en los pasos 3 y 4, la puerta 2, «Para:» en resumen/paso 6/tarjeta, rótulos en **`tickets.dependents`** (
+- ⚠️ no en `account`: eso viaja solo con sesión y el guion los encontró en blanco), guion §5.undecies **19/19**; el selector se vio ROTO por `.eventfields input` y está arreglado y re-medido, §9.9.8·7—; **sigue U4, el OJO del owner**, y la SIGUIENTE sesión es el PANEL (D14) + el subsistema A (`#207`); §9.9.1 corrige al cuerpo: no existe pantalla post-login, y la cesta del propio titular se PURGABA al nacer abierto el cajón) · **TANDAS 1, 2 y 3 EN EL ÁRBOL** (carril A, 2026-08-27: `#191` la entidad `Dependent`, el registro con tope de servidor bajo lock, `GET|POST|DELETE /me/dependents`, `anonymize()`/export/purga, el tope en Ajustes · `#198` la FIRMA DEL MENOR: cadena de hashes por (titular, sujeto) `[DECIDIDO owner]` `#197`, identidad del menor en la firma (v3), FK `subject_id → dependents` RESTRICT, `POST /me/dependents/{id}/waiver`, PDF y panel con el nombre, retención desde los 18, `waiver:verify-chain` rehecho y visto FALLAR sin el lock · **`#199` la ZONA DEL CAJÓN**: `DependentsZone` + `DependentCard`, icono `users`, 17 rótulos ×3 idiomas, **cero CSS nuevo**, chunk 234,41 KiB → techo 235 y payload 7.602 B → techo 7.700 por FEATURE, guion headless 20/20 en `VERIFICACION-E2E-CAJON.md` §5.decies).
+- ▶ **EMPIEZA POR §9**: §9.1/§9.7/§9.8 qué existe · §9.5 las cinco decisiones, TOMADAS · **§9.8.4 lo que queda: la tanda 4 (el embudo: §4.7–§4.10, toca el checkout) y el OJO del owner** · trampas en §9.6/§9.7.5/§9.8.5 (
+- ⚠️ `ctx.request.get(pdf)` en Playwright da 401 sin `Referer`). Después el cuerpo: **§8.1 CORRIGE a §4.8: el mecanismo es la LISTA BLANCA de `cart.js::save()`** · **§8.2 subir `STORAGE_VERSION` purga TODAS las cestas** · **§4.6: Booking NO mira a Identity** · **§4.7: al elegir cantidad NO hay sesión**. `DECISIONES #142` + `#156` + `#191` + `#197` + `#198` + **`#199`**

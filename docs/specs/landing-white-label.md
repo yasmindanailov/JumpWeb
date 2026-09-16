@@ -14,6 +14,22 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **La línea**: data-driven el DATO, no la PÁGINA. Tanda A CERRADA (`#138`→`#143`); la B quedó parada por el
+  diseño y la sustituyó el rediseño desde el canvas (`rediseno-desde-canvas.md`); **la C (los servicios como
+  producto real) toca AFORO y PAY y no se empieza desde aquí** (§4.4, §7). ⚠️ El programa
+  `producto-e-instancias.md` (`#611`) saca la landing del producto: el marco de esta spec queda superado.
+- **Tres afirmaciones PROPIAS resultaron falsas al medirlas** (§4.5.1 ×2 y §4.5.2): lee cada corrección antes
+  que el texto que corrige. Y de los cinco problemas del owner, uno era falso, otro iba al revés y otro era peor.
+- **§4.5: el tema son TRES mecanismos** (valores → panel · ficheros → assets · dibujos → el set de iconos, que
+  ya tiene guarda); **§4.5.6 es el hueco por donde entra `client.css`** (tres piezas: el orden, el `.gitignore`
+  y la exclusión del `rsync --delete`; con dos parece que funciona).
+- **`/servicios`, medido**: 0 productos vinculados, 2 tablas de precios TECLEADAS y 18 ficheros tocan la
+  resolución de precio (§1.3, §5).
+- El sistema visual del cliente vive en su canvas y se lee con `DesignSync` (`tema-por-instalacion.md` §1).
+- Anexo al final (dos filas del enrutador).
+
 ## 1. Contexto y problema — MEDIDO, no supuesto
 
 El owner enunció cinco problemas al preparar la landing del **segundo cliente** de JumpWeb. Cada uno
@@ -525,3 +541,29 @@ dimensionado que ya está documentado en el repo.
 - **Corregido por el owner**: el tema no es un binario. De ahí los tres mecanismos de §4.5 — y el
   hallazgo de que el compartido cajón↔landing que se temía imposible **ya existe y ya tiene guarda**.
 - **Entrada final**: `DECISIONES #136`.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Landing / tema visual (tokens CSS) · CMS de contenido · white-label por cliente»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/landing-white-label.md` · `docs/specs/tema-por-instalacion.md` · `docs/ARQUITECTURA.md` · `docs/MAPA-PAGINAS.md`.
+
+- **`docs/specs/landing-white-label.md`**
+- 🟦 (`#136`) — **la línea es: data-driven el DATO, no la PÁGINA.**
+- ▶ **TANDA A CERRADA** (`#138`→`#143`); la **B** en curso pero
+- ⏸️ **PARADA a la espera del diseño**.
+- ❗ **El sistema visual del 2º cliente NO está en el repo**: vive en el canvas de Claude Design del owner y se lee con el MCP **`DesignSync`** (`projectId=8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad`) — **no con WebFetch (403) ni con `Artifact read`**.
+- ▶ **Todo lo del canvas —cómo bajarlo, qué artboard es normativo y cuál está sin migrar— vive ahora en `docs/specs/tema-por-instalacion.md` §1**, que es donde se mantiene.
+- ⚠️ **Esta fila decía «14 artboards» y «la paleta de la landing está CADUCADA»: las dos cifras envejecieron.** Medido el 2026-08-27: son **18**, y la landing definitiva (`Landing PJP Modos`) **sí** lleva el sistema vigente — lo caducado son 10 artboards de exploración, entre ellos los de logotipo, menú y hero.
+- ⚠️⚠️ **Este documento acumula TRES afirmaciones PROPIAS que resultaron FALSAS al medirlas** —§4.5.1 «cero variables se inyectan desde BD» · §4.5.1 «76 colores en crudo» (eran **234**) · §4.5.2 «el dibujo del spinner es un fichero» (no lo era)— **además** de los tres problemas del owner que §1 ya desmiente. **Lee cada corrección antes que el texto que corrige.** · §4.5: el tema son **TRES** mecanismos (valores→panel · ficheros→assets · dibujos→el set de iconos, que **ya existe y ya tiene guarda**) · **§4.5.6: el hueco por donde entra `client.css`** · §4.6: el icono por producto ·
+- ⚠️ **§4.4/§7: los servicios como producto real tocan AFORO y PAY — spec propia, no se empieza desde ahí** · `docs/ARQUITECTURA.md` (white-label) · `docs/MAPA-PAGINAS.md`
+
+## Anexo 2 · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Página `/servicios` · precios por tramo de grupo · reservas de grupo fuera de horario»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después de «Antes de tocar» y no lo reescribas.
+> Documentos que la fila citaba: `docs/specs/landing-white-label.md` · `docs/sistemas/SERVICIOS-CMS.md` · `docs/INVARIANTES.md`.
+
+- `docs/specs/landing-white-label.md` §1.3, §4.4 y §5 (
+- ⚠️ **medido**: 0 productos vinculados, 2 tablas de precios tecleadas, y 18 ficheros tocan la resolución de precio) · `docs/sistemas/SERVICIOS-CMS.md` · **`docs/INVARIANTES.md` §2 (AFORO) antes de tocar nada**

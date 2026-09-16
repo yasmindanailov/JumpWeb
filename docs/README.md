@@ -6,9 +6,11 @@
 ## Vivos (se actualizan cada sesión)
 | Doc | Qué es |
 |---|---|
-| `ESTADO.md` | Foto viva mínima: dónde estamos / qué sigue. **Carga obligatoria al arrancar.** Fuente única del recuento vivo de la suite. |
-| `00-REFACTOR.md` | Tracker VIVO del refactor de generalización (fases + checklists). Sus marcadores de fase MANDAN sobre ESTADO. |
-| `DECISIONES.md` | Cronológico de decisiones con su porqué. Buscar por número, no cargar entero. Revertida = «Sustituida por #N» en la antigua. |
+| `ESTADO.md` | Índice de carriles (≤ 4 KB): qué carril hay, en qué máquina, con qué banda y dónde está cada entorno. **Carga obligatoria al arrancar**, y de ahí a tu carril. El contador de la suite va en el trailer del commit (`#618`). |
+| `carriles/<carril>.md` | **Un fichero por carril** (`#621`): banda y último usado · ficheros · foto · por dónde retomar · buzón. Cada agente escribe SOLO el suyo (≤ 24 KB). Hoy: `plataforma` · `web` · `spa` · `correos` · `pasarela`. |
+| `00-REFACTOR.md` | Tracker VIVO (fases + casillas, sin narrativa, ≤ 16 KB). Sus marcadores de fase MANDAN sobre los carriles. |
+| `DECISIONES.md` | **Índice** del registro de decisiones (`#617`): dónde está cada número, cómo se escribe una (≤ 1,5 KB) y las bandas. Buscar por número. Revertida = «Sustituida por #N» en la antigua. |
+| `decisiones/NNN-NNN.md` | Las entradas, por centenas (`000-099` … `600-699`), en orden de número; una nueva se añade al final de su centena. Partido el 2026-09-16 sin tocar una entrada. |
 | `ENTORNOS.md` | Los dos entornos (local y **staging**, que es 0 LIVE / 0 PRODUCCIÓN), sus seis guardas y el procedimiento de despliegue. |
 | `CONVENCIONES.md` | Reglas y protocolo de los agentes (DoD §3.bis, arranque/handoff §7, git §8, escalado al owner §9, **dos agentes sobre `main` §10**). |
 | `GLOSARIO.md` | Lenguaje ubicuo: término de dominio ↔ artefacto real de código/BD, con estado de generalización. |
@@ -99,6 +101,7 @@
 | `sistemas/OFERTAS-WIDGET.md` | Widget de ofertas informativo + CMS `Offer` (primer FileUpload real). |
 | `sistemas/COOKIES.md` | Consentimiento de cookies (banner 2 capas + bloqueo previo). ✅ implementado. |
 | `sistemas/UI-SPINNER.md` | Sistema de feedback de carga. |
+| `sistemas/AFORO-FRANJAS.md` | La rejilla de franjas, la oferta (`SlotOffer`, dos recorridos y una fuente) y los contadores de aforo: qué hay que saber ANTES de tocar aforo (`#420`, `#465`). Nace en F1 (`#619`); las reglas siguen en `INVARIANTES.md` §2. |
 
 ## Qué NO hay aquí (y dónde está)
 Los trackers del ciclo de vida del cliente origen (producción, handoffs, audits de copys,

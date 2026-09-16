@@ -1,6 +1,6 @@
 # [SPEC] Producto e instancias — la separación de JumpWeb y sus clientes
 
-> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 cerrada y **F1 es lo siguiente** ·
+> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) y **F2 es lo siguiente** ·
 > Última actualización: 2026-09-16 · Decisiones: `DECISIONES #610` → `#616` · Carril: **plataforma**, banda **610–639**.
 > Origen: sesión de análisis del 2026-09-16 con el owner; inventario medido sobre el árbol de ese día.
 > Las dos páginas de trabajo que se iteraron con el owner son borradores de ESTA spec, no fuente:
@@ -34,8 +34,8 @@
 | `docs/DECISIONES.md` | 2,4 MB | 1,2 MB | +87 KB/día |
 
 Arranque en frío: **1,57 MB**, del orden de 400.000 a 500.000 tokens (estimación sin tokenizador local). El
-enrutador pasó de 4,8 KB a 314 KB en 32 días con «mantener CORTO» en su cabecera: el gate documental tiene ocho
-comprobaciones y **ninguna mide tamaño**. El 94 % del enrutador es la tabla de enrutado; tres filas superan los 32 KB;
+enrutador pasó de 4,8 KB a 314 KB en 32 días con «mantener CORTO» en su cabecera: el gate documental tenía nueve
+comprobaciones (esta spec dijo «ocho»; F1 midió nueve, `#620`) y **ninguna medía tamaño**. El 94 % del enrutador es la tabla de enrutado; tres filas superan los 32 KB;
 27 de 63 filas apuntan a trabajo ✅. El estado apila 11 bloques «si entras nuevo» desde el 28 de agosto. El
 registro de decisiones tiene 556 entradas con 3,7 KB de mediana y 47 KB de máximo.
 
@@ -186,7 +186,8 @@ subsistema es mejorable, lo propone en spec antes de codificar**; cambiar la for
 cuando es mejor y está medido. Toda regla nueva de calidad que exija una dependencia (análisis estático con
 Larastan, Rector, ESLint) es decisión del owner por `CONVENCIONES §9`: **propuesta pendiente**, con coste.
 
-Lo que no es skill y es gate: comprobación 9 del gate documental (techos), el guard de Bash y el pre-push que ya
+Lo que no es skill y es gate: comprobación 10 del gate documental (techos; la 9, los marcadores de conflicto,
+existía desde `#506` y F1 lo midió: `#620`), el guard de Bash y el pre-push que ya
 existen, la guarda 8 del despliegue y el comando que valida una instancia contra el contrato. Lo que es texto: las
 reglas del owner en `CONVENCIONES §10` y en las reglas 8 y 9 de `CLAUDE.md`; plantilla de `CLAUDE.md` de 4 KB para
 instancia y app.
@@ -236,7 +237,7 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 | Fase | Carril | Sesiones | Salida |
 |---|---|---|---|
 | F0 gobierno | 1 | 1 | esta spec ✅ owner; `#610`–`#616`; reglas 8 y 9 |
-| F1 doc caliente | 1, el 2 en pausa | 2–3 | arranque ≤ 60 KB; huella 100 %; comprobación 9 |
+| F1 doc caliente | 1, el 2 en pausa | 2–3 | arranque ≤ 60 KB; huella 100 %; comprobación 10 — ✅ 2026-09-16, `#617`→`#621` |
 | F2 capa de agente | 1, ambas máquinas | 2 | plugin en las dos; 6 de 6 frases |
 | F3 versión | 1 | 1 | `git describe` en producción = v1.0.0; guarda 8 |
 | F4 cajón y token | 2 la SPA, 1 la API | 3–5 | cajón montado desde HTML ajeno; huella de maquetación 24/24; contrato 1.1.0 |

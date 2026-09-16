@@ -13,6 +13,8 @@ cd "$(git rev-parse --show-toplevel)"
 remote="${1:-origin}"   # git pasa el nombre del remoto como $1
 ZERO=0000000000000000000000000000000000000000
 pushing_main=0
+main_local_sha=''
+main_remote_sha=''
 touched_critical=''
 # Ficheros cuyo cambio exige los comandos verify-* (DECISIONES #10.c / INVARIANTES §6).
 # Dos familias, por dos motivos distintos:
@@ -80,6 +82,8 @@ while read -r _local_ref local_sha remote_ref remote_sha; do
         continue
     fi
     pushing_main=1
+    main_local_sha="$local_sha"
+    main_remote_sha="$remote_sha"
     # --no-renames: un rename puro solo listaría la ruta destino y escaparía a la guarda.
     if [[ "$remote_sha" == "$ZERO" ]]; then
         # main aún no existe en ESTE remoto: gatear lo que este remoto no tiene.
@@ -175,13 +179,13 @@ trap 'estado=$?; if [[ $estado -ne 0 && -s "${suite_log:-}" ]]; then
 
 docker compose exec -u sail -T laravel.test php artisan test --parallel 2>&1 | tee "$suite_log"
 
-# ── El CONTADOR de la suite en ESTADO.md, que hasta hoy no vigilaba nadie ─────────────────────
-# ⚠️ `docs-check` NO lo comprueba: sus cuatro patrones son modelos, migraciones, invariantes y
-# Resources, y «N tests» no casa con ninguno. Por eso derivó — el 2026-08-21 la doc decía 2715
-# con la suite en 2642, y en esa MISMA sesión volvió a quedarse atrás dos veces más, una de ellas
-# en el commit que acababa de retirar el duplicado por haber derivado.
-# El gate ya tiene la cifra en la mano (acaba de correr la suite), así que compararla es gratis.
-# `DECISIONES #116`. Fail-closed: si no se puede leer alguno de los cuatro números, se corta.
+# ── El CONTADOR de la suite: lo que acaba de dar contra lo que el commit DECLARA ───────────────
+# `DECISIONES #116` lo comparaba con una línea de `docs/ESTADO.md` porque derivaba (el 2026-08-21 la
+# doc decía 2715 con la suite en 2642). Desde F1 (`DECISIONES #618`, 2026-09-16) esa línea no existe:
+# el número tiene UNA copia, el trailer «Verificación: suite N tests / M aserciones» del commit
+# (CONVENCIONES §8), porque era la línea que los dos carriles reescribían en cada cierre. El gate ya
+# tiene la cifra en la mano (acaba de correr la suite), así que compararla sigue siendo gratis.
+# Fail-closed: si no se puede leer alguno de los cuatro números, se corta.
 ran_tests=$(grep -a 'Tests:' "$suite_log" | grep -oE 'Tests:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
 ran_asserts=$(grep -a 'Assertions:' "$suite_log" | grep -oE 'Assertions:[[:space:]]+[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)
 # ⚠️ PHPUnit escribe DOS resúmenes: «Tests: N, Assertions: M, …» solo cuando hubo issues (notices,
@@ -192,28 +196,52 @@ if [[ -z "$ran_tests" ]]; then
     ran_tests=$(grep -aoE 'OK \([0-9]+ tests?, [0-9]+ assertions?\)' "$suite_log" | grep -oE '[0-9]+' | sed -n '1p' || true)
     ran_asserts=$(grep -aoE 'OK \([0-9]+ tests?, [0-9]+ assertions?\)' "$suite_log" | grep -oE '[0-9]+' | sed -n '2p' || true)
 fi
-doc_tests=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\*' docs/ESTADO.md | grep -oE '[0-9]+' | head -1 || true)
-doc_asserts=$(grep -oE 'Suite \*\*[0-9]+ en verde\*\* \([0-9.]+ aserciones' docs/ESTADO.md | grep -oE '\([0-9.]+' | tr -d '(.' | head -1 || true)
 # Solo se borra si el gate va bien: si algo falla, el `trap` de arriba lo anuncia y el fichero
 # se queda. Un log que se borra en el camino de error es un log que no existe.
 rm -f "$suite_log"
 trap - EXIT
 
-if [[ -z "$ran_tests" || -z "$ran_asserts" || -z "$doc_tests" || -z "$doc_asserts" ]]; then
-    echo '✗ pre-push: no he podido leer el contador de la suite o el que declara `docs/ESTADO.md`.' >&2
+if [[ -z "$ran_tests" || -z "$ran_asserts" ]]; then
+    echo '✗ pre-push: no he podido leer el contador de la suite en su propia salida. Gate cerrado.' >&2
+    exit 1
+fi
+
+# El trailer se busca del commit más nuevo al más viejo entre los que este push lleva a `main`: el
+# primero que lo declare es el que cuenta. Un commit solo de doc detrás de uno de código puede no
+# llevarlo; lo que no puede pasar es que el más nuevo que lo lleve mienta.
+if [[ "$main_remote_sha" == "$ZERO" ]]; then
+    nuevos=$(git rev-list "$main_local_sha" --not --remotes="$remote")
+else
+    nuevos=$(git rev-list "${main_remote_sha}..${main_local_sha}")
+fi
+doc_tests=''; doc_asserts=''; doc_sha=''
+for sha in $nuevos; do
+    trailer=$(git log -1 --format=%B "$sha" \
+        | grep -oiE 'suite[[:space:]]+[0-9][0-9.]*[[:space:]]+tests?[[:space:]]*/[[:space:]]*[0-9][0-9.]*[[:space:]]+aserciones' \
+        | head -1 || true)
+    [[ -n "$trailer" ]] || continue
+    doc_tests=$(grep -oE '[0-9][0-9.]*' <<<"$trailer" | sed -n '1p' | tr -d '.')
+    doc_asserts=$(grep -oE '[0-9][0-9.]*' <<<"$trailer" | sed -n '2p' | tr -d '.')
+    doc_sha="${sha:0:8}"
+    break
+done
+
+if [[ -z "$doc_tests" || -z "$doc_asserts" ]]; then
+    echo '✗ pre-push: ningún commit de este push declara el contador de la suite.' >&2
     echo '  Un número que no se ha podido comprobar NO es un número comprobado: gate cerrado.' >&2
-    echo "  suite=[${ran_tests:-?}/${ran_asserts:-?}]  doc=[${doc_tests:-?}/${doc_asserts:-?}]" >&2
+    echo '  El número vive en el trailer del commit (CONVENCIONES §8): «Verificación: suite N tests / M aserciones (Xs) · …».' >&2
+    echo "  La suite acaba de dar: ${ran_tests} tests · ${ran_asserts} aserciones. Escríbelo en el commit y vuelve a empujar." >&2
     exit 1
 fi
 
 if [[ "$ran_tests" != "$doc_tests" || "$ran_asserts" != "$doc_asserts" ]]; then
-    echo '✗ pre-push: `docs/ESTADO.md` MIENTE sobre el tamaño de la suite.' >&2
+    echo "✗ pre-push: el commit ${doc_sha} MIENTE sobre el tamaño de la suite." >&2
     echo "    la suite acaba de dar:  ${ran_tests} tests · ${ran_asserts} aserciones" >&2
-    echo "    ESTADO.md declara:      ${doc_tests} tests · ${doc_asserts} aserciones" >&2
-    echo '  ▶ Corrige la línea «Suite **N en verde** (M aserciones…)» de `docs/ESTADO.md`.' >&2
-    echo '    Es la ÚNICA copia del número a propósito; no la dupliques en otro documento.' >&2
+    echo "    el trailer declara:     ${doc_tests} tests · ${doc_asserts} aserciones" >&2
+    echo '  ▶ Corrige el trailer (`git commit --amend` si es el último) o añade un commit con el número real.' >&2
+    echo '    Es la ÚNICA copia del número a propósito; no la dupliques en ningún documento.' >&2
     exit 1
 fi
-echo "→ pre-push: contador de ESTADO.md al día (${ran_tests} tests · ${ran_asserts} aserciones)."
+echo "→ pre-push: contador del commit ${doc_sha} al día (${ran_tests} tests · ${ran_asserts} aserciones)."
 
 echo '✓ pre-push: verde. Empujando main.'

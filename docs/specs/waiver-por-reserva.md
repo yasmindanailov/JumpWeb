@@ -19,6 +19,27 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **`WaiverSigner` está en el `CRITICAL_RE`** → `VERIFY_CONC=1` y `waiver:verify-chain`. T1–T3 y la activación
+  (T5→T8) en el árbol; queda el OJO del owner (guion `VERIFICACION-E2E-CAJON.md` §5.septies).
+- **EMPIEZA POR §13 (`#401`): el justificante cuelga de la RESERVA, no del pedido.** Lo cazó el owner con un
+  pedido de dos visitas: de esa raíz salían cuatro síntomas. `guardian_authorizations.order_item_id`, ruta
+  `/autorizacion/{reservation}`, un correo por reserva marcada, enlace en «Mis reservas». **Plazas libres =
+  cantidad − menores a cargo asignados − justificantes firmados** (`Identity\Services\GuardianPlaces`, porque
+  `Booking` no mira a `Identity`); los adultos no se restan. Una reserva cancelada sale de la ficha.
+- **Después §12 (`#400`), la activación**: la decide el PRODUCTO (`ticket_types.guardian_authorization`:
+  `none` · `optional` · `required`) y el hecho vive en `order_items.guardian_authorization`; `required` lo marca
+  el SERVIDOR; «se ofrece» no es «se permite» (con el enlace de un pedido pagado se firma siempre).
+  `Cart::sanitize()` y `cartToOrderCart()` son LISTAS BLANCAS y el campo se caía ahí en silencio; al fundir dos
+  líneas la marca es un O. ⛔ El «caso 3» sin reserva no se construye; no hay enlace «inicia sesión y vuelve».
+- **§11 (adversarial)**: la clave de sujeto vive en UN sitio (`WaiverSignature::chainKey()`, con `NULL` se
+  cruzaban tres); §4.5 evita la FUGA (el `user_id` es el responsable y sus firmas de menores invitados salían
+  en «las firmas de este usuario»). `signer_user_id` no existe a propósito (un `SET NULL` dentro de un hash);
+  `minor_key` normalizada en PHP; el tope NO es `SUM(quantity)`; `Order` se resuelve por `code`.
+- **Anti-bot**: el HONEYPOT calla y TURNSTILE lo dice (falla también a personas); el honeypot no se llama
+  `website`. Nueve `[DECIDIDO owner]` en §7. Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 ### 1.1 El caso, con las palabras del owner
@@ -1332,3 +1353,67 @@ feature: en un teléfono abre la hoja del sistema (WhatsApp) y en un escritorio 
 - ⚠️ **El `input` de solo lectura se queda**: si las dos APIs fallan, el cliente lo selecciona a mano.
 - ⚠️⚠️ **El dibujo es la geometría de `<x-icons.share>`, copiada, no inventada.**
   `SidebarIconParityTest` paró el primer intento: el cajón tiene `DRAWER_OWN` **vacía** desde `#258`.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Justificante de un menor INVITADO a una reserva («waiver offshore») · el padre sin cuenta que firma por un menor que no es menor a cargo · el enlace de hoja en blanco · CÓMO SE ACTIVA · la casilla del embudo · el interruptor por producto · las plazas libres»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/waiver-por-reserva.md` · `docs/specs/cumple-mixto.md` · `docs/VERIFICACION-E2E-CAJON.md` · `docs/ESTADO.md` · `docs/DEUDA.md`.
+
+- **`docs/specs/waiver-por-reserva.md`**
+- 🟦 **T1+T2+T3, LA ACTIVACIÓN (T5→T8) y EL MODELO POR RESERVA EN EL ÁRBOL** (`#328` · `#335` · `#337` · `#400` · **`#401`**) —
+- ❗❗❗ **`#401` ES LO PRIMERO QUE HAY QUE SABER: EL JUSTIFICANTE CUELGA DE LA RESERVA, NO DEL PEDIDO** (§13). Lo cazó el owner con un pedido real: dos visitas en días distintos y la hoja del padre decía *«Días de la visita: 03/09 · 07/09»*. **De esa sola raíz salían CUATRO síntomas** —dos fechas, un solo correo para dos reservas marcadas, la capacidad sumando las dos líneas (81 plazas) y un «un niño, un papel» que impedía autorizar al mismo niño para dos visitas del mismo pedido—.
+- ▶ `guardian_authorizations.order_item_id`, ruta `/autorizacion/{reservation}`, contrato `AuthorizableReservation(s)` con producto/día/hora, **un correo por reserva marcada** y el enlace en **«Mis reservas»**, que es donde el owner lo buscó.
+- ⚠️⚠️ **Las PLAZAS LIBRES son `cantidad − menores a cargo asignados − justificantes firmados`** (`Identity\Services\GuardianPlaces`, en Identity porque **Booking no puede mirar a Identity**). **Esto NO contradice a §4.10**: aquélla prohíbe inventar «3 de 100» porque no se sabe cuántos son menores; una plaza asignada a un menor a cargo **ya tiene dueño**, y eso es un hecho.
+- ⚠️ Los ADULTOS no se restan: la cota es superior a propósito.
+- ⚠️ **Una reserva CANCELADA sale de la ficha y de la cuenta** aunque tenga firmas: deja de ser una visita (las firmas siguen en el registro probatorio).
+- ⚠️⚠️ **Si tocas la migración**: el orden de los `ALTER` lo impone MySQL —**la FK antes que su índice**— y tiene que ser **idempotente**; `SHOW INDEX` **no vale** (la suite es SQLite): `Schema::getIndexes()`.
+- ⚠️ **El embudo**: «¿Quiénes vienen?» es un `<details>` **nativo** (cero JS) plegado, y **la casilla no se puede marcar sin plazas libres** —diciendo por qué— pero **sí se puede desmarcar**. Sus dos reglas viven en `assignment.js` con `node --test`.
+- ⚠️ **El cajón no resuelve plurales sin `tc()`**, que necesita el locale: los rótulos del desplegable no llevan plural. — **`#400` · LA ACTIVACIÓN** —
+- ❗❗❗ **`#400` SI TOCAS ALGO DE ESTA FEATURE, EMPIEZA POR §12**: el owner probó lo construido y **no había puerta por la que entrar** (*«no me sale nada del enlace»*). El enlace tenía **tres consumidores en el repo y ninguno lo OFRECÍA**, y el peor era un **HUEVO Y UNA GALLINA**: el botón «Copiar enlace» vivía DENTRO de una sección `visible(countFor > 0)`, así que solo salía cuando ya había un justificante firmado — y para que hubiera uno hacía falta el enlace. *Una condición de visibilidad escrita para lo que se LEE acaba escondiendo lo que se HACE.*
+- ▶ **Lo decide el PRODUCTO** (`ticket_types.guardian_authorization`: `none` · `optional` · `required`) y el hecho se guarda en `order_items.guardian_authorization`, que es un HECHO como el sello de `cumple-mixto.md`: **cambiar el producto mañana no reescribe lo que se compró ayer**.
+- ⚠️⚠️ **`required` lo marca el SERVIDOR**: si saliera de la casilla, una excursión se compraría sin justificantes quitando un `input` del DOM.
+- ⚠️⚠️ **«Se ofrece» NO es «se permite»** — quien tenga el enlace de un pedido pagado firma SIEMPRE, marcado o no, porque el caso 2 del owner es *«un cliente que no sabía que hacía falta»*.
+- ⚠️⚠️ **`Cart::sanitize()` es una LISTA BLANCA** y el campo se caía ahí **en silencio** camino de `OrderCreator` (casilla marcada, línea sin marcar, nada fallando); hay una segunda costura igual en `cartToOrderCart()` del pedido manual, y las dos tienen caso propio.
+- ⚠️ **Al FUNDIR dos líneas la marca es un O**, no «gana la existente».
+- ⛔ **El «caso 3» (justificante SIN reserva) NO se construye y la premisa es falsa**: `CreateManualOrderPage` **exige cliente**, así que toda venta de mostrador ya produce pedido con responsable; reabrirlo costaría `order_id` nullable, **la puerta no lo encontraría** (compone desde las reservas de HOY) y la caducidad se quedaría sin ancla.
+- ⚠️ **«¿50 justificantes y 40 entradas?»** medido con rollback: **no se borra ninguno** (son firmas) y **nadie lo decía** — ahora el panel y la hoja pintan «N justificantes · M plazas» con aviso; **el TOPE no se toca** (`SEC-04`).
+- ⛔ **NO hay enlace «inicia sesión y vuelve»** en la pantalla pública: `/login` es el cajón de la portada y **no hay cadena `intended` en toda la app**, así que perdería la URL firmada.
+- ⚠️ **Dos defectos que solo vio la CAPTURA** (ninguna guarda mira anchos) y **la trampa de `#335` otra vez**: captura sin una sola letra, y el control la zanjó — `document.fonts` con **cero** familias cargadas, o sea FOIT del contenedor. — **T1 + T2 + T3** (`#328` · `#335` · `#337`, 2026-09-01; **guion del OJO del owner en `VERIFICACION-E2E-CAJON.md` §5.septies con el escenario sembrado**) —
+- ❗❗❗ **EMPIEZA POR §11: LA REVISIÓN ADVERSARIAL ENCONTRÓ DOS BLOQUEANTES Y UNA AFIRMACIÓN CENTRAL DEL DISEÑO QUE ERA FALSA** («no cambia una línea del mecanismo existente» — sí cambia, y justo donde más duele).
+- ⚠️⚠️ **LA CLAVE DE SUJETO ESTÁ HOY CABLEADA A `subject_id` EN TRES SITIOS Y CON `NULL` LOS TRES SE CRUZAN**: `WaiverSigner` busca la firma anterior con `where('subject_id', null)`, que Laravel convierte en **`is null`** (medido), así que la idempotencia por versión **devuelve la firma de OTRO menor** — el segundo padre ve la pantalla de «hecho», recibe su correo y **su hijo se queda sin justificante, sin fallo y sin aviso**—; y `WaiverChain` agrupa por `subject_type.':'.(subject_id ?? '')`, así que todos caen en `guest_minor:` y el verificador declara **ROTA una cadena sana** (medido: `count=2 · chains=1 · ok=false`), con el defecto **duplicado** en `VerifyWaiverChainConcurrency`.
+- ▶ La clave pasa a **UN solo sitio** (`WaiverSignature::chainKey()`).
+- ❗❗ **§4.5 ES LA SECCIÓN QUE EVITA LA FUGA Y NO ESTABA**: poner al responsable en `user_id` hace que sus firmas de menores invitados salgan en **todo lo que lista «las firmas de este usuario»** — `GET /me/waiver` las devuelve con `dependent_id: 0` y el nombre del hijo de otro, **y sirve su PDF** (autoriza solo por `user_id`); igual el partial del panel (que además las rotularía como «menor a cargo») y el contador del audit.
+- ✅ `WaiverStatus::for()`/`forDependents()` **sí** filtran: están limpias.
+- ❗ **§1.2 CORRIGE EL ALCANCE DE `ESTADO.md`**: no es una feature de excursiones de colegio, es del WAIVER — y por eso **no puede apoyarse en nada que solo tengan los packs** (`guestFormStatus()` es `null` fuera de pack → el caso normal son entradas y **cero fichas**).
+- ❗ **§1.4(b), el bloqueo que decide el diseño**: `subject_id` tiene **FK dura a `dependents`** y **rechaza de verdad** (`1452` medido; SQLite la ejerce igual) → columna propia.
+- ▶ **Lo que hace que encaje sin migración destructiva**: `user_id` es **el que reserva** —el RESPONSABLE, `[DECIDIDO owner]`—, y `orders.user_id` es NOT NULL, así que siempre lo hay.
+- ⚠️⚠️ **NO metas al menor invitado en `dependents` con una columna de «ámbito»**: es la trampa de `prices` de `#324` y son **~14** los lectores (la spec decía «seis»: era mío y estaba mal).
+- ⚠️⚠️ **`order_id` RESTRICT ROMPE `PurgeCustomerData`** —borra TODOS los pedidos y solo las firmas de los purgados— **y CASCADE tampoco lo arregla** (la FK de la firma es RESTRICT): la purga aprende **tres pasos** (§4.2.1), y sí, borra firmas de cuentas que conserva, a propósito.
+- ⚠️⚠️ **ESTO SÍ ENTRA EN EL `CRITICAL_RE`** —`WaiverSigner` está en la lista y la T1 lo modifica—: la spec decía lo contrario.
+- ⚠️ **`signer_user_id` NO existe a propósito**: una columna `ON DELETE SET NULL` no puede estar dentro de un hash que se verifica, y **§10 lo tiene MEDIDO DOS VECES** sobre el subsistema de hoy (`declared_by_user_id`: borrar al operador pone `verifyHash()` en `false` sobre una firma que nadie tocó; ficha en `DEUDA.md`).
+- ⚠️ **`subject_name` es `varchar(120)` y el firmador corta a 255** → `1406` en MySQL y **verde en SQLite**; defecto VIVO hoy para menores a cargo.
+- ⚠️ **La unicidad NO va sobre los nombres crudos**: `utf8mb4_unicode_ci` iguala «Perez» y «Pérez» y SQLite no → columna `minor_key` normalizada en PHP, determinista en los dos motores.
+- ⚠️ **El tope NO es `SUM(quantity)`** (cuenta complementos, portadores y canceladas: un pedido íntegramente cancelado admitiría 2).
+- ⚠️ **Un `Prunable` que no entre en la lista de `routes/console.php` no se poda NUNCA** — y hoy los dos plazos valen `NULL`, así que no se poda nada.
+- ⚠️ **El escenario de concurrencia obvio NO MUERDE** (N padres distintos son N cadenas de una fila): el que muerde es **N envíos de la MISMA autorización**.
+- ▶ **Nueve `[DECIDIDO owner]` en §7** —sin verificar el correo · un enlace por reserva, hoja en blanco · en la puerta se señala · el responsable ve nombres y quién falta · sin DNI · sin alergias · copia por correo · **la rama se salta la puerta de `email_verified_at`** (un colegio reserva por teléfono y sin eso NADIE podría firmar) · **un niño, un papel**— y **cuatro tandas en §8: la T1 primero, y el acotado de §4.5 va DENTRO de ella** porque la fuga nacería con el dominio.
+- ▶ **§8.1 es lo EJECUTADO**, con las tres cosas que el plan no previó (**todo modelo necesita alias de morfo**; dos tests hermanos fijaban `canonical_version` como literal y se actualizan a propósito; la FK sobrevive al `change()`) y las cuatro trampas pagadas: **Pint convirtió un `{@see}` en `use`** (la de `#320`), **un `assertDontSee` sobre la página del panel pasaba en VACÍO** porque el registro vive en un modal (la de `#161`), **heredar de `Tests\TestCase` en vez de `ApiTestCase` convierte un test de contrato en un test de texto**, y **`Sanctum::actingAs()` deja una instancia OBSOLETA**.
+- ▶ **§8.2 es la T2**: ruta `/autorizacion/{order}` (**no `/reserva/…`**: aquí «reserva» es un `OrderItem`), contrato `AuthorizableOrders` —que **NO recibe titular a propósito**: quien abre el enlace no tiene cuenta, así que no devuelve nada que un desconocido no pueda ver—, las TRES puertas **bajo el lock** y la escalada **403→410→404** cuyo ORDEN es la propiedad.
+- ❗❗❗ **SI TOCAS UN ANTI-BOT, LEE ESTO**: copiar el silencio de `/contacto` fue un defecto REAL que **solo vio la sonda de NAVEGADOR** — sin token de Turnstile la pantalla **no escribía nada y decía «Listo»**, y el padre se enteraba en la puerta del parque. **El HONEYPOT calla** (un campo invisible relleno es señal de bot y de nada más) **y TURNSTILE lo DICE** (falla también a personas); la asimetría tiene caso propio.
+- ⚠️ Y el honeypot **no se llama `website`**: ese nombre mapea al autocompletado `url` y un gestor de contraseñas se lo rellena a una persona.
+- ⚠️ **Un pedido con SEÑAL sigue siendo `paid`** (medido: 30 € de 88 €), así que exigir «pagado» NO deja fuera a las excursiones.
+- ⚠️ **El tope NO es `SUM(quantity)`** (cuenta complementos, portadores y canceladas).
+- ⚠️ **`Order` se resuelve por `code`.**
+- ⚠️ **Hasta la T3 quien firma NO recibe copia.**
+- ⚠️⚠️ **Y el arnés de mutación dijo «14 de 14» siendo 13**: su `git checkout` se llevó un caso sin commitear y un filtro que no casa con ningún test sale con código ≠ 0 — **ahora exige VERDE antes de mutar**.
+- ⚠️ Una captura al `domcontentloaded` sale **sin una sola letra** (fuentes sin cargar): parece un defecto y es el instrumento.
+- ▶ **§8.3 es la T3**: las seis superficies.
+- ⚠️ **`GuardianRoster` tiene DOS formas y no una con un filtro** (`forOperator`/`forResponsible`) — «el responsable no ve a los otros padres» lo impone el TIPO, y el contrato es la segunda guarda (`additionalProperties: false`).
+- ⚠️ **Los menores invitados van al NIVEL de la ficha de puerta**, no dentro de cada reserva: la autorización cuelga del PEDIDO.
+- ⚠️ **La hoja de sala se compone en el CONTROLADOR** porque `ReservationSlip` vive en Booking, que no ve Identity.
+- ⚠️ **El PDF va ADJUNTO al correo, no enlazado**.
+- ⚠️⚠️ **Tres guardas de arquitectura cazaron tres defectos**: un componente hablando con la API (`CE-6`), clases de CSS sin regla (`#253`) y la lista exacta de claves del montaje.
+- ⚠️ **Los dos presupuestos del cajón se podan ANTES de subirlos** (chunk 263 KiB · textos 9.400 B, que los paga CADA página con sesión).
+- ⚠️ **§4.11 decía que `GateReservation` no lleva `order_id`: era FALSO.** Pendiente del
+- ✅ del owner y del plazo de conservación

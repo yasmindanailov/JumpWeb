@@ -19,6 +19,26 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **El armazón está COMPLETO en los doce anchos** (`#200`→`#221`): dos racimos flotantes + menú a pantalla
+  completa, también en móvil (§12; el cajón lateral queda apagado, no retirado). **Nace BAJO el hero** (§9,
+  `#216`, `[DECIDIDO owner]`) y por eso el hero recupera sus dos botones —reabre `#195`—; sale del MISMO recorrido
+  que el hero (`--nav-p`), `opacity: 0` sigue recibiendo clics y el suelo sin JS va en `<noscript>`.
+- **Corrección delante del texto**: §4.4 y §4.8 (M-05 ya estaba cumplido; la coreografía sí se implementó en
+  `#216`); §9.4 corrige el razonamiento de §8.2.
+- **El CTA es un PAR** (§8, `$store.ctaPair`, compartido con la barra de móvil): 1.er clic expande, 2.º actúa;
+  **cambia de ROL dentro del menú** (§7: tinta → aviso, `.cta-med` fuera del rol de acción) y **su anillo de foco
+  es el mismo amarillo**: sin cambiarlo queda invisible.
+- **Donde el mockup usa `nowrap` nosotros NO podemos**: sus destinos son fijos, los nuestros los manda la BD
+  (671 px de ítem en un menú de 390). §11: el titular del hero no cabía y la culpa era del SUELO de un `clamp`.
+  §10.5: su `height: 54px` es la CAJA; el dibujo son 70.
+- **§1.7, tres defectos que se importan solos** si se copia el mockup: el menú cerrado deja sus enlaces en el
+  orden de tabulación; M-05 choca con `--shadow-float`; el eslogan sale dos veces. §1.5: la auditoría del
+  cliente EXCLUYE menú y logotipo. §1.3: el cajón móvil no lo tocaba NINGÚN test.
+- `plan-select`, `nav__dd` y `nav__links` ya NO EXISTEN. Dos guardas nacieron laxas por aseverar subcadenas.
+  El logotipo sobre TINTA es `client-logo-ink.svg` (`#216`). **Anexo al final** con la fila del enrutador.
+
 ## 1. Contexto y problema — MEDIDO contra el código, no supuesto
 
 Hoy la navegación del producto es una **barra fija translúcida** en lo alto de todas las
@@ -1630,3 +1650,53 @@ pintado ya sale en ese modo (clase estática `cta-pair--account` sin sesión). �
 va en **sintaxis de objeto**: con la de array Alpine no retira una clase estática y el par se quedaría
 pegado en cuenta al pulsar «Reservar». Los dos sitios (cabecera y barra de móvil) comparten el store,
 así que cambian a la vez. Guarda: `ArmazonContractTest::test_the_pair_starts_on_account_for_guests_and_on_buy_with_session`.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El ARMAZÓN · la barra superior · el menú · la hamburguesa · el logo · los CTA de la esquina · el cajón móvil»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/armazon-y-menu.md` · `docs/INSTALACION-CLIENTE.md` · `docs/DEUDA.md` · `docs/specs/tema-por-instalacion.md`.
+
+- **`docs/specs/armazon-y-menu.md`**
+- 🟦 **EL ARMAZÓN, COMPLETO EN LOS DOCE ANCHOS** (`#200`→`#205`, `#211`, `#213`, `#214`, **`#216`**, **`#217`**, **`#218`**, **`#220`**, **`#221`**) —
+- ▶ ✅ **§12: la 2c·4b HECHA** — el menú a pantalla completa manda también en móvil; el cajón lateral queda **apagado, no retirado** (ficha en `DEUDA`).
+- ⚠️⚠️ **Donde el mockup usa `nowrap` nosotros NO podemos**: sus destinos son cortos y fijos, **los nuestros los manda la BD** — a 390 px un ítem medía **671 px dentro de un menú de 390**. Y entra la **vela** que dice que la lista sigue, apagada con `animation-timeline: scroll()` sin una línea de JS.
+- ▶ **§11: el titular del hero no cabía en un teléfono** (`#220`) y **la culpa era del SUELO de un `clamp`** — no es una talla adaptable, es una talla con dos topes. Mismo patrón dos tandas seguidas. Con él, el titular **encoge con el hero** y se retira un centrado que el mockup no tiene.
+- ▶ **§10: las tres piezas que el OJO del owner vio distintas** (`#217`) — las sombras del racimo (entra un **CUARTO rol**, el mobiliario flotante), la forma del botón de menú (rect con etiqueta y **dos rayas que ROTAN**;
+- ⚠️ se pierde el hueco de icono por instalación en esa pieza) y el logotipo, que **flota** sin pastilla.
+- ⚠️ **§10.5: su `height:54px` es la CAJA, no el dibujo** — son **70**, y hubo que llegar a la TERCERA medida porque las dos primeras medían cajas y no tinta.
+- ▶ **§9: el armazón NACE BAJO EL HERO** (`#216`, `[DECIDIDO owner]`) y por eso **el hero recupera sus dos botones**, reabriendo `#195`: el mockup puede ocultar su cabecera **porque su hero ofrece la acción**. Eso **CORRIGE a §4.4**.
+- ▶ ❗❗ **EMPIEZA POR §9: el armazón NACE BAJO EL HERO** (`[DECIDIDO owner, 2026-08-28]`, como el mockup): con el hero a pantalla completa **no hay logo, ni CTA, ni hamburguesa**, y los tres entran juntos al encoger el hero.
+- ⚠️⚠️ **Eso REABRE `#195` y no se puede separar**: el mockup puede ocultar su cabecera **porque su hero ofrece la acción**, así que el hero recupera sus dos botones — sin ellos la primera pantalla se queda sin comprar y sin navegación, el agujero de `#211` por otra puerta.
+- ▶ Eso **CORRIGE a §4.4**, que declaró esta coreografía «no sostenible»: lo era con el hero sin CTA.
+- ⚠️ Sale del **MISMO recorrido que el hero** (`nb = (bruto−0,18)/0,44`, verificado por aritmética: 0,5617 calculado / **0,561 medido**), el JS publica `--nav-p` + una clase —**`opacity:0` NO deja de recibir clics**— y el suelo sin JS va en **`<noscript>`**. `navCtaReveal` **se RETIRA** (hacía media coreografía) y con él `body.nav-cta-revealed`, que **ninguna regla leía**.
+- ▶ **§9.4: las OCHO del CTA doble** —orden, anchos 224/56 fijos, alturas iguales, el colapso pasa del TEXTO al BOTÓN, el rótulo que entra **espera .14s**, sombra por rol, el hover ya no salta, y el fantasma **se queda blanco en el menú** (lee los alias `--paper-*`)—.
+- ⚠️⚠️ **Esto CORRIGE el razonamiento de §8.2** (el `width` fijo «descentraría el icono»): con `flex-start` y padding izquierdo fijo no se mueve, y **13+30+13 = 56** exacto.
+- ▶ **§9.6: la MARCA del 2.º cliente YA ESTÁ**, y los huecos pasan de 2 a 9 (`INSTALACION-CLIENTE.md` §4.a.quater). El logo **sobre TINTA** era obligatorio: un texto se adapta solo, **una imagen no** — y con dos imágenes el nombre accesible **se duplica o se pierde**.
+- ⚠️⚠️ **§9.7: TRES trampas del instrumento** —`DesignSync` trunca los binarios a 192 KiB **sin fallar**, transcribir base64 desde el contexto **corrompe el fichero en silencio** (cabecera y dimensiones válidas, 4.632 B de 6.900), y mi propio verificador dio «ROTO» en once PNG recién generados—. —
+- ▶ **§8: el CTA es un PAR** (`[DECIDIDO owner]`): uno ancho y el otro reducido a su icono; **1.er clic expande, 2.º actúa**, y mientras nadie lo toca la mitad colapsada **asoma** con un **aro** que late.
+- ❗ **El estado subió a `$store.ctaPair`**, compartido con la barra de móvil (`#205`): son la misma decisión.
+- ⚠️ La rama **con sesión era la única del par SIN suelo sin JS** —un `<button>` que no hacía nada— y ahora es `<a href=/mi-cuenta>`.
+- ⚠️⚠️ **Dos guardas nacieron LAXAS y lo demostró la mutación** (una cadena buscada «en algún sitio» del atributo · un `animation:` que cumplía el ARO). —
+- ▶ **§7: el CTA del armazón CAMBIA DE ROL dentro del menú** (`[DECIDIDO owner]`, como su mockup): tinta cerrado → **AVISO** abierto, y por eso **`.cta-med` SALIÓ del rol de acción** que `#209` le dio (`.cta-prime`, la barra de móvil, sigue dentro).
+- ⚠️⚠️ **Tres fuentes del cliente se contradicen ahí** —su implementación dice aviso, su norma dice «el amarillo NUNCA es fondo de botón» y su tabla de orden dice color de acción—; ficha en `DEUDA.md`.
+- ⚠️ **Y su anillo de foco es EL MISMO amarillo**: sin cambiarlo, el foco de teclado sobre ese botón queda invisible.
+- ▶ **EMPIEZA POR §6 si tocas el menú**: hasta el 2026-08-28 **no se podía cerrar con el ratón** (la hamburguesa solo abría) y **abrirlo desde la portada dejaba la pantalla sin ningún botón de comprar** (el CTA nace oculto por `navCtaReveal`).
+- ❗ **Las dos las cazó el OJO del owner y ninguna de las 31 aserciones del armazón las veía: todas comprobaban que el menú se ABRE.**
+- ⚠️ Y medido: **el menú del mockup tampoco lleva CTA propio** —usa el de la cabecera, que en el suyo está siempre visible—, así que no faltaba un botón sino REVELAR el que ya hay.
+- ⚠️ **La guarda de eso nació ciega por aseverar por SUBCADENA** (`.nav-cta-med-NO` contiene `.nav-cta-med`): tercera vez en dos días. —
+- ❗ **solo queda la 2c·4b, el menú a pantalla completa en móvil**; por debajo de 1080 px sigue el cajón lateral intacto.
+- ✅ **YA NO LA BLOQUEA EL ARTBOARD**: el 2026-08-28 el canvas trajo la pasada de MÓVIL completa dentro de `Landing PJP Modos` —`--pjp-margen`/`--pjp-tope`/`--pjp-barra`, `100svh`, `env(safe-area-inset-*)`, carruseles con `scroll-snap`, el panel de reserva como **hoja inferior** con asa y una **barra de acciones** de 3 iconos + «Reservar»—.
+- ⚠️ **Esa barra choca con la nuestra**: `#205` hizo un **CTA doble** y el mockup pide 3 iconos + 1 CTA — **contrástalo con el owner antes de rehacerla**.
+- ▶ **La barra inferior de móvil ya es el CTA DOBLE** (`#205`) y **el selector de idioma salió del pie** —vive en el menú, con `<noscript>` de suelo sin JS—. —
+- ⚠️⚠️ **§4.4 y §4.8 llevan CORRECCIÓN delante del texto**: `M-05` ya estaba cumplido (nuestro mobiliario perdió la sombra en `#196`) y la coreografía «nace oculto bajo el hero» **NO se implementó** porque el hero dejó de ser a sangre en `#195` — el armazón está **visible desde el primer píxel en las doce**.
+- ❗ **La barra está DISUELTA**: `.nav` es un contenedor con `pointer-events:none` y dos racimos con `auto`; sin eso la franja vacía se traga los clics de todo el ancho.
+- ❗ **El salto al contenido va en el componente y llega a las 12** — y ojo: `pages/events` tiene DOS `<main>` y hay guarda que los mira todos. —
+- ▶ **la barra ya NO lleva enlaces: la navegación es un MENÚ A PANTALLA COMPLETA** (`.menu`, segundo consumidor de `data-surface="ink"`) y la hamburguesa está en TODOS los anchos; por debajo de 1080 px sigue mandando el cajón de móvil, intacto hasta el artboard del owner.
+- ⚠️ **`plan-select`, `nav__dd` y `nav__links` ya NO EXISTEN.** — la **tanda 2c** del tema, y no es «adoptar una estructura»: **cambia por dónde se navega el sitio**. `[DECIDIDO owner, 2026-08-27]`: la barra se retira en las **12** vistas y la sustituyen **dos racimos flotantes + menú a pantalla completa**; la lista del menú es **PLANA** y la sigue mandando la BD; con sesión, icono de cuenta con **punto naranja/verde**; **el MÓVIL lo guía el owner con un artboard** y hasta entonces no se empieza.
+- ▶ **EMPIEZA POR §1.6 y §1.7.** §1.6 es lo que el mockup **NO contesta** —solo dibuja la landing, y hay **11 vistas sin hero**—; §1.7 son **tres defectos que se importan solos**: el menú cerrado **deja sus enlaces en el orden de tabulación** (medido: cero `inert`, cero `aria-hidden`, cero `visibility`), el hallazgo **`M-05`** del propio cliente —sombra difusa fuera de modal— **choca con `--shadow-float`, que `#196` creó el mismo día**, y el eslogan a rotulador sale dos veces (`T-02`).
+- ⚠️ **§1.5: la auditoría del cliente EXCLUYE el menú y el logotipo** por indicación suya —sus colores sí, su forma y su coreografía no—: es **la misma trampa que con el hero** (`tema-por-instalacion.md` §11.1).
+- ❗ **§1.3: el cajón móvil no lo toca NINGÚN test** —ni PHP ni JS—, y es justo la pieza que el owner quiere revisar: por eso la tanda **2c·0 no cambia nada, construye la red**.
+- ⚠️ **§1.2: 33 reglas y 121 declaraciones (el 17 %) estaban MUERTAS** —retiradas en la 2c·0— — y el instrumento dijo 9 clases en vez de 11 hasta que aprendió a **no contar los comentarios**: un `grep` que SÍ encuentra tampoco demuestra que exista.
+- ⚠️ **§1.9: la copia del canvas caducó DOS veces en una jornada** (210 líneas de diff a las 17:53; no tocan el menú).
+- ❗ **§5: seis cosas siguen pendientes del owner**, y la 1.ª —el artboard de móvil— bloquea una tanda entera.

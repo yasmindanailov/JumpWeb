@@ -3,6 +3,18 @@
 > Estado: diseño 🟦 en revisión (entrada de la Fase 2; la decisión final va con el diseño de
 > módulos) · Última actualización: 2026-08-12 · Decisión asociada: DECISIONES #12.d.
 
+## §0 · Antes de tocar
+
+- **Diseño de entrada de la Fase 2** (`#12.d`): cómo generalizar el vocabulario del sector origen (`ParkSchedule`,
+  `ParkRule`, `Puerta`, acentos de zona `jump`/`kids`). La decisión final fue con los módulos
+  (`modulos-dominio.md`, `#13`), y el vocabulario VIVO —término de dominio ↔ artefacto de código/BD— se
+  mantiene en `GLOSARIO.md`, no aquí.
+- Lo que sigue valiendo: el criterio de qué se renombra y qué se deja con tabla de equivalencias
+  (`docs/README.md`, punteros fantasma); los supuestos del sector origen están en `OPERATIVA-SECTOR-ORIGEN.md`
+  y no se rompen sin decisión explícita (`CONVENCIONES §6`).
+- `zone: 'jump'`, el slug del primer cliente, se ha encontrado quemado en el producto más de una vez
+  (`#302`): la zona se identifica por `slug` y la primera la dice el DOM, nunca el código.
+
 ## 1. Contexto y problema
 El código heredado usa vocabulario del sector origen (parque de saltos): `ParkSchedule`,
 `ParkRule`, namespace `Puerta`, copys de «cumpleaños/niños», accents de zona `jump`/`kids`.

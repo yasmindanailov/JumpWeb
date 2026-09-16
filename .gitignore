@@ -86,6 +86,8 @@ Thumbs.db
 /_*.php
 /_*.html
 /_*.png
+# Caché de bytecode de los guiones Python de `scripts/` (aparece al importarlos desde un test o un REPL).
+__pycache__/
 
 # Vídeos: por defecto NO se versionan (fuentes pesadas / HEVC). EXCEPCIÓN: el vídeo del hero
 # y su póster, ya optimizados y ligeros (~2,2 MB, H.264 720p 30 fps, SIN audio), SÍ se versionan

@@ -17,6 +17,23 @@ tanda 3 del área de cliente (`#120(u)`) quedaban dos sitios; al cerrar esta spe
 
 ---
 
+## §0 · Antes de tocar
+
+- **EJECUTADA ENTERA** (A1–A10, `#122`) y validada por el owner en navegador: el modal de la cabecera está
+  retirado y la gestión del cliente vive en UN sitio (`#66`). **Se conserva por lo que MIDIÓ**: §8.bis el
+  método (clasificar los tests MUTANDO, no leyendo), §4.10 las conductas que ningún test de árbol ve, §7 lo
+  que la revisión adversarial cambió.
+- **§1.3: tres cosas que no son «pintar»**: mueren dos paridades, `SEC-06` cita tests que se van, y el
+  `noindex` de `/login`, `/registro` y `/recuperar-contrasena` no lo asevera nadie.
+- **§4.5: el clic con el motor YA montado es donde esto se rompe en silencio.**
+- **§8.ter (`#210`): el «no» del login fue INVISIBLE en el área cinco días** — en `<script setup>` una `const`
+  con el nombre de una prop la SOMBREA y nada avisa. Guarda `SidebarSetupBindingsTest`; el área **no tiene
+  casos de contrato de árbol** (`DEUDA.md`).
+- La auditoría de tests destapó un hueco de seguridad vivo: el desenlace de pago de otra persona sobrevivía a
+  un login en dispositivo compartido. Los textos del área viajan SOLO con sesión.
+- Se invalida si se retiran los componentes `Livewire\Auth\*`, cambia `Http\Sidebar\AccountDoor` o el modelo
+  de zonas de `resources/js/sidebar/account/navigation.js`. Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 ### 1.1 Dónde vive hoy la auth (medido el 2026-08-22)
@@ -637,3 +654,12 @@ con los segundos. Guion en `VERIFICACION-E2E-CAJON.md` §5.terdecies.
 
 ▶ Queda `[PENDIENTE: owner]` si el área debe ganar casos de contrato de árbol (hoy cero) o si ESLint
 (`no-use-before-define` + `vue/no-dupe-keys`) entra en el gate: ficha en `DEUDA.md`.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Auth dentro del cajón / retirar el modal de la cabecera»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/auth-en-cajon.md`.
+
+- `docs/specs/auth-en-cajon.md` (**§1.3: tres cosas que no son «pintar»** — mueren dos paridades, SEC-06 cita tests que se van y el `noindex` de `/login`, `/registro` y `/recuperar-contrasena` no lo asevera nadie · §4.5: el clic **con el motor ya montado** es donde esto se rompe en silencio ·
+- ❗ **§8.ter: el «no» del login fue INVISIBLE en el área cinco días** (`#210`) — en `<script setup>` **una `const` con el nombre de una prop la SOMBREA** y nada avisa; guarda `SidebarSetupBindingsTest`, y el área **no tiene casos de contrato de árbol** (`DEUDA`))

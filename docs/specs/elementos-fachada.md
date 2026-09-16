@@ -77,6 +77,22 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Es una VALORACIÓN, no un plan de obra** (`#281`). `[DECIDIDO owner, 2026-08-30]`: el hueco de ilustración
+  por instalación se construye (hecho: `hueco-ilustracion.md`, `#286`) y **el grupo D · Siluetas se retira
+  ENTERO** (kit de 32 de 40; `D4` y `D6` se van también). Del kit no sale NINGUNA animación.
+- **Las cinco correcciones del 2026-08-31 van antes que el cuerpo** y viven en `hueco-ilustracion.md` §12: el
+  canvas llegó SANO al descargarlo (el daño lo traía el PEGADO); el hueco ya existía dos veces; dos manchas ya
+  viajaban instaladas; el «18,6×» es cifra cruda (1,4× comprimido); los estados vacíos existen.
+- **§5 es la línea que manda**: manchas y poses son ARTE DE ESTE CLIENTE y solo entran por el hueco; sin él,
+  meterlas clava el mural de un parque dentro del producto. **De aquí se saca la FORMA, nunca el color.**
+- **§6: una geometría, doce composiciones** (plano, contorno y troquel desde el MISMO `<path>`), y las
+  composiciones van con `<use>`, no repitiendo el path.
+- **§8: seis contradicciones medidas del artboard** — y una séptima que era MÍA y falsa (`saltador.png` existe:
+  un `head` truncó el listado). Los 19 dibujos de parque tienen mecanismo desde `#286` (caduca la deuda de `#257`).
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto
 
 `Elementos Fachada` es el kit de material gráfico que el cliente saca del **mural de la entrada de
@@ -413,3 +429,33 @@ independientes dicen lo mismo: eso sube la confianza en esa corrección.
 6. ✅ **RESUELTA**: `D4` y `D6` **se van también** (`[DECIDIDO owner, 2026-08-30]`, preguntado con la
    consecuencia delante). El grupo D desaparece **sin excepciones** y el kit se queda en **32 piezas
    de las 40**. ⚠️ Lo que eso cuesta está en §4.1: **del kit no sale ninguna animación**.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Material gráfico del mural · manchas · siluetas y POSES · texturas de tarjeta · frisos · estados vacíos · iconos de zona»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/elementos-fachada.md` · `docs/specs/hueco-ilustracion.md` · `docs/specs/tema-por-instalacion.md`.
+
+- **`docs/specs/elementos-fachada.md`**
+- ⬜ **VALORACIÓN, no plan de obra** (`#281`) — el kit `Elementos Fachada` del 2.º cliente.
+- ⚠️⚠️ **§1.1: LA COPIA LOCAL DEL CANVAS ESTÁ CADUCADA** (20 piezas contra **40**: sin los grupos A, F y G) **y un fichero pegado trae la codificación rota** mientras la local está en UTF-8 sano: *el daño lo trae el pegado, no el canvas* — no se sobrescribe (§25.1 de `tema-por-instalacion.md`), y `DesignSync` sigue **sin autorización**.
+- ▶ **§1.2: su `D9` («las poses que faltan») desapareció porque el cliente lo resolvió** — pedía **4 recortes PNG** y entregó **12 poses en SVG a un color plano** (9 adulto + 3 niño), que es MEJOR: un PNG no se recolorea ni se recorta y un `<path>` sí.
+- ▶ **§3: EL VOCABULARIO DE BASE YA ESTÁ** y eso cambia el encargo — la trama A1 **es `.menu__grain` al dígito** (1,4 · 1,6 · 20×20), la tira C2 coincide **en orden 5 de 5** con `--strip-1..5`, la sombra dura de E1 **es** `--shadow-float` (`5px 5px 0`) y las cuatro tipografías **son** `--font-display/body/accent/mono`. Lo nuevo no es la técnica: es el REPERTORIO de formas.
+- ⚠️ Lo único que falta de mecanismo es `mix-blend-mode`, con **cero usos** hoy.
+- ❗❗❗ **§5 ES LA DECISIÓN QUE MANDA Y ES DEL OWNER**: las 6 manchas y las 12 poses son **ARTE DE ESTE CLIENTE**, y **F10/G5 caen justo encima de la deuda que `#257` dejó escrita** («los 19 dibujos de parque no están: son del cliente y **no existe mecanismo** para sustituir un dibujo por instalación»). *Este artboard no crea el problema: aterriza sobre el que ya teníamos anotado, y con el material para cerrarlo.* Sin ese hueco, meterlo **clava el mural de un parque dentro de JumpWeb**.
+- ▶ **§6: UNA GEOMETRÍA, DOCE COMPOSICIONES** — plano, contorno y troquel salen del **MISMO** `<path>` (verificado: F6 expande el `viewBox` **+5,1 = el `stroke-width` 4,1 más margen**; F7 añade rect exterior con `evenodd`), y eso es NUEVO frente al grupo D viejo, donde eran **dos geometrías distintas** (2.524 B y 3.746 B).
+- ⚠️⚠️ **Las composiciones van con `<use>`, no repitiendo el path**: medido, el artboard repite la silueta **44 veces** y su `D8` pesa **100.374 B para 24 figuras** (4.182 B cada una) — con `<use>` son ~5,4 KB, **18,6× menos**. Y ahí esperan las dos trampas de `#266`: **una animación sobre un elemento de `<defs>` NO PINTA** y **los `px` de un `transform` dentro de un SVG son unidades del `viewBox`**.
+- ⚠️ El presupuesto está tenso: el logotipo ya es el **42 % del HTML de `GET /`** (`#275`) y `/precios` va a **9 bucles** contra su techo de **2** (`#279`).
+- ❗❗ **`[DECIDIDO owner, 2026-08-30]`: EL GRUPO D · SILUETAS SE RETIRA ENTERO** (8 piezas + la figura vieja del cristal) **y las otras 32 entran**.
+- ▶ **Su propio `D9` ya había escrito el porqué** —«la misma pose transformada, **y se nota cuando se repite**»—, así que la decisión COMPLETA el artboard.
+- ⚠️ **No toca el logotipo**: medido, `client-logo.svg` **no contiene** ese path.
+- ▶ **Seis de los ocho tratamientos sobreviven dentro de F/G**; los dos sin gemelo —**`D4` (pegatina) y `D6` (eco de salto)**— **se van también** (`[DECIDIDO owner]`, preguntado con la consecuencia delante), así que el kit queda en **32 de las 40**.
+- ⚠️⚠️ **Coste declarado: `D6` era la ÚNICA pieza del kit que contaba un movimiento** — **de `Elementos Fachada` no sale ninguna animación**, y el movimiento lo sigue decidiendo `Microanimaciones PJP` (`#277`).
+- ⚠️ La cabecera del grupo F sigue diciendo «cualquier tratamiento del grupo D sirve»: apunta a los tratamientos **tal como F/G los traen montados**, no al grupo retirado.
+- ⚠️ **§8: SEIS contradicciones medidas del artboard, y una séptima que era MÍA y FALSA** — titula «Cuatro reglas» y son **cinco**; su **F8 rompe su propia regla 05** (14 copias, 9 poses, **5 repetidas**) diciendo «poses distintas»; el grupo C se titula «Goteos y bandas» y **no tiene ningún goteo**.
+- ⚠️⚠️ **Lo falso era mío**: dije que `D4` apuntaba a un `saltador.png` inexistente y **existe (98.508 B)** — un `head` truncó el listado a diez líneas y era la undécima. *Un listado truncado no dice que algo no exista: dice que no lo has visto.*
+- ▶ **Lo que SÍ corrobora**: su cabecera —«nada de esto pinta el fondo de una sección: el fondo es papel y el material vive dentro de las tarjetas»— **confirma el hallazgo `S-00`** de `tema-por-instalacion.md` §1.2.
+- ⚠️ **De aquí se saca la FORMA, NUNCA el color**: medido, **cero** de sus nueve literales coinciden con los de `client.css`.
+- ▶ §7 propone dónde iría cada pieza y **§10 son las cinco cosas que decides tú**.
+- ✅ **§1.1 CADUCÓ: el canvas se refrescó el 2026-08-31 y llegó SANO** (UTF-8 válido, cero mojibake, **40 piezas** con la distribución exacta prevista) — se **descargó** como fichero en vez de pegarlo, que era el daño.
+- ▶ **Y el hueco que §5 pedía ya tiene spec propia: `docs/specs/hueco-ilustracion.md`**, que además CORRIGE tres afirmaciones de aquí

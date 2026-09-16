@@ -12,6 +12,22 @@
 > ⚠️ **§1 es el diagnóstico PREVIO** (2026-08-13, antes de tocar nada): describe un repo sin API y
 > se conserva como registro del análisis, no como foto del código de hoy.
 
+## §0 · Antes de tocar
+
+- **Fase 3 ejecutada** (v2, los seis pasos de §9). El ítem que quedó fuera —la emisión de tokens Bearer— es
+  la F4 del programa «producto e instancias» (`specs/producto-e-instancias.md` §4.5).
+- **El contrato `openapi/v1.yaml` MANDA sobre el código** (`#21`): los esquemas son `additionalProperties:
+  false`, así que un campo de más es un 422 por esquema; el contrato se cambia antes que el código.
+- **§10 → §10.sexdecies son 87 puntos que el código enseñó al implementar**: entrada obligatoria antes de tocar
+  la API o construir sobre ella. **§1 es el diagnóstico PREVIO**, no una foto del código de hoy.
+- **Los controladores de checkout están en el `CRITICAL_RE` por NOMBRE** (`Order|Payment|Checkout|Quote|
+  Availability|Cart`): un endpoint que crea pedidos, inicia pagos o calcula disponibilidad orquesta las
+  carreras que la suite SQLite no ve → `VERIFY_CONC=1`. `ApiBoundariesTest` prohíbe que la lógica nazca en
+  el controlador; el ORDEN de la secuencia lo garantiza `checkout-orquestado.md`.
+- Un único esquema de seguridad hoy (la cookie de sesión): los tokens y la API pública de lectura para la
+  landing (horario, legales, normas, prueba social) nacen en F4 y F5 del programa.
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 **Medido el 2026-08-13** (los recuentos de la v1 eran erróneos; corregidos aquí — §8):

@@ -8,6 +8,29 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **El carril entero en el árbol** (`#500`→`#508`, banda 500–519) **y son 25 correos, no 23**: los dos del
+  framework (verificar el correo, restablecer la contraseña) no vivían en ninguna carpeta; se EXTIENDEN
+  (`buildMailMessage($url)`), no se reemplazan, y hoy encolan (`PAY-14`). Quedan los cuatro ÁMBAR (§16) y el
+  OJO del owner en Gmail/Outlook: nada se ha visto en un cliente real.
+- **§2: el filtro producto/cliente NO se resuelve con tokens**: los clientes de correo no leen `var(--…)` y
+  Laravel INLINEA el tema, así que `client.css` no llega. Lo data-driven va por Blade: el logotipo y el nombre
+  del negocio (`Setting::businessName()`, único lector: la forma con `?? $default` devolvía `''` con la fila en
+  blanco) y el botón con `onAction()`, nunca `onBrand()`. El remitente sale del PANEL (`ApplyBusinessSender`,
+  no `Mail::alwaysFrom()`; con `Mail::fake()` su caso sale verde desconectado).
+- **El molde es un TIPO**, `BrandedMailMessage`: `hero($grupo, $tono, $resguardo)` deriva chapa y titular del
+  GRUPO del diccionario; **todo componente de correo nace por partida doble** (`html/` y `text/`, o el envío
+  revienta); la estructura son TABLAS; el LIBRO va entero (`[DECIDIDO owner]`).
+- **Modo oscuro**: solo en el `<style>` de `layout.blade.php` con `!important` (el inliner descarta las
+  `@media`), y se mapea POR COLOR —texto, fondo y borde—, nunca por clase; el contraste lo hacen LOS DOS LADOS
+  y la guarda mide con una pila de fondos.
+- **La bandeja**: la línea de adelanto va ANTES de la cabecera, con relleno invisible, sin datos variables y sin
+  repetir el asunto (umbral 60 %); el asunto lleva el DATO y la fecha sale de `Order::singleVisitDate()` (null
+  con visitas en días distintos); sin nombre del parque. `Lang::has()` cae al idioma de respaldo.
+- El orden de las llamadas no es el de la pintura (`outro()` para el cierre); un type hint `string` destruye un
+  `Htmlable`; un `*/` en un docblock lo cierra; los comentarios CSS viajan en cada correo. Anexo al final.
+
 ## 1 · Por qué este carril y no el SPA
 
 El owner pidió el **SPA**. Al medir el terreno salió que el CSS del cajón vive dentro de
@@ -926,3 +949,68 @@ correo, su URL y su texto son los mismos.
 - **Los dos leídos en Mailpit**: la bandeja enseña «Verifica tu email» / «Un clic y tu cuenta queda
   lista…» en vez de «¡Hola!»
 - ⚠️ **Sigue sin verse en un cliente de correo real**
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Los CORREOS · el tema de email · la firma y el copyright · el remitente · la línea de adelanto · el libro dentro de un correo»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/correos-desde-canvas.md` · `docs/specs/cumple-mixto.md`.
+
+- **`docs/specs/correos-desde-canvas.md`**
+- 🟦 **EL CARRIL ENTERO EN EL ÁRBOL — y son 25 correos, no 23** (`#500`→`#508`, banda propia **500–519**) —
+- ❗❗❗ **EMPIEZA POR §2 SI VAS A TOCAR COLOR AQUÍ**: el filtro producto/cliente **no se resuelve con tokens y es estructural** —los clientes de correo no leen `var(--…)` y Laravel **inlinea** el tema antes de enviar, así que **`client.css` NO llega al correo** (medido: 0 usos de `var(`)—. Lo data-driven va por la puerta de Blade: el **logotipo y el nombre del negocio** (`header.blade.php`, `#325`) y el **color del botón** (`button.blade.php`).
+- ▶ Por eso **lo que queda en el tema no es marca: son SUPERFICIES y FORMA**, y las de antes eran las del **PRIMER cliente**: cambiarlas *no clava a un cliente nuevo, quita al viejo*.
+- ❗❗❗ **SI TOCAS LA FIRMA, EL COPYRIGHT O EL REMITENTE**: un correo tiene **CUATRO** superficies de marca y **tres decían «JumpWeb»** con el negocio llamándose otra cosa — en **20 de los 21** que lee una persona, y **ninguna guarda lo miraba**. Hoy hay **un solo lector**, `Setting::businessName()`.
+- ⚠️⚠️ **Y el defecto de fondo eran DOS formas que no son equivalentes**: `Setting::value('business.name', config('app.name'))` resuelve con `?? $default`, así que **solo cae al defecto si la clave NO EXISTE** — con la fila creada y en blanco devolvía `''` y seis correos firmaban con el nombre vacío.
+- ❗❗ **SI ESCRIBES UNA `@media` EN UN CORREO**: no puede vivir en el tema. `CssToInlineStyles` pega cada regla a su etiqueta y **descarta lo que no puede inlinear**; el modo oscuro se escribió ahí y el HTML salió **sin una sola `prefers-color-scheme`, sin fallar**. Va en el `<style>` de `layout.blade.php` —el único sitio donde sobrevive— y **con `!important`**, porque el tema ya está inlineado y gana.
+- ❗❗❗ **`#502` SI TOCAS EL MODO OSCURO**: el texto se mapea **POR SU COLOR** (`[style*="color:#101418"]`), **nunca por etiqueta o clase** — seleccionar `body, p, .table td, h1…` dejaba **el LIBRO DEL PEDIDO INVISIBLE** (los partials pintan inline sobre `<td>` y `<div>` SIN clase: **11 elementos a 1,12 : 1**, el desglose del dinero desaparecido entero).
+- ⚠️⚠️ **Y la suite pasaba en verde** porque el único caso que renderizaba un correo usaba una confirmación **sin líneas**, y sin líneas no hay libro: *el defecto no tenía sujeto*. Hoy lo vigila una guarda que censa la propiedad `color` en las **trece fuentes** y exige par oscuro o excepción con motivo.
+- ⚠️ Se declaran las DOS formas del selector (con y sin espacio): los partials lo escriben pegado y el inliner separado.
+- ❗❗ **SI TOCAS EL BOTÓN**: usa **`onAction()`, nunca `onBrand()`** — aquél elige el que más contraste dé y éste **prefiere blanco** con umbral **3,0** (texto GRANDE), y el rótulo mide 15px/700, o sea 4,5: sobre `#FF5B22` daba **3,10** en los 23 correos. *Un helper corregido no corrige a quien sigue llamando al viejo.*
+- ⚠️ **«Un archivo y tres plantillas» del canvas es FALSO: son CINCO** — faltaban `emails/partials/book.blade.php` (el LIBRO, 26 valores) y `product-card.blade.php` (17).
+- ⚠️ **«Una devolución no es un color: es un signo y una fecha»** — el libro pintaba ámbar 700/800 y rojo 800 **de Tailwind**; hoy tinta, y `settled`/`expired` **siguen en Humo** porque un saldo en reposo no reclama nada.
+- ⚠️ Las líneas de adelanto **son 63, no 69 ni 23** (`#506`: 21 × 3 — los dos internos usan vista suelta y no pueden llevarla), y `lang/zh_CN/` **no tiene `emails.php`**.
+- ⚠️ **`MailThemeTest` cementaba la paleta vieja** y se puso roja con el producto sano: hoy vigila PROPIEDADES (ninguna webfont · radios en la escala de cuatro · el modo oscuro en el HTML enviado · el contraste del botón **calculado**, no un hex).
+- ❗❗ **`#501` SI TOCAS EL REMITENTE**: sale del **PANEL** (Ajustes → Contacto), no del `.env`. Lo aplica `Platform\Listeners\ApplyBusinessSender` al vuelo y **NO es `Mail::alwaysFrom()`** —aquél consultaría `settings` en cada petición, incluidas las que no envían nada—.
+- ⚠️ Solo sustituye el remitente **POR DEFECTO** (compara con el de `config`), **con varios `From` no toca nada** porque `from()` REEMPLAZA y se llevaría uno en silencio, y **el `Reply-To` no se toca** (`ContactMessageMail` pone el del cliente: pisarlo haría que el parque se respondiera a sí mismo).
+- ⚠️⚠️ **Si escribes un caso aquí, `Mail::fake()` NO SIRVE**: intercepta antes de construir el mensaje, así que `MessageSending` no se dispara y el caso sale VERDE con el mecanismo desconectado.
+- ❗ **Paso de despliegue**: ponerlo en cada instalación, con una dirección del dominio que firma SPF/DKIM.
+- ❗❗❗ **`#503` SI TOCAS EL MOLDE DE UN CORREO**: la estructura del mockup son **cabecera en TINTA + CHAPA + RESGUARDO + AVISO**, y va con **TABLAS** (en un correo `flex` no existe). Componentes: `vendor/mail/html/hero` y `notice`; el resguardo lo compone **`Booking\Services\EmailSlip`**, único, con rótulos en `emails.slip`.
+- ⚠️⚠️ **TODO COMPONENTE DE CORREO NACE POR PARTIDA DOBLE**: sin su gemelo en `vendor/mail/text/`, `->render()` sale perfecto y **el ENVÍO revienta** con «View not found» — un caso que solo renderiza no lo ve (hay guarda).
+- ⚠️ **Los comentarios CSS VIAJAN en cada correo y los de Blade no**: los del `<style>` pesaban **3.172 B, el 11 % del HTML**.
+- ⚠️ **Un `*/` en un docblock lo CIERRA** — la ruta comodín de los ficheros de idioma dejó un servicio sin compilar y el render devolvía el HTML anterior **sin avisar**.
+- ⚠️ **El botón es TINTA por defecto** y solo los DOS que venden llevan naranja, con `->level('sell')`: `level` es la única palanca que Laravel da porque `action()` no acepta color.
+- ⚠️ **Cero emojis** y **sin tarjeta de producto donde hay resguardo** (lo repetía).
+- ⚠️ **El LIBRO se queda ENTERO** (`[DECIDIDO owner]`): el artboard lo resume a tres líneas y eso perdería el historial — es la única divergencia declarada con el mockup.
+- ❗❗❗ **`#505` SI TOCAS EL MODO OSCURO DE UN CORREO**: el mapa va **ENTERO por color** —texto, fondo y borde— y **NO por clase**: tenerlo partido en dos mecanismos hizo que la guarda diera por cubiertos fondos que sí lo estaban **y dejara pasar los que no**.
+- ⚠️⚠️ **El contraste lo hacen LOS DOS LADOS**: la guarda de `#502` solo exigía par al TEXTO, y el AVISO —tinte claro fijo con el texto subido a Papel 200— quedaba en **1,28 : 1**, la caja entera ilegible, con la suite en verde. **Lo vio el owner.**
+- ⚠️ La guarda de hoy mide el RESULTADO con una **pila de fondos** (el fondo de un texto es el de su ancestro más cercano, no el del `<body>` — medir contra el de la página es cómo un texto ilegible pasa por bueno).
+- ❗❗ **`#504` SI AÑADES UN CORREO**: el molde es un TIPO, **`Notifications\Support\BrandedMailMessage`** (`MailMessage` **no es `Macroable`**, comprobado). Su `->hero($grupo, $tono, $resguardo)` deriva la chapa y el titular **del GRUPO del diccionario** —con dos parámetros se pueden desparejar— y **anula el saludo**.
+- ⚠️ Los 23 **no son homogéneos**: 9 llevan resguardo (tienen reserva), 8 no (son de cuenta) y **2 quedan fuera del molde con ficha** (vista propia, no `MailMessage`).
+- ⚠️ Hay un quinto tono, **`neutro`**, y sale de una regla dura: la chapa de una DEVOLUCIÓN no se tiñe.
+- ⚠️⚠️ **Y la guarda estática no basta**: que un correo DECLARE la cabecera no es que la pinte — se renderizaron **21 de 21** con su fixture.
+- ❗❗❗ **`#506` SI TOCAS UN ASUNTO O LA LÍNEA DE ADELANTO**: son las **DOS** cosas que se leen en la bandeja, juntas y antes de que nadie abra nada. **La línea va en `layout.blade.php` y ANTES de la cabecera** —lo primero que lee un gestor de correo es lo primero del DOCUMENTO, y el logotipo lleva `alt="{negocio}"`: metida en el cuerpo, la bandeja leería el nombre del parque y luego la frase—; **la deriva `hero()` del grupo** (la convención de `.badge`/`.headline`, así que entra en los 21 sin tocar una notificación) y **sólo si la clave existe**, porque `__()` devuelve la clave y un grupo sin escribir anunciaría el correo con «emails.x.preheader».
+- ⚠️⚠️ **El relleno invisible NO es adorno**: sin él el gestor pinta la línea y **sigue leyendo el cuerpo detrás** (medido: 83 + 168 caracteres antes de que asome).
+- ⚠️ **No viaja en texto plano** (allí repetiría la primera frase) y **no lleva datos variables**: un `:code` sin reemplazo sale literal en la bandeja.
+- ❗❗❗ **SI TOCAS LA FECHA DE UN ASUNTO O DEL TITULAR**: sale de **UNA** derivación, `Order::singleVisitDate()`, que devuelve `null` con reservas en días distintos (`#401` lo vio en un pedido REAL) y entonces se usa la redacción sin fecha — **en la bandeja no hay cuerpo debajo que matice un día que no es el único**.
+- ⚠️ **Dos formatos de la misma fecha y es deliberado**: `dayLabel()` en el asunto (es un DATO y **lleva el mes**) y `dayInSentence()` en el titular (va en una oración).
+- ⚠️ La fecha entra en **dos** de los 21, donde el CUÁNDO es lo que se busca.
+- ⚠️ **El nombre del parque NO va en el asunto** (`[DECIDIDO owner]`): lo dice el remitente, en la misma línea.
+- ▶ Medido: media **44 → 33** caracteres · pasan del corte **18 → 7** · su dato cabe en **9 de 14** contra **1 de 13**.
+- ❗❗ **DOS DEFECTOS QUE ENCONTRÓ AL MEDIR, los dos en VERDE**: `#504` dejó `badge`/`headline` del correo de identidad social **dentro de `providers`** y la chapa decía literalmente «account.social_link_mail.badge» en los tres idiomas —*declarar una pieza no es que diga algo*—; y `#500` arregló la marca en HTML y dejó **el TEXTO PLANO** firmando con el nombre del producto.
+- ⚠️⚠️ **`Lang::has($clave, $locale)` CAE AL IDIOMA DE RESPALDO**: una clave que falte en español pero esté en inglés **pasa en verde**. Es el tercer parámetro, y lo destapó la mutación.
+- ⚠️ **`docs-check` tiene check 9**: ningún marcador de conflicto de merge sobrevive en la doc — el registro de decisiones tuvo tres, con el gate en verde. Guardas: `MailInboxLineTest` (9) + `scripts/mutar-bandeja.py` (**9/9**)
+- ❗❗❗ **`#507` SI TOCAS EL CORREO DE LA FIESTA MIXTA O AÑADES UNA LÍNEA A UN CORREO**: era el último RECHAZADO del inventario («nueve frases para un importe»), y medido eran **13 frases y 150 palabras** con **los TRES datos del resguardo repetidos debajo** —código y producto en la entradilla, y producto, día y hora en una tarjeta— y la cifra en texto corrido. Hoy la cifra va en el **AVISO**, por encima del libro, y **el tono lo pone el SIGNO del neto** desde UNA derivación para la chapa y el aviso (era `warn` fijo: un descuento llegaba teñido de «falta algo»).
+- ⚠️ **`info` y no `ok`** — teñir de verde una rebaja la vendería como celebración, la regla dura de `#503`.
+- ⚠️⚠️ **LAS SIETE FRASES DEL DESENLACE NO SE TOCAN**: están razonadas en el código —fundirlas dejaría la retirada diciendo «ahora es 0,00 €»— y `cumple-mixto.md` §24.5 **las cita como el patrón de referencia** para separar la línea del IMPORTE de la del CANAL; lo que se movió es DÓNDE se pintan.
+- ❗❗❗ **EL ORDEN DE LAS LLAMADAS NO ES EL ORDEN DE LA PINTURA**: `notifications::email` pinta **todas** las `->line()` juntas y el aviso **después**, así que un `->notice()` escrito antes acaba **el último** — la cifra quedó debajo del libro, *y eso se ve renderizando, no leyendo*. Para lo que es cierre está **`BrandedMailMessage::outro()`**.
+- ⚠️⚠️ **Y UN TYPE HINT `string` DESTRUYE UN `Htmlable` EN SILENCIO**: el libro devuelve `HtmlString` y `{{ }}` no lo escapa, pero la firma lo convertía a texto — el correo pasó de **914 a 2.873 caracteres** y se leía «border-collapse:separate» como una frase, **sin que nada fallara**; `formatLine()` tampoco es opcional (colapsa los saltos de línea) y el atajo `$this->outroLines[] = $texto` se salta **las dos** cosas.
+- ⚠️ **LA LÍNEA DE ADELANTO NO REPITE SU ASUNTO** (regla de `#506` que no vigilaba nadie): dos lo repetían al **75 %** y un tercero, en francés, al **80 %** — umbral 60 %, sacado de la medida. Guardas: `MixedPartyMailShapeTest` (5, con control en cada uno; **uno nació buscando un atributo que NO EXISTE** y habría pasado en verde) + `scripts/mutar-mixta.py` (**7/7**) + `mutar-bandeja.py` (**10/10**).
+- ❗❗❗ **`#508` SI BUSCAS «TODOS LOS CORREOS» O AÑADES UNO: NO SON 23, SON 25** — el inventario del artboard contaba `app/Notifications/` + `app/Mail/`, y **los DOS del framework no vivían en ninguna carpeta** (salían de `Illuminate\Auth\Notifications`): el de **verificar el correo** —lo recibe TODA cuenta nueva— y el de **restablecer la contraseña** (web y panel). Estuvieron fuera del carril entero, vestidos pero **sin cabecera ni línea de adelanto**, anunciándose con «¡Hola!».
+- ⚠️⚠️ **Se EXTIENDEN, no se reemplazan**: sobrescriben solo `buildMailMessage($url)`, que **recibe la URL ya construida**, así que token, firma, caducidad y ruta siguen siendo del framework (verificado: URL y cuerpo IDÉNTICOS).
+- ▶ **`toMailUsing()` se descartó por dos motivos medidos**: su callback de reset recibe **el token, no la URL** —obligaría a copiar `url(route('password.reset', …))`, una regla duplicada que envejece sin fallar— y lo registrado en un provider **no vive en `app/Notifications/`**, así que los censos del molde no lo verían.
+- ⚠️⚠️ **Y traerlos destapó que ninguno implementaba `ShouldQueue`**: los dos se mandaban SÍNCRONOS contra `PAY-14`, y su guarda escanea esa carpeta, donde no estaban — *una guarda que censa una carpeta no vigila lo que está fuera de ella*.
+- ⚠️ **Los censos suben de 21 a 23** y hay caso que exige que `User` siga mandando las nuestras, **por conducta y con la otra mitad** (que las del framework NO salen): sin él vuelven las de Laravel con las subclases intactas y el censo en verde.
+- ⚠️ `NotificationFake` **indexa por clase EXACTA**, así que la herencia no basta y diez casos ajenos se re-apuntaron.
+- ⚠️ **La URL viaja ESCAPADA en el `href`** (`&` → `&amp;`): compararla literal falla con el producto sano. Guardas: `scripts/mutar-correos-framework.py` (**7/7**)
+- ▶ **Quedan los cuatro ÁMBAR del inventario** (§16 de la spec: la hora de caducidad en «pago denegado» y en «confirma tu email», qué queda vivo en «producto cancelado», y la contraseña temporal del alta por el parque) **y el OJO del owner en Gmail/Outlook**: nada de este carril se ha visto en un cliente de correo real

@@ -18,6 +18,23 @@
 > Artefacto de LECTURA (presentación; si desaparece no se pierde nada): «Costuras a la vista» —
 > https://claude.ai/code/artifact/4d0ce068-150e-4f33-86eb-96ba071c9f40
 
+## §0 · Antes de tocar
+
+- **La segunda auditoría de diseño de la web pública, EN EL REPO** (`#430`; la primera se publicó como
+  artefacto y se perdió con su URL). 3 críticos · 10 mayores · 6 menores. **Tandas C, E, H, D y F ejecutadas**
+  (§11–§14, `#434`→`#437`) con sus guardas; la G se decide dentro de `rediseno-desde-canvas.md` (`#469`).
+- **§6 son las seis puertas de Hallmark que fallan A PROPÓSITO** (decisiones del owner): no las «arregles».
+  §7 las decisiones que son suyas; §9 las cuatro trampas de instrumento pagadas.
+- **Lo que quedó en código y no se regresa**: el par de texto lo declara quien declara el color (`--on-ok`,
+  `--on-err`; el suelo de 10 px con guarda) · 19 hovers que saltaban ya no saltan, `transition: all` fuera y
+  **cada `infinite` está enumerado con su motivo** (`MotionBudgetTest`: añadir un bucle es decidirlo) ·
+  **`--interactive` por superficie** (D1) y `--zone-*` solo para lo que IDENTIFICA una zona
+  (`InteractionColourIsNotAZoneTest`) · 662 literales al token del mismo píxel con cero reflujo medido
+  (`ScaleTokensAreUsedTest`; lo que no tiene escalón se queda en literal, sin `calc()` a mano).
+- **Pasos de despliegue de estas tandas**: cinco líneas en el `client.css` de producción.
+- **Anexo al final**: la fila del enrutador «Cambiar el idioma visual HEREDADO» (119 avisos), que cubre también
+  `idioma-visual-heredado.md`.
+
 ## 0. Lo que hay que saber en un minuto
 
 - **Método**: `hallmark audit` (la skill, leída entera: 58 puertas, anti-patrones, estructura,
@@ -564,3 +581,158 @@ instrumentos que miden lo mismo tienen que leer el mismo texto, o uno de los dos
 **Lo que gana el white-label**: `--fs-unit`/`--sp-unit` movían un tercio de la web (31 % · 29 %,
 auditoría M2); ahora mueven todo lo que está en la escala. `SidebarTokenBudgetTest` (el suelo de
 tokenización del cajón, 72 %) sube de hecho con esto y su cifra la dice el propio test.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Cambiar el idioma visual HEREDADO · badges y etiquetas · el «foam» `.jj-block` · la marquesina · «Visítanos» / horarios y ubicación · lo que es del cliente ANTIGUO»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/auditoria-diseno.md` · `docs/specs/rediseno-desde-canvas.md` · `docs/specs/idioma-visual-heredado.md` · `docs/DECISIONES.md` · `docs/ESTADO.md` · `docs/specs/hueco-ilustracion.md` · `docs/DEUDA.md` · `docs/specs/tema-por-instalacion.md`.
+
+- ❗❗❗ **EMPIEZA POR `docs/specs/auditoria-diseno.md` SI VAS A TOCAR DISEÑO** (`#430`, 2026-09-02): la segunda auditoría de la web pública, **EN EL REPO** — la primera («Un solo idioma») se publicó como artefacto y **se perdió con su URL**; sus tandas A (`#321`) y B (`#323`) se sostienen medidas. **3 críticos · 10 mayores · 6 menores**; **§6 las seis puertas de Hallmark que fallan A PROPÓSITO** (decisiones del owner: no las «arregles»); **§7 las seis decisiones que son suyas** (D1 el color de la INTERACCIÓN: `--zone-1` es la identidad de la zona que miras, no un color, y pinta la FAQ a **2,45 : 1**); **§8 el plan C→H** (C = lo roto: el mapa de `/contacto` tapado, el foco de los campos, el acordeón con tope, los cuatro contrastes).
+- ▶ ✅ **C HECHA (`#434`, §11)**: medido antes/después, y **el informe tenía una causa mal** —el sub-rótulo del CTA no leía el gris de otra superficie, lo hundía `opacity: .62`—; nacen `--on-ok/--on-err/--on-warn` (**el par lo declara quien declara el color**: no se deriva) y el suelo de 10 px con guarda;
+- ⚠️ **paso de despliegue**: dos líneas en el `client.css` de producción. D4 · D5 · D6 `[DECIDIDO owner]`.
+- ▶ ✅ **E y H HECHAS (`#435`, §12)**: 19 hovers que saltaban (no 5), los 14 públicos responden y los 5 del cajón son excepción que solo encoge; `transition: all` y el layout animado fuera; **cada `infinite` de las hojas está enumerado con su motivo** (`MotionBudgetTest`: añadir un bucle es decidirlo), banderitas quietas, spinner pausado con el cajón cerrado, calcetines solo mientras se ven (`/` de 13 bucles a 5).
+- ⚠️ **m3 NO procede**: `.eyebrow` tiene consumidores fuera de las doce vistas.
+- ⚠️ El trinquete `SidebarTokenBudgetTest` baja a 0 por tres literales del cajón (y **el número lo dice el test**: un 1 puesto a ojo costó un segundo push rechazado).
+- ▶ ✅ **D HECHA (`#436`, §13)**: D1 elegida viendo tres opciones renderizadas — **el par del cliente** (Azul Muro en papel · cian en tinta); nace **`--interactive`** por superficie (tinta por defecto), doce reglas dejan `--zone-1` y **`--zone-*` queda para lo que IDENTIFICA una zona** más los RELLENOS de marca (`.cta-med:hover`, el botón del minijuego: su texto lo calcula `--on-brand`), enumerados en `InteractionColourIsNotAZoneTest`; FAQ abierta 2,45 → 6,43.
+- ⚠️ Tres líneas más en el `client.css` de producción.
+- ▶ ✅ **F HECHA (`#437`, §14)**: 662 literales al token del MISMO píxel con `scripts/escala-a-tokens.py` (informe en seco y `--aplicar`), **«cero reflujo» MEDIDO** con la huella de maquetación de las doce vistas (24/24 idénticas en geometría); guarda `ScaleTokensAreUsedTest`.
+- ⚠️ Lo que no tiene escalón (24, 32, 36, 40…) se queda en literal: **no lo metas con un `calc()` a mano**. Queda la G, con la organización.
+- ⚠️ La sonda vive en `storage/app/audit-hallmark*.mjs` (gitignorada) y **sus cuatro trampas en §9** — la primera: «dos líneas» por alto/line-height cuenta el área táctil de 44 px como segunda línea.
+- ▶ ✅ 📜 **EL CARRIL DE DISEÑO SE REABRIÓ EL 2026-09-09** (`#469`) y lo gobierna **`docs/specs/rediseno-desde-canvas.md`** — esta fila queda como HISTÓRICO de lo medido antes. Lo que decía `#452` (2026-09-03, `[DECIDIDO owner]`): el owner delegaba el diseño a **Claude Design** y avisaría con la base; **al volver, lo primero era leer su sistema entero y contrastarlo con el código**, y eso es exactamente lo que hizo `#469`. Lo hecho está en **`docs/archivo/`** (`design-producto-2026-09-03.md`, que era el `design.md` de la raíz · `guion-de-la-portada.md` · `auditoria-cajon.md`) y **no se mantiene**; los prototipos `/_diseno/…` y `scripts/prototipo-b/` se retiraron; y **el cajón volvió a como estaba antes de `#450`/`#451`** (revert en un commit nuevo; `#438`–`#451` quedan en `DECISIONES.md` como registro de lo medido y decidido).
+- ⚠️ **Lo que SÍ queda en código son las tandas C→F de la auditoría de la web pública** (`#434`→`#437`, con sus guardas) y su paso de despliegue (cinco líneas en el `client.css` de producción).
+- ⚠️ `DesignSync` sin autorización: la copia del canvas es del 27/28/31-08. — **`docs/specs/idioma-visual-heredado.md`**
+- 🟦 **EN EL ÁRBOL: TANDA A + T2 + T4 + T5 + T6 + T7 + T8 + T9 + T10** (`#290`, `#293`, `#302`, `#303`, `#307`, `#309`, `#314`, `#321`, **`#323`**) —
+- ❗❗❗ **`#323` SI TOCAS UNA TARJETA (§3.duodecies): hay DOS niveles y solo dos** — pegatina (borde `--paper-fg` + `--shadow-float`) para lo que se elige o se compra (`.price` · `.ride-card` · `.visit-card` · `.rules-must__card` · `.rule`), sin sombra para el apoyo (`.socks-note` · `.rules-peek__item`); ninguna pegatina levita, y la que no es enlace no tiene hover. Guarda: `CardSkinTest`.
+- ⚠️ Una captura con la fuente de RESPALDO enseña otra tarjeta: la sonda comprueba `fonts.check()` antes de medir. —
+- ❗❗❗ **`#321` SI TOCAS UN BOTÓN (§3.undecies): hay UNA familia (`.btn`) y la acción es `--action` en toda la web** — el hover NO salta (la física de `#217`/`#303`; queda la pisada `:active`) y su texto sigue al rol; `btn--zone` está PROHIBIDA en Blade pero SIGUE en CSS a propósito (el cajón Vue la emite y el SPA está aparcado); `bd-btn` no existe; la piel del botón (¿plana o pegatina?) es la tanda B y se decide con opciones renderizadas. Guarda: `SingleButtonFamilyTest`.
+- ▶ La T9 es la 1.ª tanda de la AUDITORÍA DE DISEÑO (informe-artefacto «Un solo idioma», temas T1–T7): lo que sigue de ella se retoma por `ESTADO.md` carril 4. —
+- ❗❗❗ **`#314` SI REORDENAS SECCIONES, TOCAS EL AIRE ENTRE ELLAS O ESCRIBES UNA GUARDA DE SECCIÓN** (§3.decies): el orden es **entradas → cumpleaños → el parque → ubicación → normas → dudas** (`[DECIDIDO owner]`), y en código fue mover UN bloque; los anclas y `--hero-air` (que cuelga de `.hero + .section`) se mudan solos.
+- ▶ **El aire es 240 px en escritorio y 160 en móvil, uniforme**, y el número NO era el problema: **la banda de cumpleaños no es un `.section`**, llevaba relleno inferior **CERO** y tenía la mitad de aire que las demás (96 y 110 contra 193, medido) — con cumpleaños en segunda posición el salto quedó donde más se ve.
+- ⚠️ **`.bd-page` tiene DOS hijos en la portada** (`bd-sec1` y el «paso a paso» de `bd-sec3`): **manda el segundo** en el aire de salida, y suponer que era el primero costó una vuelta.
+- ⚠️⚠️ **Y las reglas de móvil NO HACÍAN NADA por estar mal colocadas**: se escribieron en el `@media (max-width: 768px)` que vive ~100 líneas ANTES de las bases de `.bd-sec1`/`.bd-sec3`, y a igual especificidad **gana la última regla del fichero** — *el fallo de cascada más caro de diagnosticar, porque no hay nada que leer que parezca mal*. Van detrás de sus bases.
+- ❗❗ **UNA GUARDA DEPENDÍA DEL ORDEN Y FALLÓ CON EL PRODUCTO SANO**: `ZonesSectionTest::seccion()` recortaba «desde `id="zones"` hasta `id="pricing"`», así que al adelantar tarifas se comió media portada y contó cuatro `<h2>`.
+- ▶ *Un localizador que depende de qué sección viene DESPUÉS no acota una sección: acota un tramo de página.* Re-apuntada al ELEMENTO.
+- ⚠️⚠️ **TRES trampas de instrumento en una tanda, todas con cifras creíbles**: la sonda de aire contaba **la CAJA de un contenedor** como tinta (38 px donde hay 240) · antes metía a `.bd-page` **y a su hijo** en la misma lista y el aire salía **negativo** · y **la captura de página completa enseña las fotos del carrusel como TRAMA** y parece que no cargan — son **23 `loading="lazy"` en un carril horizontal** y solo cargan las **3** visibles. *Compruébalo desplazándote de verdad antes de «arreglar» nada.*
+- ▶ **Las 35 fotos del parque están subidas** (`#313` las 26 asignadas, `#314` las 9 restantes como `pjp-NNN.webp`).
+- ⚠️ **Las asignadas NO se renombran**: sus nombres describen la ATRACCIÓN, no al cliente, y pasarlas a `pjp-NNN` metería la numeración de este parque en el producto y tocaría el seeder y cuatro tests para nada.
+- ⚠️ **26 huecos para 35 fotos**: nueve quedan sin asignar, y varias son cosas que el parque TIENE sin dar de alta — crearlas es DATO. —
+- ❗❗❗ **`#309` SI TOCAS ZONAS, TARIFAS, NORMAS, CUMPLEAÑOS O EL KIT DE FACHADA** (§3.nonies): cinco secciones en un encargo del owner.
+- ❗❗ **REVISA A SABIENDAS EL PRESUPUESTO DE `#292`** («una pieza de dibujo por sección, TRES en la portada»): ahora son **CUATRO** y normas lleva **dos**; anotado en `IllustrationKit::SLOTS`.
+- ⚠️ **Lo que NO cambia es `FacadeDecorationIsPerScreenTest`**: ninguna pieza decorativa dentro de un bucle — ésa era la que evitaba el defecto real.
+- ▶ **El kit pasa de 4 a 7 símbolos**, extraídos del artboard **con un guion** (la regla de `#257`): `slot-tarifas` es el **friso familiar `G3`** con las cajas del propio artboard, y dos manchas.
+- ⚠️ **Solo quedaban TRES manchas libres de seis**: dos ya viajan como `--deco-blob-a/b` y una es `slot-zonas`.
+- ⚠️⚠️ **El friso se compone con `<g transform>`, NO con `<use href="#pose">` internos**: un `<use>` interno dentro de un símbolo referenciado por `<use>` EXTERNO no resuelve igual en todos los motores y aquí solo hay Chrome (`hueco-ilustracion.md` §2.3).
+- ⚠️ Una cuarta mancha se generó y se **retiró**: la banda de cumpleaños usa el contorno de `zone-cumpleanos`, que ya viajaba, y **una ranura sin pantalla tumba su guarda**.
+- ▶ **ZONAS**: silueta 44 → **104 px** asomando;
+- ⚠️ **`overflow: visible` no era la palanca** (un `<button>` ya lo es) — lo que hacía falta era SITIO.
+- ⚠️⚠️ **Y agrandar el splash ROMPIÓ el criterio medido de `#303`** (9.936 px² sobre el párrafo): barrido de CINCO combinaciones, **ninguna crece sin caer sobre el texto** y moverla a la izquierda lo empeora cubriendo MENOS titular → queda el tamaño de `#303` con la opacidad al doble (0,14 → **0,30**) y **0 px² sobre el párrafo**. *Se ve más porque pinta más, no porque ocupe más.*
+- ▶ **NORMAS**: dos requisitos en pegatina con mancha grande y CTA (izquierda, `sticky`) + **cuatro** normas y enlace a `/normas` (derecha).
+- ❗❗ **EL `sticky` TIENE 99 px DE RECORRIDO Y A 1280×900 NO SE ENGANCHA** (la sección mide 830 y cabe entera): **las dos cosas pedidas se estorban** —columna pegajosa vs. tope de 3/4 normas— y la palanca es el tope, que es del owner.
+- ⚠️ **El ancla `#rules` nace con su consumidor** (el CTA de tarifas): un ancla a una sección que no existe **NO falla**, lleva a la home — que es exactamente cómo el enlace a `#gallery` sobrevivió a su sección. Guarda con las dos mitades.
+- ⚠️ **Los CTA reutilizan el mecanismo del producto**: registro → las MISMAS tres ramas que `<x-site.cta-pair>` (externo · con sesión · sin sesión), calcetines → el cajón de compra. La primera versión ofrecía el alta **también con sesión** y lo cazó una guarda del nav.
+- ⚠️⚠️ **Faltaba la media query y lo vio la CAPTURA, no la suite**: a 390 px la sección seguía en dos columnas y el `overflow: hidden` **cortaba titular y botón**. *Ninguna guarda mira anchos.*
+- ▶ **TARIFAS**: friso + CTA a `#rules`; la nota de calcetines sale de la portada pero **`/precios` la conserva por PROP** — borrarla del componente compartido habría quitado un requisito de seguridad de una página que no tiene normas donde recogerlo.
+- ▶ **CUMPLEAÑOS**: fuera el «foam» (el motivo del cliente antiguo **copiado como geometría**, `#293`); entra el **contorno** de la pose, que lo manda `F6` del artboard —«sobre color saturado, contorno»—
+- ⚠️ y el primer intento la sacaba por el canto y **se leía como un garabato**.
+- ⚠️⚠️ **Los toggles miden lo mismo que la tarjeta de precio y el ancho se DERIVA de la rejilla** (`(100% − gap) · 1.05/2`, con el gap en un token que leen las dos): desfase **0** en los dos anchos. *Un `420px` a ojo cuadra a un ancho y se despega en el resto sin que nada falle.*
+- ⚠️ Y destapó un **defecto PREEXISTENTE**: la tarjeta de pack **se salía 11 px de su columna** a 390 px, escondida en el relleno de la banda.
+- ▶ **«EN DIRECTO» RETIRADA** con su CSS y su enlace del pie.
+- ⚠️⚠️ **La categoría de cookies `social` se queda sin gatear NADA** —ajuste, servicio y la frase del banner— a sabiendas: el hueco es el de las reseñas; ficha en `DEUDA.md` con las dos salidas.
+- ⚠️⚠️ **Retirar la sección vieja se llevó `.rules-grid` y `.rule`, que los usa `/normas`** —la página a la que lleva el CTA nuevo—: lo cazó buscar consumidores **por FICHERO y por clase EXACTA**, no por «esto ya no lo usa la home».
+- ⚠️ **Dos trampas**: una sonda dio **20.306 px² de «friso sobre titular» y era FALSO** (medía la caja del `<div>` de 920 px, no la tinta), y una mutación no mordió porque **la mala era la mutación** — el bucle del pie lo manda la lista de RÓTULOS. —
+- ❗❗❗ **`#307` SI TOCAS «VISÍTANOS», EL PIE O LOS DATOS DE LA INSTALACIÓN** (§3.octies): la sección es **TRES TARJETAS y UN encabezado** (`[DECIDIDO owner]`: «todo en cards, lo siento más organizado y limpio»), y con ella cae el caso EXTREMO del molde de `#297` — 4 encabezados para 4 líneas de dato.
+- ❗ **La tarjeta es la PEGATINA de `#303`, con los valores de `.ride-card`** — no un cuarto tratamiento: inventar aquí otra tarjeta es cómo murió el sistema de sombras de `#196` y el de badges de la tanda A.
+- ⚠️ **Sin `:hover`** (no llevan a ninguna parte: afordancia sin consumidor, `#295`) y
+- ⚠️ **sin títulos dentro** — §3.quinquies.4 mandó retirar los `h3` internos, y ponerlos «porque una tarjeta necesita cabecera» rehace el molde desde dentro. Guarda: **`VisitSectionTest`** (un solo encabezado · tres tarjetas · el teléfono · nada de «Parking»).
+- ▶ **Entra `closes_at`** en `HeroStatus`, que lo calculaba y lo TIRABA;
+- ⚠️⚠️ **NO se deduce de `weeklyRows()`**: su `is_today` se APAGA cuando manda una temporada o una fecha especial — *se acierta casi siempre y se falla los días raros, que son justo cuando el visitante lo necesita* (medido: con una activa, las dos filas en `false`).
+- ⚠️ **Se fue el marcado heredado CON su CSS y sus dos `@media`** (`.info__grid`, `.info-card`, `.hours`); **`.map-card`/`.map-pin` SE QUEDAN** porque las usa `/contacto` — comprobado **por clase exacta y por fichero**, que un `grep "hours"` casa con `visit__hours`.
+- ⚠️ **En móvil la sección CRECE 45 px y se dice**: tres pegatinas cuestan ~100 px de chrome (se recuperaron 52: un `margin-bottom` que se sumaba al `gap` de la rejilla, y el mapa apilado 240→200). Escritorio **679 → 659**.
+- ▶ **DOS formas nuevas se montaron, midieron y RECHAZARON antes de ésta** (§3.octies.1, eje «quién abre la sección»: los datos o el mapa) — **no las vuelvas a proponer**, como tampoco A/B/C de `#297`.
+- ❗❗ **TRES DEFECTOS que destaparon los datos reales**: (1) **el pie servía `<a href="#">Instagram</a>` y lo mismo TikTok** en toda instalación sin redes, y un `tel:` a un placeholder — era **el único de los TRES consumidores** (menú y `sameAs` de schema.org ya lo comprobaban) que no miraba el centinela `'#'`; arreglado con `FooterContactLinksTest` y 2/2 mutaciones en rojo. (2) **`legal.jurisdiction` se LEE en el aviso legal y las condiciones y NO ESTÁ en el panel** — el gemelo invertido de los tres campos de `#304`; ficha en `DEUDA.md`, y **falta el valor, que es del owner**. (3) **Las franjas no cubren el horizonte**: 486 filas del 24-06 al 02-10 pero **solo 15 días con más de 5**, y el sábado 05-09 ofrece **CERO horas** — es AFORO, **NO se tocó**, ficha con el comando.
+- ⚠️⚠️ **DOS instrumentos propios dieron cifras creíbles y FALSAS**: el área táctil dio 39 px porque medía la caja del `<a>` y no el pseudo de `[data-tap]` con su `transform` (la efectiva es **105×44 y 130×44**) — *lo delató que acusaba también a la forma ya verificada en `#264`: si tu instrumento acusa a lo que ya estaba bien, el defecto es del instrumento*; y sondear la Embed API de Google **fuera de un `<iframe>`** hizo que sujeto y CONTROL dieran idéntico.
+- ⚠️⚠️ **Blade COMPILA las directivas dentro de un comentario**: citar `@php` en prosa dentro de `{{-- --}}` abre un bloque que se traga media plantilla y el error señala el FINAL del fichero (el escalón de `#298`) — *y volvió a caer en él el comentario escrito para advertirlo*.
+- ⚠️ **El enlace de Maps del cliente es de COMPARTIR, no de INSERCIÓN**: la URL de inserción se construyó y **se verificó con CONTROL** (ficha falsa → sin chincheta). —
+- ❗❗❗ **`#303` SI ESCRIBES UN TITULAR DE SECCIÓN O TOCAS UNA TARJETA** (§3.septies): **fuera la ETIQUETA de toda vista pública y los titulares a UNA palabra**, sin punto y en tinta (Dos zonas · Tarifas · Cumpleaños · Visítanos · Normas · En directo · Dudas). Guarda: **`SectionHeadlineTest`** (sin `class="eyebrow"` · sin `<br />` entre las mitades).
+- ⚠️⚠️ **Se eligió sobre DOS caminos MEDIDOS**: con el suelo del `clamp` en 48 px, a 390 px solo caben **~10 caracteres** —«Tarifas claras.» pedía 40 y «Un parque, dos zonas.» 29—, así que era «una palabra» o **bajar el suelo** (el arreglo de `#220`).
+- ⚠️⚠️ **PUSE un punto en color —titulares y tarjetas— Y EL OWNER LO RETIRÓ**: 4 de 7 titulares ya acababan en punto y yo se lo añadí a los otros 3; el color fue invención mía para un efecto colateral de mi propio cambio. *Si al acortar algo pierdes una propiedad del diseño, dilo en vez de resolverlo por tu cuenta.*
+- ❗❗ **DOS titulares NO se tocan y están declarados**: el del CIERRE («VAMOS A / SALTAR» — tres partes apiladas, coreografía de `#252` medida contra el alto de ventana; excepción con su comprobación de que sigue teniendo sujeto) y **los nombres de servicio de `/servicios`, que los escribe el PANEL** — *un titular data-driven no puede tener regla de longitud: acortarlo es truncar el texto de un cliente y encoger el tipo es rendir el diseño al dato más largo*.
+- ▶ **La TARJETA de atracción es una PEGATINA** (borde de tinta + sombra dura).
+- ⚠️⚠️ **Su `E1` se titula «BOTONES»**: la tarjeta es `E3` y pide otra cosa (mancha de esquina + silueta), así que aplicarle la regla de los botones fue **extrapolación mía presentada como cita**;
+- ⚠️ **la sombra entra como ROL `--shadow-float`, NO como valor** —con este paquete vale `5px 5px 0`—, y **no se levanta al hover**: responde la sombra.
+- ▶ **CTA en TODAS las tarjetas**:
+- ⚠️ **no hay página de detalle de atracción**, así que lleva a **reservar la ZONA**.
+- ⚠️⚠️ **Y LA MANCHA SE CAYÓ SOBRE EL PÁRRAFO al acortar los titulares** (11.016 px²): su `top` era un **porcentaje de la CABECERA**, que encogió de 264 a 153 px — *un ajuste sobrevive a la razón que lo justificaba*. Va anclada al **bloque del titular** y re-dimensionada (`-84%` · `min(22%,165px)`), porque con 250 px de mancha sobre un titular de 79 **mover el `top` no cambiaba el número**.
+- ⚠️⚠️ **El aire hero→primera sección (`--hero-air`) empezó como COMPENSACIÓN y acabó siendo DECISIÓN**: nació en 32 px medidos (lo que ocupaba la etiqueta) y **seguía viéndose corto con razón** —antes lo primero bajo el hero pesaba 16 px y ahora son **71 de tinta maciza**: mismo hueco, más presión visual—. Está en **64** por `[DECIDIDO owner]` sobre tres opciones renderizadas; **no lo bajes a 32 buscando «el número correcto»**. Va **solo en `.hero + .section`**: subirlo en `.section` separaría las otras seis.
+- ⚠️⚠️ **DOS TRAMPAS DE INSTRUMENTO que dieron números creíbles**: una **captura de ELEMENTO** más alto que la ventana **COSE los elementos `fixed`** (enseñaba flechas que miden **0×0 con `display:none`** — usa captura de VENTANA), y un contador **por subcadena** dio **115 tarjetas donde hay 23** (`class="ride-card` casa con `ride-card__viz`…). *Acota al ELEMENTO.* —
+- ❗❗❗ **`#302` SI TOCAS ZONAS, ATRACCIONES O COLOCAS MATERIAL DE FACHADA** (§3.sexies): **había DOS selectores de zona en la misma página** (las tarjetas SALTABAN a la sección donde las pestañas hacían la misma elección) y el de arriba costaba **1.011 px en escritorio y 1.831 en móvil**.
+- ▶ Queda **UNA sección, UNA cabecera y UN selector**, que dice quién es cada zona: dibujo del kit + nombre + **edad**; la tarjeta de atracción se queda en **foto + título + tag** y se amplía (380×497 → **475×713**).
+- ⚠️⚠️ **La cabecera que sobrevive es la de ZONAS y no es arbitrario**: su párrafo acaba en «Elige el tuyo», que es lo que hace el toggle de debajo.
+- ⚠️ **`#rides` envuelve selector Y carriles**: `applyZoneAccent()` tiñe ese contenedor, así que con el ancla solo en el carrusel las pestañas pierden el color de su zona; y las **dos anclas** tienen 6 enlaces que dependen.
+- ▶ **FACHADA — la regla que sale de aquí**: un icono por zona **es IDENTIDAD, no decoración**, así que NO choca con `#286`; una mancha por PANTALLA sí, **por tarjeta NO** (el CSS lleva la lápida del intento que el owner rechazó por ruido).
+- ⚠️ **La mancha se ELIGIÓ y se COLOCÓ midiendo**: `B1·02` es la más ancha de las libres (1,19) y `top: -20%` da **0 px² sobre el párrafo** (con `-14%` eran 701).
+- ⚠️ **El carrusel NO va a sangre completa a propósito**: dentro de `.wrap` el `100%` de `--wrap-gutter` mide el CONTENEDOR (trampa de `#238`); el corte es contra el borde de la columna.
+- ⚠️ **Dos defectos PREEXISTENTES arreglados**: `cursor:pointer` sobre un `<article>` sin enlace, y `zone: 'jump'` —el slug del primer cliente— quemado en el JS.
+- ❗❗ **GUARDA NUEVA que faltaba desde `#257`: toda ranura declarada tiene que tener pantalla que la pinte** — estaba escrito en tres sitios y no lo imponía nadie.
+- ⚠️⚠️ **Una mutación NO mordió porque el caso nació SIN SUJETO** (`accent == slug` en la BD de test) y al rehacerlo se vio que **dependía del kit REAL, que está GITIGNORADO**: un test así pasa en tu máquina y falla en un clon limpio — instala un kit falso en un `public/` temporal.
+- ❗ **Cuesta**: fuera las 2 fotos de zona, los 2 subtítulos y las métricas, y **`zones.image` se queda SIN CONSUMIDOR** (`DEUDA.md`, tres salidas, es del owner).
+- ⚠️ La portada pinta **4** pestañas y no 2 porque `cap`/`cap2` están marcadas para la landing: es DATO, se quita **desde el panel**. ·
+- ⛔ **EL MOLDE EDITORIAL, DIAGNOSTICADO Y CON TRES FORMAS RECHAZADAS** (`#297`) —
+- ❗❗❗ **`#301` SI TOCAS ZONAS O ATRACCIONES** (§3.quater, cabecera): **la T3 está REVERTIDA EN SU ESTRUCTURA** (`[DECIDIDO owner]`: «2 cards y debajo la sección de juegos») — vuelven `#zones` y `#rides` como DOS secciones con pestañas, flechas y barra de progreso.
+- ❗❗ **PERO EL ARREGLO DE IDENTIDAD SE QUEDA: la zona se identifica por `slug`, `accent` SOLO pone color.** Con datos reales `kids`/`cap`/`cap2` comparten acento, así que con `accent` las pestañas vuelven a abrir **tres carruseles a la vez**; medido tras revertir: **uno**.
+- ⚠️⚠️ **La lección: un arreglo puede SOBREVIVIR a la guarda que lo protegía** — el caso vivía en `ZonesAndRidesUnifiedTest`, que vigilaba la estructura unificada, así que se fue con ella y dejó el arreglo **desnudo con la suite en verde**. Red nueva: **`ZoneIdentityIsUniqueTest`** (3 casos · 3 mutaciones que muerden · **una vigila lo CONTRARIO**: que la paleta siga saliendo de `accent`, para que nadie «termine el trabajo» moviendo también el color y rompa el agrupador).
+- ⚠️ El resto de la revisión adversarial de `#295` (anillo de foco, `cursor:pointer` en tarjeta inerte, encuadre 62 %→31 %, `trim` por bytes) **se revierte CON SU SUJETO**: eran defectos *de la estructura unificada*.
+- ⚠️ **`zone: 'jump'` NO vuelve** —el slug del primer cliente escrito en el producto—: nace vacía y la primera zona la dice el DOM.
+- ⚠️ **Salen 4 tarjetas y no 2, y es DATO**: `cap` y `cap2` tienen `show_in_landing=1`, 0 atracciones y el acento de `kids`; se quitan **desde el panel**. —
+- ❗❗❗ **`#300` TAMBIÉN CAMBIA LA BASE DE PARTIDA** (§3.bis, cabecera): **la T1 de normas está REVERTIDA ENTERA** (`[DECIDIDO owner]`, elegido con la consecuencia delante: revertir devuelve el pliego de doce pictogramas del cliente ANTIGUO y el carrusel con todas las normas).
+- ▶ **La portada arranca con normas Y horarios las dos en su forma HEREDADA**, a propósito: el owner puso en el mismo punto de partida las dos secciones tocadas para rediseñar desde ahí, no encima de una tanda a medias.
+- ⚠️⚠️ **Eso NO retira el diagnóstico ni su `[DECIDIDO owner]`** — el molde se sigue rompiendo; **y la sección de normas de hoy NO es una forma aprobada**, está anotado en la vista y en las dos hojas.
+- ⚠️ **`#292` mezclaba TRES cosas y solo se revirtió la T1**: la retirada del registro fino de badges (`.tag--dato`) es decisión independiente y sigue en pie.
+- ⚠️ `IllustrationKit::SLOTS` vuelve a estar **VACÍA** y el kit baja a **3 símbolos** —la gramática es CERRADA, así que una clave sin ranura (o al revés) hace el kit **no servible** y tumba la `GUARDA 7`—; `client-kit.svg` está **gitignorado**, así que la reconstrucción **no viaja en el commit**.
+- ⚠️ **Presupuesto de dibujo de la portada: gasta UNA, quedan DOS.**
+- ⚠️ **Horarios/ubicación no se tocó porque YA estaba como estaba, y se midió antes de creerlo** (byte a byte) — *cuando alguien pide deshacer algo, comprueba primero si ya está deshecho*. —
+- ❗❗❗ **`#297` ANTES DE PROPONER NADA DE ESTRUCTURA** (§3.quinquies): el owner diagnosticó que *«la manera en que se exponen los textos, cuándo va cada texto, cada dato»* es del cliente antiguo, y **está medido**: las SIETE secciones usan el mismo molde —`ETIQUETA` → titular **partido en dos con coma** → párrafo → contenido— y **el dato llega siempre el último**.
+- ⚠️⚠️ **El caso extremo: horarios y ubicación tiene CINCO encabezados para CUATRO líneas de dato** (803 px en móvil, 280 de ellos el marcador del mapa, 31 palabras). Y `zones` ocupa **3.604 px** de los 14.831 de la portada a 390.
+- ▶ **`[DECIDIDO owner]` y SIGUE EN PIE: se rompe el molde y cada sección adopta la forma de lo que ES** — lo rechazado son las tres formas concretas, **no el criterio**.
+- ⛔ **NO vuelvas a proponer A (el estado manda) · B (la respuesta primero) · C (el sitio manda)**: montadas en la web real, medidas y descartadas.
+- ⚠️ **Las tres fallaban en el ESCRITORIO** (+105 y +136 px): hoy horario y mapa van en dos columnas y ellas apilaban en una — *quien retome esto resuelve el escritorio, no solo el móvil*.
+- ▶ **Lo que NO hay que volver a medir** (cuatro propuestas independientes coincidieron): fuera la etiqueta, el titular partido, la rejilla de dos tarjetas, los dos `h3` internos, el `h4` de fechas y la caja blanca sobre el mapa; suben el estado en vivo, la fecha especial pegada a él, «Cómo llegar» sobre el mapa y el teléfono.
+- ⚠️ **`HeroStatus` calcula la ventana de hoy y NO la devuelve**, y **no se deduce de `weeklyRows()`** (su `is_today` se apaga cuando manda una temporada o una fecha especial).
+- ⚠️ **«Parking gratis 2h» está en el código, no en el panel** — `[DECIDIDO owner]`: se retira al rehacer la sección.
+- ⚠️ **Presupuesto de dibujo de la portada: tres colocaciones, hoy gasta dos, queda UNA.** —
+- ❗❗❗ **`#295` SI TOCAS ZONAS, ATRACCIONES O UNA GUARDA QUE RE-APUNTAS**: la identidad de la zona era `accent`, que **AGRUPA y no identifica** (`cap` y `cap2` comparten el de `kids`) → **tres carruseles con el mismo `x-ref`**, y pulsar «Zona KIDS» abría tres a la vez. Manda `slug`.
+- ⚠️ **La misma raíz estaba arreglada A MEDIAS desde `#230`** (se corrigió el color, no la identidad): *cuando un campo demuestra que no identifica, hay que mirar TODO lo que lo usa para identificar*.
+- ⚠️⚠️ **REVISIÓN ADVERSARIAL de 6 lentes: 40 hallazgos, 13 confirmados, 27 descartados**, y casi todo lo confirmado no lo veía la suite. **Lo peor: una guarda re-apuntada quedó VACÍA** —aseveraba `--zone-1:#hex` sobre la página entera y esa cadena **la emite también la sección de entradas**, así que borrando la sección de zonas seguía verde—.
+- ▶ *Acota al ELEMENTO antes de creerte un test verde*, y **una guarda re-apuntada no puede quedar más débil que la que sustituye**.
+- ⚠️⚠️ **`tabindex="0"` NO basta para el teclado**: la hoja tiene `*:focus{outline:none}` con **lista blanca CERRADA**, así que un `<div tabindex=0>` queda enfocable **y sin anillo** — *hacer algo enfocable no es hacerlo accesible*.
+- ⚠️ **Una afordancia sobrevive a su consumidor**: las tarjetas, ya `<div>`, seguían con `cursor:pointer` y hover que levanta.
+- ⚠️ **Una foto con alto FIJO cambia de encuadre al cambiar de ancho**: de media columna a columna completa el visible cayó de **62 % a 31 %**.
+- ⚠️⚠️ **Retirar CSS deja los `@media` detrás** si solo se borra la regla base — tres se quedaron.
+- ⚠️ **`trim($s, ' ·')` recorta BYTES**: el `·` es `C2 B7` y parte un `¡`.
+- ⚠️⚠️ **Y dos casos de la guarda nueva NACIERON EN VACÍO** (la BD de test no tenía sujeto): *un caso sin sujeto no vigila nada, y no se nota hasta que se muta*. —
+- ❗❗ **`#293` SI TOCAS LA CINTA DE `/servicios`**: **dos de sus números parecen adorno y son GEOMETRÍA** — el interior al **120 % con `margin-left: -10%`** (una banda del ancho justo, girada, deja **dos cuñas de papel** en las esquinas) y el **alto del envoltorio** (`½·ancho·sen(giro)` = **2,51vw**; sin él la cinta **se recorta a sí misma**: 5 elementos cortados, 22 px medidos).
+- ⚠️ **El recorte NUNCA es `overflow-x` en `html`/`body`**: `#226` midió que eso rompe **todos los `sticky`**.
+- ⚠️⚠️ **De su `C3` se toma la FORMA, no el contenido ni la FUENTE**: los títulos salen del panel, y el rotulador **no se usa** porque su paquete lo reserva al eslogan y su `T-02` lo limita a UNA por página (`/servicios` ya gasta la suya en el menú).
+- ⚠️ Su nota dice «2°» y su marcado **−2,4°**.
+- ❗ **El «foam» del cliente antiguo estaba ahí copiado como GEOMETRÍA, no con la clase** — *un motivo copiado a mano no aparece buscando su nombre*.
+- ⚠️⚠️ **Dos trampas de sonda**: contar como cortados ítems ya invisibles (6 falsos en móvil) y creerse un cero **sin control** — el control **no muerde en móvil**, así que ahí el alto es aire.
+- ⚠️⚠️ **Y una guarda nació LAXA**: `/width:\s*1[0-9]{2}%/` **acepta `100%`**, el valor que rompe la pieza — *un patrón que describe la FORMA del valor no dice nada sobre el valor*. —
+- ❗❗❗ **`Landing PJP Modos` NO GUÍA LA ESTRUCTURA DE LA LANDING** (`[owner]`: «de esa maqueta solo sacaremos la sección de reseñas»), y eso **CORRIGE a `tema-por-instalacion.md` §1**: vale para color y sistema visual, no para decidir qué secciones hay.
+- ⚠️⚠️ **Tumbó una decisión de la misma jornada**: el registro fino de badges venía de ahí y se retiró — **una sola voz, la del mural**. *Una contradicción entre dos fuentes no se resuelve eligiendo la que más gusta: se resuelve preguntando cuál es fuente para qué.*
+- ⛔ **El BAR / zona de Ocio NO entra** (`[DECIDIDO owner]`): era lo único del encargo que tocaba el modelo. **Zonas y atracciones sí se unifican** (presentación, no modelo).
+- ▶ **T1: las normas de la portada** — fuera el pliego de pictogramas del cliente antiguo, **tres** normas en texto y CTA.
+- ⚠️ **El tope de tres se declara en la VISTA**: el panel decide QUÉ normas, el diseño CUÁNTAS caben (guarda con mutación).
+- ▶ **Primera ranura decorativa** (`slot-normas`).
+- ⚠️⚠️ **Dónde va la mancha lo decidió MEDIR**: el primer sitio caía sobre un párrafo (13.755 px²) y **bajarla no servía porque ahí no había hueco** — *cuando mover una pieza no cambia el número, el problema no es la posición*.
+- ⚠️ **Presupuesto: una pieza de dibujo por sección, TRES en toda la portada** (hoy gasta dos).
+- ⚠️ **Trampa**: un recorte de CSS se llevó **una llave de más** y dejó la hoja descuadrada — no falla, *se lee a medias*; lo cazó `ShapeScaleTest` (200 radios → 104). —
+- ❗❗❗ **EL ENCARGO NO ES AÑADIR, ES CAMBIAR** (`[owner]`: «primero hay que cambiar lo que tenemos»), y eso **ACOTA la regla de `#286`** sin anularla: aquélla es para DECORACIÓN AÑADIDA; un badge o un separador son componentes FUNCIONALES y se repiten porque los datos se repiten.
+- ⚠️⚠️ **No había sistema de etiquetas y está medido**: cinco formas, cinco paddings, cinco tallas y **cuatro rotaciones** para la misma función — el hallazgo de `#196` con las sombras, otra vez.
+- ⚠️⚠️ **DOS artboards suyos las visten distinto y entran los DOS** (`[DECIDIDO owner]`, elegido sobre las tres renderizadas): **SEÑAL** → `E2` del mural (punteada, tinta); **DATO** → su landing (mono fino). *Su contradicción no se resuelve eligiendo un ganador: se resuelve diciendo para qué sirve cada uno.*
+- ⚠️ **Sobre foto la punteada es la única que se lee** sin poner un rectángulo de color delante — por eso el badge de atracción deja de ir relleno.
+- ⚠️ **Un solo giro** (−2°) y solo en las que se pegan encima de algo.
+- ⚠️⚠️ **`FacadeDecorationIsPerScreenTest` cazó a quien la escribió**: el separador nuevo repetía una textura por fila; *un separador es puntuación, y la puntuación la pinta el CSS* (`--dots-tile` + pseudo).
+- ⚠️ **`TagSystemTest` vigila la EROSIÓN**, que es como muere un sistema de etiquetas: nadie lo rompe de golpe, alguien le añade «un pelín más de padding».
+- ⚠️ El registro SEÑAL **no fuerza mayúsculas** (el texto lo escribe el panel): «Top», no «TOP».
+- ▶ **Quedan**: la marquesina de `/servicios` → cinta `C3` · los cubos del cumple · la galería · **el SPA, que el owner quiere iterar con cambio de PRESENTACIÓN, no solo de traje**

@@ -8,6 +8,20 @@ Todo lo que aquí se marca **MEDIDO** se comprobó contra el código el 2026-08-
 
 ---
 
+## §0 · Antes de tocar
+
+- **Aprobada por el owner (`#120`) y ejecutada**: la tanda 1 (solo lectura) y la tanda 2 (las gestiones de
+  cuenta, §9). Marco: `#66` (la gestión del cliente vive en UN sitio) y `#119` (el terreno preparado).
+- **§1.2: la API cubría LEER, no gestionar** — «el servidor ya está» solo valía para leer.
+- **§1.3: aquí la red NO es el diff de árbol**, es la paridad de datos y el navegador
+  (`VERIFICACION-E2E-CAJON.md`).
+- **El modelo de navegación es índice + zonas libres, NO el grafo del embudo**
+  (`resources/js/sidebar/account/navigation.js`).
+- Lo que vino después vive en sus specs: la auth dentro del cajón (`auth-en-cajon.md`), el bloque de cuenta
+  en Vue (`account-context-vue.md`), «Mis reservas» por reserva (`mis-reservas-por-reserva.md`) y las nueve
+  pantallas de la cuenta vestidas por el carril del SPA (`sidebar-spa.md` §0, `#564`/`#565`).
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 ### 1.1 La gestión del cliente vive hoy en TRES sitios

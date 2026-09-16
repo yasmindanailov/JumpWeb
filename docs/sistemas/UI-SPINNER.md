@@ -193,3 +193,12 @@ panel (incluido `back`, para que retroceder tenga el mismo feedback que avanzar)
 
 - Layout y carga de CSS: `resources/views/components/layout.blade.php`.
 - Al aplicar el feedback en un punto nuevo, actualiza el inventario (§7).
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«UI de carga (spinner) · rebrandear su DIBUJO»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/sistemas/UI-SPINNER.md`.
+
+- `docs/sistemas/UI-SPINNER.md` (**§3.bis: la hoja tiene DOS mitades** —contrato y dibujo— y solo la segunda se sustituye ·
+- ⚠️ §3 decía «no se modifica» y bloqueaba el propio encargo)

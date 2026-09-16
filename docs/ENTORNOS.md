@@ -591,3 +591,14 @@ clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel
 | Datos | `migrate` + `REPLACE INTO` de las tablas de catálogo/config del local (`~/prod-datos-catalogo.replace.sql`) | dos migraciones siembran filas: por eso `REPLACE`, no `INSERT` |
 | Post-despliegue | `~/post-deploy.sh` (import si `zones` vacía · Turnstile · usuarios · `post-deploy.php`: roles de puerta + publicar la descarga v1 · cachés · `up`) | idempotente |
 | Redsys | ~~`redsys_environment=test`, comercio de pruebas~~ → **`live` desde el 2026-09-13** (TPV real configurado por el owner en el panel; `#594`) | la compra online está **abierta** (`sales.online_enabled=1`); la GUARDA 1 del despliegue admite `live` solo en producción |
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Staging / desplegar / aprovisionar · PRODUCCIÓN playjump.es»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/ENTORNOS.md`.
+
+- `docs/ENTORNOS.md` §4 (staging, **medido**) · **§6 (producción, medido el 2026-09-01, `DECISIONES #325`)**: `DEPLOY_PRODUCTION=1 DEPLOY_SSH_HOST=jumpweb-prod DEPLOY_URL=https://playjump.es scripts/deploy.sh --go` —
+- ⚠️ el paquete del cliente son CUATRO piezas (`client.css` · `client-*` · el kit · **`THEME_FONTS` en el `.env`**) y ninguna viaja por rsync · el docroot del panel no se pudo cambiar: **puente `.htaccess` → `public/`**, protegido del `--delete` · el crontab del usuario NO corre: scheduler y `queue:work` viven en el cron del PANEL ·
+- ⚠️ **Redsys en `live` desde el 2026-09-13** (TPV real; la GUARDA 1 admite `live` solo en producción, `#594`) ·
+- ❗ **se despliega DE NOCHE o con el parque cerrado** (`[DECIDIDO owner]`: una guarda que falla deja el sitio en mantenimiento)

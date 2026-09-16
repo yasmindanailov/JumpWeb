@@ -9,6 +9,26 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Es AFORO**: `SlotGenerator`, `SlotOffer` y `OrderCreator` están en el `CRITICAL_RE` → `VERIFY_CONC=1` y
+  `purchase:verify-oversell`. En el árbol desde `#322`; queda el OJO del owner. Decisiones en §7.1, ejecución en §8.
+- **Los consumidores del horario son TRES, no dos** (§4.4): `ProductAvailability::allowsStart()` lo consulta
+  y por él pasan `SlotOffer`, `OrderCreator`, `OrderItemEditor` e `ItemRescheduleOffer`. Lo cazó una guarda, no
+  una lectura: un `grep` del servicio deja fuera a quien pregunta por un tercero. Si retiras o añades un
+  consumidor, lee §4.4 antes.
+- **`OperatingSchedule::effectiveFor()` es LA CARA PÚBLICA** (landing, «Abierto ahora») y no se toca: la
+  variante por zona es un método aparte, y la duplicación es deliberada.
+- **Generar y podar leen la MISMA resolución**, o la poda cierra lo que el generador acaba de crear, con
+  ventas dentro (`AFORO-04`).
+- **Ignorar el cierre SIN declarar horas NO abre**: con el recinto cerrado no hay ventana que heredar, y el
+  fallback histórico es «abierto sin restricción».
+- **Lo que NO hay que construir**: `zones.max_per_slot` y `zones.max_guests_per_slot` ya existen y ya son por
+  zona (§1.1); igual `min_qty`/`max_qty`, `duration_min` y la señal. El tope de grupos es configuración.
+- **La excursión es un producto `pack`** (`[DECIDIDO owner]`): `min_qty` y el cupo de grupos solo funcionan
+  siendo pack. La tanda B (precio por tramo) es DINERO y vive en `specs/precio-por-tramo.md`.
+- El anexo del final conserva la fila del enrutador tal como estaba.
+
 ## 1. Contexto y problema
 
 El cliente quiere vender **excursiones de colegio**: dos productos (2 h y 3 h), zona propia, grupos

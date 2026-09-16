@@ -7,6 +7,13 @@ Copia este fichero a `docs/specs/` con nombre propio para TODO diseño previo a
 implementación (CONVENCIONES §5). El spec es artefacto de primera clase: otro agente lo
 revisa ANTES de escribir código, y quien implementa trabaja CONTRA él, no contra su memoria.
 
+## §0 · Antes de tocar
+Obligatorio y **≤ 2 KB** (lo mide `docs-check`, check 10). Es lo ÚNICO que carga el arranque de una
+sesión: el resto de la spec se lee por secciones. En viñetas: la regla que ordena todo · por dónde empezar
+(§) · las trampas que aplican ANTES de tocar (con su `#N`) · estado y qué queda · invariantes y ficheros del
+`CRITICAL_RE` si toca dinero, aforo, RGPD o seguridad. Una trampa nueva se escribe aquí o en el cuerpo, nunca
+en la fila de `CLAUDE.md`, que es una línea.
+
 ## 1. Contexto y problema
 Qué duele hoy, con evidencia (comandos, medidas, docs).
 

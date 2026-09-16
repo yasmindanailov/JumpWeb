@@ -19,6 +19,28 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **CERRADO y EN PRODUCCIÓN** (`#342`→`#354`; `playjump.es` desde 2026-09-02). Empieza por **§22** (cierre),
+  después §21 (el pulido del ojo del owner) y §18–§20 (lo ejecutado), que van antes que las tandas de §16.
+- ⛔ **One Tap NO se construye** (`[DECIDIDO owner]`, `#354`): evita verificar la firma de un `id_token` que
+  llega del CLIENTE. `prompt=select_account` sigue haciendo falta.
+- **Las claves van en `settings`, no en el `.env`** (`#353`, `app:set-setting … --force`); lo que vale es
+  `GoogleAuth::enabled()`, no un `grep` del `.env`.
+- **Lo que hace creíble lo que Google afirma es el CANAL** (canje servidor a servidor con nuestro secreto):
+  ninguna rama lee un `id_token` de la petición. Si un día se acepta uno del cliente, ese camino verifica la
+  FIRMA. El vínculo cae en `revokeAllAccess()` y sobrevive a `revokeOtherAccess()` (`RGPD-06`); en la toma de
+  una cuenta sin verificar (P12) se EXPULSA antes de escribir el vínculo; `anonymize()` BORRA (el `sub` es
+  `UNIQUE`); las dos caducidades usan `now()`, jamás `time()`.
+- **Vincular (`#347`) es una CUARTA puerta** (`SocialLogin::linkToAccount()`): no autentica, no promueve, no
+  expulsa; la intención y QUIÉN la pidió viajan en el RETO del servidor, nunca en la URL de vuelta;
+  `provider_conflict` y `provider_taken` son espejos. `Http::fake()` acumula stubs y gana el primero.
+- **Las altas pierden las casillas (`#350`)**: `Consent::TYPE_TERMS` tiene UN escritor (`TermsAcceptance::accept()`);
+  el botón de Google va encima del formulario con un «o», DENTRO de `LoginForm`/`RegisterForm`
+  (`GoogleSignInPlacementTest`). **Condiciones al CONTRATO, no al alta** (`#348`/`#349`): versión de la
+  PUBLICACIÓN, gracia v1, sin publicar no se pide nada; NO van en `CartPayload`.
+- El botón es el OFICIAL en px absolutos (`GoogleButtonBrandingTest`). Anexo al final con la fila del enrutador.
+
 ## 1 · El problema, y por qué no es «poner un botón»
 
 **El encargo del owner**: *«Quiero 0 fricción para el cliente a la hora de registrarse. Que el
@@ -1647,3 +1669,56 @@ banner (⚠️ no valía meterla en `social`, que `#309` dejó sin consumidor).
 falta.** `#342` lo puso para que la persona vea con qué cuenta entra, y el único argumento para
 quitarlo era que el chip de One Tap enseñaba el nombre antes de pulsar. **Sin One Tap, ese argumento
 desaparece.**
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Entrar / registrarse con GOOGLE · vincular una cuenta · el `sub` · las acciones que exigen contraseña»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/auth-con-google.md` · `docs/VERIFICACION-E2E-CAJON.md`.
+
+- **`docs/specs/auth-con-google.md`**
+- ✅ **CERRADO Y EN PRODUCCIÓN** (`#342`→`#344`, `#345`→`#351`, `#353`, `#354`; `playjump.es` desde 2026-09-02) —
+- ▶ **EMPIEZA POR §22**, que es la puesta en producción y el cierre; después §21 (el pulido del ojo del owner, sus siete puntos) y §18–§20 (T1, T2 y T3), que es lo ejecutado y va ANTES que las tandas.
+- ⛔ **ONE TAP NO SE CONSTRUYE** (`[DECIDIDO owner]`, `#354`): se evita verificar la firma de un `id_token` que llega del CLIENTE —*«la mitad que nadie debe añadir sola»*—, una dependencia nueva, tres directivas de CSP y una categoría de cookies propia.
+- ⚠️ **Y `prompt=select_account` SIGUE haciendo falta**: el único argumento para quitarlo era el chip de One Tap.
+- ❗❗❗ **`#353` SI TOCAS LAS CLAVES**: **NO van en el `.env`, van en `settings`** (`[DECIDIDO owner]` Q10, `app:set-setting … --force`) — el owner las puso en el `.env` y el botón no salía.
+- ⚠️⚠️ **Y la comprobación que había escrita era la equivocada** (`grep GOOGLE_CLIENT .env`): acertaba por casualidad. Lo que vale es `GoogleAuth::enabled()`.
+- ❗❗❗ **`#350` SI TOCAS UN ALTA**: las dos perdieron las casillas de privacidad, condiciones y marketing, y **quitar la casilla NO era el trabajo** — el alta escribía una fila `terms` con una FECHA por versión y la **regla de gracia de `#348` la empataba con la v1**, así que *toda cuenta nueva salía indultada y el checkout no le pedía nada* (medido: `pendingFor()` → `false`). Hoy `Consent::TYPE_TERMS` tiene **un solo escritor**, `TermsAcceptance::accept()`.
+- ⚠️ **La privacidad pierde la casilla pero NO el rastro** (`privacy_accepted_at` + su fila), y su texto **ya no dice «acepto»**: sin casilla afirmaba algo que la pantalla no recoge; la clave es `register.privacy_notice`.
+- ⚠️⚠️ **Su enlace era INVISIBLE** —el mismo color exacto que el párrafo, sin subrayado— y esto lo convertía en carga: es el único sitio donde las dos altas enseñan la política (guarda `PrivacyNoticeIsVisibleTest`).
+- ⚠️ **El alta con Google se queda en NOMBRE + descargo** (el teléfono lo pide el checkout) y **se sigue pintando aunque no haya descargo, por el nombre** (`[DECIDIDO owner]`, cierra la desviación de la Q6 de §19.6).
+- ❗❗ **`#350` SI TOCAS EL SITIO DEL BOTÓN DE GOOGLE**: va **encima del formulario con un «o»**, DENTRO de `LoginForm`/`RegisterForm` —*«encima del formulario» no es «encima del título»*, la cabecera vive ahí dentro— y **el separador cuelga del `v-if` del botón**, o una instalación sin claves se queda con una raya separando el formulario de nada. Guarda `GoogleSignInPlacementTest`, **necesaria porque el manifiesto congelado tiene CERO ocurrencias de «google»** y mover la pieza no ponía en rojo nada.
+- ⚠️ **Contrato público**: `RegisterRequest` pierde `accept_privacy`/`accept_terms`/`marketing` y `GoogleSignupRequest` pierde `phone`/`accept_terms` — los dos son `additionalProperties: false`, así que mandarlos es un **422 por esquema**.
+- ⚠️ El techo del chunk **BAJA** (277 → 275): un trinquete que solo sube deja de vigilar cuando alguien retira código.
+- ❗❗❗ **`#345` SI TOCAS EL BOTÓN DE GOOGLE**: es el **oficial** (variante clara, píldora) y **sus valores no se armonizan con el tema** —px absolutos, no `--sp-*`, porque esas escalas las mueve el cliente y entonces el botón dejaría de cumplir su guía sin que nada falle—; su «G» es un **fichero** (`public/images/providers/google.svg`), descargado de Google y **verificado a 0 px de diferencia**, exento de las dos guardas de iconos a propósito.
+- ⚠️⚠️ **El modo de fallo NO es que se rompa, es que alguien lo «ARREGLE»** devolviéndolo al color de acción: no rompe nada y **ninguna otra guarda ve este botón** (medido: cero «google» en el manifiesto congelado del contrato de árbol). Lo vigila `GoogleButtonBrandingTest`.
+- ❗❗ **`#346` SI TOCAS LA TARJETA DE CONSENTIMIENTOS**: lo indivisible es el TROZO, **nunca la línea** — `.account__consent-meta` llevaba `white-space: nowrap` desde que decía «fecha · versión» y `#344` le añadió «retirado el …» al final: **418 px de línea en un carril de 380**, barra de scroll horizontal y nada fallando. *El `nowrap` no estaba mal: dejó de ser cierto cuando alguien alargó lo que envolvía.*
+- ⚠️ **El documento NO desborda** (la barra es del carril del cajón): una sonda que mire `document.documentElement` sale limpia con la barra a la vista.
+- ⚠️ La lista **colapsa a la última fila de cada tipo** —cinco vueltas del interruptor escribían cinco filas— y eso **no oculta prueba**: sigue en la BD y en el export del art. 20.
+- ⚠️ El marketing es un **interruptor** (`role="switch"`, encendido en `--ok` y no `--action`, y el control es el propio `<input>` para que el anillo de foco caiga sobre su caja). Guarda: `ConsentCardTest`.
+- ❗❗❗ **`#348`+`#349` SI TOCAS LAS CONDICIONES, EL ALTA O EL PASO DE PAGAR** (§21.4): `[DECIDIDO owner]` **se aceptan en el momento del CONTRATO, no al crear la cuenta**, y eso **cierra un hueco legal MEDIDO** — el embudo no las enseñaba en ningún sitio, así que quien ya tenía cuenta compraba sin que se le mostraran nunca (LCGC art. 5 · TRLGDCU art. 97).
+- ⚠️ **La versión sale de la PUBLICACIÓN** (`LegalDocuments::PUBLISHABLE`, lista cerrada), nunca de `Consent::CURRENT_VERSION`, que es una constante que no lee nadie.
+- ⚠️⚠️ **La regla de gracia es una REGLA, no una reescritura de la prueba**: al consentimiento viejo no se le cambia la versión, porque diría que aceptó un documento que no existía cuando firmó — y **muere en la v2**.
+- ⚠️ **Sin publicar no se pide nada y la venta sigue** (falla hacia invisible): hay un **paso manual al desplegar**, publicar la v1 de `condiciones`.
+- ⚠️⚠️ **Las dos cosas que pide el checkout NO van en `CartPayload`/`CartRequest`**: ese esquema lo comparte el PRESUPUESTO y obligaría a aceptar condiciones para ver un precio (la lección de `#329`); `POST /orders` tiene `CreateOrderRequest` propio.
+- ⚠️ **Un 422 sobre esos campos NO devuelve al carrito** —única excepción del desenlace— y se distingue **por el CAMPO, no por el código**.
+- ⚠️ La pista viaja en el contexto de cuenta pero **se sembró al CARGAR**: el «no» del servidor también enciende el campo, o el error apuntaría a una casilla que no está pintada. **Queda la T8·c** (las dos altas pierden las casillas; toca el contrato) **y la T8·d** (el botón de Google arriba con «o»).
+- ❗❗❗ **SI TOCAS EL RETORNO DE GOOGLE**: lo que hace creíble lo que Google afirma **no es el token, es el CANAL** — canje servidor-a-servidor autenticado con nuestro secreto, y **ninguna rama lee un `id_token` de la petición** (hay caso que manda uno fabricado en la URL y se entra como dice el CANJE). Si algún día se acepta uno del cliente —One Tap, app nativa—, **ese camino necesita además verificar la FIRMA**: es la mitad que nadie debe añadir sola.
+- ⚠️⚠️ **El vínculo CAE en `revokeAllAccess()` y sobrevive a `revokeOtherAccess()`** (`RGPD-06`, el criterio del carné): no porque sea una credencial —no lo es— sino porque aquélla es la palanca de «me han entrado», y un vínculo plantado por quien te tomó la cuenta sobreviviría al reset.
+- ▶ **Y eso obliga a un ORDEN**: en la toma de una cuenta sin verificar (P12) se EXPULSA antes de escribir el vínculo, o la expulsión se lleva la llave recién dada **sin que falle nada**.
+- ⚠️⚠️ **En `anonymize()` se BORRA, no se redacta**: una fila redactada deja el `sub` ocupado en su `UNIQUE` y esa persona no podría volver a registrarse con su Google nunca más.
+- ⚠️ **Las dos caducidades usan `now()`, jamás `time()`**: con `time()` no hay forma de escribir su caso —lo dijo la mutación— y una guarda de caducidad que no se puede hacer caducar no está probada.
+- ⚠️ **El EQUIPO sí puede vincular** (`[DECIDIDO owner]` Q5): la spec se contradecía —§16 y P9 decían lo contrario y estaban caducados— y la consecuencia asumida es que esa sesión **es** la del panel (Filament no declara `authGuard`).
+- ⚠️ **Sin las dos claves las rutas son 404** y no hay botón: el hueco falla hacia invisible.
+- ⚠️⚠️ **SI TOCAS EL PRESUPUESTO DEL CAJÓN**: la pantalla del alta va en **carga DIFERIDA** y su estado **fuera del store global**, y las dos son PODAS medidas (−1,88 y −1,32 KiB) que se hicieron antes de subir el techo a 267; sus **~380 B de texto viajan solo en su puerta** (`/registro/google`), que es la primera poda por RUTA del montaje.
+- ⚠️ ~~**El botón NO lleva el logotipo tetracolor**~~ — **CADUCADO por `#345`**: sí lo lleva, como asset de proveedor fuera del set.
+- ❗ **Hay una desviación de la letra de la Q6 pendiente del owner** (§19.6: sin descargo que pedir, la pantalla se pinta igual porque recoge teléfono y condiciones).
+- ❗❗ **SI TOCAS CONSENTIMIENTOS**: retirar el de marketing **sella la fila (`revoked_at`), NO la borra** —la fila sigue probando que en su día se aceptó, que es lo que justifica los envíos hechos— y el endpoint **no pide contraseña a propósito** (art. 7.3: retirar tiene que ser tan fácil como dar; endurecerlo es incumplir, y hay caso que lo fija).
+- ⚠️ **El TICKET de re-autenticación de §8 NO EXISTE** (`[DECIDIDO owner]` Q12): quien entró con Google crea su contraseña con «he olvidado mi contraseña» y el producto se lo dice en las cuatro pantallas — no lo construyas sin reabrir la decisión.
+- ⚠️ **Desvincular exige contraseña** y comparte el limitador del cambio de contraseña; su lista **no publica el `sub`**.
+- ❗❗❗ **`#347` SI TOCAS LA VINCULACIÓN**: hay una **CUARTA puerta** (`SocialLogin::linkToAccount()`, ruta `/auth/google/vincular` con `auth`) y **se define por lo que NO hace** — no autentica, no promueve a verificado y no expulsa; hacer cualquiera de las tres convertiría el gesto de vincular en un **cambio de cuenta encubierto**.
+- ⚠️⚠️ **La intención y QUIÉN la pidió viajan en el RETO del servidor**, jamás en la URL de vuelta: entre la ida y la vuelta caben un `logout` y un `login` con otra cuenta, y sin la segunda anotación el vínculo aterriza en la cuenta equivocada **sin que nada falle**.
+- ⚠️ `provider_conflict` y `provider_taken` son ESPEJOS y no se intercambian (tu cuenta ya tiene otra llave · esa llave ya abre otra cuenta).
+- ⚠️ **No pide contraseña a propósito** —desvincular sí, porque puede dejarte FUERA—: las defensas son el aviso por correo y que `revokeAllAccess()` se lleve las identidades.
+- ⚠️⚠️ **`Http::fake()` ACUMULA stubs y gana el primero**: un caso que recorre el flujo dos veces recibe el token del PRIMER reto y sale `google-failed` — parece defecto del producto y es el arnés.
+- ▶ **Queda el OJO del owner** (`VERIFICACION-E2E-CAJON.md` §5.google, necesita el cliente de OAuth de DESARROLLO) y **la política de privacidad**, que es requisito de salida de la Q7

@@ -13,6 +13,27 @@
 > §8 registra qué cambió y por qué, incluidos los **tres desacuerdos entre lentes** que hubo que
 > resolver midiendo.
 
+## §0 · Antes de tocar
+
+- **Código completo** (`#413`, las cuatro tandas); queda el OJO del owner. **Empieza por §9.4** (la T3 y sus
+  dos defectos de navegador) y §8 (la revisión adversarial: tres afirmaciones propias eran falsas).
+  `PostFormAddons` está en el `CRITICAL_RE` → `VERIFY_CONC=1` y `postform:verify-concurrency` (escenarios
+  `addons` y `cross`). Se paga EN EL PARQUE (`#244`).
+- **El eje es `product_addons.stage`** (`booking` | `postform`) y significa **cuándo se VENDE**, no dónde se
+  ve: un `postform` no nace nunca con el pedido, tampoco en el alta manual. **La puerta del reconciliador NO
+  es el eje sino `LineFacts::birthValue() === 0`** (D9): el eje es configuración mutable, y cambiar «Tarta» a
+  `postform` habría puesto en manos del cliente líneas ya cobradas con el libro en verde. Quitar es NEUTRO en dinero.
+- **Seis guards del enganche** (§4.3) y `max_qty` obligatorio · **R1**: el estado deseado gobierna sólo lo
+  OFRECIDO (un `<input disabled>` no se envía; lo fuera de plazo no se ofrece) · **R2**: la línea conserva su
+  `unit_price` · escrituras ASIMÉTRICAS: alta, subida y bajada escriben `recordEdit`, retirar NO.
+- **El testigo es `updated_at` y `submitGuestForm()` lo mueve en la misma petición**: la regla vive en
+  `AuthorizesGuestForm::addonsExpectedVersion()` (nuestra escritura no es un tercero); en la suite salía verde
+  por la precisión de segundo. La fiesta pasada CIERRA los extras, no los esconde.
+- **La puerta es `acceptsGuestForm()`, no `isPack()`** (`[owner]`) · dos limitadores (IP y `guest-form`
+  por reserva) · orden de locks del subsistema: `orders → order_items → hijas` (el interbloqueo se reprodujo).
+- Tres listas blancas del panel entre el formulario y la fila, y las tres callan al olvidarse (§8).
+- Anexo al final con la fila del enrutador.
+
 ## 0. En una frase
 
 Un complemento puede declararse **de venta POSTERIOR**: no nace nunca con el pedido, y el cliente lo
@@ -1075,3 +1096,42 @@ instalación sin enganches `postform` no pinta la sección · navegador real con
 
 ▶ **Cada tanda cierra con `VERIFY_CONC=1`** desde la T2 (antes no toca dinero concurrente), y el
 recuento de `SUITE-04` sube al añadir los dos escenarios.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Un COMPLEMENTO que se vende DESPUÉS de reservar · el cubo de refrescos / las tapas que se eligen en el POST-FORM · el plazo de corte de un extra»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/complementos-post-reserva.md` · `docs/DEUDA.md`.
+
+- **`docs/specs/complementos-post-reserva.md`**
+- 🟦 **CÓDIGO COMPLETO — LAS CUATRO TANDAS EN EL ÁRBOL** (`#413`, 2026-09-03; suite 4.228 · JS 951 · mutaciones 13/13 + 16/16 + 13/13 + 15/15 · los DOS verificadores de concurrencia sobre InnoDB, el cruzado visto FALLAR con su control · sonda de navegador 13/13).
+- ▶ ❗❗❗ **EMPIEZA POR §9.4, que es la T3 y sus dos defectos de navegador**; sigue
+- 🟦 por el OJO del owner.
+- ❗❗❗ **SI TOCAS EL TESTIGO DEL POST-FORM**: el token es `updated_at` de la reserva y `submitGuestForm()` **lo escribe en la misma petición**, así que comparar contra el de después hace que **ningún guardado normal compre nada** (dice «la reserva ha cambiado mientras tenías esta página abierta»). La regla vive en `AuthorizesGuestForm::addonsExpectedVersion()`: **nuestra propia escritura no es un tercero**.
+- ⚠️⚠️ **En la suite salía VERDE** porque `updated_at` tiene precisión de SEGUNDO: su caso separa render y POST con `travel()`.
+- ❗❗ **SI TOCAS UNA GUARDA DE ESTA PANTALLA**: cuatro trampas pagadas, todas de la misma familia — `type="number"` aseverado sobre la página entera pasa en verde con el control en `hidden` (los campos de EDAD también son numéricos); un caso que manda el cuerpo a mano **no ve el MARCADO**, y el campo oculto del extra cerrado **es el mecanismo** (los `<input disabled>` no se envían); dos reglas —el cierre por fiesta pasada y el precio de la LÍNEA sobre el catálogo— son **invisibles en la página** y solo se ven en la API; y un presupuesto que crece con PEDIDOS no mide un coste por RESERVA.
+- ⚠️⚠️ **La fiesta pasada CIERRA los extras, NO los esconde** (con `return []` quien encargó dos cubos no encontraba rastro de ellos al día siguiente) — y ese cierre **no necesita término propio**: el plazo se mide contra el INICIO de la franja, así que una fiesta terminada venció su corte por construcción, y el `|| $finished` que se escribió **ninguna mutación podía distinguirlo**.
+- ⚠️ **«Qué hecho se escribe» y «cuánto cambia el pedido» son dos preguntas distintas**: la retirada no escribe `recordEdit` pero **sí informa delta negativo**, o el correo dice «se suman 27,00 €» donde son 19,00.
+- ⚠️ **`SEC-06`: DOS limitadores** — el de siempre por IP y **`guest-form`, 12/min por RESERVA**, porque el de IP deja treinta guardados por minuto **desde cada IP** sobre la misma reserva; el **tope por pedido** existe por construcción (`Σ max_qty × precio`).
+- ⚠️ **D15, las tres superficies de demanda**: el correo del post-form nombra los extras **solo si esa reserva tiene alguno abierto**, el rótulo del cajón cambia con `can_add_extras` (lo decide el SERVIDOR, nunca «el catálogo tiene extras») y el aviso de la cuenta **deja de morir** al completar las fichas (`extras_invite`, que es una INVITACIÓN y no la deuda de `pending_forms`). — El diseño y la revisión:
+- ❗❗ **EMPIEZA POR §1.3, que es la propiedad que sostiene todo**: una línea nacida DESPUÉS del pedido lleva un ajuste `edit` de su importe exacto, así que `nac = 0` y `online_nac = 0` (verificado en `LineFacts`) → **quitarla es NEUTRO en dinero** y el libro sigue cerrando sus cuatro identidades.
+- ▶ **El mecanismo YA EXISTE**: el panel añade complementos a una reserva pagada (`OrderItemEditor::edit` + `Order::recordEdit`) y el LIBRO lo pinta con su fecha y saldo «A pagar en el parque»; **y el post-form YA mueve dinero hoy** (`MixedPartySurcharge::reconcile` al guardar las edades). Lo que falta son DOS cosas: el eje y la puerta del cliente.
+- ▶ **El eje es `product_addons.stage`** (`booking` por defecto · `postform`), en el **PIVOTE** —doctrina del origen, «config por enganche, no global»— y con el vocabulario de `event_fields.stage`.
+- ⚠️⚠️ **Significa «cuándo se VENDE», no «dónde se ve», y esa precisión es la que hace demostrable la propiedad**: un `postform` **no nace nunca con el pedido**, ni siquiera en el **alta manual del panel** (D2) — dejar que el mostrador lo venda dentro del pedido le daría `nac > 0` y entonces el cliente podría retirar algo que SÍ se cobró.
+- ⚠️ **No hay valor `both`** (obligaría a distinguir por unidad qué se cobró).
+- ⚠️⚠️ **El filtro NO va dentro de la relación `addons()`**: son 12 consumidores y uno es el editor del panel, que dejaría de encontrar la línea que tiene que mover — **el eje gobierna la venta, no la capacidad del operador**.
+- ▶ **Cuatro `[DECIDIDO owner, 2026-09-03]`**: se paga **en el parque** (`#244`, el cobro online post-reserva queda fuera) · **plazo de corte por complemento** (`postform_cutoff_hours` nullable, `null` = hereda; medido contra el inicio de la franja con **`DisplayTime::now()`**) · el cliente **puede quitar** mientras el plazo esté abierto, incluido lo que le añadió el parque · **la puerta es `acceptsGuestForm()`, NO `isPack()`** (`[owner]`: «no es por producto, sería por postform») — hoy eso es cumpleaños, pero como CONSECUENCIA.
+- ⚠️ **Seis guards del enganche** (§4.3), cada uno cerrando un agujero: ni obligatorio (se auto-inyectaría una deuda sin un clic), ni incluido, ni `per_guest` (ataría el extra de los ADULTOS al número de NIÑOS), ni grupo excluyente (`groupDefault()` siempre elige uno → cargo que nadie pidió), ni ocupante de aforo, ni requisito de otra fase; **`max_qty` pasa a OBLIGATORIO** porque el enlace del post-form se reenvía.
+- ⚠️⚠️ **R1 del reconciliador**: el estado deseado gobierna **sólo lo OFRECIDO** — sin esa regla, retirar del catálogo un complemento ya vendido haría que el siguiente guardado del cliente **lo cancelara en silencio**.
+- ⚠️ **R2**: la línea conserva su `unit_price` (subir de 2 a 3 cobra la tercera al precio de la línea, como ya hace el panel).
+- ❗❗ **§4.9 · DEFECTO PREEXISTENTE MEDIDO**: `isFinishedInPractice()` declara terminada una reserva **1–2 h TARDE** —las franjas guardan hora de pared del parque (lo demuestra `SlotOffer::passesIntradayFloor`) y ese predicado las parsea como UTC—; de él cuelgan el `readonly` del post-form, el `item_finished` del panel y la ventana de dinero del suplemento mixto. **No contradice a `#244`** (las dos ventanas siguen cerrando a la vez; cierran tarde las dos). Ficha en `DEUDA.md`; esta spec **no hereda el error**.
+- ❗❗❗ **REVISADA POR SEIS LENTES Y CORREGIDA (§8): TRES afirmaciones de la propia spec eran FALSAS.** (1) ~~«el editor del panel ignora una bajada 3→2»~~ — **la BLOQUEA** (`addon_partial_reduce_unsupported`, con mensaje, audit y test; corría `validateAddonEdits()` ANTES del cuerpo de `edit()`), y **el bloqueo sostiene el modelo de dinero**: para una línea nacida con el pedido, bajarla DEBE dinero. (2) ~~«no hay inversión de locks posible»~~ — **hay CUATRO caminos que toman `orders` antes que `order_items`** (cancelar ítem, cancelar pedido, las dos txn del reembolso) y el interbloqueo se **REPRODUJO** (`SQLSTATE[40001] · 1213`) con dos conexiones MySQL;
+- ⚠️ y **ya existe hoy sin la feature** por la FK de `order_adjustments`.
+- ▶ Sale una regla del subsistema: **`orders` → `order_items` → hijas**. (3) ~~«`addons` ausente no toca nada, como `general`»~~ — medido con petición firmada real: un `PUT` sin `general` **BORRA** las respuestas generales (defecto preexistente, y el contrato documenta lo contrario).
+- ⚠️⚠️ **EL CAMBIO DE DISEÑO QUE TRAJO (D9)**: la puerta del reconciliador NO es el eje, es **`LineFacts::birthValue() === 0`** — el eje es configuración MUTABLE y pasar «Tarta» de `booking` a `postform` habría puesto en manos del cliente líneas ya cobradas (medido sobre un pedido real: `settled` → `refund_at_park −4,00 €`) **con el libro cerrando en VERDE**, o sea con la guarda escrita pasando con el defecto puesto.
+- ⚠️ **Segundo bloqueante: TRES listas blancas entre el formulario y la fila** (`ADDON_PIVOT_COLUMNS` · `sanitizePivotData()` · el `fillForm()` de «Configurar») y **las tres callan al olvidarse** — la peor **revierte un `postform` a `booking` al tocar la posición en la lista**.
+- ⚠️ **Las tres escrituras NO son simétricas** (§4.5.1): alta y subida escriben `recordEdit(+Δ)`, **bajar TAMBIÉN escribe** (sin él `nac` cae a −12,00 € e `I1` falla) y **retirar NO** (el libro ya emite su `−fila`, y escribirlo restaría dos veces → pedido «en revisión» y el cliente sin desglose).
+- ⚠️ **D10**: el plazo pasa a OBLIGATORIO — `null` heredaba el reloj torcido de §4.9.
+- ⚠️ **D12: NO entra anti-bot** (para llegar al POST hay que traer un HMAC válido de esa URL; Turnstile rompería el `PUT` de la API y falla también a personas); en su lugar, limitar **por reserva** y agrupar el correo.
+- ⚠️ **Los `<input disabled>` NO se envían**: con plazos por complemento, un guardado normal cancelaría el que está fuera de plazo — «ofrecido» excluye lo cerrado.
+- ❗ **Nadie invita al cliente a volver a comprar** (§4.7·quinquies): el aviso muere al completar las fichas y el correo habla solo de datos de invitados

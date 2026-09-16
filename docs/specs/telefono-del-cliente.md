@@ -16,6 +16,26 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Código NO empezado**; spec revisada (adversarial de 7 lentes, `#440`). **Conseguir el teléfono de Google se
+  DESCARTA y §3 conserva la medición** para que nadie lo relitigue: el `id_token` no trae ningún claim de
+  teléfono; el ámbito que lo daría (`user.phonenumbers.read`) es SENSIBLE (verificación con vídeo, 3–5 días,
+  «app no verificada» + tope de 100 usuarios) y el dato puede venir VACÍO. Y el mecanismo escrito no era
+  implementable: hay UNA sola ida a Google, login y registro pintan el mismo botón con la misma URL (`#350`), el
+  ámbito es una constante y alta-vs-entrada solo se sabe tras el canje; `consumeChallenge()` colapsa en silencio
+  toda intención que no sea «vincular».
+- **Lo que se construye es el MOSTRADOR. EMPIEZA POR §1.3**: al crear un cliente el teléfono ya es
+  obligatorio, pero al ELEGIR uno existente no se comprueba nada y `customerDisplay()` pinta el correo, así que
+  un cliente sin teléfono se ve igual que uno completo; y **NO EXISTE `EditUser`** (`UserResource` es
+  admin-only, `index` y `view`): hoy la única vía para que una cuenta gane teléfono es comprar por la web.
+- **La puerta son CUATRO sitios, no dos**: `addLineToCart()` es público, no mira el paso y mueve `step`.
+- **`create()` AVISA Y COBRA, NO RECHAZA** (`[DECIDIDO owner]`, escrito en el código): con el cliente delante,
+  negarse a cobrar por un número es peor que vender sin él.
+- La autoridad es **`CheckoutDuties::pendingFor()`**, nunca una copia; escribe el MÓDULO, no Filament
+  (`ApiBoundariesTest`); `normalizePhone()` NO valida (compara, quita el `+`). 3 de 22 cuentas sin teléfono.
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 ### 1.1 · El teléfono es OPERATIVO, no decorativo
@@ -279,3 +299,22 @@ falta cuando el camino feliz no ocurre.*
 ⚠️ **`AuditActionCatalogTest` puso en rojo las dos acciones nuevas** antes de que llegaran a ninguna
 parte: en este repo una acción de auditoría sin catalogar **lanza**. Es la guarda haciendo lo que
 existe para hacer.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El TELÉFONO de un cliente · una cuenta de Google sin número · pedir el teléfono en el pedido manual · editar el teléfono de un cliente»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/telefono-del-cliente.md` · `docs/DEUDA.md`.
+
+- **`docs/specs/telefono-del-cliente.md`**
+- 🟦 **REVISADA (adversarial de 7 lentes) — código NO empezado** (`#440`, 2026-09-06) —
+- ❗❗❗ **CONSEGUIR EL TELÉFONO DE GOOGLE SE DESCARTA, y §3 conserva la medición para que nadie lo relitigue**: el `id_token` **no trae ningún claim de teléfono** y los tres ámbitos OIDC de Google no lo incluyen; el que lo daría (`user.phonenumbers.read`) es **SENSIBLE** —verificación con vídeo, 3-5 días, y mientras tanto **pantalla de «app no verificada» + tope de 100 usuarios**— y **el dato puede venir VACÍO** (solo existe si esa persona lo puso en su perfil; el de recuperación no se expone).
+- ⚠️⚠️ **Y el mecanismo que se había escrito NO era implementable**: hay **UNA sola** ida a Google y login y registro **pintan el mismo botón con la misma URL** (`#350`), el ámbito es una **constante** que `authorizationUrl()` no recibe, y alta-vs-entrada solo se sabe **tras el canje** —
+- ⚠️ el atajo aparente tampoco vale y **no avisa**: `consumeChallenge()` colapsa en silencio toda intención que no sea «vincular».
+- ▶ **Lo que se construye es el MOSTRADOR.**
+- ❗❗❗ **EMPIEZA POR §1.3**: al **crear** un cliente el teléfono ya es obligatorio, pero al **ELEGIR** uno existente no se comprueba nada y `customerDisplay()` pinta el correo cuando lo hay, así que **un cliente sin teléfono se ve igual que uno completo**; y **NO EXISTE `EditUser`** —`UserResource` solo registra `index` y `view`, es **admin-only**, y sus cinco acciones son carné, prueba de waiver, roles, reset y anonimizar—, así que *hoy la única vía para que una cuenta gane teléfono es que su dueño compre por la web* (ficha en `DEUDA.md`).
+- ❗❗❗ **SI TOCAS LA PUERTA: son CUATRO sitios, no dos** — `addLineToCart()` es **público y NO mira el paso del cliente**, así que desde el paso 1 mete la línea en el carrito **y mueve `step` él mismo** (reproducido).
+- ⚠️⚠️ **`create()` AVISA Y COBRA, NO RECHAZA** (`[DECIDIDO owner]`): con el cliente delante, negarse a cobrar por un número es peor que vender sin él — **va escrito en el código**, o el siguiente lo «arregla» y sería lo primero capaz de tumbar una venta de mostrador por un teléfono.
+- ⚠️ La autoridad es **`CheckoutDuties::pendingFor()`**, nunca una segunda copia (hay ya una TERCERA redacción en `customerDisplay()`, que diverge con un teléfono de espacios), y **escribe el módulo, no Filament** (`ApiBoundariesTest` ya puso en rojo ese `save()`).
+- ⚠️ **`normalizePhone()` NO valida** —su docblock dice «para COMPARAR, no para mostrar» y quita el `+`—: el número se guarda tal cual.
+- ⚠️ Cifras: **3 de 22 cuentas de CLIENTE** sin teléfono, 2 de Google

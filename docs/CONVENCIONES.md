@@ -9,13 +9,17 @@
 - `CLAUDE.md` (raíz) — enrutador de contexto + reglas de arranque. CORTO; se carga solo.
 - `README.md` (raíz) — puesta en marcha técnica (Docker, comandos, puertos).
 - `docs/` — fuente de verdad de producto y arquitectura. Índice en `docs/README.md`.
+- `docs/carriles/` — un fichero por carril (banda · ficheros · foto · retomar · buzón); **cada agente escribe
+  solo el suyo** (`DECISIONES #621`). `docs/ESTADO.md` es su índice.
+- `docs/decisiones/` — el registro de decisiones por centenas; `docs/DECISIONES.md` es el índice (`#617`).
 - `docs/sistemas/` — referencia por sistema implementado (Redsys, cookies, post-form…).
 - `.claude/skills/` — procedimientos operativos invocables por los agentes.
 
 ## §2 Documentos clave (jerarquía de lectura)
-1. `ESTADO.md` — foto viva mínima: dónde estamos / qué sigue. **Carga obligatoria al arrancar.**
-2. `00-REFACTOR.md` — tracker VIVO del refactor (fases + checklists).
-3. `DECISIONES.md` — cronológico, el porqué de cada decisión. **No cargar entero: buscar por número.**
+1. `ESTADO.md` — índice de carriles → **tu `carriles/<carril>.md`**: dónde estás / qué sigue. **Carga
+   obligatoria al arrancar.** Techos medidos por el gate: 4 KB el índice, 24 KB un carril.
+2. `00-REFACTOR.md` — tracker VIVO (fases + casillas, sin narrativa; ≤ 16 KB).
+3. `DECISIONES.md` (índice) → `decisiones/NNN-NNN.md` — el porqué de cada decisión. **Buscar por número.**
 4. `INVARIANTES.md` — lo que NUNCA se puede regresar (endurecimiento heredado). Leer antes de
    tocar dinero, aforo, RGPD o seguridad.
 5. El resto, **solo vía la tabla de enrutado de `CLAUDE.md`** (leer lo mínimo que la tarea pida).
@@ -111,22 +115,28 @@ siempre mejora el test). El tercero hay que buscarlo activamente.
 - **Plantilla de cabecera** (todo doc nuevo; los heredados migran al tocarlos, no en barrido):
   `> Estado: vivo|heredado|diseño|congelado · Última actualización: AAAA-MM-DD ·`
   `> Verificado contra código: AAAA-MM-DD (alcance) · Se invalida si: <qué lo dejaría viejo>`
-- **Fuentes únicas declaradas**: recuento vivo de la suite → `ESTADO.md` (lo refresca
-  `/cierre-sesion` con el run real); puertos y bootstrap → README raíz; recuentos
-  estructurales → los verifica `docs-check`. El resto de docs **enlaza, no copia**.
+- **Fuentes únicas declaradas**: recuento vivo de la suite → **el trailer del commit** (§8; el `pre-push`
+  lo compara con la suite que acaba de correr, `DECISIONES #618`) y en ningún documento; puertos y
+  bootstrap → README raíz; recuentos estructurales → los verifica `docs-check`. El resto de docs
+  **enlaza, no copia**.
+- **Techos** (`docs-check`, check 10, `#620`): enrutador 12 KB · tracker 16 KB · `ESTADO.md` 4 KB ·
+  fichero de carril 24 KB · `## §0 · Antes de tocar` obligatorio y ≤ 2 KB en cada spec · decisión nueva
+  ≤ 1,5 KB. Lo que no cabe va al cuerpo de su spec o a git, no a un techo más alto.
 
 ## §5 Flujos obligatorios de actualización
-- **Decisión nueva** → `[DECIDIDO]`+fecha en el doc afectado **y** línea en `DECISIONES.md`.
+- **Decisión nueva** → `[DECIDIDO]`+fecha en el doc afectado **y** entrada al final de su centena en
+  `docs/decisiones/` (número de la BANDA del carril, §10.6; ≤ 1,5 KB; «último usado» en tu carril).
 - **Decisión revertida/modificada** → en la entrada ANTIGUA, primera línea: «Sustituida por
   #N (fecha)». Ausencia de marca = vigente (el grep por número nunca devuelve una decisión
   muerta sin saberlo).
 - **Diseño previo a implementación** → `docs/specs/<tema>.md` desde la plantilla
   `docs/specs/PLANTILLA.md`; otro agente lo revisa ANTES de escribir código.
 - **Doc nuevo/renombrado** → actualizar `docs/README.md` **y** la tabla de enrutado de `CLAUDE.md`.
-- **Fin de sesión** → skill `/cierre-sesion`: progreso en `00-REFACTOR.md` + `ESTADO.md` fiel.
-- **`[PENDIENTE]` cerrado** → resolverlo en su doc y reflejarlo en `ESTADO.md`.
+- **Fin de sesión** → skill `/cierre-sesion`: progreso en `00-REFACTOR.md` + **tu fichero de carril** fiel
+  (se REESCRIBE la foto, no se apila; los avisos atendidos se retiran).
+- **`[PENDIENTE]` cerrado** → resolverlo en su doc y reflejarlo en tu carril.
 - **Precedencia de estado** (`DECISIONES #10`): los marcadores de fase de `00-REFACTOR.md`
-  son LA fuente de verdad; `ESTADO.md` los resume y nunca puede contradecirlos.
+  son LA fuente de verdad; los carriles los resumen y nunca pueden contradecirlos.
 - **Gate documental**: `scripts/docs-check.sh` (enlaces, anclas, rutas citadas, recuentos,
   coherencia de fases) corre en el pre-push de `main` y en `/cierre-sesion`. Doc roto = push
   bloqueado, igual que la suite.
@@ -137,7 +147,8 @@ presentación · **convivencia**: no romper supuestos del sector origen document
 (`OPERATIVA-SECTOR-ORIGEN.md`) sin decisión explícita.
 
 ## §7 Protocolo de arranque y verificación (CRÍTICO en un repo 100% agentes)
-1. `CLAUDE.md` se carga solo → lee `docs/ESTADO.md` → la fila de enrutado de tu tarea. Nada más.
+1. `CLAUDE.md` se carga solo → `docs/ESTADO.md` (índice) → **tu `docs/carriles/<carril>.md`** → el
+   **§0** de la spec de tu tarea (la fila de enrutado te lleva a él). Nada más: el resto, por secciones.
 2. **Verifica antes de fiarte**: todo ✅ en prosa se contrasta con el código (rutas, clases,
    migraciones) antes de construir encima. La doc portada describe la BASE HEREDADA y puede
    estar por detrás del refactor.
@@ -145,7 +156,7 @@ presentación · **convivencia**: no romper supuestos del sector origen document
    dilo («no verificado»).
 4. **Nada vive solo en la conversación**: si descubres un gotcha, una decisión o un hueco,
    escríbelo en el doc que toque ANTES de cerrar la sesión. El siguiente agente no puede
-   preguntarte: tu handoff es lo único que tiene. Un `ESTADO.md` infiel es el peor bug.
+   preguntarte: tu handoff es lo único que tiene. Un fichero de carril infiel es el peor bug.
 5. **No tocar el repo del cliente origen** (`~/proyectos/jumpingjump`) desde una sesión de
    JumpWeb; cruces de mejoras solo por decisión explícita del owner (`DECISIONES #1`).
 
@@ -153,13 +164,16 @@ presentación · **convivencia**: no romper supuestos del sector origen document
 - Mensajes convencionales en español (`feat:`, `fix:`, `docs:`, `refactor:`…), cuerpo con el
   porqué. Commit al cerrar una unidad de trabajo con la suite en verde; **push** de `main`
   al cerrar la sesión.
-- No commitear con la suite rota. Si hay que aparcar, rama `wip/…` y anotarlo en `ESTADO.md`.
+- No commitear con la suite rota. Si hay que aparcar, rama `wip/…` y anotarlo en tu carril.
 - **El gate de pre-push aplica solo a `main`** (`DECISIONES #10`): las ramas `wip/…` pueden
   empujarse en rojo como copia de seguridad — nunca se mergean a `main` sin pasar el gate.
 - **Una sola sesión de escritura a la vez** sobre cada CLON del repo; subagentes de solo-lectura
   exentos. Dos agentes = dos clones, y su coordinación es **§10**.
 - **El commit de cierre lleva la evidencia** en el cuerpo: «Verificación: suite N tests /
   M aserciones (Xs) · Pint ✓ · docs-check ✓ · build ✓/N-A» — `git log` como bitácora falsable.
+  **Es la única copia del contador de la suite** (`DECISIONES #618`): el `pre-push` busca ese trailer en
+  los commits del push, del más nuevo al más viejo, y lo compara con la suite que acaba de correr; sin
+  trailer o con la cifra vieja, el push se corta.
 
 ## §9 Cuándo parar y preguntar al owner
 El agente decide solo en todo lo demás; **PARA y pregunta** (marca ❗ + `[PENDIENTE: owner]`
@@ -176,14 +190,16 @@ Feature visible → además validación del owner antes del ✅ definitivo (§3.
 `[DECIDIDO owner, 2026-08-25]`. Nace del precio pagado en dos días: **siete** colisiones de número
 en `DECISIONES.md` y **un defecto arreglado dos veces** en paralelo (`DECISIONES #157`, `#158`).
 No hay chat entre agentes: **lo que no está en `origin/main`, el otro no lo sabe.**
-1. **Antes de planificar**: `git fetch` y leer el bloque «REPARTO VIGENTE» de `ESTADO.md`.
-2. **Reclamar = EMPUJAR**: una tarea es tuya cuando tu fila del reparto está en `origin/main`
+1. **Antes de planificar**: `git fetch`, `docs/ESTADO.md` (el índice de carriles) y **tu**
+   `docs/carriles/<carril>.md`, más el buzón de los demás.
+2. **Reclamar = EMPUJAR**: una tarea es tuya cuando está en tu fichero de carril en `origin/main`
    (un commit solo de doc vale; pasa el gate igual). Hasta entonces el otro puede tomarla.
-3. **Carriles por FICHERO, no por tema**: cada fila del reparto lista los ficheros/carpetas que
-   toca. Entrar en un fichero del carril ajeno exige avisarlo en el reparto ANTES (línea con fecha
-   y destinatario) y `git pull --rebase` en cuanto el otro empuje.
-4. **Los mensajes entre agentes** van en ese bloque de `ESTADO.md` («▶ Para el agente del X: …»).
-   Quien lo lee y actúa **lo retira** en su siguiente push: un aviso resuelto que se queda es ruido.
+3. **Carriles por FICHERO, no por tema**: cada carril lista los ficheros/carpetas que toca. Entrar en
+   un fichero del carril ajeno exige avisarlo en el buzón ANTES (línea con fecha y destinatario) y
+   `git pull --rebase` en cuanto el otro empuje.
+4. **Los mensajes entre agentes** van en el buzón del fichero de carril del EMISOR («Para el carril X:
+   …»). El receptor anota «atendido» en el suyo, y el emisor lo retira en su siguiente cierre. **Cero
+   escrituras cruzadas**: cada agente escribe solo su fichero de carril (`DECISIONES #621`).
 5. **Empujar PRONTO** —cada unidad de trabajo verde, no solo al cierre— y **`git pull --rebase`
    antes de cada push**. Cada hora en local es una hora en la que el otro decide sin verte.
 6. **El número de `DECISIONES.md` sale de la BANDA DE TU EQUIPO, no del contador compartido**
@@ -200,8 +216,10 @@ No hay chat entre agentes: **lo que no está en `origin/main`, el otro no lo sab
    que renumerar: **mapa explícito**, **ámbito por fichero para los propios y por LÍNEA para los
    compartidos**, **huella de las citas ajenas antes y después** y **`uniq -d` sobre las cabeceras**
    al terminar (un renumerado a mano más otro automático mueven la misma cabecera dos veces).
-   ▶ El «último usado» de `ESTADO.md` se actualiza en el mismo commit, por banda.
-7. **Defectos y fichas de `DEUDA.md`**: antes de abrir uno, mira si está en la fila del otro. Si
-   cae en la frontera de los dos carriles, el reparto dice quién lo lleva; no se arregla dos veces.
-8. **Al cerrar un carril** se retira su fila: el bloque de reparto es una FOTO, no un histórico
-   (el histórico es `DECISIONES`).
+   ▶ El «último usado» vive en la cabecera de tu fichero de carril y se actualiza en el mismo commit;
+   la entrada se escribe **al final del fichero de su centena** en `docs/decisiones/` (`#617`), con
+   techo de 1,5 KB (`#620`). Las bandas vivas: `docs/DECISIONES.md`.
+7. **Defectos y fichas de `DEUDA.md`**: antes de abrir uno, mira si está en el carril del otro. Si
+   cae en la frontera de los dos carriles, los ficheros de carril dicen quién lo lleva; no se arregla dos veces.
+8. **Al cerrar un carril** su fichero dice «cerrado» y apunta a la spec: la foto es una FOTO, no un
+   histórico (el histórico es `docs/decisiones/` y `git log -p`).

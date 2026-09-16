@@ -25,6 +25,23 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Aprobada por el owner tras revisión adversarial de cinco lentes** (`#524`); **código NO empezado**; las
+  reseñas van DESPUÉS del diseño (`[owner]`). Sustituye como FUENTE a `google-reviews.md` (Places), que queda
+  como registro; el contrato `Content\Contracts\SocialProof` se conserva pero cambia (§4.3·9). El programa
+  `producto-e-instancias.md` (`#616`) la confirma: mecanismo del producto, API pública sin avatares.
+- **Las seis líneas**: (1) la API del DUEÑO de la ficha con un proyecto CENTRAL de JumpWeb (la política prohíbe
+  pedirle el suyo a cada cliente); (2) se publican TODAS las reseñas sin pedir permiso al autor —riesgo ACEPTADO
+  por el owner frente a la guía de marca, mitigado con «Ocultar»—; (3) nada de Google vive más de 30 días y el
+  límite se aplica AL LEER; (4) el horario se publica con UN botón (Google exige consentimiento por edición);
+  (5) toda escritura solo en PRODUCCIÓN, desarrollo en OTRO proyecto (revocar retira la autorización de todo el
+  proyecto); (6) las entradas se configuran a mano en la ficha.
+- **La app OAuth va «En producción»**: en prueba el permiso caduca a los 7 días y la sincronización muere en
+  silencio. El texto de una reseña puede traer la traducción de Google mezclada: se mide antes de analizarlo.
+- Tandas T1 conexión → T2 reseñas → T6 horario (T5 entradas, sin código); §7 la guía (A: JumpWeb una vez · B:
+  cada parque); §8 las decisiones; §10 el registro de la revisión. Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema — MEDIDO
 
 ### 1.1 Lo que hay hoy
@@ -512,3 +529,24 @@ además el agente principal en la fuente, con cita literal.** Lo que cambió res
 [datos estructurados de reseñas](https://developers.google.com/search/docs/appearance/structured-data/review-snippet) ·
 [EmbedSocial](https://embedsocial.com/gbp/api/) · [Elfsight](https://elfsight.com/blog/how-to-work-with-gmb-reviews-api/) ·
 [medida de la comunidad sobre traducción](https://ambience.sk/google-business-profiles-api-reviews-without-translation/).
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«Reseñas / valoración de Google · prueba social en la landing · la API de Google Business Profile (conexión OAuth, reseñas con fotos, «Escribir una reseña», horario publicado en la ficha, entradas)»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/google-business-profile.md` · `docs/specs/google-reviews.md`.
+
+- ❗❗❗ **EMPIEZA POR `docs/specs/google-business-profile.md`**
+- ✅ **APROBADA tras revisión adversarial de cinco lentes, código NO empezado** (`#524`, `[DECIDIDO owner]`): la fuente pasa de Places a la **API del DUEÑO de la ficha** — todas las reseñas, **guardables 30 días** (Places no deja guardar nada salvo el `place_id`), gratis.
+- ⚠️⚠️ **Proyecto de Google CENTRAL de JumpWeb** (la política prohíbe pedirle a cada cliente el suyo) · **se publican TODAS sin pedir permiso al autor** (riesgo ACEPTADO por el owner frente a la guía de marca de Google; mitigado con «Ocultar») · **el horario se publica con un botón** (Google exige consentimiento específico por edición) · **toda escritura solo en producción** y desarrollo en OTRO proyecto (revocar retira la autorización de todo el proyecto) · **el límite de 30 días se aplica al LEER**.
+- ⚠️⚠️ **La app OAuth va «En producción»**: en prueba el permiso caduca a los **7 días** y la sincronización muere en silencio.
+- ⚠️ **El límite de 30 días rige TODO lo que da la API.**
+- ⚠️ El texto de una reseña puede traer la **traducción de Google mezclada** (sin documentar): se mide antes de analizarlo.
+- ▶ Tandas **T1 → T2 → T6**; §7 es la guía (A: JumpWeb una vez · B: cada parque), §8 las decisiones y §10 el registro de la revisión. — Lo construido con Places: `docs/specs/google-reviews.md`
+- ✅ (ejecutada; §3.2 corregida) —
+- ⚠️⚠️ **§1.3: CINCO restricciones DURAS** verificadas contra la doc oficial, y tres chocan con invariantes ya endurecidos (`PERF-02`, `SEC-07`, `RGPD-05`). **§1.4: con Google como única fuente el parque NO elige qué sale en su portada.**
+- ✅ **§3 YA ESTÁ RESUELTA** (owner, 2026-08-25): Google es la fuente de verdad y el CMS el respaldo —
+- ⚠️ **y una de las dos opciones del owner NO se puede hacer**: el snapshot persistente de reseñas de Google está PROHIBIDO, la caché corta sí.
+- ❗❗ **§3.3 reencuadra el trabajo: el respaldo NO es para cuando Google falle — es lo que ve TODO visitante que no acepta cookies de terceros, cada día.**
+- ❗ Sigue **pendiente del owner** el
+- ✅ a la spec y **tres datos** (`place_id`, clave de API, techo de gasto)

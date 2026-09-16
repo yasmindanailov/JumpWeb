@@ -30,6 +30,26 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Carril anterior al rediseño** (`#290`→`#323`, tandas A y T2–T10): desde `#469` manda
+  `specs/rediseno-desde-canvas.md`, que adoptó el canvas entero. Lo de aquí que SIGUE en código: **un solo botón**
+  (`.btn`, la acción es `--action`, `SingleButtonFamilyTest`, `#321`), **la tarjeta en DOS niveles** (pegatina o
+  apoyo, `CardSkinTest`, `#323`) y el sistema de etiquetas (`TagSystemTest`, vigila la EROSIÓN).
+- **Corrección de fuente** (`[owner]`): `Landing PJP Modos` no guía la estructura (solo reseñas). El encargo era
+  CAMBIAR, no añadir, y eso ACOTA `#286`: la decoración añadida va por pantalla; un badge o un separador son
+  componentes funcionales y se repiten porque los datos se repiten.
+- ⛔ **No vuelvas a proponer** las formas A · B · C del molde editorial (`#297`, §3.quinquies) ni las dos de
+  «Visítanos» (`#307`, §3.octies.1): se montaron, midieron y rechazaron. `#300` y `#301` REVIRTIERON la T1 y la
+  estructura de la T3; lo que se quedó es que **la zona se identifica por `slug` y `accent` solo pone color**
+  (`ZoneIdentityIsUniqueTest`).
+- **Trampas de instrumento pagadas aquí**: un localizador que depende de qué sección viene DESPUÉS acota un
+  tramo, no una sección (`#314`) · una captura de ELEMENTO cose los `fixed` · contar por subcadena dio 115
+  tarjetas donde había 23 · `trim` recorta BYTES · retirar CSS deja los `@media` detrás · un `sticky` con 99 px
+  de recorrido no se engancha a 1280×900.
+- La fila del enrutador de este tema está anexada en **`auditoria-diseno.md`** (era el primer documento que
+  citaba): «Cambiar el idioma visual HEREDADO», 119 avisos.
+
 ## 1. El inventario, medido
 
 Lo que hay hoy en la landing con idioma del cliente **antiguo**, y qué dice el nuevo para cada pieza.

@@ -13,6 +13,28 @@
 > **Base medida**: commit `78265ec` (main, 2026-09-01), BD local con 22 pedidos pagados/cancelados,
 > `ENTORNOS`: **0 pedidos en producción**.
 
+## §0 · Antes de tocar
+
+- **Es DINERO**: `INVARIANTES.md` §1 (`PAY-16`/`PAY-17` son las identidades I1–I4 del libro) y `VERIFY_CONC=1`.
+  Nada se cobra ni se devuelve online post-reserva (`#244`, D2): el saldo se liquida EN EL PARQUE.
+- **El libro es el ÚNICO compositor**: `Booking\Services\OrderBook` (+ `Movement` · `Settlement` · `Balance`
+  · `MovementLabel`) sobre los HECHOS de cada línea (`LineFacts`: `charged · depositSplit · editDelta ·
+  courtesy` → `birthValue`, `onlineAtBirth`, `onlineNow`). El modelo de dos ejes está RETIRADO (`#315`,
+  T3·4): `OrderLedger`, `OrderFinancialSummary`, `GateBuckets` y 21 métodos de `Order` ya no existen.
+  Un solo pintor en el panel (`reservation-financials.blade.php`, `#311`) y `LedgerSingleSourceTest` vigila.
+- **Cada gestión escribe UNA fila con su delta entero** (`Order::recordEdit`, `order_adjustments.type` es el
+  único discriminador); la cortesía se escribe AL REEMBOLSAR y solo su exceso; retirar una línea NO escribe
+  (el libro emite su −fila), bajar SÍ. `Order.total` es lo FACTURADO.
+- **T4 (`#317`): el motivo manda en el reembolso** — `value_returned` no puede exceder lo debido en su ámbito
+  (`OrderBook::owedToCustomerCents`, medido EN DINERO: D-T4·6), capado en el modal y bloqueado bajo lock antes
+  de la pasarela (`exceeds_owed`); `compensation` exige motivo escrito (`payment_refunds.reason`); la
+  liquidación en el parque es SIMÉTRICA (D9 bis). Panel PLEGADO con un CTA (`#318`), el HTML lleva todas las líneas.
+- **Trampas de test**: el libro RECHAZA fixtures que «pagan» sin `Payment` o facturan distinto de sus
+  líneas — se LEGALIZAN, nunca se excepciona la identidad; asevera importes de correo por la fila
+  `<tr data-book-…>`, no por texto; `has_deposit` cuenta solo líneas vivas; `OrderItemModified` no lleva importe.
+- Empieza por §4.1 (aritmética línea → reserva → pedido) y §4.2 (qué escribe cada gestión); ejecución en
+  §6.x. Queda el OJO del owner (V18–V22 de `VERIFICACION-E2E-CAJON.md` §5.sexies). Anexo al final.
+
 ## 0. En una frase
 
 El desglose deja de ser un **balance neteado** (dos ejes, cinco canales, cuatro mecanismos de frase)
@@ -1449,3 +1471,56 @@ casos de `OrderBookTest`, con el coste del dinero contado dos veces delante.
 - Entradas: `DECISIONES #305` (la decisión de producto) · `#306` (la T1) · `#308` (la T2) · `#310`
   (la T3·1) · `#311` (la T3·2) · `#312` (la T3·3) · **`#315` (la T3·4)** · `#316` (las decisiones
   del owner tras los `LB-*`; la T4) · **`#317` (la T4 ejecutada)** · `#318` (el libro plegado).
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El LIBRO del pedido · desglose +/− con fecha · el saldo «a pagar / a devolver en el parque» · retirar los DOS EJES · la cortesía · el tope de la T4»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/desglose-libro.md` · `docs/VERIFICACION-E2E-CAJON.md` · `docs/specs/desglose-dinero-cliente.md`.
+
+- **`docs/specs/desglose-libro.md`**
+- 🟦 —
+- ❗❗❗ **T4 EN EL ÁRBOL (`#317`, 2026-09-01; diseño §6.4 · ejecución §6.4.1): EL MOTIVO MANDA EN EL REEMBOLSO.** `value_returned` («Devolver lo que se le debe») no puede exceder lo que el libro dice que se le debe en su ámbito —la reserva por línea, el pedido en el total—: el modal lo capa (importe con `maxValue`, opción deshabilitada con 0, la Σ de remanentes tiene que caber) y el dominio lo bloquea **bajo lock y ANTES de la pasarela** (`exceeds_owed`, sin dejar ni la fila `pending`); `compensation` exige MOTIVO escrito (`payment_refunds.reason`, 5–200; `compensation_without_note`) y la cortesía es SOLO su exceso, con el motivo en `context.note` y en `Movement.note` — **INTERNO** (D-T4·1: el panel lo pinta bajo la línea, `LedgerResource` no lo transcribe); `paid_in_person` y sin intención, nada. La línea se llama **«Descuento por cortesía»** (es/en/fr/zh_CN). **La liquidación en el parque es SIMÉTRICA (D9 bis)**: con la visita pasada, lo que quedaba por devolver sale como `gate` NEGATIVO «Devuelto en el parque» y el saldo queda `settled`.
+- ⚠️⚠️ **DOS AFIRMACIONES DE §6.4 ERAN FALSAS y su corrección va delante del texto**: `payment_refunds.reason` NO existía (lo que hay es `failure_reason`, del gateway; migración `2026_09_01_120000`) y «tras la visita solo compensación» contaba el dinero DOS veces → **D-T4·6: «lo debido» es lo debido EN DINERO** (`OrderBook::owedToCustomerCents = max(0, (Pagado − Σ gate) − Total)`, sin lo inferido): `LB-BAJADA` con la visita de ayer queda `settled` Y sigue debiendo 19,80, y devolverlos como «lo debido» hace desaparecer lo inferido. **D-T4·7**: en el reembolso TOTAL «lo debido» solo se ofrece si cubre el pago entero (esa acción no elige importe). Las dos son VETABLES por el owner.
+- ⚠️⚠️ **Si escribes un arnés de mutación: con CONTROL y por código de salida** — el primero dio 12/12 buscando «OK (» y el runner de un fichero imprime «Tests: N passed»; con control salió **11/12** (no muerde deshabilitar la opción del modal: segunda capa, a sabiendas).
+- ⚠️ **`validationMessages()` de Filament solo admite un array** (el `Closure` va en el VALOR): un error de firma en un modal falla al RENDERIZAR la página entera.
+- ⚠️ Reembolsar una reserva ya PASADA **sí** está permitido por línea (lo que la fecha bloquea es editar/cancelar).
+- ▶ **`#318` (`[DECIDIDO owner]`, con la T4 delante): el libro del PANEL va PLEGADO** —de un vistazo Total · Pagado · saldo— y **UN CTA** («Ver el desglose» / «Cerrar el desglose») abre el detalle; **el atajo «Ver historial completo» bajo el libro se retira** (la puerta al historial queda en «Detalles»). Revierte D-T3·1 y la adenda 4 de la T5; `hasHistoryToExplain()` murió con su consumidor.
+- ⚠️ El pliegue es Alpine y el HTML lleva SIEMPRE todas las líneas (guarda M) — `x-data` va ANTES de `data-book` porque la guarda cuenta el literal `data-book>`.
+- ▶ Queda el OJO del owner (V18–V22 de `VERIFICACION-E2E-CAJON.md` §5.sexies; los `LB-*` re-sembrados: `LB-ORDEN` IMPOSIBLE, `LB-BAJADA` saldado, `LB-CORTESIA` con motivo; sonda 53/53 y 17/17 en el panel). · **CÓDIGO COMPLETO — T1 (los HECHOS, `#306`), T2 (el LIBRO en el dominio, `#308`), T3·1 (el CONTRATO + la API + el CAJÓN, `#310`), T3·2 (PANEL + HOJA + PUERTA, `#311`), T3·3 (CORREOS + POST-FORM + EL TOPE, `#312`) y T3·4 (LA RETIRADA del modelo de dos ejes, `#315`) EN EL ÁRBOL** (2026-09-01); sigue
+- 🟦 solo por el OJO del owner —
+- ▶ ❗❗❗ **T3·4 HECHA (§6.3.6 diseño · §6.3.7 ejecución)**: **el libro es el ÚNICO compositor** — mueren `OrderLedger`, `OrderFinancialSummary`, `ReservationFinancials`, `GateBuckets` (→ **`LineFacts`**: por línea `charged · depositSplit · editDelta · courtesy`, y de ahí `birthValue`, `onlineAtBirth` y `onlineNow`, **SIN cascada**), `OrderAdjustment::breakdownLabel()` (su rama mixta vive en `MovementLabel::mixed`), 21 métodos de `Order` del modelo viejo, `tickets.ledger.*` y las claves del cargo de puerta (es/en/fr).
+- ⚠️⚠️ **La cortesía de un reembolso mide lo debido con el LIBRO** (`OrderBook::owedToCustomerCents`: la reserva si va atado a línea, el pedido si es total — la misma cifra que el panel sugiere) y **el reembolso total se prorratea entre RESERVAS por `onlineAtBirth`** (D-T3·24).
+- ⚠️⚠️ **`onlineDueCents` = Σ `onlineNow` de las líneas vivas** (D-T3·23): su único uso real es el nacimiento.
+- ⚠️⚠️ **Dos tests aseveraban `aCobrarPuerta` tras una bajada desde el panel y leían el CUBO**: el libro netea la bajada contra el suplemento en UN saldo (`#305`), así que lo que esos casos protegen es la línea ESCRITA (`written()`), no el saldo.
+- ⚠️ **Un fixture que registra `recordEdit(+400)` sin subir la fila hace nacer la línea en 6,00** (birth = fila − delta): legaliza la fila, no la aserción.
+- ⚠️ `INVARIANTES` `PAY-16`/`PAY-17` son ya las identidades I1·I3 / I2·I4 del libro y `desglose-dinero-cliente.md` es
+- 📜 HISTÓRICO.
+- ▶ ❗❗❗ **T3·3 HECHA (§6.3.4 diseño · §6.3.5 ejecución)**: **cae el tope del descuento mixto** (`applyCredit` escribe el crédito ENTERO; lo que la puerta no absorbe es saldo «a devolver en el parque», y **el «a tu favor» ya no existe en ninguna superficie ni clave**) y **los cinco correos de dinero pintan el libro AL ENVIAR** con `EmailBookBlock` (el reenvío tras una edición dice el saldo nuevo).
+- ⚠️⚠️ **`OrderItemModified` no lleva NINGÚN importe** (solo `changes`) y `OrderItemEditor::creditReduction` ya no existe: la bajada es `recordEdit(−Δ)`.
+- ⚠️⚠️ **El modelo viejo deja de cerrar para un crédito sin cobertura A PROPÓSITO** (`PAY-16`/`PAY-17` llevan la nota; B/C del tope fuera del puente): no lo «arregles» restaurando el `min()` (y desde la T3·4 ya no existe: se retiró con el modelo).
+- ⚠️ **Si aseveras un importe en un correo, acota a la fila `<tr data-book-…>`**: la tarjeta de producto imprime los mismos números y una mutación pasó en verde. ·
+- ▶ ❗❗❗ **T3·2 HECHA (§6.3.2 diseño · §6.3.3 ejecución)**: **UN PINTOR** (`reservation-financials.blade.php`, recibe un `OrderBook` del pedido o de la reserva) para el bloque «Totales del pedido», la tarjeta de cada reserva y el modal del calendario; las tablas dicen Total/Pagado del libro; `ViewOrder` sugiere `owedToCustomerCents()`; la hoja con precios = líneas de producto + libro + UNA caja de saldo; la puerta pinta por CLASE (`data-gate-pending` · `data-gate-refund` · `data-gate-under-review`).
+- ⚠️⚠️ **Si tocas un test de dinero del panel: el libro RECHAZA los fixtures que «pagan» sin `Payment`, facturan un total distinto de sus líneas o escriben un ajuste de puerta sin cambiar el valor de la línea** — diez ficheros lo hacían y se legalizaron; no excepciones la identidad.
+- ⚠️ **Las etiquetas del panel son las del cliente** (`tickets.journal.*`); el panel solo pone títulos y rótulos de saldo (`admin.orders.book.*`).
+- ⚠️ **`LedgerSingleSourceTest::STILL_ON_THE_OLD_MODEL` solo encoge** (queda `OrderConfirmation`, T3·3).
+- ⚠️ El «a tu favor» sigue en `items-list`, hoja y puerta hasta la T3·3.
+- ▶ ❗❗ **T3·1 HECHA (§6.3.1)**: `Ledger` es el libro (incompatible a propósito: 0 LIVE y un solo consumidor, que cambia en el mismo commit), `LedgerResource` TRANSCRIBE `OrderBook` sin componer nada, el cajón pinta movimientos · Total · liquidaciones · Pagado · saldo por clase, y con `is_consistent=false` solo Total, cobros y la frase (`#132`).
+- ⚠️⚠️ **Tres fixtures «pagados» SIN `Payment` responden «en revisión» con el libro** (la identidad I2): se LEGALIZAN con un cobro real por `onlineDueCents()`, nunca se excepciona la identidad.
+- ⚠️ **`has_deposit` por reserva cuenta solo líneas VIVAS** (T2): una reserva cancelada dice `false`.
+- ⚠️ **La mutación de `shows_deposit_note` sin la clase del saldo pasó en VERDE** — faltaba el caso NORMAL de una fiesta ya celebrada (resto liquidado → `settled`, sin nota).
+- ⚠️ Con DOS reservas, cada línea de valor lleva delante el nombre de la suya (§4.3), y dos cancelaciones del mismo segundo las ordena el desempate del libro: localiza por etiqueta, no por posición. spec
+- ✅ del owner (`[DECIDIDO owner, 2026-09-01]`, `#305`): cliente y operador ven CADA gestión como una línea + o − con su fecha, un Total y un **SALDO = Total − pagado** que se liquida EN EL PARQUE (positivo se paga, negativo se devuelve); **nada se cobra ni se devuelve online post-reserva** (`#244` en pie); el descuento mixto es una línea más (cae el tope de la T4, `#296`); el reembolso manual del panel se queda.
+- ⚠️ **Sustituye a los dos ejes de la fila de abajo en cuanto se ejecute.**
+- ▶ **EMPIEZA POR §4.1 (la aritmética por línea → reserva → pedido) y §4.2 (qué escribe cada gestión)**; §1.4 es la prueba: el libro coincide con `OrderLedger` en **19/22** pedidos y los 3 restantes son datos sucios (`T4-PRB01` está FABRICADO con `Order.total` = la señal).
+- ⚠️⚠️ **Tres hechos faltan hoy y son la raíz del fantasma de la señal** (§1.3): la bajada 100 % online se guarda como ajuste de **0 €** (`recordReductionMarker`), la bajada parcialmente cubierta pierde el resto, y la compensación se DERIVA al leer.
+- ⚠️ `Order.total` es lo FACTURADO (`OrderCreator` guarda el subtotal): el docblock de `applyExtraDue` que dice «lo cobrado online» es falso.
+- ▶ §6: tres tandas (T1 hechos · T2 libro con el modelo viejo de ORÁCULO · T3 superficies + tope + retirada), cada una con `VERIFY_CONC=1`.
+- ▶ ❗❗ **T1 HECHA (§6.1): `order_adjustments.type` es el ÚNICO discriminador** (`deposit_split` · `edit` · `mixed` · `courtesy`; la columna `kind` de la spec NO hizo falta), **una bajada es UNA fila con su delta entero** (`Order::recordEdit`, con signo; muere la cascada de créditos y el marcador de 0 €), **la cortesía se escribe al reembolsar** (en la misma transacción, atribuida a línea; `paid_in_person` no la genera) y **`itemOriginalOnlineCents` es un HECHO** (`GateBuckets::onlineAtBirth` = fila − Σ deltas − reparto), no una reconstrucción.
+- ⚠️ **`GateBuckets` fue TEMPORAL** (replicaba en LECTURA la cascada que antes se escribía, para que el modelo de dos ejes pintara las MISMAS cifras; la foto puente `ledger-bridge.json` fue idéntica en 15/15) **y murió en la T3·4 con la foto**: hoy es `LineFacts`.
+- ⚠️ **Tres fixtures resultaron ILEGALES al medirlos** (`Order.total` = la parte online; un pack cancelado «pagado» que ningún cobro incluía; una bajada 3→1 escrita como −12,00): se LEGALIZARON, no se excepcionó la identidad.
+- ⚠️ La migración de hechos es autocontenida (sin clases de la app) e idempotente.
+- ▶ ❗❗ **T2 HECHA (§6.2): `Booking\Services\OrderBook` (+ `Movement` · `Settlement` · `Balance` · `MovementLabel`)** compone el libro por pedido y por reserva desde los hechos —lectura pura, sin catálogo ni consultas, y **sin nombrar `Payments\Models`**: `Order::collectedPaymentFacts()`/`refundFacts()` traducen en la costura—, con **I1–I4 en ejecución** y las 17 etiquetas `tickets.journal.*` (es/en/fr/zh_CN).
+- ⚠️⚠️ **NO SE PINTA hasta la T3**: `OrderLedger` sigue siendo la pantalla y hace de ORÁCULO — la guarda puente (`OrderFinancialInvariantsTest::assertBookBridge`) es idéntica en los 15 escenarios y el corpus local da 37/40 (2 en revisión en los dos, `R-REM7YW` donde el viejo se contradice entre pedido y reserva).
+- ⚠️⚠️ **La T1 escribía una CORTESÍA FALSA con «también cancelar»** (flujo real del panel): lo debido se medía antes de la cancelación que viaja con el reembolso; corregido en los dos reembolsos.
+- ⚠️ `has_deposit` por reserva era CATÁLOGO en el modelo viejo; el libro lo define como HECHO (D-T2·1, §6.2 tiene nueve decisiones derivadas vetables). **La T3·4 lo retiró todo** (§6.3.6 diseño · §6.3.7 ejecución, `#315`): `OrderLedger`, `OrderFinancialSummary`, `ReservationFinancials`, `GateBuckets` → `LineFacts`, la rama mixta de `breakdownLabel()`, `tickets.ledger.*` salvo las tres notas, el puente y `ledger-bridge.json`, sus tests.

@@ -9,6 +9,18 @@
 > `slots.end_time`) en vez de concatenarlas —que es lo que lo habría atado al dialecto—, así que el
 > reparto es **EXACTO** y no hay discrepancia ninguna que aceptar. El texto de §3.4 está corregido.
 
+## §0 · Antes de tocar
+
+- **EJECUTADA** (`#126`): «Mis reservas» lista por RESERVA, con el pasado en un historial aparte tras un CTA.
+- **§3.4: los dos ámbitos son UN predicado con dos lados.** Si se separan, una reserva puede no salir en
+  ninguna de las dos pantallas, y eso no falla ni avisa. El corte fino de `isFinishedInPractice()` SÍ es
+  expresable en SQL comparando `slots.date` y `slots.end_time` (sin concatenar): el reparto es EXACTO.
+- **§4.2: el ledger ya no se despliega aquí** — desde `#129` vive en «Mis pedidos» y «Ver pedido» LLEVA
+  allí; desde `#130` esta pantalla **no enseña NINGÚN importe**.
+- Dos `whereNotNull` redundantes se tapan entre sí y ninguna se puede medir mutándola (la lección de `#112`).
+- El enlace al justificante de un menor invitado vive aquí desde `#401` (`waiver-por-reserva.md` §13).
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 Hoy la zona `ORDERS` del cajón lista **PEDIDOS**. Un pedido puede contener varias reservas de fechas

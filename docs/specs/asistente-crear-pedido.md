@@ -15,6 +15,28 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Las cuatro tandas en el árbol** (`#462` · `#463` · `#464` · `#466`, más `#467` el bloque del desenlace);
+  el owner validó los pasos 1→7 y queda su segunda pasada sobre ese bloque. Siete pasos: Cliente · Producto ·
+  Cuándo · Datos · Extras · Carrito · Pago. Las decisiones del owner están en §3.
+- **La regla del salto vive en UN sitio (`stepHasSomethingToAsk()`) y un paso sin nada que preguntar SE
+  SALTA** (16 de 18 productos no tienen ni un campo). **El auto-avance se engancha al CAMBIO, jamás al ESTADO**
+  (si no, volver atrás rebota). «Añadir al carrito» cuelga del ÚLTIMO paso con algo que preguntar, que es
+  VARIABLE: por eso vive en la navegación. Navegar y pintar no son el mismo predicado (`stepIsSkipped()`).
+- **`pickProduct()` y `pickDay()` son las ÚNICAS puertas y RE-VALIDAN en el servidor** (`AFORO-02`); los tests
+  las empujan a ellas, no a `data.*`. «Más info» es de LECTURA: no elige. La tira de 14 días se RETIRÓ
+  (`[DECIDIDO owner]`). Las ventajas se leen con `tr()` o salen en los tres idiomas.
+- **La CESTA entra en la oferta del panel**: la cuenta subió entera a `CartOccupants::forCart()` + `packs()`,
+  la derivación ÚNICA; la huella de la cesta va en la clave del memo. `$calMonth` es una propiedad PÚBLICA:
+  validarla dentro de la acción daba sensación de defensa sin defender nada.
+- **El desenlace no promete nada que no haya pasado**: hay clientes SIN correo y con ellos
+  `ManualOrderFulfiller` no envía nada; el bloque usa el MISMO predicado (`filled($email)`) y la guarda compara
+  con lo NOTIFICADO. `create()` vacía el carrito (es lo que impide cobrar dos veces); del desenlace no se
+  navega. «Lo que recibe el cliente» es UN bloque con una fila por entregable y TRES estados.
+- `assertSee` no ve un modal de Filament; una guarda de salto comprueba el MOVIMIENTO, no solo el predicado.
+  Cinco guardas `CreateManualOrder*Test` con sus arneses de mutación. Anexo al final con la fila del enrutador.
+
 ## 1. El encargo
 
 Del owner, sobre la pantalla de crear pedido:
@@ -492,3 +514,44 @@ y los enlaces piden un deslizamiento, que es su sitio.
 (`scripts/mutar-asistente-t4.sh`) · el caso de los menores re-apuntado por sujeto (era un *toast*) ·
 la nueva superficie registrada en `LedgerSingleSourceTest` · sonda de navegador (0 controles bajo 44
 en carrito y desenlace, 810 px de 810, sin desbordamiento) · Pint · docs-check · **suite 4.290 verde**.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El ASISTENTE de «Crear pedido» · los pasos · el auto-avance · el carrito · la pantalla de éxito»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/asistente-crear-pedido.md` · `docs/DEUDA.md` · `docs/specs/auditoria-panel-admin.md`.
+
+- **`docs/specs/asistente-crear-pedido.md`**
+- 🟦 **LAS CUATRO TANDAS EN EL ÁRBOL** (`#462` · `#463` · `#464` · **`#466`**, 2026-09-04; queda el OJO del owner) — de tres pasos a **siete**: Cliente · Producto · Cuándo · Datos · Extras · Carrito · Pago.
+- ❗❗❗ **SI TOCAS LOS PASOS**: la regla del salto vive en **UN** sitio (`stepHasSomethingToAsk()`) y **un paso sin nada que preguntar SE SALTA** — medido: de 18 productos vendibles **16 no tienen ni un campo que rellenar**, así que sin el salto vender una entrada obligaba a pasar por una pantalla en blanco.
+- ⚠️⚠️ **El auto-avance se engancha al CAMBIO, jamás al ESTADO**: si mirase el estado, volver atrás a «Cuándo» con la hora puesta rebotaría hacia adelante y el operador quedaría atrapado sin poder corregir.
+- ⚠️⚠️ **«Añadir al carrito» cuelga del ÚLTIMO paso con algo que preguntar, que es VARIABLE** (Extras si los hay; si no Datos; si no Cuándo) — por eso vive en la navegación (`manual-order-nav.blade.php`) y no dentro del formulario de un paso fijo.
+- ⚠️⚠️ **El predicado de NAVEGAR y el de PINTAR no son el mismo**: `stepIsSkipped()` exige que haya producto, porque el indicador decía «sin nada que rellenar» en el paso 1 sin que hubiera nada elegido — *afirmar lo que aún no se sabe*, y lo vio la sonda, no un test.
+- ⚠️ **`STEP_PRODUCTS` ya no existe.**
+- ▶ **Tres decisiones del owner** (§3): **la CANTIDAD va arriba de la pantalla de fecha** (así las horas dicen la verdad para esa cantidad) · **el calendario resalta días reservables y las plazas se ven con las horas** —pintarlas por día cuesta **709 consultas y 11,4 s** y NO hay vía agregada por rango: el semáforo sería tanda propia sobre AFORO— · **el post-form NO se renombra**.
+- ✅ **§2.3 CERRADA por `#464`** (era la única corrección de DOMINIO del encargo): web y panel no divergían —los dos son `SlotOffer`— pero **el panel no le pasaba la cesta**; con «añadir más productos» eso pasó de borde a camino normal.
+- ⚠️ **Si escribes una guarda de salto, comprueba el MOVIMIENTO y no solo el predicado**: dos mutaciones no mordieron por eso, y hizo falta un tercer sujeto (una entrada CON complemento) para hacerlo observable. Guarda: `CreateManualOrderStepsTest` (13 casos · 9/9 mutaciones) —
+- ❗❗❗ **`#463` SI TOCAS EL ELEGIDOR DE PRODUCTO** (§8): murió el `Select` plano de 18 opciones —el crítico **C1**, el que ya costó **61,00 €** y una sala sin reservar— y **lo que cierra el agujero es el AGRUPADO**, no la tarjeta: se elige dentro de «ENTRADAS» o dentro de «PACKS Y CELEBRACIONES», y el **rango de invitados**, que solo pintan los packs, es la marca inconfundible de un producto de grupo.
+- ⚠️⚠️ **`pickProduct()` es la ÚNICA puerta y RE-VALIDA en el servidor** (un `wire:click` se puede llamar con cualquier id, `AFORO-02`) y hace los mismos olvidos que hacía el `afterStateUpdated` del `Select` —hora, menores, campos, complementos—; los tests empujan `pickProduct`, no `data.sel_product_id`.
+- ⚠️ **«Más info» es de LECTURA: abrirlo NO elige el producto**, o el operador no podría comparar dos candidatos sin comprometerse con el primero.
+- ⚠️⚠️ **Las ventajas se leen con `tr()`**: `features` es traducible y recorrer el mapa a mano las sacó **en los tres idiomas a la vez** —lo vio la sonda, no un test—.
+- ⚠️ **`productOptions()` murió con el `Select`; `productLabel()` NO** (es el rótulo de la línea en el carrito).
+- ⚠️ **`assertSee` no ve un modal de Filament** (`wire:partial`, la trampa de `#161`): se asevera por conducta sobre `productInfoFields()`.
+- ⚠️ **`ticket_types.conditions` NO se pinta**: cero consumidores y el catálogo no la edita (ficha en `DEUDA.md`). Guarda: `CreateManualOrderProductCardsTest` (11 casos · 9/9 mutaciones) —
+- ❗❗❗ **`#464` SI TOCAS LA FECHA, LAS HORAS O `CartOccupants`** (§9): manda **un calendario grande siempre visible** y `[DECIDIDO owner]` **la tira de 14 días SE RETIRA** —eran dos puertas a la misma pregunta y costaba 90 px—, lo que **CORRIGE a `auditoria-panel-admin.md` §7**, que la daba por buena cuando el calendario vivía plegado tras un CTA (medido: **popover de 259×248 px, celdas de 29×28**, dos toques).
+- ⚠️ **`pickDay()` es la ÚNICA puerta** y con ella muere `onDateChosen()`, que existía porque había dos escritores; el servidor **re-valida** el día (`AFORO-02`) y las flechas saltan al mes **OFRECIBLE**, no al de al lado.
+- ⚠️⚠️ **La CESTA entra en la oferta del panel**: `timeMap()` pasa los ocupantes provisionales y —medido en navegador— con 7 entradas en el carrito la segunda línea ofrece **33 plazas donde antes decía 40**. **La cuenta NO se escribe en el panel**: subió entera a **`CartOccupants::forCart()` + `packs()`**, que sigue siendo la derivación ÚNICA (con el saneado y el filtro de «qué producto retiene aforo» DENTRO, porque son parte de la respuesta); `OrderCreator` no cambia y su `otherPackOccupants()` se queda.
+- ⚠️ **La huella de la cesta va en la clave del memo** —contar líneas no vale—, la lección de `#329` por la otra puerta.
+- ⚠️⚠️ **Si escribes una guarda de esta rejilla, mira la PANTALLA y no solo el modelo de vista**: quitar el `@disabled` o la marca del día elegido pasaba en VERDE —el servidor sigue rechazando, así que el operador pulsa y no pasa nada—.
+- ⚠️⚠️ **`$calMonth` es una propiedad PÚBLICA**: validar el mes dentro de `goToMonth()` no mordía porque el LECTOR ya lo descarta, y el navegador puede escribirla sin pasar por la acción — la defensa de fuera **daba sensación de defensa sin defender nada**.
+- ⚠️ **La inicial del día de la semana no distingue martes de miércoles** (`L M M J V S D`): el rótulo es la abreviatura del idioma y la guarda vigila la PROPIEDAD, no las letras.
+- ⚠️ **Las franjas se traen a la vista al elegir día** (evento `cmo-day-chosen`): con el calendario delante caen fuera de una tablet de 810 px.
+- ▶ Guardas: `CreateManualOrderCalendarTest` (7) · `CreateManualOrderCartAvailabilityTest` (7) · **14/14 mutaciones** (`scripts/mutar-asistente-t3.sh`) · los SIETE escenarios de `purchase:verify-oversell` —
+- ❗❗❗ **`#466` SI TOCAS EL DESENLACE O LO QUE SE LE ENVÍA AL CLIENTE** (§10): la pantalla de «pedido creado» **no puede prometer nada que no haya pasado** — **hay clientes SIN correo** (el alta de mostrador solo pide teléfono, `#263`) y con ellos `ManualOrderFulfiller` **no envía NADA**: ni confirmación, ni formulario de invitados, ni justificante. El bloque del correo usa el **MISMO predicado** que el fulfiller (`filled($email)`) y las listas, sus **MISMAS autoridades**; la guarda **compara con lo que se ha NOTIFICADO de verdad**, no con un texto.
+- ⚠️⚠️ **La redirección a la ficha era también lo que impedía COBRAR DOS VECES**: hoy lo impide que `create()` **vacíe el carrito**, con caso que llama a `create()` dos veces.
+- ⚠️ **Del desenlace no se navega** (`next`/`back`/`goToStep` cerrados); la única salida es «Crear otro pedido», que limpia todo **incluido el cliente**.
+- ⚠️ El dinero lo pinta `reservation-financials`, el pintor ÚNICO (`#311`): aquí no se compone ni un importe, y la superficie está registrada en `LedgerSingleSourceTest`.
+- ⚠️ **Los controles bajo 44 px del carrito eran CUATRO y eran los chips del indicador**, no los cinco «de quitar línea» que la spec daba de memoria: el `min-height` va en el BOTÓN del chip, que es quien decide su alto.
+- ⚠️⚠️ **`#467` (el OJO del owner): «Lo que recibe el cliente» es UN bloque con una FILA por entregable** —qué es · de qué reserva · estado en pastilla · enlace copiable debajo—, no dos listas que el operador tenía que emparejar de cabeza; y **los estados son TRES**: «Enviado a …», «Entrégalo tú» y **«No enviado»** —la confirmación no tiene enlace, así que pedir que se «entregue» era mandar a hacer algo que no existe—.
+- ⚠️ La pista del partial de copiar es opcional (`hint`) y su fila ganó diana táctil (38/36 → 44), lo que arregla también las otras superficies que lo incluyen.
+- ▶ Guarda: `CreateManualOrderDoneTest` (6 casos · **15/15** mutaciones, `scripts/mutar-asistente-t4.sh`)

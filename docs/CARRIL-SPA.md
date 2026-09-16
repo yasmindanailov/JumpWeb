@@ -112,19 +112,21 @@ cajón mueve la web entera), `resources/views/components/layout.blade.php` (la p
 globales de las guardas** (`MotionBudgetTest`, `ShapeScaleTest`, `TouchTargetTest`,
 `InteractionColourIsNotAZoneTest`, `ActionFillTest`).
 
-**Los documentos calientes**:
-- `DECISIONES.md`: tus números salen de **550–579**, y la entrada se añade **al final del fichero**.
-- `ESTADO.md`: toca **solo tu fila** del cuadro de carriles y tu propio bloque; los avisos al otro van
-  ahí como «▶ Para el agente de la web: …», y quien lo lee y actúa lo retira.
-- **La línea «Suite N en verde»** de `ESTADO.md` la lee el `pre-push` y tiene que coincidir con la suite
-  REAL. Con dos carriles cambiando tests, **quien empuja la vuelve a medir tras su `git pull --rebase`**;
-  un conflicto en esa línea no se resuelve eligiendo una cifra, se resuelve **corriendo la suite**.
-  ⚠️⚠️ **Y NO la busques con `grep 'Suite [0-9]'`: no la encuentra** (`#563`, un push rechazado). El
-  formato real lleva el número dentro de negritas —`Suite **4792 en verde** (30.187 aserciones…)`—, así
-  que el patrón obvio da cero resultados y se concluye que la línea no existe. Búscala **por la cifra
-  vieja** o por `en verde`. El hook dice exactamente qué declara y qué midió, así que si llegas ahí se
-  arregla en un minuto: lo caro es creer que no hay nada que actualizar.
-- `CLAUDE.md`, `DEUDA.md`, `00-REFACTOR.md`: tus filas y tus secciones; no reescribas las del otro.
+**Los documentos calientes** (desde F1 del programa, `DECISIONES #617`→`#621`, 2026-09-16):
+- Decisiones: tus números salen de **550–579**, y la entrada se añade **al final de
+  `docs/decisiones/500-599.md`** (≤ 1,5 KB; `DECISIONES.md` es solo el índice).
+- **`docs/carriles/spa.md` es TU fichero de estado** y nadie más lo escribe: foto, por dónde retomar,
+  ficheros y buzón. Los avisos a la web van en tu buzón («Para el carril de la web: …»); la web anota
+  «atendido» en el suyo y tú lo retiras en tu siguiente cierre. `docs/ESTADO.md` es el índice de carriles
+  y no se toca al trabajar.
+- **El contador de la suite ya NO está en ningún documento**: va en el trailer del commit de cierre
+  («Verificación: suite N tests / M aserciones (Xs) · …») y el `pre-push` lo compara con la suite que
+  acaba de correr (`#618`). Con dos carriles cambiando tests, **quien empuja la vuelve a medir tras su
+  `git pull --rebase`** y escribe esa cifra en el commit; sin trailer, o con la cifra de otra suite, el
+  push se corta y el hook dice qué declara y qué midió. (Hasta el 2026-09-16 era una línea «Suite N en
+  verde» de `ESTADO.md` con el número dentro de negritas, y `#563` fue un push rechazado por no encontrarla.)
+- `CLAUDE.md` (una línea por fila), `DEUDA.md`, `00-REFACTOR.md`: tus filas y tus secciones; no reescribas
+  las del otro. Las trampas del cajón van al `§0` de `specs/sidebar-spa.md`, nunca a la fila.
 
 **El ritmo**: `git pull --rebase` antes de cada push · empuja cada unidad verde pronto · **commit por
 NOMBRE de fichero, nunca `git add -A`** (en `main` hay material del cliente ignorado y a veces ficheros
@@ -245,3 +247,17 @@ aquí y no se reescribe lo de arriba: **la corrección va delante del texto que 
 del cajón viven fuera de esos bloques (`.auth__*`, `.acct__*`, `.whoblock__*`, `.guardnote__*`,
 `.acc-tile__name`…), más dos familias enteras (`.qr-pass__*`, `.dep-pick__*`). ▶ *Lo que define al cajón
 es qué clase EMITE, no dónde está escrita su regla* — el censo bueno está en `SidebarBodySizeTest`.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El carril del SPA en el OTRO ordenador · rediseñar el cajón (Fase 4) · el material de PlayJump en otra máquina · la rama `cliente/playjump` · qué ficheros son de cada carril»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/CARRIL-SPA.md` · `docs/ESTADO.md`.
+
+- **`docs/CARRIL-SPA.md`** (`#530`) —
+- ❗❗❗ **LO DEL CLIENTE NO ESTÁ EN `main` Y NO PUEDE ESTARLO** (`#1`): paquete de tema, marca, kit, copias del canvas y datos del catálogo viajan en la rama **huérfana `cliente/playjump`**, que se coloca con `git show origin/cliente/playjump:aplicar.sh \| bash` (extrae con `git archive \| tar`, **nunca con checkout**, que lo dejaría en el índice) y **nunca se fusiona**.
+- ⚠️⚠️ **Si cambias algo del cliente, cámbialo también en la rama.**
+- ▶ **El reparto por FICHERO** está en su §5 —cajón (`resources/js/sidebar/**`, `lang/*/tickets.php` y `account.php`, sus bloques de `site.css`) contra la web (`pages/**`, `components/site/**`, `landing.css`)— y **lo compartido (tokens, `layout.blade.php`, `app.js`, las listas globales de las guardas) se avisa ANTES en `ESTADO.md`**.
+- ⚠️⚠️ **La línea «Suite N en verde» la cambian los dos carriles**: quien empuja la re-mide tras su `git pull --rebase`.
+- ⚠️ **`npm install`/`uninstall` poda `playwright-core`** (va sin guardar).
+- ▶ Su §6 son las reglas de trabajo del owner, que antes vivían solo en la memoria de un ordenador

@@ -18,6 +18,29 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Es la primera puerta por la que el CLIENTE mueve AFORO**: `GuestCountAdjuster` toma el lock de zona/día
+  como PRIMERA sentencia (`AFORO-01`, zona y fecha resueltas fuera) y el dinero va POST-COMMIT — la receta del
+  EDITOR, no la de `PostFormAddons`. Está en el `CRITICAL_RE` → `VERIFY_CONC=1`; escenario `guest-count` de
+  `purchase:verify-oversell`, visto FALLAR (96 invitados donde caben 30). Código completo (`#444`); queda el
+  OJO del owner. **Empieza por §8** (ejecución) y §7.1 (revisión adversarial).
+- **El orden del guardado del post-form es testigo → cantidad → RE-LEER la reserva → fichas → extras**:
+  ajustar antes de capturar el testigo deja los extras sin poder comprarse; ajustar sin re-leer recorta las
+  fichas contra la cantidad VIEJA.
+- **El SUELO son dos motivos que no se funden** (el mínimo del pack se resuelve llamando; «ya has asignado más
+  plazas», quitando a alguien de la lista); bajar del `min_qty` es excepción del OPERADOR, no del cliente.
+  Techo: el `max_qty` del pack. Plazo: `packs.guest_count_cutoff_hours` (vacío = 24 h). Basta con el libro.
+- **`guest_count` ausente = NO LO TOQUES**, nunca un `?? $quantity` (`#413` midió que un cuerpo parcial borraba
+  las fichas de ocho menores).
+- **`Booking` no puede mirar a `Identity`**: lo ya asignado llega por `ReservationPlacesTaken`
+  (`GuardianPlaces`), con el binding en el composition root.
+- **`#571`: el campo vive FUERA del `<form>` y no se enviaba desde el despliegue del 08-09**: `form="gf-form"`,
+  verificado en navegador (20 → 19), guarda `GuestCountSurfacesTest`. *Que el servidor acepte un campo no es
+  que el formulario lo envíe.*
+- El orden de locks del post-form ya se cruza hoy sin esta feature (ficha en `DEUDA.md`); esto no añade arista.
+- Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 ### 1.1 · Lo que pasa hoy, REPRODUCIDO
@@ -405,3 +428,23 @@ que `guest_count` declarara **por qué** es opcional.
   Laravel**, que el navegador no resuelve — ninguna guarda del repo mira `guestform`, así que hay una
   nueva que exige una sola forma con sus dos marcadores.
 - **Un paso de despliegue, y es de DATO**: nada más. El plazo cae a 24 h sin configurar.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«AÑADIR o QUITAR invitados de una reserva ya pagada · el número de invitados en el post-form · el plazo para cambiarlo · bajar por debajo de lo asignado»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/invitados-en-post-form.md` · `docs/specs/complementos-post-reserva.md` · `docs/DEUDA.md`.
+
+- **`docs/specs/invitados-en-post-form.md`**
+- 🟦 **CÓDIGO COMPLETO EN EL ÁRBOL** (`#444`, 2026-09-07; queda el OJO del owner).
+- ▶ **EMPIEZA POR §8, la ejecución**; sigue por §7.1, la revisión adversarial.
+- ❗❗❗ **ES LA PRIMERA PUERTA POR LA QUE EL CLIENTE MUEVE AFORO**, y eso es justo lo que `complementos-post-reserva.md` §4.3·5 evitó a propósito («esta feature no toca aforo, y esa es la mitad de su coste»).
+- ⚠️⚠️ **SI TOCAS `GuestCountAdjuster`**: toma el lock de zona/día **como PRIMERA sentencia** (`AFORO-01`, con zona y fecha resueltas FUERA y como literales) y el dinero va **POST-COMMIT**, que es la receta del EDITOR y **no** la de `PostFormAddons` —aquélla toma `orders` primero porque no toca aforo—. Está en el **`CRITICAL_RE`** y en `CriticalPathGateTest`: tocarlo exige `VERIFY_CONC=1`.
+- ❗❗ **SI TOCAS EL ORDEN DEL GUARDADO DEL POST-FORM**: es **testigo → cantidad → RE-LEER la reserva → fichas → extras**, y las tres reglas se pagaron leyendo, no descubriendo (§7.1·A2/A3) — ajustar antes de capturar el testigo deja **los extras sin poder comprarse nunca**; ajustar sin re-leer **recorta las fichas contra la cantidad VIEJA**, que es el hueco original dentro de su propio arreglo.
+- ⚠️⚠️ **EL SUELO SON DOS MOTIVOS Y NO SE FUNDEN**: el mínimo del pack se resuelve llamando al parque; «ya has asignado más plazas» se resuelve quitando a alguien de la lista. Lo segundo cierra por su lado la ficha de la hoja de sala que imprimía **plazas NEGATIVAS**.
+- ⚠️ Bajar del `min_qty` es excepción del OPERADOR con permiso propio: **al cliente no se le da**.
+- ⚠️ **`Booking` no puede mirar a `Identity`**, así que lo ya asignado llega por `ReservationPlacesTaken` (lo implementa `GuardianPlaces`) **con el binding en el composition root** — ni `BookingServiceProvider` puede nombrar al implementador.
+- ⚠️ **`guest_count` ausente = NO LO TOQUES**, nunca un `?? $quantity`: es la semántica que `#413` impuso tras medir que un cuerpo parcial borraba las fichas de ocho menores.
+- ▶ **Cuatro `[DECIDIDO owner, 2026-09-07]`**: subir Y bajar (*«no hay arbitraje… aparte lo ve el operador»*) · plazo de **un día como mínimo** (`packs.guest_count_cutoff_hours`, vacío = 24 h) · techo el **`max_qty` del pack** · **basta con el libro**, sin correo al operador.
+- ▶ **16/16 mutaciones** y escenario propio de `purchase:verify-oversell` (`guest-count`) **visto FALLAR**: **96 invitados donde caben 30**.
+- ⚠️ El ORDEN de locks del post-form **ya se cruza hoy sin esta feature** (`MixedPartySurcharge` items→orders contra `PostFormAddons` orders→items): la forma se interbloquea —4 de 8 procesos— y esto **no añade arista**; ficha propia en `DEUDA.md`

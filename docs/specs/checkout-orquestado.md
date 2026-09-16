@@ -8,6 +8,21 @@
 > **v2 (2026-08-13)**: la v1 tenía DOS afirmaciones falsas que hacían el diseño inaplicable, y
 > rompía el gate documental. Las tres las encontró la revisión; §7 lista qué cambió.
 
+## §0 · Antes de tocar
+
+- **La secuencia «admitir → crear → abrir cobro» vive en el dominio** (`CheckoutOrchestrator`, tras los
+  puertos `ReservationCheckout` y `PaymentInitiation`), no en cada controlador. Está implementada (`#37`);
+  `CheckoutOrchestrator` está en el `CRITICAL_RE` → `VERIFY_CONC=1` con `purchase:verify-oversell` y
+  `redsys:verify-concurrency`. Invariantes: `INVARIANTES.md` §1 (`PAY-04`) y §2 (`AFORO-10`).
+- **El ORDEN es la regla y ninguna guarda de arquitectura lo ve** (un controlador que llama a los tres
+  servicios correctos en orden equivocado pasa `ApiBoundariesTest`): (1) admitir ANTES de crear y
+  CONSUMIENDO ficha —un chequeo que no cuenta no limita—; (2) crear SIEMPRE con ventana de retención: el
+  tercer parámetro de `createPendingOrder()` con `null` es un pedido FIRME que retiene aforo para siempre;
+  (3) abrir el cobro DESPUÉS de que el pedido exista; (4) si el cobro no abre, soltar el pedido en un primer
+  intento y no tocarlo en un reintento.
+- **La v1 de esta spec tenía dos afirmaciones falsas** que la hacían inaplicable; §7 lista qué cambió.
+- **El segundo driver de pasarela va a Fase 6** (`[DECIDIDO owner]`), no aquí.
+
 ## 1. Contexto y problema
 
 La secuencia «**admitir → crear → abrir cobro**» está escrita a mano en cada superficie de

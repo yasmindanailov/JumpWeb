@@ -8,6 +8,23 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Construida sobre la portada y desplegada a staging** (`#544`→`#549`, §3.ter). **Las dos variantes son
+  PROTOTIPO LOCAL** (`?fachada=1|2`, solo en `local`): su colocación definitiva y si el laboratorio se retira
+  son del owner; mientras tanto `IllustrationKit::SLOTS` arrastra 18 ranuras temporales.
+- **El kit NO viaja en el `rsync`** (`#286`, es arte del cliente): un despliegue nunca lo actualiza; se sube a
+  mano y se valida con `php artisan kit:build --check` en el servidor. Igual el `client.css` (iba trece tokens
+  por detrás en staging).
+- **El canvas lo llama «la pasada de vestido» y son CUATRO ejes** (iconos · imagen · movimiento · piezas de
+  fachada), a la vez y con presupuesto. D1: sobre la PORTADA (desviación deliberada) · D2: techo de BYTES y
+  `<use>` obligatorio (las dos trampas de `#266`: una animación sobre `<defs>` no pinta; los `px` de un
+  `transform` en un SVG son unidades del `viewBox`). **Quedan cinco decisiones** (§4), y la línea no es
+  estética: manchas y poses son arte de PlayJump y solo entran por el hueco de `#286`.
+- **Si citas un número de bucles, mídelo CORRIENDO**: se llegó a decir 28 y corriendo hay 2 (24 pausados por
+  `#435`). El logotipo en línea pesa el 41 % del HTML de `GET /`.
+- Anexo al final con la fila del enrutador.
+
 ## 0. En una línea
 
 El canvas **ya tenía previsto** este trabajo, lo llama **«la pasada de vestido»** y dice cómo se
@@ -290,3 +307,24 @@ La copia local es del **9–10 sep** y **le falta `Layout Paginas PJP`**, el arm
 
 ⚠️ **Lo que no se hace**: colocar una pieza «para rellenar» una sección. El canvas lo prohíbe con esas
 palabras y es la razón de que este documento exista.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«DÓNDE VAN LOS ELEMENTOS DE DISEÑO · la «pasada de vestido» · manchas y poses en una pantalla · el presupuesto de marcado»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/pasada-de-vestido.md`.
+
+- **`docs/specs/pasada-de-vestido.md`**
+- 🟦 **CONSTRUIDA SOBRE LA PORTADA Y DESPLEGADA A STAGING** (`#497` la valoración · `#544`→`#549` la obra, §3.ter) —
+- ❗❗ **las dos VARIANTES son PROTOTIPO LOCAL** (`?fachada=1|2`, solo en `local`): su colocación definitiva y si el laboratorio se retira **son del owner**, y mientras siga ahí `IllustrationKit::SLOTS` arrastra 18 ranuras temporales.
+- ⚠️⚠️ **EL KIT NO VIAJA EN EL `rsync`** (`#286`): un despliegue **nunca** lo actualiza, se sube a mano y se valida con `kit:build --check` en el servidor — staging abortó en la GUARDA 7 sirviendo el kit de `#309`, con cuatro ranuras retiradas. Igual el `client.css`, que iba **trece tokens** por detrás. — antes: valoración abierta (`#497`, 2026-09-10) —
+- ❗❗❗ **EL CANVAS YA DECIDIÓ EL CÓMO Y LO LLAMA «LA PASADA DE VESTIDO»**, citado en **siete artboards**: *«iconos, imagen y movimiento sobre las ocho secciones **a la vez, NO una a una**»*, y `Visitanos PJP` sin margen: *«se decide entero en la pasada de vestido, sobre todas las secciones a la vez **y con presupuesto**, no metiendo una mancha aquí por rellenar»*.
+- ▶ **Eso reencuadra lo que parecía una pérdida**: cada sección rehecha fue perdiendo su decoración (`#479`, `#485`, `#496`) y **no era limpieza, era un APLAZAMIENTO a esta pasada**.
+- ▶ Y **son CUATRO ejes**, no solo las manchas: iconos · imagen · movimiento · piezas de fachada; detrás va el **censo pieza × pantalla**.
+- ✅ **D1: se hace AHORA y solo sobre la PORTADA** (`[DECIDIDO owner]`) —
+- ⚠️ **desviación deliberada** del «todas a la vez», porque de las siete páginas solo `/atracciones` está rehecha; coste asumido: puede haber segunda pasada.
+- ✅ **D2: techo de BYTES antes de repartir y `<use>` obligatorio** (repetir el `<path>` cuesta **18,6×** más; `#266` dejó pagadas las dos trampas: una animación sobre `<defs>` **no pinta** y los `px` de un `transform` dentro de un SVG son **unidades del `viewBox`**).
+- ❗ **QUEDAN CINCO**: densidad (hoy rige la de `#292`, del carril viejo) · qué familias entran —
+- ⚠️ **la línea NO es estética, es white-label**: manchas y poses son arte de PlayJump y solo entran por el hueco de `#286`— · las dos contradicciones del artboard · `C3` la cinta, que choca con `#252` · y **refrescar el canvas**, cuya copia **no trae `Layout Paginas PJP`** (no bloquea la portada; **sí la Fase 3**).
+- ⚠️⚠️ **SI VAS A CITAR UN NÚMERO DE BUCLES, MÍDELO CORRIENDO**: se llegó a decir «28 bucles contra un techo de 2» y **corriendo hay 2** —24 están PAUSADOS por el mecanismo de `#435`—; la cifra falsa casi decide una tanda entera. *Contar elementos con `infinite` declarado no es contar bucles corriendo*, y lo delató que contradecía a `#279`.
+- ⚠️ **El marcado SÍ está cargado**: `GET /` son **275 KB** y **el logotipo en línea pesa 112,9 (41 %), más que las ocho secciones juntas (92,8)**

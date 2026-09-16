@@ -4,6 +4,21 @@
 > rivales + 3 revisores adversariales; 24 problemas de revisión incorporados aquí) ·
 > Última actualización: 2026-08-12 · Decisión asociada: `DECISIONES #13`.
 
+## §0 · Antes de tocar
+
+- **Fase 2 EJECUTADA** (los siete pasos, 2026-08-12, `#13`): el monolito modular es Catalog&Booking · Content ·
+  Identity · Payments · Platform, en `app/Domain/<Ctx>/`. Las fronteras las IMPONEN `ModuleBoundariesTest`,
+  `ModuleContractsTest` y `ApiBoundariesTest`; `scripts/module-deps.php` mide las dependencias reales.
+- **Reglas que toda spec posterior repite**: `Booking` no puede mirar a `Identity` ni a `Content` (lo que
+  necesita llega por un contrato con el binding en el composition root, nunca en `BookingServiceProvider`);
+  un docblock puede crear una flecha de arquitectura (Pint convierte un `{@see}` en `use`); el doble anónimo de
+  `ModuleContractsTest` implementa cada contrato entero, y un método nuevo lo crashea.
+- **Antes de tocar un subsistema** (`producto-e-instancias.md` §4.7, el estándar de `/carril`): leer su §0,
+  medir sus dependencias con esas tres guardas y, si la arquitectura es mejorable, proponerlo en spec antes de
+  codificar.
+- §4.bis → §4.octies: lo que cada paso enseñó · §6: los riesgos de la revisión adversarial. El vocabulario vivo
+  está en `GLOSARIO.md`.
+
 ## 1. Contexto y problema
 `app/Support` (57 ficheros) y `app/Models` (30) forman un namespace PLANO: las llamadas
 cruzadas no aparecen como imports (estáticas/mismo namespace), así que las fronteras entre

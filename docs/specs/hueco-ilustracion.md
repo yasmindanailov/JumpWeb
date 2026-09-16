@@ -36,6 +36,26 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **El mecanismo está en `main`** (`#286`) **y saneado** (`#287`, §16): la instalación entrega UN sprite
+  (`client-kit.svg`) y el producto pinta con `<use>` externo, poniendo él color, tamaño y tratamiento. Mapeo
+  POR NOMBRE desde el paquete (`slot-*` los declara el producto; `zone-<slug>` sale de `zones.slug`), sin panel
+  y **sin suelo del producto**: sin paquete no se pinta nada (`[DECIDIDO owner]`). La gramática es CERRADA.
+- **§16, y va antes que el cuerpo**: el componente emitía un `<svg>` VACÍO cuando el kit no traía esa clave (el
+  caso NORMAL: dos cajas de 190×150 en la portada); una clase compuesta (`'ilu--'.$trato`) es invisible para
+  cualquier inventario de CSS; dos trinquetes nacieron rojos con el defecto puesto
+  (`FacadeDecorationIsPerScreenTest`, `FacadeCssHasNoOrphansTest`); un `linear-gradient` a 115° no hace esquina
+  en una caja alta; para medir en navegador hace falta el puente 8081→80.
+- **§2.2, los cuatro límites de `<use>`, medidos**: el `<style>` interno del cliente GANA al `fill` (fuga
+  white-label: se cierra AL INSTALAR); el `stroke-width` propio gana; un `fill` clavado impide recolorear (se
+  extrae del ARTBOARD, no de los assets sueltos); no existe al `DOMContentLoaded`. **§8: el troquel sobre
+  `currentColor` pinta el 100 % de la caja**: rechazar al instalar y negro EXPLÍCITO en el `<use>`.
+- **§2.3: no medido en WebKit ni Firefox**, por eso `--deco-blob-*` y `--deco-tag` no se tocan. El kit NO viaja
+  en el `rsync`; `kit:build --check` es lo único que mira el fichero real.
+- §12 corrige tres afirmaciones de `elementos-fachada.md`; §14.3: comparar capturas de la portada no demuestra
+  nada (ruido del 64 %). Anexo al final con la fila del enrutador.
+
 ## 1. El mecanismo en una frase
 
 **La instalación entrega UN fichero de dibujos (`client-kit.svg`, un sprite de `<symbol>`) y el
@@ -603,3 +623,31 @@ excepciones **vacía**. Su hermana `FacadeDecorationIsPerScreenTest` vigila lo o
 textura viva dentro de un `@foreach`, y que **ningún dibujo del kit se pida con clave LITERAL dentro
 de un bucle** — la clave variable (`zone-{{ $zone->slug }}`) queda fuera a propósito, porque eso es un
 marcador y no una textura repetida.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«El HUECO DE ILUSTRACIÓN por instalación · meter un dibujo de un cliente sin clavarlo en el producto · el sprite `client-kit.svg` · `<use>` externo»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/hueco-ilustracion.md` · `docs/specs/elementos-fachada.md` · `docs/INSTALACION-CLIENTE.md`.
+
+- **`docs/specs/hueco-ilustracion.md`**
+- 🟦 **EL MECANISMO ESTÁ EN `main`** (`#286`) **Y SANEADO** (`#287`) —
+- ❗❗❗ **`#287` SI VAS A ESCRIBIR CSS DE FACHADA O A PEDIR UN DIBUJO DEL KIT** (§16): hay **DOS trinquetes** y los dos nacieron rojos con el defecto real puesto.
+- ⚠️⚠️ **El componente emitía un `<svg>` VACÍO cuando el kit no traía ese dibujo** —solo preguntaba por el FICHERO, no por la CLAVE—, y **ese es el caso NORMAL**: `kit:build` no exige un dibujo por zona. Sin `viewBox` la caja cae a los **150 px** por defecto de un elemento reemplazado: medido, dos de **190×150** en la portada.
+- ⚠️⚠️ **Una clase compuesta (`'ilu--'.$trato`) NO la ve ningún inventario de CSS**: `.ilu--plano` y `.ilu--contorno` salían huérfanas **con el producto sano**, y la salida no fue una excepción sino escribir las tres enteras — es lo mismo por lo que el cajón arrastra ~50 reglas que *parecen* muertas.
+- ⚠️ **Dos reglas nacieron MUERTAS** (`.brand-dots`, `.grain--zona`) y se retiraron: *una pieza nace en el MISMO cambio que su consumidor*.
+- ⚠️ **`/normas` pintaba la trama dentro del `@foreach`** —cinco copias— y pasa a UNA en la cabecera (`[DECIDIDO owner]`, la regla gana a la nota del artboard); de paso vuelve **su** parada del 74 %, bajada al 30 % por un párrafo que ya no está — *un ajuste sobrevive a la razón que lo justificaba si nadie lo revisa al mover la pieza*.
+- ⚠️ **Un `linear-gradient` a 115° NO hace una esquina en una caja alta**: sobre la página entera deja una tira de puntos bajando por el margen (probado también con la parada en longitud).
+- ⚠️⚠️ **Para medir en navegador hace falta el puente 8081→80**: `asset()` emite URL ABSOLUTA y desde el contenedor el `<use>` externo sale cross-origin **con el producto sano**. —
+- ▶ **El diseño y la medición del mecanismo**, en el cuerpo (2026-08-31) — el **tercer** hueco por instalación tras el logotipo y el icono, y el **primero para ILUSTRACIÓN y no para marca**.
+- ❗❗❗ **§12 CORRIGE A `elementos-fachada.md` Y VA ANTES QUE AQUEL TEXTO**: (1) su §10·1 dice que el hueco «no está diseñado» y **ya existía DOS VECES** —`--deco-blob-*` como máscara recoloreable y `--deco-tag` como imagen a color, `INSTALACION-CLIENTE.md` §4.d/§4.e desde `#228`—, así que esto es **generalizar, no inventar**; (2) su §4 clasifica las manchas como arte ausente y **dos de las seis YA VIAJAN INSTALADAS** —verificado **byte a byte**: `--deco-blob-a` **es** `splash-1.svg` (1.304 B) y `--deco-blob-b` **es** `splash-4.svg` (1.493 B), mismo sha1 y mismo `viewBox`—; (3) su «18,6× menos» de `<use>` es cifra **CRUDA** y comprimido son **1,4×** — y los «64 KB del logotipo» son 57.780 crudos pero **12.955 gzip**.
+- ▶ **§2: los CINCO vehículos medidos en Chrome real con CONTROL en cada celda.** `<use>` externo es el único que junta las dos cosas que hacen falta: **es INERTE** (ni `<script>`, ni `onload`, ni baliza externa, ni un `new Image()` salieron — **y el control en línea disparó LAS DOS balizas**, que es lo que hace creíble el cero) **y da los TRES tratamientos desde una geometría** (plano 18,9 % · contorno 8,8 % · troquel 78,8 % de cobertura; control vacío 0,0 %).
+- ⚠️⚠️ **§2.2 · SUS CUATRO LÍMITES, todos medidos**: el **`<style>` interno del cliente GANA al `fill` del producto** (medido: el verde de su propia animación se impone al cian que pone el `<use>`) — *no es agujero de seguridad, es FUGA WHITE-LABEL, y por eso se cierra AL INSTALAR y no al servir* · el **`stroke-width` propio del símbolo GANA al del `<use>`** (21,4 % idéntico al control, frente a 46,4 % normalizado) · **un `fill` clavado hace imposible recolorear por CUALQUIER vehículo**, y ahí está la regla de extracción de §9: **los ficheros sueltos del canvas lo traen (7 de 7 `fill="#000"`) y el artboard NO (1 de 138, y vale `none`)** — *se saca del artboard, no de los assets* · **no existe al `DOMContentLoaded`** (`getBBox` 0×0 hasta `load`).
+- ⚠️⚠️ **§8: el TROQUEL es donde esto se rompe peor** — sobre un símbolo que declara `fill="currentColor"` **pinta el 100,0 % de la caja del color de marca** (controles: 51,5 % limpio, 0,0 % vacío): es el rectángulo que `site.css` documenta como *peor que no tener default*, entrando por otra puerta. Hacen falta **dos** defensas: rechazarlo al instalar **y** poner el negro EXPLÍCITO en el `<use>`.
+- ⚠️ **§2.3, y manda sobre el alcance: `<use>` externo NO está medido en WebKit ni Firefox** (solo hay Chrome aquí) — por eso **`--deco-blob-*` y `--deco-tag` NO SE TOCAN**: §3.2 los escribe como la **segunda mitad de la regla** (forma de un color → kit; forma en hueco ya resuelto → máscara; imagen a color → `background-image`).
+- ✅ **`[DECIDIDO owner, 2026-08-31]`**: el mapeo es **POR NOMBRE desde el paquete**, sin panel y sin migración —eso mata de raíz las 33 elecciones manuales que habrían fallado en silencio (medido en el precedente idéntico: `ticket_types`, **2 de 18** con icono elegido)—; y **NO hay suelo del producto**: sin paquete **no se pinta nada**, porque un juego genérico versionado es justo por donde `#257` metió 43 dibujos de un cliente y por donde `favicon.svg` conserva el naranja del primero.
+- ⚠️ **La gramática es CERRADA** (`slot-*` los declara el producto, `zone-<slug>` sale de `zones.slug`, que ya existe): con sufijos libres **ninguna guarda de paridad puede existir**.
+- ⚠️ **`attractions` y `park_rules` NO tienen `slug`** — fuera de esta versión (`DEUDA`).
+- ❗ **§11: doce mutaciones, y las que este proyecto falla siempre son la 5, la 6 y la 9** —aseverar `fill` y creer que cubre la presentación entera, y vigilar las rejillas que el autor midió en vez de las poses, que es *vigilar el reposo en vez del disparador*—.
+- ❗❗ **§13: SEIS fichas de deuda y TRES son del producto de hoy, verificadas por mí**: el servidor **no manda ni una cabecera de caché** (`curl -sI` → solo `Content-Type` y `Content-Length`; `.htaccess` 740 B con **0 directivas**), `site.css:2421` escribe `aspect-ratio: 377 / 197` que **es literalmente el `viewBox` de `client-tag.svg`**, y `public/images` lleva **41 ficheros / 7,1 MB** de fotos del primer cliente versionadas.
+- ⚠️ **`#257` decía que los 19 dibujos de parque «no tienen hoy ninguna pantalla que las pinte»** (verificado en su propia entrada): el marcador de zona **no desbloquea nada roto**, habilita futuras — la demanda con consumidor hoy son las poses y las manchas

@@ -17,6 +17,22 @@ Subsistema **D** de la visión de Fase 6, y el **último por dependencia**: nece
 
 ---
 
+## §0 · Antes de tocar
+
+- **Diseño revisado (§8), pendiente del ✅ del owner; código NO empezado.** §9 es el resumen de una página
+  para ese ✅. Último subsistema por dependencia: necesita el carné de `identidad-qr-puerta.md` para canjear.
+- **§8 REESCRIBE el encuadre de §4.2 y va antes**: no hay una regla global de disponibilidad, hay **una por
+  FUENTE** (`[DECIDIDO owner]`) — la VISITA, acreditada en la pantalla de puerta (§9.bis, `#212`), y la
+  COMPRA pagada, con retardo.
+- **§8.2: abrir los puntos de compra al instante REABRE el agujero comprar → canjear → reembolsar** desde un
+  campo del panel: lo configurable es CUÁNTOS puntos da cada fuente, NO cuándo se abren.
+- **§8.1: «después de la visita» no era observable** (`tickets` tiene el ciclo y cero escritores), y por eso
+  A → D es dependencia dura.
+- **§4.5: no es dinero, pero se protege como si lo fuera**: el canje entra en el `CRITICAL_RE` del `pre-push`.
+  §4.6: la caducidad es lo único que depende del cron.
+- Ledger append-only con saldo derivado; el vale es EN ESPECIE y se canjea EN PUERTA, que es lo que lo mantiene
+  fuera del núcleo de dinero. Anexo al final con la fila del enrutador.
+
 ## 1. Contexto y problema
 
 La app móvil existe para **fidelizar**, y hoy no hay ningún mecanismo de fidelización: medido el
@@ -438,3 +454,13 @@ hace con el ledger y los vales de un titular suprimido (`RGPD-01`).
    parque) y sus vales sin usar se cancelan* — o se borra todo con la cuenta.
 6. **El orden de corte** (§4.6 lo impone en parte): ledger + fuentes → cajón → puerta → panel →
    caducidad al final. *Propuesta: ese.*
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«JumpPoints / vales / lealtad»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/lealtad-jumppoints.md`.
+
+- `docs/specs/lealtad-jumppoints.md`
+- 🟦 **REVISADA — §8 REESCRIBE el encuadre de §4.2 y va ANTES que el cuerpo**: no hay una regla global de disponibilidad, hay **una por FUENTE** (`[DECIDIDO owner]`) — **visita** acreditada en la pantalla de puerta + **compra** pagada.
+- ⚠️⚠️ **§8.2: la fuente «compra» REABRE el agujero de ingresos si sus puntos se abren al instante — lo configurable es CUÁNTOS puntos da cada fuente, NO cuándo se abren.** §8.1: «después de la visita» no era observable (`tickets` tiene el ciclo y **cero escritores**), y por eso `A → D` es **dependencia dura**. Luego: **§4.5 no es dinero pero se protege como si lo fuera** —el canje entra en el `CRITICAL_RE`— · §4.6 la caducidad es lo único que depende del cron. `DECISIONES #142` + **`#156`**

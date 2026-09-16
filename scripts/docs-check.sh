@@ -14,6 +14,10 @@
 #      y con ESTADO.md (precedencia: el tracker manda).
 #   8. Las clases de test citadas por una invariante existen en tests/ (una mención
 #      HISTÓRICA se escribe tachada: `~~ClaseTest~~`).
+#   9. Ningún marcador de conflicto de merge sobrevive en la doc (`#506`).
+#  10. Techos de la documentación caliente (`#620`): enrutador ≤ 12 KB · tracker ≤ 16 KB · estado
+#      ≤ 4 KB · fichero de carril ≤ 24 KB · §0 obligatorio y ≤ 2 KB en cada spec · decisión
+#      posterior a F0 ≤ 1,5 KB. Un techo que solo se declara no vigila nada.
 # Escape (CONVENCIONES §4): una línea con «(futuro)» o «(ejemplo)» queda exenta de los
 # checks 2-4 y 8 — para specs de diseño y ejemplos pedagógicos. Una entrada que EXPLICA un
 # ancla rota o un test retirado necesita escribirlo, y el gate no puede castigar eso.
@@ -27,7 +31,7 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null)" \
     || { echo '✗ docs-check: faltan los docs mínimos (¿repo incompleto?)' >&2; exit 1; }
 
 shopt -s nullglob
-DOCS=(CLAUDE.md README.md docs/*.md docs/sistemas/*.md docs/specs/*.md)
+DOCS=(CLAUDE.md README.md docs/*.md docs/sistemas/*.md docs/specs/*.md docs/carriles/*.md docs/decisiones/*.md)
 (( ${#DOCS[@]} >= 4 )) || { echo '✗ docs-check: corpus documental vacío' >&2; exit 1; }
 
 FAIL=0
@@ -133,9 +137,11 @@ check_count '~?[0-9]+ invariantes de no-regresión' "$real_invariants" "grep -cE
 check_count '~?[0-9]+ Filament Resources' "$real_resources" 'ls -d app/Filament/Resources/*/ | wc -l'
 
 # ── 6 · Citas «DECISIONES #N» apuntan a entradas reales ───────────────────────────────
+# Desde F1 (`#617`) las entradas viven por centenas en docs/decisiones/NNN-NNN.md y DECISIONES.md es el
+# índice; una cita vale si la entrada existe en cualquiera de los dos sitios.
 while IFS= read -r n; do
-    grep -qE "^## #${n} ·" docs/DECISIONES.md \
-        || err "cita rota: «DECISIONES #${n}» — esa entrada no existe en docs/DECISIONES.md"
+    grep -qE "^## #${n} ·" docs/DECISIONES.md docs/decisiones/*.md \
+        || err "cita rota: «DECISIONES #${n}» — esa entrada no existe en docs/decisiones/ ni en docs/DECISIONES.md"
 done < <(grep -h 'DECISIONES' "${DOCS[@]}" | grep -oE '#[0-9]+' | tr -d '#' | sort -un)
 
 # ── 7 · Coherencia de marcadores de fase (00-REFACTOR.md manda) ───────────────────────
@@ -163,14 +169,14 @@ coherence=$(awk '
 ' docs/00-REFACTOR.md)
 [[ -n "$coherence" ]] && while IFS= read -r line; do err "00-REFACTOR.md: $line"; done <<<"$coherence"
 
-# ESTADO.md no puede contradecir al tracker: «Fase N … COMPLETA» exige cabecera ✅.
+# Ni el estado ni los ficheros de carril pueden contradecir al tracker: «Fase N … COMPLETA» exige ✅.
 while IFS= read -r m; do
     [[ -z "$m" ]] && continue
     grep -qiE '\b(no|aún|todavía)\b' <<<"$m" && continue   # negaciones veraces no cuentan
     n=$(sed -E 's/^[Ff]ase ([0-9]+).*/\1/' <<<"$m")
     grep -qE "^### Fase ${n}[^0-9].*✅" docs/00-REFACTOR.md \
-        || err "ESTADO.md dice «${m}» pero la cabecera de esa fase en 00-REFACTOR.md no es ✅ (el tracker manda — DECISIONES #10)"
-done < <(grep -oiE 'Fase [0-9]+[^.]{0,60}COMPLETA' docs/ESTADO.md | sort -u || true)
+        || err "el estado o un carril dice «${m}» pero la cabecera de esa fase en 00-REFACTOR.md no es ✅ (el tracker manda — DECISIONES #10)"
+done < <(grep -ohiE 'Fase [0-9]+[^.]{0,60}COMPLETA' docs/ESTADO.md docs/carriles/*.md 2>/dev/null | sort -u || true)
 
 # ── 8 · Las clases de test citadas por una invariante EXISTEN ─────────────────────────
 # `INVARIANTES.md` es el mapa que lleva a la red: cada invariante dice en qué test se
@@ -207,6 +213,48 @@ while IFS= read -r hit; do
     [[ -z "$hit" ]] && continue
     err "marcador de conflicto de merge sin resolver: ${hit%%:*} (línea ${hit#*:}). Resuelve el merge conservando lo de los DOS carriles."
 done < <(grep -rn -E '^(<<<<<<< |>>>>>>> )' docs/ CLAUDE.md 2>/dev/null | cut -d: -f1,2)
+
+# ── 10 · Techos de la documentación caliente ─────────────────────────────────────────
+# ❗❗ ESTO PASÓ (`specs/producto-e-instancias.md` §1.1, medido el 2026-09-16): el enrutador pasó de
+# 4,8 KB a 314 KB en 32 días con «mantener CORTO» en su cabecera, el estado a 866 KB y el arranque en
+# frío de un agente a 1,57 MB — con este gate en verde en cada push, porque tenía nueve comprobaciones
+# y NINGUNA medía tamaño. Los techos son los de la spec §2 (`DECISIONES #615`, `#620`); F1 los aplicó
+# y este check es lo que impide que vuelvan a crecer. Un techo que solo se declara no vigila nada.
+techo() { # $1=ruta · $2=techo en bytes · $3=qué es el fichero
+    local bytes; bytes=$(wc -c <"$1")
+    (( bytes <= $2 )) || err "«$1» pesa ${bytes} B y su techo es $2 B ($3). Lo que sobra va a su spec, a su decisión o a git; el techo no se sube sin decisión."
+}
+techo CLAUDE.md 12288 'enrutador: una línea por fila'
+techo docs/00-REFACTOR.md 16384 'tracker: fases y casillas, sin narrativa'
+techo docs/ESTADO.md 4096 'estado: índice de carriles, no una foto'
+for f in docs/carriles/*.md; do techo "$f" 24576 'fichero de carril: banda · ficheros · foto · retomar · buzón'; done
+# El §0 de cada spec es lo único que lee el arranque: obligatorio y ≤ 2 KB (de «## §0» a la siguiente «## »).
+for f in docs/specs/*.md; do
+    if ! grep -qE '^## §0' "$f"; then
+        err "«$f» no tiene «## §0 · Antes de tocar»: toda spec lo lleva (≤ 2 KB), es lo único que lee el arranque"
+        continue
+    fi
+    bytes=$(awk '/^## §0/{p=1; next} p && /^## /{exit} p' "$f" | wc -c)
+    (( bytes <= 2048 )) || err "el §0 de «$f» pesa ${bytes} B y su techo es 2048 B: el §0 resume y remite, no explica"
+done
+# Decisión posterior a F0 (número > 616 o fecha posterior al 2026-09-16): ≤ 1,5 KB. Las anteriores no se
+# reescriben (spec §3) y por eso no se miden. La fecha se busca en toda la cabecera (`## #N · AAAA-MM-DD · …`
+# es la forma habitual, pero 14 entradas la llevan en otra posición); sin fecha, decide solo el número.
+# LC_ALL=C para que length() cuente BYTES, como wc -c.
+while IFS=$'\t' read -r fichero num fecha bytes; do
+    [[ -z "$fichero" ]] && continue
+    err "la decisión #${num} (${fecha:-sin fecha}, ${fichero}) pesa ${bytes} B y su techo es 1536 B: una decisión dice qué y por qué; lo medido va en su spec"
+done < <(LC_ALL=C awk '
+    function flush() { if (n != "" && (n + 0 > 616 || fecha > "2026-09-16") && b > 1536) printf "%s\t%s\t%s\t%d\n", f, n, fecha, b }
+    FNR == 1 { flush(); n = "" }
+    /^## #[0-9]+ · / {
+        flush(); f = FILENAME; n = $2; sub(/^#/, "", n); b = 0
+        fecha = match($0, /[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/) ? substr($0, RSTART, RLENGTH) : ""
+        next
+    }
+    n != "" { b += length($0) + 1 }
+    END { flush() }
+' docs/decisiones/*.md 2>/dev/null || true)
 
 if [[ $FAIL -eq 0 ]]; then
     echo "✓ docs-check: doc coherente (${real_models} modelos · ${real_migrations} migraciones · ${real_invariants} invariantes · ${real_resources} Resources)."

@@ -17,6 +17,25 @@
 
 ---
 
+## §0 · Antes de tocar
+
+- **Informe entregado** (`#460`), medido con Chromium sobre el panel real (10 pantallas × 3 tamaños): 4
+  críticos · 10 mayores · 11 menores. **Ejecutados el SHELL (`#461`) y el crítico C1 (`#463`)**; D1, D2 y D3
+  decididas (§9); **D4 pendiente del detalle del owner**. Empieza por §0 y por **§7, lo que NO hay que tocar**
+  (el menú plano, las 20 tarjetas de Ajustes, la puerta en reposo, la FORMA de «Crear pedido»).
+- **§9.bis: M3 (no hay pantalla de aforo) y M4 (nadie registra el cobro del parque) son conducta querida**
+  (D3, D2), no hallazgos: no los «arregles».
+- **C1 YA PASÓ en el parque**: un cumpleaños vendido como diez entradas sueltas (119,00 € en vez de 180,00 €,
+  la sala sin reservar, sin formulario de invitados) por un desplegable plano de 18 opciones. Cerrado por
+  `#463` (tarjetas agrupadas); **el DESHACER sigue sin resolver**. C2: «Cancelar producto» es el botón más
+  ancho y saturado del modal y está a 12 px de «Guardar cambios». C3: la acción principal de una reserva es
+  un icono gris de 40×40 sin rótulo, y en tablet no hay hover. C4: en la puerta «Nueva búsqueda» —que es
+  PRIVACIDAD— cae fuera de pantalla con un cliente con menores.
+- **El patrón que atraviesa todo: el panel no sabe CUÁNDO es la visita** (M1). §5.bis mide los 66 controles
+  sobre un pedido con UNA reserva. §1: cinco trampas de instrumento pagadas (medir un 404 tres tamaños;
+  `.fi-dropdown-panel` casa con todos los desplegables; las 38 píldoras del calendario son `div`).
+- Anexo al final con la fila del enrutador.
+
 ## 0. Lo que hay que saber en un minuto
 
 - **Método**: Playwright + Chromium sobre el panel real con los datos locales (64 pedidos, 82
@@ -534,3 +553,27 @@ carpetas nuevas de la raíz del repo.
 Las cifras del catálogo (las 18 opciones del desplegable, los precios de las dos formas de vender
 lo mismo, la duración, el mínimo y los complementos de cada producto) salen de `tinker` sobre la BD
 local, no de la lectura del código.
+
+## Anexo · La fila del enrutador, mudada el 2026-09-16
+
+> Lo que decía la fila **«UI/UX del PANEL · qué está mal hoy · el panel EN TABLET · ruido y jerarquía de acciones»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
+> (`DECISIONES #619`). Se conserva **verbatim** porque es historia de trampas medidas: léelo
+> después del §0 y no lo reescribas. Documentos que la fila citaba: `docs/specs/auditoria-panel-admin.md` · `docs/specs/panel-navegacion.md`.
+
+- **`docs/specs/auditoria-panel-admin.md`**
+- 🟦 **INFORME ENTREGADO; EJECUTADO EL SHELL (`#461`) Y EL CRÍTICO C1 (`#463`)** (2026-09-03, banda `#460`–`#469`) — **4 críticos · 10 mayores · 11 menores**, medidos con Chromium sobre el panel real (10 pantallas × 3 tamaños + 5 sondas de estados de trabajo). **D1, D2 y D3 ya decididas** (§9); **D4 pendiente del detalle del owner**.
+- ▶ **EMPIEZA POR §0 y por §7, que es lo que NO hay que tocar** (el menú plano, las 20 tarjetas de Ajustes con su descripción, la puerta en reposo y la FORMA de «Crear pedido»: ahí el trabajo de agosto se sostiene).
+- ✅ **C1 CERRADO por `#463`** (tarjetas agrupadas; el diagnóstico se conserva y **el DESHACER sigue sin resolver**) —
+- ❗❗❗ **C1 · EL ERROR YA PASÓ EN EL PARQUE**: una admin vendió un cumpleaños como **diez entradas sueltas**. Medido con el catálogo real: **119,00 € en vez de 180,00 € (−61,00 €, −34 %)**, la sala sin reservar, **60 min de ocupación en vez de 120** y **el formulario de invitados que nunca se pide** — sin él no hay edades y sin edades no hay suplemento mixto. La causa: **un desplegable plano de 18 opciones con entradas y packs mezclados y ni una palabra que diga cuál es cuál** (el rótulo es `«{zona} · {nombre}»`, y ni el prefijo sirve: «JUMP · Cumpleaños E2E extras» es un PACK).
+- ⚠️⚠️ **Y NO se puede deshacer**: «Editar producto» solo ofrece productos del MISMO tipo y la MISMA zona, así que hay que cancelar, reembolsar y rehacer el pedido.
+- ❗❗❗ **C2 SI TOCAS EL MODAL «GESTIONAR»**: «Cancelar producto» —que ANULA la reserva— es **el más ancho (173 vs 138) y el más saturado** (croma 0,245 vs 0,150) de los tres botones del pie y está **a 12 px** de «Guardar cambios»; y en un modal «Cancelar» significa universalmente *descartar*, así que el único botón que parece «salir sin hacer nada» es el que borra la fiesta.
+- ❗❗❗ **C3 SI TOCAS LA FILA DE ACCIONES DE UNA RESERVA**: la acción principal (editar) es **un icono gris de 40×40 sin rótulo**, uno de **hasta seis idénticos**, y otro de esos seis **retira una credencial en el acto** (rotar el enlace del formulario) —
+- ⚠️ **en tablet no hay hover, así que el `aria-label` que los distingue no se puede leer**.
+- ❗❗ **C4**: en la puerta, con un cliente con menores declarados la ficha mide **907 px en 810** y **«Nueva búsqueda» cae fuera de pantalla** — y ése es el control que quita de la vista los datos del cliente anterior (`panel-navegacion.md` §8.3 lo declara PRIVACIDAD y tiene guarda que impide ocultarlo); §8.6 midió 810 «cabe» **con una ficha sin menores**.
+- ▶ **§5.bis ES EL «MONTÓN DE ACCIONADORES Y DATOS» DEL OWNER, MEDIDO**: sobre un pedido con UNA reserva hay **14 acciones registradas y 66 controles alcanzables** (15 al abrir · 4 al desplegar · 47 en el modal), **seis del nivel 1 sin una sola letra**; la ficha mide **2.347 px** con la reserva en **572** y la administración en **1.503**, y **1.583 px de columna vacía** bajo la reserva; el **email** y el **descargo** del titular viven plegados dentro de «Detalles»; y «88,00 €» sale **5 veces**, la fecha **6**.
+- ▶ **El patrón que atraviesa todo: el panel no sabe CUÁNDO es la visita** — «Pedidos» ordena por `created_at`, no tiene columna ni filtro de fecha de visita y el buscador global rotula «Creado el» (M1, medido ya en agosto y sin cambiar).
+- ⚠️ **M5: en tablet se pierde la última columna de TODAS las tablas** (Hoy pierde «Formulario»).
+- ⚠️ **M8: el supuesto de `#320` no se cumple** — la ficha del cliente dice si firmaron sus MENORES y **no si firmó el titular**.
+- ⚠️ **M10: a 1.080 px el párrafo del historial cae en una columna de 58 px con 17 líneas, y a 1.440 no** (defecto exclusivo de la tablet, dentro de una sección plegada).
+- ▶ **§9.bis: M3 (no hay pantalla de aforo) y M4 (nadie registra el cobro del parque) NO son hallazgos, son conducta querida** — D3 y D2: no los «arregles».
+- ⚠️⚠️ **§1: cinco trampas de instrumento pagadas** — la peor, **medir un 404 durante tres tamaños** porque `Order` se resuelve por `code` y la sonda pidió el id; **un barrido de controles por etiqueta HTML no ve las 38 píldoras del calendario**, que son `div`; y **`.fi-dropdown-panel` casa con todos los desplegables del documento**, no con el abierto
