@@ -378,31 +378,37 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
-> 🕗 **OCTAVO DESPLIEGUE · PREPARADO Y ENSAYADO, NO HECHO** (2026-09-16, 20:20–20:35). Lo que sube es
-> **un solo commit de código, `448ea4f5`** (`#569`–`#571`: la piel del formulario post-reserva y **el arreglo
-> del número de invitados, que no se enviaba en producción desde el 08-09**), 11 ficheros, **sin migraciones**
-> (113 = 113, verificado por la columna de estado de `migrate:status`; ⚠️ un `grep -i pending` da 4 porque
-> casa con NOMBRES de migraciones). Producción sirve `bd61e5a9` (`#593`).
-> ▶ **Por qué no se hizo**: eran las 20:20 y la portada decía «Abierto ahora» hasta las 21:30; la regla de
-> `#594` es del owner y **se respeta**. Se hace en la siguiente sesión, con el parque cerrado.
-> ▶ **Receta, en este orden** (cada paso ensayado o medido el 16-09):
-> 1. Copia previa: `ssh jumpweb-prod bash -s -- pre571 < scripts/copia-bd-remota.sh` — ensayada (668 KB,
->    53 tablas, gzip verificado, fichero de opciones borrado). ⚠️ **El cliente `mariadb` del servidor IGNORA
->    `MYSQL_PWD`**: la contraseña parseada del `.env` era la correcta (mismo sha1 que la de Laravel) y daba
->    «Access denied»; por eso el guion deja que Laravel escriba un fichero de opciones 0600.
-> 2. El `client.css`: producción sirve el sha1 `d265355e…` (idéntico a la copia local antes del 16-09). El
->    fichero a subir es **el de la rama `cliente/playjump` en `3ded45ee`** (sha1 `687ffcb3…`): el servido más
->    `--err-ink`, `--done`, `--on-done` y `--done-ink`. ⚠️ **La rama iba por detrás en `--money`** (Lima 800;
->    `#540` manda Lima 700): subirla tal cual habría revertido esa decisión. Corregida y empujada el 16-09; la
->    copia local ya lleva ese mismo fichero. `scp` y comparar el hash antes y después.
-> 3. `DEPLOY_PRODUCTION=1 DEPLOY_SSH_HOST=jumpweb-prod DEPLOY_URL=https://playjump.es scripts/deploy.sh --go`
->    — el ensayo en seco salió limpio: 80 entradas, casi todas el build y las fuentes de Filament por fecha.
-> 4. Verificar: las diez páginas en 200 (`/`, `/entradas`, `/precios`, `/cumpleanos`, `/normas`, `/contacto`,
->    `/bar`, `/atracciones`, `/admin/login`, `/up`) · el `client.css` servido con el sha1 nuevo · en la vista
->    desplegada `grep -c 'form="gf-form"' resources/views/reservation/*.blade.php` **> 0** (control previo:
->    **0**) · `migrate:status` sin `Pending` en la columna de estado · la portada sigue nombrando reseñas.
->    El script no hace `cache:clear`, así que las reseñas no se pierden.
-> ⚠️ El servidor va en **UTC** (la copia del ensayo se llama 18:31 siendo las 20:31 en local).
+> 🚀 **OCTAVO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-16, 22:52:26–22:53:03 local, 37 s con la ventana de
+> 503 dentro; el parque cerró a las 21:30, `#594`; ensayado a las 20:20 y aplazado por estar abierto). Subió
+> **`1272cb93`**, cuyo único código sobre lo servido (`bd61e5a9`) es **`448ea4f5`** (`#569`–`#571`: la piel del
+> formulario post-reserva y **el arreglo del número de invitados, que no se enviaba en producción desde el
+> 08-09**), 19 ficheros, **sin migraciones** (113 «Ran» en la columna de estado; `Nothing to migrate`). **Sin
+> etiqueta: el último por hash** (`#613` pone la guarda de etiquetas en F3). 81 entradas de `rsync` (el ensayo
+> dio 80; la nueva, `CLAUDE.md`). Producción sirve `1272cb93`.
+> ▶ **Receta seguida, en este orden** (vale para el noveno):
+> 1. Copia previa: `ssh jumpweb-prod bash -s -- pre571 < scripts/copia-bd-remota.sh` →
+>    `~/backups/playjump2_main_pre571-20260916-204505.sql.gz` (672 KB, 53 tablas, gzip verificado; **se queda
+>    en el servidor**). ⚠️ **El cliente `mariadb` del servidor IGNORA `MYSQL_PWD`**: por eso el guion deja que
+>    Laravel escriba un fichero de opciones 0600 que se borra al salir.
+> 2. El `client.css`: extraído de la rama `cliente/playjump` (`3ded45ee`) con `git archive`, sha1 `687ffcb3…`
+>    = la copia local (el servido más `--err-ink`, `--done`, `--on-done` y `--done-ink`); `scp` a
+>    `public_html/public/css/client.css`; servido antes `d265355e…`, después `687ffcb3…` (en el servidor y por
+>    HTTP). ⚠️ **La rama iba por detrás en `--money`** (Lima 800; `#540` manda 700): comparar con la copia
+>    local antes de subirla. El `rsync` lo excluye, así que sobrevive al `--go`.
+> 3. `DEPLOY_PRODUCTION=1 DEPLOY_SSH_HOST=jumpweb-prod DEPLOY_URL=https://playjump.es scripts/deploy.sh` en
+>    seco y después `--go`: cola drenada (0), `composer install`, guarda 1 (`live`, exacto), 8520 franjas,
+>    cachés, cron, `up`; la salud del script en verde (kit 26 símbolos, scheduler 6/6, `failed_jobs` 0, 0
+>    varados). Sin `cache:clear`: las reseñas no se pierden.
+> 4. Verificado después: nueve páginas en 200 (`/`, `/entradas`, `/precios`, `/cumpleanos`, `/normas`,
+>    `/contacto`, `/atracciones`, `/admin/login`, `/up`) y **`/bar` en 503 A PROPÓSITO**:
+>    `maintenance.page.bar = 1` en los ajustes de producción, el interruptor de mantenimiento por página («Esta
+>    sección está en mantenimiento», `Retry-After: 3600`), no es del despliegue · en la vista desplegada
+>    `grep -c 'form="gf-form"' resources/views/reservation/guests.blade.php` = **2** (control previo: **0**) ·
+>    `migrate:status` solo «Ran» · la portada sigue nombrando reseñas · el log del día solo tiene un
+>    `auth.google_state_mismatch` de las 18:04 UTC.
+> ⚠️ **El clasificador del modo «auto» del harness deniega el `scp` y el `--go` como escritura remota**
+> («Remote Shell Writes») aunque dejó pasar el `ssh` de la copia: el owner cambió el modo de permisos y los dos
+> comandos se repitieron tal cual. ⚠️ El servidor va en **UTC** (la copia se llama 20:45 siendo las 22:45).
 
 > 🚀 **SÉPTIMO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-13, commit `89e49ed0`, `DECISIONES #590`).
 > **La web nueva entera** —181 commits desde `e76d6f2a`: la portada y las páginas rehechas, las paradas

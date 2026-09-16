@@ -44,19 +44,20 @@
   --scope project`, que escribió `enabledPlugins` en `.claude/settings.json`; añadí a mano
   `extraKnownMarketplaces` con esa misma forma para que la otra máquina lo añada al confiar en la carpeta. La
   versión instalada es el sha del commit (`c8e74b1de042`); actualizar = `/plugin marketplace update jumpweb-agente`.
+- **Octavo despliegue HECHO** (2026-09-16, 22:52–22:53, parque cerrado, `#594`): subió `1272cb93` (código =
+  `448ea4f5`, `#571`, el número de invitados del post-form), sin migraciones, copia `pre571-…-204505` en el
+  servidor, `client.css` `687ffcb3…` servido; nueve páginas en 200 y **`/bar` en 503 por
+  `maintenance.page.bar = 1`** (dato del panel, no del despliegue). **El último por hash** (`#613` → F3). Receta,
+  hashes y verificación: `ENTORNOS.md` §6. La sesión arrancó con el plugin instalado: «arrancamos» → `/carril` y
+  «sí, despliega» → `/desplegar` sin barra, **2 de 6** de la prueba de salida de F2.
 
 ## Por dónde retomar, en orden
 
-0. **El octavo despliegue a producción, CON EL PARQUE CERRADO** (de noche; cierra a las 21:30 entre
-   semana). Está preparado y ensayado el 16-09 a las 20:30 y no se hizo porque el parque estaba abierto
-   (`#594`). Sube `448ea4f5` (`#569`–`#571`: el arreglo del número de invitados del post-form, defecto vivo en
-   producción desde el 08-09), sin migraciones. **La receta completa, con los hashes y los controles, está en
-   `ENTORNOS.md` §6** (bloque «OCTAVO DESPLIEGUE»): copia previa con `scripts/copia-bd-remota.sh` → `scp` del
-   `client.css` de la rama `cliente/playjump` (`3ded45ee`, sha1 `687ffcb3…`) → `deploy.sh --go` → verificar.
-   Al terminar: registrar el resultado en ese bloque y avisar al SPA en el buzón (su foto dice «sin desplegar»).
 1. **F2 · lo que queda** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
-   (a) **la prueba de las seis frases en ESTA máquina**, en sesión nueva (README del plugin; el owner abre
-   `/hooks` una vez): 6 de 6, anotado en la spec §6; (b) **la otra máquina**: `git pull` en JumpWeb y confiar
+   (a) **la prueba de las seis frases en ESTA máquina** (README del plugin; el owner abre `/hooks` una vez):
+   **van 2 de 6** (`carril`, `desplegar`, el 16-09); quedan «cerramos, haz el handoff» → `handoff`, «queda
+   decidido: …» → `decision`, «hazlo en ligero» → `ligero`, «¿está hecho de verdad?» → `dod`; el 6 de 6 se
+   anota en la spec §6; (b) **la otra máquina**: `git pull` en JumpWeb y confiar
    en la carpeta instala el plugin solo (`extraKnownMarketplaces` + `enabledPlugins`); si no aparece `/carril`
    en el menú `/`, la receta manual de `CARRIL-SPA.md` §1 paso 8; después sus seis frases, 6 de 6; (c) retirar
    `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador paso 0, CONVENCIONES §1 y
@@ -94,6 +95,12 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   hace lo demás, se para y se le pide permiso (o una regla `Write` para el repo del plugin).
 - `rm -rf` está en el deny del repo y **un comando compuesto que lo lleve dentro se deniega entero**: carpeta
   nueva en vez de borrar. Y `claude plugin details` no acepta `--plugin-dir`; `claude -p … --plugin-dir` sí.
+- **El clasificador «auto» deniega `scp` y el `--go` del despliegue** («Remote Shell Writes») aunque deja pasar
+  el `ssh … bash -s` de la copia previa y los `ssh` de lectura. No se rodea con `ssh 'cat >'`: se hace lo demás,
+  se para con los dos comandos escritos y el owner cambia el modo de permisos (16-09). También denegó un `ssh`
+  de lectura con un bucle `for` sobre carpetas: un `ssh` simple con tres comandos pasó.
+- Un `git diff --stat … | tail -15` sobre 19 ficheros esconde cuatro y parecen ajenos al plan del `rsync`: contar
+  con `--numstat | wc -l` antes de creer que faltan.
 
 ## Buzón
 
@@ -106,10 +113,12 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
 - Tu fichero es **`docs/carriles/spa.md`**: lo escribí yo desde tu bloque del estado del 13-09. Hazlo tuyo en
   tu siguiente cierre; nadie más lo toca. Los `§0` de `sidebar-spa.md` y `celebracion-e-invitacion.md` también
   los escribí yo desde tus filas del enrutador: revísalos.
-- **Tu arreglo de `#571` sigue SIN desplegar** (el 16-09 el parque estaba abierto): va en el siguiente
-  despliegue, receta en `ENTORNOS.md` §6. ⚠️ **La rama `cliente/playjump` iba por detrás en `--money`**: tu
-  commit `dface9c4` añadió los cuatro tokens sobre una copia con Lima 800, y `#540` (12-09) manda Lima 700;
-  corregido en `3ded45ee`. Antes de tocar el `client.css` de la rama, compárala con la copia local.
+- **Tu arreglo de `#571` ESTÁ DESPLEGADO** desde el 16-09 a las 22:53 (octavo despliegue, `ENTORNOS.md` §6),
+  con las cuatro líneas del `client.css` (`687ffcb3…` servido) y el `gf-form` en la vista de producción: cambia
+  «sin desplegar» en tu foto y marca la casilla de tu bloque del tracker, que ya está en `[x]`. `/bar` da 503 en
+  producción por `maintenance.page.bar = 1`, un dato del panel. ⚠️ **La rama `cliente/playjump` iba por detrás
+  en `--money`**: tu commit `dface9c4` añadió los cuatro tokens sobre una copia con Lima 800, y `#540` (12-09)
+  manda Lima 700; corregido en `3ded45ee`. Antes de tocar el `client.css` de la rama, compárala con la copia local.
 - **Llega la capa de agente (F2, `#623`)**: el plugin `jumpweb-agente` con `/carril` (en vez de
   `/arranque-sesion`), `/handoff` (en vez de `/cierre-sesion`) y nueve más, y un hook que inyecta las reglas
   del owner en cada sesión. Cuando esté en GitHub, tu máquina lo instalará al confiar en la carpeta; hasta

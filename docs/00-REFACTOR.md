@@ -95,7 +95,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 
 ### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 — `carriles/spa.md` (`#550`→`#571`, el otro ordenador)
 - [x] Las 25 pantallas construidas (`#550`→`#568`) · T1 y T2 de `specs/celebracion-e-invitacion.md` (`#570`, `#571`).
-- [ ] Desplegar el arreglo del número de invitados del post-form (defecto en producción desde `#444`) con las cuatro líneas del `client.css`.
+- [x] Desplegado el arreglo del número de invitados del post-form (defecto en producción desde `#444`) con las cuatro líneas del `client.css`: octavo despliegue, 2026-09-16 (`ENTORNOS.md` §6).
 - [ ] T3 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
@@ -117,7 +117,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [ ] El ✅ del owner sobre lo desplegado · la T4 de `#448` (doc + ojo) · el alta del producto «hora extra» en producción (DATO) · una elección menor del owner (un extra cerrado que nunca se pidió).
 
 ### LANZAMIENTO Y OPERACIÓN del 2.º cliente 🟦 — `ENTORNOS.md` §6 (`#325`→`#341`, `#404`→`#431`)
-- [x] En producción y verificada (`#325`, `#326`); la operación de los primeros días (`#329`→`#341`); el tercer despliegue y la rejilla de media hora (`#420`→`#431`); go-live de Redsys (`#594`).
+- [x] En producción y verificada (`#325`, `#326`); la operación de los primeros días (`#329`→`#341`); el tercer despliegue y la rejilla de media hora (`#420`→`#431`); go-live de Redsys (`#594`); el octavo despliegue, el último por hash (`#571`, 16-09).
 - [ ] El OJO del owner sobre los TPV (rol `puerta`) · imágenes en la columna derecha del menú (`[DECIDIDO owner]`: «las que sean, que no esté vacío») · refrescar el contexto de cuenta al volver a la pestaña (toca el SPA) · EN/FR de la descarga de responsabilidad.
 - [ ] Trazabilidad de los correos que salen del panel (`DEUDA.md`) · los menores en la declaración de puerta (`[DECIDIDO owner]`: solo el titular, por ahora) · monitor y menús servidos en la hoja impresa (aparcado por el owner).
 
