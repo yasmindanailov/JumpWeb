@@ -223,3 +223,26 @@ No hay chat entre agentes: **lo que no está en `origin/main`, el otro no lo sab
    cae en la frontera de los dos carriles, los ficheros de carril dicen quién lo lleva; no se arregla dos veces.
 8. **Al cerrar un carril** su fichero dice «cerrado» y apunta a la spec: la foto es una FOTO, no un
    histórico (el histórico es `docs/decisiones/` y `git log -p`).
+
+## §11 Ciclo de vida de la documentación — escribir, mover, borrar
+`[DECIDIDO owner, 2026-09-16]` (`DECISIONES #622`). F1 enseñó a escribir con techo; esto dice cómo se
+CIERRA un documento, para que la doc no sea un acumule. Tres familias, cada una con su salida:
+
+| Familia | Documentos | Se mantiene | Al cerrar |
+|---|---|---|---|
+| **Referencia** | `sistemas/`, `INVARIANTES`, `GLOSARIO`, `INSTALACION-CLIENTE`, `ENTORNOS`, `TESTING` | con el sistema, al tocarlo (DoD §3.bis·4); **techo 48 KB por doc de `sistemas/`**: si crece, se parte por subsistema | si el sistema se retira, al archivo con «retirado en #N» en su cabecera |
+| **Proceso** | specs, tracker, carriles | mientras está en curso | una spec ✅ sin trabajo pendiente y sin carril que la cite en «retomar» **se destila** —lo que es referencia va a su doc de `sistemas/`— y **se archiva**: estado 📜, `git mv` de `docs/specs/` a `docs/archivo/` con el MISMO nombre; su anexo del enrutador se borra al destilar; el tracker deja un programa cerrado en una línea; un carril, §10.8 |
+| **Registro** | decisiones, deuda | nunca se reescribe | se MARCA: «Sustituida por #N», «Retirada con #N»; una ficha de deuda cerrada se borra (git la guarda) |
+
+Reglas transversales:
+1. **Archivar no reescribe citas.** Un documento archivado conserva su NOMBRE, y `docs-check` resuelve
+   una cita a su ruta antigua bajo `docs/specs/` contra la nueva bajo `docs/archivo/` (check 1). Las
+   decisiones que lo citaban siguen siendo ciertas: hablaban de cuando estaba vivo.
+2. **El enrutador solo cita documentos vivos** (check 11): al archivar, su fila se retira o apunta al doc
+   de sistema que la destiló. `README.md` mueve la fila a su sección «Archivo» en el mismo commit.
+3. **La historia no se copia, se cita**: por `#N` o por commit. Lo que se borra queda en `git log -p`;
+   ningún documento resume «cómo se llegó» salvo el archivo.
+4. **Mover o borrar va en el mismo commit que el índice y el enrutador**: el gate vigila los enlaces.
+5. **Lo medible lo mide el gate** (check 11): una spec con estado 📜 no puede seguir en `docs/specs/`;
+   `CLAUDE.md` no cita `docs/archivo/`; ningún doc de `sistemas/` pasa de 48 KB. El resto lo ejecutan
+   las skills de cierre (`/handoff` y `/dod` desde F2), no la memoria de nadie.

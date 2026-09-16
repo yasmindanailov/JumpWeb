@@ -67,7 +67,6 @@ web `localhost:8081` · MySQL `3308` · Mailpit `8028` (en `.env`, no versionado
 | El hueco de ilustración por instalación · `client-kit.svg` · `<use>` externo | `docs/specs/hueco-ilustracion.md` §0 |
 | `/servicios` · precios por tramo de grupo · reservas de grupo | `docs/specs/landing-white-label.md` §0 · `docs/sistemas/SERVICIOS-CMS.md` |
 | El libro del pedido · desglose +/− · saldo en el parque · cortesía · reembolso | `docs/specs/desglose-libro.md` §0 |
-| El desglose de dinero que ve el cliente (📜 histórico, el modelo de dos ejes) | `docs/specs/desglose-dinero-cliente.md` §0 |
 | «Mis reservas» por reserva · historial | `docs/specs/mis-reservas-por-reserva.md` §0 |
 | Área de cliente en el cajón (mis pedidos / mis reservas) | `docs/specs/area-cliente.md` §0 |
 | Bloque de cuenta del cajón (`.acct`) · el `no-store` de la web | `docs/specs/account-context-vue.md` §0 |

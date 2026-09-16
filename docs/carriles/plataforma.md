@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#621`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#622`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-16.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -19,6 +19,10 @@
   al cerrar · nace `sistemas/AFORO-FRANJAS.md` (la fila de aforo apuntaba a las invariantes, que son una tabla).
 - ⚠️ **Corrección a la spec**: la comprobación de techos es la **10**; la 9 (marcadores de conflicto) existía
   desde `#506` aunque la cabecera del gate enumeraba ocho.
+- **`#622` · el ciclo de vida de la doc** (`CONVENCIONES §11`, comprobación 11): referencia con techo, proceso
+  que se archiva al cerrar, registro que se marca; archivar no reescribe citas (el gate resuelve la cita vieja
+  al archivo). Aplicado a `desglose-dinero-cliente.md`. ▶ Queda **podar `DEUDA.md`** (277 KB; las fichas
+  cerradas se borran) y `VERIFICACION-E2E-CAJON.md` (186 KB) antes de ponerles techo — tarea propia.
 - **Medido al cerrar F1** (`wc -c`, 2026-09-16): `CLAUDE.md` 12.249 B (era 316.874) · `00-REFACTOR.md` 11.409
   (era 390.052) · `ESTADO.md` 2.679 (era 870.051) · el carril más grande (`web.md`) 7.542 · el §0 más grande
   2.039 · **arranque en frío 35.918 B** (enrutador + índice + carril + tracker + un §0; era 1,57 MB). Las tres

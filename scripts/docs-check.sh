@@ -18,6 +18,9 @@
 #  10. Techos de la documentación caliente (`#620`): enrutador ≤ 12 KB · tracker ≤ 16 KB · estado
 #      ≤ 4 KB · fichero de carril ≤ 24 KB · §0 obligatorio y ≤ 2 KB en cada spec · decisión
 #      posterior a F0 ≤ 1,5 KB. Un techo que solo se declara no vigila nada.
+#  11. Ciclo de vida (`#622`, CONVENCIONES §11): una spec con estado 📜 vive en docs/archivo/, el
+#      enrutador no cita el archivo, y un doc de sistemas/ no pasa de 48 KB (si crece, se parte).
+#      Y el check 1 resuelve la cita a un doc ARCHIVADO por su nombre: archivar no reescribe citas.
 # Escape (CONVENCIONES §4): una línea con «(futuro)» o «(ejemplo)» queda exenta de los
 # checks 2-4 y 8 — para specs de diseño y ejemplos pedagógicos. Una entrada que EXPLICA un
 # ancla rota o un test retirado necesita escribirlo, y el gate no puede castigar eso.
@@ -40,14 +43,15 @@ err() { printf '✗ docs-check: %s\n' "$*" >&2; FAIL=1; }
 ESCAPE_RE='\((futuro|ejemplo)\)'
 
 # ── 1 · Enlaces a docs citados (boundary-aware: ignora URLs externas …/docs/x.md) ─────
+# Un documento ARCHIVADO conserva su nombre (CONVENCIONES §11.1, `#622`): la cita antigua
+# «docs/specs/X.md» sigue valiendo si existe «docs/archivo/X.md». Así archivar no obliga a
+# reescribir el registro de decisiones, que hablaba del documento cuando estaba vivo.
 while IFS= read -r raw; do
     ref="$raw"
     [[ "$ref" == docs/* || "$ref" == sistemas/* || "$ref" == specs/* ]] || ref="${ref#?}"
-    if [[ "$ref" == docs/* ]]; then
-        [[ -f "$ref" ]] || err "enlace roto: «$ref» no existe (citado en la doc)"
-    else
-        [[ -f "docs/$ref" ]] || err "enlace roto: «$ref» no existe bajo docs/ (citado en la doc)"
-    fi
+    [[ "$ref" == docs/* ]] || ref="docs/$ref"
+    [[ -f "$ref" || -f "docs/archivo/$(basename "$ref")" ]] \
+        || err "enlace roto: «$ref» no existe (citado en la doc), ni archivado bajo docs/archivo/"
 done < <(grep -ohE '(^|[^/A-Za-z0-9_.-])(docs|sistemas|specs)/[A-Za-z0-9_/.-]+\.md' "${DOCS[@]}" | sort -u)
 
 # ── 2 · Anclas §N hacia CONVENCIONES / INVARIANTES ───────────────────────────────────
@@ -255,6 +259,22 @@ done < <(LC_ALL=C awk '
     n != "" { b += length($0) + 1 }
     END { flush() }
 ' docs/decisiones/*.md 2>/dev/null || true)
+
+# ── 11 · Ciclo de vida de la documentación (CONVENCIONES §11, DECISIONES #622) ────────
+# Tres familias: REFERENCIA se mantiene con techo, PROCESO se archiva al cerrar, REGISTRO se marca y
+# no se reescribe. Lo medible: una spec que se declara histórica no puede seguir entre las vivas (el
+# arranque la seguiría enrutando), el enrutador no cita el archivo, y un doc de sistema no crece sin
+# partirse — los de referencia son el siguiente sitio donde la doc acumula (medido el 2026-09-16:
+# DEUDA.md 277 KB, VERIFICACION-E2E-CAJON.md 186 KB; sistemas/ de 12 a 31 KB, y ahí se pone el techo).
+for f in docs/specs/*.md; do
+    if head -14 "$f" | grep -E '^> \**Estado' | grep -q '📜'; then
+        err "«$f» declara estado 📜 histórico y sigue en docs/specs/: se destila en su doc de sistema y se mueve a docs/archivo/ (CONVENCIONES §11)"
+    fi
+done
+if grep -q 'docs/archivo/' CLAUDE.md; then
+    err 'CLAUDE.md cita docs/archivo/: el enrutador solo apunta a documentos vivos; la fila se retira o apunta al doc de sistema (CONVENCIONES §11.2)'
+fi
+for f in docs/sistemas/*.md; do techo "$f" 49152 'doc de sistema: referencia viva; si crece, se parte por subsistema'; done
 
 if [[ $FAIL -eq 0 ]]; then
     echo "✓ docs-check: doc coherente (${real_models} modelos · ${real_migrations} migraciones · ${real_invariants} invariantes · ${real_resources} Resources)."
