@@ -30,6 +30,16 @@ bien separadas sobre un núcleo único, y preparada para app móvil.
 
 ## Fases
 
+### PRODUCTO E INSTANCIAS 🟦 — el programa de separación, spec ✅ del owner (`specs/producto-e-instancias.md`, `#610`→`#616`, 2026-09-16)
+Empieza por el §0 de la spec; las fases con su salida medible están en su §4.9 y los riesgos en su §4.10.
+- [x] F0 · gobierno: spec aprobada, `#610`–`#616`, reglas 8 y 9 de `CLAUDE.md` (empujado en `d898c76a`)
+- [ ] F1 · doc caliente: enrutador ≤ 12 KB, estado por carriles, tracker ≤ 16 KB, §0 por spec, comprobación 9 del gate, huella 100 %
+- [ ] F2 · capa de agente: plugin en las dos máquinas, disparo sin barra 6 de 6, `/carril` con estándar de calidad
+- [ ] F3 · versión: v1.0.0 sobre `b0ea5a16`, changelog, guarda 8 del despliegue
+- [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0
+- [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0
+- [ ] F6 · app nativa: spec con pila y alcance
+
 ### Fase 0 — Fundación ✅
 - [x] Exportar la base (árbol versionado + fix de aislamiento de la suite) sin datos de
       **infraestructura** del cliente origen (deploy scripts con IP/SSH, docs, mockup) —
