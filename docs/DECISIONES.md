@@ -31978,3 +31978,93 @@ guarda. El JS pasa a módulo e importa `public/js/guest-form/logic.js`, estátic
 ⚠️⚠️ **Defecto en producción desde `#444`**: el campo del número de invitados vive en el resguardo, fuera del `<form>`, y el
 navegador no lo enviaba — cambiarlo no hacía nada. Arreglado con `form="gf-form"`, vigilado en `GuestCountSurfacesTest` y
 verificado en navegador (20 → 19). ▶ «Abrir la primera pendiente» se retira (la 3a no lo dibuja). Mutaciones **5/5**.
+
+## #610 · 2026-09-16 · `[DECIDIDO owner]` El programa «producto e instancias»: un producto, N instancias, y la banda 610–639
+JumpWeb se separa en **producto** (`main`: API, cajón y panel; la app en repo propio) e **instancias** (un repo por
+cliente con landing, tema, configuración, semillas, build de la app y documentos propios), unidos por un **contrato
+de instancia** con versión. La regla que decide dónde vive cada cosa: «¿sería distinto para un segundo cliente?».
+`JumpWeb` conserva nombre y ruta —renombrar cuesta 6 rutas, 10 nombres, el remoto, el clon del otro ordenador y la
+memoria del agente, ligada a la ruta absoluta—; solo se crea `jumpapp`. Spec: `docs/specs/producto-e-instancias.md`.
+Carril «plataforma», banda **610–639**.
+**Por qué**: medido el 2026-09-16, 79 de 526 decisiones y 14 de 44 specs nombran al cliente, y el mecanismo de
+ficheros del cliente (rama huérfana, `aplicar.sh`, 15 rutas ignoradas) no da casa a sus decisiones ni a su estado.
+**Consecuencia**: nada de un cliente en `main`, nada de código de producto en una instancia; la rama
+`cliente/playjump` es la semilla del primer repo de instancia; la plantilla de instancia la publica el producto.
+
+## #611 · 2026-09-16 · `[DECIDIDO owner]` La landing sale del producto, una por instancia y a mano, y el panel se queda sin CMS
+La landing es de cada instancia y consume del producto **solo hechos por la API pública**: precios (catálogo),
+horario, los cinco documentos legales, normas y reseñas. La presentación es manual. Del panel salen Attractions,
+Faqs, Testimonials, LandingServices, Offers y BarImages y las secciones «textos de la landing» y «bar»; se quedan
+ParkRules y Pages. Attractions arrastra el complemento por atracción (0 de 23 en uso) y se retira con él; los campos
+de presentación de `ticket_types` se quedan porque los consume el cajón. **El cajón sigue siendo un cajón sobre la
+landing**: pasa a ser un paquete con contrato de incrustación, y el producto gana un anfitrión mínimo para las nueve
+rutas que hoy renderizan la portada solo para abrirlo.
+**Por qué**: diseñar y editar una landing data-driven era insostenible (owner); medido, las specs de landing y diseño
+son el 27 % de la doc y 73 de 489 tests son guardas de landing. **Consecuencia**: F5 del programa y v2.0.0; cuatro
+endpoints públicos nuevos (horario, legales por clave, normas, prueba social); las 79 decisiones que nombran al
+cliente se marcan y no se migran ahora.
+
+## #612 · 2026-09-16 · `[DECIDIDO owner]` La app es nativa, y nace después de la instancia atada a una versión del contrato
+Opción B: app nativa con código propio contra la API v1, una base y N builds white-label. El repo `jumpapp` se crea
+desde la plantilla en F6, no antes: un repo vacío sin reglas es un repo que un agente empieza a llenar a su manera.
+La pila se decide en la spec de F6 con una prueba corta por candidata.
+**Por qué**: el owner prefiere el tacto nativo a una cápsula sobre el cajón, con el coste de una segunda
+implementación de las 25 pantallas asumido. **Consecuencia**: antes de la app, la API necesita login por token —hoy
+declara un único esquema de seguridad, la cookie, y ningún endpoint emite tokens aunque el modelo los admita— y un
+registro de dispositivo para notificaciones; cada cliente publica en las tiendas con su propia cuenta (guía 4.2.6 de
+Apple).
+
+## #613 · 2026-09-16 · `[DECIDIDO owner]` Versionado semántico del producto: v1.0.0 es producción, y producción despliega solo etiquetas
+Un solo número, `vMAYOR.MENOR.PARCHE`, sobre el producto entero. **MAYOR**: una instancia tiene que actuar para
+actualizar, porque el contrato cambió; su versión es el MAYOR del producto. **MENOR**: capacidad nueva sin acción.
+**PARCHE**: arreglo. Etiqueta anotada en `main`; **producción despliega solo etiquetas** (guarda 8 del despliegue) y
+staging despliega `main`. `CHANGELOG.md` por versión con dos mitades, «para las instancias» e «interno». La versión
+desplegada queda escrita en el servidor y en el estado de la instancia. El contrato OpenAPI sube en MENOR al añadir
+y una ruptura es `/api/v2`. **v1.0.0 = `b0ea5a16`**, lo que corre en producción desde el 13-09; la separación de la
+landing publica v2.0.0.
+**Por qué**: medido, cero etiquetas de versión (las dos que hay son una copia de seguridad y un wip), el contrato
+declara 1.0.0 sin moverse en 75 commits que lo cambiaron, y siete despliegues en once días identificados por hash.
+**Consecuencia**: con dos agentes empujando a `main` cada hora, la etiqueta separa «esto está listo» de «esto es lo
+último»; F3 del programa.
+
+## #614 · 2026-09-16 · `[DECIDIDO owner]` La capa de agente es un plugin compartido, las skills arrancan sin barra, y el estándar de `/carril` es calidad profesional
+Skills y hooks van en un **plugin de Claude Code** instalado en las dos máquinas y activado por repo; cada repo lleva
+solo su `CLAUDE.md` corto. Las skills arrancan **sin escribir la barra** por tres capas: la descripción como lista de
+situaciones y frases del owner (techo 1.536 caracteres), una tabla momento → skill en el enrutador, y hooks
+deterministas (`SessionStart`, `UserPromptSubmit`, `Stop`) que inyectan la sugerencia al contexto. **`/carril`
+sustituye a `/arranque-sesion` con un estándar**: calidad de código profesional como norma; antes de tocar un
+subsistema se miden sus dependencias y sus fronteras, y si su arquitectura es mejorable se propone en spec antes de
+codificar. Entran las **reglas 8 y 9 de `CLAUDE.md`**: leer con Read y editar con Edit/Write, y ningún workflow sin
+permiso del owner en ese turno. Las herramientas de análisis estático (Larastan, Rector, ESLint) son dependencia
+nueva: **pendiente del owner**.
+**Por qué**: el modo «auto» del harness inyecta la orden de preferir Bash, y la regla contraria vivía solo en la
+memoria de una máquina, copiada a mano al arranque del otro ordenador; la skill de arranque, con «usar SIEMPRE» en su
+descripción, no se ejecutó en la sesión del 16 porque el modelo juzgó que no era una sesión de trabajo. Solo hay
+Pint y PHPUnit como herramientas de calidad. **Consecuencia**: F2 del programa; salida medible, seis frases del
+owner en sesión nueva de cada máquina, 6 de 6.
+
+## #615 · 2026-09-16 · `[DECIDIDO owner]` Techos para la documentación caliente, estado por carriles, y el contador de la suite fuera del estado
+Lo que carga la SESIÓN se mide en KB y tiene gate; lo que carga la TAREA se lee bajo demanda desde su spec.
+Techos: enrutador ≤ 12 KB con una línea por fila; un fichero por carril en `docs/carriles/` ≤ 24 KB, que cada agente
+escribe solo el suyo, con buzón para el otro; tracker ≤ 16 KB; §0 «antes de tocar» de cada spec ≤ 2 KB; decisión
+nueva ≤ 1,5 KB, con el registro partido por centenas. Entra la comprobación 9 del gate documental (tamaños y
+longitud de fila). El histórico del estado se borra: git es el archivo. **El contador de la suite sale de
+`ESTADO.md`** y queda en el trailer del commit de cierre, lo que cambia la parte del hook de `DECISIONES #10` que lo
+compara. La mudanza del contenido de las filas del enrutador se verifica con huella: cada frase con aviso localizable
+en su spec antes de borrarse.
+**Por qué**: arranque en frío de 1,57 MB (enrutador 314 KB inyectado siempre, estado 866 KB, tracker 389 KB), con
+crecimiento de +17, +38 y +8 KB al día; la instrucción «mantener CORTO» no frenó nada en 32 días porque el gate no
+mide tamaño; cada trampa se escribe en 2 a 6 ficheros. **Consecuencia**: F1 del programa; salida, arranque en frío
+≤ 60 KB y huella 100 %.
+
+## #616 · 2026-09-16 · `[DECIDIDO owner]` Las reseñas son mecanismo del producto: Business Profile, API pública sin avatares, y el CMS de testimonios fuera
+Las reseñas de Google se quedan en el producto como herramienta del panel: la conexión con Google Business Profile
+(`specs/google-business-profile.md`, `#524`, sigue vigente; sus tandas T1 y T2 van después de F5) sobre el contrato
+`SocialProof` que ya existe, expuestas a la landing por un endpoint público con valoración, recuento y reseñas con
+autor, enlace al perfil, marca de traducción y fuente, **sin avatares**. El CMS manual de testimonios se retira: una
+instancia que quiera testimonios escritos los escribe en su landing.
+**Por qué**: la mayoría de instancias tendrán reseñas (owner), y un mecanismo idéntico para todos es producto;
+copiarlas a mano no es legítimo y envejece; sin avatares no hay petición del visitante a terceros y el consentimiento
+deja de hacer falta. **Consecuencia**: el endpoint nace en F5 con la fuente de hoy (Places) y la fuente cambia
+después sin tocar consumidores; requisito previo del owner, el proyecto de Google de JumpWeb verificado y «en
+producción», porque en prueba el permiso caduca a los siete días.
