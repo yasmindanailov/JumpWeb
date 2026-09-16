@@ -50,10 +50,19 @@
   `maintenance.page.bar = 1`** (dato del panel, no del despliegue). **El último por hash** (`#613` → F3). Receta,
   hashes y verificación: `ENTORNOS.md` §6. La sesión arrancó con el plugin instalado: «arrancamos» → `/carril` y
   «sí, despliega» → `/desplegar` sin barra, **2 de 6** de la prueba de salida de F2.
+- **F2 · sesión 3** (2026-09-16, noche): medido un defecto del hook —«vamos con F2, continuamos» a mitad de sesión
+  volvió a ordenar `/carril` entero— y corregido en el plugin (`c57c9f2`, empujado): `carril` es
+  `una_vez_por_sesion` en `momentos.json` y `prompt_submit.py` mira la transcripción (`transcript_path`) con las
+  dos formas medidas (`"skill":"jumpweb-agente:carril"` y `<command-name>/carril`); arnés **43/43**, mutación
+  vista en rojo (3 de 43) y el fichero restaurado byte a byte; 21 ms sobre 1 MB. ⚠️ **En esta máquina sigue
+  instalado `c8e74b1`**: el clasificador denegó `claude plugin marketplace update` como «Self-Modification».
 
 ## Por dónde retomar, en orden
 
 1. **F2 · lo que queda** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
+   (0) **el owner actualiza el plugin en esta máquina**: `/plugin marketplace update jumpweb-agente` (y
+   `/plugin update jumpweb-agente@jumpweb-agente` si la caché sigue en `c8e74b1de042`); comprobar con
+   `ls ~/.claude/plugins/cache/jumpweb-agente/jumpweb-agente/` que aparece `c57c9f2…` y abrir `/hooks` una vez;
    (a) **la prueba de las seis frases en ESTA máquina** (README del plugin; el owner abre `/hooks` una vez):
    **van 2 de 6** (`carril`, `desplegar`, el 16-09); quedan «cerramos, haz el handoff» → `handoff`, «queda
    decidido: …» → `decision`, «hazlo en ligero» → `ligero`, «¿está hecho de verdad?» → `dod`; el 6 de 6 se
@@ -101,6 +110,11 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   de lectura con un bucle `for` sobre carpetas: un `ssh` simple con tres comandos pasó.
 - Un `git diff --stat … | tail -15` sobre 19 ficheros esconde cuatro y parecen ajenos al plan del `rsync`: contar
   con `--numstat | wc -l` antes de creer que faltan.
+- **`claude plugin …` desde el agente lo deniega el clasificador «auto»** («Self-Modification»), igual que escribir
+  hooks: actualizar o instalar el plugin lo hace el owner con `/plugin …` en su sesión. Además, en la shell del
+  harness `claude` da «command not found» aunque `~/.local/bin` está en el PATH: **el enlace
+  `~/.local/bin/claude` está roto** (apunta a la extensión 2.1.263, retirada); el binario vivo es
+  `~/.vscode-server/extensions/anthropic.claude-code-<v>/resources/native-binary/claude` (hoy 2.1.273).
 
 ## Buzón
 

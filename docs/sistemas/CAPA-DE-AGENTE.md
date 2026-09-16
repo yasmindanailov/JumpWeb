@@ -47,6 +47,8 @@
      **las reglas del owner** (`reglas/owner.md`). En un subagente no escribe nada.
    - `UserPromptSubmit`: casa el mensaje (minúsculas, sin acentos) contra `reglas/momentos.json` e inyecta
      hasta dos sugerencias «ejecuta AHORA la skill /x». Nunca bloquea; un `/comando` explícito no recibe sugerencia.
+     Un momento `una_vez_por_sesion` (hoy solo `carril`) calla si la transcripción (`transcript_path`) ya tiene
+     la skill invocada, por el modelo (`"skill":"jumpweb-agente:carril"`) o tecleada (`<command-name>/carril`).
    - `Stop`: si hay commits sin empujar, bloquea UNA vez por estado (HEAD + cuenta) con la orden de decirlo en
      una línea; con `stop_hook_active` calla. Medido en la documentación de hooks: en `Stop` el owner no ve
      stdout ni `systemMessage`; solo un bloqueo le llega. Un árbol sucio no avisa: es trabajo normal.
@@ -82,8 +84,8 @@ El mapa vive en un solo sitio, `reglas/momentos.json`; esta tabla es su copia le
   versión instalada es el sha del commit (`claude plugin list` lo enseña), así que cada push es una versión.
   La actualización en segundo plano no autentica en repos privados por HTTPS: se hace a mano. Tras escribir o
   cambiar hooks, abrir `/hooks` una vez (spec §4.10).
-- **Probar**: `bash pruebas/probar-hooks.sh` (38 casos: los tres eventos, los once momentos, el dedupe del Stop,
-  fail-open; veredicto por código de salida) y una sesión real sin instalar nada, desde la raíz del repo:
+- **Probar**: `bash pruebas/probar-hooks.sh` (43 casos: los tres eventos, los once momentos, el «una vez por
+  sesión» de `carril`, el dedupe del Stop, fail-open; veredicto por código de salida) y una sesión real sin instalar nada, desde la raíz del repo:
   `claude -p "…" --plugin-dir ~/proyectos/jumpweb-agente/plugins/jumpweb-agente --max-turns 1`.
 - **Salida de F2**: las seis frases del README del plugin (arrancar · cerrar · decidir · ligero · ¿hecho? ·
   desplegar), en sesión NUEVA de cada máquina, 6 de 6.
@@ -105,3 +107,9 @@ Una skill se puede no invocar; un gate no.
 - En `Stop` nada llega al owner salvo un bloqueo: por eso avisa así, y solo de commits sin empujar.
 - `claude plugin details` no acepta `--plugin-dir`; la sesión `-p` con `--plugin-dir` sí carga el plugin entero
   (skills y hooks) y es la prueba empírica que vale antes de instalar.
+- **El hook no sabe en qué punto de la sesión está**: «vamos con F2, continuamos» a mitad de sesión (16-09, con el
+  plugin ya instalado) volvió a ordenar `/carril` entero, y un agente obediente repite fetch, gates y lecturas.
+  La memoria de sesión que sí tiene es la transcripción: `carril` es «una vez por sesión» desde ese día.
+- **El clasificador «auto» también deniega las escrituras remotas de un despliegue** (`scp`, `deploy.sh --go`;
+  «Remote Shell Writes») aunque deja pasar `ssh … bash -s` y los `ssh` de lectura; el owner cambia el modo de
+  permisos para ese paso (`ENTORNOS.md` §6, octavo despliegue). Dato para su decisión pendiente sobre el modo.
