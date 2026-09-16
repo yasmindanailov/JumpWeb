@@ -1,9 +1,11 @@
 # [SPEC] Producto e instancias — la separación de JumpWeb y sus clientes
 
-> Estado: 🟦 **en revisión del owner** (F0 del programa) · Última actualización: 2026-09-16 ·
-> Decisiones: `DECISIONES #610` → `#616` · Carril: **plataforma**, banda **610–639**.
+> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 cerrada y **F1 es lo siguiente** ·
+> Última actualización: 2026-09-16 · Decisiones: `DECISIONES #610` → `#616` · Carril: **plataforma**, banda **610–639**.
 > Origen: sesión de análisis del 2026-09-16 con el owner; inventario medido sobre el árbol de ese día.
-> Las páginas de trabajo del owner (esquema y hoja de ruta) son borradores de ESTA spec: lo vigente es esto.
+> Las dos páginas de trabajo que se iteraron con el owner son borradores de ESTA spec, no fuente:
+> el esquema (https://claude.ai/code/artifact/c0a1828f-63ee-4644-a5fc-77383a295bc8) y la hoja de ruta
+> (https://claude.ai/code/artifact/56fdb8f2-d7c9-4669-99c6-39fe9e54cc9b). Lo vigente es esto.
 
 ## §0 · Antes de tocar
 
@@ -189,6 +191,38 @@ existen, la guarda 8 del despliegue y el comando que valida una instancia contra
 reglas del owner en `CONVENCIONES §10` y en las reglas 8 y 9 de `CLAUDE.md`; plantilla de `CLAUDE.md` de 4 KB para
 instancia y app.
 
+**Las skills, una a una** (lo que hace cada una y la medida que la motiva):
+
+| Skill | Sustituye o cubre | Qué la motiva, medido |
+|---|---|---|
+| `carril` | Arranque de carril: fetch, árbol limpio, hook activo, lee su fichero de carril y el enrutador, reclama empujando una línea; antes de tocar un subsistema, revisión de sus dependencias y su arquitectura | 711 commits sobre un estado compartido; 13 colisiones de número; la skill de arranque no se disparó sola |
+| `handoff` | Cierre: reescribe la foto de su carril en vez de apilarla, retira avisos atendidos, añade por nombre de fichero, trailer con evidencia y modo | 11 bloques históricos apilados; el cierre hace `git add -A` y el carril del SPA lo prohíbe |
+| `decision` | Entrada en la banda del carril, techo de 1,5 KB, estructura fija, actualiza «último usado», corre el gate | 556 entradas con 3,7 KB de mediana y 47 KB de máximo |
+| `ligero` | Perfil rápido con recibo, abajo | la doc es el 41 % de los bytes escritos en 14 días; la suite tarda 114 s |
+| `dod` | Existe y se queda | |
+| `spec` | Spec desde la plantilla con su §0 de 2 KB, alta en el índice y en el enrutador | 44 specs sin §0; filas del enrutador de hasta 34 KB |
+| `release` | Etiqueta anotada, sección del changelog, push; producción solo etiquetas | 0 etiquetas de versión; 7 despliegues por hash |
+| `mutar` | Arnés de mutación con restauración garantizada y puerta por código de salida | 60 arneses escritos uno por feature; dos árboles dejados mutados |
+| `desplegar` | Runbook sobre el script: de noche, etiqueta obligatoria en producción, guarda del contrato | 3 minutos de 503 con un pago en curso (`#594`) |
+| `sonda` | La receta del navegador: Chromium en el contenedor, puente de puertos, la dependencia que `npm install` poda | 8 sondas con la receta en una cabecera |
+| `instancia` | Crear desde la plantilla, aplicar el paquete a un producto local, comprobar la versión del contrato, sincronizar docs; sustituye a `aplicar.sh` | 79 decisiones del cliente dentro del registro del producto |
+| `build-cliente` | Build de la app para una instancia desde su carpeta de config; se diseña en F6 | |
+
+**El perfil `/ligero`**, saltarse cosas con recibo y no a escondidas:
+- **Siempre**: código más un test que falle al revertir; Pint; docs-check; leer INVARIANTES si toca dinero,
+  aforo, RGPD o seguridad; commit por nombre de fichero; handoff de tres líneas.
+- **Se omite, y queda escrito en el trailer del commit** como «Modo: ligero · omitido: …»: la suite completa en
+  local (filtro del módulo; el gate la corre una vez), el arnés de mutación (una línea en `DEUDA.md`), la sonda de
+  navegador si nada visual cambió, el reloj y el build si no hay fixtures con fechas ni assets, la narrativa larga
+  (registro de seis líneas), la revisión adversarial.
+- **Se prohíbe**: tocar un fichero del `CRITICAL_RE`, el contrato OpenAPI o una migración de dinero o aforo. La
+  skill lo comprueba con el diff y baja sola a modo completo.
+- En ligero se lee el §0 de la spec, no la spec.
+
+**La regla del buzón de `/carril`**: cada agente escribe solo su fichero de carril. Un mensaje para el otro va en
+el fichero del emisor; el receptor lo atiende y anota «atendido» en el suyo; el emisor lo retira en su siguiente
+cierre. Cero escrituras cruzadas. El contador de la suite no vive en ningún fichero de carril.
+
 ### 4.8 La documentación del producto, con techo
 
 Enrutador ≤ 12 KB con una línea por fila; `docs/carriles/<carril>.md` uno por agente (banda, ficheros, foto,
@@ -208,6 +242,22 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 | F4 cajón y token | 2 la SPA, 1 la API | 3–5 | cajón montado desde HTML ajeno; huella de maquetación 24/24; contrato 1.1.0 |
 | F5 instancia PlayJump | 1 | 4–6 | visitante sin cambios; cero cliente en el código; 13 recursos; v2.0.0 |
 | F6 app nativa | 2 | spec 1–2 | pila y alcance ✅ owner; repo desde plantilla |
+
+### 4.10 Riesgos por fase, y qué los cubre
+
+- **F1**: perder una trampa al mudar (la huella); chocar con el carril 2 en ficheros compartidos (el carril 2
+  empuja y se para antes, y hace pull al volver).
+- **F2**: un hook que no dispara falla en silencio (la prueba de las seis frases es de salida; el vigilante de
+  ajustes del harness exige abrir `/hooks` una vez tras escribirlos).
+- **F4**: un token es una credencial nueva (revocación, caducidad y limitadores se prueban, no se suponen); partir
+  la hoja compartida puede cambiar el cajón sin que falle nada (la huella de maquetación, no la suite).
+- **F5**: una URL que cambia es una pérdida de SEO silenciosa (el sitemap se compara antes y después);
+  consentimiento de cookies, textos legales y el retorno de Google necesitan dueño declarado antes de mover nada;
+  la vía B ata la landing a componentes del producto (es transición, la vía A es destino).
+- **F6**: la guía 4.2.6 de Apple exige que cada cliente publique con su cuenta; una app nativa es una segunda
+  implementación de las 25 pantallas del cajón, en manos de una sola persona.
+- **Programa**: el ojo del owner es el único revisor; cada fase termina con un guion de revisión corto que dice
+  qué mirar y dónde.
 
 ## 5. Impacto en invariantes
 
@@ -232,7 +282,8 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 
 ## 7. Revisión y decisión
 
-Revisada con el owner en la sesión del 2026-09-16: app nativa, landing fuera, repo por instancia, nombre y ruta del
-producto, Business Profile como mecanismo, panel sin CMS con la lista cerrada. Decisiones `#610` → `#616`.
+**Aprobada por el owner el 2026-09-16** tras leer §0 y §4.9 («la valido, todo ok»). Revisada con él en la misma
+sesión: app nativa, landing fuera, repo por instancia, nombre y ruta del producto, Business Profile como
+mecanismo, panel sin CMS con la lista cerrada. Decisiones `#610` → `#616`.
 **Pendientes del owner**: la pila de la app (F6a); las herramientas de análisis estático (dependencia nueva); el
 modo de permisos del harness; si Zones pierde sus campos de landing y si «redes» se va (F5).
