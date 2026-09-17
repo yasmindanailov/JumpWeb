@@ -94,7 +94,9 @@
    `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador paso 0, CONVENCIONES §1 y
    §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker. ⚠️ Hasta (c), `arranque-sesion` y
    `cierre-sesion` siguen. Cada cambio del plugin: `bash pruebas/probar-hooks.sh` en verde → commit → push →
-   `/plugin marketplace update jumpweb-agente` en cada máquina (la versión es el sha del commit).
+   `claude plugin marketplace update jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente
+   --scope project` en cada máquina, por TERMINAL (en VSCode `/plugin` no existe); con las reglas de `#626` el
+   agente ya puede correrlas él. La versión es el sha del commit y surte efecto en la sesión siguiente.
 2. **F3 · cerrarla**: que producción diga v1.0.0. Una línea, de noche o con el parque cerrado (`#594`), y la
    corre el owner o se pide permiso (el clasificador deniega escrituras remotas):
    `ssh jumpweb-prod "printf '%s\n' 'v1.0.0 1272cb93 <fecha-UTC>' > public_html/storage/app/version"`; o se
@@ -116,13 +118,20 @@
    `FROZEN_ERRORS` en el mismo commit.
 4. Después F4 (cajón empaquetable y token; la parte de la API empieza por `/spec`, toca `RGPD-06` y `SEC-06`)
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes») → F6 (app nativa, spec).
-- **Del owner**: pegar las cuatro reglas de `#626` en `~/.claude/settings.json` (y arreglar el enlace
-  `~/.local/bin/claude`) · la pila de la app (F6a) · las dos de F5, que se le llevan con el censo hecho.
-- **El plan de la noche del 17-09** (parque cerrado a las 21:30), en sesión NUEVA con el plugin actualizado:
-  «Hola, lee la doc y arranca» → la línea de `storage/app/version` en producción → «¿esto está hecho de
-  verdad?» (`dod`) → «queda decidido: …» (`decision`, p. ej. la pila) → «esto hazlo en ligero: …» (`ligero`)
-  → «cerramos por hoy, haz el handoff» (`handoff`). El agente comprueba cada disparo en la transcripción y
-  anota el recuento en la spec §6.
+- **Del owner**: la pila de la app (F6a; tiene los pros y contras y la respuesta a «¿se reutiliza el tema?»:
+  sí los 65 tokens de `client.css`, las fuentes, el logo, el kit y los textos; no el CSS ni los componentes
+  Vue — propuesta para la spec de F5: un `tokens.json` en la instancia del que salen `client.css` y el tema de
+  la app) · las dos de F5, que se le llevan con el censo hecho.
+- **LA SIGUIENTE SESIÓN ES LA DE LAS FRASES** (acordado con el owner el 17-09 a las ~22:00, parque cerrado): es
+  una sesión NUEVA con el plugin `627b3a3` ya cargado, y el owner va a decir, una por mensaje: «Hola, lee la
+  doc y arranca» → «Escribe la versión v1.0.0 en producción» (es el paso 2 de arriba: inténtalo con su orden
+  delante; si el clasificador deniega la escritura remota, dale la línea para su terminal y verifica después
+  con `ssh jumpweb-prod 'cat public_html/storage/app/version'`) → «¿Esto está hecho de verdad?» (`dod`, sobre
+  F3) → «Queda decidido: …» (`decision`; p. ej. la pila) → «Esto hazlo en ligero: …» (`ligero`) → «Cerramos por
+  hoy, haz el handoff» (`handoff`). **Comprueba cada disparo en la transcripción** (la skill invocada sin que
+  él escriba la barra) y anota el recuento en la spec §6 y aquí. ⚠️ En la sesión del 17-09 «cerramos» YA disparó
+  `/handoff` sin barra, pero **no cuenta**: no era sesión nueva y corría el plugin viejo (`c8e74b1`), el mismo
+  que a media sesión volvió a pedir `/carril` por la palabra «empezar» (el defecto que `c57c9f2` corrige).
 
 ## Ficheros de este carril
 

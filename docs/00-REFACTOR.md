@@ -21,7 +21,8 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### PRODUCTO E INSTANCIAS 🟦 — `specs/producto-e-instancias.md` §0 y §4.9 (`#610`→`#621`)
 - [x] F0 · gobierno: spec ✅ owner, `#610`–`#616`, reglas 8 y 9 de `CLAUDE.md` (`d898c76a`)
 - [x] F1 · doc caliente: decisiones por centenas · contador al trailer · §0 en las 46 specs · huella 974/974 · enrutador ≤ 12 KB · carriles y `ESTADO.md` índice · tracker ≤ 16 KB · comprobación 10 (`#617`→`#621`)
-- [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub, instalado en la primera máquina; arnés 38/38; dos sesiones reales con los tres hooks) · falta: 6 de 6 en la primera máquina, instalar y 6 de 6 en la segunda, retirar las skills viejas
+- [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub `627b3a3`, instalado y actualizado en la primera máquina; arnés 43/43; reglas `allow` del owner, `#626`) · falta: 6 de 6 en la primera máquina (van 2), 6 de 6 en la segunda, retirar las skills viejas
+- [ ] Análisis estático en el gate (`#625`): Larastan nivel 5 con línea base de 459 y trinquete, arnés 8/8 · falta: ESLint sobre el cajón (toca `package.json`, compartido) · deuda: bajar la línea base
 - [ ] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) · falta: que producción DIGA v1.0.0 (`storage/app/version`, de noche)
 - [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0
