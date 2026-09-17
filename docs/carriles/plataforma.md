@@ -54,8 +54,9 @@
   volvió a ordenar `/carril` entero— y corregido en el plugin (`c57c9f2`, empujado): `carril` es
   `una_vez_por_sesion` en `momentos.json` y `prompt_submit.py` mira la transcripción (`transcript_path`) con las
   dos formas medidas (`"skill":"jumpweb-agente:carril"` y `<command-name>/carril`); arnés **43/43**, mutación
-  vista en rojo (3 de 43) y el fichero restaurado byte a byte; 21 ms sobre 1 MB. ⚠️ **En esta máquina sigue
-  instalado `c8e74b1`**: el clasificador denegó `claude plugin marketplace update` como «Self-Modification».
+  vista en rojo (3 de 43) y el fichero restaurado byte a byte; 21 ms sobre 1 MB. En esta máquina estuvo
+  instalado `c8e74b1` hasta el 17-09 por la noche (el clasificador denegaba `claude plugin marketplace update`
+  como «Self-Modification»); desde entonces, `627b3a3` (ver «retomar», paso 0).
 - **F3 · versión, ejecutada salvo una línea** (2026-09-17, `#624`): lo que queda de F2 es todo del owner, así
   que la sesión hizo F3. `[DECIDIDO owner]` **v1.0.0 = `1272cb93`** (lo que corre desde el octavo despliegue;
   `#613` decía `b0ea5a16` y queda marcada). **Guarda 8** en `scripts/deploy.sh`, lo primero del pre-vuelo
@@ -77,9 +78,13 @@
 ## Por dónde retomar, en orden
 
 1. **F2 · lo que queda** (spec §4.7, `#623`, `sistemas/CAPA-DE-AGENTE.md`), en este orden:
-   (0) **el owner actualiza el plugin en esta máquina**: `/plugin marketplace update jumpweb-agente` (y
-   `/plugin update jumpweb-agente@jumpweb-agente` si la caché sigue en `c8e74b1de042`); comprobar con
-   `ls ~/.claude/plugins/cache/jumpweb-agente/jumpweb-agente/` que aparece `c57c9f2…` y abrir `/hooks` una vez;
+   (0) ✅ **HECHO por el owner el 17-09 a las ~21:55**: plugin en `627b3a3f7b09` en esta máquina (por terminal,
+   `claude plugin …`), enlace `~/.local/bin/claude` reparado (2.1.273) y las cuatro reglas de `#626` en
+   `~/.claude/settings.json`. **Medido**: con la regla puesta, `claude plugin marketplace update jumpweb-agente`
+   desde la shell del agente PASA (antes, «Self-Modification» dos veces). ⚠️ El primer intento del owner pegó el
+   bloque en `.claude/settings.json` del PROYECTO como segunda clave `permissions`: en JSON gana la última y el
+   fichero cargaba 4 `allow` y **0 `deny`** (adiós a `rm -rf`, `migrate:fresh`, `db:wipe` y `jumpingjump`);
+   restaurado antes de commitear. En la otra máquina hizo lo mismo (no verificable desde aquí);
    (a) **la prueba de las seis frases en ESTA máquina** (README del plugin; el owner abre `/hooks` una vez):
    **van 2 de 6** (`carril`, `desplegar`, el 16-09); quedan «cerramos, haz el handoff» → `handoff`, «queda
    decidido: …» → `decision`, «hazlo en ligero» → `ligero`, «¿está hecho de verdad?» → `dod`; el 6 de 6 se

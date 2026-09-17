@@ -84,7 +84,9 @@ El mapa vive en un solo sitio, `reglas/momentos.json`; esta tabla es su copia le
   17-09): ahí todo va por la TERMINAL con `claude plugin …` (mismos argumentos; `install` y `update` llevan
   `--scope project`). Y **lo corre el owner**: al agente el clasificador «auto» le deniega `claude plugin …`
   como «Self-Modification» incluso con la petición del owner delante, hasta que el owner añada las reglas
-  `allow` de `#626` a sus ajustes de usuario. Si `claude` no está en el PATH: el binario vivo es
+  `allow` de `#626` a sus ajustes de USUARIO (`~/.claude/settings.json`, nunca el del proyecto: una segunda
+  clave `permissions` allí gana a la primera y deja el repo sin sus `deny`). Medido el 17-09: con la regla
+  puesta, `claude plugin marketplace update jumpweb-agente` pasa desde la shell del agente. Si `claude` no está en el PATH: el binario vivo es
   `~/.vscode-server/extensions/anthropic.claude-code-<v>/resources/native-binary/claude`.
 - **Actualizar**: `/plugin marketplace update jumpweb-agente` (en VSCode: `claude plugin marketplace update
   jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente --scope project`). Sin `version` en el manifiesto a propósito: la
