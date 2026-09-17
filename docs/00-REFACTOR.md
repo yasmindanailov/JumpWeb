@@ -99,7 +99,8 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] Desplegado el arreglo del número de invitados del post-form (defecto en producción desde `#444`) con las cuatro líneas del `client.css`: octavo despliegue, 2026-09-16 (`ENTORNOS.md` §6).
 - [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
 - [ ] Desplegar la T3 con etiqueta: arregla la barra de firmar del justificante, rota en producción desde el 16-09.
-- [ ] T4 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
+- [ ] T4 · la invitación digital, partida en seis unidades verdes (spec §10.4): **T4·1 cimientos hecha** (`#573`); quedan T4·2 reglas → T4·3 catálogo → T4·4 plazas y firmador → T4·5 RGPD → T4·6 API.
+- [ ] T5 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`

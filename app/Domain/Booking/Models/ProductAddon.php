@@ -58,6 +58,10 @@ class ProductAddon extends Pivot
         'included_quantity' => 'integer',
         'is_mandatory' => 'boolean',
         'allow_extra' => 'boolean',
+        // D12: si este enganche es «el menú» que la invitación digital enseña
+        // (`specs/celebracion-e-invitacion.md` §4.4, `#573`). Casteado por lo mismo que
+        // `postform_cutoff_hours`: un `'0'` de SQLite y un `0` de MySQL tienen que significar lo mismo.
+        'show_in_invitation' => 'boolean',
         'max_qty' => 'integer',
         'requires_addon_id' => 'integer',
         // El plazo de corte del complemento, en HORAS antes del inicio de la franja. `0` es un valor

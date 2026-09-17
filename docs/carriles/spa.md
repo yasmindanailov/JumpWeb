@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#572`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#573`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-17.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -14,6 +14,10 @@
 - **`celebracion-e-invitacion.md`**: T1 (`#570`) y T2 (`#571`) **desplegadas** el 16-09 (octavo despliegue).
   **T3 (`#572`, la piel del justificante) EN EL ÁRBOL y con el ✅ del owner en vivo** (17-09), medida en
   navegador a 390 y 1280, con `GuardianSkinTest` (10 casos). **SIN DESPLEGAR.**
+- **T4 · la invitación digital, empezada**: se parte en **seis unidades verdes empujables** (spec §10.4) y
+  la **T4·1 (los cimientos, `#573`) está en el árbol**: las dos tablas, los dos interruptores apagados, el
+  vínculo `nullOnDelete` con el justificante, `Platform\Services\PersonNameKey` (y `keyFor()` delegando,
+  con paridad) y la poda registrada. Guardas: `PersonNameKeyTest` (7) · `PartyInvitationSchemaTest` (8).
 - ❗❗ **Defecto en PRODUCCIÓN desde el 16-09, arreglado en el árbol por la T3**: la T2 hizo `.gf-savebar`
   pegada y en fila, y el justificante llevaba dentro dos párrafos legales y el botón. Medido a 390 × 844: la
   barra de firmar ocupa **401 px** pegada abajo y el botón se sale **65 px** de la pantalla. Se puede firmar,
@@ -28,9 +32,17 @@
    despliegue de noche o con el parque cerrado (`#594`). Solo código. Al desplegar, mirar el justificante en
    producción en ventana de teléfono, y allí el widget REAL de Turnstile, que en local no se pudo ver (no hay
    claves). Tampoco se ha visto en un teléfono de verdad.
-2. **T4** (dominio y contrato; lee §7.2 antes: `/spec` no hace falta, la spec existe y está revisada) → T5 (la
-   página) → T7 (correos) → **T6, el aterrizaje, al final** (borde abierto en §7·5: bajar invitados descarta
-   las filas del final). La T4 lleva verificador de concurrencia sobre InnoDB y arnés de mutación.
+2. **Seguir la T4 por su unidad `#573` siguiente** (spec §10.4, y **lee §7.2 antes de construir**):
+   **T4·2** las reglas del dominio (§4.5: nace sola, lista completa BAJO LOCK, emparejado, repetido en
+   silencio, recibo de 2 h, plazos) con su verificador de concurrencia sobre InnoDB —N «sí» simultáneos
+   sobre la última plaza → exactamente 1, **visto fallar sin el lock**— y el `openapi/v1.yaml` **antes de
+   una sola línea de código de API** → **T4·3** catálogo y embudo (los dos interruptores, las TRES listas
+   blancas del pivote, `funnelGuardianMode()`; `OrderCreator` NO se toca) → **T4·4** `PartyGuests`,
+   `GuardianPlaces`, la excepción del firmador y la rotación del token → **T4·5** RGPD (supresión, purga,
+   poda) → **T4·6** la API. Después T5 (la página) → T7 (correos) → **T6, el aterrizaje, al final**
+   (borde abierto en §7·5: bajar invitados descarta las filas del final).
+   ▶ Aplazados a propósito a la unidad que los consume: el contrato `PartyGuests` y
+   `TicketType::guestNameFieldKey()` — un contrato sin consumidor no lo puede verificar `ModuleContractsTest`.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha
    visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. De plataforma (F2·b): la prueba de las seis frases en ESTA máquina. Van **1 de 6** («lee la doc, vamos a
@@ -61,6 +73,11 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   de mutación (restaura el árbol, no el bundle).
 - Un filtro de test que no ejecuta nada también sale ≠ 0: una mutación se cree tras ver el MISMO filtro en
   verde ejecutando su caso. Y aseverar una subcadena sobre HTML acusa al script que la nombra (`#553`).
+- **`Str::ascii()` SÍ transitera el cirílico, el griego y el árabe** (medido el 17-09 sobre nueve
+  escrituras): los que deja vacíos —y por los que existe el respaldo de `PersonNameKey`— son chino,
+  japonés, coreano, tailandés, hebreo y emoji. La prosa heredada decía «alfabeto no latino» y era falsa.
+- **Un modelo nuevo necesita alias de morfo** en `AppServiceProvider` o `MorphMapTest` pone la suite en
+  rojo, y el rojo aparece en la suite COMPLETA, no en el filtro de tu tanda.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/500-599.md`.
 
 ## Buzón

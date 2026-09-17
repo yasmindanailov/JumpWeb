@@ -515,10 +515,19 @@ dominio. Arnés de mutación **solo en T4 y T6**. Sonda de navegador a 390 y 128
 | **T7** | Correos (§4.9). | Censos del molde · render de los dos correos · idempotencia de la víspera · «no se envía con todo hecho». |
 | **T6** | Aterrizaje (§4.7), puerta, hoja y panel (§4.8). | **Caso intercalado**: pintar → llega un «sí» → guardar → la respuesta sigue pendiente y nada se borra · adopción solo de `adopt[]` · quitar un «sí» · descarte al quitar la ficha · suelo con «sí» · puerta ≤28 consultas · hoja con pendientes · arnés de mutación · escenario `guest-count` de `purchase:verify-oversell` (cambia el suelo) · sonda. |
 
-⚠️ **Del `CRITICAL_RE`**: con §4.8, T4 y T6 **no** tocan ningún fichero de la lista (el padre no escribe
-`order_items`, el suelo cambia en `GuardianPlaces`, la casilla en un predicado del producto). Si una
+⚠️ **Del `CRITICAL_RE`**: con §4.8, el padre no escribe `order_items`, el suelo cambia en
+`GuardianPlaces` y la casilla en un predicado del producto, así que **`OrderCreator` no se toca**. Si una
 tanda acaba tocando `GuestCountAdjuster` (el borde de §7.1·5), `PostFormAddons`, `OrderCreator` o
 `MixedPartySurcharge`, el push pide `VERIFY_CONC=1` con sus verificadores.
+
+⚠️⚠️ **CORRECCIÓN, medida en la T4·1: esta sección decía «T4 y T6 no tocan ningún fichero de la lista» y
+es FALSO.** `product_addons.show_in_invitation` (D12) es una columna del PIVOTE, y el pivote es
+**`app/Domain/Booking/Models/ProductAddon.php`**, que el `CRITICAL_RE` nombra una por una. Lo paró el
+gate al empujar la T4·1, no una lectura. ▶ Así que **toda unidad de la T4 que toque el pivote —la T4·1 por
+su cast y la T4·3 por las tres listas blancas— empuja con `VERIFY_CONC=1`** y sus verificadores. No es
+ceremonia inútil: el pivote gobierna cuántas unidades de un complemento entran en una reserva, y el gate
+no distingue «solo añadí un cast» de «cambié el resolvedor». *Una spec que declara qué NO va a tocar está
+haciendo una predicción, y ésta se comprobó equivocada.*
 
 ⚠️ **Coordinación** (`CARRIL-SPA.md` §5, §7.2·R14): `.gf-*` es de este carril. **No están repartidos**
 y se anuncian en `ESTADO.md` antes de tocarlos: `.guardian__*`, `resources/views/reservation/**`,
@@ -782,6 +791,89 @@ Turnstile en navegador (en local no hay claves; el marcado lo cubre el caso) y u
 rótulo del anti-robot «Comprobación de seguridad · Cloudflare» delante. ▶ **Paso de despliegue**: solo
 código, sin migraciones y sin tocar `client.css`; producción pide etiqueta (`/release`, guarda 8 de `#624`) y
 noche o parque cerrado (`#594`).
+
+### 10.4 T4 · la invitación digital — SE PARTE EN SEIS UNIDADES VERDES
+
+`§6` la describe como una tanda, y **es varias sesiones**: dos tablas, dos interruptores, un contrato de
+módulo, un verificador de concurrencia sobre InnoDB y el contrato de la API. Se parte para poder empujar
+pronto (`CONVENCIONES §10.5`), en orden de dependencia y cada una verde por su cuenta:
+
+| | Qué | Estado |
+|---|---|---|
+| **T4·1** | Esquema, modelos y el normalizador compartido (§4.4) | ✅ `#573` |
+| **T4·2** | Las reglas del dominio (§4.5) + el verificador de concurrencia | ⬜ |
+| **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ⬜ |
+| **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ⬜ |
+| **T4·5** | RGPD: supresión, purga y poda (§4.4) | ⬜ |
+| **T4·6** | El contrato de la API y sus endpoints (§4.10) | ⬜ |
+
+⚠️ **Desviación declarada sobre §4.10.** Dice que los nombres y esquemas se fijan en `openapi/v1.yaml`
+**antes del código de la T4**. Se respeta su INTENCIÓN —que la API no se retro-ajuste a lo que hizo la
+web— pero no su letra: el `yaml` se escribe en la T4·2, cuando la forma del dominio está decidida y
+**antes de una sola línea de código de API**. Fijar el contrato antes del modelo de datos habría descrito
+una forma que aún no existía.
+
+#### 10.4.1 T4·1 · los cimientos — EN EL ÁRBOL (2026-09-17, `DECISIONES #573`)
+
+**Hecho.**
+- **`party_invitations`** (una por reserva, `order_item_id` único, token opaco de 12 base62) e
+  **`invitation_replies`** (`child_key` normalizada, `data`, `companion`, y el par
+  `adopted_at`/`dismissed_at` que solo mueve el anfitrión).
+- Los interruptores **`ticket_types.guest_invitation`** y **`product_addons.show_in_invitation`**, los dos
+  apagados: la migración no cambia la conducta de ninguna instalación.
+- El vínculo **`guardian_authorizations.invitation_reply_id`**, `nullOnDelete`.
+- **`Platform\Services\PersonNameKey`**: la normalización sube desde `GuardianAuthorization::keyFor()`,
+  que delega. Sube porque **Booking** necesita la misma clave para emparejar y no puede mirar a Identity.
+- `InvitationReply` es **`Prunable`** a los 14 días de la visita (V3) y queda **registrado en la lista
+  explícita de `model:prune`** en el mismo commit: fuera de ella no se poda nunca.
+
+**Lo que NO entra, y por qué.** El contrato `PartyGuests` y `TicketType::guestNameFieldKey()` se aplazan a
+la unidad que los consume (T4·4 y T4·2). Un contrato sin consumidor **no lo puede verificar**
+`ModuleContractsTest`, que sustituye el doble y comprueba que el consumidor cambia de conducta: escrito
+hoy sería ceremonia con una guarda decorativa.
+
+**Guardas**: `PersonNameKeyTest` (7, Unit puro por `CONVENCIONES §3.ter`) · `PartyInvitationSchemaTest`
+(8): el único por reserva, la cascada, el repetido aceptado en silencio, el `SET NULL` que salva la prueba
+legal, la poda por plazo con el comando REAL, el registro en `model:prune`, la lista blanca y los dos
+defectos apagados.
+
+**Trampas pagadas en esta unidad** —las cuatro salieron del instrumento, no del código—:
+1. Una aserción mía afirmaba que `'Pérez'` y `'Peréz'` daban claves distintas. **Es al revés y es el
+   contrato**: una tilde mal puesta no puede convertir a un niño en otro. El caso quedó, invertido.
+2. `guest_invitation` recién creado vale `null` en memoria: el defecto lo pone la BD y hay que releer.
+   Aseverar sobre la instancia decía que el defecto no existía.
+3. El payload manipulado **lanza** en vez de descartar en silencio: `preventSilentlyDiscardingAttributes`
+   (`SEC-10`) está activo fuera de producción. La protección es la misma; el caso asevera lo que ocurre.
+4. Larastan cazó la invarianza de `Builder<static>` en `prunable()` — el mismo patrón que
+   `GuardianAuthorization` tiene en la línea base, y que aquí no se puede añadir porque solo encoge.
+5. Un modelo nuevo **tiene que declarar su alias de morfo**: `MorphMapTest` lo caza, y es lo que hace
+   que el audit guarde `invitation_reply` y no un nombre de clase que se rompe al mover el fichero.
+6. ⚠️⚠️ **El push lo paró el gate de concurrencia**, y tenía razón: el cast de `show_in_invitation` vive
+   en `ProductAddon.php`, que está en el `CRITICAL_RE` — justo lo que §6 predecía que T4 no tocaría.
+   Corregido allí. Esta unidad empujó con `VERIFY_CONC=1` tras los verificadores sobre MySQL.
+
+**Arnés de mutación**: `scripts/mutar-invitacion-t41.sh`, **9/9 muerden con CONTROL en verde**, y el
+árbol restaurado byte a byte (sha1). Se corrió porque las políticas de borrado **no fallan solas**: una
+FK mal puesta no rompe nada hasta el día en que la purga o la poda corren en producción.
+
+⚠️⚠️ **La primera pasada salió 5/9, y las cuatro flojas eran de la GUARDA, no del código.** Es el valor
+del arnés y merece quedar escrito:
+- **La segunda cascada no estaba ejercida.** Con `invitation_replies.party_invitation_id` en `RESTRICT`
+  no moría ningún caso, porque al borrar la RESERVA las respuestas caían igual por su otra clave
+  foránea. Nace `test_deleting_the_invitation_takes_its_replies`.
+- **La lista blanca se probaba con un payload de dos claves.** Añadiendo `adopted_at` a `$fillable` el
+  caso seguía en verde: la excepción saltaba igual por `dismissed_at`. Hoy se asevera además sobre
+  `getFillable()`, clave a clave, y el arnés muta las dos.
+- ⚠️⚠️ **Y el respaldo del normalizador se probaba con un ejemplo FALSO.** El caso usaba cirílico como
+  «alfabeto no latino que se vacía», y **`Str::ascii()` sí lo transitera**: «Александр Петров» →
+  `aleksandr petrov`. Medido en el contenedor sobre nueve escrituras, los que de verdad se vacían son
+  **chino, japonés, coreano, tailandés, hebreo y emoji**; el griego y el árabe también se transliteran.
+  ▶ **La afirmación venía heredada del docblock de `GuardianAuthorization::keyFor()`** («un nombre
+  escrito íntegramente en un alfabeto no latino se convertiría en `''`»), donde llevaba desde `#328`.
+  Corregida en los dos sitios con lo medido. *Una prosa heredada que nadie midió es una afirmación, no
+  un hecho — y un caso escrito sobre ella prueba lo que la prosa creía, no lo que el código hace.*
+- El propio arnés mentía al final: contaba el CONTROL como un mutante y decía «9/10» con las diez
+  líneas en verde, saliendo con código 1. Los controles se cuentan aparte.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

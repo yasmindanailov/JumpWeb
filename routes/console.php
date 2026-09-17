@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
@@ -69,8 +70,16 @@ Schedule::command('social-proof:refresh')->everyThirtyMinutes()->withoutOverlapp
  * plazo se lleva la última firma de un menor, su nombre y su fecha de nacimiento se quedan sin nada
  * que los justifique. Las activas no se podan nunca (son del titular); las desvinculadas con firma,
  * tampoco (`Dependent::prunable()` las excluye antes de que la guarda de `deleting` lance).
+ *
+ * Fase 6 · la INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.4 V3, `DECISIONES #573`) — y
+ * en la misma tarea, las RESPUESTAS de los padres 14 días después de la visita. Pasado ese margen no
+ * queda nada que repasar y lo que hay son nombres de menores que dio un tercero. Lo ADOPTADO sigue en
+ * `order_items.guest_data` con su régimen de siempre, que es el que la supresión ya cubre.
+ * ⚠️ Va DESPUÉS de `GuardianAuthorization` a propósito: la FK `invitation_reply_id` es `nullOnDelete`,
+ * así que el orden no la rompería — pero podar primero la respuesta y luego su justificante huérfano
+ * en la misma pasada deja el rastro en el orden en que se razona.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class]])
     ->daily()
     ->withoutOverlapping();
 

@@ -97,7 +97,7 @@ siguiente al tramo de su padre, `specs/hora-extra.md`).
 | Display | `name`,`description`,`period_label`,`features`,`gifts`,`conditions`,`badge` (JSON i18n) · `gifts` = lo que se da sin cobrar, aparte de lo que incluye: se pinta cada uno en su etiqueta (`DECISIONES #589`) · `featured` · `position` · `is_active` · `icon` = clave del set de diseño que marca el producto (`DECISIONES #140`); `null` ⇒ el que le toca por su tipo. **No es un fichero**: lista curada, para que la paridad de dibujos entre superficies siga siendo comprobable |
 | Venta | `type` (indexed, default `entry`) · `is_sellable` (default false) · `zone_id` (**uint indexado SIN FK real**, nullable = ambas zonas) · `duration_min` (null = ilimitada; **bloqueada con ventas hechas** — `occupancyMap` la lee del producto para cada línea vendida, borde 9 de `specs/hora-extra.md`) · `occupies_after_parent` (bool, default false; **solo addons**: la HORA EXTRA — el guard de `TicketType::booted()` exige duración > 0 y `seats_per_unit >= 1`, y su cinturón vive en `AddonOccupancy`) · `tax_rate` decimal(5,2) · `wristband_color` · `seats_per_unit` (default 1; **en packs SIEMPRE 1**, normalizado por migración) |
 | Ventana | `available_after_open_min`/`available_before_close_min` (offsets sobre apertura/cierre del día) · `min_advance_value` + `min_advance_unit` (`days` calendario / `hours` rodante; ver `meetsMinAdvance()`) · `prep_before_min`/`prep_after_min` (solo packs: montaje/limpieza) |
-| Pack | `min_qty`/`max_qty` (invitados) · `deposit_type` (`none`\|`percent`\|`fixed`) + `deposit_value` (señal; calculador `depositCents()`) · `event_fields` JSON (esquema de campos del evento por pack: `{key,label i18n,type,required}`) · `guest_fields` JSON (esquema por-invitado; default 4 columnas `DEFAULT_GUEST_FIELDS`) |
+| Pack | `min_qty`/`max_qty` (invitados) · `deposit_type` (`none`\|`percent`\|`fixed`) + `deposit_value` (señal; calculador `depositCents()`) · `event_fields` JSON (esquema de campos del evento por pack: `{key,label i18n,type,required}`) · `guest_fields` JSON (esquema por-invitado; default 4 columnas `DEFAULT_GUEST_FIELDS`) · `guardian_authorization` (`none`\|`optional`\|`required`, el interruptor del justificante de un menor invitado) · `guest_invitation` (bool default `false`, 2026-09-17 `DECISIONES #573`: ofrece **invitación digital**; incompatible con `required` — si el justificante hace falta siempre, no hay nada que preguntar) |
 | Familia por edad | `guest_age_family` (slug, indexado) · `guest_age_min`/`guest_age_max` (tinyint, **los dos extremos INCLUIDOS**; nulo = sin tope por ese lado). **Solo packs.** Es lo que conecta dos productos que son el mismo servicio en dos regímenes (KIDS/JUMP) — antes del 2026-08-29 **no había ninguna relación entre ellos** — y de ahí sale el veredicto de fiesta MIXTA. Vacío = el producto no distingue edades y la función está apagada. La edad la declara el post-form con un campo de tipo `age`, acotado en el saneo. `docs/specs/cumple-mixto.md` §9 |
 
 Sin `price_cents`: el precio vive SOLO en `prices` (fuente única).
@@ -118,6 +118,12 @@ gratis en un pack y de pago en una entrada):
 - `allow_extra` — permite unidades extra de pago sobre lo incluido (solo `fixed`).
 - `choice_group` — grupo excluyente tipo radio (Menú A ⊻ Menú B); índice `(product_id, choice_group)`.
 - `max_qty` nullable — tope por reserva (solo `fixed`; cap duro global 20 aparte).
+- `show_in_invitation` — bool default `false` (2026-09-17, `specs/celebracion-e-invitacion.md` §4.4 D12,
+  `DECISIONES #573`): **qué complemento es «el menú»** que la invitación digital enseña. Es una casilla
+  del ENGANCHE y no una deducción del grupo excluyente — deducirlo sería la trampa de los calcetines
+  (`#485`), presentación usada como identidad. ⚠️ Como toda columna de este pivote, tiene que entrar en
+  las **tres** listas blancas (`ADDON_PIVOT_COLUMNS`, `sanitizePivotData()` y el `fillForm()` de
+  «Configurar») o se cae **sin avisar** al enganchar (`#413` §4.7·ter).
 - `requires_addon_id` FK → `ticket_types` `nullOnDelete` — dependencia «requiere» (2.ª tarta
   requiere tarta). Autoridad de servidor: `App\Domain\Booking\Services\AddonResolver`.
 - `stage` (`booking` por defecto | `postform`) — la **FASE de venta** (`#413`, T1): dice **cuándo se
@@ -228,6 +234,38 @@ guardas `can{Edit,Cancel}Item`; la mitad `canRefundItem` se partió a Payments e
 Estado operativo calculado (NO persistido): `active` / `finished` (al pasar `slot.end_time`,
 `isFinishedInPractice()`) / `cancelled`. Scopes: `active`, `paidScheduledPrincipal`,
 `slotDateBetween`.
+
+### `party_invitations` (PartyInvitation) — Fase 6 · la INVITACIÓN DIGITAL de una reserva
+Una fila = **una reserva de cumpleaños que se puede compartir**
+(`specs/celebracion-e-invitacion.md` §4.4, `DECISIONES #573`). Cuelga de la RESERVA y no del pedido, como
+el post-form y el justificante: un pedido puede llevar dos visitas en dos días, y a una fiesta se invita.
+`order_item_id` **unique**, FK **cascade** · `token` char(12) **unique** · `theme`(16) · `honoree_name`(60) ·
+`honoree_age` tinyint nullable · `host_line`(80) · `show_host_phone` · `reminded_at` + `reminded_count`
+(el aviso de la víspera, idempotente por reserva) · timestamps.
+⚠️ **El enlace es un token OPACO de 12 base62 (~71 bits)**, no una firma temporal de Laravel (200
+caracteres, imposible de teclear y confundible con la credencial del anfitrión) ni una ruta legible como
+`/i/lucia-8`, que sería adivinable y publicaría el nombre y la edad de un menor en la URL. **Se rota**
+desde el panel: es la palanca para anular un enlace ya repartido a un grupo de clase.
+⚠️ El teléfono del anfitrión **no se copia aquí**: sale del de su cuenta y `show_host_phone` solo dice si
+se enseña. `honoree_name` y `host_line` son texto libre que se publica bajo el dominio del parque, así
+que su escritor rechaza URLs y direcciones de correo (`SEC-07`).
+
+### `invitation_replies` (InvitationReply, **Prunable**) — lo que contesta un padre
+`party_invitation_id` FK **cascade** · `order_item_id` FK **cascade** (denormalizado: la puerta y la hoja
+leen por LOTES de reservas del día, y la supresión borra por los ids de las reservas del titular) ·
+`attending` · `child_name`(120) · `child_key`(255, `PersonNameKey`) · `data` JSON nullable (las columnas
+del pack, saneadas con `sanitizeGuestData`) · `companion` (`with_adult`\|`alone`\|`unknown`) ·
+`adopted_at` + `adopted_name_key` · `dismissed_at` · timestamps · índice `(order_item_id, child_key)`.
+⚠️⚠️ **Una respuesta NO escribe `guest_data`, y ésa es la decisión que ordena la feature**: se le PROPONE
+al anfitrión sobre una ficha y solo pasa a `guest_data` cuando él la ADOPTA al guardar. Si escribiera
+directamente, el siguiente guardado del anfitrión la borraría (`submitGuestForm()` sustituye la lista
+entera), cada respuesta dejaría obsoleto el testigo `updated_at` de su página abierta, y una edad ajena
+dispararía el suplemento de fiesta mixta: **un tercero movería dinero y aforo**.
+⚠️⚠️ **El índice NO es único, y es una decisión de PRIVACIDAD** (V6): rechazar un nombre repetido con «ya
+nos habéis contestado por Hugo» le confirmaría a cualquiera con el enlace que Hugo va a esa fiesta.
+⚠️ **Prunable a los 14 días de la visita** (el mismo plazo con el que caduca el enlace del post-form,
+`RGPD-03`), y **registrado en la lista explícita de `model:prune` de `routes/console.php`**: un Prunable
+fuera de ella no se poda nunca.
 
 ### `tickets` — entrada emitida, una por admisión (Ticket)
 `order_id`/`ticket_type_id`/`slot_id` FK cascade · `qr_token` unique (aleatorio impredecible) ·
@@ -381,7 +419,14 @@ va al revés, el patrón de `dependent_assignments` — pero la política de bor
 la de una asignación) · `minor_name`(120) · `minor_surname`(120) · **`minor_key`**(255) ·
 `minor_born_on` · `guardian_name`(120) · `guardian_surname`(120) · `guardian_relationship`(16, la lista
 CERRADA `Dependent::RELATIONSHIPS`) · `guardian_email` · `guardian_phone` · `created_at` (**sin
-`updated_at`: la fila no se edita**). **`unique (order_id, minor_key)`** = «un niño, un papel».
+`updated_at`: la fila no se edita**) · `invitation_reply_id` (FK nullable **`nullOnDelete`** a
+`invitation_replies`, 2026-09-17 `DECISIONES #573`). **`unique (order_id, minor_key)`** = «un niño, un papel».
+⚠️⚠️ **`invitation_reply_id` es `SET NULL` por diseño y NO entra en el hash de la firma**: las respuestas
+se podan a los 14 días de la visita y esta prueba se conserva años — con `RESTRICT` la poda fallaría y
+con `CASCADE` se llevaría la prueba por delante. Y meter una columna `SET NULL` dentro de un hash
+verificable es lo que este repo ya pagó una vez (§10 de `waiver-por-reserva.md`: `verifyHash()` en
+`false` sin que nadie tocara la fila). Sirve para que el firmador **no descuente plaza** por una firma
+atada a un «sí»: esa plaza ya tiene dueño.
 ⚠️⚠️ **La unicidad NO va sobre los nombres crudos**: todas las tablas son `utf8mb4_unicode_ci`, donde
 `'Perez' = 'Pérez'` y `'ana' = 'Ana'` dan **1**, y en SQLite —donde corre la suite— dan **0**. `minor_key`
 se normaliza en PHP (`keyFor()`: minúsculas, sin tildes, espacios colapsados, con respaldo para

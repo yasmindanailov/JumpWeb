@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderAdjustment;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\Price;
 use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\ProductAddon;
@@ -172,6 +174,10 @@ class AppServiceProvider extends ServiceProvider
             'dependent_assignment' => DependentAssignment::class,
             'faq' => Faq::class,
             'guardian_authorization' => GuardianAuthorization::class,
+            // La INVITACIÓN DIGITAL y lo que contesta un padre (`#573`). Alias como todo modelo
+            // nuevo: lo exige `MorphMapTest`, y es lo que hace que el audit guarde `invitation_reply`
+            // en vez de un nombre de clase que se rompe al mover el fichero de sitio.
+            'invitation_reply' => InvitationReply::class,
             'landing_service' => LandingService::class,
             'legal_document_version' => LegalDocumentVersion::class,
             'offer' => Offer::class,
@@ -181,6 +187,7 @@ class AppServiceProvider extends ServiceProvider
             'order_item' => OrderItem::class,
             'page' => Page::class,
             'park_rule' => VenueRule::class,
+            'party_invitation' => PartyInvitation::class,
             'payment' => Payment::class,
             'payment_refund' => PaymentRefund::class,
             'permission' => Permission::class,

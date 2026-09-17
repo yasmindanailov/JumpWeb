@@ -202,6 +202,9 @@ class TicketType extends Model
         'badge' => 'array',
         'event_fields' => 'array',
         'guest_fields' => 'array',
+        // D15: si este producto ofrece INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.4,
+        // `#573`). Hermano de `guardian_authorization`: los dos contestan a «¿qué papeles pide?».
+        'guest_invitation' => 'boolean',
         'tax_rate' => 'decimal:2',
         'duration_min' => 'integer',
         'seats_per_unit' => 'integer',

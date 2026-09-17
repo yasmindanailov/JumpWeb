@@ -3,12 +3,12 @@
 namespace App\Domain\Identity\Models;
 
 use App\Domain\Identity\Exceptions\GuardianAuthorizationHasSignaturesException;
+use App\Domain\Platform\Services\PersonNameKey;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 
 /**
  * Fase 6 · el JUSTIFICANTE de un menor invitado a una reserva — «waiver offshore»
@@ -101,22 +101,24 @@ class GuardianAuthorization extends Model
      *
      * La salida no es elegir motor, es no depender de ninguno: se normaliza en PHP.
      *
-     * ⚠️ **El respaldo cuando `Str::ascii()` deja la cadena vacía no es decorativo**: un nombre escrito
-     * íntegramente en un alfabeto no latino se convertiría en `''` y **todos** esos menores
-     * colisionarían en la misma clave dentro de un pedido. Con el respaldo, se normaliza lo que se
-     * pueda y se conserva el original.
+     * ⚠️ **El respaldo cuando `Str::ascii()` deja la cadena vacía no es decorativo**: esos nombres se
+     * convertirían en `''` y **todos** esos menores colisionarían en la misma clave dentro de un
+     * pedido. Con el respaldo, se normaliza lo que se pueda y se conserva el original.
+     * ▶ **«Alfabeto no latino» era el criterio equivocado**, y esta línea lo decía hasta que se midió
+     * (2026-09-17, `#573`): el cirílico, el griego y el árabe **sí** se transliteran. El detalle, con
+     * los alfabetos que de verdad se vacían, en el docblock de {@see PersonNameKey}.
+     *
+     * ▶ **La normalización SUBIÓ a `Platform\Services\PersonNameKey`** (T4·1 de
+     * `celebracion-e-invitacion.md`, `DECISIONES #573`): desde la invitación digital la misma
+     * pregunta se hace en **Booking** —emparejar lo que contesta un padre con una ficha del
+     * post-form— y Booking no puede mirar a Identity. Aquí se conserva el método porque es el
+     * vocabulario de esta entidad («la clave de un menor»), y porque su firma de dos campos —nombre y
+     * apellidos en columnas separadas (`#236`)— es de esta tabla, no del normalizador. La salida es
+     * **idéntica**, con un caso de paridad que lo vigila.
      */
     public static function keyFor(string $name, string $surname): string
     {
-        $full = trim($name.' '.$surname);
-        $ascii = Str::ascii($full);
-        $base = trim((string) preg_replace('/\s+/u', ' ', $ascii)) !== '' ? $ascii : $full;
-
-        return mb_substr(
-            mb_strtolower(trim((string) preg_replace('/\s+/u', ' ', $base))),
-            0,
-            self::KEY_MAX,
-        );
+        return PersonNameKey::for($name.' '.$surname);
     }
 
     /** Nombre y apellidos, con el espacio SOLO si hay apellidos — como {@see Dependent::fullName()}. */

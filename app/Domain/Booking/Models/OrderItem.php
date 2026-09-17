@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
 
@@ -98,6 +99,28 @@ class OrderItem extends Model
     public function slot(): BelongsTo
     {
         return $this->belongsTo(Slot::class);
+    }
+
+    /**
+     * La INVITACIÓN DIGITAL de esta reserva (`specs/celebracion-e-invitacion.md` §4.4, `#573`).
+     * `null` mientras el anfitrión no haya abierto su formulario: nace sola al pintarlo.
+     *
+     * @return HasOne<PartyInvitation, $this>
+     */
+    public function partyInvitation(): HasOne
+    {
+        return $this->hasOne(PartyInvitation::class);
+    }
+
+    /**
+     * Lo que han contestado los padres. Cuelga también de la reserva —y no solo de la invitación—
+     * porque la puerta y la hoja de sala leen por LOTES de reservas del día.
+     *
+     * @return HasMany<InvitationReply, $this>
+     */
+    public function invitationReplies(): HasMany
+    {
+        return $this->hasMany(InvitationReply::class);
     }
 
     /**
