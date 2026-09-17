@@ -168,6 +168,10 @@ presentación · **convivencia**: no romper supuestos del sector origen document
 - No commitear con la suite rota. Si hay que aparcar, rama `wip/…` y anotarlo en tu carril.
 - **El gate de pre-push aplica solo a `main`** (`DECISIONES #10`): las ramas `wip/…` pueden
   empujarse en rojo como copia de seguridad — nunca se mergean a `main` sin pasar el gate.
+- **El gate corre análisis estático** (`DECISIONES #625`): Larastan en nivel 5 sobre `app/`, detrás de Pint,
+  con línea base (`phpstan-baseline.neon`). **La línea base solo BAJA**: un error nuevo se arregla, no se
+  congela regenerándola; si arreglas errores congelados, regenérala y baja `FROZEN_ERRORS` en
+  `StaticAnalysisGateTest` en el mismo commit. A mano: `./vendor/bin/phpstan analyse --memory-limit=2G`.
 - **Una sola sesión de escritura a la vez** sobre cada CLON del repo; subagentes de solo-lectura
   exentos. Dos agentes = dos clones, y su coordinación es **§10**.
 - **El commit de cierre lleva la evidencia** en el cuerpo: «Verificación: suite N tests /

@@ -132,6 +132,15 @@ fi
 echo '→ pre-push: Pint (repo completo)…'
 docker compose exec -u sail -T laravel.test ./vendor/bin/pint --test
 
+# Análisis estático (`DECISIONES #625`, `[DECIDIDO owner]` 2026-09-17): Larastan en nivel 5 sobre
+# `app/`, con LÍNEA BASE —los 459 errores del día que entró viven en `phpstan-baseline.neon` y solo
+# corta un error NUEVO—. Medido antes de activarlo: 10 s en frío y 2 s con la caché de resultados.
+# Va detrás de Pint y ANTES de los builds y la suite: es lo más barato que puede decir «esto no
+# llama a lo que crees», y no tiene sentido gastar 80 s de suite para enterarse después.
+# ⚠️ La línea base no se regenera para tapar un error nuevo: se arregla el error.
+echo '→ pre-push: análisis estático (Larastan, nivel 5 con línea base)…'
+docker compose exec -u sail -T laravel.test ./vendor/bin/phpstan analyse --no-progress --memory-limit=2G
+
 # Build de assets ANTES de la suite, y por dos motivos independientes:
 #  · `INVARIANTES SUITE-05` ya lo exigía («npm run build una vez antes de la suite completa: las
 #    vistas dan `ViteManifestNotFound` sin manifest») y el hook no lo hacía;

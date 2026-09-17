@@ -97,11 +97,18 @@
    en el tracker y en la spec §4.9. Las skills `/release` y `/desplegar` del plugin ya dicen `1272cb93` y
    nombran la guarda 8 (plugin `627b3a3`, empujado, arnés 43/43): **el paso (0) de arriba instala ahora
    `627b3a3`, no `c57c9f2`**.
-3. **`#625` · instalar el análisis estático** (tarea propia, sin esperar a nadie): `composer require --dev
-   larastan/larastan`, `phpstan.neon` en nivel 5 sobre `app/` y su línea base; ESLint con las reglas de Vue
-   sobre `resources/js/sidebar/` y la suya; **medir antes de activar** (segundos que añade al gate, tamaño de
-   cada línea base) y solo entonces meterlos en `.githooks/pre-push` detrás de Pint, con su caso en
-   `PrePushGateTest`. ⚠️ `package.json` es compartido: el aviso al SPA ya está en el buzón.
+3. **`#625` · la mitad que falta: ESLint** sobre `resources/js/sidebar/` con las reglas de Vue y su línea base,
+   midiendo antes de activar (segundos de gate, tamaño de la línea base) y con su paso en el `pre-push` y su
+   caso en `PrePushGateTest`. ⚠️ `package.json` es compartido: el aviso al SPA está en el buzón desde el 17-09;
+   antes de tocarlo, `git fetch` y mirar si `carriles/spa.md` contesta o tiene `package.json` a medias.
+   **Larastan YA ESTÁ** (17-09): `larastan/larastan` 3.12.1 (tres paquetes de desarrollo en el lock, nada más
+   se movió), `phpstan.neon` en nivel 5 sobre `app/`, **línea base de 459 errores** (333 entradas, 86 KB; los
+   más repetidos `property.notFound` 99, `nullCoalesce.offset` 86, `nullsafe.neverNull` 82), **10 s en frío
+   y 2 s con caché**, paso en el `pre-push` detrás de Pint, `StaticAnalysisGateTest` (nivel, rutas, extensión,
+   línea base con TRINQUETE que solo baja, orden) y `scripts/mutar-analisis-estatico.sh` **8/8** con los cuatro
+   ficheros restaurados byte a byte. Los dos `.neon` excluidos del `rsync` del despliegue. ▶ Deuda que abre:
+   bajar la línea base por familias (empezar por `nullsafe.neverNull`, que es mecánico), siempre bajando
+   `FROZEN_ERRORS` en el mismo commit.
 4. Después F4 (cajón empaquetable y token; la parte de la API empieza por `/spec`, toca `RGPD-06` y `SEC-06`)
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes») → F6 (app nativa, spec).
 - **Del owner**: pegar las cuatro reglas de `#626` en `~/.claude/settings.json` (y arreglar el enlace
@@ -117,7 +124,9 @@
 `CLAUDE.md` · `docs/ESTADO.md` · `docs/00-REFACTOR.md` · `docs/CONVENCIONES.md` · `docs/README.md` ·
 `docs/DECISIONES.md` y la estructura de `docs/decisiones/` (cada carril escribe SUS entradas) · la estructura de
 `docs/carriles/` (cada carril SU fichero) · `scripts/docs-check.sh` · `.githooks/pre-push` ·
-`scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `.claude/skills/`. Todo lo anterior es
+`scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `.claude/skills/` · `scripts/deploy.sh` (la
+guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
+`scripts/mutar-analisis-estatico.sh` · `StaticAnalysisGateTest`. Todo lo anterior es
 COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
 
 ## Trampas de este carril

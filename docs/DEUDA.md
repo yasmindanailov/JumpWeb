@@ -926,3 +926,17 @@ la sección 03 promete *«carta corta»*, y el artboard la hacía cumplir dibuja
 la carta se estira a veinte platos, la tarjeta de 03 pasa a mentir»*. Con la carta como imagen, lo
 que se publica lo decide el fichero que suba el parque — el producto ya no puede acotarlo. ▶ **No hay
 nada que construir**: queda escrito para que nadie lo lea como un descuido.
+
+## ▶ Media · la LÍNEA BASE de Larastan: 459 errores de nivel 5 congelados en `app/` (2026-09-17, `DECISIONES #625`)
+
+El análisis estático entró con línea base (`phpstan-baseline.neon`, 333 entradas): el gate solo corta un
+error NUEVO y lo que había quedó congelado, no arreglado. Por familias, medido el día que entró:
+`property.notFound` 99 · `nullCoalesce.offset` 86 · `nullsafe.neverNull` 82 · `method.notFound` 25 ·
+`argument.type` 18 · `method.nonObject` 18 · `offsetAccess.notFound` 15 · `identical.alwaysFalse` 14 ·
+`return.type` 11 · el resto por debajo de 10. ▶ **Cómo se paga**: por familias, empezando por las
+mecánicas (`nullsafe.neverNull` y `nullCoalesce.offset` son `?->` y `??` que sobran); las de
+`property.notFound` y `method.notFound` piden anotar modelos y relaciones, y ahí puede haber algún
+defecto de verdad escondido — mirarlas una a una, no en bloque. Tras arreglar: regenerar la línea base
+(`phpstan analyse --generate-baseline phpstan-baseline.neon`) **y bajar `FROZEN_ERRORS` en
+`StaticAnalysisGateTest` en el mismo commit** (el trinquete solo baja). ⚠️ Si toca un fichero del
+`CRITICAL_RE`, aunque sea quitar un `?->`, el push exige los verificadores de concurrencia.

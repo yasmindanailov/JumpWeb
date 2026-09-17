@@ -36,6 +36,7 @@ class PrePushGateTest extends TestCase
     private const STEPS = [
         'docs-check' => 'scripts/docs-check.sh',
         'Pint' => 'pint --test',
+        'análisis estático' => 'phpstan analyse --no-progress',
         'build de assets' => 'npm run build',
         'build SSR del cajón' => 'npm run build:ssr',
         'tests JS' => 'npm run test:js',

@@ -1,0 +1,1999 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Using nullsafe property access "\?\-\>group" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Console/Commands/SetSetting.php
+
+		-
+			message: '#^Constant App\\Console\\Commands\\VerifyPurchaseConcurrency\:\:STAY_SCENARIOS is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Match arm comparison between ''entry'' and ''guest\-count'' is always false\.$#'
+			identifier: match.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Match arm comparison between ''entry'' and ''pack'' is always false\.$#'
+			identifier: match.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Match arm comparison between ''entry'' and ''pack\-guests'' is always false\.$#'
+			identifier: match.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Match arm comparison between ''entry'' and ''pack\-prep'' is always false\.$#'
+			identifier: match.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Match arm comparison between ''entry'' and ''stay\-extension'' is always false\.$#'
+			identifier: match.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Match arm comparison between ''entry'' and ''stay\-extension\-per…'' is always false\.$#'
+			identifier: match.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''addon''\|''extender'' on array\{zone\: App\\Domain\\Booking\\Models\\Zone, type\: App\\Domain\\Booking\\Models\\TicketType, slot\: App\\Domain\\Booking\\Models\\Slot, users\: array\<int, App\\Domain\\Identity\\Models\\User\>\} in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''date'' does not exist on array\{scenario\: string, slot\: App\\Domain\\Booking\\Models\\Slot, type\: App\\Domain\\Booking\\Models\\TicketType, probe_qty\: int\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''date'' does not exist on array\{zone\: App\\Domain\\Booking\\Models\\Zone, type\: App\\Domain\\Booking\\Models\\TicketType, slot\: App\\Domain\\Booking\\Models\\Slot, users\: array\<int, App\\Domain\\Identity\\Models\\User\>\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 2
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''expected_winners'' on array\{zone\: App\\Domain\\Booking\\Models\\Zone, type\: App\\Domain\\Booking\\Models\\TicketType, slot\: App\\Domain\\Booking\\Models\\Slot, users\: array\<int, App\\Domain\\Identity\\Models\\User\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''is_open'' on array\{is_open\: bool, open\: string\|null, close\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''pack'' on array\{scenario\: string, slot\: App\\Domain\\Booking\\Models\\Slot, type\: App\\Domain\\Booking\\Models\\TicketType, probe_qty\: int\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''probe_qty'' does not exist on array\{zone\: App\\Domain\\Booking\\Models\\Zone, type\: App\\Domain\\Booking\\Models\\TicketType, slot\: App\\Domain\\Booking\\Models\\Slot, users\: array\<int, App\\Domain\\Identity\\Models\\User\>\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''scenario'' on array\{users\: non\-empty\-array\<int, App\\Domain\\Identity\\Models\\User\>, carts\: array\<int, array\<int, array\<string, mixed\>\>\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''scenario'' on array\{zone\: App\\Domain\\Booking\\Models\\Zone, type\: App\\Domain\\Booking\\Models\\TicketType, slot\: App\\Domain\\Booking\\Models\\Slot, users\: array\<int, App\\Domain\\Identity\\Models\\User\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''time'' does not exist on array\{scenario\: string, slot\: App\\Domain\\Booking\\Models\\Slot, type\: App\\Domain\\Booking\\Models\\TicketType, probe_qty\: int\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Offset ''zone'' does not exist on array\{scenario\: string, slot\: App\\Domain\\Booking\\Models\\Slot, type\: App\\Domain\\Booking\\Models\\TicketType, probe_qty\: int\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Parameter \#3 \$created of method App\\Console\\Commands\\VerifyPurchaseConcurrency\:\:evaluateMixed\(\) expects Illuminate\\Support\\Collection\<int, string\>, Illuminate\\Support\\Collection\<\(int\|string\), non\-falsy\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Parameter \#4 \$soldOut of method App\\Console\\Commands\\VerifyPurchaseConcurrency\:\:evaluateMixed\(\) expects Illuminate\\Support\\Collection\<int, string\>, Illuminate\\Support\\Collection\<\(int\|string\), non\-falsy\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Parameter \#5 \$errors of method App\\Console\\Commands\\VerifyPurchaseConcurrency\:\:evaluateMixed\(\) expects Illuminate\\Support\\Collection\<int, string\>, Illuminate\\Support\\Collection\<\(int\|string\), non\-falsy\-string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between '''' and ''guest\-count'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between '''' and ''panel\-edit'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 3
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''entry'' and ''mixed'' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Console/Commands/VerifyPurchaseConcurrency.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Console/Commands/VerifyRedsysConcurrency.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Offset ''failure_message'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Offset ''gateway_response…'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Offset ''ok'' on array\{ok\: bool, reason\?\: string, refund\?\: App\\Domain\\Payments\\Models\\PaymentRefund, order\?\: App\\Domain\\Booking\\Models\\Order, item\?\: App\\Domain\\Booking\\Models\\OrderItem, payment\?\: App\\Domain\\Payments\\Models\\Payment, also_cancelled_item\?\: bool, gateway_response_code\?\: string\|null, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Offset ''reason'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Offset ''refund'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<int\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Domain\\Booking\\Models\\Order\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between App\\Domain\\Booking\\Models\\OrderItem and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>dsResponse" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Domain/Booking/Models/Order.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:active\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Booking/Models/OrderItem.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:quantityUnit\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Booking/Models/OrderItem.php
+
+		-
+			message: '#^Method App\\Domain\\Booking\\Models\\OrderItem\:\:guestFormLinkExpiresAt\(\) should return Illuminate\\Support\\Carbon but returns Carbon\\Carbon\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Booking/Models/OrderItem.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between Carbon\\Carbon and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Domain/Booking/Models/OrderItem.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: app/Domain/Booking/Models/OrderItem.php
+
+		-
+			message: '#^Method App\\Domain\\Booking\\Models\\TicketType\:\:addons\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Domain\\Booking\\Models\\TicketType, \$this\(App\\Domain\\Booking\\Models\\TicketType\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Domain\\Booking\\Models\\TicketType, \$this\(App\\Domain\\Booking\\Models\\TicketType\), App\\Domain\\Booking\\Models\\ProductAddon, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Booking/Models/TicketType.php
+
+		-
+			message: '#^Method App\\Domain\\Booking\\Models\\TicketType\:\:configurableAddons\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Domain\\Booking\\Models\\TicketType, \$this\(App\\Domain\\Booking\\Models\\TicketType\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<App\\Domain\\Booking\\Models\\TicketType, \$this\(App\\Domain\\Booking\\Models\\TicketType\), App\\Domain\\Booking\\Models\\ProductAddon, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Booking/Models/TicketType.php
+
+		-
+			message: '#^Offset ''type'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Models/TicketType.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Domain/Booking/Models/TicketType.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>amount_cents" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Models/TicketType.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_active" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Models/TicketType.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/AddonOfferReader.php
+
+		-
+			message: '#^Offset ''key'' does not exist on array\{options\: array\<int, array\<string, mixed\>\>\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Booking/Services/AddonOfferReader.php
+
+		-
+			message: '#^Offset ''label'' does not exist on array\{options\: array\<int, array\<string, mixed\>\>\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Booking/Services/AddonOfferReader.php
+
+		-
+			message: '#^Offset ''total'' does not exist on array\{singles\: array\<int, array\<string, mixed\>\>, groups\: array\<int, array\{options\: array\<int, array\<string, mixed\>\>\}\>\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Booking/Services/AddonOfferReader.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 10
+			path: app/Domain/Booking/Services/AddonResolver.php
+
+		-
+			message: '#^Offset ''qty'' on array\{ticket_type_id\: int, qty\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/AddonResolver.php
+
+		-
+			message: '#^Offset ''ticket_type_id'' on array\{ticket_type_id\: int, qty\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/AddonResolver.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Domain/Booking/Services/AddonResolver.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between mixed and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Domain/Booking/Services/AddonResolver.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<App\\Domain\\Booking\\Services\\SealedRegime\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Domain/Booking/Services/AgeFamilySeal.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Domain/Booking/Services/AgeFamilySealer.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/AuthorizableReservationsReader.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/BirthdayComparison.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Offset ''date'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int, addons\?\: array\<int, array\{ticket_type_id\: int, qty\: int\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Offset ''date'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Offset ''qty'' on array\{ticket_type_id\: int, qty\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Offset ''ticket_type_id'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int, addons\?\: array\<int, array\{ticket_type_id\: int, qty\: int\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Offset ''ticket_type_id'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Offset ''ticket_type_id'' on array\{ticket_type_id\: int, qty\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Domain/Booking/Services/CartOccupants.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/CatalogReader.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 2
+			path: app/Domain/Booking/Services/CatalogReader.php
+
+		-
+			message: '#^Property App\\Domain\\Booking\\Services\\CatalogReader\:\:\$addons is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Domain/Booking/Services/CatalogReader.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>start_time" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/CustomerReservationsReader.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/DailyReservationsSummary.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/DailyReservationsSummary.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>start_time" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/DailyReservationsSummary.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Domain/Booking/Services/EmailProductCard.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Domain/Booking/Services/EmailSlip.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/EmailSlip.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>start_time" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/GateReservationsReader.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/GuestCountAdjuster.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>quantity" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/GuestCountAdjuster.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between Carbon\\Carbon and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Domain/Booking/Services/GuestCountPolicy.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Domain/Booking/Services/GuestCountPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:\$is_included\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/ItemEditPricing.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\Pivot\:\:quantityUnit\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Booking/Services/ItemEditPricing.php
+
+		-
+			message: '#^Parameter \#1 \$pivot of static method App\\Domain\\Booking\\Services\\AddonResolver\:\:effectiveQuantity\(\) expects App\\Domain\\Booking\\Models\\ProductAddon, Illuminate\\Database\\Eloquent\\Relations\\Pivot given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Booking/Services/ItemEditPricing.php
+
+		-
+			message: '#^Parameter \#1 \$pivot of static method App\\Domain\\Booking\\Services\\AddonResolver\:\:freeUnits\(\) expects App\\Domain\\Booking\\Models\\ProductAddon, Illuminate\\Database\\Eloquent\\Relations\\Pivot given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Booking/Services/ItemEditPricing.php
+
+		-
+			message: '#^Offset ''count'' on array\{type_id\: int, name\: string, count\: int, unit_cents\: int\|null, target_price_cents\: int\|null, diff_cents\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/MixedPartySurcharge.php
+
+		-
+			message: '#^Offset ''name'' on array\{count\: int, unit\: int, name\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Domain/Booking/Services/MixedPartySurcharge.php
+
+		-
+			message: '#^Offset ''value_lines'' does not exist on array\{currency\: string, collected\: bool, cancelled\: bool, multi\: bool, consistent\: false, cobrado\: int, devuelto\: int, payments\: list\<array\{id\: int, amount_cents\: int, method\: string, occurred_at\: DateTimeInterface\}\>, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Booking/Services/OrderBook.php
+
+		-
+			message: '#^Offset ''addons'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int, event_data\: array\<string, mixed\>, addons\: array\<int, array\{ticket_type_id\: int, qty\: int\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Domain/Booking/Services/OrderCreator.php
+
+		-
+			message: '#^Offset ''event_data'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int, event_data\: array\<string, mixed\>, addons\: array\<int, array\{ticket_type_id\: int, qty\: int\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 3
+			path: app/Domain/Booking/Services/OrderCreator.php
+
+		-
+			message: '#^Offset ''extra_minutes'' on array\{rows\: array\<int, array\<string, mixed\>\>, subtotal\: int, extra_minutes\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderCreator.php
+
+		-
+			message: '#^Offset ''guardian…'' on array\{ticket_type_id\: int, date\: string, time\: string, qty\: int, event_data\: array\<string, mixed\>, addons\: array\<int, array\{ticket_type_id\: int, qty\: int\}\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderCreator.php
+
+		-
+			message: '#^Right side of && is always false\.$#'
+			identifier: booleanAnd.rightAlwaysFalse
+			count: 1
+			path: app/Domain/Booking/Services/OrderCreator.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 7
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$quantity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ticketType\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ticket_type_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''add_free_quantities'' on array\{upcharge\: int, changes\: array\<string, mixed\>, add_unit_prices\: array\<int, int\>, add_quantities\: array\<int, int\>, add_free_quantities\: array\<int, int\>, add_quantity_modes\: array\<int, string\|null\>, charges\: array\<int, array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\}\>, error\: null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''add_quantities'' on array\{upcharge\: int, changes\: array\<string, mixed\>, add_unit_prices\: array\<int, int\>, add_quantities\: array\<int, int\>, add_free_quantities\: array\<int, int\>, add_quantity_modes\: array\<int, string\|null\>, charges\: array\<int, array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\}\>, error\: null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''add_quantity_modes'' on array\{upcharge\: int, changes\: array\<string, mixed\>, add_unit_prices\: array\<int, int\>, add_quantities\: array\<int, int\>, add_free_quantities\: array\<int, int\>, add_quantity_modes\: array\<int, string\|null\>, charges\: array\<int, array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\}\>, error\: null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''adds'' on array\{edits\: array\<int, array\{child_id\: int, quantity\: int\}\>, adds\: array\<int, array\{ticket_type_id\: int, quantity\: int\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 5
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''amount'' on array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''charges'' on array\{upcharge\: int, changes\: array\<string, mixed\>, add_unit_prices\: array\<int, int\>, add_quantities\: array\<int, int\>, add_free_quantities\: array\<int, int\>, add_quantity_modes\: array\<int, string\|null\>, charges\: array\<int, array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\}\>, error\: null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''context'' on array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''edits'' on array\{edits\: array\<int, array\{child_id\: int, quantity\: int\}\>, adds\: array\<int, array\{ticket_type_id\: int, quantity\: int\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 5
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''edits'' on array\{edits\: array\<int, array\{child_id\: int, quantity\: int\}\>, adds\: array\<int, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''locked'' on array\{min\: 0, locked\: false\}\|array\{min\: int, max\: int\|null, locked\: bool, badge\: string\|null, group\: string\|null, free\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''min'' on array\{min\: 0, locked\: false\}\|array\{min\: int, max\: int\|null, locked\: bool, badge\: string\|null, group\: string\|null, free\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''quantity'' on array\{child_id\: int, quantity\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Parameter \#1 \$child of static method App\\Domain\\Booking\\Services\\AddonResolver\:\:soldQuantityUnit\(\) expects App\\Domain\\Booking\\Models\\OrderItem, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between App\\Domain\\Identity\\Models\\User and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domain\\Identity\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_included" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_mandatory" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>max_qty" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEditor.php
+
+		-
+			message: '#^Offset ''added'' on array\{changed\: array\<string, mixed\>, added\: array\<string, mixed\>, removed\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEventDataWriter.php
+
+		-
+			message: '#^Offset ''changed'' on array\{changed\: array\<string, mixed\>, added\: array\<string, mixed\>, removed\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEventDataWriter.php
+
+		-
+			message: '#^Offset ''removed'' on array\{changed\: array\<string, mixed\>, added\: array\<string, mixed\>, removed\: array\<string, mixed\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/OrderItemEventDataWriter.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$duration_min\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$guests\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$prep_after_min\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$prep_before_min\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$start\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Offset ''prep_after_min'' on array\{start\: mixed, prep_before_min\: int, duration_min\: mixed, prep_after_min\: int, guests\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Offset ''prep_before_min'' on array\{start\: mixed, prep_before_min\: int, duration_min\: mixed, prep_after_min\: int, guests\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domain\\Booking\\Models\\OrderItem\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domain/Booking/Services/PackAvailability.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Domain/Booking/Services/PostFormAddons.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{addon_id\: int, reason\: string\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Domain/Booking/Services/PostFormAddons.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between Carbon\\Carbon and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Domain/Booking/Services/PostFormAddons.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Domain/Booking/Services/PostFormAddons.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currency" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/PostFormAddons.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:prices\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Booking/Services/RateResolver.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domain\\Booking\\Models\\TicketType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/RateTable.php
+
+		-
+			message: '#^Method App\\Domain\\Booking\\Services\\ReservationSlip\:\:createdAt\(\) should return Illuminate\\Support\\Carbon\|null but returns Carbon\\Carbon\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Booking/Services/ReservationSlip.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Domain/Booking/Services/ReservationSlip.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>color" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Booking/Services/ReservationSlip.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$duration_min\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/SlotAvailability.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\OrderItem\:\:\$entry_start\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Booking/Services/SlotAvailability.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domain\\Booking\\Models\\OrderItem\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domain/Booking/Services/SlotAvailability.php
+
+		-
+			message: '#^Offset 0 on array\{0\: int\<0, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Content/Models/BarImage.php
+
+		-
+			message: '#^Offset 1 on array\{0\: int\<1, max\>, 1\: int\<0, max\>, 2\: int, 3\: string, mime\: string, channels\?\: int, bits\?\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Content/Models/BarImage.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Content/Services/LandingAddonPresenter.php
+
+		-
+			message: '#^Offset ''id'' does not exist on array\{name\: string, badge\: string\|null, note\: string\|null, features\: list\<string\>, gifts\: list\<string\>, group\: string\|null\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Content/Services/LandingAddonPresenter.php
+
+		-
+			message: '#^Offset ''id'' does not exist on array\{name\: string, badge\: string\|null, note\: string\|null, features\: list\<string\>, gifts\: list\<string\>, group\: string\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Content/Services/LandingAddonPresenter.php
+
+		-
+			message: '#^Offset ''time_extra'' does not exist on array\{name\: string, badge\: string\|null, note\: string\|null, features\: list\<string\>, gifts\: list\<string\>, group\: string\|null\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Content/Services/LandingAddonPresenter.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Domain/Content/Services/LegalIdentity.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Content/Services/LegalIdentity.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{papel\: ''chica''\|''grande''\|''velada'', ride\: mixed, zone\: object\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Domain/Content/Services/RideMosaic.php
+
+		-
+			message: '#^Match arm comparison between 0 and 0 is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Domain/Content/Services/ScheduleDisplay.php
+
+		-
+			message: '#^Offset ''is_closed'' does not exist on array\{label\: string, time\: string, is_today\: bool\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Domain/Content/Services/ScheduleDisplay.php
+
+		-
+			message: '#^Parameter \#1 \$array \(array\{\}\) to function array_values is empty, call has no effect\.$#'
+			identifier: arrayValues.empty
+			count: 1
+			path: app/Domain/Content/Services/ScheduleDisplay.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between array\{signature\: string, days\: array\{0\}\|array\{1, 2, 3, 4, 5, 6, 0\}\|array\{2, 3, 4, 5, 6, 0\}\|array\{3, 4, 5, 6, 0\}\|array\{4, 5, 6, 0\}\|array\{5, 6, 0\}\|array\{6, 0\}, time\: string, has_today\?\: true\} and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Domain/Content/Services/ScheduleDisplay.php
+
+		-
+			message: '#^PHPDoc tag @param for parameter \$today with type list\<array\<string, bool\|int\|list\<array\<string, int\|string\|null\>\|string\>\|string\|null\>\> is incompatible with native type string\.$#'
+			identifier: parameter.phpDocType
+			count: 1
+			path: app/Domain/Identity/Contracts/GateProfileData.php
+
+		-
+			message: '#^PHPDoc type for property App\\Domain\\Identity\\Contracts\\GateProfileData\:\:\$today with type list\<array\<string, bool\|int\|list\<array\<string, int\|string\|null\>\|string\>\|string\|null\>\> is incompatible with native type string\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Domain/Identity/Contracts/GateProfileData.php
+
+		-
+			message: '#^Property App\\Domain\\Identity\\Listeners\\SignPendingWaiverOnVerification\:\:\$acceptance is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: app/Domain/Identity/Listeners/SignPendingWaiverOnVerification.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Domain/Identity/Listeners/SignPendingWaiverOnVerification.php
+
+		-
+			message: '#^Method App\\Domain\\Identity\\Models\\CookieConsentLog\:\:prunable\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Domain\\Identity\\Models\\CookieConsentLog\> but returns Illuminate\\Database\\Eloquent\\Builder\<static\(App\\Domain\\Identity\\Models\\CookieConsentLog\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Identity/Models/CookieConsentLog.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Domain/Identity/Models/Dependent.php
+
+		-
+			message: '#^Method App\\Domain\\Identity\\Models\\Dependent\:\:prunable\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Domain\\Identity\\Models\\Dependent\> but returns Illuminate\\Database\\Eloquent\\Builder\<static\(App\\Domain\\Identity\\Models\\Dependent\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Identity/Models/Dependent.php
+
+		-
+			message: '#^Method App\\Domain\\Identity\\Models\\GuardianAuthorization\:\:prunable\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Domain\\Identity\\Models\\GuardianAuthorization\> but returns Illuminate\\Database\\Eloquent\\Builder\<static\(App\\Domain\\Identity\\Models\\GuardianAuthorization\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Identity/Models/GuardianAuthorization.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Domain/Identity/Models/LegalDocumentVersion.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<array\{h\: string, p\: string\}\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Domain/Identity/Models/LegalDocumentVersion.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Domain\\Identity\\Models\\Permission\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Domain/Identity/Models/Permission.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Domain\\Identity\\Models\\Role\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Domain/Identity/Models/Role.php
+
+		-
+			message: '#^Instanceof between Laravel\\Sanctum\\PersonalAccessToken and Laravel\\Sanctum\\PersonalAccessToken will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 2
+			path: app/Domain/Identity/Models/User.php
+
+		-
+			message: '#^Method App\\Domain\\Identity\\Models\\WaiverSignature\:\:prunable\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Domain\\Identity\\Models\\WaiverSignature\> but returns Illuminate\\Database\\Eloquent\\Builder\<static\(App\\Domain\\Identity\\Models\\WaiverSignature\)\>\.$#'
+			identifier: return.type
+			count: 2
+			path: app/Domain/Identity/Models/WaiverSignature.php
+
+		-
+			message: '#^Call to function method_exists\(\) with Illuminate\\Auth\\SessionGuard and ''logoutOtherDevices'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Domain/Identity/Services/AccountCredentials.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domain/Identity/Services/AccountPrivacy.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Domain/Identity/Services/AccountPrivacy.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domain\\Identity\\Models\\Dependent\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Domain/Identity/Services/AccountPrivacy.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domain/Identity/Services/AccountPrivacy.php
+
+		-
+			message: '#^Cannot call method copy\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domain/Identity/Services/AccountProfile.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Domain/Identity/Services/CustomerRegistrar.php
+
+		-
+			message: '#^Method App\\Domain\\Identity\\Services\\DependentAssigner\:\:rejections\(\) should return array\<string, string\> but returns array\<int, string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Identity/Services/DependentAssigner.php
+
+		-
+			message: '#^Offset decimal\-int\-string on array\<string, string\> in isset\(\) does not exist\.$#'
+			identifier: isset.offset
+			count: 1
+			path: app/Domain/Identity/Services/DependentAssigner.php
+
+		-
+			message: '#^Offset decimal\-int\-string on array\<string, string\> on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Identity/Services/DependentAssigner.php
+
+		-
+			message: '#^Parameter \#1 \$array \(list\<int\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 3
+			path: app/Domain/Identity/Services/DependentAssigner.php
+
+		-
+			message: '#^Parameter \#1 \$rejections of static method App\\Domain\\Identity\\Contracts\\SyncOutcome\:\:rejected\(\) expects array\<string, string\>, array\<int, string\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Identity/Services/DependentAssigner.php
+
+		-
+			message: '#^Parameter &\$statuses by\-ref type of method App\\Domain\\Identity\\Services\\DependentAssigner\:\:rejections\(\) expects array\<int, bool\>, array\<bool\> given\.$#'
+			identifier: parameterByRef.type
+			count: 1
+			path: app/Domain/Identity/Services/DependentAssigner.php
+
+		-
+			message: '#^PHPDoc tag @throws with type App\\Domain\\Identity\\Exceptions\\DependentNotMinorException\|App\\Domain\\Identity\\Exceptions\\DependentsLimitReachedException\|App\\Domain\\Identity\\Exceptions\\DependentWaiverRequiredException\|App\\Domain\\Identity\\Services\\WaiverDocumentStaleException is not subtype of Throwable$#'
+			identifier: throws.notThrowable
+			count: 1
+			path: app/Domain/Identity/Services/DependentRegistry.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between App\\Domain\\Identity\\Models\\LegalDocumentVersion and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Domain/Identity/Services/DependentRegistry.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Domain/Identity/Services/DependentRegistry.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domain\\Identity\\Services\\WaiverStatus\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Identity/Services/GateProfile.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\CarbonImmutable\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Identity/Services/GuardianRoster.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\{title\?\: mixed, body\?\: mixed\} will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 5
+			path: app/Domain/Identity/Services/LegalDocumentPublisher.php
+
+		-
+			message: '#^Parameter \#1 \$array \(non\-empty\-list\<string\>\) of array_values is already a list, call has no effect\.$#'
+			identifier: arrayValues.list
+			count: 1
+			path: app/Domain/Identity/Services/LegalDocumentPublisher.php
+
+		-
+			message: '#^Call to function is_array\(\) with null will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: app/Domain/Identity/Services/SelfSignup.php
+
+		-
+			message: '#^Offset ''channel'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Identity/Services/SelfSignup.php
+
+		-
+			message: '#^Offset ''document'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Identity/Services/SelfSignup.php
+
+		-
+			message: '#^Offset ''user_agent'' on \*NEVER\* in isset\(\) always exists and is not nullable\.$#'
+			identifier: isset.offset
+			count: 1
+			path: app/Domain/Identity/Services/SelfSignup.php
+
+		-
+			message: '#^Offset ''waiver'' on array\{name\: string, email\: string, phone\: string, password\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Identity/Services/SelfSignup.php
+
+		-
+			message: '#^Anonymous function never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Domain/Identity/Services/TermsAcceptance.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domain/Identity/Services/WaiverSigner.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Domain/Identity/Services/WaiverSigner.php
+
+		-
+			message: '#^Parameter \#3 \$acceptedAt of class App\\Domain\\Identity\\Services\\WaiverStatus constructor expects Carbon\\CarbonInterface\|null, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Identity/Services/WaiverStatus.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Domain\\Payments\\Models\\Payment\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Domain/Payments/Models/Payment.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:guardianReservations\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:guestFormItems\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:needsGuestForm\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Parameter \#1 \$order of class App\\Notifications\\OrderConfirmation constructor expects App\\Domain\\Booking\\Models\\Order, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Parameter \#1 \$order of class App\\Notifications\\OrderPaymentDeclined constructor expects App\\Domain\\Booking\\Models\\Order, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Parameter \#1 \$order of class App\\Notifications\\OrderProcessedAfterExpiration constructor expects App\\Domain\\Booking\\Models\\Order, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^Parameter \#3 \$order of method App\\Domain\\Payments\\Services\\RedsysReturnHandler\:\:result\(\) expects App\\Domain\\Booking\\Models\\Order\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Payments/Services/RedsysReturnHandler.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Domain\\Platform\\Models\\Setting\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Domain/Platform/Models/Setting.php
+
+		-
+			message: '#^Access to an undefined property chillerlan\\Settings\\SettingsContainerInterface\:\:\$outputBase64\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Platform/Services/Qr/PngWithLogo.php
+
+		-
+			message: '#^Access to an undefined property chillerlan\\Settings\\SettingsContainerInterface\:\:\$outputType\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Platform/Services/Qr/PngWithLogo.php
+
+		-
+			message: '#^Access to an undefined property chillerlan\\Settings\\SettingsContainerInterface\:\:\$returnResource\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domain/Platform/Services/Qr/PngWithLogo.php
+
+		-
+			message: '#^Offset ''en''\|''es''\|''fr'' on array\{es\: ''Español'', en\: ''English'', fr\: ''Français''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Platform/Services/SiteLocales.php
+
+		-
+			message: '#^Unsafe call to private method App\\Filament\\Pages\\AdminSettingsHub\:\:entryIsVisible\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 2
+			path: app/Filament/Pages/AdminSettingsHub.php
+
+		-
+			message: '#^Unsafe call to private method App\\Filament\\Pages\\AdminSettingsHub\:\:iconFor\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 1
+			path: app/Filament/Pages/AdminSettingsHub.php
+
+		-
+			message: '#^Unsafe call to private method App\\Filament\\Pages\\AdminSettingsHub\:\:urlFor\(\) through static\:\:\.$#'
+			identifier: staticClassAccess.privateMethod
+			count: 1
+			path: app/Filament/Pages/AdminSettingsHub.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\CreateManualOrderPage\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^If condition is always false\.$#'
+			identifier: if.alwaysFalse
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''h'' on array\{h\: string, p\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''p'' on array\{h\: string, p\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''required'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool, stage\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''type'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool, stage\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''waiver_declared'' on array\{name\: string, phone\: string\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''waiver_declared'' on array\{name\: string, phone\: string\}\|null on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Offset ''waiver_declared'' on array\{name\?\: string, email\?\: string\|null, phone\?\: string\|null, privacy_informed\: true\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domain\\Identity\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>version" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Pages/CreateManualOrderPage.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\Maintenance\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/Maintenance.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\Settings\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/Settings.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Pages\\WeeklySchedule\:\:\$form\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Pages/WeeklySchedule.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_closed" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Pages/WeeklySchedule.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:tr\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Filament/Resources/Attractions/Tables/AttractionTable.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Filament/Resources/Catalog/Concerns/InteractsWithCatalogForm.php
+
+		-
+			message: '#^Cannot access property \$prices on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Filament/Resources/Catalog/Pages/EditCatalog.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 8
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:configurableAddons\(\)\.$#'
+			identifier: method.notFound
+			count: 7
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:guestFields\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isPack\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>allow_extra" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>included_quantity" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>position" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>quantity_mode" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Catalog/RelationManagers/AddonsRelationManager.php
+
+		-
+			message: '#^Anonymous function never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Filament/Resources/Catalog/Schemas/CatalogForm.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Content\\Models\\LandingService\:\:\$ticket_type_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/LandingServices/Pages/EditLandingService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/OrderResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Orders/OrderResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/Concerns/AssignsDependents.php
+
+		-
+			message: '#^Offset ''failed'' on array\{succeeded\: list\<array\{item\: App\\Domain\\Booking\\Models\\OrderItem, amount_cents\: int\}\>, failed\: list\<array\{item\: App\\Domain\\Booking\\Models\\OrderItem, reason\: string, gateway_response_code\: string\|null, failure_message\: string\|null\}\>, aborted\: list\<int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/Concerns/PresentsOrderActions.php
+
+		-
+			message: '#^Offset ''succeeded'' on array\{succeeded\: list\<array\{item\: App\\Domain\\Booking\\Models\\OrderItem, amount_cents\: int\}\>, failed\: list\<array\{item\: App\\Domain\\Booking\\Models\\OrderItem, reason\: string, gateway_response_code\: string\|null, failure_message\: string\|null\}\>, aborted\: list\<int\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/Concerns/PresentsOrderActions.php
+
+		-
+			message: '#^Offset ''upcharge'' on array\{upcharge\: int, changes\: array\<string, mixed\>, add_unit_prices\: array\<int, int\>, add_quantities\: array\<int, int\>, add_free_quantities\: array\<int, int\>, add_quantity_modes\: array\<int, string\|null\>, charges\: array\<int, array\{child_id\: int\|null, type_id\: int\|null, amount\: int, context\: array\<string, mixed\>\}\>, error\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/Concerns/PresentsOrderActions.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Booking\\Models\\TicketType\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Access to an undefined property App\\Filament\\Resources\\Orders\\Pages\\ViewOrder\:\:\$orderAuditPaginator\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:canResend\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Cannot call method isRedsysRefundable\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Method App\\Filament\\Resources\\Orders\\Pages\\ViewOrder\:\:addonQuantityHint\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Method App\\Filament\\Resources\\Orders\\Pages\\ViewOrder\:\:productAndQuantityFields\(\) should return array\<int, Filament\\Forms\\Components\\Field\> but returns array\<int, Filament\\Forms\\Components\\Placeholder\|Filament\\Forms\\Components\\Toggle\|Filament\\Schemas\\Components\\Grid\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Offset ''ok'' on array\{ok\: bool, reason\?\: string, refund\?\: App\\Domain\\Payments\\Models\\PaymentRefund, order\?\: App\\Domain\\Booking\\Models\\Order, payment\?\: App\\Domain\\Payments\\Models\\Payment, also_cancelled\?\: bool, gateway_response_code\?\: string\|null, failure_message\?\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Offset ''refund'' does not exist on array\{item\: App\\Domain\\Booking\\Models\\OrderItem, amount_cents\: int\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Offset ''required'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool, stage\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Offset ''requires_name'' on array\{locked\: bool, qty\: int, group\: string\|null, max\: int\|null, per_guest\: bool\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Offset ''type'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool, stage\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Offset ''type'' on array\{key\: string, label\: array\<string, string\>\|string, type\: string, required\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Parameter \#1 \$order of method App\\Filament\\Resources\\Orders\\Pages\\ViewOrder\:\:owedForItem\(\) expects App\\Domain\\Booking\\Models\\Order, Illuminate\\Database\\Eloquent\\Model\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Parameter \#1 \$order of method App\\Filament\\Resources\\Orders\\Pages\\ViewOrder\:\:plannedRefundCents\(\) expects App\\Domain\\Booking\\Models\\Order, Illuminate\\Database\\Eloquent\\Model\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Parameter \#2 \$order of method App\\Filament\\Resources\\Orders\\Pages\\ViewOrder\:\:logBlocked\(\) expects App\\Domain\\Booking\\Models\\Order, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between null and null will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 1
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Domain\\Booking\\Models\\TicketType\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>amount" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Filament/Resources/Orders/Pages/ViewOrder.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/Orders/Tables/OrdersTable.php
+
+		-
+			message: '#^Cannot access property \$slug on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Filament/Resources/Pages/Pages/EditPage.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Filament/Resources/Roles/Pages/EditRole.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:permissions\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Filament/Resources/Roles/Pages/EditRole.php
+
+		-
+			message: '#^Cannot call method permissions\(\) on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Filament/Resources/Roles/Pages/EditRole.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/Seasons/Pages/CreateSeason.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/Seasons/Pages/EditSeason.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/Seasons/Tables/SeasonTable.php
+
+		-
+			message: '#^Cannot access property \$capacity_overridden on Illuminate\\Database\\Eloquent\\Model\|int\|string\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Filament/Resources/Slots/Pages/EditSlot.php
+
+		-
+			message: '#^Parameter \#1 \$slot of static method App\\Filament\\Resources\\Slots\\SlotResource\:\:isPackZone\(\) expects App\\Domain\\Booking\\Models\\Slot, Illuminate\\Database\\Eloquent\\Model\|int\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Filament/Resources/Slots/Pages/EditSlot.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Filament/Resources/SpecialDates/Pages/CreateSpecialDate.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Filament/Resources/SpecialDates/Pages/EditSpecialDate.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:customers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Filament/Resources/Users/Pages/ListUsers.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\:\:teamMembers\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Filament/Resources/Users/Pages/ListUsers.php
+
+		-
+			message: '#^Cannot call method setTimezone\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Filament/Resources/Users/Pages/ViewUser.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Users/UserResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Filament/Resources/Users/UserResource.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Filament/Resources/Zones/Concerns/InteractsWithZoneForm.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<non\-empty\-string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Filament/Support/InitialsAvatarProvider.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Http/Api/AdmissionCodeMap.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>user_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Concerns/AuthorizesGuardianAuthorization.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>user_id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Concerns/AuthorizesGuestForm.php
+
+		-
+			message: '#^Access to an undefined property App\\Domain\\Identity\\Models\\User\:\:\$previous_email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Account/EmailChangeController.php
+
+		-
+			message: '#^Cannot call method lt\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Account/EmailChangeController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\CalendarEventsController\:\:metaLabel\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Http/Controllers/Admin/CalendarEventsController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/AttractionsController.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/GuardianAuthorizationController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Domain\\Identity\\Models\\Dependent\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/GuardianAuthorizationController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GuardianAuthorizationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GuardianAuthorizationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>phone" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GuardianAuthorizationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currency" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GuestFormController.php
+
+		-
+			message: '#^Class App\\Domain\\Booking\\Services\\RateCards does not have a constructor and must be instantiated without any parameters\.$#'
+			identifier: new.noConstructor
+			count: 1
+			path: app/Http/Controllers/HomeController.php
+
+		-
+			message: '#^Parameter \#1 \$zones of static method App\\Domain\\Content\\Services\\RideMosaic\:\:compose\(\) expects Illuminate\\Support\\Collection\<int, object\>, Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domain\\Booking\\Models\\Zone\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/HomeController.php
+
+		-
+			message: '#^Parameter \#1 \$zones of method App\\Domain\\Content\\Services\\RuleBoard\:\:heightScale\(\) expects Illuminate\\Support\\Collection\<int, object\>, Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domain\\Booking\\Models\\Zone\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/PageController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Payments/RedsysReturnController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Payments/RedsysReturnController.php
+
+		-
+			message: '#^Call to function assert\(\) with true will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Http/Controllers/Payments/RedsysReturnController.php
+
+		-
+			message: '#^Instanceof between App\\Domain\\Payments\\Services\\RedsysReturnOutcome and App\\Domain\\Payments\\Services\\RedsysReturnOutcome will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Payments/RedsysReturnController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Api/V1/ConsentResource.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/CustomerCardResource.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Resources/Api/V1/DependentResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Api/V1/UserIdentityResource.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Http/Resources/Api/V1/UserResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Api/V1/WaiverDocumentResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Api/V1/WaiverStatusResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/GuardianAuthorizationRequest.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/GuestFormRequest.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/MixedPartySurchargeChanged.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>amount" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/OrderRefunded.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>code" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/PostFormAddonsChanged.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>currency" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Notifications/PostFormAddonsChanged.php
+
+		-
+			message: '#^Property Illuminate\\Notifications\\Messages\\SimpleMessage\:\:\$greeting \(string\) does not accept null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Notifications/Support/BrandedMailMessage.php
+
+		-
+			message: '#^Offset ''maps'' on array\{maps\: bool, social\: bool, decided\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Providers/AppServiceProvider.php
+
+		-
+			message: '#^Offset ''es''\|''zh_CN'' on array\{es\: ''Español'', zh_CN\: ''中文''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Providers/Filament/AdminPanelProvider.php

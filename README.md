@@ -27,7 +27,7 @@ misma máquina: `.env.example` ya trae los puertos propios de dev (web **8081** 
 # bootstrap sin vendor (una vez):
 docker run --rm -v $(pwd):/app -w /app laravelsail/php85-composer:latest composer install --ignore-platform-reqs
 cp .env.example .env   # puertos de dev incluidos; APP_KEY se genera abajo
-git config core.hooksPath .githooks   # gate local de push a main: docs-check + Pint + suite
+git config core.hooksPath .githooks   # gate local de push a main: docs-check + Pint + Larastan + builds + suite
 docker compose up -d
 docker compose exec -u sail laravel.test php artisan key:generate
 docker compose exec -u sail laravel.test php artisan migrate
@@ -42,6 +42,7 @@ docker compose exec -u sail laravel.test npm ci && docker compose exec -u sail l
 - Web: `http://localhost:8081` · Mailpit: `http://localhost:8028` · MySQL: `localhost:3308`
 - Tests: `docker compose exec -u sail laravel.test php artisan test --parallel`
 - Estilo: `docker compose exec -u sail laravel.test ./vendor/bin/pint`
+- Análisis estático (Larastan, nivel 5 con línea base): `docker compose exec -u sail laravel.test ./vendor/bin/phpstan analyse --memory-limit=2G`
 
 > ⚠️ `docker compose exec` **siempre con `-u sail`**: como root deja ficheros en
 > `storage/` que el servidor web no puede escribir (500 por permisos).
