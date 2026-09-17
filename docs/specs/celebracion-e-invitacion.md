@@ -1,7 +1,7 @@
 # [SPEC] El formulario de celebración, el justificante y la invitación digital
 
-> Estado: 🟦 **revisada de forma adversarial dos veces · T1 y T2 EN EL ÁRBOL (§10.1–§10.2) · T3→T6 sin empezar** ·
-> Última actualización: 2026-09-13 · Decisiones: `#569` (spec) · `#570` (T1) · `#571` (T2) · Carril: 🧩 SPA (banda 550–579).
+> Estado: 🟦 **revisada de forma adversarial dos veces · T1, T2 y T3 EN EL ÁRBOL (§10.1–§10.3) · T4→T6 sin empezar** ·
+> Última actualización: 2026-09-17 · Decisiones: `#569` (spec) · `#570` (T1) · `#571` (T2) · `#572` (T3) · Carril: 🧩 SPA (banda 550–579).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
 > `Justificante Invitado PJP` e `Invitaciones PJP` (el turno **2a** manda sobre el 1a).
@@ -10,7 +10,7 @@
 
 ## §0 · Antes de tocar
 
-- **Carril del SPA** (banda 550–579). T1 y T2 en el árbol (`#570`, `#571`, §10.1–§10.2); **T3→T6 sin
+- **Carril del SPA** (banda 550–579). T1, T2 y T3 en el árbol (`#570`–`#572`, §10.1–§10.3); **T4→T6 sin
   empezar** y **si vas a construir, §7.2 primero** (la segunda revisión cambió seis cosas). Orden
   `[DECIDIDO owner]`: T1 → T2 → T3 → T4 → T5 → T7 → **T6**, el aterrizaje, al final.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
@@ -24,8 +24,10 @@
   los colores del producto); el orden de la PÁGINA ya no es el de las POSICIONES (`sanitizeGuestData()`
   ordena por clave); el número de invitados lleva `form="gf-form"` o no se envía (defecto en producción
   desde `#444`, arreglado en el árbol, **pide despliegue**).
-- **T3**: la hora del justificante pinta el FIN de la franja («17:00 – 18:00»), la trampa de `#426`: usar la
-  duración efectiva. **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.
+- ⚠️ **El molde es de DOS páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*` o `.gf-notice` mueve también
+  el justificante. La T2 hizo la barra pegada y en fila y rompió la de firmar (401 px de 844, en producción
+  del 16-09 a la T3, §10.3): tras tocar el molde, **sonda y captura de VENTANA de las dos**.
+- **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.
 - Anexo al final con la fila del enrutador.
 
 ## 0. En una línea cada cosa
@@ -716,6 +718,70 @@ es el suelo táctil de 48 del desplegable).
 **Guardas**: `GuestFormManyGuestsTest` (5) · `logic.test.js` (16) · `scripts/mutar-postform-t2.py` (**5/5**,
 con control). ⚠️ **Sin guarda automática**, a sabiendas: el `sticky` de la barra y el alto de las filas, que
 son geometría y se miden con la sonda.
+
+### 10.3 T3 · la piel del justificante — EN EL ÁRBOL (2026-09-17, `DECISIONES #572`) · ✅ del owner en vivo · SIN DESPLEGAR
+
+**Hallazgo que ordenó la tanda** ⚠️⚠️ **defecto en producción desde el octavo despliegue (16-09)**: la T2 hizo
+`.gf-savebar` pegada y en FILA para el post-form, y el justificante metía DENTRO de esa barra dos párrafos
+legales, el anti-robot y el botón. Medido a 390 × 844 con captura de VENTANA: la barra ocupaba **401 px**
+pegada abajo —tapando el formulario mientras se rellena— y «Firmar la autorización» se salía **65 px** de la
+pantalla (x 236 → 455). Se podía firmar, pero nadie lo habría dado por bueno, y no lo veía ningún test: la
+T2 midió el justificante solo con la sonda de página entera, que cose lo pegado. **Pide despliegue.**
+
+**Hecho** (J-01…J-08 de `doc/formulario.md`):
+- **El cierre**: lo legal baja al flujo (`.guardian__close`) y la barra lleva SOLO a quién se autoriza y
+  «Firmar» a 56. El nombre sigue a lo que se teclea (y al selector de menores a cargo, que rellena por
+  código); sin JS aparece al volver con errores; sin nombre, el botón ocupa la barra. Un nombre largo se
+  corta con puntos. El rótulo largo queda de nombre accesible del botón (contiene al visible).
+- **El descargo ENTERO** (sin `max-height` ni scroll propio), a 16 y en tinta.
+- **Cinco desenlaces, cuatro tonos**, con `.gf-notice` y su título; nace `.gf-notice--ok`. El rechazo del
+  dominio comparte tono y título con el anti-robot: «No se ha registrado nada».
+- **La casilla del sistema** (`.guardian__check`): el propio `input` con `appearance: none`, 24, borde de 2,
+  y marcada tinta con el ✓ en papel —dos bordes girados: un SVG incrustado traería un color crudo—.
+- **El ordinal en cubo de 40** · **el logotipo como fichero** · bordes continuos · lo OPCIONAL marcado en
+  vez del asterisco · el error delante de la ayuda, a 15 y en `--err-ink` · la política como control de 48,
+  también en la pantalla sin formulario · el anti-robot en su caja con rótulo (`guardian.antibot_label`).
+- **La hora**: `AuthorizableReservation` cambia `startTime`/`endTime` por `timeWindow`, compuesta por
+  `OrderItem::displayTimeWindow()`. La vista era su único consumidor (medido).
+- Las reglas `.guardian__*` y `.gf-group__num` **se mudan al bloque de la hoja**: fuera de él ninguna escala
+  las miraba, y por eso el ordinal era un círculo con mono 12 y el descargo iba a 13.
+- Defecto heredado que enseñó la captura: el `<form>` no llevaba `.gf-form` y los tres pasos iban PEGADOS.
+
+**Medido** con `sonda-enlace-firmado.mjs` y tres sondas locales de ventana, a 390, antes → después:
+
+| | Antes | Después |
+|---|---|---|
+| Alto de la barra de firmar | 401 px | **85** (la cifra del canvas) |
+| Borde derecho del botón (ventana de 390) | 455 | **370** |
+| Nodos de texto < 15 px | 15 | **7** (todos rótulos mono de 12) |
+| Piezas con color de zona | 1 | **0** |
+| Radios distintos | 3 (con un `50%`) | **2** (16 y 10) |
+| La hora de una fiesta de 2 h | «17:00 – 18:00» | **«17:00–19:00»** |
+
+Los cuatro tonos dan el valor exacto del canvas (`#DFE9D6` · `#D5EAEE` · `#F4EDCF`; el error en Rojo 800,
+`#C83912`). Recorrido en navegador: barra con nombre larguísimo, casilla marcada pulsando la ETIQUETA, error
+de mayoría de edad, «texto nuevo», «firmada» y «ya estaba»; **cero errores de JavaScript**. La hermana no se
+mueve: A/B en la misma página con el titular en fila y en bloque, idéntico al píxel.
+
+**Desviaciones declaradas**: «Firmar» va en el SECUNDARIO (`#539`), como «Guardar» en la T1 · §4.3 decía
+«cero cadenas nuevas» y son **siete** (cuatro títulos de desenlace, `submit_short`, `bar.minor`,
+`antibot_label`) más cuatro retocadas: la receta del aviso pide título, como en la T1 · no se añade el
+rótulo «Atajo, no un campo» del dibujo · campos a 48 y no a 52 (la familia es de la web).
+
+**Trampas pagadas**: (1) el script nombraba `data-guardian-pick-select` y el caso «sin sesión no hay
+selector» asevera por subcadena: ese tramo solo se EMITE con menores (`#553`, otra vez). (2) «Ya estaba» no
+sale repitiendo al mismo firmante —es idempotente a propósito—: hace falta el OTRO progenitor; lo midió mal
+la sonda, no el dominio. (3) Un filtro de test que no ejecuta nada también sale ≠ 0: la mutación se dio por
+buena solo tras ver el mismo filtro ejecutar 1 caso en verde.
+
+**Guarda**: `GuardianSkinTest` (10 casos, vistos en ROJO antes del arreglo; la aserción de los tonos, nacida
+después, mutada a mano con `site.css` restaurado byte a byte). ⚠️ **Sin verificar**: el widget real de
+Turnstile en navegador (en local no hay claves; el marcado lo cubre el caso) y un teléfono de verdad.
+
+`[DECIDIDO owner, 2026-09-17]` **la piel está bien**: la vio en vivo en `localhost:8081` («perfecto»), con el
+rótulo del anti-robot «Comprobación de seguridad · Cloudflare» delante. ▶ **Paso de despliegue**: solo
+código, sin migraciones y sin tocar `client.css`; producción pide etiqueta (`/release`, guarda 8 de `#624`) y
+noche o parque cerrado (`#594`).
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

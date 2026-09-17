@@ -28,14 +28,43 @@
     $dayLabel = $context->date === null
         ? __('guardian.booking.no_date')
         : \App\Domain\Platform\Services\DisplayTime::dayLabel(\Illuminate\Support\Carbon::parse($context->date));
-    $timeLabel = $context->startTime === null
-        ? null
-        : mb_substr((string) $context->startTime, 0, 5).($context->endTime ? ' – '.mb_substr((string) $context->endTime, 0, 5) : '');
+
+    // ▶ **T3 · la piel** (`docs/specs/celebracion-e-invitacion.md` §4.3, grietas J-01…J-08 del canvas).
+    // ⚠️⚠️ La hora llega COMPUESTA del dominio (`timeWindow`): esta vista la montaba con el fin de la
+    // FRANJA y una fiesta de dos horas decía «17:00 – 18:00» (la trampa de `#426`).
+    //
+    // Los cinco desenlaces en cuatro tonos (J-02). El rechazo del dominio comparte tono y título con el
+    // anti-robot porque dicen lo mismo: no se ha registrado nada.
+    $refused = in_array($status, ['not_paid', 'closed', 'full'], true);
+    $outcome = match (true) {
+        $status === 'signed' => ['tone' => ' gf-notice--ok', 'role' => 'status', 'title' => __('guardian.done.signed_title'),
+            'text' => $minorName ? __('guardian.done.signed', ['name' => $minorName]) : __('guardian.done.signed_generic')],
+        $status === 'already' => ['tone' => '', 'role' => 'status', 'title' => __('guardian.done.already_title'),
+            'text' => $minorName ? __('guardian.done.already', ['name' => $minorName]) : __('guardian.done.already_generic')],
+        $status === 'stale' => ['tone' => ' gf-notice--attn', 'role' => 'alert', 'title' => __('guardian.done.stale_title'), 'text' => __('guardian.done.stale')],
+        // Turnstile falla también a personas: se le DICE, no se le miente.
+        $status === 'antibot' => ['tone' => ' gf-notice--err', 'role' => 'alert', 'title' => __('guardian.done.refused_title'), 'text' => __('guardian.done.antibot')],
+        // El dominio rechazó bajo el lock lo que la pantalla creía posible: entre pintar y enviar cambió
+        // el mundo. Se dice con la misma frase que el estado bloqueado.
+        $refused => ['tone' => ' gf-notice--err', 'role' => 'alert', 'title' => __('guardian.done.refused_title'), 'text' => __('guardian.blocked.'.$status)],
+        default => null,
+    };
+
+    // A QUIÉN se autoriza, en la barra de firmar. Sin JS solo se conoce al volver con errores.
+    $whoName = trim(old('minor_name', '').' '.old('minor_surname', ''));
 @endphp
 <x-focused-layout :title="__('guardian.title')">
     <div class="gf-page">
+        {{-- El logotipo entra como FICHERO por el mismo hueco que en la hoja hermana (J-05): es lo primero
+             que ve alguien que no conoce esta web. Sin él, el nombre en la fuente de rótulo. --}}
+        @php $clientLogo = @filemtime(public_path('img/client-logo.svg')); @endphp
         <div class="gf-mark">
-            <span class="gf-mark__brand">{{ $site['name'] ?? config('app.name') }}</span>
+            @if ($clientLogo)
+                <img class="gf-mark__logo" src="{{ asset('img/client-logo.svg') }}?v={{ $clientLogo }}"
+                     alt="{{ $site['name'] ?? config('app.name') }}">
+            @else
+                <span class="gf-mark__brand">{{ $site['name'] ?? config('app.name') }}</span>
+            @endif
             <span class="gf-mark__sub">{{ __('guardian.title') }}</span>
         </div>
 
@@ -69,8 +98,8 @@
                     <div class="gf-stub__cell">
                         <span class="k">{{ __('guardian.booking.date') }}</span>
                         <span class="v">{{ $dayLabel }}</span>
-                        @if ($timeLabel)
-                            <span class="v mono">{{ $timeLabel }}</span>
+                        @if ($context->timeWindow)
+                            <span class="v mono">{{ $context->timeWindow }}</span>
                         @endif
                     </div>
                     {{-- §12.4, `[DECIDIDO owner]`: **quién responde del menor durante la visita**. Un
@@ -91,24 +120,15 @@
 
             <div class="gf-form">
 
-                {{-- ───── Desenlace del envío anterior ───── --}}
-                @if ($status === 'signed')
-                    <p class="guardian__notice guardian__notice--ok" role="status">
-                        {{ $minorName ? __('guardian.done.signed', ['name' => $minorName]) : __('guardian.done.signed_generic') }}
-                    </p>
-                @elseif ($status === 'already')
-                    <p class="guardian__notice" role="status">
-                        {{ $minorName ? __('guardian.done.already', ['name' => $minorName]) : __('guardian.done.already_generic') }}
-                    </p>
-                @elseif ($status === 'stale')
-                    <p class="guardian__notice guardian__notice--bad" role="alert">{{ __('guardian.done.stale') }}</p>
-                @elseif ($status === 'antibot')
-                    {{-- Turnstile falla también a personas: se le DICE, no se le miente. --}}
-                    <p class="guardian__notice guardian__notice--bad" role="alert">{{ __('guardian.done.antibot') }}</p>
-                @elseif (in_array($status, ['not_paid', 'closed', 'full'], true))
-                    {{-- El dominio rechazó bajo el lock lo que la pantalla creía posible: entre pintar
-                         y enviar cambió el mundo. Se dice con la misma frase que el estado bloqueado. --}}
-                    <p class="guardian__notice guardian__notice--bad" role="alert">{{ __('guardian.blocked.'.$status) }}</p>
+                {{-- ───── Desenlace del envío anterior ─────
+                     El aviso sobre papel de la hoja (`.gf-notice`, `#570`): un tono por desenlace y el
+                     título delante. Antes tres de los cinco salían con el mismo gris, y «ha quedado
+                     registrada» se leía igual que «NO hemos registrado nada» (J-02). --}}
+                @if ($outcome !== null)
+                    <div class="gf-notice{{ $outcome['tone'] }}" role="{{ $outcome['role'] }}" data-guardian-outcome="{{ $status }}">
+                        <p class="gf-notice__title">{{ $outcome['title'] }}</p>
+                        <p class="gf-notice__text">{{ $outcome['text'] }}</p>
+                    </div>
                 @endif
 
                 @if ($blocked !== null)
@@ -118,7 +138,9 @@
                         <div class="gf-group__head">
                             <h2 class="gf-group__title">{{ __('guardian.blocked.heading') }}</h2>
                         </div>
-                        <p class="guestform__privacy">{{ __('guardian.blocked.'.$blocked) }}</p>
+                        <p class="guardian__text">{{ __('guardian.blocked.'.$blocked) }}</p>
+                        {{-- Sin formulario la política sigue siendo el único control legal de la página. --}}
+                        <a class="gf-legal" href="{{ route('legal.privacidad') }}">{{ __('guardian.privacy_link') }}</a>
                     </section>
                 @else
                     {{-- ⚠️ **El `guardian.intro` de la T2 se RETIRA aquí, y lo vio la captura.** Decía
@@ -131,7 +153,10 @@
                          consumidor antes de tocarla, y una clave sin pantalla es peso muerto que el
                          siguiente agente tiene que descartar. --}}
 
-                    <form method="POST" action="{{ $formAction }}" novalidate>
+                    {{-- ⚠️ El `<form>` lleva también `.gf-form`: el hueco entre grupos es del contenedor, y sin
+                         la clase los tres pasos y el cierre iban PEGADOS (la ayuda de la fecha tocaba el
+                         ordinal del paso 2). Lo enseñó la captura de la T3; ningún test mira el aire. --}}
+                    <form class="gf-form" method="POST" action="{{ $formAction }}" novalidate>
                         @csrf
                         <input type="hidden" name="document_id" value="{{ $document->getKey() }}">
 
@@ -176,9 +201,12 @@
                                 </label>
                             @endif
 
+                            {{-- ⚠️ Sin asterisco (T3): de ocho campos dos son opcionales, así que se marca LO
+                                 OPCIONAL, como en la hoja hermana; el asterisco iba sin leyenda y en el color
+                                 de la zona. Y el ERROR va delante de la ayuda: es lo que hay que leer. --}}
                             <div class="eventfields">
                                 <label class="eventfields__field @error('minor_name') is-invalid @enderror" for="minor_name">
-                                    <span class="eventfields__label">{{ __('guardian.minor.name') }} <span class="eventfields__req" aria-hidden="true">*</span></span>
+                                    <span class="eventfields__label">{{ __('guardian.minor.name') }}</span>
                                     <input id="minor_name" name="minor_name" type="text" required autocomplete="off"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::NAME_MAX }}"
                                            value="{{ old('minor_name') }}">
@@ -186,7 +214,7 @@
                                 </label>
 
                                 <label class="eventfields__field @error('minor_surname') is-invalid @enderror" for="minor_surname">
-                                    <span class="eventfields__label">{{ __('guardian.minor.surname') }} <span class="eventfields__req" aria-hidden="true">*</span></span>
+                                    <span class="eventfields__label">{{ __('guardian.minor.surname') }}</span>
                                     <input id="minor_surname" name="minor_surname" type="text" required autocomplete="off"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::SURNAME_MAX }}"
                                            value="{{ old('minor_surname') }}">
@@ -194,10 +222,10 @@
                                 </label>
 
                                 <label class="eventfields__field @error('minor_born_on') is-invalid @enderror" for="minor_born_on">
-                                    <span class="eventfields__label">{{ __('guardian.minor.born_on') }} <span class="eventfields__req" aria-hidden="true">*</span></span>
+                                    <span class="eventfields__label">{{ __('guardian.minor.born_on') }}</span>
                                     <input id="minor_born_on" name="minor_born_on" type="date" required value="{{ old('minor_born_on') }}">
-                                    <span class="eventfields__help">{{ __('guardian.minor.born_on_help') }}</span>
                                     @error('minor_born_on')<span class="eventfields__error">{{ $message }}</span>@enderror
+                                    <span class="eventfields__help">{{ __('guardian.minor.born_on_help') }}</span>
                                 </label>
                             </div>
                         </section>
@@ -207,10 +235,10 @@
                             <div class="gf-group__head">
                                 <h2 class="gf-group__title"><span class="gf-group__num">2</span> {{ __('guardian.guardian.heading') }}</h2>
                             </div>
-                            <p class="guestform__privacy">{{ __('guardian.guardian.help') }}</p>
+                            <p class="guardian__text">{{ __('guardian.guardian.help') }}</p>
                             <div class="eventfields">
                                 <label class="eventfields__field @error('guardian_name') is-invalid @enderror" for="guardian_name">
-                                    <span class="eventfields__label">{{ __('guardian.guardian.name') }} <span class="eventfields__req" aria-hidden="true">*</span></span>
+                                    <span class="eventfields__label">{{ __('guardian.guardian.name') }}</span>
                                     <input id="guardian_name" name="guardian_name" type="text" required autocomplete="given-name"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::NAME_MAX }}"
                                            value="{{ old('guardian_name', $prefill['guardian_name']) }}">
@@ -218,7 +246,7 @@
                                 </label>
 
                                 <label class="eventfields__field @error('guardian_surname') is-invalid @enderror" for="guardian_surname">
-                                    <span class="eventfields__label">{{ __('guardian.guardian.surname') }} <span class="eventfields__req" aria-hidden="true">*</span></span>
+                                    <span class="eventfields__label">{{ __('guardian.guardian.surname') }}</span>
                                     <input id="guardian_surname" name="guardian_surname" type="text" required autocomplete="family-name"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::SURNAME_MAX }}"
                                            value="{{ old('guardian_surname') }}">
@@ -226,7 +254,7 @@
                                 </label>
 
                                 <label class="eventfields__field @error('guardian_relationship') is-invalid @enderror" for="guardian_relationship">
-                                    <span class="eventfields__label">{{ __('guardian.guardian.relationship') }} <span class="eventfields__req" aria-hidden="true">*</span></span>
+                                    <span class="eventfields__label">{{ __('guardian.guardian.relationship') }}</span>
                                     <select id="guardian_relationship" name="guardian_relationship" required>
                                         <option value="">{{ __('guardian.guardian.relationship_placeholder') }}</option>
                                         @foreach ($relationships as $relationship)
@@ -239,21 +267,21 @@
                                 </label>
 
                                 <label class="eventfields__field @error('guardian_email') is-invalid @enderror" for="guardian_email">
-                                    <span class="eventfields__label">{{ __('guardian.guardian.email') }}</span>
+                                    <span class="eventfields__label">{{ __('guardian.guardian.email') }} <span class="gf-opt">{{ __('guestform.optional') }}</span></span>
                                     <input id="guardian_email" name="guardian_email" type="email" autocomplete="email"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::EMAIL_MAX }}"
                                            value="{{ old('guardian_email', $prefill['guardian_email']) }}">
-                                    <span class="eventfields__help">{{ __('guardian.guardian.email_help') }}</span>
                                     @error('guardian_email')<span class="eventfields__error">{{ $message }}</span>@enderror
+                                    <span class="eventfields__help">{{ __('guardian.guardian.email_help') }}</span>
                                 </label>
 
                                 <label class="eventfields__field @error('guardian_phone') is-invalid @enderror" for="guardian_phone">
-                                    <span class="eventfields__label">{{ __('guardian.guardian.phone') }}</span>
+                                    <span class="eventfields__label">{{ __('guardian.guardian.phone') }} <span class="gf-opt">{{ __('guestform.optional') }}</span></span>
                                     <input id="guardian_phone" name="guardian_phone" type="tel" autocomplete="tel"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::PHONE_MAX }}"
                                            value="{{ old('guardian_phone', $prefill['guardian_phone']) }}">
-                                    <span class="eventfields__help">{{ __('guardian.guardian.phone_help') }}</span>
                                     @error('guardian_phone')<span class="eventfields__error">{{ $message }}</span>@enderror
+                                    <span class="eventfields__help">{{ __('guardian.guardian.phone_help') }}</span>
                                 </label>
                             </div>
                         </section>
@@ -266,11 +294,13 @@
                         <section class="gf-group">
                             <div class="gf-group__head">
                                 <h2 class="gf-group__title"><span class="gf-group__num">3</span> {{ __('guardian.waiver.heading') }}</h2>
-                                <span class="gf-group__opt">{{ __('guardian.waiver.version', [
-                                    'version' => $document->version,
-                                    'date' => \App\Domain\Platform\Services\DisplayTime::format($document->published_at, 'd/m/Y'),
-                                ]) }}</span>
                             </div>
+                            {{-- La versión en SU línea, debajo del titular: a su derecha lo estrangulaba
+                                 en un teléfono, y al partir quedaba sola y alineada al otro lado. --}}
+                            <span class="guardian__version">{{ __('guardian.waiver.version', [
+                                'version' => $document->version,
+                                'date' => \App\Domain\Platform\Services\DisplayTime::format($document->published_at, 'd/m/Y'),
+                            ]) }}</span>
 
                             <div class="guardian__waiver">
                                 <h3 class="guardian__waiver-title">{{ $document->title }}</h3>
@@ -284,31 +314,60 @@
                                 @endforeach
                             </div>
 
-                            {{-- Casilla SEPARADA y DESMARCADA por defecto (§4.4). --}}
+                            {{-- Casilla SEPARADA y DESMARCADA por defecto (§4.4).
+                                 ▶ Es la casilla del SISTEMA (J-03): 24, y marcada, relleno de tinta con el ✓
+                                 en papel. Era un `input` de navegador de 13 px, y es el gesto legal de toda
+                                 la pantalla. Sigue siendo el `input` —con `appearance: none`—, así que el
+                                 teclado, el `required` y el lector de pantalla no se enteran del cambio. --}}
                             <label class="guardian__accept @error('accept_waiver') is-invalid @enderror" for="accept_waiver">
-                                <input type="checkbox" id="accept_waiver" name="accept_waiver" value="1" required>
+                                <input type="checkbox" class="guardian__check" id="accept_waiver" name="accept_waiver" value="1" required>
                                 <span>{{ __('guardian.waiver.accept') }}</span>
                             </label>
                             @error('accept_waiver')<span class="eventfields__error">{{ $message }}</span>@enderror
                         </section>
 
-                        <div class="gf-savebar">
+                        {{-- ───── El cierre: lo legal, EN EL FLUJO y no en la barra ─────
+                             ⚠️⚠️ Estos dos párrafos y el anti-robot vivían DENTRO de `.gf-savebar`, y la T2
+                             (`#571`) hizo esa barra pegada y en fila para la hoja hermana: medido a
+                             390 × 844, aquí ocupaba 401 px pegada abajo y el botón se salía 65 px de la
+                             pantalla, sin que fallara ningún test. `GuardianSkinTest` mira qué lleva la barra. --}}
+                        <div class="guardian__close">
                             <p class="guestform__privacy">{{ __('guardian.notice') }}</p>
                             {{-- Deber de información (art. 13): quien rellena esto es un tercero que
                                  no ha aceptado nada antes y está entregando datos de un MENOR. La
-                                 política se enlaza, no se resume. --}}
-                            <p class="guestform__privacy">
-                                {!! __('guardian.privacy', [
-                                    'link' => '<a href="'.e(route('legal.privacidad')).'">'.e(__('guardian.privacy_link')).'</a>',
-                                ]) !!}
-                            </p>
+                                 política se enlaza, no se resume — y FUERA de su frase, como control
+                                 propio de 48 (J-07). --}}
+                            <div class="gf-intro">
+                                <p class="guestform__privacy">{{ __('guardian.privacy') }}</p>
+                                <a class="gf-legal" href="{{ route('legal.privacidad') }}">{{ __('guardian.privacy_link') }}</a>
+                            </div>
 
+                            {{-- El anti-robot es la caja de un TERCERO: no se recolorea ni se redibuja, y se
+                                 DICE qué es (J-08). Segunda excepción declarada del sistema, tras el botón
+                                 de Google. Le falla a personas, y aquí un fallo es un niño que no entra. --}}
                             @if (\App\Domain\Platform\Services\Turnstile::enabled())
-                                <div class="cf-turnstile" data-sitekey="{{ \App\Domain\Platform\Services\Turnstile::siteKey() }}"></div>
+                                <div class="guardian__third">
+                                    <span class="guardian__third-label">{{ __('guardian.antibot_label') }}</span>
+                                    <div class="cf-turnstile" data-sitekey="{{ \App\Domain\Platform\Services\Turnstile::siteKey() }}"></div>
+                                </div>
                                 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
                             @endif
+                        </div>
 
-                            <button type="submit" class="btn btn--lg">{{ __('guardian.submit') }}</button>
+                        {{-- ───── La BARRA de firmar, pegada abajo (J-01) ─────
+                             Es la que permite leer el descargo ENTERO: el botón ya no puede quedarse fuera
+                             de la pantalla. A la izquierda, A QUIÉN se autoriza —lo único que hay que releer
+                             antes de firmar—; con JS sigue a lo que se teclea, y sin él aparece al volver
+                             con errores. ⚠️ Solo eso y el botón: un párrafo aquí dentro es media pantalla.
+                             ▶ «Firmar» y no el rótulo largo, que no cabe junto a un nombre a 390; el largo
+                             se queda de nombre accesible (contiene al visible). En el SECUNDARIO del sistema
+                             como «Guardar» en la hoja hermana (`#539`): aquí tampoco se compra nada. --}}
+                        <div class="gf-savebar">
+                            <span class="gf-savebar__count guardian__who" data-guardian-who @if ($whoName === '') hidden @endif>
+                                <span class="gf-savebar__label">{{ __('guardian.bar.minor') }}</span>
+                                <span class="guardian__who-name" data-guardian-who-name>{{ $whoName }}</span>
+                            </span>
+                            <button type="submit" class="btn btn--lg btn--ink" aria-label="{{ __('guardian.submit') }}">{{ __('guardian.submit_short') }}</button>
                         </div>
                     </form>
                 @endif
@@ -316,20 +375,43 @@
         </main>
     </div>
 
-    @if ($blocked === null && $dependents !== [])
-        {{-- El selector de menores a cargo, EN LÍNEA y sin dependencias.
+    @if ($blocked === null)
+        {{-- Dos comodidades EN LÍNEA y sin dependencias: el nombre del menor en la barra de firmar, y el
+             selector de menores a cargo (solo con sesión).
              ⚠️ Va aquí y no en un módulo del cajón porque esta pantalla **no carga el cajón**: es una
              hoja enfocada y pública, y traerse 265 KiB de motor SPA para rellenar cuatro campos sería
              pagar el presupuesto entero de la compra por una comodidad.
-             ⚠️ **Rellena y NO envía**: quien firma revisa lo que ha quedado puesto. Y el `change` que
-             vuelve a «a mano» **vacía**, para que no queden datos de otro niño en el formulario. --}}
+             ⚠️ El selector **rellena y NO envía**: quien firma revisa lo que ha quedado puesto. Y el
+             `change` que vuelve a «a mano» **vacía**, para que no queden datos de otro niño. --}}
         <script>
             (function () {
+                var who = document.querySelector('[data-guardian-who]');
+                var whoName = document.querySelector('[data-guardian-who-name]');
+                var field = function (id) { return document.getElementById(id); };
+
+                // A QUIÉN se autoriza: nombre y apellidos tal como están escritos ahora mismo.
+                var sync = function () {
+                    if (! who || ! whoName) return;
+                    var parts = [field('minor_name'), field('minor_surname')]
+                        .map(function (el) { return el ? el.value.trim() : ''; })
+                        .filter(function (v) { return v !== ''; });
+                    whoName.textContent = parts.join(' ');
+                    who.hidden = parts.length === 0;
+                };
+                ['minor_name', 'minor_surname'].forEach(function (id) {
+                    var el = field(id);
+                    if (el) el.addEventListener('input', sync);
+                });
+                sync();
+                @if ($dependents !== [])
+
+                // ⚠️ Este tramo solo se EMITE con menores a cargo: sin sesión la página no nombra el
+                // selector ni en su script (lo asevera `GuardianAuthorizationScreenTest`).
                 var pick = document.querySelector('[data-guardian-pick-select]');
                 if (! pick) return;
 
                 var set = function (id, value) {
-                    var el = document.getElementById(id);
+                    var el = field(id);
                     if (el) el.value = value || '';
                 };
 
@@ -344,7 +426,10 @@
                     // dato que la ficha del menor a cargo ya tiene declarado, y volver a preguntarlo
                     // sería pedir dos veces lo mismo. Solo se pone si la ficha lo trae.
                     if (chosen && opt.dataset.relationship) set('guardian_relationship', opt.dataset.relationship);
+                    // Rellenar por código no dispara `input`: la barra se pone al día a mano.
+                    sync();
                 });
+                @endif
             })();
         </script>
     @endif

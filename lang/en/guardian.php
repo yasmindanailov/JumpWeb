@@ -40,9 +40,9 @@ return [
         'relationship' => 'Relationship to the minor',
         'relationship_placeholder' => 'Choose one',
         'email' => 'Email address',
-        'email_help' => 'Optional. If you leave it, we send you a copy of what you sign.',
+        'email_help' => 'If you leave it, we send you a copy of what you sign.',
         'phone' => 'Phone',
-        'phone_help' => 'Optional. So we can reach you on the day of the visit.',
+        'phone_help' => 'So we can reach you on the day of the visit.',
     ],
 
     'relationships' => [
@@ -60,8 +60,18 @@ return [
     ],
 
     'submit' => 'Sign the authorisation',
+    'submit_short' => 'Sign',
+    'bar' => [
+        'minor' => 'Minor',
+    ],
+
+    'antibot_label' => 'Security check · Cloudflare',
 
     'done' => [
+        'signed_title' => 'Authorisation registered',
+        'already_title' => 'Nothing else to do',
+        'stale_title' => 'Please read it again',
+        'refused_title' => 'Nothing was registered',
         'signed' => "Done: :name's authorisation has been registered.",
         'signed_generic' => 'Done: the authorisation has been registered.',
         'already' => ':name already has an authorisation signed for this booking. Nothing else to do.',
@@ -84,6 +94,6 @@ return [
     ],
 
     'notice' => 'You are declaring these details yourself and we do not check them against any document. They are kept as proof of this authorisation.',
-    'privacy' => 'We process these details so the minor can be admitted and as proof of your authorisation. You can exercise your rights as explained in :link.',
-    'privacy_link' => 'our privacy policy',
+    'privacy' => 'We process these details so the minor can be admitted and as proof of your authorisation. You can exercise your rights as explained in our privacy policy.',
+    'privacy_link' => 'Read the privacy policy',
 ];

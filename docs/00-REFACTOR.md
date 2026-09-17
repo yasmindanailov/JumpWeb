@@ -94,10 +94,12 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] El carril entero: 25 correos, molde, remitente, modo oscuro, bandeja, fiesta mixta y los dos del framework.
 - [ ] Los cuatro ámbar (§16) y el OJO del owner en Gmail y Outlook.
 
-### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 — `carriles/spa.md` (`#550`→`#571`, el otro ordenador)
+### EL CAJÓN · FASE 4 DEL DISEÑO 🟦 — `carriles/spa.md` (`#550`→`#572`, el otro ordenador)
 - [x] Las 25 pantallas construidas (`#550`→`#568`) · T1 y T2 de `specs/celebracion-e-invitacion.md` (`#570`, `#571`).
 - [x] Desplegado el arreglo del número de invitados del post-form (defecto en producción desde `#444`) con las cuatro líneas del `client.css`: octavo despliegue, 2026-09-16 (`ENTORNOS.md` §6).
-- [ ] T3 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
+- [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
+- [ ] Desplegar la T3 con etiqueta: arregla la barra de firmar del justificante, rota en producción desde el 16-09.
+- [ ] T4 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
 ### El PANEL: la exención del menor y el ROL DE PUERTA ✅ código — `#320`

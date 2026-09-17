@@ -26,8 +26,12 @@ final readonly class AuthorizableReservation
      * @param  string  $productName  a qué va el menor («Excursión 2 h», «Jump · 1 hora»). ⚠️ Es lo
      *                               que faltaba: hasta `#401` la hoja no decía el tipo de reserva
      * @param  ?string  $date  el día (`Y-m-d`), o `null` si la línea todavía no tiene franja
-     * @param  ?string  $startTime  hora de inicio (`H:i:s`) y {@see $endTime} de fin: un padre quiere
-     *                              saber a qué hora deja y recoge a su hijo
+     * @param  ?string  $timeWindow  la ventana YA COMPUESTA («17:00–19:00»), o `null` sin franja: un padre
+     *                               quiere saber a qué hora deja y recoge a su hijo. ⚠️ Hasta la T3 de
+     *                               `celebracion-e-invitacion.md` viajaban la hora de inicio y el FIN DE
+     *                               LA FRANJA, y la rejilla es de 60 min: una fiesta de dos horas decía
+     *                               «17:00 – 18:00» (la trampa de `#426`). Sale de
+     *                               `OrderItem::displayTimeWindow()`, la fuente única de todas las superficies
      * @param  int  $quantity  unidades de ESTA línea. Es el techo bruto de autorizaciones; lo que
      *                         queda libre lo decide Identity restando los menores a cargo ya
      *                         asignados, que ella sí conoce
@@ -46,8 +50,7 @@ final readonly class AuthorizableReservation
         public string $orderCode,
         public string $productName,
         public ?string $date,
-        public ?string $startTime,
-        public ?string $endTime,
+        public ?string $timeWindow,
         public int $quantity,
         public bool $isPaid,
         public bool $visitFinished,

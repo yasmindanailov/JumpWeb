@@ -65,8 +65,9 @@ class AuthorizableReservationsReader implements AuthorizableReservations
             // exactamente lo que lee el operador.
             productName: $item->displayProductName(),
             date: $item->slot?->date?->toDateString(),
-            startTime: $item->slot?->start_time,
-            endTime: $item->slot?->end_time,
+            // ⚠️ La duración EFECTIVA, nunca `slot->end_time`: la rejilla es de 60 min y una fiesta de
+            // dos horas decía «17:00 – 18:00» en la hoja que firma el padre (`#426`).
+            timeWindow: $item->displayTimeWindow(),
             quantity: (int) $item->quantity,
             isPaid: $order?->status === Order::STATUS_PAID,
             // Sin franja no ha terminado nada: `false`, no `true`. Es la misma trampa que el lector

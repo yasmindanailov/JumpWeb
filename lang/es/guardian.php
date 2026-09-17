@@ -52,9 +52,11 @@ return [
         'relationship' => 'Relación con el menor',
         'relationship_placeholder' => 'Elige una opción',
         'email' => 'Correo electrónico',
-        'email_help' => 'Opcional. Si lo dejas, te enviamos una copia de lo que firmas.',
+        // ⚠️ Sin «Opcional.» delante (T3): lo opcional lo marca el RÓTULO del campo, con
+        // `guestform.optional`, como en la hoja hermana. Decirlo dos veces era la grieta del asterisco al revés.
+        'email_help' => 'Si lo dejas, te enviamos una copia de lo que firmas.',
         'phone' => 'Teléfono',
-        'phone_help' => 'Opcional. Para poder localizarte el día de la visita.',
+        'phone_help' => 'Para poder localizarte el día de la visita.',
     ],
 
     'relationships' => [
@@ -71,9 +73,31 @@ return [
         'version' => 'Versión :version, publicada el :date',
     ],
 
+    /*
+     * La BARRA de firmar (T3 de `celebracion-e-invitacion.md`): pegada abajo, con el nombre del menor a la
+     * izquierda —lo único que hay que releer antes de firmar— y «Firmar» a 56. El rótulo largo no cabe
+     * junto a un nombre a 390 px, así que se queda de NOMBRE ACCESIBLE del botón (contiene al visible).
+     */
     'submit' => 'Firmar la autorización',
+    'submit_short' => 'Firmar',
+    'bar' => [
+        'minor' => 'Menor',
+    ],
 
+    // El anti-robot es la caja de un TERCERO y se dice qué es (J-08): segunda excepción declarada del
+    // sistema, después del botón de Google. No se recolorea; lo nuestro es este rótulo.
+    'antibot_label' => 'Comprobación de seguridad · Cloudflare',
+
+    /*
+     * Cinco desenlaces, cuatro tonos (J-02), y cada uno con su TÍTULO: la receta del aviso sobre papel
+     * lo pide, y el punto del tono vive en él. El anti-robot y el rechazo del dominio comparten título
+     * porque dicen lo mismo: no se ha registrado nada.
+     */
     'done' => [
+        'signed_title' => 'Autorización registrada',
+        'already_title' => 'No hace falta hacer nada',
+        'stale_title' => 'Hay que volver a leerlo',
+        'refused_title' => 'No se ha registrado nada',
         'signed' => 'Listo: la autorización de :name ha quedado registrada.',
         'signed_generic' => 'Listo: la autorización ha quedado registrada.',
         'already' => ':name ya tiene su autorización firmada para esta reserva. No hace falta hacer nada más.',
@@ -102,6 +126,8 @@ return [
      * declara un desconocido.
      */
     'notice' => 'Los datos que escribes aquí los declaras tú y no los comprobamos con ningún documento. Se conservan como prueba de esta autorización.',
-    'privacy' => 'Tratamos estos datos para poder dejar entrar al menor y como prueba de tu autorización. Puedes ejercer tus derechos como se explica en :link.',
-    'privacy_link' => 'nuestra política de privacidad',
+    // ⚠️ La política va FUERA de su frase, como control propio de 48 (J-07, la misma regla que F-08 en
+    // la hoja hermana): dentro del párrafo corría en cajas de línea de 20 px.
+    'privacy' => 'Tratamos estos datos para poder dejar entrar al menor y como prueba de tu autorización. Puedes ejercer tus derechos como se explica en nuestra política de privacidad.',
+    'privacy_link' => 'Leer la política de privacidad',
 ];

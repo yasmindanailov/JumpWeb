@@ -1054,6 +1054,11 @@ necesita antes de firmar**: a qué visita va su hijo, y con quién.
   **una sola columna `name`** (verificado sobre el esquema). Lo que se enseña es el nombre tal como
   está en su cuenta. Inventar un apellido partiendo la cadena por el primer espacio sería fabricar un
   dato en una pantalla que acompaña a una prueba legal.
+- ▶ **La piel de esta pantalla es la T3 de `celebracion-e-invitacion.md`** (§4.3 y §10.3, `DECISIONES #572`,
+  2026-09-17): el descargo entero con «Firmar» en la barra pegada, cinco desenlaces en cuatro tonos, la casilla
+  del sistema. ⚠️ **La hora de la visita llega COMPUESTA** (`AuthorizableReservation::$timeWindow`, de
+  `OrderItem::displayTimeWindow()`): con el fin de la franja una fiesta de dos horas decía «17:00 – 18:00».
+  Y su molde `.gf-*` es el del post-form: un cambio allí se mira también aquí, en ventana de teléfono.
 
 ### 12.5 Iniciar sesión: elegir al menor en vez de teclearlo
 

@@ -40,9 +40,9 @@ return [
         'relationship' => 'Lien avec le mineur',
         'relationship_placeholder' => 'Choisissez une option',
         'email' => 'Adresse e-mail',
-        'email_help' => 'Facultatif. Si vous la laissez, nous vous envoyons une copie de ce que vous signez.',
+        'email_help' => 'Si vous la laissez, nous vous envoyons une copie de ce que vous signez.',
         'phone' => 'Téléphone',
-        'phone_help' => 'Facultatif. Pour pouvoir vous joindre le jour de la visite.',
+        'phone_help' => 'Pour pouvoir vous joindre le jour de la visite.',
     ],
 
     'relationships' => [
@@ -60,8 +60,18 @@ return [
     ],
 
     'submit' => 'Signer l’autorisation',
+    'submit_short' => 'Signer',
+    'bar' => [
+        'minor' => 'Mineur',
+    ],
+
+    'antibot_label' => 'Contrôle de sécurité · Cloudflare',
 
     'done' => [
+        'signed_title' => 'Autorisation enregistrée',
+        'already_title' => 'Rien d’autre à faire',
+        'stale_title' => 'Il faut le relire',
+        'refused_title' => 'Rien n’a été enregistré',
         'signed' => 'C’est fait : l’autorisation de :name a bien été enregistrée.',
         'signed_generic' => 'C’est fait : l’autorisation a bien été enregistrée.',
         'already' => ':name a déjà une autorisation signée pour cette réservation. Rien d’autre à faire.',
@@ -84,6 +94,6 @@ return [
     ],
 
     'notice' => 'Vous déclarez vous-même ces données et nous ne les vérifions avec aucun document. Elles sont conservées comme preuve de cette autorisation.',
-    'privacy' => 'Nous traitons ces données pour permettre l’entrée du mineur et comme preuve de votre autorisation. Vous pouvez exercer vos droits comme expliqué dans :link.',
-    'privacy_link' => 'notre politique de confidentialité',
+    'privacy' => 'Nous traitons ces données pour permettre l’entrée du mineur et comme preuve de votre autorisation. Vous pouvez exercer vos droits comme expliqué dans notre politique de confidentialité.',
+    'privacy_link' => 'Lire la politique de confidentialité',
 ];
