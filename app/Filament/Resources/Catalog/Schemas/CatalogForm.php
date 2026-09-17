@@ -375,6 +375,19 @@ class CatalogForm
                     ->options(collect(TicketType::GUARDIAN_MODES)
                         ->mapWithKeys(fn (string $mode): array => [$mode => __('admin.catalog.guardian_modes.'.$mode)])
                         ->all()),
+
+                // LA INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.8 D15, `#575`), junto a
+                // su hermano: los dos contestan a «¿qué papeles pide este producto?».
+                //
+                // ⚠️⚠️ **La autoridad es el guard de `TicketType::saving()`, no este campo.** Exige un
+                // PACK, con columna de nombre en sus datos por invitado, y justificante distinto de
+                // «obligatorio» — y lo exige también a los seeders y a un `update()` a mano, que es por
+                // donde entraría la combinación imposible sin que nadie lo viera. Aquí solo se dice, y
+                // guardar una combinación prohibida devuelve el mensaje del dominio.
+                Toggle::make('guest_invitation')
+                    ->label(__('admin.catalog.field_guest_invitation'))
+                    ->helperText(__('admin.catalog.guest_invitation_hint'))
+                    ->default(false),
             ]);
     }
 

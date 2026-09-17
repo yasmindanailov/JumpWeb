@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#574`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#575`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-17.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -22,6 +22,10 @@
     `PublicFreeText`, los dos lectores de columna por REGLA, el verificador `invitation:verify-places` y
     los cuatro esquemas del contrato. `PartyInvitationsTest` (18) · `PublicFreeTextTest` (16) · arnés
     13/13 · **InnoDB: 16 padres → entra 1**, y sin el lock entran 16 (el instrumento visto fallar).
+  - **T4·3 · catálogo y embudo (`#575`)**: el interruptor con su guard en `TicketType::saving()` (pack +
+    columna de nombre + justificante no obligatorio), `funnelGuardianMode()` leído por el cajón y el
+    mostrador, y `show_in_invitation` por las CUATRO puertas del pivote. `InvitationCatalogTest` (11) ·
+    arnés 11/11. ⚠️ `OrderCreator` intacto: es una oferta, no un permiso.
 - ❗❗ **Defecto en PRODUCCIÓN desde el 16-09, arreglado en el árbol por la T3**: la T2 hizo `.gf-savebar`
   pegada y en fila, y el justificante llevaba dentro dos párrafos legales y el botón. Medido a 390 × 844: la
   barra de firmar ocupa **401 px** pegada abajo y el botón se sale **65 px** de la pantalla. Se puede firmar,
@@ -36,14 +40,13 @@
    despliegue de noche o con el parque cerrado (`#594`). Solo código. Al desplegar, mirar el justificante en
    producción en ventana de teléfono, y allí el widget REAL de Turnstile, que en local no se pudo ver (no hay
    claves). Tampoco se ha visto en un teléfono de verdad.
-2. **Seguir la T4 por la T4·3** (spec §10.4, y **lee §7.2 antes de construir**): catálogo y embudo — el
-   interruptor «Invitación digital» con su guarda de incompatibilidad con `required`, la casilla del
-   enganche pasando por las **TRES listas blancas** del pivote (`ADDON_PIVOT_COLUMNS`,
-   `sanitizePivotData()` y el `fillForm()` de «Configurar», o se cae **sin avisar**) y
-   `TicketType::funnelGuardianMode()` para el cajón y el pedido manual. ⚠️ **`OrderCreator` NO se toca**
-   y el push pedirá `VERIFY_CONC=1`, porque el pivote está en el `CRITICAL_RE`.
-   → **T4·4** `PartyGuests`, `GuardianPlaces`, la excepción del firmador y la rotación del token →
-   **T4·5** RGPD (supresión, purga, poda) → **T4·6** los endpoints, contra los esquemas ya fijados.
+2. **Seguir la T4 por la T4·4** (spec §10.4, y **lee §7.2 antes de construir**): el contrato
+   `Booking\Contracts\PartyGuests` —aplazado desde la T4·1 hasta tener consumidor—, `GuardianPlaces`
+   sumando los «sí» no descartados **sin firma atada** (V4, y con ello cambia el suelo de `#444`), la
+   **excepción del firmador** (una firma atada a un «sí» no descuenta plaza: sin ella, el padre que dijo
+   «sí» con la lista llena no podría firmar) y la **rotación del token** desde el panel, con rastro.
+   ⚠️ Toca Identity y el firmador: mira si el push pide `VERIFY_CONC=1` (`waiver:verify-chain`).
+   → **T4·5** RGPD (supresión, purga, poda) → **T4·6** los endpoints, contra los esquemas ya fijados.
    Después T5 (la página, y con ella el `receiptUrl()` aplazado) → T7 (correos) → **T6, el aterrizaje, al
    final** (borde abierto en §7·5: bajar invitados descarta las filas del final).
    ▶ Aplazado a propósito a la unidad que lo consume: el contrato `PartyGuests` — un contrato sin
@@ -91,6 +94,16 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   vale si se ha visto FALLAR con el lock retirado.
 - **Un test que calcula su expectativa desde el código bajo prueba no prueba nada**, y un fixture que usa
   la convención que dice vigilar tampoco: las dos las cazó el arnés de mutación, no una relectura.
+- **Al pivote se le habla por MÉTODO, no por propiedad** (`showsInInvitation()`, `saleStage()`…): un
+  `$record->pivot?->columna` suma un `property.notFound` a la línea base de Larastan, **que solo encoge**.
+- ⏰ **La sesión del 17-09 cruzó la medianoche**: `#573`, `#574` y `#575` son del **17** —se escribieron
+  antes de las 24:00 en Madrid— y lo que venga después es del **18**. El contenedor va en UTC y marca dos
+  horas menos, así que la fecha de una decisión se toma del reloj del OWNER (`date` en el host), nunca del
+  contenedor: dos sesiones anteriores fecharon «la madrugada del 28» siendo la noche del 27.
+- **Un fixture que basta para una superficie puede no bastar para otra**: sin una `RateType` en la BD,
+  `GET catalog/products/{id}` responde **404**, no 200 con otro contenido.
+- **Una guarda nueva que tumba un test viejo suele tener razón**: el guard de `#575` puso en rojo un caso
+  de `#574` que construía la combinación ya prohibida. Se reescribe el caso, no se relaja la guarda.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/500-599.md`.
 
 ## Buzón

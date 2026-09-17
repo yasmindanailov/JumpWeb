@@ -159,6 +159,11 @@ class AddonsRelationManager extends RelationManager
                     ->fillForm(fn (TicketType $record): array => [
                         'stage' => $record->pivot?->saleStage() ?? ProductAddon::STAGE_BOOKING,
                         'postform_cutoff_hours' => $record->pivot?->postformCutoffHours(),
+                        // Tercera lista blanca: sin esta línea, tocar la POSICIÓN de un complemento
+                        // apagaría su casilla de la invitación semanas después y sin que nada falle.
+                        // ⚠️ Por método y no por propiedad: un acceso dinámico al pivote suma una
+                        // entrada al trinquete de Larastan, y esa línea base solo encoge.
+                        'show_in_invitation' => $record->pivot?->showsInInvitation() ?? false,
                         'is_included' => (bool) $record->pivot?->is_included,
                         'included_quantity' => (int) ($record->pivot?->included_quantity ?? 1),
                         'is_mandatory' => (bool) $record->pivot?->is_mandatory,
@@ -284,6 +289,14 @@ class AddonsRelationManager extends RelationManager
                 ->default(0)
                 ->required($postForm)
                 ->visible($postForm),
+
+            // D12 · «el menú» de la invitación digital. Es una CASILLA del enganche y no una deducción
+            // del grupo excluyente: deducirlo sería la trampa de los calcetines (`#485`), presentación
+            // usada como identidad. El mismo complemento puede ser el menú en un pack y no en otro.
+            Toggle::make('show_in_invitation')
+                ->label(__('admin.catalog.addons.show_in_invitation'))
+                ->helperText(__('admin.catalog.addons.show_in_invitation_hint'))
+                ->default(false),
 
             Toggle::make('is_included')
                 ->label(__('admin.catalog.addons.is_included'))
@@ -467,6 +480,9 @@ class AddonsRelationManager extends RelationManager
             'postform_cutoff_hours' => ($postForm && isset($data['postform_cutoff_hours']) && $data['postform_cutoff_hours'] !== '')
                 ? max(0, (int) $data['postform_cutoff_hours'])
                 : null,
+            // D12 (`#574`): «el menú» que la invitación digital enseña. Segunda lista blanca — sin
+            // esta línea la casilla del formulario no se escribiría NUNCA, en silencio.
+            'show_in_invitation' => (bool) ($data['show_in_invitation'] ?? false),
             'is_included' => (bool) ($data['is_included'] ?? false),
             'included_quantity' => max(1, (int) ($data['included_quantity'] ?? 1)),
             'is_mandatory' => (bool) ($data['is_mandatory'] ?? false),

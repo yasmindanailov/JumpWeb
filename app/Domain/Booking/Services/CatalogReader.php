@@ -82,7 +82,11 @@ class CatalogReader implements ProductCatalog
             // SANEADO por el modelo, nunca la columna a pelo: un valor corrupto tiene que llegar al
             // cliente como `none` —el estado que no pinta nada— y no como una cadena desconocida que
             // el contrato rechaza y la pantalla no sabe interpretar.
-            guardianAuthorization: $product->guardianMode(),
+            // ⚠️ El modo DEL EMBUDO, no el del producto (`#575`): con invitación digital encendida el
+            // cajón no enseña la casilla del justificante, porque quien contesta ya dice por su cuenta
+            // si el niño viene con un adulto. `OrderCreator` sigue leyendo el modo real: esto es una
+            // oferta, no un permiso (`#400`).
+            guardianAuthorization: $product->funnelGuardianMode(),
         );
     }
 

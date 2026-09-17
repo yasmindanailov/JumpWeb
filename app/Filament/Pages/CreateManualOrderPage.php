@@ -272,7 +272,7 @@ class CreateManualOrderPage extends Page
         return match ($step) {
             self::STEP_DETAILS => $this->selectionEventDataFields() !== []
                 || $this->manualDependentOptions()['options'] !== []
-                || ($this->selectedProduct()?->offersGuardianAuthorization() ?? false)
+                || ($this->selectedProduct()?->offersGuardianInFunnel() ?? false)
                 || ($this->selectedProduct()?->requiresGuardianAuthorization() ?? false),
             self::STEP_EXTRAS => $this->selectedProductAddons()->isNotEmpty(),
             default => true,
@@ -785,7 +785,9 @@ class CreateManualOrderPage extends Page
                             ->label(__('admin.orders.create_manual.guardian_label'))
                             ->helperText(__('admin.orders.create_manual.guardian_help'))
                             ->default(false)
-                            ->visible(fn (): bool => $this->selectedProduct()?->offersGuardianAuthorization() ?? false),
+                            // ⚠️ El modo del EMBUDO (`#575`): con invitación digital no se pregunta, ni
+                            // en el cajón ni en el mostrador. Las dos puertas leen el mismo predicado.
+                            ->visible(fn (): bool => $this->selectedProduct()?->offersGuardianInFunnel() ?? false),
 
                         // Con `required` no hay nada que preguntar: se INFORMA, para que el operador
                         // sepa decírselo al cliente que tiene delante.

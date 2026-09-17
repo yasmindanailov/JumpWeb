@@ -15,6 +15,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\AuditLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -65,15 +66,27 @@ class PartyInvitationsTest extends TestCase
         $this->assertSame(0, PartyInvitation::query()->count());
     }
 
-    /** Sin columna de nombre no hay con qué emparejar: el interruptor no puede sostenerse solo. */
+    /**
+     * Sin columna de nombre no hay con qué emparejar: el interruptor no se sostiene solo.
+     *
+     * ⚠️⚠️ **La fila se fuerza POR DEBAJO del modelo (`DB::table`), y no es un atajo.** Desde la T4·3
+     * (`#575`) el guard de `TicketType::saving()` **impide guardar esta combinación desde Eloquent** —
+     * este caso la creaba con `save()` y el guard lo puso en rojo, que es exactamente su trabajo—. Lo
+     * que queda por probar es el camino que el guard NO alcanza: una importación o una migración de
+     * datos. Y lo que se comprueba es que el servicio tampoco se fía de esa fila.
+     */
     public function test_without_a_name_column_there_is_no_invitation(): void
     {
         $reservation = $this->reservation();
-        $reservation->ticketType->forceFill(['guest_fields' => [
-            ['key' => 'age', 'type' => 'age', 'required' => false, 'label' => ['es' => 'Edad']],
-        ]])->save();
+
+        DB::table('ticket_types')->where('id', $reservation->ticket_type_id)->update([
+            'guest_fields' => json_encode([
+                ['key' => 'age', 'type' => 'age', 'required' => false, 'label' => ['es' => 'Edad']],
+            ], JSON_UNESCAPED_UNICODE),
+        ]);
 
         $this->assertNull($this->service()->forReservation($reservation->fresh(['ticketType'])));
+        $this->assertSame(0, PartyInvitation::query()->count());
     }
 
     /**

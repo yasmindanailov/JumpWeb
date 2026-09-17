@@ -802,7 +802,7 @@ pronto (`CONVENCIONES §10.5`), en orden de dependencia y cada una verde por su 
 |---|---|---|
 | **T4·1** | Esquema, modelos y el normalizador compartido (§4.4) | ✅ `#573` |
 | **T4·2** | Las reglas del dominio (§4.5) + el verificador de concurrencia | ✅ `#574` |
-| **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ⬜ |
+| **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ✅ `#575` |
 | **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ⬜ |
 | **T4·5** | RGPD: supresión, purga y poda (§4.4) | ⬜ |
 | **T4·6** | El contrato de la API y sus endpoints (§4.10) | ⬜ |
@@ -922,6 +922,47 @@ vistas del mismo**, para que un campo añadido en uno no pueda filtrarse en el o
 **Aplazado con su motivo**: `receiptUrl()` (§4.5·6) nombra la ruta de la página pública, que nace en la
 T5; escribirlo hoy sería un método que lanza y que ninguna prueba puede ejercer. Lo decidido —2 horas y
 que **no es un enlace de edición** (D9)— queda escrito.
+
+#### 10.4.3 T4·3 · catálogo y embudo — EN EL ÁRBOL (2026-09-17, `DECISIONES #575`)
+
+**Hecho.**
+- **El interruptor «Invitación digital»** en el formulario del catálogo, junto a su hermano el del
+  justificante: los dos contestan a «¿qué papeles pide este producto?».
+- **La autoridad es el guard de `TicketType::saving()`**, no el formulario, y exige **las tres cosas**:
+  que sea un **pack**, que su esquema por invitado tenga **columna de nombre** y que el justificante
+  **no sea obligatorio** —si hace falta siempre, no hay nada que preguntar—. Vive en el modelo porque
+  los seeders, una importación y un `update()` a mano escriben por debajo del panel.
+- **`funnelGuardianMode()` y `offersGuardianInFunnel()`**: con invitación encendida el embudo **deja de
+  enseñar la casilla del justificante**, en las **dos** puertas —el cajón (por `CatalogReader`) y el
+  mostrador (`CreateManualOrderPage`)—, que leen el mismo predicado.
+  ⚠️⚠️ **Es una OFERTA, no un permiso** (`#400`): `OrderCreator` **no se toca** y sigue leyendo el modo
+  real. Hay un caso que lo fija: `offersGuardianAuthorization()` sigue diciendo `true`.
+- **`product_addons.show_in_invitation`** (D12) atraviesa las **cuatro** puertas: la lista de columnas
+  del pivote, el saneo, la precarga del formulario y el propio campo. Cada una **calla al olvidarse**, y
+  la tercera es la peor: apaga la casilla **sola**, semanas después, al tocar cualquier otro campo.
+
+**Guardas**: `InvitationCatalogTest` (11) + `AddonStageTest` (23), y arnés
+`scripts/mutar-invitacion-t43.sh` **11/11 con CONTROL en verde**, árbol byte a byte.
+
+**Trampas pagadas**, las cuatro del instrumento o del propio guard:
+1. **Larastan rompió el trinquete con un acceso dinámico al pivote**: `$record->pivot?->show_in_invitation`
+   suma un `property.notFound` a la línea base, **que solo encoge**. Nace `ProductAddon::showsInInvitation()`
+   — y ésa es la razón de que ya existieran `saleStage()` y `postformCutoffHours()`.
+2. **El caso del cajón devolvía 404 y no 200 con otro contenido**: sin ninguna `RateType` en base de
+   datos el catálogo no puede describir el producto. Es la trampa que `ModuleContractsTest` dejó escrita:
+   *un fixture que basta para una superficie puede no bastar para otra.*
+3. ⚠️ **Un mutante no mordía: quitar `isPack()` de `offersGuestInvitation()`.** El guard de `saving()`
+   impide crear esa fila desde el modelo, así que **ningún caso llegaba a ejercer el cinturón**. No es
+   código muerto: protege la fila que entra **por debajo** (`DB::table`, una importación). Nace el caso
+   que la fuerza y comprueba que el embudo no cambia de conducta.
+4. ⚠️⚠️ **El guard nuevo puso en ROJO un caso de la T4·2, y tenía razón**: aquél construía con `save()`
+   un producto con invitación y sin columna de nombre, que es justo lo que esto prohíbe. Se reescribe
+   forzando la fila por debajo del modelo. *Una guarda nueva que tumba un test viejo suele estar
+   diciendo que el test describía algo que ya no es cierto.*
+
+**Sin hacer, declarado**: el formulario del panel **no deshabilita** la combinación prohibida de forma
+reactiva (`Get` está importado y se podría), así que el operador la descubre al guardar, con el mensaje
+del dominio. Se prefiere una autoridad y un mensaje claro a dos sitios que puedan divergir.
 
 **Arnés de mutación**: `scripts/mutar-invitacion-t41.sh`, **9/9 muerden con CONTROL en verde**, y el
 árbol restaurado byte a byte (sha1). Se corrió porque las políticas de borrado **no fallan solas**: una

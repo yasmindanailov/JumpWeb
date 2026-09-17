@@ -1977,6 +1977,9 @@ return [
             'required' => 'Obligatorio: este producto siempre lo necesita',
         ],
 
+        'field_guest_invitation' => 'Invitación digital',
+        'guest_invitation_hint' => 'El cliente comparte un enlace y cada padre contesta si su hijo viene, con su nombre. Solo en packs con datos por invitado que tengan una columna de nombre, y no se puede combinar con el justificante obligatorio. Con la invitación encendida el cliente ya no ve la casilla del justificante: lo dice cada padre al contestar.',
+
         'field_min_qty' => 'Mín. invitados',
         'min_qty_hint' => 'Número mínimo de invitados para reservar.',
         'field_max_qty' => 'Máx. invitados',
@@ -2078,6 +2081,8 @@ return [
             'badge_postform_cutoff' => 'Venta posterior · hasta :hours h antes',
             'postform_without_form' => 'Este producto no tiene formulario post-reserva',
             'postform_without_form_body' => 'El complemento queda guardado, pero el cliente no podrá elegirlo: solo un operador podrá añadirlo desde «Gestionar». Los formularios post-reserva los tienen hoy los packs con fichas de invitados.',
+            'show_in_invitation' => 'Se enseña en la invitación',
+            'show_in_invitation_hint' => 'Marca aquí el menú (o lo que quieras que vean los padres en la invitación digital de este producto). El mismo complemento puede enseñarse en un pack y no en otro.',
             'is_included' => 'Incluido (gratis)',
             'is_included_hint' => 'Las primeras unidades vienen gratis con el producto. Las que excedan se cobran a su precio.',
             'included_quantity' => 'Unidades incluidas',

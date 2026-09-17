@@ -56,6 +56,8 @@ class TicketType extends Model
         // listas blancas que hay entre el formulario del panel y la fila (§4.7·ter).
         'stage',
         'postform_cutoff_hours',
+        // D12 (`#574`): si este enganche es «el menú» que la invitación digital enseña.
+        'show_in_invitation',
     ];
 
     /** Tipos de SEÑAL configurable para packs (#83). */
@@ -736,6 +738,51 @@ class TicketType extends Model
         return $this->guardianMode() === self::GUARDIAN_REQUIRED;
     }
 
+    // ─── La INVITACIÓN DIGITAL y el EMBUDO (`celebracion-e-invitacion.md` §4.8, `#575`) ───
+
+    /**
+     * ¿Este producto ofrece invitación digital? (D15). Exige **las tres cosas**, no solo la casilla:
+     *
+     *  - el interruptor encendido;
+     *  - que sea un **pack** —la invitación es de una fiesta, y el post-form del que cuelga solo lo
+     *    tienen los packs—;
+     *  - y que su esquema por invitado **tenga columna de nombre** ({@see guestNameFieldKey()}), sin
+     *    la cual no hay con qué emparejar lo que conteste un padre.
+     *
+     * ⚠️ Se comprueban aquí y no solo en el formulario del panel porque **un formulario no es una
+     * autoridad**: el guard de `saving()` impide guardar la combinación imposible, y esto impide que
+     * una fila que ya la tuviera —de una importación, de un `update()` a mano— encienda la feature.
+     */
+    public function offersGuestInvitation(): bool
+    {
+        return (bool) $this->guest_invitation
+            && $this->isPack()
+            && $this->guestNameFieldKey() !== null;
+    }
+
+    /**
+     * **El modo del justificante QUE VE EL EMBUDO** (D15, §4.8).
+     *
+     * Con la invitación encendida el cajón **no enseña la casilla del justificante**: quien contesta
+     * ya dice por su cuenta si el niño viene con un adulto o necesita firma, así que preguntárselo
+     * además al anfitrión sería pedir dos veces el mismo dato y por el lado que no lo sabe.
+     *
+     * ⚠️⚠️ **Esto NO es un permiso, es una OFERTA** (`#400`: «ofrecer ≠ permitir»). `OrderCreator` —que
+     * está en el `CRITICAL_RE`— **no se toca**: sigue escribiendo la marca con `requiresGuardian...`
+     * o con la casilla de la línea. Una marca forjada por un cliente que edite el DOM solo produce el
+     * correo del justificante suelto, que ya funciona en cualquier pedido pagado.
+     */
+    public function funnelGuardianMode(): string
+    {
+        return $this->offersGuestInvitation() ? self::GUARDIAN_NONE : $this->guardianMode();
+    }
+
+    /** ¿El embudo le PREGUNTA al cliente por el justificante? Lo leen el cajón y el pedido manual. */
+    public function offersGuardianInFunnel(): bool
+    {
+        return $this->funnelGuardianMode() === self::GUARDIAN_OPTIONAL;
+    }
+
     /** ¿Este producto tiene algo que ver con justificantes? (`optional` o `required`). */
     public function usesGuardianAuthorization(): bool
     {
@@ -912,6 +959,43 @@ class TicketType extends Model
      */
     protected static function booted(): void
     {
+        /*
+         * **La INVITACIÓN DIGITAL exige tres cosas, y la BD es quien las impone** (D15, `#575`).
+         *
+         * ⚠️⚠️ Va en el modelo y no solo en el formulario del panel porque **un formulario no es una
+         * autoridad**: lo escriben también los seeders, las importaciones y cualquier `update()` a
+         * mano, y una fila con la combinación imposible encendería una feature que no puede funcionar.
+         * Es la misma doctrina que el guard de `occupies_after_parent` de aquí abajo.
+         *
+         * ⚠️ `required` es incompatible por definición: si el justificante hace falta SIEMPRE, no hay
+         * nada que preguntarle a nadie y la invitación no cambia el embudo.
+         */
+        static::saving(function (self $type): void {
+            if (! $type->guest_invitation) {
+                return;
+            }
+
+            if ($type->guardianMode() === self::GUARDIAN_REQUIRED) {
+                throw new \InvalidArgumentException(
+                    'Un producto con justificante OBLIGATORIO no puede ofrecer invitación digital: '
+                    .'si hace falta siempre, no hay nada que preguntar.'
+                );
+            }
+
+            if (! $type->isPack()) {
+                throw new \InvalidArgumentException(
+                    'La invitación digital es de una FIESTA: solo un pack puede ofrecerla.'
+                );
+            }
+
+            if ($type->guestNameFieldKey() === null) {
+                throw new \InvalidArgumentException(
+                    'Un producto sin columna de NOMBRE en sus datos por invitado no puede ofrecer '
+                    .'invitación digital: no habría con qué emparejar lo que conteste un padre.'
+                );
+            }
+        });
+
         static::saving(function (self $type): void {
             if ($type->type !== self::TYPE_PACK) {
                 return;

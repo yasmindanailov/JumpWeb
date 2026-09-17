@@ -71,6 +71,19 @@ class ProductAddon extends Pivot
         'postform_cutoff_hours' => 'integer',
     ];
 
+    /**
+     * ¿Este enganche es «el menú» que la invitación digital enseña? (D12, `#575`).
+     *
+     * ⚠️ Existe por lo mismo que {@see saleStage()} y {@see postformCutoffHours()}, y no es estilo: un
+     * `$record->pivot?->show_in_invitation` es un acceso DINÁMICO que Larastan no puede resolver
+     * —`property.notFound`— y que sumaría una entrada al trinquete de la línea base, **que solo
+     * encoge**. Un método tipado lo resuelve y además da el valor saneado.
+     */
+    public function showsInInvitation(): bool
+    {
+        return (bool) $this->show_in_invitation;
+    }
+
     /** ¿La cantidad sigue al nº de invitados del pack (no la toca el cliente)? */
     public function isPerGuest(): bool
     {
