@@ -91,6 +91,16 @@ class ApiContractTest extends TestCase
         // ⚠️ Lo que sigue mordiendo es `additionalProperties: false`: es lo que impide colar aquí un
         // `email` que el servidor ignoraría en silencio — y ese silencio sería la vulnerabilidad.
         'GoogleSignupRequest' => ['accept_waiver', 'waiver_document_id'],
+        // `#574` · cuerpo de PETICIÓN de la INVITACIÓN DIGITAL, y aquí la opcionalidad es **el
+        // diseño de la feature**, no una concesión: `[DECIDIDO owner]` D10 y §2.1 de
+        // `specs/celebracion-e-invitacion.md` dicen que **el padre contesta con un nombre y un
+        // gesto**, y que «el resto es opcional y dice quién lo hace si no». Exigir `companion`
+        // obligaría a todo padre a declarar si se queda en el parque para poder decir «sí», y exigir
+        // `guest_data` le pediría las alergias de su hijo a quien solo quiere confirmar que viene —
+        // los dos se ofrecen DESPUÉS, con el recibo de dos horas (§4.5·6).
+        // ⚠️ Lo que sigue mordiendo aquí es `additionalProperties: false`: es lo que impide colar un
+        // campo que el servidor ignoraría en silencio, y ese silencio sí sería el agujero.
+        'InvitationReplyRequest' => ['companion', 'guest_data'],
         // Cuerpo de PETICIÓN otra vez, y por el mismo motivo. Una línea de cesta sin complementos y
         // sin datos de evento es lo normal —una entrada suelta—, así que exigir los dos campos
         // convertiría en 422 la petición más frecuente de todas. `additionalProperties: false`

@@ -130,6 +130,9 @@ class AuditLog extends Model
         'orders.guest_form_link_rotated',
         'orders.guest_form_link_rotate_blocked',
         'orders.guest_form_submitted',
+        // `#574`: un padre contestó a la invitación digital. SIN PII — ni el nombre del niño ni sus
+        // datos: solo qué reserva, si viene y si ocupó plaza nueva (`RGPD-02`).
+        'orders.invitation_reply_received',
         'orders.item_cancel_blocked',   // ⚠️ construida: 'orders.item_'.$actionKey.'_blocked'
         'orders.item_cancelled',
         'orders.item_edit_blocked',     // ⚠️ construida

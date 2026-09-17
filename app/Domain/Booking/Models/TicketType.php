@@ -633,6 +633,54 @@ class TicketType extends Model
         return self::resolveFieldLabel($field);
     }
 
+    /**
+     * **La CLAVE de la columna de NOMBRE del esquema por invitado**: la primera de tipo `text`
+     * (`specs/celebracion-e-invitacion.md` §4.4, §7.2·R2; `DECISIONES #574`).
+     *
+     * ⚠️⚠️ **El esquema por invitado NO tiene un tipo «nombre»** —sus tipos son `text`, `number`,
+     * `textarea` y `age`—, así que `name` es la clave del SEMBRADO por convención, no una garantía.
+     * La revisión adversarial lo midió: una spec que contara «fichas con nombre» leyendo `name` se
+     * rompería en la primera instalación que renombrara la columna desde su panel, **sin fallar**.
+     *
+     * De aquí leen el emparejado de la invitación, la lista completa, la puerta y la hoja de sala, así
+     * que la regla vive en UN sitio. `null` si el esquema no declara ninguna columna de texto: ese
+     * producto no puede ofrecer invitación digital, y el interruptor lo exige.
+     */
+    public function guestNameFieldKey(): ?string
+    {
+        // ⚠️ Sin `?? null`: `normalizeFieldSchema()` garantiza `type` en toda fila que devuelve, y
+        // fingir que puede faltar no solo es falso — sumaba dos entradas al trinquete de la línea
+        // base de Larastan, que solo encoge.
+        foreach ($this->guestFields() as $field) {
+            if ($field['type'] === self::FIELD_TYPE_TEXT) {
+                return (string) $field['key'];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * **La CLAVE del nombre del HOMENAJEADO**, con la misma regla: la primera columna `text` de los
+     * campos del evento en fase de RESERVA.
+     *
+     * ⚠️ La spec decía «se prerrellena desde `event_data` por las claves `celebrant` y `age`». Medido
+     * el 2026-09-17: **la edad sí tiene lector canónico por TIPO** ({@see celebrantAgeFieldKey()}),
+     * pero el nombre no — `celebrant` es una clave del sembrado (`LandingContentSeeder`,
+     * `ProductionSeeder`), igual que `name` en el esquema por invitado. Se lee por la misma regla que
+     * su hermana en vez de quemar la clave, que es lo que `#588` ya hizo con la edad.
+     */
+    public function celebrantNameFieldKey(): ?string
+    {
+        foreach ($this->eventFields(self::EVENT_STAGE_BOOKING) as $field) {
+            if ($field['type'] === self::FIELD_TYPE_TEXT) {
+                return (string) $field['key'];
+            }
+        }
+
+        return null;
+    }
+
     // ─── El JUSTIFICANTE de un menor invitado (`specs/waiver-por-reserva.md` §12.2) ───
 
     /**

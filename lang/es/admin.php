@@ -1065,6 +1065,7 @@ return [
                     'guest_form_link_rotated' => 'Enlace del formulario rotado',
                     'guest_form_link_rotate_blocked' => 'Rotación del enlace bloqueada',
                     'guest_form_submitted' => 'Formulario de invitados enviado',
+                    'invitation_reply_received' => 'Respuesta recibida en la invitación',
                     // `#440` · el teléfono del cliente en el mostrador. El primero es el rastro de que
                     // se vendió sin él —que se avisa pero NO se bloquea, `[DECIDIDO owner]`— y el
                     // segundo, el de que el operador lo consiguió y lo escribió.

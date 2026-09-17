@@ -4626,6 +4626,140 @@ components:
             guardan igual. La respuesta trae el estado nuevo, así que `guest_count` de la reserva
             dice si se aplicó.
 
+    # ─── La INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.10, `DECISIONES #574`) ───
+    # Los nombres y las formas se fijan AQUÍ antes de escribir una sola línea de código de API, que
+    # es lo que impide que el contrato acabe siendo un calco de lo que hizo la web. Sus endpoints
+    # llegan en la T4·6; estos esquemas son lo que van a hablar.
+    Invitation:
+      type: object
+      description: |
+        La invitación de una reserva **vista por su ANFITRIÓN**: el enlace para compartir, cómo la ha
+        personalizado y el resumen de lo que han contestado los padres.
+
+        ⚠️ No la confundas con `InvitationCard`, que es lo que ve un desconocido: **aquélla no lleva
+        ni una respuesta**, y ésta sí. Son dos objetos distintos a propósito y no dos vistas del
+        mismo, porque el día que alguien añada un campo aquí no puede filtrarse allí por descuido.
+      required: [url, token, theme, honoree_name, honoree_age, host_line, show_host_phone, shareable, replies_yes, replies_no, replies_pending]
+      additionalProperties: false
+      properties:
+        url:
+          type: string
+          format: uri
+          description: El enlace que el anfitrión reparte. Cambia si el operador lo anula.
+        token:
+          type: string
+          minLength: 12
+          maxLength: 12
+          description: Doce caracteres base62 (~71 bits), opacos — no llevan ni el nombre ni la edad de nadie.
+        theme:
+          type: string
+        honoree_name:
+          type: string
+          maxLength: 60
+        honoree_age:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 255
+        host_line:
+          type: string
+          maxLength: 80
+        show_host_phone:
+          type: boolean
+          description: El teléfono sale del de la CUENTA; esto solo dice si se enseña.
+        shareable:
+          type: boolean
+          description: |
+            ⚠️ Sigue siendo `true` **pasado el plazo de respuestas**: la información de la fiesta hace
+            falta justo el día de la fiesta. Lo que el plazo cierra son las respuestas, no el enlace.
+        replies_yes:
+          type: integer
+        replies_no:
+          type: integer
+        replies_pending:
+          type: integer
+          description: Cuántas respuestas le quedan al anfitrión por repasar.
+    InvitationCard:
+      type: object
+      description: |
+        La invitación **vista por un desconocido** que abre el enlace, y por eso es una HOJA EN
+        BLANCO: ni una respuesta, ni cuántos han contestado, **ni si un nombre concreto ya contestó**.
+        Ése es el motivo por el que su enlace se puede repartir a un grupo de clase entero.
+      required: [theme, honoree_name, honoree_age, host_line, host_phone, date, time_window, product_name, replies_open]
+      additionalProperties: false
+      properties:
+        theme:
+          type: string
+        honoree_name:
+          type: string
+        honoree_age:
+          type: integer
+          nullable: true
+        host_line:
+          type: string
+        host_phone:
+          type: string
+          nullable: true
+          description: Solo si el anfitrión lo marcó. Sale de su cuenta y nunca se teclea aquí.
+        date:
+          type: string
+          format: date
+        time_window:
+          type: string
+          description: |
+            ⚠️ El fin sale de la duración EFECTIVA de la reserva (base + horas extra), nunca del fin
+            de la franja: la rejilla es de 60 min y una fiesta de dos horas diría una hora de menos.
+        product_name:
+          type: string
+        replies_open:
+          type: boolean
+          description: Si ya pasó el plazo, la tarjeta se sigue viendo pero no admite respuestas.
+    InvitationReplyRequest:
+      type: object
+      description: Lo que manda un padre. Solo el nombre y el gesto son obligatorios.
+      required: [child_name, attending]
+      additionalProperties: false
+      properties:
+        child_name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Nombre y apellidos, que es lo que distingue a dos niños que se llaman igual.
+        attending:
+          type: boolean
+        companion:
+          type: string
+          enum: [with_adult, alone, unknown, null]
+          nullable: true
+        guest_data:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string
+          description: |
+            Las columnas del pack que quiera dejar (alergias, menú…), todas opcionales. Se sanean con
+            el mismo saneo del formulario del anfitrión: una clave que el esquema no declare se cae.
+    InvitationReplyResult:
+      type: object
+      description: |
+        El desenlace de contestar.
+
+        ⚠️⚠️ **Lo que un padre puede saber por él está ACOTADO a propósito.** Un nombre repetido NO
+        tiene motivo propio: devuelve `accepted: true`, exactamente igual que la primera vez. Decirle
+        «ya nos habéis contestado por Hugo» le confirmaría a cualquiera con el enlace quién va a esa
+        fiesta, y bastaba con probar nombres. La hoja es en blanco también en sus errores.
+      required: [accepted, reason]
+      additionalProperties: false
+      properties:
+        accepted:
+          type: boolean
+        reason:
+          type: string
+          enum: [full, closed, cutoff, no_name, too_many, null]
+          nullable: true
+          description: |
+            `full` = la lista está completa y no hay lista de espera. ⚠️ **No existe un motivo
+            «repetido»**, y su ausencia es la propiedad, no un olvido.
     PaymentStatus:
       type: object
       description: El desenlace del pago de un pedido, en su forma mínima para sondear.

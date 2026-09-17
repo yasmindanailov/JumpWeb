@@ -801,7 +801,7 @@ pronto (`CONVENCIONES §10.5`), en orden de dependencia y cada una verde por su 
 | | Qué | Estado |
 |---|---|---|
 | **T4·1** | Esquema, modelos y el normalizador compartido (§4.4) | ✅ `#573` |
-| **T4·2** | Las reglas del dominio (§4.5) + el verificador de concurrencia | ⬜ |
+| **T4·2** | Las reglas del dominio (§4.5) + el verificador de concurrencia | ✅ `#574` |
 | **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ⬜ |
 | **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ⬜ |
 | **T4·5** | RGPD: supresión, purga y poda (§4.4) | ⬜ |
@@ -851,6 +851,77 @@ defectos apagados.
 6. ⚠️⚠️ **El push lo paró el gate de concurrencia**, y tenía razón: el cast de `show_in_invitation` vive
    en `ProductAddon.php`, que está en el `CRITICAL_RE` — justo lo que §6 predecía que T4 no tocaría.
    Corregido allí. Esta unidad empujó con `VERIFY_CONC=1` tras los verificadores sobre MySQL.
+
+#### 10.4.2 T4·2 · las reglas del dominio — EN EL ÁRBOL (2026-09-17, `DECISIONES #574`)
+
+**Hecho.** Nace `Booking\Services\PartyInvitations`, que es §4.5 entera:
+- **Nace sola** al pintar el formulario (`firstOrCreate` bajo el único; una carrera se relee, no revienta),
+  con el prerrelleno del anfitrión y el nombre de su cuenta en «te invita».
+- **Se comparte** en cuanto hay homenajeado — y **se sigue compartiendo pasado el plazo** (§7.2·R8): lo
+  único que el plazo cierra son las respuestas.
+- **`reply()` decide BAJO EL LOCK de la fila de la invitación**: lista completa (D2), emparejado por
+  nombre y por su primera palabra (D11), repetido **aceptado en silencio** (V6), plazo (D14) y tope
+  `3 × invitados`. Un «no» nunca ocupa (D3).
+- `Platform\Services\PublicFreeText`: el texto que se publica bajo el dominio del parque **rechaza** —no
+  limpia— enlaces y correos (`SEC-07`, §7.2·R9).
+- El rastro de auditoría no lleva ni el nombre del niño (`RGPD-02`).
+
+**El lock es UNA sola fila**, la de `party_invitations`: la exclusión que hace falta es entre respuestas
+de la misma invitación, y así no se añade ninguna arista al grafo de bloqueos del post-form —que ya tiene
+un ciclo conocido—. Un padre no mueve dinero ni aforo, así que no se bloquea `slots`.
+
+**⚠️⚠️ CORRECCIÓN a §4.5·1, medida.** Decía que el prerrelleno sale «desde `event_data` por las claves
+`celebrant` y `age`». Medido el 17-09: la **edad** tiene lector canónico **por TIPO**
+(`celebrantAgeFieldKey()`, la regla de `#588`), pero el **nombre no** — `celebrant` es una clave del
+SEMBRADO (`LandingContentSeeder`, `ProductionSeeder`), exactamente igual que `name` en el esquema por
+invitado. Nace `TicketType::celebrantNameFieldKey()`, que lo lee por **la primera columna `text`**: la
+misma regla que §7.2·R2 fijó para la columna de nombre, en vez de quemar una clave que cualquier
+instalación puede renombrar desde su panel. Con él nace `guestNameFieldKey()`, aplazado en la T4·1.
+▶ **Divergencia declarada**: `DailyReservationsSummary::celebrantOf()` (la hoja de sala) usa otra regla —
+*el primer campo de evento con valor, sea del tipo que sea*, así que puede devolver una edad o unas
+observaciones—. **No se toca aquí**: es una superficie operativa y sería un cambio que nadie ha pedido.
+
+**Medido sobre InnoDB** (`php artisan invitation:verify-places --workers=16`): 16 padres contestan «sí» a
+la vez por la **última plaza** de una reserva de 8 con 7 fichas escritas → **entra 1, 15 reciben `full`, 0
+errores**. ⚠️ **Y el instrumento se ha visto FALLAR** (`#147`): con el `lockForUpdate()` retirado a mano
+entran **16 de 16** y la reserva acaba con 16 «sí» para una plaza. Sin eso el verde no valdría, porque la
+suite es **ciega a esta carrera por construcción**: corre sobre SQLite, donde `compileLock()` devuelve
+cadena vacía y el caso pasa igual con lock y sin él.
+
+**Guardas**: `PartyInvitationsTest` (18) · `PublicFreeTextTest` (16) · arnés
+`scripts/mutar-invitacion-t42.sh` **13/13 con CONTROL en verde** y el árbol restaurado byte a byte.
+
+**Trampas pagadas**, las cuatro del instrumento:
+1. ⚠️⚠️ **La migración de la T4·1 nunca se aplicó a MySQL**, y ni la suite ni el gate lo vieron: la suite
+   migra en SQLite en memoria. Lo destapó el verificador con un `Unknown column 'guest_invitation'`.
+   ▶ *Una migración empujada no es una migración aplicada, y el único sitio donde eso se nota es el que
+   corre sobre el motor de verdad.*
+2. **Un test que se calcula su expectativa desde el código bajo prueba no prueba ese código**: el caso del
+   tope leía `REPLY_CAP_PER_GUEST` para el bucle, así que subirla a 300 lo dejaba en verde. Hoy va el 3
+   literal, y además se asevera la constante.
+3. **El fixture usaba la convención que decía vigilar**: todos los casos nombraban la columna `name`, así
+   que una lectura por clave quemada los pasaba todos. Lo enseñó el arnés al no encontrar mutante posible.
+   Nace el caso de la columna renombrada.
+4. Dos mutantes no se aplicaron (barras invertidas dobladas al pasar por `bash`) y el arnés lo **dijo** en
+   vez de contarlos como verdes: se mutan el recorrido y no las expresiones regulares.
+5. ⚠️⚠️ **Dos puntos dentro de una descripción del contrato tumbaron 460 casos.** En YAML un escalar sin
+   comillas no puede llevar `: `, y dos de las descripciones nuevas lo llevaban («Opaco: no lleva…»).
+   El fichero **entero** deja de parsear, y como `ApiTestCase` valida cada respuesta contra él, la mitad
+   de la superficie de API se cae de golpe. ▶ *Un documento roto hace más daño que un código roto,
+   porque el código roto falla donde está.* Se valida con el parser antes de gastar un pase de suite.
+6. **El contrato exige que cada campo opcional sea una exención CON NOMBRE** (`OPTIONAL_BY_DESIGN`), y
+   tenía razón: `companion` y `guest_data` lo son **por diseño** —el padre contesta con un nombre y un
+   gesto (D10), y lo demás se le ofrece después con el recibo—, así que se declara y se explica en vez
+   de relajar la guarda. Lo que sigue mordiendo es `additionalProperties: false`.
+
+**El contrato, fijado antes del código** (§4.10): `openapi/v1.yaml` gana `Invitation`, `InvitationCard`,
+`InvitationReplyRequest` e `InvitationReplyResult`, con `additionalProperties: false`. ⚠️ `InvitationCard`
+—lo que ve un desconocido— y `Invitation` —lo que ve el anfitrión— son **dos objetos distintos y no dos
+vistas del mismo**, para que un campo añadido en uno no pueda filtrarse en el otro por descuido.
+
+**Aplazado con su motivo**: `receiptUrl()` (§4.5·6) nombra la ruta de la página pública, que nace en la
+T5; escribirlo hoy sería un método que lanza y que ninguna prueba puede ejercer. Lo decidido —2 horas y
+que **no es un enlace de edición** (D9)— queda escrito.
 
 **Arnés de mutación**: `scripts/mutar-invitacion-t41.sh`, **9/9 muerden con CONTROL en verde**, y el
 árbol restaurado byte a byte (sha1). Se corrió porque las políticas de borrado **no fallan solas**: una
