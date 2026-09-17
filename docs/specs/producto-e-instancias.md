@@ -194,7 +194,8 @@ excepción. Antes de tocar un subsistema, el agente lee su §0, mide sus depende
 las guardas `ModuleBoundariesTest`, `ModuleContractsTest` y `ApiBoundariesTest`), y **si la arquitectura del
 subsistema es mejorable, lo propone en spec antes de codificar**; cambiar la forma de un sistema es legítimo
 cuando es mejor y está medido. Toda regla nueva de calidad que exija una dependencia (análisis estático con
-Larastan, Rector, ESLint) es decisión del owner por `CONVENCIONES §9`: **propuesta pendiente**, con coste.
+Larastan, Rector, ESLint) es decisión del owner por `CONVENCIONES §9`. `[DECIDIDO owner]` 2026-09-17 (`#625`):
+entran **Larastan y ESLint con línea base y dentro del gate**; Rector no. Se mide el coste antes de activarlo.
 
 Lo que no es skill y es gate: comprobación 10 del gate documental (techos; la 9, los marcadores de conflicto,
 existía desde `#506` y F1 lo midió: `#620`), el guard de Bash y el pre-push que ya
@@ -312,5 +313,8 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 **Aprobada por el owner el 2026-09-16** tras leer §0 y §4.9 («la valido, todo ok»). Revisada con él en la misma
 sesión: app nativa, landing fuera, repo por instancia, nombre y ruta del producto, Business Profile como
 mecanismo, panel sin CMS con la lista cerrada. Decisiones `#610` → `#616`.
-**Pendientes del owner**: la pila de la app (F6a); las herramientas de análisis estático (dependencia nueva); el
-modo de permisos del harness; si Zones pierde sus campos de landing y si «redes» se va (F5).
+**Decidido el 2026-09-17**: v1.0.0 = `1272cb93` (`#624`); análisis estático, Larastan y ESLint con línea base
+(`#625`); el harness sigue en «auto» con reglas `allow` estrechas que escribe el owner, producción fuera (`#626`).
+**Pendientes del owner**: la pila de la app (F6a; pros y contras entregados el 17-09, recomendada React Native +
+Expo confirmada con una prueba corta en F6). **Se deciden en F5, con censo delante**: si Zones pierde sus campos
+de landing (qué lee el cajón) y si «redes» se va (qué correos las usan).

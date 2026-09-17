@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#624`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#626`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-17.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -65,6 +65,14 @@
   desnudo; `scripts/mutar-guarda8.sh` 9/9, `deploy.sh` restaurado byte a byte (sha1). Medido aparte: un `--go`
   de producción sin etiqueta contra un host `.invalid` sale con 1 antes de conectar. `CHANGELOG.md` nace en la
   raíz con la v1.0.0. ▶ **Falta para el ✅**: que producción DIGA v1.0.0 (el fichero no existe allí).
+- **Tres decisiones del owner el 17-09**: `#624` (arriba) · **`#625` análisis estático**: Larastan nivel 5 sobre
+  `app/` y ESLint sobre el cajón, con línea base y dentro del `pre-push`; Rector no · **`#626` permisos**: el
+  harness sigue en «auto» y el OWNER añade a `~/.claude/settings.json` de cada máquina cuatro reglas `allow`
+  (las dos órdenes de `claude plugin … jumpweb-agente` y `Edit`/`Write` sobre `~/proyectos/jumpweb-agente/**`);
+  producción queda fuera a propósito. Medido: `claude plugin marketplace update` se le deniega al agente también
+  con la petición del owner delante, y **en la extensión de VSCode `/plugin` no existe** (todo por la terminal;
+  corregido en `CARRIL-SPA.md` §1 paso 8 y `CAPA-DE-AGENTE.md` §4). **La pila de la app sigue abierta**: el
+  owner pidió pros y contras y los tiene; recomendada React Native + Expo confirmada con prueba corta en F6.
 
 ## Por dónde retomar, en orden
 
@@ -89,10 +97,20 @@
    en el tracker y en la spec §4.9. Las skills `/release` y `/desplegar` del plugin ya dicen `1272cb93` y
    nombran la guarda 8 (plugin `627b3a3`, empujado, arnés 43/43): **el paso (0) de arriba instala ahora
    `627b3a3`, no `c57c9f2`**.
-3. Después F4 (cajón empaquetable y token) → F5 (instancia PlayJump, v2.0.0) → F6 (app nativa, spec).
-- **Del owner**: la pila de la app (F6a) · las herramientas de análisis estático (dependencia nueva,
-  `CONVENCIONES §9`) · el modo de permisos del harness · si Zones pierde sus campos de landing y si «redes»
-  se va (F5).
+3. **`#625` · instalar el análisis estático** (tarea propia, sin esperar a nadie): `composer require --dev
+   larastan/larastan`, `phpstan.neon` en nivel 5 sobre `app/` y su línea base; ESLint con las reglas de Vue
+   sobre `resources/js/sidebar/` y la suya; **medir antes de activar** (segundos que añade al gate, tamaño de
+   cada línea base) y solo entonces meterlos en `.githooks/pre-push` detrás de Pint, con su caso en
+   `PrePushGateTest`. ⚠️ `package.json` es compartido: el aviso al SPA ya está en el buzón.
+4. Después F4 (cajón empaquetable y token; la parte de la API empieza por `/spec`, toca `RGPD-06` y `SEC-06`)
+   → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes») → F6 (app nativa, spec).
+- **Del owner**: pegar las cuatro reglas de `#626` en `~/.claude/settings.json` (y arreglar el enlace
+  `~/.local/bin/claude`) · la pila de la app (F6a) · las dos de F5, que se le llevan con el censo hecho.
+- **El plan de la noche del 17-09** (parque cerrado a las 21:30), en sesión NUEVA con el plugin actualizado:
+  «Hola, lee la doc y arranca» → la línea de `storage/app/version` en producción → «¿esto está hecho de
+  verdad?» (`dod`) → «queda decidido: …» (`decision`, p. ej. la pila) → «esto hazlo en ligero: …» (`ligero`)
+  → «cerramos por hoy, haz el handoff» (`handoff`). El agente comprueba cada disparo en la transcripción y
+  anota el recuento en la spec §6.
 
 ## Ficheros de este carril
 
@@ -159,6 +177,16 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   del owner en cada sesión. Cuando esté en GitHub, tu máquina lo instalará al confiar en la carpeta; hasta
   entonces sigues con las skills viejas. **Toqué `CARRIL-SPA.md`** (§1, paso 8 nuevo, y la primera línea de
   §6) y el enrutador ya nombra las skills nuevas. Detalle: `sistemas/CAPA-DE-AGENTE.md`.
+- **(17-09) El plugin YA está en GitHub (`627b3a3`)**: tras tu `git pull`, sesión nueva y confiar en la carpeta.
+  Si no aparece `/carril`, la receta es por TERMINAL (`claude plugin …`; en VSCode `/plugin` no existe) y la
+  corre el owner: volví a tocar tu `CARRIL-SPA.md` §1 paso 8 para decirlo. Tu primer prompt: «Hola, lee la doc
+  y arranca».
+- **(17-09) AVISO ANTES DE TOCAR LO COMPARTIDO — `package.json`** (`#625`, `[DECIDIDO owner]`): voy a añadir
+  ESLint con las reglas de Vue como dependencia de desarrollo, con una línea base que congela lo que hay en
+  `resources/js/sidebar/` (solo bloqueará errores NUEVOS) y un paso en el `pre-push`. No cambia ningún fichero
+  tuyo. Si tienes `package.json` o `package-lock.json` a medias, empuja antes o dímelo en tu buzón.
+- **(17-09) Producción despliega solo etiquetas** (guarda 8, `#624`): tu próximo arreglo llega a producción
+  con `/release` delante; staging sigue desplegando `main`.
 
 ### Atendido
 - Nada todavía.

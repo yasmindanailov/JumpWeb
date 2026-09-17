@@ -80,7 +80,14 @@ El mapa vive en un solo sitio, `reglas/momentos.json`; esta tabla es su copia le
 - **A mano**: `/plugin marketplace add https://github.com/yasmindanailov/jumpweb-agente.git` y
   `/plugin install jumpweb-agente@jumpweb-agente`. Desarrollo local: `/plugin marketplace add
   ~/proyectos/jumpweb-agente` (mismo nombre: sustituye al de GitHub en esa máquina).
-- **Actualizar**: `/plugin marketplace update jumpweb-agente`. Sin `version` en el manifiesto a propósito: la
+- ⚠️ **En la extensión de VSCode `/plugin` no existe** («isn't available in this environment», medido el
+  17-09): ahí todo va por la TERMINAL con `claude plugin …` (mismos argumentos; `install` y `update` llevan
+  `--scope project`). Y **lo corre el owner**: al agente el clasificador «auto» le deniega `claude plugin …`
+  como «Self-Modification» incluso con la petición del owner delante, hasta que el owner añada las reglas
+  `allow` de `#626` a sus ajustes de usuario. Si `claude` no está en el PATH: el binario vivo es
+  `~/.vscode-server/extensions/anthropic.claude-code-<v>/resources/native-binary/claude`.
+- **Actualizar**: `/plugin marketplace update jumpweb-agente` (en VSCode: `claude plugin marketplace update
+  jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente --scope project`). Sin `version` en el manifiesto a propósito: la
   versión instalada es el sha del commit (`claude plugin list` lo enseña), así que cada push es una versión.
   La actualización en segundo plano no autentica en repos privados por HTTPS: se hace a mano. Tras escribir o
   cambiar hooks, abrir `/hooks` una vez (spec §4.10).

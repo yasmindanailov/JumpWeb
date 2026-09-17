@@ -39,9 +39,12 @@ agente, en el primer ordenador, sigue con la **Fase 3** (las páginas públicas:
    un defecto (`DECISIONES #529`).
 8. **La capa de agente** (F2, `#623`): cuando el plugin `jumpweb-agente` esté en GitHub, tu máquina lo añade e
    instala al confiar en la carpeta (lo declara `.claude/settings.json`); si no ves `/carril` y `/handoff` en el
-   menú `/`, ejecuta `/plugin marketplace add https://github.com/yasmindanailov/jumpweb-agente.git` y
-   `/plugin install jumpweb-agente@jumpweb-agente`, y abre `/hooks` una vez. Detalle:
-   `docs/sistemas/CAPA-DE-AGENTE.md`. Hasta entonces, `/arranque-sesion` y `/cierre-sesion`.
+   menú `/`, **desde la TERMINAL** (medido el 17-09: en la extensión de VSCode `/plugin` contesta «isn't
+   available in this environment»): `claude plugin marketplace add https://github.com/yasmindanailov/jumpweb-agente.git`
+   y `claude plugin install jumpweb-agente@jumpweb-agente --scope project`, y abre una sesión NUEVA. Si `claude`
+   no está en el PATH, el binario vive en `~/.vscode-server/extensions/anthropic.claude-code-<v>/resources/native-binary/claude`.
+   Lo corre el owner: al agente se lo deniega el clasificador (`#626`). El primer prompt es «Hola, lee la doc y
+   arranca». Detalle: `docs/sistemas/CAPA-DE-AGENTE.md`. Hasta entonces, `/arranque-sesion` y `/cierre-sesion`.
 
 ## 2 · De dónde sale el diseño
 
