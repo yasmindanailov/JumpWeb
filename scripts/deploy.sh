@@ -33,6 +33,9 @@
 #   · **Basic-auth global: PROHIBIDA** (no la pone este script y no debe ponerse a
 #     mano). `/pago/redsys/notificacion` es una S2S y no puede llevar auth: un 401 a
 #     Redsys deja el pedido caducando con la tarjeta cobrada — `PAY-02`, `#103(h)`.
+#   · **PRODUCCIÓN despliega SOLO ETIQUETAS** (guarda 8, `#613`): con `DEPLOY_PRODUCTION=1`
+#     HEAD tiene que ser una etiqueta anotada `vX.Y.Z` que ya esté en `origin`. Staging
+#     despliega `main`. La versión queda escrita en `storage/app/version` del servidor.
 #
 # ORDEN QUE NO ES NEGOCIABLE (cada uno con su porqué medido):
 #   `down` ANTES de nada  → `public/index.php` comprueba `maintenance.php` ANTES del
@@ -185,6 +188,50 @@ printf '%s\n' "═════════════════════�
 # 1 · PRE-VUELO LOCAL — si algo falla aquí, el servidor ni se entera
 # =============================================================================
 step "1/9 · Pre-vuelo local"
+
+# ── GUARDA 8 · PRODUCCIÓN despliega SOLO ETIQUETAS (`DECISIONES #613`, `#624`) ──────────────────
+# Con dos agentes empujando a `main` cada hora, «lo último» no es «lo listo», y la etiqueta es lo
+# que los separa. Ocho despliegues a producción se identificaron por hash; el noveno ya no puede.
+#
+# ⚠️ Pregunta «¿es lo que espero?», como la guarda 1 (`#106`): HEAD tiene que SER una versión
+# —una etiqueta ANOTADA `vMAYOR.MENOR.PARCHE` que apunta EXACTAMENTE a este commit— y esa etiqueta
+# tiene que estar en `origin`, porque una etiqueta solo local es un hash con nombre: la otra máquina
+# no sabría qué corre en producción. Todo lo demás —sin etiqueta, etiqueta ligera, un commit por
+# delante de la etiqueta, `origin` sin contestar— aborta con `--go`. En seco se AVISA y se sigue,
+# igual que con el árbol sucio: el plan se puede mirar antes de cortar la versión.
+#
+# Va lo PRIMERO del pre-vuelo: es local, no necesita nada, y si falla el servidor ni se entera.
+# Staging despliega `main`, y su versión es la descripción (`v1.0.0-12-gc4471bb9`).
+release_tag() {  # la etiqueta de versión ANOTADA que apunta exactamente a HEAD; si no la hay, falla
+    local tag
+    while IFS= read -r tag; do
+        [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+        [[ "$(git cat-file -t "refs/tags/$tag" 2>/dev/null)" == "tag" ]] || continue
+        printf '%s' "$tag"
+        return 0
+    done < <(git tag --points-at HEAD --sort=-v:refname)
+    return 1
+}
+
+DEPLOY_VERSION="$(git describe --always --match 'v[0-9]*' HEAD)"
+if [[ "${DEPLOY_PRODUCTION:-0}" == "1" ]]; then
+    guard8=""
+    if ! DEPLOY_VERSION="$(release_tag)"; then
+        guard8="HEAD ($(git rev-parse --short HEAD)) NO es una versión: ninguna etiqueta ANOTADA vMAYOR.MENOR.PARCHE apunta exactamente a este commit."
+    elif [[ "$(git ls-remote --tags origin "refs/tags/$DEPLOY_VERSION" 2>/dev/null | cut -f1)" != "$(git rev-parse "refs/tags/$DEPLOY_VERSION")" ]]; then
+        guard8="la etiqueta $DEPLOY_VERSION NO está en origin (o allí es otro objeto): git push origin $DEPLOY_VERSION"
+    fi
+
+    if [[ -n "$guard8" ]]; then
+        warn "GUARDA 8 · $guard8"
+        [[ $GO -eq 1 ]] && die "GUARDA 8 · producción despliega SOLO etiquetas (DECISIONES #613).
+   ▶ Corta la versión con /release (etiqueta HEAD y la empuja) o sitúate en una: git checkout vX.Y.Z"
+        warn "Con --go esto ABORTA. El plan de abajo es orientativo: no hay versión que desplegar."
+        DEPLOY_VERSION="sin-version"
+    else
+        info "guarda 8 ✓ · versión a desplegar: $DEPLOY_VERSION (etiqueta anotada, y en origin)"
+    fi
+fi
 
 command -v rsync >/dev/null || die "rsync no está instalado en local."
 
@@ -448,6 +495,13 @@ sshx "cd '$REMOTE_ROOT' && mkdir -p \
     chmod -R ug+rwX storage bootstrap/cache public/uploads"
 info "esqueleto de storage/ y bootstrap/cache asegurado"
 
+# La versión desplegada queda ESCRITA en el servidor (`DECISIONES #613`): allí no hay `.git`, así
+# que este fichero es lo único que contesta «¿qué corre aquí?». Vive en `storage/`, que no viaja:
+# el `--delete` del rsync no lo toca. Se escribe AQUÍ, justo tras sincronizar, porque es el momento
+# en que el código del servidor cambia; la salud (9/9) lo relee y lo compara.
+sshx "printf '%s\n' '$DEPLOY_VERSION $(git rev-parse --short HEAD) $(date -u +%Y-%m-%dT%H:%M:%SZ)' > '$REMOTE_ROOT/storage/app/version'"
+info "versión escrita en storage/app/version: $DEPLOY_VERSION"
+
 sshx "rm -f '$REMOTE_ROOT/public/hot'"
 info "public/hot borrado en destino"
 
@@ -588,6 +642,12 @@ fi
 kit_out=$(remote_php "artisan kit:build --check" 2>&1); kit_rc=$?
 check "GUARDA 7 · $(head -1 <<<"$kit_out")" "$kit_rc"
 
+# ── GUARDA 8 · lo que el servidor DICE que corre es lo que se acaba de desplegar ────────────────
+# Fail-closed: si la lectura falla, `remote_version` queda vacío y la comprobación cae.
+remote_version=$(sshx "cat '$REMOTE_ROOT/storage/app/version'" 2>/dev/null | cut -d' ' -f1 || true)
+check "GUARDA 8 · versión escrita en el servidor: ${remote_version:-?} (esperada $DEPLOY_VERSION)" \
+    "$([[ "$remote_version" == "$DEPLOY_VERSION" ]] && echo 0 || echo 1)"
+
 # ⚠️ `grep -c X || echo 0` imprime DOS ceros cuando no hay coincidencias: `grep -c` ya emite «0» y
 # ADEMÁS sale con 1, así que el `||` añade otro. Eso rompió la comprobación de migraciones el
 # 2026-08-19 (`0\n0` != `0` → rojo con el sitio sano). `|| true` conserva el 0 y traga el código.
@@ -638,6 +698,6 @@ fi
 printf '%s════════════════════════════════════════════════════════════════════%s\n' "$c_grn" "$c_off"
 printf '%s ✓ DESPLIEGUE COMPLETO Y VERIFICADO — %s%s\n' "$c_grn" "$SITE_URL" "$c_off"
 printf '%s════════════════════════════════════════════════════════════════════%s\n\n' "$c_grn" "$c_off"
-info "commit desplegado: $(git rev-parse --short HEAD)"
+info "versión desplegada: $DEPLOY_VERSION · commit $(git rev-parse --short HEAD)"
 dim "Recuerda: staging es 0 LIVE · 0 PRODUCCIÓN. Y «verificado aquí» ≠ «verificado en MySQL»:"
 dim "la BD es MariaDB 11.4, así que ninguna conclusión sobre concurrencia sale de este servidor."

@@ -41,7 +41,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Si trabajas en… | Lee solo |
 |---|---|
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
-| **Producto e instancias** · la landing fuera del producto · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 |
+| **Producto e instancias** · la landing fuera del producto · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
 | Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |

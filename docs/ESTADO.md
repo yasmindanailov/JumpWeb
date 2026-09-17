@@ -11,7 +11,7 @@
 
 | Carril | Máquina | Banda | Fichero | Estado |
 |---|---|---|---|---|
-| 🏗️ Plataforma · producto e instancias | este ordenador | 610–639 | `carriles/plataforma.md` | F1 hecha; sigue F2 (capa de agente) |
+| 🏗️ Plataforma · producto e instancias | este ordenador | 610–639 | `carriles/plataforma.md` | F2 a falta del owner (plugin y frases); F3 hecha salvo que producción diga v1.0.0 |
 | 🎨 Diseño de la web | este ordenador | 580–609 | `carriles/web.md` | todo en producción (13-09); sigue la T6 de copys |
 | 🧩 Diseño del SPA (el cajón) | el otro ordenador | 550–579 | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
 | 📧 Correos | este ordenador | 500–519 | `carriles/correos.md` | entero en el árbol; quedan cuatro ámbar y el ojo del owner |

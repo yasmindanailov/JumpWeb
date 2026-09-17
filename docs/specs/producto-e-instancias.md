@@ -166,7 +166,17 @@ sin acción. **PARCHE**: arreglo. La versión del contrato de instancia es el MA
 en `main`; **producción despliega solo etiquetas** (guarda 8 del despliegue); staging despliega `main`.
 `CHANGELOG.md` con dos mitades por versión: «para las instancias» e «interno». La versión desplegada queda en el
 servidor y en el estado de la instancia. El contrato OpenAPI sube en MENOR al añadir; una ruptura es `/api/v2`.
-v1.0.0 = `b0ea5a16` (producción del 13-09). La separación de la landing publica v2.0.0.
+~~v1.0.0 = `b0ea5a16` (producción del 13-09).~~ La separación de la landing publica v2.0.0.
+
+`[DECIDIDO owner]` 2026-09-17 (`#624`): **v1.0.0 = `1272cb93`**, lo que corre en producción desde el octavo
+despliegue (16-09), que salió entre `#613` y la etiqueta; el principio no cambia, el hash sí. **F3 ejecutada**:
+la guarda 8 es lo primero del pre-vuelo local de `scripts/deploy.sh` (etiqueta ANOTADA `vX.Y.Z`, exacta sobre
+HEAD y en `origin`; `--go` aborta, en seco avisa, staging no la pide), la versión se escribe en
+`storage/app/version` del servidor y la salud la relee, y `CHANGELOG.md` nace con la v1.0.0. Medido: un `--go`
+de producción sin etiqueta sale con 1 antes de la primera conexión; `DeployScriptGateTest` ejecuta el script en
+un repo de usar y tirar (39 casos); `scripts/mutar-guarda8.sh` 9/9 con el fichero restaurado byte a byte.
+**Falta para el ✅**: que producción DIGA v1.0.0 — el fichero no existe allí porque el octavo despliegue fue
+anterior a la guarda; lo escribe el noveno despliegue o una línea por `ssh`, de noche (`#594`).
 
 ### 4.7 La capa de agente
 
@@ -249,7 +259,7 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 | F0 gobierno | 1 | 1 | esta spec ✅ owner; `#610`–`#616`; reglas 8 y 9 |
 | F1 doc caliente | 1, el 2 en pausa | 2–3 | arranque ≤ 60 KB; huella 100 %; comprobación 10 — ✅ 2026-09-16, `#617`→`#621` |
 | F2 capa de agente | 1, ambas máquinas | 2 | plugin en las dos; 6 de 6 frases |
-| F3 versión | 1 | 1 | `git describe` en producción = v1.0.0; guarda 8 |
+| F3 versión | 1 | 1 | `git describe` en producción = v1.0.0; guarda 8 — 🟦 2026-09-17, `#624`: etiqueta, changelog y guarda hechos; falta que el servidor lo diga |
 | F4 cajón y token | 2 la SPA, 1 la API | 3–5 | cajón montado desde HTML ajeno; huella de maquetación 24/24; contrato 1.1.0 |
 | F5 instancia PlayJump | 1 | 4–6 | visitante sin cambios; cero cliente en el código; 13 recursos; v2.0.0 |
 | F6 app nativa | 2 | spec 1–2 | pila y alcance ✅ owner; repo desde plantilla |
@@ -290,7 +300,8 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
   abierto); hooks canalizados con su JSON y validados con python3 (`pruebas/probar-hooks.sh` del plugin, 38
   casos; `jq` no está en las máquinas) y una sesión real `claude -p --plugin-dir` sobre el repo — hecho en la
   sesión 1 (`#623`); las seis frases, pendientes.
-- F3: `git describe --tags` en producción; un despliegue sin etiqueta abortando.
+- F3: `git describe --tags` en producción (sin `.git` allí, es `cat storage/app/version`); un despliegue sin
+  etiqueta abortando — hecho el 2026-09-17 contra un host `.invalid`, código de salida 1 (`#624`).
 - F4: caso que monta el cajón desde un HTML mínimo ajeno; tests de contrato del esquema Bearer; huella de
   maquetación de las doce vistas (el instrumento de `#437`) idéntica.
 - F5: sitemap antes y después idéntico; siete páginas en 200; `grep -ciE 'pjp|playjump'` en `app/`, `resources/` y

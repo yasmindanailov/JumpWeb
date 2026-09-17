@@ -603,6 +603,19 @@ El mismo panel que staging (**Enhance**), así que `deploy.sh` vale con dos vari
 DEPLOY_PRODUCTION=1 DEPLOY_SSH_HOST=jumpweb-prod DEPLOY_URL=https://playjump.es scripts/deploy.sh --go
 ```
 
+**GUARDA 8 · producción despliega SOLO etiquetas** (`[DECIDIDO owner]` 2026-09-17, `DECISIONES #613` y `#624`).
+Con `DEPLOY_PRODUCTION=1`, lo primero que mira el pre-vuelo local es que HEAD **sea una versión**: una etiqueta
+ANOTADA `vX.Y.Z` que apunta exactamente a ese commit y que ya está en `origin`. Sin etiqueta, con una ligera,
+con `v1.0` o `v1.0.0-rc1`, con la etiqueta sin empujar o con un commit por delante, `--go` **aborta antes de la
+primera conexión**; en seco avisa y sigue, para poder mirar el plan antes de versionar. Staging despliega
+`main` y no se le pide nada. Así que el noveno despliegue empieza por **`/release`** (changelog, etiqueta,
+push) y, si `main` se movió después, por `git checkout vX.Y.Z`. El despliegue escribe la versión en
+**`storage/app/version`** del servidor (`versión hash fecha-UTC`; `storage/` no viaja, el `--delete` no la
+toca) y la salud la relee: `ssh jumpweb-prod 'cat public_html/storage/app/version'` contesta «¿qué corre
+aquí?». **v1.0.0 = `1272cb93`**, lo del octavo despliegue; ese fichero aún no existe en producción porque
+aquel despliegue fue anterior a la guarda. Medido: `DeployScriptGateTest` ejecuta el script en un repo de
+usar y tirar y `scripts/mutar-guarda8.sh` da 9/9.
+
 `jumpweb-prod` es un alias de `~/.ssh/config` (`HostName 51.68.7.199 · User playjump2 · Port 22`,
 clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel como «jumpweb-prod»).
 `DEPLOY_PRODUCTION=1` **invierte** las guardas 3 y 4 de §2: el correo tiene que salir y el

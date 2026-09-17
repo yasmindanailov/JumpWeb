@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use Illuminate\Filesystem\Filesystem;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -139,6 +140,9 @@ class DeployScriptGateTest extends TestCase
             'excluye tests/' => ["--exclude='/tests/'", 'Cero valor en runtime y lleva fixtures y credenciales de prueba.'],
             'drena la cola' => ['remote_php "artisan queue:work --stop-when-empty', 'Un job con FQCN viejo cae a failed_jobs: el cliente pagó y no recibe nada.'],
             'comprueba la salud al terminar' => ['"$SITE_URL/up"', 'No dar por hecho que fue bien es la mitad del valor del script.'],
+            'guarda 8 · producción solo etiquetas' => ['DEPLOY_VERSION="$(release_tag)"', 'Con dos agentes empujando a `main`, «lo último» no es «lo listo»: producción despliega versiones (#613).'],
+            'guarda 8 · la versión queda escrita en el servidor' => ["> '\$REMOTE_ROOT/storage/app/version'", 'En el servidor no hay `.git`: sin este fichero nadie puede contestar «¿qué corre aquí?».'],
+            'guarda 8 · la salud relee la versión' => ['"$remote_version" == "$DEPLOY_VERSION"', 'Escribir la versión y no releerla es suponer: la salud compara lo que el servidor DICE con lo desplegado.'],
         ];
     }
 
@@ -477,5 +481,157 @@ class DeployScriptGateTest extends TestCase
             '`redsys_environment` es un Setting de BD: antes de migrar no se puede leer.');
         $this->assertLessThan($this->callSite($s, 'up'), $guard,
             'Si el entorno fuera `live`, el sitio NO puede levantarse: cobraría de verdad.');
+    }
+
+    // ── GUARDA 8 · producción despliega SOLO etiquetas (`DECISIONES #613`, `#624`) ────────────────
+
+    /** @var list<string> */
+    private array $sandboxes = [];
+
+    protected function tearDown(): void
+    {
+        foreach ($this->sandboxes as $root) {
+            (new Filesystem)->deleteDirectory($root);
+        }
+
+        parent::tearDown();
+    }
+
+    private function git(string $dir, string $args): void
+    {
+        exec('git -C '.escapeshellarg($dir).' -c user.name=guarda8 -c user.email=guarda8@example.test '.$args.' 2>&1', $out, $rc);
+
+        $this->assertSame(0, $rc, "`git {$args}` falló en el cajón de arena:\n".implode("\n", $out));
+    }
+
+    /**
+     * Un repo de usar y tirar con el `deploy.sh` REAL dentro y un `origin` desnudo al lado.
+     *
+     * ⚠️ La guarda se comprueba EJECUTANDO el script, no leyéndolo (la lección de `#594` sobre la guarda 1:
+     * un literal satisface una guarda de texto aunque la lógica de alrededor la desmienta). Es seguro
+     * por construcción: la guarda 8 es lo PRIMERO del pre-vuelo local, el host de SSH es `.invalid`, y
+     * sin `public/build/manifest.json` el script muere en local mucho antes de la primera conexión.
+     */
+    private function sandbox(): string
+    {
+        $root = sys_get_temp_dir().'/guarda8-'.bin2hex(random_bytes(6));
+        $this->sandboxes[] = $root;
+
+        mkdir($root.'/repo/scripts', 0777, true);
+        copy(base_path(self::SCRIPT), $root.'/repo/'.self::SCRIPT);
+        chmod($root.'/repo/'.self::SCRIPT, 0755);
+
+        exec('git init -q --bare -b main '.escapeshellarg($root.'/origin.git').' 2>&1', $out, $rc);
+        $this->assertSame(0, $rc, implode("\n", $out));
+        exec('git init -q -b main '.escapeshellarg($root.'/repo').' 2>&1', $out, $rc);
+        $this->assertSame(0, $rc, implode("\n", $out));
+
+        $repo = $root.'/repo';
+        $this->git($repo, 'add -A');
+        $this->git($repo, 'commit -q -m base');
+        $this->git($repo, 'remote add origin '.escapeshellarg($root.'/origin.git'));
+        $this->git($repo, 'push -q origin main');
+
+        return $repo;
+    }
+
+    /** @return array{0: int, 1: string} código de salida y salida completa */
+    private function deploy(string $repo, string $flags, bool $production = true): array
+    {
+        exec(
+            'cd '.escapeshellarg($repo).' && '.($production ? 'DEPLOY_PRODUCTION=1 ' : '')
+            .'DEPLOY_SSH_HOST=guarda8.invalid DEPLOY_URL=https://guarda8.invalid '
+            .'bash '.self::SCRIPT.' --skip-build '.$flags.' 2>&1',
+            $out,
+            $rc,
+        );
+
+        return [$rc, implode("\n", $out)];
+    }
+
+    private const GUARD_8_ABORTS = 'GUARDA 8 · producción despliega SOLO etiquetas';
+
+    private const GUARD_8_PASSES = 'guarda 8 ✓ · versión a desplegar: v1.0.0';
+
+    /**
+     * La propiedad, con los valores que importan: en producción solo pasa una etiqueta ANOTADA
+     * `vX.Y.Z` que apunta exactamente a HEAD y que ya está en `origin`. Cada escalón de abajo es una
+     * forma distinta de «casi una versión», y todas tienen que abortar.
+     */
+    public function test_production_only_deploys_an_annotated_version_tag_that_is_on_origin(): void
+    {
+        $repo = $this->sandbox();
+
+        [$rc, $out] = $this->deploy($repo, '--go');
+        $this->assertNotSame(0, $rc);
+        $this->assertStringContainsString(self::GUARD_8_ABORTS, $out, 'Sin etiqueta, producción tiene que abortar: es un despliegue por hash.');
+        $this->assertStringContainsString('NO es una versión', $out);
+
+        // ⚠️ Cada «casi versión» se EMPUJA a `origin` antes de medir: si no, abortaría por no estar
+        // allí y el caso saldría verde sin haber mirado lo que dice mirar.
+        $this->git($repo, 'tag v1.0.0');
+        $this->git($repo, 'push -q origin v1.0.0');
+        [, $out] = $this->deploy($repo, '--go');
+        $this->assertStringContainsString(self::GUARD_8_ABORTS, $out);
+        $this->assertStringContainsString('NO es una versión', $out, 'Una etiqueta LIGERA no es una versión: no lleva autor, fecha ni mensaje (`/release` exige `-a`).');
+        $this->git($repo, 'push -q origin :refs/tags/v1.0.0');
+        $this->git($repo, 'tag -d v1.0.0');
+
+        $this->git($repo, 'tag -a v1.0 -m casi');
+        $this->git($repo, 'tag -a v1.0.0-rc1 -m casi');
+        $this->git($repo, 'push -q origin v1.0 v1.0.0-rc1');
+        [, $out] = $this->deploy($repo, '--go');
+        $this->assertStringContainsString(self::GUARD_8_ABORTS, $out);
+        $this->assertStringContainsString('NO es una versión', $out, 'Solo `vMAYOR.MENOR.PARCHE` exacto es una versión del producto (#613).');
+
+        $this->git($repo, 'tag -a v1.0.0 -m v1.0.0');
+        [, $out] = $this->deploy($repo, '--go');
+        $this->assertStringContainsString(self::GUARD_8_ABORTS, $out, 'Una etiqueta que no está en `origin` es un hash con nombre: la otra máquina no sabría qué corre en producción.');
+        $this->assertStringContainsString('NO está en origin', $out);
+
+        $this->git($repo, 'push -q origin v1.0.0');
+        [$rc, $out] = $this->deploy($repo, '--go');
+        $this->assertStringContainsString(self::GUARD_8_PASSES, $out, 'Con la etiqueta anotada, exacta y en `origin`, la guarda tiene que pasar.');
+        $this->assertStringNotContainsString('GUARDA 8', $out);
+        $this->assertNotSame(0, $rc, 'El cajón de arena no tiene build: el script debe morir en LOCAL después de la guarda, sin llegar a SSH.');
+
+        $this->git($repo, 'commit -q --allow-empty -m "un commit por delante de la etiqueta"');
+        [, $out] = $this->deploy($repo, '--go');
+        $this->assertStringContainsString(self::GUARD_8_ABORTS, $out, 'Un commit por delante de la etiqueta ya no ES la versión: «lo último» no es «lo listo».');
+    }
+
+    public function test_a_production_dry_run_warns_about_the_missing_version_and_goes_on(): void
+    {
+        [, $out] = $this->deploy($this->sandbox(), '');
+
+        $this->assertStringContainsString('GUARDA 8 · HEAD', $out, 'En seco la guarda tiene que AVISAR, no callar.');
+        $this->assertStringContainsString('Con --go esto ABORTA', $out);
+        $this->assertStringNotContainsString(self::GUARD_8_ABORTS, $out, 'En seco se avisa y se sigue (como con el árbol sucio): el plan se mira antes de cortar la versión.');
+    }
+
+    public function test_staging_deploys_main_and_is_never_asked_for_a_tag(): void
+    {
+        [, $out] = $this->deploy($this->sandbox(), '--go', production: false);
+
+        $this->assertStringNotContainsString('GUARDA 8', $out, 'Staging despliega `main` (#613): pedirle etiqueta lo dejaría sin poder validar nada antes de versionar.');
+    }
+
+    public function test_the_version_guard_runs_before_the_server_hears_anything_and_the_version_is_written_after_the_sync(): void
+    {
+        $s = $this->executable();
+        $guard = strpos($s, 'DEPLOY_VERSION="$(release_tag)"');
+
+        $this->assertNotFalse($guard, 'Falta la llamada a `release_tag` en el pre-vuelo.');
+        $this->assertLessThan(
+            strpos($s, 'sshx true'),
+            $guard,
+            'La guarda 8 va en el pre-vuelo LOCAL: si falla, el servidor ni se entera. Y el test que la '.
+            'ejecuta es seguro precisamente porque muere antes de la primera conexión.',
+        );
+
+        $write = strpos($s, "> '\$REMOTE_ROOT/storage/app/version'");
+
+        $this->assertLessThan($write, strpos($s, 'rsync_run ""'), 'La versión se escribe DESPUÉS de sincronizar: antes, el fichero mentiría sobre el código que hay.');
+        $this->assertLessThan($this->callSite($s, 'up'), $write, 'La versión se escribe ANTES de levantar el sitio.');
     }
 }

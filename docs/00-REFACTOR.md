@@ -1,6 +1,6 @@
 # JumpWeb — tracker de fases (VIVO)
 
-> Última actualización: **2026-09-16** · Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
+> Última actualización: **2026-09-17** · Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
 > Regla: **la suite en verde es la red** — ninguna fase se cierra con tests rotos. Los marcadores de cabecera
 > MANDAN sobre cualquier otro documento (`docs-check`, check 7; `DECISIONES #10`). Techo 16 KB (check 10,
 > `#621`): aquí van fases y casillas, no narrativa; el porqué está en la decisión que cita cada línea y en el
@@ -22,7 +22,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] F0 · gobierno: spec ✅ owner, `#610`–`#616`, reglas 8 y 9 de `CLAUDE.md` (`d898c76a`)
 - [x] F1 · doc caliente: decisiones por centenas · contador al trailer · §0 en las 46 specs · huella 974/974 · enrutador ≤ 12 KB · carriles y `ESTADO.md` índice · tracker ≤ 16 KB · comprobación 10 (`#617`→`#621`)
 - [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub, instalado en la primera máquina; arnés 38/38; dos sesiones reales con los tres hooks) · falta: 6 de 6 en la primera máquina, instalar y 6 de 6 en la segunda, retirar las skills viejas
-- [ ] F3 · versión: v1.0.0 sobre `b0ea5a16`, changelog, guarda 8 del despliegue
+- [ ] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) · falta: que producción DIGA v1.0.0 (`storage/app/version`, de noche)
 - [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0
 - [ ] F6 · app nativa: spec con pila y alcance

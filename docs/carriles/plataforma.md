@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#623`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-16.
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#624`** ·
+> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-17.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -56,6 +56,15 @@
   dos formas medidas (`"skill":"jumpweb-agente:carril"` y `<command-name>/carril`); arnés **43/43**, mutación
   vista en rojo (3 de 43) y el fichero restaurado byte a byte; 21 ms sobre 1 MB. ⚠️ **En esta máquina sigue
   instalado `c8e74b1`**: el clasificador denegó `claude plugin marketplace update` como «Self-Modification».
+- **F3 · versión, ejecutada salvo una línea** (2026-09-17, `#624`): lo que queda de F2 es todo del owner, así
+  que la sesión hizo F3. `[DECIDIDO owner]` **v1.0.0 = `1272cb93`** (lo que corre desde el octavo despliegue;
+  `#613` decía `b0ea5a16` y queda marcada). **Guarda 8** en `scripts/deploy.sh`, lo primero del pre-vuelo
+  local: etiqueta ANOTADA `vX.Y.Z` exacta sobre HEAD y en `origin`; `--go` aborta, en seco avisa, staging no
+  la pide; la versión se escribe en `storage/app/version` del servidor tras el `rsync` y la salud la relee.
+  `DeployScriptGateTest` pasa de 32 a 39 casos y EJECUTA el script en un repo de usar y tirar con un `origin`
+  desnudo; `scripts/mutar-guarda8.sh` 9/9, `deploy.sh` restaurado byte a byte (sha1). Medido aparte: un `--go`
+  de producción sin etiqueta contra un host `.invalid` sale con 1 antes de conectar. `CHANGELOG.md` nace en la
+  raíz con la v1.0.0. ▶ **Falta para el ✅**: que producción DIGA v1.0.0 (el fichero no existe allí).
 
 ## Por dónde retomar, en orden
 
@@ -73,9 +82,14 @@
    §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker. ⚠️ Hasta (c), `arranque-sesion` y
    `cierre-sesion` siguen. Cada cambio del plugin: `bash pruebas/probar-hooks.sh` en verde → commit → push →
    `/plugin marketplace update jumpweb-agente` en cada máquina (la versión es el sha del commit).
-2. **F3 · versión**: v1.0.0 sobre `b0ea5a16` (producción del 13-09), `CHANGELOG.md` con dos mitades, guarda 8
-   del despliegue (producción solo etiquetas). Después F4 (cajón empaquetable y token) → F5 (instancia
-   PlayJump, v2.0.0) → F6 (app nativa, spec).
+2. **F3 · cerrarla**: que producción diga v1.0.0. Una línea, de noche o con el parque cerrado (`#594`), y la
+   corre el owner o se pide permiso (el clasificador deniega escrituras remotas):
+   `ssh jumpweb-prod "printf '%s\n' 'v1.0.0 1272cb93 <fecha-UTC>' > public_html/storage/app/version"`; o se
+   deja al noveno despliegue, que ya la escribe solo y exige `/release` antes (guarda 8). Después, marcar F3
+   en el tracker y en la spec §4.9. Las skills `/release` y `/desplegar` del plugin ya dicen `1272cb93` y
+   nombran la guarda 8 (plugin `627b3a3`, empujado, arnés 43/43): **el paso (0) de arriba instala ahora
+   `627b3a3`, no `c57c9f2`**.
+3. Después F4 (cajón empaquetable y token) → F5 (instancia PlayJump, v2.0.0) → F6 (app nativa, spec).
 - **Del owner**: la pila de la app (F6a) · las herramientas de análisis estático (dependencia nueva,
   `CONVENCIONES §9`) · el modo de permisos del harness · si Zones pierde sus campos de landing y si «redes»
   se va (F5).
@@ -115,6 +129,13 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   harness `claude` da «command not found» aunque `~/.local/bin` está en el PATH: **el enlace
   `~/.local/bin/claude` está roto** (apunta a la extensión 2.1.263, retirada); el binario vivo es
   `~/.vscode-server/extensions/anthropic.claude-code-<v>/resources/native-binary/claude` (hoy 2.1.273).
+- **«The command 'docker' could not be found in this WSL 2 distro» es Docker Desktop APAGADO**, no una
+  instalación rota: se arranca desde WSL con `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en
+  segundo plano y se espera con un `until docker info` (medido el 17-09: el stack y la web en 200 en ~1 min).
+- **Un test que mira una «casi versión» tiene que EMPUJARLA antes de medir**: una etiqueta ligera o `v1.0` sin
+  empujar aborta por «no está en origin» y el caso sale verde sin haber mirado el nombre ni el tipo.
+- El push de una ETIQUETA no pasa por el gate (`pre-push` solo mira `refs/heads/main`): es a propósito, pero
+  por eso `/release` exige que el commit etiquetado ya esté en `origin/main`.
 
 ## Buzón
 
