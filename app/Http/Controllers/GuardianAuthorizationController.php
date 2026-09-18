@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Booking\Contracts\AuthorizableReservation;
 use App\Domain\Booking\Contracts\AuthorizableReservations;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\Dependent;
@@ -62,6 +63,7 @@ class GuardianAuthorizationController extends Controller
         abort_if($document === null, 404);
 
         $user = $request->user();
+        $desdeLaInvitacion = $this->invitationExtras($request);
 
         return view('reservation.authorization', [
             'reservation' => $reservation,
@@ -103,8 +105,8 @@ class GuardianAuthorizationController extends Controller
             // el id **no se cree**: quien decide si esa respuesta es de esta reserva es el contrato,
             // dentro del firmador.
             'fromInvitation' => [
-                'reply_id' => (int) $request->query('invitation_reply_id', 0) ?: null,
-                'minor' => trim((string) $request->query('minor', '')),
+                'reply_id' => $desdeLaInvitacion['invitation_reply_id'] ?? null,
+                'minor' => $desdeLaInvitacion['minor'] ?? '',
             ],
             // §4.6: con sesión, los datos del adulto vienen rellenos. ⚠️ Iniciar sesión no cambia nada
             // más: no verifica, no enlaza la cuenta y el justificante sigue siendo puntual.
@@ -145,10 +147,16 @@ class GuardianAuthorizationController extends Controller
                 ])
                 ->values()
                 ->all(),
+            // ❗❗ **Los extras de la invitación viajan también en la firma del POST** (`#704`, §10.6):
+            // hasta aquí solo iban en el `GET`, y el `invitation_reply_id` llegaba al envío por un campo
+            // oculto del CUERPO. Para ATAR la firma eso basta —el dominio lo contrasta con el contrato y
+            // no se fía—, pero para decidir **a dónde se vuelve** no: una URL de recibo es una credencial
+            // de dos horas sobre los datos de un menor y no se emite a partir de un número que cualquiera
+            // puede escribir. Dentro del HMAC, no se puede.
             'formAction' => URL::temporarySignedRoute(
                 'reservation.authorization.store',
                 $context->linkExpiresAt,
-                ['reservation' => $reservation],
+                ['reservation' => $reservation] + $desdeLaInvitacion,
             ),
         ]);
     }
@@ -244,6 +252,17 @@ class GuardianAuthorizationController extends Controller
                 ->notify(new GuardianAuthorizationSigned($result['signature']));
         }
 
+        // ❗❗ **El flujo se CIERRA donde empezó** (`#704`, §10.6·D): quien llegó desde su invitación
+        // vuelve a SU recibo, y allí ve que ya está firmado (§10.6·C). Antes se quedaba en el
+        // justificante mirando la misma hoja que acababa de enviar.
+        //
+        // ⚠️ Solo en el ÉXITO. Un formulario rechazado vuelve al formulario con lo que escribió: sacarle
+        // de la pantalla del error le dejaría sin saber qué corregir.
+        $recibo = $this->receiptUrl($request, $reservation);
+        if ($recibo !== null) {
+            return redirect()->to($recibo);
+        }
+
         return $this->back($request, $reservation, 'signed', $result['authorization']->minorFullName());
     }
 
@@ -324,13 +343,74 @@ class GuardianAuthorizationController extends Controller
     /**
      * A dónde se vuelve: **una URL firmada de nuevo**. Quien rellena no tiene sesión, así que un
      * `back()` a secas le dejaría en un 403 con lo que acaba de escribir perdido.
+     *
+     * ❗❗ **Y con los extras de la invitación dentro** (`#704`, §10.6). Sin ellos, un padre que se
+     * equivocaba en la fecha de nacimiento volvía a un formulario **sin la atadura y sin el nombre**:
+     * su segundo intento ya no iba atado a la respuesta, así que **cobraba plaza** y con la lista llena
+     * acababa en «no quedan plazas» — justo el fallo que `#576` existe para impedir. Medido antes de
+     * arreglarlo, con la pantalla real.
      */
     private function backUrl(Request $request, OrderItem $reservation): string
     {
+        $extras = $this->invitationExtras($request);
+
         if ($this->ownsOrder($request, $reservation)) {
-            return route('reservation.authorization', ['reservation' => $reservation]);
+            return route('reservation.authorization', ['reservation' => $reservation] + $extras);
         }
 
-        return $reservation->guardianAuthorizationSignedUrl();
+        return $reservation->guardianAuthorizationSignedUrl($extras);
+    }
+
+    /**
+     * **A dónde se vuelve cuando el padre llegó desde su invitación** (`#704`, §10.6·D): a SU recibo,
+     * que es donde estaba. Hasta aquí se le devolvía al justificante, así que se quedaba mirando la
+     * misma hoja que acababa de enviar y sin saber si había servido de algo.
+     *
+     * ⚠️⚠️ **Solo por la FIRMA del enlace, nunca por el cuerpo.** El recibo abre los datos de un menor
+     * durante dos horas: emitirlo a partir del `invitation_reply_id` que manda el navegador le daría a
+     * cualquiera con un enlace de firma el recibo del hijo de otro. Dentro del HMAC no se puede forjar,
+     * y el que hay dentro del HMAC lo puso esta casa al pintar el recibo de ESA respuesta.
+     *
+     * ⚠️ Al titular no se le emite: tiene cuenta y su sitio es el panel, no una credencial temporal
+     * pensada para un adulto sin sesión.
+     */
+    private function receiptUrl(Request $request, OrderItem $reservation): ?string
+    {
+        if (! $request->hasValidSignature()) {
+            return null;
+        }
+
+        $replyId = (int) $request->query('invitation_reply_id', 0);
+
+        return $replyId > 0
+            ? app(PartyInvitations::class)->receiptUrlForReplyIn($replyId, (int) $reservation->getKey())
+            : null;
+    }
+
+    /**
+     * Lo que trae la URL desde la invitación —la respuesta y el nombre del menor, ENTERO y sin partir
+     * (`#236`)— para volver a ponerlo en la siguiente. Es lo que hace que un formulario rechazado
+     * conserve la atadura.
+     *
+     * ⚠️ **Aquí no se re-comprueba quién pregunta, y no es un descuido**: a estos métodos solo se llega
+     * después de `authorizeGuardianAccess()`, que ya exige firma válida **o** ser el titular. Repetirlo
+     * añadiría una rama que ninguna prueba puede poner en rojo, y una guarda que no puede morder es
+     * ruido. Lo que sí se comprueba aparte es la emisión del RECIBO ({@see receiptUrl()}), porque eso
+     * **no** es volver a una pantalla: es entregar una credencial.
+     *
+     * @return array{invitation_reply_id?: int, minor?: string}
+     */
+    private function invitationExtras(Request $request): array
+    {
+        $extras = [];
+
+        if (($id = (int) $request->query('invitation_reply_id', 0)) > 0) {
+            $extras['invitation_reply_id'] = $id;
+        }
+        if (($minor = trim((string) $request->query('minor', ''))) !== '') {
+            $extras['minor'] = $minor;
+        }
+
+        return $extras;
     }
 }

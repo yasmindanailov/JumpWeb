@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#703`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#704`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -17,35 +17,16 @@
   La migración `create_party_invitations` quedó aplicada (118 ms) y **los dos interruptores, apagados**.
   Con ello **el defecto de la barra de firmar de 401 px ya no está vivo**. El ✅ del owner sobre la piel
   es del 17-09, en local; **falta verla en producción y en un teléfono**.
-- **T4 · la invitación digital, empezada**: se parte en **seis unidades verdes empujables** (spec §10.4).
-  - **T4·1 · cimientos (`#573`), empujada**: las dos tablas, los dos interruptores apagados, el vínculo
-    `nullOnDelete` con el justificante, `PersonNameKey` (y `keyFor()` delegando, con paridad) y la poda
-    registrada. `PersonNameKeyTest` (7) · `PartyInvitationSchemaTest` (8) · arnés 9/9.
-  - **T4·2 · las reglas del dominio (`#574`)**: `PartyInvitations` con su lock de una sola fila,
-    `PublicFreeText`, los dos lectores de columna por REGLA, el verificador `invitation:verify-places` y
-    los cuatro esquemas del contrato. `PartyInvitationsTest` (18) · `PublicFreeTextTest` (16) · arnés
-    13/13 · **InnoDB: 16 padres → entra 1**, y sin el lock entran 16 (el instrumento visto fallar).
-  - **T4·3 · catálogo y embudo (`#575`)**: el interruptor con su guard en `TicketType::saving()` (pack +
-    columna de nombre + justificante no obligatorio), `funnelGuardianMode()` leído por el cajón y el
-    mostrador, y `show_in_invitation` por las CUATRO puertas del pivote. `InvitationCatalogTest` (11) ·
-    arnés 11/11. ⚠️ `OrderCreator` intacto: es una oferta, no un permiso.
-  - **T4·4 · plazas con dueño y el enlace que se anula (`#576`)**: el contrato `PartyGuests` con su lector
-    y su binding, el **cuarto sumando** del suelo de `#444` (los «sí» vivos sin firma atada), la
-    **excepción del firmador** (una firma atada a un «sí» no cobra plaza — sin ella el padre que avisó no
-    podría firmar) y **anular el enlace** desde la ficha, con permiso re-exigido al ejecutar, bloqueo
-    auditado y token fuera del rastro. `InvitationPlacesTest` (9) · `InvitationLinkRotationTest` (4) · un
-    caso nuevo en `ModuleContractsTest` · arnés **12/12**. ⚠️ El botón lo pinta la T6 (§4.8).
-  - **T4·5 · el RGPD de la invitación (`#577`)**: `anonymize()` borra respuestas e invitación **por
-    tabla y en dos consultas**; el **justificante se conserva** y solo pierde el puntero, con
-    `WaiverChain::verify()` en verde; la purga se las lleva por cascada (comprobado) y el export del
-    art. 20 no las publica. `RGPD-01` y `RGPD-06` al día —esta última gana **la quinta credencial**, el
-    token de la invitación—. `InvitationPrivacyTest` (5) · arnés **5/5 + 1 declarado**.
-  - **T4·6 · la API (`#578`) — CIERRA LA T4**: pública por token (`GET`/`POST /invitations/{token}`,
-    la tarjeta es una HOJA EN BLANCO y los cuatro «no» el mismo 404) y del anfitrión por la misma
-    puerta que su formulario (`invitation` en `GuestForm`, `PUT` de personalizar, `DELETE` de «no lo
-    apuntes», `adopt[]` fuera de `guests`). Con ellos el dominio que faltaba: resumen, personalizar,
-    propuesta por emparejado, adoptar, descartar y reconciliar. `InvitationApiTest` (20) · arnés
-    **14/14**. ⚠️ `Invitation.url` es `null` hasta que la T5 declare su ruta, **y se rellena solo**.
+- **T4 · la invitación digital, CERRADA en sus seis unidades** (`#573`→`#578`) y en producción desde
+  v1.1.0 **con los interruptores apagados**. El detalle de cada una vive en la spec §10.4; lo que hay que
+  recordar al tocarlas: los cimientos y `PersonNameKey` (`#573`) · el lock de UNA fila de
+  `PartyInvitations`, verificado sobre InnoDB —16 padres → entra 1, y sin el lock entran 16— (`#574`) ·
+  el guard de `TicketType::saving()` y `show_in_invitation` por las CUATRO puertas del pivote, con
+  `OrderCreator` intacto porque es una oferta y no un permiso (`#575`) · el **cuarto sumando** del suelo
+  de `#444` y la **excepción del firmador**, sin la cual el padre que dijo «sí» no podría firmar
+  (`#576`) · el RGPD, donde el justificante **se conserva** y solo pierde el puntero (`#577`) · y la API
+  por token, hoja en blanco y cuatro «no» que son el mismo 404 (`#578`). Arneses 9/9 · 13/13 · 11/11 ·
+  12/12 · 5/5+1 declarado · 14/14. ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
 - **T5 · la página pública, TRES de cinco unidades en el árbol** y las tres **vistas en vivo por el
   owner** (18-09):
   - **T5·1 (`#701`)**: la ruta `/invitacion/{token}`, los bloques de §4.6 y **los TRES temas** —
@@ -58,12 +39,23 @@
   - **T5·3 (`#703`)**: el **recibo de 2 horas** (`receiptUrl()`, que estaba aplazado), G2 con su aviso
     propio, G3 con el salto al justificante **atado a la respuesta**, y «voy con él» ya sin botón de
     firmar. `InvitationReceiptTest` (6).
-- ❗❗ **LO QUE EL OWNER LEVANTÓ Y QUEDA ABIERTO: el flujo firmar ↔ invitación NO es coherente**
-  (spec **§10.6**, es lo primero que hay que leer al retomar). Medido: tres defectos y **una
-  contradicción que NO se toca sin él** — `minor_surname` es `required` y §4.5·7 manda que el nombre
-  llegue **sin partirlo** (`#236`), así que el prerrelleno deja el apellido vacío y obligatorio. Las
-  tres salidas están escritas en §10.6·A con su coste; **el primer paso de esa tanda es MEDIR cuántas
-  firmas existentes afecta cada una**.
+  - **T5·5 · el flujo firmar ↔ invitación (`#704`), en el árbol salvo su A**: **C** (el recibo ya no
+    ofrece firmar a quien firmó — contrato nuevo `Booking\Contracts\SignedInvitationReplies`, que
+    implementa `GuardianPlaces` y responde **por la ATADURA de `#576`, no por el nombre**), **D** (tras
+    firmar se vuelve a SU recibo) y **E, un CUARTO defecto que no estaba escrito en la spec**: la vuelta
+    de un formulario RECHAZADO se componía sin los extras firmados, así que el segundo intento ya no iba
+    atado, **cobraba plaza** y con la lista llena acababa en «no quedan plazas» — lo que `#576` existe
+    para impedir. Lo destapó **caminar la pantalla**, no leerla. `InvitationSigningFlowTest` (5) · un
+    caso en `ModuleContractsTest` · arnés **7/7** · los dos estados del recibo vistos a 390 y 1280 px.
+- ❗❗ **LO ÚNICO QUE QUEDA ABIERTO DE LA T5·5 es §10.6·A, y es DECISIÓN DEL OWNER** (se le preguntó el
+  18-09 con las cuatro salidas y su coste; **sin respuesta todavía**). Medido, y **dos costes que la spec
+  daba por ciertos NO existen**: unificar los dos campos del menor **no reescribe ninguna firma** (el hash
+  se calcula con los atributos de la propia firma y `subject_name` ya va unido; simulado sobre la BD en
+  una transacción deshecha, con control que muerde) y **no cambia ninguna clave** (`keyFor()` ya
+  concatena: 3 filas reales + 9 casos adversariales, 0 distintas). La API tampoco parte el nombre.
+  ❗ Y **«como `dependents` ya hace por `#236`» era FALSO**: `#236` decidió lo contrario (campo aparte).
+  ▶ La recomendación que se le dio: **unificar + exigir «al menos dos palabras»**, porque una sola
+  casilla `required` acepta «Hugo» y eso se lleva por delante el OBJETIVO de `#236`.
 - **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner: 8 lentes + un refutador por
   hallazgo, 31 agentes. 17 sobreviven, 6 refutados, 8 sin refutar por el tope. **Dos defectos reales,
   arreglados**: la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT` (el
@@ -93,15 +85,14 @@
    ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
    `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **T5·1→T5·3 en el árbol y aprobadas** (`#701`→`#703`). Quedan dos, y el owner ya acordó el reparto:
-   - **T5·5 · el flujo firmar ↔ invitación** (spec **§10.6** — LÉELA ENTERA ANTES DE TOCAR). Trae
-     **B ya hecho** y quedan **C** (el recibo no sabe si ese niño ya firmó → hay que preguntarlo **por
-     el contrato**, que las firmas son de Identity) y **D** (tras firmar no se vuelve a la invitación:
-     `backUrl()` deja al padre en la misma hoja que acaba de enviar).
-     ❗ **Y antes que nada, A**: la contradicción del apellido. **No se codifica: se MIDE y se le
-     enseña al owner** con las tres salidas y su coste (cuántas firmas afecta cada una, qué migrar).
+2. **T5·1→T5·3 y T5·5 en el árbol** (`#701`→`#704`), **sin desplegar**. Quedan:
+   - ❗ **§10.6·A — ESPERA RESPUESTA DEL OWNER**, y es lo único que bloquea cerrar la T5·5. La medición
+     está hecha y escrita en la spec (§10.6·A); **no se codifica hasta que él elija**. Si dice
+     «unificar», la tanda es: migración (`minor_name = TRIM(CONCAT(…))`, ensanchar a 255, soltar
+     `minor_surname`) + la regla de «al menos dos palabras» **igualada en la invitación** (hoy `min:1`)
+     + 6 ficheros de código, 3 rótulos y 12 de test. **Ninguna firma se reescribe.**
    - **T5·4 · compartir y calendario**: `og:*` (§4.6) y el `.ics` **con `TZID`** — en UTC adelantaría
-     la fiesta una hora (§7.2·R13). Es independiente de todo lo demás.
+     la fiesta una hora (§7.2·R13). Es independiente de todo lo demás y **se puede hacer ya**.
    ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile, y en local no hay
    claves — solo se puede en producción.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha
@@ -187,9 +178,42 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `Maintenance`, `Unauthenticated` y `ValidationFailed`; **no hay `Forbidden`**, se escribe inline.
 - **`Route::has()` no ve una ruta declarada a mitad de un test** hasta
   `Route::getRoutes()->refreshNameLookups()`: el índice por nombre se construye una vez.
-- Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/500-599.md`.
+- ⚠️⚠️ **`$request->query()` NO lee el cuerpo, y por eso un caso puede pasar sin ejercer nada**: el
+  primer caso de `#704` ponía el `invitation_reply_id` en el POST y «pasaba» — pero la guarda que creía
+  probar (la firma de la URL) **no se ejecutaba**. Lo cazó el ARNÉS (6/7), no una relectura: un
+  superviviente es una pregunta sobre el TEST antes que sobre el código (`#578`).
+- **Una guarda que ninguna prueba puede poner en rojo es ruido, no defensa**: en `#704` se escribieron
+  dos re-comprobaciones de acceso dentro de ayudantes a los que solo se llega **después** de
+  `authorizeGuardianAccess()`. Se retiraron en vez de declararlas.
+- **Una costura se prueba ANDÁNDOLA**: el defecto más caro de la T5·5 (la vuelta del formulario
+  rechazado perdía la atadura) no lo veía ningún test de dominio, y los tres ya existían. Un caso que
+  fabrica el escenario con el servicio prueba el servicio; la costura solo la ve caminar la pantalla.
+- ⏰ **Techo de una decisión: 1,5 KB, y `docs-check` NO lo mide** (sí mide el §0 de una spec, 2 KB):
+  `#704` salió a 1815 B y hubo que recortarlo a mano tres veces. Mídelo con `python3` antes del commit.
+- 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (medido el 18-09): 19 firmas
+  apuntan a versiones del texto legal **que ya no existen** (ids 10, 13, 14, 16, 19, 22, 25, 32, 34),
+  todas del 26–27 de agosto. **No es un defecto del producto**: ningún código ni seeder borra
+  versiones, y la FK es `RESTRICT` desde el 25-08 — es basura de desarrollo de aquella semana. ⚠️ Pero
+  significa que **`WaiverChain::verify()` en local sale rojo de fábrica**: si mides cadenas, compara
+  ANTES/DESPUÉS, nunca contra «todo verde». Y **en producción está sin comprobar** (`waiver:verify-chain`
+  desde la otra máquina).
+- Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
 
 ## Buzón
+
+### Para el carril de plataforma (emisor: SPA, 2026-09-18, segunda tanda del día)
+- ⚠️ **Toqué el composition root sin avisar antes, y lo digo yo**: `app/Providers/AppServiceProvider.php`
+  gana **una línea** (`bind(SignedInvitationReplies::class, GuardianPlaces::class)`), pegada a la de
+  `ReservationPlacesTaken` y por la misma razón — Booking no puede nombrar a Identity, así que su propio
+  proveedor tampoco. Es el patrón de `#444`, no uno nuevo. Si prefieres que los bindings de esta frontera
+  vivan en otro sitio, dilo y lo muevo.
+- ▶ **Lo empujado en esta tanda (`#704`)** y lo que implica para el próximo despliegue: `GuardianPlaces`
+  (un método), `PartyInvitations` (constructor con una dependencia más + `receiptUrlForReplyIn()`),
+  `GuardianAuthorizationController` (los extras viajan ahora **dentro de la firma del POST**),
+  `InvitationPageController`, el recibo y `lang/*/invitation.php`. **Sin migraciones, sin contrato de API
+  y sin tocar dinero ni aforo.** Ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
+- 🐞 **Tu defecto de `DependentsZone.vue` (`addBtn` sin declarar) sigue vivo**: no lo he tocado en esta
+  tanda para no mezclarlo con la invitación. Lo cojo en la siguiente salvo que lo quieras tú.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
 - **BANDA**: `#579` agotó 550–579. He tomado **520–549**, que estaba libre y sin dueño en la tabla, y

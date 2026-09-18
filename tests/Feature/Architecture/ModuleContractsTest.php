@@ -34,10 +34,12 @@ use App\Domain\Booking\Contracts\ReservationScope;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Contracts\RetryOutcome;
 use App\Domain\Booking\Contracts\SeasonWindow;
+use App\Domain\Booking\Contracts\SignedInvitationReplies;
 use App\Domain\Booking\Contracts\SpecialDay;
 use App\Domain\Booking\Contracts\UpcomingReservation;
 use App\Domain\Booking\Contracts\WeeklyOpening;
 use App\Domain\Booking\Contracts\ZonePalette;
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
@@ -51,6 +53,7 @@ use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PartyGuestsReader;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ZonePaletteReader;
 use App\Domain\Content\Models\Attraction;
@@ -429,6 +432,36 @@ class ModuleContractsTest extends TestCase
 
         // Por el CONTRATO, no por el implementador: es como pregunta Booking desde `GuestCountPolicy`.
         $this->assertSame(3, app(ReservationPlacesTaken::class)->takenIn(4242));
+    }
+
+    /**
+     * BOOKING → IDENTITY: **si una respuesta ya tiene justificante lo sabe Identity**, y el recibo de la
+     * invitación lo pregunta por el contrato en vez de mirar las firmas (T5·5, `DECISIONES #704`).
+     *
+     * Es la flecha contraria a la de aquí arriba y la misma frontera: las respuestas son de Booking, las
+     * firmas de Identity y **Booking no puede mirar a Identity**. Por eso el contrato lo declara Booking,
+     * lo implementa `GuardianPlaces` y el binding vive en el composition root.
+     *
+     * ⚠️ El doble dice que SÍ de una respuesta que **no tiene ni una firma en base de datos**: si
+     * `PartyInvitations` fuera a mirar por su cuenta, el doble quedaría sin usar y esto saldría `false`.
+     * Ésa es toda la prueba — y es justo lo que `InvitationSigningFlowTest`, que trabaja con datos
+     * reales, no puede distinguir (la trampa que pagó `#576`).
+     */
+    public function test_booking_asks_identity_whether_a_reply_is_already_signed(): void
+    {
+        $this->app->instance(SignedInvitationReplies::class, new class implements SignedInvitationReplies
+        {
+            public function isReplySigned(int $replyId): bool
+            {
+                return $replyId === 90001;
+            }
+        });
+
+        $reply = (new InvitationReply)->forceFill(['id' => 90001]);
+        $otra = (new InvitationReply)->forceFill(['id' => 90002]);
+
+        $this->assertTrue(app(PartyInvitations::class)->waiverSignedFor($reply));
+        $this->assertFalse(app(PartyInvitations::class)->waiverSignedFor($otra));
     }
 
     /**

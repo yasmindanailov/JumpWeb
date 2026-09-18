@@ -88,5 +88,7 @@ return [
             'unknown' => '— Signe au cas où, ou règle ça à l’entrée le jour même.',
         ],
         'g3_sign' => 'Signer maintenant',
+        'g3_signed_title' => 'Déjà signé',
+        'g3_signed' => 'Nous avons ta signature pour cet enfant. Tu n’as rien d’autre à faire.',
     ],
 ];

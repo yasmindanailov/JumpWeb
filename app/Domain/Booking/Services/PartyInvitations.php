@@ -3,6 +3,7 @@
 namespace App\Domain\Booking\Services;
 
 use App\Domain\Booking\Contracts\InvitationReplyOutcome;
+use App\Domain\Booking\Contracts\SignedInvitationReplies;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
@@ -61,7 +62,10 @@ final class PartyInvitations
      */
     public const RECEIPT_HOURS = 2;
 
-    public function __construct(private GuestCountPolicy $policy) {}
+    public function __construct(
+        private GuestCountPolicy $policy,
+        private SignedInvitationReplies $signed,
+    ) {}
 
     /**
      * La invitación de esta reserva, creándola si no existe.
@@ -425,6 +429,20 @@ final class PartyInvitations
     public function repliesOpenFor(OrderItem $reservation): bool
     {
         return $this->policy->isOpenFor($reservation) && $this->policy->isWithinWindow($reservation);
+    }
+
+    /**
+     * ¿Esa respuesta ya tiene justificante? (`#704`, §10.6·C)
+     *
+     * ⚠️⚠️ **Se pregunta al CONTRATO y no a la base**: las firmas son de Identity y Booking no puede
+     * mirar allí (`ModuleBoundariesTest`). Es la misma frontera que el suelo de plazas de `#444`, y el
+     * implementador es el mismo — el único sitio donde las dos mitades coexisten.
+     *
+     * ⚠️ Una respuesta descartada no se pregunta: ya no tiene recibo (su página responde 404).
+     */
+    public function waiverSignedFor(InvitationReply $reply): bool
+    {
+        return $this->signed->isReplySigned((int) $reply->getKey());
     }
 
     /**
@@ -815,6 +833,29 @@ final class PartyInvitations
             now()->addHours(self::RECEIPT_HOURS),
             ['reply' => $reply->getKey()],
         );
+    }
+
+    /**
+     * El recibo de una respuesta **de esta reserva**, por su id (`#704`, §10.6·D): es como vuelve al
+     * suyo el padre que acaba de firmar.
+     *
+     * ⚠️⚠️ **La reserva se exige y no se deduce.** Quien llama llega desde el justificante de UNA
+     * reserva, y sin esta comprobación un id de otra fiesta le abriría el recibo del hijo de otro. Que
+     * el id venga dentro de una firma HMAC no basta como garantía: quien firma esa URL es esta casa,
+     * y esta casa tiene que seguir comprobando de qué fiesta es la respuesta.
+     *
+     * ⚠️ Una respuesta descartada no tiene recibo —su página responde 404 (D9)—, así que tampoco se
+     * emite el enlace: se para aquí y no se le manda a un 404.
+     */
+    public function receiptUrlForReplyIn(int $replyId, int $reservationId): ?string
+    {
+        $reply = InvitationReply::query()
+            ->whereKey($replyId)
+            ->where('order_item_id', $reservationId)
+            ->whereNull('dismissed_at')
+            ->first();
+
+        return $reply === null ? null : $this->receiptUrl($reply);
     }
 
     /**

@@ -3,7 +3,8 @@
 > Estado: 🟦 **revisada de forma adversarial tres veces · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los
 > interruptores apagados) · T5 empezada · T7 y T6 sin empezar** ·
 > Última actualización: 2026-09-18 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
-> `#579` (revisión adversarial) · `#700` (el oráculo) · `#521` (T5·1) · Carril: 🧩 SPA (banda 520–549).
+> `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
+> Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
 > `Justificante Invitado PJP` e `Invitaciones PJP` (el turno **2a** manda sobre el 1a).
@@ -12,27 +13,27 @@
 
 ## §0 · Antes de tocar
 
-- **Carril del SPA** (banda 520–549). **T1→T4 EN PRODUCCIÓN** desde v1.1.0 con los dos interruptores
-  **APAGADOS** (encenderlos es DATO del owner); **T5·1 en el árbol** (§10.5.1). Quedan T5·2→T5·4 → T7 →
-  **T6** al final. **Si vas a construir, §7.2 primero.**
-- ⚠️⚠️ **La T4 pasó una revisión adversarial** (§10.4.7, `#579`): dos defectos arreglados y **diez puntos
-  anotados sin tocar** en §10.4.7·B. Míralos antes de dar por buena cualquier parte de la T4.
+- **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**: los
+  enciende el owner); **T5·1→T5·3 y la T5·5 salvo su A**, en el árbol sin desplegar. Quedan **T5·4** y
+  **§10.6·A, del OWNER** → T7 → **T6**. **Si construyes, §7.2 primero.**
+- ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): dos defectos arreglados y **diez puntos sin tocar** en
+  §10.4.7·B — míralos antes de dar por buena una parte de la T4.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
   `invitation_replies`, el formulario lo PROPONE sobre una ficha y el anfitrión lo ADOPTA al guardar —
-  `submitGuestForm()` sustituye la lista entera y `updated_at` es el testigo de extras e invitados (medido)—.
+  `submitGuestForm()` sustituye la lista entera y `updated_at` es el testigo (medido)—.
   Por eso un padre no mueve dinero, aforo ni ningún fichero del `CRITICAL_RE`, y `OrderCreator` no se toca.
 - ❗ **La lista completa NO rechaza** (`#700`, sustituye a D2): era un **oráculo de pertenencia**. **No existe
-  `full`**, como no existe «repetido»: ningún motivo puede depender del NOMBRE. El «sí» que no cabe se acepta
-  y sale en el aviso «hay N que ya no caben» (§4.7).
-- «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja con
-  una ficha escrita solo con UN candidato (D11) · el «no podemos» se enseña al anfitrión (D3).
+  `full`**, como no existe «repetido»: ningún motivo depende del NOMBRE. El «sí» que no cabe se acepta y sale
+  en el aviso «hay N que ya no caben» (§4.7).
+- «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja
+  solo con una ficha de UN candidato (D11) · el «no podemos» lo ve el anfitrión (D3).
 - **Lo que enseñó §10**: el orden de la PÁGINA ya no es el de las POSICIONES (`sanitizeGuestData()` ordena
-  por clave) · el número de invitados lleva `form="gf-form"` o no se envía.
+  por clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba
+  andándola** (§10.6·E).
 - ⚠️ **El molde es de TRES páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*`, `.gf-notice` o
   `.gf-extras__list` mueve también el justificante y la invitación. Tras tocarlo, **sonda y captura de
-  VENTANA de las tres** (la T2 rompió la barra de firmar así: 401 px de 844, §10.3).
+  VENTANA de las tres** (así rompió la T2 la barra de firmar: 401 px de 844, §10.3).
 - **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.
-- Anexo al final con la fila del enrutador.
 
 ## 0. En una línea cada cosa
 
@@ -1262,13 +1263,13 @@ La barra de contestar llega con su aviso o no llega.
 
 | | Qué | Estado |
 |---|---|---|
-| **T5·1** | La página, su ruta y el vestido: banda, confeti y chapa (§4.6, §3.4) | ✅ `#521` |
+| **T5·1** | La página, su ruta y el vestido: banda, confeti y chapa (§4.6, §3.4) | ✅ `#701` |
 | **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ✅ `#702` |
 | **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ✅ `#703` |
 | **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ⬜ |
-| **T5·5** | ⚠️ **El flujo firmar ↔ invitación, que NO es coherente** (abajo) | ⬜ |
+| **T5·5** | El flujo firmar ↔ invitación: **C, D y E ✅ `#704`** · ⚠️ **A, del owner** (abajo) | 🟦 |
 
-#### 10.5.1 T5·1 · la página y su vestido — EN EL ÁRBOL (2026-09-18, `DECISIONES #521`)
+#### 10.5.1 T5·1 · la página y su vestido — EN EL ÁRBOL (2026-09-18, `DECISIONES #701`)
 
 **Hecho.**
 - La ruta `/invitacion/{token}` (`invitation.show`) y su controlador, con `resolvePublic()` como
@@ -1370,9 +1371,11 @@ Ahora `guardianAuthorizationSignedUrl()` acepta extras que viajan DENTRO de la f
 abre ese enlace de verdad. ▶ Y para que la atadura sirviera, el justificante tuvo que **leer** esos
 parámetros de su query firmada y llevarlos en un oculto.
 
-### 10.6 ⚠️ T5·5 · EL FLUJO FIRMAR ↔ INVITACIÓN NO ES COHERENTE — sin empezar
+### 10.6 ⚠️ T5·5 · EL FLUJO FIRMAR ↔ INVITACIÓN — C, D y un cuarto defecto HECHOS (`#704`); A es del owner
 
-Lo levantó el owner al ver la T5·3 funcionando, y **medido, tiene tres defectos y una contradicción**:
+Lo levantó el owner al ver la T5·3 funcionando, y **medido, tenía tres defectos y una contradicción** —
+más un **cuarto que destapó la pantalla** y no estaba escrito aquí (E, abajo). **C, D y E están en el
+árbol** (`DECISIONES #704`); **A sigue pendiente del owner y es lo único que bloquea cerrar la T5·5**.
 
 ##### A · El apellido obligatorio — 🔴 **PENDIENTE DEL OWNER**, no se toca sin su decisión
 
@@ -1390,18 +1393,62 @@ Las tres salidas, ninguna gratis:
 3. Que el justificante **unifique sus dos campos en uno**, como `dependents` ya hace por `#236` → lo
    coherente a largo plazo, pero toca el esquema de una prueba legal y las firmas ya emitidas.
 
-▶ Antes de decidir hay que **medir el coste de cada una**: cuántas firmas existentes afecta y qué habría
-que migrar. Esa medición es el primer paso de esta tanda.
+▶ **La medición, hecha el 18-09** (`#704`) — y **dos de los costes que esta sección daba por ciertos no
+existen**, así que la decisión se toma sobre datos y no sobre el susto:
+
+- **Unificar NO reescribe ninguna firma.** El hash se calcula con los atributos de la **propia firma**
+  (`WaiverSignature::computeHash()`), y la firma guarda `subject_name` **ya unido** (`minorFullName()`).
+  Simulada la unificación sobre la BD de desarrollo dentro de una transacción deshecha: cadenas idénticas
+  antes y después, y el **control** —alterar `subject_name`— sí rompe una. La prueba es autónoma.
+- **Unificar NO cambia la identidad del menor.** `keyFor()` ya concatena antes de normalizar: 3 filas
+  reales + 9 casos adversariales (dos apellidos, cirílico, CJK, espacios dobles, 241 caracteres) → **0
+  claves distintas**. La migración sería `minor_name = TRIM(CONCAT(…))`, ensanchando a 255.
+- **La API no parte el nombre**: `GuardianRoster` publica `minor` entero → **no toca el contrato**.
+- ❗ **«Como `dependents` ya hace por `#236`» era FALSO**: `#236` decidió lo contrario —«campo aparte para
+  los apellidos, no "nombre y apellidos" en una casilla»— y `dependents` tiene dos columnas, con la API
+  exigiendo las dos. Unificar aquí **revierte la FORMA de `#236`** en esta pantalla (no su objetivo).
+- **Superficie de la salida 3**: 6 ficheros de código + 1 migración + 3 rótulos + 12 de test (23 sitios).
+- ⚠️ **Lo que la unificación se lleva y hay que reponer**: hoy las dos casillas `required` **garantizan
+  que hay apellidos**; una sola casilla con `required` acepta «Hugo». Repondría la garantía una regla de
+  «al menos dos palabras», que además habría que igualar en la invitación (hoy `min:1`) — y que dejaría
+  fuera un nombre mononímico.
+- **Sin medir**: cuántas firmas hay **en producción**. Desde esta máquina no hay acceso; el número no
+  cambia el coste (ninguna fila se reescribe), solo el susto.
+
+▶ **Salida añadida por la medición, la más barata**: *quitar el prerrelleno* — el justificante se queda
+como está y la invitación deja de mandar el nombre (2 líneas, sin migración, `#236` intacto). Cuesta que
+el padre escriba dos veces el nombre de su hijo, y **no arregla la causa**: el producto sigue pidiendo el
+mismo nombre con dos formas distintas.
 
 ##### B · ✅ Hecho en la T5·3: «voy con él» ya no enseña el botón de firmar.
 
-##### C · El recibo no sabe si ese niño YA tiene justificante
-Le sigue ofreciendo firmar a quien ya firmó. Hace falta preguntarlo — y ⚠️ **por el contrato**, porque
-las firmas son de Identity y el recibo es de Booking.
+##### C · ✅ Hecho (`#704`) · El recibo ya sabe si ese niño tiene justificante
+Le ofrecía firmar a quien ya había firmado. Ahora lo pregunta **por el contrato**
+`Booking\Contracts\SignedInvitationReplies` —las firmas son de Identity y el recibo es de Booking—, que
+implementa `GuardianPlaces`: la misma frontera, el mismo implementador y el mismo composition root que
+`#444`. **Responde por la ATADURA de `#576`, nunca por el nombre** (`#328`), así que es un hecho y no un
+parecido; y **falla por el lado seguro**: de un justificante firmado por el enlace del correo dice `false`
+—no hay atadura—, se vuelve a ofrecer y el duplicado lo para «un niño, un papel».
 
-##### D · Tras firmar, el padre NO vuelve a su invitación
-`backUrl()` le devuelve al justificante, así que se queda mirando la misma hoja que acaba de enviar. El
-flujo no se cierra.
+##### D · ✅ Hecho (`#704`) · Tras firmar, el padre vuelve a SU recibo
+`backUrl()` le devolvía al justificante, así que se quedaba mirando la misma hoja que acababa de enviar.
+Ahora vuelve al recibo y allí lee que ya está firmado (es C, del otro lado).
+
+⚠️⚠️ **La vuelta se decide por la FIRMA de la URL, nunca por el cuerpo.** El recibo abre los datos de un
+menor durante dos horas: emitirlo a partir del `invitation_reply_id` que manda el navegador le daría a
+cualquiera con un enlace de firma el recibo del hijo de otro. Por eso los extras viajan ahora **también
+en la firma del POST**, y el recibo solo se emite desde ahí y **solo para una respuesta de esa reserva**.
+
+##### E · ✅ Hecho (`#704`) · El camino de ERROR perdía la atadura — y no estaba en esta lista
+Lo destapó caminar la pantalla, no leerla: la vuelta de un formulario **rechazado** se componía sin los
+extras firmados, así que el segundo intento **ya no iba atado a la respuesta**, cobraba plaza y con la
+lista llena acababa en «no quedan plazas» — exactamente el fallo que `#576` existe para impedir.
+▶ Es el defecto más caro de los cuatro y el único que nadie había visto. *Una costura se prueba andándola.*
+
+##### Lo que queda de la T5·5
+**Solo A**, que es decisión del owner. `InvitationSigningFlowTest` (5 casos) · un caso en
+`ModuleContractsTest` · arnés `scripts/mutar-flujo-invitacion.py` **7/7** · los dos estados del recibo
+vistos en navegador a 390 y 1280 px.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

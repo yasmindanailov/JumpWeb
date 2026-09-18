@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
+use App\Domain\Booking\Contracts\SignedInvitationReplies;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\Order;
@@ -94,6 +95,11 @@ class AppServiceProvider extends ServiceProvider
         // (`ModuleBoundariesTest`), así que su propio proveedor tampoco puede nombrar al
         // implementador. La capa de ENTREGA es el composition root y sí puede ver a los dos.
         $this->app->bind(ReservationPlacesTaken::class, GuardianPlaces::class);
+
+        // Y por la MISMA frontera y con el mismo implementador (`#704`, T5·5): el recibo de la
+        // invitación necesita saber si esa respuesta ya tiene justificante para no ofrecerle firmar a
+        // quien acaba de firmar. La atadura la guarda Identity (`#576`) y el recibo es de Booking.
+        $this->app->bind(SignedInvitationReplies::class, GuardianPlaces::class);
 
         // **La prueba social de la landing** (`#490`, `specs/google-reviews.md` §4.1). Hoy resuelve
         // a las opiniones PROPIAS y nada más, porque la mitad de Google todavía no existe.

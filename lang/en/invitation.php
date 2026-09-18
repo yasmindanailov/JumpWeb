@@ -87,5 +87,7 @@ return [
             'unknown' => '— Sign just in case, or sort it out at the door on the day.',
         ],
         'g3_sign' => 'Sign now',
+        'g3_signed_title' => 'Already signed',
+        'g3_signed' => 'We have your signature for this child. There is nothing else to do.',
     ],
 ];

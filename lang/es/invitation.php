@@ -113,5 +113,9 @@ return [
             'unknown' => '— Firma por si acaso, o resuélvelo en la puerta ese día.',
         ],
         'g3_sign' => 'Firmar ahora',
+        // Cuando ya hay justificante para ESTA respuesta (`#704`): se le dice que está hecho en vez de
+        // volver a pedírselo. ⚠️ BORRADOR PARA EL OWNER, como el resto de G3.
+        'g3_signed_title' => 'Ya está firmado',
+        'g3_signed' => 'Tenemos tu firma para este niño. No hace falta que hagas nada más.',
     ],
 ];

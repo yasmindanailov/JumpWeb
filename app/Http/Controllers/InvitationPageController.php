@@ -128,6 +128,10 @@ class InvitationPageController extends Controller
                     ->values()->all(),
                 'data' => (array) ($reply->data ?? []),
                 'companion' => $reply->companion,
+                // ❗ **Si ya firmó, no se le vuelve a ofrecer** (`#704`, §10.6·C). La pregunta cruza la
+                // frontera con Identity y va por contrato; el implementador responde por la ATADURA de
+                // `#576`, no por el nombre.
+                'signed' => app(PartyInvitations::class)->waiverSignedFor($reply),
                 // «Lo dejo y me voy» lleva al justificante de ESTA reserva con la respuesta atada, y
                 // el nombre del menor entero — sin partirlo en nombre y apellidos (`#236`).
                 // ⚠️⚠️ Los dos extras viajan **DENTRO** de la firma: medido, pegar un `&x=y` a una URL

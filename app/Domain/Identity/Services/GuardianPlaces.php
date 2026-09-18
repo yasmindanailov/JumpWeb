@@ -5,6 +5,7 @@ namespace App\Domain\Identity\Services;
 use App\Domain\Booking\Contracts\AuthorizableReservation;
 use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
+use App\Domain\Booking\Contracts\SignedInvitationReplies;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
 
@@ -39,8 +40,13 @@ use App\Domain\Identity\Models\GuardianAuthorization;
  * que Booking pregunta lo mismo sin poder mirar a Identity: es uno de los dos suelos de una bajada de
  * invitados desde el post-formulario. La frontera no cambia —sigue siendo Identity quien sabe de
  * menores—; lo que se publica es la RESPUESTA, no la consulta.
+ *
+ * ▶ **Y desde `#704`, también el de {@see SignedInvitationReplies}**, que es la MISMA pregunta que hace
+ * {@see committedGuests()} —«¿esta respuesta ya tiene justificante atado?»— vista de una en una. Va
+ * aquí y no en una clase nueva justamente por eso: dos dueños del mismo hecho acaban discrepando, y
+ * este es el sitio donde las dos mitades ya coexistían.
  */
-final class GuardianPlaces implements ReservationPlacesTaken
+final class GuardianPlaces implements ReservationPlacesTaken, SignedInvitationReplies
 {
     public function __construct(private readonly PartyGuests $guests) {}
 
@@ -94,6 +100,21 @@ final class GuardianPlaces implements ReservationPlacesTaken
             ->all();
 
         return count(array_diff($ids, $signed));
+    }
+
+    /**
+     * ¿Esa respuesta de la invitación ya tiene justificante atado? (`#704`, §10.6·C)
+     *
+     * ⚠️ **Por la ATADURA y no por el nombre**: la firma que nace desde el recibo guarda de qué
+     * respuesta viene, así que esto es un hecho. Comparar nombres es lo que `#328` descartó.
+     *
+     * ⚠️ No se acota a una reserva a propósito: `invitation_reply_id` apunta a UNA respuesta, que
+     * pertenece a una sola reserva. Pedir además el id de la reserva daría dos fuentes para el mismo
+     * vínculo y una de las dos podría mentir.
+     */
+    public function isReplySigned(int $replyId): bool
+    {
+        return GuardianAuthorization::query()->where('invitation_reply_id', $replyId)->exists();
     }
 
     /**

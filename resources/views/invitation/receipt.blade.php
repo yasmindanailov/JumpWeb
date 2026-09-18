@@ -112,10 +112,22 @@
                         </div>
 
                         {{-- El salto al justificante, con la respuesta ATADA: esa firma no descuenta
-                             plaza porque la plaza ya tiene dueño (§4.5·7, `#576`). --}}
-                        <a class="btn btn--ghost invitation__go" href="{{ $waiverUrl }}">
-                            {{ __('invitation.receipt.g3_sign') }}
-                        </a>
+                             plaza porque la plaza ya tiene dueño (§4.5·7, `#576`).
+                             ❗ **Y solo si NO está firmado** (`#704`, §10.6·C): ofrecerle firmar a quien
+                             acaba de firmar le hace dudar de si le sirvió. Lo decide el servidor, que es
+                             quien lo sabe; el CSS solo esconde el botón con «voy con él» (D4). --}}
+                        @if ($signed)
+                            {{-- La pieza que esta misma página ya usa para «guardado»: el aviso del
+                                 molde, en su tono de acierto. No nace una clase para un párrafo. --}}
+                            <div class="gf-notice gf-notice--ok" role="status" data-receipt-signed>
+                                <p class="gf-notice__title">{{ __('invitation.receipt.g3_signed_title') }}</p>
+                                <p class="gf-notice__text">{{ __('invitation.receipt.g3_signed') }}</p>
+                            </div>
+                        @else
+                            <a class="btn btn--ghost invitation__go" href="{{ $waiverUrl }}">
+                                {{ __('invitation.receipt.g3_sign') }}
+                            </a>
+                        @endif
                     </div>
 
                     <div class="invitation__answers">
