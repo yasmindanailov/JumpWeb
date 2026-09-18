@@ -154,6 +154,11 @@ Nuevos en F5: horario con estado en vivo y festivos; documentos legales por clav
 única pieza que obliga al visitante a pedir algo a Google). Fuente de reseñas: la de hoy en F5; Business Profile
 (T1 y T2 de `specs/google-business-profile.md`) después, sobre el mismo contrato `SocialProof`.
 
+`[DECIDIDO owner]` 2026-09-18 (`#631`): la API pública es un **MENÚ DE HECHOS y todo es opcional** para quien
+diseña la landing. El menú crece: **identidad y contacto van por API** (`site`), más `prices`, `policies` y la
+ficha de producto (título y descripción). El widget flotante de ofertas se RETIRA (en §4.3, Offers ya se iba):
+«oferta» pasa a ser un hecho de precio. Principio, forma y estándar: `specs/cajon-empaquetable.md` §4.6.
+
 ### 4.5 Login por token (F4)
 
 Esquema Bearer en el contrato; endpoints para emitir y revocar con los mismos limitadores que el login;

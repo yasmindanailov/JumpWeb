@@ -1,7 +1,7 @@
 # [SPEC] Login por token — el emisor de Bearer de la API v1 (F4 del programa)
 
-> Estado: ⬜ **borrador, pendiente de revisión del owner** · Última actualización: 2026-09-18 ·
-> Decisión asociada: `#63x` de la banda de plataforma al aprobarse · Carril: **plataforma**.
+> Estado: ✅ **aprobada el 2026-09-18** (`DECISIONES #630`: el owner delega lo técnico en el estándar profesional;
+> duración = opción B) → **a implementar** · Última actualización: 2026-09-18 · Carril: **plataforma**.
 > Origen: `specs/producto-e-instancias.md` §4.5 (F4) y `specs/api-v1.md` §4.2, que aplazó la EMISIÓN (`#29`).
 > Hermana: `specs/cajon-empaquetable.md` (la otra mitad de F4). Sube el contrato a **1.1.0**.
 
@@ -72,7 +72,7 @@ basta «cerrar las demás» (`me/sessions/revoke-others`); (d) **el desenlace de
 | Verificar credenciales | Un método nuevo en `PasswordLogin` que comparte el núcleo (limitadores + comprobación) con `attempt()` | Llamar a `attempt()`: abre sesión en un guard sin sesión arrancada y encola la cookie `remember`. Copiar los limitadores al controlador: el defecto exacto de `SEC-06` |
 | Revocar el propio | `POST auth/logout`, que ya lo hace | Un `DELETE auth/tokens/current` nuevo: dos puertas para lo mismo |
 | Abilities | Una, `api-v1`, exigida en el grupo autenticado | `['*']`: el día que exista una superficie privilegiada, los tokens de la app ya emitidos la abrirían. Sin comprobarla: una ability que nadie mira no es una guarda |
-| Duración | **`[PENDIENTE: owner]`** — ver §4.4 | — |
+| Duración | 30 días con rotación (§4.4, `#630`) | 30 días sin rotación; 180 días: ver §4.4 |
 | Tope por cuenta | 10 tokens vivos; el 11.º retira el de `last_used_at` más antiguo | Sin tope: quien tiene la contraseña llena la tabla; con tope que RECHAZA: un móvil nuevo no entra hasta que caduque otro |
 
 ## 4. Diseño elegido
@@ -84,7 +84,8 @@ basta «cerrar las demás» (`me/sessions/revoke-others`); (d) **el desenlace de
   códigos y sobre que `auth/login`. La respuesta lleva `Cache-Control: no-store` explícito: es pública para el
   middleware (`NoStoreWhenAuthenticated` no la ve) y transporta una credencial.
 - `bearerAuth`: se corrige la descripción (hoy cita «paso 3»). `auth/logout` documenta que con Bearer revoca ESE token.
-- Si el owner elige rotación (§4.4): **`POST /auth/tokens/rotate`** · `bearerAuth` · 201 con la misma forma.
+- **`POST /auth/tokens/rotate`** (§4.4) · solo `bearerAuth` (con cookie → 409: no hay token que rotar) · 201 con
+  la misma forma · `throttle:6,1` por token.
 
 ### 4.2 Dominio (`Identity`)
 - `PasswordLogin` gana **`verify(email, password, ip): LoginResult`**: mismos limitadores, mismas claves
@@ -100,12 +101,14 @@ basta «cerrar las demás» (`me/sessions/revoke-others`); (d) **el desenlace de
 - Grupo autenticado de `routes/api.php`: gana `abilities:api-v1`. Con cookie, Sanctum usa un `TransientToken`
   que responde `true` a todo: la SPA no nota nada (se prueba).
 
-### 4.4 Duración — `[PENDIENTE: owner]`, tres opciones
-- **A · 30 días y fuera** (lo que hay configurado): la app pide contraseña una vez al mes aunque se use a diario.
-- **B · 30 días con rotación** (recomendada): la app cambia su token por uno nuevo al arrancar si tiene más de
-  7 días; quien la usa no vuelve a teclear la contraseña y un token olvidado muere a los 30 días. Un token
-  robado que rota expulsa al dueño, que al volver a entrar puede «cerrar las demás».
-- **C · 180 días sin rotación**: lo más cómodo y lo que más tiempo deja vivo un token perdido.
+### 4.4 Duración — `[DECIDIDO]` 2026-09-18 (`#630`): **B · 30 días con rotación**
+La app cambia su token por uno nuevo al arrancar si tiene más de 7 días (`POST /auth/tokens/rotate`: emite el
+nuevo con el mismo `device_name` y revoca el de la petición, en una transacción); quien la usa no vuelve a
+teclear la contraseña y un token olvidado muere a los 30 días. Un token robado que rota expulsa al dueño, que al
+volver a entrar puede «cerrar las demás». La rotación NO pasa por los limitadores del login (no hay contraseña
+que adivinar) pero sí por uno propio por token (6/min).
+**Descartadas**: A · 30 días y fuera (la app pide la contraseña cada mes aunque se use a diario); C · 180 días
+sin rotación (lo más cómodo y lo que más tiempo deja vivo un token perdido).
 
 ## 5. Impacto en invariantes
 
@@ -128,7 +131,9 @@ basta «cerrar las demás» (`me/sessions/revoke-others`); (d) **el desenlace de
 
 ## 7. Revisión y decisión
 
-Pendiente. El owner decide §4.4 y revisa §0 y §4. Al aprobarse: `/decision`, estado ✅ y casilla en el tracker.
+**Aprobada el 2026-09-18** (`#630`). El owner, tras leer el resumen del diseño: *«las decisiones técnicas acepto
+tu recomendación basándote en el estándar profesional»*; §4.4 queda en B. Lo que afecte al TIPO de producto se le
+sigue llevando con opciones. Implementa el carril de plataforma en el orden de §0.
 
 ## Anexo · fila del enrutador
 

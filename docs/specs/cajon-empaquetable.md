@@ -1,8 +1,8 @@
 # [SPEC] El cajón empaquetable — del layout del producto a un paquete con contrato (F4 del programa)
 
-> Estado: ⬜ **borrador INCOMPLETO a propósito**: §1–§3 y §4.1–§4.4 escritos; **§4.5 y §4.6 se iteran con el
-> owner** (qué consume el cajón del servidor al arrancar y qué consume la landing independiente del panel y de
-> la API) · Última actualización: 2026-09-18 · Decisión asociada: `#63x` al aprobarse.
+> Estado: 🟦 **en revisión**: lo técnico decidido (`DECISIONES #631`: el owner lo delega en el estándar
+> profesional); **abiertas tres opciones de PRODUCTO de §4.6** (P1–P3, del owner) y la lectura del carril del
+> SPA, que es quien implementa · Última actualización: 2026-09-18.
 > Carriles: diseño **plataforma**; implementación **SPA** (`resources/js/sidebar/**`, `public/css/site.css`) con
 > plataforma en el anfitrión y la API. Origen: `specs/producto-e-instancias.md` §4.2. Hermana: `specs/token-bearer.md`.
 
@@ -21,8 +21,10 @@
 - **Trampas que aplican**: tras tocar un `.vue`, `npm run build:ssr` antes de la suite; el contrato visual es el
   ÁRBOL (`specs/sidebar-spa.md` §4.2); `route('logout')` aparece UNA vez y es el suelo del hueco de cuenta
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo (285).
-- **Estado**: borrador. NO se escribe código hasta cerrar §4.5 y §4.6 con el owner y revisar §4.
-- **Empieza por** §1 (el censo) → §4.1 (la forma del paquete) → §4.5 (lo abierto).
+- **La landing consume un MENÚ DE HECHOS y todo es opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende
+  de que la landing lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
+- **Estado**: en revisión. NO se escribe código del cajón hasta que el SPA lea §1 y §4; P1–P3 son del owner.
+- **Empieza por** §1 (el censo) → §4.1 (la forma del paquete) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
 
@@ -100,17 +102,58 @@ propia (verificar correo, restablecer contraseña, errores, mantenimiento): resp
 puertas SIGUEN sirviendo la portada; el anfitrión entra en F5, cuando la portada se va. `login` no es opcional: es
 el destino del middleware `auth`.
 
-### 4.5 El arranque — ⏸ SE ITERA CON EL OWNER
-Hoy Blade pinta las 9 claves del `data-boot` en cada página. Una landing a mano no puede. Hay que decidir de dónde
-saca el cajón: los **rótulos** (16 KB por idioma), las **URLs** (legales, condiciones), **quién es el titular** y su
-contexto, y el **desenlace de un pago pendiente** (vive en sesión y se consume una vez).
+### 4.5 El arranque — `[DECIDIDO]` 2026-09-18 (`#631`): dos lecturas, una pública y una privada
+Hoy Blade pinta las 9 claves del `data-boot` en cada página; una landing a mano no puede. El cargador las pide:
+- **Pública y cacheable** — `GET /api/v1/cajon/boot` (futuro), por idioma: `messages`, `ui`, `account`, `auth` y
+  `urls` (18,3 de los 18,7 KB). `Cache-Control: public` + `ETag` + `Vary: Accept-Language`; cambia solo al desplegar.
+- **Privada, `no-store`** — `GET /api/v1/cajon/session` (futuro): `userId`, `accountContext`, y `outcome` +
+  `orderCode` **consumidos al leerlos** (`SidebarEntry::consume()` ya es de un solo uso). Se pide al ABRIR, no al
+  cargar la página: una landing estática no gasta una petición por visita.
+- «¿Abrir al cargar?» (`data-purchase-open`, `data-account-zone`): en las puertas lo sabe la RUTA, y el anfitrión
+  lo declara con atributos; tras volver de Redsys se aterriza en una ruta del producto, que ya lo sabe.
+**Descartado**: un cargador que el producto sirve con todo incrustado por petición — no se cachea, y lleva estado
+de sesión dentro de un guion, que es lo que `RGPD-04` pide no hacer.
 
-### 4.6 Lo que consume la landing independiente — ⏸ SE ITERA CON EL OWNER
-Del panel y de la API. Base: el censo de §1 y `specs/producto-e-instancias.md` §4.3 y §4.4.
+### 4.6 Lo que consume la landing independiente — EL MENÚ DE HECHOS (`#631`; tres opciones de producto abiertas)
+**Principio `[DECIDIDO owner]` 2026-09-18**: *todo lo que la landing pueda consumir es OPCIONAL*; cada cliente
+diseña la suya y usa lo que quiera, o nada. Consecuencias de diseño:
+1. **El cajón no depende de que la landing consuma nada**: lee lo suyo (§4.5). Lo único que el producto
+   GARANTIZA es lo que pasa dentro del cajón; el precio que manda es el del checkout.
+2. **Criterio de entrada al menú**: un dato entra si el negocio lo OPERA desde el panel (lo usan el cajón, los
+   correos, la puerta o la factura) y equivocarlo en la web perjudica al cliente. Lo que solo se ENSEÑA
+   (titulares, dudas, galería, testimonios a mano) es de la instancia y no vive en el panel.
+3. **Un solo modelo de lectura, dos transportes**: cada recurso público es un servicio de lectura de dominio +
+   su `Resource`. Por HTTP es la API; en la vía B (la instancia como vistas que renderiza el producto) la vista
+   recibe ESE MISMO payload. Pasar a vía A es cambiar el transporte, no los datos.
+
+**El menú** (todo GET, público, por idioma; «hoy» = ya existe):
+| Recurso | Contenido | Hoy |
+|---|---|---|
+| `site` | identidad (nombre comercial y fiscal), contacto, dirección y coordenadas, redes, idiomas, moneda, zona horaria — `[DECIDIDO owner]`: van por API | no |
+| `hours` | horario por temporada, fechas especiales y festivos, «abierto ahora» | no |
+| `catalog/products`, `catalog/zones` | nombre, chapa, ventajas, regalos, «desde», periodo, zona — **falta** `slug`, `description` y el precio de antes | sí, parcial |
+| `prices` | la rejilla de tarifas por tipo de día (lo que pinta `/precios`) | no |
+| `rules`, `legal/{clave}`, `policies` | normas, los cinco documentos legales, políticas (cancelación, menores) | solo `legal/waiver` |
+| `social-proof` | valoración, recuento, reseñas sin avatares (`RGPD-05`) | no |
+| `booking/status` | ventas abiertas o en pausa, con su mensaje | sí |
+
+**Estándar que fija el diseño** (técnico, decidido): (a) **lista blanca por `Resource`, jamás un volcado de
+ajustes** — medido: la tabla `settings` mezcla `business`, `contact` y `address` con `redsys_secret_key`; una
+guarda impedirá que un recurso público lea una clave fuera de su lista; (b) **caché**: hoy la API pública
+responde `no-cache, private`; el menú irá con `public, max-age` corto + `ETag`, invalidado al guardar en el panel
+(`PERF-02`); (c) limitador propio para lectura (hoy 60/min por IP: una landing renderizada en servidor lo agota);
+(d) dinero en céntimos + moneda, fechas ISO con la zona de la instalación; (e) `was_price_cents` lo alimenta hoy
+la promo `#628` y mañana el sistema de ofertas: misma forma; (f) `site` basta para componer el `LocalBusiness`.
+**`[DECIDIDO owner]`**: el widget flotante de ofertas (imágenes y texto) se RETIRA; «oferta» pasa a ser un HECHO de precio.
+
+**Abierto — tres opciones de PRODUCTO, las elige el owner** (P1 ficha de producto con descripción e imagen en el
+panel · P2 API sola o también un kit declarativo para quien diseña · P3 atracciones: fuera o como hechos mínimos).
+El alcance fino de cada recurso se escribe en la spec de F5; aquí queda el principio y la forma.
 
 ## 5. Impacto en invariantes
-Pendiente de §4.5: si el arranque pasa a un endpoint, entran `RGPD-04` (`no-store` con titular), `PERF-02` (caché
-de los rótulos) y `SEC-01`. `AFORO-*` y `PAY-*`: ninguno previsto; el desenlace del pago se LEE, no se decide.
+`RGPD-04`: `cajon/session` es `no-store` (lleva titular). `PERF-02`: `cajon/boot` y el menú van con caché pública
+y `ETag`. `SEC-01`: rutas nuevas dentro del grupo `api`. `RGPD-05`: prueba social sin avatares. Guarda NUEVA: ningún
+recurso público lee un ajuste fuera de su lista blanca. `AFORO-*` y `PAY-*`: ninguno; el desenlace del pago se LEE.
 
 ## 6. Plan de verificación empírica
 - `/sonda`: una página HTML estática servida en local que monta el cajón, lo abre por las tres vías y compra.
@@ -119,7 +162,9 @@ de los rótulos) y `SEC-01`. `AFORO-*` y `PAY-*`: ninguno previsto; el desenlace
   contra el paquete. Mutación: quitar un bloque compartido de la hoja del paquete tiene que poner rojo el trinquete de §4.3.
 
 ## 7. Revisión y decisión
-Pendiente. Se completa §4.5 y §4.6 con el owner; después revisa el carril del SPA (es quien implementa).
+**2026-09-18, con el owner** (`#631`): lo técnico, por el estándar profesional (§4.5 y el estándar de §4.6);
+suyo y decidido: todo lo consumible es OPCIONAL, identidad y contacto van por API, el widget de ofertas se retira,
+y el menú crece (ficha de producto). Abierto: P1–P3. Después revisa el carril del SPA (es quien implementa).
 
 ## Anexo · fila del enrutador
 

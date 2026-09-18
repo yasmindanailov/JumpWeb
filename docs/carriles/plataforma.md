@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#629`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#631`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (mapa de frases y ESLint).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -35,17 +35,23 @@
   Las dos con trinquete en `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` **20/20**. Medido antes:
   los otros dos juegos de Vue dan los mismos 12 errores y +4.364 avisos de formato. **El primer día cazó un
   defecto VIVO del SPA** (`addBtn` sin declarar en `DependentsZone.vue`), avisado en el buzón.
-- **F4 ABIERTA (18-09), en DISEÑO, cero código**: dos specs en ⬜ borrador, con su censo medido.
-  `specs/token-bearer.md` COMPLETA: casi todo existe desde la Fase 3 (Sanctum, caducidad 30 d, poda, revocación
+- **Regla de trabajo del owner desde `#630`**: lo TÉCNICO lo decide el agente por el estándar profesional y lo
+  justifica con medida; lo que afecte al TIPO DE PRODUCTO se le lleva con opciones, la recomendada primero.
+- **F4 ABIERTA (18-09), en DISEÑO, cero código**, con su censo medido. `specs/token-bearer.md` **✅ APROBADA
+  (`#630`, duración B: 30 d con rotación) → lo siguiente que se implementa**. `specs/cajon-empaquetable.md` 🟦
+  (`#631`): arranque en dos lecturas (`cajon/boot` pública y cacheable, `cajon/session` privada y `no-store`) y
+  **la landing consume un MENÚ DE HECHOS donde TODO es opcional** (`[DECIDIDO owner]`: identidad y contacto por
+  API, ficha de producto, el widget flotante de ofertas se RETIRA); estándar: lista blanca por `Resource` (la
+  tabla `settings` mezcla `contact` con `redsys_secret_key`), caché pública con `ETag` (hoy `no-cache, private`),
+  un modelo de lectura con dos transportes. **Abiertas P1–P3 del owner** (ficha con imagen en el panel · API sola
+  o kit declarativo · atracciones fuera o como hechos mínimos) y la lectura del SPA. Del censo del token: casi todo existe desde la Fase 3 (Sanctum, caducidad 30 d, poda, revocación
   por 5 vías, `bearerAuth` en el contrato, 35/55 rutas tras `auth:sanctum`); falta el emisor `POST /auth/tokens`,
   un `PasswordLogin::verify()` SIN sesión que comparta los dos limitadores (`attempt()` usa `Auth::attempt()`
   sobre el guard de sesión: el emisor no puede llamarlo), la ability `api-v1` (hoy nadie mira abilities) y el
-  tope de 10 por cuenta; **el owner decide la duración (§4.4, recomendada B: 30 d con rotación)**.
-  `specs/cajon-empaquetable.md` INCOMPLETA a propósito: el censo desmiente «una línea del layout» (son DIEZ
-  dependencias: carcasa Blade, store de Alpine que llega DENTRO de Livewire, `data-boot` de 18,7 KB, hoja de
-  549 KB compartida con 10 bloques definidos en las DOS hojas, tokens de otra hoja, 8 puertas); §4.1–§4.4
-  escritos; **§4.5 (el arranque) y §4.6 (qué consume la landing independiente) se iteran con el owner**, que
-  pidió parar ahí. El enrutador quedó a 7 bytes del techo: la próxima fila exige acortar otra.
+  tope de 10 por cuenta. Del censo del cajón: «una línea del layout» era falso (son DIEZ dependencias: carcasa
+  Blade, store de Alpine que llega DENTRO de Livewire, `data-boot` de 18,7 KB, hoja de 549 KB compartida con 10
+  bloques definidos en las DOS hojas, tokens de otra hoja, 8 puertas). El enrutador quedó a 7 bytes del techo:
+  la próxima fila exige acortar otra.
 - **`#627`** `[DECIDIDO owner]`: la app en **React Native + Expo, TypeScript**; la prueba corta de F6 confirma,
   no compara (`#612` marcada).
 - **`#628` · la promo «−20 % online», chapuza declarada y EN PRODUCCIÓN ENTERA**: el 17-09 a las 22:35 las 9
@@ -82,10 +88,12 @@
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día** (si no, el tachado miente). Sin desplegar. Y el **sistema de ofertas** cuando
    lo pida: `/spec` desde `archivo/promo-precio-anterior.md` §1 y §3.
-4. **F4, en curso**: (a) cerrar con el owner §4.5 y §4.6 de `specs/cajon-empaquetable.md` y su decisión de §4.4
-   en `specs/token-bearer.md`; (b) aprobadas, `/decision` (`#630`…) y estado ✅; (c) el token lo implementa ESTE
-   carril en el orden de su §0 (contrato → `verify()` → controlador → tests → `scripts/mutar-token-bearer.sh`);
-   (d) el cajón lo implementa el SPA contra su spec, con la huella de maquetación 24/24 como juez.
+4. **F4, en curso**: (a) **IMPLEMENTAR EL TOKEN** (`specs/token-bearer.md` ✅, `#630`), en el orden de su §0:
+   contrato 1.1.0 → `PasswordLogin::verify()` con núcleo compartido → `ApiTokenIssuer` → `AuthTokenController`
+   (emitir y rotar) → `abilities:api-v1` en el grupo → `AuthTokenTest` + las cinco vías de revocación con un token
+   REAL → `scripts/mutar-token-bearer.sh` → `CHANGELOG.md`; (b) recoger P1–P3 del owner y cerrarlas en §4.6 de
+   `specs/cajon-empaquetable.md`; (c) leer la respuesta del SPA a esa spec y pasarla a ✅; (d) el cajón lo
+   implementa el SPA, con la huella de maquetación 24/24 como juez; `cajon/boot` y `cajon/session` son de ESTE carril.
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes»; propuesta guardada: un
    `tokens.json` en la instancia del que salgan `client.css` y el tema de la app —se reutilizan los 65 tokens,
    fuentes, logo, kit y textos; no el CSS ni los componentes Vue—) → F6 (app nativa, spec con la pila `#627`).
