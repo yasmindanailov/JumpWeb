@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\AuthorizableReservation;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\GuardianAuthorization;
@@ -15,9 +16,10 @@ use App\Domain\Identity\Models\GuardianAuthorization;
  * cargo suyo y además marcó que venía un menor invitado. La pantalla decía *«0 justificantes
  * firmados · 3 plazas»* de una línea cuya única plaza ya tenía dueño.
  *
- * La cuenta es de una línea y de tres sumandos:
+ * La cuenta es de una línea, y desde `#576` de cuatro sumandos:
  *
  *     libres = cantidad − menores a cargo YA asignados − justificantes YA firmados
+ *                       − «sí» de la invitación digital que aún no han firmado
  *
  * ⚠️⚠️ **Vive en Identity y no en el contrato de Booking, y no es una preferencia**: la cantidad la
  * sabe Booking y los menores a cargo los sabe Identity — **Booking no puede mirar a Identity**
@@ -32,8 +34,7 @@ use App\Domain\Identity\Models\GuardianAuthorization;
  * suponer lo primero cerraría la puerta a quien tiene derecho a firmar. **La cota es superior a
  * propósito**: el tope existe para que nadie autorice a más gente de la que se ha comprado, no para
  * adivinar la composición del grupo.
- */
-/**
+ *
  * ▶ **Y desde `#444` es además el implementador de {@see ReservationPlacesTaken}**, el contrato por el
  * que Booking pregunta lo mismo sin poder mirar a Identity: es uno de los dos suelos de una bajada de
  * invitados desde el post-formulario. La frontera no cambia —sigue siendo Identity quien sabe de
@@ -41,16 +42,58 @@ use App\Domain\Identity\Models\GuardianAuthorization;
  */
 final class GuardianPlaces implements ReservationPlacesTaken
 {
+    public function __construct(private readonly PartyGuests $guests) {}
+
     /** Plazas de la reserva que todavía podrían recibir un menor invitado. Nunca negativo. */
     public function freeIn(AuthorizableReservation $reservation): int
     {
         return max(0, $reservation->quantity - $this->takenIn($reservation->reservationId));
     }
 
-    /** Lo que ya tiene dueño en esa reserva: menores a cargo asignados + justificantes firmados. */
+    /**
+     * Lo que ya tiene dueño en esa reserva: menores a cargo asignados + justificantes firmados **+ los
+     * «sí» de la invitación digital que todavía no tienen justificante** (V4,
+     * `specs/celebracion-e-invitacion.md` §4.5·8, `DECISIONES #576`).
+     *
+     * ⚠️ El tercer sumando entra para que **el suelo de `#444` proteja a un niño que confirmó**: sin él,
+     * el anfitrión podría bajar los invitados por debajo de los «sí» que ya tiene y dejar fuera a quien
+     * le había dicho que venía, sin que nada avisara.
+     */
     public function takenIn(int $reservationId): int
     {
-        return $this->assignedDependents($reservationId) + $this->authorizations($reservationId);
+        return $this->assignedDependents($reservationId)
+            + $this->authorizations($reservationId)
+            + $this->committedGuests($reservationId);
+    }
+
+    /**
+     * Los «sí» vivos que **todavía no tienen justificante atado**.
+     *
+     * ⚠️⚠️ **La resta se hace AQUÍ y no en Booking, y es la razón de que el contrato devuelva ids.** Las
+     * respuestas las sabe Booking y las firmas las sabe Identity: éste es el único sitio donde las dos
+     * mitades coexisten — exactamente el motivo por el que esta clase existe desde `#401`. Si no se
+     * restaran, un niño que dijo «sí» **y** firmó ocuparía dos plazas del suelo.
+     *
+     * ⚠️ **Lo que sí cuenta dos veces, declarado** (§4.5·8): un justificante SUELTO de un niño que
+     * además dijo «sí» — porque su firma no viene atada a la respuesta y no hay forma de saber que son
+     * el mismo niño sin comparar nombres, que es justo lo que `#328` decidió no hacer. El suelo sale
+     * alto, que es el lado seguro: protege de más, nunca de menos.
+     */
+    public function committedGuests(int $reservationId): int
+    {
+        $ids = $this->guests->committedReplyIdsIn($reservationId);
+        if ($ids === []) {
+            return 0;
+        }
+
+        $signed = GuardianAuthorization::query()
+            ->where('order_item_id', $reservationId)
+            ->whereIn('invitation_reply_id', $ids)
+            ->pluck('invitation_reply_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        return count(array_diff($ids, $signed));
     }
 
     /**

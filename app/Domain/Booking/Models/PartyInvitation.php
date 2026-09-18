@@ -89,6 +89,25 @@ class PartyInvitation extends Model
         return Str::random(self::TOKEN_LENGTH);
     }
 
+    /**
+     * **Anula el enlace repartido** (§4.5·11, `#576`): emite un token nuevo, y con eso el anterior deja
+     * de abrir. Lo hace el OPERADOR desde el panel; el anfitrión no, en esta versión.
+     *
+     * ⚠️ **Rotar retira una credencial, NO deshace una gestión**, igual que `rotateGuestFormLink()`: lo
+     * que los padres ya contestaron sigue ahí. Quitar una respuesta es otro gesto («no lo apuntes»).
+     *
+     * ⚠️ Es la única palanca de revocación que tiene este enlace. La caducidad la marca la reserva
+     * (`RGPD-03`), pero un enlace repartido a un grupo de clase entero necesita poder cerrarse **antes**
+     * —y sin tocar el resto de la fiesta—.
+     */
+    public function rotateToken(): string
+    {
+        $token = self::freshToken();
+        $this->forceFill(['token' => $token])->save();
+
+        return $token;
+    }
+
     /** El tema saneado contra la lista cerrada. Desconocido o ausente → el del producto. */
     public function safeTheme(): string
     {

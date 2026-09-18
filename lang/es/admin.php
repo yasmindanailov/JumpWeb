@@ -1066,6 +1066,8 @@ return [
                     'guest_form_link_rotate_blocked' => 'Rotación del enlace bloqueada',
                     'guest_form_submitted' => 'Formulario de invitados enviado',
                     'invitation_reply_received' => 'Respuesta recibida en la invitación',
+                    'invitation_link_rotated' => 'Enlace de la invitación anulado',
+                    'invitation_link_rotate_blocked' => 'Anulación del enlace bloqueada',
                     // `#440` · el teléfono del cliente en el mostrador. El primero es el rastro de que
                     // se vendió sin él —que se avisa pero NO se bloquea, `[DECIDIDO owner]`— y el
                     // segundo, el de que el operador lo consiguió y lo escribió.
@@ -1162,6 +1164,15 @@ return [
             'submit' => 'Rotar el enlace',
             'success' => 'Enlace rotado. Cópialo de nuevo y envíaselo al cliente.',
             'blocked' => 'No se ha podido rotar el enlace de esta reserva.',
+        ],
+
+        'rotate_invitation' => [
+            'btn_aria' => 'Anular el enlace de la invitación',
+            'modal_heading' => '¿Anular el enlace de esta invitación?',
+            'modal_description' => 'El enlace que el cliente repartió deja de funcionar en el acto, y tendrá que compartir el nuevo. Úsalo si ha circulado por donde no debía. Lo que los padres ya han contestado NO se borra.',
+            'submit' => 'Anular el enlace',
+            'success' => 'Enlace anulado. El cliente tiene que compartir el nuevo.',
+            'blocked' => 'No se ha podido anular el enlace de esta reserva.',
         ],
 
         'copy_guest_form' => [

@@ -4,7 +4,13 @@ namespace App\Domain\Booking\Contracts;
 
 /**
  * **Cuántas plazas de una reserva YA TIENEN DUEÑO** (`specs/invitados-en-post-form.md` §4.4,
- * `DECISIONES #444`): menores a cargo asignados + justificantes de menores invitados firmados.
+ * `DECISIONES #444`): menores a cargo asignados + justificantes de menores invitados firmados **+ los
+ * «sí» de la invitación digital que todavía no tienen justificante** (V4 de
+ * `specs/celebracion-e-invitacion.md` §4.5·8, `DECISIONES #576`).
+ *
+ * ▶ **El tercer sumando cambió el tope del justificante suelto**, y queda dicho aquí porque es donde se
+ * busca: una reserva con «sí» pendientes ofrece menos plazas libres al firmante que llega por su cuenta.
+ * Es deliberado — esas plazas tienen dueño— y el lado por el que se equivoca es el seguro.
  *
  * ⚠️⚠️ **Existe por una frontera, no por gusto.** La cantidad de la reserva la sabe Booking y los
  * menores los sabe Identity, y **Booking no puede mirar a Identity** (`ModuleBoundariesTest`). Por eso

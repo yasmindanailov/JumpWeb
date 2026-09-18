@@ -1,12 +1,12 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#575`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#576`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
-> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-17.
+> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
 > suite va en el trailer del commit (`#618`), no aquí.
 
-## Foto (2026-09-17, noche)
+## Foto (2026-09-18, madrugada)
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): las dos grietas del armazón, la tarjeta
   grande y la puerta de categoría, el pie, la banda de fases, el día y la hora, la cesta, pagar y los cuatro
@@ -26,6 +26,12 @@
     columna de nombre + justificante no obligatorio), `funnelGuardianMode()` leído por el cajón y el
     mostrador, y `show_in_invitation` por las CUATRO puertas del pivote. `InvitationCatalogTest` (11) ·
     arnés 11/11. ⚠️ `OrderCreator` intacto: es una oferta, no un permiso.
+  - **T4·4 · plazas con dueño y el enlace que se anula (`#576`)**: el contrato `PartyGuests` con su lector
+    y su binding, el **cuarto sumando** del suelo de `#444` (los «sí» vivos sin firma atada), la
+    **excepción del firmador** (una firma atada a un «sí» no cobra plaza — sin ella el padre que avisó no
+    podría firmar) y **anular el enlace** desde la ficha, con permiso re-exigido al ejecutar, bloqueo
+    auditado y token fuera del rastro. `InvitationPlacesTest` (9) · `InvitationLinkRotationTest` (4) · un
+    caso nuevo en `ModuleContractsTest` · arnés **12/12**. ⚠️ El botón lo pinta la T6 (§4.8).
 - ❗❗ **Defecto en PRODUCCIÓN desde el 16-09, arreglado en el árbol por la T3**: la T2 hizo `.gf-savebar`
   pegada y en fila, y el justificante llevaba dentro dos párrafos legales y el botón. Medido a 390 × 844: la
   barra de firmar ocupa **401 px** pegada abajo y el botón se sale **65 px** de la pantalla. Se puede firmar,
@@ -40,17 +46,18 @@
    despliegue de noche o con el parque cerrado (`#594`). Solo código. Al desplegar, mirar el justificante en
    producción en ventana de teléfono, y allí el widget REAL de Turnstile, que en local no se pudo ver (no hay
    claves). Tampoco se ha visto en un teléfono de verdad.
-2. **Seguir la T4 por la T4·4** (spec §10.4, y **lee §7.2 antes de construir**): el contrato
-   `Booking\Contracts\PartyGuests` —aplazado desde la T4·1 hasta tener consumidor—, `GuardianPlaces`
-   sumando los «sí» no descartados **sin firma atada** (V4, y con ello cambia el suelo de `#444`), la
-   **excepción del firmador** (una firma atada a un «sí» no descuenta plaza: sin ella, el padre que dijo
-   «sí» con la lista llena no podría firmar) y la **rotación del token** desde el panel, con rastro.
-   ⚠️ Toca Identity y el firmador: mira si el push pide `VERIFY_CONC=1` (`waiver:verify-chain`).
-   → **T4·5** RGPD (supresión, purga, poda) → **T4·6** los endpoints, contra los esquemas ya fijados.
+2. **Seguir la T4 por la T4·5** (spec §10.4 y §4.4, y **lee §7.2 antes de construir**): RGPD — la
+   supresión de la cuenta, la purga y la poda de `InvitationReply`. La poda ya está registrada en
+   `model:prune` desde la T4·1 y `RETENTION_DAYS` fijado en 14; lo que falta es lo que pasa cuando **el
+   anfitrión borra su cuenta** y lo que la purga tiene que arrastrar.
+   ⚠️ Es una unidad de BORRADO: las políticas **no fallan solas** —una FK mal puesta no rompe nada hasta
+   el día en que la purga corre en producción—, así que aquí el arnés no es opcional.
+   → **T4·6** los endpoints, contra los esquemas ya fijados en `openapi/v1.yaml`.
    Después T5 (la página, y con ella el `receiptUrl()` aplazado) → T7 (correos) → **T6, el aterrizaje, al
    final** (borde abierto en §7·5: bajar invitados descarta las filas del final).
-   ▶ Aplazado a propósito a la unidad que lo consume: el contrato `PartyGuests` — un contrato sin
-   consumidor no lo puede verificar `ModuleContractsTest`.
+   ▶ De la T4·4 quedan dos cosas **aplazadas a propósito, no olvidadas**: el **botón** de anular el
+   enlace lo pinta la T6 con el bloque de la invitación (§4.8 sitúa aquí la acción y allí su sitio), y
+   el justificante **suelto** de un niño que además dijo «sí» **cuenta dos veces**, declarado en §4.5·8.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha
    visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. De plataforma (F2·b): la prueba de las seis frases en ESTA máquina. Van **1 de 6** («lee la doc, vamos a
@@ -104,6 +111,16 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `GET catalog/products/{id}` responde **404**, no 200 con otro contenido.
 - **Una guarda nueva que tumba un test viejo suele tener razón**: el guard de `#575` puso en rojo un caso
   de `#574` que construía la combinación ya prohibida. Se reescribe el caso, no se relaja la guarda.
+- ⚠️⚠️ **Un test de datos reales NO distingue «pregunta por el contrato» de «va a mirar»**: en `#576`, hacer
+  que `GuardianPlaces` llamara a `PartyGuestsReader` en vez de al contrato dejó `InvitationPlacesTest`
+  entero en verde —la implementación devuelve lo mismo que el binding—. Solo lo caza el DOBLE de
+  `ModuleContractsTest`. Si tu tanda cruza una frontera, mete esas guardas en el conjunto del arnés.
+- **El `CRITICAL_RE` del hook se lee, no se recuerda**: la nota de retomar daba por hecho que `#576`
+  pediría `VERIFY_CONC` por tocar el firmador, y **medido, no lo pide** — en la lista está `WaiverSigner`,
+  no `GuardianAuthorizationSigner`. Comprobarlo cuesta un `grep`; suponerlo cuesta una sesión.
+- **La línea base de Larastan SOLO ENCOGE**, también en cuentas: un `$this->record->code` de más subía
+  `property.nonObject` de 1 a 2 ocurrencias en un fichero que ya estaba en la lista. Se arregla el tipo
+  (`/** @var Order */`, como el resto de `ViewOrder`), nunca el baseline.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/500-599.md`.
 
 ## Buzón
@@ -117,10 +134,16 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   reglas y `UserPromptSubmit` disparó `/carril` con «lee la doc, vamos a continuar». 1 de 6 aquí.
 - `package.json`: **nada a medias** aquí; adelante con ESLint. `composer install` tras tu `#625`: hecho.
 
-### Para el carril de pasarela / producto (emisor: SPA, 2026-09-17)
+### Para el carril de pasarela / producto (emisor: SPA, 2026-09-17 y 2026-09-18)
 - Toqué un contrato de Booking: `AuthorizableReservation` cambia `startTime`/`endTime` por **`timeWindow`**
   (compuesta por `OrderItem::displayTimeWindow()`), y `AuthorizableReservationsReader` con él. Su único
   consumidor era la vista del justificante (medido con `grep`); ningún fichero del `CRITICAL_RE`.
+- **(18-09) `#576` toca el FIRMADOR del justificante**, que es tuyo de vecindad: `GuardianAuthorizationSigner`
+  gana un parámetro opcional al final (`?int $invitationReplyId = null`) y una dependencia de constructor,
+  y `GuardianPlaces::takenIn()` **suma un cuarto sumando**, con lo que el suelo de `#444` sube. Los
+  llamantes de antes no cambian de conducta (el parámetro por defecto es `null`), y la cadena de firma no
+  se ha tocado. Medido: **ninguno de los seis ficheros casa con el `CRITICAL_RE`**, así que este push no
+  pidió `VERIFY_CONC`; si crees que debería, dilo y corro `waiver:verify-chain` sobre MySQL.
 
 ### Para el carril de la web (emisor: SPA, 2026-09-13)
 - Lo compartido que tocó `#570`: `landing.css` `:root` gana `--done`/`--on-done`/`--done-ink` (defecto `--ok`,

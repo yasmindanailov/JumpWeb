@@ -200,6 +200,11 @@ class GuardianAuthorizationController extends Controller
                     'guardian_phone' => $data['guardian_phone'] ?? null,
                 ],
                 WaiverSignatureRequest::web($request->ip(), (string) $request->userAgent()),
+                // «Lo dejo y me voy» (§4.5·7, `#576`): el padre llega desde su respuesta a la
+                // invitación. ⚠️ **No se cree**: el firmador lo contrasta con el contrato de Booking y,
+                // si no es un «sí» vivo de ESTA reserva, lo ignora y aplica el tope como siempre. Por
+                // eso puede venir del formulario sin ser una credencial.
+                isset($data['invitation_reply_id']) ? (int) $data['invitation_reply_id'] : null,
             );
         } catch (GuardianAuthorizationExistsException $e) {
             // «Un niño, un papel» (§7·9): el otro progenitor ve el nombre del menor y nada más — ni
@@ -231,6 +236,10 @@ class GuardianAuthorizationController extends Controller
     {
         return [
             'document_id' => ['required', 'integer'],
+            // La respuesta de la invitación desde la que se llega (§4.5·7). Opcional: el justificante
+            // se firma igual sin ella. No lleva `exists:` a propósito — quien decide si vale es el
+            // dominio, contra la reserva, y un 422 aquí le diría a un desconocido si ese id existe.
+            'invitation_reply_id' => ['nullable', 'integer', 'min:1'],
             // Casilla SEPARADA y desmarcada por defecto (§4.4 del subsistema): no se da por aceptado
             // por el hecho de enviar el formulario.
             'accept_waiver' => ['accepted'],

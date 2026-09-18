@@ -803,7 +803,7 @@ pronto (`CONVENCIONES §10.5`), en orden de dependencia y cada una verde por su 
 | **T4·1** | Esquema, modelos y el normalizador compartido (§4.4) | ✅ `#573` |
 | **T4·2** | Las reglas del dominio (§4.5) + el verificador de concurrencia | ✅ `#574` |
 | **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ✅ `#575` |
-| **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ⬜ |
+| **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ✅ `#576` |
 | **T4·5** | RGPD: supresión, purga y poda (§4.4) | ⬜ |
 | **T4·6** | El contrato de la API y sus endpoints (§4.10) | ⬜ |
 
@@ -851,6 +851,29 @@ defectos apagados.
 6. ⚠️⚠️ **El push lo paró el gate de concurrencia**, y tenía razón: el cast de `show_in_invitation` vive
    en `ProductAddon.php`, que está en el `CRITICAL_RE` — justo lo que §6 predecía que T4 no tocaría.
    Corregido allí. Esta unidad empujó con `VERIFY_CONC=1` tras los verificadores sobre MySQL.
+
+**Arnés de mutación**: `scripts/mutar-invitacion-t41.sh`, **9/9 muerden con CONTROL en verde**, y el
+árbol restaurado byte a byte (sha1). Se corrió porque las políticas de borrado **no fallan solas**: una
+FK mal puesta no rompe nada hasta el día en que la purga o la poda corren en producción.
+
+⚠️⚠️ **La primera pasada salió 5/9, y las cuatro flojas eran de la GUARDA, no del código.** Es el valor
+del arnés y merece quedar escrito:
+- **La segunda cascada no estaba ejercida.** Con `invitation_replies.party_invitation_id` en `RESTRICT`
+  no moría ningún caso, porque al borrar la RESERVA las respuestas caían igual por su otra clave
+  foránea. Nace `test_deleting_the_invitation_takes_its_replies`.
+- **La lista blanca se probaba con un payload de dos claves.** Añadiendo `adopted_at` a `$fillable` el
+  caso seguía en verde: la excepción saltaba igual por `dismissed_at`. Hoy se asevera además sobre
+  `getFillable()`, clave a clave, y el arnés muta las dos.
+- ⚠️⚠️ **Y el respaldo del normalizador se probaba con un ejemplo FALSO.** El caso usaba cirílico como
+  «alfabeto no latino que se vacía», y **`Str::ascii()` sí lo transitera**: «Александр Петров» →
+  `aleksandr petrov`. Medido en el contenedor sobre nueve escrituras, los que de verdad se vacían son
+  **chino, japonés, coreano, tailandés, hebreo y emoji**; el griego y el árabe también se transliteran.
+  ▶ **La afirmación venía heredada del docblock de `GuardianAuthorization::keyFor()`** («un nombre
+  escrito íntegramente en un alfabeto no latino se convertiría en `''`»), donde llevaba desde `#328`.
+  Corregida en los dos sitios con lo medido. *Una prosa heredada que nadie midió es una afirmación, no
+  un hecho — y un caso escrito sobre ella prueba lo que la prosa creía, no lo que el código hace.*
+- El propio arnés mentía al final: contaba el CONTROL como un mutante y decía «9/10» con las diez
+  líneas en verde, saliendo con código 1. Los controles se cuentan aparte.
 
 #### 10.4.2 T4·2 · las reglas del dominio — EN EL ÁRBOL (2026-09-17, `DECISIONES #574`)
 
@@ -964,28 +987,58 @@ que **no es un enlace de edición** (D9)— queda escrito.
 reactiva (`Get` está importado y se podría), así que el operador la descubre al guardar, con el mensaje
 del dominio. Se prefiere una autoridad y un mensaje claro a dos sitios que puedan divergir.
 
-**Arnés de mutación**: `scripts/mutar-invitacion-t41.sh`, **9/9 muerden con CONTROL en verde**, y el
-árbol restaurado byte a byte (sha1). Se corrió porque las políticas de borrado **no fallan solas**: una
-FK mal puesta no rompe nada hasta el día en que la purga o la poda corren en producción.
+#### 10.4.4 T4·4 · las plazas con dueño y el enlace que se anula — EN EL ÁRBOL (2026-09-18, `DECISIONES #576`)
 
-⚠️⚠️ **La primera pasada salió 5/9, y las cuatro flojas eran de la GUARDA, no del código.** Es el valor
-del arnés y merece quedar escrito:
-- **La segunda cascada no estaba ejercida.** Con `invitation_replies.party_invitation_id` en `RESTRICT`
-  no moría ningún caso, porque al borrar la RESERVA las respuestas caían igual por su otra clave
-  foránea. Nace `test_deleting_the_invitation_takes_its_replies`.
-- **La lista blanca se probaba con un payload de dos claves.** Añadiendo `adopted_at` a `$fillable` el
-  caso seguía en verde: la excepción saltaba igual por `dismissed_at`. Hoy se asevera además sobre
-  `getFillable()`, clave a clave, y el arnés muta las dos.
-- ⚠️⚠️ **Y el respaldo del normalizador se probaba con un ejemplo FALSO.** El caso usaba cirílico como
-  «alfabeto no latino que se vacía», y **`Str::ascii()` sí lo transitera**: «Александр Петров» →
-  `aleksandr petrov`. Medido en el contenedor sobre nueve escrituras, los que de verdad se vacían son
-  **chino, japonés, coreano, tailandés, hebreo y emoji**; el griego y el árabe también se transliteran.
-  ▶ **La afirmación venía heredada del docblock de `GuardianAuthorization::keyFor()`** («un nombre
-  escrito íntegramente en un alfabeto no latino se convertiría en `''`»), donde llevaba desde `#328`.
-  Corregida en los dos sitios con lo medido. *Una prosa heredada que nadie midió es una afirmación, no
-  un hecho — y un caso escrito sobre ella prueba lo que la prosa creía, no lo que el código hace.*
-- El propio arnés mentía al final: contaba el CONTROL como un mutante y decía «9/10» con las diez
-  líneas en verde, saliendo con código 1. Los controles se cuentan aparte.
+**Hecho.** Es la unidad que **cose las dos mitades**: las respuestas viven en Booking, las firmas en
+Identity, y Booking no puede mirar a Identity.
+- **`Booking\Contracts\PartyGuests`** —aplazado desde la T4·1 hasta tener consumidor, como §10.4.1
+  declaró— con `PartyGuestsReader` y su binding en `BookingServiceProvider`.
+  ⚠️ **Publica IDS, no un recuento**, y eso no es un capricho: restar los ya firmados obligaría a Booking
+  a mirar los justificantes. La resta la hace `GuardianPlaces`, **el único sitio donde las dos mitades
+  coexisten** — la misma salida que `#401` encontró para `ReservationPlacesTaken`.
+- **Un cuarto sumando en el suelo de `#444`**: los «sí» vivos sin justificante atado cuentan como plazas
+  con dueño. Sin él, el anfitrión podía bajar los invitados **por debajo de quien ya le confirmó** y
+  dejar fuera a un niño que avisó, sin que nada saltara.
+- ⚠️⚠️ **La excepción del firmador, que es lo que ordena la tanda.** Una firma **atada a un «sí»** no
+  descuenta plaza: sin ella, el padre que dijo «sí» **no podría firmar** —su propio aviso le cerraría la
+  puerta—, que es la peor forma de fallar que tiene esta feature. El vínculo se escribe en
+  `guardian_authorizations.invitation_reply_id` **solo si el contrato confirma que esa respuesta es de
+  esta reserva**: el firmador no se cree el id que le llega.
+- **Anular el enlace** desde la ficha del pedido (`rotateInvitationLink`), con el permiso re-exigido **al
+  ejecutar** (`SEC-04`), el intento bloqueado **auditado** y **el token fuera del rastro** (`RGPD-02`).
+  Ese enlace se reparte a un grupo de clase entero: es la clase de credencial que hay que poder cerrar
+  antes de que caduque, y `RGPD-06` no la alcanza porque no es una credencial de cuenta.
+  ▶ El **botón** lo pinta la T6 con el bloque de la invitación (§4.8). Hasta entonces la acción existe,
+  está auditada y probada.
+
+**Declarado, y es deliberado** (§4.5·8): un justificante **suelto** de un niño que además dijo «sí»
+cuenta **dos veces**. Su firma no viene atada a la respuesta y saber que son el mismo niño exigiría
+comparar nombres, que es justo lo que `#328` decidió no hacer. El suelo sale alto, que es el lado
+seguro: **protege de más, nunca de menos**.
+
+**Guardas**: `InvitationPlacesTest` (9) · `InvitationLinkRotationTest` (4) · un caso nuevo en
+`ModuleContractsTest` · arnés `scripts/mutar-invitacion-t44.sh` **12/12 con CONTROL en verde**, árbol
+byte a byte. El conjunto del arnés **incluye las guardas de frontera a propósito**: hay un mutante que
+solo ellas cazan.
+
+**Trampas pagadas en esta unidad:**
+1. ⚠️⚠️ **Un mutante que `InvitationPlacesTest` no puede cazar**: hacer que `GuardianPlaces` llame a
+   `PartyGuestsReader` **en vez de al contrato**. Con datos reales la implementación devuelve lo mismo
+   que el binding y **todo sigue verde**. Lo caza `ModuleContractsTest`, cuyo doble se queda sin usar en
+   el acto — y ése es, entero, el motivo de que el fichero exista. *Un test de datos reales no puede
+   distinguir «pregunta por el contrato» de «va a mirar»: hace falta el doble.*
+2. **El carril suponía que este push pediría `VERIFY_CONC=1`** por tocar el firmador. **Medido contra el
+   `CRITICAL_RE` del hook: no lo pide.** El que está en la lista es `WaiverSigner`, no
+   `GuardianAuthorizationSigner`. *La lista viva es el `CRITICAL_RE`, no la memoria de quien escribió la
+   nota.*
+3. **Larastan rompió el trinquete** con `$this->record->code` en la acción nueva: `property.nonObject`
+   pasaba de 1 a 2 ocurrencias y la línea base **solo encoge**. Se arregla con el `/** @var Order */` que
+   el resto de la clase ya usa, no ampliando el baseline.
+4. Dos defectos de PROSA que solo se ven leyendo: `GuardianPlaces` tenía **dos docblocks consecutivos**
+   sobre la clase desde `#444` —PHP solo toma el segundo, así que la mitad de su explicación estaba
+   huérfana— y su fórmula seguía anunciando **tres** sumandos. Unidos y corregida a cuatro.
+5. El bloque del arnés de la **T4·1 estaba pegado al final de la §10.4.3**, donde su «9/9» contradecía al
+   «11/11» de aquélla. Devuelto a su unidad.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

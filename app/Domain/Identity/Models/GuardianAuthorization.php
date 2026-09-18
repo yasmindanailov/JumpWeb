@@ -40,6 +40,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 #[Fillable([
     'order_item_id',
+    // El vínculo con la respuesta de la invitación (`#576`). Lo escribe el firmador y solo cuando el
+    // contrato confirma que esa respuesta es un «sí» vivo de ESTA reserva.
+    'invitation_reply_id',
     'minor_name', 'minor_surname', 'minor_key', 'minor_born_on',
     'guardian_name', 'guardian_surname', 'guardian_relationship', 'guardian_email', 'guardian_phone',
 ])]

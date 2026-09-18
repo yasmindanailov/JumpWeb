@@ -12,6 +12,7 @@ use App\Domain\Booking\Contracts\CustomerOrderHistory;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
@@ -29,6 +30,7 @@ use App\Domain\Booking\Services\CustomerOrderHistoryReader;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\PartyGuestsReader;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Booking\Services\ZonePaletteReader;
@@ -64,6 +66,13 @@ class BookingServiceProvider extends ServiceProvider
         $this->app->bind(AuthorizableReservations::class, AuthorizableReservationsReader::class);
         // Fase 6 · subsistema A: la ficha de puerta (Identity) pide las reservas y su dinero por aquí.
         $this->app->bind(GateReservations::class, GateReservationsReader::class);
+        // Fase 6 · la INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.5·8, `#576`): los
+        // niños que han CONFIRMADO. Lo consumen `Identity\Services\GuardianPlaces` —que resta los que
+        // ya tienen justificante atado, porque es el único sitio donde las dos mitades coexisten— y el
+        // firmador, para saber si una firma viene atada a un «sí» y no descontar plaza por ella.
+        // ⚠️ Devuelve IDS y no una cifra: restar aquí obligaría a Booking a mirar las firmas de
+        // Identity, que es justo la flecha que el grafo prohíbe.
+        $this->app->bind(PartyGuests::class, PartyGuestsReader::class);
         $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
         // Catálogo de venta (Fase 3 · paso 1b): lo consume la API, y por ella la web y el móvil.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);

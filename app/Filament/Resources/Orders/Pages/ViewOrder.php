@@ -1213,6 +1213,73 @@ class ViewOrder extends ViewRecord
     }
 
     /**
+     * **ANULAR el enlace de la INVITACIÓN DIGITAL de una reserva**
+     * (`specs/celebracion-e-invitacion.md` §4.5·11 y §4.8; `DECISIONES #576`).
+     *
+     * Hermana de la de arriba y por el mismo motivo: ese enlace se reparte **a un grupo de clase
+     * entero**, así que es la clase de credencial que hay que poder cerrar sin esperar a que caduque.
+     * Emite un token nuevo y el anterior deja de abrir en el acto.
+     *
+     * ⚠️ **Rotar retira una credencial, NO deshace una gestión**: lo que los padres ya contestaron sigue
+     * ahí. Quitar una respuesta es otro gesto del anfitrión («no lo apuntes», §4.7).
+     *
+     * ⚠️ El permiso es `orders.edit_guest_data`, el mismo que gobierna el formulario de invitados: la
+     * invitación cuelga de él, y separarlos daría un permiso nuevo que nadie ha pedido.
+     *
+     * ▶ El BOTÓN lo pinta la T6 con el bloque de la invitación en la ficha del pedido (§4.8, que sitúa
+     * aquí la acción y allí su sitio). Hasta entonces la acción existe, está auditada y probada.
+     */
+    public function rotateInvitationLinkAction(): Action
+    {
+        return Action::make('rotateInvitationLink')
+            ->modalHeading(__('admin.orders.rotate_invitation.modal_heading'))
+            ->modalDescription(__('admin.orders.rotate_invitation.modal_description'))
+            ->modalIcon(Heroicon::OutlinedArrowPath)
+            ->modalSubmitActionLabel(__('admin.orders.rotate_invitation.submit'))
+            ->requiresConfirmation()
+            ->action(function (array $arguments): void {
+                // `SEC-04`: el permiso y el gating se re-comprueban AQUÍ, al ejecutar — no basta con
+                // que el botón estuviera pintado cuando se cargó la página.
+                $item = $this->resolveItem($arguments);
+                $invitation = $item?->partyInvitation;
+                $allowed = (auth()->user()?->hasPermission('orders.edit_guest_data') ?? false)
+                    && $invitation !== null;
+
+                if (! $allowed) {
+                    if ($item !== null) {
+                        AuditLogger::log('orders.invitation_link_rotate_blocked', $this->record, [
+                            'order_item_id' => $item->id,
+                            'reason' => $invitation === null ? 'no_invitation' : 'not_allowed',
+                        ]);
+                    }
+                    Notification::make()
+                        ->title(__('admin.orders.rotate_invitation.blocked'))
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $invitation->rotateToken();
+
+                /** @var Order $order */
+                $order = $this->record;
+
+                // `RGPD-02`: **el token NO entra en el rastro** — es la credencial, y escribirla aquí
+                // sería guardarla en claro. Solo qué reserva se anuló y cuándo.
+                AuditLogger::log('orders.invitation_link_rotated', $order, [
+                    'order_code' => $order->code,
+                    'order_item_id' => $item->id,
+                ]);
+
+                Notification::make()
+                    ->title(__('admin.orders.rotate_invitation.success'))
+                    ->success()
+                    ->send();
+            });
+    }
+
+    /**
      * Enlace FIRMADO del post-form de ESTA reserva. Solo cuando el item es una reserva con post-form
      * (`isGuestFormReservation()`) de un pedido PAGADO — coincide con lo que el endpoint del post-form
      * acepta (404 si no está pagado). Misma fuente que el email (`OrderItem::guestFormSignedUrl()`):

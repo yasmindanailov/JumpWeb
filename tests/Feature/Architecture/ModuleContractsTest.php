@@ -22,12 +22,14 @@ use App\Domain\Booking\Contracts\OfferedDate;
 use App\Domain\Booking\Contracts\OfferedTime;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\OperatingWindow;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\PaymentInitiation;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
+use App\Domain\Booking\Contracts\ReservationPlacesTaken;
 use App\Domain\Booking\Contracts\ReservationScope;
 use App\Domain\Booking\Contracts\RetryAdmission;
 use App\Domain\Booking\Contracts\RetryOutcome;
@@ -48,6 +50,7 @@ use App\Domain\Booking\Services\CheckoutOrchestrator;
 use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
+use App\Domain\Booking\Services\PartyGuestsReader;
 use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ZonePaletteReader;
 use App\Domain\Content\Models\Attraction;
@@ -113,6 +116,7 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
         $this->assertInstanceOf(CartPricer::class, app(CartPricing::class));
         $this->assertInstanceOf(AvailabilityReader::class, app(AvailabilityOffer::class));
+        $this->assertInstanceOf(PartyGuestsReader::class, app(PartyGuests::class));
         // Los dos puertos del checkout (cierre de Fase 3). `PaymentInitiation` es el caso raro y
         // conviene que salte a la vista: el contrato es de Booking pero lo implementa Payments, así
         // que su bind vive en `PaymentsServiceProvider` y no en el de Booking.
@@ -387,6 +391,44 @@ class ModuleContractsTest extends TestCase
             $context['pendingForms'][0]['url'],
             'la URL se construye en Identity a partir del ID de la reserva'
         );
+    }
+
+    /**
+     * IDENTITY → BOOKING: **los «sí» de la invitación digital los sabe Booking**, y el suelo de plazas
+     * los pide por el contrato en vez de ir a mirar las respuestas (T4·4, `DECISIONES #576`).
+     *
+     * Es la otra mitad de la misma frontera que `#401` y `#444` dibujaron: las respuestas viven en
+     * Booking, las firmas en Identity, y **Booking no puede mirar a Identity** — por eso el contrato
+     * publica IDS y la resta la hace `GuardianPlaces`, el único sitio donde las dos mitades coexisten.
+     *
+     * ⚠️ El doble devuelve tres respuestas que **no existen en base de datos**: si `GuardianPlaces`
+     * consultara `InvitationReply` por su cuenta, el doble quedaría sin usar y el suelo saldría `0`.
+     * Ésa es toda la prueba — y es lo que `InvitationPlacesTest`, que trabaja con datos reales, no
+     * puede distinguir.
+     */
+    public function test_identity_asks_booking_for_the_committed_guests_through_the_contract(): void
+    {
+        $this->app->instance(PartyGuests::class, new class implements PartyGuests
+        {
+            public function committedReplyIdsIn(int $reservationId): array
+            {
+                return [90001, 90002, 90003];
+            }
+
+            /**
+             * ⚠️ Este caso ejerce el SUELO, no la excepción del firmador (`#576`). Devolver `false`
+             * silenciaría a un consumidor que llegara aquí por error: le diría «esa respuesta no es
+             * de esta reserva» —y con ello le cerraría la puerta a un padre que sí dijo «sí»— en vez
+             * de fallar. Justo el silencio que este fichero existe para impedir.
+             */
+            public function isCommittedReply(int $replyId, int $reservationId): bool
+            {
+                throw new \LogicException('este doble sirve el suelo de plazas, no la excepción del firmador');
+            }
+        });
+
+        // Por el CONTRATO, no por el implementador: es como pregunta Booking desde `GuestCountPolicy`.
+        $this->assertSame(3, app(ReservationPlacesTaken::class)->takenIn(4242));
     }
 
     /**

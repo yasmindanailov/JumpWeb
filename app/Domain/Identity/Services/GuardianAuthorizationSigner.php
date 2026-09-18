@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\Services;
 
 use App\Domain\Booking\Contracts\AuthorizableReservations;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationExistsException;
 use App\Domain\Identity\Exceptions\GuardianAuthorizationRefusedException;
 use App\Domain\Identity\Models\GuardianAuthorization;
@@ -49,6 +50,7 @@ final class GuardianAuthorizationSigner
         private readonly WaiverSigner $signer,
         private readonly AuthorizableReservations $reservations,
         private readonly GuardianPlaces $places,
+        private readonly PartyGuests $guests,
     ) {}
 
     /**
@@ -57,6 +59,11 @@ final class GuardianAuthorizationSigner
      *                              un pedido puede tener dos visitas en días distintos y el padre
      *                              autoriza una (§13)
      * @param  array{minor_name:string, minor_surname:string, minor_born_on:string, guardian_name:string, guardian_surname:string, guardian_relationship:string, guardian_email:?string, guardian_phone:?string}  $data
+     * @param  ?int  $invitationReplyId  la respuesta de la invitación digital desde la que se llega
+     *                                   («lo dejo y me voy», §4.5·7). ⚠️ **No se cree**: se comprueba
+     *                                   contra el contrato de Booking, y si no es un «sí» vivo de ESTA
+     *                                   reserva se ignora en silencio — un enlace de otra fiesta no
+     *                                   puede servir para saltarse el tope de ésta
      * @return array{authorization: GuardianAuthorization, signature: WaiverSignature, created: bool}
      */
     public function sign(
@@ -65,10 +72,11 @@ final class GuardianAuthorizationSigner
         LegalDocumentVersion $version,
         array $data,
         WaiverSignatureRequest $request,
+        ?int $invitationReplyId = null,
     ): array {
         $key = GuardianAuthorization::keyFor($data['minor_name'], $data['minor_surname']);
 
-        return DB::transaction(function () use ($responsible, $reservationId, $version, $data, $request, $key): array {
+        return DB::transaction(function () use ($responsible, $reservationId, $version, $data, $request, $key, $invitationReplyId): array {
             // El MISMO punto de serialización que usa el firmador (§4.4). Va primero, antes de leer
             // nada: si se buscara la autorización fuera del lock, dos envíos simultáneos del mismo
             // menor podrían decidir los dos que no existe.
@@ -116,12 +124,26 @@ final class GuardianAuthorizationSigner
             //
             // ⚠️ Se mira DESPUÉS de la idempotencia a propósito: un padre que reenvía su propio
             // formulario no consume plaza, así que una reserva llena sigue admitiendo su reenvío.
-            if ($this->places->freeIn($reservation) < 1) {
+            // ⚠️⚠️ **La EXCEPCIÓN de la invitación digital** (§4.5·7, `#576`): una firma que llega atada a
+            // un «sí» **no descuenta plaza, porque esa plaza ya tiene dueño** — `GuardianPlaces` la
+            // cuenta desde que el padre contestó. Sin esta excepción, el padre que dijo «sí» con la
+            // lista completa **no podría firmar**: el propio «sí» que le reservó el sitio le cerraría
+            // la puerta, que es la peor forma de fallar que tiene esta feature.
+            //
+            // ⚠️ Se pregunta al CONTRATO, no al parámetro: un id inventado, de otra fiesta o de una
+            // respuesta ya descartada no ata nada y el tope se aplica como siempre.
+            $tied = $invitationReplyId !== null
+                && $this->guests->isCommittedReply($invitationReplyId, $reservationId);
+
+            if (! $tied && $this->places->freeIn($reservation) < 1) {
                 throw GuardianAuthorizationRefusedException::full($reservationId, $reservation->quantity);
             }
 
             $authorization = GuardianAuthorization::create([
                 'order_item_id' => $reservationId,
+                // ⚠️ Solo si el contrato lo confirmó. Es lo que permite a `GuardianPlaces` dejar de
+                // contar ese «sí» aparte: a partir de aquí, la plaza la cuenta el justificante.
+                'invitation_reply_id' => $tied ? $invitationReplyId : null,
                 'minor_name' => mb_substr(trim($data['minor_name']), 0, GuardianAuthorization::NAME_MAX),
                 'minor_surname' => mb_substr(trim($data['minor_surname']), 0, GuardianAuthorization::SURNAME_MAX),
                 'minor_key' => $key,
