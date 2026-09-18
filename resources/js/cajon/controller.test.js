@@ -129,8 +129,8 @@ describe('el cajón sin framework', () => {
         assert.equal(await cajon.bootSpaEngine(), null);
     });
 
-    /** El modo lo publica el MOTOR y entra por una sola puerta. */
-    test('el modo entra por setMode y vuelve a «catalog» si llega vacío', () => {
+    /** El modo lo publica el MOTOR, entra por una sola puerta, y se ANUNCIA: la carcasa lo pinta en el panel. */
+    test('el modo entra por setMode, vuelve a «catalog» si llega vacío, y se anuncia', () => {
         const cajon = montar();
 
         cajon.setMode('booking');
@@ -138,5 +138,19 @@ describe('el cajón sin framework', () => {
 
         cajon.setMode('');
         assert.equal(cajon.mode, 'catalog');
+
+        assert.deepEqual(eventos, [
+            { tipo: 'jw:cajon:mode', detalle: { mode: 'booking' } },
+            { tipo: 'jw:cajon:mode', detalle: { mode: 'catalog' } },
+        ]);
+    });
+
+    /** Escape llega a `close()` esté como esté el cajón: cerrar uno CERRADO no es un cierre y no se anuncia. */
+    test('cerrar un cajón que ya estaba cerrado no anuncia nada', () => {
+        const cajon = montar();
+
+        cajon.close();
+
+        assert.deepEqual(eventos, []);
     });
 });

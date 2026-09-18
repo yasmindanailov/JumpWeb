@@ -1,0 +1,185 @@
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { installShell, modeClass, trapTarget } from './shell.js';
+
+/**
+ * F4 · T3a — la carcasa del cajón con un solo dueño y sin framework.
+ *
+ * Aquí se prueba la LÓGICA con un DOM de mentira. Que la carcasa se vea abrir, que el foco entre y que Tab no
+ * escape son cosas de un navegador de verdad: `scripts/sonda-cajon-apertura.mjs`.
+ */
+
+function elemento(nombre) {
+    const clases = new Set();
+    const oyentes = {};
+
+    return {
+        nombre,
+        oyentes,
+        enfocado: 0,
+        offsetParent: {},
+        classList: {
+            add: (c) => clases.add(c),
+            remove: (c) => clases.delete(c),
+            toggle: (c, on) => (on ? clases.add(c) : clases.delete(c)),
+            contains: (c) => clases.has(c),
+        },
+        clases: () => [...clases].sort(),
+        addEventListener(tipo, fn) { (oyentes[tipo] ??= []).push(fn); },
+        disparar(tipo, evento = {}) { (oyentes[tipo] ?? []).forEach((fn) => fn(evento)); },
+        focus() { this.enfocado += 1; },
+    };
+}
+
+function montar({ cajon } = {}) {
+    const root = elemento('sidecart');
+    const panel = elemento('panel');
+    const telon = elemento('backdrop');
+    const cierre = elemento('close');
+    const enfocables = [cierre, elemento('campo'), elemento('boton')];
+
+    root.querySelector = (sel) => ({
+        '.sidecart__panel': panel, '.sidecart__backdrop': telon, '.sidecart__close': cierre,
+    }[sel] ?? enfocables[0]);
+    root.querySelectorAll = () => enfocables;
+
+    const doc = elemento('document');
+    doc.querySelector = (sel) => (sel === '.sidecart' ? root : null);
+    doc.activeElement = null;
+    doc.defaultView = { requestAnimationFrame: (fn) => fn() };
+
+    const estado = cajon ?? { isOpen: false, mode: 'catalog', cierres: 0, close() { this.cierres += 1; this.isOpen = false; } };
+
+    installShell(() => estado, doc);
+
+    return { root, panel, telon, cierre, enfocables, doc, estado };
+}
+
+describe('la carcasa sin framework', () => {
+    test('nace cerrada y en el modo del controlador', () => {
+        const { root, panel } = montar();
+
+        assert.deepEqual(root.clases(), []);
+        assert.deepEqual(panel.clases(), ['is-catalog']);
+    });
+
+    /**
+     * `/entradas`, una puerta de cuenta o la vuelta de la pasarela: el cajón NACE abierto y nadie llama a `open()`.
+     *
+     * ⚠️ **Y NO mete el foco: paridad deliberada con lo que había** (el `a11yPanel` viejo quería hacerlo y su
+     * comprobación estaba rota). Meterlo pinta el anillo sobre la × al cargar la página, que es un cambio
+     * visible y está pendiente del owner. Este caso existe para que ese cambio sea una decisión y no un efecto
+     * secundario de tocar la carcasa.
+     */
+    test('si el cajón nace abierto, la carcasa nace abierta — y sin robar el foco', () => {
+        const { root, cierre } = montar({ cajon: { isOpen: true, mode: 'catalog', close() {} } });
+
+        assert.deepEqual(root.clases(), ['is-open']);
+        assert.equal(cierre.enfocado, 0);
+    });
+
+    test('se abre y se cierra por los eventos del controlador, y al abrir mete el foco', () => {
+        const { root, doc, cierre } = montar();
+
+        doc.disparar('jw:cajon:open');
+        assert.deepEqual(root.clases(), ['is-open']);
+        assert.equal(cierre.enfocado, 1);
+
+        doc.disparar('jw:cajon:close');
+        assert.deepEqual(root.clases(), []);
+    });
+
+    /**
+     * ⚠️⚠️ El puente del MODO (`DECISIONES #118`): `is-{modo}` es lo que colapsa el bloque de cuenta. Si se
+     * pierde, el panel se queda en `is-catalog` para siempre y NADA falla. Y la clase anterior se RETIRA: dos
+     * modos a la vez es peor que ninguno.
+     */
+    test('el modo que publica el motor sustituye a la clase anterior del panel', () => {
+        const { panel, doc } = montar();
+
+        doc.disparar('jw:cajon:mode', { detail: { mode: 'booking' } });
+        assert.deepEqual(panel.clases(), ['is-booking']);
+
+        doc.disparar('jw:cajon:mode', { detail: { mode: 'account' } });
+        assert.deepEqual(panel.clases(), ['is-account']);
+    });
+
+    test('el telón y la × cierran por el controlador', () => {
+        const { telon, cierre, estado } = montar();
+
+        telon.disparar('click');
+        cierre.disparar('click');
+
+        assert.equal(estado.cierres, 2);
+    });
+
+    /** Escape cerraba SIEMPRE, también un cajón cerrado: soltaba una llave que no tenía y anunciaba un cierre falso. */
+    test('Escape cierra solo si está abierto', () => {
+        const { doc, estado } = montar();
+
+        doc.disparar('keydown', { key: 'Escape' });
+        assert.equal(estado.cierres, 0);
+
+        estado.isOpen = true;
+        doc.disparar('keydown', { key: 'Escape' });
+        doc.disparar('keydown', { key: 'Enter' });
+        assert.equal(estado.cierres, 1);
+    });
+
+    test('Tab no escapa del panel: del último salta al primero, y con Shift al revés', () => {
+        const { root, doc, enfocables } = montar();
+        const [primero, , ultimo] = enfocables;
+        let prevenidos = 0;
+        const tab = (shiftKey) => ({ key: 'Tab', shiftKey, preventDefault: () => { prevenidos += 1; } });
+
+        doc.activeElement = ultimo;
+        root.disparar('keydown', tab(false));
+        assert.equal(primero.enfocado, 1);
+
+        doc.activeElement = primero;
+        root.disparar('keydown', tab(true));
+        assert.equal(ultimo.enfocado, 1);
+
+        doc.activeElement = enfocables[1];
+        root.disparar('keydown', tab(false));
+        assert.equal(prevenidos, 2, 'en mitad del panel el navegador sigue solo');
+    });
+
+    /**
+     * ⚠️⚠️ Medido en navegador: justo al montar el motor, tras el botón de cerrar quedan controles CON caja y
+     * `visibility: hidden`. El filtro viejo (`offsetParent`) los contaba, la trampa creía no estar en el último
+     * y el foco se iba al banner de cookies. «Visible» es que se puede enfocar.
+     */
+    test('un control con caja pero `visibility: hidden` no cuenta: desde el último DE VERDAD se da la vuelta', () => {
+        const { root, doc, enfocables } = montar();
+        const [primero, medio, oculto] = enfocables;
+        doc.defaultView.getComputedStyle = (el) => ({ visibility: el === oculto ? 'hidden' : 'visible' });
+
+        // Se reinstala con esa vista: `installShell` lee `defaultView` al instalarse.
+        const otroRoot = { ...root, oyentes: {}, addEventListener(tipo, fn) { (this.oyentes[tipo] ??= []).push(fn); } };
+        doc.querySelector = (sel) => (sel === '.sidecart' ? otroRoot : null);
+        installShell(() => ({ isOpen: false, mode: 'catalog', close() {} }), doc);
+
+        let prevenido = false;
+        doc.activeElement = medio;
+        otroRoot.oyentes.keydown.forEach((fn) => fn({ key: 'Tab', shiftKey: false, preventDefault: () => { prevenido = true; } }));
+
+        assert.equal(prevenido, true, '`medio` es el último enfocable de verdad: Tab tiene que dar la vuelta');
+        assert.equal(primero.enfocado, 1);
+    });
+
+    test('los enfocables OCULTOS no cuentan para el ciclo', () => {
+        const items = [{ id: 1 }, { id: 2 }];
+
+        assert.equal(trapTarget({ key: 'Tab', shiftKey: false }, items, items[1]), items[0]);
+        assert.equal(trapTarget({ key: 'Tab', shiftKey: false }, [], null), null);
+        assert.equal(trapTarget({ key: 'a', shiftKey: false }, items, items[1]), null);
+    });
+
+    test('sin carcasa en la página no hace nada', () => {
+        const doc = { querySelector: () => null };
+
+        assert.equal(installShell(() => null, doc), null);
+        assert.equal(modeClass(''), '');
+    });
+});

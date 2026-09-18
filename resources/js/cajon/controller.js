@@ -60,6 +60,10 @@ export function createCajonController({ scrollLock }) {
         mode: 'catalog',
         setMode(m) {
             this.mode = m || 'catalog';
+            // ⚠️ Y se ANUNCIA (F4 · T3a): la clase `is-{modo}` del panel ya no la pinta un `:class` de Alpine
+            // sino la carcasa sin framework (`cajon/shell.js`), que se entera por aquí. Sin este aviso el
+            // panel se queda en `is-catalog` para siempre y el bloque de cuenta no se colapsa (`#118`).
+            announce('mode', { mode: this.mode });
         },
         // `true` SOLO en el paso de identificación (login/registro embebido, paso 5). La escribe
         // el MOTOR (ver el contrato de arriba); hoy, el puente reactivo de `purchase.blade.php`.
@@ -234,6 +238,9 @@ export function createCajonController({ scrollLock }) {
             });
         },
         close() {
+            // ⚠️ Cerrar un cajón CERRADO no es un cierre: no se anuncia. Pasaba con Escape, que llega aquí
+            // esté como esté el cajón — la página habría recibido un `jw:cajon:close` por cada pulsación.
+            const wasOpen = this.isOpen;
             this.isOpen = false;
             // ⚠️⚠️ **Aquí se hacía `this.mode = 'catalog'`, y se RETIRÓ el 2026-08-23 porque era un
             // SEGUNDO ESCRITOR de una señal con dueño único.** El modo lo publica el motor —el `watch`
@@ -253,7 +260,7 @@ export function createCajonController({ scrollLock }) {
             scrollLock.unlock('sidecart');
             // ⚠️ Se anuncia ANTES de la recarga de abajo: quien escucha (una landing que mide embudo, por
             // ejemplo) tiene que enterarse del cierre también cuando ese cierre se lleva la página.
-            announce('close', { reloading: this.authChanged });
+            if (wasOpen) announce('close', { reloading: this.authChanged });
             // Si hubo login dentro del sidebar, recargamos la PÁGINA ACTUAL (no navegamos a otro
             // sitio) para que el nav refleje la sesión. Al cierre, no a mitad del flujo; el carrito
             // vive en sesión, así que no se pierde nada. Mismo patrón que el modal (#51).

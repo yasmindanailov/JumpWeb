@@ -972,9 +972,24 @@ class SidebarMountTest extends TestCase
      */
     public function test_the_panel_still_bridges_its_mode_class_to_the_store(): void
     {
-        $this->get(route('entradas'))
-            ->assertOk()
-            ->assertSee("'is-' + \$store.purchase.mode", false);
+        // ⚠️⚠️ **Re-apuntado el 2026-09-18 (F4 · T3a), con el SUJETO intacto**: el puente ya no es un
+        // `:class="'is-' + $store.purchase.mode"` de Alpine sobre el marcado del layout, sino la carcasa sin
+        // framework (`cajon/shell.js`), que pinta la clase al oír `jw:cajon:mode`, y el controlador, que lo
+        // anuncia desde `setMode()` —la única puerta por la que entra el motor—. Se exigen los DOS extremos:
+        // con uno solo el panel se queda en `is-catalog` para siempre y nada falla (`DECISIONES #118`).
+        // La conducta la prueba `shell.test.js`; que se VEA, la sonda (`is-booking` medido en navegador).
+        $shell = (string) file_get_contents(resource_path('js/cajon/shell.js'));
+        $controller = (string) file_get_contents(resource_path('js/cajon/controller.js'));
+
+        $this->assertStringContainsString("doc.addEventListener('jw:cajon:mode'", $shell, 'La carcasa ya no escucha el modo que publica el motor.');
+        $this->assertStringContainsString("announce('mode', { mode: this.mode })", $controller, '`setMode()` ya no anuncia el modo: la carcasa no se entera.');
+
+        // Y el marcado servido sigue trayendo el panel que esa clase viste — sin atributos de Alpine, que es
+        // justo lo que permite que lo monte una página que no lo cargue.
+        $html = (string) $this->get(route('entradas'))->assertOk()->getContent();
+
+        $this->assertSame(1, preg_match('/<aside class="sidecart__panel"[^>]*>/', $html, $panel), 'El layout ya no sirve el panel del cajón.');
+        $this->assertDoesNotMatchRegularExpression('/(?:\s|^)(?:x-|:|@)[a-z]/i', (string) preg_replace('/"[^"]*"/', '""', $panel[0]), 'El panel del cajón vuelve a llevar atributos de Alpine: su dueño es `cajon/shell.js`.');
     }
 
     /**

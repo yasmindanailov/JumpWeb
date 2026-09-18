@@ -21,9 +21,12 @@ CTRL=resources/js/cajon/controller.js
 DECL=resources/js/cajon/declarative.js
 APP=resources/js/app.js
 GAINED=resources/js/sidebar/account/session-gained.js
+# ⚠️ `CARCASA` y no `SHELL`: esa es una variable del propio bash y pisarla se la cambia a todo lo que se lance después.
+CARCASA=resources/js/cajon/shell.js
+LAYOUT=resources/views/components/layout.blade.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$CTRL" "$DECL" "$APP" "$GAINED")
+FICHEROS=("$CTRL" "$DECL" "$APP" "$GAINED" "$CARCASA" "$LAYOUT")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -116,6 +119,36 @@ mutar "el controlador deja de registrarse como \`\$store.purchase\` (la landing 
 mutar "\`window.JumpWeb.cajon\` se queda en el objeto crudo, sin proxy" "$APP" \
   "    window.JumpWeb.cajon = window.Alpine.store('purchase');
 " ""
+
+# ── T3a · la CARCASA con un solo dueño sin framework ───────────────────────────────────────────
+mutar "la carcasa deja de escuchar el modo (el panel se queda en \`is-catalog\` para siempre, #118)" "$CARCASA" \
+  "    doc.addEventListener('jw:cajon:mode', (event) => paintMode(event.detail?.mode));
+" ""
+
+mutar "\`setMode()\` deja de anunciar el modo" "$CTRL" \
+  "            announce('mode', { mode: this.mode });
+" ""
+
+mutar "Escape vuelve a cerrar un cajón CERRADO" "$CARCASA" \
+  "if (event.key === 'Escape' && getCajon()?.isOpen) close();" \
+  "if (event.key === 'Escape') close();"
+
+mutar "cerrar un cajón cerrado vuelve a anunciarse a la página" "$CTRL" \
+  "if (wasOpen) announce('close'," \
+  "announce('close',"
+
+mutar "la trampa de foco vuelve a contar los controles con \`visibility: hidden\` (el foco se iba a las cookies)" "$CARCASA" \
+  "    const canFocus = (el) => el.offsetParent !== null
+        && (view?.getComputedStyle?.(el)?.visibility ?? 'visible') !== 'hidden';" \
+  "    const canFocus = (el) => el.offsetParent !== null;"
+
+mutar "el cajón que NACE abierto roba el foco (el anillo sobre la × al cargar: cambio visible sin decidir)" "$CARCASA" \
+  "    if (cajon?.isOpen) paintOpen(true, { focus: false });" \
+  "    if (cajon?.isOpen) paintOpen(true);"
+
+mutar "el panel del layout vuelve a llevar un atributo de Alpine" "$LAYOUT" \
+  "<aside class=\"sidecart__panel\" role=\"dialog\"" \
+  "<aside class=\"sidecart__panel\" :class=\"'is-' + \$store.purchase.mode\" role=\"dialog\""
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

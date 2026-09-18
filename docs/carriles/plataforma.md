@@ -56,13 +56,19 @@
      `open()` no mueve la carcasa y NADA falla: visto en rojo en la sonda). `cajon/declarative.js`
      (`data-jw-open*`), eventos `jw:cajon:open|close`, y el motor escribe por `sidebar/host-bridge.js`. Sonda
      `scripts/sonda-cajon-apertura.mjs` 17/17; `scripts/mutar-cajon-apertura.sh` 13/13; ESLint cubre `cajon/`.
-   - **T3 · la carcasa dentro del paquete — LO SIGUIENTE.** Hoy la pinta Blade en el layout (`.sidecart`: telón,
-     panel `role="dialog"` con `:class="'is-' + $store.purchase.mode"`, cabecera con título y cierre, el hueco
-     `#sidecart-account` con el SUELO de logout —el único `route('logout')` de la aplicación, con `@csrf`— y
-     `#sidecart-spa` con su velo), más `a11yPanel` (trampa de foco, en `app.js`) y el arranque del cajón que
-     NACE abierto (`if (…isOpen) { lock; bootSpaEngine() }`, también en `app.js`). Pasa a pintarla el paquete
-     cuando la página no la trae; y sin `data-boot`, el motor arranca por las dos lecturas de la T1. Falta
-     también `jw:cajon:purchased`. ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear.
+   - **T3a ✅ HECHA (18-09) · la carcasa con UN dueño**: el marcado del layout pierde sus 8 atributos de Alpine
+     y `a11yPanel` se retira de `app.js`; manda `resources/js/cajon/shell.js` (adopta `.sidecart`: `is-open`,
+     `is-{modo}` por el evento `jw:cajon:mode`, cierre por telón/×/Escape, trampa de foco). `/entradas`
+     idéntica PÍXEL A PÍXEL antes y después; sonda 23/23; arnés 20/20.
+   - **T3b · que el PAQUETE cree la carcasa — LO SIGUIENTE.** Hoy `shell.js` la adopta si existe; falta que la
+     cree cuando la página no la trae (una landing ajena), con el hueco de cuenta y su SUELO de logout —el
+     único `route('logout')` de la aplicación—, el hueco del motor con su velo, y `jw:cajon:purchased`. Y
+     mudar el arranque del cajón que NACE abierto (`if (…isOpen) { lock; bootSpaEngine() }`, hoy en `app.js`,
+     que es del producto). ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear.
+   - ▶ **`[PENDIENTE: owner]` de la T3a**: al nacer abierto el cajón NO mete el foco dentro (paridad con lo que
+     había: el `a11yPanel` quería hacerlo y su comprobación estaba rota). Hacerlo es lo correcto para un
+     diálogo modal, y pinta el anillo de foco sobre la × al cargar `/entradas` y las puertas de cuenta: es un
+     cambio visible. Enseñárselo y, si dice que sí, quitar `{ focus: false }` de `installShell()`.
    - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
      Vite servida desde una ruta estable; sin `data-boot` en la página, arranca por las dos lecturas de T1.
    - **T4 · la hoja propia**: extracción MECÁNICA de `site.css` con guion e informe en seco (método `#437`),
@@ -89,7 +95,7 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `StaticAnalysisGateTest` · el emisor de tokens (`ApiTokenIssuer`, `AuthTokenController`,
 `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
 `Tests\TestCase::be()` · el arranque del cajón (`Http\Sidebar\SidebarBoot`, `SidebarBootController`,
-`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura (`resources/js/cajon/**`,
+`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura y su carcasa (`resources/js/cajon/**`,
 `sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
@@ -119,6 +125,13 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   devuelve un PROXY; el objeto crudo que se le pasó no avisa a nadie. Una API pública que apunte al crudo
   «funciona» —el estado cambia, no falla nada— y la pantalla no se mueve. Se publica el proxy, se comprueba con
   `window.JumpWeb.cajon === Alpine.store('purchase')` y se demuestra en navegador, no en Node.
+- **Una captura solo vale con la pieza ASENTADA, y el limitador de la API puede falsearla**: dos corridas del
+  MISMO código daban imágenes distintas (panel a medio entrar, incluso con `reducedMotion`), y tres corridas
+  seguidas agotaron el limitador (60/min por IP) hasta que `/entradas` se capturó con «No hay días
+  disponibles» — que parecía una diferencia del cambio. Se espera a dos fotogramas con la misma caja + fuentes
+  cargadas, se cuentan los 429 como fila de la sonda, y se compara ANTES/DESPUÉS con control de dos corridas.
+- **`SHELL` es una variable del propio bash**: llamar así a una ruta en un guion se la cambia a todo lo que se
+  lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL (las cadenas viajan), se re-apunta cada
   guarda al fichero nuevo y se MUTA allí. Buscar antes con `grep -rln "js/app.js" tests`: salieron once.
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
@@ -161,6 +174,13 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   sesión), no en `components/layout.blade.php`: `SidebarBootTest` pone rojo un `'messages' =>` en el layout. El
   payload es idéntico byte a byte al de antes (medido en 7 contextos): tu cajón no nota nada. Si tenías cambios
   SIN EMPUJAR en ese bloque del layout, el rebase te dará conflicto: pásalos a la clase.
+- ❗❗ **T3a HECHA: la carcasa del cajón ya no lleva atributos de Alpine.** En `layout.blade.php`, `.sidecart` y
+  su panel pierden `x-data="a11yPanel(…)"`, `x-cloak`, los `:class`, los `@click` y los `@keydown`; su dueño es
+  `resources/js/cajon/shell.js` (abrir/cerrar, la clase `is-{modo}`, telón, ×, Escape y trampa de foco), y
+  `a11yPanel` se retiró de `app.js`. **Si tu invitación necesita tocar el panel del cajón, es ahí.** Medido:
+  `/entradas` idéntica píxel a píxel antes y después. Y dos defectos HEREDADOS que encontró el navegador: la
+  trampa de foco no veía `visibility: hidden` (el foco se escapaba al banner de cookies en la primera Tab tras
+  montar el motor) y Escape anunciaba un cierre aunque el cajón ya estuviera cerrado. Los dos, arreglados.
 - ❗❗ **T2 HECHA: abrir y cerrar el cajón YA NO VIVE EN `app.js`.** El store `purchase` se mudó tal cual a
   `resources/js/cajon/controller.js` (sin framework); `app.js` solo lo registra en Alpine. Si tocas `open()`,
   `close()`, `openAccount()`, `bootSpaEngine()` o la zona de cuenta, es AHÍ. Y **el motor no nombra a Alpine**:

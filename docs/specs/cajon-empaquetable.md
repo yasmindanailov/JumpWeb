@@ -13,8 +13,8 @@
   (cookie de sesión + CSRF, sin token). Cambia QUIÉN lo monta: del layout del producto a cualquier HTML que
   cargue el paquete. «Empaquetable» no es «página aparte» ni «otro dominio».
 - **«Una línea del layout» era falso, medido (§1)**: el cajón le pedía a su página la carcasa de Blade, un store
-  de Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB, una hoja de 549 KB compartida con la
-  landing, los tokens de `:root` de OTRA hoja y ocho rutas-puerta. Las tandas lo deshacen de una en una.
+  de Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB, una hoja de 549 KB, los tokens de OTRA
+  hoja y ocho rutas-puerta. Las tandas lo deshacen una a una.
 - **El riesgo silencioso es la hoja**: los `.vue` llevan CERO `<style>`; 81 bloques del cajón viven solo en
   `site.css` y **10 están definidos en las DOS hojas** (`btn`, `form`, `price`, `tabset`, `auth`, `catalog`,
   `addons`, `gifts`, `active`, `jj-block`). Partirla puede mover el cajón sin que falle un test: manda la huella
@@ -24,10 +24,11 @@
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo.
 - **La landing consume un MENÚ DE HECHOS opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende de que
   lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: por TANDAS — **T1 ✅** el arranque (`Http\Sidebar\SidebarBoot`, §4.5) · **T2 ✅** la apertura
-  (`resources/js/cajon/controller.js`, `window.JumpWeb.cajon`, `data-jw-*`, §4.2) → T3 carcasa → T4 hoja propia
-  → T5 página ajena. Implementa plataforma (`#633`). ⚠️ Un rótulo nuevo va en `SidebarBoot`, no en el layout;
-  abrir y cerrar, en el controlador, no en `app.js`; el motor NO nombra a Alpine.
+- **Estado**: por TANDAS — **T1 ✅** arranque (`SidebarBoot`, §4.5) · **T2 ✅** apertura
+  (`cajon/controller.js`, `window.JumpWeb.cajon`, `data-jw-*`) · **T3a ✅** carcasa con dueño
+  (`cajon/shell.js`) → T3b el paquete la CREA → T4 hoja propia → T5 página ajena. Implementa plataforma
+  (`#633`). ⚠️ Un rótulo nuevo va en `SidebarBoot`, no en el layout; abrir y cerrar, en el controlador; la
+  carcasa, en `shell.js`; el motor NO nombra a Alpine.
 - **Empieza por** §1 (el censo) → §4.1 (la forma) → §4.2 (la apertura) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
@@ -126,6 +127,26 @@ entrada de todas las páginas. **Medido**: `scripts/sonda-cajon-apertura.mjs` **
 (los abridores REALES de la landing por las tres vías, la API, los atributos sin navegar al `href`, los eventos,
 el modo del motor en la clase del panel y `/entradas` naciendo abierto); `npm run test:js` 1016 (20 nuevos);
 `scripts/mutar-cajon-apertura.sh` **13/13**; la entrada de la landing, 24,5 kB de un techo de 26.
+
+**✅ T3a HECHA (2026-09-18) · la carcasa con un solo dueño**. El marcado sigue pintándolo Blade, pero **ya no
+lleva ni un atributo de Alpine**: `x-data="a11yPanel(…)"`, `x-cloak`, dos `:class`, tres `@click` y dos
+`@keydown` se retiran, y su dueño es `resources/js/cajon/shell.js`, que ADOPTA `.sidecart` y le pone `is-open`,
+la clase `is-{modo}`, el cierre por telón, × y Escape, y la trampa de foco. `a11yPanel` se retira de `app.js`
+(su único consumidor era esta carcasa). El controlador gana `announce('mode')` y deja de anunciar un cierre
+cuando el cajón ya estaba cerrado (Escape llegaba siempre). Cerrada, la carcasa se oculta por CSS
+(`visibility: hidden`), no por `x-cloak`: sin JS no se ve, que es lo que debe pasar. **Tres cosas que enseñó el
+navegador y ningún test de Node habría visto**: (1) la trampa de foco heredada filtraba por `offsetParent`, que
+NO ve `visibility: hidden` — recién montado el motor, el foco se escapaba del diálogo al banner de cookies en la
+primera pulsación de Tab; ahora «visible» es «se puede enfocar» y 46 pulsaciones no salen del panel; (2) el
+`a11yPanel` viejo QUERÍA enfocar al nacer abierto y su comprobación (`this.$data.$evaluate`) no existía, así que
+nunca corría: hacerlo bien pinta el anillo sobre la × al cargar `/entradas` y las puertas, que es un cambio
+VISIBLE — se deja en paridad con `{ focus: false }` y **queda para el owner**; (3) las capturas hay que tomarlas
+con el panel ASENTADO (dos fotogramas con la misma caja) y cuidando el limitador de la API: sin eso, dos
+corridas del mismo código daban imágenes distintas y un 429 pintó «No hay días disponibles» en una. **Medido**:
+`/entradas` (el cajón que nace abierto) **idéntica píxel a píxel** antes y después, con control de dos corridas;
+sonda **23/23**; `npm run test:js` 1027; `scripts/mutar-cajon-apertura.sh` **20/20**.
+▶ **Queda la T3b**: que el paquete CREE la carcasa cuando la página no la trae, `jw:cajon:purchased`, y el
+arranque del cajón que nace abierto (hoy en `app.js`, que es del producto).
 
 ### 4.3 La hoja y los tokens
 La hoja del cajón lleva SU raíz de tokens (los que lee, medidos con el guion, no los 231) bajo un selector propio,

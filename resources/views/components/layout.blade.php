@@ -148,16 +148,21 @@
     {{-- ⚠️ El bloqueo de scroll YA NO se pone aquí (`sidebar-spa.md` §6): lo pide el dueño único desde
          `app.js` al arrancar Alpine, junto con el del modal de auth —que venía abierto sin bloquear
          nada—. Un `x-init` suelto era el sexto escritor de `body.no-scroll`. --}}
-    <div x-data="a11yPanel('$store.purchase.isOpen')" x-cloak class="sidecart" :class="$store.purchase.isOpen && 'is-open'"
-         @keydown.escape.window="$store.purchase.close()" @keydown="trap($event)">
-        <div class="sidecart__backdrop" @click="$store.purchase.close()"></div>
-        {{-- Sidebar v2: el «modo» del flujo (catalog/booking/cart/result) lo fija el componente de
-             compra desde `$wire.step` (ver purchase.blade.php). La clase `is-{modo}` minimiza la
-             cuenta y posiciona el footer, replicando el `.side.is-booking` del mockup. --}}
-        <aside class="sidecart__panel" :class="'is-' + $store.purchase.mode" role="dialog" aria-modal="true" aria-label="{{ __('tickets.title') }}">
+    {{-- ⚠️⚠️ **LA CARCASA YA NO LLEVA NI UN ATRIBUTO DE ALPINE** (F4 · T3a, `specs/cajon-empaquetable.md`
+         §4.2). Aquí vivían `x-data="a11yPanel(…)"`, `x-cloak`, dos `:class`, tres `@click` y dos
+         `@keydown`: la conducta de la carcasa repartida en el marcado. Su dueño único es ahora
+         `resources/js/cajon/shell.js`, sin framework, que ADOPTA este marcado: le pone `is-open`, la clase
+         `is-{modo}` que publica el motor, el cierre por el telón, por la × y por Escape, y la trampa de foco.
+         ▶ Cerrada se oculta por CSS (`.sidecart { visibility: hidden }`), no por `x-cloak`: sin JS no se ve,
+         que es lo que tiene que pasar. --}}
+    <div class="sidecart">
+        <div class="sidecart__backdrop"></div>
+        {{-- El «modo» del flujo (catalog/booking/cart/result/account) lo publica el MOTOR y la carcasa lo
+             pinta como `is-{modo}`: minimiza el bloque de cuenta y posiciona el footer (`DECISIONES #118`). --}}
+        <aside class="sidecart__panel" role="dialog" aria-modal="true" aria-label="{{ __('tickets.title') }}">
             <header class="sidecart__head">
                 <span class="sidecart__title">{{ __('tickets.title') }}</span>
-                <button type="button" class="sidecart__close" @click="$store.purchase.close()" aria-label="{{ __('account.close') }}">&times;</button>
+                <button type="button" class="sidecart__close" aria-label="{{ __('account.close') }}">&times;</button>
             </header>
             {{-- ⚠️⚠️ **El HUECO del bloque de cuenta** (`specs/account-context-vue.md` §4.1). Hasta el
                  2026-08-23 aquí vivía el componente Livewire `site.account-context`, el ÚLTIMO

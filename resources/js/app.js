@@ -1,6 +1,7 @@
 import { installScrollLock } from './ui/scroll-lock.js';
 import { createCajonController } from './cajon/controller.js';
 import { installDeclarativeOpeners } from './cajon/declarative.js';
+import { installShell } from './cajon/shell.js';
 import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
 import { installHeroSwitch } from './ui/hero-switch.js';
@@ -31,6 +32,10 @@ const scrollLock = installScrollLock();
 const cajon = createCajonController({ scrollLock });
 window.JumpWeb = { ...(window.JumpWeb ?? {}), cajon };
 installDeclarativeOpeners(() => window.JumpWeb.cajon);
+// La CARCASA (telón, panel, cierre, Escape, trampa de foco y la clase de modo) tiene un solo dueño y no es
+// Alpine (F4 · T3a): adopta el marcado que pinta el layout. Este módulo es `type="module"` —diferido—, así
+// que el documento ya está parseado cuando llega aquí.
+installShell(() => window.JumpWeb.cajon);
 
 document.addEventListener('alpine:init', () => {
 
@@ -190,10 +195,6 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // T4.1/T4.2 — accesibilidad de modal/sidecart: focus trap (Tab/Shift+Tab no escapa) y
-    // foco automático al primer elemento interactivo cuando se abre el panel. Sin esto el
-    // usuario de teclado/lector de pantalla puede tabular detrás del backdrop y perderse.
-    // Implementación manual (~25 líneas) para no depender del plugin @alpinejs/focus.
     // ── EL CAJÓN PUEDE NACER ABIERTO, y eso tiene DOS consecuencias ────────────────────────────
     // El servidor lo abre solo en dos casos (`data-purchase-open`): el enlace profundo `/entradas` y
     // **la vuelta de la pasarela con un desenlace pendiente**.
@@ -217,37 +218,10 @@ document.addEventListener('alpine:init', () => {
         window.Alpine.store('purchase').bootSpaEngine();
     }
 
-    window.Alpine.data('a11yPanel', (openExpr) => ({
-        _focusableSelector:
-            'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
-        init() {
-            this.$watch(openExpr, (open) => {
-                if (open) {
-                    this.$nextTick(() => this.focusFirst());
-                }
-            });
-            // Si el panel ya estaba abierto al cargar (auth-modal por URL, sidecart por /entradas).
-            if (this.$data.$evaluate ? this.$data.$evaluate(openExpr) : false) {
-                this.$nextTick(() => this.focusFirst());
-            }
-        },
-        focusFirst() {
-            const target = this.$el.querySelector(this._focusableSelector);
-            target?.focus();
-        },
-        trap(e) {
-            if (e.key !== 'Tab') return;
-            const items = [...this.$el.querySelectorAll(this._focusableSelector)]
-                .filter((el) => el.offsetParent !== null);
-            if (items.length === 0) return;
-            const first = items[0], last = items[items.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault(); last.focus();
-            } else if (! e.shiftKey && document.activeElement === last) {
-                e.preventDefault(); first.focus();
-            }
-        },
-    }));
+    // ⚠️ Aquí vivía `a11yPanel`, el componente de Alpine con la trampa de foco y el foco automático del
+    // cajón (T4.1/T4.2). Se retiró en F4 · T3a: su ÚNICO consumidor era la carcasa del cajón, que desde
+    // entonces tiene un dueño sin framework (`cajon/shell.js`) con la misma conducta — Tab y Shift+Tab no
+    // escapan del panel, y el foco entra al abrir—. Medido antes de borrar: un solo `x-data="a11yPanel(…)"`.
 
     // ⚠️ Aquí vivían `birthdayInvite` (el editor de la tarjeta de invitación, que traía
     // `html2canvas` bajo demanda) y `birthdayProcess` (el paso a paso de la reserva). Se retiraron
