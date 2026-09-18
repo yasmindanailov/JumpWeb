@@ -1059,11 +1059,17 @@ paths:
         a cualquiera con el enlace quién va a esa fiesta, y bastaba con ir probando nombres. La hoja
         es en blanco también en sus errores.
 
-        ### Los «no» que sí se dicen
+        ### Los «no» que sí se dicen, y por qué son seguros
 
-        `full` (la lista está completa; no hay lista de espera), `closed` (la reserva ya no admite
-        cambios), `cutoff` (pasó el plazo), `no_name` y `too_many`. Ninguno de ellos revela **quién**
-        hay en la lista.
+        `closed` (la reserva ya no admite cambios), `cutoff` (pasó el plazo), `no_name` y `too_many`.
+        **Ninguno depende del nombre que traiga la respuesta**, así que contestan igual a todo el
+        mundo y no sirven para preguntarle nada a la lista.
+
+        ❗❗ **La lista completa NO rechaza** (`DECISIONES #520`). Hacerlo abría el mismo oráculo que el
+        motivo «repetido»: un nombre ya escrito se aceptaba y uno nuevo recibía «full», así que se
+        podía reconstruir la lista probando. El «sí» que no cabe se acepta igual y sale en el aviso
+        del anfitrión — «hay N respuestas que ya no caben: sube el número o avisa a esas familias» —,
+        que es quien sabe quién va. Lo que frena el abuso es `too_many`, que no mira el nombre.
 
         ⚠️ Todo se vuelve a comprobar **al contestar**, no al pintar la tarjeta: entre que el padre
         abre el enlace y pulsa pueden pasar la fiesta, el plazo o los demás «sí».
@@ -5141,6 +5147,11 @@ components:
         tiene motivo propio: devuelve `accepted: true`, exactamente igual que la primera vez. Decirle
         «ya nos habéis contestado por Hugo» le confirmaría a cualquiera con el enlace quién va a esa
         fiesta, y bastaba con probar nombres. La hoja es en blanco también en sus errores.
+
+        ❗❗ **Y por lo mismo NO existe un motivo `full`.** Rechazar por lista completa abría el mismo
+        oráculo por otra puerta: el nombre que emparejaba con una ficha ya escrita se aceptaba y el
+        nuevo recibía «full», así que se podía **reconstruir la lista probando nombres**. Desde
+        `DECISIONES #520` el «sí» se acepta siempre y el que no cabe sale en el aviso del anfitrión.
       required: [accepted, reason]
       additionalProperties: false
       properties:
@@ -5148,11 +5159,14 @@ components:
           type: boolean
         reason:
           type: string
-          enum: [full, closed, cutoff, no_name, too_many, null]
+          enum: [closed, cutoff, no_name, too_many, null]
           nullable: true
           description: |
-            `full` = la lista está completa y no hay lista de espera. ⚠️ **No existe un motivo
-            «repetido»**, y su ausencia es la propiedad, no un olvido.
+            ⚠️⚠️ **Los cuatro motivos tienen algo en común, y es lo que los hace seguros: ninguno
+            depende del NOMBRE que traiga la respuesta.** Cerrada, fuera de plazo, sin nombre o
+            demasiadas contestan igual a todo el mundo, así que no sirven para preguntarle nada a la
+            lista. Los dos que sí dependían del nombre —«repetido» y `full`— no existen, y su
+            ausencia es la propiedad, no un olvido.
     PaymentStatus:
       type: object
       description: El desenlace del pago de un pedido, en su forma mínima para sondear.

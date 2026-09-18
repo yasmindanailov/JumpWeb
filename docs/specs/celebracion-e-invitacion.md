@@ -292,11 +292,22 @@ Reglas estructurales:
 2. **Se puede compartir** mientras `GuestCountPolicy::isOpenFor()` (pagada, no cancelada, no celebrada)
    y `honoree_name` no esté vacío. ⚠️ **Pasado el plazo se sigue compartiendo** (§7.2·R8): la
    información hace falta el mismo día, y lo único que se cierra son las respuestas.
-3. **Lista completa.** Se comprueba bajo lock de la fila de `party_invitations`:
-   **fichas con nombre en `guest_data`** (acotadas a `quantity`) **+ «sí» pendientes, distintos por
-   `child_key`, que no emparejan con ninguna de esas fichas ≥ `quantity`**. Con la lista completa, un
-   «sí» se rechaza (D2) salvo que **empareje** (regla 4) o repita un `child_key` pendiente (regla 5),
-   porque entonces no ocupa plaza nueva. Un «no» nunca ocupa.
+3. **Lista completa** — `[DECIDIDO owner, 2026-09-18]`, `DECISIONES #520`, **sustituye a D2**.
+   Se cuenta bajo lock de la fila de `party_invitations`: **fichas con nombre en `guest_data`**
+   (acotadas a `quantity`) **+ «sí» pendientes, distintos por `child_key`, que no emparejan con
+   ninguna de esas fichas**. Lo que esa cuenta decide es si el «sí» **toma plaza nueva** o **se une a
+   una que ya tenía dueño** —por emparejar (regla 4) o por repetir un `child_key` (regla 5)—. Un «no»
+   nunca ocupa.
+   - ❗❗ **La lista completa NO rechaza.** D2 decía que sí, y era **un oráculo de pertenencia**: con la
+     lista llena, el nombre que emparejaba se aceptaba y el nuevo recibía «full», así que cualquiera
+     con el enlace podía **reconstruir la lista de invitados probando nombres**. Chocaba de frente con
+     §7.2·R1, que manda hoja en blanco **también en los errores**; gana la hoja en blanco. Lo encontró
+     la revisión adversarial (`#579`) y lo decidió el owner.
+   - ▶ El «sí» que no cabe **se acepta y toma plaza propia**, así que sube el suelo de `#444` y sale
+     en el aviso que ya estaba escrito en §4.7: «hay N respuestas que ya no caben: sube el número o
+     avisa a esas familias». La decisión vuelve al ANFITRIÓN, que es quien sabe quién va.
+   - ⚠️ Lo que frena el abuso sigue siendo el tope `3 × invitados` (§4.5·12), que **no mira el
+     nombre** y por eso no delata nada. Es la propiedad que comparten los cuatro motivos que quedan.
 4. **Emparejado** (D11). Candidatas: fichas con nombre **no adoptadas por otra respuesta** cuyo
    `PersonNameKey` sea igual al de la respuesta, **o igual a su primera palabra** (el anfitrión pegó
    «Mateo» y el padre escribe «Mateo Ruiz»).
@@ -1179,7 +1190,7 @@ refutados, 8 sin refutar por el tope declarado de 3 por lente.**
 
 **Arnés**: `scripts/mutar-invitacion-t46.sh` sube a **16/16** con los dos mutantes nuevos.
 
-##### A · LA DECISIÓN QUE QUEDA PARA EL OWNER: el oráculo de pertenencia 🔴
+##### A · El oráculo de pertenencia — ✅ **RESUELTO** (`[DECIDIDO owner, 2026-09-18]`, `DECISIONES #520`)
 
 Con la lista completa, contestar «sí» **distingue un nombre que ya está de uno nuevo**: el que empareja
 con una ficha escrita se acepta; el nuevo recibe `full`. Quien tiene el enlace —un grupo de clase
@@ -1190,11 +1201,20 @@ manda rechazar con «la lista está completa», y §7.2·R1 manda que la hoja se
 errores. Las dos no pueden cumplirse a la vez cuando el nombre empareja. Por eso **no se arregla sin el
 owner**: cualquier salida cambia lo que un padre ve.
 
-▶ La salida que recomiendo, y que **la spec ya tiene medio escrita**: que la lista completa **deje de
-rechazar**. El «sí» se acepta siempre —sin ocupar plaza nueva— y sale en el aviso que §4.7 ya
-contempla, «hay N respuestas que ya no caben: sube el número o avisa a esas familias». Cierra el
-oráculo, reutiliza un mecanismo existente y deja la decisión donde debe estar: en el anfitrión, que sí
-sabe quién va. Coste: retirar `full` del enum del contrato y reescribir tres casos.
+▶ **El owner aceptó la salida recomendada**: la lista completa **deja de rechazar**. El «sí» se acepta
+siempre —tomando plaza propia, así que sube el suelo— y sale en el aviso que §4.7 ya contempla, «hay N
+respuestas que ya no caben». Cierra el oráculo, reutiliza un mecanismo existente y devuelve la decisión
+al anfitrión, que sí sabe quién va. **Aplicado en `#520`**: §4.5·3 reescrita, `REASON_FULL` retirado del
+dominio y del enum del contrato, y la guarda que lo cierra compara los DOS campos del desenlace —un
+nombre conocido y uno nuevo, mismo fixture— porque mirar solo `accepted` dejaría pasar un `reason`
+distinto, que era justo la rendija.
+
+⚠️ **Y se reorientó el verificador de concurrencia**, que medía esta carrera: «16 padres por la última
+plaza → entra 1, 15 `full`» dejó de existir con el rechazo. Ahora fuerza **16 «sí» del MISMO niño**,
+cuyo invariante es que ocupen **una sola plaza**. Medido sobre InnoDB: con el lock, 1 toma plaza y 15
+se unen; **sin él, 16 de 16 creen estrenar plaza**. ▶ Dicho sin venderlo de más: el suelo sale 1 en los
+dos casos, porque `PartyGuestsReader` agrupa por `child_key` al leer — lo que el lock protege es la
+CLASIFICACIÓN, de la que vive el aviso de «no caben».
 
 ##### B · Lo que queda anotado y NO se ha tocado
 

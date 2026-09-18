@@ -20,8 +20,22 @@ use App\Domain\Booking\Models\InvitationReply;
  */
 final class InvitationReplyOutcome
 {
-    /** La lista está completa y este «sí» ocuparía una plaza nueva (D2). No hay lista de espera. */
-    public const REASON_FULL = 'full';
+    /*
+     * ❗❗ **`full` YA NO EXISTE, y su ausencia es la propiedad** (`[DECIDIDO owner, 2026-09-18]`,
+     * `DECISIONES #520`; sustituye a D2 de `#569`).
+     *
+     * Rechazar un «sí» por lista completa abría un **oráculo de pertenencia**: el nombre que emparejaba
+     * con una ficha escrita se aceptaba y el nuevo recibía «full», así que cualquiera con el enlace
+     * podía reconstruir la lista de invitados probando nombres. Lo mismo que ya pasaba con el motivo
+     * «repetido», que por eso tampoco existe (§7.2·R1).
+     *
+     * ▶ La regla que queda: **el «sí» se acepta siempre**; el que no cabe sale en el aviso del
+     * anfitrión, «hay N respuestas que ya no caben» (§4.7). La decisión vuelve a quien sabe quién va.
+     *
+     * ⚠️ Los motivos que SÍ quedan tienen todos algo en común y conviene verlo: **ninguno depende del
+     * nombre que traiga la respuesta**. Cerrada, fuera de plazo, sin nombre o demasiadas contestan lo
+     * mismo a todo el mundo, así que no se pueden usar para preguntarle nada a la lista.
+     */
 
     /** La reserva ya no admite respuestas: cancelada, celebrada o pedido no pagado. */
     public const REASON_CLOSED = 'closed';

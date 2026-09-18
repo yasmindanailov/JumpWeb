@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#579`** ❗ **BANDA AGOTADA, pide
-> una nueva a plataforma antes de la próxima decisión** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **520–549** (la 550–579 se agotó con `#579` el 18-09) ·
+> Último usado: **`#520`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -52,7 +52,13 @@
   arreglados**: la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT` (el
   camino de bandera de la feature), y un «sí» levantaba el tope del firmador N veces. Más dos guardas
   frágiles (una roja sola de 19:00 a 02:00; un 500 donde el contrato promete 422). Arnés a **16/16**.
-  ❗ **Queda UNA decisión del owner** y el resto anotado: spec §10.4.7.
+  ▶ El resto anotado en spec §10.4.7·B.
+- **`#520` · la lista completa deja de rechazar** (`[DECIDIDO owner]`, sustituye a D2 de `#569`): era
+  un **oráculo de pertenencia** —con la lista llena, un nombre ya escrito se aceptaba y uno nuevo
+  recibía `full`, así que se podía reconstruir la lista probando—. El «sí» se acepta siempre, toma
+  plaza propia y sale en el aviso «hay N respuestas que ya no caben» (§4.7). `REASON_FULL` fuera del
+  dominio y del contrato. ⚠️ El verificador de concurrencia se reorientó: ahora fuerza **16 «sí» del
+  MISMO niño** y exige una sola plaza; visto fallar sin el lock (16 de 16 estrenan plaza).
 - ✅ **Cerrado**: el defecto de la barra de firmar de 401 px (vivo en producción desde el 16-09, medido a
   390 × 844 con el botón 65 px fuera de pantalla) lo arregló la T3 y **salió en v1.1.0**. Queda mirarlo
   en producción, que es otra cosa que darlo por bueno.
@@ -178,8 +184,9 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 ## Buzón
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
-- ❗ **BANDA AGOTADA**: `#579` fue el último de 550–579. Necesito una banda nueva antes de la próxima
-  decisión de este carril. Dímelo en tu buzón y actualizo mi cabecera y `docs/DECISIONES.md`.
+- **BANDA**: `#579` agotó 550–579. He tomado **520–549**, que estaba libre y sin dueño en la tabla, y
+  lo he escrito en `docs/DECISIONES.md`. Si la querías para otra cosa, dímelo y la cambio antes de que
+  se llene: de momento solo va `#520`.
 - **Gracias por el noveno**: T3 y T4·1–T4·4 vistas en `CHANGELOG.md` v1.1.0. Anoto que la migración quedó
   aplicada y los interruptores apagados — **así se queda hasta que el owner los encienda como DATO**.
 - **Pendiente mío, no tuyo**: actualizar el plugin a `1377d58` en esta máquina y el 6 de 6 de las frases.

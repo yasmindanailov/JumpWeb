@@ -3,6 +3,7 @@
 namespace Tests\Feature\Invitation;
 
 use App\Domain\Booking\Contracts\InvitationReplyOutcome;
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
@@ -175,13 +176,55 @@ class PartyInvitationsTest extends TestCase
         $this->assertTrue($outcome->reply->isPending(), 'nace por repasar: la adopta el anfitrión');
     }
 
-    /** D2: con la lista completa no se admite un «sí». No hay lista de espera. */
-    public function test_a_yes_is_refused_when_the_list_is_full(): void
+    /**
+     * ❗❗ **LA PRUEBA QUE CIERRA EL ORÁCULO DE PERTENENCIA** (`[DECIDIDO owner, 2026-09-18]`,
+     * `DECISIONES #520`; sustituye a D2 de `#569`).
+     *
+     * Con la lista completa, un nombre que **ya está** en ella y uno **nuevo** tienen que recibir
+     * exactamente el mismo desenlace. Hasta `#520` no era así: el que emparejaba se aceptaba y el
+     * nuevo recibía `full`, así que cualquiera con el enlace —repartido a un grupo de clase entero—
+     * podía **reconstruir la lista de invitados probando nombres**. Lo encontró la revisión
+     * adversarial de `#579`, y es la misma fuga que el motivo «repetido» ya tenía cerrada.
+     *
+     * ⚠️ Se asevera sobre los DOS campos a la vez y con el mismo fixture: comparar solo `accepted`
+     * dejaría pasar un `reason` distinto, que es exactamente la rendija por la que se filtraba.
+     */
+    public function test_with_a_full_list_a_known_name_and_a_new_one_answer_the_same(): void
     {
         $invitation = $this->invitation(quantity: 2, guests: [['name' => 'Ana Gil'], ['name' => 'Leo Sanz']]);
 
-        $this->assertSame(InvitationReplyOutcome::REASON_FULL, $this->service()->reply($invitation, 'Hugo Ruiz', true)->reason);
-        $this->assertSame(0, InvitationReply::query()->count());
+        // «Ana Gil» ESTÁ en la lista; «Hugo Ruiz» no. Los dos con la lista completa.
+        $conocido = $this->service()->reply($invitation, 'Ana Gil', true);
+        $nuevo = $this->service()->reply($invitation, 'Hugo Ruiz', true);
+
+        $this->assertSame(
+            [$conocido->accepted, $conocido->reason],
+            [$nuevo->accepted, $nuevo->reason],
+            'el desenlace distingue quién está en la lista: es un oráculo de pertenencia'
+        );
+        $this->assertTrue($nuevo->accepted, 'la lista completa ya no rechaza (#520)');
+        $this->assertNull($nuevo->reason);
+
+        // Las dos se guardan: el que no cabe lo resuelve el ANFITRIÓN, no el servidor.
+        $this->assertSame(2, InvitationReply::query()->count());
+    }
+
+    /**
+     * ⚠️ Y lo que NO cambia: el que no cabe **ocupa plaza nueva**, así que el suelo de `#444` sube por
+     * encima de la cantidad y el anfitrión no puede bajar invitados hasta resolverlo. Es la mitad que
+     * hace honesto el cambio — aceptar en silencio sin que nadie se entere sí sería un defecto.
+     */
+    public function test_a_yes_that_does_not_fit_still_takes_a_place_of_its_own(): void
+    {
+        $invitation = $this->invitation(quantity: 2, guests: [['name' => 'Ana Gil'], ['name' => 'Leo Sanz']]);
+
+        $outcome = $this->service()->reply($invitation, 'Hugo Ruiz', true);
+
+        $this->assertTrue($outcome->accepted);
+        $this->assertFalse(
+            $outcome->joinedExistingPlace,
+            'se unió a una plaza ajena: entonces no saldría en el aviso de «no caben»'
+        );
     }
 
     /** D3: un «no» NUNCA ocupa, así que se recoge aunque la lista esté completa. */
@@ -241,8 +284,16 @@ class PartyInvitationsTest extends TestCase
         $this->assertTrue($matched->accepted);
         $this->assertTrue($matched->joinedExistingPlace, 'la ficha se leyó: si no, esto habría ocupado plaza nueva');
 
-        // Y las dos fichas SÍ cuentan como llenas: un niño nuevo no cabe.
-        $this->assertSame(InvitationReplyOutcome::REASON_FULL, $this->service()->reply($invitation, 'Ana Gil', true)->reason);
+        // Y el CONTRASTE, que es lo que hace útil la aserción de arriba: un nombre que NO está en
+        // ninguna ficha **ocupa plaza propia**. Si la columna renombrada no se leyera, los dos
+        // caminos darían lo mismo y el caso pasaría sin probar nada.
+        //
+        // ⚠️ El control era `full` hasta `#520`; ese motivo ya no existe —era un oráculo de
+        // pertenencia— y lo que queda para distinguirlos es la plaza, que el padre no ve.
+        $this->assertFalse(
+            $this->service()->reply($invitation, 'Ana Gil', true)->joinedExistingPlace,
+            'un nombre ajeno a las fichas se unió a una plaza existente: la columna no se está leyendo'
+        );
     }
 
     /**
@@ -264,9 +315,17 @@ class PartyInvitationsTest extends TestCase
         $this->assertTrue($second->joinedExistingPlace, 'se une a la propuesta del primero: no ocupa plaza nueva');
         $this->assertSame(2, InvitationReply::query()->count(), 'las dos quedan, y las resuelve el anfitrión');
 
-        // Y con la plaza que queda libre todavía entra OTRO niño: el repetido no la consumió.
+        // Y el repetido NO consumió plaza: con la que queda libre entra otro niño y el suelo sigue
+        // contando DOS, no tres.
+        //
+        // ⚠️ Se mide sobre el suelo —los ids distintos por niño— y ya no con `full`, que desde `#520`
+        // no existe: era la otra mitad del mismo oráculo que este caso existe para cerrar.
         $this->assertTrue($this->service()->reply($invitation, 'Leo Sanz', true)->accepted);
-        $this->assertSame(InvitationReplyOutcome::REASON_FULL, $this->service()->reply($invitation, 'Ana Gil', true)->reason);
+        $this->assertCount(
+            2,
+            app(PartyGuests::class)->committedReplyIdsIn((int) $invitation->order_item_id),
+            'el repetido ocupó una plaza propia: son dos niños, no tres'
+        );
     }
 
     /**

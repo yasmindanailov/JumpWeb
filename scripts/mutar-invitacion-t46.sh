@@ -131,6 +131,18 @@ mutar "adoptar acepta una respuesta ya adoptada o descartada" "$SRV" \
             ->where('attending', true)" \
   "            ->where('attending', true)"
 
+echo '── El ORÁCULO DE PERTENENCIA que cerró #520 ─────────────────────────────────────────────'
+
+# ❗❗ Reintroducir el rechazo por lista completa vuelve a abrir la fuga: con la lista llena, el nombre
+# que empareja se acepta y el nuevo recibe «full», así que quien tenga el enlace puede reconstruir la
+# lista de invitados probando nombres. Es la misma fuga que el motivo «repetido» ya tenía cerrada.
+mutar "⚠⚠ la lista completa vuelve a rechazar (oráculo de pertenencia)" "$SRV" \
+  '            $joined = $attending && $this->placeFor($reservation, $existing, $childKey);' \
+  "            \$joined = \$attending && \$this->placeFor(\$reservation, \$existing, \$childKey);
+            if (\$attending && ! \$joined && count(\$this->namedGuestKeys(\$reservation)) >= \$quantity) {
+                return InvitationReplyOutcome::refused('full');
+            }"
+
 echo '── Los DOS defectos que encontró la revisión adversarial (#579) ─────────────────────────'
 
 # ❗❗ El camino de bandera: el anfitrión pega nombres de pila y el padre contesta con apellidos. Si la

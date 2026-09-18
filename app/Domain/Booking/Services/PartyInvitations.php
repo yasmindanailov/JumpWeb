@@ -155,15 +155,9 @@ final class PartyInvitations
                 return InvitationReplyOutcome::refused(InvitationReplyOutcome::REASON_TOO_MANY);
             }
 
-            // Un «no» NUNCA ocupa: no hay nada que comprobar contra la lista completa (D3).
-            $joined = false;
-            if ($attending) {
-                $verdict = $this->placeFor($reservation, $existing, $childKey);
-                if ($verdict === null) {
-                    return InvitationReplyOutcome::refused(InvitationReplyOutcome::REASON_FULL);
-                }
-                $joined = $verdict;
-            }
+            // Un «no» NUNCA ocupa (D3). Y desde `#520` un «sí» TAMPOCO se rechaza por lista llena: lo
+            // único que dice `placeFor()` es si toma plaza nueva o se une a una que ya tenía dueño.
+            $joined = $attending && $this->placeFor($reservation, $existing, $childKey);
 
             $type = $reservation->ticketType;
 
@@ -196,15 +190,19 @@ final class PartyInvitations
     }
 
     /**
-     * ¿Cabe este «sí»? `null` = la lista está completa. `true` = se une a una plaza que ya tenía dueño
-     * (no ocupa una nueva); `false` = ocupa una plaza libre.
+     * ¿Este «sí» se une a una plaza que YA tenía dueño (`true`) o toma una nueva (`false`)?
+     *
+     * ⚠️ **Ya no contesta «no cabes»** (`#520`): la lista completa dejó de rechazar, y con ella
+     * desapareció el único desenlace que dependía de **qué nombre** traía la respuesta. Lo que queda
+     * es una distinción que el padre no puede observar —los dos caminos le dan el mismo 200— y que
+     * solo usa el suelo de `#444` para saber cuántas plazas tienen dueño.
      *
      * La cuenta de §4.5·3: **fichas con nombre** (acotadas a la cantidad) **+ «sí» pendientes,
      * distintos por `child_key`, que no emparejan con ninguna de esas fichas**.
      *
      * @param  Collection<int, InvitationReply>  $existing
      */
-    private function placeFor(OrderItem $reservation, $existing, string $childKey): ?bool
+    private function placeFor(OrderItem $reservation, $existing, string $childKey): bool
     {
         $namedKeys = $this->namedGuestKeys($reservation);
 
@@ -228,9 +226,25 @@ final class PartyInvitations
             ->reject(fn (string $key): bool => $this->matches($namedKeys, $key))
             ->count();
 
-        $taken = count($namedKeys) + $pendingOwnPlaces;
-
-        return $taken >= max(0, (int) $reservation->quantity) ? null : false;
+        // ❗❗ **La lista completa ya NO rechaza** (`[DECIDIDO owner, 2026-09-18]`, `DECISIONES #520`;
+        // sustituye a D2 de `#569`). Antes se devolvía `null` → `full`, y eso abría un ORÁCULO DE
+        // PERTENENCIA que se cargaba la propiedad central de la feature: con la lista llena, un nombre
+        // que EMPAREJA con una ficha escrita se aceptaba y uno nuevo recibía «full», así que cualquiera
+        // con el enlace —un grupo de clase entero— podía **reconstruir la lista de invitados probando
+        // nombres**. Lo encontró la revisión adversarial de `#579`.
+        //
+        // ⚠️⚠️ No era un descuido, sino una CONTRADICCIÓN de la propia spec: §4.5·3 mandaba rechazar y
+        // §7.2·R1 manda que la hoja sea en blanco **también en sus errores**. Las dos no pueden
+        // cumplirse a la vez cuando el nombre empareja, y la que se queda es la hoja en blanco.
+        //
+        // ▶ Lo que ocupa su sitio ya estaba escrito en §4.7: el «sí» que no cabe **se acepta igual** y
+        // sale en el aviso «hay N respuestas que ya no caben: sube el número o avisa a esas familias».
+        // La decisión vuelve al ANFITRIÓN, que es el único que sabe quién va. Lo que frena el spam
+        // sigue siendo el tope `3 × invitados`, que no depende del nombre y por eso no delata nada.
+        //
+        // ⚠️ El valor devuelto sigue distinguiendo si se une a una plaza con dueño (`true`) o toma una
+        // nueva (`false`), porque de eso vive el suelo de `#444`. Lo que desaparece es el «no».
+        return false;
     }
 
     /**

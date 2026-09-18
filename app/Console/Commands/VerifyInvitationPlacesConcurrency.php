@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
@@ -17,24 +18,35 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 /**
- * **La ÚLTIMA PLAZA de una invitación, disputada de verdad**
- * (`specs/celebracion-e-invitacion.md` §2.1 y §4.5·3; `DECISIONES #574`).
+ * **El MISMO NIÑO contestando a la vez, y la plaza que no puede contarse dos veces**
+ * (`specs/celebracion-e-invitacion.md` §4.5·5 y §4.5·8; `DECISIONES #574`, reorientado en `#520`).
  *
  * Hermano de `purchase:verify-oversell` y de `waiver:verify-chain`, y existe por lo mismo: **la suite
  * es ciega a esta carrera por construcción**. Corre sobre SQLite, donde `SQLiteGrammar::compileLock()`
  * devuelve **cadena vacía** — o sea que `lockForUpdate()` no bloquea nada y el caso pasa igual con el
  * lock y sin él. Un invariante de exclusión que solo se prueba ahí es una afirmación, no un hecho.
  *
- * Lo que fuerza: N padres contestan «sí» **a la vez** por niños DISTINTOS cuando queda **una sola
- * plaza**. El invariante (D2, «no hay lista de espera») es que entre **exactamente uno** y los demás
- * reciban `full`. Sin el lock de `PartyInvitations::reply()` todos leen la misma lista, todos ven
- * hueco, todos escriben — y la fiesta acaba con más niños confirmados que plazas compradas, **sin un
- * solo error y sin que nadie se entere** hasta que se presenten en la puerta.
+ * Lo que fuerza: N padres contestan «sí» **a la vez por el MISMO niño**. El invariante (V6, regla 5)
+ * es que las N respuestas se guarden pero **ocupen UNA sola plaza**: la primera la toma y las demás
+ * se unen a ella. Sin el lock de `PartyInvitations::reply()` todos leen la misma lista, ninguno ve el
+ * «sí» de los otros, todos creen estar estrenando plaza — y el suelo de `#444` sale contando N niños
+ * donde hay uno, así que **el anfitrión no puede bajar el número de invitados** y nadie sabe por qué.
+ *
+ * ⚠️⚠️ **Hasta `#520` este comando medía otra cosa**: N padres por niños DISTINTOS a la última plaza,
+ * con el invariante de que entrara uno y los demás recibieran `full`. Ese rechazo se retiró —era un
+ * oráculo de pertenencia— y con él desapareció aquella carrera. La que queda es ésta, y es la misma
+ * mecánica de leer-decidir-escribir bajo el mismo lock.
  *
  * ⚠️⚠️ **Un verde solo vale si el instrumento se ha visto FALLAR** (`#147`). El control de este
  * comando no es una bandera: es **retirar el `lockForUpdate()`** de `PartyInvitations::reply()` y
- * volver a correrlo — entonces tiene que cazar varios aceptados. Se hizo al escribirlo, y el arnés
- * `scripts/mutar-invitacion-t42.sh` lo repite como mutante.
+ * volver a correrlo. Medido el 2026-09-18 con 16 forks: con el lock, **1** toma plaza y 15 se unen;
+ * sin él, **16 de 16** creen estrenar plaza. El arnés `scripts/mutar-invitacion-t42.sh` lo repite.
+ *
+ * ⚠️ **Y lo que ese fallo NO rompe, dicho para no venderlo de más**: el suelo de `#444` sale igual a 1
+ * en los dos casos, porque `PartyGuestsReader` agrupa por `child_key` **al leer**. O sea que la
+ * segunda red sostiene la cuenta aunque la primera falle. Lo que el lock protege de verdad es la
+ * CLASIFICACIÓN de cada respuesta —quién tomó plaza y quién se unió—, que es de lo que vive el aviso
+ * de «hay N respuestas que ya no caben» que ve el anfitrión (§4.7).
  *
  * ⚠️ Un padre NO mueve aforo ni dinero: esto no bloquea `slots` ni toca `order_items`. La exclusión
  * que hace falta es entre respuestas de la MISMA invitación, y todas pasan por su fila.
@@ -43,7 +55,7 @@ class VerifyInvitationPlacesConcurrency extends Command
 {
     protected $signature = 'invitation:verify-places {--workers=16} {--keep}';
 
-    protected $description = 'N «sí» simultáneos sobre la última plaza de una invitación: tiene que entrar exactamente uno.';
+    protected $description = 'N «sí» simultáneos del MISMO niño: tienen que ocupar exactamente una plaza.';
 
     public function handle(): int
     {
@@ -180,11 +192,16 @@ class VerifyInvitationPlacesConcurrency extends Command
 
                 $outcome = 'ERROR';
                 try {
-                    // ⚠️ Nombres DISTINTOS: con el mismo nombre se unirían a la misma plaza por la
-                    // regla del repetido (V6) y la carrera no se ejercería.
+                    // ⚠️⚠️ **El MISMO nombre en todos los forks, y desde `#520` es justo al revés que
+                    // antes.** Mientras la lista completa rechazaba, la carrera se ejercía con nombres
+                    // distintos por la última plaza. Ya no rechaza, así que la exclusión que queda —y
+                    // la única que puede romperse en silencio— es la del **repetido**: N padres
+                    // contestando por el mismo niño a la vez tienen que ocupar UNA plaza, no N.
                     $invitation = PartyInvitation::findOrFail($seed['invitation']->getKey());
-                    $verdict = app(PartyInvitations::class)->reply($invitation, 'Padre Numero '.$i, true);
-                    $outcome = $verdict->accepted ? 'accepted' : (string) $verdict->reason;
+                    $verdict = app(PartyInvitations::class)->reply($invitation, 'Hugo Ruiz Pla', true);
+                    $outcome = $verdict->accepted
+                        ? ($verdict->joinedExistingPlace ? 'joined' : 'took-place')
+                        : (string) $verdict->reason;
                 } catch (\Throwable $e) {
                     $outcome = 'EXCEPTION: '.$e->getMessage();
                 }
@@ -206,31 +223,36 @@ class VerifyInvitationPlacesConcurrency extends Command
             $outcomes[] = trim(File::get($file->getPathname()));
         }
 
-        $accepted = count(array_filter($outcomes, static fn (string $o): bool => $o === 'accepted'));
-        $full = count(array_filter($outcomes, static fn (string $o): bool => $o === 'full'));
+        $took = count(array_filter($outcomes, static fn (string $o): bool => $o === 'took-place'));
+        $joined = count(array_filter($outcomes, static fn (string $o): bool => $o === 'joined'));
         $errors = count(array_filter($outcomes, static fn (string $o): bool => str_starts_with($o, 'EXCEPTION') || $o === 'ERROR'));
         $rows = InvitationReply::query()
             ->where('order_item_id', $seed['item']->getKey())
             ->where('attending', true)
             ->count();
 
+        // El SUELO de `#444`: plazas con dueño, distintas por niño. Es la cifra que de verdad importa,
+        // porque es la que decide si el anfitrión puede bajar el número de invitados.
+        $plazas = count(app(PartyGuests::class)->committedReplyIdsIn((int) $seed['item']->getKey()));
+
         $this->newLine();
         $this->table(
             ['Invariante', 'Esperado', 'Real', 'OK'],
             [
-                ['«Sí» admitidos', 1, $accepted, $accepted === 1 ? '✓' : '✗'],
-                ['Rechazados por lista completa', $workers - 1, $full, $full === $workers - 1 ? '✓' : '✗'],
-                ['Filas «sí» en la reserva', 1, $rows, $rows === 1 ? '✓' : '✗'],
+                ['«Sí» que TOMAN plaza nueva', 1, $took, $took === 1 ? '✓' : '✗'],
+                ['«Sí» que se UNEN a la del primero', $workers - 1, $joined, $joined === $workers - 1 ? '✓' : '✗'],
+                ['Plazas con dueño (el suelo de #444)', 1, $plazas, $plazas === 1 ? '✓' : '✗'],
+                ['Filas «sí» guardadas', $workers, $rows, $rows === $workers ? '✓' : '✗'],
                 ['Errores inesperados', 0, $errors, $errors === 0 ? '✓' : '✗'],
             ],
         );
 
-        $ok = $accepted === 1 && $full === $workers - 1 && $rows === 1 && $errors === 0;
+        $ok = $took === 1 && $joined === $workers - 1 && $plazas === 1 && $rows === $workers && $errors === 0;
 
         $this->newLine();
         $this->line($ok
-            ? "<fg=green>✅ PASA: bajo {$workers} respuestas concurrentes a la última plaza el lock serializó — entró UNA, sin lista sobrevendida. Verificado sobre InnoDB real.</>"
-            : '<fg=red>❌ FALLA: la última plaza no se disputó en exclusión. Revisa el `lockForUpdate()` de `PartyInvitations::reply()`.</>');
+            ? "<fg=green>✅ PASA: bajo {$workers} respuestas concurrentes del MISMO niño el lock serializó — UNA tomó plaza y el suelo cuenta un niño, no {$workers}. Verificado sobre InnoDB real.</>"
+            : '<fg=red>❌ FALLA: las respuestas del mismo niño no se clasificaron en exclusión. Revisa el `lockForUpdate()` de `PartyInvitations::reply()`.</>');
 
         if (! $ok) {
             foreach (array_filter($outcomes, static fn (string $o): bool => str_starts_with($o, 'EXCEPTION')) as $e) {

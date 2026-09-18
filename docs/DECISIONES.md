@@ -41,7 +41,7 @@ cada uno se conservan, adyacentes.
 |---|---|---|
 | Plataforma · producto e instancias | 610–639 | este ordenador |
 | Diseño de la web | 580–609 | este ordenador |
-| Diseño del SPA (el cajón) | 550–579 | el otro ordenador |
+| Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · sigue en **520–549** | el otro ordenador |
 | Correos | 500–519 | este ordenador |
 | Pasarela / producto | 4xx (libres `#455`–`#459`) | este ordenador |
 | Google auth (cerrado, en producción) | `#34x` | el portátil |
