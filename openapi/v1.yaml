@@ -1212,7 +1212,7 @@ paths:
         **Ninguno depende del nombre que traiga la respuesta**, así que contestan igual a todo el
         mundo y no sirven para preguntarle nada a la lista.
 
-        ❗❗ **La lista completa NO rechaza** (`DECISIONES #520`). Hacerlo abría el mismo oráculo que el
+        ❗❗ **La lista completa NO rechaza** (`DECISIONES #700`). Hacerlo abría el mismo oráculo que el
         motivo «repetido»: un nombre ya escrito se aceptaba y uno nuevo recibía «full», así que se
         podía reconstruir la lista probando. El «sí» que no cabe se acepta igual y sale en el aviso
         del anfitrión — «hay N respuestas que ya no caben: sube el número o avisa a esas familias» —,
@@ -5394,7 +5394,7 @@ components:
         ❗❗ **Y por lo mismo NO existe un motivo `full`.** Rechazar por lista completa abría el mismo
         oráculo por otra puerta: el nombre que emparejaba con una ficha ya escrita se aceptaba y el
         nuevo recibía «full», así que se podía **reconstruir la lista probando nombres**. Desde
-        `DECISIONES #520` el «sí» se acepta siempre y el que no cabe sale en el aviso del anfitrión.
+        `DECISIONES #700` el «sí» se acepta siempre y el que no cabe sale en el aviso del anfitrión.
       required: [accepted, reason]
       additionalProperties: false
       properties:

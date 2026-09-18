@@ -19,7 +19,7 @@ use Illuminate\Support\Str;
 
 /**
  * **El MISMO NIÑO contestando a la vez, y la plaza que no puede contarse dos veces**
- * (`specs/celebracion-e-invitacion.md` §4.5·5 y §4.5·8; `DECISIONES #574`, reorientado en `#520`).
+ * (`specs/celebracion-e-invitacion.md` §4.5·5 y §4.5·8; `DECISIONES #574`, reorientado en `#700`).
  *
  * Hermano de `purchase:verify-oversell` y de `waiver:verify-chain`, y existe por lo mismo: **la suite
  * es ciega a esta carrera por construcción**. Corre sobre SQLite, donde `SQLiteGrammar::compileLock()`
@@ -32,7 +32,7 @@ use Illuminate\Support\Str;
  * «sí» de los otros, todos creen estar estrenando plaza — y el suelo de `#444` sale contando N niños
  * donde hay uno, así que **el anfitrión no puede bajar el número de invitados** y nadie sabe por qué.
  *
- * ⚠️⚠️ **Hasta `#520` este comando medía otra cosa**: N padres por niños DISTINTOS a la última plaza,
+ * ⚠️⚠️ **Hasta `#700` este comando medía otra cosa**: N padres por niños DISTINTOS a la última plaza,
  * con el invariante de que entrara uno y los demás recibieran `full`. Ese rechazo se retiró —era un
  * oráculo de pertenencia— y con él desapareció aquella carrera. La que queda es ésta, y es la misma
  * mecánica de leer-decidir-escribir bajo el mismo lock.
@@ -192,7 +192,7 @@ class VerifyInvitationPlacesConcurrency extends Command
 
                 $outcome = 'ERROR';
                 try {
-                    // ⚠️⚠️ **El MISMO nombre en todos los forks, y desde `#520` es justo al revés que
+                    // ⚠️⚠️ **El MISMO nombre en todos los forks, y desde `#700` es justo al revés que
                     // antes.** Mientras la lista completa rechazaba, la carrera se ejercía con nombres
                     // distintos por la última plaza. Ya no rechaza, así que la exclusión que queda —y
                     // la única que puede romperse en silencio— es la del **repetido**: N padres

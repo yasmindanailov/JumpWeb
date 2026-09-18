@@ -25,7 +25,16 @@ class SecurityHeaders
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
-        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        // ⚠️ **No pisar un `Referrer-Policy` que una respuesta concreta haya fijado** (`#521`), con el
+        // mismo criterio que la CSP de abajo: el suelo global sigue siendo `strict-origin-when-cross-origin`
+        // y una pantalla puede endurecerlo, nunca relajarlo — aquí solo se respeta lo ya puesto.
+        //
+        // ▶ Quien lo usa: la página de la INVITACIÓN, que lleva un TOKEN en la URL y ofrece un enlace
+        // externo a un mapa. Medido: el valor global no filtraría ese token —manda solo el origen, sin
+        // path— pero sí diría de qué parque viene el visitante, y §4.6 pide `no-referrer`.
+        if (! $response->headers->has('Referrer-Policy')) {
+            $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        }
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), browsing-topics=()');
 
         // No pisar una CSP específica que una respuesta concreta haya fijado.

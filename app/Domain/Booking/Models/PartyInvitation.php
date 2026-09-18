@@ -63,10 +63,28 @@ class PartyInvitation extends Model
      * cuando existen. Declarar aquí tres nombres inventados sería fijar una decisión suya por
      * adelantado; la columna ya es lo bastante ancha para los que elija.
      */
-    public const THEME_DEFAULT = 'default';
+    /**
+     * Los TRES temas de la lista cerrada (§3.4, `[DECIDIDO owner]`).
+     *
+     * ⚠️⚠️ **No son ilustraciones: son formas del sistema y tokens de la INSTALACIÓN.** Los seis del
+     * canvas se descartaron porque exigían dibujo encargado y clavarían el mural de un parque de
+     * saltos dentro del producto — y esto es white-label. Lo que cambia entre ellos es el trazo del
+     * confeti y de qué token sale la chapa de la edad; los dos salen de la marca de quien instala, así
+     * que un cliente con paleta lima ve su lima y no la del vecino.
+     *
+     * ▶ `confeti` es el de por defecto y el que más se va a ver. `sereno` existe para la fiesta de un
+     * niño mayor, donde el confeti sobra.
+     */
+    public const THEME_CONFETI = 'confeti';
+
+    public const THEME_FIESTA = 'fiesta';
+
+    public const THEME_SERENO = 'sereno';
+
+    public const THEME_DEFAULT = self::THEME_CONFETI;
 
     /** @var list<string> Lista CERRADA: es lo que permite sanear un valor desconocido (`#448`). */
-    public const THEMES = [self::THEME_DEFAULT];
+    public const THEMES = [self::THEME_CONFETI, self::THEME_FIESTA, self::THEME_SERENO];
 
     protected $casts = [
         'order_item_id' => 'integer',

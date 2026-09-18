@@ -16,6 +16,7 @@
 | `decisiones/400-499.md` | `#400` → `#499` (`#430`, `#431` y `#432` están dos veces) |
 | `decisiones/500-599.md` | `#500` → … (correos, SPA y web: bandas vivas) |
 | `decisiones/600-699.md` | `#610` → … (plataforma: la centena viva) |
+| `decisiones/700-799.md` | `#700` → … (SPA, abierta el 18-09 al agotarse su banda) |
 
 Recuento vivo: `grep -cE '^## #[0-9]+ ·' docs/decisiones/*.md` (al partir, el 2026-09-16, eran 536). Los
 cuatro números repetidos son colisiones de la época sin bandas (`CONVENCIONES §10.6`); las dos entradas de
@@ -41,7 +42,7 @@ cada uno se conservan, adyacentes.
 |---|---|---|
 | Plataforma · producto e instancias | 610–639 | este ordenador |
 | Diseño de la web | 580–609 | este ordenador |
-| Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · sigue en **520–549** | el otro ordenador |
+| Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · sigue en **700–729** | el otro ordenador |
 | Correos | 500–519 | este ordenador |
 | Pasarela / producto | 4xx (libres `#455`–`#459`) | este ordenador |
 | Google auth (cerrado, en producción) | `#34x` | el portátil |

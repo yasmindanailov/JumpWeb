@@ -16,7 +16,6 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\PersonNameKey;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -287,28 +286,30 @@ class InvitationApiTest extends ApiTestCase
     }
 
     /**
-     * ⚠️⚠️ **`url` es `null` mientras la página pública no exista** (T5), y se rellena SOLA. Aquí se
-     * declara una ruta con ese nombre y el campo aparece sin tocar una línea de producción: eso es lo
-     * que hace que nadie tenga que acordarse de volver a rellenarlo.
+     * **El anfitrión recibe el enlace REAL de su invitación, y ése es el que abre.**
+     *
+     * ▶ **Este caso cambió de significado al nacer la T5·1 (`#701`), y merece quedar escrito.** Nació
+     * en la T4·6 vigilando un hueco: `url` era `null` mientras la página pública no existiera, y el
+     * caso declaraba una ruta falsa con el nombre esperado para comprobar que el campo **se rellenaba
+     * solo**. Al existir la ruta de verdad, esa primera mitad dejó de poder pasar —el campo ya nunca
+     * es `null`— y el caso se reescribió en vez de borrarse: lo que vigila ahora es que el enlace que
+     * se entrega sea el de la página, no una cadena compuesta a mano que podría apuntar a nada.
+     *
+     * ⚠️ Que renombrar la ruta devuelva `url` a `null` lo caza `InvitationPageTest`, que es donde vive
+     * esa ruta. Aquí se comprueba el otro extremo: lo que el ANFITRIÓN recibe por la API.
      */
-    public function test_the_share_url_appears_by_itself_the_day_the_public_page_exists(): void
+    public function test_the_host_is_handed_the_real_link_to_the_public_page(): void
     {
         [$reservation, $invitation] = $this->party();
-        $host = $this->hostOf($reservation);
 
-        $this->actingAs($host)
+        $this->actingAs($this->hostOf($reservation))
             ->getJson("/api/v1/reservations/{$reservation->id}/guest-form")
-            ->assertOk()->assertJsonPath('invitation.url', null);
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('invitation.url', route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]));
 
-        Route::get('/invitacion/{token}', fn () => '')->name(PartyInvitations::PUBLIC_ROUTE);
-        // El índice por nombre del router se construye una vez: sin refrescarlo, una ruta añadida
-        // a mitad de una petición existe pero `Route::has()` no la ve.
-        Route::getRoutes()->refreshNameLookups();
-
-        $this->actingAs($host)
-            ->getJson("/api/v1/reservations/{$reservation->id}/guest-form")
-            ->assertOk()
-            ->assertJsonPath('invitation.url', url('/invitacion/'.$invitation->token));
+        // Y ese enlace abre de verdad: entregar uno bien compuesto que diera 404 sería peor que nada,
+        // porque el anfitrión lo reparte a un grupo entero antes de que nadie lo pruebe.
+        $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))->assertOk();
     }
 
     /**

@@ -155,7 +155,7 @@ final class PartyInvitations
                 return InvitationReplyOutcome::refused(InvitationReplyOutcome::REASON_TOO_MANY);
             }
 
-            // Un «no» NUNCA ocupa (D3). Y desde `#520` un «sí» TAMPOCO se rechaza por lista llena: lo
+            // Un «no» NUNCA ocupa (D3). Y desde `#700` un «sí» TAMPOCO se rechaza por lista llena: lo
             // único que dice `placeFor()` es si toma plaza nueva o se une a una que ya tenía dueño.
             $joined = $attending && $this->placeFor($reservation, $existing, $childKey);
 
@@ -192,7 +192,7 @@ final class PartyInvitations
     /**
      * ¿Este «sí» se une a una plaza que YA tenía dueño (`true`) o toma una nueva (`false`)?
      *
-     * ⚠️ **Ya no contesta «no cabes»** (`#520`): la lista completa dejó de rechazar, y con ella
+     * ⚠️ **Ya no contesta «no cabes»** (`#700`): la lista completa dejó de rechazar, y con ella
      * desapareció el único desenlace que dependía de **qué nombre** traía la respuesta. Lo que queda
      * es una distinción que el padre no puede observar —los dos caminos le dan el mismo 200— y que
      * solo usa el suelo de `#444` para saber cuántas plazas tienen dueño.
@@ -226,7 +226,7 @@ final class PartyInvitations
             ->reject(fn (string $key): bool => $this->matches($namedKeys, $key))
             ->count();
 
-        // ❗❗ **La lista completa ya NO rechaza** (`[DECIDIDO owner, 2026-09-18]`, `DECISIONES #520`;
+        // ❗❗ **La lista completa ya NO rechaza** (`[DECIDIDO owner, 2026-09-18]`, `DECISIONES #700`;
         // sustituye a D2 de `#569`). Antes se devolvía `null` → `full`, y eso abría un ORÁCULO DE
         // PERTENENCIA que se cargaba la propiedad central de la feature: con la lista llena, un nombre
         // que EMPAREJA con una ficha escrita se aceptaba y uno nuevo recibía «full», así que cualquiera
@@ -349,6 +349,65 @@ final class PartyInvitations
         }
 
         return $invitation;
+    }
+
+    /**
+     * **El MENÚ de la fiesta** (§4.6): los complementos **de esta reserva** que el catálogo marcó como
+     * «se enseña en la invitación» (D12).
+     *
+     * ⚠️⚠️ **Los COMPRADOS, no los ofrecidos.** Lo que un padre quiere saber es qué van a comer en
+     * ESTA fiesta, no qué se podría haber pedido: listar el catálogo pondría en la invitación cosas
+     * que nadie ha pagado.
+     *
+     * ⚠️ El nombre se lee con `tr()` y nunca del array crudo —la trampa de `#463`—: es un campo
+     * traducible, y leerlo a pelo devuelve el mapa de idiomas entero. Lo mismo vale para lo que
+     * INCLUYE cada plato, que además puede venir como lista **o como texto suelto**
+     * ({@see TicketType::featureLines()}).
+     *
+     * ▶ Cada plato viaja con sus `features` para que la página pueda ofrecer el «Más info» —la pieza
+     * `<details>` que el post-form ya usa, y que funciona **sin una línea de JS**, que es la condición
+     * de esta página—. Un plato sin detalles se pinta como una fila y ya: un desplegable vacío es
+     * peor que ninguno.
+     *
+     * @return list<array{name: string, features: list<string>}>
+     */
+    public function menuFor(OrderItem $reservation): array
+    {
+        $type = $reservation->ticketType;
+
+        if ($type === null) {
+            return [];
+        }
+
+        // ❗❗ **El pivote se lee DIRECTO y no por `addons()`** (`DECISIONES #521`). Esa relación filtra
+        // `is_sellable` y `is_active` —es la del CATÁLOGO, que describe qué se vende hoy—, así que
+        // usarla aquí hacía que retirar un complemento de la venta lo borrara del menú de **una fiesta
+        // que ya lo había pagado**: cambio de carta en septiembre, y las invitaciones de octubre dejan
+        // de decir qué se come. Lo encontró la sonda en el navegador, no la suite.
+        //
+        // ⚠️ Lo que manda es lo COMPRADO más la marca del enganche. El catálogo dice qué se vende;
+        // esta reserva dice qué se pagó, y son preguntas distintas.
+        $marked = DB::table('product_addons')
+            ->where('product_id', $type->getKey())
+            ->where('show_in_invitation', true)
+            ->pluck('addon_id')
+            ->map(static fn ($id): int => (int) $id)
+            ->all();
+
+        if ($marked === []) {
+            return [];
+        }
+
+        return $reservation->children
+            ->filter(static fn (OrderItem $line): bool => in_array((int) $line->ticket_type_id, $marked, true))
+            ->map(static fn (OrderItem $line): array => [
+                'name' => trim((string) $line->ticketType?->tr('name')),
+                'features' => $line->ticketType?->featureLines() ?? [],
+            ])
+            ->filter(static fn (array $dish): bool => $dish['name'] !== '')
+            ->unique('name')
+            ->values()
+            ->all();
     }
 
     /** ¿Admite respuestas ahora mismo? La tarjeta se ve igual; esto solo gobierna los botones. */

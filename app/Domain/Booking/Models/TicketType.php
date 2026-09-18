@@ -312,6 +312,31 @@ class TicketType extends Model
     }
 
     /**
+     * **Lo que INCLUYE el producto** (`features`), en el idioma activo y sin vacíos.
+     *
+     * ⚠️⚠️ **Un campo traducible llega de DOS formas según quién lo escribiera** —una lista o un texto
+     * suelto—, y ésa es «la trampa de `features`» que la spec de la invitación cita (`#463`). Leerlo a
+     * pelo y recorrerlo devuelve las LETRAS de la cadena cuando vino suelto.
+     *
+     * ▶ Gemelo exacto de {@see giftLines()} y con su misma normalización. Nace aquí, en el modelo,
+     * porque ya era la cuarta copia de la misma regla —`CatalogReader`, `PostFormAddons`,
+     * `CreateManualOrderPage`— y la quinta la pedía la invitación digital (`#521`). Los otros tres
+     * siguen con la suya: migrarlos es otra tanda, y se anota en vez de hacerse de paso.
+     *
+     * @return list<string>
+     */
+    public function featureLines(): array
+    {
+        $features = $this->tr('features');
+        $features = is_array($features) ? $features : [$features];
+
+        return array_values(array_filter(
+            array_map(fn (mixed $feature): string => is_scalar($feature) ? trim((string) $feature) : '', $features),
+            fn (string $feature): bool => $feature !== '',
+        ));
+    }
+
+    /**
      * **La clave del icono que marca este producto** (`DECISIONES #140`).
      *
      * ⚠️ Lo decide {@see ProductIcon}, no cada superficie. La regla era un booleano —tarta si es

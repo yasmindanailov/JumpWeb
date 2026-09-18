@@ -1,7 +1,9 @@
 # [SPEC] El formulario de celebración, el justificante y la invitación digital
 
-> Estado: 🟦 **revisada de forma adversarial dos veces · T1, T2 y T3 EN EL ÁRBOL (§10.1–§10.3) · T4→T6 sin empezar** ·
-> Última actualización: 2026-09-17 · Decisiones: `#569` (spec) · `#570` (T1) · `#571` (T2) · `#572` (T3) · Carril: 🧩 SPA (banda 550–579).
+> Estado: 🟦 **revisada de forma adversarial tres veces · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los
+> interruptores apagados) · T5 empezada · T7 y T6 sin empezar** ·
+> Última actualización: 2026-09-18 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
+> `#579` (revisión adversarial) · `#700` (el oráculo) · `#521` (T5·1) · Carril: 🧩 SPA (banda 520–549).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
 > `Justificante Invitado PJP` e `Invitaciones PJP` (el turno **2a** manda sobre el 1a).
@@ -10,23 +12,25 @@
 
 ## §0 · Antes de tocar
 
-- **Carril del SPA** (banda 550–579). T1, T2 y T3 en el árbol (`#570`–`#572`, §10.1–§10.3); **T4→T6 sin
-  empezar** y **si vas a construir, §7.2 primero** (la segunda revisión cambió seis cosas). Orden
-  `[DECIDIDO owner]`: T1 → T2 → T3 → T4 → T5 → T7 → **T6**, el aterrizaje, al final.
+- **Carril del SPA** (banda 520–549). **T1→T4 EN PRODUCCIÓN** desde v1.1.0 con los dos interruptores
+  **APAGADOS** (encenderlos es DATO del owner); **T5·1 en el árbol** (§10.5.1). Quedan T5·2→T5·4 → T7 →
+  **T6** al final. **Si vas a construir, §7.2 primero.**
+- ⚠️⚠️ **La T4 pasó una revisión adversarial** (§10.4.7, `#579`): dos defectos arreglados y **diez puntos
+  anotados sin tocar** en §10.4.7·B. Míralos antes de dar por buena cualquier parte de la T4.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
   `invitation_replies`, el formulario lo PROPONE sobre una ficha y el anfitrión lo ADOPTA al guardar —
   `submitGuestForm()` sustituye la lista entera y `updated_at` es el testigo de extras e invitados (medido)—.
   Por eso un padre no mueve dinero, aforo ni ningún fichero del `CRITICAL_RE`, y `OrderCreator` no se toca.
-- Con la lista completa no se admite un «sí» y el «no podemos» se enseña al anfitrión (D2/D3) · «voy con él»
-  no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja con una ficha
-  escrita solo con UN candidato (D11) · un nombre repetido **no se anuncia** (confirmaría quién va).
-- **Lo que enseñó §10**: `focused-layout` no cargaba `client.css` desde que existe (las dos páginas iban con
-  los colores del producto); el orden de la PÁGINA ya no es el de las POSICIONES (`sanitizeGuestData()`
-  ordena por clave); el número de invitados lleva `form="gf-form"` o no se envía (defecto en producción
-  desde `#444`, arreglado en el árbol, **pide despliegue**).
-- ⚠️ **El molde es de DOS páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*` o `.gf-notice` mueve también
-  el justificante. La T2 hizo la barra pegada y en fila y rompió la de firmar (401 px de 844, en producción
-  del 16-09 a la T3, §10.3): tras tocar el molde, **sonda y captura de VENTANA de las dos**.
+- ❗ **La lista completa NO rechaza** (`#700`, sustituye a D2): era un **oráculo de pertenencia**. **No existe
+  `full`**, como no existe «repetido»: ningún motivo puede depender del NOMBRE. El «sí» que no cabe se acepta
+  y sale en el aviso «hay N que ya no caben» (§4.7).
+- «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja con
+  una ficha escrita solo con UN candidato (D11) · el «no podemos» se enseña al anfitrión (D3).
+- **Lo que enseñó §10**: el orden de la PÁGINA ya no es el de las POSICIONES (`sanitizeGuestData()` ordena
+  por clave) · el número de invitados lleva `form="gf-form"` o no se envía.
+- ⚠️ **El molde es de TRES páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*`, `.gf-notice` o
+  `.gf-extras__list` mueve también el justificante y la invitación. Tras tocarlo, **sonda y captura de
+  VENTANA de las tres** (la T2 rompió la barra de firmar así: 401 px de 844, §10.3).
 - **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.
 - Anexo al final con la fila del enrutador.
 
@@ -292,7 +296,7 @@ Reglas estructurales:
 2. **Se puede compartir** mientras `GuestCountPolicy::isOpenFor()` (pagada, no cancelada, no celebrada)
    y `honoree_name` no esté vacío. ⚠️ **Pasado el plazo se sigue compartiendo** (§7.2·R8): la
    información hace falta el mismo día, y lo único que se cierra son las respuestas.
-3. **Lista completa** — `[DECIDIDO owner, 2026-09-18]`, `DECISIONES #520`, **sustituye a D2**.
+3. **Lista completa** — `[DECIDIDO owner, 2026-09-18]`, `DECISIONES #700`, **sustituye a D2**.
    Se cuenta bajo lock de la fila de `party_invitations`: **fichas con nombre en `guest_data`**
    (acotadas a `quantity`) **+ «sí» pendientes, distintos por `child_key`, que no emparejan con
    ninguna de esas fichas**. Lo que esa cuenta decide es si el «sí» **toma plaza nueva** o **se une a
@@ -1190,7 +1194,7 @@ refutados, 8 sin refutar por el tope declarado de 3 por lente.**
 
 **Arnés**: `scripts/mutar-invitacion-t46.sh` sube a **16/16** con los dos mutantes nuevos.
 
-##### A · El oráculo de pertenencia — ✅ **RESUELTO** (`[DECIDIDO owner, 2026-09-18]`, `DECISIONES #520`)
+##### A · El oráculo de pertenencia — ✅ **RESUELTO** (`[DECIDIDO owner, 2026-09-18]`, `DECISIONES #700`)
 
 Con la lista completa, contestar «sí» **distingue un nombre que ya está de uno nuevo**: el que empareja
 con una ficha escrita se acepta; el nuevo recibe `full`. Quien tiene el enlace —un grupo de clase
@@ -1204,7 +1208,7 @@ owner**: cualquier salida cambia lo que un padre ve.
 ▶ **El owner aceptó la salida recomendada**: la lista completa **deja de rechazar**. El «sí» se acepta
 siempre —tomando plaza propia, así que sube el suelo— y sale en el aviso que §4.7 ya contempla, «hay N
 respuestas que ya no caben». Cierra el oráculo, reutiliza un mecanismo existente y devuelve la decisión
-al anfitrión, que sí sabe quién va. **Aplicado en `#520`**: §4.5·3 reescrita, `REASON_FULL` retirado del
+al anfitrión, que sí sabe quién va. **Aplicado en `#700`**: §4.5·3 reescrita, `REASON_FULL` retirado del
 dominio y del enum del contrato, y la guarda que lo cierra compara los DOS campos del desenlace —un
 nombre conocido y uno nuevo, mismo fixture— porque mirar solo `accepted` dejaría pasar un `reason`
 distinto, que era justo la rendija.
@@ -1249,6 +1253,59 @@ que la superficie ya estuviera viva sin aviso · que dos «no» del mismo niño 
 · y que el borrado RGPD con `DB::table` cruzara la frontera de módulo. ⚠️ Y uno que **no era de esta
 tanda**: la IP del padre en el rastro es conducta estándar de `AuditLogger`, ya graduada como menor en
 `waiver-por-reserva.md` §4.14.
+
+### 10.5 T5 · la página pública — SE PARTE EN CUATRO UNIDADES VERDES
+
+El corte NO es arbitrario: **la T5·1 no recoge ningún dato**, y por eso puede existir sin el aviso de
+privacidad que `§7.2·R7` exige, sin el texto de G3 y sin nada de lo que sigue pendiente del owner (§8).
+La barra de contestar llega con su aviso o no llega.
+
+| | Qué | Estado |
+|---|---|---|
+| **T5·1** | La página, su ruta y el vestido: banda, confeti y chapa (§4.6, §3.4) | ✅ `#521` |
+| **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ⬜ |
+| **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ⬜ |
+| **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ⬜ |
+
+#### 10.5.1 T5·1 · la página y su vestido — EN EL ÁRBOL (2026-09-18, `DECISIONES #521`)
+
+**Hecho.**
+- La ruta `/invitacion/{token}` (`invitation.show`) y su controlador, con `resolvePublic()` como
+  **única** fuente de a quién se le abre — la misma que la API, así que los cuatro «no» no pueden
+  divergir entre las dos superficies.
+- ❗ **Con ella, `Invitation.url` deja de ser `null` SOLO**: el mecanismo que la T4·6 dejó preparado se
+  cerró en el momento en que el fichero existió, sin tocar una línea. Hay una guarda que vigila que
+  renombrar la ruta no pueda romperlo en silencio.
+- Los bloques de §4.6 con «sin dato, sin bloque», el menú de los complementos **comprados y marcados**,
+  y «Cómo llegar» como enlace externo — **nunca un mapa embebido**.
+- **Los TRES temas** (§3.4): `confeti` (defecto), `fiesta` y `sereno`. Banda, confeti y chapa de edad
+  con formas del sistema y los tokens de la INSTALACIÓN, así que un cliente con paleta lima ve su lima.
+  **Cero naranja**, verificado en las reglas y no de vista.
+- El **«Más info»** de cada plato (`[DECIDIDO owner]`): la pieza `<details>` del post-form (`#416`),
+  **sin una línea de JS**, que es la condición de esta página.
+
+**Guardas**: `InvitationPageTest` (10). Las de piel (`GuestFormSkinTest`, `GuardianSkinTest`) siguen
+verdes: el molde compartido no se ha tocado.
+
+**Trampas pagadas en esta unidad** —las tres las vio el OJO o una guarda, ninguna la suite—:
+1. ⚠️⚠️ **Me inventé el confeti con gradientes propios y `F-06` lo tumbó**: «la trama de puntos no es de
+   la marca», que es justo por lo que se retiró la del post-form. Al leer por qué, apareció que el
+   sistema **ya tiene su trama**: `.grain`, «la única textura que admite sobre tinta», con su perilla
+   `--trama`. Ahora el confeti ES esa pieza y lo único que cambia por tema es la densidad. *Lo que el
+   sistema tiene se usa; lo que no, se propone.*
+2. ⚠️⚠️ **«Dónde» y «Qué hay de comer» salieron en TEXTO PLANO, y lo vio el owner.** Tenían clase y
+   regla —así que ninguna guarda de clases huérfanas lo habría cazado—, pero la regla era un párrafo
+   sin caja. Ahora el menú usa `.gf-extras__list` + `.gf-extra` (el menú **es** una lista de
+   complementos) y «Dónde» el molde con superficie del justificante, con «Cómo llegar» como
+   `.btn--ghost`: es una acción y tenía que parecerlo. *Una pieza por cada cosa, no una caja genérica.*
+3. **Un complemento RETIRADO de la venta desaparecía del menú de una fiesta ya pagada**, porque
+   `menuFor()` leía la relación del catálogo, que filtra `is_sellable`. Lo encontró la sonda en el
+   navegador. El catálogo dice qué se vende hoy; la reserva dice qué se pagó.
+
+**Deuda anotada, no hecha**: `featureLines()` nace en `TicketType` como gemelo de `giftLines()` porque
+la normalización de un campo traducible —lista **o** texto suelto, la trampa de `#463`— ya estaba
+copiada en `CatalogReader`, `PostFormAddons` y `CreateManualOrderPage`. **Los tres siguen con la suya**:
+migrarlos es otra tanda y se anota en vez de hacerse de paso.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

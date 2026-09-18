@@ -22,7 +22,7 @@ final class InvitationReplyOutcome
 {
     /*
      * ❗❗ **`full` YA NO EXISTE, y su ausencia es la propiedad** (`[DECIDIDO owner, 2026-09-18]`,
-     * `DECISIONES #520`; sustituye a D2 de `#569`).
+     * `DECISIONES #700`; sustituye a D2 de `#569`).
      *
      * Rechazar un «sí» por lista completa abría un **oráculo de pertenencia**: el nombre que emparejaba
      * con una ficha escrita se aceptaba y el nuevo recibía «full», así que cualquiera con el enlace

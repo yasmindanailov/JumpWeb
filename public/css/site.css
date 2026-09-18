@@ -5944,6 +5944,86 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
 /* A QUIÉN se autoriza, a la izquierda de la barra de firmar: lo único que hay que releer antes de firmar.
    Un nombre largo se corta con puntos y no empuja al botón. Sin nombre todavía, el bloque no está y el
    botón ocupa la barra entera. ⚠️ `[hidden]` hay que decirlo: `.gf-savebar__count` declara `display`. */
+/* ───── La INVITACIÓN de una fiesta (`celebracion-e-invitacion.md` §4.6, T5·1) ─────
+   Vive DENTRO de la hoja enfocada porque comparte su molde entero (`.gf-page`, `.gf-stub`,
+   `.gf-group`), y por eso sus tallas y sus radios entran en las mismas escalas que vigila
+   `GuestFormSkinTest`. Lo único propio es lo que sus hermanas no tienen.
+
+   ⚠️ **Nada de esto toca una clase `.gf-*`**, a propósito: ese molde es de DOS páginas más, y la T2
+   ya enseñó lo que cuesta moverlo sin mirarlas (la barra de firmar de 401 px, §10.3). */
+
+/* ── La TARJETA: banda, confeti y chapa de edad (§4.6, §3.4) ──
+   ⚠️⚠️ **Cero naranja**, y está escrito en la spec: `--action-brand` es el color de COMPRAR en todo el
+   producto, y esta página no vende nada. Usar aquí el mismo naranja convertiría «te invito a mi
+   cumple» en un CTA de tienda.
+
+   ⚠️ Los tres temas NO son ilustraciones: son formas del sistema (gradientes) teñidas con los tokens
+   de la INSTALACIÓN (`--brand`, `--brand-2`). Un cliente con paleta lima ve su lima. Los seis del
+   canvas se descartaron justo por lo contrario: clavaban el mural de un parque dentro del producto. */
+.invitation-card { position: relative; overflow: hidden; }
+
+/* La BANDA: el tema en el borde superior de la tarjeta, del ancho completo. Es lo único que se ve
+   antes de leer nada, y lo que distingue un tema de otro de un vistazo. */
+.invitation-card::before {
+    content: ''; position: absolute; inset-block-start: 0; inset-inline: 0; height: var(--sp-8);
+    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-2) 100%);
+}
+/* El CONFETI es **`.grain`, la pieza del sistema** (A1 de la fachada): «la única textura que el
+   sistema admite sobre tinta», con su perilla de densidad `--trama`.
+   ⚠️⚠️ **No se inventa un gradiente propio, y esto no es purismo.** La primera versión de esta página
+   llevaba dos radiales míos y la guarda F-06 la puso en rojo: la trama del post-form se retiró
+   justamente por «no ser de la marca». Lo que el sistema ya tiene se usa; lo que no, se propone.
+   Lo único que cambia por tema es la DENSIDAD, que es para lo que existe la perilla. */
+.invitation-card[data-theme="fiesta"] { --trama: 0.34; }
+/* `sereno`: sin confeti y con la banda en un solo tono. Para la fiesta de un niño mayor, donde el
+   confeti sobra, y para una instalación cuya marca ya es muy gráfica. */
+.invitation-card[data-theme="sereno"] .grain { display: none; }
+.invitation-card[data-theme="sereno"]::before { background: var(--brand); }
+/* `fiesta` invierte la banda: el mismo gesto, el otro tono de la marca al frente. */
+.invitation-card[data-theme="fiesta"]::before { background: linear-gradient(90deg, var(--brand-2) 0%, var(--brand) 100%); }
+
+/* Lo de dentro por encima del confeti. Sin esto, los puntos se pintan sobre el texto. */
+.invitation-card > * { position: relative; z-index: 1; }
+
+/* La CHAPA de la edad: el número, grande y redondo, al lado del nombre. Es el segundo dato que se
+   mira, y en el canvas es una pieza y no una frase.
+   ⚠️ Tamaño fijo y `flex-shrink: 0`: con dos cifras («Cumple 12») no puede deformarse en un óvalo. */
+.invitation__age {
+    display: inline-flex; align-items: center; justify-content: center;
+    inline-size: 56px; block-size: 56px; flex: 0 0 auto; border-radius: var(--r-pill);
+    font-family: var(--font-display); font-size: var(--fs-20); line-height: 1;
+    background: var(--brand); color: var(--on-brand);
+}
+.invitation-card[data-theme="fiesta"] .invitation__age { background: var(--brand-2); color: var(--on-brand); }
+/* En `sereno` la chapa es de trazo, no de relleno: el tema entero va un tono más bajo. */
+.invitation-card[data-theme="sereno"] .invitation__age { background: transparent; border: 2px solid var(--brand); color: var(--ink-fg); }
+.invitation__age-unit { font-size: var(--fs-label); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* El nombre y la chapa, en la misma fila y alineados por su centro. */
+.invitation__who { display: flex; align-items: center; gap: var(--sp-16); }
+
+/* El nombre de quien cumple es EL dato de la página: va solo, en la fuente de rótulo y a la talla del
+   titular. Un nombre largo parte por palabras en vez de desbordar la tarjeta. */
+.invitation__honoree { font-family: var(--font-display); font-size: var(--fs-title); line-height: 1.05; margin: 0; overflow-wrap: break-word; min-width: 0; }
+/* El bloque de «Dónde»: el MISMO molde con superficie que enmarca el anti-robot del justificante
+   (borde, radio medio y papel suave del sistema). Antes eran dos párrafos sueltos sobre el fondo, sin
+   caja — que es lo que el owner vio como «texto plano».
+   ⚠️ El menú NO necesita esto: usa `.gf-extras__list`, la pieza con la que el post-form lista los
+   complementos, porque el menú **es** una lista de complementos. Una pieza por cada cosa, no una caja
+   genérica para las dos. */
+.invitation__panel { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12); padding: var(--sp-16); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-soft); }
+/* El nombre del negocio manda dentro de su bloque: es el sitio al que hay que ir. */
+.invitation__place { font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.2; margin: 0; }
+/* El texto de un bloque. A la talla del cuerpo, no a la de una nota: aquí no es letra pequeña, es la
+   información por la que se abre la invitación. */
+.invitation__note { font-size: var(--fs-body); line-height: 1.5; margin: 0; color: var(--fg-body); }
+/* «Cómo llegar» es una ACCIÓN y ahora lo parece: botón del sistema en su variante discreta. Como
+   párrafo con un enlace subrayado se leía igual que la dirección de encima. */
+.invitation__go { align-self: flex-start; }
+/* El teléfono del anfitrión es un enlace `tel:` y tiene que parecerlo en un dedo: área táctil propia
+   dentro de la celda, sin cambiar la tipografía mono de la cifra. */
+.invitation__call { display: inline-block; padding-block: var(--sp-4); text-decoration: underline; }
+
 .guardian__who { flex: 1 1 auto; min-width: 0; }
 .guardian__who[hidden] { display: none; }
 .guardian__who-name { font-size: var(--fs-body); font-weight: 700; line-height: 1.3; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

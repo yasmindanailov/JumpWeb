@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\EmailChangeController;
 use App\Http\Controllers\Admin\CalendarEventsController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\EventsController;
 use App\Http\Controllers\GuardianAuthorizationController;
 use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvitationPageController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Controllers\PricingController;
@@ -240,6 +242,29 @@ Route::post('/autorizacion/{reservation}', [GuardianAuthorizationController::cla
     ->middleware(['throttle:10,1', 'no-store'])
     ->missing(fn () => abort(403))
     ->name('reservation.authorization.store');
+
+// ── La INVITACIÓN DIGITAL de una fiesta (`specs/celebracion-e-invitacion.md` §4.6, T5·1) ──────────
+//
+// La tercera página enfocada y pública del producto, y la que tiene la credencial más rara de las
+// tres: un TOKEN en la URL. Las otras dos se abren con una firma HMAC sobre la URL exacta; ésta con
+// doce caracteres opacos que son una fila, porque su enlace se reparte **a un grupo de clase entero**
+// por un chat de padres y tiene que poder anularse sin esperar a ninguna caducidad.
+//
+// ⚠️ **El nombre `invitation.show` es contrato**: `PartyInvitations::PUBLIC_ROUTE` pregunta por él
+// para componer el enlace que reparte el anfitrión, y por eso el campo `url` de la API se rellena
+// solo desde que esta línea existe. Renombrarla lo devuelve a `null` **sin romper ningún test** — hay
+// un caso que lo vigila (`InvitationPageTest`).
+//
+// ⚠️ `no-store` (`RGPD-04`): se entra sin sesión y lo que se sirve es el nombre y la edad de un menor.
+// El `Referrer-Policy: no-referrer` lo pone el controlador — sin él, «Cómo llegar» le mandaría el
+// token a Google en el `Referer`.
+//
+// ⚠️ El regex del token va en la ruta: un identificador que no tiene su forma ni llega a mirarse
+// contra la base de datos.
+Route::get('/invitacion/{token}', [InvitationPageController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{12}')
+    ->middleware(['throttle:60,1', 'no-store'])
+    ->name(PartyInvitations::PUBLIC_ROUTE);
 
 // SEO: mapa del sitio para buscadores.
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
