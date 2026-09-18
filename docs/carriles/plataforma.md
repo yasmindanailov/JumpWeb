@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#628`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (los cuatro arreglos del mapa de frases).
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#629`** ·
+> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (mapa de frases y ESLint).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -29,8 +29,12 @@
   de compactación, que NO pasa por `UserPromptSubmit`: medido, 10 de 10 sin salida del hook detrás).
 - **F3 ✅** (`#624`): v1.0.0 = `1272cb93`, guarda 8 con arnés 9/9, `CHANGELOG.md`; producción dijo v1.0.0 el 17-09
   (fichero escrito a mano) y **la guarda 8 se estrenó en real el 18-09** con el noveno despliegue.
-- **`#625` análisis estático**: Larastan nivel 5 sobre `app/` con línea base de 459 y trinquete, en el gate
-  (`StaticAnalysisGateTest`, arnés 8/8). **ESLint pendiente** (el SPA ya dijo que `package.json` está libre).
+- **`#625` análisis estático ✅ ENTERO** (18-09): Larastan nivel 5 sobre `app/` con línea base de 459, y
+  **ESLint (`#629`)** sobre el cajón: reglas base + `vue flat/essential` + `no-use-before-define` a coste cero,
+  línea base NATIVA de 12 (`eslint-suppressions.json`), paso `npm run lint:js` en el gate tras Larastan (~2 s).
+  Las dos con trinquete en `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` **20/20**. Medido antes:
+  los otros dos juegos de Vue dan los mismos 12 errores y +4.364 avisos de formato. **El primer día cazó un
+  defecto VIVO del SPA** (`addBtn` sin declarar en `DependentsZone.vue`), avisado en el buzón.
 - **`#627`** `[DECIDIDO owner]`: la app en **React Native + Expo, TypeScript**; la prueba corta de F6 confirma,
   no compara (`#612` marcada).
 - **`#628` · la promo «−20 % online», chapuza declarada y EN PRODUCCIÓN ENTERA**: el 17-09 a las 22:35 las 9
@@ -59,10 +63,10 @@
    `CONVENCIONES §1` y §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker. Un patrón nuevo del mapa se
    prueba SIEMPRE con el control de mensajes reales (mapa de `git show HEAD:` contra el nuevo sobre los `.jsonl`
    de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`): fue lo que descubrió la frase habitual del owner.
-2. **`#625` · ESLint** sobre `resources/js/sidebar/` con las reglas de Vue y línea base, midiendo antes de activar
-   (segundos de gate, tamaño de la línea base), paso en el `pre-push` y caso en `PrePushGateTest`; `package.json`
-   es compartido y el SPA ya contestó que está libre (aviso retirado del buzón). Deuda de Larastan: bajar la
-   línea base por familias (`nullsafe.neverNull` es mecánico), bajando `FROZEN_ERRORS` en el mismo commit.
+2. **Deuda del análisis estático** (`#625` y `#629` están hechos): bajar la línea base de Larastan por familias
+   (`nullsafe.neverNull` es mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint son ficheros
+   del SPA: los baja ese carril (poda con `--prune-suppressions` y baja `FROZEN_JS_ERRORS`, que SÍ es de este).
+   Y la tarea propia de F1 que sigue abierta: podar `DEUDA.md` y `VERIFICACION-E2E-CAJON.md`.
 3. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día** (si no, el tachado miente). Sin desplegar. Y el **sistema de ofertas** cuando
@@ -80,7 +84,8 @@
 `docs/carriles/` (cada carril SU fichero) · `scripts/docs-check.sh` · `.githooks/pre-push` ·
 `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `.claude/skills/` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
-`scripts/mutar-analisis-estatico.sh` · `StaticAnalysisGateTest` · `Setting::promoPercent()` y
+`scripts/mutar-analisis-estatico.sh` · `StaticAnalysisGateTest` · `eslint.config.js` · `eslint-suppressions.json`
+(la línea base la PODA quien arregla; la config y el techo son de este carril) · `Setting::promoPercent()` y
 `WritesLandingValues::antes()` (la chapuza `#628`; lo que pinta es de la web). Todo lo anterior es
 COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
 
@@ -123,12 +128,35 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   empujar aborta por «no está en origin» y el caso sale verde sin haber mirado el nombre ni el tipo.
 - El push de una ETIQUETA no pasa por el gate (`pre-push` solo mira `refs/heads/main`): por eso `/release`
   exige que el commit etiquetado ya esté en `origin/main`.
+- **`npm install` PODA `playwright-core`** (se instala con `--no-save`): medido el 18-09 al meter ESLint
+  («removed 1 package»). Tras cualquier `npm install`, reponerlo (`/sonda` §1) o la sonda falla al importar.
+- **Un arnés que restaura un `.vue` tocándole la fecha deja el bundle SSR «rancio»**: la suite dio 36 fallos de
+  `SidebarDomContractTest` tras `mutar-analisis-estatico.sh` (18-09). No es una regresión: `npm run build:ssr` y
+  re-medir (el `pre-push` lo reconstruye solo).
+- **ESLint se mide fuera del árbol** cuando el gate está corriendo: instalación desechable en el `/tmp` del
+  contenedor y `--config` apuntándola, con el cwd en el repo (los `import` de la config resuelven junto a ella).
+- **El código de salida de una tarea en segundo plano con `; tail` al final es el del `tail`**: los de `pull` y
+  `push` se imprimen con `echo "… exit=$?"` y se LEEN en la salida.
 - **El ojo del navegador se pierde al recrear el contenedor** (Chromium y el puente `socat`): montarlo son
   ~2 min en segundo plano (`/sonda` §1); `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`.
 
 ## Buzón
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-18)
+- ❗ **ESLint ya está en el gate (`#629`): tras el `pull`, `docker compose exec -u sail laravel.test npm install`**
+  o tu push muere con «eslint: not found». Toqué lo compartido que avisé: `package.json` (4 `devDependencies` y
+  el script `lint:js`) y `package-lock.json`. A mano: `npm run lint:js` (~2 s). Reglas: base + `vue
+  flat/essential` + `no-use-before-define` en el mismo ámbito; nada de formato. Tus 12 errores de hoy están
+  congelados en `eslint-suppressions.json`; **si arreglas uno, el gate sale en rojo (código 2) hasta que podas**:
+  `npx eslint resources/js/sidebar --prune-suppressions` y bajas `FROZEN_JS_ERRORS` en
+  `StaticAnalysisGateTest` en tu mismo commit (ese número lo puedes tocar tú). Nunca `--suppress-all`.
+- 🐞 **Defecto VIVO tuyo, cazado por ESLint el primer día y sin tocar**: `account/zones/DependentsZone.vue`
+  usa `addBtn.value?.focus()` (líneas 102 y 106) y la plantilla lleva `ref="addBtn"` (145), pero el `<script
+  setup>` **no declara `addBtn`** (`const addBtn = ref(null)`). Al cancelar o dar de alta un menor salta un
+  `ReferenceError` dentro del `nextTick` y el foco NO vuelve al botón: justo lo que protege tu comentario de la
+  línea 97 (`#217`). Está en `v1.1.0` (producción) y la declaración no ha existido nunca (`git log -S'const
+  addBtn'` vacío; `nameInput` sí se declara). Hallazgo ESTÁTICO: no lo he reproducido en navegador. Los otros 11: 7 `no-unused-vars` (imports y variables muertas) y 3
+  nombres de componente de una palabra (`Shell`, `Sidebar`, `Foot`; congelados a propósito, no hay que renombrar).
 - ❗ **Actualiza el plugin en tu máquina a `1377d58`** (por terminal, y reinicia la sesión):
   `claude plugin marketplace update jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente --scope
   project`. Trae los cuatro arreglos del mapa de frases: «vamos a cerrar…» ya dispara `/handoff`, «desplegamos»

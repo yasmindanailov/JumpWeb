@@ -336,7 +336,9 @@ degrada en silencio.
   de profundidad 0 que lee una constante **declarada debajo** (TDZ: Vue captura el `ReferenceError`,
   sigue con `undefined` y el observador nace sin dependencias). Escáner de los `.vue` de
   `resources/js` —consciente de cadenas, comentarios y profundidad, no un parser— con su guarda de
-  la guarda; lo que no cubre está en su docblock (ESLint es el siguiente escalón, `DEUDA.md`). Se une
+  la guarda; lo que no cubre está en su docblock. ESLint entró el 2026-09-18 (`#629`, `npm run lint:js` en
+  el gate): caza la prop sombreada (`vue/no-dupe-keys`) y el uso antes de declarar en el MISMO ámbito; el
+  `watch` de callback síncrono sobre una constante de más abajo sigue siendo solo de este escáner. Se une
   a `SidebarComponentBudgetTest` (CE-6) y `SidebarBundleBudgetTest` como guardas del cajón.
 
 > Al tocar estos tests: modificar una baseline para AÑADIR una entrada es casi siempre la

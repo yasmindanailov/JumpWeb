@@ -26,7 +26,7 @@ arrancar o retomar → **`/carril`** · cerrar → **`/handoff`** · decidir →
 diseñar antes → `/spec` · versión → `/release` · mutación → `/mutar` · desplegar → `/desplegar` · navegador →
 `/sonda` · instancia → `/instancia` · ¿hecho? → `/dod`. Sin barra, por la frase del owner. Docker:
 `README.md` raíz; siempre `docker compose exec -u sail …`. **CI = gate local**: el hook `pre-push` (`.githooks/`)
-corre **docs-check + Pint + Larastan + build + suite** en pushes de `main` y bloquea en rojo (`wip/…` exento). Dinero/aforo
+corre **docs-check + Pint + Larastan + ESLint + build + suite** en pushes de `main` y bloquea en rojo (`wip/…` exento). Dinero/aforo
 exige `VERIFY_CONC=1` tras los verificadores (`INVARIANTES §6`; la lista viva es el `CRITICAL_RE` del hook). **El
 contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git config core.hooksPath .githooks`.
 

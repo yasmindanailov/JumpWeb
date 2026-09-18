@@ -172,6 +172,10 @@ presentación · **convivencia**: no romper supuestos del sector origen document
   con línea base (`phpstan-baseline.neon`). **La línea base solo BAJA**: un error nuevo se arregla, no se
   congela regenerándola; si arreglas errores congelados, regenérala y baja `FROZEN_ERRORS` en
   `StaticAnalysisGateTest` en el mismo commit. A mano: `./vendor/bin/phpstan analyse --memory-limit=2G`.
+  **Y ESLint sobre el cajón** (`#629`): `npm run lint:js` (`flat/essential` de Vue), con su línea base en
+  `eslint-suppressions.json` (12, solo baja). Un error congelado que arreglas deja el gate en rojo hasta que
+  podas (`npx eslint resources/js/sidebar --prune-suppressions`) y bajas `FROZEN_JS_ERRORS`. Nunca
+  `--suppress-all` para tapar uno nuevo, ni una regla en `'off'`. Tras traer el paso: `npm install`.
 - **Una sola sesión de escritura a la vez** sobre cada CLON del repo; subagentes de solo-lectura
   exentos. Dos agentes = dos clones, y su coordinación es **§10**.
 - **El commit de cierre lleva la evidencia** en el cuerpo: «Verificación: suite N tests /

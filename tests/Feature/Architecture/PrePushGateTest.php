@@ -37,6 +37,7 @@ class PrePushGateTest extends TestCase
         'docs-check' => 'scripts/docs-check.sh',
         'Pint' => 'pint --test',
         'análisis estático' => 'phpstan analyse --no-progress',
+        'análisis estático del cajón' => 'npm run lint:js',
         'build de assets' => 'npm run build',
         'build SSR del cajón' => 'npm run build:ssr',
         'tests JS' => 'npm run test:js',

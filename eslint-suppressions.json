@@ -1,0 +1,47 @@
+{
+  "resources/js/sidebar/Shell.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "resources/js/sidebar/Sidebar.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "resources/js/sidebar/account/orders.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "resources/js/sidebar/account/waiver.test.js": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "resources/js/sidebar/account/zones/DependentsZone.vue": {
+    "no-undef": {
+      "count": 2
+    }
+  },
+  "resources/js/sidebar/sections/PurchaseSection.vue": {
+    "no-unused-vars": {
+      "count": 2
+    }
+  },
+  "resources/js/sidebar/steps/Foot.vue": {
+    "vue/multi-word-component-names": {
+      "count": 1
+    }
+  },
+  "resources/js/sidebar/steps/LoginForm.vue": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  },
+  "resources/js/sidebar/stores/account.js": {
+    "no-unused-vars": {
+      "count": 1
+    }
+  }
+}

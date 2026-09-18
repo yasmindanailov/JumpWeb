@@ -141,6 +141,17 @@ docker compose exec -u sail -T laravel.test ./vendor/bin/pint --test
 echo '→ pre-push: análisis estático (Larastan, nivel 5 con línea base)…'
 docker compose exec -u sail -T laravel.test ./vendor/bin/phpstan analyse --no-progress --memory-limit=2G
 
+# La otra mitad de `#625`: ESLint con las reglas de Vue (`flat/essential`) sobre el cajón
+# (`resources/js/sidebar/`), también con LÍNEA BASE —los 12 errores del día que entró (2026-09-18)
+# viven en `eslint-suppressions.json`—. Medido antes de activarlo: ~2 s sin caché. El primer día
+# encontró un defecto vivo (una `ref` de plantilla sin declarar: `ReferenceError` al plegar un alta).
+# ⚠️ Si dice «eslint: not found», falta `npm install` en el contenedor tras traer este paso.
+# ⚠️ Si un error congelado se ARREGLA, ESLint sale con código 2 hasta que se poda la línea base
+#    (`npx eslint resources/js/sidebar --prune-suppressions`) y se baja `FROZEN_JS_ERRORS` en
+#    `StaticAnalysisGateTest`: el trinquete lo trae puesto la herramienta.
+echo '→ pre-push: análisis estático del cajón (ESLint + Vue, con línea base)…'
+docker compose exec -u sail -T laravel.test npm run lint:js
+
 # Build de assets ANTES de la suite, y por dos motivos independientes:
 #  · `INVARIANTES SUITE-05` ya lo exigía («npm run build una vez antes de la suite completa: las
 #    vistas dan `ViteManifestNotFound` sin manifest») y el hook no lo hacía;
