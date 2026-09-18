@@ -97,9 +97,11 @@ class InvitationReceiptTest extends TestCase
      * una URL ya firmada la invalida, así que componerla concatenando habría llevado a un 403 **al
      * padre que acaba de decir que su hijo viene** — el peor momento posible.
      *
-     * ⚠️ Y el nombre del menor llega ENTERO al primer campo, sin partirlo (`#236`): viene de un campo
-     * que pedía «nombre y apellidos», y partirlo fabricaría un apellido en una pantalla que acompaña a
-     * una prueba legal.
+     * ❗❗ Y el nombre **se le ENSEÑA, no se le prerrellena** (`[DECIDIDO owner]`, `#706`): nombre y
+     * apellidos son dos campos (`#236`) y la invitación los pide en uno, así que **cualquier reparto
+     * automático adivina** — volcarlo entero deja el apellido obligatorio vacío, y partirlo por el
+     * primer espacio recorta «María del Carmen» a «María» dentro de un documento que se firma. El
+     * único que sabe dónde acaba su nombre es quien lo escribió.
      */
     public function test_lo_dejo_y_me_voy_lands_on_a_waiver_that_opens_with_the_reply_tied(): void
     {
@@ -116,10 +118,17 @@ class InvitationReceiptTest extends TestCase
         $waiver = html_entity_decode($m[1]);
 
         // La firma del enlace TIENE que valer: es lo que este caso existe para probar.
-        $this->get($waiver)
+        $html = (string) $this->get($waiver)
             ->assertOk()
             ->assertSee('value="'.$reply->getKey().'"', escape: false)
-            ->assertSee('value="Hugo Ruiz"', escape: false);
+            // Lo que escribió, ENSEÑADO…
+            ->assertSee('Hugo Ruiz')
+            ->getContent();
+
+        // …y las dos casillas VACÍAS: que el reparto lo haga él.
+        $this->assertStringContainsString('name="minor_name" type="text" required autocomplete="off"', $html);
+        $this->assertStringNotContainsString('value="Hugo Ruiz"', $html, 'el nombre se volcó en una casilla en vez de enseñarse');
+        $this->assertStringContainsString('data-from-invitation', $html, 'no se le dice de dónde viene ni qué escribió');
 
         $this->assertNotNull($reservation->fresh());
     }

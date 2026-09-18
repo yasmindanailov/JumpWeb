@@ -27,6 +27,7 @@ return [
         'surname' => 'Nom',
         'born_on' => 'Date de naissance',
         'born_on_help' => 'Elle nous sert à connaître son âge le jour de la visite.',
+        'from_invitation' => 'Sur l’invitation tu as écrit « :name ». Répartis-le ici : le prénom dans une case et le nom dans l’autre.',
         'pick' => 'Choisissez votre enfant',
         'pick_manual' => 'Saisir les données à la main',
         'pick_help' => 'Ce sont les mineurs déclarés dans votre compte. En choisir un remplit ses données ; vous pouvez les corriger.',

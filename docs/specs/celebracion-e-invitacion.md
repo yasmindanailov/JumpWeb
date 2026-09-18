@@ -14,26 +14,27 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**: los
-  enciende el owner); **la T5 ENTERA en el árbol sin desplegar salvo §10.6·A, que decide el OWNER** →
-  T7 → **T6**. **Si construyes, §7.2 primero.**
+  enciende el owner); **la T5 ENTERA en el árbol, sin desplegar** → siguen **T7** y **T6** al final.
+  **Si construyes, §7.2 primero.**
+- ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
+  escribió. Repartirlo automáticamente es adivinar, y esto acompaña a una firma.
 - ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): dos defectos arreglados y **diez puntos sin tocar** en
-  §10.4.7·B — míralos antes de dar por buena una parte de la T4.
+  §10.4.7·B — míralos antes de darla por buena.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
-  `invitation_replies`, el formulario lo PROPONE sobre una ficha y el anfitrión lo ADOPTA al guardar —
-  `submitGuestForm()` sustituye la lista entera y `updated_at` es el testigo (medido)—.
-  Por eso un padre no mueve dinero, aforo ni ningún fichero del `CRITICAL_RE`, y `OrderCreator` no se toca.
+  `invitation_replies`, el formulario lo PROPONE y el anfitrión lo ADOPTA al guardar —`submitGuestForm()`
+  sustituye la lista entera y `updated_at` es el testigo (medido)—. Por eso un padre no mueve dinero,
+  aforo ni ningún fichero del `CRITICAL_RE`, y `OrderCreator` no se toca.
 - ❗ **La lista completa NO rechaza** (`#700`, sustituye a D2): era un **oráculo de pertenencia**. **No existe
-  `full`**, como no existe «repetido»: ningún motivo depende del NOMBRE. El «sí» que no cabe se acepta y sale
-  en el aviso «hay N que ya no caben» (§4.7).
+  `full`**: ningún motivo depende del NOMBRE. El «sí» que no cabe se acepta y sale en el aviso (§4.7).
 - «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja
   solo con una ficha de UN candidato (D11) · el «no podemos» lo ve el anfitrión (D3).
-- **Lo que enseñó §10**: el orden de la PÁGINA ya no es el de las POSICIONES (`sanitizeGuestData()` ordena
-  por clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba
-  andándola** (§10.6·E).
+- **Lo que enseñó §10**: el orden de la PÁGINA no es el de las POSICIONES (`sanitizeGuestData()` ordena por
+  clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba andándola**
+  (§10.6·E).
 - ⚠️ **El molde es de TRES páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*`, `.gf-notice` o
-  `.gf-extras__list` mueve también el justificante y la invitación. Tras tocarlo, **sonda y captura de
-  VENTANA de las tres** (así rompió la T2 la barra de firmar: 401 px de 844, §10.3).
-- **Borde abierto para la T6** (§7·5): bajar invitados descarta las filas del FINAL.
+  `.gf-extras__list` mueve el justificante y la invitación. Tras tocarlo, **sonda y captura de VENTANA de
+  las tres** (así rompió la T2 la barra de firmar: 401 px de 844, §10.3).
+- **Borde abierto (T6, §7·5)**: bajar invitados descarta las filas del FINAL.
 
 ## 0. En una línea cada cosa
 
@@ -1267,7 +1268,7 @@ La barra de contestar llega con su aviso o no llega.
 | **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ✅ `#702` |
 | **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ✅ `#703` |
 | **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ✅ `#705` |
-| **T5·5** | El flujo firmar ↔ invitación: **C, D y E ✅ `#704`** · ⚠️ **A, del owner** (abajo) | 🟦 |
+| **T5·5** | El flujo firmar ↔ invitación: C, D y E (`#704`) · **A, decidida por el owner** (`#706`) | ✅ |
 
 #### 10.5.1 T5·1 · la página y su vestido — EN EL ÁRBOL (2026-09-18, `DECISIONES #701`)
 
@@ -1398,13 +1399,24 @@ abre bien toca añadir el enlace de Google Calendar como segunda opción) · `og
 del tema (1200×441), que en una tarjeta 2:1 se ve con bandas: si el owner quiere tarjeta propia, es un
 fichero más del paquete de instalación.
 
-### 10.6 ⚠️ T5·5 · EL FLUJO FIRMAR ↔ INVITACIÓN — C, D y un cuarto defecto HECHOS (`#704`); A es del owner
+### 10.6 ✅ T5·5 · EL FLUJO FIRMAR ↔ INVITACIÓN — CERRADA (`#704` y `#706`)
 
 Lo levantó el owner al ver la T5·3 funcionando, y **medido, tenía tres defectos y una contradicción** —
-más un **cuarto que destapó la pantalla** y no estaba escrito aquí (E, abajo). **C, D y E están en el
-árbol** (`DECISIONES #704`); **A sigue pendiente del owner y es lo único que bloquea cerrar la T5·5**.
+más un **cuarto que destapó la pantalla** y no estaba escrito aquí (E, abajo). **C, D y E entraron con
+`#704`**; **A la decidió el owner el 18-09 (`#706`)**. Con ella, la T5 entera está en el árbol.
 
-##### A · El apellido obligatorio — 🔴 **PENDIENTE DEL OWNER**, no se toca sin su decisión
+##### A · El apellido obligatorio — ✅ **DECIDIDO por el owner el 18-09** (`#706`): dos campos, sin prerrelleno
+
+> **La decisión, arriba del todo porque es lo que manda**: nombre y apellidos **siguen siendo dos
+> campos** (`#236` en pie, sin migración y sin tocar ninguna firma), y **el prerrelleno del menor se
+> retira**: el justificante le ENSEÑA lo que escribió en la invitación y lo reparte él.
+> ▶ El owner propuso además dos salidas propias, y **las dos se midieron y se descartaron con datos**:
+> *prerrellenar solo el nombre* obliga a adivinar dónde acaba («María del Carmen Ruiz Gil» → «María»)
+> dentro de un documento firmado; *pedir solo el nombre en la invitación* colapsa a **dos «Martina»
+> distintas de una clase en una sola** (medido: el anfitrión ve «vienen 1» y una propuesta).
+> ▶ Y el defecto era real, con sus manos: firmó desde el enlace y su justificante quedó como
+> «Hugo Ruiz Pla» + «DANAILOV».
+> ▶ Lo de abajo se conserva porque es **el porqué**, y porque dos de sus costes resultaron falsos.
 
 `minor_surname` es **`required`** en el justificante, y §4.5·7 manda que el nombre llegue desde la
 invitación **«sin partirlo en nombre y apellidos»** (`#236`). **Las dos no pueden cumplirse**: el
@@ -1472,9 +1484,9 @@ extras firmados, así que el segundo intento **ya no iba atado a la respuesta**,
 lista llena acababa en «no quedan plazas» — exactamente el fallo que `#576` existe para impedir.
 ▶ Es el defecto más caro de los cuatro y el único que nadie había visto. *Una costura se prueba andándola.*
 
-##### Lo que queda de la T5·5
-**Solo A**, que es decisión del owner. `InvitationSigningFlowTest` (5 casos) · un caso en
-`ModuleContractsTest` · arnés `scripts/mutar-flujo-invitacion.py` **7/7** · los dos estados del recibo
+##### Guardas de la T5·5
+`InvitationSigningFlowTest` (5 casos) · un caso en `ModuleContractsTest` · arnés
+`scripts/mutar-flujo-invitacion.py` **7/7** · los dos estados del recibo y la hoja sin prerrelleno,
 vistos en navegador a 390 y 1280 px.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16

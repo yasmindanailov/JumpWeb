@@ -217,16 +217,26 @@
                             {{-- ⚠️ Sin asterisco (T3): de ocho campos dos son opcionales, así que se marca LO
                                  OPCIONAL, como en la hoja hermana; el asterisco iba sin leyenda y en el color
                                  de la zona. Y el ERROR va delante de la ayuda: es lo que hay que leer. --}}
+                            {{-- ❗❗ **Lo que escribió en la invitación se ENSEÑA, no se prerrellena**
+                                 (`[DECIDIDO owner]`, `#706`; spec §10.6·A). Nombre y apellidos son dos
+                                 campos (`#236`) y la invitación pide el nombre en UNA casilla, así que
+                                 cualquier reparto automático adivina: volcarlo entero deja el apellido
+                                 —obligatorio— vacío, y partirlo por el primer espacio recorta «María del
+                                 Carmen» a «María» dentro de un documento que se firma. Se le devuelve lo
+                                 que él escribió y lo reparte él, que es el único que sabe dónde acaba su
+                                 nombre. --}}
+                            @if (($fromInvitation['minor'] ?? '') !== '')
+                                <p class="guardian__text" data-from-invitation>
+                                    {{ __('guardian.minor.from_invitation', ['name' => $fromInvitation['minor']]) }}
+                                </p>
+                            @endif
+
                             <div class="eventfields">
                                 <label class="eventfields__field @error('minor_name') is-invalid @enderror" for="minor_name">
                                     <span class="eventfields__label">{{ __('guardian.minor.name') }}</span>
                                     <input id="minor_name" name="minor_name" type="text" required autocomplete="off"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::NAME_MAX }}"
-                                           {{-- Desde la invitación digital llega ENTERO y no se parte
-                                                (`#236`, `#703`): viene de un campo que pedía «nombre y
-                                                apellidos», y partirlo por el primer espacio fabricaría
-                                                un apellido en una pantalla que acompaña a una prueba. --}}
-                                           value="{{ old('minor_name', $fromInvitation['minor'] ?? '') }}">
+                                           value="{{ old('minor_name') }}">
                                     @error('minor_name')<span class="eventfields__error">{{ $message }}</span>@enderror
                                 </label>
 

@@ -27,6 +27,7 @@ return [
         'surname' => 'Surname',
         'born_on' => 'Date of birth',
         'born_on_help' => 'We use it to know their age on the day of the visit.',
+        'from_invitation' => 'On the invitation you wrote “:name”. Split it here: first name in one box, surname in the other.',
         'pick' => 'Choose your child',
         'pick_manual' => 'Type the details by hand',
         'pick_help' => 'These are the minors declared in your account. Picking one fills in their details; you can correct them.',

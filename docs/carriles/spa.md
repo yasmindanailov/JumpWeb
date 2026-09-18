@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#705`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#706`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -27,7 +27,7 @@
   (`#576`) · el RGPD, donde el justificante **se conserva** y solo pierde el puntero (`#577`) · y la API
   por token, hoja en blanco y cuatro «no» que son el mismo 404 (`#578`). Arneses 9/9 · 13/13 · 11/11 ·
   12/12 · 5/5+1 declarado · 14/14. ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
-- **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#705`), **sin desplegar**; las
+- **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#706`), **sin desplegar**; las
   tres primeras vistas en vivo por el owner el 18-09:
   - **T5·1→T5·3 (`#701`→`#703`)**: la ruta `/invitacion/{token}` con los tres temas —con ella
     `Invitation.url` se rellenó sola—, contestar con su aviso de privacidad, y el **recibo de 2 horas**
@@ -43,7 +43,7 @@
     ❗ **El defecto lo encontró el fichero servido por HTTP, no el test**: el `VTIMEZONE` declaraba
     observancias que entraban en el mismo desfase del que venían (recortar la lista de transiciones la
     reindexa). El unitario miraba el `TZOFFSETTO` y el fallo estaba en el `FROM`. Hay guarda del PAR.
-  - **T5·5 · el flujo firmar ↔ invitación (`#704`), en el árbol salvo su A**: **C** (el recibo ya no
+  - **T5·5 · el flujo firmar ↔ invitación (`#704`)**: **C** (el recibo ya no
     ofrece firmar a quien firmó — contrato nuevo `Booking\Contracts\SignedInvitationReplies`, que
     implementa `GuardianPlaces` y responde **por la ATADURA de `#576`, no por el nombre**), **D** (tras
     firmar se vuelve a SU recibo) y **E, un CUARTO defecto que no estaba escrito en la spec**: la vuelta
@@ -51,25 +51,28 @@
     atado, **cobraba plaza** y con la lista llena acababa en «no quedan plazas» — lo que `#576` existe
     para impedir. Lo destapó **caminar la pantalla**, no leerla. `InvitationSigningFlowTest` (5) · un
     caso en `ModuleContractsTest` · arnés **7/7** · los dos estados del recibo vistos a 390 y 1280 px.
-- ❗❗ **LO ÚNICO QUE QUEDA ABIERTO DE LA T5·5 es §10.6·A, y es DECISIÓN DEL OWNER** (se le preguntó el
-  18-09 con las cuatro salidas y su coste; **sin respuesta todavía**). Medido, y **dos costes que la spec
-  daba por ciertos NO existen**: unificar los dos campos del menor **no reescribe ninguna firma** (el hash
-  se calcula con los atributos de la propia firma y `subject_name` ya va unido; simulado sobre la BD en
-  una transacción deshecha, con control que muerde) y **no cambia ninguna clave** (`keyFor()` ya
-  concatena: 3 filas reales + 9 casos adversariales, 0 distintas). La API tampoco parte el nombre.
-  ❗ Y **«como `dependents` ya hace por `#236`» era FALSO**: `#236` decidió lo contrario (campo aparte).
-  ▶ La recomendación que se le dio: **unificar + exigir «al menos dos palabras»**, porque una sola
-  casilla `required` acepta «Hugo» y eso se lleva por delante el OBJETIVO de `#236`.
+- ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **nombre y apellidos siguen siendo DOS campos**
+  (`#236` en pie, sin migración y sin tocar ninguna firma) y **el prerrelleno del menor se retira** — la
+  hoja le enseña «En la invitación escribiste "…"» y lo reparte él.
+  ▶ Propuso dos alternativas y **las dos se midieron y se descartaron con datos**: *prerrellenar solo el
+  nombre* obliga a adivinar dónde acaba («María del Carmen Ruiz Gil» → «María») dentro de un documento
+  firmado; *pedir solo el nombre en la invitación* colapsa **dos «Martina» distintas de una clase en
+  una** (medido: el anfitrión ve «vienen 1» y una propuesta, la segunda niña desaparece).
+  ▶ **La prueba de que el defecto era real la dio él**: firmó desde el enlace y su justificante quedó
+  como «Hugo Ruiz Pla» + «DANAILOV» (`auth #36` de la BD de desarrollo).
+  ⚠️ De la medición que sostuvo la decisión, lo que conviene no perder: unificar **no** habría reescrito
+  ninguna firma (el hash sale de los atributos de la propia firma y `subject_name` ya va unido) ni
+  cambiado ninguna clave (`keyFor()` ya concatena), y **«como `dependents` ya hace por `#236`» era
+  FALSO** — `#236` decidió lo contrario. Está en spec §10.6·A por si algún día se reabre.
 - **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner (31 agentes): **dos defectos reales
   arreglados** —la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT`, y un
   «sí» levantaba el tope del firmador N veces— más dos guardas frágiles. Arnés a **16/16**; los diez
   puntos anotados sin tocar, en spec §10.4.7·B.
-- **`#700` · la lista completa deja de rechazar** (`[DECIDIDO owner]`, sustituye a D2 de `#569`): era
-  un **oráculo de pertenencia** —con la lista llena, un nombre ya escrito se aceptaba y uno nuevo
-  recibía `full`, así que se podía reconstruir la lista probando—. El «sí» se acepta siempre, toma
-  plaza propia y sale en el aviso «hay N respuestas que ya no caben» (§4.7). `REASON_FULL` fuera del
-  dominio y del contrato. ⚠️ El verificador de concurrencia se reorientó: ahora fuerza **16 «sí» del
-  MISMO niño** y exige una sola plaza; visto fallar sin el lock (16 de 16 estrenan plaza).
+- **`#700` · la lista completa deja de rechazar** (`[DECIDIDO owner]`, sustituye a D2 de `#569`): era un
+  **oráculo de pertenencia** —con la lista llena, un nombre ya escrito se aceptaba y uno nuevo recibía
+  `full`, así que se reconstruía la lista probando—. `REASON_FULL` fuera del dominio y del contrato.
+  ⚠️ El verificador de concurrencia fuerza ahora **16 «sí» del MISMO niño** y exige una sola plaza;
+  visto fallar sin el lock (16 de 16 estrenan plaza).
 - ✅ **Cerrado**: la barra de firmar de 401 px (rota en producción desde el 16-09) la arregló la T3 y
   **salió en v1.1.0**. Queda mirarla allí, que es otra cosa que darla por buena.
 - La capa de agente: el plugin `jumpweb-agente` quedó instalado aquí el 17-09 (`627b3a3`) y esta sesión
@@ -86,12 +89,9 @@
    ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
    `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **La T5 ENTERA en el árbol** (`#701`→`#705`), **sin desplegar**. Quedan:
-   - ❗ **§10.6·A — ESPERA RESPUESTA DEL OWNER**, y es lo único que bloquea cerrar la T5·5. La medición
-     está hecha y escrita en la spec (§10.6·A); **no se codifica hasta que él elija**. Si dice
-     «unificar», la tanda es: migración (`minor_name = TRIM(CONCAT(…))`, ensanchar a 255, soltar
-     `minor_surname`) + la regla de «al menos dos palabras» **igualada en la invitación** (hoy `min:1`)
-     + 6 ficheros de código, 3 rótulos y 12 de test. **Ninguna firma se reescribe.**
+2. **La T5 ENTERA en el árbol** (`#701`→`#706`), **sin desplegar**. Lo que queda no es código:
+   - **El OJO del owner sobre lo de hoy** en `localhost:8081` — el recibo en sus dos estados, el bloque
+     del calendario y la hoja del justificante ya **sin prerrelleno**, con el aviso de dónde viene.
    - **El `.ics` en un TELÉFONO de verdad** (lo pide §4.6): en local está medido por HTTP y en
      Chromium, pero nadie lo ha abierto con la aplicación de calendario de un móvil. Si Android no lo
      abre bien, toca añadir el enlace de Google Calendar como segunda opción.

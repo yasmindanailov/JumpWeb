@@ -38,6 +38,9 @@ return [
         'surname' => 'Apellidos',
         'born_on' => 'Fecha de nacimiento',
         'born_on_help' => 'La usamos para saber su edad el día de la visita.',
+        // Quien llega desde la invitación ya escribió el nombre allí, en UNA casilla. Aquí van dos, así
+        // que se le devuelve lo que puso y lo reparte él: el producto no adivina dónde acaba un nombre.
+        'from_invitation' => 'En la invitación escribiste «:name». Repártelo aquí: el nombre en una casilla y los apellidos en la otra.',
         // El selector de menores a cargo (§12.5), solo con sesión iniciada.
         'pick' => 'Elige a tu hijo o hija',
         'pick_manual' => 'Escribir los datos a mano',
