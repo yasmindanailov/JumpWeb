@@ -81,7 +81,27 @@ class SidebarSeamTest extends TestCase
      */
     public function test_the_store_publishes_the_intent_facade(): void
     {
-        $store = (string) file_get_contents(resource_path('js/app.js'));
+        // ⚠️ Re-apuntado el 2026-09-18 (F4 · T2): la fachada vive en el controlador sin framework, que
+        // `app.js` registra TAMBIÉN como store de Alpine. Y se exige ese registro: sin él, los `@click` de
+        // la landing llamarían a un store que no existe y no harían nada.
+        $store = (string) file_get_contents(resource_path('js/cajon/controller.js'));
+
+        $this->assertStringContainsString(
+            "window.Alpine.store('purchase', cajon)",
+            (string) file_get_contents(resource_path('js/app.js')),
+            'el controlador del cajón ya no se registra como `$store.purchase`: los 23 usos de la landing se quedan mudos',
+        );
+
+        // ⚠️⚠️ **Y `window.JumpWeb.cajon` tiene que acabar siendo el PROXY de ese store, no el objeto crudo.**
+        // Alpine solo se entera de un cambio si la escritura pasa por su proxy: sin esta línea,
+        // `window.JumpWeb.cajon.open()` pone `isOpen` a `true`, NO falla nada, y la carcasa no se mueve.
+        // Esto es solo el centinela estático; quien lo demuestra es el navegador
+        // (`scripts/sonda-cajon-apertura.mjs`, visto en rojo con esta línea quitada el 2026-09-18).
+        $this->assertStringContainsString(
+            "window.JumpWeb.cajon = window.Alpine.store('purchase');",
+            (string) file_get_contents(resource_path('js/app.js')),
+            'con Alpine, `window.JumpWeb.cajon` se queda en el objeto crudo: la API abriría «por dentro» sin mover el panel',
+        );
 
         foreach (['openWith(', 'useIntentAdapter(', 'flushIntent('] as $member) {
             $this->assertStringContainsString(

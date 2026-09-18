@@ -31,6 +31,7 @@
  * catálogo encuentre su nombre— solo lo dice el navegador (`V21`).
  */
 
+import { cajonHost } from '../host-bridge.js';
 import { useAccountContextStore } from '../stores/accountContext.js';
 import { useReservationsStore } from '../stores/reservations.js';
 
@@ -52,8 +53,10 @@ export async function sessionGained({
     // ⚠️ El aviso al resto de la página va PRIMERO y sin esperar a nadie: es un booleano, no puede
     // fallar, y de él depende que cerrar el cajón recargue. Colgarlo detrás de una petición lo
     // pondría a merced de que esa petición saliera bien.
-    const alpine = win?.Alpine?.store?.('purchase');
-    if (alpine) alpine.authChanged = true;
+    // ⚠️ Al ANFITRIÓN del cajón, no a Alpine (F4 · T2): es el mismo objeto —con Alpine, su proxy reactivo—, y
+    // así el motor no nombra un framework que una página ajena no tiene por qué cargar.
+    const host = cajonHost(win);
+    if (host) host.authChanged = true;
 
     reservations?.invalidate?.();
 

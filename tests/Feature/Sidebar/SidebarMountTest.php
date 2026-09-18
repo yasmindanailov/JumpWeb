@@ -1005,18 +1005,22 @@ class SidebarMountTest extends TestCase
         // `SidebarEntryTest` dejó escrita —allí tres docblocks citaban las claves de sesión a
         // propósito— y la que costó una mutación en falso al medir `@livewireScripts`: **mirar el
         // código, no el texto**.
+        // ⚠️⚠️ **Re-apuntado el 2026-09-18 (F4 · T2)**: el store `purchase` se mudó TAL CUAL de `app.js` a
+        // `cajon/controller.js`, un módulo sin framework que `app.js` registra además como store de Alpine.
+        // Mirar aquí `app.js` habría dejado esta guarda vigilando un fichero donde ya no hay `close()` —
+        // y por eso la regex de más abajo exige encontrarlo. Medido por mutación en el fichero nuevo.
         $alpine = (string) preg_replace(
             ['#/\\*.*?\\*/#s', '#^\\s*//.*$#m'],
             '',
-            (string) file_get_contents(base_path('resources/js/app.js')),
+            (string) file_get_contents(base_path('resources/js/cajon/controller.js')),
         );
 
         $this->assertSame(
             // ⚠️ **ACOTADA en la 2c·7**: el store `ctaPair` del CTA doble también tiene un `mode`,
             // y `this.mode =` casaba con el suyo. Contar «cualquier asignación de mode» convertía
             // una guarda del CAJÓN en una que se rompe cada vez que otro store elige ese nombre.
-            // Se acota al bloque del store `purchase`, que es de quien habla.
-            1, preg_match_all('/this\.mode\s*=/', $this->purchaseStoreSource($alpine)),
+            // ▶ Desde la T2 el acotado lo da el FICHERO: el controlador solo contiene el cajón.
+            1, preg_match_all('/this\.mode\s*=/', $alpine),
             "Alguien ha vuelto a escribir el modo del panel fuera de `setMode()`.\n".
             "⚠️ El modo lo publica el MOTOR (`Sidebar.vue`), y un segundo escritor lo desincroniza sin \n".
             "que nada falle: al reabrir el cajón, el panel dice «catálogo» y el bloque de cuenta \n".
@@ -1286,23 +1290,7 @@ class SidebarMountTest extends TestCase
         return json_decode(html_entity_decode($matches[1], ENT_QUOTES), true, 512, JSON_THROW_ON_ERROR);
     }
 
-    /**
-     * El fuente del store `purchase` y solo él.
-     *
-     * ⚠️ Existe porque la guarda de arriba contaba `this.mode =` en TODO `app.js`, y el store
-     * `ctaPair` del CTA doble (2c·7) también tiene un `mode`. Una guarda que cuenta por nombre de
-     * propiedad se rompe cuando otro store elige el mismo nombre — y su mensaje culpa al cajón.
-     */
-    private function purchaseStoreSource(string $alpine): string
-    {
-        $inicio = strpos($alpine, "Alpine.store('purchase'");
-
-        if ($inicio === false) {
-            return '';   // que la guarda falle: si no encuentra el store, no puede aseverar nada
-        }
-
-        $fin = strpos($alpine, "Alpine.store('", $inicio + 30);
-
-        return substr($alpine, $inicio, $fin === false ? null : $fin - $inicio);
-    }
+    // ⚠️ Aquí vivía `purchaseStoreSource()`, que recortaba el store `purchase` de DENTRO de `app.js` porque
+    // el store `ctaPair` también tiene un `mode`. Se retiró en F4 · T2: el cajón tiene fichero propio
+    // (`cajon/controller.js`), así que el acotado lo da el fichero y el recorte sobra.
 }

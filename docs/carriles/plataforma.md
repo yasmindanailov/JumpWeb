@@ -50,12 +50,19 @@
      `GET /api/v1/sidebar/boot?lang=` (pública, `max-age=300` + `ETag` → 304) y `/sidebar/session?lang=`
      (`no-store`, consume el desenlace). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos;
      `SidebarBootTest` 9 casos; `scripts/mutar-cajon-arranque.sh` 8/8. ▶ Un rótulo nuevo va en `SidebarBoot`.
-   - **T2 · la apertura sin Alpine — LO SIGUIENTE** (medida y diseño ya escritos en la spec §4.2): un
-     controlador sin framework dueño del estado y la lógica que hoy vive en el store `purchase` de `app.js`
-     (~240 líneas de trampas pagadas: léelas ANTES), `window.JumpWeb.cajon`, `data-jw-*` y eventos
-     `jw:cajon:*`; el store de Alpine queda de ESPEJO (sus 23 usos y los `:class` del layout no se tocan); el
-     motor escribe en el controlador (solo 2 sitios reales: `Sidebar.vue` y `account/session-gained.js`).
-     Verificar con `npm run test:js`, `SidebarDomContractTest` y `/sonda` por las tres vías de apertura.
+   - **T2 ✅ HECHA (18-09) · la apertura sin Alpine**: el store `purchase` se mudó TAL CUAL a
+     `resources/js/cajon/controller.js`; `app.js` lo instancia al cargar, publica `window.JumpWeb.cajon` y en
+     `alpine:init` lo registra como `$store.purchase` y reasigna `JumpWeb.cajon` al PROXY reactivo (sin eso
+     `open()` no mueve la carcasa y NADA falla: visto en rojo en la sonda). `cajon/declarative.js`
+     (`data-jw-open*`), eventos `jw:cajon:open|close`, y el motor escribe por `sidebar/host-bridge.js`. Sonda
+     `scripts/sonda-cajon-apertura.mjs` 17/17; `scripts/mutar-cajon-apertura.sh` 13/13; ESLint cubre `cajon/`.
+   - **T3 · la carcasa dentro del paquete — LO SIGUIENTE.** Hoy la pinta Blade en el layout (`.sidecart`: telón,
+     panel `role="dialog"` con `:class="'is-' + $store.purchase.mode"`, cabecera con título y cierre, el hueco
+     `#sidecart-account` con el SUELO de logout —el único `route('logout')` de la aplicación, con `@csrf`— y
+     `#sidecart-spa` con su velo), más `a11yPanel` (trampa de foco, en `app.js`) y el arranque del cajón que
+     NACE abierto (`if (…isOpen) { lock; bootSpaEngine() }`, también en `app.js`). Pasa a pintarla el paquete
+     cuando la página no la trae; y sin `data-boot`, el motor arranca por las dos lecturas de la T1. Falta
+     también `jw:cajon:purchased`. ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear.
    - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
      Vite servida desde una ruta estable; sin `data-boot` en la página, arranca por las dos lecturas de T1.
    - **T4 · la hoja propia**: extracción MECÁNICA de `site.css` con guion e informe en seco (método `#437`),
@@ -82,7 +89,8 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `StaticAnalysisGateTest` · el emisor de tokens (`ApiTokenIssuer`, `AuthTokenController`,
 `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
 `Tests\TestCase::be()` · el arranque del cajón (`Http\Sidebar\SidebarBoot`, `SidebarBootController`,
-`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
+`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura (`resources/js/cajon/**`,
+`sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
 Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
@@ -107,6 +115,12 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el guard real no hace (adjunta un
   `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando cerrado. Con tokens REALES,
   `Auth::forgetGuards()` entre peticiones o un token revocado sigue entrando por la caché del guard.
+- **Un objeto registrado como store de Alpine tiene DOS caras, y solo una es reactiva**: `Alpine.store('x')`
+  devuelve un PROXY; el objeto crudo que se le pasó no avisa a nadie. Una API pública que apunte al crudo
+  «funciona» —el estado cambia, no falla nada— y la pantalla no se mueve. Se publica el proxy, se comprueba con
+  `window.JumpWeb.cajon === Alpine.store('purchase')` y se demuestra en navegador, no en Node.
+- **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL (las cadenas viajan), se re-apunta cada
+  guarda al fichero nuevo y se MUTA allí. Buscar antes con `grep -rln "js/app.js" tests`: salieron once.
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
   llega `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base.
 - **Un arnés que restaura un `.vue` tocándole la fecha deja el bundle SSR «rancio»**: 36 rojos de
@@ -147,6 +161,12 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   sesión), no en `components/layout.blade.php`: `SidebarBootTest` pone rojo un `'messages' =>` en el layout. El
   payload es idéntico byte a byte al de antes (medido en 7 contextos): tu cajón no nota nada. Si tenías cambios
   SIN EMPUJAR en ese bloque del layout, el rebase te dará conflicto: pásalos a la clase.
+- ❗❗ **T2 HECHA: abrir y cerrar el cajón YA NO VIVE EN `app.js`.** El store `purchase` se mudó tal cual a
+  `resources/js/cajon/controller.js` (sin framework); `app.js` solo lo registra en Alpine. Si tocas `open()`,
+  `close()`, `openAccount()`, `bootSpaEngine()` o la zona de cuenta, es AHÍ. Y **el motor no nombra a Alpine**:
+  para publicar algo hacia fuera usa `cajonHost()` de `sidebar/host-bridge.js` (lo hacen ya `Sidebar.vue` y
+  `account/session-gained.js`). Nada cambia para quien compra: sonda 17/17 en navegador por las tres vías.
+  ESLint cubre ahora también `resources/js/cajon` (`npm run lint:js`).
 - ❗ **Actualiza el plugin a `07076ac`** (terminal, y reinicia): `claude plugin marketplace update jumpweb-agente`
   y `claude plugin update jumpweb-agente@jumpweb-agente --scope project`. Trae los cuatro arreglos del mapa de
   frases y deja de nombrar las skills viejas, que ya no existen en el repo (F2 cerrada, `#633`).

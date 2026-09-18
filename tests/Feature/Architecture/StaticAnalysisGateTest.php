@@ -113,7 +113,7 @@ class StaticAnalysisGateTest extends TestCase
      * script, y congelar un error nuevo regenerando la línea base.
      *
      * ⚠️ Esta cifra SOLO BAJA. Si arreglas un error congelado, ESLint sale con código 2 hasta que podas
-     * (`npx eslint resources/js/sidebar --prune-suppressions`): baja el número aquí en el mismo commit.
+     * (`npm run lint:js -- --prune-suppressions`): baja el número aquí en el mismo commit.
      */
     private const FROZEN_JS_ERRORS = 12;
 
@@ -140,7 +140,7 @@ class StaticAnalysisGateTest extends TestCase
             $config,
             'Sin un juego de reglas de Vue, ESLint no entiende una plantilla: `flat/essential` es el suelo (`#625`).',
         );
-        $this->assertStringContainsString("'resources/js/sidebar/**/*.{js,vue}'", $config, 'La config ya no declara el cajón entero (`.js` y `.vue`).');
+        $this->assertStringContainsString("'resources/js/{sidebar,cajon}/**/*.{js,vue}'", $config, 'La config ya no declara el cajón entero: el motor (`sidebar/`) y lo que lo abre sin framework (`cajon/`, F4 · T2), `.js` y `.vue`.');
         $this->assertMatchesRegularExpression(
             "/'no-use-before-define':\s*\[\s*'error'/",
             $config,
@@ -157,7 +157,7 @@ class StaticAnalysisGateTest extends TestCase
         $scripts = json_decode((string) file_get_contents(base_path('package.json')), true)['scripts'] ?? [];
 
         $this->assertSame(
-            'eslint resources/js/sidebar',
+            'eslint resources/js/sidebar resources/js/cajon',
             $scripts['lint:js'] ?? null,
             'El comando del gate es exactamente este: una subcarpeta estrecha el alcance, y `--quiet`, `|| true` o '.
             '`--pass-on-unpruned-suppressions` ablandan el veredicto.',

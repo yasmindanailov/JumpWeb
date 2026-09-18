@@ -34,6 +34,7 @@ FICHEROS=(
     package.json
     resources/js/sidebar/steps/LoginForm.vue
     resources/js/sidebar/account/zones/DependentsZone.vue
+    resources/js/cajon/controller.js
 )
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
@@ -167,12 +168,21 @@ mutar verde_tests "las reglas de Vue desaparecen (ESLint a secas no entiende una
   ""
 
 mutar verde_tests "el comando del script se ablanda (|| true)" package.json \
-  "\"lint:js\": \"eslint resources/js/sidebar\"" \
-  "\"lint:js\": \"eslint resources/js/sidebar || true\""
+  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon\"" \
+  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon || true\""
 
 mutar verde_tests "el alcance se estrecha a una subcarpeta" package.json \
-  "\"lint:js\": \"eslint resources/js/sidebar\"" \
+  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon\"" \
   "\"lint:js\": \"eslint resources/js/sidebar/steps\""
+
+mutar verde_tests "el controlador sin framework (\`cajon/\`, F4 · T2) se cae del alcance" package.json \
+  "\"lint:js\": \"eslint resources/js/sidebar resources/js/cajon\"" \
+  "\"lint:js\": \"eslint resources/js/sidebar\""
+
+mutar verde_eslint "una variable sin definir en el controlador del cajón" resources/js/cajon/controller.js \
+  "        open() {" \
+  "        open() {
+            variableQueNoExisteEnElControlador();"
 
 mutar verde_tests "un error nuevo se CONGELA en la línea base del cajón" eslint-suppressions.json \
   "\"count\": 2" \

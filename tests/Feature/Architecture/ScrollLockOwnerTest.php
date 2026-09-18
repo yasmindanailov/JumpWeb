@@ -182,6 +182,15 @@ class ScrollLockOwnerTest extends TestCase
                 'vuelto a tocar el `<body>` por su cuenta.'
             );
         }
+
+        // ⚠️ Desde F4 · T2 el cajón abre y cierra en su controlador sin framework, y es AHÍ donde pide y
+        // suelta su llave. `app.js` conserva un `lock('sidecart')` —el del cajón que NACE abierto—, así que
+        // mirar solo ese fichero dejaría pasar un controlador que dejara de pedirla al abrir.
+        $cajon = (string) file_get_contents(base_path('resources/js/cajon/controller.js'));
+
+        foreach (["scrollLock.lock('sidecart')", "scrollLock.unlock('sidecart')"] as $call) {
+            $this->assertStringContainsString($call, $cajon, "El controlador del cajón ya no hace `{$call}`: abrir o cerrar dejaría el scroll a su suerte.");
+        }
     }
 
     /** @return list<string> */

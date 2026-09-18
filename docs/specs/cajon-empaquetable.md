@@ -10,24 +10,25 @@
 ## §0 · Antes de tocar
 
 - **Regla que ordena todo**: el cajón sigue siendo un cajón SOBRE la landing, en el MISMO dominio que la API
-  (cookie de sesión + CSRF, sin token). Lo que cambia es QUIÉN lo monta: deja de ser el layout del producto y
-  pasa a ser cualquier HTML que cargue el paquete. «Empaquetable» no es «página aparte» ni «otro dominio».
-- **«Una línea del layout» era falso, medido (§1)**: hoy el cajón necesita de su página SEIS cosas — la carcasa
-  que pinta Blade, un store de Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB que pinta Blade,
-  una hoja de 549 KB compartida con la landing, los tokens de `:root` de OTRA hoja, y ocho rutas-puerta.
+  (cookie de sesión + CSRF, sin token). Cambia QUIÉN lo monta: del layout del producto a cualquier HTML que
+  cargue el paquete. «Empaquetable» no es «página aparte» ni «otro dominio».
+- **«Una línea del layout» era falso, medido (§1)**: el cajón le pedía a su página la carcasa de Blade, un store
+  de Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB, una hoja de 549 KB compartida con la
+  landing, los tokens de `:root` de OTRA hoja y ocho rutas-puerta. Las tandas lo deshacen de una en una.
 - **El riesgo silencioso es la hoja**: los `.vue` llevan CERO `<style>`; 81 bloques del cajón viven solo en
   `site.css` y **10 están definidos en las DOS hojas** (`btn`, `form`, `price`, `tabset`, `auth`, `catalog`,
   `addons`, `gifts`, `active`, `jj-block`). Partirla puede mover el cajón sin que falle un test: manda la huella
   de maquetación (`#437`), no la suite.
-- **Trampas que aplican**: tras tocar un `.vue`, `npm run build:ssr` antes de la suite; el contrato visual es el
-  ÁRBOL (`specs/sidebar-spa.md` §4.2); `route('logout')` aparece UNA vez y es el suelo del hueco de cuenta
-  (`specs/account-context-vue.md` §4.8); el chunk tiene techo (285).
-- **La landing consume un MENÚ DE HECHOS y todo es opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende
-  de que la landing lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: por TANDAS — **T1 ✅** (el arranque: `Http\Sidebar\SidebarBoot` + `sidebar/boot` y
-  `sidebar/session`, §4.5) → T2 apertura sin Alpine → T3 carcasa en el paquete → T4 hoja propia → T5 página
-  ajena. Implementa plataforma (`#633`). ⚠️ Un rótulo nuevo del cajón va en `SidebarBoot`, NUNCA en el layout.
-- **Empieza por** §1 (el censo) → §4.1 (la forma del paquete) → §4.5 (el arranque) → §4.6 (el menú).
+- **Trampas**: tras tocar un `.vue`, `npm run build:ssr` antes de la suite; el contrato visual es el ÁRBOL
+  (`specs/sidebar-spa.md` §4.2); `route('logout')` aparece UNA vez, en el suelo del hueco de cuenta
+  (`specs/account-context-vue.md` §4.8); el chunk tiene techo.
+- **La landing consume un MENÚ DE HECHOS opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende de que
+  lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
+- **Estado**: por TANDAS — **T1 ✅** el arranque (`Http\Sidebar\SidebarBoot`, §4.5) · **T2 ✅** la apertura
+  (`resources/js/cajon/controller.js`, `window.JumpWeb.cajon`, `data-jw-*`, §4.2) → T3 carcasa → T4 hoja propia
+  → T5 página ajena. Implementa plataforma (`#633`). ⚠️ Un rótulo nuevo va en `SidebarBoot`, no en el layout;
+  abrir y cerrar, en el controlador, no en `app.js`; el motor NO nombra a Alpine.
+- **Empieza por** §1 (el censo) → §4.1 (la forma) → §4.2 (la apertura) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
 
@@ -107,6 +108,24 @@ cierre que recarga si hubo login. **Diseño de la tanda**: (1) un controlador SI
 scroll (`ui/scroll-lock.js`, ya sin framework) se instancia UNA vez y lo comparten los dos. ⚠️ Tras la T2 una
 página sin Alpine tiene API pero aún no ve el panel: la clase `is-open` la pone la carcasa Blade, que es la T3.
 Se verifica con `npm run test:js`, `SidebarDomContractTest` y la sonda del cajón por las tres vías de apertura.
+
+**✅ T2 HECHA (2026-09-18)** — los ~240 miembros del store se mudaron TAL CUAL, con sus comentarios, a
+`resources/js/cajon/controller.js` (`createCajonController({ scrollLock })`); `app.js` instancia el cerrojo y el
+controlador UNA vez al cargar el módulo, publica `window.JumpWeb.cajon` y, en `alpine:init`, registra ese mismo
+objeto como `$store.purchase` y **reasigna `window.JumpWeb.cajon` al PROXY reactivo**. Atributos
+(`cajon/declarative.js`, un oyente delegado): `data-jw-open`, `data-jw-open="packs"`, `data-jw-open-zone`,
+`data-jw-open-product`, `data-jw-open-account`; conservan el `href` y dejan pasar el clic con modificador o central
+(`#117`). Eventos: `jw:cajon:open` y `jw:cajon:close` (con `reloading`); **`jw:cajon:purchased` queda para la T3**,
+que es cuando el motor tendrá a quién decírselo. El motor escribe por `sidebar/host-bridge.js`. **Lo que enseñó
+el código**: (1) el fallo temido es MUDO y solo lo ve un navegador — con `JumpWeb.cajon` en el objeto crudo,
+`open()` pone `isOpen` a `true`, nada falla y la carcasa no se mueve: la sonda se vio en ROJO con esa línea quitada
+y hay un centinela estático en `SidebarSeamTest`; (2) cuatro guardas leían el store como TEXTO de `app.js`
+(`AccountDoorWiringTest`, `SidebarSeamTest`, `SidebarMountTest`, `ScrollLockOwnerTest`): re-apuntadas al fichero
+nuevo y MUTADAS allí; (3) ESLint solo miraba `sidebar/`: su alcance crece a `resources/js/cajon`, que viaja en la
+entrada de todas las páginas. **Medido**: `scripts/sonda-cajon-apertura.mjs` **17/17** en Chromium a 390 px
+(los abridores REALES de la landing por las tres vías, la API, los atributos sin navegar al `href`, los eventos,
+el modo del motor en la clase del panel y `/entradas` naciendo abierto); `npm run test:js` 1016 (20 nuevos);
+`scripts/mutar-cajon-apertura.sh` **13/13**; la entrada de la landing, 24,5 kB de un techo de 26.
 
 ### 4.3 La hoja y los tokens
 La hoja del cajón lleva SU raíz de tokens (los que lee, medidos con el guion, no los 231) bajo un selector propio,

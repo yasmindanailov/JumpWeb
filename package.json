@@ -7,7 +7,7 @@
         "build": "vite build",
         "dev": "vite",
         "test:js": "node --test \"resources/js/**/*.test.js\"",
-        "lint:js": "eslint resources/js/sidebar",
+        "lint:js": "eslint resources/js/sidebar resources/js/cajon",
         "build:ssr": "vite build --ssr scripts/render-sidebar.mjs --outDir storage/ssr --emptyOutDir --logLevel warn"
     },
     "devDependencies": {

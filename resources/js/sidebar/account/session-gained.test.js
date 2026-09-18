@@ -15,7 +15,9 @@ function deps({ alpine = {}, falla = false } = {}) {
             },
         },
         reservations: { invalidate: () => hecho.push('invalidate') },
-        win: { Alpine: { store: () => alpine } },
+        // El ANFITRIÓN del cajón (`window.JumpWeb.cajon`), no Alpine: desde F4 · T2 el motor no nombra un
+        // framework. La variable sigue llamándose `alpine` porque con Alpine es su proxy reactivo.
+        win: { JumpWeb: { cajon: alpine } },
     };
 }
 
@@ -41,14 +43,29 @@ describe('cuando el cajón consigue sesión sin recargar', () => {
         assert.deepEqual(d.hecho, ['invalidate', 'refresh']);
     });
 
-    /** Sin Alpine —un montaje raro, o un test— no revienta: lo demás sigue haciéndose. */
-    test('sin Alpine no lanza y el resto se hace igual', async () => {
+    /** Sin anfitrión —un montaje raro, o un test— no revienta: lo demás sigue haciéndose. */
+    test('sin anfitrión no lanza y el resto se hace igual', async () => {
         const d = deps();
-        d.win = { Alpine: undefined };
+        d.win = { JumpWeb: undefined };
 
         await sessionGained(d);
 
         assert.deepEqual(d.hecho, ['invalidate', 'refresh']);
+    });
+
+    /**
+     * ⚠️ **El motor ya no mira a Alpine** (F4 · T2): una página ajena no lo carga. Si alguien devolviera la
+     * lectura a `win.Alpine.store('purchase')`, con este `window` —que SÍ tiene Alpine y NO tiene anfitrión—
+     * la marca se pondría, y en una landing sin Alpine cerrar el cajón dejaría de recargar sin que nada avisara.
+     */
+    test('la marca va al anfitrión, no a un store de Alpine que ande por ahí', async () => {
+        const d = deps();
+        const deAlpine = {};
+        d.win = { Alpine: { store: () => deAlpine } };
+
+        await sessionGained(d);
+
+        assert.equal(deAlpine.authChanged, undefined);
     });
 
     /**

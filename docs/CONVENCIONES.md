@@ -174,7 +174,7 @@ presentación · **convivencia**: no romper supuestos del sector origen document
   `StaticAnalysisGateTest` en el mismo commit. A mano: `./vendor/bin/phpstan analyse --memory-limit=2G`.
   **Y ESLint sobre el cajón** (`#629`): `npm run lint:js` (`flat/essential` de Vue), con su línea base en
   `eslint-suppressions.json` (12, solo baja). Un error congelado que arreglas deja el gate en rojo hasta que
-  podas (`npx eslint resources/js/sidebar --prune-suppressions`) y bajas `FROZEN_JS_ERRORS`. Nunca
+  podas (`npm run lint:js -- --prune-suppressions`) y bajas `FROZEN_JS_ERRORS`. Nunca
   `--suppress-all` para tapar uno nuevo, ni una regla en `'off'`. Tras traer el paso: `npm install`.
 - **Una sola sesión de escritura a la vez** sobre cada CLON del repo; subagentes de solo-lectura
   exentos. Dos agentes = dos clones, y su coordinación es **§10**.

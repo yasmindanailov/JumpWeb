@@ -147,7 +147,7 @@ docker compose exec -u sail -T laravel.test ./vendor/bin/phpstan analyse --no-pr
 # encontró un defecto vivo (una `ref` de plantilla sin declarar: `ReferenceError` al plegar un alta).
 # ⚠️ Si dice «eslint: not found», falta `npm install` en el contenedor tras traer este paso.
 # ⚠️ Si un error congelado se ARREGLA, ESLint sale con código 2 hasta que se poda la línea base
-#    (`npx eslint resources/js/sidebar --prune-suppressions`) y se baja `FROZEN_JS_ERRORS` en
+#    (`npm run lint:js -- --prune-suppressions`) y se baja `FROZEN_JS_ERRORS` en
 #    `StaticAnalysisGateTest`: el trinquete lo trae puesto la herramienta.
 echo '→ pre-push: análisis estático del cajón (ESLint + Vue, con línea base)…'
 docker compose exec -u sail -T laravel.test npm run lint:js

@@ -6,6 +6,7 @@ import AccountPanel from './account/AccountPanel.vue';
 import { useSectionStore } from './stores/section.js';
 import { usePurchaseStore } from './stores/purchase.js';
 import { publishedIdentifying, publishedMode } from './section.js';
+import { cajonHost } from './host-bridge.js';
 
 /**
  * La RAÍZ del cajón: monta, enruta secciones y publica hacia fuera. Nada más.
@@ -60,11 +61,14 @@ const purchaseStore = usePurchaseStore();
 watch(
     [() => section.active, () => purchaseStore.mode, () => purchaseStore.identifying],
     ([active, mode, identifying]) => {
-        const alpine = window.Alpine?.store('purchase');
-        if (! alpine) return;
+        // ⚠️ El anfitrión, no Alpine (F4 · T2): `window.JumpWeb.cajon` es el controlador sin framework —y,
+        // cuando Alpine está, su proxy reactivo, así que la carcasa reacciona igual—. Nombrar a Alpine aquí
+        // ataba el motor a un framework que una página ajena no tiene por qué cargar.
+        const host = cajonHost();
+        if (! host) return;
 
-        alpine.setMode(publishedMode(active, mode));
-        alpine.identifying = publishedIdentifying(active, identifying);
+        host.setMode(publishedMode(active, mode));
+        host.identifying = publishedIdentifying(active, identifying);
     },
     { immediate: true },
 );

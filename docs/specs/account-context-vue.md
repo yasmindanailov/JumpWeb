@@ -64,7 +64,9 @@ el cajón entero. Retirar el último componente Livewire **no permite retirar Li
 **Y no elimina «la frontera»: elimina UNA de las dos.** Lo que muere es Livewire↔Vue. La costura
 **Vue↔Alpine sigue viva y en este trabajo gana un escritor**: el `watch` de `Sidebar.vue` escribe
 `mode`/`identifying` en el store de Alpine, `app.js` conserva `openAccount()`/`bootSpaEngine()`/
-`applyAccountZone()`, y §4.6 añade la escritura de `authChanged`. ⚠️ **Y ahora hay una dependencia
+`applyAccountZone()`, y §4.6 añade la escritura de `authChanged`. ▶ **Desde F4 · T2 (2026-09-18) esa lógica
+vive en `resources/js/cajon/controller.js`**, sin framework: `app.js` solo lo registra como store de Alpine, y
+el motor escribe por `sidebar/host-bridge.js` (`window.JumpWeb.cajon`), sin nombrar a Alpine. ⚠️ **Y ahora hay una dependencia
 nueva que antes no existía**: la clase `is-{modo}` que produce ese puente —Alpine, sobre un elemento
 del layout— es lo que **colapsa un bloque que ahora pinta Vue**. Vue → Pinia → Alpine → DOM → CSS.
 

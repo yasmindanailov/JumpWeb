@@ -37,7 +37,15 @@ class AccountDoorWiringTest extends TestCase
      */
     private const PANEL = 'resources/js/sidebar/account/AccountPanel.vue';
 
-    private const ALPINE = 'resources/js/app.js';
+    /**
+     * ⚠️⚠️ **Re-apuntado el 2026-09-18 (F4 · T2) y MEDIDO, no supuesto**: la lógica del store `purchase`
+     * se mudó tal cual de `app.js` a este módulo sin framework, para que una página que no cargue Alpine
+     * pueda abrir el cajón. Las cadenas que estos casos buscan viajaron con ella; tras el cambio se mutó
+     * cada una en el fichero NUEVO para comprobar que la guarda sigue mordiendo
+     * (`scripts/mutar-cajon-apertura.sh`). El nombre de la constante se queda: con Alpine, este objeto ES
+     * su store.
+     */
+    private const ALPINE = 'resources/js/cajon/controller.js';
 
     private const ENTRY = 'resources/js/sidebar/index.js';
 
