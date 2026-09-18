@@ -21,6 +21,18 @@ return [
     'where' => 'Où',
     'directions' => 'Comment venir',
     'menu' => 'Ce qu’on mange',
+
+    'calendar' => [
+        'title' => 'Pour ne pas oublier',
+        'add' => 'Ajouter au calendrier',
+        'summary' => 'Anniversaire de :name',
+    ],
+    'og' => [
+        'title' => ':name fête ses :age ans',
+        'title_no_age' => 'L’anniversaire de :name',
+        'description' => 'À :time chez :business. Dis-nous si vous venez.',
+        'description_no_time' => 'Chez :business. Dis-nous si vous venez.',
+    ],
     'menu_more' => 'Voir ce qu’il contient',
 
     'soon' => [

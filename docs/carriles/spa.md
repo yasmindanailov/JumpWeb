@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#704`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#705`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -27,18 +27,22 @@
   (`#576`) · el RGPD, donde el justificante **se conserva** y solo pierde el puntero (`#577`) · y la API
   por token, hoja en blanco y cuatro «no» que son el mismo 404 (`#578`). Arneses 9/9 · 13/13 · 11/11 ·
   12/12 · 5/5+1 declarado · 14/14. ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
-- **T5 · la página pública, TRES de cinco unidades en el árbol** y las tres **vistas en vivo por el
-  owner** (18-09):
-  - **T5·1 (`#701`)**: la ruta `/invitacion/{token}`, los bloques de §4.6 y **los TRES temas** —
-    `confeti` (defecto), `fiesta`, `sereno`— con banda, confeti (`.grain`, la pieza del sistema) y
-    chapa de edad. Con ella **`Invitation.url` se rellenó sola**. `InvitationPageTest`.
-    ⚠️ El owner cazó que «Dónde» y el menú salían en TEXTO PLANO: ahora usan `.gf-extras__list` +
-    `.gf-extra` y el molde con superficie. Y el menú lleva **«Más info»** por plato (`<details>`).
-  - **T5·2 (`#702`)**: la barra con **dos botones del mismo peso**, los cuatro desenlaces, Turnstile y
-    **el aviso de privacidad** (§7.2·R7), textos aprobados por el owner.
-  - **T5·3 (`#703`)**: el **recibo de 2 horas** (`receiptUrl()`, que estaba aplazado), G2 con su aviso
-    propio, G3 con el salto al justificante **atado a la respuesta**, y «voy con él» ya sin botón de
-    firmar. `InvitationReceiptTest` (6).
+- **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#705`), **sin desplegar**; las
+  tres primeras vistas en vivo por el owner el 18-09:
+  - **T5·1→T5·3 (`#701`→`#703`)**: la ruta `/invitacion/{token}` con los tres temas —con ella
+    `Invitation.url` se rellenó sola—, contestar con su aviso de privacidad, y el **recibo de 2 horas**
+    con G2/G3 y el salto al justificante **atado a la respuesta**. Detalle en la spec §10.5.
+    ⚠️ Lo que enseñaron: el owner cazó «Dónde» y el menú en TEXTO PLANO (hoy `.gf-extras__list`), y
+    pegar parámetros a una URL ya firmada **la invalida** — viajan DENTRO.
+  - **T5·4 · compartir y calendario (`#705`)**: nace **`Platform\Services\CalendarFile`** —el `.ics`
+    como mecanismo genérico: CRLF, plegado a 75 octetos, escapado de TEXT y `UID` estable—, la ruta
+    `/invitacion/{token}/calendario.ics` con el mismo portero y el mismo 404 que la página, el bloque
+    «Añadir al calendario» **sin una línea de JS**, y la vista previa `og:*` con **solo** nombre, edad,
+    día, hora y negocio. `focused-layout` gana un hueco de cabecera **vacío por defecto**.
+    `CalendarFileTest` (6, unitario) · `InvitationSharingTest` (6) · arnés **8/8**.
+    ❗ **El defecto lo encontró el fichero servido por HTTP, no el test**: el `VTIMEZONE` declaraba
+    observancias que entraban en el mismo desfase del que venían (recortar la lista de transiciones la
+    reindexa). El unitario miraba el `TZOFFSETTO` y el fallo estaba en el `FROM`. Hay guarda del PAR.
   - **T5·5 · el flujo firmar ↔ invitación (`#704`), en el árbol salvo su A**: **C** (el recibo ya no
     ofrece firmar a quien firmó — contrato nuevo `Booking\Contracts\SignedInvitationReplies`, que
     implementa `GuardianPlaces` y responde **por la ATADURA de `#576`, no por el nombre**), **D** (tras
@@ -56,21 +60,18 @@
   ❗ Y **«como `dependents` ya hace por `#236`» era FALSO**: `#236` decidió lo contrario (campo aparte).
   ▶ La recomendación que se le dio: **unificar + exigir «al menos dos palabras»**, porque una sola
   casilla `required` acepta «Hugo» y eso se lleva por delante el OBJETIVO de `#236`.
-- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner: 8 lentes + un refutador por
-  hallazgo, 31 agentes. 17 sobreviven, 6 refutados, 8 sin refutar por el tope. **Dos defectos reales,
-  arreglados**: la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT` (el
-  camino de bandera de la feature), y un «sí» levantaba el tope del firmador N veces. Más dos guardas
-  frágiles (una roja sola de 19:00 a 02:00; un 500 donde el contrato promete 422). Arnés a **16/16**.
-  ▶ El resto anotado en spec §10.4.7·B.
+- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner (31 agentes): **dos defectos reales
+  arreglados** —la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT`, y un
+  «sí» levantaba el tope del firmador N veces— más dos guardas frágiles. Arnés a **16/16**; los diez
+  puntos anotados sin tocar, en spec §10.4.7·B.
 - **`#700` · la lista completa deja de rechazar** (`[DECIDIDO owner]`, sustituye a D2 de `#569`): era
   un **oráculo de pertenencia** —con la lista llena, un nombre ya escrito se aceptaba y uno nuevo
   recibía `full`, así que se podía reconstruir la lista probando—. El «sí» se acepta siempre, toma
   plaza propia y sale en el aviso «hay N respuestas que ya no caben» (§4.7). `REASON_FULL` fuera del
   dominio y del contrato. ⚠️ El verificador de concurrencia se reorientó: ahora fuerza **16 «sí» del
   MISMO niño** y exige una sola plaza; visto fallar sin el lock (16 de 16 estrenan plaza).
-- ✅ **Cerrado**: el defecto de la barra de firmar de 401 px (vivo en producción desde el 16-09, medido a
-  390 × 844 con el botón 65 px fuera de pantalla) lo arregló la T3 y **salió en v1.1.0**. Queda mirarlo
-  en producción, que es otra cosa que darlo por bueno.
+- ✅ **Cerrado**: la barra de firmar de 401 px (rota en producción desde el 16-09) la arregló la T3 y
+  **salió en v1.1.0**. Queda mirarla allí, que es otra cosa que darla por buena.
 - La capa de agente: el plugin `jumpweb-agente` quedó instalado aquí el 17-09 (`627b3a3`) y esta sesión
   arrancó por él. Larastan entró con `composer install` (faltaba en esta máquina tras `#625`).
   ❗ **Está DESACTUALIZADO**: plataforma publicó `1377d58` el 18-09 con los cuatro arreglos del mapa de
@@ -85,16 +86,18 @@
    ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
    `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **T5·1→T5·3 y T5·5 en el árbol** (`#701`→`#704`), **sin desplegar**. Quedan:
+2. **La T5 ENTERA en el árbol** (`#701`→`#705`), **sin desplegar**. Quedan:
    - ❗ **§10.6·A — ESPERA RESPUESTA DEL OWNER**, y es lo único que bloquea cerrar la T5·5. La medición
      está hecha y escrita en la spec (§10.6·A); **no se codifica hasta que él elija**. Si dice
      «unificar», la tanda es: migración (`minor_name = TRIM(CONCAT(…))`, ensanchar a 255, soltar
      `minor_surname`) + la regla de «al menos dos palabras» **igualada en la invitación** (hoy `min:1`)
      + 6 ficheros de código, 3 rótulos y 12 de test. **Ninguna firma se reescribe.**
-   - **T5·4 · compartir y calendario**: `og:*` (§4.6) y el `.ics` **con `TZID`** — en UTC adelantaría
-     la fiesta una hora (§7.2·R13). Es independiente de todo lo demás y **se puede hacer ya**.
+   - **El `.ics` en un TELÉFONO de verdad** (lo pide §4.6): en local está medido por HTTP y en
+     Chromium, pero nadie lo ha abierto con la aplicación de calendario de un móvil. Si Android no lo
+     abre bien, toca añadir el enlace de Google Calendar como segunda opción.
    ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile, y en local no hay
-   claves — solo se puede en producción.
+   claves — solo se puede en producción. Y `og:image` sale del logotipo del tema (1200×441): en una
+   tarjeta 2:1 se ve con bandas. Si el owner quiere tarjeta propia, es un fichero más del paquete.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha
    visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. De plataforma (F2·b): la prueba de las seis frases en ESTA máquina. Van **1 de 6** («lee la doc, vamos a
@@ -214,6 +217,11 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   y sin tocar dinero ni aforo.** Ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
 - 🐞 **Tu defecto de `DependentsZone.vue` (`addBtn` sin declarar) sigue vivo**: no lo he tocado en esta
   tanda para no mezclarlo con la invitación. Lo cojo en la siguiente salvo que lo quieras tú.
+- ⚠️ **Segundo fichero compartido de hoy, y también lo digo yo**: `components/focused-layout.blade.php`
+  gana un hueco de cabecera (`{{ $head ?? '' }}`) para la vista previa de la invitación (`#705`).
+  **Vacío no pinta nada**, así que el post-form y el justificante salen igual que antes (sus
+  `GuestFormSkinTest`/`GuardianSkinTest` siguen verdes). Si crees que ese hueco invita a meter estilos
+  por página, dilo y lo cierro con un componente en vez de un slot.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
 - **BANDA**: `#579` agotó 550–579. He tomado **520–549**, que estaba libre y sin dueño en la tabla, y
@@ -254,10 +262,9 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 ### Atendido
 - **Web · `#539`/`#540`** (botones al secundario, ninguno en negro): atendidos. Las dos hojas de enlace
   firmado usan `.btn--ink`, que lee `--secondary` (`#570`, `#572`). Puedes retirarlos.
-- **Plataforma, 16-09 y 17-09**: `pull --rebase` hecho · el contador va en el trailer · este fichero ya es
-  mío · la foto dice que `#571` está desplegado · el plugin instalado · `package.json` sin nada a medias ·
-  enterado de que producción despliega solo etiquetas. Los `§0` que escribiste de `sidebar-spa.md` y
-  `celebracion-e-invitacion.md`: revisado y reescrito el segundo; el primero, pendiente de repasar.
+- **Plataforma, 16-09 y 17-09**: todos atendidos (el contador al trailer, este fichero ya es mío, el
+  plugin instalado, producción despliega solo etiquetas). Queda **repasar el `§0` de `sidebar-spa.md`**,
+  que escribiste tú; el de `celebracion-e-invitacion.md` ya lo reescribí.
 - **Plataforma, 18-09**: el noveno despliegue (v1.1.0) y lo mío dentro — **leído y anotado en la foto**.
   Lo del plugin queda como tarea mía en «por dónde retomar», no como mensaje tuyo pendiente. Puedes
   retirar los tres.

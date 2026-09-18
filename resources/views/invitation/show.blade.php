@@ -44,6 +44,29 @@
     };
 @endphp
 <x-focused-layout :title="__('invitation.title')">
+    {{-- ───── La VISTA PREVIA al pegar el enlace en un chat (§4.6, T5·4) ─────
+         ⚠️⚠️ **Solo nombre, edad, día, hora y negocio**, y lo compone el controlador. Esta tarjeta la
+         pinta el chat de la clase entera y a veces un tercero que nadie controla: ni la dirección, ni
+         el menú, ni una sola respuesta salen de aquí. Y **sin `og:url`**: la página ya está en el
+         enlace que se pega, así que repetir el token en una meta no añade nada y lo deja en un sitio
+         más del que copiarlo. --}}
+    <x-slot:head>
+        <meta property="og:site_name" content="{{ $site['name'] ?? config('app.name') }}">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="{{ $preview['title'] }}">
+        <meta property="og:description" content="{{ $preview['description'] }}">
+        @if ($preview['image'])
+            <meta property="og:image" content="{{ $preview['image'] }}">
+            {{-- Declaradas solo cuando el fichero es NUESTRO y se ha podido medir: un chat que recibe
+                 medidas falsas reserva un hueco que luego no encaja. --}}
+            @if ($preview['width'] && $preview['height'])
+                <meta property="og:image:width" content="{{ $preview['width'] }}">
+                <meta property="og:image:height" content="{{ $preview['height'] }}">
+            @endif
+            <meta name="twitter:card" content="summary_large_image">
+        @endif
+    </x-slot:head>
+
     <div class="gf-page">
         {{-- Lo primero que ve alguien que no conoce esta web. Mismo hueco que las hojas hermanas. --}}
         @php $clientLogo = @filemtime(public_path('img/client-logo.svg')); @endphp
@@ -121,6 +144,26 @@
             </div>
 
             <div class="gf-form">
+                {{-- ───── Añadir al calendario ─────
+                     El orden de §4.6: después de quién invita y ANTES de dónde. Es un enlace a un
+                     fichero que sirve el servidor, **sin una línea de JS** —la condición de esta
+                     página—, y con `download` para que el móvil lo abra con su calendario en vez de
+                     enseñarlo como texto.
+                     ⚠️ El bloque no existe si falta la hora o la duración: un `.ics` sin cuándo no es
+                     un recordatorio, es un fichero roto en la carpeta de descargas de un padre. --}}
+                @if ($calendarUrl !== null)
+                    <div class="gf-group" data-invitation-calendar>
+                        <div class="gf-group__head">
+                            <p class="gf-group__title">{{ __('invitation.calendar.title') }}</p>
+                        </div>
+                        <div class="invitation__panel">
+                            <a class="btn btn--ghost invitation__go" href="{{ $calendarUrl }}" download>
+                                {{ __('invitation.calendar.add') }}
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- ───── Dónde ─────
                      ⚠️⚠️ **Enlace externo, NUNCA un mapa embebido** (§4.6). Un iframe de Google en una
                      página pública es un tercero cargando dentro de la fiesta de un niño, con su

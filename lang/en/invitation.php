@@ -20,6 +20,18 @@ return [
     'where' => 'Where',
     'directions' => 'Get directions',
     'menu' => 'What we are eating',
+
+    'calendar' => [
+        'title' => 'So you do not forget',
+        'add' => 'Add to calendar',
+        'summary' => ':name’s birthday',
+    ],
+    'og' => [
+        'title' => ':name turns :age',
+        'title_no_age' => ':name’s birthday',
+        'description' => 'At :time, at :business. Let us know if you are coming.',
+        'description_no_time' => 'At :business. Let us know if you are coming.',
+    ],
     'menu_more' => 'See what it includes',
 
     'soon' => [

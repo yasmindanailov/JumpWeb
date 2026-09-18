@@ -275,6 +275,16 @@ Route::post('/invitacion/{token}', [InvitationPageController::class, 'reply'])
     ->middleware(['throttle:20,1', 'throttle:invitation-reply', 'no-store'])
     ->name('invitation.reply');
 
+// «Añadir al calendario» (§4.6, T5·4): el `.ics` de la fiesta, servido por el servidor.
+//
+// ⚠️ Mismo portero y mismo 404 que la página —`resolvePublic()` en el controlador—: una ruta que
+// distinguiera un token caducado de uno inventado abriría la rendija que §4.5·12 cerró. Y `no-store`
+// porque el fichero lleva el nombre del niño y la dirección del parque.
+Route::get('/invitacion/{token}/calendario.ics', [InvitationPageController::class, 'calendar'])
+    ->where('token', '[A-Za-z0-9]{12}')
+    ->middleware(['throttle:60,1', 'no-store'])
+    ->name('invitation.calendar');
+
 // El RECIBO de una respuesta (§4.5·6): **DOS HORAS** y no es un enlace de edición (D9).
 //
 // ⚠️⚠️ Lo autoriza la FIRMA de la URL, **no el token de la invitación**: son dos alcances distintos —

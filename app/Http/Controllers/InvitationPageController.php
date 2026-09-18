@@ -3,13 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Booking\Models\InvitationReply;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\CalendarFile;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Turnstile;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
@@ -201,7 +207,166 @@ class InvitationPageController extends Controller
                 // La tarjeta se ve igual pasado el plazo (§7.2·R8): lo único que cierra son las
                 // respuestas, y la información de la fiesta hace falta **el día de la fiesta**.
                 'repliesOpen' => $this->invitations->repliesOpenFor($reservation),
+                // ── Lo que se ve al PEGAR el enlace en un chat (§4.6, T5·4) ──
+                //
+                // ⚠️⚠️ **Solo nombre, edad, día, hora y negocio.** La vista previa la pinta el chat de
+                // la clase entera —y a veces la caja de un buscador que nadie controla—, así que aquí
+                // no entran ni la dirección, ni el menú, ni una sola respuesta. La página lleva
+                // `noindex`; esto es lo único que sale de ella sin que nadie la abra.
+                'preview' => $this->previewOf($invitation, $reservation, $date),
+                // «Añadir al calendario»: `null` cuando falta la hora o la duración —sin dato, sin
+                // bloque—, y así el botón no existe en vez de ofrecer un fichero vacío.
+                'calendarUrl' => $this->calendarEventOf($reservation) === null
+                    ? null
+                    : route('invitation.calendar', ['token' => $invitation->token]),
             ])
             ->header('Referrer-Policy', 'no-referrer');
+    }
+
+    /**
+     * **El `.ics` de la fiesta** (§4.6, `DECISIONES #705`).
+     *
+     * ⚠️ Mismo portero que la página —`resolvePublic()`— y el mismo 404 para los cuatro «no»: si esta
+     * ruta distinguiera un token caducado de uno inventado, sería la rendija que §4.5·12 cerró en la
+     * página. Y no lleva el token dentro del fichero: el `UID` se compone con el id de la invitación.
+     */
+    public function calendar(string $token): Response
+    {
+        $invitation = $this->invitations->resolvePublic($token);
+
+        abort_if($invitation === null, 404);
+
+        $reservation = $invitation->reservation;
+        $evento = $reservation === null ? null : $this->calendarEventOf($reservation);
+
+        // Sin hora o sin duración no hay evento que dar. Es el mismo criterio que el bloque de la
+        // página: «sin dato, sin bloque».
+        abort_if($evento === null, 404);
+
+        [$inicio, $fin] = $evento;
+        $negocio = trim((string) Setting::businessName());
+        $sitio = array_filter([
+            $negocio,
+            trim((string) Setting::value('address.line1')),
+            trim((string) Setting::value('address.line2')),
+        ], static fn (string $linea): bool => $linea !== '');
+
+        $ics = CalendarFile::event(
+            // ESTABLE y sin el token dentro: volver a descargarlo actualiza el evento del padre en vez
+            // de duplicárselo, y el fichero puede acabar en un calendario compartido.
+            uid: 'invitacion-'.$invitation->getKey().'@'.(parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'jumpweb'),
+            summary: __('invitation.calendar.summary', ['name' => (string) $invitation->honoree_name]),
+            startsAt: $inicio,
+            endsAt: $fin,
+            // ⚠️ La zona del PARQUE, no la del servidor ni la del móvil del padre: las franjas son hora
+            // de pared (§7.2·R13).
+            timezone: DisplayTime::timezone(),
+            location: implode(', ', $sitio),
+        );
+
+        return response($ics, 200, [
+            'Content-Type' => CalendarFile::MIME,
+            'Content-Disposition' => 'attachment; filename="'.$this->calendarFileName($invitation).'"',
+            'Referrer-Policy' => 'no-referrer',
+        ]);
+    }
+
+    /**
+     * El PRINCIPIO y el FIN de la fiesta como instantes, o `null` si falta alguno.
+     *
+     * ⚠️⚠️ La duración es la EFECTIVA (`occupiedMinutes()`: base + hora extra), no la del producto —la
+     * trampa de `#426`—, y el fin de la FRANJA no vale: en una fiesta de dos horas diría una hora menos.
+     *
+     * @return array{0: CarbonImmutable, 1: CarbonImmutable}|null
+     */
+    private function calendarEventOf(OrderItem $reservation): ?array
+    {
+        $date = $reservation->slot?->date;
+        // ⚠️ Sin `?->` a la izquierda de un `??`: el propio `??` ya tapa la relación ausente, y
+        // encadenarlos hace que Larastan cuente una rama que no existe.
+        $hora = (string) ($reservation->slot->start_time ?? '');
+        $minutos = $reservation->occupiedMinutes();
+
+        if ($date === null || $hora === '' || $minutos === null || $minutos <= 0) {
+            return null;
+        }
+
+        $inicio = CarbonImmutable::createFromFormat(
+            'Y-m-d H:i:s',
+            $date->toDateString().' '.substr($hora, 0, 8),
+            DisplayTime::timezone(),
+        );
+
+        // Una fecha que no case con el formato devuelve `null`, y entonces no hay evento: es el mismo
+        // criterio que arriba, «sin dato, sin bloque».
+        return $inicio === null ? null : [$inicio, $inicio->addMinutes($minutos)];
+    }
+
+    /** Un nombre de fichero que una persona reconozca en su carpeta de descargas, sin acentos ni token. */
+    private function calendarFileName(PartyInvitation $invitation): string
+    {
+        $slug = Str::slug((string) $invitation->honoree_name);
+
+        return ($slug === '' ? 'invitacion' : 'cumple-'.$slug).'.ics';
+    }
+
+    /**
+     * Lo que se ve al pegar el enlace (§4.6): título, descripción e imagen.
+     *
+     * ⚠️ La imagen es la del TEMA de la instalación si la hay —el mismo PNG que usan los correos,
+     * porque un SVG no vale para Open Graph— y si no, la del sitio. Las medidas se declaran **solo
+     * cuando el fichero es nuestro y se puede medir**: inventarlas para una URL externa sería afirmar
+     * algo que no sabemos.
+     *
+     * @return array{title: string, description: string, image: ?string, width: ?int, height: ?int}
+     */
+    private function previewOf(PartyInvitation $invitation, OrderItem $reservation, mixed $date): array
+    {
+        $nombre = trim((string) $invitation->honoree_name);
+        $edad = $invitation->honoree_age === null ? null : (int) $invitation->honoree_age;
+        $negocio = trim((string) Setting::businessName());
+
+        $titulo = $edad === null
+            ? __('invitation.og.title_no_age', ['name' => $nombre])
+            : __('invitation.og.title', ['name' => $nombre, 'age' => $edad]);
+
+        if ($date !== null) {
+            $titulo .= ' · '.DisplayTime::dayLabel(Carbon::parse($date->toDateString()));
+        }
+
+        $hora = substr((string) ($reservation->slot->start_time ?? ''), 0, 5);
+
+        return [
+            'title' => $titulo,
+            'description' => $hora === ''
+                ? __('invitation.og.description_no_time', ['business' => $negocio])
+                : __('invitation.og.description', ['time' => $hora, 'business' => $negocio]),
+            ...$this->previewImage(),
+        ];
+    }
+
+    /** @return array{image: ?string, width: ?int, height: ?int} */
+    private function previewImage(): array
+    {
+        foreach (['img/client-logo@4x.png', 'og-image.jpg'] as $candidato) {
+            $ruta = public_path($candidato);
+            if (! is_file($ruta)) {
+                continue;
+            }
+            $medidas = @getimagesize($ruta);
+
+            return [
+                'image' => asset($candidato).'?v='.@filemtime($ruta),
+                'width' => $medidas === false ? null : (int) $medidas[0],
+                'height' => $medidas === false ? null : (int) $medidas[1],
+            ];
+        }
+
+        // La del panel, que es una URL externa ya saneada: se publica sin medidas porque no se pueden
+        // medir sin salir a buscarla.
+        $site = (array) (view()->shared('site') ?? []);
+        $externa = trim((string) ($site['og_image'] ?? ''));
+
+        return ['image' => $externa === '' ? null : $externa, 'width' => null, 'height' => null];
     }
 }

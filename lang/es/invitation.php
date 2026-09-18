@@ -27,6 +27,23 @@ return [
     'where' => 'Dónde',
     'directions' => 'Cómo llegar',
     'menu' => 'Qué hay de comer',
+
+    // ── COMPARTIR Y CALENDARIO (T5·4) ─────────────────────────────────────────────────────────────
+    'calendar' => [
+        'title' => 'Para que no se te olvide',
+        'add' => 'Añadir al calendario',
+        // Lo que verá en su calendario, meses después y fuera de esta página: tiene que decir de qué
+        // fiesta habla sin contexto ninguno.
+        'summary' => 'Cumple de :name',
+    ],
+    // ⚠️⚠️ Lo que se ve al PEGAR el enlace en un chat. Aquí solo entran nombre, edad, día, hora y
+    // negocio (§4.6): la vista previa la pinta un tercero que nadie controla.
+    'og' => [
+        'title' => ':name cumple :age',
+        'title_no_age' => 'El cumple de :name',
+        'description' => 'A las :time en :business. Dinos si venís.',
+        'description_no_time' => 'En :business. Dinos si venís.',
+    ],
     // Nombre accesible del desplegable de cada plato: se VE el chevron, se ANUNCIA esto.
     'menu_more' => 'Ver qué lleva',
 

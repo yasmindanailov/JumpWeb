@@ -14,8 +14,8 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**: los
-  enciende el owner); **T5·1→T5·3 y la T5·5 salvo su A**, en el árbol sin desplegar. Quedan **T5·4** y
-  **§10.6·A, del OWNER** → T7 → **T6**. **Si construyes, §7.2 primero.**
+  enciende el owner); **la T5 ENTERA en el árbol sin desplegar salvo §10.6·A, que decide el OWNER** →
+  T7 → **T6**. **Si construyes, §7.2 primero.**
 - ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): dos defectos arreglados y **diez puntos sin tocar** en
   §10.4.7·B — míralos antes de dar por buena una parte de la T4.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
@@ -1266,7 +1266,7 @@ La barra de contestar llega con su aviso o no llega.
 | **T5·1** | La página, su ruta y el vestido: banda, confeti y chapa (§4.6, §3.4) | ✅ `#701` |
 | **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ✅ `#702` |
 | **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ✅ `#703` |
-| **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ⬜ |
+| **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ✅ `#705` |
 | **T5·5** | El flujo firmar ↔ invitación: **C, D y E ✅ `#704`** · ⚠️ **A, del owner** (abajo) | 🟦 |
 
 #### 10.5.1 T5·1 · la página y su vestido — EN EL ÁRBOL (2026-09-18, `DECISIONES #701`)
@@ -1370,6 +1370,33 @@ que el padre que acaba de decir que su hijo viene habría recibido un **403 en e
 Ahora `guardianAuthorizationSignedUrl()` acepta extras que viajan DENTRO de la firma, y hay un caso que
 abre ese enlace de verdad. ▶ Y para que la atadura sirviera, el justificante tuvo que **leer** esos
 parámetros de su query firmada y llevarlos en un oculto.
+
+#### 10.5.4 T5·4 · compartir y calendario — EN EL ÁRBOL (2026-09-18, `DECISIONES #705`)
+
+**Hecho.**
+- **`Platform\Services\CalendarFile`**: el `.ics` (RFC 5545) como mecanismo **genérico** —no sabe de
+  invitaciones—, con CRLF, plegado a 75 octetos sin partir un carácter, escapado de TEXT y `UID` estable
+  (volver a descargarlo ACTUALIZA el evento del padre, no se lo duplica).
+- La ruta **`/invitacion/{token}/calendario.ics`**, con el mismo portero (`resolvePublic()`) y el mismo
+  404 que la página, `no-store` y `Referrer-Policy: no-referrer`. El token **no entra en el fichero**.
+- El bloque «Añadir al calendario» en su sitio de §4.6 (tras quién invita, antes de «Dónde»), **sin una
+  línea de JS** y con `download`. Sin hora o sin duración **no hay bloque ni fichero**.
+- La **vista previa** (`og:*`) con solo nombre, edad, día, hora y negocio; `focused-layout` gana para
+  ello un hueco de cabecera **vacío por defecto**, así que el post-form y el justificante no cambian.
+
+**Guardas**: `CalendarFileTest` (6, `tests/Unit`: es un value object puro) · `InvitationSharingTest` (6,
+con el parque en una zona **distinta** de la del contenedor, porque con las dos iguales un `.ics` en UTC
+pasaría sin ser correcto) · arnés `scripts/mutar-compartir-invitacion.py` **8/8**.
+
+**Trampa pagada:** los casos unitarios daban verde con un `VTIMEZONE` **mal**: cada observancia declaraba
+que entraba en el mismo desfase del que venía —recortar la lista de transiciones la reindexa, y «la
+anterior» dejaba de serlo—. Lo vio el fichero **servido por HTTP**, no el test, porque el test miraba el
+`TZOFFSETTO` y el defecto estaba en el `FROM`. ▶ Ahora se comprueba el **par**.
+
+⚠️ **Pendiente y declarado**: probarlo en un **teléfono de verdad** (§4.6 lo pide, y si Android no lo
+abre bien toca añadir el enlace de Google Calendar como segunda opción) · `og:image` sale del logotipo
+del tema (1200×441), que en una tarjeta 2:1 se ve con bandas: si el owner quiere tarjeta propia, es un
+fichero más del paquete de instalación.
 
 ### 10.6 ⚠️ T5·5 · EL FLUJO FIRMAR ↔ INVITACIÓN — C, D y un cuarto defecto HECHOS (`#704`); A es del owner
 

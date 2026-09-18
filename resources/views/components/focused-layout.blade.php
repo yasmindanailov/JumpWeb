@@ -48,6 +48,12 @@
     @if ($clientTheme)
         <link rel="stylesheet" href="{{ asset('css/client.css') }}?v={{ $clientTheme }}">
     @endif
+
+    {{-- Hueco para la cabecera de UNA página (`#705`): hoy solo lo usa la invitación, para su vista
+         previa al compartir. Va al final a propósito —después de las hojas— y **vacío no pinta nada**,
+         así que el post-form y el justificante salen byte a byte como antes. Es un hueco, no una
+         invitación a meter estilos: lo que sea de todas las páginas se pone arriba, no aquí. --}}
+    {{ $head ?? '' }}
 </head>
 <body class="gf">
     {{ $slot }}
