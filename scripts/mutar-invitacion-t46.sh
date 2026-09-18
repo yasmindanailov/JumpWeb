@@ -27,9 +27,10 @@ CARD=app/Http/Resources/Api/V1/InvitationCardResource.php
 CTRL=app/Http/Controllers/Api/V1/InvitationsController.php
 HOST=app/Http/Controllers/Api/V1/InvitationHostController.php
 GF=app/Http/Controllers/Api/V1/GuestFormController.php
+SIG=app/Domain/Identity/Services/GuardianAuthorizationSigner.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$SRV" "$CARD" "$CTRL" "$HOST" "$GF")
+FICHEROS=("$SRV" "$CARD" "$CTRL" "$HOST" "$GF" "$SIG")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -129,6 +130,24 @@ mutar "adoptar acepta una respuesta ya adoptada o descartada" "$SRV" \
             // Un «no» no se pinta sobre ninguna ficha, así que no hay nada que adoptar: se descarta.
             ->where('attending', true)" \
   "            ->where('attending', true)"
+
+echo '── Los DOS defectos que encontró la revisión adversarial (#579) ─────────────────────────'
+
+# ❗❗ El camino de bandera: el anfitrión pega nombres de pila y el padre contesta con apellidos. Si la
+# adopción vuelve a marcar con la clave del PADRE, la reconciliación —que compara contra las FICHAS—
+# la da por huérfana y la descarta EN EL MISMO PUT.
+mutar "⚠⚠ adoptar vuelve a marcar con la clave del PADRE y se descarta sola" "$SRV" \
+  "            \$reply->forceFill(['adopted_at' => now(), 'adopted_name_key' => \$key])->save();" \
+  "            \$reply->forceFill(['adopted_at' => now(), 'adopted_name_key' => \$reply->child_key])->save();"
+
+# ❗❗ Un «sí» abre la puerta UNA vez. Sin la segunda mitad, el mismo id levanta el tope N veces y
+# entran N justificantes por encima de lo comprado.
+mutar "⚠⚠ el mismo «sí» levanta el tope del firmador tantas veces como quieras" "$SIG" \
+  "                && ! GuardianAuthorization::query()
+                    ->where('order_item_id', \$reservationId)
+                    ->where('invitation_reply_id', \$invitationReplyId)
+                    ->exists();" \
+  '                ;'
 
 echo '── Lo que el anfitrión ve, y lo que NO debe moverse ─────────────────────────────────────'
 

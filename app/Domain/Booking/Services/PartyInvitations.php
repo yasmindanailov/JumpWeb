@@ -534,16 +534,39 @@ final class PartyInvitations
             ->pending()
             // Un «no» no se pinta sobre ninguna ficha, así que no hay nada que adoptar: se descarta.
             ->where('attending', true)
+            ->orderBy('id')
             ->get();
 
+        // ❗❗ **La clave con la que se adopta es la de la FICHA, no la del nombre que escribió el
+        // padre** (`DECISIONES #579`). Hasta esa corrección se guardaba `child_key`, y entonces el
+        // camino de bandera de la feature **se rompía solo**: el anfitrión pega la lista de clase con
+        // nombres de pila («Hugo»), al padre se le pide nombre y apellidos («Hugo Ruiz»), el
+        // emparejado los une por la primera palabra… y `reconcileAdopted()` —que compara contra las
+        // fichas con igualdad exacta— la daba por huérfana y la descartaba **en el mismo `PUT`**. El
+        // niño que había confirmado dejaba de ocupar plaza y desaparecía del resumen sin que nadie lo
+        // quitara. Todo lo que lee `adopted_name_key` después compara contra fichas: `slotsOf()` para
+        // saber cuáles están ocupadas y `reconcileAdopted()` para ver cuáles siguen escritas.
+        //
+        // ▶ Se reparten con la MISMA función que calcula la propuesta, así que adoptar no puede
+        // decidir una ficha distinta de la que se le enseñó al anfitrión. Y las fichas ya están
+        // guardadas cuando esto corre: si la suya quedó **vacía**, es que él no aceptó ese nombre y
+        // no hay nada que adoptar.
+        $slots = $this->slotsOf($reservation);
+        $adopted = 0;
+
         foreach ($replies as $reply) {
-            $reply->forceFill([
-                'adopted_at' => now(),
-                'adopted_name_key' => $reply->child_key,
-            ])->save();
+            $index = $this->takeSlotFor($slots, (string) $reply->child_key);
+            $key = $index === null ? null : $slots[$index]['key'];
+
+            if ($key === null) {
+                continue;
+            }
+
+            $reply->forceFill(['adopted_at' => now(), 'adopted_name_key' => $key])->save();
+            $adopted++;
         }
 
-        return $replies->count();
+        return $adopted;
     }
 
     /**

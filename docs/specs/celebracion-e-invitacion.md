@@ -1150,6 +1150,86 @@ declarando esa ruta y comprobando que el campo se rellena.
    `$ref: '#/components/responses/Forbidden'` **que no existe** — el contrato solo tiene `NotFound`,
    `TooManyRequests`, `Maintenance`, `Unauthenticated` y `ValidationFailed`.
 
+#### 10.4.7 La REVISIÓN ADVERSARIAL de la T4 (2026-09-18, `DECISIONES #579`)
+
+Con permiso del owner: **8 lentes independientes** sobre los seis commits (privacidad, concurrencia,
+RGPD, autorización, dominio y plazas, contrato de API, fronteras y pruebas) y **un refutador por
+hallazgo** cuyo encargo era tumbarlo leyendo el código. 31 agentes. **31 hallazgos → 17 sobreviven, 6
+refutados, 8 sin refutar por el tope declarado de 3 por lente.**
+
+**Los DOS defectos reales, arreglados** (los dos eran míos, y ninguna de mis guardas los cazaba):
+
+1. ❗❗ **El camino de bandera se rompía solo.** `adopt()` marcaba la respuesta con la clave del PADRE
+   y `reconcileAdopted()` compara contra las claves de las FICHAS: el anfitrión pega «Hugo», el padre
+   contesta «Hugo Ruiz», el emparejado los une por la primera palabra… y la adopción **se descartaba
+   en el mismo `PUT`**. El niño que había confirmado dejaba de ocupar plaza —el suelo que `#576` añadió
+   para protegerlo— y desaparecía del resumen sin que nadie lo quitara. ▶ Arreglado en la raíz: la
+   clave de adopción es la de la **ficha**, repartida con la MISMA función que calcula la propuesta.
+   *Mi caso de adopción usaba «Hugo Ruiz» en las dos puntas, así que el emparejado por primera palabra
+   —el que la spec llama «el real y no un adorno»— no estaba ejercido en ningún sitio.*
+2. ❗❗ **Un «sí» levantaba el tope del firmador tantas veces como quisieras.** El atajo comprobaba que
+   la respuesta fuera un «sí» vivo de esa reserva, pero no que estuviera **sin consumir**: N padres con
+   el mismo `invitation_reply_id` → N justificantes por encima de lo comprado. Y no hacía falta mala
+   fe, bastaba reenviar el enlace del justificante. ▶ La segunda mitad se pregunta en Identity, no al
+   contrato: `PartyGuests` es de Booking y los justificantes son de Identity.
+
+**Dos guardas frágiles, arregladas**: una dependía del reloj de pared (se ponía **roja sola de 19:00 a
+02:00**, justo cuando se cierran las sesiones, y mentía sobre su causa diciendo «esperaba 200, recibí
+404»); y un `guest_data` con un valor anidado daba **500 donde el contrato promete 422**.
+
+**Arnés**: `scripts/mutar-invitacion-t46.sh` sube a **16/16** con los dos mutantes nuevos.
+
+##### A · LA DECISIÓN QUE QUEDA PARA EL OWNER: el oráculo de pertenencia 🔴
+
+Con la lista completa, contestar «sí» **distingue un nombre que ya está de uno nuevo**: el que empareja
+con una ficha escrita se acepta; el nuevo recibe `full`. Quien tiene el enlace —un grupo de clase
+entero— puede ir probando nombres y **reconstruir la lista de invitados**.
+
+⚠️ **No es un descuido de implementación: es una CONTRADICCIÓN dentro de la propia spec.** §4.5·3 (D2)
+manda rechazar con «la lista está completa», y §7.2·R1 manda que la hoja sea en blanco también en sus
+errores. Las dos no pueden cumplirse a la vez cuando el nombre empareja. Por eso **no se arregla sin el
+owner**: cualquier salida cambia lo que un padre ve.
+
+▶ La salida que recomiendo, y que **la spec ya tiene medio escrita**: que la lista completa **deje de
+rechazar**. El «sí» se acepta siempre —sin ocupar plaza nueva— y sale en el aviso que §4.7 ya
+contempla, «hay N respuestas que ya no caben: sube el número o avisa a esas familias». Cierra el
+oráculo, reutiliza un mecanismo existente y deja la decisión donde debe estar: en el anfitrión, que sí
+sabe quién va. Coste: retirar `full` del enum del contrato y reescribir tres casos.
+
+##### B · Lo que queda anotado y NO se ha tocado
+
+Todo esto sobrevivió a su refutador o no llegó a refutarse. **Ninguno es urgente** —los dos
+interruptores están apagados en producción y la página pública no existe—, pero ninguno está cerrado:
+
+- 🟠 **El colapso de repetidas solo vive dentro de un render**: adoptar o descartar deja viva a la
+  gemela, que vuelve como propuesta nueva. Y adoptar la más reciente **resucita la vieja** como si
+  fuera otro niño.
+- 🟠 **`matches()` y `takeSlotFor()` no son la misma regla**, así que la comprobación de lista completa
+  y el reparto de fichas pueden discrepar. Es la raíz común del defecto 1 y de lo anterior.
+- 🟠 **`PartyGuests` publica ids con dos significados**: una firma atada a un «sí» duplicado puede
+  contar la plaza dos veces.
+- 🟠 **La rama `guest_data` de una respuesta y la lista blanca de `companion` no tienen ninguna prueba**,
+  y es la única puerta pública sin sesión que escribe.
+- 🟡 El tope `3 × invitados` cuenta **toda** respuesta que haya existido: ni descartar ni rotar el
+  enlace lo reabren, así que se puede dejar un RSVP cerrado para siempre.
+- 🟡 `rotateInvitationLinkAction` no acota el item al pedido en pantalla.
+- 🟡 `replies_pending` cuenta filas y `pending_replies` cuenta niños: pueden no cuadrar.
+- 🟡 Un `theme` largo da 422 aunque el contrato promete el respaldo; un `honoree_name` o un `host_line`
+  vacíos se ignoran en silencio, así que «Te invita …» no se puede borrar.
+- 🟡 `party_invitations` no tiene plazo de conservación, al lado de unas respuestas que sí declaran 14
+  días.
+- ⬜ **Sin verificar** (tope del cap): los dos endpoints del anfitrión prometen entrada «con el enlace
+  firmado» y nadie firma nunca esas URLs — un anfitrión **sin cuenta** recibiría 403; y el `DELETE`
+  comparte cubo con el guardado, así que retirar una docena de respuestas puede dejarle sin guardar.
+
+**Lo que se REFUTÓ, y merece quedar escrito** porque son los errores que una revisión así comete: que
+el agotamiento del tope fuera un contador de respuestas · que `reply()` y `GuestCountAdjuster` no
+compartieran lock (sí lo hacen por otra vía) · que el enlace firmado del post-form entregara el token ·
+que la superficie ya estuviera viva sin aviso · que dos «no» del mismo niño desmintieran a `replies_no`
+· y que el borrado RGPD con `DB::table` cruzara la frontera de módulo. ⚠️ Y uno que **no era de esta
+tanda**: la IP del padre en el rastro es conducta estándar de `AuditLogger`, ya graduada como menor en
+`waiver-por-reserva.md` §4.14.
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«Vestir el formulario de CELEBRACIÓN o el JUSTIFICANTE · la INVITACIÓN digital de un cumpleaños · el «sí / no podemos» de un padre · el pegado de nombres · «¿vas tú con él?»»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila

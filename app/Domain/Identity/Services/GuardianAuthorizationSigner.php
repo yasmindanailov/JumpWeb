@@ -132,8 +132,26 @@ final class GuardianAuthorizationSigner
             //
             // ⚠️ Se pregunta al CONTRATO, no al parámetro: un id inventado, de otra fiesta o de una
             // respuesta ya descartada no ata nada y el tope se aplica como siempre.
+            // ❗❗ **Un «sí» abre la puerta UNA vez** (`DECISIONES #579`). Hasta esa corrección bastaba
+            // con que la respuesta fuera un «sí» vivo de esta reserva, así que el MISMO
+            // `invitation_reply_id` levantaba el tope una y otra vez: N justificantes por encima de lo
+            // comprado, que es justo lo que el tope existe para impedir. Y no hacía falta mala fe —
+            // reenviar a otro padre el enlace del justificante bastaba, porque lleva dentro la
+            // respuesta atada.
+            //
+            // ⚠️ La segunda mitad se pregunta **aquí y no al contrato**: `PartyGuests` vive en Booking
+            // y los justificantes son de Identity. Es la misma frontera que obliga a `GuardianPlaces` a
+            // hacer la resta, y por la misma razón.
+            //
+            // ⚠️ **No se comparan nombres** —ni el del «sí» con el del menor que firma—: eso es
+            // exactamente lo que `#328` descartó. Lo que se comprueba es que esa plaza no la esté
+            // usando ya otro justificante.
             $tied = $invitationReplyId !== null
-                && $this->guests->isCommittedReply($invitationReplyId, $reservationId);
+                && $this->guests->isCommittedReply($invitationReplyId, $reservationId)
+                && ! GuardianAuthorization::query()
+                    ->where('order_item_id', $reservationId)
+                    ->where('invitation_reply_id', $invitationReplyId)
+                    ->exists();
 
             if (! $tied && $this->places->freeIn($reservation) < 1) {
                 throw GuardianAuthorizationRefusedException::full($reservationId, $reservation->quantity);

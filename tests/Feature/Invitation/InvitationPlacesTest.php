@@ -184,6 +184,30 @@ class InvitationPlacesTest extends TestCase
     }
 
     /**
+     * ❗❗ **Un «sí» abre la puerta UNA vez, y hasta `#579` la abría tantas como quisieras.**
+     *
+     * El atajo del firmador comprobaba que la respuesta fuera un «sí» vivo de esta reserva, pero **no
+     * que siguiera sin usar**. Con la lista llena, el mismo `invitation_reply_id` levantaba el tope
+     * una y otra vez: N justificantes por encima de lo comprado, que es exactamente lo que el tope
+     * existe para impedir —«que nadie autorice a más gente de la que se ha comprado»—.
+     *
+     * ⚠️ Y el que lo explota no necesita ser malicioso: le basta reenviar a otro padre el enlace del
+     * justificante que le llegó a él, porque ese enlace lleva dentro la respuesta atada.
+     */
+    public function test_a_yes_lifts_the_cap_once_and_only_once(): void
+    {
+        $reservation = $this->reservation(quantity: 1);
+        $reply = $this->reply($this->invitationFor($reservation), 'Hugo Ruiz', true);
+
+        $first = $this->signFor($reservation, 'Hugo', 'Ruiz', (int) $reply->getKey());
+        $this->assertTrue($first['created'], 'el padre que avisó tiene que poder firmar');
+
+        // El MISMO «sí», otro menor: la plaza que protegía ya la está usando el primero.
+        $this->expectException(GuardianAuthorizationRefusedException::class);
+        $this->signFor($reservation, 'Otro', 'Niño', (int) $reply->getKey());
+    }
+
+    /**
      * ⚠️⚠️ **Y un id de OTRA fiesta no abre ésta.** Si el firmador se creyera el parámetro en vez de
      * preguntarle al contrato, cualquiera con un enlace de otra invitación se saltaría el tope.
      */

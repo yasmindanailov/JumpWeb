@@ -74,7 +74,14 @@ class InvitationsController extends Controller
             'companion' => ['sometimes', 'nullable', 'string', Rule::in(InvitationReply::COMPANIONS)],
             // Solo la FORMA: las claves son data-driven (`guest_fields` del pack) y el saneo del
             // dominio descarta lo que el esquema no declare — el mismo trato que el post-form.
+            //
+            // ⚠️ **Los VALORES sí se acotan a escalares** (`DECISIONES #579`), y no es celo: el saneo
+            // del dominio hace `trim((string) $value)`, así que un array anidado levantaba un
+            // «Array to string conversion» y el endpoint respondía **500 donde el contrato promete
+            // 422**. Lo que el esquema declara es `additionalProperties: {type: string}`; esto es esa
+            // promesa, cumplida en la puerta.
             'guest_data' => ['sometimes', 'nullable', 'array'],
+            'guest_data.*' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $outcome = $this->invitations->reply(

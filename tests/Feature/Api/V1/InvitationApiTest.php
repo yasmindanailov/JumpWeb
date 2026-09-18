@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\V1;
 
+use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
@@ -9,9 +10,12 @@ use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\PersonNameKey;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
@@ -197,10 +201,28 @@ class InvitationApiTest extends ApiTestCase
         $this->assertNull($second->json('reason'));
     }
 
-    /** Un «no» con el plazo pasado: 200 con su motivo, no un error del padre. */
+    /**
+     * Un «sí» con el plazo pasado: 200 con su motivo, no un error del padre.
+     *
+     * ⚠️⚠️ **El reloj se congela y el corte se fija, y las dos cosas son necesarias** (`#579`). La
+     * primera versión montaba la franja HOY a las 17:00 y no congelaba nada: a partir de las 19:00 de
+     * Madrid la fiesta ya había terminado, `resolvePublic()` devolvía `null` y el caso recibía un 404
+     * en vez del 200 — o sea, **se ponía rojo solo de siete de la tarde a dos de la mañana**, que es
+     * justo cuando se cierran las sesiones y se corre el gate. Y el rojo mentía sobre su causa:
+     * decía «esperaba 200, recibí 404», no «tu franja caducó».
+     *
+     * Aquí la fiesta es **mañana** —así que no ha terminado, y `closed` no puede taparle el sitio a
+     * `cutoff`— y el corte se pone a 48 horas por ajuste, no por el valor que traiga la instalación.
+     */
     public function test_the_deadline_is_a_reason_and_not_an_http_error(): void
     {
-        [, $invitation] = $this->party(slot: $this->slotIn(0));
+        $this->travelTo(Carbon::parse('2026-10-01 09:00:00', 'UTC'));
+        Setting::query()->updateOrCreate(
+            ['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS],
+            ['value' => '48'],
+        );
+
+        [, $invitation] = $this->party(slot: $this->slotIn(1));
 
         $this->postJson("/api/v1/invitations/{$invitation->token}", [
             'child_name' => 'Hugo Ruiz', 'attending' => true,
@@ -221,6 +243,25 @@ class InvitationApiTest extends ApiTestCase
         [, $invitation] = $this->party();
         $this->postJson("/api/v1/invitations/{$invitation->token}", ['attending' => true])
             ->assertStatus(422);
+    }
+
+    /**
+     * ⚠️ **Un valor anidado en `guest_data` es un 422, no un 500** (`#579`). El saneo del dominio hace
+     * `trim((string) $value)`, así que un array llegaba hasta ahí y levantaba «Array to string
+     * conversion»: el endpoint respondía 500 donde el contrato promete 422, y un cliente no puede
+     * distinguir «lo que mandé está mal» de «el servidor se ha roto».
+     */
+    public function test_a_nested_value_in_guest_data_is_a_422_and_not_a_500(): void
+    {
+        [, $invitation] = $this->party();
+
+        $this->postJson("/api/v1/invitations/{$invitation->token}", [
+            'child_name' => 'Hugo Ruiz',
+            'attending' => true,
+            'guest_data' => ['allergy' => ['no', 'es', 'un', 'texto']],
+        ])->assertStatus(422);
+
+        $this->assertSame(0, InvitationReply::query()->count(), 'no se escribe nada con un cuerpo inválido');
     }
 
     // ── 3 · El ANFITRIÓN ──────────────────────────────────────────────────────
@@ -410,6 +451,56 @@ class InvitationApiTest extends ApiTestCase
             ->getJson("/api/v1/reservations/{$reservation->id}/guest-form")
             ->assertOk()
             ->assertJsonPath('invitation.pending_replies.0.slot_index', 1);
+    }
+
+    /**
+     * ❗❗ **EL CAMINO DE BANDERA de la feature, y hasta `#579` se rompía solo.**
+     *
+     * El anfitrión pega la lista de clase con nombres de pila —«Hugo»— y al padre se le pide **nombre
+     * y apellidos** para distinguir a dos niños que se llamen igual, así que contesta «Hugo Ruiz». El
+     * emparejado los une (regla 4, por la primera palabra) y la propuesta cae sobre esa ficha.
+     *
+     * Al adoptarla, la respuesta se marcaba con la clave del PADRE (`hugo ruiz`) y la reconciliación
+     * la comparaba contra las claves de las FICHAS (`hugo`) con igualdad exacta: no casaba, así que la
+     * daba por huérfana y **la descartaba en el mismo `PUT`**. El niño que confirmó dejaba de ocupar
+     * plaza —justo el suelo que `#576` añadió para protegerlo— y desaparecía del resumen sin que el
+     * anfitrión hubiera quitado nada.
+     *
+     * ▶ La raíz: `adopted_name_key` tiene que ser **la clave de la ficha sobre la que se adopta**, no
+     * la del nombre que escribió el padre. Todo lo que la lee después compara contra fichas.
+     */
+    public function test_adopting_a_reply_matched_by_its_first_word_survives_the_save(): void
+    {
+        [$reservation, $invitation] = $this->party();
+        $host = $this->hostOf($reservation);
+
+        // El anfitrión pegó solo el nombre de pila.
+        $this->actingAs($host)->putJson("/api/v1/reservations/{$reservation->id}/guest-form", [
+            'guests' => [['name' => 'Hugo'], ['name' => '']],
+        ])->assertOk();
+
+        $reply = $this->replyOf($reservation->fresh() ?? $reservation, $invitation, 'Hugo Ruiz');
+
+        // Y guarda adoptándola, sin tocar el nombre que ya había escrito.
+        $this->actingAs($host)->putJson("/api/v1/reservations/{$reservation->id}/guest-form", [
+            'guests' => [['name' => 'Hugo'], ['name' => '']],
+            'adopt' => [$reply->id],
+        ])->assertOk()
+            ->assertJsonPath('invitation.replies_yes', 1)
+            ->assertJsonPath('invitation.replies_pending', 0);
+
+        $fresh = $reply->fresh();
+        $this->assertNotNull($fresh?->adopted_at, 'no se adoptó');
+        $this->assertNull($fresh?->dismissed_at, 'se adoptó y se descartó en el mismo guardado');
+
+        // Y sigue ocupando su plaza: es el suelo que impide dejar fuera a quien confirmó.
+        $this->assertSame(
+            1,
+            app(PartyGuests::class)->committedReplyIdsIn((int) $reservation->id) === []
+                ? 0
+                : 1,
+            'el niño que confirmó dejó de ocupar plaza'
+        );
     }
 
     /**

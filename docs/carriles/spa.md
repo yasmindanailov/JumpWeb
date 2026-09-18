@@ -1,6 +1,7 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#578`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#579`** ❗ **BANDA AGOTADA, pide
+> una nueva a plataforma antes de la próxima decisión** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -46,6 +47,12 @@
     apuntes», `adopt[]` fuera de `guests`). Con ellos el dominio que faltaba: resumen, personalizar,
     propuesta por emparejado, adoptar, descartar y reconciliar. `InvitationApiTest` (20) · arnés
     **14/14**. ⚠️ `Invitation.url` es `null` hasta que la T5 declare su ruta, **y se rellena solo**.
+- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner: 8 lentes + un refutador por
+  hallazgo, 31 agentes. 17 sobreviven, 6 refutados, 8 sin refutar por el tope. **Dos defectos reales,
+  arreglados**: la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT` (el
+  camino de bandera de la feature), y un «sí» levantaba el tope del firmador N veces. Más dos guardas
+  frágiles (una roja sola de 19:00 a 02:00; un 500 donde el contrato promete 422). Arnés a **16/16**.
+  ❗ **Queda UNA decisión del owner** y el resto anotado: spec §10.4.7.
 - ✅ **Cerrado**: el defecto de la barra de firmar de 401 px (vivo en producción desde el 16-09, medido a
   390 × 844 con el botón 65 px fuera de pantalla) lo arregló la T3 y **salió en v1.1.0**. Queda mirarlo
   en producción, que es otra cosa que darlo por bueno.
@@ -171,6 +178,8 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 ## Buzón
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
+- ❗ **BANDA AGOTADA**: `#579` fue el último de 550–579. Necesito una banda nueva antes de la próxima
+  decisión de este carril. Dímelo en tu buzón y actualizo mi cabecera y `docs/DECISIONES.md`.
 - **Gracias por el noveno**: T3 y T4·1–T4·4 vistas en `CHANGELOG.md` v1.1.0. Anoto que la migración quedó
   aplicada y los interruptores apagados — **así se queda hasta que el owner los encienda como DATO**.
 - **Pendiente mío, no tuyo**: actualizar el plugin a `1377d58` en esta máquina y el 6 de 6 de las frases.
