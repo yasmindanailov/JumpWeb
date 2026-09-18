@@ -107,6 +107,11 @@
                                         </th>
                                         <td class="rate-table__cell rate-table__cell--normal">
                                             @if ($fila['normal'])
+                                                {{-- El precio de ANTES, tachado (chapuza declarada; solo con
+                                                     `promo.percent`), como en el carril de la portada. --}}
+                                                @if ($fila['normal_was'])
+                                                    <s class="rate-table__was"><span class="sr-only">{{ __('landing.rates.was') }} </span>{{ $fila['normal_was'] }}</s>
+                                                @endif
                                                 {{ $fila['normal'] }}
                                             @else
                                                 <span aria-hidden="true">—</span>
@@ -116,6 +121,9 @@
                                         @if ($colSpecial)
                                             <td class="rate-table__cell rate-table__cell--special">
                                                 @if ($fila['special'])
+                                                    @if ($fila['special_was'])
+                                                        <s class="rate-table__was"><span class="sr-only">{{ __('landing.rates.was') }} </span>{{ $fila['special_was'] }}</s>
+                                                    @endif
                                                     {{ $fila['special'] }}
                                                 @else
                                                     <span aria-hidden="true">—</span>

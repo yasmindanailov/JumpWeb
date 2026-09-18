@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Content\Services\LandingAddonPresenter;
+use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -754,5 +755,95 @@ class RateRailSectionTest extends TestCase
                 );
             }
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  La promo: el precio de ANTES tachado y el recuadro (chapuza declarada, 2026-09-18)
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * **El precio de antes se tacha SOLO con el ajuste `promo.percent`, y deshace esa rebaja.**
+     *
+     * `[DECIDIDO owner, 2026-09-18]`: «no quiero spec, ni sistema ni nada». El catálogo guarda el
+     * precio ya rebajado (la promo del 17-09 se aplicó como dato) y el «antes» es `nuevo / 0,8`,
+     * escrito en `<s>` con la palabra para el lector de pantalla. Sin ajuste, la tarjeta es la de
+     * siempre: ni un `<s>` en toda la sección.
+     */
+    public function test_the_previous_price_is_struck_only_with_the_promo_setting(): void
+    {
+        [$unidad] = $this->dosEntradasDeUnaZona();
+        $this->reprecio($unidad, 960);
+
+        $this->assertStringNotContainsString('rate-card__was', $this->seccion(), 'sin ajuste no hay «antes».');
+
+        Setting::updateOrCreate(['key' => 'promo.percent'], ['value' => '20', 'group' => 'promo']);
+        Setting::flushMemo();
+        $panel = $this->panel('kids');
+
+        $this->assertMatchesRegularExpression(
+            '#<s class="rate-card__was"><span class="sr-only">'.preg_quote(__('landing.rates.was'), '#').' </span>12 €</s>\s*<span class="rate-card__num">9,60</span>#',
+            $panel,
+            '960 céntimos con una rebaja del 20 % eran 12 €, y van tachados delante de la cifra viva.',
+        );
+    }
+
+    /**
+     * **El «antes» de la tarifa especial acompaña a su cifra, y el ahorro no se mide contra él.**
+     *
+     * ⚠️ El ahorro sale del catálogo (`saving()`), o sea de los precios REBAJADOS: tachar no lo mueve.
+     */
+    public function test_the_special_price_is_struck_too_and_the_saving_is_untouched(): void
+    {
+        Setting::updateOrCreate(['key' => 'promo.percent'], ['value' => '20', 'group' => 'promo']);
+        Setting::flushMemo();
+
+        [$unidad, $larga] = $this->dosEntradasDeUnaZona();
+        $this->reprecio($unidad, 960);
+        $this->reprecio($larga, 1440);
+        $larga->prices()->create([
+            'rate_type_id' => RateType::where('is_special', true)->value('id'),
+            'amount_cents' => 1760,
+            'currency' => 'EUR',
+        ]);
+
+        $panel = $this->panel('kids');
+
+        $this->assertStringContainsString('rate-card__was--special"><span class="sr-only">'.__('landing.rates.was').' </span>22 €</s>', $panel);
+        $this->assertStringContainsString('<span class="rate-card__saving-num">4,80 €</span>', $panel, 'dos de 9,60 menos 14,40: el ahorro sigue saliendo del catálogo.');
+    }
+
+    /**
+     * **El recuadro de la oferta es el ajuste `promo.banner.{idioma}`, sin respaldo del diccionario.**
+     * Vacío, no hay recuadro; puesto, es un `<p role="note">` encima del carril, escapado.
+     */
+    public function test_the_promo_box_is_the_installation_setting_or_nothing(): void
+    {
+        $this->assertStringNotContainsString('rates__promo', $this->seccion());
+
+        Setting::updateOrCreate(['key' => 'promo.banner.es'], ['value' => '−20 % en todas las entradas online <b>x</b>', 'group' => 'promo']);
+        Setting::flushMemo();
+
+        $seccion = $this->seccion();
+        $this->assertStringContainsString('<p class="rates__promo" role="note">−20 % en todas las entradas online &lt;b&gt;x&lt;/b&gt;</p>', $seccion);
+        $this->assertLessThan(strpos($seccion, 'class="tabset"'), strpos($seccion, 'rates__promo'), 'el recuadro va ENCIMA de las pestañas.');
+    }
+
+    /**
+     * **`/precios` tacha con el mismo ajuste y el mismo cálculo**, en su propia línea sobre la cifra.
+     */
+    public function test_the_pricing_page_strikes_the_previous_price_with_the_same_setting(): void
+    {
+        [$unidad] = $this->dosEntradasDeUnaZona();
+        $this->reprecio($unidad, 960);
+
+        $this->assertStringNotContainsString('rate-table__was', (string) $this->get('/precios')->assertOk()->getContent());
+
+        Setting::updateOrCreate(['key' => 'promo.percent'], ['value' => '20', 'group' => 'promo']);
+        Setting::flushMemo();
+
+        $this->assertStringContainsString(
+            '<s class="rate-table__was"><span class="sr-only">'.__('landing.rates.was').' </span>12 €</s>',
+            (string) $this->get('/precios')->assertOk()->getContent(),
+        );
     }
 }

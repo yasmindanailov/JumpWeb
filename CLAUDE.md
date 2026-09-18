@@ -48,20 +48,19 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Secuencia de compra (admitir → crear → cobrar) | `docs/specs/checkout-orquestado.md` §0 |
 | Excursiones de colegio · horario por zona · precio por tramo · venta de mostrador | `docs/specs/precio-por-tramo.md` §0 · `docs/specs/horario-por-zona.md` §0 |
 | Aforo · franjas · la rejilla · disponibilidad · calendario · `SlotOffer` | `docs/sistemas/AFORO-FRANJAS.md` · `docs/INVARIANTES.md` §2 |
-| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
-| Google: entrar, registrarse, vincular · el `sub` · condiciones al contratar | `docs/specs/auth-con-google.md` §0 |
+| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 || Google: entrar, registrarse, vincular · el `sub` · condiciones | `docs/specs/auth-con-google.md` §0 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
 | El teléfono de un cliente · cuenta de Google sin número · pedirlo en el pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
 | Auth dentro del cajón · retirar el modal de la cabecera | `docs/specs/auth-en-cajon.md` §0 |
 | Landing · tema visual (tokens) · CMS de contenido · white-label por cliente | `docs/specs/landing-white-label.md` §0 |
-| Capa de tema · superficies · radios · sombras · foco · fuentes · el botón de comprar · el logotipo · scroll · iconos · área táctil | `docs/specs/tema-por-instalacion.md` §0 |
+| Capa de tema · superficies · radios · sombras · foco · fuentes · botón de comprar · logotipo · scroll · iconos · área táctil | `docs/specs/tema-por-instalacion.md` §0 |
 | El armazón · barra · menú · hamburguesa · CTA de la esquina · cajón móvil | `docs/specs/armazon-y-menu.md` §0 |
 | Dónde van los elementos de diseño · la pasada de vestido · presupuesto de marcado | `docs/specs/pasada-de-vestido.md` §0 |
 | Material gráfico del mural · manchas · poses · texturas · iconos de zona | `docs/specs/elementos-fachada.md` §0 |
-| Rediseño desde el canvas · el sistema · las 8 secciones y su orden · las 7 páginas · la atribución de Google | `docs/specs/rediseno-desde-canvas.md` §0 |
-| Idioma visual heredado · badges · marquesina · «Visítanos» · la auditoría de diseño de la web | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
-| La hora extra · complemento que ocupa aforo · precio de un complemento por día · mover fecha con complementos · el sello de un complemento vendido | `docs/specs/hora-extra.md` §0 |
+| Rediseño desde el canvas · el sistema · las 8 secciones · las 7 páginas · la atribución de Google | `docs/specs/rediseno-desde-canvas.md` §0 |
+| Idioma visual heredado · badges · marquesina · «Visítanos» · auditoría de diseño | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
+| La hora extra · complemento que ocupa aforo · su precio por día · mover fecha · su sello | `docs/specs/hora-extra.md` §0 |
 | Añadir o quitar invitados de una reserva pagada · el plazo | `docs/specs/invitados-en-post-form.md` §0 |
 | Un complemento que se vende después de reservar · el post-form · plazo de corte | `docs/specs/complementos-post-reserva.md` §0 |
 | El hueco de ilustración por instalación · `client-kit.svg` · `<use>` externo | `docs/specs/hueco-ilustracion.md` §0 |
@@ -80,7 +79,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Reseñas de Google · Business Profile · prueba social | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
 | El carril del SPA en el otro ordenador · la rama `cliente/playjump` · reparto por fichero | `docs/CARRIL-SPA.md` · `docs/carriles/spa.md` |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
-| Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` (copiar) · `docs/CONVENCIONES.md` §5 |
+| Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
 | Panel admin / puerta / operación diaria | `docs/PANEL-ADMIN.md` · `docs/OPERATIVA-SECTOR-ORIGEN.md` |
 | El asistente de «Crear pedido» · pasos · carrito · desenlace | `docs/specs/asistente-crear-pedido.md` §0 |

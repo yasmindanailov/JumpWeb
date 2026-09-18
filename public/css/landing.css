@@ -2389,6 +2389,40 @@ img { display: block; max-width: 100%; }
   font-family: var(--font-display); font-weight: 400;
   font-size: 0.5em; color: var(--fg);
 }
+/* ── EL PRECIO DE ANTES, TACHADO ──────────────────────────────────────────────────────────
+   Chapuza declarada (`[DECIDIDO owner, 2026-09-18]`; `Setting::promoPercent()`): solo existe con el
+   ajuste `promo.percent`. Es media cifra en el gris de apoyo, con la raya del sistema (`<s>`), delante
+   del precio vivo: lo que ya no vale no compite con lo que vale. ⚠️ En `--fg-mute` y no en Lima: no es
+   un precio, es una ausencia, como la raya de «ese día no se vende» de `/precios`. */
+.rate-card__was {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 0.5em; line-height: 0.9;
+  color: var(--fg-mute);
+  text-decoration-thickness: 2px;
+}
+/* En la línea de la tarifa especial va a su talla, delante de la cifra en negrita. */
+.rate-card__was--special { font-family: inherit; font-size: inherit; line-height: inherit; }
+/* En la tabla va en su PROPIA línea, encima de la cifra: la columna es estrecha en móvil y en línea
+   partía «9,60 €» en dos renglones (medido a 390). */
+.rate-table__was {
+  display: block; margin: 0 0 var(--sp-4);
+  font-family: var(--font-body); font-weight: 400;
+  font-size: var(--fs-body-s); line-height: 1.2; color: var(--fg-mute);
+}
+
+/* ── EL RECUADRO DE LA OFERTA ─────────────────────────────────────────────────────────────
+   La misma chapuza, encima del carril: una pegatina del sistema (borde de Línea, radio grande) con
+   el marcador amarillo como filete izquierdo — la misma mancha que el badge y el ahorro, así que no
+   entra ningún color nuevo. El texto es el ajuste `promo.banner.{idioma}`; sin él, no hay recuadro. */
+.rates__promo {
+  margin: 0 0 var(--sp-16);
+  padding: var(--sp-12) var(--sp-14);
+  background: var(--bg-card);
+  border: 2px solid var(--line-strong); border-left: 8px solid var(--marker);
+  border-radius: var(--r-lg);
+  font-family: var(--font-body); font-weight: 800;
+  font-size: var(--fs-body); line-height: 1.35; color: var(--fg);
+}
 .rate-card__unit {
   font-family: var(--font-mono); font-size: var(--fs-label);
   line-height: 1.4; color: var(--fg-mute); white-space: nowrap;

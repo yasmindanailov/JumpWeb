@@ -6,6 +6,40 @@
 > **interno**. Producción despliega solo etiquetas (guarda 8 de `scripts/deploy.sh`); staging despliega
 > `main`. Una versión se corta con la skill `/release`.
 
+## v1.1.0 · 2026-09-18
+
+Tres cosas: el precio de antes tachado y el recuadro de una oferta en la sección de tarifas, encendidos
+por dos ajustes de la instalación (`#628`, chapuza declarada hasta el sistema de ofertas); la piel del
+justificante del menor invitado con el arreglo de su barra de firmar, que estaba rota en producción desde
+el octavo despliegue (`#572`, T3 del carril del SPA); y los cimientos de la invitación digital de
+cumpleaños, apagados (`#573`→`#576`, T4·1–T4·4).
+
+### Para las instancias
+
+- **Nada que hacer para actualizar.** Sin los ajustes, la web es la de v1.0.0 con el justificante vestido.
+- **Una migración nueva** (`create_party_invitations`: dos tablas de la invitación digital) que el
+  despliegue corre solo; los dos interruptores de la invitación nacen APAGADOS y nada cambia en el embudo
+  hasta que el panel los encienda (T5/T6, todavía sin construir).
+- Para enseñar una rebaja YA aplicada a los precios del catálogo: `promo.percent` (por ejemplo `20`)
+  en la tabla `settings` (grupo `promo`, sin pantalla en el panel) → la card de la portada y `/precios`
+  tachan el precio de antes (`precio × 100 / (100 − pct)`). Y `promo.banner.{es,en,fr}` → el recuadro
+  con el copy encima del carril. Se apaga borrando las filas; **al subir los precios, borrarlas el
+  mismo día**, o el tachado mentiría.
+- El contrato de la API no cambia (`info.version` sigue en 1.0.0); el cajón no pinta el «antes».
+
+### Interno
+
+- `Setting::promoPercent()`, `WritesLandingValues::antes()`, `RateCards` y `RateTable` con el tercer
+  argumento, `site.promo_banner` en el payload compartido, `rate-rail.blade.php`, `pages/pricing.blade.php`,
+  `landing.css` (`.rate-card__was`, `.rate-table__was`, `.rates__promo`), `landing.rates.was` en tres idiomas y
+  cuatro casos en `RateRailSectionTest` (mutación vista: 3 en rojo con el porcentaje a 0).
+- La spec del mecanismo queda aparcada en `docs/archivo/promo-precio-anterior.md`.
+- Del carril del SPA (`carriles/spa.md`): T3, la piel del justificante (`GuardianSkinTest`, 10 casos) y la
+  barra de firmar a su sitio; T4·1–T4·4, las tablas, `PartyInvitations` con su lock de una fila (16 padres →
+  entra 1, medido en InnoDB), `show_in_invitation` en el pivote de complementos (`ProductAddon.php`, del
+  `CRITICAL_RE`: sus pushes fueron con `VERIFY_CONC=1`), el cuarto sumando del suelo de plazas y la
+  excepción del firmador. Sin cambios en el contrato OpenAPI.
+
 ## v1.0.0 · 2026-09-17
 
 La línea base: lo que corre en producción desde el 2026-09-16 (`1272cb93`, octavo despliegue). Es la

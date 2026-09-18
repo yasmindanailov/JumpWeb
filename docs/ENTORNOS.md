@@ -612,9 +612,46 @@ primera conexión**; en seco avisa y sigue, para poder mirar el plan antes de ve
 push) y, si `main` se movió después, por `git checkout vX.Y.Z`. El despliegue escribe la versión en
 **`storage/app/version`** del servidor (`versión hash fecha-UTC`; `storage/` no viaja, el `--delete` no la
 toca) y la salud la relee: `ssh jumpweb-prod 'cat public_html/storage/app/version'` contesta «¿qué corre
-aquí?». **v1.0.0 = `1272cb93`**, lo del octavo despliegue; ese fichero aún no existe en producción porque
-aquel despliegue fue anterior a la guarda. Medido: `DeployScriptGateTest` ejecuta el script en un repo de
-usar y tirar y `scripts/mutar-guarda8.sh` da 9/9.
+aquí?». **v1.0.0 = `1272cb93`**, lo del octavo despliegue; aquel despliegue fue anterior a la guarda, así que
+el fichero se escribió A MANO el **2026-09-17 a las 22:05 local** (parque cerrado, orden del owner en el turno),
+con el formato del script: `v1.0.0 1272cb93 2026-09-17T20:05:48Z` (la fecha es la de la ESCRITURA; el código
+corre desde el 16-09 a las 22:53). Releído por `ssh` (37 B, `playjump2`, 0664) y `/`, `/up` y `/admin/login`
+en 200 después. Medido: `DeployScriptGateTest` ejecuta el script en un repo de usar y tirar y
+`scripts/mutar-guarda8.sh` da 9/9.
+
+**No hay noveno despliegue pendiente a 2026-09-17** (medido con lecturas, el clasificador «auto» denegó el
+ensayo en seco del script por «Blind Apply»): de `v1.0.0` a `13289269` hay 7 commits y **0 ficheros de
+runtime** (`app/`, `resources/`, `routes/`, `config/`, `database/`, `public/`, `lang/`, `bootstrap/`,
+`package.json`); el `rsync` solo llevaría 8 ficheros inertes (`CHANGELOG.md`, `CLAUDE.md`, `README.md`,
+`composer.json`/`.lock`, tres de `scripts/`); los 117 paquetes de producción del `composer.lock` no se mueven
+(solo entra Larastan, de desarrollo); `client.css` servido = rama `cliente/playjump` = copia local
+(`687ffcb3…`). ⚠️ **El build NO es reproducible byte a byte**: 6 de las 7 entradas del `manifest.json`
+servido coinciden con el build local, pero `resources/css/app.css` cambia de hash (65.339 B servido, 50.080 B
+local) porque Tailwind escanea el árbol entero —docs y mockups incluidos— y **ninguna vista, config ni ruta
+la carga** (0 coincidencias): es una entrada de Vite sin consumidor. Comparar manifiestos enteros da un
+falso «hay algo que desplegar»; se compara entrada a entrada.
+
+**OPERACIÓN DE DATOS · promo «−20 % en las entradas online»** (`[DECIDIDO owner]` 2026-09-17, aplicada a las
+22:35 local con el parque cerrado; es DATO de la instalación, sin código ni despliegue). Las 5 entradas
+(`ticket_types` 100–104, tipo `entry`): sus **9 filas de `prices` × 0,8** (exacto, sin redondeos; 0 tramos) y
+el **badge** `−20 % online` / `−20% online` / `−20 % en ligne`. Packs, excursiones y complementos, intactos.
+Copia previa en el servidor: `~/backups/playjump2_main_prepromo20-20260917-203115.sql.gz`. El guion llevaba el
+precio ESPERADO de cada fila (la segunda pasada aborta: medido en local, que partía del mismo estado), corre en
+una transacción, escribe por Eloquent, deja **10 filas en `audit_logs`** (`catalog.prices_updated` y
+`catalog.updated`, con `from`/`to` y los badges anteriores: **de ahí se revierte**) y olvida
+`cta.min_price_cents`, como `EditCatalog::afterSave()`. Verificado: BD, `/api/v1/catalog/products`, la portada
+(«Desde 6,40 €», 5 badges), `/`, `/precios` y `/up` en 200. ⚠️ **Taquilla cobra lo mismo**: el pedido manual
+del panel usa el mismo `RateResolver` y la misma tabla; por eso el badge dice «online» y no «solo online».
+**El precio de antes tachado y el recuadro** (`#628`, 18-09, chapuza declarada, v1.1.0): en la card de la
+portada y en `/precios`, el «antes» = precio × 100 / (100 − `promo.percent`) y el recuadro = `promo.banner.{es,en,fr}`.
+▶ **Tras desplegar v1.1.0, las cuatro filas en `settings` de producción** (grupo `promo`; el copy con espacio
+FINO antes de «%» y menos tipográfico): `promo.percent` = `20` · `promo.banner.es` = «−20 % en todas las entradas
+online: compra en la web, elige día y hora, y ahorra un 20 %.» · `en` = «20% off all tickets online: book on the
+website, pick your day and time, and save 20%.» · `fr` = «−20 % sur toutes les entrées en ligne : réservez sur le
+site, choisissez le jour et l'heure, et économisez 20 %.». Sin las filas, la web es la de siempre. **Fin de la
+promo**: subir los precios en el panel (los `from` de `audit_logs`), quitar el badge y BORRAR las cuatro filas el
+mismo día, o el tachado mentiría. Medido en local a 390 y 1280 antes de commitear; ⚠️ en `/precios` a 390 la
+cifra «9,60 €» ya se partía en dos renglones ANTES de este cambio (84 px de celda): no es de esta promo.
 
 `jumpweb-prod` es un alias de `~/.ssh/config` (`HostName 51.68.7.199 · User playjump2 · Port 22`,
 clave `jumpweb_staging_ed25519` — la misma que staging, registrada en el panel como «jumpweb-prod»).

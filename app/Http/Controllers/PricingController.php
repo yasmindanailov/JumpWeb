@@ -44,7 +44,9 @@ class PricingController extends Controller
         return view('pages.pricing', [
             'tickets' => $entradas,
             'zones' => $zonas,
-            'rateTable' => $tabla->compose($zonas, $entradas),
+            // La rebaja YA aplicada al catálogo, para el «antes» tachado (chapuza declarada,
+            // `Setting::promoPercent()`); 0 = la tabla de siempre.
+            'rateTable' => $tabla->compose($zonas, $entradas, Setting::promoPercent()),
             'week' => $tabla->week(),
             'colNormal' => $tabla->normalColumnLabel(),
             'colSpecial' => $tabla->specialColumnLabel(),

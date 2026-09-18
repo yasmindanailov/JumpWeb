@@ -48,6 +48,26 @@ trait WritesLandingValues
     }
 
     /**
+     * **El precio ANTES de una rebaja del `$pct` %**, en céntimos, o `null` sin rebaja.
+     *
+     * ⚠️⚠️ **Es una CHAPUZA declarada** (`[DECIDIDO owner, 2026-09-18]`: *«no quiero spec, ni sistema
+     * ni nada; más adelante haremos un sistema de ofertas»*). El catálogo ya guarda el precio
+     * REBAJADO —la promo del 17-09 se aplicó como dato, `ENTORNOS.md` §6— y el «antes» se deshace
+     * de esa rebaja: `nuevo × 100 / (100 − pct)`. Con las nueve filas de PlayJump sale exacto.
+     * ⚠️ El porcentaje NO vive aquí: es el ajuste `promo.percent` de la instalación, que los
+     * controladores leen y pasan. Sin ajuste (0), no hay «antes» y la tarjeta es la de siempre.
+     * ⚠️ **No es un precio que se cobre** (`#329`): es presentación, y nunca entra en un cálculo.
+     */
+    private function antes(?int $cents, int $pct): ?int
+    {
+        if ($cents === null || $pct <= 0 || $pct >= 100) {
+            return null;
+        }
+
+        return (int) round($cents * 100 / (100 - $pct));
+    }
+
+    /**
      * Centímetros enteros → metros escritos en el idioma que toca.
      *
      * ⚠️ Siempre con dos decimales, también cuando son cero: una estatura es una medida, y «1,30 m»

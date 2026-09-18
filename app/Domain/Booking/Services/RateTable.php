@@ -144,13 +144,14 @@ final class RateTable
      *
      * @param  Collection<int, Zone>  $zones  las zonas de la landing, en su orden
      * @param  Collection<int, TicketType>  $tickets  las entradas activas con precios y complementos
+     * @param  int  $promoPercent  la rebaja ya aplicada al catálogo (ajuste `promo.percent`); 0 = sin «antes»
      * @return list<array<string, mixed>>
      */
-    public function compose(Collection $zones, Collection $tickets): array
+    public function compose(Collection $zones, Collection $tickets, int $promoPercent = 0): array
     {
         $porZona = $tickets->groupBy('zone_id');
 
-        return $zones->map(function (Zone $zone) use ($porZona): ?array {
+        return $zones->map(function (Zone $zone) use ($porZona, $promoPercent): ?array {
             /** @var Collection<int, TicketType> $entradas */
             $entradas = $porZona->get($zone->id, collect())->values();
 
@@ -174,7 +175,7 @@ final class RateTable
                 'unit' => $entradas->first()?->tr('period_label') ?: null,
                 // ⚠️ Solo ENTRADAS: la fila de la hora extra se retiró con el resto de complementos de
                 // la web (`[DECIDIDO owner, 2026-09-13]`, `#583`), que solo se ofrecen al reservar.
-                'rows' => $entradas->map(fn (TicketType $t, int $i): array => $this->entryRow($t, $zone, $i === $lidera))->all(),
+                'rows' => $entradas->map(fn (TicketType $t, int $i): array => $this->entryRow($t, $zone, $i === $lidera, $promoPercent))->all(),
             ];
         })->filter()->values()->all();
     }
@@ -184,10 +185,11 @@ final class RateTable
      *
      * @return array<string, mixed>
      */
-    private function entryRow(TicketType $ticket, Zone $zone, bool $lidera): array
+    private function entryRow(TicketType $ticket, Zone $zone, bool $lidera, int $promoPercent = 0): array
     {
         [$nombre, $matiz] = $this->nameAndNuance((string) $ticket->tr('name'), (string) $zone->tr('name'));
         $badge = $ticket->tr('badge') ?: null;
+        $normal = $this->normalPriceCents($ticket);
         $especial = $this->specialPriceCents($ticket);
         $dias = $this->plainDaysPhrase();
 
@@ -209,8 +211,12 @@ final class RateTable
             'note' => ($especial === null && $dias !== null)
                 ? __('landing.rates.days_only', ['days' => $dias])
                 : null,
-            'normal' => $this->writeCents($this->normalPriceCents($ticket)),
+            'normal' => $this->writeCents($normal),
             'special' => $this->writeCents($especial),
+            // El precio de ANTES, tachado (chapuza declarada, `WritesLandingValues::antes()`): solo
+            // con el ajuste `promo.percent` puesto, y escrito como la cifra a la que acompaña.
+            'normal_was' => $this->writeCents($this->antes($normal, $promoPercent)),
+            'special_was' => $this->writeCents($this->antes($especial, $promoPercent)),
         ];
     }
 

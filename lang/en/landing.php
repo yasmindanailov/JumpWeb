@@ -141,6 +141,7 @@ return [
         'zone_chip' => ':zone zone',
         'saving' => 'You save',
         'saving_base' => 'versus :count of :unit',
+        'was' => 'Was',
         'times' => [2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six'],
         'from' => 'from',
         'addon_per_guest' => 'per guest',

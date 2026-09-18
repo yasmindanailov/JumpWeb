@@ -30,6 +30,15 @@
      style="--rates-max: {{ max(1, (int) collect($zones)->max(fn ($z) => count($z['cards']))) }}"
      x-data="rateRail(@js(collect($zones)->pluck('slug')->first()), @js(collect($zones)->mapWithKeys(fn ($z) => [$z['slug'] => $z['featured'] ?? 0])))">
 
+    {{-- ══ EL RECUADRO DE LA OFERTA ═══════════════════════════════════════════════════════════
+         Chapuza declarada (`[DECIDIDO owner, 2026-09-18]`: «no quiero spec, ni sistema ni nada;
+         más adelante haremos un sistema de ofertas»). El texto es el ajuste `promo.banner.{idioma}`
+         de la instalación, sin respaldo del diccionario: vacío, no hay recuadro. Es una pegatina
+         del sistema con el marcador amarillo delante, la misma mancha que el badge y el ahorro. --}}
+    @if (! empty($site['promo_banner']))
+        <p class="rates__promo" role="note">{{ $site['promo_banner'] }}</p>
+    @endif
+
     {{-- ⚠️⚠️ **LA PESTAÑA DEL SISTEMA, y no `.zone-tab`.** Aquella clase la comparten `/servicios`
          y **el cajón en Vue** (`IdentifyStep`, `AuthTabs`), que es Fase 4: retocarla aquí habría
          cambiado el embudo de compra desde una tanda de la portada. `.tabset` es el componente del
@@ -106,6 +115,12 @@
                              heredaría su interlineado y se partiría en dos — el defecto que `#309`
                              arregló en la tarjeta vieja. --}}
                         <p class="rate-card__price">
+                            {{-- El precio de ANTES, tachado (chapuza declarada; solo con `promo.percent`).
+                                 `<s>` es el elemento que significa «ya no vale», y la palabra va para
+                                 el lector de pantalla, que no lee el tachado. --}}
+                            @if ($card['was'])
+                                <s class="rate-card__was"><span class="sr-only">{{ __('landing.rates.was') }} </span>{{ $card['was'] }} €</s>
+                            @endif
                             <span class="rate-card__num">{{ $card['price'] }}</span>
                             <span class="rate-card__cur">€</span>
                             @if ($card['unit'])<span class="rate-card__unit">{{ $card['unit'] }}</span>@endif
@@ -140,6 +155,9 @@
                              van una vez al pie de la sección (regla dura del canvas). --}}
                         @if ($card['special'])
                             <p class="rate-card__special">
+                                @if ($card['special_was'])
+                                    <s class="rate-card__was rate-card__was--special"><span class="sr-only">{{ __('landing.rates.was') }} </span>{{ $card['special_was'] }}</s>
+                                @endif
                                 <b>{{ $card['special'] }}</b>
                                 <span>{{ __('landing.rates.special_suffix') }}</span>
                             </p>

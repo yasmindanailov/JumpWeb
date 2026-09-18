@@ -99,4 +99,22 @@ class Setting extends Model
 
         return null;
     }
+
+    /**
+     * **La rebaja que YA está aplicada al catálogo**, en tanto por ciento, para escribir el precio de
+     * antes tachado en la web (`promo.percent`; sin ajuste o fuera de 1–99, `0` = no hay «antes»).
+     *
+     * ⚠️⚠️ **Chapuza declarada** (`[DECIDIDO owner, 2026-09-18]`: *«no quiero spec, ni sistema ni nada;
+     * más adelante haremos un sistema de ofertas»*). Es un dato de la INSTALACIÓN que se escribe en
+     * la tabla `settings` sin pantalla en el panel, junto a `promo.banner.{es,en,fr}` (el recuadro de
+     * la sección de tarifas). **No toca ningún precio que se cobre**: la promo del 17-09 rebajó las
+     * filas de `prices` como dato (`ENTORNOS.md` §6) y esto solo deshace esa rebaja para enseñarla.
+     * Apagar la promo = borrar las filas; no hace falta desplegar.
+     */
+    public static function promoPercent(): int
+    {
+        $pct = (int) self::value('promo.percent', 0);
+
+        return $pct > 0 && $pct < 100 ? $pct : 0;
+    }
 }

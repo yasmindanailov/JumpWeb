@@ -349,6 +349,10 @@ class AppServiceProvider extends ServiceProvider
                 // pequeños y entre qué alturas. Es un dato del parque, así que SIN respaldo del
                 // diccionario: vacía, la portada y `/atracciones` no pintan nada.
                 'zones_access' => $get('landing.zones_access.'.$locale) ?: null,
+                // EL RECUADRO DE LA OFERTA sobre el carril de tarifas (chapuza declarada, `[DECIDIDO
+                // owner, 2026-09-18]`; ver `Setting::promoPercent()`): un dato de la instalación por
+                // idioma y SIN respaldo del diccionario, como la nota de acceso. Vacío = no se pinta.
+                'promo_banner' => $get('promo.banner.'.$locale) ?: null,
                 'seo_title' => $get('seo.title.'.$locale) ?: null,
                 // Registro «del parque» (#216): URL del sistema externo + etiqueta/subtítulo por idioma
                 // (fallback a los textos i18n del nav). URL vacía → el CTA cae al modal de registro interno.

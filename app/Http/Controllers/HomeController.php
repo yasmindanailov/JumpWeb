@@ -13,6 +13,7 @@ use App\Domain\Content\Services\BarPage;
 use App\Domain\Content\Services\RideMosaic;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
+use App\Domain\Platform\Models\Setting;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Sidebar\AccountDoor;
 use App\Http\Sidebar\SidebarEntry;
@@ -101,7 +102,9 @@ class HomeController extends Controller
              * consulta dos veces por petición, con el riesgo de que dos secciones de la misma
              * página ofrecieran precios distintos.
              */
-            'rateCards' => ($rateCards = new RateCards($zoneCards))->compose($zones, $entradas),
+            // El tercer argumento es la rebaja YA aplicada al catálogo, para el «antes» tachado
+            // (chapuza declarada, `Setting::promoPercent()`); 0 = la tarjeta de siempre.
+            'rateCards' => ($rateCards = new RateCards($zoneCards))->compose($zones, $entradas, Setting::promoPercent()),
             'ratesFrom' => $rateCards->cheapest($entradas),
             'ratesSpecialLabel' => $rateCards->specialLabel(),
             // ⚠️ **`heroStatus` se fue al payload compartido en `#230`** y por eso ya no está aquí:

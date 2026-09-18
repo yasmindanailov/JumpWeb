@@ -141,6 +141,7 @@ return [
         'zone_chip' => 'Zone :zone',
         'saving' => 'Tu économises',
         'saving_base' => 'face à :count de :unit',
+        'was' => 'Avant',
         'times' => [2 => 'deux', 3 => 'trois', 4 => 'quatre', 5 => 'cinq', 6 => 'six'],
         'from' => 'dès',
         'addon_per_guest' => 'par invité',

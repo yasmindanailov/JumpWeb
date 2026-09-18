@@ -175,8 +175,12 @@ HEAD y en `origin`; `--go` aborta, en seco avisa, staging no la pide), la versi�
 `storage/app/version` del servidor y la salud la relee, y `CHANGELOG.md` nace con la v1.0.0. Medido: un `--go`
 de producción sin etiqueta sale con 1 antes de la primera conexión; `DeployScriptGateTest` ejecuta el script en
 un repo de usar y tirar (39 casos); `scripts/mutar-guarda8.sh` 9/9 con el fichero restaurado byte a byte.
-**Falta para el ✅**: que producción DIGA v1.0.0 — el fichero no existe allí porque el octavo despliegue fue
-anterior a la guarda; lo escribe el noveno despliegue o una línea por `ssh`, de noche (`#594`).
+**✅ F3 cerrada el 2026-09-17 (22:05, parque cerrado)**: producción DICE v1.0.0 —`cat storage/app/version` →
+`v1.0.0 1272cb93 2026-09-17T20:05:48Z`, escrito por `ssh` con la orden del owner porque el octavo despliegue
+fue anterior a la guarda—. Pasada `/dod` esa noche: `DeployScriptGateTest` 39 casos en verde y el arnés 9/9
+REPETIDO sobre el `deploy.sh` de hoy (lo tocó `#625` tras el primer 9/9), restaurado byte a byte. ▶ Lo único
+que ningún test ejecuta contra un servidor de verdad es la escritura y la relectura de la versión DENTRO del
+script: las estrena el noveno despliegue, el primero por etiqueta (`ENTORNOS.md` §6); se mira ese día.
 
 ### 4.7 La capa de agente
 
@@ -260,10 +264,10 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 | F0 gobierno | 1 | 1 | esta spec ✅ owner; `#610`–`#616`; reglas 8 y 9 |
 | F1 doc caliente | 1, el 2 en pausa | 2–3 | arranque ≤ 60 KB; huella 100 %; comprobación 10 — ✅ 2026-09-16, `#617`→`#621` |
 | F2 capa de agente | 1, ambas máquinas | 2 | plugin en las dos; 6 de 6 frases |
-| F3 versión | 1 | 1 | `git describe` en producción = v1.0.0; guarda 8 — 🟦 2026-09-17, `#624`: etiqueta, changelog y guarda hechos; falta que el servidor lo diga |
+| F3 versión | 1 | 1 | `git describe` en producción = v1.0.0; guarda 8 — ✅ 2026-09-17, `#624`: etiqueta, changelog, guarda y el servidor lo dice (`cat storage/app/version`) |
 | F4 cajón y token | 2 la SPA, 1 la API | 3–5 | cajón montado desde HTML ajeno; huella de maquetación 24/24; contrato 1.1.0 |
 | F5 instancia PlayJump | 1 | 4–6 | visitante sin cambios; cero cliente en el código; 13 recursos; v2.0.0 |
-| F6 app nativa | 2 | spec 1–2 | pila y alcance ✅ owner; repo desde plantilla |
+| F6 app nativa | 2 | spec 1–2 | pila y alcance ✅ owner; repo desde plantilla — pila `[DECIDIDO owner]` 2026-09-17, `#627`: React Native + Expo (TypeScript); falta el alcance |
 
 ### 4.10 Riesgos por fase, y qué los cubre
 
@@ -314,7 +318,8 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 sesión: app nativa, landing fuera, repo por instancia, nombre y ruta del producto, Business Profile como
 mecanismo, panel sin CMS con la lista cerrada. Decisiones `#610` → `#616`.
 **Decidido el 2026-09-17**: v1.0.0 = `1272cb93` (`#624`); análisis estático, Larastan y ESLint con línea base
-(`#625`); el harness sigue en «auto» con reglas `allow` estrechas que escribe el owner, producción fuera (`#626`).
-**Pendientes del owner**: la pila de la app (F6a; pros y contras entregados el 17-09, recomendada React Native +
-Expo confirmada con una prueba corta en F6). **Se deciden en F5, con censo delante**: si Zones pierde sus campos
+(`#625`); el harness sigue en «auto» con reglas `allow` estrechas que escribe el owner, producción fuera (`#626`);
+`[DECIDIDO owner]` **la pila de la app es React Native + Expo, en TypeScript** (`#627`, cierra F6a): la prueba
+corta de F6 la CONFIRMA (token, una pantalla contra `/api/v1`, cámara del QR, notificación, build de iOS sin Mac,
+coste de EAS) y, si falla en algo medido, vuelve al owner. **Se deciden en F5, con censo delante**: si Zones pierde sus campos
 de landing (qué lee el cajón) y si «redes» se va (qué correos las usan).

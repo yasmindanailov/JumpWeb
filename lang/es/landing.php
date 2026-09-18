@@ -272,6 +272,8 @@ return [
         // ⚠️ La cifra la calcula el dominio del catálogo; aquí solo va la FORMA de la frase.
         'saving' => 'Ahorras',
         'saving_base' => 'frente a :count de :unit',
+        // El precio de ANTES tachado (solo con `promo.percent`): la palabra es para el lector de pantalla.
+        'was' => 'Antes',
         // ⚠️ El número va ESCRITO: la frase se lee, no se calcula. Fuera de esta lista corta el
         // dominio cae al dígito, que es preferible a inventar la palabra.
         'times' => [2 => 'dos', 3 => 'tres', 4 => 'cuatro', 5 => 'cinco', 6 => 'seis'],

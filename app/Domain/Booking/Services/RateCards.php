@@ -50,9 +50,10 @@ final class RateCards
     /**
      * @param  Collection<int, Zone>  $zones  las zonas de la landing, en su orden
      * @param  Collection<int, TicketType>  $tickets  las entradas activas con `prices.rateType`
+     * @param  int  $promoPercent  la rebaja ya aplicada al catálogo (ajuste `promo.percent`); 0 = sin «antes»
      * @return list<array<string, mixed>>
      */
-    public function compose(Collection $zones, Collection $tickets): array
+    public function compose(Collection $zones, Collection $tickets, int $promoPercent = 0): array
     {
         $porZona = $tickets->groupBy('zone_id');
 
@@ -65,7 +66,7 @@ final class RateCards
          */
         $diasNormales = $this->plainDaysPhrase();
 
-        return $zones->map(function (Zone $zone) use ($porZona, $diasNormales): array {
+        return $zones->map(function (Zone $zone) use ($porZona, $diasNormales, $promoPercent): array {
             /** @var Collection<int, TicketType> $entradas */
             $entradas = $porZona->get($zone->id, collect())->values();
             $nombreZona = (string) $zone->tr('name');
@@ -97,7 +98,7 @@ final class RateCards
                 'slug' => $zone->slug,
                 'name' => $nombreZona,
                 'cards' => $entradas
-                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $zone, $diasNormales, $i === $lidera, $unidad))
+                    ->map(fn (TicketType $t, int $i): array => $this->card($t, $zone, $diasNormales, $i === $lidera, $unidad, $promoPercent))
                     ->values()->all(),
                 'featured' => $lidera,
             ];
@@ -142,7 +143,7 @@ final class RateCards
      *
      * @return array<string, mixed>
      */
-    private function card(TicketType $ticket, Zone $zone, ?string $diasNormales, bool $lidera, ?TicketType $unidad): array
+    private function card(TicketType $ticket, Zone $zone, ?string $diasNormales, bool $lidera, ?TicketType $unidad, int $promoPercent = 0): array
     {
         $nombreZona = (string) $zone->tr('name');
         $especial = $ticket->specialRateSurcharges()[0] ?? null;
@@ -185,6 +186,12 @@ final class RateCards
             // ⚠️ La cifra SIN el símbolo: el artboard los pinta a 38 y a 20, así que el «€» es un
             // elemento aparte del marcado. Ver `WritesLandingValues::numero()`.
             'price' => $this->numero($ticket->displayPriceCents()),
+            /*
+             * **EL PRECIO DE ANTES, tachado** (chapuza declarada, `WritesLandingValues::antes()`): la
+             * cifra sin símbolo, como `price`, y solo con el ajuste `promo.percent` puesto. El ahorro
+             * de abajo NO se mide contra esto: sigue saliendo del catálogo (`saving()`).
+             */
+            'was' => ($antes = $this->antes($ticket->displayPriceCents(), $promoPercent)) !== null ? $this->numero($antes) : null,
             'unit' => $ticket->tr('period_label') ?: null,
             /*
              * **La frase de día, y aquí está la mitad de la honestidad de la sección.**
@@ -211,6 +218,8 @@ final class RateCards
              * lo único que cambia es cuál se escribe.
              */
             'special' => isset($especial['priceCents']) ? $this->euros((int) $especial['priceCents']) : null,
+            // El «antes» de la especial, escrito entero como ella.
+            'special_was' => ($antesEsp = $this->antes(isset($especial['priceCents']) ? (int) $especial['priceCents'] : null, $promoPercent)) !== null ? $this->euros($antesEsp) : null,
             /*
              * **EL BOTÓN YA NO LLEVA LA ZONA** (`[DECIDIDO owner, 2026-09-09]`, sobre la nota del
              * propio turno 15b: *«con la zona en la chapa, en el botón sobra»*). La llevó mientras

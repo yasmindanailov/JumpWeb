@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#626`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#628`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-17.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -65,15 +65,18 @@
   `DeployScriptGateTest` pasa de 32 a 39 casos y EJECUTA el script en un repo de usar y tirar con un `origin`
   desnudo; `scripts/mutar-guarda8.sh` 9/9, `deploy.sh` restaurado byte a byte (sha1). Medido aparte: un `--go`
   de producción sin etiqueta contra un host `.invalid` sale con 1 antes de conectar. `CHANGELOG.md` nace en la
-  raíz con la v1.0.0. ▶ **Falta para el ✅**: que producción DIGA v1.0.0 (el fichero no existe allí).
+  raíz con la v1.0.0. **✅ CERRADA el 17-09 a las 22:05** (parque cerrado, orden del owner): producción dice
+  `v1.0.0 1272cb93 2026-09-17T20:05:48Z`; `/dod` pasada (39 casos en verde, arnés 9/9 repetido sobre el
+  `deploy.sh` que `#625` tocó). **No hay noveno despliegue pendiente** (0 ficheros de runtime desde `v1.0.0`;
+  el owner eligió no desplegar): lo medido y la trampa del `manifest.json` están en `ENTORNOS.md` §6.
 - **Tres decisiones del owner el 17-09**: `#624` (arriba) · **`#625` análisis estático**: Larastan nivel 5 sobre
   `app/` y ESLint sobre el cajón, con línea base y dentro del `pre-push`; Rector no · **`#626` permisos**: el
   harness sigue en «auto» y el OWNER añade a `~/.claude/settings.json` de cada máquina cuatro reglas `allow`
   (las dos órdenes de `claude plugin … jumpweb-agente` y `Edit`/`Write` sobre `~/proyectos/jumpweb-agente/**`);
   producción queda fuera a propósito. Medido: `claude plugin marketplace update` se le deniega al agente también
   con la petición del owner delante, y **en la extensión de VSCode `/plugin` no existe** (todo por la terminal;
-  corregido en `CARRIL-SPA.md` §1 paso 8 y `CAPA-DE-AGENTE.md` §4). **La pila de la app sigue abierta**: el
-  owner pidió pros y contras y los tiene; recomendada React Native + Expo confirmada con prueba corta en F6.
+  corregido en `CARRIL-SPA.md` §1 paso 8 y `CAPA-DE-AGENTE.md` §4). **`#627` · la pila de la app, DECIDIDA
+  por el owner el 17-09**: React Native + Expo en TypeScript; la prueba corta de F6 la confirma, no compara.
 
 ## Por dónde retomar, en orden
 
@@ -97,13 +100,10 @@
    `claude plugin marketplace update jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project` en cada máquina, por TERMINAL (en VSCode `/plugin` no existe); con las reglas de `#626` el
    agente ya puede correrlas él. La versión es el sha del commit y surte efecto en la sesión siguiente.
-2. **F3 · cerrarla**: que producción diga v1.0.0. Una línea, de noche o con el parque cerrado (`#594`), y la
-   corre el owner o se pide permiso (el clasificador deniega escrituras remotas):
-   `ssh jumpweb-prod "printf '%s\n' 'v1.0.0 1272cb93 <fecha-UTC>' > public_html/storage/app/version"`; o se
-   deja al noveno despliegue, que ya la escribe solo y exige `/release` antes (guarda 8). Después, marcar F3
-   en el tracker y en la spec §4.9. Las skills `/release` y `/desplegar` del plugin ya dicen `1272cb93` y
-   nombran la guarda 8 (plugin `627b3a3`, empujado, arnés 43/43): **el paso (0) de arriba instala ahora
-   `627b3a3`, no `c57c9f2`**.
+2. ✅ **F3 cerrada** (17-09, 22:05): hecha la línea por `ssh` con la orden del owner delante (esta vez el
+   clasificador la dejó pasar), marcada en el tracker y en la spec (§4.6 y la tabla de §4.9). ▶ Queda MIRAR, el día del noveno
+   despliegue (el primero por etiqueta; empieza por `/release`), que el script escribe la versión y la salud la
+   relee: ningún test lo ejecuta contra un servidor de verdad.
 3. **`#625` · la mitad que falta: ESLint** sobre `resources/js/sidebar/` con las reglas de Vue y su línea base,
    midiendo antes de activar (segundos de gate, tamaño de la línea base) y con su paso en el `pre-push` y su
    caso en `PrePushGateTest`. ⚠️ `package.json` es compartido: el aviso al SPA está en el buzón desde el 17-09;
@@ -118,10 +118,10 @@
    `FROZEN_ERRORS` en el mismo commit.
 4. Después F4 (cajón empaquetable y token; la parte de la API empieza por `/spec`, toca `RGPD-06` y `SEC-06`)
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes») → F6 (app nativa, spec).
-- **Del owner**: la pila de la app (F6a; tiene los pros y contras y la respuesta a «¿se reutiliza el tema?»:
-  sí los 65 tokens de `client.css`, las fuentes, el logo, el kit y los textos; no el CSS ni los componentes
-  Vue — propuesta para la spec de F5: un `tokens.json` en la instancia del que salen `client.css` y el tema de
-  la app) · las dos de F5, que se le llevan con el censo hecho.
+- **Del owner**: las dos de F5, que se le llevan con el censo hecho. La pila de la app ya está (`#627`); de
+  aquella conversación queda una propuesta para la spec de F5: del tema se reutilizan los 65 tokens de
+  `client.css`, las fuentes, el logo, el kit y los textos —no el CSS ni los componentes Vue—, con un
+  `tokens.json` en la instancia del que salen `client.css` y el tema de la app.
 - **LA SIGUIENTE SESIÓN ES LA DE LAS FRASES** (acordado con el owner el 17-09 a las ~22:00, parque cerrado): es
   una sesión NUEVA con el plugin `627b3a3` ya cargado, y el owner va a decir, una por mensaje: «Hola, lee la
   doc y arranca» → «Escribe la versión v1.0.0 en producción» (es el paso 2 de arriba: inténtalo con su orden
@@ -210,6 +210,16 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   tuyo. Si tienes `package.json` o `package-lock.json` a medias, empuja antes o dímelo en tu buzón.
 - **(17-09) Producción despliega solo etiquetas** (guarda 8, `#624`): tu próximo arreglo llega a producción
   con `/release` delante; staging sigue desplegando `main`.
+
+### Para el carril de la web (emisor: plataforma, 2026-09-18)
+- **Toqué lo tuyo, por orden del owner y como chapuza declarada** (`#628`): `components/site/rate-rail.blade.php`
+  (el recuadro `.rates__promo` encima de las pestañas y el `<s class="rate-card__was">` delante de la cifra y de
+  la especial), `pages/pricing.blade.php` (`.rate-table__was`), `landing.css` (tres reglas nuevas tras
+  `.rate-card__cur`, solo tokens), `lang/*/landing.php` (`rates.was`) y los servicios `RateCards`/`RateTable`
+  (tercer argumento). Sin los ajustes `promo.*` no cambia ni un byte del HTML. Cuatro casos nuevos al final de
+  `RateRailSectionTest`.
+- ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px la cifra «9,60 €» ya se partía en dos
+  renglones (celda de 84 px) antes de este cambio. Es tuyo si lo quieres.
 
 ### Atendido
 - Nada todavía.
