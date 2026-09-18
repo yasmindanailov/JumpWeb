@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#701`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#703`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -104,26 +104,6 @@
      la fiesta una hora (§7.2·R13). Es independiente de todo lo demás.
    ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile, y en local no hay
    claves — solo se puede en producción.
-   ▶ Lo de antes, que sigue vigente:
-   (§4.6, y **lee §7.2 antes de construir**), que es lo único que la T4 dejó abierto:
-   - Nace la ruta `invitation.show`, y con ella **`Invitation.url` se rellena SOLO** — no hay que
-     tocar nada, `PartyInvitations::shareUrlFor()` pregunta por el NOMBRE de la ruta. Hay un caso que
-     lo ejerce (`InvitationApiTest::test_the_share_url_appears_by_itself…`).
-   - Y con ella el **`receiptUrl()`** aplazado desde la T4·2 (§4.5·6: firmada, **2 horas**, no es un
-     enlace de edición).
-   - ⚠️⚠️ No puede nacer a medias: recoge alergias de un menor que va a leer un tercero, así que
-     **§7.2·R7 le exige su aviso de privacidad** (sin casilla, con la política como control de 48).
-     Y `og:*`, el `.ics` con **`TZID`** (§7.2·R13 — en UTC adelantaría la fiesta una hora) y Turnstile,
-     que hay que **medir** cuántos toques cuesta (§7.2·R12).
-   - El owner elige **los tres temas** viéndolos renderizados aquí (§3.4), y eso bloquea la parte
-     visual: hoy `PartyInvitation::THEMES` tiene uno solo.
-   → Después **T7** (correos) → **T6, el aterrizaje, al final** (el bloque del anfitrión, §4.7, que es
-   quien pinta el botón de anular el enlace y la lista de propuestas que la T4·6 ya sirve).
-   Después T5 (la página, y con ella el `receiptUrl()` aplazado) → T7 (correos) → **T6, el aterrizaje, al
-   final** (borde abierto en §7·5: bajar invitados descarta las filas del final).
-   ▶ De la T4·4 quedan dos cosas **aplazadas a propósito, no olvidadas**: el **botón** de anular el
-   enlace lo pinta la T6 con el bloque de la invitación (§4.8 sitúa aquí la acción y allí su sitio), y
-   el justificante **suelto** de un niño que además dijo «sí» **cuenta dos veces**, declarado en §4.5·8.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha
    visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. De plataforma (F2·b): la prueba de las seis frases en ESTA máquina. Van **1 de 6** («lee la doc, vamos a
