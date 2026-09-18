@@ -1,6 +1,6 @@
 # JumpWeb — tracker de fases (VIVO)
 
-> Última actualización: **2026-09-17** · Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
+> Última actualización: **2026-09-18** · Leyenda: ⬜ pendiente · 🟦 en curso · ✅ hecho · ❗ bloqueado.
 > Regla: **la suite en verde es la red** — ninguna fase se cierra con tests rotos. Los marcadores de cabecera
 > MANDAN sobre cualquier otro documento (`docs-check`, check 7; `DECISIONES #10`). Techo 16 KB (check 10,
 > `#621`): aquí van fases y casillas, no narrativa; el porqué está en la decisión que cita cada línea y en el
@@ -21,7 +21,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### PRODUCTO E INSTANCIAS 🟦 — `specs/producto-e-instancias.md` §0 y §4.9 (`#610`→`#621`)
 - [x] F0 · gobierno: spec ✅ owner, `#610`–`#616`, reglas 8 y 9 de `CLAUDE.md` (`d898c76a`)
 - [x] F1 · doc caliente: decisiones por centenas · contador al trailer · §0 en las 46 specs · huella 974/974 · enrutador ≤ 12 KB · carriles y `ESTADO.md` índice · tracker ≤ 16 KB · comprobación 10 (`#617`→`#621`)
-- [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub `627b3a3`, instalado y actualizado en la primera máquina; arnés 43/43; reglas `allow` del owner, `#626`) · falta: 6 de 6 en la primera máquina (van 2), 6 de 6 en la segunda, retirar las skills viejas
+- [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub `627b3a3`, instalado en las dos máquinas; arnés 43/43; reglas `allow` del owner, `#626`) · la sesión de las frases (17/18-09) dio 5 de 6 sin barra (`handoff` no casó «vamos a cerrar aquí») · falta: cuatro arreglos del mapa de frases (`carriles/plataforma.md`, retomar 1), 6 de 6 en cada máquina, retirar las skills viejas
 - [ ] Análisis estático en el gate (`#625`): Larastan nivel 5 con línea base de 459 y trinquete, arnés 8/8 · falta: ESLint sobre el cajón (toca `package.json`, compartido) · deuda: bajar la línea base
 - [x] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) y producción DICE v1.0.0 (`storage/app/version`, 2026-09-17 22:05) · el noveno despliegue (v1.1.0, 18-09) estrenó la escritura y la relectura dentro del script ✓
 - [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0

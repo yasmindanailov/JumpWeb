@@ -304,7 +304,9 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
   «¿está hecho de verdad?» → `dod` · «despliega a producción» → `desplegar`, que debe negarse con el parque
   abierto); hooks canalizados con su JSON y validados con python3 (`pruebas/probar-hooks.sh` del plugin, 38
   casos; `jq` no está en las máquinas) y una sesión real `claude -p --plugin-dir` sobre el repo — hecho en la
-  sesión 1 (`#623`); las seis frases, pendientes.
+  sesión 1 (`#623`). **Las frases, medidas en la transcripción el 17/18-09 con el plugin `627b3a3`: 5 de 6**
+  (`carril`, `release` por «v1.0.0», `dod`, `decision`, `ligero`); `handoff` no casó «vamos a cerrar aquí», y
+  el mapa tiene cuatro defectos más medidos (`carriles/plataforma.md`, retomar 1). El 6 de 6 sigue pendiente.
 - F3: `git describe --tags` en producción (sin `.git` allí, es `cat storage/app/version`); un despliegue sin
   etiqueta abortando — hecho el 2026-09-17 contra un host `.invalid`, código de salida 1 (`#624`).
 - F4: caso que monta el cajón desde un HTML mínimo ajeno; tests de contrato del esquema Bearer; huella de
