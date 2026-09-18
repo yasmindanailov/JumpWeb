@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Services\GuestCountAdjuster;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddonChanges;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Http\Api\ApiErrorCode;
@@ -91,6 +92,12 @@ class GuestFormController extends Controller
             // techo, los DOS suelos, el plazo y el aforo los decide el dominio bajo el lock — igual
             // que con los extras, y por el mismo motivo (`SEC-04`: la autoridad no es la petición).
             'guest_count' => ['sometimes', 'integer', 'min:1', 'max:'.self::MAX_GUESTS],
+            // La ADOPCIÓN de respuestas de la invitación (T4·6). ⚠️ Va FUERA de `guests` y no dentro
+            // de cada fila: una fila es un mapa ABIERTO de respuestas por clave de campo, y esas
+            // claves las inventa cada instalación desde su panel — una marca metida ahí chocaría el
+            // día que alguien llamara a una columna igual (§1.3·13, §7.2·R3).
+            'adopt' => ['sometimes', 'array', 'max:'.self::MAX_GUESTS],
+            'adopt.*' => ['integer', 'min:1'],
         ]);
 
         // El estado ANTES de nuestra propia escritura ({@see addonsExpectedVersion}): `submitGuestForm()`
@@ -124,6 +131,24 @@ class GuestFormController extends Controller
             $this->submittedGuestFormArray($request, 'general', $validated),
             $this->guestFormVia($request),
         );
+
+        // ── La ADOPCIÓN de respuestas de la invitación (T4·6, §4.7; `DECISIONES #578`) ──────────
+        //
+        // ⚠️⚠️ **Va DESPUÉS de guardar las fichas, y el orden es la regla.** Adoptar marca una
+        // respuesta con la clave del nombre que el anfitrión acaba de escribir, así que antes de
+        // escribirlo no hay contra qué emparejarla. Y la reconciliación va la última porque compara
+        // contra las fichas que han quedado guardadas: una respuesta adoptada cuyo nombre ya no está
+        // es una que **el anfitrión quitó** — dejarla adoptada la escondería para siempre y encima
+        // seguiría ocupando su plaza en el suelo de `#444`.
+        //
+        // ⚠️ Solo se reconcilia si vinieron `guests`: sin ellas las fichas no se han tocado, y
+        // recorrerlas igual descartaría respuestas por un `PUT` que solo cambiaba las observaciones.
+        if (isset($validated['adopt']) && is_array($validated['adopt'])) {
+            app(PartyInvitations::class)->adopt($item, array_map(intval(...), $validated['adopt']));
+        }
+        if ($this->submittedGuestFormArray($request, 'guests', $validated) !== null) {
+            app(PartyInvitations::class)->reconcileAdopted($item->fresh(['ticketType']) ?? $item);
+        }
 
         // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un hueco de tarifas o un id que
         // dejó de ofrecerse no puede tumbar el guardado de los nombres y las alergias, que es la
@@ -186,12 +211,14 @@ class GuestFormController extends Controller
             && collect($changes->blocked)->every(fn (array $b): bool => $b['reason'] === 'stale');
     }
 
-    /** Reserva por id, o `null`. Sin `firstOrFail`: el «no existe» lo decide la escalada, no esto. */
+    /**
+     * Reserva por id, o `null`. Sin `firstOrFail`: el «no existe» lo decide la escalada, no esto.
+     *
+     * ▶ El cuerpo subió al trait en la T4·6 (`#578`), donde ya vive la escalada que lo explica y
+     * desde donde lo comparten los tres controladores que entran por esta puerta.
+     */
     private function resolve(int $reservation): ?OrderItem
     {
-        return OrderItem::query()
-            ->with(['ticketType', 'order.user', 'slot'])
-            ->whereKey($reservation)
-            ->first();
+        return $this->resolveGuestFormReservation($reservation);
     }
 }

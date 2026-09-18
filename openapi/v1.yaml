@@ -53,6 +53,17 @@ tags:
       Qué se vende. Superficie PÚBLICA: se consulta sin identidad, igual que el escaparate de la
       web. Describe la oferta, nunca la disponibilidad ni el precio final de una cesta — eso
       depende de la fecha y de la selección, y lo sirven `availability/*` y `orders/quote`.
+  - name: Invitación
+    description: |
+      La invitación digital de una fiesta, **vista desde fuera**. Es la única superficie del contrato
+      cuya credencial es un **token en la URL** —doce caracteres opacos, una fila que se puede
+      anular— y no una sesión ni una firma HMAC, porque su enlace se reparte a un grupo de clase
+      entero por un chat de padres.
+
+      ⚠️⚠️ De ahí sale su propiedad central: **es una hoja en blanco**. Quien tiene el enlace ve la
+      fiesta, pero **no puede averiguar quién va** — ni la lista, ni los contadores, ni si un nombre
+      concreto ya contestó. Lo que el anfitrión ve de su propia invitación vive en `Reservas`, en un
+      objeto distinto a propósito.
   - name: Reservas
     description: |
       Lo que el cliente hace con una reserva YA pagada. Su particularidad es la autorización: el
@@ -864,6 +875,224 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /reservations/{reservation}/invitation:
+    put:
+      tags: [Reservas]
+      operationId: personalizeInvitation
+      summary: Personalizar la invitación digital de una reserva
+      description: |
+        Tema, nombre y edad de quien cumple, la línea «Te invita» y si se enseña el teléfono.
+
+        **Se entra igual que al formulario de invitados**: con el enlace firmado o como titular del
+        pedido, y con la misma escalada 403 → 410 → 404. No hay una puerta nueva.
+
+        ⚠️⚠️ **Escribe SOLO la invitación, nunca la reserva**, y ésa es la razón de que sea un
+        endpoint aparte y no un campo del `PUT` del formulario: `order_items.updated_at` es el
+        testigo con el que ese formulario detecta que el parque movió la reserva, y tocarlo aquí
+        dejaría obsoleta la página del anfitrión **por cambiar el color de una banda**.
+
+        ⚠️ Un `honoree_name` o un `host_line` con un enlace o un correo **se rechaza sin 422**: ese
+        campo se queda como estaba y el resto se guarda. Lo que se publica bajo el dominio del parque
+        no puede mandar a nadie a pagar a otro sitio, y un 422 por ello convertiría un descuido de
+        redacción en un formulario que no guarda nada.
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          description: Id de la reserva (la línea de pack del pedido).
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationPersonalizeRequest'
+      responses:
+        '200':
+          description: La invitación ya personalizada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        '403':
+          description: Ni firma válida ni titularidad (`unauthorized`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: El titular ejerció su derecho de supresión y el canal queda cerrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /reservations/{reservation}/invitation/replies/{reply}:
+    delete:
+      tags: [Reservas]
+      operationId: dismissInvitationReply
+      summary: Quitar una respuesta de la lista («no lo apuntes»)
+      description: |
+        El anfitrión retira una respuesta que no quiere apuntar.
+
+        ❗❗ **Sin esto el anfitrión se queda ATRAPADO.** Un «sí» pendiente es una plaza con dueño y
+        sube el suelo por debajo del cual no se puede bajar el número de invitados: una respuesta que
+        el anfitrión no quiere le bloquearía esa bajada **sin darle forma de retirarla**.
+
+        ⚠️ **No borra nada.** La respuesta sigue en su tabla hasta que la poda se la lleve a los 14
+        días de la visita; lo que cambia es que deja de contar, de proponerse y de ocupar plaza.
+      parameters:
+        - name: reservation
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+        - name: reply
+          in: path
+          required: true
+          description: Id de la respuesta, tal y como viene en `pending_replies[].id`.
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: |
+            Retirada. **También cuando ya lo estaba**: el gesto es idempotente y dos pestañas del
+            anfitrión no tienen por qué pelearse por quién llegó antes.
+        '403':
+          description: Ni firma válida ni titularidad (`unauthorized`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: El titular ejerció su derecho de supresión y el canal queda cerrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /invitations/{token}:
+    get:
+      tags: [Invitación]
+      operationId: getInvitationCard
+      summary: La invitación que abre un padre
+      description: |
+        La tarjeta pública de una fiesta: quién cumple, cuándo, dónde y qué menú hay.
+
+        ### Es una HOJA EN BLANCO, y de ahí sale todo lo demás
+
+        No lleva **ni una respuesta**, ni cuántos han contestado, **ni si un nombre concreto ya
+        contestó**. Ése es exactamente el motivo por el que su enlace se puede repartir a un grupo de
+        clase entero por un chat de padres: quien lo tiene no puede averiguar quién va a la fiesta.
+
+        ### Un solo «no», y el mismo
+
+        Token inexistente, invitación anulada, pedido cancelado o titular anonimizado responden **el
+        mismo 404**. Distinguirlos sería un oráculo: un 410 para «cancelada» frente a un 404 para
+        «no existe» le diría a un desconocido que ese token existió.
+
+        ⚠️ **No hace falta sesión**, así que la respuesta lleva su propio `Cache-Control: no-store`:
+        el `no-store` de la superficie autenticada no la cubriría, y lo que sirve es el nombre y la
+        edad de un menor.
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: Los doce caracteres del enlace, opacos — no llevan el nombre ni la edad de nadie.
+          schema:
+            type: string
+            minLength: 12
+            maxLength: 12
+      responses:
+        '200':
+          description: La tarjeta.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationCard'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+    post:
+      tags: [Invitación]
+      operationId: replyToInvitation
+      summary: Contestar a una invitación
+      description: |
+        Lo que manda un padre: el nombre del niño y si viene. Todo lo demás es opcional.
+
+        ### Lo que se puede saber por la respuesta está ACOTADO
+
+        Un nombre **repetido** devuelve `accepted: true`, exactamente igual que la primera vez, y
+        **no existe un motivo «repetido»**. Decir «ya nos habéis contestado por Hugo» le confirmaría
+        a cualquiera con el enlace quién va a esa fiesta, y bastaba con ir probando nombres. La hoja
+        es en blanco también en sus errores.
+
+        ### Los «no» que sí se dicen
+
+        `full` (la lista está completa; no hay lista de espera), `closed` (la reserva ya no admite
+        cambios), `cutoff` (pasó el plazo), `no_name` y `too_many`. Ninguno de ellos revela **quién**
+        hay en la lista.
+
+        ⚠️ Todo se vuelve a comprobar **al contestar**, no al pintar la tarjeta: entre que el padre
+        abre el enlace y pulsa pueden pasar la fiesta, el plazo o los demás «sí».
+      security: []
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 12
+            maxLength: 12
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationReplyRequest'
+      responses:
+        '200':
+          description: |
+            El desenlace. ⚠️ **200 también cuando `accepted` es `false`**: que la lista esté completa
+            no es un error del padre, y un 4xx haría que un cliente lo tratara como tal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationReplyResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationFailed'
         '429':
@@ -4419,6 +4648,7 @@ components:
         - guest_count_max
         - guest_count_locked_reason
         - guest_count_deadline
+        - invitation
       additionalProperties: false
       properties:
         reservation_id:
@@ -4541,6 +4771,62 @@ components:
           description: |
             El instante EXACTO del corte, en la zona del parque. Se mide contra la hora de PARED de
             la franja, no contra el fin de la visita: son preguntas distintas.
+        invitation:
+          type: object
+          nullable: true
+          description: |
+            La invitación digital de esta reserva, si su producto la ofrece. `null` cuando no la
+            ofrece — que es el caso de casi todos los productos.
+
+            ⚠️ **Nace al pedir este formulario**, no antes: compartir por Web Share necesita el
+            enlace **en el mismo gesto** del usuario y un `fetch` previo pierde la activación en
+            Safari.
+
+            ⚠️⚠️ **Va escrito INLINE y es una COPIA VIGILADA de `Invitation`, no un `$ref`.** En
+            OpenAPI 3.0 un `$ref` no admite `nullable` a su lado, y la forma canónica —`allOf: [$ref]`
+            con `nullable: true`— **no funciona con el validador**: medido aquí el 2026-09-18, con
+            ella una reserva CON invitación falla con «The data (object) must match the type: null».
+            Es el mismo hallazgo de `DECISIONES #27`, que `AccountContext.next_reservation` y
+            `extras_invite` ya pagaron, y se resuelve igual. Que las dos definiciones no diverjan lo
+            vigila `ApiContractTest`.
+          required: [url, token, theme, honoree_name, honoree_age, host_line, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
+          additionalProperties: false
+          properties:
+            url:
+              type: string
+              format: uri
+              nullable: true
+            token:
+              type: string
+              minLength: 12
+              maxLength: 12
+            theme:
+              type: string
+            honoree_name:
+              type: string
+              maxLength: 60
+            honoree_age:
+              type: integer
+              nullable: true
+              minimum: 0
+              maximum: 255
+            host_line:
+              type: string
+              maxLength: 80
+            show_host_phone:
+              type: boolean
+            shareable:
+              type: boolean
+            replies_yes:
+              type: integer
+            replies_no:
+              type: integer
+            replies_pending:
+              type: integer
+            pending_replies:
+              type: array
+              items:
+                $ref: '#/components/schemas/InvitationPendingReply'
 
     GuestFormField:
       type: object
@@ -4625,6 +4911,25 @@ components:
             ▶ **Un cambio rechazado NO tumba el guardado del resto**: las fichas y los extras se
             guardan igual. La respuesta trae el estado nuevo, así que `guest_count` de la reserva
             dice si se aplicó.
+        adopt:
+          type: array
+          maxItems: 200
+          description: |
+            Ids de las respuestas de la invitación que el anfitrión ADOPTA con este guardado: dejan
+            de proponerse y pasan a ser fichas suyas.
+
+            ⚠️⚠️ **Va FUERA de `guests`, y eso no es estética.** Cada fila de `guests` es un mapa
+            ABIERTO de respuestas por clave de campo, y esas claves las inventa cada instalación
+            desde su panel: una marca metida dentro de la fila chocaría el día que alguien llamara a
+            una columna igual. Fuera no puede chocar con nada.
+
+            ⚠️ Ausente = no se adopta ninguna, con la misma regla que las otras claves. Un id que ya
+            no esté pendiente, o que sea de otra reserva, **se ignora en silencio**: es el estado
+            normal cuando dos pestañas guardan, no un error que deba tumbar el envío.
+          items:
+            type: integer
+            format: int64
+            minimum: 1
 
     # ─── La INVITACIÓN DIGITAL (`specs/celebracion-e-invitacion.md` §4.10, `DECISIONES #574`) ───
     # Los nombres y las formas se fijan AQUÍ antes de escribir una sola línea de código de API, que
@@ -4639,13 +4944,20 @@ components:
         ⚠️ No la confundas con `InvitationCard`, que es lo que ve un desconocido: **aquélla no lleva
         ni una respuesta**, y ésta sí. Son dos objetos distintos a propósito y no dos vistas del
         mismo, porque el día que alguien añada un campo aquí no puede filtrarse allí por descuido.
-      required: [url, token, theme, honoree_name, honoree_age, host_line, show_host_phone, shareable, replies_yes, replies_no, replies_pending]
+      required: [url, token, theme, honoree_name, honoree_age, host_line, show_host_phone, shareable, replies_yes, replies_no, replies_pending, pending_replies]
       additionalProperties: false
       properties:
         url:
           type: string
           format: uri
-          description: El enlace que el anfitrión reparte. Cambia si el operador lo anula.
+          nullable: true
+          description: |
+            El enlace que el anfitrión reparte. Cambia si el operador lo anula.
+
+            ⚠️ **`null` mientras la página pública no exista** (llega en la T5). No se clava el path
+            a mano para «ir teniendo algo»: el enlace se compone preguntando por el NOMBRE de esa
+            ruta, así que aparece **solo** en cuanto nazca. Un cliente que lo reciba `null` no debe
+            ofrecer «compartir»; el `token` sí va desde el primer día.
         token:
           type: string
           minLength: 12
@@ -4679,6 +4991,87 @@ components:
         replies_pending:
           type: integer
           description: Cuántas respuestas le quedan al anfitrión por repasar.
+        pending_replies:
+          type: array
+          description: |
+            Las respuestas por repasar, cada «sí» con la ficha sobre la que se propone.
+
+            ⚠️ De un niño repetido sale **solo su respuesta más reciente**: dos respuestas con el
+            mismo nombre son el mismo niño, y proponer las dos le pediría al anfitrión que eligiera
+            entre una cosa y ella misma.
+          items:
+            $ref: '#/components/schemas/InvitationPendingReply'
+    InvitationPendingReply:
+      type: object
+      description: |
+        Una respuesta que el anfitrión todavía no ha repasado, y **dónde iría** si la adopta.
+      required: [id, child_name, attending, companion, guest_data, slot_index, repeated]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Lo que se manda en `adopt[]` al guardar el formulario.
+        child_name:
+          type: string
+        attending:
+          type: boolean
+        companion:
+          type: string
+          enum: [with_adult, alone, unknown, null]
+          nullable: true
+        guest_data:
+          type: object
+          additionalProperties:
+            type: string
+          description: Lo que el padre dejó, ya saneado contra el esquema del pack.
+        slot_index:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: |
+            La POSICIÓN de la ficha propuesta, empezando en 0. La calcula el servidor para que la web
+            y la app no repitan la regla de emparejado.
+
+            ⚠️⚠️ **`null` no es un error**: un «no» no se pinta sobre ninguna ficha, y un «sí» lo
+            lleva a `null` cuando **ya no cabe** — entre que el anfitrión pintó y guardó entraron más
+            «sí». Eso es lo que se enseña como «hay respuestas que ya no caben».
+        repeated:
+          type: boolean
+          description: |
+            Hay más de una respuesta de este niño. Lo ve **el anfitrión**, nunca quien contesta: al
+            padre se le da el mismo desenlace que la primera vez.
+    InvitationPersonalizeRequest:
+      type: object
+      description: |
+        Cómo el anfitrión personaliza su invitación. **Se envía entera**, como el resto del
+        formulario: es un `PUT`, no un parcheo campo a campo.
+
+        ⚠️ `honoree_name` y `host_line` se publican bajo el dominio del parque, así que **se rechaza**
+        —no se limpia— un valor con enlaces o direcciones de correo: una invitación no puede decir
+        «paga el regalo en este enlace». El valor anterior se queda como estaba.
+      required: [theme, honoree_name, honoree_age, host_line, show_host_phone]
+      additionalProperties: false
+      properties:
+        theme:
+          type: string
+          description: |
+            Lista CERRADA. Un valor que no esté en ella cae al de por defecto en vez de dar 422: un
+            tema desconocido no rompe nada, y el cliente puede ir por delante de la instalación.
+        honoree_name:
+          type: string
+          maxLength: 60
+        honoree_age:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 255
+        host_line:
+          type: string
+          maxLength: 80
+        show_host_phone:
+          type: boolean
+          description: El teléfono sale del de la CUENTA; esto solo dice si se enseña.
     InvitationCard:
       type: object
       description: |

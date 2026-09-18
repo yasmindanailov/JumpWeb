@@ -100,7 +100,8 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] Desplegado el arreglo del número de invitados del post-form (defecto en producción desde `#444`) con las cuatro líneas del `client.css`: octavo despliegue, 2026-09-16 (`ENTORNOS.md` §6).
 - [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
 - [ ] Desplegar la T3 con etiqueta: arregla la barra de firmar del justificante, rota en producción desde el 16-09.
-- [ ] T4 · la invitación digital, partida en seis unidades verdes (spec §10.4): **T4·1 cimientos** (`#573`), **T4·2 reglas del dominio** (`#574`, concurrencia verificada sobre InnoDB), **T4·3 catálogo y embudo** (`#575`) **T4·4 plazas con dueño, firmador y rotación** (`#576`) y **T4·5 el RGPD de la invitación** (`#577`, `RGPD-01`/`RGPD-06` al día) hechas; queda **T4·6**, la API contra los esquemas ya fijados.
+- [x] T4 · la invitación digital, **cerrada** en seis unidades verdes (spec §10.4, `#573`→`#578`): cimientos · reglas del dominio (concurrencia verificada sobre InnoDB) · catálogo y embudo · plazas con dueño, firmador y rotación · RGPD (`RGPD-01`/`RGPD-06` al día) · la API. ⚠️ El código está en producción desde v1.1.0 **con los dos interruptores APAGADOS**: encenderlos es DATO del owner.
+- [ ] T5 · la página pública de la invitación (§4.6): con ella se rellenan solos `Invitation.url` y el `receiptUrl()` aplazado; pide el aviso de privacidad de §7.2·R7, el `.ics` con `TZID`, medir Turnstile y que el owner elija los tres temas.
 - [ ] T5 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 

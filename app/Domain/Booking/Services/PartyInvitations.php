@@ -13,6 +13,7 @@ use App\Domain\Platform\Services\PublicFreeText;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 /**
  * **La INVITACIÓN DIGITAL de una reserva y lo que contestan los padres**
@@ -42,6 +43,12 @@ final class PartyInvitations
      * una familia contesta, se equivoca y vuelve a contestar.
      */
     public const REPLY_CAP_PER_GUEST = 3;
+
+    /**
+     * El NOMBRE de la ruta de la página pública, que nace en la T5 (§4.6). Se pregunta por su nombre
+     * y nunca se compone el path a mano: es lo que hace que {@see shareUrlFor()} se cierre solo.
+     */
+    public const PUBLIC_ROUTE = 'invitation.show';
 
     public function __construct(private GuestCountPolicy $policy) {}
 
@@ -278,6 +285,403 @@ final class PartyInvitations
         }
 
         return false;
+    }
+
+    // ══ Lo que ve el ANFITRIÓN (T4·6, §4.10; `DECISIONES #578`) ════════════════════════════════
+    //
+    // Hasta aquí este servicio solo sabía de lo que hace un PADRE. Lo de abajo es la otra mitad: el
+    // resumen, la personalización y la ADOPCIÓN — el gesto por el que una respuesta deja de ser una
+    // propuesta y se convierte en una ficha del formulario, que es la puerta de siempre.
+
+    /**
+     * La invitación que abre un desconocido con su token, **o `null`**.
+     *
+     * ⚠️⚠️ **`null` en TODOS los casos, y ése es el diseño** (§4.5·12, §7.2·R10): token inexistente,
+     * enlace anulado, pedido cancelado, producto con la invitación apagada o titular anonimizado
+     * devuelven **lo mismo**. Distinguirlos sería un oráculo — un «410 cancelada» frente a un «404 no
+     * existe» le diría a cualquiera que ese token existió, y el enlace circula por un chat de padres.
+     *
+     * ⚠️ El plazo **no** entra aquí: pasado, la tarjeta se sigue viendo y lo que se cierra son las
+     * respuestas (§7.2·R8). Eso lo dice `replies_open`, no un 404.
+     */
+    public function resolvePublic(string $token): ?PartyInvitation
+    {
+        if (mb_strlen($token) !== PartyInvitation::TOKEN_LENGTH) {
+            return null;
+        }
+
+        /** @var PartyInvitation|null $invitation */
+        $invitation = PartyInvitation::query()
+            ->with(['reservation.ticketType', 'reservation.slot', 'reservation.order.user'])
+            ->where('token', $token)
+            ->first();
+
+        $reservation = $invitation?->reservation;
+
+        if ($invitation === null || $reservation === null) {
+            return null;
+        }
+
+        // La supresión del titular cierra el canal, igual que `RGPD-03` hace con el post-form: lo que
+        // la tarjeta publica es el nombre y la edad de un menor.
+        if ($reservation->order?->user?->isAnonymized() ?? false) {
+            return null;
+        }
+
+        // El producto pudo apagar la invitación después de repartirse el enlace. Y `isOpenFor` cubre
+        // el pedido cancelado y la fiesta ya celebrada — un enlace no sobrevive a su fiesta.
+        if (! (bool) $reservation->ticketType->guest_invitation || ! $this->policy->isOpenFor($reservation)) {
+            return null;
+        }
+
+        return $invitation;
+    }
+
+    /** ¿Admite respuestas ahora mismo? La tarjeta se ve igual; esto solo gobierna los botones. */
+    public function repliesOpenFor(OrderItem $reservation): bool
+    {
+        return $this->policy->isOpenFor($reservation) && $this->policy->isWithinWindow($reservation);
+    }
+
+    /**
+     * El enlace que el anfitrión reparte.
+     *
+     * ⚠️⚠️ **`null` mientras la PÁGINA pública no exista, y eso se cierra solo.** Esa página es la T5
+     * (§4.6) y no puede nacer a medias: recoge alergias de un menor que va a leer un tercero, así que
+     * `§7.2·R7` le exige su aviso de privacidad — publicarla sin él sería un defecto de RGPD, y
+     * publicar una ruta que no lleva a ninguna página sería peor.
+     *
+     * ▶ Lo que **no** se hace aquí es clavar el path a mano «para que ya tenga algo»: el día que la T5
+     * declarara su ruta en otro sitio, el anfitrión estaría repartiendo un enlace muerto y nadie se
+     * enteraría. Preguntando por el NOMBRE de la ruta, el campo se rellena **solo** en cuanto exista,
+     * sin que nadie tenga que acordarse de volver aquí.
+     */
+    public function shareUrlFor(PartyInvitation $invitation): ?string
+    {
+        return Route::has(self::PUBLIC_ROUTE)
+            ? route(self::PUBLIC_ROUTE, ['token' => (string) $invitation->token])
+            : null;
+    }
+
+    /**
+     * «N vienen · M no pueden · K por repasar» (§4.7).
+     *
+     * ⚠️ «Por repasar» son las pendientes de las DOS clases: un «no» también hay que verlo —lleva a
+     * bajar el número de invitados— y contarlo solo entre los «sí» dejaría avisos invisibles.
+     *
+     * @return array{yes: int, no: int, pending: int}
+     */
+    public function summaryFor(OrderItem $reservation): array
+    {
+        $replies = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereNull('dismissed_at')
+            ->get(['id', 'attending', 'adopted_at', 'dismissed_at', 'child_key']);
+
+        return [
+            // Distintos por `child_key`: dos respuestas del mismo niño son un niño (regla 5).
+            'yes' => $replies->filter(fn (InvitationReply $r): bool => (bool) $r->attending)
+                ->pluck('child_key')->unique()->count(),
+            'no' => $replies->reject(fn (InvitationReply $r): bool => (bool) $r->attending)
+                ->pluck('child_key')->unique()->count(),
+            'pending' => $replies->filter(fn (InvitationReply $r): bool => $r->isPending())->count(),
+        ];
+    }
+
+    /**
+     * Cómo el anfitrión personaliza su invitación (§4.7).
+     *
+     * ⚠️⚠️ **Escribe SOLO `party_invitations`, y eso es la propiedad, no un detalle de implementación**:
+     * `order_items.updated_at` es el testigo del post-form (§1.3·2) y tocarlo aquí dejaría obsoleta la
+     * página que el anfitrión tiene abierta **por cambiar el color de una banda**.
+     *
+     * ⚠️ `honoree_name` y `host_line` son TEXTO LIBRE que se publica bajo el dominio del parque
+     * (§7.2·R9): pasan por `PublicFreeText`, que **rechaza** enlaces y correos en vez de limpiarlos —
+     * una invitación no puede decir «paga el regalo en este enlace». Un valor con enlace se queda como
+     * estaba: no se escribe a medias.
+     *
+     * @param  array<string, mixed>  $data  solo las claves presentes se tocan (es un PATCH)
+     */
+    public function personalize(PartyInvitation $invitation, array $data): PartyInvitation
+    {
+        $changes = [];
+
+        if (array_key_exists('theme', $data)) {
+            $theme = is_scalar($data['theme']) ? (string) $data['theme'] : '';
+            // Lista CERRADA (§3.4). Hoy tiene un solo tema: los tres los elige el owner viéndolos
+            // renderizados en la T5, y hasta entonces cualquier otro valor cae al de por defecto.
+            $changes['theme'] = in_array($theme, PartyInvitation::THEMES, true)
+                ? $theme
+                : PartyInvitation::THEME_DEFAULT;
+        }
+
+        foreach ([
+            'honoree_name' => PartyInvitation::HONOREE_NAME_MAX,
+            'host_line' => PartyInvitation::HOST_LINE_MAX,
+        ] as $field => $max) {
+            if (! array_key_exists($field, $data)) {
+                continue;
+            }
+            $value = is_scalar($data[$field]) ? (string) $data[$field] : '';
+            $clean = PublicFreeText::clean($value, $max);
+            // `null` = llevaba un enlace o un correo: se RECHAZA, no se limpia a medias.
+            if ($clean !== null) {
+                $changes[$field] = $clean;
+            }
+        }
+
+        if (array_key_exists('honoree_age', $data)) {
+            $age = $data['honoree_age'];
+            $changes['honoree_age'] = is_numeric($age) ? max(0, min(255, (int) $age)) : null;
+        }
+
+        if (array_key_exists('show_host_phone', $data)) {
+            $changes['show_host_phone'] = (bool) $data['show_host_phone'];
+        }
+
+        if ($changes !== []) {
+            $invitation->fill($changes)->save();
+        }
+
+        return $invitation;
+    }
+
+    /**
+     * Las respuestas **por repasar**, cada «sí» con la ficha sobre la que se propone (regla 4).
+     *
+     * ⚠️⚠️ **La propuesta se calcula AQUÍ y no en cada cliente**, y es la razón de que este método
+     * exista: la web y la app son clientes iguales (`API-first`), y una regla de emparejado repetida en
+     * dos sitios diverge en el primer arreglo. Lo que sale es la POSICIÓN de la ficha; el prerrelleno
+     * campo a campo —solo los vacíos— lo pinta quien la dibuja.
+     *
+     * El reparto es **conjunto y determinista**: dos respuestas no pueden proponerse sobre la misma
+     * ficha, así que se recorren por orden de llegada y cada una consume la suya. Las fichas que ya
+     * adoptó otra respuesta salen ocupadas de entrada.
+     *
+     * ⚠️ `slot_index` **es `null` cuando no cabe**, y eso no es un error: es la carrera de §7.1·3
+     * dicha en voz alta —entre que el anfitrión pintó y guardó entraron más «sí»— y lo que la T6 pinta
+     * como «hay N respuestas que ya no caben». Un «no» tampoco lleva ficha: no se pinta sobre ninguna.
+     *
+     * @return list<array{id: int, child_name: string, attending: bool, companion: string|null, guest_data: array<string, string>, slot_index: int|null, repeated: bool}>
+     */
+    public function proposalsFor(OrderItem $reservation): array
+    {
+        $slots = $this->slotsOf($reservation);
+
+        $pending = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->pending()
+            ->orderBy('id')
+            ->get();
+
+        // Regla 5: con el mismo `child_key` manda **la más reciente**, y las demás no se proponen
+        // aparte — son el mismo niño. `keyBy` sobre una lista ordenada por id se queda la última.
+        $latestByChild = $pending
+            ->filter(fn (InvitationReply $r): bool => (bool) $r->attending)
+            ->keyBy('child_key');
+
+        $proposals = [];
+
+        foreach ($pending as $reply) {
+            $childKey = (string) $reply->child_key;
+            $isYes = (bool) $reply->attending;
+
+            // De un niño repetido solo se propone su respuesta más reciente.
+            if ($isYes && (int) ($latestByChild[$childKey]->id ?? 0) !== (int) $reply->id) {
+                continue;
+            }
+
+            $proposals[] = [
+                'id' => (int) $reply->getKey(),
+                'child_name' => (string) $reply->child_name,
+                'attending' => $isYes,
+                'companion' => $reply->companion === null ? null : (string) $reply->companion,
+                'guest_data' => array_map(strval(...), (array) ($reply->data ?? [])),
+                'slot_index' => $isYes ? $this->takeSlotFor($slots, $childKey) : null,
+                'repeated' => $isYes && $pending
+                    ->filter(fn (InvitationReply $r): bool => (bool) $r->attending && $r->child_key === $childKey)
+                    ->count() > 1,
+            ];
+        }
+
+        return $proposals;
+    }
+
+    /**
+     * El anfitrión ADOPTA respuestas: dejan de proponerse y pasan a ser fichas suyas.
+     *
+     * ⚠️⚠️ **Se re-comprueba todo aquí dentro** (`SEC-04` aplicado al tiempo, como `reply()`): que la
+     * respuesta siga PENDIENTE y que sea **de esta reserva**. Un id de otra fiesta no adopta nada, y
+     * uno que ya se adoptó o se descartó tampoco — el `where` es la guarda, no una optimización.
+     *
+     * ▶ Las que llegaron DESPUÉS de pintar no se adoptan y siguen pendientes (§4.7): salen solas en el
+     * siguiente render, porque el cliente manda ids concretos y no «todas».
+     *
+     * @param  list<int>  $replyIds
+     * @return int cuántas se adoptaron de verdad
+     */
+    public function adopt(OrderItem $reservation, array $replyIds): int
+    {
+        $ids = array_values(array_unique(array_filter(array_map(intval(...), $replyIds), fn (int $id): bool => $id > 0)));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $replies = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereIn('id', $ids)
+            ->pending()
+            // Un «no» no se pinta sobre ninguna ficha, así que no hay nada que adoptar: se descarta.
+            ->where('attending', true)
+            ->get();
+
+        foreach ($replies as $reply) {
+            $reply->forceFill([
+                'adopted_at' => now(),
+                'adopted_name_key' => $reply->child_key,
+            ])->save();
+        }
+
+        return $replies->count();
+    }
+
+    /**
+     * «No lo apuntes» (§7.2·R11): el anfitrión quita una respuesta de su lista.
+     *
+     * ❗❗ **Sin esto, V4 deja al anfitrión ATRAPADO.** Desde `#576` un «sí» pendiente es una plaza con
+     * dueño y sube el suelo de `#444`, así que una respuesta que el anfitrión no quiere le impediría
+     * bajar el número de invitados **y no tendría forma de retirarla**. Es el par de la regla que la
+     * T4·4 añadió, no una comodidad.
+     *
+     * ⚠️ Descartar **no borra**: la respuesta sigue en su tabla hasta que la poda de los 14 días se la
+     * lleve (V3). Lo que cambia es que deja de contar, de proponerse y de ocupar plaza.
+     */
+    public function dismiss(OrderItem $reservation, int $replyId): bool
+    {
+        $reply = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereKey($replyId)
+            ->whereNull('dismissed_at')
+            ->first();
+
+        if ($reply === null) {
+            return false;
+        }
+
+        $reply->forceFill(['dismissed_at' => now()])->save();
+
+        return true;
+    }
+
+    /**
+     * Tras guardar el formulario: una respuesta ADOPTADA cuya ficha ya no existe **se descarta**,
+     * porque el anfitrión la quitó (§4.7).
+     *
+     * ⚠️ Se compara por `adopted_name_key` —la clave con la que se adoptó— contra las claves que hay
+     * escritas AHORA. Si el anfitrión borró ese nombre del formulario, su respuesta vuelve a la nada:
+     * dejarla adoptada la escondería para siempre (ni se propone ni se ve) **y seguiría ocupando su
+     * plaza en el suelo de `#444`**, que es la peor de las dos mitades.
+     *
+     * @return int cuántas se descartaron
+     */
+    public function reconcileAdopted(OrderItem $reservation): int
+    {
+        $namedKeys = $this->namedGuestKeys($reservation);
+
+        $orphans = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereNotNull('adopted_at')
+            ->whereNull('dismissed_at')
+            ->get()
+            ->reject(fn (InvitationReply $r): bool => in_array((string) $r->adopted_name_key, $namedKeys, true));
+
+        foreach ($orphans as $orphan) {
+            $orphan->forceFill(['dismissed_at' => now()])->save();
+        }
+
+        return $orphans->count();
+    }
+
+    /**
+     * Las fichas de la reserva por POSICIÓN, con su clave y si ya las tiene alguien.
+     *
+     * @return list<array{key: string|null, taken: bool}>
+     */
+    private function slotsOf(OrderItem $reservation): array
+    {
+        $nameKey = $reservation->ticketType?->guestNameFieldKey();
+        $quantity = max(0, (int) $reservation->quantity);
+        $rows = $nameKey === null ? [] : array_slice($reservation->guestData(), 0, $quantity);
+
+        $slots = [];
+        for ($i = 0; $i < $quantity; $i++) {
+            $name = $nameKey === null ? '' : trim((string) ($rows[$i][$nameKey] ?? ''));
+            $slots[] = ['key' => $name === '' ? null : PersonNameKey::for($name), 'taken' => false];
+        }
+
+        // Regla 4: una ficha que ya adoptó otra respuesta NO es candidata de nadie más.
+        $adopted = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->whereNotNull('adopted_at')
+            ->whereNull('dismissed_at')
+            ->pluck('adopted_name_key');
+
+        foreach ($adopted as $key) {
+            foreach ($slots as $i => $slot) {
+                if (! $slot['taken'] && $slot['key'] !== null && $slot['key'] === (string) $key) {
+                    // Se reconstruye el elemento entero en vez de tocarle una clave: mutar
+                    // `$slots[$i]['taken']` le hace perder la forma al análisis estático.
+                    $slots[$i] = ['key' => $slot['key'], 'taken' => true];
+                    break;
+                }
+            }
+        }
+
+        return $slots;
+    }
+
+    /**
+     * La ficha que le toca a esta respuesta, marcándola ocupada (regla 4).
+     *
+     * **Exactamente una** candidata por nombre → ésa. **Cero o varias** → la primera ficha VACÍA. Y si
+     * no queda ninguna, `null`: no cabe.
+     *
+     * ⚠️ «Varias candidatas» no es un caso raro de laboratorio: el anfitrión puede haber escrito dos
+     * hermanos como «Ruiz» y «Ruiz», y entonces **adivinar cuál es sería peor que no adivinar**.
+     *
+     * @param  list<array{key: string|null, taken: bool}>  $slots
+     */
+    private function takeSlotFor(array &$slots, string $childKey): ?int
+    {
+        $firstWord = PersonNameKey::for(explode(' ', $childKey)[0]);
+
+        $candidates = [];
+        foreach ($slots as $i => $slot) {
+            if ($slot['taken'] || $slot['key'] === null) {
+                continue;
+            }
+            if ($slot['key'] === $childKey || ($firstWord !== '' && $slot['key'] === $firstWord)) {
+                $candidates[] = $i;
+            }
+        }
+
+        if (count($candidates) === 1) {
+            $only = $candidates[0];
+            $slots[$only] = ['key' => $slots[$only]['key'], 'taken' => true];
+
+            return $only;
+        }
+
+        foreach ($slots as $i => $slot) {
+            if (! $slot['taken'] && $slot['key'] === null) {
+                $slots[$i] = ['key' => null, 'taken' => true];
+
+                return $i;
+            }
+        }
+
+        return null;
     }
 
     /**

@@ -151,7 +151,13 @@ class ApiContractTest extends TestCase
         // defecto convertiría una petición que **no habla de invitados** en un cambio de aforo y de
         // dinero que nadie pidió. Ausente = no se toca; lo decide `submittedGuestCount()` con
         // `array_key_exists`, igual que sus tres hermanas.
-        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count'],
+        // ▶ `adopt` (T4·6, `#578`) entra con la MISMA regla, y aquí la ausencia es especialmente
+        // obvia: un `PUT` que solo corrige una alergia no adopta ninguna respuesta de la invitación,
+        // y exigir la clave obligaría a todo cliente a mandar `[]` para decir «nada». La lista tiene
+        // además una propiedad que conviene no perder de vista: va **fuera de `guests`** porque cada
+        // fila es un mapa ABIERTO cuyas claves inventa cada instalación, y una marca metida dentro
+        // chocaría el día que alguien llamara a una columna igual (§1.3·13, §7.2·R3).
+        'GuestFormRequest' => ['guests', 'general', 'addons', 'expected_version', 'guest_count', 'adopt'],
     ];
 
     /** @var array<string, mixed>|null */
@@ -389,6 +395,48 @@ class ApiContractTest extends TestCase
             $component['required'],
             $inline['required'] ?? null,
             '`AccountContext.extras_invite` ha divergido de `PendingGuestForm` en sus campos obligatorios'
+        );
+    }
+
+    /**
+     * ⚠️ **Y la INVITACIÓN DIGITAL del post-form, por lo MISMO** (T4·6, `DECISIONES #578`).
+     *
+     * `GuestForm.invitation` es anulable —casi ningún producto la ofrece— y tiene exactamente la
+     * forma del componente `Invitation`. Tercera vez que se paga el mismo peaje del validador, y la
+     * tercera con la misma salida: objeto escrito entero, con su `nullable`, y esta guarda de precio.
+     *
+     * ▶ La copia inline **no lleva las descripciones** del componente: lo que tiene que coincidir es
+     * la FORMA, y obligar a copiar tres párrafos de prosa a mano garantizaría que divergieran. Por eso
+     * se comparan los NOMBRES de las propiedades y los `required`, no los valores enteros.
+     */
+    public function test_the_inlined_invitation_says_the_same_as_the_component(): void
+    {
+        $schemas = $this->contract()['components']['schemas'] ?? [];
+        $component = $schemas['Invitation'] ?? null;
+
+        $this->assertIsArray($component, 'falta el componente `Invitation`');
+
+        $inline = $schemas['GuestForm']['properties']['invitation'] ?? null;
+
+        $this->assertIsArray($inline, '`GuestForm` ya no declara la invitación inline');
+        $this->assertTrue(
+            $inline['nullable'] ?? false,
+            'la invitación tiene que ser anulable: casi ningún producto la ofrece'
+        );
+        $this->assertFalse(
+            $inline['additionalProperties'] ?? true,
+            'la copia perdió `additionalProperties: false` y ya no caza un campo colado'
+        );
+        $this->assertSame(
+            array_keys($component['properties']),
+            array_keys($inline['properties'] ?? []),
+            '`GuestForm.invitation` ha divergido de `Invitation`: sus propiedades ya no coinciden, '.
+            'así que el post-form y el endpoint de personalizar han dejado de prometer lo mismo'
+        );
+        $this->assertSame(
+            $component['required'],
+            $inline['required'] ?? null,
+            '`GuestForm.invitation` ha divergido de `Invitation` en sus campos obligatorios'
         );
     }
 

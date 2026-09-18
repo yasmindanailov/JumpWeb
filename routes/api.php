@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\V1\CatalogZonesController;
 use App\Http\Controllers\Api\V1\ConfigController;
 use App\Http\Controllers\Api\V1\GoogleSignupController;
 use App\Http\Controllers\Api\V1\GuestFormController;
+use App\Http\Controllers\Api\V1\InvitationHostController;
+use App\Http\Controllers\Api\V1\InvitationsController;
 use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\MeAccountContextController;
 use App\Http\Controllers\Api\V1\MeCardController;
@@ -210,6 +212,46 @@ Route::name('api.v1.')->group(function (): void {
         // compran extras (`SEC-06`, D12). Ver el comentario de `routes/web.php`.
         ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
         ->name('reservations.guest-form.update');
+
+    // La INVITACIÓN DIGITAL del ANFITRIÓN (T4·6, `specs/celebracion-e-invitacion.md` §4.10;
+    // `DECISIONES #578`). Misma puerta y mismo trait que el formulario de arriba: es su reserva, y
+    // abrir aquí una vía propia habría duplicado los sitios donde equivocarse con quién puede tocar
+    // los datos de menores de una fiesta.
+    //
+    // ⚠️ Endpoint APARTE del `PUT` del formulario a propósito: personalizar escribe **solo** la
+    // invitación, y `order_items.updated_at` es el testigo con el que ese formulario detecta que el
+    // parque movió la reserva. Meterlo dentro dejaría obsoleta la página abierta del anfitrión por
+    // cambiar el color de una banda.
+    Route::put('/reservations/{reservation}/invitation', [InvitationHostController::class, 'update'])
+        ->whereNumber('reservation')
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->name('reservations.invitation.update');
+    Route::delete('/reservations/{reservation}/invitation/replies/{reply}', [InvitationHostController::class, 'destroyReply'])
+        ->whereNumber('reservation')
+        ->whereNumber('reply')
+        ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+        ->name('reservations.invitation.replies.destroy');
+
+    // ── La INVITACIÓN vista desde FUERA (T4·6, §4.6 y §4.10) ──────────────────────────────────
+    //
+    // La única superficie del contrato cuya credencial es **un token en la URL** —doce caracteres
+    // opacos, una fila que el operador puede anular— y no una sesión ni una firma HMAC: el enlace se
+    // reparte a un grupo de clase entero por un chat de padres.
+    //
+    // ⚠️ `no-store` EXPLÍCITO por el mismo motivo que el formulario: se entra sin sesión y lo que se
+    // sirve es el nombre y la edad de un menor (`RGPD-04`).
+    //
+    // ⚠️⚠️ El throttle del POST es **por IP y por TOKEN**: sin el segundo, quien tuviera el enlace
+    // podría ir probando nombres desde muchas IPs. Lo que protege la hoja en blanco es que contestar
+    // no distingue un nombre repetido de uno nuevo, pero un tope por invitación lo pone más caro.
+    Route::get('/invitations/{token}', [InvitationsController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{12}')
+        ->middleware(['throttle:60,1', 'no-store'])
+        ->name('invitations.show');
+    Route::post('/invitations/{token}', [InvitationsController::class, 'reply'])
+        ->where('token', '[A-Za-z0-9]{12}')
+        ->middleware(['throttle:20,1', 'throttle:invitation-reply', 'no-store'])
+        ->name('invitations.reply');
 
     // ── Zona autenticada ──────────────────────────────────────────────────────────────────────
     // `auth:sanctum` cubre los DOS modos del §4.2 con el mismo código: cookie de sesión para la

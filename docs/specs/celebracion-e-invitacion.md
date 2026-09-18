@@ -805,7 +805,7 @@ pronto (`CONVENCIONES §10.5`), en orden de dependencia y cada una verde por su 
 | **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ✅ `#575` |
 | **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ✅ `#576` |
 | **T4·5** | RGPD: supresión, purga y poda (§4.4) | ✅ `#577` |
-| **T4·6** | El contrato de la API y sus endpoints (§4.10) | ⬜ |
+| **T4·6** | El contrato de la API y sus endpoints (§4.10) | ✅ `#578` |
 
 ⚠️ **Desviación declarada sobre §4.10.** Dice que los nombres y esquemas se fijan en `openapi/v1.yaml`
 **antes del código de la T4**. Se respeta su INTENCIÓN —que la API no se retro-ajuste a lo que hizo la
@@ -1087,6 +1087,68 @@ contra su tanda.
    guarda y hay que reclasificarlo.
 3. **La mutación que más enseña es la de DEMÁS**: «ya que limpio, limpio todo» se lleva el justificante
    de otra familia. Las unidades de borrado se miden en las dos direcciones o no se miden.
+
+#### 10.4.6 T4·6 · la API de la invitación — EN EL ÁRBOL (2026-09-18, `DECISIONES #578`) · **cierra la T4**
+
+**Hecho.** Son **dos superficies con dos credenciales**, y casi todo lo interesante está en lo que las
+separa.
+
+- **Pública, por TOKEN** (`GET` y `POST /invitations/{token}`): la única superficie del contrato cuya
+  credencial es un token en la URL y no una sesión ni una firma HMAC. Su propiedad es ser una **HOJA EN
+  BLANCO**: `InvitationCard` **no lleva ni una respuesta, ni un contador, ni el token, ni la url**.
+  ⚠️⚠️ **No es una vista recortada de `Invitation` con banderas, sino un objeto aparte**: si fuera un
+  subconjunto calculado, el día que alguien añadiera un campo al objeto del anfitrión se filtraría aquí
+  sin que ninguna prueba lo notara — y lo que se filtra es quién va a la fiesta de un niño.
+- **Los cuatro «no» son el MISMO 404** (§7.2·R10), decidido en un solo sitio
+  (`PartyInvitations::resolvePublic()`) para que no pueda divergir entre el `GET` y el `POST`. Y el
+  cuerpo se valida **después** de resolver el token: al revés, un cuerpo bien formado distinguiría un
+  token real de uno inventado.
+- **Del anfitrión**, por la MISMA puerta que su formulario (el trait de siempre, con su escalada
+  403 → 410 → 404): `GuestForm` gana `invitation`, nace un `PUT .../invitation` para personalizar y un
+  `DELETE .../invitation/replies/{reply}` para «no lo apuntes».
+  ⚠️ Personalizar es un endpoint **aparte** del `PUT` del formulario a propósito: escribe solo
+  `party_invitations`, y meterlo dentro movería `order_items.updated_at` —el testigo— dejando obsoleta
+  la página abierta del anfitrión **por cambiar el color de una banda**.
+- **La ADOPCIÓN** viaja en el `PUT` del formulario y **fuera de `guests`** (§7.2·R3), porque cada fila
+  es un mapa abierto cuyas claves inventa cada instalación. Va **después** de guardar las fichas —antes
+  no hay contra qué emparejar— y la reconciliación la última: una adoptada cuya ficha ya no está la
+  quitó el anfitrión.
+- **El dominio que faltaba**: `summaryFor`, `personalize`, `proposalsFor` (el emparejado de la regla 4,
+  con reparto **conjunto y determinista**: dos respuestas no pueden caer en la misma ficha), `adopt`,
+  `dismiss`, `reconcileAdopted` y `resolvePublic`.
+
+**Lo único que la T4 deja abierto, y se cierra SOLO.** `Invitation.url` es `null` mientras no exista la
+página pública, que es la T5. Esa página **no puede nacer a medias** —recoge alergias de un menor que va
+a leer un tercero, así que §7.2·R7 le exige su aviso de privacidad—, y publicar una ruta que no lleva a
+ninguna parte sería peor. ⚠️ Lo que **no** se hizo es clavar el path a mano «para ir teniendo algo»: el
+enlace se compone preguntando por el **nombre** de la ruta (`PartyInvitations::PUBLIC_ROUTE`), así que
+aparece en cuanto la T5 la declare, sin que nadie tenga que acordarse. Hay un caso que lo ejerce
+declarando esa ruta y comprobando que el campo se rellena.
+
+**Guardas**: `InvitationApiTest` (20, cada cuerpo validado contra `openapi/v1.yaml` por
+`assertValidResponse`) · `ApiContractTest` con una guarda de divergencia nueva · arnés
+`scripts/mutar-invitacion-t46.sh` **14/14 con CONTROL en verde**, árbol byte a byte.
+
+**Trampas pagadas en esta unidad:**
+1. ⚠️⚠️ **Tres mutantes sobrevivieron, y los tres señalaban guardas QUE ME FALTABAN, no código malo.**
+   (a) La comprobación de la supresión no mordía **porque desde `#577` anonimizar ya borra la
+   invitación**: el enlace muere por esa otra vía. Es un cinturón, y ahora hay un caso que lo aísla
+   reponiendo la fila. (b) Adoptar aceptaba una respuesta descartada y nada lo notaba: sin ese caso,
+   «no lo apuntes» se deshacía con el siguiente guardado. (c) El emparejado de la regla 4 no estaba
+   ejercido —todas las fichas del fixture estaban vacías—, así que proponer siempre sobre la primera
+   libre pasaba. *Un superviviente es una pregunta sobre el test, no sobre el código.*
+2. **`nullable` no atraviesa un `$ref` en OpenAPI 3.0**, y la forma canónica `allOf: [$ref] + nullable`
+   **no valida**: medido aquí con «The data (object) must match the type: null». Es el hallazgo de
+   `DECISIONES #27`, que `next_reservation` y `extras_invite` ya habían pagado. Tercera vez, misma
+   salida: copia INLINE con su guarda de divergencia en `ApiContractTest`.
+3. **Un array PHP vacío se serializa `[]`, no `{}`**: `guest_data` sin datos —el caso NORMAL, el padre
+   solo dice que viene— rompía la validación del contrato. Se convierte en la capa que serializa, no en
+   el servicio.
+4. **`Route::has()` no ve una ruta declarada a mitad de un test**: el índice por nombre del router se
+   construye una vez y hay que refrescarlo. El caso parecía decir que el mecanismo no funcionaba.
+5. Y otra vez la **Slot duplicada** entre dos fixtures de la misma clase (`firstOrCreate`), y un
+   `$ref: '#/components/responses/Forbidden'` **que no existe** — el contrato solo tiene `NotFound`,
+   `TooManyRequests`, `Maintenance`, `Unauthenticated` y `ValidationFailed`.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

@@ -28,6 +28,25 @@ use Illuminate\Http\Request;
 trait AuthorizesGuestForm
 {
     /**
+     * La reserva por id, o `null`.
+     *
+     * ⚠️ **Sin `firstOrFail` y sin *route model binding***, y eso es parte de la escalada de arriba:
+     * con binding implícito Laravel responde 404 **antes** de que corra nada de esto, así que un id
+     * inexistente daría 404 y uno real 403 — y esa diferencia permite enumerar qué reservas hay. El
+     * «no existe» lo decide el peldaño 3, nunca el enrutador.
+     *
+     * ▶ Vive en el trait desde la T4·6 (`#578`) porque ya son TRES los controladores que entran por
+     * esta puerta; tenerlo copiado en cada uno era la forma segura de que un día divergieran.
+     */
+    protected function resolveGuestFormReservation(int $reservation): ?OrderItem
+    {
+        return OrderItem::query()
+            ->with(['ticketType', 'order.user', 'slot'])
+            ->whereKey($reservation)
+            ->first();
+    }
+
+    /**
      * @param  OrderItem|null  $reservation  `null` cuando el identificador no resuelve a ninguna
      *                                       reserva; se trata como el peldaño 3 y NO como un 404
      *                                       temprano, para no responder distinto a un desconocido

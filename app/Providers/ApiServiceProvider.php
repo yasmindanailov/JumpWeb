@@ -67,5 +67,21 @@ class ApiServiceProvider extends ServiceProvider
 
             return Limit::perMinute(12)->by('guest-form:'.$key);
         });
+
+        // Contestar a una INVITACIÓN DIGITAL (T4·6, `specs/celebracion-e-invitacion.md` §4.5·12;
+        // `DECISIONES #578`). Por TOKEN, sumado al de IP, y por una razón propia.
+        //
+        // ⚠️⚠️ **Aquí el enlace lo tiene un grupo de clase entero**, así que el techo por IP no
+        // significa gran cosa: son familias distintas desde redes distintas. Lo que hay que acotar es
+        // cuánto se puede machacar UNA invitación — y no por el servidor, sino porque contestar es la
+        // única operación de esta feature que **escribe** en nombre de un desconocido.
+        //
+        // ▶ El tope duro de verdad no es éste: es `3 × invitados` por invitación (`REPLY_CAP_PER_GUEST`),
+        // que vive en el dominio y no se puede esperar a que expire. Esto solo pone caro el camino.
+        RateLimiter::for('invitation-reply', static function (Request $request): Limit {
+            $token = $request->route('token');
+
+            return Limit::perMinute(10)->by('invitation-reply:'.(is_scalar($token) ? (string) $token : ''));
+        });
     }
 }

@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#577`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#578`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -40,6 +40,12 @@
     `WaiverChain::verify()` en verde; la purga se las lleva por cascada (comprobado) y el export del
     art. 20 no las publica. `RGPD-01` y `RGPD-06` al día —esta última gana **la quinta credencial**, el
     token de la invitación—. `InvitationPrivacyTest` (5) · arnés **5/5 + 1 declarado**.
+  - **T4·6 · la API (`#578`) — CIERRA LA T4**: pública por token (`GET`/`POST /invitations/{token}`,
+    la tarjeta es una HOJA EN BLANCO y los cuatro «no» el mismo 404) y del anfitrión por la misma
+    puerta que su formulario (`invitation` en `GuestForm`, `PUT` de personalizar, `DELETE` de «no lo
+    apuntes», `adopt[]` fuera de `guests`). Con ellos el dominio que faltaba: resumen, personalizar,
+    propuesta por emparejado, adoptar, descartar y reconciliar. `InvitationApiTest` (20) · arnés
+    **14/14**. ⚠️ `Invitation.url` es `null` hasta que la T5 declare su ruta, **y se rellena solo**.
 - ✅ **Cerrado**: el defecto de la barra de firmar de 401 px (vivo en producción desde el 16-09, medido a
   390 × 844 con el botón 65 px fuera de pantalla) lo arregló la T3 y **salió en v1.1.0**. Queda mirarlo
   en producción, que es otra cosa que darlo por bueno.
@@ -57,16 +63,21 @@
    ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
    `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **Seguir la T4 por la T4·6, la última unidad** (spec §10.4 y **§4.10**, y **lee §7.2 antes de
-   construir**): los endpoints de la invitación, **contra los cuatro esquemas ya fijados en
-   `openapi/v1.yaml`** desde la T4·2 — el contrato está escrito, esto es cumplirlo.
-   ⚠️ `ApiContractTest` exige `additionalProperties: false` y `required` completo; una propiedad que
-   deba quedar fuera va a `OPTIONAL_BY_DESIGN` **con su razón**, nunca relajando la guarda. Y `: ` dentro
-   de un escalar sin comillas rompe el `yaml` entero: valida con el parser ANTES de gastar una suite
-   (costó 460 fallos + 29 errores).
-   ▶ Del §7.2 mandan aquí **R3** (la adopción viaja como `adopt[]` FUERA de `guests`, porque la fila es
-   un mapa abierto) y **R10** (un solo desenlace y el mismo 404: distinguir «no existe» de «cancelada»
-   es un oráculo que dice si un token existió).
+2. **La T4 está CERRADA** (`#573`→`#578`). Lo siguiente de esta spec es la **T5 · la página pública**
+   (§4.6, y **lee §7.2 antes de construir**), que es lo único que la T4 dejó abierto:
+   - Nace la ruta `invitation.show`, y con ella **`Invitation.url` se rellena SOLO** — no hay que
+     tocar nada, `PartyInvitations::shareUrlFor()` pregunta por el NOMBRE de la ruta. Hay un caso que
+     lo ejerce (`InvitationApiTest::test_the_share_url_appears_by_itself…`).
+   - Y con ella el **`receiptUrl()`** aplazado desde la T4·2 (§4.5·6: firmada, **2 horas**, no es un
+     enlace de edición).
+   - ⚠️⚠️ No puede nacer a medias: recoge alergias de un menor que va a leer un tercero, así que
+     **§7.2·R7 le exige su aviso de privacidad** (sin casilla, con la política como control de 48).
+     Y `og:*`, el `.ics` con **`TZID`** (§7.2·R13 — en UTC adelantaría la fiesta una hora) y Turnstile,
+     que hay que **medir** cuántos toques cuesta (§7.2·R12).
+   - El owner elige **los tres temas** viéndolos renderizados aquí (§3.4), y eso bloquea la parte
+     visual: hoy `PartyInvitation::THEMES` tiene uno solo.
+   → Después **T7** (correos) → **T6, el aterrizaje, al final** (el bloque del anfitrión, §4.7, que es
+   quien pinta el botón de anular el enlace y la lista de propuestas que la T4·6 ya sirve).
    Después T5 (la página, y con ella el `receiptUrl()` aplazado) → T7 (correos) → **T6, el aterrizaje, al
    final** (borde abierto en §7·5: bajar invitados descarta las filas del final).
    ▶ De la T4·4 quedan dos cosas **aplazadas a propósito, no olvidadas**: el **botón** de anular el
@@ -143,6 +154,18 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - **Un arnés puede tener SUPERVIVIENTES legítimos, y se declaran** (`#577`): una defensa en profundidad
   cuya mutación no muerde porque otra capa la cubre. Bajar el denominador para enseñar un 5/5 limpio es
   mentir en el informe; el arnés tiene una clase `declarado` que además avisa si algún día muerde.
+- ⚠️⚠️ **Un superviviente del arnés es una pregunta sobre el TEST, no sobre el código** (`#578`): los
+  tres de la T4·6 señalaban guardas que faltaban —un cinturón que otra capa ya tapaba, un caso que no
+  existía y un fixture cuyas fichas estaban todas vacías, así que no ejercía el emparejado—. Primero
+  se pregunta «¿qué caso me falta?», y solo si no hay ninguno se declara.
+- **En OpenAPI 3.0 `nullable` NO atraviesa un `$ref`** y `allOf: [$ref] + nullable` **no valida** con
+  Spectator (`#27`, y ya van tres veces: `next_reservation`, `extras_invite`, `GuestForm.invitation`).
+  La salida de la casa es **copia INLINE + guarda de divergencia** en `ApiContractTest`.
+  ▶ Y un array PHP vacío se serializa `[]`, no `{}`: un objeto vacío del contrato se convierte en la
+  capa que serializa. ▶ Las `responses` reutilizables son solo `NotFound`, `TooManyRequests`,
+  `Maintenance`, `Unauthenticated` y `ValidationFailed`; **no hay `Forbidden`**, se escribe inline.
+- **`Route::has()` no ve una ruta declarada a mitad de un test** hasta
+  `Route::getRoutes()->refreshNameLookups()`: el índice por nombre se construye una vez.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/500-599.md`.
 
 ## Buzón

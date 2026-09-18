@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestCountPolicy;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddons;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -85,7 +86,24 @@ class GuestFormResource extends JsonResource
             'guest_count_max' => $policy->maxFor($item),
             'guest_count_locked_reason' => $policy->lockedReason($item),
             'guest_count_deadline' => $policy->deadlineFor($item)?->toIso8601String(),
+            // La INVITACIÓN DIGITAL (T4·6, §4.10; `DECISIONES #578`). `null` cuando el producto no la
+            // ofrece, que es el caso de casi todos.
+            //
+            // ⚠️ **Nace aquí, en el GET, y no antes** (§4.5·1): compartir con Web Share necesita el
+            // enlace **en el mismo gesto** del usuario y un `fetch` previo pierde la activación en
+            // Safari. Un escáner de correos que abra el enlace solo crea una fila vacía.
+            'invitation' => $this->invitationOf($item),
         ];
+    }
+
+    /** @return array<string, mixed>|null */
+    private function invitationOf(OrderItem $item): ?array
+    {
+        $invitation = app(PartyInvitations::class)->forReservation($item);
+
+        return $invitation === null
+            ? null
+            : (new InvitationResource($invitation, $item))->toArray(request());
     }
 
     /**
