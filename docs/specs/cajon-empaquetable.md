@@ -92,7 +92,21 @@ del cajón** y el **motor** (los chunks de hoy). La landing escribe dos líneas:
 - **Eventos** en `document`: `jw:cajon:open`, `jw:cajon:close`, `jw:cajon:purchased` (con el código del pedido) —
   para que la landing mida o reaccione sin tocar el motor.
 - **Idioma**: `<html lang>`; **tema**: `client.css` cargada DESPUÉS de la hoja del cajón.
-- La landing del producto conserva `$store.purchase` como adaptador de tres líneas sobre esa API: sus 23 usos no se tocan en F4.
+- La landing del producto conserva `$store.purchase` como ADAPTADOR sobre esa API: sus 23 usos no se tocan en F4.
+
+**Medido para la T2 (2026-09-18), antes de tocar nada**: el MOTOR (`resources/js/sidebar/**`) toca Alpine en solo
+DOS sitios reales — `Sidebar.vue` (publica `mode` e `identifying` en `Alpine.store('purchase')`) y
+`account/session-gained.js` (marca `authChanged`); el resto de menciones son comentarios. Todo lo demás vive en
+`resources/js/app.js`: el store `purchase` (~240 líneas) es a la vez la API de apertura, el arranque perezoso del
+motor (`bootSpaEngine()` con su `import()`), la costura de intención, la zona de cuenta que se CONSUME y el
+cierre que recarga si hubo login. **Diseño de la tanda**: (1) un controlador SIN framework (`resources/js/cajon/`
+(futuro)) dueño de ese estado y esa lógica, con `subscribe()` y los eventos `jw:cajon:*`, expuesto en
+`window.JumpWeb.cajon`; (2) el store de Alpine queda de espejo — mismos nombres, delega y refleja, para que
+`:class="$store.purchase.isOpen && 'is-open'"` y `'is-' + $store.purchase.mode` del layout sigan reaccionando;
+(3) el motor escribe en el controlador, no en Alpine; (4) `data-jw-*` por delegación de clic; (5) el cerrojo de
+scroll (`ui/scroll-lock.js`, ya sin framework) se instancia UNA vez y lo comparten los dos. ⚠️ Tras la T2 una
+página sin Alpine tiene API pero aún no ve el panel: la clase `is-open` la pone la carcasa Blade, que es la T3.
+Se verifica con `npm run test:js`, `SidebarDomContractTest` y la sonda del cajón por las tres vías de apertura.
 
 ### 4.3 La hoja y los tokens
 La hoja del cajón lleva SU raíz de tokens (los que lee, medidos con el guion, no los 231) bajo un selector propio,

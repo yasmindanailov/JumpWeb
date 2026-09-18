@@ -50,8 +50,12 @@
      `GET /api/v1/sidebar/boot?lang=` (pública, `max-age=300` + `ETag` → 304) y `/sidebar/session?lang=`
      (`no-store`, consume el desenlace). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos;
      `SidebarBootTest` 9 casos; `scripts/mutar-cajon-arranque.sh` 8/8. ▶ Un rótulo nuevo va en `SidebarBoot`.
-   - **T2 · la apertura sin Alpine**: `window.JumpWeb.cajon` (`open`, `openWith`, `openAccount`, `close`),
-     atributos `data-jw-*` y eventos `jw:cajon:*`; `$store.purchase` queda de adaptador (sus 23 usos no se tocan).
+   - **T2 · la apertura sin Alpine — LO SIGUIENTE** (medida y diseño ya escritos en la spec §4.2): un
+     controlador sin framework dueño del estado y la lógica que hoy vive en el store `purchase` de `app.js`
+     (~240 líneas de trampas pagadas: léelas ANTES), `window.JumpWeb.cajon`, `data-jw-*` y eventos
+     `jw:cajon:*`; el store de Alpine queda de ESPEJO (sus 23 usos y los `:class` del layout no se tocan); el
+     motor escribe en el controlador (solo 2 sitios reales: `Sidebar.vue` y `account/session-gained.js`).
+     Verificar con `npm run test:js`, `SidebarDomContractTest` y `/sonda` por las tres vías de apertura.
    - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
      Vite servida desde una ruta estable; sin `data-boot` en la página, arranca por las dos lecturas de T1.
    - **T4 · la hoja propia**: extracción MECÁNICA de `site.css` con guion e informe en seco (método `#437`),
