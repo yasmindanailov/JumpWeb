@@ -35,6 +35,17 @@
   Las dos con trinquete en `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` **20/20**. Medido antes:
   los otros dos juegos de Vue dan los mismos 12 errores y +4.364 avisos de formato. **El primer día cazó un
   defecto VIVO del SPA** (`addBtn` sin declarar en `DependentsZone.vue`), avisado en el buzón.
+- **F4 ABIERTA (18-09), en DISEÑO, cero código**: dos specs en ⬜ borrador, con su censo medido.
+  `specs/token-bearer.md` COMPLETA: casi todo existe desde la Fase 3 (Sanctum, caducidad 30 d, poda, revocación
+  por 5 vías, `bearerAuth` en el contrato, 35/55 rutas tras `auth:sanctum`); falta el emisor `POST /auth/tokens`,
+  un `PasswordLogin::verify()` SIN sesión que comparta los dos limitadores (`attempt()` usa `Auth::attempt()`
+  sobre el guard de sesión: el emisor no puede llamarlo), la ability `api-v1` (hoy nadie mira abilities) y el
+  tope de 10 por cuenta; **el owner decide la duración (§4.4, recomendada B: 30 d con rotación)**.
+  `specs/cajon-empaquetable.md` INCOMPLETA a propósito: el censo desmiente «una línea del layout» (son DIEZ
+  dependencias: carcasa Blade, store de Alpine que llega DENTRO de Livewire, `data-boot` de 18,7 KB, hoja de
+  549 KB compartida con 10 bloques definidos en las DOS hojas, tokens de otra hoja, 8 puertas); §4.1–§4.4
+  escritos; **§4.5 (el arranque) y §4.6 (qué consume la landing independiente) se iteran con el owner**, que
+  pidió parar ahí. El enrutador quedó a 7 bytes del techo: la próxima fila exige acortar otra.
 - **`#627`** `[DECIDIDO owner]`: la app en **React Native + Expo, TypeScript**; la prueba corta de F6 confirma,
   no compara (`#612` marcada).
 - **`#628` · la promo «−20 % online», chapuza declarada y EN PRODUCCIÓN ENTERA**: el 17-09 a las 22:35 las 9
@@ -71,7 +82,10 @@
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día** (si no, el tachado miente). Sin desplegar. Y el **sistema de ofertas** cuando
    lo pida: `/spec` desde `archivo/promo-precio-anterior.md` §1 y §3.
-4. Después F4 (cajón empaquetable y token; la parte de la API empieza por `/spec`, toca `RGPD-06` y `SEC-06`)
+4. **F4, en curso**: (a) cerrar con el owner §4.5 y §4.6 de `specs/cajon-empaquetable.md` y su decisión de §4.4
+   en `specs/token-bearer.md`; (b) aprobadas, `/decision` (`#630`…) y estado ✅; (c) el token lo implementa ESTE
+   carril en el orden de su §0 (contrato → `verify()` → controlador → tests → `scripts/mutar-token-bearer.sh`);
+   (d) el cajón lo implementa el SPA contra su spec, con la huella de maquetación 24/24 como juez.
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes»; propuesta guardada: un
    `tokens.json` en la instancia del que salgan `client.css` y el tema de la app —se reutilizan los 65 tokens,
    fuentes, logo, kit y textos; no el CSS ni los componentes Vue—) → F6 (app nativa, spec con la pila `#627`).
@@ -143,6 +157,10 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
 ## Buzón
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-18)
+- 📐 **F4 abierta y la mitad del cajón la implementas TÚ**: lee `specs/cajon-empaquetable.md` §0 y §1 (el censo
+  de lo que el cajón le pide hoy al layout) y dime en tu buzón lo que veas falso o que falte; es borrador y
+  §4.5/§4.6 están abiertos con el owner. **No codifiques nada aún.** Lo que más me importa de tu ojo: los 10
+  bloques definidos en las DOS hojas y si el adaptador de `$store.purchase` sobre una API propia te encaja.
 - ❗ **ESLint ya está en el gate (`#629`): tras el `pull`, `docker compose exec -u sail laravel.test npm install`**
   o tu push muere con «eslint: not found». Toqué lo compartido que avisé: `package.json` (4 `devDependencies` y
   el script `lint:js`) y `package-lock.json`. A mano: `npm run lint:js` (~2 s). Reglas: base + `vue

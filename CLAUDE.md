@@ -41,14 +41,16 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Si trabajas en… | Lee solo |
 |---|---|
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
-| **Producto e instancias** · la landing fuera del producto · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
+| **Producto e instancias** · landing fuera · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
+| F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
 | Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |
 | Secuencia de compra (admitir → crear → cobrar) | `docs/specs/checkout-orquestado.md` §0 |
 | Excursiones de colegio · horario por zona · precio por tramo · venta de mostrador | `docs/specs/precio-por-tramo.md` §0 · `docs/specs/horario-por-zona.md` §0 |
 | Aforo · franjas · la rejilla · disponibilidad · calendario · `SlotOffer` | `docs/sistemas/AFORO-FRANJAS.md` · `docs/INVARIANTES.md` §2 |
-| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 || Google: entrar, registrarse, vincular · el `sub` · condiciones | `docs/specs/auth-con-google.md` §0 |
+| Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
+| Google: entrar, registrarse, vincular · el `sub` · condiciones | `docs/specs/auth-con-google.md` §0 |
 | Auth / cuentas / RGPD | `docs/SEGURIDAD.md` · `docs/INVARIANTES.md` §3 + §4 · `docs/FLUJOS.md` |
 | El teléfono de un cliente · cuenta de Google sin número · pedirlo en el pedido manual | `docs/specs/telefono-del-cliente.md` §0 |
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
@@ -100,7 +102,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Deuda técnica | `docs/DEUDA.md` |
 | Instalar un cliente nuevo · paquete de tema (`client.css`) · logotipo e icono | `docs/INSTALACION-CLIENTE.md` |
 | UI de carga (spinner) | `docs/sistemas/UI-SPINNER.md` |
-| Requisitos / alcance funcional | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
+| Requisitos / alcance | `docs/REQUISITOS.md` · `docs/MAPA-PAGINAS.md` |
 | Dos agentes sobre `main` · carriles · bandas · buzón | `docs/CONVENCIONES.md` §10 · `docs/ESTADO.md` |
 
 Índice: `docs/README.md`.
