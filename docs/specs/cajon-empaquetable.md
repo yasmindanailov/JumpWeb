@@ -24,8 +24,9 @@
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo (285).
 - **La landing consume un MENÚ DE HECHOS y todo es opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende
   de que la landing lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: aprobada y en ejecución por TANDAS (T1 arranque con un compositor → T2 apertura sin Alpine → T3
-  carcasa en el paquete → T4 hoja propia → T5 página ajena): cada una verde y empujada. Implementa plataforma (`#633`).
+- **Estado**: por TANDAS — **T1 ✅** (el arranque: `Http\Sidebar\SidebarBoot` + `sidebar/boot` y
+  `sidebar/session`, §4.5) → T2 apertura sin Alpine → T3 carcasa en el paquete → T4 hoja propia → T5 página
+  ajena. Implementa plataforma (`#633`). ⚠️ Un rótulo nuevo del cajón va en `SidebarBoot`, NUNCA en el layout.
 - **Empieza por** §1 (el censo) → §4.1 (la forma del paquete) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
@@ -106,15 +107,29 @@ el destino del middleware `auth`.
 
 ### 4.5 El arranque — `[DECIDIDO]` 2026-09-18 (`#631`): dos lecturas, una pública y una privada
 Hoy Blade pinta las 9 claves del `data-boot` en cada página; una landing a mano no puede. El cargador las pide:
-- **Pública y cacheable** — `GET /api/v1/cajon/boot` (futuro), por idioma: `messages`, `ui`, `account`, `auth` y
-  `urls` (18,3 de los 18,7 KB). `Cache-Control: public` + `ETag` + `Vary: Accept-Language`; cambia solo al desplegar.
-- **Privada, `no-store`** — `GET /api/v1/cajon/session` (futuro): `userId`, `accountContext`, y `outcome` +
+- **Pública y cacheable** — `GET /api/v1/sidebar/boot?lang=`, por idioma: `messages`, `ui`, `account`, `auth` y
+  `urls` (18,3 de los 18,7 KB). `Cache-Control: public, max-age=300` + `ETag`; cambia solo al desplegar.
+- **Privada, `no-store`** — `GET /api/v1/sidebar/session?lang=`: `userId`, `accountContext`, y `outcome` +
   `orderCode` **consumidos al leerlos** (`SidebarEntry::consume()` ya es de un solo uso). Se pide al ABRIR, no al
   cargar la página: una landing estática no gasta una petición por visita.
 - «¿Abrir al cargar?» (`data-purchase-open`, `data-account-zone`): en las puertas lo sabe la RUTA, y el anfitrión
   lo declara con atributos; tras volver de Redsys se aterriza en una ruta del producto, que ya lo sabe.
 **Descartado**: un cargador que el producto sirve con todo incrustado por petición — no se cachea, y lleva estado
 de sesión dentro de un guion, que es lo que `RGPD-04` pide no hacer.
+
+**✅ T1 HECHA (2026-09-18)** — `Http\Sidebar\SidebarBoot` es el modelo de lectura (`shared()`, `personal()` y
+`forCurrentRequest()`, que las funde en el orden de claves del layout); el layout baja de 603 a 290 líneas y
+PINTA, no compone. Las rutas se llaman **`GET /api/v1/sidebar/boot` y `/sidebar/session`** (~~`cajon/…`~~: la
+API está en inglés y el código lo llama `Sidebar` en todas partes). Contrato **1.2.0**. Lo que enseñó el código:
+(1) la mitad pública solo es cacheable si el idioma viaja EN LA URL (`?lang=`, obligatorio): `ApiLocale` lo saca
+de la sesión o de `Accept-Language`, y una caché habría servido francés a quien pidió español; (2) el subgrupo
+`google` viaja en el layout solo en su puerta y en la API siempre que la instalación ofrezca Google (no sabe en qué
+página está quien pregunta); (3) un grupo vacío de PHP es `[]` en JSON y uno lleno `{}`: `session` los devuelve
+siempre como diccionario; (4) `accountContext` va declarado abierto, no con `$ref` (`#27`: el validador no admite
+`allOf` + `nullable`). **Medido**: el `data-boot` de siete contextos (anónimo es/en/fr, `/entradas`, la puerta de
+Google, y con sesión en dos rutas) **idéntico byte a byte** antes y después; `curl`: 200 `public, max-age=300` +
+`ETag` → 304 con `If-None-Match`; `session` `no-store`. `SidebarBootTest` 9 casos, el central «las dos lecturas
+reconstruyen lo que pinta el layout» (anónimo y con sesión); `scripts/mutar-cajon-arranque.sh` **8/8**.
 
 ### 4.6 Lo que consume la landing independiente — EL MENÚ DE HECHOS (`#631`; tres opciones de producto abiertas)
 **Principio `[DECIDIDO owner]` 2026-09-18**: *todo lo que la landing pueda consumir es OPCIONAL*; cada cliente

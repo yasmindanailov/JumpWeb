@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\SidebarBootController;
 use App\Http\Middleware\EnsureOnlineSalesEnabled;
 use Illuminate\Support\Facades\Route;
 
@@ -127,6 +128,22 @@ Route::name('api.v1.')->group(function (): void {
     // Lo que cambia mientras el cliente navega NO va aquí: la pausa de reservas vive en su propio
     // endpoint, porque un snapshot de arranque mentiría en cuanto la dueña accionara el interruptor.
     Route::get('/config', ConfigController::class)->name('config.show');
+
+    // ── El ARRANQUE del cajón (F4 · T1, `docs/specs/cajon-empaquetable.md` §4.5) — PÚBLICO ─────
+    // Lo que el layout del producto pinta en `data-boot`, para una página que NO pinte Blade (la
+    // landing a mano de una instancia). Es el MISMO modelo de lectura, `Http\Sidebar\SidebarBoot`, por
+    // un segundo transporte. Dos rutas porque no se cachean igual:
+    //  · `boot` — los rótulos del idioma y las rutas. No depende de quién mira y el idioma viaja en
+    //    la URL (`?lang=`), así que se cachea: `public`, cinco minutos y `ETag` para revalidar con 304.
+    //  · `session` — quién es el titular, su contexto y el desenlace de un pago pendiente, que se
+    //    CONSUME al leerlo. `no-store` (`RGPD-04`). Pública a propósito: al anónimo le responde
+    //    `null`, que es justo lo que el cajón necesita saber.
+    Route::get('/sidebar/boot', [SidebarBootController::class, 'boot'])
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('sidebar.boot');
+    Route::get('/sidebar/session', [SidebarBootController::class, 'session'])
+        ->middleware('no-store')
+        ->name('sidebar.session');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo

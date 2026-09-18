@@ -22,7 +22,8 @@
   clase correcta). El diff de árbol NO ve el interior de un `<svg>` ni el texto: eso necesita paridad propia
   (`TESTING.md` §2.ter/§2.quater, `#113`).
 - **Rótulos (`#333`)**: el prop `account` YA ES el grupo (`verify.resend`, no `account.verify.resend`); `t()`
-  devuelve `''` en silencio; una clave puede existir y quedar fuera de la poda de `layout.blade.php`. Guarda
+  devuelve `''` en silencio; una clave puede existir y quedar fuera de la poda del arranque, que desde F4 · T1
+  vive en **`Http\Sidebar\SidebarBoot`** (`shared()` / `personal()`), NO en `layout.blade.php`. Guarda
   `SidebarTranslationKeysExistTest`. *Que el texto llegue no es que se pinte*: se verifica RENDERIZANDO.
 - **Tras traer commits del SPA, `npm run build:ssr` ANTES de la suite**: `SidebarDomContractTest` renderiza el
   BUNDLE (35 rojos con el árbol limpio), y los arneses que mutan `.vue` restauran el árbol pero no el bundle.
@@ -718,7 +719,7 @@ NAVEGADOR: receta en `VERIFICACION-E2E-CAJON.md` §5.bis.
 - ⚠️⚠️ **Y `--money` SOLO lo lleva lo ya COBRADO**: por defecto vale tinta, así que ponerlo en un importe pendiente **no cambia nada en la suite ni en un clon sin paquete** y con el del cliente lo pinta de color — un pendiente es un dato del pedido, y teñirlo lo convierte en una alarma.
 - ⚠️ **Lo pasado se dice cambiando de SUPERFICIE, nunca con opacidad** (un velo sobre la tarjeta entera dejó la fecha del historial en 3,10). —
 - ❗❗ **`#565` SI AÑADES UNA PREGUNTA AL CAJÓN**: es `ConfirmInline` y **nunca `window.confirm`**; lleva el gesto entero —el disparador desaparece, el foco salta al que confirma y vuelve al cerrar—, y el disparador entra por SLOT porque los tres suyos son distintos (un botón, un botón dentro de una tarjeta y un formulario completo).
-- ⚠️ Sus rótulos tienen que entrar en la poda de `layout.blade.php` o el botón sale **mudo** (`#333`). —
+- ⚠️ Sus rótulos tienen que entrar en la poda del arranque (`Http\Sidebar\SidebarBoot`, antes en `layout.blade.php`) o el botón sale **mudo** (`#333`). —
 - ❗❗❗ **`#562`/`#563` SI TOCAS EL PASO DE PAGAR O UN DESENLACE DEL BANCO** (parada 04, CERRADA): el enlace de las condiciones **está FUERA de la casilla**, en su propia fila de 48 px —inline medía 19—, y esa fila **comparte receta con «Ver más fechas»** (`.cal-more`, selector agrupado): no la copies, que el modo de fallo no es romperse sino quedarse atrás.
 - ⚠️⚠️ **El bloque «lo que falta antes de pagar» no lo vigilaba NINGÚN diff desde `#349`**: su caso de contrato nace con un comprador que ya tiene teléfono y una instalación sin condiciones publicadas, así que `need` salía todo `false` y `.paydue` **no se emitía** — y el renderizador SSR tampoco componía `need`. Hoy lo compone con `buyer-due.js` desde el contexto real; si tocas ese bloque, el caso es `the_pay_step_emits_what_is_missing_before_paying`.
 - ⚠️ **Tres frases que el servidor ya tenía escritas no las pedía nadie** —`verify_hold` con CERO consumidores en los tres idiomas, a qué correo se ha escrito, y la HORA de caducidad (`expires_at` ya viaja en `payment-status`)—: *al transcribir una pantalla se compara con el DICCIONARIO, no con la de al lado*.

@@ -23,7 +23,8 @@ use Tests\TestCase;
  * dos formas de quedarse mudo y solo una se ve leyendo `lang/`:
  *  1. la clave no existe (el fallo de `#332`);
  *  2. la clave existe **pero la poda del montaje la deja fuera** — el cajón recibe subgrupos
- *     recortados clave a clave (`layout.blade.php`) precisamente para no pagar bytes en cada página.
+ *     recortados clave a clave (`Http\Sidebar\SidebarBoot`, que es lo que pinta el layout desde F4 · T1)
+ *     precisamente para no pagar bytes en cada página.
  * La segunda no la ve ningún `grep` en `lang/`, y es la que muerde al añadir un rótulo nuevo.
  *
  * ⚠️ **Alcance declarado, para que nadie lo crea más ancho de lo que es**: solo se comprueban las
@@ -71,7 +72,8 @@ class SidebarTranslationKeysExistTest extends TestCase
                 '  · la ruta está mal — el prop `account` ES YA el grupo `account`, así que se pide',
                 '    «verify.resend», NO «account.verify.resend» (el fallo de `#332`);',
                 '  · la clave existe pero la PODA del montaje la deja fuera: mírala en',
-                '    `resources/views/components/layout.blade.php` y añádela ahí a propósito.',
+                '    `app/Http/Sidebar/SidebarBoot.php` (el arranque salió del layout en F4 · T1) y añádela',
+                '    ahí a propósito: en `shared()` si la pinta cualquiera, en `personal()` si es solo con sesión.',
             ],
         )));
     }

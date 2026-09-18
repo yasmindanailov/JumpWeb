@@ -45,10 +45,11 @@
 
 1. **F4 · el cajón empaquetable, por TANDAS pequeñas y empujadas** (`specs/cajon-empaquetable.md` §0 → §4).
    Antes de cada tanda: aviso en el buzón (son ficheros del SPA) y `git pull --rebase`. Nada de la invitación.
-   - **T1 · el arranque con UN compositor**: sacar el `data-boot` del layout a una clase (`Http\Sidebar`), con el
-     payload IDÉNTICO byte a byte (se mide con `curl` antes y después), y servirlo por `GET /api/v1/cajon/boot`
-     (pública, `ETag`, por idioma) y `GET /api/v1/cajon/session` (privada, `no-store`, consume el desenlace).
-     Contrato 1.2.0. Un modelo de lectura, dos transportes.
+   - **T1 ✅ HECHA (18-09) · el arranque con UN compositor**: `Http\Sidebar\SidebarBoot` (`shared()`,
+     `personal()`, `forCurrentRequest()`); el layout baja de 603 a 290 líneas y PINTA, no compone;
+     `GET /api/v1/sidebar/boot?lang=` (pública, `max-age=300` + `ETag` → 304) y `/sidebar/session?lang=`
+     (`no-store`, consume el desenlace). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos;
+     `SidebarBootTest` 9 casos; `scripts/mutar-cajon-arranque.sh` 8/8. ▶ Un rótulo nuevo va en `SidebarBoot`.
    - **T2 · la apertura sin Alpine**: `window.JumpWeb.cajon` (`open`, `openWith`, `openAccount`, `close`),
      atributos `data-jw-*` y eventos `jw:cajon:*`; `$store.purchase` queda de adaptador (sus 23 usos no se tocan).
    - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
@@ -76,7 +77,8 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
 `StaticAnalysisGateTest` · el emisor de tokens (`ApiTokenIssuer`, `AuthTokenController`,
 `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
-`Tests\TestCase::be()` · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
+`Tests\TestCase::be()` · el arranque del cajón (`Http\Sidebar\SidebarBoot`, `SidebarBootController`,
+`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
 Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
@@ -135,6 +137,12 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   (saca el `data-boot` del layout a una clase, mismo payload byte a byte, y lo sirve por API). Si vas a tocar el
   layout, `app.js` o `site.css`, dímelo en tu buzón y te dejo paso. Tu lectura de `specs/cajon-empaquetable.md` §1
   y §4 me sigue valiendo: lo que veas falso, a tu buzón.
+- ❗❗ **T1 HECHA: el arranque del cajón YA NO SE COMPONE EN EL LAYOUT.** Las 310 líneas del `data-boot` se
+  mudaron, con todos sus comentarios, a `app/Http/Sidebar/SidebarBoot.php`. **Si tu invitación necesita un
+  rótulo nuevo en el cajón, se añade AHÍ** (`shared()` si lo pinta cualquiera, `personal()` si es solo con
+  sesión), no en `components/layout.blade.php`: `SidebarBootTest` pone rojo un `'messages' =>` en el layout. El
+  payload es idéntico byte a byte al de antes (medido en 7 contextos): tu cajón no nota nada. Si tenías cambios
+  SIN EMPUJAR en ese bloque del layout, el rebase te dará conflicto: pásalos a la clase.
 - ❗ **Actualiza el plugin a `07076ac`** (terminal, y reinicia): `claude plugin marketplace update jumpweb-agente`
   y `claude plugin update jumpweb-agente@jumpweb-agente --scope project`. Trae los cuatro arreglos del mapa de
   frases y deja de nombrar las skills viejas, que ya no existen en el repo (F2 cerrada, `#633`).

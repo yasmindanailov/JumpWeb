@@ -44,6 +44,11 @@ class AccessRevocationTest extends TestCase
         // así que no puede delegar en un método de instancia. Sus tres tablas sin FK
         // —password_reset_tokens, sessions, personal_access_tokens— se borran a mano y a propósito.
         'app/Console/Commands/PurgeCustomerData.php' => 'borrado por conjunto en la limpieza de go-live',
+        // ⚠️ NO escribe en ninguna tabla — no tiene ni una consulta: es el modelo de lectura del arranque
+        // del cajón (F4 · T1) y el literal que ve el escáner es la CLAVE del subgrupo de traducción
+        // `account.account.sessions` («cerrar las demás sesiones»). Hasta el 2026-09-18 vivía dentro de
+        // `layout.blade.php`, que este escaneo no mira; al mudarse a PHP el falso positivo se hizo visible.
+        'app/Http/Sidebar/SidebarBoot.php' => 'la clave de traducción `sessions` del arranque del cajón, no una tabla',
     ];
 
     /** La invalidación centralizada existe con los dos nombres que el resto del código espera. */

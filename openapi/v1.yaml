@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -494,6 +494,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicConfig'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /sidebar/boot:
+    get:
+      tags: [Instalación]
+      operationId: getSidebarBoot
+      summary: El arranque del cajón — la parte que no depende de quién mira
+      description: |
+        Los rótulos del cajón en un idioma y las rutas que pinta. Es lo que el layout del producto
+        escribe en el atributo `data-boot`; una página que no pinte el producto (la landing propia de
+        una instalación) lo pide aquí y recibe **exactamente lo mismo**.
+
+        **El idioma viaja en la URL** (`lang`, obligatorio), al revés que en el resto de la API,
+        donde sale de la sesión o de `Accept-Language`: esta respuesta se **cachea**
+        (`Cache-Control: public, max-age=300` y `ETag`; con `If-None-Match` responde `304`), y una
+        respuesta cacheable tiene que ser función de su URL.
+
+        Los diccionarios conservan el camino de `lang/` (`account.login.email`) y van podados a lo
+        que el cajón pinta. No llevan datos de nadie.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Rótulos y rutas del cajón en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SidebarBoot'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /sidebar/session:
+    get:
+      tags: [Instalación]
+      operationId: getSidebarSession
+      summary: El arranque del cajón — la parte de quien mira
+      description: |
+        Quién es el titular (`null` para el visitante anónimo: la ruta es pública a propósito), su
+        contexto de cuenta, los rótulos y rutas que solo viajan con sesión, y **el desenlace de un
+        pago pendiente de enseñar**.
+
+        ⚠️ **Leerla CONSUME ese desenlace**: `outcome` y `orderCode` llegan una vez y la siguiente
+        lectura devuelve `null`, igual que ocurre al pintar una página del producto. Sin eso, el
+        cajón se reabriría en cada página con el mismo «pago confirmado».
+
+        `Cache-Control: no-store`: lleva datos del titular. Se identifica por la cookie de sesión.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: El estado de quien mira.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SidebarSession'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -2836,6 +2902,18 @@ components:
         `POST /auth/tokens/rotate` y revocable desde el borrado RGPD, el cambio y el
         restablecimiento de contraseña, «cerrar otras sesiones» y `POST /auth/logout`.
 
+  parameters:
+    SidebarLang:
+      name: lang
+      in: query
+      required: true
+      description: |
+        El idioma de los rótulos. Va en la URL y no en `Accept-Language` para que la respuesta sea
+        función de su URL y se pueda cachear.
+      schema:
+        type: string
+        enum: [es, en, fr]
+
   responses:
     Unauthenticated:
       description: Falta identidad o ya no es válida.
@@ -3018,6 +3096,89 @@ components:
 
                 La regla de cuándo procede vive en el servidor a propósito, para que las distintas
                 superficies no puedan discrepar sobre ella.
+
+    SidebarBoot:
+      type: object
+      description: |
+        La parte del arranque del cajón que no depende de quién mira. Los cinco grupos son
+        diccionarios de rótulos o de rutas: su contenido lo decide `lang/` y no este contrato, así
+        que se declaran abiertos.
+      additionalProperties: false
+      required: [messages, ui, account, auth, urls]
+      properties:
+        messages:
+          type: object
+          additionalProperties: true
+          description: El grupo de rótulos del embudo de compra.
+        ui:
+          type: object
+          additionalProperties: true
+        account:
+          type: object
+          additionalProperties: true
+          description: Los rótulos de entrar, darse de alta, recuperar la contraseña y el bloque de cuenta.
+        auth:
+          type: object
+          additionalProperties: true
+        urls:
+          type: object
+          additionalProperties:
+            type: string
+          description: Las rutas que pinta el cajón (contacto, condiciones, privacidad…). Las compone el servidor.
+
+    SidebarSession:
+      type: object
+      description: La parte del arranque del cajón que es de quien mira. Nunca se cachea.
+      additionalProperties: false
+      required: [outcome, orderCode, account, locales, userId, accountContext, urls]
+      properties:
+        outcome:
+          type: string
+          nullable: true
+          enum: [confirmed, failed, verifying, null]
+          description: En qué quedó el último pago, si está pendiente de enseñar. Se consume al leerlo.
+        orderCode:
+          type: string
+          nullable: true
+        account:
+          type: object
+          additionalProperties: true
+          description: Los rótulos del área de cliente. Vacío sin sesión.
+        locales:
+          type: array
+          description: Los idiomas que ofrece el selector del perfil. Lista vacía sin sesión.
+          items:
+            type: object
+            additionalProperties: false
+            required: [value, label]
+            properties:
+              value:
+                type: string
+              label:
+                type: string
+        userId:
+          type: integer
+          nullable: true
+          description: El titular de la sesión, o `null` para el visitante anónimo.
+        accountContext:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: |
+            El contexto de cuenta del titular, o `null` sin sesión. **Tiene la forma de
+            `AccountContext`** —sale del mismo Resource que `GET /me/account-context`, que es donde
+            se valida campo a campo—, podada por cardinalidad: como mucho un formulario pendiente.
+
+            ⚠️ Va declarado ABIERTO y no con `$ref`: en OpenAPI 3.0 un `$ref` no admite `nullable` a
+            su lado y la forma canónica (`allOf: [$ref]` + `nullable`) no funciona con el validador
+            (`DECISIONES #27`; re-medido aquí: «The data (null) must match the type: object»). Copiar
+            el esquema entero para vigilar que no diverja sería una segunda definición de algo que
+            ya tiene una.
+        urls:
+          type: object
+          additionalProperties:
+            type: string
+          description: Las rutas que solo existen con sesión (vincular con Google).
 
     PublicConfig:
       type: object
