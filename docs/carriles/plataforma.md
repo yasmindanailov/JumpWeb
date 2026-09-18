@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#631`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#632`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (mapa de frases y ESLint).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -43,8 +43,10 @@
   **la landing consume un MENÚ DE HECHOS donde TODO es opcional** (`[DECIDIDO owner]`: identidad y contacto por
   API, ficha de producto, el widget flotante de ofertas se RETIRA); estándar: lista blanca por `Resource` (la
   tabla `settings` mezcla `contact` con `redsys_secret_key`), caché pública con `ETag` (hoy `no-cache, private`),
-  un modelo de lectura con dos transportes. **Abiertas P1–P3 del owner** (ficha con imagen en el panel · API sola
-  o kit declarativo · atracciones fuera o como hechos mínimos) y la lectura del SPA. Del censo del token: casi todo existe desde la Fase 3 (Sanctum, caducidad 30 d, poda, revocación
+  un modelo de lectura con dos transportes. **P1–P3 `[DECIDIDO owner]` (`#632`)**: la ficha de producto y de zona
+  gana descripción traducible e imagen (la app de F6 vende con eso) · API ahora y kit declarativo cuando lo pida
+  una segunda instancia · las 23 atracciones SALEN del panel (son presentación). Falta solo la lectura del SPA.
+  Del censo del token: casi todo existe desde la Fase 3 (Sanctum, caducidad 30 d, poda, revocación
   por 5 vías, `bearerAuth` en el contrato, 35/55 rutas tras `auth:sanctum`); falta el emisor `POST /auth/tokens`,
   un `PasswordLogin::verify()` SIN sesión que comparta los dos limitadores (`attempt()` usa `Auth::attempt()`
   sobre el guard de sesión: el emisor no puede llamarlo), la ability `api-v1` (hoy nadie mira abilities) y el
@@ -91,8 +93,8 @@
 4. **F4, en curso**: (a) **IMPLEMENTAR EL TOKEN** (`specs/token-bearer.md` ✅, `#630`), en el orden de su §0:
    contrato 1.1.0 → `PasswordLogin::verify()` con núcleo compartido → `ApiTokenIssuer` → `AuthTokenController`
    (emitir y rotar) → `abilities:api-v1` en el grupo → `AuthTokenTest` + las cinco vías de revocación con un token
-   REAL → `scripts/mutar-token-bearer.sh` → `CHANGELOG.md`; (b) recoger P1–P3 del owner y cerrarlas en §4.6 de
-   `specs/cajon-empaquetable.md`; (c) leer la respuesta del SPA a esa spec y pasarla a ✅; (d) el cajón lo
+   REAL → `scripts/mutar-token-bearer.sh` → `CHANGELOG.md`; (b) P1–P3 cerradas (`#632`): su trabajo es de F5 (campos e
+   imagen en el catálogo del panel, retirar Attractions con su complemento); (c) leer la respuesta del SPA a esa spec y pasarla a ✅; (d) el cajón lo
    implementa el SPA, con la huella de maquetación 24/24 como juez; `cajon/boot` y `cajon/session` son de ESTE carril.
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes»; propuesta guardada: un
    `tokens.json` en la instancia del que salgan `client.css` y el tema de la app —se reutilizan los 65 tokens,

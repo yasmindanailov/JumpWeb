@@ -1,8 +1,8 @@
 # [SPEC] El cajón empaquetable — del layout del producto a un paquete con contrato (F4 del programa)
 
-> Estado: 🟦 **en revisión**: lo técnico decidido (`DECISIONES #631`: el owner lo delega en el estándar
-> profesional); **abiertas tres opciones de PRODUCTO de §4.6** (P1–P3, del owner) y la lectura del carril del
-> SPA, que es quien implementa · Última actualización: 2026-09-18.
+> Estado: 🟦 **en revisión**: todo lo del owner DECIDIDO (`DECISIONES #631` lo técnico y el principio, `#632`
+> las tres opciones de producto); **falta la lectura del carril del SPA**, que es quien implementa ·
+> Última actualización: 2026-09-18.
 > Carriles: diseño **plataforma**; implementación **SPA** (`resources/js/sidebar/**`, `public/css/site.css`) con
 > plataforma en el anfitrión y la API. Origen: `specs/producto-e-instancias.md` §4.2. Hermana: `specs/token-bearer.md`.
 
@@ -23,7 +23,8 @@
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo (285).
 - **La landing consume un MENÚ DE HECHOS y todo es opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende
   de que la landing lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: en revisión. NO se escribe código del cajón hasta que el SPA lea §1 y §4; P1–P3 son del owner.
+- **Estado**: en revisión. NO se escribe código del cajón hasta que el SPA lea §1 y §4. Lo del owner está
+  decidido (`#631`, `#632`: ficha con descripción e imagen · API ahora y kit después · atracciones fuera).
 - **Empieza por** §1 (el censo) → §4.1 (la forma del paquete) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
@@ -146,9 +147,17 @@ responde `no-cache, private`; el menú irá con `public, max-age` corto + `ETag`
 la promo `#628` y mañana el sistema de ofertas: misma forma; (f) `site` basta para componer el `LocalBusiness`.
 **`[DECIDIDO owner]`**: el widget flotante de ofertas (imágenes y texto) se RETIRA; «oferta» pasa a ser un HECHO de precio.
 
-**Abierto — tres opciones de PRODUCTO, las elige el owner** (P1 ficha de producto con descripción e imagen en el
-panel · P2 API sola o también un kit declarativo para quien diseña · P3 atracciones: fuera o como hechos mínimos).
-El alcance fino de cada recurso se escribe en la spec de F5; aquí queda el principio y la forma.
+**Tres opciones de PRODUCTO — `[DECIDIDO owner]` 2026-09-18 (`#632`)**:
+- **P1 · la ficha de producto gana descripción e imagen**: cada producto y cada zona, en el panel, una
+  descripción traducible y UNA imagen opcional. La landing los usa si quiere; la app (F6) vende con ellos sin
+  empaquetar material por cliente. *Descartado*: solo texto; nada nuevo.
+- **P2 · API ahora, kit después**: en F5 la API con su contrato; el kit declarativo (atributos que el cargador
+  rellena solo) se construye cuando una segunda instancia lo pida, con su uso delante. *Descartado*: solo API para
+  siempre; kit desde F5 (diseñado sin quien lo valide); componentes listos (devuelve presentación al producto).
+- **P3 · las atracciones SALEN del panel**: medido, son presentación (nombre, descripción, imagen, chapa y una
+  etiqueta de edad en texto; sin aforo ni venta). Las restricciones que importen viven en Normas, que va por API;
+  se retira con ellas el complemento por atracción (0 de 23 en uso). *Descartado*: hechos mínimos; dejarlas.
+El alcance fino de cada recurso se escribe en la spec de F5; aquí queda el principio, la forma y estas tres.
 
 ## 5. Impacto en invariantes
 `RGPD-04`: `cajon/session` es `no-store` (lleva titular). `PERF-02`: `cajon/boot` y el menú van con caché pública
@@ -164,7 +173,8 @@ recurso público lee un ajuste fuera de su lista blanca. `AFORO-*` y `PAY-*`: ni
 ## 7. Revisión y decisión
 **2026-09-18, con el owner** (`#631`): lo técnico, por el estándar profesional (§4.5 y el estándar de §4.6);
 suyo y decidido: todo lo consumible es OPCIONAL, identidad y contacto van por API, el widget de ofertas se retira,
-y el menú crece (ficha de producto). Abierto: P1–P3. Después revisa el carril del SPA (es quien implementa).
+y el menú crece (ficha de producto). **P1–P3 decididas ese mismo día (`#632`)**, las tres por la recomendada.
+Falta que revise el carril del SPA (es quien implementa) para pasar a ✅.
 
 ## Anexo · fila del enrutador
 
