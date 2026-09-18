@@ -44,7 +44,7 @@ agente, en el primer ordenador, sigue con la **Fase 3** (las páginas públicas:
    y `claude plugin install jumpweb-agente@jumpweb-agente --scope project`, y abre una sesión NUEVA. Si `claude`
    no está en el PATH, el binario vive en `~/.vscode-server/extensions/anthropic.claude-code-<v>/resources/native-binary/claude`.
    Lo corre el owner: al agente se lo deniega el clasificador (`#626`). El primer prompt es «Hola, lee la doc y
-   arranca». Detalle: `docs/sistemas/CAPA-DE-AGENTE.md`. Hasta entonces, `/arranque-sesion` y `/cierre-sesion`.
+   arranca». Detalle: `docs/sistemas/CAPA-DE-AGENTE.md`. Las skills viejas del repo se retiraron con F2 (`#633`).
 
 ## 2 · De dónde sale el diseño
 

@@ -1,6 +1,6 @@
 # [SPEC] Producto e instancias — la separación de JumpWeb y sus clientes
 
-> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) y **F2 en curso** (`#623`: plugin construido, en GitHub e instalado en la primera máquina; falta el 6 de 6 en las dos y retirar las skills viejas) ·
+> Estado: ✅ **aprobada por el owner el 2026-09-16** · en ejecución, F0 y F1 cerradas (`#617`→`#621`) F2 ✅ (`#623`, cerrada por el owner el 2026-09-18, `#633`), F3 ✅ (`#624`) y **F4 en curso** (`#630`→`#632`: el emisor de Bearer hecho; el cajón empaquetable lo implementa el carril de plataforma) ·
 > Última actualización: 2026-09-16 · Decisiones: `DECISIONES #610` → `#616` · Carril: **plataforma**, banda **610–639**.
 > Origen: sesión de análisis del 2026-09-16 con el owner; inventario medido sobre el árbol de ese día.
 > Las dos páginas de trabajo que se iteraron con el owner son borradores de ESTA spec, no fuente:
@@ -214,7 +214,7 @@ instancia y app.
 
 **Ejecución, sesión 1** (`#623`, 2026-09-16; referencia `docs/sistemas/CAPA-DE-AGENTE.md`): el repo del plugin es su
 propio marketplace con el plugin bajo `plugins/`; las skills se invocan como `/jumpweb-agente:<skill>` y también
-`/<skill>` si nadie más usa el nombre (por eso las tres viejas conviven hasta el 6 de 6); los hooks van en Python 3
+`/<skill>` si nadie más usa el nombre (por eso las tres viejas convivieron hasta cerrar F2, `#633`); los hooks van en Python 3
 y no en `jq` (no está en las máquinas), fallan abiertos, y `Stop` bloquea una vez por estado solo con commits sin
 empujar, porque en ese evento el owner no ve otra cosa. Medido: arnés de hooks 38/38 y una sesión real
 `claude -p --plugin-dir` sobre el repo con los tres hooks disparando. ⚠️ El clasificador del modo «auto» deniega
@@ -268,7 +268,7 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
 |---|---|---|---|
 | F0 gobierno | 1 | 1 | esta spec ✅ owner; `#610`–`#616`; reglas 8 y 9 |
 | F1 doc caliente | 1, el 2 en pausa | 2–3 | arranque ≤ 60 KB; huella 100 %; comprobación 10 — ✅ 2026-09-16, `#617`→`#621` |
-| F2 capa de agente | 1, ambas máquinas | 2 | plugin en las dos; 6 de 6 frases |
+| F2 capa de agente | 1, ambas máquinas | 2 | plugin en las dos; 6 de 6 frases — ✅ 2026-09-18, `#633`: la cierra el owner, que dio por revisadas las frases; skills viejas retiradas |
 | F3 versión | 1 | 1 | `git describe` en producción = v1.0.0; guarda 8 — ✅ 2026-09-17, `#624`: etiqueta, changelog, guarda y el servidor lo dice (`cat storage/app/version`) |
 | F4 cajón y token | 2 la SPA, 1 la API | 3–5 | cajón montado desde HTML ajeno; huella de maquetación 24/24; contrato 1.1.0 |
 | F5 instancia PlayJump | 1 | 4–6 | visitante sin cambios; cero cliente en el código; 13 recursos; v2.0.0 |
@@ -315,8 +315,10 @@ las filas se verifica con **huella**: cada frase con aviso del enrutador localiz
   negación `anulan` de «no quiero spec» y los avisos `<task-notification>`): arnés 52/52 con los seis casos
   nuevos vistos en rojo antes, `pruebas/mutar-frases.py` 9/9, y un control con los 419 mensajes reales de 25
   sesiones (mapa viejo contra nuevo): 23 avisos de tarea que sugerían en falso callan y 8 cierres del owner
-  («vamos a cerrar sesion…») que el mapa viejo no cazó nunca casan; cero falsos positivos nuevos. El 6 de 6
-  en sesión nueva de cada máquina sigue pendiente.
+  («vamos a cerrar sesion…») que el mapa viejo no cazó nunca casan; cero falsos positivos nuevos. **F2 cerrada
+  el 2026-09-18 (`#633`)**: el owner dio por revisadas las frases («ya lo hemos revisado»); el 6 de 6 con
+  `1377d58` en una sola sesión NO lo midió el agente — lo medido por él es el 5 de 6 de arriba, los cuatro arreglos
+  con su mutación, y el hook disparando `/carril` en esta sesión con «vamos a continuar».
 - F3: `git describe --tags` en producción (sin `.git` allí, es `cat storage/app/version`); un despliegue sin
   etiqueta abortando — hecho el 2026-09-17 contra un host `.invalid`, código de salida 1 (`#624`).
 - F4: caso que monta el cajón desde un HTML mínimo ajeno; tests de contrato del esquema Bearer; huella de

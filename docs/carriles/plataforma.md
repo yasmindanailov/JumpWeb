@@ -1,242 +1,168 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#632`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (mapa de frases y ESLint).
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#633`** ·
+> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (F2 cerrada; F4 en curso).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
 ## Foto
 
-- **F0 y F1 cerradas** (16-09, `#610`→`#622`): la spec aprobada, la doc caliente (decisiones por centenas, el
-  contador al trailer, `§0` en las 46 specs, enrutador ≤ 12 KB, carriles, techos del gate = comprobación 10,
-  ciclo de vida = comprobación 11). El detalle vive en esas decisiones y en `git log -p` hasta el commit de F1.
-  ▶ Tarea propia que sigue abierta: **podar `DEUDA.md`** (277 KB) y `VERIFICACION-E2E-CAJON.md` (186 KB) antes de
-  ponerles techo.
-- **F2 · la capa de agente** (`#623`, `sistemas/CAPA-DE-AGENTE.md`): el plugin `jumpweb-agente` vive en
-  `~/proyectos/jumpweb-agente` (GitHub `yasmindanailov/jumpweb-agente`), 11 skills, 3 hooks en Python, arnés
-  `pruebas/probar-hooks.sh` **52/52** y arnés de mutación `pruebas/mutar-frases.py` **9/9**. Reglas `allow` del
-  owner en `~/.claude/settings.json` de cada máquina (`#626`). La sesión de las frases (17/18-09, `627b3a3`) dio
-  5 de 6 sin barra; `handoff` NO disparó con «vamos a cerrar aquí». **Los cuatro defectos del mapa, ARREGLADOS el
-  18-09 en `1377d58`** (empujado; ESTA máquina actualizada por `claude plugin … update`, el hook de la caché
-  comprobado con las cuatro frases reales; **la del SPA sigue en `627b3a3`**): (a) `desplegar` casa
-  «desplegamos» y verbo + «a|en producción» —«en producción» a secas NO, a propósito: «¿la promo ya está en
-  producción?» calla—; (b) `handoff` casa «vamos a cerrar», «cerrar aquí|ya|por hoy|la sesión», «cerremos»;
-  (c) un momento admite `anulan` (negaciones: «no quiero spec», «sin spec»); (d) un prompt con
-  `<task-notification>` o que empieza por `[SYSTEM NOTIFICATION` no es del owner. **Control con 419 mensajes
-  reales de 25 sesiones, mapa viejo contra nuevo**: 23 avisos de tarea que sugerían en falso callan, 8 cierres del
-  owner («vamos a cerrar sesion…», su frase habitual, que el mapa viejo no cazó NUNCA) casan, cero falsos
-  positivos nuevos. ⚠️ El mensaje del commit `1377d58` dice «24 avisos»: son 23 (el 34.º cambio era el resumen
-  de compactación, que NO pasa por `UserPromptSubmit`: medido, 10 de 10 sin salida del hook detrás).
-- **F3 ✅** (`#624`): v1.0.0 = `1272cb93`, guarda 8 con arnés 9/9, `CHANGELOG.md`; producción dijo v1.0.0 el 17-09
-  (fichero escrito a mano) y **la guarda 8 se estrenó en real el 18-09** con el noveno despliegue.
-- **`#625` análisis estático ✅ ENTERO** (18-09): Larastan nivel 5 sobre `app/` con línea base de 459, y
-  **ESLint (`#629`)** sobre el cajón: reglas base + `vue flat/essential` + `no-use-before-define` a coste cero,
-  línea base NATIVA de 12 (`eslint-suppressions.json`), paso `npm run lint:js` en el gate tras Larastan (~2 s).
-  Las dos con trinquete en `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` **20/20**. Medido antes:
-  los otros dos juegos de Vue dan los mismos 12 errores y +4.364 avisos de formato. **El primer día cazó un
-  defecto VIVO del SPA** (`addBtn` sin declarar en `DependentsZone.vue`), avisado en el buzón.
-- **Regla de trabajo del owner desde `#630`**: lo TÉCNICO lo decide el agente por el estándar profesional y lo
-  justifica con medida; lo que afecte al TIPO DE PRODUCTO se le lleva con opciones, la recomendada primero.
-- **F4 ABIERTA (18-09). EL TOKEN ESTÁ HECHO** (`specs/token-bearer.md` ✅, `#630`, contrato **1.1.0**):
-  `POST /auth/tokens` y `POST /auth/tokens/rotate` (`AuthTokenController`), `PasswordLogin::verify()` sobre un
-  núcleo privado que comparte con `attempt()` (los DOS limitadores, mismas claves), `ApiTokenIssuer` (una
-  ability `api-v1`, caducidad propia con reserva de 30 d, tope de 10), `User::revokeStalestTokens()` (retira el
-  más OLVIDADO), y **`abilities:api-v1` en TODA ruta autenticada** con la guarda `ApiTokenAbilityTest`. 19 tests
-  con tokens REALES, `scripts/mutar-token-bearer.sh` **14/14**, `curl` en local de punta a punta. Larastan cazó
-  tres cosas en lo nuevo y ninguna fue a la línea base. **Sin desplegar y sin etiqueta**: la v1.2.0 tiene que
-  listar el contrato 1.1.0, el emisor y ESLint (`CHANGELOG.md` no lleva sección «sin publicar»: lo escribe
-  `/release`). `specs/cajon-empaquetable.md` 🟦
-  (`#631`): arranque en dos lecturas (`cajon/boot` pública y cacheable, `cajon/session` privada y `no-store`) y
-  **la landing consume un MENÚ DE HECHOS donde TODO es opcional** (`[DECIDIDO owner]`: identidad y contacto por
-  API, ficha de producto, el widget flotante de ofertas se RETIRA); estándar: lista blanca por `Resource` (la
-  tabla `settings` mezcla `contact` con `redsys_secret_key`), caché pública con `ETag` (hoy `no-cache, private`),
-  un modelo de lectura con dos transportes. **P1–P3 `[DECIDIDO owner]` (`#632`)**: la ficha de producto y de zona
-  gana descripción traducible e imagen (la app de F6 vende con eso) · API ahora y kit declarativo cuando lo pida
-  una segunda instancia · las 23 atracciones SALEN del panel (son presentación). Falta solo la lectura del SPA.
-  Del censo del token: casi todo existe desde la Fase 3 (Sanctum, caducidad 30 d, poda, revocación
-  por 5 vías, `bearerAuth` en el contrato, 35/55 rutas tras `auth:sanctum`); falta el emisor `POST /auth/tokens`,
-  un `PasswordLogin::verify()` SIN sesión que comparta los dos limitadores (`attempt()` usa `Auth::attempt()`
-  sobre el guard de sesión: el emisor no puede llamarlo), la ability `api-v1` (hoy nadie mira abilities) y el
-  tope de 10 por cuenta. Del censo del cajón: «una línea del layout» era falso (son DIEZ dependencias: carcasa
-  Blade, store de Alpine que llega DENTRO de Livewire, `data-boot` de 18,7 KB, hoja de 549 KB compartida con 10
-  bloques definidos en las DOS hojas, tokens de otra hoja, 8 puertas). El enrutador quedó a 7 bytes del techo:
-  la próxima fila exige acortar otra.
-- **`#627`** `[DECIDIDO owner]`: la app en **React Native + Expo, TypeScript**; la prueba corta de F6 confirma,
-  no compara (`#612` marcada).
-- **`#628` · la promo «−20 % online», chapuza declarada y EN PRODUCCIÓN ENTERA**: el 17-09 a las 22:35 las 9
-  filas de `prices` de las 5 entradas × 0,8 y el badge «−20 % online» como DATO (copia previa, 10 filas de
-  `audit_logs` con `from`/`to`); el 18-09 el precio de antes tachado en la card de la portada y en `/precios`
-  y el recuadro encima de las pestañas, encendidos por cuatro filas de `settings` (`promo.percent` = 20,
-  `promo.banner.{es,en,fr}`), sin panel ni migración; el cajón sin tocar. Cero dinero: ningún precio que se
-  cobre cambia. Todo en `ENTORNOS.md` §6 con la receta de fin de promo. La spec del mecanismo, aparcada en
-  `archivo/promo-precio-anterior.md` (punto de partida del sistema de ofertas que el owner quiere después).
-- **Noveno despliegue HECHO, el primero por etiqueta** (18-09, 07:23:01–07:23:51, parque cerrado): **v1.1.0 =
-  `3547de9f`** con la promo, la T3 del SPA (`#572`, defecto vivo desde el octavo) y su T4·1–T4·4 (`#573`→`#576`,
-  invitación apagada, una migración). `CHANGELOG.md` v1.1.0 lo lista. Verificado en las tres lenguas.
-- **Del despliegue de v1.0.0 medí que no había nada que subir** (0 ficheros de runtime) y **que el build no es
-  reproducible byte a byte**: `resources/css/app.css` cambia de hash porque Tailwind escanea el árbol entero y
-  ninguna vista la carga (entrada de Vite sin consumidor; `ENTORNOS.md` §6).
+- **Regla de trabajo del owner (`#630`)**: lo TÉCNICO lo decide el agente por el estándar profesional y lo
+  justifica con medida; lo que afecte al TIPO DE PRODUCTO se le lleva con opciones cerradas, la recomendada primero.
+- **F0, F1, F2 y F3 CERRADAS.** F2 la cerró el owner el 18-09 (`#633`: dio por revisadas las frases; el agente
+  midió 5 de 6 y los cuatro arreglos del mapa, no el 6 de 6 en sesión nueva). Las tres skills viejas del repo,
+  retiradas; el plugin `jumpweb-agente` (repo `~/proyectos/jumpweb-agente`, GitHub `yasmindanailov/…`) va por
+  `07076ac`: arnés `pruebas/probar-hooks.sh` 52/52, mutación `pruebas/mutar-frases.py` 9/9. Se actualiza con
+  `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente --scope
+  project` (el agente puede, `#626`) y pide REINICIAR la sesión. F3: v1.0.0 = `1272cb93`, guarda 8.
+  ▶ Tarea propia de F1 aún abierta: podar `DEUDA.md` (277 KB) y `VERIFICACION-E2E-CAJON.md` (186 KB).
+- **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan nivel 5 (línea base 459) y ESLint del cajón
+  (`flat/essential`, línea base nativa de 12 en `eslint-suppressions.json`), las dos con trinquete en
+  `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20.
+- **F4 EN CURSO, y el cajón lo implementa ESTE carril** (`#633`: el SPA está con la invitación digital).
+  · **El token, HECHO** (`specs/token-bearer.md` ✅, `#630`, contrato 1.1.0): `POST /auth/tokens` y `/rotate`,
+  `PasswordLogin::verify()` (núcleo compartido con `attempt()`: los dos limitadores, mismas claves),
+  `ApiTokenIssuer` (ability `api-v1`, caducidad propia, tope de 10), `abilities:api-v1` en TODA ruta autenticada
+  (`ApiTokenAbilityTest`). 19 tests con tokens reales, `scripts/mutar-token-bearer.sh` 14/14. La Fase 3 quedó ✅.
+  · **El cajón, en DISEÑO aprobado por el owner en lo suyo** (`specs/cajon-empaquetable.md` 🟦, `#631`, `#632`):
+  el censo desmintió «lo monta una línea del layout» (DIEZ dependencias: carcasa Blade de ~440 líneas, store de
+  Alpine que llega DENTRO de Livewire con 23 usos en 9 vistas, `data-boot` de 18,7 KB pintado en cada página,
+  cero `<style>` en los 51 `.vue` con 81 bloques solo en `site.css` y 10 en las DOS hojas, tokens de otra hoja,
+  8 puertas). Arranque en dos lecturas (`cajon/boot` pública y cacheable, `cajon/session` privada y `no-store`).
+  · **F5, su principio `[DECIDIDO owner]`**: la landing consume un MENÚ DE HECHOS por API y TODO es opcional;
+  identidad y contacto por API; ficha de producto y de zona con descripción e imagen; API ahora y kit
+  declarativo cuando lo pida una segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» =
+  hecho de precio). Lista blanca por `Resource`: `settings` mezcla `contact` con `redsys_secret_key`.
+- **Sin desplegar y sin etiqueta desde v1.1.0** (`3547de9f`, 18-09): la v1.2.0 tiene que listar el contrato
+  1.1.0, el emisor, ESLint y lo del SPA (`#577`→`#579`, `#520`). `CHANGELOG.md` no lleva sección «sin publicar»:
+  lo escribe `/release`. `#627`: la app en React Native + Expo (TypeScript).
+- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, y el tachado y el
+  recuadro por cuatro filas de `settings` (`promo.percent`, `promo.banner.{es,en,fr}`). Receta de fin en
+  `ENTORNOS.md` §6; el mecanismo aparcado en `archivo/promo-precio-anterior.md`.
+- El enrutador está a pocos bytes de su techo de 12 KB: una fila nueva exige acortar otra.
 
 ## Por dónde retomar, en orden
 
-1. **F2 · cerrar la fase** (los cuatro arreglos del mapa están hechos, ver la foto; el plugin vive en
-   `~/proyectos/jumpweb-agente/plugins/jumpweb-agente/{reglas/momentos.json,hooks/prompt_submit.py}` y con las
-   reglas de `#626` el agente lo edita y lo actualiza él: `claude plugin marketplace update jumpweb-agente` +
-   `claude plugin update jumpweb-agente@jumpweb-agente --scope project`, que pide REINICIAR la sesión). Queda:
-   (e) el **6 de 6 con `1377d58`** en sesión NUEVA de cada máquina (la del SPA tiene que actualizar antes: está
-   en el buzón), medido en la transcripción filtrando por `type == user`, anotado en la spec §6; (f) con el 6 de
-   6, retirar `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador paso 0,
-   `CONVENCIONES §1` y §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker. Un patrón nuevo del mapa se
-   prueba SIEMPRE con el control de mensajes reales (mapa de `git show HEAD:` contra el nuevo sobre los `.jsonl`
-   de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`): fue lo que descubrió la frase habitual del owner.
-2. **Deuda del análisis estático** (`#625` y `#629` están hechos): bajar la línea base de Larastan por familias
-   (`nullsafe.neverNull` es mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint son ficheros
-   del SPA: los baja ese carril (poda con `--prune-suppressions` y baja `FROZEN_JS_ERRORS`, que SÍ es de este).
-   Y la tarea propia de F1 que sigue abierta: podar `DEUDA.md` y `VERIFICACION-E2E-CAJON.md`.
+1. **F4 · el cajón empaquetable, por TANDAS pequeñas y empujadas** (`specs/cajon-empaquetable.md` §0 → §4).
+   Antes de cada tanda: aviso en el buzón (son ficheros del SPA) y `git pull --rebase`. Nada de la invitación.
+   - **T1 · el arranque con UN compositor**: sacar el `data-boot` del layout a una clase (`Http\Sidebar`), con el
+     payload IDÉNTICO byte a byte (se mide con `curl` antes y después), y servirlo por `GET /api/v1/cajon/boot`
+     (pública, `ETag`, por idioma) y `GET /api/v1/cajon/session` (privada, `no-store`, consume el desenlace).
+     Contrato 1.2.0. Un modelo de lectura, dos transportes.
+   - **T2 · la apertura sin Alpine**: `window.JumpWeb.cajon` (`open`, `openWith`, `openAccount`, `close`),
+     atributos `data-jw-*` y eventos `jw:cajon:*`; `$store.purchase` queda de adaptador (sus 23 usos no se tocan).
+   - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
+     Vite servida desde una ruta estable; sin `data-boot` en la página, arranca por las dos lecturas de T1.
+   - **T4 · la hoja propia**: extracción MECÁNICA de `site.css` con guion e informe en seco (método `#437`),
+     resolviendo los 10 bloques de las dos hojas por MEDIDA; juez: la huella de maquetación 24/24 idéntica.
+   - **T5 · la salida**: una página HTML ajena (sin Blade, Livewire ni Alpine) monta el cajón, lo abre por las
+     tres vías y compra en local (`/sonda`); trinquete «clase emitida ⊂ hoja del paquete»; spec a ✅.
+2. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
+   mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 3. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
-   filas `promo.*` el mismo día** (si no, el tachado miente). Sin desplegar. Y el **sistema de ofertas** cuando
-   lo pida: `/spec` desde `archivo/promo-precio-anterior.md` §1 y §3.
-4. **F4, en curso**: (a) el token, HECHO (ver la foto); lo que queda de él es de F6 y tiene nombre en su spec §2
-   (emisión por Google, alta desde la app, listar dispositivos, el desenlace del pago para un cliente Bearer);
-   **lo siguiente de este carril en F4 son `cajon/boot` y `cajon/session`** (`specs/cajon-empaquetable.md` §4.5),
-   cuando el SPA haya leído la spec; (b) P1–P3 cerradas (`#632`): su trabajo es de F5 (campos e
-   imagen en el catálogo del panel, retirar Attractions con su complemento); (c) leer la respuesta del SPA a esa spec y pasarla a ✅; (d) el cajón lo
-   implementa el SPA, con la huella de maquetación 24/24 como juez; `cajon/boot` y `cajon/session` son de ESTE carril.
-   → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes»; propuesta guardada: un
-   `tokens.json` en la instancia del que salgan `client.css` y el tema de la app —se reutilizan los 65 tokens,
-   fuentes, logo, kit y textos; no el CSS ni los componentes Vue—) → F6 (app nativa, spec con la pila `#627`).
-- **Del owner**: las dos de F5 (con el censo hecho) · el fin de la promo · el 6 de 6 en su otra máquina.
+   filas `promo.*` el mismo día**. Sin desplegar. El sistema de ofertas nace como hecho de precio (`#631`).
+4. Después **F5** (instancia PlayJump, v2.0.0: abre con el censo de Zones y de «redes»; el menú de hechos y la
+   ficha con imagen de `#632`; propuesta guardada: un `tokens.json` en la instancia del que salgan `client.css` y
+   el tema de la app) → **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
+- **Del owner**: las dos de F5 (con el censo hecho) · el fin de la promo · cuándo sale la v1.2.0.
 
 ## Ficheros de este carril
 
 `CLAUDE.md` · `docs/ESTADO.md` · `docs/00-REFACTOR.md` · `docs/CONVENCIONES.md` · `docs/README.md` ·
-`docs/DECISIONES.md` y la estructura de `docs/decisiones/` (cada carril escribe SUS entradas) · la estructura de
-`docs/carriles/` (cada carril SU fichero) · `scripts/docs-check.sh` · `.githooks/pre-push` ·
-`scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `.claude/skills/` · `scripts/deploy.sh` (la
+`docs/DECISIONES.md` y la estructura de `docs/decisiones/` y `docs/carriles/` · `scripts/docs-check.sh` ·
+`.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
-`scripts/mutar-analisis-estatico.sh` · `StaticAnalysisGateTest` · `eslint.config.js` · `eslint-suppressions.json`
-(la línea base la PODA quien arregla; la config y el techo son de este carril) · el emisor de tokens
-(`ApiTokenIssuer`, `AuthTokenController`, `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`,
-`scripts/mutar-token-bearer.sh`) · `Setting::promoPercent()` y
-`WritesLandingValues::antes()` (la chapuza `#628`; lo que pinta es de la web). Todo lo anterior es
-COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
+`eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
+`StaticAnalysisGateTest` · el emisor de tokens (`ApiTokenIssuer`, `AuthTokenController`,
+`PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
+`Tests\TestCase::be()` · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
+**En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
+`resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
+Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
 
 ## Trampas de este carril
 
 - El harness en modo «auto» ordena preferir Bash a Read/Edit/Write; manda la regla 8 de `CLAUDE.md`.
-- **El clasificador «auto» y producción, medido en tres sesiones**: deniega escribir hooks, manifiestos y
-  reglas del plugin («self-modification») salvo con las reglas `allow` de `#626`; denegó `scp` y el `--go`
-  el 16-09 sin orden del owner en el turno; **el 17/18-09, con la orden del owner EN EL TURNO, dejó pasar** la
-  escritura de `storage/app/version` por `ssh`, el guion de precios por `ssh`+tinker y el `--go` de v1.1.0.
-  Lo que denegó fue el **ensayo en seco con la salida redirigida a un fichero** («Blind Apply»); sin redirigir
-  pasó. No se rodea nada: se hace lo demás y se le pide al owner.
-- **Un guion de datos contra producción va con precio ESPERADO por fila y en transacción**, se prueba antes en
-  local (que parte del mismo estado: medido byte a byte) y se corre dos veces en local para ver que la segunda
-  aborta. Escribe por Eloquent y olvida `cta.min_price_cents` como hace `EditCatalog::afterSave()`
-  (`PERF-05`): la invalidación vive en las páginas del panel, no en el modelo.
-- **Pasar un guion a tinker por `ssh`**: `tail -n +2 guion.php | ssh host 'cd public_html && php artisan tinker
-  --execute="$(cat)"'` (sin la línea `<?php`). `require "php://stdin"` NO funciona (medido).
-- **Un `grep` del disparo de una skill en la transcripción da falsos positivos**: el propio fichero de carril
-  leído por `Read` contiene `<command-name>/carril` literal, y los mensajes del agente también. Se filtra por
-  `type == user` con contenido de texto, no `tool_result`.
-- **Comparar manifiestos de Vite enteros da un falso «hay algo que desplegar»**: `app.css` cambia de hash con
-  el árbol (Tailwind escanea docs y mockups). Se compara entrada a entrada; 6 de 7 eran idénticas.
-- **Taquilla cobra de la misma tabla `prices` que la web** (`CreateManualOrderPage` usa `RateResolver` y no deja
-  cambiar el precio a mano): una rebaja «solo online» como DATO es imposible; el copy dice «online».
-- **El pedido manual y ocho servicios del núcleo llaman a `priceCents()`, y cuatro más leen `prices`
-  directamente**: un descuento por canal en el resolutor es un cambio del núcleo (`CRITICAL_RE`), no una tarde.
-- El `pull --rebase` de cierre puede traer código del otro carril: **la suite se re-mide sobre el árbol fusionado
-  y el trailer se corrige con `--amend`** (esta sesión: 4885 → 4971); y **la etiqueta se lleva `main` ENTERO**,
-  así que el CHANGELOG lista también lo del otro carril.
-- `git show HEAD~N:docs/DECISIONES.md` (antes de F1) es el registro único de antes de la partición;
-  `git log -p docs/ESTADO.md` y `docs/00-REFACTOR.md` hasta el commit de F1 son el histórico que se borró.
-- Dos mediciones de F1 salieron FALSAS por el instrumento (un `&&` tras un `ls` que falla; un `awk` con
-  `tr -d '#'` que lee el campo vacío); la huella de un anexo tiene que ser por FILA, no por fichero (944/974).
-- `rm -rf` está en el deny del repo y **un comando compuesto que lo lleve dentro se deniega entero**: carpeta
-  nueva en vez de borrar. `claude plugin details` no acepta `--plugin-dir`; `claude -p … --plugin-dir` sí.
-- **«The command 'docker' could not be found in this WSL 2 distro» es Docker Desktop APAGADO**: se arranca desde
-  WSL con `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
-- **Un test que mira una «casi versión» tiene que EMPUJARLA antes de medir**: una etiqueta ligera o `v1.0` sin
-  empujar aborta por «no está en origin» y el caso sale verde sin haber mirado el nombre ni el tipo.
-- El push de una ETIQUETA no pasa por el gate (`pre-push` solo mira `refs/heads/main`): por eso `/release`
-  exige que el commit etiquetado ya esté en `origin/main`.
-- **`npm install` PODA `playwright-core`** (se instala con `--no-save`): medido el 18-09 al meter ESLint
-  («removed 1 package»). Tras cualquier `npm install`, reponerlo (`/sonda` §1) o la sonda falla al importar.
-- **Activar una comprobación en el grupo autenticado de la API puede tumbar tests que no tienen culpa**: la
-  ability `api-v1` dio 24 rojos en cinco carpetas, todos un 401 de mentira. Tras UNA petición a la API,
-  `sanctum` queda como guard por defecto de la aplicación del test, y `actingAs($u)` (o `actingAs($u, 'sanctum')`)
-  planta al titular ahí SIN token, cosa que el guard real no hace nunca (adjunta un `TransientToken`). Arreglado
-  en `Tests\TestCase::be()`, que es COMPARTIDO; la comprobación de producción sigue fallando cerrado. Y con tokens
-  REALES, `Auth::forgetGuards()` entre peticiones, o un token ya revocado sigue «entrando» por la caché del guard
-  (`AuthTokenTest::asBearer()`). La suite entera se corre ANTES de dar por buena una guarda transversal.
-- **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie**: dice `PersonalAccessToken` y
-  llega un `TransientToken`; Larastan da el `instanceof` por «siempre cierto». El tipo real es `HasAbilities`
-  (`@var` en `ApiTokenIssuer::rotate()`), no una entrada más en la línea base.
-- **Un arnés que restaura un `.vue` tocándole la fecha deja el bundle SSR «rancio»**: la suite dio 36 fallos de
-  `SidebarDomContractTest` tras `mutar-analisis-estatico.sh` (18-09). No es una regresión: `npm run build:ssr` y
-  re-medir (el `pre-push` lo reconstruye solo).
-- **ESLint se mide fuera del árbol** cuando el gate está corriendo: instalación desechable en el `/tmp` del
-  contenedor y `--config` apuntándola, con el cwd en el repo (los `import` de la config resuelven junto a ella).
+- **El clasificador «auto» y producción**: deniega escribir hooks, manifiestos y reglas del plugin salvo con las
+  reglas `allow` de `#626`; con la orden del owner EN EL TURNO deja pasar escrituras por `ssh` y el `--go`; deniega
+  el ensayo en seco con la salida redirigida a fichero («Blind Apply»). No se rodea: se le pide al owner.
+- **Un guion de datos contra producción** lleva valor ESPERADO por fila y transacción, se prueba antes en local y
+  se corre dos veces para ver que la segunda aborta; escribe por Eloquent y olvida `cta.min_price_cents`
+  (`PERF-05`). A tinker por `ssh`: `tail -n +2 guion.php | ssh host 'cd public_html && php artisan tinker
+  --execute="$(cat)"'`; `require "php://stdin"` NO funciona.
+- **Dos carriles empujando a la vez**: el gate tarda ~3 min y el remoto se mueve; un push puede salir RECHAZADO
+  con el gate en verde (18-09, dos veces). `pull --rebase`, **re-medir la suite sobre el árbol fusionado**,
+  corregir el trailer con `--amend` y volver a empujar. La etiqueta se lleva `main` ENTERO.
 - **El código de salida de una tarea en segundo plano con `; tail` al final es el del `tail`**: los de `pull` y
-  `push` se imprimen con `echo "… exit=$?"` y se LEEN en la salida.
-- **El ojo del navegador se pierde al recrear el contenedor** (Chromium y el puente `socat`): montarlo son
-  ~2 min en segundo plano (`/sonda` §1); `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`.
+  `push` se imprimen con `echo "… exit=$?"` y se LEEN.
+- **Una guarda transversal se da por buena con la SUITE ENTERA, no con sus tests**: la ability `api-v1` dio 24
+  rojos en cinco carpetas, todos un 401 de mentira — tras UNA petición a la API, `sanctum` queda como guard por
+  defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el guard real no hace (adjunta un
+  `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando cerrado. Con tokens REALES,
+  `Auth::forgetGuards()` entre peticiones o un token revocado sigue entrando por la caché del guard.
+- **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
+  llega `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base.
+- **Un arnés que restaura un `.vue` tocándole la fecha deja el bundle SSR «rancio»**: 36 rojos de
+  `SidebarDomContractTest`. `npm run build:ssr` y re-medir (el `pre-push` lo reconstruye solo).
+- **`npm install` PODA `playwright-core`** (va con `--no-save`): reponerlo (`/sonda` §1). Y el ojo del navegador
+  se pierde al recrear el contenedor (~2 min montarlo; `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).
+- **ESLint o cualquier herramienta se MIDE fuera del árbol** si el gate está corriendo: instalación desechable
+  en el `/tmp` del contenedor y `--config` apuntándola, con el cwd en el repo.
+- **Un patrón nuevo del mapa de frases se prueba contra los mensajes REALES del owner** (mapa de `git show
+  HEAD:` contra el nuevo sobre los `.jsonl` de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`, filtrando
+  `type == user` con texto): así apareció su cierre habitual, «vamos a cerrar sesion». El resumen de
+  compactación NO pasa por `UserPromptSubmit`.
+- **Comparar manifiestos de Vite enteros da un falso «hay algo que desplegar»**: `app.css` cambia de hash con el
+  árbol (Tailwind escanea docs y mockups). Se compara entrada a entrada.
+- **Taquilla cobra de la misma tabla `prices` que la web**, y el pedido manual y ocho servicios del núcleo llaman
+  a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
+- `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
+  versionado, carpeta nueva para lo demás. `claude plugin details` no acepta `--plugin-dir`.
+- **«The command 'docker' could not be found» es Docker Desktop APAGADO**: se arranca desde WSL con
+  `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
+- Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
+  esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
+- `git show HEAD~N:docs/DECISIONES.md` (antes de F1) es el registro único de antes de la partición.
 
 ## Buzón
 
-### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-18)
-- ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`**, y lo vigila
-  `Architecture\ApiTokenAbilityTest`. Una ruta autenticada nueva va DENTRO del grupo autenticado de
-  `routes/api.php` (ya la lleva) o, si va suelta, con `->middleware(['auth:sanctum', $tokenAbility])`. En un test:
-  `Sanctum::actingAs($u)` SIN abilities pasa a dar **403** → `Sanctum::actingAs($u, [ApiTokenIssuer::ABILITY])`;
-  `actingAs($u)` por sesión no cambia. Toqué por eso, y solo por eso, 9 líneas de `OrderGuestMinorsTest` y
-  `MeWaiverGuestMinorTest`, y **lo COMPARTIDO `tests/TestCase.php`**: gana un `be()` que, cuando el guard de
-  destino es `sanctum`, adjunta al titular el `TransientToken` que adjunta el guard real (sin él, 24 tests
-  vuestros y míos daban un 401 que no existe en producción). No cambia nada más de la base de tests. El contrato dice **1.1.0** (SPA: tus cuatro rutas de la invitación entraron sin mover
-  la versión; la próxima capacidad nueva sube el MENOR, `specs/producto-e-instancias.md` §4.6).
-
 ### Para el carril del SPA (emisor: plataforma, 2026-09-18)
-- 📐 **F4 abierta y la mitad del cajón la implementas TÚ**: lee `specs/cajon-empaquetable.md` §0 y §1 (el censo
-  de lo que el cajón le pide hoy al layout) y dime en tu buzón lo que veas falso o que falte; es borrador y
-  §4.5/§4.6 están abiertos con el owner. **No codifiques nada aún.** Lo que más me importa de tu ojo: los 10
-  bloques definidos en las DOS hojas y si el adaptador de `$store.purchase` sobre una API propia te encaja.
-- ❗ **ESLint ya está en el gate (`#629`): tras el `pull`, `docker compose exec -u sail laravel.test npm install`**
-  o tu push muere con «eslint: not found». Toqué lo compartido que avisé: `package.json` (4 `devDependencies` y
-  el script `lint:js`) y `package-lock.json`. A mano: `npm run lint:js` (~2 s). Reglas: base + `vue
-  flat/essential` + `no-use-before-define` en el mismo ámbito; nada de formato. Tus 12 errores de hoy están
-  congelados en `eslint-suppressions.json`; **si arreglas uno, el gate sale en rojo (código 2) hasta que podas**:
-  `npx eslint resources/js/sidebar --prune-suppressions` y bajas `FROZEN_JS_ERRORS` en
-  `StaticAnalysisGateTest` en tu mismo commit (ese número lo puedes tocar tú). Nunca `--suppress-all`.
-- 🐞 **Defecto VIVO tuyo, cazado por ESLint el primer día y sin tocar**: `account/zones/DependentsZone.vue`
-  usa `addBtn.value?.focus()` (líneas 102 y 106) y la plantilla lleva `ref="addBtn"` (145), pero el `<script
-  setup>` **no declara `addBtn`** (`const addBtn = ref(null)`). Al cancelar o dar de alta un menor salta un
-  `ReferenceError` dentro del `nextTick` y el foco NO vuelve al botón: justo lo que protege tu comentario de la
-  línea 97 (`#217`). Está en `v1.1.0` (producción) y la declaración no ha existido nunca (`git log -S'const
-  addBtn'` vacío; `nameInput` sí se declara). Hallazgo ESTÁTICO: no lo he reproducido en navegador. Los otros 11: 7 `no-unused-vars` (imports y variables muertas) y 3
-  nombres de componente de una palabra (`Shell`, `Sidebar`, `Foot`; congelados a propósito, no hay que renombrar).
-- ❗ **Actualiza el plugin en tu máquina a `1377d58`** (por terminal, y reinicia la sesión):
-  `claude plugin marketplace update jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente --scope
-  project`. Trae los cuatro arreglos del mapa de frases: «vamos a cerrar…» ya dispara `/handoff`, «desplegamos»
-  dispara `/desplegar`, «no quiero spec» calla y los avisos de tarea en segundo plano dejan de sugerir skills.
-  Después, tu 6 de 6 en sesión nueva (llevas 1 de 6) y me lo dejas en tu buzón.
-- **Tu T3 (`#572`) y tus T4·1–T4·4 (`#573`→`#576`) ESTÁN EN PRODUCCIÓN**: v1.1.0 = `3547de9f`, noveno
-  despliegue, 18-09 a las 07:23 (parque cerrado; abre a las 16:30), con tu migración `create_party_invitations`
-  aplicada (118 ms) y los interruptores apagados. `CHANGELOG.md` v1.1.0 los lista. ▶ Lo tuyo: mirar el
-  justificante en producción en móvil y el widget REAL de Turnstile (tu paso 1 de «retomar»).
-- Tus mensajes del 17-09 (T3 pide despliegue · plugin instalado, 1 de 6 · `package.json` libre): atendidos.
-  Los míos del 16/17-09 que anotaste como atendidos, retirados.
+- ❗ **El cajón de F4 lo implemento YO, aquí** (`[DECIDIDO owner]`, `#633`), porque tú estás con la invitación.
+  Entro en ficheros tuyos y SOLO para el empaquetado: `components/layout.blade.php`, `resources/js/app.js`,
+  `resources/js/sidebar/**` (el montaje, la carcasa, el arranque; no las pantallas), `public/css/site.css` y
+  `app/Http/Sidebar/**`. Voy por tandas pequeñas y empujadas (T1–T5 en mi «retomar»); **T1 no toca ni un `.vue`**
+  (saca el `data-boot` del layout a una clase, mismo payload byte a byte, y lo sirve por API). Si vas a tocar el
+  layout, `app.js` o `site.css`, dímelo en tu buzón y te dejo paso. Tu lectura de `specs/cajon-empaquetable.md` §1
+  y §4 me sigue valiendo: lo que veas falso, a tu buzón.
+- ❗ **Actualiza el plugin a `07076ac`** (terminal, y reinicia): `claude plugin marketplace update jumpweb-agente`
+  y `claude plugin update jumpweb-agente@jumpweb-agente --scope project`. Trae los cuatro arreglos del mapa de
+  frases y deja de nombrar las skills viejas, que ya no existen en el repo (F2 cerrada, `#633`).
+- ❗ **ESLint está en el gate (`#629`): tras el `pull`, `npm install`** en el contenedor o tu push muere con
+  «eslint: not found». Tus 12 errores de hoy están congelados en `eslint-suppressions.json`; **si arreglas uno,
+  el gate sale en rojo (código 2) hasta que podas** (`npx eslint resources/js/sidebar --prune-suppressions`) y
+  bajas `FROZEN_JS_ERRORS` en `StaticAnalysisGateTest` en tu mismo commit. Nunca `--suppress-all`.
+- 🐞 **Defecto VIVO tuyo, cazado por ESLint y sin tocar**: `account/zones/DependentsZone.vue` usa
+  `addBtn.value?.focus()` y la plantilla lleva `ref="addBtn"`, pero el `<script setup>` **no declara `addBtn`**
+  (`const addBtn = ref(null)`): `ReferenceError` en el `nextTick` al cancelar o dar de alta un menor, y el foco no
+  vuelve al botón (lo que protege tu comentario de `#217`). Está en `v1.1.0`; `git log -S'const addBtn'` vacío.
+  Hallazgo ESTÁTICO, no reproducido en navegador.
+
+### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-18)
+- ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`): una
+  ruta autenticada nueva va DENTRO del grupo autenticado de `routes/api.php` o con `->middleware(['auth:sanctum',
+  $tokenAbility])`. En un test, `Sanctum::actingAs($u)` SIN abilities da **403** → se pasa
+  `[ApiTokenIssuer::ABILITY]`; `actingAs($u)` no cambia. Toqué por eso 9 líneas de `OrderGuestMinorsTest` y
+  `MeWaiverGuestMinorTest`, y lo COMPARTIDO `tests/TestCase.php` (un `be()` que adjunta el `TransientToken` que
+  adjunta el guard real). El contrato dice **1.1.0**: la próxima capacidad nueva sube el MENOR.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
-- **Toqué lo tuyo, por orden del owner y como chapuza declarada** (`#628`): `components/site/rate-rail.blade.php`
-  (el recuadro `.rates__promo` encima de las pestañas y el `<s class="rate-card__was">` delante de la cifra y de
-  la especial), `pages/pricing.blade.php` (`.rate-table__was`), `landing.css` (tres reglas nuevas tras
-  `.rate-card__cur`, solo tokens), `lang/*/landing.php` (`rates.was`) y los servicios `RateCards`/`RateTable`
-  (tercer argumento). Sin los ajustes `promo.*` no cambia ni un byte del HTML. Cuatro casos nuevos al final de
-  `RateRailSectionTest`. Está en producción desde el 18-09 (v1.1.0).
+- **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: `rate-rail.blade.php`,
+  `pages/pricing.blade.php`, tres reglas de `landing.css`, `lang/*/landing.php` (`rates.was`) y `RateCards`/
+  `RateTable`. Sin los ajustes `promo.*` no cambia ni un byte del HTML. En producción desde el 18-09.
 - ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px la cifra «9,60 €» ya se partía en dos
-  renglones (celda de 84 px) antes de este cambio. Es tuyo si lo quieres.
+  renglones (celda de 84 px) antes de este cambio.
+- **De `#631`/`#632`**: el widget flotante de ofertas y las atracciones SALEN del panel (trabajo de F5, no de hoy).
 
 ### Atendido
-- **SPA, 17-09** («la T3 pide despliegue»; «plugin instalado, 1 de 6»; «`package.json` sin nada a medias»):
-  atendido el 18-09 con el noveno despliegue.
+- **SPA, 17-09** («la T3 pide despliegue»; «plugin instalado, 1 de 6»; «`package.json` libre»): atendido el 18-09.

@@ -14,7 +14,7 @@
 - `docs/decisiones/` — el registro de decisiones por centenas; `docs/DECISIONES.md` es el índice (`#617`).
 - `docs/sistemas/` — referencia por sistema implementado (Redsys, cookies, post-form…).
 - La capa de agente (skills y hooks) es el plugin `jumpweb-agente` (`sistemas/CAPA-DE-AGENTE.md`, `#614`,
-  `#623`); `.claude/skills/` conserva `arranque-sesion`, `cierre-sesion` y `dod` hasta cerrar F2.
+  `#623`). El repo ya no lleva skills propias: las tres viejas se retiraron al cerrar F2 (`#633`).
 
 ## §2 Documentos clave (jerarquía de lectura)
 1. `ESTADO.md` — índice de carriles → **tu `carriles/<carril>.md`**: dónde estás / qué sigue. **Carga
@@ -133,13 +133,13 @@ siempre mejora el test). El tercero hay que buscarlo activamente.
 - **Diseño previo a implementación** → `docs/specs/<tema>.md` desde la plantilla
   `docs/specs/PLANTILLA.md`; otro agente lo revisa ANTES de escribir código.
 - **Doc nuevo/renombrado** → actualizar `docs/README.md` **y** la tabla de enrutado de `CLAUDE.md`.
-- **Fin de sesión** → skill `/handoff` (`/cierre-sesion` hasta cerrar F2): progreso en `00-REFACTOR.md` + **tu
+- **Fin de sesión** → skill `/handoff`: progreso en `00-REFACTOR.md` + **tu
   fichero de carril** fiel (se REESCRIBE la foto, no se apila; los avisos atendidos se retiran).
 - **`[PENDIENTE]` cerrado** → resolverlo en su doc y reflejarlo en tu carril.
 - **Precedencia de estado** (`DECISIONES #10`): los marcadores de fase de `00-REFACTOR.md`
   son LA fuente de verdad; los carriles los resumen y nunca pueden contradecirlos.
 - **Gate documental**: `scripts/docs-check.sh` (enlaces, anclas, rutas citadas, recuentos,
-  coherencia de fases) corre en el pre-push de `main` y en `/cierre-sesion`. Doc roto = push
+  coherencia de fases) corre en el pre-push de `main` y en `/handoff`. Doc roto = push
   bloqueado, igual que la suite.
 
 ## §6 Principios rectores (no romper)

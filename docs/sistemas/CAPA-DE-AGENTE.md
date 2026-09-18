@@ -17,9 +17,9 @@
   vivían en la memoria de UNA máquina y se copiaron a mano a `docs/CARRIL-SPA.md` §6). Por qué un repo aparte y
   no dentro de `main`: sirve a tres repos (producto, instancias, app).
 - Las skills de un plugin se llaman `/jumpweb-agente:<skill>` **y también `/<skill>`** mientras ningún otro
-  comando use ese nombre (documentación de Claude Code, verificada el 2026-09-16). Hasta cerrar F2 conviven con
-  `arranque-sesion`, `cierre-sesion` y `dod` de `.claude/skills/` (`/dod` a secas resuelve al del repo mientras
-  tanto); se retiran con el 6 de 6.
+  comando use ese nombre (documentación de Claude Code, verificada el 2026-09-16). Las tres skills viejas del
+  repo (`arranque-sesion`, `cierre-sesion`, `dod` en `.claude/skills/`) se RETIRARON al cerrar F2 (`#633`,
+  2026-09-18): `/dod` a secas resuelve ya al del plugin, y sin el plugin no hay respaldo — se instala (§4).
 
 ## 2 · Las skills (once)
 | Skill | Sustituye o cubre |

@@ -5,7 +5,7 @@
 > tendrá el siguiente (`docs/CONVENCIONES.md` §7 y §5).
 
 ## ▶ Para continuar el proyecto (handoff)
-0. Skill **`/carril`** (sin el plugin, `/arranque-sesion`) → base verde VERIFICADA (árbol, push, hook, stack, gates). Obligatorio tras un cierre abrupto.
+0. Skill **`/carril`** (del plugin: `CAPA-DE-AGENTE.md` §4) → base verde VERIFICADA (árbol, push, hook, stack, gates). Obligatorio tras un cierre abrupto.
 1. **`docs/ESTADO.md`** (índice de carriles) → **tu `docs/carriles/<carril>.md`** (foto, por dónde retomar, buzón).
 2. **`docs/00-REFACTOR.md`** → tracker de fases (marcadores y casillas; sus marcadores mandan).
 3. Para tu tarea: **solo su fila** de la tabla de abajo → el **§0** de esa spec. El resto de la spec, por secciones.

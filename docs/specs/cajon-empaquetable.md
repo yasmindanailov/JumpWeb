@@ -1,10 +1,11 @@
 # [SPEC] El cajón empaquetable — del layout del producto a un paquete con contrato (F4 del programa)
 
-> Estado: 🟦 **en revisión**: todo lo del owner DECIDIDO (`DECISIONES #631` lo técnico y el principio, `#632`
-> las tres opciones de producto); **falta la lectura del carril del SPA**, que es quien implementa ·
+> Estado: ✅ **aprobada, EN EJECUCIÓN por tandas** (`DECISIONES #631` lo técnico y el principio, `#632` las tres
+> opciones de producto, `#633` quién implementa); la lectura del SPA se pide en paralelo y ya no es condición ·
 > Última actualización: 2026-09-18.
-> Carriles: diseño **plataforma**; implementación **SPA** (`resources/js/sidebar/**`, `public/css/site.css`) con
-> plataforma en el anfitrión y la API. Origen: `specs/producto-e-instancias.md` §4.2. Hermana: `specs/token-bearer.md`.
+> Carril: **plataforma**, diseño E implementación (`[DECIDIDO owner]` `#633`: el SPA está con la invitación
+> digital; se entra en sus ficheros avisando y por tandas T1–T5, `carriles/plataforma.md`).
+> Origen: `specs/producto-e-instancias.md` §4.2. Hermana: `specs/token-bearer.md`.
 
 ## §0 · Antes de tocar
 
@@ -23,8 +24,8 @@
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo (285).
 - **La landing consume un MENÚ DE HECHOS y todo es opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende
   de que la landing lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: en revisión. NO se escribe código del cajón hasta que el SPA lea §1 y §4. Lo del owner está
-  decidido (`#631`, `#632`: ficha con descripción e imagen · API ahora y kit después · atracciones fuera).
+- **Estado**: aprobada y en ejecución por TANDAS (T1 arranque con un compositor → T2 apertura sin Alpine → T3
+  carcasa en el paquete → T4 hoja propia → T5 página ajena): cada una verde y empujada. Implementa plataforma (`#633`).
 - **Empieza por** §1 (el censo) → §4.1 (la forma del paquete) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
