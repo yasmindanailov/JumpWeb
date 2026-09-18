@@ -7,8 +7,11 @@ use App\Domain\Identity\Services\GoogleAuth;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
 use Carbon\Carbon;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Laravel\Sanctum\TransientToken;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
@@ -109,6 +112,36 @@ abstract class TestCase extends BaseTestCase
         RateType::forgetSpecialMemo();
 
         $this->applyAuditClock();
+    }
+
+    /**
+     * **`actingAs()` sobre el guard `sanctum` hace lo que hace el guard REAL** (F4, `DECISIONES #630`).
+     *
+     * En producción nadie llega a una ruta de `/api/v1` autenticado y SIN token: el guard de Sanctum
+     * le adjunta al usuario de sesión un `TransientToken` —que responde «sí» a toda ability— y al de
+     * Bearer su token de verdad. `actingAs()` se salta ese paso: planta al usuario en el guard tal
+     * cual, sin nada, y desde que toda ruta autenticada exige la ability `api-v1` eso es un **401 que
+     * solo existe en los tests**.
+     *
+     * ⚠️ Y no hace falta nombrar el guard para caer: tras UNA petición a la API dentro del test,
+     * `auth:sanctum` deja `sanctum` como guard por defecto de esa aplicación, así que el SEGUNDO
+     * `actingAs($otro)` —sin guard— lo planta ahí. Medido al activar la ability: 24 tests de cinco
+     * carpetas, todos con este patrón y ninguno por un defecto del producto.
+     *
+     * Se arregla AQUÍ y no en la comprobación: la de producción sigue fallando CERRADO (sin token
+     * no hay ability), y el test vuelve a parecerse a lo que simula, un titular con sesión.
+     * `Sanctum::actingAs()` no pasa por aquí: monta su propio token, con las abilities que se le den.
+     */
+    public function be(Authenticatable $user, $guard = null)
+    {
+        if (($guard ?? Auth::getDefaultDriver()) === 'sanctum'
+            && method_exists($user, 'withAccessToken')
+            && method_exists($user, 'currentAccessToken')
+            && $user->currentAccessToken() === null) {
+            $user->withAccessToken(new TransientToken);
+        }
+
+        return parent::be($user, $guard);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Domain\Identity\Services;
 
 use App\Domain\Identity\Contracts\LoginResult;
 use App\Domain\Identity\Models\User;
+use Closure;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -50,6 +51,53 @@ class PasswordLogin
 
     public function attempt(string $email, string $password, bool $remember, string $ip): LoginResult
     {
+        return $this->guarded($email, $ip, 'auth.login', static function (string $email) use ($password, $remember): ?User {
+            if (! Auth::attempt(['email' => $email, 'password' => $password], $remember)) {
+                return null;
+            }
+
+            /** @var User */
+            return Auth::user();
+        });
+    }
+
+    /**
+     * Comprueba las credenciales **sin abrir sesión** (F4, `docs/specs/token-bearer.md` §4.2): es la
+     * puerta del emisor de tokens Bearer, que atiende a quien no tiene sesión ni la quiere.
+     *
+     * ⚠️ No puede llamar a {@see attempt()}: `Auth::attempt()` inicia sesión en el guard `web` y
+     * encola la cookie `remember`, que en una petición sin `StartSession` es estado a medias. Aquí
+     * se usa `validate()`, que comprueba el hash por el mismo proveedor y no toca la sesión.
+     *
+     * ⚠️⚠️ Y **no es una segunda puerta para un atacante**: comparte con `attempt()` el núcleo
+     * {@see guarded()} —los DOS limitadores, con las MISMAS claves—, así que cinco fallos en el login
+     * bloquean también la emisión de tokens, y al revés. Dos cubos separados habrían duplicado los
+     * intentos que `SEC-06` concede.
+     */
+    public function verify(string $email, string $password, string $ip): LoginResult
+    {
+        return $this->guarded($email, $ip, 'auth.credentials_verified', static function (string $email) use ($password): ?User {
+            // Por el GUARD y no por el proveedor a pelo: `validate()` comprueba el hash dentro de la
+            // misma caja de tiempo que `attempt()`, así que la puerta nueva tampoco delata por el
+            // reloj qué correos existen (`SEC-06`).
+            if (! Auth::guard('web')->validate(['email' => $email, 'password' => $password])) {
+                return null;
+            }
+
+            // Las credenciales ya casaron: es la misma búsqueda que acaba de hacer el proveedor.
+            return User::query()->where('email', $email)->first();
+        });
+    }
+
+    /**
+     * El núcleo de las dos puertas: limitadores, veredicto, sello de la última entrada y rastro.
+     * Lo único que cambia entre ellas es CÓMO se comprueban las credenciales, que llega en `$check`
+     * (devuelve el titular, o `null` si no casan).
+     *
+     * @param  Closure(string): ?User  $check
+     */
+    private function guarded(string $email, string $ip, string $successEvent, Closure $check): LoginResult
+    {
         $email = Str::lower(trim($email));
         $compositeKey = $this->compositeKey($email, $ip);
         $ipKey = $this->ipKey($ip);
@@ -63,7 +111,9 @@ class PasswordLogin
             return LoginResult::rateLimited($retryAfter);
         }
 
-        if (! Auth::attempt(['email' => $email, 'password' => $password], $remember)) {
+        $user = $check($email);
+
+        if ($user === null) {
             RateLimiter::hit($compositeKey, self::WINDOW);
             RateLimiter::hit($ipKey, self::WINDOW);
             Log::info('auth.login_failed', ['ip' => $ip]);
@@ -73,12 +123,10 @@ class PasswordLogin
 
         RateLimiter::clear($compositeKey);
 
-        /** @var User $user */
-        $user = Auth::user();
         // `saveQuietly`: sellar la última entrada no es un cambio del titular y no debe disparar
         // observers ni eventos de modelo.
         $user->forceFill(['last_login_at' => now()])->saveQuietly();
-        Log::info('auth.login', ['user_id' => $user->id, 'ip' => $ip]);
+        Log::info($successEvent, ['user_id' => $user->id, 'ip' => $ip]);
 
         return LoginResult::success($user);
     }

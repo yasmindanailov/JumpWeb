@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\LegalDocumentVersion;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\Models\WaiverSignature;
+use App\Domain\Identity\Services\ApiTokenIssuer;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -85,7 +86,7 @@ class MeWaiverGuestMinorTest extends ApiTestCase
     public function test_the_responsible_does_not_see_the_guest_minor_signatures_and_the_response_matches_the_contract(): void
     {
         ['responsible' => $responsible] = $this->scenario();
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         $response = $this->getJson(self::ROOT.'/me/waiver');
 
@@ -113,7 +114,7 @@ class MeWaiverGuestMinorTest extends ApiTestCase
         // ⚠️ `fresh()`: firmar escribe `waiver_accepted_at` en la BD, y la instancia que
         // `Sanctum::actingAs()` deja en el contenedor es la que el resource lee. Con la instancia
         // vieja, `signed` saldría `false` con el producto sano — el test mentiría, no el código.
-        Sanctum::actingAs($responsible->fresh());
+        Sanctum::actingAs($responsible->fresh(), [ApiTokenIssuer::ABILITY]);
 
         $response = $this->getJson(self::ROOT.'/me/waiver');
 
@@ -126,7 +127,7 @@ class MeWaiverGuestMinorTest extends ApiTestCase
     public function test_the_pdf_of_a_guest_minor_signature_does_not_exist_for_the_responsible(): void
     {
         ['responsible' => $responsible, 'signature' => $signature] = $this->scenario();
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         // Llega por RUTA, así que el filtro de la relación no lo alcanza: necesita su propia condición.
         $this->getJson(self::ROOT."/me/waiver/{$signature->id}/pdf")->assertNotFound();

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.0.0
+  version: 1.1.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -119,6 +119,87 @@ paths:
                 $ref: '#/components/schemas/Error'
         '422':
           $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /auth/tokens:
+    post:
+      tags: [Sesión]
+      operationId: issueToken
+      summary: Emitir un token (cliente nativo)
+      description: |
+        La puerta de quien NO es un navegador de primera parte: autentica con correo y contraseña y
+        devuelve un token Bearer, sin abrir sesión ni pedir CSRF. El cajón de la web no la usa: vive
+        en el mismo dominio y sigue con la cookie de sesión.
+
+        **Es la misma puerta que `POST /auth/login` a efectos de ataque** (`SEC-06`): mismas
+        credenciales genéricas (`invalid_credentials`, sin distinguir si el correo existe) y los
+        MISMOS dos limitadores con las mismas claves —por (correo, IP) y por IP sola—, así que los
+        intentos fallidos en una cuentan en la otra.
+
+        El token caduca (`expires_at`) y se renueva con `POST /auth/tokens/rotate`. Muere además por
+        `POST /auth/logout` (solo ese), «cerrar las demás sesiones», el cambio o el
+        restablecimiento de contraseña y la supresión de la cuenta. Cada cuenta conserva un máximo
+        de diez tokens vivos: al emitir el undécimo se retira el que lleva más tiempo sin usarse.
+
+        La respuesta lleva `Cache-Control: no-store`: transporta una credencial.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '201':
+          description: Token emitido. El valor de `token` no se vuelve a mostrar nunca.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedToken'
+        '401':
+          description: Las credenciales no casan (`invalid_credentials`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Maintenance'
+
+  /auth/tokens/rotate:
+    post:
+      tags: [Sesión]
+      operationId: rotateToken
+      summary: Cambiar el token por uno nuevo
+      description: |
+        Emite un token nuevo con el mismo nombre de dispositivo y **revoca el de esta petición**, en
+        una sola operación. El cliente lo llama al arrancar si su token tiene más de siete días: así
+        quien usa la app no vuelve a teclear la contraseña y un token olvidado caduca solo.
+
+        Solo tiene sentido con Bearer: una petición con cookie de sesión no trae ningún token que
+        rotar y recibe `bad_request`.
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Token nuevo emitido; el anterior ya no sirve.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuedToken'
+        '400':
+          description: La petición no viene por Bearer (`bad_request`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -2751,8 +2832,9 @@ components:
       type: http
       scheme: bearer
       description: |
-        Modo cliente nativo. Token emitido por `POST /auth/tokens` (paso 3), con caducidad y
-        revocable desde el borrado RGPD, el cambio de contraseña y «cerrar otras sesiones».
+        Modo cliente nativo. Token emitido por `POST /auth/tokens`, con caducidad, renovable con
+        `POST /auth/tokens/rotate` y revocable desde el borrado RGPD, el cambio y el
+        restablecimiento de contraseña, «cerrar otras sesiones» y `POST /auth/logout`.
 
   responses:
     Unauthenticated:
@@ -6388,6 +6470,42 @@ components:
         remember:
           type: boolean
           description: Mantener la sesión abierta más allá del cierre del navegador.
+
+    TokenRequest:
+      type: object
+      description: Credenciales más el nombre del dispositivo, que es lo que el titular verá si algún día se listan.
+      required: [email, password, device_name]
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        device_name:
+          type: string
+          minLength: 1
+          maxLength: 60
+          description: Nombre legible del dispositivo (p. ej. «iPhone de Ana»). No identifica al token.
+
+    IssuedToken:
+      type: object
+      description: Un token recién emitido, con el perfil de su titular (la misma forma que `GET /me`).
+      required: [token, token_type, expires_at, user]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          description: El valor en claro. Solo viaja aquí; el servidor guarda su hash.
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
 
     LinkedIdentity:
       type: object

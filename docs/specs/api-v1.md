@@ -14,8 +14,11 @@
 
 ## §0 · Antes de tocar
 
-- **Fase 3 ejecutada** (v2, los seis pasos de §9). El ítem que quedó fuera —la emisión de tokens Bearer— es
-  la F4 del programa «producto e instancias» (`specs/producto-e-instancias.md` §4.5).
+- **Fase 3 ejecutada** (v2, los seis pasos de §9). El ítem que quedó fuera —la emisión de tokens Bearer— se
+  hizo en la F4 del programa (`specs/token-bearer.md`, `#630`, contrato **1.1.0**).
+- ⚠️ **Ruta nueva con `auth:sanctum` → DENTRO del grupo autenticado de `routes/api.php`** (o con `$tokenAbility`):
+  toda ruta autenticada exige la ability `api-v1` (`ApiTokenAbilityTest`). En un test, `Sanctum::actingAs($u)`
+  SIN abilities da 403: se pasa `[ApiTokenIssuer::ABILITY]`; `actingAs($u)` por sesión no cambia.
 - **El contrato `openapi/v1.yaml` MANDA sobre el código** (`#21`): los esquemas son `additionalProperties:
   false`, así que un campo de más es un 422 por esquema; el contrato se cambia antes que el código.
 - **§10 → §10.sexdecies son 87 puntos que el código enseñó al implementar**: entrada obligatoria antes de tocar
@@ -24,8 +27,8 @@
   Availability|Cart`): un endpoint que crea pedidos, inicia pagos o calcula disponibilidad orquesta las
   carreras que la suite SQLite no ve → `VERIFY_CONC=1`. `ApiBoundariesTest` prohíbe que la lógica nazca en
   el controlador; el ORDEN de la secuencia lo garantiza `checkout-orquestado.md`.
-- Un único esquema de seguridad hoy (la cookie de sesión): los tokens y la API pública de lectura para la
-  landing (horario, legales, normas, prueba social) nacen en F4 y F5 del programa.
+- Dos esquemas de seguridad: la cookie de sesión (el cajón) y `bearerAuth` (el cliente nativo, desde F4). La
+  API pública de lectura para la landing —el «menú de hechos», `specs/cajon-empaquetable.md` §4.6— nace en F5.
 - Anexo al final con la fila del enrutador.
 
 ## 1. Contexto y problema

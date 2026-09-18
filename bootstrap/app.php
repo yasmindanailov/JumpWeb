@@ -16,6 +16,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -113,6 +114,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'panel_role' => RequiresPanelRole::class,
             // `no-store` para respuestas con PII de menores (PDFs operativos + post-form, L1).
             'no-store' => NoStore::class,
+            // F4 (`DECISIONES #630`): la ability que exige toda ruta autenticada de `/api/v1`. Sanctum
+            // trae el middleware pero NO registra su alias; sin esta línea `abilities:` no resuelve.
+            'abilities' => CheckAbilities::class,
         ]);
 
         // Cookie de consentimiento de cookies (#219): NO se cifra → la leen el servidor

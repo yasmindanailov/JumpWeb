@@ -248,6 +248,37 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     }
 
     /**
+     * Deja vivos, como mucho, los `$keep` tokens de API **usados más recientemente** y revoca el resto
+     * (F4, `docs/specs/token-bearer.md` §3): es el tope por cuenta del emisor de Bearer.
+     *
+     * Vive aquí por la regla del paso 3a —quien retira una credencial es `User`, y nadie más—. El
+     * emisor lo llama DESPUÉS de crear el token nuevo, que al no haberse usado nunca ordena por su
+     * fecha de creación: es el más reciente y sobrevive siempre. Se retira el más OLVIDADO, no el
+     * más antiguo: un móvil que se usa a diario no pierde la sesión porque su token sea viejo.
+     *
+     * ⚠️ Retira en vez de RECHAZAR la emisión: con un tope que rechazara, quien estrena móvil no
+     * podría entrar hasta que caducara otro token, y quien tiene la contraseña seguiría sin freno.
+     *
+     * @return int cuántos tokens se han retirado
+     */
+    public function revokeStalestTokens(int $keep): int
+    {
+        // `take()` con el máximo porque un `OFFSET` sin `LIMIT` no es SQL válido en MySQL.
+        $stale = $this->tokens()
+            ->orderByRaw('COALESCE(last_used_at, created_at) DESC')
+            ->orderByDesc('id')
+            ->skip(max(0, $keep))
+            ->take(PHP_INT_MAX)
+            ->pluck('id');
+
+        if ($stale->isEmpty()) {
+            return 0;
+        }
+
+        return (int) $this->tokens()->whereKey($stale->all())->delete();
+    }
+
+    /**
      * Borra las filas de `sessions` del titular. Solo aplica con el driver de base de datos: con
      * `array`/`file`/`redis` no hay tabla que purgar y el resto de la invalidación (rotación del
      * `remember_token`, `logoutOtherDevices`) sigue haciendo su trabajo.

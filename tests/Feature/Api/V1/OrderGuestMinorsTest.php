@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\Zone;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\DependentAssignment;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\ApiTokenIssuer;
 use App\Domain\Identity\Services\GuardianAuthorizationSigner;
 use App\Domain\Identity\Services\LegalDocumentPublisher;
 use App\Domain\Identity\Services\WaiverSettings;
@@ -85,7 +86,7 @@ class OrderGuestMinorsTest extends ApiTestCase
     public function test_the_responsible_gets_one_entry_per_reservation_with_its_own_link(): void
     {
         [$responsible, $order] = $this->scenario();
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
@@ -104,7 +105,7 @@ class OrderGuestMinorsTest extends ApiTestCase
     public function test_it_never_carries_anything_of_the_other_parents(): void
     {
         [$responsible, $order] = $this->scenario();
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         $body = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors")->assertOk()->getContent();
 
@@ -125,7 +126,7 @@ class OrderGuestMinorsTest extends ApiTestCase
         [$responsible, $order] = $this->scenario();
         Slot::query()->whereKey($order->items()->value('slot_id'))
             ->update(['date' => now()->subDays(3)->toDateString()]);
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
@@ -150,7 +151,7 @@ class OrderGuestMinorsTest extends ApiTestCase
             ])->id,
             'order_item_id' => $item->id,
         ]);
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 
@@ -164,7 +165,7 @@ class OrderGuestMinorsTest extends ApiTestCase
         // Un 403 le confirmaría a un desconocido que ese pedido existe, y quien pregunta por él está
         // preguntando por datos de menores.
         [, $order] = $this->scenario();
-        Sanctum::actingAs(User::factory()->create(['email_verified_at' => now()]));
+        Sanctum::actingAs(User::factory()->create(['email_verified_at' => now()]), [ApiTokenIssuer::ABILITY]);
 
         $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors")->assertNotFound();
     }
@@ -174,7 +175,7 @@ class OrderGuestMinorsTest extends ApiTestCase
         // CONTROL de que la lista vacía es una RESPUESTA y no un fallo: el enlace sigue viniendo,
         // que es justo lo que el responsable necesita cuando todavía no ha firmado nadie.
         [$responsible, $order] = $this->scenario(withAuthorization: false);
-        Sanctum::actingAs($responsible);
+        Sanctum::actingAs($responsible, [ApiTokenIssuer::ABILITY]);
 
         $response = $this->getJson(self::ROOT."/orders/{$order->code}/guest-minors");
 

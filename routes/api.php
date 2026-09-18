@@ -1,7 +1,9 @@
 <?php
 
+use App\Domain\Identity\Services\ApiTokenIssuer;
 use App\Http\Controllers\Api\V1\AuthRegistrationController;
 use App\Http\Controllers\Api\V1\AuthSessionController;
+use App\Http\Controllers\Api\V1\AuthTokenController;
 use App\Http\Controllers\Api\V1\AvailabilityController;
 use App\Http\Controllers\Api\V1\BookingStatusController;
 use App\Http\Controllers\Api\V1\CartLineController;
@@ -57,6 +59,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::name('api.v1.')->group(function (): void {
 
+    // ⚠️ **Toda ruta con `auth:sanctum` lleva además esta ability** (F4, `DECISIONES #630`). Los tokens
+    // de un cliente nacen con UNA ability (`ApiTokenIssuer::ABILITY`), nunca con el comodín, y esta
+    // superficie la exige: un token emitido mañana para otra cosa (la puerta, un kiosko) no abre la
+    // cuenta de nadie. Con cookie de sesión Sanctum entrega un `TransientToken` que responde «sí» a
+    // todo, así que la SPA no lo nota. Lo vigila `ApiTokenAbilityTest`: ruta autenticada sin ella, rojo.
+    $tokenAbility = 'abilities:'.ApiTokenIssuer::ABILITY;
+
     // ── Sesión (paso 3b) ──────────────────────────────────────────────────────────────────────
     // Modo SPA de Sanctum: cookie de sesión + CSRF, nunca un token en `localStorage`. El CSRF lo
     // monta `EnsureFrontendRequestsAreStateful` para los orígenes declarados *stateful*, así que
@@ -70,8 +79,22 @@ Route::name('api.v1.')->group(function (): void {
     // El logout se declara con `auth:sanctum`: cerrar sesión sin tenerla no es una operación, y
     // dejarlo público daría una respuesta idéntica a quien no ha entrado nunca.
     Route::post('/auth/logout', [AuthSessionController::class, 'logout'])
-        ->middleware('auth:sanctum')
+        ->middleware(['auth:sanctum', $tokenAbility])
         ->name('auth.logout');
+
+    // ── Tokens Bearer (F4, `docs/specs/token-bearer.md`) — la puerta del cliente NATIVO ───────
+    // Emitir es PÚBLICO y no pide sesión ni CSRF: es para quien no es un navegador de primera
+    // parte. No es una segunda puerta para un atacante: `PasswordLogin::verify()` comparte con el
+    // login los dos limitadores de `SEC-06` y sus claves. `no-store` porque la respuesta lleva una
+    // credencial y `NoStoreWhenAuthenticated` no la ve (todavía no hay nadie autenticado).
+    Route::post('/auth/tokens', [AuthTokenController::class, 'issue'])
+        ->middleware('no-store')
+        ->name('auth.tokens.issue');
+    // Rotar no pasa por los limitadores del login —no hay contraseña que adivinar— pero sí por uno
+    // propio: cada llamada escribe y borra una credencial.
+    Route::post('/auth/tokens/rotate', [AuthTokenController::class, 'rotate'])
+        ->middleware(['auth:sanctum', $tokenAbility, 'throttle:6,1', 'no-store'])
+        ->name('auth.tokens.rotate');
 
     // ── Alta y contraseña (paso 3c) — PÚBLICO ────────────────────────────────────────────────
     // Las cuatro capas de defensa del alta (honeypot, límite por IP, límite por correo y Turnstile)
@@ -257,7 +280,7 @@ Route::name('api.v1.')->group(function (): void {
     // `auth:sanctum` cubre los DOS modos del §4.2 con el mismo código: cookie de sesión para la
     // SPA de primera parte y Bearer para el móvil. El guard resuelve primero los guards de sesión
     // (`sanctum.guard`) y solo después el token.
-    Route::middleware('auth:sanctum')->group(function (): void {
+    Route::middleware(['auth:sanctum', $tokenAbility])->group(function (): void {
         Route::get('/me', [MeController::class, 'show'])->name('me.show');
 
         // «Mis reservas» y «Mis pedidos» (paso 1, solo lectura). El scoping es por el guard en los

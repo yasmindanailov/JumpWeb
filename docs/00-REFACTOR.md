@@ -24,7 +24,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub `1377d58`, instalado en las dos máquinas —esta ya en `1377d58`, la del SPA en `627b3a3`—; reglas `allow` del owner, `#626`) · la sesión de las frases (17/18-09) dio 5 de 6 sin barra · los cuatro defectos del mapa de frases arreglados el 18-09 (arnés 52/52, mutación 9/9, control con 419 mensajes reales) · falta: actualizar el plugin en la máquina del SPA, 6 de 6 en sesión nueva de cada máquina, retirar las skills viejas
 - [x] Análisis estático en el gate (`#625`, `#629`): Larastan nivel 5 con línea base de 459 y ESLint (`flat/essential` de Vue) sobre el cajón con línea base de 12, las dos con trinquete; arnés 20/20 (2026-09-18) · deuda: bajar las dos líneas base (`DEUDA.md`; los 12 del cajón son del carril del SPA)
 - [x] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) y producción DICE v1.0.0 (`storage/app/version`, 2026-09-17 22:05) · el noveno despliegue (v1.1.0, 18-09) estrenó la escritura y la relectura dentro del script ✓
-- [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0 · ABIERTA el 2026-09-18, medida: `specs/token-bearer.md` ✅ aprobada (`#630`, 30 días con rotación) → a implementar por plataforma · `specs/cajon-empaquetable.md` 🟦 en revisión (`#631`: arranque en dos lecturas y la landing consume un MENÚ DE HECHOS opcional; `#632`: ficha con descripción e imagen, API ahora y kit después, atracciones fuera; falta la lectura del SPA) · cero código todavía
+- [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0 · ABIERTA el 2026-09-18, medida: **el token ✅ HECHO** (`specs/token-bearer.md`, `#630`: `POST /auth/tokens` y `/rotate`, contrato 1.1.0, ability `api-v1` exigida en toda ruta autenticada, tope de 10; 19 tests, mutación 14/14, `curl` en local) · `specs/cajon-empaquetable.md` 🟦 en revisión (`#631`: arranque en dos lecturas y la landing consume un MENÚ DE HECHOS opcional; `#632`: ficha con descripción e imagen, API ahora y kit después, atracciones fuera; falta la lectura del SPA) · cero código todavía
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0
 - [ ] F6 · app nativa: spec con pila y alcance · pila decidida (`#627`): React Native + Expo en TypeScript, a confirmar con la prueba corta
 
@@ -37,9 +37,9 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### Fase 2 — Modularización del dominio ✅
 - [x] Los siete pasos: Catalog&Booking · Content · Identity · Payments · Platform, con las tres guardas de frontera (`specs/modulos-dominio.md` §0, `#13`).
 
-### Fase 3 — API v1 🟦
+### Fase 3 — API v1 ✅
 - [x] Los seis pasos del corte y el checkout orquestado (`specs/api-v1.md` §0, `specs/checkout-orquestado.md` §0, `#24`→`#37`).
-- [ ] La emisión de tokens Bearer (`POST auth/tokens`): es la F4 del programa.
+- [x] La emisión de tokens Bearer (`POST auth/tokens`): hecha en la F4 del programa (`#630`, 2026-09-18).
 
 ### Fase 4 — Sidebar SPA ✅
 - [x] De 4.0a a 4.6: los once pasos en Vue 3 + Pinia, `Purchase.php` retirado, el área de cliente y la auth dentro del cajón (`specs/sidebar-spa.md` §0, `#38`→`#123`).

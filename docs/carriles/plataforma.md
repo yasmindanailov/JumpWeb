@@ -37,8 +37,15 @@
   defecto VIVO del SPA** (`addBtn` sin declarar en `DependentsZone.vue`), avisado en el buzón.
 - **Regla de trabajo del owner desde `#630`**: lo TÉCNICO lo decide el agente por el estándar profesional y lo
   justifica con medida; lo que afecte al TIPO DE PRODUCTO se le lleva con opciones, la recomendada primero.
-- **F4 ABIERTA (18-09), en DISEÑO, cero código**, con su censo medido. `specs/token-bearer.md` **✅ APROBADA
-  (`#630`, duración B: 30 d con rotación) → lo siguiente que se implementa**. `specs/cajon-empaquetable.md` 🟦
+- **F4 ABIERTA (18-09). EL TOKEN ESTÁ HECHO** (`specs/token-bearer.md` ✅, `#630`, contrato **1.1.0**):
+  `POST /auth/tokens` y `POST /auth/tokens/rotate` (`AuthTokenController`), `PasswordLogin::verify()` sobre un
+  núcleo privado que comparte con `attempt()` (los DOS limitadores, mismas claves), `ApiTokenIssuer` (una
+  ability `api-v1`, caducidad propia con reserva de 30 d, tope de 10), `User::revokeStalestTokens()` (retira el
+  más OLVIDADO), y **`abilities:api-v1` en TODA ruta autenticada** con la guarda `ApiTokenAbilityTest`. 19 tests
+  con tokens REALES, `scripts/mutar-token-bearer.sh` **14/14**, `curl` en local de punta a punta. Larastan cazó
+  tres cosas en lo nuevo y ninguna fue a la línea base. **Sin desplegar y sin etiqueta**: la v1.2.0 tiene que
+  listar el contrato 1.1.0, el emisor y ESLint (`CHANGELOG.md` no lleva sección «sin publicar»: lo escribe
+  `/release`). `specs/cajon-empaquetable.md` 🟦
   (`#631`): arranque en dos lecturas (`cajon/boot` pública y cacheable, `cajon/session` privada y `no-store`) y
   **la landing consume un MENÚ DE HECHOS donde TODO es opcional** (`[DECIDIDO owner]`: identidad y contacto por
   API, ficha de producto, el widget flotante de ofertas se RETIRA); estándar: lista blanca por `Resource` (la
@@ -90,10 +97,10 @@
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día** (si no, el tachado miente). Sin desplegar. Y el **sistema de ofertas** cuando
    lo pida: `/spec` desde `archivo/promo-precio-anterior.md` §1 y §3.
-4. **F4, en curso**: (a) **IMPLEMENTAR EL TOKEN** (`specs/token-bearer.md` ✅, `#630`), en el orden de su §0:
-   contrato 1.1.0 → `PasswordLogin::verify()` con núcleo compartido → `ApiTokenIssuer` → `AuthTokenController`
-   (emitir y rotar) → `abilities:api-v1` en el grupo → `AuthTokenTest` + las cinco vías de revocación con un token
-   REAL → `scripts/mutar-token-bearer.sh` → `CHANGELOG.md`; (b) P1–P3 cerradas (`#632`): su trabajo es de F5 (campos e
+4. **F4, en curso**: (a) el token, HECHO (ver la foto); lo que queda de él es de F6 y tiene nombre en su spec §2
+   (emisión por Google, alta desde la app, listar dispositivos, el desenlace del pago para un cliente Bearer);
+   **lo siguiente de este carril en F4 son `cajon/boot` y `cajon/session`** (`specs/cajon-empaquetable.md` §4.5),
+   cuando el SPA haya leído la spec; (b) P1–P3 cerradas (`#632`): su trabajo es de F5 (campos e
    imagen en el catálogo del panel, retirar Attractions con su complemento); (c) leer la respuesta del SPA a esa spec y pasarla a ✅; (d) el cajón lo
    implementa el SPA, con la huella de maquetación 24/24 como juez; `cajon/boot` y `cajon/session` son de ESTE carril.
    → F5 (instancia PlayJump, v2.0.0; abre con el censo de Zones y de «redes»; propuesta guardada: un
@@ -109,7 +116,9 @@
 `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `.claude/skills/` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `scripts/mutar-analisis-estatico.sh` · `StaticAnalysisGateTest` · `eslint.config.js` · `eslint-suppressions.json`
-(la línea base la PODA quien arregla; la config y el techo son de este carril) · `Setting::promoPercent()` y
+(la línea base la PODA quien arregla; la config y el techo son de este carril) · el emisor de tokens
+(`ApiTokenIssuer`, `AuthTokenController`, `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`,
+`scripts/mutar-token-bearer.sh`) · `Setting::promoPercent()` y
 `WritesLandingValues::antes()` (la chapuza `#628`; lo que pinta es de la web). Todo lo anterior es
 COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
 
@@ -154,6 +163,16 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   exige que el commit etiquetado ya esté en `origin/main`.
 - **`npm install` PODA `playwright-core`** (se instala con `--no-save`): medido el 18-09 al meter ESLint
   («removed 1 package»). Tras cualquier `npm install`, reponerlo (`/sonda` §1) o la sonda falla al importar.
+- **Activar una comprobación en el grupo autenticado de la API puede tumbar tests que no tienen culpa**: la
+  ability `api-v1` dio 24 rojos en cinco carpetas, todos un 401 de mentira. Tras UNA petición a la API,
+  `sanctum` queda como guard por defecto de la aplicación del test, y `actingAs($u)` (o `actingAs($u, 'sanctum')`)
+  planta al titular ahí SIN token, cosa que el guard real no hace nunca (adjunta un `TransientToken`). Arreglado
+  en `Tests\TestCase::be()`, que es COMPARTIDO; la comprobación de producción sigue fallando cerrado. Y con tokens
+  REALES, `Auth::forgetGuards()` entre peticiones, o un token ya revocado sigue «entrando» por la caché del guard
+  (`AuthTokenTest::asBearer()`). La suite entera se corre ANTES de dar por buena una guarda transversal.
+- **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie**: dice `PersonalAccessToken` y
+  llega un `TransientToken`; Larastan da el `instanceof` por «siempre cierto». El tipo real es `HasAbilities`
+  (`@var` en `ApiTokenIssuer::rotate()`), no una entrada más en la línea base.
 - **Un arnés que restaura un `.vue` tocándole la fecha deja el bundle SSR «rancio»**: la suite dio 36 fallos de
   `SidebarDomContractTest` tras `mutar-analisis-estatico.sh` (18-09). No es una regresión: `npm run build:ssr` y
   re-medir (el `pre-push` lo reconstruye solo).
@@ -165,6 +184,17 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
   ~2 min en segundo plano (`/sonda` §1); `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`.
 
 ## Buzón
+
+### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-18)
+- ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`**, y lo vigila
+  `Architecture\ApiTokenAbilityTest`. Una ruta autenticada nueva va DENTRO del grupo autenticado de
+  `routes/api.php` (ya la lleva) o, si va suelta, con `->middleware(['auth:sanctum', $tokenAbility])`. En un test:
+  `Sanctum::actingAs($u)` SIN abilities pasa a dar **403** → `Sanctum::actingAs($u, [ApiTokenIssuer::ABILITY])`;
+  `actingAs($u)` por sesión no cambia. Toqué por eso, y solo por eso, 9 líneas de `OrderGuestMinorsTest` y
+  `MeWaiverGuestMinorTest`, y **lo COMPARTIDO `tests/TestCase.php`**: gana un `be()` que, cuando el guard de
+  destino es `sanctum`, adjunta al titular el `TransientToken` que adjunta el guard real (sin él, 24 tests
+  vuestros y míos daban un 401 que no existe en producción). No cambia nada más de la base de tests. El contrato dice **1.1.0** (SPA: tus cuatro rutas de la invitación entraron sin mover
+  la versión; la próxima capacidad nueva sube el MENOR, `specs/producto-e-instancias.md` §4.6).
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-18)
 - 📐 **F4 abierta y la mitad del cajón la implementas TÚ**: lee `specs/cajon-empaquetable.md` §0 y §1 (el censo

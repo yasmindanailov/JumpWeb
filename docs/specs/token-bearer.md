@@ -1,7 +1,7 @@
 # [SPEC] Login por token — el emisor de Bearer de la API v1 (F4 del programa)
 
-> Estado: ✅ **aprobada el 2026-09-18** (`DECISIONES #630`: el owner delega lo técnico en el estándar profesional;
-> duración = opción B) → **a implementar** · Última actualización: 2026-09-18 · Carril: **plataforma**.
+> Estado: ✅ **aprobada e IMPLEMENTADA el 2026-09-18** (`DECISIONES #630`: el owner delega lo técnico en el
+> estándar profesional; duración = opción B) · resultados en §6 · Última actualización: 2026-09-18 · Carril: **plataforma**.
 > Origen: `specs/producto-e-instancias.md` §4.5 (F4) y `specs/api-v1.md` §4.2, que aplazó la EMISIÓN (`#29`).
 > Hermana: `specs/cajon-empaquetable.md` (la otra mitad de F4). Sube el contrato a **1.1.0**.
 
@@ -84,19 +84,20 @@ basta «cerrar las demás» (`me/sessions/revoke-others`); (d) **el desenlace de
   códigos y sobre que `auth/login`. La respuesta lleva `Cache-Control: no-store` explícito: es pública para el
   middleware (`NoStoreWhenAuthenticated` no la ve) y transporta una credencial.
 - `bearerAuth`: se corrige la descripción (hoy cita «paso 3»). `auth/logout` documenta que con Bearer revoca ESE token.
-- **`POST /auth/tokens/rotate`** (§4.4) · solo `bearerAuth` (con cookie → 409: no hay token que rotar) · 201 con
-  la misma forma · `throttle:6,1` por token.
+- **`POST /auth/tokens/rotate`** (§4.4) · solo `bearerAuth` (con cookie → 400 `bad_request`: no hay token que
+  rotar; ~~409~~: el sobre de error no tiene código de conflicto y `auth/login` ya responde 400 a «sin sesión») ·
+  201 con la misma forma · `throttle:6,1`, que con titular autenticado cuenta POR TITULAR (~~por token~~).
 
 ### 4.2 Dominio (`Identity`)
 - `PasswordLogin` gana **`verify(email, password, ip): LoginResult`**: mismos limitadores, mismas claves
   (`email|ip` y `login-ip|ip`), mismo log sin PII, `Auth::validate()` en vez de `Auth::attempt()`, sella
   `last_login_at`. `attempt()` y `verify()` comparten un núcleo privado: el segundo limitador no se puede olvidar.
-- `Identity\Services\ApiTokenIssuer` (futuro): emite con `createToken(device_name, ['api-v1'], expiresAt)`,
+- `Identity\Services\ApiTokenIssuer`: emite con `createToken(device_name, ['api-v1'], expiresAt)`,
   aplica el tope de 10 dentro de una transacción y deja `Log::info('auth.token_issued', user_id, ip)`.
-  La escritura en `personal_access_tokens` pasa por `User` o se declara por nombre en `AccessRevocationTest`.
+  Lo que RETIRA tokens vive en `User` (`revokeStalestTokens()`, `revokeCurrentAccessToken()`): el emisor no borra.
 
 ### 4.3 Superficie
-- `Api\V1\AuthTokenController` (futuro): valida, llama a `verify()` y al emisor, responde. Sin lógica propia
+- `Api\V1\AuthTokenController`: valida, llama a `verify()` y al emisor, responde. Sin lógica propia
   (`ApiBoundariesTest`). **No usa `requireSession`**: esta puerta es justo para quien no tiene sesión.
 - Grupo autenticado de `routes/api.php`: gana `abilities:api-v1`. Con cookie, Sanctum usa un `TransientToken`
   que responde `true` a todo: la SPA no nota nada (se prueba).
@@ -119,15 +120,30 @@ sin rotación (lo más cómodo y lo que más tiempo deja vivo un token perdido).
 
 ## 6. Plan de verificación empírica
 
-- `Api\V1\AuthTokenTest` (futuro): emisión feliz; 401 indistinguible (correo inexistente ≡ contraseña mala, byte a
+- `Api\V1\AuthTokenTest`: emisión feliz; 401 indistinguible (correo inexistente ≡ contraseña mala, byte a
   byte); **cubos compartidos** (5 fallos en `auth/login` bloquean `auth/tokens` y al revés; 30 por IP igual);
   `no-store`; el token abre `GET me` y una ruta de escritura; caducado → 401; tope de 10; `abilities`.
 - `ApiTokenRevocationTest`: las cinco vías repetidas con un token salido de `POST /auth/tokens`.
 - Un Bearer válido contra `/admin` → redirección al login del panel, nunca 200.
 - La SPA no se mueve: `AuthSessionTest` y la suite del cajón en verde sin tocar; `abilities:api-v1` con cookie → 200.
-- Mutación (`scripts/mutar-token-bearer.sh` (futuro)): quitar el limitador de IP en `verify()`, emitir con `['*']`,
+- Mutación (`scripts/mutar-token-bearer.sh`): quitar el limitador de IP en `verify()`, emitir con `['*']`,
   quitar `abilities:` del grupo, quitar el tope, quitar `no-store`, saltarse `expires_at`. Todas deben morir.
 - Empírico: `curl` contra `localhost:8081` — emitir, usar, `logout`, reusar → 401.
+
+**RESULTADO (2026-09-18)**: `AuthTokenTest` 16 casos con tokens REALES en la cabecera (no `Sanctum::actingAs`) +
+`Architecture\ApiTokenAbilityTest` 3; respuestas validadas contra el contrato con Spectator. **Mutación 14/14**.
+Suite completa 5018 tests en verde.
+`curl` en local: emitir 201 con `no-store` y caducidad a 30 días → `GET me` 200 → contraseña mala 401 genérico →
+rotar 201 → el viejo 401 y el nuevo 200 → `logout` 204 → reuso 401 → un Bearer contra `/admin` 302 al login.
+**Lo que enseñó el código**: (1) Larastan cazó tres cosas en lo nuevo y ninguna fue a la línea base — el tipo que
+Sanctum declara para `currentAccessToken()` es más estrecho que lo que llega con cookie (`TransientToken`); el
+tipo real es `HasAbilities`; (2) `validate()` y `attempt()` del guard corren en la MISMA caja de tiempo (leído en
+el framework): la puerta nueva no delata por el reloj; (3) 9 usos de `Sanctum::actingAs($u)` sin abilities en dos
+tests ajenos pasaron a declarar la ability: sin ella es un 403; (4) ⚠️ **al activar la ability cayeron 24 tests de
+cinco carpetas con un 401 que NO era del producto**: `actingAs($u, 'sanctum')`, o un segundo `actingAs($u)` tras
+una petición a la API (que deja `sanctum` como guard por defecto), plantan al titular en el guard SIN token, cosa
+que en producción no pasa nunca —el guard real adjunta un `TransientToken`—. No se ablandó la comprobación (sigue
+fallando cerrado): `Tests\TestCase::be()` hace ahora lo que hace el guard real, con su caso y su mutación.
 
 ## 7. Revisión y decisión
 
