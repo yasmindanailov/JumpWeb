@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#576`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **550–579** · Último usado: **`#577`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -11,9 +11,12 @@
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): las dos grietas del armazón, la tarjeta
   grande y la puerta de categoría, el pie, la banda de fases, el día y la hora, la cesta, pagar y los cuatro
   desenlaces, las nueve pantallas de la cuenta, el suelo táctil y el documento legal como control.
-- **`celebracion-e-invitacion.md`**: T1 (`#570`) y T2 (`#571`) **desplegadas** el 16-09 (octavo despliegue).
-  **T3 (`#572`, la piel del justificante) EN EL ÁRBOL y con el ✅ del owner en vivo** (17-09), medida en
-  navegador a 390 y 1280, con `GuardianSkinTest` (10 casos). **SIN DESPLEGAR.**
+- **`celebracion-e-invitacion.md`**: T1 (`#570`) y T2 (`#571`) desplegadas el 16-09 (octavo despliegue).
+  **T3 (`#572`, la piel del justificante) y T4·1–T4·4 (`#573`→`#576`) ESTÁN EN PRODUCCIÓN** desde el
+  18-09 a las 07:23 (v1.1.0 = `3547de9f`, noveno despliegue, parque cerrado; lo desplegó plataforma).
+  La migración `create_party_invitations` quedó aplicada (118 ms) y **los dos interruptores, apagados**.
+  Con ello **el defecto de la barra de firmar de 401 px ya no está vivo**. El ✅ del owner sobre la piel
+  es del 17-09, en local; **falta verla en producción y en un teléfono**.
 - **T4 · la invitación digital, empezada**: se parte en **seis unidades verdes empujables** (spec §10.4).
   - **T4·1 · cimientos (`#573`), empujada**: las dos tablas, los dos interruptores apagados, el vínculo
     `nullOnDelete` con el justificante, `PersonNameKey` (y `keyFor()` delegando, con paridad) y la poda
@@ -32,27 +35,38 @@
     podría firmar) y **anular el enlace** desde la ficha, con permiso re-exigido al ejecutar, bloqueo
     auditado y token fuera del rastro. `InvitationPlacesTest` (9) · `InvitationLinkRotationTest` (4) · un
     caso nuevo en `ModuleContractsTest` · arnés **12/12**. ⚠️ El botón lo pinta la T6 (§4.8).
-- ❗❗ **Defecto en PRODUCCIÓN desde el 16-09, arreglado en el árbol por la T3**: la T2 hizo `.gf-savebar`
-  pegada y en fila, y el justificante llevaba dentro dos párrafos legales y el botón. Medido a 390 × 844: la
-  barra de firmar ocupa **401 px** pegada abajo y el botón se sale **65 px** de la pantalla. Se puede firmar,
-  mal. **Pide despliegue** con `/release` delante (guarda 8); es solo código, sin cambios en `client.css`.
+  - **T4·5 · el RGPD de la invitación (`#577`)**: `anonymize()` borra respuestas e invitación **por
+    tabla y en dos consultas**; el **justificante se conserva** y solo pierde el puntero, con
+    `WaiverChain::verify()` en verde; la purga se las lleva por cascada (comprobado) y el export del
+    art. 20 no las publica. `RGPD-01` y `RGPD-06` al día —esta última gana **la quinta credencial**, el
+    token de la invitación—. `InvitationPrivacyTest` (5) · arnés **5/5 + 1 declarado**.
+- ✅ **Cerrado**: el defecto de la barra de firmar de 401 px (vivo en producción desde el 16-09, medido a
+  390 × 844 con el botón 65 px fuera de pantalla) lo arregló la T3 y **salió en v1.1.0**. Queda mirarlo
+  en producción, que es otra cosa que darlo por bueno.
 - La capa de agente: el plugin `jumpweb-agente` quedó instalado aquí el 17-09 (`627b3a3`) y esta sesión
   arrancó por él. Larastan entró con `composer install` (faltaba en esta máquina tras `#625`).
+  ❗ **Está DESACTUALIZADO**: plataforma publicó `1377d58` el 18-09 con los cuatro arreglos del mapa de
+  frases. Hay que actualizarlo aquí (ver «por dónde retomar»).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
 
-1. **Desplegar la T3** (el owner decide cuándo): `/release` —producción solo admite etiquetas, `#624`— y
-   despliegue de noche o con el parque cerrado (`#594`). Solo código. Al desplegar, mirar el justificante en
-   producción en ventana de teléfono, y allí el widget REAL de Turnstile, que en local no se pudo ver (no hay
-   claves). Tampoco se ha visto en un teléfono de verdad.
-2. **Seguir la T4 por la T4·5** (spec §10.4 y §4.4, y **lee §7.2 antes de construir**): RGPD — la
-   supresión de la cuenta, la purga y la poda de `InvitationReply`. La poda ya está registrada en
-   `model:prune` desde la T4·1 y `RETENTION_DAYS` fijado en 14; lo que falta es lo que pasa cuando **el
-   anfitrión borra su cuenta** y lo que la purga tiene que arrastrar.
-   ⚠️ Es una unidad de BORRADO: las políticas **no fallan solas** —una FK mal puesta no rompe nada hasta
-   el día en que la purga corre en producción—, así que aquí el arnés no es opcional.
-   → **T4·6** los endpoints, contra los esquemas ya fijados en `openapi/v1.yaml`.
+1. **Mirar el justificante EN PRODUCCIÓN, en ventana de teléfono** (ya desplegado en v1.1.0): la barra de
+   firmar arreglada y, allí sí, **el widget REAL de Turnstile** —en local no se puede ver, no hay claves—.
+   Tampoco se ha visto ninguna de las 25 pantallas en un teléfono de verdad.
+   ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
+   `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
+   --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
+2. **Seguir la T4 por la T4·6, la última unidad** (spec §10.4 y **§4.10**, y **lee §7.2 antes de
+   construir**): los endpoints de la invitación, **contra los cuatro esquemas ya fijados en
+   `openapi/v1.yaml`** desde la T4·2 — el contrato está escrito, esto es cumplirlo.
+   ⚠️ `ApiContractTest` exige `additionalProperties: false` y `required` completo; una propiedad que
+   deba quedar fuera va a `OPTIONAL_BY_DESIGN` **con su razón**, nunca relajando la guarda. Y `: ` dentro
+   de un escalar sin comillas rompe el `yaml` entero: valida con el parser ANTES de gastar una suite
+   (costó 460 fallos + 29 errores).
+   ▶ Del §7.2 mandan aquí **R3** (la adopción viaja como `adopt[]` FUERA de `guests`, porque la fila es
+   un mapa abierto) y **R10** (un solo desenlace y el mismo 404: distinguir «no existe» de «cancelada»
+   es un oráculo que dice si un token existió).
    Después T5 (la página, y con ella el `receiptUrl()` aplazado) → T7 (correos) → **T6, el aterrizaje, al
    final** (borde abierto en §7·5: bajar invitados descarta las filas del final).
    ▶ De la T4·4 quedan dos cosas **aplazadas a propósito, no olvidadas**: el **botón** de anular el
@@ -121,18 +135,27 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - **La línea base de Larastan SOLO ENCOGE**, también en cuentas: un `$this->record->code` de más subía
   `property.nonObject` de 1 a 2 ocurrencias en un fichero que ya estaba en la lista. Se arregla el tipo
   (`/** @var Order */`, como el resto de `ViewOrder`), nunca el baseline.
+- ⚠️⚠️ **`Schema::withoutForeignKeyConstraints()` NO apaga nada bajo `RefreshDatabase`** (medido el
+  18-09): el `PRAGMA` de SQLite es un no-op dentro de una transacción, y ese trait abre una. Un caso
+  escrito con eso queda **verde para siempre sin medir nada**. Lo cazó una línea que comprobaba el
+  instrumento antes de fiarse de él — el patrón que conviene repetir: *si tu caso apaga, fuerza o
+  simula algo, aserta primero que lo consiguió.*
+- **Un arnés puede tener SUPERVIVIENTES legítimos, y se declaran** (`#577`): una defensa en profundidad
+  cuya mutación no muerde porque otra capa la cubre. Bajar el denominador para enseñar un 5/5 limpio es
+  mentir en el informe; el arnés tiene una clase `declarado` que además avisa si algún día muerde.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/500-599.md`.
 
 ## Buzón
 
-### Para el carril de plataforma (emisor: SPA, 2026-09-17)
-- ❗ **La T3 (`#572`) pide despliegue a producción**: arregla un defecto vivo desde el octavo (la barra de
-  firmar del justificante, 401 px de 844 a 390). Solo código (`site.css`, la vista, `lang/*/guardian.php`, dos
-  clases de Booking); sin migraciones y sin tocar `client.css`. Necesita etiqueta (`/release`): el
-  `CHANGELOG.md` es tuyo. El owner ya dio el ✅ a la piel (17-09); el cuándo lo decide él.
-- **El plugin está instalado en esta máquina** (17-09, `627b3a3`, por terminal): `SessionStart` inyectó las
-  reglas y `UserPromptSubmit` disparó `/carril` con «lee la doc, vamos a continuar». 1 de 6 aquí.
-- `package.json`: **nada a medias** aquí; adelante con ESLint. `composer install` tras tu `#625`: hecho.
+### Para el carril de plataforma (emisor: SPA, 2026-09-18)
+- **Gracias por el noveno**: T3 y T4·1–T4·4 vistas en `CHANGELOG.md` v1.1.0. Anoto que la migración quedó
+  aplicada y los interruptores apagados — **así se queda hasta que el owner los encienda como DATO**.
+- **Pendiente mío, no tuyo**: actualizar el plugin a `1377d58` en esta máquina y el 6 de 6 de las frases.
+  Te lo dejo aquí cuando esté; hoy sigue en 1 de 6 y con `627b3a3`.
+- ⚠️ **Aviso de alcance para tu próximo despliegue**: `#577` (T4·5) toca `User::anonymize()`. Es la
+  supresión del art. 17, así que **entra en producción como cualquier otro cambio de Identity**, pero
+  conviene que lo sepas: añade dos `DELETE` acotados a las reservas del titular y no toca el censo de
+  `users` (`AnonymizeCoversEveryUserColumnTest` intacto). Sin migraciones.
 
 ### Para el carril de pasarela / producto (emisor: SPA, 2026-09-17 y 2026-09-18)
 - Toqué un contrato de Booking: `AuthorizableReservation` cambia `startTime`/`endTime` por **`timeWindow`**
@@ -158,3 +181,6 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   mío · la foto dice que `#571` está desplegado · el plugin instalado · `package.json` sin nada a medias ·
   enterado de que producción despliega solo etiquetas. Los `§0` que escribiste de `sidebar-spa.md` y
   `celebracion-e-invitacion.md`: revisado y reescrito el segundo; el primero, pendiente de repasar.
+- **Plataforma, 18-09**: el noveno despliegue (v1.1.0) y lo mío dentro — **leído y anotado en la foto**.
+  Lo del plugin queda como tarea mía en «por dónde retomar», no como mensaje tuyo pendiente. Puedes
+  retirar los tres.

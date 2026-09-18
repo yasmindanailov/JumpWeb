@@ -804,7 +804,7 @@ pronto (`CONVENCIONES §10.5`), en orden de dependencia y cada una verde por su 
 | **T4·2** | Las reglas del dominio (§4.5) + el verificador de concurrencia | ✅ `#574` |
 | **T4·3** | Catálogo y embudo: los dos interruptores y `funnelGuardianMode()` (§4.8) | ✅ `#575` |
 | **T4·4** | `PartyGuests`, `GuardianPlaces`, el firmador y la rotación | ✅ `#576` |
-| **T4·5** | RGPD: supresión, purga y poda (§4.4) | ⬜ |
+| **T4·5** | RGPD: supresión, purga y poda (§4.4) | ✅ `#577` |
 | **T4·6** | El contrato de la API y sus endpoints (§4.10) | ⬜ |
 
 ⚠️ **Desviación declarada sobre §4.10.** Dice que los nombres y esquemas se fijan en `openapi/v1.yaml`
@@ -1039,6 +1039,54 @@ solo ellas cazan.
    huérfana— y su fórmula seguía anunciando **tres** sumandos. Unidos y corregida a cuatro.
 5. El bloque del arnés de la **T4·1 estaba pegado al final de la §10.4.3**, donde su «9/9» contradecía al
    «11/11» de aquélla. Devuelto a su unidad.
+
+#### 10.4.5 T4·5 · el RGPD de la invitación — EN EL ÁRBOL (2026-09-18, `DECISIONES #577`)
+
+**El agujero que cierra, y por qué era el peor de su clase.** `anonymize()` lleva desde la Fase 1
+vaciando `guest_data`/`event_data` —los nombres y las alergias de los invitados—, y la invitación
+digital volvía a guardar **esa misma clase de dato** en dos tablas que la supresión no miraba. El
+titular borraba su cuenta, el nombre del homenajeado seguía en pie y **nada fallaba**. El art. 17 no se
+incumple con un error ruidoso: se incumple con una tabla nueva que nadie recordó.
+
+**Hecho.**
+- **`User::anonymize()` borra las respuestas y la invitación** de las reservas del titular, **por tabla
+  y en dos consultas**, las respuestas primero. Por tabla porque `User` solo puede importar `Order`,
+  `OrderItem` y `Ticket` de Booking (§1.3·3); en dos consultas porque el art. 17 no puede depender de
+  una acción de clave foránea que **por esta vía nadie dispara** — la lección que `user_identities`
+  tiene escrita en esa misma función.
+- ⚠️⚠️ **Lo que NO se borra: el JUSTIFICANTE.** Sigue el régimen de su firma (`RGPD-01`, art. 17.3.e):
+  no es del responsable para que él lo borre, y al caer la respuesta solo pierde el puntero. Lo que se
+  comprueba es que **`WaiverChain::verify()` sigue en verde**: si `invitation_reply_id` entrara en el
+  hash, la supresión de un anfitrión dejaría ROTA la prueba de la visita de un menor **de otra
+  familia**. Medido: el snapshot firmado copia el nombre, no la relación viva.
+- **La purga de go-live** se las lleva por cascada — **comprobado, no supuesto**.
+- **El export del art. 20 no las publica.** Medido en `CustomerOrderHistoryReader::line()`: el export
+  lleva `event_data` entero (es del titular y de su hijo) y **no lleva `guest_data`**. Lo que un padre
+  contestó sobre SU hijo es esa segunda clase de dato, y sigue la misma regla.
+- **La poda** ya entró en la T4·1 (`RETENTION_DAYS = 14`, registrada en `model:prune`); aquí solo se
+  verifica que sigue en la lista.
+- **El mapa al día**: `RGPD-01` gana los dos regímenes de la invitación y `RGPD-06` **su QUINTA
+  credencial** —el token, que la T4·4 creó y la invariante no sabía—, la más expuesta de las cinco
+  porque se reparte a un grupo de clase entero.
+
+**Guardas**: `InvitationPrivacyTest` (5) · arnés `scripts/mutar-invitacion-t45.sh` **5/5 con CONTROL en
+verde y UN SUPERVIVIENTE DECLARADO**, árbol byte a byte. Su conjunto incluye `PrivacyTest` y
+`GuestMinorAuthorizationTest`: quien toca `anonymize()` se mide contra la supresión entera, no solo
+contra su tanda.
+
+**Trampas pagadas en esta unidad:**
+1. ⚠️⚠️ **Una guarda que no podía fallar, y se retiró en vez de dejarla.** Para ejercer que el borrado
+   no se apoya en la cascada escribí un caso con `Schema::withoutForeignKeyConstraints()`. **Medido: no
+   apaga nada** — el `PRAGMA` de SQLite es un no-op dentro de una transacción y `RefreshDatabase` abre
+   una. Lo delató una línea que comprobaba el propio instrumento antes de fiarse de él. *Una guarda que
+   no puede ponerse roja es un comentario con sintaxis de test.*
+2. **El arnés aprende a declarar un SUPERVIVIENTE.** Quitar la consulta de las respuestas no muerde: con
+   las FK activas caen igual. La consulta se queda como cinturón, pero **bajar el denominador para
+   enseñar un 5/5 limpio habría sido mentir en el informe**. Ahora hay tres clases de mutación —muerde,
+   control y **declarado**— y si un declarado empieza a morder, el arnés avisa de que ha nacido una
+   guarda y hay que reclasificarlo.
+3. **La mutación que más enseña es la de DEMÁS**: «ya que limpio, limpio todo» se lleva el justificante
+   de otra familia. Las unidades de borrado se miden en las dos direcciones o no se miden.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

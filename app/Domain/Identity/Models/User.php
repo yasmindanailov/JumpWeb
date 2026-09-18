@@ -331,6 +331,30 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
                 ->where(fn ($q) => $q->whereNotNull('guest_data')->orWhereNotNull('event_data'))
                 ->update(['guest_data' => null, 'event_data' => null]);
 
+            // ⚠️ Y la INVITACIÓN DIGITAL de esas mismas reservas (`specs/celebracion-e-invitacion.md`
+            // §4.4, `DECISIONES #577`). Es la MISMA clase de dato que acaba de vaciarse arriba:
+            // `party_invitations.honoree_name` es el nombre de un menor, y cada fila de
+            // `invitation_replies` lleva el nombre de un niño de OTRA familia, lo que su padre
+            // contestó y —si el pack lo pedía— sus alergias (art. 9).
+            // ❗ Sin estas dos líneas la supresión dejaba PII de menores **justo donde acababa de
+            // vaciarla**: el titular borraba su cuenta y el nombre del homenajeado seguía en pie.
+            //
+            // ⚠️⚠️ **Por tabla y con las DOS consultas, sin apoyarse en la cascada**, por dos razones
+            // independientes: `User` solo tiene permitido importar `Order`, `OrderItem` y `Ticket` de
+            // Booking (`ModuleBoundariesTest`), y el art. 17 no puede depender de una acción de clave
+            // foránea que por esta vía **nadie dispara** — la misma lección que `user_identities` dejó
+            // escrita unas líneas más arriba.
+            //
+            // ▶ **Las respuestas van PRIMERO**, y ese orden es la propiedad: así el borrado no
+            // necesita que la cascada de la invitación funcione. Al caer arrastran a `null` el
+            // `invitation_reply_id` de los justificantes (`nullOnDelete`), que es lo correcto: la
+            // firma **se conserva** —es la prueba de una visita que ocurrió, art. 17.3.e, `RGPD-01`—
+            // y ese vínculo **no entra en su hash**, así que la cadena sigue verificando.
+            $invitationItemIds = OrderItem::whereIn('order_id', $this->orders()->select('id'))->select('id');
+
+            DB::table('invitation_replies')->whereIn('order_item_id', $invitationItemIds)->delete();
+            DB::table('party_invitations')->whereIn('order_item_id', $invitationItemIds)->delete();
+
             // P2 (auditoría Fase 1): el audit de `order_items.event_data_updated` de pedidos LEGACY
             // pudo guardar el nombre del homenajeado (PII de menor) en `payload` (hoy se guardan solo
             // las CLAVES). Redacta esos payloads de los items del titular → la PII tampoco sobrevive
