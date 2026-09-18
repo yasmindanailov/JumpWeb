@@ -10,11 +10,13 @@ use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\PersonNameKey;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -59,9 +61,18 @@ class InvitationPageTest extends TestCase
             ->assertSee('Cumple 8 años')
             ->assertSee('Te invita Marta');
 
-        // ❗❗ Lo que NO puede estar, dicho por su nombre.
+        // ❗❗ Lo que NO puede estar: ni una respuesta de otro padre.
         $response->assertDontSee('Hugo', escape: false);
-        $response->assertDontSee((string) $invitation->token, escape: false);
+
+        // ⚠️ **El token SÍ está, y tiene que estar**: el formulario de contestar postea a su propia
+        // URL. Quien ve esta página ya lo tiene en la barra de direcciones, así que esconderlo del
+        // marcado no protegería de nada. Lo que impide que SALGA de aquí es el
+        // `Referrer-Policy: no-referrer`, que vigila su propio caso.
+        //
+        // ▶ Hasta la T5·2 esta línea aseveraba lo contrario, y pasaba solo porque la página no tenía
+        // formulario. *Una aserción que deja de poder cumplirse se revisa: puede estar describiendo
+        // una propiedad que nunca existió.*
+        $response->assertSee((string) $invitation->token, escape: false);
     }
 
     /** «Sin dato, sin bloque»: sin edad y sin línea de anfitrión, esos bloques no se pintan. */
@@ -267,6 +278,109 @@ class InvitationPageTest extends TestCase
             ->assertSee('Menú Pizza');
 
         $this->assertNotNull($reservation->fresh());
+    }
+
+    // ── 6 · Contestar (T5·2) ──────────────────────────────────────────────────
+
+    public function test_a_parent_answers_from_the_page_and_is_told_so(): void
+    {
+        [$reservation, $invitation] = $this->party();
+
+        $this->post(route('invitation.reply', ['token' => $invitation->token]), [
+            'child_name' => 'Hugo Ruiz', 'attending' => '1',
+        ])->assertRedirect();
+
+        $this->assertSame(1, InvitationReply::query()->where('order_item_id', $reservation->id)->count());
+        $this->assertTrue((bool) InvitationReply::query()->value('attending'));
+
+        // El desenlace viaja por flash y lo pinta el GET siguiente (POST-redirect-GET).
+        $this->followingRedirects()
+            ->post(route('invitation.reply', ['token' => $invitation->token]), [
+                'child_name' => 'Lía Fernández', 'attending' => '0',
+            ])
+            ->assertOk()
+            ->assertSee('Gracias por avisar')
+            ->assertSee('Otra vez será');
+    }
+
+    /**
+     * ❗❗ **LA PROPIEDAD QUE ORDENA ESTA PANTALLA.** Con la lista completa, un nombre que YA está y uno
+     * nuevo reciben **exactamente el mismo desenlace** (`#700`). Si no fuera así, quien tiene el enlace
+     * —repartido a un grupo de clase entero— podría reconstruir la lista de invitados probando nombres.
+     *
+     * ⚠️ Se compara el HTML del aviso **entero**: bastaría un título distinto, o un tono distinto, para
+     * abrir la misma rendija que el `reason` abría en la API.
+     */
+    public function test_with_a_full_list_a_known_name_and_a_new_one_see_the_same_thing(): void
+    {
+        [$reservation, $invitation] = $this->party();
+        $reservation->forceFill(['quantity' => 1, 'guest_data' => [['name' => 'Ana Gil']]])->save();
+
+        $conocido = $this->followingRedirects()
+            ->post(route('invitation.reply', ['token' => $invitation->token]),
+                ['child_name' => 'Ana Gil', 'attending' => '1'])
+            ->assertOk()->getContent();
+
+        $nuevo = $this->followingRedirects()
+            ->post(route('invitation.reply', ['token' => $invitation->token]),
+                ['child_name' => 'Hugo Ruiz', 'attending' => '1'])
+            ->assertOk()->getContent();
+
+        $aviso = static fn (string $html): string => preg_match(
+            '#<div class="gf-notice[^"]*"[^>]*data-invitation-outcome="[^"]*">.*?</div>#s', $html, $m
+        ) ? preg_replace('/Ana Gil|Hugo Ruiz/', 'NOMBRE', $m[0]) : 'SIN AVISO';
+
+        $this->assertSame(
+            $aviso((string) $conocido),
+            $aviso((string) $nuevo),
+            'el desenlace distingue quién está en la lista: es un oráculo de pertenencia'
+        );
+        $this->assertStringContainsString('Contamos con vosotros', (string) $nuevo);
+    }
+
+    /**
+     * Pasado el plazo la fiesta **se sigue viendo** y lo que se cierra son los botones (§7.2·R8): la
+     * información hace falta justo el día de la fiesta.
+     *
+     * ⚠️⚠️ **Pasado el PLAZO, no pasada la FIESTA, y la diferencia importa.** La primera versión de
+     * este caso ponía la fiesta ayer y recibía un 404 — correcto: un enlace no sobrevive a su fiesta,
+     * porque `resolvePublic()` exige que la reserva siga abierta. Lo que §7.2·R8 protege es la ventana
+     * de en medio: la fiesta es mañana y el corte de respuestas ya venció.
+     */
+    public function test_past_the_deadline_the_party_is_still_visible_but_the_buttons_are_gone(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-01 09:00:00', 'UTC'));
+        Setting::query()->updateOrCreate(
+            ['key' => GuestCountPolicy::SETTING_CUTOFF_HOURS], ['value' => '48']
+        );
+
+        [$reservation, $invitation] = $this->party();
+        // Mañana: la fiesta NO ha terminado, pero el corte de 48 h ya pasó.
+        $reservation->slot?->forceFill(['date' => now()->addDay()->toDateString()])->save();
+
+        $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
+            ->assertOk()
+            ->assertSee('Lucía')
+            ->assertSee('El plazo para confirmar ya ha pasado')
+            ->assertDontSee('name="child_name"', escape: false);
+    }
+
+    /**
+     * ⚠️ El AVISO DE PRIVACIDAD está **desde el primer momento y sin casilla** (§7.2·R7, `#350`): dice
+     * para qué son los datos, **quién los va a ver** —el anfitrión, que es un tercero— y cuándo se
+     * borran. Quien escribe aquí el nombre de un niño no tiene cuenta ni ha aceptado nada.
+     */
+    public function test_the_privacy_notice_is_there_without_a_checkbox(): void
+    {
+        [, $invitation] = $this->party();
+
+        $this->get(route(PartyInvitations::PUBLIC_ROUTE, ['token' => $invitation->token]))
+            ->assertOk()
+            ->assertSee('quien organiza la fiesta')
+            ->assertSee('14 días')
+            ->assertSee(route('legal.privacidad'), escape: false)
+            // Sin casilla: el consentimiento no se pide con un checkbox aquí.
+            ->assertDontSee('type="checkbox"', escape: false);
     }
 
     // ── Fixtures ──────────────────────────────────────────────────────────────

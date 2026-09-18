@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Booking\Models\InvitationReply;
 use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Platform\Services\DisplayTime;
+use App\Domain\Platform\Services\Turnstile;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
@@ -35,6 +39,55 @@ use Illuminate\Support\Carbon;
 class InvitationPageController extends Controller
 {
     public function __construct(private readonly PartyInvitations $invitations) {}
+
+    /**
+     * Lo que contesta un padre, desde la propia página.
+     *
+     * ⚠️⚠️ **El desenlace va por FLASH y la respuesta es un redirect** (patrón POST-redirect-GET, el
+     * mismo del justificante): sin él, recargar reenvía el formulario y el padre contesta dos veces
+     * sin querer — que aquí no rompe nada (el repetido se acepta en silencio) pero le enseñaría un
+     * diálogo del navegador que no entiende.
+     *
+     * ⚠️ **El anti-robot va ANTES que el dominio**, y su fallo se DICE: Turnstile le falla también a
+     * personas, y aquí un fallo es un niño que se queda sin confirmar. Mentirle con un «hecho» sería
+     * peor que el fallo.
+     */
+    public function reply(Request $request, string $token): RedirectResponse
+    {
+        $invitation = $this->invitations->resolvePublic($token);
+
+        abort_if($invitation === null, 404);
+
+        // Se valida DESPUÉS de resolver, igual que en la API: al revés, un cuerpo bien formado
+        // distinguiría un token real de uno inventado.
+        $data = $request->validate([
+            'child_name' => ['required', 'string', 'min:1', 'max:'.InvitationReply::CHILD_NAME_MAX],
+            'attending' => ['required', 'in:1,0'],
+        ]);
+
+        // ⚠️ Se vuelve a la página POR SU NOMBRE y no con `back()`: aquél depende del `Referer`, que lo
+        // manda el cliente y puede no venir —un enlace abierto desde una app de mensajería suele
+        // quitarlo—. Con `back()` el padre acababa en la portada sin saber si se había apuntado.
+        $volver = redirect()->route(PartyInvitations::PUBLIC_ROUTE, ['token' => $token]);
+
+        if (! Turnstile::verify((string) $request->input('cf-turnstile-response'), (string) $request->ip())) {
+            return $volver->with('invitation_status', 'antibot');
+        }
+
+        $outcome = $this->invitations->reply(
+            $invitation,
+            (string) $data['child_name'],
+            $data['attending'] === '1',
+        );
+
+        return $volver
+            ->with('invitation_status', $outcome->accepted
+                ? ($data['attending'] === '1' ? 'yes' : 'no')
+                : (string) $outcome->reason)
+            // ⚠️ Solo el nombre que ACABA de escribir quien contesta, y solo en SU sesión: es para
+            // decirle «contamos con Hugo» y nada más. La página no lista ni una respuesta.
+            ->with('invitation_child', trim((string) $data['child_name']));
+    }
 
     public function show(string $token, Response $response): Response
     {

@@ -75,7 +75,12 @@
    ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
    `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **La T4 está CERRADA** (`#573`→`#578`). Lo siguiente de esta spec es la **T5 · la página pública**
+2. **T5·1 y T5·2 en el árbol** (`#701`, `#702`): la página vestida con los tres temas y contestar con
+   su aviso de privacidad. **Sigue por la T5·3** (spec §10.5): el RECIBO de dos horas y sus dos ofertas
+   —G2 «quién viene» y G3 «¿vas tú con él?»—, que es donde entra el `receiptUrl()` aplazado desde la
+   T4·2. ⚠️ **El texto de G3 sigue PENDIENTE del owner** (§8): hay borrador en §4.6, se le enseña
+   corregido como se hizo con el aviso. Después **T5·4** (`og:*` y el `.ics` con `TZID`).
+   ▶ Lo de antes, que sigue vigente:
    (§4.6, y **lee §7.2 antes de construir**), que es lo único que la T4 dejó abierto:
    - Nace la ruta `invitation.show`, y con ella **`Invitation.url` se rellena SOLO** — no hay que
      tocar nada, `PartyInvitations::shareUrlFor()` pregunta por el NOMBRE de la ruta. Hay un caso que

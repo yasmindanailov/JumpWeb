@@ -6020,6 +6020,35 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
 /* «Cómo llegar» es una ACCIÓN y ahora lo parece: botón del sistema en su variante discreta. Como
    párrafo con un enlace subrayado se leía igual que la dirección de encima. */
 .invitation__go { align-self: flex-start; }
+
+/* ── CONTESTAR (T5·2) ──
+   ⚠️⚠️ **Barra PROPIA y no `.gf-savebar`, aunque hablen el mismo idioma.** Esa clase es de TRES
+   páginas y resuelve otro problema —un «guardar» en fila—; aquí hay un campo y DOS botones del mismo
+   peso, que a 390 no caben en una línea. Tocarla para que cupieran movería el post-form y el
+   justificante, que es **exactamente** cómo la T2 rompió la barra de firmar (401 px de 844, §10.3).
+   ▶ Lo que sí se comparte es el lenguaje: mueble pegado abajo, papel de tarjeta, borde superior y la
+   sombra de dock — la misma familia que la guarda de la hoja admite. */
+.invitation__bar {
+    position: sticky; bottom: 0; z-index: 20;
+    display: flex; flex-direction: column; gap: var(--sp-12);
+    margin-inline: calc(var(--sp-20) * -1);
+    padding: var(--sp-14) var(--sp-20) calc(var(--sp-14) + env(safe-area-inset-bottom, 0px));
+    background: var(--bg-card); border-top: 1px solid var(--line); box-shadow: var(--shadow-nav-dock);
+}
+.invitation__field { display: flex; flex-direction: column; gap: var(--sp-6); }
+.invitation__label { font-size: var(--fs-label); font-weight: var(--fw-semibold); }
+.invitation__field input { min-height: var(--tap-min); font-size: var(--fs-body); border-radius: var(--r-md); }
+.invitation__error { font-size: var(--fs-body-s); line-height: 1.5; color: var(--err-ink); margin: 0; }
+
+/* ❗❗ **Los dos botones con el MISMO peso** (§4.6): no hay respuesta correcta. Jerarquizar el «sí»
+   —tinta grande contra un enlace pequeño— empujaría a decir que sí a quien no puede ir, y el anfitrión
+   acabaría con una lista que no es la real. Ocupan mitad y mitad, y en pantallas estrechas se apilan
+   antes de encogerse por debajo del área táctil. */
+.invitation__answers { display: flex; flex-wrap: wrap; gap: var(--sp-12); }
+.invitation__answers > .btn { flex: 1 1 12ch; }
+
+/* El aviso de privacidad, al pie y fuera de la barra: se lee una vez, no acompaña a cada gesto. */
+.invitation__privacy { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; max-width: 60ch; }
 /* El teléfono del anfitrión es un enlace `tel:` y tiene que parecerlo en un dedo: área táctil propia
    dentro de la celda, sin cambiar la tipografía mono de la cifra. */
 .invitation__call { display: inline-block; padding-block: var(--sp-4); text-decoration: underline; }

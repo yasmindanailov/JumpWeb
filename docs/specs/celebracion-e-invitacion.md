@@ -1263,7 +1263,7 @@ La barra de contestar llega con su aviso o no llega.
 | | Qué | Estado |
 |---|---|---|
 | **T5·1** | La página, su ruta y el vestido: banda, confeti y chapa (§4.6, §3.4) | ✅ `#521` |
-| **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ⬜ |
+| **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ✅ `#702` |
 | **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ⬜ |
 | **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ⬜ |
 
@@ -1306,6 +1306,44 @@ verdes: el molde compartido no se ha tocado.
 la normalización de un campo traducible —lista **o** texto suelto, la trampa de `#463`— ya estaba
 copiada en `CatalogReader`, `PostFormAddons` y `CreateManualOrderPage`. **Los tres siguen con la suya**:
 migrarlos es otra tanda y se anota en vez de hacerse de paso.
+
+#### 10.5.2 T5·2 · contestar — EN EL ÁRBOL (2026-09-18, `DECISIONES #702`)
+
+**Hecho.**
+- La **barra de contestar**, pegada desde el primer píxel: campo de nombre y apellidos + «Sí, viene» y
+  «No podemos» **con el mismo peso** (§4.6).
+  ❗❗ **Barra PROPIA y no `.gf-savebar`**, aunque hablen el mismo idioma. Esa clase es de TRES páginas y
+  resuelve otra cosa —un «guardar» en fila—; tocarla para que cupieran un campo y dos botones movería
+  el post-form y el justificante, que es **exactamente** cómo la T2 rompió la barra de firmar (§10.3).
+- **Los desenlaces en cuatro tonos**: «contamos con vosotros», «gracias por avisar», el rechazo del
+  dominio y el anti-robot. ⚠️ **No hay desenlace de «lista completa»** (`#700`): dejó de existir porque
+  distinguirlo del «sí» aceptado decía si ese niño estaba invitado.
+- **El aviso de privacidad** (§7.2·R7), `[DECIDIDO owner, 2026-09-18]`: al pie, **sin casilla** (el
+  criterio de `#350`), diciendo para qué son los datos, **que los verá quien organiza la fiesta** —un
+  tercero, no solo el parque— y que se borran a los 14 días. Con la política como control de 48.
+- **Turnstile** con el mismo bloque de tercero que el justificante, y el POST con sus tres defensas que
+  no se sustituyen: anti-robot, límite por IP y el tope `3 × invitados` del dominio.
+- El **POST-redirect-GET** vuelve a la página **por el nombre de su ruta y no con `back()`**: aquél
+  depende del `Referer`, que una app de mensajería suele quitar — y el padre acababa en la portada sin
+  saber si se había apuntado.
+
+**Guardas**: `InvitationPageTest` sube a 14, con **la que ordena la pantalla**: con la lista completa,
+un nombre que YA está y uno nuevo ven **el mismo aviso**, comparado sobre el HTML entero del bloque.
+
+**Trampas pagadas:**
+1. ⚠️ **«Pasado el plazo» NO es «pasada la fiesta».** El primer caso ponía la fiesta ayer y recibía un
+   404 — correcto: un enlace no sobrevive a su fiesta. Lo que §7.2·R8 protege es la ventana de en
+   medio: la fiesta es mañana y el corte de respuestas ya venció.
+2. **Una aserción dejó de poder cumplirse**: el token aparece ahora en el `action` del formulario, que
+   es su propia URL. En la T5·1 se aseveraba lo contrario y pasaba **solo porque no había formulario**.
+   Quien ve la página ya tiene el token en su barra de direcciones; lo que impide que SALGA es el
+   `Referrer-Policy`, que tiene su propio caso. *Una aserción que deja de poder cumplirse se revisa:
+   puede estar describiendo una propiedad que nunca existió.*
+3. El nombre del ejemplo del campo colisionaba con el que otro caso vigila como «no filtrado». Un
+   texto de ejemplo no puede usar un nombre que una guarda persigue.
+
+**Sin medir, declarado**: `§7.2·R12` pide **medir cuántos toques cuesta Turnstile**, y en local no hay
+claves — el widget real solo se ve en producción. Queda para la pasada del owner allí.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

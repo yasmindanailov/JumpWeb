@@ -15,10 +15,32 @@
      * el vestido del canvas —banda de tema, confeti y chapa de edad— llega con **los tres temas**, que
      * el owner elige viéndolos renderizados (§3.4). Inventarlos aquí sería decidir por él.
      *
-     * ⚠️ **Sin JS y sin formulario**: la barra de contestar es la T5·2, y llega con el aviso de
-     * privacidad que `§7.2·R7` exige para recoger datos de un menor. Por eso esta unidad puede existir
-     * sola: **no recoge nada**.
+     * ⚠️ **Sin una línea de JS**: el formulario es un POST normal y funciona entero. Lo único que se
+     * carga de fuera es el anti-robot, y solo si la instalación lo tiene configurado.
      */
+    $status = session('invitation_status');
+    $child = session('invitation_child');
+
+    // Los desenlaces, en cuatro tonos. El rechazo del dominio comparte tono y título con el anti-robot
+    // porque dicen lo mismo: no se ha guardado nada.
+    //
+    // ⚠️⚠️ **`full` NO está, y su ausencia es la propiedad** (`#700`): un «sí» ya no se rechaza por
+    // lista completa, porque distinguirlo del aceptado decía si ese niño estaba invitado.
+    $outcome = match (true) {
+        $status === 'yes' => ['tone' => ' gf-notice--ok', 'role' => 'status',
+            'title' => __('invitation.done.yes_title'),
+            'text' => $child ? __('invitation.done.yes', ['name' => $child]) : __('invitation.done.yes_generic')],
+        $status === 'no' => ['tone' => '', 'role' => 'status',
+            'title' => __('invitation.done.no_title'), 'text' => __('invitation.done.no')],
+        // Turnstile falla también a personas: se le DICE, no se le miente con un «hecho».
+        $status === 'antibot' => ['tone' => ' gf-notice--err', 'role' => 'alert',
+            'title' => __('invitation.done.refused_title'), 'text' => __('invitation.done.antibot')],
+        // Entre que abrió la página y pulsó cambió el mundo: la fiesta, el plazo o el tope.
+        in_array($status, ['closed', 'cutoff', 'no_name', 'too_many'], true) => [
+            'tone' => ' gf-notice--err', 'role' => 'alert',
+            'title' => __('invitation.done.refused_title'), 'text' => __('invitation.refused.'.$status)],
+        default => null,
+    };
 @endphp
 <x-focused-layout :title="__('invitation.title')">
     <div class="gf-page">
@@ -176,17 +198,88 @@
                     </div>
                 @endif
 
-                {{-- ───── Lo que todavía no está ─────
-                     ⚠️ Se DICE en vez de callarse. Un padre que abre la invitación y no encuentra dónde
-                     contestar pensaría que la página está rota; esto le dice que lo hará aquí mismo.
-                     La barra de contestar es la T5·2, con su aviso de privacidad. --}}
-                <div class="gf-notice" role="status" data-invitation-soon>
-                    <p class="gf-notice__title">{{ __('invitation.soon.title') }}</p>
-                    <p class="gf-notice__text">
-                        {{ $repliesOpen ? __('invitation.soon.open') : __('invitation.soon.closed') }}
-                    </p>
-                </div>
+                {{-- ───── Desenlace de lo que se acaba de contestar ─────
+                     Un tono por desenlace y el título delante, igual que la hoja hermana: antes tres
+                     de cinco salían en el mismo gris y «hecho» se leía igual que «no hemos guardado
+                     nada» (la grieta J-02 del justificante).
+                     ⚠️⚠️ **No hay desenlace de «lista completa»** (`#700`): dejó de existir porque
+                     distinguirlo del «sí» aceptado decía si ese niño estaba en la lista. --}}
+                @if ($outcome !== null)
+                    <div class="gf-notice{{ $outcome['tone'] }}" role="{{ $outcome['role'] }}"
+                         data-invitation-outcome="{{ $status }}">
+                        <p class="gf-notice__title">{{ $outcome['title'] }}</p>
+                        <p class="gf-notice__text">{{ $outcome['text'] }}</p>
+                    </div>
+                @endif
+
+                {{-- ───── Pasado el plazo ─────
+                     La información de la fiesta SE SIGUE VIENDO (§7.2·R8): hace falta justo el día de
+                     la fiesta. Lo único que se cierra son los botones, y se dice por qué. --}}
+                @unless ($repliesOpen)
+                    <div class="gf-notice" role="status" data-invitation-closed>
+                        <p class="gf-notice__title">{{ __('invitation.closed.title') }}</p>
+                        <p class="gf-notice__text">{{ __('invitation.closed.text') }}</p>
+                    </div>
+                @endunless
             </div>
+
+            {{-- ───── CONTESTAR ─────
+                 ⚠️⚠️ **Barra propia y NO `.gf-savebar`**, aunque hablen el mismo idioma: esa clase es de
+                 TRES páginas y aquí hace falta otra cosa —un campo y DOS botones, no un «guardar»—.
+                 Tocarla para que cupieran movería el post-form y el justificante, que es exactamente
+                 como la T2 rompió la barra de firmar (401 px de 844, §10.3).
+
+                 ⚠️ «Sí, viene» y «No podemos» van **con el mismo peso** (§4.6): no hay respuesta
+                 correcta, y jerarquizar una empujaría a decir que sí a quien no puede ir. --}}
+            @if ($repliesOpen)
+                <form class="invitation__bar" method="POST"
+                      action="{{ route('invitation.reply', ['token' => $invitation->token]) }}"
+                      data-invitation-form>
+                    @csrf
+                    <label class="invitation__field">
+                        <span class="invitation__label">{{ __('invitation.field') }}</span>
+                        <input type="text" name="child_name" required maxlength="120"
+                               autocomplete="off" value="{{ old('child_name') }}"
+                               placeholder="{{ __('invitation.field_hint') }}">
+                    </label>
+                    @error('child_name')
+                        <p class="invitation__error" role="alert">{{ $message }}</p>
+                    @enderror
+
+                    {{-- El anti-robot es la caja de un TERCERO: no se recolorea ni se redibuja, y se
+                         DICE qué es. Le falla también a personas, y aquí un fallo es un niño que se
+                         queda sin confirmar. --}}
+                    @if (\App\Domain\Platform\Services\Turnstile::enabled())
+                        <div class="guardian__third">
+                            <span class="guardian__third-label">{{ __('invitation.antibot_label') }}</span>
+                            <div class="cf-turnstile" data-sitekey="{{ \App\Domain\Platform\Services\Turnstile::siteKey() }}"></div>
+                        </div>
+                        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                    @endif
+
+                    <div class="invitation__answers">
+                        <button type="submit" name="attending" value="1" class="btn btn--lg btn--ink">
+                            {{ __('invitation.yes') }}
+                        </button>
+                        <button type="submit" name="attending" value="0" class="btn btn--lg btn--ghost">
+                            {{ __('invitation.no') }}
+                        </button>
+                    </div>
+                </form>
+            @endif
+
+            {{-- ───── El AVISO DE PRIVACIDAD (§7.2·R7) ─────
+                 ❗❗ **Sin casilla** (el criterio de `#350`) y al pie de la página. Dice las tres cosas
+                 que hay que decir: **para qué** son los datos, **quién los va a ver** —y aquí lo lee un
+                 TERCERO, el anfitrión, que no es el parque— y **cuándo se borran**. La política queda
+                 como control de 48 para quien quiera leerla entera.
+                 ⚠️ Va aquí aunque esta pantalla solo pida un nombre: el nombre de un niño YA es un dato
+                 personal de un menor, y quien lo escribe no tiene cuenta ni ha aceptado nada. --}}
+            <p class="invitation__privacy" data-invitation-privacy>
+                {{ __('invitation.privacy.text') }}
+                {{-- La misma ruta y la misma clase de enlace legal que sus dos hermanas. --}}
+                <a class="gf-legal" href="{{ route('legal.privacidad') }}">{{ __('invitation.privacy.link') }}</a>
+            </p>
         </main>
     </div>
 </x-focused-layout>

@@ -28,4 +28,37 @@ return [
         'open' => 'Tu pourras bientôt confirmer depuis cette page. En attendant, préviens la personne qui t’a invité.',
         'closed' => 'Le délai pour confirmer est passé, mais les informations de la fête restent ici.',
     ],
+
+    'field' => 'Nom et prénom de l’enfant',
+    'field_hint' => 'Par exemple : Martina Serra López',
+    'yes' => 'Oui, il vient',
+    'no' => 'On ne peut pas',
+    'antibot_label' => 'Vérification de sécurité',
+
+    'done' => [
+        'yes_title' => 'On compte sur vous !',
+        'yes' => 'Nous l’avons dit à la personne qui organise la fête. À bientôt, :name.',
+        'yes_generic' => 'Nous l’avons dit à la personne qui organise la fête. À bientôt !',
+        'no_title' => 'Merci de nous prévenir',
+        'no' => 'Nous l’avons dit à la personne qui organise la fête. Ce sera pour une prochaine fois.',
+        'refused_title' => 'Nous n’avons pas pu l’enregistrer',
+        'antibot' => 'La vérification de sécurité n’a pas abouti. Réessaie ; si cela ne marche toujours pas, préviens directement la personne qui t’a invité.',
+    ],
+
+    'refused' => [
+        'closed' => 'Cette fête n’accepte plus de réponses. Si tu penses que c’est une erreur, parles-en à la personne qui t’a invité.',
+        'cutoff' => 'Le délai pour confirmer est passé. Préviens directement la personne qui t’a invité.',
+        'no_name' => 'Nous avons besoin du nom de l’enfant pour pouvoir l’ajouter.',
+        'too_many' => 'Cette invitation a reçu trop de réponses d’affilée. Réessaie plus tard.',
+    ],
+
+    'closed' => [
+        'title' => 'Le délai pour confirmer est passé',
+        'text' => 'Les informations de la fête restent ici. Si tu n’as encore rien dit, parles-en à la personne qui t’a invité.',
+    ],
+
+    'privacy' => [
+        'text' => 'Ce que tu écris ici est transmis à la personne qui organise la fête, pour qu’elle sache qui vient, et au parc, pour préparer la journée. Nous ne l’utilisons pour rien d’autre et le supprimons 14 jours après la fête.',
+        'link' => 'Politique de confidentialité',
+    ],
 ];

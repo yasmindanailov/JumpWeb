@@ -265,6 +265,15 @@ Route::get('/invitacion/{token}', [InvitationPageController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{12}')
     ->middleware(['throttle:60,1', 'no-store'])
     ->name(PartyInvitations::PUBLIC_ROUTE);
+// Contestar. ⚠️ Es la superficie MÁS expuesta de esta feature: pública, sin sesión y **escribe en
+// nombre de un desconocido**. Lleva las tres defensas que no se sustituyen entre sí — Turnstile en el
+// controlador, límite por IP aquí y el tope `3 × invitados` en el DOMINIO, que es el único que no se
+// puede esperar a que expire. Y el `throttle:invitation-reply` por TOKEN, porque el enlace lo tiene un
+// grupo de clase entero y un techo por IP no dice gran cosa entre familias distintas.
+Route::post('/invitacion/{token}', [InvitationPageController::class, 'reply'])
+    ->where('token', '[A-Za-z0-9]{12}')
+    ->middleware(['throttle:20,1', 'throttle:invitation-reply', 'no-store'])
+    ->name('invitation.reply');
 
 // SEO: mapa del sitio para buscadores.
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
