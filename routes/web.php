@@ -275,6 +275,25 @@ Route::post('/invitacion/{token}', [InvitationPageController::class, 'reply'])
     ->middleware(['throttle:20,1', 'throttle:invitation-reply', 'no-store'])
     ->name('invitation.reply');
 
+// El RECIBO de una respuesta (§4.5·6): **DOS HORAS** y no es un enlace de edición (D9).
+//
+// ⚠️⚠️ Lo autoriza la FIRMA de la URL, **no el token de la invitación**: son dos alcances distintos —
+// el token abre la fiesta entera, esto abre UNA respuesta—. Mezclarlos le daría a cualquiera con el
+// enlace de la fiesta los datos de todos los niños.
+//
+// ⚠️ `signed` va en la ruta: pasadas las dos horas Laravel responde 403 **antes** de que el
+// controlador mire nada. Y `no-store` porque lo que se sirve son las alergias de un menor (art. 9).
+Route::get('/invitacion/recibo/{reply}', [InvitationPageController::class, 'receipt'])
+    ->whereNumber('reply')
+    ->middleware(['signed', 'throttle:60,1', 'no-store'])
+    ->missing(fn () => abort(403))
+    ->name(PartyInvitations::RECEIPT_ROUTE);
+Route::post('/invitacion/recibo/{reply}', [InvitationPageController::class, 'saveReceipt'])
+    ->whereNumber('reply')
+    ->middleware(['signed', 'throttle:20,1', 'no-store'])
+    ->missing(fn () => abort(403))
+    ->name('invitation.receipt.save');
+
 // SEO: mapa del sitio para buscadores.
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 

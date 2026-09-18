@@ -326,9 +326,21 @@ class InvitationPageTest extends TestCase
                 ['child_name' => 'Hugo Ruiz', 'attending' => '1'])
             ->assertOk()->getContent();
 
+        // Se neutraliza lo que es PROPIO de cada padre —su nombre y la URL firmada de SU recibo— y se
+        // compara el resto del aviso.
+        //
+        // ⚠️⚠️ **Normalizar la URL no debilita la aserción, y conviene ver por qué**: si uno llevara
+        // recibo y el otro no, la diferencia seguiría ahí —uno tendría el `<a>` entero y el otro no—.
+        // Lo único que se tapa es el id y la firma, que son de quien contesta y no dicen nada sobre
+        // quién está en la lista. Sin esta normalización el caso salía ROJO por dos credenciales
+        // distintas, que es justo lo que TIENEN que ser.
         $aviso = static fn (string $html): string => preg_match(
             '#<div class="gf-notice[^"]*"[^>]*data-invitation-outcome="[^"]*">.*?</div>#s', $html, $m
-        ) ? preg_replace('/Ana Gil|Hugo Ruiz/', 'NOMBRE', $m[0]) : 'SIN AVISO';
+        ) ? preg_replace(
+            ['/Ana Gil|Hugo Ruiz/', '#/invitacion/recibo/\d+\?[^"]*#'],
+            ['NOMBRE', '/invitacion/recibo/RECIBO'],
+            $m[0]
+        ) : 'SIN AVISO';
 
         $this->assertSame(
             $aviso((string) $conocido),

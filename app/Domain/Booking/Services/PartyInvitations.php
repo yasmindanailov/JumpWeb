@@ -14,6 +14,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
 /**
  * **La INVITACIÓN DIGITAL de una reserva y lo que contestan los padres**
@@ -49,6 +50,16 @@ final class PartyInvitations
      * y nunca se compone el path a mano: es lo que hace que {@see shareUrlFor()} se cierre solo.
      */
     public const PUBLIC_ROUTE = 'invitation.show';
+
+    /** La ruta del RECIBO, firmada y temporal (§4.5·6). */
+    public const RECEIPT_ROUTE = 'invitation.receipt';
+
+    /**
+     * Las DOS HORAS del recibo (D9). No es un plazo elegido al peso: es el tiempo en que un padre que
+     * acaba de contestar sigue con el móvil en la mano. Más allá, el enlace sería una credencial viva
+     * sobre los datos de un menor viajando por un chat de padres.
+     */
+    public const RECEIPT_HOURS = 2;
 
     public function __construct(private GuestCountPolicy $policy) {}
 
@@ -781,7 +792,73 @@ final class PartyInvitations
     }
 
     /**
-     * ▶ **El RECIBO de una respuesta (§4.5·6) NO está aquí, y es deliberado.** Es una URL firmada de
+     * **El RECIBO de una respuesta** (§4.5·6, T5·3; `DECISIONES #703`): una URL firmada de **2 horas**
+     * atada a esa fila, que abre las dos ofertas — dejar los datos del niño (G2) y decir si va un
+     * adulto con él (G3).
+     *
+     * ⚠️⚠️ **DOS HORAS y no es un enlace de edición** (D9). Un enlace permanente convertiría cada
+     * respuesta en una credencial viva sobre los datos de un menor, repartida por un grupo de clase
+     * entero: quien reenviara el mensaje del padre entraría a sus alergias meses después. Pasado el
+     * plazo las ofertas desaparecen y lo que se dejó se queda como está.
+     *
+     * ⚠️ **Se firma con la fila, no con el token de la invitación.** El token abre la fiesta entera;
+     * esto abre UNA respuesta, la de quien acaba de contestar. Son dos alcances distintos y mezclarlos
+     * le daría a cualquiera con el enlace de la fiesta los datos de todos los niños.
+     *
+     * ▶ Estuvo aplazado desde la T4·2 con su razón escrita: nombraba una ruta que no existía, y un
+     * método así es uno que lanza en cuanto alguien lo llama y que ninguna prueba puede ejercer.
+     */
+    public function receiptUrl(InvitationReply $reply): string
+    {
+        return URL::temporarySignedRoute(
+            self::RECEIPT_ROUTE,
+            now()->addHours(self::RECEIPT_HOURS),
+            ['reply' => $reply->getKey()],
+        );
+    }
+
+    /**
+     * **Las dos ofertas del recibo** (G2 y G3): los datos del niño y si va un adulto con él.
+     *
+     * ⚠️⚠️ **Se re-comprueba el plazo AQUÍ dentro** (`SEC-04` aplicado al tiempo): entre que el padre
+     * recibe el recibo y lo rellena pueden pasar dos horas de fiesta, y una firma válida no puede
+     * escribir sobre una reserva que ya cerró. El plazo de estas ofertas es el MISMO que el de
+     * contestar — si el anfitrión ya no puede mover su lista, nadie le añade datos.
+     *
+     * ⚠️ `data` se sanea con el esquema del pack, igual que en `reply()`: una clave inventada no entra
+     * y una edad fuera de rango no llega a la aritmética de un suplemento el día que se adopte.
+     *
+     * ⚠️ **Una respuesta DESCARTADA no se toca.** Si el anfitrión ya dijo «no lo apuntes», el recibo
+     * que el padre tenga abierto no puede resucitarla por la puerta de atrás.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function completeReply(InvitationReply $reply, ?string $companion, array $data): bool
+    {
+        $reservation = $reply->reservation;
+
+        if ($reservation === null
+            || $reply->dismissed_at !== null
+            || ! $this->policy->isOpenFor($reservation)
+            || ! $this->policy->isWithinWindow($reservation)) {
+            return false;
+        }
+
+        $type = $reservation->ticketType;
+        $clean = $data === [] || $type === null ? null : ($type->sanitizeGuestData([$data], 1)[0] ?: null);
+
+        $reply->forceFill([
+            'companion' => in_array($companion, InvitationReply::COMPANIONS, true) ? $companion : $reply->companion,
+            // Lo que ya había se conserva si esta vez no viene nada: el recibo se puede rellenar en
+            // dos pasadas —primero los datos, luego la compañía— y la segunda no borra la primera.
+            'data' => $clean ?? $reply->data,
+        ])->save();
+
+        return true;
+    }
+
+    /**
+     * ▶ **La nota de por qué el recibo estuvo aplazado**, que conviene no perder: era una URL firmada de
      * 2 horas atada a la fila, que abre las dos ofertas —dejar los datos del niño y decir si va un
      * adulto con él—; nombra la ruta de la página pública, **que nace en la T5**. Escribirlo hoy sería
      * un método que lanza en cuanto alguien lo llame y que ninguna prueba puede ejercer: el mismo

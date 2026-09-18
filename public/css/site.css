@@ -6049,6 +6049,13 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
 
 /* El aviso de privacidad, al pie y fuera de la barra: se lee una vez, no acompaña a cada gesto. */
 .invitation__privacy { font-size: var(--fs-body-s); line-height: 1.55; color: var(--fg-mute); margin: 0; max-width: 60ch; }
+
+/* ❗❗ **«Voy con él» NO pide firma** (D4), y hasta `#703` el botón de firmar se enseñaba igual — o sea
+   que la pantalla contradecía el texto que el propio padre acababa de leer dos líneas antes.
+   ⚠️ Con `:has()` y no con JS: esta página funciona entera sin una línea de script, y el estado lo
+   lleva el propio radio. Sin elegir nada el botón SÍ se ve, y es correcto: todavía no ha dicho que se
+   queda. `:has()` ya es idioma de la casa (19 usos entre las dos hojas). */
+.gf-group:has(input[name="companion"][value="with_adult"]:checked) .invitation__go { display: none; }
 /* El teléfono del anfitrión es un enlace `tel:` y tiene que parecerlo en un dedo: área táctil propia
    dentro de la celda, sin cambiar la tipografía mono de la cifra. */
 .invitation__call { display: inline-block; padding-block: var(--sp-4); text-decoration: underline; }

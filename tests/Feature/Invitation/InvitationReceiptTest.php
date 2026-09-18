@@ -1,0 +1,234 @@
+<?php
+
+namespace Tests\Feature\Invitation;
+
+use App\Domain\Booking\Models\InvitationReply;
+use App\Domain\Booking\Models\Order;
+use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\PartyInvitation;
+use App\Domain\Booking\Models\Slot;
+use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Models\Zone;
+use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Identity\Models\LegalDocumentVersion;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\Services\LegalDocumentPublisher;
+use App\Domain\Identity\Services\WaiverSettings;
+use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\PersonNameKey;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * **El RECIBO de una respuesta** (T5·3 de `docs/specs/celebracion-e-invitacion.md` §4.5·6;
+ * `DECISIONES #703`): las dos ofertas que se le hacen a quien acaba de decir que su hijo viene.
+ *
+ * Lo que vigila, en orden de importancia:
+ *
+ *  1. ❗❗ **DOS HORAS, y no es un enlace de edición** (D9). Un enlace permanente convertiría cada
+ *     respuesta en una credencial viva sobre los datos de un menor, repartida por un chat de padres.
+ *  2. ⚠️ **Su alcance es UNA respuesta, no la fiesta.** El token de la invitación abre la fiesta
+ *     entera; esto abre una sola respuesta. Mezclarlos daría los datos de todos los niños a cualquiera
+ *     con el enlace.
+ *  3. **La atadura con el justificante** viaja DENTRO de la firma: medido, pegar un parámetro a una
+ *     URL ya firmada la invalida, y el padre habría recibido un 403 justo después de decir que sí.
+ *  4. Todo es OPCIONAL: quien cierra la pestaña sin tocar nada ha terminado bien.
+ */
+class InvitationReceiptTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /** ❗❗ El plazo: dentro de dos horas abre; pasadas, la firma caduca y no hay página. */
+    public function test_the_receipt_lasts_two_hours_and_not_a_minute_more(): void
+    {
+        [, , $reply] = $this->partyWithReply();
+        $url = app(PartyInvitations::class)->receiptUrl($reply);
+
+        $this->get($url)->assertOk()->assertSee('Contamos con Hugo Ruiz');
+
+        // A las dos horas y un minuto, la firma ya no vale. Lo para Laravel antes del controlador.
+        $this->travel(PartyInvitations::RECEIPT_HOURS)->hours();
+        $this->travel(1)->minutes();
+
+        $this->get($url)->assertForbidden();
+    }
+
+    /**
+     * ⚠️⚠️ **La URL del recibo NO se puede fabricar desde el token de la invitación.** Son dos
+     * alcances distintos: quien tiene el enlace de la fiesta —un grupo de clase entero— no puede
+     * llegar a los datos que dejó otro padre.
+     */
+    public function test_the_receipt_cannot_be_reached_without_its_own_signature(): void
+    {
+        [, , $reply] = $this->partyWithReply();
+
+        // Sin firma.
+        $this->get('/invitacion/recibo/'.$reply->getKey())->assertForbidden();
+
+        // Con la firma de OTRA respuesta.
+        [, , $otra] = $this->partyWithReply();
+        $urlAjena = app(PartyInvitations::class)->receiptUrl($otra);
+        $query = (string) parse_url($urlAjena, PHP_URL_QUERY);
+
+        $this->get('/invitacion/recibo/'.$reply->getKey().'?'.$query)->assertForbidden();
+    }
+
+    /** Las dos ofertas se guardan, y son opcionales: se puede dejar solo una. */
+    public function test_the_two_offers_are_saved_and_either_one_can_be_left_out(): void
+    {
+        [, , $reply] = $this->partyWithReply();
+        $url = app(PartyInvitations::class)->receiptUrl($reply);
+
+        // Solo la compañía.
+        $this->post($url, ['companion' => InvitationReply::COMPANION_ALONE])->assertRedirect();
+        $this->assertSame(InvitationReply::COMPANION_ALONE, $reply->fresh()?->companion);
+
+        // Y luego solo los datos: la segunda pasada NO borra la primera.
+        $this->post($url, ['guest_data' => ['allergy' => 'Frutos secos']])->assertRedirect();
+
+        $fresh = $reply->fresh();
+        $this->assertSame(InvitationReply::COMPANION_ALONE, $fresh?->companion, 'la compañía se perdió al guardar los datos');
+        $this->assertSame('Frutos secos', ($fresh?->data['allergy'] ?? null));
+    }
+
+    /**
+     * ❗❗ **La atadura con el justificante viaja DENTRO de la firma.** Medido: añadir un parámetro a
+     * una URL ya firmada la invalida, así que componerla concatenando habría llevado a un 403 **al
+     * padre que acaba de decir que su hijo viene** — el peor momento posible.
+     *
+     * ⚠️ Y el nombre del menor llega ENTERO al primer campo, sin partirlo (`#236`): viene de un campo
+     * que pedía «nombre y apellidos», y partirlo fabricaría un apellido en una pantalla que acompaña a
+     * una prueba legal.
+     */
+    public function test_lo_dejo_y_me_voy_lands_on_a_waiver_that_opens_with_the_reply_tied(): void
+    {
+        [$reservation, , $reply] = $this->partyWithReply();
+
+        $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))
+            ->assertOk()->getContent();
+
+        $this->assertTrue(
+            (bool) preg_match('#href="([^"]*autorizacion[^"]*)"#', $html, $m),
+            'el recibo no ofrece el salto al justificante'
+        );
+
+        $waiver = html_entity_decode($m[1]);
+
+        // La firma del enlace TIENE que valer: es lo que este caso existe para probar.
+        $this->get($waiver)
+            ->assertOk()
+            ->assertSee('value="'.$reply->getKey().'"', escape: false)
+            ->assertSee('value="Hugo Ruiz"', escape: false);
+
+        $this->assertNotNull($reservation->fresh());
+    }
+
+    /**
+     * ❗❗ **«Voy con él» no pide firma** (D4), y la pantalla tiene que decir lo mismo que el texto que
+     * el padre acaba de leer dos líneas antes. Hasta `#703` el botón de firmar se enseñaba con las
+     * tres opciones, así que la pantalla se contradecía a sí misma.
+     *
+     * ⚠️ Lo resuelve el CSS con `:has()` sobre el propio radio —esta página funciona entera **sin una
+     * línea de JS**—, así que lo que se comprueba aquí es que la REGLA existe y apunta a lo que dice:
+     * un test de servidor no puede observar un `display` calculado por el navegador.
+     */
+    public function test_staying_with_the_child_hides_the_signing_button(): void
+    {
+        $css = (string) file_get_contents(public_path('css/site.css'));
+
+        $this->assertStringContainsString(
+            '.gf-group:has(input[name="companion"][value="with_adult"]:checked) .invitation__go',
+            $css,
+            'la regla que esconde el botón de firmar con «voy con él» ya no está'
+        );
+
+        // Y el marcado que esa regla necesita: el radio y el botón dentro del mismo grupo.
+        [, , $reply] = $this->partyWithReply();
+        $html = (string) $this->get(app(PartyInvitations::class)->receiptUrl($reply))->assertOk()->getContent();
+
+        $this->assertTrue(
+            (bool) preg_match('#<div class="gf-group" data-receipt-companion>.*?value="with_adult".*?invitation__go.*?</div>#s', $html),
+            'el radio y el botón dejaron de estar en el mismo grupo: la regla ya no los alcanza'
+        );
+    }
+
+    /** Una respuesta que el anfitrión DESCARTÓ no se resucita por el recibo. */
+    public function test_a_dropped_reply_has_no_receipt_page(): void
+    {
+        [, , $reply] = $this->partyWithReply();
+        $url = app(PartyInvitations::class)->receiptUrl($reply);
+
+        $reply->forceFill(['dismissed_at' => now()])->save();
+
+        $this->get($url)->assertNotFound();
+    }
+
+    // ── Fixtures ──────────────────────────────────────────────────────────────
+
+    /** @return array{0: OrderItem, 1: PartyInvitation, 2: InvitationReply} */
+    private function partyWithReply(): array
+    {
+        // ⚠️ El justificante NO existe sin una versión del texto publicada (su controlador aborta con
+        // 404): la maquinaria puede estar montada antes que el texto legal. Sin esto, el caso del
+        // salto medía un 404 y lo habría llamado un defecto del enlace.
+        // Y el modo del waiver tiene que ser INTERNO: en `externo` esta instalación no gestiona
+        // justificantes y la pantalla no existe (`AuthorizesGuardianAuthorization`).
+        Setting::query()->updateOrCreate(['key' => 'waiver.mode'], ['value' => WaiverSettings::MODE_INTERNAL]);
+
+        if (LegalDocumentVersion::query()->count() === 0) {
+            app(LegalDocumentPublisher::class)->publish(WaiverSettings::SLUG, [
+                'es' => ['title' => 'Exención', 'body' => [['h' => 'Riesgo', 'p' => 'Saltar implica riesgos.']]],
+            ]);
+        }
+
+        $zone = Zone::firstOrCreate(['slug' => 'jump'], ['name' => ['es' => 'Jump'], 'position' => 1, 'is_active' => true]);
+        $type = TicketType::firstOrCreate(
+            ['zone_id' => $zone->id, 'type' => TicketType::TYPE_PACK],
+            [
+                'name' => ['es' => 'Cumpleaños'], 'duration_min' => 120, 'seats_per_unit' => 1,
+                'min_qty' => 1, 'max_qty' => 20, 'is_sellable' => true, 'is_active' => true, 'position' => 1,
+                'guest_invitation' => true,
+                // El producto OFRECE el justificante: sin eso no hay pantalla que abrir. `optional` y
+                // no `required`, que es la combinación que el guard de `#575` prohíbe con invitación.
+                'guardian_authorization' => TicketType::GUARDIAN_OPTIONAL,
+                'guest_fields' => [
+                    ['key' => 'name', 'type' => 'text', 'required' => true, 'label' => ['es' => 'Nombre']],
+                    ['key' => 'allergy', 'type' => 'text', 'required' => false, 'label' => ['es' => 'Alergias']],
+                ],
+                'event_fields' => [
+                    ['key' => 'celebrant', 'type' => 'text', 'required' => true,
+                        'stage' => TicketType::EVENT_STAGE_BOOKING, 'label' => ['es' => 'Homenajeado']],
+                ],
+            ]
+        );
+        $slot = Slot::firstOrCreate(
+            ['zone_id' => $zone->id, 'date' => now()->addMonth()->toDateString(), 'start_time' => '17:00:00'],
+            ['end_time' => '18:00:00', 'capacity' => 200, 'online_capacity' => 200],
+        );
+        $user = User::factory()->create(['name' => 'Marta Anfitriona', 'phone' => '600111222']);
+        $order = Order::create([
+            'user_id' => $user->id, 'code' => 'R-'.Str::upper(Str::random(6)),
+            'status' => Order::STATUS_PAID, 'subtotal' => 500, 'tax' => 0, 'total' => 500,
+            'currency' => 'EUR', 'paid_at' => now(),
+        ]);
+        $reservation = $order->items()->create([
+            'ticket_type_id' => $type->id, 'slot_id' => $slot->id,
+            'quantity' => 6, 'unit_price' => 500, 'seats' => 6,
+            'event_data' => ['celebrant' => 'Lucía'],
+        ]);
+
+        $invitation = app(PartyInvitations::class)
+            ->forReservation($reservation->fresh(['ticketType', 'slot', 'order.user']) ?? $reservation);
+
+        $reply = InvitationReply::query()->create([
+            'party_invitation_id' => $invitation->getKey(),
+            'order_item_id' => $reservation->getKey(),
+            'attending' => true,
+            'child_name' => 'Hugo Ruiz',
+            'child_key' => PersonNameKey::for('Hugo Ruiz'),
+        ]);
+
+        return [$reservation->fresh(['ticketType', 'slot', 'order.user']) ?? $reservation, $invitation, $reply];
+    }
+}

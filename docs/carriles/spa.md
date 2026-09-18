@@ -6,7 +6,7 @@
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
 > suite va en el trailer del commit (`#618`), no aquí.
 
-## Foto (2026-09-18, madrugada)
+## Foto (2026-09-18, cierre de la sesión)
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): las dos grietas del armazón, la tarjeta
   grande y la puerta de categoría, el pie, la banda de fases, el día y la hora, la cesta, pagar y los cuatro
@@ -46,6 +46,24 @@
     apuntes», `adopt[]` fuera de `guests`). Con ellos el dominio que faltaba: resumen, personalizar,
     propuesta por emparejado, adoptar, descartar y reconciliar. `InvitationApiTest` (20) · arnés
     **14/14**. ⚠️ `Invitation.url` es `null` hasta que la T5 declare su ruta, **y se rellena solo**.
+- **T5 · la página pública, TRES de cinco unidades en el árbol** y las tres **vistas en vivo por el
+  owner** (18-09):
+  - **T5·1 (`#701`)**: la ruta `/invitacion/{token}`, los bloques de §4.6 y **los TRES temas** —
+    `confeti` (defecto), `fiesta`, `sereno`— con banda, confeti (`.grain`, la pieza del sistema) y
+    chapa de edad. Con ella **`Invitation.url` se rellenó sola**. `InvitationPageTest`.
+    ⚠️ El owner cazó que «Dónde» y el menú salían en TEXTO PLANO: ahora usan `.gf-extras__list` +
+    `.gf-extra` y el molde con superficie. Y el menú lleva **«Más info»** por plato (`<details>`).
+  - **T5·2 (`#702`)**: la barra con **dos botones del mismo peso**, los cuatro desenlaces, Turnstile y
+    **el aviso de privacidad** (§7.2·R7), textos aprobados por el owner.
+  - **T5·3 (`#703`)**: el **recibo de 2 horas** (`receiptUrl()`, que estaba aplazado), G2 con su aviso
+    propio, G3 con el salto al justificante **atado a la respuesta**, y «voy con él» ya sin botón de
+    firmar. `InvitationReceiptTest` (6).
+- ❗❗ **LO QUE EL OWNER LEVANTÓ Y QUEDA ABIERTO: el flujo firmar ↔ invitación NO es coherente**
+  (spec **§10.6**, es lo primero que hay que leer al retomar). Medido: tres defectos y **una
+  contradicción que NO se toca sin él** — `minor_surname` es `required` y §4.5·7 manda que el nombre
+  llegue **sin partirlo** (`#236`), así que el prerrelleno deja el apellido vacío y obligatorio. Las
+  tres salidas están escritas en §10.6·A con su coste; **el primer paso de esa tanda es MEDIR cuántas
+  firmas existentes afecta cada una**.
 - **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner: 8 lentes + un refutador por
   hallazgo, 31 agentes. 17 sobreviven, 6 refutados, 8 sin refutar por el tope. **Dos defectos reales,
   arreglados**: la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT` (el
@@ -75,11 +93,17 @@
    ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
    `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **T5·1 y T5·2 en el árbol** (`#701`, `#702`): la página vestida con los tres temas y contestar con
-   su aviso de privacidad. **Sigue por la T5·3** (spec §10.5): el RECIBO de dos horas y sus dos ofertas
-   —G2 «quién viene» y G3 «¿vas tú con él?»—, que es donde entra el `receiptUrl()` aplazado desde la
-   T4·2. ⚠️ **El texto de G3 sigue PENDIENTE del owner** (§8): hay borrador en §4.6, se le enseña
-   corregido como se hizo con el aviso. Después **T5·4** (`og:*` y el `.ics` con `TZID`).
+2. **T5·1→T5·3 en el árbol y aprobadas** (`#701`→`#703`). Quedan dos, y el owner ya acordó el reparto:
+   - **T5·5 · el flujo firmar ↔ invitación** (spec **§10.6** — LÉELA ENTERA ANTES DE TOCAR). Trae
+     **B ya hecho** y quedan **C** (el recibo no sabe si ese niño ya firmó → hay que preguntarlo **por
+     el contrato**, que las firmas son de Identity) y **D** (tras firmar no se vuelve a la invitación:
+     `backUrl()` deja al padre en la misma hoja que acaba de enviar).
+     ❗ **Y antes que nada, A**: la contradicción del apellido. **No se codifica: se MIDE y se le
+     enseña al owner** con las tres salidas y su coste (cuántas firmas afecta cada una, qué migrar).
+   - **T5·4 · compartir y calendario**: `og:*` (§4.6) y el `.ics` **con `TZID`** — en UTC adelantaría
+     la fiesta una hora (§7.2·R13). Es independiente de todo lo demás.
+   ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile, y en local no hay
+   claves — solo se puede en producción.
    ▶ Lo de antes, que sigue vigente:
    (§4.6, y **lee §7.2 antes de construir**), que es lo único que la T4 dejó abierto:
    - Nace la ruta `invitation.show`, y con ella **`Invitation.url` se rellena SOLO** — no hay que
@@ -195,6 +219,12 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   aplicada y los interruptores apagados — **así se queda hasta que el owner los encienda como DATO**.
 - **Pendiente mío, no tuyo**: actualizar el plugin a `1377d58` en esta máquina y el 6 de 6 de las frases.
   Te lo dejo aquí cuando esté; hoy sigue en 1 de 6 y con `627b3a3`.
+- ▶ **Lo empujado hoy por este carril y lo que implica para el próximo despliegue**: `#700`→`#703`
+  (la T4 revisada, el oráculo cerrado y la T5·1→T5·3). Toca `User::anonymize()` (`#577`),
+  `SecurityHeaders` (deja de pisar un `Referrer-Policy` ya fijado, el suelo global no se relaja) y
+  `OrderItem::guardianAuthorizationSignedUrl()`, que gana extras firmados. **Sin migraciones.**
+  ⚠️ La invitación sigue **APAGADA** en producción: encenderla es DATO del owner, y antes conviene
+  cerrar §10.6 (el flujo firmar↔invitación).
 - ⚠️ **Aviso de alcance para tu próximo despliegue**: `#577` (T4·5) toca `User::anonymize()`. Es la
   supresión del art. 17, así que **entra en producción como cualquier otro cambio de Identity**, pero
   conviene que lo sepas: añade dos `DELETE` acotados a las reservas del titular y no toca el censo de

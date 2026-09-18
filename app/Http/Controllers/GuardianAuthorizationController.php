@@ -88,6 +88,24 @@ class GuardianAuthorizationController extends Controller
                 'name' => (string) ($reservation->order?->user?->name ?? ''),
                 'phone' => (string) ($reservation->order?->user?->phone ?? ''),
             ],
+            // ── Lo que llega DESDE la invitación digital (§4.5·7, `DECISIONES #703`) ──
+            //
+            // Quien elige «lo dejo y me voy» en su recibo aterriza aquí con dos cosas atadas **dentro
+            // de la firma**: la respuesta a la que pertenece —para que el firmador no le cobre una
+            // plaza que ya tiene dueño (`#576`)— y el nombre del niño, que ya escribió una vez.
+            //
+            // ⚠️⚠️ **El nombre entra ENTERO en el primer campo y NO se parte** (`#236`): partirlo por
+            // el primer espacio fabricaría un apellido en una pantalla que acompaña a una prueba
+            // legal, que es justo el defecto asumido que la nota de abajo describe para el adulto.
+            // Aquí no hay que asumirlo: viene de un campo que pedía «nombre y apellidos».
+            //
+            // ⚠️ Llegan por la QUERY FIRMADA, así que no se pueden forjar sin romper el HMAC. Aun así
+            // el id **no se cree**: quien decide si esa respuesta es de esta reserva es el contrato,
+            // dentro del firmador.
+            'fromInvitation' => [
+                'reply_id' => (int) $request->query('invitation_reply_id', 0) ?: null,
+                'minor' => trim((string) $request->query('minor', '')),
+            ],
             // §4.6: con sesión, los datos del adulto vienen rellenos. ⚠️ Iniciar sesión no cambia nada
             // más: no verifica, no enlaza la cuenta y el justificante sigue siendo puntual.
             //

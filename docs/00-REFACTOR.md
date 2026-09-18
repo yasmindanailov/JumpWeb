@@ -101,7 +101,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
 - [ ] Desplegar la T3 con etiqueta: arregla la barra de firmar del justificante, rota en producción desde el 16-09.
 - [x] T4 · la invitación digital, **cerrada** en seis unidades verdes (spec §10.4, `#573`→`#578`): cimientos · reglas del dominio (concurrencia verificada sobre InnoDB) · catálogo y embudo · plazas con dueño, firmador y rotación · RGPD (`RGPD-01`/`RGPD-06` al día) · la API. ⚠️ El código está en producción desde v1.1.0 **con los dos interruptores APAGADOS**: encenderlos es DATO del owner.
-- [ ] T5 · la página pública de la invitación (§4.6): con ella se rellenan solos `Invitation.url` y el `receiptUrl()` aplazado; pide el aviso de privacidad de §7.2·R7, el `.ics` con `TZID`, medir Turnstile y que el owner elija los tres temas.
+- [ ] T5 · la página pública de la invitación (§4.6), partida en cinco: **T5·1 la página y sus tres temas** (`#701`), **T5·2 contestar con su aviso de privacidad** (`#702`) y **T5·3 el recibo de 2 h con G2/G3** (`#703`) hechas y vistas por el owner. Quedan **T5·4** (`og:*` y el `.ics` con `TZID`) y **T5·5, el flujo firmar↔invitación, que NO es coherente** (spec §10.6: tres defectos y ❗ **una contradicción que decide el owner** — `minor_surname` es `required` y §4.5·7 manda no partir el nombre).
 - [ ] T5 → T6 de la celebración y la invitación (T6, el aterrizaje, al final).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 

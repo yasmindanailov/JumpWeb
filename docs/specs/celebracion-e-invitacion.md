@@ -1264,8 +1264,9 @@ La barra de contestar llega con su aviso o no llega.
 |---|---|---|
 | **T5·1** | La página, su ruta y el vestido: banda, confeti y chapa (§4.6, §3.4) | ✅ `#521` |
 | **T5·2** | Contestar: la barra pegada, los desenlaces, Turnstile **y el aviso de privacidad** | ✅ `#702` |
-| **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ⬜ |
+| **T5·3** | El RECIBO de dos horas y sus dos ofertas: datos y compañía (§4.5·6, G2/G3) | ✅ `#703` |
 | **T5·4** | Compartir y calendario: `og:*` y el `.ics` con `TZID` (§7.2·R13) | ⬜ |
+| **T5·5** | ⚠️ **El flujo firmar ↔ invitación, que NO es coherente** (abajo) | ⬜ |
 
 #### 10.5.1 T5·1 · la página y su vestido — EN EL ÁRBOL (2026-09-18, `DECISIONES #521`)
 
@@ -1344,6 +1345,63 @@ un nombre que YA está y uno nuevo ven **el mismo aviso**, comparado sobre el HT
 
 **Sin medir, declarado**: `§7.2·R12` pide **medir cuántos toques cuesta Turnstile**, y en local no hay
 claves — el widget real solo se ve en producción. Queda para la pasada del owner allí.
+
+#### 10.5.3 T5·3 · el recibo y sus dos ofertas — EN EL ÁRBOL (2026-09-18, `DECISIONES #703`)
+
+**Hecho.**
+- **`receiptUrl()`**, aplazado desde la T4·2 y ahora posible porque su ruta existe: firmado, **2 horas**
+  (D9) y **atado a UNA respuesta, no a la fiesta**. El token de la invitación abre la fiesta entera;
+  esto abre una sola respuesta, y mezclarlos daría los datos de todos los niños a cualquiera con el
+  enlace. ⚠️ El enlace **viaja por flash y nunca se pinta en la página**.
+- **G2** con las columnas del pack —menos la del nombre, ya contestado— y **su aviso propio**: ahí puede
+  haber alergias, que son dato de salud y las lee un tercero.
+- **G3** con las tres opciones y el salto al justificante **con la respuesta atada**, que es lo que hace
+  que esa firma no cobre una plaza que ya tiene dueño (`#576`).
+- **«Voy con él» ya no enseña el botón de firmar** (D4), con `:has()` sobre el propio radio — sin una
+  línea de JS. Hasta aquí la pantalla contradecía el texto que el padre acababa de leer.
+- Guardar en dos pasadas **no borra la primera**: compañía y datos son ofertas independientes.
+
+**Guardas**: `InvitationReceiptTest` (6).
+
+**Trampa pagada, y de las caras:** el enlace al justificante se componía **concatenando** los
+parámetros a una URL ya firmada. **Medido: eso invalida la firma** —el HMAC cubre la query entera—, así
+que el padre que acaba de decir que su hijo viene habría recibido un **403 en el peor momento posible**.
+Ahora `guardianAuthorizationSignedUrl()` acepta extras que viajan DENTRO de la firma, y hay un caso que
+abre ese enlace de verdad. ▶ Y para que la atadura sirviera, el justificante tuvo que **leer** esos
+parámetros de su query firmada y llevarlos en un oculto.
+
+### 10.6 ⚠️ T5·5 · EL FLUJO FIRMAR ↔ INVITACIÓN NO ES COHERENTE — sin empezar
+
+Lo levantó el owner al ver la T5·3 funcionando, y **medido, tiene tres defectos y una contradicción**:
+
+##### A · El apellido obligatorio — 🔴 **PENDIENTE DEL OWNER**, no se toca sin su decisión
+
+`minor_surname` es **`required`** en el justificante, y §4.5·7 manda que el nombre llegue desde la
+invitación **«sin partirlo en nombre y apellidos»** (`#236`). **Las dos no pueden cumplirse**: el
+prerrelleno deja «Hugo Ruiz» entero en el primer campo y el segundo, obligatorio, vacío — así que el
+padre lo parte a mano, y si reescribe los apellidos acaba con «Hugo Ruiz» + «Ruiz». *El prerrelleno no
+ayuda: estorba.*
+
+Las tres salidas, ninguna gratis:
+1. Que la invitación **parta** el nombre por el primer espacio → contradice `#236` y fabrica un apellido
+   en una pantalla que acompaña a una prueba legal.
+2. Que el justificante **no exija apellido** cuando viene de una invitación → dos reglas para la misma
+   prueba según por dónde entres.
+3. Que el justificante **unifique sus dos campos en uno**, como `dependents` ya hace por `#236` → lo
+   coherente a largo plazo, pero toca el esquema de una prueba legal y las firmas ya emitidas.
+
+▶ Antes de decidir hay que **medir el coste de cada una**: cuántas firmas existentes afecta y qué habría
+que migrar. Esa medición es el primer paso de esta tanda.
+
+##### B · ✅ Hecho en la T5·3: «voy con él» ya no enseña el botón de firmar.
+
+##### C · El recibo no sabe si ese niño YA tiene justificante
+Le sigue ofreciendo firmar a quien ya firmó. Hace falta preguntarlo — y ⚠️ **por el contrato**, porque
+las firmas son de Identity y el recibo es de Booking.
+
+##### D · Tras firmar, el padre NO vuelve a su invitación
+`backUrl()` le devuelve al justificante, así que se queda mirando la misma hoja que acaba de enviar. El
+flujo no se cierra.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

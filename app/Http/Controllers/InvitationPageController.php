@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 /**
  * **La PÁGINA de la invitación digital** (`docs/specs/celebracion-e-invitacion.md` §4.6, T5·1;
@@ -86,7 +87,82 @@ class InvitationPageController extends Controller
                 : (string) $outcome->reason)
             // ⚠️ Solo el nombre que ACABA de escribir quien contesta, y solo en SU sesión: es para
             // decirle «contamos con Hugo» y nada más. La página no lista ni una respuesta.
-            ->with('invitation_child', trim((string) $data['child_name']));
+            ->with('invitation_child', trim((string) $data['child_name']))
+            // El RECIBO, solo tras un «sí» y solo si de verdad se guardó una fila. Va por flash y no
+            // en la página: es una credencial de dos horas sobre los datos de un menor, y publicarla
+            // en el HTML de una página que ve cualquiera con el enlace sería regalarla.
+            ->with('invitation_receipt', $outcome->accepted && $data['attending'] === '1' && $outcome->reply !== null
+                ? $this->invitations->receiptUrl($outcome->reply)
+                : null);
+    }
+
+    /**
+     * **El RECIBO** (§4.5·6): las dos ofertas que se le hacen a quien acaba de decir que sí.
+     *
+     * ⚠️⚠️ **Lo autoriza la FIRMA de la URL, no el token de la invitación.** Son dos alcances
+     * distintos: el token abre la fiesta entera y esto abre UNA respuesta. Mezclarlos le daría a
+     * cualquiera con el enlace de la fiesta los datos de todos los niños.
+     *
+     * ⚠️ Pasadas las dos horas, la firma caduca y Laravel responde 403 antes de llegar aquí. No es un
+     * enlace de edición (D9): lo que se dejó se queda como está.
+     */
+    public function receipt(InvitationReply $reply, Response $response): Response
+    {
+        $reservation = $reply->reservation;
+
+        abort_if($reservation === null || $reply->dismissed_at !== null, 404);
+
+        $type = $reservation->ticketType;
+        $nameKey = $type?->guestNameFieldKey();
+
+        return response()
+            ->view('invitation.receipt', [
+                'reply' => $reply,
+                'childName' => (string) $reply->child_name,
+                // Las columnas del pack **menos la del nombre**, que ya se contestó: volver a pedirlo
+                // aquí sería preguntar dos veces lo mismo y abrir la puerta a que no coincidan.
+                'fields' => collect($type?->guestFields() ?? [])
+                    // El esquema normalizado garantiza la clave: un `?? null` afirmaría una duda que el
+                    // contrato ya cierra, y Larastan lo dice.
+                    ->reject(fn (array $f): bool => $f['key'] === $nameKey)
+                    ->values()->all(),
+                'data' => (array) ($reply->data ?? []),
+                'companion' => $reply->companion,
+                // «Lo dejo y me voy» lleva al justificante de ESTA reserva con la respuesta atada, y
+                // el nombre del menor entero — sin partirlo en nombre y apellidos (`#236`).
+                // ⚠️⚠️ Los dos extras viajan **DENTRO** de la firma: medido, pegar un `&x=y` a una URL
+                // ya firmada la invalida, y el padre que acaba de decir que sí habría recibido un 403.
+                'waiverUrl' => $reservation->guardianAuthorizationSignedUrl([
+                    'invitation_reply_id' => (int) $reply->getKey(),
+                    'minor' => (string) $reply->child_name,
+                ]),
+                'open' => app(PartyInvitations::class)->repliesOpenFor($reservation),
+            ])
+            ->header('Referrer-Policy', 'no-referrer');
+    }
+
+    /** Guarda las dos ofertas. La firma de la URL es lo que autoriza; el plazo lo re-mira el dominio. */
+    public function saveReceipt(Request $request, InvitationReply $reply): RedirectResponse
+    {
+        abort_if($reply->reservation === null, 404);
+
+        $data = $request->validate([
+            'companion' => ['sometimes', 'nullable', 'string', Rule::in(InvitationReply::COMPANIONS)],
+            'guest_data' => ['sometimes', 'nullable', 'array'],
+            'guest_data.*' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $saved = app(PartyInvitations::class)->completeReply(
+            $reply,
+            is_string($data['companion'] ?? null) ? $data['companion'] : null,
+            is_array($data['guest_data'] ?? null) ? $data['guest_data'] : [],
+        );
+
+        // ⚠️ Se vuelve a la MISMA URL firmada: `back()` perdería la firma y el padre acabaría en un 403
+        // justo después de que le hayamos guardado los datos.
+        return redirect()
+            ->to($request->fullUrl())
+            ->with('receipt_status', $saved ? 'saved' : 'closed');
     }
 
     public function show(string $token, Response $response): Response

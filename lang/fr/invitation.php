@@ -61,4 +61,32 @@ return [
         'text' => 'Ce que tu écris ici est transmis à la personne qui organise la fête, pour qu’elle sache qui vient, et au parc, pour préparer la journée. Nous ne l’utilisons pour rien d’autre et le supprimons 14 jours après la fête.',
         'link' => 'Politique de confidentialité',
     ],
+
+    'receipt' => [
+        'cta' => 'Laisser ses informations (2 minutes)',
+        'hint' => 'Ce lien est valable 2 heures. Si tu le laisses passer, ce n’est pas grave : il est déjà inscrit.',
+        'title' => 'C’est noté',
+        'badge' => 'Confirmé',
+        'heading' => 'On compte sur :name',
+        'lede' => 'Si tu veux, dis-nous encore deux choses. Tout est facultatif.',
+        'save' => 'Enregistrer',
+        'saved_title' => 'Enregistré',
+        'saved' => 'Nous le transmettons à la personne qui organise la fête.',
+        'closed' => 'Cette fête n’accepte plus de modifications. Ce que tu nous avais dit reste enregistré.',
+
+        'g2_title' => 'Qui vient',
+        'g2_lede' => 'Rien n’est obligatoire. Remplis seulement ce que tu veux nous dire.',
+        'g2_privacy' => 'Si tu nous parles d’une allergie ou d’un autre besoin, la personne qui organise la fête et l’équipe du parc le verront, pour en tenir compte ce jour-là. Rien d’autre.',
+
+        'g3_title' => 'Tu restes avec lui ?',
+        'g3' => [
+            'with_adult_title' => 'Je reste',
+            'with_adult' => '— Rien à signer. Tu restes au parc pendant la fête et tu t’identifies à l’entrée.',
+            'alone_title' => 'Je le dépose',
+            'alone' => '— Il nous faut alors ta signature : deux minutes, ici même.',
+            'unknown_title' => 'Je ne sais pas encore',
+            'unknown' => '— Signe au cas où, ou règle ça à l’entrée le jour même.',
+        ],
+        'g3_sign' => 'Signer maintenant',
+    ],
 ];

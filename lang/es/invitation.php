@@ -79,4 +79,39 @@ return [
         'text' => 'Lo que escribas aquí se lo damos a quien organiza la fiesta, para que sepa quién viene, y al parque, para preparar el día. No lo usamos para nada más y lo borramos a los 14 días de la fiesta.',
         'link' => 'Política de privacidad',
     ],
+
+    // ── EL RECIBO (T5·3) ──────────────────────────────────────────────────────────────────────────
+    // ⚠️ Todo aquí es OPCIONAL: el padre ya hizo lo que se le pedía. Son dos OFERTAS, no un segundo
+    // formulario, y quien cierre la pestaña sin tocar nada ha terminado bien.
+    'receipt' => [
+        'cta' => 'Dejar sus datos (2 minutos)',
+        'hint' => 'Este enlace vale 2 horas. Si lo dejas pasar, no pasa nada: ya estás apuntado.',
+        'title' => 'Ya estás apuntado',
+        'badge' => 'Confirmado',
+        'heading' => 'Contamos con :name',
+        'lede' => 'Si quieres, cuéntanos dos cosas más. Todo es opcional.',
+        'save' => 'Guardar',
+        'saved_title' => 'Guardado',
+        'saved' => 'Se lo pasamos a quien organiza la fiesta.',
+        'closed' => 'Esta fiesta ya no admite cambios. Lo que nos dijiste antes sigue guardado.',
+
+        'g2_title' => 'Quién viene',
+        'g2_lede' => 'Nada de esto es obligatorio. Rellena solo lo que quieras contarnos.',
+        // ⚠️ Aquí puede haber ALERGIAS = dato de salud (art. 9), y lo lee un TERCERO.
+        'g2_privacy' => 'Si nos cuentas una alergia u otra necesidad, la verá quien organiza la fiesta y el equipo del parque, para tenerla en cuenta ese día. Nada más.',
+
+        // ⚠️⚠️ BORRADOR PARA EL OWNER (§8, D4). Las tres opciones y su consecuencia están decididas;
+        // las palabras las corriges tú. «Voy con él» NO pide firma: el adulto se queda y se
+        // identifica en la puerta.
+        'g3_title' => '¿Vas tú con él?',
+        'g3' => [
+            'with_adult_title' => 'Voy con él',
+            'with_adult' => '— No hay que firmar nada. Te quedas en el parque mientras dura la fiesta y te identificas en la puerta.',
+            'alone_title' => 'Lo dejo y me voy',
+            'alone' => '— Entonces hace falta tu firma: son dos minutos, aquí mismo.',
+            'unknown_title' => 'Todavía no lo sé',
+            'unknown' => '— Firma por si acaso, o resuélvelo en la puerta ese día.',
+        ],
+        'g3_sign' => 'Firmar ahora',
+    ],
 ];

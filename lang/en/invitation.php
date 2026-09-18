@@ -60,4 +60,32 @@ return [
         'text' => 'What you write here goes to whoever is hosting the party, so they know who is coming, and to the venue, to get the day ready. We use it for nothing else and delete it 14 days after the party.',
         'link' => 'Privacy policy',
     ],
+
+    'receipt' => [
+        'cta' => 'Leave their details (2 minutes)',
+        'hint' => 'This link lasts 2 hours. If you skip it, no problem: they are already on the list.',
+        'title' => 'You are on the list',
+        'badge' => 'Confirmed',
+        'heading' => 'We are counting on :name',
+        'lede' => 'If you like, tell us two more things. All optional.',
+        'save' => 'Save',
+        'saved_title' => 'Saved',
+        'saved' => 'We will pass it on to whoever is hosting the party.',
+        'closed' => 'This party no longer takes changes. What you told us before is still saved.',
+
+        'g2_title' => 'Who is coming',
+        'g2_lede' => 'None of this is required. Fill in only what you want to tell us.',
+        'g2_privacy' => 'If you tell us about an allergy or another need, it will be seen by whoever is hosting the party and by the venue team, so they can take it into account that day. Nothing else.',
+
+        'g3_title' => 'Are you staying with them?',
+        'g3' => [
+            'with_adult_title' => 'I am staying',
+            'with_adult' => '— Nothing to sign. You stay at the venue for the party and identify yourself at the door.',
+            'alone_title' => 'I am dropping them off',
+            'alone' => '— Then we need your signature: two minutes, right here.',
+            'unknown_title' => 'I am not sure yet',
+            'unknown' => '— Sign just in case, or sort it out at the door on the day.',
+        ],
+        'g3_sign' => 'Sign now',
+    ],
 ];

@@ -730,12 +730,20 @@ class OrderItem extends Model
      * siembra en el HTML de cada página con sesión (la prohibición que `AccountContextResource`
      * documenta). Se sirve bajo demanda, por una acción explícita.
      */
-    public function guardianAuthorizationSignedUrl(): string
+    /**
+     * @param  array<string, string|int>  $extra  parámetros que viajan DENTRO de la firma
+     *
+     * ⚠️⚠️ **`$extra` se firma, no se pega después** (`DECISIONES #703`). Medido: añadir un `&x=y` a una
+     * URL ya firmada la invalida —el HMAC cubre la query entera—, así que componerla concatenando
+     * habría llevado a un **403** justo al padre que acaba de decir que su hijo viene. Lo usa el recibo
+     * de la invitación para atar la firma a su respuesta (§4.5·7) y prerrellenar el nombre del menor.
+     */
+    public function guardianAuthorizationSignedUrl(array $extra = []): string
     {
         return URL::temporarySignedRoute(
             'reservation.authorization',
             $this->guestFormLinkExpiresAt(),
-            ['reservation' => $this],
+            ['reservation' => $this] + $extra,
         );
     }
 

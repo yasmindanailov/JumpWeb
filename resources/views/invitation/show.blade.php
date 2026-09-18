@@ -20,6 +20,7 @@
      */
     $status = session('invitation_status');
     $child = session('invitation_child');
+    $receipt = session('invitation_receipt');
 
     // Los desenlaces, en cuatro tonos. El rechazo del dominio comparte tono y título con el anti-robot
     // porque dicen lo mismo: no se ha guardado nada.
@@ -209,6 +210,15 @@
                          data-invitation-outcome="{{ $status }}">
                         <p class="gf-notice__title">{{ $outcome['title'] }}</p>
                         <p class="gf-notice__text">{{ $outcome['text'] }}</p>
+
+                        {{-- Las dos ofertas de G1, tras un «sí» (§4.5·6). El enlace es una credencial
+                             de DOS HORAS atada a esa respuesta: viaja por flash y **nunca se pinta en
+                             la página**, que la ve cualquiera con el enlace de la fiesta. --}}
+                        @if ($receipt !== null)
+                            <a class="btn btn--ink invitation__receipt" href="{{ $receipt }}"
+                               data-invitation-receipt>{{ __('invitation.receipt.cta') }}</a>
+                            <p class="gf-notice__text">{{ __('invitation.receipt.hint') }}</p>
+                        @endif
                     </div>
                 @endif
 

@@ -52,6 +52,10 @@
 
     // A QUIÉN se autoriza, en la barra de firmar. Sin JS solo se conoce al volver con errores.
     $whoName = trim(old('minor_name', '').' '.old('minor_surname', ''));
+
+    // Lo que llega DESDE la invitación digital (§4.5·7). Puede no venir: esta pantalla se abre también
+    // por su propio enlace del correo, y entonces no hay respuesta que atar.
+    $fromInvitation = $fromInvitation ?? ['reply_id' => null, 'minor' => ''];
 @endphp
 <x-focused-layout :title="__('guardian.title')">
     <div class="gf-page">
@@ -158,6 +162,15 @@
                          ordinal del paso 2). Lo enseñó la captura de la T3; ningún test mira el aire. --}}
                     <form class="gf-form" method="POST" action="{{ $formAction }}" novalidate>
                         @csrf
+                        {{-- La respuesta de la invitación a la que pertenece esta firma (§4.5·7,
+                             `#703`). ⚠️ Con ella, el firmador NO cobra plaza: esa plaza ya tiene dueño
+                             desde que el padre dijo que sí (`#576`). Sin ella —el camino normal, por el
+                             enlace del correo— no viaja nada y el tope se aplica como siempre.
+                             ⚠️ Llega por la query FIRMADA, pero aquí no se cree: quien decide si esa
+                             respuesta es de esta reserva es el contrato, dentro del firmador. --}}
+                        @if ($fromInvitation['reply_id'] !== null)
+                            <input type="hidden" name="invitation_reply_id" value="{{ $fromInvitation['reply_id'] }}">
+                        @endif
                         <input type="hidden" name="document_id" value="{{ $document->getKey() }}">
 
                         {{-- Honeypot: un campo que ninguna persona ve y que un bot rellena.
@@ -209,7 +222,11 @@
                                     <span class="eventfields__label">{{ __('guardian.minor.name') }}</span>
                                     <input id="minor_name" name="minor_name" type="text" required autocomplete="off"
                                            maxlength="{{ \App\Domain\Identity\Models\GuardianAuthorization::NAME_MAX }}"
-                                           value="{{ old('minor_name') }}">
+                                           {{-- Desde la invitación digital llega ENTERO y no se parte
+                                                (`#236`, `#703`): viene de un campo que pedía «nombre y
+                                                apellidos», y partirlo por el primer espacio fabricaría
+                                                un apellido en una pantalla que acompaña a una prueba. --}}
+                                           value="{{ old('minor_name', $fromInvitation['minor'] ?? '') }}">
                                     @error('minor_name')<span class="eventfields__error">{{ $message }}</span>@enderror
                                 </label>
 
