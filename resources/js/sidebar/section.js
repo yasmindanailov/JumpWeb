@@ -64,6 +64,28 @@ export function publishedMode(section, purchaseMode) {
  * fuera se quedarían muertos sin nada en pantalla que lo explicara. La señal describe lo que el
  * cliente está VIENDO, no por dónde pasó.
  */
+/**
+ * **El código del pedido que el cajón ANUNCIA como comprado**, o cadena vacía (F4 · T3b).
+ *
+ * Es la tercera señal que el cajón publica hacia fuera (`jw:cajon:purchased`, el contrato de incrustación de
+ * `specs/cajon-empaquetable.md` §4.2), y vive aquí por lo mismo que sus dos hermanas: **la RAÍZ del cajón no
+ * puede conocer los pasos del embudo** (`CE-6`, y lo vigila `SidebarComponentBudgetTest`). Los pasos son de la
+ * sección de compra; una raíz que los conoce ha vuelto a ser una pantalla. Por eso recibe el HECHO —«el embudo
+ * está en confirmado», que deriva el store con el vocabulario de `machine.js`— y no el paso: este módulo sigue
+ * sin colgarse del grafo del embudo, igual que sus dos hermanas.
+ *
+ * ⚠️ Se pide la sección además del hecho: el área de cliente puede estar delante con el embudo aparcado en
+ * confirmado, y anunciar una compra mientras el cliente mira sus pedidos sería contarla donde no ocurre.
+ *
+ * ⚠️ Quien no repite el aviso es el controlador, que recuerda el último pedido anunciado: esta pantalla se
+ * repinta —el resumen llega después del sondeo— y una landing que contara conversiones contaría de más.
+ */
+export function publishedPurchase(section, purchaseConfirmed, orderCode) {
+    if (section !== SECTIONS.PURCHASE || ! purchaseConfirmed) return '';
+
+    return orderCode || '';
+}
+
 export function publishedIdentifying(section, purchaseIdentifying) {
     return section === SECTIONS.ACCOUNT ? false : purchaseIdentifying;
 }

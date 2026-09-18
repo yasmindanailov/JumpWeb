@@ -19,11 +19,39 @@
  * `sidebar/host-bridge.js`; ya no nombra a Alpine.
  */
 import { reveal } from '../ui/account-host.js';
+import { installShell } from './shell.js';
+
+/**
+ * El arranque que la página del producto trae PINTADO en el hueco del motor, o `null` si no hay ninguno —que
+ * es la señal de «esta página no es del producto» y manda a buscarlo a la API.
+ *
+ * ⚠️ Un `data-boot` ilegible es un defecto del servidor, no un motivo para no abrir: se trata como si no
+ * estuviera y el cajón arranca por la API.
+ */
+function inlineBoot(host) {
+    if (! host?.dataset?.boot) return null;
+
+    try {
+        return JSON.parse(host.dataset.boot);
+    } catch {
+        return null;
+    }
+}
 
 /** Lo que pasa en el cajón, contado a la página que lo aloja sin que tenga que saber nada del motor. */
 function announce(name, detail = {}) {
     document.dispatchEvent(new CustomEvent(`jw:cajon:${name}`, { detail }));
 }
+
+/**
+ * El cajón TAL Y COMO lo ve el resto de la página.
+ *
+ * ⚠️⚠️ Con Alpine, `window.JumpWeb.cajon` es el PROXY reactivo del store y este objeto es el crudo. Lo que se
+ * entregue por ahí tiene que ser el proxy: un `close()` sobre el crudo apagaría el cajón sin que se enteraran
+ * los consumidores de Alpine que quedan fuera (la coreografía del nav lee `$store.purchase.isOpen`). Sin
+ * Alpine —una landing ajena— no hay proxy y el crudo ES el anfitrión.
+ */
+const anfitrion = (crudo) => globalThis.window?.JumpWeb?.cajon ?? crudo;
 
 /**
  * @param {{scrollLock: {lock: (key: string) => void, unlock: (key: string) => void}}} deps
@@ -65,6 +93,25 @@ export function createCajonController({ scrollLock }) {
             // panel se queda en `is-catalog` para siempre y el bloque de cuenta no se colapsa (`#118`).
             announce('mode', { mode: this.mode });
         },
+        /**
+         * **El motor avisa de que una compra quedó CONFIRMADA** (F4 · T3b): `jw:cajon:purchased`, con el código
+         * del pedido. Es el tercer evento del contrato de incrustación y el único que una landing querría de
+         * verdad — para medir su embudo o enseñar algo suyo— sin tener que espiar el DOM del cajón.
+         *
+         * ⚠️ Lo anuncia el CONTROLADOR y no el motor: el vocabulario de eventos es del paquete, y el motor no
+         * tiene por qué saber cómo se llaman. Y una sola vez por pedido: la pantalla de confirmación se
+         * repinta, y una landing que cuente conversiones contaría de más.
+         */
+        purchased(orderCode) {
+            const code = orderCode || '';
+
+            if (! code || code === this.purchasedCode) return;
+
+            this.purchasedCode = code;
+            announce('purchased', { orderCode: code });
+        },
+        /** El último pedido ya anunciado, para no anunciarlo dos veces. */
+        purchasedCode: '',
         // `true` SOLO en el paso de identificación (login/registro embebido, paso 5). La escribe
         // el MOTOR (ver el contrato de arriba); hoy, el puente reactivo de `purchase.blade.php`.
         // El bloque de cuenta de invitado lo lee para BLOQUEAR sus botones «Iniciar sesión»
@@ -169,16 +216,42 @@ export function createCajonController({ scrollLock }) {
         async bootSpaEngine() {
             if (this.spaHandle || this.spaLoading) return this.spaHandle;
 
-            const host = document.getElementById('sidecart-spa');
-            if (! host) return null;      // motor Livewire: no hay hueco que montar
-
             this.spaLoading = true;
+            // ⚠️ Declarado FUERA del `try` porque el `catch` lo necesita: si se queda dentro, un fallo del
+            // chunk lanza un `ReferenceError` DENTRO del manejador de errores, la promesa se rompe y el velo
+            // gira para siempre — que es exactamente lo que ese bloque existe para impedir. Lo cazó ESLint al
+            // ampliarle el alcance a `resources/js/cajon` en esta misma tanda.
+            let host = null;
 
             try {
+                // ⚠️ **El arranque se LEE antes de tener dónde montar** (F4 · T3b): en la página del producto
+                // viene en el `data-boot` del hueco y no cuesta nada; en una landing ajena no hay hueco
+                // todavía, y hace falta el payload para poder CONSTRUIR la carcasa con sus rótulos.
+                host = document.getElementById('sidecart-spa');
+                let boot = inlineBoot(host);
+
+                // ⚠️ **El camino de una página AJENA, y va con `import()`** (F4 · T3b): pedir el arranque a la
+                // API y construir la carcasa solo hace falta donde no hay ni `data-boot` ni marcado, o sea
+                // nunca en el producto. Metido en la entrada, lo pagaría toda página pública suya
+                // (`SidebarBundleBudgetTest`). Se trae en la misma ventana en que ya se trae el motor.
+                if (boot === null) {
+                    const { createShell, readBootFromApi } = await import('./standalone.js');
+
+                    boot = await readBootFromApi();
+
+                    // Sin carcasa en la página y sin arranque con que construirla, no hay cajón: una carcasa
+                    // muda —sin título y sin nombre accesible en su ×— sería peor que ninguna.
+                    if (! boot) return null;
+
+                    // Queda INSTALADA, así que la carcasa recién construida nace ya abierta si el cajón lo
+                    // estaba — por su rama de «cómo NACE», que es la misma que usa la del layout.
+                    installShell(() => anfitrion(this), document, host ? null : createShell(boot, document));
+                    host = document.getElementById('sidecart-spa');
+                }
+
+                if (! host) return null;      // ni traída ni construida: no hay dónde montar
+
                 const mod = await import('../sidebar/index.js');
-                // Lo que el servidor dejó en el montaje: el desenlace del pago (ya consumido, con
-                // un solo dueño desde el paso 4.0a) y las traducciones del grupo `tickets`.
-                const boot = JSON.parse(host.dataset.boot || '{}');
 
                 this.spaHandle = mod.mount(host, boot);
                 this.useIntentAdapter((intent) => this.spaHandle.applyIntent(intent));
@@ -215,12 +288,28 @@ export function createCajonController({ scrollLock }) {
                 // montar (`container.textContent = ''`), pero si no hay montaje nadie lo haría. Un
                 // spinner eterno MIENTE —dice «esto va a llegar»—; vaciarlo devuelve el cajón al
                 // estado que tenía antes de que el velo existiera.
-                host.textContent = '';
+                if (host) host.textContent = '';
             } finally {
                 this.spaLoading = false;
             }
 
             return this.spaHandle;
+        },
+        /**
+         * **Lo que hay que hacer cuando el cajón NACE abierto**, que es un camino que no pasa por `open()`
+         * (F4 · T3b; vivía suelto en `app.js`, o sea solo para las páginas del producto).
+         *
+         * El servidor lo abre en dos casos —el enlace profundo `/entradas` y la vuelta de la pasarela con un
+         * desenlace pendiente— y una puerta de cuenta en un tercero. En todos, `open()` **no se llama nunca**:
+         * sin esto, el cajón aparece con el hueco VACÍO y sin bloquear el scroll de la página de detrás.
+         * Encontrado en su día con navegador (`VERIFICACION-E2E-CAJON.md`); ninguna paridad podía verlo.
+         */
+        start() {
+            if (! this.isOpen) return null;
+
+            scrollLock.lock('sidecart');
+
+            return this.bootSpaEngine();
         },
         open() {
             this.isOpen = true;

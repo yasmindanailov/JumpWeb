@@ -103,6 +103,38 @@ class SidebarSeamTest extends TestCase
             'con Alpine, `window.JumpWeb.cajon` se queda en el objeto crudo: la API abriría «por dentro» sin mover el panel',
         );
 
+        // ⚠️⚠️ **El VOCABULARIO de eventos del contrato de incrustación** (F4 · T2 y T3b,
+        // `specs/cajon-empaquetable.md` §4.2). Es lo único que una página ajena tiene para enterarse de lo que
+        // pasa dentro del cajón sin espiar su DOM. `purchased` es además el que cuelga de un cable largo —el
+        // motor lo publica por `cajonHost()` y lo anuncia el controlador—, así que se exigen los DOS extremos:
+        // con uno solo, una landing que mida su embudo deja de contar conversiones y nada falla.
+        foreach (['jw:cajon:${name}', "announce('open')", "announce('close'", "announce('mode'", "announce('purchased'"] as $evento) {
+            $this->assertStringContainsString($evento, $store, "el controlador del cajón ya no anuncia «{$evento}»");
+        }
+
+        // ⚠️ La aguja lleva la REGLA dentro, no solo la llamada: anclar en `host.purchased?.(…)` dejaba pasar
+        // un `if (false)` delante — medido con el arnés de mutación, que atravesó la primera versión.
+        // ⚠️⚠️ Y la regla vive en `section.js` y no en la raíz: los pasos del embudo son de la sección de
+        // compra, y una raíz que los conoce ha vuelto a ser una pantalla (`CE-6`, `SidebarComponentBudgetTest`).
+        $this->assertStringContainsString(
+            'host.purchased?.(publishedPurchase(active, confirmed, orderCode))',
+            (string) file_get_contents(resource_path('js/sidebar/Sidebar.vue')),
+            'el MOTOR ya no avisa de la compra confirmada: `jw:cajon:purchased` no lo dispararía nadie',
+        );
+
+        // ⚠️⚠️ **El camino de una página AJENA** (F4 · T3b): sin `data-boot` que leer, el cajón pide el arranque
+        // a la API y CONSTRUYE su carcasa, y las dos cosas viven en un módulo que se trae con `import()` para
+        // que las páginas del producto no paguen una rama que nunca ejecutan (`SidebarBundleBudgetTest`).
+        // Quien de verdad lo demuestra es el navegador —la sección F de `scripts/sonda-cajon-apertura.mjs`
+        // monta el cajón en una página que no es del producto—, pero eso no lo puede correr un arnés de
+        // mutación: esto es el centinela barato que sí, y sin él la rama se puede borrar sin que nada avise.
+        $this->assertMatchesRegularExpression(
+            "/if \(boot === null\) \{\s*\n\s*const \{ createShell, readBootFromApi \} = await import\('\.\/standalone\.js'\);/",
+            $store,
+            'el cajón ya no toma el camino de la página ajena: en una landing que no pinta el producto se '.
+            'quedaría sin arranque y sin carcasa, y `open()` no enseñaría nada.',
+        );
+
         foreach (['openWith(', 'useIntentAdapter(', 'flushIntent('] as $member) {
             $this->assertStringContainsString(
                 $member, $store,

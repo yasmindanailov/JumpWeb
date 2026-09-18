@@ -352,7 +352,10 @@ class SidebarMountTest extends TestCase
         // instante: podarlos por sesión le dejaría el saludo, la sub-línea y el aviso **en blanco**,
         // y nada avisaría. Es el mismo motivo por el que ya viajaban `login`, `register` y `forgot`.
         $this->assertSame(
-            ['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify'], array_keys($boot['account'] ?? []),
+            // ⚠️ `close` entra en F4 · T3b, y es la única clave que NO pinta una pantalla del cajón: es el
+            // nombre accesible de la × de la CARCASA. Desde esa tanda el paquete puede CONSTRUIR la carcasa en
+            // una página que no la trae, y quien diseña esa landing no tiene de dónde sacar ese rótulo. 7 bytes.
+            ['close', 'login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify'], array_keys($boot['account'] ?? []),
             'el montaje anónimo lleva textos que solo pinta quien ha iniciado sesión'
         );
 
@@ -568,7 +571,7 @@ class SidebarMountTest extends TestCase
         // revés que `orders`: son 8 rótulos y la pantalla los usa todos, así que podarlo clave a
         // clave sería mantenimiento sin ahorro. Que esté en esta lista es lo que impide que crezca
         // en silencio hasta ser el `__('account.orders')` de conveniencia que esta guarda persigue.
-        $this->assertSame(['login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
+        $this->assertSame(['close', 'login', 'register', 'forgot', 'nav', 'sidecart', 'account', 'verify', 'orders', 'purchases'], array_keys($boot['account'] ?? []));
         // ⚠️ `guest_minors` entra con la T3 del justificante (`#337`) y **la pantalla lo pinta**:
         // `GuestMinorsPanel.vue` usa sus cinco rótulos —el contador, la capacidad, los dos estados de
         // excepción y la frase del enlace—. Esta guarda es justo la que obliga a comprobarlo: crecer

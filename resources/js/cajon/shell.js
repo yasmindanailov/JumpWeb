@@ -22,6 +22,11 @@
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
+// ⚠️ **`createShell()` NO vive aquí, y no es por orden**: construir la carcasa solo hace falta en una página
+// que no la trae, y este módulo lo carga TODA página pública del producto. Vive en `cajon/standalone.js`, que
+// se trae con `import()` desde `bootSpaEngine()`. Medido: metido aquí, el JS de la entrada pasaba de 26 a
+// 27,3 kB y `SidebarBundleBudgetTest` lo cazó.
+
 /** La clase de modo que toca, o `''` si el modo llega vacío (el controlador ya lo normaliza a «catalog»). */
 export function modeClass(mode) {
     return mode ? `is-${mode}` : '';
@@ -50,11 +55,26 @@ export function trapTarget(event, items, active) {
  * @param {() => {isOpen: boolean, mode: string, close: Function}|null} getCajon  se PIDE cada vez: con Alpine,
  *   `window.JumpWeb.cajon` pasa a ser el proxy reactivo tras `alpine:init`.
  * @param {Document} doc
- * @returns {{root: Element}|null}  `null` si la página no trae carcasa (crearla es la T3b).
+ * @param {Element|null} construida  una carcasa ya construida (`standalone.js::createShell()`), para colgarla
+ *   del documento cuando la página no trae ninguna. Sin ella solo se ADOPTA la que haya, que es lo que hace la
+ *   página del producto, donde la pinta Blade.
+ * @returns {{root: Element}|null}  `null` si no hay carcasa que adoptar y no se dio ninguna construida.
  */
-export function installShell(getCajon, doc = document) {
-    const root = doc.querySelector('.sidecart');
-    if (! root) return null;
+export function installShell(getCajon, doc = document, construida = null) {
+    let root = doc.querySelector('.sidecart');
+
+    if (! root) {
+        if (! construida) return null;
+
+        root = construida;
+        doc.body.append(root);
+    }
+
+    // ⚠️ Idempotente: en una página ajena se llama DOS veces —al cargar, que no encuentra nada, y al abrir,
+    // que ya puede construirla—. Sin esta marca, la segunda pasada dejaría dos oyentes por gesto y un clic en
+    // el telón cerraría y volvería a cerrar.
+    if (root.dataset.jwShell === 'on') return { root };
+    root.dataset.jwShell = 'on';
 
     const panel = root.querySelector('.sidecart__panel');
     let currentMode = '';

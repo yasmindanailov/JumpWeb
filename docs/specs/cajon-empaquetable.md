@@ -12,23 +12,22 @@
 - **Regla que ordena todo**: el cajón sigue siendo un cajón SOBRE la landing, en el MISMO dominio que la API
   (cookie de sesión + CSRF, sin token). Cambia QUIÉN lo monta: del layout del producto a cualquier HTML que
   cargue el paquete. «Empaquetable» no es «página aparte» ni «otro dominio».
-- **«Una línea del layout» era falso, medido (§1)**: el cajón le pedía a su página la carcasa de Blade, un store
-  de Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB, una hoja de 549 KB, los tokens de OTRA
-  hoja y ocho rutas-puerta. Las tandas lo deshacen una a una.
-- **El riesgo silencioso es la hoja**: los `.vue` llevan CERO `<style>`; 81 bloques del cajón viven solo en
-  `site.css` y **10 están definidos en las DOS hojas** (`btn`, `form`, `price`, `tabset`, `auth`, `catalog`,
-  `addons`, `gifts`, `active`, `jj-block`). Partirla puede mover el cajón sin que falle un test: manda la huella
-  de maquetación (`#437`), no la suite.
+- **«Una línea del layout» era falso, medido (§1)**: le pedía a su página la carcasa de Blade, un store de
+  Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB, una hoja de 549 KB, los tokens de OTRA hoja y
+  ocho rutas-puerta. Las tandas lo deshacen una a una.
+- **El riesgo silencioso es la hoja** (la T4): los `.vue` llevan CERO `<style>`; 81 bloques del cajón viven solo
+  en `site.css` y **10 están definidos en las DOS hojas** (§1). Partirla puede mover el cajón sin que falle un
+  test: manda la huella de maquetación (`#437`), no la suite.
 - **Trampas**: tras tocar un `.vue`, `npm run build:ssr` antes de la suite; el contrato visual es el ÁRBOL
   (`specs/sidebar-spa.md` §4.2); `route('logout')` aparece UNA vez, en el suelo del hueco de cuenta
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo.
 - **La landing consume un MENÚ DE HECHOS opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende de que
   lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: por TANDAS — **T1 ✅** arranque (`SidebarBoot`, §4.5) · **T2 ✅** apertura
-  (`cajon/controller.js`, `window.JumpWeb.cajon`, `data-jw-*`) · **T3a ✅** carcasa con dueño
-  (`cajon/shell.js`) → T3b el paquete la CREA → T4 hoja propia → T5 página ajena. Implementa plataforma
-  (`#633`). ⚠️ Un rótulo nuevo va en `SidebarBoot`, no en el layout; abrir y cerrar, en el controlador; la
-  carcasa, en `shell.js`; el motor NO nombra a Alpine.
+- **Estado**: por TANDAS — **T1 ✅** arranque · **T2 ✅** apertura · **T3a ✅** carcasa con dueño · **T3b ✅** el
+  paquete se monta en una página ajena (`installCajon()`) → **T4 la hoja propia** → T5 la salida. Implementa
+  plataforma (`#633`). ⚠️ **Dónde va cada cosa**: un rótulo nuevo, en `SidebarBoot`; abrir y cerrar, en
+  `cajon/controller.js`; la carcasa, en `shell.js`; lo que solo usa una página ajena, en `standalone.js` (la
+  entrada del producto tiene presupuesto). El motor NO nombra a Alpine ni conoce los pasos del embudo.
 - **Empieza por** §1 (el censo) → §4.1 (la forma) → §4.2 (la apertura) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
@@ -145,8 +144,32 @@ con el panel ASENTADO (dos fotogramas con la misma caja) y cuidando el limitador
 corridas del mismo código daban imágenes distintas y un 429 pintó «No hay días disponibles» en una. **Medido**:
 `/entradas` (el cajón que nace abierto) **idéntica píxel a píxel** antes y después, con control de dos corridas;
 sonda **23/23**; `npm run test:js` 1027; `scripts/mutar-cajon-apertura.sh` **20/20**.
-▶ **Queda la T3b**: que el paquete CREE la carcasa cuando la página no la trae, `jw:cajon:purchased`, y el
-arranque del cajón que nace abierto (hoy en `app.js`, que es del producto).
+**✅ T3b HECHA (2026-09-18) · el paquete se monta en una página que no es del producto.** `installCajon()`
+(`cajon/index.js`) es la ÚNICA llamada: controlador, `window.JumpWeb.cajon`, atributos, carcasa y el arranque
+del cajón que nace abierto —que vivía suelto en `app.js`, o sea solo para el producto, y ahora es
+`controller.start()`—. Cuando no hay `data-boot` ni marcado, `bootSpaEngine()` trae con `import()` el módulo
+`cajon/standalone.js`, pide el arranque a las dos lecturas de la T1 (`?lang=` de `<html lang>`) y CONSTRUYE la
+carcasa nodo a nodo. El arranque gana dos claves para poder construirla: `account.close` (el nombre accesible
+de la ×) y `urls.logout` (a dónde POSTea el suelo). Tercer evento del contrato: **`jw:cajon:purchased`**, con
+el código del pedido y una sola vez por pedido.
+**Lo que enseñaron las guardas de la casa, y cambió el diseño**: (1) `SidebarBundleBudgetTest` — meter el
+camino ajeno en la entrada subía a 27,3 kB lo que descarga TODA página pública del producto, para una rama que
+sus páginas nunca ejecutan: por eso `standalone.js` es un módulo aparte y diferido (entrada 25,3 kB de 26);
+(2) `SidebarComponentBudgetTest` — la raíz del cajón NO puede conocer los pasos del embudo, así que la regla
+del anuncio vive en `section.js` (`publishedPurchase`) con sus dos hermanas y el store deriva el hecho
+(`confirmed`); (3) el presupuesto del montaje anónimo obligó a justificar `account.close` clave a clave.
+**Y ESLint cazó un defecto mío**: al reordenar `bootSpaEngine()`, `host` quedó fuera del alcance de su `catch`
+— un fallo del chunk habría lanzado un `ReferenceError` DENTRO del manejador de errores y el velo habría girado
+para siempre, que es justo lo que ese bloque existe para impedir.
+**El SUELO de logout de una carcasa construida se levanta ENTERO o no se levanta**: hacen falta titular, URL y
+un `<meta name="csrf-token">` en la página. Una landing de instancia que lo quiera publica el meta — una línea,
+y va en el contrato de instancia (F5). Sin él no hay suelo, que es mejor que un botón que no cierra sesión.
+**Medido**: `scripts/sonda-cajon-apertura.mjs` **31/31** en Chromium, con una sección nueva que sirve una
+página AJENA del mismo origen (sin carcasa, sin `data-boot` y sin Alpine) y la ve construir la carcasa, montar
+el motor, pintar el catálogo y cerrar; `npm run test:js` 1049; `scripts/mutar-cajon-apertura.sh` **34/34**.
+▶ **Queda para la T4**: la hoja propia. La carcasa construida se viste hoy con `site.css`, así que una landing
+ajena tiene que cargar las hojas y las fuentes de la instalación —medido: sin la hoja de fuentes cambia la
+métrica del texto y un botón del bloque de cuenta se sale del panel—.
 
 ### 4.3 La hoja y los tokens
 La hoja del cajón lleva SU raíz de tokens (los que lee, medidos con el guion, no los 231) bajo un selector propio,

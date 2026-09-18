@@ -145,6 +145,51 @@ describe('el cajón sin framework', () => {
         ]);
     });
 
+    /**
+     * **La compra confirmada se cuenta UNA vez** (F4 · T3b). La pantalla de confirmación se repinta —el
+     * resumen llega después, el sondeo resuelve—, y una landing que contara conversiones contaría de más.
+     */
+    test('`purchased()` anuncia una vez por pedido, y nunca sin código', () => {
+        const cajon = montar();
+
+        cajon.purchased('');
+        cajon.purchased(null);
+        assert.deepEqual(eventos, [], 'sin código no hay nada que contar');
+
+        cajon.purchased('JW-1');
+        cajon.purchased('JW-1');
+        cajon.purchased('JW-2');
+
+        assert.deepEqual(eventos, [
+            { tipo: 'jw:cajon:purchased', detalle: { orderCode: 'JW-1' } },
+            { tipo: 'jw:cajon:purchased', detalle: { orderCode: 'JW-2' } },
+        ]);
+    });
+
+    /**
+     * **El cajón que NACE abierto** (`/entradas`, una puerta de cuenta, la vuelta de la pasarela): por ahí
+     * `open()` no se llama NUNCA. Sin `start()`, el panel aparece con el hueco vacío y la página de detrás
+     * sigue rodando bajo él — el fallo de `#59(b)`, que vivía suelto en `app.js` y solo cubría al producto.
+     */
+    test('`start()` solo hace algo si el cajón nace abierto: pide la llave y arranca el motor', async () => {
+        const cerrado = montar();
+
+        assert.equal(cerrado.start(), null);
+        assert.deepEqual(llaves, []);
+
+        const abierto = montar({ dataset: { purchaseOpen: '1' } });
+        // ⚠️ Se ESPÍA el arranque del motor en vez de mirar lo que devuelve: sin hueco, `bootSpaEngine()`
+        // devuelve `null` igual que no llamarlo, así que comprobar el valor no distingue las dos cosas — y
+        // esa era la primera versión de este caso, que una mutación atravesó sin despeinarse.
+        let arrancado = 0;
+        abierto.bootSpaEngine = async () => { arrancado += 1; return null; };
+
+        await abierto.start();
+
+        assert.deepEqual(llaves, ['+sidecart'], 'sin la llave, la página de detrás sigue rodando bajo el panel');
+        assert.equal(arrancado, 1, 'sin esto el cajón aparece abierto y con el hueco VACÍO (`#59(b)`)');
+    });
+
     /** Escape llega a `close()` esté como esté el cajón: cerrar uno CERRADO no es un cierre y no se anuncia. */
     test('cerrar un cajón que ya estaba cerrado no anuncia nada', () => {
         const cajon = montar();

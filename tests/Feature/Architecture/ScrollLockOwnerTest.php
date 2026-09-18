@@ -172,25 +172,40 @@ class ScrollLockOwnerTest extends TestCase
      */
     public function test_every_overlay_asks_with_its_own_key(): void
     {
-        $sources = (string) file_get_contents(base_path('resources/js/app.js'));
+        // ⚠️⚠️ **Re-apuntado en F4 · T2 y T3b, con el inventario intacto**: el cajón pide y suelta su llave en
+        // su CONTROLADOR sin framework, no en `app.js` —primero al abrir y cerrar (T2), y desde la T3b también
+        // cuando NACE abierto, que antes era un `lock('sidecart')` suelto en la entrada del producto—. Los
+        // otros dos superpuestos siguen donde estaban. Mirar un solo fichero dejaría media regla sin vigilar.
+        $porFichero = [
+            'resources/js/app.js' => ['nav', 'offers'],
+            'resources/js/cajon/controller.js' => ['sidecart'],
+        ];
 
-        foreach (['sidecart', 'nav', 'offers'] as $owner) {
-            $this->assertStringContainsString(
-                "'{$owner}",
-                $sources,
-                "El superpuesto «{$owner}» ya no pide su llave del cerrojo. O ha desaparecido, o ha ".
-                'vuelto a tocar el `<body>` por su cuenta.'
-            );
+        foreach ($porFichero as $fichero => $owners) {
+            $sources = (string) file_get_contents(base_path($fichero));
+
+            foreach ($owners as $owner) {
+                $this->assertStringContainsString(
+                    "'{$owner}",
+                    $sources,
+                    "El superpuesto «{$owner}» ya no pide su llave del cerrojo en «{$fichero}». O ha ".
+                    'desaparecido, o ha vuelto a tocar el `<body>` por su cuenta.'
+                );
+            }
         }
 
-        // ⚠️ Desde F4 · T2 el cajón abre y cierra en su controlador sin framework, y es AHÍ donde pide y
-        // suelta su llave. `app.js` conserva un `lock('sidecart')` —el del cajón que NACE abierto—, así que
-        // mirar solo ese fichero dejaría pasar un controlador que dejara de pedirla al abrir.
+        // Y las TRES puertas por las que el cajón la pide o la suelta: abrir, cerrar y nacer abierto.
         $cajon = (string) file_get_contents(base_path('resources/js/cajon/controller.js'));
 
-        foreach (["scrollLock.lock('sidecart')", "scrollLock.unlock('sidecart')"] as $call) {
-            $this->assertStringContainsString($call, $cajon, "El controlador del cajón ya no hace `{$call}`: abrir o cerrar dejaría el scroll a su suerte.");
-        }
+        $this->assertSame(
+            2, substr_count($cajon, "scrollLock.lock('sidecart')"),
+            'El cajón pide su llave en DOS caminos —`open()` y `start()`, el del cajón que nace abierto—: si '.
+            'uno se pierde, la página de detrás sigue rodando bajo el panel y nada falla.'
+        );
+        $this->assertStringContainsString(
+            "scrollLock.unlock('sidecart')", $cajon,
+            'El cajón ya no suelta su llave al cerrar: el scroll quedaría bloqueado con el panel fuera.'
+        );
     }
 
     /** @return list<string> */

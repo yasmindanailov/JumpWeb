@@ -21,7 +21,7 @@
  * ⚠️ `ERR_CONNECTION_REFUSED` es el puente `socat` caído, no el producto. Sale con código 1 si algo falla.
  */
 import { chromium } from 'playwright-core';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const BASE = 'http://localhost:8081';
 const ETIQUETA = process.argv[2] || 'apertura';
@@ -272,6 +272,67 @@ try {
         }
         await page.close();
         await escritorio.close();
+    }
+
+    // ── F · una página AJENA: sin carcasa, sin `data-boot` y sin Alpine (F4 · T3b) ─────────────
+    // Es el ensayo de lo que promete la T5: una landing que no pinta el producto monta el cajón. Se sirve
+    // interceptando una ruta del MISMO origen —no `setContent`, que deja la página en `about:blank` y dejaría
+    // fuera las cookies y la API—, con lo único que tendrá una landing de instancia: dos hojas y el paquete.
+    if (corre('F')) {
+        const entrada = JSON.parse(await readFile('public/build/manifest.json', 'utf8'))['resources/js/app.js'].file;
+        // ⚠️ La página ajena carga las MISMAS hojas y fuentes que el producto, tomadas de su propio HTML. Sin
+        // ellas la comparación mentiría hacia el lado fácil: medido el 2026-09-18, sin la hoja de fuentes el
+        // texto cambia de métrica y un botón del bloque de cuenta se sale del panel. Lo que esta sección mide
+        // es que el cajón MONTE donde no hay producto; que se vea igual es cosa del tema de la instancia
+        // (F5) y de la hoja propia del paquete (T4).
+        const cabeza = (await (await context.request.get(`${BASE}/`)).text())
+            .match(/<link[^>]+rel="(?:stylesheet|preconnect)"[^>]*>/g)?.join('\n') ?? '';
+        page = await context.newPage();
+        await page.route(`${BASE}/landing-ajena-de-prueba`, (ruta) => ruta.fulfill({
+            status: 200,
+            contentType: 'text/html; charset=utf-8',
+            body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${cabeza}
+                <script type="module" src="/build/${entrada}"></script></head>
+                <body><h1>Landing de otra instancia</h1><a href="/entradas" data-jw-open>Reservar</a></body></html>`,
+        }));
+        await page.goto(`${BASE}/landing-ajena-de-prueba`, { waitUntil: 'load' });
+        await page.waitForFunction(() => !! window.JumpWeb?.cajon, null, { timeout: 10000 });
+
+        const antes = await page.evaluate(() => ({
+            carcasa: !! document.querySelector('.sidecart'),
+            alpine: !! window.Alpine,
+            boot: !! document.querySelector('[data-boot]'),
+        }));
+        anotar('F', 'la página ajena NO trae carcasa, ni `data-boot`, ni Alpine', ! antes.carcasa && ! antes.alpine && ! antes.boot, JSON.stringify(antes));
+        anotar('F', 'y aun así tiene la API del cajón (`window.JumpWeb.cajon`)', true);
+
+        await page.click('a[data-jw-open]');
+        await esperar(page, true);
+        await esperarMotor(page);
+        e = await estado(page);
+        anotar('F', '`data-jw-open` CONSTRUYE la carcasa, la abre y monta el motor', e.abierto && e.visible && e.motor && e.scrollBloqueado, e.modo);
+        anotar('F', 'sin navegar al `href` de la puerta', new URL(page.url()).pathname === '/landing-ajena-de-prueba', page.url());
+
+        // ⚠️ El catálogo llega por su propia petición DESPUÉS de montar: medir en cuanto Vue monta da cero
+        // botones y parece que el motor no pinta nada. Se espera a que haya algo con que operar.
+        await page.waitForFunction(() => document.querySelectorAll('#sidecart-spa button, #sidecart-spa a').length > 0, null, { timeout: 15000 });
+
+        const pintado = await page.evaluate(() => {
+            const titulo = document.querySelector('.sidecart__title');
+            const catalogo = document.querySelectorAll('#sidecart-spa button, #sidecart-spa a').length;
+
+            return { titulo: titulo?.textContent ?? '', ancho: Math.round(document.querySelector('.sidecart__panel').getBoundingClientRect().width), catalogo };
+        });
+        anotar('F', 'la carcasa construida lleva su rótulo y el motor pinta el catálogo dentro', pintado.titulo !== '' && pintado.catalogo > 0, JSON.stringify(pintado));
+
+        await asentado(page);
+        await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/F-ajena@390.png` });
+
+        await page.evaluate(() => document.querySelector('.sidecart__close').click());
+        await esperar(page, false);
+        e = await estado(page);
+        anotar('F', 'y se cierra, soltando el scroll de la página ajena', ! e.abierto && ! e.scrollBloqueado);
+        await page.close();
     }
 
     // ── D · el cajón que NACE abierto (no pasa por `open()`) ───────────────────────────────────

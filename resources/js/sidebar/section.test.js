@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULT_SECTION, SECTIONS, isSection, publishedIdentifying, publishedMode } from './section.js';
+import { DEFAULT_SECTION, SECTIONS, isSection, publishedIdentifying, publishedMode, publishedPurchase } from './section.js';
 import { FUNNEL_STEPS, modeOf } from './machine.js';
 
 /**
@@ -65,5 +65,29 @@ describe('la señal que bloquea los botones de login de FUERA', () => {
         // El caso real: el cliente está identificándose para pagar y salta a ver sus reservas. Si la
         // señal se quedara pegada, los botones de fuera quedarían muertos sin nada que lo explicara.
         assert.equal(publishedIdentifying(SECTIONS.ACCOUNT, true), false);
+    });
+});
+
+describe('el pedido que el cajón anuncia como comprado', () => {
+    test('en la compra y en confirmado, publica su código', () => {
+        assert.equal(publishedPurchase(SECTIONS.PURCHASE, true, 'JW-1'), 'JW-1');
+    });
+
+    test('sin confirmar no hay nada que anunciar', () => {
+        assert.equal(publishedPurchase(SECTIONS.PURCHASE, false, 'JW-1'), '');
+    });
+
+    /**
+     * ⚠️ El caso real: el cliente paga, entra en «mis pedidos» y el embudo se queda aparcado en confirmado.
+     * Anunciar ahí la compra sería contarla donde no ocurre —y quien mide su embudo la contaría dos veces,
+     * porque ya se la contamos al confirmar.
+     */
+    test('⚠️ en la cuenta NO se anuncia, aunque el embudo siga en confirmado', () => {
+        assert.equal(publishedPurchase(SECTIONS.ACCOUNT, true, 'JW-1'), '');
+    });
+
+    test('sin código no se anuncia nada', () => {
+        assert.equal(publishedPurchase(SECTIONS.PURCHASE, true, ''), '');
+        assert.equal(publishedPurchase(SECTIONS.PURCHASE, true, null), '');
     });
 });

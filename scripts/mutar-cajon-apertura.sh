@@ -24,15 +24,19 @@ GAINED=resources/js/sidebar/account/session-gained.js
 # ⚠️ `CARCASA` y no `SHELL`: esa es una variable del propio bash y pisarla se la cambia a todo lo que se lance después.
 CARCASA=resources/js/cajon/shell.js
 LAYOUT=resources/views/components/layout.blade.php
+BOOT=resources/js/cajon/standalone.js
+SIDEBAR=resources/js/sidebar/Sidebar.vue
+SECCION=resources/js/sidebar/section.js
 
 TMP="$(mktemp -d)"
-FICHEROS=("$CTRL" "$DECL" "$APP" "$GAINED" "$CARCASA" "$LAYOUT")
+FICHEROS=("$CTRL" "$DECL" "$APP" "$GAINED" "$CARCASA" "$LAYOUT" "$BOOT" "$SIDEBAR" "$SECCION")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
 
 verde() {
-    $SAIL node --test "resources/js/cajon/*.test.js" resources/js/sidebar/account/session-gained.test.js >/dev/null 2>&1 || return 1
+    $SAIL node --test "resources/js/cajon/*.test.js" resources/js/sidebar/account/session-gained.test.js \
+        resources/js/sidebar/section.test.js >/dev/null 2>&1 || return 1
     $SAIL php artisan test --filter='AccountDoorWiringTest|SidebarSeamTest|SidebarMountTest|ScrollLockOwnerTest' >/dev/null 2>&1
 }
 
@@ -149,6 +153,65 @@ mutar "el cajón que NACE abierto deja de meter el foco (\`#634\`: con teclado, 
 mutar "el panel del layout vuelve a llevar un atributo de Alpine" "$LAYOUT" \
   "<aside class=\"sidecart__panel\" role=\"dialog\"" \
   "<aside class=\"sidecart__panel\" :class=\"'is-' + \$store.purchase.mode\" role=\"dialog\""
+
+# ── T3b · el paquete CONSTRUYE la carcasa y lee su arranque ────────────────────────────────────
+mutar "el controlador no toma el camino de la página ajena (se queda sin arranque y sin carcasa)" "$CTRL" \
+  "                if (boot === null) {" \
+  "                if (false) {"
+
+mutar "la mitad privada viaja SIN la cookie de sesión (el titular no llega y el desenlace tampoco)" "$BOOT" \
+  "        pedir('session', { credentials: 'same-origin' })" \
+  "        pedir('session', {})"
+
+mutar "con las dos lecturas caídas devuelve un arranque VACÍO en vez de \`null\`" "$BOOT" \
+  "    if (shared === null && personal === null) return null;
+" ""
+
+mutar "\`locales\` viaja siempre (el layout solo lo manda con sesión: las dos fusiones divergen)" "$BOOT" \
+  "        ...(locales.length ? { locales } : {})," \
+  "        locales,"
+
+mutar "la carcasa construida pierde el nombre accesible de su ×" "$BOOT" \
+  "'aria-label': boot.account?.close ?? ''" \
+  "'aria-label': ''"
+
+mutar "la carcasa construida nace con el hueco de cuenta ABIERTO (una franja vacía que se lee como un fallo)" "$BOOT" \
+  "nodo(doc, 'div', 'acct acct--pending', { id: 'sidecart-account' })" \
+  "nodo(doc, 'div', 'acct', { id: 'sidecart-account' })"
+
+mutar "el suelo de logout se construye A MEDIAS, sin token CSRF" "$BOOT" \
+  "if (! boot.userId || ! accion || ! csrf) return null;" \
+  "if (! boot.userId || ! accion) return null;"
+
+mutar "instalar la carcasa deja de ser idempotente (dos oyentes por gesto en una página ajena)" "$CARCASA" \
+  "    if (root.dataset.jwShell === 'on') return { root };
+" ""
+
+mutar "\`installShell\` cuelga una carcasa que no le han dado (y revienta, o cuelga nada)" "$CARCASA" \
+  "        if (! construida) return null;
+" ""
+
+mutar "el motor deja de anunciar la compra confirmada" "$SIDEBAR" \
+  "        host.purchased?.(publishedPurchase(active, confirmed, orderCode));
+" ""
+
+mutar "la regla del anuncio ignora la SECCIÓN (cuenta una compra mientras el cliente mira sus pedidos)" "$SECCION" \
+  "    if (section !== SECTIONS.PURCHASE || ! purchaseConfirmed) return '';" \
+  "    if (! purchaseConfirmed) return '';"
+
+mutar "la compra confirmada se anuncia CADA vez que se repinta la pantalla" "$CTRL" \
+  "            if (! code || code === this.purchasedCode) return;" \
+  "            if (! code) return;"
+
+mutar "el cajón que NACE abierto deja de arrancar el motor (el hueco VACÍO de \`#59(b)\`)" "$CTRL" \
+  "            return this.bootSpaEngine();" \
+  "            return null;"
+
+mutar "el cajón que NACE abierto no pide la llave del cerrojo (la página de detrás sigue rodando)" "$CTRL" \
+  "            scrollLock.lock('sidecart');
+
+            return this.bootSpaEngine();" \
+  "            return this.bootSpaEngine();"
 
 echo
 echo "mutaciones que muerden: ${muerden}/${total}"

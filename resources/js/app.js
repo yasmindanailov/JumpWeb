@@ -1,7 +1,5 @@
 import { installScrollLock } from './ui/scroll-lock.js';
-import { createCajonController } from './cajon/controller.js';
-import { installDeclarativeOpeners } from './cajon/declarative.js';
-import { installShell } from './cajon/shell.js';
+import { installCajon } from './cajon/index.js';
 import { shouldHideNav } from './ui/nav-choreography.js';
 import { installScrollMagnet } from './ui/scroll-magnet.js';
 import { installHeroSwitch } from './ui/hero-switch.js';
@@ -25,17 +23,13 @@ import { initRailDrag } from './ui/rail-drag.js';
 // Dos instancias serían dos dueños de `body.no-scroll`, que es justo el fallo que el cerrojo cerró.
 const scrollLock = installScrollLock();
 
-// ── EL CAJÓN, sin framework (F4 · T2, `docs/specs/cajon-empaquetable.md` §4.2) ─────────────────
-// `window.JumpWeb.cajon` es la API de apertura para CUALQUIER página: `open()`, `openWith(intención)`,
-// `openAccount(evento, zona)`, `close()`; y los atributos `data-jw-open*` la usan sin una línea de JS.
-// Nace aquí, al cargar el módulo, y no dentro de `alpine:init`: una página sin Alpine la tiene igual.
-const cajon = createCajonController({ scrollLock });
-window.JumpWeb = { ...(window.JumpWeb ?? {}), cajon };
-installDeclarativeOpeners(() => window.JumpWeb.cajon);
-// La CARCASA (telón, panel, cierre, Escape, trampa de foco y la clase de modo) tiene un solo dueño y no es
-// Alpine (F4 · T3a): adopta el marcado que pinta el layout. Este módulo es `type="module"` —diferido—, así
-// que el documento ya está parseado cuando llega aquí.
-installShell(() => window.JumpWeb.cajon);
+// ── EL CAJÓN, en una sola llamada (F4 · T3b, `docs/specs/cajon-empaquetable.md` §4.1) ──────────
+// El controlador sin framework, `window.JumpWeb.cajon`, los atributos `data-jw-*`, la carcasa y el arranque
+// del cajón que NACE abierto. Montar el cajón es esto y nada más: el cargador que publicará el paquete (T5)
+// llamará a la misma función, que es lo que hace de esto un paquete y no un trozo de la entrada del producto.
+// Va al cargar el módulo y no dentro de `alpine:init`: una página sin Alpine tiene el cajón igual. Este módulo
+// es `type="module"` —diferido—, así que el documento ya está parseado cuando llega aquí.
+const cajon = installCajon({ scrollLock });
 
 document.addEventListener('alpine:init', () => {
 
@@ -195,29 +189,12 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // ── EL CAJÓN PUEDE NACER ABIERTO, y eso tiene DOS consecuencias ────────────────────────────
-    // El servidor lo abre solo en dos casos (`data-purchase-open`): el enlace profundo `/entradas` y
-    // **la vuelta de la pasarela con un desenlace pendiente**.
+    // ⚠️ Aquí vivía el arranque del cajón que NACE ABIERTO —pedir la llave del cerrojo y montar el motor
+    // cuando el servidor lo abre solo (`/entradas`, una puerta de cuenta, la vuelta de la pasarela, donde
+    // `open()` no se llama nunca)—. Se mudó en F4 · T3b a `cajon/controller.js::start()`, que llama
+    // `installCajon()`: estaba aquí dentro, o sea que solo lo hacían las páginas del producto, y una landing
+    // de instancia habría enseñado el cajón abierto con el hueco VACÍO y sin bloquear el scroll de detrás.
     //
-    // ⚠️ (1) **Hay que ARRANCAR EL MOTOR aquí.** `bootSpaEngine()` colgaba solo de `open()`, que en
-    // este camino no se llama nunca: con `sidebar.engine = spa`, `/entradas` y —peor— la vuelta del
-    // pago abrían el cajón con **el hueco VACÍO**. Encontrado en el extremo a extremo con navegador
-    // (`VERIFICACION-E2E-CAJON.md`); ninguna paridad podía verlo, porque todas montan los componentes
-    // por su cuenta y nunca pasan por este arranque. Es no-op con el motor Livewire (no hay hueco).
-    //
-    // ⚠️ (2) El bloqueo de scroll también es del dueño único, y aquí había una asimetría: el modal de
-    // auth abierto al cargar (`/registro`) no bloqueaba nada, porque el `x-init` que lo hacía vivía
-    // solo en el cajón. Pedir la llave aquí arregla los dos casos y retira ese sexto escritor.
-    //
-    // ⚠️ **Desde el 2026-08-23 el caso del modal ya no existe** (`DECISIONES #122`): `/registro` y sus
-    // dos hermanas son PUERTAS que abren el CAJÓN, así que quien pide la llave al cargar es la rama
-    // de arriba. Se retiró la segunda línea, no la explicación: la asimetría que documenta es la
-    // razón de que esta llave se pida aquí y no en una plantilla.
-    if (window.Alpine.store('purchase').isOpen) {
-        scrollLock.lock('sidecart');
-        window.Alpine.store('purchase').bootSpaEngine();
-    }
-
     // ⚠️ Aquí vivía `a11yPanel`, el componente de Alpine con la trampa de foco y el foco automático del
     // cajón (T4.1/T4.2). Se retiró en F4 · T3a: su ÚNICO consumidor era la carcasa del cajón, que desde
     // entonces tiene un dueño sin framework (`cajon/shell.js`) con la misma conducta — Tab y Shift+Tab no

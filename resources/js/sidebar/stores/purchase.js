@@ -45,6 +45,16 @@ export const usePurchaseStore = defineStore('purchase', {
 
         /** `true` en el paso de identificación: bloquea los botones de login de FUERA del cajón. */
         identifying: (state) => isIdentifying(state.step),
+
+        /**
+         * `true` cuando el embudo está en la pantalla de compra CONFIRMADA (F4 · T3b).
+         *
+         * ⚠️ Existe para que la RAÍZ del cajón no tenga que conocer los pasos del embudo —lo prohíbe `CE-6` y
+         * lo vigila `SidebarComponentBudgetTest`—: ella publica el hecho hacia fuera (`jw:cajon:purchased`) y
+         * el vocabulario de los pasos se queda aquí, que es donde ya vive. Se deriva de `state.step` por el
+         * mismo motivo que sus dos hermanas: es lo único que Vue puede observar.
+         */
+        confirmed: (state) => state.step === STEPS.CONFIRMED,
     },
 
     actions: {

@@ -60,19 +60,22 @@
      y `a11yPanel` se retira de `app.js`; manda `resources/js/cajon/shell.js` (adopta `.sidecart`: `is-open`,
      `is-{modo}` por el evento `jw:cajon:mode`, cierre por telón/×/Escape, trampa de foco). `/entradas`
      idéntica PÍXEL A PÍXEL antes y después; sonda 23/23; arnés 20/20.
-   - **T3b · que el PAQUETE cree la carcasa — LO SIGUIENTE.** Hoy `shell.js` la adopta si existe; falta que la
-     cree cuando la página no la trae (una landing ajena), con el hueco de cuenta y su SUELO de logout —el
-     único `route('logout')` de la aplicación—, el hueco del motor con su velo, y `jw:cajon:purchased`. Y
-     mudar el arranque del cajón que NACE abierto (`if (…isOpen) { lock; bootSpaEngine() }`, hoy en `app.js`,
-     que es del producto). ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear.
+   - **T3b ✅ HECHA (18-09) · el paquete se monta en una página AJENA**: `installCajon()` (`cajon/index.js`) es
+     la única llamada —controlador, API, atributos, carcasa y `start()` del cajón que nace abierto, que vivía
+     suelto en `app.js`—; sin `data-boot` ni marcado, `bootSpaEngine()` trae con `import()` `cajon/standalone.js`
+     (pide el arranque a la API y CONSTRUYE la carcasa) y `jw:cajon:purchased` cierra el contrato de eventos.
+     Sonda 31/31 con una página ajena de verdad; arnés 34/34.
+   - **T4 · la hoja propia — LO SIGUIENTE.** Extracción MECÁNICA de `site.css` con guion e informe en seco
+     (método `#437`), resolviendo por MEDIDA los 10 bloques definidos en las dos hojas; juez: la huella de
+     maquetación 24/24 idéntica. ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear. Dato ya
+     medido: sin la hoja de fuentes de la instalación, la métrica del texto cambia y un botón del bloque de
+     cuenta se sale del panel — o sea que la hoja del paquete no basta: el tema y las fuentes son de la
+     instancia, y eso hay que escribirlo en el contrato de instancia (F5).
    - ✅ **Cerrado el pendiente de la T3a** (`[DECIDIDO owner]`, `#634`): naciendo abierto, el foco SÍ entra en
      el panel. Cambio visible aceptado (el anillo sobre la ×); caso, fila de sonda y mutación puestos.
-   - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
-     Vite servida desde una ruta estable; sin `data-boot` en la página, arranca por las dos lecturas de T1.
-   - **T4 · la hoja propia**: extracción MECÁNICA de `site.css` con guion e informe en seco (método `#437`),
-     resolviendo los 10 bloques de las dos hojas por MEDIDA; juez: la huella de maquetación 24/24 idéntica.
-   - **T5 · la salida**: una página HTML ajena (sin Blade, Livewire ni Alpine) monta el cajón, lo abre por las
-     tres vías y compra en local (`/sonda`); trinquete «clase emitida ⊂ hoja del paquete»; spec a ✅.
+   - **T5 · la salida**: el cargador del paquete como entrada propia de Vite en una ruta estable (hoy la
+     sección F de la sonda usa la entrada del producto como sustituto), una COMPRA completa en la página ajena,
+     trinquete «clase emitida ⊂ hoja del paquete», y la spec a ✅.
 2. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 3. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
@@ -93,7 +96,7 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `StaticAnalysisGateTest` · el emisor de tokens (`ApiTokenIssuer`, `AuthTokenController`,
 `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
 `Tests\TestCase::be()` · el arranque del cajón (`Http\Sidebar\SidebarBoot`, `SidebarBootController`,
-`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura y su carcasa (`resources/js/cajon/**`,
+`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura, su carcasa y el paquete (`resources/js/cajon/**`,
 `sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
@@ -130,6 +133,20 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   cargadas, se cuentan los 429 como fila de la sonda, y se compara ANTES/DESPUÉS con control de dos corridas.
 - **`SHELL` es una variable del propio bash**: llamar así a una ruta en un guion se la cambia a todo lo que se
   lance después. En `mutar-cajon-apertura.sh` se llama `CARCASA`.
+- **El gate puede fallar por SATURACIÓN, y su síntoma parece un defecto**: 49 errores de golpe con
+  «ProcessTimedOutException … render-sidebar.js exceeded the timeout of 300 seconds» (18-09). No era el
+  producto: `--parallel` levanta un proceso por núcleo y cada test de paridad lanza un `node` que renderiza el
+  SSR; con la carga a 92 en 20 núcleos, 300 s no bastan. Medido después con la máquina tranquila: los 45 tests
+  de paridad en 7,7 s y un render suelto en 0,2 s. Antes de tocar nada se mira `uptime` y se reintenta; la
+  salida completa de la suite queda en el `/tmp/tmp.*` que el propio hook nombra.
+- **Las guardas de presupuesto del cajón CAMBIAN el diseño, no solo avisan**: la entrada de la landing tiene 26
+  kB (`SidebarBundleBudgetTest`) y la raíz del cajón 40 líneas sin conocer los pasos del embudo
+  (`SidebarComponentBudgetTest`). Las dos me obligaron a rehacer la T3b: lo que solo usa una página ajena se
+  trae con `import()`, y la regla de una señal nueva vive en `section.js` con el hecho derivado en el store.
+- **ESLint sobre `resources/js/cajon` cazó un defecto de verdad** (18-09): al reordenar `bootSpaEngine()`,
+  `host` quedó fuera del alcance de su `catch` — un fallo del chunk habría lanzado un `ReferenceError` dentro
+  del manejador de errores y el velo habría girado para siempre. Una variable que usa un `catch` se declara
+  FUERA del `try`.
 - **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL (las cadenas viajan), se re-apunta cada
   guarda al fichero nuevo y se MUTA allí. Buscar antes con `grep -rln "js/app.js" tests`: salieron once.
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
@@ -172,6 +189,14 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   sesión), no en `components/layout.blade.php`: `SidebarBootTest` pone rojo un `'messages' =>` en el layout. El
   payload es idéntico byte a byte al de antes (medido en 7 contextos): tu cajón no nota nada. Si tenías cambios
   SIN EMPUJAR en ese bloque del layout, el rebase te dará conflicto: pásalos a la clase.
+- ❗❗ **T3b HECHA: el cajón ya se monta en una página que NO es del producto.** `installCajon()` es la única
+  llamada del paquete y `cajon/standalone.js` (diferido) pide el arranque a la API y construye la carcasa.
+  **Lo que te toca saber**: (1) un rótulo nuevo del cajón va en `Http\Sidebar\SidebarBoot`, y si lo necesita la
+  CARCASA, además en el presupuesto de `SidebarMountTest`; (2) la raíz del cajón NO puede conocer los pasos del
+  embudo —lo cazó `SidebarComponentBudgetTest` con mi primer diseño—: una señal nueva hacia fuera va en
+  `section.js` y su hecho lo deriva el store; (3) lo que solo use una página ajena va en `standalone.js`, no en
+  la entrada: `SidebarBundleBudgetTest` vigila los 26 kB que descarga toda página pública. Y el motor publica
+  ya tres señales: modo, identificación y compra confirmada (`jw:cajon:purchased`).
 - ❗❗ **T3a HECHA: la carcasa del cajón ya no lleva atributos de Alpine.** En `layout.blade.php`, `.sidecart` y
   su panel pierden `x-data="a11yPanel(…)"`, `x-cloak`, los `:class`, los `@click` y los `@keydown`; su dueño es
   `resources/js/cajon/shell.js` (abrir/cerrar, la clase `is-{modo}`, telón, ×, Escape y trampa de foco), y

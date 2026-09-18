@@ -101,6 +101,12 @@ final class SidebarBoot
             // vez de aplanarlo, porque `i18n.js` lee por camino y una forma nueva del diccionario
             // sería la tercera.
             'account' => [
+                // ⚠️ **El rótulo de la × de la CARCASA** (F4 · T3b). Entra en el presupuesto del montaje
+                // anónimo —lo vigila `SidebarMountTest::test_the_mount_payload_stays_pruned`— porque desde la
+                // T3b el paquete puede CONSTRUIR la carcasa en una página que no la trae, y quien diseña esa
+                // landing no tiene de dónde sacar el nombre accesible del botón de cerrar. Son 7 bytes y el
+                // camino es el de `lang/` (`account.close`), como el resto.
+                'close' => __('account.close'),
                 'login' => __('account.login'),
                 // ⚠️ El texto de privacidad lleva un `<a href>` dentro y viaja **ya interpolado**: la
                 // URL la compone `route()`, y partirlo en «texto + enlace» obligaría al cliente a
@@ -244,6 +250,11 @@ final class SidebarBoot
                 // `routes/web.php` y un `href` no es atributo de contrato del diff de árbol, así que
                 // un enlace roto aquí pasaría el gate en VERDE.
                 'privacy' => route('legal.privacidad'),
+                // ⚠️ **A dónde POSTea el suelo del bloque de cuenta** (F4 · T3b). En el layout del producto ese
+                // formulario lo pinta Blade con `route('logout')` y `@csrf`; en una carcasa CONSTRUIDA por el
+                // paquete hay que componerlo, y la URL la decide `routes/web.php`, no el cajón. Viaja para todos
+                // porque la carcasa se construye antes de saber si hay sesión (el suelo, no).
+                'logout' => route('logout'),
                 // ⚠️ **La IDA a Google, y solo si esta instalación la ofrece**
                 // (`specs/auth-con-google.md` §10): su presencia ES el interruptor del botón — sin
                 // claves no viaja la clave y el botón no se pinta, que es el mismo hueco que falla

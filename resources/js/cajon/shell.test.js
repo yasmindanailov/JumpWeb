@@ -18,6 +18,8 @@ function elemento(nombre) {
         oyentes,
         enfocado: 0,
         offsetParent: {},
+        // La marca de idempotencia de `installShell` vive aquí: en una página ajena se instala dos veces.
+        dataset: {},
         classList: {
             add: (c) => clases.add(c),
             remove: (c) => clases.delete(c),
@@ -154,7 +156,7 @@ describe('la carcasa sin framework', () => {
         doc.defaultView.getComputedStyle = (el) => ({ visibility: el === oculto ? 'hidden' : 'visible' });
 
         // Se reinstala con esa vista: `installShell` lee `defaultView` al instalarse.
-        const otroRoot = { ...root, oyentes: {}, addEventListener(tipo, fn) { (this.oyentes[tipo] ??= []).push(fn); } };
+        const otroRoot = { ...root, oyentes: {}, dataset: {}, addEventListener(tipo, fn) { (this.oyentes[tipo] ??= []).push(fn); } };
         doc.querySelector = (sel) => (sel === '.sidecart' ? otroRoot : null);
         installShell(() => ({ isOpen: false, mode: 'catalog', close() {} }), doc);
 
@@ -174,10 +176,70 @@ describe('la carcasa sin framework', () => {
         assert.equal(trapTarget({ key: 'a', shiftKey: false }, items, items[1]), null);
     });
 
-    test('sin carcasa en la página no hace nada', () => {
+    test('sin carcasa en la página, y sin arranque con que construirla, no hace nada', () => {
         const doc = { querySelector: () => null };
 
         assert.equal(installShell(() => null, doc), null);
         assert.equal(modeClass(''), '');
+    });
+});
+
+// ── F4 · T3b — instalar una carcasa CONSTRUIDA (la construye `standalone.js`, y allí se prueba) ─
+
+describe('instalar una carcasa construida', () => {
+    /** Un documento sin carcasa, donde se pueda colgar una y volver a buscarla. */
+    function docVacio() {
+        let colgada = null;
+        const doc = {
+            oyentes: {},
+            activeElement: null,
+            body: { hijos: [], append(nodo) { this.hijos.push(nodo); colgada = nodo; } },
+            querySelector: (sel) => (sel === '.sidecart' ? colgada : null),
+            addEventListener(tipo, fn) { (this.oyentes[tipo] ??= []).push(fn); },
+            defaultView: { requestAnimationFrame: (fn) => fn(), getComputedStyle: () => ({ visibility: 'visible' }) },
+        };
+
+        return doc;
+    }
+
+    test('la cuelga del documento y la cablea', () => {
+        const doc = docVacio();
+        const construida = elemento('sidecart');
+        const cierre = elemento('close');
+
+        construida.querySelector = (sel) => (sel === '.sidecart__close' ? cierre : elemento('otro'));
+        construida.querySelectorAll = () => [];
+
+        const cajon = { isOpen: false, mode: 'catalog', cierres: 0, close() { this.cierres += 1; } };
+        const instalada = installShell(() => cajon, doc, construida);
+
+        assert.equal(instalada.root, construida);
+        assert.deepEqual(doc.body.hijos, [construida], 'la carcasa construida se cuelga del body');
+        assert.equal(construida.dataset.jwShell, 'on', 'queda marcada para no cablearse dos veces');
+
+        cierre.disparar('click');
+        assert.equal(cajon.cierres, 1, 'la × de la carcasa construida cierra el cajón');
+    });
+
+    /**
+     * ⚠️⚠️ En una página ajena `installShell` se llama DOS veces —al cargar, que no encuentra nada, y al abrir,
+     * que ya trae una construida—: sin la marca, cada gesto tendría dos oyentes y Escape cerraría dos veces.
+     */
+    test('la segunda pasada no vuelve a colgar ni a cablear', () => {
+        const doc = docVacio();
+        const construida = elemento('sidecart');
+
+        construida.querySelector = () => elemento('otro');
+        construida.querySelectorAll = () => [];
+
+        installShell(() => ({ isOpen: false, mode: 'catalog', close() {} }), doc, construida);
+        installShell(() => ({ isOpen: false, mode: 'catalog', close() {} }), doc, construida);
+
+        assert.equal(doc.body.hijos.length, 1);
+        assert.equal(doc.oyentes.keydown.length, 1);
+    });
+
+    test('sin carcasa que adoptar y sin una construida, no hace nada', () => {
+        assert.equal(installShell(() => null, { querySelector: () => null }), null);
     });
 });

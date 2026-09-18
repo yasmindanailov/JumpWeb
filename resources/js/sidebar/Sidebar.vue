@@ -5,7 +5,8 @@ import AccountSection from './sections/AccountSection.vue';
 import AccountPanel from './account/AccountPanel.vue';
 import { useSectionStore } from './stores/section.js';
 import { usePurchaseStore } from './stores/purchase.js';
-import { publishedIdentifying, publishedMode } from './section.js';
+import { useOutcomeStore } from './stores/outcome.js';
+import { publishedIdentifying, publishedMode, publishedPurchase } from './section.js';
 import { cajonHost } from './host-bridge.js';
 
 /**
@@ -43,6 +44,7 @@ const props = defineProps({
 const purchase = ref(null);
 const section = useSectionStore();
 const purchaseStore = usePurchaseStore();
+const outcomeStore = useOutcomeStore();
 
 /**
  * **El PUENTE de señales hacia fuera del cajón**, que sube aquí porque desde 2026-08-22 depende de
@@ -59,8 +61,8 @@ const purchaseStore = usePurchaseStore();
  * `account-context`—, y por eso ya estuvieron muertas sin que nadie lo notara (`DECISIONES #118`).
  */
 watch(
-    [() => section.active, () => purchaseStore.mode, () => purchaseStore.identifying],
-    ([active, mode, identifying]) => {
+    [() => section.active, () => purchaseStore.mode, () => purchaseStore.identifying, () => purchaseStore.confirmed, () => outcomeStore.orderCode],
+    ([active, mode, identifying, confirmed, orderCode]) => {
         // ⚠️ El anfitrión, no Alpine (F4 · T2): `window.JumpWeb.cajon` es el controlador sin framework —y,
         // cuando Alpine está, su proxy reactivo, así que la carcasa reacciona igual—. Nombrar a Alpine aquí
         // ataba el motor a un framework que una página ajena no tiene por qué cargar.
@@ -69,6 +71,10 @@ watch(
 
         host.setMode(publishedMode(active, mode));
         host.identifying = publishedIdentifying(active, identifying);
+        // La TERCERA señal (F4 · T3b): la compra confirmada, que el anfitrión anuncia como
+        // `jw:cajon:purchased`. La regla vive en `section.js` con sus hermanas y quien no la repite es el
+        // controlador; aquí, como con las otras dos, solo se conecta con el mundo.
+        host.purchased?.(publishedPurchase(active, confirmed, orderCode));
     },
     { immediate: true },
 );

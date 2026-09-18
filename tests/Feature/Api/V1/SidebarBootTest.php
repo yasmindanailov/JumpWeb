@@ -182,6 +182,26 @@ class SidebarBootTest extends ApiTestCase
         $this->assertSame($painted, $rebuilt, 'El arranque CON SESIÓN por la API ya no es el que pinta el layout.');
     }
 
+    /**
+     * **Lo que el paquete necesita para CONSTRUIR la carcasa en una página que no la trae** (F4 · T3b).
+     *
+     * ⚠️ Son tres rótulos y una ruta, y ninguno se puede dar por supuesto en el cliente: el título del panel y
+     * su `aria-label`, el nombre accesible de la ×, el rótulo del velo de carga y a dónde POSTea el suelo de
+     * cerrar sesión. Si alguno deja de viajar, `cajon/shell.js` levanta una carcasa MUDA —un diálogo sin
+     * nombre, o un botón de cerrar sin nombre accesible— y no falla nada: lo vería un lector de pantalla y
+     * nadie más.
+     */
+    public function test_the_shared_half_carries_what_the_package_needs_to_build_the_shell(): void
+    {
+        $boot = $this->getJson(self::ROOT.'/sidebar/boot?lang=es')->assertOk()->json();
+
+        $this->assertNotSame('', (string) ($boot['messages']['title'] ?? ''), 'sin título, el diálogo construido no tiene nombre');
+        $this->assertNotSame('', (string) ($boot['account']['close'] ?? ''), 'sin este rótulo, la × de la carcasa construida se queda sin nombre accesible');
+        $this->assertNotSame('', (string) ($boot['ui']['loading'] ?? ''), 'sin esto, el velo de carga de la carcasa construida no dice nada');
+        $this->assertSame(route('logout'), $boot['urls']['logout'] ?? null, 'sin la ruta, el suelo de cerrar sesión no se puede construir');
+        $this->assertNotSame('', (string) ($boot['account']['nav']['sign_out'] ?? ''), 'y su botón se quedaría sin rótulo');
+    }
+
     /** El payload no vuelve a componerse DENTRO de la plantilla: sería la segunda fuente que un día discrepa. */
     public function test_the_layout_paints_the_boot_and_does_not_compose_it(): void
     {
