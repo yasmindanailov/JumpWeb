@@ -23,7 +23,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] F1 · doc caliente: decisiones por centenas · contador al trailer · §0 en las 46 specs · huella 974/974 · enrutador ≤ 12 KB · carriles y `ESTADO.md` índice · tracker ≤ 16 KB · comprobación 10 (`#617`→`#621`)
 - [ ] F2 · capa de agente (`#623`: plugin completo, en GitHub `627b3a3`, instalado y actualizado en la primera máquina; arnés 43/43; reglas `allow` del owner, `#626`) · falta: 6 de 6 en la primera máquina (van 2), 6 de 6 en la segunda, retirar las skills viejas
 - [ ] Análisis estático en el gate (`#625`): Larastan nivel 5 con línea base de 459 y trinquete, arnés 8/8 · falta: ESLint sobre el cajón (toca `package.json`, compartido) · deuda: bajar la línea base
-- [x] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) y producción DICE v1.0.0 (`storage/app/version`, 2026-09-17 22:05) · el noveno despliegue estrena la escritura y la relectura dentro del script
+- [x] F3 · versión (`#624`): v1.0.0 = `1272cb93` etiquetada, `CHANGELOG.md`, guarda 8 del despliegue con su arnés (9/9) y producción DICE v1.0.0 (`storage/app/version`, 2026-09-17 22:05) · el noveno despliegue (v1.1.0, 18-09) estrenó la escritura y la relectura dentro del script ✓
 - [ ] F4 · cajón empaquetable y login por token, contrato 1.1.0
 - [ ] F5 · instancia PlayJump y la landing fuera, v2.0.0
 - [ ] F6 · app nativa: spec con pila y alcance · pila decidida (`#627`): React Native + Expo en TypeScript, a confirmar con la prueba corta
@@ -78,7 +78,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [ ] B · `testimonials`: aplazado por el owner; hoy resuelto como mecanismo de reseñas (`#616`).
 - [ ] B · el copy al CMS (244 claves): reencuadrado por el programa, la landing sale del producto (`#611`).
 - [ ] C · los servicios como PRODUCTO REAL: toca AFORO y PAY, exige spec propia y `VERIFY_CONC=1`.
-- [ ] Promo «−20 % online» (`#628`, chapuza declarada): precios y badge como DATO en producción (17-09) · el precio de antes tachado y el recuadro (`promo.percent`, `promo.banner.*`) en código, v1.1.0 · falta: desplegar de noche y escribir las cuatro filas en producción · después, el sistema de ofertas (`archivo/promo-precio-anterior.md`).
+- [x] Promo «−20 % online» (`#628`, chapuza declarada): precios y badge como DATO en producción (17-09) · el precio de antes tachado y el recuadro (`promo.percent`, `promo.banner.*`) en v1.1.0, desplegada y con las filas escritas (18-09, 07:25; `ENTORNOS.md` §6) · al terminar la promo: subir precios, quitar badge y borrar las filas el mismo día · después, el sistema de ofertas (`archivo/promo-precio-anterior.md`).
 
 ### La CAPA DE TEMA 🟦 — `specs/tema-por-instalacion.md` §0 (`#192`→`#280`)
 - [x] Los seis mecanismos (color y superficie · forma · hero · elevación · acción · movimiento), el armazón en los doce anchos (`specs/armazon-y-menu.md` §0) y la marca del 2.º cliente.

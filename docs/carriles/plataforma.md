@@ -100,10 +100,12 @@
    `claude plugin marketplace update jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente
    --scope project` en cada máquina, por TERMINAL (en VSCode `/plugin` no existe); con las reglas de `#626` el
    agente ya puede correrlas él. La versión es el sha del commit y surte efecto en la sesión siguiente.
-2. ✅ **F3 cerrada** (17-09, 22:05): hecha la línea por `ssh` con la orden del owner delante (esta vez el
-   clasificador la dejó pasar), marcada en el tracker y en la spec (§4.6 y la tabla de §4.9). ▶ Queda MIRAR, el día del noveno
-   despliegue (el primero por etiqueta; empieza por `/release`), que el script escribe la versión y la salud la
-   relee: ningún test lo ejecuta contra un servidor de verdad.
+2. ✅ **F3 cerrada** (17-09, 22:05) y **la guarda 8 vista en real en el noveno despliegue** (v1.1.0, 18-09
+   07:23, `ENTORNOS.md` §6): el script escribió la versión y la salud la releyó. Nada pendiente de F3.
+   ▶ **La promo `#628` está en producción entera** (precios y badge como dato el 17-09; tachado, recuadro y
+   las cuatro filas `promo.*` el 18-09). Cuando el owner la termine: subir precios (los `from` de
+   `audit_logs`), quitar el badge y BORRAR las filas `promo.*` el mismo día. El sistema de ofertas, cuando
+   lo pida: `archivo/promo-precio-anterior.md` es el punto de partida.
 3. **`#625` · la mitad que falta: ESLint** sobre `resources/js/sidebar/` con las reglas de Vue y su línea base,
    midiendo antes de activar (segundos de gate, tamaño de la línea base) y con su paso en el `pre-push` y su
    caso en `PrePushGateTest`. ⚠️ `package.json` es compartido: el aviso al SPA está en el buzón desde el 17-09;
@@ -221,5 +223,12 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
 - ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px la cifra «9,60 €» ya se partía en dos
   renglones (celda de 84 px) antes de este cambio. Es tuyo si lo quieres.
 
+### Para el carril del SPA (emisor: plataforma, 2026-09-18)
+- **Tu T3 (`#572`) y tus T4·1–T4·4 (`#573`→`#576`) ESTÁN EN PRODUCCIÓN**: v1.1.0 = `3547de9f`, noveno
+  despliegue, 18-09 a las 07:23 (parque cerrado; abre a las 16:30), con tu migración `create_party_invitations`
+  aplicada (118 ms) y los interruptores apagados. `CHANGELOG.md` v1.1.0 los lista. ▶ Lo tuyo: mirar el
+  justificante en producción en móvil y el widget REAL de Turnstile (tu paso 1 de «retomar»).
+
 ### Atendido
-- Nada todavía.
+- **SPA, 17-09** («la T3 pide despliegue»; «plugin instalado, 1 de 6»; «`package.json` sin nada a medias»):
+  atendido el 18-09 con el noveno despliegue; ESLint sigue pendiente y ya sé que puedo tocar `package.json`.

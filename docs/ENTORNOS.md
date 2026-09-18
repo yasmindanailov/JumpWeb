@@ -378,6 +378,20 @@ instalación de un cliente. Si se configura a mano deja de ser una prueba del pr
 
 ## 6 · PRODUCCIÓN · playjump.es, MEDIDO (2026-09-01, `DECISIONES #325`)
 
+> 🚀 **NOVENO DESPLIEGUE · HECHO Y VERIFICADO · EL PRIMERO POR ETIQUETA** (2026-09-18, 07:23:01–07:23:51
+> local, 50 s con la ventana de 503 dentro; el parque abre a las 16:30, `#594`). Subió **v1.1.0 = `3547de9f`**
+> (`CHANGELOG.md`): la promo tachada y el recuadro (`#628`), la piel del justificante con su barra de firmar
+> (`#572`, defecto vivo desde el octavo) y la invitación digital apagada (`#573`→`#576`). 134 entradas de
+> `rsync`, **una migración** (`create_party_invitations`, 118 ms), 8553 franjas, cola 0. Copia previa
+> `~/backups/playjump2_main_v1.1.0-20260918-052113.sql.gz` (728 KB, 53 tablas). `client.css` sin tocar (idéntico
+> a la rama). **La guarda 8 estrenada en real**: pre-vuelo «v1.1.0 (etiqueta anotada, y en origin)», el script
+> escribió `v1.1.0 3547de9f 2026-09-18T05:23:24Z` en `storage/app/version` y la salud lo releyó (✓ esperada
+> v1.1.0). Después, las cuatro filas `promo.*` por `ssh`+tinker (idempotente) y verificado en las tres lenguas
+> (recuadro y «Antes/Was/Avant 12 €» en la portada, 9 tachados en `/precios`), `/`, `/precios`, `/up` y
+> `/admin/login` en 200. ⚠️ El ensayo en seco lo denegó el clasificador «auto» una vez («Blind Apply», con la
+> salida redirigida a un fichero) y lo dejó pasar sin redirigir; el `--go` pasó a la primera con la orden del
+> owner en el turno. ▶ Pendiente del carril del SPA: mirar el justificante en producción en móvil y el Turnstile real.
+
 > 🚀 **OCTAVO DESPLIEGUE · HECHO Y VERIFICADO** (2026-09-16, 22:52:26–22:53:03 local, 37 s con la ventana de
 > 503 dentro; el parque cerró a las 21:30, `#594`; ensayado a las 20:20 y aplazado por estar abierto). Subió
 > **`1272cb93`**, cuyo único código sobre lo servido (`bd61e5a9`) es **`448ea4f5`** (`#569`–`#571`: la piel del
@@ -644,8 +658,8 @@ una transacción, escribe por Eloquent, deja **10 filas en `audit_logs`** (`cata
 del panel usa el mismo `RateResolver` y la misma tabla; por eso el badge dice «online» y no «solo online».
 **El precio de antes tachado y el recuadro** (`#628`, 18-09, chapuza declarada, v1.1.0): en la card de la
 portada y en `/precios`, el «antes» = precio × 100 / (100 − `promo.percent`) y el recuadro = `promo.banner.{es,en,fr}`.
-▶ **Tras desplegar v1.1.0, las cuatro filas en `settings` de producción** (grupo `promo`; el copy con espacio
-FINO antes de «%» y menos tipográfico): `promo.percent` = `20` · `promo.banner.es` = «−20 % en todas las entradas
+▶ **Desplegada v1.1.0 y las cuatro filas ESCRITAS en `settings` de producción el 18-09 a las 07:25** (grupo
+`promo`; el copy con espacio FINO antes de «%» y menos tipográfico): `promo.percent` = `20` · `promo.banner.es` = «−20 % en todas las entradas
 online: compra en la web, elige día y hora, y ahorra un 20 %.» · `en` = «20% off all tickets online: book on the
 website, pick your day and time, and save 20%.» · `fr` = «−20 % sur toutes les entrées en ligne : réservez sur le
 site, choisissez le jour et l'heure, et économisez 20 %.». Sin las filas, la web es la de siempre. **Fin de la
