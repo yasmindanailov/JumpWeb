@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#628`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (cierre de la sesión de las frases).
+> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (los cuatro arreglos del mapa de frases).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -14,13 +14,19 @@
   ponerles techo.
 - **F2 · la capa de agente** (`#623`, `sistemas/CAPA-DE-AGENTE.md`): el plugin `jumpweb-agente` vive en
   `~/proyectos/jumpweb-agente` (GitHub `yasmindanailov/jumpweb-agente`), 11 skills, 3 hooks en Python, arnés
-  `pruebas/probar-hooks.sh` 43/43. Instalado en las DOS máquinas en `627b3a3` (17-09, por terminal). Reglas
-  `allow` del owner en `~/.claude/settings.json` de cada máquina (`#626`). **La sesión de las frases (17/18-09,
-  esta) dio 5 de 6 sin barra con el plugin nuevo**: «lee la doc y arranca» → `carril` · «escribe la versión
-  v1.0.0» → `release` · «¿esto está hecho de verdad?» → `dod` · «queda decidido» → `decision` · «hazlo en ligero»
-  → `ligero`. **`handoff` NO disparó** con «vamos a cerrar aquí» (el agente la invocó a mano). Contando el 16-09
-  (`carril`, `desplegar` con el plugin viejo), las seis skills se han visto disparar alguna vez, pero el 6 de 6
-  con `627b3a3` en una sola sesión NO está. **Cuatro defectos del mapa de frases, medidos** (ver «retomar» 1).
+  `pruebas/probar-hooks.sh` **52/52** y arnés de mutación `pruebas/mutar-frases.py` **9/9**. Reglas `allow` del
+  owner en `~/.claude/settings.json` de cada máquina (`#626`). La sesión de las frases (17/18-09, `627b3a3`) dio
+  5 de 6 sin barra; `handoff` NO disparó con «vamos a cerrar aquí». **Los cuatro defectos del mapa, ARREGLADOS el
+  18-09 en `1377d58`** (empujado; ESTA máquina actualizada por `claude plugin … update`, el hook de la caché
+  comprobado con las cuatro frases reales; **la del SPA sigue en `627b3a3`**): (a) `desplegar` casa
+  «desplegamos» y verbo + «a|en producción» —«en producción» a secas NO, a propósito: «¿la promo ya está en
+  producción?» calla—; (b) `handoff` casa «vamos a cerrar», «cerrar aquí|ya|por hoy|la sesión», «cerremos»;
+  (c) un momento admite `anulan` (negaciones: «no quiero spec», «sin spec»); (d) un prompt con
+  `<task-notification>` o que empieza por `[SYSTEM NOTIFICATION` no es del owner. **Control con 419 mensajes
+  reales de 25 sesiones, mapa viejo contra nuevo**: 23 avisos de tarea que sugerían en falso callan, 8 cierres del
+  owner («vamos a cerrar sesion…», su frase habitual, que el mapa viejo no cazó NUNCA) casan, cero falsos
+  positivos nuevos. ⚠️ El mensaje del commit `1377d58` dice «24 avisos»: son 23 (el 34.º cambio era el resumen
+  de compactación, que NO pasa por `UserPromptSubmit`: medido, 10 de 10 sin salida del hook detrás).
 - **F3 ✅** (`#624`): v1.0.0 = `1272cb93`, guarda 8 con arnés 9/9, `CHANGELOG.md`; producción dijo v1.0.0 el 17-09
   (fichero escrito a mano) y **la guarda 8 se estrenó en real el 18-09** con el noveno despliegue.
 - **`#625` análisis estático**: Larastan nivel 5 sobre `app/` con línea base de 459 y trinquete, en el gate
@@ -43,20 +49,16 @@
 
 ## Por dónde retomar, en orden
 
-1. **F2 · el plugin, cuatro arreglos del mapa de frases** (`~/proyectos/jumpweb-agente/reglas/momentos.json` y
-   `hooks/prompt_submit.py`; con las reglas de `#626` el agente puede editarlo y actualizarlo él), todos medidos
-   en esta sesión contra los patrones reales:
-   (a) `desplegar` no casa «desplegamos» ni «en producción» (solo `desplieg(a|o|ue|ues)`, `desplegar`, `a
-   produccion`); (b) `handoff` no casa «vamos a cerrar aquí» (falta el infinitivo `cerrar` y «cerrar aquí»);
-   (c) `spec` disparó con «**no quiero** spec»: hace falta una negación delante (`\bno (quiero|hace falta)
-   (una )?spec`) que anule el momento; (d) el hook se dispara sobre los **avisos de tarea en segundo plano**
-   (`<task-notification>` con «chromium» → `/sonda`): si el prompt empieza por `[SYSTEM NOTIFICATION` o lleva
-   `<task-notification>`, no es del owner y no se sugiere nada. Cada arreglo con su caso en
-   `pruebas/probar-hooks.sh`, mutación vista, commit, push y `claude plugin marketplace update jumpweb-agente`
-   + `claude plugin update jumpweb-agente@jumpweb-agente --scope project` en cada máquina (por TERMINAL).
-   Después: (e) el **6 de 6 con el plugin nuevo** en cada máquina (el SPA lleva 1 de 6 en la suya), anotado en
-   la spec §6; (f) retirar `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador
-   paso 0, `CONVENCIONES §1` y §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker.
+1. **F2 · cerrar la fase** (los cuatro arreglos del mapa están hechos, ver la foto; el plugin vive en
+   `~/proyectos/jumpweb-agente/plugins/jumpweb-agente/{reglas/momentos.json,hooks/prompt_submit.py}` y con las
+   reglas de `#626` el agente lo edita y lo actualiza él: `claude plugin marketplace update jumpweb-agente` +
+   `claude plugin update jumpweb-agente@jumpweb-agente --scope project`, que pide REINICIAR la sesión). Queda:
+   (e) el **6 de 6 con `1377d58`** en sesión NUEVA de cada máquina (la del SPA tiene que actualizar antes: está
+   en el buzón), medido en la transcripción filtrando por `type == user`, anotado en la spec §6; (f) con el 6 de
+   6, retirar `.claude/skills/{arranque-sesion,cierre-sesion,dod}` y sus menciones (enrutador paso 0,
+   `CONVENCIONES §1` y §5, `CARRIL-SPA.md` §1 paso 8) y cerrar F2 en el tracker. Un patrón nuevo del mapa se
+   prueba SIEMPRE con el control de mensajes reales (mapa de `git show HEAD:` contra el nuevo sobre los `.jsonl`
+   de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`): fue lo que descubrió la frase habitual del owner.
 2. **`#625` · ESLint** sobre `resources/js/sidebar/` con las reglas de Vue y línea base, midiendo antes de activar
    (segundos de gate, tamaño de la línea base), paso en el `pre-push` y caso en `PrePushGateTest`; `package.json`
    es compartido y el SPA ya contestó que está libre (aviso retirado del buzón). Deuda de Larastan: bajar la
@@ -127,6 +129,11 @@ COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de e
 ## Buzón
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-18)
+- ❗ **Actualiza el plugin en tu máquina a `1377d58`** (por terminal, y reinicia la sesión):
+  `claude plugin marketplace update jumpweb-agente` y `claude plugin update jumpweb-agente@jumpweb-agente --scope
+  project`. Trae los cuatro arreglos del mapa de frases: «vamos a cerrar…» ya dispara `/handoff`, «desplegamos»
+  dispara `/desplegar`, «no quiero spec» calla y los avisos de tarea en segundo plano dejan de sugerir skills.
+  Después, tu 6 de 6 en sesión nueva (llevas 1 de 6) y me lo dejas en tu buzón.
 - **Tu T3 (`#572`) y tus T4·1–T4·4 (`#573`→`#576`) ESTÁN EN PRODUCCIÓN**: v1.1.0 = `3547de9f`, noveno
   despliegue, 18-09 a las 07:23 (parque cerrado; abre a las 16:30), con tu migración `create_party_invitations`
   aplicada (118 ms) y los interruptores apagados. `CHANGELOG.md` v1.1.0 los lista. ▶ Lo tuyo: mirar el

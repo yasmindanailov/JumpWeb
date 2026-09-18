@@ -49,6 +49,10 @@
      hasta dos sugerencias «ejecuta AHORA la skill /x». Nunca bloquea; un `/comando` explícito no recibe sugerencia.
      Un momento `una_vez_por_sesion` (hoy solo `carril`) calla si la transcripción (`transcript_path`) ya tiene
      la skill invocada, por el modelo (`"skill":"jumpweb-agente:carril"`) o tecleada (`<command-name>/carril`).
+     Un momento puede llevar `anulan`: negaciones que lo callan («no quiero spec», «sin spec»). Un prompt con
+     `<task-notification>` o que empieza por `[SYSTEM NOTIFICATION` es un aviso del harness, no del owner: sin
+     sugerencia (medido: 23 avisos de tarea sugerían skills en falso). Un patrón nuevo se prueba con su caso en
+     `pruebas/probar-hooks.sh`, su mutación en `pruebas/mutar-frases.py` y el control de mensajes reales.
    - `Stop`: si hay commits sin empujar, bloquea UNA vez por estado (HEAD + cuenta) con la orden de decirlo en
      una línea; con `stop_hook_active` calla. Medido en la documentación de hooks: en `Stop` el owner no ve
      stdout ni `systemMessage`; solo un bloqueo le llega. Un árbol sucio no avisa: es trabajo normal.
@@ -58,8 +62,8 @@ El mapa vive en un solo sitio, `reglas/momentos.json`; esta tabla es su copia le
 | Momento | Frases del owner (ejemplos) | Skill |
 |---|---|---|
 | arrancar o retomar | «lee la doc y arranca» · «empezamos» · «continuamos con F2» · «retoma el carril» | `carril` |
-| cerrar | «cerramos» · «haz el handoff» · «lo dejamos aquí» · «guarda y empuja» | `handoff` |
-| desplegar | «despliega a producción» · «súbelo a staging» | `desplegar` |
+| cerrar | «cerramos» · «vamos a cerrar sesión» · «haz el handoff» · «lo dejamos aquí» · «guarda y empuja» | `handoff` |
+| desplegar | «despliega a producción» · «desplegamos» · «ponlo en producción» · «súbelo a staging» | `desplegar` |
 | decidir | «queda decidido: …» · «registra la decisión» | `decision` |
 | diseñar antes | «hazme la spec» · «diséñalo antes de tocar código» | `spec` |
 | ir rápido | «en ligero» · «sin ceremonia» · «rápido» | `ligero` |
