@@ -66,16 +66,14 @@ describe('la carcasa sin framework', () => {
     /**
      * `/entradas`, una puerta de cuenta o la vuelta de la pasarela: el cajón NACE abierto y nadie llama a `open()`.
      *
-     * ⚠️ **Y NO mete el foco: paridad deliberada con lo que había** (el `a11yPanel` viejo quería hacerlo y su
-     * comprobación estaba rota). Meterlo pinta el anillo sobre la × al cargar la página, que es un cambio
-     * visible y está pendiente del owner. Este caso existe para que ese cambio sea una decisión y no un efecto
-     * secundario de tocar la carcasa.
+     * ⚠️ **Y el foco entra también aquí** (`[DECIDIDO owner]`, `DECISIONES #634`): si no, quien llega a esas
+     * páginas con teclado o lector de pantalla se encuentra el panel delante y el foco fuera, detrás del telón.
      */
-    test('si el cajón nace abierto, la carcasa nace abierta — y sin robar el foco', () => {
+    test('si el cajón nace abierto, la carcasa nace abierta y con el foco dentro', () => {
         const { root, cierre } = montar({ cajon: { isOpen: true, mode: 'catalog', close() {} } });
 
         assert.deepEqual(root.clases(), ['is-open']);
-        assert.equal(cierre.enfocado, 0);
+        assert.equal(cierre.enfocado, 1);
     });
 
     test('se abre y se cierra por los eventos del controlador, y al abrir mete el foco', () => {

@@ -70,11 +70,11 @@ export function installShell(getCajon, doc = document) {
 
     const focusFirst = () => root.querySelector(FOCUSABLE)?.focus();
 
-    const paintOpen = (open, { focus = true } = {}) => {
+    const paintOpen = (open) => {
         root.classList.toggle('is-open', open);
         // El foco entra DESPUÉS de que el navegador haya hecho visible la carcasa: un elemento con
         // `visibility: hidden` no se puede enfocar, y pedirlo en el mismo tic no haría nada.
-        if (open && focus) (doc.defaultView?.requestAnimationFrame ?? ((fn) => fn()))(focusFirst);
+        if (open) (doc.defaultView?.requestAnimationFrame ?? ((fn) => fn()))(focusFirst);
     };
 
     doc.addEventListener('jw:cajon:open', () => paintOpen(true));
@@ -113,16 +113,16 @@ export function installShell(getCajon, doc = document) {
     });
 
     // Cómo NACE: el servidor puede haberlo pedido abierto, y el motor puede haber publicado ya su modo.
-    // ⚠️⚠️ **Al NACER abierto NO se mete el foco, y es paridad deliberada, no un olvido** (medido el
-    // 2026-09-18 comparando capturas). El `a11yPanel` que esto sustituye QUERÍA hacerlo —su comentario lo
-    // decía: «si el panel ya estaba abierto al cargar»— pero lo comprobaba con `this.$data.$evaluate`, que
-    // no existe, así que nunca corrió. Hacerlo bien pinta el anillo de foco sobre la × al cargar `/entradas`,
-    // las puertas de cuenta y la vuelta de la pasarela: es la conducta correcta de un diálogo modal Y es un
-    // cambio VISIBLE en páginas de entrada. Esta tanda prometió no mover un píxel; se lleva al owner aparte
-    // (`specs/cajon-empaquetable.md` §4.2) y, cuando lo decida, es quitar `{ focus: false }` de esta línea.
+    // ⚠️⚠️ **Al NACER abierto SÍ se mete el foco** (`[DECIDIDO owner]` 2026-09-18, `DECISIONES #634`). Es la
+    // conducta correcta de un diálogo modal: quien llega a `/entradas`, a una puerta de cuenta o de vuelta del
+    // banco se encuentra el panel delante, y con teclado o lector de pantalla tiene que poder operarlo sin
+    // buscarlo. El `a11yPanel` que esto sustituye QUERÍA hacerlo —su comentario lo decía— y su comprobación
+    // (`this.$data.$evaluate`) no existía, así que nunca corrió: no es una conducta nueva, es la que estaba
+    // escrita y nunca se ejecutó. Se lleva por delante un cambio visible —el anillo de foco sobre la ×— que el
+    // owner vio y aprobó; la captura de `/entradas` cambia por eso y solo por eso.
     const cajon = getCajon();
     paintMode(cajon?.mode);
-    if (cajon?.isOpen) paintOpen(true, { focus: false });
+    if (cajon?.isOpen) paintOpen(true);
 
     return { root };
 }

@@ -142,9 +142,9 @@ mutar "la trampa de foco vuelve a contar los controles con \`visibility: hidden\
         && (view?.getComputedStyle?.(el)?.visibility ?? 'visible') !== 'hidden';" \
   "    const canFocus = (el) => el.offsetParent !== null;"
 
-mutar "el cajón que NACE abierto roba el foco (el anillo sobre la × al cargar: cambio visible sin decidir)" "$CARCASA" \
-  "    if (cajon?.isOpen) paintOpen(true, { focus: false });" \
-  "    if (cajon?.isOpen) paintOpen(true);"
+mutar "el cajón que NACE abierto deja de meter el foco (\`#634\`: con teclado, el panel delante y el foco detrás)" "$CARCASA" \
+  "    if (cajon?.isOpen) paintOpen(true);" \
+  "    if (cajon?.isOpen) root.classList.add('is-open');"
 
 mutar "el panel del layout vuelve a llevar un atributo de Alpine" "$LAYOUT" \
   "<aside class=\"sidecart__panel\" role=\"dialog\"" \

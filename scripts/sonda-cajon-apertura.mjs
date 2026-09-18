@@ -280,6 +280,15 @@ try {
         await esperarMotor(page);
         e = await estado(page);
         anotar('D', '`/entradas` nace abierto, con el motor montado y el scroll bloqueado', e.abierto && e.motor && e.scrollBloqueado, e.modo);
+
+        // `[DECIDIDO owner]` `#634`: naciendo abierto, el foco entra en el panel — si no, quien llega con
+        // teclado o lector de pantalla se encuentra el diálogo delante y el foco detrás del telón.
+        const dentro = await page.evaluate(() => {
+            const root = document.querySelector('.sidecart');
+
+            return { dentro: root.contains(document.activeElement), quien: `${document.activeElement?.tagName?.toLowerCase()}.${(document.activeElement?.className || '').toString().split(' ')[0]}` };
+        });
+        anotar('D', 'naciendo abierto, el foco entra DENTRO del panel (`#634`)', dentro.dentro, dentro.quien);
         await asentado(page);
         await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/D-entradas@390.png` });
         await page.close();

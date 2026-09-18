@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#633`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#634`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (F2 cerrada; F4 en curso).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -65,10 +65,8 @@
      único `route('logout')` de la aplicación—, el hueco del motor con su velo, y `jw:cajon:purchased`. Y
      mudar el arranque del cajón que NACE abierto (`if (…isOpen) { lock; bootSpaEngine() }`, hoy en `app.js`,
      que es del producto). ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear.
-   - ▶ **`[PENDIENTE: owner]` de la T3a**: al nacer abierto el cajón NO mete el foco dentro (paridad con lo que
-     había: el `a11yPanel` quería hacerlo y su comprobación estaba rota). Hacerlo es lo correcto para un
-     diálogo modal, y pinta el anillo de foco sobre la × al cargar `/entradas` y las puertas de cuenta: es un
-     cambio visible. Enseñárselo y, si dice que sí, quitar `{ focus: false }` de `installShell()`.
+   - ✅ **Cerrado el pendiente de la T3a** (`[DECIDIDO owner]`, `#634`): naciendo abierto, el foco SÍ entra en
+     el panel. Cambio visible aceptado (el anillo sobre la ×); caso, fila de sonda y mutación puestos.
    - **T3 · la carcasa dentro del paquete** (Vue), con el suelo de logout, y el cargador como entrada propia de
      Vite servida desde una ruta estable; sin `data-boot` en la página, arranca por las dos lecturas de T1.
    - **T4 · la hoja propia**: extracción MECÁNICA de `site.css` con guion e informe en seco (método `#437`),

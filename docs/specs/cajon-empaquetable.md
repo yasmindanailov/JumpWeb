@@ -139,8 +139,8 @@ navegador y ningún test de Node habría visto**: (1) la trampa de foco heredada
 NO ve `visibility: hidden` — recién montado el motor, el foco se escapaba del diálogo al banner de cookies en la
 primera pulsación de Tab; ahora «visible» es «se puede enfocar» y 46 pulsaciones no salen del panel; (2) el
 `a11yPanel` viejo QUERÍA enfocar al nacer abierto y su comprobación (`this.$data.$evaluate`) no existía, así que
-nunca corría: hacerlo bien pinta el anillo sobre la × al cargar `/entradas` y las puertas, que es un cambio
-VISIBLE — se deja en paridad con `{ focus: false }` y **queda para el owner**; (3) las capturas hay que tomarlas
+nunca corría: se preguntó en vez de arrastrarlo y **`[DECIDIDO owner]` que SÍ entre** (`#634`) — el anillo sobre
+la × al cargar esas páginas es el único píxel que se mueve; (3) las capturas hay que tomarlas
 con el panel ASENTADO (dos fotogramas con la misma caja) y cuidando el limitador de la API: sin eso, dos
 corridas del mismo código daban imágenes distintas y un 429 pintó «No hay días disponibles» en una. **Medido**:
 `/entradas` (el cajón que nace abierto) **idéntica píxel a píxel** antes y después, con control de dos corridas;
