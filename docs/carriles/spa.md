@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#713`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#714`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -74,12 +74,14 @@
      allí sí, **el widget REAL de Turnstile** —en local no hay claves—.
    ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile (solo en producción) · y
    `og:image` sale del logotipo del tema (1200×441): en una tarjeta 2:1 se ve con bandas.
-2. **La T7 · los CORREOS de la celebración** (spec §4.9, turno 4a del canvas): `GuestFormRequest` rehecho
-   y el **aviso de la víspera**, al titular y **solo si queda algo por hacer**, con su cifra («12 de
-   20»), el saldo y `ShouldQueue` (`PAY-14`). Inventario **25 → 26**.
-   ⚠️ **Necesita su propia marca de idempotencia**: `reminded_at`/`reminded_count` se las quedó la T6·6
-   (`#713`) y son otro gesto —éste lo escribe el anfitrión, aquél lo manda el parque—. La marca se
-   escribe **por el constructor de consultas**, que no toca `updated_at` (§1.3·2).
+2. ❗ **LA TAREA: la T7 · los CORREOS de la celebración**, partida en tres por `#714` (spec §10.14):
+   **T7·1** `GuestFormRequest` rehecho —el primario pasa a «Compartir la invitación» si el producto la
+   tiene— · **T7·2a** el LECTOR de «qué queda por hacer» (fichas incompletas, respuestas por repasar,
+   plazas de menor sin resolver y saldo del parque), que es dominio y cruza a Identity **por contrato**
+   · **T7·2b** la notificación, el comando, el scheduler a las **18:00 del día antes** (`[DECIDIDO
+   owner]`) y la marca. Inventario **25 → 26** (la prosa; el censo del test se lee de la fuente y entra
+   solo). ⚠️⚠️ **Cruza al carril de correos y está AVISADO en el buzón**: se lee su §0 antes de tocar.
+   ⚠️ La marca idempotente **no reutiliza `reminded_at`/`reminded_count`**, que se las quedó la T6·6.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas
    se ha visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
@@ -210,6 +212,21 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
 
 ## Buzón
+
+### ❗ Para el carril de CORREOS (emisor: SPA, 2026-09-19) — AVISO ANTES DE TOCAR
+- ▶ **Voy a entrar en tus ficheros para la T7 de la invitación** (`celebracion-e-invitacion.md` §4.9 y
+  §10.14, plan en `#714`): `app/Notifications/GuestFormRequest.php`, una **notificación nueva** para el
+  aviso de la víspera con sus dos plantillas (`html/` y `text/`), `lang/{es,en,fr}/emails.php` y sus
+  tests; y en tu spec, el inventario **25 → 26**.
+- **Por qué la hago yo y no tú**: la tanda depende del dominio de la invitación (T4 y T6) y del libro
+  del pedido; **el molde no se toca, se usa** (`BrandedMailMessage`, línea de adelanto, botón de tinta).
+  Si prefieres cogerla tú, dilo y te la paso entera con el plan hecho.
+- **Lo que NO voy a tocar**: el tema (`vendor/mail/html/themes/brand.css`), el remitente
+  (`ApplyBusinessSender`), el modo oscuro ni ninguno de los 25 correos existentes salvo
+  `GuestFormRequest`, que gana un botón y una frase.
+- ⚠️ Anotado de tu §0: **un componente sin su gemelo en `text/` renderiza bien y REVIENTA al enviar**;
+  `Mail::fake()` intercepta antes de construir, así que un caso del remitente sale verde desconectado;
+  y un `*/` dentro de un docblock lo cierra y el render devuelve el HTML anterior sin avisar.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-19, cierre)
 - ▶ **La T6 quedó CERRADA hoy con `#713` (T6·6)**, y esto es lo que suma al próximo despliegue sobre lo

@@ -478,8 +478,12 @@ Turno 4a. Molde de `correos-desde-canvas.md`: `BrandedMailMessage`, línea de ad
 - **Aviso de la víspera (nuevo).** Al titular, **solo si queda algo por hacer**: fichas incompletas,
   respuestas por repasar, niños sin resolver o saldo a pagar en el parque según el libro.
   - Trae la cifra («12 de 20»), por qué no es grave («si vienen con un adulto, entran») y el saldo.
-  - Programado a diario. Idempotente por reserva, con una marca escrita **por el constructor de
-    consultas** (no toca `updated_at`, §1.3·2).
+  - **A las 18:00 del día ANTES de la fiesta, hora del parque** (`[DECIDIDO owner, 2026-09-19]`,
+    `#714`): es cuando un padre mira el móvil y aún tiene la tarde para arreglarlo. Una hora
+    configurable desde el panel y 48 h de antelación se ofrecieron con su coste y se cayeron.
+  - Idempotente por reserva, con una marca escrita **por el constructor de consultas** (no toca
+    `updated_at`, §1.3·2). ⚠️ **NO son `reminded_at`/`reminded_count`**: esas se las quedó la T6·6
+    (`#713`) y son otro gesto —aquél lo escribe el anfitrión, éste lo manda el parque—.
   - `ShouldQueue` (`PAY-14`).
 - **Inventario: 25 → 26.** Los censos de `MailInboxLineTest` y del molde se actualizan.
 
@@ -1803,6 +1807,39 @@ regla nueva entra en el paquete · Pint, Larastan y docs-check limpios · **ning
 
 ▶ **Con ella la T6 queda cerrada** y la invitación se puede encender en producción: los dos
 interruptores son DATO del owner. Después, la T7 de correos.
+
+### 10.14 T7 · LOS CORREOS — SE PARTE EN TRES UNIDADES (plan, `DECISIONES #714`)
+
+La última tanda de la feature. ⚠️⚠️ **Cruza al carril de CORREOS** (`carriles/correos.md`: las
+notificaciones, `resources/views/vendor/mail/**`, `lang/*/emails.php` y sus tests) y a su spec
+`correos-desde-canvas.md`. Avisado en el buzón del SPA **antes de tocar nada** (`CONVENCIONES §10`).
+La tanda es del SPA porque **depende del dominio de la invitación** que construyó la T4 y la T6; el
+molde de correo no se toca, se usa.
+
+| | Qué | Por qué corta ahí |
+|---|---|---|
+| **T7·1** | **`GuestFormRequest` rehecho**: si el producto tiene invitación, el primario es «Compartir la invitación» y el fantasma «Rellenarlo yo» | **Un correo que ya existe y ya se envía**: sin migración, sin comando y sin censo nuevo. Es la mitad barata y la que el cliente ve primero |
+| **T7·2a** | **El LECTOR de «qué queda por hacer»** de una reserva: fichas incompletas, respuestas por repasar, plazas de menor sin resolver y saldo a pagar en el parque | Es **dominio y no correo**, y cruza a Identity (las firmas) — así que va por el contrato, como `PartyGuests` (§4.5·8). Con sus casos, y sin mandar nada todavía |
+| **T7·2b** | **El aviso de la víspera**: la notificación, el comando diario, el scheduler a las **18:00** y la marca idempotente | Es lo único que **manda correo de verdad** y lo único que pide **migración**. Se construye sobre un lector ya verde, que es lo que evita depurar las dos cosas a la vez |
+
+**Lo que hay que saber antes de abrirla** (medido el 2026-09-19, no supuesto)
+
+- **El censo de correos se lee de la FUENTE**: `MailInboxLineTest::grupos()` hace `glob` sobre
+  `app/Notifications/*.php` y busca `->hero('…')`, con un `assertGreaterThanOrEqual(23)`. Un correo
+  nuevo **entra solo** y no tumba nada; lo que hay que actualizar a mano es la **prosa** que dice
+  «25» (spec de correos §0 y su carril).
+- **Todo componente de correo nace por partida doble** (`html/` y `text/`) o el envío revienta —el
+  render no—, y el molde es `BrandedMailMessage::hero($grupo, $tono, $resguardo)`.
+- **El saldo del parque ya está resuelto**: `OrderBook::$balance` con `Balance::KIND_PAY_AT_PARK` y
+  su cifra en céntimos. No se recalcula nada aquí.
+- **Las plazas de menor sin resolver** salen de `GuardianPlaces::freeIn()` (Identity), que es quien
+  conoce las dos mitades; Booking no puede mirar allí (`ModuleBoundariesTest`).
+- **El progreso «12 de 20»** es `OrderItem::guestFormProgress()`, que **ya descuenta** las fichas con
+  una edad sin producto (`#284` D6): la cifra del correo es la misma que la de la pantalla.
+- **El worker de la cola va sobre el mismo `schedule:run`** (`#243`), y la señal de que está muerto
+  es la **EDAD** del trabajo más viejo de `jobs`, nunca `failed_jobs` (`#115`).
+- ⏰ **La hora del comando es hora del PARQUE**, no del contenedor: `DisplayTime::timezone()`. Es la
+  trampa que la T6·6 acaba de pagar en el sello del recordatorio (§10.13).
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
