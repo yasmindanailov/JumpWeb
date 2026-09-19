@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#714`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#715`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -35,27 +35,15 @@
   componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
   `signDependent()` al módulo plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
 - ✅✅ **T6 · EL ATERRIZAJE, CERRADA EN SUS SEIS UNIDADES** (`#708`→`#713`, spec §10.8–§10.13), toda en
-  el árbol y **sin desplegar**. Con ella **la invitación se puede encender en producción**: los dos
-  interruptores son DATO del owner. Lo que enseñó cada una, por si hay que volver:
-  - **T6·1 · el bloque** (`#708`): su propio POST, porque personalizar **no puede mover el testigo** de
-    los extras. 10 casos · arnés 8/8. ❗ Un campo de texto vacío llega como `null` → 422.
-  - **T6·2 · propuestas y adopción** (`#709`): se rellena **solo lo vacío**, `adopt[]` **fuera** de la
-    fila; `adopt()` y luego `reconcileAdopted()`. 8 casos · arnés 6/6. ❗ **Los dos supervivientes de la
-    primera pasada eran del TEST**, no del código.
-  - **T6·3 · «no vienen», «no caben» y «no lo apuntes»** (`#710`): retirar es el **par del suelo**
-    (`#576`) y el caso lo mide sobre `assignedFloorFor()`. 10 casos · arnés 8/8. ⚠️ Medido: **no hizo
-    falta tocar `GuestCountAdjuster`**, así que sin `VERIFY_CONC`.
-  - **T6·4 · la puerta y la hoja de sala** (`#711`): los **tres estados** y «8 de 12» sobre lo
-    CONTRATADO, por lotes bajo el techo de 28 consultas. 12 casos · arnés 9/9 · PDF real. ❗ El
-    emparejado **no era la igualdad de claves**: subió a `PersonNameKey::cardMatches()`.
-  - **T6·5 · el panel** (`#712`): resumen, «Copiar el enlace» (el público) y **anular**. 9 casos · arnés
-    7/7. ❗ **Escribí una acción que ya existía desde `#576`** y solo la cazó el arnés: antes de escribir
-    una acción del panel, **búscala con `grep`**.
-  - **T6·6 · el recordatorio** (`#713`, §10.13): compone el texto —nombres **solo si el anfitrión marca
-    la casilla**—, lo deja copiable y guarda `reminded_at`/`reminded_count` (**cuenta VECES**,
-    `[DECIDIDO owner]`). ❗❗ **No envía nada**: del padre no tenemos correo. 14 casos · arnés **13/13 sin
-    supervivientes** · sonda 390/1280. ⚠️ Las dos columnas eran «de la T7» según la migración de la T4·1
-    y **se las queda la T6**; la T7 traerá su propia marca.
+  el árbol y **sin desplegar**: el bloque del anfitrión · las propuestas y su adopción · «no vienen» y
+  «no lo apuntes» · la puerta y la hoja de sala · el panel · el recordatorio. Arneses 8/8 · 6/6 · 8/8 ·
+  9/9 · 7/7 · **13/13**. Con ella **la invitación se puede encender**: los interruptores son DATO del
+  owner. ▶ **El detalle de cada unidad y lo que enseñó está en su § de la spec**, que es donde no
+  caduca; lo que de ahí vale para CUALQUIER tanda bajó a «Trampas vivas».
+  ⚠️ De la T6·6: `reminded_at`/`reminded_count` **cuentan VECES** (`[DECIDIDO owner]`) y eran «de la
+  T7» según la migración de la T4·1 — **se las quedó la T6**, y la T7 trae su propia marca.
+- ✅ **T7·1** (`#715`, §10.15): el correo del post-form pide **compartir** cuando el producto ofrece
+  invitación, con el ancla `#gf-invite`. 6 casos · arnés 8/8 · los dos correos, en Mailpit.
 - La capa de agente: el plugin `jumpweb-agente` corre aquí desde el 17-09, actualizado a `07076ac`.
 
 ## Por dónde retomar, en orden
@@ -74,14 +62,19 @@
      allí sí, **el widget REAL de Turnstile** —en local no hay claves—.
    ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile (solo en producción) · y
    `og:image` sale del logotipo del tema (1200×441): en una tarjeta 2:1 se ve con bandas.
-2. ❗ **LA TAREA: la T7 · los CORREOS de la celebración**, partida en tres por `#714` (spec §10.14):
-   **T7·1** `GuestFormRequest` rehecho —el primario pasa a «Compartir la invitación» si el producto la
-   tiene— · **T7·2a** el LECTOR de «qué queda por hacer» (fichas incompletas, respuestas por repasar,
-   plazas de menor sin resolver y saldo del parque), que es dominio y cruza a Identity **por contrato**
-   · **T7·2b** la notificación, el comando, el scheduler a las **18:00 del día antes** (`[DECIDIDO
-   owner]`) y la marca. Inventario **25 → 26** (la prosa; el censo del test se lee de la fuente y entra
-   solo). ⚠️⚠️ **Cruza al carril de correos y está AVISADO en el buzón**: se lee su §0 antes de tocar.
-   ⚠️ La marca idempotente **no reutiliza `reminded_at`/`reminded_count`**, que se las quedó la T6·6.
+2. ❗ **LA TAREA: la T7 · los CORREOS de la celebración**, partida en tres por `#714` (spec §10.14).
+   ✅ **T7·1 hecha** (`#715`, §10.15): con invitación la llamada del correo es «Compartir la
+   invitación» y el botón lleva el ancla `#gf-invite`. Arnés 8/8; los dos correos, en Mailpit.
+   ▶ **Sigue la T7·2a**: el LECTOR de «qué queda por hacer» de una reserva —fichas incompletas
+   (`guestFormProgress()`), respuestas por repasar (`summaryFor()['pending']`), plazas de menor sin
+   resolver (`GuardianPlaces::freeIn()`, Identity → **por contrato**) y saldo del parque
+   (`OrderBook::$balance`, `KIND_PAY_AT_PARK`)—, con sus casos y **sin mandar nada todavía**.
+   ▶ Y después **T7·2b**: la notificación, el comando, el scheduler a las **18:00 del día antes**
+   (`[DECIDIDO owner]`, hora del PARQUE) y la marca idempotente, que **no reutiliza
+   `reminded_at`/`reminded_count`** —se las quedó la T6·6— y por tanto **pide migración**.
+   Inventario **25 → 26**: es la PROSA (spec de correos §0 y su carril); el censo del test se lee de
+   la fuente y un correo nuevo entra solo.
+   ⚠️⚠️ **Cruza al carril de correos y está AVISADO en el buzón**: se lee su §0 antes de tocar.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas
    se ha visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
@@ -132,6 +125,14 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   son tuyos).
 - **La escala de la hoja `.gf-*` son TRES radios** (`--r-md`, `--r`, `--r-pill`) y ocho tallas:
   `GuestFormSkinTest` pone en rojo cualquier otro. La guarda tiene razón; se cambia el valor, no la guarda.
+- ⚠️⚠️ **Un COMENTARIO puede romper un censo** (`#715`): `MailInboxLineTest` averigua el grupo del
+  diccionario de cada correo con un `grep` que se queda con la PRIMERA llamada de cabecera del
+  fichero, así que una nota que la escriba entre comillas para explicarla **le gana al código** y el
+  correo entero sale del censo —12 avisos en rojo a la vez—. Es `#553` del lado del inventario: si
+  vas a nombrar en prosa el patrón que un escáner busca, **no lo escribas tal cual**.
+- **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
+  guard de `saving()` de `TicketType` lanza, y el escenario real contra el que defiende el predicado
+  es justo ése —una importación, un `update()` a mano—. Con `create()` el caso no existiría.
 - Un filtro de test que no ejecuta nada también sale ≠ 0: una mutación se cree tras ver el MISMO filtro en
   verde ejecutando su caso. Y aseverar una subcadena sobre HTML acusa al script que la nombra (`#553`).
 - **`Str::ascii()` SÍ transitera el cirílico, el griego y el árabe** (medido el 17-09 sobre nueve
@@ -218,6 +219,13 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   §10.14, plan en `#714`): `app/Notifications/GuestFormRequest.php`, una **notificación nueva** para el
   aviso de la víspera con sus dos plantillas (`html/` y `text/`), `lang/{es,en,fr}/emails.php` y sus
   tests; y en tu spec, el inventario **25 → 26**.
+- ✅ **YA HECHO, la T7·1** (`#715`): `GuestFormRequest` gana cuatro claves por idioma y cambia el cuerpo
+  y la llamada **solo** cuando el producto ofrece invitación; el asunto y la línea de adelanto **no
+  tienen variante**, a propósito, para no sacar el correo de tu censo. Nada más de tus ficheros.
+  ❗ **Y un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre
+  comillas para explicar el escáner, y tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el
+  código — **los 12 avisos en rojo de golpe**. Tu guarda funciona; la nota está en mis trampas vivas y
+  la mutación que lo reproduce, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca una línea en tu §0.
 - **Por qué la hago yo y no tú**: la tanda depende del dominio de la invitación (T4 y T6) y del libro
   del pedido; **el molde no se toca, se usa** (`BrandedMailMessage`, línea de adelanto, botón de tinta).
   Si prefieres cogerla tú, dilo y te la paso entera con el plan hecho.

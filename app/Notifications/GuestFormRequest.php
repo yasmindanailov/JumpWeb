@@ -42,6 +42,17 @@ class GuestFormRequest extends Notification implements ShouldQueue
         $product = (string) ($this->reservation->ticketType?->tr('name') ?? '');
         $code = (string) ($this->reservation->order?->code ?? '');
 
+        // ❗❗ **CON INVITACIÓN, LO PRIMERO NO ES TECLEAR: ES REPARTIR** (T7·1,
+        // `specs/celebracion-e-invitacion.md` §4.9). Este es el único correo que lleva al formulario,
+        // así que es el único sitio donde se puede decir que la mitad del trabajo la hacen los padres.
+        // Pedirle a un anfitrión que escriba veinte nombres cuando puede mandar un enlace es
+        // construir la feature entera y no venderla.
+        //
+        // ⚠️ Se pregunta al PRODUCTO, `offersGuestInvitation()`, y no se materializa la invitación:
+        // nace en el GET del anfitrión (§4.5·1) y crearla dentro de un correo en cola le daría un
+        // enlace emitido antes de que él hubiera abierto nada. Es la lección de `#712` en el panel.
+        $invita = $this->reservation->ticketType?->offersGuestInvitation() === true;
+
         // ❗❗ EL ASUNTO, CON EL DATO DELANTE (`#506`). Medido antes: «Completa los datos de tu
         // reserva «Cumpleaños Jump» · R-7MN4PK» son 61 caracteres y en el corte de ~35 de un móvil
         // no entraba ni el producto ni el código: se leía sólo la instrucción.
@@ -53,12 +64,23 @@ class GuestFormRequest extends Notification implements ShouldQueue
             ? DisplayTime::dayLabel($this->reservation->slot->date)
             : null;
 
+        // ⚠️⚠️ **El ASUNTO y la línea de adelanto NO cambian con la invitación, y es a propósito**:
+        // `MailInboxLineTest` averigua qué grupo del diccionario gobierna cada correo escaneando la
+        // llamada de la cabecera y quedándose con su PRIMER argumento, que tiene que ser una cadena
+        // literal; un grupo elegido por una variable dejaría a este correo fuera del censo —y con él
+        // el tope de 85 caracteres, los tres idiomas y el solape con el asunto—. Lo que cambia es el
+        // CUERPO y la llamada a la acción; la bandeja sigue diciendo lo mismo, que además sigue
+        // siendo verdad: hacen falta los datos de los invitados.
+        //
+        // ⚠️ Y por eso esta nota **no escribe esa llamada entre comillas**: el escáner es un `grep` y
+        // se quedaría con el ejemplo del comentario en vez de con el código. Es `#553` otra vez —una
+        // aserción por subcadena acusa al texto que la nombra—, ahora del lado del censo.
         $message = (new BrandedMailMessage)
             ->subject($dia !== null
                 ? __('emails.guest_form.subject', ['day' => $dia, 'code' => $code])
                 : __('emails.guest_form.subject_no_date', ['code' => $code]))
-            ->line(__('emails.guest_form.intro', ['product' => $product, 'code' => $code]))
-            ->line(__('emails.guest_form.body'));
+            ->line(__($invita ? 'emails.guest_form.intro_invite' : 'emails.guest_form.intro', ['product' => $product, 'code' => $code]))
+            ->line(__($invita ? 'emails.guest_form.body_invite' : 'emails.guest_form.body'));
 
         // LA CABECERA EN TINTA (`#503`). ⚠️ SIN «Dónde»: este correo no habla de llegar al parque,
         // habla de rellenar una ficha — la dirección aquí es ruido. Y sin tarjeta de producto: el
@@ -78,12 +100,24 @@ class GuestFormRequest extends Notification implements ShouldQueue
             $message->notice(__('emails.guest_form.notice_title'), __('emails.guest_form.extras'));
         }
 
+        // Fuente ÚNICA del enlace firmado (compartida con el botón «Copiar enlace» del panel).
+        $url = $this->reservation->guestFormSignedUrl();
+
         return $message
             ->action(
-                __('emails.guest_form.action'),
-                // Fuente ÚNICA del enlace firmado (compartida con el botón «Copiar enlace» del panel).
-                $this->reservation->guestFormSignedUrl(),
+                __($invita ? 'emails.guest_form.action_invite' : 'emails.guest_form.action'),
+                // ⚠️ **El ancla NO es un parámetro**: un `?algo=` pegado a una URL ya firmada la
+                // invalida —la firma cubre la query—, pero un `#fragmento` **no se envía al
+                // servidor**, así que la firma sigue siendo la misma. Lo que gana es que el
+                // anfitrión aterriza EN el bloque: medido en la sonda de la T6·1, en un teléfono
+                // empieza por debajo de los 844 px y sin esto hay que buscarlo bajando.
+                $invita ? $url.'#gf-invite' : $url,
             )
-            ->line(__('emails.guest_form.outro'));
+            // ⚠️ No lleva un segundo botón, y no es por ahorrar: el destino es **la misma página**
+            // —el bloque de la invitación va arriba y el formulario justo debajo (§4.7)—, así que
+            // «Rellenarlo yo» es una FRASE, no otro enlace. Un botón fantasma exigiría además un
+            // componente de correo nuevo, y en esta casa todo componente nace por partida doble
+            // (`html/` y `text/`) o el envío revienta.
+            ->line(__($invita ? 'emails.guest_form.outro_invite' : 'emails.guest_form.outro'));
     }
 }

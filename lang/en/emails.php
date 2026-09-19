@@ -124,6 +124,12 @@ return [
         'badge' => 'One thing left',
         'headline' => 'Who\'s coming to the party?',
         'notice_title' => 'And if you like, extras',
+        // With the digital invitation (T7·1). The subject and preheader have no variant on purpose:
+        // the inbox census reads the group from a literal string. Only the body and the call change.
+        'intro_invite' => 'Your :product booking (no. :code) is confirmed! And you do not have to fill it all in yourself: share the invitation and let each family tell you whether they are coming and their child’s name.',
+        'body_invite' => 'Whatever they reply shows up in your form, and you decide what to keep. You can keep editing it until the day of the party.',
+        'action_invite' => 'Share the invitation',
+        'outro_invite' => 'If you would rather fill it in by hand, it is the same page: the form sits right below the invitation. You can also get there from "My bookings". Thank you!',
     ],
     'order_after_expiration' => [
         'subject' => 'Your payment came through · :code',

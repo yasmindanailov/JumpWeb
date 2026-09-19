@@ -133,6 +133,16 @@ return [
         'badge' => 'Nos falta un dato',
         'headline' => '¿Quién viene a la fiesta?',
         'notice_title' => 'Y si quieres, extras',
+        // ── CON INVITACIÓN DIGITAL (T7·1, `specs/celebracion-e-invitacion.md` §4.9) ───────────────
+        // ⚠️ El asunto, la línea de adelanto, la chapa y el titular NO tienen versión: el censo de la
+        // bandeja lee el grupo de una cadena literal, y uno elegido por variable se quedaría fuera.
+        // Lo que cambia es el cuerpo y la llamada — repartir el enlace, no teclear veinte nombres.
+        'intro_invite' => '¡Tu reserva «:product» (nº :code) está confirmada! Y no tienes que rellenarlo todo tú: reparte la invitación y que cada familia te diga si viene y cómo se llama su hijo.',
+        'body_invite' => 'Lo que contesten aparece en tu formulario y tú decides qué apuntas. Puedes seguir editándolo cuando quieras hasta el día de la fiesta.',
+        'action_invite' => 'Compartir la invitación',
+        // ⚠️ «Rellenarlo yo» es una FRASE y no otro botón: el destino es la misma página — el bloque
+        // de la invitación arriba y el formulario justo debajo.
+        'outro_invite' => 'Si prefieres rellenarlo a mano, es la misma página: el formulario está justo debajo de la invitación. También puedes entrar desde «Mis reservas». ¡Gracias!',
     ],
     'order_after_expiration' => [
         'subject' => 'Tu pago llegó bien · :code',

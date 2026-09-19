@@ -124,6 +124,13 @@ return [
         'badge' => 'Il manque une donnée',
         'headline' => 'Qui vient à la fête ?',
         'notice_title' => 'Et si vous voulez, des extras',
+        // Avec l'invitation numérique (T7·1). L'objet et la ligne d'aperçu n'ont pas de variante :
+        // le recensement de la boîte lit le groupe dans une chaîne littérale. Seuls le corps et
+        // l'appel à l'action changent.
+        'intro_invite' => 'Ta réservation « :product » (n° :code) est confirmée ! Et tu n’as pas à tout remplir toi-même : partage l’invitation et laisse chaque famille te dire si elle vient et le prénom de son enfant.',
+        'body_invite' => 'Ce qu’ils répondent apparaît dans ton formulaire et c’est toi qui décides quoi noter. Tu peux le modifier jusqu’au jour de la fête.',
+        'action_invite' => 'Partager l’invitation',
+        'outro_invite' => 'Si tu préfères le remplir à la main, c’est la même page : le formulaire est juste en dessous de l’invitation. Tu peux aussi y aller depuis « Mes réservations ». Merci !',
     ],
     'order_after_expiration' => [
         'subject' => 'Ton paiement est bien arrivé · :code',

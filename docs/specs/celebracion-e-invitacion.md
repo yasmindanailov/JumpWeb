@@ -1818,7 +1818,7 @@ molde de correo no se toca, se usa.
 
 | | Qué | Por qué corta ahí |
 |---|---|---|
-| **T7·1** | **`GuestFormRequest` rehecho**: si el producto tiene invitación, el primario es «Compartir la invitación» y el fantasma «Rellenarlo yo» | **Un correo que ya existe y ya se envía**: sin migración, sin comando y sin censo nuevo. Es la mitad barata y la que el cliente ve primero |
+| **T7·1** ✅ | **`GuestFormRequest` rehecho**: si el producto tiene invitación, la llamada es «Compartir la invitación» — **en el árbol** (`#715`, §10.15) | **Un correo que ya existe y ya se envía**: sin migración, sin comando y sin censo nuevo. Es la mitad barata y la que el cliente ve primero |
 | **T7·2a** | **El LECTOR de «qué queda por hacer»** de una reserva: fichas incompletas, respuestas por repasar, plazas de menor sin resolver y saldo a pagar en el parque | Es **dominio y no correo**, y cruza a Identity (las firmas) — así que va por el contrato, como `PartyGuests` (§4.5·8). Con sus casos, y sin mandar nada todavía |
 | **T7·2b** | **El aviso de la víspera**: la notificación, el comando diario, el scheduler a las **18:00** y la marca idempotente | Es lo único que **manda correo de verdad** y lo único que pide **migración**. Se construye sobre un lector ya verde, que es lo que evita depurar las dos cosas a la vez |
 
@@ -1840,6 +1840,56 @@ molde de correo no se toca, se usa.
   es la **EDAD** del trabajo más viejo de `jobs`, nunca `failed_jobs` (`#115`).
 - ⏰ **La hora del comando es hora del PARQUE**, no del contenedor: `DisplayTime::timezone()`. Es la
   trampa que la T6·6 acaba de pagar en el sello del recordatorio (§10.13).
+
+### 10.15 T7·1 · EL CORREO QUE LLEVA AL FORMULARIO — EN EL ÁRBOL (2026-09-19, `DECISIONES #715`)
+
+❗❗ **Es el único correo que lleva al post-form**, así que es el único sitio donde se puede decir que
+la mitad del trabajo la hacen los padres. Pedirle al anfitrión que escriba veinte nombres cuando puede
+repartir un enlace sería construir la feature entera y no venderla — la misma razón por la que D15
+obligó a nombrar los extras en este mismo correo.
+
+**Lo que entra**
+
+- Con `TicketType::offersGuestInvitation()`, el cuerpo y la llamada cambian: «Compartir la invitación»
+  en vez de «Rellenar el formulario», y un intro que dice que no tiene que rellenarlo todo él.
+- El botón lleva el **ancla `#gf-invite`**: el anfitrión aterriza EN el bloque, que en un teléfono
+  empieza por debajo de los 844 px (medido en la sonda de la T6·1).
+- **Cuatro claves por idioma** (`intro_invite`, `body_invite`, `action_invite`, `outro_invite`) en los
+  tres, con su caso —y con el tercer parámetro de `Lang::has()`, sin el cual caería al respaldo—.
+
+**Lo que se decidió, y por qué**
+
+- ⚠️⚠️ **El asunto y la línea de adelanto NO tienen variante.** El censo de `MailInboxLineTest`
+  averigua qué grupo del diccionario gobierna cada correo escaneando la cabecera y quedándose con su
+  primer argumento, **que tiene que ser una cadena literal**: un grupo elegido por variable sacaría
+  este correo del censo, y con él el tope de 85 caracteres, los tres idiomas y el solape con el
+  asunto. Lo que se lee en la bandeja sigue siendo verdad: hacen falta los datos de los invitados.
+- ⚠️ **No hay segundo botón.** «Rellenarlo yo» es una **frase**, porque el destino es **la misma
+  página** —el bloque arriba y el formulario justo debajo (§4.7)—; un fantasma exigiría un componente
+  de correo nuevo, y en esa casa **todo componente nace por partida doble o el envío revienta**. Si el
+  owner lo quiere como botón, es una unidad aparte.
+- ⚠️ **El correo NO materializa la invitación**: pregunta al producto, no a `forReservation()`. Crearla
+  dentro de un job en cola le daría un enlace emitido antes de que él hubiera abierto nada. Es la
+  lección de `#712` en el panel, aplicada aquí.
+
+**Lo que enseñó construirla**
+
+- ⚠️⚠️ **Un COMENTARIO rompió el censo, y no es una hipótesis: pasó.** La nota que explicaba el escáner
+  escribía la llamada de cabecera **entre comillas** para ilustrarla, y como el escáner es un `grep`
+  que se queda con la primera del fichero, leyó el ejemplo en vez del código: `emails.guest_form` pasó
+  a ser un grupo inventado y **los 12 avisos de la bandeja salieron en rojo a la vez**. Es `#553` —una
+  aserción por subcadena acusa al texto que la nombra— del lado del inventario. ▶ El arnés lo deja
+  demostrado con una mutación que vuelve a meter el ejemplo.
+- ⚠️ **La combinación imposible se monta por el constructor de consultas.** El caso de «pack con el
+  interruptor y sin columna de nombre» no se puede crear por el modelo: el guard de `saving()` lanza.
+  Se monta con un `update()`, que es **el escenario real** contra el que `offersGuestInvitation()`
+  defiende —una importación, un `update()` a mano—; con `create()` el caso no existiría.
+
+**Verificación**: `GuestFormRequestInvitationTest` (6 casos, con el **CONTROL** del pack sin
+invitación y el instrumento afirmado —el enlace sin ancla abre 200—) · arnés
+`scripts/mutar-invitacion-t7-1.py` **8/8** · los dos correos renderizados y **enviados a Mailpit**
+para el ojo del owner · `MailInboxLineTest` sigue verde con sus 10 · Pint, Larastan y docs-check
+limpios · **sin migraciones y sin tocar dinero ni aforo**.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
