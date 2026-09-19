@@ -17,8 +17,10 @@
   del producto. Medido: las vistas usan **29 componentes distintos**. Se acepta a sabiendas y con fecha.
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
-- **Estado**: ✅ aprobada (`#647`), **sin código**. La T2 va partida: **T2a** = mecanismo + plantilla +
-  `/contacto`; **T2b** = el resto de las vistas. `instancia-playjump` nace como repo.
+- **Estado**: ✅ aprobada (`#647`). **T2a HECHA**: el mecanismo, `SEC-12`, la `plantilla/` y `/contacto`
+  resolviendo por la instancia. ⚠️ **La vista NO se mudó**, y es lo que la T2a descubrió (§4.5): mudarla
+  deja sus 14 pruebas sin sujeto y el gate sale verde en una máquina y rojo en otra. **T2b empieza
+  eligiendo dónde viven las pruebas de la landing**, no moviendo ficheros.
 - **Invariantes**: **`SEC-12` es de aquí** (la ruta de vistas) y no se relaja. Ninguno más cambia.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-19)
@@ -123,13 +125,33 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 ⚠️ La plantilla es **producto** (un mecanismo, igual para todos); lo que salga de ella es **instancia**.
 
-### 4.4 Qué se muda y qué no, en la T2
+### 4.4 Qué se muda y qué no
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
 | `home.blade.php` y `pages/*.blade.php` | Las **rutas** y sus nombres (el sitemap, §1.4) |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
+
+### 4.5 ⚠️⚠️ Mudar una vista es mudar sus PRUEBAS, y eso no estaba diseñado
+
+**Medido el 19-09, intentándolo con `/contacto`**: con la vista fuera del producto, **9 de los 14 casos de
+`ContactPageTest` fallan** en cualquier máquina que no tenga el paquete. Y no hay `.env.testing` ni variable
+en `phpunit.xml`, así que la suite lee el `.env` de cada máquina: el gate habría salido **verde en el
+ordenador que tiene el paquete y rojo en el otro**, que es la peor forma de romper algo.
+
+No es un detalle de fontanería: **el producto no puede probar una página que ya no es suya**, y la instancia
+no es una app PHP con suite propia. Las salidas posibles, que la T2b tiene que elegir con su coste delante:
+
+1. **Las pruebas se van con la vista** y la instancia monta su CI contra un checkout del producto.
+2. **El producto trae un paquete de instancia de PRUEBA** en sus fixtures y la suite lo usa: prueba el
+   mecanismo siempre, y el contenido de la landing deja de ser asunto suyo.
+3. **Las pruebas de contenido se retiran** y lo que queda en el producto es la huella de maquetación, que ya
+   cubre las 34 pantallas y no mira el marcado por dentro.
+
+▶ Hasta que eso se decida, la T2a deja **el mecanismo vivo y la vista en su sitio**: `/contacto` resuelve
+`instancia::contacto` si el paquete la trae, y la del producto si no. Una instancia ya puede vestir esa
+página; el producto sigue bastándose solo.
 
 ## 5. Impacto en invariantes
 

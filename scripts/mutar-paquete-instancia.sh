@@ -72,6 +72,14 @@ mutar "se sirve SIEMPRE la vista de la instancia, exista o no (y el respaldo del
   "$VISTAS" "        return \$this->vistas->exists(\$nombre) ? \$nombre : \$respaldo;" \
   "        return \$nombre;"
 
+# ── El contrato: avisa, no tumba ───────────────────────────────────────────────────────────────
+mutar "un contrato viejo DEJA LA WEB EN BLANCO en vez de avisar (una landing menos por un número)" \
+  "$VISTAS" "            Log::warning('instancia: el paquete está hecho para otra versión del producto', [
+                'paquete' => (int) \$manifiesto['contrato'],
+                'producto' => self::CONTRATO,
+            ]);" \
+  "            throw new \RuntimeException('contrato de instancia incompatible');"
+
 echo
 echo "mutaciones: $muerden/$total muerden"
 [ "$muerden" -eq "$total" ]

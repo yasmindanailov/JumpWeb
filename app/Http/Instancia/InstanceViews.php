@@ -35,6 +35,18 @@ class InstanceViews
     /** La subcarpeta del paquete donde viven las vistas. El resto del paquete no es código de vistas. */
     public const SUBCARPETA = 'web';
 
+    /** El fichero donde el paquete declara con qué producto está hecho para funcionar. */
+    public const MANIFIESTO = 'instancia.json';
+
+    /**
+     * **La versión del CONTRATO DE INSTANCIA que sirve este producto.**
+     *
+     * Sube cuando un paquete existente deja de valer tal cual: cambia el nombre de una carpeta, una vista
+     * pasa a recibir otras variables, se retira un componente que las landings usaban. Es el MAYOR de
+     * `producto-e-instancias.md` §4.1, y por eso NO sube al añadir cosas: añadir no rompe a nadie.
+     */
+    public const CONTRATO = 1;
+
     public function __construct(private readonly ViewFactory $vistas) {}
 
     /**
@@ -62,9 +74,44 @@ class InstanceViews
             return null;
         }
 
+        $this->avisarSiElContratoNoCuadra($raiz);
+
         $this->vistas->addNamespace(self::NAMESPACE, $web);
 
         return $web;
+    }
+
+    /**
+     * **El contrato del paquete contra el del producto: avisa, NO tumba** (spec §4.3).
+     *
+     * ⚠️⚠️ Y esto es deliberado, no una tibieza: negarse a servir una landing porque su manifiesto dice `1`
+     * y el producto va por `2` deja la web del cliente EN BLANCO por un número, justo después de un
+     * despliegue y sin que el visitante tenga la culpa de nada. El aviso va al log, donde lo ve quien puede
+     * arreglarlo; la web sigue en pie mientras tanto.
+     *
+     * ⚠️ Un manifiesto ausente o ilegible tampoco tumba nada: hay paquetes hechos a mano y eso no es un
+     * error, es una instalación que todavía no lo declara.
+     */
+    private function avisarSiElContratoNoCuadra(string $raiz): void
+    {
+        $fichero = $raiz.DIRECTORY_SEPARATOR.self::MANIFIESTO;
+
+        if (! is_file($fichero)) {
+            return;
+        }
+
+        $manifiesto = json_decode((string) file_get_contents($fichero), true);
+
+        if (! is_array($manifiesto) || ! isset($manifiesto['contrato'])) {
+            return;
+        }
+
+        if ((int) $manifiesto['contrato'] !== self::CONTRATO) {
+            Log::warning('instancia: el paquete está hecho para otra versión del producto', [
+                'paquete' => (int) $manifiesto['contrato'],
+                'producto' => self::CONTRATO,
+            ]);
+        }
     }
 
     /**

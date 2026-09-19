@@ -19,6 +19,15 @@ services:
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
         volumes:
             - '.:/var/www/html'
+            # **Los paquetes de INSTANCIA** (`specs/paquete-de-instancia.md`, `SEC-12`). Van FUERA del
+            # árbol del producto —Blade compila a PHP, así que `web/` es código: dentro de `public/` se
+            # serviría en crudo y en el resto del árbol lo borraría el despliegue—, y por eso Sail no los
+            # ve con el montaje de arriba: solo monta `.`.
+            # ⚠️ Es un montaje GENÉRICO, no de un cliente: una carpeta `instancias/` al lado del repo con
+            # todos los paquetes locales. Montar `..` entero expondría también el repo del cliente origen.
+            # Si la carpeta no existe, Docker la crea vacía y no pasa nada: sin paquete el producto sirve
+            # su respaldo.
+            - '../instancias:/var/www/instancias'
         networks:
             - sail
         depends_on:

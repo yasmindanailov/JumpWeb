@@ -5,6 +5,7 @@ namespace Tests\Feature\Instancia;
 use App\Http\Instancia\InstanceViews;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 /**
@@ -190,5 +191,34 @@ class InstanceViewPathTest extends TestCase
         $this->assertSame('instancia::contacto', $vistas->pick('contacto', 'pages.contact'));
         // Y lo que la instancia NO trae sigue saliendo del producto, sin que nadie tenga que elegirlo.
         $this->assertSame('pages.pricing', $vistas->pick('precios', 'pages.pricing'));
+    }
+
+    /**
+     * **Un contrato que no cuadra AVISA, pero la web sigue en pie.**
+     *
+     * ⚠️⚠️ Es lo contrario de lo que pide el instinto, y por eso tiene caso propio: negarse a servir la
+     * landing porque el manifiesto dice `1` y el producto va por `2` dejaría la web del cliente EN BLANCO
+     * por un número, justo después de un despliegue. El aviso va al log, que es donde lo ve quien puede
+     * arreglarlo.
+     */
+    public function test_a_mismatched_contract_warns_but_still_serves(): void
+    {
+        File::put($this->paquete.'/'.InstanceViews::SUBCARPETA.'/contacto.blade.php', 'la de la instancia');
+        File::put(
+            $this->paquete.'/'.InstanceViews::MANIFIESTO,
+            json_encode(['slug' => 'prueba', 'contrato' => InstanceViews::CONTRATO + 1]),
+        );
+
+        Log::spy();
+        config(['instancia.ruta' => $this->paquete]);
+
+        $vistas = app(InstanceViews::class);
+
+        $this->assertNotNull($vistas->registrar(), 'un contrato viejo no puede dejar la web sin landing');
+        $this->assertSame('instancia::contacto', $vistas->pick('contacto', 'pages.contact'));
+
+        Log::shouldHaveReceived('warning')
+            ->withArgs(fn (string $mensaje): bool => str_contains($mensaje, 'otra versión del producto'))
+            ->once();
     }
 }

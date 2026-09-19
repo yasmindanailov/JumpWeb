@@ -6,12 +6,15 @@ use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Turnstile;
+use App\Http\Instancia\InstanceViews;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
     /**
      * Los temas que el desplegable «¿Sobre qué?» ofrece (`DECISIONES #535`).
      *
@@ -33,7 +36,18 @@ class ContactController extends Controller
          * ninguna, el ancla no existe y ofrecerla sería un enlace que no lleva a ninguna parte.
          * ⚠️ `exists()` y no `get()`: aquí solo hace falta saber si hay alguna.
          */
-        return view('pages.contact', [
+        /*
+         * **La primera página que una INSTANCIA puede vestir por su cuenta** (F5 · T2a, `#647`): si su
+         * paquete trae `web/contacto.blade.php`, se sirve la suya; si no, la del producto.
+         *
+         * ⚠️⚠️ **La vista TODAVÍA no se ha mudado, y eso es una decisión medida, no un a medias.** Al
+         * intentarlo apareció que las pruebas de la landing se quedan sin sujeto: con la vista fuera,
+         * **9 de los 14 casos de `ContactPageTest` fallan** en cualquier máquina que no tenga el
+         * paquete —medido el 19-09—, y el gate saldría verde aquí y rojo en el otro ordenador. Mudar
+         * una vista es mudar también sus pruebas, y eso lo tiene que diseñar la T2b antes de tocar
+         * nada. Mientras tanto el mecanismo está vivo y el producto se basta solo.
+         */
+        return view($this->instancia->pick('contacto', 'pages.contact'), [
             'answers' => SiteDestinations::answersItself(
                 withFaq: Faq::where('is_active', true)->exists(),
             ),

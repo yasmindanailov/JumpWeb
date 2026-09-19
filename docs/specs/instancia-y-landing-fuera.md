@@ -313,6 +313,25 @@ no una valoración que el negocio declare—.
 
 **Medido**: `SocialProofFactsTest` (4), `scripts/mutar-menu-de-hechos.sh` **38/38**.
 
+### 4.1.bis · La RECETA de un plato nuevo
+
+Siete tandas destilan esto. Vale para **cualquier** recurso público que se añada después, dentro de F5 o
+fuera de ella, y está aquí —y no en un fichero de carril— porque una receta no caduca con la tanda:
+
+- La **lista blanca se declara EN el recurso** y se lee por `PublicFacts`; `Setting::` a pelo lo prohíbe
+  `PublicFactsBoundaryTest`, que barre los 37 recursos de la API **por carpeta, no por nombre**.
+- **Lo que la instalación no rellenó NO viaja**, ni como `""` —y «rellenado y BORRADO» es `''`, que cuenta
+  como no rellenado—. Cada objeto se emite con `(object)`: un array vacío de PHP sale `[]`, y el tipo de la
+  respuesta no puede depender de si alguien rellenó el panel. ⚠️ En la RAÍZ eso no basta: `resolve()` hace
+  `(array)` de lo que devuelva `toArray()`, así que el tipo del sobre vacío se fija en la ENTREGA (`#646`).
+- **Se traduce → `?lang=` obligatorio**, y el respaldo lo resuelve el servidor, nunca el mapa de idiomas.
+  Lo que no se traduce **no lo lleva** (la cifra de prueba social es el caso).
+- **Se cachea según CAMBIE**: lo que toca el panel, 5 min; lo que cambia solo (el «abierto ahora»), 1 min.
+- **Lo apagado en el panel no se sirve**: una norma, una página o un producto desactivados están retirados.
+- **Contrato OpenAPI en el mismo commit** (sube el MENOR) + caso en `ApiContractTest` + su mutación en el
+  arnés. ⚠️ `ApiContractTest` exige `required` en TODO campo: lo opcional se declara en
+  `OPTIONAL_BY_DESIGN` **con su porqué**, y la comprobación baja también a los `items` de las listas.
+
 ▶ **El MENÚ DE HECHOS queda servido.** Lo que sigue en F5 es la **T2**: el paquete de la instancia.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),

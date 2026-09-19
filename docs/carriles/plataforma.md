@@ -56,14 +56,18 @@
    **ficha** en `/catalog/zones` y `/catalog/products` · y `/social-proof`. Sus porqués están en la spec
    §4.1; aquí queda **lo que hace falta para lo siguiente**.
 
-   ▶ **T2a EN CURSO** (`specs/paquete-de-instancia.md` ✅, `#647`, que partió la T2 en T2a+T2b).
-   **HECHO el mecanismo**: `config/instancia.php`, `Http\Instancia\InstanceViews` (namespace `instancia::`
-   y las tres puertas), su registro en `AppServiceProvider::boot`, el invariante **`SEC-12`** con seis
-   casos y `scripts/mutar-paquete-instancia.sh` **4/4**.
-   ▶ **QUEDA de la T2a**: la `plantilla/`, mudar `/contacto` al paquete, el repo `instancia-playjump` y
-   comparar sitemap + huella. Luego **T2b**: el resto de las vistas.
-   ⚠️⚠️ **Blade compila a PHP**: la vía B no es «servir ficheros», es ejecutar código desde fuera del repo.
-   Y el sitemap sale de **nombres de ruta**, así que las rutas se quedan en `main`; solo se mudan vistas.
+   ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): `config/instancia.php`,
+   `Http\Instancia\InstanceViews` (namespace `instancia::` y sus tres puertas), el registro en el arranque,
+   el invariante **`SEC-12`** con siete casos y `scripts/mutar-paquete-instancia.sh` **5/5**, la
+   `plantilla/` del producto y el repo LOCAL `~/proyectos/instancias/instancia-playjump` (sin remoto: la
+   org `jumpweb` la crea el owner). `/contacto` ya resuelve por la instancia si su paquete la trae.
+   ⚠️⚠️ **LO QUE DESCUBRIÓ LA T2a Y ORDENA LA T2b**: la vista **NO se mudó**. Con ella fuera, **9 de los
+   14 casos de `ContactPageTest` fallan** en una máquina sin paquete —no hay `.env.testing`, la suite lee
+   el `.env` de cada una—, o sea gate verde aquí y ROJO en el otro ordenador. **Mudar una vista es mudar
+   sus pruebas**: la T2b empieza eligiendo dónde viven (spec §4.5, tres salidas con su coste), no moviendo
+   ficheros. Medido con la suite entera en las dos condiciones: 5186 verdes con paquete y sin él.
+   ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
+   genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**.
 
    ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
    propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).
@@ -72,21 +76,13 @@
    `ConvertEmptyStringsToNull` convierte un `""` en `null`, así que **un cliente que mande cadena vacía
    recibe 422**. En la web lo arreglaron con `nullable`; en la API es contrato y lo cambio yo, con su caso.
 
-   ⚠️⚠️ **De la ficha**: la foto de un PRODUCTO se sube al disco `uploads` (gitignorado, fuera del
-   `rsync --delete`) y la de una ZONA es ruta a `public/` heredada de junio; **las dos salen como URL
-   absoluta** por sus `imageUrl()`, así que el contrato no distingue. Medido y SIN tocar: **35 imágenes del
-   cliente versionadas en `main`** (`public/images/attractions/`), a las que apuntan las 3 zonas con foto.
-   Mudarlas es material del cliente y va con la T2, no antes.
+   ⚠️⚠️ **De la ficha** (el porqué en la spec §4.1): la foto de un PRODUCTO se SUBE al disco `uploads` y la
+   de una ZONA es ruta a `public/` heredada; las dos salen como URL absoluta. Medido y SIN tocar: **35
+   imágenes del cliente versionadas en `main`**, a las que apuntan las 3 zonas con foto. Van con la T2.
 
-   **RECETA de un plato nuevo**, que es lo que costó aprender:
-   - La lista blanca se declara EN el recurso y se lee por `PublicFacts`; `Setting::` a pelo lo prohíbe
-     `PublicFactsBoundaryTest`, que barre los 37 recursos de la API (no por nombre: por carpeta).
-   - **Lo que la instalación no rellenó NO viaja**, ni como `""`. Y cada objeto se emite con `(object)`: un
-     array vacío de PHP sale `[]` y el tipo no puede depender de si alguien rellenó el panel.
-   - **Se traduce → `?lang=` obligatorio** y el respaldo lo resuelve el servidor (nunca el mapa de idiomas).
-   - **Se cachea según CAMBIE**: lo que toca el panel, 5 min; lo que cambia solo (el «abierto ahora»), 1 min.
-   - **Lo apagado en el panel no se sirve**: una norma, una página o un producto desactivados están retirados.
-   - Contrato OpenAPI en el mismo commit (sube el MENOR) + caso en `ApiContractTest` + su mutación en el arnés.
+   ▶ **La RECETA de un plato nuevo** (lista blanca en el recurso, lo no rellenado no viaja, `?lang=` si se
+   traduce, caché según cambie, lo apagado no se sirve, contrato + caso + mutación en el mismo commit) se
+   mudó a la spec, **§4.1.bis**: vale para cualquier recurso público y allí no caduca con la tanda.
    ⚠️ **`ApiContractTest` exige `required` en TODO campo**: lo opcional se declara en `OPTIONAL_BY_DESIGN` con
    su porqué, y ahora también baja a los `items` de las listas.
 
@@ -220,14 +216,10 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
 ## Buzón
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-19)
-- ❗❗ **F4 CERRADA: el cajón ya es un PAQUETE y varias cosas tuyas cambiaron de sitio.** Entré en tus ficheros
+- ❗❗ **F4 CERRADA: el cajón es un PAQUETE y varias cosas tuyas cambiaron de sitio.** Entré en tus ficheros
   por orden del owner (`#633`) y solo para el empaquetado. **Dónde vive ahora cada cosa lo dice
-  `specs/cajon-empaquetable.md` §0, y las seis trampas su §4.8** — ahí no caduca, aquí sí. Lo que no puedes
-  no saber: un rótulo del cajón va en `Http\Sidebar\SidebarBoot` y no en el layout · abrir/cerrar en
-  `cajon/controller.js` y la carcasa en `cajon/shell.js`, publicando por `sidebar/host-bridge.js` · lo que
-  solo use una página ajena, en `cajon/standalone.js` (presupuesto de 26 kB) · la raíz no conoce los pasos
-  del embudo · y el estilo se toca en `site.css` y se REGENERA `public/css/cajon.css`
-  (`python3 scripts/hoja-del-cajon.py --aplicar`). Medido: landing idéntica píxel a píxel, sonda 42/42.
+  `specs/cajon-empaquetable.md` §0, y las seis trampas su §4.8**: ahí no caduca y aquí sí, así que se lee
+  de ahí antes de tocar el cajón. Medido: landing idéntica píxel a píxel, sonda 42/42.
 - ❗ **Si tocas un `.vue`, `npm run build:ssr` antes de la suite**: si no, `SidebarDomContractTest` saca 36
   rojos que no son de tu código (el SSR se queda viejo). Le pasa a los arneses de mutación también.
 
@@ -236,6 +228,12 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   demuestra) · leído el alcance de `#708`→`#711`, va al próximo despliegue · `FROZEN_ERRORS` a 458, bien
   bajado · y **el 422 del `InvitationHostController` lo cojo yo**: tu diagnóstico es correcto, es contrato
   de API, y está anotado arriba en «por dónde retomar». Gracias por medirlo y no arreglarlo a ciegas.
+
+### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
+- ⚠️ **`compose.yaml` gana un montaje** (F5 · T2a, `#647`): `../instancias:/var/www/instancias`, para los
+  paquetes de instancia, que por `SEC-12` viven FUERA del árbol. **Te obliga a recrear el contenedor** la
+  próxima vez que hagas `docker compose up -d` — y con él se pierde el Chromium de la sonda (`/sonda` §1).
+  Si la carpeta `../instancias` no existe, Docker la crea vacía y no pasa nada.
 
 ### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
 - ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`):
