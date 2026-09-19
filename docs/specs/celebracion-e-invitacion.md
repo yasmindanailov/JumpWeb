@@ -1489,6 +1489,25 @@ lista llena acababa en «no quedan plazas» — exactamente el fallo que `#576` 
 `scripts/mutar-flujo-invitacion.py` **7/7** · los dos estados del recibo y la hoja sin prerrelleno,
 vistos en navegador a 390 y 1280 px.
 
+### 10.7 T6 · el ATERRIZAJE — SE PARTE EN SEIS UNIDADES VERDES (sin empezar)
+
+Es la tanda que **enciende la feature**: hasta que el anfitrión pueda ver y adoptar lo que contestan los
+padres, la invitación no puede estar encendida en producción. Como una sola tanda son varias sesiones, y
+el corte no es arbitrario — cada unidad deja la pantalla en un estado que se puede empujar y enseñar.
+
+| | Qué | Por qué corta ahí |
+|---|---|---|
+| **T6·1** | El **bloque de la invitación** en el post-form (§4.7): compartir, personalizar, resumen y el plazo escrito como fecha | Escribe **solo `party_invitations`**, así que no roza el testigo de las fichas. Es lo primero que necesita un anfitrión: repartir el enlace |
+| **T6·2** | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
+| **T6·3** | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` | ⚠️ Es la que puede acabar tocando `GuestCountAdjuster`: si lo toca, el push pide **`VERIFY_CONC=1`** con sus verificadores (§6) |
+| **T6·4** | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
+| **T6·5** | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
+| **T6·6** | **«Escribir el recordatorio»**: compone el texto, lo copia y guarda `reminded_at`/`reminded_count` | **No envía nada**, así que no toca correos ni depende de la T7 |
+
+⚠️ **Antes de empezar**: `POSTFORM-INVITADOS.md` es la doc de esta tanda (T1, T2 y T6) · el armazón de la
+T2 **no se toca** · la marca de adopción viaja fuera de las filas (§1.3·13, §7.2·R3) · arnés de mutación
+y sonda a 390 y 1280 en esta tanda (§6).
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«Vestir el formulario de CELEBRACIÓN o el JUSTIFICANTE · la INVITACIÓN digital de un cumpleaños · el «sí / no podemos» de un padre · el pegado de nombres · «¿vas tú con él?»»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
