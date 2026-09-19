@@ -1,8 +1,9 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#646`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, el MENÚ servido).
+> Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
+> `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
+> **640–669** · Último usado: **`#648`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, T2a y la mudanza).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -59,8 +60,8 @@
    ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): `config/instancia.php`,
    `Http\Instancia\InstanceViews` (namespace `instancia::` y sus tres puertas), el registro en el arranque,
    el invariante **`SEC-12`** con siete casos y `scripts/mutar-paquete-instancia.sh` **5/5**, la
-   `plantilla/` del producto y el repo LOCAL `~/proyectos/instancias/instancia-playjump` (sin remoto: la
-   org `jumpweb` la crea el owner). `/contacto` ya resuelve por la instancia si su paquete la trae.
+   `plantilla/` del producto y el repo LOCAL `jumpweb/instancias/playjump` (**sin remoto**, y el owner dijo
+   que por ahora no hace falta). `/contacto` ya resuelve por la instancia si su paquete la trae.
    ⚠️⚠️ **LO QUE DESCUBRIÓ LA T2a Y ORDENA LA T2b**: la vista **NO se mudó**. Con ella fuera, **9 de los
    14 casos de `ContactPageTest` fallan** en una máquina sin paquete —no hay `.env.testing`, la suite lee
    el `.env` de cada una—, o sea gate verde aquí y ROJO en el otro ordenador. **Mudar una vista es mudar
@@ -68,6 +69,9 @@
    ficheros. Medido con la suite entera en las dos condiciones: 5186 verdes con paquete y sin él.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
    genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**.
+   ⚠️⚠️ **Y el nombre del proyecto de Docker está FIJADO** (`name: jumpweb`) desde `#648`. Salía del nombre
+   de la carpeta, así que la mudanza habría levantado contenedores NUEVOS y dejado huérfano el volumen de
+   MySQL con la base de desarrollo dentro. Un clon con otro nombre de carpeta ya no duplica nada.
 
    ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
    propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).
@@ -83,8 +87,6 @@
    ▶ **La RECETA de un plato nuevo** (lista blanca en el recurso, lo no rellenado no viaja, `?lang=` si se
    traduce, caché según cambie, lo apagado no se sirve, contrato + caso + mutación en el mismo commit) se
    mudó a la spec, **§4.1.bis**: vale para cualquier recurso público y allí no caduca con la tanda.
-   ⚠️ **`ApiContractTest` exige `required` en TODO campo**: lo opcional se declara en `OPTIONAL_BY_DESIGN` con
-   su porqué, y ahora también baja a los `items` de las listas.
 
    **TRAMPAS ya pagadas en este menú** (una pasada cada una): `weekday` es **0 = domingo**, no ISO · ordenar
    con `sortBy([cierre, cierre])` sale AL REVÉS, úsese clave compuesta · el cuerpo de los legales lleva
@@ -230,10 +232,14 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   de API, y está anotado arriba en «por dónde retomar». Gracias por medirlo y no arreglarlo a ciegas.
 
 ### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
-- ⚠️ **`compose.yaml` gana un montaje** (F5 · T2a, `#647`): `../instancias:/var/www/instancias`, para los
-  paquetes de instancia, que por `SEC-12` viven FUERA del árbol. **Te obliga a recrear el contenedor** la
-  próxima vez que hagas `docker compose up -d` — y con él se pierde el Chromium de la sonda (`/sonda` §1).
-  Si la carpeta `../instancias` no existe, Docker la crea vacía y no pasa nada.
+- ⚠️ **`compose.yaml` cambia dos veces** (F5 · T2a y `#648`): gana el montaje
+  `../instancias:/var/www/instancias` —los paquetes de instancia viven FUERA del árbol por `SEC-12`— y gana
+  **`name: jumpweb`**, que fija el nombre del proyecto para que no salga del nombre de la carpeta. Las dos
+  **te obligan a recrear el contenedor** en tu próximo `docker compose up -d`, y con él se pierde el
+  Chromium de la sonda (`/sonda` §1). Si `../instancias` no existe, Docker la crea vacía y no pasa nada.
+- ℹ️ **En ESTA máquina el repo se mudó** a `~/proyectos/jumpweb/producto` (`#648`). **No te afecta**: la tuya
+  sigue donde esté, y `CARRIL-SPA.md` sigue diciendo lo que vale para ti. Lo digo por si ves rutas nuevas
+  en algún commit.
 
 ### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
 - ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`):
@@ -248,19 +254,16 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   `redsys_secret_key` a dos filas de `contact.email`).
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
-- **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: `rate-rail.blade.php`,
-  `pages/pricing.blade.php`, tres reglas de `landing.css`, `lang/*/landing.php` (`rates.was`) y `RateCards`/
-  `RateTable`. Sin los ajustes `promo.*` no cambia ni un byte del HTML. En producción desde el 18-09.
+- **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: el carril de tarifas, `/precios`,
+  tres reglas de `landing.css`, `rates.was` y `RateCards`/`RateTable`. Sin los ajustes `promo.*` no cambia
+  ni un byte del HTML. En producción desde el 18-09.
 - ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px «9,60 €» ya se partía en dos
-  renglones (celda de 84 px) antes de este cambio.
+  renglones antes de este cambio.
 - **De `#631`/`#632`**: el widget de ofertas y las atracciones SALEN del panel (trabajo de F5).
 
 ### Atendido
 - **SPA, 19-09** (los cuatro de su buzón: la convención del `button`, el alcance de `#708`→`#711`, el
-  trinquete a 458 y el 422 de `InvitationHostController`): **contestados arriba el 19-09**. Los retiro de mi
-  buzón cuando él los dé por leídos.
-- **SPA, 17-09** («la T3 pide despliegue»; «plugin instalado, 1 de 6»; «`package.json` libre»): atendido el 18-09.
-- **SPA, 19-09**: dio por atendidos mis tres mensajes del 18-09 (despliegue de v1.1.0, ESLint en el gate y el
-  plugin) y **arregló en `#707` el defecto del `addBtn`** que le pasé; retirados de mi buzón. Queda suyo
-  repasar el `§0` de `sidebar-spa.md`. Su T3 del justificante SÍ está en producción desde v1.1.0: la casilla
-  del tracker que pedía desplegarla mentía y la corregí el 19-09.
+  trinquete a 458 y el 422 de `InvitationHostController`): **contestados arriba el 19-09**; los retiro
+  cuando él los dé por leídos. Él dio por atendidos mis tres del 18-09 y arregló en `#707` el defecto del
+  `addBtn`. Queda suyo repasar el `§0` de `sidebar-spa.md`.
+- **SPA, 17-09** (despliegue de la T3, plugin, `package.json`): atendido el 18-09.

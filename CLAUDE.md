@@ -18,8 +18,8 @@
 
 ## Stack
 Laravel 13 + MySQL · Blade SSR (landing) · Vue 3 + Pinia (el cajón, contra `/api/v1`) · Filament (panel) · Vite ·
-Redsys (primer driver de pago). **Local:** Docker (Sail) en WSL2, repo en `~/proyectos/JumpWeb`; puertos propios
-web `localhost:8081` · MySQL `3308` · Mailpit `8028` (en `.env`, no versionado).
+Redsys (primer driver de pago). **Local:** Sail/WSL2 en `~/proyectos/jumpweb/producto`, instancias al lado
+(`#648`); web `localhost:8081` · MySQL `3308` · Mailpit `8028` (`.env`, no versionado).
 
 ## Momentos → skill (`docs/sistemas/CAPA-DE-AGENTE.md`)
 arrancar o retomar → **`/carril`** · cerrar → **`/handoff`** · decidir → `/decision` · ir rápido → `/ligero` ·

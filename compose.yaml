@@ -1,3 +1,9 @@
+# ⚠️⚠️ **El nombre del proyecto, FIJADO y no derivado de la carpeta.** Sin esta línea, Docker lo saca del
+# nombre del directorio: el día que el repo se mueve o se clona con otro nombre, `docker compose up` levanta
+# un juego de contenedores NUEVO y deja los de antes huérfanos —con su volumen de MySQL, que es donde está la
+# base de datos de desarrollo—. Se fijó al mudar el repo a `jumpweb/producto/` (F5 · T2c).
+name: jumpweb
+
 services:
     laravel.test:
         build:
