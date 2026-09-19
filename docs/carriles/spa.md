@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#715`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#716`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -44,6 +44,8 @@
   T7» según la migración de la T4·1 — **se las quedó la T6**, y la T7 trae su propia marca.
 - ✅ **T7·1** (`#715`, §10.15): el correo del post-form pide **compartir** cuando el producto ofrece
   invitación, con el ancla `#gf-invite`. 6 casos · arnés 8/8 · los dos correos, en Mailpit.
+- ✅ **T7·2a** (`#716`, §10.16): `PendingWork` y `PendingBeforeVisit` — las cuatro cifras de lo que le
+  queda por hacer a una reserva, **sin mandar nada**. 13 casos · arnés **10/10**.
 - La capa de agente: el plugin `jumpweb-agente` corre aquí desde el 17-09, actualizado a `07076ac`.
 
 ## Por dónde retomar, en orden
@@ -65,11 +67,10 @@
 2. ❗ **LA TAREA: la T7 · los CORREOS de la celebración**, partida en tres por `#714` (spec §10.14).
    ✅ **T7·1 hecha** (`#715`, §10.15): con invitación la llamada del correo es «Compartir la
    invitación» y el botón lleva el ancla `#gf-invite`. Arnés 8/8; los dos correos, en Mailpit.
-   ▶ **Sigue la T7·2a**: el LECTOR de «qué queda por hacer» de una reserva —fichas incompletas
-   (`guestFormProgress()`), respuestas por repasar (`summaryFor()['pending']`), plazas de menor sin
-   resolver (`GuardianPlaces::freeIn()`, Identity → **por contrato**) y saldo del parque
-   (`OrderBook::$balance`, `KIND_PAY_AT_PARK`)—, con sus casos y **sin mandar nada todavía**.
-   ▶ Y después **T7·2b**: la notificación, el comando, el scheduler a las **18:00 del día antes**
+   ✅ **T7·2a hecha** (`#716`, §10.16): `PendingWork` + `PendingBeforeVisit` dan las cuatro cifras y
+   `any()`. 13 casos · arnés **10/10**. ⚠️ **No hizo falta contrato nuevo**: `ReservationPlacesTaken`
+   ya publicaba las plazas con dueño desde `#444`.
+   ▶ **Sigue la T7·2b**: la notificación, el comando, el scheduler a las **18:00 del día antes**
    (`[DECIDIDO owner]`, hora del PARQUE) y la marca idempotente, que **no reutiliza
    `reminded_at`/`reminded_count`** —se las quedó la T6·6— y por tanto **pide migración**.
    Inventario **25 → 26**: es la PROSA (spec de correos §0 y su carril); el censo del test se lee de
@@ -133,6 +134,10 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
   guard de `saving()` de `TicketType` lanza, y el escenario real contra el que defiende el predicado
   es justo ése —una importación, un `update()` a mano—. Con `create()` el caso no existiría.
+- 💰 **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` de tipo `deposit_split`), no
+  con un cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**,
+  que también devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra
+  POSITIVA sin ser dinero del parque**: un `max(0, $saldo)` no distingue las clases (`#716`).
 - Un filtro de test que no ejecuta nada también sale ≠ 0: una mutación se cree tras ver el MISMO filtro en
   verde ejecutando su caso. Y aseverar una subcadena sobre HTML acusa al script que la nombra (`#553`).
 - **`Str::ascii()` SÍ transitera el cirílico, el griego y el árabe** (medido el 17-09 sobre nueve

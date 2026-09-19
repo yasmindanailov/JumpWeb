@@ -1819,7 +1819,7 @@ molde de correo no se toca, se usa.
 | | Qué | Por qué corta ahí |
 |---|---|---|
 | **T7·1** ✅ | **`GuestFormRequest` rehecho**: si el producto tiene invitación, la llamada es «Compartir la invitación» — **en el árbol** (`#715`, §10.15) | **Un correo que ya existe y ya se envía**: sin migración, sin comando y sin censo nuevo. Es la mitad barata y la que el cliente ve primero |
-| **T7·2a** | **El LECTOR de «qué queda por hacer»** de una reserva: fichas incompletas, respuestas por repasar, plazas de menor sin resolver y saldo a pagar en el parque | Es **dominio y no correo**, y cruza a Identity (las firmas) — así que va por el contrato, como `PartyGuests` (§4.5·8). Con sus casos, y sin mandar nada todavía |
+| **T7·2a** ✅ | **El LECTOR de «qué queda por hacer»** de una reserva — **en el árbol** (`#716`, §10.16) | Es **dominio y no correo**, y cruza a Identity (las firmas) — así que va por el contrato, que **ya existía** (`ReservationPlacesTaken`, `#444`). Con sus casos, y sin mandar nada todavía |
 | **T7·2b** | **El aviso de la víspera**: la notificación, el comando diario, el scheduler a las **18:00** y la marca idempotente | Es lo único que **manda correo de verdad** y lo único que pide **migración**. Se construye sobre un lector ya verde, que es lo que evita depurar las dos cosas a la vez |
 
 **Lo que hay que saber antes de abrirla** (medido el 2026-09-19, no supuesto)
@@ -1890,6 +1890,57 @@ invitación y el instrumento afirmado —el enlace sin ancla abre 200—) · arn
 `scripts/mutar-invitacion-t7-1.py` **8/8** · los dos correos renderizados y **enviados a Mailpit**
 para el ojo del owner · `MailInboxLineTest` sigue verde con sus 10 · Pint, Larastan y docs-check
 limpios · **sin migraciones y sin tocar dinero ni aforo**.
+
+### 10.16 T7·2a · EL LECTOR DE «QUÉ QUEDA POR HACER» — EN EL ÁRBOL (2026-09-19, `DECISIONES #716`)
+
+La mitad del aviso de la víspera que **no manda nada**. Se cierra antes que el correo a propósito: el
+día que el aviso salga mal se sabrá de qué mitad es la culpa.
+
+**Lo que entra**
+
+- **`PendingWork`** (contrato, `readonly`): cuatro hechos —fichas hechas/totales, respuestas por
+  repasar, plazas de menor sin resolver y **céntimos a pagar en el parque**— con `guestsMissing()` y
+  `any()`. ❗ **Hechos y no frases**: el panel y la app hacen la misma pregunta, y si esto devolviera
+  texto habría que traducirlo de vuelta a cifras el día que alguien más lo pinte.
+- **`PendingBeforeVisit`** (servicio de Booking) que los compone. ⚠️ **No hizo falta contrato nuevo**:
+  las plazas con dueño ya se publican por `ReservationPlacesTaken` desde `#444`, que implementa
+  `Identity\Services\GuardianPlaces`. Se buscó antes de escribirlo.
+- El progreso sale de **`guestFormProgress()`**, la misma fuente que el medidor de la pantalla —que ya
+  descuenta las fichas con una edad sin producto (`#284` D6)—: recontar aquí daría «4 de 4» donde el
+  cliente lee «2 de 4».
+
+**Las reglas, y por qué**
+
+- **Cancelada o ya celebrada → nada pendiente**, aunque las cifras digan que sí. Se corta en el lector
+  y no en quien avisa, porque quien avisa van a ser tres sitios.
+- **Sin justificante en el producto (`guardian_authorization = none`) no hay menores sin resolver.** Sin
+  esa guarda la resta daría la cantidad entera y el aviso reclamaría 20 papeles que nadie pide.
+- **Solo cuenta el saldo `pay_at_park`.** Una devolución pendiente no es trabajo del cliente, y —el
+  caso que importa— **lo que se debe ONLINE tampoco**: su cifra es positiva, así que sin comprobar la
+  clase el aviso le diría al cliente que lleve al parque lo que tiene que pagar por web.
+- Las respuestas solo con la invitación **encendida**: V5 permite apagarla con invitaciones repartidas,
+  y las que llegaron siguen en la tabla.
+
+**Lo que enseñó construirla**
+
+- ⚠️⚠️ **Los tres supervivientes del arnés eran casos que faltaban**, y uno destapaba un defecto real
+  (`#578` otra vez):
+  1. el «control» de la invitación **no ejercía nada** —una reserva sin invitación tampoco tiene
+     respuestas, así que quitar la guarda daba el mismo 0—: el caso que distingue es el **interruptor
+     apagado con respuestas ya dentro**;
+  2. la mutación del saldo era **equivalente** contra una devolución, porque el `max(0, …)` ya tapa lo
+     negativo: lo que la mata es **`pay_online`**, cuya cifra es positiva sin ser dinero del parque;
+  3. y `any()` sobrevivía porque el caso tenía las fichas a medias: hacía falta uno donde lo **único**
+     que falta sea el dinero.
+- ⚠️ **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` de tipo `deposit_split`), no
+  con un cobro parcial a mano: eso rompe las identidades del libro y el saldo sale `under_review` —que
+  también da 0—. Los casos **afirman antes qué dice el libro**, o estarían verdes por el motivo
+  contrario al que declaran.
+
+**Verificación**: `PendingBeforeVisitTest` (13 casos, con el instrumento afirmado en los tres
+escenarios de dinero) · arnés `scripts/mutar-invitacion-t7-2a.py` **10/10, sin supervivientes** ·
+`ModuleBoundariesTest`/`ModuleContractsTest` verdes antes y después · Pint, Larastan y docs-check
+limpios · **sin migraciones, sin correo y sin tocar dinero ni aforo** (solo los lee).
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
