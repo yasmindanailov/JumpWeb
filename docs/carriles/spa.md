@@ -26,15 +26,11 @@
   `VTIMEZONE` lo encontró **el fichero SERVIDO**, no el test · y el cuarto defecto de la T5·5 —la vuelta
   de un formulario rechazado perdía la atadura y **cobraba plaza**— lo destapó **caminar la pantalla**.
   Arneses 8/8 y 7/7.
-- ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **dos campos** (`#236` en pie, sin migración) y
-  **el prerrelleno del menor se retira** — la hoja enseña lo que escribió y lo reparte él. Sus dos
-  alternativas se midieron y se cayeron; la medición entera está en spec §10.6·A por si se reabre.
-  ▶ La prueba la dio él: firmó y quedó «Hugo Ruiz Pla» + «DANAILOV».
-- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner: dos defectos reales arreglados —la
-  adopción marcaba con la clave del PADRE, y un «sí» levantaba el tope N veces—. Arnés **16/16**; los
-  diez puntos sin tocar, en spec §10.4.7·B.
-- **`#700` · la lista completa deja de rechazar**: era un **oráculo de pertenencia**. ⚠️ El verificador
-  fuerza **16 «sí» del MISMO niño** y exige una plaza; visto fallar sin el lock.
+- ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **dos campos** (`#236` en pie) y **el
+  prerrelleno del menor se retira**. Sus dos alternativas se midieron y se cayeron (spec §10.6·A).
+- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**: dos defectos reales arreglados. Arnés **16/16**; los diez
+  puntos sin tocar, en spec §10.4.7·B. **`#700`**: la lista completa deja de rechazar —era un oráculo de
+  pertenencia—; su verificador fuerza 16 «sí» del MISMO niño y se vio fallar sin el lock.
 - ✅ **Cerrado**: la barra de firmar de 401 px la arregló la T3 y **salió en v1.1.0**. Queda mirarla allí.
 - ✅ **`#707` (19-09) · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` sin
   declarar lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. Declararlo
@@ -81,11 +77,10 @@
    son de esta unidad. Guardar cuándo avisó y a cuántos es lo que evita mandarlo tres veces.
    ▶ Con ella, la T6 queda cerrada y **la invitación se puede encender en producción** (los dos
    interruptores son DATO del owner). Después, la T7 de correos.
-2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
-   el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
-   cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
-   sesión disparó `/carril`, `/sonda` y `/handoff` por frase, pero **con el plugin viejo**, así que la
-   prueba de F2·b hay que hacerla con el nuevo.
+2. ✅ **El plugin `07076ac` ya corre aquí y DOS frases están medidas con él** (F2·b, 19-09): «vamos a
+   continuar en nuestro carril» disparó `/carril` y «vamos a cerrar sesión» disparó `/handoff`, las dos
+   por el hook de la frase y sin barra. ▶ Quedan **cuatro de las seis** por ver en vivo: `/decision`,
+   `/sonda`, `/dod` y `/ligero`. Anótalo en el buzón de plataforma cuando las pruebes.
 3. **La T5 ENTERA está en el árbol** (`#701`→`#706`) **y sin desplegar**. Lo que le falta no es código:
    - **El OJO del owner** en `localhost:8081` — el recibo en sus dos estados, el bloque del calendario y
      la hoja del justificante ya **sin prerrelleno**. Vio el recibo y el calendario el 18-09; la hoja sin
@@ -112,8 +107,16 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 
 ## Trampas vivas
 
-- ⚠️ **El molde `.gf-*` es de DOS páginas** (post-form y justificante): tras tocarlo, sonda Y captura de
-  VENTANA de las dos. La de página entera cose lo pegado y no vio una barra de 401 px.
+- ⚠️ **El molde `.gf-*` es de TRES páginas** (post-form, justificante e invitación): tras tocarlo, sonda
+  Y captura de VENTANA de las tres. La de página entera cose lo pegado y no vio una barra de 401 px.
+- 🩹 **LA BD LOCAL se tocó el 19-09 para poder ver la T6** (es DATO, no código): el pack **105** tiene
+  ahora `guest_invitation = true` y `guardian_authorization = optional` (estaba en `none`, y con `none`
+  los estados de puerta **no existen** por diseño), y hay un pedido **`R-PRBT64` de HOY** con 12
+  invitados, tres fichas escritas, cuatro respuestas y una firma atada. Los guiones que lo montan, en
+  la carpeta de almacenamiento y sin versionar: `probe-t6-invitacion.php` (enciende el pack e imprime
+  los enlaces), `probe-t6-respuestas.php` (tres «sí» y un «no»), `probe-t6-puerta.php` (la fiesta de
+  hoy con su firma) y las sondas `probe-t6-ventana.mjs` y `probe-t6-ficha.mjs`.
+  ⚠️ Las respuestas se contestan **tres días antes**: el día de la fiesta el plazo ya está cerrado.
 - **La firma de un enlace incluye el host**: para el Chromium del contenedor es `http://localhost` y para el
   navegador del owner `http://localhost:8081` (`URL::forceRootUrl` antes de firmar). Fixtures locales en la
   carpeta de almacenamiento de la app, no versionados: «probe-postform» (reserva `R-PRBT1A`), las tres sondas
