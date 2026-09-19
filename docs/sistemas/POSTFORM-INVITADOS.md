@@ -170,6 +170,14 @@ seed siempre incluye `guest_fields`).
   escribe solo `party_invitations`, y meterlo en el guardado de siempre movería `updated_at` —el testigo
   de los extras— por cambiar el color de una banda. Guarda: `InvitationHostBlockTest` (con el CONTROL del
   testigo) y `scripts/mutar-invitacion-t6-1.py`.
+- **Las RESPUESTAS PROPUESTAS sobre las fichas** (2026-09-19, `#709`, spec §10.9): cada «sí» pendiente se
+  pinta sobre su ficha prerrellenando **solo los campos vacíos** —lo que el titular escribió manda—, con
+  la chapa «Por la invitación» y su id en **`adopt[]`, fuera de la fila** (`guests[i]` es un mapa abierto
+  de columnas del panel). Al guardar: `adopt()` y después `reconcileAdopted()`, **en ese orden**, porque
+  se marca con la clave del nombre recién escrito; y solo se reconcilia si vinieron `guests`.
+  ⚠️ Lo propuesto **no se guarda solo**: viaja en los mismos `<input>` y se escribe cuando el titular
+  pulsa Guardar, así que el medidor sigue contando lo GUARDADO (como el pegado de la T2). Guardas:
+  `InvitationProposalsTest` (el caso INTERCALADO) y `scripts/mutar-invitacion-t6-2.py`.
 - **Ruta**: `/reserva/{reservation}/datos-invitados` — nombres `reservation.guests` /
   `reservation.guests.store`. El parámetro es el **OrderItem del pack**: **1 post-form POR
   RESERVA**, no por pedido. Un pedido con 2 packs → 2 post-forms, 2 emails, 2 botones.

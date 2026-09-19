@@ -53,6 +53,8 @@ class GuestFormController extends Controller
         $ageSurcharge = app(MixedPartySurcharge::class)->written($reservation);
         $guestRegimes = app(GuestAgeMixReader::class)->guestRegimes($reservation);
         $addons = app(PostFormAddons::class)->viewFor($reservation);
+        // Lo que PROPONEN las respuestas pendientes, ya colocado sobre sus fichas (T6·2).
+        $proposed = $this->withProposals($reservation, $reservation->guestData());
 
         return view('reservation.guests', [
             'order' => $reservation->order,
@@ -60,7 +62,10 @@ class GuestFormController extends Controller
             'type' => $type,
             'guestFields' => $type->guestFields(),
             'generalFields' => $type->eventFields(TicketType::EVENT_STAGE_POSTFORM),
-            'rows' => $reservation->guestData(),
+            'rows' => $proposed['rows'],
+            // La marca de cada ficha propuesta, POR POSICIÓN: la chapa «Por la invitación», el id que
+            // viaja en `adopt[]` y si esa familia contestó más de una vez.
+            'proposals' => $proposed['marks'],
             'progress' => $reservation->guestFormProgress(),
             // El suplemento de fiesta MIXTA, para decírselo al cliente EN EL SITIO donde declara las
             // edades (`docs/specs/cumple-mixto.md` §12).
@@ -185,6 +190,28 @@ class GuestFormController extends Controller
             $this->guestFormVia($request),
         );
 
+        // ── La ADOPCIÓN de las respuestas de la invitación (T6·2, §4.7) ───────────────────────────
+        //
+        // ⚠️⚠️ **Va DESPUÉS de guardar las fichas, y el orden es la regla** (lo mismo que hace la API,
+        // y por eso está escrito igual en los dos sitios): adoptar marca la respuesta con la clave del
+        // nombre que el anfitrión ACABA de escribir, así que antes de escribirlo no hay contra qué
+        // emparejarla. Y la reconciliación va la última, porque compara contra las fichas que han
+        // quedado guardadas: una respuesta adoptada cuyo nombre ya no está es una que **él quitó**.
+        //
+        // ⚠️ Solo se reconcilia si vinieron `guests`: sin ellas las fichas no se han tocado, y
+        // recorrerlas igual descartaría respuestas por un envío que solo cambiaba las observaciones.
+        //
+        // ⚠️ Los ids se filtran a ESCALARES antes de convertirlos: `adopt[]` llega de un formulario
+        // público, y un cuerpo forjado con `adopt[0][x]=1` reventaría el `intval` con un TypeError en
+        // vez de no adoptar nada, que es lo que tiene que pasar.
+        $adopt = array_filter($this->submittedGuestFormArray($request, 'adopt') ?? [], 'is_scalar');
+        if ($adopt !== []) {
+            app(PartyInvitations::class)->adopt($reservation, array_map(intval(...), $adopt));
+        }
+        if ($this->submittedGuestFormArray($request, 'guests') !== null) {
+            app(PartyInvitations::class)->reconcileAdopted($reservation->fresh(['ticketType']) ?? $reservation);
+        }
+
         // Los extras van DESPUÉS y en su propia transacción (§4.5.3): un id que dejó de ofrecerse no
         // puede tumbar el guardado de los nombres y las alergias, que es la razón de ser de esta
         // página. La no-atomicidad es deliberada, y por eso el desenlace la DICE.
@@ -299,6 +326,66 @@ class GuestFormController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * **Las fichas con lo que PROPONEN las respuestas pendientes** (T6·2, §4.7 y §4.5·4).
+     *
+     * ⚠️⚠️ **Se prerrellenan SOLO los campos vacíos**: lo que el anfitrión escribió manda siempre, y
+     * una propuesta que pisara su texto convertiría una sugerencia en una corrección. El nombre sale
+     * de `child_name` —el que escribió el padre, con apellidos— y solo si su ficha no tiene ninguno.
+     *
+     * ⚠️ **Esto NO guarda nada.** Lo propuesto viaja en los mismos `<input>` de siempre, así que se
+     * escribe cuando él pulsa Guardar y lo ha visto (V1). Por eso el medidor del servidor sigue
+     * contando lo GUARDADO: es la misma honestidad que el pegado de la T2 —los nombres pegados
+     * tampoco mueven el contador hasta que se guardan—.
+     *
+     * ⚠️ Un «no» no se pinta sobre ninguna ficha, y un «sí» **que no cabe** no tiene dónde pintarse:
+     * los dos llegan con `slot_index === null` —el dominio no le da ficha a un «no»— y los dos los
+     * dice el aviso de la T6·3, no una ficha inventada.
+     * ▶ Aquí hubo además un `! $proposal['attending']`, y **se retiró**: el arnés enseñó que ninguna
+     * prueba podía ponerlo en rojo, porque el contrato de `proposalsFor()` ya garantiza lo mismo. Una
+     * guarda que nada puede tumbar es ruido, no defensa (`#704`).
+     *
+     * @param  list<array<string, string>>  $rows
+     * @return array{rows: list<array<string, string>>, marks: array<int, array{id: int, repeated: bool}>}
+     */
+    private function withProposals(OrderItem $reservation, array $rows): array
+    {
+        $type = $reservation->ticketType;
+
+        if ($type === null || ! $type->offersGuestInvitation() || $reservation->isFinishedInPractice()) {
+            return ['rows' => $rows, 'marks' => []];
+        }
+
+        $nameKey = $type->guestNameFieldKey();
+        $marks = [];
+
+        foreach (app(PartyInvitations::class)->proposalsFor($reservation) as $proposal) {
+            $index = $proposal['slot_index'];
+
+            if ($index === null) {
+                continue;
+            }
+
+            $proposed = $proposal['guest_data'];
+
+            if ($nameKey !== null && trim((string) ($proposed[$nameKey] ?? '')) === '') {
+                $proposed[$nameKey] = $proposal['child_name'];
+            }
+
+            $row = $rows[$index] ?? [];
+            foreach ($proposed as $key => $value) {
+                if (trim((string) ($row[$key] ?? '')) === '' && trim((string) $value) !== '') {
+                    $row[$key] = (string) $value;
+                }
+            }
+
+            $rows[$index] = $row;
+            $marks[$index] = ['id' => $proposal['id'], 'repeated' => $proposal['repeated']];
+        }
+
+        return ['rows' => $rows, 'marks' => $marks];
     }
 
     /**

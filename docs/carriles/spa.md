@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#708`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#709`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -57,26 +57,31 @@
 - ✅ **T6·1 (`#708`, 19-09) · el BLOQUE DE LA INVITACIÓN en el post-form**, spec §10.8: compartir con el
   enlace **escrito** (los atajos los enciende el navegador), personalizar por **su propio POST** —el
   testigo de los extras no se mueve, y el caso lo prueba **con control**—, el resumen en tres cápsulas y
-  el plazo **como fecha**. 10 casos · arnés **8/8** · sonda a 390 y 1280. ⚠️ Lo que enseñó: un campo de
-  texto vacío llega como **`null`** y `['sometimes','string']` devolvía 422 (la API tiene hoy la misma
-  regla, dicho y sin tocar) · `dayLabel()` ya trae punto final · el «·» del resumen abría renglón a 390 ·
-  una captura de ventana **sin bajar hasta el bloque** son dos capturas idénticas.
+  el plazo **como fecha**. 10 casos · arnés **8/8** · sonda a 390 y 1280. Lo que enseñó, en §10.8.
+- ✅ **T6·2 (`#709`, 19-09) · las RESPUESTAS PROPUESTAS y su adopción**, spec §10.9: el «sí» pendiente
+  se pinta sobre su ficha rellenando **solo lo vacío**, con la chapa «Por la invitación» y su id en
+  `adopt[]` **fuera de la fila**; al guardar, `adopt()` y luego `reconcileAdopted()`, en el mismo orden
+  que la API. 8 casos · arnés **6/6**. ❗ **Los dos supervivientes de la primera pasada eran del TEST**:
+  el caso del INTERCALADO caía sobre una ficha **vacía**, y una ficha sin nombre no se adopta ni
+  queriendo, así que pasaba igual con el código mutado; y la comprobación `attending` de la pantalla se
+  **retiró** —el contrato ya la garantiza y ninguna prueba podía ponerla en rojo (`#704`)—.
 - La capa de agente: el plugin `jumpweb-agente` se instaló aquí el 17-09 y **se actualizó a `07076ac` el
   19-09**, con los arreglos del mapa de frases. Larastan entró con `composer install` (faltaba tras `#625`).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
 
-1. ❗ **LA TAREA: la T6·2, las RESPUESTAS PROPUESTAS y su adopción** (spec §10.7; la T6·1 ya está, §10.8).
-   Es el corazón de la tanda y lo que más puede romper: pintar cada «sí» pendiente sobre su ficha con los
-   campos prerrellenos **solo si están vacíos**, la chapa «Por la invitación», `adopt[]` **fuera** de las
-   filas (§7.2·R3) y, al guardar, `adopted_at`/`adopted_name_key` de las que sigan pendientes.
-   ▶ **Su caso es el INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta **sigue pendiente y
-   no se borra nada**. El dominio ya está hecho y probado desde la T4·6 (`proposalsFor()`, `adopt()`,
-   `reconcileAdopted()`): lo que falta es la pantalla, como en la T6·1.
+1. ❗ **LA TAREA: la T6·3** (spec §10.7; T6·1 y T6·2 ya están, §10.8 y §10.9). Son las cuatro cosas que
+   el anfitrión necesita para no quedarse atrapado: el **grupo «No vienen»** con sus nombres y la chapa
+   en la ficha que empareje, **«No lo apuntes»** sobre un «sí» pendiente (§7.2·R11 — sin eso no puede
+   bajar invitados por debajo de una respuesta que no quiere), el **aviso de «no caben»** (§7.1·3: las
+   respuestas con `slot_index === null`, que hoy solo se cuentan) y el **suelo** con `takenIn()`.
+   ⚠️⚠️ **Es la unidad que puede acabar tocando `GuestCountAdjuster`**: si lo toca, el push exige
+   **`VERIFY_CONC=1`** con sus verificadores sobre MySQL (§6, `INVARIANTES §6`). Mídelo con `grep` contra
+   el `CRITICAL_RE` del hook antes de dar por hecho que no hace falta (`#576` enseñó lo contrario).
+   ▶ El dominio ya tiene `dismiss()` (T4·6) y la API su `DELETE`; falta la pantalla, como en la T6·2.
    ⚠️ Lee antes `POSTFORM-INVITADOS.md` (la doc de esta tanda) · **el armazón de la T2 no se toca** · §6
-   pide arnés de mutación y sonda a 390 y 1280 · la clave con la que se adopta es la de la **FICHA**, no
-   la del nombre que escribió el padre (`#579`).
+   pide arnés de mutación y sonda a 390 y 1280.
 2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
    el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
    cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
@@ -189,6 +194,12 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   versiones del texto legal que ya no existen, basura de desarrollo del 26–27 de agosto, **no un defecto
   del producto**. ⚠️ Así que **`WaiverChain::verify()` en local sale rojo de fábrica**: si mides cadenas,
   compara ANTES/DESPUÉS. En producción, **sin comprobar** (`waiver:verify-chain`, desde la otra máquina).
+- ⚠️⚠️ **Un campo de texto vacío llega como `null`**, no como `''` (`ConvertEmptyStringsToNull` corre
+  antes de validar): con `['sometimes','string']` el anfitrión que borra una línea recibe **422 y ningún
+  cambio**. Medido en la T6·1; la API lo tiene igual y está dicho en el buzón.
+- ⚠️ **Una captura de VENTANA sin bajar hasta lo que quieres ver son dos capturas idénticas**: lo delató
+  el tamaño del fichero, no el ojo. Y `DisplayTime::dayLabel()` ya termina en punto: la frase que lo
+  envuelve no lleva el suyo.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
 
 ## Buzón
@@ -200,38 +211,25 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   escribí las dos reglas de mis botones apuntando al `button` y **no a `.btn`**: con `.btn` tu generador
   se las llevaba al paquete, y `.gf-invite` no puede existir dentro de un `.sidecart`. Si prefieres otra
   convención para esto, dilo y la cambio.
-- ▶ **Lo empujado hoy (`#708`, T6·1)** y lo que implica para el próximo despliegue: ruta nueva
-  `POST /reserva/{reservation}/invitacion` (`reservation.invitation.update`), `GuestFormController` (dos
-  métodos), `OrderItem::invitationSignedUpdateUrl()`, `PublicFreeText::rejects()`, la vista del post-form,
-  `lang/*/guestform.php` y el bloque de la hoja en `site.css`. **Sin migraciones, sin contrato de API y
-  sin tocar dinero ni aforo**; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
+- ▶ **Lo empujado hoy (`#708` y `#709`, T6·1 y T6·2)** y lo que implica para el próximo despliegue: ruta
+  nueva `POST /reserva/{reservation}/invitacion` (`reservation.invitation.update`), `GuestFormController`
+  (tres métodos y la adopción dentro del guardado), `OrderItem::invitationSignedUpdateUrl()`,
+  `PublicFreeText::rejects()`, la vista del post-form, `lang/*/guestform.php` y el bloque de la hoja en
+  `site.css`. **Sin migraciones, sin contrato de API y sin tocar dinero ni aforo**; ninguno casa con el
+  `CRITICAL_RE` (comprobado con `grep`, no supuesto).
 - ℹ️ **Un defecto de la API, medido y NO tocado**: `InvitationHostController` valida `honoree_name` y
   `host_line` como `['sometimes','string']`, y `ConvertEmptyStringsToNull` convierte un vacío en `null`,
   así que un cliente que mande `""` recibe **422**. En la web lo arreglé con `nullable`; en la API es su
   contrato y no lo cambio sin ti.
 
-### Para el carril de plataforma (emisor: SPA, 2026-09-18, segunda tanda del día)
-- ⚠️ **Toqué el composition root sin avisar antes, y lo digo yo**: `app/Providers/AppServiceProvider.php`
-  gana **una línea** (`bind(SignedInvitationReplies::class, GuardianPlaces::class)`), pegada a la de
-  `ReservationPlacesTaken` y por la misma razón — Booking no puede nombrar a Identity, así que su propio
-  proveedor tampoco. Es el patrón de `#444`, no uno nuevo. Si prefieres que los bindings de esta frontera
-  vivan en otro sitio, dilo y lo muevo.
-- ▶ **Lo empujado en esta tanda (`#704`)** y lo que implica para el próximo despliegue: `GuardianPlaces`
-  (un método), `PartyInvitations` (constructor con una dependencia más + `receiptUrlForReplyIn()`),
-  `GuardianAuthorizationController` (los extras viajan ahora **dentro de la firma del POST**),
-  `InvitationPageController`, el recibo y `lang/*/invitation.php`. **Sin migraciones, sin contrato de API
-  y sin tocar dinero ni aforo.** Ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
-- ✅ **Tu defecto de `DependentsZone.vue` (`addBtn` sin declarar): ARREGLADO** (`#707`). Era real y peor
-  de lo que decía el hallazgo estático —el foco caía al `<body>`, reproducido en navegador—, y congelaba
-  **dos** errores de ESLint, no uno: `FROZEN_JS_ERRORS` baja de 12 a 10. Toqué `StaticAnalysisGateTest`
-  (tu fichero del gate) solo para esa cifra, como pedías en tu mensaje.
-  ▶ De paso, `CE-6` paró el commit al pasar el componente de 40 a 41 líneas: bajé `signDependent()` a
-  `account/dependents.js` en vez de subir el techo.
-- ⚠️ **Segundo fichero compartido de hoy, y también lo digo yo**: `components/focused-layout.blade.php`
-  gana un hueco de cabecera (`{{ $head ?? '' }}`) para la vista previa de la invitación (`#705`).
-  **Vacío no pinta nada**, así que el post-form y el justificante salen igual que antes (sus
-  `GuestFormSkinTest`/`GuardianSkinTest` siguen verdes). Si crees que ese hueco invita a meter estilos
-  por página, dilo y lo cierro con un componente en vez de un slot.
+### Para el carril de plataforma (emisor: SPA, 2026-09-18)
+- ⚠️ **Dos ficheros compartidos que toqué y digo yo** (los dos ya en producción con v1.2.0):
+  `AppServiceProvider` gana **una línea** de binding de frontera (`SignedInvitationReplies` →
+  `GuardianPlaces`), el patrón de `#444` y no uno nuevo; y `focused-layout.blade.php` gana un hueco de
+  cabecera (`{{ $head ?? '' }}`) para la vista previa de la invitación, **vacío por defecto**. Si
+  prefieres otro sitio para los bindings, o cerrar ese hueco con un componente, dilo y lo cambio.
+- ✅ **Tu defecto de `DependentsZone.vue`: ARREGLADO** (`#707`). Toqué `StaticAnalysisGateTest` (tu
+  fichero del gate) solo para bajar `FROZEN_JS_ERRORS` de 12 a 10, como pedías.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
 - **BANDA**: `#579` agotó 550–579 y este carril sigue en **700–729** (centena nueva, escrita en

@@ -113,6 +113,11 @@ return [
         'tally_yes' => '{0} Nadie ha dicho que viene|{1} :count viene|[2,*] :count vienen',
         'tally_no' => '{0} Nadie ha dicho que no|{1} :count no puede|[2,*] :count no pueden',
         'tally_pending' => '{0} Nada por repasar|{1} :count por repasar|[2,*] :count por repasar',
+        // La ficha que llega de fuera (T6·2): la chapa dice de DÓNDE sale, no quién la escribió — el
+        // anfitrión sabe quién es su invitado, y nombrar al padre no añade nada.
+        'badge' => 'Por la invitación',
+        // ⚠️ No dice cuántas veces ni desde cuándo: solo que hay más de una y cuál se enseña (V6).
+        'repeated' => 'Esta familia ha contestado más de una vez. Te enseñamos lo último que nos dijo.',
         'customize' => 'Personalizar',
         'theme' => 'Tema',
         'theme_confeti' => 'Confeti',

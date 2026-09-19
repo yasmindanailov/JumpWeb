@@ -96,6 +96,8 @@ return [
         'tally_yes' => "{0} Personne n'a dit qu'il venait|{1} :count vient|[2,*] :count viennent",
         'tally_no' => '{0} Personne ne s’est excusé|{1} :count ne peut pas venir|[2,*] :count ne peuvent pas venir',
         'tally_pending' => '{0} Rien à revoir|{1} :count à revoir|[2,*] :count à revoir',
+        'badge' => "Par l'invitation",
+        'repeated' => 'Cette famille a répondu plusieurs fois. Nous vous montrons sa dernière réponse.',
         'customize' => 'Personnaliser',
         'theme' => 'Thème',
         'theme_confeti' => 'Confettis',

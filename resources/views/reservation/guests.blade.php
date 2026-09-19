@@ -614,8 +614,8 @@
                                     </summary>
                                     <div class="gf-done__list">
                             @endif
-                            @php $state = $ficheStates[$i]; @endphp
-                            <div class="gf-fiche {{ $state['complete'] ? 'is-complete' : '' }}" data-i="{{ $i }}" @if ($state['no_product']) data-no-product="1" @endif>
+                            @php $state = $ficheStates[$i]; $mark = $proposals[$i] ?? null; @endphp
+                            <div class="gf-fiche {{ $state['complete'] ? 'is-complete' : '' }}" data-i="{{ $i }}" @if ($state['no_product']) data-no-product="1" @endif @if ($mark !== null) data-proposed="{{ $mark['id'] }}" @endif>
                                 <button type="button" class="gf-fiche__head" data-act="toggle" aria-expanded="false" aria-controls="gf-body-{{ $i }}">
                                     <span class="gf-fiche__cube">{{ str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) }}</span>
                                     <span class="gf-fiche__who">
@@ -637,15 +637,36 @@
                                         @elseif ($state['regime'] !== null && $state['regime']['state'] === \App\Domain\Booking\Services\GuestAgeMixReader::ROW_OUT_OF_RANGE)
                                             <span class="gf-fiche__regime is-unknown">{{ __('guestform.regime_no_product') }}</span>
                                         @endif
+                                        {{-- La chapa de ORIGEN (T6·2, canvas turno 3a): esta ficha la propone una
+                                             respuesta, todavía sin adoptar. Misma receta que la del régimen. --}}
+                                        @if ($mark !== null)
+                                            <span class="gf-fiche__from">{{ __('guestform.invite.badge') }}</span>
+                                        @endif
                                     </span>
                                     <span class="gf-fiche__chev" aria-hidden="true">
                                         <x-icons.chevron-down :width="16" :height="16" />
                                     </span>
                                 </button>
 
+                                {{-- ⚠️⚠️ **La marca de adopción viaja FUERA de la fila** (§1.3·13, §7.2·R3): `guests[i]`
+                                     es un mapa ABIERTO de columnas que nombra el panel, así que un `reply_id`
+                                     dentro chocaría el día que una instalación llamara así a una columna. Va en
+                                     su propia lista, igual que en la API.
+                                     ⚠️ Y no adopta por sí solo: `adopt()` vuelve a mirar que la respuesta siga
+                                     pendiente, que sea de ESTA reserva y que su ficha tenga nombre guardado — si
+                                     el anfitrión la vació, no la quiso y no se adopta nada. --}}
+                                @if ($mark !== null)
+                                    <input type="hidden" name="adopt[]" value="{{ $mark['id'] }}">
+                                @endif
+
                                 <div class="gf-fiche__body" id="gf-body-{{ $i }}">
                                     <div>
                                         <div class="gf-fiche__pad">
+                                            {{-- Una familia que contestó dos veces por el mismo niño: se le dice
+                                                 cuál se le está enseñando, sin nombrar a nadie más (V6). --}}
+                                            @if ($mark !== null && $mark['repeated'])
+                                                <p class="gf-fiche__note">{{ __('guestform.invite.repeated') }}</p>
+                                            @endif
                                             <div class="eventfields">
                                                 @foreach ($guestFields as $idx => $field)
                                                     <label class="eventfields__field" for="c-{{ $i }}-{{ $field['key'] }}">

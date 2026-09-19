@@ -5785,6 +5785,14 @@ html:not(.js) .gf-fiche__chev { display: none; }
    Chapa de TINTE, nunca relleno de zona. */
 .gf-fiche__regime { display: inline-flex; align-items: center; margin-top: var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.06em; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-pill); color: var(--fg); background: var(--tint-info); border: 1px solid var(--tint-info-border); }
 .gf-fiche__regime.is-unknown { background: var(--err-bg); border-color: var(--err-border); }
+/* La chapa de ORIGEN (T6·2): esta ficha la PROPONE una respuesta de la invitación y todavía no está
+   adoptada. **Misma receta que la del régimen** —mono, cápsula, tinte de información— porque es el
+   mismo oficio: un dato de contexto sobre el invitado, no un estado ni un error. Ninguno en rojo:
+   aquí nadie ha roto nada. */
+.gf-fiche__from { display: inline-flex; align-items: center; margin-top: var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.06em; padding: var(--sp-4) var(--sp-8); border-radius: var(--r-pill); color: var(--fg); background: var(--tint-info); border: 1px solid var(--tint-info-border); }
+/* La nota de «ha contestado más de una vez», dentro de la ficha y en cuerpo: explica un dato que el
+   anfitrión no puede deducir, así que no puede ir en letra pequeña (F-02). */
+.gf-fiche__note { margin: 0 0 var(--sp-12); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
 .gf-fiche.is-open .gf-fiche__chev { transform: rotate(180deg); color: var(--fg); }
 .gf-fiche__body { display: grid; grid-template-rows: 1fr; }
 html.js .gf-fiche__body { grid-template-rows: 0fr; transition: grid-template-rows var(--dur-entra) var(--ease-sale); }

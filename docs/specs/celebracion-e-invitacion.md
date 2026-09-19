@@ -3,7 +3,8 @@
 > Estado: 🟦 **revisada de forma adversarial tres veces · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los
 > interruptores apagados) · T5 entera en el árbol · T6 empezada (T6·1, §10.8) · T7 sin empezar** ·
 > Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
-> `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) · `#708` (T6·1) ·
+> `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
+> `#708`–`#709` (T6·1 y T6·2) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -14,7 +15,7 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
-  **T5 entera y T6·1 en el árbol, sin desplegar** → sigue la **T6·2** (§10.7) y la T7.
+  **T5 y T6·1–T6·2 en el árbol, sin desplegar** → sigue la **T6·3** (§10.7) y la T7.
   **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
   escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
@@ -1497,7 +1498,7 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 | | Qué | Por qué corta ahí |
 |---|---|---|
 | **T6·1** ✅ | El **bloque de la invitación** en el post-form (§4.7): compartir, personalizar, resumen y el plazo escrito como fecha — **en el árbol** (`#708`, §10.8) | Escribe **solo `party_invitations`**, así que no roza el testigo de las fichas. Es lo primero que necesita un anfitrión: repartir el enlace |
-| **T6·2** | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
+| **T6·2** ✅ | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar — **en el árbol** (`#709`, §10.9) | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
 | **T6·3** | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` | ⚠️ Es la que puede acabar tocando `GuestCountAdjuster`: si lo toca, el push pide **`VERIFY_CONC=1`** con sus verificadores (§6) |
 | **T6·4** | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
 | **T6·5** | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
@@ -1562,6 +1563,52 @@ pantalla del anfitrión, que hasta hoy solo tenía la API.
 `scripts/mutar-invitacion-t6-1.py` **8/8** · sonda de ventana a **390 y 1280** (`storage/app/audit/
 sonda-t6/invitacion/`): sin scroll horizontal, atajos y desplegable a 48, bloque de 557 px en el
 teléfono y 429 en escritorio, y el bloque **antes** del formulario · Pint y Larastan limpios.
+
+### 10.9 T6·2 · LAS RESPUESTAS PROPUESTAS Y SU ADOPCIÓN — EN EL ÁRBOL (2026-09-19, `DECISIONES #709`)
+
+El dominio es de la T4·6 (`proposalsFor()`, `adopt()`, `reconcileAdopted()`, con sus casos) y la API lo
+usa desde `#578`. Esta unidad es **la mitad que faltaba: la pantalla del anfitrión**.
+
+**Lo que entra**
+
+- **Lo propuesto se pinta sobre su ficha**, prerrellenando **solo los campos vacíos** —lo que él
+  escribió manda siempre—, con el nombre que puso el padre (con apellidos) si su ficha no tenía
+  ninguno, la **chapa «Por la invitación»** (misma receta que la del régimen) y, si esa familia
+  contestó más de una vez, la línea que lo dice sin nombrar a nadie (V6).
+- **La marca viaja FUERA de la fila**: `adopt[]` en su propia lista, nunca dentro de `guests[i]`, que
+  es un mapa abierto de columnas que nombra el panel (§7.2·R3). Igual que en la API.
+- **Al guardar**, `adopt()` y después `reconcileAdopted()`, **en ese orden y con las mismas
+  condiciones que la API**: adoptar marca con la clave del nombre **que se acaba de escribir**, así que
+  antes de escribirlo no hay contra qué emparejar; y solo se reconcilia si vinieron `guests`, o un envío
+  que solo tocaba las observaciones descartaría respuestas.
+- **Nada se guarda sin que él lo vea** (V1): lo propuesto viaja en los mismos `<input>` de siempre. Por
+  eso el medidor del servidor sigue contando lo GUARDADO — la misma honestidad que el pegado de la T2.
+
+**Lo que enseñó el arnés, y es lo que más vale de esta unidad**
+
+- ⚠️⚠️ **El caso del INTERCALADO estaba mal escrito y pasaba igual con el código mutado**: la respuesta
+  que llegaba tarde caía sobre una ficha **vacía**, y una ficha sin nombre no se adopta ni queriendo,
+  así que «adoptar solo lo pintado» y «adoptarlo todo» daban el mismo resultado. Se reescribió para que
+  la tardía **empareje con una ficha escrita**, y entonces la mutación muerde. *Un superviviente es una
+  pregunta sobre el TEST antes que sobre el código* (`#578`).
+- ⚠️ **La comprobación `! $proposal['attending']` en la pantalla se RETIRÓ**: el contrato de
+  `proposalsFor()` ya garantiza que un «no» llega sin ficha, así que ninguna prueba podía ponerla en
+  rojo. Una guarda que nada puede tumbar es ruido, no defensa (`#704`). La mutación que la vigila apunta
+  ahora al dominio, que es donde vive la propiedad.
+
+**Bordes declarados**
+
+- **Un «sí» que no cabe** (`slot_index === null`) **no se pinta y hoy solo se cuenta** en «por
+  repasar»: su aviso —«hay N respuestas que ya no caben»— es de la T6·3, igual que el grupo de «No
+  vienen» y «No lo apuntes».
+- **No se marca campo a campo** qué vino de la invitación: la chapa es de la FICHA. Marcar cada valor
+  prerrellenado es una decisión de diseño que el canvas no dibujó.
+
+**Verificación**: `InvitationProposalsTest` (8 casos: el intercalado, solo-los-vacíos, la marca fuera
+de la fila, la clave de la ficha, la ficha vaciada, la reconciliación y un `adopt` de otra fiesta) ·
+arnés `scripts/mutar-invitacion-t6-2.py` **6/6** (dos supervivientes en la primera pasada, los dos
+arreglados arriba) · sonda de la ficha propuesta a **390 y 1280** (`storage/app/audit/sonda-t6/ficha/`):
+`adopt[]` dentro del formulario, la chapa a 26 px y el prerrelleno visible · Pint y Larastan limpios.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

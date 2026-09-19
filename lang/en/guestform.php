@@ -95,6 +95,8 @@ return [
         'tally_yes' => '{0} Nobody is coming yet|{1} :count coming|[2,*] :count coming',
         'tally_no' => "{0} Nobody has said no|{1} :count can't come|[2,*] :count can't come",
         'tally_pending' => '{0} Nothing to review|{1} :count to review|[2,*] :count to review',
+        'badge' => 'From the invitation',
+        'repeated' => 'This family has replied more than once. We are showing you the latest.',
         'customize' => 'Personalise',
         'theme' => 'Theme',
         'theme_confeti' => 'Confetti',
