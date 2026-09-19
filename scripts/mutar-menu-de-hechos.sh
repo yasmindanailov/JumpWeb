@@ -14,10 +14,11 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
+DIRECCION=app/Domain/Platform/Services/VenueAddress.php
 HORARIO=app/Http/Resources/Api/V1/ScheduleFactsResource.php
 ENVIVO=app/Http/Resources/Api/V1/OpeningNowResource.php
 ESTADO=app/Domain/Content/Services/OpeningState.php
@@ -41,7 +42,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -272,6 +273,21 @@ mutar "la prueba social deja de cachearse (cada landing se la descarga entera ca
   "$RUTAS" "    Route::get('/social-proof', SocialProofFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')" \
   "    Route::get('/social-proof', SocialProofFactsController::class)"
+
+# ── La DIRECCIÓN, escrita en un solo sitio (T2b) ───────────────────────────────────────────────
+mutar "las dos líneas se unen con ESPACIO (y el código postal se lee como parte del portal)" \
+  "$DIRECCION" "        return \$partes === [] ? null : implode(', ', \$partes);" \
+  "        return \$partes === [] ? null : implode(' ', \$partes);"
+
+mutar "una línea vacía deja una COMA COLGANDO («Ctra. de Prueba, 1, »)" \
+  "$DIRECCION" "            if (\$limpia !== '') {
+                \$partes[] = \$limpia;
+            }" \
+  "            \$partes[] = \$limpia;"
+
+mutar "la API deja de publicar la dirección escrita (y cada instancia la re-deriva)" \
+  "$RECURSO" "        return \$escrita === null ? [] : ['written' => \$escrita];" \
+  "        return [];"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

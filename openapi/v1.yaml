@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.9.0
+  version: 1.10.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -3405,6 +3405,15 @@ components:
             city: { type: string }
             maps_url: { type: string, format: uri }
             maps_embed_url: { type: string, format: uri, description: 'El `src` del iframe de Google Maps.' }
+            written:
+              type: string
+              example: 'Ctra. de Prueba, 1, 30000 Ciudad'
+              description: |
+                Las dos líneas **ya escritas en una**, que es lo que se pinta. **Ausente** si la
+                instalación no ha rellenado ninguna.
+                ⚠️ Úsala en vez de unir `line1` y `line2` por tu cuenta: se unen con **coma**, porque
+                «Ctra. de Prueba, 1 30000 Ciudad» se lee como si el código postal fuera parte del
+                número de portal. Las dos líneas siguen viajando por si quieres maquetarlas aparte.
         contact:
           type: object
           additionalProperties: false

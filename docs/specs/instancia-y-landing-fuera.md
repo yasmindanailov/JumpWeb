@@ -332,6 +332,27 @@ fuera de ella, y está aquí —y no en un fichero de carril— porque una recet
   arnés. ⚠️ `ApiContractTest` exige `required` en TODO campo: lo opcional se declara en
   `OPTIONAL_BY_DESIGN` **con su porqué**, y la comprobación baja también a los `items` de las listas.
 
+### 4.1.ter · Las TRAMPAS que costaron una pasada cada una
+
+Están aquí y no en un fichero de carril por el mismo motivo que la receta: no caducan con la tanda, y quien
+añada un recurso público dentro de cinco meses las necesita igual.
+
+- **`weekday` es `0 = domingo`**, no ISO. Un día desplazado no falla: publica la semana entera corrida.
+- **Ordenar con `sortBy([cierre, cierre])` sale AL REVÉS.** Úsese una clave compuesta (`'%d-%05d'`), que
+  ordena igual en cualquier versión y se lee de un vistazo.
+- **El cuerpo de un legal lleva marcadores** (`:legal_name`, `:legal_nif`…) y hay que **interpolarlo**: en
+  crudo, una landing publicaría «El responsable del tratamiento es :legal_name» en su política de privacidad.
+- **`prices` es polimórfica y su `priceable_type` es el ALIAS del morphMap** (`ticket_type`, no el FQCN):
+  con la clase entera la fila se escribe y el producto sale sin precios.
+- **`prices` tiene columna `currency`**, así que la moneda sale del dato y no de una constante a mano.
+- ⚠️⚠️ **Un objeto que puede salir VACÍO se fija en la ENTREGA**, no con `(object)` por bloque:
+  `JsonResource::resolve()` hace `(array)` de lo que devuelva `toArray()`, así que la raíz vacía sale `[]` y
+  no `{}`. Y un caso escrito con `json()` **no lo ve**: hay que mirar el cuerpo crudo.
+- ⚠️⚠️ **«Rellenado y BORRADO» no es `null`, es `''`** (el panel deja la cadena vacía dentro del JSON de
+  traducciones). El arnés cazó que sin ese caso, cambiar un `?:` por un `??` publica `""` con todo en verde.
+- **`FileUpload` descarta al hidratar el fichero que no existe en el disco**, así que probar un campo de
+  subida pide `Storage::fake` con el fichero puesto — o el campo sale vacío y la prueba no prueba nada.
+
 ▶ **El MENÚ DE HECHOS queda servido.** Lo que sigue en F5 es la **T2**: el paquete de la instancia.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),

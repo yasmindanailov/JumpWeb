@@ -4,6 +4,7 @@ namespace App\Domain\Content\Services;
 
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Content\Models\Faq;
+use App\Domain\Platform\Services\VenueAddress;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -90,14 +91,17 @@ class StructuredData
      */
     private static function postalAddress(array $site): ?array
     {
-        $street = implode(', ', array_filter([
+        // ⚠️ La regla de cómo se escribe una dirección de dos líneas vive en UN sitio (`#650`): aquí
+        // estaba su segunda copia, y con un filtro distinto al de la página. Una divergencia entre las
+        // dos habría puesto en el JSON-LD una dirección distinta de la que lee el visitante.
+        $street = VenueAddress::written(
             self::clean($site['address1'] ?? null),
             self::clean($site['address2'] ?? null),
-        ]));
+        );
 
         $address = self::prune([
             '@type' => 'PostalAddress',
-            'streetAddress' => $street !== '' ? $street : null,
+            'streetAddress' => $street,
             'addressLocality' => self::clean($site['city'] ?? null),
             'addressCountry' => 'ES',
         ]);

@@ -49,7 +49,9 @@ class ApiContractTest extends TestCase
         // nuevo salga a la API sin pasar por el contrato, y `required` en la raíz: los seis bloques van
         // siempre, aunque lleguen `{}`.
         'SiteFacts.identity' => ['name', 'legal_name', 'nif', 'domain'],
-        'SiteFacts.address' => ['line1', 'line2', 'city', 'maps_url', 'maps_embed_url'],
+        // ⚠️ `written` es la dirección ya compuesta (`#650`) y falta cuando no hay ninguna línea, igual
+        // que las líneas mismas: no se puede escribir lo que no existe.
+        'SiteFacts.address' => ['line1', 'line2', 'city', 'maps_url', 'maps_embed_url', 'written'],
         'SiteFacts.contact' => ['email', 'phone', 'whatsapp'],
         'SiteFacts.social' => ['instagram', 'tiktok', 'feed_embed_url', 'google_place_id'],
         'SiteFacts.legal' => ['jurisdiction', 'fiscal_address'],

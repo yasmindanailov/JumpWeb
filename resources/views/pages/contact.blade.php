@@ -180,7 +180,10 @@
                          coma colgando al final — el mismo defecto que el colofón del pie ya evita. --}}
                     <section class="where" aria-labelledby="where-title">
                         <p class="where__label" id="where-title">{{ __('site.contact_where_title') }}</p>
-                        <p class="where__addr">{{ collect([$site['address1'] ?? null, $site['address2'] ?? null])->filter(fn ($l) => filled($l))->implode(', ') }}</p>
+                        {{-- ⚠️ La regla de CÓMO se escribe una dirección de dos líneas no vive aquí
+                             (`#650`): la pone el producto en `VenueAddress`, y la API la publica ya
+                             escrita. Una landing de instancia no tiene que re-derivar la coma. --}}
+                        <p class="where__addr">{{ \App\Domain\Platform\Services\VenueAddress::written($site['address1'] ?? null, $site['address2'] ?? null) }}</p>
                         <a class="where__cta" href="{{ url('/#info') }}" data-tap>
                             <span>{{ __('site.contact_where_cta') }}</span>
                             <span aria-hidden="true">&rarr;</span>

@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#649`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#650`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, T2a y la mudanza).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -46,34 +46,36 @@
    ▶ **`main` ya se movió tras etiquetar**, así que la guarda 8 dice «HEAD no es una versión»: se despliega
    desde **`git checkout v1.2.0`** y se vuelve con `git checkout main`. Comprobado en seco: desde la
    etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
-   ▶ Lo hecho DESPUÉS de esa etiqueta (F5 · el menú de hechos, contrato **1.8.0**) va en la siguiente.
+   ▶ Lo hecho DESPUÉS de esa etiqueta (F5 entera, contrato **1.10.0**) va en la siguiente versión.
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
-   **EL MENÚ, SERVIDO** (`#640`→`#646`, contrato **1.9.0**, `scripts/mutar-menu-de-hechos.sh` **38/38**):
+   **EL MENÚ, SERVIDO** (`#640`→`#646`, contrato **1.10.0**, `scripts/mutar-menu-de-hechos.sh` **41/41**):
    `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices` · la
    **ficha** en `/catalog/zones` y `/catalog/products` · y `/social-proof`. Sus porqués están en la spec
    §4.1; aquí queda **lo que hace falta para lo siguiente**.
 
-   ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): `config/instancia.php`,
-   `Http\Instancia\InstanceViews` (namespace `instancia::` y sus tres puertas), el registro en el arranque,
-   el invariante **`SEC-12`** con siete casos y `scripts/mutar-paquete-instancia.sh` **5/5**, la
-   `plantilla/` del producto y el repo LOCAL `jumpweb/instancias/playjump` (**sin remoto**, y el owner dijo
-   que por ahora no hace falta). `/contacto` ya resuelve por la instancia si su paquete la trae.
-   ⚠️⚠️ **LA T2b YA TIENE SALIDA** (`#649`, spec §4.5.bis): las pruebas de la landing se parten **por lo
-   que AFIRMAN**, no por dónde vive el fichero — el experimento trazó la línea solo (sin paquete cayeron
-   **9** y aguantaron **5**: los que aguantan no miran el HTML). **El contrato producto↔instancia son los
-   DATOS que recibe la vista, no el HTML que produce.** El producto se queda la conducta; la instancia, el
-   marcado, y su herramienta es la HUELLA y no `assertStringContainsString` (una cadena se rompe cuando el
-   cliente rediseña, que es su derecho, y eso es un fallo equivocado).
-   ▶ **HECHO ya el CONTRATO DE VISTA**: `InstanceViews::CONTRATO_DE_VISTAS` + `InstanceViewContractTest`,
-   arnés **7/7**. ❗❗ Y al medirlo saltó lo gordo: **la vista recibe NUEVE variables, no dos**. Siete las
-   mete el composer global en TODA vista (`site`, `heroStatus`, `offers`, los dos `ctaMinPrice*`, las dos
-   de cookies), así que el producto promete sin saberlo — y esa lista **va a ENCOGER**: el composer se
-   sustituye por el menú y `offers` lo retira `#631`. Ese día sube el MAYOR y hay que avisar a cada
-   instalación.
-   ▶ **QUEDA de la T2b**: limpiar los 5 de conducta para que afirmen sobre DATOS y no sobre HTML, y llevar
-   los 9 de marcado a la huella.
+   ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): el namespace `instancia::` con sus tres
+   puertas, el invariante **`SEC-12`**, la `plantilla/` y el repo LOCAL `jumpweb/instancias/playjump`
+   (**sin remoto**; el owner dijo que por ahora no hace falta). `/contacto` ya resuelve por la instancia.
+   ⚠️⚠️ **LA REGLA DE LA T2b** (`#649`, spec §4.5.bis): **el contrato producto↔instancia son los DATOS que
+   recibe la vista, no el HTML que produce.** Las pruebas se parten por lo que AFIRMAN, no por dónde vive
+   el fichero (sin paquete cayeron 9 y aguantaron 5: los que aguantan no miran el HTML). El producto se
+   queda la conducta; la instancia, el marcado, y su herramienta es la HUELLA — no
+   `assertStringContainsString`, que se rompe cuando el cliente rediseña, que es su derecho.
+   ▶ **HECHO el CONTRATO DE VISTA**: `InstanceViews::CONTRATO_DE_VISTAS` + `InstanceViewContractTest`,
+   arnés **7/7**. ❗❗ Al medirlo saltó que **la vista recibe NUEVE variables, no dos** —siete las mete el
+   composer global— y que esa lista **va a ENCOGER** cuando el composer se sustituya por el menú: ese día
+   sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
+   ▶ **T2b EN CURSO, y su primer hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una
+   vista hay que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. La
+   dirección se unía con coma en dos sitios y `/site` daba las líneas sueltas: la tercera copia la escribía
+   cada instancia. Ya tiene hogar (`VenueAddress`), la API publica `address.written` y su guarda afirma
+   sobre el DATO.
+   ▶ **QUEDA**: el mismo barrido para las demás reglas de las vistas (los canales ya son componente del
+   producto y sobreviven; el resto, una a una), y limpiar los 5 casos de conducta para que afirmen sobre
+   datos. ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún
+   tienen sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
    genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**.
    ⚠️⚠️ **Y el nombre del proyecto de Docker está FIJADO** (`name: jumpweb`) desde `#648`. Salía del nombre
@@ -95,18 +97,10 @@
    traduce, caché según cambie, lo apagado no se sirve, contrato + caso + mutación en el mismo commit) se
    mudó a la spec, **§4.1.bis**: vale para cualquier recurso público y allí no caduca con la tanda.
 
-   **TRAMPAS ya pagadas en este menú** (una pasada cada una): `weekday` es **0 = domingo**, no ISO · ordenar
-   con `sortBy([cierre, cierre])` sale AL REVÉS, úsese clave compuesta · el cuerpo de los legales lleva
-   marcadores (`:legal_name`) y hay que INTERPOLARLO · `prices` es polimórfica y su `priceable_type` es el
-   ALIAS del morphMap (`ticket_type`, no el FQCN): con la clase entera el producto sale sin precios ·
-   `prices` tiene columna `currency`, así que la moneda no se escribe a mano · **un objeto que puede salir
-   VACÍO se fija en la ENTREGA**, no con `(object)` por bloque: `JsonResource::resolve()` hace `(array)` de
-   lo que devuelva `toArray()`, así que la raíz vacía sale `[]` y no `{}` — y un caso escrito con `json()`
-   no lo ve, hay que mirar el cuerpo crudo · **«rellenado y BORRADO» no es
-   `null` sino `''`** (el panel deja la cadena vacía en el JSON de traducciones): el arnés cazó que sin ese
-   caso, cambiar un `?:` por un `??` publica `""` con todo en verde · y **`FileUpload` descarta al hidratar
-   el fichero que no existe en el disco**, así que probar un campo de subida pide `Storage::fake` con el
-   fichero puesto o el campo sale vacío y la prueba no prueba nada.
+   ▶ **Las OCHO TRAMPAS del menú** (el `weekday` que es 0 = domingo, el `sortBy` que ordena al revés, los
+   marcadores de los legales, el alias del morphMap, el objeto vacío que sale `[]`, el `''` de lo borrado,
+   el `FileUpload` que descarta lo que no está en disco…) se mudaron a la spec, **§4.1.ter**: no caducan
+   con la tanda y allí las encuentra quien añada un recurso público dentro de cinco meses.
 
    **Del censo, medido y sin repetir**: 71 ajustes (5 secretos, 22 hechos, 40 de operación) · sitemap de 11
    URLs · la landing son 3.142 líneas de Blade y ocho rutas sirven la portada · la marca del cliente son 167

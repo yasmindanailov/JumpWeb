@@ -100,6 +100,28 @@ class SiteFactsTest extends TestCase
     }
 
     /**
+     * **La dirección viaja YA ESCRITA, además de en sus dos líneas** (`#650`).
+     *
+     * ❗❗ **Sin esto, cada instancia re-derivaría la coma** — y la primera que la olvidara publicaría
+     * «Ctra. del parque, km 1 30800 Ciudad», que se lee como si el código postal fuera parte del
+     * número de portal, sin que nada fallara. Medido el 19-09: esa regla ya estaba escrita dos veces
+     * dentro del producto; ésta habría sido la tercera copia, y una por cliente.
+     */
+    public function test_the_address_travels_already_written(): void
+    {
+        $this->ajuste('address.line1', 'Ctra. del parque, km 1', 'contact');
+        $this->ajuste('address.line2', '30800 Ciudad', 'contact');
+
+        $this->getJson('/api/v1/site')
+            ->assertOk()
+            ->assertJsonPath('address.written', 'Ctra. del parque, km 1, 30800 Ciudad')
+            // ⚠️ Las dos líneas SIGUEN viajando: quitarlas sería romper el contrato para arreglar otra
+            // cosa, y quien quiera maquetarlas en dos renglones tiene derecho a ellas.
+            ->assertJsonPath('address.line1', 'Ctra. del parque, km 1')
+            ->assertJsonPath('address.line2', '30800 Ciudad');
+    }
+
+    /**
      * **Se cachea en público y revalida con `ETag`** (`PERF-02`): no depende de quién mira, así que una
      * landing que lo pida en cada visita no tiene que pagar la consulta cada vez.
      */

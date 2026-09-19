@@ -191,6 +191,34 @@ funciona un paquete; éste dice qué le PROMETE el producto a cada vista.
 ⚠️ La guarda afirma sobre los **datos de la vista**, nunca sobre el HTML — si mirara el marcado volvería a
 atar el producto a la landing de un cliente, que es el defecto que esta sección arregla.
 
+▶ **Medido al escribirla (19-09): la vista recibe NUEVE variables, no dos.** El controlador pone `answers` y
+`topics`; las otras siete las inyecta el composer global en TODA vista (`site`, `heroStatus`, `offers`, los
+dos `ctaMinPrice*` y las dos de cookies). El producto ya promete siete cosas sin saberlo — y esa lista **va
+a encoger**, porque ese composer es «la pieza que hay que sustituir por el menú» (§1.1 de la spec hermana) y
+`offers` lo retira `#631`. Ese día sube el MAYOR del contrato de instancia y hay que avisar a cada
+instalación. Sin la lista, nadie se habría enterado hasta ver la web de un cliente rota.
+
+### 4.7 Una regla escrita DENTRO de una vista se va con la vista (`#650`)
+
+Es el corolario práctico de §4.5.bis, y la T2b empieza por aquí: antes de mudar una vista hay que mirar **qué
+reglas del producto viven dentro de ella**, porque el día de la mudanza se van con ella y cada instancia las
+re-deriva a su manera.
+
+**Caso medido y ya arreglado**: la dirección de dos líneas se unía **con coma** —«Ctra. de Prueba, 1 30000
+Ciudad» se lee como si el código postal fuera el portal— y esa regla estaba escrita **dos veces**: en línea
+en `pages/contact.blade.php` y en `StructuredData::postalAddress()`, con filtros distintos. Y `/site`
+publicaba las dos líneas sueltas, así que la tercera copia la habría escrito **cada instancia**.
+
+▶ Ahora la regla tiene un hogar (`Platform\Services\VenueAddress`), la API publica `address.written` además
+de las líneas, y su guarda afirma sobre el dato: **sobrevive a la mudanza**.
+
+⚠️ La duplicación ya había cobrado una pieza: el `streetAddress` del JSON-LD hacía pasar en verde un caso
+que aseveraba sobre la página entera aunque el bloque visible dijera otra cosa.
+
+▶ **Lo que queda de la T2b**: el mismo barrido para las demás reglas que hoy viven en las vistas de la
+landing —los canales ya están en un componente del producto, que sobrevive; el resto hay que mirarlo una a
+una— y después limpiar los casos de conducta para que afirmen sobre datos.
+
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.
 

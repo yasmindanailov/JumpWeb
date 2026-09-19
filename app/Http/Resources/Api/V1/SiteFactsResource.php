@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Platform\Services\PublicFacts;
+use App\Domain\Platform\Services\VenueAddress;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -89,13 +90,13 @@ class SiteFactsResource extends JsonResource
             // versión de este recurso lo sirvió como `address.postal`: una landing que pintara su bloque de
             // contacto habría mandado a sus clientas a la gestoría. El fiscal viaja en `legal`, que es donde
             // se usa (aviso legal y facturación), y con su nombre.
-            'address' => (object) $hechos->compact([
+            'address' => (object) ($hechos->compact([
                 'line1' => 'address.line1',
                 'line2' => 'address.line2',
                 'city' => 'business.city',
                 'maps_url' => 'address.maps_url',
                 'maps_embed_url' => 'address.maps_embed_url',
-            ]),
+            ]) + $this->direccionEscrita($hechos)),
             'contact' => (object) $hechos->compact([
                 'email' => 'contact.email',
                 'phone' => 'contact.phone',
@@ -115,5 +116,26 @@ class SiteFactsResource extends JsonResource
                 'og_image' => 'seo.og_image',
             ]),
         ];
+    }
+
+    /**
+     * **La dirección YA ESCRITA**, además de sus dos líneas (`#650`).
+     *
+     * ❗❗ **Publicar solo `line1` y `line2` obligaba a cada instancia a re-derivar la coma**, y la
+     * primera que la olvidara publicaría «Ctra. de Prueba, 1 30000 Ciudad» —que se lee como si el
+     * código postal fuera parte del portal— sin que nada fallara. Medido el 19-09: esa regla ya
+     * estaba escrita dos veces dentro del producto, y ésta habría sido la tercera copia por cliente.
+     *
+     * ⚠️ Las dos líneas SIGUEN viajando: quien quiera maquetarlas en dos renglones puede, y quitarlas
+     * habría sido romper el contrato para arreglar otra cosa.
+     *
+     * @return array<string, string>
+     */
+    private function direccionEscrita(PublicFacts $hechos): array
+    {
+        $escrita = VenueAddress::written($hechos->get('address.line1'), $hechos->get('address.line2'));
+
+        // Lo que la instalación no rellenó no viaja: sin ninguna línea no hay dirección que escribir.
+        return $escrita === null ? [] : ['written' => $escrita];
     }
 }
