@@ -70,6 +70,9 @@
    de `.env`, sin ajustes; el contrato de la API sube a 1.2.0 solo añadiendo. ⚠️ Producción, de noche o con
    el parque cerrado (`#594`), y sería el **décimo** despliegue. Cortar la versión y desplegarla son dos
    actos: el segundo es suyo.
+   ▶ **`main` ya se movió tras etiquetar** (commits de doc), así que la guarda 8 dice «HEAD no es una
+   versión»: se despliega desde **`git checkout v1.2.0`** y al terminar se vuelve con `git checkout main`.
+   Comprobado en seco: desde la etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
 3. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 4. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
