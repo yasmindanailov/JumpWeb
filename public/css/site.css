@@ -5714,6 +5714,31 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
     padding: var(--sp-6) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--bg);
     font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg);
 }
+/* El grupo «NO VIENEN» (T6·3): una lista de nombres con su botón de retirar. Superficie de papel
+   dentro del bloque, como la caja del enlace: es un dato, no un aviso — nadie ha roto nada, y por eso
+   no lleva el componente de aviso ni ningún tono de error. */
+.gf-invite__declined { display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg); }
+.gf-invite__declinedhead { margin: 0; font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+.gf-invite__names { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.gf-invite__name { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); font-size: var(--fs-body); }
+.gf-invite__name + .gf-invite__name { border-top: 1px solid var(--line); }
+/* ⚠️ Es un control, así que lleva el suelo táctil de 48 aunque parezca un enlace: se pulsa en un
+   teléfono, con el pulgar y entre dos nombres. */
+.gf-invite__dismiss {
+    flex: none; display: inline-flex; align-items: center; min-height: var(--tap-min); padding: 0 var(--sp-4);
+    border: 0; background: none; cursor: pointer;
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold);
+    color: var(--interactive); text-decoration: underline;
+}
+.gf-invite__dismiss:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+/* En una ficha propuesta el botón va debajo de su nota. ⚠️ `.gf-fiche__pad` es un bloque normal, no
+   un flex: aquí manda `display: flex` sobre el propio botón, no un `align-self` que no haría nada. */
+.gf-fiche__pad > .gf-invite__dismiss { display: flex; width: fit-content; margin-bottom: var(--sp-8); }
+/* La chapa del «no» sobre una ficha: INERTE, no informativa — ese niño sigue en la lista del
+   anfitrión y es él quien decide quitarlo. Superficie Nube, nunca un tono de error (§4.7: ninguno en
+   rojo). */
+.gf-fiche__from.is-declined { background: var(--bg-soft); border-color: var(--line); color: var(--fg-mute); }
+
 /* Personalizar: `details` nativo con el suelo táctil en su `summary` y el chevrón girado al abrirse,
    la misma receta que el grupo de fichas listas y el «Más info» de un extra. */
 .gf-invite__custom { border-top: 1px solid var(--line); }

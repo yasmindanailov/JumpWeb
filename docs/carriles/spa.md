@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#709`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#710`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -58,30 +58,32 @@
   enlace **escrito** (los atajos los enciende el navegador), personalizar por **su propio POST** —el
   testigo de los extras no se mueve, y el caso lo prueba **con control**—, el resumen en tres cápsulas y
   el plazo **como fecha**. 10 casos · arnés **8/8** · sonda a 390 y 1280. Lo que enseñó, en §10.8.
-- ✅ **T6·2 (`#709`, 19-09) · las RESPUESTAS PROPUESTAS y su adopción**, spec §10.9: el «sí» pendiente
-  se pinta sobre su ficha rellenando **solo lo vacío**, con la chapa «Por la invitación» y su id en
-  `adopt[]` **fuera de la fila**; al guardar, `adopt()` y luego `reconcileAdopted()`, en el mismo orden
-  que la API. 8 casos · arnés **6/6**. ❗ **Los dos supervivientes de la primera pasada eran del TEST**:
-  el caso del INTERCALADO caía sobre una ficha **vacía**, y una ficha sin nombre no se adopta ni
-  queriendo, así que pasaba igual con el código mutado; y la comprobación `attending` de la pantalla se
-  **retiró** —el contrato ya la garantiza y ninguna prueba podía ponerla en rojo (`#704`)—.
+- ✅ **T6·2 (`#709`, 19-09) · las RESPUESTAS PROPUESTAS y su adopción**, spec §10.9: se pinta sobre la
+  ficha rellenando **solo lo vacío**, con su chapa y su id en `adopt[]` **fuera de la fila**; al guardar,
+  `adopt()` y luego `reconcileAdopted()`, como la API. 8 casos · arnés **6/6**. ❗ **Los dos
+  supervivientes de la primera pasada eran del TEST**, no del código (detalle en §10.9).
+- ✅ **T6·3 (`#710`, 19-09) · los que NO VIENEN, los que no caben y «No lo apuntes»**, spec §10.10: el
+  grupo con sus nombres y la frase de D3, la chapa en la ficha que empareja, el aviso de la carrera y el
+  botón de retirar, con **su propio POST** y llegando desde dos sitios por `form=`. 10 casos · arnés
+  **8/8**. ❗ Retirar es el **par del suelo** (`#576`), y el caso lo mide sobre `assignedFloorFor()`, no
+  sobre la pantalla. ⚠️ Medido: **no hizo falta tocar `GuestCountAdjuster`**, así que sin `VERIFY_CONC`.
+  ▶ De paso, arreglado un defecto de la T6·1: personalizar mandaba al titular a «Mis pedidos».
 - La capa de agente: el plugin `jumpweb-agente` se instaló aquí el 17-09 y **se actualizó a `07076ac` el
   19-09**, con los arreglos del mapa de frases. Larastan entró con `composer install` (faltaba tras `#625`).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
 
-1. ❗ **LA TAREA: la T6·3** (spec §10.7; T6·1 y T6·2 ya están, §10.8 y §10.9). Son las cuatro cosas que
-   el anfitrión necesita para no quedarse atrapado: el **grupo «No vienen»** con sus nombres y la chapa
-   en la ficha que empareje, **«No lo apuntes»** sobre un «sí» pendiente (§7.2·R11 — sin eso no puede
-   bajar invitados por debajo de una respuesta que no quiere), el **aviso de «no caben»** (§7.1·3: las
-   respuestas con `slot_index === null`, que hoy solo se cuentan) y el **suelo** con `takenIn()`.
-   ⚠️⚠️ **Es la unidad que puede acabar tocando `GuestCountAdjuster`**: si lo toca, el push exige
-   **`VERIFY_CONC=1`** con sus verificadores sobre MySQL (§6, `INVARIANTES §6`). Mídelo con `grep` contra
-   el `CRITICAL_RE` del hook antes de dar por hecho que no hace falta (`#576` enseñó lo contrario).
-   ▶ El dominio ya tiene `dismiss()` (T4·6) y la API su `DELETE`; falta la pantalla, como en la T6·2.
-   ⚠️ Lee antes `POSTFORM-INVITADOS.md` (la doc de esta tanda) · **el armazón de la T2 no se toca** · §6
-   pide arnés de mutación y sonda a 390 y 1280.
+1. ❗ **LA TAREA: la T6·4 — PUERTA y HOJA DE SALA** (spec §10.7 y §4.8; T6·1→T6·3 ya están, §10.8–§10.10).
+   Son **otro consumidor** de lo mismo: los niños invitados con «sí» pendiente tienen que salir en la
+   puerta (`GateProfile::guestMinors`, con su estado y la cuenta «8 de 12 con justificante») y en la hoja
+   de sala (`ReservationSlip::guestRows`, marcados «por la invitación, sin repasar»). Sin la hoja, un
+   anfitrión que no vuelve a guardar deja niños fuera del papel.
+   ⚠️⚠️ **Tiene techo medido: `GateProfileTest` NO sube de 28 consultas** (§7.2·R16), así que la lectura
+   va **por lotes** a través del contrato `PartyGuests`, nunca una consulta por niño.
+   ⚠️ Los estados de puerta son **derivados y nunca guardados** (§4.5·10) y solo existen si el producto
+   no está en `none` y el waiver es interno. Ninguno en rojo.
+   ▶ Después quedan T6·5 (panel: resumen, copiar enlace y anular) y T6·6 («escribir el recordatorio»).
 2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
    el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
    cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
@@ -211,12 +213,12 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   escribí las dos reglas de mis botones apuntando al `button` y **no a `.btn`**: con `.btn` tu generador
   se las llevaba al paquete, y `.gf-invite` no puede existir dentro de un `.sidecart`. Si prefieres otra
   convención para esto, dilo y la cambio.
-- ▶ **Lo empujado hoy (`#708` y `#709`, T6·1 y T6·2)** y lo que implica para el próximo despliegue: ruta
-  nueva `POST /reserva/{reservation}/invitacion` (`reservation.invitation.update`), `GuestFormController`
-  (tres métodos y la adopción dentro del guardado), `OrderItem::invitationSignedUpdateUrl()`,
-  `PublicFreeText::rejects()`, la vista del post-form, `lang/*/guestform.php` y el bloque de la hoja en
-  `site.css`. **Sin migraciones, sin contrato de API y sin tocar dinero ni aforo**; ninguno casa con el
-  `CRITICAL_RE` (comprobado con `grep`, no supuesto).
+- ▶ **Lo empujado hoy (`#708`→`#710`, T6·1→T6·3)** y lo que implica para el próximo despliegue: **dos
+  rutas nuevas** (`reservation.invitation.update` y `.dismiss`), `GuestFormController` (cuatro métodos y
+  la adopción dentro del guardado), `OrderItem` (dos enlaces firmados), `PartyInvitations`
+  (`declinedPendingIn()`), `PublicFreeText::rejects()`, la vista del post-form, `lang/*/guestform.php` y
+  el bloque de la hoja en `site.css`. **Sin migraciones, sin contrato de API y sin tocar dinero ni
+  aforo**; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
 - ℹ️ **Un defecto de la API, medido y NO tocado**: `InvitationHostController` valida `honoree_name` y
   `host_line` como `['sometimes','string']`, y `ConvertEmptyStringsToNull` convierte un vacío en `null`,
   así que un cliente que mande `""` recibe **422**. En la web lo arreglé con `nullable`; en la API es su

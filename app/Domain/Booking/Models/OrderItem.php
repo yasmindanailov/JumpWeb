@@ -686,6 +686,12 @@ class OrderItem extends Model
         return $this->signedGuestFormRoute('reservation.invitation.update');
     }
 
+    /** El enlace firmado de «No lo apuntes» (T6·3, §7.2·R11), por la misma puerta y con la misma versión. */
+    public function invitationSignedDismissUrl(): string
+    {
+        return $this->signedGuestFormRoute('reservation.invitation.dismiss');
+    }
+
     /**
      * La VERSIÓN del enlace del post-form (`specs/complementos-post-reserva.md` §4.6.bis, `#413` D14).
      *

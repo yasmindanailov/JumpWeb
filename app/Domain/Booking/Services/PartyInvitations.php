@@ -610,6 +610,67 @@ final class PartyInvitations
     }
 
     /**
+     * **Los «NO PODEMOS» por repasar, y la ficha con la que empareja cada uno** (T6·3, §4.7).
+     *
+     * Un «no» no se propone sobre ninguna ficha —no hay nada que apuntar— pero el anfitrión **tiene
+     * que verlo**: es lo que le lleva a bajar el número de invitados (D3) y, si ese nombre ya estaba
+     * en su lista, a quitarlo de ella.
+     *
+     * ⚠️⚠️ **El emparejado se calcula AQUÍ**, con la misma regla que el de los «sí» ({@see matches}):
+     * la clave entera o su primera palabra. Repetirlo en la pantalla sería una segunda copia de la
+     * regla, y la primera vez que alguien arreglara una divergiría de la otra.
+     *
+     * ⚠️ **No consume fichas.** `takeSlotFor()` marca la ficha como ocupada porque reparte propuestas;
+     * aquí no se reparte nada, así que dos «no» del mismo nombre señalan la misma ficha y ninguno le
+     * quita el sitio a un «sí».
+     *
+     * ⚠️ Regla 5 también para el «no»: del mismo niño manda **la más reciente**, y las demás no se
+     * enseñan aparte — son la misma familia contestando dos veces.
+     *
+     * @return list<array{id: int, child_name: string, slot_index: int|null}>
+     */
+    public function declinedPendingIn(OrderItem $reservation): array
+    {
+        $nameKey = $reservation->ticketType?->guestNameFieldKey();
+        $quantity = max(0, (int) $reservation->quantity);
+        $rows = $nameKey === null ? [] : array_slice($reservation->guestData(), 0, $quantity);
+
+        $declined = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->pending()
+            ->where('attending', false)
+            ->orderBy('id')
+            ->get()
+            // `keyBy` sobre una lista ordenada por id se queda la última de cada niño.
+            ->keyBy('child_key');
+
+        $out = [];
+
+        foreach ($declined as $reply) {
+            $childKey = (string) $reply->child_key;
+            $index = null;
+
+            foreach ($rows as $i => $row) {
+                // Sin columna de nombre `$rows` es `[]`, así que aquí `$nameKey` no puede ser null:
+                // volver a comprobarlo sería afirmar una duda que la línea de arriba ya cerró.
+                $name = trim((string) ($row[$nameKey] ?? ''));
+                if ($name !== '' && $this->matches([PersonNameKey::for($name)], $childKey)) {
+                    $index = (int) $i;
+                    break;
+                }
+            }
+
+            $out[] = [
+                'id' => (int) $reply->getKey(),
+                'child_name' => (string) $reply->child_name,
+                'slot_index' => $index,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * El anfitrión ADOPTA respuestas: dejan de proponerse y pasan a ser fichas suyas.
      *
      * ⚠️⚠️ **Se re-comprueba todo aquí dentro** (`SEC-04` aplicado al tiempo, como `reply()`): que la

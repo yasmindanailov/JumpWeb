@@ -299,6 +299,14 @@
                     </div>
                 @endif
 
+                {{-- Retirar una respuesta hace desaparecer un nombre de la pantalla: se acusa recibo, o
+                     parecería que se ha perdido algo. --}}
+                @if (session('status') === 'invitation-dismissed')
+                    <div class="gf-notice gf-notice--ok" role="status">
+                        <p class="gf-notice__text">{{ __('guestform.invite.dismissed') }}</p>
+                    </div>
+                @endif
+
                 <section class="gf-invite" id="gf-invite">
                     <div class="gf-group__head">
                         <h2 class="gf-group__title">{{ __('guestform.invite.title') }}</h2>
@@ -351,6 +359,42 @@
                         <li class="gf-invite__tallyitem">{{ trans_choice('guestform.invite.tally_pending', $invitation['summary']['pending'], ['count' => $invitation['summary']['pending']]) }}</li>
                     </ul>
 
+                    {{-- ⚠️⚠️ **Si no caben** (§7.1·3): es la CARRERA, dicha en voz alta — entre que el
+                         anfitrión pintó su pantalla y guardó entraron más «sí»—. No es una lista de
+                         espera y no se rechaza a nadie: la decisión vuelve a él, que es el único que
+                         sabe quién va. --}}
+                    @if ($invitation['unplaced'] > 0)
+                        <div class="gf-notice gf-notice--attn" role="status">
+                            <p class="gf-notice__title">{{ __('guestform.invite.overflow_title') }}</p>
+                            <p class="gf-notice__text">{{ trans_choice('guestform.invite.overflow', $invitation['unplaced'], ['count' => $invitation['unplaced']]) }}</p>
+                        </div>
+                    @endif
+
+                    {{-- ───── El grupo «NO VIENEN» (T6·3, §4.7) ─────
+                         No se apunta en ninguna parte: lo que hace un «no» es llevar a BAJAR el número
+                         de invitados (D3), y por eso la frase dice hasta cuándo se puede. Cada aviso se
+                         puede descartar, que es el mismo gesto de «no lo apuntes». --}}
+                    @if ($invitation['declined'] !== [])
+                        <div class="gf-invite__declined">
+                            <p class="gf-invite__declinedhead">{{ trans_choice('guestform.invite.declined_title', count($invitation['declined']), ['count' => count($invitation['declined'])]) }}</p>
+                            <ul class="gf-invite__names">
+                                @foreach ($invitation['declined'] as $no)
+                                    <li class="gf-invite__name">
+                                        <span>{{ $no['child_name'] }}</span>
+                                        {{-- ⚠️ `form=` NO es decorativo: este botón vive DENTRO del bloque
+                                             de la invitación, que está fuera del formulario de las fichas,
+                                             y su envío es el de descartar —nunca el de guardar—. --}}
+                                        <button type="submit" class="gf-invite__dismiss" form="gf-dismiss"
+                                                name="reply" value="{{ $no['id'] }}">{{ __('guestform.invite.dismiss') }}</button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if ($invitation['deadline'] !== '' && $guestCount['editable'] && ! $readonly)
+                                <p class="gf-invite__deadline">{{ __('guestform.invite.declined_lead', ['when' => $invitation['deadline']]) }}</p>
+                            @endif
+                        </div>
+                    @endif
+
                     {{-- PERSONALIZAR: `details` NATIVO, que se abre sin una línea de JS. Nace ABIERTO
                          cuando aún no se puede compartir, porque entonces el remedio está dentro. --}}
                     <details class="gf-invite__custom" @if (! $invitation['shareable']) open @endif>
@@ -401,6 +445,12 @@
                         </form>
                     </details>
                 </section>
+
+                {{-- El formulario de «No lo apuntes», VACÍO y fuera de todo: lo envían por `form=` los
+                     botones del grupo «No vienen» y los de las fichas propuestas, que viven en sitios
+                     distintos de la página. Un `form` dentro de otro no es HTML válido, y este gesto no
+                     puede ir por el POST de guardar: escribe solo `invitation_replies`. --}}
+                <form method="POST" action="{{ $invitation['dismiss'] }}" id="gf-dismiss" class="gf-sr-only">@csrf</form>
             @endif
 
             <form method="POST" action="{{ $formAction }}" class="gf-form" id="gf-form">
@@ -580,6 +630,11 @@
                     $pageOrder = array_merge($pendingIdx, $doneIdx);
                     $lastPos = count($pageOrder) - 1;
                     $pasteable = ! $readonly && $nameKey !== null;
+                    // Los «no» que EMPAREJAN con una ficha escrita (T6·3): su chapa va en la ficha, y el
+                    // emparejado lo calculó el dominio — aquí solo se indexa por posición.
+                    $declinedBySlot = collect($invitation['declined'] ?? [])
+                        ->filter(fn ($row) => $row['slot_index'] !== null)
+                        ->keyBy('slot_index');
                 @endphp
                 <section class="gf-group">
                     <div class="gf-group__head">
@@ -642,6 +697,12 @@
                                         @if ($mark !== null)
                                             <span class="gf-fiche__from">{{ __('guestform.invite.badge') }}</span>
                                         @endif
+                                        {{-- Y la del «no»: este niño ESTÁ en su lista y su familia ha dicho que
+                                             no viene (T6·3). No se quita nadie solo —la lista es suya—, pero
+                                             tiene que verlo antes de bajar el número de invitados. --}}
+                                        @if ($declinedBySlot->has($i))
+                                            <span class="gf-fiche__from is-declined">{{ __('guestform.invite.declined_badge') }}</span>
+                                        @endif
                                     </span>
                                     <span class="gf-fiche__chev" aria-hidden="true">
                                         <x-icons.chevron-down :width="16" :height="16" />
@@ -666,6 +727,14 @@
                                                  cuál se le está enseñando, sin nombrar a nadie más (V6). --}}
                                             @if ($mark !== null && $mark['repeated'])
                                                 <p class="gf-fiche__note">{{ __('guestform.invite.repeated') }}</p>
+                                            @endif
+                                            {{-- «No lo apuntes» sobre un «sí» PENDIENTE (§7.2·R11): sin esto, una
+                                                 respuesta que no quiere le sube el suelo y le impide bajar el
+                                                 número de invitados, sin forma de retirarla.
+                                                 ⚠️ `form=` manda el gesto por SU ruta y no por la de guardar. --}}
+                                            @if ($mark !== null && ! $readonly)
+                                                <button type="submit" class="gf-invite__dismiss" form="gf-dismiss"
+                                                        name="reply" value="{{ $mark['id'] }}">{{ __('guestform.invite.dismiss') }}</button>
                                             @endif
                                             <div class="eventfields">
                                                 @foreach ($guestFields as $idx => $field)

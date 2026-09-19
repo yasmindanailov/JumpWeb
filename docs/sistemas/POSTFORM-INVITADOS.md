@@ -178,6 +178,14 @@ seed siempre incluye `guest_fields`).
   ⚠️ Lo propuesto **no se guarda solo**: viaja en los mismos `<input>` y se escribe cuando el titular
   pulsa Guardar, así que el medidor sigue contando lo GUARDADO (como el pegado de la T2). Guardas:
   `InvitationProposalsTest` (el caso INTERCALADO) y `scripts/mutar-invitacion-t6-2.py`.
+- **Los que NO VIENEN, los que no caben y «No lo apuntes»** (2026-09-19, `#710`, spec §10.10): el grupo
+  «No vienen» con sus nombres y la frase de D3 (bajar invitados hasta la fecha), la chapa «Ha dicho que
+  no viene» en la ficha que empareja, el aviso de «no caben» (la carrera de §7.1·3) y el botón de
+  **retirar** una respuesta, que tiene **su propio POST** (`reservation.invitation.dismiss`) y llega
+  desde dos sitios de la página por el atributo `form=`.
+  ❗ Retirar es el par del suelo: un «sí» pendiente sube `GuardianPlaces::takenIn()` y sin este gesto el
+  titular no podría bajar el número de invitados. **No borra** (V3). Guardas: `InvitationDeclinedTest`
+  (mide el SUELO antes y después) y `scripts/mutar-invitacion-t6-3.py`.
 - **Ruta**: `/reserva/{reservation}/datos-invitados` — nombres `reservation.guests` /
   `reservation.guests.store`. El parámetro es el **OrderItem del pack**: **1 post-form POR
   RESERVA**, no por pedido. Un pedido con 2 packs → 2 post-forms, 2 emails, 2 botones.

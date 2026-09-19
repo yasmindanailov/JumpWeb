@@ -97,6 +97,15 @@ return [
         'tally_pending' => '{0} Nothing to review|{1} :count to review|[2,*] :count to review',
         'badge' => 'From the invitation',
         'repeated' => 'This family has replied more than once. We are showing you the latest.',
+
+        // Those who can't come, and those who no longer fit (T6·3, §4.7).
+        'declined_title' => "{1} Can't come|[2,*] Can't come",
+        'declined_badge' => 'Has said they cannot come',
+        'declined_lead' => 'If they are not coming, you can lower the number of guests until :when',
+        'dismiss' => "Don't add them",
+        'dismissed' => 'Done: that is no longer on your list.',
+        'overflow_title' => 'Some replies no longer fit',
+        'overflow' => '{1} One family has said they are coming and there is no card left for their child: raise the number of guests or let them know.|[2,*] :count replies no longer fit: raise the number of guests or let those families know.',
         'customize' => 'Personalise',
         'theme' => 'Theme',
         'theme_confeti' => 'Confetti',

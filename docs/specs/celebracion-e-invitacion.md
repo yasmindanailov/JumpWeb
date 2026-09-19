@@ -4,7 +4,7 @@
 > interruptores apagados) · T5 entera en el árbol · T6 empezada (T6·1, §10.8) · T7 sin empezar** ·
 > Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
 > `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
-> `#708`–`#709` (T6·1 y T6·2) ·
+> `#708`–`#710` (T6·1→T6·3) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -15,7 +15,7 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
-  **T5 y T6·1–T6·2 en el árbol, sin desplegar** → sigue la **T6·3** (§10.7) y la T7.
+  **T5 y T6·1–T6·3 en el árbol, sin desplegar** → sigue la **T6·4** (§10.7) y la T7.
   **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
   escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
@@ -1499,7 +1499,7 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 |---|---|---|
 | **T6·1** ✅ | El **bloque de la invitación** en el post-form (§4.7): compartir, personalizar, resumen y el plazo escrito como fecha — **en el árbol** (`#708`, §10.8) | Escribe **solo `party_invitations`**, así que no roza el testigo de las fichas. Es lo primero que necesita un anfitrión: repartir el enlace |
 | **T6·2** ✅ | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar — **en el árbol** (`#709`, §10.9) | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
-| **T6·3** | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` | ⚠️ Es la que puede acabar tocando `GuestCountAdjuster`: si lo toca, el push pide **`VERIFY_CONC=1`** con sus verificadores (§6) |
+| **T6·3** ✅ | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` — **en el árbol** (`#710`, §10.10) | ⚠️ Podía acabar tocando `GuestCountAdjuster`; **medido, no hizo falta**: el suelo ya salía de `GuardianPlaces::takenIn()` (`#576`), así que su push no pidió `VERIFY_CONC` |
 | **T6·4** | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
 | **T6·5** | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
 | **T6·6** | **«Escribir el recordatorio»**: compone el texto, lo copia y guarda `reminded_at`/`reminded_count` | **No envía nada**, así que no toca correos ni depende de la T7 |
@@ -1609,6 +1609,42 @@ de la fila, la clave de la ficha, la ficha vaciada, la reconciliación y un `ado
 arnés `scripts/mutar-invitacion-t6-2.py` **6/6** (dos supervivientes en la primera pasada, los dos
 arreglados arriba) · sonda de la ficha propuesta a **390 y 1280** (`storage/app/audit/sonda-t6/ficha/`):
 `adopt[]` dentro del formulario, la chapa a 26 px y el prerrelleno visible · Pint y Larastan limpios.
+
+### 10.10 T6·3 · LOS QUE NO VIENEN, LOS QUE NO CABEN Y «NO LO APUNTES» — EN EL ÁRBOL (2026-09-19, `#710`)
+
+La unidad que **desatasca** al anfitrión: hasta aquí podía ver y adoptar, pero no quitar nada.
+
+**Lo que entra**
+
+- **El grupo «No vienen»**, con los nombres y la frase de D3 —«puedes bajar el número de invitados hasta
+  el {fecha}»—, y la **chapa «Ha dicho que no viene»** en la ficha que empareja, si ese niño estaba en su
+  lista. **Nadie se quita solo**: la lista es suya.
+- **«No lo apuntes»** sobre un «sí» pendiente (§7.2·R11) y sobre un «no». ❗ Es el par de la regla de
+  `#576`: un «sí» pendiente es una plaza con dueño y **sube el suelo**, así que sin este gesto una
+  respuesta que no quiere le impediría bajar invitados y no tendría forma de retirarla. El caso lo mide
+  **sobre el suelo**, que es lo que duele, y no sobre la pantalla.
+- **El aviso de «no caben»** (§7.1·3): la carrera, dicha. No es una lista de espera ni rechaza a nadie.
+- **Su propio POST** (`reservation.invitation.dismiss`), como personalizar y por lo mismo: escribe solo
+  `invitation_replies` y no puede mover el testigo de los extras. Con su caso y su **control**.
+
+**Lo que enseñó construirla**
+
+- ⚠️⚠️ **La T6·1 mandaba al anfitrión a «Mis pedidos» al personalizar**, porque reutilizó el `backUrl()`
+  de guardar —y guardar es terminar, pero personalizar o retirar son gestos **dentro** de la pantalla—.
+  **Arreglado aquí** con `invitationBackUrl()`. Lo vio el recorrido: los casos afirmaban «redirige» sin
+  mirar **a dónde**, que es la mitad que faltaba de esa aserción.
+- ⚠️ **`proposalsFor()` se pedía DOS veces por render** (las fichas y el bloque). Se pide una y se pasa:
+  esta pantalla tiene presupuesto de consultas medido.
+- ⚠️ El caso de la T6·2 afirmaba de más —«el nombre de un “no” no aparece en la página»— y esta unidad lo
+  enseña en su grupo. Se corrigió a lo que la propiedad dice de verdad: **no cae en una FICHA**.
+- ▶ El botón de retirar vive en dos sitios distintos de la página y el formulario de descartar está
+  fuera de los dos: los une el atributo **`form=`**, el mismo recurso que el número de invitados (`#571`).
+
+**Verificación**: `InvitationDeclinedTest` (10 casos, con el **CONTROL** del testigo y el suelo medido
+antes y después) · arnés `scripts/mutar-invitacion-t6-3.py` **8/8** · sonda a **390 y 1280**: los tres
+botones de retirar a 48 px y atados al formulario de descartar, el bloque a 682 px en el teléfono ·
+Pint y Larastan limpios · **`GuestCountAdjuster` no se toca** (medido con `grep` contra el `CRITICAL_RE`:
+el suelo ya lo daba `GuardianPlaces::takenIn()` desde `#576`), así que este push **no pide `VERIFY_CONC`**.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

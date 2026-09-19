@@ -98,6 +98,15 @@ return [
         'tally_pending' => '{0} Rien à revoir|{1} :count à revoir|[2,*] :count à revoir',
         'badge' => "Par l'invitation",
         'repeated' => 'Cette famille a répondu plusieurs fois. Nous vous montrons sa dernière réponse.',
+
+        // Ceux qui ne viennent pas, et ceux qui ne rentrent plus (T6·3, §4.7).
+        'declined_title' => '{1} Ne peut pas venir|[2,*] Ne peuvent pas venir',
+        'declined_badge' => 'A dit qu’il ne vient pas',
+        'declined_lead' => "S'ils ne viennent pas, vous pouvez baisser le nombre d'invités jusqu'au :when",
+        'dismiss' => 'Ne pas le noter',
+        'dismissed' => "C'est fait : ce n'est plus dans votre liste.",
+        'overflow_title' => 'Des réponses ne rentrent plus',
+        'overflow' => "{1} Une famille a dit qu'elle venait et il ne reste plus de fiche pour son enfant : augmentez le nombre d'invités ou prévenez-la.|[2,*] :count réponses ne rentrent plus : augmentez le nombre d'invités ou prévenez ces familles.",
         'customize' => 'Personnaliser',
         'theme' => 'Thème',
         'theme_confeti' => 'Confettis',

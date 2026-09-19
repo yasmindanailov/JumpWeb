@@ -111,7 +111,9 @@ class InvitationProposalsTest extends TestCase
 
         $html = $this->get($item->guestFormSignedUrl())->assertOk()->getContent();
 
-        $this->assertStringNotContainsString('Martina Serra', $html, 'un «no» no se propone sobre ninguna ficha');
+        // ⚠️ Lo que NO puede pasar es que caiga en una FICHA. Desde la T6·3 su nombre sí sale, pero en
+        // el grupo «No vienen», que es otra cosa: ahí no se apunta a nadie (§4.7).
+        $this->assertStringNotContainsString('value="Martina Serra"', $html, 'un «no» no se propone sobre ninguna ficha');
         $this->assertStringNotContainsString('name="adopt[]"', $html);
     }
 

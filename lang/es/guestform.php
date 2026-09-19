@@ -118,6 +118,21 @@ return [
         'badge' => 'Por la invitación',
         // ⚠️ No dice cuántas veces ni desde cuándo: solo que hay más de una y cuál se enseña (V6).
         'repeated' => 'Esta familia ha contestado más de una vez. Te enseñamos lo último que nos dijo.',
+
+        // ── LOS QUE NO VIENEN Y LOS QUE NO CABEN (T6·3, §4.7) ─────────────────────────────────────
+        // ⚠️ Un «no» no se apunta en ninguna parte: lo que hace es llevar a BAJAR el número de
+        // invitados (D3), y por eso su frase dice hasta cuándo se puede.
+        'declined_title' => '{1} No puede venir|[2,*] No pueden venir',
+        'declined_badge' => 'Ha dicho que no viene',
+        'declined_lead' => 'Si no vienen, puedes bajar el número de invitados hasta el :when',
+        // El mismo botón sirve para un «no» y para un «sí» que no quiere apuntar: en los dos casos es
+        // «quítalo de mi lista», y por eso no dice «borrar» — la respuesta se conserva.
+        'dismiss' => 'No lo apuntes',
+        'dismissed' => 'Hecho: eso ya no está en tu lista.',
+        // ⚠️⚠️ La CARRERA, dicha (§7.1·3): entre pintar y guardar entraron más «sí». No es una lista de
+        // espera y no se rechaza a nadie; la decisión es suya, que es quien sabe quién va.
+        'overflow_title' => 'Hay respuestas que ya no caben',
+        'overflow' => '{1} Una familia ha dicho que viene y ya no queda ficha para su hijo: sube el número de invitados o avísale.|[2,*] Hay :count respuestas que ya no caben: sube el número de invitados o avisa a esas familias.',
         'customize' => 'Personalizar',
         'theme' => 'Tema',
         'theme_confeti' => 'Confeti',

@@ -53,8 +53,15 @@ class GuestFormController extends Controller
         $ageSurcharge = app(MixedPartySurcharge::class)->written($reservation);
         $guestRegimes = app(GuestAgeMixReader::class)->guestRegimes($reservation);
         $addons = app(PostFormAddons::class)->viewFor($reservation);
+        // Celebrada = solo lectura: ni se pintan propuestas ni se materializa ninguna invitación.
+        $readonly = $reservation->isFinishedInPractice();
+        // ⚠️ Las propuestas se piden UNA vez: cada llamada consulta, y esta pantalla tiene su
+        // presupuesto de consultas medido. Las usan las dos mitades —las fichas y el bloque—.
+        $proposals = ($type !== null && $type->offersGuestInvitation() && ! $readonly)
+            ? app(PartyInvitations::class)->proposalsFor($reservation)
+            : [];
         // Lo que PROPONEN las respuestas pendientes, ya colocado sobre sus fichas (T6·2).
-        $proposed = $this->withProposals($reservation, $reservation->guestData());
+        $proposed = $this->withProposals($reservation, $reservation->guestData(), $proposals);
 
         return view('reservation.guests', [
             'order' => $reservation->order,
@@ -102,7 +109,7 @@ class GuestFormController extends Controller
             // SOLO LECTURA cuando la reserva ya se ha celebrado (su franja terminó): el post-form solo
             // sirve para PREPARAR la fiesta; pasada, se muestra pero no se edita. El enlace sigue
             // caducando a evento+14d (tope RGPD), pero la edición se cierra al terminar el evento.
-            'readonly' => $reservation->isFinishedInPractice(),
+            'readonly' => $readonly,
             // Si se entró por enlace firmado (sin sesión), el POST también debe ir firmado para
             // re-autorizar; si es el dueño autenticado, basta la ruta normal (la sesión autoriza).
             // El POST hereda la MISMA caducidad que el enlace del email (A7), de ESTA reserva.
@@ -124,7 +131,7 @@ class GuestFormController extends Controller
             // El BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7): compartir,
             // personalizar, el resumen y el plazo escrito como fecha. `null` cuando este producto no
             // ofrece invitación — y entonces no se pinta nada, ni se crea ninguna fila.
-            'invitation' => $this->invitationView($request, $reservation),
+            'invitation' => $this->invitationView($request, $reservation, $proposals, $readonly),
             // ⚠️ La firma la compone el DOMINIO (`guestFormSignedStoreUrl`), no esta capa: desde D14
             // toda URL firmada del post-form lleva además la VERSIÓN del enlace, y una compuesta a
             // mano aquí sería la que se queda sin ella.
@@ -304,8 +311,43 @@ class GuestFormController extends Controller
         $invitations->personalize($invitation, $data);
 
         return redirect()
-            ->to($this->backUrl($request, $reservation))
+            ->to($this->invitationBackUrl($request, $reservation))
             ->with('status', $rejected ? 'invitation-text-rejected' : 'invitation-saved');
+    }
+
+    /**
+     * **«No lo apuntes»** (T6·3, §7.2·R11): el anfitrión retira de su lista una respuesta que no
+     * quiere apuntar.
+     *
+     * ❗❗ **Sin esto se queda ATRAPADO**: desde `#576` un «sí» pendiente es una plaza con dueño y sube
+     * el suelo por debajo del cual no puede bajar el número de invitados. Es el par de esa regla, no
+     * una comodidad.
+     *
+     * ⚠️ **Mismo desenlace aunque ya estuviera descartada**, como el 204 de la API: el gesto es
+     * idempotente y dos pestañas del mismo anfitrión no tienen por qué pelearse. Distinguir «no
+     * existe» de «ya estaba» sería además información sobre su propia lista que no hace falta dar.
+     *
+     * ⚠️ Descartar **no borra**: la respuesta vive hasta que la poda de los 14 días se la lleve (V3).
+     * Lo que cambia es que deja de contar, de proponerse y de ocupar plaza.
+     */
+    public function dismissReply(Request $request, OrderItem $reservation): RedirectResponse
+    {
+        $this->authorizeGuestFormAccess($request, $reservation);
+
+        if ($reservation->isFinishedInPractice()) {
+            return redirect()
+                ->to($this->invitationBackUrl($request, $reservation))
+                ->with('status', 'guest-form-readonly');
+        }
+
+        // El `where` de la reserva vive dentro de `dismiss()`: una respuesta de OTRA fiesta no se toca
+        // aunque su id llegue en este cuerpo.
+        $reply = $request->input('reply');
+        app(PartyInvitations::class)->dismiss($reservation, is_numeric($reply) ? (int) $reply : 0);
+
+        return redirect()
+            ->to($this->invitationBackUrl($request, $reservation))
+            ->with('status', 'invitation-dismissed');
     }
 
     /**
@@ -348,20 +390,15 @@ class GuestFormController extends Controller
      * guarda que nada puede tumbar es ruido, no defensa (`#704`).
      *
      * @param  list<array<string, string>>  $rows
+     * @param  list<array{id: int, child_name: string, attending: bool, companion: string|null, guest_data: array<string, string>, slot_index: int|null, repeated: bool}>  $proposals
      * @return array{rows: list<array<string, string>>, marks: array<int, array{id: int, repeated: bool}>}
      */
-    private function withProposals(OrderItem $reservation, array $rows): array
+    private function withProposals(OrderItem $reservation, array $rows, array $proposals): array
     {
-        $type = $reservation->ticketType;
-
-        if ($type === null || ! $type->offersGuestInvitation() || $reservation->isFinishedInPractice()) {
-            return ['rows' => $rows, 'marks' => []];
-        }
-
-        $nameKey = $type->guestNameFieldKey();
+        $nameKey = $reservation->ticketType?->guestNameFieldKey();
         $marks = [];
 
-        foreach (app(PartyInvitations::class)->proposalsFor($reservation) as $proposal) {
+        foreach ($proposals as $proposal) {
             $index = $proposal['slot_index'];
 
             if ($index === null) {
@@ -402,11 +439,16 @@ class GuestFormController extends Controller
      * horas que el anfitrión tenga que sumar. Sale de `GuestCountPolicy`, la misma fuente que cierra
      * las respuestas (D14), y no de una cuenta propia.
      *
-     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, themes: list<string>}|null
+     * ⚠️ **Los «no» y los que no caben viven aquí y no en las fichas** (T6·3): un «no» no se apunta en
+     * ninguna parte —lo que hace es llevar a BAJAR el número de invitados (D3)— y un «sí» que ya no
+     * cabe no tiene ficha donde pintarse. Los dos son avisos sobre la lista, no filas de la lista.
+     *
+     * @param  list<array{id: int, child_name: string, attending: bool, companion: string|null, guest_data: array<string, string>, slot_index: int|null, repeated: bool}>  $proposals
+     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, dismiss: string, themes: list<string>, declined: list<array{id: int, child_name: string, slot_index: int|null}>, unplaced: int}|null
      */
-    private function invitationView(Request $request, OrderItem $reservation): ?array
+    private function invitationView(Request $request, OrderItem $reservation, array $proposals, bool $readonly): ?array
     {
-        if ($reservation->isFinishedInPractice()) {
+        if ($readonly) {
             return null;
         }
 
@@ -418,6 +460,7 @@ class GuestFormController extends Controller
         }
 
         $deadline = app(GuestCountPolicy::class)->deadlineFor($reservation);
+        $signed = $request->hasValidSignature();
 
         return [
             'invitation' => $invitation,
@@ -428,10 +471,20 @@ class GuestFormController extends Controller
             'summary' => $invitations->summaryFor($reservation),
             // La misma regla que `formAction`: quien entró por enlace firmado POSTea firmado, y la
             // firma la compone el DOMINIO para que lleve la versión del enlace (D14).
-            'action' => $request->hasValidSignature()
+            'action' => $signed
                 ? $reservation->invitationSignedUpdateUrl()
                 : route('reservation.invitation.update', ['reservation' => $reservation]),
+            'dismiss' => $signed
+                ? $reservation->invitationSignedDismissUrl()
+                : route('reservation.invitation.dismiss', ['reservation' => $reservation]),
             'themes' => PartyInvitation::THEMES,
+            'declined' => $invitations->declinedPendingIn($reservation),
+            // Los «sí» que llegaron cuando ya no quedaba ficha (§7.1·3): la carrera, dicha. No es una
+            // lista de espera — la decisión vuelve al anfitrión, que es quien sabe quién va.
+            'unplaced' => count(array_filter(
+                $proposals,
+                static fn (array $p): bool => $p['attending'] && $p['slot_index'] === null,
+            )),
         ];
     }
 
@@ -516,6 +569,24 @@ class GuestFormController extends Controller
     {
         if ($this->ownsGuestForm($request, $reservation)) {
             return route('account.orders');
+        }
+
+        return $reservation->guestFormSignedUrl();
+    }
+
+    /**
+     * Tras un gesto de la INVITACIÓN se vuelve **al formulario**, nunca a «Mis pedidos».
+     *
+     * ⚠️⚠️ **Es distinto de `backUrl()` a propósito, y arregla un defecto de la T6·1**: guardar el
+     * formulario es terminar —de ahí que el titular autenticado acabe en su lista de pedidos—, pero
+     * personalizar la invitación o retirar una respuesta son gestos **dentro** de la pantalla, y
+     * echarle de ella le obligaría a volver a entrar para seguir repasando su lista. Lo vio el
+     * recorrido, no un test: los casos afirmaban «redirige» sin mirar a dónde.
+     */
+    private function invitationBackUrl(Request $request, OrderItem $reservation): string
+    {
+        if ($this->ownsGuestForm($request, $reservation)) {
+            return route('reservation.guests', ['reservation' => $reservation]);
         }
 
         return $reservation->guestFormSignedUrl();

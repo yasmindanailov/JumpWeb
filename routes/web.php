@@ -241,6 +241,16 @@ Route::post('/reserva/{reservation}/invitacion', [GuestFormController::class, 'u
     ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
     ->missing(fn () => abort(403))
     ->name('reservation.invitation.update');
+// «No lo apuntes» (T6·3, §7.2·R11): el anfitrión retira una respuesta de su lista.
+//
+// ⚠️⚠️ **Es su propio POST por el mismo motivo que personalizar**: descartar escribe SOLO
+// `invitation_replies`, y meterlo en el guardado de siempre movería el testigo de los extras. Y es el
+// gesto que evita que se quede ATRAPADO: desde `#576` un «sí» pendiente sube el suelo por debajo del
+// cual no puede bajar el número de invitados, así que sin esto no tendría forma de retirarlo.
+Route::post('/reserva/{reservation}/invitacion/descartar', [GuestFormController::class, 'dismissReply'])
+    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+    ->missing(fn () => abort(403))
+    ->name('reservation.invitation.dismiss');
 
 // El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
 // cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito
