@@ -240,6 +240,30 @@ if [[ -n "$(git status --porcelain)" ]]; then
     warn "y entonces «lo que hay en staging» deja de ser reproducible."
     [[ $GO -eq 1 ]] && die "Commitea (o guarda) antes de desplegar con --go."
 fi
+
+# ── GUARDA 9 · LO QUE GIT NO VE, RSYNC SÍ LO SUBE (`DECISIONES #638`) ───────────────────────────
+# ⚠️⚠️ **La guarda de arriba no cubre esto, y ahí está el agujero**: `git status --porcelain` calla los
+# ficheros ignorados —`.gitignore` y, peor, `.git/info/exclude`, que solo existe en ESTA máquina—, pero
+# `rsync` sube el árbol de trabajo y no sabe nada de git. Un andamio local dejado en `public/` acaba
+# **publicado en el dominio del cliente**, indexable, sin aparecer en ningún diff ni en ninguna revisión.
+#
+# Medido el 2026-09-19: el banco de pruebas de la F4 (`public/landing-ajena.html`, una landing falsa para
+# mirar el cajón empaquetado en vivo) estaba en `.git/info/exclude` y habría viajado en el décimo despliegue.
+#
+# La lista blanca es la que dice qué vive legítimamente en `public/` fuera de git, y es corta a propósito:
+# los assets construidos, las subidas del panel, el enlace de storage y el paquete de marca de la
+# instalación (`img/` es entero suyo). Cualquier otra cosa se nombra antes de subir.
+mapfile -t intrusos < <(
+    git ls-files --others --directory public/ \
+        | grep -Ev '^public/(build/|uploads/|storage$|hot$|css/client\.css$|img/)$' || true
+)
+if [[ ${#intrusos[@]} -gt 0 ]]; then
+    warn "GUARDA 9 · en public/ hay ficheros que git NO conoce y que rsync SÍ subiría:"
+    for intruso in "${intrusos[@]}"; do warn "   · $intruso"; done
+    [[ $GO -eq 1 ]] && die "GUARDA 9 · un andamio local no se publica en el dominio del cliente.
+   ▶ Bórralo, muévelo fuera de public/, o añádelo a las exclusiones del rsync con su motivo escrito."
+    warn "Con --go esto ABORTA."
+fi
 info "commit a desplegar: $(git rev-parse --short HEAD) ($(git rev-parse --abbrev-ref HEAD))"
 
 if [[ $SKIP_BUILD -eq 0 ]]; then

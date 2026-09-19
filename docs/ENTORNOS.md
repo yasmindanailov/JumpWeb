@@ -633,6 +633,15 @@ corre desde el 16-09 a las 22:53). Releído por `ssh` (37 B, `playjump2`, 0664) 
 en 200 después. Medido: `DeployScriptGateTest` ejecuta el script en un repo de usar y tirar y
 `scripts/mutar-guarda8.sh` da 9/9.
 
+**GUARDA 9 · lo que git no ve, `rsync` sí lo sube** (`DECISIONES #638`, 2026-09-19). El pre-vuelo lista lo que
+git NO conoce bajo `public/` y, con `--go`, aborta; en seco avisa. Existe porque la comprobación de árbol
+limpio se apoya en `git status --porcelain`, que **calla los ficheros ignorados** —incluidos los de
+`.git/info/exclude`, que solo existe en UNA máquina— y `rsync` sincroniza el árbol de trabajo sin saber nada
+de git: el banco de pruebas de la F4 (`public/landing-ajena.html`) habría acabado publicado en el dominio del
+cliente sin aparecer en ningún diff. Lista blanca —lo que vive ahí fuera de git a propósito—: `build/`,
+`uploads/`, `storage`, `hot`, `css/client.css`, `img/`. Medido: `DeployScriptGateTest` comprueba el patrón
+real del script en las dos direcciones (mutación vista).
+
 **No hay noveno despliegue pendiente a 2026-09-17** (medido con lecturas, el clasificador «auto» denegó el
 ensayo en seco del script por «Blind Apply»): de `v1.0.0` a `13289269` hay 7 commits y **0 ficheros de
 runtime** (`app/`, `resources/`, `routes/`, `config/`, `database/`, `public/`, `lang/`, `bootstrap/`,

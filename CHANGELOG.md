@@ -6,6 +6,56 @@
 > **interno**. Producción despliega solo etiquetas (guarda 8 de `scripts/deploy.sh`); staging despliega
 > `main`. Una versión se corta con la skill `/release`.
 
+## v1.2.0 · 2026-09-19
+
+La versión del **cajón empaquetable** (F4 del programa, `#630`→`#638`): el cajón deja de necesitar la landing
+del producto y pasa a montarse, abrirse y **vender** en cualquier página HTML del mismo dominio, con dos
+líneas. Entra también el **emisor de tokens Bearer** —la puerta de la app móvil—, ESLint en el gate, y del
+carril del SPA la invitación digital completa, todavía apagada.
+
+### Para las instancias
+
+- **Nada que hacer para actualizar.** Sin tocar nada, la web es la de v1.1.0: mismos píxeles —comprobado con
+  la huella de maquetación, 34 pantallas— y mismo comportamiento. Sin migraciones, sin claves nuevas de
+  `.env`, sin ajustes obligatorios.
+- **El contrato de la API sube de 1.0.0 a 1.2.0**, y solo AÑADE: `/auth/tokens` y `/auth/tokens/rotate` (login
+  por token para la app), `/sidebar/boot` y `/sidebar/session` (el arranque del cajón) y las tres de la
+  invitación. Ninguna ruta existente cambia de forma. La web sigue hablando por cookie de sesión.
+- **Dos rutas nuevas que sirve el producto y hoy no usa nadie**: `/css/cajon.css` (la hoja del cajón) y
+  `/cajon/paquete.js` (su cargador). Son el paquete con el que una instalación podrá servir SU propia landing
+  sin copiar nada del producto (F5). Mientras la landing sea la del producto, no se cargan.
+- **Recomendado, no obligatorio** (`docs/INSTALACION-CLIENTE.md` §4): en `client.css`, declarar el bloque de
+  tokens en `:root, .sidecart` en vez de solo `:root`. Hoy no cambia nada; el día que la landing sea de la
+  instalación, es lo que hace que su tema llegue también al cajón.
+- **La invitación digital de cumpleaños entra entera en el código y sigue APAGADA**: sus dos interruptores los
+  enciende el panel. Hasta entonces el embudo es exactamente el de v1.1.0.
+- La promo de `#628` (precio anterior tachado y recuadro de oferta) sigue como está: son filas de `settings`, y
+  esta versión no las toca.
+
+### Interno
+
+- **F4 · el cajón empaquetable, cerrada** (`specs/cajon-empaquetable.md`, `#631`→`#637`). Cinco tandas: el
+  arranque sale del layout a un modelo de lectura con dos transportes (`SidebarBoot`, contrato 1.2.0); la
+  apertura pierde Alpine (`cajon/controller.js`, `window.JumpWeb.cajon`, `data-jw-*`, eventos `jw:cajon:*`);
+  la carcasa gana un dueño sin framework (`cajon/shell.js`); el paquete se monta donde no hay producto
+  (`installCajon()` + `cajon/standalone.js`, que CONSTRUYE la carcasa pidiendo el arranque a la API); y la
+  hoja propia se GENERA desde las tres del producto (`scripts/hoja-del-cajon.py`, sin tocar `site.css`).
+  Criterio de salida medido: una página ajena abre el cajón y COMPRA —`POST /api/v1/orders` 201 y salto
+  firmado a la pasarela—, sonda 42/42.
+- **El emisor de tokens Bearer** (`#630`, `specs/token-bearer.md`): `ApiTokenIssuer`, ability `api-v1` exigida
+  en toda ruta autenticada, tope de 10 por usuario, rotación. Con él se cerró la Fase 3 (API v1).
+- **Dos fallos de cascada cazados ANTES de etiquetar**, los dos silenciosos: el tema del panel scopeado al
+  cajón le ganaba al tema de la instalación (`#637`, medido con el `client.css` real: `--on-brand` del cliente
+  pisado por el del panel), y `deploy.sh` habría subido un andamio local de `public/` que git no veía
+  (`#638`, guarda 9 nueva). Cada uno con su guarda y su mutación.
+- **ESLint del cajón en el gate** (`#629`, línea base nativa de 12 con trinquete) — cazó un defecto vivo el
+  primer día. Larastan sigue en nivel 5.
+- Del **carril del SPA** (`carriles/spa.md`): la invitación digital T4·5→T5·5 (`#577`, `#578`, `#701`→`#706`),
+  el `addBtn` de «Menores a cargo» (`#707`) y el oráculo de pertenencia de la lista completa (`#520`).
+- Instrumentos nuevos que quedan para el siguiente: `scripts/huella-maquetacion.mjs` (la huella cubre ahora el
+  cajón, y deja fuera el `<head>`, que no se pinta), `scripts/hoja-del-cajon.py` y tres arneses de mutación
+  (`mutar-hoja-del-cajon.sh` 10/10, `mutar-paquete-del-cajon.sh` 5/5, `mutar-token-bearer.sh` 14/14).
+
 ## v1.1.0 · 2026-09-18
 
 Tres cosas: el precio de antes tachado y el recuadro de una oferta en la sección de tarifas, encendidos

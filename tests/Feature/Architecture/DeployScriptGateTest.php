@@ -142,6 +142,7 @@ class DeployScriptGateTest extends TestCase
             'comprueba la salud al terminar' => ['"$SITE_URL/up"', 'No dar por hecho que fue bien es la mitad del valor del script.'],
             'guarda 8 · producción solo etiquetas' => ['DEPLOY_VERSION="$(release_tag)"', 'Con dos agentes empujando a `main`, «lo último» no es «lo listo»: producción despliega versiones (#613).'],
             'guarda 8 · la versión queda escrita en el servidor' => ["> '\$REMOTE_ROOT/storage/app/version'", 'En el servidor no hay `.git`: sin este fichero nadie puede contestar «¿qué corre aquí?».'],
+            'guarda 9 · lo que git no ve, rsync lo sube' => ['git ls-files --others --directory public/', 'Un andamio local en `public/` ignorado por git —`.git/info/exclude` solo existe en una máquina— viaja en el rsync y acaba PUBLICADO en el dominio del cliente, sin aparecer en ningún diff (#638).'],
             'guarda 8 · la salud relee la versión' => ['"$remote_version" == "$DEPLOY_VERSION"', 'Escribir la versión y no releerla es suponer: la salud compara lo que el servidor DICE con lo desplegado.'],
         ];
     }
@@ -633,5 +634,37 @@ class DeployScriptGateTest extends TestCase
 
         $this->assertLessThan($write, strpos($s, 'rsync_run ""'), 'La versión se escribe DESPUÉS de sincronizar: antes, el fichero mentiría sobre el código que hay.');
         $this->assertLessThan($this->callSite($s, 'up'), $write, 'La versión se escribe ANTES de levantar el sitio.');
+    }
+
+    /**
+     * **La lista blanca de la guarda 9 deja pasar lo legítimo y para a un intruso** (`#638`).
+     *
+     * Las dos mitades importan por igual y en direcciones opuestas: si la lista se queda corta, el
+     * despliegue aborta SIEMPRE —`public/build/` no está en git y tiene que subir— y lo primero que hará
+     * quien tenga prisa de noche es borrar la guarda; si se queda larga, deja de ver el andamio que existe
+     * para ver. Se comprueba el patrón REAL, leído del script, no una copia que se puede quedar atrás.
+     */
+    public function test_the_ninth_guard_whitelist_is_neither_short_nor_long(): void
+    {
+        $this->assertSame(
+            1, preg_match("/grep -Ev '(\^public\/\([^']+\)\\$)'/", $this->script(), $m),
+            'no se encuentra el patrón de la lista blanca de la guarda 9 en el script',
+        );
+
+        $patron = '#'.$m[1].'#';
+
+        foreach (['public/build/', 'public/uploads/', 'public/storage', 'public/hot', 'public/css/client.css', 'public/img/'] as $legitimo) {
+            $this->assertSame(
+                1, preg_match($patron, $legitimo),
+                "la guarda 9 abortaría el despliegue por «{$legitimo}», que vive fuera de git a propósito",
+            );
+        }
+
+        foreach (['public/landing-ajena.html', 'public/prueba.php', 'public/css/andamio.css'] as $intruso) {
+            $this->assertSame(
+                0, preg_match($patron, $intruso),
+                "la guarda 9 dejaría subir «{$intruso}» al dominio del cliente",
+            );
+        }
     }
 }
