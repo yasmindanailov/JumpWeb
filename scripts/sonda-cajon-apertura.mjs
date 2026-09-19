@@ -280,20 +280,43 @@ try {
     // fuera las cookies y la API—, con lo único que tendrá una landing de instancia: dos hojas y el paquete.
     if (corre('F')) {
         const entrada = JSON.parse(await readFile('public/build/manifest.json', 'utf8'))['resources/js/app.js'].file;
-        // ⚠️ La página ajena carga las MISMAS hojas y fuentes que el producto, tomadas de su propio HTML. Sin
-        // ellas la comparación mentiría hacia el lado fácil: medido el 2026-09-18, sin la hoja de fuentes el
-        // texto cambia de métrica y un botón del bloque de cuenta se sale del panel. Lo que esta sección mide
-        // es que el cajón MONTE donde no hay producto; que se vea igual es cosa del tema de la instancia
-        // (F5) y de la hoja propia del paquete (T4).
-        const cabeza = (await (await context.request.get(`${BASE}/`)).text())
-            .match(/<link[^>]+rel="(?:stylesheet|preconnect)"[^>]*>/g)?.join('\n') ?? '';
+        // ⚠️⚠️ **La página ajena escribe lo que promete §4.1 y nada más**: las fuentes y el tema de la
+        // instalación —que están en el contrato— más LAS DOS LÍNEAS del paquete, la hoja y el cargador.
+        // Hasta la T4 esta sección copiaba los `<link>` del producto enteros, así que el cajón se vestía con
+        // `site.css` y la autosuficiencia de la hoja no se comprobaba: se veía bien por el motivo equivocado.
+        const delProducto = (await (await context.request.get(`${BASE}/`)).text())
+            .match(/<link[^>]+rel="(?:stylesheet|preconnect)"[^>]*>/g) ?? [];
+        const cabeza = [
+            ...delProducto.filter((l) => ! /\/css\/(site|landing|spinner)\.css/.test(l)),
+            '<link rel="stylesheet" href="/css/cajon.css">',
+        ].join('\n');
+        // ⚠️⚠️ **La landing ajena tiene SUS tokens, y con los nombres genéricos del sistema.** Sin esto la
+        // página de prueba no modela nada: lo que hay que demostrar es que el paquete convive con un `--bg` y
+        // un `--fg` que no son suyos —ni se los come ni se los presta—, y una página sin CSS propio aprueba
+        // ese examen sin presentarse.
+        const estiloDelAnfitrion = `<style>
+            :root { --bg: #10263a; --fg: #eaf2f8; --line: #24506f; }
+            body { margin: 0; background: var(--bg); color: var(--fg); font-family: Georgia, serif; }
+            h1 { font-size: 34px; }
+            .reservar { display: inline-block; padding: 14px 22px; border-radius: 999px; background: #ffd166; color: #10263a; }
+        </style>`;
+        const cuerpo = '<body><h1>Landing de otra instancia</h1>'
+            + '<a class="reservar" href="/entradas" data-jw-open>Reservar</a></body></html>';
+
         page = await context.newPage();
         await page.route(`${BASE}/landing-ajena-de-prueba`, (ruta) => ruta.fulfill({
             status: 200,
             contentType: 'text/html; charset=utf-8',
-            body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${cabeza}
+            body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${cabeza}${estiloDelAnfitrion}
                 <script type="module" src="/build/${entrada}"></script></head>
-                <body><h1>Landing de otra instancia</h1><a href="/entradas" data-jw-open>Reservar</a></body></html>`,
+                ${cuerpo}`,
+        }));
+        // La misma página SIN el paquete: es el control de la invasión, y se sirve aparte porque quitar la
+        // hoja en caliente no prueba lo mismo (el navegador ya ha resuelto la cascada una vez).
+        await page.route(`${BASE}/landing-ajena-sin-paquete`, (ruta) => ruta.fulfill({
+            status: 200,
+            contentType: 'text/html; charset=utf-8',
+            body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${estiloDelAnfitrion}</head>${cuerpo}`,
         }));
         await page.goto(`${BASE}/landing-ajena-de-prueba`, { waitUntil: 'load' });
         await page.waitForFunction(() => !! window.JumpWeb?.cajon, null, { timeout: 10000 });
@@ -321,9 +344,43 @@ try {
             const titulo = document.querySelector('.sidecart__title');
             const catalogo = document.querySelectorAll('#sidecart-spa button, #sidecart-spa a').length;
 
-            return { titulo: titulo?.textContent ?? '', ancho: Math.round(document.querySelector('.sidecart__panel').getBoundingClientRect().width), catalogo };
+            const panel = document.querySelector('.sidecart__panel');
+            const cs = getComputedStyle(panel);
+
+            return {
+                titulo: titulo?.textContent ?? '',
+                ancho: Math.round(panel.getBoundingClientRect().width),
+                catalogo,
+                // La prueba de que la hoja del paquete VISTE: nada de esto lo da el navegador por su cuenta.
+                // ⚠️ El `fixed` es del CONTENEDOR `.sidecart`; el panel va `absolute` dentro. Escribí la
+                // comprobación al revés y la sonda me corrigió: el criterio de una guarda se mide también.
+                posicion: getComputedStyle(document.querySelector('.sidecart')).position,
+                fondo: cs.backgroundColor,
+                tinta: getComputedStyle(document.querySelector('.sidecart__title')).color,
+                // ⚠️ `--line` es el token que hace sensible la comprobación: el tema de la instalación NO lo
+                // declara, así que es de los ~190 que solo pone el paquete. Si el paquete los publicara en el
+                // `:root` del anfitrión, el suyo ganaría y el cajón se rayaría de azul marino.
+                linea: getComputedStyle(document.querySelector('.sidecart__head')).borderBottomColor,
+                hojas: [...document.styleSheets].map((h) => (h.href ?? '').split('/').pop()).filter(Boolean),
+            };
         });
-        anotar('F', 'la carcasa construida lleva su rótulo y el motor pinta el catálogo dentro', pintado.titulo !== '' && pintado.catalogo > 0, JSON.stringify(pintado));
+        anotar('F', 'la carcasa construida lleva su rótulo y el motor pinta el catálogo dentro', pintado.titulo !== '' && pintado.catalogo > 0, JSON.stringify({ titulo: pintado.titulo, catalogo: pintado.catalogo }));
+        anotar(
+            'F', 'y la viste la hoja DEL PAQUETE, sin ninguna hoja del producto en la página',
+            pintado.posicion === 'fixed' && pintado.fondo !== 'rgba(0, 0, 0, 0)'
+                && ! pintado.hojas.some((h) => /^(site|landing|spinner)\.css/.test(h)),
+            JSON.stringify({ posicion: pintado.posicion, fondo: pintado.fondo, ancho: pintado.ancho, hojas: pintado.hojas }),
+        );
+
+        // ⚠️⚠️ **Y el anfitrión NO le tematiza el cajón.** Ésta es la comprobación que pilló el fallo real de
+        // la T4: con los valores del paquete en `:root` (aunque fuera con `:where`), el `--bg` de la página
+        // ajena ganaba por herencia y el cajón salía AZUL MARINO con el texto ilegible. Se mira por valor
+        // concreto —los colores que declara `estiloDelAnfitrion`— porque «tiene fondo» lo aprobaba igual.
+        anotar(
+            'F', 'y el cajón conserva SU tema, no el del anfitrión (`--bg`, `--fg` y `--line` de la página ajena)',
+            pintado.fondo !== 'rgb(16, 38, 58)' && pintado.tinta !== 'rgb(234, 242, 248)' && pintado.linea !== 'rgb(36, 80, 111)',
+            JSON.stringify({ fondo: pintado.fondo, tinta: pintado.tinta, linea: pintado.linea, anfitrion: { bg: 'rgb(16, 38, 58)', fg: 'rgb(234, 242, 248)', line: 'rgb(36, 80, 111)' } }),
+        );
 
         await asentado(page);
         await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/F-ajena@390.png` });
@@ -332,6 +389,38 @@ try {
         await esperar(page, false);
         e = await estado(page);
         anotar('F', 'y se cierra, soltando el scroll de la página ajena', ! e.abierto && ! e.scrollBloqueado);
+
+        // ── El control de la INVASIÓN: la página del anfitrión se ve igual con el paquete y sin él ────────
+        // ⚠️ Es la otra mitad de la promesa. El paquete declara 193 tokens con nombres genéricos —`--bg`,
+        // `--fg`, `--line`, `--sp-3`— y si los publicara en el `:root` del anfitrión le repintaría SUS
+        // componentes. Se mide con la página cargada dos veces, con paquete y sin él.
+        const suyo = (p) => p.evaluate(() => ['body', 'h1', '.reservar'].map((sel) => {
+            const el = document.querySelector(sel);
+            const r = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+
+            return [sel, [r.x, r.y, r.width, r.height].map(Math.round).join(','),
+                cs.color, cs.backgroundColor, cs.fontFamily, cs.fontSize, cs.padding, cs.borderRadius, cs.margin].join('|');
+        }));
+
+        const conPaquete = await suyo(page);
+        const limpia = await context.newPage();
+        await limpia.route(`${BASE}/landing-ajena-sin-paquete`, (ruta) => ruta.fulfill({
+            status: 200,
+            contentType: 'text/html; charset=utf-8',
+            body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${estiloDelAnfitrion}</head>${cuerpo}`,
+        }));
+        await limpia.goto(`${BASE}/landing-ajena-sin-paquete`, { waitUntil: 'load' });
+        const sinPaquete = await suyo(limpia);
+        await limpia.close();
+
+        const tocados = conPaquete.filter((fila, i) => fila !== sinPaquete[i]);
+        anotar(
+            'F', 'y el paquete NO le ha tocado nada a la página del anfitrión',
+            tocados.length === 0,
+            tocados.length === 0 ? '3 nodos idénticos con paquete y sin él' : tocados.join('\n        '),
+        );
+
         await page.close();
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
 
 /**
@@ -22,6 +23,9 @@ use Tests\TestCase;
  */
 class MotionScaleTest extends TestCase
 {
+    // Solo por su lista de hojas que NO son del producto: esta guarda lee las hojas a su manera.
+    use ReadsSiteStylesheets;
+
     /** Las CUATRO curvas y las SIETE duraciones, con el uso que las justifica. */
     private const ESCALA = [
         '--ease-entra' => 'lo que APARECE: se pasa de largo y vuelve',
@@ -202,13 +206,24 @@ class MotionScaleTest extends TestCase
     }
 
     /** Las hojas del producto, con los comentarios blanqueados. */
+    /**
+     * `client.css` es el paquete de una INSTALACIÓN —hecho de literales a propósito— y `cajon.css` es una
+     * COPIA generada de las hojas del producto para el cajón empaquetable (`#635`): contarla duplicaría cada
+     * declaración y haría decir a esta guarda que la escala está en dos sitios. Misma lista que
+     * `Tests\Support\ReadsSiteStylesheets`, que es donde está escrito el porqué largo.
+     */
+    private function noEsDelProducto(string $ruta): bool
+    {
+        return in_array(basename($ruta), self::HOJAS_QUE_NO_SON_DEL_PRODUCTO, true);
+    }
+
     private function hojas(): string
     {
         $out = '';
 
         foreach (glob(public_path('css/*.css')) ?: [] as $ruta) {
-            if (str_ends_with($ruta, 'client.css')) {
-                continue;   // el paquete de un cliente está hecho de literales, y es correcto
+            if ($this->noEsDelProducto($ruta)) {
+                continue;
             }
 
             $out .= preg_replace('#/\*.*?\*/#s', ' ', (string) file_get_contents($ruta))."\n";
@@ -223,7 +238,7 @@ class MotionScaleTest extends TestCase
         $out = [];
 
         foreach (glob(public_path('css/*.css')) ?: [] as $ruta) {
-            if (str_ends_with($ruta, 'client.css')) {
+            if ($this->noEsDelProducto($ruta)) {
                 continue;
             }
 
@@ -358,7 +373,7 @@ class MotionScaleTest extends TestCase
                 fn (array $m): string => str_repeat(' ', strlen($m[0])),
                 (string) file_get_contents($ruta),
             ),
-            array_filter(glob(public_path('css/*.css')) ?: [], fn (string $r): bool => ! str_ends_with($r, 'client.css')),
+            array_filter(glob(public_path('css/*.css')) ?: [], fn (string $r): bool => ! $this->noEsDelProducto($r)),
         ));
 
         foreach (self::COREOGRAFIAS as $nombre => $porque) {

@@ -1,0 +1,3579 @@
+/* GENERADO por scripts/hoja-del-cajon.py desde public/css/{site,landing,spinner}.css. NO se edita a mano:
+ * se toca la regla en su fuente y se vuelve a generar. `HojaDelCajonTest` vigila que no se separen.
+ * Qué entra y por qué: la cabecera de ese guion y `specs/cajon-empaquetable.md` §4.3.
+ * FUENTES landing.css:291d055b06cf spinner.css:8270bcfe03ab site.css:3757b29b7bb0 */
+/* La BASE del paquete: lo que el cajón heredaba del `<body>` del producto y ahora se da
+ * a sí mismo, para no tocar el documento del anfitrión. Ver la cabecera del generador. */
+:where(.sidecart), :where(.sidecart) * {
+    box-sizing: border-box;
+}
+:where(.sidecart) {
+    color: var(--fg);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+:where(.sidecart) {
+    /* base: warm cream + ink black */
+    --bg: #F4EFE3;
+    --bg-soft: #ECE5D2;
+    --bg-card: #FBF7EC;
+    --fg: #14130F;
+    --fg-mute: #6B675D;
+    /* La HOJA sobre la superficie: el blanco de las polaroids, la tarjeta de invitación, el
+    resumen del post-form… **NO es `--bg`** (que es crema) ni `--on-brand` (que sigue al
+    acento). Vale hoy exactamente lo que valían los 15 literales que sustituye, así que no
+    mueve un píxel; lo que gana es que ahora sigue a la superficie. `DEUDA.md` lo pedía.
+    ⚠️ Se llama `--sheet` y no `--paper` a propósito: «papel» es el nombre de la SUPERFICIE
+    clara (ver `[data-surface]`), y usarlo también para la tarjeta que va encima haría que
+    el mismo nombre significara dos cosas a un palmo de distancia. */
+    --sheet: #FFFFFF;
+    /* ⚠️ Antes eran `rgba(20, 19, 15, α)`, o sea `--fg` escrito a mano: un cliente cambiaba
+    `--fg` y las 147 líneas y bordes seguían siendo del primer cliente. `color-mix` con
+    `transparent` premultiplica y rinde EXACTAMENTE el mismo color (`DECISIONES #143`). */
+    --line: color-mix(in srgb, var(--fg) 10%, transparent);
+    --line-strong: color-mix(in srgb, var(--fg) 22%, transparent);
+    /* ── LA SUPERFICIE DE TINTA ─────────────────────────────────────────────────────────
+    Se DERIVA de las dos de arriba en vez de teclearse: así un cliente que cambie `--fg`
+    y `--bg` desde su paquete obtiene una superficie oscura coherente sin declarar nada, y
+    no hay dos paletas que puedan separarse en silencio — que es el defecto que esta capa
+    entera existe para cerrar.
+    ⚠️⚠️ **Se declaran AQUÍ, en `:root`, y eso NO es un detalle de estilo.** La sustitución
+    de `var()` ocurre en el elemento donde la custom property se DECLARA, así que estas
+    resuelven contra los valores de PAPEL y bajan ya computadas. Declararlas dentro del
+    propio `[data-surface="ink"]` —donde `--fg` y `--bg` se están redefiniendo— sería un
+    CICLO, y un ciclo en CSS no falla: deja la propiedad inválida y el color se cae al
+    valor inicial, sin aviso. Verificado en navegador con un control negativo que sí cicla.
+    Las mezclas están elegidas por ARITMÉTICA de contraste, no a ojo (spec §6·2). */
+    --ink-bg: var(--fg);
+    --ink-fg: var(--bg);
+    --ink-bg-soft: color-mix(in srgb, var(--bg) 3%, var(--fg));
+    --ink-bg-card: color-mix(in srgb, var(--bg) 6%, var(--fg));
+    --ink-sheet: color-mix(in srgb, var(--bg) 9%, var(--fg));
+    /* 65% da 7,30 sobre tinta (AAA) con los valores del producto. No es un número redondo
+    elegido por gusto: es el mínimo que deja el gris secundario por encima de AAA, y cae
+    junto al 7,08 del sistema de referencia. Con el gris ÚNICO de antes eran 3,28: FALLA AA.
+    Ningún gris puede pasar en las dos superficies — por eso hay dos. */
+    --ink-fg-mute: color-mix(in srgb, var(--bg) 65%, var(--fg));
+    /* El TEXTO DE CUERPO sobre tinta (`#522`): el Papel 200 del sistema v1.10
+    (`semantico.tinta.textoCuerpo`), un gris entre el claro de los titulares (`--ink-fg`) y el
+    secundario (`--ink-fg-mute`). Lo estrena el pie del marco, que usa los tres a la vez. El 82 %
+    da ≈ 12,6 sobre la tinta con los valores del producto (AAA); el paquete del cliente lo fija
+    con su nombre propio. */
+    --ink-fg-body: color-mix(in srgb, var(--bg) 82%, var(--fg));
+    --ink-line: color-mix(in srgb, var(--bg) 12%, transparent);
+    --ink-line-strong: color-mix(in srgb, var(--bg) 24%, transparent);
+    /* ── Y LA DE PAPEL, para poder VOLVER a ella desde dentro de tinta ──────────────────
+    ⚠️ Son alias, no copias. La primera versión de este bloque re-tecleaba los literales
+    en `[data-surface="paper"]` y eso era **exactamente el defecto que esta capa existe
+    para cerrar**: un cliente cambia `--bg` en su paquete y la sección de papel anidada se
+    queda con el color del primer cliente, sin fallar y sin avisar. */
+    --paper-bg: var(--bg);
+    --paper-bg-soft: var(--bg-soft);
+    --paper-bg-card: var(--bg-card);
+    --paper-sheet: var(--sheet);
+    --paper-fg: var(--fg);
+    --paper-fg-mute: var(--fg-mute);
+    --paper-line: var(--line);
+    --paper-line-strong: var(--line-strong);
+    /* El TEXTO DE CUERPO fuera de toda superficie declarada (`#522`): el papel por defecto, donde el
+    cuerpo es la tinta. Las dos superficies lo re-declaran —papel con la tinta, tinta con
+    `--ink-fg-body`—, porque su valor DEPENDE del fondo (`SurfaceScopeTest`). */
+    --fg-body: var(--fg);
+    /* ⚠️ AQUÍ VIVÍAN `--jump-1/2` y `--kids-1/2`: la paleta de las dos zonas del PRIMER CLIENTE,
+    escrita en el CSS del producto y heredada por toda instalación. Se retiraron el 2026-08-25
+    (`DECISIONES #139`), cuando dejó de consumirlas nadie: el acento de cada zona lo pinta el
+    servidor en línea como `--zone-1`/`--zone-2`, sacado de `zones.color` y `zones.color_secondary`.
+    No las devuelvas: `ZoneAccentIsNotAClassNameTest` las persigue. */
+    /* Acento ACTIVO. Lo fija el servidor en `<style id="jj-theme">` desde `theme.brand` y
+    `theme.brand_secondary` (`ThemeSettings`), y cada zona lo re-escopa en línea sobre su elemento.
+    ⚠️ Estos literales son solo el respaldo de si el tema no llegara a inyectarse: antes eran
+    `var(--jump-1)` / `var(--jump-2)`, o sea la paleta de una zona del PRIMER cliente heredada por
+    toda instalación (`DECISIONES #138`). */
+    --zone-1: #FF5B22;
+    --zone-2: #FFE14A;
+    /* --on-brand: el texto/icono SOBRE el acento. Blanco sobre la marca (look pedido por la
+    clienta); si el acento es muy claro (p. ej. la lima de Kids) el blanco no contrasta y se
+    usa texto oscuro. Lo fija ThemeSettings por contraste WCAG (global y por zona); este es el
+    fallback. El TEXTO-acento (H2 em, enlaces) usa el color de marca tal cual (var(--zone-1)).
+    IMPORTANTE: para el texto/borde SECUNDARIO sobre el acento NO se deriva un token de
+    --on-brand (un var(--on-brand) anidado en otro custom-property resuelve mal cuando
+    --on-brand se redefine por zona → cogía el blanco global). Se usa directamente
+    `color: var(--on-brand); opacity: …` (texto) y `color-mix(in srgb, var(--on-brand) …%,
+    transparent)` en la propiedad (bordes). */
+    --on-brand: #FFFFFF;
+    /* ── EL RELLENO DE ACCIÓN — el QUINTO mecanismo del tema (`specs/tema-por-instalacion.md` §15)
+    ───────────────────────────────────────────────────────────────────────────────────────────
+    La pregunta que lo define no es «¿qué botones son oscuros?» sino **«¿para qué sirve cada
+    relleno de tinta?»** — la misma que sacó los tres roles de sombra en `#196`. Medido: **52
+    reglas** del producto rellenan con `var(--fg)` sólido, y solo **11** son ACCIÓN (el control
+    primario: comprar, reservar, enviar, confirmar). Las otras 41 son superficie invertida,
+    hover que invierte, estado seleccionado o decoración, y **se quedan en `var(--fg)` a
+    propósito**: el propio sistema del 2.º cliente dice «en claro el secundario es TINTA».
+    ⚠️⚠️ **Por qué hay un nivel de indirección y no un literal.** El rol tiene que poder ser las
+    DOS cosas:
+    · sin color de acción declarado → **sigue a la superficie**, que es lo que el producto lleva
+    haciendo siempre (el CTA del nav se invierte al abrir el menú, porque `.nav` pasa a
+    `data-surface="ink"`; sin eso sería un botón oscuro sobre un menú oscuro);
+    · con color de acción declarado → **idéntico en los dos fondos**, que es lo que exige el
+    sistema del cliente («CTA primario: idéntico en ambos fondos, siempre con texto tinta»).
+    Las dos caben porque el fallback de `var()` se evalúa DONDE se declara: por eso estas cuatro
+    líneas se repiten en `[data-surface="ink"]` y `[data-surface="paper"]` — ahí `var(--fg)` ya
+    vale lo de esa superficie. Si el servidor emite `--action-brand`, gana en los tres sitios.
+    ⚠️ `--action-brand*` NO se declara aquí: o lo emite `ThemeSettings` desde `theme.action`, o no
+    existe y manda el fallback. Declararlo vacío rompería el fallback sin avisar. */
+    --action: var(--action-brand, var(--fg));
+    --on-action: var(--on-action-brand, var(--bg));
+    --action-hover: var(--action-brand-hover, var(--zone-1));
+    --on-action-hover: var(--on-action-brand-hover, var(--on-brand));
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "Space Grotesk", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, monospace;
+    /* ⚠️ El CUARTO rol tipográfico: el ESLOGAN. El sistema del segundo cliente lo escribe con una
+    familia de rotulador y lo limita a seis palabras («el eslogan, nada más»), y esa distinción
+    —eslogan ≠ titular— es ESTRUCTURA, no marca: la tiene cualquier landing que quiera una voz
+    encima del titular.
+    ▶ Por defecto vale lo mismo que `--font-display`, así que el producto **no cambia de aspecto**
+    por declararlo: quien quiera una familia aparte la pone en su `client.css` y la añade a
+    `THEME_FONTS` (las dos mitades, `config/theme.php`). */
+    --font-accent: var(--font-display);
+    /* La escala de canto, CERRADA. Un paquete de cliente redefine estos siete y todos los cantos
+    del producto le obedecen — que es el criterio §2·3 de `specs/tema-por-instalacion.md`.
+    ⚠️ `--r-xs` y `--r-md` entran en la tanda 2a: son los dos escalones que faltaban, y sus
+    valores salen de minimizar el movimiento sobre los 23 literales que había (ver cabecera). */
+    --r-xs: 5px;
+    --r-sm: 8px;
+    --r-md: 10px;
+    --r-btn: 14px;
+    --r: 16px;
+    --r-lg: 28px;
+    --r-pill: 999px;
+    /* ── LA ELEVACIÓN: TRES ROLES, no una escala ───────────────────────────────────────────
+    ⚠️⚠️ **Aquí NO hay una escala de tamaños, y eso se decidió MIDIENDO.** El producto tenía
+    **53 sombras con 42 formas distintas** —casi cada una única— y la mejor escala de cinco
+    escalones movía **47 de 53**. Eso no es una escala con ruido: es que no había ninguna.
+    Y el sistema del segundo cliente, al que esta capa sirve, **declara DOS formas**: «dura
+    `5px 5px 0` o ninguna», más la difusa reservada a modales, con la regla «un solo elemento
+    por pantalla la lleva; en una rejilla de tarjetas, jamás».
+    ▶ Con 42 formas de un lado y 2 del otro, la pregunta no era «¿de cuántos escalones?» sino
+    **«¿para qué sirve cada sombra?»**. Salen TRES respuestas, y son las de abajo. Lo que no
+    entra en ninguna **no lleva sombra**: una tarjeta quieta no está elevada, está apoyada.
+    ⚠️ **Leen `--paper-fg`, no `--fg`, y no es un detalle**: dentro de `[data-surface="ink"]`
+    `--fg` vale CLARO, así que una sombra escrita con él se volvería clara en el hero. Una
+    sombra es ausencia de luz: es oscura en las dos superficies. `--paper-fg` es el alias que
+    no se mueve al entrar en tinta.
+    ▶ Un paquete de cliente redefine estos tres y **las 28 sombras del producto le obedecen**.
+    El del segundo cliente pondría `none` en las dos primeras y su dura en la tercera. */
+    --shadow-lift:  0 12px 28px -8px color-mix(in srgb, var(--paper-fg) 35%, transparent);
+    --shadow-float: 0 16px 36px -10px color-mix(in srgb, var(--paper-fg) 50%, transparent);
+    --shadow-modal: 0 30px 64px -20px color-mix(in srgb, var(--paper-fg) 50%, transparent);
+    /* ── LOS DOS ESTADOS DE UNA PEGATINA QUE SE APRIETA (`#478`) ────────────────────────────
+    ⚠️⚠️ **Se declaran los DOS o ninguno**, que es la lección de `RhythmScaleTest`: un paquete que
+    sobreescriba solo uno deja la pieza con media respuesta y **no falla nada**.
+    ▶ La receta la escriben los propios tokens del canvas: al apretar, la sombra se ACORTA a 2 y la
+    pieza baja 3 — **la suma sigue siendo 5, así que el keyline no cambia de sitio**. Eso es lo que
+    distingue apretar de saltar.
+    ⚠️ Aquí van los valores del PRODUCTO (sombra difusa, como sus tres hermanas); el paquete de una
+    instalación con sombra dura pone `2px 2px 0` y `0 0 0`. */
+    --shadow-float-hover: 0 6px 14px -8px color-mix(in srgb, var(--paper-fg) 40%, transparent);
+    --shadow-float-press: none;
+    /* Cuánto se hunde una pegatina al apretarla. Sale del sistema del canvas
+    (`movimiento.desplazamiento.hover`), y va en un token porque lo usan la sombra y el
+    desplazamiento a la vez: si se separan, el keyline deja de cuadrar. */
+    --press-shift: 3px;
+    /* ── LA SOMBRA DEL MOBILIARIO FLOTANTE (`#217`) ─────────────────────────────────────────
+    ❗ **Un CUARTO rol, y hace falta porque los tres de arriba no describen esta pieza.** El
+    armazón no está «apoyado» (no lleva sombra), ni «se despega al pasar el ratón» (`lift`), ni
+    «tapa la página» (`modal`): **flota permanentemente sobre un contenido que se mueve por
+    debajo**. Eso es una cuarta respuesta a «¿para qué sirve esta sombra?», no un escalón más de
+    una escala.
+    ⚠️⚠️ **Y esto RESUELVE la ficha de `DEUDA.md` sobre la sombra del 2.º cliente**, que era la
+    TERCERA contradicción de sus fuentes: su mockup pinta el mobiliario con sombra difusa y su
+    hallazgo `M-05` dice que las difusas son solo para modal. `[DECIDIDO owner, 2026-08-28]`:
+    **gana el mockup**, como ya pasó con el color del CTA. `M-05` sigue valiendo para el resto.
+    Son CINCO valores y no uno porque el mockup declara **tres pesos** —el relleno de tinta pesa
+    más y proyecta más— y **dos alturas**. Medido en `Landing PJP Modos`:
+    reservar  `0 10px 28px .24` → hover `0 18px 40px .32`
+    registro  `0 10px 26px .18` → hover `0 16px 36px .26`
+    menú      `0 10px 28px .16`  (su hover no toca la sombra: LEVANTA el botón)
+    ⚠️ Leen `--paper-fg` por lo mismo que los tres de arriba: dentro del menú de tinta, `--fg`
+    vale claro y la sombra se volvería luz. */
+    --shadow-nav:            0 10px 28px color-mix(in srgb, var(--paper-fg) 16%, transparent);
+    --shadow-nav-ghost:      0 10px 26px color-mix(in srgb, var(--paper-fg) 18%, transparent);
+    --shadow-nav-ghost-lift: 0 16px 36px color-mix(in srgb, var(--paper-fg) 26%, transparent);
+    --shadow-nav-fill:       0 10px 28px color-mix(in srgb, var(--paper-fg) 24%, transparent);
+    --shadow-nav-fill-lift:  0 18px 40px color-mix(in srgb, var(--paper-fg) 32%, transparent);
+    /* ── EL ANILLO DE FOCO ─────────────────────────────────────────────────────────────────
+    Medido antes de esta tanda: **23 reglas de foco, CINCO tratamientos distintos y CERO
+    tokens**. O sea que un cliente podía cambiar toda su marca y el anillo con el que su
+    visitante navega con teclado seguía siendo el del primer cliente — y no fallaba nadie.
+    Se tokeniza el GROSOR y el COLOR, que es lo que un paquete necesita cambiar. El
+    `outline-offset` NO: es encaje de cada componente (hay 2, 3, 4 y −2 px, y cada uno
+    responde a la forma de su caja, no a la marca). Meterlo en un token único movería
+    píxeles en cinco reglas a cambio de nada.
+    ⚠️ Y sigue al TEMA por herencia: dentro de `[data-surface="ink"]`, `--fg` ya vale claro,
+    así que el anillo se invierte solo sin declarar nada. Los dos sitios que hoy pintan a
+    mano el anillo claro —el `.skip-link` y el chip del hero— es porque su fondo oscuro
+    todavía NO declara superficie; el día que el armazón la declare (tanda del hero), pasan
+    a `var(--focus-color)` y esas dos excepciones desaparecen. */
+    --focus-w: 2px;
+    --focus-color: var(--fg);
+    --focus-outline: var(--focus-w) solid var(--focus-color);
+    /* ── EL COLOR DE LA INTERACCIÓN (auditoría C2 · `[DECIDIDO owner, 2026-09-03]` D1, `#436`) ────
+    Lo que RESPONDE al ratón y al teclado fuera de una zona: la pregunta abierta de la FAQ, el
+    destino enfocado del menú, el enlace del banner de cookies. Hasta hoy lo pintaba `--zone-1`,
+    que **no es un color: es la identidad de la zona que se está mirando** —lo repinta el servidor
+    por elemento desde `zones.color`—, y su contraste no lo garantiza nadie porque cambia con el
+    dato: el cian del 2.º cliente daba **2,45** sobre papel en la FAQ abierta.
+    ▶ Por defecto vale TINTA, como el anillo de foco: pasa en cualquier instalación sin declarar
+    nada. Se re-declara en las dos superficies para que `var(--fg)` se evalúe con el `--fg` de
+    cada una (el mismo mecanismo que `--action`). El paquete del 2.º cliente pone su par medido
+    —Azul Muro en papel (6,43), cian en tinta (6,85)—, que es lo que su propia tabla de roles
+    escribe para el enlace. `--zone-*` se queda para lo que IDENTIFICA una zona: sus pestañas, sus
+    chips, su tarjeta, la tira. Lo vigila `InteractionColourIsNotAZoneTest`. */
+    --interactive: var(--fg);
+    /* ── LA CIFRA ──────────────────────────────────────────────────────────────────────────
+    `DECISIONES #479`. **El color de un número que es DINERO**: el precio de una tarifa, un
+    importe cobrado, una confirmación. El sistema del 2.º cliente lo tiene como rol propio
+    («Precios, cifras, confirmación»), y el producto no tenía ninguno: el precio se pintaba con
+    la tinta o, peor, con el color de la zona.
+    ⚠️⚠️ **Nace en `var(--fg)` y eso NO es un hueco a medio hacer: es la conducta correcta.** Una
+    instalación que no declare color de cifra escribe sus precios en tinta, que es lo que hacía
+    antes de existir este token — o sea que estrenarlo no mueve un píxel en nadie. El mecanismo
+    es el mismo de `--action` (`#209`) y `--interactive` (`#436`): el rol lo declara el producto,
+    el valor lo pone el paquete, y **vacío es una respuesta**.
+    ⚠️ Se re-declara en las dos superficies por lo mismo que `--interactive`: `var(--fg)` tiene
+    que evaluarse con el `--fg` de cada una, o una cifra sobre tinta saldría en tinta.
+    ⚠️ **No puede ser un `--zone-*`**: sería la grieta 01 del canvas —el color de un dato
+    decidiendo el aspecto de un componente— con el agravante de que aquí el componente es un
+    precio. Lo vigila `InteractionColourIsNotAZoneTest` junto al resto. */
+    --money: var(--fg);
+    /* ── EL MARCADOR ───────────────────────────────────────────────────────────────────────
+    `DECISIONES #480`. **El resalte tipo rotulador**: un fondo que levanta media frase sin
+    convertirla en un botón ni en un aviso. Lo estrena la línea de ahorro de una tarifa de tarifa,
+    y el sistema del 2.º cliente lo tiene como rol propio («resalte tipo marcador»).
+    ⚠️⚠️ **El producto no lo tenía, y los dos candidatos eran PEORES que no usarlo.** `--warn` lleva
+    hoy `#b45309` —uno de los siete hexadecimales del PRIMER cliente que la spec §2 tiene
+    fichados— y además es un color de TEXTO («a cobrar en el parque»), no de fondo; y `--strip-3`,
+    que en el paquete sí es el amarillo, cae por defecto en `var(--zone-1)`, o sea en el color de
+    una zona: la grieta 01 por la puerta de atrás. *Dos roles que se llaman parecido no son el
+    mismo rol.*
+    ⚠️ **Nace TRANSPARENTE, y eso es la conducta correcta**: un marcador sin color no es un
+    marcador, así que sin paquete la frase se queda en texto y lo que la levanta es su PESO — que
+    no depende de ninguna paleta. **Vacío es una respuesta.** El par lo pone el paquete, como
+    `--action` (`#209`), `--interactive` (`#436`) y `--money` (`#479`).
+    ⚠️ Y viaja con su TINTA (`--on-marker`): **el par lo declara quien declara el color**, nunca se
+    deriva — la regla que `#434` dejó escrita al nacer `--on-ok`/`--on-err`/`--on-warn`.
+    ⚠️⚠️ **Y la tinta del PAQUETE va en `--on-marker-brand`, no en `--on-marker`** (`#523`). Las dos
+    superficies re-declaran `--on-marker` para que su valor por defecto —el `--fg` de ESA superficie,
+    porque sin paquete el marcador es transparente y el texto va sobre el fondo— se evalúe donde
+    toca (`SurfaceScopeTest`). Pero esa re-declaración PISABA la tinta que el paquete ponía en
+    `:root`: dentro de la tarjeta de tinta de cumpleaños el sello amarillo del precio salía con texto
+    CLARO (**1,49 : 1**, medido). Un marcador de color tiene la misma tinta en todos los fondos, así
+    que el paquete la declara aparte y las tres declaraciones la prefieren — el patrón de
+    `--action-brand` (`#209`). */
+    --marker: transparent;
+    --on-marker: var(--on-marker-brand, var(--fg));
+    /* ── EL VERDE Y EL AMARILLO CUANDO SON TEXTO ────────────────────────────────────────────
+    `#487` · el estado de «Visítanos» («Abierto ahora» en verde, «Abre hoy» en amarillo).
+    ❗❗❗ **NO son `--ok` ni `--attn`, y la regla es dura**: *«cian, naranja, lima, amarillo y verde
+    no pueden ser texto sobre claro (< 3,0); sobre papel se usa su variante oscura»*. Con el verde
+    del paquete de este cliente (`#5FA82E`) sobre blanco el titular daría **2,4** — ilegible— y con
+    su amarillo (`#F5C400`), **1,5**.
+    ⚠️⚠️ **Se DECLARAN, no se derivan.** Mezclar la variante oscura con un porcentaje fijo es
+    exactamente el defecto que `#481` midió y una guarda cazó: pasaba con los colores de esta
+    instalación y **fallaba con el verde que el producto trae por defecto**. Es la misma regla que
+    `#434` dejó escrita al nacer `--on-ok`: *el par lo declara quien declara el color.*
+    ▶ **Sus defectos caen del lado seguro y son distintos a propósito**:
+    · `--ok-ink` cae en `--ok`, porque el verde DEL PRODUCTO (`#1f7a3d`) ya es oscuro y sobre
+    papel se lee. Quien lo rompe es un paquete que aclare `--ok` sin declarar su tinta, y eso
+    lo vigila `ClientThemePackageTest`.
+    · `--attn-ink` cae en `--fg`: no hay ningún amarillo legible como texto sobre claro, así que
+    el defecto **pierde el color** en vez de arriesgar la lectura. */
+    --ok-ink: var(--ok);
+    --attn-ink: var(--fg);
+    /* El ROJO como texto sobre papel (`#571`: «Falta edad» en una ficha a medias). Cae en `--err`, que el
+    producto ya declara oscuro; un paquete con un rojo claro declara su variante 800. */
+    --err-ink: var(--err);
+    /* ── LO HECHO (`#570`, `docs/specs/celebracion-e-invitacion.md` T1) ───────────────────────────
+    Un ROL y no un color: «esta ficha está lista», «guardado». El canvas lo pinta en LIMA y reserva
+    el VERDE para «reserva confirmada» — si lo hecho fuera verde, el verde dejaría de decirlo.
+    ▶ Sus defectos caen en `--ok`: una instalación sin paquete sigue viendo lo hecho como éxito, que
+    es lo que era. El paquete que lo distingue declara los TRES —el relleno, su texto encima y su
+    variante de TEXTO sobre papel—, porque el par lo declara quien declara el color (`#434`). */
+    --done: var(--ok);
+    --on-done: var(--on-ok);
+    --done-ink: var(--ok-ink);
+    /* ── LA TIRA DE MARCA ──────────────────────────────────────────────────────────────────
+    Cinco franjas de color que rematan el pie. Es la pieza «C2 · tiras» del sistema del
+    segundo cliente, y por eso son cinco: su marca tiene cinco colores.
+    ⚠️ **Ni un hex entra aquí.** Los cinco salen de los dos tokens de marca, así que una
+    instalación cualquiera obtiene su tira sin declarar nada, y una con cinco colores propios
+    los redefine uno a uno desde su `client.css`.
+    ⚠️⚠️ **CICLAN, no interpolan — y eso se decidió MIDIENDO, después de escribirlo al revés.**
+    La primera versión repartía cinco pasos de `color-mix` entre los dos colores. Con la marca
+    por defecto (naranja→amarillo, vecinos) quedaba bien; con la del segundo cliente
+    (cian→naranja, casi complementarios) la franja del medio salía **`#868D7D`, barro**. Y no
+    era cosa del espacio de color: en `oklab` el croma mínimo era **0,024** frente a 0,025 en
+    `srgb` — o sea, lo mismo. Interpolar entre dos colores arbitrarios NO es robusto, y el
+    producto no puede elegir la marca de su cliente. Alternar sí lo es: sea cual sea el par,
+    cada franja es un color de marca entero y ninguna es una mezcla que nadie eligió.
+    ⚠️⚠️ **Y NO se pintan con `--ok` / `--err` / `--attn`, que era la vía obvia.** Dos razones
+    medidas: `--attn` vale HOY exactamente lo mismo que `--zone-2` (`#FFE14A`), así que dos
+    franjas saldrían idénticas; y un color semántico usado como decoración deja de significar
+    lo que significa —es el hallazgo `C-04` de la auditoría del propio cliente, «el estado
+    "Abierto ahora" pintado en el color de acción»—. */
+    --strip-1: var(--zone-1);
+    --strip-2: var(--zone-2);
+    --strip-3: var(--zone-1);
+    --strip-4: var(--zone-2);
+    --strip-5: var(--zone-1);
+    /* ── Escalas de TIPOGRAFÍA y ESPACIADO del sidebar (Fase 4 · paso 4.0c, 2ª mitad) ────────────
+    `docs/specs/sidebar-spa.md` §4.3.bis · `DECISIONES #42`.
+    **Cada escalón vale hoy EXACTAMENTE lo que valía el literal que sustituye**: `calc(1px * 13)`
+    es `13px`, no «casi». Eso importa porque el spec deja el REDISEÑO VISUAL fuera del alcance de
+    la fase (§2), y medido antes de decidir: cualquier escala canónica de 6–7 pasos movería el
+    52-55% de los tamaños de letra del cajón. Eso es rediseñar, no tokenizar.
+    **La escala es MULTIPLICATIVA sobre una unidad, y ahí está el white-label**: una instalación
+    que quiera el cajón un 15% más aireado cambia `--sp-unit` a `1.15px` y se mueve todo a la vez,
+    conservando las proporciones. Con literales por escalón habría que tocar diecisiete. Y el
+    nombre no miente aunque la unidad cambie: `--sp-12` son doce unidades, no doce píxeles.
+    Solo están los valores que se REPITEN (≥2 usos). Un tamaño que aparece una vez no forma parte
+    de ninguna escala, y meterlo la ensuciaría fingiendo un sistema que no existe: esos quedan
+    literales a propósito y el presupuesto de `SidebarTokenBudgetTest` los cuenta como tales.
+    ⚠️ Viven aquí y no en `site.css` porque las reglas del sidebar están repartidas entre los DOS
+    ficheros, y los tres layouts que sirven CSS cargan `landing.css` PRIMERO. Definirlos en el
+    segundo dejaría las reglas de este sin token, y un `calc()` sin su variable no es un valor
+    raro: es una declaración inválida que el navegador descarta. */
+    --fs-unit: 1px;
+    /* ⚠️ `--fs-9` SE RETIRA con la grieta 00 del cajón: sus tres consumidores —«Casi llena», la chapa
+    del catálogo y el precio del día— subieron al nivel Etiqueta (12), que es el escalón más pequeño
+    que el sistema declara, y el token se quedó con CERO usos. Lo dijo `SidebarTokenBudgetTest`: una
+    escala con escalones muertos describe un sistema que el producto no tiene.
+    ▶ Este `:root` lo COMPARTEN los dos carriles: si vuelve a hacer falta un 9, es que algo bajó del
+    suelo, y eso se decide antes de declarar el token. */
+    --fs-10: calc(var(--fs-unit) * 10);
+    --fs-11: calc(var(--fs-unit) * 11);
+    --fs-12: calc(var(--fs-unit) * 12);
+    --fs-13: calc(var(--fs-unit) * 13);
+    --fs-14: calc(var(--fs-unit) * 14);
+    --fs-15: calc(var(--fs-unit) * 15);
+    --fs-16: calc(var(--fs-unit) * 16);
+    --fs-17: calc(var(--fs-unit) * 17);
+    --fs-18: calc(var(--fs-unit) * 18);
+    --fs-20: calc(var(--fs-unit) * 20);
+    --fs-22: calc(var(--fs-unit) * 22);
+    /* ── LA ESCALA TIPOGRÁFICA DEL SISTEMA · los DIEZ niveles con nombre ──────────────────────
+    `DECISIONES #474` · carril de diseño, Fase 1 · T1g. Los valores son los del canvas del
+    2.º cliente (`tokens-pjp.js` v1.10, `tipo.escala`), que es la fuente.
+    ❗❗ **Esto NO sustituye a `--fs-9..22` de arriba: convive con ellos** (`[DECIDIDO owner]`).
+    Aquélla es una lista por PÍXEL —un token por talla, que es lo que el propio canvas ficha
+    como su grieta «00 bis»: *«las dos escalas no son escalas: son un token por píxel»*—; ésta
+    nombra el PAPEL del texto, que es lo que impide que alguien estrene el escalón 19. Los
+    `--fs-N` mueren superficie a superficie según se vaya vistiendo cada una (Fase 2 la web
+    pública, Fase 4 el cajón, Fase 5 el post-form), no de golpe.
+    ▶ **Cada nivel es un `clamp` entre sus DOS tallas** (`[DECIDIDO owner]`): el canvas declara
+    una talla móvil y una de escritorio por nivel, y aquí se interpolan en vez de saltar en un
+    punto de corte. El motivo es que **el punto de corte está APARCADO sin decidir** (`#473`,
+    T1f: el canvas declara tres y el producto tiene catorce), así que un `@media` tendría que
+    elegir hoy un número que se decide en la Fase 2 con el armazón delante.
+    La recta va de **390** (`reticula.referencia`) a **1024** (`reticula.puntos.escritorio`), y
+    de ahí salen las constantes: `B = (E − M) / 6,34` en vw y `A = M − 390·(E − M)/634` en px.
+    La propiedad comprobable, y la que vigila `TypeScaleTest`, es que **a 390 px cada nivel vale
+    su talla móvil y a 1024 la de escritorio** — aritmética pura, sin navegador.
+    ⚠️ **Los tres de talla ÚNICA no llevan `clamp`** (Cuerpo S · Botón · Etiqueta): el canvas les
+    da el mismo valor en las dos superficies, y un `clamp` de extremos iguales sería ruido que
+    hace creer que ahí hay un tramo fluido.
+    ⚠️ **El mando `--fs-unit` alcanza los EXTREMOS, no el tramo fluido.** Un término en `vw` es
+    relativo al viewport y no a la unidad, y CSS no deja multiplicar longitud por longitud para
+    derivarlo de los propios tokens. O sea: una instalación que mueva `--fs-unit` mueve lo que se
+    ve en móvil y en escritorio —que son los topes— y deja el tramo intermedio ligeramente
+    desplazado. Está medido y aceptado; escribirlo de otra forma exigiría `@property`.
+    ⚠️⚠️ **NACEN SIN CONSUMIDOR, y eso es deliberado y acotado** (`[DECIDIDO owner]`). Al medirlo
+    resultó que **ninguna regla del producto coincide con su nivel en talla Y en papel a la vez**
+    —las cuatro reglas de mono a 12 no son etiquetas (un glifo de 6 px, un precio, un número en
+    círculo), los `--fs-15` son campos y botones, el eslogan está a 18 y 22 contra 24/30—, así que
+    no había ni una sustitución que no afirmara un rol falso o moviera geometría.
+    ▶ **No contradice a `#287` ni al `barra: 1400` que `#473` rechazó**: aquella duración no tiene
+    consumidor **ni lo tendrá** (no existe ninguna barra indeterminada); estos diez lo tienen
+    fechado y son la razón de la tanda — la escala va ANTES de vestir las secciones, igual que la
+    columna, el aire, los radios y el táctil.
+    ▶ **La tabla completa del canvas, que es lo que la Fase 2 tiene que respetar al aplicarlos**
+    (aquí solo vive la talla; peso, familia e interletraje se escriben en la regla de cada nivel):
+    nivel        familia          peso   móvil→escr.   line-height   letter-spacing
+    Display XL   --font-display    —      42 → 76         .92          -.015em
+    Display L    --font-display    —      34 → 52         .95          -.01em
+    Título       --font-display    —      26 → 36        1.05           0
+    Subtítulo    --font-body      700     22 → 26        1.25           0
+    Entradilla   --font-body      500     18 → 21        1.5            0
+    Cuerpo       --font-body      400     16 → 17        1.6            0
+    Cuerpo S     --font-body      400     15 → 15        1.55           0
+    Botón        --font-body      800     16 → 16        1             .01em
+    Etiqueta     --font-mono       —      12 → 12        1.2           .16em   (mayúsculas)
+    Eslogan      --font-accent     —      24 → 30        1.15           0      (girado −2°)
+    ⚠️ Reglas duras del canvas que van con la escala: **el botón NUNCA es `--font-display` y nunca
+    baja de 16** · **Display XL es UNO por página** (solo el hero) · **el Eslogan es uno por página
+    y solo eso: en cuanto informa, deja de ser un guiño** · **el titular de una SECCIÓN es Display
+    L**, y el Título es el de un bloque DENTRO de ella. */
+    --fs-display-xl: clamp(calc(var(--fs-unit) * 42), calc(var(--fs-unit) * 21.0852 + 5.3628vw), calc(var(--fs-unit) * 76));
+    --fs-display-l:  clamp(calc(var(--fs-unit) * 34), calc(var(--fs-unit) * 22.9274 + 2.8391vw), calc(var(--fs-unit) * 52));
+    --fs-title:      clamp(calc(var(--fs-unit) * 26), calc(var(--fs-unit) * 19.8486 + 1.5773vw), calc(var(--fs-unit) * 36));
+    --fs-subtitle:   clamp(calc(var(--fs-unit) * 22), calc(var(--fs-unit) * 19.5394 + 0.6309vw), calc(var(--fs-unit) * 26));
+    --fs-lede:       clamp(calc(var(--fs-unit) * 18), calc(var(--fs-unit) * 16.1546 + 0.4732vw), calc(var(--fs-unit) * 21));
+    --fs-body:       clamp(calc(var(--fs-unit) * 16), calc(var(--fs-unit) * 15.3849 + 0.1577vw), calc(var(--fs-unit) * 17));
+    --fs-slogan:     clamp(calc(var(--fs-unit) * 24), calc(var(--fs-unit) * 20.3091 + 0.9464vw), calc(var(--fs-unit) * 30));
+    --fs-body-s:     calc(var(--fs-unit) * 15);
+    --fs-button:     calc(var(--fs-unit) * 16);
+    --fs-label:      calc(var(--fs-unit) * 12);
+    /* **EL AIRE DE LA PRIMERA SECCIÓN BAJO EL HERO.**
+    ⚠️⚠️ **Empezó siendo una compensación y acabó siendo una decisión, y conviene saber cuál es
+    cuál.** Nació en **32 px**, que es exactamente lo que ocupaba la etiqueta retirada en `#303`
+    (16 de alto + 16 de margen, medido); con eso el hueco volvía al que había: 128 px en escritorio.
+    ▶ **Pero el owner siguió viéndolo corto, y tenía razón aunque el número fuera el mismo**: antes
+    lo primero bajo el hero era una etiqueta de 16 px —ligera—, y ahora es el titular, **71 px de
+    tinta maciza**. Mismo hueco geométrico, mucha más presión visual.
+    `[DECIDIDO owner]` sobre tres opciones renderizadas (131 · 163 · 195 px de tinta a tinta): **64
+    px**, o sea 163 en escritorio y 128 en móvil.
+    ⚠️ Ya NO es «lo que ocupaba la etiqueta»: es aire decidido. Si alguien lo baja a 32 buscando el
+    número «correcto», estará deshaciendo una decisión. */
+    --hero-air: 64px;
+    /* ── EL AIRE ENTRE SECCIONES ──────────────────────────────────────────────────────────────
+    ⚠️⚠️ **Es el hueco ENTRE dos secciones, no el relleno de una** — y la diferencia es el doble.
+    El CSS pensaba en relleno (`padding: 120px 0`, o sea 240 de aire) y el sistema de diseño
+    piensa en aire (`ritmo.seccion`), así que el token dice lo que el sistema quiere decir y la
+    mitad se hace visible en la regla. Escribir «aire 120» habría hecho que el siguiente leyera
+    240 donde pone 120.
+    ▶ **Son DOS tokens y no uno redefinido en una media query, a propósito**: con uno solo, un
+    paquete de instalación que sobreescriba únicamente el valor base **se lleva por delante el
+    escalón de móvil sin que nada falle** —la regla del cliente va después y gana en los dos
+    anchos—. Es la trampa de `#314` por otra puerta. Dos tokens obligan a decidir los dos.
+    ▶ El defecto es el valor de HOY (240 · 160): el primer cliente no se mueve. `#470`. */
+    --sec-air: 240px;
+    --sec-air-mobile: 160px;
+    --sp-unit: 1px;
+    --sp-1: calc(var(--sp-unit) * 1);
+    --sp-2: calc(var(--sp-unit) * 2);
+    --sp-3: calc(var(--sp-unit) * 3);
+    --sp-4: calc(var(--sp-unit) * 4);
+    --sp-6: calc(var(--sp-unit) * 6);
+    --sp-7: calc(var(--sp-unit) * 7);
+    --sp-8: calc(var(--sp-unit) * 8);
+    --sp-10: calc(var(--sp-unit) * 10);
+    --sp-11: calc(var(--sp-unit) * 11);
+    --sp-12: calc(var(--sp-unit) * 12);
+    --sp-13: calc(var(--sp-unit) * 13);
+    --sp-14: calc(var(--sp-unit) * 14);
+    --sp-15: calc(var(--sp-unit) * 15);
+    --sp-16: calc(var(--sp-unit) * 16);
+    --sp-18: calc(var(--sp-unit) * 18);
+    --sp-20: calc(var(--sp-unit) * 20);
+    --sp-28: calc(var(--sp-unit) * 28);
+}
+:where(.sidecart) ::selection {
+    background: var(--zone-1); color: var(--on-brand);
+}
+:where(.sidecart) a {
+    color: inherit; text-decoration: none;
+}
+:where(.sidecart) button {
+    font: inherit; color: inherit; background: none; border: none; cursor: pointer; padding: 0;
+}
+:where(.sidecart) img {
+    display: block; max-width: 100%;
+}
+.mob-menu__foot .btn {
+    flex: 1; justify-content: center;
+}
+.btn {
+    display: inline-flex; align-items: center; gap: var(--sp-10);
+    min-height: var(--tap-min);
+    padding: var(--sp-12) var(--sp-20);
+    background: var(--action); color: var(--on-action);
+    border-radius: var(--r-btn);
+    /* ⚠️ `#538` · 800 y no 600 (`[DECIDIDO owner, 2026-09-12]`): el sistema declara
+    `componente.boton.peso: 800` y su regla dura lo repite —«Botones en Hanken Grotesk 800»—.
+    Medido antes: la web usaba CINCO pesos de botón (400, 500, 600, 700, 800) y solo dos clases
+    cumplían. Éste es el más repetido de todos: 17 apariciones en las siete páginas. */
+    font-weight: var(--fw-black); font-size: var(--fs-14);
+    transition:
+    transform var(--dur-toque) var(--ease-sale),
+    background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+    white-space: nowrap;
+}
+.btn:hover {
+    background: var(--action-hover);
+    color: var(--on-action-hover);
+}
+.btn:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px);
+}
+.btn svg {
+    transition: transform var(--dur-entra) var(--ease-entra);
+}
+.btn:hover svg {
+    transform: translateX(5px);
+}
+.btn--ink {
+    background: var(--secondary); color: var(--on-secondary);
+}
+.btn--ink:hover {
+    background: var(--secondary-hover); color: var(--on-secondary);
+}
+.btn--ink:active {
+    background: var(--secondary-press); color: var(--on-secondary);
+}
+.btn--ghost {
+    background: transparent; color: var(--interactive); border: 1px solid var(--secondary);
+}
+.btn--ghost:hover {
+    background: var(--secondary); color: var(--on-secondary); border-color: var(--secondary);
+}
+.btn--lg {
+    padding: var(--sp-18) var(--sp-28); font-size: var(--fs-16);
+    line-height: 1; min-height: var(--book-bar-h);
+}
+.btn--keyline {
+    border: 0;
+}
+.btn--sm {
+    padding: var(--sp-10) var(--sp-16); font-size: var(--fs-13);
+}
+.btn:disabled, .btn[aria-disabled="true"] {
+    opacity: 0.55; cursor: not-allowed;
+}
+.btn:disabled:hover, .btn[aria-disabled="true"]:hover {
+    transform: none; background: var(--action); color: var(--on-action);
+}
+.btn:disabled:hover svg, .btn[aria-disabled="true"]:hover svg {
+    transform: none;
+}
+.btn--ink:disabled:hover, .btn--ink[aria-disabled="true"]:hover {
+    background: var(--fg); color: var(--bg);
+}
+.btn--ghost:disabled:hover, .btn--ghost[aria-disabled="true"]:hover {
+    background: transparent; color: var(--fg); border-color: var(--line-strong);
+}
+.jj-block {
+    display: inline-block;
+    background: var(--zone-1);
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+.tabset {
+    display: flex; gap: var(--sp-4);
+    background: var(--bg-soft);
+    padding: var(--sp-4);
+    border-radius: var(--r-lg);
+}
+.tabset__tab {
+    flex: 1; min-height: var(--tap-min);
+    border: 0; border-radius: var(--r-btn);
+    background: transparent; color: var(--fg-mute);
+    font-family: var(--font-body); font-weight: 800; font-size: var(--fs-15);
+    cursor: pointer;
+    transition:
+    background-color var(--dur-estado) var(--ease-sale),
+    color var(--dur-estado) var(--ease-sale);
+}
+.tabset__tab.is-active {
+    background: var(--bg-card); color: var(--fg);
+}
+@media (min-width: 1024px) {
+    .tabset {
+        width: 352px;
+    }
+}
+.zone-tab.active {
+    background: var(--zone-1); color: var(--on-brand);
+}
+:where(.sidecart) input:focus-visible, :where(.sidecart) textarea:focus-visible, :where(.sidecart) select:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: 2px;
+}
+.party-compare__cell .gifts {
+    flex-direction: column;
+}
+.form__opt {
+    font-style: normal; font-weight: 400; color: var(--fg-mute);
+}
+.page--contact .form__field {
+    margin-bottom: 0;
+}
+.page--contact .form__field input, .page--contact .form__field select {
+    min-height: 52px;
+}
+.page--contact .form__field textarea {
+    min-height: 128px;
+}
+.page--contact .form__field input:focus, .page--contact .form__field select:focus, .page--contact .form__field textarea:focus {
+    border-color: var(--interactive);
+}
+.jj-spinner {
+    /* tokens */
+    --jj-spinner-size: 36px;
+    --jj-spinner-color: currentColor;
+    /* ⚠️ **Entra en la escala de movimiento con la 2d** (`#222`): un spinner es EL cargador, y el
+    sistema le da un tiempo propio —`--dur-espera`, 900 ms— porque «una espera con easing parece
+    un fallo de red intermitente» y su ciclo es el único número que se repite en toda la web.
+    ▶ **El token del spinner NO desaparece**: sigue siendo el punto por el que una instalación
+    ajusta SU cargador desde el marcado, como documenta la cabecera. Lo que cambia es de dónde
+    sale su valor por defecto — de un literal a la escala. El fallback conserva el 1,4 s por si
+    esta hoja se sirve sin las otras dos, que es como se prueba aislada. */
+    --jj-spinner-speed: var(--dur-espera, 1.4s);
+    /* layout */
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    width: var(--jj-spinner-size);
+    height: calc(var(--jj-spinner-size) * 1.5); /* room for the hop */
+    color: var(--jj-spinner-color);
+    line-height: 0;
+}
+.jj-spinner__sr {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+}
+.jj-spinner--xs {
+    --jj-spinner-size: 20px;
+}
+.jj-spinner--sm {
+    --jj-spinner-size: 28px;
+}
+.jj-spinner--md {
+    --jj-spinner-size: 36px;
+}
+.jj-spinner--lg {
+    --jj-spinner-size: 56px;
+}
+.jj-spinner--xl {
+    --jj-spinner-size: 88px;
+}
+.jj-spinner-with-label {
+    display: inline-flex; flex-direction: column;
+    align-items: center; gap: 14px;
+}
+.jj-spinner-with-label .jj-spinner-label {
+    font-family: var(--font-display, "Bricolage Grotesque", system-ui, sans-serif);
+    font-stretch: 75%; font-weight: 700;
+    font-size: 14px; letter-spacing: -0.005em;
+    color: var(--jj-spinner-color);
+    opacity: 0.7;
+}
+@media (prefers-reduced-motion: reduce) {
+    .jj-spinner, .jj-spinner::before, .jj-spinner::after {
+        animation: none !important;
+    }
+}
+.jj-spinner {
+    --jj-bote: calc(var(--jj-spinner-size) * 0.216);   /* el punto (11 del artboard) */
+    --jj-salto: calc(var(--jj-bote) * 0.636);          /* el salto (7 sobre 11) */
+    --jj-desfase: calc(var(--jj-spinner-speed) * 0.1333); /* 120 ms sobre 900 */
+}
+.jj-spinner {
+    /* ⚠️⚠️ **`closest-side` no es un detalle: sin él el punto del medio sale un 29 % más pequeño.**
+    En un `radial-gradient` los porcentajes de las paradas se miden sobre el RAYO, y el rayo por
+    defecto (`farthest-corner`) llega a la esquina: 0,707 × el lado. Un `50%` ahí dibuja un círculo
+    de 5,5 px donde los pseudo-elementos tienen 7,8. Se vio en una captura —los tres puntos tenían
+    que ser idénticos y el del medio no lo era—, no en una medida. */
+    background-image: radial-gradient(circle closest-side,
+    var(--jj-spinner-color) 0 100%, transparent 100%);
+    background-repeat: no-repeat;
+    background-size: var(--jj-bote) var(--jj-bote);
+    background-position: 50% 50%;
+    animation: jjSpinnerHopBg var(--jj-spinner-speed) ease-in-out var(--jj-desfase) infinite;
+}
+.jj-spinner::before, .jj-spinner::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: var(--jj-bote);
+    height: var(--jj-bote);
+    margin-top: calc(var(--jj-bote) / -2);
+    background: var(--jj-spinner-color);
+    border-radius: 50%;
+    animation: jjSpinnerHop var(--jj-spinner-speed) ease-in-out infinite;
+}
+.jj-spinner::before {
+    left: 0;
+}
+.jj-spinner::after {
+    right: 0; animation-delay: calc(var(--jj-desfase) * 2);
+}
+@media (prefers-reduced-motion: reduce) {
+    .jj-spinner {
+        opacity: 0.4;
+    }
+}
+:where(.sidecart) {
+    /* ── Escala de PESO TIPOGRÁFICO (Fase 4 · paso 4.0c, `docs/specs/sidebar-spa.md` §4.3.bis) ──
+    Medido antes de inventarla: el sidebar usa 51 `font-weight` con solo CINCO valores
+    distintos, y tres de ellos cubren 49. No es una escala de diseño: es la que ya existía
+    de hecho, escrita a mano.
+    ⚠️ Alcance: se aplica al SIDEBAR, que es lo que Fase 4 tokeniza. El resto de `site.css`
+    sigue con literales a propósito — tokenizarlo entero exigiría re-verificar la landing
+    completa, y esta fase no la toca.
+    ▶ **CADUCADO en la tanda F de la auditoría de diseño** (`DECISIONES #437`): la sustitución se hizo
+    MECÁNICA y del MISMO píxel —`font-size: 13px` → `var(--fs-13)`, `padding: 12px 20px` →
+    `var(--sp-12) var(--sp-20)`— con `scripts/escala-a-tokens.py`, y la re-verificación fue la huella de
+    maquetación de las doce vistas a 1280 y 390: idéntica antes y después. Lo que sigue en literal es lo
+    que NO tiene escalón exacto en la escala (24, 32, 36, 40…); `ScaleTokensAreUsedTest` impide que
+    vuelva un literal con token disponible. */
+    --fw-semibold: 600;
+    --fw-bold: 700;
+    --fw-black: 800;
+    /* ⚠️ ATENCIÓN — «esto es distinto», ni error ni éxito: el día de tarifa especial del calendario
+    y el pedido a medio pagar. Tenía token propio desde `DECISIONES #138`; antes los tres sitios
+    tomaban prestado `--jump-2`, el AMARILLO SECUNDARIO DE UNA ZONA del primer cliente. Nada
+    fallaba: simplemente, una instalación sin una zona llamada «jump» perdía el color, y cambiar la
+    paleta de esa zona repintaba el calendario y el estado de un pedido sin que nadie lo pidiera.
+    Un color con significado no puede vivir en la paleta de una zona. */
+    --attn: #FFE14A;
+    /* ══ LA IDENTIDAD COMO SUPERFICIE · la pasada de vestido (`#537`) ═══════════════════════
+    Medido antes de existir: la portada tenía **1,1 %** de color y las seis páginas
+    interiores **0,0 %**, mientras el sistema del cliente declara `proporcion: '60/30/10'`
+    —neutro / CIAN IDENTIDAD / naranja acción— y su masa de mural da azul 46 %. El color
+    que ES la identidad ocupaba el **0,10 %** de la página.
+    ⚠️ NO son fondos de sección: el sistema lo prohíbe (`fondosColor: 0`, «el fondo es papel
+    y el material vive DENTRO de las tarjetas»). Son la superficie de las TARJETAS.
+    ⚠️⚠️ **Se DERIVAN, no se teclean**, y eso es lo que los hace white-label: `--strip-1` es
+    el primer color de marca y ya viaja en el paquete de cada instalación, así que el tinte
+    sale del cian de ESTE cliente y del que venga. El fallback es el azul del producto, para
+    una instalación sin paquete. Verificado en navegador: la receta del 14 % y el 30 %
+    devuelve **#D5EAEE** y **#B3DDEB**, que son al dígito los dos valores que el sistema del
+    cliente declara como `tintePapel.cian` / `bordeCian`. */
+    --identity-fill: var(--strip-1, #2F7FA8);
+    /* Los dos estados del color INTERACTIVO, para cuando hace de RELLENO (el secundario de la
+    familia de botones, `#539`). Se derivan con el paso **0,88** que el producto ya usa para el
+    hover de acción (`ThemeSettings::actionHover()`, `#209`) — y no es una coincidencia feliz:
+    aplicado al Azul Muro da **#095181**, que es al dígito el escalón 600 que declara el sistema
+    del cliente, y otro paso da #084772 contra su 700 (#084670).
+    ⚠️ Se derivan y no se teclean por lo mismo que los tintes: `--interactive` cambia con la
+    superficie —Azul Muro en papel, Cian en tinta— y con el paquete de cada instalación.
+    Medido: 6,43 · 7,61 · 8,99 contra el Papel. */
+    /* ══ EL SECUNDARIO DE LA FAMILIA DE BOTONES · `#540` ═══════════════════════════════════
+    `[DECIDIDO owner, 2026-09-12]`, elegido viendo tres formas renderizadas en la web Y en el
+    cajón: **ningún botón con fondo negro en ningún sitio**, y tres variantes — primario
+    naranja · secundario CIAN · fantasma sin relleno con borde cian.
+    ▶ **Es `--interactive`, o sea AZUL MURO en papel y CIAN en tinta** — el mismo color que ya
+    lleva el fantasma en el borde, así que secundario y fantasma son UN color con dos
+    tratamientos, que es lo que el owner pedía al decir que eran demasiados colores de botón.
+    ⚠️⚠️ **Y con esto el contraste deja de ser una desviación.** Llegó a estar en CIAN pleno con
+    rótulo blanco, que da **2,70** —por debajo del 4,5 de texto normal y del 3,0 de texto
+    grande—; el owner lo eligió viéndolo y luego lo cambió a Azul Muro. Hoy: **6,43** en papel y
+    **6,85** en tinta.
+    ⚠️ **El rótulo es `--on-secondary: var(--bg)` y NO un blanco fijo, y eso es lo que lo hace
+    cumplir en las dos superficies**: cuando el relleno sigue a la superficie, el rótulo también.
+    Con blanco fijo, sobre tinta el relleno sería cian y el rótulo caería a 2,45.
+    ⚠️ Los estados se derivan con el paso 0,88 de `ThemeSettings::actionHover()` (`#209`). */
+    --secondary: var(--interactive);
+    --secondary-hover: color-mix(in srgb, var(--secondary) 88%, #000);
+    --secondary-press: color-mix(in srgb, var(--secondary) 77%, #000);
+    --on-secondary: var(--bg);
+    --interactive-hover: color-mix(in srgb, var(--interactive) 88%, #000);
+    --interactive-press: color-mix(in srgb, var(--interactive) 77%, #000);
+    /* ⚠️ Aquí vivieron `--identity-deep` y sus dos estados —un azul derivado al 65 % para poder
+    llevar texto blanco— y **se retiraron** (`[DECIDIDO owner, 2026-09-12]`): el relleno azul es
+    el **Azul Muro de la paleta**, que ya existe, ya tiene sus tres escalones declarados y ya
+    hace de fantasma. Un segundo azul solo para un botón era el cuarto color que el owner vio
+    de más. */
+    /* ⚠️ Sobre un tinte SOLO aguantan Tinta (14,8) y Azul Muro (5,68): Humo da 4,40, Lima 800
+    4,18, Verde 800 4,19 y Amarillo 800 3,90. No es criterio propio — `tokens-pjp.js` ya lo
+    trae escrito con esas mismas cifras. Lo que se pinte encima va en `--fg`. */
+    --tint-info:        color-mix(in srgb, var(--identity-fill) 14%, var(--bg));
+    --tint-info-border: color-mix(in srgb, var(--identity-fill) 30%, var(--bg));
+    --tint-attn:        color-mix(in srgb, var(--attn) 14%, var(--bg));
+    --tint-attn-border: color-mix(in srgb, var(--attn) 30%, var(--bg));
+    /* ⚠️ `#540` · el tinte «ok» tiñe con el CIAN de identidad, no con el verde
+    (`[DECIDIDO owner, 2026-09-12]`: «el verde salvia fuera»). El rol `--ok` NO se toca: sigue
+    significando éxito —«reserva confirmada», «pago correcto»— y eso es significado, no
+    decoración. Lo que se retira es el verde como SUPERFICIE. */
+    --tint-ok:          color-mix(in srgb, var(--identity-fill) 14%, var(--bg));
+    --tint-ok-border:   color-mix(in srgb, var(--identity-fill) 30%, var(--bg));
+    /* ⚠️ **El PAR lo declara quien declara el color** (`#434`: no se deriva, se escribe). El resalte
+    es un amarillo claro, así que encima siempre va TINTA — y tenerlo escrito es lo que impide que
+    la próxima pieza que lo use elija el suyo a ojo, que es como nacieron los cuatro contrastes
+    que aquella tanda tuvo que arreglar. Su primer consumidor es el sello de precio de la sección
+    «Para quién» (`#478`). */
+    --on-attn: var(--fg);
+    /* ⚠️⚠️ **`--wrap-gutter` es el sangrado de un elemento A SANGRE COMPLETA, y solo sirve ahí.**
+    Su `100%` es un porcentaje: se resuelve contra el CONTENEDOR del elemento, no contra el
+    elemento. En algo que ocupa todo el ancho eso significa lo que dice —«el sangrado, o lo que
+    haga falta para centrar `--col-max`»— y por eso el `.nav` y el hero lo usan bien.
+    ▶ **En un elemento que YA está acotado por su propio `max-width` significa otra cosa**: el
+    sangrado sigue creciendo con la ventana mientras la caja no, así que la columna se
+    estrangula. No falla, no avisa y no se ve a 1280 px. Medido a 2560: la tarjeta del cierre
+    quedaba en **160 px de ancho** y la columna del menú a pantalla completa en **60**.
+    Los contenedores acotados usan `--col-gutter`. */
+    --wrap-gutter: max(var(--col-gutter), calc((100% - var(--col-max)) / 2));
+    /* ⚠️ **EL ANCHO DE LA COLUMNA, Y EL ÚNICO SITIO DONDE SE ESCRIBE.** Es el del mockup: sus
+    secciones son cajas de 1240 con 32 de sangrado, o sea 1176 de contenido. Cambiar este
+    número mueve el sitio entero —las doce vistas— a la vez, que es justo lo que tiene que
+    pasar: una columna que hay que cambiar en tres sitios acaba siendo tres columnas. */
+    /* ══ LA GEOMETRÍA DEL RACIMO DE LA ESQUINA, y el hueco que el hero le tiene que dejar ═══
+    `[DECIDIDO owner, 2026-08-29]`: en el punto estático del hero de cabecera «el logo, el CTA
+    y el icono del menú tienen que verse perfectamente en su sitio ENCIMA del hero».
+    ⚠️⚠️ **No lo estaban, y la causa es que el hueco dependía de la ALTURA DE VENTANA y el
+    racimo no.** Era `clamp(76px, 9vh, 104px)`: a 1080 px de alto daba 97 y el racimo acaba en
+    86, así que sobraba aire; **a 900 daba 81 y el logotipo se metía 5 px DENTRO del hero**.
+    Un hueco medido en `vh` para tapar algo que mide siempre lo mismo acierta por tramos.
+    ▶ Ahora el hueco se DERIVA: dónde nace el racimo + lo que mide el más alto + aire. */
+    --nav-pad-block: 16px;
+    /* el aire de arriba del armazón (`.nav`) */
+    --nav-logo-h: 70px;
+    /* el logotipo, medido contra la tinta del mockup (`#218`) */
+    /* ⚠️ El alto de los BOTONES de la esquina —la hamburguesa y el par de CTA—, que es el que
+    manda el racimo en cuanto el logotipo encoge. Estaba como reserva dentro de `.cta-pair`, y
+    **la hamburguesa no es descendiente suya**: leía `var(--cta-pair-h, 54px)` y se quedaba
+    siempre en el 54 de la reserva, aunque su propio comentario dijera «54, o 48 en teléfono».
+    Medido a 390: 54. Un token fuera de alcance no falla, rinde su reserva. */
+    /* ⚠️ `#538` · 56 y no 54 (`[DECIDIDO owner, 2026-09-12]`): el sistema declara DOS alturas de
+    botón —48 (`altoMin`/`altoS`) y 56 (`altoL`)— y la web usaba OCHO. El 54 salía del mockup y
+    tenía decisión escrita en `#218`, así que subirlo se decidió a sabiendas: una escala con una
+    excepción medida deja de ser una escala. El logotipo (`--nav-logo-h`, 70) NO cambia: ése sí
+    está medido sobre la TINTA del mockup y no es un control. */
+    --nav-btn-h: 56px;
+    /* ⚠️ **El CTA flotante de móvil NO mide lo que el racimo de arriba** (`#265`, `[DECIDIDO
+    owner]`: «hazlo más grande»). Heredaba `--nav-btn-h`, que en teléfono baja a 48 porque
+    arriba comparte fila con el logotipo y la hamburguesa — abajo no comparte con nadie y el
+    mockup lo pone en **56** (`min-height:56px` en su barra de acciones). Es el único sitio del
+    armazón donde el alto no puede salir del racimo: son dos piezas con dos restricciones. */
+    --book-bar-h: 56px;
+    /* La sombra de un mueble ANCLADO ABAJO (`#571`: la barra de guardar del formulario post-reserva). Es la
+    de la familia `--shadow-nav` pero hacia ARRIBA: una sombra hacia abajo en una barra pegada al borde
+    inferior cae fuera de la pantalla y no separa nada. */
+    --shadow-nav-dock: 0 -8px 24px color-mix(in srgb, var(--paper-fg) 12%, transparent);
+    --nav-cluster-h: max(var(--nav-logo-h), var(--nav-btn-h));
+    --col-max: 1176px;
+    /* El sangrado lateral de un contenedor YA ACOTADO (`max-width` propio). Es una LONGITUD FIJA
+    a propósito: dentro de una caja acotada, un porcentaje mide el padre y miente. Los tres
+    escalones son los del mockup (`--pjp-margen`: 32 · 24 · 16). */
+    --col-gutter: 32px;
+    /* Inset lateral (móvil) COMPARTIDO por el CTA flotante de reserva (`.book-bar`) y el CTA del
+    hero, para que ambos tengan EXACTAMENTE el mismo ancho y el float deslice sobre el hueco que
+    deja el hero sin saltos de anchura. Cambiar aquí afecta a los dos a la vez. */
+    --float-cta-inset: 14px;
+    /* El aire VERTICAL del CTA flotante de móvil (`#276`, `[DECIDIDO owner]`: «hay que subirlo un
+    pelín»). Estaban los dos como literales dentro de la regla, y el de abajo se subió a 19.
+    ⚠️⚠️ **No es un número suelto: hay una pieza que se apoya en él.** El lanzador del widget de
+    ofertas se aparta cuando la barra aparece, y su desplazamiento estaba escrito a mano —`92px`,
+    que era `10 + 56 + 10 + 16` calculado por alguien y copiado—. Subir la barra sin tocar ese 92
+    la habría metido por debajo del lanzador **sin que fallara nada**. Ahora los dos leen
+    `--book-bar-block`, así que el hueco se mantiene solo. */
+    --book-bar-pad-top: 10px;
+    --book-bar-pad-bottom: 19px;
+    /* Lo que la barra OCUPA desde el filo inferior, sin el margen seguro del dispositivo (que cada
+    consumidor añade por su cuenta, porque no todos lo necesitan). */
+    --book-bar-block: calc(var(--book-bar-pad-top) + var(--book-bar-h) + var(--book-bar-pad-bottom));
+    /* Objetivo táctil mínimo (Lote 9, WCAG 2.5.5): tamaño del área de toque de los controles
+    de icono. Se aplica preservando el tamaño VISIBLE (pseudo-elemento centrado o caja
+    transparente), salvo donde subir el visible es trivial (burger, cerrar drawer).
+    ▶ **Desde `#264` es también el mínimo de la LANDING entera**, por dos vías: `[data-tap]`
+    (el área crece sin mover el dibujo) y `min-height` donde crecer no daña. El número vive
+    aquí y solo aquí — `TouchTargetTest` pone la suite roja si aparece un segundo.
+    ⚠️⚠️ **Sube de 44 a 48 en `#470`** (`[DECIDIDO owner]`: el sistema del 2.º cliente lo pide
+    «sin excepciones»). Y sube en el PRODUCTO y no en el paquete del cliente, porque esto es
+    ACCESIBILIDAD y no marca: WCAG 2.5.5 pone el suelo en 44, crecer está permitido y encoger
+    no. Que un cliente NO pueda bajarlo está garantizado por construcción — `siteSheets()`
+    incluye `client.css`, así que la aserción de «declarado una sola vez» lo impide. */
+    --tap-min: 48px;
+    /* Colores SEMÁNTICOS de estado (Lote 12): éxito / error / atención.
+    Consolidan ~25 hex con deriva (verdes/rojos/ámbares casi-idénticos) en un set único; el
+    valor es el dominante de cada rol (antes repartidos por badges, estados de pedido,
+    formularios, depósito y reembolsos).
+    ══ EL AVISO SOBRE PAPEL (`#564`, grieta 10, `[DECIDIDO owner]`) ═══════════════════════════
+    ⚠️⚠️ **Los fondos y bordes claros SE DERIVAN de su color sólido, y antes eran siete hex del
+    PRIMER cliente.** El sistema del 2.º cliente solo declara avisos sobre TINTA y el cajón es
+    papel de arriba abajo, así que el hueco lo rellenaba el producto con los colores que traía
+    —`#e7f6ec`, `#fbeaea`, `#b45309`…—, que nadie eligió para esta marca. `#480` ya los tenía
+    fichados.
+    ▶ **El defecto no era estético y está MEDIDO**: `--ok` y `--err` SÍ los sobrescribe el paquete
+    del cliente, y sus fondos claros NO — así que «Pagado» pintaba Verde Salta sobre un verde
+    azulado ajeno y daba **2,64** de contraste; «Cancelado» **3,88**; «Gratis» **2,64**, éste
+    también en la landing. Con la receta del sistema —fondo al **14 %**, borde al **30 %**, texto
+    en **TINTA**— quedan en **14,77 · 13,89 · 15,73**.
+    ⚠️ **El texto va en tinta y eso no es conservadurismo, es aritmética**: los tres colores de
+    marca como TEXTO sobre papel dan 2,67 · 4,10 · 1,49 — los tres por debajo del suelo. Es la
+    misma conclusión a la que llegó `#487` al declarar `--ok-ink` y `--attn-ink`.
+    ⚠️⚠️ **Se derivan en el PRODUCTO y no en el paquete**, que es mejor que las «siete líneas en
+    `client.css`» que el canvas proponía: así una instalación que solo declare sus verde y rojo
+    obtiene sus cuatro avisos **sin escribir nada**, y una que no declare nada sigue teniendo los
+    del producto. El tinte se mezcla con `--bg`, así que sobre una superficie de tinta sale
+    oscuro solo — que es la conducta correcta. */
+    --ok: #1f7a3d;
+    /* éxito: texto y fondo sólido (consolida #1a7f37, #15803d) */
+    --ok-bg: color-mix(in srgb, var(--ok) 14%, var(--bg));
+    --ok-border: color-mix(in srgb, var(--ok) 30%, var(--bg));
+    --err: #c0392b;
+    /* error: texto y fondo sólido */
+    /* El hover de un relleno de error, con el MISMO factor que `actionHover()` usa en el servidor
+    (`#209`): ×0,88 sobre cada canal es mezclar con negro al 12 %. Un hex aquí sería un segundo
+    criterio para lo mismo. */
+    --err-hover: color-mix(in srgb, var(--err) 88%, #000);
+    --err-bg: color-mix(in srgb, var(--err) 14%, var(--bg));
+    --err-border: color-mix(in srgb, var(--err) 30%, var(--bg));
+    /* El tercer tono. `--attn` ya existía como relleno sólido (19 usos); lo que faltaba era su
+    superficie. ⚠️ **Y con él se retira `--warn`**, que era el MISMO rol con otro nombre y un hex
+    del primer cliente — dos tokens para «atención» son dos sitios donde equivocarse. */
+    --attn-bg: color-mix(in srgb, var(--attn) 14%, var(--bg));
+    --attn-border: color-mix(in srgb, var(--attn) 30%, var(--bg));
+    /* ── TEXTO SOBRE UN RELLENO SEMÁNTICO (auditoría C3, `#434`) ─────────────────────────────────
+    «Incluido» pintaba `#fff` quemado sobre `--ok`, y con el verde del 2.º cliente eso da **2,95**
+    — su propia tabla de contraste lo marca «Blanco sobre Verde ✕ NUNCA». No hay luminancia en
+    CSS, así que el PAR lo declara quien declara el color: el producto pone papel sobre sus verde y
+    rojo OSCUROS (4,96 y 5,3 medidos), y `client.css` pone tinta sobre su verde CLARO y blanco
+    sobre su rojo (su tabla §2.1). ⚠️ Un `color: #fff` junto a `background: var(--ok|--err)`
+    vuelve a romper esto sin que falle nada: lo vigila `SemanticFillTextTest`.
+    ⚠️ **`--on-warn` se retiró en `#564` con su color**: tenía CERO consumidores —ninguna regla
+    rellenaba con `--warn`— y el paquete del cliente tampoco lo declaraba, así que era un par
+    para un relleno que no existía. El tercer tono rellena hoy con `--attn`, y sobre amarillo el
+    texto es tinta por aritmética (11,26), no por elección. */
+    --on-ok: var(--paper-bg);
+    --on-err: var(--paper-bg);
+    /* ══ EL MOVIMIENTO — CUATRO CURVAS Y SIETE DURACIONES (tanda 2d, `#222`) ════════════════════
+    ⚠️⚠️ **Aquí había DOS duraciones y DOS curvas, y no era un sistema: era un parche.**
+    `DECISIONES #42` tokenizó lo que el cajón repetía a mano y dejó el resto pendiente. Medido
+    antes de esta tanda: **239 declaraciones de movimiento, 53 duraciones y 20 curvas**, y
+    **200 de los 220 usos de curva eran `ease`** — o sea que el 90 % del movimiento no elegía
+    curva, la heredaba del navegador.
+    ▶ **Esto NO es una escala extraída de lo que había** —igual que las sombras de `#196`, no
+    había ninguna que extraer—: es el sistema del 2.º cliente, que sí lo tiene escrito
+    (`Microanimaciones PJP`), traducido a ROLES del producto. Cada valor responde a «¿para qué
+    sirve este tiempo?», no a «¿qué números usamos?».
+    LOS TRES PRINCIPIOS que ordenan la tabla, y que explican por qué no es simétrica:
+    1. **Lo que entra rebota; lo que sale, no** — y sale en la MITAD de tiempo. Un modal que
+    rebota al cerrarse parece que ha fallado.
+    2. **El sobreimpulso se paga en píxeles**: el rebote es desplazamiento y escala, nunca
+    opacidad ni color. Lo que no mueve masa es un fundido, no un rebote.
+    3. **Nada en bucle salvo las esperas.** Un banner que respira o un icono que late es ruido.
+    ⚠️ **`--dur-invite` y las marquesinas quedan FUERA de la escala a propósito**: son bucles
+    AMBIENTALES, de otra familia que un tiempo de respuesta. Están declarados abajo y
+    `MotionScaleTest` los lleva en una lista de excepciones que **solo encoge**. */
+    /* Las CUATRO curvas. Un paquete de instalación las redefine y el movimiento entero le sigue. */
+    --ease-entra: cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* lo que APARECE: se pasa de largo y vuelve */
+    --ease-cae: cubic-bezier(0.2, 1.56, 0.25, 1);
+    /* el rebote GRANDE: uno por pantalla */
+    --ease-sale: cubic-bezier(0.4, 0, 0.2, 1);
+    /* cierres, foco y TODO el hover: sin opinión */
+    --ease-bucle: linear;
+    /* solo esperas: un easing parece un fallo de red */
+    /* Las SIETE duraciones, cada una con su uso. */
+    --dur-toque: 120ms;
+    /* hover de icono y de enlace. Por debajo se percibe instantáneo */
+    --dur-sale: 180ms;
+    /* botones, cierres, salidas. La mitad de su entrada */
+    --dur-estado: 240ms;
+    /* cambio de estado DENTRO de un componente */
+    --dur-entra: 320ms;
+    /* entrada simple de una tarjeta o un tile, sin cadena */
+    --dur-cae: 420ms;
+    /* cascada, sello y confirmación. **TECHO general** */
+    --dur-salto: 620ms;
+    /* la ÚNICA excepción al techo: el salto del hero */
+    --dur-espera: 900ms;
+    /* ciclo de espera. El único número que se repite */
+    /* ── FUERA DE LA ESCALA: los bucles AMBIENTALES ────────────────────────────────────────────
+    No son tiempos de respuesta a un gesto, así que no compiten con los siete de arriba. Cada
+    uno tiene su token para que una instalación pueda calmarlos sin reescribir `@keyframes`. */
+    --dur-invite: 4.6s;
+    /* el latido que invita a descubrir el CTA doble (2c·7) */
+    --dur-cinta: 34s;
+    /* AMBIENTAL · la cinta `C3`: «en la web se mueve despacio» */
+    --dur-switch: 3.4s;
+    /* el ciclo del interruptor del titular. Es el número del artboard (6d) */
+    /* ⚠️ **Y el interruptor YA NO es un bucle**: salta este número de veces y se queda encendido
+    (`#280`, `[DECIDIDO owner]`). Sigue con su token ambiental porque 3,4 s no cabe en la escala
+    —no responde a un gesto—, pero deja de gastar presupuesto de movimiento para siempre
+    (`#279`). Cuántas veces salta es de la instalación; DÓNDE para, no: eso lo deriva
+    `--switch-runs` en `.hero__switch`, y ahí está la única cifra que no se toca. */
+    --switch-cycles: 3;
+    /* cuántas veces se enciende el interruptor del titular. El último se queda */
+}
+@media (max-width: 1099px) {
+    :where(.sidecart) {
+        --col-gutter: 24px;
+    }
+}
+@media (max-width: 719px) {
+    :where(.sidecart) {
+        --col-gutter: 16px;
+    }
+}
+@media (max-width: 768px) {
+    :where(.sidecart) {
+        --nav-pad-block: 12px;
+    }
+}
+@media (max-width: 719px) {
+    :where(.sidecart) {
+        --nav-logo-h: 46px;
+    }
+}
+@media (max-width: 619px) {
+    :where(.sidecart) {
+        --nav-btn-h: 48px;
+    }
+}
+.entry__stepper button, .cal__nav, .cart__remove, .sidecart__close, .bk-foot__info-btn {
+    position: relative;
+}
+.entry__stepper button::after, .cal__nav::after, .cart__remove::after, .sidecart__close::after, .bk-foot__info-btn::after {
+    content: ""; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: max(100%, var(--tap-min)); height: max(100%, var(--tap-min));
+}
+.lang-dd__panel a.active {
+    color: var(--interactive);
+}
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.pagination {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: var(--sp-16); margin-top: 40px;
+    font-family: var(--font-body);
+}
+.pagination__btn {
+    font-size: var(--fs-14); font-weight: 600; color: var(--fg);
+    border: 1px solid var(--line); border-radius: var(--r-pill); padding: var(--sp-8) var(--sp-18);
+    transition: color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+}
+.pagination__btn:hover {
+    border-color: var(--fg);
+}
+.pagination__btn--disabled {
+    color: var(--fg-mute); opacity: 0.5; pointer-events: none;
+}
+.pagination__info {
+    font-size: var(--fs-14); color: var(--fg-mute);
+}
+.form {
+    max-width: 640px; margin-top: var(--sp-8);
+}
+.form__row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-18);
+}
+@media (max-width: 560px) {
+    .form__row {
+        grid-template-columns: 1fr;
+    }
+}
+.form__field {
+    display: flex; flex-direction: column; gap: var(--sp-6); margin-bottom: var(--sp-18);
+}
+.form__field > span, .form__field > .form__label {
+    font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; color: var(--fg);
+}
+.form__field input, .form__field textarea {
+    font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    padding: var(--sp-12) var(--sp-14); width: 100%; resize: vertical;
+    min-height: var(--tap-min);
+    transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.form__field input:focus, .form__field textarea:focus {
+    border-color: var(--fg);
+}
+.form__error {
+    color: var(--err); font-size: var(--fs-12); font-style: normal; margin-top: var(--sp-2);
+}
+.pwd-input {
+    position: relative; display: block;
+}
+.pwd-input input {
+    padding-right: 44px;
+}
+.pwd-input__toggle {
+    position: absolute; top: 50%; right: 6px;
+    transform: translateY(-50%);
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; background: transparent;
+    color: var(--fg-mute); cursor: pointer; border-radius: 6px;
+    transition: color var(--dur-toque) var(--ease-sale), background var(--dur-toque) var(--ease-sale);
+}
+.pwd-input__toggle:hover {
+    color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.pwd-input__toggle:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: 2px;
+}
+.pwd-input__icon {
+    display: block;
+}
+.qr-frame {
+    display: flex; flex-direction: column; align-items: center; gap: var(--sp-14);
+}
+.qr-tile {
+    position: relative; width: var(--qr-size); height: var(--qr-size);
+    background: var(--sheet); border: 1px solid var(--line);   /* era `#fdfbf4` a mano (auditoría m4, `#435`) */
+    border-radius: var(--r); padding: var(--sp-14);
+}
+.qr-slot {
+    position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 5px;
+}
+.qr-slot svg {
+    display: block; width: 100%; height: 100%;
+}
+.qr-slot svg path {
+    fill: var(--fg);
+}
+.qr-corner {
+    position: absolute; width: 16px; height: 16px; border: 2.5px solid var(--zone-1);
+}
+.qr-corner--tl {
+    top: -5px; left: -5px; border-right: none; border-bottom: none; border-radius: 7px 0 0 0;
+}
+.qr-corner--tr {
+    top: -5px; right: -5px; border-left: none; border-bottom: none; border-radius: 0 7px 0 0;
+}
+.qr-corner--bl {
+    bottom: -5px; left: -5px; border-right: none; border-top: none; border-radius: 0 0 0 7px;
+}
+.qr-corner--br {
+    bottom: -5px; right: -5px; border-left: none; border-top: none; border-radius: 0 0 7px 0;
+}
+.reg-cta .arrow-ico {
+    transition: transform var(--dur-sale) var(--ease-sale);
+}
+.reg-cta:hover .arrow-ico {
+    transform: translateX(3px);
+}
+@media (max-width: 560px) {
+    .regcard .qr-frame {
+        justify-self: center;
+    }
+}
+.auth__row {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-18);
+}
+.auth__row .check--opt {
+    margin: 0;
+}
+.auth__link {
+    background: none; border: none; cursor: pointer; padding: 0;
+    font-family: var(--font-body); font-size: var(--fs-button); color: var(--interactive);
+    font-weight: 600; text-decoration: underline; white-space: nowrap;
+}
+.auth--page {
+    max-width: 480px; margin-top: var(--sp-8);
+}
+.auth__switch {
+    margin: var(--sp-16) 0 0; text-align: center;
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.auth__switch button {
+    background: none; border: none; cursor: pointer; padding: 0;
+    font: inherit; color: var(--interactive); font-weight: 600; text-decoration: underline;
+}
+.auth__head {
+    margin-bottom: var(--sp-18);
+}
+.auth__title {
+    font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
+    letter-spacing: -0.02em; line-height: 1; font-size: clamp(28px, 5vw, 38px); margin: 0;
+}
+.auth__sub {
+    margin: var(--sp-8) 0 0; color: var(--fg-mute); font-size: var(--fs-14); line-height: 1.5;
+}
+.auth__sent {
+    margin: 0 0 var(--sp-4); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg);
+}
+.auth__form {
+    max-width: none; margin-top: var(--sp-18);
+}
+.auth__submit {
+    width: 100%; justify-content: center; margin-top: var(--sp-6);
+}
+.auth__google {
+    width: 100%; justify-content: center;
+    gap: var(--sp-10); min-height: var(--tap-min); padding: var(--sp-10) var(--sp-12);
+    background: #fff; color: #1f1f1f;
+    border: 1px solid #747775; border-radius: var(--r-pill);
+    font-family: var(--font-body); font-size: var(--fs-body); line-height: 20px; font-weight: 500;
+}
+.auth__google:hover {
+    background: #f7f8f8; color: #1f1f1f; border-color: #747775;
+}
+.auth__google-mark {
+    flex: none; width: 18px; height: 18px; object-fit: contain;
+}
+.auth__or {
+    display: flex; align-items: center; gap: var(--sp-12);
+    margin: var(--sp-14) 0;
+    color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-body-s);
+}
+.auth__or::before, .auth__or::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+}
+.form__hint {
+    color: var(--fg-mute); font-size: var(--fs-12);
+}
+.form__hint a, .form__hint button {
+    color: var(--interactive); text-decoration: underline;
+}
+.form__checks {
+    display: flex; flex-direction: column; gap: var(--sp-12); margin: var(--sp-4) 0 var(--sp-20);
+}
+.check {
+    display: flex; align-items: flex-start; gap: var(--sp-10); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); cursor: pointer;
+}
+.check input {
+    margin-top: var(--sp-2); width: 16px; height: 16px; flex: none; accent-color: var(--zone-1);
+}
+.check span a {
+    color: var(--zone-1); text-decoration: underline;
+}
+.check--opt {
+    color: var(--fg-mute);
+}
+.hp {
+    display: none;
+}
+.auth__errors {
+    background: var(--err-bg); border: 1px solid var(--err-border); color: var(--fg);
+    border-radius: var(--r-sm); padding: var(--sp-12) var(--sp-14); margin-bottom: var(--sp-16);
+    font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.5;
+}
+.auth__errors strong {
+    display: block; margin-bottom: var(--sp-4);
+}
+.auth__errors ul {
+    margin: 0; padding-left: var(--sp-18);
+}
+.account__intro {
+    max-width: 70ch; margin: var(--sp-14) 0 0; color: var(--fg-mute); font-size: var(--fs-16); line-height: 1.6;
+}
+.account__grid {
+    display: grid; gap: 22px; max-width: 720px;
+}
+.account__card {
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+    padding: clamp(20px, 3vw, 30px);
+}
+.account__card-title {
+    font-family: var(--font-display); font-weight: 700; font-stretch: 75%;
+    letter-spacing: -0.02em; font-size: var(--fs-22); color: var(--fg); margin: 0;
+}
+.account__card-sub {
+    margin: var(--sp-6) 0 var(--sp-18); color: var(--fg-mute); font-size: var(--fs-body-s); line-height: 1.5;
+}
+.account__card .form {
+    max-width: none; margin-top: 0;
+}
+.account__danger-btn {
+    width: 100%; justify-content: center;
+}
+.account__linked {
+    margin-top: var(--sp-20);
+}
+.account__linked .account__card-title {
+    margin-bottom: var(--sp-12);
+}
+.account__consents {
+    list-style: none; margin: 0 0 var(--sp-18); padding: 0; display: flex; flex-direction: column; gap: var(--sp-8);
+}
+.account__consents li {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-4) var(--sp-12); align-items: baseline; font-family: var(--font-body); font-size: var(--fs-body); padding: var(--sp-10) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-sm);
+}
+.account__consent-type {
+    font-weight: 600; color: var(--fg);
+}
+.account__consent-meta {
+    display: flex; flex-wrap: wrap; align-items: baseline; color: var(--fg-mute);
+}
+.account__consent-part {
+    white-space: nowrap;
+}
+.account__consent-part + .account__consent-part::before {
+    content: "·"; margin: 0 var(--sp-6);
+}
+.account__consent--revoked .account__consent-type {
+    color: var(--fg-mute); font-weight: 500; text-decoration: line-through; text-decoration-thickness: 1px;
+}
+.switch {
+    display: flex; align-items: center; gap: var(--sp-12); min-height: var(--tap-min); font-family: var(--font-body); font-size: var(--fs-13); line-height: 1.45; color: var(--fg); cursor: pointer;
+}
+.switch__input {
+    appearance: none; -webkit-appearance: none;
+    position: relative; flex: none; width: 44px; height: 26px; margin: 0; cursor: pointer;
+    background: var(--bg-soft); border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+    transition: background var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+}
+.switch__input::before {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+    border-radius: var(--r-pill); background: var(--bg-card); border: 1px solid var(--line-strong);
+    transition: transform var(--dur-sale) var(--ease-sale), background var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale);
+}
+.switch__input:checked {
+    background: var(--ok); border-color: var(--ok);
+}
+.switch__input:checked::before {
+    transform: translateX(18px); background: var(--bg-card); border-color: var(--ok);
+}
+.switch__input:disabled {
+    opacity: 0.55; cursor: not-allowed;
+}
+.switch__label {
+    flex: 1 1 auto;
+}
+.account__export-btn {
+    margin-top: var(--sp-4);
+}
+.account__card--danger {
+    border-color: var(--err);
+}
+.account__delete-btn {
+    width: 100%; justify-content: center; background: var(--err); color: var(--on-err); border: 1px solid var(--err);
+}
+.account__delete-btn:hover {
+    background: var(--err-hover); border-color: var(--err-hover);
+}
+.form__field select {
+    font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    padding: var(--sp-12) var(--sp-14); width: 100%;
+    min-height: var(--tap-min);  /* mismo suelo táctil que input y textarea (`#476`) */
+}
+.form__field select:focus {
+    border-color: var(--fg);
+}
+html.no-scroll, body.no-scroll {
+    overflow: hidden;
+}
+.sidecart {
+    position: fixed; inset: 0; z-index: 160; visibility: hidden;
+}
+.sidecart:not(.is-open) .jj-spinner, .sidecart:not(.is-open) .jj-spinner::before, .sidecart:not(.is-open) .jj-spinner::after {
+    animation-play-state: paused;
+}
+.sidecart.is-open {
+    visibility: visible;
+}
+.sidecart__backdrop {
+    position: absolute; inset: 0; background: color-mix(in srgb, var(--fg) 50%, transparent); opacity: 0; transition: opacity var(--dur-entra) var(--ease-sale);
+}
+.sidecart.is-open .sidecart__backdrop {
+    opacity: 1;
+}
+.sidecart__panel {
+    position: absolute; top: 0; right: 0; height: 100%; width: min(440px, 100%); display: flex; flex-direction: column; background: var(--bg); box-shadow: -20px 0 60px -20px color-mix(in srgb, var(--fg) 40%, transparent); transform: translateX(100%); transition: transform var(--dur-entra) var(--ease-sale);
+}
+.sidecart.is-open .sidecart__panel {
+    transform: translateX(0);
+}
+.sidecart__head {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-16) var(--sp-20); border-bottom: 1px solid var(--line);
+}
+.sidecart__title {
+    font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: var(--fs-18); color: var(--fg);
+}
+.sidecart__close {
+    background: none; border: 0; color: var(--fg-mute); font-size: 26px; line-height: 1; cursor: pointer;
+}
+.sidecart__close:hover {
+    color: var(--fg);
+}
+.sidecart__body {
+    flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+}
+@media (max-width: 480px) {
+    .sidecart__panel {
+        width: 100%;
+    }
+}
+#sidecart-spa {
+    display: flex; flex-direction: column; flex: 1; min-height: 0;
+}
+.purchase {
+    display: flex; flex-direction: column; position: relative; flex: 1; min-height: 0;
+}
+.purchase__scroll {
+    flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--sp-20);
+}
+.purchase__scroll::-webkit-scrollbar {
+    width: 10px;
+}
+.purchase__scroll::-webkit-scrollbar-thumb {
+    background: var(--line-strong); border-radius: var(--r-pill); border: 3px solid var(--bg);
+}
+.wiz__title {
+    margin: 0 0 var(--sp-14); font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: 24px; line-height: 1.05; color: var(--fg);
+}
+.wiz__title:has(+ .wiz__lede) {
+    margin-bottom: var(--sp-7);
+}
+.wiz__lede {
+    margin: 0 0 var(--sp-14); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute);
+}
+.purchase__empty {
+    color: var(--fg-mute); font-family: var(--font-body); font-size: var(--fs-body);
+}
+.timestrip {
+    position: relative; margin-inline: calc(var(--sp-20) * -1);
+}
+.timestrip__track {
+    display: flex; align-items: stretch; gap: var(--sp-8);
+    padding-inline: var(--sp-20);
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--sp-20);
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-block: var(--sp-2);
+}
+.timestrip__track::-webkit-scrollbar {
+    display: none;
+}
+.timestrip::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+}
+.purchase__chip {
+    flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-4); min-height: 76px; min-width: 76px; padding: var(--sp-8) var(--sp-10); border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); cursor: pointer; transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.purchase__chip:hover {
+    border-color: var(--fg);
+}
+.purchase__chip.is-full {
+    cursor: not-allowed; border-style: dashed;
+}
+.purchase__chip.is-full .purchase__chip-t {
+    text-decoration: line-through; text-decoration-thickness: 1.5px;
+}
+.purchase__chip.is-full .purchase__chip-full {
+    color: var(--err);
+}
+.purchase__chip.is-full:hover {
+    border-color: var(--line);
+}
+.timestrip__track {
+    --cascada-desfase: calc(var(--dur-cae) * 0.2143);
+}
+.purchase__chip {
+    transform-origin: 50% 100%;
+    animation: chip-cae var(--dur-cae) var(--ease-cae) calc(var(--i, 0) * var(--cascada-desfase)) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .purchase__chip {
+        animation-name: chip-cae-quieta;
+    }
+}
+.purchase__chip-t {
+    font-size: var(--fs-17); font-weight: var(--fw-black); line-height: 1;
+}
+.purchase__chip-full {
+    max-width: 100%; font-size: var(--fs-label); font-weight: var(--fw-semibold); line-height: 1.15; letter-spacing: 0.02em; text-align: center; color: var(--attn-ink);
+}
+.purchase__chip.is-active .purchase__chip-full {
+    color: var(--bg); opacity: 0.78;
+}
+.purchase__entries {
+    display: flex; flex-direction: column; gap: var(--sp-8);
+}
+.entry {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card);
+}
+.entry.is-out {
+    opacity: 0.55;
+}
+.entry__info {
+    display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.entry__stepper {
+    display: flex; align-items: center; gap: var(--sp-7); flex: none;
+}
+.entry__stepper button {
+    display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-btn); border: 1px solid var(--line); background: var(--bg-card); color: var(--fg); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1; cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale);
+}
+.entry__stepper--lg {
+    gap: var(--sp-10);
+}
+.entry__stepper--lg button {
+    width: 48px; height: 48px; font-size: var(--fs-22);
+}
+.entry__stepper button:hover:not(:disabled) {
+    border-color: var(--fg);
+}
+.entry__stepper button:disabled {
+    opacity: 0.4; cursor: not-allowed;
+}
+.entry__qty {
+    min-width: 3ch; text-align: center; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); background: transparent; border: 0; padding: 0 var(--sp-4); border-radius: var(--r-sm);
+}
+.entry__stepper--lg .entry__qty {
+    min-width: 46px; font-family: var(--font-display); font-stretch: 75%; font-size: 24px;
+}
+.entry__qty::-webkit-outer-spin-button, .entry__qty::-webkit-inner-spin-button {
+    appearance: none; margin: 0;
+}
+.entry__qty[type="number"] {
+    appearance: textfield;
+}
+.entry__qty:focus-visible {
+    outline: var(--focus-outline); outline-offset: 2px;
+}
+.purchase__foot {
+    margin-top: var(--sp-18); padding-top: var(--sp-16); border-top: 1px solid var(--line);
+}
+.purchase__foot--info {
+    margin-top: var(--sp-16); padding-top: 0; border-top: 0;
+}
+.purchase__total {
+    display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-body);
+}
+.purchase__total strong {
+    font-size: var(--fs-22); font-family: var(--font-display); font-stretch: 75%;
+}
+.purchase__split {
+    display: flex; justify-content: space-between; align-items: baseline; margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute);
+}
+.purchase__split strong {
+    font-weight: var(--fw-bold); color: var(--fg);
+}
+.purchase__money {
+    margin-top: var(--sp-14);
+    padding: var(--sp-14) var(--sp-16);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r);
+    text-align: left;
+}
+.purchase__split--paid strong {
+    color: var(--money);
+}
+.acct {
+    display: grid;
+    grid-template-rows: 1fr;
+    visibility: visible;
+    opacity: 1;
+    transition: grid-template-rows var(--dur-entra) var(--ease-sale),
+    padding var(--dur-entra) var(--ease-sale),
+    border-bottom-width var(--dur-entra) var(--ease-sale),
+    opacity var(--dur-estado) var(--ease-sale),
+    visibility 0s;
+}
+.sidecart__panel.is-booking .acct, .sidecart__panel.is-cart .acct, .sidecart__panel.is-account .acct, .sidecart__panel.is-result .acct {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows var(--dur-entra) var(--ease-sale),
+    padding var(--dur-entra) var(--ease-sale),
+    border-bottom-width var(--dur-entra) var(--ease-sale),
+    opacity var(--dur-estado) var(--ease-sale),
+    /* el retardo IGUALA a la duración del colapso: se va del foco justo al terminar */
+    visibility 0s var(--dur-entra);
+}
+.acct.acct--pending {
+    grid-template-rows: 0fr;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+    .acct, .sidecart__panel.is-booking .acct, .sidecart__panel.is-cart .acct, .sidecart__panel.is-account .acct, .sidecart__panel.is-result .acct {
+        transition: opacity var(--dur-toque) var(--ease-sale), visibility 0s var(--ease-bucle) var(--dur-toque);
+    }
+}
+.bk-progress {
+    flex: none; display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-14) var(--sp-20); background: var(--bg-soft); border-bottom: 1px solid var(--line); animation: bk-fade var(--dur-entra) var(--ease-sale);
+}
+.bk-progress__top {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
+}
+.bk-back {
+    display: inline-flex; align-items: center; gap: var(--sp-7); background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-bold); color: var(--interactive); transition: gap var(--dur-sale) var(--ease-sale);
+}
+.bk-back svg {
+    width: 15px; height: 15px;
+}
+.arrow-ico {
+    vertical-align: middle; flex-shrink: 0;
+}
+.bk-back:hover {
+    gap: var(--sp-11);
+}
+.bk-back {
+    position: relative;
+}
+.bk-back::before {
+    content: ""; position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: max(100%, var(--tap-min)); height: max(100%, var(--tap-min));
+}
+.account__back {
+    margin-bottom: var(--sp-14);
+}
+.bk-step-count {
+    font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-mute); flex-shrink: 0;
+}
+.bk-seg {
+    display: flex; gap: var(--sp-7);
+}
+.bk-seg__item {
+    flex: 1; display: flex; flex-direction: column; gap: var(--sp-6); min-width: 0;
+}
+.bk-seg__bar {
+    height: 5px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--fg) 12%, transparent); overflow: hidden; position: relative;
+}
+.bk-seg__bar::after {
+    content: ""; position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--secondary); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-cae) var(--ease-sale);
+}
+.bk-seg__item.is-done .bk-seg__bar::after, .bk-seg__item.is-current .bk-seg__bar::after {
+    transform: scaleX(1);
+}
+.bk-seg__item.is-current .bk-seg__bar {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--secondary) 30%, transparent);
+}
+.bk-seg__label {
+    font-size: var(--fs-label); font-weight: var(--fw-bold); color: var(--fg-mute); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color var(--dur-estado) var(--ease-sale);
+}
+.bk-seg__item.is-current .bk-seg__label, .bk-seg__item.is-done .bk-seg__label {
+    color: var(--fg);
+}
+.bk-context {
+    display: flex; align-items: center; gap: var(--sp-8); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--fg); line-height: 1.2;
+}
+.bk-context .jj-block {
+    width: 11px; height: 11px; border-radius: 3px; transform: rotate(20deg); background: var(--zone-1); flex: none;
+}
+.bk-foot {
+    position: relative; flex: none; display: flex; flex-direction: column; gap: var(--sp-10); padding: var(--sp-14) var(--sp-20); border-top: 1px solid var(--line); background: var(--bg);
+}
+.bk-foot__row {
+    display: flex; flex-direction: column; align-items: stretch; row-gap: var(--sp-10);
+}
+.bk-foot__total {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12);
+}
+.bk-foot__l {
+    font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); letter-spacing: 0.04em;
+}
+.bk-foot:has(.bk-cta--sells) .bk-foot__l {
+    font-weight: var(--fw-bold); color: var(--fg);
+}
+.bk-foot__v {
+    font-family: var(--font-display); font-weight: var(--fw-black); font-stretch: 75%; font-size: var(--fs-22); letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap;
+}
+.bk-foot__note {
+    margin: 0; font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4;
+}
+.bk-foot__info {
+    display: inline-flex; vertical-align: middle; margin-left: 5px;
+}
+.bk-foot__info-btn {
+    display: inline-grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; background: none; cursor: pointer; color: var(--fg-mute); transition: color var(--dur-sale) var(--ease-sale);
+}
+.bk-foot__info-btn:hover {
+    color: var(--interactive);
+}
+.bk-foot__info-btn svg {
+    width: 15px; height: 15px;
+}
+.bk-foot__pop {
+    position: absolute; left: 20px; right: 20px; bottom: calc(100% + 6px); z-index: 20; display: flex; flex-direction: column; gap: var(--sp-7); padding: var(--sp-12) var(--sp-14); border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg-card); box-shadow: var(--shadow-float);
+}
+.bk-foot__pop-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-16); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute);
+}
+.bk-foot__pop-row span:last-child {
+    font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap;
+}
+.bk-paybreakdown {
+    flex: none; display: flex; flex-direction: column; gap: var(--sp-6); padding: var(--sp-12) var(--sp-20); background: var(--bg-soft); border-top: 1px solid var(--line);
+}
+.bk-paybreakdown + .bk-foot {
+    border-top: 0;
+}
+.bk-paybreakdown__row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-14); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute);
+}
+.bk-paybreakdown__l {
+    font-weight: var(--fw-semibold);
+}
+.bk-paybreakdown__v {
+    font-weight: var(--fw-bold); color: var(--fg); white-space: nowrap;
+}
+.bk-cta {
+    display: inline-flex; width: 100%; min-height: 56px; align-items: center; justify-content: center; gap: 9px; padding: var(--sp-18) 34px; line-height: 1.25; border: 0; cursor: pointer; border-radius: var(--r-btn); background: var(--action); color: var(--on-action); font-family: var(--font-body); font-weight: var(--fw-black); font-size: var(--fs-button); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
+}
+.bk-cta:hover {
+    transform: translateY(-2px); background: var(--action-hover); color: var(--on-action-hover); box-shadow: var(--shadow-lift);
+}
+.bk-cta svg {
+    width: 17px; height: 17px; transition: transform var(--dur-entra) var(--ease-entra);
+}
+.bk-cta:hover svg {
+    transform: translateX(4px);
+}
+.bk-cta:disabled {
+    background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed; transform: none; box-shadow: none;
+}
+.cartbar {
+    display: flex; align-items: center; gap: var(--sp-14); width: 100%; border: 0; cursor: pointer; background: var(--secondary); color: var(--on-secondary); border-radius: var(--r-btn); padding: var(--sp-13) var(--sp-16); transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+}
+.cartbar:hover {
+    transform: translateY(-2px); background: var(--secondary-hover); color: var(--on-secondary);
+}
+.cartbar__count {
+    display: grid; place-items: center; flex-shrink: 0; min-width: 34px; height: 34px; padding: 0 var(--sp-8); border-radius: var(--r-md); background: var(--ok); color: var(--on-ok); font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-17); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+}
+.cartbar__txt {
+    display: flex; flex-direction: column; gap: var(--sp-1); flex: 1; min-width: 0; text-align: left;
+}
+.cartbar__label {
+    font-size: var(--fs-label); font-weight: var(--fw-semibold); opacity: 0.7; letter-spacing: 0.04em;
+}
+.cartbar__total {
+    font-family: var(--font-display); font-weight: var(--fw-black); font-size: var(--fs-18); letter-spacing: -0.01em;
+}
+.cartbar__go {
+    display: inline-flex; align-items: center; gap: var(--sp-7); font-size: var(--fs-button); font-weight: var(--fw-semibold); white-space: nowrap;
+}
+.cartbar__go svg {
+    width: 16px; height: 16px; transition: transform var(--dur-entra) var(--ease-entra);
+}
+.cartbar:hover .cartbar__go svg {
+    transform: translateX(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+    .acct__avatar, .bk-progress, .bk-seg__bar::after, .bk-cta, .bk-cta svg, .cartbar, .cartbar__go svg {
+        transition: none; animation: none;
+    }
+}
+.purchase__cta {
+    width: 100%; justify-content: center; margin-top: var(--sp-14);
+}
+.purchase__final-actions {
+    margin-top: var(--sp-20);
+    display: flex; flex-direction: column; gap: var(--sp-10);
+}
+.purchase__final-actions .purchase__cta {
+    margin-top: 0;
+}
+.purchase__cta-secondary {
+    width: 100%; justify-content: center;
+    /* hereda padding base de .btn (12px 20px); no usamos --lg para que el principal
+    (`.btn btn--lg`, relleno de ACCIÓN desde `#551`) tenga jerarquía visual más fuerte. */
+}
+.purchase__cta-tertiary {
+    width: 100%; justify-content: center;
+    font-size: var(--fs-body-s);
+    color: var(--fg-mute);
+    border-color: var(--line);
+}
+.purchase__cta-tertiary:hover {
+    color: var(--bg);
+}
+.purchase__confirm {
+    margin-top: var(--sp-12); padding: var(--sp-10) var(--sp-12); background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg);
+}
+.purchase__note {
+    margin: var(--sp-10) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.5;
+}
+.daystrip {
+    position: relative; margin-inline: calc(var(--sp-20) * -1);
+}
+.daystrip__track {
+    position: relative;
+    display: flex; align-items: stretch; gap: var(--sp-6);
+    padding-inline: var(--sp-20);
+    overflow-x: auto; overflow-y: hidden;
+    /* El AJUSTE: el dedo suelta y el chip se coloca. `proximity` y no `mandatory` porque con 182
+    chips un ajuste obligatorio pelea con el impulso largo del deslizamiento. */
+    scroll-snap-type: x proximity;
+    /* El ajuste alinea con el CONTENIDO, no con el borde a sangre: si no, el chip elegido quedaría
+    pegado al filo de la pantalla. */
+    scroll-padding-inline: var(--sp-20);
+    /* Sin barra: en un cajón de 390 px se come 15 de los 350 útiles. Lo que dice que la lista sigue
+    son el corte del borde y la vela de aquí abajo. */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-block: var(--sp-2);
+}
+.daystrip__track::-webkit-scrollbar {
+    display: none;
+}
+.daystrip::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0; right: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg));
+    pointer-events: none;
+}
+.daystrip__month {
+    flex: none;
+    scroll-snap-align: start;
+    display: flex; align-items: center;
+    padding: 0 var(--sp-6);
+    border-left: 1px solid var(--line);
+    font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold);
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-mute);
+    writing-mode: vertical-rl;
+    /* El primero no lleva raya: no separa nada. */
+}
+.daystrip__month:first-child {
+    border-left: 0; padding-left: 0;
+}
+.daystrip__day {
+    flex: none;
+    scroll-snap-align: start;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--sp-2);
+    min-width: 64px; min-height: 80px;
+    padding: var(--sp-8) var(--sp-6);
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    background: var(--bg-card);
+    font-family: var(--font-body); color: var(--fg);
+    cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
+}
+.daystrip__day:hover {
+    border-color: var(--fg);
+}
+.daystrip__wd {
+    font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1;
+}
+.daystrip__num {
+    font-family: var(--font-display); font-weight: var(--fw-bold); font-stretch: 75%; font-size: 21px; line-height: 1;
+}
+.daystrip__price {
+    font-size: var(--fs-label); font-weight: var(--fw-bold); line-height: 1; color: var(--fg-mute);
+}
+.daystrip__day--special {
+    background: var(--attn); border-color: var(--attn);
+}
+.daystrip__day--special .daystrip__wd, .daystrip__day--special .daystrip__price {
+    color: var(--fg); opacity: 0.78;
+}
+.daystrip__day.is-selected {
+    background: var(--fg); border-color: var(--fg);
+    box-shadow: 0 0 0 2px var(--fg) inset;
+    color: var(--bg);
+}
+.daystrip__day.is-selected .daystrip__wd, .daystrip__day.is-selected .daystrip__price {
+    color: var(--bg); opacity: 0.78;
+}
+.daystrip__nav, .timestrip__nav {
+    display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+    .daystrip__nav, .timestrip__nav {
+        position: absolute; top: 50%; z-index: 2;
+        display: flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px;
+        transform: translateY(-50%);
+        border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+        background: var(--bg-card);
+        color: var(--fg);
+        box-shadow: var(--shadow-lift);
+        cursor: pointer;
+        transition: border-color var(--dur-sale) var(--ease-sale);
+    }
+    .daystrip__nav:hover, .timestrip__nav:hover {
+        border-color: var(--fg);
+    }
+    .daystrip__nav--prev, .timestrip__nav--prev {
+        left: var(--sp-4);
+    }
+    .daystrip__nav--next, .timestrip__nav--next {
+        right: var(--sp-4);
+    }
+    .daystrip__nav span, .timestrip__nav span {
+        width: 8px; height: 8px;
+        border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+    }
+    .daystrip__nav--prev span, .timestrip__nav--prev span {
+        transform: translateX(2px) rotate(135deg);
+    }
+    .daystrip__nav--next span, .timestrip__nav--next span {
+        transform: translateX(-2px) rotate(-45deg);
+    }
+}
+.cal-more, .paydue__terms {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
+    width: 100%; min-height: var(--tap-min); margin-top: var(--sp-10);
+    padding: var(--sp-12) var(--sp-16);
+    border: 1px solid var(--line); border-radius: var(--r-btn);
+    background: var(--bg-card); color: var(--fg);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.cal-more:hover, .paydue__terms:hover {
+    border-color: var(--fg);
+}
+.cal-more__chev {
+    flex: none; width: 18px; height: 18px; color: var(--interactive); transition: transform var(--dur-estado) var(--ease-sale);
+}
+.cal-more.is-open .cal-more__chev {
+    transform: rotate(180deg);
+}
+.cal-more.is-open + .cal {
+    margin-top: var(--sp-10);
+}
+.legal-more {
+    margin-top: 0;
+}
+summary.legal-more {
+    list-style: none;
+}
+summary.legal-more::-webkit-details-marker {
+    display: none;
+}
+details[open] > summary.legal-more .cal-more__chev {
+    transform: rotate(180deg);
+}
+details > summary.legal-more ~ p {
+    margin-top: var(--sp-10);
+}
+.cal {
+    padding: var(--sp-8); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card);
+}
+.cal__head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-10);
+}
+.cal__month {
+    font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-14); text-transform: capitalize;
+}
+.cal__nav {
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font-size: var(--fs-18); line-height: 1; cursor: pointer;
+}
+.cal__nav:hover:not(:disabled) {
+    border-color: var(--fg);
+}
+.cal__nav:disabled {
+    opacity: 0.35; cursor: not-allowed;
+}
+.cal__grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--sp-3);
+}
+.cal__grid--head {
+    margin-bottom: var(--sp-4);
+}
+.cal__wd {
+    padding: var(--sp-4) 0; text-align: center; font-family: var(--font-body); font-size: var(--fs-11); font-weight: var(--fw-semibold); color: var(--fg-mute); text-transform: capitalize;
+}
+.cal__day {
+    aspect-ratio: 1 / 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--sp-2);
+    border: 0; border-radius: var(--r-md);
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: var(--fs-14); font-weight: var(--fw-bold);
+    color: var(--fg);
+    cursor: pointer;
+    transition: box-shadow var(--dur-toque) var(--ease-sale);
+}
+.cal__day.is-out {
+    opacity: 0.4;
+}
+.cal__day.is-disabled {
+    color: var(--fg-mute); opacity: 0.4; cursor: default;
+}
+.cal__day--normal {
+    background: color-mix(in srgb, var(--fg) 5%, transparent);
+}
+.cal__day--special {
+    background: var(--attn);
+}
+.cal__day--normal:hover, .cal__day--special:hover {
+    box-shadow: 0 0 0 2px var(--fg) inset;
+}
+.cal__day.is-selected {
+    background: var(--fg); box-shadow: 0 0 0 2px var(--fg) inset; color: var(--bg); font-weight: var(--fw-black);
+}
+.cal__day.is-selected .cal__day-price {
+    color: var(--bg); opacity: 0.78;
+}
+.cal__day-num {
+    font-size: inherit; font-weight: inherit; line-height: 1;
+}
+.cal__day-price {
+    font-size: var(--fs-label); font-weight: 500; line-height: 1;
+    letter-spacing: 0.01em;
+    color: var(--fg-mute);
+    /* Etiqueta tipo "chip": pequeño padding y fondo sutil para separarlo claramente del
+    número y leerlo como información secundaria. */
+    padding: 2px 5px; border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+.cal__day--special .cal__day-price {
+    background: color-mix(in srgb, var(--sheet) 55%, transparent);
+    color: var(--fg);
+}
+@media (max-width: 380px) {
+    .cal__day {
+        gap: var(--sp-2); padding: var(--sp-2);
+    }
+    .cal__day-price {
+        padding: 0; background: transparent;
+    }
+}
+.cal__legend {
+    display: flex; flex-wrap: wrap; gap: var(--sp-16); margin-top: var(--sp-12);
+}
+.cal__legend-item {
+    display: inline-flex; align-items: center; gap: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute);
+}
+.cal__dot {
+    width: 12px; height: 12px; border-radius: 4px; display: inline-block;
+}
+.cal__dot--normal {
+    background: color-mix(in srgb, var(--fg) 12%, transparent);
+}
+.cal__dot--special {
+    background: var(--attn);
+}
+.price__from {
+    font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body-s);
+    color: var(--fg-mute); margin-right: 5px; vertical-align: middle;
+}
+.jj-loading {
+    position: absolute; inset: 0; z-index: 30;
+    /* `--bg` al 82%: es EXACTAMENTE el mismo color (--bg es #F4EFE3), con el patrón de 4.0c. */
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    color: var(--zone-1); /* el spinner hereda este color (marca) */
+}
+.jj-loading > * {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+.btn__loading {
+    display: inline-flex; align-items: center; gap: var(--sp-8);
+}
+.purchase-loading {
+    flex: 1; display: grid; place-items: center; min-height: 42vh; color: var(--zone-1);
+}
+.cart {
+    list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-10);
+}
+.cart__item {
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-14);
+}
+.cart__head {
+    display: flex; align-items: flex-start; gap: var(--sp-10);
+}
+.cart__ico {
+    flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: var(--r-btn); background: var(--bg-soft); color: var(--fg);
+}
+.cart__ico .prod-ico {
+    margin-inline-end: 0; opacity: 1;
+}
+.cart__main {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.cart__when {
+    flex: 1; min-width: 0; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); text-transform: capitalize;
+}
+.cart__price {
+    flex: none; font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg);
+}
+.cart__remove {
+    flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin: calc(var(--sp-10) * -1) calc(var(--sp-10) * -1) calc(var(--sp-10) * -1) 0; background: none; border: 0; color: var(--fg-mute); font-size: var(--fs-20); line-height: 1; cursor: pointer;
+}
+.cart__remove:hover {
+    color: var(--fg);
+}
+.cart__lines {
+    list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-4); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.cart__lines li {
+    display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+}
+.purchase__add-more {
+    display: flex; align-items: center; justify-content: center; gap: var(--sp-8);
+    width: 100%; min-height: var(--tap-min); margin-top: var(--sp-14); padding: var(--sp-12) var(--sp-16);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--interactive); cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.purchase__add-more:hover {
+    border-color: var(--fg);
+}
+.catalog {
+    display: flex; flex-direction: column; gap: var(--sp-8); margin-bottom: var(--sp-4);
+}
+.catalog__item {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); width: 100%; text-align: left; padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
+}
+.catalog__item:hover {
+    border-color: var(--fg);
+}
+.catalog__tk {
+    flex: none; display: inline-flex; color: var(--fg);
+}
+.catalog__item--feat .catalog__badge {
+    display: inline-block;            /* inline-block para que el scale/translate del hop se aplique bien */
+    transform-origin: 50% 100%;
+    animation: jj-badge-hop 2.8s cubic-bezier(0.5, 0, 0.3, 1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+    .catalog__item--feat .catalog__badge {
+        animation: none;
+    }
+}
+.catalog__info {
+    display: flex; flex-direction: column; gap: var(--sp-2); flex: 1; min-width: 0;
+}
+.catalog__name {
+    font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg); display: flex; align-items: center; gap: var(--sp-7); flex-wrap: wrap;
+}
+.catalog__ico {
+    flex: none; margin-right: var(--sp-10); color: var(--fg-mute);
+}
+.catalog__item:hover .catalog__ico {
+    color: var(--interactive);
+}
+.catalog__badge {
+    font-size: var(--fs-label); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: 0.08em;
+    /* ❗❗ **La etiqueta destacada en el AMARILLO del sistema** (`#585`, `[DECIDIDO owner, 2026-09-13]`):
+    la misma pieza que la web pinta donde salga el producto, con el rol del marcador. Hasta aquí iba
+    en tinta (`#551`). Los respaldos cubren una vista sin `landing.css`: sin paquete `--marker` es
+    transparente y la palabra se lee en tinta. Lo vigila `FeaturedBadgeColourTest`. */
+    background: var(--marker, transparent); color: var(--on-marker, var(--fg)); padding: var(--sp-2) var(--sp-7); border-radius: var(--r-pill, 999px);
+    white-space: nowrap;
+}
+.catalog__feat {
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.4;
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.gifts {
+    display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-6); margin: 0; padding: 0; list-style: none;
+}
+.gift {
+    display: inline-flex; align-items: center; gap: var(--sp-6);
+    padding: var(--sp-4) var(--sp-10) var(--sp-4) var(--sp-8); border-radius: var(--r-pill, 999px);
+    background: var(--marker, transparent); color: var(--on-marker, var(--fg));
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-bold); line-height: 1.3;
+}
+.gift svg {
+    flex: none; width: 16px; height: 16px;
+}
+.gift .prod-ico {
+    margin-inline-end: 0; opacity: 1;
+}
+.addons__features .addons__features-gifts {
+    padding: var(--sp-4) 0 0;
+}
+.addons__features .addons__features-gifts::before {
+    content: none;
+}
+.catalog__price {
+    font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg); white-space: nowrap; flex: none;
+}
+.catalog__per {
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute); line-height: 1.2;
+}
+.catalog__pricecol {
+    flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-3); text-align: right;
+}
+.catalog__go {
+    flex: none; display: inline-grid; place-items: center; color: var(--fg-mute); transition: transform var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
+}
+.catalog__go svg {
+    width: 18px; height: 18px;
+}
+.catalog__item:hover .catalog__go {
+    transform: translateX(3px); color: var(--interactive);
+}
+.catalog__deposit {
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--money); line-height: 1.3;
+}
+.catalog-acc {
+    display: flex; flex-direction: column;
+}
+.catalog-search {
+    position: relative; margin: 0 0 var(--sp-12);
+}
+.catalog-search svg {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--fg-mute); pointer-events: none;
+}
+.catalog-search__input {
+    width: 100%; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    padding: var(--sp-11) var(--sp-14) var(--sp-11) 38px; transition: border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-sale) var(--ease-sale);
+}
+.catalog-search__input:focus {
+    border-color: var(--fg);
+}
+.catalog-search__input::placeholder {
+    color: var(--fg-mute);
+}
+.catalog-acc__sec {
+    border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--bg-card);
+}
+.catalog-acc__sec + .catalog-acc__sec {
+    margin-top: var(--sp-12);
+}
+.catalog-acc__head {
+    width: 100%; border: 0; font: inherit; text-align: left; cursor: pointer; position: relative;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+    gap: var(--sp-8); min-height: 152px; padding: var(--sp-20) var(--sp-16);
+    transition: min-height var(--dur-entra) var(--ease-sale), padding var(--dur-entra) var(--ease-sale);
+}
+.catalog-acc__sec--ink .catalog-acc__head {
+    background: var(--fg); color: var(--bg);
+}
+.catalog-acc__sec--paper .catalog-acc__head {
+    background: var(--bg-soft); color: var(--fg);
+}
+.catalog-acc__head .catalog-acc__icon svg {
+    width: 34px; height: 34px;
+}
+.catalog-acc__head .catalog-acc__title {
+    font-size: var(--fs-20);
+}
+.catalog-acc__count {
+    position: absolute; top: var(--sp-14); right: var(--sp-16);
+}
+.catalog-acc__sec.is-open .catalog-acc__head {
+    flex-direction: row; align-items: center;
+    gap: var(--sp-12); min-height: 0; padding: var(--sp-14) var(--sp-16);
+}
+.catalog-acc__sec.is-open .catalog-acc__icon svg {
+    width: 24px; height: 24px;
+}
+.catalog-acc__sec.is-open .catalog-acc__title {
+    font-size: var(--fs-body);
+}
+.catalog-acc__sec.is-open .catalog-acc__count {
+    position: static;
+}
+.catalog-acc__icon {
+    flex: none; display: grid; place-items: center; color: inherit;
+}
+.catalog-acc__icon svg {
+    width: 24px; height: 24px;
+}
+.catalog-acc__txt {
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.catalog-acc__title {
+    font-family: var(--font-display); font-weight: var(--fw-bold); font-size: var(--fs-body); letter-spacing: -0.01em; color: inherit;
+}
+.catalog-acc__sub {
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: inherit; opacity: 0.72; line-height: 1.3;
+}
+.catalog-acc__cta {
+    display: inline-flex; align-items: center; gap: var(--sp-8); margin-top: var(--sp-8);
+    padding: var(--sp-8) var(--sp-14); border-radius: var(--r-btn);
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); line-height: 1.2;
+}
+.catalog-acc__cta svg {
+    width: 16px; height: 16px; flex: none;
+}
+.catalog-acc__sec--ink .catalog-acc__cta {
+    background: var(--bg); color: var(--fg);
+}
+.catalog-acc__sec--paper .catalog-acc__cta {
+    background: var(--fg); color: var(--bg);
+}
+.catalog-acc__sec.is-open .catalog-acc__cta {
+    display: none;
+}
+.catalog-acc__count {
+    flex: none; min-width: 22px; height: 20px; padding: 0 var(--sp-7); border-radius: var(--r-pill); display: inline-grid; place-items: center; font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold);
+}
+.catalog-acc__sec--ink .catalog-acc__count {
+    background: color-mix(in srgb, var(--bg) 18%, transparent); color: var(--bg);
+}
+.catalog-acc__sec--paper .catalog-acc__count {
+    background: var(--bg-card); color: var(--fg-mute);
+}
+.catalog-acc__body {
+    display: grid; grid-template-rows: 0fr; padding: 0 var(--sp-12);
+    transition: grid-template-rows var(--dur-entra) var(--ease-sale), padding var(--dur-entra) var(--ease-sale);
+}
+.catalog-acc__sec.is-open .catalog-acc__body {
+    grid-template-rows: 1fr; padding: var(--sp-12);
+}
+.catalog-acc__body .catalog {
+    overflow: hidden; min-height: 0; margin-bottom: 0;
+}
+.catalog-acc__none {
+    margin-top: var(--sp-12);
+}
+@media (prefers-reduced-motion: reduce) {
+    .catalog-acc__head, .catalog-acc__body {
+        transition: none;
+    }
+}
+.purchase__chip.is-active {
+    background: var(--fg); color: var(--bg); border-color: var(--fg);
+}
+.qtybox {
+    margin-top: var(--sp-16); padding: var(--sp-14); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card);
+}
+.qtybox__row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap;
+}
+.qtybox__hint {
+    margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg-mute);
+}
+.qtybox__label {
+    font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body); color: var(--fg);
+}
+.qtybox__avail {
+    margin: 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); text-align: right;
+}
+.qtybox__price {
+    font-weight: var(--fw-bold); color: var(--fg);
+}
+.qtybox__control {
+    margin-top: var(--sp-12);
+}
+.paydue {
+    margin-top: var(--sp-18); padding-top: var(--sp-16); border-top: 1px solid var(--line);
+}
+.paydue .eventfields {
+    margin-top: 0;
+}
+.paydue__hint {
+    margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.5;
+}
+.paydue__checks {
+    margin: var(--sp-18) 0 0;
+}
+.paydue__heading {
+    margin: 0 0 var(--sp-14);
+    font-family: var(--font-mono); font-size: var(--fs-label); font-weight: var(--fw-semibold);
+    letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute);
+}
+.paydue__terms {
+    margin-top: var(--sp-12); text-decoration: none;
+}
+.paydue__terms-ico, .legal-more__ico {
+    flex: none; width: 18px; height: 18px; color: var(--interactive);
+}
+.paydue > :first-child {
+    margin-top: 0;
+}
+.paydue__legal {
+    margin: var(--sp-14) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.5;
+}
+.paydue__legal a {
+    color: inherit; text-decoration: underline;
+}
+.eventfields {
+    margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-14);
+}
+.eventfields__field {
+    display: flex; flex-direction: column; gap: var(--sp-6);
+}
+.eventfields__label {
+    font-family: var(--font-body); font-size: var(--fs-13); font-weight: var(--fw-semibold); color: var(--fg);
+}
+.eventfields__req {
+    color: var(--zone-1);
+}
+.eventfields input, .eventfields select, .eventfields textarea, .gf-extra__field input {
+    font-family: var(--font-body); font-size: var(--fs-15); color: var(--fg);
+    background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn);
+    padding: var(--sp-11) var(--sp-13); width: 100%; resize: vertical;
+    /* ⚠️⚠️ **44 y no 42** (`#264` aplicado aquí por fin): `11 + 18 + 11 + 2` da **42**, dos píxeles por
+    debajo del mínimo táctil que este proyecto se impuso. Se corrige con `min-height` y no con más
+    relleno para no mover el texto dentro de la caja.
+    ▶ **Por qué se escapó al barrido de `#264`**, que dejó «37 → 1»: aquél recorre *las siete vistas
+    PÚBLICAS renderizables*, y los tres sitios donde vive esta clase —el paso de datos del cajón, el
+    post-form de invitados y la pantalla del justificante— **necesitan sesión o un enlace firmado**.
+    *Un recorrido de vistas públicas no llega a una pantalla que exige un enlace, por pública que sea.*
+    ▶ Medido en navegador a 390×844 con puntero grueso: **42 → 44** en los siete campos y el `select`.
+    El `textarea` ya pasaba de sobra; para él esto no cambia nada. */
+    min-height: var(--tap-min);
+    transition: border-color var(--dur-sale) var(--ease-sale);
+}
+.eventfields select {
+    appearance: none; resize: none; cursor: pointer;
+}
+.eventfields input:focus, .eventfields select:focus, .eventfields textarea:focus {
+    border-color: var(--fg);
+}
+.eventfields__field.is-invalid input, .eventfields__field.is-invalid select, .eventfields__field.is-invalid textarea {
+    border-color: var(--err); box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 13%, transparent);
+}
+.eventfields__help {
+    font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute);
+}
+.eventfields__error {
+    font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--err);
+}
+.cart__event {
+    list-style: none; margin: var(--sp-8) 0 0; padding: var(--sp-8) 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.cart__event li {
+    font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); line-height: 1.45;
+}
+.cart__event-label {
+    font-weight: var(--fw-semibold); color: var(--fg);
+}
+.addons {
+    margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-10);
+}
+.addons__intro {
+    margin: 0 0 var(--sp-2); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-bold); color: var(--fg);
+}
+.addons__row {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; min-height: 48px; padding: var(--sp-11) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-btn); background: var(--bg-card);
+}
+.addons__info {
+    display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start;
+}
+.addons__name {
+    font-family: var(--font-body); font-weight: var(--fw-semibold); font-size: var(--fs-body); color: var(--fg);
+}
+.addons__price {
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.addons__badge {
+    display: inline-block; margin-left: var(--sp-6); padding: var(--sp-1) var(--sp-7); border-radius: var(--r-pill); font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-bold); letter-spacing: 0.03em; text-transform: uppercase; vertical-align: middle;
+}
+.addons__badge--included {
+    background: var(--ok); color: var(--on-ok);
+}
+.addons__badge--free {
+    background: var(--ok-bg); color: var(--fg); border: 1px solid var(--ok-border);
+}
+.addons__charged {
+    font-weight: var(--fw-bold); color: var(--fg);
+}
+.addons__group {
+    border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-10) var(--sp-12); margin: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-6);
+}
+.addons__group-label {
+    font-family: var(--font-body); font-weight: var(--fw-bold); font-size: var(--fs-body-s); color: var(--fg); padding: 0;
+}
+.addons__row--choice {
+    cursor: pointer; transition: border-color var(--dur-toque) var(--ease-sale), box-shadow var(--dur-toque) var(--ease-sale);
+}
+.addons__row--choice.is-selected {
+    border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg);
+}
+.addons__choice {
+    display: flex; align-items: center; gap: var(--sp-10); flex: 1 1 auto; min-width: 0; cursor: pointer; margin: 0;
+}
+.addons__radio {
+    width: 18px; height: 18px; flex: none; accent-color: var(--ok); cursor: pointer;
+}
+.addons__moreinfo {
+    align-self: flex-start; background: none; border: none; padding: var(--sp-2) 0; font-family: var(--font-body); font-size: var(--fs-12); font-weight: var(--fw-semibold); color: var(--fg-mute); cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+}
+.addons__moreinfo:hover {
+    color: var(--fg);
+}
+.addons__perguest {
+    flex: none; font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute);
+}
+.addons__features {
+    flex-basis: 100%; list-style: none; margin: var(--sp-4) 0 0; padding: var(--sp-8) 0 var(--sp-2); border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: var(--sp-4);
+}
+.addons__features li {
+    position: relative; padding-left: var(--sp-18); font-family: var(--font-body); font-size: var(--fs-12); color: var(--fg-mute);
+}
+.addons__features li::before {
+    content: "✓"; position: absolute; left: 0; color: var(--ok); font-weight: var(--fw-bold);
+}
+.addons__requires {
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--attn-ink);
+}
+.addons__row.is-disabled, .addons__group .addons__row--choice.is-disabled {
+    opacity: 0.6;
+}
+.addons__row.is-disabled .entry__stepper button[disabled] {
+    cursor: not-allowed;
+}
+.cart__pending-actions {
+    display: flex; align-items: center; justify-content: flex-end; gap: var(--sp-10); margin-top: var(--sp-12);
+}
+.cart__pending-discard {
+    min-height: 44px; padding: 0 var(--sp-8);
+    background: none; border: 0; cursor: pointer;
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg-mute);
+    transition: color var(--dur-sale) var(--ease-sale);
+}
+.cart__pending-discard:hover {
+    color: var(--fg);
+}
+.cart__pending-save {
+    min-height: 44px; padding: 0 var(--sp-16);
+    border: 0; border-radius: var(--r-btn); cursor: pointer;
+    background: var(--fg); color: var(--bg);
+    font-family: var(--font-body); font-size: var(--fs-body-s); font-weight: var(--fw-black);
+    transition: background var(--dur-sale) var(--ease-sale);
+}
+.cart__pending-save:disabled {
+    background: var(--bg-soft); color: var(--fg-mute); cursor: not-allowed;
+}
+.cart__addon-incl {
+    margin-left: var(--sp-7); font-style: normal; font-weight: var(--fw-semibold); font-size: var(--fs-body-s); color: var(--ok);
+}
+.orders__line-unit {
+    color: var(--fg-mute); font-size: var(--fs-body-s); font-weight: 400;
+}
+.cart__addons {
+    list-style: none; margin: var(--sp-6) 0 0; padding: 0 0 0 40px; display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.cart__addons li {
+    display: flex; justify-content: space-between; gap: var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.cart__deposit {
+    margin: var(--sp-6) 0 0; padding: var(--sp-6) var(--sp-8); border-radius: var(--r-sm); background: var(--attn-bg); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--money); font-weight: var(--fw-semibold);
+}
+.state-badge {
+    display: inline-grid; place-items: center; flex: none;
+    width: max(40px, var(--state-size, 56px));
+    height: max(40px, var(--state-size, 56px));
+    border-radius: var(--r-pill);
+    background: var(--state-fill, var(--ok));
+    border: 2px solid var(--paper-fg);
+    box-shadow: var(--shadow-float);
+    color: var(--paper-fg);
+}
+.state-badge svg {
+    width: 54%; height: 54%; display: block;
+}
+.state-badge--ok {
+    --state-fill: var(--ok);
+}
+.state-badge--err {
+    --state-fill: var(--err);
+}
+.state-badge--attn {
+    --state-fill: var(--attn);
+}
+.state-badge--wait {
+    --state-fill: var(--zone-1);
+}
+.state-tile {
+    display: inline-grid; place-items: center; flex: none;
+    width: max(40px, var(--state-size, 56px));
+    height: max(40px, var(--state-size, 56px));
+    border-radius: var(--r);
+    background: var(--bg-soft);
+    color: var(--fg);
+}
+.state-tile svg {
+    width: 54%; height: 54%; display: block;
+}
+.purchase__party--inert {
+    margin-bottom: var(--sp-10);
+}
+.purchase__done {
+    text-align: center;
+}
+.purchase__done .wiz__title {
+    text-align: center;
+}
+.purchase__party {
+    font-size: 40px; line-height: 1; margin-bottom: var(--sp-4);
+}
+.cart--summary {
+    margin: var(--sp-14) 0; text-align: left;
+}
+.purchase__code {
+    margin: var(--sp-12) 0 0; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+}
+.purchase__party .state-badge {
+    animation: confirma-check var(--dur-cae) var(--ease-cae) both;
+}
+.purchase__stamp {
+    display: inline-block;
+    padding: 2px var(--sp-8);
+    border: 2px solid var(--paper-fg);
+    border-radius: var(--r-btn);
+    /* ⚠️ **El artboard sella en AMARILLO y aquí el sello va NEUTRO, y es una desviación decidida.**
+    En su demo el sello es la única pieza de la pantalla; aquí comparte sitio con la pegatina de
+    éxito, que ya es verde. Dos rellenos saturados seguidos convierten el desenlace en un semáforo
+    —justo lo que `[DECIDIDO owner]` pidió evitar al quitar el confeti («no saturar»)— y su amarillo
+    es además el rol de AVISO del producto: un localizador no avisa de nada.
+    ▶ Lo que se conserva es lo que hace que sea un sello: el keyline duro, la sombra dura y el
+    giro. El color lo pone la pegatina, que es la que dice «ha salido bien». */
+    background: var(--bg);
+    color: var(--fg);
+    box-shadow: var(--shadow-float);
+    transform: rotate(-6deg);
+    animation: confirma-sello var(--dur-cae) var(--ease-cae) var(--dur-estado) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .purchase__party .state-badge {
+        animation-name: confirma-check-quieta;
+    }
+    .purchase__stamp {
+        animation-name: confirma-sello-quieta;
+    }
+}
+.purchase__authtabs {
+    width: 100%; margin-bottom: var(--sp-16);
+}
+.orders {
+    list-style: none; margin: 0 0 24px; padding: 0; display: flex; flex-direction: column; gap: var(--sp-16); max-width: 760px;
+}
+.orders__item {
+    border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-card); padding: var(--sp-18) var(--sp-20);
+}
+.orders__item--past {
+    background: var(--bg-soft);
+}
+.orders__order {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line);
+}
+.orders__history-cta {
+    display: flex; justify-content: center; margin: var(--sp-4) 0 0;
+}
+.orders__head {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap;
+}
+.orders__code {
+    font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+}
+.orders__status {
+    font-family: var(--font-body); font-size: var(--fs-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 5px 10px; border-radius: var(--r-pill); background: var(--bg-soft); color: var(--fg-mute);
+}
+.orders__status--paid {
+    background: var(--ok-bg); color: var(--fg);
+}
+.orders__status--pending {
+    background: var(--attn-bg); color: var(--fg);
+}
+.orders__status--cancelled, .orders__status--expired {
+    background: var(--err-bg); color: var(--fg);
+}
+.orders__status--refunded-badge {
+    background: var(--bg-soft); color: var(--fg);
+}
+.orders__meta {
+    margin: var(--sp-4) 0 var(--sp-12); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.orders__lines {
+    list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8);
+}
+.orders__line {
+    display: flex; justify-content: space-between; gap: var(--sp-12); flex-wrap: wrap; font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+}
+.orders__line:not(.orders__line--addon) .orders__line-name {
+    font-size: var(--fs-body); font-weight: 700;
+}
+.orders__line-when {
+    color: var(--fg-mute); text-transform: capitalize;
+}
+.orders__event {
+    list-style: none; margin: var(--sp-4) 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.orders__event li {
+    font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute); line-height: 1.45;
+}
+.orders__event-label {
+    font-weight: 600; color: var(--fg);
+}
+.orders__total {
+    display: flex; justify-content: space-between; margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700;
+}
+.orders__refund-label {
+    color: var(--fg-mute);
+}
+.orders__refund-amount {
+    color: var(--fg); font-weight: 700;
+}
+.orders__refund--anchor .orders__refund-amount {
+    color: var(--fg);
+}
+.orders__net {
+    display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg);
+}
+.orders__gate {
+    display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-8); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+}
+.orders__gate-label {
+    color: var(--fg-mute);
+}
+.orders__gate-amount {
+    color: var(--fg); font-weight: 700;
+}
+.orders__gate-toggle {
+    margin: var(--sp-2) 0 0; padding: 0; background: none; border: 0; cursor: pointer; font-family: var(--font-body); font-size: var(--fs-button); font-weight: 600; color: var(--interactive); text-decoration: underline;
+}
+.orders__gate-toggle:hover {
+    color: var(--fg);
+}
+.orders__guests {
+    margin-top: var(--sp-10); padding-top: var(--sp-10); border-top: 1px dashed var(--line);
+}
+.orders__guests-title {
+    margin: 0 0 var(--sp-8);
+    font-family: var(--font-mono); font-size: var(--fs-label); font-weight: var(--fw-semibold);
+    letter-spacing: .14em; text-transform: uppercase; color: var(--fg-mute);
+}
+.orders__guests-what {
+    margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg);
+}
+.orders__guests-count {
+    margin: 0; font-family: var(--font-body); font-size: var(--fs-label); font-weight: var(--fw-semibold); color: var(--fg);
+}
+.orders__guests-free {
+    font-weight: 400; color: var(--fg-mute);
+}
+.orders__guests-share {
+    display: flex; align-items: stretch; gap: var(--sp-8); margin-top: var(--sp-6);
+}
+.orders__guests-share .orders__guests-link {
+    flex: 1; min-width: 0; margin-top: 0;
+}
+.orders__guests-copy {
+    flex: none; width: var(--tap-min); min-height: var(--tap-min);
+    display: grid; place-items: center;
+    /* ⚠️ **Radio de CONTROL, no de tarjeta** (`#565`): llevaba `--r` (16), que es el canto de la
+    tarjeta que lo contiene — un 16 dentro de un 16 rompe el concéntrico y el botón se lee como un
+    trozo de la tarjeta en vez de como un control. */
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-card);
+    color: var(--fg); cursor: pointer;
+    transition: border-color var(--dur-sale) var(--ease-sale), background var(--dur-sale) var(--ease-sale);
+}
+.orders__guests-copy:hover {
+    border-color: var(--line-strong); background: var(--bg-soft);
+}
+.orders__guests-copy:focus-visible {
+    outline: var(--focus-outline); outline-offset: 2px;
+}
+.orders__guests-ack {
+    margin: var(--sp-6) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.orders__guests-list {
+    list-style: none; margin: var(--sp-6) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3);
+}
+.orders__guests-item {
+    font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg-mute);
+}
+.orders__guests-item em {
+    font-style: normal; font-weight: var(--fw-semibold); color: var(--attn-ink);
+}
+.orders__guests-hint {
+    margin: var(--sp-8) 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.45;
+}
+.orders__guests-link {
+    width: 100%; font-family: var(--font-mono); font-size: var(--fs-body-s); color: var(--fg); background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--r-btn); padding: var(--sp-8) var(--sp-10);
+}
+.orders__guests-link:focus {
+    border-color: var(--fg);
+}
+.orders__gate-caption {
+    margin: var(--sp-2) 0 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute);
+}
+.orders__final {
+    display: flex; justify-content: space-between; margin-top: var(--sp-6); padding-top: var(--sp-8); border-top: 1px dashed var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg);
+}
+.orders__ledger--cash .orders__final strong {
+    color: var(--money);
+}
+.orders__ledger {
+    margin-top: var(--sp-14); padding-top: var(--sp-12); border-top: 1px solid var(--line);
+}
+.orders__ledger--cash {
+    margin-top: var(--sp-16);
+}
+.orders__ledger-title {
+    margin: 0 0 var(--sp-6); font-family: var(--font-body); font-size: var(--fs-label); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--fg-mute);
+}
+.orders__ledger-note {
+    margin: var(--sp-12) 0 0; padding: var(--sp-10) var(--sp-12); border-radius: var(--r-s, 8px); background: var(--bg-soft, var(--bg-card)); border: 1px solid var(--line); font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg);
+}
+.orders__ledger-invoiced {
+    margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px dashed var(--line); opacity: 0.85;
+}
+.orders__mov {
+    display: flex; justify-content: space-between; gap: var(--sp-12); margin-top: var(--sp-6); font-family: var(--font-body); font-size: var(--fs-body); color: var(--fg);
+}
+.orders__mov-label {
+    color: var(--fg-mute);
+}
+.orders__mov-date {
+    font-size: var(--fs-body-s); white-space: nowrap;
+}
+.orders__mov strong {
+    font-weight: 700; color: var(--fg); white-space: nowrap;
+}
+.orders__mov--neg strong {
+    color: var(--fg);
+}
+.orders__mov--pending {
+    opacity: 0.7;
+}
+.orders__balance {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-2) var(--sp-12); margin-top: var(--sp-12); padding-top: var(--sp-10); border-top: 1px solid var(--line); font-family: var(--font-body); font-weight: 700; color: var(--fg);
+}
+.orders__balance--pay_at_park strong, .orders__balance--pay_online strong {
+    color: var(--fg);
+}
+.orders__balance--refund_at_park strong, .orders__balance--refund_pending strong {
+    color: var(--fg);
+}
+.orders__balance .orders__gate-caption {
+    flex-basis: 100%; font-weight: 400;
+}
+.orders__line-badge {
+    display: inline-flex; align-items: center; padding: var(--sp-1) var(--sp-8); border-radius: var(--r-pill); font-size: var(--fs-label); font-weight: 600; line-height: 1.6;
+}
+.orders__line-badge--finished {
+    background: var(--line); color: var(--fg-mute);
+}
+.orders__line--finished .orders__line-name, .orders__line--finished .orders__line-when, .orders__line--finished .orders__line-price {
+    color: var(--fg-mute);
+}
+.orders__line-badge--cancelled {
+    background: var(--err-bg); color: var(--fg);
+}
+.orders__line-badge--refunded {
+    background: var(--bg-soft); color: var(--fg);
+}
+.orders__line--cancelled .orders__line-name, .orders__line--cancelled .orders__line-price {
+    color: var(--fg-mute);
+}
+.orders__line--cancelled .orders__line-text, .orders__line--cancelled .orders__line-price {
+    text-decoration: line-through;
+}
+.orders__head-badges {
+    margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-8); flex-wrap: wrap;
+}
+.orders__line-badges {
+    margin-left: auto; display: inline-flex; align-items: center; gap: var(--sp-6); flex-wrap: wrap;
+}
+.orders__retry {
+    margin-top: var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-6);
+}
+.orders__retry-btn {
+    width: 100%; justify-content: center;
+}
+.orders__retry-hint {
+    font-family: var(--font-body); font-size: var(--fs-body-s); color: var(--fg-mute); margin: 0; line-height: 1.5;
+}
+.orders__manage {
+    margin-top: var(--sp-14);
+}
+.orders__manage-btn {
+    width: 100%; justify-content: center;
+}
+.icon {
+    position: relative; display: inline-grid; place-items: center; color: currentColor; line-height: 0;
+}
+.icon svg {
+    display: block; overflow: visible;
+}
+.icon svg path, .icon svg rect, .icon svg line, .icon svg polyline, .icon svg circle {
+    fill: none; stroke: currentColor; stroke-width: 1.6;
+    stroke-linecap: round; stroke-linejoin: round;
+}
+.icon svg .filled {
+    fill: currentColor; stroke: none;
+}
+.icon svg .occ {
+    fill: var(--bg);
+}
+.icon svg .accent {
+    stroke: var(--zone-1);
+}
+.icon svg .accent-fill {
+    fill: var(--zone-1); stroke: none;
+}
+.icon svg .dashed {
+    stroke-dasharray: 1.4 1.8;
+}
+.icon svg .thin {
+    stroke-width: 0.9;
+}
+.icon svg .bold {
+    stroke-width: 2.2;
+}
+@media (prefers-reduced-motion: reduce) {
+    .icon *, .icon::before, .icon::after {
+        animation: none !important;
+    }
+}
+.ic-b1 svg .flame {
+    transform-origin: 50% 100%; transform-box: fill-box;
+    animation: b1-flicker 1.4s ease-in-out infinite;
+}
+.ic-e2 svg .tk-back {
+    transform-origin: 14% 88%; transform-box: fill-box;
+}
+.cta-med:hover .ic-e2 svg .tk-back, .cta-med:focus-visible .ic-e2 svg .tk-back {
+    animation: e2-fan 1.3s var(--ease-entra);
+}
+.ic-b7 svg .pop {
+    transform-origin: 8px 32px; animation: b7-recoil 2.4s ease-in-out infinite;
+}
+.ic-b7 svg .c1, .ic-b7 svg .c2, .ic-b7 svg .c3 {
+    transform-origin: 50% 50%; transform-box: fill-box;
+    animation: b7-fly 2.4s ease-out infinite;
+}
+.ic-b7 svg .c2 {
+    animation-delay: var(--dur-entra);
+}
+.ic-b7 svg .c3 {
+    animation-delay: var(--dur-salto);
+}
+.ic-s1 svg .grip {
+    fill: var(--zone-1); stroke: none;
+    transform-origin: 50% 50%; transform-box: fill-box;
+    animation: s1-grip 1.8s var(--ease-entra) infinite;
+}
+.ic-s1 svg .g2 {
+    animation-delay: var(--dur-toque);
+}
+.ic-s1 svg .g3 {
+    animation-delay: var(--dur-estado);
+}
+.ic-s1 svg .g4 {
+    animation-delay: var(--dur-entra);
+}
+.ic-s1 svg .g5 {
+    animation-delay: var(--dur-cae);
+}
+.ic-s1 svg .g6 {
+    animation-delay: var(--dur-salto);
+}
+.ic-s1 svg .sock-a {
+    transform-origin: 50% 100%; transform-box: fill-box;
+    animation: s1-bob 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.ic-s1 svg .sock-b {
+    transform-origin: 50% 100%; transform-box: fill-box;
+    animation: s1-bob 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite 1.2s;
+}
+.ic-s1:not(.is-onscreen) svg .grip, .ic-s1:not(.is-onscreen) svg .sock-a, .ic-s1:not(.is-onscreen) svg .sock-b {
+    animation-play-state: paused;
+}
+.tk {
+    position: relative; display: inline-grid; place-items: center; color: currentColor; line-height: 0;
+}
+.tk svg {
+    display: block; overflow: visible;
+}
+.tk svg path, .tk svg rect, .tk svg line {
+    fill: none; stroke: currentColor;
+    stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round;
+}
+.tk svg .dashed {
+    stroke-dasharray: 1.2 1.4;
+}
+.tk svg .thin {
+    stroke-width: 0.8;
+}
+.tk svg .stubnum {
+    font-family: var(--font-display); font-weight: 800; font-stretch: 75%;
+    font-size: var(--fs-18); letter-spacing: -0.04em;
+    fill: currentColor; stroke: none;
+}
+.ic-reg svg .thin {
+    stroke-width: 0.9;
+}
+@media (prefers-reduced-motion: reduce) {
+    .tk .stub {
+        animation: none !important;
+    }
+}
+.prod-ico {
+    display: inline-grid; place-items: center; line-height: 0; vertical-align: middle; margin-inline-end: 6px; opacity: 0.75;
+}
+.prod-ico svg .accent-fill {
+    fill: currentColor;
+}
+.prod-ico svg .accent {
+    stroke: currentColor;
+}
+.prod-ico svg .flame {
+    animation: none;
+}
+.cta-med__ico .tk {
+    width: 28px; height: 18px; color: var(--on-brand);
+}
+.cta-med__ico .tk svg {
+    width: 28px; height: 18px;
+}
+.cta-med:hover .tk .stub, .cta-med:focus-visible .tk .stub {
+    animation: tear-once 0.7s cubic-bezier(0.5, 0, 0.25, 1) both;
+}
+:where(.sidecart) {
+    --cierre-p: 0;
+    --cierre-q: 0;
+    /* ⚠️ Lee el progreso CRUDO (`--cierre-q`), no el suavizado: es lo que hace el mockup, y con el
+    suavizado el armazón se quedaba puesto medio recorrido de más. */
+    --cierre-salida: calc((var(--cierre-q) - 0.02) / 0.28);
+    /* Lo que QUEDA del armazón, con la curva del mockup: `(1 − salida)³`. */
+    --cierre-queda: calc((1 - var(--cierre-salida)) * (1 - var(--cierre-salida)) * (1 - var(--cierre-salida)));
+}
+.nav[data-surface="ink"] .cta-med__ico .tk, .nav[data-surface="ink"] .cta-med:hover .cta-med__ico .tk, .nav[data-surface="ink"] .cta-med__ico .ic-e2, .nav[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 {
+    color: var(--paper-fg);
+}
+.nav[data-surface="ink"] .cta-med__ico .ic-e2 svg .occ, .nav[data-surface="ink"] .cta-med:hover .cta-med__ico .ic-e2 svg .occ {
+    fill: var(--attn);
+}
+.addons-mini__item .addons__features {
+    width: 100%;
+}
+.acct {
+    /* Fondo propio (tono crema más marcado) para que la sección del cliente RESALTE sobre el panel
+    del sidecart (`--bg`), igual que en el mockup `design_mockup/Sidebar Catalogo.html` (allí el
+    bloque de cuenta es `--bg` sobre un panel `--bg-card`); aquí el panel ya es `--bg`, así que el
+    bloque usa el tono más marcado `--bg-soft` para conservar ese contraste. */
+    padding: var(--sp-16) var(--sp-20); border-bottom: 1px solid var(--line); background: var(--bg-soft);
+}
+.acct__inner {
+    overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: var(--sp-13);
+}
+.acct__row {
+    display: flex; align-items: center; gap: var(--sp-13);
+}
+.acct__avatar {
+    width: 36px; height: 36px; border-radius: var(--r-pill); flex-shrink: 0;
+    background: var(--fg); color: var(--bg);
+    display: grid; place-items: center;
+    font-family: var(--font-body); font-weight: 800; font-size: var(--fs-body); line-height: 1;
+}
+.acct__avatar--guest {
+    background: var(--bg-card); color: var(--fg-mute); border: 1px solid var(--line);
+}
+.acct__avatar svg {
+    width: 20px; height: 20px;
+}
+.acct__txt {
+    display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; flex: 1;
+}
+.acct__hello {
+    font-family: var(--font-display); font-weight: 800; font-size: var(--fs-17);
+    letter-spacing: -0.01em; line-height: 1.05; color: var(--fg);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.acct__sub {
+    font-size: var(--fs-body-s); color: var(--fg-mute); line-height: 1.3;
+}
+.acct__cta {
+    display: flex; gap: 9px;
+}
+.acct__logout-form {
+    margin: 0; display: flex; flex: 1;
+}
+.acct__btn {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-8);
+    padding: var(--sp-11) var(--sp-15); border-radius: var(--r-btn);
+    font-family: var(--font-body); font-size: var(--fs-13); font-weight: 600; white-space: nowrap;
+    cursor: pointer; text-decoration: none; border: 1px solid transparent;
+    transition: transform var(--dur-estado) var(--ease-entra), background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), border-color var(--dur-sale) var(--ease-sale), box-shadow var(--dur-estado) var(--ease-sale);
+}
+.acct__btn svg {
+    width: 15px; height: 15px;
+}
+.acct__btn--primary {
+    background: var(--secondary); color: var(--on-secondary);
+}
+.acct__btn--primary:hover {
+    transform: translateY(-2px); background: var(--secondary-hover); color: var(--on-secondary); box-shadow: var(--shadow-lift);
+}
+.acct__btn--ghost {
+    background: transparent; color: var(--interactive); border-color: var(--interactive);
+}
+.acct__btn--ghost:hover {
+    transform: translateY(-2px); background: var(--interactive); color: var(--paper-bg); border-color: var(--interactive);
+}
+.acct__btn:disabled {
+    opacity: 0.45; cursor: not-allowed;
+}
+.acct__btn--primary:disabled:hover {
+    transform: none; background: var(--fg); color: var(--bg); box-shadow: none;
+}
+.acct__btn--ghost:disabled:hover {
+    transform: none; background: transparent; color: var(--interactive); border-color: var(--interactive);
+}
+.acct__btn--reservas {
+    position: relative;
+}
+.cta-med:active, .cta-ghost:active, .bk-cta:active:not(:disabled), .cartbar:active, .acct__btn:active:not(:disabled), .svc-cta:active {
+    transform: translateY(0) scale(0.97);
+    transition: transform var(--dur-toque) var(--ease-sale);
+}
+.acct__count {
+    display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
+    /* La píldora del contador a `--ok` (`#551`): el canvas la dibuja en Lima y aquí los colores son
+    ROLES, no sus literales (`#254`). Sobre un botón de tinta, tinta no se vería. */
+    border-radius: var(--r-pill); background: var(--ok); color: var(--on-ok); font-size: var(--fs-label); font-weight: 700;
+}
+.acct__alert {
+    display: flex; align-items: center; gap: var(--sp-8); text-decoration: none;
+    padding: var(--sp-8) var(--sp-10); border-radius: var(--r-sm);
+    background: color-mix(in srgb, var(--zone-1) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--zone-1) 35%, transparent);
+    color: var(--fg); font-size: var(--fs-body); font-weight: 600; line-height: 1.3;
+    transition: background var(--dur-sale) var(--ease-sale);
+}
+.acct__alert:hover {
+    background: color-mix(in srgb, var(--zone-1) 20%, transparent);
+}
+.acct__alert-ico {
+    flex: none; display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    /* Tinta oscura (no #fff) sobre el acento: contraste robusto con cualquier marca white-label
+    (#213) — el naranja por defecto y un verde lima claro pasan ambos. Igual que .acct__count. */
+    background: var(--zone-1); color: var(--on-brand); font-weight: 800; font-size: var(--fs-12); line-height: 1;
+}
+.acct__alert-text {
+    flex: 1;
+}
+.acct__alert-arrow {
+    flex: none; color: var(--zone-1); font-weight: 700;
+}
+.account__logout {
+    margin: var(--sp-8) 0 0;
+}
+.purchase__note--guestform {
+    background: color-mix(in srgb, var(--zone-1) 10%, var(--sheet));
+    border-radius: var(--r-md); padding: var(--sp-10) var(--sp-12);
+}
+.orders__products {
+    display: flex; flex-direction: column; gap: var(--sp-10);
+}
+.orders__product {
+    background: var(--bg-soft); border-radius: var(--r-md); padding: var(--sp-12) var(--sp-14); display: flex; flex-direction: column; gap: var(--sp-8);
+}
+.orders__product-form {
+    margin-top: var(--sp-2);
+}
+.orders__product-form-link {
+    font-size: var(--fs-body); color: var(--fg-mute); text-decoration: underline; text-underline-offset: 2px;
+}
+.orders__guestform-btn {
+    width: 100%; justify-content: center; white-space: normal; text-align: center;
+}
+.purchase__reginfo {
+    margin-top: var(--sp-16); padding: var(--sp-14) var(--sp-16);
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
+    display: flex; flex-direction: column; gap: var(--sp-12);
+}
+.purchase__reginfo-text {
+    margin: 0; font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg);
+}
+.purchase__reginfo-btn {
+    width: 100%; justify-content: center;
+}
+.purchase__maint {
+    text-align: center; padding: var(--sp-28) var(--sp-4) var(--sp-12);
+}
+.purchase__maint-body {
+    color: var(--fg-mute); font-size: var(--fs-16); line-height: 1.6; margin: 10px 0 26px;
+}
+.purchase__maint-ctas {
+    display: flex; flex-direction: column; gap: var(--sp-12);
+}
+.purchase__maint-ctas .btn {
+    width: 100%; justify-content: center; text-align: center;
+}
+.gf-page .eventfields {
+    margin-top: 0;
+}
+.gf-page .eventfields__label {
+    font-size: var(--fs-body);
+}
+.gf-page .eventfields input, .gf-page .eventfields select, .gf-page .eventfields textarea {
+    font-size: var(--fs-body); border-radius: var(--r-md);
+}
+.gf-fiche__pad .eventfields {
+    margin-top: 0;
+}
+.gf-page .btn {
+    font-size: var(--fs-button);
+}
+.gf-savebar .btn {
+    flex: 1; justify-content: center;
+}
+.gf-extra__more > ul:not(.gifts) {
+    list-style: none; margin: var(--sp-6) 0 0; padding: var(--sp-8) 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.gf-dialog__actions .btn {
+    flex: 1; justify-content: center;
+}
+.gf-page .eventfields__help {
+    font-size: var(--fs-body-s); line-height: 1.5;
+}
+.gf-page .eventfields__error {
+    font-size: var(--fs-body-s); line-height: 1.5; color: var(--err-ink);
+}
+.invitation__answers > .btn {
+    flex: 1 1 12ch;
+}
+.guardian__who:not([hidden]) + .btn {
+    flex: 0 0 auto;
+}
+.offw-gift.is-open .cft.c2 {
+    animation-delay: var(--dur-toque);
+}
+.offw-gift.is-open .cft.c3 {
+    animation-delay: var(--dur-toque);
+}
+.acc-tiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--sp-8);
+    margin-bottom: var(--sp-4);
+}
+.acc-tile {
+    /* `relative` sostiene al contador, que va en la esquina: en la fila iba detrás del rótulo,
+    y centrado bajo un icono ese sitio ya no existe. */
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+    gap: var(--sp-8);
+    width: 100%;
+    padding: var(--sp-16) var(--sp-10);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-card);
+    text-align: center;
+    cursor: pointer;
+    /* ⚠️ Duraciones y curvas por ROL, no a mano (`MotionScaleTest`, tanda 2d del tema): el hover de
+    una tarjeta es «toque», y el hover NUNCA lleva rebote — la escala lo dice y la guarda lo exige. */
+    transition: border-color var(--dur-toque) var(--ease-sale), transform var(--dur-sale) var(--ease-sale), box-shadow var(--dur-sale) var(--ease-sale);
+}
+.acc-tile:hover {
+    border-color: var(--fg); transform: translateY(-2px); box-shadow: var(--shadow-lift);
+}
+.acc-tile:active {
+    transform: translateY(0) scale(0.97); transition: transform var(--dur-toque) var(--ease-sale);
+}
+.acc-tile:focus-visible {
+    outline: var(--focus-outline); outline-offset: 2px;
+}
+.acc-tile__ico {
+    display: inline-flex;
+}
+.acc-tile__ico svg {
+    width: 26px; height: 26px; margin-right: 0;
+    color: var(--fg-mute);
+    transition: color var(--dur-toque) var(--ease-sale);
+}
+.acc-tile:hover .acc-tile__ico svg {
+    color: var(--interactive);
+}
+.acc-tile__name {
+    font-family: var(--font-body); font-weight: var(--fw-semibold);
+    font-size: var(--fs-body); line-height: 1.25; color: var(--fg);
+}
+.acc-tile__count {
+    position: absolute; top: var(--sp-8); right: var(--sp-8);
+}
+.acct__btn--qr {
+    flex: none;
+}
+.acct__qr-ico {
+    flex: none; display: inline-flex;
+}
+.acct__qr-ico svg {
+    width: 14px; height: 14px;
+}
+.acc-actions {
+    display: flex; flex-wrap: wrap; gap: var(--sp-8); margin-top: var(--sp-10);
+}
+.acc-actions .btn {
+    flex: 1 1 auto; justify-content: center;
+}
+.dep-pick {
+    padding-top: var(--sp-11); border-top: 1px solid var(--line);
+}
+.dep-pick__list {
+    list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;
+}
+.dep-pick__row {
+    min-height: 44px; display: flex; flex-direction: column; justify-content: center;
+}
+.dep-pick__row--off .dep-pick__pick {
+    opacity: 0.55; cursor: not-allowed;
+}
+.dep-pick__pick {
+    align-items: center;
+}
+.dep-pick__who {
+    display: flex; align-items: baseline; gap: var(--sp-7); flex-wrap: wrap;
+}
+.dep-pick__name {
+    font-weight: var(--fw-semibold); color: var(--fg);
+}
+.dep-pick__age {
+    font-size: var(--fs-body-s); color: var(--fg-mute);
+}
+.dep-pick__why {
+    margin: var(--sp-6) 0 0;
+    padding-left: calc(var(--sp-16) + var(--sp-10) + var(--sp-7));
+    font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.35;
+    color: var(--attn-ink);
+}
+.dep-pick__ok {
+    font-family: var(--font-body); font-size: var(--fs-label); font-weight: 500;
+    color: var(--fg-mute);
+}
+.whoblock {
+    margin-top: var(--sp-14);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+.whoblock__head {
+    display: flex; align-items: baseline; gap: var(--sp-8); flex-wrap: wrap;
+    /* 44 px de área táctil por relleno REAL y no con un pseudo (`#264`): un `<summary>` dentro de un
+    carril con scroll recortaría el pseudo, que es la trampa que documenta la tira del pie. */
+    padding: var(--sp-12) var(--sp-14);
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-body);
+}
+.whoblock__head::-webkit-details-marker {
+    display: none;
+}
+.whoblock__head:hover {
+    background: var(--bg-soft);
+}
+.whoblock__head:focus-visible {
+    outline: var(--focus-outline); outline-offset: -2px;
+}
+.whoblock__title {
+    font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg);
+}
+.whoblock__title::before {
+    content: "";
+    display: inline-block; width: 0; height: 0; margin-right: var(--sp-8);
+    border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+    transition: transform var(--dur-entra) var(--ease-sale);
+}
+.whoblock[open] .whoblock__title::before {
+    transform: rotate(90deg);
+}
+.whoblock__hint {
+    font-size: var(--fs-body-s); color: var(--fg-mute); margin-left: auto;
+}
+.whoblock__body {
+    padding: 0 var(--sp-14) var(--sp-14);
+}
+.whoblock__body .dep-pick {
+    padding-top: 0; border-top: none;
+}
+.guardnote {
+    margin-top: var(--sp-10);
+    padding: var(--sp-10) var(--sp-12);
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    background: var(--bg-soft);
+}
+.guardnote--ask {
+    display: flex; align-items: flex-start; gap: var(--sp-10); background: var(--bg-card); cursor: pointer;
+}
+.guardnote--ask:hover {
+    border-color: var(--line-strong);
+}
+.guardnote--off {
+    background: var(--bg-soft); cursor: not-allowed;
+}
+.guardnote--off:hover {
+    border-color: var(--line);
+}
+.guardnote--off .guardnote__label {
+    color: var(--fg-mute);
+}
+.guardnote__box {
+    margin-top: var(--sp-2); flex-shrink: 0;
+}
+.guardnote__body {
+    display: flex; flex-direction: column; gap: var(--sp-4);
+}
+.guardnote__label {
+    font-family: var(--font-body); font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--fg);
+}
+.guardnote__help {
+    font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.4; color: var(--fg-mute);
+}
+.guardnote__text {
+    margin: 0; font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.45; color: var(--fg);
+}
+.qr-pass {
+    /* `.qr-tile` lee `--qr-size` y lo define `.regcard`, que aquí no existe: sin esta línea el
+    recuadro nacería con `width: var(--qr-size)` inválido y se quedaría en `auto`. 264 px es el
+    tamaño NATURAL del PNG que sirve el servidor (versión 2 + zona de silencio 4, a escala 8);
+    el `min()` de abajo lo encoge cuando el cajón es más estrecho que eso. */
+    --qr-size: 264px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: var(--sp-4);
+    text-align: center;
+}
+.qr-pass .qr-tile {
+    width: min(var(--qr-size), 100%); height: auto; aspect-ratio: 1;
+}
+.qr-pass .qr-slot img {
+    display: block; width: 100%; height: 100%;
+}
+.qr-pass__code {
+    margin: var(--sp-4) 0 0;
+    padding: var(--sp-8) var(--sp-12);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--bg-soft);
+    font-family: var(--font-mono); font-size: var(--fs-body); font-weight: var(--fw-semibold);
+    letter-spacing: 0.08em; line-height: 1.4; color: var(--fg);
+    /* Un token de 20 caracteres en cinco grupos no cabe de una línea en el cajón estrecho: parte por
+    el espacio de grupo, que es donde también lo parte quien lo dicta. */
+    word-spacing: 0.2em; overflow-wrap: break-word; max-width: 100%;
+}
+.qr-pass__empty {
+    display: flex; align-items: center; justify-content: center;
+    width: min(var(--qr-size), 100%); aspect-ratio: 1;
+    margin: 0;
+    padding: var(--sp-20);
+    border: 1px dashed var(--line-strong);
+    border-radius: var(--r);
+    background: var(--bg-soft);
+    font-family: var(--font-body); font-size: var(--fs-body); line-height: 1.5; color: var(--fg-mute);
+}
+.qr-pass__hint {
+    max-width: 42ch;
+}
+.qr-pass__acts {
+    width: 100%; margin-top: var(--sp-16);
+}
+.qr-pass__renew {
+    width: 100%;
+    margin-top: var(--sp-20);
+    padding-top: var(--sp-16);
+    border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center;
+}
+.qr-pass__notice {
+    margin: var(--sp-10) 0 0; max-width: 42ch; font-size: var(--fs-body-s);
+}
+.qr-pass__renew .purchase__confirm {
+    width: 100%; text-align: left;
+}
+.dep-add {
+    margin-bottom: var(--sp-4);
+}
+.dep-page {
+    margin-top: var(--sp-20);
+}
+:where(.sidecart) {
+    --brand-hop-tempo: 0.9;
+}
+:where(.sidecart) {
+    /* A1 · densidad de la trama. ⚠️ El 0.2 NO es un número elegido: es el que deja la trama del menú
+    EXACTAMENTE como estaba antes de generalizarla — 55 % de tinta × 0.2 = el 11 % que tenía
+    horneado. Generalizar no puede cambiar lo que ya se ve. */
+    --trama: 0.2;
+    --trama-fade: 0.55;
+    /* A2 · la variante que se apaga; suya al dígito */
+    /* ⚠️ `--spray` se fue con su pieza en `#535`: la niebla A5 perdió su única pantalla al retirarse
+    el mapa de `/contacto`. Un token sin consumidor deja de vigilar nada y encima invita a
+    reintroducir la pieza sin decidirlo (la regla que `#550` aplicó a `--fs-9`). */
+    --rayos: 1;
+    /* A3 · el abanico quieto */
+    --rayos-size: 520px;
+    /* suyo */
+}
+:where(.sidecart) {
+    --dots-tile: radial-gradient(circle, var(--paper-fg) 3px, transparent 3.4px);
+}
+.sidecart__panel .form__field > .form__label {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .form__field textarea {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .form__field select {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .form__error {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .form__hint {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .check {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .switch {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .auth__sub {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .auth__errors {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .eventfields__label {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .addons__moreinfo {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .addons__features li {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .cal__month {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .cal__day {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .cal__wd {
+    font-size: var(--fs-label);
+}
+.sidecart__panel .acct__btn {
+    font-size: var(--fs-button);
+}
+.sidecart__panel .zone-tab {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .purchase__note {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .btn {
+    font-size: var(--fs-button);
+}
+.sidecart__panel .eventfields input {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .eventfields select {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .eventfields textarea {
+    font-size: var(--fs-body);
+}
+.sidecart__panel .pagination__info {
+    font-size: var(--fs-body-s);
+}
+.sidecart__panel .form__hint a, .sidecart__panel .form__hint button {
+    color: var(--interactive);
+}
+.sidecart__panel .check span a {
+    color: var(--interactive);
+}
+.sidecart__panel .check input {
+    accent-color: var(--fg);
+}
+.sidecart__panel .check input {
+    width: 24px; height: 24px; margin-top: var(--sp-1);
+}
+.sidecart__panel .zone-tab.active {
+    background: var(--fg); color: var(--bg); border-color: var(--fg);
+}
+.sidecart__panel .zone-tab.active {
+    background: var(--bg-card);
+    color: var(--fg);
+}

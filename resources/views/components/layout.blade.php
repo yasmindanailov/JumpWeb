@@ -61,7 +61,11 @@
          `ThemeSettings::zoneStyle()`; el acento de «Atracciones» va scoped a `#rides` desde `app.js`.
          ⚠️ Aquí se citaban `--jump-1`/`--kids-1` como «color de cada zona»: los retiró `#139` y este
          comentario los sobrevivió. Las zonas son DATOS y pueden ser dos, cinco o llamarse de otra forma. --}}
-    <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
+    {{-- ⚠️ **`.sidecart` va con `:root` desde `#635`**: la hoja del cajón empaquetable declara sus valores por
+         defecto sobre la raíz del cajón —para que la landing de otro no le repinte el `--bg`—, y eso deja fuera
+         a un tema que solo hable de `:root`. Sin los dos selectores el color de marca del panel llegaba a la
+         landing y NO al cajón, que se quedaba con el naranja del producto. Lo vio el juez de maquetación. --}}
+    <style id="jj-theme">:root, .sidecart{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
     {{-- Spinner de marca (estático, no por Vite: su minificador rompe `backdrop-filter`).
          Su DIBUJO es sustituible por instalación desde `client.css`; ver docs/UI-SPINNER.md §3.bis. --}}
     <link rel="stylesheet" href="{{ asset('css/spinner.css') }}?v={{ @filemtime(public_path('css/spinner.css')) }}">

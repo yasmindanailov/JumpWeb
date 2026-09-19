@@ -12,22 +12,22 @@
 - **Regla que ordena todo**: el cajón sigue siendo un cajón SOBRE la landing, en el MISMO dominio que la API
   (cookie de sesión + CSRF, sin token). Cambia QUIÉN lo monta: del layout del producto a cualquier HTML que
   cargue el paquete. «Empaquetable» no es «página aparte» ni «otro dominio».
-- **«Una línea del layout» era falso, medido (§1)**: le pedía a su página la carcasa de Blade, un store de
-  Alpine que llega DENTRO de Livewire, un `data-boot` de 18,7 KB, una hoja de 549 KB, los tokens de OTRA hoja y
-  ocho rutas-puerta. Las tandas lo deshacen una a una.
-- **El riesgo silencioso es la hoja** (la T4): los `.vue` llevan CERO `<style>`; 81 bloques del cajón viven solo
-  en `site.css` y **10 están definidos en las DOS hojas** (§1). Partirla puede mover el cajón sin que falle un
-  test: manda la huella de maquetación (`#437`), no la suite.
+- **«Una línea del layout» era falso, medido (§1)**: carcasa de Blade, un store de Alpine que llega DENTRO de
+  Livewire, `data-boot` de 18,7 KB, una hoja de 549 KB, tokens de OTRA hoja y ocho rutas-puerta.
+- **La hoja NO se parte: se GENERA** (T4 ✅, `#635`, §4.3). `cajon.css` sale de `scripts/hoja-del-cajon.py` y no
+  se edita a mano; quien juzga si falta algo es el navegador (`huella-maquetacion.mjs --cajon`), no la suite.
 - **Trampas**: tras tocar un `.vue`, `npm run build:ssr` antes de la suite; el contrato visual es el ÁRBOL
   (`specs/sidebar-spa.md` §4.2); `route('logout')` aparece UNA vez, en el suelo del hueco de cuenta
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo.
 - **La landing consume un MENÚ DE HECHOS opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende de que
   lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
 - **Estado**: por TANDAS — **T1 ✅** arranque · **T2 ✅** apertura · **T3a ✅** carcasa con dueño · **T3b ✅** el
-  paquete se monta en una página ajena (`installCajon()`) → **T4 la hoja propia** → T5 la salida. Implementa
-  plataforma (`#633`). ⚠️ **Dónde va cada cosa**: un rótulo nuevo, en `SidebarBoot`; abrir y cerrar, en
-  `cajon/controller.js`; la carcasa, en `shell.js`; lo que solo usa una página ajena, en `standalone.js` (la
-  entrada del producto tiene presupuesto). El motor NO nombra a Alpine ni conoce los pasos del embudo.
+  paquete se monta en una página ajena (`installCajon()`) · **T4 ✅** la hoja propia (`cajon.css`, generada) →
+  **T5 la salida**. Implementa plataforma (`#633`). ⚠️ **Dónde va cada cosa**: un rótulo nuevo, en
+  `SidebarBoot`; abrir y cerrar, en `cajon/controller.js`; la carcasa, en `shell.js`; lo que solo usa una
+  página ajena, en `standalone.js`; **una regla de estilo, en `site.css` y se REGENERA la hoja**
+  (`python3 scripts/hoja-del-cajon.py --aplicar`) — `cajon.css` no se edita a mano. El motor NO nombra a
+  Alpine ni conoce los pasos del embudo.
 - **Empieza por** §1 (el censo) → §4.1 (la forma) → §4.2 (la apertura) → §4.5 (el arranque) → §4.6 (el menú).
 
 ## 1. Contexto y problema — MEDIDO (2026-09-18)
@@ -167,14 +167,45 @@ y va en el contrato de instancia (F5). Sin él no hay suelo, que es mejor que un
 **Medido**: `scripts/sonda-cajon-apertura.mjs` **31/31** en Chromium, con una sección nueva que sirve una
 página AJENA del mismo origen (sin carcasa, sin `data-boot` y sin Alpine) y la ve construir la carcasa, montar
 el motor, pintar el catálogo y cerrar; `npm run test:js` 1049; `scripts/mutar-cajon-apertura.sh` **34/34**.
-▶ **Queda para la T4**: la hoja propia. La carcasa construida se viste hoy con `site.css`, así que una landing
-ajena tiene que cargar las hojas y las fuentes de la instalación —medido: sin la hoja de fuentes cambia la
-métrica del texto y un botón del bloque de cuenta se sale del panel—.
+**✅ T4 HECHA (2026-09-18) · la hoja propia del paquete.** `public/css/cajon.css` (167 kB, 777 reglas, el 18 %
+de las tres hojas del producto) la GENERA `scripts/hoja-del-cajon.py`, y `site.css` no se toca (`#635`). Con
+ella, una página ajena escribe las dos líneas de §4.1 y ya no arrastra las 2.650 reglas de la landing.
 
-### 4.3 La hoja y los tokens
-La hoja del cajón lleva SU raíz de tokens (los que lee, medidos con el guion, no los 231) bajo un selector propio,
-con `client.css` pisándolos igual que hoy. `site.css` se queda con la landing. Trinquete nuevo: un test que falle
-si un `.vue` del cajón emite una clase que no esté en la hoja del paquete.
+### 4.3 La hoja y los tokens — `[DECIDIDO]` 2026-09-18 (`#635`): se GENERA, y su raíz es el cajón
+**Se genera, no se parte.** De los 102 bloques BEM que emite el cajón, **45 los pinta también la landing**
+(`btn` en 19 ficheros Blade, `form`, `check`, `pagination`, `sr-only`, `tabset`, las tripas de once iconos SVG):
+mover cualquiera deja la landing sin estilo y duplicarlo crea dos copias que divergen al primer retoque.
+Generando, `site.css` queda intacta **por construcción** y la hoja del paquete es un extracto de esas mismas
+reglas. Qué entra: las que nombran una clase que el cajón puede emitir (sus `.vue` + la carcasa), los dos huecos
+por ID, los TOKENS de la base y las cinco reglas de elemento que el cajón heredaba del documento (`a`, `button`,
+`img`, `::selection`, el foco de los campos) — bajo `:where(.sidecart)`, que conserva su especificidad de origen.
+
+**Los tokens van en `:where(.sidecart)`, no en `:root`**, y las tres pasadas que costó están en `#635`: en
+`.sidecart` a secas el producto le ganaba a `client.css`; en `:where(:root)` le ganaba el ANFITRIÓN y el cajón
+salía con su azul marino y el texto ilegible. Jerarquía final: **instalación → paquete → anfitrión**. El precio
+es una línea de contrato: **un tema de instalación declara sus tokens en `:root, .sidecart`** (el bloque que
+inyecta el panel ya lo hace; `docs/INSTALACION-CLIENTE.md` §4 lo pide para `client.css`).
+
+**Lo que no se ve si no se mide, y aquí se midió** (el juez es `scripts/huella-maquetacion.mjs --cajon`, que
+compara el subárbol del cajón con las hojas del producto y con el paquete SOLO, en dos anchos):
+- el juez nació **mintiendo**: retiraba `site.css` y dejaba `landing.css`, así que los 116 tokens del sistema
+  seguían en la página y la hoja parecía autosuficiente sin serlo. Ahora retira las tres y lo comprueba;
+- `landing.css` **no era «solo tokens»**: 31 de sus reglas son del cajón y `tabset` —las pestañas de Entrar /
+  Crear cuenta— vive solo ahí;
+- el orden importa: las fuentes se leen como las carga el layout, y agrupar por `@media` **reordena la cascada**
+  (`.tabset` de landing ganándole a `.purchase__authtabs` de site);
+- un `^(:root|html|body|\*)` con `\b` se llevaba 34 reglas de la landing del anfitrión, incluida
+  `html, body { background; color; font-family }`: **un paquete no repinta el `<body>` de quien lo monta**.
+
+**Trinquetes**: `HojaDelCajonTest` (5 casos) vigila que la hoja no se quede vieja —lleva el SHA-1 de sus tres
+fuentes en la cabecera—, que ninguna lectura de token quede sin valor ni respaldo, y **que toda clase que un
+`.vue` emite y el producto viste la vista también el paquete**, que es el trinquete que pedía esta sección.
+Mutación: `scripts/mutar-hoja-del-cajon.sh` **8/8**.
+**Medido**: juez en **0 diferencias sobre 1.640 nodos** (3 pantallas × 2 anchos); sonda **34/34**, con la página
+ajena cargando solo fuentes + `client.css` + el paquete, y dos controles nuevos —el anfitrión no tematiza el
+cajón y el paquete no le toca nada al anfitrión—; `HojaDelCajonTest` 5.
+▶ **Queda para la T5**: el cargador en ruta estable (hoy la página ajena cita el fichero con hash de Vite), una
+COMPRA entera en la página ajena, y decidir si en F5 la instalación se lleva la hoja ya tematizada.
 
 ### 4.4 El anfitrión mínimo
 Una vista del producto, vestida por el tema, para las 7 puertas que no son la portada y para los flujos con vista

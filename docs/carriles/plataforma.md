@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#634`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (F2 cerrada; F4 en curso).
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#635`** ·
+> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (F2 cerrada; F4 · T4 hecha).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -51,11 +51,8 @@
      (`no-store`, consume el desenlace). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos;
      `SidebarBootTest` 9 casos; `scripts/mutar-cajon-arranque.sh` 8/8. ▶ Un rótulo nuevo va en `SidebarBoot`.
    - **T2 ✅ HECHA (18-09) · la apertura sin Alpine**: el store `purchase` se mudó TAL CUAL a
-     `resources/js/cajon/controller.js`; `app.js` lo instancia al cargar, publica `window.JumpWeb.cajon` y en
-     `alpine:init` lo registra como `$store.purchase` y reasigna `JumpWeb.cajon` al PROXY reactivo (sin eso
-     `open()` no mueve la carcasa y NADA falla: visto en rojo en la sonda). `cajon/declarative.js`
-     (`data-jw-open*`), eventos `jw:cajon:open|close`, y el motor escribe por `sidebar/host-bridge.js`. Sonda
-     `scripts/sonda-cajon-apertura.mjs` 17/17; `scripts/mutar-cajon-apertura.sh` 13/13; ESLint cubre `cajon/`.
+     `cajon/controller.js`; el de Alpine queda de espejo y `JumpWeb.cajon` se reasigna al PROXY reactivo (sin
+     eso `open()` no mueve la carcasa y NADA falla: visto en rojo en la sonda). Sonda 17/17; arnés 13/13.
    - **T3a ✅ HECHA (18-09) · la carcasa con UN dueño**: el marcado del layout pierde sus 8 atributos de Alpine
      y `a11yPanel` se retira de `app.js`; manda `resources/js/cajon/shell.js` (adopta `.sidecart`: `is-open`,
      `is-{modo}` por el evento `jw:cajon:mode`, cierre por telón/×/Escape, trampa de foco). `/entradas`
@@ -65,17 +62,28 @@
      suelto en `app.js`—; sin `data-boot` ni marcado, `bootSpaEngine()` trae con `import()` `cajon/standalone.js`
      (pide el arranque a la API y CONSTRUYE la carcasa) y `jw:cajon:purchased` cierra el contrato de eventos.
      Sonda 31/31 con una página ajena de verdad; arnés 34/34.
-   - **T4 · la hoja propia — LO SIGUIENTE.** Extracción MECÁNICA de `site.css` con guion e informe en seco
-     (método `#437`), resolviendo por MEDIDA los 10 bloques definidos en las dos hojas; juez: la huella de
-     maquetación 24/24 idéntica. ⚠️ Es la tanda VISIBLE: se enseña al owner en vivo antes de commitear. Dato ya
-     medido: sin la hoja de fuentes de la instalación, la métrica del texto cambia y un botón del bloque de
-     cuenta se sale del panel — o sea que la hoja del paquete no basta: el tema y las fuentes son de la
-     instancia, y eso hay que escribirlo en el contrato de instancia (F5).
+   - **T4 ✅ HECHA (18-09) · la hoja propia**: `public/css/cajon.css` (167 kB, 777 reglas) la GENERA
+     `scripts/hoja-del-cajon.py` desde `landing.css` + `spinner.css` + `site.css`, en ese orden y sin tocar
+     ninguna (`#635`). **Se genera y no se parte**: 45 de los 102 bloques del cajón los pinta también la
+     landing. Tokens en `:where(.sidecart)` → jerarquía **instalación → paquete → anfitrión**; el precio es
+     que un tema declara en `:root, .sidecart` (hecho ya en el `<style>` del panel y pedido en
+     `INSTALACION-CLIENTE.md` §4). Juez `scripts/huella-maquetacion.mjs --cajon`: **0 diferencias en 1.640
+     nodos** con la página cargando SOLO fuentes + `client.css` + el paquete. `HojaDelCajonTest` 5 (sello
+     SHA-1 de las fuentes en la cabecera de la hoja), `scripts/mutar-hoja-del-cajon.sh` 8/8, sonda 34/34 con
+     dos controles nuevos (el anfitrión no tematiza el cajón; el paquete no toca al anfitrión).
+     ⚠️ **Banco de pruebas LOCAL, no versionado**: `public/landing-ajena.html` (excluido en `.git/info/exclude`)
+     sirve en `localhost:8081/landing-ajena.html` una landing con SUS tokens para mirar el paquete en vivo.
+     Cita el fichero con hash de Vite, así que **caduca con cada `npm run build`**: se actualiza la ruta del
+     `<script>` con la de `public/build/manifest.json`. T5 le dará ruta estable.
+     ⚠️ **El juez nació mintiendo** y conviene recordarlo al tocar cualquier instrumento: retiraba `site.css`
+     y dejaba `landing.css`, así que los tokens seguían en la página y la hoja parecía autosuficiente.
    - ✅ **Cerrado el pendiente de la T3a** (`[DECIDIDO owner]`, `#634`): naciendo abierto, el foco SÍ entra en
      el panel. Cambio visible aceptado (el anillo sobre la ×); caso, fila de sonda y mutación puestos.
-   - **T5 · la salida**: el cargador del paquete como entrada propia de Vite en una ruta estable (hoy la
-     sección F de la sonda usa la entrada del producto como sustituto), una COMPRA completa en la página ajena,
-     trinquete «clase emitida ⊂ hoja del paquete», y la spec a ✅.
+   - **T5 · la salida — LO SIGUIENTE**: el cargador del paquete como entrada propia de Vite en una ruta
+     estable (hoy la sección F de la sonda y el banco de pruebas citan la entrada del producto, con hash), una
+     COMPRA completa en la página ajena, y la spec a ✅. El trinquete «clase emitida ⊂ hoja del paquete» ya está
+     puesto en la T4 (`HojaDelCajonTest`). Decisión abierta para F5: si la instalación se lleva la hoja ya
+     tematizada (una sola hoja, sin `client.css` en la página ajena).
 2. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 3. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
@@ -97,7 +105,9 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
 `Tests\TestCase::be()` · el arranque del cajón (`Http\Sidebar\SidebarBoot`, `SidebarBootController`,
 `SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura, su carcasa y el paquete (`resources/js/cajon/**`,
-`sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
+`sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · la hoja del
+paquete (`public/css/cajon.css` GENERADA, `scripts/hoja-del-cajon.py`, `scripts/huella-maquetacion.mjs`,
+`HojaDelCajonTest`, `scripts/mutar-hoja-del-cajon.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
 Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.

@@ -249,9 +249,15 @@ del relevo está hecha**.
 Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cuatro** —después de
 `landing.css`, del tema inyectado y de `site.css`—, así que redefinir un token ahí gana en cascada:
 
+⚠️⚠️ **El bloque de tokens se declara en `:root, .sidecart`, no solo en `:root`** (`DECISIONES #635`, F4 · T4).
+El cajón empaquetable declara sus valores por defecto sobre **su propia raíz** (`.sidecart`) para que la landing
+de otra instalación —que puede tener su `--bg` y su `--fg`— no se lo repinte. Un token que solo se declare en
+`:root` llega a la landing y **NO al cajón**: medido, `--line` sin los dos selectores dejaba el cajón con las
+rayas del anfitrión. Con los dos, el tema manda en los dos sitios.
+
 ```css
 /* public/css/client.css — el paquete de tema de esta instalación */
-:root {
+:root, .sidecart {
     /* SUPERFICIE — la de tinta se deriva sola de estas dos (ver el aviso de abajo) */
     --bg: #F4F4F1;  --bg-soft: #E8E9E5;  --bg-card: #FFFFFF;
     --fg: #101418;  --fg-mute: #626A72;

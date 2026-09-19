@@ -18,9 +18,17 @@ namespace Tests\Support;
  *    precisamente para declarar valores literales. Juzgarlo con las reglas del producto sería
  *    prohibirle aquello para lo que existe — y además hacía MENTIR al gate, porque el recuento de
  *    aserciones cambiaba según si la máquina tenía o no un paquete montado.
+ * 3. **`cajon.css` queda fuera, y por un motivo distinto**: no es OTRA hoja, es una COPIA generada
+ *    de estas mismas reglas para el cajón empaquetable (`#635`). Contándola, toda guarda de «esto
+ *    se declara UNA vez» pasa a ver dos —39 casos en rojo el 2026-09-18, el primero el mínimo
+ *    táctil: `[["cajon.css","48px"],["site.css","48px"]]`—. Quien la vigila es `HojaDelCajonTest`,
+ *    y lo hace comprobando que sea fiel a su fuente, que es la pregunta correcta para un generado.
  */
 trait ReadsSiteStylesheets
 {
+    /** `client.css` es de una INSTALACIÓN; `cajon.css` es una copia GENERADA. Ver el aviso de arriba. */
+    public const HOJAS_QUE_NO_SON_DEL_PRODUCTO = ['client.css', 'cajon.css'];
+
     /** @var list<array{selector: string, body: string, sheet: string}>|null */
     private ?array $cssRules = null;
 
@@ -54,7 +62,7 @@ trait ReadsSiteStylesheets
         $out = [];
 
         foreach (glob(base_path('public/css/*.css')) ?: [] as $path) {
-            if (basename($path) === 'client.css') {
+            if (in_array(basename($path), self::HOJAS_QUE_NO_SON_DEL_PRODUCTO, true)) {
                 continue;
             }
 
