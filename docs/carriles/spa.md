@@ -66,10 +66,8 @@
   escribió—. Declararlo pasó el componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se
   subió el techo**, bajó `signDependent()` al módulo plano, donde estrena tres casos de `node --test`.
   `FROZEN_JS_ERRORS` **12 → 10** (congelaba dos errores) · sonda nueva `scripts/sonda-foco-cuenta.mjs`.
-- La capa de agente: el plugin `jumpweb-agente` quedó instalado aquí el 17-09 (`627b3a3`) y esta sesión
-  arrancó por él. Larastan entró con `composer install` (faltaba en esta máquina tras `#625`).
-  ❗ **Está DESACTUALIZADO**: plataforma publicó `1377d58` el 18-09 con los cuatro arreglos del mapa de
-  frases. Hay que actualizarlo aquí (ver «por dónde retomar»).
+- La capa de agente: el plugin `jumpweb-agente` se instaló aquí el 17-09 y **se actualizó a `07076ac` el
+  19-09**, con los arreglos del mapa de frases. Larastan entró con `composer install` (faltaba tras `#625`).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
@@ -82,10 +80,11 @@
    plazo escrito como fecha. Escribe **solo `party_invitations`**, así que no roza el testigo de las
    fichas. Lee antes `POSTFORM-INVITADOS.md`, que es la doc de esta tanda, y **el armazón de la T2 no se
    toca**. §6 pide arnés de mutación y sonda a 390 y 1280 en esta tanda.
-2. **En esta máquina, antes de nada: actualizar el plugin** (buzón de plataforma; el owner cerró la sesión
-   del 19-09 **para esto**): `claude plugin marketplace update jumpweb-agente` +
-   `claude plugin update jumpweb-agente@jumpweb-agente --scope project`, reiniciar sesión, y anotar en el
-   buzón de plataforma cómo van las seis frases (iban **1 de 6**).
+2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
+   el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
+   cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
+   sesión disparó `/carril`, `/sonda` y `/handoff` por frase, pero **con el plugin viejo**, así que la
+   prueba de F2·b hay que hacerla con el nuevo.
 3. **La T5 ENTERA está en el árbol** (`#701`→`#706`) **y sin desplegar**. Lo que le falta no es código:
    - **El OJO del owner** en `localhost:8081` — el recibo en sus dos estados, el bloque del calendario y
      la hoja del justificante ya **sin prerrelleno**. Vio el recibo y el calendario el 18-09; la hoja sin
