@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.2.0
+  version: 1.3.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -498,6 +498,35 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '503':
           $ref: '#/components/responses/Maintenance'
+
+  /site:
+    get:
+      tags: [Instalación]
+      operationId: getSiteFacts
+      summary: Identidad, dirección y contacto de la instalación — el primer plato del menú de hechos
+      description: |
+        Lo que una landing necesita para pintar su pie, su página de contacto y sus datos legales **sin
+        teclearlos**: hasta la F5 esos datos solo existían dentro del producto, y una landing propia no
+        tenía forma de leerlos (la alternativa era copiarlos y que envejecieran).
+
+        **Es un MENÚ y todo es opcional**: se usa lo que se quiera. Y **lo que la instalación no ha
+        rellenado NO viaja** — sin TikTok no hay clave `tiktok`, no hay `""`—, así que quien pinta
+        pregunta si la clave existe en vez de repetir la misma condición de cadena vacía.
+
+        Se cachea en público (`Cache-Control: public, max-age=300` y `ETag`; con `If-None-Match`
+        responde `304`). No lleva idioma: ninguno de sus campos se traduce.
+
+        ⚠️ **`address` es dónde está el local y `legal.fiscal_address` es el domicilio fiscal**, que
+        puede ser otro municipio. Para un bloque de contacto, `address`.
+      responses:
+        '200':
+          description: Los hechos de la instalación, sin las claves que no tiene.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteFacts'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
 
   /sidebar/boot:
     get:
@@ -3096,6 +3125,67 @@ components:
 
                 La regla de cuándo procede vive en el servidor a propósito, para que las distintas
                 superficies no puedan discrepar sobre ella.
+
+    SiteFacts:
+      type: object
+      description: |
+        Los hechos de la instalación, en seis bloques. **Cada bloque es un objeto con las claves que
+        esa instalación ha rellenado**: las demás no aparecen (no viajan vacías). Un bloque entero
+        puede llegar `{}`, y eso también es una respuesta — significa «esta instalación no ha puesto
+        nada de eso».
+      additionalProperties: false
+      required: [identity, address, contact, social, legal, seo]
+      properties:
+        identity:
+          type: object
+          additionalProperties: false
+          description: Quién es. `name` es el nombre comercial; `legal_name` y `nif`, los de facturar.
+          properties:
+            name: { type: string }
+            legal_name: { type: string }
+            nif: { type: string }
+            domain: { type: string, description: 'El dominio de la instalación, sin esquema.' }
+        address:
+          type: object
+          additionalProperties: false
+          description: |
+            **Dónde está el local.** No es el domicilio fiscal, que va en `legal.fiscal_address` y
+            puede ser otro municipio.
+          properties:
+            line1: { type: string }
+            line2: { type: string }
+            city: { type: string }
+            maps_url: { type: string, format: uri }
+            maps_embed_url: { type: string, format: uri, description: 'El `src` del iframe de Google Maps.' }
+        contact:
+          type: object
+          additionalProperties: false
+          properties:
+            email: { type: string, format: email }
+            phone: { type: string }
+            whatsapp: { type: string }
+        social:
+          type: object
+          additionalProperties: false
+          description: |
+            Las redes viven en el PANEL y salen por aquí (`DECISIONES #639`): cambiar un Instagram es
+            editar un campo, no desplegar la landing.
+          properties:
+            instagram: { type: string, format: uri }
+            tiktok: { type: string, format: uri }
+            feed_embed_url: { type: string, format: uri }
+            google_place_id: { type: string, description: 'Para pedirle las reseñas a Google.' }
+        legal:
+          type: object
+          additionalProperties: false
+          properties:
+            jurisdiction: { type: string, description: 'Los juzgados a los que se someten las condiciones.' }
+            fiscal_address: { type: string, description: 'Domicilio fiscal, para el aviso legal y la factura.' }
+        seo:
+          type: object
+          additionalProperties: false
+          properties:
+            og_image: { type: string, description: 'La imagen de `og:image` de la instalación.' }
 
     SidebarBoot:
       type: object

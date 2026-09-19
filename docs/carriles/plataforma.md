@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#639`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#640`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F4 cerrada, F5 abierta).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -20,10 +20,8 @@
 - **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan nivel 5 (línea base 459) y ESLint del cajón
   (`flat/essential`, línea base nativa de 12 en `eslint-suppressions.json`), las dos con trinquete en
   `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20.
-- **F4 EN CURSO, y el cajón lo implementa ESTE carril** (`#633`: el SPA está con la invitación digital).
-  · **El token, HECHO** (`specs/token-bearer.md` ✅, `#630`, contrato 1.1.0): `POST /auth/tokens` y `/rotate`,
-  `PasswordLogin::verify()` (núcleo compartido con `attempt()`), `ApiTokenIssuer` (ability `api-v1`, tope de
-  10), `abilities:api-v1` en TODA ruta autenticada. 19 tests, arnés 14/14. La Fase 3 quedó ✅.
+- **F4 CERRADA** (`#633`: la implementó este carril, no el SPA). El token (`specs/token-bearer.md` ✅, `#630`,
+  contrato 1.1.0) cerró con ella la Fase 3; el cajón empaquetado, en cinco tandas. Detalle en sus specs.
   · **El cajón** (`specs/cajon-empaquetable.md` 🟦, `#631`→`#636`): el censo desmintió «lo monta una línea del
   layout» —DIEZ dependencias, entre ellas una carcasa Blade de ~440 líneas y un `data-boot` de 18,7 KB en cada
   página—. Las cinco tandas, abajo.
@@ -78,7 +76,13 @@
    las **tres decisiones contestadas por el owner** (`#639`, las tres por la recomendada): las redes se
    quedan en el panel y salen por `site.social`; los cuatro campos muertos de `zones` se retiran con su
    columna; «cero marca» se lee como código vivo. ▶ **T1 = el menú de hechos, recurso a recurso, con lista
-   blanca declarada en cada uno y su guarda** (§4.1 y §4.6). ⚠️ Lo que el censo desmintió:
+   blanca declarada en cada uno y su guarda** (§4.1 y §4.6).
+   · **T1 ✅ HECHA (19-09)** (`#640`): `Platform\Services\PublicFacts` + `GET /api/v1/site`, contrato
+   **1.3.0**. Lo que hay que saber al añadir el siguiente recurso: se declara su lista blanca en el propio
+   recurso y se lee por `PublicFacts` —`Setting::` a pelo lo prohíbe `PublicFactsBoundaryTest`—; lo no
+   rellenado NO viaja y cada bloque se emite con `(object)` (un array vacío de PHP sale `[]`). Arnés
+   `scripts/mutar-menu-de-hechos.sh` 8/8. ▶ Siguen: horario, normas, legales, precios, fichas, prueba social.
+   ⚠️ Lo que el censo desmintió:
    la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
    son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.
    Datos que ya no hay que volver a medir: 71 ajustes (5 secretos, 22 hechos, 40 de operación), sitemap de 11

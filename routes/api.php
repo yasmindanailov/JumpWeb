@@ -35,6 +35,7 @@ use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\QuoteController;
 use App\Http\Controllers\Api\V1\SidebarBootController;
+use App\Http\Controllers\Api\V1\SiteFactsController;
 use App\Http\Middleware\EnsureOnlineSalesEnabled;
 use Illuminate\Support\Facades\Route;
 
@@ -144,6 +145,20 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/sidebar/session', [SidebarBootController::class, 'session'])
         ->middleware('no-store')
         ->name('sidebar.session');
+
+    // ── El MENÚ DE HECHOS (F5 · T1, `docs/specs/instancia-y-landing-fuera.md` §4.1) — PÚBLICO ───
+    // La landing de una instancia deja de vivir dentro del producto, así que necesita LEER lo que
+    // hasta ahora le inyectaba un `View::composer('*')`: identidad, dirección, contacto y redes.
+    // Es un MENÚ: quien pinta la landing usa lo que quiera y **todo es opcional** (`#631`), y lo que
+    // la instalación no ha rellenado no viaja (sin clave, no `""`).
+    //
+    // ⚠️ Se cachea como `/sidebar/boot` —`public`, cinco minutos, `ETag`— porque no depende de quién
+    // mira. Y NO lleva `?lang=`: ninguno de sus campos se traduce (un NIF es el mismo en tres lenguas).
+    // ⚠️⚠️ Sus claves salen por LISTA BLANCA (`SiteFactsResource::AJUSTES` y `PublicFacts`): la tabla
+    // `settings` tiene `redsys_secret_key` a dos filas de `contact.email`.
+    Route::get('/site', SiteFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('site.facts');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo

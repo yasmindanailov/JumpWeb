@@ -20,8 +20,9 @@
     capturadas en §1.5).
   - ⚠️ El criterio «cero marca del cliente en el código» **no se puede leer como un `grep` a secas**: 166 de
     sus 167 apariciones son citas de artboards en comentarios (§1.4).
-- **Estado**: censo hecho y las tres decisiones de producto contestadas (`#639`, §7). Sin código: **lo
-  siguiente es la T1 de §4.6**, el menú de hechos con su lista blanca.
+- **Estado**: censo hecho, las tres decisiones contestadas (`#639`) y **T1 ✅** (`#640`: `PublicFacts` y
+  `GET /api/v1/site`, contrato 1.3.0). ▶ Sigue el resto del menú: horario, normas, legales, precios, fichas
+  y prueba social. **Un recurso público nuevo se escribe con su lista blanca o no se escribe.**
 - **Invariantes que toca**: `RGPD-05` (prueba social sin avatares), `PERF-02` (la lectura pública se cachea),
   `SEC-01` (rutas nuevas dentro del grupo `api`). Dinero y aforo: ninguno; esta fase no toca el embudo.
 
@@ -129,6 +130,32 @@ app (F6); tocar el embudo, el aforo o el dinero.
 
 ### 4.1 El menú de hechos
 
+**✅ T1 HECHA (2026-09-19) · el mecanismo y el primer plato** (`#640`). `GET /api/v1/site` sirve identidad,
+dirección, contacto, redes, legal y SEO de la instalación, cacheado en público con `ETag` y sin idioma en la
+URL —ninguno de sus campos se traduce—. Contrato **1.3.0** (añade, no cambia).
+
+**Lo que hace que esto sea un menú y no un volcado**: `Platform\Services\PublicFacts`. Un recurso declara su
+lista (`SiteFactsResource::AJUSTES`, 19 claves) y lee por ahí; pedir una clave no declarada **revienta**, no
+devuelve `null`. Encima hay una segunda red: **un secreto no sale ni declarándolo** —se niegan por FAMILIA
+(`*secret*`, `*key*`, `*token*`, `*password*`, `redsys_*`), no por nombre—, porque una lista blanca protege
+del olvido y no del copiar y pegar, y el coste de ese error concreto es la clave con la que se firman cobros.
+
+**Y dos cosas que decidió la respuesta, no el diseño**:
+- ⚠️ **Lo que la instalación no ha rellenado NO viaja** (tampoco si es un espacio en blanco): sin TikTok no
+  hay clave `tiktok`. Es el «todo es opcional» de `#631` en el JSON, y evita que cada landing repita la misma
+  condición de cadena vacía. Cada bloque va con `(object)`: un `array` vacío de PHP sale como `[]` y el tipo
+  de un campo no puede depender de si alguien rellenó el panel (la trampa ya pagada en F4 · T1).
+- ⚠️⚠️ **`address` es dónde está el parque y `legal.fiscal_address` el domicilio fiscal.** El panel avisa de
+  que «puede diferir», y en la instalación real son **municipios distintos**; la primera versión los sirvió
+  juntos y una landing que pintara su contacto habría mandado a sus clientas a la gestoría.
+
+**Medido**: `SiteFactsTest` (6) y `PublicFactsBoundaryTest` (7, con la respuesta entera revisada contra dos
+secretos sembrados), `ApiContractTest` en verde con el esquema estricto, y `scripts/mutar-menu-de-hechos.sh`
+**8/8**.
+
+▶ **Lo que sigue en el menú**: horario con estado en vivo y festivos · normas · documentos legales por clave ·
+precios «desde» · la ficha de producto y de zona · la prueba social sin avatares.
+
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la
 landing de hoy se pueda pintar sin el producto: identidad y contacto (`site`), horario con estado en vivo y
@@ -162,7 +189,7 @@ de §1.4 es el instrumento, y queda como guarda.
 
 ### 4.6 El orden de las tandas (propuesto)
 
-1. **T1 · el menú de hechos**, recurso a recurso, con su lista blanca y su guarda.
+1. **T1 ✅** · el mecanismo (`PublicFacts`) y el primer plato (`/site`); el resto del menú, recurso a recurso.
 2. **T2 · el paquete de la instancia**: repo desde plantilla, la landing actual mudada tal cual (vía B) y el
    sitemap comparado.
 3. **T3 · el panel adelgaza**: los seis recursos y las secciones de texto.

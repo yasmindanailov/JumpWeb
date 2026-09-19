@@ -40,6 +40,19 @@ class ApiContractTest extends TestCase
      * @var array<string, list<string>>
      */
     private const OPTIONAL_BY_DESIGN = [
+        // ⚠️⚠️ **El menú de hechos es opcional POR DEFINICIÓN** (F5 · T1, `#631`, `#639`): `/site` publica lo
+        // que la instalación ha rellenado y **omite lo demás**, en vez de emitir `"tiktok": ""`. Exigir aquí
+        // los campos obligaría a toda instalación a tener TikTok, WhatsApp y una imagen de `og:` — o a que el
+        // producto mintiera con cadenas vacías que cada landing tendría que volver a filtrar. Lo que SÍ sigue
+        // mordiendo es `additionalProperties: false` en los seis bloques, que es lo que impide que un campo
+        // nuevo salga a la API sin pasar por el contrato, y `required` en la raíz: los seis bloques van
+        // siempre, aunque lleguen `{}`.
+        'SiteFacts.identity' => ['name', 'legal_name', 'nif', 'domain'],
+        'SiteFacts.address' => ['line1', 'line2', 'city', 'maps_url', 'maps_embed_url'],
+        'SiteFacts.contact' => ['email', 'phone', 'whatsapp'],
+        'SiteFacts.social' => ['instagram', 'tiktok', 'feed_embed_url', 'google_place_id'],
+        'SiteFacts.legal' => ['jurisdiction', 'fiscal_address'],
+        'SiteFacts.seo' => ['og_image'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],
