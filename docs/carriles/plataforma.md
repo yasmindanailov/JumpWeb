@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#650`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#651`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, T2a y la mudanza).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -58,24 +58,23 @@
    ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): el namespace `instancia::` con sus tres
    puertas, el invariante **`SEC-12`**, la `plantilla/` y el repo LOCAL `jumpweb/instancias/playjump`
    (**sin remoto**; el owner dijo que por ahora no hace falta). `/contacto` ya resuelve por la instancia.
-   ⚠️⚠️ **LA REGLA DE LA T2b** (`#649`, spec §4.5.bis): **el contrato producto↔instancia son los DATOS que
-   recibe la vista, no el HTML que produce.** Las pruebas se parten por lo que AFIRMAN, no por dónde vive
-   el fichero (sin paquete cayeron 9 y aguantaron 5: los que aguantan no miran el HTML). El producto se
-   queda la conducta; la instancia, el marcado, y su herramienta es la HUELLA — no
-   `assertStringContainsString`, que se rompe cuando el cliente rediseña, que es su derecho.
-   ▶ **HECHO el CONTRATO DE VISTA**: `InstanceViews::CONTRATO_DE_VISTAS` + `InstanceViewContractTest`,
-   arnés **7/7**. ❗❗ Al medirlo saltó que **la vista recibe NUEVE variables, no dos** —siete las mete el
-   composer global— y que esa lista **va a ENCOGER** cuando el composer se sustituya por el menú: ese día
-   sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
-   ▶ **T2b EN CURSO, y su primer hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una
-   vista hay que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. La
-   dirección se unía con coma en dos sitios y `/site` daba las líneas sueltas: la tercera copia la escribía
-   cada instancia. Ya tiene hogar (`VenueAddress`), la API publica `address.written` y su guarda afirma
-   sobre el DATO.
-   ▶ **QUEDA**: el mismo barrido para las demás reglas de las vistas (los canales ya son componente del
-   producto y sobreviven; el resto, una a una), y limpiar los 5 casos de conducta para que afirmen sobre
-   datos. ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún
-   tienen sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
+   ⚠️⚠️ **LA REGLA DE LA T2b** (`#649`, spec §4.5.bis, donde está el porqué entero): **el contrato
+   producto↔instancia son los DATOS que recibe la vista, no el HTML que produce.**
+   ▶ **HECHO el CONTRATO DE VISTA** (`CONTRATO_DE_VISTAS` + su test, arnés 7/7). ❗❗ Al medirlo saltó que
+   **la vista recibe NUEVE variables, no dos** —siete las mete el composer global— y que esa lista **va a
+   ENCOGER** con el menú: ese día sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
+   ▶ **T2b EN CURSO, y su hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una vista hay
+   que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. Dos barridos hechos:
+   la **dirección** (se unía con coma en dos sitios y `/site` daba las líneas sueltas → `VenueAddress` y
+   `address.written`) y los **separadores numéricos**, que eran un **defecto vivo**: la portada en inglés
+   decía `4,8` y `1.234 reviews` → `LocalNumber`, y `Money::showcase()` delega el suyo.
+   ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito**: cambiarlo movería importes en la
+   web inglesa. **Pendiente del owner**; un caso fija lo que imprime hoy, valor por valor.
+   ▶ **QUEDA**: seguir el barrido (los canales ya son componente del producto y sobreviven; las metas de
+   `rules`/`attractions`/`text`/`events` derivan su `<meta description>` en línea, cada una a su manera, y
+   repiten el tope de 155 — candidato claro al mismo tratamiento), y limpiar los 5 casos de conducta.
+   ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún tienen
+   sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
    genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**.
    ⚠️⚠️ **Y el nombre del proyecto de Docker está FIJADO** (`name: jumpweb`) desde `#648`. Salía del nombre
@@ -251,13 +250,19 @@ dueño es el carril de la web/reseñas—) ·
   no lo hagas a mano: `PublicFactsBoundaryTest` barre los 37 recursos y te lo prohíbe (la tabla tiene
   `redsys_secret_key` a dos filas de `contact.email`).
 
+### Para el carril de la web (emisor: plataforma, 2026-09-19)
+- ⚠️ **He tocado `home.blade.php`, que es tuyo** (`#651`, tres líneas del bloque de reseñas). Motivo: la
+  portada **en inglés** enseñaba la nota como `4,8` y el recuento como `1.234 reviews`, porque los
+  separadores estaban escritos a mano. Ahora los pone `Platform\Services\LocalNumber`, que es donde vive la
+  regla. **No cambia ni un byte del HTML en español** — verificado en el navegador en los dos idiomas.
+  Si prefieres otra forma de llamarlo desde la vista, dilo y lo cambio.
+
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
-- **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: el carril de tarifas, `/precios`,
-  tres reglas de `landing.css`, `rates.was` y `RateCards`/`RateTable`. Sin los ajustes `promo.*` no cambia
-  ni un byte del HTML. En producción desde el 18-09.
+- **Toqué lo tuyo por orden del owner, chapuza declarada (`#628`)**: carril de tarifas, `/precios`, tres
+  reglas de `landing.css`, `rates.was` y `RateCards`/`RateTable`. Sin los ajustes `promo.*` no cambia ni un
+  byte del HTML. En producción desde el 18-09.
 - ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px «9,60 €» ya se partía en dos
-  renglones antes de este cambio.
-- **De `#631`/`#632`**: el widget de ofertas y las atracciones SALEN del panel (trabajo de F5).
+  renglones antes de ese cambio. · **De `#631`/`#632`**: ofertas y atracciones SALEN del panel (F5).
 
 ### Atendido
 - **SPA, 19-09** (los cuatro de su buzón: la convención del `button`, el alcance de `#708`→`#711`, el

@@ -14,11 +14,13 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
 DIRECCION=app/Domain/Platform/Services/VenueAddress.php
+NUMERO=app/Domain/Platform/Services/LocalNumber.php
+MONEDA=app/Domain/Platform/Services/Money.php
 HORARIO=app/Http/Resources/Api/V1/ScheduleFactsResource.php
 ENVIVO=app/Http/Resources/Api/V1/OpeningNowResource.php
 ESTADO=app/Domain/Content/Services/OpeningState.php
@@ -42,7 +44,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -288,6 +290,18 @@ mutar "una línea vacía deja una COMA COLGANDO («Ctra. de Prueba, 1, »)" \
 mutar "la API deja de publicar la dirección escrita (y cada instancia la re-deriva)" \
   "$RECURSO" "        return \$escrita === null ? [] : ['written' => \$escrita];" \
   "        return [];"
+
+# ── Y cómo se ESCRIBE un número en cada idioma (T2b) ───────────────────────────────────────────
+mutar "el separador DECIMAL deja de seguir al idioma (la web inglesa vuelve a decir «4,8»)" \
+  "$NUMERO" "        return app()->getLocale() === 'en' ? '.' : ',';" \
+  "        return ',';"
+
+mutar "el separador de MILLARES deja de seguir al idioma («1.234 reviews» se lee como 1,234)" \
+  "$NUMERO" "        return app()->getLocale() === 'en' ? ',' : '.';" \
+  "        return '.';"
+
+mutar "el importe de escaparate deja de delegar y vuelve a escribir el separador a mano" \
+  "$MONEDA" "            LocalNumber::decimalSeparator()," "            ',',"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

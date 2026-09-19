@@ -49,9 +49,19 @@ class Money
      */
     public static function showcase(int $cents): string
     {
-        $coma = app()->getLocale() === 'en' ? '.' : ',';
-
-        return number_format($cents / 100, $cents % 100 === 0 ? 0 : 2, $coma, '.');
+        // ⚠️ El separador decimal lo decide `LocalNumber` desde `#651`: la regla era la misma aquí y
+        // en la nota de las reseñas, y allí estaba escrita a mano con el español fijo.
+        //
+        // ⚠️⚠️ **El de MILLARES sigue siendo `'.'` a mano, y NO es un descuido**: cambiarlo movería
+        // importes escritos en la web inglesa (`1.234,00 €` pasaría a `1,234.00 €`), y eso es dinero
+        // a la vista de un cliente. Queda anotado como pendiente del owner; hasta entonces, esta
+        // llamada imprime EXACTAMENTE lo que imprimía antes.
+        return number_format(
+            $cents / 100,
+            $cents % 100 === 0 ? 0 : 2,
+            LocalNumber::decimalSeparator(),
+            '.',
+        );
     }
 
     /** Símbolo a mostrar para una moneda: € para EUR, el propio código en otro caso. */

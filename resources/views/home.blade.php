@@ -1001,14 +1001,16 @@
                          foto y no es dato personal. La reseña sí, por su avatar. --}}
                     <div class="rev-score" data-surface="ink">
                         <p class="rev-score__num">
-                            <span class="rev-score__val">{{ number_format($socialRating->value, 1, ',', '.') }}</span>
+                            {{-- ⚠️ El separador lo decide el IDIOMA y no esta vista (`#651`): escrito a
+                                 mano, la web inglesa enseñaba «4,8». La regla vive en `LocalNumber`. --}}
+                            <span class="rev-score__val">{{ \App\Domain\Platform\Services\LocalNumber::decimal($socialRating->value) }}</span>
                             <span class="rev-score__of">{{ __('landing.reviews.out_of') }}</span>
                         </p>
                         {{-- ⚠️⚠️ **El recorte va por CAJA, nunca a lo largo de la fila**: el
                              interletraje se come la décima y las cinco se leerían llenas. Cada
                              estrella es su propia caja de 24 y su relleno es un porcentaje de ella. --}}
                         <p class="rev-score__stars" role="img"
-                           aria-label="{{ __('landing.reviews.score_aria', ['value' => number_format($socialRating->value, 1, ',', '.')]) }}">
+                           aria-label="{{ __('landing.reviews.score_aria', ['value' => \App\Domain\Platform\Services\LocalNumber::decimal($socialRating->value)]) }}">
                             @for ($e = 1; $e <= 5; $e++)
                                 @php($lleno = max(0, min(1, $socialRating->value - $e + 1)))
                                 <span class="rev-score__star" aria-hidden="true">
@@ -1019,7 +1021,7 @@
                         </p>
                         {{-- El recuento va en TEXTO y no en mono: es el segundo argumento de la
                              sección, y la letra mono es etiqueta, no argumento. --}}
-                        <p class="rev-score__count">{{ trans_choice('landing.reviews.count', $socialRating->count, ['n' => number_format($socialRating->count, 0, ',', '.')]) }}</p>
+                        <p class="rev-score__count">{{ trans_choice('landing.reviews.count', $socialRating->count, ['n' => \App\Domain\Platform\Services\LocalNumber::count($socialRating->count)]) }}</p>
                         {{-- ❗❗❗ **LA ATRIBUCIÓN OBLIGATORIA** (`#494`): la cifra es dato de Places y
                              esta vista no enseña ningún mapa de Google, que es exactamente el
                              supuesto de *«you must include the Google logo»*. Va DENTRO de la chapa
