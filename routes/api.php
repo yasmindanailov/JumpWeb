@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\ScheduleFactsController;
 use App\Http\Controllers\Api\V1\SidebarBootController;
 use App\Http\Controllers\Api\V1\SiteFactsController;
 use App\Http\Middleware\EnsureOnlineSalesEnabled;
@@ -159,6 +160,18 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/site', SiteFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('site.facts');
+
+    // El HORARIO, en dos lecturas por el mismo motivo que `boot` y `session`: no se cachean igual.
+    // ⚠️ `/schedule` son los hechos del calendario —semana, temporadas, fechas especiales— y cambian
+    // cuando alguien toca el panel: cinco minutos. `/schedule/now` cambia DOS VECES AL DÍA, y justo en
+    // ese minuto es cuando importa: un minuto de caché, que acota el error y protege al servidor de una
+    // landing que lo pida en cada visita.
+    Route::get('/schedule', [ScheduleFactsController::class, 'schedule'])
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('schedule.facts');
+    Route::get('/schedule/now', [ScheduleFactsController::class, 'now'])
+        ->middleware('cache.headers:public;max_age=60;etag')
+        ->name('schedule.now');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo

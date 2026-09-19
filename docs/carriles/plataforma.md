@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#640`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#641`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F4 cerrada, F5 abierta).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -22,13 +22,9 @@
   `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20.
 - **F4 CERRADA** (`#633`: la implementó este carril, no el SPA). El token (`specs/token-bearer.md` ✅, `#630`,
   contrato 1.1.0) cerró con ella la Fase 3; el cajón empaquetado, en cinco tandas. Detalle en sus specs.
-  · **El cajón** (`specs/cajon-empaquetable.md` 🟦, `#631`→`#636`): el censo desmintió «lo monta una línea del
-  layout» —DIEZ dependencias, entre ellas una carcasa Blade de ~440 líneas y un `data-boot` de 18,7 KB en cada
-  página—. Las cinco tandas, abajo.
-  · **F5, su principio `[DECIDIDO owner]`**: la landing consume un MENÚ DE HECHOS por API y TODO es opcional;
-  identidad y contacto por API; ficha de producto y de zona con descripción e imagen; API ahora y kit
-  declarativo cuando lo pida una segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» =
-  hecho de precio). Lista blanca por `Resource`: `settings` mezcla `contact` con `redsys_secret_key`.
+  · **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
+  TODO es opcional; ficha de producto y de zona con descripción e imagen; kit declarativo cuando lo pida una
+  segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
 - **Sin desplegar y sin etiqueta desde v1.1.0** (`3547de9f`, 18-09): la v1.2.0 tiene que listar el contrato
   1.1.0, el emisor, ESLint y lo del SPA (`#577`→`#579`, `#520`). `CHANGELOG.md` no lleva sección «sin publicar»:
   lo escribe `/release`. `#627`: la app en React Native + Expo (TypeScript).
@@ -72,16 +68,18 @@
    ▶ **`main` ya se movió tras etiquetar** (commits de doc), así que la guarda 8 dice «HEAD no es una
    versión»: se despliega desde **`git checkout v1.2.0`** y al terminar se vuelve con `git checkout main`.
    Comprobado en seco: desde la etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
-3. **F5 ABIERTA (19-09) · LO SIGUIENTE ES LA T1**: `specs/instancia-y-landing-fuera.md` ✅, con §1 medido y
-   las **tres decisiones contestadas por el owner** (`#639`, las tres por la recomendada): las redes se
-   quedan en el panel y salen por `site.social`; los cuatro campos muertos de `zones` se retiran con su
-   columna; «cero marca» se lee como código vivo. ▶ **T1 = el menú de hechos, recurso a recurso, con lista
-   blanca declarada en cada uno y su guarda** (§4.1 y §4.6).
-   · **T1 ✅ HECHA (19-09)** (`#640`): `Platform\Services\PublicFacts` + `GET /api/v1/site`, contrato
-   **1.3.0**. Lo que hay que saber al añadir el siguiente recurso: se declara su lista blanca en el propio
-   recurso y se lee por `PublicFacts` —`Setting::` a pelo lo prohíbe `PublicFactsBoundaryTest`—; lo no
-   rellenado NO viaja y cada bloque se emite con `(object)` (un array vacío de PHP sale `[]`). Arnés
-   `scripts/mutar-menu-de-hechos.sh` 8/8. ▶ Siguen: horario, normas, legales, precios, fichas, prueba social.
+3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
+   su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
+   muertos de `zones` se retiran, «cero marca» se lee como código vivo).
+   · **T1 ✅ (19-09)** (`#640`): `Platform\Services\PublicFacts` + `GET /api/v1/site`. **Lo que hay que saber
+   para añadir el siguiente recurso**: su lista blanca se declara en el propio recurso y se lee por
+   `PublicFacts` —`Setting::` a pelo lo prohíbe `PublicFactsBoundaryTest`, que barre los 37—; lo no
+   rellenado NO viaja y cada bloque se emite con `(object)` (un array vacío de PHP sale `[]`).
+   · **T2 ✅ (19-09)** (`#641`): el horario en DOS rutas —`/schedule` a 5 min y `/schedule/now` a 1 min,
+   porque el estado en vivo cambia dos veces al día—, contrato **1.4.0**; y el hecho lo calcula
+   `Content\Services\OpeningState`, que ahora consume también el chip del hero: antes lo resolvían los dos
+   por su cuenta. ⚠️ `weekday` es **0 = domingo**, no ISO. Arnés `scripts/mutar-menu-de-hechos.sh` **13/13**.
+   ▶ Siguen: normas, legales por clave, precios «desde», fichas de producto y zona, prueba social.
    ⚠️ Lo que el censo desmintió:
    la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
    son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.

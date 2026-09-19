@@ -31,58 +31,65 @@ class PublicFactsBoundaryTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Los recursos de la API pública que sirven hechos de la instalación.
+     * Recursos que pueden leer `settings` a mano, con su motivo. **Hoy está vacía y esa es la gracia.**
      *
-     * ⚠️ La lista crece con el menú (horario, normas, legales, precios…). Lo que NO puede es que un recurso
-     * nuevo se quede fuera sin que nadie lo note: por eso el caso de abajo la contrasta con el disco.
-     *
-     * @var array<class-string, string>
+     * @var array<string, string>
      */
-    private const RECURSOS = [
-        SiteFactsResource::class => 'app/Http/Resources/Api/V1/SiteFactsResource.php',
+    private const TOLERADOS = [
+        // (vacía: ningún recurso de la API lee la tabla directamente)
     ];
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  1 · De código: la lista blanca es el ÚNICO camino
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    public function test_no_public_facts_resource_reads_settings_by_hand(): void
+    /**
+     * **NINGÚN recurso de la API v1 lee `settings` a mano** — los 37, no una lista de nombres.
+     *
+     * ⚠️⚠️ **La primera versión de esta guarda se apoyaba en el NOMBRE del fichero** (`*FactsResource`) y
+     * tenía el agujero de siempre: `OpeningNowResource`, escrito diez minutos después, no casaba con el
+     * patrón y se le escapaba entero. Una guarda que depende de que el siguiente fichero se llame bien no
+     * es una guarda, es una costumbre. Barriendo la carpeta no hace falta convención: el recurso nuevo
+     * entra vigilado el día que nace.
+     *
+     * Y se puede exigir a TODOS porque hoy ya se cumple: medido, ninguno de los 37 llama a `Setting::`.
+     * Un hecho público se pide por `PublicFacts` con la lista de ese recurso; lo demás lo sirve un servicio
+     * de dominio, que es quien sabe qué significa su ajuste.
+     */
+    public function test_no_api_resource_reads_settings_by_hand(): void
     {
-        foreach (self::RECURSOS as $clase => $ruta) {
-            $fuente = $this->sinComentarios((string) file_get_contents(base_path($ruta)));
+        $culpables = [];
 
-            $this->assertStringNotContainsString(
-                'Setting::', $fuente, implode("\n", [
-                    "«{$clase}» lee la tabla `settings` directamente.",
-                    '',
-                    'Un hecho público se pide por `PublicFacts`, con la lista de ese recurso. Si se lee a',
-                    'mano, la lista blanca no vigila nada y la primera clave nueva que alguien añada al',
-                    'panel puede salir a la web sin que nadie la haya mirado.',
-                ]),
-            );
+        foreach (glob(base_path('app/Http/Resources/Api/V1/*.php')) ?: [] as $ruta) {
+            if (isset(self::TOLERADOS[basename($ruta)])) {
+                continue;
+            }
+
+            if (str_contains($this->sinComentarios((string) file_get_contents($ruta)), 'Setting::')) {
+                $culpables[] = basename($ruta);
+            }
         }
+
+        $this->assertSame([], $culpables, implode("\n", [
+            'Estos recursos de la API leen la tabla `settings` directamente: '.implode(', ', $culpables),
+            '',
+            'Un hecho público se pide por `PublicFacts`, con la lista blanca de ese recurso. Si se lee a',
+            'mano, la lista no vigila nada y la primera clave nueva que alguien añada al panel puede salir',
+            'a la web sin que nadie la haya mirado — y en esa tabla está la clave de firma de Redsys.',
+        ]));
     }
 
     /**
-     * **Y la lista de arriba está completa.** Sin esto, añadir un recurso público nuevo y olvidarse de
-     * declararlo aquí deja la guarda verde mirando a otro lado — el modo de fallo clásico de una lista.
+     * **La guarda de arriba mira de verdad**: si no encontrara ficheros, pasaría sola.
      */
-    public function test_the_list_of_public_resources_is_complete(): void
+    public function test_the_sweep_actually_sees_the_resources(): void
     {
-        $enDisco = array_map(
-            fn (string $ruta): string => basename($ruta),
-            glob(base_path('app/Http/Resources/Api/V1/*FactsResource.php')) ?: [],
-        );
+        $ficheros = glob(base_path('app/Http/Resources/Api/V1/*.php')) ?: [];
 
-        $declarados = array_map('basename', array_values(self::RECURSOS));
-
-        sort($enDisco);
-        sort($declarados);
-
-        $this->assertSame(
-            $enDisco, $declarados,
-            'Hay recursos `*FactsResource` en disco que esta guarda no vigila (o al revés). El menú de '.
-            'hechos crece por recursos; la lista de arriba tiene que crecer con él.',
+        $this->assertGreaterThan(30, count($ficheros), 'el barrido no está viendo la carpeta de recursos');
+        $this->assertContains(
+            base_path('app/Http/Resources/Api/V1/SiteFactsResource.php'), $ficheros,
+            'el barrido no ve el recurso que estrenó el menú de hechos',
         );
     }
 

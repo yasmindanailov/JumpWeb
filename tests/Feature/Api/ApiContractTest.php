@@ -53,6 +53,14 @@ class ApiContractTest extends TestCase
         'SiteFacts.social' => ['instagram', 'tiktok', 'feed_embed_url', 'google_place_id'],
         'SiteFacts.legal' => ['jurisdiction', 'fiscal_address'],
         'SiteFacts.seo' => ['og_image'],
+        // El horario, por el mismo principio y con un motivo más fuerte: **son EXCLUYENTES**. `closes_at`
+        // solo tiene sentido con el parque abierto y `opens_at` solo con el parque cerrado; exigir los dos
+        // obligaría a emitir uno de los dos mintiendo. Y `opens_at` puede faltar también cerrado: es una
+        // instalación sin horario configurado, y ahí lo correcto es no afirmar nada.
+        'OpeningNow' => ['closes_at', 'opens_at'],
+        // Las claves que la instalación no rellenó de un día especial: la nota y la etiqueta de tarifa. La
+        // fecha y si cierra van SIEMPRE, que es lo que hace útil al día.
+        'Schedule.special_days' => ['opens_at', 'closes_at', 'note', 'rate_label'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],

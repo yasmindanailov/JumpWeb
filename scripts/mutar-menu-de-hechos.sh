@@ -12,14 +12,17 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ApiContractTest'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|HeroStatusTest|ApiContractTest'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
+HORARIO=app/Http/Resources/Api/V1/ScheduleFactsResource.php
+ENVIVO=app/Http/Resources/Api/V1/OpeningNowResource.php
+ESTADO=app/Domain/Content/Services/OpeningState.php
 RUTAS=routes/api.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$RUTAS")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$RUTAS")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -90,6 +93,36 @@ mutar "la respuesta deja de cachearse en público" \
   "$RUTAS" "    Route::get('/site', SiteFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')" \
   "    Route::get('/site', SiteFactsController::class)"
+
+# ── El horario: lo que una landing no puede comprobar por su cuenta ────────────────────────────
+mutar "el día de la semana pasa a la convención ISO (la semana entera, desplazada, sin que falle nada)" \
+  "$HORARIO" "                'weekday' => \$dia->weekday," "                'weekday' => (\$dia->weekday + 6) % 7,"
+
+mutar "las horas salen con segundos (\`21:30:00\` en vez de \`21:30\`)" \
+  "$HORARIO" "        return \$hora === null ? null : substr(\$hora, 0, 5);" "        return \$hora;"
+
+mutar "un parque CERRADO anuncia su hora de cierre (un cartel que miente)" \
+  "$ENVIVO" "            ...(\$ahora->openNow
+                ? ['closes_at' => \$ahora->closesAt]
+                : array_filter(['opens_at' => \$ahora->opensAt?->toIso8601String()]))," \
+  "            'closes_at' => \$ahora->closesAt,
+            'opens_at' => \$ahora->opensAt?->toIso8601String(),"
+
+mutar "el estado en vivo se cachea como el calendario (cinco minutos diciendo «abierto» tras cerrar)" \
+  "$RUTAS" "    Route::get('/schedule/now', [ScheduleFactsController::class, 'now'])
+        ->middleware('cache.headers:public;max_age=60;etag')" \
+  "    Route::get('/schedule/now', [ScheduleFactsController::class, 'now'])
+        ->middleware('cache.headers:public;max_age=300;etag')"
+
+# ⚠️ Ésta es la que dice si el chip y la API pueden separarse: con el hecho calculado dos veces, el día raro
+# —un festivo, un cierre a media tarde— cada uno diría una cosa y ningún test lo vería.
+mutar "sin horario configurado se afirma que está ABIERTO" \
+  "$ESTADO" "        if (\$abre === null || \$cierra === null) {
+            return false;
+        }" \
+  "        if (\$abre === null || \$cierra === null) {
+            return true;
+        }"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

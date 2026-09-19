@@ -19,7 +19,10 @@ use Carbon\CarbonInterface;
  */
 class HeroStatus
 {
-    public function __construct(private readonly OperatingCalendar $schedule) {}
+    public function __construct(
+        private readonly OperatingCalendar $schedule,
+        private readonly OpeningState $estado,
+    ) {}
 
     /**
      * ⚠️ **`closes_at` NO se deduce de `ScheduleDisplay::weeklyRows()`** y por eso viaja aquí
@@ -55,9 +58,15 @@ class HeroStatus
         $day = (string) __('landing.info.weekdays.'.$now->dayOfWeek);
         $today = $this->schedule->windowFor($now);
 
+        // ⚠️ **El HECHO lo calcula `OpeningState`, no este servicio** (F5 · T2): la API pública sirve ese
+        // mismo objeto sin una palabra traducida, y calcularlo dos veces sería pedir que un día raro
+        // —una fecha especial, un cierre a media tarde— el chip y la API dijeran cosas distintas.
+        // Aquí queda lo que este servicio siempre fue: las PALABRAS.
+        $estado = $this->estado->current($now);
+
         // Abierto AHORA: hoy abierto, con ventana concreta que cubre la hora actual.
-        if ($today->isOpen && $this->withinWindow($now, $today->opensAt, $today->closesAt)) {
-            $cierra = substr((string) $today->closesAt, 0, 5);
+        if ($estado->openNow) {
+            $cierra = (string) $estado->closesAt;
 
             return [
                 'open_now' => true,
@@ -72,7 +81,7 @@ class HeroStatus
         }
 
         // Cerrado ahora → próxima apertura (hoy más tarde, o el próximo día con horario).
-        $opensAt = $this->nextOpening($now);
+        $opensAt = $estado->opensAt;
         if ($opensAt === null) {
             return null; // sin horario configurado → no mostramos chip (evita un «abierto» falso)
         }
@@ -142,42 +151,9 @@ class HeroStatus
         ]);
     }
 
-    /** ¿`$now` cae dentro de la ventana [open, close) del día? Requiere una ventana concreta. */
-    private function withinWindow(CarbonInterface $now, ?string $open, ?string $close): bool
-    {
-        if ($open === null || $close === null) {
-            return false; // sin ventana concreta → no afirmamos «abierto ahora»
-        }
-
-        $start = $now->copy()->setTimeFromTimeString($open);
-        $end = $now->copy()->setTimeFromTimeString($close);
-
-        return $end->greaterThan($start) && $now->greaterThanOrEqualTo($start) && $now->lessThan($end);
-    }
-
-    /** Instante de la próxima apertura desde `$now`, o null si no hay horario en los próximos 7 días. */
-    private function nextOpening(CarbonInterface $now): ?CarbonInterface
-    {
-        // Hoy, si el parque abre MÁS TARDE.
-        $today = $this->schedule->windowFor($now);
-        if ($today->isOpen && $today->opensAt !== null) {
-            $openAt = $now->copy()->setTimeFromTimeString($today->opensAt);
-            if ($now->lessThan($openAt)) {
-                return $openAt;
-            }
-        }
-
-        // Próximos 7 días: el primer día abierto con hora de apertura concreta.
-        for ($i = 1; $i <= 7; $i++) {
-            $day = $now->copy()->addDays($i)->startOfDay();
-            $eff = $this->schedule->windowFor($day);
-            if ($eff->isOpen && $eff->opensAt !== null) {
-                return $day->setTimeFromTimeString($eff->opensAt);
-            }
-        }
-
-        return null;
-    }
+    // ⚠️ `withinWindow()` y `nextOpening()` vivían aquí y se fueron a `OpeningState` (F5 · T2): eran el
+    // HECHO, y el hecho lo sirve también la API pública. Dejarlos duplicados era garantizar que un día
+    // raro el chip y la API dijeran cosas distintas, y nadie lo habría notado hasta ese día.
 
     /** Texto de «abrimos…»: cuenta atrás el mismo día; día + hora si es futuro. */
     private function opensLabel(CarbonInterface $now, CarbonInterface $opensAt): string

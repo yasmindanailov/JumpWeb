@@ -153,8 +153,31 @@ del olvido y no del copiar y pegar, y el coste de ese error concreto es la clave
 secretos sembrados), `ApiContractTest` en verde con el esquema estricto, y `scripts/mutar-menu-de-hechos.sh`
 **8/8**.
 
-▶ **Lo que sigue en el menú**: horario con estado en vivo y festivos · normas · documentos legales por clave ·
-precios «desde» · la ficha de producto y de zona · la prueba social sin avatares.
+**✅ T2 HECHA (2026-09-19) · el horario, en DOS rutas** (`#641`). `GET /api/v1/schedule` (semana, temporadas y
+fechas especiales; cinco minutos de caché) y `GET /api/v1/schedule/now` (si está abierto; **un minuto**).
+Contrato **1.4.0**.
+
+**Por qué dos y no una**: los hechos del calendario cambian cuando alguien toca el panel; el estado en vivo
+cambia **dos veces al día**, y justo en ese minuto es cuando importa. Juntos obligaban a elegir entre
+recalcular el calendario en cada visita o decir «abierto» cinco minutos después de cerrar. Es el mismo motivo
+por el que `boot` y `session` son dos rutas en F4 · T1: *lo que no se cachea igual, no va junto*.
+
+**Y el hecho se calcula UNA vez**: nace `Content\Services\OpeningState`, y `HeroStatus` —el chip del hero—
+pasa a consumirlo en vez de resolverlo por su cuenta. Antes lo calculaban los dos; nada fallaba, y el día que
+se hubieran separado —un festivo, un cierre a media tarde— no lo habría visto ningún test. Ahora hay uno que
+compara los dos y no les deja discrepar.
+
+⚠️⚠️ **`weekday` es 0 = domingo** (Carbon y `Date.getDay()`), no la ISO. Es el campo que más daño hace en
+silencio: una landing que asuma lo otro pinta la semana entera desplazada y el JSON sigue siendo válido. El
+contrato lo dice y un test lo clava **contra una fecha real**, no contra la documentación.
+
+⚠️ Y la misma regla que en `/site`: `closes_at` viaja solo si está abierto, `opens_at` solo si está cerrado.
+Un cartel que dice «cerramos a las 21:30» con el parque cerrado es peor que no decir nada.
+
+**Medido**: `ScheduleFactsTest` (8) y los 13 casos de `scripts/mutar-menu-de-hechos.sh`, **13/13**.
+
+▶ **Lo que sigue en el menú**: normas · documentos legales por clave · precios «desde» · la ficha de producto
+y de zona · la prueba social sin avatares.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la
