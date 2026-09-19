@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#641`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#642`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F4 cerrada, F5 abierta).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -39,26 +39,10 @@
    lo abre y COMPRA, con la landing del producto idéntica píxel a píxel. El anfitrión mínimo (§4.4) es de F5
    por diseño, no un pendiente. ⚠️ **Lo único que le falta es un ojo humano sobre la COMPRA de la T5**: está
    medida en Chromium (42/42), no vista. El banco de pruebas de abajo la enseña en vivo.
-   Las cinco tandas, con sus cifras y sus porqués, están en la spec (§4.1→§4.7). **Lo que NO está allí y hace
-   falta aquí son las trampas que costaron una pasada cada una**:
-   - ⚠️ **`JumpWeb.cajon` se reasigna al PROXY de Alpine** tras `alpine:init`: quien se quede con el objeto
-     crudo escribe en el sitio equivocado, `open()` no mueve la carcasa y **nada falla** (T2, visto en rojo).
-   - ⚠️ **Tras un arnés que toque un `.vue`, `npm run build:ssr` ANTES de la suite**: restaurar por copia mueve
-     las fechas y `SidebarDomContractTest` sale con 36 rojos que no son del código.
-   - ⚠️ **El juez de la hoja nació mintiendo** (T4): retiraba `site.css` y dejaba `landing.css`, así que los
-     tokens seguían en la página y el paquete parecía autosuficiente. Al tocar un instrumento, control primero.
-   - ⚠️⚠️ **Y por hacerle caso al juez casi se despliega un fallo** (`#637`, cazado al preparar la v1.2.0): se
-     scopeó el tema del panel a `:root, .sidecart` para que diera cero, y eso le quitaba sus colores al cajón
-     de una instalación (`--on-brand` del cliente pisado por el del panel). *Un juez no arregla el producto
-     para poder aprobarlo.* La pregunta que lo cazó es la del `/release`: «¿qué tendría que tocar PlayJump?».
-   - ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker`; en esta
-     máquina se creó el 19-09. La sonda lo dice con su receta si falta.
-   - ▶ **Banco de pruebas LOCAL: se crea y se BORRA** (lo retiró la guarda 9, `#638`: lo que git no ve, el
-     `rsync` del despliegue sí lo sube). Un HTML cualquiera en `public/` con estas dos líneas y un `:root`
-     propio basta para mirar el cajón empaquetado en vivo; ya no caduca con el build:
-     `<link rel="stylesheet" href="/css/cajon.css">` y `<script type="module" src="/cajon/paquete.js"></script>`,
-     más un disparador `<a href="/entradas" data-jw-open>Reservar</a>`. **Al terminar, se borra**: si está en
-     `public/` cuando el owner despliegue, la guarda 9 aborta —de noche, que es cuando peor viene—.
+   Las cinco tandas y **las seis trampas que costaron una pasada cada una** —el proxy de Alpine, el
+   `build:ssr` tras un arnés, el juez que nació mintiendo, el tema del panel que casi se despliega mal, el
+   cliente de pruebas que no viaja en el repo y el banco de pruebas que hay que borrar— están en la spec,
+   §4.1→§4.8. Al tocar el cajón, se leen de ahí.
 2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** La etiqueta está cortada y empujada
    (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades; la guarda 8 en seco ya contesta
    «versión a desplegar: v1.2.0». **Para las instancias no hay nada que hacer**: sin migraciones, sin claves
@@ -79,7 +63,10 @@
    porque el estado en vivo cambia dos veces al día—, contrato **1.4.0**; y el hecho lo calcula
    `Content\Services\OpeningState`, que ahora consume también el chip del hero: antes lo resolvían los dos
    por su cuenta. ⚠️ `weekday` es **0 = domingo**, no ISO. Arnés `scripts/mutar-menu-de-hechos.sh` **13/13**.
-   ▶ Siguen: normas, legales por clave, precios «desde», fichas de producto y zona, prueba social.
+   · **T3 ✅ (19-09)** (`#642`): `GET /api/v1/rules?lang=` — primer plato que se TRADUCE, así que el idioma
+   va en la URL y el respaldo lo resuelve el servidor. El orden (el recorrido de una visita) es parte del
+   dato y la primera versión lo sacaba AL REVÉS sin que nada fallara. Contrato **1.5.0**, arnés **17/17**.
+   ▶ Siguen: legales por clave, precios «desde», fichas de producto y zona, prueba social.
    ⚠️ Lo que el censo desmintió:
    la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
    son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.

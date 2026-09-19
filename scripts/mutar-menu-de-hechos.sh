@@ -12,17 +12,20 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|HeroStatusTest|ApiContractTest'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|HeroStatusTest|ApiContractTest'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
 HORARIO=app/Http/Resources/Api/V1/ScheduleFactsResource.php
 ENVIVO=app/Http/Resources/Api/V1/OpeningNowResource.php
 ESTADO=app/Domain/Content/Services/OpeningState.php
+NORMAS=app/Http/Resources/Api/V1/RulesFactsResource.php
+NORMASCTRL=app/Http/Controllers/Api/V1/RulesFactsController.php
+CONTRATO=tests/Feature/Api/ApiContractTest.php
 RUTAS=routes/api.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$RUTAS")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$RUTAS")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -123,6 +126,31 @@ mutar "sin horario configurado se afirma que está ABIERTO" \
   "        if (\$abre === null || \$cierra === null) {
             return true;
         }"
+
+# ── Las normas: el orden ES el dato, y lo retirado no vuelve ───────────────────────────────────
+mutar "el orden pasa a ser el de la tabla (la visita, contada de atrás adelante)" \
+  "$NORMAS" "            ->sortBy(fn (VenueRule \$r): string => sprintf(
+                '%d-%05d', \$this->ordenDelMomento(\$r->momentOrNull()), (int) \$r->position,
+            ))" \
+  "            ->sortBy(fn (VenueRule \$r): int => (int) \$r->id)"
+
+mutar "una norma DESACTIVADA vuelve a la web por la API" \
+  "$NORMASCTRL" "VenueRule::query()->where('is_active', true)->orderBy('position')->get()" \
+  "VenueRule::query()->orderBy('position')->get()"
+
+mutar "el idioma deja de ser obligatorio (y la caché sirve uno por otro)" \
+  "$NORMASCTRL" "        \$datos = \$request->validate(['lang' => ['required', 'string', Rule::in(SetLocale::SUPPORTED)]]);
+
+        app()->setLocale(\$datos['lang']);" ""
+
+# ⚠️ Y la guarda del CONTRATO, que tenía su propio punto ciego: sin bajar a los `items`, tres esquemas de
+# lista se colaban sin declarar un solo `required`.
+mutar "el contrato deja de mirar dentro de las listas" "$CONTRATO" \
+  "        if ((\$schema['type'] ?? null) === 'array' && is_array(\$schema['items'] ?? null)) {
+            \$this->assertObjectSchemaIsStrict(\"{\$name}.items\", \$schema['items']);
+
+            return;
+        }" ""
 
 echo
 echo "mutaciones: $muerden/$total muerden"

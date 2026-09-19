@@ -340,6 +340,28 @@ y aceptar condiciones**, y sin dárselos el servidor responde **422** —se rell
 comprobación—; y el cliente de pruebas **no vive en el repo** (se crea con `tinker`), así que en una máquina
 nueva la sonda lo dice con su receta en vez de morir en un tiempo agotado.
 
+### 4.8 Las trampas que costaron una pasada cada una
+
+Vivían en el fichero de carril, que es efímero; al cerrarse la fase vienen aquí, que es donde las va a buscar
+quien toque este cajón.
+
+- ⚠️ **`window.JumpWeb.cajon` se reasigna al PROXY de Alpine** tras `alpine:init`. Quien se quede con el
+  objeto crudo escribe en el sitio equivocado: `open()` no mueve la carcasa y **nada falla** (T2, visto en
+  rojo en la sonda). Por eso el anfitrión se pide con una función, nunca se captura.
+- ⚠️ **Tras un arnés de mutación que toque un `.vue`, `npm run build:ssr` ANTES de la suite**: restaurar por
+  copia mueve las fechas y `SidebarDomContractTest` sale con 36 rojos que no son del código.
+- ⚠️ **El juez de la hoja nació mintiendo** (T4): retiraba `site.css` y dejaba `landing.css`, así que los
+  tokens seguían en la página y el paquete parecía autosuficiente. Al tocar un instrumento, control primero.
+- ⚠️⚠️ **Y por hacerle caso al juez casi se despliega un fallo** (`#637`): se scopeó el tema del panel a
+  `:root, .sidecart` para que diera cero, y eso le quitaba sus colores al cajón de una instalación. *Un juez
+  no arregla el producto para poder aprobarlo.* Lo cazó la pregunta del `/release`: «¿qué tendría que tocar
+  PlayJump para desplegar esto?».
+- ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker` y la
+  sonda lo dice con su receta si falta.
+- ▶ **El banco de pruebas de la página ajena se crea y se BORRA.** Un HTML en `public/` con las dos líneas
+  del paquete y un `:root` propio basta para verlo en vivo; si se queda ahí, **la guarda 9 del despliegue
+  aborta** (`#638`: lo que git no ve, el `rsync` sí lo sube).
+
 ## 5. Impacto en invariantes
 `RGPD-04`: `cajon/session` es `no-store` (lleva titular); y la ruta del cargador **hereda** el `no-store` de la
 web en vez de abrirle una excepción (§4.1). `PERF-02`: `cajon/boot` y el menú van con caché pública

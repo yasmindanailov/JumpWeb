@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
 use App\Http\Controllers\Api\V1\QuoteController;
+use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
 use App\Http\Controllers\Api\V1\SidebarBootController;
 use App\Http\Controllers\Api\V1\SiteFactsController;
@@ -172,6 +173,13 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/schedule/now', [ScheduleFactsController::class, 'now'])
         ->middleware('cache.headers:public;max_age=60;etag')
         ->name('schedule.now');
+
+    // Las NORMAS del recinto. ⚠️ Primer plato del menú que se TRADUCE, así que el idioma viaja en la
+    // URL (`?lang=`, obligatorio) como en `/sidebar/boot`: una respuesta cacheable tiene que ser
+    // función de su URL, o la primera caché sirve francés a quien pidió español.
+    Route::get('/rules', RulesFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('rules.facts');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.4.0
+  version: 1.5.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -581,6 +581,44 @@ paths:
                 $ref: '#/components/schemas/OpeningNow'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+
+  /rules:
+    get:
+      tags: [Instalación]
+      operationId: getRules
+      summary: Las normas del recinto, en el orden del recorrido de una visita
+      description: |
+        Las normas que el negocio opera desde el panel. Solo las **activas**: una norma desactivada es una
+        norma retirada, y publicarla aquí la devolvería a la web por la puerta de atrás.
+
+        **El orden es parte del dato**: primero por momento —`before`, `gate`, `inside`, que es el recorrido
+        de una visita— y dentro de cada uno por la posición que fija el panel. Las que no tienen momento van
+        al final. Una landing puede agrupar por `moment` sin decidir nada; el orden ya viene hecho, y
+        `moments` trae el catálogo en su orden canónico.
+
+        **El idioma viaja en la URL** (`lang`, obligatorio), como en `/sidebar/boot` y por lo mismo: la
+        respuesta se cachea. La cadena de respaldo cuando una norma no está traducida —idioma → respaldo →
+        la primera que haya— la resuelve el servidor; el cliente recibe texto, no un mapa de idiomas.
+
+        `updated_at` es la fecha de la norma tocada más recientemente, **no la de hoy**: quien las leyó hace
+        un año necesita saber si siguen siendo éstas.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Las normas activas en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rules'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /sidebar/boot:
     get:
@@ -3306,6 +3344,36 @@ components:
           description: |
             Solo si está CERRADO: el instante de la próxima apertura, en ISO 8601 con desplazamiento. Puede
             faltar — es una instalación sin horario configurado, y entonces no se afirma nada.
+
+    Rules:
+      type: object
+      additionalProperties: false
+      required: [lang, moments, updated_at, rules]
+      properties:
+        lang:
+          type: string
+          description: El idioma en el que viene el texto, que es el que se pidió.
+        moments:
+          type: array
+          description: 'El catálogo de momentos EN SU ORDEN: el recorrido de una visita.'
+          items: { type: string, enum: [before, gate, inside] }
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: 'La norma tocada más recientemente. `null` con la tabla vacía: no se inventa una fecha.'
+        rules:
+          type: array
+          description: Las normas ACTIVAS, ya ordenadas. Lo que la instalación no escribió no viaja.
+          items:
+            type: object
+            additionalProperties: false
+            required: [name]
+            properties:
+              moment: { type: string, enum: [before, gate, inside], description: Falta en las que el negocio no ha situado. }
+              name: { type: string }
+              description: { type: string }
+              reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
 
     SidebarBoot:
       type: object

@@ -6,6 +6,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Http\Api\ApiErrorCode;
 use App\Http\Api\ApiSurface;
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\AssertionFailedError;
 use Symfony\Component\Yaml\Yaml;
 use Tests\TestCase;
 
@@ -60,7 +61,10 @@ class ApiContractTest extends TestCase
         'OpeningNow' => ['closes_at', 'opens_at'],
         // Las claves que la instalación no rellenó de un día especial: la nota y la etiqueta de tarifa. La
         // fecha y si cierra van SIEMPRE, que es lo que hace útil al día.
-        'Schedule.special_days' => ['opens_at', 'closes_at', 'note', 'rate_label'],
+        'Schedule.special_days.items' => ['opens_at', 'closes_at', 'note', 'rate_label'],
+        // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
+        // nombre va siempre: una norma sin nombre no es una norma.
+        'Rules.rules.items' => ['moment', 'description', 'reason'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],
@@ -305,10 +309,48 @@ class ApiContractTest extends TestCase
     }
 
     /**
+     * **Y la comprobación de arriba MIRA DENTRO DE LAS LISTAS** (2026-09-19).
+     *
+     * ⚠️⚠️ Hasta esta fecha no lo hacía: un esquema `type: array` no es `object`, así que salía por el
+     * primer `return` y **el objeto de dentro no se miraba**. Un campo de más en cada elemento de una lista
+     * pasaba el contrato entero. Se vio al añadir el menú de hechos, cuyos esquemas son listas de objetos.
+     *
+     * ▶ Y hace falta ESTE caso, no una mutación: quitar el descenso hace la comprobación más PERMISIVA, y
+     * una comprobación más permisiva sigue pasando. Lo único que la caza es ejercerla con un esquema laxo.
+     */
+    public function test_the_strictness_walk_looks_inside_lists(): void
+    {
+        $listaLaxa = [
+            'type' => 'array',
+            'items' => [
+                'type' => 'object',
+                'additionalProperties' => true,   // ← lo que no se puede colar
+                'properties' => ['a' => ['type' => 'string']],
+                'required' => ['a'],
+            ],
+        ];
+
+        try {
+            $this->assertObjectSchemaIsStrict('Prueba', $listaLaxa);
+            $this->fail('la comprobación no miró dentro de la lista: un campo de más se colaría');
+        } catch (AssertionFailedError $e) {
+            $this->assertStringContainsString('Prueba.items', $e->getMessage());
+        }
+    }
+
+    /**
      * @param  array<string, mixed>  $schema
      */
     private function assertObjectSchemaIsStrict(string $name, array $schema): void
     {
+        // Una LISTA no tiene campos, pero el objeto de dentro sí: se baja a él antes de rendirse. Ver el
+        // aviso del final de este método — era el punto ciego de la guarda.
+        if (($schema['type'] ?? null) === 'array' && is_array($schema['items'] ?? null)) {
+            $this->assertObjectSchemaIsStrict("{$name}.items", $schema['items']);
+
+            return;
+        }
+
         if (($schema['type'] ?? null) !== 'object' || ! isset($schema['properties'])) {
             return;
         }
@@ -339,6 +381,12 @@ class ApiContractTest extends TestCase
                 $this->assertObjectSchemaIsStrict("{$name}.{$property}", $subSchema);
             }
         }
+
+        // ⚠️⚠️ **El punto ciego que tenía esta guarda hasta el 2026-09-19**: un esquema `type: array` salía
+        // por el `return` de arriba —no es `object`— y con él se iba sin mirar **el objeto de dentro**. Un
+        // campo de más en cada elemento de una lista pasaba el contrato entero sin que nadie lo viera, que
+        // es justo lo que este fichero existe para impedir. Se vio al añadir el menú de hechos: `Schedule` y
+        // `Rules` son listas de objetos y se habrían colado sin declarar un solo `required`.
     }
 
     /**

@@ -176,8 +176,29 @@ Un cartel que dice «cerramos a las 21:30» con el parque cerrado es peor que no
 
 **Medido**: `ScheduleFactsTest` (8) y los 13 casos de `scripts/mutar-menu-de-hechos.sh`, **13/13**.
 
-▶ **Lo que sigue en el menú**: normas · documentos legales por clave · precios «desde» · la ficha de producto
-y de zona · la prueba social sin avatares.
+**✅ T3 HECHA (2026-09-19) · las NORMAS** (`#642`). `GET /api/v1/rules?lang=` sirve las normas ACTIVAS, ya
+ordenadas por el recorrido de una visita —`before`, `gate`, `inside`, y dentro de cada uno la posición del
+panel—, con su porqué y con `updated_at`. Contrato **1.5.0**.
+
+**Primer plato que se traduce**, y por eso el idioma va en la URL como en `/sidebar/boot`: una respuesta
+cacheable tiene que ser función de su URL. **No se manda el mapa de idiomas**: la cadena «idioma → respaldo →
+la primera que haya» es del dominio, y repartirla entre landings da tres respaldos distintos.
+
+⚠️ **El orden es parte del dato** y costó una pasada: la primera versión ordenaba con `sortBy([cierre,
+cierre])` y salía **al revés** —la visita contada de atrás adelante—, con el JSON válido y las diez normas
+dentro. Lo vio una llamada real, no un test. Ahora es una clave compuesta y el caso comprueba por NOMBRE.
+
+⚠️ **Una norma desactivada no vuelve por la API**: quien la retiró en el panel cree que ya no está.
+
+▶ **Y se cerró un punto ciego del contrato**: `ApiContractTest` no bajaba a los `items` de una lista —un
+esquema `type: array` no es `object` y salía por el primer `return`—, así que **un campo de más en cada
+elemento pasaba el contrato entero**. Los tres esquemas nuevos del menú son listas de objetos y se habrían
+colado. Con su control propio, porque una comprobación más permisiva no la caza ninguna mutación.
+
+**Medido**: `RulesFactsTest` (8), `scripts/mutar-menu-de-hechos.sh` **17/17**.
+
+▶ **Lo que sigue en el menú**: documentos legales por clave · precios «desde» · la ficha de producto y de
+zona · la prueba social sin avatares.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la
