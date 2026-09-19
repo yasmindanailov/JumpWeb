@@ -58,12 +58,18 @@
      para poder aprobarlo.* La pregunta que lo cazó es la del `/release`: «¿qué tendría que tocar PlayJump?».
    - ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker`; en esta
      máquina se creó el 19-09. La sonda lo dice con su receta si falta.
-   - ▶ **Banco de pruebas LOCAL, no versionado**: `public/landing-ajena.html` (en `.git/info/exclude`) sirve en
-     `localhost:8081/landing-ajena.html` una landing ajena con SUS tokens. Desde la T5 ya no caduca con cada
-     `npm run build`, porque pide el cargador por su ruta estable.
-2. **LO SIGUIENTE: la v1.2.0** (skill `/release`). Es lo que más se ha acumulado: el contrato 1.1.0→1.2.0, el
-   emisor de Bearer, ESLint en el gate, las cinco tandas del cajón empaquetable y lo del carril del SPA. Sin
-   etiqueta ni despliegue desde v1.1.0 (18-09). ⚠️ Producción, de noche o con el parque cerrado (`#594`).
+   - ▶ **Banco de pruebas LOCAL: se crea y se BORRA** (lo retiró la guarda 9, `#638`: lo que git no ve, el
+     `rsync` del despliegue sí lo sube). Un HTML cualquiera en `public/` con estas dos líneas y un `:root`
+     propio basta para mirar el cajón empaquetado en vivo; ya no caduca con el build:
+     `<link rel="stylesheet" href="/css/cajon.css">` y `<script type="module" src="/cajon/paquete.js"></script>`,
+     más un disparador `<a href="/entradas" data-jw-open>Reservar</a>`. **Al terminar, se borra**: si está en
+     `public/` cuando el owner despliegue, la guarda 9 aborta —de noche, que es cuando peor viene—.
+2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** La etiqueta está cortada y empujada
+   (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades; la guarda 8 en seco ya contesta
+   «versión a desplegar: v1.2.0». **Para las instancias no hay nada que hacer**: sin migraciones, sin claves
+   de `.env`, sin ajustes; el contrato de la API sube a 1.2.0 solo añadiendo. ⚠️ Producción, de noche o con
+   el parque cerrado (`#594`), y sería el **décimo** despliegue. Cortar la versión y desplegarla son dos
+   actos: el segundo es suyo.
 3. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 4. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
