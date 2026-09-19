@@ -132,6 +132,23 @@ return [
         'action_invite' => 'Partager l’invitation',
         'outro_invite' => 'Si tu préfères le remplir à la main, c’est la même page : le formulaire est juste en dessous de l’invitation. Tu peux aussi y aller depuis « Mes réservations ». Merci !',
     ],
+    // L'avis de la veille (T7·2b). Part l'après-midi d'AVANT, et seulement s'il reste quelque chose.
+    'visit_eve' => [
+        'subject' => 'Ta fête, c’est demain · :code',
+        'preheader' => 'Il reste deux ou trois choses à boucler, et rien de grave.',
+        'badge' => 'C’est demain',
+        'headline' => 'Un point avant demain',
+        'intro' => 'On vous attend demain. Avant le jour J, voici ce qu’il reste à boucler :',
+        'guests' => 'Fiches des invités : :done sur :total complètes.',
+        'replies' => '{1} Une famille a répondu et attend que tu la valides.|[2,*] :count familles ont répondu et attendent que tu les valides.',
+        'minors' => '{1} Il reste un enfant sans autorisation signée.|[2,*] Il reste :count enfants sans autorisation signée.',
+        'balance_title' => 'Ce qui se règle au parc',
+        'balance' => 'Il restera :amount à régler à l’accueil demain.',
+        'not_serious' => 'Rien de tout cela n’empêche la fête : ce qui manque, on le règle à l’accueil, et un enfant accompagné d’un adulte entre quand même. Si tu peux, boucle-le cet après-midi et demain vous n’aurez qu’à venir.',
+        'action' => 'Revoir ma réservation',
+        'outro' => 'À demain !',
+    ],
+
     'order_after_expiration' => [
         'subject' => 'Ton paiement est bien arrivé · :code',
         'preheader' => "On t'appelle sous 24 h pour reprogrammer ta visite ou te rembourser.",

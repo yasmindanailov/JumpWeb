@@ -131,6 +131,23 @@ return [
         'action_invite' => 'Share the invitation',
         'outro_invite' => 'If you would rather fill it in by hand, it is the same page: the form sits right below the invitation. You can also get there from "My bookings". Thank you!',
     ],
+    // The eve notice (T7·2b). Goes out the afternoon BEFORE, and only if something is still pending.
+    'visit_eve' => [
+        'subject' => 'Your party is tomorrow · :code',
+        'preheader' => 'A couple of things are still open, and none of them is serious.',
+        'badge' => 'Tomorrow is the day',
+        'headline' => 'A quick check before tomorrow',
+        'intro' => 'We are expecting you tomorrow. Before the day arrives, here is what is still open:',
+        'guests' => 'Guest details: :done of :total complete.',
+        'replies' => '{1} One family has replied and is waiting for you to review it.|[2,*] :count families have replied and are waiting for you to review them.',
+        'minors' => '{1} One child still has no signed authorisation.|[2,*] :count children still have no signed authorisation.',
+        'balance_title' => 'What is paid at the park',
+        'balance' => ':amount will be due at reception tomorrow.',
+        'not_serious' => 'None of this stops the party: whatever is missing we sort out at the desk, and a child who comes with an adult gets in anyway. If you can, get it done this afternoon and tomorrow you only have to turn up.',
+        'action' => 'Review my booking',
+        'outro' => 'See you tomorrow!',
+    ],
+
     'order_after_expiration' => [
         'subject' => 'Your payment came through · :code',
         'preheader' => "We'll call within 24 h to rebook your visit or refund you.",

@@ -144,6 +144,29 @@ return [
         // de la invitación arriba y el formulario justo debajo.
         'outro_invite' => 'Si prefieres rellenarlo a mano, es la misma página: el formulario está justo debajo de la invitación. También puedes entrar desde «Mis reservas». ¡Gracias!',
     ],
+    // ── EL AVISO DE LA VÍSPERA (T7·2b, `specs/celebracion-e-invitacion.md` §4.9) ──────────────────
+    // ❗❗ Sale la tarde ANTES y SOLO si queda algo por hacer. Por eso puede permitirse ser concreto:
+    // quien lo recibe tiene algo pendiente de verdad, y aún le da tiempo.
+    'visit_eve' => [
+        'subject' => 'Mañana es tu fiesta · :code',
+        // ⚠️ Sin datos variables y sin repetir el asunto (`#506`): lo que se lee en la lista.
+        'preheader' => 'Quedan un par de cosas por dejar listas, y ninguna es grave.',
+        'badge' => 'Mañana es el día',
+        'headline' => 'Un repaso antes de mañana',
+        'intro' => 'Mañana os esperamos. Antes de que llegue el día, esto es lo que nos queda por cerrar:',
+        // Las cifras, cada una en su línea y solo si falta.
+        'guests' => 'Fichas de invitados: :done de :total completas.',
+        'replies' => '{1} Una familia te ha contestado y está por repasar.|[2,*] :count familias te han contestado y están por repasar.',
+        'minors' => '{1} Queda un niño sin justificante firmado.|[2,*] Quedan :count niños sin justificante firmado.',
+        'balance_title' => 'Lo que se paga en el parque',
+        'balance' => 'Mañana quedan :amount por abonar en recepción.',
+        // ❗❗ La frase que quita el susto, y no es cortesía: la cifra sola se lee como un reproche a
+        // las nueve de la noche del día antes de la fiesta de tu hijo.
+        'not_serious' => 'Nada de esto impide la fiesta: lo que falte lo resolvemos en el mostrador, y un niño que venga con un adulto entra igual. Si puedes, déjalo hecho esta tarde y mañana solo tenéis que llegar.',
+        'action' => 'Repasar mi reserva',
+        'outro' => '¡Nos vemos mañana!',
+    ],
+
     'order_after_expiration' => [
         'subject' => 'Tu pago llegó bien · :code',
         'preheader' => 'Te llamamos en 24 h para reagendar tu visita o devolverte el importe.',

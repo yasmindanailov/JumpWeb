@@ -87,7 +87,7 @@
 |---|---|
 | `INVARIANTES.md` | 63 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
 | `ARQUITECTURA.md` | Stack real, estructura (`app/Domain/<Contexto>/`), white-label 3 capas, composer global memoizado. |
-| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (43 modelos · 115 migraciones), por dominios, con rarezas heredadas. |
+| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (43 modelos · 116 migraciones), por dominios, con rarezas heredadas. |
 | `SEGURIDAD.md` | Estándar transversal nivel Reforzado (ASVS/NIST): 12 reglas + estado heredado. |
 | `TESTING.md` | Suite (paralelo paratest), anti-red, fakes por proveedor, Unit/Feature, comandos de verificación con MySQL real. |
 | `FLUJOS.md` | Los 6 recorridos de usuario heredados + reglas transversales. |

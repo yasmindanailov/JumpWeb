@@ -1,11 +1,11 @@
 # [SPEC] El formulario de celebración, el justificante y la invitación digital
 
-> Estado: 🟦 **revisada de forma adversarial tres veces · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los
-> interruptores apagados) · T5 entera en el árbol · T6 CERRADA en sus seis unidades (§10.8–§10.13) ·
-> T7 sin empezar** ·
-> Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
+> Estado: 🟦 **COMPLETA EN CÓDIGO — las siete tandas cerradas** · T1→T4 EN PRODUCCIÓN (§10.1–§10.4,
+> v1.1.0, con los interruptores apagados) · **T5, T6 y T7 en el árbol y SIN DESPLEGAR**. Sigue 🟦 por
+> el ojo del owner, el despliegue y los dos interruptores (dato suyo), no por código ·
+> Última actualización: 2026-09-20 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
 > `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
-> `#708`–`#713` (T6·1→T6·6) ·
+> `#708`–`#713` (T6·1→T6·6) · `#714`–`#717` (T7) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -15,9 +15,9 @@
 
 ## §0 · Antes de tocar
 
-- **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
-  **T5 y la T6 ENTERA en el árbol, sin desplegar** → sigue la **T7** (§4.9); encenderla es DATO del
-  owner. **Si construyes, §7.2 primero.**
+- **Carril del SPA** (banda **700–729**). ✅ **COMPLETA EN CÓDIGO**: T1→T4 en PRODUCCIÓN (v1.1.0,
+  **APAGADOS**) y T5, T6 y T7 en el árbol sin desplegar. Falta el ojo del owner, desplegar y
+  **encender** (dato suyo). **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
   escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
 - ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): quedan **diez puntos sin tocar** en §10.4.7·B.
@@ -481,9 +481,12 @@ Turno 4a. Molde de `correos-desde-canvas.md`: `BrandedMailMessage`, línea de ad
   - **A las 18:00 del día ANTES de la fiesta, hora del parque** (`[DECIDIDO owner, 2026-09-19]`,
     `#714`): es cuando un padre mira el móvil y aún tiene la tarde para arreglarlo. Una hora
     configurable desde el panel y 48 h de antelación se ofrecieron con su coste y se cayeron.
-  - Idempotente por reserva, con una marca escrita **por el constructor de consultas** (no toca
-    `updated_at`, §1.3·2). ⚠️ **NO son `reminded_at`/`reminded_count`**: esas se las quedó la T6·6
-    (`#713`) y son otro gesto —aquél lo escribe el anfitrión, éste lo manda el parque—.
+  - Idempotente por reserva, con una marca escrita por el constructor de consultas **CRUDO**
+    (`toBase()`). ⚠️⚠️ **El de Eloquent SÍ toca `updated_at`** —`Builder::update()` llama a
+    `addUpdatedAtColumn()`—, y ése es el testigo del post-form (§1.3·2): la forma «obvia» tumbaría la
+    página abierta del cliente **por mandarle un correo**. Medido en `#717`; esta línea lo decía mal.
+    ⚠️ **NO son `reminded_at`/`reminded_count`**: esas se las quedó la T6·6 (`#713`) y son otro gesto
+    —aquél lo escribe el anfitrión, éste lo manda el parque—.
   - `ShouldQueue` (`PAY-14`).
 - **Inventario: 25 → 26.** Los censos de `MailInboxLineTest` y del molde se actualizan.
 
@@ -1808,7 +1811,7 @@ regla nueva entra en el paquete · Pint, Larastan y docs-check limpios · **ning
 ▶ **Con ella la T6 queda cerrada** y la invitación se puede encender en producción: los dos
 interruptores son DATO del owner. Después, la T7 de correos.
 
-### 10.14 T7 · LOS CORREOS — SE PARTE EN TRES UNIDADES (plan, `DECISIONES #714`)
+### 10.14 T7 · LOS CORREOS — CERRADA EN TRES UNIDADES (§10.15–§10.17, `DECISIONES #714`)
 
 La última tanda de la feature. ⚠️⚠️ **Cruza al carril de CORREOS** (`carriles/correos.md`: las
 notificaciones, `resources/views/vendor/mail/**`, `lang/*/emails.php` y sus tests) y a su spec
@@ -1820,7 +1823,7 @@ molde de correo no se toca, se usa.
 |---|---|---|
 | **T7·1** ✅ | **`GuestFormRequest` rehecho**: si el producto tiene invitación, la llamada es «Compartir la invitación» — **en el árbol** (`#715`, §10.15) | **Un correo que ya existe y ya se envía**: sin migración, sin comando y sin censo nuevo. Es la mitad barata y la que el cliente ve primero |
 | **T7·2a** ✅ | **El LECTOR de «qué queda por hacer»** de una reserva — **en el árbol** (`#716`, §10.16) | Es **dominio y no correo**, y cruza a Identity (las firmas) — así que va por el contrato, que **ya existía** (`ReservationPlacesTaken`, `#444`). Con sus casos, y sin mandar nada todavía |
-| **T7·2b** | **El aviso de la víspera**: la notificación, el comando diario, el scheduler a las **18:00** y la marca idempotente | Es lo único que **manda correo de verdad** y lo único que pide **migración**. Se construye sobre un lector ya verde, que es lo que evita depurar las dos cosas a la vez |
+| **T7·2b** ✅ | **El aviso de la víspera**: la notificación, el comando, el scheduler y la marca — **en el árbol** (`#717`, §10.17) | Es lo único que **manda correo de verdad** y lo único que pide **migración**. Se construyó sobre un lector ya verde, que es lo que evitó depurar las dos cosas a la vez |
 
 **Lo que hay que saber antes de abrirla** (medido el 2026-09-19, no supuesto)
 
@@ -1941,6 +1944,60 @@ día que el aviso salga mal se sabrá de qué mitad es la culpa.
 escenarios de dinero) · arnés `scripts/mutar-invitacion-t7-2a.py` **10/10, sin supervivientes** ·
 `ModuleBoundariesTest`/`ModuleContractsTest` verdes antes y después · Pint, Larastan y docs-check
 limpios · **sin migraciones, sin correo y sin tocar dinero ni aforo** (solo los lee).
+
+### 10.17 T7·2b · EL AVISO DE LA VÍSPERA — EN EL ÁRBOL (2026-09-20, `DECISIONES #717`)
+
+La última unidad de la feature. Al titular, la tarde de antes, **solo si queda algo por hacer**.
+
+**Lo que entra**
+
+- **`VisitEveNotice`** (correo **26**), `ShouldQueue` como el resto (`PAY-14`): nombra **solo lo que
+  falta** —una reserva a la que solo le falta pagar no habla de fichas—, el saldo va en su **aviso**
+  porque es dinero y dice dónde se paga, y cierra con la frase de que **nada de eso impide la
+  fiesta**. ❗ Esa frase no es cortesía: «12 de 20» a solas se lee como un reproche a las nueve de la
+  noche del día antes del cumpleaños de tu hijo.
+- **`reservations:eve-notice`**, con `--force` (staging, donde el scheduler no corre) y `--dry-run`.
+- **`order_items.eve_notice_at`**, la marca, y su línea en `MODELO-DATOS.md`.
+
+**Por qué corre CADA HORA y no `dailyAt('18:00')`**
+
+1. **La zona del parque es un AJUSTE**, no una constante: `->timezone(DisplayTime::timezone())` lo
+   resolvería **al registrar el schedule**, o sea en cada arranque de consola —la suite incluida, y
+   antes de que exista `settings` en una instalación nueva—. Es la regla que `slots:generate-rolling`
+   ya sigue: *el rango se calcula en la EJECUCIÓN, no al registrar.*
+2. **Con una sola pasada, una hora de cron caído se lleva el aviso y nadie se entera.** A partir de
+   las 18:00 del parque cualquier pasada lo recupera, y la marca impide el duplicado. Las otras 23
+   salen en el primer `if`. La ventana muere a medianoche: a las 00:00 «mañana» ya es otro día, y un
+   aviso la mañana de la fiesta diciendo que quedan cosas por hacer es peor que no mandarlo.
+
+**❗❗ Lo que enseñó construirla — un defecto que el caso cazó**
+
+- **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`**: `Builder::update()` llama a
+  `addUpdatedAtColumn()`. §4.9 decía desde el diseño que la marca «va por el constructor de consultas
+  y no toca el testigo (§1.3·2)», y **era falso**. Escrito así, mandar el aviso dejaba obsoleta la
+  página que el cliente tuviera abierta y le tumbaba la compra de extras — **por haberle escrito un
+  correo**. Lo cazó el caso del testigo con su control, en el primer intento. Se arregla con
+  `toBase()`, que baja al constructor crudo conservando tabla y clave. ▶ Medido con `grep`: **ninguna
+  otra escritura del repo depende de esa creencia**, y la línea de §4.9 queda corregida.
+- ⏰ **Un test con reloj propio miente dos horas al día.** La suite completa sacó un rojo en
+  `ScheduleFactsTest` —ajeno a esta tanda— a las **00:07 del 20-09**: el caso abría el día de la
+  semana de `Carbon::now()` (contenedor, **UTC**) mientras el servicio pregunta por el de
+  `now(DisplayTime::timezone())` (**Madrid**), y entre las dos medianoches no son el mismo día. El
+  producto calculaba bien. Arreglado con un ayudante `ahora()` y avisado al carril de plataforma.
+- ⚠️ **Un superviviente DECLARADO**: quitar el `whereNull('cancelled_at')` de la consulta no cambia
+  nada, y no debe — una cancelada ya sale con «nada pendiente» del lector (§10.16), que allí sí tiene
+  su mutación. Lo de aquí es un filtro que ahorra cargar filas, no la guarda. Bajar el denominador
+  para enseñar un arnés limpio sería mentir en el informe (`#577`).
+
+**Verificación**: `VisitEveNoticeTest` (11 casos, con el **CONTROL** del testigo y el instrumento
+afirmado en la hora del parque) · arnés `scripts/mutar-invitacion-t7-2b.py` **12/12 (+1 declarado)** ·
+`MailInboxLineTest` verde con el correo nuevo dentro del censo, que lo ve solo · el aviso real
+**renderizado y enviado a Mailpit** · Pint, Larastan y docs-check limpios · **una migración**, sin
+tocar dinero ni aforo.
+
+▶ **Con esto la invitación digital queda COMPLETA EN CÓDIGO.** Lo que falta no es escribir nada: el
+ojo del owner, desplegar (T5, T6 y T7 siguen en el árbol) y **encender los dos interruptores**, que es
+dato suyo. Queda además el borde abierto de §7.1·5, que la T6 no tocó.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

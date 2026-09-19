@@ -146,3 +146,28 @@ Schedule::command('queue:work --stop-when-empty --max-time=55 --tries=3')
 Schedule::command('sanctum:prune-expired --hours=24')
     ->weekly()
     ->withoutOverlapping();
+
+/*
+ * T7·2b de `specs/celebracion-e-invitacion.md` (§4.9, `DECISIONES #714` y `#717`) — el AVISO DE LA
+ * VÍSPERA: al titular de cada reserva de mañana a la que le queda algo por hacer, y solo entonces.
+ *
+ * ⚠️⚠️ **CADA HORA, y la hora la decide el COMANDO**, que es lo contrario de lo que parece pedir un
+ * aviso diario. Dos motivos, los dos medidos:
+ *
+ *  1. La hora es la del PARQUE y la zona del parque es un AJUSTE (`display_timezone`). Un
+ *     `->dailyAt('18:00')->timezone(DisplayTime::timezone())` resolvería ese ajuste **al registrar el
+ *     schedule**, o sea en cada arranque de consola —la suite incluida, y antes de que exista la
+ *     tabla `settings` en una instalación nueva—. Es la misma regla que sigue `slots:generate-rolling`
+ *     desde la auditoría de la Fase 1: *el rango se calcula en la EJECUCIÓN, no al registrar.*
+ *  2. Con una sola pasada, **una hora de cron caído se lleva el aviso por delante** y nadie se
+ *     entera. Corriendo cada hora a partir de las 18:00 del parque, la siguiente pasada lo recupera,
+ *     y la marca `order_items.eve_notice_at` impide que llegue dos veces. Las otras 23 pasadas salen
+ *     en el primer `if` sin tocar la base.
+ *
+ * ⚠️ `withoutOverlapping` porque manda correos: dos pasadas a la vez sobre las mismas reservas se
+ * pelearían por la marca, y la que perdiera ya habría encolado su copia.
+ * ❗ En staging el scheduler no corre (`#115`): allí se dispara a mano con `--force`.
+ */
+Schedule::command('reservations:eve-notice')
+    ->hourly()
+    ->withoutOverlapping();

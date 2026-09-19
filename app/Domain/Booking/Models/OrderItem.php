@@ -75,6 +75,10 @@ class OrderItem extends Model
         'guardian_authorization' => 'boolean',
         'age_family_seal' => 'array',
         'cancelled_at' => 'datetime',
+        // Cuándo salió el AVISO DE LA VÍSPERA de esta reserva (T7·2b). ⚠️ Se escribe por el
+        // constructor de consultas, nunca por el modelo: `updated_at` es el testigo del post-form
+        // (§1.3·2) y mandar un correo no puede dejar obsoleta la página del cliente.
+        'eve_notice_at' => 'datetime',
     ];
 
     /**

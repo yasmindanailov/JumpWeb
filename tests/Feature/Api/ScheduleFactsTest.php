@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Booking\Models\SpecialDate;
 use App\Domain\Content\Services\HeroStatus;
+use App\Domain\Platform\Services\DisplayTime;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -20,6 +21,20 @@ use Tests\TestCase;
 class ScheduleFactsTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * ⏰⏰ **«Ahora» es la hora del PARQUE, no la del contenedor** (que va en UTC).
+     *
+     * Estos casos abrían el día de la semana de `Carbon::now()` mientras el servicio pregunta por el
+     * de `now(DisplayTime::timezone())` — y entre la medianoche de Madrid y la de UTC **no son el
+     * mismo día**. El caso de «abierto ahora» se puso en rojo solo el 2026-09-20 a las 00:07, dos
+     * horas después de haberse medido en verde: *un test con un reloj propio es un test que miente
+     * durante dos horas al día.* No era un defecto del producto, que calcula bien.
+     */
+    private function ahora(): Carbon
+    {
+        return now(DisplayTime::timezone());
+    }
 
     private function abre(int $weekday, string $desde, string $hasta): void
     {
@@ -91,7 +106,7 @@ class ScheduleFactsTest extends TestCase
 
     public function test_open_now_says_until_when_and_nothing_else(): void
     {
-        $this->abre(Carbon::now()->dayOfWeek, '00:00:00', '23:59:00');
+        $this->abre($this->ahora()->dayOfWeek, '00:00:00', '23:59:00');
 
         $ahora = $this->getJson('/api/v1/schedule/now')->assertOk();
 
@@ -107,14 +122,14 @@ class ScheduleFactsTest extends TestCase
     public function test_closed_says_when_it_opens_and_never_when_it_closes(): void
     {
         OpeningHour::query()->delete();
-        $this->abre(Carbon::now()->addDay()->dayOfWeek, '16:30:00', '21:30:00');
+        $this->abre($this->ahora()->addDay()->dayOfWeek, '16:30:00', '21:30:00');
 
         $ahora = $this->getJson('/api/v1/schedule/now')->assertOk();
 
         $ahora->assertJsonPath('open_now', false);
         $ahora->assertJsonMissingPath('closes_at');
         $this->assertStringContainsString(
-            Carbon::now()->addDay()->toDateString(), (string) $ahora->json('opens_at'),
+            $this->ahora()->addDay()->toDateString(), (string) $ahora->json('opens_at'),
             'la próxima apertura no es mañana',
         );
     }
@@ -140,7 +155,7 @@ class ScheduleFactsTest extends TestCase
      */
     public function test_the_landing_chip_and_the_api_cannot_disagree(): void
     {
-        $this->abre(Carbon::now()->dayOfWeek, '00:00:00', '23:59:00');
+        $this->abre($this->ahora()->dayOfWeek, '00:00:00', '23:59:00');
 
         $api = $this->getJson('/api/v1/schedule/now')->assertOk()->json();
         $chip = app(HeroStatus::class)->current();

@@ -1,51 +1,32 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#716`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#717`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
-> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
+> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
 > suite va en el trailer del commit (`#618`), no aquí.
 
-## Foto (2026-09-19, cierre de la sesión)
+## Foto (2026-09-20, cierre de la sesión)
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
-- **`celebracion-e-invitacion.md`**: T1 y T2 desplegadas el 16-09. **T3 (`#572`) y T4·1–T4·4 EN
-  PRODUCCIÓN** desde el 18-09 (v1.1.0 = `3547de9f`, parque cerrado; lo desplegó plataforma): la
-  migración quedó aplicada y **los dos interruptores, apagados**. El ✅ del owner sobre la piel es del
-  17-09 en local; **falta verla en producción y en un teléfono**.
-- **T4 · la invitación digital, CERRADA** (`#573`→`#578`). ⚠️ En producción solo van T4·1–T4·4:
-  **`#577` (RGPD) y `#578` (la API) están en el árbol SIN DESPLEGAR**, como toda la T5 y toda la T6.
-  Detalle en spec §10.4; lo que hay que recordar: el **lock de UNA fila** de `PartyInvitations`
-  verificado sobre InnoDB · `show_in_invitation` por las CUATRO puertas del pivote, con `OrderCreator`
-  intacto porque **es una oferta y no un permiso** · el cuarto sumando del suelo de `#444` y la
-  **excepción del firmador**. Arneses 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 · 14/14.
-- **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#706`), **sin desplegar**; las
-  tres primeras vistas en vivo por el owner el 18-09. Detalle en spec §10.5 y §10.6. Lo que hay que
-  recordar: pegar parámetros a una URL ya firmada **la invalida** —viajan DENTRO— · el defecto del
-  `VTIMEZONE` lo encontró **el fichero SERVIDO**, no el test · y el cuarto defecto de la T5·5 —la vuelta
-  de un formulario rechazado perdía la atadura y **cobraba plaza**— lo destapó **caminar la pantalla**.
-  ✅ **§10.6·A cerrada por el owner** (`#706`): **dos campos** (`#236` en pie) y **el prerrelleno del
-  menor se retira**. Sus dos alternativas se midieron y se cayeron.
-- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**: dos defectos reales arreglados. Arnés **16/16**; los diez
-  puntos sin tocar, en spec §10.4.7·B. **`#700`**: la lista completa deja de rechazar —era un oráculo de
-  pertenencia—; su verificador fuerza 16 «sí» del MISMO niño y se vio fallar sin el lock.
+- ▶▶ **`celebracion-e-invitacion.md` está COMPLETA EN CÓDIGO: las siete tandas cerradas** (`#569`→`#717`).
+  **El detalle de cada unidad y lo que enseñó vive en su § de la spec** (§10.1–§10.17), que es donde no
+  caduca; lo que de ahí vale para CUALQUIER tanda bajó aquí, a «Trampas vivas». Lo que hay que saber:
+  - **En PRODUCCIÓN solo van T1→T4·4** (v1.1.0 = `3547de9f`, 18-09, parque cerrado; lo desplegó
+    plataforma), y **con los dos interruptores APAGADOS**. Su migración quedó aplicada.
+  - **SIN DESPLEGAR**: `#577` (RGPD) y `#578` (la API) de la T4, **toda la T5, toda la T6 y toda la
+    T7** — incluida **una migración nueva**, `order_items.eve_notice_at` (`#717`).
+  - Arneses de la feature: T4 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 · 14/14 · revisión adversarial 16/16 ·
+    T5 8/8 y 7/7 · T6 8/8 · 6/6 · 8/8 · 9/9 · 7/7 · 13/13 · T7 8/8 · 10/10 · 12/12 (+1 declarado).
+  - ⚠️ `party_invitations.reminded_at`/`reminded_count` son del **recordatorio del anfitrión** (`#713`,
+    cuentan VECES) y **no envían nada**; el aviso de la víspera tiene su propia marca (`#717`).
+  - **Falta el OJO del owner** (el bloque del anfitrión, el recibo de la T5, el justificante sin
+    prerrelleno y **los tres correos, en Mailpit**), desplegar y **encender**, que es dato suyo.
 - ✅ **`#707` · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` sin declarar
   lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. Declararlo pasó el
   componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
   `signDependent()` al módulo plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
-- ✅✅ **T6 · EL ATERRIZAJE, CERRADA EN SUS SEIS UNIDADES** (`#708`→`#713`, spec §10.8–§10.13), toda en
-  el árbol y **sin desplegar**: el bloque del anfitrión · las propuestas y su adopción · «no vienen» y
-  «no lo apuntes» · la puerta y la hoja de sala · el panel · el recordatorio. Arneses 8/8 · 6/6 · 8/8 ·
-  9/9 · 7/7 · **13/13**. Con ella **la invitación se puede encender**: los interruptores son DATO del
-  owner. ▶ **El detalle de cada unidad y lo que enseñó está en su § de la spec**, que es donde no
-  caduca; lo que de ahí vale para CUALQUIER tanda bajó a «Trampas vivas».
-  ⚠️ De la T6·6: `reminded_at`/`reminded_count` **cuentan VECES** (`[DECIDIDO owner]`) y eran «de la
-  T7» según la migración de la T4·1 — **se las quedó la T6**, y la T7 trae su propia marca.
-- ✅ **T7·1** (`#715`, §10.15): el correo del post-form pide **compartir** cuando el producto ofrece
-  invitación, con el ancla `#gf-invite`. 6 casos · arnés 8/8 · los dos correos, en Mailpit.
-- ✅ **T7·2a** (`#716`, §10.16): `PendingWork` y `PendingBeforeVisit` — las cuatro cifras de lo que le
-  queda por hacer a una reserva, **sin mandar nada**. 13 casos · arnés **10/10**.
 - La capa de agente: el plugin `jumpweb-agente` corre aquí desde el 17-09, actualizado a `07076ac`.
 
 ## Por dónde retomar, en orden
@@ -64,18 +45,12 @@
      allí sí, **el widget REAL de Turnstile** —en local no hay claves—.
    ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile (solo en producción) · y
    `og:image` sale del logotipo del tema (1200×441): en una tarjeta 2:1 se ve con bandas.
-2. ❗ **LA TAREA: la T7 · los CORREOS de la celebración**, partida en tres por `#714` (spec §10.14).
-   ✅ **T7·1 hecha** (`#715`, §10.15): con invitación la llamada del correo es «Compartir la
-   invitación» y el botón lleva el ancla `#gf-invite`. Arnés 8/8; los dos correos, en Mailpit.
-   ✅ **T7·2a hecha** (`#716`, §10.16): `PendingWork` + `PendingBeforeVisit` dan las cuatro cifras y
-   `any()`. 13 casos · arnés **10/10**. ⚠️ **No hizo falta contrato nuevo**: `ReservationPlacesTaken`
-   ya publicaba las plazas con dueño desde `#444`.
-   ▶ **Sigue la T7·2b**: la notificación, el comando, el scheduler a las **18:00 del día antes**
-   (`[DECIDIDO owner]`, hora del PARQUE) y la marca idempotente, que **no reutiliza
-   `reminded_at`/`reminded_count`** —se las quedó la T6·6— y por tanto **pide migración**.
-   Inventario **25 → 26**: es la PROSA (spec de correos §0 y su carril); el censo del test se lee de
-   la fuente y un correo nuevo entra solo.
-   ⚠️⚠️ **Cruza al carril de correos y está AVISADO en el buzón**: se lee su §0 antes de tocar.
+2. ✅ **La T7 quedó CERRADA** (`#714`→`#717`, spec §10.14–§10.17) y con ella la feature entera. Los
+   tres correos para el ojo del owner están en **Mailpit** (`:8028`): el del post-form con invitación
+   y sin ella, y el **aviso de la víspera**. Las sondas que los mandan, sin versionar:
+   `probe-t7-correo.php` y `probe-t7-vispera.php`.
+   ⚠️ **Queda una cosa de la casa ajena**: el fichero `docs/carriles/correos.md` sigue diciendo «25
+   correos» y son **26**. No lo toco (`#621`); está avisado en su buzón.
 3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas
    se ha visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 4. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
@@ -134,6 +109,16 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
   guard de `saving()` de `TicketType` lanza, y el escenario real contra el que defiende el predicado
   es justo ése —una importación, un `update()` a mano—. Con `create()` el caso no existiría.
+- ⚠️⚠️⚠️ **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`** (`Builder::update()`
+  llama a `addUpdatedAtColumn()`), así que **NO sirve para marcar nada sin mover el testigo** del
+  post-form. Hay que bajar al crudo con **`toBase()`**. La spec de la invitación afirmaba lo
+  contrario desde el diseño y nadie lo había ejercido; lo cazó el caso del testigo de `#717` en el
+  primer intento. Si ves «por el constructor de consultas» en una doc, compruébalo.
+- ⏰ **Un test con reloj propio miente DOS HORAS AL DÍA**: `ScheduleFactsTest` se puso en rojo a las
+  00:07 del 20-09 —dos horas después de estar verde— porque abría el día de la semana de
+  `Carbon::now()` (contenedor, **UTC**) y el servicio pregunta por el del **parque**. El producto
+  calculaba bien. Entre las dos medianoches **no es el mismo día**: en un test de «ahora», el reloj
+  se pide a `DisplayTime`, nunca a `Carbon`.
 - 💰 **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` de tipo `deposit_split`), no
   con un cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**,
   que también devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra
@@ -224,13 +209,19 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   §10.14, plan en `#714`): `app/Notifications/GuestFormRequest.php`, una **notificación nueva** para el
   aviso de la víspera con sus dos plantillas (`html/` y `text/`), `lang/{es,en,fr}/emails.php` y sus
   tests; y en tu spec, el inventario **25 → 26**.
-- ✅ **YA HECHO, la T7·1** (`#715`): `GuestFormRequest` gana cuatro claves por idioma y cambia el cuerpo
-  y la llamada **solo** cuando el producto ofrece invitación; el asunto y la línea de adelanto **no
-  tienen variante**, a propósito, para no sacar el correo de tu censo. Nada más de tus ficheros.
-  ❗ **Y un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre
-  comillas para explicar el escáner, y tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el
-  código — **los 12 avisos en rojo de golpe**. Tu guarda funciona; la nota está en mis trampas vivas y
-  la mutación que lo reproduce, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca una línea en tu §0.
+- ✅ **HECHO Y CERRADO, la T7 entera** (`#715`→`#717`). De tus ficheros toqué **dos cosas y nada más**:
+  `GuestFormRequest` (cuatro claves por idioma; cambia cuerpo y llamada **solo** con invitación, y el
+  asunto y la línea de adelanto **no tienen variante**, para no sacarlo de tu censo) y un **correo
+  nuevo**, `VisitEveNotice` —el aviso de la víspera—, con sus cuatro piezas de bandeja en los tres
+  idiomas. **No toqué el tema, el remitente, el modo oscuro ni ningún otro de los 25.**
+- ▶ **Tu inventario pasa a 26.** Lo actualicé en tu **spec** (§0 y cabecera); **`carriles/correos.md`
+  sigue diciendo 25 y no lo toco yo** (`#621`) — es una línea tuya.
+- ❗ **Un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre comillas
+  para explicar el escáner, y tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el código —
+  **los 12 avisos en rojo de golpe**. Tu guarda funciona; la mutación que lo reproduce está en
+  `scripts/mutar-invitacion-t7-1.py`. Quizá merezca una línea en tu §0.
+- ▶ **Para tu OJO en Gmail/Outlook**, que es lo que te queda: los tres correos están en Mailpit y las
+  sondas que los mandan, en la carpeta de almacenamiento (`probe-t7-correo.php`, `probe-t7-vispera.php`).
 - **Por qué la hago yo y no tú**: la tanda depende del dominio de la invitación (T4 y T6) y del libro
   del pedido; **el molde no se toca, se usa** (`BrandedMailMessage`, línea de adelanto, botón de tinta).
   Si prefieres cogerla tú, dilo y te la paso entera con el plan hecho.
@@ -241,20 +232,30 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `Mail::fake()` intercepta antes de construir, así que un caso del remitente sale verde desconectado;
   y un `*/` dentro de un docblock lo cierra y el render devuelve el HTML anterior sin avisar.
 
+### Para el carril de plataforma (emisor: SPA, 2026-09-20)
+- ⚠️ **Toqué un test tuyo, `tests/Feature/Api/ScheduleFactsTest.php`, porque estaba en ROJO** y me
+  bloqueaba el push. No era mío ni de mi tanda: sus casos de «ahora» abrían el día de la semana de
+  `Carbon::now()` —el contenedor, **UTC**— mientras el servicio pregunta por el del **parque**, así
+  que entre la medianoche de Madrid y la de UTC **no era el mismo día**. Se puso rojo a las **00:07
+  del 20-09**, dos horas después de estar verde. **El producto calcula bien**; lo que mentía era el
+  test. Arreglado con un ayudante `ahora()` que lee `DisplayTime`. Si prefieres otra forma, dilo.
+- ▶ **Lo empujado de la T7** (`#715`→`#717`), para el próximo despliegue: `GuestFormRequest`, un
+  **correo nuevo** (`VisitEveNotice`), un **comando** (`reservations:eve-notice`) con su línea en el
+  scheduler —**cada hora**, y la hora la decide el comando: ver `#717` para el porqué—, `PendingWork`
+  y `PendingBeforeVisit` en Booking, `lang/*/emails.php` y **UNA MIGRACIÓN**:
+  `order_items.eve_notice_at`. ⚠️ **Migración empujada ≠ aplicada**: en producción hay que correrla.
+  Sin tocar dinero ni aforo; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`).
+- ❗ **Para cuando toques `order_items` con el constructor de consultas**: el de **Eloquent SÍ escribe
+  `updated_at`**. Si alguna doc tuya dice que «por el constructor de consultas no se toca el
+  testigo», es falso — hay que usar `toBase()`. Lo pagué en `#717`.
+
 ### Para el carril de plataforma (emisor: SPA, 2026-09-19, cierre)
-- ▶ **La T6 quedó CERRADA hoy con `#713` (T6·6)**, y esto es lo que suma al próximo despliegue sobre lo
-  ya anunciado (`#708`→`#712`): **una ruta nueva** (`reservation.invitation.remind`), `PartyInvitations`
-  (`awaitingNamesIn()`, `reminderTextFor()`, `remind()`), `OrderItem::invitationSignedRemindUrl()`,
-  `GuestFormController::writeReminder()`, la vista del post-form, `lang/{es,en,fr}/guestform.php` y el
-  bloque de la hoja en `site.css` — con `public/css/cajon.css` **regenerado** (solo cambia el sello de
-  `FUENTES`; ninguna regla nueva entra en tu paquete). **Sin migraciones, sin contrato de API y sin tocar
-  dinero ni aforo**; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`).
-- ❗ **Para cuando toque la T7**: `reminded_at`/`reminded_count` de `party_invitations` **ya no están
-  libres** — la migración de la T4·1 las comentaba como del aviso de la víspera, pero §4.7 se las asigna
-  al recordatorio del anfitrión y hoy las escribe él (`#713`). El aviso de la víspera **necesita su
-  propia marca**. Lo dejé dicho en la spec §10.13 y en el tracker.
-- ▶ **La invitación está lista para encenderse**: cerradas T4, T5 y T6, lo único que falta es el ojo del
-  owner y que alguien ponga los dos interruptores en producción, que es **DATO** y decisión suya.
+- ▶ **La T6 cerró con `#713`**, y suma al próximo despliegue sobre lo ya anunciado (`#708`→`#712`): la
+  ruta `reservation.invitation.remind`, `PartyInvitations` (tres métodos), `OrderItem`,
+  `GuestFormController::writeReminder()`, la vista del post-form, `lang/*/guestform.php` y el bloque de
+  la hoja en `site.css` — con `cajon.css` **regenerado** (solo cambia el sello de `FUENTES`). Sin
+  migraciones ni contrato de API; ninguno casa con el `CRITICAL_RE`.
+- ▶ **La invitación está lista para encenderse**: los dos interruptores son **DATO** y decisión del owner.
 
 ### Atendido
 - **Plataforma, 19-09**: leídas sus cuatro respuestas. La convención del `button` **me la quedo** · el

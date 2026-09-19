@@ -1,6 +1,6 @@
 # Los correos, desde el canvas de Claude Design
 
-> **Estado:** 🟦 **EL CARRIL ENTERO EN EL ÁRBOL, y son 25 correos, no 23** — T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA) · la FIESTA MIXTA (`#507`, §15) · **los DOS del framework que nadie había contado** (`#508`, §17). **El inventario del artboard queda sin ningún RECHAZADO.** Sigue 🟦 solo por el OJO del owner en un cliente de correo real, y por los cuatro ÁMBAR (§16)
+> **Estado:** 🟦 **EL CARRIL ENTERO EN EL ÁRBOL, y son 26 correos, no 23** — T1 (vestido) · T2 (remitente) · T3+T4 (el MOLDE) · T5 (LA BANDEJA) · la FIESTA MIXTA (`#507`, §15) · **los DOS del framework que nadie había contado** (`#508`, §17) · y el **AVISO DE LA VÍSPERA** (`#717`, 2026-09-20), que lo trae el carril del SPA desde `specs/celebracion-e-invitacion.md` §10.17 y usa este molde sin tocarlo. **El inventario del artboard queda sin ningún RECHAZADO.** Sigue 🟦 solo por el OJO del owner en un cliente de correo real, y por los cuatro ÁMBAR (§16)
 > **Banda de decisiones:** **500–519** (`[DECIDIDO owner, 2026-09-10]`; la del carril de diseño de la web pública es 470–499 y va por `#489`)
 > **Fuente:** canvas `8c37d2d2-7e9c-43a9-bc25-aacb6607f2ad` · artboard `Correos PJP` (turno 1a) · `doc/correos.md` · `doc/reglas.md` · tokens **v1.10**
 > ⚠️ Esa fuente **se mueve sola** (`rediseno-desde-canvas.md` §1: v1.9 por la mañana y v1.10 por la tarde del 09-09): **se relee antes de cada tanda, no una vez por carril.**
@@ -10,10 +10,10 @@
 
 ## §0 · Antes de tocar
 
-- **El carril entero en el árbol** (`#500`→`#508`, banda 500–519) **y son 25 correos, no 23**: los dos del
-  framework (verificar el correo, restablecer la contraseña) no vivían en ninguna carpeta; se EXTIENDEN
-  (`buildMailMessage($url)`), no se reemplazan, y hoy encolan (`PAY-14`). Quedan los cuatro ÁMBAR (§16) y el
-  OJO del owner en Gmail/Outlook: nada se ha visto en un cliente real.
+- **El carril entero en el árbol** (`#500`→`#508`, banda 500–519) **y son 26, no 23**: los dos del
+  framework (verificar el correo y la contraseña) no vivían en ninguna carpeta; se EXTIENDEN
+  (`buildMailMessage($url)`), no se reemplazan, y hoy encolan (`PAY-14`). El 26 es el **aviso de la
+  víspera** (`#717`, del SPA). Quedan los cuatro ÁMBAR (§16) y el OJO del owner en un cliente real.
 - **§2: el filtro producto/cliente NO se resuelve con tokens**: los clientes de correo no leen `var(--…)` y
   Laravel INLINEA el tema, así que `client.css` no llega. Lo data-driven va por Blade: el logotipo y el nombre
   del negocio (`Setting::businessName()`, único lector: la forma con `?? $default` devolvía `''` con la fila en
