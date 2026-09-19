@@ -141,17 +141,58 @@ en `phpunit.xml`, así que la suite lee el `.env` de cada máquina: el gate habr
 ordenador que tiene el paquete y rojo en el otro**, que es la peor forma de romper algo.
 
 No es un detalle de fontanería: **el producto no puede probar una página que ya no es suya**, y la instancia
-no es una app PHP con suite propia. Las salidas posibles, que la T2b tiene que elegir con su coste delante:
+no es una app PHP con suite propia.
 
-1. **Las pruebas se van con la vista** y la instancia monta su CI contra un checkout del producto.
-2. **El producto trae un paquete de instancia de PRUEBA** en sus fixtures y la suite lo usa: prueba el
-   mecanismo siempre, y el contenido de la landing deja de ser asunto suyo.
-3. **Las pruebas de contenido se retiran** y lo que queda en el producto es la huella de maquetación, que ya
-   cubre las 34 pantallas y no mira el marcado por dentro.
+▶ **Se plantearon tres salidas y NINGUNA era la buena** (se dejan escritas porque la descartada es
+información): (1) las pruebas se van con la vista y la instancia monta CI de PHP contra un checkout del
+producto; (2) el producto trae un paquete de PRUEBA en sus fixtures y la suite lo usa; (3) las de contenido
+se retiran y queda la huella de maquetación. Las tres **daban por hecho que los 14 casos son una unidad que
+hay que colocar en algún sitio**, y no lo son.
 
-▶ Hasta que eso se decida, la T2a deja **el mecanismo vivo y la vista en su sitio**: `/contacto` resuelve
-`instancia::contacto` si el paquete la trae, y la del producto si no. Una instancia ya puede vestir esa
-página; el producto sigue bastándose solo.
+### 4.5.bis · La salida elegida: partir por lo que AFIRMA cada caso (`#649`)
+
+**El propio experimento trazó la línea**: de los 14, **cayeron 9 y aguantaron 5**. Los que aguantaron no
+miran el HTML —hacen `POST /contacto`, comprueban que un tema inventado se rechaza y que el tema llega al
+asunto del correo—; los que cayeron afirman sobre el **marcado**: que el botón de enviar es el relleno
+secundario, que el aviso de privacidad va como nota, que no hay mapa.
+
+> **La regla, en una línea**: el contrato entre el producto y una instancia son los **DATOS que recibe la
+> vista**, no el **HTML que la vista produce**.
+
+Es la línea que separa una prueba de CONTRATO —la escribe quien produce— de una de RENDERIZADO —la escribe
+quien consume—. Hoy están mezcladas: el producto prueba su propia conducta **a través del marcado de un
+cliente**, y por eso mudar una vista le rompe la suite.
+
+| El producto prueba | La instancia prueba |
+|---|---|
+| Que el controlador pasa `answers` y `topics` | Que su página pinta lo que ella quiere |
+| Que un tema inválido se rechaza | Que el botón lleva la clase que ella decidió |
+| Que el tema llega al asunto del correo | Que no hay mapa, si ella no quiere mapa |
+| Que el mecanismo resuelve la vista y cae al respaldo | — |
+
+⚠️⚠️ **Y la herramienta de la instancia NO es `assertStringContainsString`: es la huella de maquetación**
+(34 pantallas). La diferencia no es de estilo: una afirmación de cadena se rompe cada vez que el cliente
+rediseña —que es su derecho—, y eso es un fallo EQUIVOCADO; la huella solo dice «esto cambió sin querer»,
+que es la pregunta buena.
+
+**Por qué escala**: diez clientes y la suite del producto ni crece ni depende de ninguno · un cliente
+rediseña y no se pone rojo nada del producto · un cliente rompe lo suyo y es suyo · y **nadie monta CI de
+PHP en un repo que no es PHP**, que es lo que hundía la salida 1.
+
+### 4.6 El CONTRATO DE VISTA, que es lo que hay que añadir
+
+Hoy, si alguien renombra la variable `answers` en `ContactController`, **se rompen todas las instancias a la
+vez y ninguna prueba del producto se entera**. Eso es justo lo que el producto tiene que guardar.
+
+Cada vista que una instancia puede vestir **declara qué variables recibe**, y una guarda verifica que el
+controlador las sigue pasando. Es el hermano de `instancia.json`: aquél dice con qué VERSIÓN del producto
+funciona un paquete; éste dice qué le PROMETE el producto a cada vista.
+
+⚠️ La guarda afirma sobre los **datos de la vista**, nunca sobre el HTML — si mirara el marcado volvería a
+atar el producto a la landing de un cliente, que es el defecto que esta sección arregla.
+
+▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
+`instancia::contacto` si el paquete la trae, y la del producto si no.
 
 ## 5. Impacto en invariantes
 

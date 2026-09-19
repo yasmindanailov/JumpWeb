@@ -14,12 +14,13 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='InstanceViewPathTest'"
+TESTS="$SAIL php artisan test --filter='InstanceViewPathTest|InstanceViewContractTest'"
 
 VISTAS=app/Http/Instancia/InstanceViews.php
+CONTACTO=app/Http/Controllers/ContactController.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$VISTAS")
+FICHEROS=("$VISTAS" "$CONTACTO")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -79,6 +80,17 @@ mutar "un contrato viejo DEJA LA WEB EN BLANCO en vez de avisar (una landing men
                 'producto' => self::CONTRATO,
             ]);" \
   "            throw new \RuntimeException('contrato de instancia incompatible');"
+
+# ── El CONTRATO DE VISTA: lo que el producto promete a la landing de cada instancia ────────────
+# El modo de fallo es el más silencioso de todos: aquí no se rompe nada y las N instalaciones se rompen a
+# la vez, cada una en su servidor.
+mutar "el controlador DEJA DE PASAR una variable que el contrato promete (todas las landings a la vez)" \
+  "$CONTACTO" "            'topics' => self::TOPICS," ""
+
+mutar "el controlador pasa una variable de MÁS sin declararla (contrato tácito otra vez)" \
+  "$CONTACTO" "            'topics' => self::TOPICS," \
+  "            'topics' => self::TOPICS,
+            'sinDeclarar' => 1,"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

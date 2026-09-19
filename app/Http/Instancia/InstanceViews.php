@@ -47,6 +47,47 @@ class InstanceViews
      */
     public const CONTRATO = 1;
 
+    /**
+     * **EL CONTRATO DE VISTA**: qué recibe cada vista que una instancia puede vestir (`#649`).
+     *
+     * ❗❗❗ **Es una promesa hacia fuera, no una nota interna.** Quien escribe la landing de una
+     * instalación programa contra esta lista; si una variable se renombra aquí, **se rompen todas las
+     * instancias a la vez**, cada una en su servidor y sin que la suite del producto se entere. Por eso
+     * lo vigila `InstanceViewContractTest`, que compara el conjunto EXACTO.
+     *
+     * ⚠️ Son los DATOS, nunca el marcado. El HTML es de la instancia y el producto no opina.
+     *
+     * ⚠️ Añadir una variable también rompe la guarda, y está bien que así sea: es contrato nuevo, hay
+     * que declararlo, y declararlo es lo que hace que el siguiente que escriba una landing sepa con qué
+     * puede contar.
+     *
+     * ❗❗❗ **Medido el 19-09 al escribir la guarda, y la cifra sorprendió: son NUEVE, no dos.** El
+     * controlador pasa `answers` y `topics`; las otras siete las inyecta el **composer global**
+     * (`View::composer('*')`) en TODAS las vistas sin que nadie las pida. O sea que el producto ya
+     * promete —sin saberlo— `site`, `heroStatus`, `offers`, el par de `ctaMinPrice*` y las dos de
+     * cookies. Escribirlas aquí es lo que convierte esa promesa tácita en una declarada.
+     *
+     * ⚠️⚠️ **Y esta lista va a ENCOGER**: ese composer es «la pieza que hay que sustituir por el menú»
+     * (`instancia-y-landing-fuera.md` §1.1) y `offers` es uno de los seis recursos que `#631` retira
+     * del panel. Cuando eso pase, el contrato de instancia sube de MAYOR y hay que avisar a cada
+     * instalación: su landing dejará de recibir lo que hoy recibe. **Sin esta lista, ese día nadie se
+     * habría enterado hasta ver la web del cliente rota.**
+     *
+     * @var array<string, array{ruta: string, datos: list<string>}>
+     */
+    public const CONTRATO_DE_VISTAS = [
+        'contacto' => [
+            'ruta' => 'contacto',
+            'datos' => [
+                // Lo que pone el controlador de la página.
+                'answers', 'topics',
+                // Lo que pone el composer global, en toda vista. ⚠️ Se va con el menú de hechos.
+                'site', 'heroStatus', 'offers', 'ctaMinPriceCents', 'ctaMinPriceLabel',
+                'cookieBannerEnabled', 'cookieConsent',
+            ],
+        ],
+    ];
+
     public function __construct(private readonly ViewFactory $vistas) {}
 
     /**

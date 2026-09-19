@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#648`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#649`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, T2a y la mudanza).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -34,12 +34,10 @@
 
 ## Por dónde retomar, en orden
 
-1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`): una página ajena monta el cajón, lo abre y
-   COMPRA, con la landing idéntica píxel a píxel. El anfitrión mínimo (§4.4) es de F5 por diseño, no un
-   pendiente. ⚠️ **Le falta un ojo humano sobre la COMPRA de la T5**: medida en Chromium (42/42), no vista.
-   Se enseña con el banco de pruebas de la spec §4.8 (un HTML en `public/` con las dos líneas del paquete)
-   — **y se BORRA al terminar**, o la guarda 9 del despliegue aborta. Las cinco tandas y sus seis trampas
-   están en esa spec, §4.1→§4.8: al tocar el cajón, se leen de ahí.
+1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`, donde están sus cinco tandas y sus seis
+   trampas: al tocar el cajón se leen de ahí). ⚠️ **Le falta un ojo humano sobre la COMPRA de la T5**:
+   medida en Chromium (42/42), no vista. Se enseña con el banco de pruebas de su §4.8 — **que se BORRA al
+   terminar**, o la guarda 9 del despliegue aborta.
 2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** Etiqueta cortada y empujada
    (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades. **Para las instancias no hay
    nada que hacer**: sin migraciones, sin claves de `.env`, sin ajustes. ⚠️ Producción, de noche o con el
@@ -62,11 +60,20 @@
    el invariante **`SEC-12`** con siete casos y `scripts/mutar-paquete-instancia.sh` **5/5**, la
    `plantilla/` del producto y el repo LOCAL `jumpweb/instancias/playjump` (**sin remoto**, y el owner dijo
    que por ahora no hace falta). `/contacto` ya resuelve por la instancia si su paquete la trae.
-   ⚠️⚠️ **LO QUE DESCUBRIÓ LA T2a Y ORDENA LA T2b**: la vista **NO se mudó**. Con ella fuera, **9 de los
-   14 casos de `ContactPageTest` fallan** en una máquina sin paquete —no hay `.env.testing`, la suite lee
-   el `.env` de cada una—, o sea gate verde aquí y ROJO en el otro ordenador. **Mudar una vista es mudar
-   sus pruebas**: la T2b empieza eligiendo dónde viven (spec §4.5, tres salidas con su coste), no moviendo
-   ficheros. Medido con la suite entera en las dos condiciones: 5186 verdes con paquete y sin él.
+   ⚠️⚠️ **LA T2b YA TIENE SALIDA** (`#649`, spec §4.5.bis): las pruebas de la landing se parten **por lo
+   que AFIRMAN**, no por dónde vive el fichero — el experimento trazó la línea solo (sin paquete cayeron
+   **9** y aguantaron **5**: los que aguantan no miran el HTML). **El contrato producto↔instancia son los
+   DATOS que recibe la vista, no el HTML que produce.** El producto se queda la conducta; la instancia, el
+   marcado, y su herramienta es la HUELLA y no `assertStringContainsString` (una cadena se rompe cuando el
+   cliente rediseña, que es su derecho, y eso es un fallo equivocado).
+   ▶ **HECHO ya el CONTRATO DE VISTA**: `InstanceViews::CONTRATO_DE_VISTAS` + `InstanceViewContractTest`,
+   arnés **7/7**. ❗❗ Y al medirlo saltó lo gordo: **la vista recibe NUEVE variables, no dos**. Siete las
+   mete el composer global en TODA vista (`site`, `heroStatus`, `offers`, los dos `ctaMinPrice*`, las dos
+   de cookies), así que el producto promete sin saberlo — y esa lista **va a ENCOGER**: el composer se
+   sustituye por el menú y `offers` lo retira `#631`. Ese día sube el MAYOR y hay que avisar a cada
+   instalación.
+   ▶ **QUEDA de la T2b**: limpiar los 5 de conducta para que afirmen sobre DATOS y no sobre HTML, y llevar
+   los 9 de marcado a la huella.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
    genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**.
    ⚠️⚠️ **Y el nombre del proyecto de Docker está FIJADO** (`name: jumpweb`) desde `#648`. Salía del nombre
@@ -75,14 +82,14 @@
 
    ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
    propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).
-   ▶ **Y un defecto de la API, mío y pequeño, que me pasó el carril del SPA medido** (su buzón, 19-09):
-   `InvitationHostController` valida `honoree_name` y `host_line` como `['sometimes','string']`, y
-   `ConvertEmptyStringsToNull` convierte un `""` en `null`, así que **un cliente que mande cadena vacía
-   recibe 422**. En la web lo arreglaron con `nullable`; en la API es contrato y lo cambio yo, con su caso.
+   ▶ **Defecto de la API, mío y pequeño** (medido por el SPA, su buzón 19-09): `InvitationHostController`
+   valida `honoree_name` y `host_line` como `['sometimes','string']` y `ConvertEmptyStringsToNull` hace
+   `null` de un `""`, así que **una cadena vacía recibe 422**. En la web va con `nullable`; en la API es
+   contrato y lo cambio yo, con su caso.
 
-   ⚠️⚠️ **De la ficha** (el porqué en la spec §4.1): la foto de un PRODUCTO se SUBE al disco `uploads` y la
-   de una ZONA es ruta a `public/` heredada; las dos salen como URL absoluta. Medido y SIN tocar: **35
-   imágenes del cliente versionadas en `main`**, a las que apuntan las 3 zonas con foto. Van con la T2.
+   ⚠️ **De la ficha** (spec §4.1): la foto de un PRODUCTO se SUBE a `uploads`, la de una ZONA es ruta a
+   `public/` heredada, y las dos salen como URL absoluta. Medido y sin tocar: **35 imágenes del cliente
+   versionadas en `main`**. Van con la T2.
 
    ▶ **La RECETA de un plato nuevo** (lista blanca en el recurso, lo no rellenado no viaja, `?lang=` si se
    traduce, caché según cambie, lo apagado no se sirve, contrato + caso + mutación en el mismo commit) se
@@ -121,24 +128,21 @@
 `.githooks/pre-push` · `scripts/huella-enrutador.py` · `scripts/partir-decisiones.py` · `scripts/deploy.sh` (la
 guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `phpstan-baseline.neon` ·
 `eslint.config.js` · `eslint-suppressions.json` (la poda quien arregla) · `scripts/mutar-analisis-estatico.sh` ·
-`StaticAnalysisGateTest` · el emisor de tokens (`ApiTokenIssuer`, `AuthTokenController`,
-`PasswordLogin::verify()`, `AuthTokenTest`, `ApiTokenAbilityTest`, `scripts/mutar-token-bearer.sh`) ·
-`Tests\TestCase::be()` · el arranque del cajón (`Http\Sidebar\SidebarBoot`, `SidebarBootController`,
-`SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura, su carcasa y el paquete (`resources/js/cajon/**`,
-`sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · la hoja del
-paquete (`public/css/cajon.css` GENERADA, `scripts/hoja-del-cajon.py`, `scripts/huella-maquetacion.mjs`,
-`HojaDelCajonTest`, `scripts/mutar-hoja-del-cajon.sh`) · **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
+`StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
+enumera cada spec (`token-bearer.md`, `cajon-empaquetable.md` §0): el emisor, el arranque, la apertura, la
+carcasa, la hoja GENERADA `public/css/cajon.css` y sus cuatro arneses · `scripts/huella-maquetacion.mjs` ·
+**EL PAQUETE DE INSTANCIA** (`#647`, `#649`: `config/instancia.php`, `Http\Instancia\InstanceViews` con el
+CONTRATO DE VISTAS, `plantilla/`, `InstanceViewPathTest`, `InstanceViewContractTest`,
+`scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`) ·
+**el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
 `Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
 `PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`,
 más `SocialProofFacts{Controller,Resource}` —que consumen el contrato `Content\Contracts\SocialProof`, cuyo
 dueño es el carril de la web/reseñas—) ·
-**la FICHA del catálogo** (`#645`: `Booking\Contracts\CatalogZoneDetail`, `CatalogZoneDetailResource`, los dos
-`imageUrl()` —`Zone` y `TicketType`—, `CatalogReader::describeZoneDetail()`, el `FileUpload` de
-`CatalogForm`, la migración `ticket_types_image`) ·
-`Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
-**En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
-`resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
-Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
+**la FICHA del catálogo** (`#645`: `CatalogZoneDetail(+Resource)`, los dos `imageUrl()`, el `FileUpload` de
+`CatalogForm` y su migración) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
+**En F4, además y AVISANDO**: `layout.blade.php`, `app.js`, `resources/js/sidebar/**` (solo el empaquetado),
+`public/css/site.css`, `app/Http/Sidebar/**`. Todo es COMPARTIDO: un cambio de forma se avisa antes.
 
 ## Trampas de este carril
 
