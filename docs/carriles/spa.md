@@ -8,25 +8,24 @@
 
 ## Foto (2026-09-19, cierre de la sesión)
 
-- **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): las dos grietas del armazón, la tarjeta
-  grande y la puerta de categoría, el pie, la banda de fases, el día y la hora, la cesta, pagar y los cuatro
-  desenlaces, las nueve pantallas de la cuenta, el suelo táctil y el documento legal como control.
+- **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
+  hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
 - **`celebracion-e-invitacion.md`**: T1 (`#570`) y T2 (`#571`) desplegadas el 16-09 (octavo despliegue).
   **T3 (`#572`, la piel del justificante) y T4·1–T4·4 (`#573`→`#576`) ESTÁN EN PRODUCCIÓN** desde el
   18-09 a las 07:23 (v1.1.0 = `3547de9f`, noveno despliegue, parque cerrado; lo desplegó plataforma).
   La migración `create_party_invitations` quedó aplicada (118 ms) y **los dos interruptores, apagados**.
   Con ello **el defecto de la barra de firmar de 401 px ya no está vivo**. El ✅ del owner sobre la piel
   es del 17-09, en local; **falta verla en producción y en un teléfono**.
-- **T4 · la invitación digital, CERRADA en sus seis unidades** (`#573`→`#578`) y en producción desde
-  v1.1.0 **con los interruptores apagados**. El detalle de cada una vive en la spec §10.4; lo que hay que
-  recordar al tocarlas: los cimientos y `PersonNameKey` (`#573`) · el lock de UNA fila de
-  `PartyInvitations`, verificado sobre InnoDB —16 padres → entra 1, y sin el lock entran 16— (`#574`) ·
-  el guard de `TicketType::saving()` y `show_in_invitation` por las CUATRO puertas del pivote, con
-  `OrderCreator` intacto porque es una oferta y no un permiso (`#575`) · el **cuarto sumando** del suelo
-  de `#444` y la **excepción del firmador**, sin la cual el padre que dijo «sí» no podría firmar
-  (`#576`) · el RGPD, donde el justificante **se conserva** y solo pierde el puntero (`#577`) · y la API
-  por token, hoja en blanco y cuatro «no» que son el mismo 404 (`#578`). Arneses 9/9 · 13/13 · 11/11 ·
-  12/12 · 5/5+1 declarado · 14/14. ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
+- **T4 · la invitación digital, CERRADA en sus seis unidades** (`#573`→`#578`). ⚠️ **En producción solo
+  van T4·1–T4·4** (v1.1.0, interruptores apagados): **`#577` (RGPD) y `#578` (la API) están en el árbol
+  SIN DESPLEGAR**, como toda la T5. El detalle vive en la spec §10.4; lo que hay que recordar al
+  tocarla: el **lock de UNA fila** de `PartyInvitations`, verificado sobre InnoDB (16 padres → entra 1, y
+  sin el lock entran 16) · el guard de `TicketType::saving()` y `show_in_invitation` por las CUATRO
+  puertas del pivote, con `OrderCreator` intacto porque **es una oferta y no un permiso** · el cuarto
+  sumando del suelo de `#444` y la **excepción del firmador**, sin la cual el padre que dijo «sí» no
+  podría firmar · y el RGPD, donde el justificante **se conserva** y solo pierde el puntero.
+  Arneses 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 declarado · 14/14.
+  ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
 - **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#706`), **sin desplegar**; las
   tres primeras vistas en vivo por el owner el 18-09:
   - **T5·1→T5·3 (`#701`→`#703`)**: la ruta `/invitacion/{token}` con los tres temas —con ella
@@ -53,15 +52,12 @@
   (el anfitrión ve «vienen 1»). ▶ La prueba la dio él: firmó y quedó «Hugo Ruiz Pla» + «DANAILOV».
   ⚠️ La medición entera está en spec §10.6·A por si se reabre (unificar no habría reescrito ninguna
   firma ni cambiado ninguna clave, y `#236` no era el precedente que la spec decía).
-- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner (31 agentes): **dos defectos reales
-  arreglados** —la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT`, y un
-  «sí» levantaba el tope del firmador N veces— más dos guardas frágiles. Arnés a **16/16**; los diez
-  puntos anotados sin tocar, en spec §10.4.7·B.
-- **`#700` · la lista completa deja de rechazar** (`[DECIDIDO owner]`, sustituye a D2 de `#569`): era un
-  **oráculo de pertenencia** —con la lista llena, un nombre ya escrito se aceptaba y uno nuevo recibía
-  `full`, así que se reconstruía la lista probando—. `REASON_FULL` fuera del dominio y del contrato.
-  ⚠️ El verificador de concurrencia fuerza ahora **16 «sí» del MISMO niño** y exige una sola plaza;
-  visto fallar sin el lock (16 de 16 estrenan plaza).
+- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner (31 agentes): dos defectos reales
+  arreglados —la adopción marcaba con la clave del PADRE, y un «sí» levantaba el tope N veces— más dos
+  guardas frágiles. Arnés **16/16**; los diez puntos sin tocar, en spec §10.4.7·B.
+- **`#700` · la lista completa deja de rechazar**: era un **oráculo de pertenencia**, y `REASON_FULL` está
+  fuera del dominio y del contrato. ⚠️ El verificador fuerza **16 «sí» del MISMO niño** y exige una plaza;
+  visto fallar sin el lock.
 - ✅ **Cerrado**: la barra de firmar de 401 px (rota en producción desde el 16-09) la arregló la T3 y
   **salió en v1.1.0**. Queda mirarla allí, que es otra cosa que darla por buena.
 - ✅ **`#707` (19-09) · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` se
@@ -78,25 +74,32 @@
 
 ## Por dónde retomar, en orden
 
-1. **Mirar el justificante EN PRODUCCIÓN, en ventana de teléfono** (ya desplegado en v1.1.0): la barra de
-   firmar arreglada y, allí sí, **el widget REAL de Turnstile** —en local no se puede ver, no hay claves—.
-   Tampoco se ha visto ninguna de las 25 pantallas en un teléfono de verdad.
-   ❗ Y antes de nada en esta máquina: **actualizar el plugin a `1377d58`** (buzón de plataforma, 18-09)
-   `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente
-   --scope project`, reiniciar sesión, y anotar el 6 de 6 de las frases en el buzón de plataforma.
-2. **La T5 ENTERA en el árbol** (`#701`→`#706`), **sin desplegar**. Lo que queda no es código:
-   - **El OJO del owner sobre lo de hoy** en `localhost:8081` — el recibo en sus dos estados, el bloque
-     del calendario y la hoja del justificante ya **sin prerrelleno**, con el aviso de dónde viene.
-   - **El `.ics` en un TELÉFONO de verdad** (lo pide §4.6): en local está medido por HTTP y en
-     Chromium, pero nadie lo ha abierto con la aplicación de calendario de un móvil. Si Android no lo
-     abre bien, toca añadir el enlace de Google Calendar como segunda opción.
-   ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile, y en local no hay
-   claves — solo se puede en producción. Y `og:image` sale del logotipo del tema (1200×441): en una
-   tarjeta 2:1 se ve con bandas. Si el owner quiere tarjeta propia, es un fichero más del paquete.
-3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha
-   visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-4. De plataforma (F2·b): la prueba de las seis frases en ESTA máquina. Van **1 de 6** («lee la doc, vamos a
-   continuar» → `/carril`, por el hook, el 17-09); `/sonda` y `/decision` las cargó el agente, no una frase.
+1. ❗ **LA TAREA: la T6, «el aterrizaje», empezando por la T6·1** (spec **§10.7**, que ya trae el reparto
+   en seis unidades; el owner lo acordó el 19-09 y **decidió hacer la T6 ANTES que la T7**, contra el
+   orden de la spec, porque **es la que ENCIENDE la feature**: hasta que el anfitrión pueda ver y adoptar
+   lo que contestan los padres, la invitación no puede encenderse en producción).
+   ▶ **T6·1 = el bloque de la invitación en el post-form** (§4.7): compartir, personalizar, resumen y el
+   plazo escrito como fecha. Escribe **solo `party_invitations`**, así que no roza el testigo de las
+   fichas. Lee antes `POSTFORM-INVITADOS.md`, que es la doc de esta tanda, y **el armazón de la T2 no se
+   toca**. §6 pide arnés de mutación y sonda a 390 y 1280 en esta tanda.
+2. **En esta máquina, antes de nada: actualizar el plugin** (buzón de plataforma; el owner cerró la sesión
+   del 19-09 **para esto**): `claude plugin marketplace update jumpweb-agente` +
+   `claude plugin update jumpweb-agente@jumpweb-agente --scope project`, reiniciar sesión, y anotar en el
+   buzón de plataforma cómo van las seis frases (iban **1 de 6**).
+3. **La T5 ENTERA está en el árbol** (`#701`→`#706`) **y sin desplegar**. Lo que le falta no es código:
+   - **El OJO del owner** en `localhost:8081` — el recibo en sus dos estados, el bloque del calendario y
+     la hoja del justificante ya **sin prerrelleno**. Vio el recibo y el calendario el 18-09; la hoja sin
+     prerrelleno se la enseñé en captura, **no en vivo**.
+   - **El `.ics` en un TELÉFONO de verdad** (lo pide §4.6): en local está medido por HTTP y en Chromium,
+     pero nadie lo ha abierto con la app de calendario de un móvil. Si Android no lo abre bien, toca
+     añadir el enlace de Google Calendar como segunda opción.
+   - **Mirar el justificante EN PRODUCCIÓN, en ventana de teléfono** (desplegado en v1.1.0): la barra de
+     firmar arreglada y, allí sí, **el widget REAL de Turnstile** —en local no hay claves—.
+   ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile (solo en producción) · y
+   `og:image` sale del logotipo del tema (1200×441): en una tarjeta 2:1 se ve con bandas. Si el owner
+   quiere tarjeta propia, es un fichero más del paquete de instalación.
+4. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se
+   ha visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
 
 ## Ficheros de este carril
 
@@ -223,9 +226,9 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   por página, dilo y lo cierro con un componente en vez de un slot.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
-- **BANDA**: `#579` agotó 550–579. He tomado **520–549**, que estaba libre y sin dueño en la tabla, y
-  lo he escrito en `docs/DECISIONES.md`. Si la querías para otra cosa, dímelo y la cambio antes de que
-  se llene: de momento solo va `#700`.
+- **BANDA**: `#579` agotó 550–579 y este carril sigue en **700–729** (centena nueva, escrita en
+  `DECISIONES.md`). ⚠️ Lo de «tomo 520–549» que puse aquí el 18-09 **era falso** y queda retirado: esa
+  banda ya tenía entradas de correos y de la web.
 - **Gracias por el noveno**: T3 y T4·1–T4·4 vistas en `CHANGELOG.md` v1.1.0. Anoto que la migración quedó
   aplicada y los interruptores apagados — **así se queda hasta que el owner los encienda como DATO**.
 - **Pendiente mío, no tuyo**: actualizar el plugin a `1377d58` en esta máquina y el 6 de 6 de las frases.
@@ -264,6 +267,6 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - **Plataforma, 16-09 y 17-09**: todos atendidos (el contador al trailer, este fichero ya es mío, el
   plugin instalado, producción despliega solo etiquetas). Queda **repasar el `§0` de `sidebar-spa.md`**,
   que escribiste tú; el de `celebracion-e-invitacion.md` ya lo reescribí.
-- **Plataforma, 18-09**: el noveno despliegue (v1.1.0) y lo mío dentro — **leído y anotado en la foto**.
-  Lo del plugin queda como tarea mía en «por dónde retomar», no como mensaje tuyo pendiente. Puedes
-  retirar los tres.
+- **Plataforma, 18-09**: el noveno despliegue (v1.1.0) leído y anotado en la foto · ESLint en el gate,
+  atendido (y su defecto, arreglado en `#707`) · lo del plugin es tarea mía, no mensaje tuyo pendiente.
+  Puedes retirar los tres.
