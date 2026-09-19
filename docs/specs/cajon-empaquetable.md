@@ -1,8 +1,9 @@
 # [SPEC] El cajón empaquetable — del layout del producto a un paquete con contrato (F4 del programa)
 
-> Estado: ✅ **aprobada, EN EJECUCIÓN por tandas** (`DECISIONES #631` lo técnico y el principio, `#632` las tres
-> opciones de producto, `#633` quién implementa); la lectura del SPA se pide en paralelo y ya no es condición ·
-> Última actualización: 2026-09-18.
+> Estado: ✅ **EJECUTADA — las cinco tandas hechas** (T1 arranque · T2 apertura · T3a carcasa · T3b montaje en
+> página ajena · T4 hoja propia · T5 cargador, ruta estable y COMPRA desde una página ajena; `#631`→`#636`).
+> El anfitrión mínimo (§4.4) y el menú de hechos (§4.6) son de F5 por diseño, no pendientes de esta fase ·
+> Última actualización: 2026-09-19.
 > Carril: **plataforma**, diseño E implementación (`[DECIDIDO owner]` `#633`: el SPA está con la invitación
 > digital; se entra en sus ficheros avisando y por tandas T1–T5, `carriles/plataforma.md`).
 > Origen: `specs/producto-e-instancias.md` §4.2. Hermana: `specs/token-bearer.md`.
@@ -21,9 +22,8 @@
   (`specs/account-context-vue.md` §4.8); el chunk tiene techo.
 - **La landing consume un MENÚ DE HECHOS opcional** (`[DECIDIDO owner]`, §4.6): el cajón no depende de que
   lea nada; lista blanca por `Resource`, jamás un volcado de `settings` (lleva secretos).
-- **Estado**: por TANDAS — **T1 ✅** arranque · **T2 ✅** apertura · **T3a ✅** carcasa con dueño · **T3b ✅** el
-  paquete se monta en una página ajena (`installCajon()`) · **T4 ✅** la hoja propia (`cajon.css`, generada) →
-  **T5 la salida**. Implementa plataforma (`#633`). ⚠️ **Dónde va cada cosa**: un rótulo nuevo, en
+- **Estado**: las CINCO tandas hechas (T1 arranque · T2 apertura · T3a carcasa · T3b montaje ajeno · T4 hoja
+  propia · **T5 ✅** cargador, ruta estable y compra desde una página ajena). Implementó plataforma (`#633`). ⚠️ **Dónde va cada cosa**: un rótulo nuevo, en
   `SidebarBoot`; abrir y cerrar, en `cajon/controller.js`; la carcasa, en `shell.js`; lo que solo usa una
   página ajena, en `standalone.js`; **una regla de estilo, en `site.css` y se REGENERA la hoja**
   (`python3 scripts/hoja-del-cajon.py --aplicar`) — `cajon.css` no se edita a mano. El motor NO nombra a
@@ -59,12 +59,18 @@ claves, todas del cajón. **No hay** horario, legales por clave, normas, prueba 
 
 ## 2. Objetivo
 
-1. Un HTML mínimo AJENO al producto (sin Blade, sin Livewire, sin Alpine) monta el cajón, lo abre en cualquier
-   zona y completa una compra en local. Es el criterio de salida del programa para F4.
-2. La huella de maquetación de las doce vistas a 1280 y 390 (el instrumento de `#437`) es **idéntica, 24 de 24**,
-   antes y después de partir la hoja.
-3. La landing del producto sigue funcionando sin cambios visibles: pasa a ser el PRIMER consumidor del paquete.
-4. El producto gana un anfitrión mínimo para las puertas y los flujos con vista propia.
+1. ✅ Un HTML mínimo AJENO al producto (sin Blade, sin Livewire, sin Alpine) monta el cajón, lo abre en cualquier
+   zona y completa una compra en local. Es el criterio de salida del programa para F4. **Medido** el 2026-09-19:
+   sonda 42/42, con `POST /api/v1/orders` → 201 y el salto firmado a la pasarela (§4.7).
+2. ✅ La huella de maquetación es **idéntica** antes y después de la hoja del paquete. El instrumento creció
+   —`huella-maquetacion.mjs` cubre 14 vistas públicas y 3 pantallas del cajón a 1280 y 390, 34 pantallas y
+   38.430 nodos, no las 24 comparaciones de `#437`— porque partir la hoja sin mirar el CAJÓN habría medido
+   justo lo que no cambiaba.
+3. ✅ La landing del producto sigue funcionando sin cambios visibles: pasa a ser el PRIMER consumidor del
+   paquete. Medido: huella IDÉNTICA con y sin el cambio del `<style>` del tema.
+4. ▶ **El anfitrión mínimo se movió a F5**, y no es un descuido: lo decidió el diseño aprobado en `#631` y está
+   escrito en §4.4 —«en F4 las puertas SIGUEN sirviendo la portada; el anfitrión entra en F5, cuando la portada
+   se va»—. Este objetivo se escribió antes que esa sección y la contradecía; manda §4.4.
 
 **Fuera**: sacar la landing del producto (F5), la API pública de lectura para la landing (F5, pero su alcance se
 itera en §4.6), rediseñar el cajón, otro dominio o CORS.
@@ -228,8 +234,9 @@ Mutación: `scripts/mutar-hoja-del-cajon.sh` **8/8**.
 **Medido**: juez en **0 diferencias sobre 1.640 nodos** (3 pantallas × 2 anchos); sonda **34/34**, con la página
 ajena cargando solo fuentes + `client.css` + el paquete, y dos controles nuevos —el anfitrión no tematiza el
 cajón y el paquete no le toca nada al anfitrión—; `HojaDelCajonTest` 5.
-▶ **Queda para la T5**: el cargador en ruta estable (hoy la página ajena cita el fichero con hash de Vite), una
-COMPRA entera en la página ajena, y decidir si en F5 la instalación se lleva la hoja ya tematizada.
+▶ **Lo que quedaba para la T5 está hecho** (§4.1 y §4.7). Sigue abierto, para F5: decidir si la instalación se
+lleva la hoja YA TEMATIZADA —una sola hoja y sin `client.css` en la página ajena—, que es la simplificación
+natural del contrato cuando el kit de instalación genere el paquete.
 
 ### 4.4 El anfitrión mínimo
 Una vista del producto, vestida por el tema, para las 7 puertas que no son la portada y para los flujos con vista
@@ -340,7 +347,16 @@ recurso público lee un ajuste fuera de su lista blanca. `AFORO-*` y `PAY-*`: ni
 **2026-09-18, con el owner** (`#631`): lo técnico, por el estándar profesional (§4.5 y el estándar de §4.6);
 suyo y decidido: todo lo consumible es OPCIONAL, identidad y contacto van por API, el widget de ofertas se retira,
 y el menú crece (ficha de producto). **P1–P3 decididas ese mismo día (`#632`)**, las tres por la recomendada.
-Falta que revise el carril del SPA (es quien implementa) para pasar a ✅.
+La revisión del carril del SPA dejó de ser condición al decidirse que implementa plataforma (`#633`).
+
+**2026-09-19 · las cinco tandas están hechas** (T1→T5, `#631`→`#636`) y los tres objetivos que eran de F4 se
+cumplieron y se midieron; el cuarto es de F5 por §4.4. **Lo que el owner ha visto en vivo**: la T4, en una
+landing ajena servida en local, y la aprobó. La compra de la T5 está medida en Chromium y **no la ha visto un
+ojo humano todavía** — dicho aquí para que nadie lo dé por hecho leyendo el 42/42.
+
+▶ **Esta spec NO se archiva aún** (`CONVENCIONES §11`): sus §4.4 y §4.6 son la entrada de F5 —el anfitrión
+mínimo y el menú de hechos— y archivarla ahora escondería el diseño que la fase siguiente tiene que leer. Se
+destila y se mueve cuando la spec de F5 los absorba.
 
 ## Anexo · fila del enrutador
 

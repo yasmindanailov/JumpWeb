@@ -40,58 +40,32 @@
 
 ## Por dónde retomar, en orden
 
-1. **F4 · el cajón empaquetable, por TANDAS pequeñas y empujadas** (`specs/cajon-empaquetable.md` §0 → §4).
-   Antes de cada tanda: aviso en el buzón (son ficheros del SPA) y `git pull --rebase`. Nada de la invitación.
-   - **T1 ✅ HECHA (18-09) · el arranque con UN compositor**: `Http\Sidebar\SidebarBoot`; el layout baja de 603
-     a 290 líneas y PINTA, no compone; `/sidebar/boot?lang=` (pública, `ETag`) y `/sidebar/session?lang=`
-     (`no-store`). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos; arnés 8/8.
-     ▶ Un rótulo nuevo va en `SidebarBoot`.
-   - **T2 ✅ HECHA (18-09) · la apertura sin Alpine**: el store `purchase` se mudó TAL CUAL a
-     `cajon/controller.js`; el de Alpine queda de espejo y `JumpWeb.cajon` se reasigna al PROXY reactivo (sin
-     eso `open()` no mueve la carcasa y NADA falla: visto en rojo en la sonda). Sonda 17/17; arnés 13/13.
-   - **T3a ✅ HECHA (18-09) · la carcasa con UN dueño**: el layout pierde sus 8 atributos de Alpine y manda
-     `cajon/shell.js` (adopta `.sidecart`, cierre por telón/×/Escape, trampa de foco). `/entradas` idéntica
-     PÍXEL A PÍXEL antes y después; sonda 23/23; arnés 20/20.
-   - **T3b ✅ HECHA (18-09) · el paquete se monta en una página AJENA**: `installCajon()` (`cajon/index.js`) es
-     la única llamada; sin `data-boot` ni marcado, `bootSpaEngine()` trae con `import()` `cajon/standalone.js`,
-     que pide el arranque a la API y CONSTRUYE la carcasa. `jw:cajon:purchased` cierra el contrato de eventos.
-     Sonda 31/31 con una página ajena de verdad; arnés 34/34.
-   - **T4 ✅ HECHA (18-09) · la hoja propia**: `public/css/cajon.css` (167 kB, 777 reglas) la GENERA
-     `scripts/hoja-del-cajon.py` desde `landing.css` + `spinner.css` + `site.css`, en ese orden y sin tocar
-     ninguna (`#635`). **Se genera y no se parte**: 45 de los 102 bloques del cajón los pinta también la
-     landing. Tokens en `:where(.sidecart)` → jerarquía **instalación → paquete → anfitrión**; el precio es
-     que un tema declara en `:root, .sidecart` (hecho ya en el `<style>` del panel y pedido en
-     `INSTALACION-CLIENTE.md` §4). Juez `scripts/huella-maquetacion.mjs --cajon`: **0 diferencias en 1.640
-     nodos** con la página cargando SOLO fuentes + `client.css` + el paquete. `HojaDelCajonTest` 5 (sello
-     SHA-1 de las fuentes en la cabecera de la hoja), `scripts/mutar-hoja-del-cajon.sh` 8/8, sonda 34/34 con
-     dos controles nuevos (el anfitrión no tematiza el cajón; el paquete no toca al anfitrión).
-     ⚠️ **Banco de pruebas LOCAL, no versionado**: `public/landing-ajena.html` (excluido en `.git/info/exclude`)
-     sirve en `localhost:8081/landing-ajena.html` una landing con SUS tokens para mirar el paquete en vivo.
-     Cita el fichero con hash de Vite, así que **caduca con cada `npm run build`**: se actualiza la ruta del
-     `<script>` con la de `public/build/manifest.json`. T5 le dará ruta estable.
-     ⚠️ **El juez nació mintiendo** y conviene recordarlo al tocar cualquier instrumento: retiraba `site.css`
-     y dejaba `landing.css`, así que los tokens seguían en la página y la hoja parecía autosuficiente.
-   - ✅ **Cerrado el pendiente de la T3a** (`[DECIDIDO owner]`, `#634`): naciendo abierto, el foco SÍ entra en
-     el panel. Cambio visible aceptado (el anillo sobre la ×); caso, fila de sonda y mutación puestos.
-   - **T5a ✅ HECHA (19-09) · el cargador y su ruta estable** (`#636`): `resources/js/cajon/paquete.js` es
-     entrada de Vite y `/cajon/paquete.js` la ruta que escribe una landing. Una página ajena descargaba
-     **25,3 KiB** (la entrada del producto entera) y ahora **6,1 KiB**. La ruta **redirige** (302) porque los
-     `import()` del build son relativos: servir los bytes haría pedir `/cajon/sidebar-<hash>.js` y el cajón no
-     abriría. No se cachea: hereda el `no-store` de `RGPD-04` y **no se abre una excepción a una invariante de
-     privacidad por un salto**. `PaqueteDelCajonTest` 4, `scripts/mutar-paquete-del-cajon.sh` 5/5.
-   - **T5b ✅ HECHA (19-09) · se COMPRA desde la página ajena**: sonda **42/42**, con el embudo entero hasta
-     `POST /api/v1/orders` → **201** y el salto firmado a la pasarela (interceptada, no visitada). El login va
-     dentro del cajón y la cookie y el CSRF funcionan desde la página de otro.
-     ⚠️ El cliente de pruebas (`probe-card@jumpweb.test`) **no vive en el repo**: en una máquina nueva la sonda
-     lo dice con su receta de `tinker`. En ésta se creó el 19-09.
-   - ▶ **Queda de la T5**: la spec a ✅ y decidir si en F5 la instalación se lleva la hoja ya tematizada (una
-     sola hoja, sin `client.css` en la página ajena).
-2. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
+1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`): una página que no es del producto monta el cajón,
+   lo abre y COMPRA, con la landing del producto idéntica píxel a píxel. El anfitrión mínimo (§4.4) es de F5
+   por diseño, no un pendiente. ⚠️ **Lo único que le falta es un ojo humano sobre la COMPRA de la T5**: está
+   medida en Chromium (42/42), no vista. El banco de pruebas de abajo la enseña en vivo.
+   Las cinco tandas, con sus cifras y sus porqués, están en la spec (§4.1→§4.7). **Lo que NO está allí y hace
+   falta aquí son las trampas que costaron una pasada cada una**:
+   - ⚠️ **`JumpWeb.cajon` se reasigna al PROXY de Alpine** tras `alpine:init`: quien se quede con el objeto
+     crudo escribe en el sitio equivocado, `open()` no mueve la carcasa y **nada falla** (T2, visto en rojo).
+   - ⚠️ **Tras un arnés que toque un `.vue`, `npm run build:ssr` ANTES de la suite**: restaurar por copia mueve
+     las fechas y `SidebarDomContractTest` sale con 36 rojos que no son del código.
+   - ⚠️ **El juez de la hoja nació mintiendo** (T4): retiraba `site.css` y dejaba `landing.css`, así que los
+     tokens seguían en la página y el paquete parecía autosuficiente. Al tocar un instrumento, control primero.
+   - ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker`; en esta
+     máquina se creó el 19-09. La sonda lo dice con su receta si falta.
+   - ▶ **Banco de pruebas LOCAL, no versionado**: `public/landing-ajena.html` (en `.git/info/exclude`) sirve en
+     `localhost:8081/landing-ajena.html` una landing ajena con SUS tokens. Desde la T5 ya no caduca con cada
+     `npm run build`, porque pide el cargador por su ruta estable.
+2. **LO SIGUIENTE: la v1.2.0** (skill `/release`). Es lo que más se ha acumulado: el contrato 1.1.0→1.2.0, el
+   emisor de Bearer, ESLint en el gate, las cinco tandas del cajón empaquetable y lo del carril del SPA. Sin
+   etiqueta ni despliegue desde v1.1.0 (18-09). ⚠️ Producción, de noche o con el parque cerrado (`#594`).
+3. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
-3. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
+4. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día**. Sin desplegar. El sistema de ofertas nace como hecho de precio (`#631`).
-4. Después **F5** (instancia PlayJump, v2.0.0: abre con el censo de Zones y de «redes»; el menú de hechos y la
+5. Después **F5** (instancia PlayJump, v2.0.0: abre con el censo de Zones y de «redes»; el menú de hechos y la
    ficha con imagen de `#632`; propuesta guardada: un `tokens.json` en la instancia del que salgan `client.css` y
    el tema de la app) → **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
 - **Del owner**: las dos de F5 (con el censo hecho) · el fin de la promo · cuándo sale la v1.2.0.
