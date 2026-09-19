@@ -1,6 +1,6 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#636`** ·
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#637`** ·
 > Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-19 (F4 · T4 y T5 hechas).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -52,6 +52,10 @@
      las fechas y `SidebarDomContractTest` sale con 36 rojos que no son del código.
    - ⚠️ **El juez de la hoja nació mintiendo** (T4): retiraba `site.css` y dejaba `landing.css`, así que los
      tokens seguían en la página y el paquete parecía autosuficiente. Al tocar un instrumento, control primero.
+   - ⚠️⚠️ **Y por hacerle caso al juez casi se despliega un fallo** (`#637`, cazado al preparar la v1.2.0): se
+     scopeó el tema del panel a `:root, .sidecart` para que diera cero, y eso le quitaba sus colores al cajón
+     de una instalación (`--on-brand` del cliente pisado por el del panel). *Un juez no arregla el producto
+     para poder aprobarlo.* La pregunta que lo cazó es la del `/release`: «¿qué tendría que tocar PlayJump?».
    - ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker`; en esta
      máquina se creó el 19-09. La sonda lo dice con su receta si falta.
    - ▶ **Banco de pruebas LOCAL, no versionado**: `public/landing-ajena.html` (en `.git/info/exclude`) sirve en

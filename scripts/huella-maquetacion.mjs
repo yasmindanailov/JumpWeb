@@ -86,7 +86,14 @@ const huellaDeLaPagina = (props) => (page) => page.evaluate((campos) => {
     };
 
     const filas = {};
-    for (const el of document.querySelectorAll('*')) {
+    // ⚠️⚠️ **El `<head>` queda fuera, y es un arreglo, no una comodidad.** Sus hijos no tienen caja ni se
+    // pintan —`0,0,0,0` y `display:none`—, pero la clave de una fila es la POSICIÓN del nodo, así que un
+    // `<script>` de más o de menos en el `<head>` desplaza el índice de todos los siguientes y la huella
+    // canta **cinco nodos distintos en cada página** sin que se haya movido un píxel. Pasó el 2026-09-19 al
+    // comparar contra una huella tomada antes de que naciera la entrada del paquete: 1.780 «diferencias»
+    // que eran, una por una, etiquetas invisibles renumeradas. *Una huella de maquetación mide lo que se
+    // maqueta.*
+    for (const el of document.body.querySelectorAll('*')) {
         const r = el.getBoundingClientRect();
         const cs = getComputedStyle(el);
         const caja = [r.x, r.y, r.width, r.height].map(Math.round).join(',');
@@ -238,6 +245,18 @@ async function juzgarHojaDelCajon(navegador) {
             // exactamente lo que una landing ajena carga —fuentes, `client.css` y el paquete—, que es la
             // promesa de §4.1: dos líneas.
             const retiradas = await page.evaluate(async (hojas) => {
+                // ⚠️⚠️ **El `<style id="jj-theme">` del panel se re-escopa AQUÍ, en el instrumento, y ésa es
+                // la mitad honesta de este juez** (`#637`). Escenario: esta página es la del PRODUCTO, donde
+                // el tema del panel tematiza en `:root` y nadie declara nada sobre `.sidecart`; al meterle la
+                // hoja del paquete —que sí declara sus valores por defecto sobre `:where(.sidecart)`— el
+                // tema del panel pierde por PROXIMIDAD y salen cinco nodos distintos que no existen en
+                // ninguna página real: en la landing no se carga `cajon.css`, y en una página ajena ese
+                // `<style>` no existe. La primera reacción fue scopear el bloque en el layout y eso ROMPÍA el
+                // tema de una instalación (medido: `--on-brand` del cliente pisado por el del panel). *Un
+                // juez no arregla el producto para poder aprobarlo: compensa su propio montaje.*
+                const tema = document.getElementById('jj-theme');
+                if (tema) tema.textContent = tema.textContent.replace(/^:root\{/, ':root, .sidecart{');
+
                 const nueva = document.createElement('link');
                 nueva.rel = 'stylesheet';
                 nueva.href = `/css/cajon.css?v=${document.querySelectorAll('link').length}`;

@@ -61,11 +61,15 @@
          `ThemeSettings::zoneStyle()`; el acento de «Atracciones» va scoped a `#rides` desde `app.js`.
          ⚠️ Aquí se citaban `--jump-1`/`--kids-1` como «color de cada zona»: los retiró `#139` y este
          comentario los sobrevivió. Las zonas son DATOS y pueden ser dos, cinco o llamarse de otra forma. --}}
-    {{-- ⚠️ **`.sidecart` va con `:root` desde `#635`**: la hoja del cajón empaquetable declara sus valores por
-         defecto sobre la raíz del cajón —para que la landing de otro no le repinte el `--bg`—, y eso deja fuera
-         a un tema que solo hable de `:root`. Sin los dos selectores el color de marca del panel llegaba a la
-         landing y NO al cajón, que se quedaba con el naranja del producto. Lo vio el juez de maquetación. --}}
-    <style id="jj-theme">:root, .sidecart{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
+    {{-- ⚠️⚠️ **Este bloque se queda en `:root` y NO se scopea al cajón** (`DECISIONES #637`). La T4 lo puso un
+         rato en `:root, .sidecart` para que el juez de la hoja del paquete diera cero, y era un error con
+         consecuencia real: el tema del panel pasaba a declarar sobre `.sidecart`, que está MÁS CERCA de los
+         nodos del cajón que el `:root` donde tematiza `client.css`, así que **dentro del cajón le ganaba al
+         tema de la instalación**. Medido con el `client.css` de producción: `--on-brand` pasaba de `#101418`
+         (el del cliente) a `#14130F` (el del panel). Y no hacía falta para nada: en la landing del producto no
+         se carga `cajon.css`, y en una página ajena este `<style>` ni existe. El juez compensa su propio
+         escenario artificial (`huella-maquetacion.mjs`), que para eso es el instrumento y no el producto. --}}
+    <style id="jj-theme">:root{ {{ \App\Domain\Content\Services\ThemeSettings::cssRootDeclarations() }} }</style>
     {{-- Spinner de marca (estático, no por Vite: su minificador rompe `backdrop-filter`).
          Su DIBUJO es sustituible por instalación desde `client.css`; ver docs/UI-SPINNER.md §3.bis. --}}
     <link rel="stylesheet" href="{{ asset('css/spinner.css') }}?v={{ @filemtime(public_path('css/spinner.css')) }}">

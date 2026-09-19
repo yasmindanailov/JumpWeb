@@ -16,20 +16,23 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter=HojaDelCajonTest"
+TESTS="$SAIL php artisan test --filter='HojaDelCajonTest|TemaDeInstalacionMandaTest'"
 
 HOJA=public/css/cajon.css
 FUENTE=public/css/site.css
 VUE=resources/js/sidebar/steps/AuthTabset.vue
 GUARDA=tests/Feature/Architecture/HojaDelCajonTest.php
+LAYOUT=resources/views/components/layout.blade.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$HOJA" "$FUENTE" "$VUE" "$GUARDA")
+FICHEROS=("$HOJA" "$FUENTE" "$VUE" "$GUARDA" "$LAYOUT")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
 
-verde() { $TESTS >/dev/null 2>&1; }
+# `eval` porque el filtro lleva comillas: sin él, `--filter='A|B'` viaja como una palabra con comillas dentro
+# y no casa con nada… con lo que TODO saldría verde y el arnés diría que ninguna mutación muerde.
+verde() { $SAIL php artisan view:clear >/dev/null 2>&1; eval "$TESTS" >/dev/null 2>&1; }
 
 if ! verde; then
     echo '✗ `HojaDelCajonTest` NO está verde antes de mutar: el veredicto de abajo no valdría nada.' >&2
@@ -84,6 +87,19 @@ mutar "una regla lee un token que nadie define y sin respaldo" "$HOJA" \
 
 mutar "un respaldo desaparece de una lectura de fuera (\`--state-size\` lo pone la instalación, o nadie)" \
   "$HOJA" "var(--state-size, 56px)" "var(--state-size)"
+
+# ── El orden de la cascada: instalación → paquete → anfitrión (`#637`) ─────────────────────────
+# ⚠️ Las dos mutaciones de este bloque son EL fallo que se coló y se cazó a mano antes de etiquetar la
+# v1.2.0: ninguna rompe la landing, ninguna rompe el cajón en la máquina de quien las escribe, y las dos le
+# quitan sus colores al cajón de la instalación después de desplegar.
+mutar "el tema del panel se scopea al cajón (y le gana a \`client.css\` dentro del cajón)" "$LAYOUT" \
+  '<style id="jj-theme">:root{' '<style id="jj-theme">:root, .sidecart{'
+
+# ⚠️ `mutar_todas` y no `mutar`: la PRIMERA `:where(.sidecart) {` de la hoja es el suelo del paquete —color y
+# fuente, que LEE tokens pero no declara ninguno—, así que cambiar solo esa no toca el reparto de la cascada y
+# la mutación sobrevivía sin que la guarda tuviera un agujero. La que importa es la que declara los 193.
+mutar_todas "los valores por defecto del paquete pierden el \`:where\` (y le ganan al tema de la instalación)" \
+  "$HOJA" ":where(.sidecart) {" ".sidecart {"
 
 # ── Y las guardas de la guarda ─────────────────────────────────────────────────────────────────
 mutar "el escáner de selectores se queda ciego" "$GUARDA" \

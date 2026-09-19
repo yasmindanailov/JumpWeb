@@ -252,8 +252,13 @@ Hoja **OPCIONAL** de la instalación. El layout la carga **la última de las cua
 ⚠️⚠️ **El bloque de tokens se declara en `:root, .sidecart`, no solo en `:root`** (`DECISIONES #635`, F4 · T4).
 El cajón empaquetable declara sus valores por defecto sobre **su propia raíz** (`.sidecart`) para que la landing
 de otra instalación —que puede tener su `--bg` y su `--fg`— no se lo repinte. Un token que solo se declare en
-`:root` llega a la landing y **NO al cajón**: medido, `--line` sin los dos selectores dejaba el cajón con las
-rayas del anfitrión. Con los dos, el tema manda en los dos sitios.
+`:root` llega a la landing y **NO al cajón** cuando el cajón viaja empaquetado: medido, `--line` sin los dos
+selectores dejaba el cajón con las rayas del anfitrión. Con los dos, el tema manda en los dos sitios.
+▶ **Hoy no urge**: con la landing del producto no se carga la hoja del paquete y nada cambia. Hace falta en
+cuanto la instalación sirva SU propia landing (F5), y ponerlo antes no cuesta ni rompe nada.
+⚠️ **Lo simétrico, que es un fallo de verdad**: el tema que inyecta el PANEL se queda en `:root` a secas. Si
+alguien le añade `.sidecart`, el tema del producto le gana al de la instalación dentro del cajón — medido en
+`#637`, con este mismo fichero. Lo vigila `TemaDeInstalacionMandaTest`.
 
 ```css
 /* public/css/client.css — el paquete de tema de esta instalación */

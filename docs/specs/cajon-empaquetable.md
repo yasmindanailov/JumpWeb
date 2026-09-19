@@ -213,8 +213,17 @@ por ID, los TOKENS de la base y las cinco reglas de elemento que el cajón hered
 **Los tokens van en `:where(.sidecart)`, no en `:root`**, y las tres pasadas que costó están en `#635`: en
 `.sidecart` a secas el producto le ganaba a `client.css`; en `:where(:root)` le ganaba el ANFITRIÓN y el cajón
 salía con su azul marino y el texto ilegible. Jerarquía final: **instalación → paquete → anfitrión**. El precio
-es una línea de contrato: **un tema de instalación declara sus tokens en `:root, .sidecart`** (el bloque que
-inyecta el panel ya lo hace; `docs/INSTALACION-CLIENTE.md` §4 lo pide para `client.css`).
+es una línea de contrato: **un tema de instalación declara sus tokens en `:root, .sidecart`**
+(`docs/INSTALACION-CLIENTE.md` §4). Hace falta cuando la instalación sirva SU landing con el paquete (F5); en
+la landing del producto no cambia nada, porque ahí no se carga `cajon.css`.
+
+⚠️⚠️ **Lo que NO se hace: scopear el tema del panel** (`#637`). La T4 puso un rato el `<style id="jj-theme">`
+en `:root, .sidecart` para que este juez diera cero, y era un error con consecuencia real — el tema del
+PRODUCTO quedaba más cerca de los nodos del cajón que el `:root` donde tematiza `client.css` y le ganaba:
+medido con el tema real de PlayJump, `--on-brand` dentro del cajón pasaba de `#101418` a `#14130F`. Un
+despliegue habría cambiado los colores del cajón de una instalación sin que nadie tocara su tema. Lo compensa
+el instrumento, que re-escopa ese bloque EN LA PÁGINA antes de comparar, y lo vigila
+`TemaDeInstalacionMandaTest`. ▶ *Un juez no arregla el producto para poder aprobarlo.*
 
 **Lo que no se ve si no se mide, y aquí se midió** (el juez es `scripts/huella-maquetacion.mjs --cajon`, que
 compara el subárbol del cajón con las hojas del producto y con el paquete SOLO, en dos anchos):
