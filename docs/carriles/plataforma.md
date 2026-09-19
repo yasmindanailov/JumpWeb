@@ -56,14 +56,14 @@
    **ficha** en `/catalog/zones` y `/catalog/products` · y `/social-proof`. Sus porqués están en la spec
    §4.1; aquí queda **lo que hace falta para lo siguiente**.
 
-   ▶ **LO SIGUIENTE ES LA T2 DE F5: el paquete de la instancia**, y **ya tiene spec propia**:
-   `specs/paquete-de-instancia.md` ⬜ (19-09). **Está ESPERANDO AL OWNER, no a código**: su §7 le pide tres
-   cosas —un **invariante nuevo** sobre la ruta de vistas (suyo por `CONVENCIONES §9.1-2`), aceptar la deuda
-   de la vía B con su cifra (la instancia dependerá de **29 componentes** del producto) y si la instancia
-   pasa a repo o sigue en la rama `cliente/playjump` una tanda más—. No escribas código hasta eso.
-   ⚠️⚠️ Lo que descubrió el §1 y ordena la tanda: **Blade compila a PHP**, así que la vía B no es «servir
-   ficheros» sino **ejecutar código desde fuera del repo**; y el sitemap sale de **nombres de ruta**, no de
-   ficheros, así que en la T2 las rutas se quedan en `main` y solo se mudan las vistas.
+   ▶ **T2a EN CURSO** (`specs/paquete-de-instancia.md` ✅, `#647`, que partió la T2 en T2a+T2b).
+   **HECHO el mecanismo**: `config/instancia.php`, `Http\Instancia\InstanceViews` (namespace `instancia::`
+   y las tres puertas), su registro en `AppServiceProvider::boot`, el invariante **`SEC-12`** con seis
+   casos y `scripts/mutar-paquete-instancia.sh` **4/4**.
+   ▶ **QUEDA de la T2a**: la `plantilla/`, mudar `/contacto` al paquete, el repo `instancia-playjump` y
+   comparar sitemap + huella. Luego **T2b**: el resto de las vistas.
+   ⚠️⚠️ **Blade compila a PHP**: la vía B no es «servir ficheros», es ejecutar código desde fuera del repo.
+   Y el sitemap sale de **nombres de ruta**, así que las rutas se quedan en `main`; solo se mudan vistas.
 
    ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
    propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).

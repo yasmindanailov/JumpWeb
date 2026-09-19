@@ -62,6 +62,7 @@ use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\QrLogo;
+use App\Http\Instancia\InstanceViews;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
@@ -148,6 +149,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // **Las vistas de la INSTANCIA** (F5 · T2a, `specs/paquete-de-instancia.md` §4.1, `#647`): si
+        // hay paquete configurado, su carpeta `web/` queda registrada como el namespace `instancia`.
+        // ⚠️⚠️ Va aquí, en el arranque, y la ruta sale SOLO de configuración (`SEC-12`): es una ruta
+        // desde la que el servidor ejecuta código, porque Blade compila a PHP. Sin paquete no se
+        // registra nada y el producto sirve su anfitrión mínimo — que es el estado normal de una
+        // instalación recién montada, no un error.
+        $this->app->make(InstanceViews::class)->registrar();
+
         // Fase 6 · waiver (`#179`): la aceptación pendiente del alta se firma al VERIFICAR el correo. El
         // listener vive en Identity (el arch-test no deja dominio fuera de `app/Domain`) y se registra aquí.
         Event::listen(Verified::class, SignPendingWaiverOnVerification::class);

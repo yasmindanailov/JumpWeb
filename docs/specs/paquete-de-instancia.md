@@ -1,7 +1,7 @@
 # [SPEC] El paquete de instancia — la landing fuera del producto (F5 · T2)
 
-> Estado: ⬜ **borrador, a revisar por el owner antes de una línea de código** ·
-> Última actualización: 2026-09-19 · Decisión asociada: `#N` al aprobarse.
+> Estado: ✅ **APROBADA — las tres decisiones contestadas por el owner** (`#647`) ·
+> Última actualización: 2026-09-19 · Decisión asociada: `DECISIONES #647`.
 > Carril: **plataforma**. Origen: `specs/instancia-y-landing-fuera.md` §4.6·2 (la T2) y
 > `specs/producto-e-instancias.md` §4.1 (las tres capas). Hermana: `specs/cajon-empaquetable.md` (F4).
 
@@ -17,9 +17,9 @@
   del producto. Medido: las vistas usan **29 componentes distintos**. Se acepta a sabiendas y con fecha.
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
-- **Estado**: ⬜ sin código. No existe la plantilla, ni el namespace, ni `config/view.php` (futuro).
-- **Invariantes**: ninguno existente cambia. **Propone uno nuevo** sobre la ruta de vistas de instancia
-  (§5), y un invariante nuevo es decisión del owner (`CONVENCIONES §9.1-2`).
+- **Estado**: ✅ aprobada (`#647`), **sin código**. La T2 va partida: **T2a** = mecanismo + plantilla +
+  `/contacto`; **T2b** = el resto de las vistas. `instancia-playjump` nace como repo.
+- **Invariantes**: **`SEC-12` es de aquí** (la ruta de vistas) y no se relaja. Ninguno más cambia.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-19)
 
@@ -97,13 +97,23 @@ falta antes de que la BD conteste).
 Las ocho rutas de la portada resuelven **`instancia::home`** y caen al anfitrión mínimo del producto si el
 namespace no tiene esa vista. La resolución vive en UN sitio (un helper), no repartida por los controladores.
 
-### 4.2 Las tres reglas duras de la ruta
+### 4.2 Las tres reglas duras de la ruta — `SEC-12`
 
-1. **Viene de configuración y nunca de una petición.** Ni de un parámetro, ni de una cabecera, ni de un
-   subdominio. Con guarda (§6).
-2. **Fuera del docroot.** Si estuviera bajo `public/`, el servidor podría servir el `.blade.php` en crudo.
-3. **El `rsync --delete` del despliegue la excluye**, como ya hace con las catorce rutas del cliente y
-   `public/uploads/`. Un despliegue que borre el paquete deja la web sin landing.
+1. **Viene de configuración y nunca de una petición.** Ni de un parámetro, ni de una cabecera, ni del
+   host. La función que la resuelve **no acepta argumentos**: lo que no se puede pasar no se puede colar.
+2. **Absoluta.** Una relativa se resolvería contra el cwd del proceso, distinto en `artisan`, en php-fpm y
+   en la cola: tres landings según quién renderice.
+3. **Fuera del ÁRBOL del producto** (`base_path()`), que cubre dos peligros de un golpe: bajo `public/` el
+   servidor entregaría el `.blade.php` en crudo, y en cualquier otro sitio del árbol el `rsync --delete`
+   del despliegue se lo llevaría. ▶ Es además lo coherente con el diseño: el paquete es **otro repo**.
+
+⚠️ **Sin paquete no se cae**: no se registra el namespace, `pick()` devuelve el respaldo del producto y la
+instalación sirve su anfitrión mínimo. Una instalación recién montada está justo así.
+
+▶ **Corregido al implementar (19-09)**: el primer borrador decía «fuera del docroot» y que el despliegue
+excluiría la ruta del `--delete`. Las dos cosas eran flojas: un paquete en `public_html/instancia/` está
+fuera del docroot (`public/`) pero DENTRO del árbol desplegado, y el `--delete` se lo lleva. La regla de
+`base_path()` no necesita exclusión ninguna en el despliegue.
 
 ### 4.3 La plantilla que publica el producto
 
@@ -141,13 +151,17 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 ## 7. Revisión y decisión
 
-⬜ **Pendiente del owner.** Tres cosas que quiero que mire antes de que escriba código:
+**2026-09-19 · las tres contestadas por el owner** (`#647`), con la spec delante:
 
-1. **El invariante nuevo de §5** (la ruta de vistas), que es suyo por `CONVENCIONES §9.1-2`.
-2. **Aceptar la deuda de la vía B** con su cifra delante: la instancia dependerá de **29 componentes** del
-   producto, y renombrar uno la rompe sin que falle un test de `main`.
-3. **Si el paquete de instancia es un repo aparte ya** (`instancia-playjump`) o sigue siendo la rama
-   huérfana `cliente/playjump` una tanda más. Hoy la rama tiene el tema; le faltarían las vistas.
+- **D1 · La ruta de vistas es INVARIANTE** → nace `SEC-12`. *Descartado*: dejarlo solo en un test.
+- **D2 · Se estrena con UNA página** (`/contacto`) y después el resto: el mecanismo se prueba con poco en
+  juego, y un fallo de diseño se ve en una página y no entre 3.142 líneas. *Descartado*: las nueve de una.
+  ▶ Parte la T2 en **T2a** (mecanismo + plantilla + `/contacto`) y **T2b** (el resto de las vistas).
+- **D3 · `instancia-playjump` nace como REPO** y `cliente/playjump` se retira. *Descartado*: la rama una
+  tanda más.
+
+▶ **Deuda aceptada a sabiendas**: la instancia dependerá de **29 componentes** del producto (§1.5), y
+renombrar uno la rompe sin que falle un test de `main`. Es el precio de la vía B, que es transición.
 
 ## Anexo · fila del enrutador
 
