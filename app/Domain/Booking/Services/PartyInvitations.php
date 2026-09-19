@@ -109,6 +109,19 @@ final class PartyInvitations
     }
 
     /**
+     * La invitación de esta reserva **si ya existe**, sin crearla (T6·5, §4.8).
+     *
+     * ⚠️⚠️ **El panel no puede materializarla.** Nace en el GET del ANFITRIÓN y con una razón (Web
+     * Share necesita el enlace en el mismo gesto, §4.5·1); que la creara el operador al abrir una
+     * ficha de pedido convertiría cada visita al panel en una escritura, y le daría un enlace que
+     * repartir **antes de que el anfitrión haya visto siquiera su formulario**.
+     */
+    public function existingFor(OrderItem $reservation): ?PartyInvitation
+    {
+        return PartyInvitation::query()->where('order_item_id', $reservation->getKey())->first();
+    }
+
+    /**
      * ¿Se puede COMPARTIR?
      *
      * ⚠️⚠️ **Pasado el plazo se sigue compartiendo** (§7.2·R8), y es lo contrario de lo que la primera

@@ -4,7 +4,7 @@
 > interruptores apagados) · T5 entera en el árbol · T6 empezada (T6·1, §10.8) · T7 sin empezar** ·
 > Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
 > `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
-> `#708`–`#711` (T6·1→T6·4) ·
+> `#708`–`#712` (T6·1→T6·5) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -15,7 +15,7 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
-  **T5 y T6·1–T6·4 en el árbol, sin desplegar** → sigue la **T6·5** (§10.7) y la T7.
+  **T5 y T6·1–T6·5 en el árbol, sin desplegar** → sigue la **T6·6** (§10.7) y la T7.
   **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
   escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
@@ -1501,7 +1501,7 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 | **T6·2** ✅ | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar — **en el árbol** (`#709`, §10.9) | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
 | **T6·3** ✅ | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` — **en el árbol** (`#710`, §10.10) | ⚠️ Podía acabar tocando `GuestCountAdjuster`; **medido, no hizo falta**: el suelo ya salía de `GuardianPlaces::takenIn()` (`#576`), así que su push no pidió `VERIFY_CONC` |
 | **T6·4** ✅ | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) — **en el árbol** (`#711`, §10.11) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
-| **T6·5** | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
+| **T6·5** ✅ | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) — **en el árbol** (`#712`, §10.12) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
 | **T6·6** | **«Escribir el recordatorio»**: compone el texto, lo copia y guarda `reminded_at`/`reminded_count` | **No envía nada**, así que no toca correos ni depende de la T7 |
 
 ⚠️ **Antes de empezar**: `POSTFORM-INVITADOS.md` es la doc de esta tanda (T1, T2 y T6) · el armazón de la
@@ -1690,6 +1690,43 @@ que no llega, la cuenta sobre lo contratado, el presupuesto por lotes y el escan
 `InvitationProposalsTest` gana los dos del papel · arnés `scripts/mutar-invitacion-t6-4.py` **9/9** ·
 **el PDF REAL renderizado** (`gs`→PNG, `storage/app/audit/sonda-t6/hoja-1.png`): la fila del niño
 propuesto sale con su `*` y su nota, y la sección de justificantes sigue en su sitio · Pint, Larastan y
+docs-check limpios.
+
+### 10.12 T6·5 · LA INVITACIÓN EN LA FICHA DEL PEDIDO — EN EL ÁRBOL (2026-09-19, `DECISIONES #712`)
+
+La unidad más pequeña de la T6, y aun así **la que cierra un agujero**: la acción de anular el enlace
+existía desde `#576` y **no tenía botón**.
+
+**Lo que entra**
+
+- **El resumen en la línea**: «Invitación: N vienen · M no · K por repasar», junto al estado del
+  formulario, que es la misma pregunta por el otro lado.
+- **«Copiar el enlace de la invitación»**: el PÚBLICO —el que se reparte al grupo de clase—, con el
+  molde del enlace del post-form. Solo si la invitación **ya existe** y el dominio la da por
+  compartible.
+- **«Anular el enlace»**, con el permiso `orders.edit_guest_data` y el rastro **sin el token**. La
+  acción es de `#576`; aquí entra su botón.
+
+**Lo que enseñó construirla**
+
+- ⚠️⚠️ **Escribí una acción de anular que YA EXISTÍA.** No lo vi al abrir la unidad —la spec decía «la
+  acción va en T4» y aun así no la busqué con `grep`— y la duplicada solo la cazó **el arnés**, al
+  encontrar su `rotateToken()` dos veces en el fichero. Se retiró la mía y el botón llama a la de
+  `#576`. ▶ *Antes de escribir una acción del panel, búscala: este repo lleva 700 decisiones y muchas
+  dejaron la mitad hecha a propósito.*
+- ⚠️ **El panel NO materializa la invitación**: usa `existingFor()`, no `forReservation()`. Crearla al
+  abrir una ficha convertiría cada visita al panel en una escritura y le daría al operador un enlace
+  que repartir **antes de que el anfitrión hubiera visto su formulario**.
+- ⚠️ **La comprobación de «pedido pagado» se retiró de esta página**: `isShareable()` ya la hace por
+  `isOpenFor()`, y el arnés demostró que ninguna prueba podía tumbar la copia (`#704`). Lo que sí queda
+  —y ahora con su caso— es el **IDOR**: el id de la reserva llega por `mountAction` y puede forzarse.
+- ⚠️ El resumen va **memorizado por reserva** y en una propiedad **privada**: declararlo público lo
+  metería en el payload de Livewire, y lo que lleva son cuentas de niños de una fiesta.
+
+**Verificación**: `InvitationPanelTest` (9 casos: el enlace público, el IDOR, el panel que no
+materializa, sin nombre no hay enlace, el resumen y **los dos botones**, con y sin permiso) · arnés
+`scripts/mutar-invitacion-t6-5.py` **7/7** (un superviviente en la primera pasada, el de «pagado»,
+resuelto retirando la guarda) · `InvitationLinkRotationTest` de `#576` sigue verde · Pint, Larastan y
 docs-check limpios.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16

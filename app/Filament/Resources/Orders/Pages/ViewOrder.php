@@ -16,6 +16,7 @@ use App\Domain\Booking\Services\OrderItemEditor;
 use App\Domain\Booking\Services\OrderItemEventDataWriter;
 use App\Domain\Booking\Services\OrderItemGuestDataWriter;
 use App\Domain\Booking\Services\OrderItemRefunder;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Platform\Models\AuditLog;
 use App\Domain\Platform\Services\AuditLogger;
@@ -72,6 +73,17 @@ class ViewOrder extends ViewRecord
     use WithPagination;
 
     protected static string $resource = OrderResource::class;
+
+    /**
+     * El resumen de la invitación por reserva, memorizado en el render (T6·5).
+     *
+     * ⚠️ **No es estado de Livewire**: se rellena al pintar y muere con la petición. Declararlo
+     * `public` lo metería en el payload que viaja al navegador en cada interacción, y lo que lleva son
+     * cuentas de niños de una fiesta.
+     *
+     * @var array<int, array{yes: int, no: int, pending: int}|null>
+     */
+    private array $invitationSummaries = [];
 
     /**
      * Browser tab title (sin HTML): "Pedido JJ-XXXX".
@@ -1125,6 +1137,83 @@ class ViewOrder extends ViewRecord
                     'url' => $item->guardianAuthorizationSignedUrl(),
                 ]);
             });
+    }
+
+    /**
+     * **Copiar el enlace de la INVITACIÓN digital** (T6·5, `specs/celebracion-e-invitacion.md` §4.8).
+     *
+     * Gemelo del de arriba y por el mismo motivo: el operador tiene al cliente al teléfono y le manda
+     * el enlace por donde puede. ⚠️ Es OTRO enlace —abre la tarjeta pública de la fiesta, no el
+     * formulario del anfitrión— y por eso tiene su propio gesto y su propio rótulo.
+     */
+    public function copyInvitationLinkAction(): Action
+    {
+        return Action::make('copyInvitationLink')
+            ->modalHeading(__('admin.orders.copy_invitation.modal_heading'))
+            ->modalDescription(__('admin.orders.copy_invitation.modal_description'))
+            ->modalIcon(Heroicon::OutlinedLink)
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('admin.orders.copy_invitation.close'))
+            ->modalContent(function (array $arguments): ?View {
+                $item = $this->resolveItem($arguments);
+                $url = $item !== null ? $this->invitationLinkForManageItem($item) : null;
+
+                return $url === null ? null : view('filament.orders.partials.guest-form-link', ['url' => $url]);
+            });
+    }
+
+    /**
+     * El enlace PÚBLICO de la invitación de esta reserva, o `null` si no se ofrece (T6·5).
+     *
+     * Se ofrece cuando la reserva es de ESTE pedido —la misma defensa IDOR que su gemelo—, **la fila
+     * ya existe** (la crea el anfitrión al abrir su formulario) y el dominio la da por compartible.
+     *
+     * ⚠️ **El «pedido pagado» NO se comprueba aquí y es deliberado**: `isShareable()` lo exige por
+     * `GuestCountPolicy::isOpenFor()`, que además cubre el cancelado y la fiesta ya celebrada. El arnés
+     * lo demostró —la mutación que quitaba esa comprobación no ponía nada en rojo—, y una guarda que
+     * ninguna prueba puede tumbar es ruido, no defensa (`#704`).
+     */
+    public function invitationLinkForManageItem(OrderItem $item): ?string
+    {
+        /** @var Order $order */
+        $order = $this->record;
+
+        // IDOR: nunca acuñar el enlace de la fiesta de OTRO pedido aunque se fuerce el id por
+        // `mountAction` — la misma defensa que su gemelo del post-form.
+        if ((int) $item->order_id !== (int) $order->id) {
+            return null;
+        }
+
+        $invitations = app(PartyInvitations::class);
+        $invitation = $invitations->existingFor($item);
+
+        if ($invitation === null || ! $invitations->isShareable($item, $invitation)) {
+            return null;
+        }
+
+        return $invitations->shareUrlFor($invitation);
+    }
+
+    /**
+     * «N vienen · M no pueden · K por repasar» para la línea del pedido (T6·5, §4.8).
+     *
+     * ⚠️ **Memorizado por reserva**: la lista de productos pinta cada línea una vez, pero el icono y
+     * el rótulo preguntan lo mismo, y esta página ya tiene su presupuesto de consultas medido.
+     *
+     * @return array{yes: int, no: int, pending: int}|null
+     */
+    public function invitationSummaryFor(OrderItem $item): ?array
+    {
+        $key = (int) $item->getKey();
+
+        if (! array_key_exists($key, $this->invitationSummaries)) {
+            $invitations = app(PartyInvitations::class);
+            $this->invitationSummaries[$key] = $invitations->existingFor($item) === null
+                ? null
+                : $invitations->summaryFor($item);
+        }
+
+        return $this->invitationSummaries[$key];
     }
 
     public function copyGuestFormLinkAction(): Action

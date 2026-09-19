@@ -1188,6 +1188,18 @@ return [
             'blocked' => 'No se ha podido anular el enlace de esta reserva.',
         ],
 
+        // La INVITACIÓN en la ficha del pedido (T6·5, `specs/celebracion-e-invitacion.md` §4.8).
+        // ⚠️ Es OTRO enlace que el del formulario: éste abre la tarjeta pública que el cliente reparte
+        // al grupo de clase, así que se nombra por lo que es y no «el enlace» a secas.
+        'copy_invitation' => [
+            'btn_aria' => 'Enlace de la invitación',
+            'modal_heading' => 'Enlace de la invitación',
+            'modal_description' => 'Es el enlace que el cliente reparte a las familias: abre la tarjeta de la fiesta y desde ahí contestan. Cópialo y mándaselo si lo ha perdido.',
+            'close' => 'Cerrar',
+        ],
+        // «N vienen · M no pueden · K por repasar» en la línea del pedido.
+        'invitation_summary' => 'Invitación: :yes vienen · :no no · :pending por repasar',
+
         'copy_guest_form' => [
             'btn_aria' => 'Enlace del formulario de invitados',
             'modal_heading' => 'Enlace del formulario de invitados',

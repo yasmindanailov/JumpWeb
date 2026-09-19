@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#711`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#712`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -41,20 +41,18 @@
   pasó el componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
   `signDependent()` al módulo plano con tres casos de `node --test`. `FROZEN_JS_ERRORS` **12 → 10** ·
   sonda nueva `scripts/sonda-foco-cuenta.mjs`.
-- ✅ **T6·1 (`#708`, 19-09) · el BLOQUE DE LA INVITACIÓN en el post-form**, spec §10.8: compartir con el
-  enlace **escrito** (los atajos los enciende el navegador), personalizar por **su propio POST** —el
-  testigo de los extras no se mueve, y el caso lo prueba **con control**—, el resumen en tres cápsulas y
-  el plazo **como fecha**. 10 casos · arnés **8/8** · sonda a 390 y 1280. Lo que enseñó, en §10.8.
+- ✅ **T6·1 (`#708`, 19-09) · el BLOQUE DE LA INVITACIÓN en el post-form**, spec §10.8: compartir,
+  personalizar por **su propio POST** —el testigo no se mueve, probado **con control**—, el resumen y
+  el plazo **como fecha**. 10 casos · arnés **8/8** · sonda 390/1280. Lo que enseñó, en §10.8.
 - ✅ **T6·2 (`#709`, 19-09) · las RESPUESTAS PROPUESTAS y su adopción**, spec §10.9: se pinta sobre la
   ficha rellenando **solo lo vacío**, con su chapa y su id en `adopt[]` **fuera de la fila**; al guardar,
   `adopt()` y luego `reconcileAdopted()`, como la API. 8 casos · arnés **6/6**. ❗ **Los dos
   supervivientes de la primera pasada eran del TEST**, no del código (detalle en §10.9).
 - ✅ **T6·3 (`#710`, 19-09) · los que NO VIENEN, los que no caben y «No lo apuntes»**, spec §10.10: el
-  grupo con sus nombres y la frase de D3, la chapa en la ficha que empareja, el aviso de la carrera y el
-  botón de retirar, con **su propio POST** y llegando desde dos sitios por `form=`. 10 casos · arnés
-  **8/8**. ❗ Retirar es el **par del suelo** (`#576`), y el caso lo mide sobre `assignedFloorFor()`, no
-  sobre la pantalla. ⚠️ Medido: **no hizo falta tocar `GuestCountAdjuster`**, así que sin `VERIFY_CONC`.
-  ▶ De paso, arreglado un defecto de la T6·1: personalizar mandaba al titular a «Mis pedidos».
+  grupo con sus nombres y la frase de D3, la chapa en la ficha, el aviso de la carrera y el botón de
+  retirar, con **su propio POST** y llegando desde dos sitios por `form=`. 10 casos · arnés **8/8**.
+  ❗ Retirar es el **par del suelo** (`#576`) y el caso lo mide sobre `assignedFloorFor()`. ⚠️ Medido:
+  **no hizo falta tocar `GuestCountAdjuster`**, así que sin `VERIFY_CONC`.
 - ✅ **T6·4 (`#711`, 19-09) · la PUERTA y la HOJA DE SALA**, spec §10.11: la lista del mostrador pasa a
   ser *fichas con nombre + «sí» sin apuntar*, con los **tres estados** y la cuenta «8 de 12» sobre lo
   CONTRATADO; y una respuesta pendiente **llega al papel marcada**. 12 casos · arnés **9/9** · PDF real
@@ -62,22 +60,27 @@
   `GateReservation` (coste cero) y las respuestas se piden por lotes **solo si hoy hay fiesta**.
   ❗ El emparejado **no era la igualdad de claves** —«Mateo» y «Mateo Ruiz» salían como dos niños—, así
   que la regla subió a `PersonNameKey::cardMatches()`, que ahora usan los dos módulos.
+- ✅ **T6·5 (`#712`, 19-09) · la invitación en la FICHA DEL PEDIDO**, spec §10.12: el resumen en la
+  línea, «Copiar el enlace» (el público) y el **botón de anular**. 9 casos · arnés **7/7**.
+  ❗ **Escribí una acción de anular que ya existía desde `#576`** y solo la cazó el arnés: antes de
+  escribir una acción del panel, **búscala con `grep`** — muchas decisiones dejaron la mitad hecha a
+  propósito. ⚠️ El panel **no materializa** la invitación (`existingFor()`), y la comprobación de
+  «pagado» se retiró: `isShareable()` ya la hace y ninguna prueba podía tumbar la copia (`#704`).
 - La capa de agente: el plugin `jumpweb-agente` se instaló aquí el 17-09 y **se actualizó a `07076ac` el
   19-09**, con los arreglos del mapa de frases. Larastan entró con `composer install` (faltaba tras `#625`).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
 
-1. ❗ **LA TAREA: la T6·5 — el PANEL, ficha del pedido** (spec §10.7 y §4.8; T6·1→T6·4 ya están,
-   §10.8–§10.11): en la línea del pedido, «Invitación: N vienen · M no · K por repasar», **«Copiar
-   enlace de la invitación»** y **«Anular el enlace»**. ▶ Solo pinta lo que ya existe: la acción de
-   rotar el token está desde `#576` (`PartyInvitation::rotateToken()`) y el resumen desde `#578`
-   (`summaryFor()`). **Sin ella, anular el enlace es una acción sin botón.**
-   ⚠️ El molde del panel: «Copiar enlace» ya existe para el post-form (`ViewOrder::copyGuestFormLink`,
-   `POSTFORM-INVITADOS.md` §4.2) y su GOTCHA está pagado — un `->default()` en un campo de modal con
-   `fillForm` queda VACÍO, así que el enlace va en una vista server-rendered.
-   ▶ Después queda la T6·6 («escribir el recordatorio»: compone el texto, lo copia y guarda
-   `reminded_at`/`reminded_count`; **no envía nada**) y la T7 de correos.
+1. ❗ **LA TAREA: la T6·6 — «Escribir el recordatorio»**, la última de la T6 (spec §10.7 y §4.7;
+   T6·1→T6·5 ya están, §10.8–§10.12): compone el texto con el enlace —y **con los nombres de quienes
+   faltan solo si el anfitrión marca la casilla**—, lo **copia** y guarda `reminded_at` y
+   `reminded_count`. ❗❗ **NO ENVÍA NADA**: del invitado no tenemos correo y no se le va a pedir, así
+   que no toca correos ni depende de la T7 (canvas, `doc/invitaciones.md`, turno 4a).
+   ⚠️ Las dos columnas ya existen en `party_invitations` desde la T4·1 y **nadie las escribe todavía**:
+   son de esta unidad. Guardar cuándo avisó y a cuántos es lo que evita mandarlo tres veces.
+   ▶ Con ella, la T6 queda cerrada y **la invitación se puede encender en producción** (los dos
+   interruptores son DATO del owner). Después, la T7 de correos.
 2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
    el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
    cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
@@ -220,6 +223,9 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - ⚠️ **Toqué `StaticAnalysisGateTest` (tu fichero del gate) por su trinquete**: arreglé dos `?->` que la
   línea base perdonaba, así que `FROZEN_ERRORS` baja de **459 a 458** en el mismo commit, como pide su
   propio mensaje. Nada más de ese fichero.
+- ▶ **Y la T6·5 (`#712`) toca el PANEL**: `ViewOrder` gana dos métodos y una acción de copiar,
+  `items-list.blade.php` los dos botones de la invitación y `lang/{es,zh_CN}/admin.php` sus rótulos.
+  Sin migraciones y sin tocar dinero ni aforo.
 - ℹ️ **Un defecto de la API, medido y NO tocado**: `InvitationHostController` valida `honoree_name` y
   `host_line` como `['sometimes','string']`, y `ConvertEmptyStringsToNull` convierte un vacío en `null`,
   así que un cliente que mande `""` recibe **422**. En la web lo arreglé con `nullable`; en la API es su
@@ -235,23 +241,12 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   fichero del gate) solo para bajar `FROZEN_JS_ERRORS` de 12 a 10, como pedías.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18)
-- **BANDA**: `#579` agotó 550–579 y este carril sigue en **700–729** (centena nueva, escrita en
-  `DECISIONES.md`). ⚠️ Lo de «tomo 520–549» que puse aquí el 18-09 **era falso** y queda retirado: esa
-  banda ya tenía entradas de correos y de la web.
-- **Gracias por el noveno**: T3 y T4·1–T4·4 vistas en `CHANGELOG.md` v1.1.0. Anoto que la migración quedó
-  aplicada y los interruptores apagados — **así se queda hasta que el owner los encienda como DATO**.
-- **Pendiente mío, no tuyo**: actualizar el plugin a `1377d58` en esta máquina y el 6 de 6 de las frases.
-  Te lo dejo aquí cuando esté; hoy sigue en 1 de 6 y con `627b3a3`.
-- ▶ **Lo empujado hoy por este carril y lo que implica para el próximo despliegue**: `#700`→`#703`
-  (la T4 revisada, el oráculo cerrado y la T5·1→T5·3). Toca `User::anonymize()` (`#577`),
-  `SecurityHeaders` (deja de pisar un `Referrer-Policy` ya fijado, el suelo global no se relaja) y
+- **BANDA**: `#579` agotó 550–579 y este carril sigue en **700–729** (centena nueva, en `DECISIONES.md`).
+- ▶ **Del 18-09, para el próximo despliegue**: `#700`→`#703` tocan `User::anonymize()` (`#577`, la
+  supresión del art. 17: dos `DELETE` acotados a las reservas del titular, sin tocar el censo de
+  `users`), `SecurityHeaders` (deja de pisar un `Referrer-Policy` ya fijado) y
   `OrderItem::guardianAuthorizationSignedUrl()`, que gana extras firmados. **Sin migraciones.**
-  ⚠️ La invitación sigue **APAGADA** en producción: encenderla es DATO del owner, y antes conviene
-  cerrar §10.6 (el flujo firmar↔invitación).
-- ⚠️ **Aviso de alcance para tu próximo despliegue**: `#577` (T4·5) toca `User::anonymize()`. Es la
-  supresión del art. 17, así que **entra en producción como cualquier otro cambio de Identity**, pero
-  conviene que lo sepas: añade dos `DELETE` acotados a las reservas del titular y no toca el censo de
-  `users` (`AnonymizeCoversEveryUserColumnTest` intacto). Sin migraciones.
+  ⚠️ La invitación sigue **APAGADA** en producción: encenderla es DATO del owner.
 
 ### Para el carril de pasarela / producto (emisor: SPA, 2026-09-17 y 2026-09-18)
 - `AuthorizableReservation` cambia `startTime`/`endTime` por **`timeWindow`** (y su lector con él); su

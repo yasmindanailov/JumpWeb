@@ -877,6 +877,23 @@ return [
             'blocked' => '无法轮换此预订的链接。',
         ],
 
+        // 邀请函在订单页（T6·5）。
+        'rotate_invitation' => [
+            'btn_aria' => '作废邀请函链接',
+            'modal_heading' => '要作废这份邀请函的链接吗？',
+            'modal_description' => '客户已分享的链接会立即失效，需要重新分享新的链接。如果链接流传到不该去的地方，请使用此功能。家长已经回复的内容不会被删除。',
+            'submit' => '作废链接',
+            'success' => '链接已作废。客户需要分享新的链接。',
+            'blocked' => '无法作废此预订的链接。',
+        ],
+        'copy_invitation' => [
+            'btn_aria' => '邀请函链接',
+            'modal_heading' => '邀请函链接',
+            'modal_description' => '这是客户发给各家庭的链接：打开派对邀请卡并从那里回复。如果客户弄丢了，复制后发给他。',
+            'close' => '关闭',
+        ],
+        'invitation_summary' => '邀请函：:yes 位参加 · :no 位不来 · :pending 位待查看',
+
         'copy_guest_form' => [
             'btn_aria' => '宾客表单链接',
             'modal_heading' => '宾客表单链接',

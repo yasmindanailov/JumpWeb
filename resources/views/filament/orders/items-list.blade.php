@@ -264,6 +264,21 @@
                                 <span class="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-400">! {{ __('admin.orders.guest_badge_pending') }}</span>
                             @endif
                         @endif
+                        {{-- El resumen de la INVITACIÓN (T6·5, §4.8): «N vienen · M no · K por
+                             repasar», en la misma línea que el estado del formulario porque es la
+                             misma pregunta —¿está la lista lista?— por el otro lado.
+                             ⚠️ Solo si la invitación existe: la crea el anfitrión al abrir su
+                             formulario, y antes de eso no hay nada que resumir. --}}
+                        @php $invitationSummary = $this->invitationSummaryFor($item); @endphp
+                        @if ($invitationSummary !== null)
+                            <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-700 dark:bg-white/10 dark:text-gray-300" data-invitation-summary>
+                                {{ __('admin.orders.invitation_summary', [
+                                    'yes' => $invitationSummary['yes'],
+                                    'no' => $invitationSummary['no'],
+                                    'pending' => $invitationSummary['pending'],
+                                ]) }}
+                            </span>
+                        @endif
                         <button type="button" x-on:click="open = ! open" class="ml-auto inline-flex items-center gap-1 font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400">
                             <span x-show="! open">{{ __('admin.orders.show_more') }}</span>
                             <span x-show="open" x-cloak>{{ __('admin.orders.show_less') }}</span>
@@ -643,6 +658,36 @@
                             color="gray"
                             size="lg"
                             :label="__('admin.orders.rotate_guest_form.btn_aria')"
+                        />
+                    @endif
+                @endif
+
+                {{-- La INVITACIÓN digital de esta fiesta (T6·5, `specs/celebracion-e-invitacion.md`
+                     §4.8): copiar su enlace y ANULARLO. Son otro objeto que el enlace del formulario
+                     —éste abre la tarjeta pública que se reparte al grupo de clase—, así que van
+                     aparte y con su propio rótulo.
+                     ⚠️ Solo si la invitación YA EXISTE y es compartible: la crea el anfitrión al abrir
+                     su formulario, y sin nombre de quien cumple no se reparte (§4.5·2). --}}
+                @if ($this->invitationLinkForManageItem($item) !== null)
+                    <x-filament::icon-button
+                        wire:click="mountAction('copyInvitationLink', { item: {{ $item->id }} })"
+                        icon="heroicon-o-envelope-open"
+                        color="gray"
+                        size="lg"
+                        :label="__('admin.orders.copy_invitation.btn_aria')"
+                    />
+
+                    {{-- Anular: es la ÚNICA palanca de revocación de un enlace que circula por un grupo
+                         de clase entero. Mismo permiso que rotar el del formulario.
+                         ▶ **La acción existe desde `#576`** (`rotateInvitationLink`, con su audit y sus
+                         casos): lo que faltaba —y es lo que pone la T6·5— era su BOTÓN. --}}
+                    @if (auth()->user()?->hasPermission('orders.edit_guest_data'))
+                        <x-filament::icon-button
+                            wire:click="mountAction('rotateInvitationLink', { item: {{ $item->id }} })"
+                            icon="heroicon-o-x-circle"
+                            color="gray"
+                            size="lg"
+                            :label="__('admin.orders.rotate_invitation.btn_aria')"
                         />
                     @endif
                 @endif
