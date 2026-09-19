@@ -116,6 +116,64 @@ class CatalogTest extends ApiTestCase
         $this->assertSame(2, $response->json('meta.total'));
     }
 
+    /**
+     * **La FICHA de una zona** (F5 · T6 del menú de hechos, `#632` P1): su descripción y su foto,
+     * que es lo que necesita quien vende SIN la landing del producto.
+     *
+     * ⚠️ La URL es ABSOLUTA. Quien la pinta puede estar en otro dominio o no ser un navegador (la
+     * app de F6), y ninguno de los dos puede resolver `images/attractions/park_jump.webp`.
+     */
+    public function test_a_zone_publishes_its_description_and_photo(): void
+    {
+        $this->zone->update([
+            'description' => ['es' => 'Trampolines de pared a pared.', 'en' => 'Wall to wall trampolines.'],
+            'image' => 'images/attractions/park_jump.webp',
+        ]);
+
+        $response = $this->getJson(self::ROOT.'/catalog/zones')
+            ->assertOk()
+            ->assertValidResponse(200);
+
+        $this->assertSame('Trampolines de pared a pared.', $response->json('data.0.description'));
+        $this->assertSame(
+            asset('images/attractions/park_jump.webp'),
+            $response->json('data.0.image_url'),
+            'la foto de la zona tiene que viajar como URL absoluta'
+        );
+    }
+
+    /**
+     * ⚠️⚠️ **Lo que la instalación no rellenó NO viaja, ni como `""`** — la receta del menú de
+     * hechos. Si esto se relajara, cada landing tendría que distinguir «no hay descripción» de
+     * «hay una descripción vacía», que son lo mismo para quien pinta.
+     */
+    public function test_a_zone_without_ficha_omits_the_keys_instead_of_emitting_empty_ones(): void
+    {
+        // Caso 1: nunca se rellenó — las columnas están a `null`.
+        $sinTocar = $this->getJson(self::ROOT.'/catalog/zones')
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->json('data.0');
+
+        $this->assertSame(['id', 'slug', 'name'], array_keys($sinTocar));
+
+        // ⚠️⚠️ Caso 2, el que de verdad muerde: se escribió y se BORRÓ. El panel no deja `null`, deja
+        // la cadena vacía dentro del JSON de traducciones —y una zona con la foto borrada deja `''`
+        // en su columna—. Sin este caso, cambiar el `?:` del lector por un `??` publicaría
+        // `"description": ""` y ninguna prueba se enteraría: medido el 19-09 con el arnés de
+        // mutación, que lo cazó como una mutación que NO muerde.
+        $this->zone->update(['description' => ['es' => '', 'en' => ''], 'image' => '']);
+
+        $vaciada = $this->getJson(self::ROOT.'/catalog/zones')
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->json('data.0');
+
+        $this->assertSame(['id', 'slug', 'name'], array_keys($vaciada));
+        $this->assertArrayNotHasKey('description', $vaciada);
+        $this->assertArrayNotHasKey('image_url', $vaciada);
+    }
+
     /** El catálogo es el escaparate: se mira sin cuenta, igual que en la web. */
     public function test_the_catalog_is_public(): void
     {
@@ -317,6 +375,64 @@ class CatalogTest extends ApiTestCase
 
         foreach ($card as $field => $value) {
             $this->assertSame($value, $detail[$field], "el campo `{$field}` difiere entre la lista y la ficha");
+        }
+    }
+
+    /**
+     * **La FICHA de un producto, y el REPARTO que la define** (F5 · T6, `#632` P1).
+     *
+     * ⚠️⚠️ Éste es el caso que fija la decisión de diseño, no un caso de campo: la FOTO va en la
+     * lista y la DESCRIPCIÓN solo en el detalle. Un catálogo se recorre mirando fotos —la app de F6
+     * no tiene landing y pinta tarjetas con esto—, mientras que la prosa se lee al abrir. Medido el
+     * 19-09: la descripción son ~340 bytes en cada producto que la tiene, sobre un payload de 4.079
+     * bytes con 24 productos; la URL, ~60. Si alguien mueve la descripción a la lista, el catálogo
+     * entero paga la prosa en todas las filas y este caso se pone rojo.
+     */
+    public function test_the_photo_travels_in_the_list_and_the_description_only_in_the_detail(): void
+    {
+        $product = $this->priced($this->product('Entrada', [
+            'description' => ['es' => 'Una hora de salto libre en la zona Jump.'],
+            'image' => 'productos/entrada.webp',
+        ]), 990);
+
+        $card = $this->getJson(self::ROOT.'/catalog/products')
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->json('data.0');
+
+        $detail = $this->getJson(self::ROOT.'/catalog/products/'.$product->id)
+            ->assertOk()
+            ->assertValidResponse(200)
+            ->json();
+
+        // La foto, en las dos, y ABSOLUTA: quien la pinta puede no compartir dominio con la API.
+        $this->assertSame(asset('uploads/productos/entrada.webp'), $card['image_url']);
+        $this->assertSame(asset('uploads/productos/entrada.webp'), $detail['image_url']);
+
+        // La prosa, SOLO en la ficha.
+        $this->assertArrayNotHasKey('description', $card, 'la descripción no puede viajar en la lista');
+        $this->assertSame('Una hora de salto libre en la zona Jump.', $detail['description']);
+    }
+
+    /**
+     * Lo que la instalación no rellenó no viaja, tampoco en el producto — y «rellenado y borrado»
+     * cuenta como no rellenado, que es el caso que se escapa (ver la gemela de las zonas).
+     */
+    public function test_a_product_without_ficha_omits_the_keys(): void
+    {
+        $product = $this->priced($this->product('Entrada'), 990);
+
+        foreach ([[], ['description' => ['es' => ''], 'image' => '']] as $estado) {
+            if ($estado !== []) {
+                $product->update($estado);
+            }
+
+            $card = $this->getJson(self::ROOT.'/catalog/products')->assertOk()->json('data.0');
+            $detail = $this->getJson(self::ROOT.'/catalog/products/'.$product->id)->assertOk()->json();
+
+            $this->assertArrayNotHasKey('image_url', $card);
+            $this->assertArrayNotHasKey('image_url', $detail);
+            $this->assertArrayNotHasKey('description', $detail);
         }
     }
 

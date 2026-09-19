@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.7.0
+  version: 1.8.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -877,8 +877,16 @@ paths:
         nombres de producto ya la llevan («Jump · 1 hora»). Se expone porque el `slug` es la clave
         del deep-link con el que la landing enlaza «Comprar» a una zona concreta.
 
-        Lo que la zona tiene ADEMÁS —imagen, color, atracciones— es material de la landing y no
-        entra aquí.
+        Desde el contrato **1.8.0** sirve además la FICHA de la zona: su descripción y su foto. Es
+        lo que necesita para pintarse quien venda SIN landing del producto —la app nativa, o la
+        landing propia de una instalación—, y por eso no es material de presentación sino un hecho
+        más del menú.
+
+        ⚠️ **Los dos campos de la ficha son OPCIONALES y no viajan si la instalación no los
+        rellenó**: una zona sin descripción no trae la clave `description`, en vez de traerla como
+        `""`. Lo que sigue fuera es la presentación propiamente dicha —color de acento, superficie,
+        número de atracciones—, y la zona anidada dentro de cada producto sigue siendo solo
+        identidad: ahí cada campo se paga en todas las filas.
       responses:
         '200':
           description: Zonas operativas.
@@ -6389,15 +6397,16 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/CatalogZone'
+            $ref: '#/components/schemas/CatalogZoneDetail'
         meta:
           $ref: '#/components/schemas/ListMeta'
 
     CatalogZone:
       type: object
       description: |
-        Una zona operativa. El mismo objeto se sirve en la lista de zonas y anidado en cada
-        producto, para que «zona» signifique lo mismo en los dos sitios.
+        La IDENTIDAD de una zona operativa: lo que viaja anidado dentro de cada producto, y la base
+        de la que parte su ficha (`CatalogZoneDetail`), para que «zona» signifique lo mismo en los
+        dos sitios.
       required: [id, slug, name]
       additionalProperties: false
       properties:
@@ -6409,6 +6418,39 @@ components:
           description: Clave estable de la zona; es la que usa el deep-link de la landing.
         name:
           type: string
+
+    CatalogZoneDetail:
+      type: object
+      description: |
+        La FICHA de una zona (contrato 1.8.0): su identidad **al mismo nivel** —una zona es un solo
+        objeto, se venga de aquí o de dentro de un producto— más lo que se cuenta de ella.
+
+        Los campos de la identidad se repiten aquí escritos porque OpenAPI 3.0 no compone objetos de
+        forma que el validador acepte (el mismo motivo por el que la zona va inline dentro de un
+        producto); que no diverjan de `CatalogZone` lo vigila `ApiContractTest`.
+      required: [id, slug, name]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int64
+        slug:
+          type: string
+          description: Clave estable de la zona; es la que usa el deep-link de la landing.
+        name:
+          type: string
+        description:
+          type: string
+          description: |
+            Qué es esta zona, en el idioma activo. **Ausente** si la instalación no la ha escrito:
+            no viaja como `""`.
+        image_url:
+          type: string
+          format: uri
+          description: |
+            URL ABSOLUTA de la foto de la zona. **Ausente** si no tiene. Absoluta porque quien la
+            pinta puede estar en otro dominio (una landing de instancia) o no ser un navegador (la
+            app nativa).
 
     CatalogProductList:
       type: object
@@ -6520,6 +6562,14 @@ components:
               description: Clave estable de la zona; es la que usa el deep-link de la landing.
             name:
               type: string
+        image_url:
+          type: string
+          format: uri
+          description: |
+            URL ABSOLUTA de la foto del producto (contrato 1.8.0). **Ausente** si esta instalación
+            no ha subido ninguna: no viaja como `""`.
+            ⚠️ La foto va en la LISTA y la descripción NO: un catálogo se recorre mirando fotos y la
+            prosa se lee al abrir un producto. Cada campo de la lista se paga en todas las filas.
 
     CatalogProductDetail:
       type: object
@@ -6634,6 +6684,19 @@ components:
               `CartLine.guardian_authorization`.
             · `required` — hace falta siempre (una excursión de colegio). **No se pregunta**: la
               pantalla informa, y el servidor marca la línea llegue lo que llegue en el cuerpo.
+        image_url:
+          type: string
+          format: uri
+          description: |
+            La misma foto que publica `CatalogProduct` (contrato 1.8.0), porque el detalle sirve los
+            campos de la lista al mismo nivel. **Ausente** si no la hay.
+        description:
+          type: string
+          description: |
+            Qué es este producto, en el idioma activo (contrato 1.8.0). **Ausente** si la
+            instalación no lo ha escrito: no viaja como `""`.
+            ⚠️ Vive SOLO en el detalle: es prosa y se lee al abrir un producto, no al recorrer el
+            catálogo, donde cada campo se paga en todas las filas.
 
     CatalogEventField:
       type: object

@@ -7,6 +7,7 @@ use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\ProductIcon;
 use App\Filament\Resources\Catalog\CatalogResource;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -146,6 +147,33 @@ class CatalogForm
                         ->placeholder(__('admin.catalog.icon_placeholder'))
                         ->helperText(__('admin.catalog.icon_hint')),
                 ]),
+
+                // **LA FOTO de la ficha** (`DECISIONES #632` P1, T6 del menú de hechos). La sirve
+                // `GET /catalog/products` como URL absoluta, y es lo que pinta una tarjeta de
+                // catálogo quien vende SIN landing — la app de F6, o la landing de la instancia.
+                //
+                // ⚠️ **Esto sí es una subida, y el `icon` de arriba sigue sin serlo**: no se
+                // contradicen. Aquél es un DIBUJO de interfaz y un SVG subido sería código
+                // ejecutable; ésta es una FOTOGRAFÍA, y los tipos aceptados no incluyen SVG.
+                //
+                // ⚠️⚠️ Va al disco `uploads` (`public/uploads`, gitignorado y excluido del
+                // `rsync --delete` del despliegue), que es el hueco de la instalación: así la
+                // clienta cambia la foto sin commitear nada al repo del producto. El fichero
+                // antiguo lo borra `TicketType::booted()` — `FileUpload` no lo hace solo.
+                //
+                // Opcional a propósito: una instalación sin fotos es válida y la API se calla el
+                // campo (la receta del menú: lo que no se rellenó no viaja).
+                FileUpload::make('image')
+                    ->label(__('admin.catalog.field_image'))
+                    ->helperText(__('admin.catalog.field_image_hint'))
+                    ->disk(TicketType::IMAGE_DISK)
+                    ->directory('productos')
+                    ->visibility('public')
+                    ->image()
+                    ->imageEditor()
+                    ->maxSize(3072)
+                    ->acceptedFileTypes(['image/webp', 'image/jpeg', 'image/png'])
+                    ->columnSpanFull(),
             ]);
     }
 

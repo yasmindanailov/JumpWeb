@@ -47,6 +47,13 @@ class CatalogProductResource extends JsonResource
             'zone' => $this->resource->zone === null
                 ? null
                 : (new CatalogZoneResource($this->resource->zone))->toArray($request),
-        ];
+        ] + (
+            // ⚠️ **La foto solo viaja si la hay** (`#632` P1, la receta del menú de hechos: lo que
+            // la instalación no rellenó no viaja). Por eso se suma la clave en vez de emitirla a
+            // `null`: `image_url` es opcional en el contrato, con su porqué en `OPTIONAL_BY_DESIGN`.
+            // La DESCRIPCIÓN no está aquí, sino en el detalle: cada campo de la lista se paga en
+            // todas las filas, y la prosa se lee al abrir un producto.
+            $this->resource->imageUrl === null ? [] : ['image_url' => $this->resource->imageUrl]
+        );
     }
 }

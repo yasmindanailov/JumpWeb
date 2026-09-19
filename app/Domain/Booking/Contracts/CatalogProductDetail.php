@@ -45,5 +45,17 @@ final readonly class CatalogProductDetail
          * catálogo delante: un cliente que mienta aquí no cambia nada.
          */
         public string $guardianAuthorization,
+        /**
+         * Qué es este producto, en el idioma activo, o `null` si la instalación no lo escribió
+         * (`#632` P1, T6 del menú de hechos).
+         *
+         * ⚠️ Va en el DETALLE y no en el resumen de lista, por lo mismo que `guardianAuthorization`
+         * y que la foto al revés: es PROSA —medidas ~340 bytes en las 6 que la tienen— y se lee al
+         * abrir un producto, no al recorrer el catálogo. Medido además el 19-09: hoy la pinta un
+         * solo sitio del producto, el `<meta name="description">` de `/cumpleanos`.
+         *
+         * `null` y no `''`: lo que la instalación no rellenó no viaja.
+         */
+        public ?string $description,
     ) {}
 }

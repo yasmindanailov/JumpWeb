@@ -1909,6 +1909,8 @@ return [
         'field_icon' => 'Icono del producto',
         'icon_placeholder' => 'El que le toca por su tipo',
         'icon_hint' => 'Marca el producto en la cesta, en el resumen y en «Mis pedidos». Si lo dejas vacío se usa el de su tipo: tarta para los packs y entrada para el resto.',
+        'field_image' => 'Foto del producto',
+        'field_image_hint' => 'webp, jpg o png; máx. 3 MB. Es la foto de la ficha: la publica la API y la pinta quien venda desde fuera de esta web (la app o una landing propia). Opcional — sin foto, no se publica el campo. Al cambiarla se borra la anterior.',
         /*
          * ⚠️⚠️ **CUATRO de las once opciones NO tenían rótulo y el selector enseñaba la CLAVE CRUDA**
          * (`admin.catalog.icon_option.ticket`, y lo mismo `gift`, `party` y `school-trip`).

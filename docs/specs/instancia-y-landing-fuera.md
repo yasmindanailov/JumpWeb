@@ -20,9 +20,12 @@
     capturadas en §1.5).
   - ⚠️ El criterio «cero marca del cliente en el código» **no se puede leer como un `grep` a secas**: 166 de
     sus 167 apariciones son citas de artboards en comentarios (§1.4).
-- **Estado**: censo hecho, las tres decisiones contestadas (`#639`) y **T1 ✅** (`#640`: `PublicFacts` y
-  `GET /api/v1/site`, contrato 1.3.0). ▶ Sigue el resto del menú: horario, normas, legales, precios, fichas
-  y prueba social. **Un recurso público nuevo se escribe con su lista blanca o no se escribe.**
+  - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
+    `public/`; las dos salen como URL absoluta por su `imageUrl()`.
+- **Estado**: censo hecho, `#639` contestada y **seis platos servidos** (`#640`→`#645`, contrato 1.8.0):
+  `site`, horario, normas, legales, precios y la ficha de producto y zona. ▶ Queda la prueba social.
+  **Un recurso público nuevo se escribe con su lista blanca o no se escribe**, y lo que la instalación no
+  rellenó no viaja — tampoco lo rellenado y BORRADO, que en BD es `''`.
 - **Invariantes que toca**: `RGPD-05` (prueba social sin avatares), `PERF-02` (la lectura pública se cachea),
   `SEC-01` (rutas nuevas dentro del grupo `api`). Dinero y aforo: ninguno; esta fase no toca el embudo.
 
@@ -245,8 +248,40 @@ escrita a mano.
 
 **Medido**: `PricesFactsTest` (6), `scripts/mutar-menu-de-hechos.sh` **24/24**.
 
-▶ **Lo que sigue en el menú**: la ficha de producto y de zona (descripción e imagen, `#632`) · la prueba
-social sin avatares.
+**✅ T6 HECHA (2026-09-19) · la FICHA de producto y de zona** (`#645`, de `#632` P1). `GET /catalog/zones`
+pasa a servir descripción y foto de cada zona, y el producto estrena foto: en la lista
+(`GET /catalog/products`) y, con su descripción, en el detalle. Contrato **1.8.0**.
+
+⚠️⚠️ **La foto del producto se SUBE al hueco de la instalación, y ésa es la decisión del owner.** Va al disco
+`uploads` (`public/uploads`), que está gitignorado y excluido del `rsync --delete` del despliegue: la clienta
+cambia su foto desde el panel sin commitear al repo del producto. Es literalmente lo que `#632` quería
+evitar, y lo que se estaba haciendo mal — medido: **35 imágenes del cliente versionadas en `main`**
+(`public/images/attractions/`), a las que apuntan las 3 zonas con foto. **La zona NO se convierte hoy**:
+mover esos ficheros es tocar material del cliente y va con la tanda en la que la landing se va. Las dos
+formas conviven sin que el contrato se entere, porque `Zone::imageUrl()` y `TicketType::imageUrl()` las dos
+sacan **URL absoluta** — el día que la zona se mude no cambia ni un byte de lo publicado.
+
+⚠️⚠️ **El reparto es asimétrico, y está medido.** La FOTO viaja en la lista y la DESCRIPCIÓN solo en el
+detalle: un catálogo se recorre mirando fotos —la app de F6 no tiene landing y pinta tarjetas con esto— y la
+prosa se lee al abrir. Las cifras del 19-09: `/catalog/products` son **4.079 bytes** con 24 productos (9 con
+zona); una descripción son ~340 bytes y una URL ~60. Es la regla que `CatalogProductDetail` ya había escrito
+para `guardian_authorization`: cada campo de la lista se paga en todas las filas.
+
+⚠️ **Y por eso la ficha de zona es un DTO aparte** (`CatalogZoneDetail`, que COMPONE `CatalogZone`) en vez de
+engordar la zona anidada en cada producto: eso habría repetido las descripciones de 4 zonas a lo largo de 9
+productos, ~47 % más de payload en la primera pantalla del flujo, para un dato que el cajón no pinta. Medido
+después del cambio: la lista sigue en **4.079 bytes exactos**, y `/catalog/zones` pasa de 210 a 689.
+
+▶ Tres cosas que costaron una pasada cada una: `ticket_types` **no tenía columna de imagen** (la zona sí, y
+también `description`) · `FileUpload` **descarta al hidratar el fichero que no existe en el disco**, así que
+una prueba del campo del panel necesita `Storage::fake` con el fichero puesto o el campo sale vacío · y el
+arnés cazó que «rellenado y BORRADO» (`''` en el JSON de traducciones) no estaba cubierto: sin ese caso,
+cambiar el `?:` del lector por un `??` publicaría `"description": ""` con todo en verde.
+
+**Medido**: `CatalogTest` (+4), `CatalogEditTest` (+1, el campo del panel), guarda nueva de divergencia en
+`ApiContractTest`, `scripts/mutar-menu-de-hechos.sh` **34/34**.
+
+▶ **Lo que sigue en el menú**: la prueba social sin avatares (`RGPD-05`).
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la

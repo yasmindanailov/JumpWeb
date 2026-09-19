@@ -17,10 +17,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class TicketType extends Model
 {
     use HasTranslations;
+
+    /**
+     * Disco de la FOTO de la ficha (`#632` P1, T6 del menú de hechos). Es `public/uploads`:
+     * gitignorado y excluido del `rsync --delete` del despliegue, o sea el hueco de la instalación.
+     * El mismo que usan `Offer` y `BarImage`, y por el mismo motivo: lo que sube la clienta no entra
+     * en el repo del producto.
+     */
+    public const IMAGE_DISK = 'uploads';
 
     /** Tipos de producto del catálogo unificado (Decisión A, §2 del plan). */
     public const TYPE_ENTRY = 'entry';   // entrada (admisión por zona + duración)
@@ -350,6 +359,23 @@ class TicketType extends Model
     public function iconKey(): string
     {
         return ProductIcon::forProduct($this->icon, $this->isPack());
+    }
+
+    /**
+     * **URL pública de la FOTO de la ficha, o `null` si esta instalación no subió ninguna**
+     * (`#632` P1).
+     *
+     * ⚠️ `asset('uploads/'.…)` y no el `url()` del disco: `public/uploads` lo sirve el servidor web
+     * de forma NATIVA, sin depender del symlink `public/storage` —que en producción está roto—. Es
+     * la misma resolución, letra por letra, que `Offer::imageUrl()` y `BarImage::imageUrl()`.
+     *
+     * ⚠️ No comprueba que el fichero exista: una foto borrada a mano del disco daría una URL que da
+     * 404, y eso es correcto —quien pinta decide qué hacer con una imagen que no carga—. Mirar el
+     * disco aquí costaría una llamada de E/S por producto en la lista del catálogo.
+     */
+    public function imageUrl(): ?string
+    {
+        return $this->image ? asset('uploads/'.ltrim((string) $this->image, '/')) : null;
     }
 
     /**
@@ -984,6 +1010,24 @@ class TicketType extends Model
      */
     protected static function booted(): void
     {
+        /*
+         * **Limpieza de huérfanos de la foto** — copiada de `Offer::booted()`, que es donde esta
+         * casa ya resolvió el problema: `FileUpload` sube el fichero nuevo pero NO borra el viejo,
+         * así que sin esto cada cambio de foto deja basura en `public/uploads` para siempre.
+         * `delete()` sobre una ruta que no existe es un no-op seguro.
+         */
+        static::updating(function (self $type): void {
+            if ($type->isDirty('image') && ($anterior = $type->getOriginal('image'))) {
+                Storage::disk(self::IMAGE_DISK)->delete($anterior);
+            }
+        });
+
+        static::deleted(function (self $type): void {
+            if ($type->image) {
+                Storage::disk(self::IMAGE_DISK)->delete($type->image);
+            }
+        });
+
         /*
          * **La INVITACIÓN DIGITAL exige tres cosas, y la BD es quien las impone** (D15, `#575`).
          *

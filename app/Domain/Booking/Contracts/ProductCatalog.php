@@ -27,12 +27,17 @@ namespace App\Domain\Booking\Contracts;
 interface ProductCatalog
 {
     /**
-     * Zonas que OPERAN (`zones.is_active`), en el orden configurado.
+     * Zonas que OPERAN (`zones.is_active`), en el orden configurado, **con su ficha**.
      *
      * Una zona desactivada no vende: sus productos ya quedan fuera de `products()`, y listarla
      * igualmente ofrecería al cliente un filtro que nunca tiene contenido.
      *
-     * @return list<CatalogZone>
+     * ⚠️ Devuelve {@see CatalogZoneDetail} y no {@see CatalogZone} desde la T6 del menú de hechos
+     * (`#632` P1): aquí la ficha es el punto —son cuatro filas y es SU endpoint—, mientras que la
+     * zona anidada en cada producto sigue siendo solo identidad, porque ahí se paga en todas las
+     * filas.
+     *
+     * @return list<CatalogZoneDetail>
      */
     public function zones(): array;
 

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Http\Api\ApiCollection;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Api\V1\CatalogZoneResource;
+use App\Http\Resources\Api\V1\CatalogZoneDetailResource;
 
 /**
  * Fase 3 · paso 1b — las zonas operativas del catálogo.
@@ -16,11 +16,15 @@ use App\Http\Resources\Api\V1\CatalogZoneResource;
  * de `throttle` (spec §10, punto 2)—, así que el suelo de `config/api.php` protege de verdad.
  *
  * Qué zona «opera» lo decide el dominio (`zones.is_active`), no este controlador.
+ *
+ * ▶ **Desde la T6 del menú de hechos sirve la FICHA** (`#632` P1): descripción y foto, además de la
+ * identidad. Es el sitio de la ficha de zona, y no la zona anidada en cada producto, porque aquí
+ * son cuatro filas que se piden una vez — allí se pagarían en todas.
  */
 class CatalogZonesController extends Controller
 {
     public function index(ProductCatalog $catalog): ApiCollection
     {
-        return new ApiCollection($catalog->zones(), CatalogZoneResource::class);
+        return new ApiCollection($catalog->zones(), CatalogZoneDetailResource::class);
     }
 }

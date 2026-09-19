@@ -89,6 +89,20 @@ final readonly class CatalogProduct
         public string $icon,
         /** Zona operativa del producto, o null si no tiene (nunca en un producto con franjas). */
         public ?CatalogZone $zone,
+        /**
+         * URL ABSOLUTA de la foto del producto, o `null` si esta instalación no subió ninguna
+         * (`#632` P1, T6 del menú de hechos).
+         *
+         * ⚠️ **Va en la LISTA y su descripción no**, y no es un descuido: un catálogo de venta se
+         * recorre mirando fotos —la app de F6 no tiene landing y pinta tarjetas con lo que dé
+         * esto—, mientras que la prosa se lee al abrir un producto. Una URL son ~60 bytes por fila;
+         * una descripción, ~340. Es la regla que `CatalogProductDetail` ya escribió para
+         * `guardianAuthorization`: cada campo de la lista se paga en todas las filas.
+         *
+         * Absoluta y no la ruta guardada, por el mismo motivo que en {@see CatalogZoneDetail}: la
+         * resuelve `TicketType::imageUrl()` contra el disco de subidas.
+         */
+        public ?string $imageUrl,
     ) {}
 
     public function isPack(): bool

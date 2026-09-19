@@ -83,4 +83,24 @@ class Zone extends Model
     {
         return $this->hasMany(Attraction::class)->orderBy('position');
     }
+
+    /**
+     * **URL pública de la foto de la zona, o `null` si no tiene** (T6 del menú de hechos, `#632`).
+     *
+     * ⚠️⚠️ **`asset($image)` a secas, y NO `asset('uploads/'.$image)` como en `TicketType`**: la
+     * foto de zona nació en 2026-06-11 como una **ruta relativa a `public/`** escrita a mano en el
+     * panel (`images/attractions/park_jump.webp`), no como una subida. Las dos formas conviven a
+     * propósito y por decisión del owner (19-09): el producto nace con subida real porque no tiene
+     * valores heredados, y la zona no se convierte hoy porque sus ficheros están dentro del repo y
+     * mudarlos es tocar material del cliente — eso va con la tanda en la que la landing se va.
+     *
+     * Lo que NO cambia es lo publicado: las dos salen por la API como URL absoluta, así que el día
+     * que la zona se mude a `uploads` el contrato no se entera.
+     */
+    public function imageUrl(): ?string
+    {
+        $ruta = trim((string) ($this->image ?? ''));
+
+        return $ruta === '' ? null : asset($ruta);
+    }
 }

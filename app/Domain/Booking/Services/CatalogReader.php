@@ -7,6 +7,7 @@ use App\Domain\Booking\Contracts\CatalogEventField;
 use App\Domain\Booking\Contracts\CatalogProduct;
 use App\Domain\Booking\Contracts\CatalogProductDetail;
 use App\Domain\Booking\Contracts\CatalogZone;
+use App\Domain\Booking\Contracts\CatalogZoneDetail;
 use App\Domain\Booking\Contracts\ProductCatalog;
 use App\Domain\Booking\Models\ProductAddon;
 use App\Domain\Booking\Models\TicketType;
@@ -39,14 +40,14 @@ class CatalogReader implements ProductCatalog
 {
     public function __construct(private RateResolver $rates, private AddonResolver $addons) {}
 
-    /** @return list<CatalogZone> */
+    /** @return list<CatalogZoneDetail> */
     public function zones(): array
     {
         return Zone::query()
             ->where('is_active', true)
             ->orderBy('position')
             ->get()
-            ->map(fn (Zone $zone): CatalogZone => $this->describeZone($zone))
+            ->map(fn (Zone $zone): CatalogZoneDetail => $this->describeZoneDetail($zone))
             ->all();
     }
 
@@ -87,6 +88,8 @@ class CatalogReader implements ProductCatalog
             // si el niño viene con un adulto. `OrderCreator` sigue leyendo el modo real: esto es una
             // oferta, no un permiso (`#400`).
             guardianAuthorization: $product->funnelGuardianMode(),
+            // Qué es este producto (`#632` P1). `?:` y no `??`: una traducción vacía es «no escrita».
+            description: $product->tr('description') ?: null,
         );
     }
 
@@ -130,6 +133,9 @@ class CatalogReader implements ProductCatalog
             // su tipo. Es la MISMA fuente que usan la cesta y el resumen (`ProductIcon`).
             icon: $product->iconKey(),
             zone: $product->zone ? $this->describeZone($product->zone) : null,
+            // La foto de la ficha, ya resuelta a URL absoluta por el modelo (`#632` P1). La
+            // DESCRIPCIÓN no está aquí: viaja en el detalle, por lo que explica su DTO.
+            imageUrl: $product->imageUrl(),
         );
     }
 
@@ -139,6 +145,23 @@ class CatalogReader implements ProductCatalog
             id: (int) $zone->id,
             slug: (string) $zone->slug,
             name: (string) $zone->tr('name'),
+        );
+    }
+
+    /**
+     * La zona con su FICHA (T6 del menú de hechos, `#632` P1): la identidad de arriba más lo que se
+     * cuenta de ella. Compone {@see describeZone} en vez de repetir sus tres campos, que es lo que
+     * garantiza que la zona anidada en un producto y la de `GET /catalog/zones` no puedan divergir.
+     *
+     * ⚠️ `?:` y no `??` en la descripción: una traducción guardada como cadena vacía es «no lo han
+     * escrito», igual que la ausencia. Es el mismo criterio que `describe()` aplica a `badge`.
+     */
+    private function describeZoneDetail(Zone $zone): CatalogZoneDetail
+    {
+        return new CatalogZoneDetail(
+            zone: $this->describeZone($zone),
+            description: $zone->tr('description') ?: null,
+            imageUrl: $zone->imageUrl(),
         );
     }
 

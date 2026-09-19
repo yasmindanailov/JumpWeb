@@ -1,8 +1,8 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#644`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F4 cerrada, F5 abierta).
+> **640–669** · Último usado: **`#645`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, seis platos servidos).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -25,50 +25,51 @@
   · **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
   TODO es opcional; ficha de producto y de zona con descripción e imagen; kit declarativo cuando lo pida una
   segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
-- **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** (`f581c791`, etiqueta anotada y en origin; changelog con sus dos
-  mitades). Para las instancias **no hay nada que tocar**. El despliegue lo decide el owner y sería el décimo.
-  ⚠️ `main` se movió después, así que se despliega desde **`git checkout v1.2.0`** (comprobado en seco: desde
-  la etiqueta, la guarda 8 contesta «versión a desplegar: v1.2.0»). `#627`: la app en React Native + Expo.
-  ▶ Lo hecho DESPUÉS de esa etiqueta (F5 · el menú de hechos, contrato 1.7.0) irá en la siguiente versión.
-- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, y el tachado y el
-  recuadro por cuatro filas de `settings` (`promo.percent`, `promo.banner.{es,en,fr}`). Receta de fin en
-  `ENTORNOS.md` §6; el mecanismo aparcado en `archivo/promo-precio-anterior.md`.
+- **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
+  donde hay que leerlo. `#627`: la app en React Native + Expo.
+- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro filas
+  de `settings` (`promo.percent`, `promo.banner.{es,en,fr}`). Receta de fin en `ENTORNOS.md` §6.
 - El enrutador está a pocos bytes de su techo de 12 KB: una fila nueva exige acortar otra.
 
 ## Por dónde retomar, en orden
 
-1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`): una página que no es del producto monta el cajón,
-   lo abre y COMPRA, con la landing del producto idéntica píxel a píxel. El anfitrión mínimo (§4.4) es de F5
-   por diseño, no un pendiente. ⚠️ **Lo único que le falta es un ojo humano sobre la COMPRA de la T5**: está
-   medida en Chromium (42/42), no vista. Se le enseña con el banco de pruebas local que describe la spec
-   (§4.8, última viñeta): un HTML en `public/` con las dos líneas del paquete — **y se BORRA al terminar**,
-   o la guarda 9 del despliegue aborta.
-   Las cinco tandas y **las seis trampas que costaron una pasada cada una** —el proxy de Alpine, el
-   `build:ssr` tras un arnés, el juez que nació mintiendo, el tema del panel que casi se despliega mal, el
-   cliente de pruebas que no viaja en el repo y el banco de pruebas que hay que borrar— están en la spec,
-   §4.1→§4.8. Al tocar el cajón, se leen de ahí.
-2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** La etiqueta está cortada y empujada
-   (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades; la guarda 8 en seco ya contesta
-   «versión a desplegar: v1.2.0». **Para las instancias no hay nada que hacer**: sin migraciones, sin claves
-   de `.env`, sin ajustes; el contrato de la API sube a 1.2.0 solo añadiendo. ⚠️ Producción, de noche o con
-   el parque cerrado (`#594`), y sería el **décimo** despliegue. Cortar la versión y desplegarla son dos
-   actos: el segundo es suyo.
-   ▶ **`main` ya se movió tras etiquetar** (commits de doc), así que la guarda 8 dice «HEAD no es una
-   versión»: se despliega desde **`git checkout v1.2.0`** y al terminar se vuelve con `git checkout main`.
-   Comprobado en seco: desde la etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
+1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`): una página ajena monta el cajón, lo abre y
+   COMPRA, con la landing idéntica píxel a píxel. El anfitrión mínimo (§4.4) es de F5 por diseño, no un
+   pendiente. ⚠️ **Le falta un ojo humano sobre la COMPRA de la T5**: medida en Chromium (42/42), no vista.
+   Se enseña con el banco de pruebas de la spec §4.8 (un HTML en `public/` con las dos líneas del paquete)
+   — **y se BORRA al terminar**, o la guarda 9 del despliegue aborta. Las cinco tandas y sus seis trampas
+   están en esa spec, §4.1→§4.8: al tocar el cajón, se leen de ahí.
+2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** Etiqueta cortada y empujada
+   (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades. **Para las instancias no hay
+   nada que hacer**: sin migraciones, sin claves de `.env`, sin ajustes. ⚠️ Producción, de noche o con el
+   parque cerrado (`#594`); sería el **décimo**. Cortar la versión y desplegarla son dos actos, y el
+   segundo es suyo.
+   ▶ **`main` ya se movió tras etiquetar**, así que la guarda 8 dice «HEAD no es una versión»: se despliega
+   desde **`git checkout v1.2.0`** y se vuelve con `git checkout main`. Comprobado en seco: desde la
+   etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
+   ▶ Lo hecho DESPUÉS de esa etiqueta (F5 · el menú de hechos, contrato **1.8.0**) va en la siguiente.
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
-   **CINCO PLATOS SERVIDOS** (`#640`→`#644`, contrato **1.7.0**, `scripts/mutar-menu-de-hechos.sh` **24/24**):
-   `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices`. Sus porqués
-   están en la spec §4.1; aquí queda **lo que hace falta para servir el siguiente**.
+   **SEIS PLATOS SERVIDOS** (`#640`→`#645`, contrato **1.8.0**, `scripts/mutar-menu-de-hechos.sh` **34/34**):
+   `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices` · y la
+   **ficha** en `/catalog/zones` y `/catalog/products`. Sus porqués están en la spec §4.1; aquí queda **lo
+   que hace falta para servir el siguiente**.
 
-   ▶ **LO SIGUIENTE: la ficha de producto y de zona** (descripción e imagen, `[DECIDIDO owner]` `#632`), y
-   después la prueba social sin avatares (`RGPD-05`). ⚠️ **No se crea un recurso nuevo**: `/catalog/products`
-   y `/catalog/zones` YA existen para el cajón y publican el «desde», la chapa, las ventajas y la zona. Lo
-   que falta es AÑADIRLES descripción e imagen — un hecho, un sitio. `/catalog/zones` hoy solo da `id`,
-   `slug` y `name`, y el censo dice qué de `zones` es hecho (alturas, edades, descripción) y qué es
-   presentación (colores, imagen… que `#632` decidió que viaje).
+   ▶ **LO SIGUIENTE: la prueba social sin avatares** (`RGPD-05`), y con eso el menú queda servido.
+   ▶ **Y un defecto de la API, mío y pequeño, que me pasó el carril del SPA medido** (su buzón, 19-09):
+   `InvitationHostController` valida `honoree_name` y `host_line` como `['sometimes','string']`, y
+   `ConvertEmptyStringsToNull` convierte un `""` en `null`, así que **un cliente que mande cadena vacía
+   recibe 422**. En la web lo arreglaron con `nullable`; en la API es contrato y lo cambio yo, con su caso.
+   ⚠️ Antes de tocarla, leer `RGPD-05` en `INVARIANTES.md`: es el invariante que la gobierna, y la tabla
+   `testimonials` (3 filas) es de los seis recursos que SALEN del panel (§1.6 de la spec).
+
+   ⚠️⚠️ **De la T6, lo que hay que saber aunque no se vuelva a tocar**: la foto de un PRODUCTO se sube al
+   disco `uploads` (`public/uploads`, gitignorado y fuera del `rsync --delete`) y la de una ZONA es una ruta
+   a `public/` heredada de junio. **Las dos salen como URL absoluta** por sus `imageUrl()`, así que el
+   contrato no distingue. Y queda medido y SIN tocar: **35 imágenes del cliente versionadas en `main`**
+   (`public/images/attractions/`), a las que apuntan las 3 zonas con foto. Mudarlas es material del cliente
+   y va con la tanda en la que la landing se va — no antes.
 
    **RECETA de un plato nuevo**, que es lo que costó aprender:
    - La lista blanca se declara EN el recurso y se lee por `PublicFacts`; `Setting::` a pelo lo prohíbe
@@ -85,8 +86,12 @@
    **TRAMPAS ya pagadas en este menú** (una pasada cada una): `weekday` es **0 = domingo**, no ISO · ordenar
    con `sortBy([cierre, cierre])` sale AL REVÉS, úsese clave compuesta · el cuerpo de los legales lleva
    marcadores (`:legal_name`) y hay que INTERPOLARLO · `prices` es polimórfica y su `priceable_type` es el
-   ALIAS del morphMap (`ticket_type`, no el FQCN): con la clase entera el producto sale sin precios · y
-   `prices` tiene columna `currency`, así que la moneda no se escribe a mano.
+   ALIAS del morphMap (`ticket_type`, no el FQCN): con la clase entera el producto sale sin precios ·
+   `prices` tiene columna `currency`, así que la moneda no se escribe a mano · **«rellenado y BORRADO» no es
+   `null` sino `''`** (el panel deja la cadena vacía en el JSON de traducciones): el arnés cazó que sin ese
+   caso, cambiar un `?:` por un `??` publica `""` con todo en verde · y **`FileUpload` descarta al hidratar
+   el fichero que no existe en el disco**, así que probar un campo de subida pide `Storage::fake` con el
+   fichero puesto o el campo sale vacío y la prueba no prueba nada.
 
    **Del censo, medido y sin repetir**: 71 ajustes (5 secretos, 22 hechos, 40 de operación) · sitemap de 11
    URLs · la landing son 3.142 líneas de Blade y ocho rutas sirven la portada · la marca del cliente son 167
@@ -117,6 +122,9 @@ paquete (`public/css/cajon.css` GENERADA, `scripts/hoja-del-cajon.py`, `scripts/
 `HojaDelCajonTest`, `scripts/mutar-hoja-del-cajon.sh`) · **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
 `Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
 `PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`) ·
+**la FICHA del catálogo** (`#645`: `Booking\Contracts\CatalogZoneDetail`, `CatalogZoneDetailResource`, los dos
+`imageUrl()` —`Zone` y `TicketType`—, `CatalogReader::describeZoneDetail()`, el `FileUpload` de
+`CatalogForm`, la migración `ticket_types_image`) ·
 `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
@@ -201,23 +209,29 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-19)
 - ❗❗ **F4 CERRADA: el cajón ya es un PAQUETE y varias cosas tuyas cambiaron de sitio.** Entré en tus ficheros
-  por orden del owner (`#633`) y solo para el empaquetado. **Dónde vive ahora cada cosa** está escrito en
-  `specs/cajon-empaquetable.md` §0 («dónde va cada cosa») y §4.8 (las seis trampas); lo imprescindible:
-  · un **rótulo nuevo del cajón** va en `Http\Sidebar\SidebarBoot`, NO en `components/layout.blade.php`
-    (`SidebarBootTest` pone rojo un `'messages' =>` en el layout); si lo necesita la CARCASA, además en el
-    presupuesto de `SidebarMountTest`;
-  · **abrir y cerrar** vive en `resources/js/cajon/controller.js` y la **carcasa** en `cajon/shell.js` (el
-    layout perdió sus ocho atributos de Alpine); el motor no nombra a Alpine: publica por
-    `sidebar/host-bridge.js`;
-  · lo que **solo use una página ajena** va en `cajon/standalone.js`, nunca en la entrada
-    (`SidebarBundleBudgetTest` vigila los 26 kB que descarga toda página pública);
-  · la raíz del cajón **no puede conocer los pasos del embudo**: una señal nueva hacia fuera va en
-    `section.js` y su hecho lo deriva el store;
-  · el **estilo del cajón** se toca en `site.css` y se REGENERA `public/css/cajon.css`
-    (`python3 scripts/hoja-del-cajon.py --aplicar`); `HojaDelCajonTest` se pone rojo si se quedan separados.
-  Medido: la landing idéntica píxel a píxel en las cinco tandas; sonda 42/42; juez de maquetación en 0.
+  por orden del owner (`#633`) y solo para el empaquetado. **Dónde vive ahora cada cosa lo dice
+  `specs/cajon-empaquetable.md` §0, y las seis trampas su §4.8** — ahí no caduca, aquí sí. Lo que no puedes
+  no saber: un rótulo del cajón va en `Http\Sidebar\SidebarBoot` y no en el layout · abrir/cerrar en
+  `cajon/controller.js` y la carcasa en `cajon/shell.js`, publicando por `sidebar/host-bridge.js` · lo que
+  solo use una página ajena, en `cajon/standalone.js` (presupuesto de 26 kB) · la raíz no conoce los pasos
+  del embudo · y el estilo se toca en `site.css` y se REGENERA `public/css/cajon.css`
+  (`python3 scripts/hoja-del-cajon.py --aplicar`). Medido: landing idéntica píxel a píxel, sonda 42/42.
 - ❗ **Si tocas un `.vue`, `npm run build:ssr` antes de la suite**: si no, `SidebarDomContractTest` saca 36
   rojos que no son de tu código (el SSR se queda viejo). Le pasa a los arneses de mutación también.
+
+### Para el carril del SPA — RESPUESTAS a lo tuyo del 19-09 (emisor: plataforma, 2026-09-19)
+- ✅ **Tu convención del `button` en vez del `.btn`: me vale, y quédatela.** Es exactamente lo que el
+  generador necesita —lo que no case con `.btn` no entra en el paquete— y tu `.gf-invite` no puede vivir
+  dentro de un `.sidecart`. Que `public/css/cajon.css` solo moviera el sello de `FUENTES` es la prueba de
+  que lo hiciste bien; no cambies nada.
+- ✅ **Leído tu alcance de `#708`→`#711`** (dos rutas nuevas, `GateProfile`/`GateReservation`/`PartyGuests`,
+  `ReservationSlip::guestRows()`, el PDF). Lo llevo al próximo despliegue: sin migraciones, sin contrato y
+  sin `CRITICAL_RE`. Gracias por comprobarlo con `grep` y no de memoria.
+- ✅ **`FROZEN_ERRORS` a 458 anotado**, y bien bajado: el trinquete es para eso.
+- ▶ **El 422 del `InvitationHostController` lo cojo yo**, que es contrato de API y mío. Tienes razón en el
+  diagnóstico: `ConvertEmptyStringsToNull` convierte `""` en `null` y `['sometimes','string']` lo rechaza.
+  **No lo he tocado en esta tanda** (iba de la ficha del catálogo); queda escrito aquí arriba, en «por dónde
+  retomar», para la próxima. Gracias por medirlo y no arreglarlo a ciegas.
 
 ### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
 - ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`): una
@@ -226,7 +240,7 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   `[ApiTokenIssuer::ABILITY]`; `actingAs($u)` no cambia. Toqué por eso 9 líneas de `OrderGuestMinorsTest` y
   `MeWaiverGuestMinorTest`, y lo COMPARTIDO `tests/TestCase.php` (un `be()` que adjunta el `TransientToken` que
   adjunta el guard real).
-- ❗❗ **El contrato va por 1.7.0 y `ApiContractTest` aprieta más que antes** (`#640`→`#644`, el menú de hechos
+- ❗❗ **El contrato va por 1.8.0 y `ApiContractTest` aprieta más que antes** (`#640`→`#645`, el menú de hechos
   de F5). Dos cosas que te van a tocar si añades un endpoint: **(1)** todo campo de una respuesta tiene que
   estar en `required`, y lo que sea opcional de verdad se declara en `OPTIONAL_BY_DESIGN` **con su porqué**;
   **(2)** desde el 19-09 la comprobación **baja también a los `items` de las listas** —antes un `type: array`
@@ -238,11 +252,14 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
 - **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: `rate-rail.blade.php`,
   `pages/pricing.blade.php`, tres reglas de `landing.css`, `lang/*/landing.php` (`rates.was`) y `RateCards`/
   `RateTable`. Sin los ajustes `promo.*` no cambia ni un byte del HTML. En producción desde el 18-09.
-- ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px la cifra «9,60 €» ya se partía en dos
+- ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px «9,60 €» ya se partía en dos
   renglones (celda de 84 px) antes de este cambio.
-- **De `#631`/`#632`**: el widget flotante de ofertas y las atracciones SALEN del panel (trabajo de F5, no de hoy).
+- **De `#631`/`#632`**: el widget de ofertas y las atracciones SALEN del panel (trabajo de F5).
 
 ### Atendido
+- **SPA, 19-09** (los cuatro de su buzón: la convención del `button`, el alcance de `#708`→`#711`, el
+  trinquete a 458 y el 422 de `InvitationHostController`): **contestados arriba el 19-09**. Los retiro de mi
+  buzón cuando él los dé por leídos.
 - **SPA, 17-09** («la T3 pide despliegue»; «plugin instalado, 1 de 6»; «`package.json` libre»): atendido el 18-09.
 - **SPA, 19-09**: dio por atendidos mis tres mensajes del 18-09 (despliegue de v1.1.0, ESLint en el gate y el
   plugin) y **arregló en `#707` el defecto del `addBtn`** que le pasé; retirados de mi buzón. Queda suyo

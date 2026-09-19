@@ -71,6 +71,18 @@ class ApiContractTest extends TestCase
         // publicada tiene fecha por definición. Declararlo opcional «por si acaso» es una mentira que cada
         // cliente tendría que programar.
         'LegalDocumentSummary' => ['signed_version'],
+        // **La FICHA de producto y de zona** (F5 · T6, `#632` P1), por el mismo principio del menú: lo que la
+        // instalación no rellenó NO viaja, ni como `""`. Exigir estos campos obligaría a toda instalación a
+        // escribir una descripción por zona y a subir una foto por producto para que su API validara.
+        // ⚠️ La identidad de la zona —`id`, `slug`, `name`— NO entra aquí: una zona sin nombre no es una zona,
+        // y el `slug` es la clave del deep-link.
+        'CatalogZoneDetail' => ['description', 'image_url'],
+        // ⚠️ El reparto es asimétrico A PROPÓSITO y por eso las dos entradas dicen cosas distintas: la FOTO va
+        // en la lista (un catálogo se recorre mirándolas) y la DESCRIPCIÓN solo en el detalle (es prosa, se lee
+        // al abrir). Medido el 19-09: la descripción son ~340 bytes en las 6 que la tienen, sobre un payload de
+        // 4.079 bytes con 24 productos.
+        'CatalogProduct' => ['image_url'],
+        'CatalogProductDetail' => ['image_url', 'description'],
         'LegalDocument' => ['signed_version'],
         // Una sección puede traer solo titular o solo párrafo: los documentos los escribe una persona en el
         // panel, y hay secciones que son un titular con su lista debajo.
@@ -562,6 +574,31 @@ class ApiContractTest extends TestCase
                 "«{$owner}.zone» ha divergido de `CatalogZone`: sus campos obligatorios ya no coinciden"
             );
         }
+
+        // Y la TERCERA copia, que no está anidada bajo `zone` sino APLANADA: la ficha de
+        // `GET /catalog/zones` (contrato 1.8.0). Aquí la identidad convive con `description` e
+        // `image_url`, así que no se comparan los mapas enteros —serían distintos a propósito— sino
+        // que se exige que los tres campos de la identidad digan LO MISMO, letra por letra, y que
+        // sigan siendo los obligatorios. Sin esto, la zona anidada en un producto y la de su propia
+        // lista podrían acabar describiendo el `slug` de dos maneras.
+        $ficha = $schemas['CatalogZoneDetail'] ?? null;
+
+        $this->assertIsArray($ficha, 'falta el componente `CatalogZoneDetail`');
+
+        foreach (array_keys($component['properties']) as $campo) {
+            $this->assertSame(
+                $component['properties'][$campo],
+                $ficha['properties'][$campo] ?? null,
+                "«CatalogZoneDetail.{$campo}» ha divergido de `CatalogZone`"
+            );
+        }
+
+        $this->assertSame(
+            $component['required'],
+            $ficha['required'] ?? null,
+            '`CatalogZoneDetail` tiene que exigir exactamente la identidad de `CatalogZone`: '.
+            'lo que añade la ficha es opcional por diseño'
+        );
     }
 
     /**

@@ -14,9 +14,11 @@ use App\Filament\Resources\Catalog\Pages\EditCatalog;
 use App\Filament\Resources\Catalog\Pages\ListCatalog;
 use Database\Seeders\PermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Filament\Forms\Components\FileUpload;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use ReflectionMethod;
@@ -179,6 +181,48 @@ class CatalogEditTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertSame(['Uno', 'Dos', 'Tres'], $entry->fresh()->features['es']);
+    }
+
+    /**
+     * **La FOTO de la ficha se pone desde el PANEL** (`#645`, F5 · T6), y esta guarda existe porque
+     * el modo de fallo es silencioso: si alguien retira el `FileUpload` del formulario, la API
+     * sigue publicando `image_url` —sus tests siguen verdes, porque escriben la columna a mano— y
+     * lo único que pasa es que **ninguna instalación puede rellenarlo ya**. Un campo que solo se
+     * puede escribir por SQL no es un campo del producto.
+     *
+     * ⚠️ **No se simula una subida**: el estado de un `FileUpload` no es la ruta sino un mapa
+     * `uuid → ruta`, y montar un fichero temporal probaría a Filament, no a esta casa. Lo que se
+     * fija aquí es lo que de verdad puede romperse sin avisar: que el campo SIGA en el formulario,
+     * que apunte al disco y a la carpeta correctos —si acabara en el repo, el despliegue lo
+     * borraría con su `rsync --delete`— y que lo guardado vuelva a cargarse.
+     */
+    public function test_the_ficha_photo_is_editable_from_the_panel(): void
+    {
+        // ⚠️ El disco, FALSO y con el fichero dentro: `FileUpload` descarta al hidratar lo que no
+        // existe en el disco —conducta suya, y sensata—, así que sin el fichero el campo saldría
+        // vacío y la última aserción no probaría nada.
+        Storage::fake(TicketType::IMAGE_DISK);
+        Storage::disk(TicketType::IMAGE_DISK)->put('productos/entrada.webp', 'x');
+
+        $entry = $this->makeEntry(['image' => 'productos/entrada.webp']);
+
+        $page = Livewire::actingAs($this->admin())
+            ->test(EditCatalog::class, ['record' => $entry->id])
+            ->assertSuccessful();
+
+        $campo = $page->instance()->getSchema('form')
+            ?->getComponent(fn ($c): bool => $c instanceof FileUpload && $c->getName() === 'image');
+
+        $this->assertInstanceOf(
+            FileUpload::class, $campo,
+            'el formulario del catálogo ya no deja poner la foto de la ficha: la API publicaría un campo que nadie puede rellenar'
+        );
+        $this->assertSame(TicketType::IMAGE_DISK, $campo->getDiskName(), 'la foto tiene que ir al hueco de la instalación');
+        $this->assertSame('productos', $campo->getDirectory());
+        $this->assertContains(
+            'productos/entrada.webp', array_values((array) $campo->getState()),
+            'lo guardado tiene que volver al formulario: si no, editar un producto le BORRA la foto'
+        );
     }
 
     /**

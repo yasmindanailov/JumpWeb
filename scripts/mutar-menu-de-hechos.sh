@@ -12,7 +12,9 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|HeroStatusTest|ApiContractTest'"
+# ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
+# corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -27,9 +29,17 @@ LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
 PRECIOS=app/Http/Resources/Api/V1/PricesFactsResource.php
 PRECIOSCTRL=app/Http/Controllers/Api/V1/PricesFactsController.php
 RUTAS=routes/api.php
+# T6 · la ficha de producto y de zona (`#632` P1).
+PANEL=app/Filament/Resources/Catalog/Schemas/CatalogForm.php
+FICHAZONA=app/Http/Resources/Api/V1/CatalogZoneDetailResource.php
+FICHAPROD=app/Http/Resources/Api/V1/CatalogProductResource.php
+LECTORCAT=app/Domain/Booking/Services/CatalogReader.php
+MODELOZONA=app/Domain/Booking/Models/Zone.php
+MODELOPROD=app/Domain/Booking/Models/TicketType.php
+YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -190,6 +200,60 @@ mutar "se anuncian precios de productos APAGADOS en el panel" \
 
 mutar "la moneda se escribe a mano en vez de salir de la fila de precio" \
   "$PRECIOS" "            'currency' => \$this->moneda()," "            'currency' => 'USD',"
+
+# ── La FICHA de producto y de zona (T6): lo no rellenado no viaja, y la URL es absoluta ────────
+# El modo de fallo de esta tanda no rompe nada: publicar `""` donde no hay dato, o una ruta que
+# solo resuelve quien esté en el mismo dominio. Las dos dejan el JSON válido y la app en blanco.
+
+mutar "la ficha de zona publica lo no rellenado (la clave viaja aunque esté vacía)" \
+  "$FICHAZONA" "            fn (mixed \$valor): bool => \$valor !== null," \
+  "            fn (mixed \$valor): bool => true,"
+
+mutar "una descripción de zona en blanco viaja como cadena vacía en vez de callarse" \
+  "$LECTORCAT" "            description: \$zone->tr('description') ?: null," \
+  "            description: \$zone->tr('description') ?? null,"
+
+mutar "una descripción de PRODUCTO en blanco viaja como cadena vacía en vez de callarse" \
+  "$LECTORCAT" "            description: \$product->tr('description') ?: null," \
+  "            description: \$product->tr('description') ?? null,"
+
+mutar "la foto de la ZONA viaja como ruta cruda, no como URL absoluta" \
+  "$MODELOZONA" "        return \$ruta === '' ? null : asset(\$ruta);" \
+  "        return \$ruta === '' ? null : \$ruta;"
+
+mutar "la foto del PRODUCTO viaja como ruta del disco, no como URL absoluta" \
+  "$MODELOPROD" "        return \$this->image ? asset('uploads/'.ltrim((string) \$this->image, '/')) : null;" \
+  "        return \$this->image ? ltrim((string) \$this->image, '/') : null;"
+
+mutar "el producto sin foto publica «image_url: null» en vez de omitir la clave" \
+  "$FICHAPROD" "            \$this->resource->imageUrl === null ? [] : ['image_url' => \$this->resource->imageUrl]" \
+  "            ['image_url' => \$this->resource->imageUrl]"
+
+# Y las dos guardas del CONTRATO que esta tanda estrena.
+mutar "la foto deja de estar declarada como opcional POR DISEÑO (y nadie exige su porqué)" \
+  "$CONTRATO" "        'CatalogProduct' => ['image_url']," "        'CatalogProduct' => [],"
+
+mutar "la ficha de zona DIVERGE de la identidad que viaja anidada en cada producto" \
+  "$YAML" "        name:
+          type: string
+        description:
+          type: string
+          description: |
+            Qué es esta zona" \
+  "        name:
+          type: string
+          description: Nombre de la zona.
+        description:
+          type: string
+          description: |
+            Qué es esta zona"
+
+# Y el otro extremo del campo: el PANEL. Una API que publica un dato que nadie puede rellenar no es un dato.
+mutar "el campo de la foto desaparece del formulario del panel (la API publica algo irrellenable)" \
+  "$PANEL" "                FileUpload::make('image')" "                FileUpload::make('imagen')"
+
+mutar "la foto se sube fuera del hueco de la instalación (el despliegue se la lleva)" \
+  "$PANEL" "                    ->disk(TicketType::IMAGE_DISK)" "                    ->disk('public')"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

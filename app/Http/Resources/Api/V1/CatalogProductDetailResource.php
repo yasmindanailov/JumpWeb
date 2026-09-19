@@ -50,6 +50,10 @@ class CatalogProductDetailResource extends JsonResource
             // menor invitado. La pantalla decide con esto si pinta una CASILLA (`optional`), una NOTA
             // (`required`) o nada (`none`).
             'guardian_authorization' => $this->resource->guardianAuthorization,
-        ];
+        ] + (
+            // Qué es este producto (`#632` P1). Como la foto en la lista: si la instalación no lo
+            // escribió, la clave NO viaja — ni como `""`.
+            $this->resource->description === null ? [] : ['description' => $this->resource->description]
+        );
     }
 }

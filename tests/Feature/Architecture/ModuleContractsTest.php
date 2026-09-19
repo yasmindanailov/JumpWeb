@@ -680,6 +680,7 @@ class ModuleContractsTest extends TestCase
                     featured: false,
                     icon: 'ticket',
                     zone: new CatalogZone(7, 'zona-del-contrato', 'Zona del contrato'),
+                    imageUrl: null,
                 )];
             }
 
