@@ -11,7 +11,7 @@
 
 | Carril | Máquina | Banda | Fichero | Estado |
 |---|---|---|---|---|
-| 🏗️ Plataforma · producto e instancias | este ordenador | 610–639 | `carriles/plataforma.md` | **F0–F4 ✅** (F4 el 19-09: una página ajena monta el cajón y COMPRA). **v1.2.0 etiquetada y SIN DESPLEGAR** — el despliegue lo decide el owner. Sigue F5 |
+| 🏗️ Plataforma · producto e instancias | este ordenador | **640–669** | `carriles/plataforma.md` | **F0–F4 ✅** (F4 el 19-09: una página ajena monta el cajón y COMPRA). **v1.2.0 etiquetada y SIN DESPLEGAR** — lo decide el owner. **F5 en curso**: cinco platos del menú de hechos servidos, contrato 1.7.0 |
 | 🎨 Diseño de la web | este ordenador | 580–609 | `carriles/web.md` | todo en producción (13-09); sigue la T6 de copys |
 | 🧩 Diseño del SPA (el cajón) | el otro ordenador | 550–579 | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
 | 📧 Correos | este ordenador | 500–519 | `carriles/correos.md` | entero en el árbol; quedan cuatro ámbar y el ojo del owner |

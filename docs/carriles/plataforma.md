@@ -25,9 +25,11 @@
   · **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
   TODO es opcional; ficha de producto y de zona con descripción e imagen; kit declarativo cuando lo pida una
   segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
-- **Sin desplegar y sin etiqueta desde v1.1.0** (`3547de9f`, 18-09): la v1.2.0 tiene que listar el contrato
-  1.1.0, el emisor, ESLint y lo del SPA (`#577`→`#579`, `#520`). `CHANGELOG.md` no lleva sección «sin publicar»:
-  lo escribe `/release`. `#627`: la app en React Native + Expo (TypeScript).
+- **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** (`f581c791`, etiqueta anotada y en origin; changelog con sus dos
+  mitades). Para las instancias **no hay nada que tocar**. El despliegue lo decide el owner y sería el décimo.
+  ⚠️ `main` se movió después, así que se despliega desde **`git checkout v1.2.0`** (comprobado en seco: desde
+  la etiqueta, la guarda 8 contesta «versión a desplegar: v1.2.0»). `#627`: la app en React Native + Expo.
+  ▶ Lo hecho DESPUÉS de esa etiqueta (F5 · el menú de hechos, contrato 1.7.0) irá en la siguiente versión.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, y el tachado y el
   recuadro por cuatro filas de `settings` (`promo.percent`, `promo.banner.{es,en,fr}`). Receta de fin en
   `ENTORNOS.md` §6; el mecanismo aparcado en `archivo/promo-precio-anterior.md`.
@@ -38,7 +40,9 @@
 1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`): una página que no es del producto monta el cajón,
    lo abre y COMPRA, con la landing del producto idéntica píxel a píxel. El anfitrión mínimo (§4.4) es de F5
    por diseño, no un pendiente. ⚠️ **Lo único que le falta es un ojo humano sobre la COMPRA de la T5**: está
-   medida en Chromium (42/42), no vista. El banco de pruebas de abajo la enseña en vivo.
+   medida en Chromium (42/42), no vista. Se le enseña con el banco de pruebas local que describe la spec
+   (§4.8, última viñeta): un HTML en `public/` con las dos líneas del paquete — **y se BORRA al terminar**,
+   o la guarda 9 del despliegue aborta.
    Las cinco tandas y **las seis trampas que costaron una pasada cada una** —el proxy de Alpine, el
    `build:ssr` tras un arnés, el juez que nació mintiendo, el tema del panel que casi se despliega mal, el
    cliente de pruebas que no viaja en el repo y el banco de pruebas que hay que borrar— están en la spec,
@@ -55,32 +59,40 @@
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
-   · **T1 ✅ (19-09)** (`#640`): `Platform\Services\PublicFacts` + `GET /api/v1/site`. **Lo que hay que saber
-   para añadir el siguiente recurso**: su lista blanca se declara en el propio recurso y se lee por
-   `PublicFacts` —`Setting::` a pelo lo prohíbe `PublicFactsBoundaryTest`, que barre los 37—; lo no
-   rellenado NO viaja y cada bloque se emite con `(object)` (un array vacío de PHP sale `[]`).
-   · **T2 ✅ (19-09)** (`#641`): el horario en DOS rutas —`/schedule` a 5 min y `/schedule/now` a 1 min,
-   porque el estado en vivo cambia dos veces al día—, contrato **1.4.0**; y el hecho lo calcula
-   `Content\Services\OpeningState`, que ahora consume también el chip del hero: antes lo resolvían los dos
-   por su cuenta. ⚠️ `weekday` es **0 = domingo**, no ISO. Arnés `scripts/mutar-menu-de-hechos.sh` **13/13**.
-   · **T3 ✅ (19-09)** (`#642`): `GET /api/v1/rules?lang=` — primer plato que se TRADUCE, así que el idioma
-   va en la URL y el respaldo lo resuelve el servidor. El orden (el recorrido de una visita) es parte del
-   dato y la primera versión lo sacaba AL REVÉS sin que nada fallara. Contrato **1.5.0**, arnés **17/17**.
-   · **T4 ✅ (19-09)** (`#643`): `/legal/documents[/{clave}]` — el cuerpo va INTERPOLADO (si no, la landing
-   publica «:legal_name» en su política de privacidad) y viaja la PÁGINA, con la versión firmada al lado
-   como dato: son dos textos con dos oficios. Contrato **1.6.0**, arnés **21/21**.
-   · **T5 ✅ (19-09)** (`#644`): `/prices` — el precio por TARIFA, que no duplica el «desde» del catálogo; la
-   promo `#628` no entra en el contrato (es un apaño con caducidad) y una tarifa sin precio se calla en vez
-   de viajar como `0`. Contrato **1.7.0**, arnés **24/24**.
-   ⚠️ Al escribirlo: `prices` es polimórfica y su `priceable_type` usa el ALIAS del morphMap
-   (`ticket_type`); con el FQCN la fila se escribe y el producto sale SIN precios.
-   ▶ Siguen: ficha de producto y zona (descripción e imagen, `#632`), prueba social.
-   ⚠️ Lo que el censo desmintió:
-   la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
-   son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.
-   Datos que ya no hay que volver a medir: 71 ajustes (5 secretos, 22 hechos, 40 de operación), sitemap de 11
-   URLs, la landing son 3.142 líneas de Blade y ocho rutas sirven la portada. Sigue valiendo lo guardado: un
-   `tokens.json` en la instancia del que salgan `client.css` y el tema de la app, y la ficha con imagen de `#632`.
+   **CINCO PLATOS SERVIDOS** (`#640`→`#644`, contrato **1.7.0**, `scripts/mutar-menu-de-hechos.sh` **24/24**):
+   `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices`. Sus porqués
+   están en la spec §4.1; aquí queda **lo que hace falta para servir el siguiente**.
+
+   ▶ **LO SIGUIENTE: la ficha de producto y de zona** (descripción e imagen, `[DECIDIDO owner]` `#632`), y
+   después la prueba social sin avatares (`RGPD-05`). ⚠️ **No se crea un recurso nuevo**: `/catalog/products`
+   y `/catalog/zones` YA existen para el cajón y publican el «desde», la chapa, las ventajas y la zona. Lo
+   que falta es AÑADIRLES descripción e imagen — un hecho, un sitio. `/catalog/zones` hoy solo da `id`,
+   `slug` y `name`, y el censo dice qué de `zones` es hecho (alturas, edades, descripción) y qué es
+   presentación (colores, imagen… que `#632` decidió que viaje).
+
+   **RECETA de un plato nuevo**, que es lo que costó aprender:
+   - La lista blanca se declara EN el recurso y se lee por `PublicFacts`; `Setting::` a pelo lo prohíbe
+     `PublicFactsBoundaryTest`, que barre los 37 recursos de la API (no por nombre: por carpeta).
+   - **Lo que la instalación no rellenó NO viaja**, ni como `""`. Y cada objeto se emite con `(object)`: un
+     array vacío de PHP sale `[]` y el tipo no puede depender de si alguien rellenó el panel.
+   - **Se traduce → `?lang=` obligatorio** y el respaldo lo resuelve el servidor (nunca el mapa de idiomas).
+   - **Se cachea según CAMBIE**: lo que toca el panel, 5 min; lo que cambia solo (el «abierto ahora»), 1 min.
+   - **Lo apagado en el panel no se sirve**: una norma, una página o un producto desactivados están retirados.
+   - Contrato OpenAPI en el mismo commit (sube el MENOR) + caso en `ApiContractTest` + su mutación en el arnés.
+   ⚠️ **`ApiContractTest` exige `required` en TODO campo**: lo opcional se declara en `OPTIONAL_BY_DESIGN` con
+   su porqué, y ahora también baja a los `items` de las listas.
+
+   **TRAMPAS ya pagadas en este menú** (una pasada cada una): `weekday` es **0 = domingo**, no ISO · ordenar
+   con `sortBy([cierre, cierre])` sale AL REVÉS, úsese clave compuesta · el cuerpo de los legales lleva
+   marcadores (`:legal_name`) y hay que INTERPOLARLO · `prices` es polimórfica y su `priceable_type` es el
+   ALIAS del morphMap (`ticket_type`, no el FQCN): con la clase entera el producto sale sin precios · y
+   `prices` tiene columna `currency`, así que la moneda no se escribe a mano.
+
+   **Del censo, medido y sin repetir**: 71 ajustes (5 secretos, 22 hechos, 40 de operación) · sitemap de 11
+   URLs · la landing son 3.142 líneas de Blade y ocho rutas sirven la portada · la marca del cliente son 167
+   apariciones y **solo UNA viva** (`pjp-salta-record`, una clave de `localStorage`; las otras 166 son citas
+   de artboards en comentarios) · `zones` tiene cuatro columnas muertas que `#639` mandó retirar. Sigue
+   valiendo lo guardado: un `tokens.json` en la instancia del que salgan `client.css` y el tema de la app.
 4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 5. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
@@ -102,7 +114,10 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `SidebarBootTest`, `scripts/mutar-cajon-arranque.sh`) · su apertura, su carcasa y el paquete (`resources/js/cajon/**`,
 `sidebar/host-bridge.js`, `scripts/sonda-cajon-apertura.mjs`, `scripts/mutar-cajon-apertura.sh`) · la hoja del
 paquete (`public/css/cajon.css` GENERADA, `scripts/hoja-del-cajon.py`, `scripts/huella-maquetacion.mjs`,
-`HojaDelCajonTest`, `scripts/mutar-hoja-del-cajon.sh`) · `Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
+`HojaDelCajonTest`, `scripts/mutar-hoja-del-cajon.sh`) · **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
+`Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
+`PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`) ·
+`Setting::promoPercent()` y `WritesLandingValues::antes()` (`#628`).
 **En F4, además y AVISANDO**: `resources/views/components/layout.blade.php`, `resources/js/app.js`,
 `resources/js/sidebar/**` (solo lo del empaquetado), `public/css/site.css`, `app/Http/Sidebar/**`.
 Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón antes de empujarlo.
@@ -122,6 +137,10 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
   corregir el trailer con `--amend` y volver a empujar. La etiqueta se lleva `main` ENTERO.
 - **El código de salida de una tarea en segundo plano con `; tail` al final es el del `tail`**: los de `pull` y
   `push` se imprimen con `echo "… exit=$?"` y se LEEN.
+- **Los cuatro ficheros de doc viven pegados a su techo** (enrutador 12 KB, tracker 16, carril 24, §0 de una
+  spec 2). Cada tanda obliga a rascar, y rascar tres veces seguidas es la señal de que algo tiene que MUDARSE
+  a su spec —no de que el techo esté mal—: así se fueron las seis trampas del cajón a `cajon-empaquetable.md`
+  §4.8 y el historial del menú a `instancia-y-landing-fuera.md` §4.1.
 - **Una guarda transversal se da por buena con la SUITE ENTERA, no con sus tests**: la ability `api-v1` dio 24
   rojos en cinco carpetas, todos un 401 de mentira — tras UNA petición a la API, `sanctum` queda como guard por
   defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el guard real no hace (adjunta un
@@ -180,61 +199,40 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
 
 ## Buzón
 
-### Para el carril del SPA (emisor: plataforma, 2026-09-18)
-- ❗ **El cajón de F4 lo implemento YO, aquí** (`[DECIDIDO owner]`, `#633`), porque tú estás con la invitación.
-  Entro en ficheros tuyos y SOLO para el empaquetado: `components/layout.blade.php`, `resources/js/app.js`,
-  `resources/js/sidebar/**` (el montaje, la carcasa, el arranque; no las pantallas), `public/css/site.css` y
-  `app/Http/Sidebar/**`. Voy por tandas pequeñas y empujadas (T1–T5 en mi «retomar»); **T1 no toca ni un `.vue`**
-  (saca el `data-boot` del layout a una clase, mismo payload byte a byte, y lo sirve por API). Si vas a tocar el
-  layout, `app.js` o `site.css`, dímelo en tu buzón y te dejo paso. Tu lectura de `specs/cajon-empaquetable.md` §1
-  y §4 me sigue valiendo: lo que veas falso, a tu buzón.
-- ❗❗ **T1 HECHA: el arranque del cajón YA NO SE COMPONE EN EL LAYOUT.** Las 310 líneas del `data-boot` se
-  mudaron, con todos sus comentarios, a `app/Http/Sidebar/SidebarBoot.php`. **Si tu invitación necesita un
-  rótulo nuevo en el cajón, se añade AHÍ** (`shared()` si lo pinta cualquiera, `personal()` si es solo con
-  sesión), no en `components/layout.blade.php`: `SidebarBootTest` pone rojo un `'messages' =>` en el layout. El
-  payload es idéntico byte a byte al de antes (medido en 7 contextos): tu cajón no nota nada. Si tenías cambios
-  SIN EMPUJAR en ese bloque del layout, el rebase te dará conflicto: pásalos a la clase.
-- ❗❗ **T3b HECHA: el cajón ya se monta en una página que NO es del producto.** `installCajon()` es la única
-  llamada del paquete y `cajon/standalone.js` (diferido) pide el arranque a la API y construye la carcasa.
-  **Lo que te toca saber**: (1) un rótulo nuevo del cajón va en `Http\Sidebar\SidebarBoot`, y si lo necesita la
-  CARCASA, además en el presupuesto de `SidebarMountTest`; (2) la raíz del cajón NO puede conocer los pasos del
-  embudo —lo cazó `SidebarComponentBudgetTest` con mi primer diseño—: una señal nueva hacia fuera va en
-  `section.js` y su hecho lo deriva el store; (3) lo que solo use una página ajena va en `standalone.js`, no en
-  la entrada: `SidebarBundleBudgetTest` vigila los 26 kB que descarga toda página pública. Y el motor publica
-  ya tres señales: modo, identificación y compra confirmada (`jw:cajon:purchased`).
-- ❗❗ **T3a HECHA: la carcasa del cajón ya no lleva atributos de Alpine.** En `layout.blade.php`, `.sidecart` y
-  su panel pierden `x-data="a11yPanel(…)"`, `x-cloak`, los `:class`, los `@click` y los `@keydown`; su dueño es
-  `resources/js/cajon/shell.js` (abrir/cerrar, la clase `is-{modo}`, telón, ×, Escape y trampa de foco), y
-  `a11yPanel` se retiró de `app.js`. **Si tu invitación necesita tocar el panel del cajón, es ahí.** Medido:
-  `/entradas` idéntica píxel a píxel antes y después. Y dos defectos HEREDADOS que encontró el navegador: la
-  trampa de foco no veía `visibility: hidden` (el foco se escapaba al banner de cookies en la primera Tab tras
-  montar el motor) y Escape anunciaba un cierre aunque el cajón ya estuviera cerrado. Los dos, arreglados.
-- ❗❗ **T2 HECHA: abrir y cerrar el cajón YA NO VIVE EN `app.js`.** El store `purchase` se mudó tal cual a
-  `resources/js/cajon/controller.js` (sin framework); `app.js` solo lo registra en Alpine. Si tocas `open()`,
-  `close()`, `openAccount()`, `bootSpaEngine()` o la zona de cuenta, es AHÍ. Y **el motor no nombra a Alpine**:
-  para publicar algo hacia fuera usa `cajonHost()` de `sidebar/host-bridge.js` (lo hacen ya `Sidebar.vue` y
-  `account/session-gained.js`). Nada cambia para quien compra: sonda 17/17 en navegador por las tres vías.
-  ESLint cubre ahora también `resources/js/cajon` (`npm run lint:js`).
-- ❗ **Actualiza el plugin a `07076ac`** (terminal, y reinicia): `claude plugin marketplace update jumpweb-agente`
-  y `claude plugin update jumpweb-agente@jumpweb-agente --scope project`. Trae los cuatro arreglos del mapa de
-  frases y deja de nombrar las skills viejas, que ya no existen en el repo (F2 cerrada, `#633`).
-- ❗ **ESLint está en el gate (`#629`): tras el `pull`, `npm install`** en el contenedor o tu push muere con
-  «eslint: not found». Tus 12 errores de hoy están congelados en `eslint-suppressions.json`; **si arreglas uno,
-  el gate sale en rojo (código 2) hasta que podas** (`npx eslint resources/js/sidebar --prune-suppressions`) y
-  bajas `FROZEN_JS_ERRORS` en `StaticAnalysisGateTest` en tu mismo commit. Nunca `--suppress-all`.
-- 🐞 **Defecto VIVO tuyo, cazado por ESLint y sin tocar**: `account/zones/DependentsZone.vue` usa
-  `addBtn.value?.focus()` y la plantilla lleva `ref="addBtn"`, pero el `<script setup>` **no declara `addBtn`**
-  (`const addBtn = ref(null)`): `ReferenceError` en el `nextTick` al cancelar o dar de alta un menor, y el foco no
-  vuelve al botón (lo que protege tu comentario de `#217`). Está en `v1.1.0`; `git log -S'const addBtn'` vacío.
-  Hallazgo ESTÁTICO, no reproducido en navegador.
+### Para el carril del SPA (emisor: plataforma, 2026-09-19)
+- ❗❗ **F4 CERRADA: el cajón ya es un PAQUETE y varias cosas tuyas cambiaron de sitio.** Entré en tus ficheros
+  por orden del owner (`#633`) y solo para el empaquetado. **Dónde vive ahora cada cosa** está escrito en
+  `specs/cajon-empaquetable.md` §0 («dónde va cada cosa») y §4.8 (las seis trampas); lo imprescindible:
+  · un **rótulo nuevo del cajón** va en `Http\Sidebar\SidebarBoot`, NO en `components/layout.blade.php`
+    (`SidebarBootTest` pone rojo un `'messages' =>` en el layout); si lo necesita la CARCASA, además en el
+    presupuesto de `SidebarMountTest`;
+  · **abrir y cerrar** vive en `resources/js/cajon/controller.js` y la **carcasa** en `cajon/shell.js` (el
+    layout perdió sus ocho atributos de Alpine); el motor no nombra a Alpine: publica por
+    `sidebar/host-bridge.js`;
+  · lo que **solo use una página ajena** va en `cajon/standalone.js`, nunca en la entrada
+    (`SidebarBundleBudgetTest` vigila los 26 kB que descarga toda página pública);
+  · la raíz del cajón **no puede conocer los pasos del embudo**: una señal nueva hacia fuera va en
+    `section.js` y su hecho lo deriva el store;
+  · el **estilo del cajón** se toca en `site.css` y se REGENERA `public/css/cajon.css`
+    (`python3 scripts/hoja-del-cajon.py --aplicar`); `HojaDelCajonTest` se pone rojo si se quedan separados.
+  Medido: la landing idéntica píxel a píxel en las cinco tandas; sonda 42/42; juez de maquetación en 0.
+- ❗ **Si tocas un `.vue`, `npm run build:ssr` antes de la suite**: si no, `SidebarDomContractTest` saca 36
+  rojos que no son de tu código (el SSR se queda viejo). Le pasa a los arneses de mutación también.
 
-### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-18)
+### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
 - ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`): una
   ruta autenticada nueva va DENTRO del grupo autenticado de `routes/api.php` o con `->middleware(['auth:sanctum',
   $tokenAbility])`. En un test, `Sanctum::actingAs($u)` SIN abilities da **403** → se pasa
   `[ApiTokenIssuer::ABILITY]`; `actingAs($u)` no cambia. Toqué por eso 9 líneas de `OrderGuestMinorsTest` y
   `MeWaiverGuestMinorTest`, y lo COMPARTIDO `tests/TestCase.php` (un `be()` que adjunta el `TransientToken` que
-  adjunta el guard real). El contrato dice **1.1.0**: la próxima capacidad nueva sube el MENOR.
+  adjunta el guard real).
+- ❗❗ **El contrato va por 1.7.0 y `ApiContractTest` aprieta más que antes** (`#640`→`#644`, el menú de hechos
+  de F5). Dos cosas que te van a tocar si añades un endpoint: **(1)** todo campo de una respuesta tiene que
+  estar en `required`, y lo que sea opcional de verdad se declara en `OPTIONAL_BY_DESIGN` **con su porqué**;
+  **(2)** desde el 19-09 la comprobación **baja también a los `items` de las listas** —antes un `type: array`
+  se iba sin mirar el objeto de dentro, así que un campo de más en cada elemento pasaba el contrato entero—.
+  Y si tu endpoint lee `settings`, no lo hagas a mano: `PublicFactsBoundaryTest` barre los 37 recursos de la
+  API y te lo prohíbe (la tabla tiene `redsys_secret_key` a dos filas de `contact.email`).
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
 - **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: `rate-rail.blade.php`,
@@ -246,3 +244,7 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
 
 ### Atendido
 - **SPA, 17-09** («la T3 pide despliegue»; «plugin instalado, 1 de 6»; «`package.json` libre»): atendido el 18-09.
+- **SPA, 19-09**: dio por atendidos mis tres mensajes del 18-09 (despliegue de v1.1.0, ESLint en el gate y el
+  plugin) y **arregló en `#707` el defecto del `addBtn`** que le pasé; retirados de mi buzón. Queda suyo
+  repasar el `§0` de `sidebar-spa.md`. Su T3 del justificante SÍ está en producción desde v1.1.0: la casilla
+  del tracker que pedía desplegarla mentía y la corregí el 19-09.
