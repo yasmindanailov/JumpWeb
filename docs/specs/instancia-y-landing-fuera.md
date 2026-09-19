@@ -1,7 +1,7 @@
 # [SPEC] La instancia y la landing fuera — el producto expone HECHOS, el cliente pinta su web (F5 del programa)
 
-> Estado: ⬜ **borrador con el censo medido**, a revisión del owner (tres decisiones en §7) ·
-> Última actualización: 2026-09-19 · Decisión asociada: `#N` al aprobarse.
+> Estado: ✅ **APROBADA — el censo medido y las tres decisiones contestadas por el owner** (`#639`) ·
+> Última actualización: 2026-09-19 · Decisión asociada: `DECISIONES #639`.
 > Carril: **plataforma**. Origen: `specs/producto-e-instancias.md` §4.1→§4.4 y `#610`→`#616`; el principio del
 > menú de hechos es `#631` y sus tres rasgos `#632`. Hermana: `specs/cajon-empaquetable.md` (F4, cerrada).
 
@@ -20,7 +20,8 @@
     capturadas en §1.5).
   - ⚠️ El criterio «cero marca del cliente en el código» **no se puede leer como un `grep` a secas**: 166 de
     sus 167 apariciones son citas de artboards en comentarios (§1.4).
-- **Estado**: censo hecho; diseño a revisión; sin código. Lo que sigue lo dice §4.6.
+- **Estado**: censo hecho y las tres decisiones de producto contestadas (`#639`, §7). Sin código: **lo
+  siguiente es la T1 de §4.6**, el menú de hechos con su lista blanca.
 - **Invariantes que toca**: `RGPD-05` (prueba social sin avatares), `PERF-02` (la lectura pública se cachea),
   `SEC-01` (rutas nuevas dentro del grupo `api`). Dinero y aforo: ninguno; esta fase no toca el embudo.
 
@@ -184,17 +185,21 @@ el grupo `api`. **Guarda NUEVA**: ningún recurso público lee un ajuste fuera d
 
 ## 7. Revisión y decisión
 
-**Lo que el owner decide antes de que se escriba código** (las tres salen del censo, no de una opinión):
+**2026-09-19 · las tres contestadas por el owner, las tres por la recomendada** (`#639`), preguntadas con el
+censo de §1 delante:
 
-- **D1 · Las redes sociales.** Medido: ningún correo las usa; solo las pinta la landing.
-  (a) **Se quedan en el panel** y salen como hecho en `site.social` — el cliente las cambia sin tocar su repo;
-  (b) bajan al paquete de la instancia — una menos en el panel, pero cambiar el Instagram pide un despliegue.
-- **D2 · Los cuatro campos muertos de `zones`** (`subtitle`, `age_label`, `area_sqm`, `rides_count`).
-  (a) **Se retiran con su columna** —migración, y por eso entra en la v2.0.0—; (b) se dejan por si la landing
-  nueva los quiere: cuesta cero hoy y sigue enseñando cuatro campos que no hacen nada en el panel.
-- **D3 · El criterio «cero marca del cliente en el código».** (a) **Se acota a código vivo** (§4.5): queda una
-  aparición y se retira en la T4; (b) se aplica al pie de la letra: reescribir 166 comentarios que citan los
-  artboards del canvas, perdiendo la trazabilidad del diseño.
+- **D1 · Las redes sociales → SE QUEDAN EN EL PANEL** y viajan como hecho en `site.social`. Medido que ningún
+  correo las usa, pero el criterio que mandó fue otro: cambiar un Instagram tiene que ser editar un campo, no
+  desplegar el repo de la instancia. *Descartado*: bajarlas al paquete de la instancia.
+- **D2 · Los cuatro campos muertos de `zones` → SE RETIRAN CON SU COLUMNA.** Un campo que el panel pide y que
+  no sale a ningún sitio se vuelve a rellenar creyendo que sirve. Es migración, así que confirma el MAYOR de
+  la v2.0.0. *Descartado*: dejarlos por si la landing nueva los quisiera.
+- **D3 · «Cero marca del cliente en el código» → SE LEE COMO CÓDIGO VIVO** (§4.5): lo que viaja al navegador,
+  a la BD o a un correo. Queda una aparición —`pjp-salta-record`— y cae en la T4. *Descartado*: aplicarlo al
+  pie de la letra, que habría borrado 166 comentarios con la trazabilidad del diseño sin quitar una marca.
+
+▶ **Con `#639` se agota la banda 610–639**; el carril sigue en **640–669** (`docs/DECISIONES.md`).
+▶ **Lo siguiente es la T1** de §4.6: el menú de hechos, recurso a recurso, con su lista blanca y su guarda.
 
 ## Anexo · fila del enrutador
 

@@ -40,7 +40,7 @@ cada uno se conservan, adyacentes.
 
 | Carril | Banda | Máquina |
 |---|---|---|
-| Plataforma · producto e instancias | 610–639 | este ordenador |
+| Plataforma · producto e instancias | 610–639 **agotada el 19-09** (`#639`) · sigue en **640–669** | este ordenador |
 | Diseño de la web | 580–609 | este ordenador |
 | Diseño del SPA (el cajón) | 550–579 **agotada el 18-09** · sigue en **700–729** | el otro ordenador |
 | Correos | 500–519 | este ordenador |

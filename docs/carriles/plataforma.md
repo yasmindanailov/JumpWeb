@@ -1,7 +1,8 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#637`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-19 (F4 · T4 y T5 hechas).
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
+> **640–669** · Último usado: **`#639`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F4 cerrada, F5 abierta).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -73,9 +74,11 @@
    ▶ **`main` ya se movió tras etiquetar** (commits de doc), así que la guarda 8 dice «HEAD no es una
    versión»: se despliega desde **`git checkout v1.2.0`** y al terminar se vuelve con `git checkout main`.
    Comprobado en seco: desde la etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
-3. **F5 ABIERTA por el censo (19-09)**: `specs/instancia-y-landing-fuera.md` ⬜, con §1 medido y **tres
-   decisiones esperando al owner en §7** (las redes · los cuatro campos muertos de `zones` · cómo se lee el
-   criterio «cero marca en el código»). Nada de código hasta que las conteste. ⚠️ Lo que el censo desmintió:
+3. **F5 ABIERTA (19-09) · LO SIGUIENTE ES LA T1**: `specs/instancia-y-landing-fuera.md` ✅, con §1 medido y
+   las **tres decisiones contestadas por el owner** (`#639`, las tres por la recomendada): las redes se
+   quedan en el panel y salen por `site.social`; los cuatro campos muertos de `zones` se retiran con su
+   columna; «cero marca» se lee como código vivo. ▶ **T1 = el menú de hechos, recurso a recurso, con lista
+   blanca declarada en cada uno y su guarda** (§4.1 y §4.6). ⚠️ Lo que el censo desmintió:
    la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
    son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.
    Datos que ya no hay que volver a medir: 71 ajustes (5 secretos, 22 hechos, 40 de operación), sitemap de 11
