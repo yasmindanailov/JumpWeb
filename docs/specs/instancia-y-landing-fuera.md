@@ -222,8 +222,31 @@ cada cliente tiene que programar.
 
 **Medido**: `LegalDocumentsTest` (8), `scripts/mutar-menu-de-hechos.sh` **21/21**.
 
-▶ **Lo que sigue en el menú**: precios «desde» · la ficha de producto y de zona · la prueba social sin
-avatares.
+**✅ T5 HECHA (2026-09-19) · los PRECIOS por tarifa** (`#644`). `GET /api/v1/prices?lang=` da, por producto,
+lo que cuesta en cada tarifa, con el rótulo que escribe el panel («Lunes a jueves», «Viernes, fines de
+semana, vísperas y festivos»). Contrato **1.7.0**.
+
+⚠️ **No duplica `/catalog/products`, aunque lo parezca.** Aquél publica el **«desde»** para abrir la ficha en
+el embudo; esto es el desglose por tarifa, que no vivía en ningún sitio público. Un hecho, un sitio: el
+«desde» no se repite aquí, y hay un caso que lo vigila —si algún día apareciera, habría dos fuentes del
+mismo número y divergirían, porque el catálogo lo calcula con los tramos de volumen (`#324`) y esto no—.
+
+⚠️⚠️ **El «precio de antes» de la promo NO entra en el contrato.** `#628` es una chapuza declarada con fecha
+de caducidad; meterla obligaría a romper el contrato después para desmontarla. Lo traerá el mecanismo de
+ofertas que `#631` decidió («oferta» = hecho de precio), con su forma pensada.
+
+⚠️ **Una tarifa en la que un producto no se vende se CALLA**, no viaja con `0`: un cero es un precio, y una
+landing pintaría «gratis los festivos».
+
+▶ Y dos cosas que enseñó la tabla al escribir el test: `prices` es **polimórfica** y su `priceable_type` usa
+el **alias del morphMap** (`ticket_type`, no el FQCN) —con la clase entera la fila se escribe y el producto
+sale sin precios—; y lleva **columna `currency`**, así que la moneda sale del dato y no de una constante
+escrita a mano.
+
+**Medido**: `PricesFactsTest` (6), `scripts/mutar-menu-de-hechos.sh` **24/24**.
+
+▶ **Lo que sigue en el menú**: la ficha de producto y de zona (descripción e imagen, `#632`) · la prueba
+social sin avatares.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la

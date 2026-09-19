@@ -75,6 +75,9 @@ class ApiContractTest extends TestCase
         // Una sección puede traer solo titular o solo párrafo: los documentos los escribe una persona en el
         // panel, y hay secciones que son un titular con su lista debajo.
         'LegalDocument.sections.items' => ['h', 'p'],
+        // De un producto con precio: la zona —un producto puede no tenerla— y la unidad de venta, que el
+        // panel deja vacía cuando no aplica. El id, el nombre y los precios van siempre.
+        'Prices.products.items' => ['zone', 'unit'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],

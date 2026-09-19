@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\OrderPaymentController;
 use App\Http\Controllers\Api\V1\OrderPaymentStatusController;
 use App\Http\Controllers\Api\V1\OrdersController;
 use App\Http\Controllers\Api\V1\PasswordRecoveryController;
+use App\Http\Controllers\Api\V1\PricesFactsController;
 use App\Http\Controllers\Api\V1\QuoteController;
 use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
@@ -185,6 +186,13 @@ Route::name('api.v1.')->group(function (): void {
     // Los TEXTOS LEGALES: el índice y cada documento, con los marcadores (`:legal_name`…) ya resueltos.
     // ⚠️ Cuelgan de `/legal/documents` y no de `/legal/{clave}` porque `/legal/waiver` ya existe y dice
     // otra cosa —el RÉGIMEN del justificante para el cajón—: una ruta genérica ahí la ensombrecería.
+    // Los PRECIOS por tarifa: el desglose que pinta un carril de tarifas («Lunes a jueves» / «Viernes,
+    // findes y festivos»). ⚠️ NO duplica `/catalog/products`, que publica el «desde» para el embudo:
+    // aquí está el precio de CADA tarifa, que no vivía en ningún sitio público.
+    Route::get('/prices', PricesFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('prices.facts');
+
     Route::get('/legal/documents', [LegalDocumentsController::class, 'index'])
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('legal.documents.index');

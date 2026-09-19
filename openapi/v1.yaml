@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.6.0
+  version: 1.7.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -611,6 +611,44 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Rules'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /prices:
+    get:
+      tags: [Instalación]
+      operationId: getPrices
+      summary: Los precios de cada producto en cada tarifa
+      description: |
+        El desglose que pinta un carril de tarifas: por producto, lo que cuesta en cada tarifa, con el
+        rótulo de la tarifa tal y como lo escribe el panel («Lunes a jueves», «Viernes, fines de semana,
+        vísperas y festivos»).
+
+        ⚠️ **No es lo mismo que `/catalog/products`**, aunque lo parezca: aquél publica el **«desde»** de
+        cada producto (`from_price_cents`) para abrir su ficha en el embudo, y aquí está el precio de CADA
+        tarifa. Un hecho, un sitio: el «desde» no se repite.
+
+        Solo productos y zonas **activos**: lo que no se vende hoy no tiene precio público.
+
+        Los importes van en **céntimos enteros**. El símbolo y el formato los pone quien pinta.
+
+        ⚠️ Un producto que no se vende en una tarifa **omite esa entrada**; no viaja con `0`, que sería un
+        precio, y uno muy llamativo.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Los precios activos en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prices'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
         '422':
@@ -3449,6 +3487,48 @@ components:
               name: { type: string }
               description: { type: string }
               reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
+
+    Prices:
+      type: object
+      additionalProperties: false
+      required: [lang, currency, rates, products]
+      properties:
+        lang: { type: string }
+        currency:
+          type: string
+          example: EUR
+          description: 'Hoy es constante: el producto vende en una sola moneda.'
+        rates:
+          type: array
+          description: Las tarifas activas con el rótulo que escribe el panel.
+          items:
+            type: object
+            additionalProperties: false
+            required: [key, label]
+            properties:
+              key: { type: string, example: special }
+              label: { type: string, example: 'Viernes, fines de semana, vísperas y festivos' }
+        products:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, name, prices]
+            properties:
+              id: { type: integer }
+              zone: { type: string, description: 'El `slug` de su zona. Falta en un producto sin zona.' }
+              name: { type: string }
+              unit: { type: string, example: por persona, description: La unidad de venta que escribe el panel. }
+              prices:
+                type: array
+                description: 'Solo las tarifas en las que ese producto SE VENDE.'
+                items:
+                  type: object
+                  additionalProperties: false
+                  required: [rate, cents]
+                  properties:
+                    rate: { type: string }
+                    cents: { type: integer, description: Céntimos enteros. }
 
     LegalDocumentIndex:
       type: object

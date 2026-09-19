@@ -12,7 +12,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|HeroStatusTest|ApiContractTest'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|HeroStatusTest|ApiContractTest'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -24,10 +24,12 @@ NORMASCTRL=app/Http/Controllers/Api/V1/RulesFactsController.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
 LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
 LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
+PRECIOS=app/Http/Resources/Api/V1/PricesFactsResource.php
+PRECIOSCTRL=app/Http/Controllers/Api/V1/PricesFactsController.php
 RUTAS=routes/api.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$RUTAS")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -174,6 +176,20 @@ mutar "una página DESACTIVADA se sirve por la API" \
 mutar "el índice se lleva el cuerpo de los cinco documentos" \
   "$LEGALESCTRL" "return new LegalDocumentsResource(\$this->activas(), conCuerpo: false);" \
   "return new LegalDocumentsResource(\$this->activas(), conCuerpo: true);"
+
+# ── Los precios: un cero es un precio, y lo apagado no se anuncia ──────────────────────────────
+mutar "una tarifa sin precio viaja como 0 (una landing pintaría «gratis los festivos»)" \
+  "$PRECIOS" "            if (\$cents !== null) {
+                \$salida[] = ['rate' => (string) \$tarifa->key, 'cents' => (int) \$cents];
+            }" \
+  "            \$salida[] = ['rate' => (string) \$tarifa->key, 'cents' => (int) \$cents];"
+
+mutar "se anuncian precios de productos APAGADOS en el panel" \
+  "$PRECIOSCTRL" "            ->where('is_active', true)
+            ->whereHas('zone', fn (\$q) => \$q->where('is_active', true))" ""
+
+mutar "la moneda se escribe a mano en vez de salir de la fila de precio" \
+  "$PRECIOS" "            'currency' => \$this->moneda()," "            'currency' => 'USD',"
 
 echo
 echo "mutaciones: $muerden/$total muerden"
