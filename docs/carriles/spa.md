@@ -1,12 +1,12 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#706`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#707`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
-> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-18.
+> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
 > suite va en el trailer del commit (`#618`), no aquí.
 
-## Foto (2026-09-18, cierre de la sesión)
+## Foto (2026-09-19, cierre de la sesión)
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): las dos grietas del armazón, la tarjeta
   grande y la puerta de categoría, el pie, la banda de fases, el día y la hora, la cesta, pagar y los cuatro
@@ -34,36 +34,25 @@
     con G2/G3 y el salto al justificante **atado a la respuesta**. Detalle en la spec §10.5.
     ⚠️ Lo que enseñaron: el owner cazó «Dónde» y el menú en TEXTO PLANO (hoy `.gf-extras__list`), y
     pegar parámetros a una URL ya firmada **la invalida** — viajan DENTRO.
-  - **T5·4 · compartir y calendario (`#705`)**: nace **`Platform\Services\CalendarFile`** —el `.ics`
-    como mecanismo genérico: CRLF, plegado a 75 octetos, escapado de TEXT y `UID` estable—, la ruta
-    `/invitacion/{token}/calendario.ics` con el mismo portero y el mismo 404 que la página, el bloque
-    «Añadir al calendario» **sin una línea de JS**, y la vista previa `og:*` con **solo** nombre, edad,
-    día, hora y negocio. `focused-layout` gana un hueco de cabecera **vacío por defecto**.
-    `CalendarFileTest` (6, unitario) · `InvitationSharingTest` (6) · arnés **8/8**.
-    ❗ **El defecto lo encontró el fichero servido por HTTP, no el test**: el `VTIMEZONE` declaraba
-    observancias que entraban en el mismo desfase del que venían (recortar la lista de transiciones la
-    reindexa). El unitario miraba el `TZOFFSETTO` y el fallo estaba en el `FROM`. Hay guarda del PAR.
-  - **T5·5 · el flujo firmar ↔ invitación (`#704`)**: **C** (el recibo ya no
-    ofrece firmar a quien firmó — contrato nuevo `Booking\Contracts\SignedInvitationReplies`, que
-    implementa `GuardianPlaces` y responde **por la ATADURA de `#576`, no por el nombre**), **D** (tras
-    firmar se vuelve a SU recibo) y **E, un CUARTO defecto que no estaba escrito en la spec**: la vuelta
-    de un formulario RECHAZADO se componía sin los extras firmados, así que el segundo intento ya no iba
-    atado, **cobraba plaza** y con la lista llena acababa en «no quedan plazas» — lo que `#576` existe
-    para impedir. Lo destapó **caminar la pantalla**, no leerla. `InvitationSigningFlowTest` (5) · un
-    caso en `ModuleContractsTest` · arnés **7/7** · los dos estados del recibo vistos a 390 y 1280 px.
-- ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **nombre y apellidos siguen siendo DOS campos**
-  (`#236` en pie, sin migración y sin tocar ninguna firma) y **el prerrelleno del menor se retira** — la
-  hoja le enseña «En la invitación escribiste "…"» y lo reparte él.
-  ▶ Propuso dos alternativas y **las dos se midieron y se descartaron con datos**: *prerrellenar solo el
-  nombre* obliga a adivinar dónde acaba («María del Carmen Ruiz Gil» → «María») dentro de un documento
-  firmado; *pedir solo el nombre en la invitación* colapsa **dos «Martina» distintas de una clase en
-  una** (medido: el anfitrión ve «vienen 1» y una propuesta, la segunda niña desaparece).
-  ▶ **La prueba de que el defecto era real la dio él**: firmó desde el enlace y su justificante quedó
-  como «Hugo Ruiz Pla» + «DANAILOV» (`auth #36` de la BD de desarrollo).
-  ⚠️ De la medición que sostuvo la decisión, lo que conviene no perder: unificar **no** habría reescrito
-  ninguna firma (el hash sale de los atributos de la propia firma y `subject_name` ya va unido) ni
-  cambiado ninguna clave (`keyFor()` ya concatena), y **«como `dependents` ya hace por `#236`» era
-  FALSO** — `#236` decidió lo contrario. Está en spec §10.6·A por si algún día se reabre.
+  - **T5·4 · compartir y calendario (`#705`)**: nace **`Platform\Services\CalendarFile`** (el `.ics` como
+    mecanismo genérico), su ruta con el mismo portero y 404 que la página, el bloque «Añadir al
+    calendario» **sin una línea de JS** y la vista previa `og:*` con **solo** nombre, edad, día, hora y
+    negocio; `focused-layout` gana un hueco de cabecera **vacío por defecto**. Arnés **8/8**.
+    ❗ **El defecto lo encontró el fichero SERVIDO, no el test**: el `VTIMEZONE` declaraba observancias
+    que entraban en el desfase del que venían y el unitario miraba el `TO`. Hay guarda del PAR.
+  - **T5·5 · el flujo firmar ↔ invitación (`#704`)**: **C** (el recibo ya no ofrece firmar a quien
+    firmó — contrato nuevo `SignedInvitationReplies`, que implementa `GuardianPlaces` y responde **por
+    la ATADURA de `#576`, no por el nombre**), **D** (tras firmar se vuelve a SU recibo) y **E, un
+    CUARTO defecto que no estaba en la spec**: la vuelta de un formulario RECHAZADO iba sin los extras
+    firmados, así que el segundo intento **cobraba plaza** y con la lista llena acababa en «no quedan
+    plazas». Lo destapó **caminar la pantalla**. Arnés **7/7**.
+- ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **dos campos** (`#236` en pie, sin migración) y
+  **el prerrelleno del menor se retira** — la hoja enseña lo que escribió y lo reparte él. Las dos
+  alternativas que propuso se midieron y se cayeron: partir el nombre recorta «María del Carmen» a
+  «María» en un documento firmado, y pedir solo el nombre colapsa **dos «Martina» de una clase en una**
+  (el anfitrión ve «vienen 1»). ▶ La prueba la dio él: firmó y quedó «Hugo Ruiz Pla» + «DANAILOV».
+  ⚠️ La medición entera está en spec §10.6·A por si se reabre (unificar no habría reescrito ninguna
+  firma ni cambiado ninguna clave, y `#236` no era el precedente que la spec decía).
 - **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner (31 agentes): **dos defectos reales
   arreglados** —la adopción marcaba con la clave del PADRE y se descartaba sola en el mismo `PUT`, y un
   «sí» levantaba el tope del firmador N veces— más dos guardas frágiles. Arnés a **16/16**; los diez
@@ -75,6 +64,12 @@
   visto fallar sin el lock (16 de 16 estrenan plaza).
 - ✅ **Cerrado**: la barra de firmar de 401 px (rota en producción desde el 16-09) la arregló la T3 y
   **salió en v1.1.0**. Queda mirarla allí, que es otra cosa que darla por buena.
+- ✅ **`#707` (19-09) · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` se
+  usaba sin declarar, así que plegar el alta lanzaba `addBtn is not defined` y **el foco caía al
+  `<body>`** —reproducido en navegador antes de tocarlo, y la promesa de `#217` llevaba rota desde que se
+  escribió—. Declararlo pasó el componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se
+  subió el techo**, bajó `signDependent()` al módulo plano, donde estrena tres casos de `node --test`.
+  `FROZEN_JS_ERRORS` **12 → 10** (congelaba dos errores) · sonda nueva `scripts/sonda-foco-cuenta.mjs`.
 - La capa de agente: el plugin `jumpweb-agente` quedó instalado aquí el 17-09 (`627b3a3`) y esta sesión
   arrancó por él. Larastan entró con `composer install` (faltaba en esta máquina tras `#625`).
   ❗ **Está DESACTUALIZADO**: plataforma publicó `1377d58` el 18-09 con los cuatro arreglos del mapa de
@@ -215,8 +210,12 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `GuardianAuthorizationController` (los extras viajan ahora **dentro de la firma del POST**),
   `InvitationPageController`, el recibo y `lang/*/invitation.php`. **Sin migraciones, sin contrato de API
   y sin tocar dinero ni aforo.** Ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
-- 🐞 **Tu defecto de `DependentsZone.vue` (`addBtn` sin declarar) sigue vivo**: no lo he tocado en esta
-  tanda para no mezclarlo con la invitación. Lo cojo en la siguiente salvo que lo quieras tú.
+- ✅ **Tu defecto de `DependentsZone.vue` (`addBtn` sin declarar): ARREGLADO** (`#707`). Era real y peor
+  de lo que decía el hallazgo estático —el foco caía al `<body>`, reproducido en navegador—, y congelaba
+  **dos** errores de ESLint, no uno: `FROZEN_JS_ERRORS` baja de 12 a 10. Toqué `StaticAnalysisGateTest`
+  (tu fichero del gate) solo para esa cifra, como pedías en tu mensaje.
+  ▶ De paso, `CE-6` paró el commit al pasar el componente de 40 a 41 líneas: bajé `signDependent()` a
+  `account/dependents.js` en vez de subir el techo.
 - ⚠️ **Segundo fichero compartido de hoy, y también lo digo yo**: `components/focused-layout.blade.php`
   gana un hueco de cabecera (`{{ $head ?? '' }}`) para la vista previa de la invitación (`#705`).
   **Vacío no pinta nada**, así que el post-form y el justificante salen igual que antes (sus

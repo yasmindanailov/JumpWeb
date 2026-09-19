@@ -115,7 +115,12 @@ class StaticAnalysisGateTest extends TestCase
      * ⚠️ Esta cifra SOLO BAJA. Si arreglas un error congelado, ESLint sale con código 2 hasta que podas
      * (`npm run lint:js -- --prune-suppressions`): baja el número aquí en el mismo commit.
      */
-    private const FROZEN_JS_ERRORS = 12;
+    /**
+     * ▶ **12 → 10 el 2026-09-19** (`DECISIONES #707`): declarar el `addBtn` que faltaba en
+     * `DependentsZone.vue` no arregló un error, sino DOS —la referencia aparecía en `closeAdd()` y en
+     * el alta correcta—. El trinquete solo baja.
+     */
+    private const FROZEN_JS_ERRORS = 10;
 
     private function jsConfig(): string
     {

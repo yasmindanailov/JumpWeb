@@ -7,7 +7,7 @@ import ZoneLoading from '../ZoneLoading.vue';
 import DependentCard from './DependentCard.vue';
 import WaiverDoc from '../../WaiverDoc.vue';
 import { fieldError } from '../form-outcome.js';
-import { RELATIONSHIPS, dependentsPager, dependentsView, signupNeedsWaiver } from '../dependents.js';
+import { RELATIONSHIPS, dependentsPager, dependentsView, signDependent, signupNeedsWaiver } from '../dependents.js';
 import { t as translate } from '../../i18n.js';
 
 /**
@@ -80,6 +80,12 @@ const context = useAccountContextStore();
 /** Página y formulario desplegado, con sus transiciones (`account/dependents.js`). */
 const view = reactive(dependentsView());
 const nameInput = ref(null);
+// ⚠️ **Sin esta línea, `closeAdd()` y el alta correcta lanzaban `addBtn is not defined`** y el foco se
+// iba al `<body>` —medido en navegador—, que es exactamente lo que el comentario de abajo promete que no
+// puede pasar. La plantilla tenía su `ref="addBtn"` desde el principio; lo que faltaba era declararlo, y
+// **ningún test lo vio**: una referencia no declarada en `<script setup>` solo revienta al EJECUTARSE.
+// Lo encontró ESLint al entrar en el gate (`#629`).
+const addBtn = ref(null);
 
 const a = (key) => translate(props.account, key);
 // ⚠️ `#441` · el `document_id` viaja en el CONTEXTO y no como argumento de `add()`: es del mismo
@@ -117,11 +123,9 @@ async function remove(dependent) {
     if (await store.remove(dependent.id, ctx())) view.removed(store.items.length);
 }
 
-async function sign(dependent) {
-    const { ok, stale } = await store.signWaiver({ id: dependent.id, documentId: waiver.currentDocumentId }, ctx());
-
-    if (! ok && stale) { await waiver.reloadLegal(); view.rereadDocument(); }
-}
+// La secuencia y su regla —si el texto cambió, reléelo y desmarca— viven en el módulo plano, donde
+// tienen `node --test` (`CE-6`); aquí solo se llama.
+const sign = (dependent) => signDependent({ store, waiver, view, dependent, ctx: ctx() });
 </script>
 
 <template>

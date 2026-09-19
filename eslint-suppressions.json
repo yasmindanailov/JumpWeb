@@ -19,11 +19,6 @@
       "count": 2
     }
   },
-  "resources/js/sidebar/account/zones/DependentsZone.vue": {
-    "no-undef": {
-      "count": 2
-    }
-  },
   "resources/js/sidebar/sections/PurchaseSection.vue": {
     "no-unused-vars": {
       "count": 2

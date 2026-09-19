@@ -356,3 +356,30 @@ export function dependentsView(perPage = DEPENDENTS_PER_PAGE) {
         },
     };
 }
+
+/**
+ * **Firmar la exención de un menor a cargo** (CAJ-1, `#175`).
+ *
+ * La regla que la envuelve es una sola y es la que importa: si el servidor dice que el texto cambió
+ * entre servirlo y aceptarlo (`stale`), **se RELEE y las casillas marcadas dejan de valer** — lo que
+ * se leyó ya no es lo que se firma.
+ *
+ * ⚠️ **Vive aquí y no en `DependentsZone.vue` por `CE-6`**: es una SECUENCIA con una decisión, y aquí
+ * tiene `node --test`; allí solo podía probarse abriendo un navegador. Bajó cuando el componente se
+ * pasó de su techo de líneas al declarar el `addBtn` que faltaba (`DECISIONES #707`) — el mismo
+ * movimiento que ya hizo `reread`, y por la misma razón: *se coloca la lógica donde le toca, no se
+ * sube el techo.*
+ *
+ * @param {{store: object, waiver: object, view: object, dependent: {id: number}, ctx: object}} deps
+ * @returns {Promise<boolean>} si la firma quedó escrita
+ */
+export async function signDependent({ store, waiver, view, dependent, ctx }) {
+    const { ok, stale } = await store.signWaiver({ id: dependent.id, documentId: waiver.currentDocumentId }, ctx);
+
+    if (! ok && stale) {
+        await waiver.reloadLegal();
+        view.rereadDocument();
+    }
+
+    return Boolean(ok);
+}

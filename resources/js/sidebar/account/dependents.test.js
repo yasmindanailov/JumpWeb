@@ -4,7 +4,7 @@ import {
     DEPENDENTS_PER_PAGE, DEPENDENT_WAIVER_SIGN, DEPENDENT_WAIVER_VERIFY,
     bornOnLabel, clampPage, coverageKey, dependentForm, dependentNeedsSignature,
     dependentWaiverAction, dependentWaiverKey, dependentsPager, dependentsView, lastPageOf,
-    pageSlice, replaceDependent, signupNeedsWaiver, signupWaiverDocumentId,
+    pageSlice, replaceDependent, signDependent, signupNeedsWaiver, signupWaiverDocumentId,
 } from './dependents.js';
 
 /**
@@ -300,5 +300,61 @@ describe('el estado de la pantalla', () => {
         view.go(2, 7);
 
         assert.deepEqual(view.rows(many(7)).map((r) => r.id), [4, 5, 6]);
+    });
+});
+
+/**
+ * **Firmar la exención de un menor** (`signDependent`, bajada del `.vue` en `DECISIONES #707`).
+ *
+ * Hasta que bajó, esta secuencia no tenía ninguna guarda: vivía dentro del componente y solo se podía
+ * ejercer abriendo un navegador. La regla que importa es la del texto releído — sin ella, un cliente
+ * firmaría con las casillas marcadas **un texto que ya no es el que leyó**.
+ */
+describe('firmar la exención de un menor a cargo', () => {
+    const dobles = (respuesta) => {
+        const trazas = [];
+
+        return {
+            trazas,
+            store: {
+                async signWaiver(payload, ctx) {
+                    trazas.push(['signWaiver', payload, ctx]);
+
+                    return respuesta;
+                },
+            },
+            waiver: {
+                currentDocumentId: 7,
+                async reloadLegal() {
+                    trazas.push(['reloadLegal']);
+                },
+            },
+            view: {
+                rereadDocument() {
+                    trazas.push(['rereadDocument']);
+                },
+            },
+        };
+    };
+
+    test('firma con el id del menor y el del TEXTO QUE SE ENSEÑA', async () => {
+        const d = dobles({ ok: true });
+
+        assert.equal(await signDependent({ ...d, dependent: { id: 42 }, ctx: { auth: {} } }), true);
+        assert.deepEqual(d.trazas, [['signWaiver', { id: 42, documentId: 7 }, { auth: {} }]]);
+    });
+
+    test('⚠️ si el texto cambió por debajo, se RELEE y las casillas dejan de valer', async () => {
+        const d = dobles({ ok: false, stale: true });
+
+        assert.equal(await signDependent({ ...d, dependent: { id: 42 }, ctx: {} }), false);
+        assert.deepEqual(d.trazas.map((t) => t[0]), ['signWaiver', 'reloadLegal', 'rereadDocument']);
+    });
+
+    test('un fallo que NO es del texto no relee nada: el cliente ve su error y vuelve a intentarlo', async () => {
+        const d = dobles({ ok: false, stale: false });
+
+        assert.equal(await signDependent({ ...d, dependent: { id: 42 }, ctx: {} }), false);
+        assert.deepEqual(d.trazas.map((t) => t[0]), ['signWaiver']);
     });
 });
