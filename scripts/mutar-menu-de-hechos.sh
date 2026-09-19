@@ -12,7 +12,7 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|HeroStatusTest|ApiContractTest'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|HeroStatusTest|ApiContractTest'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -22,10 +22,12 @@ ESTADO=app/Domain/Content/Services/OpeningState.php
 NORMAS=app/Http/Resources/Api/V1/RulesFactsResource.php
 NORMASCTRL=app/Http/Controllers/Api/V1/RulesFactsController.php
 CONTRATO=tests/Feature/Api/ApiContractTest.php
+LEGALES=app/Http/Resources/Api/V1/LegalDocumentsResource.php
+LEGALESCTRL=app/Http/Controllers/Api/V1/LegalDocumentsController.php
 RUTAS=routes/api.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$RUTAS")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$RUTAS")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -151,6 +153,27 @@ mutar "el contrato deja de mirar dentro de las listas" "$CONTRATO" \
 
             return;
         }" ""
+
+# ── Los legales: el texto que se publica es el correcto, y completo ────────────────────────────
+# ⚠️ La primera es EL caso: sin interpolar, una landing publica «El responsable es :legal_name» en su
+# política de privacidad, que es el peor sitio donde puede quedar un marcador sin resolver.
+mutar "el cuerpo sale SIN interpolar (\`:legal_name\` publicado tal cual)" \
+  "$LEGALES" "            'h' => LegalIdentity::interpolate(\$seccion['h'] ?? null) ?: null,
+            'p' => LegalIdentity::interpolate(\$seccion['p'] ?? null) ?: null," \
+  "            'h' => (\$seccion['h'] ?? null) ?: null,
+            'p' => (\$seccion['p'] ?? null) ?: null,"
+
+mutar "se publica el texto FIRMADO en vez de la página (y se pierden las secciones que explican)" \
+  "$LEGALES" "            'sections' => \$this->conCuerpo ? \$this->secciones(\$pagina) : null," \
+  "            'sections' => \$this->conCuerpo ? (\$version?->body ?? \$this->secciones(\$pagina)) : null,"
+
+mutar "una página DESACTIVADA se sirve por la API" \
+  "$LEGALESCTRL" "return Page::query()->where('is_active', true)->orderBy('slug')->get()->collect();" \
+  "return Page::query()->orderBy('slug')->get()->collect();"
+
+mutar "el índice se lleva el cuerpo de los cinco documentos" \
+  "$LEGALESCTRL" "return new LegalDocumentsResource(\$this->activas(), conCuerpo: false);" \
+  "return new LegalDocumentsResource(\$this->activas(), conCuerpo: true);"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\GoogleSignupController;
 use App\Http\Controllers\Api\V1\GuestFormController;
 use App\Http\Controllers\Api\V1\InvitationHostController;
 use App\Http\Controllers\Api\V1\InvitationsController;
+use App\Http\Controllers\Api\V1\LegalDocumentsController;
 use App\Http\Controllers\Api\V1\LegalWaiverController;
 use App\Http\Controllers\Api\V1\MeAccountContextController;
 use App\Http\Controllers\Api\V1\MeCardController;
@@ -180,6 +181,16 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/rules', RulesFactsController::class)
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('rules.facts');
+
+    // Los TEXTOS LEGALES: el índice y cada documento, con los marcadores (`:legal_name`…) ya resueltos.
+    // ⚠️ Cuelgan de `/legal/documents` y no de `/legal/{clave}` porque `/legal/waiver` ya existe y dice
+    // otra cosa —el RÉGIMEN del justificante para el cajón—: una ruta genérica ahí la ensombrecería.
+    Route::get('/legal/documents', [LegalDocumentsController::class, 'index'])
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('legal.documents.index');
+    Route::get('/legal/documents/{clave}', [LegalDocumentsController::class, 'show'])
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('legal.documents.show');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo

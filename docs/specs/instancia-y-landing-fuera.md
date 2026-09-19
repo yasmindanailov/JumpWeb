@@ -197,8 +197,33 @@ colado. Con su control propio, porque una comprobación más permisiva no la caz
 
 **Medido**: `RulesFactsTest` (8), `scripts/mutar-menu-de-hechos.sh` **17/17**.
 
-▶ **Lo que sigue en el menú**: documentos legales por clave · precios «desde» · la ficha de producto y de
-zona · la prueba social sin avatares.
+**✅ T4 HECHA (2026-09-19) · los TEXTOS LEGALES** (`#643`). `GET /api/v1/legal/documents` (índice: título,
+fecha y versión firmada si la hay) y `/legal/documents/{clave}?lang=` (el texto en secciones). Contrato
+**1.6.0**.
+
+⚠️⚠️ **El cuerpo viaja INTERPOLADO**, y esto es lo que justifica la tanda: el texto guardado lleva
+`:legal_name`, `:legal_nif`, `:legal_address` y `:legal_email`, que el producto sustituye AL RENDERIZAR. En
+crudo, una landing publicaría «El responsable del tratamiento de tus datos es :legal_name» en su política de
+privacidad — el peor sitio posible para un marcador sin resolver.
+
+⚠️⚠️ **Viaja la PÁGINA, no el documento firmado, y son dos cosas distintas.** Medido: para `condiciones` y
+`waiver` existe además una versión publicada que es **la página interpolada y congelada** al publicarla, y
+que es a lo que la gente se obliga. En la instalación de referencia el justificante tiene **once** secciones
+como página y **una** como versión. Servir la versión quitaría diez secciones de explicación; servir la
+página como si fuera lo firmado publicaría texto que nadie firmó. Así que viaja la página y la versión va al
+lado como dato (`signed_version`); el texto firmable sigue en `/legal/waiver`.
+
+⚠️ **No cuelgan de `/legal/{clave}`**: `/legal/waiver` ya existe y dice otra cosa —el régimen del
+justificante—, y una ruta genérica ahí la habría ensombrecido.
+
+▶ Y una corrección que trajo Larastan: `published_at` es `NOT NULL`, así que el contrato lo **exige**. El
+primer borrador lo declaró opcional «por si acaso», y un «por si acaso» contra el esquema es una mentira que
+cada cliente tiene que programar.
+
+**Medido**: `LegalDocumentsTest` (8), `scripts/mutar-menu-de-hechos.sh` **21/21**.
+
+▶ **Lo que sigue en el menú**: precios «desde» · la ficha de producto y de zona · la prueba social sin
+avatares.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la

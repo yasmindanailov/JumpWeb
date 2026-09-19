@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#642`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#643`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F4 cerrada, F5 abierta).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
@@ -66,7 +66,10 @@
    · **T3 ✅ (19-09)** (`#642`): `GET /api/v1/rules?lang=` — primer plato que se TRADUCE, así que el idioma
    va en la URL y el respaldo lo resuelve el servidor. El orden (el recorrido de una visita) es parte del
    dato y la primera versión lo sacaba AL REVÉS sin que nada fallara. Contrato **1.5.0**, arnés **17/17**.
-   ▶ Siguen: legales por clave, precios «desde», fichas de producto y zona, prueba social.
+   · **T4 ✅ (19-09)** (`#643`): `/legal/documents[/{clave}]` — el cuerpo va INTERPOLADO (si no, la landing
+   publica «:legal_name» en su política de privacidad) y viaja la PÁGINA, con la versión firmada al lado
+   como dato: son dos textos con dos oficios. Contrato **1.6.0**, arnés **21/21**.
+   ▶ Siguen: precios «desde», fichas de producto y zona, prueba social.
    ⚠️ Lo que el censo desmintió:
    la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
    son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.

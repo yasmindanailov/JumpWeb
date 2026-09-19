@@ -65,6 +65,16 @@ class ApiContractTest extends TestCase
         // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
         // nombre va siempre: una norma sin nombre no es una norma.
         'Rules.rules.items' => ['moment', 'description', 'reason'],
+        // `signed_version` existe SOLO donde hay documento publicado y versionado (hoy `condiciones` y
+        // `waiver`): exigirlo obligaría a inventar una versión para la política de cookies.
+        // ⚠️ Su `published_at` NO entra aquí: la columna es `NOT NULL` (medido), así que una versión
+        // publicada tiene fecha por definición. Declararlo opcional «por si acaso» es una mentira que cada
+        // cliente tendría que programar.
+        'LegalDocumentSummary' => ['signed_version'],
+        'LegalDocument' => ['signed_version'],
+        // Una sección puede traer solo titular o solo párrafo: los documentos los escribe una persona en el
+        // panel, y hay secciones que son un titular con su lista debajo.
+        'LegalDocument.sections.items' => ['h', 'p'],
         // El sobre de error omite estos dos cuando están vacíos (spec §4.3): un `"fields": {}` en
         // cada 500 sería ruido que todo cliente tendría que aprender a ignorar.
         'Error.error' => ['params', 'fields'],

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.5.0
+  version: 1.6.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -613,6 +613,81 @@ paths:
                 $ref: '#/components/schemas/Rules'
         '304':
           description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /legal/documents:
+    get:
+      tags: [Instalación]
+      operationId: getLegalDocuments
+      summary: El índice de los textos legales
+      description: |
+        Los documentos ACTIVOS con su título y su fecha, sin el cuerpo: lo que hace falta para pintar los
+        enlaces de un pie. El texto de cada uno, en `/legal/documents/{clave}`.
+
+        `signed_version` aparece solo donde existe un documento **publicado y versionado** —hoy,
+        `condiciones` y `waiver`—, y es un dato, no el texto: sirve para escribir «Condiciones v1, de tal
+        fecha» sin inventárselo.
+      parameters:
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: Los documentos activos en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalDocumentIndex'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '422':
+          description: Falta `lang` o no es uno de los idiomas soportados.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /legal/documents/{clave}:
+    get:
+      tags: [Instalación]
+      operationId: getLegalDocument
+      summary: Un texto legal, con los marcadores ya resueltos
+      description: |
+        El documento en secciones `{h, p}`.
+
+        ⚠️ **El cuerpo viaja INTERPOLADO**: el texto guardado lleva marcadores (`:legal_name`, `:legal_nif`,
+        `:legal_address`, `:legal_email`) que resuelve el servidor. En crudo, una landing publicaría «El
+        responsable del tratamiento de tus datos es :legal_name» en su política de privacidad.
+
+        ⚠️ **Viaja la PÁGINA, no el documento firmado.** Donde hay versión publicada son dos textos
+        distintos con dos oficios distintos: la página explica y la versión es a lo que alguien se obligó
+        —en la instalación de referencia, el justificante tiene once secciones como página y una como
+        versión—. La versión viaja al lado, en `signed_version`; el texto firmable vive en `/legal/waiver`.
+      parameters:
+        - name: clave
+          in: path
+          required: true
+          schema: { type: string }
+          description: 'La clave del documento: `privacidad`, `cookies`, `condiciones`, `aviso-legal`, `waiver`.'
+        - $ref: '#/components/parameters/SidebarLang'
+      responses:
+        '200':
+          description: El documento en ese idioma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegalDocument'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
+        '404':
+          description: No hay documento activo con esa clave.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '422':
           description: Falta `lang` o no es uno de los idiomas soportados.
           content:
@@ -3374,6 +3449,57 @@ components:
               name: { type: string }
               description: { type: string }
               reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
+
+    LegalDocumentIndex:
+      type: object
+      additionalProperties: false
+      required: [lang, documents]
+      properties:
+        lang: { type: string }
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/LegalDocumentSummary'
+
+    LegalDocumentSummary:
+      type: object
+      additionalProperties: false
+      required: [key, title, updated_at]
+      properties:
+        key: { type: string, example: privacidad }
+        title: { type: string }
+        updated_at: { type: string, format: date-time }
+        signed_version:
+          $ref: '#/components/schemas/SignedVersion'
+
+    SignedVersion:
+      type: object
+      additionalProperties: false
+      required: [version, published_at]
+      description: 'Solo donde hay documento publicado y versionado. Es un DATO, no el texto.'
+      properties:
+        version: { type: integer }
+        published_at: { type: string, format: date-time }
+
+    LegalDocument:
+      type: object
+      additionalProperties: false
+      required: [key, title, updated_at, sections]
+      properties:
+        key: { type: string }
+        title: { type: string }
+        updated_at: { type: string, format: date-time }
+        signed_version:
+          $ref: '#/components/schemas/SignedVersion'
+        sections:
+          type: array
+          description: 'Las secciones del texto, con los marcadores ya resueltos. Un bloque puede traer solo `h` o solo `p`.'
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              h: { type: string }
+              p: { type: string }
 
     SidebarBoot:
       type: object
