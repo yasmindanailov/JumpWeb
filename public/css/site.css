@@ -5739,6 +5739,26 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
    rojo). */
 .gf-fiche__from.is-declined { background: var(--bg-soft); border-color: var(--line); color: var(--fg-mute); }
 
+/* EL RECORDATORIO (T6·6): el bloque que escribe el mensaje para que el anfitrión lo pegue en su chat.
+   Mismo papel que el grupo «No vienen» —es un gesto sobre su lista, no un aviso—, así que ni tono ni
+   componente de aviso.
+   ⚠️ Se apunta al `button` y NO a `.btn`, por lo mismo que los atajos del enlace: `hoja-del-cajon.py`
+   se lleva al paquete del cajón toda regla que nombre una de sus clases, y `.gf-invite` no puede
+   existir dentro de un `.sidecart`. */
+.gf-invite__remind { display: flex; flex-direction: column; gap: var(--sp-12); padding-top: var(--sp-4); }
+.gf-invite__remindform { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-12); }
+.gf-invite__remindout { display: flex; flex-direction: column; gap: var(--sp-10); padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg); }
+.gf-invite__remindlead { margin: 0; font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
+/* ⚠️ `resize: vertical` y no `none`: el texto crece con los nombres y un campo que no se puede
+   estirar obligaría a leerlo por una rendija en el móvil. `width: 100%` con `box-sizing` heredado del
+   reset: sin él el `cols` por defecto de un `textarea` se sale de la columna de 390. */
+.gf-invite__remindtext {
+    width: 100%; resize: vertical; padding: var(--sp-10) var(--sp-12);
+    border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg-soft);
+    font-family: var(--font-body); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg);
+}
+.gf-invite__remindtext:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+
 /* Personalizar: `details` nativo con el suelo táctil en su `summary` y el chevrón girado al abrirse,
    la misma receta que el grupo de fichas listas y el «Más info» de un extra. */
 .gf-invite__custom { border-top: 1px solid var(--line); }

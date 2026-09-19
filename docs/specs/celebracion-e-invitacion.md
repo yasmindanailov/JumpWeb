@@ -1,10 +1,11 @@
 # [SPEC] El formulario de celebración, el justificante y la invitación digital
 
 > Estado: 🟦 **revisada de forma adversarial tres veces · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los
-> interruptores apagados) · T5 entera en el árbol · T6 empezada (T6·1, §10.8) · T7 sin empezar** ·
+> interruptores apagados) · T5 entera en el árbol · T6 CERRADA en sus seis unidades (§10.8–§10.13) ·
+> T7 sin empezar** ·
 > Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
 > `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
-> `#708`–`#712` (T6·1→T6·5) ·
+> `#708`–`#713` (T6·1→T6·6) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -15,8 +16,8 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
-  **T5 y T6·1–T6·5 en el árbol, sin desplegar** → sigue la **T6·6** (§10.7) y la T7.
-  **Si construyes, §7.2 primero.**
+  **T5 y la T6 ENTERA en el árbol, sin desplegar** → sigue la **T7** (§4.9); encenderla es DATO del
+  owner. **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
   escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
 - ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): quedan **diez puntos sin tocar** en §10.4.7·B.
@@ -1489,7 +1490,7 @@ lista llena acababa en «no quedan plazas» — exactamente el fallo que `#576` 
 `scripts/mutar-flujo-invitacion.py` **7/7** · los dos estados del recibo y la hoja sin prerrelleno,
 vistos en navegador a 390 y 1280 px.
 
-### 10.7 T6 · el ATERRIZAJE — SE PARTE EN SEIS UNIDADES VERDES (**T6·1 en el árbol**, §10.8)
+### 10.7 T6 · el ATERRIZAJE — CERRADA EN SEIS UNIDADES VERDES (§10.8–§10.13)
 
 Es la tanda que **enciende la feature**: hasta que el anfitrión pueda ver y adoptar lo que contestan los
 padres, la invitación no puede estar encendida en producción. Como una sola tanda son varias sesiones, y
@@ -1502,7 +1503,7 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 | **T6·3** ✅ | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` — **en el árbol** (`#710`, §10.10) | ⚠️ Podía acabar tocando `GuestCountAdjuster`; **medido, no hizo falta**: el suelo ya salía de `GuardianPlaces::takenIn()` (`#576`), así que su push no pidió `VERIFY_CONC` |
 | **T6·4** ✅ | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) — **en el árbol** (`#711`, §10.11) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
 | **T6·5** ✅ | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) — **en el árbol** (`#712`, §10.12) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
-| **T6·6** | **«Escribir el recordatorio»**: compone el texto, lo copia y guarda `reminded_at`/`reminded_count` | **No envía nada**, así que no toca correos ni depende de la T7 |
+| **T6·6** ✅ | **«Escribir el recordatorio»**: compone el texto, lo copia y guarda `reminded_at`/`reminded_count` — **en el árbol** (`#713`, §10.13) | **No envía nada**, así que no toca correos ni depende de la T7. ⚠️ Las dos columnas se las queda esta unidad; la T7 trae su propia marca |
 
 ⚠️ **Antes de empezar**: `POSTFORM-INVITADOS.md` es la doc de esta tanda (T1, T2 y T6) · el armazón de la
 T2 **no se toca** · la marca de adopción viaja fuera de las filas (§1.3·13, §7.2·R3) · arnés de mutación
@@ -1728,6 +1729,80 @@ materializa, sin nombre no hay enlace, el resumen y **los dos botones**, con y s
 `scripts/mutar-invitacion-t6-5.py` **7/7** (un superviviente en la primera pasada, el de «pagado»,
 resuelto retirando la guarda) · `InvitationLinkRotationTest` de `#576` sigue verde · Pint, Larastan y
 docs-check limpios.
+
+### 10.13 T6·6 · «ESCRIBIR EL RECORDATORIO» — EN EL ÁRBOL (2026-09-19, `DECISIONES #713`)
+
+La última unidad de la T6. ❗❗ **No envía nada, y no es una carencia: es el diseño** (§2.2). Del padre
+no tenemos correo y no se le pide, así que lo único que el parque puede hacer es **escribirle el
+mensaje al anfitrión** para que lo pegue por donde ya repartió el enlace. Por eso no toca correos ni
+depende de la T7.
+
+**Lo que entra**
+
+- **`awaitingNamesIn()`**: quién falta = las fichas **con nombre** de las que **nadie ha contestado**,
+  con el nombre tal y como lo escribió el anfitrión —el destino es un chat de padres— y con la MISMA
+  regla de emparejado que la adopción y la puerta (`PersonNameKey::cardMatches()`).
+- **`reminderTextFor()`**, que compone el texto **en el dominio y no en cada cliente** (la razón de
+  `proposalsFor()`): el saludo con quien cumple, los nombres **solo si se piden**, el plazo y el
+  enlace. ⚠️ El enlace va **DENTRO**, al revés que `share_text`: aquél lo consume Web Share, que pone
+  la URL en su propio campo; éste se copia de una pieza.
+- **`remind()`**: `reminded_at` y `reminded_count`, con la suma hecha por **SQL** y **topada** al techo
+  de su columna. Escribe SOLO `party_invitations`, como personalizar y descartar, y por lo mismo.
+- **Su propio POST** (`reservation.invitation.remind`) con su enlace firmado, la tercera puerta del
+  mismo formulario. El texto vuelve **por la sesión**: lleva nombres de menores y un `?texto=` acabaría
+  en el historial del navegador y en cualquier referer.
+- **La pantalla**: el bloque solo cuando se puede compartir **y el plazo sigue abierto** —recordar que
+  contesten cuando ya pasó no es un recordatorio—, la casilla **sin marcar**, el texto escrito en un
+  campo que se puede seleccionar a mano y el sello «Lo escribiste N veces, la última el {fecha}».
+
+**Decisiones de esta unidad**
+
+- ❗ **`reminded_count` cuenta VECES, no familias** (`[DECIDIDO owner]`, 2026-09-19): es lo que evita
+  mandarlo tres veces y lo que la pantalla puede decir. Sus dos alternativas —a cuántos iba el último,
+  o las dos cosas con una columna nueva— se ofrecieron con su coste y se cayeron.
+- ❗ **Una respuesta DESCARTADA es una respuesta**: `awaitingNamesIn()` mira **todas**, no solo las
+  vivas como `summaryFor()`. «No lo apuntes» es el anfitrión quitándose algo de la lista, no un «no me
+  han contestado»; volver a reclamársela a esa familia sería el peor desenlace del botón.
+- ❗ **Los nombres solo si el anfitrión marca la casilla**, y nace **sin marcar**: una lista de «éstos
+  no han contestado» en el chat de la clase señala a unas familias delante de las demás, y si en el
+  suyo eso se puede hacer lo sabe él.
+- ⚠️ **Las dos columnas se las queda esta unidad.** La migración de la T4·1 las comentaba como del
+  aviso de la víspera (T7), pero §4.7 se las asigna al recordatorio del anfitrión y son dos gestos
+  distintos —éste lo hace él, aquél lo manda el parque—. ▶ **La T7 trae su propia marca** (§4.9).
+
+**Lo que enseñó construirla**
+
+- ⏰ **`DisplayTime::dayLabel()` NO convierte de zona**: sus llamantes le pasan un Carbon ya construido
+  en la del parque, y `reminded_at` sale de la BD en **UTC**. Sin el `setTimezone`, un aviso escrito a
+  las 00:30 de Madrid se fechaba **el día anterior**. El caso lo congela justo ahí —y **afirma primero
+  que el contenedor va en UTC**, o no mediría nada—, que es lo que hace que la mutación muerda siempre.
+- ⚠️ **Un texto con su propio scroll dentro del de la página**: con `rows="5"` el recordatorio salía
+  cortado a media frase. **Lo vio la captura, no la medida** —las cifras decían que no desbordaba a lo
+  ancho, y era a lo alto—. Se arregló con `rows` generoso **y** el crecido por JS, que va **fuera** de
+  la puerta del portapapeles: el navegador sin `clipboard` es justo el que más necesita verlo entero.
+- ⚠️ **Dos pesos de botón en un bloque pequeño**: «Copiar el recordatorio» nació en tinta y competía
+  con el «Guardar» de la barra. Pasa a fantasma, como su hermano «Copiar enlace» doce líneas más
+  arriba. También lo decidió la captura.
+- ⚠️ **La mutación de la suma atómica sí se puede ver sin concurrencia**: dos instancias LEÍDAS ANTES
+  de que ninguna escriba (las dos pestañas del anfitrión) distinguen `DB::raw('reminded_count + 1')` de
+  `$modelo->reminded_count + 1`. Un superviviente «legítimo» que resultó ser un caso que faltaba
+  (`#578`), no una defensa incomprobable.
+- ⚠️ **La escala de radios de la hoja son tres** (`--r-md`, `--r`, `--r-pill`): `--r-sm` puso
+  `GuestFormSkinTest` en rojo. La guarda tenía razón; se cambió el radio, no la guarda.
+- ⚠️ **`namedGuestKeys()` se partió en dos**: el recordatorio necesita el nombre y la adopción solo la
+  clave. La regla de «la columna de nombre es la primera `text`» (§7.2·R2) y el corte por `quantity`
+  viven ahora en `namedGuestCards()`, una sola vez.
+
+**Verificación**: `InvitationReminderTest` (14 casos, con el **CONTROL** del testigo y el instrumento
+afirmado antes de fiarse de él) · arnés `scripts/mutar-invitacion-t6-6.py` **13/13, sin
+supervivientes** · sonda de ventana a **390 y 1280** (`storage/app/audit/sonda-t6/recordatorio/`): sin
+scroll horizontal, botón y casilla a 48, el texto entero sin scroll interno (313 px en el teléfono,
+223 en escritorio) · `public/css/cajon.css` regenerado: **solo cambia el sello de `FUENTES`**, ninguna
+regla nueva entra en el paquete · Pint, Larastan y docs-check limpios · **ningún fichero casa con el
+`CRITICAL_RE`** (medido con `grep`), así que el push no pide `VERIFY_CONC`.
+
+▶ **Con ella la T6 queda cerrada** y la invitación se puede encender en producción: los dos
+interruptores son DATO del owner. Después, la T7 de correos.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

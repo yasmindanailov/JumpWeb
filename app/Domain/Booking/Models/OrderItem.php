@@ -692,6 +692,12 @@ class OrderItem extends Model
         return $this->signedGuestFormRoute('reservation.invitation.dismiss');
     }
 
+    /** El enlace firmado de «Escribir el recordatorio» (T6·6, §4.7), tercera puerta del mismo formulario. */
+    public function invitationSignedRemindUrl(): string
+    {
+        return $this->signedGuestFormRoute('reservation.invitation.remind');
+    }
+
     /**
      * La VERSIÓN del enlace del post-form (`specs/complementos-post-reserva.md` §4.6.bis, `#413` D14).
      *

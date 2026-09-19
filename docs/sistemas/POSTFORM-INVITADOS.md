@@ -186,6 +186,15 @@ seed siempre incluye `guest_fields`).
   ❗ Retirar es el par del suelo: un «sí» pendiente sube `GuardianPlaces::takenIn()` y sin este gesto el
   titular no podría bajar el número de invitados. **No borra** (V3). Guardas: `InvitationDeclinedTest`
   (mide el SUELO antes y después) y `scripts/mutar-invitacion-t6-3.py`.
+- **«ESCRIBIR EL RECORDATORIO»** (2026-09-19, `#713`, spec §4.7 y §10.13): compone el texto —saludo con
+  quien cumple, los nombres de quienes faltan **solo si el titular marca la casilla**, el plazo y el
+  enlace **dentro**—, lo deja escrito en un campo que se puede copiar o seleccionar a mano, y guarda
+  `reminded_at` y `reminded_count` (que cuenta **VECES**, `[DECIDIDO owner]`). ❗❗ **No envía nada**: del
+  padre no tenemos correo y no se le pide. Su POST también es propio (`reservation.invitation.remind`).
+  ⚠️ «Quien falta» = ficha **con nombre** de la que **nadie ha contestado**, emparejando con
+  `PersonNameKey::cardMatches()`; una respuesta **descartada cuenta como contestada**. Solo se ofrece
+  con el plazo **abierto**. Guardas: `InvitationReminderTest` (14 casos, con el CONTROL del testigo) y
+  `scripts/mutar-invitacion-t6-6.py` (13/13).
 - **Ruta**: `/reserva/{reservation}/datos-invitados` — nombres `reservation.guests` /
   `reservation.guests.store`. El parámetro es el **OrderItem del pack**: **1 post-form POR
   RESERVA**, no por pedido. Un pedido con 2 packs → 2 post-forms, 2 emails, 2 botones.
@@ -365,7 +374,10 @@ Todas las superficies usan el genérico «**Formulario de reserva**» (no «dato
 `GuestFormTest` (acceso por reserva, IDOR cruzado, multi-pack aislado, progreso, expiry
 por-franja, solo-lectura GET+store) · `InvitationHostBlockTest` (el bloque de la invitación: el enlace,
 el plazo como fecha, el testigo que NO se mueve —con su control—, el texto con enlace rechazado y dicho,
-la casilla que se apaga por el `hidden`, y la misma puerta) · `GuestFormEmployeeTest` (1 email por reserva en resend) ·
+la casilla que se apaga por el `hidden`, y la misma puerta) · `InvitationReminderTest` (el recordatorio:
+quién falta con la regla de emparejado de la casa, la descartada que cuenta como contestada, los nombres
+solo si se piden, las dos pestañas que no escriben el mismo número y el sello en la zona del parque) ·
+`GuestFormEmployeeTest` (1 email por reserva en resend) ·
 `CustomerAccountContextTest` (URL por reserva; 2 packs → 2 avisos) · `GuestFormLinkCopyTest`
 (enlace firmado abre 200 sin sesión; gating pagado/pack; modal server-rendered lleva el
 enlace) · `ManualOrderWithoutEmailTest` (alta sin email + sin correos + dedup por teléfono).

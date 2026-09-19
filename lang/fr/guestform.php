@@ -120,6 +120,21 @@ return [
         'saved' => 'Invitation enregistrée.',
         'rejected_title' => "Nous n'avons pas enregistré cela",
         'rejected' => "Les liens et les adresses e-mail ne sont pas acceptés dans « De qui est l'anniversaire » ni dans « Invités par » : l'invitation est publiée sur notre site et n'importe qui pourrait cliquer dessus. Retirez-les et enregistrez à nouveau.",
+
+        // Le rappel (T6·6, §4.7). Rien n'est envoyé : nous n'avons pas l'e-mail du parent. Cela écrit
+        // le message et l'hôte le colle là où il a déjà partagé le lien.
+        'remind_title' => "S'il manque des réponses",
+        'remind' => 'Écrire le rappel',
+        'remind_names' => '{1} Nommer la famille qui manque|[2,*] Nommer les :count familles qui manquent',
+        'remind_ready' => 'Le voici : copiez-le et collez-le là où vous avez partagé le lien.',
+        'remind_copy' => 'Copier le rappel',
+        'remind_copied' => 'Rappel copié',
+        'remind_text_label' => 'Le rappel',
+        'remind_last' => '{1} Vous l’avez écrit une fois, la dernière le :when|[2,*] Vous l’avez écrit :count fois, la dernière le :when',
+        'reminder_text' => "Il nous manque des réponses pour l'anniversaire de :name. Si vous ne nous avez pas encore dit si vous venez, cela prend un instant ici :",
+        'reminder_text_generic' => 'Il nous manque des réponses pour notre fête. Si vous ne nous avez pas encore dit si vous venez, cela prend un instant ici :',
+        'reminder_names' => 'Il nous manque : :names.',
+        'reminder_deadline' => "On peut répondre jusqu'au :when",
     ],
 
     'submit' => 'Enregistrer',

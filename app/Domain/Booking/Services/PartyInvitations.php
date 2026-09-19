@@ -9,6 +9,7 @@ use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\PersonNameKey;
 use App\Domain\Platform\Services\PublicFreeText;
 use Illuminate\Database\QueryException;
@@ -61,6 +62,12 @@ final class PartyInvitations
      * sobre los datos de un menor viajando por un chat de padres.
      */
     public const RECEIPT_HOURS = 2;
+
+    /**
+     * El techo de `reminded_count`, que es el de su columna (`unsignedSmallInteger`, T4·1). Se lee de
+     * aquí y no se recuerda: pasarse no sube el número, **rechaza el UPDATE entero** en MySQL.
+     */
+    public const REMINDED_COUNT_MAX = 65535;
 
     public function __construct(
         private GuestCountPolicy $policy,
@@ -286,24 +293,41 @@ final class PartyInvitations
      */
     private function namedGuestKeys(OrderItem $reservation): array
     {
+        return array_map(
+            static fn (array $card): string => $card['key'],
+            $this->namedGuestCards($reservation),
+        );
+    }
+
+    /**
+     * Lo mismo, pero **con el nombre escrito al lado de su clave** (T6·6).
+     *
+     * ⚠️ Existe para que la regla de «la columna de nombre es la primera `text`» (§7.2·R2) y el corte
+     * por `quantity` vivan en **un solo sitio**: el recordatorio necesita el nombre tal cual y la
+     * adopción solo la clave, y dos recorridos de la misma lista divergen en el primer arreglo.
+     *
+     * @return list<array{name: string, key: string}>
+     */
+    private function namedGuestCards(OrderItem $reservation): array
+    {
         $type = $reservation->ticketType;
         $nameKey = $type?->guestNameFieldKey();
         if ($type === null || $nameKey === null) {
             return [];
         }
 
-        $keys = [];
+        $cards = [];
         foreach (array_slice($reservation->guestData(), 0, max(0, (int) $reservation->quantity)) as $row) {
             // Sin `is_array($row)`: `guestData()` declara `array<int, array<string,string>>` y
             // `sanitizeGuestData()` lo impone al escribir. Comprobarlo afirmaba una duda que el
             // contrato ya cierra — y Larastan lo dice.
             $name = trim((string) ($row[$nameKey] ?? ''));
             if ($name !== '') {
-                $keys[] = PersonNameKey::for($name);
+                $cards[] = ['name' => $name, 'key' => PersonNameKey::for($name)];
             }
         }
 
-        return $keys;
+        return $cards;
     }
 
     /**
@@ -560,6 +584,130 @@ final class PartyInvitations
         }
 
         return $invitation;
+    }
+
+    // ══ EL RECORDATORIO (T6·6, §4.7; `DECISIONES #713`) ════════════════════════════════════════
+    //
+    // ❗❗ **No envía nada, y no es una limitación: es el diseño** (§2.2). Del padre no tenemos correo
+    // y no se le pide, así que lo único que el parque puede hacer es **escribirle el mensaje al
+    // anfitrión** para que lo pegue en el chat por donde ya repartió el enlace. Por eso esto no toca
+    // correos ni depende de la T7.
+
+    /**
+     * **Los niños de la lista del anfitrión cuya familia todavía no ha contestado** (T6·6, §4.7).
+     *
+     * Devuelve el nombre **tal y como lo escribió el anfitrión** —«Mateo», no la clave normalizada—:
+     * el destino de esto es un chat de padres, y ahí el nombre que reconocen es el suyo.
+     *
+     * ⚠️⚠️ **Una respuesta DESCARTADA también es una respuesta**, y por eso aquí se miran todas —a
+     * diferencia de {@see summaryFor}, que solo cuenta las vivas—. «No lo apuntes» es el gesto con el
+     * que el anfitrión se quita algo de la lista, no un «no me han contestado»: volver a reclamarle a
+     * esa familia una respuesta que ya dio sería el peor desenlace posible de este botón.
+     *
+     * ⚠️ Empareja con la MISMA regla que la adopción y que la puerta ({@see PersonNameKey::cardMatches})
+     * — la ficha dice «Mateo» y el padre firma «Mateo Ruiz»—. Una regla propia aquí diría que falta
+     * alguien que ya contestó.
+     *
+     * @return list<string>
+     */
+    public function awaitingNamesIn(OrderItem $reservation): array
+    {
+        $cards = $this->namedGuestCards($reservation);
+
+        if ($cards === []) {
+            return [];
+        }
+
+        $answered = InvitationReply::query()
+            ->where('order_item_id', $reservation->getKey())
+            ->pluck('child_key')
+            ->all();
+
+        $names = [];
+        foreach ($cards as $card) {
+            foreach ($answered as $childKey) {
+                if (PersonNameKey::cardMatches($card['key'], (string) $childKey)) {
+                    continue 2;
+                }
+            }
+            $names[] = $card['name'];
+        }
+
+        return $names;
+    }
+
+    /**
+     * **El texto del recordatorio**, listo para pegar en un chat (T6·6, §4.7).
+     *
+     * ⚠️⚠️ **El enlace va DENTRO del texto**, al revés que el de `share_text`: aquél lo consume Web
+     * Share, que pone la URL en su propio campo y repetirla la pega dos veces; éste se copia al
+     * portapapeles de una pieza y sin la URL dentro no serviría de nada.
+     *
+     * ⚠️ **Los nombres solo si el anfitrión lo pide** (`$withNames`), y no por capricho: una lista de
+     * «éstos no han contestado» en el chat de la clase señala a unas familias delante de las demás.
+     * El anfitrión sabe si en el suyo eso se puede hacer; nosotros no.
+     *
+     * ▶ Se compone **aquí y no en cada cliente**, por lo mismo que {@see proposalsFor}: la web y la app
+     * son clientes iguales y un texto repetido en dos sitios diverge en el primer arreglo.
+     */
+    public function reminderTextFor(OrderItem $reservation, bool $withNames): string
+    {
+        $invitation = $this->existingFor($reservation);
+        $url = $invitation === null ? null : $this->shareUrlFor($invitation);
+
+        $honoree = trim((string) $invitation?->honoree_name);
+        $lines = [$honoree !== ''
+            ? __('guestform.invite.reminder_text', ['name' => $honoree])
+            : __('guestform.invite.reminder_text_generic')];
+
+        $names = $withNames ? $this->awaitingNamesIn($reservation) : [];
+        if ($names !== []) {
+            $lines[] = __('guestform.invite.reminder_names', ['names' => implode(', ', $names)]);
+        }
+
+        $deadline = $this->policy->deadlineFor($reservation);
+        if ($deadline !== null && $this->repliesOpenFor($reservation)) {
+            $lines[] = __('guestform.invite.reminder_deadline', ['when' => DisplayTime::dayLabel($deadline)]);
+        }
+
+        if ($url !== null) {
+            $lines[] = $url;
+        }
+
+        return implode("\n\n", $lines);
+    }
+
+    /**
+     * **Queda dicho que el anfitrión ya avisó**: `reminded_at` y una vez más en `reminded_count`.
+     *
+     * ⚠️⚠️ **Escribe SOLO `party_invitations`**, como personalizar y por la misma razón: el testigo
+     * optimista del post-form es `order_items.updated_at` (§1.3·2), y mover el testigo por copiar un
+     * texto le tumbaría al anfitrión los extras de la página que tiene abierta.
+     *
+     * ⚠️ El incremento es **SQL, no `$modelo->reminded_count + 1`**: el anfitrión con dos pestañas
+     * abiertas escribiría dos veces el mismo número y la cuenta diría «1» después de dos avisos. No
+     * hace falta lock —es una suma sobre su propia fila y nadie decide nada con ella—, pero sí que la
+     * suma la haga la base de datos.
+     *
+     * ⚠️ `reminded_count` es `unsignedSmallInteger`: a partir de su techo solo se refresca la fecha.
+     * Pasarse haría que MySQL **rechazara el UPDATE entero** y el anfitrión perdiera también el texto,
+     * que es lo único que venía a buscar.
+     */
+    public function remind(PartyInvitation $invitation): PartyInvitation
+    {
+        $capped = (int) $invitation->reminded_count >= self::REMINDED_COUNT_MAX;
+
+        PartyInvitation::query()
+            ->whereKey($invitation->getKey())
+            ->update([
+                'reminded_at' => now(),
+                'reminded_count' => $capped
+                    ? self::REMINDED_COUNT_MAX
+                    : DB::raw('reminded_count + 1'),
+                'updated_at' => now(),
+            ]);
+
+        return $invitation->refresh();
     }
 
     /**

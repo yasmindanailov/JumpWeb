@@ -395,6 +395,70 @@
                         </div>
                     @endif
 
+                    {{-- ───── EL RECORDATORIO (T6·6, §4.7) ─────
+                         ❗❗ **No envía NADA**: del padre no tenemos correo y no se le pide (§2.2). Lo
+                         único que el parque puede hacer es escribirle el mensaje al anfitrión para que
+                         lo pegue donde ya repartió el enlace, que es el único camino que hay hasta esas
+                         familias.
+
+                         ⚠️ Solo cuando se puede compartir y las respuestas siguen abiertas: recordar
+                         que contesten cuando el plazo ya pasó no es un recordatorio, es un engaño.
+
+                         ⚠️ **El texto se pinta escrito, no solo detrás del portapapeles**: la misma
+                         razón que el enlace de arriba —sin JavaScript no hay `clipboard`—, y un
+                         recordatorio que no se puede copiar a mano no existiría en ese navegador. --}}
+                    @if ($invitation['shareable'] && $invitation['replies_open'])
+                        <div class="gf-invite__remind">
+                            <p class="gf-invite__declinedhead">{{ __('guestform.invite.remind_title') }}</p>
+
+                            @if (session('reminder_text'))
+                                <div class="gf-invite__remindout" data-remind
+                                     data-copied="{{ __('guestform.invite.remind_copied') }}">
+                                    <p class="gf-invite__remindlead">{{ __('guestform.invite.remind_ready') }}</p>
+                                    <label class="gf-sr-only" for="gf-remind-text">{{ __('guestform.invite.remind_text_label') }}</label>
+                                    {{-- `readonly` y no `disabled`: un campo deshabilitado no se puede
+                                         seleccionar, y seleccionarlo es justo el plan B sin JS. --}}
+                                    {{-- ⚠️ `rows` GENEROSO y no cinco: con cinco el texto quedaba
+                                         cortado a media frase y con su propio scroll dentro del de la
+                                         página —lo vio la captura, no la medida—, que es justo lo que
+                                         §2.1 prohíbe en el justificante. Con JS crece hasta su
+                                         contenido; sin JS, nueve filas ya caben el texto entero. --}}
+                                    <textarea id="gf-remind-text" class="gf-invite__remindtext" rows="9" readonly
+                                              data-remind-text>{{ session('reminder_text') }}</textarea>
+                                    <div class="gf-invite__actions">
+                                        {{-- Fantasma, como su hermano «Copiar enlace» doce líneas más
+                                             arriba: en esta pantalla la tinta es de «Guardar». --}}
+                                        <button type="button" class="btn btn--ghost" data-remind-copy hidden>{{ __('guestform.invite.remind_copy') }}</button>
+                                    </div>
+                                    <p class="gf-sr-only" role="status" data-remind-said></p>
+                                </div>
+                            @endif
+
+                            <form method="POST" action="{{ $invitation['remind'] }}" class="gf-invite__remindform">
+                                @csrf
+                                {{-- ⚠️ Nace SIN marcar, y es la decisión del producto: una lista de
+                                     «éstos no han contestado» en el chat de la clase señala a unas
+                                     familias delante de las demás. Si en el suyo eso se puede hacer lo
+                                     sabe el anfitrión, no nosotros. --}}
+                                @if ($invitation['awaiting'] > 0)
+                                    <label class="gf-invite__check">
+                                        <input type="checkbox" name="with_names" value="1">
+                                        <span>{{ trans_choice('guestform.invite.remind_names', $invitation['awaiting'], ['count' => $invitation['awaiting']]) }}</span>
+                                    </label>
+                                @endif
+                                <button type="submit" class="btn btn--ghost">{{ __('guestform.invite.remind') }}</button>
+                            </form>
+
+                            {{-- Cuántas veces y cuándo: es lo que evita mandarlo tres veces. --}}
+                            @if ((int) $inv->reminded_count > 0 && $invitation['reminded_on'] !== '')
+                                <p class="gf-invite__deadline">{{ trans_choice('guestform.invite.remind_last', (int) $inv->reminded_count, [
+                                    'count' => (int) $inv->reminded_count,
+                                    'when' => $invitation['reminded_on'],
+                                ]) }}</p>
+                            @endif
+                        </div>
+                    @endif
+
                     {{-- PERSONALIZAR: `details` NATIVO, que se abre sin una línea de JS. Nace ABIERTO
                          cuando aún no se puede compartir, porque entonces el remedio está dentro. --}}
                     <details class="gf-invite__custom" @if (! $invitation['shareable']) open @endif>
@@ -1171,6 +1235,39 @@
                             // no lo lee un lector de pantalla.
                             if (said) said.textContent = copied;
                             setTimeout(() => { copyBtn.textContent = label; }, 2500);
+                        }).catch(() => {});
+                    });
+                }
+            }
+
+            // EL RECORDATORIO (T6·6): el mismo atajo sobre el texto ya escrito. ⚠️ El botón nace
+            // `hidden` y solo lo enciende `navigator.clipboard`: sin él el texto sigue ahí, en un
+            // campo que se puede seleccionar a mano, que es el plan que no depende de nada.
+            const remind = document.querySelector('[data-remind]');
+            const field = remind ? remind.querySelector('[data-remind-text]') : null;
+
+            // ⚠️ Crecer NO depende del portapapeles, y por eso va fuera de esa puerta: un navegador sin
+            // `clipboard` es justo el que más necesita ver el texto entero para seleccionarlo a mano.
+            if (field) {
+                // `height: auto` antes de medir, o `scrollHeight` devuelve el alto que ya tenía y la
+                // caja solo puede crecer.
+                field.style.height = 'auto';
+                field.style.height = field.scrollHeight + 'px';
+            }
+
+            if (remind && navigator.clipboard) {
+                const btn = remind.querySelector('[data-remind-copy]');
+                const told = remind.querySelector('[data-remind-said]');
+
+                if (field && btn) {
+                    btn.hidden = false;
+                    const label = btn.textContent;
+                    const copied = remind.dataset.copied || label;
+                    btn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(field.value).then(() => {
+                            btn.textContent = copied;
+                            if (told) told.textContent = copied;
+                            setTimeout(() => { btn.textContent = label; }, 2500);
                         }).catch(() => {});
                     });
                 }

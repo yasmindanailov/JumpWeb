@@ -148,6 +148,27 @@ return [
         // al anfitrión creyendo que lo suyo se publicó (§7.2·R9).
         'rejected_title' => 'Eso no lo hemos guardado',
         'rejected' => 'En «Quién cumple» y en «Te invita» no caben enlaces ni direcciones de correo: la invitación se publica en nuestra web y cualquiera podría pulsarlos. Quítalos y vuelve a guardar.',
+
+        // ── EL RECORDATORIO (T6·6, §4.7) ──────────────────────────────────────────────────────────
+        // ❗❗ No se envía NADA: del padre no tenemos correo. Esto escribe el mensaje y el anfitrión lo
+        // pega donde ya repartió el enlace, que es el único sitio por donde se puede llegar a ellos.
+        'remind_title' => 'Si falta gente por contestar',
+        'remind' => 'Escribir el recordatorio',
+        // ⚠️ La casilla nace SIN marcar: una lista de «éstos no han contestado» en el chat de la clase
+        // señala a unas familias delante de las demás, y si eso se puede hacer lo sabe él, no nosotros.
+        'remind_names' => '{1} Nombrar a la familia que falta|[2,*] Nombrar a las :count familias que faltan',
+        'remind_ready' => 'Ya lo tienes escrito: cópialo y pégalo donde repartiste el enlace.',
+        'remind_copy' => 'Copiar el recordatorio',
+        'remind_copied' => 'Recordatorio copiado',
+        'remind_text_label' => 'El recordatorio',
+        // La marca de que ya avisó. ⚠️ Sin punto: `DisplayTime::dayLabel()` ya termina en uno.
+        'remind_last' => '{1} Lo escribiste una vez, la última el :when|[2,*] Lo escribiste :count veces, la última el :when',
+        // ── Y el texto que se copia. Va DENTRO el enlace, al revés que `share_text`: esto se pega de
+        // una pieza en un chat, y sin la URL dentro no serviría de nada.
+        'reminder_text' => 'Nos faltan respuestas para el cumple de :name. Si todavía no nos habéis dicho si venís, se contesta aquí en un momento:',
+        'reminder_text_generic' => 'Nos faltan respuestas para nuestra fiesta. Si todavía no nos habéis dicho si venís, se contesta aquí en un momento:',
+        'reminder_names' => 'Nos faltan: :names.',
+        'reminder_deadline' => 'Se puede contestar hasta el :when',
     ],
 
     'submit' => 'Guardar',

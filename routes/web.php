@@ -251,6 +251,18 @@ Route::post('/reserva/{reservation}/invitacion/descartar', [GuestFormController:
     ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
     ->missing(fn () => abort(403))
     ->name('reservation.invitation.dismiss');
+// «Escribir el recordatorio» (T6·6, §4.7): compone el texto para que el anfitrión lo pegue donde ya
+// repartió el enlace, y deja escrito que avisó.
+//
+// ❗❗ **NO ENVÍA NADA** (§2.2): del padre no tenemos correo y no se le pide. Por eso es un POST y no
+// un GET —escribe `reminded_at` y `reminded_count`—, pero lo único que viaja de vuelta es un texto.
+//
+// ⚠️ Su propio POST, como sus dos hermanas y por lo mismo: escribe SOLO `party_invitations` y meterlo
+// en el guardado de siempre movería `order_items.updated_at`, que es el testigo de los extras.
+Route::post('/reserva/{reservation}/invitacion/recordatorio', [GuestFormController::class, 'writeReminder'])
+    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+    ->missing(fn () => abort(403))
+    ->name('reservation.invitation.remind');
 
 // El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
 // cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito
