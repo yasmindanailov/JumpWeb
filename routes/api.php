@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\V1\RulesFactsController;
 use App\Http\Controllers\Api\V1\ScheduleFactsController;
 use App\Http\Controllers\Api\V1\SidebarBootController;
 use App\Http\Controllers\Api\V1\SiteFactsController;
+use App\Http\Controllers\Api\V1\SocialProofFactsController;
 use App\Http\Middleware\EnsureOnlineSalesEnabled;
 use Illuminate\Support\Facades\Route;
 
@@ -199,6 +200,16 @@ Route::name('api.v1.')->group(function (): void {
     Route::get('/legal/documents/{clave}', [LegalDocumentsController::class, 'show'])
         ->middleware('cache.headers:public;max_age=300;etag')
         ->name('legal.documents.show');
+
+    // La CIFRA de prueba social: media, recuento, fuente y enlace a la ficha (`#616`, `#646`).
+    // ⚠️ **La única ruta del menú SIN `?lang=`**, y a propósito: una media, un recuento y una URL son
+    // los mismos en los tres idiomas. El texto de la atribución («en Google») lo pone quien pinta.
+    // ⚠️⚠️ Las RESEÑAS no están aquí todavía: su fuente está a mitad de cambio (Places → Business
+    // Profile, `#524`) y su forma cambia con ella. Llegan en la T2 de esa spec como clave hermana
+    // dentro del mismo sobre, sin romper este contrato.
+    Route::get('/social-proof', SocialProofFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')
+        ->name('social.proof.facts');
 
     // ── Estado de las reservas (Fase 4 · paso 4.0b) — PÚBLICO ──────────────────────────────
     // Si se puede reservar online ahora, y qué enseñar si no (#218). Hasta este paso la pausa solo

@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.8.0
+  version: 1.9.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -657,6 +657,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /social-proof:
+    get:
+      tags: [Instalación]
+      operationId: getSocialProof
+      summary: La cifra de prueba social de la instalación
+      description: |
+        La valoración agregada de la instalación: media, número de opiniones que la sostienen, quién lo
+        dice y su ficha pública. Es lo que hace falta para pintar una chapa de «4,8 sobre 5 · 320
+        opiniones en Google» sin depender de la web del producto.
+
+        ⚠️ **Es la única ruta de este bloque SIN `lang`**, y a propósito: una media, un recuento y una URL
+        son los mismos en los tres idiomas. El texto de la atribución lo pone quien pinta.
+
+        ⚠️⚠️ **`{}` es una respuesta NORMAL, no un fallo.** No hay cifra cuando la instalación no tiene
+        fuente configurada, cuando su caché está fría o cuando no llega al umbral que hace publicable una
+        media. Nunca viaja un `0`: una landing lo pintaría como «0,0 sobre 5».
+
+        ⚠️⚠️ **Las RESEÑAS todavía no están aquí, y llegarán dentro de este mismo objeto** como una clave
+        hermana de `rating`. Hoy no se publican porque su fuente está a mitad de cambio y su forma cambia
+        con ella —gana la respuesta del negocio, las fotos, la marca de anónimo y la línea que declara el
+        filtro aplicado—. Publicarlas antes obligaría a romper este contrato después.
+
+        ▶ **Dos obligaciones de quien publique esta cifra**: acreditar la fuente (`source`) allí donde se
+        enseñe, y **no** emitirla como `aggregateRating` de JSON-LD — son opiniones de un tercero sobre el
+        negocio, no una valoración que el negocio pueda declarar como propia.
+      responses:
+        '200':
+          description: La cifra, o un objeto vacío si no hay ninguna que se pueda sostener.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialProofFacts'
+        '304':
+          description: Sin cambios desde el `ETag` enviado en `If-None-Match`.
 
   /legal/documents:
     get:
@@ -3495,6 +3530,44 @@ components:
               name: { type: string }
               description: { type: string }
               reason: { type: string, description: 'El PORQUÉ de la norma, que es lo que hace que se cumpla.' }
+
+    SocialProofFacts:
+      type: object
+      description: |
+        El sobre de la prueba social. **Hoy lleva como mucho `rating`**, y está escrito como objeto —y no
+        como la cifra suelta en la raíz— precisamente para que las reseñas quepan después como clave
+        hermana sin romper a nadie.
+      additionalProperties: false
+      properties:
+        rating:
+          type: object
+          description: |
+            La cifra agregada. **Ausente** cuando no hay ninguna que se pueda sostener: sin fuente
+            configurada, con la caché fría o por debajo del umbral publicable.
+          additionalProperties: false
+          required: [value, count, source]
+          properties:
+            value:
+              type: number
+              format: float
+              example: 4.8
+              description: La media tal y como la da la fuente. No se redondea en servidor.
+            count:
+              type: integer
+              example: 320
+              description: Cuántas opiniones la sostienen. Es el segundo argumento de la chapa, no un adorno.
+            source:
+              type: string
+              example: google
+              description: |
+                Quién lo dice. ⚠️ Viaja con el dato porque **la atribución es obligatoria**: la cifra no
+                se puede enseñar sin decir de dónde sale.
+            url:
+              type: string
+              format: uri
+              description: |
+                La ficha pública de la fuente, para enlazar «ver todas». **Ausente** si la fuente no da
+                una.
 
     Prices:
       type: object

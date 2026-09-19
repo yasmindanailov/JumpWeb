@@ -10,7 +10,7 @@
 - **Regla que ordena todo**: la landing SALE del producto. El producto se queda con el dominio, el panel, el
   cajón empaquetado y **una API pública de HECHOS**; quien diseña una landing usa lo que quiera de ese menú y
   **todo es opcional** (`#631`). Nada de presentación vuelve al producto.
-- **Empieza por** §1 (el censo, medido) → §4.1 (el menú) → §4.2 (lo que sale del panel) → §7 (lo que decide el owner).
+- **Empieza por** §1 (el censo) → §4.1 (el menú) → §4.2 (lo que sale del panel) → §7 (lo del owner).
 - **Trampas, antes de tocar**:
   - ⚠️⚠️ **`settings` mezcla el secreto de Redsys con el correo de contacto** (71 filas, medidas en §1.3):
     la API publica una **lista blanca por recurso**, nunca la tabla. Un volcado filtra `redsys_secret_key`.
@@ -22,10 +22,10 @@
     sus 167 apariciones son citas de artboards en comentarios (§1.4).
   - ⚠️ **Dos formas de foto a propósito** (`#645`): el producto la SUBE a `uploads`, la zona guarda ruta a
     `public/`; las dos salen como URL absoluta por su `imageUrl()`.
-- **Estado**: censo hecho, `#639` contestada y **seis platos servidos** (`#640`→`#645`, contrato 1.8.0):
-  `site`, horario, normas, legales, precios y la ficha de producto y zona. ▶ Queda la prueba social.
-  **Un recurso público nuevo se escribe con su lista blanca o no se escribe**, y lo que la instalación no
-  rellenó no viaja — tampoco lo rellenado y BORRADO, que en BD es `''`.
+- **Estado**: **MENÚ SERVIDO** (`#640`→`#646`, contrato 1.9.0): `site`, horario, normas, legales, precios,
+  la ficha de producto y zona, y la cifra de prueba social —**sin reseñas: esperan a su fuente** (`#646`)—.
+  ▶ Sigue la **T2**, el paquete de la instancia. **Un recurso público nuevo se escribe con su lista blanca o
+  no se escribe**, y lo no rellenado no viaja — tampoco lo rellenado y BORRADO, que en BD es `''`.
 - **Invariantes que toca**: `RGPD-05` (prueba social sin avatares), `PERF-02` (la lectura pública se cachea),
   `SEC-01` (rutas nuevas dentro del grupo `api`). Dinero y aforo: ninguno; esta fase no toca el embudo.
 
@@ -281,7 +281,39 @@ cambiar el `?:` del lector por un `??` publicaría `"description": ""` con todo 
 **Medido**: `CatalogTest` (+4), `CatalogEditTest` (+1, el campo del panel), guarda nueva de divergencia en
 `ApiContractTest`, `scripts/mutar-menu-de-hechos.sh` **34/34**.
 
-▶ **Lo que sigue en el menú**: la prueba social sin avatares (`RGPD-05`).
+**✅ T7 HECHA (2026-09-19) · la CIFRA de prueba social, y el menú queda servido** (`#646`, de `#616`).
+`GET /api/v1/social-proof` publica media, recuento, fuente y enlace a la ficha. Contrato **1.9.0**.
+
+⚠️⚠️ **Las RESEÑAS no se publican todavía, y es una decisión, no un olvido.** `#616` las quería aquí «con
+autor, enlace al perfil, marca de traducción y fuente, sin avatares», pero la fuente está a mitad de cambio:
+`specs/google-business-profile.md` —aprobada, código no empezado— **sustituye a Places** y dice que el
+contrato `SocialProof` CAMBIA (§4.3·9): la reseña gana la respuesta del parque, las fotos y la marca de
+anónimo, y aparecen el enlace a la ficha, «Escribir una reseña» y **la línea del filtro**, que no es
+estética —la ley Ómnibus 2019/2161 considera engañoso enseñar solo las buenas sin decirlo—. Publicarlas hoy
+sería repartir contenido de Places a otro repo y atarse a una forma que ya sabemos que cambia, y este repo
+no rompe un contrato público para desmontar algo (`#644`). ▶ **Llegan en la T2 de esa spec, DENTRO de este
+mismo sobre**, como clave hermana de `rating`: por eso la cifra viaja envuelta y no suelta en la raíz, y por
+eso la ruta pide el contrato `SocialProof` y nunca `GoogleSocialProof` —el día que se cambie el binding,
+esta ruta no se toca—.
+
+⚠️ **La cifra sí puede ir sola, y el repo ya lo tenía argumentado**: la trae nuestro servidor, no lleva autor
+ni foto y una media de un negocio no es dato personal, así que no pide consentimiento (es lo que
+`FallingBackSocialProof` razona al separarla de las opiniones). De ahí que sea pública y cacheable, y **la
+única ruta del menú sin `?lang=`**: una media, un recuento y una URL son los mismos en los tres idiomas.
+
+⚠️ **Sin cifra sostenible el sobre va VACÍO**, nunca con un `0` que una landing pintaría como «0,0 sobre 5».
+▶ Y la trampa que costó una pasada: ese vacío salía **`[]` y no `{}`**. Es la trampa de la receta —un array
+vacío de PHP sale como lista— pero en la RAÍZ, donde el `(object)` por bloque de los hermanos no llega:
+`JsonResource::resolve()` hace `(array)` sobre lo que devuelva `toArray()`, así que el tipo solo se puede
+fijar en la entrega. Un caso escrito con `json()` no lo habría visto: hay que mirar el cuerpo crudo.
+
+▶ **Dos obligaciones de quien consuma la cifra**, escritas en el contrato: acreditar la fuente donde se
+enseñe, y **no** emitirla como `aggregateRating` de JSON-LD —son opiniones de un tercero sobre el negocio,
+no una valoración que el negocio declare—.
+
+**Medido**: `SocialProofFactsTest` (4), `scripts/mutar-menu-de-hechos.sh` **38/38**.
+
+▶ **El MENÚ DE HECHOS queda servido.** Lo que sigue en F5 es la **T2**: el paquete de la instancia.
 
 Una familia de rutas públicas bajo `/api/v1` (grupo `api`, `SEC-01`), cacheables y con `ETag` (`PERF-02`),
 cada una con su **lista blanca declarada en el propio recurso**. El censo dice qué hay que servir para que la

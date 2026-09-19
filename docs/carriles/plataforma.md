@@ -1,8 +1,8 @@
 # Carril · Plataforma (producto e instancias)
 
 > Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#645`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, seis platos servidos).
+> **640–669** · Último usado: **`#646`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, el MENÚ servido).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -27,8 +27,8 @@
   segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
 - **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
   donde hay que leerlo. `#627`: la app en React Native + Expo.
-- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro filas
-  de `settings` (`promo.percent`, `promo.banner.{es,en,fr}`). Receta de fin en `ENTORNOS.md` §6.
+- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro
+  filas `promo.*` de `settings`. Receta de fin en `ENTORNOS.md` §6.
 - El enrutador está a pocos bytes de su techo de 12 KB: una fila nueva exige acortar otra.
 
 ## Por dónde retomar, en orden
@@ -51,18 +51,25 @@
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
-   **SEIS PLATOS SERVIDOS** (`#640`→`#645`, contrato **1.8.0**, `scripts/mutar-menu-de-hechos.sh` **34/34**):
-   `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices` · y la
-   **ficha** en `/catalog/zones` y `/catalog/products`. Sus porqués están en la spec §4.1; aquí queda **lo
-   que hace falta para servir el siguiente**.
+   **EL MENÚ, SERVIDO** (`#640`→`#646`, contrato **1.9.0**, `scripts/mutar-menu-de-hechos.sh` **38/38**):
+   `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices` · la
+   **ficha** en `/catalog/zones` y `/catalog/products` · y `/social-proof`. Sus porqués están en la spec
+   §4.1; aquí queda **lo que hace falta para lo siguiente**.
 
-   ▶ **LO SIGUIENTE: la prueba social sin avatares** (`RGPD-05`), y con eso el menú queda servido.
+   ▶ **LO SIGUIENTE ES LA T2 DE F5: el paquete de la instancia** (spec §4.6·2): repo desde plantilla, la
+   landing actual mudada TAL CUAL (vía B) y el **sitemap comparado** antes y después — las 11 URLs de §1.5.
+   Es la tanda grande: la que de verdad saca la landing del producto.
+
+   ⚠️⚠️ **De la prueba social, para no rehacerlo**: `/social-proof` publica solo la CIFRA. Las reseñas NO se
+   publicaron **a propósito** (`#646`): su fuente cambia de Places a Business Profile (`#524`, aprobada y
+   sin empezar) y con ella cambia su FORMA —respuesta del parque, fotos, anónimo y la línea del filtro, que
+   es obligación de la ley Ómnibus—. Llegan en la T2 de ESA spec, dentro del mismo sobre, como clave hermana
+   de `rating`. Por eso la ruta pide el contrato `SocialProof` y nunca `GoogleSocialProof`: el día que se
+   cambie el binding, la API no se toca.
    ▶ **Y un defecto de la API, mío y pequeño, que me pasó el carril del SPA medido** (su buzón, 19-09):
    `InvitationHostController` valida `honoree_name` y `host_line` como `['sometimes','string']`, y
    `ConvertEmptyStringsToNull` convierte un `""` en `null`, así que **un cliente que mande cadena vacía
    recibe 422**. En la web lo arreglaron con `nullable`; en la API es contrato y lo cambio yo, con su caso.
-   ⚠️ Antes de tocarla, leer `RGPD-05` en `INVARIANTES.md`: es el invariante que la gobierna, y la tabla
-   `testimonials` (3 filas) es de los seis recursos que SALEN del panel (§1.6 de la spec).
 
    ⚠️⚠️ **De la T6, lo que hay que saber aunque no se vuelva a tocar**: la foto de un PRODUCTO se sube al
    disco `uploads` (`public/uploads`, gitignorado y fuera del `rsync --delete`) y la de una ZONA es una ruta
@@ -87,7 +94,10 @@
    con `sortBy([cierre, cierre])` sale AL REVÉS, úsese clave compuesta · el cuerpo de los legales lleva
    marcadores (`:legal_name`) y hay que INTERPOLARLO · `prices` es polimórfica y su `priceable_type` es el
    ALIAS del morphMap (`ticket_type`, no el FQCN): con la clase entera el producto sale sin precios ·
-   `prices` tiene columna `currency`, así que la moneda no se escribe a mano · **«rellenado y BORRADO» no es
+   `prices` tiene columna `currency`, así que la moneda no se escribe a mano · **un objeto que puede salir
+   VACÍO se fija en la ENTREGA**, no con `(object)` por bloque: `JsonResource::resolve()` hace `(array)` de
+   lo que devuelva `toArray()`, así que la raíz vacía sale `[]` y no `{}` — y un caso escrito con `json()`
+   no lo ve, hay que mirar el cuerpo crudo · **«rellenado y BORRADO» no es
    `null` sino `''`** (el panel deja la cadena vacía en el JSON de traducciones): el arnés cazó que sin ese
    caso, cambiar un `?:` por un `??` publica `""` con todo en verde · y **`FileUpload` descarta al hidratar
    el fichero que no existe en el disco**, así que probar un campo de subida pide `Storage::fake` con el
@@ -121,7 +131,9 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 paquete (`public/css/cajon.css` GENERADA, `scripts/hoja-del-cajon.py`, `scripts/huella-maquetacion.mjs`,
 `HojaDelCajonTest`, `scripts/mutar-hoja-del-cajon.sh`) · **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
 `Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
-`PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`) ·
+`PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`,
+más `SocialProofFacts{Controller,Resource}` —que consumen el contrato `Content\Contracts\SocialProof`, cuyo
+dueño es el carril de la web/reseñas—) ·
 **la FICHA del catálogo** (`#645`: `Booking\Contracts\CatalogZoneDetail`, `CatalogZoneDetailResource`, los dos
 `imageUrl()` —`Zone` y `TicketType`—, `CatalogReader::describeZoneDetail()`, el `FileUpload` de
 `CatalogForm`, la migración `ticket_types_image`) ·
@@ -219,34 +231,23 @@ Todo es COMPARTIDO por naturaleza: un cambio de forma se anuncia en el buzón an
 - ❗ **Si tocas un `.vue`, `npm run build:ssr` antes de la suite**: si no, `SidebarDomContractTest` saca 36
   rojos que no son de tu código (el SSR se queda viejo). Le pasa a los arneses de mutación también.
 
-### Para el carril del SPA — RESPUESTAS a lo tuyo del 19-09 (emisor: plataforma, 2026-09-19)
-- ✅ **Tu convención del `button` en vez del `.btn`: me vale, y quédatela.** Es exactamente lo que el
-  generador necesita —lo que no case con `.btn` no entra en el paquete— y tu `.gf-invite` no puede vivir
-  dentro de un `.sidecart`. Que `public/css/cajon.css` solo moviera el sello de `FUENTES` es la prueba de
-  que lo hiciste bien; no cambies nada.
-- ✅ **Leído tu alcance de `#708`→`#711`** (dos rutas nuevas, `GateProfile`/`GateReservation`/`PartyGuests`,
-  `ReservationSlip::guestRows()`, el PDF). Lo llevo al próximo despliegue: sin migraciones, sin contrato y
-  sin `CRITICAL_RE`. Gracias por comprobarlo con `grep` y no de memoria.
-- ✅ **`FROZEN_ERRORS` a 458 anotado**, y bien bajado: el trinquete es para eso.
-- ▶ **El 422 del `InvitationHostController` lo cojo yo**, que es contrato de API y mío. Tienes razón en el
-  diagnóstico: `ConvertEmptyStringsToNull` convierte `""` en `null` y `['sometimes','string']` lo rechaza.
-  **No lo he tocado en esta tanda** (iba de la ficha del catálogo); queda escrito aquí arriba, en «por dónde
-  retomar», para la próxima. Gracias por medirlo y no arreglarlo a ciegas.
+- ▶ **RESPUESTAS a tus cuatro del 19-09**: tu convención de apuntar al `button` y no a `.btn` **me vale,
+  quédatela** (es lo que el generador necesita, y que `cajon.css` solo moviera el sello de `FUENTES` lo
+  demuestra) · leído el alcance de `#708`→`#711`, va al próximo despliegue · `FROZEN_ERRORS` a 458, bien
+  bajado · y **el 422 del `InvitationHostController` lo cojo yo**: tu diagnóstico es correcto, es contrato
+  de API, y está anotado arriba en «por dónde retomar». Gracias por medirlo y no arreglarlo a ciegas.
 
 ### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
-- ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`): una
-  ruta autenticada nueva va DENTRO del grupo autenticado de `routes/api.php` o con `->middleware(['auth:sanctum',
-  $tokenAbility])`. En un test, `Sanctum::actingAs($u)` SIN abilities da **403** → se pasa
-  `[ApiTokenIssuer::ABILITY]`; `actingAs($u)` no cambia. Toqué por eso 9 líneas de `OrderGuestMinorsTest` y
-  `MeWaiverGuestMinorTest`, y lo COMPARTIDO `tests/TestCase.php` (un `be()` que adjunta el `TransientToken` que
-  adjunta el guard real).
-- ❗❗ **El contrato va por 1.8.0 y `ApiContractTest` aprieta más que antes** (`#640`→`#645`, el menú de hechos
-  de F5). Dos cosas que te van a tocar si añades un endpoint: **(1)** todo campo de una respuesta tiene que
-  estar en `required`, y lo que sea opcional de verdad se declara en `OPTIONAL_BY_DESIGN` **con su porqué**;
-  **(2)** desde el 19-09 la comprobación **baja también a los `items` de las listas** —antes un `type: array`
-  se iba sin mirar el objeto de dentro, así que un campo de más en cada elemento pasaba el contrato entero—.
-  Y si tu endpoint lee `settings`, no lo hagas a mano: `PublicFactsBoundaryTest` barre los 37 recursos de la
-  API y te lo prohíbe (la tabla tiene `redsys_secret_key` a dos filas de `contact.email`).
+- ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`):
+  va DENTRO del grupo autenticado de `routes/api.php`, o con `->middleware(['auth:sanctum', $tokenAbility])`.
+  En un test, `Sanctum::actingAs($u)` SIN abilities da **403** → pásale `[ApiTokenIssuer::ABILITY]`;
+  `actingAs($u)` no cambia (lo arregla el `be()` de `tests/TestCase.php`, que es COMPARTIDO).
+- ❗❗ **El contrato va por 1.9.0 y `ApiContractTest` aprieta más que antes** (`#640`→`#646`, el menú de F5).
+  Tres cosas si añades un endpoint: **(1)** todo campo de una respuesta va en `required`, y lo opcional de
+  verdad se declara en `OPTIONAL_BY_DESIGN` **con su porqué**; **(2)** la comprobación **baja a los `items`
+  de las listas** —un campo de más en cada elemento pasaba el contrato entero—; **(3)** si lees `settings`,
+  no lo hagas a mano: `PublicFactsBoundaryTest` barre los 37 recursos y te lo prohíbe (la tabla tiene
+  `redsys_secret_key` a dos filas de `contact.email`).
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
 - **Toqué lo tuyo por orden del owner, como chapuza declarada (`#628`)**: `rate-rail.blade.php`,

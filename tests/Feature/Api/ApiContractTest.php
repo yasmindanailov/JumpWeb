@@ -83,6 +83,12 @@ class ApiContractTest extends TestCase
         // 4.079 bytes con 24 productos.
         'CatalogProduct' => ['image_url'],
         'CatalogProductDetail' => ['image_url', 'description'],
+        // **La prueba social** (F5 · T6, `#646`). El sobre puede venir VACÍO —no hay cifra sostenible— y por
+        // eso `rating` es opcional; exigirlo obligaría a toda instalación a tener reseñas para que su API
+        // validara, y a inventar un `0` cuando no las tiene. ⚠️ Dentro de la cifra, en cambio, solo `url` es
+        // opcional: una media sin recuento o sin fuente no se puede publicar —la atribución es obligatoria—.
+        'SocialProofFacts' => ['rating'],
+        'SocialProofFacts.rating' => ['url'],
         'LegalDocument' => ['signed_version'],
         // Una sección puede traer solo titular o solo párrafo: los documentos los escribe una persona en el
         // panel, y hay secciones que son un titular con su lista debajo.

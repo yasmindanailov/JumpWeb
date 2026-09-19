@@ -14,7 +14,7 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
@@ -31,6 +31,8 @@ PRECIOSCTRL=app/Http/Controllers/Api/V1/PricesFactsController.php
 RUTAS=routes/api.php
 # T6 · la ficha de producto y de zona (`#632` P1).
 PANEL=app/Filament/Resources/Catalog/Schemas/CatalogForm.php
+# T6 · la cifra de prueba social (`#616`, `#646`).
+CIFRA=app/Http/Resources/Api/V1/SocialProofFactsResource.php
 FICHAZONA=app/Http/Resources/Api/V1/CatalogZoneDetailResource.php
 FICHAPROD=app/Http/Resources/Api/V1/CatalogProductResource.php
 LECTORCAT=app/Domain/Booking/Services/CatalogReader.php
@@ -39,7 +41,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -254,6 +256,22 @@ mutar "el campo de la foto desaparece del formulario del panel (la API publica a
 
 mutar "la foto se sube fuera del hueco de la instalación (el despliegue se la lleva)" \
   "$PANEL" "                    ->disk(TicketType::IMAGE_DISK)" "                    ->disk('public')"
+
+# ── La CIFRA de prueba social (T6): el tipo del vacío, la atribución y la caché ────────────────
+mutar "el sobre vacío vuelve a salir como LISTA (\`[]\`) en vez de como objeto" \
+  "$CIFRA" "        return new JsonResponse((object) \$this->toArray(\$request));" \
+  "        return new JsonResponse(\$this->toArray(\$request));"
+
+mutar "la cifra viaja SIN decir de quién es (se va la atribución obligatoria)" \
+  "$CIFRA" "                'source' => \$this->cifra->source," ""
+
+mutar "la cifra deja de declararse opcional y toda instalación necesita reseñas para validar" \
+  "$CONTRATO" "        'SocialProofFacts' => ['rating']," "        'SocialProofFacts' => [],"
+
+mutar "la prueba social deja de cachearse (cada landing se la descarga entera cada vez)" \
+  "$RUTAS" "    Route::get('/social-proof', SocialProofFactsController::class)
+        ->middleware('cache.headers:public;max_age=300;etag')" \
+  "    Route::get('/social-proof', SocialProofFactsController::class)"
 
 echo
 echo "mutaciones: $muerden/$total muerden"
