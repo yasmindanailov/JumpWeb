@@ -73,15 +73,21 @@
    ▶ **`main` ya se movió tras etiquetar** (commits de doc), así que la guarda 8 dice «HEAD no es una
    versión»: se despliega desde **`git checkout v1.2.0`** y al terminar se vuelve con `git checkout main`.
    Comprobado en seco: desde la etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
-3. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
+3. **F5 ABIERTA por el censo (19-09)**: `specs/instancia-y-landing-fuera.md` ⬜, con §1 medido y **tres
+   decisiones esperando al owner en §7** (las redes · los cuatro campos muertos de `zones` · cómo se lee el
+   criterio «cero marca en el código»). Nada de código hasta que las conteste. ⚠️ Lo que el censo desmintió:
+   la marca del cliente son **167 apariciones y solo UNA viva** (una clave de `localStorage`); las otras 166
+   son citas de artboards en comentarios, o sea la trazabilidad del diseño. ▶ Tandas propuestas en §4.6.
+   Datos que ya no hay que volver a medir: 71 ajustes (5 secretos, 22 hechos, 40 de operación), sitemap de 11
+   URLs, la landing son 3.142 líneas de Blade y ocho rutas sirven la portada. Sigue valiendo lo guardado: un
+   `tokens.json` en la instancia del que salgan `client.css` y el tema de la app, y la ficha con imagen de `#632`.
+4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
-4. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
+5. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día**. Sin desplegar. El sistema de ofertas nace como hecho de precio (`#631`).
-5. Después **F5** (instancia PlayJump, v2.0.0: abre con el censo de Zones y de «redes»; el menú de hechos y la
-   ficha con imagen de `#632`; propuesta guardada: un `tokens.json` en la instancia del que salgan `client.css` y
-   el tema de la app) → **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner**: las dos de F5 (con el censo hecho) · el fin de la promo · cuándo sale la v1.2.0.
+6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
+- **Del owner**: las TRES de §7 de la spec de F5 · el fin de la promo · cuándo se despliega la v1.2.0.
 
 ## Ficheros de este carril
 

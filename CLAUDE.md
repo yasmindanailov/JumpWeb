@@ -41,13 +41,14 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Si trabajas en… | Lee solo |
 |---|---|
 | Refactor · fases · arquitectura de módulos · fronteras | `docs/00-REFACTOR.md` · `docs/specs/modulos-dominio.md` §0 |
-| **Producto e instancias** · landing fuera · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
+| **Producto e instancias** · repos · versionado · F0→F6 | `docs/specs/producto-e-instancias.md` §0 · `CHANGELOG.md` |
+| La landing FUERA · el menú de hechos · API pública de lectura · el panel sin CMS (F5) | `docs/specs/instancia-y-landing-fuera.md` §0 |
 | F4 · cajón empaquetable · token Bearer | `docs/specs/cajon-empaquetable.md` §0 · `docs/specs/token-bearer.md` §0 |
 | La capa de agente · el plugin `jumpweb-agente` · skills · hooks · reglas del owner | `docs/sistemas/CAPA-DE-AGENTE.md` |
 | Dinero / pagos / Redsys / reembolsos | `docs/INVARIANTES.md` §1 + §6 · `docs/sistemas/REDSYS.md` · `docs/MODELO-DATOS.md` §2 |
 | Señal / depósito (pago parcial) | `docs/sistemas/DEPOSITO.md` · `docs/INVARIANTES.md` §1 (PAY-10) |
 | Secuencia de compra (admitir → crear → cobrar) | `docs/specs/checkout-orquestado.md` §0 |
-| Excursiones de colegio · horario por zona · precio por tramo · venta de mostrador | `docs/specs/precio-por-tramo.md` §0 · `docs/specs/horario-por-zona.md` §0 |
+| Excursiones de colegio · horario por zona · precio por tramo | `docs/specs/precio-por-tramo.md` §0 · `docs/specs/horario-por-zona.md` §0 |
 | Aforo · franjas · la rejilla · disponibilidad · calendario · `SlotOffer` | `docs/sistemas/AFORO-FRANJAS.md` · `docs/INVARIANTES.md` §2 |
 | Compra / carrito / catálogo de productos | `docs/sistemas/COMPRA-PRODUCTOS.md` · `docs/FLUJOS.md` · `docs/MODELO-DATOS.md` §1 |
 | Google: entrar, registrarse, vincular · el `sub` · condiciones | `docs/specs/auth-con-google.md` §0 |
@@ -56,12 +57,12 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Firmar la exención al declarar un menor · el 409 de la tarjeta | `docs/specs/firma-al-declarar-menor.md` §0 |
 | Auth dentro del cajón · retirar el modal de la cabecera | `docs/specs/auth-en-cajon.md` §0 |
 | Landing · tema visual (tokens) · CMS de contenido · white-label por cliente | `docs/specs/landing-white-label.md` §0 |
-| Capa de tema · superficies · radios · sombras · foco · fuentes · botón de comprar · logotipo · scroll · iconos · área táctil | `docs/specs/tema-por-instalacion.md` §0 |
+| Capa de tema · superficies · radios · sombras · foco · fuentes · logotipo · iconos · área táctil | `docs/specs/tema-por-instalacion.md` §0 |
 | El armazón · barra · menú · hamburguesa · CTA de la esquina · cajón móvil | `docs/specs/armazon-y-menu.md` §0 |
 | Dónde van los elementos de diseño · la pasada de vestido · presupuesto de marcado | `docs/specs/pasada-de-vestido.md` §0 |
 | Material gráfico del mural · manchas · poses · texturas · iconos de zona | `docs/specs/elementos-fachada.md` §0 |
-| Rediseño desde el canvas · el sistema · las 8 secciones · las 7 páginas · la atribución de Google | `docs/specs/rediseno-desde-canvas.md` §0 |
-| Idioma visual heredado · badges · marquesina · «Visítanos» · auditoría de diseño | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
+| Rediseño desde el canvas · las 8 secciones · las 7 páginas | `docs/specs/rediseno-desde-canvas.md` §0 |
+| Idioma visual heredado · badges · marquesina · auditoría de diseño | `docs/specs/auditoria-diseno.md` §0 · `docs/specs/idioma-visual-heredado.md` §0 |
 | La hora extra · complemento que ocupa aforo · su precio por día · mover fecha · su sello | `docs/specs/hora-extra.md` §0 |
 | Añadir o quitar invitados de una reserva pagada · el plazo | `docs/specs/invitados-en-post-form.md` §0 |
 | Un complemento que se vende después de reservar · el post-form · plazo de corte | `docs/specs/complementos-post-reserva.md` §0 |
@@ -79,7 +80,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | JumpPoints / vales / lealtad | `docs/specs/lealtad-jumppoints.md` §0 |
 | CMS público (servicios, ofertas) | `docs/sistemas/SERVICIOS-CMS.md` · `docs/sistemas/OFERTAS-WIDGET.md` |
 | Reseñas de Google · Business Profile · prueba social | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
-| El carril del SPA en el otro ordenador · la rama `cliente/playjump` · reparto por fichero | `docs/CARRIL-SPA.md` · `docs/carriles/spa.md` |
+| El carril del SPA en el otro ordenador · reparto por fichero | `docs/CARRIL-SPA.md` · `docs/carriles/spa.md` |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |
 | Diseño previo a implementación (spec) | `docs/specs/PLANTILLA.md` · `docs/CONVENCIONES.md` §5 |
 | Cookies / consentimiento | `docs/sistemas/COOKIES.md` · `docs/SEGURIDAD.md` |
