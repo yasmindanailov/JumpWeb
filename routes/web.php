@@ -227,6 +227,20 @@ Route::post('/reserva/{reservation}/datos-invitados', [GuestFormController::clas
     ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
     ->missing(fn () => abort(403))
     ->name('reservation.guests.store');
+// PERSONALIZAR la invitación digital de esa reserva (T6·1, `specs/celebracion-e-invitacion.md` §4.7).
+//
+// ⚠️⚠️ **Endpoint APARTE del de guardar, y no por comodidad**: personalizar escribe SOLO
+// `party_invitations`, mientras que `order_items.updated_at` es el testigo con el que el formulario
+// detecta que el parque movió la reserva. Metido dentro del POST de siempre, cambiar el color de una
+// banda dejaría obsoleta la página que el anfitrión tiene abierta y le tumbaría los extras. Es la
+// misma separación que la API tomó en `InvitationHostController`, por el mismo motivo.
+//
+// ⚠️ Mismos dos limitadores, misma escalada y mismo `no-store` que el formulario: es su misma puerta
+// —el trait `AuthorizesGuestForm`— y lo que se sirve al volver sigue llevando datos de menores.
+Route::post('/reserva/{reservation}/invitacion', [GuestFormController::class, 'updateInvitation'])
+    ->middleware(['throttle:30,1', 'throttle:guest-form', 'no-store'])
+    ->missing(fn () => abort(403))
+    ->name('reservation.invitation.update');
 
 // El JUSTIFICANTE de un menor INVITADO a una reserva («waiver offshore», `#328`): un adulto SIN
 // cuenta autoriza a un menor que no es menor a cargo de quien reservó. Va por PEDIDO —es «el papelito

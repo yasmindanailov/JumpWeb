@@ -1,9 +1,9 @@
 # [SPEC] El formulario de celebración, el justificante y la invitación digital
 
 > Estado: 🟦 **revisada de forma adversarial tres veces · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los
-> interruptores apagados) · T5 empezada · T7 y T6 sin empezar** ·
-> Última actualización: 2026-09-18 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
-> `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
+> interruptores apagados) · T5 entera en el árbol · T6 empezada (T6·1, §10.8) · T7 sin empezar** ·
+> Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
+> `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) · `#708` (T6·1) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -13,27 +13,26 @@
 
 ## §0 · Antes de tocar
 
-- **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**: los
-  enciende el owner); **la T5 ENTERA en el árbol, sin desplegar** → siguen **T7** y **T6** al final.
+- **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
+  **T5 entera y T6·1 en el árbol, sin desplegar** → sigue la **T6·2** (§10.7) y la T7.
   **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
-  escribió. Repartirlo automáticamente es adivinar, y esto acompaña a una firma.
-- ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): dos defectos arreglados y **diez puntos sin tocar** en
-  §10.4.7·B — míralos antes de darla por buena.
+  escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
+- ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): quedan **diez puntos sin tocar** en §10.4.7·B.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
   `invitation_replies`, el formulario lo PROPONE y el anfitrión lo ADOPTA al guardar —`submitGuestForm()`
-  sustituye la lista entera y `updated_at` es el testigo (medido)—. Por eso un padre no mueve dinero,
-  aforo ni ningún fichero del `CRITICAL_RE`, y `OrderCreator` no se toca.
+  sustituye la lista entera y `updated_at` es el testigo (medido)—. Por eso un padre no mueve dinero ni
+  aforo, no roza el `CRITICAL_RE` y `OrderCreator` no se toca.
 - ❗ **La lista completa NO rechaza** (`#700`, sustituye a D2): era un **oráculo de pertenencia**. **No existe
-  `full`**: ningún motivo depende del NOMBRE. El «sí» que no cabe se acepta y sale en el aviso (§4.7).
+  `full`** y ningún motivo depende del NOMBRE; el «sí» que no cabe se acepta y sale en el aviso (§4.7).
 - «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja
   solo con una ficha de UN candidato (D11) · el «no podemos» lo ve el anfitrión (D3).
 - **Lo que enseñó §10**: el orden de la PÁGINA no es el de las POSICIONES (`sanitizeGuestData()` ordena por
   clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba andándola**
-  (§10.6·E).
+  (§10.6·E) · un texto **vacío llega como `null`** y `['sometimes','string']` da **422** (§10.8).
 - ⚠️ **El molde es de TRES páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*`, `.gf-notice` o
   `.gf-extras__list` mueve el justificante y la invitación. Tras tocarlo, **sonda y captura de VENTANA de
-  las tres** (así rompió la T2 la barra de firmar: 401 px de 844, §10.3).
+  las tres** (así rompió la T2 la barra de firmar, §10.3).
 - **Borde abierto (T6, §7·5)**: bajar invitados descarta las filas del FINAL.
 
 ## 0. En una línea cada cosa
@@ -1489,7 +1488,7 @@ lista llena acababa en «no quedan plazas» — exactamente el fallo que `#576` 
 `scripts/mutar-flujo-invitacion.py` **7/7** · los dos estados del recibo y la hoja sin prerrelleno,
 vistos en navegador a 390 y 1280 px.
 
-### 10.7 T6 · el ATERRIZAJE — SE PARTE EN SEIS UNIDADES VERDES (sin empezar)
+### 10.7 T6 · el ATERRIZAJE — SE PARTE EN SEIS UNIDADES VERDES (**T6·1 en el árbol**, §10.8)
 
 Es la tanda que **enciende la feature**: hasta que el anfitrión pueda ver y adoptar lo que contestan los
 padres, la invitación no puede estar encendida en producción. Como una sola tanda son varias sesiones, y
@@ -1497,7 +1496,7 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 
 | | Qué | Por qué corta ahí |
 |---|---|---|
-| **T6·1** | El **bloque de la invitación** en el post-form (§4.7): compartir, personalizar, resumen y el plazo escrito como fecha | Escribe **solo `party_invitations`**, así que no roza el testigo de las fichas. Es lo primero que necesita un anfitrión: repartir el enlace |
+| **T6·1** ✅ | El **bloque de la invitación** en el post-form (§4.7): compartir, personalizar, resumen y el plazo escrito como fecha — **en el árbol** (`#708`, §10.8) | Escribe **solo `party_invitations`**, así que no roza el testigo de las fichas. Es lo primero que necesita un anfitrión: repartir el enlace |
 | **T6·2** | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
 | **T6·3** | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` | ⚠️ Es la que puede acabar tocando `GuestCountAdjuster`: si lo toca, el push pide **`VERIFY_CONC=1`** con sus verificadores (§6) |
 | **T6·4** | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
@@ -1507,6 +1506,62 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 ⚠️ **Antes de empezar**: `POSTFORM-INVITADOS.md` es la doc de esta tanda (T1, T2 y T6) · el armazón de la
 T2 **no se toca** · la marca de adopción viaja fuera de las filas (§1.3·13, §7.2·R3) · arnés de mutación
 y sonda a 390 y 1280 en esta tanda (§6).
+
+### 10.8 T6·1 · EL BLOQUE DE LA INVITACIÓN — EN EL ÁRBOL (2026-09-19, `DECISIONES #708`)
+
+Compartir, personalizar, el resumen y el plazo escrito como fecha. **Lo de dentro ya existía desde la
+T4·6** (`forReservation`, `isShareable`, `shareUrlFor`, `summaryFor`, `personalize`): esta unidad es la
+pantalla del anfitrión, que hasta hoy solo tenía la API.
+
+**Lo que entra**
+
+- **Ruta y endpoint APARTE**, `POST /reserva/{reservation}/invitacion` (`reservation.invitation.update`),
+  en `GuestFormController::updateInvitation()`. Es la misma razón que escribió la API en `#578`:
+  personalizar escribe **solo `party_invitations`** y `order_items.updated_at` es el testigo optimista
+  de los extras — meterlo en el POST de siempre dejaría obsoleta la página abierta **por cambiar el
+  color de una banda**, y con ella la compra de un extra. El caso lo prueba **con su control**.
+- **Su URL firmada la compone el dominio** (`OrderItem::invitationSignedUpdateUrl()`): el anfitrión
+  llega muchas veces sin sesión, y una firma compuesta en la plantilla se quedaría sin la **versión del
+  enlace** (D14) — rotar cerraría el formulario y dejaría abierta la personalización.
+- **El bloque**, arriba y antes de las fichas, con la puerta de teclear debajo y sin esconderla: el
+  enlace **escrito** (sin JS no hay Web Share ni portapapeles), los dos atajos encendidos por lo que el
+  navegador tenga, el plazo **como fecha**, el resumen en tres cápsulas y «Personalizar» en un
+  `details` nativo que **nace abierto** cuando aún falta el nombre de quien cumple.
+- **`PublicFreeText::rejects()`**: `clean()` devuelve `null` por dos motivos —vacío o con enlace— y la
+  pantalla necesita distinguirlos. Vacío es «no lo toques»; con enlace es un texto suyo que **no se ha
+  publicado**, y se le dice (§7.2·R9). La API puede callarlo porque devuelve el recurso entero.
+
+**Lo que se midió, y no estaba escrito**
+
+- ⚠️⚠️ **Un campo de texto vacío llega como `null`, no como `''`**: `ConvertEmptyStringsToNull` corre
+  antes de la validación, así que `['sometimes', 'string']` daba **422 y ningún cambio** al anfitrión
+  que borrara «Te invita». Lo cazó el caso en el primer intento. ▶ **La API tiene la misma regla y por
+  tanto el mismo desenlace** (`InvitationHostController`): no se toca aquí porque es su contrato, pero
+  queda dicho.
+- ⚠️ **El punto final de la frase del plazo sobraba**: `DisplayTime::dayLabel()` ya termina en uno
+  («Mar. 22 sep.») y salían dos. Lo vio la **sonda**, no una relectura. ▶ Y la fecha va **abreviada**
+  —no «jueves 2 de octubre», como pedía el canvas— porque el **mismo plazo** ya se escribe así doce
+  líneas más arriba, en la pista del número de invitados: dos formas de la misma fecha en la misma
+  pantalla se leen como dos fechas.
+- ⚠️ **El resumen no puede llevar el «·» entre hermanos**: a 390 las tres frases envuelven y el punto
+  quedaba **abriendo renglón**, como una viñeta mal puesta. Tres cápsulas envuelven solas. Lo decidió
+  una **captura**, no una medida.
+- ⚠️ **Una captura de ventana sin bajar hasta el bloque son dos capturas idénticas**: el bloque empieza
+  por debajo de los 844 del teléfono. Lo delató el **tamaño del fichero**, no el ojo.
+
+**Bordes declarados** (no bloquean, y conviene no perderlos)
+
+- **`honoree_name` y `host_line` no se pueden VACIAR**: `clean('')` es `null` y el dominio lo lee como
+  «no lo toques». El nombre no debería poder vaciarse —sin él no se comparte—, pero la línea «Te
+  invita» sí tendría sentido; hoy se sustituye, no se borra. Cambiarlo es tocar `personalize()`, que es
+  de la T4.
+- **El tema se elige en una lista**, sin previsualizarlo: los tres temas existen desde la T5 y verlos
+  es abrir la propia invitación. Un selector con muestras es trabajo de diseño, no de esta unidad.
+
+**Verificación**: `InvitationHostBlockTest` (10 casos, con el **CONTROL** del testigo) · arnés
+`scripts/mutar-invitacion-t6-1.py` **8/8** · sonda de ventana a **390 y 1280** (`storage/app/audit/
+sonda-t6/invitacion/`): sin scroll horizontal, atajos y desplegable a 48, bloque de 557 px en el
+teléfono y 429 en escritorio, y el bloque **antes** del formulario · Pint y Larastan limpios.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

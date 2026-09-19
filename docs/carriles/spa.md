@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#707`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#708`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -18,13 +18,11 @@
   es del 17-09, en local; **falta verla en producción y en un teléfono**.
 - **T4 · la invitación digital, CERRADA en sus seis unidades** (`#573`→`#578`). ⚠️ **En producción solo
   van T4·1–T4·4** (v1.1.0, interruptores apagados): **`#577` (RGPD) y `#578` (la API) están en el árbol
-  SIN DESPLEGAR**, como toda la T5. El detalle vive en la spec §10.4; lo que hay que recordar al
-  tocarla: el **lock de UNA fila** de `PartyInvitations`, verificado sobre InnoDB (16 padres → entra 1, y
-  sin el lock entran 16) · el guard de `TicketType::saving()` y `show_in_invitation` por las CUATRO
-  puertas del pivote, con `OrderCreator` intacto porque **es una oferta y no un permiso** · el cuarto
-  sumando del suelo de `#444` y la **excepción del firmador**, sin la cual el padre que dijo «sí» no
-  podría firmar · y el RGPD, donde el justificante **se conserva** y solo pierde el puntero.
-  Arneses 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 declarado · 14/14.
+  SIN DESPLEGAR**, como toda la T5. El detalle vive en la spec §10.4; lo que hay que recordar al tocarla:
+  el **lock de UNA fila** de `PartyInvitations`, verificado sobre InnoDB · `show_in_invitation` por las
+  CUATRO puertas del pivote, con `OrderCreator` intacto porque **es una oferta y no un permiso** · el
+  cuarto sumando del suelo de `#444` y la **excepción del firmador** · y el RGPD, donde el justificante
+  **se conserva** y solo pierde el puntero. Arneses 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 declarado · 14/14.
   ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
 - **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#706`), **sin desplegar**; las
   tres primeras vistas en vivo por el owner el 18-09:
@@ -34,52 +32,51 @@
     ⚠️ Lo que enseñaron: el owner cazó «Dónde» y el menú en TEXTO PLANO (hoy `.gf-extras__list`), y
     pegar parámetros a una URL ya firmada **la invalida** — viajan DENTRO.
   - **T5·4 · compartir y calendario (`#705`)**: nace **`Platform\Services\CalendarFile`** (el `.ics` como
-    mecanismo genérico), su ruta con el mismo portero y 404 que la página, el bloque «Añadir al
-    calendario» **sin una línea de JS** y la vista previa `og:*` con **solo** nombre, edad, día, hora y
-    negocio; `focused-layout` gana un hueco de cabecera **vacío por defecto**. Arnés **8/8**.
-    ❗ **El defecto lo encontró el fichero SERVIDO, no el test**: el `VTIMEZONE` declaraba observancias
-    que entraban en el desfase del que venían y el unitario miraba el `TO`. Hay guarda del PAR.
-  - **T5·5 · el flujo firmar ↔ invitación (`#704`)**: **C** (el recibo ya no ofrece firmar a quien
-    firmó — contrato nuevo `SignedInvitationReplies`, que implementa `GuardianPlaces` y responde **por
-    la ATADURA de `#576`, no por el nombre**), **D** (tras firmar se vuelve a SU recibo) y **E, un
-    CUARTO defecto que no estaba en la spec**: la vuelta de un formulario RECHAZADO iba sin los extras
-    firmados, así que el segundo intento **cobraba plaza** y con la lista llena acababa en «no quedan
-    plazas». Lo destapó **caminar la pantalla**. Arnés **7/7**.
+    mecanismo genérico), el bloque «Añadir al calendario» **sin una línea de JS** y la vista previa `og:*`
+    con **solo** nombre, edad, día, hora y negocio; `focused-layout` gana un hueco de cabecera **vacío por
+    defecto**. Arnés **8/8**. ❗ El defecto del `VTIMEZONE` lo encontró **el fichero SERVIDO**, no el test.
+  - **T5·5 · el flujo firmar ↔ invitación (`#704`)**: C, D y **E, un CUARTO defecto que no estaba en la
+    spec** —la vuelta de un formulario RECHAZADO perdía la atadura y el segundo intento **cobraba
+    plaza**—. Contrato nuevo `SignedInvitationReplies`, que responde por la ATADURA de `#576` y no por el
+    nombre. Lo destapó **caminar la pantalla**. Arnés **7/7**. Detalle en spec §10.6.
 - ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **dos campos** (`#236` en pie, sin migración) y
-  **el prerrelleno del menor se retira** — la hoja enseña lo que escribió y lo reparte él. Las dos
-  alternativas que propuso se midieron y se cayeron: partir el nombre recorta «María del Carmen» a
-  «María» en un documento firmado, y pedir solo el nombre colapsa **dos «Martina» de una clase en una**
-  (el anfitrión ve «vienen 1»). ▶ La prueba la dio él: firmó y quedó «Hugo Ruiz Pla» + «DANAILOV».
-  ⚠️ La medición entera está en spec §10.6·A por si se reabre (unificar no habría reescrito ninguna
-  firma ni cambiado ninguna clave, y `#236` no era el precedente que la spec decía).
-- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner (31 agentes): dos defectos reales
-  arreglados —la adopción marcaba con la clave del PADRE, y un «sí» levantaba el tope N veces— más dos
-  guardas frágiles. Arnés **16/16**; los diez puntos sin tocar, en spec §10.4.7·B.
-- **`#700` · la lista completa deja de rechazar**: era un **oráculo de pertenencia**, y `REASON_FULL` está
-  fuera del dominio y del contrato. ⚠️ El verificador fuerza **16 «sí» del MISMO niño** y exige una plaza;
-  visto fallar sin el lock.
-- ✅ **Cerrado**: la barra de firmar de 401 px (rota en producción desde el 16-09) la arregló la T3 y
-  **salió en v1.1.0**. Queda mirarla allí, que es otra cosa que darla por buena.
-- ✅ **`#707` (19-09) · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` se
-  usaba sin declarar, así que plegar el alta lanzaba `addBtn is not defined` y **el foco caía al
-  `<body>`** —reproducido en navegador antes de tocarlo, y la promesa de `#217` llevaba rota desde que se
-  escribió—. Declararlo pasó el componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se
-  subió el techo**, bajó `signDependent()` al módulo plano, donde estrena tres casos de `node --test`.
-  `FROZEN_JS_ERRORS` **12 → 10** (congelaba dos errores) · sonda nueva `scripts/sonda-foco-cuenta.mjs`.
+  **el prerrelleno del menor se retira** — la hoja enseña lo que escribió y lo reparte él. Sus dos
+  alternativas se midieron y se cayeron; la medición entera está en spec §10.6·A por si se reabre.
+  ▶ La prueba la dio él: firmó y quedó «Hugo Ruiz Pla» + «DANAILOV».
+- **REVISIÓN ADVERSARIAL de la T4 (`#579`)**, con permiso del owner: dos defectos reales arreglados —la
+  adopción marcaba con la clave del PADRE, y un «sí» levantaba el tope N veces—. Arnés **16/16**; los
+  diez puntos sin tocar, en spec §10.4.7·B.
+- **`#700` · la lista completa deja de rechazar**: era un **oráculo de pertenencia**. ⚠️ El verificador
+  fuerza **16 «sí» del MISMO niño** y exige una plaza; visto fallar sin el lock.
+- ✅ **Cerrado**: la barra de firmar de 401 px la arregló la T3 y **salió en v1.1.0**. Queda mirarla allí.
+- ✅ **`#707` (19-09) · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` sin
+  declarar lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. Declararlo
+  pasó el componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
+  `signDependent()` al módulo plano con tres casos de `node --test`. `FROZEN_JS_ERRORS` **12 → 10** ·
+  sonda nueva `scripts/sonda-foco-cuenta.mjs`.
+- ✅ **T6·1 (`#708`, 19-09) · el BLOQUE DE LA INVITACIÓN en el post-form**, spec §10.8: compartir con el
+  enlace **escrito** (los atajos los enciende el navegador), personalizar por **su propio POST** —el
+  testigo de los extras no se mueve, y el caso lo prueba **con control**—, el resumen en tres cápsulas y
+  el plazo **como fecha**. 10 casos · arnés **8/8** · sonda a 390 y 1280. ⚠️ Lo que enseñó: un campo de
+  texto vacío llega como **`null`** y `['sometimes','string']` devolvía 422 (la API tiene hoy la misma
+  regla, dicho y sin tocar) · `dayLabel()` ya trae punto final · el «·» del resumen abría renglón a 390 ·
+  una captura de ventana **sin bajar hasta el bloque** son dos capturas idénticas.
 - La capa de agente: el plugin `jumpweb-agente` se instaló aquí el 17-09 y **se actualizó a `07076ac` el
   19-09**, con los arreglos del mapa de frases. Larastan entró con `composer install` (faltaba tras `#625`).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
 
-1. ❗ **LA TAREA: la T6, «el aterrizaje», empezando por la T6·1** (spec **§10.7**, que ya trae el reparto
-   en seis unidades; el owner lo acordó el 19-09 y **decidió hacer la T6 ANTES que la T7**, contra el
-   orden de la spec, porque **es la que ENCIENDE la feature**: hasta que el anfitrión pueda ver y adoptar
-   lo que contestan los padres, la invitación no puede encenderse en producción).
-   ▶ **T6·1 = el bloque de la invitación en el post-form** (§4.7): compartir, personalizar, resumen y el
-   plazo escrito como fecha. Escribe **solo `party_invitations`**, así que no roza el testigo de las
-   fichas. Lee antes `POSTFORM-INVITADOS.md`, que es la doc de esta tanda, y **el armazón de la T2 no se
-   toca**. §6 pide arnés de mutación y sonda a 390 y 1280 en esta tanda.
+1. ❗ **LA TAREA: la T6·2, las RESPUESTAS PROPUESTAS y su adopción** (spec §10.7; la T6·1 ya está, §10.8).
+   Es el corazón de la tanda y lo que más puede romper: pintar cada «sí» pendiente sobre su ficha con los
+   campos prerrellenos **solo si están vacíos**, la chapa «Por la invitación», `adopt[]` **fuera** de las
+   filas (§7.2·R3) y, al guardar, `adopted_at`/`adopted_name_key` de las que sigan pendientes.
+   ▶ **Su caso es el INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta **sigue pendiente y
+   no se borra nada**. El dominio ya está hecho y probado desde la T4·6 (`proposalsFor()`, `adopt()`,
+   `reconcileAdopted()`): lo que falta es la pantalla, como en la T6·1.
+   ⚠️ Lee antes `POSTFORM-INVITADOS.md` (la doc de esta tanda) · **el armazón de la T2 no se toca** · §6
+   pide arnés de mutación y sonda a 390 y 1280 · la clave con la que se adopta es la de la **FICHA**, no
+   la del nombre que escribió el padre (`#579`).
 2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
    el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
    cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
@@ -140,10 +137,8 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   la convención que dice vigilar tampoco: las dos las cazó el arnés de mutación, no una relectura.
 - **Al pivote se le habla por MÉTODO, no por propiedad** (`showsInInvitation()`, `saleStage()`…): un
   `$record->pivot?->columna` suma un `property.notFound` a la línea base de Larastan, **que solo encoge**.
-- ⏰ **La sesión del 17-09 cruzó la medianoche**: `#573`, `#574` y `#575` son del **17** —se escribieron
-  antes de las 24:00 en Madrid— y lo que venga después es del **18**. El contenedor va en UTC y marca dos
-  horas menos, así que la fecha de una decisión se toma del reloj del OWNER (`date` en el host), nunca del
-  contenedor: dos sesiones anteriores fecharon «la madrugada del 28» siendo la noche del 27.
+- ⏰ **La fecha de una decisión sale del reloj del OWNER** (`date` en el host), nunca del contenedor, que
+  va en UTC y marca dos horas menos: dos sesiones fecharon «la madrugada del 28» siendo la noche del 27.
 - **Un fixture que basta para una superficie puede no bastar para otra**: sin una `RateType` en la BD,
   `GET catalog/products/{id}` responde **404**, no 200 con otro contenido.
 - **Una guarda nueva que tumba un test viejo suele tener razón**: el guard de `#575` puso en rojo un caso
@@ -190,16 +185,30 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   fabrica el escenario con el servicio prueba el servicio; la costura solo la ve caminar la pantalla.
 - ⏰ **Techo de una decisión: 1,5 KB, y `docs-check` NO lo mide** (sí mide el §0 de una spec, 2 KB):
   `#704` salió a 1815 B y hubo que recortarlo a mano tres veces. Mídelo con `python3` antes del commit.
-- 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (medido el 18-09): 19 firmas
-  apuntan a versiones del texto legal **que ya no existen** (ids 10, 13, 14, 16, 19, 22, 25, 32, 34),
-  todas del 26–27 de agosto. **No es un defecto del producto**: ningún código ni seeder borra
-  versiones, y la FK es `RESTRICT` desde el 25-08 — es basura de desarrollo de aquella semana. ⚠️ Pero
-  significa que **`WaiverChain::verify()` en local sale rojo de fábrica**: si mides cadenas, compara
-  ANTES/DESPUÉS, nunca contra «todo verde». Y **en producción está sin comprobar** (`waiver:verify-chain`
-  desde la otra máquina).
+- 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (medido el 18-09): apuntan a
+  versiones del texto legal que ya no existen, basura de desarrollo del 26–27 de agosto, **no un defecto
+  del producto**. ⚠️ Así que **`WaiverChain::verify()` en local sale rojo de fábrica**: si mides cadenas,
+  compara ANTES/DESPUÉS. En producción, **sin comprobar** (`waiver:verify-chain`, desde la otra máquina).
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
 
 ## Buzón
+
+### Para el carril de plataforma (emisor: SPA, 2026-09-19)
+- ⚠️ **Toqué `public/css/site.css` (el bloque «HOJA ENFOCADA», que es mío) y eso obliga a REGENERAR tu
+  `public/css/cajon.css`**: lo hice con `python3 scripts/hoja-del-cajon.py --aplicar` y en el fichero
+  **solo cambia el sello de `FUENTES`** — ninguna regla nueva entra en el paquete. Para que siguiera así
+  escribí las dos reglas de mis botones apuntando al `button` y **no a `.btn`**: con `.btn` tu generador
+  se las llevaba al paquete, y `.gf-invite` no puede existir dentro de un `.sidecart`. Si prefieres otra
+  convención para esto, dilo y la cambio.
+- ▶ **Lo empujado hoy (`#708`, T6·1)** y lo que implica para el próximo despliegue: ruta nueva
+  `POST /reserva/{reservation}/invitacion` (`reservation.invitation.update`), `GuestFormController` (dos
+  métodos), `OrderItem::invitationSignedUpdateUrl()`, `PublicFreeText::rejects()`, la vista del post-form,
+  `lang/*/guestform.php` y el bloque de la hoja en `site.css`. **Sin migraciones, sin contrato de API y
+  sin tocar dinero ni aforo**; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
+- ℹ️ **Un defecto de la API, medido y NO tocado**: `InvitationHostController` valida `honoree_name` y
+  `host_line` como `['sometimes','string']`, y `ConvertEmptyStringsToNull` convierte un vacío en `null`,
+  así que un cliente que mande `""` recibe **422**. En la web lo arreglé con `nullable`; en la API es su
+  contrato y no lo cambio sin ti.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-18, segunda tanda del día)
 - ⚠️ **Toqué el composition root sin avisar antes, y lo digo yo**: `app/Providers/AppServiceProvider.php`
@@ -244,28 +253,19 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `users` (`AnonymizeCoversEveryUserColumnTest` intacto). Sin migraciones.
 
 ### Para el carril de pasarela / producto (emisor: SPA, 2026-09-17 y 2026-09-18)
-- Toqué un contrato de Booking: `AuthorizableReservation` cambia `startTime`/`endTime` por **`timeWindow`**
-  (compuesta por `OrderItem::displayTimeWindow()`), y `AuthorizableReservationsReader` con él. Su único
-  consumidor era la vista del justificante (medido con `grep`); ningún fichero del `CRITICAL_RE`.
+- `AuthorizableReservation` cambia `startTime`/`endTime` por **`timeWindow`** (y su lector con él); su
+  único consumidor era la vista del justificante (medido con `grep`), ninguno del `CRITICAL_RE`.
 - **(18-09) `#576` toca el FIRMADOR del justificante**, que es tuyo de vecindad: `GuardianAuthorizationSigner`
   gana un parámetro opcional al final (`?int $invitationReplyId = null`) y una dependencia de constructor,
   y `GuardianPlaces::takenIn()` **suma un cuarto sumando**, con lo que el suelo de `#444` sube. Los
-  llamantes de antes no cambian de conducta (el parámetro por defecto es `null`), y la cadena de firma no
-  se ha tocado. Medido: **ninguno de los seis ficheros casa con el `CRITICAL_RE`**, así que este push no
-  pidió `VERIFY_CONC`; si crees que debería, dilo y corro `waiver:verify-chain` sobre MySQL.
-
-### Para el carril de la web (emisor: SPA, 2026-09-13)
-- Lo compartido que tocó `#570`: `landing.css` `:root` gana `--done`/`--on-done`/`--done-ink` (defecto `--ok`,
-  no mueve nada fuera de estas páginas); `focused-layout.blade.php` carga `client.css`; este carril toma
-  `.guardian__*`, `resources/views/reservation/**` y `lang/*/guestform.php`/`guardian.php`.
-- `#572` no toca nada tuyo: usa `.btn--ink` tal cual y ningún token nuevo.
+  llamantes de antes no cambian de conducta y la cadena de firma no se ha tocado. Medido: **ninguno de los
+  seis ficheros casa con el `CRITICAL_RE`**; si crees que debería, corro `waiver:verify-chain` sobre MySQL.
 
 ### Atendido
 - **Web · `#539`/`#540`** (botones al secundario, ninguno en negro): atendidos. Las dos hojas de enlace
   firmado usan `.btn--ink`, que lee `--secondary` (`#570`, `#572`). Puedes retirarlos.
-- **Plataforma, 16-09 y 17-09**: todos atendidos (el contador al trailer, este fichero ya es mío, el
-  plugin instalado, producción despliega solo etiquetas). Queda **repasar el `§0` de `sidebar-spa.md`**,
-  que escribiste tú; el de `celebracion-e-invitacion.md` ya lo reescribí.
+- **Plataforma, 16-09 y 17-09**: todos atendidos. Queda **repasar el `§0` de `sidebar-spa.md`**, que
+  escribiste tú; el de `celebracion-e-invitacion.md` ya lo reescribí.
 - **Plataforma, 18-09**: el noveno despliegue (v1.1.0) leído y anotado en la foto · ESLint en el gate,
   atendido (y su defecto, arreglado en `#707`) · lo del plugin es tarea mía, no mensaje tuyo pendiente.
   Puedes retirar los tres.

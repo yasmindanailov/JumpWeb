@@ -271,6 +271,138 @@
                 </div>
             @endif
 
+            {{-- ───── EL BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7) ─────
+
+                 Va ARRIBA y **antes** de que el anfitrión empiece a teclear —después ya no sirve de
+                 nada—, con la puerta de rellenar a mano justo debajo y sin esconderla (canvas, turno
+                 3a). No promete rellenarlo todo: promete repartir el trabajo.
+
+                 ⚠️⚠️ **Es su PROPIO formulario y vive FUERA de `#gf-form`**, y no es una cuestión de
+                 estilo: un `form` dentro de otro no es HTML válido —el navegador lo descarta— y
+                 además personalizar escribe SOLO `party_invitations`, mientras que el testigo de los
+                 extras es `order_items.updated_at`. Meterlo dentro haría que cambiar el tema dejara
+                 obsoleta la página abierta.
+
+                 ⚠️ El ENLACE se enseña escrito, siempre: sin JavaScript no hay ni Web Share ni
+                 portapapeles, y un botón que no se puede pulsar dejaría al anfitrión sin forma de
+                 repartir su fiesta. Los dos botones nacen `hidden` y los enciende el JS según lo que
+                 el navegador tenga (mejora progresiva, como el resto de la hoja). --}}
+            @if ($invitation !== null)
+                @php $inv = $invitation['invitation']; @endphp
+
+                {{-- Un texto con enlace NO se guarda, y se dice: el campo se queda como estaba y
+                     callarlo dejaría al anfitrión creyendo que se publicó (§7.2·R9). --}}
+                @if (session('status') === 'invitation-text-rejected')
+                    <div class="gf-notice gf-notice--err" role="alert">
+                        <p class="gf-notice__title">{{ __('guestform.invite.rejected_title') }}</p>
+                        <p class="gf-notice__text">{{ __('guestform.invite.rejected') }}</p>
+                    </div>
+                @endif
+
+                <section class="gf-invite" id="gf-invite">
+                    <div class="gf-group__head">
+                        <h2 class="gf-group__title">{{ __('guestform.invite.title') }}</h2>
+                    </div>
+                    <p class="gf-invite__lead">{{ __('guestform.invite.lead') }}</p>
+
+                    @if ($invitation['shareable'])
+                        <div class="gf-invite__share" data-invite
+                             data-url="{{ $invitation['url'] }}"
+                             data-text="{{ trim((string) $inv->honoree_name) !== ''
+                                 ? __('guestform.invite.share_text', ['name' => $inv->honoree_name])
+                                 : __('guestform.invite.share_text_generic') }}"
+                             data-copied="{{ __('guestform.invite.copied') }}">
+                            <p class="gf-invite__linkbox">
+                                <span class="gf-invite__linklabel">{{ __('guestform.invite.link_label') }}</span>
+                                {{-- ⚠️ El enlace se pinta como TEXTO y no como `<a>`: el anfitrión no tiene
+                                     que abrir su propia invitación, tiene que repartirla, y un enlace que
+                                     navega se pulsa sin querer en un teléfono. --}}
+                                <span class="gf-invite__url">{{ $invitation['url'] }}</span>
+                            </p>
+                            <div class="gf-invite__actions">
+                                <button type="button" class="btn btn--ink" data-invite-share hidden>{{ __('guestform.invite.share') }}</button>
+                                <button type="button" class="btn btn--ghost" data-invite-copy hidden>{{ __('guestform.invite.copy') }}</button>
+                            </div>
+                            <p class="gf-sr-only" role="status" data-invite-said></p>
+                        </div>
+
+                        {{-- El plazo, escrito COMO FECHA (canvas, turno 3a): no un número de horas que
+                             haya que sumar. Pasado, el enlace sigue abriendo (§7.2·R8). --}}
+                        @if ($invitation['replies_open'])
+                            @if ($invitation['deadline'] !== '')
+                                <p class="gf-invite__deadline">{{ __('guestform.invite.deadline', ['when' => $invitation['deadline']]) }}</p>
+                            @endif
+                        @else
+                            <p class="gf-invite__deadline">{{ __('guestform.invite.deadline_closed') }}</p>
+                        @endif
+                    @else
+                        {{-- Sin nombre de quien cumple no se puede compartir (§4.5·2) **y la pantalla lo
+                             dice**, con el remedio al lado: el campo está aquí mismo, abierto. --}}
+                        <div class="gf-notice gf-notice--attn" role="status">
+                            <p class="gf-notice__title">{{ __('guestform.invite.needs_name_title') }}</p>
+                            <p class="gf-notice__text">{{ __('guestform.invite.needs_name') }}</p>
+                        </div>
+                    @endif
+
+                    {{-- El resumen: «N vienen · M no pueden · K por repasar». --}}
+                    <ul class="gf-invite__tally">
+                        <li class="gf-invite__tallyitem">{{ trans_choice('guestform.invite.tally_yes', $invitation['summary']['yes'], ['count' => $invitation['summary']['yes']]) }}</li>
+                        <li class="gf-invite__tallyitem">{{ trans_choice('guestform.invite.tally_no', $invitation['summary']['no'], ['count' => $invitation['summary']['no']]) }}</li>
+                        <li class="gf-invite__tallyitem">{{ trans_choice('guestform.invite.tally_pending', $invitation['summary']['pending'], ['count' => $invitation['summary']['pending']]) }}</li>
+                    </ul>
+
+                    {{-- PERSONALIZAR: `details` NATIVO, que se abre sin una línea de JS. Nace ABIERTO
+                         cuando aún no se puede compartir, porque entonces el remedio está dentro. --}}
+                    <details class="gf-invite__custom" @if (! $invitation['shareable']) open @endif>
+                        <summary class="gf-invite__summary">
+                            <span>{{ __('guestform.invite.customize') }}</span>
+                            <x-icons.chevron-down :width="16" :height="16" />
+                        </summary>
+                        <form method="POST" action="{{ $invitation['action'] }}" class="gf-invite__form">
+                            @csrf
+                            <div class="eventfields">
+                                <label class="eventfields__field" for="inv-honoree">
+                                    <span class="eventfields__label">{{ __('guestform.invite.honoree_name') }}</span>
+                                    <input id="inv-honoree" type="text" name="honoree_name"
+                                           maxlength="{{ \App\Domain\Booking\Models\PartyInvitation::HONOREE_NAME_MAX }}"
+                                           value="{{ $inv->honoree_name }}">
+                                </label>
+                                <label class="eventfields__field" for="inv-age">
+                                    <span class="eventfields__label">{{ __('guestform.invite.honoree_age') }} <span class="gf-opt">{{ __('guestform.optional') }}</span></span>
+                                    <input id="inv-age" type="number" name="honoree_age" inputmode="numeric" min="0" max="255"
+                                           value="{{ $inv->honoree_age }}">
+                                </label>
+                                <label class="eventfields__field" for="inv-host">
+                                    <span class="eventfields__label">{{ __('guestform.invite.host_line') }} <span class="gf-opt">{{ __('guestform.optional') }}</span></span>
+                                    <input id="inv-host" type="text" name="host_line"
+                                           maxlength="{{ \App\Domain\Booking\Models\PartyInvitation::HOST_LINE_MAX }}"
+                                           value="{{ $inv->host_line }}">
+                                </label>
+                                <label class="eventfields__field" for="inv-theme">
+                                    <span class="eventfields__label">{{ __('guestform.invite.theme') }}</span>
+                                    <select id="inv-theme" name="theme">
+                                        @foreach ($invitation['themes'] as $theme)
+                                            <option value="{{ $theme }}" @selected($inv->safeTheme() === $theme)>{{ __('guestform.invite.theme_'.$theme) }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                            </div>
+
+                            {{-- ⚠️⚠️ El `hidden` de delante NO es decorativo: una casilla sin marcar no se
+                                 envía, y para el dominio una clave ausente es «no lo toques» (es un
+                                 PATCH). Sin él, desmarcar «enseñar mi teléfono» no lo apagaría nunca. --}}
+                            <input type="hidden" name="show_host_phone" value="0">
+                            <label class="gf-invite__check">
+                                <input type="checkbox" name="show_host_phone" value="1" @checked($inv->show_host_phone)>
+                                <span>{{ __('guestform.invite.show_phone') }}</span>
+                            </label>
+
+                            <button type="submit" class="btn btn--ink">{{ __('guestform.invite.save') }}</button>
+                        </form>
+                    </details>
+                </section>
+            @endif
+
             <form method="POST" action="{{ $formAction }}" class="gf-form" id="gf-form">
                 @csrf
                 {{-- El TESTIGO de la reserva: si el parque la movió mientras el cliente tenía la
@@ -597,8 +729,10 @@
         </footer>
     </div>
 
-    {{-- Toast de guardado (flash del servidor; relevante al recargar por enlace firmado). --}}
-    <div class="gf-toast {{ session('status') === 'guest-form-saved' ? 'is-on' : '' }}" id="gf-toast" role="status">
+    {{-- Toast de guardado (flash del servidor; relevante al recargar por enlace firmado).
+         ⚠️ También tras personalizar la invitación (T6·1): es otro POST y otra redirección, pero para
+         quien pulsa es el mismo gesto de guardar, y sin acuse parecería que no pasó nada. --}}
+    <div class="gf-toast {{ in_array(session('status'), ['guest-form-saved', 'invitation-saved'], true) ? 'is-on' : '' }}" id="gf-toast" role="status">
         {{-- ⚠️ CUADRADO: el check pasó a la rejilla 24 del set y 12×10 ya no encoge, DEFORMA. --}}
         <span class="tcheck"><x-icons.check :width="12" :height="12" /></span>
         <span>{{ __('guestform.toast_saved') }}</span>
@@ -903,6 +1037,56 @@
                 de.classList.remove('js', 'gf-initing');
                 de.classList.add('no-js');
             }
+        }
+
+        // ───── COMPARTIR LA INVITACIÓN (T6·1, §4.7) ─────
+        //
+        // ⚠️⚠️ **En su propio `try` y FUERA del `if` del acordeón**: son dos mejoras independientes, y
+        // una reserva sin fichas —o un fallo del acordeón— no puede dejar al anfitrión sin repartir su
+        // fiesta. El enlace ya está escrito en la página; esto solo añade los dos atajos.
+        //
+        // ⚠️ Los botones nacen `hidden` y se encienden **por lo que el navegador tiene**: `share` no
+        // existe en casi ningún escritorio y el portapapeles necesita contexto seguro. Pintar un botón
+        // que no hace nada es peor que no pintarlo.
+        //
+        // ⚠️ `navigator.share` se invoca DENTRO del gesto, sin `await` previo: Safari exige activación
+        // del usuario y una promesa intermedia la pierde — el mismo motivo por el que la invitación
+        // nace en el GET y no en un `fetch` (§4.5·1).
+        try {
+            const invite = document.querySelector('[data-invite]');
+            if (invite) {
+                const url = invite.dataset.url || '';
+                const text = invite.dataset.text || '';
+                const shareBtn = invite.querySelector('[data-invite-share]');
+                const copyBtn = invite.querySelector('[data-invite-copy]');
+                const said = invite.querySelector('[data-invite-said]');
+
+                if (shareBtn && url && navigator.share) {
+                    shareBtn.hidden = false;
+                    shareBtn.addEventListener('click', () => {
+                        // Sin `catch` no: cancelar el diálogo del sistema RECHAZA la promesa, y un
+                        // rechazo sin capturar es un error en la consola por cerrar un menú.
+                        navigator.share({ text, url }).catch(() => {});
+                    });
+                }
+
+                if (copyBtn && url && navigator.clipboard) {
+                    copyBtn.hidden = false;
+                    const label = copyBtn.textContent;
+                    const copied = invite.dataset.copied || label;
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(url).then(() => {
+                            copyBtn.textContent = copied;
+                            // Se ANUNCIA aparte: el cambio de rótulo de un botón que acaba de pulsarse
+                            // no lo lee un lector de pantalla.
+                            if (said) said.textContent = copied;
+                            setTimeout(() => { copyBtn.textContent = label; }, 2500);
+                        }).catch(() => {});
+                    });
+                }
+            }
+        } catch (error) {
+            // El enlace escrito sigue ahí: sin los atajos, la página no pierde ninguna capacidad.
         }
     </script>
 </x-focused-layout>

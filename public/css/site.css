@@ -5672,6 +5672,64 @@ body.maint { min-height: 100vh; display: flex; background: var(--bg, #fff); }
 .gf-group__title { display: flex; align-items: center; gap: var(--sp-12); font-family: var(--font-display); font-size: var(--fs-20); line-height: 1.1; margin: 0; }
 .gf-group__opt { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; letter-spacing: 0.14em; color: var(--fg-mute); margin-left: auto; align-self: center; }
 
+/* ─── EL BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7) ──────────────────
+   Arriba del todo y **antes** de que el anfitrión empiece a teclear, con la puerta de rellenar a mano
+   justo debajo (canvas, turno 3a). Se distingue del papel con SUPERFICIE y BORDE —nunca con una
+   sombra (F-04) ni con el color de zona (F-01)—, que es lo mismo que hace el aviso de solo lectura.
+   ⚠️ Cero controles nuevos: el enlace es texto, los dos atajos son botones del sistema y el
+   desplegable es un `details` NATIVO, como el «Más info» de los extras. */
+.gf-invite {
+    display: flex; flex-direction: column; gap: var(--sp-16);
+    padding: var(--sp-20); border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-soft);
+}
+.gf-invite__lead { margin: 0; font-size: var(--fs-body); line-height: 1.5; color: var(--fg-body); }
+.gf-invite__share { display: flex; flex-direction: column; gap: var(--sp-12); }
+/* El enlace, ESCRITO: sin JavaScript no hay ni Web Share ni portapapeles, y sin verlo no habría forma
+   de repartir la fiesta. En papel (`--bg`) dentro de la superficie suave, para que se lea como un dato
+   y no como un control. */
+.gf-invite__linkbox {
+    display: flex; flex-direction: column; gap: var(--sp-4); margin: 0;
+    padding: var(--sp-12) var(--sp-14); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--bg);
+}
+.gf-invite__linklabel { font-family: var(--font-mono); font-size: var(--fs-label); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; color: var(--fg-mute); }
+/* ⚠️ `overflow-wrap: anywhere` no es cosmético: un token de 12 caracteres sobre el dominio del cliente
+   se sale de la columna de 390 y empuja la página entera a un scroll horizontal. */
+.gf-invite__url { font-family: var(--font-mono); font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg); overflow-wrap: anywhere; }
+/* Los atajos miden lo que dicen y no el ancho de la columna —estirados, un solo «Copiar enlace» ocupaba
+   los 640 del escritorio—, que es lo que hace un `.btn` por su cuenta: `inline-flex` y sin crecer.
+   ⚠️ **Un `.btn` es `inline-flex`, y eso PISA el atributo `hidden`**: sin esta línea los dos atajos se
+   verían siempre, también donde el navegador no puede compartir ni copiar.
+   ⚠️ Se apunta al `button` y NO a `.btn`: `scripts/hoja-del-cajon.py` se lleva al paquete del cajón toda
+   regla que nombre una clase suya, y `.gf-invite` no puede existir dentro de un `.sidecart`. */
+.gf-invite__actions { display: flex; flex-wrap: wrap; gap: var(--sp-10); }
+.gf-invite__actions button[hidden] { display: none; }
+.gf-invite__deadline { margin: 0; font-size: var(--fs-body-s); line-height: 1.5; color: var(--fg-mute); }
+/* El resumen: «N vienen · M no pueden · K por repasar», cada cifra en su propia cápsula.
+   ⚠️⚠️ **El punto separador entre hermanos se retiró, y lo decidió una CAPTURA**: a 390 las tres
+   frases no caben en una línea, así que envolvían — y el «·» quedaba **abriendo renglón**, con lo que
+   el resumen se leía como una lista de viñetas mal puesta. Tres cápsulas envuelven solas y cada una
+   sigue siendo su propio elemento para quien lee con lector de pantalla. */
+.gf-invite__tally { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--sp-8); }
+.gf-invite__tallyitem {
+    padding: var(--sp-6) var(--sp-12); border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--bg);
+    font-size: var(--fs-body-s); font-weight: var(--fw-semibold); color: var(--fg);
+}
+/* Personalizar: `details` nativo con el suelo táctil en su `summary` y el chevrón girado al abrirse,
+   la misma receta que el grupo de fichas listas y el «Más info» de un extra. */
+.gf-invite__custom { border-top: 1px solid var(--line); }
+.gf-invite__summary {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-12);
+    min-height: var(--tap-min); cursor: pointer; list-style: none;
+    font-size: var(--fs-body); font-weight: var(--fw-semibold); color: var(--interactive);
+}
+.gf-invite__summary::-webkit-details-marker { display: none; }
+.gf-invite__summary:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
+.gf-invite__summary svg { transition: transform var(--dur-sale) var(--ease-sale); }
+.gf-invite__custom[open] > .gf-invite__summary svg { transform: rotate(180deg); }
+.gf-invite__form { display: flex; flex-direction: column; gap: var(--sp-16); padding-bottom: var(--sp-4); }
+.gf-invite__form button[type="submit"] { align-self: flex-start; }
+.gf-invite__check { display: flex; align-items: center; gap: var(--sp-12); min-height: var(--tap-min); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); cursor: pointer; }
+
 /* El PEGADO de la lista (2b, `#571`): una frase y un botón fantasma encima de las fichas. Solo con JS: sin él
    no hay diálogo, y el formulario sigue siendo completo. */
 .gf-paste { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-10); }
@@ -5909,21 +5967,29 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
    ⚠️ El control es el propio `<input>` con `appearance: none` (la receta del interruptor, `#346`): el
    anillo de foco cae sobre la caja real, y el teclado, el `required` y el lector de pantalla no se
    enteran. El ✓ son dos bordes girados, sin imagen: un SVG incrustado traería un color crudo.
-   ▶ El área útil sigue siendo la ETIQUETA, que envuelve la casilla y lleva el suelo táctil. */
+   ▶ El área útil sigue siendo la ETIQUETA, que envuelve la casilla y lleva el suelo táctil.
+   ▶ **La receta la comparten las DOS páginas del molde** (T6·1): la casilla de «enseñar mi teléfono»
+   del bloque de la invitación es la misma pieza, y copiarla habría sido un segundo sitio donde
+   arreglarla el día que el sistema la mueva. */
 .guardian__accept { display: flex; align-items: flex-start; gap: var(--sp-12); min-height: var(--tap-min); font-size: var(--fs-body); line-height: 1.5; color: var(--fg); cursor: pointer; }
-.guardian__check {
+.guardian__check,
+.gf-invite__check input[type="checkbox"] {
     appearance: none; -webkit-appearance: none;
     position: relative; flex: none; width: 24px; height: 24px; margin: 0; cursor: pointer;
     border: 2px solid var(--fg); border-radius: var(--r-md); background: var(--bg-card);
     transition: background var(--dur-sale) var(--ease-sale);
 }
-.guardian__check::before {
+.guardian__check::before,
+.gf-invite__check input[type="checkbox"]::before {
     content: ""; position: absolute; left: 6.5px; top: 2px; width: 7px; height: 12px;
     border: solid var(--bg); border-width: 0 3px 3px 0;
     transform: rotate(45deg) scale(0); transition: transform var(--dur-sale) var(--ease-sale);
 }
-.guardian__check:checked { background: var(--fg); }
-.guardian__check:checked::before { transform: rotate(45deg) scale(1); }
+.guardian__check:checked,
+.gf-invite__check input[type="checkbox"]:checked { background: var(--fg); }
+.guardian__check:checked::before,
+.gf-invite__check input[type="checkbox"]:checked::before { transform: rotate(45deg) scale(1); }
+.gf-invite__check input[type="checkbox"]:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 .guardian__accept.is-invalid { color: var(--err-ink); }
 .guardian__accept.is-invalid .guardian__check { border-color: var(--err); }
 

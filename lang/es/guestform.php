@@ -81,6 +81,55 @@ return [
     'count_error_closed' => 'Tus datos se han guardado, pero el número de invitados no se ha podido cambiar. Llámanos y lo vemos contigo.',
     'count_error_stale' => 'Tus datos se han guardado, pero el número de invitados no: la reserva ha cambiado mientras tenías esta página abierta. Vuelve a cargarla.',
 
+    // ── EL BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7) ───────────────
+    // Va ARRIBA y antes de que el anfitrión empiece a teclear —después ya no sirve de nada— y no
+    // promete rellenarlo todo: promete **repartir el trabajo**, dejando debajo la puerta de teclear
+    // sin esconderla (canvas, turno 3a). ⚠️ Lo que el anfitrión escribe aquí lo lee un DESCONOCIDO
+    // en la página pública, y por eso lo de allí vive en `invitation.php`: aquí solo está lo que lee
+    // ÉL. Las dos mitades no comparten voz.
+    'invite' => [
+        'title' => 'La invitación',
+        'lead' => 'Reparte el enlace y que cada familia te diga si viene. Lo que contesten aparecerá aquí y tú decides qué apuntas.',
+        'share' => 'Compartir la invitación',
+        // Lo que se manda con el enlace por Web Share. ⚠️ Sin el enlace dentro: lo pone el navegador
+        // en su propio campo, y repetirlo lo pega dos veces en el chat.
+        'share_text' => 'Estás invitado al cumple de :name.',
+        'share_text_generic' => 'Estás invitado a nuestra fiesta.',
+        'copy' => 'Copiar enlace',
+        'copied' => 'Enlace copiado',
+        // El enlace se ENSEÑA siempre, no solo detrás de un botón: sin JavaScript no hay ni Web Share
+        // ni portapapeles, y sin verlo escrito no habría forma de repartirlo.
+        'link_label' => 'Enlace de la invitación',
+        // ⚠️ Sin punto final: `DisplayTime::dayLabel()` ya termina en uno («Mar. 22 sep.») y la frase
+        // salía con dos. Lo vio la sonda, no una relectura. ▶ Y la fecha va ABREVIADA, como la pista
+        // del número de invitados dos líneas más arriba: es el MISMO plazo, y darle dos formas en la
+        // misma pantalla se lee como dos fechas distintas.
+        'deadline' => 'Pueden contestar hasta el :when',
+        'deadline_closed' => 'El plazo para contestar ya ha pasado. El enlace sigue abriendo: lo que dice la invitación hace falta el mismo día de la fiesta.',
+        'needs_name_title' => 'Antes de repartirla',
+        'needs_name' => 'Dinos de quién es la fiesta y ya puedes compartir el enlace: lo escribes aquí debajo, en «Personalizar».',
+        // El resumen de §4.7. ⚠️ «Por repasar» son las respuestas de las DOS clases, también los «no»:
+        // un «no» lleva a bajar el número de invitados, así que también hay que verlo.
+        'tally_yes' => '{0} Nadie ha dicho que viene|{1} :count viene|[2,*] :count vienen',
+        'tally_no' => '{0} Nadie ha dicho que no|{1} :count no puede|[2,*] :count no pueden',
+        'tally_pending' => '{0} Nada por repasar|{1} :count por repasar|[2,*] :count por repasar',
+        'customize' => 'Personalizar',
+        'theme' => 'Tema',
+        'theme_confeti' => 'Confeti',
+        'theme_fiesta' => 'Fiesta',
+        'theme_sereno' => 'Sereno',
+        'honoree_name' => 'Quién cumple',
+        'honoree_age' => 'Años que cumple',
+        'host_line' => 'Te invita',
+        'show_phone' => 'Enseñar mi teléfono en la invitación',
+        'save' => 'Guardar la invitación',
+        'saved' => 'Invitación guardada.',
+        // ⚠️ Se DICE cuando un texto no se admite: el campo se queda como estaba, y callarlo dejaría
+        // al anfitrión creyendo que lo suyo se publicó (§7.2·R9).
+        'rejected_title' => 'Eso no lo hemos guardado',
+        'rejected' => 'En «Quién cumple» y en «Te invita» no caben enlaces ni direcciones de correo: la invitación se publica en nuestra web y cualquiera podría pulsarlos. Quítalos y vuelve a guardar.',
+    ],
+
     'submit' => 'Guardar',
     'hint' => 'Si aún no los sabes todos, guarda lo que tengas y vuelve más adelante.',
     'back' => 'Volver a mis reservas',

@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use App\Domain\Booking\Contracts\GuestCountChange;
 use App\Domain\Booking\Contracts\PostFormAddonView;
 use App\Domain\Booking\Models\OrderItem;
+use App\Domain\Booking\Models\PartyInvitation;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\GuestAgeMixReader;
 use App\Domain\Booking\Services\GuestCountAdjuster;
 use App\Domain\Booking\Services\GuestCountPolicy;
 use App\Domain\Booking\Services\MixedPartySettings;
 use App\Domain\Booking\Services\MixedPartySurcharge;
+use App\Domain\Booking\Services\PartyInvitations;
 use App\Domain\Booking\Services\PostFormAddons;
 use App\Domain\Platform\Services\DisplayTime;
 use App\Domain\Platform\Services\Money;
+use App\Domain\Platform\Services\PublicFreeText;
 use App\Http\Concerns\AuthorizesGuestForm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -113,6 +116,10 @@ class GuestFormController extends Controller
             // su plazo salen de `GuestCountPolicy`, que es la MISMA fuente que revalida bajo el lock.
             // ⚠️ La pantalla no es la autoridad (`SEC-04`): esto decide qué se OFRECE.
             'guestCount' => $this->guestCountView($reservation),
+            // El BLOQUE DE LA INVITACIÓN (T6·1, `specs/celebracion-e-invitacion.md` §4.7): compartir,
+            // personalizar, el resumen y el plazo escrito como fecha. `null` cuando este producto no
+            // ofrece invitación — y entonces no se pinta nada, ni se crea ninguna fila.
+            'invitation' => $this->invitationView($request, $reservation),
             // ⚠️ La firma la compone el DOMINIO (`guestFormSignedStoreUrl`), no esta capa: desde D14
             // toda URL firmada del post-form lleva además la VERSIÓN del enlace, y una compuesta a
             // mano aquí sería la que se queda sin ella.
@@ -214,6 +221,131 @@ class GuestFormController extends Controller
         return redirect()
             ->to($this->backUrl($request, $reservation))
             ->with('status', $status);
+    }
+
+    /**
+     * **Personalizar la invitación** (T6·1, `specs/celebracion-e-invitacion.md` §4.7): tema, quién
+     * cumple, la línea «Te invita» y si se enseña el teléfono de la cuenta.
+     *
+     * ⚠️⚠️ **Escribe SOLO `party_invitations` y por eso es otro POST** (§4.7, y la misma razón que la
+     * API escribió en `InvitationHostController`): `order_items.updated_at` es el testigo optimista
+     * de los extras, así que personalizar dentro del guardado de siempre dejaría obsoleta la página
+     * abierta **por cambiar el color de una banda**.
+     *
+     * ⚠️ **Un texto con un enlace se rechaza y SE DICE.** El dominio no publica «paga el regalo en
+     * este enlace» (§7.2·R9) y tampoco lo limpia a medias; sin este aviso el anfitrión vería su
+     * campo intacto y creería que se guardó. La API puede callarlo —devuelve el recurso entero y el
+     * cliente compara—; una pantalla, no.
+     */
+    public function updateInvitation(Request $request, OrderItem $reservation): RedirectResponse
+    {
+        $this->authorizeGuestFormAccess($request, $reservation);
+
+        // Celebrada = solo lectura, igual que el formulario: la invitación de una fiesta que ya pasó
+        // no se personaliza. Blinda un POST forjado o una pestaña vieja.
+        if ($reservation->isFinishedInPractice()) {
+            return redirect()
+                ->to($this->backUrl($request, $reservation))
+                ->with('status', 'guest-form-readonly');
+        }
+
+        $invitations = app(PartyInvitations::class);
+        $invitation = $invitations->forReservation($reservation);
+
+        if ($invitation === null) {
+            abort(404);
+        }
+
+        // ⚠️⚠️ **`nullable` en los dos textos, y no es laxitud**: `ConvertEmptyStringsToNull` convierte
+        // un campo vacío del formulario en `null` ANTES de llegar aquí, así que con `string` a secas
+        // un anfitrión que borrara «Te invita» y guardara recibía un **422 y ningún cambio**. Medido:
+        // el caso lo cazó en el primer intento. Lo que el dominio hace con un vacío ya está decidido
+        // —es «no lo toques», porque `clean()` devuelve `null`— y eso sigue igual.
+        $data = $request->validate([
+            'theme' => ['sometimes', 'string', 'max:16'],
+            'honoree_name' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
+            'honoree_age' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
+            'host_line' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
+            'show_host_phone' => ['sometimes', 'boolean'],
+        ]);
+
+        // ⚠️ Se PREGUNTA por el rechazo antes de escribir, con el mismo predicado del dominio: lo que
+        // se compara después no serviría, porque `clean()` además recorta y colapsa espacios y una
+        // diferencia no significaría «no se admitió».
+        $rejected = $this->rejectedFreeText($data);
+
+        $invitations->personalize($invitation, $data);
+
+        return redirect()
+            ->to($this->backUrl($request, $reservation))
+            ->with('status', $rejected ? 'invitation-text-rejected' : 'invitation-saved');
+    }
+
+    /**
+     * ¿Alguno de los dos textos libres trae un enlace o un correo? (§7.2·R9.)
+     *
+     * ⚠️ Vacío **no** es rechazo: es «no lo toques», y decirle al anfitrión que no caben enlaces
+     * cuando lo que hizo fue borrar una línea sería un aviso que no explica nada.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function rejectedFreeText(array $data): bool
+    {
+        foreach (['honoree_name', 'host_line'] as $field) {
+            $value = $data[$field] ?? null;
+            if (is_string($value) && PublicFreeText::rejects($value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Lo que la pantalla necesita para pintar el bloque de la invitación, ya resuelto (§4.7).
+     *
+     * ⚠️⚠️ **La invitación NACE aquí, en el GET, y es deliberado** (§4.5·1): Web Share necesita el
+     * enlace **en el mismo gesto** del usuario y un `fetch` previo pierde la activación en Safari.
+     *
+     * ⚠️ **Pasada la fiesta no se pinta ni se crea la fila.** El formulario entero es de solo lectura
+     * y una invitación que ya no se puede repartir sería un control muerto; además, materializarla
+     * escribiría una fila por cada reserva vieja que alguien abra a consultar.
+     *
+     * ⚠️ El PLAZO se escribe **como fecha** (canvas, turno 3a): «hasta el jue 2 oct», no un número de
+     * horas que el anfitrión tenga que sumar. Sale de `GuestCountPolicy`, la misma fuente que cierra
+     * las respuestas (D14), y no de una cuenta propia.
+     *
+     * @return array{invitation: PartyInvitation, url: string|null, shareable: bool, replies_open: bool, deadline: string, summary: array{yes: int, no: int, pending: int}, action: string, themes: list<string>}|null
+     */
+    private function invitationView(Request $request, OrderItem $reservation): ?array
+    {
+        if ($reservation->isFinishedInPractice()) {
+            return null;
+        }
+
+        $invitations = app(PartyInvitations::class);
+        $invitation = $invitations->forReservation($reservation);
+
+        if ($invitation === null) {
+            return null;
+        }
+
+        $deadline = app(GuestCountPolicy::class)->deadlineFor($reservation);
+
+        return [
+            'invitation' => $invitation,
+            'url' => $invitations->shareUrlFor($invitation),
+            'shareable' => $invitations->isShareable($reservation, $invitation),
+            'replies_open' => $invitations->repliesOpenFor($reservation),
+            'deadline' => $deadline === null ? '' : DisplayTime::dayLabel($deadline),
+            'summary' => $invitations->summaryFor($reservation),
+            // La misma regla que `formAction`: quien entró por enlace firmado POSTea firmado, y la
+            // firma la compone el DOMINIO para que lleve la versión del enlace (D14).
+            'action' => $request->hasValidSignature()
+                ? $reservation->invitationSignedUpdateUrl()
+                : route('reservation.invitation.update', ['reservation' => $reservation]),
+            'themes' => PartyInvitation::THEMES,
+        ];
     }
 
     /**

@@ -160,6 +160,16 @@ seed siempre incluye `guest_fields`).
   reindexar, y el JS navega por la página y cuenta pérdidas por `data-i`. ⚠️ El JS es un módulo que importa
   `public/js/guest-form/logic.js` (estático, sin Vite). ⚠️ El número de invitados lleva `form="gf-form"`: vive fuera
   del formulario y sin el atributo no se enviaba. Guardas: `GuestFormManyGuestsTest` + `scripts/mutar-postform-t2.py`.
+- **El BLOQUE DE LA INVITACIÓN** (2026-09-19, `#708`, `specs/celebracion-e-invitacion.md` §4.7 y §10.8):
+  arriba del todo y **antes** de que el anfitrión empiece a teclear, con la puerta de rellenar a mano
+  justo debajo. Lleva el enlace **escrito** (los atajos de Web Share y portapapeles se encienden solo si
+  el navegador los tiene), el plazo **como fecha**, el resumen «N vienen · M no pueden · K por repasar» y
+  «Personalizar» en un `details` nativo. Solo si el producto tiene `guest_invitation` y la reserva no se
+  ha celebrado; si aún no hay nombre de quien cumple, **no se reparte** y la pantalla lo dice.
+  ⚠️⚠️ **Personalizar es OTRO POST** (`reservation.invitation.update`, mismo trait y misma escalada):
+  escribe solo `party_invitations`, y meterlo en el guardado de siempre movería `updated_at` —el testigo
+  de los extras— por cambiar el color de una banda. Guarda: `InvitationHostBlockTest` (con el CONTROL del
+  testigo) y `scripts/mutar-invitacion-t6-1.py`.
 - **Ruta**: `/reserva/{reservation}/datos-invitados` — nombres `reservation.guests` /
   `reservation.guests.store`. El parámetro es el **OrderItem del pack**: **1 post-form POR
   RESERVA**, no por pedido. Un pedido con 2 packs → 2 post-forms, 2 emails, 2 botones.
@@ -333,7 +343,9 @@ Todas las superficies usan el genérico «**Formulario de reserva**» (no «dato
 ## 8. Tests
 
 `GuestFormTest` (acceso por reserva, IDOR cruzado, multi-pack aislado, progreso, expiry
-por-franja, solo-lectura GET+store) · `GuestFormEmployeeTest` (1 email por reserva en resend) ·
+por-franja, solo-lectura GET+store) · `InvitationHostBlockTest` (el bloque de la invitación: el enlace,
+el plazo como fecha, el testigo que NO se mueve —con su control—, el texto con enlace rechazado y dicho,
+la casilla que se apaga por el `hidden`, y la misma puerta) · `GuestFormEmployeeTest` (1 email por reserva en resend) ·
 `CustomerAccountContextTest` (URL por reserva; 2 packs → 2 avisos) · `GuestFormLinkCopyTest`
 (enlace firmado abre 200 sin sesión; gating pagado/pack; modal server-rendered lleva el
 enlace) · `ManualOrderWithoutEmailTest` (alta sin email + sin correos + dedup por teléfono).

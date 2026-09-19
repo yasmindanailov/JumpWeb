@@ -662,13 +662,28 @@ class OrderItem extends Model
 
     /**
      * El enlace firmado del POST (guardar). Vive aquí y no en el controlador —donde estaba— por lo
-     * mismo que su hermano: **cuatro URLs firmadas del mismo formulario tienen que llevar todas la
+     * mismo que su hermano: **las URLs firmadas del mismo formulario tienen que llevar todas la
      * versión del enlace** ({@see guestFormLinkVersion}), y una compuesta a mano en una plantilla es
      * la que se queda sin ella el día que alguien añade un parámetro.
      */
     public function guestFormSignedStoreUrl(): string
     {
         return $this->signedGuestFormRoute('reservation.guests.store');
+    }
+
+    /**
+     * El enlace firmado del POST que PERSONALIZA la invitación (T6·1,
+     * `specs/celebracion-e-invitacion.md` §4.7).
+     *
+     * ⚠️⚠️ **Es una puerta más del post-form, así que va por el MISMO sitio.** El anfitrión llega
+     * muchas veces sin sesión —el enlace viaja por correo semanas antes—, de modo que este POST
+     * necesita su propia firma; componerla en la plantilla la dejaría **sin la versión del enlace**
+     * (D14) y rotar cerraría el formulario dejando abierta la personalización, que es la misma
+     * credencial por otro path. Es el mismo error que `guestFormApiUrls()` evita en la API.
+     */
+    public function invitationSignedUpdateUrl(): string
+    {
+        return $this->signedGuestFormRoute('reservation.invitation.update');
     }
 
     /**

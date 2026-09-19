@@ -62,12 +62,37 @@ final class PublicFreeText
      */
     public static function clean(?string $value, int $max): ?string
     {
-        $text = trim((string) preg_replace('/\s+/u', ' ', (string) $value));
+        $text = self::normalize($value);
 
         if ($text === '' || self::hasLink($text)) {
             return null;
         }
 
         return mb_substr($text, 0, $max);
+    }
+
+    /**
+     * ¿Este texto se RECHAZA —trae algo pulsable—, frente a estar simplemente vacío? (T6·1.)
+     *
+     * ⚠️⚠️ **`clean()` devuelve `null` por DOS motivos distintos y quien escribe necesita
+     * distinguirlos**: un campo vacío es «no lo toques» y no hay nada que decirle al anfitrión; uno
+     * con un enlace es un texto suyo que NO se ha publicado, y callarlo lo dejaría creyendo que sí.
+     * La pantalla de la API podía no distinguirlos porque no dice nada; la del anfitrión sí lo dice.
+     *
+     * ▶ No repite la regla: pregunta por el MISMO predicado y con la MISMA normalización que
+     * {@see clean()}. Un `hasLink()` sobre el valor crudo respondería distinto en cuanto alguien
+     * escribiera un enlace partido por un salto de línea.
+     */
+    public static function rejects(?string $value): bool
+    {
+        $text = self::normalize($value);
+
+        return $text !== '' && self::hasLink($text);
+    }
+
+    /** Los extremos recortados y los espacios colapsados: la forma en la que se decide todo aquí. */
+    private static function normalize(?string $value): string
+    {
+        return trim((string) preg_replace('/\s+/u', ' ', (string) $value));
     }
 }
