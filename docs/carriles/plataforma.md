@@ -29,7 +29,7 @@
   donde hay que leerlo. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro
   filas `promo.*` de `settings`. Receta de fin en `ENTORNOS.md` §6.
-- El enrutador está a pocos bytes de su techo de 12 KB: una fila nueva exige acortar otra.
+- El enrutador vive pegado a su techo de 12 KB: una fila nueva exige acortar otra.
 
 ## Por dónde retomar, en orden
 
@@ -56,27 +56,27 @@
    **ficha** en `/catalog/zones` y `/catalog/products` · y `/social-proof`. Sus porqués están en la spec
    §4.1; aquí queda **lo que hace falta para lo siguiente**.
 
-   ▶ **LO SIGUIENTE ES LA T2 DE F5: el paquete de la instancia** (spec §4.6·2): repo desde plantilla, la
-   landing actual mudada TAL CUAL (vía B) y el **sitemap comparado** antes y después — las 11 URLs de §1.5.
-   Es la tanda grande: la que de verdad saca la landing del producto.
+   ▶ **LO SIGUIENTE ES LA T2 DE F5: el paquete de la instancia**, y **ya tiene spec propia**:
+   `specs/paquete-de-instancia.md` ⬜ (19-09). **Está ESPERANDO AL OWNER, no a código**: su §7 le pide tres
+   cosas —un **invariante nuevo** sobre la ruta de vistas (suyo por `CONVENCIONES §9.1-2`), aceptar la deuda
+   de la vía B con su cifra (la instancia dependerá de **29 componentes** del producto) y si la instancia
+   pasa a repo o sigue en la rama `cliente/playjump` una tanda más—. No escribas código hasta eso.
+   ⚠️⚠️ Lo que descubrió el §1 y ordena la tanda: **Blade compila a PHP**, así que la vía B no es «servir
+   ficheros» sino **ejecutar código desde fuera del repo**; y el sitemap sale de **nombres de ruta**, no de
+   ficheros, así que en la T2 las rutas se quedan en `main` y solo se mudan las vistas.
 
-   ⚠️⚠️ **De la prueba social, para no rehacerlo**: `/social-proof` publica solo la CIFRA. Las reseñas NO se
-   publicaron **a propósito** (`#646`): su fuente cambia de Places a Business Profile (`#524`, aprobada y
-   sin empezar) y con ella cambia su FORMA —respuesta del parque, fotos, anónimo y la línea del filtro, que
-   es obligación de la ley Ómnibus—. Llegan en la T2 de ESA spec, dentro del mismo sobre, como clave hermana
-   de `rating`. Por eso la ruta pide el contrato `SocialProof` y nunca `GoogleSocialProof`: el día que se
-   cambie el binding, la API no se toca.
+   ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
+   propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).
    ▶ **Y un defecto de la API, mío y pequeño, que me pasó el carril del SPA medido** (su buzón, 19-09):
    `InvitationHostController` valida `honoree_name` y `host_line` como `['sometimes','string']`, y
    `ConvertEmptyStringsToNull` convierte un `""` en `null`, así que **un cliente que mande cadena vacía
    recibe 422**. En la web lo arreglaron con `nullable`; en la API es contrato y lo cambio yo, con su caso.
 
-   ⚠️⚠️ **De la T6, lo que hay que saber aunque no se vuelva a tocar**: la foto de un PRODUCTO se sube al
-   disco `uploads` (`public/uploads`, gitignorado y fuera del `rsync --delete`) y la de una ZONA es una ruta
-   a `public/` heredada de junio. **Las dos salen como URL absoluta** por sus `imageUrl()`, así que el
-   contrato no distingue. Y queda medido y SIN tocar: **35 imágenes del cliente versionadas en `main`**
-   (`public/images/attractions/`), a las que apuntan las 3 zonas con foto. Mudarlas es material del cliente
-   y va con la tanda en la que la landing se va — no antes.
+   ⚠️⚠️ **De la ficha**: la foto de un PRODUCTO se sube al disco `uploads` (gitignorado, fuera del
+   `rsync --delete`) y la de una ZONA es ruta a `public/` heredada de junio; **las dos salen como URL
+   absoluta** por sus `imageUrl()`, así que el contrato no distingue. Medido y SIN tocar: **35 imágenes del
+   cliente versionadas en `main`** (`public/images/attractions/`), a las que apuntan las 3 zonas con foto.
+   Mudarlas es material del cliente y va con la T2, no antes.
 
    **RECETA de un plato nuevo**, que es lo que costó aprender:
    - La lista blanca se declara EN el recurso y se lee por `PublicFacts`; `Setting::` a pelo lo prohíbe
