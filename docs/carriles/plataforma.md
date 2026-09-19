@@ -1,7 +1,7 @@
 # Carril · Plataforma (producto e instancias)
 
-> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#635`** ·
-> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-18 (F2 cerrada; F4 · T4 hecha).
+> Máquina: **este ordenador** (`~/proyectos/JumpWeb`) · Banda: **610–639** · Último usado: **`#636`** ·
+> Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) · Actualizado: 2026-09-19 (F4 · T4 y T5 hechas).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -21,14 +21,11 @@
   `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20.
 - **F4 EN CURSO, y el cajón lo implementa ESTE carril** (`#633`: el SPA está con la invitación digital).
   · **El token, HECHO** (`specs/token-bearer.md` ✅, `#630`, contrato 1.1.0): `POST /auth/tokens` y `/rotate`,
-  `PasswordLogin::verify()` (núcleo compartido con `attempt()`: los dos limitadores, mismas claves),
-  `ApiTokenIssuer` (ability `api-v1`, caducidad propia, tope de 10), `abilities:api-v1` en TODA ruta autenticada
-  (`ApiTokenAbilityTest`). 19 tests con tokens reales, `scripts/mutar-token-bearer.sh` 14/14. La Fase 3 quedó ✅.
-  · **El cajón, en DISEÑO aprobado por el owner en lo suyo** (`specs/cajon-empaquetable.md` 🟦, `#631`, `#632`):
-  el censo desmintió «lo monta una línea del layout» (DIEZ dependencias: carcasa Blade de ~440 líneas, store de
-  Alpine que llega DENTRO de Livewire con 23 usos en 9 vistas, `data-boot` de 18,7 KB pintado en cada página,
-  cero `<style>` en los 51 `.vue` con 81 bloques solo en `site.css` y 10 en las DOS hojas, tokens de otra hoja,
-  8 puertas). Arranque en dos lecturas (`cajon/boot` pública y cacheable, `cajon/session` privada y `no-store`).
+  `PasswordLogin::verify()` (núcleo compartido con `attempt()`), `ApiTokenIssuer` (ability `api-v1`, tope de
+  10), `abilities:api-v1` en TODA ruta autenticada. 19 tests, arnés 14/14. La Fase 3 quedó ✅.
+  · **El cajón** (`specs/cajon-empaquetable.md` 🟦, `#631`→`#636`): el censo desmintió «lo monta una línea del
+  layout» —DIEZ dependencias, entre ellas una carcasa Blade de ~440 líneas y un `data-boot` de 18,7 KB en cada
+  página—. Las cinco tandas, abajo.
   · **F5, su principio `[DECIDIDO owner]`**: la landing consume un MENÚ DE HECHOS por API y TODO es opcional;
   identidad y contacto por API; ficha de producto y de zona con descripción e imagen; API ahora y kit
   declarativo cuando lo pida una segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» =
@@ -45,22 +42,19 @@
 
 1. **F4 · el cajón empaquetable, por TANDAS pequeñas y empujadas** (`specs/cajon-empaquetable.md` §0 → §4).
    Antes de cada tanda: aviso en el buzón (son ficheros del SPA) y `git pull --rebase`. Nada de la invitación.
-   - **T1 ✅ HECHA (18-09) · el arranque con UN compositor**: `Http\Sidebar\SidebarBoot` (`shared()`,
-     `personal()`, `forCurrentRequest()`); el layout baja de 603 a 290 líneas y PINTA, no compone;
-     `GET /api/v1/sidebar/boot?lang=` (pública, `max-age=300` + `ETag` → 304) y `/sidebar/session?lang=`
-     (`no-store`, consume el desenlace). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos;
-     `SidebarBootTest` 9 casos; `scripts/mutar-cajon-arranque.sh` 8/8. ▶ Un rótulo nuevo va en `SidebarBoot`.
+   - **T1 ✅ HECHA (18-09) · el arranque con UN compositor**: `Http\Sidebar\SidebarBoot`; el layout baja de 603
+     a 290 líneas y PINTA, no compone; `/sidebar/boot?lang=` (pública, `ETag`) y `/sidebar/session?lang=`
+     (`no-store`). Contrato **1.2.0**. `data-boot` idéntico byte a byte en 7 contextos; arnés 8/8.
+     ▶ Un rótulo nuevo va en `SidebarBoot`.
    - **T2 ✅ HECHA (18-09) · la apertura sin Alpine**: el store `purchase` se mudó TAL CUAL a
      `cajon/controller.js`; el de Alpine queda de espejo y `JumpWeb.cajon` se reasigna al PROXY reactivo (sin
      eso `open()` no mueve la carcasa y NADA falla: visto en rojo en la sonda). Sonda 17/17; arnés 13/13.
-   - **T3a ✅ HECHA (18-09) · la carcasa con UN dueño**: el marcado del layout pierde sus 8 atributos de Alpine
-     y `a11yPanel` se retira de `app.js`; manda `resources/js/cajon/shell.js` (adopta `.sidecart`: `is-open`,
-     `is-{modo}` por el evento `jw:cajon:mode`, cierre por telón/×/Escape, trampa de foco). `/entradas`
-     idéntica PÍXEL A PÍXEL antes y después; sonda 23/23; arnés 20/20.
+   - **T3a ✅ HECHA (18-09) · la carcasa con UN dueño**: el layout pierde sus 8 atributos de Alpine y manda
+     `cajon/shell.js` (adopta `.sidecart`, cierre por telón/×/Escape, trampa de foco). `/entradas` idéntica
+     PÍXEL A PÍXEL antes y después; sonda 23/23; arnés 20/20.
    - **T3b ✅ HECHA (18-09) · el paquete se monta en una página AJENA**: `installCajon()` (`cajon/index.js`) es
-     la única llamada —controlador, API, atributos, carcasa y `start()` del cajón que nace abierto, que vivía
-     suelto en `app.js`—; sin `data-boot` ni marcado, `bootSpaEngine()` trae con `import()` `cajon/standalone.js`
-     (pide el arranque a la API y CONSTRUYE la carcasa) y `jw:cajon:purchased` cierra el contrato de eventos.
+     la única llamada; sin `data-boot` ni marcado, `bootSpaEngine()` trae con `import()` `cajon/standalone.js`,
+     que pide el arranque a la API y CONSTRUYE la carcasa. `jw:cajon:purchased` cierra el contrato de eventos.
      Sonda 31/31 con una página ajena de verdad; arnés 34/34.
    - **T4 ✅ HECHA (18-09) · la hoja propia**: `public/css/cajon.css` (167 kB, 777 reglas) la GENERA
      `scripts/hoja-del-cajon.py` desde `landing.css` + `spinner.css` + `site.css`, en ese orden y sin tocar
@@ -79,11 +73,19 @@
      y dejaba `landing.css`, así que los tokens seguían en la página y la hoja parecía autosuficiente.
    - ✅ **Cerrado el pendiente de la T3a** (`[DECIDIDO owner]`, `#634`): naciendo abierto, el foco SÍ entra en
      el panel. Cambio visible aceptado (el anillo sobre la ×); caso, fila de sonda y mutación puestos.
-   - **T5 · la salida — LO SIGUIENTE**: el cargador del paquete como entrada propia de Vite en una ruta
-     estable (hoy la sección F de la sonda y el banco de pruebas citan la entrada del producto, con hash), una
-     COMPRA completa en la página ajena, y la spec a ✅. El trinquete «clase emitida ⊂ hoja del paquete» ya está
-     puesto en la T4 (`HojaDelCajonTest`). Decisión abierta para F5: si la instalación se lleva la hoja ya
-     tematizada (una sola hoja, sin `client.css` en la página ajena).
+   - **T5a ✅ HECHA (19-09) · el cargador y su ruta estable** (`#636`): `resources/js/cajon/paquete.js` es
+     entrada de Vite y `/cajon/paquete.js` la ruta que escribe una landing. Una página ajena descargaba
+     **25,3 KiB** (la entrada del producto entera) y ahora **6,1 KiB**. La ruta **redirige** (302) porque los
+     `import()` del build son relativos: servir los bytes haría pedir `/cajon/sidebar-<hash>.js` y el cajón no
+     abriría. No se cachea: hereda el `no-store` de `RGPD-04` y **no se abre una excepción a una invariante de
+     privacidad por un salto**. `PaqueteDelCajonTest` 4, `scripts/mutar-paquete-del-cajon.sh` 5/5.
+   - **T5b ✅ HECHA (19-09) · se COMPRA desde la página ajena**: sonda **42/42**, con el embudo entero hasta
+     `POST /api/v1/orders` → **201** y el salto firmado a la pasarela (interceptada, no visitada). El login va
+     dentro del cajón y la cookie y el CSRF funcionan desde la página de otro.
+     ⚠️ El cliente de pruebas (`probe-card@jumpweb.test`) **no vive en el repo**: en una máquina nueva la sonda
+     lo dice con su receta de `tinker`. En ésta se creó el 19-09.
+   - ▶ **Queda de la T5**: la spec a ✅ y decidir si en F5 la instalación se lleva la hoja ya tematizada (una
+     sola hoja, sin `client.css` en la página ajena).
 2. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 3. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de

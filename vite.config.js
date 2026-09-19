@@ -13,6 +13,10 @@ export default defineConfig({
                 // Panel admin (Fase 7.4): calendario unificado. Entry propio para que
                 // FullCalendar quede en su chunk y NO entre en el bundle de la landing.
                 'resources/js/admin/calendar.js',
+                // F4 · T5 — el CARGADOR DEL PAQUETE. Entry propio para que una página que no es del
+                // producto no tenga que descargar la landing entera (`app.js`) para abrir el cajón.
+                // Se sirve en ruta estable desde `/cajon/paquete.js`; lo vigila `PaqueteDelCajonTest`.
+                'resources/js/cajon/paquete.js',
             ],
             refresh: true,
         }),

@@ -81,10 +81,34 @@ itera en §4.6), rediseñar el cajón, otro dominio o CORS.
 
 ## 4. Diseño elegido
 
-### 4.1 La forma del paquete
+### 4.1 La forma del paquete — `[DECIDIDO]` 2026-09-19 (`#636`): dos líneas, y la segunda es una ruta que redirige
 Tres piezas servidas por el PRODUCTO desde rutas estables (no con hash, o con un manifiesto público): el **cargador**
 (pocos KB: registra la API de apertura y trae el motor con `import()` en la primera apertura, como hoy), la **hoja
 del cajón** y el **motor** (los chunks de hoy). La landing escribe dos líneas: la hoja y el cargador.
+
+```html
+<link rel="stylesheet" href="/css/cajon.css">
+<script type="module" src="/cajon/paquete.js"></script>
+```
+
+**✅ T5a HECHA (2026-09-19).** El cargador es una entrada de Vite propia (`resources/js/cajon/paquete.js`): instala
+el cerrojo de scroll y llama a `installCajon()`, nada más. **Medido**: una página ajena descargaba **25,3 KiB** —la
+entrada del producto, con la coreografía del nav, el hero, los raíles y el imán de scroll de la landing de
+JumpWeb— y ahora descarga **6,1 KiB**. El motor sigue llegando con `import()` en la primera apertura.
+
+⚠️⚠️ **La ruta estable REDIRIGE (302); no sirve los bytes.** El módulo construido trae sus `import()` en relativo
+y un módulo los resuelve contra SU propia URL: devolver el contenido desde `/cajon/paquete.js` haría pedir
+`/cajon/sidebar-<hash>.js` —404— y **el cajón no abriría nunca**, sin que fallara la carga del cargador. Con el
+302 el módulo acaba cargado desde `/build/assets/…` y sus chunks resuelven solos.
+
+⚠️ **La redirección NO se cachea**, y es a propósito: `NoStoreWebResponses` pone `no-store` en toda respuesta de
+la web (`RGPD-04`) y su única excepción es la superficie de la API. Se probó a poner `max-age` y el middleware lo
+pisa, que es lo correcto: **una excepción a una invariante de privacidad no se abre para ahorrar un salto**. El
+coste es una petición de más por carga —302 sin cuerpo, mismo dominio— y el fichero con hash sí se cachea largo.
+
+⚠️ **Mismo dominio.** El cajón habla con `/api/v1` con cookie de sesión y CSRF (§0), así que esas dos líneas las
+escribe una página SERVIDA POR LA INSTALACIÓN. Un `<script type="module">` de otro origen exigiría CORS y
+credenciales cruzadas: otra historia, y no es la de esta fase.
 
 ### 4.2 Contrato de incrustación
 - **Montaje**: el cargador crea la carcasa al final de `<body>` si no existe `[data-jw-cajon]`.
@@ -283,8 +307,26 @@ la promo `#628` y mañana el sistema de ofertas: misma forma; (f) `site` basta p
   se retira con ellas el complemento por atracción (0 de 23 en uso). *Descartado*: hechos mínimos; dejarlas.
 El alcance fino de cada recurso se escribe en la spec de F5; aquí queda el principio, la forma y estas tres.
 
+### 4.7 La compra desde una página ajena — MEDIDA (2026-09-19)
+Abrir era la mitad; lo que decide la fase es si se puede **vender**. La sonda recorre el embudo entero en una
+landing que no es del producto —categoría → día → hora → cantidad → cesta → «quién eres» → resumen → pagar— y
+termina en la pasarela: `POST /api/v1/orders` responde **201** y el cajón salta con `Ds_MerchantParameters` y
+`Ds_Signature`. La pasarela se **intercepta**, no se visita: que el banco acepte la firma tiene su propio guion
+con tarjetas reales (`VERIFICACION-E2E-CAJON.md`), y atar una sonda a un servicio de terceros para responder una
+pregunta nuestra no es rigor, es fragilidad.
+
+Lo que esa pasada demostró y ningún test de PHP ni de JS podía: la **cookie de sesión y el CSRF** funcionan desde
+la página de otro; el **login vive dentro del cajón** y no hay que salir de la landing; y el **salto a la pasarela
+se lleva la ventana del anfitrión**, que es lo que tenía que pasar.
+
+⚠️ Dos cosas que la primera pasada enseñó, las dos del producto haciendo lo correcto: el resumen **pide teléfono
+y aceptar condiciones**, y sin dárselos el servidor responde **422** —se rellena la pantalla, no se relaja la
+comprobación—; y el cliente de pruebas **no vive en el repo** (se crea con `tinker`), así que en una máquina
+nueva la sonda lo dice con su receta en vez de morir en un tiempo agotado.
+
 ## 5. Impacto en invariantes
-`RGPD-04`: `cajon/session` es `no-store` (lleva titular). `PERF-02`: `cajon/boot` y el menú van con caché pública
+`RGPD-04`: `cajon/session` es `no-store` (lleva titular); y la ruta del cargador **hereda** el `no-store` de la
+web en vez de abrirle una excepción (§4.1). `PERF-02`: `cajon/boot` y el menú van con caché pública
 y `ETag`. `SEC-01`: rutas nuevas dentro del grupo `api`. `RGPD-05`: prueba social sin avatares. Guarda NUEVA: ningún
 recurso público lee un ajuste fuera de su lista blanca. `AFORO-*` y `PAY-*`: ninguno; el desenlace del pago se LEE.
 

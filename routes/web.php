@@ -22,6 +22,7 @@ use App\Http\Controllers\GuestFormController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvitationPageController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\PaqueteDelCajonController;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ServicesController;
@@ -168,6 +169,11 @@ Route::get('/bar', BarController::class)->name('bar');
 // Compra de entradas (Fase 5.2): el sidebar de compra se abre sobre la página. `/entradas`
 // es un enlace profundo: renderiza la home y abre el sidebar (vía data-purchase-open en el layout).
 Route::get('/entradas', HomeController::class)->name('entradas');
+
+// El PAQUETE del cajón (F4 · T5, `specs/cajon-empaquetable.md` §4.1): la ruta estable del cargador, para
+// que una landing que no pinta el producto pueda escribir su `<script>` una vez y no volver a tocarlo en
+// cada despliegue. La otra línea del paquete es la hoja, `/css/cajon.css`, que ya es estática.
+Route::get('/cajon/paquete.js', PaqueteDelCajonController::class)->name('cajon.paquete');
 
 // Pagos Redsys (Fase 5.5): vuelta del navegador (UrlOK/UrlKO) y notificación servidor-a-servidor.
 // UrlOK/UrlKO aceptan **GET y POST**: el método depende de la configuración del terminal

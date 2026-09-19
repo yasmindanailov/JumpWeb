@@ -57,6 +57,9 @@ class SidebarBundleBudgetTest extends TestCase
      */
     private const LANDING_ENTRY_MAX_KB = 26;
 
+    /** Techo del CARGADOR DEL PAQUETE con sus chunks estáticos. Medido al nacer (T5): **6,10 KiB**. */
+    private const PACKAGE_LOADER_MAX_KB = 8;
+
     /**
      * Techo del trozo del minijuego (`#231`). Medido al construirlo: **12,08 kB**.
      *
@@ -853,6 +856,75 @@ class SidebarBundleBudgetTest extends TestCase
         return filesize($path) / 1024;
     }
 
+    /**
+     * Lo que la página descarga DE VERDAD por una entrada: su fichero **y los chunks estáticos que
+     * importa**, en transitivo.
+     *
+     * ⚠️⚠️ **Sin esto el presupuesto se relaja solo, y pasó el 2026-09-19.** Este test medía el fichero
+     * de la entrada a secas. Al nacer la entrada del paquete (T5), Vite vio que `cajon/**` lo usaban DOS
+     * entradas y lo sacó a un chunk compartido: la landing seguía descargando los mismos 25,3 KiB, pero
+     * la guarda pasó a ver **19,3** y se habría tragado 6 KiB nuevos sin decir nada. *Un presupuesto que
+     * mide una parte del gasto no es un presupuesto.*
+     *
+     * Los `dynamicImports` NO entran, y eso es el diseño: el chunk del motor es diferido a propósito y
+     * tiene su propio techo.
+     */
+    private function pesoConImportesKb(string $clave): float
+    {
+        $manifest = $this->manifest();
+        $vistos = [];
+        $suma = 0.0;
+
+        $recorrer = function (string $k) use (&$recorrer, &$vistos, &$suma, $manifest): void {
+            if (isset($vistos[$k]) || ! isset($manifest[$k])) {
+                return;
+            }
+
+            $vistos[$k] = true;
+            $suma += $this->sizeKb((string) $manifest[$k]['file']);
+
+            foreach ($manifest[$k]['imports'] ?? [] as $importado) {
+                $recorrer((string) $importado);
+            }
+        };
+
+        $recorrer($clave);
+
+        return $suma;
+    }
+
+    /**
+     * ¿El objetivo se alcanza con un `import()` desde la entrada o desde alguno de los chunks que ésta
+     * importa de forma estática? Es la pregunta de «llega diferido», y no cambia porque Rollup reparta
+     * el código entre más chunks.
+     */
+    private function llegaPorImportDinamico(string $entrada, string $objetivo): bool
+    {
+        $manifest = $this->manifest();
+        $pendientes = [$entrada];
+        $vistos = [];
+
+        while ($pendientes !== []) {
+            $clave = array_pop($pendientes);
+
+            if (isset($vistos[$clave]) || ! isset($manifest[$clave])) {
+                continue;
+            }
+
+            $vistos[$clave] = true;
+
+            if (in_array($objetivo, $manifest[$clave]['dynamicImports'] ?? [], true)) {
+                return true;
+            }
+
+            foreach ($manifest[$clave]['imports'] ?? [] as $importado) {
+                $pendientes[] = (string) $importado;
+            }
+        }
+
+        return false;
+    }
+
     public function test_the_landing_entry_stays_under_its_budget(): void
     {
         $manifest = $this->manifest();
@@ -860,7 +932,7 @@ class SidebarBundleBudgetTest extends TestCase
 
         $this->assertNotNull($entry, 'el entry de la landing no está en el manifiesto');
 
-        $kb = $this->sizeKb($entry);
+        $kb = $this->pesoConImportesKb('resources/js/app.js');
 
         $this->assertLessThanOrEqual(
             self::LANDING_ENTRY_MAX_KB, $kb,
@@ -870,6 +942,47 @@ class SidebarBundleBudgetTest extends TestCase
                 'la landing, sube el techo a propósito — es un presupuesto, no un objetivo.',
                 $kb, self::LANDING_ENTRY_MAX_KB
             )
+        );
+    }
+
+    /**
+     * **El CARGADOR DEL PAQUETE pesa lo que pesa un cargador** (F4 · T5, `specs/cajon-empaquetable.md` §4.1).
+     *
+     * Hasta la T5, una landing que no era del producto tenía que cargar `app.js` para abrir el cajón: 25,3
+     * KiB de los que la mayoría son la coreografía del nav, el hero, los raíles y el imán de scroll de la
+     * landing de JumpWeb — código que esa página no ejecuta nunca. Con su entrada propia son **6,1 KiB**.
+     *
+     * ▶ Este techo es lo que impide que el paquete se vuelva a llenar de landing sin que nadie lo vea: si
+     * alguien importa desde `cajon/paquete.js` algo que arrastre `ui/**` o el motor, el número salta aquí.
+     * El margen (8 contra 6,1) es el de siempre: holgado para no ser un cable trampa, corto para avisar.
+     */
+    public function test_the_package_loader_stays_under_its_budget(): void
+    {
+        $manifest = $this->manifest();
+
+        $this->assertArrayHasKey(
+            'resources/js/cajon/paquete.js', $manifest,
+            'el cargador del paquete no está en el manifiesto: falta su entrada en `vite.config.js`',
+        );
+
+        $kb = $this->pesoConImportesKb('resources/js/cajon/paquete.js');
+
+        $this->assertLessThanOrEqual(
+            self::PACKAGE_LOADER_MAX_KB, $kb,
+            sprintf(
+                "El cargador del paquete pesa %.1f KiB (techo: %d).\nUna página ajena lo descarga entero ".
+                'para poder abrir el cajón. Si ha crecido, mira qué le ha entrado de `ui/**` o del motor: '.
+                'lo diferido va con `import()`, como el resto.',
+                $kb, self::PACKAGE_LOADER_MAX_KB
+            )
+        );
+
+        // Y el simétrico, que es el sentido de la tanda: cargar el paquete NO puede costar como cargar la
+        // landing. Sin esta línea el techo de arriba se podría satisfacer volviendo a fundir las dos.
+        $this->assertLessThan(
+            $this->pesoConImportesKb('resources/js/app.js') / 2, $kb,
+            'el cargador del paquete pesa más de la mitad que la entrada del producto: ha dejado de ser un '.
+            'cargador y se está llevando la landing dentro',
         );
     }
 
@@ -926,10 +1039,15 @@ class SidebarBundleBudgetTest extends TestCase
             'entry, así que Vue y Pinia viajan ahora con todas las páginas públicas.'
         );
 
-        $this->assertContains(
-            'resources/js/sidebar/index.js',
-            $manifest['resources/js/app.js']['dynamicImports'] ?? [],
-            'El entry de la landing ya no declara el motor como importación dinámica.'
+        // ⚠️ **Se mira el GRAFO ESTÁTICO de la entrada, no solo su fichero.** Desde la T5 hay dos entradas
+        // que montan el cajón —la landing y el cargador del paquete—, así que Rollup sacó `cajon/**` a un
+        // chunk compartido y es ÉL quien declara ahora el `import()` del motor. La pregunta que importa
+        // sigue siendo la misma —«¿llega el motor a la landing sin pedirlo?»— y se responde igual de bien;
+        // preguntársela solo a `app.js` habría puesto esta guarda en rojo sin que nada hubiera empeorado.
+        $this->assertTrue(
+            $this->llegaPorImportDinamico('resources/js/app.js', 'resources/js/sidebar/index.js'),
+            'El entry de la landing ya no declara el motor como importación dinámica, ni él ni ninguno de '.
+            'los chunks que importa de forma estática.'
         );
 
         $kb = $this->sizeKb($manifest['resources/js/sidebar/index.js']['file']);

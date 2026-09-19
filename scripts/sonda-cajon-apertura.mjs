@@ -21,12 +21,14 @@
  * ⚠️ `ERR_CONNECTION_REFUSED` es el puente `socat` caído, no el producto. Sale con código 1 si algo falla.
  */
 import { chromium } from 'playwright-core';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 
 const BASE = 'http://localhost:8081';
 const ETIQUETA = process.argv[2] || 'apertura';
 const SALIDA = 'storage/app/audit';
 const MOVIL = { width: 390, height: 844 };
+// El cliente de pruebas del entorno local, el mismo que usa `scripts/sonda-cajon.mjs`.
+const CLIENTE = { email: 'probe-card@jumpweb.test', password: 'Probe-card-2026!' };
 
 const filas = [];
 const anotar = (via, que, ok, detalle = '') => filas.push({ via, que, ok: !! ok, detalle: String(detalle) });
@@ -105,6 +107,38 @@ async function pagina(context, ruta) {
 }
 
 /** Pulsa el primer abridor de la landing cuyo `@click` contiene ese texto; visible si lo hay, y si no, el primero. */
+/**
+ * Las piezas de la LANDING AJENA, que usan la sección F (abrir) y la G (comprar).
+ *
+ * ⚠️⚠️ **Escribe lo que promete §4.1 y nada más**: las fuentes y el tema de la instalación —que están en el
+ * contrato— más LAS DOS LÍNEAS del paquete, la hoja y el cargador. Hasta la T4 esto copiaba los `<link>` del
+ * producto enteros, así que el cajón se vestía con `site.css` y la autosuficiencia de la hoja no se
+ * comprobaba: se veía bien por el motivo equivocado.
+ *
+ * ⚠️⚠️ **Y la landing tiene SUS tokens, con los nombres genéricos del sistema.** Sin eso la página de prueba
+ * no modela nada: lo que hay que demostrar es que el paquete convive con un `--bg` y un `--fg` que no son
+ * suyos —ni se los come ni se los presta—, y una página sin CSS propio aprueba ese examen sin presentarse.
+ */
+async function piezasDeLaPaginaAjena(context) {
+    const delProducto = (await (await context.request.get(`${BASE}/`)).text())
+        .match(/<link[^>]+rel="(?:stylesheet|preconnect)"[^>]*>/g) ?? [];
+
+    return {
+        cabeza: [
+            ...delProducto.filter((l) => ! /\/css\/(site|landing|spinner)\.css/.test(l)),
+            '<link rel="stylesheet" href="/css/cajon.css">',
+        ].join('\n'),
+        estiloDelAnfitrion: `<style>
+            :root { --bg: #10263a; --fg: #eaf2f8; --line: #24506f; }
+            body { margin: 0; background: var(--bg); color: var(--fg); font-family: Georgia, serif; }
+            h1 { font-size: 34px; }
+            .reservar { display: inline-block; padding: 14px 22px; border-radius: 999px; background: #ffd166; color: #10263a; }
+        </style>`,
+        cuerpo: '<body><h1>Landing de otra instancia</h1>'
+            + '<a class="reservar" href="/entradas" data-jw-open>Reservar</a></body></html>',
+    };
+}
+
 async function pulsarAbridor(page, fragmento) {
     return page.evaluate((texto) => {
         const candidatos = [...document.querySelectorAll('*')].filter((el) => [...el.attributes].some(
@@ -135,6 +169,7 @@ await mkdir(`${SALIDA}/cajon-${ETIQUETA}`, { recursive: true });
 /** `SOLO=D` (o `SOLO=A,E`) corre solo esas secciones: cada una abre páginas y gasta del limitador de la API. */
 const corre = (seccion) => ! process.env.SOLO || process.env.SOLO.split(',').includes(seccion);
 let page; let e; let clic;
+let dondeVoy = '';
 
 try {
     // ── A · los abridores REALES de la landing (Alpine) ────────────────────────────────────────
@@ -279,36 +314,17 @@ try {
     // interceptando una ruta del MISMO origen —no `setContent`, que deja la página en `about:blank` y dejaría
     // fuera las cookies y la API—, con lo único que tendrá una landing de instancia: dos hojas y el paquete.
     if (corre('F')) {
-        const entrada = JSON.parse(await readFile('public/build/manifest.json', 'utf8'))['resources/js/app.js'].file;
-        // ⚠️⚠️ **La página ajena escribe lo que promete §4.1 y nada más**: las fuentes y el tema de la
-        // instalación —que están en el contrato— más LAS DOS LÍNEAS del paquete, la hoja y el cargador.
-        // Hasta la T4 esta sección copiaba los `<link>` del producto enteros, así que el cajón se vestía con
-        // `site.css` y la autosuficiencia de la hoja no se comprobaba: se veía bien por el motivo equivocado.
-        const delProducto = (await (await context.request.get(`${BASE}/`)).text())
-            .match(/<link[^>]+rel="(?:stylesheet|preconnect)"[^>]*>/g) ?? [];
-        const cabeza = [
-            ...delProducto.filter((l) => ! /\/css\/(site|landing|spinner)\.css/.test(l)),
-            '<link rel="stylesheet" href="/css/cajon.css">',
-        ].join('\n');
-        // ⚠️⚠️ **La landing ajena tiene SUS tokens, y con los nombres genéricos del sistema.** Sin esto la
-        // página de prueba no modela nada: lo que hay que demostrar es que el paquete convive con un `--bg` y
-        // un `--fg` que no son suyos —ni se los come ni se los presta—, y una página sin CSS propio aprueba
-        // ese examen sin presentarse.
-        const estiloDelAnfitrion = `<style>
-            :root { --bg: #10263a; --fg: #eaf2f8; --line: #24506f; }
-            body { margin: 0; background: var(--bg); color: var(--fg); font-family: Georgia, serif; }
-            h1 { font-size: 34px; }
-            .reservar { display: inline-block; padding: 14px 22px; border-radius: 999px; background: #ffd166; color: #10263a; }
-        </style>`;
-        const cuerpo = '<body><h1>Landing de otra instancia</h1>'
-            + '<a class="reservar" href="/entradas" data-jw-open>Reservar</a></body></html>';
+        const { cabeza, estiloDelAnfitrion, cuerpo } = await piezasDeLaPaginaAjena(context);
 
         page = await context.newPage();
         await page.route(`${BASE}/landing-ajena-de-prueba`, (ruta) => ruta.fulfill({
             status: 200,
             contentType: 'text/html; charset=utf-8',
+            // ⚠️ El cargador se pide por su RUTA ESTABLE (T5), que es lo que escribe una landing de verdad.
+            // Hasta la T5 esta página citaba `/build/assets/app-<hash>.js`: funcionaba, pero se descargaba
+            // la landing del producto entera para abrir un cajón y la URL caducaba en cada despliegue.
             body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${cabeza}${estiloDelAnfitrion}
-                <script type="module" src="/build/${entrada}"></script></head>
+                <script type="module" src="/cajon/paquete.js"></script></head>
                 ${cuerpo}`,
         }));
         // La misma página SIN el paquete: es el control de la invasión, y se sirve aparte porque quitar la
@@ -443,8 +459,153 @@ try {
         await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/D-entradas@390.png` });
         await page.close();
     }
+
+    // ── G · una COMPRA ENTERA desde la página ajena (F4 · T5) ──────────────────────────────────
+    // La F demuestra que el cajón ABRE donde no hay producto. Ésta es la pregunta que de verdad
+    // decide la fase: ¿se puede COMPRAR? Es donde vive lo que una página ajena podría romper —la
+    // cookie de sesión, el CSRF, el login DENTRO del cajón y el salto a la pasarela, que se lleva la
+    // ventana entera de la landing de otro—, y nada de eso lo ve un test de PHP ni uno de JS.
+    //
+    // ⚠️⚠️ **La pasarela se INTERCEPTA, no se visita.** El salto es un `<form method=POST>` hacia
+    // Redsys: dejarlo salir ataría esta sonda a una red y a un servicio de terceros para responder
+    // una pregunta que es nuestra. Se atrapa la navegación, se leen los campos firmados y se
+    // responde con una página de pega. Lo que queda fuera —que el banco acepte la firma— tiene su
+    // propio guion con tarjetas reales: `docs/VERIFICACION-E2E-CAJON.md`.
+    if (corre('G')) {
+        const { cabeza, estiloDelAnfitrion, cuerpo } = await piezasDeLaPaginaAjena(context);
+        page = await context.newPage();
+        await page.route(`${BASE}/landing-ajena-compra`, (ruta) => ruta.fulfill({
+            status: 200,
+            contentType: 'text/html; charset=utf-8',
+            body: `<!doctype html><html lang="es"><head><meta charset="utf-8">${cabeza}${estiloDelAnfitrion}
+                <script type="module" src="/cajon/paquete.js"></script></head>
+                ${cuerpo}`,
+        }));
+
+        let pasarela = null;
+        await page.route(/redsys|realizarPago/, async (ruta) => {
+            const pedida = ruta.request();
+            pasarela = { url: pedida.url(), metodo: pedida.method(), datos: pedida.postData() ?? '' };
+            await ruta.fulfill({ status: 200, contentType: 'text/html', body: '<h1>Pasarela de pega</h1>' });
+        });
+
+        dondeVoy = 'cargando la landing ajena';
+        await page.goto(`${BASE}/landing-ajena-compra`, { waitUntil: 'load' });
+        await page.waitForFunction(() => !! window.JumpWeb?.cajon, null, { timeout: 10000 });
+        dondeVoy = 'abriendo el cajón con `data-jw-open`';
+        await page.click('a[data-jw-open]');
+        dondeVoy = 'esperando al motor';
+        await esperarMotor(page);
+
+        // El embudo, tal cual lo recorre `scripts/sonda-cajon.mjs` en el producto: categoría → día →
+        // hora → cantidad → cesta. Mismos selectores a propósito — si el cajón cambia de forma, las
+        // dos sondas se caen juntas y no hay una que mienta por estar copiada a medias.
+        const paso = async (que, selector, siguiente) => {
+            dondeVoy = `${que} (clic en \`${selector}\`, esperando \`${siguiente}\`)`;
+            await page.locator(selector).first().click();
+            await page.waitForSelector(siguiente, { timeout: 20000 });
+            anotar('G', que, true);
+        };
+
+        dondeVoy = 'esperando el catálogo';
+        await page.waitForSelector('.catalog__item', { timeout: 20000 });
+        // ⚠️ El catálogo es un ACORDEÓN: los productos están dentro de una categoría plegada, y lo que se
+        // pulsa es su cabecera. La primera versión de esta sección pulsaba `.catalog__go` —la flecha de la
+        // tarjeta— y agotaba los 30 s sin decir por qué: esa flecha está DENTRO del botón y no recibe el
+        // clic. Se hace igual que `sonda-cajon.mjs`, preguntando el `aria-expanded` en vez de suponerlo.
+        dondeVoy = 'abriendo la categoría';
+        const cabecera = page.locator('.catalog-acc__head').first();
+        if (await cabecera.count() && await cabecera.getAttribute('aria-expanded') === 'false') {
+            await cabecera.click();
+            await page.waitForFunction(
+                () => document.querySelector('.catalog-acc__head')?.getAttribute('aria-expanded') === 'true',
+            ).catch(() => {});
+        }
+        await paso('en la página ajena se elige producto…', '.catalog__item', '.daystrip__day, .purchase__empty');
+        await paso('…día…', '.daystrip__day', '.purchase__chip');
+        await paso('…hora…', '.purchase__chip:not(.is-full)', '.qtybox');
+        await paso('…y entra en la cesta', '.bk-cta', '.cartbar, .cart__item');
+
+        if (await page.locator('.cartbar').count()) {
+            await page.locator('.cartbar').click();
+            await page.waitForSelector('.cart__item', { timeout: 20000 });
+        }
+        anotar('G', 'la cesta lleva lo elegido', await page.locator('.cart__item').count() > 0);
+
+        dondeVoy = 'saliendo de la cesta hacia identificarse';
+        await page.locator('.bk-cta').click();
+        await page.waitForSelector('.auth, .cart--summary', { timeout: 20000 });
+
+        // El login VA DENTRO del cajón (`specs/auth-en-cajon.md`): en una página ajena no hay ninguna
+        // otra puerta, así que si esto no funcionara aquí el paquete no serviría para vender.
+        if (await page.locator('#login-email').count()) {
+            dondeVoy = 'entrando en la cuenta desde el cajón';
+            await page.fill('#login-email', CLIENTE.email);
+            await page.fill('#login-password', CLIENTE.password);
+            await page.click('.sidecart__panel button[type="submit"]');
+            dondeVoy = 'esperando el resumen de pago tras entrar';
+
+            // ⚠️ **El cliente de pruebas NO vive en el repo** (se crea con `tinker`, ver
+            // `VERIFICACION-E2E-CAJON.md` §5.quindecies), así que en una máquina nueva esto falla — y sin
+            // esta comprobación fallaba como un «Timeout 25000ms» que no dice nada. Costó una pasada.
+            const malCreds = await page.waitForSelector('.auth__errors', { timeout: 3000 }).catch(() => null);
+            if (malCreds) {
+                anotar('G', 'el cliente de pruebas existe en esta máquina', false, [
+                    `«${(await malCreds.innerText()).trim()}» con ${CLIENTE.email}.`,
+                    'No es un defecto del paquete: ese cliente se crea a mano y no viaja en el repo. Receta:',
+                    'docker compose exec -u sail -T laravel.test php artisan tinker --execute=\'$u = new App\\Domain\\Identity\\Models\\User();',
+                    '  $u->name = "Sonda"; $u->email = "probe-card@jumpweb.test";',
+                    '  $u->password = Illuminate\\Support\\Facades\\Hash::make("Probe-card-2026!");',
+                    '  $u->email_verified_at = now(); $u->save();\'',
+                ].join('\n        '));
+                throw new Error('sin cliente de pruebas no se puede comprar');
+            }
+
+            await page.waitForSelector('.cart--summary', { timeout: 25000 });
+            anotar('G', 'se entra en la cuenta DENTRO del cajón, sin salir de la página ajena', true, page.url());
+        }
+
+        // ⚠️⚠️ **El resumen PIDE lo que le falta, y no dárselo es un 422 —no un fallo del paquete.** La
+        // primera pasada de esta sección pulsó «Pagar» a secas y el servidor respondió 422: el cliente
+        // recién creado no tiene teléfono y nadie había aceptado las condiciones. Lo correcto no era
+        // relajar la comprobación sino rellenar la pantalla, que es lo que hace una persona.
+        dondeVoy = 'rellenando lo que pide el resumen (teléfono y condiciones)';
+        const telefono = page.locator('.sidecart__panel input[type="tel"]');
+        if (await telefono.count() && ! await telefono.inputValue()) {
+            await telefono.fill('600123123');
+        }
+        const condiciones = page.locator('.sidecart__panel input[type="checkbox"]').first();
+        if (await condiciones.count() && ! await condiciones.isChecked()) {
+            await condiciones.check();
+        }
+
+        await asentado(page);
+        await page.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}/G-resumen@390.png` });
+
+        const pedidos = [];
+        page.on('response', (r) => r.url().includes('/api/v1/orders') && pedidos.push(r.status()));
+
+        await page.locator('.bk-cta').click();
+        await page.waitForFunction(() => true, null, { timeout: 1000 }).catch(() => {});
+        await page.waitForTimeout(4000);
+
+        anotar('G', 'el pedido se CREA desde la página ajena (`POST /api/v1/orders`)', pedidos.some((s) => s >= 200 && s < 300), JSON.stringify(pedidos));
+        anotar(
+            'G', 'y el cajón salta a la pasarela con sus campos firmados',
+            !! pasarela && pasarela.metodo === 'POST'
+                && pasarela.datos.includes('Ds_MerchantParameters') && pasarela.datos.includes('Ds_Signature'),
+            pasarela ? `${pasarela.metodo} ${pasarela.url}` : 'no hubo salto a la pasarela',
+        );
+
+        await page.close();
+    }
 } catch (error) {
-    anotar('ERROR', error.message.split('\n')[0], false);
+    // ⚠️ El sitio DONDE estaba la sonda es la mitad del mensaje: «Timeout 30000ms» sin pantalla manda a
+    // buscar a ciegas. Es la misma lección que ya tiene escrita `scripts/sonda-cajon.mjs`, pagada allí.
+    // Y con la captura del momento son las dos mitades: qué esperaba y qué había.
+    const rotulo = await page?.locator('.wiz__title, .sidecart__title').first().innerText().catch(() => '');
+    await page?.screenshot({ path: `${SALIDA}/cajon-${ETIQUETA}-donde-murio.png` }).catch(() => {});
+    anotar('ERROR', `${error.message.split('\n')[0]} · iba por: ${dondeVoy || '—'} · en pantalla: «${(rotulo || '—').trim()}»`, false);
 }
 
 anotar('SONDA', 'ninguna petición chocó con el limitador de la API (si no, las capturas no valen)', limitadas === 0, `${limitadas} respuestas 429`);
