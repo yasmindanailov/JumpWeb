@@ -61,5 +61,32 @@ final readonly class GateReservation
          * @var array{label:string, cents:int}|null
          */
         public ?array $mixedPartyCredit = null,
+        /**
+         * **Las fichas CON NOMBRE del formulario de invitados** (T6·4, §4.8), ya normalizadas:
+         * `{name, key}`. Vacío si el producto no ofrece la invitación digital.
+         *
+         * ⚠️⚠️ **Viajan aquí y no en una lectura propia porque salen GRATIS**: este contrato ya carga
+         * la línea y su producto, así que componerlas cuesta cero consultas — y la puerta tiene un
+         * presupuesto medido que no admite una lectura por fiesta (§7.2·R16).
+         *
+         * @var list<array{name: string, key: string}>
+         */
+        public array $partyGuests = [],
+        /**
+         * ¿El producto de esta reserva ofrece la invitación digital?
+         *
+         * ⚠️ Es lo que permite a la puerta **no preguntar** por las respuestas cuando no hay ninguna
+         * fiesta con invitación entre las de hoy: sin esta bandera, el presupuesto pagaría una
+         * consulta en cada escaneo de un cliente normal.
+         */
+        public bool $invitationOffered = false,
+        /**
+         * ¿El producto OFRECE justificante de menor invitado (su modo no es `none`)?
+         *
+         * ⚠️ Lo pide §4.5·10: los tres estados de puerta **solo existen** con el justificante en
+         * juego. Sin él, la puerta enseña quién viene y no pinta ningún estado — un punto que no
+         * puede cambiar nada sería ruido en la pantalla que más se mira.
+         */
+        public bool $waiverOffered = false,
     ) {}
 }

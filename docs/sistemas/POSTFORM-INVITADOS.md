@@ -257,6 +257,10 @@ seed siempre incluye `guest_fields`).
 
 ### 4.3 PDF (hoja de reserva)
 
+- ⚠️ **Desde la T6·4** (`#711`, `specs/celebracion-e-invitacion.md` §10.11) cada fila es
+  `{cells, proposed}`: una respuesta pendiente de la invitación **llega al papel** con su `*` y su nota
+  al pie, sin pisar lo que escribió el titular. Sin eso, un anfitrión que no vuelve a guardar deja niños
+  fuera de la hoja.
 - `ReservationSlip::guestRows(): array` (solo packs; `[]` si no aplica) + tabla en
   `resources/views/pdf/reservation-slip.blade.php` (tras «Datos de la reserva»). **Subset CSS
   dompdf**: solo `<table>`, sin flex/grid; cabecera repetida (`thead { display:

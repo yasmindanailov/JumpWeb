@@ -7,6 +7,7 @@ use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Models\Order;
 use App\Domain\Booking\Models\OrderItem;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Platform\Services\PersonNameKey;
 
 /**
  * Fase 6 · subsistema A — la implementación de `GateReservations` (`docs/specs/identidad-qr-puerta.md`
@@ -84,8 +85,45 @@ class GateReservationsReader implements GateReservations
                         'label' => $written['credit']['label'],
                         'cents' => $written['credit']['cents'],
                     ],
+                    // Las fichas con nombre de la fiesta (T6·4): salen de `guest_data`, que ya está en
+                    // la línea cargada, así que no cuestan ni una consulta.
+                    partyGuests: $this->partyGuests($item),
+                    invitationOffered: $item->ticketType?->offersGuestInvitation() ?? false,
+                    waiverOffered: ($item->ticketType?->guardianMode() ?? TicketType::GUARDIAN_NONE) !== TicketType::GUARDIAN_NONE,
                 );
             })
             ->all();
+    }
+
+    /**
+     * **Las fichas CON NOMBRE de una fiesta**, acotadas a la cantidad y normalizadas (T6·4, §4.8).
+     *
+     * ⚠️ La columna de nombre es **la primera `text`** del esquema por invitado, no la clave `name`:
+     * una instalación puede renombrarla desde su panel (§7.2·R2).
+     *
+     * ⚠️ Solo si el producto OFRECE la invitación: sin ella, la puerta no tiene nada que cruzar y
+     * publicar los nombres de los niños sería repartir datos de menores sin motivo.
+     *
+     * @return list<array{name: string, key: string}>
+     */
+    private function partyGuests(OrderItem $item): array
+    {
+        $type = $item->ticketType;
+        $nameKey = $type?->guestNameFieldKey();
+
+        if ($type === null || $nameKey === null || ! $type->offersGuestInvitation()) {
+            return [];
+        }
+
+        $guests = [];
+
+        foreach (array_slice($item->guestData(), 0, max(0, (int) $item->quantity)) as $row) {
+            $name = trim((string) ($row[$nameKey] ?? ''));
+            if ($name !== '') {
+                $guests[] = ['name' => $name, 'key' => PersonNameKey::for($name)];
+            }
+        }
+
+        return $guests;
     }
 }

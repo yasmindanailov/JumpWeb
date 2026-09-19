@@ -52,10 +52,25 @@ final readonly class GateProfileData
          * —de ahí que vivan aquí y no dentro de cada reserva—; y **tampoco tienen apellidos**, por
          * la misma regla estructural que los menores a cargo.
          *
-         * @var list<array{order_code: string, name: string, age: int, waiver: ?string}>
+         * ▶ **Desde la T6·4 no son solo los FIRMADOS** (`specs/celebracion-e-invitacion.md` §4.8): la
+         * lista son las fichas con nombre de la fiesta más los «sí» que el anfitrión todavía no ha
+         * apuntado, y cada uno trae su **estado de entrada** (`entry`): `signed` · `with_adult` ·
+         * `unresolved`, **ninguno en rojo** (§4.5·10). `null` cuando el producto no pide justificante
+         * o el waiver no es interno. Sin firma no hay fecha de nacimiento, así que `age` puede ser
+         * `null`; y el nombre de un niño invitado es **un solo campo libre**, así que puede traer
+         * apellidos —es justo para lo que se piden (§4.5·5)—.
+         *
+         * @var list<array{order_code: string, name: string, age: int|null, waiver: ?string, entry: ?string}>
          */
         public array $guestMinors,
         public bool $visitRegisteredToday,
+        /**
+         * «8 de 12 con justificante» (T6·4): cuántos de los invitados CONTRATADOS de las fiestas de
+         * hoy llegan con firma. `null` si hoy no hay ninguna fiesta con invitación.
+         *
+         * @var array{signed: int, expected: int}|null
+         */
+        public ?array $guestMinorsCount = null,
     ) {}
 
     /** @return array<string, mixed> */
@@ -72,6 +87,7 @@ final readonly class GateProfileData
             'window_days' => $this->windowDays,
             'dependents' => $this->dependents,
             'guest_minors' => $this->guestMinors,
+            'guest_minors_count' => $this->guestMinorsCount,
             'visit_registered_today' => $this->visitRegisteredToday,
         ];
     }

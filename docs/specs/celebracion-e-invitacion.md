@@ -4,7 +4,7 @@
 > interruptores apagados) · T5 entera en el árbol · T6 empezada (T6·1, §10.8) · T7 sin empezar** ·
 > Última actualización: 2026-09-19 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
 > `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
-> `#708`–`#710` (T6·1→T6·3) ·
+> `#708`–`#711` (T6·1→T6·4) ·
 > Carril: 🧩 SPA (banda **700–729**; la 550–579 se agotó con `#579`).
 > Fuente de diseño: el canvas por `DesignSync` — `doc/formulario.md`, `doc/invitaciones.md`,
 > `doc/pendiente.md` (decisiones 13–21 y 36–41) y los artboards `Formulario Post Reserva PJP`,
@@ -15,7 +15,7 @@
 ## §0 · Antes de tocar
 
 - **Carril del SPA** (banda **700–729**). **T1→T4 en PRODUCCIÓN** (v1.1.0, interruptores **APAGADOS**);
-  **T5 y T6·1–T6·3 en el árbol, sin desplegar** → sigue la **T6·4** (§10.7) y la T7.
+  **T5 y T6·1–T6·4 en el árbol, sin desplegar** → sigue la **T6·5** (§10.7) y la T7.
   **Si construyes, §7.2 primero.**
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
   escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
@@ -1500,7 +1500,7 @@ el corte no es arbitrario — cada unidad deja la pantalla en un estado que se p
 | **T6·1** ✅ | El **bloque de la invitación** en el post-form (§4.7): compartir, personalizar, resumen y el plazo escrito como fecha — **en el árbol** (`#708`, §10.8) | Escribe **solo `party_invitations`**, así que no roza el testigo de las fichas. Es lo primero que necesita un anfitrión: repartir el enlace |
 | **T6·2** ✅ | Las **respuestas propuestas y su adopción**: pintar sobre la ficha, `adopt[]` **fuera** de las filas, `adopted_at`/`adopted_name_key` al guardar — **en el árbol** (`#709`, §10.9) | Es el corazón y lo que más puede romper. Su caso es el **INTERCALADO**: pintar → llega un «sí» → guardar → esa respuesta sigue pendiente y no se borra nada |
 | **T6·3** ✅ | **«No vienen»**, «no lo apuntes» (§7.2·R11), el aviso de «no caben» (§7.1·3) y el suelo con `takenIn()` — **en el árbol** (`#710`, §10.10) | ⚠️ Podía acabar tocando `GuestCountAdjuster`; **medido, no hizo falta**: el suelo ya salía de `GuardianPlaces::takenIn()` (`#576`), así que su push no pidió `VERIFY_CONC` |
-| **T6·4** | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
+| **T6·4** ✅ | **Puerta** (`GateProfile::guestMinors`) y **hoja de sala** (`ReservationSlip::guestRows`) — **en el árbol** (`#711`, §10.11) | Son otro consumidor y tienen su propio techo: `GateProfileTest` **no sube de 28 consultas**, así que la lectura va por lotes por `PartyGuests` |
 | **T6·5** | **Panel, ficha del pedido**: el resumen en la línea, «Copiar enlace» y el botón de **anular** (la acción existe desde `#576`) | Solo pinta lo que ya hay; sin ella, anular el enlace es una acción sin botón |
 | **T6·6** | **«Escribir el recordatorio»**: compone el texto, lo copia y guarda `reminded_at`/`reminded_count` | **No envía nada**, así que no toca correos ni depende de la T7 |
 
@@ -1645,6 +1645,52 @@ antes y después) · arnés `scripts/mutar-invitacion-t6-3.py` **8/8** · sonda 
 botones de retirar a 48 px y atados al formulario de descartar, el bloque a 682 px en el teléfono ·
 Pint y Larastan limpios · **`GuestCountAdjuster` no se toca** (medido con `grep` contra el `CRITICAL_RE`:
 el suelo ya lo daba `GuardianPlaces::takenIn()` desde `#576`), así que este push **no pide `VERIFY_CONC`**.
+
+### 10.11 T6·4 · LA PUERTA Y LA HOJA DE SALA — EN EL ÁRBOL (2026-09-19, `DECISIONES #711`)
+
+Las dos superficies del OPERADOR. Hasta aquí, un niño que había dicho que viene y aún no tenía firma
+**no existía para el mostrador**: la puerta solo listaba justificantes firmados y la hoja imprimía una
+fila vacía donde había un niño con su alergia escrita.
+
+**Lo que entra**
+
+- **La puerta** (`GateProfile`): la lista son **las fichas con nombre + los «sí» que el anfitrión no ha
+  apuntado**, una vez cada niño, con su **estado de entrada** —`signed` · `with_adult` · `unresolved`,
+  ninguno en rojo (§4.5·10)— y la cuenta **«8 de 12 con justificante»**, medida sobre lo **contratado**
+  para que una lista a medias no esconda a los que faltan. Una firma que no empareja con nadie **sigue
+  saliendo**: es la lista de siempre de `waiver-por-reserva.md` §4.11.
+- **La hoja de sala** (`ReservationSlip::guestRows()`): una respuesta pendiente **llega al papel**, con
+  su `*` y la nota «Por la invitación, sin repasar por el cliente». Lo que el anfitrión escribió manda:
+  lo propuesto solo rellena huecos.
+- **El contrato** `PartyGuests` gana `partyGuestsIn()` —por LOTES— y `GateReservation` publica las fichas
+  con nombre y dos banderas. Identity compone el estado porque **las firmas son suyas** y las respuestas
+  de Booking: la misma frontera y la misma razón que el suelo de plazas.
+- **`PersonNameKey::cardMatches()`**: la regla de emparejado «la ficha puede traer solo el nombre de
+  pila» **sube a Platform**, porque ahora la hacen dos módulos.
+
+**Lo que enseñó construirla**
+
+- ⚠️⚠️ **El presupuesto de la puerta estaba en 27 de 28**, así que la lectura **no podía costar dos
+  consultas**: las fichas viajan en el contrato que ya carga la línea (coste cero) y las respuestas se
+  piden **en un viaje y solo si hoy hay una fiesta con invitación**. Un escaneo normal no paga nada, y
+  hay un caso que lo vigila mirando las consultas de verdad.
+- ⚠️⚠️ **El emparejado no es la igualdad de claves, y el caso lo cazó**: «Mateo» (ficha) y «Mateo Ruiz»
+  (respuesta) salían como **dos niños** en la puerta. Es el mismo defecto que la adopción resolvió en la
+  T4, aparecido de nuevo en otra capa — por eso la regla subió a Platform.
+- ⚠️ **Un fixture de hoy no puede contestar**: el plazo cierra con el del número de invitados (D14), así
+  que las respuestas del caso se escriben **tres días antes**. El primer intento murió con `cutoff`.
+- ⚠️ La línea base de Larastan **bajó a 458** al arreglar dos `?->` que perdonaba; el trinquete exigió
+  bajar `FROZEN_ERRORS` en el mismo commit.
+- ▶ **El nombre de un niño invitado puede traer apellidos**, y eso **no contradice `#236`**: ahí los
+  apellidos tienen columna propia y se retienen; aquí el nombre es **un solo campo libre** y distinguir
+  a dos «Martina» de una clase es justo para lo que se pide (§4.5·5).
+
+**Verificación**: `GateInvitedGuestsTest` (10 casos: los tres estados, el emparejado por nombre, el «no»
+que no llega, la cuenta sobre lo contratado, el presupuesto por lotes y el escaneo que no paga) ·
+`InvitationProposalsTest` gana los dos del papel · arnés `scripts/mutar-invitacion-t6-4.py` **9/9** ·
+**el PDF REAL renderizado** (`gs`→PNG, `storage/app/audit/sonda-t6/hoja-1.png`): la fila del niño
+propuesto sale con su `*` y su nota, y la sección de justificantes sigue en su sitio · Pint, Larastan y
+docs-check limpios.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

@@ -1117,12 +1117,6 @@ parameters:
 			path: app/Domain/Identity/Services/DependentRegistry.php
 
 		-
-			message: '#^Using nullsafe method call on non\-nullable type App\\Domain\\Identity\\Services\\WaiverStatus\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Domain/Identity/Services/GateProfile.php
-
-		-
 			message: '#^Using nullsafe method call on non\-nullable type Carbon\\CarbonImmutable\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1

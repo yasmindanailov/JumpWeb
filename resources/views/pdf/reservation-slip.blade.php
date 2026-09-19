@@ -357,16 +357,23 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{-- ▶ T6·4: una fila puede traer lo que contestó un padre y el anfitrión todavía no
+                         ha repasado. Se MARCA en su número —la hoja es papel, no tiene colores fiables
+                         ni iconos— y la nota de debajo dice qué significa. Sin esto, un anfitrión que no
+                         vuelve a guardar deja niños fuera del papel. --}}
                     @foreach ($guestRows as $i => $row)
                         <tr>
-                            <td class="g-num">{{ $i + 1 }}</td>
-                            @foreach ($row as $cell)
+                            <td class="g-num">{{ $i + 1 }}@if ($row['proposed'])*@endif</td>
+                            @foreach ($row['cells'] as $cell)
                                 <td class="g-cell">{{ $cell }}</td>
                             @endforeach
                         </tr>
                     @endforeach
                 </tbody>
             </table>
+            @if (collect($guestRows)->contains(fn (array $row): bool => $row['proposed']))
+                <div class="guests-pending-note">{{ __('admin.orders.slip.guests_proposed') }}</div>
+            @endif
         </div>
     @endif
 

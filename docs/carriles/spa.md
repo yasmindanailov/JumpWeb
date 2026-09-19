@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#710`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#711`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-19.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -10,35 +10,22 @@
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
-- **`celebracion-e-invitacion.md`**: T1 (`#570`) y T2 (`#571`) desplegadas el 16-09 (octavo despliegue).
-  **T3 (`#572`, la piel del justificante) y T4·1–T4·4 (`#573`→`#576`) ESTÁN EN PRODUCCIÓN** desde el
-  18-09 a las 07:23 (v1.1.0 = `3547de9f`, noveno despliegue, parque cerrado; lo desplegó plataforma).
-  La migración `create_party_invitations` quedó aplicada (118 ms) y **los dos interruptores, apagados**.
-  Con ello **el defecto de la barra de firmar de 401 px ya no está vivo**. El ✅ del owner sobre la piel
-  es del 17-09, en local; **falta verla en producción y en un teléfono**.
+- **`celebracion-e-invitacion.md`**: T1 y T2 desplegadas el 16-09 (octavo despliegue). **T3 (`#572`) y
+  T4·1–T4·4 EN PRODUCCIÓN** desde el 18-09 (v1.1.0 = `3547de9f`, noveno, parque cerrado; lo desplegó
+  plataforma): la migración quedó aplicada y **los dos interruptores, apagados**. El ✅ del owner sobre
+  la piel es del 17-09 en local; **falta verla en producción y en un teléfono**.
 - **T4 · la invitación digital, CERRADA en sus seis unidades** (`#573`→`#578`). ⚠️ **En producción solo
   van T4·1–T4·4** (v1.1.0, interruptores apagados): **`#577` (RGPD) y `#578` (la API) están en el árbol
-  SIN DESPLEGAR**, como toda la T5. El detalle vive en la spec §10.4; lo que hay que recordar al tocarla:
-  el **lock de UNA fila** de `PartyInvitations`, verificado sobre InnoDB · `show_in_invitation` por las
-  CUATRO puertas del pivote, con `OrderCreator` intacto porque **es una oferta y no un permiso** · el
-  cuarto sumando del suelo de `#444` y la **excepción del firmador** · y el RGPD, donde el justificante
-  **se conserva** y solo pierde el puntero. Arneses 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 declarado · 14/14.
-  ⚠️ El botón de anular el enlace lo pinta la T6 (§4.8).
+  SIN DESPLEGAR**, como toda la T5. Detalle en spec §10.4; lo que hay que recordar: el **lock de UNA
+  fila** de `PartyInvitations` verificado sobre InnoDB · `show_in_invitation` por las CUATRO puertas del
+  pivote, con `OrderCreator` intacto porque **es una oferta y no un permiso** · el cuarto sumando del
+  suelo de `#444` y la **excepción del firmador**. Arneses 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 · 14/14.
 - **T5 · la página pública, LAS CINCO UNIDADES en el árbol** (`#701`→`#706`), **sin desplegar**; las
-  tres primeras vistas en vivo por el owner el 18-09:
-  - **T5·1→T5·3 (`#701`→`#703`)**: la ruta `/invitacion/{token}` con los tres temas —con ella
-    `Invitation.url` se rellenó sola—, contestar con su aviso de privacidad, y el **recibo de 2 horas**
-    con G2/G3 y el salto al justificante **atado a la respuesta**. Detalle en la spec §10.5.
-    ⚠️ Lo que enseñaron: el owner cazó «Dónde» y el menú en TEXTO PLANO (hoy `.gf-extras__list`), y
-    pegar parámetros a una URL ya firmada **la invalida** — viajan DENTRO.
-  - **T5·4 · compartir y calendario (`#705`)**: nace **`Platform\Services\CalendarFile`** (el `.ics` como
-    mecanismo genérico), el bloque «Añadir al calendario» **sin una línea de JS** y la vista previa `og:*`
-    con **solo** nombre, edad, día, hora y negocio; `focused-layout` gana un hueco de cabecera **vacío por
-    defecto**. Arnés **8/8**. ❗ El defecto del `VTIMEZONE` lo encontró **el fichero SERVIDO**, no el test.
-  - **T5·5 · el flujo firmar ↔ invitación (`#704`)**: C, D y **E, un CUARTO defecto que no estaba en la
-    spec** —la vuelta de un formulario RECHAZADO perdía la atadura y el segundo intento **cobraba
-    plaza**—. Contrato nuevo `SignedInvitationReplies`, que responde por la ATADURA de `#576` y no por el
-    nombre. Lo destapó **caminar la pantalla**. Arnés **7/7**. Detalle en spec §10.6.
+  tres primeras vistas en vivo por el owner el 18-09. El detalle, en spec §10.5 y §10.6. Lo que hay que
+  recordar: pegar parámetros a una URL ya firmada **la invalida** —viajan DENTRO— · el defecto del
+  `VTIMEZONE` lo encontró **el fichero SERVIDO**, no el test · y el cuarto defecto de la T5·5 —la vuelta
+  de un formulario rechazado perdía la atadura y **cobraba plaza**— lo destapó **caminar la pantalla**.
+  Arneses 8/8 y 7/7.
 - ✅ **§10.6·A, CERRADA por el owner el 18-09 (`#706`)**: **dos campos** (`#236` en pie, sin migración) y
   **el prerrelleno del menor se retira** — la hoja enseña lo que escribió y lo reparte él. Sus dos
   alternativas se midieron y se cayeron; la medición entera está en spec §10.6·A por si se reabre.
@@ -68,22 +55,29 @@
   **8/8**. ❗ Retirar es el **par del suelo** (`#576`), y el caso lo mide sobre `assignedFloorFor()`, no
   sobre la pantalla. ⚠️ Medido: **no hizo falta tocar `GuestCountAdjuster`**, así que sin `VERIFY_CONC`.
   ▶ De paso, arreglado un defecto de la T6·1: personalizar mandaba al titular a «Mis pedidos».
+- ✅ **T6·4 (`#711`, 19-09) · la PUERTA y la HOJA DE SALA**, spec §10.11: la lista del mostrador pasa a
+  ser *fichas con nombre + «sí» sin apuntar*, con los **tres estados** y la cuenta «8 de 12» sobre lo
+  CONTRATADO; y una respuesta pendiente **llega al papel marcada**. 12 casos · arnés **9/9** · PDF real
+  renderizado. ⚠️ El presupuesto de la puerta estaba en **27 de 28**: las fichas viajan en
+  `GateReservation` (coste cero) y las respuestas se piden por lotes **solo si hoy hay fiesta**.
+  ❗ El emparejado **no era la igualdad de claves** —«Mateo» y «Mateo Ruiz» salían como dos niños—, así
+  que la regla subió a `PersonNameKey::cardMatches()`, que ahora usan los dos módulos.
 - La capa de agente: el plugin `jumpweb-agente` se instaló aquí el 17-09 y **se actualizó a `07076ac` el
   19-09**, con los arreglos del mapa de frases. Larastan entró con `composer install` (faltaba tras `#625`).
 - Pendiente del ojo del owner, de antes: «Guardar» en el secundario (`#539`) y no en tinta.
 
 ## Por dónde retomar, en orden
 
-1. ❗ **LA TAREA: la T6·4 — PUERTA y HOJA DE SALA** (spec §10.7 y §4.8; T6·1→T6·3 ya están, §10.8–§10.10).
-   Son **otro consumidor** de lo mismo: los niños invitados con «sí» pendiente tienen que salir en la
-   puerta (`GateProfile::guestMinors`, con su estado y la cuenta «8 de 12 con justificante») y en la hoja
-   de sala (`ReservationSlip::guestRows`, marcados «por la invitación, sin repasar»). Sin la hoja, un
-   anfitrión que no vuelve a guardar deja niños fuera del papel.
-   ⚠️⚠️ **Tiene techo medido: `GateProfileTest` NO sube de 28 consultas** (§7.2·R16), así que la lectura
-   va **por lotes** a través del contrato `PartyGuests`, nunca una consulta por niño.
-   ⚠️ Los estados de puerta son **derivados y nunca guardados** (§4.5·10) y solo existen si el producto
-   no está en `none` y el waiver es interno. Ninguno en rojo.
-   ▶ Después quedan T6·5 (panel: resumen, copiar enlace y anular) y T6·6 («escribir el recordatorio»).
+1. ❗ **LA TAREA: la T6·5 — el PANEL, ficha del pedido** (spec §10.7 y §4.8; T6·1→T6·4 ya están,
+   §10.8–§10.11): en la línea del pedido, «Invitación: N vienen · M no · K por repasar», **«Copiar
+   enlace de la invitación»** y **«Anular el enlace»**. ▶ Solo pinta lo que ya existe: la acción de
+   rotar el token está desde `#576` (`PartyInvitation::rotateToken()`) y el resumen desde `#578`
+   (`summaryFor()`). **Sin ella, anular el enlace es una acción sin botón.**
+   ⚠️ El molde del panel: «Copiar enlace» ya existe para el post-form (`ViewOrder::copyGuestFormLink`,
+   `POSTFORM-INVITADOS.md` §4.2) y su GOTCHA está pagado — un `->default()` en un campo de modal con
+   `fillForm` queda VACÍO, así que el enlace va en una vista server-rendered.
+   ▶ Después queda la T6·6 («escribir el recordatorio»: compone el texto, lo copia y guarda
+   `reminded_at`/`reminded_count`; **no envía nada**) y la T7 de correos.
 2. ✅ **El plugin ya está actualizado en esta máquina**: `627b3a3` → **`07076ac`** (19-09, al cerrar; es
    el sha que pedía plataforma). Se aplica **al reiniciar la sesión**, que es justo por lo que el owner
    cerró aquí. ▶ Queda anotar en el buzón de plataforma cómo van las **seis frases** (iban 1 de 6): esta
@@ -213,12 +207,19 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   escribí las dos reglas de mis botones apuntando al `button` y **no a `.btn`**: con `.btn` tu generador
   se las llevaba al paquete, y `.gf-invite` no puede existir dentro de un `.sidecart`. Si prefieres otra
   convención para esto, dilo y la cambio.
-- ▶ **Lo empujado hoy (`#708`→`#710`, T6·1→T6·3)** y lo que implica para el próximo despliegue: **dos
+- ▶ **Lo empujado hoy (`#708`→`#711`, T6·1→T6·4)** y lo que implica para el próximo despliegue: **dos
   rutas nuevas** (`reservation.invitation.update` y `.dismiss`), `GuestFormController` (cuatro métodos y
   la adopción dentro del guardado), `OrderItem` (dos enlaces firmados), `PartyInvitations`
-  (`declinedPendingIn()`), `PublicFreeText::rejects()`, la vista del post-form, `lang/*/guestform.php` y
-  el bloque de la hoja en `site.css`. **Sin migraciones, sin contrato de API y sin tocar dinero ni
-  aforo**; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`, no supuesto).
+  (`declinedPendingIn()`), `PublicFreeText::rejects()`, `PersonNameKey::cardMatches()`, la vista del
+  post-form, `lang/*/guestform.php` y el bloque de la hoja en `site.css`; y en la T6·4, **lo tuyo de
+  vecindad**: `GateProfile` y `GateProfileData` (la lista de la puerta cambia de forma: `age` puede ser
+  `null` y cada fila trae `entry`), `GateReservation` (dos campos nuevos al final), `PartyGuests` (un
+  método más), `ReservationSlip::guestRows()` (ahora `{cells, proposed}`) y el PDF de la hoja.
+  **Sin migraciones, sin contrato de API y sin tocar dinero ni aforo**; ninguno casa con el
+  `CRITICAL_RE` (comprobado con `grep`, no supuesto).
+- ⚠️ **Toqué `StaticAnalysisGateTest` (tu fichero del gate) por su trinquete**: arreglé dos `?->` que la
+  línea base perdonaba, así que `FROZEN_ERRORS` baja de **459 a 458** en el mismo commit, como pide su
+  propio mensaje. Nada más de ese fichero.
 - ℹ️ **Un defecto de la API, medido y NO tocado**: `InvitationHostController` valida `honoree_name` y
   `host_line` como `['sometimes','string']`, y `ConvertEmptyStringsToNull` convierte un vacío en `null`,
   así que un cliente que mande `""` recibe **422**. En la web lo arreglé con `nullable`; en la API es su

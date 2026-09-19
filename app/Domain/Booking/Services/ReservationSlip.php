@@ -257,7 +257,16 @@ final class ReservationSlip
      * en el parque — coherente con cómo el parque trabaja en papel. Siempre exactamente `quantity`
      * filas (ni más ni menos), para que la hoja sirva tanto si el form está completo como si no.
      *
-     * @return list<list<string>>
+     * ▶ **Desde la T6·4 una fila en blanco puede traer lo que contestó un padre**
+     * (`specs/celebracion-e-invitacion.md` §4.8): si hay un «sí» pendiente propuesto sobre esa ficha,
+     * sus datos se imprimen **marcados** (`proposed`). ❗ Sin esto, **un anfitrión que no vuelve a
+     * guardar deja niños fuera del papel**: la sala tendría una fila vacía donde hay un niño que ya
+     * dijo que viene, con su alergia escrita.
+     *
+     * ⚠️ Se MARCA y no se cuela como dato del anfitrión: lo propuesto no está repasado por él, y la
+     * hoja es lo que la sala da por bueno.
+     *
+     * @return list<array{cells: list<string>, proposed: bool}>
      */
     public function guestRows(): array
     {
@@ -267,13 +276,41 @@ final class ReservationSlip
         }
 
         $data = $this->item->guestData();
+        // Lo que han contestado y el anfitrión aún no ha apuntado, ya colocado sobre su ficha por el
+        // MISMO servicio que lo propone en la pantalla: la hoja no puede emparejar por su cuenta.
+        $proposals = [];
+        if ($this->item->ticketType?->offersGuestInvitation() ?? false) {
+            foreach (app(PartyInvitations::class)->proposalsFor($this->item) as $proposal) {
+                if ($proposal['attending'] && $proposal['slot_index'] !== null) {
+                    $proposals[$proposal['slot_index']] = $proposal;
+                }
+            }
+        }
+
+        $nameKey = $this->item->ticketType?->guestNameFieldKey();
         $rows = [];
+
         for ($i = 0; $i < $this->quantity(); $i++) {
+            $proposal = $proposals[$i] ?? null;
+            $written = $data[$i] ?? [];
+            // Una ficha que el anfitrión ya escribió manda siempre: lo propuesto solo rellena huecos,
+            // igual que en su formulario.
+            $proposed = $proposal !== null && trim((string) ($written[$nameKey] ?? '')) === '';
+
             $row = [];
             foreach ($columns as $col) {
-                $row[] = $this->stringifyValue($data[$i][$col['key']] ?? '');
+                $value = $this->stringifyValue($written[$col['key']] ?? '');
+                if ($value === '' && $proposal !== null) {
+                    $value = $this->stringifyValue(
+                        $col['key'] === $nameKey && ($proposal['guest_data'][$col['key']] ?? '') === ''
+                            ? $proposal['child_name']
+                            : ($proposal['guest_data'][$col['key']] ?? '')
+                    );
+                }
+                $row[] = $value;
             }
-            $rows[] = $row;
+
+            $rows[] = ['cells' => $row, 'proposed' => $proposed];
         }
 
         return $rows;

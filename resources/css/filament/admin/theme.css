@@ -1110,6 +1110,15 @@
     gap: calc(var(--spacing) * 2);
 }
 
+/* «8 de 12 con justificante» (T6·4): la cuenta de la fiesta, encima de sus nombres. Es un DATO de
+ * cabecera, no un aviso: el operador lo lee de un vistazo y decide si le toca firmar en el mostrador. */
+.gate-minors__count {
+    margin-bottom: calc(var(--spacing) * 2);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--gray-700);
+}
+
 .gate-minor {
     display: inline-flex;
     align-items: center;

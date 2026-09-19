@@ -329,19 +329,50 @@
                                  ⚠️ Se pinta SOLO si hay alguno: una sección vacía en la ficha de un
                                  cliente normal sería ruido en la pantalla que más se mira.
                                  ▶ Apellidos fuera, como en la de arriba: el DTO no los trae. --}}
-                            @if (($profile['guest_minors'] ?? []) !== [])
+                            {{-- ▶ T6·4: también con la lista VACÍA si hoy hay una fiesta con invitación —
+                                 «0 de 12 con justificante» es justo el aviso que el mostrador necesita—. --}}
+                            @if (($profile['guest_minors'] ?? []) !== [] || ($profile['guest_minors_count'] ?? null) !== null)
                                 <x-filament::section
                                     :heading="__('admin.puerta.validar.profile.guest_minors')"
                                     :icon="Heroicon::OutlinedTicket"
                                     icon-color="gray"
                                     compact
                                 >
+                                    {{-- «8 de 12 con justificante» (T6·4, §4.8): lo que el operador necesita
+                                         de un vistazo — cuántos niños se esperan y cuántos llegan
+                                         resueltos. El 12 es lo CONTRATADO, así que una lista a medias no
+                                         esconde a los que faltan. --}}
+                                    @if (($profile['guest_minors_count'] ?? null) !== null)
+                                        <p class="gate-minors__count" data-gate-guest-minors-count>
+                                            {{ __('admin.puerta.validar.profile.guest_minors_count', [
+                                                'signed' => $profile['guest_minors_count']['signed'],
+                                                'expected' => $profile['guest_minors_count']['expected'],
+                                            ]) }}
+                                        </p>
+                                    @endif
                                     <ul class="gate-minors" data-gate-guest-minors>
                                         @foreach ($profile['guest_minors'] as $g)
-                                            <li class="gate-minor" data-gate-guest-minor data-gate-guest-minor-name="{{ $g['name'] ?? '' }}" data-gate-guest-minor-age="{{ (int) $g['age'] }}" data-gate-guest-minor-waiver="{{ $g['waiver'] ?? 'unknown' }}">
+                                            <li class="gate-minor" data-gate-guest-minor data-gate-guest-minor-name="{{ $g['name'] ?? '' }}" data-gate-guest-minor-age="{{ $g['age'] === null ? '' : (int) $g['age'] }}" data-gate-guest-minor-waiver="{{ $g['waiver'] ?? 'unknown' }}" data-gate-guest-minor-entry="{{ $g['entry'] ?? '' }}">
                                                 <span class="gate-minor__name">{{ $g['name'] ?? '' }}</span>
-                                                <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $g['age']]) }}</span>
+                                                {{-- Sin firma no hay fecha de nacimiento, así que puede no
+                                                     haber edad: un «0 años» sería un dato inventado. --}}
+                                                @if ($g['age'] !== null)
+                                                    <span class="gate-minor__age">{{ __('admin.puerta.validar.profile.minor', ['age' => (int) $g['age']]) }}</span>
+                                                @endif
                                                 <span class="gate-minor__age">{{ $g['order_code'] ?? '' }}</span>
+                                                {{-- El ESTADO DE ENTRADA (T6·4, §4.5·10), y ninguno en rojo:
+                                                     firmado (lima) · viene con un adulto (cian) · sin
+                                                     resolver (amarillo), que no es un error sino trabajo
+                                                     que se hará en el mostrador si nadie lo adelanta. --}}
+                                                @if (($g['entry'] ?? null) !== null)
+                                                    <x-filament::badge size="xs" :color="match ($g['entry']) {
+                                                        'signed' => 'success',
+                                                        'with_adult' => 'info',
+                                                        default => 'warning',
+                                                    }">
+                                                        {{ __('admin.puerta.validar.profile.guest_entry_'.$g['entry']) }}
+                                                    </x-filament::badge>
+                                                @endif
                                                 {{-- `#320`: solo la EXCEPCIÓN lleva pastilla. --}}
                                                 @if (\App\Domain\Identity\Services\WaiverStatus::minorStateIsNoteworthy($g['waiver']))
                                                     <x-filament::badge size="xs" :color="$g['waiver'] === 'outdated' ? 'warning' : 'danger'">

@@ -54,6 +54,31 @@ final class PersonNameKey
         return mb_substr(mb_strtolower(self::collapse($base)), 0, self::MAX);
     }
 
+    /**
+     * **¿La clave de una FICHA nombra al mismo niño que una clave completa?** (T6·4.)
+     *
+     * El caso real, y no un adorno: el anfitrión pega la lista de la clase con nombres de pila
+     * («Mateo») y al padre se le piden **nombre y apellidos** —«Mateo Ruiz»—, porque es lo que
+     * distingue a dos niños que se llaman igual. Empareja la clave entera o **su primera palabra**.
+     *
+     * ⚠️⚠️ **La dirección importa y por eso no es simétrica**: la corta es la de la FICHA. Hacerla
+     * simétrica ampliaría el emparejado de la adopción —que está cerrado desde la T4 y tiene su
+     * arnés— sin que nadie lo hubiera pedido.
+     *
+     * ▶ Vive aquí porque la hacen **dos módulos**: Booking al proponer una respuesta sobre una ficha
+     * y la PUERTA al cruzar un justificante firmado con la lista del anfitrión. Repetida en los dos,
+     * divergiría en el primer arreglo.
+     */
+    public static function cardMatches(string $cardKey, string $fullKey): bool
+    {
+        if ($cardKey === '') {
+            return false;
+        }
+
+        // `explode()` nunca devuelve lista vacía: sin `?? ''`, que afirmaría lo contrario.
+        return $cardKey === $fullKey || $cardKey === self::for(explode(' ', $fullKey)[0]);
+    }
+
     /** Espacios colapsados a uno y recortados por los extremos. */
     private static function collapse(string $value): string
     {

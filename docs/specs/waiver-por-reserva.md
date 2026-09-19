@@ -480,6 +480,13 @@ responsable del grupo. Queda escrito para que no se descubra dentro de seis mese
   agrupa por pedido en la composición, no al pintar** — decidirlo en el Blade es como nacen los N+1.
 - ⚠️⚠️ **El presupuesto de consultas es una restricción de diseño, no una comprobación posterior**:
   techo **28**, ya cazó un N+1 en `#294`. Carga **en lote por pedido**, nunca por fila.
+- ▶ **Desde la T6·4 de la invitación digital esta lista NO son solo los firmados**
+  (`specs/celebracion-e-invitacion.md` §4.8 y §10.11, `#711`): son los niños de la fiesta —fichas con
+  nombre **+** «sí» sin apuntar— y cada uno trae su **estado de entrada** (firmado · viene con un
+  adulto · sin resolver), más la cuenta «8 de 12 con justificante». Una firma que no empareja con
+  ninguno **sigue saliendo**, que es lo que esta sección describía. El presupuesto no se movió: las
+  fichas viajan en `GateReservation` (coste cero) y las respuestas se piden por lotes **solo si hoy hay
+  una fiesta con invitación**.
 
 ### 4.12 Lo que ve el PANEL
 

@@ -300,15 +300,16 @@ final class PartyInvitations
      * padre escribe «Mateo Ruiz» — con apellidos, porque es lo que se le pide para distinguir a dos
      * niños que se llamen igual.
      *
+     * ▶ **La regla SUBIÓ a `PersonNameKey::cardMatches()`** (T6·4): la puerta hace la misma pregunta
+     * al cruzar un justificante firmado con la lista del anfitrión, y una copia en Identity habría
+     * divergido de ésta en el primer arreglo. Aquí queda el recorrido de la lista, que sí es de aquí.
+     *
      * @param  list<string>  $namedKeys
      */
     private function matches(array $namedKeys, string $childKey): bool
     {
-        // `explode()` nunca devuelve lista vacía: sin `?? ''`, que afirmaría lo contrario.
-        $firstWord = PersonNameKey::for(explode(' ', $childKey)[0]);
-
         foreach ($namedKeys as $key) {
-            if ($key === $childKey || ($key !== '' && $key === $firstWord)) {
+            if (PersonNameKey::cardMatches($key, $childKey)) {
                 return true;
             }
         }

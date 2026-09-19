@@ -428,6 +428,12 @@ class ModuleContractsTest extends TestCase
             {
                 throw new \LogicException('este doble sirve el suelo de plazas, no la excepción del firmador');
             }
+
+            /** Lo mismo para la lista de la PUERTA (T6·4): este doble no la sirve. */
+            public function partyGuestsIn(array $reservationIds): array
+            {
+                throw new \LogicException('este doble sirve el suelo de plazas, no la lista de la puerta');
+            }
         });
 
         // Por el CONTRATO, no por el implementador: es como pregunta Booking desde `GuestCountPolicy`.

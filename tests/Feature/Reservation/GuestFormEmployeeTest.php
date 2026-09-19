@@ -198,8 +198,12 @@ class GuestFormEmployeeTest extends TestCase
 
         $this->assertSame(['name', 'allergy'], array_column($slip->guestColumns(), 'key'));
         $this->assertTrue($slip->guestFormComplete());
-        // Una fila por invitado (= cantidad), en orden de columnas.
-        $this->assertSame([['Ana', 'Gluten'], ['Leo', '']], $slip->guestRows());
+        // Una fila por invitado (= cantidad), en orden de columnas. ▶ Desde la T6·4 cada fila dice
+        // además si lo que trae viene de la invitación **sin repasar** por el cliente (`#711`).
+        $this->assertSame([
+            ['cells' => ['Ana', 'Gluten'], 'proposed' => false],
+            ['cells' => ['Leo', ''], 'proposed' => false],
+        ], $slip->guestRows());
     }
 
     public function test_slip_pads_blank_rows_when_incomplete(): void
@@ -211,7 +215,11 @@ class GuestFormEmployeeTest extends TestCase
 
         $this->assertFalse($slip->guestFormComplete());
         // 3 filas: la 1.ª con datos, las 2 restantes en blanco para rellenar a mano.
-        $this->assertSame([['Ana', ''], ['', ''], ['', '']], $slip->guestRows());
+        $this->assertSame([
+            ['cells' => ['Ana', ''], 'proposed' => false],
+            ['cells' => ['', ''], 'proposed' => false],
+            ['cells' => ['', ''], 'proposed' => false],
+        ], $slip->guestRows());
     }
 
     public function test_slip_view_renders_guest_form_section(): void

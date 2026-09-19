@@ -40,4 +40,24 @@ interface PartyGuests
      * por id, o un enlace de otra fiesta serviría para saltarse el tope de ésta.
      */
     public function isCommittedReply(int $replyId, int $reservationId): bool;
+
+    /**
+     * **Los niños que han dicho que VIENEN, de varias reservas y en UN SOLO VIAJE** (T6·4, §4.8).
+     *
+     * ⚠️⚠️ **Por lotes porque la PUERTA tiene presupuesto** (§7.2·R16): `GateProfileTest` no sube de 28
+     * consultas, y una lectura por reserva —o peor, por niño— lo reventaría el día que un titular
+     * tenga dos fiestas. Quien llama pasa todas las reservas de hoy y recibe el mapa entero.
+     *
+     * ⚠️ Devuelve **lo que Booking sabe y nada más**: el nombre, la clave con la que cruzarlo con la
+     * ficha del formulario, si el padre dijo que viene un adulto y si la respuesta sigue por repasar.
+     * **El estado de puerta lo compone Identity**, que es quien sabe de firmas (§4.5·10) — la misma
+     * frontera y la misma razón que {@see committedReplyIdsIn}.
+     *
+     * ⚠️ `key` es la clave de ADOPCIÓN cuando la hay: una respuesta adoptada ya es una ficha del
+     * anfitrión, y es por esa clave por la que las dos mitades se emparejan.
+     *
+     * @param  list<int>  $reservationIds
+     * @return array<int, list<array{reply_id: int, name: string, key: string, companion: string|null, pending: bool}>>
+     */
+    public function partyGuestsIn(array $reservationIds): array;
 }

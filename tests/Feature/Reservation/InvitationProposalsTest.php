@@ -11,6 +11,7 @@ use App\Domain\Booking\Models\Slot;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Booking\Services\PartyInvitations;
+use App\Domain\Booking\Services\ReservationSlip;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\Payment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -219,6 +220,35 @@ class InvitationProposalsTest extends TestCase
         ])->assertRedirect();
 
         $this->assertNull($ajena->fresh()->adopted_at, 'un id de otra fiesta no adopta nada');
+    }
+
+    // ─── El papel de la sala (T6·4) ──────────────────────────────────────────────────
+
+    public function test_a_pending_yes_reaches_the_paper_marked_as_not_reviewed(): void
+    {
+        // ❗ Sin esto, un anfitrión que no vuelve a guardar deja niños FUERA del papel: la sala vería
+        // una fila vacía donde hay un niño que ya dijo que viene, con su alergia escrita.
+        $item = $this->reservation(3, [['name' => 'Hugo'], [], []]);
+        $this->reply($item, 'Martina Serra', ['allergy' => 'Sin gluten']);
+
+        $rows = ReservationSlip::make($item->order, $item)->guestRows();
+
+        $this->assertSame(['Hugo', ''], $rows[0]['cells']);
+        $this->assertFalse($rows[0]['proposed'], 'lo que escribió el anfitrión no se marca: es suyo');
+        $this->assertSame(['Martina Serra', 'Sin gluten'], $rows[1]['cells'], 'lo contestado tiene que llegar al papel');
+        $this->assertTrue($rows[1]['proposed'], 'y marcado: no lo ha repasado él');
+        $this->assertSame([['', ''], false], [$rows[2]['cells'], $rows[2]['proposed']]);
+    }
+
+    public function test_the_paper_never_overwrites_what_the_host_wrote(): void
+    {
+        $item = $this->reservation(2, [['name' => 'Hugo', 'allergy' => 'Nada'], []]);
+        $this->reply($item, 'Hugo Ruiz', ['allergy' => 'Sin gluten']);
+
+        $rows = ReservationSlip::make($item->order, $item)->guestRows();
+
+        $this->assertSame(['Hugo', 'Nada'], $rows[0]['cells'], 'la respuesta no puede pisar la ficha del anfitrión');
+        $this->assertFalse($rows[0]['proposed']);
     }
 
     // ─── Fixture ─────────────────────────────────────────────────────────────────────

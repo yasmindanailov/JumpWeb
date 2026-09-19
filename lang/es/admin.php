@@ -149,6 +149,15 @@ return [
                 'minor_waiver_current' => 'descargo ✓',
                 'minor_waiver_outdated' => 'descargo de versión anterior',
                 'minor_waiver_missing' => 'sin descargo',
+                // La INVITACIÓN en la puerta (T6·4, `specs/celebracion-e-invitacion.md` §4.8 y
+                // §4.5·10). ⚠️ Los tres estados y NINGUNO en rojo: aquí nadie ha roto nada y ninguno
+                // impide la fiesta — «sin resolver» es trabajo que se hará en el mostrador si nadie
+                // lo adelanta. ⚠️ La clave se compone dinámicamente (`'guest_entry_'.$estado`), así
+                // que las tres tienen que existir o se pintaría el identificador en crudo.
+                'guest_minors_count' => ':signed de :expected con justificante',
+                'guest_entry_signed' => 'firmado',
+                'guest_entry_with_adult' => 'viene con un adulto',
+                'guest_entry_unresolved' => 'sin resolver',
                 'visit_register' => 'Registrar visita',
                 'visit_registered' => 'Visita registrada hoy',
                 'visit_hint' => 'Es lo que acredita que ha venido (JumpPoints). Una vez por día; volver a pulsar no suma.',
@@ -528,6 +537,10 @@ return [
             'reservation_data_heading' => 'Datos de la reserva',
             'guests_heading' => 'Formulario de reserva',
             'guests_pending' => 'PENDIENTE: el cliente aún no ha rellenado el formulario. Complétalo a mano.',
+            // T6·4: una fila con * trae lo que contestó un padre por la invitación y el anfitrión
+            // todavía no ha repasado. ⚠️ En papel se marca con un signo, no con color: la hoja se
+            // imprime en blanco y negro y un tono no sobrevive a la fotocopia.
+            'guests_proposed' => '* Por la invitación, sin repasar por el cliente.',
             'guest_minors_heading' => 'Menores invitados con justificante',
             'guest_minor' => 'Menor',
             'guest_minor_guardian' => 'Autoriza',
