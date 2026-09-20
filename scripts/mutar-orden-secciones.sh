@@ -24,7 +24,9 @@ FILTER='HomeSectionOrderTest'
 RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FILTER}"
 
 TMP="storage/app/mutaciones/orden-secciones"
-FICHEROS=(resources/views/home.blade.php public/css/landing.css)
+# ⚠️ Desde `#666` la portada de PlayJump vive en la instancia: se muta el ANFITRIÓN MÍNIMO, que
+# conserva las ocho secciones y su orden.
+FICHEROS=(resources/views/anfitrion/portada.blade.php public/css/landing.css)
 
 restaurar() {
     for f in "${FICHEROS[@]}"; do
@@ -96,7 +98,7 @@ mover_bloque() {
 
     python3 - "$cual" "$detras_de" <<'PY'
 import re, sys
-p = 'resources/views/home.blade.php'
+p = 'resources/views/anfitrion/portada.blade.php'
 L = open(p, encoding='utf-8').read().split('\n')
 cual, detras = sys.argv[1], sys.argv[2]
 
@@ -118,21 +120,21 @@ nuevo = resto[:b2+1] + [''] + bloque + resto[b2+1:]
 open(p, 'w', encoding='utf-8').write('\n'.join(nuevo))
 PY
 
-    if cmp -s resources/views/home.blade.php "$TMP/home.blade.php"; then
+    if cmp -s resources/views/anfitrion/portada.blade.php "$TMP/portada.blade.php"; then
         echo "  ⚠ «$nombre» NO SE APLICÓ: el veredicto no vale"
         return
     fi
-    touch resources/views/home.blade.php
+    touch resources/views/anfitrion/portada.blade.php
     if verde; then
         echo "  ✗ NO muerde: $nombre"
     else
         echo "  ✓ muerde:    $nombre"
         muerden=$((muerden + 1))
     fi
-    cp "$TMP/home.blade.php" resources/views/home.blade.php; touch resources/views/home.blade.php
+    cp "$TMP/portada.blade.php" resources/views/anfitrion/portada.blade.php; touch resources/views/anfitrion/portada.blade.php
 }
 
-HB=resources/views/home.blade.php
+HB=resources/views/anfitrion/portada.blade.php
 
 echo '── El orden ──'
 
@@ -158,53 +160,16 @@ mutar "la primera sección deja de ser .section y pierde el aire del hero" "$HB"
   '    <section id="zones" class="section wrap">' \
   '    <section id="zones" class="wrap">'
 
-echo
-echo '── La numeración de los bloques ──'
-
-# ⚠️ La numeración solo sirve si está COMPLETA: a medias hace creer un orden que no vigila nadie.
-mutar "un bloque pierde su cabecera numerada" "$HB" \
-  '{{-- ══ 04 · CUMPLEAÑOS · los dos packs' \
-  '{{-- ══ CUMPLEAÑOS · los dos packs'
-
-mutar "dos cabeceras se numeran al revés" "$HB" \
-  '{{-- ══ 02 · CUÁNTO · el carril de tarifas' \
-  '{{-- ══ 03 · CUÁNTO · el carril de tarifas'
-
-# ⚠️⚠️ Y la mitad que de verdad importa: que cada cabecera esté delante de SU sección.
-# ▶ **La primera versión de esta mutación NO MORDÍA, y era la mutación la que estaba mal**: cerraba
-#   el comentario en su sitio, así que la cabecera seguía delante de `#reviews` y no había nada que
-#   cazar. El defecto real es **mover una cabecera sin su sección**, y eso son DOS pasos: quitarla de
-#   donde está y ponerla más abajo. Con los números en orden y las secciones en orden, es la ÚNICA
-#   forma de romper la correspondencia sin romper antes otra cosa.
-mover_cabecera() {
-    local nombre="$1"
-    total=$((total + 1))
-
-    python3 - <<'PY'
-p = 'resources/views/home.blade.php'
-L = open(p, encoding='utf-8').read().split('\n')
-i = next(k for k, l in enumerate(L) if '══ 06 · RESEÑAS' in l)
-j = next(k for k, l in enumerate(L) if '══ 07 · VISÍTANOS' in l)
-cab = L.pop(i)                       # la cabecera 06 sale de su sitio…
-L.insert(j - 1, cab + ' --}}')       # …y aterriza delante de la 07, ya cerrada.
-open(p, 'w', encoding='utf-8').write('\n'.join(L))
-PY
-
-    if cmp -s "$HB" "$TMP/home.blade.php"; then
-        echo "  ⚠ «$nombre» NO SE APLICÓ: el veredicto no vale"
-        return
-    fi
-    touch "$HB"
-    if verde; then
-        echo "  ✗ NO muerde: $nombre"
-    else
-        echo "  ✓ muerde:    $nombre"
-        muerden=$((muerden + 1))
-    fi
-    cp "$TMP/home.blade.php" "$HB"; touch "$HB"
-}
-
-mover_cabecera "una cabecera se queda huérfana de su sección"
+# 📜 **AQUÍ VIVÍAN LOS TRES MUTANTES DE LA NUMERACIÓN, Y SE PODAN CON SU SUJETO** (`#666`).
+# Mordían a `HomeSectionOrderTest::test_the_template_numbers_its_eight_blocks_in_order`, que leía el
+# FUENTE de la portada para comprobar que sus ocho comentarios `══ NN · RÓTULO ══` iban en orden y
+# cada uno sobre su sección. Esa guarda se fue con la vista: la portada de PlayJump vive en su
+# paquete y cómo se comente un fichero que el producto no escribe no es cosa suya (`paginas/home.md`).
+# ▶ Medido antes de podarlos, que es lo que hay que hacer: los tres salían «NO SE APLICÓ» o «NO
+# muerde» contra el anfitrión, que no lleva cabeceras numeradas. *Un mutante cuyo texto ya no existe
+# solo mide que nadie lo mira* (`#658`).
+# ⚠️ Lo que este arnés SÍ sigue vigilando es el orden de lo SERVIDO, que es la afirmación fuerte y
+# la que quedó viva en su fichero: las ocho secciones, su orden y el aire bajo el hero.
 
 echo
 echo "── Veredicto: ${muerden}/${total} mutaciones mordidas ──"

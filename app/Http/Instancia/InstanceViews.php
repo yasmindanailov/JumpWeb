@@ -132,6 +132,37 @@ class InstanceViews
             'ruta' => 'servicios',
             'datos' => ['services', 'groupRates', 'groupFrom', 'rateColumns', 'birthdayCards', ...self::DEL_COMPOSER],
         ],
+        /*
+         * **LA PORTADA** (`#666`), y es el contrato más grande de todos: VEINTE claves del
+         * controlador más las siete del composer. Las ocho secciones que pinta reciben cada una lo
+         * suyo ya compuesto —las tarjetas de zona con su escala de altura y los dos extremos del
+         * eje, el mosaico y su recuento, la puerta del bar, las tarifas con su «desde» ya escrito,
+         * los packs, las dudas, la prueba social en sus tres estados y la entradilla del horario—.
+         *
+         * ⚠️⚠️ **La landing NO calcula ninguno de estos datos, y ése es el contrato**: ni compone la
+         * escala de estatura, ni elige qué precio anuncia, ni escribe un importe, ni resuelve el
+         * horario. La portada de una instancia que quiera otra cosa **pinta distinto**, no calcula
+         * distinto.
+         * ❗ **`menuSections` es la única que vuelve hacia el armazón**: son las anclas que el menú y
+         * el pie de las DOCE vistas anuncian de ESTA página, y por eso el anfitrión mínimo las pinta
+         * todas. Un ancla a una sección que no está no falla —el navegador se queda donde estaba—,
+         * así que nadie lo vería.
+         * ⚠️ `noindex` es del producto y no de la página: es cierto en las tres puertas de auth
+         * (`/registro`, `/login`, `/recuperar-contrasena`), que sirven esta misma vista.
+         */
+        'portada' => [
+            'ruta' => 'home',
+            'datos' => [
+                'zoneCards', 'zoneAxisCeiling', 'zoneAxisFloor',
+                'rideMosaic', 'ridesTotal', 'barName', 'barLede',
+                'rateCards', 'ratesFrom', 'ratesSpecialLabel',
+                'partyCards', 'partyFrom',
+                'faqs', 'menuSections',
+                'socialProof', 'socialRating', 'socialLocked',
+                'guestWaiverOffered', 'noindex', 'scheduleLede',
+                ...self::DEL_COMPOSER,
+            ],
+        ],
         // Los cinco legales (`#655`) comparten vista y contrato: la página del panel. Se mide con una.
         'legal' => [
             'ruta' => 'legal.privacidad',
@@ -171,13 +202,32 @@ class InstanceViews
         'brand-band__dot' => 'web/servicios.blade.php · el punto separador de la cinta C3 (`#660`)',
         'slot-ico-altura' => 'web/normas.blade.php · el icono de «La altura, de un vistazo» (`#655`)',
         'slot-ico-saltador' => 'web/normas.blade.php · el icono del grupo «Mientras saltas» (`#655`)',
+        // ⚠️⚠️ **LA PORTADA** (`#666`). De las 208 clases que se quedaron sin consumidor al mudarla
+        // (`#665`), las guardas del producto ven exactamente CUATRO piezas: el modificador del trío
+        // —`.trio` y `.trio-stand` las emite el COMPONENTE, que es del producto, así que conservan
+        // su sujeto— y las tres ranuras del kit que solo pintaba la portada. Las otras 207 son CSS y
+        // se van con la **T2c** (`instancia-y-landing-fuera.md` §4.6): esta lista mira pieza a pieza
+        // lo que alguien declaró, no la hoja entera.
+        'trio--events' => 'web/portada.blade.php · el trío junto al titular de la sección 04 (`#666`)',
+        'slot-dudas' => 'web/portada.blade.php · la mancha del lockup de «Dudas» (`#666`)',
+        'slot-resenas' => 'web/portada.blade.php · la mancha detrás de la tarjeta de opinión (`#666`)',
+        'slot-ico-calcetines' => 'web/portada.blade.php · el icono del aviso de los calcetines (`#666`)',
     ];
 
     /**
      * Lo que el composer global (`View::composer('*')`) pone en TODA vista. ⚠️ Se va con el menú de hechos
      * (`instancia-y-landing-fuera.md` §1.1), y ese día sube el MAYOR: por eso está escrito una sola vez.
+     *
+     * ❗❗ **PÚBLICA desde `#666`, y no por comodidad de un test: porque marca una frontera real.**
+     * `CONTRATO_DE_VISTAS` mezcla **dos contratos** —lo que pone el CONTROLADOR, que es de la página y
+     * tiene que pintarlo ella, y esto, que lo reparte el composer a TODA vista y lo consumen el layout, el
+     * nav y el pie, o sea el ARMAZÓN—. La guarda que exige que un anfitrión consuma su contrato entero
+     * (`AnfitrionPortadaTest`) nació roja con estas seis claves, y ninguna era un olvido: *exigirle a una
+     * página que pinte lo que pinta su marco es pedirle que lo pinte dos veces.*
+     *
+     * @var list<string>
      */
-    private const DEL_COMPOSER = [
+    public const DEL_COMPOSER = [
         'site', 'heroStatus', 'offers', 'ctaMinPriceCents', 'ctaMinPriceLabel', 'cookieBannerEnabled', 'cookieConsent',
     ];
 

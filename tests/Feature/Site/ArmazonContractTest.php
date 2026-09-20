@@ -57,9 +57,11 @@ class ArmazonContractTest extends TestCase
         'anfitrion/cumpleanos',
         'anfitrion/legal',
         'anfitrion/normas',
+        // ⚠️ Era `home` hasta `#666` (F5 · T2b): la portada vive en la INSTANCIA y el producto sirve
+        // su anfitrión mínimo. El armazón lo sirve él, y es quien tiene que seguir cumpliéndolo.
+        'anfitrion/portada',
         'anfitrion/precios',
         'anfitrion/servicios',
-        'home',
         'payments/retry-redirect',
     ];
 

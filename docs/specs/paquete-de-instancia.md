@@ -17,12 +17,12 @@
   del producto. Medido: las vistas usan **29 componentes distintos**. Se acepta a sabiendas y con fecha.
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
-- **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: mudadas `/contacto`, `/normas`, `/bar`,
-  los cinco legales, `/atracciones`, `/precios`, `/cumpleanos` y `/servicios` (`#654`→`#660`; §4.4 y §4.7) y **la suite corre SIN paquete**
-  (`phpunit.xml`): el producto prueba su anfitrión mínimo y la instancia se prueba con la huella. ⚠️ Mudar
-  una vista es, en este orden: barrer sus reglas (§4.7), partir sus pruebas por lo que afirman (§4.5.bis),
-  dejar un anfitrión mínimo que cumpla el armazón, y huella 0 — **con la página DENTRO de la huella**
-  (`#657`: no lo estaba).
+- **Estado**: ✅ aprobada (`#647`). **T2a y T2b HECHAS**: las ocho de `pages/` (`#654`→`#660`) y **`home`**
+  (`#666`) viven en la instancia, y **la suite corre SIN paquete** (`phpunit.xml`): el producto prueba su
+  anfitrión mínimo y la instancia se prueba con la huella. Queda la **T2c**, el CSS (`#665`).
+  ⚠️ Mudar una vista es, en este orden: barrer sus reglas (§4.7), partir sus pruebas por lo que afirman
+  (§4.5.bis), dejar un anfitrión que **consuma el contrato entero** (§4.7.ter: «mínimo» no es lo mínimo que
+  renderiza), y huella 0 — **con la página DENTRO de la huella** (`#657`: no lo estaba).
 - **Invariantes**: **`SEC-12` es de aquí** (la ruta de vistas) y no se relaja. Ninguno más cambia.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-19)
@@ -131,7 +131,7 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
-| `home.blade.php` y `pages/*.blade.php` · **✅ las OCHO de `pages/`, que ya no existe** (`#654`→`#660`, 20-09); queda **`home`** | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
+| ✅ **LAS NUEVE**: las ocho de `pages/` —carpeta que ya no existe— (`#654`→`#660`) y **`home` → `web/portada.blade.php`** (`#666`, 21-09) | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
 
@@ -485,10 +485,83 @@ mezclan dos riesgos: mover marcado se verifica con la HUELLA; mover reglas toca 
 otra medida. ⚠️ Lo que esto arregla del plan: **las T3–T5 no contemplaban el CSS**, aunque la lista de
 material declarado prometía vaciarse «cuando el material se mude con las vistas (T3–T5)».
 
-▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) con el plan de arriba. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
-en 60 ficheros**, porque medio producto usa `/` como «una página cualquiera» para ejercitar el armazón, las
-cookies, el tema, el idioma, las cabeceras y el montaje del cajón. Las ocho anteriores tenían sus pruebas
-concentradas (`/contacto`: 14 casos en un fichero). Después, T3–T5 (spec hermana §4.6).
+### 4.7.ter · `home` MUDADA, y la cifra de rojos medía el anfitrión (`#666`, 2026-09-21)
+
+**Hecha, y con ella la T2b se cierra.** `web/portada.blade.php` en el paquete, `anfitrion/portada.blade.php`
+en el producto. Medido: **huella 0 diferencias en 38 pantallas**, mismo DOM en es/en/fr (0 líneas), sitemap
+11=11 idéntico y suite **5.474 verde** (5.475 antes: se fue el caso que se mudó).
+
+❗❗❗ **LA LECCIÓN DE LA TANDA: `#664` midió 161 rojos y salieron 16.** Aquella medida no se equivocó —
+apuntó el controlador a un anfitrión de **nueve líneas**—, pero lo que contaba no era la página: *la cifra
+de rojos de una mudanza mide el ANFITRIÓN con el que se mide.* Un anfitrión que monta los componentes del
+producto (`rate-rail`, `visit`, `cta-pair`, `gifts`, `sample-qr`, `faq-json-ld`, `google-attribution`,
+`brand-strip`, `special-rate-note`), las ocho secciones con sus anclas y el contrato entero **conserva el
+sujeto de 145 casos** que parecían condenados a mudarse. ▶ Y eso reordena el trabajo: lo caro de una
+mudanza no es partir pruebas, es **escribir bien el anfitrión**.
+
+▶ **El criterio para saber cuándo un anfitrión está completo, y es nuevo**: no es «lo mínimo que
+renderiza» —eso deja datos sin consumidor—, es **consumir el CONTRATO ENTERO**. Los cuatro rojos de
+marcado que quedaron lo dijeron uno a uno: faltaban el velo teñido (`tint`, `tintOpacity`), la frontera de
+la escala con su chapa (`heightAxis.side/label/neighbour`), la marca «i» de la nota de acceso y los puntos
+del carril de reseñas. **Los cuatro son DATOS que el producto compone**, y un dato compuesto que nadie
+pinta es exactamente el defecto que `#658` cazó en `/precios`.
+
+▶ **Lo que NO se muda aunque sea marcado: una OBLIGACIÓN.** La atribución de Places, el autor acreditado
+con su enlace, el aviso de traducción **con el original servido** y la frase de la política se quedan en el
+anfitrión. El producto tiene que poder demostrar que las cumple en la superficie que él sirve; si eso
+viajara entero a la instancia, una instalación podría retirar el logotipo de Google y aquí no fallaría
+nada. ⚠️ Y queda escrito además en `paginas/home.md`, que es lo que la instancia tampoco puede romper.
+
+▶ **Lo que SÍ se muda: el VÍDEO.** `HomePageTest` exigía `hero__video` como guarda de la guarda del hero, y
+eso **salía verde aquí y rojo en una instalación recién montada** —§4.5 otra vez—: desde `#663` el fichero
+ni siquiera vive en `main`. Lo sustituye el TITULAR, que sí es de toda portada. Y el anfitrión escribe
+`data-has-video="false"`, que es como se alcanza por fin el estado que el CSS tenía diseñado y nadie podía
+ver (`#664`).
+
+▶ **Se retiró UNA prueba y se declaró su motivo**: `HomeSectionOrderTest::test_the_template_numbers_its_
+eight_blocks_in_order` leía el fuente para comprobar que las ocho cabeceras `══ NN ·` van en orden. Su
+sujeto es la ESCRITURA de una plantilla que ya no es del producto. ⚠️ **Antes de retirarla se comprobó que
+no se perdía fuerza**: los otros cuatro casos del fichero vigilan el orden sobre el marcado SERVIDO, que es
+la afirmación fuerte. La garantía viaja a `paginas/home.md`.
+
+▶ **Y tres variables muertas, retiradas ANTES de prometerlas** (`zones`, `tickets`, `packages`; `#661` las
+midió): en cuanto una clave entra en `CONTRATO_DE_VISTAS` es una promesa a cada instalación, y retirarla
+después sube el MAYOR (`#658`). Siguen vivas como locales, que es de donde salen las tarjetas y el mosaico.
+
+⚠️⚠️ **La trampa que costó la línea base: una medida que cruza la MEDIANOCHE mide DOS DÍAS.** La huella
+«antes» empezó un domingo a las 23:52 y terminó el lunes a las 00:00. El estado del horario (`heroStatus`)
+viaja en el menú de **las doce vistas**, así que las 38 pantallas quedaron contaminadas y el DOM daba 18
+líneas de diferencia que no eran de la mudanza. Se volvió a tomar apartando el cambio con `git stash -u`
+—no basta con revertir el controlador: la vista tiene que volver a su sitio— y con el reloj lejos del
+borde. *Una medida con dos días dentro no es un juez: es ruido con forma de diferencia.*
+
+❗❗ **Y el criterio se convirtió en GUARDA, que es lo que impide que se olvide**: `AnfitrionPortadaTest`
+(tres casos) exige que el anfitrión **consuma el contrato entero**, que pinte **las cinco anclas que el
+inventario anuncia** y que **no dé por hecho material del cliente** —ni `<video>`, ni rutas de fotos
+tecleadas—. Los tres se vieron MATAR a su mutante antes de darlos por buenos (`#662`).
+⚠️⚠️ **Y nació roja enseñando algo que no se sabía**: seis de las 27 claves del contrato de la portada no
+las pinta ninguna vista, y ninguna era un olvido. **`CONTRATO_DE_VISTAS` mezcla DOS contratos**: lo que
+pone el CONTROLADOR —de la página, y lo pinta ella— y lo que el composer global reparte a toda vista
+—`site`, `heroStatus`, `offers`, los dos `ctaMinPrice*` y las dos de cookies—, que lo consumen el layout,
+el nav y el pie: o sea el **ARMAZÓN**, que es del producto. Por eso `DEL_COMPOSER` pasa a ser pública y la
+guarda la resta. *Exigirle a una página que pinte lo que pinta su marco es pedirle que lo pinte dos veces.*
+▶ **Los siete arneses de mutación, re-apuntados y en verde: 144/144** (`resenas` 36, `atribucion-google`
+29, `pie` 25, `dudas` 19, `bar` 17, `antes-de-venir` 13, `orden-secciones` 5). Tres mutantes de la
+numeración de cabeceras se **podaron con su sujeto** y los tres de la atribución solo pedían la
+indentación del anfitrión — *que no es lo mismo: uno perdió su sujeto y los otros no*.
+❗❗ **Dos hallazgos que NO son de esta tanda y que el re-apuntado destapó:**
+1. **Dos mutantes del acordeón de Dudas llevaban caducados desde `#537`**, que cambió los tokens del CSS
+   (`--bg-soft`/`--line` → `--tint-attn-border`). Sus patrones dejaron de casar y **un «NO SE APLICÓ» no
+   rompe el gate**: el arnés seguía cantando 19/19 con dos guardas que no miraban nada. *El veredicto de un
+   arnés solo vale si sus mutaciones se APLICAN, y eso hay que leerlo.*
+2. **`mutar-pie.py` reventaba antes de dar veredicto** con un `UnicodeDecodeError`: la salida de un test
+   que falla lleva el HTML dentro y PHPUnit lo **trunca por longitud**, a media secuencia UTF-8. *Quien
+   decodifica la salida de otro no puede dar por hecho que está bien formada* (`errors='replace'`).
+
+▶ **Lo que la T2b deja para la T2c**: las 208 clases de CSS sin consumidor (`#665`). De ellas, las guardas
+del producto ven **cuatro piezas** —`trio--events` y las ranuras `slot-dudas`, `slot-resenas`,
+`slot-ico-calcetines`—, ya declaradas en `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`; las otras 207 siguen
+invisibles hasta que esa tanda las mueva. Después, T3–T5 (spec hermana §4.6).
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.

@@ -432,15 +432,20 @@ class SurfaceScopeTest extends TestCase
      *
      * ⚠️ Es la primera vez que el producto CONSUME el mecanismo de la tanda 1, y este test es
      * lo único que ata las dos mitades. Un test de CSS no puede verlo: el atributo vive en Blade.
+     *
+     * ⚠️⚠️ **Desde `#666` el sujeto es el ANFITRIÓN de la portada** (la de PlayJump vive en su
+     * instancia). Y no pierde fuerza: la hoja es del producto y el atributo que la enciende está en
+     * la vista que el producto sirve, así que las dos mitades siguen atadas aquí. Lo que una
+     * instalación haga en SU portada lo juzga la huella, no esta guarda.
      */
     public function test_the_hero_declares_its_surface(): void
     {
-        $blade = (string) file_get_contents(base_path('resources/views/home.blade.php'));
+        $blade = (string) file_get_contents(base_path('resources/views/anfitrion/portada.blade.php'));
 
         $this->assertMatchesRegularExpression(
             '/class="hero__stage"[^>]*data-surface="ink"/',
             $blade,
-            'el `.hero__stage` de la home ha dejado de declarar `data-surface="ink"`. Sin el '.
+            'el `.hero__stage` de la portada ha dejado de declarar `data-surface="ink"`. Sin el '.
             'atributo, los siete tokens de superficie NO se redefinen y el hero pinta con los de '.
             'papel: fondo crema, texto crema encima. No falla nada — solo deja de verse.',
         );

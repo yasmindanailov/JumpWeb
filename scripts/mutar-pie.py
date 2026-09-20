@@ -17,7 +17,7 @@ RAIZ = Path(__file__).resolve().parent.parent
 FILTRO = 'FooterFrameTest|FooterContactLinksTest|ArmazonContractTest|SurfaceScopeTest'
 FICHEROS = [
     'resources/views/components/site/footer.blade.php',
-    'resources/views/home.blade.php',
+    'resources/views/anfitrion/portada.blade.php',
     'resources/views/components/layout.blade.php',
     'resources/views/components/site/cta-pair.blade.php',
     'public/css/landing.css',
@@ -33,7 +33,7 @@ MUTACIONES = [
      "@props(['sections' => [], 'surface' => 'paper'])"),
 
     ("la portada vuelve a pedir el pie de TINTA (se funde con la tarjeta del cierre, #523)",
-     'resources/views/home.blade.php',
+     'resources/views/anfitrion/portada.blade.php',
      # ⚠️ Anclada a la LLAMADA entera: ` surface="paper" />` a secas aparece dos veces en la portada,
      # y una mutación ambigua no se aplica (lo dijo el propio arnés, «NO APLICADA»).
      '<x-site.footer :sections="$menuSections" surface="paper" />',
@@ -168,10 +168,15 @@ def restaura():
 
 
 def verde():
+    # ⚠️⚠️ `errors='replace'` y NO el `text=True` a secas (`#666`): la salida de un test que falla
+    # lleva el HTML de la página dentro, y al volcarlo PHPUnit lo TRUNCA por longitud — a media
+    # secuencia UTF-8. El arnés reventaba con `UnicodeDecodeError` **antes de dar su veredicto**, y
+    # el fallo parecía del mutante cuando era del lector. *Quien decodifica la salida de otro no
+    # puede dar por hecho que está bien formada.*
     r = subprocess.run(
         ['docker', 'compose', 'exec', '-u', 'sail', '-T', 'laravel.test',
          'php', 'artisan', 'test', '--filter=' + FILTRO],
-        cwd=RAIZ, capture_output=True, text=True)
+        cwd=RAIZ, capture_output=True, encoding='utf-8', errors='replace')
     return r.returncode == 0, r.stdout + r.stderr
 
 

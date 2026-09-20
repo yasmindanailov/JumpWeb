@@ -44,7 +44,9 @@ class SidebarSeamTest extends TestCase
         $views = $this->bladeFiles();
 
         $this->assertNotEmpty($views);
-        $this->assertContains('home.blade.php', $views, 'no se ve la home: ¿han cambiado de sitio las vistas?');
+        // ⚠️ Desde `#666` la portada vive en la instancia: el centinela es su ANFITRIÓN, que es la
+        // vista del producto que monta el cajón y desde la que un evento del motor se colaría.
+        $this->assertContains('anfitrion/portada.blade.php', $views, 'no se ve la portada: ¿han cambiado de sitio las vistas?');
     }
 
     /** La guarda: ninguna vista de la landing despacha eventos del motor. */

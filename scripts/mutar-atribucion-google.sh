@@ -29,7 +29,7 @@ RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FIL
 
 TMP="storage/app/mutaciones/atribucion-google"
 FICHEROS=(
-    resources/views/home.blade.php
+    resources/views/anfitrion/portada.blade.php
     resources/views/components/site/google-attribution.blade.php
     public/css/landing.css
     public/images/providers/google-maps-gray.svg
@@ -100,7 +100,9 @@ mutar() {
     cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
 }
 
-HB=resources/views/home.blade.php
+# ⚠️ Desde `#666` la portada de PlayJump vive en la instancia: se muta el ANFITRIÓN MÍNIMO, que es
+# donde el PRODUCTO cumple la atribución obligatoria de Places.
+HB=resources/views/anfitrion/portada.blade.php
 CMP=resources/views/components/site/google-attribution.blade.php
 CSS=public/css/landing.css
 SVGG=public/images/providers/google-maps-gray.svg
@@ -176,19 +178,19 @@ mutar "la reseña de Google se queda sin su atribución" "$HB" \
 # sobre la opinión del parque es «misrepresent Google Maps by attributing it with non-Google
 # Maps Platform content».
 mutar "el logotipo sale también sobre una opinión propia" "$HB" \
-  '                                        @if ($op->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE)
-                                            <x-site.google-attribution surface="paper" />
-                                        @endif' \
-  '                                            <x-site.google-attribution surface="paper" />'
+  '                                            @if ($op->source === \App\Domain\Content\Contracts\Testimonial::SOURCE_GOOGLE)
+                                                <x-site.google-attribution surface="paper" />
+                                            @endif' \
+  '                                                <x-site.google-attribution surface="paper" />'
 
 # ⚠️ Sin comillas simples en el patrón: dentro de comillas simples de bash, dos seguidas NO producen
 #    una comilla — cierran y abren—, así que un patrón con `__('clave')` llega sin ellas y no casa.
 #    Cuatro mutaciones de la primera versión de este arnés salieron «NO SE APLICÓ» por esto.
 mutar "el logotipo sube a la cabecera de la sección" "$HB" \
   '</h2>
-                    {{-- ⚠️⚠️ **La entradilla sigue a la fuente de las OPINIONES' \
+                    {{-- ⚠️⚠️ La entradilla sigue a la fuente de las OPINIONES' \
   '</h2><x-site.google-attribution surface="paper" />
-                    {{-- ⚠️⚠️ **La entradilla sigue a la fuente de las OPINIONES'
+                    {{-- ⚠️⚠️ La entradilla sigue a la fuente de las OPINIONES'
 
 mutar "la superficie de tinta recibe la variante de papel" "$CMP" \
   "\$surface === 'ink' ? 'images/providers/google-maps-white.svg' : 'images/providers/google-maps-gray.svg'" \
@@ -215,10 +217,10 @@ mutar "el aviso de traducción se sirve oculto" "$HB" \
   '                                    <p class="rev__xlat" hidden>'
 
 mutar "una reseña traducida deja de decirlo" "$HB" \
-  '                                    <p class="rev__xlat">
-                                        <span class="rev__xlat-note">' \
-  '                                    <p class="rev__xlat">
-                                        <span class="rev__xlat-NO">'
+  '                                        <p class="rev__xlat">
+                                            <span class="rev__xlat-note">' \
+  '                                        <p class="rev__xlat">
+                                            <span class="rev__xlat-NO">'
 
 # La señal tiene que ser el IDIOMA: Google devuelve originalText SIEMPRE, traducida o no, así que
 # «hay original» no significa «está traducida».

@@ -333,7 +333,14 @@ class HomePageTest extends TestCase
         // Guarda de la guarda: si el recorte fuera vacío o mínimo, las tres aserciones de abajo
         // pasarían sin mirar nada.
         $this->assertStringContainsString('hero__stage', $hero, 'el recorte del hero no trae el escenario');
-        $this->assertStringContainsString('hero__video', $hero, 'el recorte del hero no trae el vídeo');
+        // ⚠️⚠️ **Aquí se exigía `hero__video`, y desde `#666` no se puede**: el producto no puede
+        // pedirle a una instalación que tenga vídeo. El fichero es del CLIENTE y desde `#663` ni
+        // siquiera vive en `main`, así que esta aserción habría salido **verde aquí y roja en una
+        // instalación recién montada** — §4.5 otra vez. El estado «sin vídeo» que el CSS tiene
+        // diseñado es un estado válido, y el anfitrión es quien lo alcanza.
+        // ▶ Lo que la sustituye como guarda de la guarda es el TITULAR, que sí es de toda portada:
+        // es el único `<h1>` de la página y no se va nunca.
+        $this->assertStringContainsString('hero__headline', $hero, 'el recorte del hero no trae el titular');
 
         // ⚠️⚠️ **Esta aserción decía `cta-prime` y desde `#225` NO FIJABA NADA**: esa clase ya no
         // existe en ninguna parte del producto, así que la ausencia se cumplía sola. Y el motivo

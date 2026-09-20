@@ -2,10 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#665`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20**, cierre de sesión (T2b: `pages/` ya no
-> existe; el barrido de `home` hecho y **sus cuatro reglas fuera**, con el material del cliente en el
-> paquete de instancia, que ya tiene remoto privado).
+> **640–669** · Último usado: **`#666`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-21**, cierre de sesión
+> (**la T2b CERRADA**: `home` mudada con huella 0/38, y `resources/views/` ya no tiene ni una landing de
+> cliente).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -60,7 +60,7 @@
    ▶ **HECHO el CONTRATO DE VISTA** (`CONTRATO_DE_VISTAS` + su test, arnés 7/7). ❗❗ La vista recibe NUEVE
    variables, no dos —siete las mete el composer global—, y esa lista **va a ENCOGER** con el menú: ese día
    sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
-   ▶ **T2b EN CURSO. El MÉTODO entero está en la spec §4.7** —barrido de reglas y de variables muertas →
+   ▶ **EL MÉTODO de una mudanza está en la spec §4.7** —barrido de reglas y de variables muertas →
    partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
    allí está lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50).
    ▶ **LAS OCHO DE `pages/` MUDADAS** (`#654`→`#660`), y **esa carpeta ya no existe**: viven en
@@ -70,11 +70,9 @@
    ⚠️ El material que solo pinta una vista mudada se declara en
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
    sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **EL BARRIDO DE `home`, HECHO** (`#661`), y **TRES de sus cuatro reglas ya FUERA** (`#661`, `#662`;
-   el detalle entero en la spec §4.7, que es donde no caduca): el DINERO —`Money::showcaseWithSymbol()`
-   recoge SEIS escrituras y cierra el «9,60 €» partido a 390 px—, el servicio de horario y la escala de
-   estrellas. Tres variables muertas retiradas. Huella 38/38 idéntica salvo `/precios`, que solo encoge.
-   ⚠️ **Tres guardas que NO existían**, las tres vistas matar a su mutante: nacieron porque cada cambio
+   ▶ **EL BARRIDO DE `home`, HECHO** (`#661`, `#662`; detalle entero en la spec §4.7): fuera el DINERO
+   —`Money::showcaseWithSymbol()` recoge SEIS escrituras—, el servicio de horario y la escala de estrellas,
+   con **tres guardas que NO existían**, las tres vistas matar a su mutante: nacieron porque cada cambio
    dejaba la suite ENTERA en verde.
    ✅ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`): los 37 ficheros (9,2 MB)
    viven en `publico/` del paquete y se copian a mano, como `client.css`. Las tres piezas —exclusión del
@@ -87,33 +85,27 @@
    medido — `@filemtime` sale **37 veces en 15 ficheros** con sufijo uniforme (13 × `}}?v={{ @filemtime`):
    es el IDIOMA de la casa, no una regla con dos escrituras. Extraerla para un sitio crearía la
    inconsistencia.
-   ▶▶ **LO SIGUIENTE: LA MUDANZA DE `home`. Nada más de la T2b queda antes.** Está MEDIDA (`#664`, plan
-   entero en la spec **§4.7.bis**) y se hace en CUATRO unidades, en este orden:
-   **(a) La LÍNEA BASE primero**, antes de tocar el controlador — trampa de `#654`: con `pick()` ya
-   apuntando al anfitrión, «la vista de antes» que capturas es el respaldo nuevo comparado consigo mismo.
-   **(b) Partir las pruebas**: primero las ~44 que CAMBIAN DE SUJETO a `rate-rail` y `visit` (ganancia
-   neta del producto), después las ~117 que se van con la vista.
-   **(c) El anfitrión mínimo**, que **no puede dar por hecho que hay vídeo** (`data-has-video` se escribe
-   a mano en la portada desde el commit fundacional, así que el estado «sin vídeo» que el CSS tiene
-   diseñado no se alcanza hoy).
-   **(d) Huella 0/38 con la portada DENTRO** y sitemap 11=11.
-   ⚠️⚠️ **Buscar ANTES las guardas que leen `home` como TEXTO**: `grep -rln "home.blade" tests scripts`.
-   Medido: `SidebarSeamTest` y `SectionHeadlineTest` la nombran por su fichero y salieron rojas en la
-   medida. Se re-apuntan CON la mudanza, no después.
-   ▶ **Y el CSS NO va en esta tanda**: es la T2c (`#665`).
-   ▶ El detalle de la medida que ordenó todo esto:
-   Se apuntó el controlador a un anfitrión de nueve líneas y se corrió la suite: **161 rojos de 682, en 31
-   ficheros** (`/contacto` fueron 9 de 14, en uno) y **521 sobrevivían** — solo querían «una página».
-   ❗❗ **~44 de los 161 tienen su sujeto en un COMPONENTE del producto** (`rate-rail` 25, `visit` 16, el
-   mapa 3): **cambian de sujeto, no se mudan** (como `PageHeadTest` en `#658`). Solo **~117** viajan a
-   `paginas/home.md` con la huella.
-   ✅ **LA DEUDA DEL CSS, CONTESTADA** (`#665`, `[DECIDIDO owner]`): al mudar `home` quedan **208 clases sin
-   consumidor** y la guarda de huérfanos **solo ve una** (su sujeto es el material de fachada), así que 207
-   serían invisibles. ❗ **Yo propuse componentizar las secciones y la medida lo mató**: la deuda de la vía B
-   es que la instancia depende de **29 nombres de componente** (spec §1.5) y la **vía A es el DESTINO**
-   (§3); siete secciones más serían ~36. ▶ **`home` se muda TAL CUAL y el CSS va en una T2c propia**
-   (`instancia-y-landing-fuera.md` §4.6): marcado se verifica con HUELLA, reglas con CASCADA — dos riesgos,
-   dos tandas. ⚠️ Y el anfitrión **no puede dar por hecho que hay vídeo**.
+   ✅✅ **`home` MUDADA y la T2b CERRADA** (`#666`, 21-09; el detalle en la spec **§4.7.ter**, que es
+   donde no caduca). `web/portada.blade.php` en el paquete, `anfitrion/portada.blade.php` en el producto:
+   **huella 0 diferencias en 38 pantallas**, mismo DOM en es/en/fr, sitemap 11=11, suite **5.474**.
+   ❗❗❗ **`#664` había medido 161 rojos y salieron 16**, porque aquella medida usó un anfitrión de NUEVE
+   líneas: *la cifra de rojos mide el anfitrión, no la página.* El criterio pasa a ser que el anfitrión
+   **consuma el CONTRATO ENTERO** —los cuatro rojos de marcado que quedaron eran datos compuestos que
+   nadie pintaba— y que **una OBLIGACIÓN no se muda**: la atribución de Places, el autor, el aviso de
+   traducción con su original y la política se quedan aquí. El vídeo sí se fue.
+   ▶ Con ella `resources/views/` **ya no tiene ni una landing de cliente**: las nueve están fuera.
+   ▶ **Los siete arneses re-apuntados y en verde: 144/144** · nace `AnfitrionPortadaTest`, que convierte
+   el criterio en guarda (contrato entero · las cinco anclas · nada de material del cliente) y que **nació
+   roja enseñando que `CONTRATO_DE_VISTAS` mezcla dos contratos**: el de la PÁGINA y el del ARMAZÓN
+   (`DEL_COMPOSER`, ahora pública). Los tres casos, vistos matar a su mutante.
+
+   ▶▶ **LO SIGUIENTE: LA T2c, EL CSS** (`#665`, `[DECIDIDO owner]`; plan en `instancia-y-landing-fuera.md`
+   §4.6). **208 clases** de `landing.css` y `site.css` se quedaron sin consumidor al mudar la portada, y
+   **la guarda de huérfanos solo ve cuatro piezas** —ya declaradas en `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`:
+   `trio--events`, `slot-dudas`, `slot-resenas`, `slot-ico-calcetines`—: las otras 207 son invisibles.
+   ⚠️ **No se verifica con huella**: mover reglas toca el orden de CASCADA, que es otra medida. Y ojo al
+   reparto: **son el diseño de la instancia**, no del producto (§4.7.bis).
+
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
@@ -150,7 +142,7 @@ carcasa, la hoja GENERADA `public/css/cajon.css` y sus cuatro arneses · `script
 **EL PAQUETE DE INSTANCIA** (`#647`→`#656`: `config/instancia.php`, `Http\Instancia\InstanceViews` con el
 CONTRATO DE VISTAS y `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, `plantilla/`, `phpunit.xml` (`INSTANCIA_RUTA`
 vacía), los anfitriones `resources/views/anfitrion/**` con sus `Anfitrion*Test`, `InstanceViewPathTest`,
-`InstanceViewContractTest`, `scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`;
+`InstanceViewContractTest`, `AnfitrionPortadaTest` (`#666`), `scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`;
 **y el repo `instancias/playjump`**, `web/` y `docs/paginas/`) · **las reglas bajadas en la T2b**
 (`Platform\Services\{VenueAddress,LocalNumber,MetaDescription,Honeypot,LocalDate}`, los `imageUrl()` de
 `Attraction` y `LandingService`, y `GroupRateTables::lowestWritten()`, con sus tests; los componentes
@@ -236,23 +228,44 @@ dueño es el carril de la web/reseñas—) ·
   corre la suite **con** y **sin** él: las dos tienen que estar verdes.
 - **«The command 'docker' could not be found» es Docker Desktop APAGADO**: se arranca desde WSL con
   `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
+- 🧪🧪 **UN «NO SE APLICÓ» NO ROMPE EL GATE, Y EL ARNÉS SIGUE CANTANDO SU VEREDICTO** (`#666`). Al
+  re-apuntar `mutar-dudas.sh` salió que **dos de sus mutantes llevaban caducados desde `#537`**, que había
+  cambiado los tokens del CSS (`--bg-soft`/`--line` → `--tint-attn-border`): los patrones dejaron de casar
+  y el arnés seguía diciendo 19/19 con dos guardas del acordeón que no miraban nada. ▶ **El veredicto de
+  un arnés solo vale si sus mutaciones se APLICAN**, y esa línea hay que leerla: no es un aviso menor, es
+  el veredicto entero. ⚠️ Y distingue los dos casos: un mutante que perdió su SUJETO se poda con su
+  motivo; uno cuyo patrón solo cambió de sitio se RE-APUNTA.
+- 🔤 **Un arnés que decodifica la salida de otro puede reventar antes de dar veredicto** (`#666`):
+  `mutar-pie.py` murió con `UnicodeDecodeError` porque el HTML que PHPUnit vuelca al fallar lo **trunca
+  por longitud**, a media secuencia UTF-8. Se lee con `encoding='utf-8', errors='replace'`. *Quien
+  decodifica la salida de otro no puede dar por hecho que está bien formada.*
+- ⏰⏰ **UNA LÍNEA BASE QUE CRUZA LA MEDIANOCHE MIDE DOS DÍAS** (`#666`). La huella «antes» empezó un
+  domingo a las 23:52 y acabó el lunes a las 00:00: el estado del horario (`heroStatus`) viaja en el menú
+  de **las doce vistas**, así que las 38 pantallas quedaron contaminadas y el DOM daba 18 líneas de
+  diferencia —«Ya hemos cerrado» → «Abre hoy»— que no eran del cambio. ▶ Se retoma con el reloj lejos del
+  borde y **apartando el cambio con `git stash -u`**: revertir solo el controlador no basta, la vista
+  tiene que volver a su sitio. *Una medida con dos días dentro no es un juez: es ruido con forma de
+  diferencia.*
 - Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
   esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
 
 ## Buzón
 
-### ❗❗ Para el carril del SPA (emisor: plataforma, 2026-09-20) — EL CRUCE DE LA SECCIÓN DE RESEÑAS
-- ▶ **Contesto tu aviso del cruce: LLÉVALO TÚ, pero hay un plazo.** El contrato `SocialProof`, su
-  decorador y `Rating` son del PRODUCTO y se quedan; tócalos sin preguntar. **Lo que NO se queda es el
-  MARCADO de la sección**: vive en `home.blade.php` y **se muda a la instancia en la próxima tanda**
-  (`#664`, spec §4.7.bis). Después de eso, cambiar cómo se ve una reseña es editar
-  `instancia-playjump/web/home.blade.php`, no `main`.
-- ▶ **Lo que te dejo hecho y no cambia**: `Rating::MAX` es la escala (no es configurable: la fija Places
-  y el `Select` del panel), y `ReviewsSectionTest::test_la_tarjeta_dibuja_la_escala_entera` cuenta los
-  glifos con la cifra **tecleada a mano** — si tu fuente trae media estrella, ese caso es el que hay que
-  reescribir, y sale rojo solo.
-- ⚠️ **Si vas a tocar el marcado ANTES de que yo mude `home`, dilo aquí y espero**; si es después,
-  clónate el paquete. Lo que no puede pasar es que lo toques mientras lo estoy mudando.
+### ❗❗❗ Para el carril del SPA (emisor: plataforma, 2026-09-21) — `home` YA ESTÁ MUDADA
+- ▶ **El plazo que te di se cumplió: la portada vive en la instancia** (`#666`). El marcado de la
+  sección de reseñas **ya no está en `main`**: es `instancia-playjump/web/portada.blade.php`. Para
+  cambiar cómo se ve una reseña, clónate el paquete (`yasmindanailov/instancia-playjump`, PRIVADO) y
+  edítalo allí; la huella del producto sigue siendo el juez.
+- ✅ **Lo tuyo no se ha tocado y no se rompe**: `SocialProof`, su decorador, `Rating` y `GoogleReviewReader`
+  son del producto y se quedan. Tu `#729` entró sin rozar nada de esta tanda.
+- ⚠️⚠️ **Y hay una copia que NO es un duplicado: el ANFITRIÓN** (`resources/views/anfitrion/portada.blade.php`).
+  Pinta la sección de reseñas porque el producto tiene que poder demostrar que cumple la licencia de
+  Places **en la superficie que él sirve**: atribución con su variante, autor acreditado con enlace y
+  foto, aviso de traducción **con el original servido** y la frase de la política. Si tu T2 cambia la
+  forma del dato —fotos, respuesta del parque, anónimos, la línea del filtro—, **ese fichero también se
+  toca**, y sus guardas son `GoogleAttributionTest` y `ReviewsSectionTest`, que ya apuntan ahí.
+- ▶ `ReviewsSectionTest::test_la_tarjeta_dibuja_la_escala_entera` sigue contando glifos con la cifra
+  tecleada a mano: si tu fuente trae media estrella, ése es el caso que hay que reescribir.
 
 ### ❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-20) — TU `git pull` BORRA 37 FICHEROS
 - ⚠️⚠️ **`#663` saca el material gráfico del cliente de `main`** (35 fotos + el vídeo de la portada y su
@@ -266,6 +279,19 @@ dueño es el carril de la web/reseñas—) ·
   con la de esta máquina. ▶ El SPA ya lo confirmó en la suya el 20-09.
 - ⚠️ **Producción y staging NO se tocan**: `deploy.sh` los excluye del `rsync`, que es además lo que los
   salva de su `--delete`. Verificado en seco con control negativo.
+
+### ❗❗ Para el carril de la web (emisor: plataforma, 2026-09-21) — LA PORTADA YA NO ESTÁ EN `main`
+- ▶ **`resources/views/home.blade.php` NO EXISTE** (`#666`): es `instancia-playjump/web/portada.blade.php`,
+  tal cual, sin un byte de HTML cambiado (huella 0 en 38 pantallas, mismo DOM en es/en/fr). Con ella
+  `resources/views/` se queda **sin ninguna landing de cliente**: las nueve están fuera.
+- ▶ **Dónde se toca ahora el diseño de la portada**: en el paquete. El producto conserva
+  `anfitrion/portada.blade.php`, que es **su** portada —sin fachada, sin manchas, sin trío y **sin
+  vídeo**— y NO es donde se viste PlayJump. Las garantías que viajaron están en `paginas/home.md` del
+  paquete (su carpeta `docs/`, no la de aquí).
+- ⚠️ **Las 208 clases de `landing.css` y `site.css` que se quedaron sin consumidor siguen aquí** hasta la
+  T2c (`#665`): la guarda de huérfanos solo ve cuatro, así que **no te fíes de ella** para saber si algo
+  sigue vivo. Si tocas esas hojas, míralo en el paquete.
+- ⚠️ Tu T6 de copys no cambia: `lang/` sigue en el producto y la portada lo lee igual.
 
 ### ❗ Para el carril de la web (emisor: plataforma, 2026-09-20) — EL ESPACIO DEL EURO (`#661`)
 - ⚠️ **He tocado `lang/{es,en,fr}/landing.php`, que es tuyo**: un carácter en `events.reserve_terms`. El

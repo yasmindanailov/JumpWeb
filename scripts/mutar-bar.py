@@ -26,7 +26,9 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent.parent
 FILTRO = 'Tests\\\\Feature\\\\Landing\\\\BarPageTest|AnfitrionBarTest'
 VISTA = 'resources/views/anfitrion/bar.blade.php'
-PORTADA = 'resources/views/home.blade.php'
+# ⚠️ Desde `#666` la portada de PlayJump también vive en la instancia: la puerta del bar se muta en
+# el ANFITRIÓN MÍNIMO, que es la portada que el producto sirve.
+PORTADA = 'resources/views/anfitrion/portada.blade.php'
 CONTROLADOR = 'app/Http/Controllers/BarController.php'
 HOME = 'app/Http/Controllers/HomeController.php'
 SERVICIO = 'app/Domain/Content/Services/BarPage.php'

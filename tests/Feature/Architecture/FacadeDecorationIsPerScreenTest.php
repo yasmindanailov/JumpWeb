@@ -103,11 +103,12 @@ class FacadeDecorationIsPerScreenTest extends TestCase
 
         $this->assertGreaterThan(60, count($views), 'se están leyendo muy pocas vistas: el barrido no llega');
         // ⚠️ El defecto apareció en `pages/rules.blade.php`, que desde `#655` vive en la INSTANCIA: el
-        // barrido ya no la ve (una instancia no es una app PHP; su juez es la huella). Lo que sigue aquí
-        // es la portada, la vista con más bucles del producto, hasta que también se mude.
+        // barrido ya no la ve (una instancia no es una app PHP; su juez es la huella). Y desde `#666`
+        // tampoco la portada: el centinela es su ANFITRIÓN, que conserva los bucles —zonas, mosaico,
+        // packs y dudas— y es la vista del producto donde una textura mal puesta se repetiría.
         $this->assertContains(
-            'home.blade.php', $views,
-            'el barrido no ve la portada, que es la vista con más bucles del producto',
+            'anfitrion/portada.blade.php', $views,
+            'el barrido no ve el anfitrión de la portada, que es la vista con más bucles del producto',
         );
     }
 

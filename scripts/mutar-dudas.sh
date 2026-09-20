@@ -23,7 +23,7 @@ RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FIL
 
 TMP="storage/app/mutaciones/dudas"
 FICHEROS=(
-    resources/views/home.blade.php
+    resources/views/anfitrion/portada.blade.php
     public/css/landing.css
     resources/js/app.js
     lang/es/landing.php
@@ -89,7 +89,8 @@ mutar() {
     cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
 }
 
-HB=resources/views/home.blade.php
+# ⚠️ Desde `#666` la portada de PlayJump vive en la instancia: se muta el ANFITRIÓN MÍNIMO.
+HB=resources/views/anfitrion/portada.blade.php
 CSS=public/css/landing.css
 JS=resources/js/app.js
 ES=lang/es/landing.php
@@ -152,13 +153,18 @@ echo
 echo '── La tarjeta y su filete ──'
 
 # 8 · el defecto que el owner señaló en `#486`: dos líneas seguidas en la primera fila.
+# ⚠️⚠️ **Estos dos mutantes llevaban CADUCADOS desde `#537`** y salió al re-apuntar el arnés en `#666`:
+# aquella tanda cambió el token del filete y del borde (`--bg-soft`/`--line` → `--tint-attn-border`) y los
+# patrones dejaron de casar. **Un «NO SE APLICÓ» no rompe el gate**, así que dos guardas del acordeón
+# llevaban meses sin vigilar nada y el veredicto del arnés (19/19) lo daba por bueno. *Un mutante cuyo
+# texto ya no existe solo mide que nadie lo mira* (`#658`).
 mutar "el filete sube a la primera fila" "$CSS" \
-  '.faq__item + .faq__item { border-top: 1px solid var(--bg-soft); }' \
-  '.faq__item { border-top: 1px solid var(--bg-soft); }'
+  '.faq__item + .faq__item { border-top: 1px solid var(--tint-attn-border); }' \
+  '.faq__item { border-top: 1px solid var(--tint-attn-border); }'
 
 # 9 · sin borde, el acordeón deja de ser una tarjeta y vuelve a ser filetes sueltos.
 mutar "la tarjeta pierde su borde" "$CSS" \
-  '  border: 1px solid var(--line);
+  '  border: 1px solid var(--tint-attn-border);
   border-radius: var(--r-lg);
   /* Recorta las esquinas' \
   '  border: 0;

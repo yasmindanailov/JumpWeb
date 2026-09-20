@@ -20,7 +20,7 @@ RUN="docker compose exec -u sail -T laravel.test php artisan test --filter=${FIL
 
 TMP="storage/app/mutaciones/antes-de-venir"
 FICHEROS=(
-    resources/views/home.blade.php
+    resources/views/anfitrion/portada.blade.php
     resources/views/components/site/sample-qr.blade.php
     app/Domain/Platform/Services/SampleQrCode.php
     app/Http/Controllers/HomeController.php
@@ -86,7 +86,8 @@ mutar() {
     cp "$TMP/$(basename "$fichero")" "$fichero"; touch "$fichero"
 }
 
-HOME_V=resources/views/home.blade.php
+# ⚠️ Desde `#666` la portada de PlayJump vive en la instancia: se muta el ANFITRIÓN MÍNIMO.
+HOME_V=resources/views/anfitrion/portada.blade.php
 SQR=resources/views/components/site/sample-qr.blade.php
 GEN=app/Domain/Platform/Services/SampleQrCode.php
 CTL=app/Http/Controllers/HomeController.php

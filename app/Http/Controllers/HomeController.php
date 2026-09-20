@@ -16,12 +16,23 @@ use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\Setting;
 use App\Http\Controllers\Payments\RedsysReturnController;
+use App\Http\Instancia\InstanceViews;
 use App\Http\Sidebar\AccountDoor;
 use App\Http\Sidebar\SidebarEntry;
 use Illuminate\Http\Request;
 
+/**
+ * La PORTADA.
+ *
+ * ⚠️ Desde `#666` (F5 · T2b) su vista vive en la INSTANCIA (`web/portada.blade.php`) y el producto
+ * sirve su anfitrión mínimo sin paquete. Lo que se pasa aquí es su CONTRATO
+ * (`InstanceViews::CONTRATO_DE_VISTAS`): renombrar una clave rompe todas las landings a la vez, y
+ * ninguna prueba de este repo se enteraría.
+ */
 class HomeController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
     public function __invoke(Request $request, ScheduleDisplay $schedule)
     {
         $this->maybeConsumeRedsysReturn($request);
@@ -47,12 +58,34 @@ class HomeController extends Controller
 
         // Las entradas activas de zona operativa, que alimentan a la vez la sección de tarifas y el
         // sello de precio de las tarjetas de zona. Se resuelven UNA vez.
+        // ⚠️ `inOperationalZone()`: NO pintar entradas de una zona desactivada con CTA «Reservar»
+        // que el flujo de compra no puede vender (espejo de packs/sidebar; Sistema 6 · W4).
         $entradas = TicketType::with(['prices.rateType', 'addons.prices.rateType'])
             ->ofType(TicketType::TYPE_ENTRY)
             ->where('is_active', true)->inOperationalZone()->orderBy('position')->get();
 
-        return view('home', [
-            'zones' => $zones,
+        // Cumpleaños = productos `pack` (#70/#87). Landing de packs: VISIBLE en la web (`is_active`)
+        // Y en venta online (`sellable()`). Tras el desacople is_active⊥is_sellable (P3) la landing
+        // exige AMBOS: no anuncia un pack oculto de la web ni uno no vendible (los packs no tienen
+        // fallback «Llamar» como las entradas), y así el CTA «Reservar ahora» siempre tiene su
+        // sección detrás (coherencia CTA⟺catálogo, #210).
+        // Fuente ÚNICA (#256, modelo A): packs de la superficie Cumpleaños = vendibles de zona
+        // operativa SIN un `LandingService` que los reubique en /servicios (idéntico en Events).
+        $packs = TicketType::birthdaySurfacePacks()
+            ->with(['prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get();
+
+        /*
+         * ⚠️⚠️ **TRES VARIABLES MUERTAS RETIRADAS** (`#661` las midió, `#666` las quita): `zones`,
+         * `tickets` y `packages` viajaban a la vista y **ninguna se leía** —comprobado que tampoco
+         * por un `@include`: no hay ninguno—. Las tres siguen aquí como locales, que es de donde
+         * salen las tarjetas, el mosaico y el recuento.
+         * ❗ **No es higiene, es el momento**: mientras es una variable, un dato sin consumidor no se
+         * nota; en cuanto se declara en `CONTRATO_DE_VISTAS` es una **promesa a cada instalación**, y
+         * retirarla después sube el MAYOR del contrato y obliga a avisar a todas (`#658`).
+         * ⚠️ `/precios` tenía dos con los MISMOS nombres: un controlador que compone pasa de paso lo
+         * que usó para componer.
+         */
+        return view($this->instancia->pick('portada', 'anfitrion.portada'), [
             /*
              * Las tarjetas de «Para quién» (`#478`). Se componen en el dominio y no en la vista:
              * cruzar zonas con entradas, elegir la más barata y redactar la regla de altura es
@@ -112,23 +145,6 @@ class HomeController extends Controller
             // su consumidor dejó de ser el chip del hero —que `#226` retiró— y pasó a ser el bloque
             // de datos del MENÚ, que vive en las doce vistas. Calcularlo también aquí sería
             // ejecutar el mismo servicio dos veces en la misma petición.
-            // `inOperationalZone()`: NO pintar entradas de una zona desactivada con CTA «Reservar»
-            // que el flujo de compra no puede vender (espejo de packs/sidebar; Sistema 6 · W4).
-            // ⚠️ La MISMA colección que alimenta las tarjetas de zona: se resolvía aquí y volver a
-            // consultarla para el sello de precio habría sido la misma consulta dos veces por
-            // petición, con el riesgo de que las dos secciones ofrecieran precios distintos.
-            'tickets' => $entradas,
-            // Cumpleaños = productos `pack` (#70/#87). El selector de la landing soporta N packs
-            // por id único (#194). Cada pack muestra sus complementos (pivote) bajo la tarjeta.
-            // Landing de packs: VISIBLE en la web (`is_active`) Y en venta online (`sellable()`).
-            // Tras el desacople is_active⊥is_sellable (P3) la landing exige AMBOS: no anuncia un pack
-            // oculto de la web ni uno no vendible (los packs no tienen fallback «Llamar» como las
-            // entradas), y así el CTA «Reservar ahora» (deep-link `show-packs`) siempre tiene su
-            // sección «Servicios» detrás (coherencia CTA⟺catálogo, #210).
-            // Fuente ÚNICA (#256, modelo A): packs de la superficie Cumpleaños = vendibles de zona
-            // operativa SIN un `LandingService` que los reubique en /servicios (idéntico en Events).
-            'packages' => ($packs = TicketType::birthdaySurfacePacks()
-                ->with(['prices.rateType', 'addons.prices.rateType'])->orderBy('position')->get()),
             /*
              * Las dos tarjetas de «Cumpleaños» (`#483`). Se componen en el dominio y no en la vista:
              * cruzar el pack con su tarifa especial, elegir qué edad se publica y escribir los

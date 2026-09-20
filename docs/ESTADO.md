@@ -11,7 +11,7 @@
 
 | Carril | Máquina | Banda | Fichero | Estado |
 |---|---|---|---|---|
-| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **640–669** | `carriles/plataforma.md` | **F0–F4 ✅**. **v1.2.0 etiquetada y SIN DESPLEGAR** — lo decide el owner. **F5**: menú de hechos SERVIDO (contrato 1.10.0) · **T2a hecha** (el paquete de instancia, `SEC-12`) · **T2b en curso** |
+| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **640–669** | `carriles/plataforma.md` | **F0–F4 ✅**. **v1.2.0 etiquetada y SIN DESPLEGAR** — lo decide el owner. **F5**: menú de hechos SERVIDO (contrato 1.11.0) · **T2a y T2b HECHAS** (`#666`): las NUEVE vistas de la landing viven en la instancia · queda la **T2c**, el CSS |
 | 🎨 Diseño de la web | este ordenador | 580–609 | `carriles/web.md` | todo en producción (13-09); sigue la T6 de copys |
 | 🧩 Diseño del SPA (el cajón) | el otro ordenador | 550–579 | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
 | 📧 Correos | este ordenador | 500–519 | `carriles/correos.md` | entero en el árbol; quedan cuatro ámbar y el ojo del owner |

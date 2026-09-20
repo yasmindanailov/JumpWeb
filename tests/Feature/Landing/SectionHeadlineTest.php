@@ -69,7 +69,9 @@ class SectionHeadlineTest extends TestCase
     {
         $vistas = $this->vistas();
 
-        $this->assertArrayHasKey('home.blade.php', $vistas, 'la portada no está en el corpus');
+        // ⚠️ Desde `#666` la portada de PlayJump vive en la instancia; el centinela es el ANFITRIÓN,
+        // que es la portada que el producto sirve y la que tiene que respetar el molde de cabecera.
+        $this->assertArrayHasKey('anfitrion/portada.blade.php', $vistas, 'la portada no está en el corpus');
         // ⚠️ Desde `#660` (F5 · T2b) **`resources/views/pages/` ya no existe**: las ocho páginas viven en
         // la instancia y el producto sirve su anfitrión mínimo. El centinela se re-apunta a uno de ellos,
         // que es la página pública que el producto SÍ tiene.
