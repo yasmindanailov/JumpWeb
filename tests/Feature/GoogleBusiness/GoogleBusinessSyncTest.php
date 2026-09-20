@@ -6,6 +6,7 @@ use App\Domain\Content\Enums\GoogleBusinessSyncOutcome;
 use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Content\Services\GoogleBusinessSync;
+use App\Domain\Content\Services\GoogleReviewImages;
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
@@ -17,6 +18,7 @@ use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -47,8 +49,17 @@ class GoogleBusinessSyncTest extends TestCase
      */
     private array $paginas = [];
 
+    /** Un PNG de 1×1 de verdad: el descargador decide el tipo por los BYTES, no por la cabecera. */
+    private const PNG = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n\x2d\xb4\x00\x00\x00\x00IEND\xaeB`\x82";
+
     /** Cuántas veces se ha pedido `reviews.list` en ESTE caso. */
     private int $peticiones = 0;
+
+    /** Cuántas imágenes se han descargado en ESTE caso. */
+    private int $imagenes = 0;
+
+    /** Qué contesta Google al pedirle una imagen. @var callable(): mixed */
+    private $imagenContesta;
 
     /** Quién contesta a `reviews.list`. @var (callable(): mixed)|null */
     private $contesta = null;
@@ -72,6 +83,10 @@ class GoogleBusinessSyncTest extends TestCase
         Setting::updateOrCreate(['key' => GoogleBusinessCredentials::CLIENT_SECRET_KEY], ['value' => 'GOCSPX-secreto', 'group' => 'google']);
         Setting::flushMemo();
 
+        Storage::fake(GoogleReviewImages::DISK);
+
+        $this->imagenContesta = fn () => Http::response(self::PNG);
+
         Http::fake([
             GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::response(['access_token' => 'ya29.de-acceso', 'expires_in' => 3600]),
             GoogleBusinessApi::REVIEWS_BASE.'*' => function () {
@@ -82,6 +97,15 @@ class GoogleBusinessSyncTest extends TestCase
                 }
 
                 return ($this->contesta)();
+            },
+            // ⚠️⚠️ **Las imágenes se fingen APARTE y se cuentan.** Al escribir la T2·4 el descargador
+            // llevaba un `catch (Throwable)` que se tragaba el aviso de «petición sin doble», así que
+            // estos casos pasaban en verde **sin descargar nada**. El doble es ancho a propósito: si
+            // la pasada pidiera una imagen a un host que no es éste, saltaría como petición perdida.
+            'https://lh3.googleusercontent.com/*' => function () {
+                $this->imagenes++;
+
+                return ($this->imagenContesta)();
             },
         ]);
 
@@ -194,16 +218,70 @@ class GoogleBusinessSyncTest extends TestCase
         $this->assertSame(1, GoogleBusinessReview::query()->count());
     }
 
-    public function test_la_url_de_la_foto_de_google_no_llega_a_la_tabla(): void
+    public function test_la_foto_se_descarga_y_lo_que_se_guarda_es_una_ruta_nuestra(): void
     {
         $this->conectada();
         $this->fakePages([['reviews' => [$this->row('r1')], 'averageRating' => 5.0, 'totalReviewCount' => 1]]);
 
         $this->sync()->run();
 
-        // ❗ La reseña TRAE la URL de Google en memoria (la necesita la T2·4), y aun así la columna
-        // se queda a `null`: la guarda del modelo lanzaría, pero antes de eso la pasada ni la toca.
-        $this->assertNull(GoogleBusinessReview::query()->sole()->author_photo_path);
+        $ruta = GoogleBusinessReview::query()->sole()->author_photo_path;
+
+        // ❗ La reseña TRAE la URL de Google en memoria, y lo que entra en la columna es la ruta del
+        // fichero que hemos descargado — nunca la URL. La guarda del modelo lanzaría, pero antes de
+        // eso la pasada ni la tiene a mano.
+        $this->assertSame(1, $this->imagenes, 'no se ha descargado la foto');
+        $this->assertNotNull($ruta);
+        $this->assertTrue(GoogleReviewImages::isOwnName($ruta), "«{$ruta}» no tiene la forma de un fichero nuestro");
+        Storage::disk(GoogleReviewImages::DISK)->assertExists($ruta);
+    }
+
+    public function test_una_foto_ya_descargada_no_se_vuelve_a_pedir(): void
+    {
+        $this->conectada();
+        $this->fakePages([['reviews' => [$this->row('r1')], 'averageRating' => 5.0, 'totalReviewCount' => 1]]);
+        $this->sync()->run();
+        $this->assertSame(1, $this->imagenes);
+
+        // La misma reseña al día siguiente: el fichero se llama por el hash de su contenido, así que
+        // ya está bien. Volver a pedirla sería doce imágenes diarias para reescribir lo mismo.
+        $this->fakePages([['reviews' => [$this->row('r1')], 'averageRating' => 5.0, 'totalReviewCount' => 1]]);
+        $this->sync()->run();
+
+        $this->assertSame(1, $this->imagenes, 'se ha vuelto a descargar una foto que ya estaba');
+    }
+
+    public function test_al_retirar_una_resena_su_fichero_se_va_con_ella(): void
+    {
+        $this->conectada();
+        $this->fakePages([['reviews' => [$this->row('r1')], 'averageRating' => 5.0, 'totalReviewCount' => 1]]);
+        $this->sync()->run();
+        $ruta = GoogleBusinessReview::query()->sole()->author_photo_path;
+        Storage::disk(GoogleReviewImages::DISK)->assertExists($ruta);
+
+        $this->fakePages([['reviews' => [], 'averageRating' => null, 'totalReviewCount' => 0]]);
+        $this->sync()->run();
+
+        // ❗❗ **En la misma operación que su fila** (§4.3·6). Si el fichero sobreviviera, la cara de
+        // alguien cuya reseña ya no existe seguiría servida por una URL que alguien pudo guardar.
+        Storage::disk(GoogleReviewImages::DISK)->assertMissing($ruta);
+    }
+
+    public function test_si_la_descarga_falla_la_resena_se_guarda_sin_foto(): void
+    {
+        $this->conectada();
+        $this->fakePages([['reviews' => [$this->row('r1')], 'averageRating' => 5.0, 'totalReviewCount' => 1]]);
+        // ⚠️ Se cambia el doble por su PROPIEDAD y no con otro `Http::fake()`: ése fusiona, y el
+        // primero seguiría ganando. Es la trampa que pagó esta misma tanda.
+        $this->imagenContesta = fn () => Http::response('', 404);
+
+        $this->sync()->run();
+
+        // §4.3·6: si la descarga falla, **la inicial, jamás la URL de Google**. Y la reseña se
+        // guarda igual: perder una opinión por una foto sería el peor cambio posible.
+        $resena = GoogleBusinessReview::query()->sole();
+        $this->assertNull($resena->author_photo_path);
+        $this->assertSame('Marta R.', $resena->author_name);
     }
 
     // ─────────── Borrar solo con una pasada creíble (§4.3·3) ───────────

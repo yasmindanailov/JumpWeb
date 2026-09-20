@@ -59,7 +59,10 @@ final class GoogleBusinessSync
      */
     public const LOCK_STORE = 'database';
 
-    public function __construct(private readonly GoogleReviewReader $reader) {}
+    public function __construct(
+        private readonly GoogleReviewReader $reader,
+        private readonly GoogleReviewImages $images,
+    ) {}
 
     /**
      * El candado de la pasada, siempre el mismo y siempre del mismo almacén.
@@ -194,10 +197,24 @@ final class GoogleBusinessSync
                     'fetched_at' => $ahora,
                 ];
 
-                // ⚠️⚠️ **`author_photo_path` y `photos` NO se tocan aquí**, y es deliberado: la URL
-                // que trae `IncomingGoogleReview` es la de Google, y en la base solo cabe una ruta
-                // nuestra (§4.3·9). Quien las rellena es la T2·4, después de descargarlas.
                 $fila = $existentes->get($candidata->name);
+
+                // ⚠️⚠️ **Las imágenes solo se traen si FALTAN** (§4.3·6): el nombre del fichero es
+                // el hash de su contenido, así que una reseña que ya tiene su foto guardada la
+                // tiene bien. Volver a descargarla cada día sería pedirle a Google doce imágenes
+                // diarias para escribir los mismos bytes con el mismo nombre.
+                // ⚠️ Lo que entra en la columna es la RUTA que devuelve el descargador, nunca la
+                // URL que trae la candidata: la guarda del modelo lanzaría, y antes de eso este
+                // código no la tiene a mano por accidente.
+                if ($fila === null || $fila->author_photo_path === null) {
+                    $atributos['author_photo_path'] = $this->images->fetch($candidata->authorPhotoSourceUrl);
+                }
+
+                if ($fila === null || $fila->photos === null) {
+                    $atributos['photos'] = array_values(array_filter(
+                        array_map(fn (string $url) => $this->images->fetch($url), $candidata->photoSourceUrls)
+                    ));
+                }
 
                 if ($fila === null) {
                     GoogleBusinessReview::create(['review_name' => $candidata->name] + $atributos);

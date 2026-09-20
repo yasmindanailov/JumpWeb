@@ -1,35 +1,26 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729 AGOTADA** (último usado `#729`) · **sigue en
-> 730–759**, libre, como hicieron plataforma (610–639 → 640–669) y este carril (550–579 → 700–729).
-> ❗ La siguiente decisión sale de **730**, ya dada de alta en la tabla de `DECISIONES.md` ·
+> Máquina: **el OTRO ordenador** · Banda: **730–759** (700–729 agotada el 20-09) · Último usado:
+> **`#730`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
 > era 24). El contador de la suite va en el trailer del commit (`#618`), no aquí.
 
-## Foto (2026-09-20, cierre de la sesión)
+## Foto (2026-09-21, cierre de la sesión)
 
-- ▶▶▶ **LO ÚLTIMO: la T2 de la ficha de Google, empezada — dos tandas en el árbol.**
-  **T2·1, el CIMIENTO** (`#727`): las dos tablas, los modelos en **Content**, **dos plazos** (29 días
-  al leer · 3 días para el nombre y la cara) y la guarda que impide que una URL de Google entre en la
-  tabla. 25 casos, arnés 12/12. ⚠️ **Una migración más, aplicada solo en la BD local.**
-  **T2·2, TRAER LAS RESEÑAS** (`#728`): la paginación con tope, el filtro de candidatas, el
-  analizador del texto traducido —que **falla cerrado**— y `coherent()`. 36 casos, arnés 22/22.
-  **T2·3, LA PASADA** (`#729`): el candado en `cache_locks`, el presupuesto de 120 s, el reemplazo
-  **por diferencias** y `business-profile:sync` a diario. **Se escribe lo que se vio; se borra solo
-  con una pasada coherente.** 25 casos, arnés 24/24. ⚠️ **Se acaba la banda: `#729` era el último.**
-- ▶▶▶ **La T1 de `google-business-profile.md` (`#524`) está CERRADA EN CÓDIGO**
-  (`#720`→`#726`), y con ella la conexión con la ficha de Google del parque: conectar, elegir ficha,
-  cambiarla, desconectar y comprobar. **121 casos y seis arneses, todos exit 0.** El punto 1 de
-  «por dónde retomar» lo cuenta entero. ⚠️ **Lo que falta de la T1 no es código**: el ojo del owner y
-  las credenciales de Google.
+- ▶▶▶ **LO ÚLTIMO: `google-business-profile.md` (`#524`) va por la T2·4.** La **T1 entera**
+  (`#720`→`#726`, 121 casos, seis arneses) y **T2·1→T2·4** (`#727`→`#730`: las tablas y sus dos
+  plazos · el recorrido y su `coherent()` · la pasada diaria · las imágenes). **Ya sincroniza sola y
+  la portada no le pide NADA a Google.** Qué entró en cada tanda, **§4.1 de la spec**; lo que hace
+  falta para retomar, el punto 1 de abajo. ⚠️ **Tres migraciones, solo en la BD local.**
 - ⚠️ **El techo de un fichero de carril pasó de 24 a 32 KB** (`#724`, `[DECIDIDO owner]`): se cambió el
   gate y la doc compartida. Los otros cuatro carriles **siguen diciendo «24 KB» en su encabezado** y no
   los toco (`#621`); va avisado en el buzón.
-- 💥 **El repo se corrompió a las 14:36** por un corte de la VM de WSL (31 objetos de git a CERO bytes,
-  el build de Vite vacío). Recuperado sin perder nada versionado; **la receta está en «Trampas vivas»**.
+- 💥 **El repo se corrompió el 20-09 a las 14:36** por un corte de la VM de WSL (31 objetos de git a
+  CERO bytes, el build de Vite vacío). Recuperado sin perder nada versionado; **la receta está en
+  «Trampas vivas»**.
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
 - ▶▶ **`celebracion-e-invitacion.md`: las siete tandas y el borde `§7.1·5`, CERRADOS** (`#569`→`#718`)
@@ -50,31 +41,28 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅✅ **LA T1 ENTERA, EN EL ÁRBOL** (`#720`→`#726`): 121 casos y seis arneses, todos exit 0. Qué
-   entró en cada tanda, **§4.1 de la spec**, que es donde no caduca.
+   ✅✅ **T1 (`#720`→`#726`) y T2·1→T2·4 (`#727`→`#730`), EN EL ÁRBOL.** Qué entró en cada tanda y
+   sus trampas, **§4.1 de la spec**, que es donde no caduca.
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
-   nuevo no se ha visto renderizado**.
-   ✅ **T2·1 (`#727`, 12/12), T2·2 (`#728`, 22/22) y T2·3 (`#729`, 24/24), EN EL ÁRBOL.** Qué entró
-   en cada una y sus trampas, **§4.1 de la spec**. Ya se sincroniza y se persiste.
-   ▶▶ **LO SIGUIENTE ES LA T2·4: LAS IMÁGENES** (§4.3·6) — el descargador endurecido (lista blanca
-   de host EXACTA, sin redirecciones, tope de bytes en streaming, tipo por **bytes mágicos**, SVG
-   nunca, nombre por hash, escritura atómica, **nada de librerías de imagen**), el **disco privado
-   servido por una ruta de Laravel** con su CSP, y el fichero borrado **en la misma operación que su
-   fila**. ▶ Ya está puesto el terreno: las columnas existen a `null`,
-   `IncomingGoogleReview::$authorPhotoSourceUrl` trae la URL saneada en memoria, el borrado pasa por
-   el MODELO y `GoogleBusinessReview` es `Prunable` (no `MassPrunable`) para que `pruning()` pueda
-   llevarse el fichero.
-   ▶ Y después: (d) «Ocultar» (§4.3·7) · (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10),
-   más el **botón del panel** y `Retry-After`, que van con la pantalla · (f) retirar Places
-   (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de datos NUEVO: **§5 antes**.
+   nuevo no se ha visto renderizado**. **Tampoco se ha visto una reseña pintada.**
+   ❗ **RENUNCIA CON RECIBO en la T2·4**: las fotos salen con `no-store` (lo pone
+   `NoStoreWebResponses`, global por `RGPD-04`), así que **cada visita vuelve a pedir cada foto**.
+   Eximir esa ruta es tocar un middleware escrito incondicional a propósito: **va a la T2·6**, que es
+   la que mide el presupuesto de la portada.
+   ▶▶ **LO SIGUIENTE ES LA T2·5: «OCULTAR»** (§4.3·7) — por reseña, con **motivo tasado**, **lista
+   de supresión por HASH** que sobrevive a la resincronización y a la purga, borrado en el acto de
+   nombre, foto, fotos y texto, y rastro en `audit_logs` con **solo el hash y el motivo**. ⚠️ **No
+   toca ni la media ni el total.** ▶ Terreno puesto: borrar una fila ya se lleva sus ficheros.
+   ▶ Y después: (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10), más el **botón del panel**,
+   `Retry-After`, el gancho que fuerza una pasada al cambiar el mínimo de estrellas y la caché de las
+   fotos · (f) retirar Places (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de
+   datos NUEVO: **§5 antes**.
    ⚠️⚠️ **TRES migraciones ya, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
-   ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. La última pasada no
-   tiene qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL espera al §7·A.
-   ⚠️ **Todo contra un DOBLE**, con `Http::preventStrayRequests()`.
+   ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. `verify` contra la
+   ficha REAL espera al §7·A. **Todo contra un DOBLE**, con `Http::preventStrayRequests()`.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
-   owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
-   **tras la T1**. Empieza por el §0 y el **§1.3**.
+   owner—. El **§7·A está reescrito**: no necesita ficha propia. Empieza por el §0 y el **§1.3**.
    ⏰⏰ **EL CALENDARIO LO MANDA LA FICHA, y ya hay respuesta (owner, 20-09): la de PlayJump lleva MENOS
    de 60 días.** La solicitud del §7·A·2 **no se puede mandar todavía** y la conexión real no llega
    antes de finales de octubre. El doble no es una opción: es el único camino.
@@ -159,6 +147,19 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   (b) **`prunable()` declarado `@return Builder<Modelo>` siempre falla** porque `static::query()`
   devuelve `Builder<static>` y la plantilla **no es covariante**. Los cuatro `prunable()` que ya
   existían lo pagaron con una entrada en la base; se arregla escribiendo **`@return Builder<static>`**.
+- ⚠️⚠️⚠️ **UN `catch (Throwable)` ANCHO SE TRAGA EL AVISO DE «petición sin doble»** (`#730`): el
+  descargador de imágenes lo llevaba alrededor de la petición HTTP, así que en las pruebas de la
+  pasada **no se descargaba nada y salía todo verde**. `StrayRequestException` extiende
+  `RuntimeException`, y un `catch` ancho no distingue «la red falló» de «me falta un doble» ni de un
+  error de programación. ▶ Se atrapa **solo `ConnectionException`** en la petición, y el
+  `RuntimeException` del flujo aparte. Un `catch` que parece más seguro suele medir menos.
+- ⚠️⚠️ **UN DOBLE ESTÁTICO DE `Http::response()` SE CONSUME AL LEERLO EN FLUJO** (`#730`): es UN
+  objeto reutilizado en todas las peticiones que casen, así que la segunda lectura llega vacía y el
+  caso acusa al código de no deduplicar. ▶ En cuanto el código lea el cuerpo en flujo, el doble va
+  en un **cierre**.
+- ⚠️ **Una guarda de «no se sirve» necesita que el fichero EXISTA** (`#730`): los nombres mal
+  formados que no están en el disco dan 404 por «no existe», no por la guarda, así que la mutación
+  sobrevive. Igual que un 404 de prueba necesita CUERPO para probar que se mira el estado.
 - ⚠️⚠️⚠️ **`Http::fake()` FUSIONA los dobles, no los reemplaza** (medido en `#729`): llamarlo dos
   veces en el mismo caso deja ganando al PRIMERO, y si el primero era un `Http::sequence()` ya
   agotado, la segunda pasada revienta con «*response sequence is empty*» **señalando al código**, que

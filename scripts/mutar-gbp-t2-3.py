@@ -101,15 +101,9 @@ MUTATIONS = [
         "                    'maps_uri' => null,",
         php(S + 'test_el_resumen_sale_de_google_y_los_enlaces_de_la_conexion'),
     ),
-    # ── Lo que no se toca (§4.3·9) ───────────────────────────────────────────────────────────────
-    (
-        # El atajo que deshace la T2 entera sin romper nada visible.
-        'la URL de la foto de Google NO se escribe en la tabla',
-        SYNC,
-        "                    'review_created_at' => $candidata->createdAt,",
-        "                    'author_photo_path' => $candidata->authorPhotoSourceUrl,\n                    'review_created_at' => $candidata->createdAt,",
-        php(S + 'test_la_url_de_la_foto_de_google_no_llega_a_la_tabla'),
-    ),
+    # ⚠️ La mutación de «la URL de Google no se escribe en la tabla» se mudó a `mutar-gbp-t2-4.py`
+    # cuando la T2·4 pasó a rellenar esa columna: aquí ya no había dónde ponerla sin que la
+    # descarga la pisara, y una mutación que la línea siguiente deshace no mide nada.
     # ── El borrado fila a fila (§4.3·6) ──────────────────────────────────────────────────────────
     (
         # Un borrado en masa no instancia nada y la T2·4 cuelga del evento el borrado del fichero.

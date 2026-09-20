@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Content\Models\GoogleBusinessReview;
+use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
 use App\Domain\Platform\Exceptions\GoogleBusinessException;
@@ -175,6 +177,21 @@ class GoogleBusinessConnectController extends Controller
         if ($token === null) {
             return $this->back('google-business-not-connected');
         }
+
+        // ❗❗ **Y con la conexión se van las reseñas y sus ficheros** (T2·4, §4.3·6, `#730`).
+        // Sin conexión no queda base para seguir publicando el nombre y la cara de terceros que
+        // nunca han tratado con el parque: lo que justificaba tenerlos era el interés legítimo de
+        // enseñar la ficha, y la ficha ya no está. Dejarlos hasta que los alcance el plazo serían
+        // 29 días más de datos de otros sin nada detrás.
+        // ⚠️ **Va aquí y no en el servicio**: `disconnect()` vive en Platform, que no puede mirar a
+        // Content (`ModuleBoundariesTest`: `'Platform' => []`). La capa de entrega es el composition
+        // root y sí ve a los dos — la misma frontera que el aviso a los admins.
+        // ⚠️ **Fila a fila y por el MODELO**: es su evento `deleting` el que borra el fichero.
+        foreach (GoogleBusinessReview::query()->get() as $resena) {
+            $resena->delete();
+        }
+
+        GoogleBusinessReviewSummary::query()->delete();
 
         // ⚠️ Fuera de la transacción y sin bloquear el desenlace: lo de casa ya está borrado, y si
         // Google no atiende la revocación **se le dice al admin cómo retirarla a mano** (§4.2·8), que

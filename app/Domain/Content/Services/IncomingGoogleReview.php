@@ -69,6 +69,14 @@ final readonly class IncomingGoogleReview
          * Vive aquí porque es donde nace el dato, que es donde `SEC-07` manda sanearlo.
          */
         public ?string $authorPhotoSourceUrl,
+        /**
+         * Las fotos que el autor adjuntó a su reseña, **en el servidor de Google** y saneadas.
+         *
+         * ⚠️ Tampoco se guardan tal cual: las descarga la T2·4 y en la base van rutas nuestras.
+         *
+         * @var list<string>
+         */
+        public array $photoSourceUrls,
         /** 1–5, ya traducidas de `FIVE`/`FOUR`/… */
         public int $stars,
         /** El texto del AUTOR, ya sin la traducción de Google ({@see GoogleReviewText}). */
@@ -116,6 +124,7 @@ final readonly class IncomingGoogleReview
             authorName: $anonymous ? null : self::name($reviewer['displayName'] ?? null),
             anonymous: $anonymous,
             authorPhotoSourceUrl: $anonymous ? null : self::photoUrl($reviewer['profilePhotoUrl'] ?? null),
+            photoSourceUrls: self::photos($row['reviewMediaItems'] ?? null),
             stars: $stars,
             comment: $texto->text,
             textAmbiguous: $texto->ambiguous,
@@ -124,6 +133,51 @@ final readonly class IncomingGoogleReview
             createdAt: $createdAt,
             updatedAt: self::instant($row['updateTime'] ?? null),
         );
+    }
+
+    /**
+     * Cuántas fotos de una reseña se traen como mucho.
+     *
+     * ⚠️ No es una decisión de diseño de la tarjeta —eso es de la T2·6— sino del **presupuesto**: la
+     * pasada tiene 120 segundos para todo, y doce reseñas con fotos sin tope son una descarga que no
+     * se sabe cuánto dura. Si la tarjeta acaba enseñando otro número, se cambia aquí.
+     */
+    private const MAX_PHOTOS = 4;
+
+    /**
+     * Las fotos de `reviewMediaItems`, saneadas y sin vídeos.
+     *
+     * ⚠️⚠️ **Un elemento con `videoUrl` se descarta ENTERO, también su miniatura** (§4.3·6: «los
+     * vídeos no»). Traer solo la miniatura enseñaría un fotograma como si fuera una foto que el
+     * autor hizo, y no lo es: es el primer cuadro de un vídeo que no se va a poder ver.
+     *
+     * @return list<string>
+     */
+    private static function photos(mixed $items): array
+    {
+        if (! is_array($items)) {
+            return [];
+        }
+
+        $fotos = [];
+
+        foreach ($items as $item) {
+            if (! is_array($item) || ($item['videoUrl'] ?? null) !== null) {
+                continue;
+            }
+
+            $url = self::photoUrl($item['thumbnailUrl'] ?? null);
+
+            if ($url !== null && ! in_array($url, $fotos, true)) {
+                $fotos[] = $url;
+            }
+
+            if (count($fotos) === self::MAX_PHOTOS) {
+                break;
+            }
+        }
+
+        return $fotos;
     }
 
     private static function name(mixed $value): ?string

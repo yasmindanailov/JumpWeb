@@ -333,6 +333,38 @@ class GoogleReviewReaderTest extends TestCase
         $this->assertSame('https://lh3.googleusercontent.com/a/bueno', $porNombre[self::PARENT.'/reviews/buena']);
     }
 
+    public function test_las_fotos_de_la_resena_llegan_sin_los_videos(): void
+    {
+        $this->fakePages([[
+            'reviews' => [$this->row('r1', ['reviewMediaItems' => [
+                ['thumbnailUrl' => 'https://lh3.googleusercontent.com/p/FOTO-1'],
+                // ⚠️⚠️ Un elemento con `videoUrl` se descarta ENTERO, también su miniatura (§4.3·6:
+                // «los vídeos no»). Traer solo la miniatura enseñaría un FOTOGRAMA como si fuera una
+                // foto que hizo el autor, y no lo es: es el primer cuadro de un vídeo que no se va
+                // a poder ver.
+                ['thumbnailUrl' => 'https://lh3.googleusercontent.com/p/MINIATURA-DE-VIDEO', 'videoUrl' => 'https://video/x'],
+                ['thumbnailUrl' => 'https://ejemplo.net/p/DE-FUERA'],
+                ['thumbnailUrl' => 'https://lh4.googleusercontent.com/p/FOTO-2'],
+            ]])],
+            'averageRating' => 5.0, 'totalReviewCount' => 1,
+        ]]);
+
+        $resena = $this->reader()->pass('1//refresco', self::PARENT, $this->filter())->candidates[0];
+
+        $this->assertSame([
+            'https://lh3.googleusercontent.com/p/FOTO-1',
+            'https://lh4.googleusercontent.com/p/FOTO-2',
+        ], $resena->photoSourceUrls);
+    }
+
+    public function test_una_resena_sin_fotos_llega_con_la_lista_vacia(): void
+    {
+        // El control: sin él, un mapeador que devolviera siempre `[]` pasaría el caso de arriba.
+        $this->fakePages([['reviews' => [$this->row('r1')], 'averageRating' => 5.0, 'totalReviewCount' => 1]]);
+
+        $this->assertSame([], $this->reader()->pass('1//refresco', self::PARENT, $this->filter())->candidates[0]->photoSourceUrls);
+    }
+
     public function test_la_respuesta_del_parque_viaja_con_la_resena(): void
     {
         $this->fakePages([[

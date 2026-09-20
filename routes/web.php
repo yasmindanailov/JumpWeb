@@ -26,6 +26,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaqueteDelCajonController;
 use App\Http\Controllers\Payments\RedsysReturnController;
 use App\Http\Controllers\PricingController;
+use App\Http\Controllers\ReviewPhotoController;
 use App\Http\Controllers\ServicesController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\SetAdminLocale;
@@ -145,6 +146,23 @@ Route::post('/cookies/consentimiento', [CookieConsentController::class, 'store']
 
 // Normas del parque (desde `park_rules`).
 Route::get('/normas', [PageController::class, 'rules'])->name('normas');
+
+// Las imágenes de las reseñas de Google, servidas desde NUESTRO servidor (T2·4 de
+// `specs/google-business-profile.md` §4.3·6, `DECISIONES #730`).
+//
+// ⚠️⚠️ **Es lo que quita la dependencia del consentimiento**: mientras la cara del autor se pidiera
+// a `lh3.googleusercontent.com`, la petición la hacía el NAVEGADOR DEL VISITANTE y sin la categoría
+// `maps` aceptada no se podía pintar (`RGPD-05`). Desde aquí la portada no le pide nada a nadie.
+// ⚠️ **Pública y sin firma a propósito**: la portada la ve cualquiera y se cachea; una URL firmada
+// caduca y dejaría huecos. Lo que protege es la FORMA del nombre —el hash— no un permiso.
+// ⚠️ El `.` del nombre iría fuera del parámetro con el `where` por defecto, así que se declara.
+// ⚠️ La restricción es ANCHA a propósito: quien decide es `GoogleReviewImages::isOwnName()`, en el
+// controlador, que es la MISMA regla que usa el borrado. Con la forma exacta escrita también aquí,
+// habría dos sitios que definen qué es un fichero nuestro y el del controlador dejaría de poder
+// ponerse en rojo. Lo que sí hace falta aquí es que no entre una barra, y eso ya lo hace `{fichero}`.
+Route::get('/resenas/foto/{fichero}', ReviewPhotoController::class)
+    ->where('fichero', '[A-Za-z0-9._-]+')
+    ->name('resenas.foto');
 
 // Páginas de catálogo (contenido desde la BD).
 Route::get('/precios', PricingController::class)->name('precios');

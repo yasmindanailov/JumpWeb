@@ -75,6 +75,22 @@ Schedule::command('social-proof:refresh')->everyThirtyMinutes()->withoutOverlapp
 Schedule::command('business-profile:sync')->dailyAt('04:40')->withoutOverlapping();
 
 /*
+ * T2·4 de `specs/google-business-profile.md` (§4.3·6, `DECISIONES #730`) — BARRIDO DE HUÉRFANOS de
+ * las imágenes de reseñas.
+ *
+ * ⚠️⚠️ **Esto NO es la forma de limpiar, es la red por debajo.** El fichero se va con su fila en la
+ * misma operación (evento `deleting` del modelo); aquí solo cae lo que ese camino no puede cubrir:
+ * una descarga escrita cuya transacción se cayó, un worker muerto a media pasada, una fila borrada a
+ * mano. Si algún día esto empieza a borrar mucho, lo que hay que mirar es POR QUÉ se quedan
+ * huérfanos.
+ *
+ * ⚠️ **Veinte minutos DESPUÉS de la pasada**, no antes y no a la vez: barrer mientras se descarga
+ * sería mirar un disco a medio escribir. (El barrido además ignora lo escrito en la última hora, así
+ * que son dos guardas independientes para la misma carrera.)
+ */
+Schedule::command('business-profile:sweep-photos')->dailyAt('05:00')->withoutOverlapping();
+
+/*
  * #219 — Poda del log de consentimiento de cookies. `CookieConsentLog` es Prunable (borra las filas
  * > 24 meses, la vida del consentimiento). Diario es de sobra: el plazo es de meses. Acota el
  * crecimiento de la tabla y cumple la minimización / limitación del plazo de conservación del RGPD

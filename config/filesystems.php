@@ -61,6 +61,27 @@ return [
             'report' => false,
         ],
 
+        // Las imágenes de las reseñas de Google (T2·4 de `specs/google-business-profile.md` §4.3·6,
+        // `DECISIONES #730`): la foto del autor y las fotos que adjuntó a su reseña.
+        //
+        // ⚠️⚠️ **FUERA de `public/` a propósito, y por dos motivos distintos.** (1) El fichero se
+        // borra **en la misma operación que su fila** —purga, reemplazo, «Ocultar», desconectar— y
+        // eso solo se puede prometer si nadie más lo sirve por detrás; bajo `public/` lo serviría el
+        // servidor web aunque la fila ya no exista. (2) Lo que se sirve son bytes que nos dio un
+        // TERCERO: van por una ruta nuestra que les pone su propia CSP (`default-src 'none';
+        // sandbox`) y `nosniff`, y eso bajo `public/` no se puede poner.
+        //
+        // ⚠️ **Sin `url` y sin `serve`**: no se enlaza nunca directamente. La única puerta es
+        // `ReviewPhotoController`, que valida el nombre contra el hash y no deja pasar una ruta.
+        // ⚠️ **Sin `visibility: public`**: no es una preferencia, es lo que hace que `ServeFile` de
+        // Laravel —si algún día alguien pusiera `serve`— siguiera exigiendo firma.
+        'google-reviews' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/google-reviews'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

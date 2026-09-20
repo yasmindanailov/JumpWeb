@@ -314,10 +314,47 @@ job sin caller es código muerto, y `Retry-After` protege del botón repetido, n
 está lo de §4.3·2 «si el mínimo de estrellas cambia en el panel, se fuerza una pasada»: es un gancho
 del panel.
 
-▶ **Lo siguiente es la T2·4: las imágenes** (§4.3·6) — el descargador endurecido, el disco privado
-con su ruta, y el borrado del fichero **en la misma operación que su fila**. Las columnas existen y
-están a `null`; `IncomingGoogleReview::$authorPhotoSourceUrl` ya trae la URL saneada en memoria y el
-borrado ya pasa por el modelo.
+✅ **T2·4 · LAS IMÁGENES, EN EL ÁRBOL** (2026-09-21, `#730`): `GoogleReviewImages` (el descargador
+endurecido, el borrado y el barrido), el disco privado **`google-reviews`**, la ruta
+`/resenas/foto/{fichero}` con `ReviewPhotoController`, el comando `business-profile:sweep-photos`
+y su hueco diario, y el cableado en la pasada y en «desconectar». 60 casos, arnés **26/26**,
+Larastan 0.
+❗❗❗ **CON ESTO LA PORTADA DEJA DE PEDIRLE NADA A GOOGLE**, que es para lo que existía la T2: la
+cara del autor la pedía el **navegador del visitante**, así que sin la categoría `maps` no se pintaba
+(`RGPD-05`) y con ella `img-src` tenía que nombrar a Google (`SEC-01`).
+⚠️⚠️ **Disco privado y ruta propia, no `public/`**, por dos cosas que ahí no se pueden tener: que el
+fichero **se vaya con su fila** —bajo `public/` lo serviría el servidor web aunque la fila no exista—
+y que salga con **su propia CSP** (`default-src 'none'; sandbox`).
+⚠️⚠️ **La ruta es pública y sin firma a propósito**: la portada se cachea y una URL firmada caduca.
+Lo que protege es **la FORMA del nombre** (`isOwnName()`: 64 hexadecimales y una de las cuatro
+extensiones), que es la **misma regla** que usa el borrado. **No se busca `..`**: esa lista no se
+acaba nunca.
+⚠️ **El descargador, en seis frentes**: host de lista blanca EXACTA y solo `https` · **sin
+redirecciones** (un 302 es cómo se sale de la lista blanca) · **tope de bytes leyendo a trozos** ·
+tipo por **bytes mágicos** —lista BLANCA, así el SVG cae solo— · **nombre = hash del contenido**
+(nada del autor, y dos reseñas con la misma foto comparten fichero) · **escritura atómica** y
+**ninguna librería de imagen las toca** (*«cannot be manipulated»*).
+⚠️ **Desconectar se lleva las reseñas y sus ficheros**: sin ficha no queda base para publicar datos
+de terceros. Va en la capa de **entrega**, porque Platform no puede mirar a Content.
+⚠️ **El barrido es la RED, no la forma de limpiar**, y solo toca ficheros de más de una hora: entre
+que la descarga escribe y la transacción confirma pasa un instante.
+❗ **RENUNCIA CON RECIBO — `Cache-Control`**: §4.3·6 pide una caché corta y lo que hay es `no-store`,
+que lo pone `NoStoreWebResponses` **global e incondicional** por `RGPD-04`. Escribir un `max-age`
+aquí sería cabecera muerta: ese middleware corre después y la pisa (comprobado). **El coste es que
+cada visita vuelve a pedir cada foto.** Eximir esta ruta exige tocar un middleware escrito
+incondicional a propósito, y su propia doc dice que eso «merece medirse aparte». ▶ **Va a la T2·6**,
+que es la que mide el presupuesto de la portada (`PERF-02`).
+❗ **Lo que enseñó el arnés**: (a) el descargador llevaba un `catch (Throwable)` que se tragaba el
+aviso de «petición sin doble» de las pruebas — **las descargas de la pasada no se estaban midiendo**
+y salían verdes; (b) `nosniff` en el controlador era **código muerto**, porque `SecurityHeaders` lo
+estampa en toda respuesta; (c) un 404 con cuerpo VACÍO no prueba que se mire el estado, y (d) un
+nombre mal formado que **no existe** en el disco no prueba que se compruebe la forma.
+
+▶ **Lo siguiente es la T2·5: «Ocultar»** (§4.3·7) — por reseña, con motivo tasado, lista de supresión
+por **hash del identificador** que sobrevive a la resincronización y a la purga, borrado en el acto
+de nombre, foto, fotos y texto, y rastro en `audit_logs` con **solo el hash y el motivo**. ⚠️ No toca
+ni la media ni el total. ▶ El terreno ya está: borrar una fila se lleva sus ficheros, y la pasada
+retira por el modelo.
 
 ### 4.2 T1 · La conexión
 

@@ -3,6 +3,7 @@
 namespace App\Domain\Content\Models;
 
 use App\Domain\Content\Exceptions\ForeignImageUrlException;
+use App\Domain\Content\Services\GoogleReviewImages;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -103,6 +104,31 @@ class GoogleBusinessReview extends Model
                 $review->guardAgainstForeignImage(is_string($photo) ? $photo : null, 'photos');
             }
         });
+
+        // ❗❗ **El fichero se va con la fila, en la misma operación** (§4.3·6). Da igual por dónde
+        // se borre —la purga del plazo, el reemplazo de una pasada, «Ocultar», desconectar—: todas
+        // pasan por aquí, y por eso la pasada borra fila a fila POR EL MODELO y este modelo es
+        // `Prunable` y no `MassPrunable`. Un borrado en masa no instancia nada y dejaría en el
+        // disco la cara de alguien cuya reseña ya no existe.
+        static::deleting(function (self $review): void {
+            app(GoogleReviewImages::class)->forget($review->imagePaths());
+        });
+    }
+
+    /**
+     * Todas las rutas de imagen de esta reseña, la del autor y las suyas.
+     *
+     * @return list<string|null>
+     */
+    public function imagePaths(): array
+    {
+        $rutas = [$this->author_photo_path];
+
+        foreach ($this->photos ?? [] as $foto) {
+            $rutas[] = is_string($foto) ? $foto : null;
+        }
+
+        return $rutas;
     }
 
     /**

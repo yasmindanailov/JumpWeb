@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\GoogleBusiness;
 
+use App\Domain\Content\Models\GoogleBusinessReview;
+use App\Domain\Content\Models\GoogleBusinessReviewSummary;
+use App\Domain\Content\Services\GoogleReviewImages;
 use App\Domain\Identity\Models\Permission;
 use App\Domain\Identity\Models\Role;
 use App\Domain\Identity\Models\User;
@@ -20,6 +23,7 @@ use App\Notifications\GoogleBusinessLocationChanged;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -76,6 +80,35 @@ class GoogleBusinessDisconnectTest extends TestCase
         $this->assertNull(GoogleBusinessConnection::current());
         // Y el estado efectivo vuelve a la verdad: hay credenciales, no hay permiso.
         $this->assertSame(GoogleBusinessStatus::ReadyToConnect, GoogleBusinessConnectionState::current());
+    }
+
+    public function test_desconectar_se_lleva_tambien_las_resenas_y_sus_ficheros(): void
+    {
+        // T2·4 (§4.3·6, `#730`). Sin conexión no queda base para seguir publicando el nombre y la
+        // cara de terceros que nunca han tratado con el parque: lo que lo justificaba era enseñar la
+        // ficha, y la ficha ya no está. Dejarlos hasta que los alcance el plazo serían 29 días más
+        // de datos de otros sin nada detrás.
+        Storage::fake(GoogleReviewImages::DISK);
+        Storage::disk(GoogleReviewImages::DISK)->put($foto = hash('sha256', 'foto').'.png', 'x');
+
+        $this->conectada(placeId: 'ChIJalgo');
+        GoogleBusinessReview::create([
+            'review_name' => 'accounts/1/locations/9/reviews/r1',
+            'author_name' => 'Marta R.',
+            'author_photo_path' => $foto,
+            'star_rating' => 5,
+            'comment' => 'Bien.',
+            'review_created_at' => now(),
+            'fetched_at' => now(),
+        ]);
+        GoogleBusinessReviewSummary::create(['average_rating' => 4.8, 'total_review_count' => 3, 'fetched_at' => now()]);
+
+        $this->actingAs($this->admin())->post(route('admin.google_business.disconnect'));
+
+        $this->assertSame(0, GoogleBusinessReview::query()->count());
+        $this->assertNull(GoogleBusinessReviewSummary::current());
+        // ⚠️ Y el fichero se va con la fila: por eso se borra fila a fila y por el MODELO.
+        Storage::disk(GoogleReviewImages::DISK)->assertMissing($foto);
     }
 
     public function test_desconectar_deja_rastro_antes_de_borrar(): void
