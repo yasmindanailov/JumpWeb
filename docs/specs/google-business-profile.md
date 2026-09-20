@@ -248,7 +248,42 @@ siempre a `null` hasta la T2·4.
 tanto si no hay FK como si el lector no sabe leerlas en SQLite, y un bucle de reflexión que no
 recorra nada sale verde igual. Los dos preguntan primero por algo que SÍ tiene lo que buscan.
 
-▶ **Lo siguiente es la T2·2, traer las reseñas** (§4.3·2 y §4.3·8).
+✅ **T2·2 · TRAER LAS RESEÑAS, EN EL ÁRBOL** (2026-09-20, `#728`): `GoogleBusinessApi::reviews()`
+(paginado; `reviewSummary()` pasa a apoyarse en él), y en **Content** `GoogleReviewText`,
+`IncomingGoogleReview`, `GoogleReviewFilter`, `GoogleReviewPass` y `GoogleReviewReader`. 36 casos,
+arnés **22/22**, Larastan 0.
+⚠️⚠️ **`seen` cuenta FILAS, no candidatas, y es la guarda más cara de la tanda**: contando solo las
+candidatas, un mínimo de estrellas estricto se leería como «la ficha no tiene reseñas» y §4.3·3
+**borraría la tabla** por el motivo equivocado.
+⚠️⚠️ **`coherent()` vive en `GoogleReviewPass` y son TRES preguntas**: ¿se terminó el recorrido?,
+¿la ficha se estuvo quieta entre la primera página y la última?, y ¿una lista vacía cuadra con el
+total? La T2·3 solo puede borrar cuando las tres dicen que sí.
+⚠️ **Tope de 40 páginas** (`GoogleReviewReader::MAX_PAGES`): un `nextPageToken` que no termina nunca
+es un bucle infinito dentro de un worker. Al cortar, la pasada sale `complete = false`, que ya no
+deja borrar. ▶ Y un testigo **vacío** es «no hay más»: tratarlo como testigo pide la misma primera
+página para siempre.
+⚠️ **El analizador del §4.3·8 falla cerrado en cuatro formas**: media pareja de marcadores, pareja
+repetida, marcadores sin original detrás, y —la red para lo que aún no se ha medido— **cualquier
+paréntesis que nombre a Google y no se haya podido separar**. Lo marcado se guarda CRUDO en
+`text_ambiguous` y la pasada lo cuenta. El orden de los marcadores varía y los dos sentidos tienen
+caso.
+⚠️ **El `null` de una anónima entra en `IncomingGoogleReview::fromApi()`**, antes de que exista fila:
+así no hay ningún camino por el que su nombre llegue a la base. Se tira aunque Google mande algo en
+`displayName`.
+❗ **Lo que enseñó el arnés**: la guarda del host de la foto sobrevivió a su mutación porque **faltaba
+un caso**. El test cubría `lh3.googleusercontent.com.malo.net` (lo que se cuela con `str_contains`)
+pero no `evil.lh3.googleusercontent.com`, que es lo que se cuela con `str_ends_with`. Son dos
+defectos distintos y hacen falta los dos casos.
+▶ **Lo que la T2·2 NO trae**: nada se persiste todavía. `authorPhotoSourceUrl` viaja en memoria para
+la T2·4 y **no cabe en el modelo** —la guarda de `GoogleBusinessReview` lanza—.
+⚠️ **Pendiente de la ficha REAL** (§6·T2①): si Google manda un rótulo propio en lugar del vacío para
+las anónimas, y qué variantes del marcador de traducción usa en otros idiomas. Hasta entonces, lo
+desconocido cae del lado marcado.
+
+▶ **Lo siguiente es la T2·3: persistir una pasada** (§4.3·1 y §4.3·3) — el candado en `cache_locks`,
+el presupuesto de tiempo, el reemplazo **por diferencias** en una transacción y el `fetched_at`
+renovado en toda fila devuelta. `coherent()` ya está escrito y probado; lo que falta es quien lo
+obedece.
 
 ### 4.2 T1 · La conexión
 

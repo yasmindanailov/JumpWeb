@@ -1,7 +1,7 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#727`** (quedan `#728` y
-> `#729`; al agotarse se sigue en **730–759**, libre, como hicieron plataforma y este mismo carril) ·
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#728`** (queda `#729`; al
+> agotarse se sigue en **730–759**, libre, como hicieron plataforma y este mismo carril) ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
@@ -10,10 +10,13 @@
 
 ## Foto (2026-09-20, cierre de la sesión)
 
-- ▶▶▶ **LO ÚLTIMO: la T2·1, el CIMIENTO DE LAS RESEÑAS, en el árbol** (`#727`): las dos tablas, los
-  modelos en **Content**, **dos plazos** (29 días al leer · 3 días para el nombre y la cara) y la
-  guarda que impide que una URL de Google entre en la tabla. **25 casos, arnés 12/12, Larastan 0 sin
-  tocar la línea base.** ⚠️ **Una migración más, aplicada solo en la BD local.**
+- ▶▶▶ **LO ÚLTIMO: la T2 de la ficha de Google, empezada — dos tandas en el árbol.**
+  **T2·1, el CIMIENTO** (`#727`): las dos tablas, los modelos en **Content**, **dos plazos** (29 días
+  al leer · 3 días para el nombre y la cara) y la guarda que impide que una URL de Google entre en la
+  tabla. 25 casos, arnés 12/12. ⚠️ **Una migración más, aplicada solo en la BD local.**
+  **T2·2, TRAER LAS RESEÑAS** (`#728`): la paginación con tope, el filtro de candidatas, el
+  analizador del texto traducido —que **falla cerrado**— y `coherent()`, las tres preguntas de las
+  que depende que la T2·3 pueda borrar. 36 casos, arnés 22/22. **Nada se persiste todavía.**
 - ▶▶▶ **La T1 de `google-business-profile.md` (`#524`) está CERRADA EN CÓDIGO**
   (`#720`→`#726`), y con ella la conexión con la ficha de Google del parque: conectar, elegir ficha,
   cambiarla, desconectar y comprobar. **121 casos y seis arneses, todos exit 0.** El punto 1 de
@@ -49,17 +52,16 @@
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
    nuevo no se ha visto renderizado**.
-   ✅ **LA T2·1, EL CIMIENTO, EN EL ÁRBOL** (`#727`): `google_business_reviews` y
-   `google_business_review_summaries`, los dos modelos en **Content**, el plazo **al leer** (29 d) y
-   la purga (30 d) como números DISTINTOS, el segundo plazo de 3 días sobre el nombre y la cara, y
-   la guarda de la imagen. 25 casos, arnés **12/12**. El detalle vive en la **§4.1 de la spec**.
-   ▶▶ **LO SIGUIENTE ES LA T2·2: TRAER LAS RESEÑAS** (§4.3·2 y §4.3·8) — `reviews.list` paginado en
-   memoria (`pageSize=50`), el filtro de candidatas y **el analizador del texto traducido**, que
-   **falla cerrado**. ⚠️ El §4.3·8 dice *«se mide con la ficha real antes»* y la ficha real **no
-   llega hasta finales de octubre**: el analizador se escribe contra el doble y **lo ambiguo se
-   guarda crudo y se marca** (`text_ambiguous`), que es justo para lo que está esa columna.
+   ✅ **T2·1 (`#727`, 25 casos, 12/12) y T2·2 (`#728`, 36 casos, 22/22), EN EL ÁRBOL.** Qué entró en
+   cada una y sus trampas, **§4.1 de la spec**. **Nada se persiste todavía.**
+   ▶▶ **LO SIGUIENTE ES LA T2·3: PERSISTIR UNA PASADA** (§4.3·1 y §4.3·3) — el candado **en
+   `cache_locks`** (el almacén que no se desaloja), el presupuesto de tiempo, el botón del panel que
+   **encola lo mismo**, el reemplazo **por diferencias en una transacción** y `fetched_at` renovado
+   en **toda** fila devuelta, cambie o no. ⚠️ **`coherent()` ya está escrito y probado**: la T2·3 lo
+   OBEDECE, no lo re-decide. Y **solo borra** cuando dice que sí.
    ▶ Y después: (c) las **imágenes servidas desde nuestro servidor** (§4.3·6) —es lo que quita la
-   dependencia del consentimiento; las columnas ya existen y están a `null`— · (d) «Ocultar»
+   dependencia del consentimiento; las columnas ya existen y están a `null`, y
+   `IncomingGoogleReview::$authorPhotoSourceUrl` ya trae la URL saneada en memoria— · (d) «Ocultar»
    (§4.3·7) · (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10) · (f) retirar Places
    (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de datos NUEVO: **§5 antes**.
    ⚠️⚠️ **TRES migraciones ya, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
@@ -155,6 +157,12 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   (b) **`prunable()` declarado `@return Builder<Modelo>` siempre falla** porque `static::query()`
   devuelve `Builder<static>` y la plantilla **no es covariante**. Los cuatro `prunable()` que ya
   existían lo pagaron con una entrada en la base; se arregla escribiendo **`@return Builder<static>`**.
+- ⚠️⚠️ **UNA GUARDA DE HOST NECESITA DOS CASOS, NO UNO** (`#728`, lo destapó un superviviente del
+  arnés): `lh3.googleusercontent.com.malo.net` se cuela con `str_contains` y
+  `evil.lh3.googleusercontent.com` con `str_ends_with`. **Son defectos distintos**, y un test que
+  solo cubre el primero deja la mutación del segundo sin morder — con la guarda buena escrita y
+  todo. ▶ Al escribir una lista blanca de hosts, el caso va por TRIPLICADO: pegado por detrás,
+  pegado por delante, y el control positivo.
 - ⚠️⚠️ **UNA LISTA VACÍA NO DISTINGUE «no hay» de «no sé mirar»** (`#727`): `Schema::getForeignKeys()`
   devuelve `[]` tanto si la tabla no tiene claves ajenas como si el lector no supiera leerlas en
   SQLite, y un bucle de reflexión que no recorra nada sale igual de verde. ▶ **Todo caso que afirme
@@ -343,4 +351,6 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   retirarlo**. ▶ Sobre el 422: **que un `""` deje el campo como estaba me vale**; no pido que borre.
 - **Plataforma 20-09, «tu `git pull` borra 37 ficheros»** (`#663`): **atendido**. Traído y comprobado
   en esta máquina — la suite y el gate no se enteran (afirman sobre RUTAS), y **la landing local se ve
-  con las fotos rotas y sin vídeo** hasta que exista `instancia-playjump`. No es un defecto.
+  con las fotos rotas y sin vídeo**. No es un defecto. ▶ **Se recuperan** clonando
+  `yasmindanailov/instancia-playjump` (PRIVADO, ya existe) **FUERA** del árbol del producto y
+  `cp -r publico/. <producto>/public/`. En ESTA máquina **no se ha hecho todavía**.

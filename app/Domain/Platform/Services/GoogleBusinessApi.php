@@ -47,6 +47,13 @@ final class GoogleBusinessApi
     public const LOCATION_READ_MASK = 'name,title,storefrontAddress,websiteUri,metadata';
 
     /**
+     * Cuántas reseñas se piden por página (§4.3·1). Es el máximo que admite `reviews.list`, y pedir
+     * el máximo es lo barato: la pasada recorre **todas** las páginas, así que una página pequeña no
+     * trae menos datos — trae las mismas reseñas en más viajes contra una cuota compartida.
+     */
+    public const REVIEWS_PAGE_SIZE = 50;
+
+    /**
      * Margen con el que se considera caducado el token de acceso. Google los emite para una hora; con
      * cinco minutos de colchón, una pasada larga no se queda a medias por un segundo de diferencia
      * entre su reloj y el nuestro.
@@ -113,12 +120,55 @@ final class GoogleBusinessApi
      */
     public function reviewSummary(#[\SensitiveParameter] string $refreshToken, string $parent): array
     {
-        $body = $this->get($refreshToken, self::REVIEWS_BASE.$parent.'/reviews', ['pageSize' => 1]);
+        $pagina = $this->reviews($refreshToken, $parent, null, 1);
 
+        return [
+            'averageRating' => $pagina['averageRating'],
+            'totalReviewCount' => $pagina['totalReviewCount'],
+        ];
+    }
+
+    /**
+     * **Una página de reseñas de la ficha** (T2·2, §4.3·1 y §4.3·2).
+     *
+     * Devuelve las filas **crudas**, tal y como las manda Google: interpretarlas es de Content, que es
+     * donde vive la sincronización (§4.0). Aquí solo se habla por HTTP.
+     *
+     * ⚠️⚠️ **La media y el total viajan en CADA página, no solo en la primera**, y por eso se
+     * devuelven siempre: §4.3·3 compara los de la primera con los de la última para decidir si la
+     * pasada fue coherente, y una pasada incoherente **no borra nada**. Quedarse solo con los de la
+     * primera dejaría esa comprobación sin su otra mitad.
+     *
+     * ⚠️ `nextPageToken` se devuelve como `null` cuando no lo hay **o viene vacío**: la diferencia
+     * entre «no hay más» y «hay más, pero con una cadena vacía» no existe para quien pagina, y
+     * tratarlas distinto es un bucle infinito esperando.
+     *
+     * @param  string  $parent  `accounts/{id}/locations/{id}` ({@see GoogleBusinessLocation::reviewsParent()})
+     * @return array{reviews: list<array<string,mixed>>, nextPageToken: string|null, averageRating: float|null, totalReviewCount: int}
+     *
+     * @throws GoogleBusinessApiException
+     */
+    public function reviews(
+        #[\SensitiveParameter] string $refreshToken,
+        string $parent,
+        ?string $pageToken = null,
+        int $pageSize = self::REVIEWS_PAGE_SIZE,
+    ): array {
+        $query = ['pageSize' => $pageSize];
+
+        if ($pageToken !== null && $pageToken !== '') {
+            $query['pageToken'] = $pageToken;
+        }
+
+        $body = $this->get($refreshToken, self::REVIEWS_BASE.$parent.'/reviews', $query);
+
+        $siguiente = $body['nextPageToken'] ?? null;
         $media = $body['averageRating'] ?? null;
         $total = $body['totalReviewCount'] ?? null;
 
         return [
+            'reviews' => is_array($body['reviews'] ?? null) ? array_values($body['reviews']) : [],
+            'nextPageToken' => is_string($siguiente) && $siguiente !== '' ? $siguiente : null,
             'averageRating' => is_numeric($media) ? (float) $media : null,
             'totalReviewCount' => is_numeric($total) ? (int) $total : 0,
         ];

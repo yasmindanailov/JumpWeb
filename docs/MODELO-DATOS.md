@@ -615,7 +615,10 @@ rollback de `RefreshDatabase`). ~29 claves en uso: `business.*`, `contact.*`,
 `sales.purchase_horizon_months`, `packs.max_per_slot`/`max_guests_per_slot`/`prep_blocks_cupo`
 (globales, overrideables por zona), `theme.brand`, `payment.tax_rate`, `maintenance.*`,
 `cookies.banner_enabled`, `security.turnstile_*`, `registration.*`, `reservations.*`,
-`display_timezone`, `incidents.alert_email`, `puerta.waiver_check_enabled` (heredado de #216; hoy
+`display_timezone`, `incidents.alert_email`, `reviews.min_stars` (`#728`: el mínimo de estrellas de
+las tarjetas de la portada, por defecto **4**; se **acota a 1–5 al leerlo** —un 0 apagaría el filtro
+sin decirlo y un 7 vaciaría la sección— y **no toca la media ni el total**, que vienen de Google
+contados sobre TODAS), `puerta.waiver_check_enabled` (heredado de #216; hoy
 espejo que escribe el panel y respaldo de `WaiverSettings::mode()`), `waiver.mode`
 (`externo|interno|desactivado`, Fase 6) y `waiver.retention_months` (vacío → sin poda).
 
