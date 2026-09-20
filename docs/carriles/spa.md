@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#721`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#722`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -28,16 +28,17 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅ **T1·1 y T1·2 EN EL ÁRBOL** (`#720`, `#721`): tabla y siete estados; reto con **PKCE**, canje,
-   guardado bajo candado y la pantalla «Ficha de Google» en Ajustes → Web. 39 casos, arneses 12/12 y
-   15/15. ⚠️ **La migración está aplicada SOLO en la BD local.** ✅ **La pantalla la vio el owner** (20-09) en
-   «Sin configurar», que es el estado de hoy.
-   ▶ **La URI para el §7·A·5**: `/admin/ficha-google/callback`, RUTA COMPLETA y por instalación.
-   ▶ **Sigue**: elegir y revalidar ficha (§4.2·4) · el resto de la pantalla (§4.2·1) · desconectar
-   (§4.2·8) · `verify` (§4.2·10). Todo contra un DOBLE con `Http::preventStrayRequests()`.
+   ✅ **T1·1, T1·2 y T1·3a EN EL ÁRBOL** (`#720`→`#722`): tabla y siete estados · reto con **PKCE**,
+   canje y la pantalla «Ficha de Google» en Ajustes → Web · y el **cliente de la API**, único
+   envoltorio HTTP, con la negativa de Google traducida a estado. 59 casos, arneses 12/12, 15/15 y
+   10/10. ⚠️ **La migración está aplicada SOLO en la BD local.** ✅ La pantalla la vio el owner (20-09)
+   en «Sin configurar», el estado de hoy.
+   ▶ **Sigue**: elegir y revalidar ficha (§4.2·4) —el cliente ya está, `allLocations()`— · el resto de
+   la pantalla (§4.2·1) · desconectar (§4.2·8) · `verify` (§4.2·10). Contra un DOBLE, con
+   `Http::preventStrayRequests()`. La URI del §7·A·5 y el resto del estado, **en la §4.1 de la spec**.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
-   owner—. El **§7·A está reescrito** con lo medido: no necesita ficha propia, y el **vídeo** de
-   verificación va **tras la T1**. Empieza por el §0 y por **§1.3**.
+   owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
+   **tras la T1**. Empieza por el §0 y el **§1.3**.
    ⏰⏰ **EL CALENDARIO LO MANDA LA FICHA, y ya hay respuesta (owner, 20-09): la de PlayJump lleva MENOS
    de 60 días.** La solicitud del §7·A·2 **no se puede mandar todavía** y la conexión real no llega
    antes de finales de octubre. El doble no es una opción: es el único camino.

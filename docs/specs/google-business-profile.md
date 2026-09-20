@@ -182,8 +182,18 @@ peticiones y la pantalla **«Ficha de Google»** en Ajustes → Web. 24 casos, a
 completa** y una por instalación. Es el dato que hay que dar de alta en el cliente OAuth central.
 ✅ La pantalla **la vio el owner el 2026-09-20** en su estado «sin configurar», que es el de hoy.
 
-▶ Lo que sigue de la T1: elegir y revalidar la ficha (§4.2·4), el resto de la pantalla —quién conectó y
-la última pasada (§4.2·1)—, desconectar (§4.2·8) y `business-profile:verify` (§4.2·10).
+✅ **T1·3a · EL CLIENTE DE LA API, EN EL ÁRBOL** (2026-09-20, `#722`): `GoogleBusinessApi` —el **único**
+envoltorio HTTP del §4.2·6: token de acceso solo en memoria, `accounts.list`, `locations.list` con su
+`readMask`, y `allLocations()`, que recorre TODAS las cuentas del token porque la revalidación del
+§4.2·4 no se puede hacer contra una sola— y `GoogleBusinessApiException`, que traduce la negativa de
+Google a **un estado o a ninguno**. 20 casos, arnés 10/10.
+⚠️⚠️ **El 403 son DOS cosas y las separa la RAZÓN, no el código**: `PERMISSION_DENIED` lo arregla el
+parque; `SERVICE_DISABLED`/`accessNotConfigured` es el §7·A·2 sin aprobar y no lo arregla el parque.
+⚠️ **429 y 5xx NO tocan el estado**: son de Google, y apagar la conexión por ellos confunde un mal
+minuto con una avería. Solo el 401 se reintenta, una vez y con token nuevo.
+
+▶ Lo que sigue de la T1: elegir y revalidar la ficha (§4.2·4) con el cliente ya hecho, el resto de la
+pantalla —quién conectó y la última pasada (§4.2·1)—, desconectar (§4.2·8) y `verify` (§4.2·10).
 
 ### 4.2 T1 · La conexión
 
