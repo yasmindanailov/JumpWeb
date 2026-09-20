@@ -7,7 +7,7 @@
 | Doc | Qué es |
 |---|---|
 | `ESTADO.md` | Índice de carriles (≤ 4 KB): qué carril hay, en qué máquina, con qué banda y dónde está cada entorno. **Carga obligatoria al arrancar**, y de ahí a tu carril. El contador de la suite va en el trailer del commit (`#618`). |
-| `carriles/<carril>.md` | **Un fichero por carril** (`#621`): banda y último usado · ficheros · foto · por dónde retomar · buzón. Cada agente escribe SOLO el suyo (≤ 24 KB). Hoy: `plataforma` · `web` · `spa` · `correos` · `pasarela`. |
+| `carriles/<carril>.md` | **Un fichero por carril** (`#621`): banda y último usado · ficheros · foto · por dónde retomar · buzón. Cada agente escribe SOLO el suyo (≤ 32 KB, `#724`). Hoy: `plataforma` · `web` · `spa` · `correos` · `pasarela`. |
 | `00-REFACTOR.md` | Tracker VIVO (fases + casillas, sin narrativa, ≤ 16 KB). Sus marcadores de fase MANDAN sobre los carriles. |
 | `DECISIONES.md` | **Índice** del registro de decisiones (`#617`): dónde está cada número, cómo se escribe una (≤ 1,5 KB) y las bandas. Buscar por número. Revertida = «Sustituida por #N» en la antigua. |
 | `decisiones/NNN-NNN.md` | Las entradas, por centenas (`000-099` … `600-699`), en orden de número; una nueva se añade al final de su centena. Partido el 2026-09-16 sin tocar una entrada. |

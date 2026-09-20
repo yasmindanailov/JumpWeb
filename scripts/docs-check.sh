@@ -16,8 +16,8 @@
 #      HISTÓRICA se escribe tachada: `~~ClaseTest~~`).
 #   9. Ningún marcador de conflicto de merge sobrevive en la doc (`#506`).
 #  10. Techos de la documentación caliente (`#620`): enrutador ≤ 12 KB · tracker ≤ 16 KB · estado
-#      ≤ 4 KB · fichero de carril ≤ 24 KB · §0 obligatorio y ≤ 2 KB en cada spec · decisión
-#      posterior a F0 ≤ 1,5 KB. Un techo que solo se declara no vigila nada.
+#      ≤ 4 KB · fichero de carril ≤ 32 KB (`#724`; era 24) · §0 obligatorio y ≤ 2 KB en cada spec ·
+#      decisión posterior a F0 ≤ 1,5 KB. Un techo que solo se declara no vigila nada.
 #  11. Ciclo de vida (`#622`, CONVENCIONES §11): una spec con estado 📜 vive en docs/archivo/, el
 #      enrutador no cita el archivo, y un doc de sistemas/ no pasa de 48 KB (si crece, se parte).
 #      Y el check 1 resuelve la cita a un doc ARCHIVADO por su nombre: archivar no reescribe citas.
@@ -231,7 +231,10 @@ techo() { # $1=ruta · $2=techo en bytes · $3=qué es el fichero
 techo CLAUDE.md 12288 'enrutador: una línea por fila'
 techo docs/00-REFACTOR.md 16384 'tracker: fases y casillas, sin narrativa'
 techo docs/ESTADO.md 4096 'estado: índice de carriles, no una foto'
-for f in docs/carriles/*.md; do techo "$f" 24576 'fichero de carril: banda · ficheros · foto · retomar · buzón'; done
+# ⚠️ 32 KB desde el 2026-09-20 (`#724`, `[DECIDIDO owner]`), antes 24: con cuatro tandas en un día el
+# techo se agotaba dentro de la propia tanda y el recorte empezaba a comerse el trabajo. Sigue siendo
+# un techo y sigue obligando a bajar el detalle a su spec; lo que cambia es dónde empieza a doler.
+for f in docs/carriles/*.md; do techo "$f" 32768 'fichero de carril: banda · ficheros · foto · retomar · buzón'; done
 # El §0 de cada spec es lo único que lee el arranque: obligatorio y ≤ 2 KB (de «## §0» a la siguiente «## »).
 for f in docs/specs/*.md; do
     if ! grep -qE '^## §0' "$f"; then

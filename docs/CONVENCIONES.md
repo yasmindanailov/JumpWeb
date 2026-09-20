@@ -18,7 +18,7 @@
 
 ## §2 Documentos clave (jerarquía de lectura)
 1. `ESTADO.md` — índice de carriles → **tu `carriles/<carril>.md`**: dónde estás / qué sigue. **Carga
-   obligatoria al arrancar.** Techos medidos por el gate: 4 KB el índice, 24 KB un carril.
+   obligatoria al arrancar.** Techos medidos por el gate: 4 KB el índice, 32 KB un carril (`#724`).
 2. `00-REFACTOR.md` — tracker VIVO (fases + casillas, sin narrativa; ≤ 16 KB).
 3. `DECISIONES.md` (índice) → `decisiones/NNN-NNN.md` — el porqué de cada decisión. **Buscar por número.**
 4. `INVARIANTES.md` — lo que NUNCA se puede regresar (endurecimiento heredado). Leer antes de
@@ -121,8 +121,9 @@ siempre mejora el test). El tercero hay que buscarlo activamente.
   bootstrap → README raíz; recuentos estructurales → los verifica `docs-check`. El resto de docs
   **enlaza, no copia**.
 - **Techos** (`docs-check`, check 10, `#620`): enrutador 12 KB · tracker 16 KB · `ESTADO.md` 4 KB ·
-  fichero de carril 24 KB · `## §0 · Antes de tocar` obligatorio y ≤ 2 KB en cada spec · decisión nueva
-  ≤ 1,5 KB. Lo que no cabe va al cuerpo de su spec o a git, no a un techo más alto.
+  fichero de carril **32 KB** (`#724`; era 24) · `## §0 · Antes de tocar` obligatorio y ≤ 2 KB en cada
+  spec · decisión nueva ≤ 1,5 KB. Lo que no cabe va al cuerpo de su spec o a git, no a un techo más
+  alto — **el de carril se subió UNA vez y con decisión del owner**, que es el precio de subirlo.
 
 ## §5 Flujos obligatorios de actualización
 - **Decisión nueva** → `[DECIDIDO]`+fecha en el doc afectado **y** entrada al final de su centena en

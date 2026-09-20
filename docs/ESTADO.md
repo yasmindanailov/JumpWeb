@@ -4,7 +4,7 @@
 > `docs/carriles/<carril>.md`, y **cada agente escribe SOLO el suyo** (foto · por dónde retomar · ficheros ·
 > buzón). Este índice no cambia al trabajar: lista los carriles y dónde está cada entorno. El contador de la
 > suite va en el trailer del commit de cierre (`CONVENCIONES §8`, `#618`), en ningún documento. Techos:
-> este fichero 4 KB, un carril 24 KB (`docs-check`, check 10). El histórico de este fichero está en
+> este fichero 4 KB, un carril 32 KB (`docs-check` check 10; `#724`, era 24). El histórico está en
 > `git log -p docs/ESTADO.md` hasta el commit de F1.
 
 ## Carriles

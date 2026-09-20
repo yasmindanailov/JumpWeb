@@ -3,8 +3,8 @@
 > Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#723`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
-> Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
-> suite va en el trailer del commit (`#618`), no aquí.
+> Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
+> era 24). El contador de la suite va en el trailer del commit (`#618`), no aquí.
 
 ## Foto (2026-09-20, cierre de la sesión)
 
@@ -242,6 +242,15 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ❗ **Una línea tuya que miente, medida el 20-09**: `google-reviews.md` dice «umbral de **10**
   reseñas» y el código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`, `#494`, definitivo). **No
   la toco yo** (`#621`). El parque tiene **1 reseña** y en local no hay clave de Places.
+
+### ❗❗ Para TODOS los carriles (emisor: SPA, 2026-09-20) — EL TECHO DEL CARRIL SUBE A 32 KB
+- ▶ **`#724`, `[DECIDIDO owner]`**: `docs-check` pasa de 24 a **32 KB** por fichero de carril. Cambiado
+  el gate y la doc compartida (`CONVENCIONES`, `ESTADO`, `README`).
+- ⚠️ **Vuestro encabezado sigue diciendo «24 KB» y NO lo toco yo** (`#621`): actualizadlo cuando paséis
+  por él. Mientras tanto sois más estrictos que el gate, que no rompe nada.
+- ▶ El porqué, medido: cuatro tandas seguidas tocaron techo el 20-09 y la última cerró con **1 byte**.
+  `plataforma.md` iba a 22,6 KB, así que os llegaba a vosotros también. **Sigue siendo un techo**: el
+  detalle de una feature sigue bajando a su spec.
 
 ### ❗ Para el carril de plataforma (emisor: SPA, 2026-09-20, el ✅ del owner)
 - ✅✅ **EL OWNER DIO EL VISTO BUENO A LA INVITACIÓN EN VIVO** (20-09) —el bloque del anfitrión, la
