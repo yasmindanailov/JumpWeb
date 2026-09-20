@@ -59,6 +59,7 @@ use App\Domain\Payments\Models\PaymentRefund;
 use App\Domain\Payments\Services\PaymentSettings;
 use App\Domain\Platform\Listeners\ApplyBusinessSender;
 use App\Domain\Platform\Models\AuditLog;
+use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\Money;
 use App\Domain\Platform\Services\QrLogo;
@@ -188,6 +189,10 @@ class AppServiceProvider extends ServiceProvider
             'dependent' => Dependent::class,
             'dependent_assignment' => DependentAssignment::class,
             'faq' => Faq::class,
+            // La conexión con la ficha de Google (`#524`). Alias como todo modelo nuevo: lo exige
+            // `MorphMapTest`, y es lo que hace que el audit de «conectar»/«desconectar» guarde
+            // `google_business_connection` y no un nombre de clase que se rompe al mover el fichero.
+            'google_business_connection' => GoogleBusinessConnection::class,
             'guardian_authorization' => GuardianAuthorization::class,
             // La INVITACIÓN DIGITAL y lo que contesta un padre (`#573`). Alias como todo modelo
             // nuevo: lo exige `MorphMapTest`, y es lo que hace que el audit guarde `invitation_reply`

@@ -536,6 +536,25 @@ index `(action, created_at)`. Crear SOLO vía `App\Domain\Platform\Services\Audi
 `AuditLog::CRITICAL_ACTIONS` = incidencias que destaca la página del panel
 (`payments.duplicate_capture`, `payments.overbooked_capture`, `orders.refund_failed`…).
 
+### `google_business_connections` (GoogleBusinessConnection) — la ficha de Google del parque · `#720`
+**Fila ÚNICA**: `singleton` bool con índice **UNIQUE** (invariante de BD, no convención: una
+instalación es un parque y un parque es una ficha). `status` (enum `GoogleBusinessStatus`, default
+`ready_to_connect`) · `status_changed_at` · `refresh_token` text **cast `encrypted`** ·
+`token_fingerprint` char(64) (sha256 del token, para **comparar-y-escribir**: un worker con el token
+viejo no pisa una reconexión) · `location_name` (recurso `accounts/…/locations/…`), `location_title`,
+`place_id`, `maps_uri`, `new_review_uri` · `connected_by_user_id` nullable `nullOnDelete` ·
+`connected_at`.
+⚠️ **NO vive en `settings`**: `Setting::value()` lee la tabla entera y la memoriza por proceso, así
+que el token se pasearía por toda petición que consulte cualquier ajuste.
+⚠️ `$hidden` = token y huella (la pantalla es Livewire y serializa al snapshot del navegador).
+⚠️ El token se lee por `readToken()`, que descifra a mano y convierte `DecryptException` en
+«caducada»; **`hasStoredToken()` mira el atributo crudo** para distinguir «no hay token» de «hay y no
+se puede leer». Los dos usan `getAttributes()`, **nunca `getRawOriginal()`**.
+⚠️ **Quién conectó es FK del esquema SIN relación de Eloquent**: Platform no depende de ningún módulo
+(`ModuleBoundariesTest`: `'Platform' => []`). Lo resuelve la capa de entrega.
+De los siete estados, `unconfigured` y `ready_to_connect` **no se guardan**: los deriva
+`GoogleBusinessConnectionState` de las credenciales y del token.
+
 ---
 
 ## 4. Dominio CMS / CONTENIDO

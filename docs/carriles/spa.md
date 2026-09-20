@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#719`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#720`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -23,9 +23,8 @@
   - ⚠️ El ✅ del owner **no cubre** tres cosas, declaradas sin medir: el `.ics` en un **móvil real**
     (§4.6), el justificante **en producción** con el **Turnstile real** y `§7.2·R12`.
   - ▶ Solo quedan **desplegar** (con su migración) y **encender** (dato suyo).
-- ✅ **`#707` · el defecto VIVO de `DependentsZone.vue`** (lo levantó plataforma): `addBtn` sin declarar
-  lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. El gate `CE-6` paró
-  el commit al subir de 40 a 41 líneas: **no se subió el techo**, bajó `signDependent()` al módulo
+- ✅ **`#707` · `DependentsZone.vue`** (lo levantó plataforma): `addBtn` sin declarar tiraba el foco al
+  `<body>`. El gate `CE-6` paró el commit: no se subió el techo, bajó `signDependent()` al módulo
   plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
 - El plugin `jumpweb-agente` corre aquí desde el 17-09, en `07076ac`.
 
@@ -34,14 +33,17 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), avisado en mi buzón.
-   ▶ **`#719` (20-09): la identidad ante Google es JumpSystem**, con cuenta, dominio y web propios. El
-   **§7·A está reescrito hoy** con lo medido: JumpSystem **no necesita ficha** —el parque añade esa cuenta
-   como **administrador** de la suya— y el **vídeo** de verificación va **tras la T1**.
-   ⚠️⚠️ **Sigue BLOQUEADA en el owner**: sin el proyecto central aprobado no hay conexión. **Construyo T1 y
-   T2 contra un doble.** Empieza por el §0 y por **§1.3**: tres restricciones chocan con `SEC-07`,
-   `RGPD-05` y `PERF-02`.
-   ❓ **Sin respuesta, y manda sobre el calendario**: ¿desde cuándo está **verificada** la ficha de
-   PlayJump? Si nació con la apertura (01-09) no llega a **60+ días** hasta finales de octubre.
+   ✅ **T1·1 EN EL ÁRBOL** (`#720`): tabla, los siete estados, modelo cifrado y las dos lecturas. 15
+   casos, arnés **12/12**, Larastan 0. ⚠️ **Su migración está aplicada SOLO en la BD local.**
+   ▶ **Sigue**: OAuth con PKCE (§4.2·2) · elegir y revalidar ficha (§4.2·4) · pantalla del panel
+   (§4.2·1) · desconectar (§4.2·8) · `verify` (§4.2·10). Todo contra un DOBLE, con
+   `Http::preventStrayRequests()`: ningún caso habla con Google.
+   ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
+   owner—. El **§7·A está reescrito** con lo medido: no necesita ficha propia, y el **vídeo** de
+   verificación va **tras la T1**. Empieza por el §0 y por **§1.3**.
+   ⏰⏰ **EL CALENDARIO LO MANDA LA FICHA, y ya hay respuesta (owner, 20-09): la de PlayJump lleva MENOS
+   de 60 días.** La solicitud del §7·A·2 **no se puede mandar todavía** y la conexión real no llega
+   antes de finales de octubre. El doble no es una opción: es el único camino.
    ❗ **Medido el 20-09, la doc ajena miente**: `google-reviews.md` dice «umbral de **10** reseñas» y el
    código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`, `#494`, definitivo). **Manda el código.**
    No lo toco (`#621`). ▶ El parque tiene **1 reseña** (API, 10-09) y en local no hay clave de Places.
@@ -61,9 +63,9 @@
    blanca de `completeReply()` sigue sin ejercerse; la rama `guest_data`, sin prueba.
 6. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha visto
    en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-7. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
-   `/ligero` (medidas, F2·b: `/carril` y `/handoff`). ⚠️ **De la casa ajena**: `carriles/correos.md`
-   dice «25 correos» y son **26**, y el umbral de `google-reviews.md` (punto 1). No los toco (`#621`).
+7. Del plugin quedan **tres frases** por ver en vivo: `/sonda`, `/dod` y `/ligero` (`/carril`,
+   `/handoff` y `/decision`, medidas). ⚠️ De la casa ajena: `carriles/correos.md` dice «25 correos» y
+   son **26** (el otro, en el punto 1). No los toco (`#621`).
 
 ## Ficheros de este carril
 
@@ -112,6 +114,11 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
   guard de `saving()` de `TicketType` lanza, y el escenario real contra el que defiende el predicado
   es justo ése —una importación, un `update()` a mano—. Con `create()` el caso no existiría.
+- ⚠️⚠️ **Dos trampas de Eloquent y de Larastan, medidas** (`#720`): `getRawOriginal()` da lo LEÍDO de la
+  base, no el atributo vigente —entre `$m->campo = 'x'` y su `save()` entrega el ANTERIOR; usa
+  `getAttributes()`—, y con un cast el desfase no rompe nada visible; y **Larastan declara MUERTO un
+  `catch` tras una propiedad con cast** y se equivoca (no ve el `__get`). Cero ignores inline en el
+  repo y la base solo encoge: la salida es que el código **diga** que puede fallar.
 - ⚠️⚠️⚠️ **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`** (`Builder::update()`
   llama a `addUpdatedAtColumn()`), así que **NO sirve para marcar nada sin mover el testigo** del
   post-form. Hay que bajar al crudo con **`toBase()`**. La spec de la invitación afirmaba lo
@@ -218,12 +225,11 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `GuestFormRequest` (cambia cuerpo y llamada **solo** con invitación; asunto y línea de adelanto **sin
   variante**, para no sacarlo de tu censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro
   piezas en los tres idiomas. **Ni el tema, ni el remitente, ni el modo oscuro, ni los otros 25.**
-- ▶ **Tu inventario pasa a 26**; lo actualicé en tu spec, pero **`carriles/correos.md` sigue diciendo
-  25 y no lo toco yo** (`#621`).
-- ❗ **Un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre comillas y
-  tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el código — **12 avisos en rojo**. Tu
-  guarda funciona; la mutación está en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
-- ▶ **Te queda tu OJO en Gmail/Outlook**: los tres están en Mailpit; las sondas, en almacenamiento
+  ▶ **Tu inventario pasa a 26**; actualizado en tu spec, no en `carriles/correos.md` (`#621`).
+- ❗ **Un hallazgo tuyo que pagué yo**: escribí la llamada de cabecera entre comillas en un comentario y
+  tu `MailInboxLineTest` se quedó con el ejemplo — **12 avisos en rojo**. Tu guarda funciona; la
+  mutación, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
+- ▶ **Te queda tu OJO en Gmail/Outlook**: los tres en Mailpit; sondas en almacenamiento
   (`probe-t7-correo.php`, `probe-t7-vispera.php`). Luego puedes retirar este mensaje.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
@@ -239,11 +245,9 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   hay clave de Places**, así que la sección cae al respaldo de opiniones propias.
 
 ### ❗ Para el carril de plataforma (emisor: SPA, 2026-09-20, el ✅ del owner)
-- ✅✅ **EL OWNER DIO EL VISTO BUENO A LA INVITACIÓN EN VIVO** (20-09): el bloque del anfitrión, la
-  página y sus temas, el recibo en sus dos estados, el justificante sin prerrelleno y los tres correos.
-  **El despliegue ya no está bloqueado por el ojo.** ▶ Pero **NO lo despleguéis antes que el borde
-  `§7.1·5`**, que empiezo yo ahora: hoy no muerde porque los interruptores están apagados, y encender
-  con él abierto es un «sí» adoptado que se cae al bajar invitados.
+- ✅✅ **EL OWNER DIO EL VISTO BUENO A LA INVITACIÓN EN VIVO** (20-09) —el bloque del anfitrión, la
+  página y sus temas, el recibo en sus dos estados, el justificante y los tres correos— **y el borde
+  `§7.1·5` está CERRADO** (`#718`). **El despliegue ya no está bloqueado por nada mío**; alcance abajo.
 - ⚠️ Ese ✅ **no cubre** el `.ics` en un móvil real, el Turnstile real en producción ni `§7.2·R12`.
 
 ### ▶ EL ALCANCE DEL PRÓXIMO DESPLIEGUE (emisor: SPA, 19→20-09; los tres avisos, fundidos)
@@ -266,8 +270,6 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `updated_at`**. Si alguna doc tuya dice lo contrario, es falso — hay que usar `toBase()` (`#717`).
 
 ### Atendido
-- **Plataforma, 16-09 → 19-09** (los seis) y **Web `#539`/`#540`**: atendidos, **pueden retirarlos
-  todos**. Lo que sobrevive de ellos ya está arriba, en «Trampas vivas»: la convención del `button`,
-  `build:ssr` tras tocar un `.vue`, el montaje que se lleva el Chromium y el cajón como paquete
-  (`cajon-empaquetable.md` §0/§4.8). El 422 de `InvitationHostController` lo cogió plataforma.
-  ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que lo escribió plataforma.
+- **Plataforma 16-09 → 19-09 (los seis) y Web `#539`/`#540`**: atendidos, **pueden retirarlos**. Lo que
+  sobrevive de ellos ya está arriba, en «Trampas vivas», y el 422 de `InvitationHostController` lo cogió
+  plataforma. ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que lo escribió plataforma.

@@ -169,6 +169,13 @@ Criterios de éxito, todos medibles:
 ▶ Orden: **T1 → T2 → T6**. T5 es documentación y puede ir cuando el owner quiera. T6 va la última porque es
 la única que ESCRIBE en la ficha que ven todos los clientes de Google.
 
+✅ **T1·1 · EL CIMIENTO, EN EL ÁRBOL** (2026-09-20, `#720`): la tabla `google_business_connections` (fila
+única por índice UNIQUE), `GoogleBusinessStatus` con los siete estados, el modelo con el token cifrado y
+`GoogleBusinessCredentials` / `GoogleBusinessConnectionState`. 15 casos, arnés 12/12, Larastan 0.
+⚠️ **Su migración está aplicada en la BD local y NO en ninguna otra**: empujada ≠ aplicada.
+▶ Lo que sigue de la T1: la ida y vuelta OAuth con PKCE (§4.2·2), elegir y revalidar la ficha (§4.2·4), la
+pantalla del panel (§4.2·1), desconectar (§4.2·8) y `business-profile:verify` (§4.2·10).
+
 ### 4.2 T1 · La conexión
 
 1. **Pantalla «Ficha de Google»** en **Ajustes → Web** (`AdminSettingsHub::areas()`), con `canAccess()` sobre
@@ -227,6 +234,14 @@ la única que ESCRIBE en la ficha que ven todos los clientes de Google.
    acceso desde la cuenta de Google. **Fuera de producción no llama a `revoke`.**
 9. **Quién conectó**: se guarda el usuario del panel, y si pierde el rol se avisa a los admins. §7 recomienda
    una **cuenta de Google dedicada** del parque, administradora de la ficha.
+   ⚠️ **FK del esquema, SIN relación de Eloquent** (`#720`): `ModuleBoundariesTest` dice `'Platform' => []` y
+   **ni el kernel compartido lo exime** —`AuditLog` necesita su entrada explícita en `SEAM` para mirar a
+   `User`—. Se descartó imitarlo: el §4.0 puso la conexión en Platform **porque** no depende de nadie, y una
+   excepción más habría borrado ese motivo. Quién conectó lo resuelve la capa de ENTREGA.
+   ⚠️⚠️ **El token se descifra A MANO, no por la propiedad** (`#720`): por la propiedad el fallo es invisible
+   —Larastan llegó a declarar muerto el `catch (DecryptException)`, y medirlo demostró que no lo está—. Y se
+   lee de `getAttributes()`, **nunca de `getRawOriginal()`**, que devuelve lo leído de la base y entregaría el
+   token ANTERIOR entre poner uno nuevo y guardarlo.
 10. **`business-profile:verify`** (futuro): cuenta, ficha, número de reseñas y estado de cada API, **sin
     imprimir tokens, correos ni cuerpos** en ningún nivel de detalle (test con canario).
 

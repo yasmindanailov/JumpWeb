@@ -31,7 +31,7 @@ class SetSetting extends Command
 {
     protected $signature = 'app:set-setting
         {key : La clave, tal cual está en la tabla (p. ej. `security.turnstile_site_key`).}
-        {value : El valor. Cadena vacía = se guarda vacío, que NO es lo mismo que borrar la fila.}
+        {value? : El valor. Cadena vacía = se guarda vacío, que NO es lo mismo que borrar la fila. OMITIRLO lo pide por entrada OCULTA.}
         {--group= : Grupo de la fila. Solo se usa al CREARLA; si ya existe, se respeta el suyo.}
         {--force : Obligatorio para las claves protegidas (ver PROTECTED_KEYS).}';
 
@@ -51,6 +51,11 @@ class SetSetting extends Command
         // como este repo dice «esto cuesta caro tocarlo a ciegas».
         'auth.google_client_id' => 'identifica a ESTA instalación ante Google. Cambiarla por la de otro cliente manda a sus visitantes a la pantalla de consentimiento equivocada y deja el inicio de sesión roto.',
         'auth.google_client_secret' => 'es el secreto que autentica el canje del código ante Google: quien lo tenga puede hacerse pasar por esta instalación. Como el de Redsys, escribirlo aquí lo deja en una tabla que se vuelca en cada backup.',
+        // `specs/google-business-profile.md` §4.2·5 (`#524`, `#719`). ⚠️ Éstas NO son del cliente: son
+        // el cliente OAuth CENTRAL de JumpSystem, el MISMO en todas las instalaciones. Por eso pesan
+        // más que las de arriba — filtrarlas no compromete un parque, compromete a todos a la vez.
+        'google_business.client_id' => 'identifica a JumpSystem ante Google, y es el MISMO en todas las instalaciones. Cambiarlo manda al admin del parque a la pantalla de consentimiento de otra aplicación y deja la ficha sin conectar.',
+        'google_business.client_secret' => 'es el secreto del cliente OAuth CENTRAL de JumpSystem: quien lo tenga puede pedirle permiso sobre su ficha a CUALQUIER parque en nombre de JumpSystem, no solo a éste. Entra por entrada oculta (omite el valor) o queda en el historial de la shell.',
     ];
 
     /** Fragmentos que delatan un secreto: su valor no se imprime jamás. */
@@ -59,13 +64,22 @@ class SetSetting extends Command
     public function handle(): int
     {
         $key = trim((string) $this->argument('key'));
-        $value = (string) $this->argument('value');
+        $given = $this->argument('value');
 
         if ($key === '') {
             $this->error('La clave no puede estar vacía.');
 
             return self::FAILURE;
         }
+
+        // ⚠️⚠️ **Entrada OCULTA cuando se omite el valor** (`specs/google-business-profile.md` §4.2·5).
+        // Un secreto escrito como argumento queda en `~/.bash_history` del servidor y en la línea de
+        // `ps` mientras el comando corre — dos sitios que sobreviven a la sesión por SSH y que nadie
+        // recuerda limpiar. `null` es «no lo escribí»; la cadena vacía sigue siendo un valor legítimo
+        // («se guarda vacío, que NO es lo mismo que borrar la fila»), así que se distinguen.
+        $value = $given === null
+            ? (string) $this->secret("Valor de «{$key}» (no se muestra)")
+            : (string) $given;
 
         if (isset(self::PROTECTED_KEYS[$key]) && ! $this->option('force')) {
             $this->error("«{$key}» es una clave PROTEGIDA y no se toca sin --force.");
