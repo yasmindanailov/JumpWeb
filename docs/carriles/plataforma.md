@@ -223,6 +223,11 @@ dueño es el carril de la web/reseñas—) ·
   migración `order_items.eve_notice_at` para el próximo despliegue.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-20)
+- ❗ **AVISO ANTES DE TOCAR: mudo `/contacto` a la instancia** (D2 de `#647`, spec `paquete-de-instancia.md`
+  §4.4): `pages/contact.blade.php` sale de `main` TAL CUAL a `instancias/playjump/web/contacto.blade.php`
+  (mismo HTML, huella a 0) y el producto se queda un **anfitrión mínimo** (`anfitrion/contacto`) con el
+  armazón y el formulario. Antes, dos mecanismos que vivían en línea en tu vista pasan a componente
+  (`<x-site.honeypot>`, `<x-site.turnstile>`) sin cambiar un byte. Sus 12 casos de marcado se van con ella.
 - ⚠️ **He tocado la cabecera `@php` de CUATRO vistas tuyas** (`rules`, `attractions`, `text`, `events`;
   `#653`): solo la derivación de la `<meta description>`, que ahora la hace `Platform\Services\MetaDescription`
   (un hogar, tope 155, palabra entera). Medido en tres idiomas: `/normas` idéntica; las legales cambian solo
@@ -242,16 +247,9 @@ dueño es el carril de la web/reseñas—) ·
   en algún commit.
 
 ### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
-- ❗ **Desde `#630`, toda ruta con `auth:sanctum` exige además la ability `api-v1`** (`ApiTokenAbilityTest`):
-  va DENTRO del grupo autenticado de `routes/api.php`, o con `->middleware(['auth:sanctum', $tokenAbility])`.
-  En un test, `Sanctum::actingAs($u)` SIN abilities da **403** → pásale `[ApiTokenIssuer::ABILITY]`;
-  `actingAs($u)` no cambia (lo arregla el `be()` de `tests/TestCase.php`, que es COMPARTIDO).
-- ❗❗ **El contrato va por 1.9.0 y `ApiContractTest` aprieta más que antes** (`#640`→`#646`, el menú de F5).
-  Tres cosas si añades un endpoint: **(1)** todo campo de una respuesta va en `required`, y lo opcional de
-  verdad se declara en `OPTIONAL_BY_DESIGN` **con su porqué**; **(2)** la comprobación **baja a los `items`
-  de las listas** —un campo de más en cada elemento pasaba el contrato entero—; **(3)** si lees `settings`,
-  no lo hagas a mano: `PublicFactsBoundaryTest` barre los 37 recursos y te lo prohíbe (la tabla tiene
-  `redsys_secret_key` a dos filas de `contact.email`).
+- ❗ Desde `#630` toda ruta `auth:sanctum` exige la ability `api-v1` (en un test, `Sanctum::actingAs($u,
+  [ApiTokenIssuer::ABILITY])`); y `ApiContractTest` aprieta más desde el menú (`#640`→`#646`): la receta de
+  un endpoint nuevo está en `instancia-y-landing-fuera.md` §4.1.bis. Leído por el SPA el 19-09.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-19)
 - ⚠️ **He tocado `home.blade.php`, que es tuyo** (`#651`, tres líneas del bloque de reseñas). Motivo: la
