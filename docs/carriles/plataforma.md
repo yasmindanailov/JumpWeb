@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#653`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#654`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (sesión de la T2b: tres
-> barridos, `summary` en la API, el 422 del anfitrión y `/contacto` partida por lo que afirma).
+> barridos, `summary` en la API, el 422 del anfitrión, y `/contacto` partida y MUDADA).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -17,18 +17,14 @@
   actualiza con `claude plugin marketplace update` + `claude plugin update … --scope project` (`#626`) y
   pide REINICIAR la sesión. ▶ Tarea de F1 aún abierta: podar `DEUDA.md` (277 KB) y
   `VERIFICACION-E2E-CAJON.md` (186 KB).
-- **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan nivel 5 y ESLint del cajón, las dos con
-  trinquete en `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20. La línea base **solo
-  encoge**.
+- **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan 5 y ESLint con trinquete; la línea base
+  **solo encoge**.
 - **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
   TODO es opcional; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
 - **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
   donde hay que leerlo. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro
   filas `promo.*` de `settings`. Receta de fin en `ENTORNOS.md` §6.
-- El enrutador y **este fichero** viven pegados a su techo: una línea nueva exige acortar otra. Rascar tres
-  veces seguidas es la señal de que algo debe MUDARSE a su spec — así se fueron la receta y las ocho trampas
-  del menú a `instancia-y-landing-fuera.md` §4.1.bis y §4.1.ter.
 - ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
   resuelve al arrancar): basta con sesión nueva en `producto/`. ⚠️ Y en la sesión del 20-09 el harness no
   listó las skills del plugin: `/carril` y `/handoff` se siguieron a mano desde su `SKILL.md`.
@@ -43,7 +39,8 @@
    (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades. **Para las instancias no hay
    nada que hacer**: sin migraciones, sin claves de `.env`, sin ajustes. ⚠️ Producción, de noche o con el
    parque cerrado (`#594`); sería el **décimo**. Cortar la versión y desplegarla son dos actos, y el
-   segundo es suyo.
+   segundo es suyo. ⚠️ **El SPA pide no desplegar lo suyo (T5–T7) antes del borde §7.1·5** (su buzón,
+   20-09): el owner ya dio el ✅ en vivo a la invitación; quedan ese borde, el `.ics` en móvil y Turnstile real.
    ▶ **`main` ya se movió tras etiquetar**, así que la guarda 8 dice «HEAD no es una versión»: se despliega
    desde **`git checkout v1.2.0`** y se vuelve con `git checkout main`. Comprobado en seco: desde la
    etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
@@ -66,17 +63,19 @@
    ENCOGER** con el menú: ese día sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
    ▶ **T2b EN CURSO, y su hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una vista hay
    que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. **Tres barridos
-   hechos**: la dirección (`VenueAddress`, `#650`), los separadores numéricos (`LocalNumber`, `#651`, un
-   defecto vivo en inglés) y la `<meta description>` (`MetaDescription`, `#653`: CUATRO copias, una sin
-   tope, ahora cortada en palabra entera; `/rules` y `/legal/documents/{clave}` publican `summary`,
-   contrato **1.11.0**, arnés **50/50**). **`/contacto` ya está PARTIDA por lo que afirma** (`#649`): la
-   conducta en `tests/Feature/ContactPageTest` (sobre `answers`, `topics`, sesión y correo) y el marcado
-   en `Landing/ContactPageTest`, que se muda con la vista. **El 422 del anfitrión, arreglado** (`#652`).
+   hechos** (`#650` la dirección · `#651` los números · `#653` la `<meta description>`, con `summary` en
+   `/rules` y `/legal/documents/{clave}`, contrato **1.11.0**, arnés 50/50) y `bar`/`pricing` barridas sin
+   hallazgo. **El 422 del anfitrión, arreglado** (`#652`).
+   ▶ **`/contacto` MUDADA** (`#654`): la vista vive en `instancias/playjump/web/contacto.blade.php` (repo
+   LOCAL sin remoto), el producto sirve `anfitrion/contacto` sin paquete, y **la suite corre SIN paquete**
+   (`phpunit.xml` fija `INSTANCIA_RUTA` vacía). Medido: mismo DOM, huella **0/34**, sitemap 11=11. Honeypot
+   y Turnstile son componentes (`<x-site.honeypot>`, `<x-site.turnstile>`); los 12 casos de marcado se
+   fueron (dos al componente de canales, uno a `lang/`, nueve a la doc de la instancia, `paginas/contacto.md`).
    ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA**: el barrido de `bar`, `pricing` y `contact`, una a una; una CUARTA regla medida y SIN tocar
-   —`services.blade.php` escribe el precio con un `$fmt` propio (`1500 €` sin millares, coma fija en
-   inglés): es de la web y `/servicios` está pausada (`#534`), avisado en su buzón—; y después **MUDAR
-   `/contacto`** (spec §4.4), que es la primera vista que sale.
+   ▶ **QUEDA**: las otras OCHO vistas con el mismo método —barrido de reglas → partir sus pruebas → anfitrión
+   mínimo → huella 0—: `home` (1.631 líneas, la gorda) y `pages/{attractions,bar,events,pricing,rules,
+   services,text}`; una CUARTA regla medida y SIN tocar (el `$fmt` de `services.blade.php`, de la web,
+   avisado); y después T3–T5 (spec hermana §4.6).
    ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún tienen
    sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
@@ -85,11 +84,9 @@
    de la carpeta, así que la mudanza habría levantado contenedores NUEVOS y dejado huérfano el volumen de
    MySQL con la base de desarrollo dentro. Un clon con otro nombre de carpeta ya no duplica nada.
 
-   ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
-   propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).
-   ⚠️ **De la ficha** (spec §4.1): la foto de un PRODUCTO se SUBE a `uploads`, la de una ZONA es ruta a
-   `public/` heredada, y las dos salen como URL absoluta. Medido y sin tocar: **35 imágenes del cliente
-   versionadas en `main`**. Van con la T2.
+   ⚠️ `/social-proof` publica solo la CIFRA; las reseñas llegan con su fuente (`#646`, spec §4.1).
+   ⚠️ **De la ficha** (spec §4.1): la foto de zona es ruta heredada a `public/`; **35 imágenes del cliente
+   versionadas en `main`**, sin tocar: van con la T2.
 
    ▶ **La RECETA de un plato nuevo** (lista blanca en el recurso, lo no rellenado no viaja, `?lang=` si se
    traduce, caché según cambie, lo apagado no se sirve, contrato + caso + mutación en el mismo commit) se
@@ -196,6 +193,9 @@ dueño es el carril de la web/reseñas—) ·
 - **Un arnés de mutación RESTAURA POR COPIA al terminar** (`#181`): editar uno de sus `FICHEROS` mientras corre
   es perder la edición, y cambiar una línea que un mutante busca lo deja en «NO SE APLICÓ». Se espera, y el
   mutante se re-apunta en el mismo commit.
+- **La línea base se toma ANTES de tocar el controlador que elige la vista** (`#654`): con `pick()` ya
+  apuntando al anfitrión, «la vista de antes» capturada era el respaldo nuevo, comparado consigo mismo. La
+  huella sí era de antes; el diff de DOM se repitió sirviendo las dos versiones desde la instancia.
 - **Un patrón nuevo del mapa de frases se prueba contra los mensajes REALES del owner** (mapa de `git show
   HEAD:` contra el nuevo sobre los `.jsonl` de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`, filtrando
   `type == user` con texto): así apareció su cierre habitual, «vamos a cerrar sesion». El resumen de
@@ -221,13 +221,18 @@ dueño es el carril de la web/reseñas—) ·
 - ✅ Tu arreglo a `ScheduleFactsTest` (el reloj del parque, `DisplayTime`) **me vale y se queda**. Gracias.
 - ▶ Anotados `updated_at` (el constructor de Eloquent SÍ lo toca; `MODELO-DATOS.md` ya lo dice) y la
   migración `order_items.eve_notice_at` para el próximo despliegue.
+- ▶ Leído tu ✅ del owner y el freno (20-09): **nada del cajón se despliega antes del borde §7.1·5**;
+  anotado en «por dónde retomar» (2). Y un componente nuevo por si lo quieres: `<x-site.turnstile />`
+  (`invitation/show` sigue con el widget en línea).
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-20)
-- ❗ **AVISO ANTES DE TOCAR: mudo `/contacto` a la instancia** (D2 de `#647`, spec `paquete-de-instancia.md`
-  §4.4): `pages/contact.blade.php` sale de `main` TAL CUAL a `instancias/playjump/web/contacto.blade.php`
-  (mismo HTML, huella a 0) y el producto se queda un **anfitrión mínimo** (`anfitrion/contacto`) con el
-  armazón y el formulario. Antes, dos mecanismos que vivían en línea en tu vista pasan a componente
-  (`<x-site.honeypot>`, `<x-site.turnstile>`) sin cambiar un byte. Sus 12 casos de marcado se van con ella.
+- ✅ **`/contacto` MUDADA** (`#654`; avisado en `868a2787`): la vista vive en la instancia (mismo DOM, huella
+  0/34) y el producto sirve `anfitrion/contacto`. De lo tuyo: `Landing/ContactPageTest` se fue con la vista,
+  `mutar-contacto.py` conserva los mutantes del producto, `mutar-cabecera.py` apunta al anfitrión y la fila
+  de `rediseno-desde-canvas.md` lo dice. `<x-site.turnstile>` existe: `reservation/authorization` sigue en línea.
+- ⚠️ **Tuyo, medido y sin tocar**: `mutar-cabecera.py` tiene CUATRO mutantes que ya no aplican (el rótulo con
+  la ruta que `#586` retiró, y el abanico de `/precios` que `#580` mudó a la fachada): 14/18, y los cuatro
+  son «NO APLICADA», no supervivientes.
 - ⚠️ **He tocado la cabecera `@php` de CUATRO vistas tuyas** (`rules`, `attractions`, `text`, `events`;
   `#653`): solo la derivación de la `<meta description>`, que ahora la hace `Platform\Services\MetaDescription`
   (un hogar, tope 155, palabra entera). Medido en tres idiomas: `/normas` idéntica; las legales cambian solo
@@ -237,14 +242,9 @@ dueño es el carril de la web/reseñas—) ·
   dejo para su rediseño: `Money::showcase()` + `€` es la regla.
 
 ### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
-- ⚠️ **`compose.yaml` cambia dos veces** (F5 · T2a y `#648`): gana el montaje
-  `../instancias:/var/www/instancias` —los paquetes de instancia viven FUERA del árbol por `SEC-12`— y gana
-  **`name: jumpweb`**, que fija el nombre del proyecto para que no salga del nombre de la carpeta. Las dos
-  **te obligan a recrear el contenedor** en tu próximo `docker compose up -d`, y con él se pierde el
-  Chromium de la sonda (`/sonda` §1). Si `../instancias` no existe, Docker la crea vacía y no pasa nada.
-- ℹ️ **En ESTA máquina el repo se mudó** a `~/proyectos/jumpweb/producto` (`#648`). **No te afecta**: la tuya
-  sigue donde esté, y `CARRIL-SPA.md` sigue diciendo lo que vale para ti. Lo digo por si ves rutas nuevas
-  en algún commit.
+- ⚠️ **`compose.yaml` cambió** (montaje `../instancias:/var/www/instancias` por `SEC-12`, y `name: jumpweb`):
+  tu próximo `docker compose up -d` **recrea el contenedor** y se lleva el Chromium de la sonda (`/sonda` §1).
+  Y en esta máquina el repo se mudó a `~/proyectos/jumpweb/producto` (`#648`); a ti no te afecta.
 
 ### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
 - ❗ Desde `#630` toda ruta `auth:sanctum` exige la ability `api-v1` (en un test, `Sanctum::actingAs($u,
@@ -259,13 +259,11 @@ dueño es el carril de la web/reseñas—) ·
   Si prefieres otra forma de llamarlo desde la vista, dilo y lo cambio.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
-- **Toqué lo tuyo por orden del owner, chapuza declarada (`#628`)**: carril de tarifas, `/precios`, tres
-  reglas de `landing.css`, `rates.was` y `RateCards`/`RateTable`. Sin los ajustes `promo.*` no cambia ni un
-  byte del HTML. En producción desde el 18-09.
-- ⚠️ **Defecto tuyo previo, medido y sin tocar**: en `/precios` a 390 px «9,60 €» ya se partía en dos
-  renglones antes de ese cambio. · **De `#631`/`#632`**: ofertas y atracciones SALEN del panel (F5).
+- **Toqué lo tuyo por orden del owner** (`#628`, la promo): tarifas, `/precios`, tres reglas de `landing.css`,
+  `RateCards`/`RateTable`; sin `promo.*` no cambia un byte. ⚠️ Defecto tuyo previo, sin tocar: «9,60 €» se
+  parte en dos renglones a 390 px en `/precios`. · `#631`/`#632`: ofertas y atracciones salen del panel.
 
 ### Atendido
-- **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración) y **19-09 cierre** (la T6 al próximo
-  despliegue): atendidos arriba el 20-09. Sus cuatro del 19-09 los dio por leídos: retirados.
+- **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración; y el ✅ del owner con el freno §7.1·5) y
+  **19-09 cierre**: atendidos arriba el 20-09. Sus cuatro del 19-09 los dio por leídos: retirados.
 - **SPA, 17-09** (despliegue de la T3, plugin, `package.json`): atendido el 18-09.

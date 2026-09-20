@@ -166,7 +166,7 @@ De las **siete del inventario del canvas**, **seis existen** y **una es nueva**:
 | `/cumpleanos` | ✅ existe | `EventsController` · `pages/events.blade.php` |
 | `/normas` | ✅ existe | `PageController@rules` · `pages/rules.blade.php` |
 | `/servicios` | ✅ existe | `ServicesController` · `pages/services.blade.php` |
-| `/contacto` | ✅ existe | `ContactController` · `pages/contact.blade.php` |
+| `/contacto` | ✅ existe · **mudada a la instancia** (F5 · T2b, `#654`) | `ContactController` · la vista vive en `instancias/playjump/web/contacto.blade.php`; el producto sirve `anfitrion/contacto.blade.php` sin paquete |
 | `/atracciones` | ✅ **construida en la T2d** (`#481`) | `AttractionsController` · `pages/attractions.blade.php` |
 | `/bar` | ✅ **construida en la T3b·7** (`#536`) | `BarController` · `pages/bar.blade.php` · ⚠️ **404 mientras el panel no le ponga nombre**, y entonces no se ofrece en ninguna superficie |
 

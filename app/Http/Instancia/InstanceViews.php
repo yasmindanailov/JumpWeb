@@ -161,7 +161,10 @@ class InstanceViews
      * Se usa así, y la decisión de qué respaldo toca es del llamante porque solo él sabe qué página
      * es equivalente a la suya:
      *
-     *     return view($this->vistas->pick('contacto', 'anfitrion.pagina'), [...]);   (ejemplo)
+     *     return view($this->vistas->pick('contacto', 'anfitrion.contacto'), [...]);   (`ContactController`)
+     *
+     * ⚠️ El respaldo es el ANFITRIÓN MÍNIMO del producto (`resources/views/anfitrion/`), no la landing de
+     * un cliente: desde `#654` la de PlayJump vive en su paquete, y lo que queda aquí funciona sin arte.
      */
     public function pick(string $deLaInstancia, string $respaldo): string
     {

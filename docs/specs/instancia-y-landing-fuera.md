@@ -398,8 +398,8 @@ de §1.4 es el instrumento, y queda como guarda.
 ### 4.6 El orden de las tandas (propuesto)
 
 1. **T1 ✅** · el mecanismo (`PublicFacts`) y el primer plato (`/site`); el resto del menú, recurso a recurso.
-2. **T2 · el paquete de la instancia**: repo desde plantilla, la landing actual mudada tal cual (vía B) y el
-   sitemap comparado.
+2. **T2 · el paquete de la instancia**: repo desde plantilla ✅ (T2a, `#647`), la landing actual mudada tal
+   cual (vía B) vista a vista —`/contacto` ✅ (`#654`); quedan `home` y siete— y el sitemap comparado.
 3. **T3 · el panel adelgaza**: los seis recursos y las secciones de texto.
 4. **T4 · `zones` adelgaza** y cae la última marca viva.
 5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.

@@ -188,7 +188,7 @@ class InstanceViewPathTest extends TestCase
         $vistas = app(InstanceViews::class);
         $vistas->registrar();
 
-        $this->assertSame('instancia::contacto', $vistas->pick('contacto', 'pages.contact'));
+        $this->assertSame('instancia::contacto', $vistas->pick('contacto', 'anfitrion.contacto'));
         // Y lo que la instancia NO trae sigue saliendo del producto, sin que nadie tenga que elegirlo.
         $this->assertSame('pages.pricing', $vistas->pick('precios', 'pages.pricing'));
     }
@@ -215,7 +215,7 @@ class InstanceViewPathTest extends TestCase
         $vistas = app(InstanceViews::class);
 
         $this->assertNotNull($vistas->registrar(), 'un contrato viejo no puede dejar la web sin landing');
-        $this->assertSame('instancia::contacto', $vistas->pick('contacto', 'pages.contact'));
+        $this->assertSame('instancia::contacto', $vistas->pick('contacto', 'anfitrion.contacto'));
 
         Log::shouldHaveReceived('warning')
             ->withArgs(fn (string $mensaje): bool => str_contains($mensaje, 'otra versión del producto'))

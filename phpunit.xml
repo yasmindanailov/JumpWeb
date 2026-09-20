@@ -36,6 +36,11 @@
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
+        <!-- ❗❗ F5 · T2b (`DECISIONES #654`): la suite prueba el PRODUCTO, y el producto no tiene paquete
+             de instancia. Sin esto la suite leía `INSTANCIA_RUTA` del `.env` de cada máquina, y el gate
+             salía verde donde hay paquete y rojo donde no (medido el 19-09, `paquete-de-instancia.md`
+             §4.5). La landing de una instancia se prueba con la huella de maquetación, no con PHPUnit. -->
+        <env name="INSTANCIA_RUTA" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

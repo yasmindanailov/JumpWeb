@@ -17,10 +17,10 @@
   del producto. Medido: las vistas usan **29 componentes distintos**. Se acepta a sabiendas y con fecha.
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
-- **Estado**: ✅ aprobada (`#647`). **T2a HECHA**: el mecanismo, `SEC-12`, la `plantilla/` y `/contacto`
-  resolviendo por la instancia. ⚠️ **La vista NO se mudó**, y es lo que la T2a descubrió (§4.5): mudarla
-  deja sus 14 pruebas sin sujeto y el gate sale verde en una máquina y rojo en otra. **T2b empieza
-  eligiendo dónde viven las pruebas de la landing**, no moviendo ficheros.
+- **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: `/contacto` MUDADA (`#654`, §4.4 y
+  §4.7) y **la suite corre SIN paquete** (`phpunit.xml`): el producto prueba su anfitrión mínimo y la
+  instancia se prueba con la huella. ⚠️ Mudar una vista es, en este orden: barrer sus reglas (§4.7), partir
+  sus pruebas por lo que afirman (§4.5.bis), dejar un anfitrión mínimo que cumpla el armazón, y huella 0.
 - **Invariantes**: **`SEC-12` es de aquí** (la ruta de vistas) y no se relaja. Ninguno más cambia.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-19)
@@ -129,7 +129,7 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
-| `home.blade.php` y `pages/*.blade.php` | Las **rutas** y sus nombres (el sitemap, §1.4) |
+| `home.blade.php` y `pages/*.blade.php` · **`/contacto` ✅** (`#654`, 20-09); quedan `home` y siete | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
 
@@ -237,8 +237,24 @@ ahora sobre el DATO, no sobre los `href`—. Los doce de marcado se quedan allí
 (el escáner que exige las piezas de la página y que sin la vista cae: no hay verde en vacío) y **se mudan
 con la vista**.
 
-▶ **Lo que queda de la T2b**: mirar una a una las reglas que queden en `bar`, `pricing` y `contact` (los
-canales ya son componente del producto y sobreviven), y después mudar `/contacto` (§4.4), la primera.
+▶ **`bar` y `pricing`, barridas sin hallazgo** (20-09): todo les llega compuesto del controlador. En
+`contact` había dos MECANISMOS del producto escritos en línea, y se fueron a componente antes de la mudanza:
+el honeypot (su nombre es un contrato con el controlador: `Platform\Services\Honeypot` y `<x-site.honeypot>`)
+y el widget de Turnstile (`<x-site.turnstile>`: sin él, con claves, el formulario no entregaría nada).
+
+▶ **`/contacto` MUDADA** (`#654`, 20-09): la vista va tal cual al paquete (mismo DOM; huella 0 diferencias
+en 34 pantallas; sitemap 11=11) y el producto se queda `anfitrion/contacto`, que cumple el armazón y funciona
+sin arte. **La suite corre SIN paquete** (`phpunit.xml` fija `INSTANCIA_RUTA` vacía): es la salida de §4.5.
+Los doce casos de marcado se fueron con la vista: dos eran reglas del componente de canales
+(`ContactChannelsTest`), uno de `lang/` (`CopyHasNoBusinessDataTest`), y los nueve de diseño están en la
+doc de la instancia (`paginas/contacto.md`), con la huella de juez. `mutar-contacto.py` conserva los
+mutantes del producto y `mutar-paquete-instancia.sh` gana tres del anfitrión.
+⚠️ **La línea base (huella, DOM, sitemap) se toma ANTES de tocar el controlador que elige la vista**: con
+`pick()` ya apuntando al anfitrión, «la vista de antes» que se captura es el respaldo nuevo, y se compara
+consigo mismo. Costó una pasada.
+
+▶ **Lo que queda de la T2b**: las otras ocho vistas (`home` y siete de `pages/`) con el mismo método, una a
+una: barrido de reglas → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec hermana §4.6).
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.
@@ -260,6 +276,10 @@ canales ya son componente del producto y sobreviven), y después mudar `/contact
 4. **Huella de maquetación**: `scripts/huella-maquetacion.mjs` sobre las 34 pantallas, **0 diferencias**.
 5. **Estreno de la plantilla**: de ella sale una instancia vacía que levanta y sirve su portada de ejemplo.
 6. La suite entera en verde, y `VERIFY_CONC` no aplica (ni dinero ni aforo).
+
+**Medido el 20-09 con `/contacto`** (`#654`): sitemap 11=11 · huella 0 diferencias en 34 pantallas · sin
+paquete, `/contacto` responde 200 con el anfitrión mínimo; con un paquete que no trae la vista, también
+(`AnfitrionContactoTest`) · la suite entera en verde SIN paquete.
 
 ## 7. Revisión y decisión
 

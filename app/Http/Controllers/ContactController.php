@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Honeypot;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Instancia\InstanceViews;
 use App\Mail\ContactMessageMail;
@@ -37,17 +38,19 @@ class ContactController extends Controller
          * ⚠️ `exists()` y no `get()`: aquí solo hace falta saber si hay alguna.
          */
         /*
-         * **La primera página que una INSTANCIA puede vestir por su cuenta** (F5 · T2a, `#647`): si su
-         * paquete trae `web/contacto.blade.php`, se sirve la suya; si no, la del producto.
+         * **La primera página que una INSTANCIA viste por su cuenta** (F5 · T2a `#647`; mudada en T2b,
+         * `#654`): si su paquete trae `web/contacto.blade.php`, se sirve la suya; si no, el ANFITRIÓN
+         * MÍNIMO del producto (`anfitrion/contacto`), que es una página que funciona, no un hueco.
          *
-         * ⚠️⚠️ **La vista TODAVÍA no se ha mudado, y eso es una decisión medida, no un a medias.** Al
-         * intentarlo apareció que las pruebas de la landing se quedan sin sujeto: con la vista fuera,
-         * **9 de los 14 casos de `ContactPageTest` fallan** en cualquier máquina que no tenga el
-         * paquete —medido el 19-09—, y el gate saldría verde aquí y rojo en el otro ordenador. Mudar
-         * una vista es mudar también sus pruebas, y eso lo tiene que diseñar la T2b antes de tocar
-         * nada. Mientras tanto el mecanismo está vivo y el producto se basta solo.
+         * ⚠️⚠️ Mudarla exigió antes partir sus pruebas por lo que afirman (`#649`): la conducta —esto
+         * que se pasa a la vista, el envío, el correo— se queda en el producto y la suite corre SIN
+         * paquete (`phpunit.xml`); el marcado se fue con la vista y lo juzga la huella de maquetación.
+         *
+         * ⚠️ Lo que se pasa aquí es el CONTRATO DE VISTA (`InstanceViews::CONTRATO_DE_VISTAS`):
+         * renombrar una clave rompe la landing de todas las instancias a la vez, cada una en su
+         * servidor. Lo vigila `InstanceViewContractTest`.
          */
-        return view($this->instancia->pick('contacto', 'pages.contact'), [
+        return view($this->instancia->pick('contacto', 'anfitrion.contacto'), [
             'answers' => SiteDestinations::answersItself(
                 withFaq: Faq::where('is_active', true)->exists(),
             ),
@@ -57,9 +60,10 @@ class ContactController extends Controller
 
     public function store(Request $request)
     {
-        // Anti-spam: honeypot. Si el campo oculto viene relleno, es un bot:
-        // respondemos como si todo fuera bien, pero no enviamos nada.
-        if (filled($request->input('website'))) {
+        // Anti-spam: honeypot. Si el campo oculto viene relleno, es un bot: respondemos como si todo
+        // fuera bien, pero no enviamos nada. ⚠️ El nombre del campo vive en `Honeypot` (`#654`): la
+        // vista lo pinta por `<x-site.honeypot>` y aquí no se escribe dos veces.
+        if (Honeypot::tripped($request)) {
             return redirect()->route('contacto')->with('contact_sent', true);
         }
 

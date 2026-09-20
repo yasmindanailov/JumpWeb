@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Domain\Content\Models\Faq;
 use App\Domain\Platform\Models\Setting;
+use App\Domain\Platform\Services\Honeypot;
 use App\Domain\Platform\Services\Turnstile;
 use App\Http\Controllers\ContactController;
 use App\Mail\ContactMessageMail;
@@ -158,7 +159,7 @@ class ContactPageTest extends TestCase
             'name' => 'Bot',
             'email' => 'bot@example.com',
             'message' => 'spam spam spam spam',
-            'website' => 'http://spam.example', // honeypot relleno = bot
+            Honeypot::FIELD => 'http://spam.example', // el honeypot relleno = bot (`#654`: un solo nombre)
         ])->assertRedirect(route('contacto'));
 
         Mail::assertNothingOutgoing();

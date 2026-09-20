@@ -14,13 +14,15 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 SAIL="docker compose exec -u sail -T laravel.test"
-TESTS="$SAIL php artisan test --filter='InstanceViewPathTest|InstanceViewContractTest'"
+TESTS="$SAIL php artisan test --filter='InstanceViewPathTest|InstanceViewContractTest|AnfitrionContactoTest|Tests\\\\Feature\\\\ContactPageTest'"
 
 VISTAS=app/Http/Instancia/InstanceViews.php
 CONTACTO=app/Http/Controllers/ContactController.php
+# T2b (`#654`): el anfitrión mínimo, lo que el producto sirve sin paquete.
+ANFITRION=resources/views/anfitrion/contacto.blade.php
 
 TMP="$(mktemp -d)"
-FICHEROS=("$VISTAS" "$CONTACTO")
+FICHEROS=("$VISTAS" "$CONTACTO" "$ANFITRION")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -91,6 +93,18 @@ mutar "el controlador pasa una variable de MÁS sin declararla (contrato tácito
   "$CONTACTO" "            'topics' => self::TOPICS," \
   "            'topics' => self::TOPICS,
             'sinDeclarar' => 1,"
+
+# ── El ANFITRIÓN MÍNIMO (T2b, `#654`): lo que el producto sirve sin paquete tiene que FUNCIONAR ──
+# El modo de fallo no es un 500: es un formulario que se pinta y no filtra, o una página sin los datos
+# del panel. Nada falla y nadie avisa.
+mutar "el anfitrión mínimo pierde el honeypot (y el correo del parque recibe a los bots)" \
+  "$ANFITRION" "                        <x-site.honeypot />" ""
+
+mutar "el anfitrión mínimo deja de pintar los canales del panel" \
+  "$ANFITRION" "            <x-site.contact-channels class=\"contact-layout__channels\" />" ""
+
+mutar "el controlador deja de preguntar por el honeypot (un bot entrega igual que una persona)" \
+  "$CONTACTO" "        if (Honeypot::tripped(\$request)) {" "        if (false) {"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

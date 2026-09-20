@@ -8,9 +8,12 @@ Mismo molde endurecido que `mutar-normas.py` (`#533`) y `mutar-precios.py` (`#53
   · EXIGE VERDE antes de mutar (`#337`) y ÁRBOL LIMPIO en los ficheros que muta (`#181`);
   · restaura SIEMPRE, también si el proceso revienta (`#448`).
 
-⚠️ **Varias mutaciones prueban una AUSENCIA** —que no vuelva el mapa, que no vuelva la casilla— y
-ésas son justo las que hay que mutar al revés: se AÑADE lo que no debe estar. Una guarda de ausencia
-que nadie ha intentado violar es una guarda que nadie sabe si mira.
+⚠️⚠️ **Desde `#654` (F5 · T2b) la VISTA vive en la instancia** (`instancias/playjump/web/contacto.blade.php`)
+y sus ocho mutantes de marcado —el mapa que no vuelve, la coma de la dirección, el ancla, el botón de
+tinta, el aviso sin casilla, el tema sin elegir, la entradilla— se fueron con ella: una instancia no es una
+app PHP y su juez es la huella de maquetación (`docs/paginas/contacto.md` del paquete los lista). Aquí
+quedan los del PRODUCTO: el componente de canales, el controlador y el inventario de destinos, con las
+guardas que afirman sobre datos (`ContactChannelsTest`, `tests/Feature/ContactPageTest`).
 
     python3 scripts/mutar-contacto.py
 """
@@ -19,32 +22,14 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-FILTRO = 'Tests\\\\Feature\\\\Landing\\\\ContactPageTest'
-VISTA = 'resources/views/pages/contact.blade.php'
+FILTRO = 'ContactChannelsTest|Tests\\\\Feature\\\\ContactPageTest'
 CANALES = 'resources/views/components/site/contact-channels.blade.php'
 CONTROLADOR = 'app/Http/Controllers/ContactController.php'
 DESTINOS = 'app/Domain/Content/Services/SiteDestinations.php'
-FICHEROS = [VISTA, CANALES, CONTROLADOR, DESTINOS]
+FICHEROS = [CANALES, CONTROLADOR, DESTINOS]
 
 # (nombre, fichero, texto que se busca, texto por el que se cambia[, cuántas veces se espera])
 MUTACIONES = [
-    # ── Lo que esta página NO hace ──
-    ("vuelve el mapa a /contacto",
-     VISTA,
-     '<section class="where" aria-labelledby="where-title">',
-     '<div class="map-card"></div><section class="where" aria-labelledby="where-title">'),
-
-    # ── La dirección y su salida ──
-    ("las dos líneas de la dirección se unen sin coma",
-     VISTA,
-     "->implode(', ')",
-     "->implode(' ')"),
-
-    ("la salida apunta a un ancla que la portada no pinta",
-     VISTA,
-     "url('/#info')",
-     "url('/#visitanos')"),
-
     # ── Los canales ──
     ("el mismo número vuelve a salir en dos tarjetas",
      CANALES,
@@ -56,27 +41,7 @@ MUTACIONES = [
      "if ($email !== '') {",
      "if (true) {"),
 
-    # ── El formulario ──
-    ("el botón de enviar vuelve al relleno de acción",
-     VISTA,
-     'class="btn btn--ink btn--lg"',
-     'class="btn btn--lg"'),
-
-    ("la página deja de decir qué se hace con lo que escribes",
-     VISTA,
-     '<div class="contact-form__privacy">',
-     '<div class="contact-form__privacy-NO" hidden>'),
-
-    ("vuelve la casilla de consentimiento que `#350` retiró",
-     VISTA,
-     '<p>{{ __(\'site.contact_privacy_notice\') }}</p>',
-     '<p><input type="checkbox" name="accept" required> {{ __(\'site.contact_privacy_notice\') }}</p>'),
-
-    ("el desplegable de tema viene con una opción ya elegida",
-     VISTA,
-     '<option value="">{{ __(\'site.contact_topic_none\') }}</option>',
-     ''),
-
+    # ── El formulario (lo que decide el CONTROLADOR) ──
     ("el tema acepta cualquier valor que mande el cliente",
      CONTROLADOR,
      "'topic' => ['nullable', 'string', 'in:'.implode(',', self::TOPICS)],",
@@ -98,11 +63,11 @@ MUTACIONES = [
      "if ($withFaq) {",
      "if (true) {"),
 
-    # ── El plazo ──
-    ("la entradilla promete un horario de respuesta aunque no haya horario",
-     VISTA,
-     ":lede=\"$heroStatus ? __('site.contact_intro') : __('site.contact_intro_plain')\"",
-     ":lede=\"__('site.contact_intro')\""),
+    # ── El honeypot (`#654`): el nombre del campo tiene UN hogar ──
+    ("el controlador deja de preguntar por el honeypot (un bot entrega igual que una persona)",
+     CONTROLADOR,
+     "if (Honeypot::tripped($request)) {",
+     "if (false) {"),
 ]
 
 

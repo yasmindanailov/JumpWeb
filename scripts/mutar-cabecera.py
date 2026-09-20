@@ -24,7 +24,8 @@ FICHEROS = [
     'public/css/site.css',
     'resources/views/pages/pricing.blade.php',
     'resources/views/pages/rules.blade.php',
-    'resources/views/pages/contact.blade.php',
+    # `/contacto` es el ANFITRIÓN MÍNIMO desde `#654`: la landing de PlayJump vive en su instancia.
+    'resources/views/anfitrion/contacto.blade.php',
     'resources/views/auth/reset-password.blade.php',
     'resources/views/errors/page-maintenance.blade.php',
 ]
@@ -54,9 +55,9 @@ MUTACIONES = [
      ""),
 
     ("/contacto devuelve su frase al cuerpo de la página",
-     'resources/views/pages/contact.blade.php',
-     " :lede=\"__('site.contact_intro')\"",
-     ""),
+     'resources/views/anfitrion/contacto.blade.php',
+     "            :lede=\"$heroStatus ? __('site.contact_intro') : __('site.contact_intro_plain')\" />",
+     "            />"),
 
     # ── Las pantallas de servicio ──
     ("restablecer la contraseña deriva el rótulo de su URL (imprime el TOKEN)",
