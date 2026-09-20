@@ -81,7 +81,15 @@ final class PartyCards
             // LOS REGALOS (`#589`): aparte de lo que incluye y SIN el tope de tres — cada uno va en su
             // etiqueta, y es lo que la tarjeta tiene que destacar.
             'gifts' => $pack->giftLines(),
-            'price' => $this->numero($pack->displayPriceCents()),
+            /*
+             * ⚠️⚠️ **Va CON símbolo desde `#661`.** Sus TRES consumidores —el sello de la portada y la
+             * tarjeta de `/servicios`, en su anfitrión y en la instancia— lo pegaban a mano
+             * (`{{ $card['price'] }}&nbsp;€`), o sea que la regla estaba escrita tres veces y una de
+             * ellas vive FUERA del producto, en el paquete de una instalación. La cifra y el símbolo
+             * caen aquí dentro del MISMO elemento, así que no hay motivo de diseño para partirlos —al
+             * revés que en `RateCards::price`, donde el artboard los pinta a dos tamaños.
+             */
+            'price' => $this->euros($pack->displayPriceCents()),
             /*
              * ⚠️ **La especial se publica ENTERA, nunca como recargo** (regla dura del canvas,
              * aplicada en `#479` a toda la web): «16,95 € en tarifa especial», no «+2 €». Y no es

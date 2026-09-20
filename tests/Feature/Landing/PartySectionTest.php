@@ -136,8 +136,15 @@ class PartySectionTest extends TestCase
             $entero = Money::showcase($especial['priceCents']);
             $recargo = Money::showcase($especial['surchargeCents']);
 
-            $this->assertStringContainsString($entero.' € en tarifa especial', $seccion);
-            $this->assertStringNotContainsString('+'.$recargo.' €', $seccion,
+            /*
+             * ⚠️⚠️ **El espacio es DURO en las dos, y en la NEGATIVA importa más** (`#661`). Con el
+             * espacio normal, «+2 €» ya no puede aparecer en la página —el producto lo escribe con
+             * U+00A0 desde `Money::showcaseWithSymbol()`—, así que la aserción seguiría verde **sin
+             * ejercer nada**: diría «no se publica como recargo» siendo cierta por el motivo
+             * equivocado. *Lo que se afirma que NO pasa hay que hacerlo POSIBLE primero.*
+             */
+            $this->assertStringContainsString($entero."\u{00A0}€ en tarifa especial", $seccion);
+            $this->assertStringNotContainsString('+'.$recargo."\u{00A0}€", $seccion,
                 'la tarifa especial ha vuelto a publicarse como recargo');
         }
     }

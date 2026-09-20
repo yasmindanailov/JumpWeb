@@ -266,7 +266,8 @@
                                 @if ($card['age'])
                                     <span class="svc-party__age">{{ $card['age'] }}</span>
                                 @endif
-                                <span class="svc-party__price">{{ __('landing.pricing.from') }} {{ $card['price'] }}&nbsp;€</span>
+                                {{-- ⚠️ El «€» viene con la cifra desde `PartyCards` (`#661`). --}}
+                                <span class="svc-party__price">{{ __('landing.pricing.from') }} {{ $card['price'] }}</span>
                             </li>
                         @endforeach
                     </ul>

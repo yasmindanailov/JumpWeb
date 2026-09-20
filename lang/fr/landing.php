@@ -170,7 +170,8 @@ return [
         'see_pack' => 'Voir cet anniversaire',
         'duration_feature' => ':duration de fête',
         'eyebrow' => 'Anniversaires',
-        'reserve_terms' => 'De :min à :max enfants · Acompte de :deposit € pour réserver',
+        // ⚠️ Espacio DURO antes del «€» (`#661`), como en los otros dos idiomas.
+        'reserve_terms' => "De :min à :max enfants · Acompte de :deposit\u{00A0}€ pour réserver",
         'coming_soon' => 'Nous préparons les packs d’anniversaire. Si tu veux réserver plus tôt, écris-nous et nous t’aiderons.',
         'coming_soon_cta' => 'Nous contacter',
     ],

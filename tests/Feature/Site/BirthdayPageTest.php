@@ -137,14 +137,16 @@ class BirthdayPageTest extends TestCase
 
         $this->assertSame(['from' => 8, 'to' => 20], $compare['counter']);
         foreach ($compare['live']['total'] as $n => $cells) {
-            $this->assertSame(Money::showcase($packs[$i]->priceCentsForRate($normal, $n) * $n).' €', $cells[$i],
+            // ⚠️ La cifra se deriva del catálogo, pero el ESPACIO se teclea (`#661`): así el caso
+            // sigue vigilando el formato aunque `Money::showcase()` cambie con él.
+            $this->assertSame(Money::showcase($packs[$i]->priceCentsForRate($normal, $n) * $n)."\u{00A0}€", $cells[$i],
                 "el total de {$n} niños no es el que cobra la cesta");
         }
 
         // Y el tramo muerde de verdad: 11 niños al precio base, 12 al del tramo.
-        $this->assertSame('15 €', $compare['live']['each'][11][$i]);
-        $this->assertSame('12 €', $compare['live']['each'][12][$i]);
-        $this->assertSame('144 €', $compare['live']['total'][12][$i]);
+        $this->assertSame("15\u{00A0}€", $compare['live']['each'][11][$i]);
+        $this->assertSame("12\u{00A0}€", $compare['live']['each'][12][$i]);
+        $this->assertSame("144\u{00A0}€", $compare['live']['total'][12][$i]);
     }
 
     /**
@@ -158,8 +160,10 @@ class BirthdayPageTest extends TestCase
 
         $this->assertNotSame('', $this->filaTexto($compare, __('landing.birthday.row_each_special')),
             'la tarifa especial no trae su fila');
-        $this->assertStringContainsString('18 €', $this->tablaTexto($compare));
-        $this->assertStringNotContainsString('+3 €', $this->tablaTexto($compare),
+        $this->assertStringContainsString("18\u{00A0}€", $this->tablaTexto($compare));
+        // ⚠️⚠️ La NEGATIVA lleva el espacio duro por la misma razón que en `PartySectionTest` (`#661`):
+        // con el blando, «+3 €» ya no puede salir nunca y el caso pasaría sin ejercer la regla.
+        $this->assertStringNotContainsString("+3\u{00A0}€", $this->tablaTexto($compare),
             'la especial ha vuelto a publicarse como recargo');
         $this->assertTrue($compare['special'], 'con precios distintos, la nota de los días tiene que ofrecerse');
 
@@ -310,7 +314,7 @@ class BirthdayPageTest extends TestCase
 
         $extra = collect($form['extras'])->firstWhere('name', 'Cubo de refrescos');
         $this->assertNotNull($extra, 'el complemento de venta posterior no viaja');
-        $this->assertSame('23,99 €', $extra['price']);
+        $this->assertSame("23,99\u{00A0}€", $extra['price']);
         $this->assertSame('hasta 48 h antes', $extra['cutoff'], 'el plazo de corte no viaja con el complemento');
     }
 

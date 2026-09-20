@@ -208,7 +208,7 @@ class SpecialRateSurchargeTest extends TestCase
         $this->assertNotEmpty($m, 'la comparativa no pinta la fila de la especial: este caso miraría el vacío.');
 
         $this->assertStringContainsString(__('landing.birthday.row_each_special'), $m[1]);
-        $this->assertStringContainsString('18 €', $m[1]);
+        $this->assertStringContainsString("18\u{00A0}€", $m[1]);
         $this->assertStringNotContainsString('+', $m[1], 'el pack ha vuelto a publicar su recargo.');
     }
 

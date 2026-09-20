@@ -112,7 +112,7 @@ class ServicesPageTest extends TestCase
         $this->assertCount($packs->count(), $tablas, 'una tabla por producto comprable');
         $filas = collect($tablas)->flatMap(fn (array $t): array => $t['rows']);
         $this->assertContains(70, $filas->pluck('from')->all(), 'el tramo de 70 no viaja');
-        $this->assertContains('13 €', $filas->pluck('normal')->all(), 'el precio del tramo no viaja escrito');
+        $this->assertContains("13\u{00A0}€", $filas->pluck('normal')->all(), 'el precio del tramo no viaja escrito');
     }
 
     /**
@@ -150,7 +150,10 @@ class ServicesPageTest extends TestCase
         $servicio = $datos['services']->firstWhere('slug', 'excursiones');
 
         $this->assertCount(2, $datos['groupRates'][$servicio->id], 'el caso nace sin sujeto: no hay dos tablas');
-        $this->assertSame('18 €', $datos['groupFrom'][$servicio->id],
+        // ⚠️ «18 €» con espacio DURO y con euro EXACTO, las dos cosas a propósito (`#660`, `#661`):
+        // el euro exacto distingue el registro de escaparate del de transacción, y el espacio duro
+        // distingue la regla del producto de un símbolo puesto a mano en una vista.
+        $this->assertSame("18\u{00A0}€", $datos['groupFrom'][$servicio->id],
             'el «desde» no es el precio más bajo de sus tablas, escrito en el registro de escaparate');
 
         /*
@@ -160,7 +163,7 @@ class ServicesPageTest extends TestCase
          * no cambiaba nada y el mutante sobrevivía — el `null` de una tabla se llevaría por delante al
          * mínimo de las demás y la página anunciaría «desde» nada.
          */
-        $this->assertSame('18 €', (new GroupRateTables)->lowestWritten([
+        $this->assertSame("18\u{00A0}€", (new GroupRateTables)->lowestWritten([
             ['lowest_cents' => null],
             ['lowest_cents' => 1800],
         ]));
@@ -207,6 +210,45 @@ class ServicesPageTest extends TestCase
 
         $this->assertCount(1, $this->datos()['birthdayCards']);
         $this->get('/cumpleanos')->assertOk()->assertDontSee('Cumpleaños Jump');
+    }
+
+    /**
+     * **El precio de una tarjeta de cumpleaños lo escribe el PRODUCTO, con su símbolo** (`#661`).
+     *
+     * ❗❗ **Esta guarda nace porque no existía, y se notó al cambiar el dato**: `PartyCards::price`
+     * pasó de la cifra pelada al importe con símbolo —sus tres consumidores lo pegaban a mano, uno de
+     * ellos dentro del paquete de una instalación— y **la suite entera se quedó verde**. Un formato de
+     * dinero que ninguna prueba mira es un formato que cualquiera puede cambiar sin enterarse.
+     *
+     * Afirma las tres cosas que distinguen esta escritura, y las tres hacen falta:
+     *  · el **símbolo viene puesto** — si volviera a pegarse en la vista, cada instancia lo pondría a su aire;
+     *  · el **espacio es DURO** — con el blando el importe se parte de renglón (el defecto de `#661`);
+     *  · el **registro es de ESCAPARATE** — y por eso el euro es EXACTO: con 14,95 € el de transacción
+     *    escribe igual y el caso no distinguiría nada (`#660`, lección 3).
+     */
+    public function test_the_birthday_card_price_is_written_by_the_product_with_its_symbol(): void
+    {
+        $kids = TicketType::where('name->es', 'Cumpleaños Kids')->firstOrFail();
+        $normal = RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
+
+        // ⚠️ Los DOS precios los pone el caso: apoyarse en la cifra del sembrador ataría esta guarda a
+        // un dato que no vigila, y la primera versión de este caso ya se equivocó tomándola de la BD
+        // de desarrollo —que no es la que siembra la suite—.
+        $reprecio = function (int $cents) use ($kids, $normal): string {
+            $kids->prices()->where('rate_type_id', $normal->id)->delete();
+            $kids->prices()->create(['rate_type_id' => $normal->id, 'amount_cents' => $cents]);
+
+            $tarjeta = collect($this->datos()['birthdayCards'])->firstWhere('id', $kids->id);
+            $this->assertNotNull($tarjeta, 'el caso nace sin sujeto: la tarjeta del pack no viaja');
+
+            return $tarjeta['price'];
+        };
+
+        // (a) Con céntimos: fija el separador del idioma y el espacio duro.
+        $this->assertSame("14,95\u{00A0}€", $reprecio(1495));
+
+        // (b) Con un euro EXACTO no se escriben los ceros: «18 €», no «18,00 €».
+        $this->assertSame("18\u{00A0}€", $reprecio(1800));
     }
 
     /** La tabla TECLEADA del panel es un `array` y llega entera: es el respaldo de un servicio sin productos. */

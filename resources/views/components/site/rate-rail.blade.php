@@ -119,7 +119,10 @@
                                  `<s>` es el elemento que significa «ya no vale», y la palabra va para
                                  el lector de pantalla, que no lee el tachado. --}}
                             @if ($card['was'])
-                                <s class="rate-card__was"><span class="sr-only">{{ __('landing.rates.was') }} </span>{{ $card['was'] }} €</s>
+                                {{-- ⚠️ El «€» ya NO se escribe aquí (`#661`): viene con la cifra desde
+                                     `RateCards`, con el espacio duro. Esta línea lo ponía a mano y
+                                     era la única de la tarjeta que se podía partir de renglón. --}}
+                                <s class="rate-card__was"><span class="sr-only">{{ __('landing.rates.was') }} </span>{{ $card['was'] }}</s>
                             @endif
                             <span class="rate-card__num">{{ $card['price'] }}</span>
                             <span class="rate-card__cur">€</span>

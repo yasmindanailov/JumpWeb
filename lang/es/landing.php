@@ -323,7 +323,9 @@ return [
         'eyebrow' => 'Cumpleaños',
         // ⚠️ Sin máximo a la vista (`#586`, `[DECIDIDO owner]`): el panel guarda un tope técnico y la web
         // solo publica el mínimo. `:max` sigue llegando y no se escribe.
-        'reserve_terms' => 'Desde :min niños · Señal de :deposit € para reservar',
+        // ⚠️ El espacio antes del «€» es DURO (`\u{00A0}`, `#661`): «Señal de 50 €» se podía partir de
+        // renglón dejando el símbolo solo abajo. El texto que se lee no cambia ni una letra.
+        'reserve_terms' => "Desde :min niños · Señal de :deposit\u{00A0}€ para reservar",
         // `/cumpleanos` sin packs vendibles: la entradilla y su salida.
         'coming_soon' => 'Estamos preparando los packs de cumpleaños. Si quieres reservar antes, escríbenos y te ayudamos.',
         'coming_soon_cta' => 'Contactar',

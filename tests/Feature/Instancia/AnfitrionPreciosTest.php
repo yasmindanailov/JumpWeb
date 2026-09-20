@@ -96,7 +96,9 @@ class AnfitrionPreciosTest extends TestCase
 
         $this->assertStringContainsString('<span aria-hidden="true">—</span>', $html);
         $this->assertStringContainsString(__('landing.pricing.not_sold'), $html);
-        $this->assertStringContainsString('15 €', $html, 'el precio que SÍ existe no se pinta');
+        // ⚠️ Espacio DURO entre cifra y símbolo (`#661`): lo escribe `Money::showcaseWithSymbol()` y
+        // aquí se teclea a mano, no se deriva de ella, para que un cambio de formato ponga esto rojo.
+        $this->assertStringContainsString("15\u{00A0}€", $html, 'el precio que SÍ existe no se pinta');
 
         // Y con precio los dos días no hay ninguna raya: la tabla no inventa excepciones.
         $this->reprice($entrada, RateType::KEY_SPECIAL, 1500);

@@ -338,9 +338,45 @@ se repiten en cualquier mudanza:
 `filter()` antes de `min()` no cambia nada —medido: `Collection::min()` ya ignora los `null`—, así que no
 hay guarda que pueda matarlo.
 
-▶ **Lo que queda de la T2b**: **`home`** (1.631 líneas), con el mismo método: barrido de reglas →
-**barrido de variables muertas** → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec
-hermana §4.6).
+▶ **EL BARRIDO DE `home`, HECHO** (`#661`, 20-09). Es la séptima y última, y trae cosas que las seis
+anteriores no tenían. **Cuatro reglas escritas en la vista**:
+- **Un SERVICIO DEL DOMINIO resuelto por su nombre de clase**: `app(\App\…\ScheduleDisplay::class)` en un
+  `@php` de la línea 8, del que salen `weeklyLede()` (dato que pinta la página) y el objeto entero, que se
+  pasa a `<x-site.visit>`. ⚠️ **Ninguna de las ocho ya mudadas usa `app(`**: sería la primera landing de
+  instancia que instancia código del producto. El componente es del producto y puede resolver lo suyo; el
+  `lede` es dato y sube al controlador.
+- **El SÍMBOLO DEL EURO** en el sello de la tarjeta de cumpleaños. Bajado en `#661`, abajo.
+- **El VÍDEO DEL HERO**: `asset('videos/header_hero.mp4')` y su póster, **con la regla de caché
+  (`?v={filemtime}`) escrita en la vista**. ⚠️⚠️ Son **2,2 MB de material del cliente versionados en
+  `main`** —misma familia que las 35 imágenes de la ficha— y **ninguna vista mudada usa `asset()`**: `home`
+  sería la primera que depende de un fichero servido por el producto. Por §4.4 (en la T2 solo se mudan las
+  VISTAS) se queda y se declara, como el CSS; pero la lista de hoy nombra CLASES y RANURAS, no FICHEROS.
+- **La escala de CINCO estrellas**: `str_repeat('★', 5 - $op->rating)`. El 5 es regla y vive en la vista
+  (acotado hoy por el `Select` del panel, medido: opciones 1–5).
+
+▶ Y **tres variables MUERTAS** —`zones`, `tickets`, `packages`—, comprobado que no viajan por un `@include`
+(no hay ninguno) ni las lee ningún test. ⚠️ `/precios` tenía dos con los MISMOS nombres (`#658`): un
+controlador que compone pasa de paso lo que usó para componer.
+
+▶ **EL DINERO, CERRADO** (`#661`, `[DECIDIDO owner]`): el producto escribía sus importes de escaparate con
+espacio NORMAL y tres vistas con `&nbsp;`, así que **la misma página los escribía de dos maneras** y
+«9,60 €» se partía en dos renglones a 390 px. Nace `Money::showcaseWithSymbol()` (U+00A0, escrito
+`\u{00A0}`: un `&nbsp;` saldría escapado por `{{ }}` y el carácter crudo no se ve al releer el fuente), y
+**recoge SEIS escrituras de la misma regla**, una de ellas dentro del paquete de la instancia.
+⚠️ **No toca `Money::format()`**, el registro de TRANSACCIÓN: ficha en `DEUDA.md`.
+❗❗ **La lección transferible**: cambiar `PartyCards::price` dejó la **suite entera en verde** —ninguna
+guarda miraba ese precio—. *Un formato de dinero que nadie mira es un formato que cualquiera cambia sin
+enterarse.* La guarda nueva usa un **euro exacto**, porque con 14,95 € el registro de escaparate y el de
+transacción escriben igual (`#660`, lección 3), y se vio MATAR al mutante. Y **dos aserciones NEGATIVAS**
+(«+2 €», «+3 €») llevan el espacio duro: con el blando pasan a ser ciertas **sin ejercer nada**.
+⚠️ `CatalogTest` llevaba un `str_replace(' €', '&nbsp;€', $html)` **que normalizaba justo la diferencia que
+vigilaba**: una guarda que normaliza lo que mira no mira nada.
+
+▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) — bajar las tres reglas que siguen en
+la vista, partir pruebas, anfitrión mínimo y huella. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
+en 60 ficheros**, porque medio producto usa `/` como «una página cualquiera» para ejercitar el armazón, las
+cookies, el tema, el idioma, las cabeceras y el montaje del cajón. Las ocho anteriores tenían sus pruebas
+concentradas (`/contacto`: 14 casos en un fichero). Después, T3–T5 (spec hermana §4.6).
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.

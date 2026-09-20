@@ -78,9 +78,15 @@ class CatalogTest extends TestCase
 
         // El precio de la tarifa NORMAL, escrito como lo escribe la landing (sin decimales cuando
         // son cero): si alguien teclea una cifra en la plantilla, este caso se pone rojo.
+        //
+        // ⚠️⚠️ **Aquí vivía un `str_replace(' €', '&nbsp;€', $html)` que CEGABA a esta guarda**
+        // (`#661`). Normalizaba el espacio antes de comparar, o sea que borraba justo la diferencia
+        // entre las dos formas de escribir un importe que convivían en esta misma página —y con ella
+        // el defecto de «9,60 €» partido en dos renglones a 390 px—. Ahora se compara contra la regla
+        // del producto tal cual la escribe: *una guarda que normaliza lo que vigila no vigila nada.*
         $this->assertStringContainsString(
-            Money::showcase($entrada->displayPriceCents()).'&nbsp;€',
-            str_replace(' €', '&nbsp;€', $html),
+            Money::showcaseWithSymbol($entrada->displayPriceCents()),
+            $html,
         );
     }
 

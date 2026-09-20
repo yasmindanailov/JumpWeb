@@ -29,10 +29,15 @@ trait WritesLandingValues
      *
      * ⚠️ «10 €» y no «10,00 €»: es una cifra de escaparate. Cuando hay céntimos —14,95— se
      * escriben, porque ahí sí dicen algo.
+     *
+     * ⚠️⚠️ **Ya no compone nada: delega en `Money::showcaseWithSymbol()`** (`#661`). Aquí estaba
+     * escrito `.' €'` con espacio NORMAL, y a un palmo —en las tres vistas de la landing— el mismo
+     * precio se escribía con espacio duro. Con el símbolo puesto aquí, este trait decidía una regla
+     * de escritura de dinero que no es suya: la suya es CUÁNDO se escribe un importe de escaparate.
      */
     private function euros(int $cents): string
     {
-        return $this->numero($cents).' €';
+        return Money::showcaseWithSymbol($cents);
     }
 
     /**

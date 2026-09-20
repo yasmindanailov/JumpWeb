@@ -187,11 +187,18 @@ final class RateCards
             // elemento aparte del marcado. Ver `WritesLandingValues::numero()`.
             'price' => $this->numero($ticket->displayPriceCents()),
             /*
-             * **EL PRECIO DE ANTES, tachado** (chapuza declarada, `WritesLandingValues::antes()`): la
-             * cifra sin símbolo, como `price`, y solo con el ajuste `promo.percent` puesto. El ahorro
-             * de abajo NO se mide contra esto: sigue saliendo del catálogo (`saving()`).
+             * **EL PRECIO DE ANTES, tachado** (chapuza declarada, `WritesLandingValues::antes()`):
+             * solo con el ajuste `promo.percent` puesto. El ahorro de abajo NO se mide contra esto:
+             * sigue saliendo del catálogo (`saving()`).
+             *
+             * ⚠️⚠️ **Va CON símbolo, al revés que `price`** (`#661`). Decía «la cifra sin símbolo,
+             * como `price`» y el motivo de `price` no le valía: aquél se parte en dos elementos
+             * porque el artboard los pinta a 38 y a 20, pero el «antes» va ENTERO dentro de un mismo
+             * `<s>`, así que el símbolo lo ponía la vista a mano —y con espacio blando, mientras su
+             * hermano `special_was` ya venía con el duro—. *Dos importes tachados en la misma tarjeta
+             * no pueden partirse de renglón de maneras distintas.*
              */
-            'was' => ($antes = $this->antes($ticket->displayPriceCents(), $promoPercent)) !== null ? $this->numero($antes) : null,
+            'was' => ($antes = $this->antes($ticket->displayPriceCents(), $promoPercent)) !== null ? $this->euros($antes) : null,
             'unit' => $ticket->tr('period_label') ?: null,
             /*
              * **La frase de día, y aquí está la mitad de la honestidad de la sección.**

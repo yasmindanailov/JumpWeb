@@ -713,7 +713,10 @@
                                 {{-- EL SELLO girado −6°, con la cifra y su unidad. Es la misma
                                      pieza que el sello de precio de la tarjeta de zona. --}}
                                 <span class="party-card__seal">
-                                    <span class="party-card__price">{{ $card['price'] }}&nbsp;€</span>
+                                    {{-- ⚠️ El «€» viene con la cifra desde `PartyCards` (`#661`): aquí
+                                         se pegaba a mano, y era una regla de escritura de dinero
+                                         dentro de una vista que se va a mudar a la instancia. --}}
+                                    <span class="party-card__price">{{ $card['price'] }}</span>
                                     <span class="party-card__unit">{{ __('landing.events.per_child') }}</span>
                                 </span>
                             </span>

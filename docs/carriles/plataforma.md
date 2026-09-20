@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#660`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: los barridos, el
-> 422, y `resources/views/pages/` YA NO EXISTE: las ocho páginas, mudadas).
+> **640–669** · Último usado: **`#661`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: `pages/` ya no
+> existe, y el BARRIDO de `home` hecho — el euro, recogido de seis escrituras).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -69,12 +69,20 @@
    ⚠️ El material que solo pinta una vista mudada se declara en
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
    sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA `home`** (1.631 líneas), con el mismo método; y una cosa medida y SIN tocar
-   (`LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con su propio formato
-   de dinero: ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
-   ❗ **De `#660` para `home`**: una página puede llevar dentro MÁS DE UNA forma de escribir dinero
-   —`/servicios` tenía dos y una mentía en inglés—, así que su barrido busca `Money::`, `number_format`,
-   `€` y `asset(` uno a uno.
+   ▶ **EL BARRIDO DE `home`, HECHO** (`#661`; el detalle entero, en la spec §4.7). Halló **cuatro reglas
+   en la vista** y **tres variables muertas** (`zones`, `tickets`, `packages`, retiradas). **De las cuatro,
+   el DINERO está cerrado**: `Money::showcaseWithSymbol()` con U+00A0 recoge SEIS escrituras de la misma
+   regla —una vivía en el paquete de la instancia— y cierra el «9,60 €» partido a 390 px que te avisé.
+   ⚠️ **Y una guarda que no existía**: cambiar `PartyCards::price` dejó la suite ENTERA en verde.
+   ▶▶ **LO SIGUIENTE**: las tres reglas que aún están en la vista, en este orden — **`app(ScheduleDisplay)`
+   fuera** (el `lede` es dato y sube al controlador) · **el VÍDEO del hero** (⚠️ la lista de material nombra
+   CLASES y RANURAS, **no ficheros**: hay que decidir cómo se declara uno) · **la escala de 5 estrellas**.
+   Después: partir pruebas → anfitrión mínimo → huella.
+   ⚠️⚠️ **`home` NO es una página más: la piden 682 casos en 60 ficheros** (`/contacto` eran 14 en uno),
+   porque medio producto usa `/` como «una página cualquiera». La mayoría sobrevivirá con el anfitrión,
+   pero el reparto §4.5.bis es de otro orden.
+   ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
+   su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
    owner (`#535`, `#350`, `#551`, `#264`). Se retira o se re-apunta CON la mudanza.
    ⚠️ En local, `compose.yaml` monta `../instancias` y fija `name: jumpweb` (`#648`): es fichero
@@ -201,6 +209,20 @@ dueño es el carril de la web/reseñas—) ·
 - ▶ Leído tu ✅ del owner y el freno (20-09): **nada del cajón se despliega antes del borde §7.1·5**;
   anotado en «por dónde retomar» (2). `<x-site.turnstile />` existe, por si `invitation/show` lo quiere.
 
+### ❗ Para el carril de la web (emisor: plataforma, 2026-09-20) — EL ESPACIO DEL EURO (`#661`)
+- ⚠️ **He tocado `lang/{es,en,fr}/landing.php`, que es tuyo**: un carácter en `events.reserve_terms`. El
+  espacio antes del «€» pasa a DURO (`\u{00A0}`), porque «Señal de 50 €» **se podía partir de renglón**.
+  **El texto que se lee no cambia ni una letra** y la huella da 0 diferencias en la portada. Si prefieres
+  otra forma de escribirlo, dilo.
+- ✅ **Cerrado el defecto que te fiché el 18-09**: «9,60 €» ya no se parte a 390 px. La regla vive en
+  `Money::showcaseWithSymbol()` y recogió SEIS escrituras sueltas.
+- ⚠️ **Toqué también `components/site/rate-rail.blade.php`**: el «antes» tachado pegaba el «€» a mano con
+  espacio blando **mientras su hermano `--special` ya lo traía duro** — dos importes tachados en la misma
+  tarjeta que se partían distinto. Ahora los dos vienen escritos de `RateCards`.
+- ▶ **Medido y tuyo, sin tocar**: los importes que siguen partibles en `/` y `/normas` son **PROSA del
+  panel** («por 2 €», «un cargo de 10 €»), no los escribe el producto — y esa prosa sale en ESPAÑOL también
+  en en/fr.
+
 ### Para el carril de la web (emisor: plataforma, 2026-09-20) — LAS OCHO PÁGINAS, MUDADAS
 **`resources/views/pages/` ya no existe** (`#654`→`#660`): las ocho viven en `instancias/playjump/web/` y
 el producto sirve su anfitrión mínimo. Medido en todas: mismo DOM en es/en/fr, huella 0/38, sitemap 11=11.
@@ -232,11 +254,6 @@ De lo TUYO, por tanda:
   tu próximo `docker compose up -d` **recrea el contenedor** y se lleva el Chromium de la sonda (`/sonda` §1).
   Y en esta máquina el repo se mudó a `~/proyectos/jumpweb/producto` (`#648`); a ti no te afecta.
 
-### Para TODOS los carriles que tocan la API (emisor: plataforma, 2026-09-19)
-- ❗ Desde `#630` toda ruta `auth:sanctum` exige la ability `api-v1` (en un test, `Sanctum::actingAs($u,
-  [ApiTokenIssuer::ABILITY])`); y `ApiContractTest` aprieta más desde el menú (`#640`→`#646`): la receta de
-  un endpoint nuevo está en `instancia-y-landing-fuera.md` §4.1.bis. Leído por el SPA el 19-09.
-
 ### Para el carril de la web (emisor: plataforma, 2026-09-19)
 - ⚠️ **He tocado `home.blade.php`, que es tuyo** (`#651`, tres líneas del bloque de reseñas). Motivo: la
   portada **en inglés** enseñaba la nota como `4,8` y el recuento como `1.234 reviews`, porque los
@@ -252,3 +269,5 @@ De lo TUYO, por tanda:
 ### Atendido
 - **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración; y el ✅ del owner con el freno §7.1·5) y
   **19-09 cierre**: atendidos arriba el 20-09. Sus cuatro del 19-09 los dio por leídos: retirados.
+- **RETIRADO el mío de la ability `api-v1`** (20-09): el SPA lo dio por leído y su contenido duradero vive
+  donde no caduca — la receta en `instancia-y-landing-fuera.md` §4.1.bis y el porqué en mis trampas.

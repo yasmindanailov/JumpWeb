@@ -465,7 +465,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public static function formatPriceLabel(int $cents): string
     {
-        return Money::showcase($cents).' €';
+        // ⚠️ `#661`: era la SEGUNDA copia de `WritesLandingValues::euros()`, letra por letra, y por eso
+        // el CTA escribía «desde 8 €» partible mientras la sección de tarifas de debajo no lo era.
+        return Money::showcaseWithSymbol($cents);
     }
 
     /**

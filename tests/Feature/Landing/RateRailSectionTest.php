@@ -622,8 +622,8 @@ class RateRailSectionTest extends TestCase
 
         $seccion = $this->seccion();
 
-        // 3 × 10,00 − 25,00 = 5,00
-        $this->assertStringContainsString('5 €', $seccion);
+        // 3 × 10,00 − 25,00 = 5,00 · espacio DURO entre cifra y símbolo (`#661`).
+        $this->assertStringContainsString("5\u{00A0}€", $seccion);
         $this->assertStringContainsString(
             e(__('landing.rates.saving_base', ['count' => __('landing.rates.times.3'), 'unit' => '1 hora'])),
             $seccion,
@@ -781,7 +781,7 @@ class RateRailSectionTest extends TestCase
         $panel = $this->panel('kids');
 
         $this->assertMatchesRegularExpression(
-            '#<s class="rate-card__was"><span class="sr-only">'.preg_quote(__('landing.rates.was'), '#').' </span>12 €</s>\s*<span class="rate-card__num">9,60</span>#',
+            '#<s class="rate-card__was"><span class="sr-only">'.preg_quote(__('landing.rates.was'), '#')." </span>12\u{00A0}€</s>".'\s*<span class="rate-card__num">9,60</span>#',
             $panel,
             '960 céntimos con una rebaja del 20 % eran 12 €, y van tachados delante de la cifra viva.',
         );
@@ -808,8 +808,8 @@ class RateRailSectionTest extends TestCase
 
         $panel = $this->panel('kids');
 
-        $this->assertStringContainsString('rate-card__was--special"><span class="sr-only">'.__('landing.rates.was').' </span>22 €</s>', $panel);
-        $this->assertStringContainsString('<span class="rate-card__saving-num">4,80 €</span>', $panel, 'dos de 9,60 menos 14,40: el ahorro sigue saliendo del catálogo.');
+        $this->assertStringContainsString('rate-card__was--special"><span class="sr-only">'.__('landing.rates.was')." </span>22\u{00A0}€</s>", $panel);
+        $this->assertStringContainsString("<span class=\"rate-card__saving-num\">4,80\u{00A0}€</span>", $panel, 'dos de 9,60 menos 14,40: el ahorro sigue saliendo del catálogo.');
     }
 
     /**
@@ -842,7 +842,7 @@ class RateRailSectionTest extends TestCase
         Setting::flushMemo();
 
         $this->assertStringContainsString(
-            '<s class="rate-table__was"><span class="sr-only">'.__('landing.rates.was').' </span>12 €</s>',
+            '<s class="rate-table__was"><span class="sr-only">'.__('landing.rates.was')." </span>12\u{00A0}€</s>",
             (string) $this->get('/precios')->assertOk()->getContent(),
         );
     }

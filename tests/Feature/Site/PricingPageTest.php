@@ -139,7 +139,8 @@ class PricingPageTest extends TestCase
         $this->reprice($entrada, RateType::KEY_NORMAL, 1500);
         $this->reprice($entrada, RateType::KEY_SPECIAL, null);
 
-        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], '15 €'));
+        // ⚠️ Espacio DURO entre cifra y símbolo (`#661`): lo escribe `Money::showcaseWithSymbol()`.
+        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], "15\u{00A0}€"));
         $this->assertNotNull($fila);
         $this->assertNull($fila['special'], 'la entrada que no se vende el finde trae precio especial');
         $this->assertStringContainsString('solo', (string) $fila['note'], 'la entrada que no se vende el finde no lo dice');
@@ -147,7 +148,7 @@ class PricingPageTest extends TestCase
         // (b) CONTROL: con el MISMO precio los dos días se vende los siete, y NO puede decir «solo».
         $this->reprice($entrada, RateType::KEY_SPECIAL, 1500);
 
-        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], '15 €'));
+        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], "15\u{00A0}€"));
         $this->assertNotNull($fila);
         $this->assertNotNull($fila['special']);
         $this->assertNull($fila['note'], 'una entrada que SÍ se vende el finde viaja como si no');

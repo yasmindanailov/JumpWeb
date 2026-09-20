@@ -16,6 +16,16 @@ namespace App\Domain\Platform\Services;
 class Money
 {
     /**
+     * **El espacio que va entre la cifra y el símbolo: DURO (U+00A0), no el de la barra.**
+     *
+     * ⚠️⚠️ Se escribe como `\u{00A0}` y **nunca como `&nbsp;`**: estas cadenas salen por `{{ }}`, que
+     * escapa el HTML, así que una entidad se imprimiría literalmente («14,95&amp;nbsp;€»). Y tampoco
+     * se teclea el carácter crudo: en el fuente es indistinguible de un espacio normal, que es
+     * exactamente el defecto que esta constante viene a cerrar.
+     */
+    private const NBSP = "\u{00A0}";
+
+    /**
      * Importe en céntimos → "1.234,56 €" (o "… USD" si la moneda no es EUR).
      * EUR usa el símbolo €; cualquier otra moneda muestra su código ISO tras el número
      * (mismo criterio que la card de totales y el timeline de pagos del panel).
@@ -62,6 +72,30 @@ class Money
             LocalNumber::decimalSeparator(),
             '.',
         );
+    }
+
+    /**
+     * **Importe de ESCAPARATE con su símbolo**: «14,95 €», y con el espacio DURO.
+     *
+     * ▶ **Nace en `#661` recogiendo la regla que estaba escrita en cinco sitios**: dos en PHP
+     * —`WritesLandingValues::euros()` y `AppServiceProvider::formatPriceLabel()`, idénticas letra por
+     * letra— y tres en el marcado de la landing, que ponían el símbolo a mano. *El sitio donde se
+     * decide cómo se escribe un importe es UNO*, y eso incluye el espacio.
+     *
+     * ⚠️⚠️ **El espacio duro no es tipografía fina: es un defecto medido.** Con el espacio normal,
+     * «9,60 €» se parte en dos renglones a 390 px en la tabla de tarifas —la cifra arriba y el símbolo
+     * solo abajo—, y un importe partido no se lee como un importe. Las tres escrituras del marcado ya
+     * usaban `&nbsp;`; las dos de PHP, no, así que la misma página escribía el mismo precio de dos
+     * maneras según quién lo compusiera.
+     *
+     * ⚠️ **No toca a {@see format}, que es el otro registro.** Aquél escribe importes de TRANSACCIÓN
+     * —panel, correos, hoja de sala, PDF— donde el ancho no es el del móvil de un visitante y donde
+     * cambiar un byte movería superficies que esta tanda no mide. Queda fichado en `DEUDA.md`: son dos
+     * espacios distintos para la misma junta, y la diferencia tiene motivo, no olvido.
+     */
+    public static function showcaseWithSymbol(int $cents, string $currency = 'EUR'): string
+    {
+        return self::showcase($cents).self::NBSP.self::symbol($currency);
     }
 
     /** Símbolo a mostrar para una moneda: € para EUR, el propio código en otro caso. */

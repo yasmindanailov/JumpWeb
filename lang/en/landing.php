@@ -170,7 +170,8 @@ return [
         'see_pack' => 'See this party',
         'duration_feature' => ':duration of party',
         'eyebrow' => 'Birthdays',
-        'reserve_terms' => 'From :min to :max kids · :deposit € deposit to book',
+        // ⚠️ Espacio DURO antes del «€» (`#661`), como en los otros dos idiomas.
+        'reserve_terms' => "From :min to :max kids · :deposit\u{00A0}€ deposit to book",
         'coming_soon' => 'We are preparing the birthday packs. If you want to book sooner, write to us and we will help you.',
         'coming_soon_cta' => 'Contact us',
     ],
