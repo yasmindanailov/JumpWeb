@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#656`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (sesión de la T2b: los
-> barridos, `summary` en la API, el 422, y `/contacto`, `/normas`, `/bar` y los legales MUDADAS).
+> **640–669** · Último usado: **`#657`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: los barridos, el
+> 422, y `/contacto`, `/normas`, `/bar`, los legales y `/atracciones` MUDADAS).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -45,10 +45,9 @@
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
-   **EL MENÚ, SERVIDO** (`#640`→`#646`, contrato **1.10.0**, `scripts/mutar-menu-de-hechos.sh` **41/41**):
-   `/site` · `/schedule` y `/schedule/now` · `/rules` · `/legal/documents[/{clave}]` · `/prices` · la
-   **ficha** en `/catalog/zones` y `/catalog/products` · y `/social-proof`. Sus porqués están en la spec
-   §4.1; aquí queda **lo que hace falta para lo siguiente**.
+   **EL MENÚ, SERVIDO** (`#640`→`#646`, contrato **1.11.0**, `scripts/mutar-menu-de-hechos.sh` **41/41**):
+   los siete platos, uno a uno en la spec §4.1 (`/site`, horario, normas, legales, precios, las dos fichas
+   del catálogo y la prueba social). Aquí queda **lo que hace falta para lo siguiente**.
 
    ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): el namespace `instancia::` con sus tres
    puertas, el invariante **`SEC-12`**, la `plantilla/` y el repo LOCAL `jumpweb/instancias/playjump`
@@ -59,22 +58,25 @@
    **la vista recibe NUEVE variables, no dos** —siete las mete el composer global— y que esa lista **va a
    ENCOGER** con el menú: ese día sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
    ▶ **T2b EN CURSO, y su hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una vista hay
-   que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. **Tres barridos
-   hechos** (`#650` la dirección · `#651` los números · `#653` la `<meta description>`, con `summary` en
-   `/rules` y `/legal/documents/{clave}`, contrato **1.11.0**, arnés 50/50) y `bar`/`pricing` barridas sin
-   hallazgo. **El 422 del anfitrión, arreglado** (`#652`).
-   ▶ **CUATRO vistas MUDADAS** (`#654` `/contacto` · `#655` `/normas`, `/bar` y los cinco legales): viven
-   en `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve `anfitrion/{contacto,normas,bar,
-   legal}` sin paquete, y **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella
-   **0/34**, sitemap 11=11. El barrido de `#655` retiró una regla MUERTA (el aviso de borrador de los
-   legales) y bajó una viva (`LocalDate`, `#656`: «September de 2026»). Honeypot y Turnstile son componentes.
+   que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. Barridos hechos: la
+   dirección, los números y la `<meta description>` (`#650`, `#651`, `#653`; arnés 50/50), más `bar` y
+   `pricing` sin hallazgo. **El 422 del anfitrión, arreglado** (`#652`).
+   ▶ **CINCO vistas MUDADAS** (`#654` `/contacto` · `#655` `/normas`, `/bar` y los cinco legales · `#657`
+   `/atracciones`): viven en `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve
+   `anfitrion/{contacto,normas,bar,legal,atracciones}` sin paquete, y **la suite corre SIN paquete**
+   (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0**, sitemap 11=11. Los barridos retiraron una regla
+   MUERTA (el aviso de borrador de los legales) y bajaron dos vivas: `LocalDate` (`#656`) y
+   `Attraction::imageUrl()` (`#657`). Honeypot y Turnstile son componentes.
    Cada página mudada deja su lista de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
+   ❗❗ **Y el juez tenía dos agujeros** (`#657`): `huella-maquetacion.mjs` recorría 14 vistas, sin
+   `/atracciones` ni `/waiver` —uno de los cinco legales que `#655` YA había mudado—. Hoy son **16 vistas ·
+   38 pantallas**; antes de mudar una página se comprueba que esté en esa lista.
    ⚠️ El CSS y las ranuras que solo pinta una vista mudada se declaran en
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`: las guardas de huérfanos lo leen (spec §4.7).
    ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA**: `atracciones`, `precios`, `cumpleanos`, `servicios` y, la última, `home` (1.631 líneas), con
-   el mismo método —barrido → partir pruebas → anfitrión mínimo → huella 0—; una CUARTA regla medida y SIN
-   tocar (el `$fmt` de `services.blade.php`, de la web, avisado); y después T3–T5 (spec hermana §4.6).
+   ▶ **QUEDA**: `precios`, `cumpleanos`, `servicios` y, la última, `home` (1.631 líneas), con el mismo
+   método —barrido → partir pruebas → anfitrión mínimo → huella 0—; una regla medida y SIN tocar (el `$fmt`
+   de `services.blade.php`, de la web, avisado); y después T3–T5 (spec hermana §4.6).
    ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún tienen
    sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
@@ -120,8 +122,9 @@ CONTRATO DE VISTAS y `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, `plantilla/`, `phpun
 vacía), los anfitriones `resources/views/anfitrion/**` con sus `Anfitrion*Test`, `InstanceViewPathTest`,
 `InstanceViewContractTest`, `scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`;
 **y el repo `instancias/playjump`**, `web/` y `docs/paginas/`) · **las reglas bajadas en la T2b**
-(`Platform\Services\{VenueAddress,LocalNumber,MetaDescription,Honeypot,LocalDate}` con sus tests, y los
-componentes `site/{honeypot,turnstile}`) ·
+(`Platform\Services\{VenueAddress,LocalNumber,MetaDescription,Honeypot,LocalDate}` y `Attraction::imageUrl()`
+con sus tests, y los componentes `site/{honeypot,turnstile}`) · `scripts/huella-maquetacion.mjs` (16 vistas)
+y `scripts/mutar-atracciones.py` ·
 **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
 `Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
 `PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`,
@@ -156,10 +159,6 @@ dueño es el carril de la web/reseñas—) ·
   defecto del test y `actingAs($u)` planta al titular SIN token, cosa que el guard real no hace (adjunta un
   `TransientToken`). Arreglado en `Tests\TestCase::be()`; producción sigue fallando cerrado. Con tokens REALES,
   `Auth::forgetGuards()` entre peticiones o un token revocado sigue entrando por la caché del guard.
-- **Un objeto registrado como store de Alpine tiene DOS caras, y solo una es reactiva**: `Alpine.store('x')`
-  devuelve un PROXY; el objeto crudo que se le pasó no avisa a nadie. Una API pública que apunte al crudo
-  «funciona» —el estado cambia, no falla nada— y la pantalla no se mueve. Se publica el proxy, se comprueba con
-  `window.JumpWeb.cajon === Alpine.store('purchase')` y se demuestra en navegador, no en Node.
 - **Una captura solo vale con la pieza ASENTADA, y el limitador de la API puede falsearla**: dos corridas del
   MISMO código daban imágenes distintas (panel a medio entrar, incluso con `reducedMotion`), y tres corridas
   seguidas agotaron el limitador (60/min por IP) hasta que `/entradas` se capturó con «No hay días
@@ -173,10 +172,6 @@ dueño es el carril de la web/reseñas—) ·
   SSR; con la carga a 92 en 20 núcleos, 300 s no bastan. Medido después con la máquina tranquila: los 45 tests
   de paridad en 7,7 s y un render suelto en 0,2 s. Antes de tocar nada se mira `uptime` y se reintenta; la
   salida completa de la suite queda en el `/tmp/tmp.*` que el propio hook nombra.
-- **Las guardas de presupuesto del cajón CAMBIAN el diseño, no solo avisan**: la entrada de la landing tiene 26
-  kB (`SidebarBundleBudgetTest`) y la raíz del cajón 40 líneas sin conocer los pasos del embudo
-  (`SidebarComponentBudgetTest`). Las dos me obligaron a rehacer la T3b: lo que solo usa una página ajena se
-  trae con `import()`, y la regla de una señal nueva vive en `section.js` con el hecho derivado en el store.
 - **ESLint sobre `resources/js/cajon` cazó un defecto de verdad** (18-09): al reordenar `bootSpaEngine()`,
   `host` quedó fuera del alcance de su `catch` — un fallo del chunk habría lanzado un `ReferenceError` dentro
   del manejador de errores y el velo habría girado para siempre. Una variable que usa un `catch` se declara
@@ -185,8 +180,8 @@ dueño es el carril de la web/reseñas—) ·
   guarda al fichero nuevo y se MUTA allí. Buscar antes con `grep -rln "js/app.js" tests`: salieron once.
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
   llega `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base.
-- **Un arnés que restaura un `.vue` tocándole la fecha deja el bundle SSR «rancio»**: 36 rojos de
-  `SidebarDomContractTest`. `npm run build:ssr` y re-medir (el `pre-push` lo reconstruye solo).
+- ▶ **Las trampas del CAJÓN viven en su spec** (`cajon-empaquetable.md` §4.8): el proxy de Alpine, el bundle
+  SSR rancio tras un arnés, las guardas de presupuesto que cambian el diseño, el juez de la hoja y el banco.
 - **`npm install` PODA `playwright-core`** (va con `--no-save`): reponerlo (`/sonda` §1). Y el ojo del navegador
   se pierde al recrear el contenedor (~2 min montarlo; `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).
 - **ESLint o cualquier herramienta se MIDE fuera del árbol** si el gate está corriendo: instalación desechable
@@ -221,6 +216,15 @@ dueño es el carril de la web/reseñas—) ·
   anotado en «por dónde retomar» (2). `<x-site.turnstile />` existe, por si `invitation/show` lo quiere.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-20)
+- ✅ **`/atracciones` MUDADA** (`#657`): la vista vive en la instancia (mismo DOM, huella 0/38) y el
+  producto sirve `anfitrion/atracciones`. De lo tuyo: **toqué `home.blade.php`** —los dos `<img>` del
+  mosaico llaman ahora a `Attraction::imageUrl()`, que es donde vive la regla desde que la landing puede
+  ser de otro repo; **ni un byte de HTML cambia**, medido en tres idiomas—; `AttractionsPageTest` pasa a
+  afirmar sobre los datos, las tres cuentas de contraste de la cifra se van a `Theme/ZoneInkIsLegibleTest`
+  y la fila de `rediseno-desde-canvas.md` lo dice. Nace `scripts/mutar-atracciones.py`.
+- ⚠️ **Medido y sin tocar, tuyo**: el recuento de atracciones se escribe en DOS controladores (el tuyo de
+  la portada y el de la página). Hoy dan el mismo número y ahora hay guarda que los compara; si algún día
+  divergen, la portada promete «ver las N» y la página enseña otras N.
 - ✅ **`/contacto` MUDADA** (`#654`; avisado en `868a2787`): la vista vive en la instancia (mismo DOM, huella
   0/34) y el producto sirve `anfitrion/contacto`. De lo tuyo: `Landing/ContactPageTest` se fue con la vista,
   `mutar-contacto.py` conserva los mutantes del producto, `mutar-cabecera.py` apunta al anfitrión y la fila
@@ -264,4 +268,3 @@ dueño es el carril de la web/reseñas—) ·
 ### Atendido
 - **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración; y el ✅ del owner con el freno §7.1·5) y
   **19-09 cierre**: atendidos arriba el 20-09. Sus cuatro del 19-09 los dio por leídos: retirados.
-- **SPA, 17-09** (despliegue de la T3, plugin, `package.json`): atendido el 18-09.

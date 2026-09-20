@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Booking\Models\Zone;
+use App\Http\Instancia\InstanceViews;
 use Illuminate\Http\Request;
 
 /**
@@ -25,6 +26,13 @@ use Illuminate\Http\Request;
  */
 class AttractionsController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
+    /**
+     * ⚠️ Desde `#657` (F5 · T2b) la vista vive en la INSTANCIA (`web/atracciones.blade.php`) y el producto
+     * sirve `anfitrion/atracciones` sin paquete. Lo que se pasa es el CONTRATO de la vista
+     * (`InstanceViews::CONTRATO_DE_VISTAS`): tres variables, y las otras siete las pone el composer global.
+     */
     public function __invoke(Request $request)
     {
         /*
@@ -39,7 +47,7 @@ class AttractionsController extends Controller
 
         $requested = (string) $request->query('zona', '');
 
-        return view('pages.attractions', [
+        return view($this->instancia->pick('atracciones', 'anfitrion.atracciones'), [
             'zones' => $zones,
             // El recuento que la entradilla publica y que la portada repite en su puerta. Sale de
             // lo que la página ENSEÑA —las zonas con atracciones—, no de `Attraction::count()`:

@@ -356,6 +356,12 @@ quien toque este cajón.
   `:root, .sidecart` para que diera cero, y eso le quitaba sus colores al cajón de una instalación. *Un juez
   no arregla el producto para poder aprobarlo.* Lo cazó la pregunta del `/release`: «¿qué tendría que tocar
   PlayJump para desplegar esto?».
+- ⚠️⚠️ **Las guardas de PRESUPUESTO cambian el diseño, no solo avisan**: la entrada de la landing tiene 26 kB
+  (`SidebarBundleBudgetTest`) y la raíz del cajón 40 líneas sin conocer los pasos del embudo
+  (`SidebarComponentBudgetTest`). Las dos obligaron a rehacer la T3b: lo que solo usa una página ajena se trae
+  con `import()`, y la regla de una señal nueva vive en `section.js` con el hecho derivado en el store.
+- ⚠️ **El proxy de Alpine se comprueba en navegador**: `window.JumpWeb.cajon === Alpine.store('purchase')`,
+  no en Node.
 - ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker` y la
   sonda lo dice con su receta si falta.
 - ▶ **El banco de pruebas de la página ajena se crea y se BORRA.** Un HTML en `public/` con las dos líneas

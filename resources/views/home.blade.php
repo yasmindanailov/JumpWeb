@@ -483,10 +483,13 @@
                         {{-- ⚠️⚠️ **UNA VELADA NO ES CONTENIDO: ES TEXTURA.** Pierde el nombre, deja
                              de ser enlace y sale del árbol de accesibilidad — es la condición con la
                              que el velo entró en el sistema («lo que se oculta no puede ser un
-                             destino, y un nombre a medio velo se queda sin contraste»). --}}
+                             destino, y un nombre a medio velo se queda sin contraste»).
+                             ⚠️ Y la ruta de la foto la resuelve el MODELO (`Attraction::imageUrl()`,
+                             `#657`): la regla dejó de vivir en las vistas el día que una landing pudo
+                             estar en otro repo. --}}
                         <li class="mosaic__cell" data-papel="velada" aria-hidden="true">
-                            @if ($celda['ride']->image)
-                                <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}" alt=""
+                            @if ($foto = $celda['ride']->imageUrl())
+                                <img class="mosaic__img" src="{{ $foto }}" alt=""
                                      aria-hidden="true" loading="lazy" decoding="async">
                             @endif
                             <span class="mosaic__veil"></span>
@@ -503,8 +506,8 @@
                                      del mismo enlace. Un `alt` con el nombre lo diría dos veces; un `alt=""`
                                      a secas deja a quien no ve sin saber que eso es una imagen decorativa.
                                      Lo vigila `SeoTest::test_content_images_have_non_empty_alt`. --}}
-                                @if ($celda['ride']->image)
-                                    <img class="mosaic__img" src="{{ asset($celda['ride']->image) }}"
+                                @if ($foto = $celda['ride']->imageUrl())
+                                    <img class="mosaic__img" src="{{ $foto }}"
                                          alt="" aria-hidden="true" loading="lazy" decoding="async">
                                 @endif
                                 {{-- La banda de tinta: el nombre y, debajo, su zona. La zona va en

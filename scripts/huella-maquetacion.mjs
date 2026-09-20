@@ -51,10 +51,18 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 const BASE = 'http://localhost:8081';
 const SALIDA = 'storage/app/audit';
 
-/** Las vistas públicas, las mismas que recorre `sonda-geometria.mjs`. */
+/**
+ * Las vistas públicas, las mismas que recorre `sonda-geometria.mjs`.
+ *
+ * ❗❗ **`/atracciones` y `/waiver` faltaban, y el juez no puede juzgar lo que no mira** (`#657`). Las dos
+ * son páginas públicas con su ruta y su entrada de menú, y las dos llevaban fuera desde que se escribió
+ * esta lista: `/waiver` es **uno de los cinco legales que `#655` ya mudó**, o sea que aquella tanda dio
+ * «huella idéntica» habiendo medido cuatro de sus cinco páginas. Se añaden con la mudanza de
+ * `/atracciones`, que es justo la vista que esta tanda saca del producto.
+ */
 const VISTAS = [
-    '/', '/entradas', '/precios', '/cumpleanos', '/servicios', '/normas', '/contacto', '/bar',
-    '/cookies', '/privacidad', '/aviso-legal', '/condiciones', '/login', '/registro',
+    '/', '/entradas', '/precios', '/cumpleanos', '/atracciones', '/servicios', '/normas', '/contacto',
+    '/bar', '/cookies', '/privacidad', '/aviso-legal', '/condiciones', '/waiver', '/login', '/registro',
 ];
 
 /** Y el CAJÓN, que es lo que la T4 toca. Cada una abre por su vía y espera a que el motor pinte. */

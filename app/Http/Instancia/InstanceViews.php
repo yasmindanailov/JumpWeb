@@ -98,6 +98,13 @@ class InstanceViews
                 ...self::DEL_COMPOSER,
             ],
         ],
+        // `/atracciones` (`#657`): las zonas de la landing que TIENEN atracciones activas —cada una con
+        // las suyas cargadas y en el orden del panel—, el recuento de lo que la página enseña y la zona
+        // que llega elegida por `?zona=`, ya saneada. La vista no vuelve a decidir ninguna de las tres.
+        'atracciones' => [
+            'ruta' => 'atracciones',
+            'datos' => ['zones', 'total', 'active', ...self::DEL_COMPOSER],
+        ],
         // Los cinco legales (`#655`) comparten vista y contrato: la página del panel. Se mide con una.
         'legal' => [
             'ruta' => 'legal.privacidad',

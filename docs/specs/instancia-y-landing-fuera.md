@@ -399,7 +399,8 @@ de §1.4 es el instrumento, y queda como guarda.
 
 1. **T1 ✅** · el mecanismo (`PublicFacts`) y el primer plato (`/site`); el resto del menú, recurso a recurso.
 2. **T2 · el paquete de la instancia**: repo desde plantilla ✅ (T2a, `#647`), la landing actual mudada tal
-   cual (vía B) vista a vista —`/contacto` ✅ (`#654`); quedan `home` y siete— y el sitemap comparado.
+   cual (vía B) vista a vista —✅ `/contacto`, `/normas`, `/bar`, los cinco legales y `/atracciones`
+   (`#654`, `#655`, `#657`); quedan `precios`, `cumpleanos`, `servicios` y `home`— y el sitemap comparado.
 3. **T3 · el panel adelgaza**: los seis recursos y las secciones de texto.
 4. **T4 · `zones` adelgaza** y cae la última marca viva.
 5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.

@@ -17,10 +17,12 @@
   del producto. Medido: las vistas usan **29 componentes distintos**. Se acepta a sabiendas y con fecha.
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
-- **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: `/contacto` MUDADA (`#654`, §4.4 y
-  §4.7) y **la suite corre SIN paquete** (`phpunit.xml`): el producto prueba su anfitrión mínimo y la
-  instancia se prueba con la huella. ⚠️ Mudar una vista es, en este orden: barrer sus reglas (§4.7), partir
-  sus pruebas por lo que afirman (§4.5.bis), dejar un anfitrión mínimo que cumpla el armazón, y huella 0.
+- **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: mudadas `/contacto`, `/normas`, `/bar`,
+  los cinco legales y `/atracciones` (`#654`, `#655`, `#657`; §4.4 y §4.7) y **la suite corre SIN paquete**
+  (`phpunit.xml`): el producto prueba su anfitrión mínimo y la instancia se prueba con la huella. ⚠️ Mudar
+  una vista es, en este orden: barrer sus reglas (§4.7), partir sus pruebas por lo que afirman (§4.5.bis),
+  dejar un anfitrión mínimo que cumpla el armazón, y huella 0 — **con la página DENTRO de la huella**
+  (`#657`: no lo estaba).
 - **Invariantes**: **`SEC-12` es de aquí** (la ruta de vistas) y no se relaja. Ninguno más cambia.
 
 ## 1. Contexto y problema — MEDIDO (2026-09-19)
@@ -129,7 +131,7 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
-| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar` y los cinco legales** (`#654`, `#655`, 20-09); quedan `atracciones`, `precios`, `cumpleanos`, `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
+| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar`, los cinco legales y `/atracciones`** (`#654`, `#655`, `#657`, 20-09); quedan `precios`, `cumpleanos`, `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
 
@@ -270,9 +272,25 @@ excluyen esas piezas y exigen lo contrario de ellas —que ninguna vista del pro
 consumidores excluye esa declaración, como excluye las hojas que mide. **Es la deuda de la vía B hecha
 lista, y se vacía cuando el material se mude con las vistas** (T3–T5).
 
-▶ **Lo que queda de la T2b**: `atracciones`, `precios`, `cumpleanos`, `servicios` y, la última, `home`, con el
-mismo método: barrido de reglas → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec hermana
-§4.6).
+▶ **`/atracciones`, MUDADA** (`#657`, 20-09), con el mismo método. Lo que enseñó, y no es de esta página:
+- **El barrido bajó la foto al modelo**: `asset($ride->image)` vivía en la vista y **dos veces** en el
+  mosaico de la portada, y el producto ofrece al lado la respuesta EQUIVOCADA para la misma pregunta
+  (`TicketType::imageUrl()` antepone `uploads/`, porque aquello sí es una subida). Nace
+  `Attraction::imageUrl()`, letra por letra el de `Zone` (`#645`). Sin cambio de HTML.
+- ❗❗ **El JUEZ no miraba la página que se mudaba.** `huella-maquetacion.mjs` recorría **14 vistas** y ni
+  `/atracciones` ni `/waiver` estaban en la lista —y `/waiver` es **uno de los cinco legales que `#655` ya
+  mudó**, así que aquella tanda dio «huella idéntica» habiendo medido cuatro de sus cinco páginas—. Antes de
+  tomar la línea base se añaden las dos: **16 vistas, 38 pantallas**. *Una lista de vistas escrita a mano
+  envejece sin avisar; se comprueba contra `route:list` al mudar una página.*
+- **Una guarda re-apuntada no puede quedar más débil**: `ZoneIdentityIsUniqueTest` —que nació de tres
+  paneles abriendo a la vez por identificar la zona con el ACENTO— ya se había quedado sin sujeto dos veces
+  (`#295`, `#482`). El anfitrión mínimo conserva a propósito los tres sitios que miraba (los dos `id` y el
+  `aria-controls`), y su test lo declara para que nadie los «simplifique».
+- Y lo que NO es del anfitrión: las tres cuentas de contraste de la cifra de zona se mudan a
+  `Theme/ZoneInkIsLegibleTest`. Son regla de TEMA medida contra la hoja del producto, no dato de la página.
+
+▶ **Lo que queda de la T2b**: `precios`, `cumpleanos`, `servicios` y, la última, `home`, con el mismo
+método: barrido de reglas → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec hermana §4.6).
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.
