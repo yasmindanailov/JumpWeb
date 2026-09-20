@@ -18,7 +18,7 @@
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
 - **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: mudadas `/contacto`, `/normas`, `/bar`,
-  los cinco legales y `/atracciones` (`#654`, `#655`, `#657`; §4.4 y §4.7) y **la suite corre SIN paquete**
+  los cinco legales, `/atracciones` y `/precios` (`#654`→`#658`; §4.4 y §4.7) y **la suite corre SIN paquete**
   (`phpunit.xml`): el producto prueba su anfitrión mínimo y la instancia se prueba con la huella. ⚠️ Mudar
   una vista es, en este orden: barrer sus reglas (§4.7), partir sus pruebas por lo que afirman (§4.5.bis),
   dejar un anfitrión mínimo que cumpla el armazón, y huella 0 — **con la página DENTRO de la huella**
@@ -131,7 +131,7 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
-| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar`, los cinco legales y `/atracciones`** (`#654`, `#655`, `#657`, 20-09); quedan `precios`, `cumpleanos`, `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
+| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar`, los cinco legales, `/atracciones` y `/precios`** (`#654`→`#658`, 20-09); quedan `cumpleanos`, `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
 
@@ -289,8 +289,25 @@ lista, y se vacía cuando el material se mude con las vistas** (T3–T5).
 - Y lo que NO es del anfitrión: las tres cuentas de contraste de la cifra de zona se mudan a
   `Theme/ZoneInkIsLegibleTest`. Son regla de TEMA medida contra la hoja del producto, no dato de la página.
 
-▶ **Lo que queda de la T2b**: `precios`, `cumpleanos`, `servicios` y, la última, `home`, con el mismo
-método: barrido de reglas → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec hermana §4.6).
+▶ **`/precios`, MUDADA** (`#658`, 20-09). Su barrido no halló ninguna regla escrita en la vista —todo le
+llega compuesto— pero sí **tres variables MUERTAS** (`tickets`, `zones`, `registrationUrl`): viajaban a la
+vista y ninguna se leía. ⚠️⚠️ **El barrido de una vista que se muda incluye QUÉ VARIABLES USA**, y no es
+higiene: mientras es una variable, un dato sin consumidor no se nota; en cuanto se declara en
+`CONTRATO_DE_VISTAS` es una **promesa a cada instalación**, y retirarla después sube el MAYOR del contrato
+y obliga a avisar a todas. *Lo que no se usa se retira ANTES de prometerlo.*
+▶ Y dos cosas cambian de sujeto, no de fuerza: la mitad de `PageHeadTest` que exigía el abanico en su
+ranura de fachada se prueba sobre el **componente** (que es del producto), y **seis mutantes de
+`mutar-precios.py` se retiran con el suyo** —los del bloque de complementos y la hora extra (`#583`), el
+del chip que solo marcaba a la que lidera (`#585`) y los dos de la línea a mano hacia cumpleaños, hoy
+banda—. Un mutante cuyo texto ya no existe sale «NO APLICADA» y solo mide que nadie lo mira.
+
+⚠️ **Y una vista se mueve TAL CUAL**, porque hay guardas que la leen como TEXTO: las cadenas viajan con
+ella, así que se re-apunta cada guarda al fichero nuevo y se MUTA allí. Se busca ANTES —`grep -rln
+"pages/pricing" tests scripts`—, que es como salieron las once de `js/app.js` en su día.
+
+▶ **Lo que queda de la T2b**: `cumpleanos`, `servicios` y, la última, `home`, con el mismo método: barrido
+de reglas → **barrido de variables muertas** → partir pruebas → anfitrión mínimo → huella. Después, T3–T5
+(spec hermana §4.6).
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.

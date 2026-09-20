@@ -162,7 +162,7 @@ De las **siete del inventario del canvas**, **seis existen** y **una es nueva**:
 
 | Página | Estado | Ruta / vista |
 |---|---|---|
-| `/precios` | ✅ existe | `PricingController` · `pages/pricing.blade.php` |
+| `/precios` | ✅ existe · **mudada a la instancia** (`#658`) | `PricingController` · la vista vive en `instancias/playjump/web/precios.blade.php`; el producto sirve `anfitrion/precios.blade.php` sin paquete |
 | `/cumpleanos` | ✅ existe | `EventsController` · `pages/events.blade.php` |
 | `/normas` | ✅ existe · **mudada a la instancia** (`#655`) | `PageController@rules` · la vista vive en `instancias/playjump/web/normas.blade.php`; el producto sirve `anfitrion/normas.blade.php` sin paquete |
 | `/servicios` | ✅ existe | `ServicesController` · `pages/services.blade.php` |

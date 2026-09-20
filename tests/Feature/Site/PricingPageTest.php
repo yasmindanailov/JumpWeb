@@ -13,17 +13,21 @@ use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /**
- * **LA PÁGINA `/precios`, REHECHA DESDE SU ARTBOARD** (`DECISIONES #531`, Fase 3 · T3b).
+ * **`/precios`: la CONDUCTA del producto** (`DECISIONES #531`; partida por lo que afirma en F5 · T2b, `#658`).
  *
- * ▶ Lo que se vigila **no es el aspecto** —eso lo mide la sonda y lo mira el owner—: son las cosas
- * que se rompen **en silencio**, con la página cargando y la suite en verde. Las tres que más:
+ * ❗❗ **Aquí no se lee el HTML** (`#649`): el contrato con la landing de una instancia son los DATOS que
+ * recibe la vista —`rateTable`, `week`, las dos etiquetas de columna, `specialLabel`, `plainDays` y
+ * `holidays`—, y sobre ellos se afirma. Hasta la mudanza estos casos leían el marcado de la página de
+ * PlayJump, que ya no está en el producto; lo que ese marcado garantiza vive en la doc de la instancia
+ * (`paginas/precios.md`) y el anfitrión mínimo tiene su guarda propia (`AnfitrionPreciosTest`).
  *
- *  1. **Una entrada que no se vende un día dice que no se vende** («—» y «solo …»), y una que sí se
- *     vende al mismo precio **NO lo dice**. Es el defecto que `#531` reprodujo con control.
- *  2. **Ningún complemento se publica aquí, tampoco la hora extra** (`#583`): solo se ofrecen en el
- *     cajón, al reservar. Revierte `#531`, que la había puesto como fila de la tabla.
- *  3. **Los bloques que alimenta el panel desaparecen con cero filas** (los festivos), que es regla
- *     dura del sistema de diseño.
+ * Lo que se rompería EN SILENCIO y esto sostiene:
+ *  1. **Una entrada que no se vende un día dice que no se vende** (`normal`/`special` en `null`, y la nota
+ *     «solo …»), y una que sí se vende al mismo precio **NO lo dice**. Es el defecto que `#531` reprodujo
+ *     con control: *existir un precio y ser distinto son dos preguntas*.
+ *  2. **Ningún complemento se publica aquí, tampoco la hora extra** (`#583`): solo en el cajón, al reservar.
+ *  3. **Los bloques que alimenta el panel se quedan VACÍOS cuando no hay dato** (la semana sin tarifa
+ *     especial, los festivos sin fechas): la vista no puede inventarse lo que el producto no le da.
  */
 class PricingPageTest extends TestCase
 {
@@ -38,20 +42,16 @@ class PricingPageTest extends TestCase
         app()->setLocale('es');
     }
 
-    private function html(): string
+    /** @return array<string, mixed> Lo que el controlador le pasa a la vista: el sujeto de esta guarda. */
+    private function datos(): array
     {
-        return (string) $this->get('/precios')->assertOk()->getContent();
+        return $this->get('/precios')->assertOk()->original->getData();
     }
 
-    /** Las filas de la tabla, en orden de documento, con su texto aplanado. */
-    private function rows(string $html): array
+    /** @return list<array<string, mixed>> Todas las filas de todas las zonas, en orden. */
+    private function filas(): array
     {
-        preg_match_all('#<tr class="rate-table__row">(.*?)</tr>#s', $html, $m);
-
-        return array_map(
-            fn (string $row): string => trim(preg_replace('/\s+/u', ' ', strip_tags($row))),
-            $m[1],
-        );
+        return collect($this->datos()['rateTable'])->flatMap(fn (array $z): array => $z['rows'])->all();
     }
 
     /** Reescribe el precio de un producto para una tarifa (null = sin precio ese día). */
@@ -79,88 +79,89 @@ class PricingPageTest extends TestCase
     //  1 · La tabla
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    /**
-     * **Una tabla por zona, y sus entradas dentro** — con la zona dicha UNA vez, en su cabecera.
-     */
-    public function test_each_landing_zone_gets_a_table_with_its_entries(): void
+    /** **Una sección por zona de la landing que tenga entradas**, en el orden del panel y con las suyas dentro. */
+    public function test_every_landing_zone_with_entries_travels_with_its_own_rows(): void
     {
-        $html = $this->html();
-        $zonas = Zone::where('show_in_landing', true)->orderBy('position')->get();
+        $rateTable = $this->datos()['rateTable'];
 
-        $this->assertGreaterThan(0, $zonas->count(), 'sin zonas de landing este caso miraría el vacío');
-        $this->assertSame(
-            $zonas->count(), substr_count($html, 'class="rate-zone__head"'),
-            'la página no pinta una cabecera por zona',
-        );
+        $esperadas = Zone::where('show_in_landing', true)->orderBy('position')->pluck('slug')
+            ->filter(fn (string $slug): bool => collect($rateTable)->contains('slug', $slug))
+            ->values()->all();
 
-        foreach ($zonas as $zona) {
-            $this->assertStringContainsString('id="zone-'.$zona->slug.'"', $html);
+        $this->assertGreaterThan(0, count($esperadas), 'sin zonas de landing este caso miraría el vacío');
+        $this->assertSame($esperadas, array_column($rateTable, 'slug'), 'las zonas no viajan en el orden del panel');
+
+        foreach ($rateTable as $zona) {
+            $this->assertNotEmpty($zona['rows'], "la zona «{$zona['slug']}» viaja sin filas");
+            $this->assertSame(
+                TicketType::ofType(TicketType::TYPE_ENTRY)->where('is_active', true)
+                    ->whereHas('zone', fn ($q) => $q->where('slug', $zona['slug']))->count(),
+                count($zona['rows']),
+                "la zona «{$zona['slug']}» no trae una fila por entrada activa",
+            );
         }
 
-        $this->assertNotEmpty($this->rows($html), 'la tabla no tiene filas: todo lo de abajo miraría el vacío');
+        // ⚠️ Una zona SIN entradas no viaja: una tabla vacía no informa de nada.
+        $vacia = Zone::create(['slug' => 'sin-entradas', 'name' => ['es' => 'Sin entradas'], 'accent' => 'jump', 'position' => 9, 'show_in_landing' => true]);
+        $this->assertNotContains($vacia->slug, array_column($this->datos()['rateTable'], 'slug'));
     }
 
     /**
-     * ❗❗❗ **EL PRECIO DE CADA COLUMNA ES EL DE SU TARIFA, y una raya dice «ese día no se vende».**
+     * ❗❗❗ **EL PRECIO DE CADA COLUMNA ES EL DE SU TARIFA, y `null` dice «ese día no se vende».**
      *
-     * ⚠️ Es la propiedad que hace honesta la tabla: escribir el precio de referencia en las dos
-     * columnas publicaría una cifra para un día en el que no se puede comprar.
+     * ⚠️ Es la propiedad que hace honesta la tabla: escribir el precio de referencia en las dos columnas
+     * publicaría una cifra para un día en el que no se puede comprar.
      */
-    public function test_each_column_shows_the_price_of_its_own_rate(): void
+    public function test_each_column_carries_the_price_of_its_own_rate(): void
     {
         $entrada = $this->anEntry();
         $this->reprice($entrada, RateType::KEY_NORMAL, 1234);
         $this->reprice($entrada, RateType::KEY_SPECIAL, 4321);
 
-        [$nombre] = explode(' · ', (string) $entrada->tr('name'), 2);
-        $nombre = trim(str_replace((string) $entrada->zone?->tr('name'), '', $nombre)) ?: $nombre;
+        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], '12,34'));
 
-        $fila = collect($this->rows($this->html()))
-            ->first(fn (string $f): bool => str_contains($f, '12,34'));
-
-        $this->assertNotNull($fila, 'la fila no escribe el precio de la tarifa normal');
-        $this->assertStringContainsString('43,21', $fila, 'la fila no escribe el precio de la tarifa especial');
+        $this->assertNotNull($fila, 'la fila no lleva el precio de la tarifa normal');
+        $this->assertStringContainsString('43,21', (string) $fila['special'], 'la fila no lleva el precio de la tarifa especial');
     }
 
     /**
      * ❗❗❗ **UNA ENTRADA SIN PRECIO ESPECIAL DICE «SOLO», Y UNA CON EL MISMO PRECIO NO.**
      *
-     * ⚠️⚠️ **El control es la mitad que importa** (`#531`): hasta esta tanda la frase colgaba de
-     * «¿tiene recargo?», así que una entrada con el MISMO precio los siete días —que se vende el
-     * sábado— se anunciaba como «solo de lunes a jueves». *Existir un precio y ser distinto son dos
-     * preguntas.*
+     * ⚠️⚠️ **El control es la mitad que importa** (`#531`): hasta aquella tanda la frase colgaba de «¿tiene
+     * recargo?», así que una entrada con el MISMO precio los siete días —que se vende el sábado— se
+     * anunciaba como «solo de lunes a jueves». *Existir un precio y ser distinto son dos preguntas.*
      */
-    public function test_only_an_entry_that_is_not_sold_on_the_special_rate_says_only(): void
+    public function test_only_an_entry_that_is_not_sold_on_the_special_rate_carries_the_only_note(): void
     {
         $entrada = $this->anEntry();
 
-        // (a) SIN precio especial → la fila lo dice y su columna especial queda en raya.
+        // (a) SIN precio especial → la fila lo dice y su columna especial viaja en `null`.
         $this->reprice($entrada, RateType::KEY_NORMAL, 1500);
         $this->reprice($entrada, RateType::KEY_SPECIAL, null);
 
-        $fila = collect($this->rows($this->html()))->first(fn (string $f): bool => str_contains($f, '15 €'));
+        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], '15 €'));
         $this->assertNotNull($fila);
-        $this->assertStringContainsString('solo', $fila, 'la entrada que no se vende el finde no lo dice');
-        $this->assertStringContainsString(__('landing.pricing.not_sold'), $fila);
+        $this->assertNull($fila['special'], 'la entrada que no se vende el finde trae precio especial');
+        $this->assertStringContainsString('solo', (string) $fila['note'], 'la entrada que no se vende el finde no lo dice');
 
-        // (b) CONTROL: con el MISMO precio los dos días, se vende los siete y NO puede decir «solo».
+        // (b) CONTROL: con el MISMO precio los dos días se vende los siete, y NO puede decir «solo».
         $this->reprice($entrada, RateType::KEY_SPECIAL, 1500);
 
-        $fila = collect($this->rows($this->html()))->first(fn (string $f): bool => str_contains($f, '15 €'));
+        $fila = collect($this->filas())->first(fn (array $f): bool => str_contains((string) $f['normal'], '15 €'));
         $this->assertNotNull($fila);
-        $this->assertStringNotContainsString('solo', $fila, 'una entrada que SÍ se vende el finde se anuncia como si no');
-        $this->assertStringNotContainsString(__('landing.pricing.not_sold'), $fila);
+        $this->assertNotNull($fila['special']);
+        $this->assertNull($fila['note'], 'una entrada que SÍ se vende el finde viaja como si no');
     }
 
     /**
-     * ❗❗ **NI LA HORA EXTRA NI NINGÚN COMPLEMENTO SE PUBLICAN EN `/precios`** (`[DECIDIDO owner,
-     * 2026-09-13]`, `#583`): solo se ofrecen en el cajón, al reservar. Revierte `#531`, que había
-     * puesto la hora extra como fila de la tabla y el resto en un bloque de filas.
+     * ❗❗ **NI LA HORA EXTRA NI NINGÚN COMPLEMENTO VIAJAN A `/precios`** (`[DECIDIDO owner, 2026-09-13]`,
+     * `#583`): solo se ofrecen en el cajón, al reservar. Revierte `#531`, que había puesto la hora extra
+     * como fila de la tabla y el resto en un bloque de filas.
      */
-    public function test_neither_the_extra_hour_nor_any_addon_is_published(): void
+    public function test_neither_the_extra_hour_nor_any_addon_travels(): void
     {
-        // ⚠️ El complemento de TIEMPO se siembra aquí: el catálogo de la suite no trae ninguno, y sin
-        // él que no esté en la tabla no demostraría nada.
+        // ⚠️ El complemento de TIEMPO se siembra aquí: el catálogo de la suite no trae ninguno, y sin él
+        // que no esté en la tabla no demostraría nada.
         $extra = TicketType::create([
             'name' => ['es' => 'Hora extra'], 'type' => TicketType::TYPE_ADDON,
             'is_active' => true, 'is_sellable' => true, 'seats_per_unit' => 1,
@@ -174,35 +175,29 @@ class PricingPageTest extends TestCase
             'quantity_mode' => 'fixed', 'max_qty' => 2, 'position' => 1,
         ]);
 
-        $html = $this->html();
+        $filas = $this->filas();
 
-        $this->assertNotEmpty($this->rows($html), 'la tabla no se pinta: el caso miraría el vacío');
-        $this->assertStringNotContainsString('Hora extra', implode(' ', $this->rows($html)),
-            'la hora extra ha vuelto a la tabla de precios');
-        $this->assertStringNotContainsString('extras__list', $html, 'ha vuelto el bloque de complementos');
+        $this->assertNotEmpty($filas, 'la tabla viaja vacía: el caso miraría el vacío');
+        $this->assertNotContains('Hora extra', array_column($filas, 'name'), 'la hora extra ha vuelto a la tabla de precios');
     }
 
     /**
-     * **La etiqueta destacada sale en toda fila que la tenga, lidere o no** (`#585`, `[DECIDIDO owner,
-     * 2026-09-13]`; revierte `#480`). Y sin `badge` no hay chip, ni siquiera en la destacada: no se
+     * **La etiqueta destacada viaja en toda fila que la tenga, lidere o no** (`#585`, `[DECIDIDO owner,
+     * 2026-09-13]`; revierte `#480`). Y sin `badge` no hay etiqueta, ni siquiera en la destacada: no se
      * inventa aquí una palabra que el dueño no ha escrito.
      */
-    public function test_every_entry_with_a_badge_carries_its_chip(): void
+    public function test_every_entry_with_a_badge_carries_it(): void
     {
         TicketType::ofType(TicketType::TYPE_ENTRY)->update(['featured' => false, 'badge' => null]);
-
-        $this->assertStringNotContainsString('rate-table__badge', $this->html(), 'sin etiqueta no hay chip');
+        $this->assertEmpty(array_filter(array_column($this->filas(), 'badge')), 'sin etiqueta viaja una etiqueta');
 
         $entrada = $this->anEntry();
         $entrada->forceFill(['featured' => true])->save();
-        $this->assertStringNotContainsString('rate-table__badge', $this->html(), 'una destacada sin etiqueta pinta chip');
+        $this->assertEmpty(array_filter(array_column($this->filas(), 'badge')), 'una destacada sin etiqueta se inventa una');
 
-        // Con etiqueta y SIN destacar: el chip sale igual.
+        // Con etiqueta y SIN destacar: viaja igual.
         $entrada->forceFill(['featured' => false, 'badge' => ['es' => 'La favorita']])->save();
-
-        $html = $this->html();
-        $this->assertSame(1, substr_count($html, 'rate-table__badge'), 'la etiqueta de una fila que no lidera no sale');
-        $this->assertStringContainsString('<span class="rate-table__badge">La favorita</span>', $html);
+        $this->assertSame(['La favorita'], array_values(array_filter(array_column($this->filas(), 'badge'))));
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -210,82 +205,73 @@ class PricingPageTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────────────
 
     /**
-     * **La semana dibujada sale de los días que declara la tarifa especial**, no de una lista escrita.
+     * **La semana sale de los días que declara la tarifa especial**, no de una lista escrita.
      *
-     * ⚠️ Y su nombre completo viaja para quien no ve la inicial: «L» no es un nombre accesible, y en
-     * francés la del martes y la del miércoles son la misma.
+     * ⚠️ Y el nombre completo viaja con cada día para quien no ve la inicial: «L» no es un nombre
+     * accesible, y en francés la del martes y la del miércoles son la misma.
      */
-    public function test_the_week_strip_marks_the_days_the_special_rate_declares(): void
+    public function test_the_week_marks_the_days_the_special_rate_declares(): void
     {
         RateType::query()->where('is_special', true)->update(['weekdays' => [6]]); // solo el sábado
         RateType::forgetSpecialMemo();
 
-        $html = $this->html();
+        $week = $this->datos()['week'];
 
-        $this->assertSame(7, substr_count($html, '<li class="week__day'), 'la tira no dibuja los siete días');
-        $this->assertSame(1, substr_count($html, 'week__day--special'), 'solo un día es de tarifa especial');
-        $this->assertStringContainsString('sábado: '.__('landing.pricing.week_special'), $html);
-        $this->assertStringContainsString('lunes: '.__('landing.pricing.week_normal'), $html);
+        $this->assertCount(7, $week, 'la semana no trae los siete días');
+        $this->assertSame(1, count(array_filter(array_column($week, 'special'))), 'solo un día es de tarifa especial');
+
+        $sabado = collect($week)->firstWhere('special', true);
+        $this->assertSame('sábado', $sabado['name'], 'el día especial no es el que declara la tarifa');
+        $this->assertNotSame('', trim((string) $sabado['initial']), 'el día viaja sin inicial');
     }
 
-    /** Sin tarifa especial **no se dibuja** la semana: un diagrama sin dato afirma lo que nadie midió. */
-    public function test_without_a_special_rate_there_is_no_week_strip(): void
+    /** Sin tarifa especial **no hay semana ni término que definir**: la vista no puede dibujar un diagrama sin dato. */
+    public function test_without_a_special_rate_there_is_neither_week_nor_label(): void
     {
         RateType::query()->where('is_special', true)->update(['is_active' => false]);
         RateType::forgetSpecialMemo();
 
-        $html = $this->html();
+        $datos = $this->datos();
 
-        $this->assertStringNotContainsString('week__day', $html);
-        $this->assertStringNotContainsString('rate-note__title', $html, 'sin tarifa especial tampoco hay término que definir');
+        $this->assertNull($datos['week']);
+        $this->assertNull($datos['specialLabel'], 'sin tarifa especial viaja un rótulo que no existe');
+        $this->assertNull($datos['colSpecial'], 'sin tarifa especial viaja una segunda columna');
     }
 
-    /** La explicación nombra la tarifa **con el rótulo del panel**, no con una lista escrita aquí. */
-    public function test_the_special_rate_card_names_the_rate_from_the_panel(): void
+    /** El rótulo de la tarifa lo escribe **el panel**, no una lista escrita en la vista. */
+    public function test_the_special_label_comes_from_the_panel(): void
     {
         RateType::query()->where('is_special', true)->update(['label' => ['es' => 'Viernes, findes, festivos y vísperas']]);
         RateType::forgetSpecialMemo();
 
-        $html = $this->html();
-
-        $this->assertStringContainsString('Viernes, findes, festivos y vísperas', $html);
-        $this->assertStringContainsString(__('landing.pricing.special_calm'), $html);
+        $this->assertSame('Viernes, findes, festivos y vísperas', $this->datos()['specialLabel']);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  3 · Los festivos
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    /** Con cero fechas especiales **el bloque no existe**: regla dura del sistema. */
-    public function test_with_no_special_dates_the_holidays_block_disappears(): void
+    /** Con cero fechas especiales **no viaja ninguna**: el bloque se apaga solo, que es regla dura del sistema. */
+    public function test_with_no_special_dates_no_holiday_travels(): void
     {
         SpecialDate::query()->delete();
 
-        $html = $this->html();
-
-        $this->assertStringNotContainsString('holidays__list', $html);
-        $this->assertStringNotContainsString(__('landing.pricing.holidays_title'), $html);
+        $this->assertSame([], $this->datos()['holidays']);
     }
 
     /**
-     * ❗❗ **Cada fecha dice SU hecho**: cerrada dice «Cerrado», con tarifa dice el rótulo de esa
-     * tarifa —que es lo que se viene a saber en una página de precios— y si no, su horario.
+     * ❗❗ **Cada fecha trae SU hecho**: cerrada dice «Cerrado», con tarifa dice el rótulo de esa tarifa
+     * —que es lo que se viene a saber en una página de precios— y si no, su horario.
      *
-     * ⚠️ **No hay ninguna frase general**: «cuentan como fin de semana, en precio y en horario» es lo
-     * que `#487` retiró de la portada porque el producto no puede afirmarlo.
+     * ⚠️⚠️ **La fecha cerrada lleva TARIFA a propósito, y lo obligó el arnés**: sin ella la mutación que
+     * ignora `is_closed` sobrevivía —un día cerrado no tiene horario que enseñar, así que las dos ramas
+     * daban lo mismo—. Con tarifa se comprueba la PRECEDENCIA, que es el caso real de un festivo de cierre.
      */
     public function test_each_special_date_states_its_own_fact(): void
     {
         SpecialDate::query()->delete();
         $especial = RateType::firstSpecial();
 
-        /*
-         * ⚠️⚠️ **La fecha cerrada lleva TARIFA a propósito, y lo obligó el arnés**: sin ella la
-         * mutación que ignora `is_closed` sobrevivía —un día cerrado no tiene horario que enseñar,
-         * así que el detalle ya decía «Cerrado» y las dos ramas daban lo mismo—. Con tarifa, lo que
-         * se comprueba es la PRECEDENCIA: un día cerrado dice que está cerrado **aunque tenga
-         * tarifa declarada**, que es el caso real de un festivo de cierre.
-         */
         SpecialDate::create([
             'date' => Carbon::now()->addDays(3)->toDateString(),
             'is_closed' => true, 'note' => ['es' => 'Navidad'],
@@ -297,63 +283,42 @@ class PricingPageTest extends TestCase
             'rate_type_id' => $especial->id,
         ]);
 
-        $html = $this->html();
+        $holidays = collect($this->datos()['holidays']);
 
-        preg_match('#<ul class="holidays__list".*?</ul>#s', $html, $m);
-        $this->assertNotEmpty($m, 'con fechas cargadas el bloque tiene que pintarse');
-        $lista = strip_tags($m[0]);
+        $cerrada = $holidays->firstWhere('name', 'Navidad');
+        $abierta = $holidays->firstWhere('name', 'Víspera de Reyes');
 
-        $this->assertStringContainsString('Víspera de Reyes', $lista);
-        $this->assertStringContainsString((string) $especial->tr('label'), $lista, 'la fecha con tarifa no dice cuál');
-
-        // La fila de la fecha CERRADA, acotada: dice «Cerrado» y **no** el rótulo de su tarifa.
-        preg_match('#<li [^>]*holidays__row[^>]*>(?:(?!</li>).)*Navidad(?:(?!</li>).)*</li>#s', $m[0], $fila);
-        $this->assertNotEmpty($fila, 'la fecha cerrada no se pinta: el caso miraría el vacío');
-        $this->assertStringContainsString(__('landing.info.closed'), strip_tags($fila[0]));
-        $this->assertStringNotContainsString((string) $especial->tr('label'), strip_tags($fila[0]),
+        $this->assertNotNull($cerrada, 'la fecha cerrada no viaja: el caso miraría el vacío');
+        $this->assertNotNull($abierta);
+        $this->assertTrue($cerrada['is_closed']);
+        $this->assertStringContainsString(__('landing.info.closed'), (string) $cerrada['fact']);
+        $this->assertStringNotContainsString((string) $especial->tr('label'), (string) $cerrada['fact'],
             'un día CERRADO anuncia su tarifa: lo que hay que decir es que no se abre');
+        $this->assertStringContainsString((string) $especial->tr('label'), (string) $abierta['fact'],
+            'la fecha con tarifa no dice cuál');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
-    //  4 · La salida y lo que la página NO hace
+    //  4 · Lo que el producto promete, y nada más
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    // ⚠️ Aquí vivía `test_each_addon_row_writes_the_advantage_from_the_panel`, y se fue con su bloque
-    // (`#583`): los complementos ya no se publican en `/precios`. Lo vigila, al revés, el caso de la
-    // hora extra de arriba.
-
     /**
-     * ❗❗ **LA PÁGINA NO LLEVA CTA PROPIO, y el armazón sigue ofreciendo la acción en los dos
-     * estados de la venta.** Es la mitad que evita que retirar el botón deje la página sin salida.
+     * ❗❗ **El contrato son las variables que la vista USA** (`#658`): hasta la mudanza el controlador
+     * pasaba `tickets`, `zones` y `registrationUrl`, y la vista **no leía ninguna de las tres** —medido—.
+     * Declararlas en el contrato de instancia habría sido prometer a cada landing algo que nadie pidió, y
+     * retirarlas después habría subido el MAYOR sin motivo. Se retiran ahora, antes de prometerlas.
      */
-    public function test_the_page_has_no_cta_of_its_own_but_the_frame_still_offers_to_buy(): void
+    public function test_the_controller_passes_exactly_what_the_view_uses(): void
     {
-        $html = $this->html();
+        $recibidas = array_keys($this->datos());
 
-        $this->assertStringNotContainsString('page__cta', $html, 'la página ha recuperado un CTA propio');
-        $this->assertStringContainsString('purchase.open()', $html, 'con la venta abierta, el armazón no ofrece comprar');
-    }
+        foreach (['tickets', 'zones', 'registrationUrl'] as $muerta) {
+            $this->assertNotContains($muerta, $recibidas, "«{$muerta}» volvió al contrato sin que la vista la use");
+        }
 
-    /**
-     * La salida de la página lleva a la página de los packs.
-     *
-     * ▶ **La PROPIEDAD no cambia; cambia quién la cumple.** Hasta las bandas de enlace esto lo
-     * pintaba `.rate-page__birthdays`, una línea con su enlace escrita solo para esta página; hoy
-     * es la banda GORDA, que en el reparto del canvas contesta desde aquí exactamente eso. El caso
-     * se re-apunta al bloque nuevo y **no queda más débil**: sigue acotado y sigue exigiendo la
-     * ruta de cumpleaños dentro de él.
-     */
-    public function test_the_page_ends_pointing_at_the_birthday_packages(): void
-    {
-        $html = $this->html();
-
-        // ⚠️ **Acotado al BLOQUE y no a la página**, que fue lo que dijo el arnés: la ruta de
-        // cumpleaños la escriben también el menú y el pie, así que sobre el documento entero la
-        // aserción pasaba aunque el enlace de la salida apuntara a ninguna parte.
-        preg_match('#<div class="band-wide".*?</div>\s*</div>#s', $html, $bloque);
-        $this->assertNotEmpty($bloque, 'la página no pinta su salida a cumpleaños');
-
-        $this->assertStringContainsString(__('site.bands.ask.precios.q'), $bloque[0]);
-        $this->assertStringContainsString(route('cumpleanos'), $bloque[0]);
+        // Y lo que sí usa sigue llegando: si esto encoge, se rompen TODAS las instancias a la vez.
+        foreach (['rateTable', 'week', 'colNormal', 'colSpecial', 'specialLabel', 'plainDays', 'holidays', 'registrationSvg'] as $viva) {
+            $this->assertContains($viva, $recibidas);
+        }
     }
 }

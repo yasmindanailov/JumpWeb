@@ -362,6 +362,10 @@ quien toque este cajón.
   con `import()`, y la regla de una señal nueva vive en `section.js` con el hecho derivado en el store.
 - ⚠️ **El proxy de Alpine se comprueba en navegador**: `window.JumpWeb.cajon === Alpine.store('purchase')`,
   no en Node.
+- ⚠️ **ESLint sobre `resources/js/cajon` cazó un defecto de verdad** (18-09): al reordenar
+  `bootSpaEngine()`, `host` quedó fuera del alcance de su `catch` — un fallo del chunk habría lanzado un
+  `ReferenceError` **dentro del manejador de errores** y el velo habría girado para siempre. *Una variable
+  que usa un `catch` se declara FUERA del `try`.*
 - ⚠️ **El cliente de pruebas (`probe-card@jumpweb.test`) no vive en el repo**: se crea con `tinker` y la
   sonda lo dice con su receta si falta.
 - ▶ **El banco de pruebas de la página ajena se crea y se BORRA.** Un HTML en `public/` con las dos líneas

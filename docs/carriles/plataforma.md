@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#657`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#658`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: los barridos, el
-> 422, y `/contacto`, `/normas`, `/bar`, los legales y `/atracciones` MUDADAS).
+> 422, y seis vistas MUDADAS: `/contacto`, `/normas`, `/bar`, los legales, `/atracciones` y `/precios`).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -41,7 +41,7 @@
    ▶ **`main` ya se movió tras etiquetar**, así que la guarda 8 dice «HEAD no es una versión»: se despliega
    desde **`git checkout v1.2.0`** y se vuelve con `git checkout main`. Comprobado en seco: desde la
    etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
-   ▶ Lo hecho DESPUÉS de esa etiqueta (F5 entera, contrato **1.10.0**) va en la siguiente versión.
+   ▶ Lo hecho DESPUÉS de esa etiqueta (F5 entera, contrato **1.11.0**) va en la siguiente versión.
 3. **F5 EN CURSO · el MENÚ DE HECHOS, recurso a recurso** (`specs/instancia-y-landing-fuera.md` ✅; censo en
    su §1 y las tres decisiones del owner en `#639`: las redes se quedan en el panel, los cuatro campos
    muertos de `zones` se retiran, «cero marca» se lee como código vivo).
@@ -61,41 +61,38 @@
    que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. Barridos hechos: la
    dirección, los números y la `<meta description>` (`#650`, `#651`, `#653`; arnés 50/50), más `bar` y
    `pricing` sin hallazgo. **El 422 del anfitrión, arreglado** (`#652`).
-   ▶ **CINCO vistas MUDADAS** (`#654` `/contacto` · `#655` `/normas`, `/bar` y los cinco legales · `#657`
-   `/atracciones`): viven en `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve
-   `anfitrion/{contacto,normas,bar,legal,atracciones}` sin paquete, y **la suite corre SIN paquete**
-   (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0**, sitemap 11=11. Los barridos retiraron una regla
-   MUERTA (el aviso de borrador de los legales) y bajaron dos vivas: `LocalDate` (`#656`) y
-   `Attraction::imageUrl()` (`#657`). Honeypot y Turnstile son componentes.
+   ▶ **SEIS vistas MUDADAS** (`#654` `/contacto` · `#655` `/normas`, `/bar` y los cinco legales · `#657`
+   `/atracciones` · `#658` `/precios`): viven en `instancias/playjump/web/` (repo LOCAL sin remoto), el
+   producto sirve `anfitrion/{contacto,normas,bar,legal,atracciones,precios}` sin paquete, y **la suite
+   corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0**, sitemap 11=11. Los
+   barridos retiraron una regla MUERTA (el aviso de borrador de los legales) y bajaron dos vivas:
+   `LocalDate` (`#656`) y `Attraction::imageUrl()` (`#657`).
    Cada página mudada deja su lista de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
    ❗❗ **Y el juez tenía dos agujeros** (`#657`): `huella-maquetacion.mjs` recorría 14 vistas, sin
    `/atracciones` ni `/waiver` —uno de los cinco legales que `#655` YA había mudado—. Hoy son **16 vistas ·
    38 pantallas**; antes de mudar una página se comprueba que esté en esa lista.
-   ⚠️ El CSS y las ranuras que solo pinta una vista mudada se declaran en
-   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`: las guardas de huérfanos lo leen (spec §4.7).
-   ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA**: `precios`, `cumpleanos`, `servicios` y, la última, `home` (1.631 líneas), con el mismo
-   método —barrido → partir pruebas → anfitrión mínimo → huella 0—; una regla medida y SIN tocar (el `$fmt`
-   de `services.blade.php`, de la web, avisado); y después T3–T5 (spec hermana §4.6).
-   ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún tienen
-   sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
+   ⚠️ El material que solo pinta una vista mudada se declara en
+   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
+   sigue a mano **a propósito** (`#651`): pendiente del owner.
+   ▶ **QUEDA**: `cumpleanos`, `servicios` y, la última, `home` (1.631 líneas), con el mismo método
+   —barrido de reglas y de variables → partir pruebas → anfitrión mínimo → huella 0—; una regla medida y
+   SIN tocar (el `$fmt` de `services.blade.php`, de la web, avisado); y después T3–T5 (spec hermana §4.6).
+   ❗ **El barrido incluye QUÉ VARIABLES USA la vista** (`#658`): `/precios` pasaba tres que nadie leía
+   (`tickets`, `zones`, `registrationUrl`). Mientras es una variable no se nota; declarada en el contrato
+   es una PROMESA a cada instalación, y retirarla luego sube el MAYOR. Se retira ANTES de prometerla.
+   ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
+   owner (`#535`, `#350`, `#551`, `#264`). Se retira o se re-apunta CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
-   genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**.
-   ⚠️⚠️ **Y el nombre del proyecto de Docker está FIJADO** (`name: jumpweb`) desde `#648`. Salía del nombre
-   de la carpeta, así que la mudanza habría levantado contenedores NUEVOS y dejado huérfano el volumen de
-   MySQL con la base de desarrollo dentro. Un clon con otro nombre de carpeta ya no duplica nada.
+   genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**— y el
+   nombre del proyecto de Docker está FIJADO (`name: jumpweb`, `#648`): salía de la carpeta, así que la
+   mudanza habría levantado contenedores nuevos y dejado huérfano el volumen de MySQL.
 
    ⚠️ **De la ficha** (spec §4.1): la foto de zona es ruta heredada a `public/`; **35 imágenes del cliente
    versionadas en `main`**, sin tocar: van con la T2.
 
-   ▶ **La RECETA de un plato nuevo** (lista blanca en el recurso, lo no rellenado no viaja, `?lang=` si se
-   traduce, caché según cambie, lo apagado no se sirve, contrato + caso + mutación en el mismo commit) se
-   mudó a la spec, **§4.1.bis**: vale para cualquier recurso público y allí no caduca con la tanda.
-
-   ▶ **Las OCHO TRAMPAS del menú** (el `weekday` que es 0 = domingo, el `sortBy` que ordena al revés, los
-   marcadores de los legales, el alias del morphMap, el objeto vacío que sale `[]`, el `''` de lo borrado,
-   el `FileUpload` que descarta lo que no está en disco…) se mudaron a la spec, **§4.1.ter**: no caducan
-   con la tanda y allí las encuentra quien añada un recurso público dentro de cinco meses.
+   ▶ **La RECETA de un plato nuevo** está en la spec **§4.1.bis**, y **las OCHO TRAMPAS del menú** (el
+   `weekday` que es 0 = domingo, el `sortBy` al revés, el objeto vacío que sale `[]`, el `''` de lo
+   borrado…) en **§4.1.ter**: allí no caducan con la tanda.
 
    **Del censo** (spec §1): sigue valiendo lo guardado —un `tokens.json` en la instancia del que salgan
    `client.css` y el tema de la app— y `zones` tiene cuatro columnas muertas (`#639`).
@@ -172,12 +169,8 @@ dueño es el carril de la web/reseñas—) ·
   SSR; con la carga a 92 en 20 núcleos, 300 s no bastan. Medido después con la máquina tranquila: los 45 tests
   de paridad en 7,7 s y un render suelto en 0,2 s. Antes de tocar nada se mira `uptime` y se reintenta; la
   salida completa de la suite queda en el `/tmp/tmp.*` que el propio hook nombra.
-- **ESLint sobre `resources/js/cajon` cazó un defecto de verdad** (18-09): al reordenar `bootSpaEngine()`,
-  `host` quedó fuera del alcance de su `catch` — un fallo del chunk habría lanzado un `ReferenceError` dentro
-  del manejador de errores y el velo habría girado para siempre. Una variable que usa un `catch` se declara
-  FUERA del `try`.
-- **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL (las cadenas viajan), se re-apunta cada
-  guarda al fichero nuevo y se MUTA allí. Buscar antes con `grep -rln "js/app.js" tests`: salieron once.
+- **Mover código que unas guardas leen como TEXTO**: se mueve TAL CUAL, se re-apunta cada guarda al fichero
+  nuevo y se MUTA allí (el método entero, en `paquete-de-instancia.md` §4.7).
 - **El tipo que Sanctum declara para `currentAccessToken()` miente con cookie** (dice `PersonalAccessToken`,
   llega `TransientToken`): el tipo real es `HasAbilities`, con `@var`; no es una entrada más de la línea base.
 - ▶ **Las trampas del CAJÓN viven en su spec** (`cajon-empaquetable.md` §4.8): el proxy de Alpine, el bundle
@@ -216,6 +209,13 @@ dueño es el carril de la web/reseñas—) ·
   anotado en «por dónde retomar» (2). `<x-site.turnstile />` existe, por si `invitation/show` lo quiere.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-20)
+- ✅ **`/precios` MUDADA** (`#658`): la vista vive en la instancia (mismo DOM, huella 0/38) y el producto
+  sirve `anfitrion/precios`. De lo tuyo: `Site/PricingPageTest` pasa a afirmar sobre los DATOS y sus dos
+  casos de marcado se van al anfitrión; **`mutar-precios.py` re-apuntado y PODADO** —seis mutantes se
+  retiran con su sujeto: los tres del bloque de complementos y la hora extra (`#583`), el del chip que solo
+  marcaba a la que lidera (`#585`) y los dos de `.rate-page__birthdays`, que sustituyó la banda—; y la
+  mitad de `PageHeadTest` que exigía el abanico en su ranura se prueba ahora sobre el componente de
+  fachada. La fila de `rediseno-desde-canvas.md` lo dice.
 - ✅ **`/atracciones` MUDADA** (`#657`): la vista vive en la instancia (mismo DOM, huella 0/38) y el
   producto sirve `anfitrion/atracciones`. De lo tuyo: **toqué `home.blade.php`** —los dos `<img>` del
   mosaico llaman ahora a `Attraction::imageUrl()`, que es donde vive la regla desde que la landing puede

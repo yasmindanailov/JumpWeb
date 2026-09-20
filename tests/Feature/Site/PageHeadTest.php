@@ -159,16 +159,23 @@ class PageHeadTest extends TestCase
         $this->assertMatchesRegularExpression('/overflow:\s*(hidden|clip)/', $this->declaracion($reglas, '.page__lockup--deco'),
             'el conjunto decorado no recorta: la decoración puede volver a alcanzar a la entradilla');
 
-        // `/precios` (`#580`): el abanico NO vuelve a la cabecera, donde el conjunto lo recorta, y
-        // sigue en su ranura de fachada. ⚠️ Con él se fue `.page__head.pricing__head` (la cabecera a la
-        // columna entera existía para que el abanico no pisara el titular dentro de 820 px).
+        // `/precios` (`#580`): el abanico NO vuelve a la cabecera, donde el conjunto lo recorta.
+        // ⚠️ Con él se fue `.page__head.pricing__head` (la cabecera a la columna entera existía para que
+        // el abanico no pisara el titular dentro de 820 px).
         $x = $this->xpath($this->get('/precios')->assertOk()->getContent());
         $cabecera = $x->query('//main//'.$this->clase('div', 'page__head'))->item(0);
         $this->assertNotNull($cabecera, '«/precios» no pinta su cabecera: el caso no distingue nada');
         $this->assertSame(0, $x->query('.//'.$this->clase('div', 'rays'), $cabecera)->length,
             'el abanico de «/precios» ha vuelto a la cabecera, donde se recorta en una banda');
+
+        // ⚠️⚠️ **La otra mitad —que el abanico SÍ está en su ranura de fachada— cambia de sujeto con la
+        // mudanza** (`#658`): la página de PlayJump vive en su instancia y lo que el producto sirve es el
+        // anfitrión mínimo, SIN arte. Se prueba donde hoy vive el sujeto, que es del producto: el
+        // COMPONENTE de fachada, que es quien coloca la pieza. No queda más débil —sigue exigiendo que el
+        // abanico esté DENTRO de la ranura— y deja de depender del diseño de un cliente.
+        $x = $this->xpath((string) $this->blade('<x-site.facade en="page-precios" />'));
         $this->assertSame(1, $x->query('//'.$this->clase('div', 'fac-slot').'/'.$this->clase('div', 'rays'))->length,
-            'el abanico de «/precios» ya no está en su ranura de fachada');
+            'el abanico de «page-precios» ya no está en su ranura de fachada');
     }
 
     /**

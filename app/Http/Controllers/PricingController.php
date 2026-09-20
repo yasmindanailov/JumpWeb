@@ -8,9 +8,17 @@ use App\Domain\Booking\Services\RateTable;
 use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Platform\Models\Setting;
 use App\Domain\Platform\Services\QrCode;
+use App\Http\Instancia\InstanceViews;
 
 class PricingController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
+    /**
+     * ⚠️ Desde `#658` (F5 · T2b) la vista vive en la INSTANCIA (`web/precios.blade.php`) y el producto sirve
+     * `anfitrion/precios` sin paquete. Lo que se pasa es el CONTRATO de la vista
+     * (`InstanceViews::CONTRATO_DE_VISTAS`): todo llega COMPUESTO, y la landing solo lo pinta.
+     */
     public function __invoke(ScheduleDisplay $schedule)
     {
         /*
@@ -41,9 +49,14 @@ class PricingController extends Controller
          */
         $registro = (string) (Setting::value('registration.url') ?? '');
 
-        return view('pages.pricing', [
-            'tickets' => $entradas,
-            'zones' => $zonas,
+        /*
+         * ❗❗ **`tickets`, `zones` y `registrationUrl` se pasaban y la vista NO leía ninguna** (medido al
+         * mudarla, `#658`). Un dato que viaja sin consumidor no se nota —nada falla— hasta que se convierte
+         * en CONTRATO: declararlo en `CONTRATO_DE_VISTAS` sería prometerle a cada instancia algo que nadie
+         * pidió, y retirarlo después subiría el MAYOR del contrato sin motivo. Se retiran ANTES de
+         * prometerlos. Las dos colecciones siguen aquí porque son la ENTRADA de `RateTable::compose()`.
+         */
+        return view($this->instancia->pick('precios', 'anfitrion.precios'), [
             // La rebaja YA aplicada al catálogo, para el «antes» tachado (chapuza declarada,
             // `Setting::promoPercent()`); 0 = la tabla de siempre.
             'rateTable' => $tabla->compose($zonas, $entradas, Setting::promoPercent()),
@@ -58,7 +71,6 @@ class PricingController extends Controller
              * «los festivos enteros viven aquí, no en 07»). Vacío = no se pinta el bloque.
              */
             'holidays' => $schedule->pricingCalendar(),
-            'registrationUrl' => $registro,
             'registrationSvg' => $registro === '' ? null : QrCode::svg($registro),
         ]);
     }

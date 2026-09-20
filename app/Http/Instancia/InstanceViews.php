@@ -105,6 +105,18 @@ class InstanceViews
             'ruta' => 'atracciones',
             'datos' => ['zones', 'total', 'active', ...self::DEL_COMPOSER],
         ],
+        // `/precios` (`#658`): TODO llega compuesto por `RateTable` —la tabla por zona con sus filas, la
+        // semana dibujada, las dos etiquetas de columna, el rótulo de la tarifa especial y los días
+        // llanos— más el calendario de fechas especiales y el QR del registro externo, si lo hay. La
+        // landing no calcula un precio: los escribe el producto, incluido el «antes» tachado.
+        'precios' => [
+            'ruta' => 'precios',
+            'datos' => [
+                'rateTable', 'week', 'colNormal', 'colSpecial', 'specialLabel', 'plainDays', 'holidays',
+                'registrationSvg',
+                ...self::DEL_COMPOSER,
+            ],
+        ],
         // Los cinco legales (`#655`) comparten vista y contrato: la página del panel. Se mide con una.
         'legal' => [
             'ruta' => 'legal.privacidad',

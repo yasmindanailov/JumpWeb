@@ -56,9 +56,9 @@ class ArmazonContractTest extends TestCase
         'anfitrion/contacto',
         'anfitrion/legal',
         'anfitrion/normas',
+        'anfitrion/precios',
         'home',
         'pages/events',
-        'pages/pricing',
         'pages/services',
         'payments/retry-redirect',
     ];
