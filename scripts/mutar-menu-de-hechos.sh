@@ -14,12 +14,13 @@ cd "$(git rev-parse --show-toplevel)"
 SAIL="docker compose exec -u sail -T laravel.test"
 # ⚠️ El último no es una clase sino un MÉTODO: `CatalogEditTest` entero son ~40 casos del panel y el arnés
 # corre esta orden una vez por mutación. Se trae solo la guarda de la foto, que es la de esta tanda.
-TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
+TESTS="$SAIL php artisan test --filter='PublicFactsBoundaryTest|SiteFactsTest|ScheduleFactsTest|RulesFactsTest|LegalDocumentsTest|PricesFactsTest|SocialProofFactsTest|VenueAddressTest|LocalNumberTest|MetaDescriptionTest|HeroStatusTest|ApiContractTest|CatalogTest|the_ficha_photo_is_editable_from_the_panel'"
 
 LECTOR=app/Domain/Platform/Services/PublicFacts.php
 RECURSO=app/Http/Resources/Api/V1/SiteFactsResource.php
 DIRECCION=app/Domain/Platform/Services/VenueAddress.php
 NUMERO=app/Domain/Platform/Services/LocalNumber.php
+RESUMEN=app/Domain/Platform/Services/MetaDescription.php
 MONEDA=app/Domain/Platform/Services/Money.php
 HORARIO=app/Http/Resources/Api/V1/ScheduleFactsResource.php
 ENVIVO=app/Http/Resources/Api/V1/OpeningNowResource.php
@@ -44,7 +45,7 @@ MODELOPROD=app/Domain/Booking/Models/TicketType.php
 YAML=openapi/v1.yaml
 
 TMP="$(mktemp -d)"
-FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$MONEDA")
+FICHEROS=("$LECTOR" "$RECURSO" "$HORARIO" "$ENVIVO" "$ESTADO" "$NORMAS" "$NORMASCTRL" "$CONTRATO" "$LEGALES" "$LEGALESCTRL" "$PRECIOS" "$PRECIOSCTRL" "$RUTAS" "$FICHAZONA" "$FICHAPROD" "$LECTORCAT" "$MODELOZONA" "$MODELOPROD" "$YAML" "$PANEL" "$CIFRA" "$DIRECCION" "$NUMERO" "$RESUMEN" "$MONEDA")
 restaurar() { for f in "${FICHEROS[@]}"; do cp "$TMP/$(basename "$f")" "$f"; touch "$f"; done; }
 trap 'restaurar; rm -rf "$TMP"' EXIT
 for f in "${FICHEROS[@]}"; do cp "$f" "$TMP/$(basename "$f")"; done
@@ -181,8 +182,8 @@ mutar "el cuerpo sale SIN interpolar (\`:legal_name\` publicado tal cual)" \
             'p' => (\$seccion['p'] ?? null) ?: null,"
 
 mutar "se publica el texto FIRMADO en vez de la página (y se pierden las secciones que explican)" \
-  "$LEGALES" "            'sections' => \$this->conCuerpo ? \$this->secciones(\$pagina) : null," \
-  "            'sections' => \$this->conCuerpo ? (\$version?->body ?? \$this->secciones(\$pagina)) : null,"
+  "$LEGALES" "            'sections' => \$secciones," \
+  "            'sections' => \$secciones === null ? null : (\$version?->body ?? \$secciones),"
 
 mutar "una página DESACTIVADA se sirve por la API" \
   "$LEGALESCTRL" "return Page::query()->where('is_active', true)->orderBy('slug')->get()->collect();" \
@@ -302,6 +303,30 @@ mutar "el separador de MILLARES deja de seguir al idioma («1.234 reviews» se l
 
 mutar "el importe de escaparate deja de delegar y vuelve a escribir el separador a mano" \
   "$MONEDA" "            LocalNumber::decimalSeparator()," "            ',',"
+
+# ── Y cómo se ESCRIBE un resumen (T2b, `#653`) ────────────────────────────────────────────────
+mutar "el resumen deja de cortarse a lo que cabe en un fragmento (y viaja el párrafo entero)" \
+  "$RESUMEN" "    public const MAX = 155;" "    public const MAX = 100000;"
+
+mutar "un nombre en blanco deja dos separadores seguidos (« ·  · »)" \
+  "$RESUMEN" "            if (\$limpio !== '') {
+                \$limpios[] = \$limpio;
+            }" \
+  "            \$limpios[] = \$limpio;"
+
+mutar "las etiquetas HTML de un párrafo legal viajan dentro del resumen" \
+  "$RESUMEN" "        \$limpio = self::collapsed(strip_tags((string) \$text));" \
+  "        \$limpio = self::collapsed((string) \$text);"
+
+mutar "la API deja de publicar el resumen de las normas (y cada instancia lo re-deriva)" \
+  "$NORMAS" "            ...(\$resumen === null ? [] : ['summary' => \$resumen])," ""
+
+mutar "el resumen de las normas sale en el orden de la TABLA y no en el de la visita" \
+  "$NORMAS" "MetaDescription::fromNames(\$ordenadas->map(" "MetaDescription::fromNames(\$this->normas->map("
+
+mutar "el resumen de un texto legal sale de los TITULARES y no del primer párrafo" \
+  "$LEGALES" "                collect(\$secciones)->pluck('p')->filter()->first()," \
+  "                collect(\$secciones)->pluck('h')->filter()->first(),"
 
 echo
 echo "mutaciones: $muerden/$total muerden"

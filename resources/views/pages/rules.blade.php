@@ -2,10 +2,11 @@
     // Meta description (SEO, INVISIBLE en la página): resumen a partir del contenido real, en vez de
     // repetir el título. ⚠️ Recorre TODOS los grupos y las sin agrupar: componer la frase solo con
     // el primer grupo dejaría fuera justo las de dentro.
+    // ⚠️ CÓMO se escribe el resumen (el separador, el tope) NO se decide aquí: es regla del producto
+    // (`MetaDescription`, `#653`) y `/api/v1/rules` publica el mismo `summary`. Aquí solo el respaldo.
     $todas = collect($board['groups'])->flatMap(fn (array $g) => $g['rules'])->concat($board['ungrouped']);
-    $rulesMeta = $todas->isNotEmpty()
-        ? \Illuminate\Support\Str::limit($todas->take(6)->map(fn ($r) => $r->tr('name'))->implode(' · '), 155)
-        : __('site.rules_title');
+    $rulesMeta = \App\Domain\Platform\Services\MetaDescription::fromNames($todas->map(fn ($r) => $r->tr('name')))
+        ?? __('site.rules_title');
 @endphp
 <x-layout :title="__('site.rules_title')" :description="$rulesMeta">
 <div x-data="landing">

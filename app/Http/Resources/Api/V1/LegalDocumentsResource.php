@@ -5,6 +5,7 @@ namespace App\Http\Resources\Api\V1;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Services\LegalIdentity;
 use App\Domain\Identity\Services\LegalDocuments;
+use App\Domain\Platform\Services\MetaDescription;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
@@ -63,9 +64,18 @@ class LegalDocumentsResource extends JsonResource
             ? LegalDocuments::current($pagina->slug, app()->getLocale())
             : null;
 
+        $secciones = $this->conCuerpo ? $this->secciones($pagina) : null;
+
         return array_filter([
             'key' => $pagina->slug,
             'title' => $pagina->tr('title'),
+            // El RESUMEN (`#653`): el primer párrafo, ya interpolado, sin etiquetas y cortado a lo que cabe
+            // en el fragmento de un buscador. Es lo que la página pone en su `<meta description>`, y viaja
+            // escrito por lo mismo que `address.written`: la regla es del producto. Solo con el cuerpo, como
+            // las secciones de las que sale; y sin ningún párrafo no hay resumen.
+            'summary' => $secciones === null ? null : MetaDescription::fromText(
+                collect($secciones)->pluck('p')->filter()->first(),
+            ),
             'updated_at' => $pagina->updated_at?->toIso8601String(),
             // El dato de la versión firmada, cuando la hay. No sustituye al texto: lo acompaña.
             // ⚠️ `published_at` NO es anulable en la tabla (medido, `NOT NULL`): una versión publicada
@@ -76,7 +86,7 @@ class LegalDocumentsResource extends JsonResource
                 'version' => (int) $version->version,
                 'published_at' => $version->published_at->toIso8601String(),
             ],
-            'sections' => $this->conCuerpo ? $this->secciones($pagina) : null,
+            'sections' => $secciones,
         ], fn ($valor): bool => $valor !== null);
     }
 

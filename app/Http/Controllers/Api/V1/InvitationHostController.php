@@ -55,11 +55,16 @@ class InvitationHostController extends Controller
 
         abort_if($invitation === null, 404);
 
+        // ⚠️ `nullable` en los dos textos, como en la web (`GuestFormController`), y no es cortesía:
+        // `ConvertEmptyStringsToNull` convierte un `""` en `null` ANTES de validar, así que con `'string'`
+        // a secas una línea vacía era un **422** —medido por el cajón el 19-09, `#652`— y el anfitrión no
+        // podía guardar con «Te invita» en blanco. Un vacío no es un error: el dominio lo lee como «déjalo
+        // como estaba», igual que un texto rechazado.
         $data = $request->validate([
             'theme' => ['sometimes', 'string', 'max:16'],
-            'honoree_name' => ['sometimes', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
+            'honoree_name' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HONOREE_NAME_MAX],
             'honoree_age' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:255'],
-            'host_line' => ['sometimes', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
+            'host_line' => ['sometimes', 'nullable', 'string', 'max:'.PartyInvitation::HOST_LINE_MAX],
             'show_host_phone' => ['sometimes', 'boolean'],
         ]);
 

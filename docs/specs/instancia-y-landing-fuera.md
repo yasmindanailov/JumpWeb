@@ -200,6 +200,11 @@ colado. Con su control propio, porque una comprobación más permisiva no la caz
 
 **Medido**: `RulesFactsTest` (8), `scripts/mutar-menu-de-hechos.sh` **17/17**.
 
+▶ **T2b (`#653`, 20-09)**: `/rules` publica además **`summary`** —los nombres en el orden de la visita,
+separados por ` · ` y cortados en palabra entera a lo que cabe en el fragmento de un buscador—: la
+`<meta description>` de la página, ya escrita, por lo mismo que `/site` publica `address.written`. Sin normas
+no viaja. Contrato **1.11.0**. La regla vive en `Platform\Services\MetaDescription` y la vista la usa.
+
 **✅ T4 HECHA (2026-09-19) · los TEXTOS LEGALES** (`#643`). `GET /api/v1/legal/documents` (índice: título,
 fecha y versión firmada si la hay) y `/legal/documents/{clave}?lang=` (el texto en secciones). Contrato
 **1.6.0**.
@@ -224,6 +229,10 @@ primer borrador lo declaró opcional «por si acaso», y un «por si acaso» con
 cada cliente tiene que programar.
 
 **Medido**: `LegalDocumentsTest` (8), `scripts/mutar-menu-de-hechos.sh` **21/21**.
+
+▶ **T2b (`#653`, 20-09)**: el documento con cuerpo publica además **`summary`** —el primer párrafo, ya
+interpolado, sin etiquetas y acotado como `Rules.summary`—; el índice no, porque sale de las secciones y el
+índice no las lleva. Sin ningún párrafo no viaja.
 
 **✅ T5 HECHA (2026-09-19) · los PRECIOS por tarifa** (`#644`). `GET /api/v1/prices?lang=` da, por producto,
 lo que cuesta en cada tarifa, con el rótulo que escribe el panel («Lunes a jueves», «Viernes, fines de

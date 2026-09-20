@@ -337,6 +337,30 @@ class InvitationApiTest extends ApiTestCase
     }
 
     /**
+     * ⚠️ **Una línea VACÍA no es un 422** (`#652`; medido por el cajón el 19-09). `ConvertEmptyStringsToNull`
+     * convierte el `""` en `null` antes de validar, y `'string'` a secas lo rechazaba: el formulario del
+     * anfitrión no se podía guardar con «Te invita» en blanco. Es contrato de API y va como en la web
+     * (`InvitationHostBlockTest`): el campo vacío se queda como estaba y el resto SÍ se guarda.
+     */
+    public function test_an_empty_line_is_not_a_422(): void
+    {
+        [$reservation] = $this->party();
+
+        $this->actingAs($this->hostOf($reservation))
+            ->putJson("/api/v1/reservations/{$reservation->id}/invitation", [
+                'theme' => PartyInvitation::THEME_DEFAULT,
+                'honoree_name' => '',
+                'honoree_age' => 7,
+                'host_line' => '',
+                'show_host_phone' => true,
+            ])
+            ->assertOk()->assertValidResponse(200)
+            ->assertJsonPath('honoree_name', 'Mara')          // el anterior, intacto
+            ->assertJsonPath('honoree_age', 7)                // y el resto SÍ se guardó
+            ->assertJsonPath('show_host_phone', true);
+    }
+
+    /**
      * ⚠️⚠️ Personalizar **no toca el testigo de la reserva**. Si lo tocara, cambiar el color de una
      * banda dejaría obsoleta la página que el anfitrión tiene abierta y su siguiente guardado daría
      * 409.

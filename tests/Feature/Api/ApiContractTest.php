@@ -64,6 +64,8 @@ class ApiContractTest extends TestCase
         // Las claves que la instalación no rellenó de un día especial: la nota y la etiqueta de tarifa. La
         // fecha y si cierra van SIEMPRE, que es lo que hace útil al día.
         'Schedule.special_days.items' => ['opens_at', 'closes_at', 'note', 'rate_label'],
+        // El RESUMEN de las normas (`#653`) falta con la tabla vacía: no se resume lo que no existe.
+        'Rules' => ['summary'],
         // Y de una norma: el momento —el negocio puede no haberla situado— y los dos textos largos. El
         // nombre va siempre: una norma sin nombre no es una norma.
         'Rules.rules.items' => ['moment', 'description', 'reason'],
@@ -91,7 +93,8 @@ class ApiContractTest extends TestCase
         // opcional: una media sin recuento o sin fuente no se puede publicar —la atribución es obligatoria—.
         'SocialProofFacts' => ['rating'],
         'SocialProofFacts.rating' => ['url'],
-        'LegalDocument' => ['signed_version'],
+        // Y el RESUMEN (`#653`) falta en un documento sin ningún párrafo, por lo mismo que en `Rules`.
+        'LegalDocument' => ['signed_version', 'summary'],
         // Una sección puede traer solo titular o solo párrafo: los documentos los escribe una persona en el
         // panel, y hay secciones que son un titular con su lista debajo.
         'LegalDocument.sections.items' => ['h', 'p'],

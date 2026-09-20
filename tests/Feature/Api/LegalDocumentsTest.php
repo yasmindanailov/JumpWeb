@@ -90,6 +90,38 @@ class LegalDocumentsTest extends TestCase
             ->assertJsonMissingPath('signed_version');
     }
 
+    /**
+     * **El RESUMEN viaja ya escrito** (`#653`): el primer párrafo, interpolado, sin etiquetas y cortado a
+     * lo que cabe en el fragmento de un buscador. Es la `<meta description>` de la página, y se publica
+     * por lo mismo que `/site` publica `address.written`: la regla es del producto y sin esto cada
+     * instancia la re-derivaría — y la primera que olvidara el tope publicaría el párrafo entero.
+     */
+    public function test_the_summary_is_the_first_paragraph_resolved_stripped_and_capped(): void
+    {
+        Setting::query()->updateOrCreate(['key' => 'business.legal_name'], ['value' => 'Parque de Prueba SL', 'group' => 'business']);
+        Setting::flushMemo();
+
+        $this->pagina('privacidad', [
+            ['h' => 'Solo un titular, sin párrafo: no cuenta'],
+            ['h' => 'Responsable', 'p' => '<strong>El responsable</strong> es :legal_name. '.str_repeat('Más texto. ', 30)],
+        ]);
+
+        $resumen = (string) $this->getJson('/api/v1/legal/documents/privacidad?lang=es')->assertOk()->json('summary');
+
+        $this->assertStringStartsWith('El responsable es Parque de Prueba SL. Más texto.', $resumen);
+        $this->assertStringEndsWith('...', $resumen);
+        $this->assertLessThanOrEqual(158, mb_strlen($resumen), '155 de fragmento y los tres puntos');
+        // Cortado en palabra entera: delante de los puntos queda «texto.» o «Más», nunca «tex».
+        $this->assertMatchesRegularExpression('/(texto\.|Más)\.\.\.$/u', $resumen, 'cortado a mitad de palabra');
+
+        // El índice no lleva cuerpo, y tampoco resumen: sale de las secciones.
+        $this->getJson('/api/v1/legal/documents?lang=es')->assertOk()->assertJsonMissingPath('documents.0.summary');
+
+        // Y sin ningún párrafo no hay resumen: no se resume lo que no existe.
+        $this->pagina('cookies', [['h' => 'Solo titulares']]);
+        $this->getJson('/api/v1/legal/documents/cookies?lang=es')->assertOk()->assertJsonMissingPath('summary');
+    }
+
     /** Una página desactivada es una página retirada: no vuelve por la API. */
     public function test_a_deactivated_page_is_not_served(): void
     {

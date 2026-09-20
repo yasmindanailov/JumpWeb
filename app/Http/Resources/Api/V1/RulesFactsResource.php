@@ -3,6 +3,7 @@
 namespace App\Http\Resources\Api\V1;
 
 use App\Domain\Content\Models\VenueRule;
+use App\Domain\Platform\Services\MetaDescription;
 use App\Domain\Platform\Services\Translated;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -56,8 +57,15 @@ class RulesFactsResource extends JsonResource
             ))
             ->values();
 
+        // ⚠️ El RESUMEN se publica YA ESCRITO (`#653`), por lo mismo que `/site` publica `address.written`:
+        // la regla —los nombres en el orden de la visita, ` · `, cortado a lo que cabe en el fragmento de
+        // un buscador— es del producto, y sin esto cada landing la re-derivaría para su `<meta description>`.
+        // Sin normas no hay resumen, y lo que no existe no viaja.
+        $resumen = MetaDescription::fromNames($ordenadas->map(fn (VenueRule $r) => $r->tr('name')));
+
         return [
             'lang' => app()->getLocale(),
+            ...($resumen === null ? [] : ['summary' => $resumen]),
             // El catálogo de momentos, EN SU ORDEN: con él, una landing que quiera agrupar no tiene que
             // inventarse cuál va antes ni descubrirlo mirando los datos que le tocaron.
             'moments' => VenueRule::MOMENTS,

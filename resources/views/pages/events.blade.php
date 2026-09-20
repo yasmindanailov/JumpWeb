@@ -1,6 +1,9 @@
 @php
-    // Meta description (SEO, INVISIBLE en la página): la descripción del primer pack, como antes.
-    $meta = $packages->first()?->tr('description') ?: __('landing.birthday.lede');
+    // Meta description (SEO, INVISIBLE en la página): la descripción del primer pack, acotada a lo
+    // que cabe en el fragmento de un buscador por `MetaDescription` (`#653`) —era la única de las
+    // cuatro metas de la landing SIN tope—. Cae a la entradilla si no hay pack o no tiene descripción.
+    $meta = \App\Domain\Platform\Services\MetaDescription::fromText($packages->first()?->tr('description'))
+        ?? __('landing.birthday.lede');
     $cols = $compare ? count($compare['columns']) : 0;
 @endphp
 <x-layout :title="__('landing.nav.events')" :description="$meta">

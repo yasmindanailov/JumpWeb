@@ -1,9 +1,10 @@
 @php
-    // Meta description (SEO, INVISIBLE en la página): las primeras atracciones reales, no el
-    // titular repetido. Mismo criterio que `/normas`.
-    $ridesMeta = $zones->isNotEmpty()
-        ? \Illuminate\Support\Str::limit($zones->flatMap->attractions->take(8)->map(fn ($a) => $a->tr('name'))->implode(' · '), 155)
-        : __('landing.attractions.title');
+    // Meta description (SEO, INVISIBLE en la página): las atracciones reales, no el titular repetido.
+    // Mismo criterio que `/normas`. ⚠️ CÓMO se escribe el resumen (el separador, el tope) NO se decide
+    // aquí: es regla del producto (`MetaDescription`, `#653`), que corta a lo que cabe en el fragmento
+    // de un buscador. Aquí solo el respaldo.
+    $ridesMeta = \App\Domain\Platform\Services\MetaDescription::fromNames($zones->flatMap->attractions->map(fn ($a) => $a->tr('name')))
+        ?? __('landing.attractions.title');
 @endphp
 <x-layout :title="__('landing.attractions.title')" :description="$ridesMeta">
 <div x-data="landing">

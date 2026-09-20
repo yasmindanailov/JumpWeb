@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: JumpWeb API
-  version: 1.10.0
+  version: 1.11.0
   description: |
     API de la plataforma de reservas JumpWeb. Sus clientes son la SPA del sidebar (Fase 4) y la
     app móvil (Fase 6); ambos son clientes de igual rango sobre el mismo dominio.
@@ -1326,6 +1326,9 @@ paths:
         campo se queda como estaba y el resto se guarda. Lo que se publica bajo el dominio del parque
         no puede mandar a nadie a pagar a otro sitio, y un 422 por ello convertiría un descuido de
         redacción en un formulario que no guarda nada.
+
+        ⚠️ Y una línea **vacía** (`""`) tampoco es un 422 (`#652`): ese campo se queda como estaba y el
+        resto se guarda, igual que en la web. Para no cambiar un texto, no lo mandes o mándalo vacío.
       parameters:
         - name: reservation
           in: path
@@ -3518,6 +3521,17 @@ components:
         lang:
           type: string
           description: El idioma en el que viene el texto, que es el que se pidió.
+        summary:
+          type: string
+          maxLength: 158
+          example: 'Regístrate en la web · Añade a tus hijos a tu cuenta · Calcetines antideslizantes, obligatorios'
+          description: |
+            Las normas resumidas en UNA línea: sus nombres, en el orden de la visita, separados por ` · ` y
+            cortados a lo que cabe en el fragmento de un buscador (155 caracteres, con puntos suspensivos).
+            Es lo que una landing pone en su `<meta name="description">`. **Ausente** sin normas: no se
+            resume lo que no existe. ⚠️ Úsalo en vez de componerlo por tu cuenta (`#653`): la regla es del
+            producto, y la landing que se olvide del tope publica un párrafo que el buscador corta por
+            donde le parece.
         moments:
           type: array
           description: 'El catálogo de momentos EN SU ORDEN: el recorrido de una visita.'
@@ -3658,6 +3672,14 @@ components:
       properties:
         key: { type: string }
         title: { type: string }
+        summary:
+          type: string
+          maxLength: 158
+          description: |
+            El primer párrafo del texto, ya interpolado, sin etiquetas y cortado a lo que cabe en el
+            fragmento de un buscador (155 caracteres, con puntos suspensivos): la `<meta name="description">`
+            de la página. **Ausente** en un documento sin ningún párrafo. Misma regla que `Rules.summary`
+            (`#653`), y solo aquí: el índice no lleva cuerpo, y el resumen sale de él.
         updated_at: { type: string, format: date-time }
         signed_version:
           $ref: '#/components/schemas/SignedVersion'
@@ -5873,6 +5895,9 @@ components:
         ⚠️ `honoree_name` y `host_line` se publican bajo el dominio del parque, así que **se rechaza**
         —no se limpia— un valor con enlaces o direcciones de correo: una invitación no puede decir
         «paga el regalo en este enlace». El valor anterior se queda como estaba.
+
+        ⚠️ Y un valor **vacío** (`""`) en cualquiera de los dos tampoco es un 422 (`#652`): ese campo se
+        queda como estaba y el resto se guarda, igual que en la web.
       required: [theme, honoree_name, honoree_age, host_line, show_host_phone]
       additionalProperties: false
       properties:

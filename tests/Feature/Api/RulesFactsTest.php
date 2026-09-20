@@ -121,6 +121,26 @@ class RulesFactsTest extends TestCase
         $this->assertSame(['name'], array_keys($norma));
     }
 
+    /**
+     * **El RESUMEN viaja ya escrito** (`#653`): los nombres en el orden de la visita, separados por ` · `
+     * y cortados a lo que cabe en el fragmento de un buscador (eso último lo clava `MetaDescriptionTest`).
+     * Es lo que una landing pone en su `<meta name="description">`, y se publica por lo mismo que `/site`
+     * publica `address.written`: la regla es del producto y sin esto cada instancia la re-derivaría.
+     * Sin normas no hay resumen: no se resume lo que no existe.
+     */
+    public function test_the_summary_travels_already_written_and_in_visit_order(): void
+    {
+        $this->getJson('/api/v1/rules?lang=es')->assertOk()->assertJsonMissingPath('summary');
+
+        // En la TABLA, la de dentro va primero; en la VISITA, la de antes.
+        $this->norma(['name' => ['es' => 'Calcetines antideslizantes'], 'moment' => 'inside', 'position' => 1]);
+        $this->norma(['name' => ['es' => 'Regístrate en la web'], 'moment' => 'before', 'position' => 1]);
+
+        $this->getJson('/api/v1/rules?lang=es')
+            ->assertOk()
+            ->assertJsonPath('summary', 'Regístrate en la web · Calcetines antideslizantes');
+    }
+
     public function test_it_is_publicly_cacheable_per_language(): void
     {
         $respuesta = $this->getJson('/api/v1/rules?lang=es')->assertOk();

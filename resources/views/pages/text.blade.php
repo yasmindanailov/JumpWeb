@@ -1,12 +1,12 @@
 @php
     // Meta description (SEO, INVISIBLE en la página): primer párrafo real del cuerpo legal —
-    // interpolado (datos fiscales #206), sin etiquetas y acotado— en vez de repetir el título.
-    // Cae al título si el cuerpo está vacío.
+    // interpolado (datos fiscales #206)— en vez de repetir el título. Cae al título si el cuerpo
+    // está vacío. ⚠️ Sin etiquetas y acotado lo deja `MetaDescription` (`#653`): la misma regla con
+    // la que `/api/v1/legal/documents/{clave}` publica su `summary`. Aquí solo el respaldo.
     $legalSections = is_array($page->tr('body')) ? $page->tr('body') : [];
     $legalIntro = collect($legalSections)->pluck('p')->filter()->first();
-    $legalMeta = $legalIntro
-        ? \Illuminate\Support\Str::limit(strip_tags(\App\Domain\Content\Services\LegalIdentity::interpolate($legalIntro)), 155)
-        : $page->tr('title');
+    $legalMeta = \App\Domain\Platform\Services\MetaDescription::fromText(\App\Domain\Content\Services\LegalIdentity::interpolate($legalIntro))
+        ?? $page->tr('title');
 @endphp
 <x-layout :title="$page->tr('title')" :description="$legalMeta">
 <div x-data="landing">
