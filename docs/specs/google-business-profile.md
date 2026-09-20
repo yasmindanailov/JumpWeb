@@ -173,8 +173,17 @@ la única que ESCRIBE en la ficha que ven todos los clientes de Google.
 única por índice UNIQUE), `GoogleBusinessStatus` con los siete estados, el modelo con el token cifrado y
 `GoogleBusinessCredentials` / `GoogleBusinessConnectionState`. 15 casos, arnés 12/12, Larastan 0.
 ⚠️ **Su migración está aplicada en la BD local y NO en ninguna otra**: empujada ≠ aplicada.
-▶ Lo que sigue de la T1: la ida y vuelta OAuth con PKCE (§4.2·2), elegir y revalidar la ficha (§4.2·4), la
-pantalla del panel (§4.2·1), desconectar (§4.2·8) y `business-profile:verify` (§4.2·10).
+
+✅ **T1·2 · LA IDA Y LA VUELTA, EN EL ÁRBOL** (2026-09-20, `#721`): `GoogleBusinessOAuthSession` (reto de
+un solo uso con **PKCE S256**, que no existía en el repo), `GoogleBusinessOAuth` (autorización y canje),
+`GoogleBusinessConnector` (guardar bajo candado y revocar el anterior), el controlador de las dos
+peticiones y la pantalla **«Ficha de Google»** en Ajustes → Web. 24 casos, arnés 15/15.
+▶ ⚠️⚠️ **LA URI DE REDIRECCIÓN, para el §7·A·5**: `https://<host>/admin/ficha-google/callback`, **ruta
+completa** y una por instalación. Es el dato que hay que dar de alta en el cliente OAuth central.
+✅ La pantalla **la vio el owner el 2026-09-20** en su estado «sin configurar», que es el de hoy.
+
+▶ Lo que sigue de la T1: elegir y revalidar la ficha (§4.2·4), el resto de la pantalla —quién conectó y
+la última pasada (§4.2·1)—, desconectar (§4.2·8) y `business-profile:verify` (§4.2·10).
 
 ### 4.2 T1 · La conexión
 

@@ -45,6 +45,7 @@ return [
             'bar_images' => ['label' => 'El bar', 'description' => 'La carta del bar y la foto del local que se publican en la web.'],
             'park_rules' => ['label' => 'Normas', 'description' => 'Las normas del recinto que se publican en la web.'],
             'pages' => ['label' => 'Páginas legales', 'description' => 'Aviso legal, privacidad, cookies y condiciones.'],
+            'google_business' => ['label' => 'Ficha de Google', 'description' => 'La conexión con el perfil de empresa, de donde salen las reseñas.'],
             'settings' => ['label' => 'Configuración', 'description' => 'Datos del negocio, fiscales, venta, puerta y pagos.'],
             // `#320`: la puerta sale del menú lateral y su puerta de entrada pasa a ser ésta. La
             // descripción menciona «entrada», «validar» y «escanear» porque el buscador global busca
@@ -2293,6 +2294,56 @@ return [
                 'submit' => 'Borrar',
                 'success' => 'Fecha especial borrada.',
             ],
+        ],
+    ],
+
+    // Ficha de Google (`specs/google-business-profile.md` §4.2·1, `#524`). ⚠️ Los textos de estado
+    // dicen QUÉ HACER, no solo qué pasa: quien los lee es el admin del parque, y tres de los estados
+    // no se arreglan desde aquí.
+    'google_business' => [
+        'title' => 'Ficha de Google',
+        'subheading' => 'La conexión con el perfil de empresa del parque, de donde salen las reseñas.',
+        'state_label' => 'Estado de la conexión',
+        'connect' => 'Conectar con Google',
+        'linked_location' => 'Ficha conectada: :name',
+        'states' => [
+            'unconfigured' => [
+                'label' => 'Sin configurar',
+                'what_to_do' => 'Faltan las credenciales de JumpSystem en esta instalación. No es algo que se arregle desde el panel: lo instala quien la mantiene.',
+            ],
+            'ready_to_connect' => [
+                'label' => 'Lista para conectar',
+                'what_to_do' => 'Entra con la cuenta de Google que administra la ficha del parque y concede el permiso. Es el único paso que queda.',
+            ],
+            'connected' => [
+                'label' => 'Conectada',
+                'what_to_do' => 'El permiso está concedido. Queda elegir la ficha del parque para empezar a traer las reseñas.',
+            ],
+            'expired' => [
+                'label' => 'Caducada',
+                'what_to_do' => 'Google ya no acepta el permiso: puede haberse retirado desde la cuenta de Google o haber caducado. Vuelve a conectar.',
+            ],
+            'forbidden' => [
+                'label' => 'Sin permiso sobre la ficha',
+                'what_to_do' => 'La cuenta con la que se conectó ya no administra la ficha. Devuélvele el acceso en el perfil de empresa, o conecta con otra cuenta que sí lo tenga.',
+            ],
+            'location_lost' => [
+                'label' => 'Ficha no encontrada',
+                'what_to_do' => 'La ficha que estaba conectada ya no existe: puede haberse borrado o fusionado con otra. Vuelve a conectar y elígela de nuevo.',
+            ],
+            'no_api_access' => [
+                'label' => 'Sin acceso a la API',
+                'what_to_do' => 'Google todavía no ha aprobado el acceso de JumpSystem a la API de perfiles de empresa. No es algo que se arregle desde el parque; hay que esperar.',
+            ],
+        ],
+        'results' => [
+            'connected' => 'Ficha conectada. Ya podemos hablar con Google en nombre del parque.',
+            'cancelled' => 'No se ha concedido el permiso, así que no ha cambiado nada.',
+            'failed' => 'No hemos podido completar la conexión. Vuelve a intentarlo desde esta pantalla.',
+            'not-configured' => 'Esta instalación no tiene las credenciales de JumpSystem. Avisa a quien la mantiene.',
+            'token-exchange-failed' => 'Google ha rechazado la conexión. Suele arreglarse volviendo a empezar desde esta pantalla.',
+            'missing-refresh-token' => 'Google no ha devuelto un permiso duradero, así que no se ha guardado nada. Vuelve a intentarlo y acepta en la pantalla de permisos de Google.',
+            'scope-not-granted' => 'Falta el permiso sobre el perfil de empresa. Al conectar, deja marcada la casilla de gestionar la ficha.',
         ],
     ],
 

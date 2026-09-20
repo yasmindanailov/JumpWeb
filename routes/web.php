@@ -5,6 +5,7 @@ use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\EmailChangeController;
 use App\Http\Controllers\Admin\CalendarEventsController;
 use App\Http\Controllers\Admin\DailySummaryController;
+use App\Http\Controllers\Admin\GoogleBusinessConnectController;
 use App\Http\Controllers\Admin\PanelLocaleController;
 use App\Http\Controllers\Admin\ReservationSlipController;
 use App\Http\Controllers\Admin\WaiverProofController;
@@ -385,6 +386,22 @@ Route::get('/admin/puerta/validar', ValidarRegistro::class)
 Route::get('/admin/pedidos/{order}/items/{item}/imprimir', ReservationSlipController::class)
     ->middleware(['web', 'auth', 'panel_role', SetAdminLocale::class, 'throttle:30,1', 'no-store'])
     ->name('admin.orders.items.slip'); // L1: la hoja imprime nombres+alergias de menores (art. 9).
+
+// Panel admin — conectar la FICHA DE GOOGLE (`specs/google-business-profile.md` §4.2·2, `#524`).
+// ⚠️⚠️ **La URI que hay que dar de alta en el cliente OAuth CENTRAL de JumpSystem es la RUTA COMPLETA
+// de `callback`** (`https://<host>/admin/ficha-google/callback`), una por instalación (§7·A·5). Con el
+// origen pelado, el primer intento devuelve `Error 400: redirect_uri_mismatch` — lo pagó el login.
+// ⚠️ **`settings.manage` se comprueba EN EL CONTROLADOR, en la ida y en la vuelta**: `panel_role` deja
+// pasar a `staff`, y entre las dos peticiones caben un cambio de rol y un cambio de sesión.
+// ⚠️ La ida es POST: abrir el reto escribe en la sesión del admin, y un GET lo dejaría al alcance de
+// cualquier página que le cargue una imagen. El callback es GET porque lo redirige Google.
+// Limitadores en las dos (`SEC-06`, §4.2·2).
+Route::post('/admin/ficha-google/conectar', [GoogleBusinessConnectController::class, 'connect'])
+    ->middleware(['web', 'auth', 'panel_role', 'throttle:10,1'])
+    ->name('admin.google_business.connect');
+Route::get('/admin/ficha-google/callback', [GoogleBusinessConnectController::class, 'callback'])
+    ->middleware(['web', 'auth', 'panel_role', 'throttle:30,1'])
+    ->name('admin.google_business.callback');
 
 // Panel admin — Fase 6 · waiver: PDF del REGISTRO probatorio de una firma (`specs/waiver-probatorio.md`
 // §4.5). Permiso PROPIO `waiver.view` (comprobado en el controlador) + IDOR (la firma debe ser del

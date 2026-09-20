@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#720`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#721`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -14,30 +14,27 @@
   **y con el ✅ del owner en vivo (20-09)**. El detalle de cada unidad, sus arneses y lo que enseñó
   **viven en su § de la spec** (§10.1–§10.18), que es donde no caducan; aquí solo lo que hace falta
   para retomar:
-  - **En PRODUCCIÓN solo van T1→T4·4** (v1.1.0 = `3547de9f`, 18-09; lo desplegó plataforma) y **con
-    los dos interruptores APAGADOS**. Su migración quedó aplicada.
-  - **SIN DESPLEGAR**: `#577` y `#578` de la T4, **la T5, la T6 y la T7 enteras** — incluida **una
+  - **En PRODUCCIÓN solo van T1→T4·4** (v1.1.0 = `3547de9f`, 18-09) y **con los dos interruptores
+    APAGADOS**. **SIN DESPLEGAR**: `#577`, `#578`, y la T5, la T6 y la T7 enteras — con **una
     migración nueva**, `order_items.eve_notice_at` (`#717`).
   - ⚠️ `party_invitations.reminded_at`/`reminded_count` son del **recordatorio del anfitrión** (`#713`,
     cuentan VECES) y **no envían nada**; el aviso de la víspera tiene su propia marca (`#717`).
-  - ⚠️ El ✅ del owner **no cubre** tres cosas, declaradas sin medir: el `.ics` en un **móvil real**
-    (§4.6), el justificante **en producción** con el **Turnstile real** y `§7.2·R12`.
-  - ▶ Solo quedan **desplegar** (con su migración) y **encender** (dato suyo).
 - ✅ **`#707` · `DependentsZone.vue`** (lo levantó plataforma): `addBtn` sin declarar tiraba el foco al
   `<body>`. El gate `CE-6` paró el commit: no se subió el techo, bajó `signDependent()` al módulo
   plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
-- El plugin `jumpweb-agente` corre aquí desde el 17-09, en `07076ac`.
 
 ## Por dónde retomar, en orden
 
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
-   que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), avisado en mi buzón.
-   ✅ **T1·1 EN EL ÁRBOL** (`#720`): tabla, los siete estados, modelo cifrado y las dos lecturas. 15
-   casos, arnés **12/12**, Larastan 0. ⚠️ **Su migración está aplicada SOLO en la BD local.**
-   ▶ **Sigue**: OAuth con PKCE (§4.2·2) · elegir y revalidar ficha (§4.2·4) · pantalla del panel
-   (§4.2·1) · desconectar (§4.2·8) · `verify` (§4.2·10). Todo contra un DOBLE, con
-   `Http::preventStrayRequests()`: ningún caso habla con Google.
+   que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
+   ✅ **T1·1 y T1·2 EN EL ÁRBOL** (`#720`, `#721`): tabla y siete estados; reto con **PKCE**, canje,
+   guardado bajo candado y la pantalla «Ficha de Google» en Ajustes → Web. 39 casos, arneses 12/12 y
+   15/15. ⚠️ **La migración está aplicada SOLO en la BD local.** ✅ **La pantalla la vio el owner** (20-09) en
+   «Sin configurar», que es el estado de hoy.
+   ▶ **La URI para el §7·A·5**: `/admin/ficha-google/callback`, RUTA COMPLETA y por instalación.
+   ▶ **Sigue**: elegir y revalidar ficha (§4.2·4) · el resto de la pantalla (§4.2·1) · desconectar
+   (§4.2·8) · `verify` (§4.2·10). Todo contra un DOBLE con `Http::preventStrayRequests()`.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
    owner—. El **§7·A está reescrito** con lo medido: no necesita ficha propia, y el **vídeo** de
    verificación va **tras la T1**. Empieza por el §0 y por **§1.3**.
@@ -47,25 +44,21 @@
    ❗ **Medido el 20-09, la doc ajena miente**: `google-reviews.md` dice «umbral de **10** reseñas» y el
    código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`, `#494`, definitivo). **Manda el código.**
    No lo toco (`#621`). ▶ El parque tiene **1 reseña** (API, 10-09) y en local no hay clave de Places.
-2. ✅ **EL BORDE `§7.1·5`, CERRADO** (`#718`, spec §10.18). **La invitación no tiene nada pendiente de
-   código.**
-3. ▶ **Desplegar y encender** (no es mío): T5, T6 y T7 al completo **con la migración**
-   `order_items.eve_notice_at`. Los dos interruptores son dato del owner. Avisado en su buzón.
-4. **Los tres huecos que el ✅ del owner NO cubre**, sin medir y declarados: el **`.ics` en un TELÉFONO
-   de verdad** (§4.6 — si Android no lo abre bien, toca añadir el enlace de Google Calendar como
-   segunda opción) · el **justificante EN PRODUCCIÓN** con el **Turnstile REAL** · y `§7.2·R12`,
-   contar sus toques. ⚠️ También `og:image` sale del logotipo del tema (1200×441): en tarjeta 2:1 se
-   ve con bandas.
-5. **Los diez puntos de `§10.4.7·B`**, ninguno urgente con los interruptores apagados. ▶ **Empieza por
+2. ✅ **La invitación no tiene nada pendiente de CÓDIGO** (`#718`, spec §10.18). ▶ Queda **desplegar y
+   encender**, y no es mío: T5, T6 y T7 **con la migración** `order_items.eve_notice_at`; los dos
+   interruptores son dato del owner, avisado en su buzón.
+3. **Lo que el ✅ del owner NO cubre**, declarado sin medir: el **`.ics` en un TELÉFONO de verdad**
+   (§4.6 — si Android no lo abre, el enlace de Google Calendar como segunda opción) · el
+   **justificante EN PRODUCCIÓN** con el **Turnstile REAL** · `§7.2·R12`. ⚠️ Y `og:image` sale del
+   logotipo del tema (1200×441): en tarjeta 2:1 se ve con bandas.
+4. **Los diez puntos de `§10.4.7·B`**, ninguno urgente con los interruptores apagados. ▶ **Empieza por
    la RAÍZ**: `matches()` y `takeSlotFor()` no son la misma regla, y explica tres de los cuatro
-   naranjas. Medido el 20-09: «`companion` no tiene ninguna prueba» ya solo es cierto **a medias** —el
-   recibo tiene `InvitationReceiptTest`—, pero ninguno manda un valor **inválido**, así que la lista
-   blanca de `completeReply()` sigue sin ejercerse; la rama `guest_data`, sin prueba.
-6. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha visto
+   naranjas. Ninguna prueba de `companion` manda un valor **inválido**, así que la lista blanca de
+   `completeReply()` sigue sin ejercerse; la rama `guest_data`, sin prueba.
+5. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha visto
    en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-7. Del plugin quedan **tres frases** por ver en vivo: `/sonda`, `/dod` y `/ligero` (`/carril`,
-   `/handoff` y `/decision`, medidas). ⚠️ De la casa ajena: `carriles/correos.md` dice «25 correos» y
-   son **26** (el otro, en el punto 1). No los toco (`#621`).
+6. Del plugin quedan **tres frases** por ver: `/sonda`, `/dod` y `/ligero`. ⚠️ De la casa ajena:
+   `carriles/correos.md` dice «25 correos» y son **26** (el otro, en el punto 1). No los toco (`#621`).
 
 ## Ficheros de este carril
 
@@ -73,8 +66,8 @@
 `lang/*/account.php` · `lang/*/guestform.php` y `lang/*/guardian.php` · `resources/views/reservation/**` y las
 clases `.gf-*` y `.guardian__*` · `tests/Feature/Sidebar/**`, `tests/Feature/Architecture/Sidebar*` y
 `tests/Feature/Reservation/*SkinTest` · `scripts/sonda-cajon.mjs`, `sonda-enlace-firmado.mjs` · en
-`public/css/site.css`, los bloques del cajón por su TÍTULO y el de la «HOJA ENFOCADA». **Compartido, se avisa
-en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `cliente/playjump`, nunca a `main`.
+`public/css/site.css`, los bloques del cajón por su TÍTULO y el de la «HOJA ENFOCADA». **Compartido, se avisa antes
+en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `cliente/playjump`, nunca a `main`.
 
 ## Trampas vivas
 
@@ -86,12 +79,12 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   20-09, dos horas después de estar verde, por abrir el día de `Carbon::now()`; el producto calculaba
   bien—. ▶ En un test de «ahora» el reloj se pide a **`DisplayTime`, nunca a `Carbon`**, y si el caso
   congela la hora, **afirma primero** que el contenedor va en UTC o no mide nada.
-- ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía su
-  propio scroll dentro del de la página y las cifras de la sonda estaban todas verdes. **Lo vio la
-  captura.** Y dos pesos de botón en un bloque pequeño compiten con el «Guardar» de la barra.
-- 🩹 **Los fixtures locales de la invitación** (pack 105, `R-PRBT1A`, `R-PRBT64`) y su única puerta de
-  entrada, `probe-ojo-invitacion.php`, **viven en la spec §10.19**: son DATO de la feature y aquí
-  caducaban con el techo. ⚠️ De ahí, lo que vale para CUALQUIER sonda: un guion suelto se corre
+- ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía
+  su propio scroll y las cifras de la sonda salían verdes. **Lo vio la captura.** Y dos pesos de botón
+  en un bloque pequeño compiten con el «Guardar» de la barra.
+- 🩹 **Los fixtures locales de la invitación** (pack 105, `R-PRBT1A`, `R-PRBT64`) y su puerta de
+  entrada `probe-ojo-invitacion.php` **viven en la spec §10.19**. ⚠️ De ahí, lo que vale para CUALQUIER
+  sonda: un guion suelto se corre
   `php artisan tinker --execute="require base_path('storage/app/…')"` — con `php storage/app/…` a
   secas no hay framework y sale «Class not found».
 - **La firma de un enlace incluye el host**: para el Chromium del contenedor es `http://localhost` y para el
@@ -128,8 +121,13 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   con un cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**,
   que también devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra
   POSITIVA sin ser dinero del parque**: un `max(0, $saldo)` no distingue las clases (`#716`).
-- Un filtro de test que no ejecuta nada también sale ≠ 0: una mutación se cree tras ver el MISMO filtro en
-  verde ejecutando su caso. Y aseverar una subcadena sobre HTML acusa al script que la nombra (`#553`).
+- ⚠️⚠️ **Un filtro que no ejecuta nada también sale ≠ 0**, y **Pint DESTROZA los nombres de método con
+  palabras en MAYÚSCULAS** (`_UN_` → `_u_n_`, medido el 20-09): así se rompe un arnés **en silencio**.
+  Los tests se nombran **sin mayúsculas**, y una mutación se cree tras ver el MISMO filtro en verde
+  ejecutando su caso. Aseverar una subcadena sobre HTML acusa al script que la nombra (`#553`).
+- ⚠️⚠️ **Lo que se afirma que NO pasa hay que hacerlo POSIBLE primero** (`#721`): dos supervivientes
+  eran casos que negaban una llamada cuyo endpoint **no estaba fingido** —imposible— y con un `catch`
+  que se tragaba el cortafuegos. «No se llamó» era cierto por el motivo equivocado.
 - **`Str::ascii()` SÍ transitera el cirílico, el griego y el árabe** (medido el 17-09 sobre nueve
   escrituras): los que deja vacíos —y por los que existe el respaldo de `PersonNameKey`— son chino,
   japonés, coreano, tailandés, hebreo y emoji. La prosa heredada decía «alfabeto no latino» y era falsa.

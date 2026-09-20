@@ -112,6 +112,10 @@ class AuditLog extends Model
         'content.zone_deleted',
         'content.zone_updated',
 
+        // ── Ficha de Google (`specs/google-business-profile.md` §4.2) ──────────────────────
+        // ⚠️ El payload NUNCA lleva token ni código: solo el hecho y quién lo hizo.
+        'google_business.connected',
+
         // ── Mantenimiento ──────────────────────────────────────────────────────────────────
         'maintenance.updated',
 

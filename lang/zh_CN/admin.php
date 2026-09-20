@@ -42,6 +42,7 @@ return [
             'offers' => ['label' => '优惠', 'description' => '浮动提示中的信息性促销。'],
             'park_rules' => ['label' => '园区规则', 'description' => '网站上发布的园区规则。'],
             'pages' => ['label' => '法律页面', 'description' => '法律声明、隐私、Cookie 与条款。'],
+            'google_business' => ['label' => 'Google 商家资料', 'description' => '与商家资料的连接，评价由此而来。'],
             'settings' => ['label' => '设置', 'description' => '企业与税务资料、销售、门口与支付。'],
             // `#320`：门口从侧边菜单移到这里。
             'puerta' => ['label' => '门口', 'description' => '验证入园：扫描会员码并查看客户资料。'],
@@ -1775,6 +1776,54 @@ return [
                 'submit' => '删除',
                 'success' => '特殊日期已删除。',
             ],
+        ],
+    ],
+
+    // Google 商家资料（`specs/google-business-profile.md` §4.2·1，`#524`）。
+    'google_business' => [
+        'title' => 'Google 商家资料',
+        'subheading' => '与乐园 Google 商家资料的连接，评价由此而来。',
+        'state_label' => '连接状态',
+        'connect' => '连接 Google',
+        'linked_location' => '已连接的资料：:name',
+        'states' => [
+            'unconfigured' => [
+                'label' => '未配置',
+                'what_to_do' => '本安装缺少 JumpSystem 的凭据。这无法在后台解决，需由维护方配置。',
+            ],
+            'ready_to_connect' => [
+                'label' => '可以连接',
+                'what_to_do' => '请使用管理该乐园商家资料的 Google 账号登录并授权。只差这一步。',
+            ],
+            'connected' => [
+                'label' => '已连接',
+                'what_to_do' => '授权已完成。接下来选择乐园的商家资料，即可开始获取评价。',
+            ],
+            'expired' => [
+                'label' => '已失效',
+                'what_to_do' => 'Google 不再接受该授权：可能已在 Google 账号中被撤销或已过期。请重新连接。',
+            ],
+            'forbidden' => [
+                'label' => '没有该资料的权限',
+                'what_to_do' => '连接所用的账号已不再管理该商家资料。请在商家资料中恢复其权限，或改用有权限的账号连接。',
+            ],
+            'location_lost' => [
+                'label' => '找不到商家资料',
+                'what_to_do' => '原先连接的商家资料已不存在：可能已被删除或与其他资料合并。请重新连接并再次选择。',
+            ],
+            'no_api_access' => [
+                'label' => '无 API 访问权限',
+                'what_to_do' => 'Google 尚未批准 JumpSystem 访问商家资料 API。乐园这边无法处理，只能等待。',
+            ],
+        ],
+        'results' => [
+            'connected' => '商家资料已连接。现在可以代表乐园与 Google 通信。',
+            'cancelled' => '未授予权限，因此没有任何改动。',
+            'failed' => '未能完成连接。请在本页面重试。',
+            'not-configured' => '本安装没有 JumpSystem 的凭据。请通知维护方。',
+            'token-exchange-failed' => 'Google 拒绝了本次连接。通常在本页面重新开始即可解决。',
+            'missing-refresh-token' => 'Google 未返回长期授权，因此没有保存任何内容。请重试，并在 Google 的授权页面点击同意。',
+            'scope-not-granted' => '缺少商家资料的权限。连接时请勾选管理商家资料的选项。',
         ],
     ],
 

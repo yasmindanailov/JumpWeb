@@ -120,6 +120,10 @@ class AdminSettingsHub extends Page
                 ['key' => 'bar_images', 'class' => BarImageResource::class],
                 ['key' => 'park_rules', 'class' => ParkRuleResource::class],
                 ['key' => 'pages', 'class' => PageResource::class],
+                // La ficha de Google (`#524`, `specs/google-business-profile.md` §4.2·1). Va en
+                // «Contenido web» y no en «Sistema» porque de ella sale lo que se PUBLICA en la
+                // portada —las reseñas—, aunque por dentro sea una conexión.
+                ['key' => 'google_business', 'class' => GoogleBusinessProfilePage::class],
             ],
             'system' => [
                 ['key' => 'settings', 'class' => Settings::class],
