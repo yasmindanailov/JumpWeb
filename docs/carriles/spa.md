@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#718`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#719`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -31,24 +31,22 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗❗ **RECLAMADA: `google-business-profile.md` (`#524`) — la fuente REAL de las reseñas.**
-   `[DECIDIDO owner, 2026-09-20]`: «esto hay que hacer». Sustituye como fuente a `google-reviews.md`
-   (Places), que queda de registro. Desbloquea las reseñas de la landing **y** las que plataforma
-   dejó fuera de `/social-proof` «esperando a su fuente».
-   ⚠️ **Es del carril de la WEB** (banda 580–609, el otro ordenador): la tomo yo, avisado en mi buzón.
-   ⚠️⚠️ **BLOQUEADA EN EL OWNER y él lo sabe**: está montando el **proyecto central de Google Cloud**
-   (§7·A de la spec). Sin eso no hay conexión real. **Se puede construir T1 y T2 contra un doble** y
-   dejar las credenciales para el final. ▶ Empieza por **§1.3, las cinco restricciones DURAS**, y por
-   el §0: tres chocan con `SEC-07`, `RGPD-05` y `PERF-02`.
-   ❗ **Medido el 20-09, y la doc miente**: el encabezado de `google-reviews.md` dice «umbral de **10**
-   reseñas» y el código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`), que es lo que `#494`
-   fijó como definitivo. **Manda el código.** Corregir esa línea está pendiente —el owner prefirió
-   cerrar antes— y es de la casa ajena (`google-reviews.md` es del carril de la web).
-   ▶ Hoy el parque tiene **1 reseña** en Google (medido contra la API el 10-09) y en local **no hay
-   clave de Places**, así que la sección cae al respaldo de opiniones propias.
-2. ✅ **EL BORDE `§7.1·5`, CERRADO** (`#718`, spec §10.18, arnés 10/10, tres verificadores sobre
-   InnoDB). Las fichas se **compactan antes de recortar**, así que al bajar invitados se pierden las
-   VACÍAS y no quien ya confirmó. **La invitación no tiene nada pendiente de código.**
+1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
+   `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
+   que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), avisado en mi buzón.
+   ▶ **`#719` (20-09): la identidad ante Google es JumpSystem**, con cuenta, dominio y web propios. El
+   **§7·A está reescrito hoy** con lo medido: JumpSystem **no necesita ficha** —el parque añade esa cuenta
+   como **administrador** de la suya— y el **vídeo** de verificación va **tras la T1**.
+   ⚠️⚠️ **Sigue BLOQUEADA en el owner**: sin el proyecto central aprobado no hay conexión. **Construyo T1 y
+   T2 contra un doble.** Empieza por el §0 y por **§1.3**: tres restricciones chocan con `SEC-07`,
+   `RGPD-05` y `PERF-02`.
+   ❓ **Sin respuesta, y manda sobre el calendario**: ¿desde cuándo está **verificada** la ficha de
+   PlayJump? Si nació con la apertura (01-09) no llega a **60+ días** hasta finales de octubre.
+   ❗ **Medido el 20-09, la doc ajena miente**: `google-reviews.md` dice «umbral de **10** reseñas» y el
+   código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`, `#494`, definitivo). **Manda el código.**
+   No lo toco (`#621`). ▶ El parque tiene **1 reseña** (API, 10-09) y en local no hay clave de Places.
+2. ✅ **EL BORDE `§7.1·5`, CERRADO** (`#718`, spec §10.18). **La invitación no tiene nada pendiente de
+   código.**
 3. ▶ **Desplegar y encender** (no es mío): T5, T6 y T7 al completo **con la migración**
    `order_items.eve_notice_at`. Los dos interruptores son dato del owner. Avisado en su buzón.
 4. **Los tres huecos que el ✅ del owner NO cubre**, sin medir y declarados: el **`.ics` en un TELÉFONO

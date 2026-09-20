@@ -12,7 +12,8 @@
 >
 > ❗❗❗ **Lo que hay que saber si solo se leen seis líneas:**
 > 1. **Fuente: la API de Google Business Profile**, la del dueño de la ficha, con un **proyecto CENTRAL de
->    JumpWeb** —la política prohíbe pedirle a cada cliente el suyo— al que cada parque solo le da permiso.
+>    JumpSystem** (`#719`) —la política prohíbe pedirle a cada cliente el suyo— al que cada parque solo le da
+>    permiso, tras añadir esa cuenta como **administrador** de su ficha.
 > 2. **Se publican TODAS las reseñas** (filtradas por estrellas, con fotos, anónimas incluidas) **sin pedir
 >    permiso a cada autor**, como hace el sector. ⚠️ **La guía de marca de Google pide ese permiso**: es un
 >    **riesgo aceptado por el owner** (§8·R1), mitigado con «Ocultar» en el panel.
@@ -31,7 +32,11 @@
   reseñas van DESPUÉS del diseño (`[owner]`). Sustituye como FUENTE a `google-reviews.md` (Places), que queda
   como registro; el contrato `Content\Contracts\SocialProof` se conserva pero cambia (§4.3·9). El programa
   `producto-e-instancias.md` (`#616`) la confirma: mecanismo del producto, API pública sin avatares.
-- **Las seis líneas**: (1) la API del DUEÑO de la ficha con un proyecto CENTRAL de JumpWeb (la política prohíbe
+- ⚠️⚠️ **La identidad ante Google es JumpSystem, no JumpWeb** (`#719`): cuenta, dominio y web propios. Y
+  **no necesita ficha** —vale la de un cliente que gestionas—, así que el parque añade esa cuenta como
+  **ADMINISTRADOR** de la suya (medido 20-09; antes se daba por gestionada). El **vídeo** de verificación
+  exige el flujo desplegado → va **tras la T1**; la **solicitud** (§7·A·2) no, y es lo que más tarda.
+- **Las seis líneas**: (1) la API del DUEÑO de la ficha con un proyecto CENTRAL de JumpSystem (la política prohíbe
   pedirle el suyo a cada cliente); (2) se publican TODAS las reseñas sin pedir permiso al autor —riesgo ACEPTADO
   por el owner frente a la guía de marca, mitigado con «Ocultar»—; (3) nada de Google vive más de 30 días y el
   límite se aplica AL LEER; (4) el horario se publica con UN botón (Google exige consentimiento por edición);
@@ -393,26 +398,47 @@ diaria no escribe · **`validateOnly` contra la ficha real antes de la primera p
 
 ## 7. Guía de configuración
 
-### A · Lo que hace JumpWeb, UNA vez (el owner, como JumpWeb)
+### A · Lo que hace JumpSystem, UNA vez (el owner) `[DECIDIDO owner, 2026-09-20]` (`#719`)
 
-1. **Dos proyectos de Google Cloud**: el **central** («JumpWeb Business Profile») y **otro de desarrollo**.
+> ⚠️ **La identidad ante Google es JumpSystem**, la casa que agrupa JumpWeb, JumpApp y lo demás — **no
+> JumpWeb ni la marca de un cliente** (`#719`): lo que ve el dueño de un parque al autorizar es el nombre
+> de la app y el dominio. Cuenta de Google propia, y **la misma** para el dominio, Search Console y los dos
+> proyectos: la aprobación de la API queda atada a la CUENTA, y migrarla obliga a re-solicitar y esperar.
+
+0. **La web de JumpSystem**, en su dominio y **pública**: `/` (qué es y **qué hace la app** — sin eso hay
+   rechazo), `/privacidad` y `/aviso-legal`. ⚠️ Esa privacidad **no es la del §10**: aquélla es la del parque y
+   habla de los autores de las reseñas; ésta habla de **los datos de Google del admin que conecta** (token,
+   ficha, reseñas 29 días, sin cesión). *«The privacy policy must be visible to users, hosted **within the same
+   domain** as your application's home page, and linked to on the OAuth consent screen»*.
+1. **Dos proyectos de Google Cloud**: el **central** («JumpSystem Business Profile») y **otro de desarrollo**.
    Separados porque revocar un permiso retira la autorización de TODO el proyecto: con uno solo, desconectar
    en local mataría la conexión de producción.
 2. **Pedir el acceso a la API para el proyecto central**: formulario de Google Business Profile → *Application
    for Basic API Access*, con el **número de proyecto** y un correo **propietario o administrador de una ficha
-   verificada y activa 60+ días, con web** (vale la ficha del parque que gestionas). Aprobado = la cuota pasa de
-   **0 a 300** consultas por minuto. Google no da plazo.
+   verificada y activa 60+ días, con web**.
+   ⚠️⚠️ **JumpSystem no tiene ficha, y no la necesita** (medido el 2026-09-20; la versión anterior daba por
+   hecho que el owner gestionaba la del parque, y **no la gestiona**): *«This GBP can be the applicant's own
+   office or headquarters or **it could belong to one of the clients they manage**»*. ▶ El paso real es que
+   **el parque añada la cuenta de JumpSystem como ADMINISTRADOR de su ficha** (su perfil → Usuarios → Añadir →
+   rol *Administrador*, no *Propietario*). Hace falta igualmente para la T1: la conexión OAuth la autoriza una
+   cuenta que administre la ficha. ⚠️ **Comprobar que esa ficha lleve 60+ días verificada**, no 60 días abierta.
+   Aprobado = la cuota pasa de **0 a 300** consultas por minuto. Google no da plazo.
 3. **Habilitar las APIs** en los dos proyectos: My Business Account Management · My Business Business
    Information · Google My Business (aparece tras la aprobación). No hacen falta Performance, Place Actions,
    Notifications, Lodging, Verifications ni Business Calls (T3, T4 y T5 por API quedan fuera).
-4. **Pantalla de consentimiento** del proyecto central: tipo **Externo**, marca **JumpWeb**, dominio y
-   política de privacidad **de JumpWeb**, ámbito `business.manage`, **estado «En producción»** (en «En prueba»
-   el permiso caduca a los 7 días).
+4. **Pantalla de consentimiento** del proyecto central: tipo **Externo**, marca **JumpSystem**, dominio y
+   política de privacidad **de JumpSystem** (§7·A·0), ámbito `business.manage`, **estado «En producción»** (en
+   «En prueba» el permiso caduca a los 7 días).
    ⚠️ **Verificación del ámbito sensible**: la autorizarán varios dueños de parques, así que la excepción de uso
-   personal no vale. Hasta verificarla (3–5 días hábiles: dominio de JumpWeb verificado en Search Console,
-   política de privacidad en ese dominio, vídeo de demostración, justificación del ámbito), la app enseña el
-   aviso de «no verificada» y tiene un **tope de 100 usuarios**: suficiente para los primeros parques, no para
-   crecer. Sin verificar la marca, la pantalla enseña **el dominio**, no el nombre.
+   personal no vale. Hasta verificarla (3–5 días hábiles: dominio de JumpSystem verificado en Search Console
+   **con una cuenta que sea Owner o Editor del proyecto**, política de privacidad en ese dominio, vídeo de
+   demostración, justificación del ámbito), la app enseña el aviso de «no verificada» y tiene un **tope de 100
+   usuarios**: suficiente para los primeros parques, no para crecer. Sin verificar la marca, la pantalla enseña
+   **el dominio**, no el nombre.
+   ⚠️⚠️ **El vídeo va DESPUÉS de la T1, y eso ordena el plan** (medido el 2026-09-20): Google exige que enseñe
+   *«the OAuth consent flow … correct app name display on consent screen … browser address bar showing your
+   OAuth client ID … detailed functionality demonstrating each sensitive scope's usage»*, o sea **el flujo real
+   funcionando y desplegado**. ▶ La **solicitud** del §7·A·2 no lo necesita y es lo que más tarda: va primero.
 5. **Cliente OAuth web** en el proyecto central, con una **URI de redirección por instalación** (la de cada
    parque, que se fija en la T1); el de **desarrollo**, en el otro proyecto, con `localhost`. **Nunca `localhost`
    en el central.**
