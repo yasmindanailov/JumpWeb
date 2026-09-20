@@ -320,6 +320,30 @@ class GuestCountTest extends TestCase
     {
         // ⚠️ Cuenta las RELLENAS y no las filas: decirle «se perderán 5» de cinco fichas vacías es
         // ruido, y el cliente no reconocería de qué le hablan.
+        //
+        // ▶ Y cuenta sobre el orden YA COMPACTADO (`§7.1·5`): **11 rellenas de 12 y se baja a 9**, así
+        // que dos no caben de verdad. Con menos rellenas que el destino no se pierde ninguna, y eso
+        // lo mide el caso de al lado — antes de la compactación aquí salía 2 y era el defecto
+        // hablando: esas dos fichas estaban al final y se tiraban teniendo nueve huecos libres.
+        $item = $this->reservation(12);
+        $rows = array_fill(0, 12, []);
+        foreach (range(0, 10) as $i) {
+            $rows[$i] = ['name' => 'Invitado '.$i];
+        }
+        $item->forceFill(['guest_data' => $rows])->save();
+
+        $change = $this->adjust($item->fresh(), 9);
+
+        $this->assertTrue($change->applied);
+        $this->assertSame(2, $change->discardedForms, 'la 12ª estaba vacía y no cuenta');
+    }
+
+    /**
+     * ⚠️⚠️ **`§7.1·5`: una ficha con datos NO se tira habiendo vacías.** Se compacta antes de
+     * recortar, así que bajar a 9 con solo dos rellenas —y al final— no pierde ninguna.
+     */
+    public function test_a_reduction_that_fits_loses_nothing_and_keeps_the_hosts_order(): void
+    {
         $item = $this->reservation(12);
         $rows = array_fill(0, 12, []);
         $rows[9] = ['name' => 'Ana'];
@@ -329,7 +353,38 @@ class GuestCountTest extends TestCase
         $change = $this->adjust($item->fresh(), 9);
 
         $this->assertTrue($change->applied);
-        $this->assertSame(2, $change->discardedForms, 'la 12ª estaba vacía y no cuenta');
+        $this->assertSame(0, $change->discardedForms, 'caben las dos: lo que sobra son fichas vacías');
+
+        $after = $item->fresh();
+        $kept = $after->ticketType->sanitizeGuestData($after->guestData(), 9);
+        $names = array_values(array_filter(array_map(
+            static fn (array $r): string => trim((string) ($r['name'] ?? '')),
+            $kept,
+        )));
+
+        $this->assertSame(['Ana', 'Leo'], $names, 'sobreviven, y en el orden en que las dejó el cliente');
+    }
+
+    /**
+     * ▶ **Y SUBIR no reordena nada**, que es la otra mitad: la compactación existe para que el
+     * recorte no se lleve lo que importa, y al subir **no hay recorte**. Mover las fichas de sitio
+     * sin que el cliente lo pida cambiaría el régimen de cada una y la hoja de sala (`#571`).
+     *
+     * Este caso lo pidió el ARNÉS: sin él, compactar SIEMPRE —también al subir— no lo cazaba nadie.
+     */
+    public function test_raising_the_count_does_not_move_the_cards_around(): void
+    {
+        $item = $this->reservation(10);
+        $rows = array_fill(0, 10, []);
+        $rows[7] = ['name' => 'Ana'];
+        $item->forceFill(['guest_data' => $rows])->save();
+
+        $this->assertTrue($this->adjust($item->fresh(), 14)->applied);
+
+        $after = $item->fresh()->guestData();
+
+        $this->assertSame('Ana', trim((string) ($after[7]['name'] ?? '')), 'la ficha sigue en su posición');
+        $this->assertSame('', trim((string) ($after[0]['name'] ?? '')), 'y la primera sigue vacía');
     }
 
     // ─── Lo que NO se toca ───────────────────────────────────────────────────────────

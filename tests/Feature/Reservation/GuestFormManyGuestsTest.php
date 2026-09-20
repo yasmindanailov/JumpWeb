@@ -68,6 +68,33 @@ class GuestFormManyGuestsTest extends TestCase
         $this->assertSame(['Ana', 'Bruno', 'Carla'], array_column($item->fresh()->guest_data, 'name'));
     }
 
+    /**
+     * ⚠️⚠️ **Y con RECORTE de por medio, que es cuando las dos reglas se pisan** (`#718`).
+     *
+     * Al bajar invitados las fichas se compactan para que lo que se pierda sean las VACÍAS
+     * (`§7.1·5`), y esa compactación **tiene que correr sobre las claves YA ordenadas**: hacerlo
+     * sobre el orden de llegada deshace el arreglo de arriba y el cliente pierde a otro niño
+     * distinto del que creía. Sin recorte no se compacta, así que el caso de arriba no lo ve.
+     */
+    public function test_saving_out_of_order_while_the_list_shrinks_still_orders_by_key_first(): void
+    {
+        [$user, $item] = $this->reservation([[], [], []]);
+        $item->forceFill(['quantity' => 2, 'seats' => 2])->save();
+
+        // Llegan desordenadas —la página pinta las pendientes arriba— y son TRES para dos plazas.
+        $this->actingAs($user)->post(route('reservation.guests.store', ['reservation' => $item]), [
+            'guests' => [
+                2 => ['name' => 'Carla', 'age' => '8'],
+                0 => ['name' => 'Ana', 'age' => '7'],
+                1 => [],
+            ],
+        ])->assertRedirect();
+
+        // Por CLAVE la lista es [Ana, vacía, Carla] → se compacta a [Ana, Carla, vacía] → caben las
+        // dos escritas. Compactando sobre el orden de LLEGADA saldría [Carla, Ana].
+        $this->assertSame(['Ana', 'Carla'], array_column($item->fresh()->guest_data, 'name'));
+    }
+
     public function test_the_save_bar_and_the_paste_exist_only_while_the_form_can_be_edited(): void
     {
         [$user, $item] = $this->reservation([[], []]);

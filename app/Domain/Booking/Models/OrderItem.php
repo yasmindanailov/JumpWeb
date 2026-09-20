@@ -4,6 +4,7 @@ namespace App\Domain\Booking\Models;
 
 use App\Domain\Booking\Services\AgeFamilySeal;
 use App\Domain\Booking\Services\GuestAgeMixReader;
+use App\Domain\Booking\Services\GuestCardOrder;
 use App\Domain\Booking\Services\MixedPartySurcharge;
 use App\Domain\Identity\Models\User;
 use App\Domain\Payments\Models\PaymentRefund;
@@ -884,7 +885,27 @@ class OrderItem extends Model
         $attributes = [];
 
         if ($guests !== null) {
-            $attributes['guest_data'] = $type->sanitizeGuestData($guests, (int) $this->quantity);
+            // ⚠️ `orderGuestRows()` PRIMERO: compactar sobre las claves sin ordenar deshacía el
+            // arreglo de `#571` —el orden de la página no es el de las posiciones— y lo cazó su caso.
+            $rows = TicketType::orderGuestRows($guests);
+
+            // ⚠️⚠️ **Se COMPACTA, pero SOLO cuando el saneo va a TIRAR algo** (`§7.1·5` de
+            // `celebracion-e-invitacion.md`, `DECISIONES #718`).
+            //
+            // El saneo recorta por el FINAL, y lo que llega aquí viene en el orden que el navegador
+            // pintó: con la cantidad ya bajada por `GuestCountAdjuster`, recortar sin más tiraba a
+            // los niños que YA habían confirmado y dejaba fichas vacías. La regla vive en
+            // `GuestCardOrder`, la misma que usa el ajuste — una punta de cada lado de la costura.
+            //
+            // ❗ **La condición NO es cosmética.** Compactar en todo guardado mueve las fichas del
+            // anfitrión sin que él lo pida, y de la posición cuelgan el emparejado de las propuestas
+            // y la hoja de sala: lo cazó `InvitationApiTest`, donde una ficha vacía delante de «Hugo»
+            // es justo lo que se está midiendo. Si no se recorta, no hay nada que proteger.
+            if (count($rows) > (int) $this->quantity) {
+                $rows = app(GuestCardOrder::class)->confirmedFirst($this, $rows);
+            }
+
+            $attributes['guest_data'] = $type->sanitizeGuestData($rows, (int) $this->quantity);
         }
 
         if ($general !== null) {

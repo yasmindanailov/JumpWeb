@@ -51,6 +51,7 @@ final class GuestCountAdjuster
         private PackAvailability $packAvailability,
         private ZoneDaySlotLock $zoneDayLock,
         private GuestCountPolicy $policy,
+        private GuestCardOrder $cardOrder,
     ) {}
 
     /**
@@ -237,17 +238,39 @@ final class GuestCountAdjuster
             return GuestCountChange::blocked(GuestCountChange::REASON_CLOSED, $from, $desired);
         }
 
-        // Cuántas fichas RELLENAS se pierden al bajar. Se cuenta ANTES de escribir, y se cuentan las
-        // rellenas y no las filas: decirle «se perderán 5» de cinco fichas vacías es ruido.
-        $discarded = $this->filledFormsBeyond($item, $desired);
+        // ⚠️⚠️⚠️ **AL BAJAR, LAS FICHAS SE REORDENAN ANTES DE RECORTAR** (`§7.1·5` de
+        // `specs/celebracion-e-invitacion.md`, el borde que la T6 dejó abierto).
+        //
+        // El recorte se lleva las filas del FINAL (`sanitizeGuestData` conserva las primeras
+        // `quantity`), y el suelo cuenta **plazas, no posiciones**: impide bajar por debajo de
+        // cuántos confirmaron, pero no dice CUÁLES. Con los confirmados en las últimas fichas, una
+        // bajada PERMITIDA —por encima del suelo— borraba justo a los niños que el suelo prometía
+        // proteger y dejaba en pie fichas vacías. Y no se quedaba ahí: `reconcileAdopted()` ve la
+        // ficha desaparecida y **descarta la respuesta**, así que el «sí» deja de contar para el
+        // suelo y la protección se deshace sola, en silencio y sin que el anfitrión lo pida.
+        //
+        // ▶ Se compacta: primero los confirmados, luego el resto de fichas con datos, y las vacías
+        // al final — **estable dentro de cada grupo**, que el orden de las fichas lo eligió el
+        // anfitrión y de la posición cuelgan el régimen de cada una y la hoja de sala (`#571`).
+        // Así lo que se pierde son fichas VACÍAS mientras las haya, que es lo que nadie echa de menos.
+        //
+        // ⚠️ Quién está protegido sale de **`PartyGuests`, la misma fuente que alimenta el suelo**
+        // (`GuardianPlaces::committedGuests`), y no de un predicado nuevo: dos reglas para el mismo
+        // hecho es exactamente lo que produjo los defectos de §10.4.7·B.
+        $rows = $desired < $from ? $this->compactForReduction($item, $desired) : null;
+
+        // Cuántas fichas RELLENAS se pierden al bajar. Se cuenta ANTES de escribir —y ya sobre el
+        // orden compactado, o el aviso diría más de lo que de verdad se pierde.
+        $discarded = $this->filledFormsBeyond($item, $desired, $rows);
 
         // ⚠️ **El SELLO no se toca** (`PAY-19`): solo re-sella un cambio de PRODUCTO o de DÍA. Un
         // invitado añadido entra con las condiciones que se le comunicaron al comprar.
-        $item->forceFill([
+        $item->forceFill(array_filter([
             'quantity' => $desired,
             'unit_price' => (int) $pricing['unit'],
             'seats' => $newSeats,
-        ])->save();
+            'guest_data' => $rows,
+        ], static fn (mixed $v): bool => $v !== null))->save();
 
         return new GuestCountChange(
             applied: true,
@@ -324,10 +347,34 @@ final class GuestCountAdjuster
         return $rescales;
     }
 
-    /** Fichas CON algún dato por encima de la cantidad nueva: las que el cliente reconocería como suyas. */
-    private function filledFormsBeyond(OrderItem $item, int $desired): int
+    /**
+     * Las fichas ya compactadas, o `null` si no hay nada que mover (`§7.1·5`).
+     *
+     * ⚠️ `null` cuando el orden no cambia: así no se escribe `guest_data` sin necesidad, y una
+     * reserva sin fichas no gana una columna vacía donde no había ninguna.
+     *
+     * @return list<array<string, string>>|null
+     */
+    private function compactForReduction(OrderItem $item, int $desired): ?array
     {
         $rows = array_values($item->guestData());
+        if ($rows === []) {
+            return null;
+        }
+
+        $ordenadas = $this->cardOrder->confirmedFirst($item, $rows);
+
+        return $ordenadas === $rows ? null : $ordenadas;
+    }
+
+    /**
+     * Fichas CON algún dato por encima de la cantidad nueva: las que el cliente reconocería como suyas.
+     *
+     * @param  list<array<string, string>>|null  $reordered  el orden YA compactado, si lo hubo
+     */
+    private function filledFormsBeyond(OrderItem $item, int $desired, ?array $reordered = null): int
+    {
+        $rows = $reordered ?? array_values($item->guestData());
         $lost = 0;
 
         for ($i = $desired, $n = count($rows); $i < $n; $i++) {

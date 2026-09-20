@@ -18,15 +18,16 @@
 
 - **Carril del SPA.** ✅ **Código completo y ✅ del owner en vivo** (20-09): T1→T4 en PRODUCCIÓN
   (v1.1.0, **APAGADOS**), T5–T7 en el árbol. Falta desplegar, **encender** (dato suyo) y el **borde
-  §7.1·5 ANTES de encender** (bajar invitados descarta las filas del FINAL). ⚠️ El ✅ no cubre el
-  `.ics` en un móvil, el Turnstile real ni `§7.2·R12`. **Si construyes, §7.2 primero.**
+  ✅ **borde §7.1·5, CERRADO** (`#718`, §10.18). ⚠️ El ✅ no cubre el `.ics` en un móvil, el Turnstile
+  real ni `§7.2·R12`. **Si construyes, §7.2 primero.**
+- ⚠️⚠️ **Las fichas se COMPACTAN antes de recortar** (`#718`, §10.18): la regla es `GuestCardOrder` y
+  la usan **las dos puntas** —el ajuste y el guardado—. Tocar una sola deja el defecto vivo por HTTP.
 - ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — repartir un nombre
   pegado es adivinar, y esto acompaña a una firma.
 - ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): quedan **diez puntos sin tocar** en §10.4.7·B.
-- **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
-  `invitation_replies`, el formulario lo PROPONE y el anfitrión lo ADOPTA al guardar —`submitGuestForm()`
-  sustituye la lista entera y `updated_at` es el testigo (medido)—. Por eso un padre no mueve dinero ni
-  aforo, no roza el `CRITICAL_RE` y `OrderCreator` no se toca.
+- **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive
+  en `invitation_replies`; el formulario lo PROPONE y el anfitrión lo ADOPTA al guardar. Por eso un
+  padre no mueve dinero ni aforo, no roza el `CRITICAL_RE` y `OrderCreator` no se toca.
 - ❗ **La lista completa NO rechaza** (`#700`, sustituye a D2): era un **oráculo de pertenencia**. **No existe
   `full`** y ningún motivo depende del NOMBRE; el «sí» que no cabe se acepta y sale en el aviso (§4.7).
 - «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja
@@ -35,8 +36,8 @@
   por clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba
   andándola** (§10.6·E).
 - ⚠️ **El molde es de TRES páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*`, `.gf-notice` o
-  `.gf-extras__list` mueve el justificante y la invitación. Tras tocarlo, **sonda y captura de VENTANA de
-  las tres** (así rompió la T2 la barra de firmar, §10.3).
+  `.gf-extras__list` mueve el justificante y la invitación → **sonda y captura de VENTANA de las
+  tres** (§10.3).
 
 ## 0. En una línea cada cosa
 
@@ -587,12 +588,14 @@ Ataques contra el propio diseño, con su respuesta. **«Medido»** = verificado 
    `quantity`, y el padre no la mueve.
 4. **«Un "sí" con la lista completa impide firmar a su propio padre.»** Cerrado por la excepción del
    firmador (§4.5·7). *Medido*: el tope es `freeIn < 1` bajo lock.
-5. **«Bajar invitados borra la ficha de un niño que confirmó.»** El suelo cuenta los «sí» (V4). Queda
-   un borde: el suelo cuenta **plazas**, no **posiciones**, y hoy se descartan las filas del final
-   (*medido*, `filledFormsBeyond`). Un «sí» adoptado en una fila final puede caer si se baja justo por
-   encima del suelo. ▶ **Se resuelve en la T6** con una de dos: descartar primero las fichas vacías, o
-   reordenar las adoptadas al principio al adoptar. Exige tocar `GuestCountAdjuster` (`CRITICAL_RE`),
-   así que se decide **midiendo** al abrir la tanda.
+5. ✅ **«Bajar invitados borra la ficha de un niño que confirmó.»** — **CERRADO el 2026-09-20**
+   (`DECISIONES #718`, §10.18). Era cierto: el suelo cuenta los «sí» (V4) pero cuenta **plazas**, no
+   **posiciones**, y el recorte se lleva las filas del final. **Reproducido** con un caso que falla
+   al revertir. ▶ De las dos salidas se eligió **descartar primero las fichas vacías**: se compacta
+   antes de recortar —confirmados, escritas, vacías, estable dentro de cada grupo— en
+   `GuestCardOrder`. Reordenar al ADOPTAR se descartó: movería fichas cuando el anfitrión no lo pide.
+   ❗ Y enseñó que el borde tenía **una segunda mitad que la primera pasada no vio**: la costura llega
+   por dos sitios (§10.18).
 6. **«Emparejar por nombre funde a dos niños distintos.»** Solo con **una** candidata, y la ficha
    propuesta no se guarda sin que el anfitrión la vea y pulse Guardar (V1).
 7. **«El enlace se enumera.»** 71 bits, limitadores, y ninguna información de otros invitados.
@@ -2008,6 +2011,42 @@ tocar dinero ni aforo.
 ▶ **Con esto la invitación digital queda COMPLETA EN CÓDIGO.** Lo que falta no es escribir nada: el
 ojo del owner, desplegar (T5, T6 y T7 siguen en el árbol) y **encender los dos interruptores**, que es
 dato suyo. Queda además el borde abierto de §7.1·5, que la T6 no tocó.
+
+### 10.18 EL BORDE `§7.1·5` · qué ficha se pierde al bajar — CERRADO (2026-09-20, `DECISIONES #718`)
+
+**El defecto, reproducido antes de tocar nada.** `TicketType::sanitizeGuestData()` conserva las
+**primeras** `quantity` filas, y el suelo (`GuardianPlaces::takenIn`) cuenta **plazas, no
+posiciones**: con 8 invitados, dos «sí» en las fichas 7 y 8 y las seis primeras vacías, bajar a 3
+está PERMITIDO —el suelo es 2— y borraba a los dos niños que habían confirmado, dejando vacías en
+pie. ❗ Y `reconcileAdopted()` veía la ficha ausente y **descartaba la respuesta**: el «sí» dejaba de
+contar para el suelo y la protección se deshacía sola, sin que el anfitrión pidiera nada.
+
+**La salida elegida** (de las dos que §7.1·5 dejó anotadas, decidida midiendo): **compactar antes de
+recortar**. Tres grupos, **estables dentro de cada uno**: confirmados · con datos · vacías. El suelo
+garantiza que el primer grupo siempre cabe. Se descartó *reordenar al ADOPTAR*: movería las fichas en
+un momento que el anfitrión no pide, y de la posición cuelgan su régimen y la hoja de sala (`#571`).
+
+#### ❗❗ Lo que enseñó: la costura tiene DOS puntas, y leyéndola parecía tener una
+
+Con `GuestCountAdjuster` ya arreglado y sus casos en verde, **por HTTP el defecto seguía vivo**. El
+post-form ajusta la cantidad **y después** llama a `submitGuestForm()` con las fichas que mandó el
+navegador, en el orden viejo — y ese orden es una propiedad deliberada (`invitados-en-post-form.md`
+§4.7·2), no un accidente. El saneo las recortaba otra vez por el final.
+
+▶ *Ningún test de dominio podía verlo: los dos lados estaban bien por separado.* Lo cazó el caso que
+**anda el camino real**. Por eso la regla vive en **`GuestCardOrder`** —una sola clase que usan las
+dos puntas—, y quién está protegido sale de **`PartyGuests`**, la MISMA fuente que alimenta el suelo:
+escribir la misma regla dos veces es lo que produjo los defectos de §10.4.7·B.
+
+**Y la condición que el arnés obligó a afinar**: se compacta **solo si se va a recortar**. Hacerlo en
+todo guardado movía fichas sin que nadie lo pidiera y rompía el emparejado de las propuestas — lo
+puso en rojo `InvitationApiTest`, donde una ficha vacía delante de «Hugo» es justo lo que se mide.
+
+**Guardas**: 5 casos nuevos (`InvitationPlacesTest` ×3 —incluido el de HTTP—, `GuestCountTest` ×2 y
+`GuestFormManyGuestsTest` ×1), el viejo `test_it_reports_how_many_filled_forms…` reescrito porque su
+`2` describía el defecto, y el arnés `scripts/mutar-borde-fichas-al-bajar.py` **10/10**.
+**Concurrencia** (toca el `CRITICAL_RE`): `purchase:verify-oversell`,
+`postform:verify-concurrency --scenario=cross` e `invitation:verify-places`, verdes sobre InnoDB.
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

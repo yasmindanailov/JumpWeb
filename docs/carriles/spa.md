@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#717`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#718`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -10,8 +10,8 @@
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
-- ▶▶ **`celebracion-e-invitacion.md` está COMPLETA EN CÓDIGO: las siete tandas cerradas** (`#569`→`#717`).
-  **El detalle de cada unidad y lo que enseñó vive en su § de la spec** (§10.1–§10.17), que es donde no
+- ▶▶ **`celebracion-e-invitacion.md`: las siete tandas y el borde `§7.1·5`, CERRADOS** (`#569`→`#718`).
+  **El detalle de cada unidad y lo que enseñó vive en su § de la spec** (§10.1–§10.18), que es donde no
   caduca; lo que de ahí vale para CUALQUIER tanda bajó aquí, a «Trampas vivas». Lo que hay que saber:
   - **En PRODUCCIÓN solo van T1→T4·4** (v1.1.0 = `3547de9f`, 18-09, parque cerrado; lo desplegó
     plataforma), y **con los dos interruptores APAGADOS**. Su migración quedó aplicada.
@@ -26,7 +26,7 @@
     Mailpit. Dijo «está todo bien». ⚠️ **Ese ✅ NO cubre tres cosas**, declaradas sin medir: el `.ics`
     abierto con la app de calendario de un **móvil real** (§4.6), el justificante **en producción**
     con el **Turnstile real** (en local no hay claves) y contar sus toques (`§7.2·R12`).
-  - ▶ Quedan **desplegar** (con su migración), **encender** (dato suyo) y el **borde §7.1·5**.
+  - ▶ Solo quedan **desplegar** (con su migración) y **encender** (dato suyo).
 - ✅ **`#707` · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` sin declarar
   lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. Declararlo pasó el
   componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
@@ -35,14 +35,9 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗ **EL BORDE `§7.1·5` — lo ÚLTIMO de código, y va ANTES de encender.** Bajar invitados descarta
-   las filas del **final** (`filledFormsBeyond`), así que un «sí» **adoptado** en una fila final puede
-   caerse: el niño que confirmó desaparece de la lista sin que el anfitrión se entere. Hoy no muerde
-   porque la invitación está apagada en producción; en cuanto se encienda, sí. La spec lo aplazó a la
-   T6 «decidiéndolo al medir» y la T6 cerró sin tocarlo. **Dos salidas, se elige MIDIENDO**: descartar
-   primero las fichas vacías, o reordenar las adoptadas al principio al adoptar.
-   ⚠️ Toca **`GuestCountAdjuster`, que SÍ está en el `CRITICAL_RE`** (comprobado con `grep` el 20-09,
-   no de memoria): el push exigirá los verificadores de concurrencia sobre MySQL y `VERIFY_CONC=1`.
+1. ✅ **EL BORDE `§7.1·5`, CERRADO** (`#718`, spec §10.18, arnés 10/10, tres verificadores sobre
+   InnoDB). Las fichas se **compactan antes de recortar**, así que al bajar invitados se pierden las
+   VACÍAS y no quien ya confirmó. **Con esto la invitación no tiene nada pendiente de código.**
 2. ▶ **Desplegar y encender** (no es mío): T5, T6 y T7 al completo **con la migración**
    `order_items.eve_notice_at`. Los dos interruptores son dato del owner. Avisado en su buzón.
 3. **Los tres huecos que el ✅ del owner NO cubre**, sin medir y declarados: el **`.ics` en un TELÉFONO
@@ -85,12 +80,11 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   `guest_invitation = true` y `guardian_authorization = optional` (con `none` los estados de puerta
   **no existen** por diseño) · **`R-PRBT1A`**, la fiesta con fichas, respuestas e invitación ·
   **`R-PRBT64`**, una fiesta PASADA (era «hoy» el 19-09) que sirve para el plazo CERRADO y la puerta.
-  ▶ **Una sola puerta de entrada**, en la carpeta de almacenamiento y sin versionar:
-  `probe-ojo-invitacion.php`, que imprime TODOS los enlaces del owner ya firmados para el host que él
-  usa (`localhost:8081`; la firma cubre el host) y repone lo que falte. Los
-  demás `probe-t6-*` y `probe-t7-*` siguen ahí para casos sueltos. ⚠️ **No corras
+  ▶ **Una sola puerta de entrada**, en almacenamiento y sin versionar: `probe-ojo-invitacion.php`,
+  que imprime TODOS los enlaces del owner ya firmados para su host (`localhost:8081`) y repone lo que
+  falte. Los demás `probe-t6-*` y `probe-t7-*` siguen ahí. ⚠️ **No corras
   `probe-t6-recordatorio.mjs`** sin querer: **sube `reminded_count`**, y «lo escribiste 7 veces» es la
-  sonda, no un defecto. ⚠️ Un guion suelto se corre
+  sonda, no un defecto. ⚠️ Un guion se corre
   `php artisan tinker --execute="require base_path('storage/app/…')"`: con `php storage/app/…` a secas
   no hay framework y sale «Class not found».
 - **La firma de un enlace incluye el host**: para el Chromium del contenedor es `http://localhost` y para el
@@ -204,6 +198,15 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   si solo cambia el sello de `FUENTES`, ninguna regla nueva entró en el paquete. Las reglas de botón de
   la hoja apuntan al `button` y **no a `.btn`**, o el generador se las lleva al paquete (convención
   aceptada por plataforma el 19-09).
+- ⚠️⚠️⚠️ **UNA COSTURA PUEDE TENER DOS PUNTAS, y leyéndola parece tener una** (`#718`). Arreglé el
+  borde en `GuestCountAdjuster`, sus casos en verde… y **por HTTP el defecto seguía vivo**: el
+  post-form ajusta la cantidad **y después** guarda las fichas del navegador en el orden viejo. Lo
+  cazó el caso que ANDA el camino, no una relectura. ▶ Antes de dar por cerrado un arreglo del
+  post-form, **escribe el caso que hace el POST de verdad**.
+- ⚠️ **Compactar o reordenar filas SIEMPRE rompe algo que cuelga de la posición**: el emparejado de
+  las propuestas y la hoja de sala. Se hace **solo cuando se va a recortar**, y va **después** de
+  `TicketType::orderGuestRows()` (el `ksort` de `#571`), nunca antes. Las dos condiciones las
+  descubrió un rojo ajeno —`InvitationApiTest` y `GuestFormManyGuestsTest`—, no yo.
 - **Un campo traducible sale ARRAY**: concatenar `$ticketType->name` en un guion imprime «Array» con
   un warning. En una sonda, `is_array(...) ? $x['es'] : $x`.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
