@@ -394,9 +394,47 @@ vigilaba**: una guarda que normaliza lo que mira no mira nada.
    una — **comparándose consigo mismo**, y el mutante SOBREVIVIÓ. Es la lección 2 de `#660` (`#660` la
    aprendió con `min()`; aquí con una constante), y la salida es la misma: **el valor esperado se teclea**.
 
-▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) — el vídeo del hero con su regla de
-caché (el material del cliente **sale de `main`**, `[DECIDIDO owner]` 20-09: se coloca a mano como
-`client.css`; ⚠️ el despliegue es `rsync --delete`, así que las exclusiones van ANTES que el `git rm`),
+▶ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`). Es la cuarta regla del
+barrido y resultó ser más grande que la portada: **37 ficheros y 9,2 MB**. Nace `publico/` en la plantilla
+—refleja la estructura de `public/` porque **las rutas las guarda la BD** y moverlas obligaría a migrar
+datos en cada instalación— y el paquete de la instancia lo estrena.
+⚠️⚠️ **La lección que vale para cualquier tanda que saque ficheros del repo**: ignorarlos NO basta. El
+`rsync` del despliegue **sincroniza el árbol de trabajo y no sabe nada de git**, así que hacen falta TRES
+cosas y **en el mismo commit**, o el primer despliegue borra material de producción sin que nada lo avise:
+1. la **exclusión del `rsync`**, que es lo que además los salva del `--delete`;
+2. la **lista blanca de la GUARDA 9**, o el despliegue aborta al verlos como andamios;
+3. el `.gitignore` y el `git rm --cached`.
+▶ **Verificado en seco con control negativo**, que es la única forma de creerse una exclusión: sin ella el
+`--delete` mata los tres ficheros de prueba; con ella sobreviven, `images/providers/` —del producto— sigue
+actualizándose y `rsync` sale con 0 y sin avisos.
+⚠️ **Y la guarda de la lista blanca pasó en verde sin ver el cambio**: enumera a mano lo legítimo, así que
+las dos rutas nuevas había que añadirlas. *Una guarda que enumera no cubre lo que no enumera.*
+
+❗❗❗ **LA TRAMPA QUE COSTÓ LA TANDA, y no está en ningún sitio obvio: `git rm --cached` CONSERVA el
+fichero, pero el commit REGISTRA UN BORRADO.** Al rebasar sobre el remoto, git resetea a `origin/main`
+—donde el fichero todavía está rastreado, así que lo **restaura**— y después reaplica tu commit, que lo
+**borra del árbol de trabajo**. Medido: los 37 ficheros desaparecieron del disco en el `pull --rebase` y la
+web pasó a 404. *Sacar ficheros del repo tiene un paso previo que no es opcional: **copiarlos fuera
+ANTES**.* Aquí ya estaban en el paquete y se repusieron verificándolos con `cmp`; sin esa copia, la única
+recuperación habría sido producción.
+
+❗❗ **Y de ahí salió el defecto de verdad, que era invisible en esta máquina**: TRES casos dependían de que
+el material estuviera en disco, porque el seeder hace `file_exists()` y guarda `null` si falta. Habrían
+estado **verdes aquí y rojos en el otro ordenador** en cuanto hiciera `pull` — §4.5 otra vez, y esta vez
+en el gate. Se parten por lo que afirman (§4.5.bis):
+- `ZoneImageTest` pasa de «toda atracción TIENE foto» a **«ninguna atracción apunta a una foto que no
+  está»**. Escrito al revés es cierto en cualquier máquina: con material comprueba los nombres uno a uno
+  —que es donde muerde un typo—, sin material no hay ruta que mentir.
+- `AttractionsPageTest` y `AnfitrionAtraccionesTest` **ponen su propia foto** en vez de buscarla: lo que
+  vigilan es cómo el producto resuelve la ruta y cómo el anfitrión la pinta.
+▶ **Verificado por los dos lados**: la suite entera pasa **con** material y **sin** él.
+
+❗ **El olvido al instalar sí es silencioso, pero no por igual** (medido apartando los ficheros): las fotos
+se notan —el seeder las anula y el catálogo queda sin ellas— y **el vídeo no se nota en absoluto**: 698
+casos en verde y la portada en 200 sin él. Por eso entra en el §7 de `INSTALACION-CLIENTE.md`, que se mira
+con los ojos, y **no** en una prueba: exigirlo pondría el gate rojo en toda máquina sin el paquete.
+
+▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) — su regla de caché (`?v={filemtime}`),
 partir pruebas, anfitrión mínimo y huella. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
 en 60 ficheros**, porque medio producto usa `/` como «una página cualquiera» para ejercitar el armazón, las
 cookies, el tema, el idioma, las cabeceras y el montaje del cajón. Las ocho anteriores tenían sus pruebas

@@ -57,16 +57,42 @@ class ZoneImageTest extends TestCase
         $this->assertSame(8, $kids->attractions()->count());
     }
 
-    public function test_every_seeded_attraction_has_an_existing_real_photo(): void
+    /**
+     * **Ninguna atracción apunta a una foto que no está** — y está escrito al revés a propósito.
+     *
+     * ❗❗ **Antes decía «toda atracción sembrada TIENE foto real»** (`assertSame(0, whereNull(...))`), y
+     * eso dejó de ser cierto en `#663`, cuando el material gráfico del cliente salió del repo: el
+     * seeder guarda `null` si el fichero no está (`LandingContentSeeder`, `file_exists`), así que en
+     * una máquina sin el paquete instalado las 23 salían nulas y el caso **se ponía rojo sin que nada
+     * estuviera mal**. Es exactamente la trampa de `paquete-de-instancia.md` §4.5: *verde en el
+     * ordenador que tiene el material y rojo en el otro, que es la peor forma de romper algo.*
+     *
+     * ▶ Se parte por lo que AFIRMA (§4.5.bis). Lo que el PRODUCTO puede vigilar en cualquier máquina
+     * es que **no se guarde una ruta muerta**: si hay material, cada ruta apunta a un fichero que
+     * existe —que es donde un typo de la clienta (`tobogan_Bolas`, `tobganes`) muerde de verdad—; y
+     * si no lo hay, todas son `null` y no hay ninguna ruta que mentir.
+     * ▶ La otra mitad —«esta instalación TIENE sus fotos»— es de la INSTALACIÓN y se mira con los
+     * ojos: `INSTALACION-CLIENTE.md` §7.
+     */
+    public function test_no_seeded_attraction_points_at_a_photo_that_is_not_there(): void
     {
-        // Blindaje empírico: cada atracción sembrada apunta a un fichero que EXISTE en public/
-        // (el seeder pone null si falta). Caza un desajuste entre el nombre del seeder y el
-        // fichero real (mayúsculas/typos de la clienta como `tobogan_Bolas`, `tobganes`).
-        $this->assertSame(0, Attraction::whereNull('image')->count(), 'toda atracción sembrada tiene foto real');
+        $conFoto = Attraction::whereNotNull('image')->get();
+
+        foreach ($conFoto as $ride) {
+            $this->assertFileExists(
+                public_path((string) $ride->image),
+                "la atracción «{$ride->tr('name')}» apunta a una foto que no está: el nombre del seeder y el del fichero no cuadran",
+            );
+        }
 
         $first = Attraction::where('zone_id', Zone::where('slug', 'jump')->value('id'))
             ->where('position', 1)->firstOrFail();
-        $this->assertSame('images/attractions/jump_saltos_libres.webp', $first->image);
         $this->assertSame('Saltos libres', $first->tr('name'));
+
+        // ⚠️ La RUTA solo se puede afirmar donde el fichero está: sin él, el seeder guarda `null` a
+        // propósito. Con material instalado, esto sigue fijando el nombre exacto.
+        if ($first->image !== null) {
+            $this->assertSame('images/attractions/jump_saltos_libres.webp', $first->image);
+        }
     }
 }

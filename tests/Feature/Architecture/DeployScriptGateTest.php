@@ -134,6 +134,8 @@ class DeployScriptGateTest extends TestCase
             'guarda 4 · lo verifica por HTTP' => ['Disallow: /', 'Verificar el fichero no basta: si el docroot no fuera el esperado, nadie avisaría.'],
             'protege storage/ del rsync' => ["--exclude='/storage/'", 'Llevaría logs y cachés del servidor por delante, y traería basura de test.'],
             'protege las subidas del panel' => ["--exclude='/public/uploads/'", 'Con `--delete`, el segundo despliegue borraría las imágenes subidas desde el panel.'],
+            'protege las fotos del catálogo de la instalación' => ["--exclude='/public/images/attractions/'", 'Desde `#663` no están en el repo (viven en el paquete de la instancia): sin la exclusión, el `--delete` deja la web del cliente SIN UNA SOLA FOTO y nada en el diff lo avisa. Medido en seco: sin ella el fichero muere, con ella sobrevive y el logotipo de `providers/` sigue actualizándose.'],
+            'protege el vídeo de la portada de la instalación' => ["--exclude='/public/videos/'", 'Mismo motivo exacto que la línea de arriba y que `client.css`: material de la instalación, fuera de git desde `#663`. El `--delete` se lo lleva y la portada se queda sin vídeo, sin error y sin aviso.'],
             'excluye public/hot' => ["--exclude='/public/hot'", 'Si llega, Vite sirve todo desde localhost:5274 y la web queda muda SIN error de servidor.'],
             'excluye vendor/' => ["--exclude='/vendor/'", 'Lo construye composer allí; excluirlo además lo salva del `--delete`.'],
             'excluye node_modules/' => ["--exclude='/node_modules/'", '97 MB que no sirven de nada: en el servidor no hay node.'],
@@ -653,14 +655,22 @@ class DeployScriptGateTest extends TestCase
 
         $patron = '#'.$m[1].'#';
 
-        foreach (['public/build/', 'public/uploads/', 'public/storage', 'public/hot', 'public/css/client.css', 'public/img/'] as $legitimo) {
+        // ⚠️ `videos/` y `images/attractions/` entran con `#663`: el material gráfico de la instalación
+        // salió del repo y ahora vive fuera de git, como el paquete de tema. Sin ellas en la lista, la
+        // guarda 9 abortaría **todos** los despliegues — y este caso, que enumera a mano lo legítimo,
+        // habría seguido en verde sin verlo.
+        foreach (['public/build/', 'public/uploads/', 'public/storage', 'public/hot', 'public/css/client.css', 'public/img/', 'public/videos/', 'public/images/attractions/'] as $legitimo) {
             $this->assertSame(
                 1, preg_match($patron, $legitimo),
                 "la guarda 9 abortaría el despliegue por «{$legitimo}», que vive fuera de git a propósito",
             );
         }
 
-        foreach (['public/landing-ajena.html', 'public/prueba.php', 'public/css/andamio.css'] as $intruso) {
+        // ⚠️⚠️ **`public/images/` ENTERO no es legítimo, y por eso está aquí abajo** (`#663`): dentro
+        // vive `providers/`, que son los logotipos que exige la atribución de Google y que SÍ están
+        // versionados. Una lista blanca que dijera `images/` en vez de `images/attractions/` dejaría
+        // subir cualquier andamio que alguien dejara en esa carpeta.
+        foreach (['public/landing-ajena.html', 'public/prueba.php', 'public/css/andamio.css', 'public/images/'] as $intruso) {
             $this->assertSame(
                 0, preg_match($patron, $intruso),
                 "la guarda 9 dejaría subir «{$intruso}» al dominio del cliente",

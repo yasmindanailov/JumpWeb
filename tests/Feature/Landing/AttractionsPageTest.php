@@ -190,7 +190,13 @@ class AttractionsPageTest extends TestCase
      */
     public function test_the_photo_of_an_attraction_is_resolved_by_the_product(): void
     {
-        $ride = Attraction::where('is_active', true)->whereNotNull('image')->firstOrFail();
+        // ⚠️⚠️ **El caso PONE su foto, no la busca** (`#663`). Antes tomaba la primera atracción
+        // sembrada con `image` no nula, y eso dejó de existir en una máquina sin el material del
+        // cliente instalado: el seeder guarda `null` cuando el fichero no está, así que el caso moría
+        // con `ModelNotFoundException` **sin que nada estuviera mal**. Lo que aquí se prueba es cómo
+        // el producto RESUELVE una ruta, no si esta instalación tiene sus fotos.
+        $ride = Attraction::where('is_active', true)->firstOrFail();
+        $ride->update(['image' => 'images/attractions/jump_saltos_libres.webp']);
 
         $this->assertSame(asset($ride->image), $ride->imageUrl());
         $this->assertStringStartsWith('http', (string) $ride->imageUrl(), 'la foto no sale como URL absoluta');

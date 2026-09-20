@@ -253,9 +253,12 @@ fi
 # La lista blanca es la que dice qué vive legítimamente en `public/` fuera de git, y es corta a propósito:
 # los assets construidos, las subidas del panel, el enlace de storage y el paquete de marca de la
 # instalación (`img/` es entero suyo). Cualquier otra cosa se nombra antes de subir.
+# ⚠️ `images/attractions/` y `videos/` entran en la lista con `#663`: el material gráfico de la
+# instalación salió de `main` y ahora vive fuera de git, como el paquete de tema. Sin estas dos
+# entradas la guarda los llamaría andamios y **abortaría todos los despliegues**.
 mapfile -t intrusos < <(
     git ls-files --others --directory public/ \
-        | grep -Ev '^public/(build/|uploads/|storage$|hot$|css/client\.css$|img/)$' || true
+        | grep -Ev '^public/(build/|uploads/|storage$|hot$|css/client\.css$|img/|videos/|images/attractions/)$' || true
 )
 if [[ ${#intrusos[@]} -gt 0 ]]; then
     warn "GUARDA 9 · en public/ hay ficheros que git NO conoce y que rsync SÍ subiría:"
@@ -405,6 +408,17 @@ RSYNC_EXCLUDES=(
     --exclude='/public/hot'          # si llega, Vite sirve todo desde localhost:5274 y la web queda muda
     --exclude='/.htaccess'           # PRODUCCIÓN (#325): puente public_html → public/ mientras el panel no apunte al docroot bueno; no está en el repo y el --delete lo tumbaría
     --exclude='/public/uploads/'     # subidas del panel: excluirlas las salva del --delete
+    # ⚠️⚠️ **EL MATERIAL GRÁFICO DE LA INSTALACIÓN** (`#663`, `[DECIDIDO owner]`): 37 ficheros y 9,2 MB
+    # —las fotos del catálogo y el vídeo de la portada— que hasta hoy estaban VERSIONADOS en `main` y
+    # ahora viven en el paquete de la instancia. Es el mismo patrón que `client.css` de abajo, y la
+    # exclusión hace las dos cosas: no los sube (no están en el repo) y **los salva del `--delete`**,
+    # que es lo que de verdad importa — sin estas dos líneas, el primer despliegue tras `#663` deja la
+    # web del cliente sin una sola foto y sin vídeo, y nada en el repo lo habría avisado.
+    # ⚠️ Las rutas NO se pueden cambiar: las guarda la BD (`attractions.image` y sus hermanas).
+    # ⚠️ `public/images/providers/` NO se excluye: son los logotipos que exige la atribución de Google,
+    # los pinta un componente del PRODUCTO y siguen versionados.
+    --exclude='/public/images/attractions/'
+    --exclude='/public/videos/'
     --exclude='/public/css/client.css'  # paquete de tema DEL CLIENTE (#143): gitignorado, vive solo
                                         # en el servidor. Sin esta línea el --delete se lo lleva en el
                                         # primer despliegue y la web vuelve al tema del producto

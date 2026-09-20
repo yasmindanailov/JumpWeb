@@ -537,6 +537,39 @@ orden de página que su diseñador propuso, y **dónde el producto se aparta de 
 del cliente** (su canvas, su manual), no desde lo que el producto ya implementó: si no, hereda las
 desviaciones sin saberlo.
 
+## 4.bis · El MATERIAL GRÁFICO de la instalación (`#663`, 2026-09-20)
+
+`[DECIDIDO owner]`. **Las fotos del catálogo y el vídeo de la portada NO están en el repo del producto**
+—37 ficheros y 9,2 MB que hasta esa fecha sí lo estaban—: viven en `publico/` del paquete de la instancia
+y **se copian a mano**, exactamente como el paquete de tema de §4. Sustituye a `#529`, que versionaba el
+vídeo «para que el repo sea un clon completo»: el clon completo de una INSTALACIÓN es su paquete.
+
+    cp -r <paquete>/publico/. <producto>/public/
+
+⚠️ **Con `cp`, nunca con `rsync --delete`**: `public/` lleva también lo del producto —`build/`, sus hojas
+y `images/providers/`, los logotipos que exige la atribución de Google— y un borrado se lo llevaría.
+
+⚠️⚠️ **Las rutas no se eligen: las guarda la BD.** `attractions.image`, `zones.image` y
+`landing_services.image` almacenan `images/attractions/<fichero>`, así que la estructura de `publico/`
+refleja la de `public/` y no hay nada que traducir. Cambiarla obligaría a migrar datos.
+
+❗❗ **Olvidarlo no da error, y las dos mitades NO se comportan igual** (medido en `#663`, apartando los
+ficheros y corriendo la suite entera):
+- **Las FOTOS avisan a medias**: el seeder hace `file_exists()` y guarda `null` si no están
+  (`LandingContentSeeder`), así que el catálogo queda sin fotos y se ve. ⚠️ Pero **ninguna prueba lo
+  declara roto**, y a propósito: exigirlo pondría el gate rojo en cualquier máquina de desarrollo sin el
+  material, que es el defecto que `paquete-de-instancia.md` §4.5 llama «la peor forma de romper algo». Lo
+  que el producto sí vigila es que **ninguna ruta guardada apunte a un fichero que no está**.
+- **El VÍDEO es SILENCIOSO del todo**: `@filemtime` devuelve `false`, la portada responde 200 sin él y la
+  suite entera sigue verde (medido: 698 casos en verde con el vídeo apartado).
+
+▶ Por eso se mira con los ojos, en §7.
+
+⚠️ **El despliegue los respeta pero NO los sube.** `scripts/deploy.sh` los excluye del `rsync` —que es
+justo lo que los salva de su `--delete`—, así que una instalación nueva **no los recibe desplegando**:
+se copian la primera vez. Medido en seco: sin esa exclusión el `--delete` los borra; con ella sobreviven
+y los logotipos de `providers/` siguen actualizándose.
+
 ## 5 · Auth y primer admin
 - `RoleSeeder` (admin/customer/staff) + `PermissionSeeder` (22 permisos; staff = 11 de
   operativa). El admin no lleva permisos: `Gate::before` le concede todo.
@@ -624,6 +657,11 @@ vault. El owner lo acepta a cambio de aprovisionar sin tocar el `.env`.
 - `/admin` con el admin creado por `app:create-admin` (§5); `schedule:list` = **5** tareas (la 5.ª es `sanctum:prune-expired`,
   añadida en Fase 3 · paso 0); tabla `jobs` se vacía en ~1 min;
   `failed_jobs` vacía; compra sandbox completa (Redsys test → email de confirmación → QR).
+- ❗ **El MATERIAL GRÁFICO de §4.bis, MIRADO** (`#663`): la portada con su vídeo y `/atracciones` con sus
+  fotos. **Ninguna comprobación automática lo cubre, y es deliberado** (§4.bis): una prueba que lo
+  exigiera pondría el gate rojo en toda máquina de desarrollo sin el material. Si no se mira aquí, no se
+  entera nadie hasta que lo vea un cliente. En seco vale un `ls`:
+  `ls <producto>/public/images/attractions | wc -l` (35) y `ls <producto>/public/videos` (2).
 
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 

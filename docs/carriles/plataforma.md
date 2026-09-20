@@ -74,14 +74,15 @@
    estrellas. Tres variables muertas retiradas. Huella 38/38 idéntica salvo `/precios`, que solo encoge.
    ⚠️ **Tres guardas que NO existían**, las tres vistas matar a su mutante: nacieron porque cada cambio
    dejaba la suite ENTERA en verde.
-   ▶▶ **LO SIGUIENTE, `#663`: EL VÍDEO DEL HERO y con él TODO el material del cliente.**
-   `[DECIDIDO owner, 20-09]`: **los 37 ficheros (9,2 MB: 35 fotos + vídeo + póster) SALEN de `main`** y se
-   colocan a mano en cada instalación, como ya se hace con `client.css`. ⚠️⚠️ **EL ORDEN IMPORTA Y PUEDE
-   BORRAR PRODUCCIÓN**: el despliegue es `rsync -az --delete`, así que **primero** las
-   líneas `--exclude` y la lista blanca de la GUARDA 9 (`deploy.sh`), **después** el `.gitignore` y el
-   `git rm --cached`, y los ficheros al repo de la instancia. ⚠️ Los tres de `public/images/providers/`
-   **NO se tocan**: son los logotipos que exige la atribución de Google y los pinta un componente del
-   producto. Con el vídeo va su regla de caché (`?v={filemtime}`), hoy en la vista.
+   ✅ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`): los 37 ficheros (9,2 MB)
+   viven en `publico/` del paquete y se copian a mano, como `client.css`. Las tres piezas —exclusión del
+   `rsync`, lista blanca de la GUARDA 9, `.gitignore` + `git rm`— van en el MISMO commit, o el primer
+   despliegue borra producción; verificado en seco con control negativo. El porqué, en la spec §4.7.
+   ❗ **PENDIENTE DE TI**: crear `instancia-playjump` PRIVADO en tu GitHub y decirme la URL. `gh` no está
+   instalado y el ayudante de credenciales es el de Windows: puedo empujar a un repo que exista, pero
+   crear uno exige tus credenciales. **Hasta que lo empuje, la única copia de las 35 fotos son esta
+   máquina y producción.**
+   ▶▶ **LO SIGUIENTE**: la regla de caché del vídeo (`?v={filemtime}`), que sigue escrita en la vista.
    Después: partir pruebas → anfitrión → huella.
    ⚠️⚠️ **`home` NO es una página más: la piden 682 casos en 60 ficheros** (`/contacto` eran 14 en uno),
    porque medio producto usa `/` como «una página cualquiera». El reparto §4.5.bis es de otro orden.
@@ -196,12 +197,34 @@ dueño es el carril de la web/reseñas—) ·
   a `priceCents()`: una rebaja «solo online» como dato es imposible y un descuento por canal es `CRITICAL_RE`.
 - `rm -rf` está en el deny del repo y un comando compuesto que lo lleve se deniega entero: `git rm -r` para lo
   versionado, carpeta nueva para lo demás. `claude plugin details` no acepta `--plugin-dir`.
+- 💥💥 **`git rm --cached` CONSERVA el fichero, pero el commit REGISTRA UN BORRADO** (`#663`): al rebasar,
+  git resetea a `origin/main` —donde sigue rastreado, así que lo **restaura**— y después reaplica tu
+  commit, que lo **borra del árbol de trabajo**. Medido: los 37 ficheros del cliente desaparecieron en el
+  `pull --rebase` y la web pasó a 404. ▶ **Sacar ficheros del repo tiene un paso previo que no es
+  opcional: copiarlos FUERA antes de retirarlos**, y reponerlos verificando con `cmp`.
+- ⚠️⚠️ **Y sacar ficheros destapa quién dependía de ellos EN DISCO**: `LandingContentSeeder` hace
+  `file_exists()` y guarda `null` si falta, así que tres casos habrían salido **verdes aquí y rojos en el
+  otro ordenador** tras su `pull` — §4.5 otra vez, y esta vez en el gate. Antes de retirar material, se
+  corre la suite **con** y **sin** él: las dos tienen que estar verdes.
 - **«The command 'docker' could not be found» es Docker Desktop APAGADO**: se arranca desde WSL con
   `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
 - Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
   esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
 
 ## Buzón
+
+### ❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-20) — TU `git pull` BORRA 37 FICHEROS
+- ⚠️⚠️ **`#663` saca el material gráfico del cliente de `main`** (35 fotos del catálogo + el vídeo de la
+  portada y su póster, 9,2 MB). Son `git rm --cached`, o sea que **al hacer `pull` desaparecen de TU
+  disco**, y hoy no hay de dónde recuperarlos: el paquete de la instancia es LOCAL de esta máquina y su
+  remoto está pendiente del owner.
+- ▶ **Qué se rompe y qué no**: la suite **no** —afirma sobre las RUTAS, no sobre el disco, medido—, ni el
+  gate, ni el cajón. Lo que verás es la **landing con fotos rotas y sin vídeo** si la abres en el
+  navegador, y una huella de `/` que puede no cuadrar con la de esta máquina.
+- ▶ **Cuando el owner cree `instancia-playjump`**, se clona y se copia: `cp -r publico/. <producto>/public/`
+  (receta en `INSTALACION-CLIENTE.md` §4.bis). Avisaré aquí con la URL.
+- ⚠️ **Producción y staging NO se tocan**: `deploy.sh` los excluye del `rsync`, que es además lo que los
+  salva de su `--delete`. Verificado en seco con control negativo.
 
 ### Para el carril del SPA (emisor: plataforma, 2026-09-20)
 - ✅ **El 422 de `InvitationHostController`, arreglado** (`#652`): `nullable` en los dos textos, como en la

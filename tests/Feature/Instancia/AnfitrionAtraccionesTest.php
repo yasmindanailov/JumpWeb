@@ -81,6 +81,14 @@ class AnfitrionAtraccionesTest extends TestCase
     {
         $zonas = $this->zonas();
         $publicadas = $zonas->sum(fn (Zone $z): int => $z->attractions->count());
+
+        // ⚠️⚠️ **El caso PONE la foto, no la hereda del sembrador** (`#663`). El material gráfico del
+        // cliente salió del repo, y el seeder guarda `null` cuando el fichero no está: en una máquina
+        // sin el paquete instalado NINGUNA atracción tenía foto y este caso moría por su propia
+        // guarda de «nace sin sujeto» —siendo el producto correcto—. Lo que aquí se vigila es que el
+        // anfitrión PINTE la foto que haya, no que esta instalación la tenga.
+        $zonas->first()->attractions->first()->update(['image' => 'images/attractions/jump_saltos_libres.webp']);
+
         $html = $this->html();
 
         $this->assertSame($publicadas, substr_count($html, '<li class="ride-tile">'), 'no se pinta una ficha por atracción publicada');

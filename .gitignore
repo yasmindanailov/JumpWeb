@@ -89,17 +89,22 @@ Thumbs.db
 # Caché de bytecode de los guiones Python de `scripts/` (aparece al importarlos desde un test o un REPL).
 __pycache__/
 
-# Vídeos: por defecto NO se versionan (fuentes pesadas / HEVC). EXCEPCIÓN: el vídeo del hero
-# y su póster, ya optimizados y ligeros (~2,2 MB, H.264 720p 30 fps, SIN audio), SÍ se versionan
-# para que el repo sea un clon COMPLETO y desplegable (repositorio canónico). Receta y medidas en
-# `DECISIONES #529`; la FUENTE original del cliente no se versiona aquí.
-/public/videos/*
-!/public/videos/.gitkeep
-!/public/videos/header_hero.mp4
-!/public/videos/header_poster.jpg
+# ⚠️⚠️ **EL MATERIAL GRÁFICO DE UNA INSTALACIÓN NO SE VERSIONA** (`#663`,
+# `[DECIDIDO owner, 2026-09-20]`), y esto **sustituye a `#529`**, que sí versionaba el vídeo del hero
+# «para que el repo sea un clon COMPLETO y desplegable (repositorio canónico)». Esa premisa se cayó con
+# el programa de producto e instancias: **el clon completo de una INSTALACIÓN es su paquete**
+# (`instancia-<slug>`), y este repo es el PRODUCTO, que no lleva la marca de ningún cliente (`#610`).
+# ▶ Los 37 ficheros (9,2 MB: 35 fotos del catálogo + el vídeo y su póster) viven en `publico/` del
+# paquete y se copian a mano al instalar (`docs/INSTALACION-CLIENTE.md`), como el paquete de tema.
+# ⚠️ **Ignorarlos NO basta**: el `rsync` de `deploy.sh` sincroniza el árbol de trabajo y no sabe nada de
+# git, así que llevan su propia exclusión allí — que además es lo que los salva del `--delete`.
+# ⚠️ `public/images/providers/` NO entra aquí: son los logotipos que exige la atribución de Google, los
+# pinta un componente del PRODUCTO y siguen versionados.
+/public/videos/
+/public/images/attractions/
 
-# Fotos ORIGINALES de atracciones (~67 MB, fuente del cliente): NO se versionan.
-# Las versiones optimizadas para web SI se versionan en /public/images/attractions.
+# Fotos ORIGINALES de atracciones (~67 MB, fuente del cliente): NO se versionan. ⚠️ Desde `#663`
+# tampoco las optimizadas, que están arriba: esta línea es solo para las fuentes del canvas.
 /design_mockup/imagenesatracciones/
 storage/ssr
 
