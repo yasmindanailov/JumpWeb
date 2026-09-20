@@ -3,7 +3,8 @@
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
 > **640–669** · Último usado: **`#651`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: 2026-09-19 (F5, T2a y la mudanza).
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (cierre de la sesión
+> que sirvió el menú entero, hizo la T2a y abrió la T2b).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -11,26 +12,27 @@
 
 - **Regla de trabajo del owner (`#630`)**: lo TÉCNICO lo decide el agente por el estándar profesional y lo
   justifica con medida; lo que afecte al TIPO DE PRODUCTO se le lleva con opciones cerradas, la recomendada primero.
-- **F0, F1, F2 y F3 CERRADAS.** F2 la cerró el owner el 18-09 (`#633`: dio por revisadas las frases; el agente
-  midió 5 de 6 y los cuatro arreglos del mapa, no el 6 de 6 en sesión nueva). Las tres skills viejas del repo,
-  retiradas; el plugin `jumpweb-agente` (repo `~/proyectos/jumpweb-agente`, GitHub `yasmindanailov/…`) va por
-  `07076ac`: arnés `pruebas/probar-hooks.sh` 52/52, mutación `pruebas/mutar-frases.py` 9/9. Se actualiza con
-  `claude plugin marketplace update jumpweb-agente` + `claude plugin update jumpweb-agente@jumpweb-agente --scope
-  project` (el agente puede, `#626`) y pide REINICIAR la sesión. F3: v1.0.0 = `1272cb93`, guarda 8.
-  ▶ Tarea propia de F1 aún abierta: podar `DEUDA.md` (277 KB) y `VERIFICACION-E2E-CAJON.md` (186 KB).
-- **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan nivel 5 (línea base 459) y ESLint del cajón
-  (`flat/essential`, línea base nativa de 12 en `eslint-suppressions.json`), las dos con trinquete en
-  `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20.
-- **F4 CERRADA** (`#633`: la implementó este carril, no el SPA). El token (`specs/token-bearer.md` ✅, `#630`,
-  contrato 1.1.0) cerró con ella la Fase 3; el cajón empaquetado, en cinco tandas. Detalle en sus specs.
-  · **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
-  TODO es opcional; ficha de producto y de zona con descripción e imagen; kit declarativo cuando lo pida una
-  segunda instancia; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
+- **F0–F4 CERRADAS**; su detalle vive en sus specs (`token-bearer.md`, `cajon-empaquetable.md`) y en sus
+  decisiones. El plugin `jumpweb-agente` (repo `~/proyectos/jumpweb-agente`, marketplace por URL de git) se
+  actualiza con `claude plugin marketplace update` + `claude plugin update … --scope project` (`#626`) y
+  pide REINICIAR la sesión. ▶ Tarea de F1 aún abierta: podar `DEUDA.md` (277 KB) y
+  `VERIFICACION-E2E-CAJON.md` (186 KB).
+- **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan nivel 5 y ESLint del cajón, las dos con
+  trinquete en `StaticAnalysisGateTest`; `scripts/mutar-analisis-estatico.sh` 20/20. La línea base **solo
+  encoge**.
+- **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
+  TODO es opcional; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
 - **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
   donde hay que leerlo. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro
   filas `promo.*` de `settings`. Receta de fin en `ENTORNOS.md` §6.
-- El enrutador vive pegado a su techo de 12 KB: una fila nueva exige acortar otra.
+- El enrutador y **este fichero** viven pegados a su techo: una línea nueva exige acortar otra. Rascar tres
+  veces seguidas es la señal de que algo debe MUDARSE a su spec — así se fueron la receta y las ocho trampas
+  del menú a `instancia-y-landing-fuera.md` §4.1.bis y §4.1.ter.
+- ⚠️⚠️ **Tras la mudanza de `#648`, una sesión ya abierta PIERDE skills y hooks**: el registro del plugin se
+  resuelve al arrancar y quedó en la ruta vieja. La configuración está intacta (el repo habilita el plugin y
+  el marketplace es una URL de git), así que **basta con sesión nueva en `producto/`**. Se vio porque «vamos
+  a cerrar sesión» dejó de disparar `/handoff` y el cierre hubo que hacerlo a mano.
 
 ## Por dónde retomar, en orden
 
