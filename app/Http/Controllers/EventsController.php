@@ -5,12 +5,19 @@ namespace App\Http\Controllers;
 use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Services\BirthdayComparison;
 use App\Domain\Content\Services\LandingAddonPresenter;
+use App\Http\Instancia\InstanceViews;
 
 class EventsController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
     /**
      * `/cumpleanos` (`DECISIONES #528`, artboard `Cumpleanos Pagina PJP`): la comparativa de los
      * packs, el menú, lo que se añade y lo que se decide después de reservar.
+     *
+     * ⚠️ Desde `#659` (F5 · T2b) la vista vive en la INSTANCIA (`web/cumpleanos.blade.php`) y el producto
+     * sirve `anfitrion/cumpleanos` sin paquete. Lo que se pasa es el CONTRATO de la vista
+     * (`InstanceViews::CONTRATO_DE_VISTAS`), y todo va COMPUESTO: la landing no calcula un precio.
      */
     public function __invoke(BirthdayComparison $comparison)
     {
@@ -27,7 +34,7 @@ class EventsController extends Controller
             ->orderBy('position')
             ->get();
 
-        return view('pages.events', [
+        return view($this->instancia->pick('cumpleanos', 'anfitrion.cumpleanos'), [
             'packages' => $packages,
             /*
              * ⚠️ **La foto es DATO, nunca una ruta escrita aquí**: sale de `zones.image` de la zona

@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#658`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#659`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: los barridos, el
-> 422, y seis vistas MUDADAS: `/contacto`, `/normas`, `/bar`, los legales, `/atracciones` y `/precios`).
+> 422, y SIETE vistas mudadas —de `/contacto` a `/cumpleanos`—).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -54,32 +54,25 @@
    (**sin remoto**; el owner dijo que por ahora no hace falta). `/contacto` ya resuelve por la instancia.
    ⚠️⚠️ **LA REGLA DE LA T2b** (`#649`, spec §4.5.bis, donde está el porqué entero): **el contrato
    producto↔instancia son los DATOS que recibe la vista, no el HTML que produce.**
-   ▶ **HECHO el CONTRATO DE VISTA** (`CONTRATO_DE_VISTAS` + su test, arnés 7/7). ❗❗ Al medirlo saltó que
-   **la vista recibe NUEVE variables, no dos** —siete las mete el composer global— y que esa lista **va a
-   ENCOGER** con el menú: ese día sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
-   ▶ **T2b EN CURSO, y su hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una vista hay
-   que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. Barridos hechos: la
-   dirección, los números y la `<meta description>` (`#650`, `#651`, `#653`; arnés 50/50), más `bar` y
-   `pricing` sin hallazgo. **El 422 del anfitrión, arreglado** (`#652`).
-   ▶ **SEIS vistas MUDADAS** (`#654` `/contacto` · `#655` `/normas`, `/bar` y los cinco legales · `#657`
-   `/atracciones` · `#658` `/precios`): viven en `instancias/playjump/web/` (repo LOCAL sin remoto), el
-   producto sirve `anfitrion/{contacto,normas,bar,legal,atracciones,precios}` sin paquete, y **la suite
-   corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0**, sitemap 11=11. Los
-   barridos retiraron una regla MUERTA (el aviso de borrador de los legales) y bajaron dos vivas:
-   `LocalDate` (`#656`) y `Attraction::imageUrl()` (`#657`).
-   Cada página mudada deja su lista de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
-   ❗❗ **Y el juez tenía dos agujeros** (`#657`): `huella-maquetacion.mjs` recorría 14 vistas, sin
-   `/atracciones` ni `/waiver` —uno de los cinco legales que `#655` YA había mudado—. Hoy son **16 vistas ·
-   38 pantallas**; antes de mudar una página se comprueba que esté en esa lista.
+   ▶ **HECHO el CONTRATO DE VISTA** (`CONTRATO_DE_VISTAS` + su test, arnés 7/7). ❗❗ La vista recibe NUEVE
+   variables, no dos —siete las mete el composer global—, y esa lista **va a ENCOGER** con el menú: ese día
+   sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
+   ▶ **T2b EN CURSO. El MÉTODO entero está en la spec §4.7** —barrido de reglas y de variables muertas →
+   partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
+   allí está también lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50);
+   **el 422 del anfitrión, arreglado** (`#652`).
+   ▶ **SIETE vistas MUDADAS** (`#654`→`#659`: `/contacto`, `/normas`, `/bar`, los cinco legales,
+   `/atracciones`, `/precios` y `/cumpleanos`): viven en `instancias/playjump/web/` (repo LOCAL sin
+   remoto), el producto sirve su `anfitrion/…` sin paquete, y **la suite corre SIN paquete**
+   (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38**, sitemap 11=11. Cada página deja su lista
+   de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
    ⚠️ El material que solo pinta una vista mudada se declara en
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
    sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA**: `cumpleanos`, `servicios` y, la última, `home` (1.631 líneas), con el mismo método
-   —barrido de reglas y de variables → partir pruebas → anfitrión mínimo → huella 0—; una regla medida y
-   SIN tocar (el `$fmt` de `services.blade.php`, de la web, avisado); y después T3–T5 (spec hermana §4.6).
-   ❗ **El barrido incluye QUÉ VARIABLES USA la vista** (`#658`): `/precios` pasaba tres que nadie leía
-   (`tickets`, `zones`, `registrationUrl`). Mientras es una variable no se nota; declarada en el contrato
-   es una PROMESA a cada instalación, y retirarla luego sube el MAYOR. Se retira ANTES de prometerla.
+   ▶ **QUEDA**: `servicios` y, la última, `home` (1.631 líneas), con el mismo método; dos cosas medidas y
+   SIN tocar (el `$fmt` de `services.blade.php`, de la web, avisado; y `LandingAddonPresenter::unique()`,
+   sin consumidor en producción desde `#583` y con su propio formato de dinero: ficha en `DEUDA.md`); y
+   después T3–T5 (spec hermana §4.6).
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
    owner (`#535`, `#350`, `#551`, `#264`). Se retira o se re-apunta CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
@@ -87,8 +80,7 @@
    nombre del proyecto de Docker está FIJADO (`name: jumpweb`, `#648`): salía de la carpeta, así que la
    mudanza habría levantado contenedores nuevos y dejado huérfano el volumen de MySQL.
 
-   ⚠️ **De la ficha** (spec §4.1): la foto de zona es ruta heredada a `public/`; **35 imágenes del cliente
-   versionadas en `main`**, sin tocar: van con la T2.
+   ⚠️ **De la ficha** (spec §4.1): **35 imágenes del cliente versionadas en `main`**, sin tocar: van con la T2.
 
    ▶ **La RECETA de un plato nuevo** está en la spec **§4.1.bis**, y **las OCHO TRAMPAS del menú** (el
    `weekday` que es 0 = domingo, el `sortBy` al revés, el objeto vacío que sale `[]`, el `''` de lo
@@ -209,6 +201,15 @@ dueño es el carril de la web/reseñas—) ·
   anotado en «por dónde retomar» (2). `<x-site.turnstile />` existe, por si `invitation/show` lo quiere.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-20)
+- ✅ **`/cumpleanos` MUDADA** (`#659`): mismo DOM, huella 0/38. De lo tuyo: `Site/BirthdayPageTest` pasa a
+  afirmar sobre los datos y su marcado se reparte entre la doc de la instancia y `AnfitrionCumpleanosTest`;
+  **`mutar-cumple.py` re-apuntado y podado** (se van el mutante del reloj de las dos horas y el del carril
+  de complementos: los dos perdieron su sujeto en `#583` y salían «NO APLICADA»); y `SidebarSeamTest` lee
+  ahora el anfitrión, con su censo al día. El trío de la página (`trio--page`) queda declarado como
+  material de la instancia: su CSS sigue en el producto y nadie más lo pinta.
+- ⚠️ **Medido y sin tocar, tuyo**: `LandingAddonPresenter::unique()` no tiene consumidor en producción
+  desde que `#583` retiró el bloque de complementos de `/precios` —solo lo llama un test— y escribe el
+  dinero con su propio `number_format(…, 2)`, distinto de `Money::showcase()`. Ficha en `DEUDA.md`.
 - ✅ **`/precios` MUDADA** (`#658`): la vista vive en la instancia (mismo DOM, huella 0/38) y el producto
   sirve `anfitrion/precios`. De lo tuyo: `Site/PricingPageTest` pasa a afirmar sobre los DATOS y sus dos
   casos de marcado se van al anfitrión; **`mutar-precios.py` re-apuntado y PODADO** —seis mutantes se
@@ -263,7 +264,7 @@ dueño es el carril de la web/reseñas—) ·
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
 - **Toqué lo tuyo por orden del owner** (`#628`, la promo): tarifas, `/precios`, tres reglas de `landing.css`,
   `RateCards`/`RateTable`; sin `promo.*` no cambia un byte. ⚠️ Defecto tuyo previo, sin tocar: «9,60 €» se
-  parte en dos renglones a 390 px en `/precios`. · `#631`/`#632`: ofertas y atracciones salen del panel.
+  parte en dos renglones a 390 px en `/precios` (hoy, en la vista de la instancia).
 
 ### Atendido
 - **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración; y el ✅ del owner con el freno §7.1·5) y

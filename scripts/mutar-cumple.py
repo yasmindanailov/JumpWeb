@@ -16,9 +16,9 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-FILTRO = 'BirthdayPageTest'
+FILTRO = 'BirthdayPageTest|AnfitrionCumpleanosTest'
 SERVICIO = 'app/Domain/Booking/Services/BirthdayComparison.php'
-VISTA = 'resources/views/pages/events.blade.php'
+VISTA = 'resources/views/anfitrion/cumpleanos.blade.php'
 FICHEROS = [SERVICIO, VISTA]
 
 # (nombre, fichero, texto que se busca, texto por el que se cambia)
@@ -65,17 +65,7 @@ MUTACIONES = [
      "collect($lists)->every(fn (array $list): bool => in_array($f, $list, true))",
      "false"),
 
-    ("el reloj habla por una duración que no comparten",
-     SERVICIO,
-     "$duration = $this->same($durations) ? $durations[0] : null;",
-     "$duration = $durations[0];"),
-
     # ── Los complementos ──
-    ("el carril vuelve a llevar el menú",
-     VISTA,
-     ':without-choices="true"',
-     ':without-choices="false"'),
-
     ("lo que se añade después desaparece de la página",
      SERVICIO,
      "foreach ($pack->addonsSoldAfterBooking() as $addon) {",
@@ -115,8 +105,13 @@ MUTACIONES = [
     # ── La foto de la zona (`#532`) ──
     ("la foto se pinta aunque el panel no tenga ninguna (hueco gris esperando)",
      VISTA,
-     "                @if ($zone?->image)",
-     "                @if (true)"),
+     "            @if ($foto = $zone?->imageUrl())",
+     "            @if (true)"),
+
+    ("la ruta de la foto se vuelve a derivar en la vista (y `uploads/` está al lado)",
+     VISTA,
+     "$foto = $zone?->imageUrl()",
+     "$foto = $zone?->image"),
 
     ("el alt de la foto deja de decir de qué zona es",
      VISTA,

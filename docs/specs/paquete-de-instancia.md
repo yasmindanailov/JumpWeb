@@ -18,7 +18,7 @@
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
 - **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: mudadas `/contacto`, `/normas`, `/bar`,
-  los cinco legales, `/atracciones` y `/precios` (`#654`→`#658`; §4.4 y §4.7) y **la suite corre SIN paquete**
+  los cinco legales, `/atracciones`, `/precios` y `/cumpleanos` (`#654`→`#659`; §4.4 y §4.7) y **la suite corre SIN paquete**
   (`phpunit.xml`): el producto prueba su anfitrión mínimo y la instancia se prueba con la huella. ⚠️ Mudar
   una vista es, en este orden: barrer sus reglas (§4.7), partir sus pruebas por lo que afirman (§4.5.bis),
   dejar un anfitrión mínimo que cumpla el armazón, y huella 0 — **con la página DENTRO de la huella**
@@ -131,7 +131,7 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
-| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar`, los cinco legales, `/atracciones` y `/precios`** (`#654`→`#658`, 20-09); quedan `cumpleanos`, `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
+| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar`, los cinco legales, `/atracciones`, `/precios` y `/cumpleanos`** (`#654`→`#659`, 20-09); quedan `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
 
@@ -305,9 +305,15 @@ banda—. Un mutante cuyo texto ya no existe sale «NO APLICADA» y solo mide qu
 ella, así que se re-apunta cada guarda al fichero nuevo y se MUTA allí. Se busca ANTES —`grep -rln
 "pages/pricing" tests scripts`—, que es como salieron las once de `js/app.js` en su día.
 
-▶ **Lo que queda de la T2b**: `cumpleanos`, `servicios` y, la última, `home`, con el mismo método: barrido
-de reglas → **barrido de variables muertas** → partir pruebas → anfitrión mínimo → huella. Después, T3–T5
-(spec hermana §4.6).
+▶ **`/cumpleanos`, MUDADA** (`#659`, 20-09). Su barrido halló la misma clase de regla que `#657`: la foto
+de la zona se re-derivaba con `asset()` teniendo el producto su `Zone::imageUrl()` desde `#645`. Y **estrena
+de verdad la lista de material**: `.trio` y `.trio-stand` conservan consumidor en el producto (la portada),
+pero el MODIFICADOR `trio--page` no, así que se declara con su vista. ⚠️ *La entrada de la lista es el
+MODIFICADOR, no la familia*: declarar `trio` entero habría tapado que la portada sí lo pinta.
+
+▶ **Lo que queda de la T2b**: `servicios` y, la última, `home`, con el mismo método: barrido de reglas →
+**barrido de variables muertas** → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec
+hermana §4.6).
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.

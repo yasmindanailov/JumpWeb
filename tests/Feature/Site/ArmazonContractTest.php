@@ -54,11 +54,11 @@ class ArmazonContractTest extends TestCase
         'anfitrion/atracciones',
         'anfitrion/bar',
         'anfitrion/contacto',
+        'anfitrion/cumpleanos',
         'anfitrion/legal',
         'anfitrion/normas',
         'anfitrion/precios',
         'home',
-        'pages/events',
         'pages/services',
         'payments/retry-redirect',
     ];
@@ -543,7 +543,8 @@ class ArmazonContractTest extends TestCase
     /**
      * **TODOS los `<main>` de las vistas con armazón llevan el ancla, no solo el primero.**
      *
-     * ❗ Esto existe por un defecto REAL que cazó el test de arriba: `pages/events` tiene **dos**
+     * ❗ Esto existe por un defecto REAL que cazó el test de arriba: la página de cumpleaños (entonces
+     * `pages/events`, hoy `anfitrion/cumpleanos` y su gemela en la instancia, `#659`) tenía **dos**
      * `<main>` en ramas excluyentes, se parcheó el primero y **la página servía el segundo**. El
      * salto al contenido quedaba apuntando a un ancla que no existía en la página que se ve —y
      * eso no falla, no avisa y solo lo nota quien navega con teclado—.

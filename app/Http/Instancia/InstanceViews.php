@@ -117,6 +117,14 @@ class InstanceViews
                 ...self::DEL_COMPOSER,
             ],
         ],
+        // `/cumpleanos` (`#659`): los packs de la superficie (de ellos sale la `<meta description>`), la
+        // ZONA de la que la página publica la foto, la comparativa ya compuesta —columnas, filas, el
+        // contador y sus totales por número de niños—, lo que pide el post-form y los grupos de elección
+        // del menú. `compare` y `form` son `null` cuando no hay packs vendibles: vacío es una respuesta.
+        'cumpleanos' => [
+            'ruta' => 'cumpleanos',
+            'datos' => ['packages', 'zone', 'compare', 'form', 'choices', ...self::DEL_COMPOSER],
+        ],
         // Los cinco legales (`#655`) comparten vista y contrato: la página del panel. Se mide con una.
         'legal' => [
             'ruta' => 'legal.privacidad',
@@ -141,6 +149,10 @@ class InstanceViews
      */
     public const MATERIAL_CONSUMIDO_POR_LA_INSTANCIA = [
         'grain--fade' => 'web/normas.blade.php · la trama que se apaga, en la cabecera de /normas (`#655`)',
+        // ⚠️ `.trio` y `.trio-stand` siguen teniendo consumidor en el producto (la sección 04 de la
+        // portada), así que solo el MODIFICADOR de la página se queda sin sujeto: el trío de
+        // `/cumpleanos` va a la derecha del titular y a escala 0,8, y eso solo lo pide esa página.
+        'trio--page' => 'web/cumpleanos.blade.php · la colocación del trío en la página (`#659`)',
         'slot-ico-altura' => 'web/normas.blade.php · el icono de «La altura, de un vistazo» (`#655`)',
         'slot-ico-saltador' => 'web/normas.blade.php · el icono del grupo «Mientras saltas» (`#655`)',
     ];

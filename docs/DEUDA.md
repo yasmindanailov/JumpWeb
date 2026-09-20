@@ -940,3 +940,22 @@ defecto de verdad escondido — mirarlas una a una, no en bloque. Tras arreglar:
 (`phpstan analyse --generate-baseline phpstan-baseline.neon`) **y bajar `FROZEN_ERRORS` en
 `StaticAnalysisGateTest` en el mismo commit** (el trinquete solo baja). ⚠️ Si toca un fichero del
 `CRITICAL_RE`, aunque sea quitar un `?->`, el push exige los verificadores de concurrencia.
+
+## ▶ Media · `LandingAddonPresenter::unique()` se quedó SIN consumidor y con su propio formato de dinero (2026-09-20, `DECISIONES #659`)
+
+**Medido** al barrer `/cumpleanos` para mudarla (F5 · T2b): de los tres métodos públicos del presentador,
+`choiceGroups()` lo llama `EventsController` y `rows()` lo llaman los otros dos; **`unique()` no lo llama
+nadie en producción** — solo `tests/Feature/LandingAddonsTest`. Su superficie era el bloque de complementos
+de `/precios`, que `#583` retiró por decisión del owner («quita los complementos de la página web, solo los
+dejamos en el SPA al reservar»).
+
+▶ **Y no es solo código muerto**: escribe el dinero con un `number_format($cents / 100, 2, ',', '.').' €'`
+propio, con dos decimales fijos y separadores a mano, mientras el camino vivo usa `Money::showcase()` —que
+quita los decimales en cero y pide el separador al idioma—. Son **dos escrituras distintas del mismo
+importe** dentro del mismo servicio; hoy no divergen a la vista porque una de las dos no se pinta en ningún
+sitio, que es justo lo que la hace fácil de olvidar.
+
+**Qué hacer**: retirarlo con su test siguiendo `CONVENCIONES §3.quater` —clasificar cada caso de
+`LandingAddonsTest` por su SUJETO, no por la regla que menciona— o, si alguna landing de instancia lo
+acaba necesitando, unificar su escritura con `Money`. No se hizo en `#659` porque la tanda era la mudanza
+de la vista y retirar un servicio con sus pruebas es otra cirugía.

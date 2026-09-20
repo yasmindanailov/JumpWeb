@@ -4,7 +4,6 @@ namespace Tests\Feature\Site;
 
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
-use App\Domain\Booking\Services\BirthdayComparison;
 use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,16 +12,22 @@ use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 /**
- * **`/cumpleanos` · EL CUMPLE, AL DETALLE** (carril de diseño Fase 3 · T3b, `DECISIONES #528`).
- * Artboard `Cumpleanos Pagina PJP` 1a/1b.
+ * **`/cumpleanos`: la CONDUCTA del producto** (`DECISIONES #528`; partida por lo que afirma en F5 · T2b,
+ * `#659`).
  *
- * ▶ Lo que se vigila NO es el aspecto —eso lo midió la sonda y lo mira el owner—: son las cosas que
- * se romperían **en silencio**, con la página cargando y la suite en verde.
- *  · **El total es el precio que cobra la cesta por el número de niños**, para cada número, con
- *    los tramos de volumen dentro. Un total calculado de otra forma publicaría una cifra que el
- *    checkout no cobra.
- *  · **La regla de la comparativa**: lo que coincide en todos los packs va a «Igual» y lo que
- *    difiere a la tabla — decidido comparando el catálogo, no con una lista.
+ * ❗❗ **Aquí no se lee el HTML** (`#649`): el contrato con la landing de una instancia son los DATOS que
+ * recibe la vista —`compare` (la comparativa entera, con el contador y sus totales por número de niños),
+ * `form`, `choices`, `zone` y `packages`—, y sobre ellos se afirma. El marcado de la página de PlayJump
+ * ya no está en el producto; lo que garantizaba vive en la doc de la instancia (`paginas/cumpleanos.md`)
+ * y el anfitrión mínimo tiene su guarda propia (`AnfitrionCumpleanosTest`).
+ *
+ * Lo que se rompería EN SILENCIO y esto sostiene:
+ *  · **El total es el precio que cobra la cesta por el número de niños**, para cada número, con los
+ *    tramos de volumen dentro. Un total calculado de otra forma publicaría una cifra que el checkout no
+ *    cobra — y nadie lo notaría hasta pagar.
+ *  · **La regla de la comparativa**: lo que coincide en todos los packs va a «Igual» y lo que difiere a
+ *    la tabla, decidido comparando el catálogo y no con una lista escrita.
+ *  · **La especial va ENTERA o no va**: nunca vuelve a publicarse como recargo.
  *  · **Lo retirado no vuelve** (el editor de invitaciones, el paso a paso, `html2canvas`).
  *
  * ⚠️ Cada caso que cambia el catálogo vuelve a pedir la página: la comparativa se compone en la
@@ -40,31 +45,36 @@ class BirthdayPageTest extends TestCase
         app()->setLocale('es');
     }
 
-    private function page(): string
+    /** @return array<string, mixed> Lo que el controlador le pasa a la vista: el sujeto de esta guarda. */
+    private function datos(): array
     {
-        return (string) $this->get('/cumpleanos')->assertOk()->getContent();
+        return $this->get('/cumpleanos')->assertOk()->original->getData();
     }
 
-    private function cut(string $html, string $pattern): string
+    /** @return array<string, mixed> La comparativa ya compuesta. */
+    private function compare(): array
     {
-        preg_match($pattern, $html, $m);
-
-        return $m[0] ?? '';
+        return $this->datos()['compare'];
     }
 
-    private function table(string $html): string
+    /** Los textos de una fila de la tabla, aplanados: el sujeto de «esto se compara». */
+    private function filaTexto(array $compare, string $label): string
     {
-        return $this->cut($html, '#<table class="party-compare__table">.*?</table>#s');
+        $fila = collect($compare['rows'])->firstWhere('label', $label);
+
+        return $fila === null ? '' : json_encode($fila['cells'], JSON_UNESCAPED_UNICODE);
     }
 
-    private function shared(string $html): string
+    /** Todo lo que viaja en «Igual en los dos», aplanado. */
+    private function igualTexto(array $compare): string
     {
-        return $this->cut($html, '#<ul class="party-shared__list".*?</ul>#s');
+        return json_encode($compare['shared'], JSON_UNESCAPED_UNICODE);
     }
 
-    private function after(string $html): string
+    /** Toda la tabla, aplanada. */
+    private function tablaTexto(array $compare): string
     {
-        return $this->cut($html, '#<section class="party-page__block" aria-labelledby="party-after">.*?</section>#s');
+        return json_encode($compare['rows'], JSON_UNESCAPED_UNICODE);
     }
 
     /** @return Collection<int, TicketType> */
@@ -92,14 +102,16 @@ class BirthdayPageTest extends TestCase
     //  Guarda de la guarda
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    public function test_the_probe_frames_a_real_page(): void
+    /** Sin comparativa compuesta, todo lo de abajo miraría el vacío. */
+    public function test_the_page_composes_a_real_comparison(): void
     {
-        $html = $this->page();
+        $datos = $this->datos();
 
-        $this->assertStringContainsString(__('landing.birthday.title'), $html);
-        $this->assertGreaterThan(1500, strlen($this->table($html)), 'la comparativa es sospechosamente corta');
-        $this->assertNotSame('', $this->shared($html), 'no hay bloque «Igual»: los casos de reparto mirarían el vacío');
-        $this->assertNotSame('', $this->after($html), 'no hay bloque «Después de reservar»');
+        $this->assertNotNull($datos['compare'], 'la página no compone comparativa: los casos de abajo no medirían nada');
+        $this->assertGreaterThan(1, count($datos['compare']['columns']), 'hacen falta dos packs para comparar');
+        $this->assertNotEmpty($datos['compare']['rows']);
+        $this->assertNotEmpty($datos['compare']['shared'], 'no hay bloque «Igual»: los casos de reparto mirarían el vacío');
+        $this->assertNotNull($datos['form'], 'no viaja lo que pide el post-form');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -109,9 +121,9 @@ class BirthdayPageTest extends TestCase
     /**
      * ❗❗❗ **EL TOTAL ES EL PRECIO DE LA CESTA POR EL NÚMERO DE NIÑOS, PARA CADA NÚMERO.**
      *
-     * Es exactamente la línea de `CartPricer` (`priceCentsForRate($tarifa, $n) × $n`), y por eso
-     * el caso siembra un TRAMO: sin él, «el precio del pack × n» y «el de la cesta × n» coinciden
-     * y una implementación que ignorase los tramos pasaría en verde.
+     * Es exactamente la línea de `CartPricer` (`priceCentsForRate($tarifa, $n) × $n`), y por eso el caso
+     * siembra un TRAMO: sin él, «el precio del pack × n» y «el de la cesta × n» coinciden y una
+     * implementación que ignorase los tramos pasaría en verde.
      */
     public function test_every_total_is_the_basket_price_times_the_count_tiers_included(): void
     {
@@ -120,7 +132,7 @@ class BirthdayPageTest extends TestCase
         $jump->priceTiers()->create(['rate_type_id' => $normal->id, 'min_qty' => 12, 'amount_cents' => 1200]);
 
         $packs = $this->packs();
-        $compare = (new BirthdayComparison)->compose($packs);
+        $compare = $this->compare();
         $i = $packs->search(fn (TicketType $p): bool => $p->id === $jump->id);
 
         $this->assertSame(['from' => 8, 'to' => 20], $compare['counter']);
@@ -133,9 +145,6 @@ class BirthdayPageTest extends TestCase
         $this->assertSame('15 €', $compare['live']['each'][11][$i]);
         $this->assertSame('12 €', $compare['live']['each'][12][$i]);
         $this->assertSame('144 €', $compare['live']['total'][12][$i]);
-
-        // La página arranca en el mínimo con esos mismos números (sin JavaScript se lee esto).
-        $this->assertStringContainsString($compare['live']['total'][8][$i], $this->table($this->page()));
     }
 
     /**
@@ -145,22 +154,26 @@ class BirthdayPageTest extends TestCase
      */
     public function test_the_special_rate_rows_are_whole_and_leave_when_they_add_nothing(): void
     {
-        $tabla = $this->table($this->page());
-        $this->assertStringContainsString(__('landing.birthday.row_each_special'), $tabla);
-        $this->assertStringContainsString('18 €', $tabla);
-        $this->assertStringNotContainsString('+3 €', $tabla, 'la especial ha vuelto a publicarse como recargo');
+        $compare = $this->compare();
 
-        // Con la especial al MISMO precio que la normal en todos los packs, sus filas repetirían
-        // las de arriba: se van, y la nota de los días con ellas.
+        $this->assertNotSame('', $this->filaTexto($compare, __('landing.birthday.row_each_special')),
+            'la tarifa especial no trae su fila');
+        $this->assertStringContainsString('18 €', $this->tablaTexto($compare));
+        $this->assertStringNotContainsString('+3 €', $this->tablaTexto($compare),
+            'la especial ha vuelto a publicarse como recargo');
+        $this->assertTrue($compare['special'], 'con precios distintos, la nota de los días tiene que ofrecerse');
+
+        // Con la especial al MISMO precio que la normal en todos los packs, sus filas repetirían las de
+        // arriba: se van, y la nota de los días con ellas.
         $special = RateType::where('key', RateType::KEY_SPECIAL)->value('id');
         foreach (TicketType::birthdaySurfacePacks()->get() as $pack) {
             $pack->prices()->where('rate_type_id', $special)->update(['amount_cents' => 1500]);
         }
 
-        $html = $this->page();
-        $this->assertStringNotContainsString(__('landing.birthday.row_each_special'), $this->table($html));
-        $this->assertStringNotContainsString(__('landing.birthday.row_total_special'), $this->table($html));
-        $this->assertStringNotContainsString('class="rates__note"', $html);
+        $compare = $this->compare();
+        $this->assertSame('', $this->filaTexto($compare, __('landing.birthday.row_each_special')));
+        $this->assertSame('', $this->filaTexto($compare, __('landing.birthday.row_total_special')));
+        $this->assertFalse($compare['special'], 'se sigue ofreciendo la nota de los días de la especial');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -169,95 +182,56 @@ class BirthdayPageTest extends TestCase
 
     public function test_what_all_packs_share_goes_to_its_block_and_what_differs_to_the_table(): void
     {
-        $html = $this->page();
+        $compare = $this->compare();
 
         // «Mesa reservada para el grupo» la escriben los dos packs del seeder; el acceso a la zona, uno.
-        $this->assertStringContainsString('Mesa reservada para el grupo', $this->shared($html));
-        $this->assertStringNotContainsString('Mesa reservada para el grupo', $this->table($html));
-        $this->assertStringContainsString('Acceso exclusivo a la zona Kids', $this->table($html));
-        $this->assertStringNotContainsString('Acceso exclusivo a la zona Kids', $this->shared($html));
+        $this->assertStringContainsString('Mesa reservada para el grupo', $this->igualTexto($compare));
+        $this->assertStringNotContainsString('Mesa reservada para el grupo', $this->tablaTexto($compare));
+        $this->assertStringContainsString('Acceso exclusivo a la zona Kids', $this->tablaTexto($compare));
+        $this->assertStringNotContainsString('Acceso exclusivo a la zona Kids', $this->igualTexto($compare));
 
         // Un HECHO igual en los dos va a «Igual»; en cuanto difiere, baja a su fila.
-        $this->assertStringContainsString('Desde 8 niños', $this->shared($html));
+        $this->assertStringContainsString('Desde 8 niños', $this->igualTexto($compare));
 
         // ⚠️ El MÁXIMO no es un hecho publicado (`#586`): con topes distintos sigue siendo «Igual».
         $this->pack('Cumpleaños Kids')->update(['max_qty' => 15]);
-        $this->assertStringContainsString('Desde 8 niños', $this->shared($this->page()));
+        $this->assertStringContainsString('Desde 8 niños', $this->igualTexto($this->compare()));
 
         $this->pack('Cumpleaños Kids')->update(['min_qty' => 10]);
-        $html = $this->page();
+        $compare = $this->compare();
 
-        $this->assertStringNotContainsString('Desde 8 niños', $this->shared($html));
-        $this->assertStringContainsString(__('landing.birthday.row_kids'), $this->table($html));
-        $this->assertStringContainsString('Desde 10 niños', $this->table($html));
+        $this->assertStringNotContainsString('Desde 8 niños', $this->igualTexto($compare));
+        $this->assertStringContainsString('Desde 10 niños', $this->filaTexto($compare, __('landing.birthday.row_kids')));
     }
 
     /**
-     * **La etiqueta destacada de un pack sale bajo su nombre** (`#585`, `[DECIDIDO owner, 2026-09-13]`):
-     * el panel la deja escribir también en los packs, y la web la pinta donde salga el producto.
+     * **La etiqueta destacada de un pack viaja con su columna** (`#585`, `[DECIDIDO owner, 2026-09-13]`):
+     * el panel la deja escribir también en los packs. Sin etiqueta, la columna no se inventa ninguna.
      */
-    public function test_a_pack_badge_is_painted_under_its_name(): void
+    public function test_a_pack_badge_travels_with_its_column(): void
     {
-        $this->assertStringNotContainsString('party-compare__badge', $this->page(), 'sin etiqueta no hay chip');
+        $this->assertEmpty(array_filter(array_column($this->compare()['columns'], 'badge')), 'sin etiqueta viaja una etiqueta');
 
         $this->pack('Cumpleaños Jump')->update(['badge' => ['es' => 'La favorita', 'en' => 'Favourite', 'fr' => 'La préférée']]);
 
-        $html = $this->page();
-        $this->assertSame(1, substr_count($html, 'party-compare__badge'), 'el chip sale en una columna que no lo lleva');
-        $this->assertStringContainsString('Cumpleaños Jump<span class="party-compare__badge">La favorita</span></th>', $html);
+        $columnas = $this->compare()['columns'];
+        $this->assertSame(['La favorita'], array_values(array_filter(array_column($columnas, 'badge'))));
+        $this->assertSame('Cumpleaños Jump', collect($columnas)->firstWhere('badge', 'La favorita')['name']);
     }
 
     public function test_with_a_single_pack_everything_is_what_it_includes(): void
     {
         $this->pack('Cumpleaños Kids')->update(['is_sellable' => false]);
-        $html = $this->page();
+        $compare = $this->compare();
 
-        $this->assertStringContainsString('<h2 class="party-page__title" id="party-packs">'.trans_choice('landing.birthday.packs_title', 1).'</h2>', $html);
-        $this->assertStringContainsString(trans_choice('landing.birthday.shared_title', 1), $html);
-        $this->assertSame(1, substr_count($html, '<th scope="col" class="party-compare__pack">'));
+        $this->assertCount(1, $compare['columns']);
         // Con un pack solo, todo coincide consigo mismo: nada que comparar en la tabla.
-        $this->assertStringNotContainsString(__('landing.birthday.row_features'), $this->table($html));
-        $this->assertStringContainsString('Acceso exclusivo a la zona Jump', $this->shared($html));
+        $this->assertSame('', $this->filaTexto($compare, __('landing.birthday.row_features')));
+        $this->assertStringContainsString('Acceso exclusivo a la zona Jump', $this->igualTexto($compare));
         // ⚠️ La duración va donde va lo que incluye (`#583`): aquí, abriendo «Igual», no sola en la tabla.
-        $duracion = e(__('landing.events.duration_feature', ['duration' => '2 h']));
-        $this->assertStringContainsString($duracion, $this->shared($html), 'con un pack, la duración no abre lo que incluye');
-        $this->assertStringNotContainsString($duracion, $this->table($html));
-    }
-
-    /**
-     * **EL RELOJ SOLO HABLA POR UNA DURACIÓN COMPARTIDA.** Si los packs duran distinto, su titular
-     * diría la de uno como si fuera de todos: se retira y la duración baja a una fila.
-     */
-    /**
-     * **La foto de la zona es DATO y su ausencia es una respuesta** (`#532`).
-     *
-     * El artboard abre la página con la foto de la zona montada —*«la prueba del acceso
-     * exclusivo»*— al lado del reloj. Sale de `zones.image`, el campo del panel, así que:
-     *  · con foto, la página la publica **con el nombre de la zona por `alt`** (la convención de
-     *    `/atracciones`, donde el `alt` es el nombre de la atracción);
-     *  · **sin foto no se pinta NADA** — ni `<figure>`, ni un hueco gris esperando.
-     *
-     * ⚠️ Lo que se rompería en silencio es lo segundo: una caja vacía reservada no falla, no avisa
-     * y deja la página con un rectángulo encima de todo lo demás.
-     */
-    public function test_the_zone_photo_is_data_and_its_absence_is_an_answer(): void
-    {
-        $zone = $this->pack('Cumpleaños Kids')->zone;
-        $zone->update(['image' => 'images/attractions/cumplea_1.webp']);
-
-        $html = $this->page();
-        $hero = $this->cut($html, '#<div class="party-hero">.*?</div>\s*<section#s');
-
-        $this->assertStringContainsString('class="party-photo"', $hero, 'la foto de la zona no se publica');
-        $this->assertStringContainsString('images/attractions/cumplea_1.webp', $hero);
-        // El `alt` lo escribe el PANEL, no la vista: es el nombre de la zona.
-        $this->assertStringContainsString('alt="'.e($zone->tr('name')).'"', $hero);
-
-        // CONTROL: sin foto en el panel, ni figura ni hueco.
-        $zone->update(['image' => null]);
-        $sinFoto = $this->page();
-
-        $this->assertStringNotContainsString('party-photo', $sinFoto, 'se reserva un hueco de foto que no existe');
+        $duracion = __('landing.events.duration_feature', ['duration' => '2 h']);
+        $this->assertStringContainsString($duracion, $this->igualTexto($compare), 'con un pack, la duración no abre lo que incluye');
+        $this->assertStringNotContainsString($duracion, $this->tablaTexto($compare));
     }
 
     /**
@@ -268,37 +242,57 @@ class BirthdayPageTest extends TestCase
      */
     public function test_the_duration_leads_what_each_pack_includes(): void
     {
-        $html = $this->page();
-        $linea = fn (string $d): string => e(__('landing.events.duration_feature', ['duration' => $d]));
+        $linea = fn (string $d): string => __('landing.events.duration_feature', ['duration' => $d]);
 
-        $this->assertStringNotContainsString('party__clock', $html, 'ha vuelto el reloj de las dos horas');
-        $this->assertSame(2, substr_count($this->table($html), $linea('2 h')),
+        $this->assertSame(2, substr_count($this->tablaTexto($this->compare()), $linea('2 h')),
             'la duración no abre la columna de cada pack');
 
         $this->pack('Cumpleaños Kids')->update(['duration_min' => 90]);
-        $tabla = $this->table($this->page());
+        $tabla = $this->tablaTexto($this->compare());
 
         $this->assertStringContainsString($linea('1 h 30 min'), $tabla, 'la columna del pack cambiado no dice su duración');
         $this->assertSame(1, substr_count($tabla, $linea('2 h')), 'la otra columna perdió la suya');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
-    //  El menú y lo que se añade después (los complementos de reservar ya no salen, `#583`)
+    //  La foto, el menú y lo que se añade después
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    public function test_the_menu_keeps_its_own_block(): void
+    /**
+     * **La foto de la zona es DATO y su ausencia es una respuesta** (`#532`). Sale de `zones.image`, el
+     * campo del panel, y la resuelve el PRODUCTO (`Zone::imageUrl()`, `#645`): con foto viaja su URL
+     * absoluta; sin foto viaja `null`, y una landing que reserve hueco lo hace contra el dato.
+     */
+    public function test_the_zone_photo_is_data_and_its_absence_is_an_answer(): void
+    {
+        $zone = $this->pack('Cumpleaños Kids')->zone;
+        $zone->update(['image' => 'images/attractions/cumplea_1.webp']);
+
+        $this->assertSame($zone->fresh()->imageUrl(), $this->datos()['zone']->imageUrl());
+        $this->assertStringContainsString('images/attractions/cumplea_1.webp', (string) $this->datos()['zone']->imageUrl());
+
+        $zone->update(['image' => null]);
+        $this->assertNull($this->datos()['zone']->imageUrl(), 'sin foto en el panel sigue viajando una URL');
+    }
+
+    /** El menú es una ELECCIÓN dentro del pack, no un complemento: viaja en su propio grupo. */
+    public function test_the_menu_travels_as_its_own_choice_group(): void
     {
         $menu = $this->addon('Menú Pizza', 800, 81);
         $this->pack('Cumpleaños Jump')->configurableAddons()->attach($menu->id, ['quantity_mode' => 'per_guest', 'choice_group' => 'menu', 'position' => 2]);
 
-        $this->assertStringContainsString('<h3 class="party-menu__name">Menú Pizza</h3>', $this->page());
+        $grupos = $this->datos()['choices'];
+        $menuGroup = collect($grupos)->firstWhere('key', 'menu');
+
+        $this->assertNotNull($menuGroup, 'el grupo del menú no viaja');
+        $this->assertContains('Menú Pizza', array_column($menuGroup['rows'], 'name'));
     }
 
     /**
-     * **LO QUE SE AÑADE DESPUÉS DE RESERVAR va a su bloque con su precio y su PLAZO, nunca al carril**
-     * (que es lo que se compra al reservar, `#413`).
+     * **LO QUE SE AÑADE DESPUÉS DE RESERVAR va con su precio y su PLAZO** (nunca al carril de la compra,
+     * que es lo que se vende al reservar, `#413`).
      */
-    public function test_after_booking_lists_the_form_and_the_extras_sold_later(): void
+    public function test_after_booking_carries_the_form_and_the_extras_sold_later(): void
     {
         $jump = $this->pack('Cumpleaños Jump');
         $cubo = $this->addon('Cubo de refrescos', 2399, 95);
@@ -306,67 +300,52 @@ class BirthdayPageTest extends TestCase
             'quantity_mode' => 'fixed', 'stage' => 'postform', 'postform_cutoff_hours' => 48, 'max_qty' => 5, 'position' => 9,
         ]);
 
-        $html = $this->page();
-        $after = $this->after($html);
+        $form = $this->datos()['form'];
 
-        $this->assertStringContainsString(e(__('guestform.title')), $after);
         foreach ($jump->guestFields() as $field) {
-            $this->assertStringContainsString(e($jump->guestFieldLabel($field)), $after);
+            $rotulo = $jump->guestFieldLabel($field);
+            $this->assertContains($rotulo, $form['children'], "el post-form no anuncia el campo «{$rotulo}»");
         }
-        $this->assertStringContainsString('Nº aproximado de adultos', $after);
-        $this->assertStringContainsString('Cubo de refrescos', $after);
-        $this->assertStringContainsString('23,99 € · hasta 48 h antes', $after);
+        $this->assertContains('Nº aproximado de adultos', $form['group']);
+
+        $extra = collect($form['extras'])->firstWhere('name', 'Cubo de refrescos');
+        $this->assertNotNull($extra, 'el complemento de venta posterior no viaja');
+        $this->assertSame('23,99 €', $extra['price']);
+        $this->assertSame('hasta 48 h antes', $extra['cutoff'], 'el plazo de corte no viaja con el complemento');
     }
 
+    /** La tarjeta de edades mezcladas necesita DOS packs de la misma familia: si no, no hay fiesta mixta. */
     public function test_the_mixed_age_card_needs_a_shared_age_family(): void
     {
-        $this->assertStringNotContainsString(__('landing.birthday.mixed_text'), $this->page(),
-            'la tarjeta de edades mezcladas sale sin que dos packs compartan familia de edades');
+        $this->assertLessThan(2, $this->compare()['mixed'],
+            'se anuncia la fiesta mixta sin que dos packs compartan familia de edades');
 
         TicketType::birthdaySurfacePacks()->update(['guest_age_family' => 'cumple']);
-        $html = $this->page();
 
-        $this->assertStringContainsString(e(trans_choice('landing.birthday.mixed_title', 2)), $html);
-        $this->assertStringContainsString(__('landing.birthday.mixed_text'), $html);
+        $this->assertSame(2, $this->compare()['mixed']);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────────────
-    //  El contador, el botón de reservar y la página vacía
-    // ─────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * **Sin JavaScript el contador no se ofrece** (`x-cloak`): la tabla se lee en el mínimo y un
-     * botón que no hace nada no se enseña. **Y sin tramo de niños, no hay contador.**
-     */
-    public function test_the_counter_is_offered_only_with_javascript_and_only_with_a_range(): void
+    /** **Sin tramo de niños no hay contador**: un control que no elige nada no se ofrece. */
+    public function test_without_a_range_there_is_no_counter(): void
     {
-        preg_match_all('#<button type="button" class="party-count__btn"([^>]*)>#s', $this->page(), $m);
-
-        $this->assertCount(2, $m[1], 'no hay dos botones en el contador');
-        foreach ($m[1] as $attrs) {
-            $this->assertStringContainsString('x-cloak', $attrs);
-        }
+        $this->assertGreaterThan($this->compare()['counter']['from'], $this->compare()['counter']['to'],
+            'el caso nace sin sujeto: no hay tramo');
 
         TicketType::birthdaySurfacePacks()->update(['min_qty' => 10, 'max_qty' => 10]);
-        $this->assertStringNotContainsString('party-count__btn', $this->page());
+        $compare = $this->compare();
+
+        $this->assertSame($compare['counter']['from'], $compare['counter']['to']);
     }
 
-    public function test_the_page_books_with_a_ghost_button_that_opens_the_packs(): void
-    {
-        $this->assertMatchesRegularExpression(
-            '#<button type="button" class="btn btn--ghost party-compare__cta"\s+@click="\$store\.purchase\.openWith\(\{ type: \'packs\' \}\)">#',
-            $this->page(),
-        );
-    }
-
-    public function test_without_packs_the_page_says_so_and_offers_contact(): void
+    /** Sin packs vendibles no hay comparativa: vacío es una respuesta, y la vista lo recibe como `null`. */
+    public function test_without_packs_nothing_is_composed(): void
     {
         TicketType::birthdaySurfacePacks()->update(['is_active' => false]);
-        $html = $this->page();
+        $datos = $this->datos();
 
-        $this->assertStringContainsString(e(__('landing.events.coming_soon')), $html);
-        $this->assertStringContainsString('<a href="'.route('contacto').'" class="btn">', $html);
-        $this->assertStringNotContainsString('party-compare', $html);
+        $this->assertNull($datos['compare']);
+        $this->assertNull($datos['form']);
+        $this->assertSame([], $datos['choices']);
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -375,20 +354,14 @@ class BirthdayPageTest extends TestCase
 
     /**
      * `[DECIDIDO owner]` (`#528`): el paso a paso y el editor de invitaciones se retiran con su
-     * JavaScript y su dependencia. ⚠️ La clase se busca como CLASE, no como subcadena: un hash de
-     * Vite puede contener «bd-» por azar.
+     * JavaScript y su dependencia. ⚠️ Esto mira el PRODUCTO —su `package.json`, su `app.js` y sus
+     * componentes—, no el marcado de una landing: por eso sobrevive a la mudanza.
      */
     public function test_the_retired_pieces_leave_no_trace(): void
     {
-        $html = $this->page();
-
-        foreach (['birthdayInvite', 'birthdayProcess', 'html2canvas'] as $rastro) {
-            $this->assertStringNotContainsString($rastro, $html);
-        }
-        $this->assertDoesNotMatchRegularExpression('/class="[^"]*(?<![\w-])bd-/', $html, 'ha vuelto una clase `bd-*` de la página vieja');
-
         $this->assertStringNotContainsString('html2canvas', (string) file_get_contents(base_path('package.json')));
         $this->assertStringNotContainsString("Alpine.data('birthdayInvite'", (string) file_get_contents(base_path('resources/js/app.js')));
+        $this->assertStringNotContainsString("Alpine.data('birthdayProcess'", (string) file_get_contents(base_path('resources/js/app.js')));
         $this->assertFileDoesNotExist(resource_path('views/components/site/events-section.blade.php'));
     }
 }

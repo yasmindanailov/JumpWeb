@@ -10,24 +10,23 @@
 <div x-data="landing">
     <x-site.nav />
 
-    {{-- ══ /cumpleanos · EL CUMPLE, AL DETALLE ═══════════════════════════════════════════════════════
-         Carril de diseño Fase 3 · T3b (`DECISIONES #528`). Artboard `Cumpleanos Pagina PJP` **1a**
-         (móvil) + **1b** (escritorio), con el carril de **5a**.
+    {{-- ══ EL ANFITRIÓN MÍNIMO de /cumpleanos · lo que el producto sirve SIN paquete de instancia ══
+         F5 · T2b (`specs/paquete-de-instancia.md` §4.4, `DECISIONES #659`). La página de PlayJump
+         (artboard `Cumpleanos Pagina PJP` 1a/1b, `#528` del carril de diseño) vive en su instancia; esto
+         es lo que queda en el producto: la comparativa de packs con su contador, qué comen, lo que es
+         igual en todos, lo que se decide después de reservar y el cierre. Sin arte: sin el TRÍO.
+         Es marcado del PRODUCTO (`AnfitrionCumpleanosTest` lo mira).
 
-         ▶ **La espina es la del artboard**: el reloj primero —qué pasa ese día—, después los packs
-         comparados, qué comen, lo que se puede añadir, lo que no cambia de un pack a otro y lo que se
-         decide después de reservar.
+         ⚠️ Lo que se pinta aquí es EXACTAMENTE el contrato de vista (`InstanceViews::CONTRATO_DE_VISTAS`)
+         y TODO llega compuesto: esta vista no calcula un precio ni decide qué se compara.
 
-         ⚠️⚠️ **CUATRO piezas del artboard NO están, y las cuatro las decidió el owner** (`#528`):
-         · **las dos fotos 16:9** —la zona montada y la mesa—: no hay ninguna así en el parque, y la
-           regla del propio canvas es *«o la foto vende o no está»*. Entran cuando lleguen.
-         · **la ficha de invitado de ejemplo** («Lucía, 7 años, sin gluten»): sus valores son
-           inventados y los campos los crea el panel; se publican los RÓTULOS reales.
-         · **el paso a paso y el editor de la invitación** de la página anterior: el artboard no los
-           trae y se retiran con su JavaScript y su dependencia.
-         ⚠️ Y **«Su día especial» se llama aquí «Después de reservar»**: el formulario ya tiene nombre
-         de cara al cliente (`guestform.title`) y la página lo cita por ese nombre, que es el que se
-         va a encontrar en el correo (`#462`: el post-form no se renombra). --}}
+         ❗❗ **EL TOTAL NO SE CALCULA EN EL NAVEGADOR**: el servidor lo trae hecho para cada número de
+         niños posible —con el precio que cobra la cesta, tramos incluidos— y el contador solo elige cuál
+         enseñar. Sin JavaScript se lee la tabla del mínimo y los botones no aparecen (`x-cloak`): un
+         control que no hace nada no se ofrece.
+         ⚠️ Y **«Su día especial» se llama aquí «Después de reservar»**: el formulario ya tiene nombre de
+         cara al cliente (`guestform.title`) y la página lo cita por ese nombre, que es el que se va a
+         encontrar en el correo (`#462`: el post-form no se renombra). --}}
     <main id="main" class="page party-page wrap">
         <x-site.page-head :title="__('landing.birthday.title')"
                           :lede="$compare ? __('landing.birthday.lede') : __('landing.events.coming_soon')" />
@@ -48,14 +47,13 @@
                  la tarjeta del bar y que `/atracciones` ya aplica en sus fichas.
                  ⚠️⚠️ **El `alt` es el nombre de la ZONA y sale del panel**, como en `/atracciones`
                  con el nombre de la atracción: describir la foto con una frase escrita aquí sería
-                 afirmar lo que enseña una imagen que cambia con cada instalación. --}}
-            {{-- EL TRÍO (`G4`, `#580`): en ancho al lado del titular; en estrecho, sentado sobre esta
-                 fila — por eso va JUSTO encima de ella y no al principio de la página. --}}
-            <x-site.trio clase="trio--page" />
-            @if ($zone?->image)
+                 afirmar lo que enseña una imagen que cambia con cada instalación.
+                 ⚠️ Y CÓMO se resuelve la ruta no se decide aquí: es regla del producto
+                 (`Zone::imageUrl()`, `#645`), que además contesta `null` cuando no hay foto. --}}
+            @if ($foto = $zone?->imageUrl())
                 <div class="party-hero">
                     <figure class="party-photo">
-                        <img src="{{ asset($zone->image) }}" alt="{{ $zone->tr('name') }}"
+                        <img src="{{ $foto }}" alt="{{ $zone->tr('name') }}"
                              loading="lazy" decoding="async">
                     </figure>
                 </div>
