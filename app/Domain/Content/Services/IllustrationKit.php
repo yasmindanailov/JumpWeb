@@ -93,6 +93,9 @@ class IllustrationKit
         //     calcetines · la nota de «Antes de venir» (portada)
         //     altura     · «La altura, de un vistazo» (`/normas`)
         //     saltador   · el grupo «Mientras saltas» (`/normas`)
+        // ⚠️ Desde `#655` la vista de `/normas` vive en la INSTANCIA: `altura` y `saltador` siguen
+        // declaradas aquí porque las trae el kit y las pinta esa vista, y quien lo sabe es
+        // `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (la guarda de ranuras lo lee de ahí).
         // ⚠️ `cama`, `canasta` y `bote` NO están, a propósito (`[DECIDIDO owner, 2026-09-13]`): con los
         // iconos por zona del parque no tienen pantalla, y declararlas sin ella tumba esta guarda.
         'slot-ico-calcetines', 'slot-ico-altura', 'slot-ico-saltador',

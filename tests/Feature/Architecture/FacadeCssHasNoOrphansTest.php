@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Architecture;
 
+use App\Http\Instancia\InstanceViews;
 use Tests\Support\ReadsConsumerCorpus;
 use Tests\Support\ReadsSiteStylesheets;
 use Tests\TestCase;
@@ -171,14 +172,31 @@ class FacadeCssHasNoOrphansTest extends TestCase
     //  Lo que se vigila
     // ─────────────────────────────────────────────────────────────────────────────────
 
-    /** **Ninguna clase de fachada se declara en CSS sin que alguna pantalla la pinte.** */
+    /**
+     * **Ninguna clase de fachada se declara en CSS sin que alguna pantalla la pinte.**
+     *
+     * ⚠️ Desde `#655` (F5 · T2b) una pantalla puede vivir en la INSTANCIA: el CSS sigue aquí (en la T2 solo
+     * se mudan las vistas) y su consumidor no. Esas clases las declara el producto en
+     * `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, y aquí se exige de ellas lo contrario: que
+     * NINGUNA pantalla del producto las pinte, o la entrada sobra y tapa al siguiente.
+     */
     public function test_no_facade_class_is_declared_without_a_consumer(): void
     {
         $corpus = $this->consumerCorpus();
         $orphans = [];
+        $fuera = $this->instanceCssClasses();
 
         foreach ($this->facadeClassesInSelectors() as $class) {
             if (isset(self::ALLOWED_ORPHANS[$class])) {
+                continue;
+            }
+
+            if (in_array($class, $fuera, true)) {
+                $this->assertStringNotContainsString(
+                    $class, $corpus,
+                    "`.{$class}` está declarada como consumida por la instancia y una pantalla del producto la pinta: sobra la entrada.",
+                );
+
                 continue;
             }
 
@@ -193,10 +211,25 @@ class FacadeCssHasNoOrphansTest extends TestCase
             'Estas piezas de fachada se declaran en `public/css/` y NO las pinta ninguna pantalla:',
             '  .'.implode("\n  .", $orphans),
             '',
-            'O se retiran de la hoja, o entran en `ALLOWED_ORPHANS` con el motivo escrito.',
+            'O se retiran de la hoja, o entran en `ALLOWED_ORPHANS` con el motivo escrito — o, si su pantalla',
+            'vive en la instancia, en `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` con la vista que la pinta.',
             'La regla del carril es que una pieza nace en el MISMO cambio que su consumidor: material',
             'sin pantalla no falla ni avisa, y es lo que dejó los 19 dibujos de `#257` esperando años.',
         ]));
+    }
+
+    /**
+     * Las clases de fachada que hoy pinta una vista de la instancia (las ranuras del kit de esa misma lista
+     * no son CSS y las vigila `ZonesSectionTest`).
+     *
+     * @return list<string>
+     */
+    private function instanceCssClasses(): array
+    {
+        return array_values(array_filter(
+            array_keys(InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA),
+            fn (string $pieza): bool => ! str_starts_with($pieza, 'slot-'),
+        ));
     }
 
     /**
@@ -209,11 +242,14 @@ class FacadeCssHasNoOrphansTest extends TestCase
     public function test_every_declared_exception_still_has_a_subject(): void
     {
         $declared = $this->facadeClassesInSelectors();
-        $stale = array_values(array_diff(array_keys(self::ALLOWED_ORPHANS), $declared));
+        $stale = array_values(array_diff(
+            [...array_keys(self::ALLOWED_ORPHANS), ...$this->instanceCssClasses()],
+            $declared,
+        ));
 
         $this->assertSame(
             [], $stale,
-            '`ALLOWED_ORPHANS` tolera clases que ya no se declaran en ninguna hoja: '.
+            '`ALLOWED_ORPHANS` o `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` toleran clases que ya no se declaran en ninguna hoja: '.
             implode(', ', $stale).'. Una excepción sin sujeto tapa al siguiente que se llame igual.',
         );
     }

@@ -35,19 +35,10 @@ class CookiePolicyContentTest extends TestCase
         $response->assertSee('Data Privacy Framework');
     }
 
-    public function test_reviewed_cookie_page_hides_the_draft_notice(): void
-    {
-        $this->seed(LandingContentSeeder::class);
-
-        // Cookies tiene contenido definitivo → NO muestra el aviso de borrador.
-        $this->get('/cookies')->assertOk()->assertDontSee(__('site.legal_draft_notice'));
-
-        // Lanzamiento 2026-09-01: la descarga de responsabilidad (slug `waiver`) ya tiene texto
-        // DEFINITIVO en la instalación y entra en REVIEWED_LEGAL_SLUGS — las cinco legales son
-        // definitivas y ninguna muestra el aviso de borrador.
-        $this->assertContains('waiver', Page::REVIEWED_LEGAL_SLUGS);
-        $this->get('/waiver')->assertOk()->assertDontSee(__('site.legal_draft_notice'));
-    }
+    // ⚠️ Aquí vivía `test_reviewed_cookie_page_hides_the_draft_notice`: el aviso de borrador y su lista
+    // `REVIEWED_LEGAL_SLUGS` se retiraron en `#655` (regla muerta: las cinco legales eran definitivas desde
+    // el 2026-09-01 y el aviso no se pintaba nunca). Un caso que afirma la ausencia de algo que no existe
+    // pasa en verde sin mirar nada.
 
     public function test_policy_interpolates_fiscal_data(): void
     {

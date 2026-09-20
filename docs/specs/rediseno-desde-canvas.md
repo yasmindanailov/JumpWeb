@@ -164,11 +164,11 @@ De las **siete del inventario del canvas**, **seis existen** y **una es nueva**:
 |---|---|---|
 | `/precios` | ✅ existe | `PricingController` · `pages/pricing.blade.php` |
 | `/cumpleanos` | ✅ existe | `EventsController` · `pages/events.blade.php` |
-| `/normas` | ✅ existe | `PageController@rules` · `pages/rules.blade.php` |
+| `/normas` | ✅ existe · **mudada a la instancia** (`#655`) | `PageController@rules` · la vista vive en `instancias/playjump/web/normas.blade.php`; el producto sirve `anfitrion/normas.blade.php` sin paquete |
 | `/servicios` | ✅ existe | `ServicesController` · `pages/services.blade.php` |
 | `/contacto` | ✅ existe · **mudada a la instancia** (F5 · T2b, `#654`) | `ContactController` · la vista vive en `instancias/playjump/web/contacto.blade.php`; el producto sirve `anfitrion/contacto.blade.php` sin paquete |
 | `/atracciones` | ✅ **construida en la T2d** (`#481`) | `AttractionsController` · `pages/attractions.blade.php` |
-| `/bar` | ✅ **construida en la T3b·7** (`#536`) | `BarController` · `pages/bar.blade.php` · ⚠️ **404 mientras el panel no le ponga nombre**, y entonces no se ofrece en ninguna superficie |
+| `/bar` | ✅ **construida en la T3b·7** (`#536`) · **mudada a la instancia** (`#655`) | `BarController` · la vista vive en `instancias/playjump/web/bar.blade.php`; el producto sirve `anfitrion/bar.blade.php` · ⚠️ **404 mientras el panel no le ponga nombre**, y entonces no se ofrece en ninguna superficie |
 
 ⚠️ **Y hay una que existe y el canvas NO tiene en su inventario: `/entradas`** (la sirve `HomeController`, registrada en `routes/web.php`). Hay que decidir qué pasa con ella — el canvas es explícito en que *«un enlace
 que no está en el inventario es relleno»*, así que o entra en el inventario o se retira. **Es del

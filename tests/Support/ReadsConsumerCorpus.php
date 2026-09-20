@@ -59,6 +59,13 @@ trait ReadsConsumerCorpus
                     continue;
                 }
 
+                // ⚠️ Y una DECLARACIÓN tampoco: `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` nombra
+                // el material que pinta la instancia (`#655`) para que las guardas de huérfanos lo excluyan.
+                // Dentro del corpus, ese literal demostraría vivo lo que precisamente dice que aquí no se pinta.
+                if ($file->getPathname() === base_path('app/Http/Instancia/InstanceViews.php')) {
+                    continue;
+                }
+
                 $chunks[] = $this->stripComments((string) file_get_contents($file->getPathname()), $extension);
             }
         }

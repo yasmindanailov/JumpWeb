@@ -48,20 +48,19 @@ class ArmazonContractTest extends TestCase
         'auth/verify-email',
         'errors/404',
         'errors/page-maintenance',
-        // El ANFITRIÓN MÍNIMO de `/contacto` (F5 · T2b, `#654`): la landing de PlayJump se fue a su
-        // instancia y lo que el producto sirve sin paquete lleva el armazón entero, como cualquier interior.
+        // Los ANFITRIONES MÍNIMOS (F5 · T2b, `#654`, `#655`): la landing de PlayJump se va a su instancia
+        // vista a vista, y lo que el producto sirve sin paquete lleva el armazón entero, como cualquier interior.
+        'anfitrion/bar',
         'anfitrion/contacto',
+        'anfitrion/legal',
+        'anfitrion/normas',
         'home',
         // `/atracciones` (carril de diseño, T2d·1): la página de las 23, destino de la única puerta
         // de la sección 03. Se añade a sabiendas — sin armazón se quedaría sin vuelta.
         'pages/attractions',
-        // `#536`: `/bar` nace con el armazón puesto — es la séptima del inventario del canvas.
-        'pages/bar',
         'pages/events',
         'pages/pricing',
-        'pages/rules',
         'pages/services',
-        'pages/text',
         'payments/retry-redirect',
     ];
 

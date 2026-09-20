@@ -25,7 +25,6 @@ return [
     'rules_staff' => 'Pour toute question sur les tarifs, les anniversaires ou les promotions, demande au personnel du parc : il est là pour ça.',
     'rules_updated' => 'Mis à jour en :fecha',
     'back_home' => '← Retour à l\'accueil',
-    'legal_draft_notice' => 'Texte provisoire, en attente de révision juridique.',
 
     // ══ /contacto (`DECISIONES #535`) ═══════════════════════════════════════════════════════
     'contact_eyebrow' => 'Contact',

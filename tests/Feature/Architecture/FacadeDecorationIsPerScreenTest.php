@@ -102,9 +102,12 @@ class FacadeDecorationIsPerScreenTest extends TestCase
         $views = $this->bladeFiles();
 
         $this->assertGreaterThan(60, count($views), 'se están leyendo muy pocas vistas: el barrido no llega');
+        // ⚠️ El defecto apareció en `pages/rules.blade.php`, que desde `#655` vive en la INSTANCIA: el
+        // barrido ya no la ve (una instancia no es una app PHP; su juez es la huella). Lo que sigue aquí
+        // es la portada, la vista con más bucles del producto, hasta que también se mude.
         $this->assertContains(
-            'pages/rules.blade.php', $views,
-            'el barrido no ve `/normas`, que es justo la vista donde apareció el defecto',
+            'home.blade.php', $views,
+            'el barrido no ve la portada, que es la vista con más bucles del producto',
         );
     }
 

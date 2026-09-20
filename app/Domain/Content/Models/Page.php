@@ -9,15 +9,13 @@ class Page extends Model
 {
     use HasTranslations;
 
-    /**
-     * Páginas legales cuyo contenido ya es DEFINITIVO (redactado de forma profesional y completa) →
-     * no muestran el aviso «Texto provisional pendiente de revisión legal» (`site.legal_draft_notice`).
-     * Las que siguen en borrador (p. ej. `waiver`, gestionado por el sistema externo de la clienta)
-     * sí lo muestran. Se amplía a medida que se finaliza cada página (#219 cookies; legales #220).
-     *
-     * @var list<string>
+    /*
+     * ⚠️ Aquí vivía `REVIEWED_LEGAL_SLUGS`, la lista de legales «ya definitivas» que apagaba el aviso de
+     * borrador de la vista. Desde el lanzamiento del 2026-09-01 estaban las CINCO —y las rutas solo
+     * sirven esas cinco—, así que el aviso no se pintaba nunca: regla muerta dentro de una vista que se
+     * va a la instancia (F5 · T2b, `#655`). Se retiró con su vista, su clave de idioma y sus tres tests
+     * que afirmaban su ausencia en vacío.
      */
-    public const REVIEWED_LEGAL_SLUGS = ['cookies', 'privacidad', 'condiciones', 'aviso-legal', 'waiver'];
 
     /**
      * Slugs legales que NO pueden quedar inactivos desde el panel. TODOS están enlazados de forma

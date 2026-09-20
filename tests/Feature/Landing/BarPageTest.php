@@ -3,28 +3,25 @@
 namespace Tests\Feature\Landing;
 
 use App\Domain\Content\Models\BarImage;
+use App\Domain\Content\Services\BarPage;
 use App\Domain\Platform\Models\Setting;
 use Database\Seeders\LandingContentSeeder;
-use DOMDocument;
-use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * **`/bar`: LA CARTA CORTA, Y NADA MÁS** (`DECISIONES #536`, carril de diseño Fase 3 · T3b,
- * artboard `Bar PJP` 1a/1b).
+ * **`/bar`: la CONDUCTA del producto** (`DECISIONES #536`; partida por lo que afirma en F5 · T2b, `#655`).
  *
- * ❗❗❗ **LA CARTA SE PUBLICA COMO IMAGEN** (`[DECIDIDO owner, 2026-09-12]`), no tecleando los platos
- * como dibuja el artboard. Eso trae tres propiedades que **ninguna tabla de platos habría
- * necesitado** y que esta guarda existe para sostener: cada imagen lleva su `alt` —lo único que un
- * lector de pantalla o un buscador van a encontrar—, se pueden subir varias, y cada una es un
- * ENLACE a su fichero para poder ampliarla en un teléfono.
+ * ❗❗ **Aquí no se lee el HTML de la landing** (`#649`): se afirma sobre lo que `BarPage` publica y sobre
+ * lo que hace la ruta. Hasta la mudanza estos casos leían el marcado de la página de PlayJump, que ya no
+ * está en el producto; lo que ese marcado garantizaba —la carta como imagen con su `alt`, su tamaño y su
+ * enlace, la línea de alérgenos, cero relleno de acción— está en la doc de la instancia (`paginas/bar.md`)
+ * y, para el respaldo del producto, en `AnfitrionBarTest`.
  *
- * ❗❗ **Y la página no existe hasta que el panel dice cómo se llama el bar.** El titular es su
- * nombre; sin él la ruta da 404 y el destino no se ofrece en ninguna superficie. *Falla hacia
- * invisible*: nadie llega navegando a ese 404.
+ * ❗❗ **Y la página no existe hasta que el panel dice cómo se llama el bar.** Sin nombre la ruta da 404
+ * y el destino no se ofrece en ninguna superficie: *falla hacia invisible*.
  */
 class BarPageTest extends TestCase
 {
@@ -36,28 +33,6 @@ class BarPageTest extends TestCase
         $this->seed(LandingContentSeeder::class);
         Cache::flush();
         Setting::flushMemo();
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────────
-    //  El instrumento, antes que lo que mide
-    // ─────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * **Guarda de la guarda.** Media docena de casos de abajo comprueban AUSENCIAS —que no haya
-     * carta, que no haya destino, que no se diga nada del acceso—, y comprobar que algo no está es
-     * la forma más fácil de escribir un test que no mira nada.
-     */
-    public function test_the_scan_reads_a_published_bar_with_its_pieces(): void
-    {
-        $this->publish();
-        $this->sheet();
-
-        $html = $this->html();
-
-        $this->assertStringContainsString('page--bar', $html, 'la página no se sirve o cambió de clase raíz');
-        foreach (['bar-sheet', 'bar-counter', 'bar-menu__allergens'] as $pieza) {
-            $this->assertStringContainsString($pieza, $html, "falta `{$pieza}`: el localizador se quedó sin sujeto");
-        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -78,12 +53,12 @@ class BarPageTest extends TestCase
         $this->assertStringNotContainsString('bar-door', $home, 'la tarjeta del bar se pinta sin bar publicado');
     }
 
-    /** Con nombre: la página responde y el destino aparece en el menú, en el pie y en la portada. */
+    /** Con nombre: la página responde con su nombre y el destino aparece en el menú, en el pie y en la portada. */
     public function test_with_a_name_the_page_answers_and_the_destination_shows_up(): void
     {
         $this->publish();
 
-        $this->get('/bar')->assertOk()->assertSee('El bar de prueba');
+        $this->get('/bar')->assertOk()->assertViewHas('barName', 'El bar de prueba');
 
         $home = $this->get('/')->assertOk()->getContent();
         $this->assertStringContainsString(route('bar'), $home, 'el destino del bar no aparece en la portada');
@@ -103,57 +78,16 @@ class BarPageTest extends TestCase
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
-    //  La carta
+    //  La carta: lo que `BarPage` publica
     // ─────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * ❗❗❗ **CADA CARA DE LA CARTA LLEVA SU `alt` Y ES UN ENLACE A SU FICHERO.** Las dos cosas son
-     * la contrapartida de publicar la carta como imagen: el `alt` es lo único que encuentra quien no
-     * la ve, y el enlace es la única forma de leerla en un móvil sin un visor que mantener.
-     * ⚠️ Y **declara sus dimensiones**: sin ellas la página salta al cargar la imagen más grande del
-     * sitio.
-     */
-    public function test_every_menu_sheet_has_its_alt_its_size_and_its_own_link(): void
-    {
-        $this->publish();
-        $this->sheet(alt: 'Carta del bar: bocadillos y bebidas');
-
-        $img = $this->xpath()->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' bar-sheet ')]/img");
-        $this->assertSame(1, $img->length, 'la cara de la carta no se pinta');
-
-        $this->assertSame('Carta del bar: bocadillos y bebidas', $img->item(0)?->getAttribute('alt'), 'la carta se publica sin decir qué se ve en ella');
-        $this->assertSame('40', $img->item(0)?->getAttribute('width'), 'la imagen no declara su ancho: la página saltará al cargarla');
-        $this->assertSame('60', $img->item(0)?->getAttribute('height'), 'la imagen no declara su alto');
-
-        $enlace = $this->xpath()->query("//a[contains(concat(' ', normalize-space(@class), ' '), ' bar-sheet ')]");
-        $this->assertSame(1, $enlace->length, 'la carta no es un enlace: en un móvil no hay forma de ampliarla');
-        $this->assertStringContainsString('bar/', (string) $enlace->item(0)?->getAttribute('href'), 'el enlace no lleva al fichero de la carta');
-    }
-
-    /**
-     * **Sin carta subida, la sección de la carta NO se pinta — y no se pone nada en su lugar.**
-     * Una disculpa en una página pública («la carta estará pronto») es peor que un hueco: lo que
-     * falta lo dice el panel, no la web.
-     */
-    public function test_with_no_menu_uploaded_the_menu_section_is_not_painted(): void
-    {
-        $this->publish();
-
-        $html = $this->html();
-        $this->assertStringNotContainsString('bar-sheet', $html, 'se pinta una carta que no existe');
-        $this->assertStringNotContainsString((string) __('site.bar_menu_title'), $html, 'el rótulo de la carta se pinta sin carta');
-    }
 
     /** Una cara desactivada deja de publicarse sin borrarla. */
     public function test_an_inactive_sheet_is_not_published(): void
     {
-        $this->publish();
         $this->sheet(alt: 'Cara A');
         $this->sheet(alt: 'Cara B', active: false, position: 1);
 
-        $html = $this->html();
-        $this->assertStringContainsString('Cara A', $html);
-        $this->assertStringNotContainsString('Cara B', $html, 'una cara desactivada se sigue publicando');
+        $this->assertSame(['Cara A'], $this->alts(BarPage::menu()), 'una cara desactivada se sigue publicando');
     }
 
     /**
@@ -162,20 +96,11 @@ class BarPageTest extends TestCase
      */
     public function test_an_unknown_kind_is_not_published(): void
     {
-        $this->publish();
         $img = $this->sheet(alt: 'Ni carta ni foto');
         $img->forceFill(['kind' => 'promo'])->saveQuietly();
 
-        $this->assertStringNotContainsString('Ni carta ni foto', $this->html(), 'una fila de tipo desconocido se publica igual');
-    }
-
-    /** La línea de alérgenos acompaña a la carta: es obligación legal decir dónde se pregunta. */
-    public function test_the_allergens_line_travels_with_the_menu(): void
-    {
-        $this->publish();
-        $this->sheet();
-
-        $this->assertStringContainsString((string) __('site.bar_allergens'), $this->html(), 'la carta se publica sin decir dónde se preguntan los alérgenos');
+        $this->assertNotContains('Ni carta ni foto', $this->alts(BarPage::menu()), 'una fila de tipo desconocido se publica como carta');
+        $this->assertNull(BarPage::venuePhoto(), 'una fila de tipo desconocido se publica como foto del local');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -189,77 +114,41 @@ class BarPageTest extends TestCase
      */
     public function test_only_the_first_venue_photo_is_published(): void
     {
-        $this->publish();
         $this->venue(alt: 'La segunda', position: 5);
         $this->venue(alt: 'La primera', position: 0);
 
-        $html = $this->html();
-        $this->assertStringContainsString('La primera', $html);
-        $this->assertStringNotContainsString('La segunda', $html, 'se publican dos fotos del local: manda la primera por orden');
+        $this->assertSame('La primera', BarPage::venuePhoto()?->tr('alt'), 'se publica otra foto del local: manda la primera por orden');
     }
 
     /**
      * ❗ **Tres estados, no dos.** Sin decidir en el panel no se dice nada del acceso: afirmar «hace
-     * falta entrada» sin que nadie lo haya decidido sería peor que callar.
+     * falta entrada» sin que nadie lo haya decidido sería peor que callar. `null` es un estado.
      */
     public function test_the_free_entry_line_has_three_states(): void
     {
-        $this->publish();
-
-        /*
-         * ⚠️⚠️ **Se asevera que la LÍNEA no existe, no que no aparezca su texto**, y lo enseñó el
-         * arnés: con la condición de la vista abierta a la fuerza, el estado `null` pinta
-         * `__('site.bar_free_entry_')` — o sea **la clave en crudo**, que no contiene ninguna de las
-         * dos frases. Comprobar que falta un texto deja pasar el caso en el que se publica otro.
-         */
-        $this->assertSame(0, $this->entryLines(), 'se dice algo del acceso sin que nadie lo haya decidido');
+        $this->assertNull(BarPage::freeEntry(), 'se dice algo del acceso sin que nadie lo haya decidido');
 
         foreach (['yes', 'no'] as $valor) {
             Setting::updateOrCreate(['key' => 'bar.free_entry'], ['value' => $valor, 'group' => 'bar']);
             Cache::flush();
             Setting::flushMemo();
-            $this->assertStringContainsString((string) __('site.bar_free_entry_'.$valor), $this->html(), "el acceso «{$valor}» no se publica");
+
+            $this->assertSame($valor, BarPage::freeEntry(), "el acceso «{$valor}» no se publica");
         }
     }
 
     /**
-     * ⚠️ **Un valor que el producto no conoce no publica nada.** `bar.free_entry` se escribe desde
-     * un desplegable, pero el ajuste se puede fijar por consola o por SQL: sin esta guarda, un
-     * «quizá» acabaría pintando `site.bar_free_entry_quizá` en la página. Lo destapó el arnés.
+     * ⚠️ **Un valor que el producto no conoce no publica nada.** `bar.free_entry` se escribe desde un
+     * desplegable, pero el ajuste se puede fijar por consola o por SQL: sin esta guarda, un «quizá»
+     * acabaría pintando `site.bar_free_entry_quizá` en la página. Lo destapó el arnés.
      */
     public function test_an_unknown_free_entry_value_says_nothing(): void
     {
-        $this->publish();
         Setting::updateOrCreate(['key' => 'bar.free_entry'], ['value' => 'quizá', 'group' => 'bar']);
         Cache::flush();
         Setting::flushMemo();
 
-        $this->assertSame(0, $this->entryLines(), 'un valor desconocido publica una línea de acceso');
-        $this->assertStringNotContainsString('bar_free_entry', $this->html(), 'se escapa una clave de traducción en crudo a la página');
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────────────
-    //  El color
-    // ─────────────────────────────────────────────────────────────────────────────────
-
-    /**
-     * ❗❗ **CERO RELLENO DE ACCIÓN EN LA PÁGINA, y aquí no es estética**: el bar está fuera del
-     * modelo de reserva (`[DECIDIDO owner]`), así que nada suyo puede vestirse de compra. El único
-     * naranja de la pantalla lo trae la barra del armazón, que no es de esta página.
-     */
-    public function test_the_page_has_no_action_fill_of_its_own(): void
-    {
-        $this->publish();
-        $this->sheet();
-
-        $main = $this->xpath()->query("//main[contains(concat(' ', normalize-space(@class), ' '), ' page--bar ')]");
-        $this->assertSame(1, $main->length);
-
-        $botones = $this->xpath()->query(
-            "//main[contains(concat(' ', normalize-space(@class), ' '), ' page--bar ')]"
-            ."//*[contains(concat(' ', normalize-space(@class), ' '), ' btn ')]",
-        );
-        $this->assertSame(0, $botones->length, 'la página del bar estrena un botón: aquí no se compra, se pide en la barra');
+        $this->assertNull(BarPage::freeEntry(), 'un valor desconocido publica una línea de acceso');
     }
 
     // ─────────────────────────────────────────────────────────────────────────────────
@@ -303,6 +192,12 @@ class BarPageTest extends TestCase
         Setting::flushMemo();
     }
 
+    /** @return list<string> */
+    private function alts(iterable $imagenes): array
+    {
+        return collect($imagenes)->map(fn (BarImage $i): string => (string) $i->tr('alt'))->values()->all();
+    }
+
     private function sheet(string $alt = 'La carta', bool $active = true, int $position = 0): BarImage
     {
         return BarImage::create([
@@ -343,28 +238,5 @@ class BarPageTest extends TestCase
         Storage::disk(BarImage::IMAGE_DISK)->put($path, $bytes);
 
         return $path;
-    }
-
-    /** Cuántas líneas de acceso pinta la página. Cero = no se dice nada, que es un estado. */
-    private function entryLines(): int
-    {
-        return $this->xpath()
-            ->query("//*[contains(concat(' ', normalize-space(@class), ' '), ' bar-counter__entry ')]")
-            ->length;
-    }
-
-    private function html(): string
-    {
-        return $this->get('/bar')->assertOk()->getContent();
-    }
-
-    private function xpath(): DOMXPath
-    {
-        $dom = new DOMDocument;
-        libxml_use_internal_errors(true);
-        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$this->html());
-        libxml_clear_errors();
-
-        return new DOMXPath($dom);
     }
 }

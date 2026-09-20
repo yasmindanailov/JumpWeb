@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Content\Services\BarPage;
 use App\Domain\Content\Services\SiteDestinations;
+use App\Http\Instancia\InstanceViews;
 
 /**
  * `/bar` — la carta corta, y nada más (`DECISIONES #536`, carril de diseño Fase 3 · T3b).
@@ -24,6 +25,12 @@ use App\Domain\Content\Services\SiteDestinations;
  */
 class BarController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
+    /**
+     * ⚠️ Desde `#655` (F5 · T2b) la vista vive en la INSTANCIA (`web/bar.blade.php`) y el producto sirve
+     * `anfitrion/bar` sin paquete. Lo que se pasa es el CONTRATO de la vista (`InstanceViews`).
+     */
     public function __invoke()
     {
         abort_unless(BarPage::isPublished(), 404);
@@ -35,7 +42,7 @@ class BarController extends Controller
          */
         $party = collect(SiteDestinations::pages())->firstWhere('route', 'cumpleanos');
 
-        return view('pages.bar', [
+        return view($this->instancia->pick('bar', 'anfitrion.bar'), [
             'barName' => BarPage::name(),
             'barLede' => BarPage::lede(),
             'barPhoto' => BarPage::venuePhoto(),

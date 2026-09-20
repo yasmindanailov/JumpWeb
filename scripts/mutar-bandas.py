@@ -28,8 +28,9 @@ SERVICIO = 'app/Domain/Content/Services/LinkBands.php'
 COMPONENTE = 'resources/views/components/site/link-bands.blade.php'
 HOJA = 'public/css/landing.css'
 LANG_FR = 'lang/fr/site.php'
-BAR = 'resources/views/pages/bar.blade.php'
-FICHEROS = [SERVICIO, COMPONENTE, HOJA, LANG_FR, BAR]
+# ⚠️ Aquí se mutaba también `pages/bar.blade.php` («vuelve el cierre a medida de /bar»): desde `#655` esa
+# vista vive en la instancia y su juez es la huella, no este arnés.
+FICHEROS = [SERVICIO, COMPONENTE, HOJA, LANG_FR]
 
 # Las guardas que tienen que morder. Se pasan como RUTAS y no como `--filter`, porque el filtro por
 # nombre de clase no distingue dos casos homónimos y aquí entran cinco ficheros.
@@ -95,12 +96,6 @@ MUTACIONES = [
      COMPONENTE,
      '<p class="band-wide__route">{{ $gorda[\'s\'] }}</p>',
      '<p class="band-wide__route">{{ $gorda[\'q\'] }}</p>'),
-
-    # ── La familia es UNA ─────────────────────────────────────────────────────────────────────
-    ("vuelve el cierre a medida de `/bar`, la quinta piel",
-     BAR,
-     '<p class="bar-party__line">{{ __(\'site.bar_party_line\') }}</p>',
-     '<p class="bar-party__line">{{ __(\'site.bar_party_line\') }}</p><a class="bar-party__cta" href="#">x</a>'),
 
     # ── El diccionario ────────────────────────────────────────────────────────────────────────
     ("falta un rótulo en francés: la banda se rotularía con la clave en crudo",

@@ -43,7 +43,6 @@ return [
     'rules_staff' => '¿Te queda alguna duda? Pregúntanos en el parque, por teléfono o desde Contacto.',
     'rules_updated' => 'Actualizado en :fecha',
     'back_home' => '← Volver al inicio',
-    'legal_draft_notice' => 'Texto provisional pendiente de revisión legal.',
 
     // ══ /contacto ═══════════════════════════════════════════════════════════════════════════
     // Carril de diseño Fase 3 · T3b (`DECISIONES #535`). Artboard `Contacto PJP` 1a/1b.

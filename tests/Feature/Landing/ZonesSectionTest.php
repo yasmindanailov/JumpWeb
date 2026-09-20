@@ -3,6 +3,7 @@
 namespace Tests\Feature\Landing;
 
 use App\Domain\Content\Services\IllustrationKit;
+use App\Http\Instancia\InstanceViews;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
@@ -246,7 +247,21 @@ class ZonesSectionTest extends TestCase
             'que cree, y este caso pasaría en vacío.',
         );
 
+        // ⚠️ Desde `#655` una ranura puede tener su pantalla en la INSTANCIA (vía B): el producto declara
+        // cuáles en `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, y aquí se exige lo contrario de
+        // ellas —que NINGUNA vista del producto las pinte—, o la entrada sobra y tapa al siguiente.
+        $fuera = array_keys(InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA);
+
         foreach (IllustrationKit::SLOTS as $ranura) {
+            if (in_array($ranura, $fuera, true)) {
+                $this->assertStringNotContainsString(
+                    $ranura, $vistas,
+                    "la ranura `{$ranura}` está declarada como consumida por la instancia y una vista del producto la pinta: sobra la entrada.",
+                );
+
+                continue;
+            }
+
             $this->assertStringContainsString(
                 $ranura, $vistas,
                 "la ranura `{$ranura}` está declarada y NINGUNA vista la pinta.\n".

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature\Instancia;
 
+use App\Domain\Platform\Models\Setting;
 use App\Http\Instancia\InstanceViews;
+use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -27,6 +29,17 @@ use Tests\TestCase;
 class InstanceViewContractTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Las páginas del contrato tienen que RESPONDER para medirse: los legales necesitan sus filas del
+        // panel, y `/bar` no existe hasta que el panel le pone nombre (`#536`).
+        $this->seed(LandingContentSeeder::class);
+        Setting::updateOrCreate(['key' => 'bar.name.es'], ['value' => 'El bar', 'group' => 'bar']);
+        Setting::flushMemo();
+    }
 
     public function test_every_dressable_view_receives_exactly_what_the_contract_promises(): void
     {

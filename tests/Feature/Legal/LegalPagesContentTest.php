@@ -28,7 +28,6 @@ class LegalPagesContentTest extends TestCase
         $response = $this->get('/privacidad')->assertOk();
 
         $response->assertDontSee('[PENDIENTE: razón social]');          // marcador del texto viejo
-        $response->assertDontSee(__('site.legal_draft_notice'));        // sin aviso de borrador
         $response->assertSee('Redsys');
         $response->assertSee('AEPD');
         $response->assertSee('Bunny Fonts');                            // tercero que carga siempre (IP)
@@ -41,7 +40,6 @@ class LegalPagesContentTest extends TestCase
         $response = $this->get('/condiciones')->assertOk();
 
         $response->assertDontSee('[PENDIENTE: política de cancelación y reembolso]');
-        $response->assertDontSee(__('site.legal_draft_notice'));
         $response->assertSee('Redsys');
         $response->assertSee('reembolso parcial automático');           // política real (#150)
     }
@@ -51,7 +49,6 @@ class LegalPagesContentTest extends TestCase
         $response = $this->get('/aviso-legal')->assertOk();
 
         $response->assertDontSee('jumpingjump.com');                    // dominio a pelo retirado
-        $response->assertDontSee(__('site.legal_draft_notice'));
         $response->assertSee('34/2002');                                // LSSI-CE
     }
 

@@ -11,6 +11,12 @@ Mismo molde endurecido que `mutar-contacto.py` (`#535`) y `mutar-normas.py` (`#5
 pinte nada, que la página no estrene un botón— y ésas se mutan al revés: se AÑADE lo que no debe
 estar, o se RETIRA la condición que lo impide.
 
+⚠️⚠️ **Desde `#655` (F5 · T2b) la VISTA de PlayJump vive en la instancia** y las guardas se parten por lo
+que afirman (`#649`): `BarPageTest` afirma sobre lo que `BarPage` publica y sobre la ruta, y mata los
+mutantes del servicio, del modelo, del controlador y del inventario; los mutantes de VISTA apuntan al
+ANFITRIÓN MÍNIMO del producto (`anfitrion/bar.blade.php`) y los mata `AnfitrionBarTest`. El de «la página
+estrena un botón de compra» se fue con la vista: es diseño (`#536`), y su juez es la huella.
+
     python3 scripts/mutar-bar.py
 """
 import subprocess
@@ -18,8 +24,8 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-FILTRO = 'Tests\\\\Feature\\\\Landing\\\\BarPageTest'
-VISTA = 'resources/views/pages/bar.blade.php'
+FILTRO = 'Tests\\\\Feature\\\\Landing\\\\BarPageTest|AnfitrionBarTest'
+VISTA = 'resources/views/anfitrion/bar.blade.php'
 PORTADA = 'resources/views/home.blade.php'
 CONTROLADOR = 'app/Http/Controllers/BarController.php'
 HOME = 'app/Http/Controllers/HomeController.php'
@@ -101,12 +107,6 @@ MUTACIONES = [
      VISTA,
      "@if ($barFreeEntry)",
      "@if (true)"),
-
-    # ── El color ──
-    ("la página estrena un botón de compra",
-     VISTA,
-     '<h2 class="bar-menu__title"',
-     '<a class="btn" href="#">x</a><h2 class="bar-menu__title"'),
 
     # ── El dato ──
     ("las dimensiones dejan de medirse al subir",

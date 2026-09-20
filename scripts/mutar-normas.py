@@ -8,6 +8,12 @@ Mismo molde endurecido que `mutar-precios.py` (`#531`) y `mutar-cumple.py` (`#52
   · EXIGE VERDE antes de mutar (`#337`) y ÁRBOL LIMPIO en los ficheros que muta (`#181`);
   · restaura SIEMPRE, también si el proceso revienta (`#448`).
 
+⚠️⚠️ **Desde `#655` (F5 · T2b) la VISTA de PlayJump vive en la instancia** y las guardas se parten por lo
+que afirman (`#649`): `RulesPageTest` afirma sobre los DATOS de la vista (`board`, `scale`,
+`waiverEnabled`) y mata los mutantes del servicio, del modelo y del controlador; los mutantes de VISTA
+apuntan al ANFITRIÓN MÍNIMO del producto (`anfitrion/normas.blade.php`) y los mata `AnfitrionNormasTest`.
+El de «vuelve el pliego de tarjetas» se fue con la vista: era diseño, y su juez es la huella.
+
     python3 scripts/mutar-normas.py
 """
 import subprocess
@@ -15,10 +21,10 @@ import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-FILTRO = 'RulesPageTest'
+FILTRO = 'RulesPageTest|AnfitrionNormasTest'
 SERVICIO = 'app/Domain/Content/Services/RuleBoard.php'
 MODELO = 'app/Domain/Content/Models/VenueRule.php'
-VISTA = 'resources/views/pages/rules.blade.php'
+VISTA = 'resources/views/anfitrion/normas.blade.php'
 CONTROLADOR = 'app/Http/Controllers/PageController.php'
 FICHEROS = [SERVICIO, MODELO, VISTA, CONTROLADOR]
 
@@ -61,14 +67,16 @@ MUTACIONES = [
      "'updatedAt' => \\Illuminate\\Support\\Carbon::now(),"),
 
     # ── La escala de altura ──
+    # ⚠️ Estos dos apuntaban al `heightScale()` de antes de `#589` (una banda por zona) y salían «NO
+    # APLICADA» desde entonces; re-apuntados en `#655`, cuando `RulesPageTest` pasó a afirmar sobre `scale`.
     ("el eje se pinta aunque ninguna zona declare altura",
      SERVICIO,
-     "if ($bands === []) {\n            return null;\n        }",
+     "if ($tramos === []) {\n            return null;\n        }",
      "if (false) {\n            return null;\n        }"),
 
     ("la banda «hasta» se dibuja como si fuera «a partir de»",
      SERVICIO,
-     "$hasta = $min !== null ? $techo : $max;",
+     "$hasta = $min !== null ? $techo : min((int) $max, $techo);",
      "$hasta = $techo;"),
 
     # ── La chapa del descargo ──
@@ -77,11 +85,11 @@ MUTACIONES = [
      "'waiverEnabled' => WaiverSettings::isEnabled(),",
      "'waiverEnabled' => true,"),
 
-    # ── Lo retirado ──
-    ("vuelve el pliego de tarjetas de la página vieja",
+    # ── La fecha, ESCRITA (`#656`) ──
+    ("la fecha vuelve a escribirse a mano en la vista (y en inglés dice «September de 2026»)",
      VISTA,
-     '<main id="main" class="page page--rules wrap">',
-     '<main id="main" class="page page--rules wrap rules-grid">'),
+     "\\App\\Domain\\Platform\\Services\\LocalDate::monthYear($board['updatedAt'])",
+     "$board['updatedAt']->translatedFormat('F \\d\\e Y')"),
 ]
 
 

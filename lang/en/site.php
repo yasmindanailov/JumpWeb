@@ -25,7 +25,6 @@ return [
     'rules_staff' => 'Any questions about rates, birthdays or promotions, ask the park staff: that is what they are there for.',
     'rules_updated' => 'Updated in :fecha',
     'back_home' => '← Back to home',
-    'legal_draft_notice' => 'Draft text, pending legal review.',
 
     // ══ /contacto (`DECISIONES #535`) ═══════════════════════════════════════════════════════
     'contact_eyebrow' => 'Contact',

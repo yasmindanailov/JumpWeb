@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#654`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (sesión de la T2b: tres
-> barridos, `summary` en la API, el 422 del anfitrión, y `/contacto` partida y MUDADA).
+> **640–669** · Último usado: **`#656`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (sesión de la T2b: los
+> barridos, `summary` en la API, el 422, y `/contacto`, `/normas`, `/bar` y los legales MUDADAS).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -31,10 +31,9 @@
 
 ## Por dónde retomar, en orden
 
-1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`, donde están sus cinco tandas y sus seis
-   trampas: al tocar el cajón se leen de ahí). ⚠️ **Le falta un ojo humano sobre la COMPRA de la T5**:
-   medida en Chromium (42/42), no vista. Se enseña con el banco de pruebas de su §4.8 — **que se BORRA al
-   terminar**, o la guarda 9 del despliegue aborta.
+1. **F4 · CERRADA el 19-09** (`specs/cajon-empaquetable.md`: sus cinco tandas y sus seis trampas). ⚠️ **Le
+   falta un ojo humano sobre la COMPRA de la T5** (medida, no vista): se enseña con el banco de su §4.8,
+   **que se BORRA al terminar** o la guarda 9 del despliegue aborta.
 2. **LO SIGUIENTE: DESPLEGAR la v1.2.0, y eso lo decide el owner.** Etiqueta cortada y empujada
    (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades. **Para las instancias no hay
    nada que hacer**: sin migraciones, sin claves de `.env`, sin ajustes. ⚠️ Producción, de noche o con el
@@ -66,16 +65,18 @@
    hechos** (`#650` la dirección · `#651` los números · `#653` la `<meta description>`, con `summary` en
    `/rules` y `/legal/documents/{clave}`, contrato **1.11.0**, arnés 50/50) y `bar`/`pricing` barridas sin
    hallazgo. **El 422 del anfitrión, arreglado** (`#652`).
-   ▶ **`/contacto` MUDADA** (`#654`): la vista vive en `instancias/playjump/web/contacto.blade.php` (repo
-   LOCAL sin remoto), el producto sirve `anfitrion/contacto` sin paquete, y **la suite corre SIN paquete**
-   (`phpunit.xml` fija `INSTANCIA_RUTA` vacía). Medido: mismo DOM, huella **0/34**, sitemap 11=11. Honeypot
-   y Turnstile son componentes (`<x-site.honeypot>`, `<x-site.turnstile>`); los 12 casos de marcado se
-   fueron (dos al componente de canales, uno a `lang/`, nueve a la doc de la instancia, `paginas/contacto.md`).
+   ▶ **CUATRO vistas MUDADAS** (`#654` `/contacto` · `#655` `/normas`, `/bar` y los cinco legales): viven
+   en `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve `anfitrion/{contacto,normas,bar,
+   legal}` sin paquete, y **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella
+   **0/34**, sitemap 11=11. El barrido de `#655` retiró una regla MUERTA (el aviso de borrador de los
+   legales) y bajó una viva (`LocalDate`, `#656`: «September de 2026»). Honeypot y Turnstile son componentes.
+   Cada página mudada deja su lista de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
+   ⚠️ El CSS y las ranuras que solo pinta una vista mudada se declaran en
+   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`: las guardas de huérfanos lo leen (spec §4.7).
    ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA**: las otras OCHO vistas con el mismo método —barrido de reglas → partir sus pruebas → anfitrión
-   mínimo → huella 0—: `home` (1.631 líneas, la gorda) y `pages/{attractions,bar,events,pricing,rules,
-   services,text}`; una CUARTA regla medida y SIN tocar (el `$fmt` de `services.blade.php`, de la web,
-   avisado); y después T3–T5 (spec hermana §4.6).
+   ▶ **QUEDA**: `atracciones`, `precios`, `cumpleanos`, `servicios` y, la última, `home` (1.631 líneas), con
+   el mismo método —barrido → partir pruebas → anfitrión mínimo → huella 0—; una CUARTA regla medida y SIN
+   tocar (el `$fmt` de `services.blade.php`, de la web, avisado); y después T3–T5 (spec hermana §4.6).
    ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún tienen
    sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
@@ -84,7 +85,6 @@
    de la carpeta, así que la mudanza habría levantado contenedores NUEVOS y dejado huérfano el volumen de
    MySQL con la base de desarrollo dentro. Un clon con otro nombre de carpeta ya no duplica nada.
 
-   ⚠️ `/social-proof` publica solo la CIFRA; las reseñas llegan con su fuente (`#646`, spec §4.1).
    ⚠️ **De la ficha** (spec §4.1): la foto de zona es ruta heredada a `public/`; **35 imágenes del cliente
    versionadas en `main`**, sin tocar: van con la T2.
 
@@ -97,9 +97,8 @@
    el `FileUpload` que descarta lo que no está en disco…) se mudaron a la spec, **§4.1.ter**: no caducan
    con la tanda y allí las encuentra quien añada un recurso público dentro de cinco meses.
 
-   **Del censo** (spec §1): 71 ajustes · sitemap de 11 URLs · 3.142 líneas de Blade · una sola marca viva
-   (`pjp-salta-record`) · `zones` con cuatro columnas muertas (`#639`). Sigue valiendo lo guardado: un
-   `tokens.json` en la instancia del que salgan `client.css` y el tema de la app.
+   **Del censo** (spec §1): sigue valiendo lo guardado —un `tokens.json` en la instancia del que salgan
+   `client.css` y el tema de la app— y `zones` tiene cuatro columnas muertas (`#639`).
 4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 5. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
@@ -222,21 +221,23 @@ dueño es el carril de la web/reseñas—) ·
 - ▶ Anotados `updated_at` (el constructor de Eloquent SÍ lo toca; `MODELO-DATOS.md` ya lo dice) y la
   migración `order_items.eve_notice_at` para el próximo despliegue.
 - ▶ Leído tu ✅ del owner y el freno (20-09): **nada del cajón se despliega antes del borde §7.1·5**;
-  anotado en «por dónde retomar» (2). Y un componente nuevo por si lo quieres: `<x-site.turnstile />`
-  (`invitation/show` sigue con el widget en línea).
+  anotado en «por dónde retomar» (2). `<x-site.turnstile />` existe, por si `invitation/show` lo quiere.
 
 ### Para el carril de la web (emisor: plataforma, 2026-09-20)
 - ✅ **`/contacto` MUDADA** (`#654`; avisado en `868a2787`): la vista vive en la instancia (mismo DOM, huella
   0/34) y el producto sirve `anfitrion/contacto`. De lo tuyo: `Landing/ContactPageTest` se fue con la vista,
   `mutar-contacto.py` conserva los mutantes del producto, `mutar-cabecera.py` apunta al anfitrión y la fila
   de `rediseno-desde-canvas.md` lo dice. `<x-site.turnstile>` existe: `reservation/authorization` sigue en línea.
+- ✅ **`/normas`, `/bar` y los legales MUDADAS** (`#655`): `RulesPageTest` y `BarPageTest` afirman ya sobre
+  datos; `mutar-normas.py`, `mutar-bar.py` y `mutar-cabecera.py` apuntan a los anfitriones y `mutar-bandas.py`
+  pierde su mutante de `/bar`; las filas de `rediseno-desde-canvas.md` lo dicen. Y un defecto tuyo arreglado
+  en la copia de la instancia: la fecha de `/normas` decía «September de 2026» en inglés (`#656`).
 - ⚠️ **Tuyo, medido y sin tocar**: `mutar-cabecera.py` tiene CUATRO mutantes que ya no aplican (el rótulo con
-  la ruta que `#586` retiró, y el abanico de `/precios` que `#580` mudó a la fachada): 14/18, y los cuatro
-  son «NO APLICADA», no supervivientes.
-- ⚠️ **He tocado la cabecera `@php` de CUATRO vistas tuyas** (`rules`, `attractions`, `text`, `events`;
-  `#653`): solo la derivación de la `<meta description>`, que ahora la hace `Platform\Services\MetaDescription`
-  (un hogar, tope 155, palabra entera). Medido en tres idiomas: `/normas` idéntica; las legales cambian solo
-  el corte; `/atracciones` se llena hasta el tope; `/cumpleanos` se acota. Nada visible cambia.
+  la ruta que `#586` retiró, y el abanico de `/precios` que `#580` mudó a la fachada) y `mutar-bandas.py`
+  UNO («el rótulo deja de ser la RUTA»): «NO APLICADA», no supervivientes. Los dos de `RuleBoard` en
+  `mutar-normas.py` los re-apunté yo al pasar `RulesPageTest` a datos.
+- ⚠️ **Toqué la cabecera `@php` de cuatro vistas tuyas** (`#653`): la `<meta description>` la escribe ahora
+  `MetaDescription` (tope 155, palabra entera). Medido en tres idiomas: nada visible cambia.
 - ⚠️ **Medido y SIN tocar, tuyo**: el `$fmt` de `services.blade.php` escribe el precio a mano (`1500 €` sin
   millares, coma fija en inglés), tercera variante de `Money`. Como `/servicios` está pausada (`#534`), lo
   dejo para su rediseño: `Money::showcase()` + `€` es la regla.

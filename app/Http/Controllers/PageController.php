@@ -8,15 +8,25 @@ use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\VenueRule;
 use App\Domain\Content\Services\RuleBoard;
 use App\Domain\Identity\Services\WaiverSettings;
+use App\Http\Instancia\InstanceViews;
 
+/**
+ * Las dos páginas de texto del producto: `/normas` y los cinco legales.
+ *
+ * ⚠️ Desde `#655` (F5 · T2b) sus vistas viven en la INSTANCIA (`web/normas.blade.php`, `web/legal.blade.php`)
+ * y el producto sirve su anfitrión mínimo sin paquete. Lo que se pasa a cada vista es su CONTRATO
+ * (`InstanceViews::CONTRATO_DE_VISTAS`): renombrar una clave rompe todas las landings a la vez.
+ */
 class PageController extends Controller
 {
-    /** Página de texto legal (contenido desde la tabla `pages`). */
+    public function __construct(private readonly InstanceViews $instancia) {}
+
+    /** Página de texto legal (contenido desde la tabla `pages`). Las cinco rutas `legal.*` pasan por aquí. */
     public function show(string $slug)
     {
         $page = Page::where('slug', $slug)->where('is_active', true)->firstOrFail();
 
-        return view('pages.text', ['page' => $page]);
+        return view($this->instancia->pick('legal', 'anfitrion.legal'), ['page' => $page]);
     }
 
     /**
@@ -34,7 +44,7 @@ class PageController extends Controller
         $zones = Zone::where('is_active', true)->where('show_in_landing', true)
             ->orderBy('position')->get();
 
-        return view('pages.rules', [
+        return view($this->instancia->pick('normas', 'anfitrion.normas'), [
             'board' => $board->compose($rules),
             /*
              * ⚠️ El techo y los dos extremos escritos los compone `ZoneCards`, que es de Booking y

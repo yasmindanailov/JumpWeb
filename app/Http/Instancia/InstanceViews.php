@@ -82,10 +82,56 @@ class InstanceViews
                 // Lo que pone el controlador de la página.
                 'answers', 'topics',
                 // Lo que pone el composer global, en toda vista. ⚠️ Se va con el menú de hechos.
-                'site', 'heroStatus', 'offers', 'ctaMinPriceCents', 'ctaMinPriceLabel',
-                'cookieBannerEnabled', 'cookieConsent',
+                ...self::DEL_COMPOSER,
             ],
         ],
+        // `/normas` (`#655`): el tablero por momento, la escala de altura resuelta y si se ofrece el descargo.
+        'normas' => [
+            'ruta' => 'normas',
+            'datos' => ['board', 'scale', 'waiverEnabled', ...self::DEL_COMPOSER],
+        ],
+        // `/bar` (`#655`): lo que el panel publica del bar; `partyUrl` sale del inventario (o es `null`).
+        'bar' => [
+            'ruta' => 'bar',
+            'datos' => [
+                'barName', 'barLede', 'barPhoto', 'barPhotoCaption', 'barMenu', 'barFreeEntry', 'partyUrl',
+                ...self::DEL_COMPOSER,
+            ],
+        ],
+        // Los cinco legales (`#655`) comparten vista y contrato: la página del panel. Se mide con una.
+        'legal' => [
+            'ruta' => 'legal.privacidad',
+            'datos' => ['page', ...self::DEL_COMPOSER],
+        ],
+    ];
+
+    /**
+     * **Material del producto que hoy solo pinta una vista de la INSTANCIA** (F5 · T2b, `#655`).
+     *
+     * ⚠️⚠️ **Es la deuda de la vía B hecha lista.** El CSS de la landing y las ranuras del kit siguen en el
+     * producto (spec §4.4: en la T2 solo se mudan las VISTAS), pero su consumidor ya no está en
+     * `resources/views`, así que las guardas de huérfanos —`FacadeCssHasNoOrphansTest`, `ZonesSectionTest`—
+     * lo darían por muerto y pedirían retirarlo. Retirarlo rompería la landing de la instancia sin que
+     * fallara nada aquí. Se declara, con la vista que lo consume, y las dos guardas lo excluyen; y las dos
+     * exigen además que ninguna vista del PRODUCTO lo pinte, o la entrada sobra.
+     *
+     * ▶ **El día que el material se mude con las vistas (T3–T5), esta lista se vacía.** Una entrada sin
+     * sujeto en el paquete es deuda que hay que ver.
+     *
+     * @var array<string, string> pieza (clase CSS de la fachada, o ranura del kit) => quién la consume
+     */
+    public const MATERIAL_CONSUMIDO_POR_LA_INSTANCIA = [
+        'grain--fade' => 'web/normas.blade.php · la trama que se apaga, en la cabecera de /normas (`#655`)',
+        'slot-ico-altura' => 'web/normas.blade.php · el icono de «La altura, de un vistazo» (`#655`)',
+        'slot-ico-saltador' => 'web/normas.blade.php · el icono del grupo «Mientras saltas» (`#655`)',
+    ];
+
+    /**
+     * Lo que el composer global (`View::composer('*')`) pone en TODA vista. ⚠️ Se va con el menú de hechos
+     * (`instancia-y-landing-fuera.md` §1.1), y ese día sube el MAYOR: por eso está escrito una sola vez.
+     */
+    private const DEL_COMPOSER = [
+        'site', 'heroStatus', 'offers', 'ctaMinPriceCents', 'ctaMinPriceLabel', 'cookieBannerEnabled', 'cookieConsent',
     ];
 
     public function __construct(private readonly ViewFactory $vistas) {}

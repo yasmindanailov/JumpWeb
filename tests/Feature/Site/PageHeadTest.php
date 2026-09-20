@@ -129,21 +129,26 @@ class PageHeadTest extends TestCase
         // ⚠️ `/precios` estuvo en este bucle con su abanico en la ranura `deco`, y salió en `#580`: el
         // owner lo vio recortado en una banda («A3 Rayos… recortado») y hoy vive detrás de la figura de
         // su fachada, fuera de la cabecera. Lo que se vigila de él es justo eso, al final del caso.
-        foreach (['/normas' => 'grain'] as $ruta => $pieza) {
-            $x = $this->xpath($this->get($ruta)->assertOk()->getContent());
-            $cabecera = $x->query('//main//'.$this->clase('div', 'page__head'))->item(0);
+        // ⚠️ Y `/normas` estuvo aquí con su trama hasta `#655`: se fue con su vista a la instancia, y con
+        // ella la última decoración de cabecera del producto. La propiedad es del COMPONENTE, así que
+        // se prueba en el componente, renderizado solo con una pieza en su ranura y una entradilla.
+        $html = (string) $this->blade(
+            '<x-site.page-head title="Titular" lede="Una entradilla"><x-slot:deco><div class="grain" aria-hidden="true"></div></x-slot:deco></x-site.page-head>',
+        );
+        $x = $this->xpath($html);
+        $cabecera = $x->query('//'.$this->clase('div', 'page__head'))->item(0);
+        $this->assertNotNull($cabecera, 'el componente no pinta la cabecera');
 
-            $enConjunto = $x->query('./'.$this->clase('div', 'page__lockup--deco').'/'.$this->clase('div', $pieza), $cabecera);
-            $this->assertSame(1, $enConjunto->length, "la pieza «{$pieza}» de «{$ruta}» no está dentro del conjunto que la recorta");
+        $enConjunto = $x->query('./'.$this->clase('div', 'page__lockup--deco').'/'.$this->clase('div', 'grain'), $cabecera);
+        $this->assertSame(1, $enConjunto->length, 'la pieza no está dentro del conjunto que la recorta');
 
-            $sueltas = $x->query('./'.$this->clase('div', $pieza), $cabecera);
-            $this->assertSame(0, $sueltas->length, "la pieza «{$pieza}» de «{$ruta}» cuelga de la cabecera entera");
+        $sueltas = $x->query('./'.$this->clase('div', 'grain'), $cabecera);
+        $this->assertSame(0, $sueltas->length, 'la pieza cuelga de la cabecera entera');
 
-            $entradilla = $x->query('.//'.$this->clase('p', 'page__lede'), $cabecera)->item(0);
-            $this->assertNotNull($entradilla, "«{$ruta}» no tiene entradilla: el caso no distingue nada");
-            $conjunto = $x->query('./'.$this->clase('div', 'page__lockup'), $cabecera)->item(0);
-            $this->assertFalse($this->dentro($entradilla, $conjunto), "la entradilla de «{$ruta}» está dentro del conjunto decorado");
-        }
+        $entradilla = $x->query('.//'.$this->clase('p', 'page__lede'), $cabecera)->item(0);
+        $this->assertNotNull($entradilla, 'el componente no pinta la entradilla: el caso no distingue nada');
+        $conjunto = $x->query('./'.$this->clase('div', 'page__lockup'), $cabecera)->item(0);
+        $this->assertFalse($this->dentro($entradilla, $conjunto), 'la entradilla está dentro del conjunto decorado');
 
         // CONTROL: una página sin decoración no lleva el conjunto recortado (recortar sin motivo
         // cortaría la coma de un titular de Bungee a `line-height: .95`).

@@ -23,8 +23,8 @@ FICHEROS = [
     'public/css/landing.css',
     'public/css/site.css',
     'resources/views/pages/pricing.blade.php',
-    'resources/views/pages/rules.blade.php',
-    # `/contacto` es el ANFITRIÓN MÍNIMO desde `#654`: la landing de PlayJump vive en su instancia.
+    # `/normas` y `/contacto` son ANFITRIONES MÍNIMOS desde `#654`/`#655`: la landing de PlayJump vive en su instancia.
+    'resources/views/anfitrion/normas.blade.php',
     'resources/views/anfitrion/contacto.blade.php',
     'resources/views/auth/reset-password.blade.php',
     'resources/views/errors/page-maintenance.blade.php',
@@ -50,7 +50,7 @@ MUTACIONES = [
      "    @if (true)"),
 
     ("/normas pierde la entradilla que el owner aprobó",
-     'resources/views/pages/rules.blade.php',
+     'resources/views/anfitrion/normas.blade.php',
      " :lede=\"__('site.rules_intro')\"",
      ""),
 
