@@ -395,7 +395,14 @@ vigilaba**: una guarda que normaliza lo que mira no mira nada.
    aprendió con `min()`; aquí con una constante), y la salida es la misma: **el valor esperado se teclea**.
 
 ▶ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`). Es la cuarta regla del
-barrido y resultó ser más grande que la portada: **37 ficheros y 9,2 MB**. Nace `publico/` en la plantilla
+barrido y resultó ser más grande que la portada: **37 ficheros y 9,2 MB**.
+❗❗ **Y con ella el paquete de instancia deja de poder ser LOCAL** (`[DECIDIDO owner]`, 20-09). Nació sin
+remoto a propósito —solo llevaba vistas, que también viven en el historial de `main`—, pero con el
+material dentro pasa a ser **la única copia de ficheros irreemplazables**. *El nivel de respaldo que
+necesita un paquete no lo fija el paquete: lo fija lo que hay dentro.* El repo es **privado**, y eso se
+COMPRUEBA antes de empujar —9,2 MB de fotos de un cliente en un repo público no se deshacen—: un `curl`
+anónimo a su URL tiene que dar 404.
+Nace `publico/` en la plantilla
 —refleja la estructura de `public/` porque **las rutas las guarda la BD** y moverlas obligaría a migrar
 datos en cada instalación— y el paquete de la instancia lo estrena.
 ⚠️⚠️ **La lección que vale para cualquier tanda que saque ficheros del repo**: ignorarlos NO basta. El

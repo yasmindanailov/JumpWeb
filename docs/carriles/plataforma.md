@@ -2,9 +2,10 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#662`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#663`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: `pages/` ya no
-> existe; el BARRIDO de `home` hecho y TRES de sus cuatro reglas ya fuera de la vista).
+> existe; el barrido de `home` hecho y **sus cuatro reglas fuera**, con el material del cliente en el
+> paquete de instancia, que ya tiene remoto privado).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -51,8 +52,9 @@
    del catálogo y la prueba social). Aquí queda **lo que hace falta para lo siguiente**.
 
    ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): el namespace `instancia::` con sus tres
-   puertas, el invariante **`SEC-12`**, la `plantilla/` y el repo LOCAL `jumpweb/instancias/playjump`
-   (**sin remoto**; el owner dijo que por ahora no hace falta). `/contacto` ya resuelve por la instancia.
+   puertas, el invariante **`SEC-12`**, la `plantilla/` y el repo `jumpweb/instancias/playjump`, **con
+   remoto PRIVADO desde `#663`** (`yasmindanailov/instancia-playjump`; nació sin él y lo ganó al entrar
+   dentro el material gráfico, que ya no está en `main`). `/contacto` ya resuelve por la instancia.
    ⚠️⚠️ **LA REGLA DE LA T2b** (`#649`, spec §4.5.bis, donde está el porqué entero): **el contrato
    producto↔instancia son los DATOS que recibe la vista, no el HTML que produce.**
    ▶ **HECHO el CONTRATO DE VISTA** (`CONTRATO_DE_VISTAS` + su test, arnés 7/7). ❗❗ La vista recibe NUEVE
@@ -62,7 +64,7 @@
    partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
    allí está lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50).
    ▶ **LAS OCHO DE `pages/` MUDADAS** (`#654`→`#660`), y **esa carpeta ya no existe**: viven en
-   `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve su `anfitrion/…` sin paquete, y
+   `instancias/playjump/web/`, el producto sirve su `anfitrion/…` sin paquete, y
    **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38** y sitemap
    11=11; su lista de garantías, en `paginas/<nombre>.md` del paquete.
    ⚠️ El material que solo pinta una vista mudada se declara en
@@ -78,10 +80,9 @@
    viven en `publico/` del paquete y se copian a mano, como `client.css`. Las tres piezas —exclusión del
    `rsync`, lista blanca de la GUARDA 9, `.gitignore` + `git rm`— van en el MISMO commit, o el primer
    despliegue borra producción; verificado en seco con control negativo. El porqué, en la spec §4.7.
-   ❗ **PENDIENTE DE TI**: crear `instancia-playjump` PRIVADO en tu GitHub y decirme la URL. `gh` no está
-   instalado y el ayudante de credenciales es el de Windows: puedo empujar a un repo que exista, pero
-   crear uno exige tus credenciales. **Hasta que lo empuje, la única copia de las 35 fotos son esta
-   máquina y producción.**
+   ✅ **Y el paquete tiene REMOTO PRIVADO** (20-09): `yasmindanailov/instancia-playjump`, empujado y
+   verificado —mismo SHA local y remoto, 38 ficheros bajo `publico/`, 404 anónimo—. ⚠️ Se comprobó que
+   era privado ANTES de empujar: 9,2 MB de fotos de un cliente a un repo público no se deshacen.
    ▶▶ **LO SIGUIENTE**: la regla de caché del vídeo (`?v={filemtime}`), que sigue escrita en la vista.
    Después: partir pruebas → anfitrión → huella.
    ⚠️⚠️ **`home` NO es una página más: la piden 682 casos en 60 ficheros** (`/contacto` eran 14 en uno),
@@ -216,13 +217,17 @@ dueño es el carril de la web/reseñas—) ·
 ### ❗❗ Para TODOS los carriles (emisor: plataforma, 2026-09-20) — TU `git pull` BORRA 37 FICHEROS
 - ⚠️⚠️ **`#663` saca el material gráfico del cliente de `main`** (35 fotos del catálogo + el vídeo de la
   portada y su póster, 9,2 MB). Son `git rm --cached`, o sea que **al hacer `pull` desaparecen de TU
-  disco**, y hoy no hay de dónde recuperarlos: el paquete de la instancia es LOCAL de esta máquina y su
-  remoto está pendiente del owner.
+  disco** — medido dos veces aquí: el rebase los restaura del remoto y luego reaplica el commit, que los
+  borra del árbol de trabajo.
+- ✅ **De dónde los sacas**: `git clone https://github.com/yasmindanailov/instancia-playjump` (PRIVADO,
+  te hará falta acceso) y después `cp -r publico/. <producto>/public/`. No hace falta clonarlo dentro del
+  árbol del producto — **y no debe estar dentro** (`SEC-12`).
 - ▶ **Qué se rompe y qué no**: la suite **no** —afirma sobre las RUTAS, no sobre el disco, medido—, ni el
   gate, ni el cajón. Lo que verás es la **landing con fotos rotas y sin vídeo** si la abres en el
   navegador, y una huella de `/` que puede no cuadrar con la de esta máquina.
-- ▶ **Cuando el owner cree `instancia-playjump`**, se clona y se copia: `cp -r publico/. <producto>/public/`
-  (receta en `INSTALACION-CLIENTE.md` §4.bis). Avisaré aquí con la URL.
+- ▶ **Ya existe el repo**: se clona `yasmindanailov/instancia-playjump` (privado, necesitas acceso) y se
+  copia: `cp -r publico/. <producto>/public/` (receta en `INSTALACION-CLIENTE.md` §4.bis). ⚠️ **Clónalo
+  FUERA del árbol del producto**: dentro, el `rsync --delete` del despliegue se lo lleva (`SEC-12`).
 - ⚠️ **Producción y staging NO se tocan**: `deploy.sh` los excluye del `rsync`, que es además lo que los
   salva de su `--delete`. Verificado en seco con control negativo.
 
