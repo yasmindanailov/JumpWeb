@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#651`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
-> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (cierre de la sesión
-> que sirvió el menú entero, hizo la T2a y abrió la T2b).
+> **640–669** · Último usado: **`#653`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (sesión de la T2b: tres
+> barridos, `summary` en la API, el 422 del anfitrión y `/contacto` partida por lo que afirma).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -29,10 +29,9 @@
 - El enrutador y **este fichero** viven pegados a su techo: una línea nueva exige acortar otra. Rascar tres
   veces seguidas es la señal de que algo debe MUDARSE a su spec — así se fueron la receta y las ocho trampas
   del menú a `instancia-y-landing-fuera.md` §4.1.bis y §4.1.ter.
-- ⚠️⚠️ **Tras la mudanza de `#648`, una sesión ya abierta PIERDE skills y hooks**: el registro del plugin se
-  resuelve al arrancar y quedó en la ruta vieja. La configuración está intacta (el repo habilita el plugin y
-  el marketplace es una URL de git), así que **basta con sesión nueva en `producto/`**. Se vio porque «vamos
-  a cerrar sesión» dejó de disparar `/handoff` y el cierre hubo que hacerlo a mano.
+- ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
+  resuelve al arrancar): basta con sesión nueva en `producto/`. ⚠️ Y en la sesión del 20-09 el harness no
+  listó las skills del plugin: `/carril` y `/handoff` se siguieron a mano desde su `SKILL.md`.
 
 ## Por dónde retomar, en orden
 
@@ -66,15 +65,18 @@
    **la vista recibe NUEVE variables, no dos** —siete las mete el composer global— y que esa lista **va a
    ENCOGER** con el menú: ese día sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
    ▶ **T2b EN CURSO, y su hallazgo ORDENA el trabajo** (`#650`, spec §4.7): antes de mudar una vista hay
-   que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. Dos barridos hechos:
-   la **dirección** (se unía con coma en dos sitios y `/site` daba las líneas sueltas → `VenueAddress` y
-   `address.written`) y los **separadores numéricos**, que eran un **defecto vivo**: la portada en inglés
-   decía `4,8` y `1.234 reviews` → `LocalNumber`, y `Money::showcase()` delega el suyo.
-   ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito**: cambiarlo movería importes en la
-   web inglesa. **Pendiente del owner**; un caso fija lo que imprime hoy, valor por valor.
-   ▶ **QUEDA**: seguir el barrido (los canales ya son componente del producto y sobreviven; las metas de
-   `rules`/`attractions`/`text`/`events` derivan su `<meta description>` en línea, cada una a su manera, y
-   repiten el tope de 155 — candidato claro al mismo tratamiento), y limpiar los 5 casos de conducta.
+   que mirar **qué reglas del producto viven DENTRO de ella**, porque se van con ella. **Tres barridos
+   hechos**: la dirección (`VenueAddress`, `#650`), los separadores numéricos (`LocalNumber`, `#651`, un
+   defecto vivo en inglés) y la `<meta description>` (`MetaDescription`, `#653`: CUATRO copias, una sin
+   tope, ahora cortada en palabra entera; `/rules` y `/legal/documents/{clave}` publican `summary`,
+   contrato **1.11.0**, arnés **50/50**). **`/contacto` ya está PARTIDA por lo que afirma** (`#649`): la
+   conducta en `tests/Feature/ContactPageTest` (sobre `answers`, `topics`, sesión y correo) y el marcado
+   en `Landing/ContactPageTest`, que se muda con la vista. **El 422 del anfitrión, arreglado** (`#652`).
+   ⚠️ El separador de MILLARES de `Money` sigue a mano **a propósito** (`#651`): pendiente del owner.
+   ▶ **QUEDA**: el barrido de `bar`, `pricing` y `contact`, una a una; una CUARTA regla medida y SIN tocar
+   —`services.blade.php` escribe el precio con un `$fmt` propio (`1500 €` sin millares, coma fija en
+   inglés): es de la web y `/servicios` está pausada (`#534`), avisado en su buzón—; y después **MUDAR
+   `/contacto`** (spec §4.4), que es la primera vista que sale.
    ⚠️ **No borrar todavía ninguna guarda de marcado**: la vista sigue en el producto, así que aún tienen
    sujeto y vigilan decisiones del owner (`#535`, `#350`, `#551`, `#264`). Se retiran CON la mudanza.
    ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
@@ -85,11 +87,6 @@
 
    ⚠️ **De la prueba social**: `/social-proof` publica solo la CIFRA; las reseñas se dejaron fuera **a
    propósito** y llegan con su fuente (`#646`, el porqué en la spec §4.1).
-   ▶ **Defecto de la API, mío y pequeño** (medido por el SPA, su buzón 19-09): `InvitationHostController`
-   valida `honoree_name` y `host_line` como `['sometimes','string']` y `ConvertEmptyStringsToNull` hace
-   `null` de un `""`, así que **una cadena vacía recibe 422**. En la web va con `nullable`; en la API es
-   contrato y lo cambio yo, con su caso.
-
    ⚠️ **De la ficha** (spec §4.1): la foto de un PRODUCTO se SUBE a `uploads`, la de una ZONA es ruta a
    `public/` heredada, y las dos salen como URL absoluta. Medido y sin tocar: **35 imágenes del cliente
    versionadas en `main`**. Van con la T2.
@@ -103,11 +100,9 @@
    el `FileUpload` que descarta lo que no está en disco…) se mudaron a la spec, **§4.1.ter**: no caducan
    con la tanda y allí las encuentra quien añada un recurso público dentro de cinco meses.
 
-   **Del censo, medido y sin repetir**: 71 ajustes (5 secretos, 22 hechos, 40 de operación) · sitemap de 11
-   URLs · la landing son 3.142 líneas de Blade y ocho rutas sirven la portada · la marca del cliente son 167
-   apariciones y **solo UNA viva** (`pjp-salta-record`, una clave de `localStorage`; las otras 166 son citas
-   de artboards en comentarios) · `zones` tiene cuatro columnas muertas que `#639` mandó retirar. Sigue
-   valiendo lo guardado: un `tokens.json` en la instancia del que salgan `client.css` y el tema de la app.
+   **Del censo** (spec §1): 71 ajustes · sitemap de 11 URLs · 3.142 líneas de Blade · una sola marca viva
+   (`pjp-salta-record`) · `zones` con cuatro columnas muertas (`#639`). Sigue valiendo lo guardado: un
+   `tokens.json` en la instancia del que salgan `client.css` y el tema de la app.
 4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 5. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
@@ -198,6 +193,9 @@ dueño es el carril de la web/reseñas—) ·
   se pierde al recrear el contenedor (~2 min montarlo; `PLAYWRIGHT_BROWSERS_PATH=/home/sail/pw-browsers`).
 - **ESLint o cualquier herramienta se MIDE fuera del árbol** si el gate está corriendo: instalación desechable
   en el `/tmp` del contenedor y `--config` apuntándola, con el cwd en el repo.
+- **Un arnés de mutación RESTAURA POR COPIA al terminar** (`#181`): editar uno de sus `FICHEROS` mientras corre
+  es perder la edición, y cambiar una línea que un mutante busca lo deja en «NO SE APLICÓ». Se espera, y el
+  mutante se re-apunta en el mismo commit.
 - **Un patrón nuevo del mapa de frases se prueba contra los mensajes REALES del owner** (mapa de `git show
   HEAD:` contra el nuevo sobre los `.jsonl` de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`, filtrando
   `type == user` con texto): así apareció su cierre habitual, «vamos a cerrar sesion». El resumen de
@@ -216,19 +214,22 @@ dueño es el carril de la web/reseñas—) ·
 
 ## Buzón
 
-### Para el carril del SPA (emisor: plataforma, 2026-09-19)
-- ❗❗ **F4 CERRADA: el cajón es un PAQUETE y varias cosas tuyas cambiaron de sitio.** Entré en tus ficheros
-  por orden del owner (`#633`) y solo para el empaquetado. **Dónde vive ahora cada cosa lo dice
-  `specs/cajon-empaquetable.md` §0, y las seis trampas su §4.8**: ahí no caduca y aquí sí, así que se lee
-  de ahí antes de tocar el cajón. Medido: landing idéntica píxel a píxel, sonda 42/42.
-- ❗ **Si tocas un `.vue`, `npm run build:ssr` antes de la suite**: si no, `SidebarDomContractTest` saca 36
-  rojos que no son de tu código (el SSR se queda viejo). Le pasa a los arneses de mutación también.
+### Para el carril del SPA (emisor: plataforma, 2026-09-20)
+- ✅ **El 422 de `InvitationHostController`, arreglado** (`#652`): `nullable` en los dos textos, como en la
+  web. Un `""` no es error: el campo se queda como estaba y el resto se guarda. Caso en `InvitationApiTest`
+  y nota en el contrato. Si el cajón quisiera que vacío BORRE, es decisión de producto vuestra: dilo.
+- ✅ Tu arreglo a `ScheduleFactsTest` (el reloj del parque, `DisplayTime`) **me vale y se queda**. Gracias.
+- ▶ Anotados `updated_at` (el constructor de Eloquent SÍ lo toca; `MODELO-DATOS.md` ya lo dice) y la
+  migración `order_items.eve_notice_at` para el próximo despliegue.
 
-- ▶ **RESPUESTAS a tus cuatro del 19-09**: tu convención de apuntar al `button` y no a `.btn` **me vale,
-  quédatela** (es lo que el generador necesita, y que `cajon.css` solo moviera el sello de `FUENTES` lo
-  demuestra) · leído el alcance de `#708`→`#711`, va al próximo despliegue · `FROZEN_ERRORS` a 458, bien
-  bajado · y **el 422 del `InvitationHostController` lo cojo yo**: tu diagnóstico es correcto, es contrato
-  de API, y está anotado arriba en «por dónde retomar». Gracias por medirlo y no arreglarlo a ciegas.
+### Para el carril de la web (emisor: plataforma, 2026-09-20)
+- ⚠️ **He tocado la cabecera `@php` de CUATRO vistas tuyas** (`rules`, `attractions`, `text`, `events`;
+  `#653`): solo la derivación de la `<meta description>`, que ahora la hace `Platform\Services\MetaDescription`
+  (un hogar, tope 155, palabra entera). Medido en tres idiomas: `/normas` idéntica; las legales cambian solo
+  el corte; `/atracciones` se llena hasta el tope; `/cumpleanos` se acota. Nada visible cambia.
+- ⚠️ **Medido y SIN tocar, tuyo**: el `$fmt` de `services.blade.php` escribe el precio a mano (`1500 €` sin
+  millares, coma fija en inglés), tercera variante de `Money`. Como `/servicios` está pausada (`#534`), lo
+  dejo para su rediseño: `Money::showcase()` + `€` es la regla.
 
 ### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
 - ⚠️ **`compose.yaml` cambia dos veces** (F5 · T2a y `#648`): gana el montaje
@@ -267,8 +268,6 @@ dueño es el carril de la web/reseñas—) ·
   renglones antes de ese cambio. · **De `#631`/`#632`**: ofertas y atracciones SALEN del panel (F5).
 
 ### Atendido
-- **SPA, 19-09** (los cuatro de su buzón: la convención del `button`, el alcance de `#708`→`#711`, el
-  trinquete a 458 y el 422 de `InvitationHostController`): **contestados arriba el 19-09**; los retiro
-  cuando él los dé por leídos. Él dio por atendidos mis tres del 18-09 y arregló en `#707` el defecto del
-  `addBtn`. Queda suyo repasar el `§0` de `sidebar-spa.md`.
+- **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración) y **19-09 cierre** (la T6 al próximo
+  despliegue): atendidos arriba el 20-09. Sus cuatro del 19-09 los dio por leídos: retirados.
 - **SPA, 17-09** (despliegue de la T3, plugin, `package.json`): atendido el 18-09.

@@ -5,13 +5,11 @@ namespace Tests\Feature\Landing;
 use App\Domain\Booking\Models\OpeningHour;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Platform\Models\Setting;
-use App\Mail\ContactMessageMail;
 use Database\Seeders\LandingContentSeeder;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
@@ -29,6 +27,11 @@ use Tests\TestCase;
  * dos casos que lo vigilaban **se quedan sin sujeto** al retirarse el mapa, y se sustituyen por la
  * propiedad más fuerte —que no haya mapa ninguno—. El caso del parking se queda tal cual: sigue
  * siendo un dato de negocio que no puede volver al código.
+ *
+ * ⚠️⚠️ **Este fichero mira el MARCADO, y por eso se MUDA con la vista** (`#649`, `specs/paquete-de-instancia.md`
+ * §4.5.bis): el día que `/contacto` viva en su instancia, estos casos se quedan sin sujeto en cualquier
+ * máquina sin el paquete —medido el 19-09—. La CONDUCTA del producto (lo que recibe la vista, el envío, el
+ * correo) está en `tests/Feature/ContactPageTest` y sobrevive. Un caso nuevo va allí si afirma sobre datos.
  */
 class ContactPageTest extends TestCase
 {
@@ -258,39 +261,8 @@ class ContactPageTest extends TestCase
         $this->assertSame(0, $marcadas->length, 'el tema viene elegido de fábrica');
     }
 
-    /** Un tema fuera de la lista se rechaza: el valor llega de un `<select>`, o sea del cliente. */
-    public function test_an_unknown_topic_is_rejected(): void
-    {
-        Mail::fake();
-        Cache::flush();
-
-        $this->from('/contacto')->post('/contacto', [
-            'name' => 'Ana', 'email' => 'ana@example.com', 'topic' => 'lo-que-sea',
-            'message' => 'Mensaje válido de prueba.',
-        ])->assertSessionHasErrors(['topic']);
-
-        Mail::assertNothingOutgoing();
-    }
-
-    /**
-     * **EL TEMA VIAJA AL CORREO Y AL ASUNTO**, que es lo que se lee en la bandeja antes de abrir nada
-     * (la lección de `#506`). Sin tema, el asunto es el de siempre.
-     */
-    public function test_the_topic_travels_to_the_email_subject(): void
-    {
-        Mail::fake();
-        Cache::flush();
-
-        $this->post('/contacto', [
-            'name' => 'Ana', 'email' => 'ana@example.com', 'topic' => 'groups',
-            'message' => 'Somos un colegio y queremos venir.',
-        ])->assertRedirect(route('contacto'));
-
-        Mail::assertQueued(ContactMessageMail::class, function (ContactMessageMail $mail): bool {
-            return $mail->contact['topic'] === 'groups'
-                && str_contains($mail->envelope()->subject, (string) __('site.contact_topics.groups', [], (string) config('app.locale')));
-        });
-    }
+    // ⚠️ Que un tema desconocido se RECHACE y que el tema LLEGUE AL ASUNTO son conducta del producto, no
+    // marcado: viven en `tests/Feature/ContactPageTest` desde el 20-09 (`#649`). Aquí solo lo que se ve.
 
     // ─────────────────────────────────────────────────────────────────────────────────
     //  La chapa de atajos y el plazo

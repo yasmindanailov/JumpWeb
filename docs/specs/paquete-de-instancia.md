@@ -215,9 +215,30 @@ de las líneas, y su guarda afirma sobre el dato: **sobrevive a la mudanza**.
 ⚠️ La duplicación ya había cobrado una pieza: el `streetAddress` del JSON-LD hacía pasar en verde un caso
 que aseveraba sobre la página entera aunque el bloque visible dijera otra cosa.
 
-▶ **Lo que queda de la T2b**: el mismo barrido para las demás reglas que hoy viven en las vistas de la
-landing —los canales ya están en un componente del producto, que sobrevive; el resto hay que mirarlo una a
-una— y después limpiar los casos de conducta para que afirmen sobre datos.
+▶ **Los tres barridos hechos** (20-09), y lo que enseñó cada uno:
+- `#650` · la **dirección** (dos copias con filtros distintos → `VenueAddress`, y `/site` publica `address.written`).
+- `#651` · los **separadores numéricos**, que eran un defecto vivo en inglés (`4,8`) → `LocalNumber`.
+- `#653` · la **`<meta description>`**, escrita CUATRO veces —normas, atracciones, legales y cumpleaños—,
+  cada una a su manera y una **sin tope** → `MetaDescription`, y `/rules` y `/legal/documents/{clave}`
+  publican `summary`. ⚠️ Lo que no se publica también es decisión: las atracciones salen del producto (`#631`)
+  y la descripción del pack solo viaja en el detalle (`#645`); ahí la instancia llama al servicio (vía B).
+  **Medido** en 8 páginas × 3 idiomas, antes y después: `/normas` idéntica; las cinco legales cambian solo el
+  corte (en palabra entera: «de que e...» → «de que...»); `/atracciones` se llena hasta el tope (paraba en 8
+  nombres, 111 caracteres); `/cumpleanos` se acota (180 → 155). Nada visible cambia.
+- Y una **cuarta regla, medida y sin tocar**: `pages/services.blade.php` escribe el precio con un `$fmt`
+  propio (`1500 €` sin millares, coma fija en inglés), una tercera variante de `Money`. Es del carril de la
+  web y `/servicios` está pausada por el owner (`#534`): avisado en el buzón, se arregla con su rediseño.
+
+▶ **`/contacto` ya está PARTIDA por lo que afirma** (20-09, aplicando §4.5.bis): de los 14 casos de
+`Landing/ContactPageTest`, los dos de conducta (el tema desconocido se rechaza; el tema llega al asunto) se
+fueron a `tests/Feature/ContactPageTest`, que es el fichero de CONDUCTA del producto y afirma sobre `answers`,
+`topics`, la sesión y el correo —los atajos (una página en mantenimiento, el ancla de Dudas) se comprueban
+ahora sobre el DATO, no sobre los `href`—. Los doce de marcado se quedan allí bajo su «guarda de la guarda»
+(el escáner que exige las piezas de la página y que sin la vista cae: no hay verde en vacío) y **se mudan
+con la vista**.
+
+▶ **Lo que queda de la T2b**: mirar una a una las reglas que queden en `bar`, `pricing` y `contact` (los
+canales ya son componente del producto y sobreviven), y después mudar `/contacto` (§4.4), la primera.
 
 ▶ Hasta aquí llega la T2a: el mecanismo vivo y la vista en su sitio. `/contacto` resuelve
 `instancia::contacto` si el paquete la trae, y la del producto si no.
