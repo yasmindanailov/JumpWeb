@@ -72,13 +72,12 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 ## Trampas vivas
 
 - ⏰⏰ **EL RELOJ: el contenedor va en UTC y el parque en Madrid, y entre las dos medianoches NO es el
-  mismo día.** Dos formas de pagarlo, las dos medidas: (a) **`DisplayTime::dayLabel()` NO convierte de
-  zona** —sus llamantes le pasan un Carbon ya construido en la del parque, y una columna de la BD sale
-  en UTC: sin `setTimezone`, un sello de las 00:30 de Madrid se fecha **el día anterior**—; y (b) **un
-  test con reloj propio miente dos horas al día** —`ScheduleFactsTest` se puso rojo a las 00:07 del
-  20-09, dos horas después de estar verde, por abrir el día de `Carbon::now()`; el producto calculaba
-  bien—. ▶ En un test de «ahora» el reloj se pide a **`DisplayTime`, nunca a `Carbon`**, y si el caso
-  congela la hora, **afirma primero** que el contenedor va en UTC o no mide nada.
+  mismo día.** Dos formas de pagarlo, medidas: (a) **`DisplayTime::dayLabel()` NO convierte de zona**
+  —le pasan un Carbon ya en la del parque, y una columna de BD sale en UTC: sin `setTimezone`, un sello
+  de las 00:30 de Madrid se fecha **el día anterior**—; (b) **un test con reloj propio miente dos horas
+  al día** (`ScheduleFactsTest`, rojo a las 00:07 del 20-09 por abrir el día de `Carbon::now()`; el
+  producto calculaba bien). ▶ En un test de «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**, y
+  si congela la hora, **afirma primero** que el contenedor va en UTC o no mide nada.
 - ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía
   su propio scroll y las cifras de la sonda salían verdes. **Lo vio la captura.** Y dos pesos de botón
   en un bloque pequeño compiten con el «Guardar» de la barra.
@@ -91,36 +90,41 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   navegador del owner `http://localhost:8081` (`URL::forceRootUrl` antes de firmar). Fixtures locales en la
   carpeta de almacenamiento de la app, no versionados: «probe-postform» (reserva `R-PRBT1A`), las tres sondas
   de ventana «probe-t3-…» y «probe-t3-urls», que imprime los enlaces para el owner.
+- 💥💥 **UN CORTE DE LA VM DE WSL DEJA FICHEROS A CERO BYTES Y ROMPE GIT** (20-09, 14:36): 31 objetos
+  de `.git/objects` vacíos —el commit en curso entre ellos— y medio `public/build`. Síntoma: «*object
+  file … is empty*», «*bad object HEAD*». ▶ **Receta medida**: apartar (no borrar) los vacíos
+  (`find .git/objects -type f -empty`) · `git update-ref refs/heads/main <último sha ENTERO del
+  reflog>`, que se corta a medias · `git fsck` · `git reset`, porque el *cache-tree* del índice apunta
+  a un objeto muerto · `npm run build` y `build:ssr`. ⚠️ **Lo versionado NO se pierde, y `git status`
+  lo demuestra.** ⚠️ No era ENOSPC —misma firma—: 947 GB libres.
 - Chromium muere al recrear el contenedor: `node node_modules/playwright-core/cli.js install chromium`
-  (con `npx` cae en otra caché); `npm install` poda `playwright-core`. Las sondas de enlace firmado no
-  necesitan el puente `socat`. ⚠️ **`compose.yaml` ganó un montaje el 19-09** (`#647`): el próximo
-  `docker compose up -d` **recrea el contenedor** y se lleva el Chromium por delante.
+  (con `npx` cae en otra caché, y **no** en `~/.cache/ms-playwright`: vive en `node_modules/…/
+  .local-browsers`); `npm install` poda `playwright-core`. ⚠️ **`compose.yaml` ganó un montaje el
+  19-09** (`#647`): el próximo `docker compose up -d` recrea el contenedor y se lleva el Chromium.
 - Techo del chunk **285** (medido 284,04): la poda obvia ya se midió y no paga.
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras un arnés
   de mutación (restaura el árbol, no el bundle) **y siempre que toques un `.vue`** (si no, 36 rojos que no
   son tuyos).
-- ⚠️⚠️ **Un COMENTARIO puede romper un censo** (`#715`): `MailInboxLineTest` averigua el grupo del
-  diccionario de cada correo con un `grep` que se queda con la PRIMERA llamada de cabecera del
-  fichero, así que una nota que la escriba entre comillas para explicarla **le gana al código** y el
-  correo entero sale del censo —12 avisos en rojo a la vez—. Es `#553` del lado del inventario: si
-  vas a nombrar en prosa el patrón que un escáner busca, **no lo escribas tal cual**.
+- ⚠️⚠️ **Un COMENTARIO puede romper un censo** (`#715`): `MailInboxLineTest` saca el grupo de cada
+  correo con un `grep` que se queda con la PRIMERA llamada de cabecera, así que una nota que la
+  escriba entre comillas **le gana al código** y el correo sale del censo (12 rojos de golpe). Es
+  `#553` del lado del inventario: si nombras en prosa el patrón que un escáner busca, **cámbialo**.
 - **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
-  guard de `saving()` de `TicketType` lanza, y el escenario real contra el que defiende el predicado
-  es justo ése —una importación, un `update()` a mano—. Con `create()` el caso no existiría.
+  guard de `saving()` lanza, y el escenario real contra el que defiende es justo ése (una importación,
+  un `update()` a mano). Con `create()` el caso no existiría.
 - ⚠️⚠️ **Dos trampas de Eloquent y de Larastan, medidas** (`#720`): `getRawOriginal()` da lo LEÍDO de la
   base, no el atributo vigente —entre `$m->campo = 'x'` y su `save()` entrega el ANTERIOR; usa
   `getAttributes()`—, y con un cast el desfase no rompe nada visible; y **Larastan declara MUERTO un
   `catch` tras una propiedad con cast** y se equivoca (no ve el `__get`). Cero ignores inline en el
   repo y la base solo encoge: la salida es que el código **diga** que puede fallar.
-- ⚠️⚠️⚠️ **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`** (`Builder::update()`
-  llama a `addUpdatedAtColumn()`), así que **NO sirve para marcar nada sin mover el testigo** del
-  post-form. Hay que bajar al crudo con **`toBase()`**. La spec de la invitación afirmaba lo
-  contrario desde el diseño y nadie lo había ejercido; lo cazó el caso del testigo de `#717` en el
-  primer intento. Si ves «por el constructor de consultas» en una doc, compruébalo.
-- 💰 **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` de tipo `deposit_split`), no
-  con un cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**,
-  que también devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra
-  POSITIVA sin ser dinero del parque**: un `max(0, $saldo)` no distingue las clases (`#716`).
+- ⚠️⚠️⚠️ **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`** (`Builder::update()` llama
+  a `addUpdatedAtColumn()`), así que **no sirve para marcar nada sin mover el testigo** del post-form:
+  hay que bajar al crudo con **`toBase()`**. La spec lo afirmaba al revés desde el diseño y nadie lo
+  había ejercido (`#717`). Si ves «por el constructor de consultas» en una doc, compruébalo.
+- 💰 **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` tipo `deposit_split`), no con
+  un cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**, que
+  también devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra
+  POSITIVA sin ser dinero del parque**: `max(0, $saldo)` no distingue las clases (`#716`).
 - ⚠️⚠️ **Un filtro que no ejecuta nada también sale ≠ 0**, y **Pint DESTROZA los nombres de método con
   palabras en MAYÚSCULAS** (`_UN_` → `_u_n_`, medido el 20-09): así se rompe un arnés **en silencio**.
   Los tests se nombran **sin mayúsculas**, y una mutación se cree tras ver el MISMO filtro en verde
@@ -128,19 +132,19 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ⚠️⚠️ **Lo que se afirma que NO pasa hay que hacerlo POSIBLE primero** (`#721`): dos supervivientes
   eran casos que negaban una llamada cuyo endpoint **no estaba fingido** —imposible— y con un `catch`
   que se tragaba el cortafuegos. «No se llamó» era cierto por el motivo equivocado.
-- **`Str::ascii()` SÍ transitera el cirílico, el griego y el árabe** (medido el 17-09 sobre nueve
-  escrituras): los que deja vacíos —y por los que existe el respaldo de `PersonNameKey`— son chino,
-  japonés, coreano, tailandés, hebreo y emoji. La prosa heredada decía «alfabeto no latino» y era falsa.
+- **`Str::ascii()` SÍ transitera cirílico, griego y árabe** (medido el 17-09): los que deja vacíos —y
+  por los que existe `PersonNameKey`— son chino, japonés, coreano, tailandés, hebreo y emoji. La prosa
+  heredada decía «alfabeto no latino» y era falsa.
 - **Un modelo nuevo necesita alias de morfo** en `AppServiceProvider` o `MorphMapTest` pone la suite en
   rojo, y el rojo aparece en la suite COMPLETA, no en el filtro de tu tanda.
 - ⚠️⚠️ **Una migración empujada NO es una migración aplicada**: la suite migra en SQLite en memoria, así
   que ni ella ni el gate ven que falte en la BD MySQL de desarrollo. Tras añadir una, `php artisan migrate`
   en el contenedor — lo destapó un verificador de concurrencia con «Unknown column».
 - **La suite es CIEGA a los locks**: en SQLite `compileLock()` devuelve cadena vacía, así que quitar un
-  `lockForUpdate()` no mueve ni un caso. Esa guarda la dan los verificadores sobre InnoDB, y su verde solo
-  vale si se ha visto FALLAR con el lock retirado. ▶ Pero una suma atómica **sí** se puede ver sin
-  concurrencia: dos instancias LEÍDAS ANTES de que ninguna escriba distinguen `DB::raw('col + 1')` de
-  `$modelo->col + 1` (`#713`). Antes de declarar un superviviente, busca ese caso.
+  `lockForUpdate()` no mueve ni un caso. Esa guarda la dan los verificadores sobre InnoDB, y su verde
+  vale solo si se ha visto FALLAR sin el lock. ▶ Pero una suma atómica **sí** se ve sin concurrencia:
+  dos instancias LEÍDAS antes de que ninguna escriba distinguen `DB::raw('col + 1')` de `$m->col + 1`
+  (`#713`). Antes de declarar un superviviente, busca ese caso.
 - **Un test que calcula su expectativa desde el código bajo prueba no prueba nada**, y un fixture que usa
   la convención que dice vigilar tampoco: las dos las cazó el arnés de mutación, no una relectura.
 - **Al pivote se le habla por MÉTODO, no por propiedad** (`showsInInvitation()`, `saleStage()`…): un
@@ -197,21 +201,17 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ⚠️ **Una captura de VENTANA sin bajar hasta lo que quieres ver son dos capturas idénticas**: lo delató
   el tamaño del fichero, no el ojo. Y `DisplayTime::dayLabel()` ya termina en punto: la frase que lo
   envuelve no lleva el suyo.
-- **F4 cerró y el cajón es un PAQUETE**: dónde vive ahora cada cosa lo dice `specs/cajon-empaquetable.md`
-  §0, y sus seis trampas el §4.8 — se lee de ahí, no de aquí. Tocar el bloque «HOJA ENFOCADA» de
-  `site.css` obliga a regenerar `public/css/cajon.css` con `python3 scripts/hoja-del-cajon.py --aplicar`;
-  si solo cambia el sello de `FUENTES`, ninguna regla nueva entró en el paquete. Las reglas de botón de
-  la hoja apuntan al `button` y **no a `.btn`**, o el generador se las lleva al paquete (convención
-  aceptada por plataforma el 19-09).
-- ⚠️⚠️⚠️ **UNA COSTURA PUEDE TENER DOS PUNTAS, y leyéndola parece tener una** (`#718`). Arreglé el
-  borde en `GuestCountAdjuster`, sus casos en verde… y **por HTTP el defecto seguía vivo**: el
-  post-form ajusta la cantidad **y después** guarda las fichas del navegador en el orden viejo. Lo
-  cazó el caso que ANDA el camino, no una relectura. ▶ Antes de dar por cerrado un arreglo del
-  post-form, **escribe el caso que hace el POST de verdad**.
-- ⚠️ **Compactar o reordenar filas SIEMPRE rompe algo que cuelga de la posición**: el emparejado de
-  las propuestas y la hoja de sala. Se hace **solo cuando se va a recortar**, y va **después** de
-  `TicketType::orderGuestRows()` (el `ksort` de `#571`), nunca antes. Las dos condiciones las
-  descubrió un rojo ajeno —`InvitationApiTest` y `GuestFormManyGuestsTest`—, no yo.
+- **F4 cerró y el cajón es un PAQUETE**: dónde vive cada cosa, en `specs/cajon-empaquetable.md` §0, y
+  sus seis trampas en el §4.8 — se lee de ahí. Tocar «HOJA ENFOCADA» de `site.css` obliga a regenerar
+  `public/css/cajon.css` (`python3 scripts/hoja-del-cajon.py --aplicar`); si solo cambia el sello de
+  `FUENTES`, no entró ninguna regla. Las reglas de botón apuntan al `button` y **no a `.btn`**.
+- ⚠️⚠️⚠️ **UNA COSTURA PUEDE TENER DOS PUNTAS, y leyéndola parece tener una** (`#718`): arreglé el
+  borde en `GuestCountAdjuster`, casos en verde… y **por HTTP seguía vivo**, porque el post-form
+  ajusta **y después** guarda las fichas del navegador en el orden viejo. ▶ Antes de cerrar un arreglo
+  del post-form, **escribe el caso que hace el POST de verdad**.
+- ⚠️ **Compactar o reordenar filas SIEMPRE rompe algo que cuelga de la posición** (el emparejado de
+  propuestas y la hoja de sala): **solo al recortar**, y **después** de `TicketType::orderGuestRows()`
+  (el `ksort` de `#571`). Las dos condiciones las descubrió un rojo ajeno, no yo.
 - **Un campo traducible sale ARRAY**: concatenar `$ticketType->name` en un guion imprime «Array» con
   un warning. En una sonda, `is_array(...) ? $x['es'] : $x`.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
