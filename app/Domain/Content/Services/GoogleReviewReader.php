@@ -36,6 +36,8 @@ final class GoogleReviewReader
 
     /**
      * @param  string  $parent  `accounts/{id}/locations/{id}` ({@see GoogleBusinessLocation::reviewsParent()})
+     * @param  int|null  $deadline  marca de tiempo UNIX a partir de la cual **no se pide otra página**
+     *                              (§4.3·1, el presupuesto de la pasada). `null` = sin presupuesto.
      *
      * @throws GoogleBusinessApiException
      */
@@ -43,6 +45,7 @@ final class GoogleReviewReader
         #[\SensitiveParameter] string $refreshToken,
         string $parent,
         GoogleReviewFilter $filter,
+        ?int $deadline = null,
     ): GoogleReviewPass {
         /** @var array<string,IncomingGoogleReview> $candidatas */
         $candidatas = [];
@@ -90,6 +93,15 @@ final class GoogleReviewReader
 
             if ($pageToken === null) {
                 $completa = true;
+                break;
+            }
+
+            // ⚠️⚠️ **El presupuesto se mira ANTES de pedir la página siguiente, no después** (§4.3·1).
+            // Parar aquí deja una pasada **incompleta**, que §4.3·3 no deja borrar — que es
+            // exactamente lo que se quiere de una pasada que se ha quedado sin tiempo. La otra forma
+            // de quedarse sin tiempo es que el worker muera a media petición, y entonces no se
+            // escribe nada: las dos salidas son seguras, pero ésta además deja lo que ya vio.
+            if ($deadline !== null && now()->getTimestamp() >= $deadline) {
                 break;
             }
         } while ($paginas < self::MAX_PAGES);

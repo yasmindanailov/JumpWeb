@@ -55,6 +55,26 @@ Schedule::command('orders:expire')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('social-proof:refresh')->everyThirtyMinutes()->withoutOverlapping();
 
 /*
+ * T2·3 de `specs/google-business-profile.md` (§4.3·1, `DECISIONES #729`) — LA PASADA DE LAS RESEÑAS
+ * de la ficha de Google.
+ *
+ * ⚠️⚠️ **UNA VEZ AL DÍA, y no es tacañería**: lo que se guarda son datos de terceros con un plazo de
+ * 30 días (§4.3·11), y la portada los lee de NUESTRA base, no de Google (`PERF-02`). Pedirlos más a
+ * menudo no haría la portada más rápida ni más fresca a ojos de nadie — solo gastaría cuota de un
+ * proyecto que es COMÚN a todos los parques.
+ *
+ * ⚠️ **A una hora propia**, lejos de las 00:00 donde se amontonan las podas y de la media hora de
+ * `social-proof:refresh`. 04:40 UTC son las 06:40 en Madrid: el parque lleva horas cerrado y, si la
+ * pasada tarda sus 120 segundos de presupuesto, no compite con nada.
+ *
+ * ⚠️ `withoutOverlapping` es el cinturón; **los tirantes están dentro** (`GoogleBusinessSync` coge su
+ * propio candado en `cache_locks`), porque el botón del panel encolará este mismo trabajo y entonces
+ * el programador ya no es el único que lo dispara.
+ * ❗ **En staging el scheduler no corre** (`#115`): allí se dispara a mano.
+ */
+Schedule::command('business-profile:sync')->dailyAt('04:40')->withoutOverlapping();
+
+/*
  * #219 — Poda del log de consentimiento de cookies. `CookieConsentLog` es Prunable (borra las filas
  * > 24 meses, la vida del consentimiento). Diario es de sobra: el plazo es de meses. Acota el
  * crecimiento de la tabla y cumple la minimización / limitación del plazo de conservación del RGPD

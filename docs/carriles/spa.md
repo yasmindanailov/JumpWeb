@@ -1,7 +1,8 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#728`** (queda `#729`; al
-> agotarse se sigue en **730–759**, libre, como hicieron plataforma y este mismo carril) ·
+> Máquina: **el OTRO ordenador** · Banda: **700–729 AGOTADA** (último usado `#729`) · **sigue en
+> 730–759**, libre, como hicieron plataforma (610–639 → 640–669) y este carril (550–579 → 700–729).
+> ❗ La siguiente decisión sale de **730**, ya dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
@@ -15,8 +16,10 @@
   al leer · 3 días para el nombre y la cara) y la guarda que impide que una URL de Google entre en la
   tabla. 25 casos, arnés 12/12. ⚠️ **Una migración más, aplicada solo en la BD local.**
   **T2·2, TRAER LAS RESEÑAS** (`#728`): la paginación con tope, el filtro de candidatas, el
-  analizador del texto traducido —que **falla cerrado**— y `coherent()`, las tres preguntas de las
-  que depende que la T2·3 pueda borrar. 36 casos, arnés 22/22. **Nada se persiste todavía.**
+  analizador del texto traducido —que **falla cerrado**— y `coherent()`. 36 casos, arnés 22/22.
+  **T2·3, LA PASADA** (`#729`): el candado en `cache_locks`, el presupuesto de 120 s, el reemplazo
+  **por diferencias** y `business-profile:sync` a diario. **Se escribe lo que se vio; se borra solo
+  con una pasada coherente.** 25 casos, arnés 24/24. ⚠️ **Se acaba la banda: `#729` era el último.**
 - ▶▶▶ **La T1 de `google-business-profile.md` (`#524`) está CERRADA EN CÓDIGO**
   (`#720`→`#726`), y con ella la conexión con la ficha de Google del parque: conectar, elegir ficha,
   cambiarla, desconectar y comprobar. **121 casos y seis arneses, todos exit 0.** El punto 1 de
@@ -52,17 +55,18 @@
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
    nuevo no se ha visto renderizado**.
-   ✅ **T2·1 (`#727`, 25 casos, 12/12) y T2·2 (`#728`, 36 casos, 22/22), EN EL ÁRBOL.** Qué entró en
-   cada una y sus trampas, **§4.1 de la spec**. **Nada se persiste todavía.**
-   ▶▶ **LO SIGUIENTE ES LA T2·3: PERSISTIR UNA PASADA** (§4.3·1 y §4.3·3) — el candado **en
-   `cache_locks`** (el almacén que no se desaloja), el presupuesto de tiempo, el botón del panel que
-   **encola lo mismo**, el reemplazo **por diferencias en una transacción** y `fetched_at` renovado
-   en **toda** fila devuelta, cambie o no. ⚠️ **`coherent()` ya está escrito y probado**: la T2·3 lo
-   OBEDECE, no lo re-decide. Y **solo borra** cuando dice que sí.
-   ▶ Y después: (c) las **imágenes servidas desde nuestro servidor** (§4.3·6) —es lo que quita la
-   dependencia del consentimiento; las columnas ya existen y están a `null`, y
-   `IncomingGoogleReview::$authorPhotoSourceUrl` ya trae la URL saneada en memoria— · (d) «Ocultar»
-   (§4.3·7) · (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10) · (f) retirar Places
+   ✅ **T2·1 (`#727`, 12/12), T2·2 (`#728`, 22/22) y T2·3 (`#729`, 24/24), EN EL ÁRBOL.** Qué entró
+   en cada una y sus trampas, **§4.1 de la spec**. Ya se sincroniza y se persiste.
+   ▶▶ **LO SIGUIENTE ES LA T2·4: LAS IMÁGENES** (§4.3·6) — el descargador endurecido (lista blanca
+   de host EXACTA, sin redirecciones, tope de bytes en streaming, tipo por **bytes mágicos**, SVG
+   nunca, nombre por hash, escritura atómica, **nada de librerías de imagen**), el **disco privado
+   servido por una ruta de Laravel** con su CSP, y el fichero borrado **en la misma operación que su
+   fila**. ▶ Ya está puesto el terreno: las columnas existen a `null`,
+   `IncomingGoogleReview::$authorPhotoSourceUrl` trae la URL saneada en memoria, el borrado pasa por
+   el MODELO y `GoogleBusinessReview` es `Prunable` (no `MassPrunable`) para que `pruning()` pueda
+   llevarse el fichero.
+   ▶ Y después: (d) «Ocultar» (§4.3·7) · (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10),
+   más el **botón del panel** y `Retry-After`, que van con la pantalla · (f) retirar Places
    (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de datos NUEVO: **§5 antes**.
    ⚠️⚠️ **TRES migraciones ya, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
    ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. La última pasada no
@@ -74,9 +78,7 @@
    ⏰⏰ **EL CALENDARIO LO MANDA LA FICHA, y ya hay respuesta (owner, 20-09): la de PlayJump lleva MENOS
    de 60 días.** La solicitud del §7·A·2 **no se puede mandar todavía** y la conexión real no llega
    antes de finales de octubre. El doble no es una opción: es el único camino.
-   ❗ **Medido el 20-09, la doc ajena miente**: `google-reviews.md` dice «umbral de **10** reseñas» y el
-   código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`, `#494`, definitivo). **Manda el código.**
-   No lo toco (`#621`). ▶ El parque tiene **1 reseña** (API, 10-09) y en local no hay clave de Places.
+   ❗ La doc ajena miente sobre el umbral: el aviso, en el buzón de la WEB. Manda el código.
 2. ✅ **La invitación no tiene nada pendiente de CÓDIGO** (`#718`, spec §10.18). ▶ Queda **desplegar y
    encender**, y no es mío: T5, T6 y T7 **con la migración** `order_items.eve_notice_at`; los dos
    interruptores son dato del owner, avisado en su buzón.
@@ -157,6 +159,23 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   (b) **`prunable()` declarado `@return Builder<Modelo>` siempre falla** porque `static::query()`
   devuelve `Builder<static>` y la plantilla **no es covariante**. Los cuatro `prunable()` que ya
   existían lo pagaron con una entrada en la base; se arregla escribiendo **`@return Builder<static>`**.
+- ⚠️⚠️⚠️ **`Http::fake()` FUSIONA los dobles, no los reemplaza** (medido en `#729`): llamarlo dos
+  veces en el mismo caso deja ganando al PRIMERO, y si el primero era un `Http::sequence()` ya
+  agotado, la segunda pasada revienta con «*response sequence is empty*» **señalando al código**, que
+  no tiene nada que ver. ▶ Receta: **un solo doble en `setUp()`** que delegue en una propiedad, y
+  cada caso cambia la propiedad. De regalo, se puede contar peticiones y fallar el caso si se pide
+  una página de más.
+- ⚠️⚠️ **UN `finally` PUEDE SOLTAR EL CANDADO ANTES DE TIEMPO, y ningún test de un hilo lo ve**
+  (`#729`): la lectura iba en el `try` y la escritura DETRÁS del bloque, así que se persistía con el
+  candado suelto. ▶ Se caza preguntando por el candado **desde un evento del modelo** (`created`)
+  durante la escritura. Mismo patrón para cualquier cosa que tenga que pasar «mientras».
+- ⚠️ **Una guarda de «preguntar no cambia nada» necesita DOS llamadas** (`#729`): `inProgress()` coge
+  el candado para saber si estaba libre; con una sola llamada, no soltarlo sale igual de verde. La
+  segunda pregunta es la que mide.
+- ⚠️ **`lock()` no está en el contrato `Repository` NI en su clase**: vive en el `Store` y el
+  repositorio lo reenvía por `__call` (medido en el framework, `#729`). Larastan lo caza; la salida
+  es `$repositorio->getStore()` con `@var LockProvider`, que además dice lo que de verdad se exige
+  del almacén.
 - ⚠️⚠️ **UNA GUARDA DE HOST NECESITA DOS CASOS, NO UNO** (`#728`, lo destapó un superviviente del
   arnés): `lh3.googleusercontent.com.malo.net` se cuela con `str_contains` y
   `evil.lh3.googleusercontent.com` con `str_ends_with`. **Son defectos distintos**, y un test que
@@ -278,21 +297,17 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 
 ## Buzón
 
-### ❗ Para el carril de CORREOS (emisor: SPA, 19→20-09; los dos avisos, fundidos)
-- ✅ **La T7 entera, HECHA** (`#715`→`#717`, spec §10.14–§10.17). De lo tuyo toqué **dos cosas**:
-  `GuestFormRequest` (cuerpo y llamada **solo** con invitación; asunto y adelanto **sin variante**,
-  para no sacarlo de tu censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro piezas en los
-  tres idiomas. Ni el tema, ni el remitente, ni el modo oscuro, ni los otros 25.
-  ▶ **Tu inventario pasa a 26**; actualizado en tu spec, no en `carriles/correos.md` (`#621`).
-- ❗ **Un hallazgo tuyo que pagué yo**: escribí la llamada de cabecera entre comillas en un comentario y
-  tu `MailInboxLineTest` se quedó con el ejemplo — **12 avisos en rojo**. Tu guarda funciona; la
+### ❗ Para el carril de CORREOS (emisor: SPA, 19→20-09; los avisos, fundidos)
+- ✅ **Tu censo pasa de 25 a 27**, actualizado en TU spec y no en `carriles/correos.md` (`#621`):
+  `VisitEveNotice` (`#717`) y `GoogleBusinessLocationChanged` (`#725`), cada uno con sus cuatro
+  piezas en `es`/`en`/`fr`. De lo tuyo toqué además `GuestFormRequest` (cuerpo y llamada **solo** con
+  invitación; asunto y adelanto **sin variante**, para no sacarlo de tu censo). **Ni el tema, ni el
+  remitente, ni el modo oscuro, ni ninguno de los otros.**
+- ❗ **Un hallazgo tuyo que pagué yo**: escribí la llamada de cabecera entre comillas en un comentario
+  y tu `MailInboxLineTest` se quedó con el ejemplo — **12 avisos en rojo**. Tu guarda funciona; la
   mutación, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
-- ▶ **Te queda tu OJO en Gmail/Outlook**: los tres en Mailpit; sondas en almacenamiento
-  (`probe-t7-correo.php`, `probe-t7-vispera.php`).
-- ✅ **Y te llegó OTRO, ya HECHO** (20-09, `#725`): `GoogleBusinessLocationChanged`, el aviso a los
-  admins cuando cambia la ficha de Google del parque (§4.2·4). **Tu censo pasa a 27**, con sus cuatro
-  piezas en `es`/`en`/`fr`. No toqué ni el tema, ni el remitente, ni ninguno de los otros 26.
-  ▶ **Te queda tu OJO**: no lo he visto en Mailpit ni en un cliente de correo.
+- ▶ **Te queda tu OJO en Gmail/Outlook** de los tres nuevos; en Mailpit no he visto el de la ficha.
+  Sondas en almacenamiento (`probe-t7-correo.php`, `probe-t7-vispera.php`).
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (banda 580–609); la numero desde
@@ -322,26 +337,20 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   (fotos, respuesta del parque, anónimos, la línea del filtro). Lo tocaré yo y os aviso antes; si
   preferís llevarlo vosotros, decidlo.
 
-### ▶ EL ALCANCE DEL PRÓXIMO DESPLIEGUE (emisor: SPA, 19→20-09; los tres avisos, fundidos)
-- **Va la invitación entera: T5, T6 y T7** (`#701`→`#718`). Sin tocar dinero ni aforo y **ningún
-  fichero casa con el `CRITICAL_RE`** salvo `GuestCountAdjuster` en `#718`, cuyos verificadores de
-  concurrencia ya corrí en verde. Lo que entra: la página pública y el recibo · `PartyInvitations`,
-  `OrderItem`, `GuestFormController` y la ruta `reservation.invitation.remind` · la vista del
-  post-form, `lang/*/guestform.php` y el bloque de la hoja en `site.css` con **`cajon.css`
-  regenerado** · `GuestFormRequest`, el correo nuevo `VisitEveNotice`, `lang/*/emails.php` y el
-  comando `reservations:eve-notice` con su línea en el scheduler (**cada hora**; el porqué, en `#717`)
-  · `PendingWork` y `PendingBeforeVisit` · y la clase nueva `GuestCardOrder`.
-- ⚠️⚠️ **UNA MIGRACIÓN**: `order_items.eve_notice_at`. **Empujada ≠ aplicada**: en producción hay que
-  correrla.
-- ▶ **Encender la invitación son los dos interruptores, DATO y decisión del owner.**
-- ⚠️ **Toqué un test tuyo, `ScheduleFactsTest`, porque estaba en ROJO** y bloqueaba el push: sus casos
-  de «ahora» leían el día de `Carbon::now()` (contenedor, **UTC**) y el servicio pregunta por el del
-  **parque**. El producto calcula bien; mentía el test. Arreglado con un ayudante que lee
-  `DisplayTime`. Si prefieres otra forma, dilo.
-- ❗❗ **Y va también la T1 de la FICHA DE GOOGLE** (`#720`→`#723`): tabla nueva
-  `google_business_connections` —**otra migración**—, la pantalla «Ficha de Google» en Ajustes → Web y
-  las rutas `/admin/ficha-google/*`. ⚠️ **Sale INERTE**: sin las credenciales de JumpSystem el estado
-  es «sin configurar», no llama a Google y la pantalla lo explica. Nada que encender.
+### ▶ EL ALCANCE DEL PRÓXIMO DESPLIEGUE (emisor: SPA, 19→20-09; los avisos, fundidos y podados)
+- **Va la invitación entera: T5, T6 y T7** (`#701`→`#718`; el inventario de ficheros, en
+  `celebracion-e-invitacion.md` §10). Sin tocar dinero ni aforo, y **del `CRITICAL_RE` solo**
+  `GuestCountAdjuster` (`#718`), con sus verificadores de concurrencia ya corridos en verde.
+  ▶ **Encenderla son los dos interruptores: DATO y decisión del owner.**
+- ❗❗ **Y va la ficha de Google entera hasta hoy**: T1 (`#720`→`#726`) y T2·1→T2·3 (`#727`→`#729`),
+  con la pantalla en Ajustes → Web, las rutas `/admin/ficha-google/*` y `business-profile:sync`
+  **diario a las 04:40 UTC**. ⚠️ **Sale INERTE**: sin las credenciales de JumpSystem el estado es
+  «sin configurar», la pasada no llama y la pantalla lo explica. Nada que encender.
+- ⚠️⚠️ **CUATRO MIGRACIONES** y **empujada ≠ aplicada**: `order_items.eve_notice_at`,
+  `google_business_connections` (+ su `account_name`) y las dos tablas de reseñas.
+- ⚠️ **Toqué un test tuyo, `ScheduleFactsTest`, porque estaba en ROJO** y bloqueaba el push: leía el
+  día de `Carbon::now()` (contenedor, **UTC**) y el servicio pregunta por el del **parque**. Mentía el
+  test, no el producto. Ya me dijiste que te vale.
 
 ### Atendido
 - **Plataforma 16-09→19-09 y Web `#539`/`#540`**: atendidos, **pueden retirarlos**; lo que sobrevive

@@ -280,10 +280,44 @@ la T2·4 y **no cabe en el modelo** —la guarda de `GoogleBusinessReview` lanza
 las anónimas, y qué variantes del marcador de traducción usa en otros idiomas. Hasta entonces, lo
 desconocido cae del lado marcado.
 
-▶ **Lo siguiente es la T2·3: persistir una pasada** (§4.3·1 y §4.3·3) — el candado en `cache_locks`,
-el presupuesto de tiempo, el reemplazo **por diferencias** en una transacción y el `fetched_at`
-renovado en toda fila devuelta. `coherent()` ya está escrito y probado; lo que falta es quien lo
-obedece.
+✅ **T2·3 · LA PASADA, EN EL ÁRBOL** (2026-09-20, `#729`): `GoogleBusinessSync` (candado,
+presupuesto, reemplazo por diferencias), `GoogleBusinessSyncResult`, el enum
+`GoogleBusinessSyncOutcome`, el comando `business-profile:sync` y su hueco diario en el programador.
+25 casos, arnés **24/24**, Larastan 0.
+❗❗❗ **ESCRIBIR Y BORRAR SON DOS PERMISOS DISTINTOS, y es lo que hay que entender de esta tanda**: lo
+que la pasada vio se guarda **siempre** —también si quedó a medias o si la ficha se movió—, y se
+**borra solo con `coherent()`**. Lo que no ha visto se parece a lo que ya no existe, y no son lo
+mismo. El resumen va con el borrado: con una pasada que no se puede creer, la media se queda como
+estaba y caduca sola a los tres días.
+⚠️⚠️ **El candado va en `cache_locks` de la BASE y se nombra explícito** (`LOCK_STORE`), no se hereda
+del `default`: hoy el `default` ya es `database`, pero el día que alguien ponga `CACHE_STORE=redis`
+—lo normal en producción— el candado se mudaría a un almacén con `allkeys-lru`, que **puede
+desalojar la llave**, y nada avisaría. Caducidad = presupuesto (120 s): si durase menos entraría una
+segunda pasada mientras la primera escribe; si durase más, un worker muerto la dejaría bloqueada.
+⚠️ **El presupuesto se mira ANTES de pedir la página siguiente** y deja la pasada `complete = false`.
+Parar sin decirlo sería una pasada a medias con permiso para borrar.
+⚠️ **Lo retirado se borra fila a fila POR EL MODELO**, nunca con un `whereNotIn(...)->delete()`: la
+T2·4 cuelga del evento el borrado del fichero de la foto, y un borrado en masa no instancia nada.
+⚠️ **El comando sale con 0 también cuando no llama.** «Sin configurar», «caducada» o «ya hay una
+pasada» no son fallos; solo un «no» de Google sale distinto de cero.
+❗ **Lo que enseñó escribirlo**: (a) el `finally` soltaba el candado **antes** de persistir, así que
+la escritura quedaba fuera del candado — no lo ve ningún caso de un solo hilo, y por eso hay uno que
+comprueba que el candado sigue echado **mientras** se escribe; (b) `Http::fake()` **fusiona** los
+dobles en vez de reemplazarlos, y una secuencia agotada del primero revienta señalando al código.
+▶ **Primer uso de `tokenStillIs()`** (`#720`): comparar-y-escribir antes de apagar la conexión, para
+no pisar una reconexión hecha mientras se esperaba a Google.
+
+▶ **LO QUE LA T2·3 NO TRAE, dicho sin adornos**: el **botón del panel** que encola la misma pasada
+(§4.3·1) y el **respeto a `Retry-After`** van con la pantalla, que es cuando existe quien los usa —un
+job sin caller es código muerto, y `Retry-After` protege del botón repetido, no de una pasada diaria.
+`GoogleBusinessSync::inProgress()` ya está para que la pantalla diga «ya se está haciendo». Tampoco
+está lo de §4.3·2 «si el mínimo de estrellas cambia en el panel, se fuerza una pasada»: es un gancho
+del panel.
+
+▶ **Lo siguiente es la T2·4: las imágenes** (§4.3·6) — el descargador endurecido, el disco privado
+con su ruta, y el borrado del fichero **en la misma operación que su fila**. Las columnas existen y
+están a `null`; `IncomingGoogleReview::$authorPhotoSourceUrl` ya trae la URL saneada en memoria y el
+borrado ya pasa por el modelo.
 
 ### 4.2 T1 · La conexión
 

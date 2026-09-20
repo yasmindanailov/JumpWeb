@@ -88,7 +88,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### LA WEB · rediseño desde el canvas 🟦 — `carriles/web.md` (`#469`→`#594`)
 - [x] Fases 1 y 2 (la portada, ocho secciones), Fase 3 (siete páginas) salvo `/servicios`, contenido y copys T1–T5, la pasada de vestido (dos tandas): en producción desde el 13-09 con Redsys en `live`.
 - [ ] T6 de contenido (en/fr) · el título de la pestaña · la pasada de copys por página.
-- [ ] Google Business Profile (`#524`): **T1 (la conexión) CERRADA en código** el 20-09 (`#720`→`#726`, la lleva el SPA) y la **T2 empezada**: **T2·1** (el cimiento: tablas, los dos plazos y la guarda de la imagen, `#727`) y **T2·2** (traer las reseñas: paginación con tope, filtro de candidatas, el analizador que falla cerrado y el `coherent()` de la pasada, `#728`); falta persistir (T2·3), imágenes, «Ocultar», la sección y retirar Places, más el proyecto de Google de JumpSystem y los 60 días de la ficha. · las bandas · los tres ejes de la pasada de vestido.
+- [ ] Google Business Profile (`#524`, lo lleva el SPA): **T1 CERRADA** (`#720`→`#726`) y **T2·1→T2·3 EN EL ÁRBOL** (`#727`→`#729`): las tablas con sus dos plazos, el recorrido con su `coherent()`, y la pasada diaria `business-profile:sync` —**se escribe lo que se vio, se borra solo con una pasada coherente**—. El detalle de cada tanda, §4.1 de la spec. ▶ Faltan imágenes, «Ocultar», la sección, el botón del panel y retirar Places; más el proyecto de Google de JumpSystem y los 60 días de la ficha. · las bandas · los tres ejes de la pasada de vestido.
 - [ ] `/servicios` → «Grupos»: pausada por el owner hasta su artboard (`#534`).
 
 ### CORREOS 🟦 — `specs/correos-desde-canvas.md` §0 (`#500`→`#508`)
