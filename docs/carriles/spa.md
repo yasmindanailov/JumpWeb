@@ -8,6 +8,16 @@
 
 ## Foto (2026-09-20, cierre de la sesión)
 
+- ▶▶▶ **LO DE HOY: la T1 de `google-business-profile.md` (`#524`) está CERRADA EN CÓDIGO**
+  (`#720`→`#726`), y con ella la conexión con la ficha de Google del parque: conectar, elegir ficha,
+  cambiarla, desconectar y comprobar. **121 casos y seis arneses, todos exit 0.** El punto 1 de
+  «por dónde retomar» lo cuenta entero. ⚠️ **Lo que falta de la T1 no es código**: el ojo del owner y
+  las credenciales de Google.
+- ⚠️ **El techo de un fichero de carril pasó de 24 a 32 KB** (`#724`, `[DECIDIDO owner]`): se cambió el
+  gate y la doc compartida. Los otros cuatro carriles **siguen diciendo «24 KB» en su encabezado** y no
+  los toco (`#621`); va avisado en el buzón.
+- 💥 **El repo se corrompió a las 14:36** por un corte de la VM de WSL (31 objetos de git a CERO bytes,
+  el build de Vite vacío). Recuperado sin perder nada versionado; **la receta está en «Trampas vivas»**.
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
 - ▶▶ **`celebracion-e-invitacion.md`: las siete tandas y el borde `§7.1·5`, CERRADOS** (`#569`→`#718`)
@@ -36,9 +46,17 @@
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
    nuevo no se ha visto renderizado**.
-   ▶ **Sigue la T2, las reseñas** (§4.3). Lo que queda de la T1 es ojo y credenciales: la última
-   pasada no tiene qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL espera al
-   §7·A. Contra un DOBLE, con `Http::preventStrayRequests()`. El estado entero, **§4.1 de la spec**.
+   ▶▶ **LO SIGUIENTE ES LA T2, LAS RESEÑAS** (§4.3), y es la tanda más grande de la spec. **Empieza
+   leyendo el §4.3 entero y el §5**, porque toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de
+   datos NUEVO. Por dónde: (a) la sincronización 1×/día con candado en `cache_locks` y **solo borra
+   una pasada COHERENTE** (§4.3·1–3) · (b) el límite de 30 días **AL LEER**, no en la purga (§4.3·4)
+   · (c) las **imágenes servidas desde nuestro servidor**, con el descargador endurecido del §4.3·6
+   —es lo que quita la dependencia del consentimiento— · (d) «Ocultar» (§4.3·7) · (e) el contrato y
+   la sección, que **CAMBIAN** (§4.3·9–10) · (f) retirar Places (§4.3·13).
+   ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. La última pasada no
+   tiene qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL espera al §7·A.
+   ⚠️ **Todo contra un DOBLE**, con `Http::preventStrayRequests()`. El estado entero, **§4.1 de la
+   spec**, que es donde no caduca.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
    owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
    **tras la T1**. Empieza por el §0 y el **§1.3**.

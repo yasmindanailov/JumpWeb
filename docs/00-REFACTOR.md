@@ -88,7 +88,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### LA WEB · rediseño desde el canvas 🟦 — `carriles/web.md` (`#469`→`#594`)
 - [x] Fases 1 y 2 (la portada, ocho secciones), Fase 3 (siete páginas) salvo `/servicios`, contenido y copys T1–T5, la pasada de vestido (dos tandas): en producción desde el 13-09 con Redsys en `live`.
 - [ ] T6 de contenido (en/fr) · el título de la pestaña · la pasada de copys por página.
-- [ ] Google Business Profile (`#524`, código sin empezar) · las bandas · los tres ejes que quedan de la pasada de vestido.
+- [ ] Google Business Profile (`#524`): **T1 (la conexión) CERRADA en código** el 20-09 (`#720`→`#726`, la lleva el SPA); falta la **T2** (reseñas), el proyecto de Google de JumpSystem y los 60 días de la ficha. · las bandas · los tres ejes de la pasada de vestido.
 - [ ] `/servicios` → «Grupos»: pausada por el owner hasta su artboard (`#534`).
 
 ### CORREOS 🟦 — `specs/correos-desde-canvas.md` §0 (`#500`→`#508`)
@@ -101,10 +101,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 - [x] T3 · la piel del justificante (`#572`), con el ✅ del owner en vivo (17-09).
 - [x] Desplegada la T3 en **v1.1.0** (18-09, noveno despliegue): la barra de firmar ya no está rota en producción.
 - [x] T4 · la invitación digital, **cerrada** en seis unidades verdes (spec §10.4, `#573`→`#578`; concurrencia verificada sobre InnoDB, RGPD al día, la API). ⚠️ En producción desde v1.1.0 **con los dos interruptores APAGADOS**: encenderlos es DATO del owner.
-- [x] T5 · la página pública (§4.6 y §10.5–§10.6), **cinco unidades, sin desplegar** (`#701`→`#706`, arneses 8/8 y 7/7): la página y sus temas, contestar, el recibo de 2 h, firmar↔invitación y el calendario.
-- [x] T6 de la celebración, el aterrizaje, **CERRADA en seis unidades** (§10.8–§10.13, `#708`→`#713`): el bloque · propuestas y adopción · «no vienen» y «no lo apuntes» · puerta y hoja («8 de 12» bajo el techo de 28) · el panel · el recordatorio, que **NO envía nada**; arneses 8/8 · 6/6 · 8/8 · 9/9 · 7/7 · 13/13.
-- [x] T7 · los correos, **CERRADA en tres** (§10.14–§10.17, `#714`→`#717`; cruzó al carril de correos, avisado antes): el correo del post-form · el lector de «qué queda por hacer» · el aviso de la víspera a las **18:00 del día antes** (`[DECIDIDO owner]`). Arneses 8/8 · 10/10 · 12/12 +1 declarado. Inventario **26**. ❗ **El constructor de consultas de Eloquent SÍ toca `updated_at`**: la spec lo afirmaba al revés.
-- [x] **El borde `§7.1·5`, CERRADO** (`#718`, §10.18, arnés **10/10**, tres verificadores sobre InnoDB): las fichas se compactan antes de recortar, así que al bajar invitados caen las VACÍAS y no quien confirmó. ❗ **La costura tenía DOS puntas**: con el dominio arreglado seguía vivo por HTTP.
+- [x] **T5, T6, T7 y el borde `§7.1·5`: la invitación digital, CERRADA ENTERA** (`#701`→`#718`, spec §10.5–§10.18, con el ✅ del owner en vivo el 20-09): la página pública, el aterrizaje de la celebración, los tres correos (inventario **26**, cruzó al carril de correos) y el orden de las fichas al recortar. Doce arneses verdes y concurrencia sobre InnoDB; el detalle de cada unidad, en su § de la spec. ⚠️⚠️ **SIN DESPLEGAR**, y con **una migración** (`order_items.eve_notice_at`).
 - [ ] ▶ **La invitación: código completo y ✅ del owner en vivo** (20-09; los tres huecos que ese ✅ no cubre, en el §0 de la spec). Solo falta **desplegar** (T5–T7 + migración) y **encender** (dato del owner).
 - [ ] El OJO del owner en un teléfono de verdad · el cuaderno de entrega del cajón · el botón del sistema.
 
