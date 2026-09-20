@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Booking\Models\InvitationReply;
+use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Identity\Models\CookieConsentLog;
 use App\Domain\Identity\Models\Dependent;
 use App\Domain\Identity\Models\GuardianAuthorization;
@@ -78,8 +79,17 @@ Schedule::command('social-proof:refresh')->everyThirtyMinutes()->withoutOverlapp
  * ⚠️ Va DESPUÉS de `GuardianAuthorization` a propósito: la FK `invitation_reply_id` es `nullOnDelete`,
  * así que el orden no la rompería — pero podar primero la respuesta y luego su justificante huérfano
  * en la misma pasada deja el rastro en el orden en que se razona.
+ *
+ * T2·1 · las RESEÑAS de la ficha de Google (`specs/google-business-profile.md` §4.3·4,
+ * `DECISIONES #727`) — y en la misma tarea, lo que pase de los 30 días que concede la política de
+ * Business Profile.
+ * ⚠️⚠️ **Esta línea NO es la garantía del plazo, y no debe leerse como si lo fuera**: el filtro de
+ * los 29 días vive en la CONSULTA (`GoogleBusinessReview::scopeWithinRetention()`), de forma que una
+ * fila caducada no se pinta aunque esta tarea lleve semanas sin correr. Aquí se borra lo que ya nadie
+ * lee, que es limpieza. Si algún día alguien decide quitar el filtro «porque ya está la purga», que
+ * encuentre esto escrito.
  */
-Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class]])
+Schedule::command('model:prune', ['--model' => [CookieConsentLog::class, WaiverSignature::class, GuardianAuthorization::class, Dependent::class, InvitationReply::class, GoogleBusinessReview::class]])
     ->daily()
     ->withoutOverlapping();
 

@@ -26,6 +26,8 @@ use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Attraction;
 use App\Domain\Content\Models\BarImage;
 use App\Domain\Content\Models\Faq;
+use App\Domain\Content\Models\GoogleBusinessReview;
+use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Offer;
 use App\Domain\Content\Models\Page;
@@ -235,6 +237,12 @@ class AppServiceProvider extends ServiceProvider
             // `MorphMapTest`, y es lo que hace que el audit de «conectar»/«desconectar» guarde
             // `google_business_connection` y no un nombre de clase que se rompe al mover el fichero.
             'google_business_connection' => GoogleBusinessConnection::class,
+            // Las reseñas de esa ficha y su resumen (`#727`). ⚠️ Que tengan alias NO las hace
+            // cruzables con nada: §4.3·11 prohíbe relacionarlas con clientes o pedidos, y el alias
+            // existe porque `MorphMapTest` lo exige de TODO modelo, también de los que no se
+            // relacionan con ninguno.
+            'google_business_review' => GoogleBusinessReview::class,
+            'google_business_review_summary' => GoogleBusinessReviewSummary::class,
             'guardian_authorization' => GuardianAuthorization::class,
             // La INVITACIÓN DIGITAL y lo que contesta un padre (`#573`). Alias como todo modelo
             // nuevo: lo exige `MorphMapTest`, y es lo que hace que el audit guarde `invitation_reply`

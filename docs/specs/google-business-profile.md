@@ -226,7 +226,29 @@ sabe de qué cuenta cuelga cada ficha.
 
 ▶ **Lo que queda de la T1 es solo ojo y credenciales**: la **última pasada** en la pantalla no tiene
 qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL (§6·T1) espera al §7·A.
-▶ **Lo siguiente es la T2, las reseñas** (§4.3).
+
+✅ **T2·1 · EL CIMIENTO DE LAS RESEÑAS, EN EL ÁRBOL** (2026-09-20, `#727`): las tablas
+`google_business_reviews` y `google_business_review_summaries` (fila única), los modelos en
+**Content**, el plazo, la purga y la guarda de la imagen. 25 casos, arnés 12/12, Larastan 0 **sin
+tocar la línea base**.
+⚠️⚠️ **EL PLAZO SE APLICA AL LEER Y LA PURGA ES OTRA COSA**: `scopeWithinRetention()` corta a **29
+días** y `prunable()` a **30**. Los dos números son distintos a propósito — una purga programada es un
+comando que puede no haber corrido, y la garantía no puede depender de eso. Si alguien los iguala
+«porque ya está la purga», el aviso está escrito en `routes/console.php`.
+⚠️⚠️ **Y hay un SEGUNDO plazo, de 3 días, sobre el nombre y la foto** (§4.3·4): se mide contra el
+`fetched_at` de **LA FILA**, no contra el de la última pasada. Es más fino y es el caso real — la
+reseña que borró su autor **envejece sola** mientras las demás siguen llegando.
+⚠️ **La guarda de la imagen (§4.3·9) LANZA, no sanea**, y vive en `saving()` porque la
+re-sincronización actualiza filas que ya existen. Caza también `//host/…` —sin esquema, parece una
+ruta— y `data:`.
+▶ **Lo que la T2·1 NO trae y la T2·2 sí**: `reviews.list` paginado, el analizador del texto traducido
+(§4.3·8) y el filtro de candidatas. Las columnas `author_photo_path` y `photos` existen y quedan
+siempre a `null` hasta la T2·4.
+▶ **Dos casos con CONTROL NEGATIVO** que conviene copiar: `Schema::getForeignKeys()` devuelve `[]`
+tanto si no hay FK como si el lector no sabe leerlas en SQLite, y un bucle de reflexión que no
+recorra nada sale verde igual. Los dos preguntan primero por algo que SÍ tiene lo que buscan.
+
+▶ **Lo siguiente es la T2·2, traer las reseñas** (§4.3·2 y §4.3·8).
 
 ### 4.2 T1 · La conexión
 

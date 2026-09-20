@@ -573,6 +573,39 @@ De los siete estados, `unconfigured` y `ready_to_connect` **no se guardan**: los
 | `offers` | Offer | Oferta promocional INFORMATIVA (widget flotante de la landing; sin dinero). `title` JSON i18n · `image` (disco `uploads` = `public/uploads`, servido SIN symlink; hooks `updating`/`deleted` borran el fichero huérfano) · `position` · `is_active` |
 | `bar_images` | BarImage | Las imágenes de `/bar` (`#536`). `kind` (`menu` = una cara de la CARTA · `venue` = la foto del local) · `image` (disco `uploads`, mismos hooks de limpieza que `offers`) · `alt` JSON i18n **obligatorio en el formulario** —la carta se publica como IMAGEN, así que es lo único que encuentra un lector de pantalla— · `width`/`height` nullable **medidos al subir** (`getimagesizefromstring`, para que la página no salte) · `position` · `is_active`. De `venue` se publica la PRIMERA activa por orden: no hay unicidad en el esquema para no obligar a borrar la vieja antes de subir la nueva |
 
+### `google_business_reviews` · `google_business_review_summaries` — las reseñas de la ficha · `#727`
+**La T2·1 de `specs/google-business-profile.md` §4.3.** Lo que Business Profile permite guardar es
+*«limited amounts of Content»* hasta **30 días**: aquí solo caben las **candidatas** (con texto, con el
+mínimo de estrellas, no ocultas, una docena) y el **resumen**. No es un espejo de la ficha.
+`google_business_reviews`: `review_name` **unique** (el nombre de recurso de Google, por el que §4.3·3
+deduplica) · `author_name`/`author_photo_path`/`anonymous` (el `null` de una anónima entra ANTES del
+INSERT) · `star_rating` tinyint 1–5 (Google lo manda como texto, `FIVE`…; se traduce al entrar) ·
+`comment` + `text_ambiguous` (se publica el ORIGINAL; el analizador de la traducción mezclada **falla
+cerrado**) · `reply_comment`/`reply_at` (la respuesta del parque) · `photos` JSON (**rutas** nuestras;
+las rellena la T2·4) · `review_created_at`/`review_updated_at` · `fetched_at` **index**.
+`google_business_review_summaries`: **fila única** (`singleton` UNIQUE, como la conexión) ·
+`average_rating` decimal(2,1) nullable · `total_review_count` · `maps_uri`/`new_review_uri` ·
+`fetched_at`.
+⚠️⚠️ **EL PLAZO SE APLICA AL LEER, NO AL PURGAR**: `scopeWithinRetention()` filtra por `fetched_at` a
+**29 días** y la purga (`Prunable` en `model:prune`) corta a **30**. Son dos números distintos a
+propósito: la purga es un comando que puede no haber corrido, así que la garantía está en la consulta.
+⚠️ **Segundo plazo, más corto, sobre el dato PERSONAL**: pasados **3 días** sin una pasada que
+confirme la reseña, `publishableAuthor()`/`publishablePhotoPath()` devuelven `null` y la reseña sale
+anónima. El texto sobrevive al autor: caduca la certeza de que sigue publicada, no la opinión. Se mide
+contra el `fetched_at` de LA FILA, así que una reseña que deja de venir envejece sola.
+⚠️⚠️ **Una imagen es una RUTA nuestra o `null`, jamás un host de terceros**: guarda en `saving()` que
+**lanza** `ForeignImageUrlException` (§4.3·9). Caza también la URL sin esquema (`//host/…`) y la
+incrustada (`data:`). Sin ella, la portada volvería a pedirle la cara del autor a Google y la sección
+volvería a depender del consentimiento de `maps` (`RGPD-05`, `SEC-01`) **sin romper nada visible**.
+⚠️ **`Prunable` y NO `MassPrunable`**: la T2·4 cuelga de `pruning()` el borrado de los ficheros, y
+borrar por consulta los dejaría huérfanos en el disco.
+⚠️ **Ni una FK y ninguna relación de Eloquent, a propósito** (§4.3·11: prohibido cruzar las reseñas
+con clientes o pedidos). Hay guarda con control negativo.
+⚠️ **La media y el total NO se componen con las candidatas**: vienen de Google contados. Las tarjetas
+se filtran por estrellas; la cifra, nunca (§4.3·10 y la Ómnibus 2019/2161).
+⚠️ El resumen repite `maps_uri`/`new_review_uri`, que ya están en `google_business_connections`, para
+que la portada **no toque la fila del token cifrado**.
+
 ### `settings` — clave-valor white-label (Setting)
 `key` unique · `value` text · `group` (default `general`). Lectura vía
 `Setting::value($key, $default)` con **memo estático por petición** (invalidar con

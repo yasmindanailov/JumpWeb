@@ -1,6 +1,8 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#726`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#727`** (quedan `#728` y
+> `#729`; al agotarse se sigue en **730–759**, libre, como hicieron plataforma y este mismo carril) ·
+> Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
@@ -8,7 +10,11 @@
 
 ## Foto (2026-09-20, cierre de la sesión)
 
-- ▶▶▶ **LO DE HOY: la T1 de `google-business-profile.md` (`#524`) está CERRADA EN CÓDIGO**
+- ▶▶▶ **LO ÚLTIMO: la T2·1, el CIMIENTO DE LAS RESEÑAS, en el árbol** (`#727`): las dos tablas, los
+  modelos en **Content**, **dos plazos** (29 días al leer · 3 días para el nombre y la cara) y la
+  guarda que impide que una URL de Google entre en la tabla. **25 casos, arnés 12/12, Larastan 0 sin
+  tocar la línea base.** ⚠️ **Una migración más, aplicada solo en la BD local.**
+- ▶▶▶ **La T1 de `google-business-profile.md` (`#524`) está CERRADA EN CÓDIGO**
   (`#720`→`#726`), y con ella la conexión con la ficha de Google del parque: conectar, elegir ficha,
   cambiarla, desconectar y comprobar. **121 casos y seis arneses, todos exit 0.** El punto 1 de
   «por dónde retomar» lo cuenta entero. ⚠️ **Lo que falta de la T1 no es código**: el ojo del owner y
@@ -38,25 +44,28 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅✅ **LA T1 ENTERA, EN EL ÁRBOL** (`#720`→`#726`): tabla y siete estados · **PKCE**, canje y la
-   pantalla en Ajustes → Web · el **cliente de la API** · **elegir y revalidar la ficha** ·
-   **desconectar + el aviso a los admins** · y **`business-profile:verify`**. 121 casos, seis arneses
-   (12/12, 15/15, 10/10, 11/11, 11/11, 10/10), todos exit 0.
-   ⚠️⚠️ **DOS migraciones, aplicadas SOLO en la BD local.**
+   ✅✅ **LA T1 ENTERA, EN EL ÁRBOL** (`#720`→`#726`): 121 casos y seis arneses, todos exit 0. Qué
+   entró en cada tanda, **§4.1 de la spec**, que es donde no caduca.
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
    nuevo no se ha visto renderizado**.
-   ▶▶ **LO SIGUIENTE ES LA T2, LAS RESEÑAS** (§4.3), y es la tanda más grande de la spec. **Empieza
-   leyendo el §4.3 entero y el §5**, porque toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de
-   datos NUEVO. Por dónde: (a) la sincronización 1×/día con candado en `cache_locks` y **solo borra
-   una pasada COHERENTE** (§4.3·1–3) · (b) el límite de 30 días **AL LEER**, no en la purga (§4.3·4)
-   · (c) las **imágenes servidas desde nuestro servidor**, con el descargador endurecido del §4.3·6
-   —es lo que quita la dependencia del consentimiento— · (d) «Ocultar» (§4.3·7) · (e) el contrato y
-   la sección, que **CAMBIAN** (§4.3·9–10) · (f) retirar Places (§4.3·13).
+   ✅ **LA T2·1, EL CIMIENTO, EN EL ÁRBOL** (`#727`): `google_business_reviews` y
+   `google_business_review_summaries`, los dos modelos en **Content**, el plazo **al leer** (29 d) y
+   la purga (30 d) como números DISTINTOS, el segundo plazo de 3 días sobre el nombre y la cara, y
+   la guarda de la imagen. 25 casos, arnés **12/12**. El detalle vive en la **§4.1 de la spec**.
+   ▶▶ **LO SIGUIENTE ES LA T2·2: TRAER LAS RESEÑAS** (§4.3·2 y §4.3·8) — `reviews.list` paginado en
+   memoria (`pageSize=50`), el filtro de candidatas y **el analizador del texto traducido**, que
+   **falla cerrado**. ⚠️ El §4.3·8 dice *«se mide con la ficha real antes»* y la ficha real **no
+   llega hasta finales de octubre**: el analizador se escribe contra el doble y **lo ambiguo se
+   guarda crudo y se marca** (`text_ambiguous`), que es justo para lo que está esa columna.
+   ▶ Y después: (c) las **imágenes servidas desde nuestro servidor** (§4.3·6) —es lo que quita la
+   dependencia del consentimiento; las columnas ya existen y están a `null`— · (d) «Ocultar»
+   (§4.3·7) · (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10) · (f) retirar Places
+   (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de datos NUEVO: **§5 antes**.
+   ⚠️⚠️ **TRES migraciones ya, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
    ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. La última pasada no
    tiene qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL espera al §7·A.
-   ⚠️ **Todo contra un DOBLE**, con `Http::preventStrayRequests()`. El estado entero, **§4.1 de la
-   spec**, que es donde no caduca.
+   ⚠️ **Todo contra un DOBLE**, con `Http::preventStrayRequests()`.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
    owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
    **tras la T1**. Empieza por el §0 y el **§1.3**.
@@ -140,6 +149,19 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   `getAttributes()`—, y con un cast el desfase no rompe nada visible; y **Larastan declara MUERTO un
   `catch` tras una propiedad con cast** y se equivoca (no ve el `__get`). Cero ignores inline en el
   repo y la base solo encoge: la salida es que el código **diga** que puede fallar.
+- ⚠️⚠️ **Y DOS MÁS de Larastan, medidas en `#727`, que ahorran una entrada en la línea base**: (a)
+  sobre una columna **NOT NULL** con cast, un `!== null` es `notIdentical.alwaysTrue` **y Larastan
+  tiene razón** —es al revés que la trampa de arriba: lo que decide es si la columna admite `null`—;
+  (b) **`prunable()` declarado `@return Builder<Modelo>` siempre falla** porque `static::query()`
+  devuelve `Builder<static>` y la plantilla **no es covariante**. Los cuatro `prunable()` que ya
+  existían lo pagaron con una entrada en la base; se arregla escribiendo **`@return Builder<static>`**.
+- ⚠️⚠️ **UNA LISTA VACÍA NO DISTINGUE «no hay» de «no sé mirar»** (`#727`): `Schema::getForeignKeys()`
+  devuelve `[]` tanto si la tabla no tiene claves ajenas como si el lector no supiera leerlas en
+  SQLite, y un bucle de reflexión que no recorra nada sale igual de verde. ▶ **Todo caso que afirme
+  una AUSENCIA pide primero lo mismo a algo que SÍ la tiene** —aquí, las FK de
+  `google_business_connections` y las relaciones de `Order`— y si el control no muerde, el caso no
+  mide nada. Es la misma familia que el *«si tu caso apaga o simula algo, aserta primero que lo
+  consiguió»* de más abajo.
 - ⚠️⚠️⚠️ **El constructor de consultas de ELOQUENT SÍ escribe `updated_at`** (`Builder::update()` llama
   a `addUpdatedAtColumn()`), así que **no sirve para marcar nada sin mover el testigo** del post-form:
   hay que bajar al crudo con **`toBase()`**. La spec lo afirmaba al revés desde el diseño y nadie lo
@@ -316,3 +338,9 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 ### Atendido
 - **Plataforma 16-09→19-09 y Web `#539`/`#540`**: atendidos, **pueden retirarlos**; lo que sobrevive
   está en «Trampas vivas». ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que escribió plataforma.
+- **Plataforma 20-09** (`#652` el 422 de `InvitationHostController` · mi arreglo de `ScheduleFactsTest`
+  aceptado · `updated_at` y la migración anotados · `<x-site.turnstile />` existe): **atendido, pueden
+  retirarlo**. ▶ Sobre el 422: **que un `""` deje el campo como estaba me vale**; no pido que borre.
+- **Plataforma 20-09, «tu `git pull` borra 37 ficheros»** (`#663`): **atendido**. Traído y comprobado
+  en esta máquina — la suite y el gate no se enteran (afirman sobre RUTAS), y **la landing local se ve
+  con las fotos rotas y sin vídeo** hasta que exista `instancia-playjump`. No es un defecto.

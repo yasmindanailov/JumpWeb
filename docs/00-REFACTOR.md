@@ -88,7 +88,7 @@ programa «producto e instancias» separa el producto de sus instancias.
 ### LA WEB · rediseño desde el canvas 🟦 — `carriles/web.md` (`#469`→`#594`)
 - [x] Fases 1 y 2 (la portada, ocho secciones), Fase 3 (siete páginas) salvo `/servicios`, contenido y copys T1–T5, la pasada de vestido (dos tandas): en producción desde el 13-09 con Redsys en `live`.
 - [ ] T6 de contenido (en/fr) · el título de la pestaña · la pasada de copys por página.
-- [ ] Google Business Profile (`#524`): **T1 (la conexión) CERRADA en código** el 20-09 (`#720`→`#726`, la lleva el SPA); falta la **T2** (reseñas), el proyecto de Google de JumpSystem y los 60 días de la ficha. · las bandas · los tres ejes de la pasada de vestido.
+- [ ] Google Business Profile (`#524`): **T1 (la conexión) CERRADA en código** el 20-09 (`#720`→`#726`, la lleva el SPA) y **T2·1 (el cimiento de las reseñas: tablas, los dos plazos y la guarda de la imagen) EN EL ÁRBOL** (`#727`); falta el resto de la **T2**, el proyecto de Google de JumpSystem y los 60 días de la ficha. · las bandas · los tres ejes de la pasada de vestido.
 - [ ] `/servicios` → «Grupos»: pausada por el owner hasta su artboard (`#534`).
 
 ### CORREOS 🟦 — `specs/correos-desde-canvas.md` §0 (`#500`→`#508`)
