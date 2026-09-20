@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#725`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#726`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
@@ -28,15 +28,17 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅ **T1·1 → T1·4 EN EL ÁRBOL** (`#720`→`#725`): tabla y siete estados · **PKCE**, canje y la
-   pantalla en Ajustes → Web · el **cliente de la API** · **elegir y revalidar la ficha** · y
-   **desconectar + el aviso a los admins**. 107 casos, arneses 12/12, 15/15, 10/10, 11/11 y 11/11.
-   ⚠️ **La migración está aplicada SOLO en la BD local.** ✅ La pantalla la vio el owner (20-09) en
-   «Sin configurar», el estado de hoy — **el resto de sus estados no los ha visto nadie**.
-   ▶ **Sigue**: `business-profile:verify` (§4.2·10) —sin imprimir tokens, correos ni cuerpos, con
-   canario— y la **última pasada** en la pantalla, que no tiene qué enseñar hasta que la T2
-   sincronice. Contra un DOBLE, con `Http::preventStrayRequests()`. El estado entero, **§4.1 de la
-   spec**. ▶ Y con la T1 cerrada, la **T2: las reseñas** (§4.3).
+   ✅✅ **LA T1 ENTERA, EN EL ÁRBOL** (`#720`→`#726`): tabla y siete estados · **PKCE**, canje y la
+   pantalla en Ajustes → Web · el **cliente de la API** · **elegir y revalidar la ficha** ·
+   **desconectar + el aviso a los admins** · y **`business-profile:verify`**. 121 casos, seis arneses
+   (12/12, 15/15, 10/10, 11/11, 11/11, 10/10), todos exit 0.
+   ⚠️⚠️ **DOS migraciones, aplicadas SOLO en la BD local.**
+   ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
+   lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
+   nuevo no se ha visto renderizado**.
+   ▶ **Sigue la T2, las reseñas** (§4.3). Lo que queda de la T1 es ojo y credenciales: la última
+   pasada no tiene qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL espera al
+   §7·A. Contra un DOBLE, con `Http::preventStrayRequests()`. El estado entero, **§4.1 de la spec**.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
    owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
    **tras la T1**. Empieza por el §0 y el **§1.3**.
@@ -135,6 +137,12 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ⚠️⚠️ **Lo que se afirma que NO pasa hay que hacerlo POSIBLE primero** (`#721`): dos supervivientes
   eran casos que negaban una llamada cuyo endpoint **no estaba fingido** —imposible— y con un `catch`
   que se tragaba el cortafuegos. «No se llamó» era cierto por el motivo equivocado.
+- ⚠️⚠️⚠️ **DOS APIs DE GOOGLE NOMBRAN LA MISMA FICHA DE DOS FORMAS** (`#726`, medido contra la doc
+  oficial): `locations.list` (v1) devuelve `locations/{id}` **sin cuenta** y `reviews.list` (**v4 y
+  otro host**) exige `accounts/{id}/locations/{id}`. Guardar solo lo primero deja la sincronización
+  sin poder pedir **ni una** reseña, y leyendo el código no se ve: hay que ir a la doc de CADA
+  endpoint. ▶ Si una tanda cruza dos APIs del mismo proveedor, **comprueba cómo nombra cada una lo
+  mismo** antes de guardar nada.
 - ⚠️⚠️ **Dos trampas de forzar el ENTORNO en un caso, medidas el 20-09** (`#723`): `$this->app['env']
   = 'production'` **enciende la verificación de CSRF** que el entorno de pruebas apaga, así que un POST
   vuelve **419** y el caso mide el token, no la guarda —esa se mide por el SERVICIO—; y
@@ -260,6 +268,11 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   página y sus temas, el recibo en sus dos estados, el justificante y los tres correos— **y el borde
   `§7.1·5` está CERRADO** (`#718`). **El despliegue ya no está bloqueado por nada mío**; alcance abajo.
 - ⚠️ Ese ✅ **no cubre** el `.ics` en un móvil real, el Turnstile real en producción ni `§7.2·R12`.
+- ▶ **Nos vamos a cruzar en la T2** (aviso, no reproche): vuestro `#662` movió la escala a
+  `Rating::MAX` y tocó `ReviewsSectionTest`, y el §4.3·9 de `google-business-profile.md` dice que **el
+  contrato `SocialProof`, su decorador y la sección CAMBIAN** cuando entre la fuente de Google
+  (fotos, respuesta del parque, anónimos, la línea del filtro). Lo tocaré yo y os aviso antes; si
+  preferís llevarlo vosotros, decidlo.
 
 ### ▶ EL ALCANCE DEL PRÓXIMO DESPLIEGUE (emisor: SPA, 19→20-09; los tres avisos, fundidos)
 - **Va la invitación entera: T5, T6 y T7** (`#701`→`#718`). Sin tocar dinero ni aforo y **ningún

@@ -541,9 +541,14 @@ index `(action, created_at)`. Crear SOLO vía `App\Domain\Platform\Services\Audi
 instalación es un parque y un parque es una ficha). `status` (enum `GoogleBusinessStatus`, default
 `ready_to_connect`) · `status_changed_at` · `refresh_token` text **cast `encrypted`** ·
 `token_fingerprint` char(64) (sha256 del token, para **comparar-y-escribir**: un worker con el token
-viejo no pisa una reconexión) · `location_name` (recurso `accounts/…/locations/…`), `location_title`,
-`place_id`, `maps_uri`, `new_review_uri` · `connected_by_user_id` nullable `nullOnDelete` ·
-`connected_at`.
+viejo no pisa una reconexión) · `location_name` (`locations/{id}`), **`account_name`**
+(`accounts/{id}`, `#726`), `location_title`, `place_id`, `maps_uri`, `new_review_uri` ·
+`connected_by_user_id` nullable `nullOnDelete` · `connected_at`.
+⚠️⚠️ **`account_name` NO es redundante**: son DOS APIs que nombran la misma ficha de dos formas
+(medido contra la doc oficial el 20-09). `locations.list` (v1) devuelve `locations/{id}` **sin
+cuenta**; `reviews.list` (v4, y otro host) exige `accounts/{id}/locations/{id}`. Sin esta columna **no
+se puede pedir ni una reseña**. El `parent` lo compone `reviewsParent()`; `null` = elegida antes de
+`#726`.
 ⚠️ **NO vive en `settings`**: `Setting::value()` lee la tabla entera y la memoriza por proceso, así
 que el token se pasearía por toda petición que consulte cualquier ajuste.
 ⚠️ `$hidden` = token y huella (la pantalla es Livewire y serializa al snapshot del navegador).

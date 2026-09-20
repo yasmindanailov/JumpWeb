@@ -40,6 +40,15 @@ final readonly class GoogleBusinessLocation
     private function __construct(
         /** El nombre de RECURSO (`locations/123…`): es por donde Google la identifica. */
         public string $name,
+        /**
+         * La cuenta de la que cuelga (`accounts/123…`).
+         *
+         * ⚠️⚠️ **Se conserva porque las reseñas se piden por OTRA API que nombra la ficha de otra
+         * forma** (medido contra la doc oficial el 2026-09-20): `locations.list` devuelve
+         * `locations/{id}` **sin cuenta**, y `reviews.list` exige `accounts/{id}/locations/{id}`.
+         * Tirarla aquí dejaría a la T2 sin poder pedir una sola reseña. {@see self::reviewsParent()}.
+         */
+        public string $account,
         public string $title,
         public ?string $placeId,
         public ?string $mapsUri,
@@ -55,9 +64,10 @@ final readonly class GoogleBusinessLocation
 
     /**
      * @param  array<string,mixed>  $row  una entrada de `locations.list`
+     * @param  string  $account  la cuenta que se estaba listando (`accounts/123…`)
      * @return self|null `null` si no trae nombre de recurso: sin él no hay ficha que pedir después.
      */
-    public static function fromApi(array $row): ?self
+    public static function fromApi(array $row, string $account = ''): ?self
     {
         $name = $row['name'] ?? null;
 
@@ -69,6 +79,7 @@ final readonly class GoogleBusinessLocation
 
         return new self(
             name: trim($name),
+            account: trim($account),
             title: is_string($row['title'] ?? null) ? trim($row['title']) : trim($name),
             placeId: is_string($metadata['placeId'] ?? null) && $metadata['placeId'] !== '' ? $metadata['placeId'] : null,
             mapsUri: self::googleUrl($metadata['mapsUri'] ?? null),
@@ -93,6 +104,27 @@ final readonly class GoogleBusinessLocation
         $nuestro = self::normalizeHost($siteHost);
 
         return $suyo !== '' && $nuestro !== '' && $suyo === $nuestro;
+    }
+
+    /**
+     * El `parent` con el que se piden sus reseñas: `accounts/{id}/locations/{id}` (§4.2·10, T2).
+     *
+     * ⚠️ **No es el `name` de la ficha**, y confundirlos devuelve un 404 que parece «ficha perdida».
+     *
+     * @return string|null `null` si no se sabe la cuenta — una conexión elegida antes de la T1·5.
+     */
+    public static function reviewsParentFor(?string $account, ?string $name): ?string
+    {
+        $account = trim((string) $account);
+        $name = trim((string) $name);
+
+        return ($account === '' || $name === '') ? null : $account.'/'.$name;
+    }
+
+    /** {@see self::reviewsParentFor()}, para esta ficha. */
+    public function reviewsParent(): ?string
+    {
+        return self::reviewsParentFor($this->account, $this->name);
     }
 
     /** El host del sitio, tal y como lo declara la instalación. */

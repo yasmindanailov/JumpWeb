@@ -13,6 +13,7 @@ use App\Domain\Platform\Services\GoogleBusinessApi;
 use App\Domain\Platform\Services\GoogleBusinessConnector;
 use App\Domain\Platform\Services\GoogleBusinessCredentials;
 use App\Domain\Platform\Services\GoogleBusinessLocation;
+use App\Domain\Platform\Services\GoogleBusinessLocations;
 use App\Domain\Platform\Services\GoogleBusinessOAuth;
 use App\Filament\Pages\GoogleBusinessProfilePage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,6 +112,26 @@ class GoogleBusinessLocationTest extends TestCase
         $this->assertStringContainsString('Madrid', (string) $ficha->address);
     }
 
+    public function test_se_recorren_todas_las_cuentas_y_cada_ficha_guarda_la_suya(): void
+    {
+        // Dos cosas de una vez. Un administrador puede tener varias cuentas y la ficha del parque
+        // vivir en la segunda: mirar solo la primera dejaría la revalidación del §4.2·4 rechazando
+        // una ficha legítima. Y **cada ficha tiene que recordar DE QUÉ cuenta salió**, porque las
+        // reseñas se piden por otra API que la exige (§4.2·10).
+        Http::fake([
+            GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::response(['access_token' => 'ya29.x', 'expires_in' => 3600]),
+            GoogleBusinessApi::ACCOUNTS_ENDPOINT.'*' => Http::response(['accounts' => [['name' => 'accounts/1'], ['name' => 'accounts/2']]]),
+            GoogleBusinessApi::LOCATIONS_BASE.'accounts/1/locations*' => Http::response(['locations' => [['name' => 'locations/9']]]),
+            GoogleBusinessApi::LOCATIONS_BASE.'accounts/2/locations*' => Http::response(['locations' => [['name' => 'locations/77']]]),
+        ]);
+
+        $fichas = app(GoogleBusinessLocations::class)->available('1//token');
+
+        $this->assertSame(['locations/9', 'locations/77'], array_map(fn ($f) => $f->name, $fichas));
+        $this->assertSame(['accounts/1', 'accounts/2'], array_map(fn ($f) => $f->account, $fichas));
+        $this->assertSame('accounts/2/locations/77', $fichas[1]->reviewsParent());
+    }
+
     public function test_sin_nombre_de_recurso_no_hay_ficha(): void
     {
         // Sin `name` no se la puede volver a pedir a Google: guardarla sería guardar un fantasma.
@@ -197,6 +218,10 @@ class GoogleBusinessLocationTest extends TestCase
 
         $fila = GoogleBusinessConnection::current();
         $this->assertSame('locations/9', $fila->location_name);
+        // ⚠️ **Y la CUENTA**, que es lo que la T2 necesitará para pedir las reseñas: se conoce al
+        // listar y si no se guarda aquí, se pierde. Lo destapó el arnés de la T1·5, que sobrevivía.
+        $this->assertSame('accounts/1', $fila->account_name);
+        $this->assertSame('accounts/1/locations/9', $fila->reviewsParent());
         $this->assertSame('Parque de prueba', $fila->location_title);
         $this->assertSame('ChIJlocations/9', $fila->place_id);
         $this->assertSame('https://maps.google.com/maps?cid=1', $fila->maps_uri);

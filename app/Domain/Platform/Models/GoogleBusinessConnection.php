@@ -3,6 +3,7 @@
 namespace App\Domain\Platform\Models;
 
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
+use App\Domain\Platform\Services\GoogleBusinessLocation;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
@@ -49,7 +50,7 @@ class GoogleBusinessConnection extends Model
     protected $fillable = [
         'status', 'status_changed_at',
         'refresh_token', 'token_fingerprint',
-        'location_name', 'location_title', 'place_id', 'maps_uri', 'new_review_uri',
+        'location_name', 'account_name', 'location_title', 'place_id', 'maps_uri', 'new_review_uri',
         'connected_by_user_id', 'connected_at',
     ];
 
@@ -125,6 +126,18 @@ class GoogleBusinessConnection extends Model
         }
 
         return $token !== '' ? $token : null;
+    }
+
+    /**
+     * El `parent` con el que se piden las reseñas de la ficha conectada (§4.2·10).
+     *
+     * ⚠️ `null` si falta la cuenta —una conexión elegida antes de la T1·5— o si no hay ficha. Quien
+     * lo use tiene que decirlo, no adivinarlo: pedir con el `name` a secas devuelve un 404 que se
+     * lee como «ficha perdida».
+     */
+    public function reviewsParent(): ?string
+    {
+        return GoogleBusinessLocation::reviewsParentFor($this->account_name, $this->location_name);
     }
 
     /**

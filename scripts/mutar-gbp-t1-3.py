@@ -58,12 +58,13 @@ MUTATIONS = [
         php(T + 'test_las_fichas_se_piden_con_el_read_mask'),
     ),
     (
-        # Un administrador puede tener varias cuentas, y la ficha del parque vivir en la segunda.
-        'se recorren TODAS las cuentas, no solo la primera',
+        # ⚠️ El recorrido se mudó a `GoogleBusinessLocations` en la T1·5 (`#726`): es donde se sabe
+        # de qué cuenta cuelga cada ficha, y esa cuenta hace falta para pedir sus reseñas.
+        'el resumen de reseñas pide solo las CIFRAS',
         API,
-        '                $fichas = array_merge($fichas, $this->locations($refreshToken, $nombre));',
-        '                return array_merge($fichas, $this->locations($refreshToken, $nombre));',
-        php(T + 'test_se_recorren_todas_las_cuentas_del_token'),
+        "        $body = $this->get($refreshToken, self::REVIEWS_BASE.$parent.'/reviews', ['pageSize' => 1]);",
+        "        $body = $this->get($refreshToken, self::REVIEWS_BASE.$parent.'/reviews', ['pageSize' => 50]);",
+        php('GoogleBusinessApiTest::test_el_resumen_de_resenas_va_a_la_v4_y_con_la_cuenta_delante'),
     ),
     (
         'el token de acceso se REUTILIZA dentro de la pasada',

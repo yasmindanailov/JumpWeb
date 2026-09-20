@@ -88,19 +88,34 @@ class GoogleBusinessApiTest extends TestCase
             && str_contains(urldecode($request->url()), 'readMask='.GoogleBusinessApi::LOCATION_READ_MASK));
     }
 
-    public function test_se_recorren_todas_las_cuentas_del_token(): void
+    public function test_el_resumen_de_resenas_va_a_la_v4_y_con_la_cuenta_delante(): void
     {
-        // Un administrador puede tener varias cuentas y la ficha del parque vivir en cualquiera:
-        // mirar solo la primera dejaría la revalidación del §4.2·4 rechazando una ficha legítima.
+        // ⚠️ Otra API, otro host y otra forma de nombrar la ficha (medido contra la doc oficial el
+        // 20-09): `locations.list` devuelve `locations/9`; `reviews.list` exige
+        // `accounts/1/locations/9`. Y solo se piden las CIFRAS, que vienen al nivel de la respuesta.
         Http::fake($this->fakeToken() + [
-            GoogleBusinessApi::ACCOUNTS_ENDPOINT.'*' => Http::response(['accounts' => [['name' => 'accounts/1'], ['name' => 'accounts/2']]]),
-            GoogleBusinessApi::LOCATIONS_BASE.'accounts/1/locations*' => Http::response(['locations' => [['name' => 'locations/9']]]),
-            GoogleBusinessApi::LOCATIONS_BASE.'accounts/2/locations*' => Http::response(['locations' => [['name' => 'locations/77']]]),
+            GoogleBusinessApi::REVIEWS_BASE.'*' => Http::response(['averageRating' => 4.6, 'totalReviewCount' => 37]),
         ]);
 
-        $fichas = (new GoogleBusinessApi)->allLocations(self::CANARIO);
+        $resumen = (new GoogleBusinessApi)->reviewSummary(self::CANARIO, 'accounts/1/locations/9');
 
-        $this->assertSame(['locations/9', 'locations/77'], array_column($fichas, 'name'));
+        $this->assertSame(37, $resumen['totalReviewCount']);
+        $this->assertSame(4.6, $resumen['averageRating']);
+
+        Http::assertSent(fn ($request) => str_starts_with($request->url(), GoogleBusinessApi::REVIEWS_BASE)
+            && str_contains($request->url(), 'accounts/1/locations/9/reviews')
+            && str_contains($request->url(), 'pageSize=1'));
+    }
+
+    public function test_una_ficha_sin_resenas_cuenta_cero_y_no_revienta(): void
+    {
+        // Google omite las cifras cuando no hay ninguna: «cero» es un dato, no un fallo.
+        Http::fake($this->fakeToken() + [GoogleBusinessApi::REVIEWS_BASE.'*' => Http::response([])]);
+
+        $resumen = (new GoogleBusinessApi)->reviewSummary(self::CANARIO, 'accounts/1/locations/9');
+
+        $this->assertSame(0, $resumen['totalReviewCount']);
+        $this->assertNull($resumen['averageRating']);
     }
 
     public function test_una_respuesta_sin_la_clave_esperada_no_revienta(): void

@@ -32,11 +32,23 @@ final readonly class GoogleBusinessLocations
     {
         $fichas = [];
 
-        foreach ($this->api->allLocations($refreshToken) as $fila) {
-            $ficha = GoogleBusinessLocation::fromApi($fila);
+        // ⚠️⚠️ **El recorrido vive AQUÍ y no en el cliente HTTP**, y no es orden por el orden: al
+        // listar es el único momento en que se sabe **de qué cuenta** cuelga cada ficha, y esa cuenta
+        // hace falta para pedirle sus reseñas —son dos APIs que la nombran distinto (§4.2·10)—. Un
+        // `allLocations()` que devolviera fichas sueltas la tiraría por el camino.
+        foreach ($this->api->accounts($refreshToken) as $cuenta) {
+            $nombre = $cuenta['name'] ?? null;
 
-            if ($ficha !== null) {
-                $fichas[] = $ficha;
+            if (! is_string($nombre) || trim($nombre) === '') {
+                continue;
+            }
+
+            foreach ($this->api->locations($refreshToken, $nombre) as $fila) {
+                $ficha = GoogleBusinessLocation::fromApi($fila, $nombre);
+
+                if ($ficha !== null) {
+                    $fichas[] = $ficha;
+                }
             }
         }
 

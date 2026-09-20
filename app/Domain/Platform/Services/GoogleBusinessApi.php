@@ -33,6 +33,12 @@ final class GoogleBusinessApi
     public const LOCATIONS_BASE = 'https://mybusinessbusinessinformation.googleapis.com/v1/';
 
     /**
+     * `reviews.list`. ⚠️ **Es la v4 y otro HOST**: las reseñas no viven donde las fichas, y su
+     * `parent` es `accounts/{id}/locations/{id}`, no el `name` que devuelve `locations.list`.
+     */
+    public const REVIEWS_BASE = 'https://mybusiness.googleapis.com/v4/';
+
+    /**
      * ⚠️ **`readMask` es OBLIGATORIO** en `locations.list`: sin él Google responde 400. Y se pide lo
      * justo (§4.2·4) — el nombre de recurso, el rótulo, la dirección, la web y el `metadata` de donde
      * salen `placeId`, `mapsUri` y `newReviewUri`. Pedir de más sería traer a casa datos del parque
@@ -89,29 +95,33 @@ final class GoogleBusinessApi
     }
 
     /**
-     * Todas las fichas que el token alcanza, de todas sus cuentas.
+     * **El resumen de reseñas de una ficha** (§4.2·10): la media y el total, tal y como los da Google.
      *
-     * ⚠️ **Es lo que sostiene la revalidación del §4.2·4**: «la ficha está en el `locations.list` de
-     * ESE token» no se puede comprobar contra una sola cuenta, porque un administrador puede tener
-     * varias y la ficha del parque vivir en cualquiera.
+     * ⚠️⚠️ **Otra API y otra forma de nombrar la ficha.** Las reseñas son de la **v4**
+     * (`mybusiness.googleapis.com`) y su `parent` es `accounts/{id}/locations/{id}`, mientras que
+     * `locations.list` devuelve `locations/{id}` **a secas** —las dos cosas, comprobadas contra la
+     * documentación oficial el 2026-09-20—. Pasarle el `name` de la ficha devuelve un 404 que se lee
+     * como «ficha perdida» y manda a reconectar para nada.
      *
-     * @return list<array<string,mixed>>
+     * ⚠️ `pageSize=1`: aquí solo se quieren las CIFRAS, que Google manda al nivel de la respuesta.
+     * Traerse cincuenta reseñas para contar sería pagar por lo que ya viene contado.
+     *
+     * @param  string  $parent  `accounts/{id}/locations/{id}` ({@see GoogleBusinessLocation::reviewsParent()})
+     * @return array{averageRating: float|null, totalReviewCount: int}
      *
      * @throws GoogleBusinessApiException
      */
-    public function allLocations(#[\SensitiveParameter] string $refreshToken): array
+    public function reviewSummary(#[\SensitiveParameter] string $refreshToken, string $parent): array
     {
-        $fichas = [];
+        $body = $this->get($refreshToken, self::REVIEWS_BASE.$parent.'/reviews', ['pageSize' => 1]);
 
-        foreach ($this->accounts($refreshToken) as $cuenta) {
-            $nombre = $cuenta['name'] ?? null;
+        $media = $body['averageRating'] ?? null;
+        $total = $body['totalReviewCount'] ?? null;
 
-            if (is_string($nombre) && $nombre !== '') {
-                $fichas = array_merge($fichas, $this->locations($refreshToken, $nombre));
-            }
-        }
-
-        return $fichas;
+        return [
+            'averageRating' => is_numeric($media) ? (float) $media : null,
+            'totalReviewCount' => is_numeric($total) ? (int) $total : 0,
+        ];
     }
 
     /**

@@ -109,6 +109,9 @@ final class GoogleBusinessConnector
 
             $row->update([
                 'location_name' => $ficha->name,
+                // ⚠️ La cuenta se guarda porque las reseñas se piden por otra API que nombra la
+                // ficha de otra forma (§4.2·10). Sin ella la T2 no puede pedir ni una.
+                'account_name' => $ficha->account,
                 'location_title' => $ficha->title,
                 'place_id' => $ficha->placeId,
                 'maps_uri' => $ficha->mapsUri,

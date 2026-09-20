@@ -214,8 +214,19 @@ anonimizada, y **un fallo al avisar no tumba la elección**.
 ▶ **El censo de correos pasa a 27** (`emails.google_business_location`, cuatro piezas en tres
 idiomas). Avisado al carril de correos.
 
-▶ Lo que sigue de la T1: `business-profile:verify` (§4.2·10) y la **última pasada** en la pantalla,
-que no tiene qué enseñar hasta que la T2 sincronice.
+✅ **T1·5 · `business-profile:verify`, EN EL ÁRBOL — Y LA T1 QUEDA CERRADA** (2026-09-20, `#726`).
+14 casos, arnés 10/10. El comando **no escribe nada** y **no imprime secretos a ningún nivel de
+detalle** (medido con `-vvv`).
+⚠️⚠️ **Y destapó un muro para la T2, medido contra la doc oficial: DOS APIs nombran la misma ficha de
+dos formas.** `locations.list` (v1) devuelve *«…in the form: `locations/{locationId}`»*; `reviews.list`
+(**v4 y otro host**, `mybusiness.googleapis.com`) exige `{parent=accounts/*/locations/*}`. Lo que
+guardaba la T1·3b **no servía para pedir una sola reseña**. ▶ Se añadió **`account_name`** (migración)
+y `reviewsParent()`; el recorrido de cuentas vive ahora en `GoogleBusinessLocations`, que es donde se
+sabe de qué cuenta cuelga cada ficha.
+
+▶ **Lo que queda de la T1 es solo ojo y credenciales**: la **última pasada** en la pantalla no tiene
+qué enseñar hasta que la T2 sincronice, y `verify` contra la ficha REAL (§6·T1) espera al §7·A.
+▶ **Lo siguiente es la T2, las reseñas** (§4.3).
 
 ### 4.2 T1 · La conexión
 
