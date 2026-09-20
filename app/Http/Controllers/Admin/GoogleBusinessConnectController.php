@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
 use App\Domain\Platform\Exceptions\GoogleBusinessException;
+use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Services\AuditLogger;
 use App\Domain\Platform\Services\GoogleBusinessConnector;
 use App\Domain\Platform\Services\GoogleBusinessCredentials;
@@ -112,6 +114,43 @@ class GoogleBusinessConnectController extends Controller
         }
 
         return $this->back('google-business-connected');
+    }
+
+    /**
+     * **Elegir la ficha del parque** (§4.2·4).
+     *
+     * ⚠️ El identificador llega del navegador **a propósito** —es lo que el admin eligió en la
+     * lista—, y por eso el servicio lo revalida contra el listado de Google antes de guardarlo. Aquí
+     * no se comprueba nada de eso: la capa de entrega recoge el gesto, el dominio decide si vale.
+     */
+    public function chooseLocation(Request $request, GoogleBusinessConnector $connector): RedirectResponse
+    {
+        $this->authorizeSettings($request);
+
+        $conexion = GoogleBusinessConnection::current();
+        $token = $conexion?->readToken();
+
+        if ($token === null) {
+            return $this->back('google-business-failed');
+        }
+
+        $name = (string) $request->input('location', '');
+
+        if ($name === '') {
+            return $this->back('google-business-failed');
+        }
+
+        try {
+            $connector->chooseLocation($token, $name, (int) Auth::id(), $request->boolean('confirmed'));
+        } catch (GoogleBusinessException $e) {
+            return $this->back('google-business-'.str_replace('_', '-', $e->reason));
+        } catch (GoogleBusinessApiException $e) {
+            Log::warning('google_business.choose_failed', ['http' => $e->httpStatus, 'reason' => $e->reason]);
+
+            return $this->back('google-business-api-failed');
+        }
+
+        return $this->back('google-business-location-chosen');
     }
 
     /**

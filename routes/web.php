@@ -402,6 +402,10 @@ Route::post('/admin/ficha-google/conectar', [GoogleBusinessConnectController::cl
 Route::get('/admin/ficha-google/callback', [GoogleBusinessConnectController::class, 'callback'])
     ->middleware(['web', 'auth', 'panel_role', 'throttle:30,1'])
     ->name('admin.google_business.callback');
+// Elegir la ficha (§4.2·4). POST: cambia de qué negocio son las reseñas que publica la portada.
+Route::post('/admin/ficha-google/elegir', [GoogleBusinessConnectController::class, 'chooseLocation'])
+    ->middleware(['web', 'auth', 'panel_role', 'throttle:20,1'])
+    ->name('admin.google_business.choose');
 
 // Panel admin — Fase 6 · waiver: PDF del REGISTRO probatorio de una firma (`specs/waiver-probatorio.md`
 // §4.5). Permiso PROPIO `waiver.view` (comprobado en el controlador) + IDOR (la firma debe ser del

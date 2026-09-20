@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#722`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#723`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo 24 KB. El contador de la
@@ -28,14 +28,13 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅ **T1·1, T1·2 y T1·3a EN EL ÁRBOL** (`#720`→`#722`): tabla y siete estados · reto con **PKCE**,
-   canje y la pantalla «Ficha de Google» en Ajustes → Web · y el **cliente de la API**, único
-   envoltorio HTTP, con la negativa de Google traducida a estado. 59 casos, arneses 12/12, 15/15 y
-   10/10. ⚠️ **La migración está aplicada SOLO en la BD local.** ✅ La pantalla la vio el owner (20-09)
-   en «Sin configurar», el estado de hoy.
-   ▶ **Sigue**: elegir y revalidar ficha (§4.2·4) —el cliente ya está, `allLocations()`— · el resto de
-   la pantalla (§4.2·1) · desconectar (§4.2·8) · `verify` (§4.2·10). Contra un DOBLE, con
-   `Http::preventStrayRequests()`. La URI del §7·A·5 y el resto del estado, **en la §4.1 de la spec**.
+   ✅ **T1·1 → T1·3b EN EL ÁRBOL** (`#720`→`#723`): tabla y siete estados · **PKCE**, canje y la
+   pantalla en Ajustes → Web · el **cliente de la API** · y **elegir y revalidar la ficha**. 91 casos,
+   arneses 12/12, 15/15, 10/10 y 11/11. ⚠️ **La migración está aplicada SOLO en la BD local.**
+   ✅ La pantalla la vio el owner (20-09) en «Sin configurar», el estado de hoy.
+   ▶ **Sigue la T1·4**: quién conectó y la última pasada (§4.2·1) · desconectar (§4.2·8) · **el correo
+   a los admins** del §4.2·4, que aún no está y sube el censo de correos a 27 · `verify` (§4.2·10).
+   Contra un DOBLE, con `Http::preventStrayRequests()`. El estado entero, **en la §4.1 de la spec**.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
    owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
    **tras la T1**. Empieza por el §0 y el **§1.3**.
@@ -106,10 +105,11 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras un arnés
   de mutación (restaura el árbol, no el bundle) **y siempre que toques un `.vue`** (si no, 36 rojos que no
   son tuyos).
-- ⚠️⚠️ **Un COMENTARIO puede romper un censo** (`#715`): `MailInboxLineTest` saca el grupo de cada
-  correo con un `grep` que se queda con la PRIMERA llamada de cabecera, así que una nota que la
-  escriba entre comillas **le gana al código** y el correo sale del censo (12 rojos de golpe). Es
-  `#553` del lado del inventario: si nombras en prosa el patrón que un escáner busca, **cámbialo**.
+- ⚠️⚠️ **Dos que se pagaron en la invitación y valen fuera de ella** (el caso, en su spec §10): **un
+  COMENTARIO puede romper un censo** —un `grep` que busca la primera llamada se queda con el ejemplo
+  entre comillas y saca el fichero del inventario (`#715`, `#553`, 12 rojos de golpe): si nombras en
+  prosa el patrón que un escáner busca, **cámbialo**—; y **compactar o reordenar filas rompe lo que
+  cuelga de la posición**, así que solo al recortar y **después** de `TicketType::orderGuestRows()`.
 - **Una combinación que el modelo prohíbe se monta por el CONSTRUCTOR DE CONSULTAS** en el fixture: el
   guard de `saving()` lanza, y el escenario real contra el que defiende es justo ése (una importación,
   un `update()` a mano). Con `create()` el caso no existiría.
@@ -133,6 +133,11 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ⚠️⚠️ **Lo que se afirma que NO pasa hay que hacerlo POSIBLE primero** (`#721`): dos supervivientes
   eran casos que negaban una llamada cuyo endpoint **no estaba fingido** —imposible— y con un `catch`
   que se tragaba el cortafuegos. «No se llamó» era cierto por el motivo equivocado.
+- ⚠️⚠️ **Dos trampas de forzar el ENTORNO en un caso, medidas el 20-09** (`#723`): `$this->app['env']
+  = 'production'` **enciende la verificación de CSRF** que el entorno de pruebas apaga, así que un POST
+  vuelve **419** y el caso mide el token, no la guarda —esa se mide por el SERVICIO—; y
+  `config(['app.url' => …])` con un host distinto de `localhost` hace saltar «**Untrusted Host**» de
+  Filament antes de llegar al controlador.
 - **`Str::ascii()` SÍ transitera cirílico, griego y árabe** (medido el 17-09): los que deja vacíos —y
   por los que existe `PersonNameKey`— son chino, japonés, coreano, tailandés, hebreo y emoji. La prosa
   heredada decía «alfabeto no latino» y era falsa.
@@ -193,15 +198,14 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   rechazado perdía la atadura) no lo veía ningún test de dominio, y los tres ya existían.
 - ⏰ **Techo de una decisión: 1,5 KB, y `docs-check` NO lo mide** (sí mide el §0 de una spec, 2 KB, y el
   tracker, 16 KB): `#713` salió a 1604 B y hubo que recortarlo. Mídelo con `python3` antes del commit.
-- 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (medido el 18-09): basura de
-  desarrollo del 26–27 de agosto, **no un defecto del producto**. ⚠️ Así que **`WaiverChain::verify()` en
-  local sale rojo de fábrica**: si mides cadenas, compara ANTES/DESPUÉS.
+- 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (18-09): basura de desarrollo del
+  26–27 de agosto, **no un defecto**. Así que **`WaiverChain::verify()` sale rojo de fábrica en local**:
+  si mides cadenas, compara ANTES/DESPUÉS.
 - ⚠️⚠️ **Un campo de texto vacío llega como `null`**, no como `''` (`ConvertEmptyStringsToNull` corre
   antes de validar): con `['sometimes','string']` el anfitrión que borra una línea recibe **422 y ningún
   cambio**. Medido en la T6·1; en la API es contrato y **lo coge plataforma**.
-- ⚠️ **Una captura de VENTANA sin bajar hasta lo que quieres ver son dos capturas idénticas**: lo delató
-  el tamaño del fichero, no el ojo. Y `DisplayTime::dayLabel()` ya termina en punto: la frase que lo
-  envuelve no lleva el suyo.
+- ⚠️ **Una captura de VENTANA sin bajar hasta lo que quieres ver son dos capturas idénticas**: lo
+  delató el tamaño del fichero, no el ojo. Y `DisplayTime::dayLabel()` ya termina en punto.
 - **F4 cerró y el cajón es un PAQUETE**: dónde vive cada cosa, en `specs/cajon-empaquetable.md` §0, y
   sus seis trampas en el §4.8 — se lee de ahí. Tocar «HOJA ENFOCADA» de `site.css` obliga a regenerar
   `public/css/cajon.css` (`python3 scripts/hoja-del-cajon.py --aplicar`); si solo cambia el sello de
@@ -210,38 +214,34 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   borde en `GuestCountAdjuster`, casos en verde… y **por HTTP seguía vivo**, porque el post-form
   ajusta **y después** guarda las fichas del navegador en el orden viejo. ▶ Antes de cerrar un arreglo
   del post-form, **escribe el caso que hace el POST de verdad**.
-- ⚠️ **Compactar o reordenar filas SIEMPRE rompe algo que cuelga de la posición** (el emparejado de
-  propuestas y la hoja de sala): **solo al recortar**, y **después** de `TicketType::orderGuestRows()`
-  (el `ksort` de `#571`). Las dos condiciones las descubrió un rojo ajeno, no yo.
-- **Un campo traducible sale ARRAY**: concatenar `$ticketType->name` en un guion imprime «Array» con
-  un warning. En una sonda, `is_array(...) ? $x['es'] : $x`.
-- Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
+- **Un campo traducible sale ARRAY**: concatenarlo en un guion imprime «Array» con un warning. En una
+  sonda, `is_array(...) ? $x['es'] : $x`.
+- Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `decisiones/700-799.md`.
 
 ## Buzón
 
-### ❗ Para el carril de CORREOS (emisor: SPA, 19-09; cerrado el 20-09)
+### ❗ Para el carril de CORREOS (emisor: SPA, 19→20-09; los dos avisos, fundidos)
 - ✅ **La T7 entera, HECHA** (`#715`→`#717`, spec §10.14–§10.17). De lo tuyo toqué **dos cosas**:
-  `GuestFormRequest` (cambia cuerpo y llamada **solo** con invitación; asunto y línea de adelanto **sin
-  variante**, para no sacarlo de tu censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro
-  piezas en los tres idiomas. **Ni el tema, ni el remitente, ni el modo oscuro, ni los otros 25.**
+  `GuestFormRequest` (cuerpo y llamada **solo** con invitación; asunto y adelanto **sin variante**,
+  para no sacarlo de tu censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro piezas en los
+  tres idiomas. Ni el tema, ni el remitente, ni el modo oscuro, ni los otros 25.
   ▶ **Tu inventario pasa a 26**; actualizado en tu spec, no en `carriles/correos.md` (`#621`).
 - ❗ **Un hallazgo tuyo que pagué yo**: escribí la llamada de cabecera entre comillas en un comentario y
   tu `MailInboxLineTest` se quedó con el ejemplo — **12 avisos en rojo**. Tu guarda funciona; la
   mutación, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
 - ▶ **Te queda tu OJO en Gmail/Outlook**: los tres en Mailpit; sondas en almacenamiento
-  (`probe-t7-correo.php`, `probe-t7-vispera.php`). Luego puedes retirar este mensaje.
+  (`probe-t7-correo.php`, `probe-t7-vispera.php`).
+- ⏳ **Y te llega OTRO** (20-09): la T1·4 de `#524` trae un **aviso a los admins** cuando cambia la
+  ficha de Google del parque (§4.2·4). **Sube tu censo a 27** y necesita sus cuatro piezas en los tres
+  idiomas. Aún no está escrito: lo digo antes para que no te aparezca un rojo de la nada.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
-- ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (tracker, «LA WEB», y tu banda
-  580–609). **El owner lo pidió hoy** y dijo «esto hay que hacer». La numero desde **MI** banda
-  (700–729). Si la quieres de vuelta, dilo y te la devuelvo con lo que lleve hecho.
-- ⚠️⚠️ **Está BLOQUEADA en el owner**, y él lo sabe: monta el **proyecto central de Google Cloud**
-  (§7·A). Sin eso no hay conexión real; se puede construir contra un doble.
-- ❗ **Una línea tuya que miente, medida hoy**: el encabezado de `google-reviews.md` dice «umbral de
-  **10** reseñas» y el código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`), que es lo que
-  `#494` fijó como **definitivo**. **No la toco yo** (`#621`) — es de tu casa. Manda el código.
-- ▶ Para tu contexto: hoy el parque tiene **1 reseña** (medido contra la API el 10-09) y en local **no
-  hay clave de Places**, así que la sección cae al respaldo de opiniones propias.
+- ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (banda 580–609); la numero desde
+  la MÍA. El owner lo pidió y va avanzada: `#720`→`#723`, el estado en la **§4.1 de la spec**. Si la
+  quieres de vuelta, dilo y te la devuelvo con lo que lleve.
+- ❗ **Una línea tuya que miente, medida el 20-09**: `google-reviews.md` dice «umbral de **10**
+  reseñas» y el código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`, `#494`, definitivo). **No
+  la toco yo** (`#621`). El parque tiene **1 reseña** y en local no hay clave de Places.
 
 ### ❗ Para el carril de plataforma (emisor: SPA, 2026-09-20, el ✅ del owner)
 - ✅✅ **EL OWNER DIO EL VISTO BUENO A LA INVITACIÓN EN VIVO** (20-09) —el bloque del anfitrión, la
@@ -261,14 +261,15 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
 - ⚠️⚠️ **UNA MIGRACIÓN**: `order_items.eve_notice_at`. **Empujada ≠ aplicada**: en producción hay que
   correrla.
 - ▶ **Encender la invitación son los dos interruptores, DATO y decisión del owner.**
-- ⚠️ **Toqué un test tuyo, `tests/Feature/Api/ScheduleFactsTest.php`, porque estaba en ROJO** y me
-  bloqueaba el push: sus casos de «ahora» leían el día de `Carbon::now()` (contenedor, **UTC**) y el
-  servicio pregunta por el del **parque**. **El producto calcula bien**; mentía el test. Arreglado con
-  un ayudante `ahora()` que lee `DisplayTime`. Si prefieres otra forma, dilo.
-- ❗ **Para cuando toques `order_items` con el constructor de consultas**: el de **Eloquent SÍ escribe
-  `updated_at`**. Si alguna doc tuya dice lo contrario, es falso — hay que usar `toBase()` (`#717`).
+- ⚠️ **Toqué un test tuyo, `ScheduleFactsTest`, porque estaba en ROJO** y bloqueaba el push: sus casos
+  de «ahora» leían el día de `Carbon::now()` (contenedor, **UTC**) y el servicio pregunta por el del
+  **parque**. El producto calcula bien; mentía el test. Arreglado con un ayudante que lee
+  `DisplayTime`. Si prefieres otra forma, dilo.
+- ❗❗ **Y va también la T1 de la FICHA DE GOOGLE** (`#720`→`#723`): tabla nueva
+  `google_business_connections` —**otra migración**—, la pantalla «Ficha de Google» en Ajustes → Web y
+  las rutas `/admin/ficha-google/*`. ⚠️ **Sale INERTE**: sin las credenciales de JumpSystem el estado
+  es «sin configurar», no llama a Google y la pantalla lo explica. Nada que encender.
 
 ### Atendido
-- **Plataforma 16-09 → 19-09 (los seis) y Web `#539`/`#540`**: atendidos, **pueden retirarlos**. Lo que
-  sobrevive de ellos ya está arriba, en «Trampas vivas», y el 422 de `InvitationHostController` lo cogió
-  plataforma. ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que lo escribió plataforma.
+- **Plataforma 16-09→19-09 y Web `#539`/`#540`**: atendidos, **pueden retirarlos**; lo que sobrevive
+  está en «Trampas vivas». ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que escribió plataforma.

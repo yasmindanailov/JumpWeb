@@ -3,6 +3,8 @@
 namespace App\Domain\Platform\Services;
 
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
+use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
+use App\Domain\Platform\Exceptions\GoogleBusinessException;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -19,6 +21,8 @@ use Illuminate\Support\Facades\Log;
 final class GoogleBusinessConnector
 {
     private const TIMEOUT_SECONDS = 10;
+
+    public function __construct(private readonly GoogleBusinessLocations $locations) {}
 
     /**
      * Guarda el token y devuelve el ANTERIOR, si había uno distinto, para que quien llama lo revoque.
@@ -57,6 +61,95 @@ final class GoogleBusinessConnector
 
             return ($previous !== null && ! hash_equals($previous, $refreshToken)) ? $previous : null;
         });
+    }
+
+    /**
+     * **Elegir la ficha del parque** (§4.2·4), con sus tres guardas en el orden que importa.
+     *
+     *  1. **Revalidar contra Google**: la ficha tiene que estar en el listado de ESE token. El
+     *     identificador viaja por el navegador, así que sin esto bastaría cambiarlo a mano para
+     *     apuntar la portada del parque a una ficha ajena.
+     *  2. **El host de su web tiene que ser el del sitio**, o es la ficha equivocada.
+     *  3. **Si cambia la ficha, se pregunta**: no es un ajuste, es cambiar de qué negocio son las
+     *     reseñas que el parque publica.
+     *
+     * @param  bool  $confirmed  el admin ya ha dicho que sí al cambio de ficha
+     *
+     * @throws GoogleBusinessException|GoogleBusinessApiException
+     */
+    public function chooseLocation(
+        #[\SensitiveParameter] string $refreshToken,
+        string $name,
+        int $userId,
+        bool $confirmed = false,
+    ): GoogleBusinessLocation {
+        $ficha = $this->locations->revalidate($refreshToken, $name);
+
+        if ($ficha === null) {
+            throw GoogleBusinessException::because(GoogleBusinessException::LOCATION_NOT_YOURS);
+        }
+
+        $this->assertHost($ficha);
+
+        return DB::transaction(function () use ($ficha, $userId, $confirmed): GoogleBusinessLocation {
+            $row = GoogleBusinessConnection::query()->lockForUpdate()->first();
+
+            if ($row === null) {
+                // No se puede elegir ficha sin conexión: el flujo entra por «Conectar».
+                throw GoogleBusinessException::because(GoogleBusinessException::NOT_CONFIGURED);
+            }
+
+            $anterior = $row->place_id;
+
+            if (is_string($anterior) && $anterior !== '' && $anterior !== $ficha->placeId && ! $confirmed) {
+                throw GoogleBusinessException::because(GoogleBusinessException::LOCATION_CHANGED);
+            }
+
+            $row->update([
+                'location_name' => $ficha->name,
+                'location_title' => $ficha->title,
+                'place_id' => $ficha->placeId,
+                'maps_uri' => $ficha->mapsUri,
+                'new_review_uri' => $ficha->newReviewUri,
+            ]);
+
+            // Rastro sin dato personal: una ficha es un negocio, no una persona. Lo que importa
+            // registrar es QUE cambió y quién lo hizo, que es lo que nadie recuerda después.
+            AuditLogger::log('google_business.location_chosen', $row, [
+                'location' => $ficha->name,
+                'changed' => is_string($anterior) && $anterior !== '' && $anterior !== $ficha->placeId,
+                'by' => $userId,
+            ]);
+
+            return $ficha;
+        });
+    }
+
+    /**
+     * La comprobación de host: **dura en producción, aviso fuera**.
+     *
+     * ⚠️⚠️ **No es una guarda a medias, es la única forma de que exista.** En desarrollo el sitio es
+     * `localhost` y la ficha del parque apunta a su dominio real, así que la comprobación **nunca**
+     * casaría: dejarla dura en todas partes obligaría a saltársela para poder trabajar, y una guarda
+     * que se salta a diario acaba desactivada en el sitio donde sí importa. Donde el error es caro
+     * —producción, la portada que ven los clientes— la comprobación manda.
+     *
+     * @throws GoogleBusinessException
+     */
+    private function assertHost(GoogleBusinessLocation $ficha): void
+    {
+        if ($ficha->matchesHost(GoogleBusinessLocation::siteHost())) {
+            return;
+        }
+
+        if (app()->isProduction()) {
+            throw GoogleBusinessException::because(GoogleBusinessException::LOCATION_HOST_MISMATCH);
+        }
+
+        Log::info('google_business.host_mismatch_allowed', [
+            'reason' => 'no es producción',
+            'sitio' => GoogleBusinessLocation::siteHost(),
+        ]);
     }
 
     /**

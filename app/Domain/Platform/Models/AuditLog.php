@@ -115,6 +115,7 @@ class AuditLog extends Model
         // ── Ficha de Google (`specs/google-business-profile.md` §4.2) ──────────────────────
         // ⚠️ El payload NUNCA lleva token ni código: solo el hecho y quién lo hizo.
         'google_business.connected',
+        'google_business.location_chosen',
 
         // ── Mantenimiento ──────────────────────────────────────────────────────────────────
         'maintenance.updated',

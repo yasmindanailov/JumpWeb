@@ -3,8 +3,11 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
+use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Services\GoogleBusinessConnectionState;
+use App\Domain\Platform\Services\GoogleBusinessLocation;
+use App\Domain\Platform\Services\GoogleBusinessLocations;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -13,17 +16,18 @@ use Filament\Support\Icons\Heroicon;
  * **Ficha de Google** — el estado de la conexión y el botón que la abre
  * (`docs/specs/google-business-profile.md` §4.2·1).
  *
- * ⚠️ **Esta pantalla no habla con Google.** Lee el estado de casa y manda al admin al controlador de
- * §4.2·2, que es quien tiene la sesión, el reto y el canje. Una página de Livewire que hiciera el
- * viaje de OAuth tendría que custodiar el `code_verifier` en su propio estado —que **viaja al
- * navegador en el snapshot**— y eso es exactamente lo que PKCE existe para impedir.
+ * ⚠️⚠️ **Esta pantalla NO hace el viaje de OAuth**, y esa es la frontera que importa: el reto, el
+ * `code_verifier` y el canje viven en el controlador de §4.2·2. Una página de Livewire que los
+ * custodiara los llevaría en su estado, **que viaja al navegador en el snapshot** — justo lo que PKCE
+ * existe para impedir. Lo que sí hace es **listar** las fichas (§4.2·4), que es una lectura sin
+ * secretos y para la que se entra aquí.
  *
  * ⚠️ De los siete estados, **el que se pinta es el EFECTIVO**
  * ({@see GoogleBusinessConnectionState}), no la columna: «sin configurar» y «lista para conectar» no
  * están guardadas en ningún sitio.
  *
- * ▶ **Lo que falta aquí es la T1·3**: elegir y revalidar la ficha (§4.2·4), quién conectó y la última
- * pasada (§4.2·1) y desconectar (§4.2·8). Hoy la pantalla dice el estado y deja conectar.
+ * ▶ **Lo que falta aquí es la T1·4**: quién conectó y la última pasada (§4.2·1), y desconectar
+ * (§4.2·8). Hoy la pantalla dice el estado, deja conectar y deja elegir la ficha.
  */
 class GoogleBusinessProfilePage extends Page
 {
@@ -81,5 +85,76 @@ class GoogleBusinessProfilePage extends Page
     public function puedeConectar(): bool
     {
         return $this->estado() !== GoogleBusinessStatus::Unconfigured;
+    }
+
+    /**
+     * Las fichas que el permiso alcanza (§4.2·4), o lista vacía si no hay conexión o Google no
+     * contesta.
+     *
+     * ⚠️ **Sí, esto llama a Google al pintar la pantalla, y es deliberado.** `PERF-02` protege la
+     * PORTADA, no el panel: aquí no hay tráfico y la llamada es justo para lo que se entra. La
+     * alternativa —listar por un botón y arrastrar el resultado por la sesión— añade estado que se
+     * queda obsoleto solo, para ahorrar una llamada que hace un admin una vez.
+     *
+     * ⚠️⚠️ **Y no escribe el estado aunque Google falle.** Pintar es un GET: marcar «sin permiso»
+     * desde aquí haría que abrir una pantalla apagase la conexión de un parque, y sin el
+     * comparar-y-escribir del §4.2·7. Eso lo hace la pasada, que sí sabe con qué token llamó.
+     *
+     * @return list<GoogleBusinessLocation>
+     */
+    public function fichas(): array
+    {
+        $this->resolverFichas();
+
+        return $this->fichas ?? [];
+    }
+
+    /** El motivo por el que no hay lista, para decírselo en vez de enseñar un hueco. */
+    public function fichasError(): ?string
+    {
+        $this->resolverFichas();
+
+        return $this->fichasError;
+    }
+
+    /** ¿Ya hay ficha elegida? */
+    public function fichaElegida(): ?string
+    {
+        return $this->conexion()?->location_name;
+    }
+
+    /** @var list<GoogleBusinessLocation>|null */
+    private ?array $fichas = null;
+
+    private ?string $fichasError = null;
+
+    private bool $fichasResueltas = false;
+
+    /**
+     * Memo por render: la vista pregunta por la lista y por el error, y sin esto serían **dos**
+     * viajes a Google para pintar una pantalla.
+     */
+    private function resolverFichas(): void
+    {
+        if ($this->fichasResueltas) {
+            return;
+        }
+
+        $this->fichasResueltas = true;
+        $this->fichas = [];
+
+        $token = $this->estado() === GoogleBusinessStatus::Connected
+            ? $this->conexion()?->readToken()
+            : null;
+
+        if ($token === null) {
+            return;
+        }
+
+        try {
+            $this->fichas = app(GoogleBusinessLocations::class)->available($token);
+        } catch (GoogleBusinessApiException $e) {
+            $this->fichasError = $e->reason;
+        }
     }
 }

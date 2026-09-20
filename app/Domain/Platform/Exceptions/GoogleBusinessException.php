@@ -41,6 +41,28 @@ final class GoogleBusinessException extends RuntimeException
      */
     public const SCOPE_NOT_GRANTED = 'scope_not_granted';
 
+    /**
+     * La ficha elegida **no está en el listado de ESE token** (§4.2·4).
+     *
+     * ⚠️ Se revalida en el servidor porque el identificador viaja por el navegador: sin esto, bastaría
+     * un valor cambiado a mano en el formulario para apuntar la portada del parque a una ficha ajena.
+     */
+    public const LOCATION_NOT_YOURS = 'location_not_yours';
+
+    /**
+     * La web de la ficha no es la de este sitio (§4.2·4). **Guarda contra conectar la ficha
+     * equivocada**, que en un administrador con varias cuentas no es raro.
+     */
+    public const LOCATION_HOST_MISMATCH = 'location_host_mismatch';
+
+    /**
+     * La ficha elegida **no es la que había**, y el admin no lo ha confirmado (§4.2·4).
+     *
+     * ⚠️ Cambiar de ficha cambia de qué negocio son las reseñas que publica la portada. No es un
+     * ajuste: es cambiar lo que el parque le está diciendo a sus visitantes, y se pregunta.
+     */
+    public const LOCATION_CHANGED = 'location_changed';
+
     private function __construct(public readonly string $reason, string $message)
     {
         parent::__construct($message);

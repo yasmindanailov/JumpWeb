@@ -192,8 +192,21 @@ parque; `SERVICE_DISABLED`/`accessNotConfigured` es el §7·A·2 sin aprobar y n
 ⚠️ **429 y 5xx NO tocan el estado**: son de Google, y apagar la conexión por ellos confunde un mal
 minuto con una avería. Solo el 401 se reintenta, una vez y con token nuevo.
 
-▶ Lo que sigue de la T1: elegir y revalidar la ficha (§4.2·4) con el cliente ya hecho, el resto de la
-pantalla —quién conectó y la última pasada (§4.2·1)—, desconectar (§4.2·8) y `verify` (§4.2·10).
+✅ **T1·3b · ELEGIR Y REVALIDAR LA FICHA, EN EL ÁRBOL** (2026-09-20, `#723`): `GoogleBusinessLocation`
+(la ficha ya saneada, §5·SEC-07), `GoogleBusinessLocations` (listar y **revalidar**) y
+`Connector::chooseLocation()` con sus tres guardas, más la lista en la pantalla. 32 casos, arnés 11/11.
+⚠️ **Las URLs de Google se sanean DONDE NACEN y más estricto que `safeExternalUrl`**: `https` **y**
+host de lista blanca **exacta** (nunca por sufijo). **Los acortadores quedan fuera** aunque sean de
+Google: ahí «es de Google» no implica «lleva a Google».
+⚠️ **La comprobación de la web de la ficha es DURA en producción y aviso fuera**: en desarrollo el
+sitio es `localhost` y nunca casaría, y una guarda que se salta a diario acaba desactivada.
+⚠️ **El nombre de recurso se compara ENTERO**: con «empieza por», `locations/9` traería `locations/99`,
+que es otro negocio. Lo destapó el arnés.
+❗ **Falta el correo a los admins** del §4.2·4 cuando cambia el `placeId`: hoy hay confirmación y
+rastro, pero no aviso. Cambia el censo del carril de correos y entra en la T1·4.
+
+▶ Lo que sigue de la T1: el resto de la pantalla —quién conectó y la última pasada (§4.2·1)—,
+desconectar (§4.2·8), el correo de arriba y `business-profile:verify` (§4.2·10).
 
 ### 4.2 T1 · La conexión
 

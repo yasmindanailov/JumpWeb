@@ -1786,6 +1786,12 @@ return [
         'state_label' => '连接状态',
         'connect' => '连接 Google',
         'linked_location' => '已连接的资料：:name',
+        'choose_title' => '选择乐园的商家资料',
+        'choose' => '使用此资料',
+        'confirm_change' => '确认改用此资料',
+        'current' => '使用中',
+        'no_locations' => '所连接的账号未管理任何商家资料。请在乐园的商家资料中将其添加为管理员后重试。',
+        'choose_failed' => '无法向 Google 获取商家资料列表。请稍后重新加载此页面。',
         'states' => [
             'unconfigured' => [
                 'label' => '未配置',
@@ -1824,6 +1830,11 @@ return [
             'token-exchange-failed' => 'Google 拒绝了本次连接。通常在本页面重新开始即可解决。',
             'missing-refresh-token' => 'Google 未返回长期授权，因此没有保存任何内容。请重试，并在 Google 的授权页面点击同意。',
             'scope-not-granted' => '缺少商家资料的权限。连接时请勾选管理商家资料的选项。',
+            'location-chosen' => '已选择商家资料。评价的归属已确定。',
+            'location-not-yours' => '该资料不在所连接账号管理的范围内。请重新加载页面以查看最新列表。',
+            'location-host-mismatch' => '该资料的网址与本站不一致，可能是其他商家的资料。请在商家资料中更正网址，或另选一个。',
+            'location-changed' => '⚠️ 该资料与当前使用的不同：更换会改变首页所发布评价的归属商家。请再次点击以确认。',
+            'api-failed' => 'Google 未正确响应。未做任何更改，请稍后重试。',
         ],
     ],
 

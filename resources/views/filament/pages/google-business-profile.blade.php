@@ -36,6 +36,65 @@
         @endif
     </div>
 
+    {{-- Elegir la ficha (§4.2·4). Solo cuando hay permiso: sin él no hay nada que listar. --}}
+    @php($fichas = $this->fichas())
+    @php($elegida = $this->fichaElegida())
+
+    @if ($this->estado() === \App\Domain\Platform\Enums\GoogleBusinessStatus::Connected)
+        <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <p class="text-sm font-semibold text-gray-950 dark:text-white">
+                {{ __('admin.google_business.choose_title') }}
+            </p>
+
+            @if ($this->fichasError())
+                <p class="mt-2 text-sm text-warning-700 dark:text-warning-400">
+                    {{ __('admin.google_business.choose_failed') }}
+                </p>
+            @elseif ($fichas === [])
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    {{ __('admin.google_business.no_locations') }}
+                </p>
+            @else
+                <ul class="mt-4 space-y-3">
+                    @foreach ($fichas as $ficha)
+                        <li class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                            <span class="text-sm text-gray-950 dark:text-white">
+                                <strong>{{ $ficha->title }}</strong>
+                                @if ($ficha->address)
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400">{{ $ficha->address }}</span>
+                                @endif
+                            </span>
+
+                            @if ($elegida === $ficha->name)
+                                <span class="text-xs font-semibold text-success-700 dark:text-success-400">
+                                    {{ __('admin.google_business.current') }}
+                                </span>
+                            @else
+                                <form method="POST" action="{{ route('admin.google_business.choose') }}">
+                                    @csrf
+                                    <input type="hidden" name="location" value="{{ $ficha->name }}">
+                                    {{--
+                                        Cambiar de ficha cambia de qué negocio son las reseñas de la
+                                        portada, así que la primera vez se rechaza y se vuelve con el
+                                        aviso; este botón es el «sí» explícito del §4.2·4.
+                                    --}}
+                                    @if ($elegida !== null)
+                                        <input type="hidden" name="confirmed" value="{{ session('status') === 'google-business-location-changed' ? '1' : '0' }}">
+                                    @endif
+                                    <x-filament::button type="submit" size="sm" color="gray">
+                                        {{ session('status') === 'google-business-location-changed' && $elegida !== null
+                                            ? __('admin.google_business.confirm_change')
+                                            : __('admin.google_business.choose') }}
+                                    </x-filament::button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
+
     @if ($this->puedeConectar())
         {{--
             POST y no un enlace: abrir el reto escribe en la sesión del admin, y un GET lo dejaría al

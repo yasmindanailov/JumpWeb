@@ -2306,6 +2306,12 @@ return [
         'state_label' => 'Estado de la conexión',
         'connect' => 'Conectar con Google',
         'linked_location' => 'Ficha conectada: :name',
+        'choose_title' => 'Elige la ficha del parque',
+        'choose' => 'Usar esta ficha',
+        'confirm_change' => 'Sí, cambiar a esta ficha',
+        'current' => 'En uso',
+        'no_locations' => 'La cuenta con la que conectaste no administra ninguna ficha. Añádela como administradora en el perfil de empresa del parque y vuelve a intentarlo.',
+        'choose_failed' => 'No hemos podido pedirle la lista de fichas a Google. Vuelve a cargar esta pantalla en un rato.',
         'states' => [
             'unconfigured' => [
                 'label' => 'Sin configurar',
@@ -2344,6 +2350,11 @@ return [
             'token-exchange-failed' => 'Google ha rechazado la conexión. Suele arreglarse volviendo a empezar desde esta pantalla.',
             'missing-refresh-token' => 'Google no ha devuelto un permiso duradero, así que no se ha guardado nada. Vuelve a intentarlo y acepta en la pantalla de permisos de Google.',
             'scope-not-granted' => 'Falta el permiso sobre el perfil de empresa. Al conectar, deja marcada la casilla de gestionar la ficha.',
+            'location-chosen' => 'Ficha elegida. Ya sabemos de qué negocio son las reseñas.',
+            'location-not-yours' => 'Esa ficha no está entre las que administra la cuenta conectada. Vuelve a cargar la pantalla para ver la lista al día.',
+            'location-host-mismatch' => 'La web de esa ficha no es la de este sitio, así que puede ser la ficha de otro negocio. Corrige la web en el perfil de empresa o elige otra.',
+            'location-changed' => '⚠️ Esa ficha NO es la que estabas usando: cambiarla cambia de qué negocio son las reseñas que se publican en la portada. Pulsa de nuevo para confirmarlo.',
+            'api-failed' => 'Google no ha contestado bien. No se ha cambiado nada; inténtalo en un rato.',
         ],
     ],
 
