@@ -1,8 +1,9 @@
 # [SPEC] El formulario de celebración, el justificante y la invitación digital
 
-> Estado: 🟦 **COMPLETA EN CÓDIGO — las siete tandas cerradas** · T1→T4 EN PRODUCCIÓN (§10.1–§10.4,
-> v1.1.0, con los interruptores apagados) · **T5, T6 y T7 en el árbol y SIN DESPLEGAR**. Sigue 🟦 por
-> el ojo del owner, el despliegue y los dos interruptores (dato suyo), no por código ·
+> Estado: 🟦 **COMPLETA EN CÓDIGO y CON EL ✅ DEL OWNER** (2026-09-20, en vivo) — las siete tandas
+> cerradas · T1→T4 EN PRODUCCIÓN (§10.1–§10.4, v1.1.0, con los interruptores apagados) · **T5, T6 y T7
+> en el árbol y SIN DESPLEGAR**. Sigue 🟦 por el despliegue, los dos interruptores (dato suyo) y el
+> borde §7.1·5, no por el resto del código ·
 > Última actualización: 2026-09-20 · Decisiones: `#569` (spec) · `#570`–`#572` (T1–T3) · `#573`–`#578` (T4) ·
 > `#579` (revisión adversarial) · `#700` (el oráculo) · `#701`–`#704` (T5·1→T5·3 y T5·5) ·
 > `#708`–`#713` (T6·1→T6·6) · `#714`–`#717` (T7) ·
@@ -15,11 +16,12 @@
 
 ## §0 · Antes de tocar
 
-- **Carril del SPA** (banda **700–729**). ✅ **COMPLETA EN CÓDIGO**: T1→T4 en PRODUCCIÓN (v1.1.0,
-  **APAGADOS**) y T5, T6 y T7 en el árbol sin desplegar. Falta el ojo del owner, desplegar y
-  **encender** (dato suyo). **Si construyes, §7.2 primero.**
-- ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — se le enseña lo que
-  escribió. Repartirlo solo es adivinar, y esto acompaña a una firma.
+- **Carril del SPA.** ✅ **Código completo y ✅ del owner en vivo** (20-09): T1→T4 en PRODUCCIÓN
+  (v1.1.0, **APAGADOS**), T5–T7 en el árbol. Falta desplegar, **encender** (dato suyo) y el **borde
+  §7.1·5 ANTES de encender** (bajar invitados descarta las filas del FINAL). ⚠️ El ✅ no cubre el
+  `.ics` en un móvil, el Turnstile real ni `§7.2·R12`. **Si construyes, §7.2 primero.**
+- ❗ **`#706`: nombre y apellidos son DOS campos y el menor NO se prerrellena** — repartir un nombre
+  pegado es adivinar, y esto acompaña a una firma.
 - ⚠️⚠️ **La T4 pasó revisión adversarial** (`#579`): quedan **diez puntos sin tocar** en §10.4.7·B.
 - **§3.1, la decisión que ordena la feature: lo que contesta un padre NO escribe `guest_data`.** Vive en
   `invitation_replies`, el formulario lo PROPONE y el anfitrión lo ADOPTA al guardar —`submitGuestForm()`
@@ -29,13 +31,12 @@
   `full`** y ningún motivo depende del NOMBRE; el «sí» que no cabe se acepta y sale en el aviso (§4.7).
 - «Voy con él» no pide firma (D4) · la autorización sigue al interruptor del producto (D5) · se empareja
   solo con una ficha de UN candidato (D11) · el «no podemos» lo ve el anfitrión (D3).
-- **Lo que enseñó §10**: el orden de la PÁGINA no es el de las POSICIONES (`sanitizeGuestData()` ordena por
-  clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba andándola**
-  (§10.6·E) · un texto **vacío llega como `null`** y `['sometimes','string']` da **422** (§10.8).
+- **Lo que enseñó §10**: el orden de la PÁGINA no es el de las POSICIONES (`sanitizeGuestData()` ordena
+  por clave) · el número de invitados lleva `form="gf-form"` o no se envía · **una costura se prueba
+  andándola** (§10.6·E).
 - ⚠️ **El molde es de TRES páginas** (`.gf-*`): tocar `.gf-savebar`, `.gf-group__*`, `.gf-notice` o
   `.gf-extras__list` mueve el justificante y la invitación. Tras tocarlo, **sonda y captura de VENTANA de
   las tres** (así rompió la T2 la barra de firmar, §10.3).
-- **Borde abierto (T6, §7·5)**: bajar invitados descarta las filas del FINAL.
 
 ## 0. En una línea cada cosa
 
@@ -354,6 +355,11 @@ Reglas estructurales:
     - **con un adulto**: `companion = with_adult`.
     - **sin resolver**: todo lo demás (`alone` sin firma, `unknown` o sin respuesta).
     - Solo existen si el producto no está en `none` y el waiver es `interno`.
+    - ⚠️ **La puerta es el ÚNICO consumidor de `companion`, y solo mira las fiestas de HOY** (medido el
+      20-09). Pedirle el perfil de puerta a una fiesta de la semana que viene devuelve **vacío y es
+      correcto**: no es un defecto. ▶ Y **el anfitrión NO ve `companion`** en su formulario (medido: 0
+      ocurrencias en `guests.blade.php`); la API sí lo expone. Está así por diseño —§4.7 no lo lista—,
+      pero es decisión de producto, no omisión: **pendiente de que el owner la confirme o la cambie**.
 11. **Anular.** El operador rota el token desde el panel, con rastro. El anfitrión no, en esta versión.
 12. **Anti-abuso y seguridad** (T4).
     - Honeypot silencioso y Turnstile que **lo dice** (la asimetría de `#335`).
@@ -754,6 +760,10 @@ con control). ⚠️ **Sin guarda automática**, a sabiendas: el `sticky` de la 
 son geometría y se miden con la sonda.
 
 ### 10.3 T3 · la piel del justificante — EN EL ÁRBOL (2026-09-17, `DECISIONES #572`) · ✅ del owner en vivo · SIN DESPLEGAR
+
+⚠️ **La escala de la hoja `.gf-*` son TRES radios** (`--r-md`, `--r`, `--r-pill`) y **ocho tallas**:
+`GuestFormSkinTest` pone en rojo cualquier otro valor. La guarda tiene razón — se cambia el valor, no
+la guarda. (Vivía en el fichero de carril; baja aquí, que es donde no caduca.)
 
 **Hallazgo que ordenó la tanda** ⚠️⚠️ **defecto en producción desde el octavo despliegue (16-09)**: la T2 hizo
 `.gf-savebar` pegada y en FILA para el post-form, y el justificante metía DENTRO de esa barra dos párrafos

@@ -21,8 +21,12 @@
     T5 8/8 y 7/7 · T6 8/8 · 6/6 · 8/8 · 9/9 · 7/7 · 13/13 · T7 8/8 · 10/10 · 12/12 (+1 declarado).
   - ⚠️ `party_invitations.reminded_at`/`reminded_count` son del **recordatorio del anfitrión** (`#713`,
     cuentan VECES) y **no envían nada**; el aviso de la víspera tiene su propia marca (`#717`).
-  - **Falta el OJO del owner** (el bloque del anfitrión, el recibo de la T5, el justificante sin
-    prerrelleno y **los tres correos, en Mailpit**), desplegar y **encender**, que es dato suyo.
+  - ✅✅ **EL OJO DEL OWNER, HECHO (2026-09-20, en vivo)**: el bloque del anfitrión entero, la página
+    y sus temas, el recibo en sus DOS estados, el justificante sin prerrelleno y los tres correos en
+    Mailpit. Dijo «está todo bien». ⚠️ **Ese ✅ NO cubre tres cosas**, declaradas sin medir: el `.ics`
+    abierto con la app de calendario de un **móvil real** (§4.6), el justificante **en producción**
+    con el **Turnstile real** (en local no hay claves) y contar sus toques (`§7.2·R12`).
+  - ▶ Quedan **desplegar** (con su migración), **encender** (dato suyo) y el **borde §7.1·5**.
 - ✅ **`#707` · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` sin declarar
   lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. Declararlo pasó el
   componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
@@ -31,30 +35,33 @@
 
 ## Por dónde retomar, en orden
 
-1. ❗ **EL OJO DEL OWNER sobre la T6 y la T5, en `localhost:8081`** — es lo único que separa la
-   invitación de poder encenderse, y **ya no es código**:
-   - El **bloque del anfitrión entero** en el post-form: compartir, las propuestas sobre las fichas,
-     «no vienen», «no lo apuntes» y el **recordatorio**. Capturas de la T6·6 a 390 y 1280 en
-     `storage/app/audit/sonda-t6/recordatorio/`; el pedido de la sonda es **`R-PRBT1A`** (pack 105).
-   - El **recibo de la T5 en sus dos estados**, el bloque del calendario y la hoja del justificante
-     **sin prerrelleno** (esta última se le enseñó en captura, **no en vivo**).
-   - El **`.ics` en un TELÉFONO de verdad** (lo pide §4.6): medido por HTTP y en Chromium, nunca abierto
-     con la app de calendario de un móvil. Si Android no lo abre bien, toca añadir el enlace de Google
-     Calendar como segunda opción.
-   - **El justificante EN PRODUCCIÓN, en ventana de teléfono** (v1.1.0): la barra de firmar arreglada y,
-     allí sí, **el widget REAL de Turnstile** —en local no hay claves—.
-   ⚠️ **Sin medir y declarado**: `§7.2·R12` pide contar los toques de Turnstile (solo en producción) · y
-   `og:image` sale del logotipo del tema (1200×441): en una tarjeta 2:1 se ve con bandas.
-2. ✅ **La T7 quedó CERRADA** (`#714`→`#717`, spec §10.14–§10.17) y con ella la feature entera. Los
-   tres correos para el ojo del owner están en **Mailpit** (`:8028`): el del post-form con invitación
-   y sin ella, y el **aviso de la víspera**. Las sondas que los mandan, sin versionar:
-   `probe-t7-correo.php` y `probe-t7-vispera.php`.
-   ⚠️ **Queda una cosa de la casa ajena**: el fichero `docs/carriles/correos.md` sigue diciendo «25
-   correos» y son **26**. No lo toco (`#621`); está avisado en su buzón.
-3. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas
+1. ❗ **EL BORDE `§7.1·5` — lo ÚLTIMO de código, y va ANTES de encender.** Bajar invitados descarta
+   las filas del **final** (`filledFormsBeyond`), así que un «sí» **adoptado** en una fila final puede
+   caerse: el niño que confirmó desaparece de la lista sin que el anfitrión se entere. Hoy no muerde
+   porque la invitación está apagada en producción; en cuanto se encienda, sí. La spec lo aplazó a la
+   T6 «decidiéndolo al medir» y la T6 cerró sin tocarlo. **Dos salidas, se elige MIDIENDO**: descartar
+   primero las fichas vacías, o reordenar las adoptadas al principio al adoptar.
+   ⚠️ Toca **`GuestCountAdjuster`, que SÍ está en el `CRITICAL_RE`** (comprobado con `grep` el 20-09,
+   no de memoria): el push exigirá los verificadores de concurrencia sobre MySQL y `VERIFY_CONC=1`.
+2. ▶ **Desplegar y encender** (no es mío): T5, T6 y T7 al completo **con la migración**
+   `order_items.eve_notice_at`. Los dos interruptores son dato del owner. Avisado en su buzón.
+3. **Los tres huecos que el ✅ del owner NO cubre**, sin medir y declarados: el **`.ics` en un TELÉFONO
+   de verdad** (§4.6 — si Android no lo abre bien, toca añadir el enlace de Google Calendar como
+   segunda opción) · el **justificante EN PRODUCCIÓN** con el **Turnstile REAL** · y `§7.2·R12`,
+   contar sus toques. ⚠️ También `og:image` sale del logotipo del tema (1200×441): en tarjeta 2:1 se
+   ve con bandas.
+4. **Los diez puntos de `§10.4.7·B`** (revisión adversarial de la T4), ninguno urgente con los
+   interruptores apagados. ▶ **Empieza por la RAÍZ**: `matches()` y `takeSlotFor()` no son la misma
+   regla, y eso explica tres de los cuatro naranjas. Medido el 20-09: de ese bloque, la mitad de
+   «`companion` no tiene ninguna prueba» **ya no es cierta** —el recibo tiene `InvitationReceiptTest`,
+   seis casos, llegaron con la T5·3—, pero **ninguno manda un valor inválido**, así que la lista
+   blanca de `completeReply()` sigue sin ejercerse. La rama `guest_data` sí sigue sin prueba.
+5. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas
    se ha visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-4. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
+6. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
    `/ligero`. Las dos medidas (F2·b, 19-09) son `/carril` y `/handoff`. Anótalo en el buzón de plataforma.
+   ⚠️ **Queda una cosa de la casa ajena**: `docs/carriles/correos.md` sigue diciendo «25 correos» y son
+   **26**. No lo toco (`#621`); está avisado en su buzón.
 
 ## Ficheros de este carril
 
@@ -67,8 +74,6 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 
 ## Trampas vivas
 
-- ⚠️ **El molde `.gf-*` es de TRES páginas** (post-form, justificante e invitación): tras tocarlo, sonda
-  Y captura de VENTANA de las tres. La de página entera cose lo pegado y no vio una barra de 401 px.
 - ⚠️⚠️ **`DisplayTime::dayLabel()` NO convierte de zona** (T6·6): sus llamantes le pasan un Carbon ya
   construido en la del parque, y una columna de la BD sale en **UTC**. Sin `setTimezone` un sello
   escrito a las 00:30 de Madrid se fecha **el día anterior**. El caso que lo vigila **congela la hora
@@ -76,17 +81,18 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía su
   propio scroll dentro del de la página y las cifras de la sonda estaban todas verdes. **Lo vio la
   captura.** Y dos pesos de botón en un bloque pequeño compiten con el «Guardar» de la barra.
-- 🩹 **LA BD LOCAL se tocó el 19-09 para poder ver la T6** (es DATO, no código): el pack **105** tiene
-  `guest_invitation = true` y `guardian_authorization = optional` (estaba en `none`, y con `none` los
-  estados de puerta **no existen** por diseño); el pedido **`R-PRBT1A`** tiene tres fichas con nombre,
-  tres respuestas y su invitación —es el de las sondas del post-form—, y **`R-PRBT64`** es la fiesta de
-  HOY con 12 invitados y una firma atada, para la puerta. Los guiones que lo montan, en la carpeta de
-  almacenamiento y sin versionar: `probe-t6-invitacion.php` (enciende el pack e imprime los enlaces),
-  `probe-t6-respuestas.php`, `probe-t6-puerta.php` y las sondas `probe-t6-ventana.mjs`,
-  `probe-t6-ficha.mjs` y `probe-t6-recordatorio.mjs`. ⚠️ Correr la del recordatorio **sube
-  `reminded_count`**: si el owner ve «lo escribiste 7 veces», es la sonda, no un defecto.
-  ⚠️ Un guion suelto se corre `php artisan tinker --execute="require base_path('storage/app/…')"`: con
-  `php storage/app/…` a secas no hay framework y sale «Class not found».
+- 🩹 **LA BD LOCAL se tocó para ver la invitación** (es DATO, no código): pack **105** con
+  `guest_invitation = true` y `guardian_authorization = optional` (con `none` los estados de puerta
+  **no existen** por diseño) · **`R-PRBT1A`**, la fiesta con fichas, respuestas e invitación ·
+  **`R-PRBT64`**, una fiesta PASADA (era «hoy» el 19-09) que sirve para el plazo CERRADO y la puerta.
+  ▶ **Una sola puerta de entrada**, en la carpeta de almacenamiento y sin versionar:
+  `probe-ojo-invitacion.php`, que imprime TODOS los enlaces del owner ya firmados para el host que él
+  usa (`localhost:8081`; la firma cubre el host) y repone lo que falte. Los
+  demás `probe-t6-*` y `probe-t7-*` siguen ahí para casos sueltos. ⚠️ **No corras
+  `probe-t6-recordatorio.mjs`** sin querer: **sube `reminded_count`**, y «lo escribiste 7 veces» es la
+  sonda, no un defecto. ⚠️ Un guion suelto se corre
+  `php artisan tinker --execute="require base_path('storage/app/…')"`: con `php storage/app/…` a secas
+  no hay framework y sale «Class not found».
 - **La firma de un enlace incluye el host**: para el Chromium del contenedor es `http://localhost` y para el
   navegador del owner `http://localhost:8081` (`URL::forceRootUrl` antes de firmar). Fixtures locales en la
   carpeta de almacenamiento de la app, no versionados: «probe-postform» (reserva `R-PRBT1A`), las tres sondas
@@ -99,8 +105,6 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 - `SidebarDomContractTest` renderiza el BUNDLE: `npm run build:ssr` antes de la suite, también tras un arnés
   de mutación (restaura el árbol, no el bundle) **y siempre que toques un `.vue`** (si no, 36 rojos que no
   son tuyos).
-- **La escala de la hoja `.gf-*` son TRES radios** (`--r-md`, `--r`, `--r-pill`) y ocho tallas:
-  `GuestFormSkinTest` pone en rojo cualquier otro. La guarda tiene razón; se cambia el valor, no la guarda.
 - ⚠️⚠️ **Un COMENTARIO puede romper un censo** (`#715`): `MailInboxLineTest` averigua el grupo del
   diccionario de cada correo con un `grep` que se queda con la PRIMERA llamada de cabecera del
   fichero, así que una nota que la escriba entre comillas para explicarla **le gana al código** y el
@@ -200,37 +204,34 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   si solo cambia el sello de `FUENTES`, ninguna regla nueva entró en el paquete. Las reglas de botón de
   la hoja apuntan al `button` y **no a `.btn`**, o el generador se las lleva al paquete (convención
   aceptada por plataforma el 19-09).
+- **Un campo traducible sale ARRAY**: concatenar `$ticketType->name` en un guion imprime «Array» con
+  un warning. En una sonda, `is_array(...) ? $x['es'] : $x`.
 - Commit por NOMBRE de fichero, nunca `git add -A`. La decisión, al final de `docs/decisiones/700-799.md`.
 
 ## Buzón
 
-### ❗ Para el carril de CORREOS (emisor: SPA, 2026-09-19) — AVISO ANTES DE TOCAR
-- ▶ **Voy a entrar en tus ficheros para la T7 de la invitación** (`celebracion-e-invitacion.md` §4.9 y
-  §10.14, plan en `#714`): `app/Notifications/GuestFormRequest.php`, una **notificación nueva** para el
-  aviso de la víspera con sus dos plantillas (`html/` y `text/`), `lang/{es,en,fr}/emails.php` y sus
-  tests; y en tu spec, el inventario **25 → 26**.
-- ✅ **HECHO Y CERRADO, la T7 entera** (`#715`→`#717`). De tus ficheros toqué **dos cosas y nada más**:
-  `GuestFormRequest` (cuatro claves por idioma; cambia cuerpo y llamada **solo** con invitación, y el
-  asunto y la línea de adelanto **no tienen variante**, para no sacarlo de tu censo) y un **correo
-  nuevo**, `VisitEveNotice` —el aviso de la víspera—, con sus cuatro piezas de bandeja en los tres
-  idiomas. **No toqué el tema, el remitente, el modo oscuro ni ningún otro de los 25.**
-- ▶ **Tu inventario pasa a 26.** Lo actualicé en tu **spec** (§0 y cabecera); **`carriles/correos.md`
-  sigue diciendo 25 y no lo toco yo** (`#621`) — es una línea tuya.
+### ❗ Para el carril de CORREOS (emisor: SPA, 19-09; cerrado el 20-09)
+- ✅ **HECHO Y CERRADO, la T7 entera** (`#715`→`#717`, spec §10.14–§10.17). De tus ficheros toqué **dos
+  cosas y nada más**: `GuestFormRequest` (cuatro claves por idioma; cambia cuerpo y llamada **solo**
+  con invitación, y el asunto y la línea de adelanto **no tienen variante**, para no sacarlo de tu
+  censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro piezas de bandeja en los tres
+  idiomas. **No toqué el tema, el remitente, el modo oscuro ni ninguno de los otros 25.**
+- ▶ **Tu inventario pasa a 26.** Actualizado en tu **spec**; **`carriles/correos.md` sigue diciendo 25
+  y no lo toco yo** (`#621`) — es una línea tuya.
 - ❗ **Un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre comillas
   para explicar el escáner, y tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el código —
-  **los 12 avisos en rojo de golpe**. Tu guarda funciona; la mutación que lo reproduce está en
+  **12 avisos en rojo de golpe**. Tu guarda funciona; la mutación que lo reproduce está en
   `scripts/mutar-invitacion-t7-1.py`. Quizá merezca una línea en tu §0.
-- ▶ **Para tu OJO en Gmail/Outlook**, que es lo que te queda: los tres correos están en Mailpit y las
-  sondas que los mandan, en la carpeta de almacenamiento (`probe-t7-correo.php`, `probe-t7-vispera.php`).
-- **Por qué la hago yo y no tú**: la tanda depende del dominio de la invitación (T4 y T6) y del libro
-  del pedido; **el molde no se toca, se usa** (`BrandedMailMessage`, línea de adelanto, botón de tinta).
-  Si prefieres cogerla tú, dilo y te la paso entera con el plan hecho.
-- **Lo que NO voy a tocar**: el tema (`vendor/mail/html/themes/brand.css`), el remitente
-  (`ApplyBusinessSender`), el modo oscuro ni ninguno de los 25 correos existentes salvo
-  `GuestFormRequest`, que gana un botón y una frase.
-- ⚠️ Anotado de tu §0: **un componente sin su gemelo en `text/` renderiza bien y REVIENTA al enviar**;
-  `Mail::fake()` intercepta antes de construir, así que un caso del remitente sale verde desconectado;
-  y un `*/` dentro de un docblock lo cierra y el render devuelve el HTML anterior sin avisar.
+- ▶ **Lo que te queda: tu OJO en Gmail/Outlook.** Los tres están en Mailpit y sus sondas, en la carpeta
+  de almacenamiento (`probe-t7-correo.php`, `probe-t7-vispera.php`). Puedes retirar este mensaje.
+
+### ❗ Para el carril de plataforma (emisor: SPA, 2026-09-20, el ✅ del owner)
+- ✅✅ **EL OWNER DIO EL VISTO BUENO A LA INVITACIÓN EN VIVO** (20-09): el bloque del anfitrión, la
+  página y sus temas, el recibo en sus dos estados, el justificante sin prerrelleno y los tres correos.
+  **El despliegue ya no está bloqueado por el ojo.** ▶ Pero **NO lo despleguéis antes que el borde
+  `§7.1·5`**, que empiezo yo ahora: hoy no muerde porque los interruptores están apagados, y encender
+  con él abierto es un «sí» adoptado que se cae al bajar invitados.
+- ⚠️ Ese ✅ **no cubre** el `.ics` en un móvil real, el Turnstile real en producción ni `§7.2·R12`.
 
 ### Para el carril de plataforma (emisor: SPA, 2026-09-20)
 - ⚠️ **Toqué un test tuyo, `tests/Feature/Api/ScheduleFactsTest.php`, porque estaba en ROJO** y me
