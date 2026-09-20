@@ -11,6 +11,7 @@ use App\Domain\Content\Contracts\SocialProof;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Services\BarPage;
 use App\Domain\Content\Services\RideMosaic;
+use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\SiteDestinations;
 use App\Domain\Payments\Services\RedsysReturnOutcome;
 use App\Domain\Platform\Models\Setting;
@@ -21,7 +22,7 @@ use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, ScheduleDisplay $schedule)
     {
         $this->maybeConsumeRedsysReturn($request);
 
@@ -208,6 +209,19 @@ class HomeController extends Controller
             // si se pintaba el modal y si se indexaba—, así que sin esta línea se habrían quedado
             // indexables sin que nada fallara. Lo fija `SeoTest::test_the_auth_doors_are_never_indexable`.
             'noindex' => AccountDoor::isAuthDoor(),
+            /*
+             * **La entradilla de «Visítanos»** (`#487`). Dice cuántos horarios hay y cuáles, en vez
+             * de afirmar un horario concreto que otra instalación no tendría.
+             *
+             * ⚠️⚠️ **Sube aquí desde la VISTA en `#662`**, donde se calculaba tras un
+             * `app(ScheduleDisplay::class)` escrito en un `@php`. La portada se muda al paquete de
+             * una instalación (`paquete-de-instancia.md` §4.7) y **una landing de instancia no
+             * instancia código del producto**: lo que cruza esa frontera son DATOS.
+             * ⚠️ La TABLA y las fechas próximas NO viajan: las resuelve `<x-site.visit>`, que es del
+             * producto y se queda. Comparten instancia con esta llamada porque el servicio es
+             * singleton — medido: si no, 8 consultas por visita en vez de 4.
+             */
+            'scheduleLede' => $schedule->weeklyLede(),
         ]);
     }
 

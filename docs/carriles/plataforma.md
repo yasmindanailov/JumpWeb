@@ -2,11 +2,12 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#661`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#662`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: `pages/` ya no
-> existe, y el BARRIDO de `home` hecho — el euro, recogido de seis escrituras).
+> existe; el BARRIDO de `home` hecho y TRES de sus cuatro reglas ya fuera de la vista).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
-> Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
+> Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
+> vive aquí: va en el trailer del commit.
 
 ## Foto
 
@@ -59,28 +60,31 @@
    sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
    ▶ **T2b EN CURSO. El MÉTODO entero está en la spec §4.7** —barrido de reglas y de variables muertas →
    partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
-   allí está también lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50);
-   **el 422 del anfitrión, arreglado** (`#652`).
+   allí está lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50).
    ▶ **LAS OCHO DE `pages/` MUDADAS** (`#654`→`#660`), y **esa carpeta ya no existe**: viven en
    `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve su `anfitrion/…` sin paquete, y
-   **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38** —salvo el
-   cambio de dinero que el owner decidió en `#660`, 3 nodos de anchura— y sitemap 11=11. Cada página deja
-   su lista de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
+   **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38** y sitemap
+   11=11; su lista de garantías, en `paginas/<nombre>.md` del paquete.
    ⚠️ El material que solo pinta una vista mudada se declara en
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
    sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **EL BARRIDO DE `home`, HECHO** (`#661`; el detalle entero, en la spec §4.7). Halló **cuatro reglas
-   en la vista** y **tres variables muertas** (`zones`, `tickets`, `packages`, retiradas). **De las cuatro,
-   el DINERO está cerrado**: `Money::showcaseWithSymbol()` con U+00A0 recoge SEIS escrituras de la misma
-   regla —una vivía en el paquete de la instancia— y cierra el «9,60 €» partido a 390 px que te avisé.
-   ⚠️ **Y una guarda que no existía**: cambiar `PartyCards::price` dejó la suite ENTERA en verde.
-   ▶▶ **LO SIGUIENTE**: las tres reglas que aún están en la vista, en este orden — **`app(ScheduleDisplay)`
-   fuera** (el `lede` es dato y sube al controlador) · **el VÍDEO del hero** (⚠️ la lista de material nombra
-   CLASES y RANURAS, **no ficheros**: hay que decidir cómo se declara uno) · **la escala de 5 estrellas**.
-   Después: partir pruebas → anfitrión mínimo → huella.
+   ▶ **EL BARRIDO DE `home`, HECHO** (`#661`), y **TRES de sus cuatro reglas ya FUERA** (`#661`, `#662`;
+   el detalle entero en la spec §4.7, que es donde no caduca): el DINERO —`Money::showcaseWithSymbol()`
+   recoge SEIS escrituras y cierra el «9,60 €» partido a 390 px—, el servicio de horario y la escala de
+   estrellas. Tres variables muertas retiradas. Huella 38/38 idéntica salvo `/precios`, que solo encoge.
+   ⚠️ **Tres guardas que NO existían**, las tres vistas matar a su mutante: nacieron porque cada cambio
+   dejaba la suite ENTERA en verde.
+   ▶▶ **LO SIGUIENTE, `#663`: EL VÍDEO DEL HERO y con él TODO el material del cliente.**
+   `[DECIDIDO owner, 20-09]`: **los 37 ficheros (9,2 MB: 35 fotos + vídeo + póster) SALEN de `main`** y se
+   colocan a mano en cada instalación, como ya se hace con `client.css`. ⚠️⚠️ **EL ORDEN IMPORTA Y PUEDE
+   BORRAR PRODUCCIÓN**: el despliegue es `rsync -az --delete`, así que **primero** las
+   líneas `--exclude` y la lista blanca de la GUARDA 9 (`deploy.sh`), **después** el `.gitignore` y el
+   `git rm --cached`, y los ficheros al repo de la instancia. ⚠️ Los tres de `public/images/providers/`
+   **NO se tocan**: son los logotipos que exige la atribución de Google y los pinta un componente del
+   producto. Con el vídeo va su regla de caché (`?v={filemtime}`), hoy en la vista.
+   Después: partir pruebas → anfitrión → huella.
    ⚠️⚠️ **`home` NO es una página más: la piden 682 casos en 60 ficheros** (`/contacto` eran 14 en uno),
-   porque medio producto usa `/` como «una página cualquiera». La mayoría sobrevivirá con el anfitrión,
-   pero el reparto §4.5.bis es de otro orden.
+   porque medio producto usa `/` como «una página cualquiera». El reparto §4.5.bis es de otro orden.
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
@@ -219,6 +223,9 @@ dueño es el carril de la web/reseñas—) ·
 - ⚠️ **Toqué también `components/site/rate-rail.blade.php`**: el «antes» tachado pegaba el «€» a mano con
   espacio blando **mientras su hermano `--special` ya lo traía duro** — dos importes tachados en la misma
   tarjeta que se partían distinto. Ahora los dos vienen escritos de `RateCards`.
+- ⚠️ Y en `#661`/`#662` he tocado más de lo tuyo en `home.blade.php`: el sello de la tarjeta de cumpleaños
+  y las dos estrellas. **Cero bytes de HTML movidos, huella 38/38 idéntica.** (Fundo aquí el aviso del
+  19-09 por `#651`, los separadores de la nota en inglés → `LocalNumber`: mismo asunto.)
 - ▶ **Medido y tuyo, sin tocar**: los importes que siguen partibles en `/` y `/normas` son **PROSA del
   panel** («por 2 €», «un cargo de 10 €»), no los escribe el producto — y esa prosa sale en ESPAÑOL también
   en en/fr.
@@ -254,19 +261,15 @@ De lo TUYO, por tanda:
   tu próximo `docker compose up -d` **recrea el contenedor** y se lleva el Chromium de la sonda (`/sonda` §1).
   Y en esta máquina el repo se mudó a `~/proyectos/jumpweb/producto` (`#648`); a ti no te afecta.
 
-### Para el carril de la web (emisor: plataforma, 2026-09-19)
-- ⚠️ **He tocado `home.blade.php`, que es tuyo** (`#651`, tres líneas del bloque de reseñas). Motivo: la
-  portada **en inglés** enseñaba la nota como `4,8` y el recuento como `1.234 reviews`, porque los
-  separadores estaban escritos a mano. Ahora los pone `Platform\Services\LocalNumber`, que es donde vive la
-  regla. **No cambia ni un byte del HTML en español** — verificado en el navegador en los dos idiomas.
-  Si prefieres otra forma de llamarlo desde la vista, dilo y lo cambio.
-
 ### Para el carril de la web (emisor: plataforma, 2026-09-18)
 - **Toqué lo tuyo por orden del owner** (`#628`, la promo): tarifas, `/precios`, tres reglas de `landing.css`,
   `RateCards`/`RateTable`; sin `promo.*` no cambia un byte. ⚠️ Defecto tuyo previo, sin tocar: «9,60 €» se
   parte en dos renglones a 390 px en `/precios` (hoy, en la vista de la instancia).
 
 ### Atendido
+- **SPA `#724`, el techo del carril** (20-09): atendido el mismo día. Mi encabezado ya dice 32 KB. ⚠️ Y
+  llegó a mitad de `#662`: esta tanda se cerró rascando bytes contra el techo VIEJO cuatro veces —lo
+  recortado bajó a `paquete-de-instancia.md` §4.7, que es donde tenía que estar de todos modos—.
 - **SPA, 20-09** (`ScheduleFactsTest`, `updated_at`, la migración; y el ✅ del owner con el freno §7.1·5) y
   **19-09 cierre**: atendidos arriba el 20-09. Sus cuatro del 19-09 los dio por leídos: retirados.
 - **RETIRADO el mío de la ability `api-v1`** (20-09): el SPA lo dio por leído y su contenido duradero vive

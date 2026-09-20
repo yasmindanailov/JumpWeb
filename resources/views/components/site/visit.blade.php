@@ -1,6 +1,16 @@
-@props([
-    'schedule',          // App\Domain\Content\Services\ScheduleDisplay (lo pasa el HomeController)
-])
+{{-- ⚠️⚠️ **Este componente RESUELVE su servicio, no lo recibe** (`#662`). Antes llegaba por props
+     desde `home.blade.php`, que lo instanciaba con `app(ScheduleDisplay::class)` en un bloque de PHP
+     en línea — y esa vista se muda al paquete de una instalación (`paquete-de-instancia.md` §4.7):
+     **una landing de instancia no instancia código del producto**, y lo que cruza esa frontera son
+     DATOS.
+     ▶ No es una excepción de estilo: seis componentes de `site/` ya resuelven con `app()`, y éste ya
+     leía `$site` y `$heroStatus` del composer global sin pedirlos por props.
+     ⚠️ El servicio es **singleton** (`AppServiceProvider`): sin eso, el `weeklyLede()` del
+     controlador y estas dos llamadas serían dos instancias y **8 consultas en vez de 4**.
+     ⚠️⚠️ **Y aquí ponía el nombre de la directiva de bloque de PHP, y rompió la página**: Blade
+     extrae esos bloques ANTES de quitar los comentarios, con un patrón no codicioso, así que el de
+     esta línea se emparejó con el cierre de abajo y **se tragó la definición de `$hayHorario`**. Es
+     `#715` otra vez: si nombras en prosa el patrón que un escáner busca, cámbialo. --}}
 
 {{--
     **07 · VISÍTANOS** — carril de diseño Fase 2 · T2g (`DECISIONES #487`). Artboards
@@ -35,6 +45,7 @@
 --}}
 
 @php
+    $schedule = app(\App\Domain\Content\Services\ScheduleDisplay::class);
     $rows = $schedule->weeklyRows();
     $specials = $schedule->upcomingSpecialDates(40);
     $hasAddress = filled($site['address1'] ?? null) || filled($site['address2'] ?? null);

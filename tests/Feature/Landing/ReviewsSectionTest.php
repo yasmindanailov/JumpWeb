@@ -257,6 +257,51 @@ class ReviewsSectionTest extends TestCase
     }
 
     /**
+     * **La tarjeta dibuja la ESCALA ENTERA, llenas y vacías** (`#662`).
+     *
+     * ❗❗ **Esta guarda nace porque no había ninguna que contara glifos.** `#662` bajó el número de
+     * la escala a `Rating::MAX` —estaba tecleado dos veces en la portada, en la tarjeta y en la chapa
+     * de la media— y **la suite entera se quedó verde**: el único caso que miraba las estrellas
+     * aseveraba el `aria-label`, que sale de `lang/` y no del dibujo. Con eso, una instalación que
+     * pintara cuatro estrellas seguiría diciendo «sobre 5» sin que nada fallara.
+     *
+     * ⚠️ La nota es **3 y no 5 a propósito**: con 5 no hay ni una estrella vacía, así que el caso no
+     * distinguiría «dibuja la escala entera» de «dibuja solo las llenas» — que es justo la mitad que
+     * se rompe al teclear el número.
+     *
+     * ❗❗ **Y las cifras se escriben A MANO, no con `Rating::MAX`.** La primera versión de este caso
+     * esperaba `Rating::MAX - 3` vacías y **el mutante que baja la escala a 4 SOBREVIVIÓ**: la vista
+     * dibujaba una vacía y el caso esperaba una, comparándose consigo mismo. Es la lección 2 de
+     * `#660`, cazada aquí por el mismo método. *El valor esperado no puede salir de lo que se mide.*
+     */
+    public function test_la_tarjeta_dibuja_la_escala_entera(): void
+    {
+        Testimonial::query()->create([
+            'text' => ['es' => 'Una opinión con tres estrellas.'],
+            'author' => 'Persona 1',
+            'rating' => 3,
+            'published_at' => now()->subMonth(),
+            'position' => 1,
+            'is_active' => true,
+        ]);
+
+        $seccion = $this->seccion();
+
+        preg_match('#<span class="rev__stars-on"[^>]*>([^<]*)</span>#', $seccion, $llenas);
+        preg_match('#class="rev__stars-off"[^>]*>([^<]*)</span>#', $seccion, $vacias);
+
+        $this->assertNotEmpty($llenas, 'el caso nace sin sujeto: la tarjeta no pinta estrellas llenas');
+        $this->assertNotEmpty($vacias, 'el caso nace sin sujeto: la tarjeta no pinta estrellas vacías');
+
+        $nLlenas = mb_strlen(trim($llenas[1]));
+        $nVacias = mb_strlen(trim($vacias[1]));
+
+        $this->assertSame(3, $nLlenas, 'las estrellas llenas no son la nota');
+        $this->assertSame(2, $nVacias, 'las vacías no completan la escala de cinco');
+        $this->assertSame(5, $nLlenas + $nVacias, 'la tarjeta no dibuja la escala entera');
+    }
+
+    /**
      * **La inicial se corta por CARACTERES, no por bytes.**
      *
      * ⚠️ Con `substr`, un nombre que empieza por acento se parte por la mitad y el círculo pinta un

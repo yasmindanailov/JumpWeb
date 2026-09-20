@@ -241,4 +241,38 @@ class ScheduleDisplayTest extends TestCase
 
         $this->travelBack();
     }
+
+    /**
+     * **El servicio se memoiza POR PETICIÓN, y ni más ni menos** (`#662`).
+     *
+     * ❗❗ Las dos mitades son necesarias y cada una mata a un mutante distinto:
+     *  · **La misma dentro de una petición** — el servicio memoiza el horario, las temporadas y la
+     *    fecha especial de hoy por instancia, y desde `#662` lo piden dos sitios de la misma
+     *    petición (el controlador para la entradilla, `<x-site.visit>` para la tabla). Sin memoizar
+     *    son **58 consultas en la portada en vez de 54**, medido — y nada se pondría rojo.
+     *  · **Distinta entre peticiones** — con un `singleton` o un `scoped` la instancia sobrevive
+     *    entre los `get()` de una misma prueba (ni el Kernel HTTP ni el `TestCase` olvidan los
+     *    `scoped`), así que un caso que escriba una `SpecialDate` entre dos peticiones leería el
+     *    horario de la anterior. Fue el primer intento de `#662` y tumbó cuatro casos de
+     *    `VisitSectionTest`.
+     */
+    public function test_the_schedule_service_is_memoised_per_request_and_not_beyond(): void
+    {
+        $primera = app(ScheduleDisplay::class);
+
+        $this->assertSame(
+            $primera,
+            app(ScheduleDisplay::class),
+            'dentro de una petición se construye dos veces: el horario se consulta el doble',
+        );
+
+        // Una petición nueva sustituye la `request` del contenedor, y con ella la memoización.
+        $this->get('/')->assertOk();
+
+        $this->assertNotSame(
+            $primera,
+            app(ScheduleDisplay::class),
+            'la instancia sobrevive a la petición: un cambio de horario no se vería hasta reiniciar',
+        );
+    }
 }

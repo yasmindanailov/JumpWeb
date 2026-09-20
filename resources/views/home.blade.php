@@ -2,17 +2,14 @@
      —`/registro`, `/login`, `/recuperar-contrasena`— y falso en la home y en `/entradas`, que son la
      misma vista. Sustituye al efecto lateral que tenía el prop `auth-modal` (`AccountDoor`). --}}
 <x-layout :title="$site['tagline'] ?? __('landing.footer.tag')" :full-title="$site['seo_title'] ?? null" :noindex="$noindex ?? false" :has-hero="true">
-@php
-    // Horario del parque data-driven (#207): misma fuente que las reservas (opening_hours +
-    // temporadas + fechas especiales), agrupado para mostrar.
-    $schedule = app(\App\Domain\Content\Services\ScheduleDisplay::class);
-    // La entradilla de «Visítanos» sale del MISMO servicio (`#487`): dice cuántos horarios hay y
-    // cuáles, en vez de afirmar un horario concreto que otra instalación no tendría.
-    $scheduleLede = $schedule->weeklyLede();
-    // ⚠️ Aquí se calculaban `$totalSqm`, `$totalRides`, `$totalZones` y `$totalLabels`, la tira de
-    // cifras de la sección de zonas. `[DECIDIDO owner, 2026-08-31]` (`#302`): **las tarjetas de zona
-    // y las cifras, fuera**. Se van con su consumidor, igual que sus claves de idioma y su CSS.
-@endphp
+{{-- ⚠️⚠️ **Aquí vivía un `app(\App\…\ScheduleDisplay::class)`** y de él salían la entradilla de
+     «Visítanos» y el objeto que se le pasaba a `<x-site.visit>`. **Retirado en `#662`**: esta vista se
+     muda al paquete de una instalación, y una landing de instancia **no instancia código del
+     producto** (`paquete-de-instancia.md` §4.7). Hoy el `lede` llega como DATO del controlador y la
+     tabla la resuelve el componente, que es del producto.
+     ⚠️ Y antes de aquello se calculaban `$totalSqm`, `$totalRides`, `$totalZones` y `$totalLabels`, la
+     tira de cifras de la sección de zonas. `[DECIDIDO owner, 2026-08-31]` (`#302`): **las tarjetas de
+     zona y las cifras, fuera**. Se fueron con su consumidor, con sus claves de idioma y su CSS. --}}
 
 <div x-data="landing">
     {{-- El salto al contenido ya NO se pinta aquí: lo sirve `<x-site.nav>` para las DOCE vistas
@@ -1017,7 +1014,7 @@
                              estrella es su propia caja de 24 y su relleno es un porcentaje de ella. --}}
                         <p class="rev-score__stars" role="img"
                            aria-label="{{ __('landing.reviews.score_aria', ['value' => \App\Domain\Platform\Services\LocalNumber::decimal($socialRating->value)]) }}">
-                            @for ($e = 1; $e <= 5; $e++)
+                            @for ($e = 1; $e <= \App\Domain\Content\Contracts\Rating::MAX; $e++)
                                 @php($lleno = max(0, min(1, $socialRating->value - $e + 1)))
                                 <span class="rev-score__star" aria-hidden="true">
                                     <span class="rev-score__star-off">&#9733;</span>
@@ -1175,8 +1172,11 @@
                                                  «estrella estrella estrella…», que no dice la nota. --}}
                                             <p class="rev__stars" role="img"
                                                aria-label="{{ trans_choice('landing.reviews.stars', $op->rating, ['n' => $op->rating]) }}">
+                                                {{-- ⚠️ La ESCALA la dice el producto (`#662`): aquí
+                                                     estaba tecleada, y también en la chapa de la
+                                                     media, a ochenta líneas de aquí. --}}
                                                 <span class="rev__stars-on" aria-hidden="true">{{ str_repeat('★', $op->rating) }}</span><span
-                                                      class="rev__stars-off" aria-hidden="true">{{ str_repeat('★', 5 - $op->rating) }}</span>
+                                                      class="rev__stars-off" aria-hidden="true">{{ str_repeat('★', \App\Domain\Content\Contracts\Rating::MAX - $op->rating) }}</span>
                                             </p>
                                         @endif
                                     </div>
@@ -1363,7 +1363,7 @@
                 <p class="sec-head__lede">{{ $scheduleLede }}</p>
             @endif
         </div>
-        <x-site.visit :schedule="$schedule" />
+        <x-site.visit />
     </section>
 
     {{-- ⚠️⚠️ **AQUÍ ESTABA LA SECCIÓN DE NORMAS Y SE HA RETIRADO** (`#485`, Fase 2 · T2f). No se

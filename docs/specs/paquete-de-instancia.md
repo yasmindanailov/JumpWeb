@@ -372,8 +372,32 @@ transacción escriben igual (`#660`, lección 3), y se vio MATAR al mutante. Y *
 ⚠️ `CatalogTest` llevaba un `str_replace(' €', '&nbsp;€', $html)` **que normalizaba justo la diferencia que
 vigilaba**: una guarda que normaliza lo que mira no mira nada.
 
-▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) — bajar las tres reglas que siguen en
-la vista, partir pruebas, anfitrión mínimo y huella. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
+▶ **DOS REGLAS MÁS, FUERA** (`#662`, 20-09; huella idéntica en las 38 pantallas):
+- **El servicio de horario.** El `lede` sube al controlador como DATO y `<x-site.visit>` resuelve lo suyo.
+  ❗❗ **El primer diseño fue un `singleton` y lo tumbaron cuatro casos de `VisitSectionTest`**, y la lección
+  es del arnés de cualquier tanda: **ni el Kernel HTTP ni el `TestCase` llaman a
+  `forgetScopedInstances()`** —medido—, así que `singleton` y `scoped` se portan IGUAL y la instancia
+  **sobrevive entre las peticiones de una misma prueba**. Un caso que escriba entre dos `get()` lee lo
+  memoizado de antes, y **en producción no se vería nunca**: una petición, un contenedor. *Cuando hace
+  falta memoizar por petición, el límite lo pone la `request`, no el contenedor* — que es lo que esta casa
+  ya hacía con el payload del composer.
+- **La escala de estrellas**, tecleada dos veces en la misma página → `Rating::MAX`.
+
+❗❗ **Y las dos formas de equivocarse que dejó esta tanda, las dos transferibles:**
+1. **Un comentario puede romper la página, no solo un censo.** Escribir el nombre de la directiva de bloque
+   PHP **dentro de un comentario Blade** dejó la portada en 500: Blade extrae esos bloques **antes** de
+   quitar los comentarios y con patrón NO codicioso, así que el del comentario se emparejó con el cierre
+   real de cincuenta líneas más abajo y **se tragó la definición de una variable**. Es `#715` con otro
+   escáner: *si nombras en prosa el patrón que una herramienta busca, cámbialo.*
+2. **Una guarda nueva puede nacer ciega, y solo lo dice el mutante.** La de la escala esperaba
+   `Rating::MAX - 3` estrellas vacías: al bajar la constante a 4, la vista dibujaba una y el caso esperaba
+   una — **comparándose consigo mismo**, y el mutante SOBREVIVIÓ. Es la lección 2 de `#660` (`#660` la
+   aprendió con `min()`; aquí con una constante), y la salida es la misma: **el valor esperado se teclea**.
+
+▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) — el vídeo del hero con su regla de
+caché (el material del cliente **sale de `main`**, `[DECIDIDO owner]` 20-09: se coloca a mano como
+`client.css`; ⚠️ el despliegue es `rsync --delete`, así que las exclusiones van ANTES que el `git rm`),
+partir pruebas, anfitrión mínimo y huella. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
 en 60 ficheros**, porque medio producto usa `/` como «una página cualquiera» para ejercitar el armazón, las
 cookies, el tema, el idioma, las cabeceras y el montaje del cajón. Las ocho anteriores tenían sus pruebas
 concentradas (`/contacto`: 14 casos en un fichero). Después, T3–T5 (spec hermana §4.6).

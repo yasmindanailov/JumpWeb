@@ -11,6 +11,24 @@ namespace App\Domain\Content\Contracts;
  */
 final readonly class Rating
 {
+    /**
+     * **La ESCALA: sobre cuántas estrellas se cuenta una nota** (`#662`).
+     *
+     * ❗❗ **Vive aquí porque estaba escrita DOS VECES en la portada** —`str_repeat('★', 5 - $rating)`
+     * en la tarjeta de cada opinión y `@for ($e = 1; $e <= 5; …)` en la chapa de la media—, y esa
+     * vista se muda al paquete de una instalación (`paquete-de-instancia.md` §4.7). Con el número
+     * dentro de la vista, cada instancia re-decidiría la escala, y una que escribiera 4 dibujaría
+     * cuatro estrellas mientras el rótulo accesible —que sale de `lang/`— seguiría diciendo «sobre
+     * 5». *Una escala no se teclea en el sitio donde se dibuja.*
+     *
+     * ⚠️ **No es configurable y no debe serlo**: la fija la FUENTE. Places devuelve 1–5 y el panel
+     * ofrece un desplegable de 1 a 5 (`TestimonialForm`). Un ajuste aquí sería una promesa que
+     * ninguna de las dos fuentes puede cumplir.
+     * ⚠️ El texto «sobre 5» de `landing.reviews.{stars,out_of,score_aria}` es COPIA y se queda en
+     * `lang/`: son nueve cadenas que escribe un traductor, no aritmética.
+     */
+    public const MAX = 5;
+
     public function __construct(
         /** La media, tal como la da la fuente (p. ej. 4.8). */
         public float $value,

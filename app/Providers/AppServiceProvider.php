@@ -36,6 +36,7 @@ use App\Domain\Content\Services\FallingBackSocialProof;
 use App\Domain\Content\Services\GoogleSocialProof;
 use App\Domain\Content\Services\HeroStatus;
 use App\Domain\Content\Services\MapsEmbed;
+use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\SocialEmbed;
 use App\Domain\Identity\Listeners\SignPendingWaiverOnVerification;
 use App\Domain\Identity\Models\Consent;
@@ -84,11 +85,52 @@ class AppServiceProvider extends ServiceProvider
     /** Clave de memoización del payload del composer en `request()->attributes` (Sistema 6 · W1). */
     private const SHARED_VIEW_DATA_KEY = 'app.shared_view_data';
 
+    /** Clave de memoización de `ScheduleDisplay` en `request()->attributes` (`#662`). */
+    private const SCHEDULE_DISPLAY_KEY = 'app.schedule_display';
+
     public function register(): void
     {
         // Contexto de cuenta del cliente (#221): singleton para memoizar por petición — el nav
         // (puntito de aviso) y el sidebar lo piden por separado y comparten una única consulta.
         $this->app->singleton(CustomerAccountContext::class);
+
+        /*
+         * **Horario para mostrar: memoizado en la PETICIÓN, no en el contenedor** (`#662`).
+         *
+         * El servicio memoiza el horario semanal, las temporadas y la fecha especial de hoy **por
+         * instancia**, y desde `#662` lo piden DOS sitios de la misma petición por separado: el
+         * controlador, para la entradilla de «Visítanos», y `<x-site.visit>`, para la tabla y las
+         * fechas próximas. Medido en la portada: **compartiendo instancia, 54 consultas; sin
+         * compartirla, 58**. Antes lo compartía la VISTA, que resolvía el servicio y pasaba el objeto
+         * al componente — y eso es justo lo que `#662` retira, porque esa vista se muda al paquete de
+         * una instalación (`paquete-de-instancia.md` §4.7).
+         *
+         * ❗❗ **Y por eso NO es un `singleton`, que fue el primer intento y lo tumbaron cuatro casos
+         * de `VisitSectionTest`.** Ni el Kernel HTTP ni el `TestCase` llaman a
+         * `forgetScopedInstances()` —medido—, así que `singleton()` y `scoped()` se comportan igual:
+         * la instancia **sobrevive entre las peticiones de una misma prueba**, y un caso que escriba
+         * una `SpecialDate` entre dos `get()` lee el memoizado de la anterior. En producción no se
+         * vería nunca (una petición, un contenedor), que es la peor clase de defecto.
+         *
+         * ▶ La salida es la que esta casa ya usa para el payload del composer
+         * ({@see SHARED_VIEW_DATA_KEY}): memoizar en `request()->attributes`. El Kernel sustituye la
+         * `request` del contenedor en cada petición, así que el límite de la memoización **es el
+         * límite de la petición**, también en una prueba.
+         */
+        $this->app->bind(ScheduleDisplay::class, function ($app): ScheduleDisplay {
+            $request = $app['request'];
+            $memo = $request->attributes->get(self::SCHEDULE_DISPLAY_KEY);
+
+            if ($memo instanceof ScheduleDisplay) {
+                return $memo;
+            }
+
+            // ⚠️ `build()` y no `make()`: `make()` volvería a entrar por este mismo binding.
+            $memo = $app->build(ScheduleDisplay::class);
+            $request->attributes->set(self::SCHEDULE_DISPLAY_KEY, $memo);
+
+            return $memo;
+        });
 
         // ⚠️⚠️ **El binding vive AQUÍ y no en `BookingServiceProvider`, y es una consecuencia de la
         // frontera, no una preferencia** (`specs/invitados-en-post-form.md` §4.4, `#444`): Booking
