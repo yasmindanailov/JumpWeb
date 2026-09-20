@@ -133,6 +133,17 @@ return [
         'outro_invite' => 'Si tu préfères le remplir à la main, c’est la même page : le formulaire est juste en dessous de l’invitation. Tu peux aussi y aller depuis « Mes réservations ». Merci !',
     ],
     // L'avis de la veille (T7·2b). Part l'après-midi d'AVANT, et seulement s'il reste quelque chose.
+    // La fiche Google du parc a changé (`specs/google-business-profile.md` §4.2·4, `#725`).
+    'google_business_location' => [
+        'subject' => 'Fiche Google : désormais « :name »',
+        'preheader' => 'Les avis de la page d’accueil proviennent maintenant d’une autre fiche.',
+        'badge' => 'Fiche modifiée',
+        'headline' => 'La fiche Google a été changée',
+        'intro' => ':actor a connecté la fiche « :name » depuis le panneau. Les avis publiés sur la page d’accueil proviennent désormais de cette fiche.',
+        'previous' => 'Auparavant, c’était « :name ».',
+        'what_to_do' => 'Si ce n’était pas voulu, va dans Réglages → Contenu web → Fiche Google et choisis à nouveau la bonne. En attendant, la page d’accueil affichera les avis de la nouvelle fiche.',
+    ],
+
     'visit_eve' => [
         'subject' => 'Ta fête, c’est demain · :code',
         'preheader' => 'Il reste deux ou trois choses à boucler, et rien de grave.',

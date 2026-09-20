@@ -34,6 +34,32 @@
                 {{ __('admin.google_business.linked_location', ['name' => $conexion->location_title]) }}
             </p>
         @endif
+
+        {{-- Quién conectó y cuándo (§4.2·1): la pregunta que se hace quien llega y no estaba. --}}
+        @if ($this->conectadaPor())
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ __('admin.google_business.connected_by', [
+                    'name' => $this->conectadaPor(),
+                    'date' => $conexion?->connected_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '—',
+                ]) }}
+            </p>
+        @endif
+
+        @if ($this->puedeDesconectar())
+            {{--
+                POST y con CSRF: retirar el permiso sobre la ficha del parque no puede depender de
+                que alguien abra un enlace (§4.2·8).
+            --}}
+            <form method="POST" action="{{ route('admin.google_business.disconnect') }}" class="mt-5">
+                @csrf
+                <x-filament::button type="submit" size="sm" color="danger" outlined>
+                    {{ __('admin.google_business.disconnect') }}
+                </x-filament::button>
+                <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                    {{ __('admin.google_business.disconnect_hint') }}
+                </span>
+            </form>
+        @endif
     </div>
 
     {{-- Elegir la ficha (§4.2·4). Solo cuando hay permiso: sin él no hay nada que listar. --}}

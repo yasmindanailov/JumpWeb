@@ -132,6 +132,17 @@ return [
         'outro_invite' => 'If you would rather fill it in by hand, it is the same page: the form sits right below the invitation. You can also get there from "My bookings". Thank you!',
     ],
     // The eve notice (T7·2b). Goes out the afternoon BEFORE, and only if something is still pending.
+    // The park's Google listing changed (`specs/google-business-profile.md` §4.2·4, `#725`).
+    'google_business_location' => [
+        'subject' => 'Google listing: now “:name”',
+        'preheader' => 'The reviews on the home page now come from a different listing.',
+        'badge' => 'Listing changed',
+        'headline' => 'The Google listing was changed',
+        'intro' => ':actor connected the listing “:name” from the admin panel. The reviews published on the home page now come from that listing.',
+        'previous' => 'It was “:name” before.',
+        'what_to_do' => 'If this was not intended, go to Settings → Web content → Google listing and pick the right one again. Until then the home page will show the new listing’s reviews.',
+    ],
+
     'visit_eve' => [
         'subject' => 'Your party is tomorrow · :code',
         'preheader' => 'A couple of things are still open, and none of them is serious.',

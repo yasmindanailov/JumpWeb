@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
 use App\Domain\Platform\Exceptions\GoogleBusinessException;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Services\AuditLogger;
+use App\Domain\Platform\Services\GoogleBusinessChoice;
 use App\Domain\Platform\Services\GoogleBusinessConnector;
 use App\Domain\Platform\Services\GoogleBusinessCredentials;
 use App\Domain\Platform\Services\GoogleBusinessOAuth;
 use App\Http\Auth\GoogleBusinessOAuthSession;
 use App\Http\Controllers\Controller;
+use App\Notifications\GoogleBusinessLocationChanged;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * **Conectar la ficha de Google**, las dos peticiones de navegador
@@ -141,7 +146,7 @@ class GoogleBusinessConnectController extends Controller
         }
 
         try {
-            $connector->chooseLocation($token, $name, (int) Auth::id(), $request->boolean('confirmed'));
+            $eleccion = $connector->chooseLocation($token, $name, (int) Auth::id(), $request->boolean('confirmed'));
         } catch (GoogleBusinessException $e) {
             return $this->back('google-business-'.str_replace('_', '-', $e->reason));
         } catch (GoogleBusinessApiException $e) {
@@ -150,7 +155,66 @@ class GoogleBusinessConnectController extends Controller
             return $this->back('google-business-api-failed');
         }
 
+        if ($eleccion->changed) {
+            $this->warnAdmins($eleccion);
+        }
+
         return $this->back('google-business-location-chosen');
+    }
+
+    /**
+     * **Desconectar** (§4.2·8). **Solo POST**, y con CSRF: retirar el permiso de la ficha del parque
+     * no puede depender de que alguien abra un enlace.
+     */
+    public function disconnect(Request $request, GoogleBusinessConnector $connector): RedirectResponse
+    {
+        $this->authorizeSettings($request);
+
+        $token = $connector->disconnect((int) Auth::id());
+
+        if ($token === null) {
+            return $this->back('google-business-not-connected');
+        }
+
+        // ⚠️ Fuera de la transacción y sin bloquear el desenlace: lo de casa ya está borrado, y si
+        // Google no atiende la revocación **se le dice al admin cómo retirarla a mano** (§4.2·8), que
+        // es lo único accionable que queda.
+        return $this->back($connector->revoke($token)
+            ? 'google-business-disconnected'
+            : 'google-business-disconnected-not-revoked');
+    }
+
+    /**
+     * **El aviso del §4.2·4**, a todo el que pueda tocar esto.
+     *
+     * ⚠️ **Va aquí y no en el servicio**: `User` vive en Identity y Platform no puede mirar a ningún
+     * módulo (`ModuleBoundariesTest`). La capa de entrega es el composition root y sí ve a los dos —
+     * la misma frontera que hizo que «quién conectó» sea una FK sin relación (`#720`).
+     *
+     * ⚠️ **Avisar no puede tumbar el gesto**: el cambio ya está guardado y auditado. Si el correo
+     * falla, se registra y se sigue; lo contrario sería perder una elección legítima por un SMTP.
+     */
+    private function warnAdmins(GoogleBusinessChoice $eleccion): void
+    {
+        try {
+            $destinatarios = User::query()
+                ->whereHas('roles', fn (Builder $roles) => $roles
+                    ->where('name', 'admin')
+                    ->orWhereHas('permissions', fn (Builder $permisos) => $permisos->where('name', 'settings.manage')))
+                // Una cuenta anonimizada tiene un correo sintético que rebota (`RGPD-01`).
+                ->where('email', 'not like', '%@'.User::ANONYMIZED_EMAIL_DOMAIN)
+                ->get();
+
+            Notification::send($destinatarios, new GoogleBusinessLocationChanged(
+                $eleccion->location->title,
+                $eleccion->previousTitle,
+                // Sin `?->`: llegar aquí exige haber pasado `auth` y `settings.manage`, así que el
+                // usuario existe — y Larastan lo ve.
+                (string) Auth::user()->name,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('google_business.location_warning_failed', ['error' => $e::class]);
+        }
     }
 
     /**

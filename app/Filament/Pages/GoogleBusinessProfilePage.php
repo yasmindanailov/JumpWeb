@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
 use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
@@ -121,6 +122,26 @@ class GoogleBusinessProfilePage extends Page
     public function fichaElegida(): ?string
     {
         return $this->conexion()?->location_name;
+    }
+
+    /**
+     * **Quién conectó** (§4.2·1), por su nombre.
+     *
+     * ⚠️ Se resuelve AQUÍ y no con una relación de Eloquent: la conexión vive en Platform, que no
+     * puede mirar a Identity (`ModuleBoundariesTest`), así que guarda la FK sin relación (`#720`). La
+     * capa de entrega sí ve a los dos, y esto es la capa de entrega.
+     */
+    public function conectadaPor(): ?string
+    {
+        $id = $this->conexion()?->connected_by_user_id;
+
+        return $id === null ? null : User::query()->whereKey($id)->value('name');
+    }
+
+    /** ¿Hay algo que desconectar? Sin token no hay permiso que retirar. */
+    public function puedeDesconectar(): bool
+    {
+        return $this->conexion()?->hasStoredToken() === true;
     }
 
     /** @var list<GoogleBusinessLocation>|null */

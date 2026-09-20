@@ -1790,6 +1790,9 @@ return [
         'choose' => '使用此资料',
         'confirm_change' => '确认改用此资料',
         'current' => '使用中',
+        'connected_by' => '由 :name 于 :date 连接。',
+        'disconnect' => '断开连接',
+        'disconnect_hint' => '撤销 Google 中的授权，并删除我们保存的商家资料数据。',
         'no_locations' => '所连接的账号未管理任何商家资料。请在乐园的商家资料中将其添加为管理员后重试。',
         'choose_failed' => '无法向 Google 获取商家资料列表。请稍后重新加载此页面。',
         'states' => [
@@ -1835,6 +1838,9 @@ return [
             'location-host-mismatch' => '该资料的网址与本站不一致，可能是其他商家的资料。请在商家资料中更正网址，或另选一个。',
             'location-changed' => '⚠️ 该资料与当前使用的不同：更换会改变首页所发布评价的归属商家。请再次点击以确认。',
             'api-failed' => 'Google 未正确响应。未做任何更改，请稍后重试。',
+            'disconnected' => '已断开连接。我们已撤销 Google 的授权并删除保存的数据。',
+            'disconnected-not-revoked' => '此处已断开，但 Google 未确认撤销授权。请在 Google 账号中手动移除：管理你的账号 → 安全性 → 有访问权限的应用。',
+            'not-connected' => '此前没有已连接的商家资料，因此无需断开。',
         ],
     ],
 

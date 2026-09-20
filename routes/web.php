@@ -406,6 +406,11 @@ Route::get('/admin/ficha-google/callback', [GoogleBusinessConnectController::cla
 Route::post('/admin/ficha-google/elegir', [GoogleBusinessConnectController::class, 'chooseLocation'])
     ->middleware(['web', 'auth', 'panel_role', 'throttle:20,1'])
     ->name('admin.google_business.choose');
+// Desconectar (§4.2·8). **Solo POST**: retirar el permiso sobre la ficha del parque no puede
+// depender de que alguien abra un enlace.
+Route::post('/admin/ficha-google/desconectar', [GoogleBusinessConnectController::class, 'disconnect'])
+    ->middleware(['web', 'auth', 'panel_role', 'throttle:10,1'])
+    ->name('admin.google_business.disconnect');
 
 // Panel admin — Fase 6 · waiver: PDF del REGISTRO probatorio de una firma (`specs/waiver-probatorio.md`
 // §4.5). Permiso PROPIO `waiver.view` (comprobado en el controlador) + IDOR (la firma debe ser del

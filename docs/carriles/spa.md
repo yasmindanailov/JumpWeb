@@ -1,6 +1,6 @@
 # Carril · Diseño del SPA (el cajón)
 
-> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#723`** · Arranque de la máquina:
+> Máquina: **el OTRO ordenador** · Banda: **700–729** · Último usado: **`#725`** · Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
@@ -28,13 +28,15 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅ **T1·1 → T1·3b EN EL ÁRBOL** (`#720`→`#723`): tabla y siete estados · **PKCE**, canje y la
-   pantalla en Ajustes → Web · el **cliente de la API** · y **elegir y revalidar la ficha**. 91 casos,
-   arneses 12/12, 15/15, 10/10 y 11/11. ⚠️ **La migración está aplicada SOLO en la BD local.**
-   ✅ La pantalla la vio el owner (20-09) en «Sin configurar», el estado de hoy.
-   ▶ **Sigue la T1·4**: quién conectó y la última pasada (§4.2·1) · desconectar (§4.2·8) · **el correo
-   a los admins** del §4.2·4, que aún no está y sube el censo de correos a 27 · `verify` (§4.2·10).
-   Contra un DOBLE, con `Http::preventStrayRequests()`. El estado entero, **en la §4.1 de la spec**.
+   ✅ **T1·1 → T1·4 EN EL ÁRBOL** (`#720`→`#725`): tabla y siete estados · **PKCE**, canje y la
+   pantalla en Ajustes → Web · el **cliente de la API** · **elegir y revalidar la ficha** · y
+   **desconectar + el aviso a los admins**. 107 casos, arneses 12/12, 15/15, 10/10, 11/11 y 11/11.
+   ⚠️ **La migración está aplicada SOLO en la BD local.** ✅ La pantalla la vio el owner (20-09) en
+   «Sin configurar», el estado de hoy — **el resto de sus estados no los ha visto nadie**.
+   ▶ **Sigue**: `business-profile:verify` (§4.2·10) —sin imprimir tokens, correos ni cuerpos, con
+   canario— y la **última pasada** en la pantalla, que no tiene qué enseñar hasta que la T2
+   sincronice. Contra un DOBLE, con `Http::preventStrayRequests()`. El estado entero, **§4.1 de la
+   spec**. ▶ Y con la T1 cerrada, la **T2: las reseñas** (§4.3).
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
    owner—. El **§7·A está reescrito**: no necesita ficha propia, y el **vídeo** de verificación va
    **tras la T1**. Empieza por el §0 y el **§1.3**.
@@ -231,9 +233,10 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   mutación, en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
 - ▶ **Te queda tu OJO en Gmail/Outlook**: los tres en Mailpit; sondas en almacenamiento
   (`probe-t7-correo.php`, `probe-t7-vispera.php`).
-- ⏳ **Y te llega OTRO** (20-09): la T1·4 de `#524` trae un **aviso a los admins** cuando cambia la
-  ficha de Google del parque (§4.2·4). **Sube tu censo a 27** y necesita sus cuatro piezas en los tres
-  idiomas. Aún no está escrito: lo digo antes para que no te aparezca un rojo de la nada.
+- ✅ **Y te llegó OTRO, ya HECHO** (20-09, `#725`): `GoogleBusinessLocationChanged`, el aviso a los
+  admins cuando cambia la ficha de Google del parque (§4.2·4). **Tu censo pasa a 27**, con sus cuatro
+  piezas en `es`/`en`/`fr`. No toqué ni el tema, ni el remitente, ni ninguno de los otros 26.
+  ▶ **Te queda tu OJO**: no lo he visto en Mailpit ni en un cliente de correo.
 
 ### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (banda 580–609); la numero desde

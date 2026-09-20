@@ -147,6 +147,20 @@ return [
     // ── EL AVISO DE LA VÍSPERA (T7·2b, `specs/celebracion-e-invitacion.md` §4.9) ──────────────────
     // ❗❗ Sale la tarde ANTES y SOLO si queda algo por hacer. Por eso puede permitirse ser concreto:
     // quien lo recibe tiene algo pendiente de verdad, y aún le da tiempo.
+    // La ficha de Google del parque ha cambiado (`specs/google-business-profile.md` §4.2·4, `#725`).
+    // ⚠️ Lo que está en juego no es un ajuste: es de qué negocio son las reseñas de la portada.
+    'google_business_location' => [
+        // El dato delante: en el corte de una lista de móvil tiene que entrar el rótulo.
+        'subject' => 'Ficha de Google: ahora es «:name»',
+        // Sin datos variables y sin repetir el asunto (`#506`).
+        'preheader' => 'Las reseñas de la portada pasan a ser las de otra ficha.',
+        'badge' => 'Cambio en la ficha',
+        'headline' => 'Han cambiado la ficha de Google',
+        'intro' => ':actor ha conectado la ficha «:name» desde el panel. Las reseñas que se publican en la portada pasan a ser las de esa ficha.',
+        'previous' => 'Antes se usaba «:name».',
+        'what_to_do' => 'Si no ha sido a propósito, entra en Ajustes → Contenido web → Ficha de Google y vuelve a elegir la correcta. Hasta entonces la portada enseñará las opiniones de la ficha nueva.',
+    ],
+
     'visit_eve' => [
         'subject' => 'Mañana es tu fiesta · :code',
         // ⚠️ Sin datos variables y sin repetir el asunto (`#506`): lo que se lee en la lista.

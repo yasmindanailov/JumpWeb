@@ -2310,6 +2310,9 @@ return [
         'choose' => 'Usar esta ficha',
         'confirm_change' => 'Sí, cambiar a esta ficha',
         'current' => 'En uso',
+        'connected_by' => 'Conectada por :name el :date.',
+        'disconnect' => 'Desconectar',
+        'disconnect_hint' => 'Retira el permiso en Google y borra lo que tengamos guardado de la ficha.',
         'no_locations' => 'La cuenta con la que conectaste no administra ninguna ficha. Añádela como administradora en el perfil de empresa del parque y vuelve a intentarlo.',
         'choose_failed' => 'No hemos podido pedirle la lista de fichas a Google. Vuelve a cargar esta pantalla en un rato.',
         'states' => [
@@ -2355,6 +2358,9 @@ return [
             'location-host-mismatch' => 'La web de esa ficha no es la de este sitio, así que puede ser la ficha de otro negocio. Corrige la web en el perfil de empresa o elige otra.',
             'location-changed' => '⚠️ Esa ficha NO es la que estabas usando: cambiarla cambia de qué negocio son las reseñas que se publican en la portada. Pulsa de nuevo para confirmarlo.',
             'api-failed' => 'Google no ha contestado bien. No se ha cambiado nada; inténtalo en un rato.',
+            'disconnected' => 'Desconectada. Hemos retirado el permiso en Google y borrado lo que teníamos guardado.',
+            'disconnected-not-revoked' => 'Desconectada aquí, pero Google no ha confirmado la retirada del permiso. Quítalo tú en la cuenta de Google: Gestionar tu cuenta → Seguridad → Aplicaciones con acceso.',
+            'not-connected' => 'No había ninguna ficha conectada, así que no había nada que desconectar.',
         ],
     ],
 

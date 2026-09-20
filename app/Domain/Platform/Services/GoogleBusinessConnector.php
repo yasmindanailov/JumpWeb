@@ -82,7 +82,7 @@ final class GoogleBusinessConnector
         string $name,
         int $userId,
         bool $confirmed = false,
-    ): GoogleBusinessLocation {
+    ): GoogleBusinessChoice {
         $ficha = $this->locations->revalidate($refreshToken, $name);
 
         if ($ficha === null) {
@@ -91,7 +91,7 @@ final class GoogleBusinessConnector
 
         $this->assertHost($ficha);
 
-        return DB::transaction(function () use ($ficha, $userId, $confirmed): GoogleBusinessLocation {
+        return DB::transaction(function () use ($ficha, $userId, $confirmed): GoogleBusinessChoice {
             $row = GoogleBusinessConnection::query()->lockForUpdate()->first();
 
             if ($row === null) {
@@ -100,8 +100,10 @@ final class GoogleBusinessConnector
             }
 
             $anterior = $row->place_id;
+            $tituloAnterior = $row->location_title;
+            $cambia = is_string($anterior) && $anterior !== '' && $anterior !== $ficha->placeId;
 
-            if (is_string($anterior) && $anterior !== '' && $anterior !== $ficha->placeId && ! $confirmed) {
+            if ($cambia && ! $confirmed) {
                 throw GoogleBusinessException::because(GoogleBusinessException::LOCATION_CHANGED);
             }
 
@@ -117,11 +119,51 @@ final class GoogleBusinessConnector
             // registrar es QUE cambió y quién lo hizo, que es lo que nadie recuerda después.
             AuditLogger::log('google_business.location_chosen', $row, [
                 'location' => $ficha->name,
-                'changed' => is_string($anterior) && $anterior !== '' && $anterior !== $ficha->placeId,
+                'changed' => $cambia,
                 'by' => $userId,
             ]);
 
-            return $ficha;
+            // ⚠️ Se CUENTA lo que pasó en vez de avisar: el correo a los admins necesita `User`, que
+            // vive en Identity, y Platform no puede mirar a ningún módulo. Avisa la entrega.
+            return new GoogleBusinessChoice($ficha, $cambia, is_string($tituloAnterior) ? $tituloAnterior : null);
+        });
+    }
+
+    /**
+     * **Desconectar** (§4.2·8): se borra lo de casa y se devuelve el token para retirarlo en Google.
+     *
+     * ⚠️⚠️ **Se borra la FILA entera, no solo el token.** Media conexión —sin llave pero con la ficha
+     * y el `placeId` dentro— es un estado que nadie sabe leer y que la próxima pasada intentaría usar.
+     * Sin fila, el estado efectivo vuelve a «lista para conectar», que es exactamente la verdad.
+     *
+     * ⚠️ **Primero se borra y DESPUÉS se revoca**, como al reconectar: si la revocación falla lo que
+     * queda es un permiso de más en la cuenta de Google —que el parque puede retirar a mano—, y no una
+     * llave viva guardada en una instalación que se creía desconectada.
+     *
+     * ▶ **La T2 engancha aquí**: cuando existan las reseñas sincronizadas y sus ficheros, se borran en
+     * esta misma transacción (§4.2·8). Hoy no hay nada más que borrar y se deja dicho para que no se
+     * quede fuera.
+     *
+     * @return string|null el token que hay que revocar, o `null` si no había conexión
+     */
+    public function disconnect(int $userId): ?string
+    {
+        return DB::transaction(function () use ($userId): ?string {
+            $row = GoogleBusinessConnection::query()->lockForUpdate()->first();
+
+            if ($row === null) {
+                return null;
+            }
+
+            $token = $row->readToken();
+
+            // El rastro se escribe ANTES de borrar: después no habría fila a la que apuntar, y este
+            // es justo el gesto del que alguien preguntará dentro de un mes.
+            AuditLogger::log('google_business.disconnected', $row, ['by' => $userId]);
+
+            $row->delete();
+
+            return $token;
         });
     }
 

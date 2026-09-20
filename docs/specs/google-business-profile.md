@@ -202,11 +202,20 @@ Google: ahí «es de Google» no implica «lleva a Google».
 sitio es `localhost` y nunca casaría, y una guarda que se salta a diario acaba desactivada.
 ⚠️ **El nombre de recurso se compara ENTERO**: con «empieza por», `locations/9` traería `locations/99`,
 que es otro negocio. Lo destapó el arnés.
-❗ **Falta el correo a los admins** del §4.2·4 cuando cambia el `placeId`: hoy hay confirmación y
-rastro, pero no aviso. Cambia el censo del carril de correos y entra en la T1·4.
+✅ **T1·4 · DESCONECTAR Y EL AVISO, EN EL ÁRBOL** (2026-09-20, `#725`): `Connector::disconnect()`,
+la ruta POST, **quién conectó** en la pantalla (§4.2·1) y el correo `GoogleBusinessLocationChanged`
+a todo el que tenga `settings.manage` cuando cambia la ficha (§4.2·4). 16 casos, arnés 11/11.
+⚠️ **Desconectar borra la FILA ENTERA**, no solo el token: media conexión —sin llave pero con el
+`placeId` dentro— es un estado que nadie sabe leer. Y si Google **no confirma** la retirada, se dice y
+se explica dónde quitarla a mano.
+⚠️ **El correo lo manda la capa de ENTREGA**: `User` vive en Identity y Platform no puede mirar a
+nadie, así que el dominio devuelve `GoogleBusinessChoice` y la entrega avisa. No llega a una cuenta
+anonimizada, y **un fallo al avisar no tumba la elección**.
+▶ **El censo de correos pasa a 27** (`emails.google_business_location`, cuatro piezas en tres
+idiomas). Avisado al carril de correos.
 
-▶ Lo que sigue de la T1: el resto de la pantalla —quién conectó y la última pasada (§4.2·1)—,
-desconectar (§4.2·8), el correo de arriba y `business-profile:verify` (§4.2·10).
+▶ Lo que sigue de la T1: `business-profile:verify` (§4.2·10) y la **última pasada** en la pantalla,
+que no tiene qué enseñar hasta que la T2 sincronice.
 
 ### 4.2 T1 · La conexión
 
