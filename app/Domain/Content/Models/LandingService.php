@@ -25,6 +25,25 @@ class LandingService extends Model
 
     protected $guarded = [];
 
+    /**
+     * **URL pública de la foto del servicio, o `null` si no tiene** (F5 · T2b, `#660`).
+     *
+     * ⚠️ Tercera copia de la MISMA regla, y la última de la landing: la foto de una atracción
+     * (`#657`), la de una zona (`#645`) y ésta son rutas relativas a `public/` escritas en el panel, y
+     * las tres se resolvían con un `asset()` suelto dentro de una vista. Con la landing en otro repo,
+     * quien la escriba tiene que poder preguntar en vez de adivinar — y el producto ofrece al lado la
+     * respuesta equivocada: `TicketType::imageUrl()` antepone `uploads/` porque aquello sí es una subida.
+     *
+     * ⚠️ `null` con la ruta vacía es parte de la regla: la vista pinta la foto solo si hay, y un
+     * `asset('')` daría la raíz del sitio con un roto dentro.
+     */
+    public function imageUrl(): ?string
+    {
+        $ruta = trim((string) ($this->image ?? ''));
+
+        return $ruta === '' ? null : asset($ruta);
+    }
+
     protected $casts = [
         'accent_word' => 'array',
         'title' => 'array',

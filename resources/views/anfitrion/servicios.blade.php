@@ -1,12 +1,15 @@
-{{-- Página /servicios — diseño v2 «Editorial XL» (mockup design_mockup/pagina-servicios-v2.*),
-     ahora DATA-DRIVEN (#256, modelo A): cada fila editorial es un `LandingService` (entidad CMS,
-     gestionable en el panel) en vez de `lang/services.php`. Lo COMERCIAL (precio y tramos) se lee
-     EN VIVO de sus PRODUCTOS (`#588`: varios por servicio); cada producto comprable sale con su tabla
-     y su «Reservar» (abre el cajón en ese producto), y sin ninguno → CTA «Pedir información» (/contacto).
-     Cada fila conserva su anchor estable (`slug`): el nav enlaza a `/servicios#slug` y los tests lo
-     verifican. El hero (título/intro) y las etiquetas siguen en `lang/services.php` (chrome de
-     página). Con 0 servicios la página NO rompe: hero + bandas de enlace. La palabra grande sobre la
-     imagen es el `accent_word` (contextual), no una enumeración. --}}
+{{-- ══ EL ANFITRIÓN MÍNIMO de /servicios · lo que el producto sirve SIN paquete de instancia ═══
+     F5 · T2b (`specs/paquete-de-instancia.md` §4.4, `DECISIONES #660`). La página de PlayJump (diseño
+     «Editorial XL», `#256`/`#588`) vive en su instancia; esto es lo que queda en el producto: el hero con
+     su índice de anclas, una fila por servicio con sus tablas de grupo, el «desde», la foto, los packs de
+     cumpleaños en corto y las bandas. Sin arte: sin la CINTA `C3`. Es marcado del PRODUCTO
+     (`AnfitrionServiciosTest` lo mira).
+
+     ⚠️ Lo que se pinta aquí es EXACTAMENTE el contrato de vista (`InstanceViews::CONTRATO_DE_VISTAS`) y
+     TODO lo comercial llega compuesto: ni el precio que se anuncia ni cómo se escribe se deciden aquí.
+
+     ▶ Cada fila conserva su ancla estable (`slug`): el menú enlaza a `/servicios#slug`, así que cambiarla
+     es SEO perdido sin que falle nada. --}}
 @php
     // Hero: resalta `title_accent` (subcadena exacta de `title`) con `.blink`, fiel al mockup v2.
     // Se escapa todo; si el fragmento no aparece en el título, queda el título plano escapado.
@@ -36,38 +39,6 @@
             @endif
         </header>
 
-        {{-- **LA CINTA `C3`** (`specs/idioma-visual-heredado.md`, T2). Sustituye a la marquesina
-             heredada del cliente antiguo: banda de tinta a sangre completa, girada, con los
-             títulos y un punto de color entre ellos, moviéndose despacio.
-
-             ▶ **De su `C3` se toma la FORMA, no el contenido ni la fuente**, y las dos cosas están
-             razonadas:
-             · El CONTENIDO sigue saliendo del panel (`LandingService`), porque el sitio es
-               data-driven y su cinta lleva un eslogan fijo escrito a mano en el mockup.
-             · La FUENTE **no** es la de rotulador, aunque su `C3` la use: su propio paquete dice
-               de `--font-accent` «Guiño: **el eslogan, nada más**», y su auditoría `T-02` limita
-               Permanent Marker a **una por página** — `/servicios` ya gasta la suya en el menú
-               (medido). Los títulos van en la de rótulo, que es la que ya usaban.
-
-             ⚠️ `aria-hidden`: es decoración. Los mismos títulos son enlaces reales en el índice
-             del hero, así que un lector de pantalla no pierde nada y no se repiten. --}}
-        @if ($services->isNotEmpty())
-            <div class="brand-band" aria-hidden="true">
-                <div class="brand-band__inner">
-                    <div class="brand-band__track">
-                        {{-- Duplicado: el bucle desplaza el 50 % y tiene que volver a un fotograma
-                             idéntico. ⚠️ El punto va DENTRO del bucle a propósito —es separador de
-                             ítem, no una textura de pantalla—, y por eso no lo caza la guarda de
-                             decoración por pantalla: no está en su lista de texturas. --}}
-                        @foreach (array_merge($services->all(), $services->all()) as $service)
-                            <span class="brand-band__item">{{ $service->tr('title') }}</span>
-                            <span class="brand-band__dot"></span>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
-
         {{-- Filas editoriales: una por servicio, full-bleed alternadas (par = flip + banda) --}}
         @if ($services->isNotEmpty())
             <div class="svc-ed2">
@@ -77,7 +48,10 @@
                         $zoneLabel = $service->tr('zone_label');
                         // Las tablas de sus productos comprables (`#588`), ya compuestas en el dominio.
                         $tables = $groupRates[$service->id] ?? [];
-                        $lowest = collect($tables)->pluck('lowest_cents')->filter()->min();
+                        // ⚠️ El «desde» lo elige y lo escribe el PRODUCTO (`GroupRateTables::lowestWritten`,
+                        // `#660`): cuál es el precio más bajo de sus tablas es regla de catálogo, no de esta
+                        // página. Aquí solo se pinta.
+                        $from = $groupFrom[$service->id] ?? null;
                         $unit = $tables[0]['unit'] ?? null;
                     @endphp
                     <section id="{{ $service->slug }}"
@@ -172,7 +146,13 @@
                                 {{-- La tabla TECLEADA (`price_table`) queda solo para un servicio SIN productos que se
                                      vendan online: informativa, con reserva por teléfono. --}}
                                 @elseif (! empty($service->price_table['zones'] ?? null))
-                                    @php($fmt = fn (int $c): string => $c % 100 === 0 ? intdiv($c, 100).' €' : \App\Domain\Platform\Services\Money::format($c))
+                                    {{-- ⚠️ CÓMO se escribe un importe de escaparate NO se decide aquí: es regla del
+                                         producto (`Money::showcase()`, `#479`), que quita los decimales en cero y
+                                         pide el separador al IDIOMA. Antes vivía aquí una tercera variante escrita a
+                                         mano —`intdiv()` para los euros redondos y `Money::format()` para el resto—
+                                         que en inglés ponía coma decimal (`#660`). Medido en esta instalación: los
+                                         doce importes de las tablas son euros exactos, así que no cambia un byte. --}}
+                                    @php($fmt = fn (int $c): string => \App\Domain\Platform\Services\Money::showcase($c).' €')
                                     @php($unit = $service->price_table['unit'] ?? 'kids')
                                     <div class="svc-rates" x-data="{ rz: 0 }">
                                         <span class="svc-rates__title">{{ __('services.rates.title') }}</span>
@@ -238,10 +218,10 @@
                                     @if ($tables !== [])
                                         {{-- El «desde» es el precio MÁS BAJO de sus tablas (`#329`). La reserva va en cada
                                              tabla, que es donde se elige cuál; la etiqueta destacada, en su título (`#585`). --}}
-                                        @if ($lowest !== null)
+                                        @if ($from !== null)
                                             <span class="svc-ed2__price">
                                                 <span class="from">{{ __('landing.pricing.from') }}</span>
-                                                <span class="val">{{ \App\Domain\Platform\Services\Money::format((int) $lowest) }}</span>
+                                                <span class="val">{{ $from }}</span>
                                                 @if ($unit)
                                                     <span class="per">{{ $unit }}</span>
                                                 @endif
@@ -258,8 +238,8 @@
                             <div class="svc-ed2__media">
                                 <span class="svc-ed2__big" aria-hidden="true">{{ $service->tr('accent_word') }}</span>
                                 <div class="svc-photo">
-                                    @if ($service->image)
-                                        <img class="svc-photo__img" src="{{ asset($service->image) }}" alt="{{ $service->tr('title') }}" loading="lazy">
+                                    @if ($foto = $service->imageUrl())
+                                        <img class="svc-photo__img" src="{{ $foto }}" alt="{{ $service->tr('title') }}" loading="lazy">
                                     @endif
                                     <span class="tag tag--senal tag--punteada svc-photo__tag">{{ $zoneLabel }}</span>
                                 </div>

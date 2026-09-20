@@ -143,12 +143,14 @@ class PublicPagesTest extends TestCase
         $response->assertDontSee('id="eventos"', false);
         $response->assertSee('href="#excursionescolegio"', false); // el índice del hero apunta al anchor
 
-        // Estructura del layout editorial: hero con índice, la CINTA y filas.
-        // ⚠️ Aquí se aseveraba `svc-marquee`, la marquesina heredada del cliente antiguo. La
-        // sustituye la cinta `C3` (T2 del idioma visual, 2026-08-31) y el contrato pasa a ser
-        // `brand-band`: misma función —los títulos en bucle— y otra forma.
+        // Estructura del layout editorial: hero con índice y filas.
+        // ⚠️ Aquí se aseveraba `svc-marquee` —la marquesina heredada del cliente antiguo—, y desde la T2
+        // del idioma visual, `brand-band`, la cinta `C3` que la sustituyó. **Esa aserción se fue con la
+        // vista** (`#660`): la cinta es ARTE de la landing de PlayJump, hoy en su instancia, y el producto
+        // no puede exigirle a una instalación que pinte una decoración. Su garantía vive en
+        // `paginas/servicios.md` del paquete y su CSS está declarado en
+        // `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`.
         $response->assertSee('svc-hero__index', false);
-        $response->assertSee('brand-band', false);
         $response->assertDontSee('svc-marquee', false);
         $response->assertSee('svc-ed2__row', false);
         $response->assertDontSee('svc-other', false);

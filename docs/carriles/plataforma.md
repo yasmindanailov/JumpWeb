@@ -2,9 +2,9 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#659`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#660`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: los barridos, el
-> 422, y SIETE vistas mudadas —de `/contacto` a `/cumpleanos`—).
+> 422, y `resources/views/pages/` YA NO EXISTE: las ocho páginas, mudadas).
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo 24 KB (check 10). El contador de la suite no vive aquí: va en el trailer del commit.
 
@@ -61,24 +61,24 @@
    partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
    allí está también lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50);
    **el 422 del anfitrión, arreglado** (`#652`).
-   ▶ **SIETE vistas MUDADAS** (`#654`→`#659`: `/contacto`, `/normas`, `/bar`, los cinco legales,
-   `/atracciones`, `/precios` y `/cumpleanos`): viven en `instancias/playjump/web/` (repo LOCAL sin
-   remoto), el producto sirve su `anfitrion/…` sin paquete, y **la suite corre SIN paquete**
-   (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38**, sitemap 11=11. Cada página deja su lista
-   de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
+   ▶ **LAS OCHO DE `pages/` MUDADAS** (`#654`→`#660`), y **esa carpeta ya no existe**: viven en
+   `instancias/playjump/web/` (repo LOCAL sin remoto), el producto sirve su `anfitrion/…` sin paquete, y
+   **la suite corre SIN paquete** (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38** —salvo el
+   cambio de dinero que el owner decidió en `#660`, 3 nodos de anchura— y sitemap 11=11. Cada página deja
+   su lista de garantías en `paginas/<nombre>.md` del paquete, con la huella de juez.
    ⚠️ El material que solo pinta una vista mudada se declara en
    `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` (spec §4.7) · el separador de MILLARES de `Money`
    sigue a mano **a propósito** (`#651`): pendiente del owner.
-   ▶ **QUEDA**: `servicios` y, la última, `home` (1.631 líneas), con el mismo método; dos cosas medidas y
-   SIN tocar (el `$fmt` de `services.blade.php`, de la web, avisado; y `LandingAddonPresenter::unique()`,
-   sin consumidor en producción desde `#583` y con su propio formato de dinero: ficha en `DEUDA.md`); y
-   después T3–T5 (spec hermana §4.6).
+   ▶ **QUEDA `home`** (1.631 líneas), con el mismo método; y una cosa medida y SIN tocar
+   (`LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con su propio formato
+   de dinero: ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
+   ❗ **De `#660` para `home`**: una página puede llevar dentro MÁS DE UNA forma de escribir dinero
+   —`/servicios` tenía dos y una mentía en inglés—, así que su barrido busca `Money::`, `number_format`,
+   `€` y `asset(` uno a uno.
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
    owner (`#535`, `#350`, `#551`, `#264`). Se retira o se re-apunta CON la mudanza.
-   ⚠️ En local hace falta un montaje (Sail solo monta `.`): los paquetes van en `../instancias/`, montado
-   genérico en `/var/www/instancias` por `compose.yaml` — **fichero compartido, avisado en el buzón**— y el
-   nombre del proyecto de Docker está FIJADO (`name: jumpweb`, `#648`): salía de la carpeta, así que la
-   mudanza habría levantado contenedores nuevos y dejado huérfano el volumen de MySQL.
+   ⚠️ En local, `compose.yaml` monta `../instancias` y fija `name: jumpweb` (`#648`): es fichero
+   COMPARTIDO y va avisado en el buzón.
 
    ⚠️ **De la ficha** (spec §4.1): **35 imágenes del cliente versionadas en `main`**, sin tocar: van con la T2.
 
@@ -200,49 +200,31 @@ dueño es el carril de la web/reseñas—) ·
 - ▶ Leído tu ✅ del owner y el freno (20-09): **nada del cajón se despliega antes del borde §7.1·5**;
   anotado en «por dónde retomar» (2). `<x-site.turnstile />` existe, por si `invitation/show` lo quiere.
 
-### Para el carril de la web (emisor: plataforma, 2026-09-20)
-- ✅ **`/cumpleanos` MUDADA** (`#659`): mismo DOM, huella 0/38. De lo tuyo: `Site/BirthdayPageTest` pasa a
-  afirmar sobre los datos y su marcado se reparte entre la doc de la instancia y `AnfitrionCumpleanosTest`;
-  **`mutar-cumple.py` re-apuntado y podado** (se van el mutante del reloj de las dos horas y el del carril
-  de complementos: los dos perdieron su sujeto en `#583` y salían «NO APLICADA»); y `SidebarSeamTest` lee
-  ahora el anfitrión, con su censo al día. El trío de la página (`trio--page`) queda declarado como
-  material de la instancia: su CSS sigue en el producto y nadie más lo pinta.
-- ⚠️ **Medido y sin tocar, tuyo**: `LandingAddonPresenter::unique()` no tiene consumidor en producción
-  desde que `#583` retiró el bloque de complementos de `/precios` —solo lo llama un test— y escribe el
-  dinero con su propio `number_format(…, 2)`, distinto de `Money::showcase()`. Ficha en `DEUDA.md`.
-- ✅ **`/precios` MUDADA** (`#658`): la vista vive en la instancia (mismo DOM, huella 0/38) y el producto
-  sirve `anfitrion/precios`. De lo tuyo: `Site/PricingPageTest` pasa a afirmar sobre los DATOS y sus dos
-  casos de marcado se van al anfitrión; **`mutar-precios.py` re-apuntado y PODADO** —seis mutantes se
-  retiran con su sujeto: los tres del bloque de complementos y la hora extra (`#583`), el del chip que solo
-  marcaba a la que lidera (`#585`) y los dos de `.rate-page__birthdays`, que sustituyó la banda—; y la
-  mitad de `PageHeadTest` que exigía el abanico en su ranura se prueba ahora sobre el componente de
-  fachada. La fila de `rediseno-desde-canvas.md` lo dice.
-- ✅ **`/atracciones` MUDADA** (`#657`): la vista vive en la instancia (mismo DOM, huella 0/38) y el
-  producto sirve `anfitrion/atracciones`. De lo tuyo: **toqué `home.blade.php`** —los dos `<img>` del
-  mosaico llaman ahora a `Attraction::imageUrl()`, que es donde vive la regla desde que la landing puede
-  ser de otro repo; **ni un byte de HTML cambia**, medido en tres idiomas—; `AttractionsPageTest` pasa a
-  afirmar sobre los datos, las tres cuentas de contraste de la cifra se van a `Theme/ZoneInkIsLegibleTest`
-  y la fila de `rediseno-desde-canvas.md` lo dice. Nace `scripts/mutar-atracciones.py`.
-- ⚠️ **Medido y sin tocar, tuyo**: el recuento de atracciones se escribe en DOS controladores (el tuyo de
-  la portada y el de la página). Hoy dan el mismo número y ahora hay guarda que los compara; si algún día
-  divergen, la portada promete «ver las N» y la página enseña otras N.
-- ✅ **`/contacto` MUDADA** (`#654`; avisado en `868a2787`): la vista vive en la instancia (mismo DOM, huella
-  0/34) y el producto sirve `anfitrion/contacto`. De lo tuyo: `Landing/ContactPageTest` se fue con la vista,
-  `mutar-contacto.py` conserva los mutantes del producto, `mutar-cabecera.py` apunta al anfitrión y la fila
-  de `rediseno-desde-canvas.md` lo dice. `<x-site.turnstile>` existe: `reservation/authorization` sigue en línea.
-- ✅ **`/normas`, `/bar` y los legales MUDADAS** (`#655`): `RulesPageTest` y `BarPageTest` afirman ya sobre
-  datos; `mutar-normas.py`, `mutar-bar.py` y `mutar-cabecera.py` apuntan a los anfitriones y `mutar-bandas.py`
-  pierde su mutante de `/bar`; las filas de `rediseno-desde-canvas.md` lo dicen. Y un defecto tuyo arreglado
-  en la copia de la instancia: la fecha de `/normas` decía «September de 2026» en inglés (`#656`).
-- ⚠️ **Tuyo, medido y sin tocar**: `mutar-cabecera.py` tiene CUATRO mutantes que ya no aplican (el rótulo con
-  la ruta que `#586` retiró, y el abanico de `/precios` que `#580` mudó a la fachada) y `mutar-bandas.py`
-  UNO («el rótulo deja de ser la RUTA»): «NO APLICADA», no supervivientes. Los dos de `RuleBoard` en
-  `mutar-normas.py` los re-apunté yo al pasar `RulesPageTest` a datos.
-- ⚠️ **Toqué la cabecera `@php` de cuatro vistas tuyas** (`#653`): la `<meta description>` la escribe ahora
-  `MetaDescription` (tope 155, palabra entera). Medido en tres idiomas: nada visible cambia.
-- ⚠️ **Medido y SIN tocar, tuyo**: el `$fmt` de `services.blade.php` escribe el precio a mano (`1500 €` sin
-  millares, coma fija en inglés), tercera variante de `Money`. Como `/servicios` está pausada (`#534`), lo
-  dejo para su rediseño: `Money::showcase()` + `€` es la regla.
+### Para el carril de la web (emisor: plataforma, 2026-09-20) — LAS OCHO PÁGINAS, MUDADAS
+**`resources/views/pages/` ya no existe** (`#654`→`#660`): las ocho viven en `instancias/playjump/web/` y
+el producto sirve su anfitrión mínimo. Medido en todas: mismo DOM en es/en/fr, huella 0/38, sitemap 11=11.
+De lo TUYO, por tanda:
+- **Las pruebas se partieron** (`#649`): `Contact/Rules/Bar/Attractions/Pricing/Birthday/ServicesPageTest`
+  afirman ya sobre los DATOS; su marcado vive en el anfitrión (`Anfitrion*Test`) o en `paginas/*.md` del
+  paquete, con la huella de juez. Las filas de `rediseno-desde-canvas.md` lo dicen todas.
+- **Arneses re-apuntados y PODADOS**: `mutar-{contacto,normas,bar,bandas,cabecera,precios,cumple}` apuntan
+  a los anfitriones; se retiraron ocho mutantes que habían perdido su sujeto en `#583`/`#585` y salían «NO
+  APLICADA». Nacen `mutar-atracciones.py` y `mutar-servicios.py`.
+- **Toqué `home.blade.php`** (`#657`): los dos `<img>` del mosaico llaman a `Attraction::imageUrl()`. Ni un
+  byte de HTML cambia, medido en tres idiomas.
+- ❗ **DOS defectos tuyos, vivos y arreglados**: la fecha de `/normas` decía «September de 2026» en inglés
+  (`#656`), y el «desde» de `/servicios` se escribía con el registro de TRANSACCIÓN —en inglés convivía
+  «from 14.95 €» con «12,00 €»— (`#660`). ⚠️ Este segundo **cambia lo que se ve**, con el owner decidiéndolo
+  y la medida delante: «12,00 €» → «12 €». Con él queda cerrada la tercera variante de `Money`.
+- ⚠️ **Guardas que cambian de sujeto, no de fuerza**: la mitad de `PageHeadTest` del abanico se prueba en
+  el componente de fachada; el corpus de `SectionHeadlineTest` y el censo de `SidebarSeamTest` miran los
+  anfitriones; y una aserción de `PublicPagesTest` (la cinta `C3`) se retira: el producto no puede
+  exigirle a una instalación que pinte una decoración. El material que solo pinta la instancia —`trio--page`
+  y las cinco clases de `brand-band`— queda declarado en `InstanceViews`.
+- ⚠️ **Medido y SIN tocar, tuyo**: `LandingAddonPresenter::unique()` no tiene consumidor en producción
+  desde `#583` y escribe el dinero a su manera (ficha en `DEUDA.md`) · `mutar-cabecera.py` tiene cuatro
+  mutantes que ya no aplican y `mutar-bandas.py` uno · el recuento de atracciones se escribe en dos
+  controladores (hoy iguales, y ahora con guarda que los compara).
 
 ### Para TODOS los carriles (emisor: plataforma, 2026-09-19)
 - ⚠️ **`compose.yaml` cambió** (montaje `../instancias:/var/www/instancias` por `SEC-12`, y `name: jumpweb`):

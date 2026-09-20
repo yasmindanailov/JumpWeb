@@ -71,6 +71,33 @@ final class GroupRateTables
         })->values()->all();
     }
 
+    /**
+     * **El «desde» de un servicio: el precio MÁS BAJO de todas sus tablas, ya escrito** (`#329`, `#660`).
+     *
+     * ⚠️⚠️ **Las dos mitades estaban en la VISTA, y las dos son del producto.** Cuál es el precio que se
+     * anuncia —el más bajo de todas las tablas, saltándose los `null`, que no son «gratis» sino «ese día no
+     * se vende»— es una regla de catálogo; y cómo se escribe, la del escaparate ({@see euros}). Escritas en
+     * una landing, cada instancia las re-deriva: una que tomara el máximo, u olvidara el filtro, anunciaría
+     * un «desde» que no existe.
+     *
+     * ❗ **Y ahí vivía un defecto medido** (`#660`): la vista escribía este importe con `Money::format()` —el
+     * registro de TRANSACCIÓN, dos decimales fijos y coma siempre—, así que en la misma pantalla y en
+     * inglés convivían «from 14.95 €» (la tarjeta de cumpleaños, escrita por el producto) y «12,00 €»
+     * (esta línea). Es el mismo defecto que `#651` cazó en la portada.
+     *
+     * ⚠️ El `filter()` es EXPLÍCITO, no imprescindible: medido, `Collection::min()` ya ignora los `null`.
+     * Se deja porque la intención —«un `null` no es un precio»— se lee en la línea y no en la documentación
+     * del framework; su mutante se retiró del arnés por equivalente, con el motivo escrito allí.
+     *
+     * @param  list<array{lowest_cents: ?int, ...}>  $tables  lo que devuelve {@see compose}
+     */
+    public function lowestWritten(array $tables): ?string
+    {
+        $cents = collect($tables)->pluck('lowest_cents')->filter()->min();
+
+        return $cents === null ? null : $this->euros((int) $cents);
+    }
+
     private function written(?int $cents): ?string
     {
         return $cents === null ? null : $this->euros($cents);

@@ -5,16 +5,27 @@ namespace Tests\Feature\Landing;
 use App\Domain\Booking\Models\PriceTier;
 use App\Domain\Booking\Models\RateType;
 use App\Domain\Booking\Models\TicketType;
+use App\Domain\Booking\Services\GroupRateTables;
 use App\Domain\Content\Models\LandingService;
-use App\Domain\Content\Services\ThemeSettings;
+use App\Domain\Platform\Services\Money;
 use Database\Seeders\LandingContentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * F6 (#256) — /servicios data-driven: variante comprable (pack vinculado → precio + «Reservar»
- * + deep-link al sidebar) vs solo-contacto, degradación a 0 servicios, y nav data-driven.
- * (Los anchors/contenido editorial sembrado ya los cubre `PublicPagesTest`.)
+ * **`/servicios`: la CONDUCTA del producto** (`#256`, `#588`; partida por lo que afirma en F5 · T2b, `#660`).
+ *
+ * ❗❗ **Aquí no se lee el HTML** (`#649`): el contrato con la landing de una instancia son los DATOS que
+ * recibe la vista —`services`, `groupRates` (las tablas de grupo ya compuestas), `groupFrom` (el «desde»
+ * ya escrito) y `birthdayCards`—, y sobre ellos se afirma. El marcado de la página de PlayJump ya no está
+ * en el producto: lo que garantiza vive en `paginas/servicios.md` del paquete, y el anfitrión mínimo tiene
+ * su guarda propia (`AnfitrionServiciosTest`).
+ *
+ * Lo que se rompería EN SILENCIO y esto sostiene:
+ *  · **Lo comercial se lee EN VIVO de los productos** (`#588`): la tabla sale de sus tramos, así que un
+ *    precio del panel no puede quedarse viejo en la web.
+ *  · **El «desde» es el precio más bajo de TODAS sus tablas** (`#329`) y lo escribe el producto (`#660`).
+ *  · **Un pack que vende un servicio sale del resumen de cumpleaños** y de su página: fuente única.
  */
 class ServicesPageTest extends TestCase
 {
@@ -26,35 +37,58 @@ class ServicesPageTest extends TestCase
         $this->seed(LandingContentSeeder::class);
     }
 
-    public function test_a_linked_pack_shows_price_and_book_cta(): void
+    /** @return array<string, mixed> Lo que el controlador le pasa a la vista: el sujeto de esta guarda. */
+    private function datos(): array
     {
-        $pack = TicketType::ofType(TicketType::TYPE_PACK)->first();
-        LandingService::create([
-            'slug' => 'eventos-empresa',
-            'title' => ['es' => 'Eventos de empresa'],
-            'zone_label' => ['es' => 'Parque completo'],
-            'position' => 0,
-            'is_active' => true,
-        ])->products()->attach($pack->id);
-
-        $res = $this->get('/servicios')->assertOk();
-        $res->assertSee('Eventos de empresa');
-        $res->assertSee('svc-ed2__price', false);          // muestra precio (pack comprable)
-        $res->assertSee(__('landing.pricing.book'));        // CTA «Reservar»
-        // Deep-link al sidebar de compra. Desde Fase 4 · paso 4.0a la landing declara la INTENCIÓN
-        // en vez de despachar un evento de Livewire: el mismo destino, pero sin atar la página al
-        // motor del cajón (con otro motor, aquel `dispatch` no fallaba — no hacía nada).
-        // ▶ `#568`: la intención es ESTE pack, no la sección de packs — el cajón lo abre listo para
-        // elegir día. Se asevera con su id, que es lo que distingue abrir el producto de abrir la lista.
-        $res->assertSee("openWith({ type: 'product', id: {$pack->id} })", false);
+        return $this->get('/servicios')->assertOk()->original->getData();
     }
 
+    /** Las tablas de grupo de un servicio, por su slug. */
+    private function tablas(string $slug): array
+    {
+        $datos = $this->datos();
+        $servicio = $datos['services']->firstWhere('slug', $slug);
+
+        return $servicio === null ? [] : ($datos['groupRates'][$servicio->id] ?? []);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  Qué servicios viajan
+    // ─────────────────────────────────────────────────────────────────────────────────
+
+    public function test_only_active_services_travel_in_the_panels_order(): void
+    {
+        $esperado = LandingService::active()->ordered()->pluck('slug')->all();
+
+        $this->assertNotEmpty($esperado, 'el caso nace sin sujeto: no hay servicios activos');
+        $this->assertSame($esperado, $this->datos()['services']->pluck('slug')->all());
+
+        LandingService::create(['slug' => 'oculto', 'title' => ['es' => 'Servicio oculto'], 'is_active' => false]);
+
+        $this->assertNotContains('oculto', $this->datos()['services']->pluck('slug')->all(),
+            'un servicio apagado en el panel sigue viajando a la vista');
+    }
+
+    /** Con cero servicios la página NO se queda sin datos: viaja la colección vacía y la vista degrada. */
+    public function test_zero_services_travel_as_an_empty_collection(): void
+    {
+        LandingService::query()->delete();
+        $datos = $this->datos();
+
+        $this->assertTrue($datos['services']->isEmpty());
+        $this->assertSame([], $datos['groupRates']);
+        $this->assertSame([], $datos['groupFrom']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────────
+    //  Lo comercial, leído EN VIVO de los productos
+    // ─────────────────────────────────────────────────────────────────────────────────
+
     /**
-     * **La tabla de un servicio sale de los TRAMOS de sus productos** (`#588`): una tabla por producto,
-     * una fila por tramo y el «Reservar» de cada uno. La tabla tecleada no se pinta cuando hay
-     * productos: el precio tiene una sola fuente.
+     * **La tabla de un servicio sale de los TRAMOS de sus productos** (`#588`): una tabla por producto
+     * comprable, una fila por tramo, y el precio que escribe el producto.
      */
-    public function test_the_rate_table_is_read_from_the_products_tiers(): void
+    public function test_the_rate_tables_are_read_from_the_products_tiers(): void
     {
         $packs = TicketType::ofType(TicketType::TYPE_PACK)->orderBy('position')->get();
         $normal = RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
@@ -71,154 +105,119 @@ class ServicesPageTest extends TestCase
             'slug' => 'excursiones',
             'title' => ['es' => 'Excursiones'],
             'is_active' => true,
-            'price_table' => ['unit' => 'people', 'zones' => [[
-                'label' => 'Jump', 'accent' => 'jump',
-                'durations' => [['minutes' => 120, 'tiers' => [['size' => 30, 'weekday' => 9999, 'weekend' => 9999]]]],
-            ]]],
         ])->products()->attach($packs->pluck('id')->all());
 
-        $html = $this->get('/servicios')->assertOk()->getContent();
+        $tablas = $this->tablas('excursiones');
 
-        $this->assertSame($packs->count(), substr_count($html, 'class="svc-rates__product"'), 'una tabla por producto');
-        $this->assertStringContainsString(e(__('services.rates.from_count', ['count' => 70])), $html);
-        $this->assertStringContainsString('13 €', $html);
-        foreach ($packs as $pack) {
-            $this->assertStringContainsString("openWith({ type: 'product', id: {$pack->id} })", $html);
-        }
-        $this->assertStringNotContainsString('99,99', $html, 'la tabla tecleada se pinta aunque haya productos');
+        $this->assertCount($packs->count(), $tablas, 'una tabla por producto comprable');
+        $filas = collect($tablas)->flatMap(fn (array $t): array => $t['rows']);
+        $this->assertContains(70, $filas->pluck('from')->all(), 'el tramo de 70 no viaja');
+        $this->assertContains('13 €', $filas->pluck('normal')->all(), 'el precio del tramo no viaja escrito');
     }
 
     /**
-     * **La página termina con los cumpleaños resumidos y su puerta** (`#588`, `[DECIDIDO owner]`), y un
-     * pack que vende un servicio sale de ese resumen y de la página de cumpleaños.
+     * ❗❗❗ **EL «DESDE» ES EL PRECIO MÁS BAJO DE TODAS SUS TABLAS, Y LO ESCRIBE EL PRODUCTO** (`#329`,
+     * `#660`). Las dos mitades vivían en la vista: el mínimo se calculaba a mano y se escribía con
+     * `Money::format()` —el registro de transacción—, así que en inglés la misma pantalla mezclaba
+     * «from 14.95 €» con «12,00 €». Ahora sale ya escrito, en el registro de ESCAPARATE.
+     *
+     * ⚠️⚠️ **El caso SIEMBRA dos productos a precios distintos, y lo obligó el arnés**: los servicios del
+     * seeder son solo-contacto —sin productos comprables no hay tablas, y `groupFrom` viaja en `null`—, así
+     * que la primera versión de este caso se salía por su propia puerta de atrás y los tres mutantes del
+     * «desde» sobrevivían. **Y el valor esperado se escribe a mano**: derivarlo de los mismos datos con
+     * `min()` habría comparado el mutante consigo mismo.
      */
-    public function test_birthdays_are_summarised_at_the_end_and_a_service_pack_leaves_them(): void
+    public function test_the_from_price_is_the_lowest_of_its_tables_and_the_product_writes_it(): void
+    {
+        $normal = RateType::where('key', RateType::KEY_NORMAL)->firstOrFail();
+        $especial = RateType::where('key', RateType::KEY_SPECIAL)->firstOrFail();
+        [$caro, $barato] = TicketType::ofType(TicketType::TYPE_PACK)->orderBy('position')->take(2)->get()->all();
+
+        // ⚠️⚠️ El barato cuesta EUROS EXACTOS, y lo obligó el arnés: con céntimos, el registro de
+        // escaparate y el de transacción escriben igual («18,50 €») y el mutante del formato sobrevive.
+        foreach ([[$caro, 4000], [$barato, 1800]] as [$pack, $cents]) {
+            $pack->update(['guest_age_family' => null, 'guest_age_min' => null, 'guest_age_max' => null, 'min_qty' => 10]);
+            $pack->prices()->delete();
+            $pack->prices()->create(['rate_type_id' => $normal->id, 'amount_cents' => $cents]);
+        }
+        $caro->prices()->create(['rate_type_id' => $especial->id, 'amount_cents' => 4500]);
+
+        LandingService::query()->delete();
+        LandingService::create(['slug' => 'excursiones', 'title' => ['es' => 'Excursiones'], 'is_active' => true])
+            ->products()->attach([$caro->id, $barato->id]);
+
+        $datos = $this->datos();
+        $servicio = $datos['services']->firstWhere('slug', 'excursiones');
+
+        $this->assertCount(2, $datos['groupRates'][$servicio->id], 'el caso nace sin sujeto: no hay dos tablas');
+        $this->assertSame('18 €', $datos['groupFrom'][$servicio->id],
+            'el «desde» no es el precio más bajo de sus tablas, escrito en el registro de escaparate');
+
+        /*
+         * ⚠️⚠️ **Y una tabla SIN precio publicado se salta, que es lo que su contrato declara**
+         * (`lowest_cents: ?int`). Se llama al servicio DIRECTAMENTE porque por HTTP no se llega: un
+         * producto sin precios no es comprable, así que no produce tabla. Sin este caso, quitar el filtro
+         * no cambiaba nada y el mutante sobrevivía — el `null` de una tabla se llevaría por delante al
+         * mínimo de las demás y la página anunciaría «desde» nada.
+         */
+        $this->assertSame('18 €', (new GroupRateTables)->lowestWritten([
+            ['lowest_cents' => null],
+            ['lowest_cents' => 1800],
+        ]));
+
+        // Y un servicio SIN tablas no anuncia ningún «desde».
+        $suelto = LandingService::create(['slug' => 'solo-contacto', 'title' => ['es' => 'Solo contacto'], 'is_active' => true]);
+        $this->assertNull($this->datos()['groupFrom'][$suelto->id], 'sin tablas viaja un «desde» inventado');
+    }
+
+    /**
+     * **La foto de un servicio la resuelve el PRODUCTO** (`LandingService::imageUrl()`, `#660`): ruta
+     * relativa a `public/` como la de zona y la de atracción, y `null` cuando no hay —un `asset('')` daría
+     * la raíz del sitio con un roto dentro—.
+     */
+    public function test_the_service_photo_is_resolved_by_the_product(): void
+    {
+        $servicio = LandingService::first();
+        $servicio->update(['image' => 'images/attractions/park_jump.webp']);
+
+        $this->assertSame(asset('images/attractions/park_jump.webp'), $servicio->fresh()->imageUrl());
+        $this->assertStringNotContainsString('uploads/', (string) $servicio->fresh()->imageUrl(),
+            'la foto de un servicio no es una subida: no lleva `uploads/`');
+
+        $servicio->update(['image' => null]);
+        $this->assertNull($servicio->fresh()->imageUrl());
+
+        $servicio->update(['image' => '  ']);
+        $this->assertNull($servicio->fresh()->imageUrl(), 'una ruta en blanco contesta la raíz del sitio');
+    }
+
+    /**
+     * **La página termina con los cumpleaños resumidos** (`#588`, `[DECIDIDO owner]`), y un pack que vende
+     * un servicio sale de ese resumen Y de la página de cumpleaños: la fuente es única.
+     */
+    public function test_a_pack_that_sells_a_service_leaves_the_birthday_summary(): void
     {
         $jump = TicketType::where('name->es', 'Cumpleaños Jump')->firstOrFail();
 
-        $html = $this->get('/servicios')->assertOk()->getContent();
-        $this->assertStringContainsString('class="svc-party__card"', $html);
-        $this->assertStringContainsString('svc-party__cta" href="'.route('cumpleanos').'"', $html);
-        $this->assertSame(2, substr_count($html, 'class="svc-party__item"'));
+        $this->assertCount(2, $this->datos()['birthdayCards'], 'el caso nace sin sujeto');
 
         LandingService::query()->delete();
         LandingService::create(['slug' => 'excursiones', 'title' => ['es' => 'Excursiones'], 'is_active' => true])
             ->products()->attach($jump->id);
 
-        $this->assertSame(1, substr_count($this->get('/servicios')->assertOk()->getContent(), 'class="svc-party__item"'));
+        $this->assertCount(1, $this->datos()['birthdayCards']);
         $this->get('/cumpleanos')->assertOk()->assertDontSee('Cumpleaños Jump');
     }
 
-    public function test_contact_only_services_show_get_in_touch_without_price(): void
-    {
-        // Las 3 secciones sembradas son solo-contacto (sin pack).
-        $this->get('/servicios')
-            ->assertOk()
-            ->assertSee('Pedir información')
-            ->assertDontSee('svc-ed2__price', false);
-    }
-
-    public function test_colegio_service_renders_the_group_rate_table(): void
-    {
-        // El servicio «Excursiones de colegio» (sembrado) define `price_table` → la card muestra la
-        // tabla de tarifas (pestañas de zona + precios), aunque siga siendo solo-contacto.
-        $this->get('/servicios')
-            ->assertOk()
-            ->assertSee('svc-rates__table', false)         // el bloque de tarifas se renderiza
-            ->assertSee(__('services.rates.title'))        // «Tarifas de grupo»
-            // ⚠️ El tinte se aseveraba por el NOMBRE DE LA CLASE, que solo decía que la plantilla
-            // escribió el acento. Desde `#138` el color llega en línea: se asevera EL COLOR de cada
-            // zona, que es lo que se ve, y funciona con cualquier acento (antes solo con jump/kids).
-            ->assertSee(ThemeSettings::zoneStyleForAccent('kids'), false)
-            ->assertSee(ThemeSettings::zoneStyleForAccent('jump'), false)
-            ->assertSee('Kids · 2 horas')                  // caption «{zona} · {N} horas» (`#586`: antes «2H»)
-            ->assertSee('Jump · 3 horas')
-            ->assertSee('10 €')                            // Kids · 2 h · L–V · 100 niños (precio mínimo, único)
-            ->assertSee('20 €')                            // Jump · 3 h · finde · 30 niños (panel oculto, pero en el DOM)
-            ->assertSee('Desde 30 alumnos')                // unidad del colegio: alumnos (`#586`)
-            ->assertSee('Pedir información');              // sigue siendo contact-only
-    }
-
-    public function test_empresas_service_shows_a_jump_only_rate_table_in_people(): void
-    {
-        // El servicio «Empresas» (teambuilding) reusa la tabla Jump (2h/3h) con unidad «personas»
-        // (no «niños»: es un servicio de adultos). «30 personas» sólo lo pinta Empresas (colegio usa niños).
-        $this->get('/servicios')
-            ->assertOk()
-            ->assertSee('30 personas')
-            ->assertSee('100 personas')
-            ->assertSee('Jump · 2 horas')
-            ->assertSee('Jump · 3 horas');
-    }
-
-    public function test_a_single_zone_price_table_renders_without_tabs(): void
-    {
-        // Con UNA sola zona NO hay toggle: la tabla se pinta directamente, sin `.zone-tabs`.
-        LandingService::query()->delete();
-        LandingService::create([
-            'slug' => 'solo-jump',
-            'title' => ['es' => 'Solo Jump'],
-            'price_table' => [
-                'unit' => 'people',
-                'zones' => [[
-                    'label' => 'Jump', 'accent' => 'jump',
-                    'durations' => [['minutes' => 120, 'tiers' => [['size' => 30, 'weekday' => 1500, 'weekend' => 1700]]]],
-                ]],
-            ],
-            'is_active' => true,
-        ]);
-
-        $res = $this->get('/servicios')->assertOk();
-        $res->assertSee('svc-rates__table', false);    // la tabla se renderiza
-        $res->assertSee('Jump · 2 horas');             // caption «{zona} · {N} horas»
-        $res->assertSee('30 personas');                // unidad personas
-        $res->assertDontSee('zone-tabs', false);       // PERO sin pestañas (1 sola zona)
-    }
-
-    public function test_price_table_is_cast_to_array(): void
+    /** La tabla TECLEADA del panel es un `array` y llega entera: es el respaldo de un servicio sin productos. */
+    public function test_the_typed_price_table_is_cast_to_array(): void
     {
         $colegio = LandingService::where('slug', 'excursionescolegio')->first();
 
         $this->assertIsArray($colegio->price_table);
         // Kids · 2 h · L–V · 30 niños = 12,00 € (céntimos).
         $this->assertSame(1200, $colegio->price_table['zones'][0]['durations'][0]['tiers'][0]['weekday']);
-    }
-
-    public function test_services_without_a_price_table_render_no_rate_block(): void
-    {
-        // Solo los servicios que definen `price_table` muestran tarifas; los demás sin tabla, no.
-        // (`sesionadultos` = sesión de adultos, solo-contacto sin tarifas; colegio y empresas SÍ las tienen.)
+        // Y un servicio sin tabla tecleada no se inventa una.
         $this->assertNull(LandingService::where('slug', 'sesionadultos')->value('price_table'));
     }
-
-    public function test_zero_services_degrades_to_hero_and_link_bands(): void
-    {
-        LandingService::query()->delete();
-
-        // ⚠️ Hasta `#586` sobrevivía la banda «Otros eventos»; se retiró y lo que queda son las
-        // bandas de enlace, que llevan a las demás páginas.
-        $this->get('/servicios')
-            ->assertOk()
-            ->assertSee('bands-thin', false)
-            ->assertDontSee('Otros eventos')
-            ->assertDontSee('svc-ed2__row', false)     // sin filas editoriales
-            ->assertDontSee('svc-hero__index', false); // sin índice del hero
-    }
-
-    public function test_inactive_service_is_hidden(): void
-    {
-        LandingService::query()->delete();
-        LandingService::create(['slug' => 'oculto', 'title' => ['es' => 'Servicio oculto'], 'is_active' => false]);
-
-        $this->get('/servicios')->assertOk()->assertDontSee('Servicio oculto');
-    }
-
-    // ⚠️⚠️ **AQUÍ VIVÍAN `test_nav_lists_data_driven_services_and_respects_show_in_nav` Y
-    // `test_an_inactive_service_is_excluded_from_the_nav`, Y SE RETIRAN CON SU SUJETO** (`#521`,
-    // `[DECIDIDO owner, 2026-09-11]`): los destinos del menú son el INVENTARIO de páginas del canvas,
-    // y un servicio del panel ya no es un destino suelto — el interruptor «Sale en el menú» se retiró
-    // del panel con ellos. Clasificados por sujeto (`CONVENCIONES §3.quater`): lo que comprobaban era
-    // una capacidad que el owner ha quitado, no una regla que siga viva en otro sitio.
-    // ▶ Lo que SÍ sigue vivo —que el menú no ofrezca nada que no sea del inventario— lo vigila
-    // `ArmazonContractTest::test_the_menu_offers_exactly_the_inventory_in_its_order`.
 }

@@ -125,6 +125,13 @@ class InstanceViews
             'ruta' => 'cumpleanos',
             'datos' => ['packages', 'zone', 'compare', 'form', 'choices', ...self::DEL_COMPOSER],
         ],
+        // `/servicios` (`#660`): las secciones editoriales del panel, sus tablas de grupo ya compuestas,
+        // el «desde» de cada una YA ESCRITO por el producto, los rótulos de columna y los packs de
+        // cumpleaños en corto. La landing no elige qué precio anuncia ni cómo se escribe.
+        'servicios' => [
+            'ruta' => 'servicios',
+            'datos' => ['services', 'groupRates', 'groupFrom', 'rateColumns', 'birthdayCards', ...self::DEL_COMPOSER],
+        ],
         // Los cinco legales (`#655`) comparten vista y contrato: la página del panel. Se mide con una.
         'legal' => [
             'ruta' => 'legal.privacidad',
@@ -153,6 +160,15 @@ class InstanceViews
         // portada), así que solo el MODIFICADOR de la página se queda sin sujeto: el trío de
         // `/cumpleanos` va a la derecha del titular y a escala 0,8, y eso solo lo pide esa página.
         'trio--page' => 'web/cumpleanos.blade.php · la colocación del trío en la página (`#659`)',
+        // ⚠️⚠️ Aquí la familia ENTERA se queda sin sujeto en el producto: la cinta `C3` solo la pintaba
+        // `/servicios`, y se va con ella (`#660`). Se declaran las CINCO clases, no la familia: las
+        // guardas de huérfanos miran clase a clase, y con solo el bloque sus cuatro hijos seguían
+        // saliendo huérfanos (medido: el test los nombró uno a uno).
+        'brand-band' => 'web/servicios.blade.php · la cinta C3, la única pantalla que la pinta (`#660`)',
+        'brand-band__inner' => 'web/servicios.blade.php · el recorte de la cinta C3 (`#660`)',
+        'brand-band__track' => 'web/servicios.blade.php · el carril que desplaza la cinta C3 (`#660`)',
+        'brand-band__item' => 'web/servicios.blade.php · cada título dentro de la cinta C3 (`#660`)',
+        'brand-band__dot' => 'web/servicios.blade.php · el punto separador de la cinta C3 (`#660`)',
         'slot-ico-altura' => 'web/normas.blade.php · el icono de «La altura, de un vistazo» (`#655`)',
         'slot-ico-saltador' => 'web/normas.blade.php · el icono del grupo «Mientras saltas» (`#655`)',
     ];

@@ -18,7 +18,7 @@
 - ⚠️ **Una URL que cambia es SEO perdido y no falla nada**: el sitemap se compara antes y después. Sale de
   **nombres de ruta del producto** (§1.4), así que las rutas se quedan en `main`; solo se mudan las vistas.
 - **Estado**: ✅ aprobada (`#647`). **T2a HECHA**; **T2b EN CURSO**: mudadas `/contacto`, `/normas`, `/bar`,
-  los cinco legales, `/atracciones`, `/precios` y `/cumpleanos` (`#654`→`#659`; §4.4 y §4.7) y **la suite corre SIN paquete**
+  los cinco legales, `/atracciones`, `/precios`, `/cumpleanos` y `/servicios` (`#654`→`#660`; §4.4 y §4.7) y **la suite corre SIN paquete**
   (`phpunit.xml`): el producto prueba su anfitrión mínimo y la instancia se prueba con la huella. ⚠️ Mudar
   una vista es, en este orden: barrer sus reglas (§4.7), partir sus pruebas por lo que afirman (§4.5.bis),
   dejar un anfitrión mínimo que cumpla el armazón, y huella 0 — **con la página DENTRO de la huella**
@@ -131,7 +131,7 @@ del contrato de instancia** que espera. El producto valida esa versión al arran
 
 | Se muda a la instancia | Se queda en el producto |
 |---|---|
-| `home.blade.php` y `pages/*.blade.php` · **✅ `/contacto`, `/normas`, `/bar`, los cinco legales, `/atracciones`, `/precios` y `/cumpleanos`** (`#654`→`#659`, 20-09); quedan `servicios` y `home` | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
+| `home.blade.php` y `pages/*.blade.php` · **✅ las OCHO de `pages/`, que ya no existe** (`#654`→`#660`, 20-09); queda **`home`** | Las **rutas** y sus nombres (el sitemap, §1.4) · un **anfitrión mínimo** por vista mudada, en `resources/views/anfitrion/` |
 | — | Los **32 componentes** de `site/` (son mecanismo; siete ya leen el arte de fuera) |
 | — | El cajón, el panel, los correos, `/mi-cuenta`, `/api/v1` |
 
@@ -311,7 +311,34 @@ de verdad la lista de material**: `.trio` y `.trio-stand` conservan consumidor e
 pero el MODIFICADOR `trio--page` no, así que se declara con su vista. ⚠️ *La entrada de la lista es el
 MODIFICADOR, no la familia*: declarar `trio` entero habría tapado que la portada sí lo pinta.
 
-▶ **Lo que queda de la T2b**: `servicios` y, la última, `home`, con el mismo método: barrido de reglas →
+▶ **`/servicios`, MUDADA** (`#660`, 20-09), y con ella **`resources/views/pages/` deja de existir**. Su
+barrido fue el más caro de la T2b y dejó la lección más transferible: **una página puede llevar dentro más
+de una forma de escribir dinero**. Aquí había dos —el `$fmt` de la tabla tecleada y el «desde», que además
+elegía a mano QUÉ precio anunciaba—, y una tenía un defecto vivo: en inglés, la misma pantalla mezclaba
+«from 14.95 €» (escrito por el producto) con «12,00 €» (escrito por la vista). Las dos bajan
+(`GroupRateTables::lowestWritten()`), y la segunda **cambia lo que se ve** —«12,00 €» → «12 €»—, medido y
+llevado al owner antes de tocarlo.
+⚠️ **La lista de material se declara clase a clase, no por familia**: la cinta `C3` tiene cinco
+(`brand-band` y sus cuatro hijos) y con el bloque solo, la guarda siguió nombrando huérfanos a los otros.
+
+❗❗ **Y el arnés de esta tanda enseñó cómo se mide una partición, en tres pasadas** (6/12 → 10/12 → 11/11).
+Los supervivientes no eran código flojo: eran **guardas nuevas sin sujeto**, y las tres formas de no tenerlo
+se repiten en cualquier mudanza:
+1. **El caso se sale por su propia puerta de atrás.** El del «desde» empezaba con un `if ($minimo === null)
+   return;` y los servicios del seeder son solo-contacto —sin productos no hay tablas—, así que el caso
+   pasaba sin afirmar nada. *Un `return` temprano en un test es una rama que hay que sembrar, no una
+   cortesía.*
+2. **El valor esperado se deriva de lo mismo que se mide.** Calcular el mínimo en el test con `min()` y
+   compararlo con el del servicio hace que el mutante que lo cambia a `max()` se compare consigo mismo. Se
+   escribe A MANO («18 €»), como `ArmazonContractTest` hace con su inventario.
+3. **El dato del caso no distingue las dos conductas.** Con un importe de 18,50 € el registro de escaparate
+   y el de transacción escriben IGUAL: hay que elegir un euro exacto (18 €) para que el mutante del formato
+   muera.
+▶ Y un cuarto, que no es un hueco: un mutante **EQUIVALENTE** se retira con su motivo escrito. Quitar el
+`filter()` antes de `min()` no cambia nada —medido: `Collection::min()` ya ignora los `null`—, así que no
+hay guarda que pueda matarlo.
+
+▶ **Lo que queda de la T2b**: **`home`** (1.631 líneas), con el mismo método: barrido de reglas →
 **barrido de variables muertas** → partir pruebas → anfitrión mínimo → huella. Después, T3–T5 (spec
 hermana §4.6).
 

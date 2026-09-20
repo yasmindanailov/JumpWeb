@@ -70,7 +70,10 @@ class SectionHeadlineTest extends TestCase
         $vistas = $this->vistas();
 
         $this->assertArrayHasKey('home.blade.php', $vistas, 'la portada no está en el corpus');
-        $this->assertArrayHasKey('pages/services.blade.php', $vistas, 'falta una página pública');
+        // ⚠️ Desde `#660` (F5 · T2b) **`resources/views/pages/` ya no existe**: las ocho páginas viven en
+        // la instancia y el producto sirve su anfitrión mínimo. El centinela se re-apunta a uno de ellos,
+        // que es la página pública que el producto SÍ tiene.
+        $this->assertArrayHasKey('anfitrion/servicios.blade.php', $vistas, 'falta una página pública');
         $this->assertArrayNotHasKey('auth/reset-password.blade.php', $vistas, 'se ha colado una pantalla de servicio');
 
         $this->assertGreaterThan(15, count($vistas), 'el corpus es sospechosamente corto');

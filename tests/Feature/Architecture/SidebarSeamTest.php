@@ -147,7 +147,7 @@ class SidebarSeamTest extends TestCase
         // viva en `/cumpleanos`, cuyo botón no elige entre los packs de la tabla. Se vigilan las dos.
         $this->assertStringContainsString(
             "openWith({ type: 'product', id:",
-            (string) file_get_contents(resource_path('views/pages/services.blade.php')),
+            (string) file_get_contents(resource_path('views/anfitrion/servicios.blade.php')),
             'la sección de servicios ha dejado de declarar su intención'
         );
         // ⚠️ Desde `#659` (F5 · T2b) la página de cumpleaños de PlayJump vive en su instancia: lo que el
@@ -187,10 +187,10 @@ class SidebarSeamTest extends TestCase
         // vieja se retiró y la página rehecha abre el cajón en los packs desde su comparativa.
         // ▶ `#568`: ENTRA la tarjeta de tarifa, y con ella se cierra la pérdida de arriba en su mitad
         // de producto — su botón ya no llama a `open()` a secas: abre el cajón EN su producto.
-        // ▶ `#659`: la de cumpleaños pasa de `pages/events` a `anfitrion/cumpleanos`. El censo mide lo
-        // que el PRODUCTO declara; la landing de cada instancia declara lo suyo en su repo.
+        // ▶ `#659`/`#660`: las dos páginas pasan a sus anfitriones (`pages/` ya no existe). El censo mide
+        // lo que el PRODUCTO declara; la landing de cada instancia declara lo suyo en su repo.
         $this->assertSame(
-            ['anfitrion/cumpleanos.blade.php', 'components/site/rate-rail.blade.php', 'pages/services.blade.php'],
+            ['anfitrion/cumpleanos.blade.php', 'anfitrion/servicios.blade.php', 'components/site/rate-rail.blade.php'],
             $declaran,
             "la lista de superficies que declaran su intención de compra ha cambiado.\n".
             "Si es una nueva, añádela aquí; si una la ha perdido, ese camino de compra se ha cerrado\n".

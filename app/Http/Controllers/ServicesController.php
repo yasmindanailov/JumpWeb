@@ -7,9 +7,17 @@ use App\Domain\Booking\Services\GroupRateTables;
 use App\Domain\Booking\Services\PartyCards;
 use App\Domain\Booking\Services\RateTable;
 use App\Domain\Content\Models\LandingService;
+use App\Http\Instancia\InstanceViews;
 
 class ServicesController extends Controller
 {
+    public function __construct(private readonly InstanceViews $instancia) {}
+
+    /**
+     * ⚠️ Desde `#660` (F5 · T2b) la vista vive en la INSTANCIA (`web/servicios.blade.php`) y el producto
+     * sirve `anfitrion/servicios` sin paquete. Lo que se pasa es el CONTRATO de la vista
+     * (`InstanceViews::CONTRATO_DE_VISTAS`).
+     */
     public function __invoke(GroupRateTables $groupRates)
     {
         // Página /servicios data-driven (#256, modelo A): las secciones editoriales salen de la
@@ -32,11 +40,20 @@ class ServicesController extends Controller
             ->orderBy('position')
             ->get();
 
-        return view('pages.services', [
+        // Se compone UNA vez: de aquí salen las tablas y el «desde» de cada servicio.
+        $tablas = $services->mapWithKeys(fn (LandingService $service): array => [
+            $service->id => $groupRates->compose($service->purchasableProducts()),
+        ])->all();
+
+        return view($this->instancia->pick('servicios', 'anfitrion.servicios'), [
             'services' => $services,
-            'groupRates' => $services->mapWithKeys(fn (LandingService $service): array => [
-                $service->id => $groupRates->compose($service->purchasableProducts()),
-            ])->all(),
+            'groupRates' => $tablas,
+            /*
+             * El «desde» de cada servicio, YA ESCRITO por el producto (`#660`). Vivía en la vista, que
+             * elegía el mínimo a mano y lo escribía con `Money::format()`: dos reglas del producto en la
+             * landing, y una de ellas con un defecto vivo en inglés.
+             */
+            'groupFrom' => array_map(fn (array $t): ?string => $groupRates->lowestWritten($t), $tablas),
             // Las columnas dicen lo mismo que en `/precios`: los días de la normal y el rótulo del panel.
             'rateColumns' => ['normal' => $columnas->normalColumnLabel(), 'special' => $columnas->specialColumnLabel()],
             'birthdayCards' => (new PartyCards)->compose($cumples),
