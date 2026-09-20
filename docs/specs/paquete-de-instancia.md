@@ -468,12 +468,22 @@ de la portada» es en realidad **marcado de un componente del producto montado p
 **no se mudan ni se retiran: cambian de sujeto**, como la mitad de `PageHeadTest` en `#658`. Solo los ~117
 viajan a `paginas/home.md` con la huella de juez.
 
-⚠️ **Y una pregunta que hay que contestar ANTES de escribir el anfitrión**: las secciones que la portada
-pinta EN LÍNEA desde servicios del producto (`ZoneCards`, `PartyCards`, `RideMosaic`, la prueba social) se
-quedan sin consumidor en el producto al mudarse. Sus clases CSS irán a
-`MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` —que es lo previsto— **pero el hero entero también**, y ahí la lista
-deja de ser una lista corta de excepciones. *Si la deuda de la vía B se vuelve inventario, el problema no
-es la lista: es que esas secciones deberían ser componentes.*
+❗❗ **LA DEUDA DEL CSS, CONTESTADA CON LA MEDIDA** (`#665`, `[DECIDIDO owner]`). La pregunta era si esas
+secciones deberían ser componentes. **Medirlo la descartó**: al mudar `home`, **208 clases** de las dos
+hojas se quedan sin consumidor en el producto (20 familias: `rev` 28, `before` 26, `hero` 22, `salta` 20,
+`zone-card` 18, `party-card` 17…), y **la guarda de huérfanos solo ve UNA** —`trio--events`—, porque su
+sujeto es el material de FACHADA. O sea que **207 pasarían sin que nada avise**: la deuda no es la lista,
+es lo que la lista no mira.
+▶ **Y componentizar las secciones EMPEORA la deuda, no la cierra**: §1.5 dice que la de la vía B no es
+material del cliente en el producto, sino que *«la instancia depende de 29 nombres de componente»*, y §3
+dice que **la vía A es el DESTINO**. Siete secciones más serían ~36 nombres: profundizar en la transición.
+*La propuesta murió al medir su premisa.*
+⚠️ **Y no es solo una medida grande: cambia de dueño.** En la vía A, esas 208 clases viajan con la página
+que las pinta. **Son el diseño de la instancia, no del producto.**
+▶ **DECIDIDO**: `home` se muda TAL CUAL, y el CSS va en una **T2c** propia (§4.6 de la spec hermana). No se
+mezclan dos riesgos: mover marcado se verifica con la HUELLA; mover reglas toca el orden de CASCADA, que es
+otra medida. ⚠️ Lo que esto arregla del plan: **las T3–T5 no contemplaban el CSS**, aunque la lista de
+material declarado prometía vaciarse «cuando el material se mude con las vistas (T3–T5)».
 
 ▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) con el plan de arriba. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
 en 60 ficheros**, porque medio producto usa `/` como «una página cualquiera» para ejercitar el armazón, las

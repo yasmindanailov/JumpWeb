@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#664`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#665`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: `pages/` ya no
 > existe; el barrido de `home` hecho y **sus cuatro reglas fuera**, con el material del cliente en el
 > paquete de instancia, que ya tiene remoto privado).
@@ -93,9 +93,13 @@
    ❗❗ **~44 de los 161 tienen su sujeto en un COMPONENTE del producto** (`rate-rail` 25, `visit` 16, el
    mapa 3): **cambian de sujeto, no se mudan** (como `PageHeadTest` en `#658`). Solo **~117** viajan a
    `paginas/home.md` con la huella.
-   ⚠️ **Contestar ANTES de escribir el anfitrión**: con el hero y las secciones en línea, la lista de
-   material declarado deja de ser corta. *Si la deuda de la vía B se vuelve inventario, el problema es que
-   esas secciones deberían ser componentes.* Y el anfitrión **no puede dar por hecho que hay vídeo**.
+   ✅ **LA DEUDA DEL CSS, CONTESTADA** (`#665`, `[DECIDIDO owner]`): al mudar `home` quedan **208 clases sin
+   consumidor** y la guarda de huérfanos **solo ve una** (su sujeto es el material de fachada), así que 207
+   serían invisibles. ❗ **Yo propuse componentizar las secciones y la medida lo mató**: la deuda de la vía B
+   es que la instancia depende de **29 nombres de componente** (spec §1.5) y la **vía A es el DESTINO**
+   (§3); siete secciones más serían ~36. ▶ **`home` se muda TAL CUAL y el CSS va en una T2c propia**
+   (`instancia-y-landing-fuera.md` §4.6): marcado se verifica con HUELLA, reglas con CASCADA — dos riesgos,
+   dos tandas. ⚠️ Y el anfitrión **no puede dar por hecho que hay vídeo**.
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del

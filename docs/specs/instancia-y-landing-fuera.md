@@ -401,6 +401,12 @@ de §1.4 es el instrumento, y queda como guarda.
 2. **T2 · el paquete de la instancia**: repo desde plantilla ✅ (T2a, `#647`), la landing actual mudada tal
    cual (vía B) vista a vista —✅ las OCHO de `pages/`, que ya no existe (`#654`→`#660`); queda `home`—
    y el sitemap comparado.
+2.bis. **T2c · el CSS de la landing se muda con ella** (`#665`, `[DECIDIDO owner]`). ❗ **Nace porque faltaba**:
+   al mudar `home` quedan **208 clases sin consumidor** en el producto y la guarda de huérfanos solo ve una,
+   así que 207 serían deuda invisible. Ninguna de las tandas de abajo contemplaba el CSS, aunque la lista de
+   material declarado prometía vaciarse con ellas. ⚠️ Va **aparte de la T2** a propósito: mudar marcado se
+   verifica con la HUELLA y mudar reglas toca el ORDEN DE CASCADA, que es otra medida y otro riesgo.
+   ⚠️ Y **no vale `client.css`**: su README dice «tokens, no reglas». Hace falta mecanismo.
 3. **T3 · el panel adelgaza**: los seis recursos y las secciones de texto.
 4. **T4 · `zones` adelgaza** y cae la última marca viva.
 5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.
