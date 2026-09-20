@@ -12,19 +12,17 @@
 
 - **Regla de trabajo del owner (`#630`)**: lo TÉCNICO lo decide el agente por el estándar profesional y lo
   justifica con medida; lo que afecte al TIPO DE PRODUCTO se le lleva con opciones cerradas, la recomendada primero.
-- **F0–F4 CERRADAS**; su detalle vive en sus specs (`token-bearer.md`, `cajon-empaquetable.md`) y en sus
-  decisiones. El plugin `jumpweb-agente` (repo `~/proyectos/jumpweb-agente`, marketplace por URL de git) se
-  actualiza con `claude plugin marketplace update` + `claude plugin update … --scope project` (`#626`) y
-  pide REINICIAR la sesión. ▶ Tarea de F1 aún abierta: podar `DEUDA.md` (277 KB) y
-  `VERIFICACION-E2E-CAJON.md` (186 KB).
+- **F0–F4 CERRADAS**; su detalle vive en sus specs y decisiones. El plugin `jumpweb-agente` (repo
+  `~/proyectos/jumpweb-agente`) se actualiza con `claude plugin marketplace update` + `claude plugin update …
+  --scope project` (`#626`) y pide REINICIAR. ▶ De F1 queda podar `DEUDA.md` y `VERIFICACION-E2E-CAJON.md`.
 - **Análisis estático ENTERO en el gate** (`#625`, `#629`): Larastan 5 y ESLint con trinquete; la línea base
   **solo encoge**.
 - **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
   TODO es opcional; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
 - **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
   donde hay que leerlo. `#627`: la app en React Native + Expo.
-- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN**: precios × 0,8 y badge como DATO, por cuatro
-  filas `promo.*` de `settings`. Receta de fin en `ENTORNOS.md` §6.
+- **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
+  `ENTORNOS.md` §6 y en «retomar» 5).
 - ⚠️ **Tras la mudanza de `#648` una sesión ya abierta PIERDE skills y hooks** (el registro del plugin se
   resuelve al arrancar): basta con sesión nueva en `producto/`. ⚠️ Y en la sesión del 20-09 el harness no
   listó las skills del plugin: `/carril` y `/handoff` se siguieron a mano desde su `SKILL.md`.
@@ -38,8 +36,8 @@
    (`v1.2.0` = `f581c791`, anotada, 19-09) con su changelog de dos mitades. **Para las instancias no hay
    nada que hacer**: sin migraciones, sin claves de `.env`, sin ajustes. ⚠️ Producción, de noche o con el
    parque cerrado (`#594`); sería el **décimo**. Cortar la versión y desplegarla son dos actos, y el
-   segundo es suyo. ⚠️ **El SPA pide no desplegar lo suyo (T5–T7) antes del borde §7.1·5** (su buzón,
-   20-09): el owner ya dio el ✅ en vivo a la invitación; quedan ese borde, el `.ics` en móvil y Turnstile real.
+   segundo es suyo. ▶ El SPA cerró el borde §7.1·5 (`#718`) y dio la invitación por cerrada con el ✅ del
+   owner (20-09): su freno ya no aplica; le quedan el `.ics` en un móvil real y Turnstile real en producción.
    ▶ **`main` ya se movió tras etiquetar**, así que la guarda 8 dice «HEAD no es una versión»: se despliega
    desde **`git checkout v1.2.0`** y se vuelve con `git checkout main`. Comprobado en seco: desde la
    etiqueta, el pre-vuelo contesta «versión a desplegar: v1.2.0».
@@ -117,9 +115,13 @@ guarda 8) · `scripts/mutar-guarda8.sh` · `CHANGELOG.md` · `phpstan.neon` · `
 `StaticAnalysisGateTest` · `Tests\TestCase::be()` · **el token y el cajón empaquetado**, cuyos ficheros
 enumera cada spec (`token-bearer.md`, `cajon-empaquetable.md` §0): el emisor, el arranque, la apertura, la
 carcasa, la hoja GENERADA `public/css/cajon.css` y sus cuatro arneses · `scripts/huella-maquetacion.mjs` ·
-**EL PAQUETE DE INSTANCIA** (`#647`, `#649`: `config/instancia.php`, `Http\Instancia\InstanceViews` con el
-CONTRATO DE VISTAS, `plantilla/`, `InstanceViewPathTest`, `InstanceViewContractTest`,
-`scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`) ·
+**EL PAQUETE DE INSTANCIA** (`#647`→`#656`: `config/instancia.php`, `Http\Instancia\InstanceViews` con el
+CONTRATO DE VISTAS y `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, `plantilla/`, `phpunit.xml` (`INSTANCIA_RUTA`
+vacía), los anfitriones `resources/views/anfitrion/**` con sus `Anfitrion*Test`, `InstanceViewPathTest`,
+`InstanceViewContractTest`, `scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`;
+**y el repo `instancias/playjump`**, `web/` y `docs/paginas/`) · **las reglas bajadas en la T2b**
+(`Platform\Services\{VenueAddress,LocalNumber,MetaDescription,Honeypot,LocalDate}` con sus tests, y los
+componentes `site/{honeypot,turnstile}`) ·
 **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
 `Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
 `PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`,
@@ -195,10 +197,6 @@ dueño es el carril de la web/reseñas—) ·
 - **La línea base se toma ANTES de tocar el controlador que elige la vista** (`#654`): con `pick()` ya
   apuntando al anfitrión, «la vista de antes» capturada era el respaldo nuevo, comparado consigo mismo. La
   huella sí era de antes; el diff de DOM se repitió sirviendo las dos versiones desde la instancia.
-- **Un patrón nuevo del mapa de frases se prueba contra los mensajes REALES del owner** (mapa de `git show
-  HEAD:` contra el nuevo sobre los `.jsonl` de `~/.claude/projects/-home-yasmi-proyectos-JumpWeb/`, filtrando
-  `type == user` con texto): así apareció su cierre habitual, «vamos a cerrar sesion». El resumen de
-  compactación NO pasa por `UserPromptSubmit`.
 - **Comparar manifiestos de Vite enteros da un falso «hay algo que desplegar»**: `app.css` cambia de hash con el
   árbol (Tailwind escanea docs y mockups). Se compara entrada a entrada.
 - **Taquilla cobra de la misma tabla `prices` que la web**, y el pedido manual y ocho servicios del núcleo llaman
@@ -209,7 +207,6 @@ dueño es el carril de la web/reseñas—) ·
   `"/mnt/c/Program Files/Docker/Docker/Docker Desktop.exe"` en segundo plano y `until docker info`.
 - Una etiqueta no pasa por el gate (`pre-push` solo mira `refs/heads/main`): `/release` exige que el commit ya
   esté en `origin/main`; y un test sobre una «casi versión» tiene que EMPUJARLA antes de medir.
-- `git show HEAD~N:docs/DECISIONES.md` (antes de F1) es el registro único de antes de la partición.
 
 ## Buzón
 
