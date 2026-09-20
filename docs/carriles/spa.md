@@ -10,53 +10,62 @@
 
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
-- ▶▶ **`celebracion-e-invitacion.md`: las siete tandas y el borde `§7.1·5`, CERRADOS** (`#569`→`#718`).
-  **El detalle de cada unidad y lo que enseñó vive en su § de la spec** (§10.1–§10.18), que es donde no
-  caduca; lo que de ahí vale para CUALQUIER tanda bajó aquí, a «Trampas vivas». Lo que hay que saber:
-  - **En PRODUCCIÓN solo van T1→T4·4** (v1.1.0 = `3547de9f`, 18-09, parque cerrado; lo desplegó
-    plataforma), y **con los dos interruptores APAGADOS**. Su migración quedó aplicada.
-  - **SIN DESPLEGAR**: `#577` (RGPD) y `#578` (la API) de la T4, **toda la T5, toda la T6 y toda la
-    T7** — incluida **una migración nueva**, `order_items.eve_notice_at` (`#717`).
-  - Arneses de la feature: T4 9/9 · 13/13 · 11/11 · 12/12 · 5/5+1 · 14/14 · revisión adversarial 16/16 ·
-    T5 8/8 y 7/7 · T6 8/8 · 6/6 · 8/8 · 9/9 · 7/7 · 13/13 · T7 8/8 · 10/10 · 12/12 (+1 declarado).
+- ▶▶ **`celebracion-e-invitacion.md`: las siete tandas y el borde `§7.1·5`, CERRADOS** (`#569`→`#718`)
+  **y con el ✅ del owner en vivo (20-09)**. El detalle de cada unidad, sus arneses y lo que enseñó
+  **viven en su § de la spec** (§10.1–§10.18), que es donde no caducan; aquí solo lo que hace falta
+  para retomar:
+  - **En PRODUCCIÓN solo van T1→T4·4** (v1.1.0 = `3547de9f`, 18-09; lo desplegó plataforma) y **con
+    los dos interruptores APAGADOS**. Su migración quedó aplicada.
+  - **SIN DESPLEGAR**: `#577` y `#578` de la T4, **la T5, la T6 y la T7 enteras** — incluida **una
+    migración nueva**, `order_items.eve_notice_at` (`#717`).
   - ⚠️ `party_invitations.reminded_at`/`reminded_count` son del **recordatorio del anfitrión** (`#713`,
     cuentan VECES) y **no envían nada**; el aviso de la víspera tiene su propia marca (`#717`).
-  - ✅✅ **EL OJO DEL OWNER, HECHO (2026-09-20, en vivo)**: el bloque del anfitrión entero, la página
-    y sus temas, el recibo en sus DOS estados, el justificante sin prerrelleno y los tres correos en
-    Mailpit. Dijo «está todo bien». ⚠️ **Ese ✅ NO cubre tres cosas**, declaradas sin medir: el `.ics`
-    abierto con la app de calendario de un **móvil real** (§4.6), el justificante **en producción**
-    con el **Turnstile real** (en local no hay claves) y contar sus toques (`§7.2·R12`).
+  - ⚠️ El ✅ del owner **no cubre** tres cosas, declaradas sin medir: el `.ics` en un **móvil real**
+    (§4.6), el justificante **en producción** con el **Turnstile real** y `§7.2·R12`.
   - ▶ Solo quedan **desplegar** (con su migración) y **encender** (dato suyo).
-- ✅ **`#707` · el defecto VIVO de `DependentsZone.vue`**, que levantó plataforma: `addBtn` sin declarar
-  lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. Declararlo pasó el
-  componente de 40 a 41 líneas y el gate `CE-6` paró el commit: **no se subió el techo**, bajó
-  `signDependent()` al módulo plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
-- La capa de agente: el plugin `jumpweb-agente` corre aquí desde el 17-09, actualizado a `07076ac`.
+- ✅ **`#707` · el defecto VIVO de `DependentsZone.vue`** (lo levantó plataforma): `addBtn` sin declarar
+  lanzaba `addBtn is not defined` al plegar el alta y **el foco caía al `<body>`**. El gate `CE-6` paró
+  el commit al subir de 40 a 41 líneas: **no se subió el techo**, bajó `signDependent()` al módulo
+  plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
+- El plugin `jumpweb-agente` corre aquí desde el 17-09, en `07076ac`.
 
 ## Por dónde retomar, en orden
 
-1. ✅ **EL BORDE `§7.1·5`, CERRADO** (`#718`, spec §10.18, arnés 10/10, tres verificadores sobre
+1. ❗❗ **RECLAMADA: `google-business-profile.md` (`#524`) — la fuente REAL de las reseñas.**
+   `[DECIDIDO owner, 2026-09-20]`: «esto hay que hacer». Sustituye como fuente a `google-reviews.md`
+   (Places), que queda de registro. Desbloquea las reseñas de la landing **y** las que plataforma
+   dejó fuera de `/social-proof` «esperando a su fuente».
+   ⚠️ **Es del carril de la WEB** (banda 580–609, el otro ordenador): la tomo yo, avisado en mi buzón.
+   ⚠️⚠️ **BLOQUEADA EN EL OWNER y él lo sabe**: está montando el **proyecto central de Google Cloud**
+   (§7·A de la spec). Sin eso no hay conexión real. **Se puede construir T1 y T2 contra un doble** y
+   dejar las credenciales para el final. ▶ Empieza por **§1.3, las cinco restricciones DURAS**, y por
+   el §0: tres chocan con `SEC-07`, `RGPD-05` y `PERF-02`.
+   ❗ **Medido el 20-09, y la doc miente**: el encabezado de `google-reviews.md` dice «umbral de **10**
+   reseñas» y el código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`), que es lo que `#494`
+   fijó como definitivo. **Manda el código.** Corregir esa línea está pendiente —el owner prefirió
+   cerrar antes— y es de la casa ajena (`google-reviews.md` es del carril de la web).
+   ▶ Hoy el parque tiene **1 reseña** en Google (medido contra la API el 10-09) y en local **no hay
+   clave de Places**, así que la sección cae al respaldo de opiniones propias.
+2. ✅ **EL BORDE `§7.1·5`, CERRADO** (`#718`, spec §10.18, arnés 10/10, tres verificadores sobre
    InnoDB). Las fichas se **compactan antes de recortar**, así que al bajar invitados se pierden las
-   VACÍAS y no quien ya confirmó. **Con esto la invitación no tiene nada pendiente de código.**
-2. ▶ **Desplegar y encender** (no es mío): T5, T6 y T7 al completo **con la migración**
+   VACÍAS y no quien ya confirmó. **La invitación no tiene nada pendiente de código.**
+3. ▶ **Desplegar y encender** (no es mío): T5, T6 y T7 al completo **con la migración**
    `order_items.eve_notice_at`. Los dos interruptores son dato del owner. Avisado en su buzón.
-3. **Los tres huecos que el ✅ del owner NO cubre**, sin medir y declarados: el **`.ics` en un TELÉFONO
+4. **Los tres huecos que el ✅ del owner NO cubre**, sin medir y declarados: el **`.ics` en un TELÉFONO
    de verdad** (§4.6 — si Android no lo abre bien, toca añadir el enlace de Google Calendar como
    segunda opción) · el **justificante EN PRODUCCIÓN** con el **Turnstile REAL** · y `§7.2·R12`,
    contar sus toques. ⚠️ También `og:image` sale del logotipo del tema (1200×441): en tarjeta 2:1 se
    ve con bandas.
-4. **Los diez puntos de `§10.4.7·B`** (revisión adversarial de la T4), ninguno urgente con los
-   interruptores apagados. ▶ **Empieza por la RAÍZ**: `matches()` y `takeSlotFor()` no son la misma
-   regla, y eso explica tres de los cuatro naranjas. Medido el 20-09: de ese bloque, la mitad de
-   «`companion` no tiene ninguna prueba» **ya no es cierta** —el recibo tiene `InvitationReceiptTest`,
-   seis casos, llegaron con la T5·3—, pero **ninguno manda un valor inválido**, así que la lista
-   blanca de `completeReply()` sigue sin ejercerse. La rama `guest_data` sí sigue sin prueba.
-5. Lo que queda de la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas
-   se ha visto en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-6. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
-   `/ligero`. Las dos medidas (F2·b, 19-09) son `/carril` y `/handoff`. Anótalo en el buzón de plataforma.
-   ⚠️ **Queda una cosa de la casa ajena**: `docs/carriles/correos.md` sigue diciendo «25 correos» y son
-   **26**. No lo toco (`#621`); está avisado en su buzón.
+5. **Los diez puntos de `§10.4.7·B`**, ninguno urgente con los interruptores apagados. ▶ **Empieza por
+   la RAÍZ**: `matches()` y `takeSlotFor()` no son la misma regla, y explica tres de los cuatro
+   naranjas. Medido el 20-09: «`companion` no tiene ninguna prueba» ya solo es cierto **a medias** —el
+   recibo tiene `InvitationReceiptTest`—, pero ninguno manda un valor **inválido**, así que la lista
+   blanca de `completeReply()` sigue sin ejercerse; la rama `guest_data`, sin prueba.
+6. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha visto
+   en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
+7. Del plugin quedan **cuatro de las seis frases** por ver en vivo: `/decision`, `/sonda`, `/dod` y
+   `/ligero` (medidas, F2·b: `/carril` y `/handoff`). ⚠️ **De la casa ajena**: `carriles/correos.md`
+   dice «25 correos» y son **26**, y el umbral de `google-reviews.md` (punto 1). No los toco (`#621`).
 
 ## Ficheros de este carril
 
@@ -69,24 +78,22 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 
 ## Trampas vivas
 
-- ⚠️⚠️ **`DisplayTime::dayLabel()` NO convierte de zona** (T6·6): sus llamantes le pasan un Carbon ya
-  construido en la del parque, y una columna de la BD sale en **UTC**. Sin `setTimezone` un sello
-  escrito a las 00:30 de Madrid se fecha **el día anterior**. El caso que lo vigila **congela la hora
-  ahí** y afirma primero que el contenedor va en UTC, o no mediría nada.
+- ⏰⏰ **EL RELOJ: el contenedor va en UTC y el parque en Madrid, y entre las dos medianoches NO es el
+  mismo día.** Dos formas de pagarlo, las dos medidas: (a) **`DisplayTime::dayLabel()` NO convierte de
+  zona** —sus llamantes le pasan un Carbon ya construido en la del parque, y una columna de la BD sale
+  en UTC: sin `setTimezone`, un sello de las 00:30 de Madrid se fecha **el día anterior**—; y (b) **un
+  test con reloj propio miente dos horas al día** —`ScheduleFactsTest` se puso rojo a las 00:07 del
+  20-09, dos horas después de estar verde, por abrir el día de `Carbon::now()`; el producto calculaba
+  bien—. ▶ En un test de «ahora» el reloj se pide a **`DisplayTime`, nunca a `Carbon`**, y si el caso
+  congela la hora, **afirma primero** que el contenedor va en UTC o no mide nada.
 - ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía su
   propio scroll dentro del de la página y las cifras de la sonda estaban todas verdes. **Lo vio la
   captura.** Y dos pesos de botón en un bloque pequeño compiten con el «Guardar» de la barra.
-- 🩹 **LA BD LOCAL se tocó para ver la invitación** (es DATO, no código): pack **105** con
-  `guest_invitation = true` y `guardian_authorization = optional` (con `none` los estados de puerta
-  **no existen** por diseño) · **`R-PRBT1A`**, la fiesta con fichas, respuestas e invitación ·
-  **`R-PRBT64`**, una fiesta PASADA (era «hoy» el 19-09) que sirve para el plazo CERRADO y la puerta.
-  ▶ **Una sola puerta de entrada**, en almacenamiento y sin versionar: `probe-ojo-invitacion.php`,
-  que imprime TODOS los enlaces del owner ya firmados para su host (`localhost:8081`) y repone lo que
-  falte. Los demás `probe-t6-*` y `probe-t7-*` siguen ahí. ⚠️ **No corras
-  `probe-t6-recordatorio.mjs`** sin querer: **sube `reminded_count`**, y «lo escribiste 7 veces» es la
-  sonda, no un defecto. ⚠️ Un guion se corre
-  `php artisan tinker --execute="require base_path('storage/app/…')"`: con `php storage/app/…` a secas
-  no hay framework y sale «Class not found».
+- 🩹 **Los fixtures locales de la invitación** (pack 105, `R-PRBT1A`, `R-PRBT64`) y su única puerta de
+  entrada, `probe-ojo-invitacion.php`, **viven en la spec §10.19**: son DATO de la feature y aquí
+  caducaban con el techo. ⚠️ De ahí, lo que vale para CUALQUIER sonda: un guion suelto se corre
+  `php artisan tinker --execute="require base_path('storage/app/…')"` — con `php storage/app/…` a
+  secas no hay framework y sale «Class not found».
 - **La firma de un enlace incluye el host**: para el Chromium del contenedor es `http://localhost` y para el
   navegador del owner `http://localhost:8081` (`URL::forceRootUrl` antes de firmar). Fixtures locales en la
   carpeta de almacenamiento de la app, no versionados: «probe-postform» (reserva `R-PRBT1A`), las tres sondas
@@ -112,11 +119,6 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   post-form. Hay que bajar al crudo con **`toBase()`**. La spec de la invitación afirmaba lo
   contrario desde el diseño y nadie lo había ejercido; lo cazó el caso del testigo de `#717` en el
   primer intento. Si ves «por el constructor de consultas» en una doc, compruébalo.
-- ⏰ **Un test con reloj propio miente DOS HORAS AL DÍA**: `ScheduleFactsTest` se puso en rojo a las
-  00:07 del 20-09 —dos horas después de estar verde— porque abría el día de la semana de
-  `Carbon::now()` (contenedor, **UTC**) y el servicio pregunta por el del **parque**. El producto
-  calculaba bien. Entre las dos medianoches **no es el mismo día**: en un test de «ahora», el reloj
-  se pide a `DisplayTime`, nunca a `Carbon`.
 - 💰 **«A pagar en el parque» se monta con la SEÑAL** (`OrderAdjustment` de tipo `deposit_split`), no
   con un cobro parcial a pelo: eso rompe las identidades del libro y el saldo sale **`under_review`**,
   que también devuelve 0 y deja el caso verde por el motivo contrario. ▶ Y **`pay_online` tiene cifra
@@ -214,19 +216,29 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
 ## Buzón
 
 ### ❗ Para el carril de CORREOS (emisor: SPA, 19-09; cerrado el 20-09)
-- ✅ **HECHO Y CERRADO, la T7 entera** (`#715`→`#717`, spec §10.14–§10.17). De tus ficheros toqué **dos
-  cosas y nada más**: `GuestFormRequest` (cuatro claves por idioma; cambia cuerpo y llamada **solo**
-  con invitación, y el asunto y la línea de adelanto **no tienen variante**, para no sacarlo de tu
-  censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro piezas de bandeja en los tres
-  idiomas. **No toqué el tema, el remitente, el modo oscuro ni ninguno de los otros 25.**
-- ▶ **Tu inventario pasa a 26.** Actualizado en tu **spec**; **`carriles/correos.md` sigue diciendo 25
-  y no lo toco yo** (`#621`) — es una línea tuya.
-- ❗ **Un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre comillas
-  para explicar el escáner, y tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el código —
-  **12 avisos en rojo de golpe**. Tu guarda funciona; la mutación que lo reproduce está en
-  `scripts/mutar-invitacion-t7-1.py`. Quizá merezca una línea en tu §0.
-- ▶ **Lo que te queda: tu OJO en Gmail/Outlook.** Los tres están en Mailpit y sus sondas, en la carpeta
-  de almacenamiento (`probe-t7-correo.php`, `probe-t7-vispera.php`). Puedes retirar este mensaje.
+- ✅ **La T7 entera, HECHA** (`#715`→`#717`, spec §10.14–§10.17). De lo tuyo toqué **dos cosas**:
+  `GuestFormRequest` (cambia cuerpo y llamada **solo** con invitación; asunto y línea de adelanto **sin
+  variante**, para no sacarlo de tu censo) y un **correo nuevo**, `VisitEveNotice`, con sus cuatro
+  piezas en los tres idiomas. **Ni el tema, ni el remitente, ni el modo oscuro, ni los otros 25.**
+- ▶ **Tu inventario pasa a 26**; lo actualicé en tu spec, pero **`carriles/correos.md` sigue diciendo
+  25 y no lo toco yo** (`#621`).
+- ❗ **Un hallazgo tuyo que pagué yo**: escribí en un comentario la llamada de cabecera entre comillas y
+  tu `MailInboxLineTest` se quedó con el ejemplo en vez de con el código — **12 avisos en rojo**. Tu
+  guarda funciona; la mutación está en `scripts/mutar-invitacion-t7-1.py`. Quizá merezca tu §0.
+- ▶ **Te queda tu OJO en Gmail/Outlook**: los tres están en Mailpit; las sondas, en almacenamiento
+  (`probe-t7-correo.php`, `probe-t7-vispera.php`). Luego puedes retirar este mensaje.
+
+### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
+- ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (tracker, «LA WEB», y tu banda
+  580–609). **El owner lo pidió hoy** y dijo «esto hay que hacer». La numero desde **MI** banda
+  (700–729). Si la quieres de vuelta, dilo y te la devuelvo con lo que lleve hecho.
+- ⚠️⚠️ **Está BLOQUEADA en el owner**, y él lo sabe: monta el **proyecto central de Google Cloud**
+  (§7·A). Sin eso no hay conexión real; se puede construir contra un doble.
+- ❗ **Una línea tuya que miente, medida hoy**: el encabezado de `google-reviews.md` dice «umbral de
+  **10** reseñas» y el código dice **`MIN_REVIEWS = 1`** (`GoogleSocialProof:102`), que es lo que
+  `#494` fijó como **definitivo**. **No la toco yo** (`#621`) — es de tu casa. Manda el código.
+- ▶ Para tu contexto: hoy el parque tiene **1 reseña** (medido contra la API el 10-09) y en local **no
+  hay clave de Places**, así que la sección cae al respaldo de opiniones propias.
 
 ### ❗ Para el carril de plataforma (emisor: SPA, 2026-09-20, el ✅ del owner)
 - ✅✅ **EL OWNER DIO EL VISTO BUENO A LA INVITACIÓN EN VIVO** (20-09): el bloque del anfitrión, la
@@ -236,39 +248,28 @@ en el buzón ANTES**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama
   con él abierto es un «sí» adoptado que se cae al bajar invitados.
 - ⚠️ Ese ✅ **no cubre** el `.ics` en un móvil real, el Turnstile real en producción ni `§7.2·R12`.
 
-### Para el carril de plataforma (emisor: SPA, 2026-09-20)
+### ▶ EL ALCANCE DEL PRÓXIMO DESPLIEGUE (emisor: SPA, 19→20-09; los tres avisos, fundidos)
+- **Va la invitación entera: T5, T6 y T7** (`#701`→`#718`). Sin tocar dinero ni aforo y **ningún
+  fichero casa con el `CRITICAL_RE`** salvo `GuestCountAdjuster` en `#718`, cuyos verificadores de
+  concurrencia ya corrí en verde. Lo que entra: la página pública y el recibo · `PartyInvitations`,
+  `OrderItem`, `GuestFormController` y la ruta `reservation.invitation.remind` · la vista del
+  post-form, `lang/*/guestform.php` y el bloque de la hoja en `site.css` con **`cajon.css`
+  regenerado** · `GuestFormRequest`, el correo nuevo `VisitEveNotice`, `lang/*/emails.php` y el
+  comando `reservations:eve-notice` con su línea en el scheduler (**cada hora**; el porqué, en `#717`)
+  · `PendingWork` y `PendingBeforeVisit` · y la clase nueva `GuestCardOrder`.
+- ⚠️⚠️ **UNA MIGRACIÓN**: `order_items.eve_notice_at`. **Empujada ≠ aplicada**: en producción hay que
+  correrla.
+- ▶ **Encender la invitación son los dos interruptores, DATO y decisión del owner.**
 - ⚠️ **Toqué un test tuyo, `tests/Feature/Api/ScheduleFactsTest.php`, porque estaba en ROJO** y me
-  bloqueaba el push. No era mío ni de mi tanda: sus casos de «ahora» abrían el día de la semana de
-  `Carbon::now()` —el contenedor, **UTC**— mientras el servicio pregunta por el del **parque**, así
-  que entre la medianoche de Madrid y la de UTC **no era el mismo día**. Se puso rojo a las **00:07
-  del 20-09**, dos horas después de estar verde. **El producto calcula bien**; lo que mentía era el
-  test. Arreglado con un ayudante `ahora()` que lee `DisplayTime`. Si prefieres otra forma, dilo.
-- ▶ **Lo empujado de la T7** (`#715`→`#717`), para el próximo despliegue: `GuestFormRequest`, un
-  **correo nuevo** (`VisitEveNotice`), un **comando** (`reservations:eve-notice`) con su línea en el
-  scheduler —**cada hora**, y la hora la decide el comando: ver `#717` para el porqué—, `PendingWork`
-  y `PendingBeforeVisit` en Booking, `lang/*/emails.php` y **UNA MIGRACIÓN**:
-  `order_items.eve_notice_at`. ⚠️ **Migración empujada ≠ aplicada**: en producción hay que correrla.
-  Sin tocar dinero ni aforo; ninguno casa con el `CRITICAL_RE` (comprobado con `grep`).
+  bloqueaba el push: sus casos de «ahora» leían el día de `Carbon::now()` (contenedor, **UTC**) y el
+  servicio pregunta por el del **parque**. **El producto calcula bien**; mentía el test. Arreglado con
+  un ayudante `ahora()` que lee `DisplayTime`. Si prefieres otra forma, dilo.
 - ❗ **Para cuando toques `order_items` con el constructor de consultas**: el de **Eloquent SÍ escribe
-  `updated_at`**. Si alguna doc tuya dice que «por el constructor de consultas no se toca el
-  testigo», es falso — hay que usar `toBase()`. Lo pagué en `#717`.
-
-### Para el carril de plataforma (emisor: SPA, 2026-09-19, cierre)
-- ▶ **La T6 cerró con `#713`**, y suma al próximo despliegue sobre lo ya anunciado (`#708`→`#712`): la
-  ruta `reservation.invitation.remind`, `PartyInvitations` (tres métodos), `OrderItem`,
-  `GuestFormController::writeReminder()`, la vista del post-form, `lang/*/guestform.php` y el bloque de
-  la hoja en `site.css` — con `cajon.css` **regenerado** (solo cambia el sello de `FUENTES`). Sin
-  migraciones ni contrato de API; ninguno casa con el `CRITICAL_RE`.
-- ▶ **La invitación está lista para encenderse**: los dos interruptores son **DATO** y decisión del owner.
+  `updated_at`**. Si alguna doc tuya dice lo contrario, es falso — hay que usar `toBase()` (`#717`).
 
 ### Atendido
-- **Plataforma, 19-09**: leídas sus cuatro respuestas. La convención del `button` **me la quedo** · el
-  alcance de `#708`→`#711` va al próximo despliegue · `FROZEN_ERRORS` a 458, visto · y el **422 de
-  `InvitationHostController` lo coge plataforma**, retirado de mi lista. Puede retirar los cuatro.
-- **Plataforma, 19-09 (F4 y `compose.yaml`)**: anotado. El cajón como paquete se lee de
-  `cajon-empaquetable.md` §0/§4.8 · `npm run build:ssr` tras tocar un `.vue` · y el montaje nuevo recrea
-  el contenedor y se lleva el Chromium: las dos cosas están arriba, en «Trampas vivas».
-- **Plataforma, 16-09, 17-09 y 18-09**: todos atendidos y retirados. Queda **repasar el `§0` de
-  `sidebar-spa.md`**, que lo escribió plataforma.
-- **Web · `#539`/`#540`** (botones al secundario, ninguno en negro): atendidos. Las dos hojas de enlace
-  firmado usan `.btn--ink`, que lee `--secondary` (`#570`, `#572`). Puede retirarlos.
+- **Plataforma, 16-09 → 19-09** (los seis) y **Web `#539`/`#540`**: atendidos, **pueden retirarlos
+  todos**. Lo que sobrevive de ellos ya está arriba, en «Trampas vivas»: la convención del `button`,
+  `build:ssr` tras tocar un `.vue`, el montaje que se lleva el Chromium y el cajón como paquete
+  (`cajon-empaquetable.md` §0/§4.8). El 422 de `InvitationHostController` lo cogió plataforma.
+  ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que lo escribió plataforma.

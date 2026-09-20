@@ -2048,6 +2048,24 @@ puso en rojo `InvitationApiTest`, donde una ficha vacía delante de «Hugo» es 
 **Concurrencia** (toca el `CRITICAL_RE`): `purchase:verify-oversell`,
 `postform:verify-concurrency --scenario=cross` e `invitation:verify-places`, verdes sobre InnoDB.
 
+### 10.19 Los FIXTURES locales de esta feature (mudados del fichero de carril, 2026-09-20)
+
+Son **DATO de la BD local, no código**, y viven aquí porque son de la feature y allí caducaban con el
+techo del carril. El pack **105** tiene `guest_invitation = true` y `guardian_authorization = optional`
+(con `none` los estados de puerta **no existen** por diseño); **`R-PRBT1A`** es la fiesta con fichas,
+respuestas e invitación; **`R-PRBT64`**, una fiesta PASADA que sirve para el plazo **CERRADO** y para
+la puerta.
+
+▶ **Una sola puerta de entrada**, en la carpeta de almacenamiento y sin versionar:
+`probe-ojo-invitacion.php`. Imprime todos los enlaces del owner **ya firmados para su host**
+(`localhost:8081`; la firma cubre el host, y el del contenedor es `http://localhost`) y repone lo que
+falte. Los demás `probe-t6-*` y `probe-t7-*` siguen ahí para casos sueltos.
+
+⚠️ **No corras `probe-t6-recordatorio.mjs`** sin querer: **sube `reminded_count`**, y «lo escribiste 7
+veces» es la sonda, no un defecto.
+⚠️ Un guion suelto se corre `php artisan tinker --execute="require base_path('storage/app/…')"`: con
+`php storage/app/…` a secas no hay framework y sale «Class not found».
+
 ## Anexo · La fila del enrutador, mudada el 2026-09-16
 
 > Lo que decía la fila **«Vestir el formulario de CELEBRACIÓN o el JUSTIFICANTE · la INVITACIÓN digital de un cumpleaños · el «sí / no podemos» de un padre · el pegado de nombres · «¿vas tú con él?»»** de `CLAUDE.md` cuando el enrutador bajó a una línea por fila
