@@ -441,8 +441,41 @@ se notan —el seeder las anula y el catálogo queda sin ellas— y **el vídeo 
 casos en verde y la portada en 200 sin él. Por eso entra en el §7 de `INSTALACION-CLIENTE.md`, que se mira
 con los ojos, y **no** en una prueba: exigirlo pondría el gate rojo en toda máquina sin el paquete.
 
-▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) — su regla de caché (`?v={filemtime}`),
-partir pruebas, anfitrión mínimo y huella. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
+▶ **La regla de caché del vídeo NO se baja, y está medido** (`#664`): `@filemtime` aparece **37 veces en 15
+ficheros** del producto y su sufijo es **uniforme** —13 × `}}?v={{ @filemtime`, todas con arroba y todas
+`?v=`—. No hay variantes que unificar; es el IDIOMA de la casa, no una regla con dos escrituras como el
+euro. *Extraerlo para un solo sitio de llamada crearía la inconsistencia en vez de quitarla.*
+⚠️ Y `data-has-video="true"` está escrito a mano desde el commit fundacional, así que el estado «sin
+vídeo» que el CSS tiene diseñado —fondo con los colores de zona y su rótulo— **no se puede alcanzar**. No
+se toca: es MARCADO, y el marcado se va con la vista. ▶ Lo que sí es del producto: **el anfitrión mínimo
+no puede dar por hecho que hay vídeo.**
+
+### 4.7.bis · `home`: la mudanza MEDIDA antes de tocarla (`#664`)
+
+**Se midió como `#649` midió `/contacto`**: se apuntó el controlador a un anfitrión mínimo de nueve líneas
+y se corrió la suite entera. No es una estimación.
+
+| | Casos | Qué son |
+|---|---|---|
+| **521** | sobreviven | solo necesitaban «una página» para ejercitar armazón, cookies, tema, idioma, cabeceras o el montaje del cajón |
+| **~44** | rojos, re-apuntables | su sujeto vive en un **componente del producto**, que se queda (`rate-rail` 25, `visit` 16, el mapa 3) |
+| **~117** | rojos, se van | su sujeto vive DENTRO de `home.blade.php`: zonas, reseñas, cumpleaños, mosaico, dudas, atribución |
+
+▶ **161 rojos de 682**, en 31 ficheros. Compárese con `/contacto`: **9 de 14, en uno**.
+
+❗❗ **La consecuencia de diseño, y es la que ordena la tanda**: más de un tercio de lo que parecía «marcado
+de la portada» es en realidad **marcado de un componente del producto montado por la portada**. Esos casos
+**no se mudan ni se retiran: cambian de sujeto**, como la mitad de `PageHeadTest` en `#658`. Solo los ~117
+viajan a `paginas/home.md` con la huella de juez.
+
+⚠️ **Y una pregunta que hay que contestar ANTES de escribir el anfitrión**: las secciones que la portada
+pinta EN LÍNEA desde servicios del producto (`ZoneCards`, `PartyCards`, `RideMosaic`, la prueba social) se
+quedan sin consumidor en el producto al mudarse. Sus clases CSS irán a
+`MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` —que es lo previsto— **pero el hero entero también**, y ahí la lista
+deja de ser una lista corta de excepciones. *Si la deuda de la vía B se vuelve inventario, el problema no
+es la lista: es que esas secciones deberían ser componentes.*
+
+▶ **Lo que queda de la T2b**: la mudanza de **`home`** (1.631 líneas) con el plan de arriba. ⚠️⚠️ **Y no es una página más**: la piden **682 casos
 en 60 ficheros**, porque medio producto usa `/` como «una página cualquiera» para ejercitar el armazón, las
 cookies, el tema, el idioma, las cabeceras y el montaje del cajón. Las ocho anteriores tenían sus pruebas
 concentradas (`/contacto`: 14 casos en un fichero). Después, T3–T5 (spec hermana §4.6).

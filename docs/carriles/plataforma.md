@@ -2,7 +2,7 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#663`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#664`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-20** (T2b: `pages/` ya no
 > existe; el barrido de `home` hecho y **sus cuatro reglas fuera**, con el material del cliente en el
 > paquete de instancia, que ya tiene remoto privado).
@@ -83,10 +83,19 @@
    ✅ **Y el paquete tiene REMOTO PRIVADO** (20-09): `yasmindanailov/instancia-playjump`, empujado y
    verificado —mismo SHA local y remoto, 38 ficheros bajo `publico/`, 404 anónimo—. ⚠️ Se comprobó que
    era privado ANTES de empujar: 9,2 MB de fotos de un cliente a un repo público no se deshacen.
-   ▶▶ **LO SIGUIENTE**: la regla de caché del vídeo (`?v={filemtime}`), que sigue escrita en la vista.
-   Después: partir pruebas → anfitrión → huella.
-   ⚠️⚠️ **`home` NO es una página más: la piden 682 casos en 60 ficheros** (`/contacto` eran 14 en uno),
-   porque medio producto usa `/` como «una página cualquiera». El reparto §4.5.bis es de otro orden.
+   ✅ **LAS CUATRO REGLAS del barrido, RESUELTAS** (`#664`): la de caché del vídeo **no se baja**, y está
+   medido — `@filemtime` sale **37 veces en 15 ficheros** con sufijo uniforme (13 × `}}?v={{ @filemtime`):
+   es el IDIOMA de la casa, no una regla con dos escrituras. Extraerla para un sitio crearía la
+   inconsistencia.
+   ▶▶ **LO SIGUIENTE: LA MUDANZA DE `home`, ya MEDIDA** (`#664`, plan entero en la spec **§4.7.bis**).
+   Se apuntó el controlador a un anfitrión de nueve líneas y se corrió la suite: **161 rojos de 682, en 31
+   ficheros** (`/contacto` fueron 9 de 14, en uno) y **521 sobrevivían** — solo querían «una página».
+   ❗❗ **~44 de los 161 tienen su sujeto en un COMPONENTE del producto** (`rate-rail` 25, `visit` 16, el
+   mapa 3): **cambian de sujeto, no se mudan** (como `PageHeadTest` en `#658`). Solo **~117** viajan a
+   `paginas/home.md` con la huella.
+   ⚠️ **Contestar ANTES de escribir el anfitrión**: con el hero y las secciones en línea, la lista de
+   material declarado deja de ser corta. *Si la deuda de la vía B se vuelve inventario, el problema es que
+   esas secciones deberían ser componentes.* Y el anfitrión **no puede dar por hecho que hay vídeo**.
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
    ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
