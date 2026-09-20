@@ -111,9 +111,10 @@ CONTRATO DE VISTAS y `MATERIAL_CONSUMIDO_POR_LA_INSTANCIA`, `plantilla/`, `phpun
 vacía), los anfitriones `resources/views/anfitrion/**` con sus `Anfitrion*Test`, `InstanceViewPathTest`,
 `InstanceViewContractTest`, `scripts/mutar-paquete-instancia.sh`, el `name:` y el montaje de `compose.yaml`;
 **y el repo `instancias/playjump`**, `web/` y `docs/paginas/`) · **las reglas bajadas en la T2b**
-(`Platform\Services\{VenueAddress,LocalNumber,MetaDescription,Honeypot,LocalDate}` y `Attraction::imageUrl()`
-con sus tests, y los componentes `site/{honeypot,turnstile}`) · `scripts/huella-maquetacion.mjs` (16 vistas)
-y `scripts/mutar-atracciones.py` ·
+(`Platform\Services\{VenueAddress,LocalNumber,MetaDescription,Honeypot,LocalDate}`, los `imageUrl()` de
+`Attraction` y `LandingService`, y `GroupRateTables::lowestWritten()`, con sus tests; los componentes
+`site/{honeypot,turnstile}`) · `scripts/huella-maquetacion.mjs` (16 vistas) y los arneses
+`mutar-{atracciones,servicios}.py`, más los re-apuntados `mutar-{precios,cumple}.py` ·
 **el MENÚ DE HECHOS** (`Platform\Services\PublicFacts`,
 `Content\Services\OpeningState`, `app/Http/{Controllers,Resources}/Api/V1/*Facts*` y `LegalDocuments*`,
 `PublicFactsBoundaryTest`, `scripts/mutar-menu-de-hechos.sh`, y el bloque `Instalación` de `openapi/v1.yaml`,
