@@ -44,8 +44,16 @@ class InstanceViews
      * Sube cuando un paquete existente deja de valer tal cual: cambia el nombre de una carpeta, una vista
      * pasa a recibir otras variables, se retira un componente que las landings usaban. Es el MAYOR de
      * `producto-e-instancias.md` §4.1, y por eso NO sube al añadir cosas: añadir no rompe a nadie.
+     *
+     * ❗❗ **2 desde `#668` (F5 · T3), y es la PRIMERA vez que sube.** El widget de ofertas se retira
+     * (`#631`: «oferta» es un hecho de precio, no un CMS de imágenes) y con él sale `offers` del
+     * payload del composer — o sea, del contrato de vista de LAS NUEVE páginas a la vez. Una landing
+     * que lo pintara se quedaría sin datos, y esto es exactamente lo que la lista de abajo predijo el
+     * día que nació: *«esa lista va a ENCOGER, y ese día sube el MAYOR y hay que avisar a cada
+     * instalación»*. El aviso no es una nota: el paquete declara su `contrato` en `instancia.json` y
+     * {@see avisarSiElContratoNoCuadra} lo escribe en el log al arrancar.
      */
-    public const CONTRATO = 1;
+    public const CONTRATO = 2;
 
     /**
      * **EL CONTRATO DE VISTA**: qué recibe cada vista que una instancia puede vestir (`#649`).
@@ -61,17 +69,18 @@ class InstanceViews
      * que declararlo, y declararlo es lo que hace que el siguiente que escriba una landing sepa con qué
      * puede contar.
      *
-     * ❗❗❗ **Medido el 19-09 al escribir la guarda, y la cifra sorprendió: son NUEVE, no dos.** El
-     * controlador pasa `answers` y `topics`; las otras siete las inyecta el **composer global**
+     * ❗❗❗ **Medido el 19-09 al escribir la guarda, y la cifra sorprendió: eran NUEVE, no dos.** El
+     * controlador pasa `answers` y `topics`; las demás las inyecta el **composer global**
      * (`View::composer('*')`) en TODAS las vistas sin que nadie las pida. O sea que el producto ya
-     * promete —sin saberlo— `site`, `heroStatus`, `offers`, el par de `ctaMinPrice*` y las dos de
-     * cookies. Escribirlas aquí es lo que convierte esa promesa tácita en una declarada.
+     * prometía —sin saberlo— `site`, `heroStatus`, el par de `ctaMinPrice*` y las dos de cookies.
+     * Escribirlas aquí es lo que convirtió esa promesa tácita en una declarada.
      *
-     * ⚠️⚠️ **Y esta lista va a ENCOGER**: ese composer es «la pieza que hay que sustituir por el menú»
-     * (`instancia-y-landing-fuera.md` §1.1) y `offers` es uno de los seis recursos que `#631` retira
-     * del panel. Cuando eso pase, el contrato de instancia sube de MAYOR y hay que avisar a cada
-     * instalación: su landing dejará de recibir lo que hoy recibe. **Sin esta lista, ese día nadie se
-     * habría enterado hasta ver la web del cliente rota.**
+     * ❗❗❗ **Y ENCOGIÓ, que es lo que esta lista predijo el día que nació** (`#668`, F5 · T3): `offers`
+     * se fue con el widget que lo pintaba y hoy son OCHO. Ese día —éste— **el contrato sube de MAYOR y
+     * hay que avisar a cada instalación**, porque su landing deja de recibir lo que recibía. *Sin esta
+     * lista, nadie se habría enterado hasta ver la web de un cliente rota.*
+     * ▶ Y sigue encogiendo: el composer es «la pieza que hay que sustituir por el menú»
+     * (`instancia-y-landing-fuera.md` §1.1).
      *
      * @var array<string, array{ruta: string, datos: list<string>}>
      */
@@ -258,7 +267,9 @@ class InstanceViews
      * @var list<string>
      */
     public const DEL_COMPOSER = [
-        'site', 'heroStatus', 'offers', 'ctaMinPriceCents', 'ctaMinPriceLabel', 'cookieBannerEnabled', 'cookieConsent',
+        // ⚠️ Eran SIETE hasta `#668`: `offers` se fue con el widget que lo pintaba. La lista encogió
+        // por primera vez, y por eso `CONTRATO` vale 2.
+        'site', 'heroStatus', 'ctaMinPriceCents', 'ctaMinPriceLabel', 'cookieBannerEnabled', 'cookieConsent',
     ];
 
     public function __construct(private readonly ViewFactory $vistas) {}

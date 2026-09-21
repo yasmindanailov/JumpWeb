@@ -405,7 +405,9 @@ de §1.4 es el instrumento, y queda como guarda.
    consumidor** al paquete; la medida con el anfitrión real dijo otra cosa y la tanda cambió de forma. El
    detalle, en **§4.6.bis**. ⚠️ El mecanismo de «reglas por instancia» **no se construye**: con 17 clases no
    lo justifica, y la vía A —el destino (§3)— se las lleva con sus páginas.
-3. **T3 · el panel adelgaza**: los seis recursos y las secciones de texto.
+3. **T3 · el panel adelgaza** — **T3·1 ✅** (`#668`): salen los dos recursos con CERO uso; los otros
+   cuatro esperan a tener plato en el menú o a la vía A. **Las «secciones de texto» no existen**:
+   medido, ninguna de las 71 claves de `settings` está sin consumidor. Detalle en §4.6.ter.
 4. **T4 · `zones` adelgaza** y cae la última marca viva.
 5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.
 
@@ -463,6 +465,60 @@ pagadas (`client.css` fuera por ser de una instalación, `cajon.css` fuera por s
 se justifica una hoja más en el `<head>` de todas las páginas, y **profundizaría en la vía B** cuando §3
 dice que la vía A es el destino. Esas 17 siguen en el producto, declaradas, hasta que la vía A se lleve las
 hojas con sus páginas.
+
+### 4.6.ter · T3·1: lo que no deja hueco, y la cadena que arrastra (`#668`, 2026-09-21)
+
+**El owner eligió ir por grados**, con la medida delante: de los seis recursos de §1.6 solo dos tienen
+CERO uso —el widget de ofertas (0 filas) y el complemento por atracción (0 de 23)— y los otros cuatro
+tienen contenido vivo que **el menú de hechos no sirve** (no hay plato de atracciones ni de dudas).
+Sacarlos hoy convertiría «editar la web» en «desplegar el repo de la instancia», que es justo el
+criterio contrario al de §7·D1.
+
+⚠️ **Y `faqs` no es solo presentación**, lo que conviene recordar cuando le toque: tres mecanismos del
+producto cuelgan de esa tabla —el JSON-LD `FAQPage`, la chapa «Quizá ya está contestado» de `/contacto`
+y el `lastmod` del sitemap—.
+
+❗ **La tercera pieza del alcance no existía.** §4.2 hablaba de «las secciones de texto de la landing y
+del bar»; censadas las **71 claves de `settings`** con el método de `#667` (incluida la composición
+`'bar.name.'.$locale`), **ninguna está sin consumidor**. *Una tanda se acota midiendo, no leyendo su
+propio plan.*
+
+▶ **El contrato de instancia sube a 2 — la primera vez.** `offers` era una de las siete claves que el
+composer global pone en toda vista, así que salía del contrato de vista de **las nueve páginas a la
+vez**. Lo predijo la propia lista el día que nació (`#649`), y el aviso no es retórico: el paquete
+declara su `contrato` en `instancia.json` y el producto lo escribe en el log al arrancar. Los dos
+manifiestos —plantilla y PlayJump— van al día en el mismo cambio.
+
+❗❗❗ **PODAR POR CLASE NO PODA UNA FEATURE.** El guion de poda de `#667` retiró las clases del widget y
+dejó **vivo** todo lo que no es una clase: sus `@keyframes`, sus tokens (`--offw-spring`,
+`--offw-accent`) y los selectores que mezclaban una clase suya con otra genérica
+(`.offw-gift.gm-1 .all`). Lo destaparon tres guardas a la vez —tokens sin declarar, excepciones sin
+sujeto, bucles infinitos sin su regla—. *Una feature se poda por su BLOQUE*: 118 líneas de una vez, con
+la cabecera de sección como límite.
+
+❗❗ **Y UNA RETIRADA ARRASTRA SU CADENA. Ésta tenía cinco eslabones**, y solo el primero era obvio:
+1. **El panel entero cayó**: `AdminSettingsHub` importaba `OfferResource` y lo listaba. **112 rojos**
+   de golpe. ⚠️ El censo previo buscó `\bOffer\b`, que **no casa con `OfferResource`** — *al retirar una
+   clase se busca su nombre y sus derivados, no solo el modelo*.
+2. **Una clase de estado sin consumidor**: `body.book-bar-visible` la escribía la barra flotante en cada
+   cambio de visibilidad, y su ÚNICA regla era la que apartaba el lanzador del widget. Se fue con él.
+3. **Seis guardas** lo usaban de sonda o en sus listas: `ScrollLockOwnerTest` (un superpuesto menos),
+   `ShapeScaleTest` (tres excepciones y una aguja del escaneo), `MotionBudgetTest` (dos bucles),
+   `ArmazonContractTest` (el lanzador que se apartaba), `AdminNavigationTest` (23 → 22 tarjetas) y
+   `ModuleBoundariesTest` (la costura `Attraction → TicketType`). **Las líneas base encogieron**, que es
+   lo único que se les permite.
+4. **La sonda de las at-rules se cayó por TERCERA vez** (era `.nav__links`, luego `.book-bar-visible`) y
+   no había cuarta: medido, **cero** clases del armazón se declaran solo dentro de un `@media`. *Una
+   sonda atada a un dato real caduca con el dato*, así que ahora prueba el INSTRUMENTO —que el recorrido
+   desciende en las at-rules— con un CSS de prueba, y una segunda mitad comprueba que el corpus real las
+   tiene: sin ella, descender perfectamente sobre un corpus vacío pasaría por verde.
+5. **Un test que el censo no vio**: `AttractionComplementPanelTest` no nombra ninguna clase retirada,
+   solo la COLUMNA `ticket_type_id`. *El censo de una feature incluye su columna.* Se partió por lo que
+   afirma cada caso (§4.5.bis): los dos del aviso se fueron y los de «Destacada» se quedan.
+
+⚠️ **Lo que NO se borra: las tablas.** `offers` y la columna `attractions.ticket_type_id` siguen ahí. Las
+migraciones destructivas van juntas en la tanda que sube el MAYOR de la versión (T4/T5), y además una
+tabla vacía no molesta a nadie: en producción no se puede comprobar hoy que lo esté.
 
 ## 5. Impacto en invariantes
 

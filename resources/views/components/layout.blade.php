@@ -292,10 +292,12 @@
          (`mobileBookBar`) gestiona la aparición; el `$store.purchase` es global. --}}
     <x-site.mobile-book-bar />
 
-    {{-- Widget flotante «caja de regalo» de ofertas (#270). Solo se pinta si hay ofertas activas
-         (`$offers` del composer). Va al final del <body>, fuera del `x-data="landing"` (su x-data
-         propio `offersWidget`); su store `offers` coordina con la book-bar (que cede al abrirse). --}}
-    <x-site.offers-widget />
+    {{-- 📜 **AQUÍ SE MONTABA EL WIDGET FLOTANTE DE OFERTAS** (`#270`) y se retira en `#668`
+         (F5 · T3), cumpliendo lo que `#631` decidió: *«el sistema de ofertas de hoy —imágenes y texto
+         en un icono flotante— se quita; "oferta" es un hecho de precio»*. El descuento que el
+         visitante ve hoy sale del catálogo (`was_price_cents`, el «antes» tachado de `#628`), no de
+         un CMS de imágenes. Se fue entero: la caja, su carrusel, el store que compartía con la barra
+         de móvil, el recurso del panel y su tabla. --}}
 
     @livewireScripts
 </body>

@@ -2318,8 +2318,6 @@ return [
         'field_is_active_hint' => '停用后该设施不在落地页显示。',
         'field_is_special' => '特色',
         'field_is_special_hint' => '在落地页视觉上突出此设施（与是否售卖无关）。',
-        'field_complement' => '付费附加项',
-        'field_complement_hint' => '关联的可售附加项（可选）。选择后，落地页会显示其价格和「购买」按钮。仅列出可售附加项。',
         'complement_not_attached_warning' => '注意：此附加项在本区域的落地页无法购买（设施将仅作展示）。请在「目录」中确认它已设价格，并作为「付费」附加项（非「包含」）关联到本区域的可售门票。',
 
         'lang' => [

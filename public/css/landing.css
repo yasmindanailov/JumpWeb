@@ -2777,7 +2777,6 @@ img { display: block; max-width: 100%; }
   .holidays__row { padding: var(--sp-14) 24px; }
 
 
-  
 }
 
 
@@ -4154,12 +4153,6 @@ select:focus-visible {
   .zone-tab { flex: 1; text-align: center; }
   /* events */
   .events { padding: 36px 24px; border-radius: var(--r); }
-
-
-  
-
-
-  
 
 
   

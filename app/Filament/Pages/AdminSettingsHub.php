@@ -8,7 +8,6 @@ use App\Filament\Resources\BarImages\BarImageResource;
 use App\Filament\Resources\Catalog\CatalogResource;
 use App\Filament\Resources\Faqs\FaqResource;
 use App\Filament\Resources\LandingServices\LandingServiceResource;
-use App\Filament\Resources\Offers\OfferResource;
 use App\Filament\Resources\Pages\PageResource;
 use App\Filament\Resources\ParkRules\ParkRuleResource;
 use App\Filament\Resources\RateTypes\RateTypeResource;
@@ -113,7 +112,9 @@ class AdminSettingsHub extends Page
                 ['key' => 'landing_services', 'class' => LandingServiceResource::class],
                 ['key' => 'faqs', 'class' => FaqResource::class],
                 ['key' => 'testimonials', 'class' => TestimonialResource::class],
-                ['key' => 'offers', 'class' => OfferResource::class],
+                // ⚠️ Aquí estaba «Ofertas» (`#270`) y se retira con su recurso en `#668` (F5 · T3),
+                // cumpliendo `#631`: «oferta» es un hecho de PRECIO —el «antes» tachado del
+                // catálogo— y no un CMS de imágenes en un icono flotante.
                 // `#536`: las imágenes de `/bar` — las caras de la CARTA y la foto del local. Van
                 // aquí, junto al resto del CMS, y no en Ajustes: la página de ajustes no sube
                 // ficheros (cero `FileUpload` en ella) y esto es una colección ordenable.

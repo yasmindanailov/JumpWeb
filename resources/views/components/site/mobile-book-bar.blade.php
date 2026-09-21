@@ -39,9 +39,13 @@
 
      La visibilidad de la barra —aparece tras el hero, se esconde en el pie, con el cajón abierto,
      con el banner de cookies— no cambia: sigue en `Alpine.data('mobileBookBar')`. --}}
+{{-- ⚠️ **Aquí se escribía `body.book-bar-visible` y se retira en `#668`** (F5 · T3). Esa clase
+     existía para UNA cosa: apartar el lanzador del widget de ofertas cuando la barra aparecía en
+     móvil. El widget se fue, y con él su única regla — así que la barra estaba marcando el `<body>`
+     en cada cambio de visibilidad **para nadie**. *Una clase de estado sin consumidor no se nota: se
+     escribe igual y no pinta nada.* --}}
 <div class="book-bar" x-data="mobileBookBar"
-     :class="[visible && 'book-bar--on', $store.ctaPair.mode === 'account' && 'book-bar--signup']"
-     x-effect="document.body.classList.toggle('book-bar-visible', visible)">
+     :class="[visible && 'book-bar--on', $store.ctaPair.mode === 'account' && 'book-bar--signup']">
     {{-- ⚠️ **El par se fue a `<x-site.cta-pair>` en `#227`**: es el mismo botón que la cabecera y
          que la primera pantalla, y ya iban dos veces que dos copias divergían.
          `place="bar"` trae la colocación (ancho de pulgar, cuál se estira) y el perfil de copy de

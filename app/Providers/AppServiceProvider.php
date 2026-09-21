@@ -30,7 +30,6 @@ use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Content\Models\GoogleBusinessReviewSuppression;
 use App\Domain\Content\Models\LandingService;
-use App\Domain\Content\Models\Offer;
 use App\Domain\Content\Models\Page;
 use App\Domain\Content\Models\Testimonial;
 use App\Domain\Content\Models\VenueRule;
@@ -74,7 +73,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Mail\Events\MessageSending;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
@@ -276,7 +274,10 @@ class AppServiceProvider extends ServiceProvider
             'invitation_reply' => InvitationReply::class,
             'landing_service' => LandingService::class,
             'legal_document_version' => LegalDocumentVersion::class,
-            'offer' => Offer::class,
+            // ⚠️ Aquí estaba `'offer'`, y se va con su modelo (`#668`). **Las filas de auditoría que
+            // lo lleven siguen legibles**: `AuditLogTable` trata `target_type` como TEXTO
+            // (`class_basename`) y nunca resuelve la clase — comprobado antes de retirarlo, porque
+            // un alias sin modelo en una tabla que el panel sí resolviera sería un 500 en auditoría.
             'opening_hour' => OpeningHour::class,
             'order' => Order::class,
             'order_adjustment' => OrderAdjustment::class,
@@ -372,11 +373,12 @@ class AppServiceProvider extends ServiceProvider
         // ⚠️ Aquí se resolvían `navServices` y `navZones`, las dos listas del menú viejo: **dos
         // consultas por petición en las doce vistas**. Se van con su consumidor (`#521`): los
         // destinos del menú son el inventario del canvas y los compone `SiteDestinations` sin BD.
+        // ⚠️⚠️ **Aquí viajaba `offers`, y su retirada CRUZA LA FRONTERA** (`#668`, F5 · T3): era una
+        // de las siete claves que este composer pone en TODA vista, así que estaba en el CONTRATO DE
+        // VISTA de las nueve páginas de una instancia. Por eso `InstanceViews::CONTRATO` sube a 2 y
+        // hay que avisar a cada instalación: su landing deja de recibir lo que hoy recibe.
         $data = [
             'cookieConsent' => CookieConsent::state(request()),
-            // Ofertas activas para el widget «caja de regalo» (#270): site-wide, memoizado con el
-            // resto del payload (1 query/petición). El widget solo se pinta si hay alguna.
-            'offers' => $this->activeOffers(),
         ];
 
         if (! $this->tableExists('settings')) {
@@ -463,33 +465,6 @@ class AppServiceProvider extends ServiceProvider
             'ctaMinPriceCents' => $cents,
             'ctaMinPriceLabel' => $cents !== null ? self::formatPriceLabel($cents) : null,
         ];
-    }
-
-    /**
-     * Ofertas activas para el widget flotante «caja de regalo» (#270, `docs/PLAN-OFERTAS-WIDGET.md`).
-     * Data-driven, memoizado con el resto del payload (1 query/petición, no por subvista). Solo las
-     * columnas que el widget necesita (id + título + imagen). Guardado por `tableExists` para
-     * CI/instalación limpia. SIN Cache TTL: las ediciones del panel se reflejan al instante (igual
-     * que `navServices`, a diferencia de `ctaMinPriceCents`).
-     *
-     * @return Collection<int, Offer>
-     */
-    private function activeOffers(): Collection
-    {
-        if (! $this->tableExists('offers')) {
-            return collect();
-        }
-
-        // Resiliencia de DEPLOY (zero-downtime): en producción `tableExists` corta en corto (no
-        // consulta information_schema), pero entre el rsync del código nuevo y `php artisan migrate`
-        // la tabla `offers` aún no existe → la consulta lanzaría un 500 en TODAS las páginas (el
-        // composer corre en cada vista). `rescue` devuelve una colección vacía (el widget no se pinta
-        // esos segundos) en lugar de romper. En estado normal (tabla creada) no hay excepción ni coste.
-        return rescue(
-            fn (): Collection => Offer::active()->ordered()->get(['id', 'title', 'image']),
-            collect(),
-            false,
-        );
     }
 
     /**

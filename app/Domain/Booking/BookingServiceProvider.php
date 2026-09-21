@@ -14,7 +14,6 @@ use App\Domain\Booking\Contracts\GateReservations;
 use App\Domain\Booking\Contracts\OperatingCalendar;
 use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\ProductCatalog;
-use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ZonePalette;
@@ -31,7 +30,6 @@ use App\Domain\Booking\Services\CustomerReservationsReader;
 use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PartyGuestsReader;
-use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ReservationAdmissionPolicy;
 use App\Domain\Booking\Services\ZonePaletteReader;
 use Illuminate\Support\ServiceProvider;
@@ -73,7 +71,10 @@ class BookingServiceProvider extends ServiceProvider
         // ⚠️ Devuelve IDS y no una cifra: restar aquí obligaría a Booking a mirar las firmas de
         // Identity, que es justo la flecha que el grafo prohíbe.
         $this->app->bind(PartyGuests::class, PartyGuestsReader::class);
-        $this->app->bind(PublishableCatalog::class, PublishableCatalogReader::class);
+        // ⚠️ Aquí estaba `PublishableCatalog`, el contrato con el que Content preguntaba si el
+        // complemento vinculado a una atracción era comprable. Se retira en `#668` (F5 · T3) con
+        // la pieza entera: `#632`·P3 lo decidió con la medida delante —**0 de 23 atracciones** lo
+        // usaban— y las restricciones que importan viven en Normas.
         // Catálogo de venta (Fase 3 · paso 1b): lo consume la API, y por ella la web y el móvil.
         $this->app->bind(ProductCatalog::class, CatalogReader::class);
         // Política de admisión de reservas (Fase 3 · paso 2): pausa, tope de pendientes y

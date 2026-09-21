@@ -35,9 +35,6 @@ trait InteractsWithAttractionForm
             $data['zone_id'] = (int) $data['zone_id'];
         }
 
-        // Complemento vinculado (#228): entero o null (atracción solo informativa).
-        $data['ticket_type_id'] = ! empty($data['ticket_type_id']) ? (int) $data['ticket_type_id'] : null;
-
         $data['is_active'] = (bool) ($data['is_active'] ?? true);
         $data['is_special'] = (bool) ($data['is_special'] ?? false);
         $data['position'] = (int) ($data['position'] ?? 0);

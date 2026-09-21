@@ -128,4 +128,4 @@ servicios en un entorno con datos sin resembrar todo (separado de `LandingConten
 - `tests/Feature/Landing/ServicePriceTableBackfillTest.php` — backfill de `price_table`.
 
 Relacionados: `docs/ARQUITECTURA.md` (datos compartidos de vista) · `docs/MODELO-DATOS.md` ·
-`docs/sistemas/OFERTAS-WIDGET.md` (otra entidad CMS clonada de esta) · `docs/TESTING.md`.
+`docs/TESTING.md`. ⚠️ Aquí se citaba `OFERTAS-WIDGET.md`, otra entidad CMS clonada de ésta: se retiró en `#668` y su histórico está en `archivo/ofertas-widget.md`.

@@ -65,7 +65,7 @@ también viven en el código («aforo», «franja», «puerta»): grep funciona 
 | tema | `ThemeSettings` (setting `theme.brand`; `zones.color` por zona; `cssRootDeclarations()`) | Color de marca + color por zona tematizando web, panel y emails; validación hex defensiva. | mecanismo ✔ · tokens `--jump-1`/`--kids-1` 🏷️ |
 | sidebar | `Livewire/Tickets/Purchase` (wizard; muere con la SPA en Fase 4) | Flujo de compra/reserva embebido sobre la página actual sin navegar. | ✔ |
 | landing service | `LandingService` (`ticket_type_id` nullable; `isPurchasable()` delega en el pack EN VIVO) | Sección editorial de `/servicios`; su existencia reclasifica el pack fuera de Cumpleaños. Detalle: `sistemas/SERVICIOS-CMS.md`. | ✔ |
-| oferta | `Offer` (i18n + imagen `uploads`; `scopeActive`) | Promoción INFORMATIVA (sin dinero) del widget flotante. Detalle: `sistemas/OFERTAS-WIDGET.md`. | ✔ |
+| oferta | — (retirada en `#668`) | 📜 Era una promoción INFORMATIVA en un widget flotante con su CMS. Hoy **«oferta» es un hecho de PRECIO**: el «antes» tachado del catálogo (`#628`, `#631`). Histórico: `archivo/ofertas-widget.md`. | ✔ |
 | mantenimiento | `MaintenanceSettings` (site/página/reservas; fail-safe opt-in) | Apagado selectivo; un setting roto nunca tira la web. | ✔ |
 | zona horaria de display | `DisplayTime` (setting `display_timezone`; BD en UTC) | TZ de presentación; NUNCA usar `Carbon::today()` crudo en venta (invariante AFORO-09). | ✔ |
 | sala / mesa | `Room` (tabla `rooms`; sin lógica de aforo conectada) | Recurso físico para packs, previsto y SIN uso — ver `DEUDA.md`. | ❓ |

@@ -1,5 +1,11 @@
 # SISTEMA — Ofertas (widget «caja de regalo» informativo)
 
+> 📜 **ARCHIVADO el 2026-09-21 (`DECISIONES #668`, F5 · T3·1)**: el widget de ofertas **se retiró
+> entero** —la caja flotante, su carrusel, el recurso del panel y el modelo `Offer`—, cumpliendo lo
+> que `#631` decidió: *«oferta» es un hecho de PRECIO* (el «antes» tachado del catálogo, `#628`),
+> no un CMS de imágenes detrás de un icono. Tenía **0 filas**. ⚠️ La tabla `offers` sigue en la BD
+> hasta la T4/T5, que es donde van juntas las migraciones destructivas. **No se mantiene.**
+
 > Adaptado del proyecto origen (2026-08-12). Describe la BASE HEREDADA: el refactor
 > (`00-REFACTOR.md`) puede haberla cambiado. Verifica contra el código antes de construir
 > encima (CONVENCIONES §7).

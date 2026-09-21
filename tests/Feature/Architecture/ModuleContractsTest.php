@@ -13,7 +13,6 @@ use App\Domain\Booking\Contracts\CatalogZone;
 use App\Domain\Booking\Contracts\CheckoutLine;
 use App\Domain\Booking\Contracts\CheckoutLines;
 use App\Domain\Booking\Contracts\CheckoutOutcome;
-use App\Domain\Booking\Contracts\ComplementPlacement;
 use App\Domain\Booking\Contracts\CustomerReservations;
 use App\Domain\Booking\Contracts\GateReservation;
 use App\Domain\Booking\Contracts\GateReservations;
@@ -26,7 +25,6 @@ use App\Domain\Booking\Contracts\PartyGuests;
 use App\Domain\Booking\Contracts\PaymentInitiation;
 use App\Domain\Booking\Contracts\PendingGuestForm;
 use App\Domain\Booking\Contracts\ProductCatalog;
-use App\Domain\Booking\Contracts\PublishableCatalog;
 use App\Domain\Booking\Contracts\ReservationAdmission;
 use App\Domain\Booking\Contracts\ReservationCheckout;
 use App\Domain\Booking\Contracts\ReservationPlacesTaken;
@@ -54,10 +52,7 @@ use App\Domain\Booking\Services\GateReservationsReader;
 use App\Domain\Booking\Services\OperatingSchedule;
 use App\Domain\Booking\Services\PartyGuestsReader;
 use App\Domain\Booking\Services\PartyInvitations;
-use App\Domain\Booking\Services\PublishableCatalogReader;
 use App\Domain\Booking\Services\ZonePaletteReader;
-use App\Domain\Content\Models\Attraction;
-use App\Domain\Content\Services\LandingComplementResolver;
 use App\Domain\Content\Services\ScheduleDisplay;
 use App\Domain\Content\Services\ThemeSettings;
 use App\Domain\Identity\Models\Role;
@@ -113,7 +108,6 @@ class ModuleContractsTest extends TestCase
         $this->assertInstanceOf(CustomerReservationsReader::class, app(CustomerReservations::class));
         $this->assertInstanceOf(CheckoutLinesReader::class, app(CheckoutLines::class));
         $this->assertInstanceOf(GateReservationsReader::class, app(GateReservations::class));
-        $this->assertInstanceOf(PublishableCatalogReader::class, app(PublishableCatalog::class));
         $this->assertInstanceOf(CatalogReader::class, app(ProductCatalog::class));
         $this->assertInstanceOf(OperatingSchedule::class, app(OperatingCalendar::class));
         $this->assertInstanceOf(ZonePaletteReader::class, app(ZonePalette::class));
@@ -470,109 +464,16 @@ class ModuleContractsTest extends TestCase
         $this->assertFalse(app(PartyInvitations::class)->waiverSignedFor($otra));
     }
 
-    /**
-     * CONTENT → BOOKING: la comprabilidad del complemento la decide Booking, en los DOS
-     * llamantes (la comprobación unitaria del modelo y el resolver en lote de la landing).
+    /*
+     * 📜 **AQUÍ VIVÍAN LOS DOS CASOS DEL COMPLEMENTO POR ATRACCIÓN** —Content preguntando a Booking
+     * si el addon vinculado era comprable, y la guarda de IDs que se quedaba en Content para no
+     * preguntar cuando no había nada que preguntar—. La pieza entera se retira en `#668` (F5 · T3),
+     * y con ella su contrato `PublishableCatalog`: `#632`·P3 lo decidió midiendo (**0 de 23**
+     * atracciones lo usaban) y las restricciones que importan viven en Normas.
+     *
+     * ⚠️ Lo que vigilaban —que un módulo hable con otro por CONTRATO y no por su modelo— lo siguen
+     * midiendo los demás casos de este fichero, que son quince. Se va un ejemplo, no la regla.
      */
-    public function test_content_asks_booking_whether_a_complement_is_purchasable(): void
-    {
-        $zone = Zone::create([
-            'slug' => 'jump', 'name' => ['es' => 'Jump'], 'accent' => 'jump',
-            'color' => '#FF5B22', 'position' => 1, 'is_active' => true,
-        ]);
-        // Complemento REAL pero que la regla de Booking jamás daría por comprable (ni vendible,
-        // ni activo, ni enganchado a ninguna entrada, ni con precio).
-        $complement = TicketType::create([
-            'name' => ['es' => 'Complemento'], 'type' => TicketType::TYPE_ADDON,
-            'is_sellable' => false, 'is_active' => false, 'seats_per_unit' => 1, 'position' => 1,
-        ]);
-        $attraction = Attraction::create([
-            'zone_id' => $zone->id, 'ticket_type_id' => $complement->id,
-            'name' => ['es' => 'Camas'], 'position' => 1, 'is_active' => true,
-        ]);
-
-        // Prueba de que el doble manda: con la implementación real esto sería `false`.
-        $this->assertFalse(app(PublishableCatalogReader::class)->isComplementPurchasable(
-            new ComplementPlacement((int) $complement->id, (int) $zone->id)
-        ));
-
-        $catalog = new class implements PublishableCatalog
-        {
-            public int $singleCalls = 0;
-
-            public int $batchCalls = 0;
-
-            public function isComplementPurchasable(ComplementPlacement $placement): bool
-            {
-                $this->singleCalls++;
-
-                return true;
-            }
-
-            public function purchasableComplements(array $placements): array
-            {
-                $this->batchCalls++;
-
-                return $placements;
-            }
-        };
-        $this->app->instance(PublishableCatalog::class, $catalog);
-
-        // 1) Unitaria: el modelo de Content delega la REGLA (con la consulta antigua, embebida en
-        //    el propio modelo, este complemento daría false — ver aserción de arriba).
-        $this->assertTrue($attraction->complementIsPurchasable());
-        $this->assertSame(1, $catalog->singleCalls);
-
-        // 2) En lote: el resolver de la landing delega igual, con UNA sola llamada.
-        $resolver = new LandingComplementResolver([$attraction]);
-        $this->assertTrue($resolver->isPurchasable($attraction));
-        $this->assertSame(1, $catalog->batchCalls);
-    }
-
-    /** Sin complemento o sin zona no se pregunta a Booking: la guarda de IDs se queda en Content. */
-    public function test_content_does_not_ask_booking_when_there_is_nothing_to_ask(): void
-    {
-        $zone = Zone::create([
-            'slug' => 'jump', 'name' => ['es' => 'Jump'], 'accent' => 'jump',
-            'color' => '#FF5B22', 'position' => 1, 'is_active' => true,
-        ]);
-        $unlinked = Attraction::create([
-            'zone_id' => $zone->id, 'ticket_type_id' => null,
-            'name' => ['es' => 'Sin complemento'], 'position' => 1, 'is_active' => true,
-        ]);
-
-        $catalog = new class implements PublishableCatalog
-        {
-            public int $singleCalls = 0;
-
-            public function isComplementPurchasable(ComplementPlacement $placement): bool
-            {
-                $this->singleCalls++;
-
-                return true;
-            }
-
-            public function purchasableComplements(array $placements): array
-            {
-                return $placements;
-            }
-        };
-        $this->app->instance(PublishableCatalog::class, $catalog);
-
-        $this->assertFalse($unlinked->complementIsPurchasable());
-        $this->assertSame(0, $catalog->singleCalls);
-        $this->assertFalse((new LandingComplementResolver([$unlinked]))->isPurchasable($unlinked));
-    }
-
-    /** El lote devuelve SOLO los pares preguntados, no el producto cartesiano de la query. */
-    public function test_batch_purchasability_never_returns_pairs_nobody_asked_for(): void
-    {
-        $reader = new PublishableCatalogReader;
-
-        $this->assertSame([], $reader->purchasableComplements([]));
-        // Sin datos en la BD ningún par es comprable (y la query no revienta con IDs inexistentes).
-        $this->assertSame([], $reader->purchasableComplements([new ComplementPlacement(1, 2)]));
-    }
 
     /**
      * CONTENT → BOOKING: el calendario de operación (paso 7). El doble no toca la base de datos:

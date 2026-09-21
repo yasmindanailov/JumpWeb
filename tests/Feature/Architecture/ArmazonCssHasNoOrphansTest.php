@@ -100,15 +100,38 @@ class ArmazonCssHasNoOrphansTest extends TestCase
             );
         }
 
-        // ⚠️ La sonda de las at-rules era `.nav__links` y la tanda 2c·1 **la retiró**: el test se
-        // cayó al quedarse sin sujeto, que es exactamente lo que tiene que pasar y por lo que la
-        // sonda va por NOMBRE. La nueva es la única clase del armazón que hoy solo existe dentro
-        // de un `@media`; si un día también desaparece, este test volverá a avisar en vez de
-        // quedarse verde sin comprobar nada.
+        /*
+         * ❗❗❗ **LA SONDA DE LAS AT-RULES CAMBIA DE FORMA, y es la tercera vez que se cae** (`#668`).
+         * Era `.nav__links` hasta que la tanda 2c·1 la retiró, y `.book-bar-visible` hasta que el
+         * widget de ofertas se fue —su ÚNICA regla era la que apartaba su lanzador, así que la clase
+         * dejó de declararse—. Se buscó una cuarta y **no hay ninguna**: medido, hoy CERO clases del
+         * armazón se declaran solo dentro de una at-rule.
+         *
+         * ▶ *Una sonda atada a un dato real caduca con el dato.* Ésta pregunta lo mismo al
+         * INSTRUMENTO, que es lo que de verdad quería comprobar —que el recorrido desciende en las
+         * at-rules— y no caduca cuando el CSS cambia.
+         * ⚠️ Va en DOS mitades a propósito: sin la segunda, el instrumento podría descender
+         * perfectamente sobre un corpus vacío y el caso pasaría sin mirar ninguna hoja.
+         */
+        $sonda = '.fuera { color: red } @media (min-width: 900px) { .dentro-de-at-rule { color: blue } }';
+
         $this->assertContains(
-            'book-bar-visible', $classes,
-            'el escaneo no ve `.book-bar-visible`, que SOLO se declara dentro de un `@media`: el '.
-            'parser no desciende en las at-rules.',
+            '.dentro-de-at-rule', $this->selectors($sonda),
+            'el recorrido NO desciende en las at-rules: todo lo que se declare dentro de un '.
+            '`@media` quedaría sin vigilar y las guardas de abajo pasarían sin verlo.',
+        );
+
+        // Y la otra mitad: que sobre las hojas REALES haya at-rules con reglas dentro.
+        $conAtRules = 0;
+
+        foreach ($this->sheetContents() as $css) {
+            $conAtRules += preg_match_all('/@media[^{]*\{/', $css);
+        }
+
+        $this->assertGreaterThan(
+            20, $conAtRules,
+            'las hojas del producto apenas tienen `@media`: o han cambiado de sitio, o el corpus '.
+            'que lee esta guarda ya no es el de verdad.',
         );
     }
 

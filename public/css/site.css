@@ -6089,217 +6089,14 @@ body:has(.gf-savebar) .gf-toast { bottom: calc(var(--book-bar-h) + var(--sp-28) 
     .gf-page *, .gf-page *::before, .gf-page *::after, .gf-toast { transition: none !important; animation: none !important; }
 }
 
-/* ==================================================================================
-   OFERTAS — widget «caja de regalo» flotante + modal (#270, docs/PLAN-OFERTAS-WIDGET.md).
-   Portado de design_mockup/caja-regalo.css (lazo A / gm-1) + caja-modal.css (destello + vuelo),
-   AISLADO bajo `.offw` (sin colisiones). Colores de la caja FIJOS (rojo + lazo crema). Animaciones
-   solo transform/opacity (GPU); destello (is-burst) y vuelo (.show) son one-shot al abrir; respetan
-   prefers-reduced-motion. Capas z-index: lanzador 95, scrim 150, estallido 156, modal 158.
-   ================================================================================== */
-.offw {
-    --box: #E0392C; --ribbon: #FBF1DD;
-    --box-dk: #B02C21; --box-lt: #E55241; --box-in: #892119; --ribbon-dk: #C9A24A;
-    /* ⚠️ `--gift-gold` NACE aquí y no cambia un píxel (`#489`): era el ÚNICO color de este dibujo
-       escrito a mano, y en DOS sitios —el confeti `c4`, en línea en el Blade, y la barra superior de
-       la tarjeta, dentro de un `color-mix`—, mientras sus cuatro hermanos de confeti ya leían
-       `--offw-accent` y `--ribbon`. Un valor suelto en dos ficheros distintos es cómo una paleta
-       deja de poder cambiarse por instalación sin que nada falle. */
-    --gift-gold: #F0B33F;
-    --offw-accent: var(--zone-1);   /* sin el naranja del PRIMER cliente de respaldo (auditoría m4/C2, `#435`); qué rol le toca es de la tanda D */
-    --offw-spring: var(--ease-entra);
-}
-
-/* ---- Lanzador: la caja ES el botón (bottom-right) ---- */
-.offw-launch {
-    position: fixed; right: clamp(16px, 4vw, 34px); bottom: clamp(18px, 4vw, 30px);
-    z-index: 95; padding: 0; border: 0; background: none; cursor: pointer; line-height: 0;
-    -webkit-tap-highlight-color: transparent; transition: transform var(--dur-entra) var(--offw-spring);
-}
-/* El lanzador FLOTA sobre el contenido: responde como el mobiliario del armazón, con la sombra del
-   cuarto rol (`#217`), no saltando ni creciendo (auditoría M1, `#435`). */
-.offw-launch:hover { box-shadow: var(--shadow-nav-fill-lift); }
-.offw-launch.is-open-modal { cursor: default; }
-/* MÓVIL: por defecto en la esquina inferior derecha. Cuando aparece la .book-bar (sticky), el widget
-   SUBE por encima de ella con animación; al ocultarse la barra, vuelve a la esquina. La clase
-   `body.book-bar-visible` la conmuta el x-effect de `mobile-book-bar` según su estado real (#270). */
-@media (max-width: 720px) {
-    .offw-launch {
-        right: 16px;
-        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-        transition: transform var(--dur-entra) var(--offw-spring), bottom var(--dur-entra) var(--offw-spring);
-    }
-    /* ⚠️ **Este número se DERIVA, no se escribe** (`#276`). Aquí ponía `92px`, que era
-       `10 + 56 + 10` de la barra más los 16 de su reposo, calculado a mano por alguien y copiado.
-       El día que la barra cambiara de aire —y cambió— el lanzador se le habría metido encima **sin
-       que fallara nada**: son dos elementos fijos que no se conocen. */
-    body.book-bar-visible .offw-launch {
-        bottom: calc(16px + var(--book-bar-block) + env(safe-area-inset-bottom, 0px));
-    }
-}
-
-.offw-gift { position: relative; display: inline-grid; place-items: center; width: 74px; height: 74px; }
-.offw-gift svg {
-    display: block; overflow: visible; width: 74px; height: 74px;
-    filter: drop-shadow(0 7px 9px color-mix(in srgb, var(--fg) 22%, transparent)) drop-shadow(0 2px 3px color-mix(in srgb, var(--fg) 18%, transparent));
-}
-.offw-gift svg path, .offw-gift svg rect { stroke-linejoin: round; stroke-linecap: round; stroke-width: 0.9; }
-.offw-gift .pc-box { fill: var(--box); stroke: var(--box-dk); }
-.offw-gift .pc-lid { fill: var(--box-lt); stroke: var(--box-dk); }
-.offw-gift .pc-inner { fill: var(--box-in); stroke: none; }
-.offw-gift .pc-shadow { fill: color-mix(in srgb, var(--fg) 16%, transparent); stroke: none; }
-.offw-gift .pc-ribbon { fill: var(--ribbon); stroke: var(--ribbon-dk); stroke-width: 0.7; }
-.offw-gift .pc-bow { fill: var(--ribbon); stroke: var(--ribbon-dk); stroke-width: 0.7; }
-.offw-gift .pc-knot { fill: var(--ribbon-dk); stroke: var(--ribbon-dk); }
-.offw-gift .pc-hi { fill: color-mix(in srgb, var(--paper-bg) 20%, transparent); stroke: none; }
-.offw-gift .pc-crease { fill: none; stroke: var(--ribbon-dk); stroke-width: 0.6; opacity: 0.9; }
-.offw-gift .cft { position: absolute; border-radius: 1.6px; opacity: 0; pointer-events: none; }
-
-/* Badge del nº de ofertas */
-.offw-badge {
-    position: absolute; top: 2px; right: -2px; min-width: 19px; height: 19px; padding: 0 5px;
-    background: var(--offw-accent); color: var(--on-brand); border-radius: var(--r-pill); border: 2px solid var(--bg, var(--bg));
-    font-family: var(--font-mono, ui-monospace, monospace); font-size: var(--fs-10); font-weight: 700;
-    display: grid; place-items: center; z-index: 2; line-height: 1;
-    box-shadow: 0 4px 10px -3px color-mix(in srgb, var(--offw-accent) 70%, transparent);
-    transition: opacity var(--dur-estado) var(--ease-sale), transform var(--dur-estado) var(--offw-spring);
-}
-.offw-launch.is-open-modal .offw-badge { opacity: 0; transform: scale(0.6); }
-
-/* ---- Idle: zarandeo periódico (lazo A / gm-1) ---- */
-.offw-gift.gm-1 .all { transform-box: fill-box; transform-origin: 50% 100%; animation: offw-idle-shake 2.9s cubic-bezier(0.36,0.07,0.19,0.97) infinite; }
-.offw-gift.gm-1 .lid { transform-box: fill-box; transform-origin: 50% 100%; animation: offw-idle-lid 2.9s cubic-bezier(0.36,0.07,0.19,0.97) infinite; }
-.offw-gift.is-open .all, .offw-gift.is-open .lid { animation: none; }
-@keyframes offw-idle-shake {
-    0%,55% { transform: rotate(0deg) translateY(0) scale(1,1); }
-    59% { transform: rotate(-6.5deg) translateY(-0.5px); }
-    63% { transform: rotate(7deg) translateY(-1.5px); }
-    67% { transform: rotate(-5.5deg) translateY(-1px); }
-    71% { transform: rotate(4.5deg) translateY(-0.5px); }
-    75% { transform: rotate(-3deg) translateY(0); }
-    79% { transform: rotate(2deg) scale(1.03,0.97); }
-    83% { transform: rotate(-1deg) scale(1,1); }
-    88%,100% { transform: rotate(0deg) translateY(0) scale(1,1); }
-}
-@keyframes offw-idle-lid {
-    0%,56%,90%,100% { transform: translateY(0) rotate(0deg); }
-    60% { transform: translateY(-1.1px) rotate(1.4deg); }
-    66% { transform: translateY(-0.5px) rotate(-1deg); }
-    72% { transform: translateY(-0.9px) rotate(0.7deg); }
-    80% { transform: translateY(-0.4px) rotate(-0.4deg); }
-}
-
-/* ---- Apertura de la caja: la tapa salta + lazo bamboleo + confeti ---- */
-.offw-gift .lid, .offw-gift .bow { transition: transform var(--dur-cae) var(--offw-spring); }
-.offw-gift .lid { transform-box: fill-box; transform-origin: 50% 100%; }
-.offw-gift .bow { transform-box: fill-box; transform-origin: 50% 96%; }
-.offw-gift .box { transform-box: fill-box; transform-origin: 50% 100%; }
-.offw-gift.is-open .box { animation: offw-box-squash var(--dur-cae) var(--offw-spring); }
-.offw-gift.is-open .lid { transform: translateY(-14px) rotate(-2.5deg); }
-.offw-gift.is-open .bow { animation: offw-bow-jiggle var(--dur-salto) var(--ease-sale) var(--dur-toque); }
-@keyframes offw-box-squash { 0%{transform:scale(1,1)} 35%{transform:scale(1.06,0.9)} 70%{transform:scale(0.99,1.02)} 100%{transform:scale(1,1)} }
-@keyframes offw-bow-jiggle { 0%{transform:rotate(0)} 28%{transform:rotate(-8deg)} 54%{transform:rotate(4.5deg)} 78%{transform:rotate(-2deg)} 100%{transform:rotate(0)} }
-.offw-gift.is-open .cft { animation: offw-cft-pop var(--dur-espera) var(--ease-sale) forwards; }
-.offw-gift.is-open .cft.c2 { animation-delay: var(--dur-toque); }
-.offw-gift.is-open .cft.c3 { animation-delay: var(--dur-toque); }
-.offw-gift.is-open .cft.c4 { animation-delay: var(--dur-toque); }
-.offw-gift.is-open .cft.c5 { animation-delay: var(--dur-toque); }
-@keyframes offw-cft-pop {
-    0% { opacity: 0; transform: translate(0,4px) scale(0.4) rotate(0deg); }
-    18% { opacity: 1; }
-    100% { opacity: 0; transform: translate(var(--cx,0), var(--cy,-34px)) scale(1) rotate(var(--cr,60deg)); }
-}
-
-/* ---- Scrim (se centra en la caja, --ox/--oy) ---- */
-.offw-scrim {
-    position: fixed; inset: 0; z-index: 150; opacity: 0; pointer-events: none;
-    background: radial-gradient(140% 140% at var(--ox,50%) var(--oy,50%), color-mix(in srgb, var(--fg) 30%, transparent) 0%, color-mix(in srgb, var(--fg) 58%, transparent) 55%, color-mix(in srgb, var(--fg) 70%, transparent) 100%);
-    -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); transition: opacity var(--dur-cae) var(--ease-sale);
-}
-.offw-scrim.is-on { opacity: 1; pointer-events: auto; }
-
-/* ---- Estallido de luz — nace en la caja ---- */
-.offw-burst { position: fixed; left: var(--ox,50%); top: var(--oy,50%); width: 0; height: 0; z-index: 156; pointer-events: none; }
-.offw-burst > * { position: absolute; left: 0; top: 0; }
-.offw-flash { width: 240px; height: 240px; margin: -120px 0 0 -120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,247,236,0.95) 0%, rgba(255,196,140,0.55) 34%, transparent 70%); transform: scale(0.2); opacity: 0; }
-.offw-rays { width: 280px; height: 280px; margin: -140px 0 0 -140px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--offw-accent) 92%, #fff) 0deg 2.6deg, transparent 2.6deg 15deg); -webkit-mask: radial-gradient(circle, transparent 16%, #000 27%, #000 47%, transparent 66%); mask: radial-gradient(circle, transparent 16%, #000 27%, #000 47%, transparent 66%); transform: scale(0.1); opacity: 0; }
-.offw-ring { width: 84px; height: 84px; margin: -42px 0 0 -42px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--offw-accent) 80%, #fff); transform: scale(0.3); opacity: 0; }
-.offw-ring.r2 { border-color: color-mix(in srgb, var(--attn) 80%, var(--paper-bg)); }
-.offw-burst.is-burst .offw-flash { animation: offw-b-flash var(--dur-salto) var(--ease-sale) forwards; }
-.offw-burst.is-burst .offw-rays { animation: offw-b-rays var(--dur-espera) var(--ease-sale) forwards; }
-.offw-burst.is-burst .offw-ring { animation: offw-b-ring var(--dur-salto) var(--ease-sale) forwards; }
-.offw-burst.is-burst .offw-ring.r2 { animation: offw-b-ring var(--dur-espera) var(--ease-sale) var(--dur-toque) forwards; }
-@keyframes offw-b-flash { 0%{transform:scale(0.2);opacity:0} 22%{opacity:0.95} 100%{transform:scale(2.3);opacity:0} }
-@keyframes offw-b-rays { 0%{transform:scale(0.1) rotate(0);opacity:0} 26%{opacity:0.9} 100%{transform:scale(1.7) rotate(30deg);opacity:0} }
-@keyframes offw-b-ring { 0%{transform:scale(0.3);opacity:0.9} 100%{transform:scale(3.4);opacity:0} }
-.offw-burst .spark { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 2px; opacity: 0; }
-.offw-burst .spark.s-a { background: var(--offw-accent); }
-.offw-burst .spark.s-g { background: var(--attn); }
-.offw-burst .spark.s-c { background: var(--ribbon); }
-.offw-burst .spark.s-w { background: var(--sheet); }
-.offw-burst .spark.star { border-radius: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; clip-path: polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%); }
-.offw-burst.is-burst .spark { animation: offw-b-spark var(--dur-espera) var(--ease-sale) forwards; }
-@keyframes offw-b-spark {
-    0% { transform: translate(0,0) scale(0.2) rotate(0deg); opacity: 0; }
-    16% { opacity: 1; }
-    100% { transform: translate(var(--sx,0), var(--sy,-60px)) scale(1) rotate(var(--sr,90deg)); opacity: 0; }
-}
-
-/* ---- Modal: vuela y crece desde la caja ---- */
-.offw-modal {
-    position: fixed; left: 50%; top: 50%; z-index: 158; width: min(430px, calc(100vw - 32px));
-    transform: translate(calc(-50% + var(--dx,0px)), calc(-50% + var(--dy,0px))) scale(0.08);
-    opacity: 0; pointer-events: none; will-change: transform, opacity;
-    transition: transform var(--dur-espera) var(--offw-spring), opacity var(--dur-entra) var(--ease-sale);
-}
-.offw-modal.show { transform: translate(-50%,-50%) scale(1); opacity: 1; pointer-events: auto; }
-.offw-card {
-    position: relative; overflow: hidden; text-align: center;
-    background: var(--bg-card, var(--bg-card)); border: 1px solid var(--line, var(--line));
-    border-radius: var(--r-lg); padding: 30px 26px 26px;
-    box-shadow: var(--shadow-float);
-}
-.offw-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; background: linear-gradient(90deg, var(--box), color-mix(in srgb, var(--box) 55%, var(--gift-gold))); }
-.offw-close {
-    position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; z-index: 3;
-    border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
-    color: var(--fg-mute, var(--fg-mute)); background: var(--bg-soft, var(--bg-soft));
-    transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--offw-spring);
-}
-.offw-close:hover { background: var(--fg, var(--fg)); color: var(--bg, var(--bg)); transform: rotate(90deg); }
-.offw-close svg { width: 15px; height: 15px; }
-.offw-arrow {
-    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
-    width: 40px; height: 40px; border: 1px solid var(--line, color-mix(in srgb, var(--fg) 12%, transparent)); border-radius: 50%;
-    display: grid; place-items: center; cursor: pointer; color: var(--fg, var(--fg)); background: var(--bg-card, var(--bg-card));
-    box-shadow: var(--shadow-float); transition: background var(--dur-sale) var(--ease-sale), color var(--dur-sale) var(--ease-sale);
-}
-.offw-arrow--prev { left: 8px; }
-.offw-arrow--next { right: 8px; }
-.offw-arrow:hover { background: var(--fg, var(--fg)); color: var(--bg, var(--bg)); }
-.offw-arrow svg { width: 18px; height: 18px; }
-.offw-slides { position: relative; }
-.offw-slide { margin: 0; }
-.offw-title {
-    font-family: var(--font-display, "Bricolage Grotesque", system-ui, sans-serif);
-    font-weight: 800; font-stretch: 75%; font-size: clamp(24px, 5vw, 32px);
-    line-height: 1.05; letter-spacing: -0.02em; margin: 4px 24px 16px; color: var(--fg, var(--fg));
-}
-.offw-img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: contain; border-radius: var(--r-btn); }
-.offw-dots { display: flex; justify-content: center; gap: var(--sp-7); margin-top: var(--sp-16); }
-.offw-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: var(--line-strong, color-mix(in srgb, var(--fg) 22%, transparent)); transition: background var(--dur-sale) var(--ease-sale), transform var(--dur-sale) var(--offw-spring); }
-.offw-dot.is-on { background: var(--offw-accent); transform: scale(1.25); }
-
-@media (prefers-reduced-motion: reduce) {
-    .offw-gift.gm-1 .all, .offw-gift.gm-1 .lid { animation: none !important; }
-    .offw-gift .lid, .offw-gift .bow { transition: none !important; }
-    .offw-burst { display: none; }
-    .offw-modal { transition: opacity var(--dur-sale) var(--ease-sale); transform: translate(-50%,-50%) scale(1); }
-    .offw-modal:not(.show) { transform: translate(-50%,-50%) scale(1); }
-}
-@media (max-width: 560px) {
-    .offw-modal { width: calc(100vw - 24px); }
-    .offw-title { font-size: var(--fs-22); }
-}
+/* 📜 **AQUÍ VIVÍA EL WIDGET «CAJA DE REGALO» DE OFERTAS** (`#270`) —el lanzador flotante, su
+   estallido, el modal-carrusel y la caja animada con su lazo y su confeti— y se retira entero en
+   `#668` (F5 · T3), cumpliendo `#631`: «oferta» es un hecho de PRECIO (el «antes» tachado del
+   catálogo), no un CMS de imágenes detrás de un icono.
+   ⚠️ Se fue por BLOQUE y no clase a clase, y la diferencia importa: la poda por clases dejó vivas
+   sus `@keyframes`, sus tokens (`--offw-spring`, `--offw-accent`) y los selectores que mezclaban
+   una clase suya con otra genérica (`.offw-gift.gm-1 .all`). *Podar por clase no poda una feature:
+   una feature se poda por su bloque.* */
 
 /* ====================================================================
    EL MENÚ A PANTALLA COMPLETA — armazón, tanda 2c·1
@@ -7672,9 +7469,9 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
    mismo cambio que su consumidor*. */
 
 /* ── A3 · RAYOS, la variante QUIETA ────────────────────────────────────────────────────────────
-   ⚠️ **No es `.offw-rays`.** Aquél es el estallido del widget de ofertas: 2,6°/15° (24 rayos),
-   animado y con máscara de anillo. Éste es el panel de la fachada: **3,2°/8°, o sea 45 rayos**, y
-   no se mueve. Su regla, que hay que respetar al colocarlo: **uno por página**. */
+   ⚠️ **No confundir con el estallido del widget de ofertas**, que era 2,6°/15° (24 rayos), animado
+   y con máscara de anillo: se retiró con el widget en `#668`. Éste es el panel de la fachada:
+   **3,2°/8°, o sea 45 rayos**, y no se mueve. Su regla al colocarlo: **uno por página**. */
 .rays {
     position: absolute; pointer-events: none;
     width: var(--rayos-size); height: var(--rayos-size);
@@ -7684,7 +7481,7 @@ body[data-has-hero].nav--live .nav:not(.nav--hidden) .nav__brand-logo--inline {
     /* ⚠️⚠️ **Sin esto el abanico se corta en un RECTÁNGULO DURO y parece un fallo.** En su artboard
        el corte lo da el borde de la tarjeta y el centro del abanico queda FUERA de ella, así que
        nunca se ve un canto recto. Aquí el contenedor es otro, así que el desvanecido se lo pone la
-       propia pieza — el mismo recurso que `.offw-rays` ya usaba para su anillo.
+       propia pieza — el mismo recurso que el anillo del widget de ofertas usaba antes de `#668`.
        ⚠️⚠️ Y va `closest-side`: **por defecto un `radial-gradient` mide hasta la ESQUINA**, así que
        el desvanecido no llega a terminar dentro de la caja y el canto recto SIGUE viéndose. Es
        exactamente la trampa que `#259` dejó escrita, y se cayó en ella igual. */

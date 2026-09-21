@@ -2890,8 +2890,6 @@ return [
         'field_is_active_hint' => 'Si se desactiva, la atracción no aparece en la landing.',
         'field_is_special' => 'Destacada',
         'field_is_special_hint' => 'Resalta esta atracción visualmente en la landing (independiente de si se vende).',
-        'field_complement' => 'Complemento de pago',
-        'field_complement_hint' => 'Complemento vendible vinculado (opcional). Si se elige, la landing muestra su precio y un botón «Comprar». Solo se listan complementos vendibles.',
         'complement_not_attached_warning' => 'Aviso: este complemento no se podrá comprar en la landing de esta zona (la atracción se mostrará solo informativa). Revisa en Catálogo que tenga precio y esté enganchado como complemento DE PAGO (no «incluido») a una entrada vendible de esta zona.',
 
         'lang' => [

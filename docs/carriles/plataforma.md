@@ -2,10 +2,12 @@
 
 > Máquina: **este ordenador**, `~/proyectos/jumpweb/producto` (mudado en `#648`; las instancias al lado, en
 > `jumpweb/instancias/<slug>`) · Banda: **610–639 AGOTADA con `#639`** → sigue en
-> **640–669** · Último usado: **`#667`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
+> **640–669** · Último usado: **`#668`** · Spec: `docs/specs/producto-e-instancias.md` (§0 y §4.9) y, para lo
 > que viene, `docs/specs/instancia-y-landing-fuera.md` · Actualizado: **2026-09-21**, cierre de sesión
-> (**T2b y T2c CERRADAS**: `home` mudada con huella 0/38 y el CSS huérfano podado, con trinquete).
-> ⚠️ **Quedan DOS números en la banda** (`#668`, `#669`): la siguiente tanda abre banda nueva.
+> (**T2b, T2c y T3·1 cerradas**: la landing entera fuera, el CSS huérfano podado con trinquete y
+> el widget de ofertas retirado).
+> ❗❗ **QUEDA UN SOLO NÚMERO EN LA BANDA (`#669`)**: la próxima tanda abre banda nueva en
+> `DECISIONES.md` —fichero COMPARTIDO— y lo avisa en el buzón antes de tocarlo.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`): foto, retomar, ficheros y buzón.
 > Techo **32 KB** (check 10; subido de 24 en `#724` con la medida delante). El contador de la suite no
 > vive aquí: va en el trailer del commit.
@@ -91,23 +93,39 @@
    ▶ Los siete arneses re-apuntados, **144/144**; nace `AnfitrionPortadaTest`, que además destapó que
    `CONTRATO_DE_VISTAS` mezcla el contrato de la PÁGINA con el del ARMAZÓN (`DEL_COMPOSER`, ya pública).
 
-   ✅✅ **T2c CERRADA: el CSS huérfano, podado y con TRINQUETE** (`#667`, 21-09; el detalle en la spec
-   hermana **§4.6.bis**). ❗ Las **208** clases de `#665` eran **17**: el anfitrión de `#666` sostiene 174.
-   Lo que sí había era **128 sin consumidor de nadie** —deuda vieja e invisible—: **119 podadas** (−20,3 KB
-   entre `landing.css`, `site.css` y `cajon.css`) con **huella 0 en 38 pantallas**, y las **9 del hero
-   vacío intactas** porque su CSS lo aparcó el owner en `#226`.
-   ❗❗❗ **Y la lección que hay que llevarse: un censo de CSS huérfano que busca el nombre LITERAL miente.**
-   Mintió tres veces (161 → 139 → 128) porque aquí una clase se compone de **tres formas** —concatenación
-   JS, concatenación PHP e **interpolación Blade dentro del atributo**—. La tercera la destapó un control
-   contra el DOM servido, que además enseñó que **el DOM solo tiene la rama de hoy**: `visit__dot--open`
-   salía viva y `--later` muerta porque el parque estaba cerrado.
-   ▶ Lo que queda encendido es `LandingCssHasNoOrphansTest`: mira **todas** las hojas —la guarda vieja solo
-   veía la fachada— con deuda declarada de **15** que **solo encoge**. Sus tres casos, vistos morder.
+   ✅✅ **T2c CERRADA: el CSS huérfano, podado y con TRINQUETE** (`#667`, 21-09; detalle en la spec
+   hermana **§4.6.bis**). Las **208** clases de `#665` eran **17** —el anfitrión sostiene 174— y lo que
+   sí había eran **128 sin consumidor de nadie**: **119 podadas** (−20,3 KB) con **huella 0/38**, y las
+   **9 del hero vacío intactas** porque su CSS lo aparcó el owner en `#226`.
+   ❗❗❗ **Un censo de CSS huérfano que busca el nombre LITERAL miente**: mintió tres veces (161 → 139 →
+   128) porque aquí una clase se compone de **tres formas** —concatenación JS, concatenación PHP e
+   interpolación Blade en el atributo—. Lo que queda encendido es `LandingCssHasNoOrphansTest`, con
+   deuda declarada de **15** que **solo encoge**.
 
-   ▶▶ **LO SIGUIENTE: LA T3 · EL PANEL ADELGAZA** (spec hermana §4.6·3): los seis recursos que el producto
-   ya no manda —atracciones y el widget de ofertas salen del panel (`#631`, `[DECIDIDO owner]`: «oferta» =
-   hecho de precio)— y las secciones de texto. Después **T4** (`zones` pierde sus cuatro columnas muertas;
-   es migración, confirma el MAYOR) y **T5** (la v2.0.0).
+   ✅ **T3·1 HECHA: el widget de ofertas y el complemento por atracción, fuera** (`#668`, 21-09; el
+   detalle en la spec hermana **§4.6.ter**). El owner eligió ir **por grados**: de los seis recursos
+   salen los dos con CERO uso —ofertas (0 filas) y el complemento (0 de 23)—. **Huella 0/38 y suite
+   5.540.**
+   ❗ **La tercera pieza del alcance no existía**: censadas las 71 claves de `settings`, **ninguna**
+   está sin consumidor, así que «las secciones de texto» de §4.2 son un plan sin sujeto.
+   ▶▶ **`InstanceViews::CONTRATO` = 2, la PRIMERA subida**: `offers` salió del composer, o sea del
+   contrato de vista de las nueve páginas. Los dos `instancia.json` ya lo declaran.
+   ❗❗❗ **PODAR POR CLASE NO PODA UNA FEATURE**: el guion de `#667` dejó vivas sus `@keyframes`, sus
+   tokens y los selectores mezclados. *Una feature se poda por su BLOQUE* (118 líneas de una vez).
+   ⚠️⚠️ **Y una retirada arrastra su cadena, aquí de CINCO eslabones**: `AdminSettingsHub` listaba el
+   recurso (**112 rojos**, el panel entero — el censo buscó `\bOffer\b`, que no casa con
+   `OfferResource`); `body.book-bar-visible` existía SOLO para apartar su lanzador; **seis guardas** lo
+   usaban de sonda o en sus listas; la sonda de at-rules se cayó por **tercera vez** y ahora prueba el
+   INSTRUMENTO; y `AttractionComplementPanelTest` se escapó del censo porque solo nombraba la COLUMNA.
+
+   ▶▶ **LO SIGUIENTE: EL RESTO DE LA T3** (spec hermana §4.6·3 y §4.6.ter). Quedan cuatro recursos
+   —`attractions`, `faqs`, `testimonials`, `landing_services`, `bar_images`— con contenido vivo, y **no
+   se pueden sacar todavía**: el menú de hechos no tiene plato para ellos y hacerlo convertiría «editar
+   la web» en «desplegar el repo de la instancia». ⚠️ `faqs` además NO es solo presentación: de esa
+   tabla cuelgan el JSON-LD `FAQPage`, la chapa de `/contacto` y el `lastmod` del sitemap. ⚠️ Y
+   `testimonials` es el contrato de prueba social con el que **el carril del SPA está trabajando ahora**.
+   ▶ Después **T4** (`zones` pierde sus cuatro columnas muertas; es migración, confirma el MAYOR) y
+   **T5** (la v2.0.0). Las tablas `offers` y `attractions.ticket_type_id` se borran ahí, con las demás.
 
    ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
    su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
@@ -242,7 +260,14 @@ dueño es el carril de la web/reseñas—) ·
   `mutar-pie.py` murió con `UnicodeDecodeError` porque el HTML que PHPUnit vuelca al fallar lo **trunca
   por longitud**, a media secuencia UTF-8. Se lee con `encoding='utf-8', errors='replace'`. *Quien
   decodifica la salida de otro no puede dar por hecho que está bien formada.*
-- ⏰⏰ **UNA LÍNEA BASE QUE CRUZA LA MEDIANOCHE MIDE DOS DÍAS** (`#666`). La huella «antes» empezó un
+- ⏰⏰⏰ **UNA LÍNEA BASE QUE CRUZA UN UMBRAL DEL HORARIO MIDE DOS ESTADOS** (`#666`, ampliada en
+  `#668`). No es «la medianoche»: son **los dos umbrales de CADA DÍA**. En `#668` la huella «antes»
+  se tomó a las 20:40 con el parque ABIERTO y la comparación a las 21:57, ya CERRADO: **1.603 nodos
+  distintos en 38 pantallas** que no eran del cambio —el verde de «abierto» pasaba a gris, la
+  sección crecía 32 px—. ▶ Antes de creerse una diferencia se mira `GET /api/v1/schedule/now`, y si
+  el estado cambió **se retoma la base dentro de la misma franja**. La de la noche dura hasta que
+  abre, así que es la ventana cómoda. *Una medida con dos estados dentro no es un juez.*
+- ⏰⏰ **Y el caso original, que sigue valiendo** (`#666`). La huella «antes» empezó un
   domingo a las 23:52 y acabó el lunes a las 00:00: el estado del horario (`heroStatus`) viaja en el menú
   de **las doce vistas**, así que las 38 pantallas quedaron contaminadas y el DOM daba 18 líneas de
   diferencia —«Ya hemos cerrado» → «Abre hoy»— que no eran del cambio. ▶ Se retoma con el reloj lejos del

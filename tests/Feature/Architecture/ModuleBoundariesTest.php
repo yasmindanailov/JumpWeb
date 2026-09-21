@@ -106,10 +106,14 @@ class ModuleBoundariesTest extends TestCase
         //    borrase lo suyo; eso es un refactor de eventos, fuera del alcance de Fase 2 (§2).
         //    Anotado aquí para que la decisión exista y no se pierda.
         'Identity/Models/User.php' => ['App\Domain\Booking\Models\Order', 'App\Domain\Booking\Models\OrderItem', 'App\Domain\Booking\Models\Ticket'],
-        // Relaciones Eloquent Content↔Booking: `attractions.zone_id`, `attractions.ticket_type_id`,
-        // `landing_service_products` (`#588`). Son FKs del esquema, no llamadas de dominio; el
-        // spec §4 las exime a propósito. Sobreviven a la mudanza de Booking (paso 6).
-        'Content/Models/Attraction.php' => ['App\Domain\Booking\Models\TicketType', 'App\Domain\Booking\Models\Zone'],
+        // Relaciones Eloquent Content↔Booking: `attractions.zone_id` y `landing_service_products`
+        // (`#588`). Son FKs del esquema, no llamadas de dominio; el spec §4 las exime a propósito.
+        // Sobreviven a la mudanza de Booking (paso 6).
+        // ⚠️ **La costura con `TicketType` se fue en `#668`** (F5 · T3): era `attractions.ticket_type_id`,
+        // el complemento vinculado, y la pieza entera se retiró (`#632`·P3, **0 de 23** lo usaban). La
+        // entrada sale de la línea base en el mismo cambio porque **esta lista solo ENCOGE**: una costura
+        // declarada que ya no existe deja de medir nada y tapa a la siguiente que aparezca ahí.
+        'Content/Models/Attraction.php' => ['App\Domain\Booking\Models\Zone'],
         'Content/Models/LandingService.php' => ['App\Domain\Booking\Models\TicketType'],
 
         // ─── PAYMENTS → BOOKING: la costura del DINERO (paso 5, 2026-08-12) ───
@@ -201,7 +205,7 @@ class ModuleBoundariesTest extends TestCase
      * entra a Booking por `Contracts`. Las dos salidas, ya con todos los datos delante:
      *   (a) **contratos de lectura en Booking** — «calendario de operación», «identidad de zona»
      *       y «precio de referencia», extraídos de estas llamadas reales (como se hizo en el
-     *       paso 1 con `PublishableCatalog` y `CustomerReservations`); o
+     *       paso 1 con `CustomerReservations`); o
      *   (b) **reclasificar el calendario**. Medido en el paso 6: NO es viable llevarlo a
      *       Platform, porque `SpecialDate` referencia `RateType` (tarifa) y Platform no puede
      *       depender de nadie. Haría falta un módulo «recinto» nuevo — más de lo que el spec

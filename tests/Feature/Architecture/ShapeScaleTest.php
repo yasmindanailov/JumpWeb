@@ -60,7 +60,7 @@ class ShapeScaleTest extends TestCase
         // es del cliente ANTIGUO —sus iniciales dan nombre a la clase— y el owner lo sacó de la
         // landing. Queda solo el uso del cajón, que es otra tanda.
         '.bk-context .jj-block' => [11, 3.0],
-        '.offw-burst .spark' => [9, 2.0],
+        // ⚠️ Aquí estaba `.offw-burst .spark`, el destello del widget de ofertas: se fue con él en `#668`.
         // ⚠️ `.svc-marquee__item::after` vivía aquí y SE RETIRÓ el 2026-08-31 con la marquesina:
         // era el motivo «foam» del cliente antiguo **copiado como geometría**, no con la clase
         // `.jj-block`, y por eso sobrevivió al barrido que retiró aquélla. Lo cazó este mismo
@@ -91,8 +91,7 @@ class ShapeScaleTest extends TestCase
         '.nav__period-block' => 'el punto de la marca, en `em`: escala con la tipografía, no con la caja',
         '.hero__title .blink' => 'subrayado tipográfico con padding en `em`',
         '.reserve h2 .fill' => 'ídem',
-        '.offw-gift .cft' => 'lazo del regalo del widget de ofertas: dibujo',
-        '.offw-burst .spark.star' => 'punta de estrella: `0` es la forma, no un reset',
+        // ⚠️ Aquí estaban el lazo y la punta de estrella del widget de ofertas (`#668`).
         // ⚠️ `.slider-progress` se fue en `#482`: era la barra de avance del carrusel.
         '.cal__dot' => 'muestra de color de la leyenda del calendario: su radio es la forma del swatch, '.
             'no el canto de un contenedor. Con lado 12 y radio 4 su ratio es 3,00 y no cumple la ley '.
@@ -134,7 +133,7 @@ class ShapeScaleTest extends TestCase
         // con el bloque `.invite-*` entero, muerto desde el rediseño del editor. **De cinco
         // excepciones de elevación quedan cuatro** — la lista encogió sola, otra vez.
         '.ck-tgl::after' => 'el PULGAR de un interruptor: 1 px de sombra lo hace parecer una pieza física, no elevación',
-        '.offw-badge' => 'lee `--offw-accent`, color de marca del widget, no una sombra de elevación',
+        // ⚠️ Y aquí la chapa del widget de ofertas, que leía su propio color de marca (`#668`).
     ];
 
     /** Las tres reglas de foco que NO pueden usar `--focus-color`, y por qué. */
@@ -181,7 +180,11 @@ class ShapeScaleTest extends TestCase
         // ⚠️ `.bd-card` era una de las tres agujas y se fue en `#528`; la ficha del carril de
         // complementos (`.addon-card`) la sustituyó y se fue a su vez en `#583` — hoy la ocupa la foto
         // de `/cumpleanos`, que declara su canto en `landing.css`.
-        foreach (['.foot__strip', '.party-photo', '.offw-card'] as $needle) {
+        // ⚠️⚠️ **`.offw-card` era la tercera aguja y `#668` se la llevó** con el widget de ofertas.
+        // La sustituye `.zone-card`, que declara su canto en `landing.css` y es de las piezas más
+        // estables de la casa. *Las agujas de un escaneo caducan con su pieza: van por NOMBRE para
+        // que el test avise en vez de quedarse verde mirando una hoja vacía.*
+        foreach (['.foot__strip', '.party-photo', '.zone-card'] as $needle) {
             $this->assertNotEmpty(
                 array_filter($radii, fn (array $r) => str_contains($r['selector'], $needle))
                     ?: array_filter($this->sheetContents(), fn (string $c) => str_contains($c, $needle)),

@@ -176,8 +176,13 @@ class ScrollLockOwnerTest extends TestCase
         // su CONTROLADOR sin framework, no en `app.js` —primero al abrir y cerrar (T2), y desde la T3b también
         // cuando NACE abierto, que antes era un `lock('sidecart')` suelto en la entrada del producto—. Los
         // otros dos superpuestos siguen donde estaban. Mirar un solo fichero dejaría media regla sin vigilar.
+        // ⚠️ **Eran TRES superpuestos y son DOS desde `#668`** (F5 · T3): el widget de ofertas se
+        // retiró con su recurso del panel (`#631`) y su llave se fue con él. No se relaja la regla
+        // —quien tape la pantalla sigue teniendo que pedir su propia llave—: lo que hay es un
+        // superpuesto menos. ▶ Comprobado que los dos que quedan la siguen pidiendo, o esto sería
+        // una guarda que encoge hasta no vigilar nada.
         $porFichero = [
-            'resources/js/app.js' => ['nav', 'offers'],
+            'resources/js/app.js' => ['nav'],
             'resources/js/cajon/controller.js' => ['sidecart'],
         ];
 

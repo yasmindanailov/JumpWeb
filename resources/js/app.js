@@ -772,14 +772,17 @@ document.addEventListener('alpine:init', () => {
             }
         },
         // Estado VISIBLE efectivo de la barra: reúne todas las condiciones (revelada, no en el pie,
-        // sin sidecart/cookies/modal-ofertas por encima). Lo consume el blade para el `:class` de la
-        // propia barra Y para exponer `body.book-bar-visible`, que reposiciona el widget de ofertas en
-        // móvil (lo sube por encima de la barra cuando aparece; #270).
+        // sin sidecart ni cookies por encima). Lo consume el blade para el `:class` de la propia
+        // barra. ⚠️ Antes exponía además `body.book-bar-visible`, que apartaba el widget de ofertas
+        // en móvil; los dos se fueron en `#668`.
         get visible() {
+            // ⚠️ Aquí había una cuarta condición: la barra cedía el sitio al widget de OFERTAS
+            // cuando se abría su caja. El widget se fue en `#668` (F5 · T3) y con él su store, así
+            // que la condición se retira en vez de quedarse consultando un store que ya no existe
+            // —que es lo que la dejaría en verde para siempre sin ejercer nada—.
             return this.revealed && ! this.nearFoot
                 && ! this.$store.purchase.isOpen
-                && ! this.$store.cookies.visible && ! this.$store.cookies.panel
-                && ! (this.$store.offers && this.$store.offers.open);
+                && ! this.$store.cookies.visible && ! this.$store.cookies.panel;
         },
 
         destroy() {
@@ -1079,10 +1082,6 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    // Widget flotante «caja de regalo» de OFERTAS (#270, docs/PLAN-OFERTAS-WIDGET.md). El store
-    // `offers` expone SOLO el flag `open` (lo lee la book-bar para cederle sitio); toda la lógica
-    // (carrusel, destello, posicionado, focus-trap) vive en el componente para no dispersar estado.
-    window.Alpine.store('offers', { open: false });
 
     /**
      * **EL CTA DOBLE — cuál de las dos mitades está expandida** (armazón · tanda 2c·7).
@@ -1118,116 +1117,6 @@ document.addEventListener('alpine:init', () => {
         },
     });
 
-    // Componente del widget. Envuelve lanzador + scrim + estallido + modal-carrusel en UN x-data
-    // (el modal NO tiene x-data propio → comparte `i`/`go`/`close`/`loaded` sin problemas de scope).
-    // Al abrir: calcula el origen (centro de la caja) en CSS vars --ox/--oy/--dx/--dy y dispara el
-    // estallido; el vuelo del modal es CSS (`.offw-modal.show`). Imágenes perezosas: `loaded` no se
-    // pone a true hasta la 1ª apertura → 0 bytes de imagen en la carga de página.
-    window.Alpine.data('offersWidget', (count = 0) => ({
-        count,
-        i: 0,
-        loaded: false,
-        shown: false, // el modal-card está en su estado «volado» (t≈300ms tras abrir)
-        burst: false, // destello activo (t≈170ms tras abrir)
-        _timers: [],
-        _focusable: 'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])',
-
-        init() {
-            // Cuando el card VUELA (shown), lleva el foco dentro (focus-trap ligero, como `a11yPanel`).
-            this.$watch('shown', (v) => {
-                if (v) this.$nextTick(() => this.focusFirst());
-            });
-        },
-
-        // Estado canónico de apertura en el store (lo ve la book-bar).
-        get open() {
-            return this.$store.offers.open;
-        },
-
-        // Secuencia FIEL al mockup (caja-modal): la caja se abre y entra el scrim (t=0) → el destello
-        // sale de DENTRO de la caja (t=170 ms) → el modal-card VUELA desde la caja al centro (t=300 ms).
-        // El retraso de `shown` además garantiza que el estado inicial (card pequeño en la caja, con
-        // --dx/--dy ya fijados) se PINTE antes de animar; si no, saltaría directo al centro sin vuelo
-        // (era el bug «el efecto al abrir no se aplica»).
-        openModal() {
-            if (this.$store.offers.open) return;
-            this._clearTimers();
-            this.positionOrigin();
-            this.loaded = true; // carga las imágenes on-demand (perezosas hasta la 1ª apertura)
-            this.$store.offers.open = true; // t=0: scrim entra + la caja se abre (tapa + confeti)
-            this.$store.scrollLock.lock('offers');
-
-            if (this._reduced()) {
-                this.shown = true; // sin animación: modal directo
-                return;
-            }
-            this._timers.push(setTimeout(() => { this.burst = true; }, 170));   // destello desde la caja
-            this._timers.push(setTimeout(() => { this.shown = true; }, 550));   // el card vuela y crece
-            this._timers.push(setTimeout(() => { this.burst = false; }, 1550)); // limpia el destello
-        },
-
-        close() {
-            this._clearTimers();
-            this.shown = false;
-            this.burst = false;
-            this.$store.offers.open = false;
-            this.$store.scrollLock.unlock('offers');
-        },
-
-        // Carrusel por índice con vuelta infinita (patrón `birthdayProcess`).
-        go(n) {
-            const len = this.count || 1;
-            this.i = ((n % len) + len) % len;
-        },
-
-        // Origen dinámico del estallido/vuelo: centro de la caja + desfase caja→centro de pantalla.
-        positionOrigin() {
-            const btn = this.$refs.launch;
-            if (!btn) return;
-            const r = btn.getBoundingClientRect();
-            const cx = r.left + r.width / 2;
-            const cy = r.top + r.height / 2;
-            const el = this.$el;
-            el.style.setProperty('--ox', cx + 'px');
-            el.style.setProperty('--oy', cy + 'px');
-            el.style.setProperty('--dx', (cx - window.innerWidth / 2) + 'px');
-            el.style.setProperty('--dy', (cy - window.innerHeight / 2) + 'px');
-        },
-
-        onResize() {
-            if (this.$store.offers.open) this.positionOrigin();
-        },
-
-        focusFirst() {
-            this.$refs.card?.querySelector(this._focusable)?.focus();
-        },
-
-        trap(e) {
-            if (e.key !== 'Tab' || !this.$refs.card) return;
-            const items = [...this.$refs.card.querySelectorAll(this._focusable)]
-                .filter((el) => el.offsetParent !== null);
-            if (items.length === 0) return;
-            const first = items[0], last = items[items.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault(); last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault(); first.focus();
-            }
-        },
-
-        _reduced() {
-            return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        },
-
-        _clearTimers() {
-            this._timers.forEach(clearTimeout);
-            this._timers = [];
-        },
-
-        destroy() {
-            this._clearTimers();
-        },
-    }));
 });
 
 // ── EL INTERRUPTOR DEL TITULAR VUELVE A SALTAR AL VOLVER EL HERO (`#280`) ──────────────────────

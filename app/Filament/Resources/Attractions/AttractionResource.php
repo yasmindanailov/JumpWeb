@@ -54,7 +54,9 @@ class AttractionResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['zone', 'ticketType']);
+        // ⚠️ Era `with(['zone', 'ticketType'])`: la carga ansiosa del complemento vinculado se va
+        // con la relación, retirada en `#668` (`#632`·P3).
+        return parent::getEloquentQuery()->with(['zone']);
     }
 
     public static function form(Schema $schema): Schema

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Attractions\Schemas;
 
-use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -11,21 +10,20 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Fase 7.9 (iter. 1) — Formulario de alta/edición de una atracción (compartido por crear/
- * editar). Identidad (zona, imagen, orden, activa, destacada, complemento) + textos i18n
+ * editar). Identidad (zona, imagen, orden, activa, destacada) + textos i18n
  * (es/en/fr). La limpieza i18n, la normalización de la ruta de imagen y los defaults viven
  * en `InteractsWithAttractionForm`.
  *
  * La imagen es por ahora una RUTA relativa a `public/` (p. ej. `images/attractions/x.jpg`),
  * coherente con el dato sembrado; la subida de ficheros desde el panel llegará con la galería.
  *
- * Atracciones de pago (#228): `is_special` (resalte visual) + `ticket_type_id` (complemento
- * vendible vinculado → precio + CTA en la landing) son INDEPENDIENTES y opcionales.
+ * ⚠️ Atracciones de pago (`#228`): quedaba `is_special` (resalte visual). El `ticket_type_id`
+ * —el complemento vendible vinculado, que daba precio y CTA en la landing— se retiró en `#668`
+ * con la pieza entera (`#632`·P3: **0 de 23** lo usaban).
  */
 class AttractionForm
 {
@@ -72,27 +70,10 @@ class AttractionForm
                             ->label(__('admin.attractions.field_is_special'))
                             ->helperText(__('admin.attractions.field_is_special_hint'))
                             ->default(false),
-                        // Complemento vendible vinculado (#228): solo addons vendibles. Si se
-                        // elige uno que NO está enganchado a una entrada vendible de la zona de
-                        // la atracción, se avisa (en la landing degradaría a card informativa).
-                        Select::make('ticket_type_id')
-                            ->label(__('admin.attractions.field_complement'))
-                            ->helperText(fn (Get $get, $state): string => self::complementWarning(
-                                $get('zone_id') ? (int) $get('zone_id') : null,
-                                $state ? (int) $state : null,
-                            ) ?? __('admin.attractions.field_complement_hint'))
-                            ->options(fn (): array => TicketType::query()
-                                ->ofType(TicketType::TYPE_ADDON)
-                                ->sellable()
-                                ->orderBy('position')
-                                ->get()
-                                ->mapWithKeys(fn (TicketType $addon): array => [$addon->id => (string) $addon->tr('name')])
-                                ->all())
-                            ->nullable()
-                            ->native(false)
-                            ->searchable()
-                            ->live()
-                            ->columnSpanFull(),
+                        // ⚠️ Aquí estaba el selector de COMPLEMENTO vinculado (`#228`) y se retira en
+                        // `#668` (F5 · T3). `#632`·P3, con la medida delante: las atracciones son
+                        // presentación y **0 de 23** tenían complemento. Lo que se vende, se vende
+                        // desde el catálogo; lo que restringe, vive en Normas.
                     ]),
 
                 Tabs::make('translations')->tabs([
@@ -101,35 +82,6 @@ class AttractionForm
                     self::translatableTab('fr', __('admin.attractions.lang.fr')),
                 ]),
             ]);
-    }
-
-    /**
-     * Aviso si el complemento elegido NO será comprable en la landing de esta zona — porque no
-     * tiene precio, o no está enganchado como complemento DE PAGO (`is_included=false`) a una
-     * entrada vendible de esta zona (coherencia #226). En ese caso la landing lo mostraría solo
-     * informativo. Estático porque `configure()` es estático (sin `$this`). null = todo coherente.
-     */
-    private static function complementWarning(?int $zoneId, ?int $addonId): ?string
-    {
-        if (! $addonId || ! $zoneId) {
-            return null;
-        }
-
-        $addon = TicketType::find($addonId);
-        if ($addon === null || ! $addon->prices()->exists()) {
-            return __('admin.attractions.complement_not_attached_warning');
-        }
-
-        $purchasable = TicketType::query()
-            ->ofType(TicketType::TYPE_ENTRY)
-            ->sellable()
-            ->where('zone_id', $zoneId)
-            ->whereHas('addons', fn (Builder $q) => $q
-                ->whereKey($addonId)
-                ->where('product_addons.is_included', false))
-            ->exists();
-
-        return $purchasable ? null : __('admin.attractions.complement_not_attached_warning');
     }
 
     private static function translatableTab(string $locale, string $label): Tab

@@ -2,9 +2,6 @@
 
 namespace App\Domain\Content\Models;
 
-use App\Domain\Booking\Contracts\ComplementPlacement;
-use App\Domain\Booking\Contracts\PublishableCatalog;
-use App\Domain\Booking\Models\TicketType;
 use App\Domain\Booking\Models\Zone;
 use App\Domain\Platform\Concerns\HasTranslations;
 use Illuminate\Database\Eloquent\Model;
@@ -54,46 +51,13 @@ class Attraction extends Model
         return $ruta === '' ? null : asset($ruta);
     }
 
-    /**
-     * Complemento (addon) vendible vinculado a esta atracción (#228). Opcional:
-     * `null` = atracción solo informativa. Si está presente y es comprable en la
-     * zona (ver `complementIsPurchasable`), la landing muestra precio + CTA.
-     *
-     * @return BelongsTo<TicketType, $this>
+    /*
+     * 📜 **AQUÍ VIVÍAN `complementIsPurchasable()` Y `complementPriceCents()`** —el complemento
+     * que una atracción podía vender desde su ficha de la landing (`#228`)— y se retiran en
+     * `#668` (F5 · T3). `#632`·P3 lo decidió midiendo: las 23 atracciones son PRESENTACIÓN
+     * (nombre, foto, chapa, edad en texto), **0 de 23** tenían complemento vinculado y las
+     * restricciones que de verdad importan viven en Normas.
+     * ⚠️ La columna `ticket_type_id` sigue en la tabla: las migraciones que borran van juntas
+     * en la tanda que sube el MAYOR de la versión (T4/T5), no sueltas.
      */
-    public function ticketType(): BelongsTo
-    {
-        return $this->belongsTo(TicketType::class);
-    }
-
-    /**
-     * ¿El complemento vinculado es realmente COMPRABLE en la zona de esta atracción?
-     * Coherencia #226 (la landing solo anuncia lo que la cesta puede vender): el addon
-     * debe ser activo+vendible Y estar enganchado (pivote `product_addons`) a ≥1 entrada
-     * (`TYPE_ENTRY`) vendible de esta zona, con la zona operativa. Si no, la card degrada
-     * a informativa (sin precio/CTA).
-     *
-     * Comprobación de UNA atracción (panel/aviso). Para la LISTA de la landing se usa
-     * `App\Domain\Content\Services\LandingComplementResolver` (batch, sin N+1).
-     *
-     * La REGLA es de Booking y vive en su contrato (`PublishableCatalog`, Fase 2 paso 1);
-     * antes estaba duplicada aquí y en el resolver de la landing, con dos consultas que
-     * podían divergir. Aquí solo queda la guarda de los IDs.
-     */
-    public function complementIsPurchasable(): bool
-    {
-        if (! $this->ticket_type_id || ! $this->zone_id) {
-            return false;
-        }
-
-        return app(PublishableCatalog::class)->isComplementPurchasable(
-            new ComplementPlacement((int) $this->ticket_type_id, (int) $this->zone_id),
-        );
-    }
-
-    /** Precio de referencia (céntimos) del complemento vinculado, para la card de la landing. */
-    public function complementPriceCents(): int
-    {
-        return (int) ($this->ticketType?->displayPriceCents() ?? 0);
-    }
 }

@@ -78,7 +78,7 @@ contador de la suite va en el trailer del commit** (`#618`). Si no salta: `git c
 | Menores a cargo · asignar una entrada a un menor · apellidos y relación | `docs/specs/menores-a-cargo.md` §0 |
 | Carné QR · pantalla de puerta · «Mi carné» · rotar carné | `docs/specs/identidad-qr-puerta.md` §0 |
 | JumpPoints / vales / lealtad | `docs/specs/lealtad-jumppoints.md` §0 |
-| CMS público (servicios, ofertas) | `docs/sistemas/SERVICIOS-CMS.md` · `docs/sistemas/OFERTAS-WIDGET.md` |
+| CMS público (servicios) | `docs/sistemas/SERVICIOS-CMS.md` |
 | Reseñas de Google · Business Profile · prueba social | `docs/specs/google-business-profile.md` §0 · `docs/specs/google-reviews.md` §0 |
 | El carril del SPA en el otro ordenador · reparto por fichero | `docs/CARRIL-SPA.md` · `docs/carriles/spa.md` |
 | Contenido y copys · festivos · jerga de la web | `docs/specs/contenido-y-copys.md` §0 |

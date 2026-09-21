@@ -87,7 +87,7 @@
 |---|---|
 | `INVARIANTES.md` | 63 invariantes de no-regresión (dinero · aforo · RGPD · seguridad · rendimiento · suite). **Leer antes de tocar esas áreas.** |
 | `ARQUITECTURA.md` | Stack real, estructura (`app/Domain/<Contexto>/`), white-label 3 capas, composer global memoizado. |
-| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (47 modelos · 120 migraciones), por dominios, con rarezas heredadas. |
+| `MODELO-DATOS.md` | Mapa de BD **regenerado desde el código** (46 modelos · 120 migraciones), por dominios, con rarezas heredadas. |
 | `SEGURIDAD.md` | Estándar transversal nivel Reforzado (ASVS/NIST): 12 reglas + estado heredado. |
 | `TESTING.md` | Suite (paralelo paratest), anti-red, fakes por proveedor, Unit/Feature, comandos de verificación con MySQL real. |
 | `FLUJOS.md` | Los 6 recorridos de usuario heredados + reglas transversales. |
@@ -104,7 +104,6 @@
 | `sistemas/DEPOSITO.md` | Señal/depósito (pago parcial online, resto presencial). |
 | `sistemas/POSTFORM-INVITADOS.md` | Datos por invitado post-reserva (signed URL, PDF, RGPD menores). |
 | `sistemas/SERVICIOS-CMS.md` | Entidad CMS `LandingService` (clasificación de superficie, modelo A). |
-| `sistemas/OFERTAS-WIDGET.md` | Widget de ofertas informativo + CMS `Offer` (primer FileUpload real). |
 | `sistemas/COOKIES.md` | Consentimiento de cookies (banner 2 capas + bloqueo previo). ✅ implementado. |
 | `sistemas/UI-SPINNER.md` | Sistema de feedback de carga. |
 | `sistemas/AFORO-FRANJAS.md` | La rejilla de franjas, la oferta (`SlotOffer`, dos recorridos y una fuente) y los contadores de aforo: qué hay que saber ANTES de tocar aforo (`#420`, `#465`). Nace en F1 (`#619`); las reglas siguen en `INVARIANTES.md` §2. |

@@ -24,6 +24,9 @@ class MotionBudgetTest extends TestCase
     private const SHEETS = ['public/css/landing.css', 'public/css/site.css', 'public/css/spinner.css'];
 
     /** Todo `infinite` de las tres hojas, con su motivo. Añadir aquí es DECIDIR un bucle. */
+    // ⚠️ Eran DOS más hasta `#668`: los dos bucles del lanzador de ofertas (la caja en reposo y su
+    // tapa). Se fueron con el widget, y esta lista **solo encoge**: una entrada sin su `infinite`
+    // detrás deja de medir nada y tapa a la siguiente que se llame igual.
     private const BUCLES_DECLARADOS = [
         '.nav__period-dot' => 'el punto del nombre de marca en texto — solo sin logotipo',
         // ⚠️ El destello de la atracción destacada se fue en `#482` con el carrusel, y con él su
@@ -44,8 +47,6 @@ class MotionBudgetTest extends TestCase
         '.cta-pair--invita .cta-pair__alt-ring' => 'el aro del CTA doble (#205), AMBIENTAL',
         '.cta-pair--account.cta-pair--invita > .cta-med' => 'el latido del CTA doble, mitad cuenta',
         '.cta-pair--account.cta-pair--invita > .cta-med::after' => 'el aro del CTA doble, mitad cuenta',
-        '.offw-gift.gm-1 .all' => 'el lanzador de ofertas en reposo',
-        '.offw-gift.gm-1 .lid' => 'la tapa del lanzador de ofertas',
         '.jj-spinner' => 'el cargador (900 ms, el único bucle que el sistema admite), pausado con el cajón cerrado',
         '.jj-spinner::before, .jj-spinner::after' => 'las dos piezas del cargador',
     ];

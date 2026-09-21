@@ -2567,19 +2567,16 @@ class ArmazonContractTest extends TestCase
             }
         }
 
-        // El lanzador que se aparta: su posición elevada tiene que DERIVAR, no repetir el número.
-        $elevado = $this->ruleBody('body.book-bar-visible .offw-launch');
-
-        $this->assertStringContainsString(
-            'var(--book-bar-block)', $elevado,
-            "el lanzador de ofertas vuelve a apartarse con un número escrito a mano.\n".
-            '▶ El día que la barra cambie de aire —y ha cambiado— se le mete encima en silencio.',
-        );
-        $this->assertDoesNotMatchRegularExpression(
-            '/bottom:\s*calc\(\s*\d+px\s*\+\s*\d+px/',
-            $elevado,
-            'el desplazamiento del lanzador suma dos literales: uno de ellos es el alto de la barra.',
-        );
+        /*
+         * 📜 **AQUÍ SE VIGILABA EL LANZADOR DEL WIDGET DE OFERTAS**, que se apartaba de la barra
+         * leyendo `--book-bar-block` en vez de repetir su número. El widget se fue en `#668`
+         * (F5 · T3) y con él su regla y la clase `body.book-bar-visible`, que existía SOLO para
+         * apartarlo — así que la barra estaba marcando el `<body>` para nadie.
+         *
+         * ⚠️ **Lo que vigilaba esta mitad NO se pierde**: la regla es «lo que se aparta de la barra
+         * DERIVA de su alto real, no lo repite», y sigue medida arriba sobre los dos consumidores
+         * que quedan (`.book-bar` y `.hero__stage-content`). Lo que se fue es uno de los tres.
+         */
     }
 
     /** Literal XPath seguro aunque el texto lleve comillas. */

@@ -11,7 +11,7 @@
 
 | Carril | Máquina | Banda | Fichero | Estado |
 |---|---|---|---|---|
-| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **640–669** | `carriles/plataforma.md` | **F0–F4 ✅**. **v1.2.0 etiquetada y SIN DESPLEGAR** — lo decide el owner. **F5**: menú de hechos SERVIDO (contrato 1.11.0) · **T2a, T2b y T2c HECHAS** (`#666`, `#667`): las NUEVE vistas viven en la instancia y el CSS huérfano está podado y con trinquete · sigue la **T3** |
+| 🏗️ Plataforma · producto e instancias | este ordenador (`~/proyectos/jumpweb/producto`, `#648`) | **640–669** | `carriles/plataforma.md` | **F0–F4 ✅**. **v1.2.0 etiquetada y SIN DESPLEGAR** — lo decide el owner. **F5**: menú de hechos SERVIDO (contrato 1.11.0) · **T2a, T2b y T2c HECHAS** (`#666`, `#667`): las NUEVE vistas viven en la instancia y el CSS huérfano está podado y con trinquete · **T3·1 hecha** (`#668`: fuera el widget de ofertas y el complemento por atracción; contrato de instancia **2**) |
 | 🎨 Diseño de la web | este ordenador | 580–609 | `carriles/web.md` | todo en producción (13-09); sigue la T6 de copys |
 | 🧩 Diseño del SPA (el cajón) | el otro ordenador | 550–579 | `carriles/spa.md` | T1–T2 de celebración en el árbol, sin desplegar; sigue la T3 |
 | 📧 Correos | este ordenador | 500–519 | `carriles/correos.md` | entero en el árbol; quedan cuatro ámbar y el ojo del owner |
