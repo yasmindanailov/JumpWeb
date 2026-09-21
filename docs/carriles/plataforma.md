@@ -23,6 +23,11 @@
   **solo encoge**.
 - **F5, su principio `[DECIDIDO owner]`** (`#631`, `#632`): la landing consume un MENÚ DE HECHOS por API y
   TODO es opcional; atracciones y widget de ofertas FUERA del panel («oferta» = hecho de precio).
+- ❗❗❗ **DIRECCIÓN NUEVA DEL OWNER (21-09), y es lo primero que hay que leer**: va a terminar su
+  diseño en Claude Design y **estrenar la arquitectura nueva con una landing que consuma la API** —o
+  sea, la **VÍA A**, que §3 de la spec hermana declara el destino—. Eso reordena F5: lo siguiente
+  dejan de ser la T5 y pasan a ser **los cuatro platos que le faltan al menú**, que son exactamente
+  los cuatro recursos que la T3 no pudo sacar. El detalle y la pregunta abierta, en «retomar» 3.
 - **v1.2.0 CORTADA el 19-09 y SIN DESPLEGAR** — el detalle, en el punto 2 de «por dónde retomar», que es
   donde hay que leerlo. `#627`: la app en React Native + Expo.
 - **`#628` · la promo «−20 % online» sigue EN PRODUCCIÓN** (cuatro filas `promo.*`; receta de fin en
@@ -53,42 +58,19 @@
    los siete platos, uno a uno en la spec §4.1 (`/site`, horario, normas, legales, precios, las dos fichas
    del catálogo y la prueba social). Aquí queda **lo que hace falta para lo siguiente**.
 
-   ▶ **T2a HECHA** (`specs/paquete-de-instancia.md` ✅, `#647`): el namespace `instancia::` con sus tres
-   puertas, el invariante **`SEC-12`**, la `plantilla/` y el repo `jumpweb/instancias/playjump`, **con
-   remoto PRIVADO desde `#663`** (`yasmindanailov/instancia-playjump`; nació sin él y lo ganó al entrar
-   dentro el material gráfico, que ya no está en `main`). `/contacto` ya resuelve por la instancia.
-   ⚠️⚠️ **LA REGLA DE LA T2b** (`#649`, spec §4.5.bis, donde está el porqué entero): **el contrato
-   producto↔instancia son los DATOS que recibe la vista, no el HTML que produce.**
-   ▶ **HECHO el CONTRATO DE VISTA** (`CONTRATO_DE_VISTAS` + su test, arnés 7/7). ❗❗ La vista recibe NUEVE
-   variables, no dos —siete las mete el composer global—, y esa lista **va a ENCOGER** con el menú: ese día
-   sube el MAYOR y hay que avisar a cada instalación (spec §4.6).
-   ▶ **EL MÉTODO de una mudanza está en la spec §4.7** —barrido de reglas y de variables muertas →
-   partir pruebas por lo que afirman → anfitrión mínimo → huella 0, con la página DENTRO de la huella—, y
-   allí está lo que enseñó cada tanda. Barridos cerrados en `#650`, `#651` y `#653` (arnés 50/50).
-   ▶ **LAS OCHO DE `pages/` MUDADAS** (`#654`→`#660`), y **esa carpeta ya no existe**: viven en
-   `instancias/playjump/web/`, el producto sirve su `anfitrion/…` y **la suite corre SIN paquete**
-   (`phpunit.xml`). Medido cada vez: mismo DOM, huella **0/38**, sitemap 11=11; las garantías de cada una,
-   en `paginas/<nombre>.md` del paquete. ⚠️ El material que solo pinta una vista mudada se declara en
-   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` · el separador de MILLARES de `Money` sigue a mano
-   **a propósito** (`#651`): pendiente del owner.
-   ▶ **EL BARRIDO DE `home`, HECHO** (`#661`, `#662`; detalle entero en la spec §4.7): fuera el DINERO
-   —`Money::showcaseWithSymbol()` recoge SEIS escrituras—, el servicio de horario y la escala de estrellas,
-   con **tres guardas que NO existían**, las tres vistas matar a su mutante: nacieron porque cada cambio
-   dejaba la suite ENTERA en verde.
-   ✅ **EL MATERIAL DEL CLIENTE, FUERA DE `main`** (`#663`, `[DECIDIDO owner]`; spec §4.7): los 37
-   ficheros (9,2 MB) viven en `publico/` del paquete —que por eso ganó **remoto PRIVADO**, verificado con
-   un 404 anónimo ANTES de empujar— y se copian a mano, como `client.css`. ⚠️⚠️ Las tres piezas
-   —exclusión del `rsync`, lista blanca de la GUARDA 9, `.gitignore` + `git rm`— van en el MISMO commit, o
-   el primer despliegue borra producción; verificado en seco con control negativo.
-   ✅ **Y las CUATRO REGLAS del barrido, resueltas** (`#664`): la de caché del vídeo **no se baja** —
-   `@filemtime` sale 37 veces en 15 ficheros con sufijo uniforme: es el IDIOMA de la casa, no una regla
-   con dos escrituras.
-   ✅✅ **`home` MUDADA y la T2b CERRADA** (`#666`, 21-09; detalle en la spec **§4.7.ter**): huella 0 en
-   38 pantallas, mismo DOM en es/en/fr, sitemap 11=11, y `resources/views/` **sin ninguna landing de
-   cliente**. ❗❗ `#664` midió 161 rojos y salieron **16** (usó un anfitrión de NUEVE líneas): *la cifra
-   mide el anfitrión, no la página*. De ahí el criterio —**consumir el CONTRATO ENTERO**— y que **una
-   OBLIGACIÓN no se muda** (la atribución de Places se queda). Arneses **144/144**; nace
-   `AnfitrionPortadaTest`.
+   ▶ **T2a y T2b HECHAS** (`#647`→`#666`; su historia entera en `paquete-de-instancia.md`
+   §4.1→§4.7.ter, que es donde no caduca). Lo que hay que saber para seguir:
+   ⚠️⚠️ **LA REGLA**: el contrato producto↔instancia son los **DATOS** que recibe la vista, no el HTML
+   que produce (§4.5.bis). De ahí salen `CONTRATO_DE_VISTAS` y su guarda.
+   ▶ **Las NUEVE vistas viven en `instancias/playjump/web/`** y el producto sirve su `anfitrion/…`; la
+   suite corre SIN paquete (`phpunit.xml`). El material del cliente (37 ficheros, 9,2 MB) está en
+   `publico/` del paquete, que tiene **remoto PRIVADO**. Medido en todas: huella **0/38**, sitemap 11=11.
+   ❗❗ **`#664` midió 161 rojos y salieron 16** (usó un anfitrión de NUEVE líneas): *la cifra mide el
+   anfitrión, no la página*. Criterio: un anfitrión **consume el CONTRATO ENTERO**, y **una OBLIGACIÓN
+   no se muda** —la atribución de Places se queda aquí—. Arneses **144/144**.
+   ⚠️ El material que solo pinta una vista mudada se declara en
+   `InstanceViews::MATERIAL_CONSUMIDO_POR_LA_INSTANCIA` · el separador de MILLARES de `Money` sigue a
+   mano **a propósito** (`#651`): pendiente del owner.
 
    ✅✅ **T2c CERRADA: el CSS huérfano, podado y con TRINQUETE** (`#667`, 21-09; detalle en la spec
    hermana **§4.6.bis**). Las **208** clases de `#665` eran **17** —el anfitrión sostiene 174— y lo que
@@ -122,42 +104,46 @@
    ⚠️ Se pierden los datos (subtítulos, etiquetas de edad, los metros): no se migran porque no se
    publican. El `down()` recrea la forma, nunca el contenido.
 
-   ▶▶ **LO SIGUIENTE: LA T5 · la v2.0.0** (spec hermana §4.6·5), que es lo único que queda de F5 salvo
-   la espera de la T3. El contrato de instancia YA está en **2** (`#668`) y `zones` ya adelgazó, así que
-   la T5 es cortar la versión con su changelog y su nota de migración.
-   ⚠️⚠️ **El RESTO DE LA T3 está bloqueado por diseño, no por tiempo**: `attractions`, `faqs`,
-   `testimonials`, `landing_services` y `bar_images` tienen contenido vivo y **el menú de hechos no
-   tiene plato para ellos**; sacarlos convertiría «editar la web» en «desplegar el repo de la
-   instancia». ⚠️ `faqs` además NO es solo presentación —de esa tabla cuelgan el JSON-LD `FAQPage`, la
-   chapa de `/contacto` y el `lastmod` del sitemap— y `testimonials` es el contrato de prueba social con
-   el que **el carril del SPA está trabajando ahora**. ▶ El camino, si se quiere de verdad: primero su
-   plato en el menú, después la retirada.
-   ⚠️ Y las tablas `offers` y la columna `attractions.ticket_type_id` **siguen ahí**: se borran cuando
-   se decida, con la receta de `#669` (migración con `hasColumn`, datos que no se migran, `down()` que
-   recrea la forma).
+   ▶▶▶ **LO SIGUIENTE CAMBIÓ EL 21-09, Y LO CAMBIÓ EL OWNER.** Dijo, con estas palabras: *«estaba
+   pensando en terminar mi trabajo de diseño en Claude Design y estrenar la nueva arquitectura donde la
+   instancia del cliente está separada, y ahí hacer una nueva landing consumiendo desde la API o
+   panel»*. ❗❗ **Eso es la VÍA A**, que §3 de la spec hermana declara **el DESTINO** y que la vía B de
+   hoy —Blade del producto, atada a 29 nombres de componente— solo estaba sosteniendo de forma
+   transitoria.
+   ▶ **Y reordena el trabajo, por una simetría que conviene ver**: al menú le faltan cuatro platos
+   —**atracciones, dudas, servicios y el bar**— y son **exactamente los cuatro recursos que la T3 no
+   pudo sacar del panel**. No es casualidad: están bloqueados PORQUE no tienen plato. En cuanto lo
+   tengan, la landing nueva los consume por API, el panel los sigue editando y **la T3 se desbloquea
+   sola**. Un trabajo resuelve los dos. La receta de un plato está en la spec §4.1.bis y sus ocho
+   trampas en §4.1.ter.
+   ⚠️ **La T5 (cortar la v2.0.0) se aparca a propósito**: cortar la versión antes de estrenar la
+   arquitectura sería versionar un estado que va a cambiar entero. No está bloqueada, está esperando.
+   ▶ **`[PENDIENTE: owner]` — la pregunta que quedó sin contestar al cerrar**: ¿se arranca por los
+   cuatro platos, o antes por el **KIT DE WIDGETS** para poder montar piezas sueltas mientras diseña?
+   `#632`·P2 aplazó ese kit *«hasta que una segunda instancia lo pida»* —su motivo: «diseñarlo hoy es
+   diseñarlo sin quien lo valide»— y la landing nueva es justo ese validador.
 
-   ▶ Medido y SIN tocar: `LandingAddonPresenter::unique()`, sin consumidor en producción desde `#583` y con
-   su propio formato de dinero (ficha en `DEUDA.md`). Después, T3–T5 (spec hermana §4.6).
-   ⚠️ **Una guarda de marcado de una vista NO mudada no se borra**: aún tiene sujeto y vigila decisiones del
-   owner (`#535`, `#350`, `#551`, `#264`). Se retira o se re-apunta CON la mudanza.
-   ⚠️ En local, `compose.yaml` monta `../instancias` y fija `name: jumpweb` (`#648`): es fichero
-   COMPARTIDO y va avisado en el buzón.
+   ▶ **Lo que se le contestó sobre el CAJÓN** (medido el 21-09, para que no se vuelva a medir):
+   **no tiene que ser un lateral.** Lo que lo ata a esa forma son TRES cosas y las tres son
+   presentación — el CSS generado y scopeado a `:where(.sidecart)` (posición, ancho, telón),
+   `shell.js` (telón, `Escape`, cerrojo de scroll) y el nombre—. El MOTOR es Vue + Pinia contra
+   `/api/v1` y sus modos (`is-catalog`, `is-account`, `is-booking`) son de CONTENIDO, no de forma;
+   `standalone.js` ya construye la carcasa cuando lo monta una página ajena. ⚠️ Lo que sí cuesta:
+   las **25 pantallas** están maquetadas para una columna estrecha y su contrato visual es el ÁRBOL
+   (`specs/sidebar-spa.md` §4.2), así que cambiar de forma es una tanda de DISEÑO, no de arquitectura.
+   ▶ **Y sobre los WIDGETS: el cajón ya ES uno.** El criterio de salida de F4 fue que una página que no
+   es del producto lo monta, lo abre y COMPRA (sonda 42/42, pago real). Un widget nuevo es el mismo
+   patrón con otro payload; lo que falta es el kit declarativo de `#632`·P2.
 
-   ⚠️ **De la ficha** (spec §4.1): **35 imágenes del cliente versionadas en `main`**, sin tocar: van con la T2.
-
-   ▶ **La RECETA de un plato nuevo** está en la spec **§4.1.bis**, y **las OCHO TRAMPAS del menú** (el
-   `weekday` que es 0 = domingo, el `sortBy` al revés, el objeto vacío que sale `[]`, el `''` de lo
-   borrado…) en **§4.1.ter**: allí no caducan con la tanda.
-
-   **Del censo** (spec §1): sigue valiendo lo guardado —un `tokens.json` en la instancia del que salgan
-   `client.css` y el tema de la app— y `zones` tiene cuatro columnas muertas (`#639`).
 4. **Deuda del análisis estático**: bajar la línea base de Larastan por familias (`nullsafe.neverNull` es
    mecánico), bajando `FROZEN_ERRORS` en el mismo commit. Los 12 de ESLint los poda quien los arregle.
 5. **La promo, cuando el owner la termine** (es suyo el cuándo): subir los precios en el panel (los `from` de
    `audit_logs`: 800, 1000, 1200, 1500, 1800, 1200, 1400, 1800, 2200), quitar el badge y **borrar las cuatro
    filas `promo.*` el mismo día**. Sin desplegar. El sistema de ofertas nace como hecho de precio (`#631`).
 6. Después, **F6** (app nativa; hereda del token lo que su spec §2 nombra: Google, alta, dispositivos).
-- **Del owner**: las TRES de §7 de la spec de F5 · el fin de la promo · cuándo se despliega la v1.2.0.
+- **Del owner, HOY**: por dónde arrancar la vía A —los cuatro platos o el kit de widgets— · el fin de
+  la promo · cuándo se despliega (⚠️ la próxima versión lleva una MIGRACIÓN que borra columnas, `#669`).
+  ▶ Las TRES de §7 de la spec de F5 ya están contestadas desde `#639`: esa línea estaba caducada.
 
 ## Ficheros de este carril
 

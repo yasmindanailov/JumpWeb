@@ -426,7 +426,17 @@ de §1.4 es el instrumento, y queda como guarda.
    cuatro esperan a tener plato en el menú o a la vía A. **Las «secciones de texto» no existen**:
    medido, ninguna de las 71 claves de `settings` está sin consumidor. Detalle en §4.6.ter.
 4. **T4 ✅ · `zones` adelgaza** (`#669`): las cuatro columnas muertas, fuera (§4.3). ▶ Queda la última marca viva (`pjp-salta-record`, §4.5).
-5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR.
+5. **T5 · v2.0.0**: el contrato de instancia cambia, así que la versión sube de MAYOR. ⚠️ **APARCADA
+   el 21-09**: cortar la versión antes de estrenar la arquitectura nueva sería versionar un estado que
+   va a cambiar entero.
+
+❗❗❗ **EL ORDEN CAMBIA CON LA DIRECCIÓN DEL OWNER (21-09)**: va a hacer **una landing nueva que consuma
+la API** —la vía A de §3, el destino—, así que lo siguiente son **los cuatro platos que le faltan al
+menú: atracciones, dudas, servicios y el bar**. ▶ Y no es una tanda más: son **exactamente los cuatro
+recursos que la T3 no pudo sacar del panel** (§4.6.ter), bloqueados PORQUE no tienen plato. Con ellos
+servidos, la landing nueva los consume, el panel los sigue editando y la T3 se desbloquea sola.
+⚠️ `[PENDIENTE: owner]`: si antes de los platos se construye el **kit declarativo de widgets**, que
+`#632`·P2 aplazó «hasta que una segunda instancia lo pida» — y esta landing es ese validador.
 
 ### 4.6.bis · La T2c, medida: 208 huérfanas eran 17 (`#667`, 2026-09-21)
 
