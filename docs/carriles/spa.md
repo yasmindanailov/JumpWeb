@@ -1,20 +1,23 @@
 # Carril · Diseño del SPA (el cajón)
 
 > Máquina: **el OTRO ordenador** · Banda: **730–759** (700–729 agotada el 20-09) · Último usado:
-> **`#730`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> **`#731`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
-> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-20.
+> §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-21.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
 > era 24). El contador de la suite va en el trailer del commit (`#618`), no aquí.
 
 ## Foto (2026-09-21, cierre de la sesión)
 
-- ▶▶▶ **LO ÚLTIMO: `google-business-profile.md` (`#524`) va por la T2·4.** La **T1 entera**
-  (`#720`→`#726`, 121 casos, seis arneses) y **T2·1→T2·4** (`#727`→`#730`: las tablas y sus dos
-  plazos · el recorrido y su `coherent()` · la pasada diaria · las imágenes). **Ya sincroniza sola y
-  la portada no le pide NADA a Google.** Qué entró en cada tanda, **§4.1 de la spec**; lo que hace
-  falta para retomar, el punto 1 de abajo. ⚠️ **Tres migraciones, solo en la BD local.**
+- ▶▶▶ **LO ÚLTIMO: `google-business-profile.md` (`#524`) va por la T2·5.** La **T1 entera**
+  (`#720`→`#726`, 121 casos, seis arneses) y **T2·1→T2·5** (`#727`→`#731`: las tablas y sus dos
+  plazos · el recorrido y su `coherent()` · la pasada diaria · las imágenes · «Ocultar»). **Ya
+  sincroniza sola y la portada no le pide NADA a Google.** Qué entró en cada tanda, **§4.1 de la
+  spec**; lo que hace falta para retomar, el punto 1 de abajo.
+  ⚠️ **CUATRO migraciones, solo en la BD local.**
+  ▶ **En la T2·5 añadí «dejar de ocultar», que la spec NO pedía**: sin él un clic equivocado es
+  irreversible para siempre, porque la lista de supresión no caduca. El porqué, en `#731`.
 - ⚠️ **El techo de un fichero de carril pasó de 24 a 32 KB** (`#724`, `[DECIDIDO owner]`): se cambió el
   gate y la doc compartida. Los otros cuatro carriles **siguen diciendo «24 KB» en su encabezado** y no
   los toco (`#621`); va avisado en el buzón.
@@ -41,31 +44,32 @@
 1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
    `google-reviews.md` (Places), que queda de registro; desbloquea las reseñas de la landing **y** las
    que plataforma dejó fuera de `/social-proof`. ⚠️ Es del carril de la WEB (580–609), ya avisado.
-   ✅✅ **T1 (`#720`→`#726`) y T2·1→T2·4 (`#727`→`#730`), EN EL ÁRBOL.** Qué entró en cada tanda y
+   ✅✅ **T1 (`#720`→`#726`) y T2·1→T2·5 (`#727`→`#731`), EN EL ÁRBOL.** Qué entró en cada tanda y
    sus trampas, **§4.1 de la spec**, que es donde no caduca.
    ⚠️ **De la pantalla, el owner solo ha visto «sin configurar»** (20-09): el resto de estados, la
    lista de fichas y el botón de desconectar están afirmados por caso, no por ojo. Y **el correo
    nuevo no se ha visto renderizado**. **Tampoco se ha visto una reseña pintada.**
-   ❗ **RENUNCIA CON RECIBO en la T2·4**: las fotos salen con `no-store` (lo pone
-   `NoStoreWebResponses`, global por `RGPD-04`), así que **cada visita vuelve a pedir cada foto**.
-   Eximir esa ruta es tocar un middleware escrito incondicional a propósito: **va a la T2·6**, que es
-   la que mide el presupuesto de la portada.
-   ▶▶ **LO SIGUIENTE ES LA T2·5: «OCULTAR»** (§4.3·7) — por reseña, con **motivo tasado**, **lista
-   de supresión por HASH** que sobrevive a la resincronización y a la purga, borrado en el acto de
-   nombre, foto, fotos y texto, y rastro en `audit_logs` con **solo el hash y el motivo**. ⚠️ **No
-   toca ni la media ni el total.** ▶ Terreno puesto: borrar una fila ya se lleva sus ficheros.
-   ▶ Y después: (e) el contrato y la sección, que **CAMBIAN** (§4.3·9–10), más el **botón del panel**,
-   `Retry-After`, el gancho que fuerza una pasada al cambiar el mínimo de estrellas y la caché de las
-   fotos · (f) retirar Places (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un tratamiento de
-   datos NUEVO: **§5 antes**.
-   ⚠️⚠️ **TRES migraciones ya, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
+   ❗ **RENUNCIA CON RECIBO en la T2·4**: las fotos salen con `no-store` (`NoStoreWebResponses`, global
+   por `RGPD-04`), así que **cada visita vuelve a pedir cada foto**. Eximir esa ruta es tocar un
+   middleware escrito incondicional a propósito: va a la T2·6.
+   ▶▶ **LO SIGUIENTE ES LA T2·6: EL CONTRATO Y LA SECCIÓN** (§4.3·9 y §4.3·10) — `Testimonial` gana
+   la respuesta del parque, las fotos y el anónimo · `FallingBackSocialProof` cambia: **la fuente
+   declara si necesita consentimiento**, y ésta ya NO lo necesita · binding **`scoped`** con memo ·
+   la **línea del filtro siempre visible** (Ómnibus) · los dos enlaces · atribución **sin el logotipo
+   de Maps** · **nunca `aggregateRating`** · `data-nosnippet`. ⚠️ **En el MISMO despliegue, `img-src`
+   deja de nombrar a Google** (§4.3·12). ▶ Ahí se miden el presupuesto de la portada **y la caché de
+   las fotos**, que la T2·4 dejó anotada.
+   ▶ Y después: el **botón del panel**, `Retry-After` y el gancho que fuerza una pasada al cambiar el
+   mínimo de estrellas · retirar Places (§4.3·13). Toca `PERF-02`, `SEC-01`, `RGPD-05` y un
+   tratamiento de datos NUEVO: **§5 antes**.
+   ⚠️⚠️ **CUATRO migraciones de esta spec, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
    ⚠️ Lo que queda de la T1 no es código: el ojo del owner y las credenciales. `verify` contra la
    ficha REAL espera al §7·A. **Todo contra un DOBLE**, con `Http::preventStrayRequests()`.
    ▶ **`#719`: la identidad ante Google es JumpSystem** —cuenta, dominio y web propios, que monta el
-   owner—. El **§7·A está reescrito**: no necesita ficha propia. Empieza por el §0 y el **§1.3**.
-   ⏰⏰ **EL CALENDARIO LO MANDA LA FICHA, y ya hay respuesta (owner, 20-09): la de PlayJump lleva MENOS
-   de 60 días.** La solicitud del §7·A·2 **no se puede mandar todavía** y la conexión real no llega
-   antes de finales de octubre. El doble no es una opción: es el único camino.
+   owner—. El §7·A no necesita ficha propia. Empieza por el §0 y el **§1.3**.
+   ⏰⏰ **EL CALENDARIO LO MANDA LA FICHA: la de PlayJump lleva MENOS de 60 días** (owner, 20-09). La
+   solicitud del §7·A·2 no se puede mandar todavía y la conexión real no llega antes de finales de
+   octubre. El doble no es una opción: es el único camino.
    ❗ La doc ajena miente sobre el umbral: el aviso, en el buzón de la WEB. Manda el código.
 2. ✅ **La invitación no tiene nada pendiente de CÓDIGO** (`#718`, spec §10.18). ▶ Queda **desplegar y
    encender**, y no es mío: T5, T6 y T7 **con la migración** `order_items.eve_notice_at`; los dos
@@ -80,8 +84,7 @@
    `completeReply()` sigue sin ejercerse; la rama `guest_data`, sin prueba.
 5. De la Fase 4: el **ojo del owner en un teléfono de verdad** (ninguna de las 25 pantallas se ha visto
    en uno) · el **cuaderno de entrega** del cajón · el **botón del sistema** (16/800 con borde).
-6. Del plugin quedan **tres frases** por ver: `/sonda`, `/dod` y `/ligero`. ⚠️ De la casa ajena:
-   `carriles/correos.md` dice «25 correos» y son **26** (el otro, en el punto 1). No los toco (`#621`).
+6. Del plugin quedan **tres frases** por ver: `/sonda`, `/dod` y `/ligero`.
 
 ## Ficheros de este carril
 
@@ -157,26 +160,23 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   objeto reutilizado en todas las peticiones que casen, así que la segunda lectura llega vacía y el
   caso acusa al código de no deduplicar. ▶ En cuanto el código lea el cuerpo en flujo, el doble va
   en un **cierre**.
-- ⚠️ **Una guarda de «no se sirve» necesita que el fichero EXISTA** (`#730`): los nombres mal
-  formados que no están en el disco dan 404 por «no existe», no por la guarda, así que la mutación
-  sobrevive. Igual que un 404 de prueba necesita CUERPO para probar que se mira el estado.
-- ⚠️⚠️⚠️ **`Http::fake()` FUSIONA los dobles, no los reemplaza** (medido en `#729`): llamarlo dos
-  veces en el mismo caso deja ganando al PRIMERO, y si el primero era un `Http::sequence()` ya
-  agotado, la segunda pasada revienta con «*response sequence is empty*» **señalando al código**, que
-  no tiene nada que ver. ▶ Receta: **un solo doble en `setUp()`** que delegue en una propiedad, y
-  cada caso cambia la propiedad. De regalo, se puede contar peticiones y fallar el caso si se pide
-  una página de más.
+- ⚠️⚠️⚠️ **`Http::fake()` FUSIONA los dobles, no los reemplaza** (`#729`): llamarlo dos veces en el
+  mismo caso deja ganando al PRIMERO, y si el primero era un `Http::sequence()` agotado, la segunda
+  pasada revienta con «*response sequence is empty*» **señalando al código**, que no tiene nada que
+  ver. ▶ Receta: **un solo doble en `setUp()`** que delegue en una propiedad; cada caso cambia la
+  propiedad. De regalo se cuentan peticiones y se falla el caso si se pide una de más.
+- ⚠️⚠️ **UNA GUARDA NECESITA QUE EL CASO LLEGUE A ELLA**, y tres formas de que no llegue, todas
+  medidas: un nombre mal formado que **no existe** en disco da 404 por «no existe» (`#730`); un 404
+  de prueba **sin cuerpo** no prueba que se mire el estado (`#730`); y `inProgress()`, que **coge**
+  el candado para mirar, necesita **dos** llamadas —con una, no soltarlo sale igual de verde
+  (`#729`)—.
 - ⚠️⚠️ **UN `finally` PUEDE SOLTAR EL CANDADO ANTES DE TIEMPO, y ningún test de un hilo lo ve**
-  (`#729`): la lectura iba en el `try` y la escritura DETRÁS del bloque, así que se persistía con el
-  candado suelto. ▶ Se caza preguntando por el candado **desde un evento del modelo** (`created`)
-  durante la escritura. Mismo patrón para cualquier cosa que tenga que pasar «mientras».
-- ⚠️ **Una guarda de «preguntar no cambia nada» necesita DOS llamadas** (`#729`): `inProgress()` coge
-  el candado para saber si estaba libre; con una sola llamada, no soltarlo sale igual de verde. La
-  segunda pregunta es la que mide.
+  (`#729`): la lectura iba en el `try` y la escritura DETRÁS del bloque. ▶ Se caza preguntando por el
+  candado **desde un evento del modelo** durante la escritura. Mismo patrón para todo lo que tenga
+  que pasar «mientras».
 - ⚠️ **`lock()` no está en el contrato `Repository` NI en su clase**: vive en el `Store` y el
-  repositorio lo reenvía por `__call` (medido en el framework, `#729`). Larastan lo caza; la salida
-  es `$repositorio->getStore()` con `@var LockProvider`, que además dice lo que de verdad se exige
-  del almacén.
+  repositorio lo reenvía por `__call` (`#729`). La salida es `getStore()` con `@var LockProvider`,
+  que además dice lo que de verdad se exige del almacén.
 - ⚠️⚠️ **UNA GUARDA DE HOST NECESITA DOS CASOS, NO UNO** (`#728`, lo destapó un superviviente del
   arnés): `lh3.googleusercontent.com.malo.net` se cuela con `str_contains` y
   `evil.lh3.googleusercontent.com` con `str_ends_with`. **Son defectos distintos**, y un test que
@@ -343,12 +343,13 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   `celebracion-e-invitacion.md` §10). Sin tocar dinero ni aforo, y **del `CRITICAL_RE` solo**
   `GuestCountAdjuster` (`#718`), con sus verificadores de concurrencia ya corridos en verde.
   ▶ **Encenderla son los dos interruptores: DATO y decisión del owner.**
-- ❗❗ **Y va la ficha de Google entera hasta hoy**: T1 (`#720`→`#726`) y T2·1→T2·3 (`#727`→`#729`),
-  con la pantalla en Ajustes → Web, las rutas `/admin/ficha-google/*` y `business-profile:sync`
-  **diario a las 04:40 UTC**. ⚠️ **Sale INERTE**: sin las credenciales de JumpSystem el estado es
-  «sin configurar», la pasada no llama y la pantalla lo explica. Nada que encender.
-- ⚠️⚠️ **CUATRO MIGRACIONES** y **empujada ≠ aplicada**: `order_items.eve_notice_at`,
-  `google_business_connections` (+ su `account_name`) y las dos tablas de reseñas.
+- ❗❗ **Y va la ficha de Google entera hasta hoy**: T1 (`#720`→`#726`) y T2·1→T2·5 (`#727`→`#731`),
+  con la pantalla en Ajustes → Web, las rutas `/admin/ficha-google/*`, `/resenas/foto/{fichero}` y
+  los comandos `business-profile:sync` (04:40 UTC) y `:sweep-photos` (05:00). ⚠️ **Sale INERTE**: sin
+  las credenciales de JumpSystem el estado es «sin configurar», la pasada no llama y la pantalla lo
+  explica. Nada que encender.
+- ⚠️⚠️ **CINCO MIGRACIONES** y **empujada ≠ aplicada**: `order_items.eve_notice_at`,
+  `google_business_connections` (+ su `account_name`), las dos tablas de reseñas y la de supresión.
 - ⚠️ **Toqué un test tuyo, `ScheduleFactsTest`, porque estaba en ROJO** y bloqueaba el push: leía el
   día de `Carbon::now()` (contenedor, **UTC**) y el servicio pregunta por el del **parque**. Mentía el
   test, no el producto. Ya me dijiste que te vale.

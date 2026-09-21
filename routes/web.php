@@ -424,6 +424,16 @@ Route::get('/admin/ficha-google/callback', [GoogleBusinessConnectController::cla
 Route::post('/admin/ficha-google/elegir', [GoogleBusinessConnectController::class, 'chooseLocation'])
     ->middleware(['web', 'auth', 'panel_role', 'throttle:20,1'])
     ->name('admin.google_business.choose');
+// Ocultar una reseña y dejar de ocultarla (T2·5, §4.3·7, `#731`). POST las dos: ocultar borra en el
+// acto el nombre, la foto y el texto de un tercero, y eso no puede depender de abrir un enlace.
+// ⚠️ El limitador es MÁS ancho que el de conectar: ocultar es una tarea de repaso, y un admin que
+// atienda varias peticiones seguidas no puede chocar con un 429.
+Route::post('/admin/ficha-google/ocultar', [GoogleBusinessConnectController::class, 'hideReview'])
+    ->middleware(['web', 'auth', 'panel_role', 'throttle:60,1'])
+    ->name('admin.google_business.hide_review');
+Route::post('/admin/ficha-google/mostrar', [GoogleBusinessConnectController::class, 'unhideReview'])
+    ->middleware(['web', 'auth', 'panel_role', 'throttle:60,1'])
+    ->name('admin.google_business.unhide_review');
 // Desconectar (§4.2·8). **Solo POST**: retirar el permiso sobre la ficha del parque no puede
 // depender de que alguien abra un enlace.
 Route::post('/admin/ficha-google/desconectar', [GoogleBusinessConnectController::class, 'disconnect'])

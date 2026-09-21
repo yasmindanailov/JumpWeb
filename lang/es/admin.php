@@ -2314,6 +2314,23 @@ return [
         'disconnect' => 'Desconectar',
         'disconnect_hint' => 'Retira el permiso en Google y borra lo que tengamos guardado de la ficha.',
         'no_locations' => 'La cuenta con la que conectaste no administra ninguna ficha. Añádela como administradora en el perfil de empresa del parque y vuelve a intentarlo.',
+        // T2·5 · «Ocultar» (§4.3·7, `#731`). El texto dice lo que de verdad pasa: la reseña SIGUE en
+        // Google —no la podemos retirar de ahí— y lo que se promete es no volver a publicarla.
+        'reviews_title' => 'Reseñas publicadas',
+        'reviews_empty' => 'Todavía no hay ninguna. La pasada diaria las trae de la ficha; si acabas de conectar, aparecerán mañana.',
+        'reviews_count' => ':count publicadas · media :rating a fecha de :date',
+        'hide' => 'Ocultar',
+        'hide_reason' => 'Motivo',
+        'hide_hint' => 'Ocultarla borra en el acto su texto, su nombre y su foto de aquí, y no se volverá a traer. ⚠️ La reseña sigue publicada en Google y su nota sigue contando para la media: eso no lo podemos cambiar.',
+        'hidden_title' => 'Ocultas',
+        'hidden_hint' => 'De una reseña oculta solo guardamos una huella, para reconocerla y no volver a traerla. Ni su texto, ni quién la escribió.',
+        'hidden_since' => 'Oculta el :date',
+        'unhide' => 'Dejar de ocultar',
+        'unhide_hint' => 'Volverá a la web solo si sigue publicada en Google, y la traerá la pasada de mañana.',
+        'review_hidden' => 'Reseña oculta. No se volverá a traer.',
+        'review_unhidden' => 'Ya no está oculta. Volverá con la próxima pasada si sigue en Google.',
+        'review_missing' => 'Esa reseña ya no estaba. Vuelve a cargar la pantalla.',
+        'anonymous_author' => 'Usuario de Google',
         'choose_failed' => 'No hemos podido pedirle la lista de fichas a Google. Vuelve a cargar esta pantalla en un rato.',
         'states' => [
             'unconfigured' => [

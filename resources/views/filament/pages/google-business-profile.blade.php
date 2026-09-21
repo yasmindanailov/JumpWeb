@@ -121,6 +121,127 @@
         </div>
     @endif
 
+    {{--
+        T2·5 · «Ocultar» (§4.3·7, `DECISIONES #731`). Lo exigió la revisión de privacidad: aquí se
+        publican reseñas de terceros SIN pedirles permiso —riesgo aceptado por el owner (§8·R1)— y
+        esto es la mitigación que lo hace defendible.
+        ⚠️ Solo se pinta con la conexión en pie: sin ficha no hay reseñas que ocultar, y la lista de
+        ocultas de abajo se sigue enseñando siempre, porque sobrevive a todo.
+    --}}
+    @if ($this->estado() === \App\Domain\Platform\Enums\GoogleBusinessStatus::Connected)
+        <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <h3 class="text-base font-semibold text-gray-950 dark:text-white">
+                {{ __('admin.google_business.reviews_title') }}
+            </h3>
+
+            @php($resumen = $this->resumen())
+            @if ($resumen?->publishable())
+                {{-- ⚠️ La media y el total NO los toca «Ocultar» (§4.3·7): son de Google. --}}
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('admin.google_business.reviews_count', [
+                        'count' => $resumen->total_review_count,
+                        'rating' => number_format($resumen->average_rating, 1, ',', '.'),
+                        'date' => $resumen->fetched_at->timezone(config('app.timezone'))->format('d/m/Y'),
+                    ]) }}
+                </p>
+            @endif
+
+            @php($resenas = $this->resenas())
+            @if ($resenas->isEmpty())
+                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('admin.google_business.reviews_empty') }}
+                </p>
+            @else
+                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    {{ __('admin.google_business.hide_hint') }}
+                </p>
+
+                <ul class="mt-4 space-y-3">
+                    @foreach ($resenas as $resena)
+                        <li class="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                            <div class="flex flex-wrap items-baseline gap-2">
+                                <strong class="text-sm text-gray-950 dark:text-white">
+                                    {{ $resena->publishableAuthor() ?? __('admin.google_business.anonymous_author') }}
+                                </strong>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ str_repeat('★', $resena->star_rating) }}
+                                    · {{ $resena->review_created_at->timezone(config('app.timezone'))->format('d/m/Y') }}
+                                </span>
+                            </div>
+
+                            {{--
+                                ⚠️ `{{ }}` y `pre-line`, nunca `nl2br` sin escapar (§4.3·8): es texto
+                                que escribió un desconocido. `dir="auto"` porque puede venir en
+                                cualquier idioma.
+                            --}}
+                            <p class="mt-1 whitespace-pre-line text-sm text-gray-700 dark:text-gray-300" dir="auto">{{ $resena->comment }}</p>
+
+                            <form method="POST" action="{{ route('admin.google_business.hide_review') }}" class="mt-3 flex flex-wrap items-center gap-2">
+                                @csrf
+                                <input type="hidden" name="review" value="{{ $resena->id }}">
+                                <label class="sr-only" for="motivo-{{ $resena->id }}">
+                                    {{ __('admin.google_business.hide_reason') }}
+                                </label>
+                                <select id="motivo-{{ $resena->id }}" name="reason" class="fi-input rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-white/5 dark:text-white">
+                                    @foreach ($this->motivos() as $motivo)
+                                        <option value="{{ $motivo->value }}">{{ $motivo->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <x-filament::button type="submit" size="sm" color="danger" outlined>
+                                    {{ __('admin.google_business.hide') }}
+                                </x-filament::button>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
+
+    @php($ocultas = $this->ocultas())
+    @if ($ocultas->isNotEmpty())
+        <div class="fi-section rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10">
+            <h3 class="text-base font-semibold text-gray-950 dark:text-white">
+                {{ __('admin.google_business.hidden_title') }}
+            </h3>
+            {{--
+                De una oculta solo guardamos su huella. El panel NO puede decir cuál era porque no lo
+                sabemos, y eso es lo correcto: saberlo obligaría a conservar su texto para siempre.
+            --}}
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {{ __('admin.google_business.hidden_hint') }}
+            </p>
+
+            <ul class="mt-4 space-y-2">
+                @foreach ($ocultas as $oculta)
+                    <li class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                        <span class="text-sm text-gray-950 dark:text-white">
+                            {{ $oculta->reason->label() }}
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">
+                                {{ __('admin.google_business.hidden_since', [
+                                    'date' => $oculta->created_at->timezone(config('app.timezone'))->format('d/m/Y'),
+                                ]) }}
+                                · <code>{{ substr($oculta->review_hash, 0, 12) }}…</code>
+                            </span>
+                        </span>
+
+                        <form method="POST" action="{{ route('admin.google_business.unhide_review') }}">
+                            @csrf
+                            <input type="hidden" name="hash" value="{{ $oculta->review_hash }}">
+                            <x-filament::button type="submit" size="sm" color="gray">
+                                {{ __('admin.google_business.unhide') }}
+                            </x-filament::button>
+                        </form>
+                    </li>
+                @endforeach
+            </ul>
+
+            <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                {{ __('admin.google_business.unhide_hint') }}
+            </p>
+        </div>
+    @endif
+
     @if ($this->puedeConectar())
         {{--
             POST y no un enlace: abrir el reto escribe en la sesión del admin, y un GET lo dejaría al

@@ -117,6 +117,11 @@ class AuditLog extends Model
         'google_business.connected',
         'google_business.disconnected',
         'google_business.location_chosen',
+        // ⚠️⚠️ **«Ocultar» (§4.3·7, `#731`) lleva SOLO el hash y el motivo**, nunca el texto, el
+        // nombre ni la foto del autor (`RGPD-02`). Y no es una cautela de más: la reseña se borra al
+        // ocultarla, así que este registro **sobrevive al dato que lo causó** y dura mucho más.
+        'google_business.review_hidden',
+        'google_business.review_unhidden',
 
         // ── Mantenimiento ──────────────────────────────────────────────────────────────────
         'maintenance.updated',

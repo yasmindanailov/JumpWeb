@@ -62,6 +62,7 @@ final class GoogleBusinessSync
     public function __construct(
         private readonly GoogleReviewReader $reader,
         private readonly GoogleReviewImages $images,
+        private readonly GoogleReviewSuppressions $suppressions,
     ) {}
 
     /**
@@ -132,7 +133,11 @@ final class GoogleBusinessSync
             $pasada = $this->reader->pass(
                 $token,
                 $parent,
-                GoogleReviewFilter::fromSettings(),
+                // ⚠️ La lista de ocultas se lee AQUÍ, al empezar la pasada, y no dentro del filtro:
+                // así es una consulta por pasada y no una por reseña, y sobre todo el conjunto es el
+                // mismo de la primera página a la última — que alguien oculte una a mitad del
+                // recorrido no puede dejar la pasada mezclando dos criterios.
+                GoogleReviewFilter::fromSettings()->withSuppressed($this->suppressions->hashes()),
                 now()->getTimestamp() + self::BUDGET_SECONDS,
             );
 

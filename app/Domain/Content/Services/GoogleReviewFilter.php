@@ -42,7 +42,28 @@ final readonly class GoogleReviewFilter
         public int $minStars,
         /** Cuántas candidatas se persisten como mucho. */
         public int $keep = self::KEEP,
+        /**
+         * Los hashes que el panel ha ocultado (§4.3·7), como conjunto.
+         *
+         * ⚠️ **Va en el FILTRO y no en la pasada** porque «oculta» es una de las tres condiciones que
+         * §4.3·2 pone para ser candidata, junto con el texto y las estrellas. Dejarlo fuera haría que
+         * una reseña oculta contara como candidata, ocupara sitio entre las doce y luego no se
+         * guardara: la sección enseñaría once.
+         *
+         * @var array<string,true>
+         */
+        public array $suppressed = [],
     ) {}
+
+    /**
+     * El mismo filtro, sin lo que el panel haya ocultado.
+     *
+     * @param  list<string>  $hashes
+     */
+    public function withSuppressed(array $hashes): self
+    {
+        return new self($this->minStars, $this->keep, array_fill_keys($hashes, true));
+    }
 
     /**
      * El filtro tal y como lo ha dejado el panel.
@@ -58,9 +79,13 @@ final readonly class GoogleReviewFilter
         return new self(max(1, min(5, $minimo)));
     }
 
-    /** ¿Esta reseña se puede enseñar? */
+    /** ¿Esta reseña se puede enseñar? Las tres condiciones de candidata que dependen del panel. */
     public function accepts(IncomingGoogleReview $review): bool
     {
-        return $review->stars >= $this->minStars;
+        if ($review->stars < $this->minStars) {
+            return false;
+        }
+
+        return ! isset($this->suppressed[GoogleReviewSuppressions::hash($review->name)]);
     }
 }

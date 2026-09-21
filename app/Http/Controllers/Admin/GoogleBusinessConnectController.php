@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Content\Enums\GoogleReviewSuppressionReason;
 use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
+use App\Domain\Content\Services\GoogleReviewSuppressions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
 use App\Domain\Platform\Exceptions\GoogleBusinessException;
@@ -22,6 +24,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 
 /**
  * **Conectar la ficha de Google**, las dos peticiones de navegador
@@ -162,6 +165,62 @@ class GoogleBusinessConnectController extends Controller
         }
 
         return $this->back('google-business-location-chosen');
+    }
+
+    /**
+     * **OCULTAR una reseña** (T2·5, §4.3·7, `#731`). Lo exigió la revisión de privacidad.
+     *
+     * ⚠️⚠️ **El rastro lleva el hash y el motivo, y NADA más**: ni el texto, ni el nombre del autor,
+     * ni su foto (`RGPD-02`). Y no es una cautela de más — `audit_logs` **sobrevive a la reseña que
+     * lo causó**, así que lo que se escriba aquí dura mucho más que el dato que lo originó.
+     */
+    public function hideReview(Request $request, GoogleReviewSuppressions $suppressions): RedirectResponse
+    {
+        $this->authorizeSettings($request);
+
+        $datos = $request->validate([
+            'review' => ['required', 'integer'],
+            // ⚠️ El motivo se valida contra el ENUM: un valor de fuera no entra en una tabla que no
+            // caduca (§4.3·7).
+            'reason' => ['required', Rule::enum(GoogleReviewSuppressionReason::class)],
+        ]);
+
+        $resena = GoogleBusinessReview::query()->find($datos['review']);
+
+        if ($resena === null) {
+            // La pasada pudo haberla retirado entre que se pintó la pantalla y se pulsó el botón.
+            return $this->back('google-business-review-missing');
+        }
+
+        $motivo = GoogleReviewSuppressionReason::from($datos['reason']);
+        $hash = $suppressions->hide($resena, $motivo);
+
+        AuditLogger::log(GoogleReviewSuppressions::ACTION_HIDDEN, payload: ['hash' => $hash, 'reason' => $motivo->value]);
+
+        return $this->back('google-business-review-hidden');
+    }
+
+    /**
+     * **Dejar de ocultar** (T2·5, `#731`).
+     *
+     * ▶ **No estaba en la spec y se añade a sabiendas**: sin esto un clic equivocado es irreversible
+     * para siempre, porque la lista de supresión no caduca. Aquí no se restaura nada —el texto y las
+     * imágenes se borraron al ocultar— sino que se deja de tapar: la reseña vuelve a la portada
+     * **solo si sigue publicada en Google**, y la trae la pasada como cualquier otra.
+     */
+    public function unhideReview(Request $request, GoogleReviewSuppressions $suppressions): RedirectResponse
+    {
+        $this->authorizeSettings($request);
+
+        $datos = $request->validate(['hash' => ['required', 'string', 'size:64']]);
+
+        if (! $suppressions->unhide($datos['hash'])) {
+            return $this->back('google-business-review-missing');
+        }
+
+        AuditLogger::log(GoogleReviewSuppressions::ACTION_UNHIDDEN, payload: ['hash' => $datos['hash']]);
+
+        return $this->back('google-business-review-unhidden');
     }
 
     /**

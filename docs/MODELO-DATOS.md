@@ -606,6 +606,26 @@ se filtran por estrellas; la cifra, nunca (§4.3·10 y la Ómnibus 2019/2161).
 ⚠️ El resumen repite `maps_uri`/`new_review_uri`, que ya están en `google_business_connections`, para
 que la portada **no toque la fila del token cifrado**.
 
+### `google_business_review_suppressions` — lo que no se vuelve a publicar · `#731`
+**La T2·5 de `specs/google-business-profile.md` §4.3·7**, que exigió la revisión de privacidad.
+`review_hash` **char(64) UNIQUE** (`sha256` del nombre de recurso de la reseña) · `reason`
+(`GoogleReviewSuppressionReason`: `author_request` · `minor` · `health_or_third_party` · `other`) ·
+timestamps.
+⚠️⚠️ **Es la ÚNICA tabla de la feature que NO caduca**, y por eso guarda **un hash y nada más**: en
+la única tabla que no se limpia sola, cada columna de más es un dato de un tercero guardado para
+siempre. Sin nombre, sin texto, sin foto, sin identificador legible.
+⚠️⚠️ **Ocultar son DOS cosas**: borrar la fila —que se lleva sus ficheros (T2·4)— **y** apuntar el
+hash. La reseña **sigue publicada en Google** y la pasada de mañana la traería; sin el apunte,
+«ocultar» sería «ocultar hasta las 04:40». El apunte lo lee `GoogleReviewFilter::withSuppressed()`.
+⚠️ **El motivo es TASADO y no texto libre**: un campo libre en una tabla que no caduca acaba con el
+nombre de alguien dentro.
+⚠️ **Sin FK a `users`**, a diferencia de la conexión: quién y cuándo los guarda `audit_logs`
+(`google_business.review_hidden` / `.review_unhidden`), **con solo el hash y el motivo** — ese
+registro sobrevive a la reseña que lo causó.
+⚠️ **No toca la media ni el total** (§4.3·7): son de Google, contados sobre TODAS.
+▶ **`RGPD-01`**: una petición de supresión de un cliente se comprueba también contra las reseñas, y
+el procedimiento es éste.
+
 ### `settings` — clave-valor white-label (Setting)
 `key` unique · `value` text · `group` (default `general`). Lectura vía
 `Setting::value($key, $default)` con **memo estático por petición** (invalidar con

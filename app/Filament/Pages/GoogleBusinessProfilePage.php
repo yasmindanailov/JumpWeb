@@ -2,6 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Content\Enums\GoogleReviewSuppressionReason;
+use App\Domain\Content\Models\GoogleBusinessReview;
+use App\Domain\Content\Models\GoogleBusinessReviewSummary;
+use App\Domain\Content\Models\GoogleBusinessReviewSuppression;
+use App\Domain\Content\Services\GoogleReviewSuppressions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
 use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
@@ -12,6 +17,7 @@ use App\Domain\Platform\Services\GoogleBusinessLocations;
 use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Collection;
 
 /**
  * **Ficha de Google** — el estado de la conexión y el botón que la abre
@@ -142,6 +148,53 @@ class GoogleBusinessProfilePage extends Page
     public function puedeDesconectar(): bool
     {
         return $this->conexion()?->hasStoredToken() === true;
+    }
+
+    /**
+     * **Las reseñas que hay publicadas ahora mismo** (T2·5, §4.3·7, `#731`), para poder ocultarlas.
+     *
+     * ⚠️⚠️ **Se leen con el MISMO filtro de plazo que la portada** (`withinRetention()`): si aquí
+     * saliera una que la web ya no enseña, el admin la ocultaría creyendo que estaba a la vista — y
+     * gastaría una entrada de una lista que no caduca en algo que ya no se veía.
+     *
+     * @return Collection<int, GoogleBusinessReview>
+     */
+    public function resenas(): Collection
+    {
+        return GoogleBusinessReview::query()
+            ->withinRetention()
+            ->orderByDesc('review_created_at')
+            ->get();
+    }
+
+    /**
+     * **Lo que está oculto**, para poder dejar de ocultarlo.
+     *
+     * ⚠️ De aquí solo sale un hash y una fecha: es todo lo que se guarda (§4.3·7). El panel no puede
+     * enseñar qué reseña era **porque no lo sabemos**, y eso es lo correcto — enseñarlo obligaría a
+     * conservar su texto en la única tabla que no caduca.
+     *
+     * @return Collection<int, GoogleBusinessReviewSuppression>
+     */
+    public function ocultas(): Collection
+    {
+        return app(GoogleReviewSuppressions::class)->all();
+    }
+
+    /**
+     * Los motivos tasados del desplegable.
+     *
+     * @return list<GoogleReviewSuppressionReason>
+     */
+    public function motivos(): array
+    {
+        return GoogleReviewSuppressionReason::cases();
+    }
+
+    /** La media y el total, con su fecha. ⚠️ «Ocultar» NO los toca (§4.3·7). */
+    public function resumen(): ?GoogleBusinessReviewSummary
+    {
+        return GoogleBusinessReviewSummary::current();
     }
 
     /** @var list<GoogleBusinessLocation>|null */

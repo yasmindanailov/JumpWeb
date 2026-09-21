@@ -3,10 +3,12 @@
 namespace Tests\Feature\GoogleBusiness;
 
 use App\Domain\Content\Enums\GoogleBusinessSyncOutcome;
+use App\Domain\Content\Enums\GoogleReviewSuppressionReason;
 use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Content\Services\GoogleBusinessSync;
 use App\Domain\Content\Services\GoogleReviewImages;
+use App\Domain\Content\Services\GoogleReviewSuppressions;
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
 use App\Domain\Platform\Models\GoogleBusinessConnection;
 use App\Domain\Platform\Models\Setting;
@@ -282,6 +284,25 @@ class GoogleBusinessSyncTest extends TestCase
         $resena = GoogleBusinessReview::query()->sole();
         $this->assertNull($resena->author_photo_path);
         $this->assertSame('Marta R.', $resena->author_name);
+    }
+
+    public function test_la_pasada_no_vuelve_a_traer_una_resena_oculta(): void
+    {
+        $this->conectada();
+        $this->fakePages([['reviews' => [$this->row('r1'), $this->row('r2')], 'averageRating' => 5.0, 'totalReviewCount' => 2]]);
+        $this->sync()->run();
+
+        app(GoogleReviewSuppressions::class)->hide(
+            GoogleBusinessReview::query()->where('review_name', self::PARENT.'/reviews/r1')->sole(),
+            GoogleReviewSuppressionReason::AuthorRequest,
+        );
+
+        // La ficha las sigue devolviendo las dos: Google no sabe nada de lo que oculta el parque.
+        $this->fakePages([['reviews' => [$this->row('r1'), $this->row('r2')], 'averageRating' => 5.0, 'totalReviewCount' => 2]]);
+        $this->sync()->run();
+
+        // ❗❗ Sin esto, «ocultar» duraría hasta las 04:40 de la mañana siguiente.
+        $this->assertSame([self::PARENT.'/reviews/r2'], GoogleBusinessReview::query()->pluck('review_name')->all());
     }
 
     // ─────────── Borrar solo con una pasada creíble (§4.3·3) ───────────

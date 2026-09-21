@@ -28,6 +28,7 @@ use App\Domain\Content\Models\BarImage;
 use App\Domain\Content\Models\Faq;
 use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
+use App\Domain\Content\Models\GoogleBusinessReviewSuppression;
 use App\Domain\Content\Models\LandingService;
 use App\Domain\Content\Models\Offer;
 use App\Domain\Content\Models\Page;
@@ -243,6 +244,10 @@ class AppServiceProvider extends ServiceProvider
             // relacionan con ninguno.
             'google_business_review' => GoogleBusinessReview::class,
             'google_business_review_summary' => GoogleBusinessReviewSummary::class,
+            // La lista de supresión (`#731`). ⚠️ Su alias SÍ se usa: es el `target` del rastro de
+            // «Ocultar» en `audit_logs`, y por eso tiene que ser estable — el registro sobrevive a
+            // la reseña que lo causó y a cualquier refactor que mueva la clase.
+            'google_business_review_suppression' => GoogleBusinessReviewSuppression::class,
             'guardian_authorization' => GuardianAuthorization::class,
             // La INVITACIÓN DIGITAL y lo que contesta un padre (`#573`). Alias como todo modelo
             // nuevo: lo exige `MorphMapTest`, y es lo que hace que el audit guarde `invitation_reply`

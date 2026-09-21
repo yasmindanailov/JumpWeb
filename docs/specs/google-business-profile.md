@@ -350,11 +350,45 @@ y salían verdes; (b) `nosniff` en el controlador era **código muerto**, porque
 estampa en toda respuesta; (c) un 404 con cuerpo VACÍO no prueba que se mire el estado, y (d) un
 nombre mal formado que **no existe** en el disco no prueba que se compruebe la forma.
 
-▶ **Lo siguiente es la T2·5: «Ocultar»** (§4.3·7) — por reseña, con motivo tasado, lista de supresión
-por **hash del identificador** que sobrevive a la resincronización y a la purga, borrado en el acto
-de nombre, foto, fotos y texto, y rastro en `audit_logs` con **solo el hash y el motivo**. ⚠️ No toca
-ni la media ni el total. ▶ El terreno ya está: borrar una fila se lleva sus ficheros, y la pasada
-retira por el modelo.
+✅ **T2·5 · «OCULTAR», EN EL ÁRBOL** (2026-09-21, `#731`): la tabla
+`google_business_review_suppressions`, el enum `GoogleReviewSuppressionReason`,
+`GoogleReviewSuppressions`, el filtro de la pasada, las dos acciones del panel con su rastro y la
+sección de la pantalla. 38 casos, arnés **18/18**, Larastan 0.
+❗❗❗ **OCULTAR SON DOS COSAS, y la segunda es la que dura**: borrar la fila —que se lleva sus
+ficheros (T2·4)— **y apuntar el hash**. La reseña **sigue publicada en Google**, que no la podemos
+retirar de ahí, así que sin el apunte la pasada de mañana la traería otra vez: «ocultar» duraría
+hasta las 04:40. Y con el apunte sin el borrado, sigue a la vista hasta mañana. **Las dos o
+ninguna**, en una transacción.
+⚠️⚠️ **La lista guarda UN HASH Y NADA MÁS.** Es la **única** tabla de la feature que no caduca a los
+30 días, así que es la única donde un descuido duraría para siempre. ▶ Consecuencia buscada: **el
+panel no puede decir qué reseña era**, porque no lo sabemos. Enseñarlo obligaría a conservar su
+texto ahí dentro.
+⚠️ **El motivo es TASADO** (§4.3·7) y se valida contra el enum: un campo libre en una tabla que no
+caduca acaba con el nombre de alguien dentro, escrito por quien no pensaba que eso fuera un dato
+personal.
+⚠️ **El rastro lleva el hash y el motivo, y nada más** (`RGPD-02`), y no es cautela de sobra:
+`audit_logs` **sobrevive a la reseña que lo causó**, así que dura mucho más que el dato que lo
+originó. Acciones nuevas en el catálogo: `google_business.review_hidden` / `.review_unhidden`.
+⚠️ **No toca la media ni el total**: que ocultar bajara el recuento sería el parque cambiando la
+nota de su propia ficha — el dato engañoso que persigue la Ómnibus 2019/2161.
+⚠️ **La pantalla lista con el MISMO plazo que la portada** (`withinRetention()`): si enseñara una
+que la web ya no publica, el admin gastaría una entrada de una lista que no caduca en algo que ya no
+se veía.
+▶▶ **AÑADIDO A ESTA SPEC, A SABIENDAS** (`#731`): **«dejar de ocultar»**. La spec no lo pedía, y sin
+él un clic equivocado es irreversible **para siempre**, porque la lista no caduca. Es seguro por
+construcción: no restaura nada —el texto y las imágenes se borraron al ocultar— sino que deja de
+tapar, y la reseña vuelve **solo si sigue publicada en Google**, traída por la pasada como cualquier
+otra. Con su propio rastro.
+▶ **`RGPD-01` ya tiene procedimiento**: una petición de supresión de un cliente se atiende buscando
+su reseña en esta pantalla y ocultándola.
+
+▶ **Lo siguiente es la T2·6: EL CONTRATO Y LA SECCIÓN** (§4.3·9 y §4.3·10) — `Testimonial` gana la
+respuesta del parque, las fotos y la marca de anónimo; `FallingBackSocialProof` cambia (**la fuente
+declara si necesita consentimiento**, y ésta no lo necesita); binding **`scoped`** con memo; la
+**línea del filtro siempre visible**; los dos enlaces; la atribución **sin el logotipo de Maps**;
+**nunca `aggregateRating`**; `data-nosnippet`. ⚠️ Y en el MISMO despliegue, `img-src` deja de nombrar
+a Google (§4.3·12). ▶ Ahí se miden el presupuesto de la portada y **la caché de las fotos**, que la
+T2·4 dejó anotada.
 
 ### 4.2 T1 · La conexión
 
