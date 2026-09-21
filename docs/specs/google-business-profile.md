@@ -418,11 +418,23 @@ pintar la línea del filtro**, o el parque estaría enseñando reseñas filtrada
 al carril de plataforma. ⚠️ **No hay exposición hoy**: la línea solo existe cuando responde la ficha,
 y hoy responde Places, que **no filtra por estrellas**.
 
-▶ **Lo siguiente, a elegir**: (a) el **botón del panel** que encola la pasada, `Retry-After` y el
-gancho que fuerza una pasada al cambiar el mínimo de estrellas; (b) el **texto de privacidad** y la
-ponderación de interés legítimo (§4.3·11), que es lo único de la T2 con parte legal pendiente; (c) la
-**T6, el horario**; (d) **retirar Places** (§4.3·13) cuando el owner lo decida, y con ello §4.3·12 y
-la caché de las fotos que la T2·4 dejó anotada.
+❗❗❗ **UN HUECO DE LA T2·6 QUE QUEDA ABIERTO, Y VA PRIMERO** (medido al cerrar la sesión del 21-09):
+el dato nuevo **viaja** en el contrato, pero **la tarjeta del anfitrión mínimo no lo pinta**. Se
+añadió la línea del filtro y el `data-nosnippet`, y nada más. Medido sobre
+`resources/views/anfitrion/portada.blade.php`: usa `text`, `author`, `rating`, `avatarUrl`,
+`authorUrl`, `url`, `when` y `originalText`, y **ni `reply`, ni `photos`, ni `anonymous`**.
+- §4.3·10 pide las seis **con la respuesta del parque DEBAJO** y sus fotos: falta.
+- ⚠️ **Y una anónima saldría HOY sin nombre**: §4.3·5 manda pintarla como «Usuario de Google», y
+  `author` llega como cadena vacía. Es un defecto de render, no solo una función que falta.
+- ▶ Guardas que ya apuntan a ese fichero: `GoogleAttributionTest` y `ReviewsSectionTest`.
+- ⚠️ Lo mismo hará falta en la portada de la **instancia**, que es la que ven los clientes.
+
+▶ **Lo siguiente, a elegir**: (a) **cerrar ese hueco** —respuesta, fotos y anónima en la tarjeta—;
+(b) el **botón del panel** que encola la pasada, `Retry-After` y el gancho que fuerza una pasada al
+cambiar el mínimo de estrellas; (c) el **texto de privacidad** y la ponderación de interés legítimo
+(§4.3·11), lo único de la T2 con parte legal pendiente; (d) la **T6, el horario**; (e) **retirar
+Places** (§4.3·13) cuando el owner lo decida, y con ello §4.3·12 y la caché de las fotos que la T2·4
+dejó anotada.
 
 ### 4.2 T1 · La conexión
 
