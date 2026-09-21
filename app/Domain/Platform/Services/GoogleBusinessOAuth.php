@@ -3,6 +3,7 @@
 namespace App\Domain\Platform\Services;
 
 use App\Domain\Platform\Exceptions\GoogleBusinessException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -106,17 +107,23 @@ final class GoogleBusinessOAuth
 
         // Sin reintento a propósito: el código es de UN SOLO USO, y un segundo intento sobre un canje
         // que Google ya atendió falla igual.
-        $response = Http::asForm()
-            ->timeout(self::TIMEOUT_SECONDS)
-            ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
-            ->post(self::TOKEN_ENDPOINT, [
-                'code' => $code,
-                'client_id' => $credentials->clientId,
-                'client_secret' => $credentials->secret(),
-                'redirect_uri' => $redirectUri,
-                'grant_type' => 'authorization_code',
-                'code_verifier' => $verifier,
-            ]);
+        try {
+            $response = Http::asForm()
+                ->timeout(self::TIMEOUT_SECONDS)
+                ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
+                ->post(self::TOKEN_ENDPOINT, [
+                    'code' => $code,
+                    'client_id' => $credentials->clientId,
+                    'client_secret' => $credentials->secret(),
+                    'redirect_uri' => $redirectUri,
+                    'grant_type' => 'authorization_code',
+                    'code_verifier' => $verifier,
+                ]);
+        } catch (ConnectionException) {
+            // ⚠️ Sin esto la vuelta daba un 500 (`#733`). Solo `ConnectionException`: un `catch`
+            // ancho se tragaría el cortafuegos de las pruebas (`#730`).
+            throw GoogleBusinessException::because(GoogleBusinessException::UNREACHABLE);
+        }
 
         if (! $response->successful()) {
             // ⚠️ Solo el estado y el código `error` de Google. El cuerpo entero llevaría material

@@ -21,6 +21,7 @@ use App\Domain\Platform\Services\GoogleBusinessOAuth;
 use App\Filament\Pages\GoogleBusinessProfilePage;
 use App\Notifications\GoogleBusinessLocationChanged;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -212,6 +213,10 @@ class GoogleBusinessDisconnectTest extends TestCase
         $ana = $this->admin('Ana Pérez');
         $berta = $this->admin('Berta Ruiz');
         $conexion = $this->conectada(porUsuario: $ana->id);
+        // ⚠️ La hora, FIJA y escrita a mano (`#733`): antes la expectativa se calculaba con
+        // `app.timezone` —UTC—, que es justo el defecto que vio el owner, y el caso lo bendecía.
+        // 22:30 UTC del 19 son las 00:30 del 20 en Madrid.
+        $conexion->update(['connected_at' => Carbon::parse('2026-09-19 22:30:00', 'UTC')]);
         // Con permiso, la pantalla lista las fichas (§4.2·4): sin el doble, `preventStrayRequests`
         // rompe el render y este caso mediría la red, no el nombre.
         $this->fakeGoogle([$this->ficha()]);
@@ -221,7 +226,7 @@ class GoogleBusinessDisconnectTest extends TestCase
             ->assertOk()
             ->assertSee(__('admin.google_business.connected_by', [
                 'name' => 'Ana Pérez',
-                'date' => $conexion->connected_at->timezone(config('app.timezone'))->format('d/m/Y H:i'),
+                'date' => '20/09/2026 00:30',
             ]));
     }
 

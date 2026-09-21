@@ -141,6 +141,20 @@ class BusinessProfileSocialProof implements SocialProof
     }
 
     /**
+     * **Qué reseñas enseña la portada AHORA**, por su id, para que el panel pueda decirlo (`#733`).
+     *
+     * ⚠️ Sale de la MISMA consulta que las tarjetas, y no de una copia de la regla en el panel: el
+     * día que cambie el orden o el número, una copia diría «en la web» de una que ya no lo está, y el
+     * admin ocultaría o dejaría de ocultar pensando en otra.
+     *
+     * @return list<int>
+     */
+    public function shownIds(): array
+    {
+        return $this->reviews()->map(fn (GoogleBusinessReview $r): int => $r->id)->values()->all();
+    }
+
+    /**
      * Las candidatas que se pueden enseñar hoy: dentro del plazo, las más recientes, recortadas.
      *
      * @return Collection<int, GoogleBusinessReview>

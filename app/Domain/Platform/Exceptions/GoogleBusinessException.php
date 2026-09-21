@@ -26,6 +26,14 @@ final class GoogleBusinessException extends RuntimeException
     public const TOKEN_EXCHANGE_FAILED = 'token_exchange_failed';
 
     /**
+     * Google **no llegó a contestar** al canje: sin red o tiempo agotado (`#733`).
+     *
+     * ⚠️ Distinto de {@see TOKEN_EXCHANGE_FAILED} a propósito: aquél es un «no» de Google y éste un
+     * silencio, y se arreglan de forma distinta —el segundo, esperando y repitiendo—.
+     */
+    public const UNREACHABLE = 'unreachable';
+
+    /**
      * El canje fue bien pero **no vino `refresh_token`**.
      *
      * ⚠️ Es el fallo MÁS probable de esta feature y el más silencioso: Google solo lo entrega con

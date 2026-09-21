@@ -1,30 +1,24 @@
 # Carril · Diseño del SPA (el cajón)
 
 > Máquina: **el OTRO ordenador** · Banda: **730–759** (700–729 agotada el 20-09) · Último usado:
-> **`#732`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
+> **`#733`** · La banda está dada de alta en la tabla de `DECISIONES.md` ·
 > Arranque de la máquina:
 > `docs/CARRIL-SPA.md` (su §7 antes que el resto) · Specs: `sidebar-spa.md` §0 · `celebracion-e-invitacion.md`
 > §0 · `rediseno-desde-canvas.md` §5 (Fase 4) · Actualizado: 2026-09-21.
 > Este fichero lo escribe SOLO el agente de este carril (`DECISIONES #621`). Techo **32 KB** (`#724`;
 > era 24). El contador de la suite va en el trailer del commit (`#618`), no aquí.
 
-## Foto (2026-09-21, cierre de la sesión)
+## Foto (2026-09-21, sesión de noche)
 
-- ▶▶▶ **LO DE ESTA SESIÓN (20→21-09): la ficha de Google, de la T1 a la T2·6.** `#524`,
-  `google-business-profile.md`. En el árbol y **empujado**: la conexión entera (`#720`→`#726`) y
-  **seis tandas de la T2** (`#727`→`#732`) — las tablas con sus dos plazos · el recorrido con su
-  `coherent()` · la pasada diaria `business-profile:sync` · las imágenes servidas desde casa ·
-  «Ocultar» · la fuente nueva con su cascada de tres y la línea del filtro.
-  **Hoy el sistema sincroniza solo y la portada no le pide NADA a Google.**
-  ❗❗ **Y NADA DE ESTO SE HA VISTO FUNCIONANDO.** No hay conexión real, no hay reseña pintada, el
-  owner solo ha visto la pantalla en «sin configurar». Todo está medido contra un DOBLE.
+- ▶▶▶ **LA FICHA DE GOOGLE (`#524`), de la T1 a la T2·7, EN EL ÁRBOL** (`#720`→`#733`),
+  `google-business-profile.md` §4.1 (qué entró en cada tanda y qué enseñó). **El 21-09 el owner la
+  vio POR PRIMERA VEZ con datos** —fixture local fuera de git, «probe-ojo-resenas» en la carpeta de
+  almacenamiento (modos `montar`·`estado`·`caducar`·`correo`·`desmontar`), y la sonda
+  «sonda-resenas/ojo» al lado— y **dio el ✅ al panel** tras la T2·7 (`#733`).
+  ⚠️ **El fixture SIGUE MONTADO en la BD local** (las cuatro tablas y dos ajustes falsos): se
+  desmonta con su modo, y antes estaba todo VACÍO.
+  ❗ Lo demás, **contra un DOBLE**: la ficha de PlayJump no llega a los 60 días (finales de octubre).
   ⚠️ **CUATRO migraciones de esta spec, aplicadas SOLO en la BD local.**
-  ▶ Qué entró en cada tanda y qué enseñó, **§4.1 de la spec**, que es donde no caduca.
-- ⚠️ **El techo de un carril pasó de 24 a 32 KB** (`#724`, `[DECIDIDO owner]`). Los otros cuatro
-  siguen diciendo «24 KB» en su encabezado y no los toco (`#621`); avisado en el buzón.
-- 💥 **El repo se corrompió el 20-09 a las 14:36** por un corte de la VM de WSL (31 objetos de git a
-  CERO bytes, el build de Vite vacío). Recuperado sin perder nada versionado; **la receta está en
-  «Trampas vivas»**.
 - **Las 25 pantallas del cajón están construidas** (`#550`→`#568`): el armazón, el catálogo, el día y la
   hora, la cesta, pagar con sus cuatro desenlaces, las nueve de la cuenta y el suelo táctil.
 - ▶▶ **`celebracion-e-invitacion.md`: las siete tandas y el borde `§7.1·5`, CERRADOS** (`#569`→`#718`)
@@ -36,50 +30,29 @@
     migración nueva**, `order_items.eve_notice_at` (`#717`).
   - ⚠️ `party_invitations.reminded_at`/`reminded_count` son del **recordatorio del anfitrión** (`#713`,
     cuentan VECES) y **no envían nada**; el aviso de la víspera tiene su propia marca (`#717`).
-- ✅ **`#707` · `DependentsZone.vue`** (lo levantó plataforma): `addBtn` sin declarar tiraba el foco al
-  `<body>`. El gate `CE-6` paró el commit: no se subió el techo, bajó `signDependent()` al módulo
-  plano. `FROZEN_JS_ERRORS` **12 → 10** · sonda `scripts/sonda-foco-cuenta.mjs`.
-
 ## Por dónde retomar, en orden
 
-1. ❗❗ **`google-business-profile.md` (`#524`), reclamada — la fuente REAL de las reseñas.** Sustituye a
-   `google-reviews.md` (Places), que queda de registro. ⚠️ Es del carril de la WEB (580–609), avisado.
-   ✅✅ **T1 (`#720`→`#726`) y T2·1→T2·6 (`#727`→`#732`), EN EL ÁRBOL.** Qué entró en cada tanda y
-   sus trampas, **§4.1 de la spec**, que es donde no caduca.
-   ❗❗❗ **LO QUE BLOQUEA, Y NO ES CÓDIGO**: la ficha de PlayJump **lleva menos de 60 días**, así que
-   la solicitud del §7·A·2 no se puede mandar y **la conexión real no llega antes de finales de
-   octubre** (owner, 20-09). Hasta entonces **todo va contra un DOBLE**, con
-   `Http::preventStrayRequests()`. El owner monta la cuenta, el dominio y la web de **JumpSystem**
-   (`#719`); el §7·A no necesita ficha propia — empieza por el §0 y el **§1.3**.
-   ⚠️ **Nada se ha visto funcionando**: de la pantalla, solo «sin configurar» (20-09); el resto de
-   estados, la lista de fichas y el botón de desconectar están afirmados **por caso, no por ojo**; el
-   correo nuevo no se ha visto renderizado; y **no se ha pintado ni una reseña**.
-   ❗ **RENUNCIA CON RECIBO, todavía abierta**: las fotos salen con `no-store` (lo pone
-   `NoStoreWebResponses`, GLOBAL por `RGPD-04`), así que **cada visita vuelve a pedir cada foto**.
-   Eximir esa ruta es tocar un middleware escrito incondicional a propósito, y su propia doc dice
-   que eso «merece medirse aparte». ▶ Va **con la tanda que mida el presupuesto de la portada**.
-   ❗❗❗ **LO MÁS IMPORTANTE QUE DEJA LA T2·6, Y NO SE CIERRA DESDE AQUÍ**: `#666` mudó la portada a
-   la INSTANCIA, así que la sección que ven los clientes **está en otro repo**. El producto garantiza
-   que `socialSelection` viaja en `CONTRATO_DE_VISTAS` y que su anfitrión mínimo la pinta. ▶ **Antes
-   de que las reseñas de la ficha se vean en producción, la portada de la instancia TIENE que pintar
-   la línea del filtro**, o el parque enseñaría reseñas filtradas sin declararlo (Ómnibus). Avisado a
-   plataforma. ⚠️ Hoy no hay exposición: responde Places, que no filtra.
-   ⚠️⚠️ **`[owner]` 21-09: Places NO se retira todavía**, así que la cascada es de TRES y **`img-src`
-   sigue nombrando a Google** — §4.3·12 va con la retirada, no antes.
-   ❗❗❗ **UN HUECO QUE DEJO ABIERTO Y QUE VA PRIMERO** (destapado al cerrar, con el aviso de
-   plataforma del 21-09): la T2·6 metió en el contrato la **respuesta del parque**, las **fotos** y
-   la marca de **anónima**, pero **la tarjeta del anfitrión mínimo no las pinta** —solo la línea del
-   filtro y el `data-nosnippet`—. Medido: `anfitrion/portada.blade.php` usa `text`, `author`,
-   `rating`, `avatarUrl`, `authorUrl`, `url`, `when`, `originalText`, y ni `reply`, ni `photos`, ni
-   `anonymous`. ⚠️ **Y una anónima saldría HOY sin nombre**: §4.3·5 manda pintarla como «Usuario de
-   Google», y `author` llega vacío. ▶ El §4.3·10 pide la respuesta **debajo** de la reseña y sus
-   fotos. Guardas que ya apuntan ahí: `GoogleAttributionTest` y `ReviewsSectionTest`.
-   ▶▶ **DESPUÉS, a elegir**: (a) el **botón del panel** que encola la pasada, `Retry-After` y el
-   gancho que fuerza una pasada al cambiar el mínimo · (b) el **texto de privacidad** y la ponderación
-   de interés legítimo (§4.3·11), lo único de la T2 con parte legal pendiente · (c) la **T6, el
-   horario**, que es la única que ESCRIBE en la ficha · (d) **retirar Places**, y con ello §4.3·12 y
-   la caché de las fotos. Toca `PERF-02`, `SEC-01`, `RGPD-05`: **§5 antes**.
-   ⚠️⚠️ **CUATRO migraciones de esta spec, aplicadas SOLO en la BD local.** Empujada ≠ aplicada.
+1. ❗❗ **`google-business-profile.md` (`#524`), reclamada** —es del carril de la WEB, avisado—.
+   ✅ **T1 y T2·1→T2·7 en el árbol** (`#720`→`#733`); cada tanda, **§4.1 de la spec**.
+   ▶▶▶ **LO SIGUIENTE: la T2·8, la TARJETA de la portada** —los ocho hallazgos del ojo del 21-09,
+   listados en la §4.1—: anónima «Usuario de Google» (hoy sale SIN nombre y con «·»), respuesta y
+   fotos, la entradilla, «a fecha de», la palabra Google en vez del logotipo de Maps, los saltos de
+   línea y enlaces que parezcan enlaces. Toca `landing.css`, `lang/*/landing.php` y
+   `google-attribution` de la WEB: **avisado en su buzón**. Guardas que apuntan ahí:
+   `GoogleAttributionTest`, `ReviewsSectionTest`, `ReviewDisclosureTest` y `AnfitrionPortadaTest`.
+   ❗❗ **Y la T2·9, que la dirección nueva del owner (21-09: la landing por API) vuelve necesaria**:
+   `/api/v1/social-proof` sirve solo la cifra —sin `asOf`, sin reseñas, **sin la selección**, que es la
+   Ómnibus—. `#616`: API pública **sin avatares**. Spec §4.1.
+   ❗❗❗ **Lo que no se cierra desde aquí**: la portada REAL vive en la instancia (`#666`) y tiene que
+   pintar la línea del filtro —y lo de la T2·8— antes de que las reseñas de la ficha se vean en
+   producción (Ómnibus). Avisado a plataforma. Hoy no hay exposición: responde Places, que no filtra.
+   ⚠️ **Places NO se retira** (`[owner]`, 21-09): cascada de TRES, e `img-src` sigue nombrando a Google.
+   ❗ **Renuncia con recibo abierta**: las fotos salen con `no-store` (`NoStoreWebResponses`, `RGPD-04`);
+   va con la tanda que mida el presupuesto de la portada.
+   ❗❗ **Lo que bloquea y no es código**: la ficha de PlayJump **no llega a los 60 días** hasta finales
+   de octubre; el owner monta **JumpSystem** (`#719`, §7·A de la spec).
+   ▶▶ **Después, a elegir** (spec §4.1): el botón del panel · el texto de privacidad, con el aviso de
+   cookies · la T6 · retirar Places. Toca `PERF-02`, `SEC-01`, `RGPD-05`: **§5 antes**.
    ❗ La doc ajena miente sobre el umbral: el aviso, en el buzón de la WEB. Manda el código.
 2. ✅ **La invitación no tiene nada pendiente de CÓDIGO** (`#718`, spec §10.18). ▶ Queda **desplegar y
    encender**, y no es mío: T5, T6 y T7 **con la migración** `order_items.eve_notice_at`; los dos
@@ -111,7 +84,9 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   mismo día.** Dos formas de pagarlo, medidas: `DisplayTime::dayLabel()` **no convierte de zona**
   —sin `setTimezone`, un sello de las 00:30 de Madrid se fecha el día anterior—; y **un test con
   reloj propio miente dos horas al día** (`ScheduleFactsTest`, rojo a las 00:07). ▶ En un test de
-  «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**.
+  «ahora», el reloj a **`DisplayTime`, nunca a `Carbon`**. ▶ Y en el PANEL, toda hora por
+  `DisplayTime`: `app.timezone` es UTC, y un caso que calcula su expectativa con él **bendice el
+  defecto** (`#733`). Fija la hora a mano, cerca de medianoche, para que cambie hasta el día.
 - ⚠️ **Lo que desborda a lo ALTO no lo dice una medida de ancho**: un `textarea` con `rows="5"` traía
   su propio scroll y las cifras de la sonda salían verdes. **Lo vio la captura.** Y dos pesos de botón
   en un bloque pequeño compiten con el «Guardar» de la barra.
@@ -266,8 +241,8 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   `authorizeGuardianAccess()`. Se retiraron en vez de declararlas.
 - **Una costura se prueba ANDÁNDOLA**: el defecto más caro de la T5·5 (la vuelta del formulario
   rechazado perdía la atadura) no lo veía ningún test de dominio, y los tres ya existían.
-- ⏰ **Techo de una decisión: 1,5 KB, y `docs-check` NO lo mide** (sí mide el §0 de una spec, 2 KB, y el
-  tracker, 16 KB): `#713` salió a 1604 B y hubo que recortarlo. Mídelo con `python3` antes del commit.
+- ⏰ **Techos que mide `docs-check`**: decisión 1,5 KB, §0 2048 B **sin la línea del título** (un
+  `python3` que la cuente da ~26 B de más), tracker 16 KB. Mídelos con su `awk` antes del commit.
 - 🩹 **En la BD LOCAL hay 19 titulares con la cadena de waiver ROTA** (18-09): basura de desarrollo del
   26–27 de agosto, **no un defecto**. Así que **`WaiverChain::verify()` sale rojo de fábrica en local**:
   si mides cadenas, compara ANTES/DESPUÉS.
@@ -317,10 +292,21 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   de `AnfitrionPortadaTest` siguen verdes.
 - ▶ **Places NO se retira** (`[owner]`, 21-09), así que la cascada es de tres y `img-src` sigue
   nombrando a Google. Cuando se retire, el cambio de CSP va **en el mismo despliegue**.
+- ❗❗ **(21-09, noche) Tu aviso del anfitrión, atendido y ampliado**: el ojo del owner sacó OCHO
+  huecos de la tarjeta (spec §4.1, T2·8) y los cierro en `anfitrion/portada.blade.php`. **La portada
+  de la instancia necesitará los mismos** —anónima «Usuario de Google», respuesta, fotos, «a fecha
+  de», la palabra Google en vez del logotipo de Maps, entradilla nueva— y el anfitrión será la
+  referencia. ▶ Y `ESTADO.md` (tuyo) sigue dando al SPA la banda **550–579**: es **730–759**.
+- ⚠️ `GoogleBusinessApi` gana `send()` (`#733`): un corte de red es un fallo **pasajero**, HTTP 0.
 
-### ❗❗ Para el carril de la WEB (emisor: SPA, 2026-09-20) — TE TOMO UNA TAREA
+### ❗❗ Para el carril de la WEB (emisor: SPA, 20→21-09) — TE TOMO UNA TAREA, Y VOY A TOCAR LO TUYO
 - ▶ **Me llevo `google-business-profile.md` (`#524`)**, que es tuya (banda 580–609); la numero desde
-  la MÍA. Va por la T2·6 (`#720`→`#732`); el estado, en la **§4.1**. Si la quieres, te la devuelvo.
+  la MÍA. Va por la T2·7 (`#720`→`#733`); el estado, en la **§4.1**. Si la quieres, te la devuelvo.
+- ❗ **AVISO ANTES DE TOCAR (21-09)**: la T2·8 —la tarjeta de reseñas del anfitrión— toca
+  `public/css/landing.css` (el bloque `.rev*`, **no** el `:root`), `lang/*/landing.php` (claves
+  `reviews.*`), `components/site/google-attribution.blade.php` y casos de `tests/Feature/Landing/`
+  (`ReviewsSectionTest`, `GoogleAttributionTest`, `ReviewDisclosureTest`). Nada fuera de la sección
+  de reseñas.
 - ❗ **Una línea tuya que miente** (20-09): `google-reviews.md` dice «umbral de **10** reseñas» y el
   código dice **`MIN_REVIEWS = 1`** (`#494`, definitivo). **No la toco yo** (`#621`).
 
@@ -354,6 +340,8 @@ en el buzón**: `CARRIL-SPA.md` §5. Lo del cliente va también en la rama `clie
   servicio pregunta por el del parque. Mentía el test. Ya me dijiste que te vale.
 
 ### Atendido
+- **Plataforma 21-09** («`home` ya está mudada» y «banda nueva y contrato 2»): **atendidos**. La
+  tarjeta del anfitrión va en la T2·8 y la migración de `zones`, aplicada en mi BD local.
 - **Plataforma 16-09→19-09 y Web `#539`/`#540`**: atendidos, **pueden retirarlos**; lo que sobrevive
   está en «Trampas vivas». ▶ Queda **repasar el `§0` de `sidebar-spa.md`**, que escribió plataforma.
 - **Plataforma 20-09** (`#652` el 422 de `InvitationHostController` · mi arreglo de `ScheduleFactsTest`

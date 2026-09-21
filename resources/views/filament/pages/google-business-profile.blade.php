@@ -25,8 +25,12 @@
         <p class="mt-1 text-lg font-semibold text-gray-950 dark:text-white">
             {{ __('admin.google_business.states.'.$estado->value.'.label') }}
         </p>
+        {{-- ⚠️ «Conectada» cubre dos momentos, antes y después de elegir la ficha, y el texto tiene
+             que decir lo que QUEDA, no lo que ya se hizo (ojo del owner, 21-09, `#733`). --}}
         <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-            {{ __('admin.google_business.states.'.$estado->value.'.what_to_do') }}
+            {{ $this->fichaEnlazada()
+                ? __('admin.google_business.states.connected.linked')
+                : __('admin.google_business.states.'.$estado->value.'.what_to_do') }}
         </p>
 
         @if ($conexion?->location_title)
@@ -35,14 +39,30 @@
             </p>
         @endif
 
-        {{-- Quién conectó y cuándo (§4.2·1): la pregunta que se hace quien llega y no estaba. --}}
+        {{-- Quién conectó y cuándo (§4.2·1): la pregunta que se hace quien llega y no estaba.
+             ⚠️ La hora, por `DisplayTime` (la del parque): `app.timezone` es UTC. --}}
         @if ($this->conectadaPor())
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {{ __('admin.google_business.connected_by', [
                     'name' => $this->conectadaPor(),
-                    'date' => $conexion?->connected_at?->timezone(config('app.timezone'))->format('d/m/Y H:i') ?? '—',
+                    'date' => $conexion?->connected_at ? \App\Domain\Platform\Services\DisplayTime::format($conexion->connected_at) : '—',
                 ]) }}
             </p>
+        @endif
+
+        {{-- La última pasada COMPLETA (§4.2·1). Solo con la ficha enlazada: antes no hay qué traer. --}}
+        @if ($this->fichaEnlazada())
+            @php($pasada = $this->ultimaPasada())
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {{ $pasada
+                    ? __('admin.google_business.last_sync', ['date' => \App\Domain\Platform\Services\DisplayTime::format($pasada)])
+                    : __('admin.google_business.last_sync_never') }}
+            </p>
+            @if ($this->pasadaVieja())
+                <p class="mt-2 rounded-lg bg-warning-50 p-3 text-sm text-warning-700 dark:bg-warning-400/10 dark:text-warning-400">
+                    {{ __('admin.google_business.last_sync_stale', ['days' => \App\Domain\Content\Models\GoogleBusinessReviewSummary::FRESH_DAYS]) }}
+                </p>
+            @endif
         @endif
 
         @if ($this->puedeDesconectar())
@@ -137,11 +157,13 @@
             @php($resumen = $this->resumen())
             @if ($resumen?->publishable())
                 {{-- ⚠️ La media y el total NO los toca «Ocultar» (§4.3·7): son de Google. --}}
+                {{-- ⚠️ «:count EN GOOGLE», no «publicadas»: la cifra es el total de la ficha, y aquí
+                     guardamos una docena y la web enseña seis (ojo del owner, 21-09, `#733`). --}}
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {{ __('admin.google_business.reviews_count', [
                         'count' => $resumen->total_review_count,
                         'rating' => number_format($resumen->average_rating, 1, ',', '.'),
-                        'date' => $resumen->fetched_at->timezone(config('app.timezone'))->format('d/m/Y'),
+                        'date' => \App\Domain\Platform\Services\DisplayTime::format($resumen->fetched_at, 'd/m/Y'),
                     ]) }}
                 </p>
             @endif
@@ -152,20 +174,40 @@
                     {{ __('admin.google_business.reviews_empty') }}
                 </p>
             @else
+                @php($enLaWeb = $this->enLaWeb())
                 <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    {{ __('admin.google_business.reserve_hint', ['shown' => \App\Domain\Content\Services\BusinessProfileSocialProof::SHOWN]) }}
                     {{ __('admin.google_business.hide_hint') }}
                 </p>
 
                 <ul class="mt-4 space-y-3">
                     @foreach ($resenas as $resena)
-                        <li class="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
-                            <div class="flex flex-wrap items-baseline gap-2">
+                        @php($visible = in_array($resena->id, $enLaWeb, true))
+                        @php($cara = $resena->publishablePhotoPath())
+                        <li class="rounded-lg bg-gray-50 p-3 dark:bg-white/5"
+                            data-review="{{ $resena->id }}" data-shown="{{ $visible ? '1' : '0' }}">
+                            <div class="flex flex-wrap items-center gap-2">
+                                {{-- La cara del autor, porque también es lo que se publica: una foto
+                                     de perfil puede ser la de un menor (motivo tasado de §4.3·7). --}}
+                                @if ($cara && \App\Domain\Content\Services\GoogleReviewImages::isOwnName($cara))
+                                    <img src="{{ route('resenas.foto', ['fichero' => $cara]) }}" alt=""
+                                         class="size-8 rounded-full object-cover" loading="lazy" decoding="async">
+                                @endif
                                 <strong class="text-sm text-gray-950 dark:text-white">
                                     {{ $resena->publishableAuthor() ?? __('admin.google_business.anonymous_author') }}
                                 </strong>
                                 <span class="text-xs text-gray-500 dark:text-gray-400">
                                     {{ str_repeat('★', $resena->star_rating) }}
-                                    · {{ $resena->review_created_at->timezone(config('app.timezone'))->format('d/m/Y') }}
+                                    · {{ \App\Domain\Platform\Services\DisplayTime::format($resena->review_created_at, 'd/m/Y') }}
+                                </span>
+                                {{-- Qué se ve y qué es reserva, con la MISMA regla que las tarjetas
+                                     (`shownIds()`): ocultar una de reserva no cambia la portada. --}}
+                                <span @class([
+                                    'ms-auto rounded-md px-2 py-0.5 text-xs font-medium',
+                                    'bg-success-50 text-success-700 dark:bg-success-400/10 dark:text-success-400' => $visible,
+                                    'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-300' => ! $visible,
+                                ])>
+                                    {{ $visible ? __('admin.google_business.on_web') : __('admin.google_business.in_reserve') }}
                                 </span>
                             </div>
 
@@ -175,6 +217,31 @@
                                 cualquier idioma.
                             --}}
                             <p class="mt-1 whitespace-pre-line text-sm text-gray-700 dark:text-gray-300" dir="auto">{{ $resena->comment }}</p>
+
+                            {{-- La respuesta del parque se publica debajo de la reseña (§4.3·10) y
+                                 se va con ella al ocultar (§4.3·7): el admin tiene que verla aquí. --}}
+                            @if ($resena->reply_comment)
+                                <div class="mt-2 border-s-2 border-gray-300 ps-3 dark:border-white/20">
+                                    <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ __('admin.google_business.reply_label') }}</p>
+                                    <p class="whitespace-pre-line text-sm text-gray-700 dark:text-gray-300" dir="auto">{{ $resena->reply_comment }}</p>
+                                </div>
+                            @endif
+
+                            {{-- Las fotos, que es lo que más obliga a mirar antes de publicar: «menores»
+                                 es un motivo tasado de ocultar y una foto lo decide antes que el texto. --}}
+                            @if (! empty($resena->photos))
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @foreach ($resena->photos as $i => $foto)
+                                        @if (is_string($foto) && \App\Domain\Content\Services\GoogleReviewImages::isOwnName($foto))
+                                            <a href="{{ route('resenas.foto', ['fichero' => $foto]) }}" target="_blank" rel="noopener">
+                                                <img src="{{ route('resenas.foto', ['fichero' => $foto]) }}"
+                                                     alt="{{ __('admin.google_business.photo_alt', ['n' => $i + 1]) }}"
+                                                     class="size-16 rounded-md object-cover" loading="lazy" decoding="async">
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
 
                             <form method="POST" action="{{ route('admin.google_business.hide_review') }}" class="mt-3 flex flex-wrap items-center gap-2">
                                 @csrf
@@ -219,7 +286,7 @@
                             {{ $oculta->reason->label() }}
                             <span class="block text-xs text-gray-500 dark:text-gray-400">
                                 {{ __('admin.google_business.hidden_since', [
-                                    'date' => $oculta->created_at->timezone(config('app.timezone'))->format('d/m/Y'),
+                                    'date' => \App\Domain\Platform\Services\DisplayTime::format($oculta->created_at, 'd/m/Y'),
                                 ]) }}
                                 · <code>{{ substr($oculta->review_hash, 0, 12) }}…</code>
                             </span>

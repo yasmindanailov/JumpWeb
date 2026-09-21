@@ -6,6 +6,7 @@ use App\Domain\Content\Enums\GoogleReviewSuppressionReason;
 use App\Domain\Content\Models\GoogleBusinessReview;
 use App\Domain\Content\Models\GoogleBusinessReviewSummary;
 use App\Domain\Content\Models\GoogleBusinessReviewSuppression;
+use App\Domain\Content\Services\BusinessProfileSocialProof;
 use App\Domain\Content\Services\GoogleReviewSuppressions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Platform\Enums\GoogleBusinessStatus;
@@ -15,6 +16,7 @@ use App\Domain\Platform\Services\GoogleBusinessConnectionState;
 use App\Domain\Platform\Services\GoogleBusinessLocation;
 use App\Domain\Platform\Services\GoogleBusinessLocations;
 use BackedEnum;
+use Carbon\CarbonInterface;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
@@ -33,8 +35,11 @@ use Illuminate\Support\Collection;
  * ({@see GoogleBusinessConnectionState}), no la columna: «sin configurar» y «lista para conectar» no
  * están guardadas en ningún sitio.
  *
- * ▶ **Lo que falta aquí es la T1·4**: quién conectó y la última pasada (§4.2·1), y desconectar
- * (§4.2·8). Hoy la pantalla dice el estado, deja conectar y deja elegir la ficha.
+ * ⚠️ **Toda hora de esta pantalla va por `DisplayTime`**, nunca por `config('app.timezone')`, que es
+ * UTC: el ojo del owner del 21-09 vio «conectada a las 16:30» sobre una conexión de las 18:30 (`#733`).
+ *
+ * ▶ Lo que aún NO está: el botón que encola una pasada (§4.3·1) y la antigüedad de la pasada en
+ * «Hoy» (§4.2·7).
  */
 class GoogleBusinessProfilePage extends Page
 {
@@ -195,6 +200,51 @@ class GoogleBusinessProfilePage extends Page
     public function resumen(): ?GoogleBusinessReviewSummary
     {
         return GoogleBusinessReviewSummary::current();
+    }
+
+    /**
+     * ¿Está la ficha enlazada, es decir, conexión en pie Y ficha elegida?
+     *
+     * ⚠️ Es el estado en el que la pasada diaria ya trabaja sola, y el texto de «conectada» no puede
+     * seguir diciendo «queda elegir la ficha» (lo vio el owner el 21-09, `#733`): «conectada» es UN
+     * estado guardado que cubre dos momentos, antes y después de elegir.
+     */
+    public function fichaEnlazada(): bool
+    {
+        return $this->estado() === GoogleBusinessStatus::Connected && $this->fichaElegida() !== null;
+    }
+
+    /**
+     * **La última pasada COMPLETA** (§4.2·1), o `null` si aún no ha habido ninguna.
+     *
+     * ⚠️ Es la fecha del RESUMEN, y no la de cualquier pasada, a propósito: el resumen solo lo mueve
+     * una pasada coherente (T2·3). Una pasada a medias no cuenta, y enseñarla aquí diría «todo va
+     * bien» sobre una sincronización que no está sirviendo.
+     */
+    public function ultimaPasada(): ?CarbonInterface
+    {
+        return $this->resumen()?->fetched_at;
+    }
+
+    /**
+     * ¿Hace demasiado de la última pasada completa? Pasado ese plazo la web deja de enseñar nombres,
+     * fotos y media (§4.3·4) **sin dar ningún error**, así que es aquí donde el admin se entera.
+     */
+    public function pasadaVieja(): bool
+    {
+        $pasada = $this->ultimaPasada();
+
+        return $pasada !== null && $pasada->lt(now()->subDays(GoogleBusinessReviewSummary::FRESH_DAYS));
+    }
+
+    /**
+     * Los ids de las que la portada enseña ahora; el resto de la lista es reserva (§4.3·2).
+     *
+     * @return list<int>
+     */
+    public function enLaWeb(): array
+    {
+        return app(BusinessProfileSocialProof::class)->shownIds();
     }
 
     /** @var list<GoogleBusinessLocation>|null */

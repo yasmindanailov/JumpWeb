@@ -395,7 +395,7 @@ class GoogleBusinessLocationTest extends TestCase
             ->assertSee('locations/77', false);
     }
 
-    public function test_si_google_no_contesta_la_pantalla_lo_dice_y_no_revienta(): void
+    public function test_si_google_contesta_con_un_error_la_pantalla_lo_dice_y_no_revienta(): void
     {
         $this->conectada();
         Http::fake([
@@ -409,6 +409,40 @@ class GoogleBusinessLocationTest extends TestCase
             ->assertSee(__('admin.google_business.choose_failed'));
 
         // ⚠️ Y pintar NO ha apagado la conexión: un GET no escribe el estado.
+        $this->assertSame(GoogleBusinessStatus::Connected, GoogleBusinessConnection::current()->status);
+    }
+
+    /**
+     * ⚠️⚠️ **«No contesta» de verdad es un corte de red, no un 503** (`#733`): el caso de arriba se
+     * llamaba así y probaba una respuesta. Con la red caída la pantalla daba un 500 —medido en el
+     * ojo del owner del 21-09—, porque `ConnectionException` no es una negativa de Google.
+     */
+    public function test_si_google_no_responde_la_pantalla_lo_dice_y_no_revienta(): void
+    {
+        $this->conectada();
+        Http::fake([GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::failedConnection()]);
+
+        $this->actingAs($this->admin())
+            ->get(GoogleBusinessProfilePage::getUrl())
+            ->assertOk()
+            ->assertSee(__('admin.google_business.choose_failed'));
+
+        $this->assertSame(GoogleBusinessStatus::Connected, GoogleBusinessConnection::current()->status);
+    }
+
+    public function test_si_google_no_responde_al_elegir_no_se_guarda_nada_y_se_dice(): void
+    {
+        $this->conectada();
+        Http::fake([
+            GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::response(['access_token' => 'ya29.x', 'expires_in' => 3600]),
+            GoogleBusinessApi::ACCOUNTS_ENDPOINT.'*' => Http::failedConnection(),
+        ]);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.google_business.choose'), ['location' => 'locations/9'])
+            ->assertSessionHas('status', 'google-business-api-failed');
+
+        $this->assertNull(GoogleBusinessConnection::current()->location_name);
         $this->assertSame(GoogleBusinessStatus::Connected, GoogleBusinessConnection::current()->status);
     }
 

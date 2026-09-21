@@ -226,6 +226,66 @@ class GoogleBusinessApiTest extends TestCase
         }
     }
 
+    // ─────────── Sin red: el fallo que no trae respuesta de Google (`#733`) ───────────
+
+    /**
+     * ⚠️⚠️ **Sin red no hay respuesta que traducir**, así que lo tiene que decir el envoltorio. Hasta
+     * `#733` un corte o un tiempo agotado salía como `ConnectionException`, que nadie de arriba
+     * atrapaba: la pantalla del panel daba un 500 y la pasada diaria reventaba en vez de fallar.
+     */
+    public function test_sin_red_al_pedir_el_token_es_un_fallo_pasajero(): void
+    {
+        Http::fake([GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::failedConnection('cURL error 28: Operation timed out')]);
+
+        try {
+            (new GoogleBusinessApi)->accounts(self::CANARIO);
+            $this->fail('debería haber lanzado');
+        } catch (GoogleBusinessApiException $e) {
+            $this->assertNull($e->status, 'un corte de red apagaría la conexión de un parque');
+            $this->assertSame(GoogleBusinessApiException::UNREACHABLE, $e->reason);
+            $this->assertStringNotContainsString(self::CANARIO, $e->getMessage());
+        }
+    }
+
+    public function test_sin_red_al_pedir_las_cuentas_es_un_fallo_pasajero_y_se_registra_sin_el_token(): void
+    {
+        Http::fake($this->fakeToken() + [
+            GoogleBusinessApi::ACCOUNTS_ENDPOINT.'*' => Http::failedConnection(),
+        ]);
+
+        try {
+            (new GoogleBusinessApi)->accounts(self::CANARIO);
+            $this->fail('debería haber lanzado');
+        } catch (GoogleBusinessApiException $e) {
+            $this->assertNull($e->status);
+            $this->assertSame(GoogleBusinessApiException::UNREACHABLE, $e->reason);
+        }
+
+        $todo = implode("\n", $this->registrado);
+        $this->assertStringContainsString(GoogleBusinessApiException::UNREACHABLE, $todo, 'un corte que no se registra no se puede diagnosticar');
+        $this->assertStringNotContainsString(self::CANARIO, $todo);
+        $this->assertStringNotContainsString('ya29.de-acceso', $todo);
+    }
+
+    public function test_sin_red_en_el_reintento_tras_un_401_es_un_fallo_pasajero(): void
+    {
+        // El reintento del 401 es OTRA petición, con su propia protección: la primera contesta y la
+        // segunda se queda sin red.
+        Http::fake($this->fakeToken() + [
+            GoogleBusinessApi::ACCOUNTS_ENDPOINT.'*' => Http::sequence()
+                ->push(['error' => ['status' => 'UNAUTHENTICATED']], 401)
+                ->pushFailedConnection(),
+        ]);
+
+        try {
+            (new GoogleBusinessApi)->accounts(self::CANARIO);
+            $this->fail('debería haber lanzado');
+        } catch (GoogleBusinessApiException $e) {
+            $this->assertSame(GoogleBusinessApiException::UNREACHABLE, $e->reason);
+            $this->assertNull($e->status);
+        }
+    }
+
     // ─────────── El canario ───────────
 
     public function test_el_token_no_aparece_en_ningun_registro_pase_lo_que_pase(): void

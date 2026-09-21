@@ -578,6 +578,24 @@ class GoogleBusinessSyncTest extends TestCase
         $this->assertSame(GoogleBusinessStatus::Connected, $conexion->fresh()->status);
     }
 
+    /**
+     * ⚠️⚠️ **Sin red la pasada FALLA, no revienta** (`#733`): hasta ahora la `ConnectionException`
+     * salía del servicio sin pasar por el `catch`, así que el comando diario terminaba con una traza
+     * en vez de con un «falló, se reintentará». Y el candado, suelto: si no, mañana diría «ocupada».
+     */
+    public function test_sin_red_la_pasada_falla_sin_apagar_la_conexion_y_suelta_el_candado(): void
+    {
+        $conexion = $this->conectada();
+        $this->fakeReviews(fn () => Http::failedConnection());
+
+        $resultado = $this->sync()->run();
+
+        $this->assertSame(GoogleBusinessSyncOutcome::Failed, $resultado->outcome);
+        $this->assertSame(GoogleBusinessStatus::Connected, $conexion->fresh()->status);
+        $this->assertFalse(GoogleBusinessSync::inProgress(), 'el candado se quedó echado tras el corte');
+        $this->assertStringContainsString('unreachable', implode("\n", $this->registrado));
+    }
+
     public function test_si_reconectan_mientras_llamabamos_no_se_pisa_la_conexion_nueva(): void
     {
         $this->conectada();

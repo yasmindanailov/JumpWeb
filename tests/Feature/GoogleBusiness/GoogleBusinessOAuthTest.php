@@ -362,6 +362,31 @@ class GoogleBusinessOAuthTest extends TestCase
         $this->assertNull(GoogleBusinessConnection::current());
     }
 
+    /**
+     * ⚠️ **Sin red, el canje no es un «Google ha rechazado»** (`#733`): hasta ahora el corte salía
+     * como `ConnectionException` y la vuelta daba un 500. Se dice lo que ha pasado, porque se
+     * arregla de otra forma —esperar y repetir— y no se guarda nada.
+     */
+    public function test_sin_red_en_el_canje_se_dice_y_no_se_guarda_nada(): void
+    {
+        $this->credentials();
+        Http::fake([GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::failedConnection()]);
+        $admin = $this->admin();
+        $reto = $this->startChallengeFor($admin);
+
+        $this->actingAs($admin)
+            ->withSession(['google_business.oauth.challenge' => $reto])
+            ->get(route('admin.google_business.callback', ['state' => $reto['state'], 'code' => 'bueno']))
+            ->assertSessionHas('status', 'google-business-unreachable');
+
+        $this->assertNull(GoogleBusinessConnection::current());
+        $this->assertNotSame(
+            'admin.google_business.results.unreachable',
+            __('admin.google_business.results.unreachable'),
+            'el desenlace existe pero la pantalla pintaría la clave en crudo',
+        );
+    }
+
     // ─────────── Reconectar ───────────
 
     public function test_reconectar_sustituye_el_token_y_deja_una_sola_fila(): void

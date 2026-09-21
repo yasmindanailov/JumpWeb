@@ -2316,9 +2316,27 @@ return [
         'no_locations' => 'La cuenta con la que conectaste no administra ninguna ficha. Añádela como administradora en el perfil de empresa del parque y vuelve a intentarlo.',
         // T2·5 · «Ocultar» (§4.3·7, `#731`). El texto dice lo que de verdad pasa: la reseña SIGUE en
         // Google —no la podemos retirar de ahí— y lo que se promete es no volver a publicarla.
-        'reviews_title' => 'Reseñas publicadas',
+        'reviews_title' => 'Reseñas de la ficha',
         'reviews_empty' => 'Todavía no hay ninguna. La pasada diaria las trae de la ficha; si acabas de conectar, aparecerán mañana.',
-        'reviews_count' => ':count publicadas · media :rating a fecha de :date',
+        // `#733`: la cifra es el total de GOOGLE. «Publicadas» decía que las publicábamos nosotros.
+        'reviews_count' => ':count en Google · media :rating · a fecha de :date',
+        'reserve_hint' => 'La web enseña las :shown más recientes; las de reserva ocupan su hueco si ocultas una o si Google la retira.',
+        'on_web' => 'En la web',
+        'in_reserve' => 'De reserva',
+        'reply_label' => 'Tu respuesta en Google',
+        'photo_alt' => 'Foto :n de la reseña',
+        // La última pasada COMPLETA (§4.2·1, `#733`): si pasa el plazo, la web enseña menos sin dar
+        // ningún error, así que es aquí donde el admin se entera.
+        'last_sync' => 'Última sincronización completa: :date.',
+        'last_sync_never' => 'Todavía no se ha completado ninguna sincronización. La pasada diaria la hará esta noche.',
+        'last_sync_stale' => '⚠️ Hace más de :days días que no se completa ninguna sincronización. Mientras tanto la web deja de enseñar los nombres, las fotos y la media; vuelve sola en cuanto una pasada termine bien.',
+        // Motivos tasados de «Ocultar» (§4.3·7). «Enseña» porque las fotos también se publican.
+        'reasons' => [
+            'author_request' => 'Lo ha pedido quien la escribió',
+            'minor' => 'Nombra o enseña a un menor',
+            'health_or_third_party' => 'Habla de la salud de alguien o de un tercero',
+            'other' => 'Otro motivo',
+        ],
         'hide' => 'Ocultar',
         'hide_reason' => 'Motivo',
         'hide_hint' => 'Ocultarla borra en el acto su texto, su nombre y su foto de aquí, y no se volverá a traer. ⚠️ La reseña sigue publicada en Google y su nota sigue contando para la media: eso no lo podemos cambiar.',
@@ -2344,6 +2362,8 @@ return [
             'connected' => [
                 'label' => 'Conectada',
                 'what_to_do' => 'El permiso está concedido. Queda elegir la ficha del parque para empezar a traer las reseñas.',
+                // `#733`: «conectada» con la ficha YA elegida. Lo que queda es nada.
+                'linked' => 'La ficha está enlazada. Las reseñas se traen solas una vez al día; no hace falta hacer nada más.',
             ],
             'expired' => [
                 'label' => 'Caducada',
@@ -2368,6 +2388,8 @@ return [
             'failed' => 'No hemos podido completar la conexión. Vuelve a intentarlo desde esta pantalla.',
             'not-configured' => 'Esta instalación no tiene las credenciales de JumpSystem. Avisa a quien la mantiene.',
             'token-exchange-failed' => 'Google ha rechazado la conexión. Suele arreglarse volviendo a empezar desde esta pantalla.',
+            // `#733`: un silencio, no un «no». Se arregla esperando, no cambiando nada.
+            'unreachable' => 'Google no ha respondido: puede ser la conexión a internet o un mal momento suyo. No se ha guardado nada; vuelve a intentarlo en un rato.',
             'missing-refresh-token' => 'Google no ha devuelto un permiso duradero, así que no se ha guardado nada. Vuelve a intentarlo y acepta en la pantalla de permisos de Google.',
             'scope-not-granted' => 'Falta el permiso sobre el perfil de empresa. Al conectar, deja marcada la casilla de gestionar la ficha.',
             'location-chosen' => 'Ficha elegida. Ya sabemos de qué negocio son las reseñas.',

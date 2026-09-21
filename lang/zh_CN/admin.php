@@ -1795,6 +1795,37 @@ return [
         'disconnect_hint' => '撤销 Google 中的授权，并删除我们保存的商家资料数据。',
         'no_locations' => '所连接的账号未管理任何商家资料。请在乐园的商家资料中将其添加为管理员后重试。',
         'choose_failed' => '无法向 Google 获取商家资料列表。请稍后重新加载此页面。',
+        // T2·5「隐藏」及 `#733` 的面板文字。⚠️ 回退语言是 `en`，而 `en` 没有 `admin.php`：
+        // 这里缺一个键，中文后台就会直接显示键名。
+        'reviews_title' => '商家资料中的评价',
+        'reviews_empty' => '暂时还没有评价。每日同步会从商家资料中获取；如果刚刚完成连接，评价会在明天出现。',
+        'reviews_count' => 'Google 上共 :count 条 · 平均 :rating 分 · 截至 :date',
+        'reserve_hint' => '网站显示最新的 :shown 条；如果你隐藏了一条，或 Google 删除了一条，备用评价会补上空位。',
+        'on_web' => '网站上显示',
+        'in_reserve' => '备用',
+        'reply_label' => '你在 Google 上的回复',
+        'photo_alt' => '评价照片 :n',
+        'last_sync' => '最近一次完整同步：:date。',
+        'last_sync_never' => '还没有完成过任何同步。每日同步将在今晚进行。',
+        'last_sync_stale' => '⚠️ 已超过 :days 天没有完成同步。在此期间，网站不再显示作者姓名、照片和平均分；同步一旦成功完成，会自动恢复。',
+        'reasons' => [
+            'author_request' => '作者本人要求',
+            'minor' => '提到或出现未成年人',
+            'health_or_third_party' => '涉及他人的健康状况或第三方',
+            'other' => '其他原因',
+        ],
+        'hide' => '隐藏',
+        'hide_reason' => '原因',
+        'hide_hint' => '隐藏后，此处保存的评价内容、作者姓名和头像会立即删除，并且不会再次获取。⚠️ 该评价仍会在 Google 上公开，其评分仍计入平均分：这一点我们无法改变。',
+        'hidden_title' => '已隐藏',
+        'hidden_hint' => '对于已隐藏的评价，我们只保存一个指纹，用来识别它并不再获取。不保存其内容，也不保存作者。',
+        'hidden_since' => '隐藏于 :date',
+        'unhide' => '取消隐藏',
+        'unhide_hint' => '只有当该评价仍在 Google 上公开时，才会重新出现在网站上，由明天的同步获取。',
+        'review_hidden' => '评价已隐藏，不会再次获取。',
+        'review_unhidden' => '已取消隐藏。如果该评价仍在 Google 上，下次同步时会重新出现。',
+        'review_missing' => '该评价已不存在。请刷新页面。',
+        'anonymous_author' => 'Google 用户',
         'states' => [
             'unconfigured' => [
                 'label' => '未配置',
@@ -1807,6 +1838,7 @@ return [
             'connected' => [
                 'label' => '已连接',
                 'what_to_do' => '授权已完成。接下来选择乐园的商家资料，即可开始获取评价。',
+                'linked' => '商家资料已关联。评价每天自动获取一次，无需其他操作。',
             ],
             'expired' => [
                 'label' => '已失效',
@@ -1831,6 +1863,7 @@ return [
             'failed' => '未能完成连接。请在本页面重试。',
             'not-configured' => '本安装没有 JumpSystem 的凭据。请通知维护方。',
             'token-exchange-failed' => 'Google 拒绝了本次连接。通常在本页面重新开始即可解决。',
+            'unreachable' => 'Google 没有响应：可能是网络问题，也可能是 Google 暂时不可用。未保存任何内容，请稍后重试。',
             'missing-refresh-token' => 'Google 未返回长期授权，因此没有保存任何内容。请重试，并在 Google 的授权页面点击同意。',
             'scope-not-granted' => '缺少商家资料的权限。连接时请勾选管理商家资料的选项。',
             'location-chosen' => '已选择商家资料。评价的归属已确定。',

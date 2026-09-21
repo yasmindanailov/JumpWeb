@@ -119,6 +119,14 @@ class VerifyGoogleBusiness extends Command
      */
     private function fallo(string $llamada, GoogleBusinessApiException $e): int
     {
+        if ($e->reason === GoogleBusinessApiException::UNREACHABLE) {
+            // Sin respuesta no hay HTTP que enseñar, y «HTTP 0» despista más que ayuda (`#733`).
+            $this->error("«{$llamada}» no ha llegado a Google: sin red o tiempo agotado.");
+            $this->warn('Comprueba la salida a internet de este servidor. No cambia el estado de la conexión.');
+
+            return self::FAILURE;
+        }
+
         $this->error("«{$llamada}» ha fallado: HTTP {$e->httpStatus} · {$e->reason}");
 
         if ($e->status !== null) {

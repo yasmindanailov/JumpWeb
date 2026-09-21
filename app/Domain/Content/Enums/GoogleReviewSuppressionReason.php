@@ -29,13 +29,12 @@ enum GoogleReviewSuppressionReason: string
     case Other = 'other';
 
     /** El rótulo del panel. Vive aquí y no en `lang/` porque el panel es de la casa, no del cliente. */
+    /**
+     * ⚠️ Por el catálogo de traducciones y no escrito aquí (`#733`): el panel también habla chino, y
+     * un rótulo en español dentro del código salía en español a un admin en `zh_CN`.
+     */
     public function label(): string
     {
-        return match ($this) {
-            self::AuthorRequest => 'Lo ha pedido quien la escribió',
-            self::Minor => 'Nombra a un menor',
-            self::HealthOrThirdParty => 'Habla de la salud de alguien o de un tercero',
-            self::Other => 'Otro motivo',
-        };
+        return __('admin.google_business.reasons.'.$this->value);
     }
 }

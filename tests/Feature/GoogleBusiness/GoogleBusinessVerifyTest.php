@@ -145,6 +145,21 @@ class GoogleBusinessVerifyTest extends TestCase
         $this->assertStringNotContainsString('The caller does not have permission', $salida);
     }
 
+    /** Sin red, el diagnóstico lo dice y sale en rojo — no con una traza (`#733`). */
+    public function test_sin_red_lo_dice_y_sale_distinto_de_cero(): void
+    {
+        $this->conectada();
+        $this->fakeGoogle([GoogleBusinessOAuth::TOKEN_ENDPOINT => Http::failedConnection()]);
+
+        $salida = new BufferedOutput;
+        $codigo = Artisan::call('business-profile:verify', [], $salida);
+        $texto = $salida->fetch();
+
+        $this->assertNotSame(0, $codigo);
+        $this->assertStringContainsString('no ha llegado a Google', $texto);
+        $this->assertStringNotContainsString(self::CANARIO_REFRESCO, $texto);
+    }
+
     public function test_no_imprime_ningun_secreto_ni_con_el_detalle_al_maximo(): void
     {
         // ⚠️ El §4.2·10 dice «en ningún nivel de detalle», así que se mide con `-vvv`: es donde

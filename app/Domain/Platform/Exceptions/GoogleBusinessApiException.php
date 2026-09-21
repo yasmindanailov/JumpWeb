@@ -24,6 +24,13 @@ use RuntimeException;
  */
 final class GoogleBusinessApiException extends RuntimeException
 {
+    /**
+     * La razón de un fallo **sin respuesta**: sin red, DNS o tiempo agotado (`#733`).
+     *
+     * ⚠️ No es un código de Google —Google no ha dicho nada—, y por eso va con HTTP 0.
+     */
+    public const UNREACHABLE = 'unreachable';
+
     private function __construct(
         /** El estado al que pasa la conexión, o `null` si el fallo es pasajero. */
         public readonly ?GoogleBusinessStatus $status,
@@ -69,6 +76,19 @@ final class GoogleBusinessApiException extends RuntimeException
             $reason,
             trim("Google respondió HTTP {$httpStatus} · {$reason}"),
         );
+    }
+
+    /**
+     * **Google no ha llegado a contestar** (`#733`): sin red, DNS o tiempo agotado.
+     *
+     * ⚠️⚠️ **Siempre pasajero**, como un 503: un corte en NUESTRA red no dice nada del permiso del
+     * parque, y apagar la conexión por él la dejaría caída hasta que alguien reconectase.
+     * ⚠️ **No lleva el mensaje original**: el de cURL trae la URL, y la de una página de reseñas
+     * lleva el testigo de paginación. Aquí no hace falta nada de eso para actuar.
+     */
+    public static function unreachable(): self
+    {
+        return new self(null, 0, self::UNREACHABLE, 'Google no ha respondido (sin red o tiempo agotado)');
     }
 
     /** ¿Hay que dejar de llamar hasta que alguien haga algo? */

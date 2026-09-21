@@ -1,7 +1,8 @@
 # [SPEC] Google Business Profile — las reseñas de la ficha siempre a la vista, y el horario publicado desde el panel
 
 > Estado: ✅ **APROBADA POR EL OWNER tras una revisión adversarial de cinco lentes** (2026-09-11) ·
-> **código NO empezado** · Decisión asociada: `DECISIONES #524`.
+> **T1 y T2·1→T2·7 en el árbol** (`#720`→`#733`; estado por tanda en §4.1) · Decisión asociada:
+> `DECISIONES #524`.
 >
 > ▶ **Esta es la versión reescrita tras la revisión.** La versión que pasó a revisión está en el historial
 > (`3b31c45d`) y la revisión con sus citas, en §10. **Donde una versión anterior diga otra cosa, manda ésta.**
@@ -28,8 +29,9 @@
 
 ## §0 · Antes de tocar
 
-- **Aprobada por el owner tras revisión adversarial de cinco lentes** (`#524`); **código NO empezado**; las
-  reseñas van DESPUÉS del diseño (`[owner]`). Sustituye como FUENTE a `google-reviews.md` (Places), que queda
+- **Aprobada tras revisión adversarial** (`#524`). **T1 y T2·1→T2·7 en el árbol** (`#720`→`#733`),
+  contra un DOBLE hasta que la ficha real conecte; cada tanda, **§4.1**. Sustituye como FUENTE a
+  `google-reviews.md` (Places, aún en la cascada por el owner), que queda
   como registro; el contrato `Content\Contracts\SocialProof` se conserva pero cambia (§4.3·9). El programa
   `producto-e-instancias.md` (`#616`) la confirma: mecanismo del producto, API pública sin avatares.
 - ⚠️⚠️ **La identidad ante Google es JumpSystem, no JumpWeb** (`#719`): cuenta, dominio y web propios. Y
@@ -429,12 +431,58 @@ añadió la línea del filtro y el `data-nosnippet`, y nada más. Medido sobre
 - ▶ Guardas que ya apuntan a ese fichero: `GoogleAttributionTest` y `ReviewsSectionTest`.
 - ⚠️ Lo mismo hará falta en la portada de la **instancia**, que es la que ven los clientes.
 
-▶ **Lo siguiente, a elegir**: (a) **cerrar ese hueco** —respuesta, fotos y anónima en la tarjeta—;
-(b) el **botón del panel** que encola la pasada, `Retry-After` y el gancho que fuerza una pasada al
-cambiar el mínimo de estrellas; (c) el **texto de privacidad** y la ponderación de interés legítimo
-(§4.3·11), lo único de la T2 con parte legal pendiente; (d) la **T6, el horario**; (e) **retirar
-Places** (§4.3·13) cuando el owner lo decida, y con ello §4.3·12 y la caché de las fotos que la T2·4
-dejó anotada.
+✅ **EL OJO DEL OWNER, 21-09: EL SISTEMA VISTO POR PRIMERA VEZ CON DATOS.** Contra un fixture local
+(conexión «conectada», media 4,6/37, ocho reseñas con anónima, respuestas, fotos y una en francés):
+el guion «probe-ojo-resenas» de la carpeta de almacenamiento de la app, **fuera de git**, con modos
+`montar`·`estado`·`caducar`·`correo`·`desmontar`, y su sonda de navegador «sonda-resenas/ojo», al
+lado. **Medido**: rechazando cookies, el
+navegador hace **cero peticiones a Google**, en móvil y en escritorio. Salieron **trece hallazgos**:
+ocho de la tarjeta (la T2·8, abajo) y cinco del panel (la T2·7). El owner dio el visto bueno a la
+revisión y al panel arreglado.
+
+✅ **T2·7 · EL PANEL Y EL CORTE DE RED, EN EL ÁRBOL** (2026-09-21, `#733`). 22 casos nuevos, arnés
+**29/29** (`scripts/mutar-gbp-t2-7.py`), Larastan 0.
+❗❗ **Un corte de red NO era una negativa de Google, y nadie lo atrapaba**: la pantalla daba un 500
+y —medido después— la pasada diaria, `verify` y la vuelta de OAuth también reventaban. Se traduce
+en el **envoltorio único** (`GoogleBusinessApi::send()`, `GoogleBusinessApiException::unreachable()`,
+HTTP 0, **siempre pasajero**) y en el canje. El caso que se llamaba «si Google no contesta» probaba
+un **503**, que es Google contestando.
+⚠️ **El token se pide FUERA del cierre de `send()`**: dentro, el `send()` de fuera tapaba el suyo y
+el arnés no podía demostrar que existía.
+⚠️⚠️ **Toda hora del panel va por `DisplayTime`**: `app.timezone` es **UTC** y la pantalla decía
+«16:30» por una conexión de las 18:30. Un caso de la T1·4 calculaba su expectativa con
+`app.timezone`: **el test bendecía el defecto**.
+▶ El panel dice lo que QUEDA («la ficha está enlazada…» en vez de «queda elegirla»), la **última
+pasada completa** —la fecha del RESUMEN, que solo mueve una pasada coherente— con aviso a los 3
+días, «:count **en Google**» y no «publicadas», **«en la web» / «de reserva»** con
+`BusinessProfileSocialProof::shownIds()` —la misma consulta que las tarjetas, nunca una copia—, y
+**la respuesta, las fotos y la cara** de cada reseña: sin verlas no se puede ocultar «por un
+menor» (el motivo pasa a «nombra **o enseña** a un menor»).
+❗ **El panel habla `zh_CN`**, el idioma de respaldo es `en` y **no hay `lang/en/admin.php`**: las 14
+claves de «Ocultar» (T2·5) salían **en crudo** a un admin en chino. Traducidas, con guarda de
+paridad es↔zh de todo `admin.google_business`, y los motivos pasan al catálogo.
+
+▶ **T2·8 · LA TARJETA DE LA PORTADA, LO SIGUIENTE** (los ocho hallazgos del ojo, en el anfitrión
+mínimo; la portada de la instancia necesitará lo mismo): (1) la **anónima** sale sin nombre y con «·»
+—§4.3·5 manda «Usuario de Google»—; (2) ni la **respuesta** ni las **fotos**; (3) la **entradilla**
+dice «no las elegimos nosotros» encima de la línea del filtro; (4) falta **«a fecha de»** en la
+chapa; (5) la atribución sigue siendo el **logotipo de Google Maps** —§4.3·10 pide la palabra o la
+«G», y sin estrellas pegadas—; (6) se pierden los **saltos de línea** (`pre-line`, `dir="auto"`);
+(7) «ver todas» y «escribir una reseña» **no parecen enlaces**; (8) el **aviso de cookies** sigue
+diciendo que las reseñas de Google necesitan permiso — va con el texto de privacidad (c).
+
+▶ **T2·9 · LAS RESEÑAS EN LA API PÚBLICA, NECESARIA DESDE EL 21-09**: el owner dio dirección nueva
+(relevo de plataforma, 21-09) — **la landing consumirá la API** (vía A). Medido: `/api/v1/social-proof`
+sirve **solo la cifra**, **sin `asOf`**, sin reseñas y **sin la selección**; su ruta ya anuncia las
+reseñas como «clave hermana dentro del mismo sobre». ❗ **Sin la selección, una landing por API no
+puede declarar el filtro** (Ómnibus). ⚠️ `#616` fija una API pública **sin avatares**: qué entra de
+caras y fotos se decide ANTES de escribir el contrato (`openapi/v1.yaml`, subida menor).
+
+▶ **Después, a elegir**: (b) el **botón del panel** que encola la pasada, `Retry-After` y el gancho
+que fuerza una pasada al cambiar el mínimo de estrellas; (c) el **texto de privacidad** y la
+ponderación de interés legítimo (§4.3·11), lo único de la T2 con parte legal pendiente; (d) la
+**T6, el horario**; (e) **retirar Places** (§4.3·13) cuando el owner lo decida, y con ello §4.3·12 y
+la caché de las fotos que la T2·4 dejó anotada.
 
 ### 4.2 T1 · La conexión
 

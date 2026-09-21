@@ -3,6 +3,7 @@
 namespace App\Domain\Platform\Services;
 
 use App\Domain\Platform\Exceptions\GoogleBusinessApiException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -188,7 +189,10 @@ final class GoogleBusinessApi
      */
     private function get(#[\SensitiveParameter] string $refreshToken, string $url, array $query = []): array
     {
-        $response = $this->client($this->accessTokenFor($refreshToken))->get($url, $query);
+        // ⚠️ El token se pide FUERA del `send()` de la petición, no dentro de su cierre: dentro, el
+        // `send()` de fuera taparía el suyo y ninguna prueba podría demostrar que existe (`#733`).
+        $acceso = $this->accessTokenFor($refreshToken);
+        $response = $this->send(fn (): Response => $this->client($acceso)->get($url, $query));
 
         if ($response->status() === 401) {
             // El de acceso caducó: se tira y se pide otro. Si el de REFRESCO fuera el caducado, la
@@ -196,7 +200,8 @@ final class GoogleBusinessApi
             $this->accessToken = null;
             $this->accessTokenExpiresAt = null;
 
-            $response = $this->client($this->accessTokenFor($refreshToken))->get($url, $query);
+            $acceso = $this->accessTokenFor($refreshToken);
+            $response = $this->send(fn (): Response => $this->client($acceso)->get($url, $query));
         }
 
         if (! $response->successful()) {
@@ -228,7 +233,7 @@ final class GoogleBusinessApi
             throw GoogleBusinessApiException::from(401, 'invalid_client');
         }
 
-        $response = Http::asForm()
+        $response = $this->send(fn (): Response => Http::asForm()
             ->timeout(self::TIMEOUT_SECONDS)
             ->connectTimeout(self::CONNECT_TIMEOUT_SECONDS)
             ->post(GoogleBusinessOAuth::TOKEN_ENDPOINT, [
@@ -236,7 +241,7 @@ final class GoogleBusinessApi
                 'client_secret' => $credentials->secret(),
                 'refresh_token' => $refreshToken,
                 'grant_type' => 'refresh_token',
-            ]);
+            ]));
 
         if (! $response->successful()) {
             throw $this->failure($response);
@@ -255,6 +260,41 @@ final class GoogleBusinessApi
             + max(0, (is_int($vida) ? $vida : 3600) - self::EXPIRY_MARGIN_SECONDS);
 
         return $token;
+    }
+
+    /**
+     * Hace la petición y convierte **«Google no ha contestado»** en un fallo pasajero (`#733`).
+     *
+     * ❗❗ Sin esto un corte de red o un tiempo agotado salía como `ConnectionException`, que no es
+     * una negativa de Google y **nadie de arriba la atrapaba**: la pantalla del panel daba un 500, la
+     * pasada diaria reventaba y `verify` terminaba con una traza. Traducirla AQUÍ, en el envoltorio
+     * único, es lo que hace que los cuatro sitios que llaman se porten igual sin tocar ninguno.
+     *
+     * ⚠️⚠️ **Solo `ConnectionException`, nunca un `catch (Throwable)`**: uno ancho se traga el
+     * `StrayRequestException` de las pruebas y deja un caso en verde sin haber llamado a nada —pasó
+     * en el descargador de fotos (`#730`)—.
+     *
+     * @param  callable(): Response  $peticion
+     *
+     * @throws GoogleBusinessApiException
+     */
+    private function send(callable $peticion): Response
+    {
+        try {
+            return $peticion();
+        } catch (ConnectionException) {
+            $error = GoogleBusinessApiException::unreachable();
+
+            // Mismo registro que una negativa, para que un corte se vea igual en el log. Sin el
+            // mensaje de cURL: trae la URL, y la de una página de reseñas lleva el testigo.
+            Log::warning('google_business.api_failed', [
+                'http' => $error->httpStatus,
+                'reason' => $error->reason,
+                'estado' => null,
+            ]);
+
+            throw $error;
+        }
     }
 
     /**
